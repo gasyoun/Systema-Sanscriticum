@@ -1165,10 +1165,18 @@ class Payment extends Model
         $groupIds = $course->groups()->pluck('groups.id')->toArray();
 
         if (empty($groupIds)) {
+            // H2304 spec 2: fail closed на ВСЕХ платных маршрутах, а не только в
+            // Tochka-вебхуке (H2085). Log-and-return здесь означал «оплачено, но
+            // доступа нет» для zero-price checkout, Filament, PayPal и импорта.
+            // Money-контур: throw за флагом (дефолт OFF), включение — ops-шаг.
             $msg = "grantAccess: у курса '{$course->title}' (id={$course->id}) ".
                 "нет привязанных групп (payment #{$this->id}). ".
-                'Привяжите группу в админке курса и повторите доставку оплаты.';
+                'Оплата не применена: привяжите группу в админке курса и повторите.';
             Log::error($msg);
+
+            if (config('features.grant_access_fail_closed')) {
+                throw new \RuntimeException($msg);
+            }
 
             return;
         }

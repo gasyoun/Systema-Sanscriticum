@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Webhooks;
 
 use App\Enums\BillingCommitmentStatus;
 use App\Enums\BillingSubscriptionStatus;
+use App\Exceptions\PaypalChargeRejectedException;
 use App\Http\Controllers\Controller;
 use App\Models\BillingCommitment;
 use App\Models\BillingSubscription;
@@ -70,16 +71,16 @@ final class PaypalSubscriptionsWebhookController extends Controller
             return response('OK', 200);
         }
 
-        try {
-            DB::transaction(function () use ($request, $eventType, $eventId, $eventHash): void {
-                $resource = $request->input('resource', []);
-                if (! is_array($resource)) {
-                    $resource = [];
-                }
+        $resource = $request->input('resource', []);
+        if (! is_array($resource)) {
+            $resource = [];
+        }
+        $reportedAmount = $this->extractAmount($resource);
 
+        try {
+            DB::transaction(function () use ($resource, $reportedAmount, $eventType, $eventId, $eventHash): void {
                 $payment = null;
                 $decision = PaymentWebhookEvent::DECISION_APPLIED;
-                $reportedAmount = $this->extractAmount($resource);
 
                 if ($eventType === 'BILLING.SUBSCRIPTION.ACTIVATED'
                     || $eventType === 'BILLING.SUBSCRIPTION.UPDATED'
@@ -116,6 +117,23 @@ final class PaypalSubscriptionsWebhookController extends Controller
                     ]
                 );
             });
+        } catch (PaypalChargeRejectedException $e) {
+            // H2304 spec 3: строка-отказ пишется ПОСЛЕ отката транзакции — иначе
+            // журнал откатывался вместе с ней. Хэш пер-попыточный (одна строка на
+            // каждую доставку, как у Точки с per-redelivery JWT); канонический
+            // hash(eventId) на отказе не занимаем, чтобы ретрай PayPal после
+            // починки конфигурации прошёл заново, а не упёрся в replay-guard.
+            PaymentWebhookEvent::create([
+                'provider' => 'paypal',
+                'payment_id' => null,
+                'event_hash' => hash('sha256', $eventId.'|'.$e->reason.'|'.uniqid('', true)),
+                'bank_status' => $eventType !== '' ? $eventType : 'unknown',
+                'reported_amount' => $reportedAmount,
+                'decision' => $e->decision,
+                'created_at' => now(),
+            ]);
+
+            return response('Charge rejected: '.$e->reason, 422);
         } catch (\Throwable $e) {
             Log::error('paypal_subscriptions.webhook.error', [
                 'message' => $e->getMessage(),
@@ -255,6 +273,34 @@ final class PaypalSubscriptionsWebhookController extends Controller
             ]);
         }
 
+        // H2304 spec 3: паритет с Точкой — сумма из вебхука сверяется с
+        // ожиданием commitment'а. Ожидание объявляется в валюте провайдера
+        // (meta.expected_charge_amount/_currency на commitment или подписке) —
+        // commitment.amount_rub рублёвый и с валютной суммой несравним.
+        // Ожидание не объявлено => fail closed: маршрут ещё не жил в проде
+        // (создание подписок — Phase 1 placeholder), контракт фиксируем до
+        // первого живого списания. $1 против ₽40 000 не проходит ни одной веткой.
+        [$expectedAmount, $expectedCurrency] = $this->expectedCharge($commitment, $sub);
+        if ($expectedAmount === null || $expectedCurrency === null) {
+            $this->rejectCharge('missing_expected_charge', $eventId, [
+                'billing_subscription_id' => $sub->id,
+                'commitment_id' => $commitment->id,
+            ], PaymentWebhookEvent::DECISION_REJECTED_AMOUNT_MISMATCH);
+        }
+
+        $tolerance = (float) config('checkout.paypal_webhook_amount_tolerance', 1.00);
+        if ($foreignCurrency !== $expectedCurrency
+            || abs($reportedAmount - $expectedAmount) > $tolerance
+        ) {
+            $this->rejectCharge('amount_mismatch', $eventId, [
+                'billing_subscription_id' => $sub->id,
+                'commitment_id' => $commitment->id,
+                'reported' => $reportedAmount.' '.$foreignCurrency,
+                'expected' => $expectedAmount.' '.$expectedCurrency,
+                'tolerance' => $tolerance,
+            ], PaymentWebhookEvent::DECISION_REJECTED_AMOUNT_MISMATCH);
+        }
+
         $payment = Payment::create([
             'user_id' => $commitment->user_id,
             'course_id' => $commitment->course_id,
@@ -328,18 +374,49 @@ final class PaypalSubscriptionsWebhookController extends Controller
     }
 
     /**
+     * Ожидаемое списание в валюте провайдера: meta.expected_charge_amount +
+     * meta.expected_charge_currency на commitment'е, fallback — на подписке.
+     *
+     * @return array{0: ?float, 1: ?string}
+     */
+    private function expectedCharge(BillingCommitment $commitment, BillingSubscription $sub): array
+    {
+        foreach ([$commitment->meta, $sub->meta] as $meta) {
+            if (is_array($meta)
+                && isset($meta['expected_charge_amount'], $meta['expected_charge_currency'])
+                && is_numeric($meta['expected_charge_amount'])
+                && is_string($meta['expected_charge_currency'])
+                && trim($meta['expected_charge_currency']) !== ''
+            ) {
+                return [
+                    round((float) $meta['expected_charge_amount'], 2),
+                    strtoupper(trim($meta['expected_charge_currency'])),
+                ];
+            }
+        }
+
+        return [null, null];
+    }
+
+    /**
      * Fail closed so PayPal retries after commitment configuration is repaired.
+     * The controller catches the exception OUTSIDE the transaction and journals
+     * the rejected delivery (H2304 spec 3).
      *
      * @param  array<string, mixed>  $context
      */
-    private function rejectCharge(string $reason, string $eventId, array $context = []): never
-    {
+    private function rejectCharge(
+        string $reason,
+        string $eventId,
+        array $context = [],
+        string $decision = PaymentWebhookEvent::DECISION_REJECTED_CHARGE,
+    ): never {
         Log::alert('paypal_subscriptions.webhook.charge_rejected', [
             'reason' => $reason,
             'event_id' => $eventId,
             ...$context,
         ]);
 
-        throw new \RuntimeException("PayPal charge rejected: {$reason}");
+        throw new PaypalChargeRejectedException($reason, $decision, $context);
     }
 }

@@ -365,6 +365,16 @@ return [
     'tochka_webhook_guard' => (bool) env('TOCHKA_WEBHOOK_GUARD', true),
 
     /*
+     | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
+     | (fail closed на всех платных маршрутах: zero-price checkout, Filament,
+     | PayPal, PayPal-claim, conditional, импорт), а не log-and-return «оплачено
+     | без доступа». Tochka-вебхук имеет собственную независимую проверку (H2085)
+     | и от этого флага не зависит. Money-контур: дефолт OFF, включение в проде —
+     | отдельный ops-шаг (GRANT_ACCESS_FAIL_CLOSED=true + php artisan config:cache).
+     */
+    'grant_access_fail_closed' => (bool) env('GRANT_ACCESS_FAIL_CLOSED', false),
+
+    /*
      | Telegram Track C (H164, Uprava/docs/DECISIONS_telegram_harvester.md D7-D11):
      | second bot account @zapisi_ORSbot (class-booking chat) — go-forward webhook
      | capture + media download + class-reminder scheduler. ВЫКЛ по умолчанию —

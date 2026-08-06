@@ -63,4 +63,71 @@ class WebhookSecretsPreflightTest extends TestCase
             ->assertSuccessful()
             ->expectsOutput('deploy:webhook-preflight OK.');
     }
+
+    /** @test */
+    public function paypal_skip_signature_outside_local_fails(): void
+    {
+        // H2304 spec 4: эскейп-хэтч превращает любой неподписанный POST в
+        // валидное денежное событие — допустим только в APP_ENV=local.
+        config([
+            'services.zoom.webhook_secret' => 'zoom-secret',
+            'partner.enabled' => false,
+            'services.paypal.subscriptions.skip_signature_verify' => true,
+            'app.env' => 'production',
+        ]);
+
+        $this->artisan('deploy:webhook-preflight')
+            ->assertFailed()
+            ->expectsOutputToContain('PAYPAL_SKIP_WEBHOOK_SIGNATURE');
+    }
+
+    /** @test */
+    public function paypal_skip_signature_in_local_is_allowed(): void
+    {
+        config([
+            'services.zoom.webhook_secret' => 'zoom-secret',
+            'partner.enabled' => false,
+            'services.paypal.subscriptions.skip_signature_verify' => true,
+            'app.env' => 'local',
+        ]);
+
+        $this->artisan('deploy:webhook-preflight')->assertSuccessful();
+    }
+
+    /** @test */
+    public function enabled_paypal_subscriptions_require_webhook_id_and_secrets(): void
+    {
+        config([
+            'services.zoom.webhook_secret' => 'zoom-secret',
+            'partner.enabled' => false,
+            'features.paypal_subscriptions' => true,
+            'services.paypal.subscriptions.enabled' => true,
+            'services.paypal.subscriptions.skip_signature_verify' => false,
+            'services.paypal.subscriptions.client_id' => 'cid',
+            'services.paypal.subscriptions.client_secret' => '',
+            'services.paypal.subscriptions.webhook_id' => '   ',
+        ]);
+
+        $this->artisan('deploy:webhook-preflight')
+            ->assertFailed()
+            ->expectsOutputToContain('PAYPAL_WEBHOOK_ID')
+            ->expectsOutputToContain('PAYPAL_CLIENT_SECRET');
+    }
+
+    /** @test */
+    public function disabled_paypal_subscriptions_do_not_require_secrets(): void
+    {
+        config([
+            'services.zoom.webhook_secret' => 'zoom-secret',
+            'partner.enabled' => false,
+            'features.paypal_subscriptions' => false,
+            'services.paypal.subscriptions.enabled' => false,
+            'services.paypal.subscriptions.skip_signature_verify' => false,
+            'services.paypal.subscriptions.client_id' => '',
+            'services.paypal.subscriptions.client_secret' => '',
+            'services.paypal.subscriptions.webhook_id' => '',
+        ]);
+
+        $this->artisan('deploy:webhook-preflight')->assertSuccessful();
+    }
 }

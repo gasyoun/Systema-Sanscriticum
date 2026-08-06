@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Course;
+use App\Models\Payment;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -87,6 +88,17 @@ final class PaymentImportService
     ): array {
         $this->validateMapping($mapping);
         $this->validateUserLookupField($userLookupField);
+
+        // H2304 spec 1: у paid-строки без группы курса тариф открывал бы уроки,
+        // но /kurs/{slug} отдавал бы 404 (membership-гейт StudentController).
+        // Отказываем ДО чтения файла — импорт в такой курс бессмыслен.
+        if ($course->groups()->doesntExist()) {
+            throw new \InvalidArgumentException(
+                "У курса «{$course->title}» (id={$course->id}) нет привязанных групп — ".
+                'импортированные оплаты не выдали бы доступ. '.
+                'Привяжите группу в админке курса и повторите импорт.'
+            );
+        }
 
         // Кэш юзеров по выбранному полю поиска
         $users = User::whereNotNull($userLookupField)
@@ -214,21 +226,45 @@ final class PaymentImportService
 
                 $existingKeys[$key] = true;
 
-                $payment['created_at'] = $payment['created_at']->toDateTimeString();
-                $payment['updated_at'] = $payment['updated_at']->toDateTimeString();
-
                 $batch[] = $payment;
                 $stats['inserted']++;
             }
-
-            if (count($batch) >= 500) {
-                DB::table('payments')->insert($batch);
-                $batch = [];
-            }
         }
 
-        if (! empty($batch)) {
-            DB::table('payments')->insert($batch);
+        // H2304 spec 1: раньше строки уходили сырым DB::table('payments')->insert,
+        // мимо Payment::booted() — без grantAccess/enrollInCourse/revenue-schedule:
+        // студент с paid-строкой получал 404 на /kurs/{slug}. Теперь создаём модели
+        // withoutEvents (исторический импорт НЕ должен слать welcome-письма,
+        // Telegram и начислять прану) и выдаём доступ/запись/сабледжер явно,
+        // одной транзакцией.
+        if ($batch !== []) {
+            DB::transaction(function () use ($batch): void {
+                $revenue = app(RevenueScheduleService::class);
+
+                foreach ($batch as $attrs) {
+                    $payment = Payment::withoutEvents(function () use ($attrs): Payment {
+                        $model = new Payment($attrs);
+                        // Историческая дата оплаты: created_at не в $fillable,
+                        // ставим явно (Eloquent уважает уже-dirty timestamps).
+                        $model->created_at = $attrs['created_at'];
+                        $model->updated_at = $attrs['updated_at'];
+                        // Резервная опора resurrection-guard'а (H1645) — при
+                        // withoutEvents fireOnPaid не стампует, ставим сами.
+                        $model->first_paid_at = $attrs['created_at'];
+                        // withoutEvents пропускает и saving()-инвариант, который
+                        // дефолтит кассу школы; без него isRevenuePayment=false
+                        // и сабледжер не генерируется.
+                        $model->received_account = Payment::RECEIVED_SCHOOL;
+                        $model->save();
+
+                        return $model;
+                    });
+
+                    $payment->grantAccess();
+                    $payment->enrollInCourse();
+                    $revenue->regenerateFor($payment);
+                }
+            });
         }
 
         return $stats;
