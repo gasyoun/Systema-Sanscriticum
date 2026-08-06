@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // FK на dictionaries вешаем в create_dictionaries_table (2026_03_11):
+        // эта миграция старше, а MySQL 8 на migrate:fresh не даёт
+        // constrained() на ещё несуществующую таблицу (error 1824).
         Schema::create('dictionary_words', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('dictionary_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('dictionary_id');
             $table->string('devanagari')->nullable(); // सत्
             $table->string('iast')->nullable();       // sat
             $table->string('cyrillic')->nullable();   // сат
