@@ -99,7 +99,7 @@ PEM;
     {
         // НЕ переопределяем config -> контроллер берёт боевой ключ Точки, который
         // не соответствует нашей тестовой подписи -> подпись отклоняется.
-        $jwt = $this->sign(['purpose' => 'Заказ №1', 'status' => 'captured']);
+        $jwt = $this->sign(['purpose' => 'Заказ №1', 'status' => 'APPROVED']);
 
         $this->postJwt($jwt)->assertStatus(401);
     }
@@ -108,13 +108,17 @@ PEM;
     public function valid_webhook_without_order_number_is_a_noop(): void
     {
         $this->useTestKey();
-        $jwt = $this->sign(['purpose' => 'Пополнение счёта', 'status' => 'captured']);
+        $jwt = $this->sign(['purpose' => 'Пополнение счёта', 'status' => 'APPROVED']);
 
         $this->postJwt($jwt)->assertOk();
     }
 
-    /** @test */
-    public function valid_captured_webhook_marks_payment_paid_and_is_idempotent(): void
+    /**
+     * Canonical Tochka one-shot status is APPROVED (card settle / SBP / Dolyame).
+     *
+     * @test
+     */
+    public function valid_approved_webhook_marks_payment_paid_and_is_idempotent(): void
     {
         $this->useTestKey();
 
@@ -131,7 +135,7 @@ PEM;
             'status' => 'pending',
         ]);
 
-        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'captured']);
+        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED']);
 
         // Первый вебхук: pending -> paid, доступ (группа) выдан.
         $this->postJwt($jwt)->assertOk();
@@ -173,7 +177,7 @@ PEM;
 
         $jwt = $this->sign([
             'purpose' => "Заказ №{$payment->id}",
-            'status' => 'captured',
+            'status' => 'APPROVED',
             'paymentType' => $paymentType,
         ]);
 
@@ -233,7 +237,7 @@ PEM;
         $this->useTestKey();
         [$payment] = $this->makePendingPayment();
 
-        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'captured']))->assertOk();
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED']))->assertOk();
         $this->assertSame('paid', $payment->fresh()->status);
 
         // Возврат админом.
@@ -241,7 +245,7 @@ PEM;
         $this->assertSame('failed', $payment->fresh()->status);
 
         // Повторная (отличающаяся телом) success-доставка того же заказа.
-        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'captured', 'paymentType' => 'card']))->assertOk();
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED', 'paymentType' => 'card']))->assertOk();
 
         // Без флага — воскрешение происходит, как и сегодня.
         $this->assertSame('paid', $payment->fresh()->status);
@@ -259,12 +263,12 @@ PEM;
         $this->useTestKey();
         [$payment, $user, $group] = $this->makePendingPayment();
 
-        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'captured']))->assertOk();
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED']))->assertOk();
         $this->assertSame('paid', $payment->fresh()->status);
 
         $payment->update(['status' => 'failed']);
 
-        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'captured', 'paymentType' => 'card']))->assertOk();
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED', 'paymentType' => 'card']))->assertOk();
 
         // Не воскрешён.
         $this->assertSame('failed', $payment->fresh()->status);
@@ -286,7 +290,7 @@ PEM;
         $this->useTestKey();
         [$payment, $user, $group] = $this->makePendingPayment();
 
-        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'captured']);
+        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED']);
 
         $this->postJwt($jwt)->assertOk();
         $this->assertSame('paid', $payment->fresh()->status);
@@ -311,7 +315,7 @@ PEM;
         $this->useTestKey();
         [$payment, $user, $group] = $this->makePendingPayment(4800);
 
-        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'captured', 'amount' => 9999]);
+        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED', 'amount' => 9999]);
         $this->postJwt($jwt)->assertOk();
 
         $this->assertSame('pending', $payment->fresh()->status);
@@ -334,7 +338,7 @@ PEM;
         $this->useTestKey();
         [$payment, $user, $group] = $this->makePendingPayment(4800);
 
-        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'captured', 'amount' => 4800]);
+        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED', 'amount' => 4800]);
         $this->postJwt($jwt)->assertOk();
 
         $this->assertSame('paid', $payment->fresh()->status);
@@ -357,7 +361,7 @@ PEM;
         $this->useTestKey();
         [$payment, $user, $group] = $this->makePendingPayment();
 
-        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'captured']))->assertOk();
+        $this->postJwt($this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED']))->assertOk();
 
         $this->assertSame('paid', $payment->fresh()->status);
         $this->assertTrue($user->fresh()->groups->contains($group->id));
@@ -406,7 +410,7 @@ PEM;
     }
 
     /**
-     * Legacy success aliases do not prove settlement and therefore stay pending.
+     * Intermediate/unknown bank statuses stay pending (not hold, not settled).
      *
      * @test
      *
@@ -430,8 +434,41 @@ PEM;
     public static function nonCaptureStatusProvider(): array
     {
         return [
-            'paid legacy alias' => ['paid'],
-            'APPROVED legacy alias' => ['APPROVED'],
+            'processing' => ['processing'],
+            'pending bank' => ['PENDING'],
+        ];
+    }
+
+    /**
+     * Doc-backed and historical success aliases all mark paid.
+     *
+     * @test
+     *
+     * @dataProvider settledStatusProvider
+     */
+    public function settled_bank_status_marks_payment_paid(string $bankStatus): void
+    {
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment();
+
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => $bankStatus,
+        ]))->assertOk();
+
+        $this->assertSame('paid', $payment->fresh()->status);
+        $this->assertTrue($user->fresh()->groups->contains($group->id));
+    }
+
+    /** @return array<string, array{0: string}> */
+    public static function settledStatusProvider(): array
+    {
+        return [
+            'APPROVED (Tochka docs)' => ['APPROVED'],
+            'approved lower' => ['approved'],
+            'paid alias' => ['paid'],
+            'captured alias' => ['captured'],
+            'completed alias' => ['completed'],
         ];
     }
 
@@ -449,7 +486,7 @@ PEM;
 
         $this->postJwt($this->sign([
             'purpose' => "Заказ №{$payment->id}",
-            'status' => 'captured',
+            'status' => 'APPROVED',
         ]))->assertOk();
 
         $this->assertSame('paid', $payment->fresh()->status);
@@ -511,7 +548,7 @@ PEM;
 
         $this->postJwt($this->sign([
             'purpose' => 'Пополнение счёта без номера',
-            'status' => 'captured',
+            'status' => 'APPROVED',
         ]))->assertOk();
 
         $this->assertSame('pending', $payment->fresh()->status);

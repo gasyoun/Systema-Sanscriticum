@@ -91,14 +91,18 @@ class WebhookController extends Controller
                 return response('OK', 200);
             }
 
-            // Only a settled capture may open access. A bank authorization is merely a
-            // hold and must remain pending until a later captured/completed delivery.
+            // Settled money may open access. Tochka acquiringInternetPayment docs:
+            //   APPROVED  — money taken (card one-shot, SBP always, Dolyame always)
+            //   AUTHORIZED — hold only (two-stage card); wait for later APPROVED
+            // `captured`/`completed`/`paid` kept as aliases for older/other payloads.
+            // Regression (PR #1103): success was reduced to captured/completed only →
+            // real APPROVED webhooks left payments pending while the bank had charged.
             $normalizedBankStatus = is_string($statusFromBank)
                 ? mb_strtolower(trim($statusFromBank))
                 : null;
-            $successStatuses = ['captured', 'completed'];
+            $successStatuses = ['approved', 'captured', 'completed', 'paid'];
             $holdStatuses = ['authorized'];
-            $failureStatuses = ['rejected', 'canceled', 'failed'];
+            $failureStatuses = ['rejected', 'canceled', 'cancelled', 'failed'];
 
             // Идемпотентность: row-lock сериализует параллельные вебхуки на один и тот же платеж,
             // чтобы processSuccessfulPayment (выдача групп + welcome-email) не сработал дважды.
@@ -120,7 +124,7 @@ class WebhookController extends Controller
                     // Bank hold ≠ capture — do not grant access.
                     $decision = PaymentWebhookEvent::DECISION_HOLD_NOT_CAPTURED;
                     $apply = false;
-                    Log::warning("⛔ Вебхук: hold (status={$statusFromBank}) для заказа №{$payment->id} — доступ НЕ выдан (ждём captured/completed).", [
+                    Log::warning("⛔ Вебхук: hold (status={$statusFromBank}) для заказа №{$payment->id} — доступ НЕ выдан (ждём APPROVED/captured).", [
                         'payment_id' => $payment->id,
                         'bank_status' => $statusFromBank,
                     ]);
