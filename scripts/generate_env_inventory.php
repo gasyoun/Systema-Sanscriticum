@@ -9,7 +9,6 @@ declare(strict_types=1);
  *   php scripts/generate_env_inventory.php
  *   php scripts/generate_env_inventory.php --check
  */
-
 $root = dirname(__DIR__);
 $outputPath = $root.'/docs/ENVIRONMENT_VARIABLES.md';
 $check = in_array('--check', $argv, true);
@@ -135,6 +134,7 @@ function envDefault(array $tokens, int $start): array
             }
         } elseif ($text === ',' && $depth === 1 && ! $collect) {
             $collect = true;
+
             continue;
         }
 
