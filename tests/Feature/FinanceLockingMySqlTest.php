@@ -29,6 +29,18 @@ class FinanceLockingMySqlTest extends TestCase
 {
     private ?Connection $probe = null;
 
+    /** @var list<int> */
+    private array $createdUserIds = [];
+
+    /** @var list<int> */
+    private array $createdTeacherIds = [];
+
+    /** @var list<int> */
+    private array $createdCourseIds = [];
+
+    /** @var list<int> */
+    private array $createdPromiseIds = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -53,8 +65,13 @@ class FinanceLockingMySqlTest extends TestCase
         $probe = $this->secondConnection();
         DB::statement('SET SESSION innodb_lock_wait_timeout = 1');
 
+        // No RefreshDatabase: second connection must see committed rows to take
+        // InnoDB locks. Fixture cleanup runs in tearDown so sibling MySQL tests
+        // (MutualSettlementTest in the same CI job) do not see leftover acts.
         $user = User::factory()->create();
+        $this->createdUserIds[] = (int) $user->id;
         $course = Course::factory()->create();
+        $this->createdCourseIds[] = (int) $course->id;
         $promise = PaymentPromise::withoutEvents(fn () => PaymentPromise::create([
             'user_id' => $user->id,
             'course_id' => $course->id,
@@ -62,6 +79,7 @@ class FinanceLockingMySqlTest extends TestCase
             'amount' => 4000,
             'status' => PaymentPromise::STATUS_ACTIVE,
         ]));
+        $this->createdPromiseIds[] = (int) $promise->id;
 
         $probe->beginTransaction();
         $probe->select('select id from payment_promises where id = ? for update', [$promise->id]);
@@ -73,6 +91,7 @@ class FinanceLockingMySqlTest extends TestCase
         $probe->rollBack();
 
         $teacher = Teacher::create(['name' => 'Lock probe teacher']);
+        $this->createdTeacherIds[] = (int) $teacher->id;
         $user->update(['teacher_id' => $teacher->id]);
 
         // The user lock is the empty-scope mutex: it serializes two first fixes
@@ -120,6 +139,46 @@ class FinanceLockingMySqlTest extends TestCase
         }
 
         DB::disconnect('mysql_lock_probe');
+        $this->cleanupCommittedFixtures();
+
         parent::tearDown();
+    }
+
+    /**
+     * Second-connection lock probes must commit fixtures on the default
+     * connection; wipe them so later tests in the same MySQL job stay isolated.
+     */
+    private function cleanupCommittedFixtures(): void
+    {
+        if ($this->createdUserIds === [] && $this->createdPromiseIds === []) {
+            return;
+        }
+
+        try {
+            if ($this->createdUserIds !== []) {
+                MutualSettlement::query()->whereIn('user_id', $this->createdUserIds)->delete();
+            }
+            if ($this->createdPromiseIds !== []) {
+                PaymentPromise::withoutEvents(fn () => PaymentPromise::query()
+                    ->whereIn('id', $this->createdPromiseIds)
+                    ->delete());
+            }
+            if ($this->createdUserIds !== []) {
+                User::query()->whereIn('id', $this->createdUserIds)->delete();
+            }
+            if ($this->createdTeacherIds !== []) {
+                Teacher::query()->whereIn('id', $this->createdTeacherIds)->delete();
+            }
+            if ($this->createdCourseIds !== []) {
+                Course::query()->whereIn('id', $this->createdCourseIds)->delete();
+            }
+        } catch (\Throwable) {
+            // Disposable DB only; never fail teardown over cleanup.
+        }
+
+        $this->createdUserIds = [];
+        $this->createdTeacherIds = [];
+        $this->createdCourseIds = [];
+        $this->createdPromiseIds = [];
     }
 }

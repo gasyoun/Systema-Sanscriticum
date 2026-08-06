@@ -5,16 +5,21 @@ declare(strict_types=1);
 /**
  * Generate the canonical inventory of env() keys read by config/*.php.
  *
+ * Output is platform-stable: config files are scanned in path order, locations
+ * are sorted, and key order uses SORT_STRING (not locale-dependent SORT_NATURAL).
+ *
  * Usage:
  *   php scripts/generate_env_inventory.php
  *   php scripts/generate_env_inventory.php --check
  */
-
 $root = dirname(__DIR__);
 $outputPath = $root.'/docs/ENVIRONMENT_VARIABLES.md';
 $check = in_array('--check', $argv, true);
-$entries = [];
 
+/** @var array<string, list<array{path: string, line: int, hasDefault: bool, default: string}>> $occurrences */
+$occurrences = [];
+
+$configFiles = [];
 $iterator = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($root.'/config', FilesystemIterator::SKIP_DOTS)
 );
@@ -25,7 +30,14 @@ foreach ($iterator as $file) {
     }
 
     $relativePath = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1));
-    $tokens = token_get_all((string) file_get_contents($file->getPathname()));
+    $configFiles[] = $relativePath;
+}
+
+// Deterministic scan order (RecursiveDirectoryIterator order differs by OS/FS).
+sort($configFiles, SORT_STRING);
+
+foreach ($configFiles as $relativePath) {
+    $tokens = token_get_all((string) file_get_contents($root.'/'.$relativePath));
     $count = count($tokens);
 
     for ($i = 0; $i < $count; $i++) {
@@ -51,16 +63,38 @@ foreach ($iterator as $file) {
         }
 
         [$hasDefault, $default] = envDefault($tokens, $keyIndex + 1);
-        $entries[$key] ??= [
-            'category' => classify($key, $hasDefault, $default),
-            'default' => $hasDefault ? normalizeDefault($default) : '—',
-            'locations' => [],
+        $occurrences[$key][] = [
+            'path' => $relativePath,
+            'line' => $token[2],
+            'hasDefault' => $hasDefault,
+            'default' => $default,
         ];
-        $entries[$key]['locations'][] = $relativePath.':'.$token[2];
     }
 }
 
-ksort($entries, SORT_NATURAL);
+$entries = [];
+foreach ($occurrences as $key => $rows) {
+    // Stable primary: path then line (not discovery order).
+    usort($rows, static function (array $a, array $b): int {
+        return [$a['path'], $a['line']] <=> [$b['path'], $b['line']];
+    });
+
+    $primary = $rows[0];
+    $locations = [];
+    foreach ($rows as $row) {
+        $locations[] = $row['path'].':'.$row['line'];
+    }
+    $locations = array_values(array_unique($locations));
+
+    $entries[$key] = [
+        'category' => classify($key, $primary['hasDefault'], $primary['default']),
+        'default' => $primary['hasDefault'] ? normalizeDefault($primary['default']) : '—',
+        'locations' => $locations,
+    ];
+}
+
+ksort($entries, SORT_STRING);
+
 $lines = [
     '# Environment variable inventory',
     '',
@@ -75,7 +109,7 @@ $lines = [
 ];
 
 foreach ($entries as $key => $entry) {
-    $locations = implode('<br>', array_unique($entry['locations']));
+    $locations = implode('<br>', $entry['locations']);
     $lines[] = sprintf(
         '| `%s` | %s | `%s` | %s |',
         $key,
@@ -89,6 +123,8 @@ $rendered = implode("\n", $lines)."\n";
 
 if ($check) {
     $current = is_file($outputPath) ? (string) file_get_contents($outputPath) : '';
+    // Normalize CRLF so Windows working trees still match LF-only CI output.
+    $current = str_replace("\r\n", "\n", $current);
     if (! hash_equals($rendered, $current)) {
         fwrite(STDERR, "Environment inventory is stale. Run: php scripts/generate_env_inventory.php\n");
         exit(1);
@@ -135,6 +171,7 @@ function envDefault(array $tokens, int $start): array
             }
         } elseif ($text === ',' && $depth === 1 && ! $collect) {
             $collect = true;
+
             continue;
         }
 

@@ -220,9 +220,10 @@ class MutualSettlementTest extends TestCase
             ->expectsOutputToContain('Ничего не записано')
             ->assertSuccessful();
 
-        // Только чтение: ни акта, ни выплаты.
-        $this->assertSame(0, MutualSettlement::count());
-        $this->assertSame(0, TeacherPayout::count());
+        // Только чтение: ни акта, ни выплаты (скоуп по user — не глобальный count,
+        // иначе чужой мусор из MySQL-job соседей ломает ассерт).
+        $this->assertSame(0, MutualSettlement::query()->where('user_id', $user->id)->count());
+        $this->assertSame(0, TeacherPayout::query()->where('teacher_id', $user->teacher_id)->count());
     }
 
     /** @test */
@@ -274,7 +275,7 @@ class MutualSettlementTest extends TestCase
         $this->assertSame(MutualSettlement::STATUS_SUPERSEDED, $first->fresh()->status);
         $this->assertSame(MutualSettlement::STATUS_FIXED, $second->fresh()->status);
         // История полная — прежняя строка не удалена и не переписана.
-        $this->assertSame(2, MutualSettlement::count());
+        $this->assertSame(2, MutualSettlement::query()->where('user_id', $user->id)->count());
         $this->assertSame(30000.0, (float) $first->fresh()->tuition_amount);
     }
 
@@ -383,7 +384,7 @@ class MutualSettlementTest extends TestCase
             $this->assertStringContainsString('уже использован', $exception->getMessage());
         }
 
-        $this->assertSame(1, MutualSettlement::query()->count());
+        $this->assertSame(1, MutualSettlement::query()->where('user_id', $user->id)->count());
         $this->assertSame(MutualSettlement::STATUS_FIXED, $act->fresh()->status);
     }
 
@@ -400,7 +401,7 @@ class MutualSettlementTest extends TestCase
         $august = $this->service->fix($user, null, null, '2026-08-01', '2026-08-31');
 
         $this->assertSame(MutualSettlement::STATUS_FIXED, $august->status);
-        $this->assertSame(2, MutualSettlement::query()->count());
+        $this->assertSame(2, MutualSettlement::query()->where('user_id', $user->id)->count());
     }
 
     /** @test */
@@ -435,7 +436,10 @@ class MutualSettlementTest extends TestCase
         $available = $this->service->availableForTeacher($teacher);
         $this->assertCount(1, $available);
         $this->assertSame(
-            (int) MutualSettlement::query()->fixed()->value('id'),
+            (int) MutualSettlement::query()
+                ->where('user_id', $user->id)
+                ->fixed()
+                ->value('id'),
             $available[0]['settlement_id'],
         );
     }
