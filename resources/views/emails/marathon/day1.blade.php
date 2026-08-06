@@ -11,7 +11,7 @@
 
         <p style="font-size: 17px;">Здравствуйте!</p>
 
-        <p style="font-size: 17px;">Ваш первый день ждет вас. Внутри — три коротких вопроса-узнавания: вы услышите, что veda — то же слово, что русское «ведать», а matar — «мать». Санскрит и русский — родня, и это не метафора.</p>
+        <p style="font-size: 17px;">Ваш первый день ждет вас. Внутри — три коротких вопроса-узнавания: вы услышите, что veda — то же слово, что русское «ведать», а mātar — «мать». Санскрит и русский — родня, и это не метафора.</p>
 
         <div style="text-align: center; margin: 32px 0;">
             <a href="{{ $link }}" style="background-color: #E85C24; color: #ffffff; padding: 14px 35px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 15px; display: inline-block;">Открыть День 1</a>

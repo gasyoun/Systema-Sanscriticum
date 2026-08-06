@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2318: Marathon konsultaciya channel/landing copy edits (MG).** TG post 1 header → `🗣 БЕСПЛАТНАЯ КОНСУЛЬТАЦИЯ ПО ОНЛАЙН-КУРСАМ`; `matar`/`bhratar` → `mātar`/`bhrātar`; Day 2 line «как собрано» → «из чего состоит»; pace line «Темп личный» → «Темп тот, в котором студенту удобно»; drop accidental line-break mid-phrase after «маршрут». Source of truth: `config/marathon_landing_copy.php` + marketing/marathon-2026-08 md/html. After deploy: `php artisan marathon:apply-landing-copy a` (or active variant) to upsert `LandingPage`. Channel post 1 text is used by `marathon:publish-channel-posts` (scheduled; already-sent rows stay as published). Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.87.4] - 2026-08-06
 ### Fixed
 - **H2215 residual: German PayPal P2P email paste.** Parser now reads `Transaktionscode` / `Transaktionsdatum` (value on next line), glued `EUR70.00`, and `4. August 2026`; prefers sent USD/EUR over CHF conversion lines; still never invents `paypal_payer` when the dump has no from-account. Fixture `de_p2p_email_mg.txt` (MG sample). Executor: Grok 4.5 (`grok-4.5`).
