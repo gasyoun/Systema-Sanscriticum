@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Group;
 use App\Models\Schedule;
+use App\Models\ScheduleAttendanceNotice;
 use App\Models\ScheduleJoinClick;
 use App\Models\User;
 use App\Models\WebinarAttendance;
@@ -36,12 +37,21 @@ class ClassAttendanceService
         $attendances = $schedule->attendances()->get();
         $byUser = $attendances->whereNotNull('user_id')->groupBy('user_id');
         $clicks = $schedule->joinClicks()->get()->keyBy('user_id');
+        $notices = ScheduleAttendanceNotice::query()
+            ->where('schedule_id', $schedule->id)
+            ->get()
+            ->keyBy('user_id');
 
-        $roster = $expected->map(function (User $u) use ($byUser, $clicks): array {
+        $roster = $expected->map(function (User $u) use ($byUser, $clicks, $notices): array {
             $att = $byUser->get($u->id);
             $click = $clicks->get($u->id);
+            $row = $this->row($u, $att, $click);
+            $notice = $notices->get($u->id);
+            $row['notice'] = $notice;
+            $row['notice_status'] = $notice?->status;
+            $row['notice_label'] = $notice?->labelRu();
 
-            return $this->row($u, $att, $click);
+            return $row;
         })->values();
 
         $guests = $attendances->whereNull('user_id')->values();
@@ -55,6 +65,7 @@ class ClassAttendanceService
                 'clicked' => $roster->where('status', 'clicked')->count(),
                 'absent' => $roster->where('status', 'absent')->count(),
                 'guests' => $guests->count(),
+                'noticed' => $roster->whereNotNull('notice_status')->count(),
             ],
         ];
     }

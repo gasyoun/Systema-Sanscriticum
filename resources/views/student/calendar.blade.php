@@ -14,6 +14,11 @@
             Ваш личный календарь предстоящих вебинаров и онлайн-встреч.
         </p>
         <div class="w-16 h-1.5 bg-[#E85C24] rounded-full mt-4"></div>
+        @if(session('attendance_notice_status'))
+            <p class="mt-3 text-sm font-semibold text-green-700 bg-green-50 border border-green-100 rounded-xl px-3 py-2">
+                {{ session('attendance_notice_status') }}
+            </p>
+        @endif
     </div>
 
     {{-- Подписка на Google Calendar / iCal (Phase 1 фида, без OAuth) --}}
@@ -144,6 +149,49 @@
                                             </span>
                                         @endif
                                     </a>
+                                @endif
+
+                                {{-- H2317: предупредить куратора заранее --}}
+                                @if(!empty($attendanceNoticesEnabled))
+                                    @php
+                                        /** @var \App\Models\ScheduleAttendanceNotice|null $myNotice */
+                                        $myNotice = $myNotices[$event->id] ?? null;
+                                    @endphp
+                                    <div class="rounded-xl border border-gray-100 bg-gray-50/80 p-2.5 space-y-2">
+                                        <p class="text-[11px] font-bold uppercase tracking-wide text-gray-500 px-0.5">
+                                            Если не сможете быть как обычно
+                                        </p>
+                                        @if($myNotice)
+                                            <div class="flex items-center justify-between gap-2 px-1">
+                                                <span class="text-xs font-semibold text-[#101010]">
+                                                    {{ $myNotice->emoji() }} {{ $myNotice->labelRu() }}
+                                                </span>
+                                                <form method="POST" action="{{ route('student.calendar.notice.destroy', $event) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="text-[11px] font-bold text-gray-500 hover:text-[#E85C24] underline-offset-2 hover:underline">
+                                                        Снять
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @endif
+                                        <div class="grid grid-cols-2 gap-1.5">
+                                            @foreach($noticeOptions as $opt)
+                                                <form method="POST" action="{{ route('student.calendar.notice.store', $event) }}">
+                                                    @csrf
+                                                    <input type="hidden" name="status" value="{{ $opt['status'] }}">
+                                                    <button type="submit"
+                                                            class="w-full px-2 py-2 text-[11px] md:text-xs font-bold rounded-lg border transition-all
+                                                            {{ $myNotice && $myNotice->status === $opt['status']
+                                                                ? 'bg-[#E85C24] border-[#E85C24] text-white'
+                                                                : 'bg-white border-gray-200 text-gray-700 hover:border-[#E85C24]/50 hover:text-[#E85C24]' }}">
+                                                        {{ $opt['emoji'] }} {{ $opt['short'] }}
+                                                    </button>
+                                                </form>
+                                            @endforeach
+                                        </div>
+                                    </div>
                                 @endif
 
                                 @if($event->course)

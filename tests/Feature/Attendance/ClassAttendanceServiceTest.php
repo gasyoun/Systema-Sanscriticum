@@ -47,7 +47,14 @@ class ClassAttendanceServiceTest extends TestCase
 
         $result = app(ClassAttendanceService::class)->forSchedule($schedule);
 
-        $this->assertSame(['expected' => 3, 'present' => 1, 'clicked' => 1, 'absent' => 1, 'guests' => 1], $result['summary']);
+        $this->assertSame([
+            'expected' => 3,
+            'present' => 1,
+            'clicked' => 1,
+            'absent' => 1,
+            'guests' => 1,
+            'noticed' => 0,
+        ], $result['summary']);
 
         $byName = $result['roster']->keyBy(fn ($r) => $r['user']->name);
         $this->assertSame('present', $byName['Present']['status']);

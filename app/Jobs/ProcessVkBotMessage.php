@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\ChatMessage;
+use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\StudentSelfService;
@@ -135,6 +136,29 @@ final class ProcessVkBotMessage implements ShouldQueue
             $this->sendVkMessage($vkId, $menu);
 
             return;
+        }
+
+        // SELF-SERVICE: предупреждение о занятии (H2317).
+        if (app(StudentSelfService::class)->matchesAttendanceNoticeIntent($text)) {
+            $reply = app(StudentSelfService::class)->handleAttendanceNotice(
+                $user,
+                $text,
+                ScheduleAttendanceNotice::SOURCE_VK,
+            );
+
+            if ($reply['ok'] && $reply['text'] !== '') {
+                ChatMessage::create([
+                    'user_id' => $user->id,
+                    'role' => 'bot',
+                    'text' => $reply['text'],
+                    'is_read' => true,
+                    'source' => 'vk',
+                ]);
+
+                $this->sendVkMessage($vkId, $reply['text']);
+
+                return;
+            }
         }
 
         // ПРОВЕРКА: Если бот на паузе (отвечает человек)

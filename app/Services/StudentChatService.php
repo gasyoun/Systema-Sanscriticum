@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\ChatMessage;
+use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\StudentSelfService;
@@ -98,6 +99,20 @@ class StudentChatService
             $this->botSay($user, $this->selfService->helpMenu());
 
             return;
+        }
+
+        // 1.8. Self-service: предупреждение о занятии (H2317).
+        if ($this->selfService->matchesAttendanceNoticeIntent($text)) {
+            $reply = $this->selfService->handleAttendanceNotice(
+                $user,
+                $text,
+                ScheduleAttendanceNotice::SOURCE_CABINET,
+            );
+            if ($reply['ok'] && $reply['text'] !== '') {
+                $this->botSay($user, $reply['text']);
+
+                return;
+            }
         }
 
         // 2. Режим человека уже включён — ИИ молчит, ждём куратора.

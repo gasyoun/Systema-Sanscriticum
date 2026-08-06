@@ -129,4 +129,49 @@ class StudentSelfServiceIntentTest extends TestCase
             [''],
         ];
     }
+
+    /**
+     * @dataProvider matchingAttendanceNoticePhrases
+     */
+    public function test_recognises_attendance_notice_intent(string $text): void
+    {
+        $this->assertTrue(
+            $this->service->matchesAttendanceNoticeIntent($text),
+            "Должно распознать: {$text}",
+        );
+    }
+
+    /**
+     * @dataProvider nonMatchingAttendanceNoticePhrases
+     */
+    public function test_ignores_non_attendance_notice_questions(string $text): void
+    {
+        $this->assertFalse(
+            $this->service->matchesAttendanceNoticeIntent($text),
+            "Не должно перехватывать: {$text}",
+        );
+    }
+
+    public static function matchingAttendanceNoticePhrases(): array
+    {
+        return [
+            ['не смогу на урок'],
+            ['/absent'],
+            ['опоздаю'],
+            ['уйду раньше'],
+            ['возможно не буду'],
+            ['проблемная связь'],
+            ['буду на уроке'],
+        ];
+    }
+
+    public static function nonMatchingAttendanceNoticePhrases(): array
+    {
+        return [
+            ['Сколько стоит курс?'],
+            ['мои группы'],
+            ['привет'],
+            [''],
+        ];
+    }
 }

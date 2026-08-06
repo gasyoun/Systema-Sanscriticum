@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\GamesSrsOnboardingController;
 use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\HeartbeatController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\AttendanceNoticeController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CalendarFeedController;
@@ -361,6 +362,14 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::get('/calendar', [StudentController::class, 'calendar'])->name('student.calendar');
     Route::post('/calendar/feed/regenerate', [CalendarFeedController::class, 'regenerate'])
         ->name('student.calendar.feed.regenerate');
+    // H2317 — предварительное предупреждение о занятии (не приду / не уверен /
+    // опоздаю / уйду раньше). Контроллер 404 при features.attendance_notices OFF.
+    Route::post('/calendar/{schedule}/notice', [AttendanceNoticeController::class, 'store'])
+        ->whereNumber('schedule')
+        ->name('student.calendar.notice.store');
+    Route::delete('/calendar/{schedule}/notice', [AttendanceNoticeController::class, 'destroy'])
+        ->whereNumber('schedule')
+        ->name('student.calendar.notice.destroy');
     Route::get('/dvaram', [StudentController::class, 'dashboard'])->name('student.dashboard');
 
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');

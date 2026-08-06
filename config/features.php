@@ -214,6 +214,15 @@ return [
     'attendance_dashboard' => (bool) env('ATTENDANCE_DASHBOARD', false),
 
     /*
+     | Предварительные предупреждения студента о занятии (H2317): «не приду /
+     | не уверен / опоздаю / уйду раньше» из личного кабинета (календарь) и
+     | self-service бота TG/VK (в т.ч. короткий текст в чате группы). ВЫКЛ по
+     | умолчанию — deploy-рубильник. Миграция schedule_attendance_notices
+     | аддитивная; пока флаг OFF UI и перехват фраз no-op.
+     */
+    'attendance_notices' => (bool) env('ATTENDANCE_NOTICES', false),
+
+    /*
      | Дашборд наблюдаемости поддержки (W3.3, H597): здоровье userbot-сессий,
      | лаг синка, доля успешной доставки исходящих, объём обращений к LLM —
      | read-only поверх существующих агрегатов (SupportDailyRollup,
