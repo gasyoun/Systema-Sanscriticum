@@ -23,5 +23,12 @@
   "partial_txn_only.txt": {
     "paypal_txn": "2BC34567DE890123F",
     "must_be_null": ["paypal_payer", "paid_on", "foreign_amount", "foreign_currency"]
+  },
+  "de_p2p_email_mg.txt": {
+    "paid_on": "2026-08-04",
+    "foreign_amount": "70",
+    "foreign_currency": "EUR",
+    "paypal_txn": "3D635703TJ2339610",
+    "must_be_null": ["paypal_payer"]
   }
 }

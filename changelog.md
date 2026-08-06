@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Fixed
+- **H2215 residual: German PayPal P2P email paste.** Parser now reads `Transaktionscode` / `Transaktionsdatum` (value on next line), glued `EUR70.00`, and `4. August 2026`; prefers sent USD/EUR over CHF conversion lines; still never invents `paypal_payer` when the dump has no from-account. Fixture `de_p2p_email_mg.txt` (MG sample). Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.87.3] - 2026-08-06
 ### Added

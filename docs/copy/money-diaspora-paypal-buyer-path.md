@@ -2,6 +2,8 @@
 
 _Created: 20-07-2026 · Last updated: 06-08-2026_
 
+_Parser residual (same day): DE P2P email sample retune after H2215 ship._
+
 Лейн H1292 волны revenue-copy
 ([план](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_SYSTEMA_REVENUE_COPY_FABLE_WAVE_2026H2.md) ·
 [контракт голоса](https://github.com/gasyoun/Uprava/blob/main/docs/ARCHITECTURE_SYSTEMA_REVENUE_COPY_VOICE_CONTRACT.md) ·
@@ -97,7 +99,12 @@ Txn id and screenshot are optional helpers, not substitutes for the triple.
 не отправляется сама — студент проверяет и жмет «Отправить уведомление…».
 Серверная валидация `StorePaypalClaimRequest` без изменений. Фикстуры EN/RU:
 [`tests/fixtures/paypal_claim_paste/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/fixtures/paypal_claim_paste).
-MG-supplied anonymized real paste still open for retune (handoff sample empty at ship).
+**Primary real sample (MG 06-08-2026, DE P2P email):** fixture
+[`tests/fixtures/paypal_claim_paste/de_p2p_email_mg.txt`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/fixtures/paypal_claim_paste/de_p2p_email_mg.txt)
+— fills **date + EUR amount + txn**; **from-account is absent** in this dump (sender
+mail has no payer email), so the student still types `paypal_payer` by hand.
+CHF conversion/fee lines are ignored (form only accepts USD/EUR). EN/RU synthetic
+fixtures remain regression coverage.
 
 ### Страница заявки (`paypal/claim.blade.php`)
 
