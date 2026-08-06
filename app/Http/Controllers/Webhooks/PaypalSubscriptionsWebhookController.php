@@ -331,7 +331,6 @@ final class PaypalSubscriptionsWebhookController extends Controller
      * Fail closed so PayPal retries after commitment configuration is repaired.
      *
      * @param  array<string, mixed>  $context
-     * @return never
      */
     private function rejectCharge(string $reason, string $eventId, array $context = []): never
     {
