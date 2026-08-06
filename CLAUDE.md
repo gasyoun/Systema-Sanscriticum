@@ -384,6 +384,25 @@ H2110. `/dvaram/reading{,/slug}` рендерит пакеты чтения дл
 (тот же флаг, что у H2105/H2110/H2111), **не** `config('srs.enabled')` — H2106
 фенс явно запрещает трогать глобальный SRS-флаг.
 
+**Кнопка «в колоду» в панели слова (H2111).** `POST /dvaram/reading/{slug}/srs`
+(`ReadingPackController::addToSrs`) добавляет лемму нажатого слова в ту же приватную
+колоду когорты. Гейт — тот же двойной, что у чтения (флаг + entitlement), и снова
+**не** `config('srs.enabled')`. Два свойства, которые нельзя потерять при правке:
+
+1. **Клиент присылает только ПОЗИЦИИ** (индекс предложения + индекс токена), никогда
+   лемму, глоссу или slp1. Текст карточки читается на сервере из sha256-пиннутого
+   фриза, поэтому подделанный POST не запишет в чужую колоду произвольную строку.
+2. **Определение колоды — одно.** Слаг, note type, список полей и ключ дедупликации
+   `pack|lemma_slp1` живут в
+   [`app/Support/StartChteniyaSrsDeck.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/StartChteniyaSrsDeck.php)
+   и используются и командой H2106, и этой кнопкой. Не заводите вторую копию: разъехавшись,
+   массовый импорт и кнопка дали бы две колоды или два экземпляра одной леммы.
+
+Токен без `lemma` кнопки не получает — читалка деградирует, а не требует всегда включённого
+каскадного лемматизатора (H1463): «require lemmatizer always-on» — это прямо описанный
+режим отказа H2111. Публичная `/reading/kosha-demo` рендерит тот же партиал без opt-in
+переменной `$srsAdd`, поэтому её вывод не меняется.
+
 ### Landing Page Builder
 
 `LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.

@@ -403,6 +403,14 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->name('student.reading.pack')
         ->where('slug', '[a-z0-9\-]+');
 
+    // H2111 — «в колоду» from the tap-token panel. Same gate as the reader (flag +
+    // entitlement, checked per request inside the controller), deliberately NOT behind
+    // config('srs.enabled'): collecting a card must not require flipping the global SRS
+    // switch (H2106 fence).
+    Route::post('/dvaram/reading/{slug}/srs', [ReadingPackController::class, 'addToSrs'])
+        ->name('student.reading.srs.add')
+        ->where('slug', '[a-z0-9\-]+');
+
     // H1680 — Wave 2: cabinet skill-drill strip, DISTINCT from the FSRS
     // review loop above (/dvaram/koloda) — short /lila drills linked from the
     // cabinet, no spaced-repetition scheduling here. Behind its own flag
