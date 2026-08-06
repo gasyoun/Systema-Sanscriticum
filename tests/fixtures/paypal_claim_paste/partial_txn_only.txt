@@ -1,0 +1,2 @@
+Transaction ID: 2BC34567DE890123F
+Some other text without amount or date or from.
