@@ -1,12 +1,16 @@
 # Домашние задания в личном кабинете — инструкция для учеников
 
-_Created: 01-08-2026 · Last updated: 02-08-2026_
+_Created: 01-08-2026 · Last updated: 06-08-2026_
 
 **Публичная страница (можно без входа, для чата группы):**
 [https://samskrte.ru/faq/dz](https://samskrte.ru/faq/dz)
 
 **Черновики Telegram-постов для чатов/канала:**
 [marketing/homework-telegram-posts.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/homework-telegram-posts.md)
+
+**Если сайт / сдача ДЗ лежат у многих** (не «формы нет, потому что приём не открыт»):  
+[samskrte.ru/uptime](https://samskrte.ru/uptime) · тэг [@rusamskrtam](https://t.me/rusamskrtam).  
+Преподавателям: [TEACHER_SITE_DOWN_CHEATSHEET_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TEACHER_SITE_DOWN_CHEATSHEET_RU.md).
 
 Старый адрес `/help/homework` редиректит сюда же (301).
 

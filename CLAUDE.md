@@ -20,6 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Humans (RU):**  
   [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md)  
   §1 students/teachers → [samskrte.ru/uptime](https://samskrte.ru/uptime) + tag `@rusamskrtam`;  
+  teacher pin/cheatsheet → [TEACHER_SITE_DOWN_CHEATSHEET_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TEACHER_SITE_DOWN_CHEATSHEET_RU.md) · [teacher-site-down-telegram-pin.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/teacher-site-down-telegram-pin.md);  
   §2 Ivan/Marcis (red monitors; Artem only via ops). Mirror: `uptime/` on GitHub Pages.
 - **OS resource guards (OOM/cron):**  
   [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)

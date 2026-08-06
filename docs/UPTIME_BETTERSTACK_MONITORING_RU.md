@@ -1,6 +1,6 @@
 # Если сайт не открывается (Better Stack + Telegram)
 
-_Создано: 30-07-2026 · Обновлено: 30-07-2026_
+_Создано: 30-07-2026 · Обновлено: 06-08-2026_
 
 Три аудитории — **не смешивать**:
 
@@ -64,6 +64,11 @@ VPN: вкл / выкл
 ### Преподаватели
 
 То же, что ученики. Если у **всей группы** не открывается — напишите в чат `@rusamskrtam` и кратко «у N человек».
+
+**Шпаргалка + текст для закрепа в TG:**  
+[TEACHER_SITE_DOWN_CHEATSHEET_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TEACHER_SITE_DOWN_CHEATSHEET_RU.md) ·  
+[marketing/teacher-site-down-telegram-pin.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/teacher-site-down-telegram-pin.md)  
+(авто-алерт «сайт упал» преподавателям **не** приходит — только чат + `@rusamskrtam`).
 
 ---
 
