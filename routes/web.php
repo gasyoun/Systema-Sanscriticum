@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\GamesSrsOnboardingController;
 use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\HeartbeatController;
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\AttendanceNoticeController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CalendarFeedController;
@@ -286,6 +287,10 @@ Route::view('/vozvrat', 'docs.vozvrat')->name('refund.show');
 // FAQ: как сдавать ДЗ — публично (удобно для ссылки в чат группы; без входа).
 Route::view('/faq/dz', 'faq.dz')->name('faq.dz');
 
+// FAQ: способы оплаты, рассрочка, что делать, если платёж не проходит — публично
+// (H2060, linked from student.access recovery CTA behind payment_recovery_cta).
+Route::view('/faq/payment', 'faq.payment')->name('faq.payment');
+
 // Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
 // До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.
 Route::view('/uptime', 'uptime')->name('uptime.show');
@@ -357,6 +362,14 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::get('/calendar', [StudentController::class, 'calendar'])->name('student.calendar');
     Route::post('/calendar/feed/regenerate', [CalendarFeedController::class, 'regenerate'])
         ->name('student.calendar.feed.regenerate');
+    // H2317 — предварительное предупреждение о занятии (не приду / не уверен /
+    // опоздаю / уйду раньше). Контроллер 404 при features.attendance_notices OFF.
+    Route::post('/calendar/{schedule}/notice', [AttendanceNoticeController::class, 'store'])
+        ->whereNumber('schedule')
+        ->name('student.calendar.notice.store');
+    Route::delete('/calendar/{schedule}/notice', [AttendanceNoticeController::class, 'destroy'])
+        ->whereNumber('schedule')
+        ->name('student.calendar.notice.destroy');
     Route::get('/dvaram', [StudentController::class, 'dashboard'])->name('student.dashboard');
 
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
@@ -397,6 +410,14 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::get('/dvaram/reading/{slug}', [ReadingPackController::class, 'cabinetShow'])
         ->name('student.reading.pack')
+        ->where('slug', '[a-z0-9\-]+');
+
+    // H2111 — «в колоду» from the tap-token panel. Same gate as the reader (flag +
+    // entitlement, checked per request inside the controller), deliberately NOT behind
+    // config('srs.enabled'): collecting a card must not require flipping the global SRS
+    // switch (H2106 fence).
+    Route::post('/dvaram/reading/{slug}/srs', [ReadingPackController::class, 'addToSrs'])
+        ->name('student.reading.srs.add')
         ->where('slug', '[a-z0-9\-]+');
 
     // H1680 — Wave 2: cabinet skill-drill strip, DISTINCT from the FSRS

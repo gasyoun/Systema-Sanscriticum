@@ -36,6 +36,9 @@
                     @if (! empty($debt->debt_label))
                         <p class="text-sm text-gray-600 mt-1">{{ $debt->debt_label }}</p>
                     @endif
+                    @if (config('features.payment_recovery_cta') && is_array($opts) && ! empty($opts['next']['amount']))
+                        <p class="text-sm text-gray-500 mt-1">К оплате: {{ number_format((float) $opts['next']['amount'], 0, ',', ' ') }} ₽</p>
+                    @endif
                     @if (is_array($opts) && ! empty($opts['renew']))
                         <a href="{{ $opts['renew']['url'] ?? '#' }}"
                            class="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#E85C24] text-white text-sm font-bold">
@@ -46,6 +49,21 @@
                            class="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#E85C24] text-white text-sm font-bold">
                             Внести платёж
                         </a>
+                    @endif
+
+                    {{-- H2060: FAQ payment link + curator contact + installment CTA copy, behind payment_recovery_cta --}}
+                    @if (config('features.payment_recovery_cta'))
+                        <div class="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-600 leading-relaxed" data-testid="payment-recovery-cta">
+                            <p>
+                                Если вопрос в сумме — можно оформить курс в рассрочку вместо разового платежа.
+                                А если остались сомнения или вопросы по программе — куратор с радостью ответит лично.
+                            </p>
+                            <p class="mt-2">
+                                <a href="{{ route('faq.payment') }}" class="text-[#E85C24] underline hover:no-underline">Как оплатить / если платёж не прошёл</a>
+                                &middot;
+                                <a href="https://t.me/rusamskrtam" class="text-[#E85C24] underline hover:no-underline">Написать куратору</a>
+                            </p>
+                        </div>
                     @endif
                 </article>
             @endforeach

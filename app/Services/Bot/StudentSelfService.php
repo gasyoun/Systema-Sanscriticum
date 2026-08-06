@@ -7,6 +7,7 @@ namespace App\Services\Bot;
 use App\Models\HomeworkSubmission;
 use App\Models\Schedule;
 use App\Models\User;
+use App\Services\AttendanceNoticeService;
 
 /**
  * Детерминированные self-service ответы студенту в боте (TG/VK) — данные, которые
@@ -15,6 +16,12 @@ use App\Models\User;
  */
 class StudentSelfService
 {
+    public function __construct(
+        private ?AttendanceNoticeService $attendanceNotices = null,
+    ) {
+        $this->attendanceNotices ??= app(AttendanceNoticeService::class);
+    }
+
     /**
      * Точные фразы-команды «покажи мои группы».
      *
@@ -101,11 +108,40 @@ class StudentSelfService
      */
     public function helpMenu(): string
     {
+        $noticeLine = "📅 <b>не смогу на урок</b> / <b>опоздаю</b> / <b>уйду раньше</b> / <b>возможно не буду</b> — предупредить о занятии заранее\n"
+            ."   (или /absent · /late · /early · /maybe · /coming)\n";
+
         return "🤖 <b>Что я умею</b>\n\n"
             ."📚 <b>мои группы</b> — ваши группы, курсы и ближайшее занятие\n"
             ."📝 <b>мои задания</b> — статус домашних работ\n"
+            .$noticeLine
             ."🙋 «позови куратора» — переключиться на живого человека\n\n"
             .'Обычные вопросы по обучению, курсам, оплате и доступу я тоже понимаю — просто напишите их своими словами.';
+    }
+
+    /**
+     * Предупреждение о ближайшем занятии (H2317): не приду / не уверен / опоздаю / уйду раньше.
+     */
+    public function matchesAttendanceNoticeIntent(string $text): bool
+    {
+        return $this->attendanceNotices->matchIntent($text) !== null;
+    }
+
+    /**
+     * @return array{ok: bool, text: string}
+     */
+    public function handleAttendanceNotice(
+        User $user,
+        string $text,
+        string $source = 'telegram',
+        ?int $preferGroupId = null,
+    ): array {
+        $result = $this->attendanceNotices->handleBotMessage($user, $text, $source, $preferGroupId);
+
+        return [
+            'ok' => $result['ok'],
+            'text' => $result['text'],
+        ];
     }
 
     /**

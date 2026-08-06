@@ -12,7 +12,7 @@ total, 2 columns (`col_a`/`col_b`).
 Content is noun-declension paradigm drilling, one stem class per level —
 inflected forms in `col_a`, case/number gloss (in the source lemma's terms,
 e.g. "N., sg.") in `col_b`. See
-[H1442](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1442-Sonnet_Systema_memrise-grammar-tables-buhler-roadmap_22.07.26.md)
+[H1442](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1442-Sonnet_Systema_memrise-grammar-tables-buhler-roadmap_22.07.26.md)
 for the development roadmap.
 
 _Dr. Mārcis Gasūns_

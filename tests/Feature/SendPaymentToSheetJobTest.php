@@ -8,6 +8,7 @@ use App\Jobs\SendPaymentToSheetJob;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\User;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -26,6 +27,15 @@ class SendPaymentToSheetJobTest extends TestCase
         parent::setUp();
         Queue::fake();
         Mail::fake();
+    }
+
+    /** @test */
+    public function synchronization_is_queued_only_after_the_payment_transaction_commits(): void
+    {
+        $this->assertInstanceOf(
+            ShouldQueueAfterCommit::class,
+            new SendPaymentToSheetJob(1, 'create'),
+        );
     }
 
     /** @test */

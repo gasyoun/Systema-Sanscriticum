@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Webhooks;
 
+use App\Enums\BillingCommitmentStatus;
 use App\Enums\BillingSubscriptionStatus;
 use App\Http\Controllers\Controller;
+use App\Models\BillingCommitment;
 use App\Models\BillingSubscription;
 use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
@@ -94,9 +96,6 @@ final class PaypalSubscriptionsWebhookController extends Controller
                 } elseif ($eventType === 'PAYMENT.SALE.COMPLETED'
                     || $eventType === 'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED') {
                     $payment = $this->materialisePaidCharge($resource, $eventId, $reportedAmount);
-                    if ($payment === null) {
-                        $decision = PaymentWebhookEvent::DECISION_UNMATCHED;
-                    }
                 } else {
                     $decision = PaymentWebhookEvent::DECISION_UNMATCHED;
                     Log::info('paypal_subscriptions.webhook.unhandled_event', [
@@ -161,7 +160,7 @@ final class PaypalSubscriptionsWebhookController extends Controller
     /**
      * Charge → Payment (provider=paypal_subscription). Reuses fireOnPaid via status=paid.
      */
-    private function materialisePaidCharge(array $resource, string $eventId, ?float $reportedAmount): ?Payment
+    private function materialisePaidCharge(array $resource, string $eventId, ?float $reportedAmount): Payment
     {
         $providerSubId = '';
         foreach (['billing_agreement_id', 'subscription_id'] as $key) {
@@ -172,7 +171,7 @@ final class PaypalSubscriptionsWebhookController extends Controller
         }
 
         if ($providerSubId === '') {
-            return null;
+            $this->rejectCharge('missing_subscription_id', $eventId);
         }
 
         $sub = BillingSubscription::query()
@@ -182,15 +181,11 @@ final class PaypalSubscriptionsWebhookController extends Controller
             ->first();
 
         if ($sub === null) {
-            Log::warning('paypal_subscriptions.webhook.charge_unmatched_subscription', [
+            $this->rejectCharge('unmatched_subscription', $eventId, [
                 'provider_subscription_id' => $providerSubId,
-                'event_id' => $eventId,
             ]);
-
-            return null;
         }
 
-        $amount = $reportedAmount ?? (float) $sub->amount_rub;
         $saleId = (string) ($resource['id'] ?? $eventId);
 
         $existing = Payment::query()
@@ -200,21 +195,83 @@ final class PaypalSubscriptionsWebhookController extends Controller
             ->first();
 
         if ($existing !== null) {
-            if ($existing->status !== 'paid') {
-                $existing->update(['status' => 'paid']);
+            $commitment = BillingCommitment::query()
+                ->where('billing_subscription_id', $sub->id)
+                ->where('payment_id', $existing->id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($commitment === null) {
+                $this->rejectCharge('existing_payment_without_commitment', $eventId, [
+                    'payment_id' => $existing->id,
+                    'sale_id' => $saleId,
+                ]);
             }
 
-            return $existing->fresh();
+            return $existing;
+        }
+
+        $commitments = BillingCommitment::query()
+            ->where('billing_subscription_id', $sub->id)
+            ->where('status', BillingCommitmentStatus::Scheduled)
+            ->where(function ($query): void {
+                $query->whereNull('due_on')->orWhereDate('due_on', '<=', today());
+            })
+            ->orderByRaw('due_on IS NULL')
+            ->orderBy('due_on')
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->limit(2)
+            ->get();
+
+        if ($commitments->count() !== 1) {
+            $this->rejectCharge(
+                $commitments->isEmpty() ? 'unmatched_commitment' : 'ambiguous_commitment',
+                $eventId,
+                [
+                    'billing_subscription_id' => $sub->id,
+                    'candidate_commitment_ids' => $commitments->pluck('id')->all(),
+                ],
+            );
+        }
+
+        /** @var BillingCommitment $commitment */
+        $commitment = $commitments->sole();
+        $accessKey = $commitment->access_key ?: $commitment->tariff?->accessKey();
+
+        if ($commitment->user_id !== $sub->user_id
+            || ($commitment->course_id !== null && empty($accessKey))) {
+            $this->rejectCharge('invalid_commitment', $eventId, [
+                'billing_subscription_id' => $sub->id,
+                'commitment_id' => $commitment->id,
+            ]);
+        }
+
+        $foreignCurrency = $this->extractCurrency($resource);
+        if ($reportedAmount === null || $foreignCurrency === null) {
+            $this->rejectCharge('incomplete_provider_amount', $eventId, [
+                'billing_subscription_id' => $sub->id,
+                'commitment_id' => $commitment->id,
+            ]);
         }
 
         $payment = Payment::create([
-            'user_id' => $sub->user_id,
-            'course_id' => $sub->course_id,
-            'amount' => $amount,
-            'tariff' => 'subscription',
+            'user_id' => $commitment->user_id,
+            'course_id' => $commitment->course_id,
+            'amount' => $commitment->amount_rub,
+            'foreign_amount' => $reportedAmount,
+            'foreign_currency' => $foreignCurrency,
+            'tariff' => $accessKey,
+            'start_block' => $commitment->start_block,
+            'end_block' => $commitment->end_block,
             'status' => 'paid',
             'provider' => Payment::PROVIDER_PAYPAL_SUBSCRIPTION,
             'transaction_id' => $saleId,
+        ]);
+
+        $commitment->update([
+            'status' => BillingCommitmentStatus::Charged,
+            'payment_id' => $payment->id,
         ]);
 
         if ($sub->status !== BillingSubscriptionStatus::Active) {
@@ -224,6 +281,7 @@ final class PaypalSubscriptionsWebhookController extends Controller
         Log::info('paypal_subscriptions.webhook.payment_paid', [
             'payment_id' => $payment->id,
             'subscription_id' => $sub->id,
+            'commitment_id' => $commitment->id,
             'event_id' => $eventId,
         ]);
 
@@ -249,5 +307,39 @@ final class PaypalSubscriptionsWebhookController extends Controller
         }
 
         return null;
+    }
+
+    private function extractCurrency(array $resource): ?string
+    {
+        $candidates = [
+            data_get($resource, 'amount.currency'),
+            data_get($resource, 'amount.currency_code'),
+            data_get($resource, 'amount.gross_amount.currency_code'),
+            data_get($resource, 'billing_info.last_payment.amount.currency_code'),
+        ];
+
+        foreach ($candidates as $raw) {
+            if (is_string($raw) && trim($raw) !== '') {
+                return strtoupper(trim($raw));
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Fail closed so PayPal retries after commitment configuration is repaired.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function rejectCharge(string $reason, string $eventId, array $context = []): never
+    {
+        Log::alert('paypal_subscriptions.webhook.charge_rejected', [
+            'reason' => $reason,
+            'event_id' => $eventId,
+            ...$context,
+        ]);
+
+        throw new \RuntimeException("PayPal charge rejected: {$reason}");
     }
 }

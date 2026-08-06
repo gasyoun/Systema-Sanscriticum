@@ -38,6 +38,7 @@ DEST_DIR = os.path.join(HERE, 'resources', 'data', 'cohort_start_chteniya')
 # slug -> destination filename. Deliberately a subset of the freeze: see docstring.
 VENDOR = {
     'hitopadesa-0': 'hitopadesa-0.json',
+    'lemmas-for-srs': 'lemmas_for_srs.tsv',
 }
 
 

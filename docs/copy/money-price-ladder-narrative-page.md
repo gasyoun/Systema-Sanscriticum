@@ -2,7 +2,7 @@
 
 _Created: 20-07-2026 · Last updated: 20-07-2026_
 
-Лейн волны revenue-copy ([H1293](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1293-Fable_Systema-Sanscriticum_money-price-ladder-narrative-page_19.07.26.md),
+Лейн волны revenue-copy ([H1293](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1293-Fable_Systema-Sanscriticum_money-price-ladder-narrative-page_19.07.26.md),
 исполнитель Fable 5 `claude-fable-5`). До лейна витрина
 [/online](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/shop/index.blade.php)
 не показывала ни одной цены, а сравнить блок с целым курсом было негде: цены

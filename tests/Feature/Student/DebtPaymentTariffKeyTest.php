@@ -6,6 +6,7 @@ namespace Tests\Feature\Student;
 
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
@@ -47,6 +48,9 @@ class DebtPaymentTariffKeyTest extends TestCase
     private function courseWithBlocks(int $count): Course
     {
         $course = Course::factory()->create(['is_active' => true]);
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
+
         for ($n = 1; $n <= $count; $n++) {
             $block = CourseBlock::factory()->for($course);
             $n === $count ? $block->current()->create(['number' => $n]) : $block->create(['number' => $n]);

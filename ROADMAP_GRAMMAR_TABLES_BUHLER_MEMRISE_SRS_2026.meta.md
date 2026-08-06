@@ -8,7 +8,7 @@ into an SRS deck feature, and for connecting it to the already-planned but
 unbuilt "auto-declension drills" line in
 [SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md](docs/SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md) §3.
 
-**Audience:** whoever picks up [H1442](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1442-Sonnet_Systema_memrise-grammar-tables-buhler-roadmap_22.07.26.md)
+**Audience:** whoever picks up [H1442](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1442-Sonnet_Systema_memrise-grammar-tables-buhler-roadmap_22.07.26.md)
 or a future declension-drill feature session.
 
 **Provenance:** H1442, Sonnet 5 (`claude-sonnet-5`), 22-07-2026 — written

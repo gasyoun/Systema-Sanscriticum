@@ -1,8 +1,9 @@
 name: CI
 
-# Systema Sanscriticum — Laravel 10 / PHP 8.1 / Vite + Tailwind.
+# Systema Sanscriticum — Laravel 12 / PHP 8.3 / Vite 8 + Tailwind 4.
 # phpunit.xml already sets DB_CONNECTION=sqlite DB_DATABASE=:memory: for tests.
-# Two jobs run in parallel: PHP tests + frontend build.
+# SQLite remains the fast primary suite; a separate MySQL 8.4 job exercises
+# production-only migrations and transaction/locking behavior.
 
 on:
   push:
@@ -30,7 +31,7 @@ jobs:
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, xml, pdo, sqlite, pdo_sqlite, redis, curl, zip
+          extensions: mbstring, xml, pdo, sqlite, pdo_sqlite, redis, curl, zip, pcntl, posix
           coverage: none
 
       - name: Cache Composer packages
@@ -42,6 +43,12 @@ jobs:
 
       - name: Composer install
         run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Composer platform requirements
+        run: composer check-platform-reqs
+
+      - name: Composer security audit (locked dependencies)
+        run: composer audit --locked
 
       - name: Set up environment
         run: |
@@ -85,14 +92,69 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
-          node-version: "20"
+          node-version: "20.19"
           cache: npm
 
       - name: npm ci
         run: npm ci
 
+      - name: npm security audit (including dev dependencies)
+        run: npm audit
+
       - name: Vite build
         run: npm run build
+
+  mysql-finance-tests:
+    name: MySQL 8.4 — finance/webhook transactions
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: systema_test
+          MYSQL_USER: systema
+          MYSQL_PASSWORD: systema
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: systema_test
+      DB_USERNAME: systema
+      DB_PASSWORD: systema
+      RUN_MYSQL_CONCURRENCY_TESTS: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, xml, pdo, pdo_mysql, redis, curl, zip, pcntl, posix
+          coverage: none
+
+      - name: Composer install
+        run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader
+
+      - name: Set up Laravel environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: MySQL migrate:fresh
+        run: php artisan migrate:fresh --force --no-interaction
+
+      - name: MySQL finance and webhook transaction tests
+        run: >-
+          php artisan test
+          --filter='TochkaWebhookTest|MutualSettlementTest|FinanceIdempotencyTest|FinanceLockingMySqlTest'
 
   changelog-lint:
     name: Changelog — no duplicated bullets

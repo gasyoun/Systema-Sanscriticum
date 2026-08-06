@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\PromoCode;
@@ -43,7 +44,10 @@ class PromoRecentPendingTest extends TestCase
     public function fresh_pending_with_same_promo_errors_instead_of_charging_full_price(): void
     {
         $user = User::factory()->create();
-        $tariff = Tariff::factory()->for(Course::factory()->create())->create(['price' => 10000]);
+        $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
+        $tariff = Tariff::factory()->for($course)->create(['price' => 10000]);
         $promo = PromoCode::create(['code' => 'SALE20', 'type' => 'percent', 'value' => 20, 'is_active' => true]);
 
         // Первый чекаут: создаётся pending со скидкой (8000).

@@ -1,0 +1,10 @@
+Hello,
+
+You sent a payment of $75 USD to Gasyoun.
+
+Transaction ID: 5CD67890EF123456A
+Payment date: 15 Aug 2026
+
+From account: diaspora.student@example.org
+
+This email confirms your payment.

@@ -18,6 +18,17 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
+
+        // dictionary_words создаётся раньше (2026_02_11) без FK — MySQL 8
+        // падает на constrained() к несуществующей таблице. Вешаем FK здесь.
+        if (Schema::hasTable('dictionary_words')) {
+            Schema::table('dictionary_words', function (Blueprint $table) {
+                $table->foreign('dictionary_id')
+                    ->references('id')
+                    ->on('dictionaries')
+                    ->cascadeOnDelete();
+            });
+        }
     }
 
     /**
@@ -25,6 +36,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (Schema::hasTable('dictionary_words')) {
+            Schema::table('dictionary_words', function (Blueprint $table) {
+                $table->dropForeign(['dictionary_id']);
+            });
+        }
+
         Schema::dropIfExists('dictionaries');
     }
 };

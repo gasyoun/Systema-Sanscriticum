@@ -10,6 +10,14 @@
         'clicked' => ['Перешел по ссылке', '#b45309', '#fef3c7'],
         default => ['Не был', '#6b7280', '#f3f4f6'],
     };
+
+    $noticeBadge = fn (?string $status) => match ($status) {
+        'absent' => ['Не сможет', '#b91c1c', '#fee2e2'],
+        'uncertain' => ['Не уверен', '#a16207', '#fef9c3'],
+        'late' => ['Опоздает', '#c2410c', '#ffedd5'],
+        'leave_early' => ['Уйдёт раньше', '#6d28d9', '#ede9fe'],
+        default => null,
+    };
 @endphp
 
 {{-- Тёмная тема: аддитивные правила, светлую тему не трогают (цвета по [style*=…]). --}}
@@ -31,6 +39,7 @@
                 ['Пришли', $summary['present'], '#dcfce7', '#16a34a'],
                 ['По ссылке', $summary['clicked'], '#fef3c7', '#b45309'],
                 ['Не были', $summary['absent'], '#f3f4f6', '#6b7280'],
+                ['Предупредили', $summary['noticed'] ?? 0, '#ffedd5', '#c2410c'],
                 ['Гости', $summary['guests'], '#ede9fe', '#6d28d9'],
             ];
         @endphp
@@ -48,17 +57,28 @@
                 <tr style="text-align: left; color: #6b7280; border-bottom: 1px solid #e5e7eb;">
                     <th style="padding: 6px 8px;">Студент</th>
                     <th style="padding: 6px 8px;">Статус</th>
+                    <th style="padding: 6px 8px;">Предупредил</th>
                     <th style="padding: 6px 8px;">Минут</th>
                     <th style="padding: 6px 8px;">Источник</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($roster as $row)
-                    @php [$label, $fg, $bg] = $badge($row['status']); @endphp
+                    @php
+                        [$label, $fg, $bg] = $badge($row['status']);
+                        $nBadge = $noticeBadge($row['notice_status'] ?? null);
+                    @endphp
                     <tr style="border-bottom: 1px solid #f3f4f6;">
                         <td style="padding: 6px 8px; color: #111827;">{{ $row['user']->name }}</td>
                         <td style="padding: 6px 8px;">
                             <span style="background: {{ $bg }}; color: {{ $fg }}; padding: 2px 8px; border-radius: 99px; font-weight: 600; white-space: nowrap;">{{ $label }}</span>
+                        </td>
+                        <td style="padding: 6px 8px;">
+                            @if($nBadge)
+                                <span style="background: {{ $nBadge[2] }}; color: {{ $nBadge[1] }}; padding: 2px 8px; border-radius: 99px; font-weight: 600; white-space: nowrap;">{{ $nBadge[0] }}</span>
+                            @else
+                                <span style="color: #9ca3af;">—</span>
+                            @endif
                         </td>
                         <td style="padding: 6px 8px; color: #374151;">{{ $row['minutes'] !== null ? $row['minutes'] : '—' }}</td>
                         <td style="padding: 6px 8px; color: #9ca3af;">{{ $row['click_source'] ?? '—' }}</td>

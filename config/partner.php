@@ -29,6 +29,6 @@ return [
     'reward_amount' => (float) env('PARTNER_REWARD_AMOUNT', 1000),
 
     // Общий секрет API внешнего Telegram-бота (X-Partner-Bot-Secret).
-    // Enforce-if-configured: пусто → проверка секрета не требуется (dev).
+    // Обязателен при PARTNER_PROGRAM_ENABLED=true; пустой → endpoint 503.
     'bot_secret' => (string) env('PARTNER_BOT_SECRET', ''),
 ];

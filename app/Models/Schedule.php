@@ -90,6 +90,12 @@ class Schedule extends Model
         return $this->hasMany(ScheduleJoinClick::class);
     }
 
+    /** Предварительные предупреждения студентов (H2317). */
+    public function attendanceNotices(): HasMany
+    {
+        return $this->hasMany(ScheduleAttendanceNotice::class);
+    }
+
     /**
      * Трекинг-ссылка «Подключиться» для конкретного студента (для бота/напоминаний,
      * где нет сессии): подписанный URL с user id, по которому JoinClassController

@@ -75,7 +75,7 @@
                 <h4 class="text-base font-extrabold text-gray-900">Сообщите нам об оплате</h4>
             </div>
 
-            <form action="{{ route('paypal.claim.store', $tariff) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+            <form id="paypal-claim-form" action="{{ route('paypal.claim.store', $tariff) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
                 @csrf
 
                 @guest
@@ -95,6 +95,31 @@
                     </div>
                     <p class="text-xs text-gray-500">После сверки мы пришлем пароль на email — войдете в личный кабинет.</p>
                 @endguest
+
+                {{-- H2215: paste full PayPal activity / receipt dump → auto-fill reconciliation fields. --}}
+                <div id="paypal-claim-paste" class="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 sm:p-5 space-y-3">
+                    <div>
+                        <label for="paypal-paste-input" class="block text-sm font-medium text-gray-800 mb-1">
+                            Вставить детали из PayPal
+                        </label>
+                        <p class="text-xs text-gray-600 leading-relaxed">
+                            Скопируйте целиком блок с деталями платежа со страницы Activity в PayPal
+                            (или из письма-чека) и вставьте ниже — мы заполним поля сверки.
+                            Проверьте результат: форма не отправляется сама.
+                        </p>
+                    </div>
+                    <textarea id="paypal-paste-input" rows="4" maxlength="8000"
+                              placeholder="Вставьте сюда текст из PayPal (Activity или письмо-чек)"
+                              class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 text-sm transition"
+                              autocomplete="off" spellcheck="false"></textarea>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <button type="button" id="paypal-paste-parse"
+                                class="inline-flex justify-center items-center px-4 py-2.5 rounded-xl bg-white border border-indigo-200 text-indigo-800 text-sm font-semibold hover:bg-indigo-50 transition">
+                            Заполнить из вставки
+                        </button>
+                        <p id="paypal-paste-status" class="text-xs text-gray-500 leading-relaxed" aria-live="polite" data-kind="idle"></p>
+                    </div>
+                </div>
 
                 {{-- H2017: personal PayPal has no API — admin reconciles by from + date + amount. --}}
                 <div>
@@ -182,3 +207,7 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/paypal-claim-paste.js') }}?v={{ filemtime(public_path('js/paypal-claim-paste.js')) }}" defer></script>
+@endpush

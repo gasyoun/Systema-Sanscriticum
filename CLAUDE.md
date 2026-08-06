@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Stack
 
-- **Backend**: Laravel 10, PHP 8.1+
-- **Frontend**: Vite 5, Tailwind CSS 4, Axios
+- **Backend**: Laravel 12, PHP 8.3
+- **Frontend**: Vite 8 (Node.js 20.19+ or 22.12+), Tailwind CSS 4, Axios
 - **Admin**: Filament v3 (two panels: `admin` at `/admin`, `editor` at `/editor`)
 - **Queue**: Laravel Horizon (Redis-backed)
 - **DB**: MySQL (production), SQLite in-memory (tests)
@@ -36,6 +36,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   class: [Uprava FINDINGS §280](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md) ·  
   danger: [Uprava DANGER_FACTS Systema](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md).
 
+## Editorial style guide of record (RU copy)
+
+Весь русский текст для читателя (blade-шаблоны витрины, письма, лендинги, CTA) обязан
+следовать редакционному style guide of record:
+[Uprava/docs/SAMSKRTE_SAMSKRTAM_EDITORIAL_STYLE_GUIDE_2026.md](https://github.com/gasyoun/Uprava/blob/main/docs/SAMSKRTE_SAMSKRTAM_EDITORIAL_STYLE_GUIDE_2026.md)
+(H1856, 04-08-2026; приватный Uprava — ссылка работает для участников org). Главное:
+только «вы» со строчной; без ALL-CAPS; ё обязательна; цены `4 800 ₽`; санскритские
+слова в прозе — практической кириллицей (IAST только в научном слое); зонтичное имя —
+«Общество ревнителей санскрита»; датированный CTA обязан иметь поведение истечения;
+голых URL в прозе нет. Proof-цифры — только из
+[config/trust.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/trust.php).
+Юридические формулировки (`dpo/ip-gasuns/CONVENTIONS.md`, «встречи сообщества», ЭО и ДОТ)
+сильнее гида. Где существующий текст расходится — прав гид, правим при касании.
+
 ## Commands
 
 ```bash
@@ -48,7 +62,7 @@ php artisan serve
 php artisan migrate
 php artisan migrate:fresh --seed
 
-# Tests (SQLite in-memory, no real DB needed)
+# Tests (SQLite in-memory by default; CI also runs the money/webhook slice on MySQL 8.4)
 php artisan test
 php artisan test --filter=TestName
 php artisan test tests/Unit/
@@ -357,6 +371,38 @@ H2110. `/dvaram/reading{,/slug}` рендерит пакеты чтения дл
 сознательно не импортирован: его схема другая, и импорт «заодно» ввёл бы вторую
 схему в кодовую базу.
 
+**Cohort SRS import (H2106, `srs:import-start-chteniya-cohort`).** Импортирует
+вендоренный `lemmas_for_srs.tsv` (тот же H2109-фриз, тот же скрипт-вендор выше)
+в **приватную** SRS-колоду на каждого оплаченного студента когорты —
+никогда не в общую `system`/`public` колоду. Причина: `SrsController` показывает
+`system`/`public` колоды всем залогиненным пользователям без проверки оплаты
+(гейт там только глобальный `srs.enabled`), поэтому единственный способ закрыть
+колоду от не-когортных студентов — держать её `visibility=private` с
+`user_id` конкретного студента; `StartChteniyaCohort::entitledUsers()` — общий
+источник списка оплативших (используется и здесь, и потенциально другими
+потребителями H2105-гейта). Гейт команды — `features.start_chteniya_cohort`
+(тот же флаг, что у H2105/H2110/H2111), **не** `config('srs.enabled')` — H2106
+фенс явно запрещает трогать глобальный SRS-флаг.
+
+**Кнопка «в колоду» в панели слова (H2111).** `POST /dvaram/reading/{slug}/srs`
+(`ReadingPackController::addToSrs`) добавляет лемму нажатого слова в ту же приватную
+колоду когорты. Гейт — тот же двойной, что у чтения (флаг + entitlement), и снова
+**не** `config('srs.enabled')`. Два свойства, которые нельзя потерять при правке:
+
+1. **Клиент присылает только ПОЗИЦИИ** (индекс предложения + индекс токена), никогда
+   лемму, глоссу или slp1. Текст карточки читается на сервере из sha256-пиннутого
+   фриза, поэтому подделанный POST не запишет в чужую колоду произвольную строку.
+2. **Определение колоды — одно.** Слаг, note type, список полей и ключ дедупликации
+   `pack|lemma_slp1` живут в
+   [`app/Support/StartChteniyaSrsDeck.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/StartChteniyaSrsDeck.php)
+   и используются и командой H2106, и этой кнопкой. Не заводите вторую копию: разъехавшись,
+   массовый импорт и кнопка дали бы две колоды или два экземпляра одной леммы.
+
+Токен без `lemma` кнопки не получает — читалка деградирует, а не требует всегда включённого
+каскадного лемматизатора (H1463): «require lemmatizer always-on» — это прямо описанный
+режим отказа H2111. Публичная `/reading/kosha-demo` рендерит тот же партиал без opt-in
+переменной `$srsAdd`, поэтому её вывод не меняется.
+
 ### Landing Page Builder
 
 `LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.
@@ -412,6 +458,14 @@ LandingPage ──> JSON blocks
 - Feature flags in `config/features.php`
 - Admin seeding credentials from `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars
 - Force HTTPS is applied in `AppServiceProvider` for production
+- **Composer is deliberately cross-platform, not unchecked.** `config.platform`
+  pins PHP 8.3 and the Unix-only `pcntl`/`posix` extensions so Windows can
+  resolve the same lock file; `platform-check=false` prevents Composer's
+  generated runtime guard from rejecting that Windows checkout. CI runs both
+  `composer check-platform-reqs` and `composer audit --locked`; production
+  `deploy.sh` runs
+  `composer check-platform-reqs --no-dev` against the real server after install.
+  Do not remove either enforcement step when changing the Windows workaround.
 - **Поднимайте свежий worktree через [`scripts/worktree_bootstrap.ps1`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/worktree_bootstrap.ps1), а не через `composer install` руками** (H1929). Полный `composer install` в новом дереве идёт **~11 минут** — измерено 30-07-2026 на правке, которая сама стоила сорока. Скрипт делает **физическую копию** `vendor/` из главного дерева (robocopy, ~60 с) и только при совпадении `composer.lock`; при расхождении честно зовёт `composer install`. Физическая копия безопасна там, где junction смертелен (см. следующий пункт): пути в `vendor/composer/autoload_*.php` считаются от `__DIR__` в момент выполнения, поэтому копия указывает на СВОЙ worktree — скрипт это ещё и проверяет отдельным пробником и падает, если автозагрузчик резолвится в чужое дерево. Он же ставит `.env` + `APP_KEY`, а `-Teardown` сносит worktree и доводит удаление до конца, когда Windows держит хэндл и `git worktree remove` оставляет осиротевший каталог.
 - **Ритм тестов: `--filter` на итерации, полный набор ОДИН раз в конце** (H1929). `php artisan test` целиком — ~11 минут (2478 тестов); гонять его после каждой правки означает потерять час на пустом месте. На итерации `php artisan test --filter=<Набор>` (секунды), полный прогон — один раз перед PR и лучше в фоне; `./vendor/bin/pint --test` быстр всегда.
 - **Never junction/symlink a worktree's `vendor/` to another worktree's (or the main tree's) `vendor/` to skip `composer install`.** On Windows, PHP's `__DIR__`/realpath resolution for a file accessed through an NTFS junction resolves to the junction's real physical target, not the path used to reach it — so Composer's `$baseDir` computation inside `vendor/composer/autoload_*.php` always resolves to wherever `vendor/` physically lives, never the worktree accessing it through the junction. With `"optimize-autoloader": true` in `composer.json` (this repo's default), that silently makes the whole worktree run **the vendor's owning tree's `app/` code** instead of its own — a green `php artisan test` run proves nothing about the code actually being edited. Confirmed twice in practice (25/26-07-2026, [Systema-Sanscriticum#713](https://github.com/gasyoun/Systema-Sanscriticum/issues/713)): two independent sessions each hit this, then "fixed" it locally by hand-baking their own worktree's name into the shared classmap header, silently breaking every other consumer of that vendor. Run an independent `composer install` per worktree instead. If a worktree already has a `vendor/` junction (check with `Get-Item vendor | Select LinkType,Target` in PowerShell — `LinkType` shows `Junction`), remove it (`cmd /c rmdir <path>\vendor`, not `rm -rf`) and reinstall before trusting any test output from it.

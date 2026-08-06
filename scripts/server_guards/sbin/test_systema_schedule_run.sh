@@ -3,43 +3,30 @@
 # in systema-schedule-run.sh). Runs entirely in a temp dir, no prod access needed.
 #
 # Proves: (1) a fresh lock still correctly SKIPs (no regression on the existing
-# overlap guard), and (2) a lock held past STALE_SECONDS is reclaimed and the
+# overlap guard), (2) a lock held past STALE_SECONDS is reclaimed and the
 # guarded command actually runs, even though a separate process still holds an
 # flock on the (now-unlinked) old inode -- the scenario a dead/wedged holder
-# that can't be signaled (D-state) can't be told apart from in a black-box test.
+# that can't be signaled (D-state) can't be told apart from in a black-box test,
+# and (3) an unrelated host process whose argv resembles Artisan survives.
 #
 # Usage: bash scripts/server_guards/sbin/test_systema_schedule_run.sh
 #
-# SAFETY (added 30-07-2026 after a live-fire incident): reap() inside the
-# wrapper under test does a SYSTEM-WIDE `pgrep -f "artisan"` -- it is NOT
-# scoped to this test's temp dir. Running this on a host that also has a real
-# cron calling the real /usr/local/sbin/systema-schedule-run.sh WILL SIGKILL
-# live production schedule:run processes if this test's (deliberately short)
-# MAX_SECONDS/STALE_SECONDS window is shorter than how long those real
-# processes have been running -- confirmed on prod (H1973 follow-up,
-# 30-07-2026): a real `schedule:run` invocation got killed mid-tick, rc=137 in
-# schedule.log, while this test ran with MAX_SECONDS=60 against a real prod
-# cron tuned for 900s. No lasting damage that time (nothing was queued to
-# post at that exact moment), but it was luck, not design. So this script
-# refuses to run on any host where the real wrapper is installed, unless
-# explicitly overridden.
+# The wrapper is now process-group scoped and this test does not signal any
+# process except the synthetic background process it creates and cleans up.
 set -euo pipefail
-
-if [ -e /usr/local/sbin/systema-schedule-run.sh ] && [ -z "${H1973_TEST_ALLOW_MANAGED_HOST:-}" ]; then
-  echo "REFUSING TO RUN: /usr/local/sbin/systema-schedule-run.sh exists on this host." >&2
-  echo "This looks like a machine with a REAL cron calling the real wrapper -- reap()'s" >&2
-  echo "system-wide 'pgrep -f artisan' can kill live schedule:run processes (see the" >&2
-  echo "SAFETY note in this script's header for the incident this guards against)." >&2
-  echo "Run this on a disposable dev box/CI runner instead. If you have verified no" >&2
-  echo "live cron is calling the real wrapper right now, override with:" >&2
-  echo "  H1973_TEST_ALLOW_MANAGED_HOST=1 bash $0" >&2
-  exit 1
-fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC="$SCRIPT_DIR/systema-schedule-run.sh"
 TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
+unrelated_pid=""
+cleanup() {
+  if [ -n "$unrelated_pid" ]; then
+    kill "$unrelated_pid" 2>/dev/null || true
+    wait "$unrelated_pid" 2>/dev/null || true
+  fi
+  rm -rf "$TMP"
+}
+trap cleanup EXIT
 
 APP_DIR="$TMP/app"
 mkdir -p "$APP_DIR/storage/framework"
@@ -104,6 +91,24 @@ if [ -f "$RAN_MARKER" ]; then check "guarded command ran after reclaim" 1
 else check "guarded command ran after reclaim" 0; fi
 kill "$holder2" 2>/dev/null || true
 wait "$holder2" 2>/dev/null || true
+
+# --- Test 3: unrelated Artisan-like process is never signaled --------------
+# `exec -a` makes pgrep -f see "php artisan unrelated:work". The old global
+# reaper killed this process once its age exceeded MAX_SECONDS; the wrapper may
+# now terminate only the process group it started through GNU timeout.
+bash -c 'exec -a "php artisan unrelated:work" sleep 30' &
+unrelated_pid=$!
+sleep 2
+out3=$(SYSTEMA_SCHEDULE_MAX_SECONDS=1 bash "$WRAPPER" 2>&1 || true)
+echo "$out3"
+if kill -0 "$unrelated_pid" 2>/dev/null; then
+  check "unrelated Artisan-like process survives" 1
+else
+  check "unrelated Artisan-like process survives" 0
+fi
+kill "$unrelated_pid" 2>/dev/null || true
+wait "$unrelated_pid" 2>/dev/null || true
+unrelated_pid=""
 
 echo
 echo "== $pass passed / $fail failed =="

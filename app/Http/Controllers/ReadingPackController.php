@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Support\StartChteniyaCohort;
+use App\Support\StartChteniyaSrsDeck;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use RuntimeException;
@@ -39,6 +41,22 @@ use RuntimeException;
  *    sayings[]/lines[].chunks[] rather than sentences[]/tokens[]; adapting it is deliberately
  *    NOT done here (this handoff's own stated failure mode is "second pack schema"), and it
  *    is therefore not vendored at all rather than half-imported.
+ *
+ * H2111 completes the tap-token panel: the disclosure already showed form/lemma/morph/
+ * gloss/gloss_ru (H2110's shared partial), so what was left is the ADD-TO-SRS path —
+ * `addToSrs()` below, POSTed from the panel, writing into the student's own private
+ * cohort deck through App\Support\StartChteniyaSrsDeck (the same deck H2106's bulk
+ * import fills; no second deck, no second dedupe rule).
+ *
+ * Two deliberate properties of that path:
+ *
+ *  - the client sends only POSITIONS (sentence index + token index), never a lemma or a
+ *    gloss. The card's content is read out of the pinned freeze server-side, so a forged
+ *    POST cannot inject arbitrary text into a student's deck;
+ *  - it degrades instead of demanding a lemmatizer. A token that carries no `lemma` in
+ *    the feed is refused with an honest message — H2111's own fail condition is
+ *    "require lemmatizer always-on", so the always-on cascade (H1463) is not a
+ *    prerequisite here.
  */
 class ReadingPackController extends Controller
 {
@@ -93,7 +111,64 @@ class ReadingPackController extends Controller
         // controller offers are readable, so a traversal attempt is a 404, not a file read.
         abort_unless(in_array($slug, self::COHORT_PACKS, true), 404);
 
-        return view('student.reading-pack', $this->packViewData($slug));
+        // srsAdd is what turns the tap panel's «в колоду» buttons on. Only here: the
+        // public demo route renders the same partial and must stay a read-only page.
+        return view('student.reading-pack', $this->packViewData($slug) + ['srsAdd' => true]);
+    }
+
+    /**
+     * H2111 — add one tapped token's lemma to the student's private cohort SRS deck.
+     *
+     * Gated exactly like the reader itself (flag + entitlement) and NOT by
+     * config('srs.enabled'): H2106's fence forbids touching the global SRS switch, and a
+     * card collected while the review UI is off is simply waiting for it to be turned on.
+     */
+    public function addToSrs(Request $request, string $slug): RedirectResponse
+    {
+        $this->authorizeCohortReader($request);
+        abort_unless(in_array($slug, self::COHORT_PACKS, true), 404);
+
+        $validated = $request->validate([
+            'sentence' => ['required', 'integer', 'min:0'],
+            'token' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $pack = $this->readPack($slug);
+        $sentence = $pack['sentences'][$validated['sentence']] ?? null;
+        abort_if($sentence === null, 404);
+        $token = $sentence['tokens'][$validated['token']] ?? null;
+        abort_if($token === null, 404);
+
+        $lemma = trim((string) ($token['lemma'] ?? ''));
+        if ($lemma === '') {
+            return back()->with('reading_srs_status', 'no_lemma')
+                ->with('reading_srs_word', (string) ($token['form'] ?? ''));
+        }
+
+        $glossRu = $token['gloss_ru']['surface'] ?? ($token['gloss_ru']['lemma'] ?? '');
+
+        $fields = [
+            'pack' => (string) ($pack['slug'] ?? $slug),
+            // slp1 is the LEMMA in SLP1 in this feed (siddhi -> sidDi), which is what the
+            // H2106 TSV's lemma_slp1 column holds — so both writers key on the same value.
+            'lemma_slp1' => trim((string) ($token['slp1'] ?? '')) ?: $lemma,
+            'surface' => (string) ($token['form'] ?? ''),
+            'gloss_ru' => (string) $glossRu,
+            'gloss_en' => (string) ($token['gloss'] ?? ''),
+            'locus' => (string) ($sentence['n'] ?? ''),
+        ];
+
+        $deck = StartChteniyaSrsDeck::deckFor($request->user());
+
+        if (isset(StartChteniyaSrsDeck::existingKeys($deck)[StartChteniyaSrsDeck::cardKey($fields)])) {
+            return back()->with('reading_srs_status', 'duplicate')
+                ->with('reading_srs_word', $lemma);
+        }
+
+        StartChteniyaSrsDeck::createCard($deck, $fields);
+
+        return back()->with('reading_srs_status', 'added')
+            ->with('reading_srs_word', $lemma);
     }
 
     /**

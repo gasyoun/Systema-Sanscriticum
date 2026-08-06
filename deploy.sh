@@ -132,6 +132,8 @@ fi
 # ── 2. Зависимости и фронтенд ────────────────────────────────────────────────
 say "composer install (prod)"
 composer install --no-dev --optimize-autoloader --no-interaction
+say "composer check-platform-reqs (prod runtime)"
+composer check-platform-reqs --no-dev
 
 # H2104 (01-08-2026): npm ci + vite — главный потребитель wall-clock на автодеплое
 # (инцидент 11:00Z: docs-only PR → timeout 1500s → rollback снова vite → 124 →
@@ -182,18 +184,26 @@ fi
 say "php artisan filament:assets"
 php artisan filament:assets
 
-# ── 3. Maintenance (опционально) + миграции ──────────────────────────────────
-if [ "$USE_DOWN" = 1 ]; then
-  say "php artisan down"
-  php artisan down --retry=15 || true
-fi
-
-say "Сброс кэшей + миграции"
+# ── 3. Webhook-preflight + maintenance + миграции ───────────────────────────────
+say "Сброс кэшей"
 php artisan optimize:clear
 # Кеш Filament-компонентов optimize:clear НЕ трогает (bootstrap/cache/filament/);
 # без явного сброса новый виджет/страница ловит ComponentNotFoundException на
 # первом же update-запросе (см. docs/deploy.md, гочка LeadCostRangeWidget).
 php artisan filament:optimize-clear 2>/dev/null || true
+
+# На rollback команды может ещё не быть в старом коммите. Обычный деплой
+# проверяем ДО maintenance-mode и необратимых миграций.
+if [ -z "$ROLLBACK_TO" ]; then
+  say "Проверка секретов webhook"
+  php artisan deploy:webhook-preflight
+fi
+
+if [ "$USE_DOWN" = 1 ]; then
+  say "php artisan down"
+  php artisan down --retry=15 || true
+fi
+
 if [ -n "$ROLLBACK_TO" ]; then
   say "ОТКАТ: миграции пропускаются (migrate --force необратим)"
 else

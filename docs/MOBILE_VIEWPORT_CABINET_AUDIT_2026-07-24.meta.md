@@ -12,7 +12,7 @@ Agents resuming C3 / native-app go-no-go; humans deciding whether Capacitor Wave
 
 ## Provenance
 
-- Handoff: [H1488](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1488-Sonnet_Systema-Sanscriticum_cabinet-mobile-viewport-audit-pwa_22.07.26.md)
+- Handoff: [H1488](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1488-Sonnet_Systema-Sanscriticum_cabinet-mobile-viewport-audit-pwa_22.07.26.md)
 - Executor: Grok 4.5 (`grok-4.5`) via xAI (override of Sonnet lock)
 - Roadmap: ROADMAP_2026_2027.md § C3
 

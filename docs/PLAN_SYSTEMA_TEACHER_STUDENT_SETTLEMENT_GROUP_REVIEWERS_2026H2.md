@@ -4,7 +4,7 @@ _Created: 27-07-2026 · Last updated: 27-07-2026_
 
 **Репозиторий:** [Systema-Sanscriticum](https://github.com/gasyoun/Systema-Sanscriticum) · **Тир:** 0 (student/revenue-facing)
 **Планирование:** Opus 5 (`claude-opus-5[1m]`), интервью 27-07-2026 (4 раунда, 16 вопросов, 15 решений)
-**Исполнение:** [H1729](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1729-Sonnet_Systema-Sanscriticum_group-reviewers-homework-access_27.07.26.md) (волна A) · [H1730](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1730-Opus_Systema-Sanscriticum_teacher-student-mutual-settlement_27.07.26.md) (волна B)
+**Исполнение:** [H1729](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1729-Sonnet_Systema-Sanscriticum_group-reviewers-homework-access_27.07.26.md) (волна A) · [H1730](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1730-Opus_Systema-Sanscriticum_teacher-student-mutual-settlement_27.07.26.md) (волна B)
 
 ---
 

@@ -130,7 +130,7 @@ class Kernel extends HttpKernel
         // --- ЛЕГАСИ БОТ-ВЕБХУКИ (enforce-if-configured) ---
         'verify.tg.bot' => VerifyTelegramBotWebhook::class,
         'verify.vk.bot' => VerifyVkBotWebhook::class,
-        // --- ПАРТНЁРСКИЙ БОТ (enforce-if-configured) ---
+        // --- ПАРТНЁРСКИЙ БОТ (fail-closed когда partner.enabled) ---
         'verify.partner.bot' => VerifyPartnerBotWebhook::class,
         // --- TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ---
         'verify.tg.zapisi' => VerifyTelegramZapisiWebhook::class,

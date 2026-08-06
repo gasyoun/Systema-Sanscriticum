@@ -2,7 +2,7 @@
 
 _Created: 19-07-2026 · Last updated: 19-07-2026_
 
-Лейн волны revenue-copy ([H1288](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1288-Fable_Systema-Sanscriticum_money-refund-policy-student-surface_19.07.26.md),
+Лейн волны revenue-copy ([H1288](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1288-Fable_Systema-Sanscriticum_money-refund-policy-student-surface_19.07.26.md),
 исполнитель Fable 5 `claude-fable-5`). Trust row чекаута обещал «Возврат по
 оферте» и не вел никуда; юридически обязывающий порядок возврата существовал
 только внутри 8-страничного PDF. Лейн — презентация, не нормотворчество:

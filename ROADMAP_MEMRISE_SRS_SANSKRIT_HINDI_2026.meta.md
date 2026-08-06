@@ -77,7 +77,7 @@ human/credentials). This roadmap remains the live plan of record.
 
 ## Related documents
 
-- [H569-Sonnet_DO_Systema_memrise-clone-srs-sa-hi_11.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H569-Sonnet_DO_Systema_memrise-clone-srs-sa-hi_11.07.26.md) — the tracking handoff this roadmap points at.
+- [H569-Sonnet_DO_Systema_memrise-clone-srs-sa-hi_11.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H569-Sonnet_DO_Systema_memrise-clone-srs-sa-hi_11.07.26.md) — the tracking handoff this roadmap points at.
 - [database/seeders/data/memrise_6679375/README.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/seeders/data/memrise_6679375/README.md) — the contract for what the P0 export must produce.
 - [app/Services/Srs/Fsrs.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Srs/Fsrs.php) — the FSRS engine this roadmap reuses.
 - [app/Services/Prana/PranaService.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Prana/PranaService.php) — the gamification layer this roadmap wires review events into.

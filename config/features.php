@@ -214,6 +214,15 @@ return [
     'attendance_dashboard' => (bool) env('ATTENDANCE_DASHBOARD', false),
 
     /*
+     | Предварительные предупреждения студента о занятии (H2317): «не приду /
+     | не уверен / опоздаю / уйду раньше» из личного кабинета (календарь) и
+     | self-service бота TG/VK (в т.ч. короткий текст в чате группы). ВЫКЛ по
+     | умолчанию — deploy-рубильник. Миграция schedule_attendance_notices
+     | аддитивная; пока флаг OFF UI и перехват фраз no-op.
+     */
+    'attendance_notices' => (bool) env('ATTENDANCE_NOTICES', false),
+
+    /*
      | Дашборд наблюдаемости поддержки (W3.3, H597): здоровье userbot-сессий,
      | лаг синка, доля успешной доставки исходящих, объём обращений к LLM —
      | read-only поверх существующих агрегатов (SupportDailyRollup,
@@ -354,27 +363,6 @@ return [
      | (MG 01-08-2026): TOCHKA_WEBHOOK_GUARD=false to opt out.
      */
     'tochka_webhook_guard' => (bool) env('TOCHKA_WEBHOOK_GUARD', true),
-
-    /*
-     | H2085 — hold (authorized/AUTHORIZED) не считается оплатой. Когда ВКЛ,
-     | WebhookController НЕ переводит платёж в paid и НЕ выдаёт доступ на
-     | банковский hold; журнал decision=hold_not_captured. Capture-статусы
-     | (paid/APPROVED/captured/completed) без изменений. ВЫКЛ по умолчанию —
-     | прод-инертен (legacy: hold = success). Включение после ревью:
-     | TOCHKA_AUTHORIZED_NOT_PAID=true + config:cache.
-     | Memo: docs/H2085_MONEY_SILENT_GRANT_GAPS_DECISION_01-08-2026.md
-     */
-    'tochka_authorized_not_paid' => (bool) env('TOCHKA_AUTHORIZED_NOT_PAID', false),
-
-    /*
-     | H2085 — grantAccess без course_group: жёсткий отказ. Когда ВКЛ, пустой
-     | pivot course_group бросает RuntimeException (транзакция paid откатывается
-     | / вебхук 500 → ретрай банка). Когда ВЫКЛ (default): только Log::error
-     | (раньше был warning — silent-empty paid+welcome без уроков). Включение:
-     | MONEY_GRANT_REQUIRE_GROUPS=true + config:cache после того как все платные
-     | курсы в админке имеют ≥1 группу.
-     */
-    'money_grant_require_groups' => (bool) env('MONEY_GRANT_REQUIRE_GROUPS', false),
 
     /*
      | Telegram Track C (H164, Uprava/docs/DECISIONS_telegram_harvester.md D7-D11):
@@ -632,6 +620,19 @@ return [
      | LEAD_CONVERTED_AT_ON_COURSE_PAID=true + config:cache. Never enable in this PR.
      */
     'lead_converted_at_on_course_paid' => (bool) env('LEAD_CONVERTED_AT_ON_COURSE_PAID', false),
+
+    /*
+     | Noboring dozhim Wave 1 H-C (H2060): student.access ("Оплата и доступ")
+     | debt cards gain amount + FAQ payment link + curator contact + installment
+     | CTA copy. Pure presentation on top of the already-existing
+     | DebtPaymentResolver options and RecoveryStateResolver state — no new
+     | payment path, no PaymentObserver/grant change.
+     |
+     | ВЫКЛ по умолчанию. Пока OFF, student.access рендерится ровно как раньше
+     | (без блока amount/FAQ/куратор/рассрочка). Включение —
+     | PAYMENT_RECOVERY_CTA=true + config:cache после ревью.
+     */
+    'payment_recovery_cta' => (bool) env('PAYMENT_RECOVERY_CTA', false),
 
     /*
      | Cabinet skill-drill strip (H1680, Wave 2 online games): a /dvaram/skill-drills

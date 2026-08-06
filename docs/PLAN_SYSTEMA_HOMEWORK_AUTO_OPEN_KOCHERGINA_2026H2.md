@@ -8,7 +8,7 @@ _Created: 27-07-2026 · Last updated: 27-07-2026_
 `lessons.homework_enabled`, который преподаватель щёлкает руками; никакого открытия по
 времени в системе нет вообще. Этот план закрывает ровно этот разрыв и ничего больше.
 
-Handoff: [H1764](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1764-Opus_Systema-Sanscriticum_homework-auto-open-kochergina_27.07.26.md) ·
+Handoff: [H1764](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1764-Opus_Systema-Sanscriticum_homework-auto-open-kochergina_27.07.26.md) ·
 Планировал: Opus 5 (`claude-opus-5[1m]`), интервью из 16 вопросов, 27-07-2026.
 
 ## Слои плана

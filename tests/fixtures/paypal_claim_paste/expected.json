@@ -1,0 +1,34 @@
+{
+  "en_activity_synthetic.txt": {
+    "paypal_payer": "student.buyer@example.com",
+    "paid_on": "2026-07-30",
+    "foreign_amount": "50",
+    "foreign_currency": "USD",
+    "paypal_txn": "1AB23456CD789012E"
+  },
+  "ru_activity_synthetic.txt": {
+    "paypal_payer": "student.ru@example.com",
+    "paid_on": "2026-07-30",
+    "foreign_amount": "45",
+    "foreign_currency": "EUR",
+    "paypal_txn": "9ZY87654XW321098V"
+  },
+  "en_email_receipt_synthetic.txt": {
+    "paypal_payer": "diaspora.student@example.org",
+    "paid_on": "2026-08-15",
+    "foreign_amount": "75",
+    "foreign_currency": "USD",
+    "paypal_txn": "5CD67890EF123456A"
+  },
+  "partial_txn_only.txt": {
+    "paypal_txn": "2BC34567DE890123F",
+    "must_be_null": ["paypal_payer", "paid_on", "foreign_amount", "foreign_currency"]
+  },
+  "de_p2p_email_mg.txt": {
+    "paid_on": "2026-08-04",
+    "foreign_amount": "70",
+    "foreign_currency": "EUR",
+    "paypal_txn": "3D635703TJ2339610",
+    "must_be_null": ["paypal_payer"]
+  }
+}

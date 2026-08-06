@@ -14,8 +14,10 @@ use App\Models\Payment;
 use App\Models\PranaPerk;
 use App\Models\PranaRedemption;
 use App\Models\Schedule;
+use App\Models\ScheduleAttendanceNotice;
 use App\Models\SubscriberMagnet;
 use App\Services\Activity\CabinetTelemetry;
+use App\Services\AttendanceNoticeService;
 use App\Services\Cabinet\GrammarLadder;
 use App\Services\Cabinet\RecordingsCatalog;
 use App\Services\Cabinet\RecoveryState;
@@ -104,7 +106,27 @@ class StudentController extends Controller
         $feedUrl = route('student.calendar.feed', ['user' => $user->id, 'token' => $feedToken]);
         $webcalUrl = preg_replace('~^https?://~', 'webcal://', $feedUrl);
 
-        return view('student.calendar', compact('groupedEvents', 'feedUrl', 'webcalUrl'));
+        // H2317 — предварительные предупреждения (не приду / опоздаю / …).
+        $attendanceNoticesEnabled = (bool) config('features.attendance_notices', false);
+        $myNotices = collect();
+        $noticeOptions = [];
+        if ($attendanceNoticesEnabled && $upcomingEvents->isNotEmpty()) {
+            $myNotices = ScheduleAttendanceNotice::query()
+                ->where('user_id', $user->id)
+                ->whereIn('schedule_id', $upcomingEvents->pluck('id'))
+                ->get()
+                ->keyBy('schedule_id');
+            $noticeOptions = app(AttendanceNoticeService::class)->statusOptions();
+        }
+
+        return view('student.calendar', compact(
+            'groupedEvents',
+            'feedUrl',
+            'webcalUrl',
+            'attendanceNoticesEnabled',
+            'myNotices',
+            'noticeOptions',
+        ));
     }
 
     /**

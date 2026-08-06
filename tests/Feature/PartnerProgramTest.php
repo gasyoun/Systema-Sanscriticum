@@ -19,12 +19,18 @@ class PartnerProgramTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const BOT_SECRET = 'partner-bot-test-secret';
+
     protected function setUp(): void
     {
         parent::setUp();
         // Vite is disabled globally in Tests\TestCase::setUp().
         // Программа по умолчанию ВЫКЛ — включаем для большинства тестов явно.
-        config(['partner.enabled' => true, 'partner.reward_amount' => 1000]);
+        config([
+            'partner.enabled' => true,
+            'partner.reward_amount' => 1000,
+            'partner.bot_secret' => self::BOT_SECRET,
+        ]);
     }
 
     private function activePartner(array $attrs = []): Partner
@@ -333,17 +339,19 @@ class PartnerProgramTest extends TestCase
     /** @test */
     public function bot_register_is_idempotent_by_telegram(): void
     {
-        $first = $this->postJson('/api/partner-bot/register', [
-            'name' => 'Бот Партнёр',
-            'telegram_username' => 'botpartner',
-        ]);
+        $first = $this->withHeader('X-Partner-Bot-Secret', self::BOT_SECRET)
+            ->postJson('/api/partner-bot/register', [
+                'name' => 'Бот Партнёр',
+                'telegram_username' => 'botpartner',
+            ]);
         $first->assertOk()->assertJsonPath('created', true);
         $code = $first->json('partner.code');
 
-        $second = $this->postJson('/api/partner-bot/register', [
-            'name' => 'Бот Партнёр',
-            'telegram_username' => '@botpartner',
-        ]);
+        $second = $this->withHeader('X-Partner-Bot-Secret', self::BOT_SECRET)
+            ->postJson('/api/partner-bot/register', [
+                'name' => 'Бот Партнёр',
+                'telegram_username' => '@botpartner',
+            ]);
         $second->assertOk()->assertJsonPath('created', false)->assertJsonPath('partner.code', $code);
 
         $this->assertSame(1, Partner::where('telegram_username', '@botpartner')->count());

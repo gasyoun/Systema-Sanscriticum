@@ -27,7 +27,7 @@ asset↔use-case context:
 | 5 | D6 delivery | **A new script-drill exercise in the existing [`public/lila/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/lila) family** (cloze/match/sort pattern) — the current tree has no letter-drill surface on `main`, so this is an add-alongside, not a rewrite |
 | 6 | Rights | Root glosses: WhitneyRoots RU layer is org-owned — publishable. Frequency tables: derived from DCS — attribute DCS (Hellwig) on the surface's about/notes block |
 
-## D4 — Frequency-ranked RU root deck ([H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md), Sonnet)
+## D4 — Frequency-ranked RU root deck ([H1280](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1280-Sonnet_Systema-Sanscriticum_srs-root-frequency-ru-deck_19.07.26.md), Sonnet)
 
 **What ships:** a curated system deck «Корни санскрита по частотности» — the 935 Whitney
 roots ordered by corpus token frequency, front = root (devanagari + IAST), back = Russian
@@ -51,7 +51,7 @@ gloss + verb class + a top attested form; reviewable through the existing FSRS l
 (unmatched list logged, not silently dropped); re-seed is a no-op; a flagged account can
 review the deck end-to-end; DCS attribution present in the deck description.
 
-## D6 — Conjunct-frequency script drill ([H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md), Sonnet)
+## D6 — Conjunct-frequency script drill ([H1281](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1281-Sonnet_Systema-Sanscriticum_marathon-conjunct-frequency-order_19.07.26.md), Sonnet)
 
 **What ships:** a static exercise «Лигатуры по частотности» in
 [`public/lila/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/public/lila)

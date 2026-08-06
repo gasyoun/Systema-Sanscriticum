@@ -13,6 +13,7 @@ use App\Models\Teacher;
 use App\Models\User;
 use App\Support\Roles;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\FileUpload;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
@@ -132,7 +133,7 @@ class HomeworkFeedbackUploadTest extends TestCase
         );
     }
 
-    private function feedbackField(): \Filament\Forms\Components\FileUpload
+    private function feedbackField(): FileUpload
     {
         $this->actingAsAdmin();
         $submission = $this->submission();

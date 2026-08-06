@@ -4,7 +4,7 @@ _Created: 13-07-2026 · Last updated: 31-07-2026_
 
 The single ranked index of what needs **unblocking, speeding up, or paying down** in
 Systema-Sanscriticum. Origin: [H881](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H881-Opus_Systema-Sanscriticum_optimisation-backlog-2026h2_13.07.26.md)
-(Opus 4.8, `claude-opus-4-8`). **Refreshed 31-07-2026** ([H2014](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2014-Grok_Systema-Sanscriticum_optimisation-kanban-refresh_31.07.26.md),
+(Opus 4.8, `claude-opus-4-8`). **Refreshed 31-07-2026** ([H2014](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2014-Grok_Systema-Sanscriticum_optimisation-kanban-refresh_31.07.26.md),
 Grok 4.5 `grok-4.5`) against live prod (`root@193.232.229.92`, `/var/www/html`) and
 `origin/main`.
 

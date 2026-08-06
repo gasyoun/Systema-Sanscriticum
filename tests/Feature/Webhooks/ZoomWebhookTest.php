@@ -94,10 +94,42 @@ class ZoomWebhookTest extends TestCase
     }
 
     /** @test */
-    public function empty_secret_skips_signature_check(): void
+    public function missing_secret_returns_503_for_participant_event(): void
     {
-        // Секрет пуст → подпись не нужна (локалка); неизвестная встреча → ignored 200.
         $this->postZoom($this->participantPayload('333'), secret: '', sign: false)
-            ->assertOk();
+            ->assertStatus(503);
+    }
+
+    /** @test */
+    public function missing_secret_returns_503_for_url_validation_without_hmac(): void
+    {
+        $this->postZoom([
+            'event' => 'endpoint.url_validation',
+            'payload' => ['plainToken' => 'plain-abc'],
+        ], secret: '', sign: false)
+            ->assertStatus(503)
+            ->assertJsonMissing(['encryptedToken' => hash_hmac('sha256', 'plain-abc', '')]);
+    }
+
+    /** @test */
+    public function rotated_secret_rejects_old_signature_and_accepts_new_signature(): void
+    {
+        $payload = $this->participantPayload('does-not-exist');
+
+        $this->postZoom($payload, secret: 'old-secret')->assertOk();
+
+        config(['services.zoom.webhook_secret' => 'new-secret']);
+        $body = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $oldHeaders = [
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'x-zm-request-timestamp' => self::TS,
+            'x-zm-signature' => 'v0='.hash_hmac('sha256', 'v0:'.self::TS.':'.$body, 'old-secret'),
+        ];
+
+        $this->call('POST', '/api/webhooks/zoom', [], [], [], $this->transformHeadersToServerVars($oldHeaders), $body)
+            ->assertStatus(403);
+
+        $this->postZoom($payload, secret: 'new-secret')->assertOk();
     }
 }

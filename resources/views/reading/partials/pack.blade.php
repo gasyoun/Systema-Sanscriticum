@@ -7,7 +7,14 @@
     $difficulty (?array, advisory) and $rankedPacks (list). Optional per-token `gloss_ru`
     ({surface, lemma}) is rendered when the feed carries it — hitopadesa-0 does, nala-1 does
     not, so the public page's output is unchanged by its introduction.
+
+    H2111 adds the add-to-SRS half of the tap panel behind an OPT-IN flag, $srsAdd, passed
+    only by ReadingPackController::cabinetShow. The public /reading/kosha-demo page passes
+    nothing, so it keeps rendering exactly as before — no button, no POST target, no
+    per-token form. A token with no `lemma` in the feed gets no button at all (the reader
+    degrades rather than requiring the H1463 cascade lemmatizer).
 --}}
+@php($srsAdd = $srsAdd ?? false)
 <header class="text-center mb-10">
     <h1 class="text-3xl md:text-4xl font-extrabold text-[#E85C24] tracking-tight">{{ $pack['title'] }}</h1>
     <p class="mt-2 text-gray-400 text-sm">{{ $pack['ref'] }} · {{ $pack['text_name'] }} · {{ $pack['source'] }}</p>
@@ -18,9 +25,29 @@
         (<b class="text-gray-300">{{ $pack['stats']['link_rate_pct'] }}%</b>)
     </p>
     <p class="mt-4 text-gray-500 text-xs max-w-xl mx-auto">
-        Нажмите на слово, чтобы увидеть лемму, форму и значение.
+        Нажмите на слово, чтобы увидеть лемму, форму и значение@if($srsAdd) и добавить его в свою колоду@endif.
     </p>
 </header>
+
+@if($srsAdd && session('reading_srs_status'))
+    @php($srsWord = session('reading_srs_word'))
+    <div class="max-w-3xl mx-auto mb-8">
+        <div class="rounded-2xl border px-5 py-4 text-sm
+            @if(session('reading_srs_status') === 'added') border-[#E85C24]/50 bg-[#1d1410] text-gray-200
+            @else border-gray-700/60 bg-[#161b28] text-gray-400 @endif">
+            @if(session('reading_srs_status') === 'added')
+                Слово <b lang="sa-Latn">{{ $srsWord }}</b> добавлено в вашу колоду «Старт чтения».
+                @if(config('srs.enabled'))
+                    <a href="{{ route('student.srs.deck', \App\Support\StartChteniyaSrsDeck::DECK_SLUG) }}" class="text-[#2AABEE] hover:underline">Открыть колоду</a>
+                @endif
+            @elseif(session('reading_srs_status') === 'duplicate')
+                Слово <b lang="sa-Latn">{{ $srsWord }}</b> уже есть в вашей колоде «Старт чтения».
+            @else
+                Для формы <b lang="sa-Latn">{{ $srsWord }}</b> в этом пакете нет леммы — карточку не создаём.
+            @endif
+        </div>
+    </div>
+@endif
 
 {{-- ═════ Сложность (H965, Hop C — справочные данные, не влияют на порядок курса) ═════ --}}
 @if($difficulty)
@@ -46,6 +73,7 @@
 
 <div class="space-y-6 max-w-3xl mx-auto">
     @foreach($pack['sentences'] as $sentence)
+        @php($sentenceIndex = $loop->index)
         <article class="bg-[#161b28] border border-gray-700/60 rounded-2xl p-6">
             <div class="text-xs uppercase tracking-widest text-gray-500 mb-2">{{ $sentence['locus'] }}</div>
             <div class="deva text-xl text-white mb-3 leading-relaxed">
@@ -63,6 +91,17 @@
                             @endif
                             @if(!empty($token['gloss']))
                                 <div class="mt-1 text-gray-400">{{ $token['gloss'] }}</div>
+                            @endif
+                            @if($srsAdd && !empty($token['lemma']))
+                                {{-- Positions only: the card's text is read from the pinned freeze server-side. --}}
+                                <form method="POST" action="{{ route('student.reading.srs.add', $pack['slug']) }}" class="mt-2">
+                                    @csrf
+                                    <input type="hidden" name="sentence" value="{{ $sentenceIndex }}">
+                                    <input type="hidden" name="token" value="{{ $loop->index }}">
+                                    <button type="submit" class="text-xs px-2 py-1 rounded-md border border-gray-600 text-gray-300 hover:border-[#E85C24] hover:text-[#E85C24] transition-colors">
+                                        + в колоду
+                                    </button>
+                                </form>
                             @endif
                         </div>
                     </details>

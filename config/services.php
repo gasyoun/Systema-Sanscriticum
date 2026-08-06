@@ -336,8 +336,7 @@ return [
         'client_secret' => env('ZOOM_CLIENT_SECRET'),
         'timeout' => (int) env('ZOOM_TIMEOUT', 30),
         // Secret Token из настроек Event Subscriptions приложения. Подписывает
-        // вебхуки (`recording.completed`) и проверку URL. Пусто → проверка
-        // подписи выключена (только для локалки; на проде задать ОБЯЗАТЕЛЬНО).
+        // вебхуки и проверку URL. Обязателен: пустой → endpoint 503.
         'webhook_secret' => env('ZOOM_WEBHOOK_SECRET'),
     ],
 

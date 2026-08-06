@@ -8,7 +8,7 @@ _Created: 27-07-2026 · Last updated: 27-07-2026_
 
 ---
 
-## Волна A — групповые проверяющие ([H1729](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1729-Sonnet_Systema-Sanscriticum_group-reviewers-homework-access_27.07.26.md))
+## Волна A — групповые проверяющие ([H1729](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1729-Sonnet_Systema-Sanscriticum_group-reviewers-homework-access_27.07.26.md))
 
 ### A1. Миграция и модели
 
@@ -59,7 +59,7 @@ _Created: 27-07-2026 · Last updated: 27-07-2026_
 
 ---
 
-## Волна B — акт взаимозачёта ([H1730](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1730-Opus_Systema-Sanscriticum_teacher-student-mutual-settlement_27.07.26.md))
+## Волна B — акт взаимозачёта ([H1730](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1730-Opus_Systema-Sanscriticum_teacher-student-mutual-settlement_27.07.26.md))
 
 ### B1. Сервис сверки
 

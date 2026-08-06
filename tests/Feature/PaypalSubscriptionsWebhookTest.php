@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\BillingCommitmentKind;
+use App\Enums\BillingCommitmentStatus;
 use App\Enums\BillingSubscriptionMode;
 use App\Enums\BillingSubscriptionStatus;
+use App\Models\BillingCommitment;
 use App\Models\BillingSubscription;
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
 use App\Models\User;
@@ -49,6 +53,10 @@ class PaypalSubscriptionsWebhookTest extends TestCase
 
     private function makePaypalSub(User $user, Course $course, string $providerSubId = 'I-SUBTEST1'): BillingSubscription
     {
+        if (! $course->groups()->exists()) {
+            $course->groups()->attach(Group::factory()->create());
+        }
+
         return BillingSubscription::factory()->create([
             'user_id' => $user->id,
             'course_id' => $course->id,
@@ -57,6 +65,28 @@ class PaypalSubscriptionsWebhookTest extends TestCase
             'status' => BillingSubscriptionStatus::PendingFirstPay,
             'mode' => BillingSubscriptionMode::PerCourse,
             'amount_rub' => 4900,
+        ]);
+    }
+
+    private function makeCommitment(
+        BillingSubscription $subscription,
+        string $accessKey = 'full',
+        ?int $startBlock = null,
+        ?int $endBlock = null,
+    ): BillingCommitment {
+        return BillingCommitment::factory()->create([
+            'billing_subscription_id' => $subscription->id,
+            'user_id' => $subscription->user_id,
+            'course_id' => $subscription->course_id,
+            'kind' => $accessKey === 'full'
+                ? BillingCommitmentKind::CourseMonth
+                : BillingCommitmentKind::CourseBlock,
+            'amount_rub' => 4900,
+            'access_key' => $accessKey,
+            'start_block' => $startBlock,
+            'end_block' => $endBlock,
+            'status' => BillingCommitmentStatus::Scheduled,
+            'due_on' => today(),
         ]);
     }
 
@@ -92,6 +122,7 @@ class PaypalSubscriptionsWebhookTest extends TestCase
         $user = User::factory()->create();
         $course = Course::factory()->create();
         $sub = $this->makePaypalSub($user, $course);
+        $commitment = $this->makeCommitment($sub);
 
         $this->postJson('/api/webhooks/paypal-subscriptions', [
             'id' => 'WH-EVT-SALE-1',
@@ -109,7 +140,13 @@ class PaypalSubscriptionsWebhookTest extends TestCase
         $this->assertSame($user->id, $payment->user_id);
         $this->assertSame($course->id, $payment->course_id);
         $this->assertSame('SALE-ABC', $payment->transaction_id);
-        $this->assertEquals(49.0, (float) $payment->amount);
+        $this->assertEquals(4900.0, (float) $payment->amount);
+        $this->assertEquals(49.0, (float) $payment->foreign_amount);
+        $this->assertSame('USD', $payment->foreign_currency);
+        $this->assertSame('full', $payment->tariff);
+        $this->assertTrue($user->fresh()->groups()->whereKey($course->groups()->value('groups.id'))->exists());
+        $this->assertSame(BillingCommitmentStatus::Charged, $commitment->fresh()->status);
+        $this->assertSame($payment->id, $commitment->fresh()->payment_id);
         $this->assertSame(BillingSubscriptionStatus::Active, $sub->fresh()->status);
     }
 
@@ -120,6 +157,7 @@ class PaypalSubscriptionsWebhookTest extends TestCase
         $user = User::factory()->create();
         $course = Course::factory()->create();
         $sub = $this->makePaypalSub($user, $course);
+        $commitment = $this->makeCommitment($sub, 'block_2', 2, 3);
 
         $body = [
             'id' => 'WH-EVT-DUP-1',
@@ -127,7 +165,7 @@ class PaypalSubscriptionsWebhookTest extends TestCase
             'resource' => [
                 'id' => 'SALE-DUP',
                 'billing_agreement_id' => $sub->provider_subscription_id,
-                'amount' => ['total' => '49.00'],
+                'amount' => ['total' => '49.00', 'currency' => 'USD'],
             ],
         ];
 
@@ -136,6 +174,57 @@ class PaypalSubscriptionsWebhookTest extends TestCase
 
         $this->assertSame(1, Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->count());
         $this->assertSame(1, PaymentWebhookEvent::where('provider', 'paypal')->count());
+        $payment = Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->firstOrFail();
+        $this->assertSame('block_2', $payment->tariff);
+        $this->assertSame(2, $payment->start_block);
+        $this->assertSame(3, $payment->end_block);
+        $this->assertSame($payment->id, $commitment->fresh()->payment_id);
+    }
+
+    /** @test */
+    public function unmatched_charge_fails_for_retry_without_ledgering_success(): void
+    {
+        $this->enableConfigured();
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $sub = $this->makePaypalSub($user, $course);
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-NO-COMMITMENT',
+            'event_type' => 'PAYMENT.SALE.COMPLETED',
+            'resource' => [
+                'id' => 'SALE-NO-COMMITMENT',
+                'billing_agreement_id' => $sub->provider_subscription_id,
+                'amount' => ['total' => '49.00', 'currency' => 'USD'],
+            ],
+        ])->assertStatus(500);
+
+        $this->assertSame(0, Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->count());
+        $this->assertSame(0, PaymentWebhookEvent::where('provider', 'paypal')->count());
+    }
+
+    /** @test */
+    public function ambiguous_due_commitments_fail_for_retry(): void
+    {
+        $this->enableConfigured();
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $sub = $this->makePaypalSub($user, $course);
+        $this->makeCommitment($sub);
+        $this->makeCommitment($sub, 'block_1', 1, 1);
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-AMBIGUOUS',
+            'event_type' => 'PAYMENT.SALE.COMPLETED',
+            'resource' => [
+                'id' => 'SALE-AMBIGUOUS',
+                'billing_agreement_id' => $sub->provider_subscription_id,
+                'amount' => ['total' => '49.00', 'currency' => 'USD'],
+            ],
+        ])->assertStatus(500);
+
+        $this->assertSame(0, Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->count());
+        $this->assertSame(2, BillingCommitment::where('status', BillingCommitmentStatus::Scheduled)->count());
     }
 
     /** @test */

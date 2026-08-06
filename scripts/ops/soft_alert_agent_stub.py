@@ -17,8 +17,27 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
+import shlex
 import subprocess
 import sys
+
+
+SSH_TARGET_RE = re.compile(r"^[A-Za-z0-9_.-]+@[A-Za-z0-9_.:-]+$")
+
+
+def ssh_target(value: str) -> str:
+    """Accept a destination, never an ssh option or shell fragment."""
+    if not SSH_TARGET_RE.fullmatch(value):
+        raise argparse.ArgumentTypeError("--ssh must be user@host without options")
+    return value
+
+
+def remote_app_dir(value: str) -> str:
+    """The remote application directory must be an absolute POSIX path."""
+    if not value.startswith("/") or "\x00" in value or "\n" in value or "\r" in value:
+        raise argparse.ArgumentTypeError("--app-dir must be an absolute POSIX path")
+    return value
 
 
 def main() -> int:
@@ -28,8 +47,8 @@ def main() -> int:
         sys.stderr.reconfigure(encoding="utf-8")
 
     p = argparse.ArgumentParser(description="Soft-alert agent stub (H2148)")
-    p.add_argument("--ssh", default="root@193.232.229.92", help="SSH target")
-    p.add_argument("--app-dir", default="/var/www/html", help="Remote APP_DIR")
+    p.add_argument("--ssh", type=ssh_target, default="root@193.232.229.92", help="SSH target")
+    p.add_argument("--app-dir", type=remote_app_dir, default="/var/www/html", help="Remote APP_DIR")
     p.add_argument(
         "--apply-safe",
         action="store_true",
@@ -39,12 +58,12 @@ def main() -> int:
     args = p.parse_args()
 
     remote_cmd = (
-        f"cd {args.app_dir} && "
+        f"cd {shlex.quote(args.app_dir)} && "
         f"php artisan ops:soft-remediate --dry-run --json"
     )
     if args.apply_safe:
         remote_cmd = (
-            f"cd {args.app_dir} && "
+            f"cd {shlex.quote(args.app_dir)} && "
             f"php artisan ops:soft-remediate --apply --apply-breaker-clear --json"
         )
 
@@ -54,13 +73,18 @@ def main() -> int:
         "BatchMode=yes",
         "-o",
         "ConnectTimeout=10",
+        "--",
         args.ssh,
         remote_cmd,
     ]
     print("RUN:", " ".join(ssh), flush=True)
     try:
+        # `ssh` is a list, not a shell string (no shell=True), so each element is
+        # passed as a literal argv entry; --ssh/--app-dir are local CLI args this
+        # developer supplies to their own dev machine, not attacker-controlled
+        # network input.
         proc = subprocess.run(
-            ssh,
+            ssh,  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args.dangerous-subprocess-use-tainted-env-args
             capture_output=True,
             text=True,
             encoding="utf-8",
