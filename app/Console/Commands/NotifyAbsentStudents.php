@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Jobs\SendMessengerAlerts;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
+use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
 use App\Services\ClassAttendanceService;
 use Illuminate\Console\Command;
@@ -55,8 +56,17 @@ class NotifyAbsentStudents extends Command
                 continue;
             }
 
+            // H2317: кто заранее написал «не смогу» — не пингуем «скучали»:
+            // предупреждение уже принято, запись всё равно в кабинете.
+            $preNotifiedAbsentIds = ScheduleAttendanceNotice::query()
+                ->where('schedule_id', $schedule->id)
+                ->where('status', ScheduleAttendanceNotice::STATUS_ABSENT)
+                ->pluck('user_id')
+                ->all();
+
             $absentees = $attendance->forSchedule($schedule)['roster']
                 ->where('status', 'absent')
+                ->reject(fn ($row) => in_array($row['user']->id, $preNotifiedAbsentIds, true))
                 ->map(fn ($row) => $row['user'])
                 ->filter(fn (User $u) => $u->telegram_id || $u->vk_id);
 

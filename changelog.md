@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2317: предварительное предупреждение о занятии** — студент заранее сообщает, что не сможет быть / не уверен (в пути, связь) / опоздает / уйдёт раньше. Каналы: личный кабинет (`/calendar`, 4 кнопки на карточке), Telegram/VK self-service (фразы и `/absent`·`/late`·`/early`·`/maybe`·`/coming`), короткий ack в чате учебной группы. Таблица `schedule_attendance_notices` (unique user+schedule); флаг `features.attendance_notices` / `ATTENDANCE_NOTICES` default **OFF**. Админ-ростер занятия: колонка «Предупредил» + chip. `classes:notify-absent` не пингует тех, кто уже сказал «не смогу». Tests: `AttendanceNoticeTest`, intent phrases in `StudentSelfServiceIntentTest`. Deploy: `DEPLOY_QUEUE` №66. Executor: Grok 4.5 (`grok-4.5`).
+
 ### Changed
 - **H2318: Marathon konsultaciya channel/landing copy edits (MG).** TG post 1 header → `🗣 БЕСПЛАТНАЯ КОНСУЛЬТАЦИЯ ПО ОНЛАЙН-КУРСАМ`; `matar`/`bhratar` → `mātar`/`bhrātar`; Day 2 line «как собрано» → «из чего состоит»; pace line «Темп личный» → «Темп тот, в котором студенту удобно»; drop accidental line-break mid-phrase after «маршрут». Source of truth: `config/marathon_landing_copy.php` + marketing/marathon-2026-08 md/html. After deploy: `php artisan marathon:apply-landing-copy a` (or active variant) to upsert `LandingPage`. Channel post 1 text is used by `marathon:publish-channel-posts` (scheduled; already-sent rows stay as published). Executor: Grok 4.5 (`grok-4.5`).
 

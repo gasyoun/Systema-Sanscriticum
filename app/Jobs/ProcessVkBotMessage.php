@@ -137,6 +137,29 @@ final class ProcessVkBotMessage implements ShouldQueue
             return;
         }
 
+        // SELF-SERVICE: предупреждение о занятии (H2317).
+        if (app(StudentSelfService::class)->matchesAttendanceNoticeIntent($text)) {
+            $reply = app(StudentSelfService::class)->handleAttendanceNotice(
+                $user,
+                $text,
+                \App\Models\ScheduleAttendanceNotice::SOURCE_VK,
+            );
+
+            if ($reply['ok'] && $reply['text'] !== '') {
+                ChatMessage::create([
+                    'user_id' => $user->id,
+                    'role' => 'bot',
+                    'text' => $reply['text'],
+                    'is_read' => true,
+                    'source' => 'vk',
+                ]);
+
+                $this->sendVkMessage($vkId, $reply['text']);
+
+                return;
+            }
+        }
+
         // ПРОВЕРКА: Если бот на паузе (отвечает человек)
         if (Cache::has("chat_human_vk_{$vkId}")) {
             if ($adminId) {

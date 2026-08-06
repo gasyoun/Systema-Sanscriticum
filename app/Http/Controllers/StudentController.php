@@ -104,7 +104,27 @@ class StudentController extends Controller
         $feedUrl = route('student.calendar.feed', ['user' => $user->id, 'token' => $feedToken]);
         $webcalUrl = preg_replace('~^https?://~', 'webcal://', $feedUrl);
 
-        return view('student.calendar', compact('groupedEvents', 'feedUrl', 'webcalUrl'));
+        // H2317 — предварительные предупреждения (не приду / опоздаю / …).
+        $attendanceNoticesEnabled = (bool) config('features.attendance_notices', false);
+        $myNotices = collect();
+        $noticeOptions = [];
+        if ($attendanceNoticesEnabled && $upcomingEvents->isNotEmpty()) {
+            $myNotices = \App\Models\ScheduleAttendanceNotice::query()
+                ->where('user_id', $user->id)
+                ->whereIn('schedule_id', $upcomingEvents->pluck('id'))
+                ->get()
+                ->keyBy('schedule_id');
+            $noticeOptions = app(\App\Services\AttendanceNoticeService::class)->statusOptions();
+        }
+
+        return view('student.calendar', compact(
+            'groupedEvents',
+            'feedUrl',
+            'webcalUrl',
+            'attendanceNoticesEnabled',
+            'myNotices',
+            'noticeOptions',
+        ));
     }
 
     /**

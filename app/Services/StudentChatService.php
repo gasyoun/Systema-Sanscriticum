@@ -100,6 +100,20 @@ class StudentChatService
             return;
         }
 
+        // 1.8. Self-service: предупреждение о занятии (H2317).
+        if ($this->selfService->matchesAttendanceNoticeIntent($text)) {
+            $reply = $this->selfService->handleAttendanceNotice(
+                $user,
+                $text,
+                \App\Models\ScheduleAttendanceNotice::SOURCE_CABINET,
+            );
+            if ($reply['ok'] && $reply['text'] !== '') {
+                $this->botSay($user, $reply['text']);
+
+                return;
+            }
+        }
+
         // 2. Режим человека уже включён — ИИ молчит, ждём куратора.
         if (Cache::has($this->humanModeKey($user))) {
             return;

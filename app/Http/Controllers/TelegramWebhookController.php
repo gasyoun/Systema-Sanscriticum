@@ -47,6 +47,11 @@ class TelegramWebhookController extends Controller
                 $tag = app(HomeworkTelegramTagService::class);
                 if ($tag->isTagMessage($text)) {
                     $tag->handleIncoming($data['message']);
+                } else {
+                    // H2317: студент в чате группы пишет «не приду / опоздаю / …»
+                    // — фиксируем предупреждение, не уводим в AI-ветку (group chat
+                    // иначе глушится целиком).
+                    $this->handleGroupAttendanceNotice($data['message']);
                 }
 
                 return response()->json(['status' => 'ok']);
@@ -195,6 +200,29 @@ class TelegramWebhookController extends Controller
             return;
         }
 
+        // 1.8. SELF-SERVICE: предупреждение о занятии (H2317) — не приду / опоздаю / …
+        if (app(StudentSelfService::class)->matchesAttendanceNoticeIntent($question)) {
+            $reply = app(StudentSelfService::class)->handleAttendanceNotice(
+                $user,
+                $question,
+                \App\Models\ScheduleAttendanceNotice::SOURCE_TELEGRAM,
+            );
+
+            if ($reply['ok'] && $reply['text'] !== '') {
+                ChatMessage::create([
+                    'user_id' => $user->id,
+                    'role' => 'bot',
+                    'text' => $reply['text'],
+                    'is_read' => true,
+                    'source' => 'telegram_bot',
+                ]);
+
+                $this->sendMessage($chatId, $reply['text']);
+
+                return;
+            }
+        }
+
         // 2. ПРОВЕРЯЕМ РЕЖИМ ЧЕЛОВЕКА
         if (Cache::has("chat_human_{$chatId}")) {
             if ($adminId) {
@@ -250,6 +278,53 @@ class TelegramWebhookController extends Controller
         ]);
 
         $this->sendMessage($chatId, $answer);
+    }
+
+    /**
+     * H2317: предупреждение о занятии из чата учебной группы.
+     * Только привязанный студент + распознанная фраза; ответ в группу коротко.
+     *
+     * @param  array<string, mixed>  $message
+     */
+    private function handleGroupAttendanceNotice(array $message): void
+    {
+        $text = isset($message['text']) ? (string) $message['text'] : '';
+        if (! app(StudentSelfService::class)->matchesAttendanceNoticeIntent($text)) {
+            return;
+        }
+
+        $fromId = $message['from']['id'] ?? null;
+        if ($fromId === null) {
+            return;
+        }
+
+        $user = User::query()->where('telegram_id', $fromId)->first();
+        if (! $user) {
+            return;
+        }
+
+        $chatId = $message['chat']['id'] ?? null;
+        $preferGroupId = null;
+        if ($chatId !== null) {
+            $group = app(\App\Services\AttendanceNoticeService::class)
+                ->groupByTelegramChatId($chatId);
+            $preferGroupId = $group?->id;
+        }
+
+        $reply = app(StudentSelfService::class)->handleAttendanceNotice(
+            $user,
+            $text,
+            \App\Models\ScheduleAttendanceNotice::SOURCE_TELEGRAM_GROUP,
+            $preferGroupId,
+        );
+
+        if ($reply['ok'] && $reply['text'] !== '' && $chatId !== null) {
+            // Краткий ack в группу: «Имя: статус», без HTML-меню.
+            $safeName = htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8');
+            $plain = strip_tags(str_replace(['<b>', '</b>'], '', $reply['text']));
+            $firstLine = strtok($plain, "\n") ?: $plain;
+            $this->sendMessage($chatId, "{$safeName}: {$firstLine}");
+        }
     }
 
     // ==========================================
