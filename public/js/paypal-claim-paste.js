@@ -1,11 +1,13 @@
 /**
- * PayPal claim paste-to-fill (H2215).
+ * PayPal claim paste-to-fill (H2215 + DE residual).
  *
  * Pure parser + form wiring for /paypal/{tariff} step 2.
  * Never invents missing fields; never auto-submits.
+ * Supported dump languages: EN / DE / RU. Claim form only accepts USD/EUR —
+ * CHF conversion lines in DE receipts are ignored on purpose.
  *
  * Browser: window.PaypalClaimPaste.parse / .bindForm
- * Node (PHPUnit): module.exports
+ * Node (PHPUnit): module.exports via vm (package is "type":"module")
  */
 (function (root, factory) {
     if (typeof module !== 'undefined' && module.exports) {
@@ -16,23 +18,25 @@
 })(typeof self !== 'undefined' ? self : this, function () {
     'use strict';
 
-    var MONTHS_EN = {
-        jan: 1, january: 1,
-        feb: 2, february: 2,
-        mar: 3, march: 3,
+    // EN + DE month names (form dates are calendar, not language-specific).
+    var MONTHS = {
+        jan: 1, january: 1, januar: 1,
+        feb: 2, february: 2, februar: 2,
+        mar: 3, march: 3, maerz: 3, märz: 3, marz: 3,
         apr: 4, april: 4,
-        may: 5,
-        jun: 6, june: 6,
-        jul: 7, july: 7,
+        may: 5, mai: 5,
+        jun: 6, june: 6, juni: 6,
+        jul: 7, july: 7, juli: 7,
         aug: 8, august: 8,
         sep: 9, sept: 9, september: 9,
-        oct: 10, october: 10,
+        oct: 10, october: 10, okt: 10, oktober: 10,
         nov: 11, november: 11,
-        dec: 12, december: 12,
+        dec: 12, december: 12, dez: 12, dezember: 12,
     };
 
     var REQUIRED_KEYS = ['paypal_payer', 'paid_on', 'foreign_amount', 'foreign_currency'];
     var ALL_KEYS = REQUIRED_KEYS.concat(['paypal_txn']);
+    var TXN_RE = /([A-Z0-9]{12,25})/i;
 
     function pad2(n) {
         return n < 10 ? '0' + n : String(n);
@@ -56,18 +60,33 @@
         return y + '-' + pad2(m) + '-' + pad2(d);
     }
 
-    function parseEnMonthDate(raw) {
-        // "July 30, 2026" | "30 Jul 2026" | "Jul 30 2026"
-        var m1 = raw.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+    function monthNum(token) {
+        if (!token) {
+            return null;
+        }
+        // Normalize umlauts for lookup when paste is NFC/NFD mixed.
+        var key = String(token).toLowerCase()
+            .replace(/ä/g, 'a')
+            .replace(/ö/g, 'o')
+            .replace(/ü/g, 'u')
+            .replace(/ß/g, 'ss');
+        // "märz" → after ä→a is "marz"; keep both.
+        return MONTHS[String(token).toLowerCase()] || MONTHS[key] || null;
+    }
+
+    function parseMonthDate(raw) {
+        // "July 30, 2026" | "30 Jul 2026" | "4. August 2026" | "4 August 2026"
+        var cleaned = String(raw).trim().replace(/,/g, ' ').replace(/\s+/g, ' ');
+        var m1 = cleaned.match(/^([A-Za-zÄÖÜäöüß]+)\s+(\d{1,2})\.?\s+(\d{4})$/);
         if (m1) {
-            var mon1 = MONTHS_EN[m1[1].toLowerCase()];
+            var mon1 = monthNum(m1[1]);
             if (mon1) {
                 return toIsoDate(m1[3], mon1, m1[2]);
             }
         }
-        var m2 = raw.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+        var m2 = cleaned.match(/^(\d{1,2})\.?\s+([A-Za-zÄÖÜäöüß]+)\s+(\d{4})$/);
         if (m2) {
-            var mon2 = MONTHS_EN[m2[2].toLowerCase()];
+            var mon2 = monthNum(m2[2]);
             if (mon2) {
                 return toIsoDate(m2[3], mon2, m2[1]);
             }
@@ -92,6 +111,26 @@
         return toIsoDate(m[1], m[2], m[3]);
     }
 
+    function parseAnyDate(piece) {
+        if (!piece) {
+            return null;
+        }
+        var p = String(piece).trim().split(/\s{2,}|\s+[|•]\s+/)[0].trim();
+        var iso = parseIsoDate(p) || parseNumericDate(p) || parseMonthDate(p);
+        if (iso) {
+            return iso;
+        }
+        // "July 30, 2026 12:34:56 PDT" / "4. August 2026 14:00"
+        var tokens = p.replace(/,/g, ' ').split(/\s+/).filter(Boolean);
+        if (tokens.length >= 3) {
+            iso = parseMonthDate(tokens.slice(0, 3).join(' '));
+            if (iso) {
+                return iso;
+            }
+        }
+        return null;
+    }
+
     function normalizeAmount(raw) {
         if (!raw) {
             return null;
@@ -103,7 +142,7 @@
             // Assume comma is thousands separator when both present.
             s = s.replace(/,/g, '');
         } else if (s.indexOf(',') >= 0 && s.indexOf('.') < 0) {
-            // RU decimal comma.
+            // RU / DE decimal comma.
             s = s.replace(',', '.');
         }
         if (!/^\d+(\.\d{1,2})?$/.test(s)) {
@@ -134,6 +173,7 @@
         if (u === '€' || u === 'EUR' || u === 'EURO' || u === 'EUROS') {
             return 'EUR';
         }
+        // CHF / GBP / etc. are not claim-form currencies — never invent a mapping.
         return null;
     }
 
@@ -147,40 +187,76 @@
         return null;
     }
 
+    /**
+     * Value on the same line after a label, or on the next non-empty line
+     * (DE P2P email: "Transaktionscode\n3D63…").
+     */
+    function labeledValue(text, labelPattern) {
+        var re = new RegExp(
+            '(?:^|\\n)\\s*(?:' + labelPattern + ')\\s*[:\\-]?\\s*([^\\n\\r]*)',
+            'i'
+        );
+        var m = text.match(re);
+        if (!m) {
+            return null;
+        }
+        var same = (m[1] || '').trim();
+        if (same) {
+            return same;
+        }
+        // Next non-empty line after the label match.
+        var afterIdx = (m.index || 0) + m[0].length;
+        var rest = text.slice(afterIdx);
+        var next = rest.match(/^\s*\n\s*([^\n\r]+)/);
+        return next ? next[1].trim() : null;
+    }
+
+    function cleanTxn(raw) {
+        if (!raw) {
+            return null;
+        }
+        // Drop trailing URL / parenthetical tracking when the student pastes a linked code.
+        var head = String(raw).split(/\s+/)[0].replace(/[()[\]]/g, '');
+        var m = head.match(TXN_RE);
+        return m ? m[1].toUpperCase() : null;
+    }
+
     function extractTxn(text) {
+        var labeled = labeledValue(
+            text,
+            'Transaction\\s*ID|Transaction\\s*number|Transaction\\s*code|' +
+            'Transaktionscode|Transaktions-?ID|Transaktionsnummer|' +
+            'Идентификатор\\s+транзакции|Номер\\s+транзакции|ID\\s*транзакции'
+        );
+        var fromLabel = cleanTxn(labeled);
+        if (fromLabel) {
+            return fromLabel;
+        }
         var raw = firstMatch(text, [
             /Transaction\s*ID\s*[:#]?\s*([A-Z0-9]{12,25})\b/i,
+            /Transaktionscode\s*[:#]?\s*([A-Z0-9]{12,25})\b/i,
             /Идентификатор\s+транзакции\s*[:#]?\s*([A-Z0-9]{12,25})\b/i,
             /Transaction\s*number\s*[:#]?\s*([A-Z0-9]{12,25})\b/i,
             /Номер\s+транзакции\s*[:#]?\s*([A-Z0-9]{12,25})\b/i,
             /\bID\s*транзакции\s*[:#]?\s*([A-Z0-9]{12,25})\b/i,
         ]);
-        return raw || null;
+        return cleanTxn(raw);
     }
 
     function extractDate(text) {
-        // Labeled lines first.
-        var labeled = firstMatch(text, [
-            /(?:^|\n)\s*(?:Date|Дата|Payment\s+date|Дата\s+платежа|Дата\s+оплаты)\s*[:\-]?\s*([^\n\r]+)/i,
-        ]);
+        var labeled = labeledValue(
+            text,
+            'Date|Payment\\s+date|Transaction\\s+date|Transaktionsdatum|' +
+            'Datum|Дата|Дата\\s+платежа|Дата\\s+оплаты'
+        );
         if (labeled) {
-            var piece = labeled.trim().split(/\s{2,}|\s+[|•]\s+/)[0].trim();
-            var iso = parseIsoDate(piece) || parseNumericDate(piece) || parseEnMonthDate(piece);
+            var iso = parseAnyDate(labeled);
             if (iso) {
                 return iso;
             }
-            // Maybe "July 30, 2026 12:34:56 PDT" — take first 3 tokens.
-            var tokens = piece.replace(/,/g, ' ').split(/\s+/).filter(Boolean);
-            if (tokens.length >= 3) {
-                iso = parseEnMonthDate(tokens.slice(0, 3).join(' '))
-                    || parseEnMonthDate(tokens[0] + ' ' + tokens[1] + ' ' + tokens[2]);
-                if (iso) {
-                    return iso;
-                }
-            }
         }
 
-        // Free-form ISO / numeric / English month anywhere.
+        // Free-form ISO / numeric / EN+DE month anywhere.
         var freeIso = text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
         if (freeIso) {
             var iso2 = parseIsoDate(freeIso[1]);
@@ -195,30 +271,37 @@
                 return iso3;
             }
         }
+        // "4. August 2026" / "30 July 2026"
+        var freeMonth = text.match(
+            /\b(\d{1,2}\.?\s+(?:Jan(?:uar(?:y)?)?|Feb(?:ruar(?:y)?)?|Mär(?:z)?|Maerz|Mar(?:ch)?|Apr(?:il)?|May|Mai|Jun(?:i|e)?|Jul(?:i|y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Okt(?:ober)?|Oct(?:ober)?|Nov(?:ember)?|Dez(?:ember)?|Dec(?:ember)?)\s+\d{4})\b/i
+        );
+        if (freeMonth) {
+            var iso4 = parseMonthDate(freeMonth[1]);
+            if (iso4) {
+                return iso4;
+            }
+        }
         var freeEn = text.match(
             /\b((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s+\d{4})\b/i
         );
         if (freeEn) {
-            return parseEnMonthDate(freeEn[1].replace(/,/g, ''));
-        }
-        var freeEn2 = text.match(
-            /\b(\d{1,2}\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4})\b/i
-        );
-        if (freeEn2) {
-            return parseEnMonthDate(freeEn2[1]);
+            return parseMonthDate(freeEn[1]);
         }
         return null;
     }
 
     function extractAmountCurrency(text) {
-        var amount = null;
-        var currency = null;
-
-        // "$50.00 USD" / "€45.00" / "50.00 USD" / "50,00 EUR"
+        // Only USD/EUR — claim form `in:USD,EUR`. Ignore CHF conversion / fee lines.
         var patterns = [
-            /(?:Amount|Сумма|You\s+sent|Вы\s+отправили|Payment\s+of|платеж(?:а|у)?\s+на\s+сумму)?\s*[:\-]?\s*\$\s*([\d\s.,]+)\s*(USD)?\b/i,
-            /(?:Amount|Сумма|You\s+sent|Вы\s+отправили)?\s*[:\-]?\s*€\s*([\d\s.,]+)\s*(EUR)?\b/i,
-            /(?:Amount|Сумма|You\s+sent|Вы\s+отправили|Payment\s+of)?\s*[:\-]?\s*([\d\s.,]+)\s*(USD|EUR|\$|€)\b/i,
+            // DE/EN headline: "Sie haben EUR70.00 an … gesendet" / "You sent $50.00"
+            /(?:Sie\s+haben|You\s+sent|You\s+have\s+sent|Вы\s+отправили)\s+(?:USD|EUR|\$|€)\s*([\d\s.,]+)/i,
+            /(?:Sie\s+haben|You\s+sent|You\s+have\s+sent|Вы\s+отправили)\s+([\d\s.,]+)\s*(USD|EUR|\$|€)\b/i,
+            // Glued currency prefix: EUR70.00 / USD50.00 (common in DE mail)
+            /\b(USD|EUR)\s*([\d\s.,]+)\b/i,
+            // "Geld gesendet\nEUR70.00" already covered by glued prefix anywhere
+            /(?:Amount|Сумма|Payment\s+of|Geld\s+gesendet|Betrag|платеж(?:а|у)?\s+на\s+сумму)?\s*[:\-]?\s*\$\s*([\d\s.,]+)\s*(USD)?\b/i,
+            /(?:Amount|Сумма|Payment\s+of|Geld\s+gesendet|Betrag)?\s*[:\-]?\s*€\s*([\d\s.,]+)\s*(EUR)?\b/i,
+            /(?:Amount|Сумма|Payment\s+of|Geld\s+gesendet|Betrag)?\s*[:\-]?\s*([\d\s.,]+)\s*(USD|EUR|\$|€)\b/i,
             /\b([\d\s.,]+)\s*(USD|EUR)\b/i,
             /\$\s*([\d\s.,]+)/,
             /€\s*([\d\s.,]+)/,
@@ -229,36 +312,50 @@
             if (!m) {
                 continue;
             }
-            var a = normalizeAmount(m[1]);
+            // Glued "EUR70.00" pattern captures currency in g1, amount in g2.
+            var amountRaw;
+            var currencyRaw;
+            if (i === 2) {
+                currencyRaw = m[1];
+                amountRaw = m[2];
+            } else if (i === 0) {
+                // "Sie haben EUR70.00" — currency was in the non-capturing prefix match area
+                amountRaw = m[1];
+                var prefix = m[0].toUpperCase();
+                if (prefix.indexOf('EUR') >= 0 || prefix.indexOf('€') >= 0) {
+                    currencyRaw = 'EUR';
+                } else if (prefix.indexOf('USD') >= 0 || prefix.indexOf('$') >= 0) {
+                    currencyRaw = 'USD';
+                }
+            } else {
+                amountRaw = m[1];
+                currencyRaw = m[2];
+            }
+
+            var a = normalizeAmount(amountRaw);
             if (!a) {
                 continue;
             }
-            var c = null;
-            if (m[2]) {
-                c = normalizeCurrency(m[2]);
-            }
+            var c = normalizeCurrency(currencyRaw);
             if (!c) {
-                // Symbol was on the left of the number in $ / € patterns.
                 if (/\$/.test(m[0]) && !/EUR|€/i.test(m[0])) {
                     c = 'USD';
                 } else if (/€|EUR/i.test(m[0])) {
                     c = 'EUR';
                 }
             }
-            amount = a;
-            currency = c;
-            break;
+            // Skip if we only found a non-USD/EUR token (e.g. accidental CHF via $ false positive).
+            if (!c) {
+                continue;
+            }
+            return { foreign_amount: a, foreign_currency: c };
         }
 
         // Currency-only labeled line fallback (rare).
-        if (!currency) {
-            var cOnly = firstMatch(text, [
-                /(?:Currency|Валюта)\s*[:\-]?\s*(USD|EUR|\$|€)/i,
-            ]);
-            currency = normalizeCurrency(cOnly);
-        }
-
-        return { foreign_amount: amount, foreign_currency: currency };
+        var cOnly = firstMatch(text, [
+            /(?:Currency|Валюта|Währung)\s*[:\-]?\s*(USD|EUR|\$|€)/i,
+        ]);
+        return { foreign_amount: null, foreign_currency: normalizeCurrency(cOnly) };
     }
 
     function looksLikeEmail(s) {
@@ -295,12 +392,16 @@
 
     function extractPayer(text) {
         // Prefer explicit From / Sender / From account labels (payer, not recipient).
+        // Do NOT treat DE "Von Ihnen gezahlt" (amount paid by you) as a payer account.
         var labeled = firstMatch(text, [
-            /(?:^|\n)\s*(?:From|Sender|From\s+account|Paid\s+from|С\s+аккаунта|Отправитель|От|Плательщик|С\s+какого\s+PayPal)\s*[:\-]?\s*([^\n\r]+)/i,
+            /(?:^|\n)\s*(?:From\s+account|From|Sender|Paid\s+from|С\s+аккаунта|Отправитель|От|Плательщик|С\s+какого\s+PayPal|Von\s+Konto|Absender)\s*[:\-]?\s*([^\n\r]+)/i,
         ]);
-        var fromLabeled = cleanPayerCandidate(labeled);
-        if (fromLabeled) {
-            return fromLabeled;
+        // Guard: "Von Ihnen …" is a fee/total line, not a PayPal account.
+        if (labeled && !/^\s*Ihnen\b/i.test(labeled)) {
+            var fromLabeled = cleanPayerCandidate(labeled);
+            if (fromLabeled) {
+                return fromLabeled;
+            }
         }
 
         // "Buyer: email" / "Customer: email"
@@ -312,7 +413,7 @@
             return fromBuyer;
         }
 
-        // Do NOT take "To:" / "Sent to:" — that is the school recipient.
+        // Do NOT take "To:" / "Sent to:" / "an Marcis Gasuns" — that is the school recipient.
         return null;
     }
 
