@@ -158,7 +158,7 @@ and resource-guards §7. Soft remediate **must not** claim success on critical f
 | Legal PDFs | `public/docs/*.pdf` | other tracked paths |
 | Hotfix urgency | PR + wait ≤30 min auto-deploy, or one `deploy.sh` from **clean** tree | partial checkout + leave dirty forever |
 | After soft fix | `guards:verify` + `cabinet:probe` green | only delete breaker and walk away |
-| `scripts/server_guards/sbin/*` or conf changed on `main` | once on VPS: `sudo bash scripts/server_guards_apply.sh` then `guards:verify` | rely on auto-deploy alone — it will `GUARDS DRIFT` → exit 1 → rollback loop → soft fuse (2026-08-05) |
+| `scripts/server_guards/sbin/*` or conf changed on `main` | once on VPS: `sudo bash scripts/server_guards_apply.sh` then `guards:verify` (auto-deploy keeps code via deploy exit 0, does **not** rollback — #1143) | clear soft fuse without apply when reason is GUARDS DRIFT / managed-file (restarts loop) |
 
 Open a Systema issue, assign `@pe4kinsmart-tech` (Ivan), for host/ops units  
 (see n8n / ssh skill standing rule).

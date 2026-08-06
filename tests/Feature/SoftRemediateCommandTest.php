@@ -115,7 +115,27 @@ class SoftRemediateCommandTest extends TestCase
         $this->assertStringContainsString('unique', (string) file_get_contents($this->repo.'/config/copy.php'));
     }
 
-    public function test_hard_breaker_never_cleared(): void
+    public function test_guards_drift_fuse_needs_human_without_clear(): void
+    {
+        // Clean tree + soft fuse whose text is the #1143 class — remediator must
+        // NOT recommend clear_soft_breaker (that restarts the rollback loop).
+        file_put_contents(
+            $this->repo.'/storage/auto_deploy.disabled',
+            "2026-08-05T09:00:00Z [rolled-back] deploy.sh завершился с кодом 1; GUARDS DRIFT managed-file systema-schedule-run.sh\n"
+        );
+
+        $r = (new SoftAutoDeployRemediator($this->repo))->remediate(dryRun: true, applyBreakerClear: true);
+        $this->assertSame('needs_human', $r['status']);
+        $this->assertSame(1, $r['exit_code']);
+        $this->assertTrue($r['breaker_present']);
+        $this->assertTrue(is_file($this->repo.'/storage/auto_deploy.disabled'));
+        $types = array_column($r['actions'], 'type');
+        $this->assertContains('guards_drift', $types);
+        $this->assertNotContains('clear_soft_breaker', $types);
+        $this->assertStringContainsString('server_guards_apply', $r['message']);
+    }
+
+        public function test_hard_breaker_never_cleared(): void
     {
         file_put_contents(
             $this->repo.'/storage/auto_deploy.disabled',

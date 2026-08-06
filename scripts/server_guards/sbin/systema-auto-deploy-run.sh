@@ -15,6 +15,8 @@
 #    Telegram — то же плечо, что у всех предохранителей H1914.
 #  • HEAD == origin/main → тихий выход: cron-шум каждые 30 минут не нужен.
 #  • Деплой строго через deploy.sh — единственный санкционированный путь
+#  • deploy.sh exit 75 = код выложен, guards:verify видит drift managed-файлов
+#    (нужен server_guards_apply.sh). НЕ откатывать — issue #1143 / 2026-08-05.
 #    выкладки (ff-only, стоп на грязном дереве, миграции, OPcache, Horizon,
 #    смоук, guards:verify — всё там).
 #  • Пост-деплойное здоровье проверяется НЕЗАВИСИМО от deploy.sh: смоук ещё раз,
@@ -257,6 +259,18 @@ fail_deploy() {
 echo "$(stamp) AUTO-DEPLOY: $(git rev-parse --short "$LOCAL") -> $(git rev-parse --short "$REMOTE")"
 timeout -k 30s "${MAX}s" bash "$DEPLOY_SH"
 rc=$?
+# 75 = deploy.sh success with managed-guard drift only (#1143). Code is already
+# on origin/main; rolling back would re-create the 2026-08-05 loop (deploy →
+# GUARDS DRIFT → rollback → retry → fuse). Keep HEAD, skip fail_deploy, still
+# require independent health_check below.
+if [ "$rc" -eq 75 ]; then
+  if ! health_check; then
+    fail_deploy "deploy.sh exit 75 (guards drift) and server unhealthy:$fails" 75
+  fi
+  echo "$(stamp) OK-WITH-GUARDS-DRIFT: code $(git rev-parse --short HEAD) live; apply: bash scripts/server_guards_apply.sh; health clean (mem ${avail:-?}MB, smoke 200)"
+  rm -f "$RETRIES_FILE"
+  exit 0
+fi
 if [ "$rc" -ne 0 ]; then
   fail_deploy "deploy.sh завершился с кодом $rc" "$rc"
 fi
