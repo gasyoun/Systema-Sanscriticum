@@ -39,4 +39,15 @@ return [
      | CHECKOUT_WEBHOOK_AMOUNT_TOLERANCE в .env, дефолт 1.00.
      */
     'webhook_amount_tolerance' => (float) env('CHECKOUT_WEBHOOK_AMOUNT_TOLERANCE', 1.00),
+
+    /*
+     | Допуск (в валюте провайдера) при сверке суммы из PayPal-вебхука с
+     | ожидаемым списанием commitment'а (meta.expected_charge_amount /
+     | _currency; H2304 spec 3 — зеркало webhook_amount_tolerance для Точки).
+     | Расхождение сверх допуска, несовпадение валюты ИЛИ необъявленное
+     | ожидание => доступ не выдаётся (decision=rejected_amount_mismatch),
+     | ответ non-2xx — PayPal ретраит после починки конфигурации.
+     | CHECKOUT_PAYPAL_WEBHOOK_AMOUNT_TOLERANCE в .env, дефолт 1.00.
+     */
+    'paypal_webhook_amount_tolerance' => (float) env('CHECKOUT_PAYPAL_WEBHOOK_AMOUNT_TOLERANCE', 1.00),
 ];

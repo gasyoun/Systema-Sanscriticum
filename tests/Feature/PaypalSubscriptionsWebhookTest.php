@@ -87,6 +87,12 @@ class PaypalSubscriptionsWebhookTest extends TestCase
             'end_block' => $endBlock,
             'status' => BillingCommitmentStatus::Scheduled,
             'due_on' => today(),
+            // H2304 spec 3: ожидаемое списание в валюте провайдера — без него
+            // денежное событие отклоняется (fail closed).
+            'meta' => [
+                'expected_charge_amount' => 49.00,
+                'expected_charge_currency' => 'USD',
+            ],
         ]);
     }
 
@@ -197,10 +203,16 @@ class PaypalSubscriptionsWebhookTest extends TestCase
                 'billing_agreement_id' => $sub->provider_subscription_id,
                 'amount' => ['total' => '49.00', 'currency' => 'USD'],
             ],
-        ])->assertStatus(500);
+        ])->assertStatus(422);
 
+        // H2304 spec 3: отказ теперь журналируется ВНЕ откатываемой транзакции —
+        // строка-отказ остаётся, платёж не создаётся, ответ non-2xx (ретрай).
         $this->assertSame(0, Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->count());
-        $this->assertSame(0, PaymentWebhookEvent::where('provider', 'paypal')->count());
+        $this->assertSame(1, PaymentWebhookEvent::where('provider', 'paypal')->count());
+        $this->assertSame(
+            PaymentWebhookEvent::DECISION_REJECTED_CHARGE,
+            PaymentWebhookEvent::where('provider', 'paypal')->value('decision')
+        );
     }
 
     /** @test */
@@ -221,10 +233,140 @@ class PaypalSubscriptionsWebhookTest extends TestCase
                 'billing_agreement_id' => $sub->provider_subscription_id,
                 'amount' => ['total' => '49.00', 'currency' => 'USD'],
             ],
-        ])->assertStatus(500);
+        ])->assertStatus(422);
 
         $this->assertSame(0, Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->count());
         $this->assertSame(2, BillingCommitment::where('status', BillingCommitmentStatus::Scheduled)->count());
+        $this->assertSame(1, PaymentWebhookEvent::where('provider', 'paypal')->count());
+    }
+
+    /** @test */
+    public function amount_mismatch_rejects_ledgers_and_allows_retry_after_repair(): void
+    {
+        // H2304 spec 3 acceptance: $1.00 против обязательства, ожидающего $400
+        // (аналог ₽40 000) — доступ не выдаётся, строка-отказ в журнале, non-2xx.
+        $this->enableConfigured();
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $sub = $this->makePaypalSub($user, $course);
+        $commitment = $this->makeCommitment($sub);
+        $commitment->update(['meta' => [
+            'expected_charge_amount' => 400.00,
+            'expected_charge_currency' => 'USD',
+        ]]);
+
+        $body = [
+            'id' => 'WH-EVT-CHEAP-1',
+            'event_type' => 'PAYMENT.SALE.COMPLETED',
+            'resource' => [
+                'id' => 'SALE-CHEAP',
+                'billing_agreement_id' => $sub->provider_subscription_id,
+                'amount' => ['total' => '1.00', 'currency' => 'USD'],
+            ],
+        ];
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', $body)->assertStatus(422);
+
+        $this->assertSame(0, Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->count());
+        $this->assertFalse($user->fresh()->groups()->exists());
+        $rejected = PaymentWebhookEvent::where('provider', 'paypal')->firstOrFail();
+        $this->assertSame(PaymentWebhookEvent::DECISION_REJECTED_AMOUNT_MISMATCH, $rejected->decision);
+        $this->assertEquals(1.00, (float) $rejected->reported_amount);
+
+        // Отказ не занимает canonical hash(eventId): после починки суммы тот же
+        // event id проходит заново (PayPal-ретрай), а не упирается в replay-guard.
+        $body['resource']['amount']['total'] = '400.00';
+        $this->postJson('/api/webhooks/paypal-subscriptions', $body)->assertOk();
+        $this->assertSame(1, Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->count());
+        $this->assertSame(BillingCommitmentStatus::Charged, $commitment->fresh()->status);
+    }
+
+    /** @test */
+    public function currency_mismatch_rejects(): void
+    {
+        $this->enableConfigured();
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $sub = $this->makePaypalSub($user, $course);
+        $this->makeCommitment($sub);
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-CURR-1',
+            'event_type' => 'PAYMENT.SALE.COMPLETED',
+            'resource' => [
+                'id' => 'SALE-CURR',
+                'billing_agreement_id' => $sub->provider_subscription_id,
+                'amount' => ['total' => '49.00', 'currency' => 'EUR'],
+            ],
+        ])->assertStatus(422);
+
+        $this->assertSame(0, Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->count());
+        $this->assertSame(
+            PaymentWebhookEvent::DECISION_REJECTED_AMOUNT_MISMATCH,
+            PaymentWebhookEvent::where('provider', 'paypal')->value('decision')
+        );
+    }
+
+    /** @test */
+    public function missing_expected_charge_meta_fails_closed(): void
+    {
+        $this->enableConfigured();
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $sub = $this->makePaypalSub($user, $course);
+        $commitment = $this->makeCommitment($sub);
+        $commitment->update(['meta' => []]);
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-NOEXP-1',
+            'event_type' => 'PAYMENT.SALE.COMPLETED',
+            'resource' => [
+                'id' => 'SALE-NOEXP',
+                'billing_agreement_id' => $sub->provider_subscription_id,
+                'amount' => ['total' => '49.00', 'currency' => 'USD'],
+            ],
+        ])->assertStatus(422);
+
+        $this->assertSame(0, Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->count());
+        $this->assertSame(
+            PaymentWebhookEvent::DECISION_REJECTED_AMOUNT_MISMATCH,
+            PaymentWebhookEvent::where('provider', 'paypal')->value('decision')
+        );
+    }
+
+    /** @test */
+    public function groupless_course_charge_fails_closed_via_central_grant_guard(): void
+    {
+        // H2304 spec 2 на PayPal-маршруте: grantAccess() бросает, транзакция
+        // откатывается — ни платежа, ни доступа, non-2xx (PayPal ретраит).
+        $this->enableConfigured();
+        config(['features.grant_access_fail_closed' => true]);
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $sub = BillingSubscription::factory()->create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'provider' => 'paypal',
+            'provider_subscription_id' => 'I-NOGROUP',
+            'status' => BillingSubscriptionStatus::PendingFirstPay,
+            'mode' => BillingSubscriptionMode::PerCourse,
+            'amount_rub' => 4900,
+        ]);
+        $this->makeCommitment($sub);
+        $this->assertFalse($course->groups()->exists());
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-NOGROUP-1',
+            'event_type' => 'PAYMENT.SALE.COMPLETED',
+            'resource' => [
+                'id' => 'SALE-NOGROUP',
+                'billing_agreement_id' => 'I-NOGROUP',
+                'amount' => ['total' => '49.00', 'currency' => 'USD'],
+            ],
+        ])->assertStatus(500);
+
+        $this->assertSame(0, Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->count());
+        $this->assertFalse($user->fresh()->groups()->exists());
     }
 
     /** @test */

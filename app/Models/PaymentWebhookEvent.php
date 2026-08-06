@@ -38,10 +38,17 @@ class PaymentWebhookEvent extends Model
      */
     public const DECISION_HOLD_NOT_CAPTURED = 'hold_not_captured';
 
+    /**
+     * PayPal-событие о деньгах отклонено по структурной причине (нет/неоднозначен
+     * commitment, нет subscription_id и т.п.) — отказ, PayPal ретраит (H2304).
+     */
+    public const DECISION_REJECTED_CHARGE = 'rejected_charge';
+
     /** Решения-отказы — для отчёта операторам (AuditCheckoutIntegrity). */
     public const REJECTED_DECISIONS = [
         self::DECISION_REJECTED_RESURRECTION,
         self::DECISION_REJECTED_AMOUNT_MISMATCH,
+        self::DECISION_REJECTED_CHARGE,
         self::DECISION_HOLD_NOT_CAPTURED,
     ];
 
