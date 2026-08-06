@@ -1,6 +1,6 @@
 # Soft server alerts — agent playbook + cause catalog
 
-_Created: 02-08-2026 · Last updated: 02-08-2026 (H2187 dry-run fixtures + operator smoke)_
+_Created: 02-08-2026 · Last updated: 06-08-2026 (incident: GUARDS DRIFT schedule-run #1109)_
 
 **Audience:** agents (Grok / Claude / Codex) and ops.  
 **Scope:** Telegram soft path from `cabinet:probe` («Кабинет: soft-сбой …»),  
@@ -158,6 +158,7 @@ and resource-guards §7. Soft remediate **must not** claim success on critical f
 | Legal PDFs | `public/docs/*.pdf` | other tracked paths |
 | Hotfix urgency | PR + wait ≤30 min auto-deploy, or one `deploy.sh` from **clean** tree | partial checkout + leave dirty forever |
 | After soft fix | `guards:verify` + `cabinet:probe` green | only delete breaker and walk away |
+| `scripts/server_guards/sbin/*` or conf changed on `main` | once on VPS: `sudo bash scripts/server_guards_apply.sh` then `guards:verify` | rely on auto-deploy alone — it will `GUARDS DRIFT` → exit 1 → rollback loop → soft fuse (2026-08-05) |
 
 Open a Systema issue, assign `@pe4kinsmart-tech` (Ivan), for host/ops units  
 (see n8n / ssh skill standing rule).
@@ -171,6 +172,7 @@ Do not invent rows for chat-only speculation.
 
 | When (UTC) | Tag / fingerprint | Paths / SHA | Outcome | By | Notes |
 |---|---|---|---|---|---|
+| 2026-08-05 05:30–09:00 | `[rolled-back]` ×4 then `[blocked-preflight] auto-retry исчерпан (3/3)` | `/usr/local/sbin/systema-schedule-run.sh` vs repo after #1109 / `5a3b6035` (1.87.2); base `50e751b5` | **2026-08-06 triage:** site always 200; root cause = managed-file drift (reaper removed in #1109, sbin not re-applied). `server_guards_apply` path already refreshed sbin mtime 07:32Z 06-08; fuse **already absent**; retries file absent; `guards:verify` + `cabinet:probe` exit 0; HEAD=`origin/main`=`9561a1db`. No `rm` needed. | Grok 4.5 | class: template change without `server_guards_apply.sh` → deploy exit 1 → auto-rollback loop → soft fuse |
 | 2026-08-01 ~19:30 | `[blocked-preflight]` + dirty | `config/marathon_landing_copy.php` @ 852da14b stuck | later PR #1045 → fuse clear + deploy → 447bc544 | ops/H2147 | FINDINGS §280 |
 | 2026-08-02 | playbook + catalog authored | — | docs H2148 A | Grok 4.5 | this file |
 
