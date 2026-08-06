@@ -1,6 +1,6 @@
 # Шпаргалка преподавателю: сайт или ДЗ «не работают»
 
-_Created: 06-08-2026 · Last updated: 06-08-2026_
+_Created: 06-08-2026 · Last updated: 06-08-2026 (census: no teacher forward)_
 
 **Кому:** преподаватели (Костина, Литвиненко, …) и кураторы в учебных чатах.  
 **Не для ops:** красные мониторы Better Stack — только Иван / Марцис  
@@ -8,6 +8,12 @@ _Created: 06-08-2026 · Last updated: 06-08-2026_
 
 **Главное одной фразой:** вам **не** приходит автоматический алерт «сайт упал».  
 Если не открывается кабинет или **не сдаётся домашнее** — проверьте → напишите в чат с **`@rusamskrtam`**.
+
+**Почему нет форварда ops-алертов:** сейчас в мониторинге кабинета почти всё —  
+**soft** (auto-deploy / dirty, сайт часто жив), а не «кабинет умер».  
+Замер 06-08-2026: 0 critical / 107 soft-only в истории probe  
+([census](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CENSUS_CABINET_PROBE_SOFT_VS_CRITICAL_2026-08-06.md)).  
+Пока soft-шум не усмирят, авто-пинги преподам **не** включают.
 
 Живая страница для учеников и вас: [samskrte.ru/uptime](https://samskrte.ru/uptime)  
 (зеркало, если VPS лежит: [GitHub Pages](https://gasyoun.github.io/Systema-Sanscriticum/uptime/)).

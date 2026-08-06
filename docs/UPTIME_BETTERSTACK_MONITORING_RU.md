@@ -68,7 +68,9 @@ VPN: вкл / выкл
 **Шпаргалка + текст для закрепа в TG:**  
 [TEACHER_SITE_DOWN_CHEATSHEET_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TEACHER_SITE_DOWN_CHEATSHEET_RU.md) ·  
 [marketing/teacher-site-down-telegram-pin.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/teacher-site-down-telegram-pin.md)  
-(авто-алерт «сайт упал» преподавателям **не** приходит — только чат + `@rusamskrtam`).
+(авто-алерт «сайт упал» преподавателям **не** приходит — только чат + `@rusamskrtam`).  
+**Форвард soft/ops → преподам = NO-GO** (census 06-08: 0 critical / 107 soft):  
+[CENSUS_CABINET_PROBE_SOFT_VS_CRITICAL_2026-08-06.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CENSUS_CABINET_PROBE_SOFT_VS_CRITICAL_2026-08-06.md).
 
 ---
 
