@@ -136,50 +136,62 @@ final class PaypalClaimPasteParserTest extends TestCase
     {
         $jsPath = self::parserJsPath();
         $payload = json_encode(['paste' => $paste], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
-        // Systema package.json is "type":"module" — load the browser UMD via vm, not require().
-        $jsPathJson = json_encode(str_replace('\\', '/', $jsPath));
+        // Systema package.json is "type":"module" — load the browser UMD via vm.
+        // Write a temp runner so Windows shell quoting cannot mangle the script.
+        $jsPathJson = json_encode(str_replace('\\', '/', $jsPath), JSON_UNESCAPED_SLASHES);
+        $runner = sys_get_temp_dir().DIRECTORY_SEPARATOR.'paypal_claim_paste_runner_'.getmypid().'.cjs';
+        $runnerSrc = <<<'JS'
+const fs = require('fs');
+const vm = require('vm');
+const jsPath = __JS_PATH__;
+const code = fs.readFileSync(jsPath, 'utf8');
+const sandbox = { module: { exports: {} }, exports: {}, console, globalThis: {} };
+sandbox.module.exports = sandbox.exports;
+sandbox.self = sandbox.globalThis;
+vm.runInNewContext(code, sandbox, { filename: 'paypal-claim-paste.js' });
+const parser = sandbox.module.exports && sandbox.module.exports.parse
+  ? sandbox.module.exports
+  : sandbox.globalThis.PaypalClaimPaste;
+let raw = '';
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', (c) => { raw += c; });
+process.stdin.on('end', () => {
+  const input = JSON.parse(raw);
+  process.stdout.write(JSON.stringify(parser.parse(input.paste || '')));
+});
+JS;
+        $runnerSrc = str_replace('__JS_PATH__', $jsPathJson, $runnerSrc);
+        file_put_contents($runner, $runnerSrc);
 
-        $cmd = 'node -e '.escapeshellarg(
-            'const fs=require("fs"); const vm=require("vm");'.
-            'const code=fs.readFileSync('.$jsPathJson.',"utf8");'.
-            'const sandbox={module:{exports:{}},exports:{},console,globalThis:{}};'.
-            'sandbox.module.exports=sandbox.exports;'.
-            'sandbox.self=sandbox.globalThis;'.
-            'vm.runInNewContext(code,sandbox,{filename:"paypal-claim-paste.js"});'.
-            'const parser=sandbox.module.exports && sandbox.module.exports.parse'.
-            '  ? sandbox.module.exports'.
-            '  : sandbox.globalThis.PaypalClaimPaste;'.
-            'let raw=""; process.stdin.setEncoding("utf8");'.
-            'process.stdin.on("data",c=>raw+=c);'.
-            'process.stdin.on("end",()=>{'.
-            '  const input=JSON.parse(raw);'.
-            '  process.stdout.write(JSON.stringify(parser.parse(input.paste||"")));'.
-            '});'
-        );
+        try {
+            $descriptors = [
+                0 => ['pipe', 'r'],
+                1 => ['pipe', 'w'],
+                2 => ['pipe', 'w'],
+            ];
+            $proc = proc_open(['node', $runner], $descriptors, $pipes, null, null);
+            $this->assertIsResource($proc, 'Failed to start node parser process');
 
-        $descriptors = [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ];
-        $proc = proc_open($cmd, $descriptors, $pipes, null, null);
-        $this->assertIsResource($proc, 'Failed to start node parser process');
+            fwrite($pipes[0], $payload);
+            fclose($pipes[0]);
+            $stdout = stream_get_contents($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            $code = proc_close($proc);
 
-        fwrite($pipes[0], $payload);
-        fclose($pipes[0]);
-        $stdout = stream_get_contents($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-        $code = proc_close($proc);
+            $this->assertSame(0, $code, "node parser failed: {$stderr}\nstdout={$stdout}");
+            $this->assertNotFalse($stdout);
+            $this->assertNotSame('', trim($stdout));
 
-        $this->assertSame(0, $code, "node parser failed: {$stderr}\nstdout={$stdout}");
-        $this->assertNotFalse($stdout);
-        $this->assertNotSame('', trim($stdout));
+            /** @var array<string, mixed> $decoded */
+            $decoded = json_decode($stdout, true, 512, JSON_THROW_ON_ERROR);
 
-        /** @var array<string, mixed> $decoded */
-        $decoded = json_decode($stdout, true, 512, JSON_THROW_ON_ERROR);
-
-        return $decoded;
+            return $decoded;
+        } finally {
+            if (is_file($runner)) {
+                @unlink($runner);
+            }
+        }
     }
 }
