@@ -1,12 +1,16 @@
 # Soft server alerts — agent playbook + cause catalog
 
-_Created: 02-08-2026 · Last updated: 06-08-2026 (incident: GUARDS DRIFT schedule-run #1109)_
+_Created: 02-08-2026 · Last updated: 06-08-2026 (census soft vs critical; incident GUARDS DRIFT #1109)_
 
 **Audience:** agents (Grok / Claude / Codex) and ops.  
 **Scope:** Telegram soft path from `cabinet:probe` («Кабинет: soft-сбой …»),  
 `storage/auto_deploy.disabled`, tracked dirty on prod, and related guard warnings.  
 **Not in scope:** critical cabinet outage (HTTP/Auth/Filament red) — that is a  
 different TG title and severity.
+
+**Teacher forward:** **NO-GO** while soft dominates. Prod census 06-08-2026  
+(~5d of `cabinet_probe_runs`): **0 critical / 107 soft-only** —  
+[CENSUS_CABINET_PROBE_SOFT_VS_CRITICAL_2026-08-06.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CENSUS_CABINET_PROBE_SOFT_VS_CRITICAL_2026-08-06.md).
 
 Canonical long form for OOM/cron history:  
 [server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).  
