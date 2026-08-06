@@ -10,6 +10,7 @@
 # every subsequent tick silently and permanently — prod sat 5 commits behind
 # until a human deleted the file.
 #
+# Proves, in order (also #1143: deploy exit 75 = no rollback on guards drift):
 # Proves, in order:
 #   1. HARD trip (no soft tag) is NEVER auto-cleared — the safety property.
 #   2. SOFT trip younger than RETRY_AFTER_MIN waits (no thrashing in-tick).
@@ -217,6 +218,19 @@ age_breaker
 run_wrapper
 check "exhausted cap does not clear on a later healthy tick" \
   "$([ -f "$BREAKER" ] && echo 1 || echo 0)"
+
+# ── 7. deploy.sh exit 75 (guards drift only) must NOT rollback / trip fuse ──
+# Reproduces Systema #1143 / 2026-08-05: exit 1 after successful code deploy made
+# the wrapper treat managed-file drift as deploy failure and roll back good HEAD.
+reset_state
+# Fake git: after "deploy", HEAD still differs from origin so we can see whether
+# fail_deploy would run (it would call --rollback). DEPLOY_RC=75 = guards drift.
+run_wrapper DEPLOY_RC=75
+check "exit 75 does not write auto_deploy.disabled" "$([ ! -f "$BREAKER" ] && echo 1 || echo 0)"
+check "exit 75 still ran deploy.sh once" "$([ -f "$DEPLOY_MARKER" ] && echo 1 || echo 0)"
+check "exit 75 logs OK-WITH-GUARDS-DRIFT (no ROLLBACK)" \
+  "$(grep -q 'OK-WITH-GUARDS-DRIFT' "$TMP/out" && ! grep -q 'ROLLBACK' "$TMP/out" && echo 1 || echo 0)"
+check "exit 75 resets retry counter like success" "$([ ! -f "$RETRIES" ] && echo 1 || echo 0)"
 
 echo
 echo "passed=$pass failed=$fail"

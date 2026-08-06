@@ -290,8 +290,16 @@ fi
 echo "$(date '+%Y-%m-%d %H:%M:%S') ${OLD_COMMIT}..${NEW_COMMIT} php${PHP_VER} by $(whoami)" >> "$DEPLOY_LOG"
 say "Деплой завершён: ${OLD_COMMIT} → ${NEW_COMMIT}"
 
-# Код деплоя ненулевой, если предохранители разошлись: выкладка состоялась (её
-# откатывать не за что), но молча пройти мимо пропавшего предохранителя нельзя.
+# Issue #1143: managed-file drift after a successful code deploy must NOT look
+# like a failed deploy. Exit 1 made systema-auto-deploy-run.sh roll back the good
+# commit in a loop until the soft fuse burned (2026-08-05). Exit **0** so both the
+# pre-fix wrapper on prod and the post-apply wrapper keep HEAD. Loud stderr +
+# deploys.log "GUARDS DRIFT" remain; guards:verify / cabinet:probe still alert
+# until `bash scripts/server_guards_apply.sh`. Optional exit 75 is still accepted
+# by the wrapper if a future change reintroduces a distinct code.
 if [ "$GUARDS_DRIFT" = 1 ]; then
-  fail "Деплой выложен, но guards:verify недоволен — разберитесь с предохранителями"
+  printf '\n\033[1;33m%s\033[0m\n' "⚠ Деплой выложен (код жив), но guards:verify недоволен — это НЕ откат"
+  printf '\033[1;33m%s\033[0m\n' "  Следующий шаг: sudo bash scripts/server_guards_apply.sh && php artisan guards:verify"
+  printf '\033[1;33m%s\033[0m\n' "  Exit 0 (issue #1143) — auto-deploy must not rollback managed-file drift"
+  exit 0
 fi

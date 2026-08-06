@@ -18,6 +18,7 @@ use Throwable;
  * Never:
  *  - discard paths that diverge from origin
  *  - clear a hard (non soft-tagged) breaker
+ *  - clear a soft fuse whose last line is managed-guards drift (#1143) without apply
  *  - run deploy.sh / migrations / money paths
  */
 final class SoftAutoDeployRemediator
@@ -163,9 +164,34 @@ final class SoftAutoDeployRemediator
             }
         }
 
+        $guardsDriftFuse = $breakerPresent && $this->isGuardsDriftBreakerLine($breakerLast);
+
         $canClearBreaker = $breakerPresent
             && $breakerSoft === true
-            && $remainingDiverging === [];
+            && $remainingDiverging === []
+            && ! $guardsDriftFuse;
+
+        if ($guardsDriftFuse) {
+            $actions[] = [
+                'type' => 'guards_drift',
+                'applied' => false,
+                'detail' => 'fuse reason is managed-file / guards drift — run bash scripts/server_guards_apply.sh then guards:verify; clearing fuse alone restarts the deploy→drift→rollback loop (#1143)',
+            ];
+
+            return $this->result(
+                status: 'needs_human',
+                exitCode: 1,
+                message: 'managed guards drift — apply server_guards_apply.sh before clearing fuse',
+                breakerPresent: true,
+                breakerSoft: $breakerSoft,
+                breakerLast: $breakerLast,
+                dirty: $dirty,
+                originEqual: $originEqual,
+                diverging: $remainingDiverging,
+                allowed: $allowed,
+                actions: $actions,
+            );
+        }
 
         if ($breakerPresent && $breakerSoft === false) {
             $actions[] = [
@@ -295,6 +321,26 @@ final class SoftAutoDeployRemediator
         }
 
         return false;
+    }
+
+    /**
+     * Soft fuse last lines that mean OS managed files lag the repo (#1143), not
+     * a dirty tree. Clearing the fuse without server_guards_apply.sh restarts the
+     * deploy → GUARDS DRIFT → rollback loop.
+     */
+    private function isGuardsDriftBreakerLine(?string $line): bool
+    {
+        if ($line === null || $line === '') {
+            return false;
+        }
+        $hay = mb_strtolower($line);
+
+        return str_contains($hay, 'guards drift')
+            || str_contains($hay, 'guards:verify')
+            || str_contains($hay, 'managed-file')
+            || str_contains($hay, 'managed file')
+            || str_contains($hay, 'server_guards')
+            || str_contains($hay, 'предохранител');
     }
 
     /** @return list<string>|null */
