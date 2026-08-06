@@ -28,6 +28,10 @@
         </p>
     </header>
 
+    @include('student.partials.course-continuation-banner', [
+        'continuationBanner' => $continuationBanner ?? null,
+    ])
+
     {{-- R29.8 «место курса на пути» — orientation landmarks, never payment deadlines --}}
     @if (count($landmarks) > 0)
         <section class="mb-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm" data-course-landmarks aria-label="Место курса на пути">

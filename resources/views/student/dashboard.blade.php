@@ -431,6 +431,17 @@
                         <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-[#E85C24] transition-colors leading-snug line-clamp-2">
                             {{ $course->title }}
                         </h3>
+
+                        {{-- H2333: continuation shells show “from lesson N” on the card --}}
+                        @if (! empty($course->predecessor_course_id) && ! empty($course->continues_from_lesson))
+                            <p class="text-xs text-sky-800/90 font-semibold mb-2" data-testid="dashboard-continuation-hint">
+                                Записи с {{ (int) $course->continues_from_lesson }}-го · начало — в связанном курсе
+                            </p>
+                        @elseif (! empty($course->predecessor_course_id))
+                            <p class="text-xs text-sky-800/90 font-semibold mb-2" data-testid="dashboard-continuation-hint">
+                                Продолжение · начало в связанном курсе
+                            </p>
+                        @endif
                         
                         {{-- Если описание есть, выводим его. Иначе - не создаем пустую дыру --}}
                         @if(!empty($course->description))

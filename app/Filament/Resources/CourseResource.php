@@ -241,6 +241,28 @@ class CourseResource extends Resource
                                     ->helperText('«С нуля» / «Продолжающим» / «Продвинутый» — бейдж на карточке и фильтр каталога. Пусто — бейджа нет и курс не участвует в фильтре по уровню.')
                                     ->nullable()
                                     ->columnSpanFull(),
+
+                                Forms\Components\Select::make('predecessor_course_id')
+                                    ->label('Начало программы (предшественник)')
+                                    ->relationship(
+                                        'predecessor',
+                                        'title',
+                                        fn ($query) => $query->orderBy('title'),
+                                    )
+                                    ->searchable()
+                                    ->preload()
+                                    ->nullable()
+                                    ->helperText('Если этот поток — продолжение (в ЛК с N-го занятия), укажите курс, где лежат записи с 1-го. Студент увидит баннер «начало здесь» без куратора (H2333).')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TextInput::make('continues_from_lesson')
+                                    ->label('С какого занятия этот поток')
+                                    ->numeric()
+                                    ->minValue(2)
+                                    ->maxValue(999)
+                                    ->nullable()
+                                    ->helperText('Например 13 — «записи с 13-го занятия». Пусто — попробуем вывести из заголовка первого урока.')
+                                    ->columnSpanFull(),
                             ]),
                     ]),
 
