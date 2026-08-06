@@ -135,6 +135,18 @@ VPN: вкл / выкл
     </div>
 
     <div class="card">
+        <h2>Преподавателям</h2>
+        <p class="muted">
+            Авто-алерт «сайт упал» вам <strong>не</strong> приходит — пишите
+            <a href="https://t.me/rusamskrtam">@rusamskrtam</a>.
+            Шпаргалка и текст для закрепа:
+            <a href="https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TEACHER_SITE_DOWN_CHEATSHEET_RU.md">шпаргалка</a>
+            ·
+            <a href="https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/teacher-site-down-telegram-pin.md">pin TG</a>.
+        </p>
+    </div>
+
+    <div class="card">
         <h2>Для ops (не ученикам)</h2>
         <p class="muted">
             Красные мониторы Better Stack, SSH, Артём —
