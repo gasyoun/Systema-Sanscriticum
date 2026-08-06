@@ -6,11 +6,13 @@ use App\Filament\Resources\ScheduleResource\Pages;
 use App\Models\Course;
 use App\Models\Schedule;
 use App\Services\ClassAttendanceService;
+use App\Services\Schedule\ScheduleMover;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -300,26 +302,62 @@ class ScheduleResource extends Resource
 
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\EditAction::make(),
-                    Tables\Actions\ReplicateAction::make('duplicate_next_day')
-                        ->label('Дублировать на завтра')
-                        ->icon('heroicon-o-arrow-uturn-right')
-                        // attendances_count — виртуальный атрибут от ->counts('attendances')
-                        // в запросе списка; это не колонка таблицы, иначе INSERT падает.
-                        ->excludeAttributes(['attendances_count'])
-                        ->beforeReplicaSaved(function (Schedule $replica, Schedule $original): void {
-                            $replica->start = $original->start?->copy()->addDay();
-                            $replica->end = $original->end?->copy()->addDay();
-                            self::resetReplicaLifecycle($replica);
+
+                    // Перенос: только это занятие, остальные не трогаем.
+                    Tables\Actions\Action::make('reschedule')
+                        ->label('Перенести')
+                        ->icon('heroicon-o-arrow-right-circle')
+                        ->form([
+                            Forms\Components\DateTimePicker::make('start')
+                                ->label('Новое начало')
+                                ->seconds(false)
+                                ->required()
+                                ->default(fn (Schedule $r) => $r->start)
+                                ->helperText('Остальные занятия группы не изменятся. Длительность сохранится.'),
+                        ])
+                        ->action(function (Schedule $record, array $data): void {
+                            app(ScheduleMover::class)->reschedule(
+                                $record,
+                                Carbon::parse($data['start']),
+                            );
+
+                            Notification::make()
+                                ->title('Занятие перенесено')
+                                ->body($record->fresh()->start?->format('d.m.Y H:i') ?? '')
+                                ->success()
+                                ->send();
                         }),
-                    Tables\Actions\ReplicateAction::make('duplicate_next_week')
-                        ->label('Дублировать на +неделю')
+
+                    // Отмена: this + subsequent той же группы → +7 дней.
+                    Tables\Actions\Action::make('cancel_shift_week')
+                        ->label('Отменить (+неделя цепочки)')
                         ->icon('heroicon-o-calendar-days')
-                        ->excludeAttributes(['attendances_count'])
-                        ->beforeReplicaSaved(function (Schedule $replica, Schedule $original): void {
-                            $replica->start = $original->start?->copy()->addWeek();
-                            $replica->end = $original->end?->copy()->addWeek();
-                            self::resetReplicaLifecycle($replica);
+                        ->color('warning')
+                        ->visible(fn (Schedule $r): bool => $r->group_id !== null
+                            && $r->start !== null
+                            && $r->start->gte(now()->startOfDay()))
+                        ->requiresConfirmation()
+                        ->modalHeading('Отменить занятие и сдвинуть цепочку')
+                        ->modalDescription(function (Schedule $r): string {
+                            $n = app(ScheduleMover::class)->countChain($r);
+                            $group = $r->group?->name ?? 'группа';
+                            $date = $r->start?->format('d.m.Y H:i') ?? '—';
+
+                            return "Будет сдвинуто {$n} занят. группы «{$group}» на +7 дней, "
+                                ."начиная с {$date}. Слот {$date} освободится. "
+                                .'При необходимости после сдвига выгрузите расписание в Google Таблицу.';
+                        })
+                        ->modalSubmitActionLabel('Сдвинуть на неделю')
+                        ->action(function (Schedule $record): void {
+                            $n = app(ScheduleMover::class)->cancelAndShiftWeek($record);
+
+                            Notification::make()
+                                ->title('Цепочка сдвинута на +1 неделю')
+                                ->body("Сдвинуто занятий: {$n}. При необходимости выгрузите в Google Таблицу.")
+                                ->success()
+                                ->send();
                         }),
+
                     Tables\Actions\DeleteAction::make(),
                 ]),
             ])
@@ -332,25 +370,6 @@ class ScheduleResource extends Resource
             ->emptyStateHeading('Событий нет')
             ->emptyStateDescription('Создайте первое событие через кнопку «+ Создать» в правом верхнем углу.')
             ->emptyStateIcon('heroicon-o-calendar');
-    }
-
-    /**
-     * «Сегодня, ср 21 мая» / «Завтра, чт 22 мая» / «пт 23 мая».
-     */
-    /**
-     * Сбрасывает у копии занятия метки жизненного цикла и per-occurrence поля
-     * Zoom. При replicate модельный хук updating() не срабатывает (это insert),
-     * поэтому иначе копия унаследовала бы «уже напомнили / ссылка отправлена» и
-     * запись/UUID чужой Zoom-встречи, привязанной к оригинальному занятию.
-     */
-    private static function resetReplicaLifecycle(Schedule $replica): void
-    {
-        $replica->reminded_at = null;
-        $replica->absent_notified_at = null;
-        $replica->group_link_posted_at = null;
-        $replica->zoom_occurrence_uuid = null;
-        $replica->zoom_recording_url = null;
-        $replica->zoom_recording_received_at = null;
     }
 
     private static function humanizeDateHeader(?Carbon $dt): string

@@ -245,10 +245,8 @@ class ListSchedules extends ListRecords
                         ->send();
                 }),
 
-            // ==========================================
-            // СУЩЕСТВУЮЩИЙ: МАССОВЫЙ ПЕРЕНОС
-            // ==========================================
-            // (оставлено как было — блок shift_schedule не трогаем)
+            // Перенос / отмена цепочки — row-actions в ScheduleResource
+            // (ScheduleMover: reschedule / cancelAndShiftWeek).
         ];
     }
 
