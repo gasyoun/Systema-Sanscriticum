@@ -200,7 +200,14 @@ class GenerateCertificatesArchive implements ShouldBeUnique, ShouldQueue
             return;
         }
 
-        $notification->sendToDatabase($recipient);
+        // Filament::sendToDatabase() wraps into a Laravel DatabaseNotification
+        // that does NOT inherit Notification::make($id) as the row PK — Laravel
+        // assigns a fresh UUID. Then whereKey(operationId) never hits and every
+        // redelivery creates another bell. Pin the Laravel notification id to
+        // operationId so the exists() guard and the PK match.
+        $databaseNotification = $notification->toDatabase();
+        $databaseNotification->id = $this->operationId;
+        $recipient->notify($databaseNotification);
     }
 
     /**
