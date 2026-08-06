@@ -9,6 +9,7 @@ use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\StudentSelfService;
+use App\Services\Support\HomeworkPauseNoteRecorder;
 use App\Services\Support\SupportConversationManager;
 use Illuminate\Support\Facades\Cache;
 
@@ -28,6 +29,7 @@ class StudentChatService
         private StudentSelfService $selfService,
         private CuratorAi $ai,
         private SupportConversationManager $conversations,
+        private HomeworkPauseNoteRecorder $homeworkPauseNotes,
     ) {}
 
     /** Ключ «режима человека» для веб-канала (по пользователю, не по chat_id). */
@@ -56,6 +58,9 @@ class StudentChatService
 
         // Входящее открывает/переоткрывает операционный тред поддержки.
         $this->conversations->recordMessage($user, $message, $message->created_at);
+
+        // H2320: «пауза по ДЗ» → примечание куратора (не статус HomeworkSubmission).
+        $this->homeworkPauseNotes->recordIfMatches($user, $text, 'web-chat');
 
         return $message;
     }

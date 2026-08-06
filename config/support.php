@@ -28,4 +28,38 @@ return [
          */
         'web_backfill_days' => (int) env('SUPPORT_ROLLUP_WEB_BACKFILL_DAYS', 2),
     ],
+
+    /*
+     | H2320 — inbound «пауза по ДЗ» → append users.note (not HomeworkSubmission).
+     | Requires homework_cue AND life_cue. Default ON (append-only, low risk).
+     */
+    'homework_pause_note' => [
+        'enabled' => filter_var(env('SUPPORT_HOMEWORK_PAUSE_NOTE', true), FILTER_VALIDATE_BOOLEAN),
+        'quote_max' => (int) env('SUPPORT_HOMEWORK_PAUSE_NOTE_QUOTE_MAX', 120),
+        'homework_cues' => [
+            'домашк',
+            'домашн',
+            ' дз',
+            'дз ',
+            'дз,',
+            'дз.',
+            'задан',
+        ],
+        'life_cues' => [
+            'больничн',
+            'выбило из колеи',
+            'застой',
+            'не успеваю',
+            'на паузе',
+            'пауза по',
+            'отстаю',
+            'отстала',
+            'отстал ',
+            'с ребенком',
+            'с ребёнком',
+            'с детьми',
+            'форс-мажор',
+            'форс мажор',
+        ],
+    ],
 ];

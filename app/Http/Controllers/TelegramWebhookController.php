@@ -15,6 +15,7 @@ use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
 use App\Services\Bot\UnblockBotCommand;
 use App\Services\HomeworkTelegramTagService; // Добавили для переключения на человека
+use App\Services\Support\HomeworkPauseNoteRecorder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -149,6 +150,9 @@ class TelegramWebhookController extends Controller
             'is_read' => false, // Куратор это еще не видел
             'source' => 'telegram_bot',
         ]);
+
+        // H2320: «пауза по ДЗ» → users.note (не статус HomeworkSubmission).
+        app(HomeworkPauseNoteRecorder::class)->recordIfMatches($user, $question, 'telegram-bot');
 
         // 1.5. SELF-SERVICE: «мои группы» — отвечаем из БД, минуя ИИ (личные данные
         // ИИ выдумывать не вправе). Мгновенный ответ даже в режиме человека.
