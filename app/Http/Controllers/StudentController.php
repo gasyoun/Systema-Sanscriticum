@@ -14,8 +14,10 @@ use App\Models\Payment;
 use App\Models\PranaPerk;
 use App\Models\PranaRedemption;
 use App\Models\Schedule;
+use App\Models\ScheduleAttendanceNotice;
 use App\Models\SubscriberMagnet;
 use App\Services\Activity\CabinetTelemetry;
+use App\Services\AttendanceNoticeService;
 use App\Services\Cabinet\GrammarLadder;
 use App\Services\Cabinet\RecordingsCatalog;
 use App\Services\Cabinet\RecoveryState;
@@ -109,12 +111,12 @@ class StudentController extends Controller
         $myNotices = collect();
         $noticeOptions = [];
         if ($attendanceNoticesEnabled && $upcomingEvents->isNotEmpty()) {
-            $myNotices = \App\Models\ScheduleAttendanceNotice::query()
+            $myNotices = ScheduleAttendanceNotice::query()
                 ->where('user_id', $user->id)
                 ->whereIn('schedule_id', $upcomingEvents->pluck('id'))
                 ->get()
                 ->keyBy('schedule_id');
-            $noticeOptions = app(\App\Services\AttendanceNoticeService::class)->statusOptions();
+            $noticeOptions = app(AttendanceNoticeService::class)->statusOptions();
         }
 
         return view('student.calendar', compact(

@@ -4,17 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SyncUserAvatarJob;
 use App\Models\ChatMessage;
+use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
+use App\Services\AttendanceNoticeService;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\DebtorsBotCommand;
 use App\Services\Bot\RosterBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
 use App\Services\Bot\UnblockBotCommand;
-use App\Services\HomeworkTelegramTagService;
+use App\Services\HomeworkTelegramTagService; // Добавили для переключения на человека
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache; // Добавили для переключения на человека
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -205,7 +207,7 @@ class TelegramWebhookController extends Controller
             $reply = app(StudentSelfService::class)->handleAttendanceNotice(
                 $user,
                 $question,
-                \App\Models\ScheduleAttendanceNotice::SOURCE_TELEGRAM,
+                ScheduleAttendanceNotice::SOURCE_TELEGRAM,
             );
 
             if ($reply['ok'] && $reply['text'] !== '') {
@@ -306,7 +308,7 @@ class TelegramWebhookController extends Controller
         $chatId = $message['chat']['id'] ?? null;
         $preferGroupId = null;
         if ($chatId !== null) {
-            $group = app(\App\Services\AttendanceNoticeService::class)
+            $group = app(AttendanceNoticeService::class)
                 ->groupByTelegramChatId($chatId);
             $preferGroupId = $group?->id;
         }
@@ -314,7 +316,7 @@ class TelegramWebhookController extends Controller
         $reply = app(StudentSelfService::class)->handleAttendanceNotice(
             $user,
             $text,
-            \App\Models\ScheduleAttendanceNotice::SOURCE_TELEGRAM_GROUP,
+            ScheduleAttendanceNotice::SOURCE_TELEGRAM_GROUP,
             $preferGroupId,
         );
 

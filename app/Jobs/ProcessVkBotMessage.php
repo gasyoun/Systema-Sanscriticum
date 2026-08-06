@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\ChatMessage;
+use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\StudentSelfService;
@@ -142,7 +143,7 @@ final class ProcessVkBotMessage implements ShouldQueue
             $reply = app(StudentSelfService::class)->handleAttendanceNotice(
                 $user,
                 $text,
-                \App\Models\ScheduleAttendanceNotice::SOURCE_VK,
+                ScheduleAttendanceNotice::SOURCE_VK,
             );
 
             if ($reply['ok'] && $reply['text'] !== '') {

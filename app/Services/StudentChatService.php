@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\ChatMessage;
+use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\StudentSelfService;
@@ -105,7 +106,7 @@ class StudentChatService
             $reply = $this->selfService->handleAttendanceNotice(
                 $user,
                 $text,
-                \App\Models\ScheduleAttendanceNotice::SOURCE_CABINET,
+                ScheduleAttendanceNotice::SOURCE_CABINET,
             );
             if ($reply['ok'] && $reply['text'] !== '') {
                 $this->botSay($user, $reply['text']);
