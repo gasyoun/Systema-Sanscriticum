@@ -183,16 +183,22 @@ class DebtPaymentController extends Controller
             return $this->backToDebts('error', 'Не для всех блоков есть тариф — оформите оплату через куратора.');
         }
 
-        // Fallback-бандл покрывает ВЕСЬ плоский долг сразу → открываем все его блоки
-        // (closesFinalPromise=true расширяет диапазон до конца неоплаченного).
+        // Диапазон = ровно debt_block_numbers (плоский долг до reference-блока).
+        // Нельзя closesFinalPromise=true / unpaidBlockNumbers: unpaid без потолка
+        // ref включает будущие блоки (2–3 в UI → 2–4 в pending), а сумма уже
+        // посчитана только по debt_block_numbers.
+        $start = min($blocks);
+        $end = max($blocks);
+
         return $this->startCheckout(
             user: $user,
             courseId: (int) $course->id,
             amount: $amount,
             leadPromiseId: null,
             blocksToOpen: max(1, count($blocks)),
-            closesFinalPromise: true,
+            closesFinalPromise: false,
             pranaRequested: (int) $request->input('prana_amount', 0),
+            keyAndBlocksOverride: ['block_'.$start, $start, $end],
         );
     }
 

@@ -633,6 +633,64 @@ class DebtSelfServiceTest extends TestCase
         $this->assertContains('block_4', $keys);
     }
 
+    /**
+     * Регрессия: кабинет показывает долг до reference-блока (№2–3), а unpaid
+     * без потолка включает будущий блок 4. Бандл должен писать start/end = 2–3
+     * и сумму только за 2+3 — не раздувать pending до «Блоки 2–4».
+     *
+     * @test
+     */
+    public function pay_bundle_range_stops_at_reference_debt_not_all_unpaid(): void
+    {
+        Http::fake([
+            '*/payments_with_receipt' => Http::response([
+                'Data' => ['paymentLink' => 'https://pay.tochka.test/b23', 'paymentLinkId' => 'pl-b23'],
+            ], 200),
+        ]);
+
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+        CourseBlock::factory()->for($course)->create(['number' => 1]);
+        CourseBlock::factory()->for($course)->create(['number' => 2]);
+        CourseBlock::factory()->for($course)->current()->create(['number' => 3]);
+        CourseBlock::factory()->for($course)->create(['number' => 4]);
+
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 6000, 'tariff' => 'block_1', 'status' => 'paid',
+            'start_block' => 1, 'end_block' => 1, 'is_conditional' => false,
+        ]);
+        foreach ([2, 3, 4] as $n) {
+            Tariff::create([
+                'course_id' => $course->id, 'title' => 'Блок '.$n, 'type' => 'block',
+                'block_number' => $n, 'price' => 6000, 'is_active' => true,
+            ]);
+        }
+
+        $debt = app(StudentDebtsService::class)->forUser($user)->firstWhere('course_id', $course->id);
+        $this->assertNotNull($debt);
+        $this->assertSame([2, 3], $debt->debt_block_numbers);
+        // unpaid без потолка ref уходит дальше (блок 4 ещё не «долг» в UI).
+        $this->assertSame([2, 3, 4], app(StudentDebtsService::class)->unpaidBlockNumbers($user, $course->id));
+
+        $this->actingAs($user)
+            ->post(route('student.debt.course.pay-bundle', $course))
+            ->assertRedirect('https://pay.tochka.test/b23');
+
+        $bundle = Payment::where('user_id', $user->id)->where('status', 'pending')->firstOrFail();
+        $this->assertSame(12000.0, (float) $bundle->amount);
+        $this->assertSame(2, (int) $bundle->start_block);
+        $this->assertSame(3, (int) $bundle->end_block);
+        $this->assertSame('block_2', $bundle->tariff);
+        $this->assertSame('Блоки 2–3', $bundle->operationLabel());
+
+        $bundle->update(['status' => 'paid']);
+        $keys = Payment::where('user_id', $user->id)->where('course_id', $course->id)->paid()->pluck('tariff')->all();
+        $this->assertContains('block_2', $keys);
+        $this->assertContains('block_3', $keys);
+        $this->assertNotContains('block_4', $keys);
+    }
+
     // ---- Phase 2: reschedule ------------------------------------------
 
     /** @test */
