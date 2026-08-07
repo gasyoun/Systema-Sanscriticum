@@ -1,6 +1,6 @@
 # IMPLEMENTATION — Noboring dozhim wave-1
 
-_Created: 01-08-2026 · Last updated: 01-08-2026_
+_Created: 01-08-2026 · Last updated: 07-08-2026_
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
@@ -15,7 +15,7 @@ Work in a **session-unique worktree** off `origin/main`. Systema is main-tree gu
    - Idempotent on (user/lead, course, installment_group) via `findOpenDealFor` / `dealOfPlan`
    - Flag `crm_pipeline_board` still gates all writes (default OFF)
    - **Never** call grant/access; `source_payment_id` set only on paid close
-4. GC-C2: if manager report still missing, add Filament page grouping paid conversion by `Deal.assigned_to` / `Lead.assigned_to` behind `manager_sales_report`.
+4. GC-C2: **done H2058 residual** ([PR #1098](https://github.com/gasyoun/Systema-Sanscriticum/pull/1098)) — `ManagerSalesReport` + `managerScoreboard()` on `payments.created_by_user_id` (F5 RULED; not `assigned_to`), flag `manager_sales_report` default OFF. Roadmap checkbox closed H2362.
 5. Feature tests + Pint — H2102: pending→open, second pending no dup, pending→paid same deal, flag-off silence.
 6. PR non-money; merge when green.
 

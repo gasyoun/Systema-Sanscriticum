@@ -84,48 +84,35 @@ Prior art: GC-C1 **shipped**. Residual for dozhim:
 
 - [x] Audit: when is Deal created today? (paid bridge only vs pending intent) — **done H2097** (01-08-2026; see § below)
 - [x] **Open Deal** (or ensure open Deal) when user creates **payable intent** (pending Payment) — **done H2102** (01-08-2026; `PaymentDealBridgeObserver::openDealForIntent`, still rank-4, flag OFF)
-- [ ] GC-C2 manager attribution report if `assigned_to` still unused in reports — **still NOT_BUILT** (re-verified H2185, 02-08-2026; F5 fully ruled 02-08-2026 MG: join=`created_by_user_id`; vis=super_admin/admin/accountant all + manager own; see § GC-C2 census below; do not tick until Filament report + `manager_sales_report` ship)
+- [x] GC-C2 manager attribution report — **done H2058 residual** ([PR #1098](https://github.com/gasyoun/Systema-Sanscriticum/pull/1098), 03-08-2026); roadmap checkbox closed H2362 (07-08-2026). Product: [`ManagerSalesReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/ManagerSalesReport.php) + `OrderPaymentConversionService::managerScoreboard()` + flag `manager_sales_report` default **OFF**. F5 RULED join=`payments.created_by_user_id` (not `leads`/`deals.assigned_to`); vis=super_admin/admin/accountant all + manager own. Empty-looking UI is expected until CRM managers create/fix payments in admin (NULL → «Без менеджера»).
 - [x] Flag `crm_pipeline_board` remains default OFF; staging admin-on — **re-pinned H2102** (default still false; pending path gated by same flag)
 
 **Unblocks:** H-B queue has cards.
 
-#### Wave 1a census — GC-C2 `assigned_to` / manager sales attribution (H2185, 02-08-2026)
+#### Wave 1a census — GC-C2 manager sales attribution (H2185 → SHIPPED H2058 residual)
 
-**Verdict: still NOT_BUILT.** Spec row in [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md) stands. This pass re-verified code + prod fill rates; it does **not** build the report.
+**Verdict: SHIPPED** (03-08-2026, [PR #1098](https://github.com/gasyoun/Systema-Sanscriticum/pull/1098) — H2058 residual). Spec row in [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md) §1 GC-C2 = **SHIPPED**. H2185 (02-08) correctly reported NOT_BUILT; product landed next day on the F5-ruled path. H2362 (07-08) only closed this roadmap checkbox (stale `[ ]` after product merge).
 
-##### Code: who reads `assigned_to`?
+##### What shipped (product surfaces)
 
-| Surface | What it does with `assigned_to` | Sales conversion / revenue attribution? |
-|---|---|---|
-| [`LeadResource`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/LeadResource.php) | Form select, table filter, bulk assign / take | **No** — CRM ops only |
-| [`Helpdesk`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Helpdesk.php) + support models | Support-thread assignee + "mine" tabs | **No** — support queue |
-| [`RemindLeadsForFollowup`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/RemindLeadsForFollowup.php) | `groupBy('assigned_to')` for manager digests | **No** — reminder fan-out, not conversion |
-| [`OrderPaymentConversionService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reports/OrderPaymentConversionService.php) | Breakdowns `by_course`, `by_channel` only | **No** — zero `assigned_to` |
-| [`ChannelConversionReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reports/ChannelConversionReport.php) | UTM channel only | **No** |
-| [`WorkQueueReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/WorkQueueReport.php) | Follow-up buckets | **No** `assigned_to` grouping |
-| Filament sales pages (`OrderPaymentConversion`, `UnifiedSalesBoard`, `DealKanbanBoard`, LeadCost widgets) | — | **No** `assigned_to` references |
-| Models `Lead` / `Deal` / `FollowUpTask` | Column + `assignee()` relation | Schema only until a report joins it |
+| Surface | Role |
+|---|---|
+| [`ManagerSalesReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/ManagerSalesReport.php) | Filament «Продажи по менеджеру» `/admin/manager-sales-report` |
+| [`OrderPaymentConversionService::managerScoreboard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reports/OrderPaymentConversionService.php) | Breakdown by `payments.created_by_user_id` (F5 a) |
+| [`RoleGate::managerSalesReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/RoleGate.php) | admin/accountant/manager; page scopes manager → own rows |
+| `config/features.php` → `manager_sales_report` | Default **false** (`MANAGER_SALES_REPORT`) — deploy switch |
+| [`ManagerSalesReportTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/ManagerSalesReportTest.php) | Flag off / admin all / manager own / teacher 403 |
 
-**Flag census:** `manager_sales_report` is **absent** from [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) (only mentioned in roadmap/spec docs). No Filament page is gated on it.
+Join is **not** `Lead`/`Deal.assigned_to` (near-empty by construction on conversion-eligible tariffs; H2185 prod fill Lead ~0.4% / Deal 0%). F5 a RULED: blame column `created_by_user_id`. Self-serve/webhook (`NULL`) → «Без менеджера».
 
-**Tree inventory (app PHP, 02-08-2026 worktree):** 10 application files mention `assigned_to` (models, Lead CRM UI, Helpdesk, RemindLeads, Support router, audit labels). **0** files under `app/Services/Reports/` mention it.
+##### Historical `assigned_to` census (H2185, 02-08-2026 — still true for that column)
 
-##### Prod fill rate (read-only, host `193.232.229.92`, as_of `2026-08-02 18:46:31`)
+`assigned_to` remains CRM-ops only (LeadResource, Helpdesk, RemindLeads). It is **not** the manager-sales join path. Prod fill snapshot (host `193.232.229.92`, as_of `2026-08-02 18:46:31`): leads 1/264 (0.4%), deals 0/8 (0%). Do not invent newer numbers here.
 
-| Entity | Total rows | `assigned_to` NOT NULL | Fill % |
-|---|---:|---:|---:|
-| `leads` | 264 | 1 | **0.4%** |
-| `deals` | 8 | 0 | **0.0%** |
-| `follow_up_tasks` | 0 | 0 | n/a |
+##### Ops residual (not H2362)
 
-Reproduce (prod, read-only): bootstrap Laravel on the host and count
-`Lead` / `Deal` / `FollowUpTask` rows where `assigned_to` is not null vs total.
-
-##### Implication for the open checkbox
-
-1. **Report product is still missing** — checkbox stays `[ ]` until a Filament page groups paid conversion/revenue by `Deal.assigned_to` (fallback `Lead.assigned_to`) behind `manager_sales_report`.
-2. **Even a built report would be empty-looking today** — assignee fill is near zero; building the page without an assignment-fill path first yields a wall of "unassigned". Prefer: ensure managers assign Deals/Leads (or bridge assignee on create) **with** or **before** the report UI.
-3. **Do not invent prod numbers** — table above is the only measured fill snapshot for this pass.
+1. **Prod flag still OFF by design** — enable only after deploy + `MANAGER_SALES_REPORT=true` + `config:cache` (separate ops step; not this handoff).
+2. **Empty-looking board is expected** until managers create/fix payments in admin (so `created_by_user_id` fills).
 
 #### Wave 1a audit — when is Deal created? (H2097, 01-08-2026)
 
