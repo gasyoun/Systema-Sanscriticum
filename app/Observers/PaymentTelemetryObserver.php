@@ -7,6 +7,7 @@ namespace App\Observers;
 use App\Models\ActivityEvent;
 use App\Models\Payment;
 use App\Services\Activity\CabinetTelemetry;
+use App\Services\Activity\FunnelTelemetry;
 
 /**
  * Телеметрия оплат для baseline ремейка кабинета (H962, Phase 0):
@@ -23,12 +24,16 @@ use App\Services\Activity\CabinetTelemetry;
  */
 class PaymentTelemetryObserver
 {
-    public function __construct(private readonly CabinetTelemetry $telemetry) {}
+    public function __construct(
+        private readonly CabinetTelemetry $telemetry,
+        private readonly FunnelTelemetry $funnel,
+    ) {}
 
     public function updated(Payment $payment): void
     {
         if ($payment->wasChanged('status')) {
             $this->emitIfSelfServicePaid($payment);
+            $this->emitFunnelPaymentSuccess($payment);
         }
     }
 
@@ -36,6 +41,7 @@ class PaymentTelemetryObserver
     public function created(Payment $payment): void
     {
         $this->emitIfSelfServicePaid($payment);
+        $this->emitFunnelPaymentSuccess($payment);
     }
 
     private function emitIfSelfServicePaid(Payment $payment): void
@@ -57,5 +63,15 @@ class PaymentTelemetryObserver
                 'amount' => (string) $payment->amount,
             ],
         );
+    }
+
+    /** H2378: qualifying paid course-intent → payment_success (excludes deposit/trial/etc.). */
+    private function emitFunnelPaymentSuccess(Payment $payment): void
+    {
+        if (! $payment->user || ! in_array($payment->status, Payment::PAID_STATUSES, true)) {
+            return;
+        }
+
+        $this->funnel->emitPaymentSuccess($payment->user, $payment);
     }
 }

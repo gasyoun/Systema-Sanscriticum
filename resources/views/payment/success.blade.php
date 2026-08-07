@@ -159,22 +159,25 @@
 @endsection
 
 @push('scripts')
-    {{-- Цель «покупка» — по паттерну promo/thankyou.blade.php. Стреляет только
-         при наличии счетчиков в сессии; без них покупка остается неизмеренной
-         (site-wide счетчика в layouts/shop нет — открытый MG-пункт по Метрике). --}}
-    @if(session('yandex_id') || session('vk_id'))
-        <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            @if(session('yandex_id'))
-                if (typeof ym !== 'undefined') {
-                    ym({{ session('yandex_id') }}, 'reachGoal', 'payment_success');
-                }
-            @endif
-            @if(session('vk_id'))
-                var _tmr = window._tmr || (window._tmr = []);
-                _tmr.push({ type: 'reachGoal', id: "{{ session('vk_id') }}", goal: 'payment_success' });
-            @endif
-        });
-        </script>
-    @endif
+    {{-- H2378: payment_success — session landing counter OR shop-wide counter
+         (layouts/shop now includes partials/shop-metrika). --}}
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        @if(session('yandex_id'))
+            if (typeof ym !== 'undefined') {
+                ym({{ session('yandex_id') }}, 'reachGoal', 'payment_success');
+            }
+        @elseif(config('analytics.metrika.enabled') && config('analytics.metrika.shop_counter_id'))
+            if (typeof window.shopReachGoal === 'function') {
+                window.shopReachGoal('payment_success');
+            } else if (typeof ym !== 'undefined') {
+                ym({{ config('analytics.metrika.shop_counter_id') }}, 'reachGoal', 'payment_success');
+            }
+        @endif
+        @if(session('vk_id'))
+            var _tmr = window._tmr || (window._tmr = []);
+            _tmr.push({ type: 'reachGoal', id: "{{ session('vk_id') }}", goal: 'payment_success' });
+        @endif
+    });
+    </script>
 @endpush
