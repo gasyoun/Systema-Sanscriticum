@@ -123,7 +123,7 @@ class ImportStartChteniyaCohortSrsDeck extends Command
             throw new RuntimeException("Cannot read {$path}");
         }
 
-        $lines = preg_split('/\r\n|\n|\r/', trim($raw));
+        $lines = preg_split('/\r\n|\n|\r/', rtrim($raw, "\r\n"));
         if ($lines === false || count($lines) < 2) {
             throw new RuntimeException("Empty or malformed feed at {$path}");
         }
@@ -135,6 +135,12 @@ class ImportStartChteniyaCohortSrsDeck extends Command
                 continue;
             }
             $cells = str_getcsv($line, "\t");
+            // Do not trim() the whole file — trim strips trailing tabs on the last
+            // line and collapses empty TSV fields (prod import 07-08-2026).
+            // Pad short rows so a last-line without trailing tabs is accepted.
+            if (count($cells) < count($header)) {
+                $cells = array_pad($cells, count($header), '');
+            }
             if (count($cells) !== count($header)) {
                 throw new RuntimeException("Column count mismatch in {$path}: ".$line);
             }
