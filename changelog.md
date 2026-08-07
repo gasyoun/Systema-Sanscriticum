@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.88.6] - 2026-08-07
 ### Added
 - **H2337: Tochka settlement status matrix + PHPUnit lock (#1103 x #1146).** Ops-safe matrix of bank status -> payment status -> access grant after the #1146 soft-back that re-accepted `APPROVED` as paid. Hold (`authorized`/`AUTHORIZED`) remains non-granting (`hold_not_captured`); settled set is `APPROVED`/`captured`/`completed`/`paid`. Doc: [docs/TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md). Tests: `TochkaWebhookTest` failure provider + AUTHORIZED!=APPROVED regression; stale success-set wording fixed in H2085 decision + money-access-core-manual. Cross-link from H2336 prod accept memo. No money flag flip; no PayPal/partner enable. Executor: Grok 4.5 (`grok-4.5`).
 
