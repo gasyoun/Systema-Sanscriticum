@@ -11,6 +11,7 @@ use App\Support\ServerGuards\GuardFinding;
 use App\Support\ServerGuards\GuardSpec;
 use App\Support\ServerGuards\ServerGuardsAuditor;
 use App\Support\ServerGuards\SoftAlertWebhookNotifier;
+use App\Support\ServerGuards\SoftFailureFingerprint;
 use App\Support\ServerGuards\SystemInspector;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel;
@@ -448,21 +449,28 @@ class ProbeCabinetHealth extends Command
 
         $wasDown = (bool) Cache::get(self::CACHE_WAS_DOWN, false);
         $cooldown = max(1, (int) config('cabinet_probe.telegram_cooldown_minutes', 60));
-        $softCooldown = max(1, (int) config('cabinet_probe.telegram_soft_cooldown_minutes', 60));
         $force = (bool) $this->option('force-alert');
 
         // Soft-only: alert soft chats without flipping critical downtime.
-        // Cooldown + fingerprint (H1941): same soft set must not spam every */15.
-        // New fingerprint (другой набор soft-fail) шлёт сразу; --force-alert тоже.
+        // H1941: fingerprint so */15 does not spam.
+        // H2335: normalize fuse timestamps/SHAs; sticky same-set until green
+        // (or soft_reminder_hours re-nudge). New class → alert immediately.
         if ($criticalHealthy && $softFails !== []) {
-            $fingerprint = $this->softFailureFingerprint($softFails);
+            $fingerprint = SoftFailureFingerprint::hash($softFails);
             $lastSoftAt = Cache::get(self::CACHE_LAST_SOFT_ALERT_AT);
             $lastFp = Cache::get(self::CACHE_LAST_SOFT_FINGERPRINT);
             $sameSet = is_string($lastFp) && $lastFp === $fingerprint;
             if (! $force && $sameSet && $lastSoftAt !== null) {
-                $elapsed = now()->diffInMinutes($lastSoftAt, absolute: true);
-                if ($elapsed < $softCooldown) {
-                    $this->comment('TG soft-cooldown: ~'.($softCooldown - (int) $elapsed).' мин. (тот же soft-набор)');
+                // 0 = once until green; >0 = re-nudge after N hours still open.
+                $reminderHours = max(0, (int) config('cabinet_probe.telegram_soft_reminder_hours', 24));
+                if ($reminderHours === 0) {
+                    $this->comment('TG soft-sticky: тот же soft-класс, без re-alert до зелёного (reminder=0)');
+
+                    return;
+                }
+                $elapsedH = (int) now()->diffInHours($lastSoftAt, absolute: true);
+                if ($elapsedH < $reminderHours) {
+                    $this->comment('TG soft-sticky: ~'.($reminderHours - $elapsedH).' ч до reminder (тот же soft-класс)');
 
                     return;
                 }
@@ -699,19 +707,5 @@ class ProbeCabinetHealth extends Command
         return $parts === [] ? 'некритичные проверки' : implode(' / ', $parts);
     }
 
-    /**
-     * Stable fingerprint of the soft failure set (order-independent).
-     *
-     * @param  list<array{message: string, severity: string}>  $softFails
-     */
-    private function softFailureFingerprint(array $softFails): string
-    {
-        $messages = array_map(
-            static fn (array $f): string => (string) ($f['message'] ?? ''),
-            $softFails,
-        );
-        sort($messages);
-
-        return hash('sha256', implode("\n", $messages));
-    }
 }
+

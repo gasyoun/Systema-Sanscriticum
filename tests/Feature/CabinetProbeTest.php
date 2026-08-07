@@ -343,7 +343,7 @@ class CabinetProbeTest extends TestCase
         Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'снова работает'));
     }
 
-    public function test_soft_failure_sends_scoped_telegram_and_respects_soft_cooldown(): void
+    public function test_soft_failure_sends_scoped_telegram_and_respects_soft_sticky(): void
     {
         $this->seedManager();
         // Critical surfaces OK; one soft surface with no route → soft-only failure.
@@ -356,7 +356,7 @@ class CabinetProbeTest extends TestCase
         ]);
         config()->set('cabinet_probe.ping_url', '');
         config()->set('cabinet_probe.telegram_chat_id', '999001');
-        config()->set('cabinet_probe.telegram_soft_cooldown_minutes', 60);
+        config()->set('cabinet_probe.telegram_soft_reminder_hours', 24);
         config()->set('services.telegram.bot_token', 'test-bot-token');
 
         Http::fake([
@@ -373,7 +373,7 @@ class CabinetProbeTest extends TestCase
                 && str_contains($text, 'hybrid /library');
         });
 
-        // Same soft set within cooldown → no re-send (the H1941 spam class).
+        // Same soft class within reminder window → no re-send (H2335 sticky).
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
         ]);
@@ -391,18 +391,59 @@ class CabinetProbeTest extends TestCase
         Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), '(guards)')
             && str_contains((string) ($r['text'] ?? ''), 'guards/auto-deploy'));
 
-        // Same new set again → cooldown.
+        // Same new class again → sticky (no hourly spam).
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
         ]);
         Artisan::call('cabinet:probe');
         Http::assertNothingSent();
 
-        // --force-alert bypasses soft cooldown.
+        // After reminder window elapses → one re-nudge.
+        Cache::put(
+            'cabinet_probe:last_soft_tg_alert_at',
+            now()->subHours(25),
+            now()->addDay(),
+        );
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe');
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage'));
+
+        // --force-alert bypasses soft sticky.
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
         ]);
         Artisan::call('cabinet:probe', ['--force-alert' => true]);
         Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage'));
+    }
+
+    public function test_soft_reminder_zero_means_once_until_green(): void
+    {
+        $this->seedManager();
+        config()->set('cabinet_probe.surfaces', [
+            ['name' => 'student.dashboard', 'label' => 'manager /dvaram', 'severity' => 'critical'],
+        ]);
+        config()->set('features.cabinet_hybrid', true);
+        config()->set('cabinet_probe.hybrid_surfaces', [
+            ['name' => 'student.route.that.does.not.exist', 'label' => 'hybrid /library', 'severity' => 'soft'],
+        ]);
+        config()->set('cabinet_probe.ping_url', '');
+        config()->set('cabinet_probe.telegram_chat_id', '999001');
+        config()->set('cabinet_probe.telegram_soft_reminder_hours', 0);
+        config()->set('services.telegram.bot_token', 'test-bot-token');
+
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe');
+        Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage'));
+
+        Cache::put('cabinet_probe:last_soft_tg_alert_at', now()->subDays(3), now()->addDay());
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe');
+        Http::assertNothingSent();
     }
 }

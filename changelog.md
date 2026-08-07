@@ -8,6 +8,7 @@
 
 ### Fixed
 
+- **H2335: soft TG noise — sticky class + stable fuse fingerprint.** Same auto-deploy fuse no longer re-alerts every hour or on each breaker timestamp/SHA rewrite. `SoftFailureFingerprint` normalizes TS/SHA → fuse tag / dirty paths; soft path sticky until green with optional `CABINET_PROBE_TELEGRAM_SOFT_REMINDER_HOURS` (default 24; `0` = once). New soft class still fires immediately. Tests: `SoftFailureFingerprintTest`, `CabinetProbeTest` sticky. Docs: soft playbook + census. Executor: Grok 4.5 (`grok-4.5`).
 - **#1143: managed-file drift no longer rolls back a good auto-deploy.** `deploy.sh` exits **0** when only `guards:verify` fails after a successful code deploy; `systema-auto-deploy-run.sh` keeps HEAD (no rollback); wrapper also accepts optional exit 75 (no rollback, no fuse burn). `ops:soft-remediate` refuses `clear_soft_breaker` when the fuse text is GUARDS DRIFT / managed-file. Apply path unchanged: `bash scripts/server_guards_apply.sh`. Tests: shell case exit-75 (wrapper) + deploy exit 0 + SoftRemediateCommandTest. Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.88.0] - 2026-08-06

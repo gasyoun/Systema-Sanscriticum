@@ -1,6 +1,6 @@
 # Soft server alerts — agent playbook + cause catalog
 
-_Created: 02-08-2026 · Last updated: 06-08-2026 (census soft vs critical; incident GUARDS DRIFT #1109)_
+_Created: 02-08-2026 · Last updated: 07-08-2026 (H2335 soft sticky + stable fuse FP)_
 
 **Audience:** agents (Grok / Claude / Codex) and ops.  
 **Scope:** Telegram soft path from `cabinet:probe` («Кабинет: soft-сбой …»),  
@@ -45,13 +45,18 @@ www-data */15   →  cabinet:probe  →  guards:verify  →  soft or critical TG
 - Soft chat: `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` (often `@rusamskrtam` via bot  
   `TELEGRAM_BOT_TOKEN` — historically `@testpodpiska12_bot`).
 - Critical chat: `CABINET_PROBE_TELEGRAM_CHAT_ID` / `ADMIN_TELEGRAM_ID`.
-- Soft anti-spam: cooldown + fingerprint of soft-fail set  
-  (`CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN`, default 60 min). New fingerprint fires immediately.
+- Soft anti-spam (H2335): **normalized fingerprint** (fuse TS/SHA → tag class via
+  [`SoftFailureFingerprint`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/ServerGuards/SoftFailureFingerprint.php))
+  + **sticky** same class until green; optional re-nudge
+  (`CABINET_PROBE_TELEGRAM_SOFT_REMINDER_HOURS`, default **24**; `0` = once until green).
+  New soft class fires immediately. `--force-alert` bypasses.
+  Legacy minute `SOFT_COOLDOWN` no longer gates re-sends (hourly spam while fuse stuck).
 - Runbook block in the TG body is from `config/cabinet_probe.php` → `runbook`.
 
 Code:
 
 - [`ProbeCabinetHealth`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ProbeCabinetHealth.php)
+- [`SoftFailureFingerprint`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/ServerGuards/SoftFailureFingerprint.php)
 - [`ServerGuardsAuditor::auditAutoDeploy`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/ServerGuards/ServerGuardsAuditor.php)
 - [`systema-auto-deploy-run.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/systema-auto-deploy-run.sh)
 - [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh) (dirty-gate H2066)

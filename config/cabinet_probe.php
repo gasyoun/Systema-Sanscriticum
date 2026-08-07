@@ -28,12 +28,19 @@ return [
     // Critical down/recovery re-alert spacing.
     'telegram_cooldown_minutes' => (int) env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),
 
-    // Soft-only path (guards/hybrid): same failure set is not re-sent every */15.
-    // A different soft set (new fingerprint) alerts immediately. --force-alert bypasses.
+    // Soft-only path (guards/hybrid). H1941 used minute cooldown; H2335 sticky:
+    // same *normalized* soft class is not re-sent until green, optional reminder.
+    // A different soft class alerts immediately. --force-alert bypasses.
+    // Legacy env CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN is ignored for gating
+    // (kept in .env.example as comment only) — use reminder hours instead.
     'telegram_soft_cooldown_minutes' => (int) env(
         'CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN',
         env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),
     ),
+
+    // Hours before re-nudging the *same* soft class while still open (H2335).
+    // 0 = once until green (quietest). Default 24 ≈ max one soft TG/day per fuse.
+    'telegram_soft_reminder_hours' => (int) env('CABINET_PROBE_TELEGRAM_SOFT_REMINDER_HOURS', 24),
 
     'cron' => (string) env('CABINET_PROBE_CRON', '*/15 * * * *'),
 
