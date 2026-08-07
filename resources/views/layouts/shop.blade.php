@@ -133,6 +133,9 @@
         </div>
     </header>
 
+    {{-- H2365: site-wide free-intro / trial next-date CTA (NextIntroSession) --}}
+    @include('shop.partials.free-intro-banner')
+
     {{-- ═══════════════ КОНТЕНТ ═══════════════ --}}
     <main class="flex-1">
         @yield('content')

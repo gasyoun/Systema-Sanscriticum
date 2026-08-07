@@ -32,6 +32,7 @@ use App\Services\Payments\HttpPaypalWebhookSignatureVerifier;
 use App\Services\Payments\PaypalWebhookSignatureVerifier;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
+use App\Support\NextIntroSession;
 use App\Support\ServerGuards\ShellSystemInspector;
 use App\Support\ServerGuards\SystemInspector;
 use Filament\Support\View\Components\Modal;
@@ -159,6 +160,15 @@ class AppServiceProvider extends ServiceProvider
         // n8n lecture content engine (H1548, Wave 2): accepted clip → social
         // draft; accepted social draft → PublishSocialPostJob dispatch.
         ContentCandidate::observe(ContentCandidateObserver::class);
+
+        // H2365: site-wide free-intro / trial CTA date on all shop surfaces.
+        // Empty source → partial shows honest FALLBACK_LABEL (no invented dates).
+        View::composer('layouts.shop', function ($view): void {
+            if (array_key_exists('nextIntro', $view->getData())) {
+                return;
+            }
+            $view->with('nextIntro', NextIntroSession::resolve());
+        });
 
         // Мини-блок «Курсы в записи»: главная, legacy-лендинги и builder-блок
         View::composer(['main', 'promo.show', 'promo.legacy', 'promo.blocks.recorded_courses_block'], function ($view): void {
