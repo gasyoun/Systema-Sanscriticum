@@ -157,8 +157,9 @@ handoff — this roadmap does not restate the findings, it sequences them.
     - [x] public `/class/{id}/join` never redirects anonymous users to the real Zoom link
       — shipped [PR #252](https://github.com/gasyoun/Systema-Sanscriticum/pull/252)
       (`JoinClassController` + `JoinClassAccessTest` / `JoinClassControllerTest`); verified on main 07-08-2026 (H2383).
-    - [ ] chargeback/failed reversal never revokes group membership or Zoom calendar access
-      (`Payment.php:296`).
+    - [x] chargeback/failed reversal revokes group membership (and thus Zoom calendar access
+      via group-gated `IcsFeedBuilder`) — shipped [PR #258](https://github.com/gasyoun/Systema-Sanscriticum/pull/258)
+      (`Payment::reconcileAccessAfterReversal` + `AutoEnrollOnPaymentTest`); verified on main 07-08-2026 (H2384).
   - **Revenue leaks:** deposit credited to multiple pending payments (`Payment.php:519`);
     referral reward paid on 0-ruble / deposit / trial / conditional orders (`ReferralService.php:52`);
     salary month-close double-counts the whole month (`TeacherSalaryService.php:769`); block

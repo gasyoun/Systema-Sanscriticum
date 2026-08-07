@@ -177,6 +177,35 @@ class AutoEnrollOnPaymentTest extends TestCase
     }
 
     /** @test */
+    public function failed_paid_course_payment_revokes_group_when_no_other_access_remains(): void
+    {
+        // H071 #8 / H2384 — chargeback-class status is usually `failed` (not only canceled).
+        $user = User::factory()->create();
+        $course = $this->makeCourseWithGroup();
+        $groupId = $this->firstGroupId($course);
+
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 4800,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ]);
+
+        $this->assertTrue($user->fresh()->groups()->whereKey($groupId)->exists());
+
+        $payment->update(['status' => 'failed']);
+
+        $this->assertFalse($user->fresh()->groups()->whereKey($groupId)->exists());
+        // ICS calendar feed (IcsFeedBuilder) keys schedule events off group membership,
+        // so detaching the course group also drops Zoom calendar access for that group.
+        $this->assertTrue(
+            DB::table('course_user')->where('user_id', $user->id)->where('course_id', $course->id)->exists(),
+            'course_user is historical/admin state and should survive access revocation.'
+        );
+    }
+
+    /** @test */
     public function canceled_payment_keeps_group_when_another_paid_course_payment_remains(): void
     {
         $user = User::factory()->create();
