@@ -23,14 +23,28 @@ _Created: 07-08-2026 · Last updated: 07-08-2026_
 
 ## Residual — ops / human (not done this pass)
 
-**Course slug `start-chteniya` is MISSING on prod.** With the cohort flag ON, `hasEntitlement()` still returns false for everyone until:
+**Course SKU is on prod (table below).** `hasEntitlement()` needs a real paid payment on course 443 for a given student. Optional follow-ups:
 
-1. Filament: create **Course** with slug `start-chteniya` (title «Старт чтения» or as decided).
-2. Filament: create **Tariff** with a real RUB price in the Akro €75–129 band (D6: do **not** invent price in code/env).
-3. Filament: create **Group** + dates for the pilot cohort.
 4. Optional: run `php artisan srs:import-start-chteniya-cohort` after first paid enrollments (gated by the same flag).
 
 No money/access path was changed by this enable — only deploy kill-switches. Price remains a human decision.
+
+
+## Course + Tariff + Group created (07-08-2026)
+
+Human price rule: **8000 RUB per 4 classes**; **minimum 4x4 = 16 classes (32000 RUB)**.
+
+| Entity | Id | Notes |
+|---|---|---|
+| Course | **443** | slug `start-chteniya`, title Start chteniya, 16 lessons, teacher_id=2 (Gasuns), format=live, beginner, visible+active |
+| Group | **139** | slug `start-chteniya`, status=forming, min_size=4; linked via `course_group` |
+| CourseBlock 1-4 | **1035-1038** | Block N (4 classes) |
+| Tariff blocks | **5033-5036** | type=block, 8000 RUB each, keys `block_1`..`block_4` |
+| Tariff full (min) | **5037** | type=full, **32000 RUB**, title Min 4x4 (16 classes), key `full` |
+
+`StartChteniyaCohort::course()` resolves id **443**. Flags remain ON.
+
+Residual: first paid student then optional `php artisan srs:import-start-chteniya-cohort`; ORS landing if still open.
 
 ## Rollback
 
