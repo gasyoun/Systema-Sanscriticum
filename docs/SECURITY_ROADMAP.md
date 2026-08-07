@@ -1,6 +1,6 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 18-07-2026_
+_Created: 03-07-2026 · Last updated: 07-08-2026_
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
@@ -150,11 +150,14 @@ handoff — this roadmap does not restate the findings, it sequences them.
 
 - [ ] Land the ~15 remaining CONFIRMED money/access defects, **one small PR each, each with a
   regression test, no auto-merge** (money core under special protection). Highest-impact first:
-  - **Access leaks** (unpaid access / revenue-visible-to-anon): VIP/bundle tariff writes raw
-    `type` instead of `Tariff::accessKey()`, so paid VIP unlocks 0 lessons
-    (`PaymentController.php:119`); public `/class/{id}/join` redirects anonymous users to the
-    real Zoom link (`JoinClassController.php:44`); chargeback/failed reversal never revokes
-    group membership or Zoom calendar access (`Payment.php:296`).
+  - **Access leaks** (unpaid access / revenue-visible-to-anon):
+    - [x] VIP/bundle tariff → `Tariff::accessKey()` not raw `type` so paid VIP unlocks
+      lessons — shipped [PR #250](https://github.com/gasyoun/Systema-Sanscriticum/pull/250)
+      (`PaymentController` + `VipBundleAccessKeyTest`); verified on main 07-08-2026 (H2366).
+    - [ ] public `/class/{id}/join` redirects anonymous users to the real Zoom link
+      (`JoinClassController.php:44`);
+    - [ ] chargeback/failed reversal never revokes group membership or Zoom calendar access
+      (`Payment.php:296`).
   - **Revenue leaks:** deposit credited to multiple pending payments (`Payment.php:519`);
     referral reward paid on 0-ruble / deposit / trial / conditional orders (`ReferralService.php:52`);
     salary month-close double-counts the whole month (`TeacherSalaryService.php:769`); block
