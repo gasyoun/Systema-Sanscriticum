@@ -43,6 +43,8 @@ class SupportParityReportBuilder
         'support_observability',
         'support_web_rollups',
         'crm_cockpit',
+        'support_required_close_topic',
+        'support_follow_up_tasks',
     ];
 
     /**
@@ -129,6 +131,9 @@ class SupportParityReportBuilder
             'support_lead_capture' => 'SUPPORT_LEAD_CAPTURE=false (contact fields hidden).',
             'support_web_rollups' => 'SUPPORT_WEB_ROLLUPS=false (support:rollup-web becomes no-op; TG rollups continue).',
             'support_observability' => 'SUPPORT_OBSERVABILITY=false (dashboard hidden; metrics tables remain).',
+            'support_required_close_topic' => 'SUPPORT_REQUIRED_CLOSE_TOPIC=false (close without topic allowed again).',
+            'support_follow_up_tasks' => 'SUPPORT_FOLLOW_UP_TASKS=false (Helpdesk dialog follow-ups hidden).',
+            'support_geo.driver' => 'SUPPORT_GEO_DRIVER=null (or remove) — city resolve stops; flag may stay on.',
             'telegram_support_sync' => 'TELEGRAM_SUPPORT_ENABLED=false or disable TelegramSupportAccount.is_enabled.',
             'email_channel' => 'N/A — inbound email channel not implemented (H1200 residual).',
         ];

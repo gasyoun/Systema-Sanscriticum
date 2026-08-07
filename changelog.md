@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2381 prod enable (07-08-2026):** `SUPPORT_FOLLOW_UP_TASKS=true`, `SUPPORT_REQUIRED_CLOSE_TOPIC=true`, `SUPPORT_GEO_DRIVER=cloudflare` on `193.232.229.92` (backup `.env.bak.h2381-enable.20260807T204725`). Deploy already at `af4549b9`. Synthetic canary thread #47: follow-up create/complete + topic-required block + close with `technical`. Parity report builder now lists H2381 flags + geo rollback. Ops: [docs/ops/PROD_ENABLE_H2381_OPERATOR_WORKFLOW_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/PROD_ENABLE_H2381_OPERATOR_WORKFLOW_2026-08-07.md). Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.88.9] - 2026-08-07
 ### Added
 - **H2382: support/JIVO production parity acceptance packet (HOLD).** Read-only `php artisan support:parity-report --days=14` (`SupportParityReportBuilder` + command) emits channel mix, flags, topic ranking, school-wide promise outcome slices, rollback map, and GO/HOLD (exit 1 on HOLD). Dated matrix + live prod probe 07-08-2026: [docs/SUPPORT_PARITY_PRODUCTION_ACCEPTANCE_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SUPPORT_PARITY_PRODUCTION_ACCEPTANCE_2026-08-07.md). Full parity still blocked on H1200 residual (email + fresh reply-out canary), geo driver null, and zero lead/presence live evidence; H2381 product code has since landed (flags default OFF until enable). Tests: `SupportParityReportTest` (2). No flag flips, no live-fire sends. Executor: Grok 4.5 (`grok-4.5`).
