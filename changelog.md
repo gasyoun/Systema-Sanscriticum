@@ -3,6 +3,7 @@
 ## [1.88.2] - 2026-08-07
 ### Changed
 - **H2363: Wave 1c (H-C) roadmap close-out.** Product already shipped as **H2060** ([PR #1110](https://github.com/gasyoun/Systema-Sanscriticum/pull/1110), 1.87.2): `payment_recovery_cta` default OFF, `student.access` recovery CTA (amount + FAQ + curator + installment copy), `PaymentRecoveryCtaTest`. This residual only ticks Wave 1c checkboxes on [docs/ROADMAP_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_Systema_NOBORING_DOZHIM_2026H2.md) — no new payment product, no flag flip. Executor: Grok 4.5 (`grok-4.5`).
+- **H2362: GC-C2 roadmap closeout.** Product already shipped H2058 residual ([PR #1098](https://github.com/gasyoun/Systema-Sanscriticum/pull/1098), 03-08-2026: `ManagerSalesReport` + `manager_sales_report` default OFF + F5 join on `payments.created_by_user_id`). This pass only ticks Wave 1a GC-C2 on [ROADMAP_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_Systema_NOBORING_DOZHIM_2026H2.md), rewrites the H2185 census from NOT_BUILT → SHIPPED, and aligns IMPLEMENTATION/PLAN pointers. No code/flag change; no prod enable. Executor: Grok 4.5 (`grok-4.5`).
 
 ## [1.88.1] - 2026-08-07
 ### Added
