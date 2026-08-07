@@ -9,6 +9,7 @@ use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
+use App\Services\Support\HomeworkPauseNoteRecorder;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\SupportReplyService;
 use App\Services\Support\TechnicalIssueRouter;
@@ -38,7 +39,7 @@ class DeliverSupportReplyTest extends TestCase
      */
     private function bindFakeSync(): void
     {
-        $sync = new class(app(SupportDailyRollupAggregator::class), app(SupportContactUserAutoLinker::class), app(SupportConversationManager::class), app(TechnicalIssueRouter::class), app(MadelineSessionReaper::class)) extends TelegramSupportSyncService
+        $sync = new class(app(SupportDailyRollupAggregator::class), app(SupportContactUserAutoLinker::class), app(SupportConversationManager::class), app(TechnicalIssueRouter::class), app(MadelineSessionReaper::class), app(HomeworkPauseNoteRecorder::class)) extends TelegramSupportSyncService
         {
             protected function openClient(string $clientClass): object
             {
