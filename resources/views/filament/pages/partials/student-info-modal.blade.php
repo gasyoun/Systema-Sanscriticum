@@ -158,6 +158,110 @@
                 @endforelse
             </div>
 
+            {{-- P0: активные группы / курсы (H2381) --}}
+            @isset($info['groups'])
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px;">Активные группы</div>
+                    @forelse($info['groups'] as $g)
+                        <div style="padding: 7px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px;">
+                            <div style="color: #111827; font-weight: 600;">{{ $g['name'] }}</div>
+                            @if(! empty($g['courses']))
+                                <div style="color: #9ca3af; font-size: 11px;">{{ implode(' · ', $g['courses']) }}</div>
+                            @endif
+                        </div>
+                    @empty
+                        <div style="font-size: 13px; color: #9ca3af;">Нет активных групп</div>
+                    @endforelse
+                </div>
+            @endisset
+
+            {{-- P0: доступы по блокам (Lesson::isUnlockedBy) --}}
+            @isset($info['access'])
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px;">Доступы по блокам</div>
+                    @forelse($info['access'] as $row)
+                        <div style="padding: 7px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px;">
+                            <div style="color: #111827; font-weight: 600;">{{ $row['course_title'] }}</div>
+                            <div style="color: #9ca3af; font-size: 11px; margin-top: 2px;">
+                                тарифы: {{ ! empty($row['tariffs']) ? implode(', ', $row['tariffs']) : '—' }}
+                            </div>
+                            @if(! empty($row['blocks']))
+                                <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px;">
+                                    @foreach($row['blocks'] as $b)
+                                        <span style="font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 99px; background: {{ $b['unlocked'] ? '#dcfce7' : '#fee2e2' }}; color: {{ $b['unlocked'] ? '#16a34a' : '#dc2626' }};">
+                                            блок {{ $b['block'] }} · {{ $b['unlocked'] ? 'открыт' : 'закрыт' }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <div style="font-size: 13px; color: #9ca3af;">Нет данных о доступах</div>
+                    @endforelse
+                </div>
+            @endisset
+
+            {{-- P0: ближайшее занятие / Zoom --}}
+            @isset($info['next_schedule'])
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px;">Ближайшее занятие</div>
+                    @if($info['next_schedule'])
+                        <div style="font-size: 13px; color: #111827;">
+                            <div style="font-weight: 600;">{{ $info['next_schedule']['title'] }}</div>
+                            <div style="color: #9ca3af; font-size: 11px; margin-top: 2px;">
+                                {{ $info['next_schedule']['start'] ?? '—' }}
+                                @if($info['next_schedule']['group']) · {{ $info['next_schedule']['group'] }} @endif
+                                @if($info['next_schedule']['course']) · {{ $info['next_schedule']['course'] }} @endif
+                            </div>
+                            @if($info['next_schedule']['link'])
+                                <a href="{{ $info['next_schedule']['link'] }}" target="_blank" rel="noopener"
+                                   style="font-size: 12px; color: #2563eb; font-weight: 600;">Zoom / ссылка ↗</a>
+                            @endif
+                        </div>
+                    @else
+                        <div style="font-size: 13px; color: #9ca3af;">Ближайших занятий нет</div>
+                    @endif
+                </div>
+            @endisset
+
+            {{-- P0: следующий урок --}}
+            @isset($info['next_lesson'])
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px;">Следующий урок</div>
+                    @if($info['next_lesson'])
+                        <div style="font-size: 13px; color: #111827;">
+                            <div style="font-weight: 600;">{{ $info['next_lesson']['title'] }}</div>
+                            <div style="color: #9ca3af; font-size: 11px;">
+                                {{ $info['next_lesson']['course'] ?? '' }}
+                                @if($info['next_lesson']['block'] !== null) · блок {{ $info['next_lesson']['block'] }} @endif
+                            </div>
+                        </div>
+                    @else
+                        <div style="font-size: 13px; color: #9ca3af;">Нет следующего урока</div>
+                    @endif
+                </div>
+            @endisset
+
+            {{-- P0: недавние обращения --}}
+            @isset($info['recent_conversations'])
+                <div>
+                    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px;">Недавние обращения</div>
+                    @forelse($info['recent_conversations'] as $c)
+                        <div style="display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px;">
+                            <div style="min-width: 0;">
+                                <div style="color: #111827;">#{{ $c['id'] }}{{ $c['subject'] ? ' · '.$c['subject'] : '' }}</div>
+                                <div style="color: #9ca3af; font-size: 11px;">{{ $c['last_message_at'] ?? '—' }}</div>
+                            </div>
+                            <span style="font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 99px; background: {{ $c['status'] === 'closed' ? '#f3f4f6' : '#dcfce7' }}; color: {{ $c['status'] === 'closed' ? '#6b7280' : '#16a34a' }};">
+                                {{ $c['status'] }}
+                            </span>
+                        </div>
+                    @empty
+                        <div style="font-size: 13px; color: #9ca3af;">Обращений пока нет</div>
+                    @endforelse
+                </div>
+            @endisset
+
             {{-- Посещаемость занятий (Zoom / переход по ссылке) --}}
             @isset($info['attendance'])
                 <div>

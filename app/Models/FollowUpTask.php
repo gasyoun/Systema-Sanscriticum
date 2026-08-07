@@ -9,22 +9,18 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 /**
- * ЗАДАЧА МЕНЕДЖЕРУ по сделке — «позвонить/написать/встретиться до такого-то
- * числа» (GC-C3 / H1836).
+ * ЗАДАЧА МЕНЕДЖЕРУ / КУРАТОРУ — «позвонить/написать/встретиться до такого-то
+ * числа» (GC-C3 / H1836; support link H2381).
  *
- * Промоутит пару полей `leads.next_contact_at` + `leads.assigned_to` в реальный
- * объект: задач может быть НЕСКОЛЬКО, у каждой свой срок, тип и факт закрытия
- * (`done_at`) — именно это парой колонок на лиде выразить нельзя.
- *
- * Висит на {@see Deal}, а не на {@see Lead}: сделка — единица работы воронки
- * после GC-C1 (H1641). Задача НИЧЕГО не авторизует в денежном ядре — она даже
- * не наблюдает его: это чистый операторский слой поверх сделки.
+ * CRM-ветка: висит на {@see Deal}. Support-ветка (H2381): `deal_id` null +
+ * `support_conversation_id` + optional `note` — Jivo-style follow-up from
+ * Helpdesk. Academic reminders stay on ScheduledReminder/ReminderSuggestion.
  *
  * Единственный признак «сделано» — `done_at`. Закрытая сделка задачу НЕ
- * закрывает (иначе у «почему задача пропала» стало бы два ответа); менеджер
- * закрывает задачу явно.
+ * закрывает; менеджер/куратор закрывает задачу явно.
  */
 class FollowUpTask extends Model
 {
@@ -40,8 +36,10 @@ class FollowUpTask extends Model
 
     protected $fillable = [
         'deal_id',
+        'support_conversation_id',
         'assigned_to',
         'type',
+        'note',
         'due_at',
         'done_at',
     ];
@@ -71,9 +69,31 @@ class FollowUpTask extends Model
         return $this->belongsTo(Deal::class);
     }
 
+    public function supportConversation(): BelongsTo
+    {
+        return $this->belongsTo(SupportConversation::class);
+    }
+
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function isSupportTask(): bool
+    {
+        return $this->support_conversation_id !== null;
+    }
+
+    /** CRM deal tasks only (excludes support-dialog follow-ups). */
+    public function scopeForDeals(Builder $query): Builder
+    {
+        return $query->whereNotNull('deal_id');
+    }
+
+    /** Support-dialog follow-ups only. */
+    public function scopeForSupport(Builder $query): Builder
+    {
+        return $query->whereNotNull('support_conversation_id');
     }
 
     /** Незакрытые задачи. */
@@ -116,10 +136,19 @@ class FollowUpTask extends Model
         $this->update(['done_at' => now()]);
     }
 
-    /** Подпись задачи в списке: тип + заголовок сделки. */
+    /** Подпись задачи в списке: тип + заголовок сделки / support-диалог. */
     public function getLabelAttribute(): string
     {
         $type = self::types()[$this->type] ?? $this->type;
+
+        if ($this->isSupportTask()) {
+            $suffix = $this->note
+                ? Str::limit($this->note, 40)
+                : 'диалог #'.$this->support_conversation_id;
+
+            return trim($type.' — '.$suffix);
+        }
+
         $deal = $this->deal?->kanban_title;
 
         return trim($type.($deal ? ' — '.$deal : ''));
