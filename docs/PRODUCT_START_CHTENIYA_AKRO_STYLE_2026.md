@@ -1,8 +1,8 @@
-_Created: 01-08-2026 · Last updated: 02-08-2026_
+_Created: 01-08-2026 · Last updated: 07-08-2026_
 
 # PRODUCT — «Старт чтения» (Akro-style 5-week pilot) · Systema register
 
-**Status:** partly in code, **inert on prod.** H2105 landed the money contour and
+**Status:** code shipped; **flags ON on prod 07-08-2026** (reader demo live). Cohort cabinet still gated on missing Course `start-chteniya` + paid entitlement — see [docs/ops/PROD_ENABLE_START_CHTENIYA_FLAGS_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/PROD_ENABLE_START_CHTENIYA_FLAGS_2026-08-07.md). H2105 landed the money contour and
 H2110 the in-cabinet reader; both sit behind flags that default OFF, so nothing is
 student-visible until ops enables them. This file is the **Systema-local** product
 register so agents and ops do not treat the offer as undocumented ambient context.

@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2107 follow-through: prod enable reader + cohort flags.** On `193.232.229.92` `/var/www/html`: `KOSHA_READER=true` + `START_CHTENIYA_COHORT_ENABLED=true` (backup `.env.bak.h2107.20260807160940`, `config:cache`). `config:show` both true; `/reading/kosha-demo` HTTP 200. **Residual:** Course slug `start-chteniya` still missing on prod — Filament Course+Tariff+Group required before any student gets `hasEntitlement()`. Doc: [docs/ops/PROD_ENABLE_START_CHTENIYA_FLAGS_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/PROD_ENABLE_START_CHTENIYA_FLAGS_2026-08-07.md). Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.88.4] - 2026-08-07
 ### Added
 - **H2107: «Старт чтения» reading progress + teacher stalled-lemma view.** Student lookup % and unique-lemma count on the pack/index headers; teacher Filament page of top stalled lemmas (looked-up but never added to the cohort SRS deck). Reuses `ActivityEvent::TYPE_READING_TOKEN_LOOKUP` (`POST /dvaram/reading/{slug}/lookup`, positions-only, same forgery-proofing as `addToSrs`) and `StartChteniyaSrsDeck` (H2106/H2111) — no new table. Service `StartChteniyaProgress`, page `StartChteniyaStalledLemmas` (`isTeacher()||isAdminLike()`). Flags unchanged (`kosha_reader` + `start_chteniya_cohort`, both default OFF). Tests: `ReadingProgressTest` + `StalledLemmasPageTest` (8). Executor: Sonnet 5 (`claude-sonnet-5`) + midway resume Grok 4.5 (`grok-4.5`). PR: https://github.com/gasyoun/Systema-Sanscriticum/pull/1176
