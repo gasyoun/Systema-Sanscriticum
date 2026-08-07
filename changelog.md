@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.88.5] - 2026-08-07
 ### Added
 - **H2338: AuditCheckoutIntegrity teeth + schedule failure hooks.** `payments:audit-checkout-integrity` returns **FAILURE** when any measured bucket is non-empty; new **paid-but-no-group** bucket (paid non-deposit payment whose user is in no `course_group` of the course via `group_user`); daily schedule at 04:05. Core money crons (`promises:expire`, `receivables:check`, `debts:remind`, `payments:expire-stale-checkouts`, auditor) register `onFailure` → `ScheduleFailureSignal` (Log::critical + Filament DB notify to finance roles). Stale-checkout reaper always listed in schedule (command self-gates the feature flag). Docs: money-access-core-manual §11 / §11.7. Tests: `CheckoutIntegrityAuditCommandTest`, `MoneyCronScheduleHooksTest`. Detect loud, repair separate; no prod flag flips. Executor: Grok 4.5 (`grok-4.5`).
 ### Changed
