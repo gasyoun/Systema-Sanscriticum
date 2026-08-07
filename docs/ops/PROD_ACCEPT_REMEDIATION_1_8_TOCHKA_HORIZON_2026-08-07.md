@@ -111,6 +111,8 @@ No human `@DO` to enable PayPal subscriptions or partner program was applied. **
 - **Hold / `authorized` path:** zero live events with `decision=hold_not_captured` or bank hold status in the window. Code path remains in [`WebhookController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/WebhookController.php) (`$holdStatuses = ['authorized']` → `DECISION_HOLD_NOT_CAPTURED` without marking paid). **Hold traffic = N/A window** for empirical proof; no contradictory paid-from-hold rows found.
 - **Pending ≠ automatic course-group grant:** sample pending payment `14106` (user 937, course 442) → course groups **not** attached from that pending alone. Other pending rows may still show group membership from **other** paid history on the same user/course (expected; not hold-grant).
 
+**In-repo status matrix (H2337):** [docs/TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md) — bank status → payment status → access yes/no, locked by `TochkaWebhookTest`.
+
 ### Product rule restated
 
 | Bank / payment state | Access |

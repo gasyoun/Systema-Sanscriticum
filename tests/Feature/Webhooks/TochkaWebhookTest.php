@@ -205,11 +205,11 @@ PEM;
      *
      * @return array{0: Payment, 1: User, 2: Group}
      */
-    private function makePendingPayment(int $amount = 4800): array
+    private function makePendingPayment(int $amount = 4800, ?string $groupName = null): array
     {
         $user = User::factory()->create();
         $course = Course::factory()->create();
-        $group = Group::create(['name' => 'G']);
+        $group = Group::create(['name' => $groupName ?? ('G-'.uniqid('', true))]);
         $course->groups()->attach($group->id);
 
         $payment = Payment::create([
@@ -371,7 +371,8 @@ PEM;
         ]);
     }
 
-    // ================= H2085: hold ≠ capture · empty groups · purpose miss =================
+    // ================= H2085 / H2337: hold ≠ capture · empty groups · purpose miss =================
+    // Status matrix: docs/TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md
 
     /**
      * An authorization is only a hold: it never marks paid or grants access and
@@ -556,5 +557,74 @@ PEM;
         $this->assertDatabaseHas('payment_webhook_events', [
             'decision' => PaymentWebhookEvent::DECISION_UNMATCHED,
         ]);
+    }
+
+    // ================= H2337: status matrix lock (failure row + hold≠APPROVED) =================
+    // Matrix: docs/TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md
+    // Hold never paid; APPROVED settles; failures mark failed without access.
+
+    /**
+     * Bank failure statuses mark the payment failed and never grant access.
+     *
+     * @test
+     *
+     * @dataProvider failureStatusProvider
+     */
+    public function failure_bank_status_marks_payment_failed(string $bankStatus): void
+    {
+        $this->useTestKey();
+        [$payment, $user, $group] = $this->makePendingPayment();
+
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$payment->id}",
+            'status' => $bankStatus,
+        ]))->assertOk();
+
+        $this->assertSame('failed', $payment->fresh()->status);
+        $this->assertFalse($user->fresh()->groups->contains($group->id));
+    }
+
+    /** @return array<string, array{0: string}> */
+    public static function failureStatusProvider(): array
+    {
+        return [
+            'rejected' => ['rejected'],
+            'canceled' => ['canceled'],
+            'cancelled alias' => ['cancelled'],
+            'failed' => ['failed'],
+        ];
+    }
+
+    /**
+     * Explicit regression: AUTHORIZED hold must never land as paid even when
+     * APPROVED is a success alias (#1146 soft-back must not re-open hold-as-paid).
+     *
+     * @test
+     */
+    public function authorized_upper_never_equals_approved_success(): void
+    {
+        $this->useTestKey();
+        [$paymentHold, $userHold, $groupHold] = $this->makePendingPayment(4800, 'H2337-hold');
+        [$paymentOk, $userOk, $groupOk] = $this->makePendingPayment(4800, 'H2337-approved');
+
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$paymentHold->id}",
+            'status' => 'AUTHORIZED',
+        ]))->assertOk();
+        $this->postJwt($this->sign([
+            'purpose' => "Заказ №{$paymentOk->id}",
+            'status' => 'APPROVED',
+        ]))->assertOk();
+
+        $this->assertSame('pending', $paymentHold->fresh()->status);
+        $this->assertFalse($userHold->fresh()->groups->contains($groupHold->id));
+        $this->assertDatabaseHas('payment_webhook_events', [
+            'payment_id' => $paymentHold->id,
+            'decision' => PaymentWebhookEvent::DECISION_HOLD_NOT_CAPTURED,
+            'bank_status' => 'AUTHORIZED',
+        ]);
+
+        $this->assertSame('paid', $paymentOk->fresh()->status);
+        $this->assertTrue($userOk->fresh()->groups->contains($groupOk->id));
     }
 }
