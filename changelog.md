@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2380: cabinet adoption KPI pre-baseline + H1582 missing-gate packet.** Prod read-only (no flag flip, no invite `--send`): hybrid readiness A/B PASS · flag OFF · 14d `cabinet:baseline` · denominators (access-stamp ever-login **42.5%** / paid **20.2%**) · invite cohort 219 sent with post-invite login **4/219 ≈ 1.8%** → **HOLD scale** · `cabinet:probe` OK. Doc: [docs/RESULTS_CABINET_ADOPTION_KPI_H2380_20260807.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RESULTS_CABINET_ADOPTION_KPI_H2380_20260807.md). Executor: Grok 4.5 (`grok-4.5`).
+
 ### Changed
 - **H2107 follow-through: prod SKU Start chteniya.** Course id **443** slug `start-chteniya`; group 139; 4 blocks x **8000 RUB** (4 classes each) + full min package **32000 RUB** (4x4). Tariffs 5033-5037. Teacher Gasuns. Doc: [docs/ops/PROD_ENABLE_START_CHTENIYA_FLAGS_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/PROD_ENABLE_START_CHTENIYA_FLAGS_2026-08-07.md). Executor: Grok 4.5 (`grok-4.5`).
 
