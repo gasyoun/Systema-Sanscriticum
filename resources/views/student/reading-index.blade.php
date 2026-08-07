@@ -9,6 +9,11 @@
         Нажмите на слово прямо в тексте.
     </p>
 
+    {{-- H2107 — student progress: unique lemmas collected across the whole cohort deck. --}}
+    <div class="max-w-2xl mb-6 px-4 py-3 rounded-xl bg-[#161b28] border border-gray-700/60 text-sm text-gray-300">
+        В вашей колоде «Старт чтения»: <b class="text-[#E85C24]">{{ $uniqueLemmas }}</b> {{ trans_choice('лемма|леммы|лемм', $uniqueLemmas) }}.
+    </div>
+
     <ul class="space-y-3 max-w-2xl">
         @foreach($packs as $entry)
             <li>
@@ -16,7 +21,7 @@
                    class="flex items-baseline justify-between gap-4 px-4 py-3 rounded-xl bg-[#161b28] border border-gray-700/60 hover:border-[#E85C24]/50 transition-colors">
                     <span class="text-gray-200">{{ $entry['title'] }}</span>
                     <span class="text-gray-500 text-xs shrink-0">
-                        {{ $entry['stats']['sentences'] }} предл. · {{ $entry['stats']['tokens'] }} слов
+                        {{ $entry['stats']['sentences'] }} предл. · {{ $entry['stats']['tokens'] }} слов · разобрано {{ $entry['lookup_percent'] }}%
                     </span>
                 </a>
             </li>

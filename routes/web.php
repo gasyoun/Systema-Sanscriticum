@@ -420,6 +420,13 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->name('student.reading.srs.add')
         ->where('slug', '[a-z0-9\-]+');
 
+    // H2107 — fire-and-forget token-lookup telemetry (same gate, positions only).
+    // Feeds student progress % and the teacher stalled-lemma view — see
+    // App\Services\StartChteniyaProgress.
+    Route::post('/dvaram/reading/{slug}/lookup', [ReadingPackController::class, 'logLookup'])
+        ->name('student.reading.lookup')
+        ->where('slug', '[a-z0-9\-]+');
+
     // H1680 — Wave 2: cabinet skill-drill strip, DISTINCT from the FSRS
     // review loop above (/dvaram/koloda) — short /lila drills linked from the
     // cabinet, no spaced-repetition scheduling here. Behind its own flag
