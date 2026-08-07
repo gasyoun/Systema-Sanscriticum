@@ -43,6 +43,8 @@ class JoinClassAccessTest extends TestCase
         $response = $this->get(route('class.join', $schedule));
 
         $response->assertRedirect(route('login'));
+        // Hard guard: never leak the real Zoom URL on the deny path (H071 #6 / H2383).
+        $this->assertStringNotContainsString('zoom.us', (string) $response->headers->get('Location'));
         $this->assertSame(0, ScheduleJoinClick::count());
     }
 
@@ -89,10 +91,15 @@ class JoinClassAccessTest extends TestCase
         $schedule = $this->schedule(Group::create(['name' => 'Поток А']));
         $outsider = User::factory()->create(); // не в группе занятия
 
-        $this->actingAs($outsider)
-            ->get(route('class.join', $schedule))
-            ->assertForbidden();
+        $response = $this->actingAs($outsider)
+            ->get(route('class.join', $schedule));
 
+        $response->assertForbidden();
+        // 403 must not 302-away to Zoom either (no Location with the paid link).
+        $this->assertStringNotContainsString(
+            'zoom.us',
+            (string) $response->headers->get('Location', '')
+        );
         $this->assertSame(0, ScheduleJoinClick::count());
     }
 
