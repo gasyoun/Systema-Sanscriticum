@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+### Added
+- **H2338: AuditCheckoutIntegrity teeth + schedule failure hooks.** `payments:audit-checkout-integrity` returns **FAILURE** when any measured bucket is non-empty; new **paid-but-no-group** bucket (paid non-deposit payment whose user is in no `course_group` of the course via `group_user`); daily schedule at 04:05. Core money crons (`promises:expire`, `receivables:check`, `debts:remind`, `payments:expire-stale-checkouts`, auditor) register `onFailure` → `ScheduleFailureSignal` (Log::critical + Filament DB notify to finance roles). Stale-checkout reaper always listed in schedule (command self-gates the feature flag). Docs: money-access-core-manual §11 / §11.7. Tests: `CheckoutIntegrityAuditCommandTest`, `MoneyCronScheduleHooksTest`. Detect loud, repair separate; no prod flag flips. Executor: Grok 4.5 (`grok-4.5`).
 ### Changed
 - **H2107 follow-through: prod enable reader + cohort flags.** On `193.232.229.92` `/var/www/html`: `KOSHA_READER=true` + `START_CHTENIYA_COHORT_ENABLED=true` (backup `.env.bak.h2107.20260807160940`, `config:cache`). `config:show` both true; `/reading/kosha-demo` HTTP 200. **Residual:** Course slug `start-chteniya` still missing on prod — Filament Course+Tariff+Group required before any student gets `hasEntitlement()`. Doc: [docs/ops/PROD_ENABLE_START_CHTENIYA_FLAGS_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/PROD_ENABLE_START_CHTENIYA_FLAGS_2026-08-07.md). Executor: Grok 4.5 (`grok-4.5`).
 
