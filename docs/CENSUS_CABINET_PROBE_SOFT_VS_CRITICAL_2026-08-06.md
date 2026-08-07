@@ -1,6 +1,6 @@
 # Census: cabinet:probe soft vs critical (prod)
 
-_Created: 06-08-2026 · Last updated: 06-08-2026_
+_Created: 06-08-2026 · Last updated: 07-08-2026 (H2335 soft sticky shipped)_
 
 **Зачем:** решить, можно ли **форвардить** алерты преподавателям.  
 **Ответ по цифрам:** **нет** — пока 100% «болезни» в истории = soft, critical = 0.
@@ -83,7 +83,8 @@ Grok 4.5 (`grok-4.5`). Связь: [H2325](https://github.com/gasyoun/Uprava/blo
    - 1 сообщение на инцидент + 1 «встал»;  
    - отдельный chat id;  
    - повторный census: critical > 0 за 14d **и** soft-эпизоды ops терпимы.  
-4. **Чинить шум (отдельно):** застрявший `auto_deploy.disabled` / dirty / fingerprint churn — playbook soft + remediator; не «добавить аудиторию».
+4. **Чинить шум (отдельно):** застрявший `auto_deploy.disabled` / dirty / fingerprint churn — playbook soft + remediator; не «добавить аудиторию».  
+   **H2335 (07-08-2026):** soft TG sticky + normalized fuse fingerprint — same class ≤1 TG/сутки (reminder 24h), not every hour/timestamp rewrite.
 
 ---
 
