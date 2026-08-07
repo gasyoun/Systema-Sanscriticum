@@ -15,6 +15,8 @@ use Tests\TestCase;
 /**
  * H2338 / audit specs 6–7: daily integrity auditor + onFailure hooks on core
  * money crons; stale-checkout reaper registered even when its feature flag is OFF.
+ *
+ * Laravel 12 stores onFailure via then() → afterCallbacks (exitCode checked at run).
  */
 class MoneyCronScheduleHooksTest extends TestCase
 {
@@ -33,14 +35,14 @@ class MoneyCronScheduleHooksTest extends TestCase
         return null;
     }
 
-    private function hasExitCodeCallbacks(Event $event): bool
+    private function afterCallbackCount(Event $event): int
     {
         $ref = new ReflectionObject($event);
-        $prop = $ref->getProperty('exitCodeCallbacks');
+        $prop = $ref->getProperty('afterCallbacks');
         $prop->setAccessible(true);
         $callbacks = $prop->getValue($event);
 
-        return is_array($callbacks) && $callbacks !== [];
+        return is_array($callbacks) ? count($callbacks) : 0;
     }
 
     public function test_checkout_integrity_auditor_is_registered_daily(): void
@@ -50,9 +52,10 @@ class MoneyCronScheduleHooksTest extends TestCase
         $this->assertNotNull($event, 'payments:audit-checkout-integrity not in Kernel schedule');
         // dailyAt('04:05') → «5 4 * * *»
         $this->assertSame('5 4 * * *', $event->expression);
-        $this->assertTrue(
-            $this->hasExitCodeCallbacks($event),
-            'auditor schedule entry must have onFailure (exitCodeCallbacks)'
+        $this->assertGreaterThan(
+            0,
+            $this->afterCallbackCount($event),
+            'auditor schedule entry must have onFailure (afterCallbacks via then())'
         );
     }
 
@@ -64,9 +67,10 @@ class MoneyCronScheduleHooksTest extends TestCase
         $event = $this->eventFor($needle);
 
         $this->assertNotNull($event, "{$needle} not found in Kernel schedule");
-        $this->assertTrue(
-            $this->hasExitCodeCallbacks($event),
-            "{$needle} must register onFailure / exitCodeCallbacks"
+        $this->assertGreaterThan(
+            0,
+            $this->afterCallbackCount($event),
+            "{$needle} must register onFailure (afterCallbacks)"
         );
     }
 
@@ -92,7 +96,26 @@ class MoneyCronScheduleHooksTest extends TestCase
             $event,
             'reaper must stay registered when CHECKOUT_STALE_ORDER_EXPIRY is false (command self-gates)'
         );
-        $this->assertTrue($this->hasExitCodeCallbacks($event));
+        $this->assertGreaterThan(0, $this->afterCallbackCount($event));
+    }
+
+    public function test_on_failure_finish_fires_schedule_failure_signal(): void
+    {
+        Log::spy();
+
+        $event = $this->eventFor('promises:expire');
+        $this->assertNotNull($event);
+
+        // Simulate a non-zero exit: Laravel's onFailure wraps then() and checks exitCode.
+        $event->finish($this->app, 1);
+
+        Log::shouldHaveReceived('critical')
+            ->withArgs(function (string $message, array $context): bool {
+                return $message === 'schedule.money_command_failed'
+                    && ($context['command'] ?? null) === 'promises:expire';
+            })
+            ->atLeast()
+            ->once();
     }
 
     public function test_schedule_failure_signal_logs_critical(): void
