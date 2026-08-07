@@ -1,6 +1,6 @@
 # Библиотека ответов поддержки — регистровый проход, категории A–F (H1876)
 
-_Created: 31-07-2026 · Last updated: 31-07-2026_
+_Created: 31-07-2026 · Last updated: 07-08-2026_
 
 Регистровый проход по библиотеке ответов поддержки, ограниченный **категориями
 FAQ-суггестера A–F** — по [H1876](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1876-Fable_Systema-Sanscriticum_support-reply-library-ru-register-a-f_29.07.26.md).
@@ -33,6 +33,7 @@ FAQ-суггестера A–F** — по [H1876](https://github.com/gasyoun/Upr
 | D/E/F — LLM-черновики | системный промпт формулировщика | [SupportLlmDraftComposer.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportLlmDraftComposer.php) `systemPrompt` | добавлен регистровый блок: «вы» со строчной, без эмодзи/восклицаний/срочности/уменьшительных/англицизмов, «ё» только в «всё» |
 | D/E/F — привязываемые шаблоны (S9) | канреплаи `MessageTemplate` | [MessageTemplateSeeder.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/seeders/MessageTemplateSeeder.php) | добавлены три заготовки в домашнем регистре; сеются **непривязанными** — привязку к категории суггестера делает оператор в админке (S9/H1838), сидер поведение прода не меняет |
 | поддержка · общий канреплай | «приняли в работу» | там же | «вернёмся с ответом. Спасибо за терпение!» → «уже разбираемся. Обычно отвечаем в течение рабочего дня.» (без «ё» и восклицания; конкретика скорости ответа — строка 3 из `_shared_strings.md`) |
+| E1/E2/E3/E4 · D2/D3 · F2/F3 · A/C · TG · G | узкие канреплаи по темам TG | тот же seeder + [SUPPORT_CANREPLY_TEMPLATES_REVISION_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/SUPPORT_CANREPLY_TEMPLATES_REVISION_2026-08.md) | **H2339:** magic-link (E2), forgot-password (E1), post-pay пароль (E3), тех-вход (E4), оплата/чек (D2/D3), ДЗ/запись (F2/F3), Zoom/расписание (A/C), Telegram, перевод группы — по census ~2 мес prod TG |
 
 Живые тексты категорий D/E/F, уже привязанные куратором в проде
 (`message_templates.suggester_category`), в репозитории не лежат — их регистр

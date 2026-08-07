@@ -65,4 +65,37 @@ class MessageTemplateTest extends TestCase
         $this->assertTrue($rows->first()->is_active);
         $this->assertSame(MessageTemplate::CATEGORY_REACTIVATION, $rows->first()->category);
     }
+
+    /** @test H2339 */
+    public function render_substitutes_email_and_leaves_login_link_for_curator(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Виктория',
+            'email' => 'vic1511@example.com',
+        ]);
+        $tpl = MessageTemplate::factory()->create([
+            'body' => "Намасте, {name}!\n\nСсылка: {login_link}\nEmail: {email}",
+        ]);
+
+        $rendered = $tpl->render($user);
+
+        $this->assertStringContainsString('Намасте, Виктория!', $rendered);
+        $this->assertStringContainsString('Email: vic1511@example.com', $rendered);
+        // Magic-link одноразовый — куратор вставляет вручную.
+        $this->assertStringContainsString('{login_link}', $rendered);
+    }
+
+    /** @test H2339 */
+    public function render_blank_email_for_no_email_placeholder(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Без почты',
+            'email' => 'u6494@no-email.com',
+        ]);
+        $tpl = MessageTemplate::factory()->create([
+            'body' => 'mail=[{email}]',
+        ]);
+
+        $this->assertSame('mail=[]', $tpl->render($user));
+    }
 }

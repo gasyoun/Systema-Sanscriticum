@@ -1,6 +1,6 @@
 # Как впустить ученика в кабинет без пароля и «даже если ничего не помнит»
 
-_Created: 02-08-2026 · Last updated: 02-08-2026_
+_Created: 02-08-2026 · Last updated: 07-08-2026_
 
 > **Права:** magic link выдаёт **куратор (роль manager)** и **admin** —
 > `RoleGate::canIssueStudentLoginLink()`.
@@ -173,8 +173,23 @@ throttle) — это бонус; главная ценность — **ссыл�
 
 ## 7. Шаблон сообщения ученику
 
+**В библиотеке шаблонов (админка):**  
+`Поддержка · E2 — magic-link вход (не знает пароль)`  
+(сидер [MessageTemplateSeeder](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/seeders/MessageTemplateSeeder.php), H2339).
+
+Перед отправкой: «Разблокировать» → скопировать URL → вставить вместо
+`{login_link}` (авто-подстановки нет — ссылка одноразовая). `{email}` и
+`{name}` подставляются из карточки.
+
+Self-service, если email известен (без magic-link):  
+`Поддержка · E1 — вход по email (forgot-password)`.
+
+Копия тела E2 (если шаблона ещё нет на prod):
+
 ```
-Мы нашли ваш кабинет. Откройте эту ссылку в браузере (один раз, действует сутки):
+Намасте, {name}!
+
+Мы нашли ваш кабинет. Откройте эту ссылку в браузере (один раз, действует около суток):
 
 {login_link}
 
@@ -182,10 +197,13 @@ throttle) — это бонус; главная ценность — **ссыл�
 и при желании отметьте «Запомнить меня» на своём телефоне.
 
 Ваш email в системе (для следующего входа): {email}
+
+Кабинет: https://samskrte.ru/dvaram
 ```
 
 Если email placeholder (`@no-email.com`) — **не** обещать вход по почте; только
 magic link, пока админ не проставит нормальный email в карточке.
+Ревизия всех support-канреплаев: [SUPPORT_CANREPLY_TEMPLATES_REVISION_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/SUPPORT_CANREPLY_TEMPLATES_REVISION_2026-08.md).
 
 ---
 
