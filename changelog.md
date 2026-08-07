@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2363 prod enable: `PAYMENT_RECOVERY_CTA=true` on `193.232.229.92`.** Backup `.env.bak.h2363.20260807145802`, `config:cache`, `config:show features.payment_recovery_cta` → true; `/faq/payment` HTTP 200. Presentation-only (no PaymentObserver/grant change). Roadmap Wave 1c note updated. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.88.2] - 2026-08-07
 ### Changed
 - **H2363: Wave 1c (H-C) roadmap close-out.** Product already shipped as **H2060** ([PR #1110](https://github.com/gasyoun/Systema-Sanscriticum/pull/1110), 1.87.2): `payment_recovery_cta` default OFF, `student.access` recovery CTA (amount + FAQ + curator + installment copy), `PaymentRecoveryCtaTest`. This residual only ticks Wave 1c checkboxes on [docs/ROADMAP_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_Systema_NOBORING_DOZHIM_2026H2.md) — no new payment product, no flag flip. Executor: Grok 4.5 (`grok-4.5`).
