@@ -1,6 +1,6 @@
 # Money / access-core systems manual — Systema-Sanscriticum
 
-_Created: 25-07-2026 · Last updated: 01-08-2026_
+_Created: 25-07-2026 · Last updated: 07-08-2026_
 
 The deep systems manual for the money and access core of the Systema-Sanscriticum LMS
 (samskrte.ru): how a payment becomes access, how a price is computed, how the bank
@@ -668,11 +668,20 @@ The migration and backfill command are **not** run against prod by an agent (D16
 
 ## 11. [RU] Runbook — сбои и восстановление
 
-Диагностическая команда для всех сценариев (только чтение, безопасна всегда):
+Диагностическая команда для всех сценариев (только чтение; **exit ≠ 0** при любом
+непустом bucket — H2338):
 
 ```
 php artisan payments:audit-checkout-integrity
 ```
+
+Buckets: negative referral wallets · stranded deposit credit · promo counter
+mismatches · legacy pending promo without expiry · rejected webhook deliveries ·
+**paid-but-no-group** (оплаченный non-deposit платёж, студент не в `group_user` ни
+одной группы курса через `course_group`).
+
+Ежедневный cron: `payments:audit-checkout-integrity` в 04:05 (см. `schedule:list`).
+Как алерт доходит до человека — §11.7.
 
 ### 11.1 «Оплата прошла, а доступа нет»
 
@@ -731,6 +740,26 @@ php artisan payments:audit-checkout-integrity
 Любое расхождение «Promo counter mismatches» (чинится только
 `--apply-safe` при включённом `CHECKOUT_INTEGRITY_SAFE_REPAIRS`); ложные отказы
 вебхука; массовые `unmatched`-строки (сломан парсинг «Заказ №»); всё из §9.
+
+### 11.7 Как алерт с денежного cron доходит до человека (H2338)
+
+Денежные команды в `app/Console/Kernel.php` вешают `onFailure` →
+`App\Support\ScheduleFailureSignal`:
+
+| Signal | Where |
+|---|---|
+| `Log::critical('schedule.money_command_failed', …)` | `laravel.log` / log shipper |
+| Filament DB notification «Сбой денежного cron» | колокольчик админки для `super_admin` / `admin` / `accountant` |
+| Laravel ScheduleRunCommand ERROR line | тот же `laravel.log` при exit ≠ 0 |
+
+Покрытые команды: `promises:expire`, `receivables:check`, `debts:remind`,
+`payments:expire-stale-checkouts`, `payments:audit-checkout-integrity`.
+
+Ридер брошенных чекаутов **всегда** в `schedule:list` (даже при
+`CHECKOUT_STALE_ORDER_EXPIRY=false`): гейт внутри команды, exit 0 + warn когда
+флаг выключен — без ERROR-спама. Мутации только при флаге ON + `--apply`.
+
+Проверка регистрации: `php artisan schedule:list | findstr /i "audit-checkout expire-stale promises:expire receivables debts:remind"`.
 
 ---
 
