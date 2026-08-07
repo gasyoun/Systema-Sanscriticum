@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.88.3] - 2026-08-07
 ### Changed
 - **H2363 prod enable: `PAYMENT_RECOVERY_CTA=true` on `193.232.229.92`.** Backup `.env.bak.h2363.20260807145802`, `config:cache`, `config:show features.payment_recovery_cta` → true; `/faq/payment` HTTP 200. Presentation-only (no PaymentObserver/grant change). Roadmap Wave 1c note updated. Executor: Grok 4.5 (`grok-4.5`).
 
