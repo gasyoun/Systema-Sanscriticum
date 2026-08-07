@@ -27,6 +27,14 @@
     <p class="mt-4 text-gray-500 text-xs max-w-xl mx-auto">
         Нажмите на слово, чтобы увидеть лемму, форму и значение@if($srsAdd) и добавить его в свою колоду@endif.
     </p>
+
+    {{-- H2107 — student progress panel: opt-in, same $srsAdd gate as the add-to-SRS button. --}}
+    @if($srsAdd)
+        <p class="mt-3 text-gray-500 text-xs">
+            Разобрано слов: <b class="text-[#E85C24]">{{ $lookup_percent ?? 0 }}%</b> ·
+            в колоде: <b class="text-[#E85C24]">{{ $unique_lemmas ?? 0 }}</b> лемм
+        </p>
+    @endif
 </header>
 
 @if($srsAdd && session('reading_srs_status'))
@@ -78,7 +86,13 @@
             <div class="text-xs uppercase tracking-widest text-gray-500 mb-2">{{ $sentence['locus'] }}</div>
             <div class="deva text-xl text-white mb-3 leading-relaxed">
                 @foreach($sentence['tokens'] as $token)
-                    <details class="inline-block align-baseline mr-1 mb-1 group">
+                    <details class="inline-block align-baseline mr-1 mb-1 group"
+                        @if($srsAdd && !empty($token['lemma']))
+                            data-lookup-track
+                            data-lookup-sentence="{{ $sentenceIndex }}"
+                            data-lookup-token="{{ $loop->index }}"
+                        @endif
+                    >
                         <summary class="inline-block cursor-pointer px-1.5 py-0.5 rounded-md bg-gray-800/70 text-gray-100 hover:bg-gray-700 hover:text-[#E85C24] transition-colors marker:content-none [&::-webkit-details-marker]:hidden">{{ $token['form'] }}</summary>
                         <div class="mt-1 mb-2 text-xs font-sans normal-case tracking-normal text-gray-400 bg-[#0f1420] rounded-lg px-3 py-2 inline-block">
                             <span class="text-gray-300 font-semibold" lang="sa-Latn">{{ $token['lemma'] }}</span>
@@ -139,3 +153,32 @@
     <a href="https://github.com/gasyoun/kosha" rel="nofollow noopener" target="_blank" class="text-[#2AABEE] hover:underline">kosha</a>. Оценка сложности —
     <a href="https://github.com/gasyoun/kosha/blob/main/data/difficulty/METHODS.md" rel="nofollow noopener" target="_blank" class="text-[#2AABEE] hover:underline">метод kosha (H949)</a>.
 </div>
+
+@if($srsAdd)
+    {{--
+        H2107 — fire-and-forget lookup telemetry. Vanilla JS, no new dependency: each
+        details' first `toggle` (open only) POSTs its positions once per page load, so
+        re-opening the same word repeatedly does not spam activity_events.
+    --}}
+    <script>
+        document.querySelectorAll('details[data-lookup-track]').forEach(function (el) {
+            let sent = false;
+            el.addEventListener('toggle', function () {
+                if (sent || !el.open) return;
+                sent = true;
+                fetch({{ Js::from(route('student.reading.lookup', $pack['slug'])) }}, {
+                    method: 'POST',
+                    keepalive: true,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': {{ Js::from(csrf_token()) }},
+                    },
+                    body: JSON.stringify({
+                        sentence: el.dataset.lookupSentence,
+                        token: el.dataset.lookupToken,
+                    }),
+                }).catch(function () { /* telemetry only — never surface an error to the reader */ });
+            });
+        });
+    </script>
+@endif

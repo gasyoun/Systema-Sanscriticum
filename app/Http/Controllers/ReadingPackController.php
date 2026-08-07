@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityEvent;
+use App\Services\Activity\ActivityTracker;
+use App\Services\StartChteniyaProgress;
 use App\Support\StartChteniyaCohort;
 use App\Support\StartChteniyaSrsDeck;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 use RuntimeException;
 
@@ -57,6 +61,14 @@ use RuntimeException;
  *    the feed is refused with an honest message — H2111's own fail condition is
  *    "require lemmatizer always-on", so the always-on cascade (H1463) is not a
  *    prerequisite here.
+ *
+ * H2107 adds student progress + a teacher stalled-lemma view on top of the same two
+ * pipelines — no third one. `logLookup()` writes a fire-and-forget `activity_events`
+ * row (type `reading.token.lookup`, positions-only body, same forgery-proofing as
+ * `addToSrs()`) each time a student opens a token's disclosure; `addToSrs()` already
+ * writes the private cohort SRS deck. `App\Services\StartChteniyaProgress` reads both
+ * to compute per-student lookup % / unique-lemma count and the teacher-facing
+ * top-stalled-lemma ranking (lookups that never converted to a collected card).
  */
 class ReadingPackController extends Controller
 {
@@ -94,13 +106,21 @@ class ReadingPackController extends Controller
     public function cabinetIndex(Request $request): View
     {
         $this->authorizeCohortReader($request);
+        $user = $request->user();
 
         $packs = [];
         foreach (self::COHORT_PACKS as $slug) {
-            $packs[] = $this->readPack($slug);
+            $pack = $this->readPack($slug);
+            // H2107 — lookup % is per-pack (lemmas that pack's tokens carry);
+            // unique-lemma count is per-student across the whole cohort deck.
+            $pack['lookup_percent'] = StartChteniyaProgress::lookupPercentFor($user, $pack);
+            $packs[] = $pack;
         }
 
-        return view('student.reading-index', ['packs' => $packs]);
+        return view('student.reading-index', [
+            'packs' => $packs,
+            'uniqueLemmas' => StartChteniyaProgress::uniqueLemmaCountFor($user),
+        ]);
     }
 
     public function cabinetShow(Request $request, string $slug): View
@@ -111,9 +131,53 @@ class ReadingPackController extends Controller
         // controller offers are readable, so a traversal attempt is a 404, not a file read.
         abort_unless(in_array($slug, self::COHORT_PACKS, true), 404);
 
+        $viewData = $this->packViewData($slug);
+        $viewData['lookup_percent'] = StartChteniyaProgress::lookupPercentFor($request->user(), $viewData['pack']);
+        $viewData['unique_lemmas'] = StartChteniyaProgress::uniqueLemmaCountFor($request->user());
+
         // srsAdd is what turns the tap panel's «в колоду» buttons on. Only here: the
         // public demo route renders the same partial and must stay a read-only page.
-        return view('student.reading-pack', $this->packViewData($slug) + ['srsAdd' => true]);
+        return view('student.reading-pack', $viewData + ['srsAdd' => true]);
+    }
+
+    /**
+     * H2107 — fire-and-forget: a student opened a token's disclosure panel.
+     *
+     * Same security property as addToSrs(): the client sends only POSITIONS, the
+     * lemma is read server-side from the pinned freeze, so a forged POST cannot
+     * inject arbitrary text into activity_events. Always 204 — telemetry must
+     * never surface an error to the reader.
+     */
+    public function logLookup(Request $request, string $slug): Response
+    {
+        $this->authorizeCohortReader($request);
+        abort_unless(in_array($slug, self::COHORT_PACKS, true), 404);
+
+        $validated = $request->validate([
+            'sentence' => ['required', 'integer', 'min:0'],
+            'token' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $pack = $this->readPack($slug);
+        $sentence = $pack['sentences'][$validated['sentence']] ?? null;
+        $token = $sentence['tokens'][$validated['token']] ?? null;
+        $lemma = trim((string) ($token['lemma'] ?? ''));
+
+        if ($token !== null && $lemma !== '') {
+            app(ActivityTracker::class)->logEvent(
+                user: $request->user(),
+                session: null,
+                type: ActivityEvent::TYPE_READING_TOKEN_LOOKUP,
+                data: [
+                    'pack' => (string) ($pack['slug'] ?? $slug),
+                    'lemma_slp1' => trim((string) ($token['slp1'] ?? '')) ?: $lemma,
+                    'surface' => (string) ($token['form'] ?? ''),
+                ],
+                request: $request,
+            );
+        }
+
+        return response()->noContent();
     }
 
     /**

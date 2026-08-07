@@ -91,6 +91,9 @@ class ActivityEvent extends Model
 
     public const ACCESS_RENEWAL_COMPLETE = 'access.renewal.complete';
 
+    /** H2107 — a student opened a token's disclosure panel in a «Старт чтения» reading pack. */
+    public const TYPE_READING_TOKEN_LOOKUP = 'reading.token.lookup';
+
     /**
      * События §4, которые разрешено присылать с клиента (first-party JS,
      * POST student.telemetry). Серверные (home.view, mark.mastered,
