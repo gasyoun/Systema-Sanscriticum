@@ -195,6 +195,7 @@ class ShopController extends Controller
             'blocks',
             'teacher', // подгружаем преподавателя одним запросом
             'teachers', // со-преподаватели (блок «Преподаватель(и)» на лендинге)
+            'categories', // H2379: cover fallback colour + continuity with card
             'faqs', // блок «FAQ по курсу»
             'testimonials', // блок «Отзывы» (в порядке пивота)
             'previewLesson', // блок «Пример урока» + вторая CTA в hero

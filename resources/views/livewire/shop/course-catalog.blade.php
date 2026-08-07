@@ -147,39 +147,148 @@
 
         {{-- ===== Строка B: категории (скролл по горизонтали на узких экранах) ===== --}}
         @if($this->categories->isNotEmpty())
-            <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {{-- Все темы --}}
-                <button type="button" wire:click="resetCategories"
-                        @class([
-                            'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer shrink-0',
-                            'bg-[#E85C24] text-white border-[#E85C24]' => empty($categoryIds),
-                            'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-[#E85C24]/50 hover:text-white' => ! empty($categoryIds),
-                        ])>
-                    Все темы
-                </button>
-
-                @foreach($this->categories as $category)
-                    @php $active = in_array($category->id, $categoryIds, true); @endphp
-                    <button type="button"
-                            wire:click="toggleCategory({{ $category->id }})"
-                            wire:key="cat-{{ $category->id }}"
+            {{-- H2379: fade + thin scrollbar so mobile discovers horizontal scroll --}}
+            <div class="relative">
+                <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:thin] [scrollbar-color:#1F2636_transparent] scroll-smooth">
+                    {{-- Все темы --}}
+                    <button type="button" wire:click="resetCategories"
                             @class([
                                 'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer shrink-0',
-                                'bg-[#E85C24] text-white border-[#E85C24]' => $active,
-                                'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-[#E85C24]/50 hover:text-white' => ! $active,
+                                'bg-[#E85C24] text-white border-[#E85C24]' => empty($categoryIds),
+                                'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-[#E85C24]/50 hover:text-white' => ! empty($categoryIds),
                             ])>
-                        @if($category->icon)<i class="fas {{ $category->icon }} text-[11px] opacity-80"></i>@endif
-                        <span>{{ $category->name }}</span>
-                        <span @class([
-                            'text-[11px]',
-                            'text-white/70' => $active,
-                            'text-slate-500' => ! $active,
-                        ])>{{ $category->courses_count }}</span>
+                        Все темы
                     </button>
-                @endforeach
+
+                    @foreach($this->categories as $category)
+                        @php $active = in_array($category->id, $categoryIds, true); @endphp
+                        <button type="button"
+                                wire:click="toggleCategory({{ $category->id }})"
+                                wire:key="cat-{{ $category->id }}"
+                                @class([
+                                    'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer shrink-0',
+                                    'bg-[#E85C24] text-white border-[#E85C24]' => $active,
+                                    'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-[#E85C24]/50 hover:text-white' => ! $active,
+                                ])>
+                            @if($category->icon)<i class="fas {{ $category->icon }} text-[11px] opacity-80"></i>@endif
+                            <span>{{ $category->name }}</span>
+                            <span @class([
+                                'text-[11px]',
+                                'text-white/70' => $active,
+                                'text-slate-500' => ! $active,
+                            ])>{{ $category->courses_count }}</span>
+                        </button>
+                    @endforeach
+                </div>
+                <div class="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[#0A0D14] via-[#0A0D14]/80 to-transparent sm:hidden"
+                     aria-hidden="true"></div>
             </div>
+            <p class="mt-1.5 text-[11px] text-slate-500 sm:hidden" aria-hidden="true">
+                Листайте темы →
+            </p>
         @endif
     </div>
+
+    {{-- ============================================ --}}
+    {{-- КУРАТОРСКИЕ ВХОДЫ (H2379) — над сеткой          --}}
+    {{-- Синхронизация/Arzamas: сначала полки, потом grid --}}
+    {{-- ============================================ --}}
+    @if($search === '' && $teacherId === '')
+        <section class="mb-10" data-analytics="editorial-entrances">
+            <div class="flex items-end justify-between gap-4 mb-4">
+                <div>
+                    <h2 class="text-lg font-extrabold text-white tracking-tight">Куда зайти</h2>
+                    <p class="text-sm text-slate-500 mt-1">Короткие входы в каталог — без перелистывания всех карточек.</p>
+                </div>
+                <a href="{{ route('shop.start') }}"
+                   class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#38BDF8] hover:text-white underline-offset-4 hover:underline shrink-0">
+                    <i class="fas fa-compass text-[11px]"></i>
+                    С чего начать?
+                </a>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                {{-- С нуля → on-ramp --}}
+                <a href="{{ route('shop.start') }}"
+                   class="group flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#38BDF8]/50 p-5 transition-all">
+                    <div class="w-10 h-10 rounded-xl bg-[#1F2636] flex items-center justify-center mb-3 group-hover:bg-[#38BDF8]/15 transition-colors">
+                        <i class="fas fa-seedling text-[#38BDF8]"></i>
+                    </div>
+                    <span class="text-base font-bold text-white group-hover:text-[#38BDF8] transition-colors mb-1">С нуля</span>
+                    <span class="text-sm text-slate-400 leading-snug">Два вопроса — и план, с какого курса начать.</span>
+                </a>
+
+                {{-- Идут сейчас → format filter --}}
+                <button type="button"
+                        wire:click="$set('format', 'live')"
+                        @class([
+                            'group flex flex-col text-left rounded-2xl border p-5 transition-all cursor-pointer',
+                            'bg-rose-500/10 border-rose-500/50 ring-1 ring-rose-500/30' => $format === 'live',
+                            'bg-[#111622] border-[#1F2636] hover:border-rose-500/50' => $format !== 'live',
+                        ])>
+                    <div @class([
+                        'w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors',
+                        'bg-rose-500/20' => $format === 'live',
+                        'bg-[#1F2636] group-hover:bg-rose-500/15' => $format !== 'live',
+                    ])>
+                        <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+                    </div>
+                    <span class="text-base font-bold text-white group-hover:text-rose-300 transition-colors mb-1">Идут сейчас</span>
+                    <span class="text-sm text-slate-400 leading-snug">Живые потоки с преподавателем — можно присоединиться.</span>
+                </button>
+
+                {{-- Библиотека записей → format filter (явный режим, не «остатки») --}}
+                <button type="button"
+                        wire:click="$set('format', 'recorded')"
+                        @class([
+                            'group flex flex-col text-left rounded-2xl border p-5 transition-all cursor-pointer',
+                            'bg-indigo-500/10 border-indigo-500/50 ring-1 ring-indigo-500/30' => $format === 'recorded',
+                            'bg-[#111622] border-[#1F2636] hover:border-indigo-500/50' => $format !== 'recorded',
+                        ])>
+                    <div @class([
+                        'w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors',
+                        'bg-indigo-500/20' => $format === 'recorded',
+                        'bg-[#1F2636] group-hover:bg-indigo-500/15' => $format !== 'recorded',
+                    ])>
+                        <i class="fas fa-play-circle text-indigo-400"></i>
+                    </div>
+                    <span class="text-base font-bold text-white group-hover:text-indigo-300 transition-colors mb-1">Библиотека записей</span>
+                    <span class="text-sm text-slate-400 leading-snug">Смотрите в своём темпе — доступ к материалам бессрочный.</span>
+                </button>
+
+                {{-- Топ-категория (если есть) или fallback «Все курсы» --}}
+                @php $topCategory = $this->categories->sortByDesc('courses_count')->first(); @endphp
+                @if($topCategory)
+                    <button type="button"
+                            wire:click="toggleCategory({{ $topCategory->id }})"
+                            @class([
+                                'group flex flex-col text-left rounded-2xl border p-5 transition-all cursor-pointer',
+                                'bg-[#E85C24]/10 border-[#E85C24]/50 ring-1 ring-[#E85C24]/30' => in_array($topCategory->id, $categoryIds, true),
+                                'bg-[#111622] border-[#1F2636] hover:border-[#E85C24]/50' => ! in_array($topCategory->id, $categoryIds, true),
+                            ])>
+                        <div class="w-10 h-10 rounded-xl bg-[#1F2636] flex items-center justify-center mb-3 group-hover:bg-[#E85C24]/15 transition-colors">
+                            @if($topCategory->icon)
+                                <i class="fas {{ $topCategory->icon }} text-[#E85C24]"></i>
+                            @else
+                                <i class="fas fa-bookmark text-[#E85C24]"></i>
+                            @endif
+                        </div>
+                        <span class="text-base font-bold text-white group-hover:text-[#E85C24] transition-colors mb-1">{{ $topCategory->name }}</span>
+                        <span class="text-sm text-slate-400 leading-snug">Тема с наибольшим выбором — {{ $topCategory->courses_count }} {{ \App\Support\Plural::ru((int) $topCategory->courses_count, 'курс', 'курса', 'курсов') }}.</span>
+                    </button>
+                @else
+                    <button type="button"
+                            wire:click="resetFilters"
+                            class="group flex flex-col text-left rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 p-5 transition-all cursor-pointer">
+                        <div class="w-10 h-10 rounded-xl bg-[#1F2636] flex items-center justify-center mb-3 group-hover:bg-[#E85C24]/15 transition-colors">
+                            <i class="fas fa-th-large text-[#E85C24]"></i>
+                        </div>
+                        <span class="text-base font-bold text-white group-hover:text-[#E85C24] transition-colors mb-1">Весь каталог</span>
+                        <span class="text-sm text-slate-400 leading-snug">Сбросить фильтры и смотреть все курсы.</span>
+                    </button>
+                @endif
+            </div>
+        </section>
+    @endif
 
     {{-- ============================================ --}}
     {{-- РЕЗУЛЬТАТЫ (сгруппированы по секциям)          --}}
@@ -196,8 +305,17 @@
              class="space-y-12 transition-opacity">
 
             @php
-                // Заголовки секций по формату курса
-                $sectionLabels = ['live' => 'Идут сейчас', 'recorded' => 'В записи', 'other' => 'Другие курсы'];
+                // H2379: library vocabulary when browsing recorded-only; otherwise section pair.
+                $sectionLabels = [
+                    'live' => 'Идут сейчас',
+                    'recorded' => $format === 'recorded' ? 'Библиотека записей' : 'В записи',
+                    'other' => 'Другие курсы',
+                ];
+                $sectionHints = [
+                    'live' => 'Живые потоки — можно присоединиться к идущему курсу.',
+                    'recorded' => 'Открытая библиотека: смотрите в своём темпе, доступ бессрочный.',
+                    'other' => null,
+                ];
                 // Группируем всю выдачу; порядок секций фиксирован
                 $grouped = $courses->groupBy(fn ($c) => $c->format ?: 'other');
                 $orderedKeys = collect(['live', 'recorded', 'other'])
@@ -208,11 +326,16 @@
 
             @forelse($orderedKeys as $key)
                 <section wire:key="section-{{ $key }}">
-                    <div class="flex items-baseline gap-3 mb-6">
-                        <h2 class="text-2xl font-extrabold text-white">
-                            {{ $sectionLabels[$key] ?? 'Курсы' }}
-                        </h2>
-                        <span class="text-xl font-bold text-slate-500">{{ $sectionTotals[$key] ?? $grouped[$key]->count() }}</span>
+                    <div class="mb-6">
+                        <div class="flex items-baseline gap-3">
+                            <h2 class="text-2xl font-extrabold text-white">
+                                {{ $sectionLabels[$key] ?? 'Курсы' }}
+                            </h2>
+                            <span class="text-xl font-bold text-slate-500">{{ $sectionTotals[$key] ?? $grouped[$key]->count() }}</span>
+                        </div>
+                        @if(! empty($sectionHints[$key]))
+                            <p class="mt-1.5 text-sm text-slate-500 max-w-2xl">{{ $sectionHints[$key] }}</p>
+                        @endif
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
