@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2363: Wave 1c (H-C) roadmap close-out.** Product already shipped as **H2060** ([PR #1110](https://github.com/gasyoun/Systema-Sanscriticum/pull/1110), 1.87.2): `payment_recovery_cta` default OFF, `student.access` recovery CTA (amount + FAQ + curator + installment copy), `PaymentRecoveryCtaTest`. This residual only ticks Wave 1c checkboxes on [docs/ROADMAP_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_Systema_NOBORING_DOZHIM_2026H2.md) — no new payment product, no flag flip. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.88.1] - 2026-08-07
 ### Added
 - **H2336: prod acceptance packet — remediations 1–8 + Tochka/#1146 + Horizon + guards residual.** Dated ops memo on live prod HEAD `644e1c0d` (ancestors of #1103–#1109, #1146, #1148): money uniqueness migration Ran, Horizon supervisors running (fast/long/lectures/webhooks), `deploy:webhook-preflight OK`, PayPal subscriptions + partner flags still OFF, hold≠access N/A (0 hold webhooks; 32/32 Tochka APPROVED→applied), `guards:verify` exit 0. Doc: [docs/ops/PROD_ACCEPT_REMEDIATION_1_8_TOCHKA_HORIZON_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/PROD_ACCEPT_REMEDIATION_1_8_TOCHKA_HORIZON_2026-08-07.md). Executor: Grok 4.5 (`grok-4.5`).
