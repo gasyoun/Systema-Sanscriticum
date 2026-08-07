@@ -154,8 +154,9 @@ handoff — this roadmap does not restate the findings, it sequences them.
     - [x] VIP/bundle tariff → `Tariff::accessKey()` not raw `type` so paid VIP unlocks
       lessons — shipped [PR #250](https://github.com/gasyoun/Systema-Sanscriticum/pull/250)
       (`PaymentController` + `VipBundleAccessKeyTest`); verified on main 07-08-2026 (H2366).
-    - [ ] public `/class/{id}/join` redirects anonymous users to the real Zoom link
-      (`JoinClassController.php:44`);
+    - [x] public `/class/{id}/join` never redirects anonymous users to the real Zoom link
+      — shipped [PR #252](https://github.com/gasyoun/Systema-Sanscriticum/pull/252)
+      (`JoinClassController` + `JoinClassAccessTest` / `JoinClassControllerTest`); verified on main 07-08-2026 (H2383).
     - [ ] chargeback/failed reversal never revokes group membership or Zoom calendar access
       (`Payment.php:296`).
   - **Revenue leaks:** deposit credited to multiple pending payments (`Payment.php:519`);
