@@ -135,7 +135,7 @@ class SoftRemediateCommandTest extends TestCase
         $this->assertStringContainsString('server_guards_apply', $r['message']);
     }
 
-        public function test_hard_breaker_never_cleared(): void
+    public function test_hard_breaker_never_cleared(): void
     {
         file_put_contents(
             $this->repo.'/storage/auto_deploy.disabled',

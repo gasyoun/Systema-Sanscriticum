@@ -37,6 +37,7 @@ final class MessagePlaceholders
      * (приложение работает в Europe/Moscow — см. config('app.timezone')).
      *
      * {email} — нормализованный email карточки; placeholder-адреса
+     *
      * (*@no-email.com) схлопываются в пустую строку, чтобы шаблон не
      * обещал вход по почте, которой нет.
      *
