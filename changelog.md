@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2107: «Старт чтения» reading progress + teacher stalled-lemma view.** Student lookup % and unique-lemma count on the pack/index headers; teacher Filament page of top stalled lemmas (looked-up but never added to the cohort SRS deck). Reuses `ActivityEvent::TYPE_READING_TOKEN_LOOKUP` (`POST /dvaram/reading/{slug}/lookup`, positions-only, same forgery-proofing as `addToSrs`) and `StartChteniyaSrsDeck` (H2106/H2111) — no new table. Service `StartChteniyaProgress`, page `StartChteniyaStalledLemmas` (`isTeacher()||isAdminLike()`). Flags unchanged (`kosha_reader` + `start_chteniya_cohort`, both default OFF). Tests: `ReadingProgressTest` + `StalledLemmasPageTest` (8). Executor: Sonnet 5 (`claude-sonnet-5`) + midway resume Grok 4.5 (`grok-4.5`).
+
 ## [1.88.2] - 2026-08-07
 ### Changed
 - **H2363: Wave 1c (H-C) roadmap close-out.** Product already shipped as **H2060** ([PR #1110](https://github.com/gasyoun/Systema-Sanscriticum/pull/1110), 1.87.2): `payment_recovery_cta` default OFF, `student.access` recovery CTA (amount + FAQ + curator + installment copy), `PaymentRecoveryCtaTest`. This residual only ticks Wave 1c checkboxes on [docs/ROADMAP_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_Systema_NOBORING_DOZHIM_2026H2.md) — no new payment product, no flag flip. Executor: Grok 4.5 (`grok-4.5`).
