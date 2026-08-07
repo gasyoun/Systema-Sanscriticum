@@ -34,7 +34,7 @@ class PaymentWebhookEvent extends Model
 
     /**
      * Банк прислал hold (authorized/AUTHORIZED), а не capture.
-     * Доступ не выдаём, пока не придёт captured/completed (H2085).
+     * Доступ не выдаём, пока не придёт APPROVED/captured/completed/paid (H2085 / #1146).
      */
     public const DECISION_HOLD_NOT_CAPTURED = 'hold_not_captured';
 

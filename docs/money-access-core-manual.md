@@ -329,8 +329,7 @@ The body is a **JWT signed RS256 by Tochka**; the public JWK is pinned in the
 controller (overridable via `services.tochka.webhook_public_key` — used by tests to
 substitute a throwaway pair). Invalid signature ⇒ 401, no state change. The order is
 identified by `Заказ №(\d+)` parsed from `purpose`. The bank's `status` maps:
-success ∈ `{paid, authorized, APPROVED, AUTHORIZED, captured, completed}`, failure ∈
-`{rejected, canceled, failed}`. `paymentType` (documented values `card`/`sbp`/
+**settled** ∈ `{APPROVED, approved, captured, completed, paid}` (money taken; may grant access); **hold** ∈ `{authorized, AUTHORIZED}` → pending + `hold_not_captured` (**never** grant); failure ∈ `{rejected, canceled, cancelled, failed}` → `failed`. Full table: [TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md). `paymentType` (documented values `card`/`sbp`/
 `dolyame`) is normalized into `payments.payment_method` for unit-economics; an
 unrecognized value is logged raw (no PII) and stored as NULL.
 

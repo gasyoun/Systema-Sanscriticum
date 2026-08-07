@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2337: Tochka settlement status matrix + PHPUnit lock (#1103 x #1146).** Ops-safe matrix of bank status -> payment status -> access grant after the #1146 soft-back that re-accepted `APPROVED` as paid. Hold (`authorized`/`AUTHORIZED`) remains non-granting (`hold_not_captured`); settled set is `APPROVED`/`captured`/`completed`/`paid`. Doc: [docs/TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md). Tests: `TochkaWebhookTest` failure provider + AUTHORIZED!=APPROVED regression; stale success-set wording fixed in H2085 decision + money-access-core-manual. Cross-link from H2336 prod accept memo. No money flag flip; no PayPal/partner enable. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.88.5] - 2026-08-07
 ### Added
 - **H2338: AuditCheckoutIntegrity teeth + schedule failure hooks.** `payments:audit-checkout-integrity` returns **FAILURE** when any measured bucket is non-empty; new **paid-but-no-group** bucket (paid non-deposit payment whose user is in no `course_group` of the course via `group_user`); daily schedule at 04:05. Core money crons (`promises:expire`, `receivables:check`, `debts:remind`, `payments:expire-stale-checkouts`, auditor) register `onFailure` → `ScheduleFailureSignal` (Log::critical + Filament DB notify to finance roles). Stale-checkout reaper always listed in schedule (command self-gates the feature flag). Docs: money-access-core-manual §11 / §11.7. Tests: `CheckoutIntegrityAuditCommandTest`, `MoneyCronScheduleHooksTest`. Detect loud, repair separate; no prod flag flips. Executor: Grok 4.5 (`grok-4.5`).
