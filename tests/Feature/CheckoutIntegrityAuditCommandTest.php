@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
 use App\Models\PromoCode;
@@ -21,7 +22,15 @@ class CheckoutIntegrityAuditCommandTest extends TestCase
         $this->assertFalse(config('features.checkout_integrity_safe_repairs'));
     }
 
-    public function test_dry_run_reports_all_categories_without_mutating_money_records(): void
+    public function test_clean_database_returns_success(): void
+    {
+        $this->artisan('payments:audit-checkout-integrity')
+            ->expectsOutputToContain('Mode: DRY RUN (no writes)')
+            ->expectsOutputToContain('All integrity buckets empty — OK.')
+            ->assertSuccessful();
+    }
+
+    public function test_dry_run_reports_all_categories_and_fails_when_buckets_non_empty(): void
     {
         $fixture = $this->seedIntegrityIssues();
 
@@ -31,7 +40,8 @@ class CheckoutIntegrityAuditCommandTest extends TestCase
             ->expectsOutputToContain('Reversed orders with stranded deposit credit: 1')
             ->expectsOutputToContain('Promo counter mismatches: 1')
             ->expectsOutputToContain('Legacy pending promo links without expiry: 1')
-            ->assertSuccessful();
+            ->expectsOutputToContain('Integrity buckets non-empty (FAILURE)')
+            ->assertFailed();
 
         $this->assertSame(-250.0, (float) $fixture['user']->fresh()->referral_credit);
         $this->assertSame(1000.0, (float) $fixture['deposit']->fresh()->consumed_amount);
@@ -58,7 +68,7 @@ class CheckoutIntegrityAuditCommandTest extends TestCase
         $this->artisan('payments:audit-checkout-integrity', ['--apply-safe' => true])
             ->expectsOutputToContain('Mode: APPLY SAFE (promo counters only)')
             ->expectsOutputToContain('Applied promo counters: 1')
-            ->assertSuccessful();
+            ->assertFailed();
 
         $this->assertSame(1, $fixture['promo']->fresh()->used_count);
         $this->assertSame(-250.0, (float) $fixture['user']->fresh()->referral_credit);
@@ -71,10 +81,10 @@ class CheckoutIntegrityAuditCommandTest extends TestCase
             ->expectsOutputToContain('Negative referral wallets: 1')
             ->expectsOutputToContain('Reversed orders with stranded deposit credit: 1')
             ->expectsOutputToContain('Legacy pending promo links without expiry: 1')
-            ->assertSuccessful();
+            ->assertFailed();
     }
 
-    public function test_dry_run_reports_rejected_webhook_deliveries(): void
+    public function test_dry_run_reports_rejected_webhook_deliveries_and_fails(): void
     {
         // Два отказных решения журнала (H1359) + одно applied, которое НЕ должно
         // попасть в отчёт об отклонённых доставках.
@@ -108,6 +118,71 @@ class CheckoutIntegrityAuditCommandTest extends TestCase
 
         $this->artisan('payments:audit-checkout-integrity')
             ->expectsOutputToContain('Rejected webhook deliveries: 2')
+            ->assertFailed();
+    }
+
+    public function test_paid_but_no_group_bucket_fails_and_names_payment_id(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        // Course has a group, but the paid user is not in it.
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
+
+        $payment = Payment::withoutEvents(fn (): Payment => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 5000,
+            'tariff' => 'full',
+            'status' => 'paid',
+            'is_conditional' => false,
+        ]));
+
+        $this->artisan('payments:audit-checkout-integrity')
+            ->expectsOutputToContain('Paid but no course group membership: 1')
+            ->expectsOutputToContain("Paid-but-no-group payment id(s): {$payment->id}")
+            ->assertFailed();
+    }
+
+    public function test_paid_with_group_membership_is_not_flagged(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
+        $user->groups()->attach($group->id);
+
+        Payment::withoutEvents(fn (): Payment => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 5000,
+            'tariff' => 'full',
+            'status' => 'paid',
+            'is_conditional' => false,
+        ]));
+
+        $this->artisan('payments:audit-checkout-integrity')
+            ->expectsOutputToContain('Paid but no course group membership: 0')
+            ->expectsOutputToContain('All integrity buckets empty — OK.')
+            ->assertSuccessful();
+    }
+
+    public function test_deposit_tariff_is_excluded_from_paid_but_no_group(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+
+        Payment::withoutEvents(fn (): Payment => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 1000,
+            'tariff' => 'deposit',
+            'status' => 'paid',
+            'is_conditional' => false,
+        ]));
+
+        $this->artisan('payments:audit-checkout-integrity')
+            ->expectsOutputToContain('Paid but no course group membership: 0')
             ->assertSuccessful();
     }
 
@@ -173,6 +248,8 @@ class CheckoutIntegrityAuditCommandTest extends TestCase
             'payment_link_expires_at' => null,
         ]));
 
+        // Paid full payment with no group membership (bucket under test elsewhere;
+        // seed also contributes to multi-bucket FAILURE here).
         return compact('user', 'deposit', 'reversed', 'promo', 'legacy');
     }
 }

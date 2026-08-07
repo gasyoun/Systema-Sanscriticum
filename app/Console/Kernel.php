@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Jobs\CloseStaleSessionsJob;
 use App\Jobs\PruneStaleVisitorPresencesJob;
 use App\Models\MarketingSetting;
+use App\Support\ScheduleFailureSignal;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Carbon;
@@ -23,10 +24,13 @@ class Kernel extends ConsoleKernel
             ->name('archives-cleanup');
 
         // Перевод просроченных promises в статус expired — ночью.
+        // onFailure → ScheduleFailureSignal (H2338 / audit spec 7): log+admin
+        // bell; without it, money crons fail only into laravel.log.
         $schedule->command('promises:expire')
             ->dailyAt('03:30')
             ->withoutOverlapping(10)
             ->onOneServer()
+            ->onFailure(fn () => ScheduleFailureSignal::report('promises:expire'))
             ->name('promises-expire');
 
         // Сканирование ящика на предмет hard bounce (H1449 A3) — суппрессия
@@ -55,7 +59,21 @@ class Kernel extends ConsoleKernel
             ->dailyAt('04:00')
             ->withoutOverlapping(10)
             ->onOneServer()
+            ->onFailure(fn () => ScheduleFailureSignal::report('receivables:check'))
             ->name('receivables-threshold-check');
+
+        // Аудит денежных инвариантов (H2338 / audit spec 6): dry-run, FAILURE
+        // при любом непустом bucket (в т.ч. paid-but-no-group). Alert path:
+        // schedule exit ≠ 0 → onFailure → ScheduleFailureSignal (Log::critical
+        // + Filament DB notification to super_admin/admin/accountant). Operators
+        // also see ERROR lines from schedule:run in laravel.log. Manual:
+        // `php artisan payments:audit-checkout-integrity`.
+        $schedule->command('payments:audit-checkout-integrity')
+            ->dailyAt('04:05')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->onFailure(fn () => ScheduleFailureSignal::report('payments:audit-checkout-integrity'))
+            ->name('audit-checkout-integrity');
 
         // Дежурный по файловому хранилищу (H1345): после archives:cleanup (03:00)
         // и backup:clean, чтобы мерить УЖЕ освобождённое место, а не временный
@@ -152,6 +170,7 @@ class Kernel extends ConsoleKernel
             ->dailyAt($paymentTime)
             ->withoutOverlapping(10)
             ->onOneServer()
+            ->onFailure(fn () => ScheduleFailureSignal::report('debts:remind'))
             ->name('remind-debtors');
 
         // Уведомление о недоборе группы за N дней до плановой даты старта
@@ -517,26 +536,25 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('expire-stale-support-answer-suggestions');
 
-        // --- РИДЕР БРОШЕННЫХ ЧЕКАУТОВ (H1358) ---
+        // --- РИДЕР БРОШЕННЫХ ЧЕКАУТОВ (H1358 + H2338) ---
         // Заваливает (failed) зависшие pending-платежи старше checkout.legacy_pending_days
         // (или webhook-буфера timed промо-брони), освобождая прану/реферальный
         // кредит/депозит/промо-слот через Payment::booted(). Deposit/trial/paypal/
         // conditional строки не трогает никогда. Частый слот (деньги, не «раз в сутки»
         // дебри) с построчным row-lock против гонки с банковским вебхуком. Без --apply
-        // команда только отчитывается — гейт features.checkout_stale_order_expiry
-        // проверяется только когда --apply передан.
+        // команда только отчитывается.
         //
-        // Слот ТОЛЬКО при включённом флаге: иначе cron каждые 15 мин гонял --apply,
-        // команда exit 1 («Reaper is disabled»), Laravel ScheduleRunCommand логировал
-        // production.ERROR (хвост инцидента 01-08-2026). Dry-run руками без флага
-        // по-прежнему: `php artisan payments:expire-stale-checkouts`.
-        if (config('features.checkout_stale_order_expiry')) {
-            $schedule->command('payments:expire-stale-checkouts --apply')
-                ->everyFifteenMinutes()
-                ->withoutOverlapping(10)
-                ->onOneServer()
-                ->name('expire-stale-checkouts');
-        }
+        // Слот ВСЕГДА зарегистрирован (audit spec 7): иначе a false/stale config
+        // cache silently drops the reaper from schedule:list with no log line.
+        // features.checkout_stale_order_expiry is self-checked inside the command
+        // (exit SUCCESS + warn when dark + --apply — no schedule ERROR spam).
+        // Dry-run руками: `php artisan payments:expire-stale-checkouts`.
+        $schedule->command('payments:expire-stale-checkouts --apply')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->onFailure(fn () => ScheduleFailureSignal::report('payments:expire-stale-checkouts'))
+            ->name('expire-stale-checkouts');
 
         // --- ПУЛЬС ПЛАНИРОВЩИКА (H1713) ---
         // Дёргает уникальный URL на healthchecks.io; тревогу поднимает МОЛЧАНИЕ,

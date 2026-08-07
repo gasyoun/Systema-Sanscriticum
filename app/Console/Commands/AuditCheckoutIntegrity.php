@@ -12,12 +12,20 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Money-invariant auditor (checkout integrity).
+ *
+ * Dry-run by default. With any non-empty measured bucket the command returns
+ * FAILURE so a scheduled run pages via Kernel onFailure (H2338 / audit spec 6).
+ * Safe repairs (--apply-safe) only recalculate promo used_count, and only when
+ * features.checkout_integrity_safe_repairs is ON.
+ */
 class AuditCheckoutIntegrity extends Command
 {
     protected $signature = 'payments:audit-checkout-integrity
                             {--apply-safe : Recalculate promo used_count from paid, non-conditional payments}';
 
-    protected $description = 'Audit checkout money invariants; dry-run unless --apply-safe is explicitly enabled';
+    protected $description = 'Audit checkout money invariants; dry-run unless --apply-safe is explicitly enabled; FAILURE when any bucket is non-empty';
 
     public function handle(): int
     {
@@ -36,6 +44,7 @@ class AuditCheckoutIntegrity extends Command
         $promoMismatches = $this->promoCounterMismatches();
         $legacyReservations = $this->legacyPendingPromoReservations();
         $rejectedWebhooks = $this->rejectedWebhookDeliveries();
+        $paidNoGroup = $this->paidButNoGroupMembership();
 
         $this->report(
             'Negative referral wallets',
@@ -62,17 +71,52 @@ class AuditCheckoutIntegrity extends Command
             ['event_id', 'payment_id', 'decision', 'bank_status', 'reported_amount', 'created_at'],
             $rejectedWebhooks,
         );
+        $this->report(
+            'Paid but no course group membership',
+            ['payment_id', 'user_id', 'course_id', 'tariff', 'amount'],
+            $paidNoGroup,
+        );
 
         if ($applySafe) {
             $updated = $this->recalculatePromoCounters();
             $this->info("Applied promo counters: {$updated}");
+            // Re-measure promo bucket after repair so exit code reflects residual issues only.
+            $promoMismatches = $this->promoCounterMismatches();
+            $this->line("Promo counter mismatches (after apply-safe): {$promoMismatches->count()}");
         }
 
         $this->warn(
             'Manual bank/accounting review is required before fixing negative wallets, restoring historical deposits, or canceling legacy pending links.'
         );
 
-        return self::SUCCESS;
+        $bucketCounts = [
+            'Negative referral wallets' => $negativeWallets->count(),
+            'Reversed orders with stranded deposit credit' => $strandedDeposits->count(),
+            'Promo counter mismatches' => $promoMismatches->count(),
+            'Legacy pending promo links without expiry' => $legacyReservations->count(),
+            'Rejected webhook deliveries' => $rejectedWebhooks->count(),
+            'Paid but no course group membership' => $paidNoGroup->count(),
+        ];
+
+        $dirty = array_filter($bucketCounts, static fn (int $n): bool => $n > 0);
+
+        if ($dirty === []) {
+            $this->info('All integrity buckets empty — OK.');
+
+            return self::SUCCESS;
+        }
+
+        $this->error('Integrity buckets non-empty (FAILURE):');
+        foreach ($dirty as $label => $count) {
+            $this->line("  • {$label}: {$count}");
+        }
+
+        if ($paidNoGroup->isNotEmpty()) {
+            $ids = $paidNoGroup->pluck(0)->implode(', ');
+            $this->error("Paid-but-no-group payment id(s): {$ids}");
+        }
+
+        return self::FAILURE;
     }
 
     private function negativeReferralWallets(): Collection
@@ -175,6 +219,36 @@ class AuditCheckoutIntegrity extends Command
                     ? ''
                     : number_format((float) $event->reported_amount, 2, '.', ''),
                 $event->created_at?->toDateTimeString(),
+            ]);
+    }
+
+    /**
+     * Paid non-deposit payment whose user is not a member of any group linked
+     * to the purchased course (course_group ↔ group_user). Residue of silent
+     * grantAccess on group-less courses and import paths (H2304 / audit #1, #15).
+     */
+    private function paidButNoGroupMembership(): Collection
+    {
+        return Payment::query()
+            ->paid()
+            ->whereNotNull('user_id')
+            ->whereNotNull('course_id')
+            ->whereNotIn('tariff', ['deposit', 'trial'])
+            ->whereNotExists(function ($query): void {
+                $query->selectRaw('1')
+                    ->from('group_user')
+                    ->join('course_group', 'course_group.group_id', '=', 'group_user.group_id')
+                    ->whereColumn('group_user.user_id', 'payments.user_id')
+                    ->whereColumn('course_group.course_id', 'payments.course_id');
+            })
+            ->orderBy('id')
+            ->get(['id', 'user_id', 'course_id', 'tariff', 'amount'])
+            ->map(fn (Payment $payment): array => [
+                $payment->id,
+                $payment->user_id,
+                $payment->course_id,
+                $payment->tariff,
+                number_format((float) $payment->amount, 2, '.', ''),
             ]);
     }
 
