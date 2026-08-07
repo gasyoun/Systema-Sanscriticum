@@ -1,6 +1,6 @@
 # Roadmap: Jivo-паритет веб-чата — visitor intelligence 2026–2027
 
-_Created: 17-07-2026 · Last updated: 18-07-2026_
+_Created: 17-07-2026 · Last updated: 07-08-2026_
 
 > Узкий roadmap **паритета с Jivo по «интеллекту посетителя»** — тому пласту, ради
 > которого Jivo и держат на [samskrtam.ru](https://samskrtam.ru): куратор видит, **из
@@ -219,5 +219,13 @@ _Created: 17-07-2026 · Last updated: 18-07-2026_
 - GTD: строки в [`Uprava/GTD_NEXT_ACTIONS.md`](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md) (Tier 0, Systema).
 - Индекс roadmap'ов: [`Uprava/ROADMAP_INDEX.md`](https://github.com/gasyoun/Uprava/blob/main/ROADMAP_INDEX.md).
 - Deploy: [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) (строка S1).
+
+## 6. Production acceptance matrix (H2382, 07-08-2026) — HOLD
+
+Capstone evidence packet (not full parity GO):
+
+- Report command: `php artisan support:parity-report --days=14`
+- Matrix + live probe: [`docs/SUPPORT_PARITY_PRODUCTION_ACCEPTANCE_2026-08-07.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SUPPORT_PARITY_PRODUCTION_ACCEPTANCE_2026-08-07.md)
+- Blockers: H2381 (operator close-topic / dialog follow-ups / EdTech sidebar), H1200 residual (email + fresh reply-out canary), geo driver still `null`, zero lead/presence canaries.
 
 _Dr. Mārcis Gasūns_
