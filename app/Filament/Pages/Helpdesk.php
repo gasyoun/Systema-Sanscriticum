@@ -4,17 +4,20 @@ namespace App\Filament\Pages;
 
 use App\Events\ChatMessageSent;
 use App\Models\ChatMessage;
+use App\Models\FollowUpTask;
 use App\Models\MessageTemplate;
 use App\Models\ReminderSuggestion;
 use App\Models\SupportAnswerSuggestion;
 use App\Models\SupportConversation;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
-use App\Services\ClassAttendanceService;
 use App\Services\Reminders\ReminderSuggestionService;
+use App\Services\Support\HelpdeskStudentContextService;
 use App\Services\Support\SupportAiService;
 use App\Services\Support\SupportAnswerSuggestionService;
 use App\Services\Support\SupportConversationManager;
+use App\Services\Support\SupportConversationTopicService;
+use App\Services\Support\SupportFollowUpService;
 use App\Services\Support\SupportReplyService;
 use App\Services\Support\UnifiedInboxReader;
 use App\Support\Roles;
@@ -76,6 +79,18 @@ class Helpdesk extends Page
 
     /** Последнее ИИ-резюме диалога (за флагом support_ai_assist). */
     public $aiSummary = null;
+
+    /** Close-topic form (H2381): category from SupportTopicRule / other / uncategorized. */
+    public $closeTopicCategory = '';
+
+    /** Follow-up form fields (H2381, flag support_follow_up_tasks). */
+    public $followUpDueAt = '';
+
+    public $followUpNote = '';
+
+    public $followUpType = 'message';
+
+    public $followUpAssigneeId = '';
 
     public $usersWithChats = []; // Вернули []
 
@@ -820,7 +835,7 @@ class Helpdesk extends Page
     }
 
     /**
-     * Данные для модалки: основное, оплаты, обещания/рассрочки, скидки.
+     * Данные для модалки: оплаты + P0 EdTech-контекст (H2381).
      * Грузится по требованию (только когда модалка открыта).
      */
     public function getStudentInfoProperty(): ?array
@@ -834,24 +849,150 @@ class Helpdesk extends Page
             return null;
         }
 
-        $payments = $user->payments()->real()->with('course')->latest()->limit(8)->get();
+        return app(HelpdeskStudentContextService::class)->forUser($user);
+    }
 
-        return [
-            'user' => $user,
-            'payments' => $payments,
-            'payments_count' => $user->payments()->real()->count(),
-            'payments_total' => (float) $user->payments()->real()->sum('amount'),
-            'promises' => $user->paymentPromises()
-                ->with('course')
-                ->orderByRaw("CASE WHEN status = 'active' THEN 0 ELSE 1 END")
-                ->orderBy('promised_at')
-                ->get(),
-            'discounts' => $user->individualDiscounts()
-                ->where('is_active', true)
-                ->with('course')
-                ->get(),
-            // Последние занятия с посещаемостью (Zoom/клик).
-            'attendance' => app(ClassAttendanceService::class)->forStudent($user, 8),
-        ];
+    /**
+     * Resolve / close the active thread. When support_required_close_topic is ON,
+     * a category is mandatory (other/uncategorized allowed).
+     */
+    public function resolveConversation(): void
+    {
+        $thread = $this->resolveActiveThread();
+        if (! $thread || ! $thread->isOpen()) {
+            return;
+        }
+
+        try {
+            app(SupportConversationManager::class)->closeWithTopic(
+                $thread,
+                $this->closeTopicCategory !== '' ? $this->closeTopicCategory : null,
+                auth()->user(),
+            );
+        } catch (\InvalidArgumentException $e) {
+            Notification::make()
+                ->title('Нужна тема обращения')
+                ->body('Выберите тему перед закрытием диалога (или «Другое» / «Без категории»).')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $this->closeTopicCategory = '';
+        $this->loadUsersList();
+
+        Notification::make()
+            ->title('Диалог закрыт')
+            ->success()
+            ->send();
+    }
+
+    /** @return array<string, string> */
+    public function getTopicOptionsProperty(): array
+    {
+        return app(SupportConversationTopicService::class)->categoryOptions();
+    }
+
+    public function getCurrentTopicLabelProperty(): ?string
+    {
+        $thread = $this->thread;
+        if (! $thread) {
+            return null;
+        }
+
+        return app(SupportConversationTopicService::class)->currentTopic($thread)?->category;
+    }
+
+    public function createSupportFollowUp(): void
+    {
+        if (! config('features.support_follow_up_tasks')) {
+            return;
+        }
+
+        $thread = $this->resolveActiveThread();
+        if (! $thread) {
+            Notification::make()->title('Нет активного диалога')->danger()->send();
+
+            return;
+        }
+
+        if ($this->followUpDueAt === '') {
+            Notification::make()->title('Укажите срок follow-up')->danger()->send();
+
+            return;
+        }
+
+        $assignee = $this->followUpAssigneeId !== ''
+            ? User::find((int) $this->followUpAssigneeId)
+            : auth()->user();
+
+        try {
+            app(SupportFollowUpService::class)->create(
+                $thread,
+                $this->followUpDueAt,
+                $assignee,
+                $this->followUpType ?: FollowUpTask::TYPE_MESSAGE,
+                $this->followUpNote !== '' ? $this->followUpNote : null,
+            );
+        } catch (\Throwable $e) {
+            Notification::make()->title('Не удалось создать задачу')->body($e->getMessage())->danger()->send();
+
+            return;
+        }
+
+        $this->followUpDueAt = '';
+        $this->followUpNote = '';
+        $this->followUpType = FollowUpTask::TYPE_MESSAGE;
+
+        Notification::make()->title('Follow-up создан')->success()->send();
+    }
+
+    public function completeSupportFollowUp(int $taskId): void
+    {
+        if (! config('features.support_follow_up_tasks')) {
+            return;
+        }
+
+        $task = FollowUpTask::query()
+            ->forSupport()
+            ->whereKey($taskId)
+            ->first();
+
+        if (! $task) {
+            return;
+        }
+
+        app(SupportFollowUpService::class)->complete($task);
+
+        Notification::make()->title('Задача выполнена')->success()->send();
+    }
+
+    /** Open support follow-ups for the active thread. */
+    public function getOpenSupportFollowUpsProperty()
+    {
+        if (! config('features.support_follow_up_tasks')) {
+            return collect();
+        }
+
+        $thread = $this->thread;
+        if (! $thread) {
+            return collect();
+        }
+
+        return app(SupportFollowUpService::class)->openForConversation($thread);
+    }
+
+    private function resolveActiveThread(): ?SupportConversation
+    {
+        if ($this->activeGuestId) {
+            return SupportConversation::query()->whereKey((int) $this->activeGuestId)->first();
+        }
+
+        if ($this->activeUserId) {
+            return app(SupportConversationManager::class)->currentFor((int) $this->activeUserId);
+        }
+
+        return null;
     }
 }

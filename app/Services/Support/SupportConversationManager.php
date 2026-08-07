@@ -186,6 +186,39 @@ class SupportConversationManager
         ])->save();
     }
 
+    /**
+     * Close with optional required topic (H2381).
+     * When features.support_required_close_topic is ON, category is mandatory
+     * (explicit other/uncategorized allowed). History is append-only.
+     *
+     * @throws \InvalidArgumentException when topic required but missing
+     */
+    public function closeWithTopic(
+        SupportConversation $thread,
+        ?string $category = null,
+        ?User $by = null,
+        ?string $reason = null,
+    ): void {
+        $topics = app(SupportConversationTopicService::class);
+        $required = (bool) config('features.support_required_close_topic');
+
+        if ($required) {
+            if ($category === null || trim($category) === '') {
+                if (! $topics->hasTopic($thread)) {
+                    throw new \InvalidArgumentException(
+                        'Topic is required before resolving this conversation.'
+                    );
+                }
+            } else {
+                $topics->assign($thread, trim($category), $by, reason: $reason);
+            }
+        } elseif ($category !== null && trim($category) !== '') {
+            $topics->assign($thread, trim($category), $by, reason: $reason);
+        }
+
+        $this->close($thread);
+    }
+
     private function userId(User|int $user): int
     {
         return $user instanceof User ? $user->id : $user;

@@ -545,13 +545,32 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
                         {{-- «Взять диалог себе»: назначает текущий тред куратору (вкладка «Мои»). --}}
                         @if(! $thread || $thread->assigned_to !== auth()->id())
                             <button wire:click="takeConversation" style="background: #16a34a; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); transition: 0.2s;" onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
                                 <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                                 Взять диалог
                             </button>
+                        @endif
+
+                        {{-- Закрыть диалог + тема (H2381) --}}
+                        @if($thread && $thread->isOpen())
+                            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                @if(config('features.support_required_close_topic') || $this->currentTopicLabel)
+                                    <select wire:model="closeTopicCategory"
+                                        style="font-size: 12px; padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(0,0,0,.15); background: #fff; color: #111827; max-width: 180px;">
+                                        <option value="">Тема…</option>
+                                        @foreach($this->topicOptions as $cat => $label)
+                                            <option value="{{ $cat }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                @endif
+                                <button type="button" wire:click="resolveConversation"
+                                    style="background: #4b5563; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer;">
+                                    Решён
+                                </button>
+                            </div>
                         @endif
 
                         {{-- Кнопка "Вернуть ИИ" (показывается только если бот на паузе) --}}
@@ -563,6 +582,43 @@
                         @endif
                     </div>
                 </div>
+
+                {{-- Support follow-up (H2381), flag OFF → hidden --}}
+                @if(config('features.support_follow_up_tasks') && $thread)
+                    <div style="padding: 10px 16px; border-bottom: 1px solid #e5e7eb; background: #f9fafb; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #9ca3af;">Follow-up по диалогу</div>
+                        @foreach($this->openSupportFollowUps as $fu)
+                            <div style="display: flex; justify-content: space-between; gap: 8px; align-items: center; font-size: 12px;">
+                                <div>
+                                    <span style="font-weight: 600; color: {{ $fu->isOverdue() ? '#dc2626' : '#111827' }};">
+                                        {{ $fu->due_at?->format('d.m.Y H:i') }}
+                                        @if($fu->isOverdue()) · просрочено @endif
+                                    </span>
+                                    <span style="color: #6b7280;">· {{ $fu->label }}</span>
+                                </div>
+                                <button type="button" wire:click="completeSupportFollowUp({{ $fu->id }})"
+                                    style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: none; background: #16a34a; color: #fff; cursor: pointer;">
+                                    Готово
+                                </button>
+                            </div>
+                        @endforeach
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                            <input type="datetime-local" wire:model="followUpDueAt"
+                                style="font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(0,0,0,.15);" />
+                            <select wire:model="followUpType" style="font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(0,0,0,.15);">
+                                @foreach(\App\Models\FollowUpTask::types() as $tv => $tl)
+                                    <option value="{{ $tv }}">{{ $tl }}</option>
+                                @endforeach
+                            </select>
+                            <input type="text" wire:model="followUpNote" placeholder="Заметка"
+                                style="font-size: 12px; padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(0,0,0,.15); min-width: 140px;" />
+                            <button type="button" wire:click="createSupportFollowUp"
+                                style="font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; border: none; background: #2563eb; color: #fff; cursor: pointer;">
+                                + Follow-up
+                            </button>
+                        </div>
+                    </div>
+                @endif
 
                 {{-- Баннер: детектор нашёл просьбу «напомните мне» в переписке. Ничего
                      не отправлено само — только предложение, куратор подтверждает/правит/
