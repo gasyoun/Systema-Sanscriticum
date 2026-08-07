@@ -16,6 +16,7 @@ use App\Models\PranaRedemption;
 use App\Models\Schedule;
 use App\Models\ScheduleAttendanceNotice;
 use App\Models\SubscriberMagnet;
+use App\Services\AccessDiagnosticsService;
 use App\Services\Activity\CabinetTelemetry;
 use App\Services\AttendanceNoticeService;
 use App\Services\Cabinet\GrammarLadder;
@@ -281,6 +282,11 @@ class StudentController extends Controller
             request: request(),
         );
 
+        $accessSelfService = (bool) config('features.access_self_service', false);
+        $accessProfileSummary = $accessSelfService
+            ? app(AccessDiagnosticsService::class)->profileSummary($user, $courses->count())
+            : null;
+
         $viewData = compact(
             'courses',
             'nextLessonByCourseId',
@@ -305,6 +311,8 @@ class StudentController extends Controller
             'continueLearningAction',
             'recovery',
             'suppressOffers',
+            'accessSelfService',
+            'accessProfileSummary',
         );
 
         // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
@@ -765,6 +773,27 @@ class StudentController extends Controller
         // H2333: “where is lesson 1?” when this shell continues another course.
         $continuationBanner = app(CourseContinuationBanner::class)->for($course, $user);
 
+        // H2386: per-locked-lesson access findings (flag OFF → empty map, views no-op).
+        $accessSelfService = (bool) config('features.access_self_service', false);
+        $accessFindingsByLessonId = [];
+        if ($accessSelfService) {
+            $diag = app(AccessDiagnosticsService::class);
+            foreach ($lessons as $lesson) {
+                $open = $lesson->is_free
+                    || $lesson->is_preview
+                    || in_array($lesson->id, $grantedLessonIds, true)
+                    || $lesson->isUnlockedBy($unlockedTariffs);
+                if (! $open) {
+                    $accessFindingsByLessonId[$lesson->id] = $diag->forLesson(
+                        $user,
+                        $lesson,
+                        $course,
+                        $unlockedTariffs,
+                    );
+                }
+            }
+        }
+
         if (config('features.cabinet_hybrid')) {
             $recovery = app(RecoveryStateResolver::class)->resolve($user);
             $completedLessonIds = $user->completedLessons->pluck('id')->all();
@@ -781,6 +810,8 @@ class StudentController extends Controller
                 'suppressOffers' => $recovery->suppressOffers(),
                 'landmarks' => $landmarks,
                 'continuationBanner' => $continuationBanner,
+                'accessSelfService' => $accessSelfService,
+                'accessFindingsByLessonId' => $accessFindingsByLessonId,
             ]);
         }
 
@@ -790,6 +821,8 @@ class StudentController extends Controller
             'unlockedTariffs',
             'grantedLessonIds',
             'continuationBanner',
+            'accessSelfService',
+            'accessFindingsByLessonId',
         ));
     }
 

@@ -227,6 +227,11 @@
     {{-- Видимость каждого блока — отдельный тумблер  --}}
     {{-- в админке (MarketingSetting → «Боты-кураторы»)--}}
     {{-- ========================================== --}}
+    @include('student.partials.access-profile-summary', [
+        'summary' => $accessProfileSummary ?? null,
+        'enabled' => $accessSelfService ?? false,
+    ])
+
     @php
         $marketingSettings = \App\Models\MarketingSetting::cached();
         $showTelegramBot = (bool) $marketingSettings?->student_telegram_bot_enabled;
