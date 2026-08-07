@@ -1,6 +1,6 @@
 # ROADMAP — Noboring «дожим» adoption (Systema + samskrte)
 
-_Created: 01-08-2026 · Last updated: 03-08-2026_
+_Created: 01-08-2026 · Last updated: 07-08-2026_
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
@@ -172,13 +172,15 @@ Executor: Grok 4.5 (`grok-4.5`). Parent programme H-A: [H2058](https://github.co
 - [x] Flag `dozhim_queue` default OFF — **done H2119** (pinned in features + test)
 - [x] Flag `dozhim_drip` default OFF — **done H2059** (pinned in `config/features.php` + tests)
 
-**Unblocks:** H-C front mirror; live operator use. All Wave 1b checkboxes closed; H-C (below) is next.
+**Unblocks:** H-C front mirror; live operator use. All Wave 1b checkboxes closed; Wave 1c (H-C) closed by H2060 (roadmap ticks H2363).
 
 ### Wave 1c — Student recovery (H-C)
 
-- [ ] Cabinet route: resume unpaid payment + FAQ payment + curator contact
-- [ ] CTA copy: рассрочка / partial / cheaper path → link (no new payment product)
-- [ ] Flag `payment_recovery_cta` OFF; PR **without auto-merge** (money-adjacent)
+- [x] Cabinet route: resume unpaid payment + FAQ payment + curator contact — **done H2060** ([PR #1110](https://github.com/gasyoun/Systema-Sanscriticum/pull/1110), release 1.87.2): `student.access` debt cards keep existing «Оплатить / продлить» / «Внести платёж» resume buttons (`DebtPaymentResolver`); when flag ON also show amount + FAQ + curator block
+- [x] CTA copy: рассрочка / partial / cheaper path → link (no new payment product) — **done H2060**: installment CTA prose + links only (`route('faq.payment')`, `t.me/rusamskrtam`); no new SKU/installment product
+- [x] Flag `payment_recovery_cta` OFF; PR **without auto-merge** (money-adjacent) — **done H2060**: `config/features.php` `PAYMENT_RECOVERY_CTA` default **false**; tests `PaymentRecoveryCtaTest` (flag off hides block, flag on shows amount/FAQ/curator, public FAQ page). Roadmap residual close: **H2363** (Grok 4.5)
+
+**Surfaces (verify on main):** [`resources/views/student/hybrid/access.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/student/hybrid/access.blade.php) · [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) `payment_recovery_cta` · public [`/faq/payment`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/faq/payment.blade.php) · [`tests/Feature/Cabinet/PaymentRecoveryCtaTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Cabinet/PaymentRecoveryCtaTest.php). Prod enable remains a separate ops step (`PAYMENT_RECOVERY_CTA=true` + `config:cache`).
 
 ### Wave 2 — NF Education next case
 
