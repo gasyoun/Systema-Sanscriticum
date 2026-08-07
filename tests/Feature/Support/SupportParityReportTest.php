@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Support;
 
 use App\Models\ChatMessage;
+use App\Models\Course;
 use App\Models\PaymentPromise;
 use App\Models\SupportConversation;
 use App\Models\SupportDailyRollup;
@@ -105,7 +106,7 @@ class SupportParityReportTest extends TestCase
             'last_message_at' => now()->subDays(2),
         ]);
 
-        $course = \App\Models\Course::factory()->create();
+        $course = Course::factory()->create();
         PaymentPromise::create([
             'user_id' => User::factory()->create()->id,
             'course_id' => $course->id,
