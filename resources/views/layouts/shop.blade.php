@@ -27,6 +27,9 @@
     {{-- Livewire styles — должны быть в <head>, иначе wire:loading элементы видны до загрузки JS --}}
     @livewireStyles
 
+    {{-- H2378: shop-wide Metrika (card/checkout goals were 0 without this) --}}
+    @include('partials.shop-metrika')
+
     @stack('head')
 </head>
 

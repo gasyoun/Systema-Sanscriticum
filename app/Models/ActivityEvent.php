@@ -49,6 +49,17 @@ class ActivityEvent extends Model
 
     public const TYPE_COURSE_VIEW = 'course_view';
 
+    // --- Sales funnel (H2378). Names match Metrika reachGoal where applicable.
+    // Guests cannot be stored (user_id NOT NULL) — browser Metrika covers them.
+
+    public const COURSE_PAGE_VIEW = 'course_page_view';
+
+    public const BEGIN_CHECKOUT = 'begin_checkout';
+
+    public const PAYMENT_SUCCESS = 'payment_success';
+
+    public const FIRST_CABINET_ACTION = 'first_cabinet_action';
+
     public const TYPE_SESSION_TIMEOUT = 'session_timeout';
 
     /** Куратор вызвал бот-команду (/долги, /группа) — см. DebtorsBotCommand (H250). */

@@ -1,6 +1,16 @@
 @extends('layouts.shop')
 @section('title', $course->meta_title ?: $course->title)
 
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof window.shopReachGoal === 'function') {
+        window.shopReachGoal('course_page_view');
+    }
+});
+</script>
+@endpush
+
 @push('head')
     <meta name="description" content="{{ $course->meta_description ?: \Illuminate\Support\Str::limit(trim(strip_tags($course->description)), 160) }}">
 
