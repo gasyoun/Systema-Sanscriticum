@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2107 follow-through: prod SKU Start chteniya.** Course id **443** slug `start-chteniya`; group 139; 4 blocks x **8000 RUB** (4 classes each) + full min package **32000 RUB** (4x4). Tariffs 5033-5037. Teacher Gasuns. Doc: [docs/ops/PROD_ENABLE_START_CHTENIYA_FLAGS_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/PROD_ENABLE_START_CHTENIYA_FLAGS_2026-08-07.md). Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.88.6] - 2026-08-07
 ### Added
 - **H2365: free-intro CTA site-wide wired to live next-date source.** Shop layout banner consumes a single resolver [`App\Support\NextIntroSession`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/NextIntroSession.php): (1) earliest future `courses.trial_schedule_id` → `schedules.start` for visible courses, else (2) earliest future `landing_pages.webinar_date`. Empty source → honest **«дата уточняется»** (never a hard-coded promo date). Partial: `shop/partials/free-intro-banner.blade.php`. Doc: [docs/FREE_INTRO_CTA_NEXT_DATE_SOURCE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FREE_INTRO_CTA_NEXT_DATE_SOURCE_2026.md). Tests: `FreeIntroBannerTest`. Executor: Grok 4.5 (`grok-4.5`).
