@@ -28,6 +28,9 @@ class NormalizeUserEmails extends Command
         $apply = (bool) $this->option('apply');
 
         // Группируем по нормализованному email.
+        // Prefix keys: PHP coerces numeric-looking string keys to int
+        // (e.g. phone-as-email "89384362599"), which then fails strict
+        // comparison against the original string and false-flags no-op rows.
         $byNormalized = [];
         User::query()->select('id', 'email')->orderBy('id')->get()
             ->each(function (User $u) use (&$byNormalized) {
@@ -35,20 +38,21 @@ class NormalizeUserEmails extends Command
                 if ($norm === null || $norm === '') {
                     return; // пустые/плейсхолдеры пропускаем
                 }
-                $byNormalized[$norm][] = $u;
+                $byNormalized['e:'.$norm][] = $u;
             });
 
         $toUpdate = [];   // безопасные: один аккаунт, email отличается от нормализованного
         $collisions = []; // несколько аккаунтов схлопываются в один email
 
-        foreach ($byNormalized as $norm => $users) {
+        foreach ($byNormalized as $key => $users) {
+            $norm = substr($key, 2); // strip "e:" prefix
             if (count($users) > 1) {
                 $collisions[$norm] = $users;
 
                 continue;
             }
             $user = $users[0];
-            if ($user->getRawOriginal('email') !== $norm) {
+            if ((string) $user->getRawOriginal('email') !== $norm) {
                 $toUpdate[] = [$user, $norm];
             }
         }

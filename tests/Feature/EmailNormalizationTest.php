@@ -117,4 +117,20 @@ class EmailNormalizationTest extends TestCase
         $this->assertSame('Dup@X.com', DB::table('users')->where('name', 'Dup A')->value('email'));
         $this->assertSame('dup@x.com', DB::table('users')->where('name', 'Dup B')->value('email'));
     }
+
+    /** @test */
+    public function normalize_command_does_not_flag_already_normalized_phone_as_email(): void
+    {
+        // Legacy phone stored as email: digits only. PHP would coerce the
+        // grouping key to int without a string-safe key prefix, false-flagging
+        // a no-op row forever on dry-run (prod #5944 class).
+        DB::table('users')->insert([
+            'name' => 'PhoneLegacy', 'email' => '89384362599',
+            'password' => Hash::make('x'), 'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        $this->artisan('users:normalize-emails')
+            ->expectsOutputToContain('Безопасных к нормализации: 0.')
+            ->assertSuccessful();
+    }
 }
