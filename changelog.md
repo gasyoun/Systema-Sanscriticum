@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Added
+- **H2107: «Старт чтения» reading progress + teacher stalled-lemma view.** Student lookup % and unique-lemma count on the pack/index headers; teacher Filament page of top stalled lemmas (looked-up but never added to the cohort SRS deck). Reuses ActivityEvent::TYPE_READING_TOKEN_LOOKUP (POST /dvaram/reading/{slug}/lookup, positions-only, same forgery-proofing as ddToSrs) and StartChteniyaSrsDeck (H2106/H2111) — no new table. Service StartChteniyaProgress, page StartChteniyaStalledLemmas (isTeacher()||isAdminLike()). Flags unchanged (kosha_reader + start_chteniya_cohort, both default OFF). Tests: ReadingProgressTest + StalledLemmasPageTest (8). Executor: Sonnet 5 (claude-sonnet-5) + midway resume Grok 4.5 (grok-4.5). PR: https://github.com/gasyoun/Systema-Sanscriticum/pull/1176
+
+
 ### Changed
 - **H2363 prod enable: `PAYMENT_RECOVERY_CTA=true` on `193.232.229.92`.** Backup `.env.bak.h2363.20260807145802`, `config:cache`, `config:show features.payment_recovery_cta` → true; `/faq/payment` HTTP 200. Presentation-only (no PaymentObserver/grant change). Roadmap Wave 1c note updated. Executor: Grok 4.5 (`grok-4.5`).
 
