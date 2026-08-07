@@ -706,6 +706,4 @@ class ProbeCabinetHealth extends Command
 
         return $parts === [] ? 'некритичные проверки' : implode(' / ', $parts);
     }
-
 }
-
