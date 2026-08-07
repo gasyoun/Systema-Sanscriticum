@@ -12,9 +12,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Общая библиотека шаблонов сообщений оператора. Один текст с плейсхолдерами
- * {name}/{course}/{block}/{pay_link} (см. {@see MessagePlaceholders}) питает три
- * поверхности: реактивацию, массовый follow-up лидов и канреплаи поддержки.
- * Строится один раз здесь, чтобы ассистент не сочинял текст с нуля. См. H221.
+ * {name}/{course}/{block}/{pay_link}/{email} (см. {@see MessagePlaceholders})
+ * питает три поверхности: реактивацию, массовый follow-up лидов и канреплаи
+ * поддержки. {login_link} — только ручная вставка (magic-link). См. H221 · H2339.
  */
 class MessageTemplate extends Model
 {
