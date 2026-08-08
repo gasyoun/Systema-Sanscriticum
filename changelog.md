@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2471: SECURITY Wave2 re-verify — referral reverse clawback (H071 #12).** On main: `ReferralService::reverseRewardForPayment` + `PaymentObserver` paid→failed/canceled path still present; regression tests `reward_is_clawed_back_when_referred_payment_is_reversed`, `clawback_floors_referrer_credit_at_zero_when_already_spent`, `both_sides_clawback_when_referred_amount_was_granted`. Original fix [PR #258](https://github.com/gasyoun/Systema-Sanscriticum/pull/258). Roadmap revenue-leak sub-bullet ticked. No money code change this PR. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.88.11] - 2026-08-08
 - **H2448 FAQ RAG for Helpdesk suggester (flag OFF):** BM25 top-3 over `resources/knowledge/faq.md` with stable `chunk_id` citations before template/LLM; money category D refuses below score floor; Helpdesk banner shows FAQ sources; eval 20Q top-3 gate in `tests/fixtures/faq_rag_eval.json` + `docs/FAQ_RAG_EVAL_H2448.md`. Env `FAQ_RAG_SUGGESTER` default **false**. Executor: Grok 4.5 (`grok-4.5`).
 
