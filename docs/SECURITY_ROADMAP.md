@@ -191,6 +191,12 @@ handoff — this roadmap does not restate the findings, it sequences them.
       shipped [PR #253](https://github.com/gasyoun/Systema-Sanscriticum/pull/253)
       (`LoyaltyDiscountTest::conditional_and_zero_amount_payments_do_not_count_toward_loyalty`);
       verified on main 08-08-2026 (H2463).
+    - [x] deposit partial consumption + upgrade credit keeps deposit half —
+      `Payment::consumeDepositsForCourse` drains by `deposit_credit_applied` / `consumed_amount`;
+      `Tariff::upgradeCreditForUser` sums `amount + COALESCE(deposit_credit_applied, 0)` —
+      shipped [PR #360](https://github.com/gasyoun/Systema-Sanscriticum/pull/360)
+      (`DepositPartialConsumptionTest`);
+      verified on main 08-08-2026 (H2464).
 - [ ] After each fix, extend the money-core test suite so the defect cannot regress silently.
 
 **Exit criterion:** every H071 finding is either fixed-with-test or explicitly ruled
