@@ -166,8 +166,13 @@ handoff — this roadmap does not restate the findings, it sequences them.
       shipped [PR #342](https://github.com/gasyoun/Systema-Sanscriticum/pull/342)
       (`CheckoutPriceTest::second_pending_order_on_same_course_is_blocked_while_deposit_unspent`);
       verified on main 08-08-2026 (H2418).
-    - [ ] referral reward paid on 0-ruble / deposit / trial / conditional orders
-      (`ReferralService.php:52`).
+    - [x] referral reward paid on 0-ruble / deposit / trial / conditional orders —
+      filtered by `ReferralService::isQualifyingCoursePayment` (amount>0, course_id,
+      not deposit/trial/conditional/expense/salary_payout) —
+      shipped [PR #251](https://github.com/gasyoun/Systema-Sanscriticum/pull/251)
+      (`ReferralProgramTest::no_reward_on_non_course_payments` +
+      `real_course_purchase_after_non_qualifying_still_rewards`);
+      verified on main 08-08-2026 (H2437).
     - [ ] salary month-close double-counts the whole month (`TeacherSalaryService.php:769`).
     - [ ] block payout ignores refunds (`TeacherSalaryService.php:400`).
   - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071.
