@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Added
+- **H2436: Varnamālā pilot — interactive Devanāgarī akṣara toy.** Metamorphabet-inspired `/lila/varnamala/pilot/` (10 akṣara × 3 CSS morph stages → word card; gate family `varnamala`; telemetry band `pilot`). Content schema ready for later Rive art. Brief: [docs/VARNAMALA_PILOT_BRIEF_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VARNAMALA_PILOT_BRIEF_2026.md). Catalogue card on `/lila/`. No money path. Executor: Grok 4.5 (`grok-4.5`).
 - **H2386: Access self-service Phase 1 — «Почему закрыто?».** `AccessDiagnosticsService` (read-only findings: key_missing / payment_check / not_paid / not_connected_bot / login_issue) + locked-lesson panel on classic + hybrid course pages + profile «Мой доступ» tile on dashboard. Self-heal: `POST /c/{slug}/access/materialize` re-runs `BlockAccessMaterializer` on the student's own paid ranges (access-only sibling keys, amount 0; no new money path). Flag `access_self_service` / `ACCESS_SELF_SERVICE` default **OFF**. @DECIDE locked 07-08-2026 (lesson card + profile; three safe actions; pending→status else debt tab). Tests: `AccessSelfServiceTest`. Docs: onboarding-student «если нет доступа». Executor: Grok 4.5 (`grok-4.5`).
 
 ### Changed
