@@ -185,7 +185,12 @@ handoff — this roadmap does not restate the findings, it sequences them.
       (`TeacherBlockPayoutTest::block_revenue_subtracts_refund_expense_rows` +
       `block_revenue_floors_at_zero_when_refunds_exceed_revenue`);
       verified on main 08-08-2026 (H2453).
-  - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071.
+  - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071:
+    - [x] tariff loyalty wholesale count ignores conditional / 0₽ payments —
+      `Tariff::getDiscountPercentForUser` uses `->real()` + `where('amount', '>', 0)` —
+      shipped [PR #253](https://github.com/gasyoun/Systema-Sanscriticum/pull/253)
+      (`LoyaltyDiscountTest::conditional_and_zero_amount_payments_do_not_count_toward_loyalty`);
+      verified on main 08-08-2026 (H2463).
 - [ ] After each fix, extend the money-core test suite so the defect cannot regress silently.
 
 **Exit criterion:** every H071 finding is either fixed-with-test or explicitly ruled
