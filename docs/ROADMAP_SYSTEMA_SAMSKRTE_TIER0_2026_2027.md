@@ -1,10 +1,17 @@
 # ROADMAP — samskrte.ru Tier-0 · 2026–2027
 
-_Created: 30-07-2026 · Last updated: 01-08-2026_
+_Created: 30-07-2026 · Last updated: 07-08-2026_
 
 **Umbrella ID:** SAMSKRTE-TIER0 · **Wave-1 handoff:** [H1939](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1939-Grok_Systema-Sanscriticum_marathon-28-08-wave1-live_30.07.26.md) · **Pack:** /ask samskrte.ru 30-07-2026 · **Stem:** *_SYSTEMA_SAMSKRTE_TIER0_*
 
 Index: [PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md).
+
+**Revenue overlay (audit 07-08-2026):** Wave 1 remains the hard gate. Immediately after it,
+execute the evidence-backed sequence in
+[`ROADMAP_SYSTEMA_REVENUE_CABINET_EDITORIAL_JIVO_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SYSTEMA_REVENUE_CABINET_EDITORIAL_JIVO_2026H2.md):
+repair measurement (H2378) → polish the already-shipped Arzamas/Синхронизация funnel (H2379) →
+hybrid-cabinet adoption/KPI after H1582 (H2380) → JIVO workflow/production completion
+(H2381/H2382, consuming H1200 rather than duplicating it).
 
 ## Waves
 
@@ -30,12 +37,15 @@ Unblocked by W1 live + first cohort telemetry.
 
 | Priority order (revenue-ranked default) | Item | Source |
 |---|---|---|
-| 1 | Flip remaining **Anton** student-comfort flags that are code-complete (video resume, etc.) after smoke | [PLAN_SYSTEMA_ANTON_OPS_GAPS](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md) / DEPLOY_QUEUE |
-| 2 | Email campaigns bulk path once deliverability proven | DEPLOY №45 |
-| 3 | CRM pipeline board flag GO if manager needs it | GC-C1 residual / GTD `@DECIDE` |
-| 4 | Hybrid cabinet Phase 4 if baseline window met | DEPLOY №52 |
-| 5 | Homework auto-open wave-1 **code** (plan already merged H1764) if ops pain | [PLAN_SYSTEMA_HOMEWORK_AUTO_OPEN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_HOMEWORK_AUTO_OPEN_KOCHERGINA_2026H2.md) |
-| 6 | Proxmox CT power-off root-cause policy + alert | GTD outage row |
+| 1 | Repair card/checkout goals and publish the reconciled funnel | H2378 / revenue overlay |
+| 2 | Hybrid cabinet Phase 4 via existing H1582, then adoption/KPI experiment | DEPLOY №52 + H2380 |
+| 3 | Browser-verified Arzamas/Синхронизация polish of the shipped funnel | H2379; reuse H323/H387 |
+| 4 | Flip remaining **Anton** student-comfort flags that are code-complete after smoke | [PLAN_SYSTEMA_ANTON_OPS_GAPS](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md) / DEPLOY_QUEUE |
+| 5 | Email campaigns bulk path once deliverability proven | DEPLOY №45 |
+| 6 | JIVO operator workflow completion, then production parity acceptance | H2381/H2382; H1200 residual first |
+| 7 | CRM pipeline board flag GO if manager needs it | GC-C1 residual / GTD `@DECIDE` |
+| 8 | Homework auto-open wave-1 **code** if ops pain | [PLAN_SYSTEMA_HOMEWORK_AUTO_OPEN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_HOMEWORK_AUTO_OPEN_KOCHERGINA_2026H2.md) |
+| 9 | Proxmox CT power-off root-cause policy + alert | GTD outage row |
 
 ### Wave 3 — GetCourse-parity spine core (Q4 2026)
 
