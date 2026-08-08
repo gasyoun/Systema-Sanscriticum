@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.88.11] - 2026-08-08
 - **H2448 FAQ RAG for Helpdesk suggester (flag OFF):** BM25 top-3 over `resources/knowledge/faq.md` with stable `chunk_id` citations before template/LLM; money category D refuses below score floor; Helpdesk banner shows FAQ sources; eval 20Q top-3 gate in `tests/fixtures/faq_rag_eval.json` + `docs/FAQ_RAG_EVAL_H2448.md`. Env `FAQ_RAG_SUGGESTER` default **false**. Executor: Grok 4.5 (`grok-4.5`).
 
 ### Added
