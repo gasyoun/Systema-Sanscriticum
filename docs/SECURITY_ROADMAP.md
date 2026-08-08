@@ -1,6 +1,6 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 07-08-2026_
+_Created: 03-07-2026 · Last updated: 08-08-2026_
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
@@ -160,10 +160,16 @@ handoff — this roadmap does not restate the findings, it sequences them.
     - [x] chargeback/failed reversal revokes group membership (and thus Zoom calendar access
       via group-gated `IcsFeedBuilder`) — shipped [PR #258](https://github.com/gasyoun/Systema-Sanscriticum/pull/258)
       (`Payment::reconcileAccessAfterReversal` + `AutoEnrollOnPaymentTest`); verified on main 07-08-2026 (H2384).
-  - **Revenue leaks:** deposit credited to multiple pending payments (`Payment.php:519`);
-    referral reward paid on 0-ruble / deposit / trial / conditional orders (`ReferralService.php:52`);
-    salary month-close double-counts the whole month (`TeacherSalaryService.php:769`); block
-    payout ignores refunds (`TeacherSalaryService.php:400`).
+  - **Revenue leaks:**
+    - [x] deposit credited to multiple pending payments — blocked while unspent deposit
+      exists (`Payment::scopeHasOtherPendingOrderForCourse` + `PaymentController` lock) —
+      shipped [PR #342](https://github.com/gasyoun/Systema-Sanscriticum/pull/342)
+      (`CheckoutPriceTest::second_pending_order_on_same_course_is_blocked_while_deposit_unspent`);
+      verified on main 08-08-2026 (H2418).
+    - [ ] referral reward paid on 0-ruble / deposit / trial / conditional orders
+      (`ReferralService.php:52`).
+    - [ ] salary month-close double-counts the whole month (`TeacherSalaryService.php:769`).
+    - [ ] block payout ignores refunds (`TeacherSalaryService.php:400`).
   - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071.
 - [ ] After each fix, extend the money-core test suite so the defect cannot regress silently.
 
