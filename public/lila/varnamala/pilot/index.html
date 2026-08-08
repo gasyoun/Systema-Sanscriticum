@@ -36,20 +36,22 @@
 <body>
 <!--
   H2436 Varnamālā pilot — Metamorphabet-inspired Devanāgarī toy.
-  CSS morph proxy; Rive art lands later under ../rive/ without schema change.
+  CSS morph default; Rive auto-loads when ../rive/{key}.riv exists (W1: ka, ma).
+  Designer contract: public/lila/varnamala/rive/README.md
   Brief: docs/VARNAMALA_PILOT_BRIEF_2026.md
 -->
 <div class="page">
   <div id="locale-toggle"></div>
   <p class="eyebrow">संस्कृतम् · वर्णमाला</p>
   <h1 data-i18n-ru="Живые акшары" data-i18n-en="Living akṣaras">Живые акшары</h1>
-  <p class="lead" data-i18n-ru="Пилот: 10 букв. Трогай — буква меняется и становится словом. Не экзамен: игрушка для глаза и уха."
-     data-i18n-en="Pilot: 10 letters. Tap — the glyph morphs into a word. A toy for eye and ear, not a test.">
-    Пилот: 10 букв. Трогай — буква меняется и становится словом. Не экзамен: игрушка для глаза и уха.
+  <p class="lead" data-i18n-ru="Пилот: 10 букв. Трогай — буква меняется и становится словом. Rive для क/म — когда лежат .riv в /rive/."
+     data-i18n-en="Pilot: 10 letters. Tap — the glyph morphs into a word. Rive for ka/ma when .riv files are in /rive/.">
+    Пилот: 10 букв. Трогай — буква меняется и становится словом. Rive для क/म — когда лежат .riv в /rive/.
   </p>
   <div id="app"></div>
   <footer>
-    H2436 · CSS-прокси до Rive ·
+    H2436 · CSS + Rive bridge ·
+    <a href="../rive/">rive contract</a> ·
     <a href="../">семейство варны</a> ·
     <a href="/lila/">все лилы</a>
   </footer>
@@ -58,7 +60,10 @@
 <script src="/lila/gate.js" defer></script>
 <script src="/lila/telemetry.js" data-drill="varnamala" data-band="pilot" defer></script>
 <script src="/lila/locale.js"></script>
+<!-- Rive web runtime (v2 canvas/webgl family). Global: window.rive -->
+<script src="https://unpkg.com/@rive-app/canvas@2.26.4/rive.js"></script>
 <script src="../data.js"></script>
+<script src="../rive-bridge.js"></script>
 <script src="../engine.js"></script>
 <script>
   var api = null;

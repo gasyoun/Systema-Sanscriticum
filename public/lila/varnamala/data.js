@@ -12,10 +12,22 @@
   "use strict";
 
   global.VARNAMALA_PILOT = {
-    version: 1,
+    version: 2,
     family: "varnamala",
     band: "pilot",
     complete_distinct_for_play: 5,
+    /**
+     * Rive W1 contract — see public/lila/varnamala/rive/README.md
+     * Engine probes base_path + "{key}.riv"; missing → CSS proxy.
+     */
+    rive: {
+      enabled: true,
+      base_path: "/lila/varnamala/rive/",
+      state_machine: "Varnamala",
+      stage_input: "stage",
+      poke_trigger: "poke",
+      w1_keys: ["ka", "ma"]
+    },
     aksaras: [
       {
         id: "a",

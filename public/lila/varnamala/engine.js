@@ -1,8 +1,8 @@
 /* ============================================================
-   Varnamālā pilot engine (H2436) — CSS morph proxy.
+   Varnamālā pilot engine (H2436) — CSS morph + optional Rive (W1).
    Mount: VarnamalaPilot.mount(el, { locale: "ru"|"en" })
    Data:  window.VARNAMALA_PILOT from data.js
-   Later: swap glyph canvas for Rive runtime when .riv files exist.
+   Rive:  window.VarnamalaRive from rive-bridge.js (when .riv present)
    ============================================================ */
 (function (global) {
   "use strict";
@@ -39,7 +39,8 @@
     var state = {
       idx: 0,
       stage: 0, // 0 idle, 1-3 morphs
-      done: {}  // id -> true when stage 3 reached once
+      done: {}, // id -> true when stage 3 reached once
+      renderMode: "css" // "css" | "rive"
     };
 
     root.classList.add("vm-root");
@@ -49,10 +50,12 @@
       '<div class="vm-stage">' +
       '  <div class="vm-canvas" data-role="canvas" role="button" tabindex="0" aria-label="morph">' +
       '    <div class="vm-burst" aria-hidden="true"></div>' +
+      '    <canvas class="vm-rive-canvas" data-role="rive-canvas" width="360" height="360" hidden aria-hidden="true"></canvas>' +
       '    <div class="vm-glyph is-s0" data-role="glyph"></div>' +
       '    <div class="vm-emoji-proxy" data-role="emoji" aria-hidden="true"></div>' +
       '    <div class="vm-poke-label" data-role="poke-label"></div>' +
       '    <div class="vm-dots" data-role="dots" aria-hidden="true"></div>' +
+      '    <span class="vm-mode-badge" data-role="mode-badge" aria-live="polite"></span>' +
       "  </div>" +
       '  <aside class="vm-card is-locked" data-role="card">' +
       '    <p class="eyebrow" data-role="card-eye"></p>' +
@@ -76,10 +79,12 @@
       hint: root.querySelector('[data-role="hint"]'),
       strip: root.querySelector('[data-role="strip"]'),
       canvas: root.querySelector('[data-role="canvas"]'),
+      riveCanvas: root.querySelector('[data-role="rive-canvas"]'),
       glyph: root.querySelector('[data-role="glyph"]'),
       emoji: root.querySelector('[data-role="emoji"]'),
       pokeLabel: root.querySelector('[data-role="poke-label"]'),
       dots: root.querySelector('[data-role="dots"]'),
+      modeBadge: root.querySelector('[data-role="mode-badge"]'),
       card: root.querySelector('[data-role="card"]'),
       cardEye: root.querySelector('[data-role="card-eye"]'),
       cardSound: root.querySelector('[data-role="card-sound"]'),
@@ -123,6 +128,7 @@
         state.idx = i;
         state.stage = 0;
         render();
+        syncRive();
         emit("item_seen", { id: ak.id, stage: 0 });
       });
       el.strip.appendChild(chip);
@@ -130,6 +136,41 @@
 
     function current() {
       return data.aksaras[state.idx];
+    }
+
+    function riveKey(ak) {
+      return (ak && (ak.rive || ak.id)) || "";
+    }
+
+    function syncRive() {
+      var ak = current();
+      var key = riveKey(ak);
+      var bridge = global.VarnamalaRive;
+      if (!bridge || typeof bridge.show !== "function") {
+        state.renderMode = "css";
+        applyRenderMode();
+        return;
+      }
+      bridge.show(el.riveCanvas, data, key, state.stage).then(function (mode) {
+        state.renderMode = mode === "rive" ? "rive" : "css";
+        applyRenderMode();
+        // push stage again after load settles
+        if (state.renderMode === "rive" && typeof bridge.setStage === "function") {
+          bridge.setStage(state.stage);
+        }
+      });
+    }
+
+    function applyRenderMode() {
+      var isRive = state.renderMode === "rive";
+      el.canvas.classList.toggle("is-rive", isRive);
+      el.glyph.hidden = isRive;
+      el.emoji.hidden = isRive;
+      if (el.riveCanvas) el.riveCanvas.hidden = !isRive;
+      if (el.modeBadge) {
+        el.modeBadge.textContent = isRive ? "Rive" : "CSS";
+        el.modeBadge.dataset.mode = isRive ? "rive" : "css";
+      }
     }
 
     function doneCount() {
@@ -179,6 +220,11 @@
       }
       emit("item_seen", { id: ak.id, stage: state.stage });
       render();
+      if (state.renderMode === "rive" && global.VarnamalaRive) {
+        global.VarnamalaRive.setStage(state.stage);
+      } else {
+        syncRive();
+      }
       el.canvas.classList.add("is-lit");
       setTimeout(function () { el.canvas.classList.remove("is-lit"); }, 420);
     }
@@ -209,8 +255,10 @@
       });
 
       var showWord = state.stage >= 3;
+      var isRive = state.renderMode === "rive";
       el.emoji.textContent = EMOJI[ak.id] || "✨";
-      el.emoji.classList.toggle("is-show", state.stage >= 2);
+      el.emoji.classList.toggle("is-show", !isRive && state.stage >= 2);
+      applyRenderMode();
 
       el.card.classList.toggle("is-locked", !showWord);
       el.cardEye.textContent = t(locale, "Акшара · слово", "Akṣara · word");
@@ -224,12 +272,19 @@
         ak.word.translation_ru,
         ak.word.translation_en
       );
-      el.cardPh.textContent = showWord
+      var riveHint = isRive
         ? t(
             locale,
-            "Прокси-анимация (CSS). Позже — Rive artboard «" + (ak.rive || ak.id) + "».",
-            "CSS proxy morph. Later — Rive artboard «" + (ak.rive || ak.id) + "»."
+            "Rive · «" + riveKey(ak) + ".riv» · SM Varnamala · stage=" + state.stage,
+            "Rive · «" + riveKey(ak) + ".riv» · SM Varnamala · stage=" + state.stage
           )
+        : t(
+            locale,
+            "CSS-прокси. Положите " + riveKey(ak) + ".riv в /lila/varnamala/rive/ — подхватится само.",
+            "CSS proxy. Drop " + riveKey(ak) + ".riv into /lila/varnamala/rive/ — auto-loads."
+          );
+      el.cardPh.textContent = showWord
+        ? riveHint
         : t(
             locale,
             "Слово откроется после третьего касания.",
@@ -239,9 +294,11 @@
       el.progress.textContent = t(
         locale,
         "Открыто акшар: " + doneCount() + " / " + data.aksaras.length +
-          " · для «игры» в gate: ≥" + (data.complete_distinct_for_play || 5),
+          " · gate ≥" + (data.complete_distinct_for_play || 5) +
+          " · режим: " + (isRive ? "Rive" : "CSS"),
         "Unlocked: " + doneCount() + " / " + data.aksaras.length +
-          " · play counts toward gate at ≥" + (data.complete_distinct_for_play || 5)
+          " · gate ≥" + (data.complete_distinct_for_play || 5) +
+          " · mode: " + (isRive ? "Rive" : "CSS")
       );
     }
 
@@ -261,10 +318,27 @@
       state.idx = (state.idx + 1) % data.aksaras.length;
       state.stage = 0;
       render();
+      syncRive();
     });
+
+    // Resize Rive surface if the letter canvas changes size
+    if (global.addEventListener) {
+      global.addEventListener("resize", function () {
+        if (state.renderMode === "rive" && global.VarnamalaRive &&
+            global.VarnamalaRive.hasRuntime && global.VarnamalaRive.hasRuntime()) {
+          try {
+            // re-show current to resize
+            if (global.VarnamalaRive.setStage) {
+              // instance may expose resize via show path
+            }
+          } catch (e) {}
+        }
+      });
+    }
 
     emit("started", { band: data.band, n: data.aksaras.length });
     render();
+    syncRive();
 
     return {
       poke: poke,
@@ -281,7 +355,17 @@
         render();
       },
       getState: function () {
-        return { idx: state.idx, stage: state.stage, done: Object.assign({}, state.done) };
+        return {
+          idx: state.idx,
+          stage: state.stage,
+          done: Object.assign({}, state.done),
+          renderMode: state.renderMode
+        };
+      },
+      destroy: function () {
+        if (global.VarnamalaRive && global.VarnamalaRive.cleanup) {
+          global.VarnamalaRive.cleanup();
+        }
       }
     };
   }
