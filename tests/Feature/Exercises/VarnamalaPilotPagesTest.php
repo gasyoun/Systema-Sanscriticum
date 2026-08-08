@@ -39,6 +39,26 @@ class VarnamalaPilotPagesTest extends TestCase
     }
 
     /** @test */
+    public function pilot_page_wires_rive_runtime_and_bridge(): void
+    {
+        $html = file_get_contents(public_path('lila/varnamala/pilot/index.html'));
+
+        $this->assertStringContainsString('@rive-app/canvas', $html);
+        $this->assertStringContainsString('../rive-bridge.js', $html);
+        $this->assertFileExists(public_path('lila/varnamala/rive-bridge.js'));
+        $this->assertFileExists(public_path('lila/varnamala/rive/README.md'));
+
+        $bridge = file_get_contents(public_path('lila/varnamala/rive-bridge.js'));
+        $this->assertStringContainsString('VarnamalaRive', $bridge);
+        $this->assertStringContainsString('state_machine', $bridge);
+
+        $data = file_get_contents(public_path('lila/varnamala/data.js'));
+        $this->assertStringContainsString('state_machine: "Varnamala"', $data);
+        $this->assertStringContainsString('stage_input: "stage"', $data);
+        $this->assertStringContainsString('w1_keys: ["ka", "ma"]', $data);
+    }
+
+    /** @test */
     public function data_fixture_has_ten_aksaras_and_complete_threshold(): void
     {
         $js = file_get_contents(public_path('lila/varnamala/data.js'));

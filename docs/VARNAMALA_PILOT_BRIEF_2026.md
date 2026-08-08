@@ -2,6 +2,8 @@
 
 _Created: 08-08-2026 · Last updated: 08-08-2026_
 
+**Status:** W0 + W1 eng shipped · W1 art (designer `.riv`) open.
+
 **Handoff:** [H2436 (Grok 4.5) — Varnamala pilot: interactive Devanagari akshara toy (Metamorphabet-inspired)](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2436-Grok_Systema-Sanscriticum_varnamala-pilot-metamorphabet_08.08.26.md)  
 **Surface:** [`/lila/varnamala/`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/lila/varnamala/)  
 **Inspiration:** [Metamorphabet](https://metamorphabet.com) (Vectorpark) — touch → morph → word + voice. Not a fork; no shared engine.
@@ -88,12 +90,18 @@ Chosen for: early pedagogy (vowels first), high pictureability, distinct shapes,
 
 ### Designer handoff (Rive)
 
-Per akṣara file `rive/{iast}.riv` (or one multi-artboard file):
+Per akṣara file `public/lila/varnamala/rive/{key}.riv` (W1: `ka.riv`, `ma.riv`):
 
-- Inputs: `poke` (trigger), `stage` (number 0–3)
-- Artboards: glyph, morph1, morph2, word-icon
-- Hit box: full letter bounding box
-- Export: Rive runtime for web; shell loads when `USE_RIVE=true` and file present
+| Item | Exact name |
+|------|------------|
+| State machine | `Varnamala` |
+| Number input | `stage` — 0 idle · 1 wake · 2 hint · 3 word |
+| Trigger (optional) | `poke` — fire on tap |
+| Runtime | `@rive-app/canvas` via CDN in `pilot/index.html` |
+| Bridge | [`rive-bridge.js`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/lila/varnamala/rive-bridge.js) probes HEAD/GET; missing → CSS |
+| Designer card | [`rive/README.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/lila/varnamala/rive/README.md) |
+
+**Eng W1 status (08-08-2026):** bridge + shell + contract **shipped**. Designer `.riv` binaries are the remaining drop-in.
 
 ---
 
@@ -164,8 +172,9 @@ Per akṣara file `rive/{iast}.riv` (or one multi-artboard file):
 
 | Wave | Deliverable |
 |------|-------------|
-| **W0 (this)** | brief + `data.js` + CSS shell + catalogue + H2436 |
-| **W1** | designer Rive for 2 letters (क, म) end-to-end |
+| **W0** | brief + `data.js` + CSS shell + catalogue + H2436 — **done** (PR #1209) |
+| **W1 eng** | Rive runtime bridge + SM contract + auto-load for `ka`/`ma` — **done** (this pass) |
+| **W1 art** | designer exports `ka.riv` + `ma.riv` into `rive/` — **open** |
 | **W2** | Rive for remaining 8; TTS voice pass |
 | **W3** | expand to ~33 vyanjana **or** mātrā layer (pick one) |
 | **W4** | optional ORS-FAQ / samskrtam landing embed |
