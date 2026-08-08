@@ -132,10 +132,25 @@ class HomeworkImagesPdfTest extends TestCase
         $submission = HomeworkSubmission::where('user_id', $student->id)->first();
         $this->assertNotNull($submission);
 
-        $this->actingAs($teacherUser)
-            ->get(route('homework.submission.images-pdf', $submission))
-            ->assertOk()
+        $inline = $this->actingAs($teacherUser)
+            ->get(route('homework.submission.images-pdf', $submission));
+        $inline->assertOk()
             ->assertHeader('content-type', 'application/pdf');
+        $this->assertStringContainsString(
+            'inline',
+            strtolower((string) $inline->headers->get('content-disposition')),
+        );
+
+        $asFile = $this->actingAs($teacherUser)
+            ->get(route('homework.submission.images-pdf', [
+                'submission' => $submission,
+                'download' => 1,
+            ]));
+        $asFile->assertOk();
+        $this->assertStringContainsString(
+            'attachment',
+            strtolower((string) $asFile->headers->get('content-disposition')),
+        );
 
         $this->actingAs($student)
             ->get(route('homework.submission.images-pdf', $submission))
