@@ -126,6 +126,35 @@
   box-shadow: 0 2px 8px rgba(60, 45, 20, 0.08);
 }
 .vm-canvas:focus-visible { outline: 2px solid var(--vm-accent); outline-offset: 3px; }
+.vm-canvas.is-rive { padding-top: 20px; }
+
+.vm-rive-canvas {
+  width: min(72vw, 300px);
+  height: min(72vw, 300px);
+  max-width: 100%;
+  display: block;
+  pointer-events: none; /* shell canvas handles poke */
+}
+.vm-rive-canvas[hidden] { display: none !important; }
+
+.vm-mode-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font: 700 10px/1 "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--vm-line);
+  background: color-mix(in srgb, var(--vm-pnl) 90%, var(--vm-soft));
+  color: var(--vm-soft);
+}
+.vm-mode-badge[data-mode="rive"] {
+  border-color: color-mix(in srgb, var(--vm-stage) 50%, var(--vm-line));
+  color: var(--vm-stage);
+  background: color-mix(in srgb, var(--vm-stage) 12%, var(--vm-pnl));
+}
 
 .vm-glyph {
   font-family: "Noto Sans Devanagari", "Nirmala UI", "Mangal", serif;
