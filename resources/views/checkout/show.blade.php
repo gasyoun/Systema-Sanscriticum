@@ -3,6 +3,11 @@
 
 @push('scripts')
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof window.shopReachGoal === 'function') {
+        window.shopReachGoal('begin_checkout');
+    }
+});
 document.addEventListener('alpine:init', () => {
     Alpine.store('checkout', {
         prana: 0,

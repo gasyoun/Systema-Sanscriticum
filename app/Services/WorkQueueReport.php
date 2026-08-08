@@ -143,6 +143,7 @@ class WorkQueueReport
         }
 
         return FollowUpTask::query()
+            ->forDeals()
             ->due()
             ->with(['deal.user', 'deal.lead', 'deal.course', 'assignee'])
             ->orderBy('due_at')

@@ -8,6 +8,7 @@ use App\Models\LessonAccessGrant;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Testimonial;
+use App\Services\Activity\FunnelTelemetry;
 use App\Support\ProductLadderAnchors;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -181,10 +182,14 @@ class ShopController extends Controller
     }
 
     // МЕТОД 2: Страница одного конкретного курса
-    public function show(Course $course)
+    public function show(Course $course, Request $request, FunnelTelemetry $funnel)
     {
         if (! $course->is_visible) {
             abort(404, 'Курс не найден');
+        }
+
+        if (Auth::check()) {
+            $funnel->emitCoursePageView(Auth::user(), (int) $course->id, $request);
         }
 
         $course->load([
@@ -195,6 +200,7 @@ class ShopController extends Controller
             'blocks',
             'teacher', // подгружаем преподавателя одним запросом
             'teachers', // со-преподаватели (блок «Преподаватель(и)» на лендинге)
+            'categories', // H2379: cover fallback colour + continuity with card
             'faqs', // блок «FAQ по курсу»
             'testimonials', // блок «Отзывы» (в порядке пивота)
             'previewLesson', // блок «Пример урока» + вторая CTA в hero

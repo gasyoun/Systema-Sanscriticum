@@ -275,6 +275,23 @@ return [
     'support_lead_capture' => (bool) env('SUPPORT_LEAD_CAPTURE', false),
 
     /*
+     | Обязательная тема при закрытии диалога в Helpdesk (H2381, Jivo Phase 4).
+     | Когда ВКЛ, SupportConversationManager::closeWithTopic / Helpdesk resolve
+     | требуют category из SupportTopicRule (+ other/uncategorized). История
+     | пишется в support_conversation_topics (append-only). ВЫКЛ по умолчанию —
+     | close без темы остаётся допустимым (обратная совместимость).
+     */
+    'support_required_close_topic' => (bool) env('SUPPORT_REQUIRED_CLOSE_TOPIC', false),
+
+    /*
+     | Follow-up задачи из Helpdesk-диалога (H2381): reuse FollowUpTask с
+     | support_conversation_id + note, без новой таблицы и без смешения с CRM
+     | (crm_follow_up_tasks) или академическими ScheduledReminder.
+     | ВЫКЛ по умолчанию — deploy-рубильник.
+     */
+    'support_follow_up_tasks' => (bool) env('SUPPORT_FOLLOW_UP_TASKS', false),
+
+    /*
      | Жёсткая ёмкость промокодов через timed reservations. Когда ВКЛ, живой
      | pending держит usage slot до TTL ссылки Точки (30 мин) + webhook-буфера
      | (10 мин), null-expiry легаси держится до ручной сверки, а paid-reversal

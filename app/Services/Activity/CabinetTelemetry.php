@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Activity;
 
+use App\Models\ActivityEvent;
 use App\Models\User;
 use App\Models\UserSession;
 use Illuminate\Http\Request;
@@ -23,7 +24,10 @@ use Illuminate\Support\Facades\Log;
  */
 final class CabinetTelemetry
 {
-    public function __construct(private readonly ActivityTracker $tracker) {}
+    public function __construct(
+        private readonly ActivityTracker $tracker,
+        private readonly FunnelTelemetry $funnel,
+    ) {}
 
     /**
      * Записать событие §4 в activity_events.
@@ -39,6 +43,11 @@ final class CabinetTelemetry
                 data: $data,
                 request: $request,
             );
+
+            // H2378: first meaningful cabinet surface → once-per-user funnel step.
+            if ($event === ActivityEvent::CABINET_HOME_VIEW) {
+                $this->funnel->emitFirstCabinetAction($user, $event, $request);
+            }
         } catch (\Throwable $e) {
             Log::warning('CabinetTelemetry::emit failed', [
                 'user_id' => $user->id,

@@ -6,18 +6,29 @@ use App\Models\LandingPage;
 use App\Models\PromoCode;
 use App\Models\StudentDiscount; // Не забываем импортировать модель!
 use App\Models\Tariff;
+use App\Services\Activity\FunnelTelemetry;
 use App\Services\CuratorNotifier;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CheckoutController extends Controller
 {
-    public function show(Request $request, Tariff $tariff, PranaService $prana)
+    public function show(Request $request, Tariff $tariff, PranaService $prana, FunnelTelemetry $funnel)
     {
         if (! $tariff->is_active) {
             abort(404, 'Тариф недоступен для покупки.');
+        }
+
+        if (Auth::check()) {
+            $funnel->emitBeginCheckout(
+                Auth::user(),
+                (int) $tariff->id,
+                $tariff->course_id ? (int) $tariff->course_id : null,
+                $request,
+            );
         }
 
         // Промокод из ссылки (?promo=CODE), например из блока «Выбор потока» на лендинге.

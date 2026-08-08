@@ -124,4 +124,16 @@ class SupportConversation extends Model
     {
         return $this->hasMany(TelegramSupportMessage::class);
     }
+
+    /** Topic assignment history (H2381); current topic = latest by id. */
+    public function topics(): HasMany
+    {
+        return $this->hasMany(SupportConversationTopic::class);
+    }
+
+    /** Support follow-ups reusing FollowUpTask (H2381). */
+    public function followUpTasks(): HasMany
+    {
+        return $this->hasMany(FollowUpTask::class);
+    }
 }

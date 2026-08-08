@@ -100,8 +100,9 @@ class Course extends Model
      */
     public function formatLabel(): ?string
     {
+        // H2379: same vocabulary as catalogue card badges + hybrid cabinet.
         return match ($this->format) {
-            'live' => 'Live-поток',
+            'live' => 'Идет сейчас',
             'recorded' => 'В записи',
             default => null,
         };

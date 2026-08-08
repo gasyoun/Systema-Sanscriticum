@@ -1,6 +1,16 @@
 @extends('layouts.shop')
 @section('title', $course->meta_title ?: $course->title)
 
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (typeof window.shopReachGoal === 'function') {
+        window.shopReachGoal('course_page_view');
+    }
+});
+</script>
+@endpush
+
 @push('head')
     <meta name="description" content="{{ $course->meta_description ?: \Illuminate\Support\Str::limit(trim(strip_tags($course->description)), 160) }}">
 
@@ -96,16 +106,37 @@
             <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center">
                 
                 <div class="w-full lg:w-1/2">
-                    <div class="flex items-center gap-4 mb-6">
-                        <span class="bg-[#E85C24]/20 text-[#E85C24] text-xs font-black uppercase px-3 py-1.5 rounded-full tracking-widest border border-[#E85C24]/30">
-                            Онлайн-программа
-                        </span>
-                        <div class="flex gap-4 text-sm font-bold text-slate-400">
+                    {{-- H2379: format vocabulary matches catalogue card (Идет сейчас / В записи) --}}
+                    <div class="flex flex-wrap items-center gap-2 mb-6">
+                        @if($course->isLive())
+                            <span class="inline-flex items-center gap-1.5 bg-rose-500 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider shadow-[0_4px_12px_rgba(244,63,94,0.35)]">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                Идет сейчас
+                            </span>
+                        @elseif($course->format === 'recorded')
+                            <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider">
+                                <i class="fas fa-play-circle text-[10px]"></i>
+                                В записи
+                            </span>
+                        @else
+                            <span class="bg-[#E85C24]/20 text-[#E85C24] text-xs font-black uppercase px-3 py-1.5 rounded-full tracking-widest border border-[#E85C24]/30">
+                                Онлайн-программа
+                            </span>
+                        @endif
+
+                        @if($course->levelLabel())
+                            <span class="inline-flex items-center gap-1.5 bg-emerald-500/90 text-white text-[11px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider">
+                                @if($course->level === 'beginner')<i class="fas fa-seedling text-[10px]"></i>@endif
+                                {{ $course->levelLabel() }}
+                            </span>
+                        @endif
+
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold text-slate-400 sm:ml-1">
                             @if($course->lessons_count)
-                                <span class="flex items-center"><i class="fas fa-play-circle mr-2 text-indigo-400"></i> {{ $course->lessons_count }} лекций</span>
+                                <span class="flex items-center"><i class="fas fa-play-circle mr-2 text-indigo-400"></i> {{ $course->lessons_count }} {{ \App\Support\Plural::ru((int) $course->lessons_count, 'лекция', 'лекции', 'лекций') }}</span>
                             @endif
                             @if($course->hours_count)
-                                <span class="flex items-center"><i class="far fa-clock mr-2 text-indigo-400"></i> {{ $course->hours_count }} часов</span>
+                                <span class="flex items-center"><i class="far fa-clock mr-2 text-indigo-400"></i> {{ $course->hours_count }} ч</span>
                             @endif
                         </div>
                     </div>
@@ -114,7 +145,8 @@
                         {{ $course->title }}
                     </h1>
                     
-                    <div class="flex flex-wrap gap-4">
+                    {{-- One primary CTA (tariff) + optional secondary (sample) --}}
+                    <div class="flex flex-wrap gap-3">
                         <a href="#tariffs" class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#E85C24] hover:bg-[#d64e1c] transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,92,36,0.3)]">
                             Выбрать тариф
                         </a>
@@ -122,48 +154,81 @@
                             <a href="#sample" class="inline-flex justify-center items-center gap-2 px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#38BDF8]/15 border border-[#38BDF8]/30 hover:bg-[#38BDF8]/25 transition-all">
                                 <i class="fas fa-play text-xs"></i> Смотреть пробный урок
                             </a>
+                        @else
+                            <a href="{{ route('shop.index', $course->isLive() ? ['format' => 'live'] : ($course->format === 'recorded' ? ['format' => 'recorded'] : [])) }}"
+                               class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#1F2636] hover:bg-[#2A344A] transition-all">
+                                @if($course->format === 'recorded')
+                                    Библиотека записей
+                                @elseif($course->isLive())
+                                    Другие живые курсы
+                                @else
+                                    Все курсы
+                                @endif
+                            </a>
                         @endif
-                        <a href="{{ route('shop.index') }}" class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#1F2636] hover:bg-[#2A344A] transition-all">
-                            Все курсы
-                        </a>
                     </div>
 
-                    {{-- Кликабельный бейдж преподавателя --}}
-@if($course->teacher)
-    <a href="{{ route('shop.index', ['teacher' => $course->teacher->id]) }}"
-       class="group/teacher mt-6 inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 hover:bg-[#1A2235] transition-all duration-300 max-w-fit">
-        
-        {{-- Иконка-аватар --}}
-        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#E85C24] to-[#d04a15] flex items-center justify-center shrink-0 shadow-md shadow-[#E85C24]/20">
-            <i class="fas fa-user text-white text-sm"></i>
-        </div>
-        
-        {{-- Текст --}}
-        <div class="flex flex-col leading-tight">
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover/teacher:text-[#E85C24] transition-colors">
-                Преподаватель
-            </span>
-            <span class="text-sm font-bold text-white">
-                {{ $course->teacher->name }}
-            </span>
-        </div>
-        
-        {{-- Стрелка --}}
-        <i class="fas fa-arrow-right text-xs text-slate-500 group-hover/teacher:text-[#E85C24] group-hover/teacher:translate-x-1 transition-all ml-2"></i>
-    </a>
-@endif
+                    {{-- Кликабельный бейдж преподавателя — visual continuity with card teacher line --}}
+                    @if($course->teacher)
+                        <a href="{{ route('shop.index', ['teacher' => $course->teacher->id]) }}"
+                           class="group/teacher mt-6 inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 hover:bg-[#1A2235] transition-all duration-300 max-w-fit">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#E85C24] to-[#d04a15] flex items-center justify-center shrink-0 shadow-md shadow-[#E85C24]/20 overflow-hidden">
+                                @if(! empty($course->teacher->photo_path))
+                                    <img src="{{ Storage::url($course->teacher->photo_path) }}"
+                                         alt="{{ $course->teacher->name }}"
+                                         class="w-full h-full object-cover">
+                                @else
+                                    <i class="fas fa-user text-white text-sm"></i>
+                                @endif
+                            </div>
+                            <div class="flex flex-col leading-tight">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover/teacher:text-[#E85C24] transition-colors">
+                                    Преподаватель
+                                </span>
+                                <span class="text-sm font-bold text-white">
+                                    {{ $course->teacher->name }}
+                                </span>
+                            </div>
+                            <i class="fas fa-arrow-right text-xs text-slate-500 group-hover/teacher:text-[#E85C24] group-hover/teacher:translate-x-1 transition-all ml-2"></i>
+                        </a>
+                    @endif
 
                 </div>
 
                 <div class="w-full lg:w-1/2">
+                    {{-- Cover: real photo OR typographic fallback matching catalogue card --}}
                     <div class="relative w-full aspect-video md:aspect-[4/3] rounded-3xl overflow-hidden bg-gradient-to-br from-[#111622] to-[#0A0D14] border border-[#1F2636] shadow-2xl shadow-indigo-900/20 flex items-center justify-center group">
                         @if($course->image_path)
-                            <img src="{{ Storage::url($course->image_path) }}" alt="{{ $course->title }}" class="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity hover:mix-blend-normal hover:opacity-100 transition-all duration-700">
+                            <img src="{{ Storage::url($course->image_path) }}" alt="{{ $course->title }}" class="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-700">
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/80 via-transparent to-transparent"></div>
                         @else
-                            <i class="fas fa-om text-9xl text-slate-700/20 group-hover:scale-110 transition-transform duration-700"></i>
+                            @php $heroCoverColor = $course->categories->first()?->color ?: '#E85C24'; @endphp
+                            <div class="absolute inset-0 p-8 flex flex-col group-hover:scale-[1.02] transition-transform duration-500"
+                                 @style(['background-image: linear-gradient(135deg, ' . $heroCoverColor . 'E6 0%, #0A0D14 92%)'])>
+                                <i class="fas fa-om absolute -right-6 -bottom-8 text-[10rem] text-white/5 pointer-events-none"></i>
+                                <span class="relative text-[11px] font-black uppercase tracking-widest text-white/70 line-clamp-1 mb-4">
+                                    {{ $course->teacher?->name ?? 'Онлайн-программа' }}
+                                </span>
+                                <div class="relative flex-grow flex items-center">
+                                    <span class="text-2xl md:text-3xl font-extrabold text-white leading-tight line-clamp-4">{{ $course->title }}</span>
+                                </div>
+                            </div>
                         @endif
-                        <div class="absolute top-6 left-6 w-3 h-3 rounded-full bg-[#E85C24] animate-pulse"></div>
-                        <div class="absolute bottom-6 right-6 w-24 h-24 border border-white/5 rounded-full"></div>
+                        @if($course->isLive())
+                            <div class="absolute top-5 right-5 z-10">
+                                <span class="inline-flex items-center gap-1.5 bg-rose-500 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                    Идет сейчас
+                                </span>
+                            </div>
+                        @elseif($course->format === 'recorded')
+                            <div class="absolute top-5 right-5 z-10">
+                                <span class="inline-flex items-center gap-1.5 bg-indigo-500/90 text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider">
+                                    <i class="fas fa-play-circle text-[9px]"></i>
+                                    В записи
+                                </span>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -343,8 +408,9 @@
                             </span>
                         </div>
 
-                        {{-- Карусель: горизонтальная прокрутка со snap (свайп на тач, скролл на десктопе) --}}
-                        <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-1 px-1 [scrollbar-color:#1F2636_transparent] [scrollbar-width:thin]">
+                        {{-- Карусель: горизонтальная прокрутка со snap; H2379 mobile scroll affordance --}}
+                        <div class="relative">
+                        <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-1 px-1 [scrollbar-color:#1F2636_transparent] [scrollbar-width:thin] scroll-smooth">
                             @foreach($sessions as $session)
                                 <div class="relative snap-start shrink-0 w-[340px] max-w-[85vw] flex items-center gap-5 p-5 rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 hover:bg-[#1A2235] transition-all duration-300">
                                     {{-- Дата-бейдж: число + месяц --}}
@@ -405,6 +471,10 @@
                                 </div>
                             @endforeach
                         </div>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[#0A0D14] via-[#0A0D14]/70 to-transparent sm:hidden"
+                             aria-hidden="true"></div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 sm:hidden -mt-2 mb-2" aria-hidden="true">Листайте расписание →</p>
                     </div>
                 @endforeach
             </div>
