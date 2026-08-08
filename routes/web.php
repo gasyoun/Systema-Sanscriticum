@@ -504,6 +504,8 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     });
     Route::get('/homework/file/{file}', [HomeworkController::class, 'download'])
         ->name('homework.file.download');
+    Route::get('/homework/submission/{submission}/images-pdf', [HomeworkController::class, 'downloadImagesPdf'])
+        ->name('homework.submission.images-pdf');
     Route::delete('/homework/file/{file}', [HomeworkController::class, 'destroyFile'])
         ->name('homework.file.destroy');
     Route::post('/homework/file/{file}/move', [HomeworkController::class, 'moveFile'])
