@@ -110,7 +110,10 @@
                             </a>
                         @else
                             <span class="font-bold text-gray-500">{{ $lesson->title }}</span>
-                            <a href="{{ route('student.access') }}#why" class="ml-2 text-xs text-gray-400 hover:text-[#E85C24]">почему закрыто?</a>
+                            @include('student.partials.access-why-locked', [
+                                'findings' => ($accessFindingsByLessonId ?? [])[$lesson->id] ?? [],
+                                'enabled' => $accessSelfService ?? false,
+                            ])
                         @endif
                     </div>
                 </li>

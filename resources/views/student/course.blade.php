@@ -105,23 +105,40 @@
         </h2>
     </div>
         
+    @if (session('access_status'))
+        <div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-medium">
+            <i class="fas fa-check-circle mr-1.5"></i>{{ session('access_status') }}
+        </div>
+    @endif
+
     <div class="space-y-4">
         @forelse($lessons as $index => $lesson)
             @php
                 // Проверка доступа
-                $isUnlocked = $lesson->isUnlockedBy($unlockedTariffs);
+                $isUnlocked = $lesson->isUnlockedBy($unlockedTariffs)
+                    || $lesson->is_free
+                    || $lesson->is_preview
+                    || in_array($lesson->id, $grantedLessonIds ?? [], true);
                 $isCompleted = auth()->user()->completedLessons->contains($lesson->id);
+                $lessonFindings = ($accessFindingsByLessonId ?? [])[$lesson->id] ?? [];
+                $cardClass = 'group block bg-white rounded-2xl border transition-all duration-300 relative overflow-hidden '
+                    .($isUnlocked
+                        ? 'border-gray-100 hover:border-[#E85C24]/30 hover:shadow-lg hover:-translate-y-1'
+                        : 'border-gray-100 bg-gray-50/50 hover:border-[#E85C24]/40 hover:shadow-md hover:-translate-y-0.5');
             @endphp
 
-            {{-- ИЗМЕНЕНИЕ 1: Ссылка ведет либо на урок, либо на страницу покупки тарифов --}}
-            {{-- data-track-*: baseline-телеметрия H962 (спека §4) — закрытый урок это
-                 оффер «докупи блок»: показ ряда = offer.impression, клик = offer.click. --}}
-            <a href="{{ $isUnlocked ? route('student.lesson', [$course->slug, $lesson->id]) : route('shop.course.show', $course->slug) . '#tariffs' }}"
-               @if(!$isUnlocked) data-track-event="offer.click" data-track-impression="offer.impression" data-track-kind="next-block" data-track-block="{{ $lesson->block_number }}" data-track-course="{{ $course->id }}" @endif
-               class="group block bg-white rounded-2xl border transition-all duration-300 relative overflow-hidden
-                      {{ $isUnlocked 
-                          ? 'border-gray-100 hover:border-[#E85C24]/30 hover:shadow-lg hover:-translate-y-1' 
-                          : 'border-gray-100 bg-gray-50/50 hover:border-[#E85C24]/40 hover:shadow-md hover:-translate-y-0.5' }}">
+            {{-- Open lessons: whole card is a link. Locked: div so «Почему закрыто?» can host forms. --}}
+            @if($isUnlocked)
+            <a href="{{ route('student.lesson', [$course->slug, $lesson->id]) }}"
+               class="{{ $cardClass }}">
+            @else
+            <div class="{{ $cardClass }}"
+                 data-track-event="offer.click"
+                 data-track-impression="offer.impression"
+                 data-track-kind="next-block"
+                 data-track-block="{{ $lesson->block_number }}"
+                 data-track-course="{{ $course->id }}">
+            @endif
                 
                 {{-- Цветная полоска слева для пройденных уроков --}}
                 @if($isCompleted)
@@ -177,12 +194,19 @@
                                 </span>
                             @endif
                             @if(!$isUnlocked)
-                                {{-- ИЗМЕНЕНИЕ 2: Красивый бейджик покупки --}}
-                                <span class="text-[#E85C24] flex items-center bg-orange-50 px-2 py-0.5 rounded-md font-bold transition-colors group-hover:bg-[#E85C24] group-hover:text-white">
+                                <a href="{{ route('shop.course.show', $course->slug) }}#tariffs"
+                                   class="text-[#E85C24] flex items-center bg-orange-50 px-2 py-0.5 rounded-md font-bold transition-colors hover:bg-[#E85C24] hover:text-white">
                                     <i class="fas fa-shopping-cart mr-1.5"></i> Докупить блок {{ $lesson->block_number }}
-                                </span>
+                                </a>
                             @endif
                         </div>
+
+                        @if(!$isUnlocked)
+                            @include('student.partials.access-why-locked', [
+                                'findings' => $lessonFindings,
+                                'enabled' => $accessSelfService ?? false,
+                            ])
+                        @endif
                     </div>
 
                     {{-- КНОПКА ДЕЙСТВИЯ СПРАВА --}}
@@ -196,15 +220,19 @@
                                 <i class="fas fa-chevron-right"></i>
                             </div>
                         @else
-                            {{-- ИЗМЕНЕНИЕ 3: Явная кнопка Купить --}}
-                            <div class="px-5 py-2.5 rounded-xl bg-gray-200 text-gray-600 font-extrabold text-xs uppercase tracking-widest group-hover:bg-[#E85C24] group-hover:text-white transition-all shadow-sm group-hover:shadow-[0_0_15px_rgba(232,92,36,0.3)]">
+                            <a href="{{ route('shop.course.show', $course->slug) }}#tariffs"
+                               class="px-5 py-2.5 rounded-xl bg-gray-200 text-gray-600 font-extrabold text-xs uppercase tracking-widest hover:bg-[#E85C24] hover:text-white transition-all shadow-sm">
                                 Купить
-                            </div>
+                            </a>
                         @endif
                     </div>
 
                 </div>
+            @if($isUnlocked)
             </a>
+            @else
+            </div>
+            @endif
         @empty
             <div class="p-16 text-center bg-white rounded-[2rem] border border-dashed border-gray-200">
                 <div class="w-20 h-20 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-4">

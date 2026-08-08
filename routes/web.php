@@ -43,6 +43,7 @@ use App\Http\Controllers\Rq4StudyController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SrsController;
+use App\Http\Controllers\Student\AccessSelfServiceController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TransliterateController;
@@ -467,6 +468,9 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::get('/c/{slug}', [StudentController::class, 'showCourse'])
         ->middleware('course.canonical')
         ->name('student.course');
+    Route::post('/c/{slug}/access/materialize', [AccessSelfServiceController::class, 'materialize'])
+        ->middleware('course.canonical')
+        ->name('student.access.materialize');
     Route::get('/c/{slug}/u/{lessonId}', [StudentController::class, 'showLesson'])
         ->middleware('course.canonical')
         ->name('student.lesson');

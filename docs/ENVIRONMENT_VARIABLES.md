@@ -9,6 +9,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | Key | Class | Default | Config location |
 |---|---|---|---|
 | `ABLY_KEY` | required | `—` | config/broadcasting.php:69 |
+| `ACCESS_SELF_SERVICE` | optional | `false` | config/features.php:673 |
 | `ADMIN_EMAIL` | optional | `'pe4kin.85@mail.ru'` | config/services.php:301 |
 | `ADMIN_PASSWORD` | secret | `—` | config/services.php:302 |
 | `ADMIN_TELEGRAM_ID` | optional | `''` | config/cabinet_probe.php:23<br>config/services.php:116 |
@@ -134,7 +135,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:65 |
 | `FILESYSTEM_DISK` | optional | `'local'` | config/filesystems.php:16 |
 | `FULL_COURSE_BLOCK_CREDIT` | optional | `false` | config/features.php:21 |
-| `GAMES_SKILL_DRILLS` | optional | `false` | config/features.php:672 |
+| `GAMES_SKILL_DRILLS` | optional | `false` | config/features.php:683 |
 | `GOOGLE_CLIENT_ID` | required | `—` | config/services.php:348 |
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:349 |
 | `GOOGLE_REDIRECT_URI` | optional | `'/auth/google/callback'` | config/services.php:350 |
@@ -219,7 +220,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MAIL_THROTTLE_PER_MINUTE` | optional | `30` | config/mail.php:129 |
 | `MAIL_URL` | required | `—` | config/mail.php:39 |
 | `MAIL_USERNAME` | required | `—` | config/mail.php:43 |
-| `MANAGER_SALES_REPORT` | optional | `false` | config/features.php:755 |
+| `MANAGER_SALES_REPORT` | optional | `false` | config/features.php:766 |
 | `MARATHON_CHANNEL_CHAT_ID` | optional | `'@samskrte'` | config/marathon_landing_copy.php:30 |
 | `MARATHON_COUPON_AMOUNT` | optional | `1000` | config/marathon.php:21 |
 | `MARATHON_HOST_NAME` | optional | `'к.ф.н. М.Ю. Гасунс'` | config/marathon.php:25 |
@@ -282,7 +283,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PAYPAL_ME_LINK` | required | `—` | config/services.php:370 |
 | `PAYPAL_RECIPIENT` | required | `—` | config/services.php:371 |
 | `PAYPAL_SKIP_WEBHOOK_SIGNATURE` | optional | `false` | config/services.php:382 |
-| `PAYPAL_SUBSCRIPTIONS_ENABLED` | feature-flag | `false` | config/features.php:719<br>config/services.php:376 |
+| `PAYPAL_SUBSCRIPTIONS_ENABLED` | feature-flag | `false` | config/features.php:730<br>config/services.php:376 |
 | `PAYPAL_WEBHOOK_ID` | required | `—` | config/services.php:380 |
 | `POSTMARK_TOKEN` | secret | `—` | config/services.php:27 |
 | `PRANA_DAILY_P2P_LIMIT` | optional | `30` | config/prana.php:12 |
@@ -392,8 +393,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SRS_FUZZ` | optional | `true` | config/srs.php:29 |
 | `SRS_GUEST_TRIAL_CARDS` | optional | `10` | config/srs.php:33 |
 | `SRS_NEW_PER_DAY` | optional | `20` | config/srs.php:23 |
-| `STAFF_IMPERSONATION` | optional | `false` | config/features.php:710 |
-| `START_CHTENIYA_COHORT_ENABLED` | feature-flag | `false` | config/features.php:737 |
+| `STAFF_IMPERSONATION` | optional | `false` | config/features.php:721 |
+| `START_CHTENIYA_COHORT_ENABLED` | feature-flag | `false` | config/features.php:748 |
 | `START_CHTENIYA_COURSE_SLUG` | optional | `'start-chteniya'` | config/start_chteniya.php:17 |
 | `STORAGE_WATCH_ARCHIVES_MB` | optional | `500` | config/storage_watch.php:37 |
 | `STORAGE_WATCH_HOMEWORK_MB` | optional | `2000` | config/storage_watch.php:35 |
@@ -484,8 +485,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TOCHKA_API_URL` | required | `—` | config/services.php:42 |
 | `TOCHKA_CUSTOMER_CODE` | required | `—` | config/services.php:44 |
 | `TOCHKA_MERCHANT_ID` | required | `—` | config/services.php:48 |
-| `TOCHKA_RECURRING_ENABLED` | feature-flag | `false` | config/features.php:682 |
-| `TOCHKA_RECURRING_MODES` | optional | `'per_course,club,installment'` | config/features.php:690 |
+| `TOCHKA_RECURRING_ENABLED` | feature-flag | `false` | config/features.php:693 |
+| `TOCHKA_RECURRING_MODES` | optional | `'per_course,club,installment'` | config/features.php:701 |
 | `TOCHKA_TAX_SYSTEM_CODE` | required | `—` | config/services.php:51 |
 | `TOCHKA_VAT_TYPE` | optional | `'none'` | config/services.php:52 |
 | `TOCHKA_WEBHOOK_GUARD` | optional | `true` | config/features.php:382 |

@@ -662,6 +662,17 @@ return [
     'payment_recovery_cta' => (bool) env('PAYMENT_RECOVERY_CTA', false),
 
     /*
+     | Access self-service Phase 1 (H2386): "Почему закрыто?" diagnostics on locked
+     | lessons + profile access summary + POST materialize paid block keys via
+     | BlockAccessMaterializer. Read-only diagnostics; materialize only expands
+     | access-only sibling payment rows (amount 0), no new money path.
+     |
+     | ВЫКЛ по умолчанию. OFF → no diagnostics UI, materialize route 404.
+     | Включение — ACCESS_SELF_SERVICE=true + config:cache после ревью.
+     */
+    'access_self_service' => (bool) env('ACCESS_SELF_SERVICE', false),
+
+    /*
      | Cabinet skill-drill strip (H1680, Wave 2 online games): a /dvaram/skill-drills
      | page linking to short /lila drills — DISTINCT from the FSRS review loop
      | (srs.enabled, /dvaram/koloda) and orthogonal to it. Когда ВЫКЛ (по умолчанию):
