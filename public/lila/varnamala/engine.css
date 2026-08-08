@@ -1,0 +1,301 @@
+/* Varnamālā pilot shell — CSS morph proxy until Rive art (H2436). */
+
+:root {
+  --vm-pg: #f3ecdb;
+  --vm-pnl: #faf5e8;
+  --vm-ink: #2a2118;
+  --vm-soft: #6b5d47;
+  --vm-line: #d9cba8;
+  --vm-accent: #a8451f;
+  --vm-glow: #e8c87a;
+  --vm-stage: #3d6b4f;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --vm-pg: #1c1712;
+    --vm-pnl: #26201a;
+    --vm-ink: #efe6d4;
+    --vm-soft: #b3a488;
+    --vm-line: #423628;
+    --vm-accent: #e07a4e;
+    --vm-glow: #8a6a28;
+    --vm-stage: #6db88a;
+  }
+}
+:root[data-theme="dark"] {
+  --vm-pg: #1c1712;
+  --vm-pnl: #26201a;
+  --vm-ink: #efe6d4;
+  --vm-soft: #b3a488;
+  --vm-line: #423628;
+  --vm-accent: #e07a4e;
+  --vm-glow: #8a6a28;
+  --vm-stage: #6db88a;
+}
+:root[data-theme="light"] {
+  --vm-pg: #f3ecdb;
+  --vm-pnl: #faf5e8;
+  --vm-ink: #2a2118;
+  --vm-soft: #6b5d47;
+  --vm-line: #d9cba8;
+  --vm-accent: #a8451f;
+  --vm-glow: #e8c87a;
+  --vm-stage: #3d6b4f;
+}
+
+.vm-root {
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  color: var(--vm-ink);
+}
+
+.vm-hint {
+  color: var(--vm-soft);
+  font-size: 14.5px;
+  max-width: 52ch;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+.vm-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 22px;
+}
+
+.vm-chip {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--vm-line);
+  background: var(--vm-pnl);
+  color: var(--vm-ink);
+  font-family: "Noto Sans Devanagari", "Nirmala UI", "Mangal", serif;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.14s, transform 0.08s, box-shadow 0.14s;
+  box-shadow: 0 1px 2px rgba(60, 45, 20, 0.08);
+}
+.vm-chip:hover { border-color: var(--vm-accent); transform: translateY(-1px); }
+.vm-chip:focus-visible { outline: 2px solid var(--vm-accent); outline-offset: 2px; }
+.vm-chip.is-active {
+  border-color: var(--vm-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--vm-accent) 35%, transparent);
+}
+.vm-chip.is-done {
+  background: color-mix(in srgb, var(--vm-stage) 14%, var(--vm-pnl));
+  border-color: color-mix(in srgb, var(--vm-stage) 45%, var(--vm-line));
+}
+.vm-chip.is-done::after {
+  content: "";
+  position: absolute;
+  /* marker via box only — keep chip simple */
+}
+
+.vm-stage {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+@media (min-width: 720px) {
+  .vm-stage {
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: stretch;
+  }
+}
+
+.vm-canvas {
+  position: relative;
+  background: var(--vm-pnl);
+  border: 1px solid var(--vm-line);
+  border-radius: 18px;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px 36px;
+  overflow: hidden;
+  user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(60, 45, 20, 0.08);
+}
+.vm-canvas:focus-visible { outline: 2px solid var(--vm-accent); outline-offset: 3px; }
+
+.vm-glyph {
+  font-family: "Noto Sans Devanagari", "Nirmala UI", "Mangal", serif;
+  font-size: clamp(96px, 22vw, 160px);
+  line-height: 1;
+  color: var(--vm-accent);
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1.2, 0.36, 1),
+    filter 0.35s ease,
+    letter-spacing 0.35s ease,
+    text-shadow 0.35s ease,
+    opacity 0.3s ease;
+  will-change: transform, filter;
+}
+.vm-glyph.is-s0 { transform: scale(1) rotate(0deg); filter: none; }
+.vm-glyph.is-s1 {
+  transform: scale(1.12) rotate(-3deg);
+  text-shadow: 0 0 28px color-mix(in srgb, var(--vm-glow) 70%, transparent);
+  filter: saturate(1.15);
+}
+.vm-glyph.is-s2 {
+  transform: scale(1.22) rotate(4deg);
+  letter-spacing: 0.04em;
+  filter: drop-shadow(0 8px 0 color-mix(in srgb, var(--vm-accent) 18%, transparent));
+}
+.vm-glyph.is-s3 {
+  transform: scale(0.55) translateY(-36px);
+  opacity: 0.35;
+}
+
+.vm-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 48%, color-mix(in srgb, var(--vm-glow) 35%, transparent), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.vm-canvas.is-lit .vm-burst { opacity: 1; }
+
+.vm-poke-label {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vm-soft);
+  min-height: 1.2em;
+}
+
+.vm-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.vm-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--vm-line);
+  transition: background 0.2s, transform 0.2s;
+}
+.vm-dot.is-on {
+  background: var(--vm-accent);
+  transform: scale(1.2);
+}
+
+.vm-card {
+  background: var(--vm-pnl);
+  border: 1px solid var(--vm-line);
+  border-radius: 18px;
+  padding: 22px 20px 20px;
+  box-shadow: 0 2px 8px rgba(60, 45, 20, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 320px;
+}
+.vm-card .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--vm-accent);
+  margin: 0;
+}
+.vm-card .sound {
+  font-size: 15px;
+  color: var(--vm-soft);
+  margin: 0;
+}
+.vm-card .word-deva {
+  font-family: "Noto Sans Devanagari", "Nirmala UI", "Mangal", serif;
+  font-size: clamp(40px, 8vw, 56px);
+  line-height: 1.15;
+  margin: 4px 0 0;
+  color: var(--vm-ink);
+}
+.vm-card .meta {
+  margin: 0;
+  font-size: 15px;
+  color: var(--vm-soft);
+}
+.vm-card .gloss {
+  margin: 8px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  color: var(--vm-ink);
+}
+.vm-card .placeholder {
+  margin: auto 0 0;
+  font-size: 13.5px;
+  color: var(--vm-soft);
+  line-height: 1.45;
+}
+.vm-card.is-locked .word-deva,
+.vm-card.is-locked .gloss,
+.vm-card.is-locked .meta.word-meta {
+  filter: blur(5px);
+  user-select: none;
+  opacity: 0.55;
+}
+.vm-card .cta {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.vm-btn {
+  font: 600 13px/1 "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--vm-line);
+  background: var(--vm-pnl);
+  color: var(--vm-ink);
+  cursor: pointer;
+}
+.vm-btn.primary {
+  background: var(--vm-accent);
+  border-color: var(--vm-accent);
+  color: #fff;
+}
+.vm-btn:focus-visible { outline: 2px solid var(--vm-accent); outline-offset: 2px; }
+
+.vm-progress {
+  margin: 16px 0 0;
+  font-size: 13px;
+  color: var(--vm-soft);
+}
+
+.vm-emoji-proxy {
+  position: absolute;
+  bottom: 28px;
+  font-size: 56px;
+  line-height: 1;
+  opacity: 0;
+  transform: translateY(12px) scale(0.6);
+  transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1.2, 0.36, 1);
+  pointer-events: none;
+}
+.vm-emoji-proxy.is-show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vm-glyph, .vm-burst, .vm-emoji-proxy, .vm-chip {
+    transition: none !important;
+  }
+}
