@@ -146,6 +146,9 @@ class HomeworkController extends Controller
     /**
      * Один PDF со всеми студенческими картинками сдачи (H2455).
      * Штат и владелец-студент. Нет PDF — 404 (нет картинок или сборка не удалась).
+     *
+     * По умолчанию inline (встроенный просмотр в админке без «скачать»).
+     * ?download=1 — принудительное вложение.
      */
     public function downloadImagesPdf(Request $request, HomeworkSubmission $submission)
     {
@@ -163,9 +166,21 @@ class HomeworkController extends Controller
         }
         abort_unless($pdf->exists($submission), 404, 'PDF с картинками пока нет.');
 
-        return Storage::disk(HomeworkImagePdfService::DISK)->download(
-            $pdf->pathFor($submission),
-            $pdf->downloadName($submission),
+        $disk = HomeworkImagePdfService::DISK;
+        $path = $pdf->pathFor($submission);
+        $name = $pdf->downloadName($submission);
+
+        if ($request->boolean('download')) {
+            return Storage::disk($disk)->download($path, $name);
+        }
+
+        // inline: куратор открыл карточку — PDF рисуется в iframe сразу.
+        return response()->file(
+            Storage::disk($disk)->path($path),
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$name.'"',
+            ],
         );
     }
 

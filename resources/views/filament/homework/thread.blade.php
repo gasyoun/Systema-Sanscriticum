@@ -9,9 +9,44 @@
         ->where('id', '!=', $submission->lesson_id)
         ->orderBy('id')
         ->get(['id', 'title']);
+
+    // H2455 follow-up: PDF картинок без кнопки — сразу в карточке проверки.
+    $hwImagePdf = app(\App\Services\HomeworkImagePdfService::class);
+    $hwHasImages = $hwImagePdf->studentImageFiles($submission)->isNotEmpty();
+    if ($canManageFiles && $hwHasImages && ! $hwImagePdf->exists($submission)) {
+        $hwImagePdf->rebuildQuietly($submission);
+    }
+    $hwImagesPdfReady = $canManageFiles && $hwHasImages && $hwImagePdf->exists($submission);
+    $hwImagesPdfUrl = $hwImagesPdfReady
+        ? route('homework.submission.images-pdf', $submission)
+        : null;
+    $hwImagesPdfDownloadUrl = $hwImagesPdfReady
+        ? route('homework.submission.images-pdf', ['submission' => $submission, 'download' => 1])
+        : null;
 @endphp
 
 <div class="space-y-4">
+    @if($hwImagesPdfReady)
+        <div class="rounded-xl border border-primary-200 dark:border-primary-500/30 bg-primary-50/60 dark:bg-primary-500/10 p-3 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2 text-sm">
+                <span class="font-semibold text-primary-800 dark:text-primary-200">
+                    Все картинки — одним PDF (авто)
+                </span>
+                <a href="{{ $hwImagesPdfDownloadUrl }}"
+                   class="text-xs font-semibold text-primary-700 dark:text-primary-300 underline underline-offset-2 hover:no-underline"
+                   target="_blank" rel="noopener">
+                    Скачать PDF
+                </a>
+            </div>
+            <iframe
+                src="{{ $hwImagesPdfUrl }}"
+                title="Картинки домашней работы одним PDF"
+                class="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white"
+                style="min-height: 70vh; height: 70vh;"
+            ></iframe>
+        </div>
+    @endif
+
     @forelse($comments as $c)
         @php
             $isStudent = $c->author_role === 'student';
