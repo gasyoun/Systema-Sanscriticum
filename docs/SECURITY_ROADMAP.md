@@ -179,7 +179,12 @@ handoff — this roadmap does not restate the findings, it sequences them.
       [PR #618](https://github.com/gasyoun/Systema-Sanscriticum/pull/618)
       (`SalaryPeriodCloseTest`); verified on main 08-08-2026 (H2451).
       Residual test-order flake tracked separately as H2151 / issue #1055.
-    - [ ] block payout ignores refunds (`TeacherSalaryService.php:400`).
+    - [x] block payout ignores refunds — `blockGroupRevenueDetail` subtracts
+      `Расход` return rows covering the block (`isReturnPayment` / floor at 0) —
+      shipped [PR #254](https://github.com/gasyoun/Systema-Sanscriticum/pull/254)
+      (`TeacherBlockPayoutTest::block_revenue_subtracts_refund_expense_rows` +
+      `block_revenue_floors_at_zero_when_refunds_exceed_revenue`);
+      verified on main 08-08-2026 (H2453).
   - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071.
 - [ ] After each fix, extend the money-core test suite so the defect cannot regress silently.
 
