@@ -173,7 +173,12 @@ handoff — this roadmap does not restate the findings, it sequences them.
       (`ReferralProgramTest::no_reward_on_non_course_payments` +
       `real_course_purchase_after_non_qualifying_still_rewards`);
       verified on main 08-08-2026 (H2437).
-    - [ ] salary month-close double-counts the whole month (`TeacherSalaryService.php:769`).
+    - [x] salary month-close double-counts the whole month — closed periods use
+      `SalaryClosedPeriod` + `rollForwardMonth`/`remapMonths` (closed month earns 0;
+      amount rolls to next open; lifetime total unchanged) — shipped
+      [PR #618](https://github.com/gasyoun/Systema-Sanscriticum/pull/618)
+      (`SalaryPeriodCloseTest`); verified on main 08-08-2026 (H2451).
+      Residual test-order flake tracked separately as H2151 / issue #1055.
     - [ ] block payout ignores refunds (`TeacherSalaryService.php:400`).
   - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071.
 - [ ] After each fix, extend the money-core test suite so the defect cannot regress silently.
