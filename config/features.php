@@ -109,6 +109,17 @@ return [
     'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', false),
 
     /*
+     | FAQ RAG for Helpdesk suggester (H2448 Track B): BM25 top-3 chunks from
+     | resources/knowledge/faq.md with citations before template/LLM.
+     | ВЫКЛ по умолчанию. Requires support_answer_suggester (deploy + admin
+     | toggle) to produce suggestions at all; this flag only adds retrieval.
+     | Money/policy (category D): refuse draft if best BM25 score < threshold
+     | (config support.faq_rag.min_score). Never auto-sends to student.
+     | Enable: FAQ_RAG_SUGGESTER=true + config:cache after review. Flag OFF on prod.
+     */
+    'faq_rag_suggester' => (bool) env('FAQ_RAG_SUGGESTER', false),
+
+    /*
      | Гео/город посетителя веб-чата в панели куратора (H1196, Jivo-паритет
      | Pillar 1). Когда ВКЛ, при первом сообщении посетителя его IP резолвится
      | асинхронно (ResolveVisitorGeoJob → VisitorGeoResolver, драйвер из
