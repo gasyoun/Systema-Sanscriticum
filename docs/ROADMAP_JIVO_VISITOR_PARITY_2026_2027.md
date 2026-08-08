@@ -1,4 +1,4 @@
-# Roadmap: Jivo-паритет веб-чата — visitor intelligence 2026–2027
+# Roadmap: полный JIVO-паритет — visitor intelligence + Support Inbox 2026–2027
 
 _Created: 17-07-2026 · Last updated: 07-08-2026_
 
@@ -23,6 +23,35 @@ _Created: 17-07-2026 · Last updated: 07-08-2026_
 недостающих столпа Jivo + поставить задачи по всем 6 требованиям паритета». Живая проверка
 обоих сайтов (Jivo на samskrtam.ru работает; наш виджет на samskrte.ru работает, Reverb-push
 **подключён в проде** — connState=connected, wsHost=samskrte.ru) выполнена в той же сессии.
+
+## 0. Re-audit 07-08-2026 — visitor parity больше не главный разрыв
+
+Code-grounded source of truth:
+[`support-subsystem-map.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/support-subsystem-map.md),
+а не исходная колонка «как у нас сейчас» в `jivo.md`. После H536/H1196–H1200/H1837/H221/H223:
+
+| Capability | Статус 07-08 | Остаток |
+|---|---|---|
+| Web real-time + guest widget | ✅ | production health входит в H2382 |
+| Visitor geo/presence + operator-first message | ✅ code, flags | privacy/flag/smoke evidence в H2382 |
+| Lead capture + contextual greeting | ✅ code, flags | adoption/readout, не новый build |
+| Unified web/TG/VK read + channel badges | ✅ | no table merge; identity remains `social_accounts` |
+| Inbox tabs + assignment + canned replies | ✅ | не планировать снова |
+| AI suggested reply + summary services | ✅ code, flags | prove operator value; no auto-send |
+| Shared topics + per-channel rollups | ✅ | required topic on close still missing |
+| EdTech context beside chat | 🟡 | payments/promises/discounts/attendance есть; courses/groups/block access/next lesson/recent tickets incomplete |
+| Support follow-up | 🔴 | CRM/academic reminders are not a task-from-dialog workflow |
+| Support→payment/access/attendance outcomes | 🔴 | rollups exist, correlation dashboard missing |
+| Inbound email | 🔴 | H1200 residual; do not mint a duplicate implementation |
+
+**Completion sequence:**
+
+1. [H2381 (Grok 4.5) — Complete JIVO operator workflow with EdTech context, close topics and support follow-ups](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2381-Grok_Systema-Sanscriticum_jivo-operator-workflow-completion_07.08.26.md).
+2. Finish the already-active [H1200 (Sonnet 5) — Jivo parity S5/5 email channel, channel badging and reply-out canary](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1200-Sonnet_Systema-Sanscriticum_jivo-parity-s5of5-email-channel-badging_17.07.26.md) residual; do not duplicate it.
+3. [H2382 (Grok 4.5) — Prove production support parity across the existing JIVO implementation lanes](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2382-Grok_Systema-Sanscriticum_support-parity-production-acceptance_07.08.26.md): flag matrix, approved canaries, channel health and 14-day KPI evidence.
+
+Full product sequencing and kill criteria:
+[`ROADMAP_SYSTEMA_REVENUE_CABINET_EDITORIAL_JIVO_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SYSTEMA_REVENUE_CABINET_EDITORIAL_JIVO_2026H2.md).
 
 ---
 

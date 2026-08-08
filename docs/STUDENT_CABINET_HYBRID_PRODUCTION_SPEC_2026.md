@@ -1,6 +1,13 @@
 # Student cabinet — HYBRID production spec (R29): B-chassis + organs of A/C/D
 
-_Created: 15-07-2026 · Last updated: 15-07-2026_
+_Created: 15-07-2026 · Last updated: 07-08-2026_
+
+> **Build-status correction 07-08-2026.** Phase 0 instrumentation and Phases 1–3
+> product code are on `main`; Phase 4 release packaging is complete in
+> [`CABINET_HYBRID_PHASE4_RELEASE_PACK_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CABINET_HYBRID_PHASE4_RELEASE_PACK_2026.md).
+> The remaining release owner is the already-minted H1582; do not mint/rebuild the chassis.
+> Post-release adoption and revenue-KPI work is
+> [H2380 (Grok 4.5) — Run the post-release cabinet adoption and revenue KPI experiment](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2380-Grok_Systema-Sanscriticum_cabinet-adoption-kpi-experiment_07.08.26.md).
 
 The production ruling of the cabinet-remake programme
 ([H822](https://github.com/gasyoun/Uprava/blob/main/handoffs/H822-Fable_Systema-Sanscriticum_student-cabinet-custdev-ux-remake_12.07.26.md)).
@@ -94,10 +101,10 @@ implementation sessions.
 
 ## 6. Sequence (each step = its own handoff at execution time)
 
-1. **Phase 0 — instrumentation** ([H962](https://github.com/gasyoun/Uprava/blob/main/handoffs/H962-Sonnet_Systema-Sanscriticum_student-cabinet-remake-instrumentation-phase_15.07.26.md), queued).
-2. Phase 1 — chassis: workspace routes + job-nav + home band (+homework item, recovery mode).
-3. Phase 2 — «Записи» shelves + rail + ownership offer; lapse detector.
-4. Phase 3 — «Прогресс» path + completion lighting + вехи in course home.
-5. Phase 4 — flag-flip release per §5; post-release KPI readout vs baseline.
+1. **Phase 0 — ✅ built** ([H962](https://github.com/gasyoun/Uprava/blob/main/handoffs/H962-Sonnet_Systema-Sanscriticum_student-cabinet-remake-instrumentation-phase_15.07.26.md)): baseline instrumentation.
+2. **Phase 1 — ✅ built:** chassis, workspace routes, job-nav, home band and recovery mode.
+3. **Phase 2 — ✅ built:** «Записи» shelves, rail, ownership offer and lapse detector.
+4. **Phase 3 — ✅ built:** «Прогресс» path, completion lighting and вехи in course home.
+5. **Phase 4 — 🟡 packaged / human release gate:** H1582 flag-flip checklist, then H2380 post-release KPI/adoption readout.
 
 _Dr. Mārcis Gasūns_

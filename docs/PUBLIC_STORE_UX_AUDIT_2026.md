@@ -1,6 +1,14 @@
 # UX-аудит публичной витрины и продающих страниц курсов — Systema Sanscriticum
 
-_Created: 07-07-2026 · Last updated: 07-07-2026_
+_Created: 07-07-2026 · Last updated: 07-08-2026_
+
+> **Truth pass 07-08-2026.** Ticket 1 is shipped (the red/pulsing blocker became a calm
+> returning-buyer note); H323 shipped the beginner on-ramp, quiz, level badges, product
+> ladder and social proof; H387 shipped the «Материалы» magazine layer. The remaining
+> code-shaped visual gap is no longer a redesign: it is a browser-verified composition
+> pass over these shipped surfaces plus explicit recorded-library browsing and mobile
+> scroll affordance. Flagship-course content completion remains human/editorial. Current
+> execution owner: [H2379 (Grok 4.5) — Arzamas and Synchronization visual-polish pass over the shipped samskrte.ru funnel](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2379-Grok_Systema-Sanscriticum_arzamas-sinhro-visual-polish-pass_07.08.26.md).
 
 Документ фиксирует UX-аудит публичного каталога (`/online`, `resources/views/shop/index.blade.php`
 + `Livewire\Shop\CourseCatalog`) и продающей страницы курса (`shop.course.show`,
