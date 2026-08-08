@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2474: SECURITY Wave2 lower-severity (MEDIUM/LOW) census.** Re-verified residual H071 pricing/loyalty/salary defects on main (code + tests); durable table [docs/SECURITY_WAVE2_LOWER_SEVERITY_CENSUS_H2474_2026-08-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_WAVE2_LOWER_SEVERITY_CENSUS_H2474_2026-08-08.md). Roadmap lower-severity sub-bullets + parent Land-the-15 ticked (keeps H2471 revenue-leak cite from concurrent verify). Two base-case tests: TeacherBlockPayoutTest::block_group_revenue_excludes_already_paid_share_keys, TeacherAdvanceTest::settle_advances_for_block_payout_applies_fifo_up_to_limit. No money flag flip. Executor: Grok 4.5 (grok-4.5).
+
 ## [1.88.12] - 2026-08-08
 ### Changed
 - **H2471: SECURITY Wave2 re-verify — referral reverse clawback (H071 #12).** On main: `ReferralService::reverseRewardForPayment` + `PaymentObserver` paid→failed/canceled path still present; regression tests `reward_is_clawed_back_when_referred_payment_is_reversed`, `clawback_floors_referrer_credit_at_zero_when_already_spent`, `both_sides_clawback_when_referred_amount_was_granted`. Original fix [PR #258](https://github.com/gasyoun/Systema-Sanscriticum/pull/258). Roadmap revenue-leak sub-bullet ticked. No money code change this PR. Executor: Grok 4.5 (`grok-4.5`).

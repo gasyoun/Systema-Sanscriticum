@@ -174,4 +174,51 @@ class TeacherBlockPayoutTest extends TestCase
 
         $this->assertSame(0.0, $this->service->blockGroupRevenue($course->id, 2, null));
     }
+/** @test */
+    public function block_group_revenue_excludes_already_paid_share_keys(): void
+    {
+        // Регрессия (money-core, H071 lower-severity / H2465): base auto-fill must
+        // skip payment shares already recorded in a prior TeacherPayout breakdown
+        // when teacher_id is passed (paidShareKeys). Without this, re-running a
+        // block payout double-pays the same share.
+        $teacher = Teacher::create(['name' => 'Препод share keys']);
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'salary_type' => 'percent',
+            'salary_value' => 30,
+        ]);
+        for ($n = 1; $n <= 3; $n++) {
+            CourseBlock::create(['course_id' => $course->id, 'number' => $n, 'is_active' => true]);
+        }
+
+        $u1 = User::factory()->create();
+        $u2 = User::factory()->create();
+        $this->pay($course, ['user_id' => $u1->id, 'amount' => 10000, 'tariff' => 'block_2', 'start_block' => 2, 'end_block' => 2]);
+        $this->pay($course, ['user_id' => $u2->id, 'amount' => 10000, 'tariff' => 'block_2', 'start_block' => 2, 'end_block' => 2]);
+
+        $p1 = Payment::query()->where('user_id', $u1->id)->where('course_id', $course->id)->firstOrFail();
+
+        // Prior payout already included u1's share of block 2.
+        $teacher->payouts()->create([
+            'amount' => 3000,
+            'paid_at' => now()->toDateString(),
+            'course_id' => $course->id,
+            'salary_type' => 'percent',
+            'salary_value' => 30,
+            'breakdown' => [
+                'course_id' => $course->id,
+                'block_number' => 2,
+                'payments' => [['payment_id' => $p1->id, 'user_id' => $u1->id]],
+            ],
+        ]);
+
+        // Without teacher_id: both shares still sum (legacy / no dedup context).
+        $this->assertSame(20000.0, $this->service->blockGroupRevenue($course->id, 2, null));
+
+        // With teacher_id: u1 share excluded → only u2's 10000 remains.
+        $this->assertSame(
+            10000.0,
+            $this->service->blockGroupRevenue($course->id, 2, null, ['teacher_id' => $teacher->id]),
+        );
+    }
 }
