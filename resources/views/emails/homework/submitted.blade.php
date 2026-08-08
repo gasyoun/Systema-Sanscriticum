@@ -25,6 +25,12 @@
             <a href="{{ $reviewUrl }}" style="background-color: #d35400; color: #ffffff; padding: 14px 35px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 15px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">Проверить работу</a>
         </div>
 
+        @if(!empty($hasImagesPdfAttachment))
+            <p style="font-size: 14px; color: #5d564f; text-align: center; margin-top: 0;">
+                Все картинки работы — одним PDF во вложении.
+            </p>
+        @endif
+
         <hr style="border: none; border-top: 1px solid #f0e6d2; margin: 36px 0;">
 
         <p style="margin-top: 0; font-size: 14px; color: #95a5a6; text-align: center;">
