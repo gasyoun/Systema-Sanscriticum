@@ -185,6 +185,14 @@ handoff — this roadmap does not restate the findings, it sequences them.
       (`TeacherBlockPayoutTest::block_revenue_subtracts_refund_expense_rows` +
       `block_revenue_floors_at_zero_when_refunds_exceed_revenue`);
       verified on main 08-08-2026 (H2453).
+    - [x] referral credit not clawed on paid→failed/canceled — reverse via
+      `ReferralService::reverseRewardForPayment` from `PaymentObserver` (floor at 0;
+      deletes `ReferralReward` so unique(referred_id) slot reopens) —
+      shipped [PR #258](https://github.com/gasyoun/Systema-Sanscriticum/pull/258)
+      (`ReferralProgramTest::reward_is_clawed_back_when_referred_payment_is_reversed` +
+      `clawback_floors_referrer_credit_at_zero_when_already_spent` +
+      `both_sides_clawback_when_referred_amount_was_granted`);
+      verified on main 08-08-2026 (H2471). No re-implementation — regression present.
   - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071:
     - [x] tariff loyalty wholesale count ignores conditional / 0₽ payments —
       `Tariff::getDiscountPercentForUser` uses `->real()` + `where('amount', '>', 0)` —
