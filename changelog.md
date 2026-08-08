@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.88.12] - 2026-08-08
 ### Changed
 - **H2471: SECURITY Wave2 re-verify — referral reverse clawback (H071 #12).** On main: `ReferralService::reverseRewardForPayment` + `PaymentObserver` paid→failed/canceled path still present; regression tests `reward_is_clawed_back_when_referred_payment_is_reversed`, `clawback_floors_referrer_credit_at_zero_when_already_spent`, `both_sides_clawback_when_referred_amount_was_granted`. Original fix [PR #258](https://github.com/gasyoun/Systema-Sanscriticum/pull/258). Roadmap revenue-leak sub-bullet ticked. No money code change this PR. Executor: Grok 4.5 (`grok-4.5`).
 
