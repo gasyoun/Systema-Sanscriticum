@@ -28,7 +28,9 @@ class HomeworkService
         array $files,
         bool $finalize,
     ): HomeworkSubmission {
-        return DB::transaction(function () use ($student, $lesson, $body, $files, $finalize) {
+        $isResubmission = false;
+
+        $submission = DB::transaction(function () use ($student, $lesson, $body, $files, $finalize, &$isResubmission) {
             $submission = HomeworkSubmission::firstOrNew([
                 'user_id' => $student->id,
                 'lesson_id' => $lesson->id,
@@ -64,12 +66,17 @@ class HomeworkService
 
             $this->attachFiles($comment, $files);
 
-            if ($finalize) {
-                $this->notifyTeacher($submission, $isResubmission);
-            }
-
             return $submission;
         });
+
+        // PDF из картинок — после коммита, до письма: вложение в mail уже готово.
+        // Падение сборки не откатывает сдачу (rebuildQuietly).
+        if ($finalize) {
+            app(HomeworkImagePdfService::class)->rebuildQuietly($submission);
+            $this->notifyTeacher($submission, $isResubmission);
+        }
+
+        return $submission;
     }
 
     /**
@@ -105,6 +112,8 @@ class HomeworkService
 
             $submission->last_activity_at = now();
             $submission->save();
+
+            app(HomeworkImagePdfService::class)->rebuildQuietly($submission->fresh(['comments.files', 'user', 'lesson', 'course']));
         });
     }
 
@@ -138,6 +147,8 @@ class HomeworkService
 
             $submission->last_activity_at = now();
             $submission->save();
+
+            app(HomeworkImagePdfService::class)->rebuildQuietly($submission->fresh(['comments.files', 'user', 'lesson', 'course']));
         });
     }
 
@@ -157,7 +168,7 @@ class HomeworkService
 
         $submission->loadMissing('comments.files');
 
-        return DB::transaction(function () use ($submission, $staff, $reopenForRevision) {
+        $deleted = DB::transaction(function () use ($submission, $staff, $reopenForRevision) {
             $names = [];
 
             foreach ($submission->comments as $comment) {
@@ -200,6 +211,13 @@ class HomeworkService
 
             return $deleted;
         });
+
+        // Картинок больше нет — combined PDF тоже убираем.
+        app(HomeworkImagePdfService::class)->rebuildQuietly(
+            $submission->fresh(['comments.files', 'user', 'lesson', 'course']) ?? $submission
+        );
+
+        return $deleted;
     }
 
     /**
@@ -233,7 +251,7 @@ class HomeworkService
 
         $studentId = (int) $source->user_id;
 
-        return DB::transaction(function () use ($file, $comment, $source, $targetLesson, $actor, $isStaff, $studentId) {
+        $target = DB::transaction(function () use ($file, $comment, $source, $targetLesson, $actor, $isStaff, $studentId) {
             $target = HomeworkSubmission::firstOrNew([
                 'user_id' => $studentId,
                 'lesson_id' => $targetLesson->id,
@@ -296,8 +314,14 @@ class HomeworkService
             $source->last_activity_at = now();
             $source->save();
 
-            return $target->fresh(['comments.files', 'lesson', 'course']);
+            return $target->fresh(['comments.files', 'lesson', 'course', 'user']);
         });
+
+        $pdf = app(HomeworkImagePdfService::class);
+        $pdf->rebuildQuietly($source->fresh(['comments.files', 'user', 'lesson', 'course']) ?? $source);
+        $pdf->rebuildQuietly($target->fresh(['comments.files', 'user', 'lesson', 'course']));
+
+        return $target;
     }
 
     /**

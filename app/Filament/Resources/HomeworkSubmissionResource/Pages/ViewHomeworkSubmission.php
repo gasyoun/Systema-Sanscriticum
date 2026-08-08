@@ -5,6 +5,7 @@ namespace App\Filament\Resources\HomeworkSubmissionResource\Pages;
 use App\Filament\Resources\HomeworkSubmissionResource;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
+use App\Services\HomeworkImagePdfService;
 use App\Services\HomeworkService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -58,6 +59,22 @@ class ViewHomeworkSubmission extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('downloadImagesPdf')
+                ->label('Картинки → PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
+                ->url(fn (): string => route('homework.submission.images-pdf', $this->getRecord()))
+                ->openUrlInNewTab()
+                ->visible(function (): bool {
+                    if (! HomeworkSubmissionResource::canReview($this->getRecord())) {
+                        return false;
+                    }
+
+                    return app(HomeworkImagePdfService::class)
+                        ->studentImageFiles($this->getRecord())
+                        ->isNotEmpty();
+                }),
+
             Action::make('accept')
                 ->label('Принять')
                 ->icon('heroicon-o-check-circle')

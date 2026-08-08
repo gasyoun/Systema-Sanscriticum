@@ -9,6 +9,7 @@ use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
 use App\Models\Payment;
+use App\Services\HomeworkImagePdfService;
 use App\Services\HomeworkService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -140,6 +141,32 @@ class HomeworkController extends Controller
         abort_unless(Storage::disk($file->disk)->exists($file->path), 404);
 
         return Storage::disk($file->disk)->download($file->path, $file->original_name);
+    }
+
+    /**
+     * Один PDF со всеми студенческими картинками сдачи (H2455).
+     * Штат и владелец-студент. Нет PDF — 404 (нет картинок или сборка не удалась).
+     */
+    public function downloadImagesPdf(Request $request, HomeworkSubmission $submission)
+    {
+        $user = $request->user();
+        $submission->loadMissing(['course', 'lesson', 'user', 'comments.files']);
+
+        $isOwner = (int) $submission->user_id === (int) $user->id;
+        $isStaff = $this->service->actorIsStaffFor($user, $submission);
+        abort_unless($isOwner || $isStaff, 403);
+
+        $pdf = app(HomeworkImagePdfService::class);
+        if (! $pdf->exists($submission)) {
+            // Ленивая досборка: старые сдачи до деплоя или сбой при submit.
+            $pdf->rebuildQuietly($submission);
+        }
+        abort_unless($pdf->exists($submission), 404, 'PDF с картинками пока нет.');
+
+        return Storage::disk(HomeworkImagePdfService::DISK)->download(
+            $pdf->pathFor($submission),
+            $pdf->downloadName($submission),
+        );
     }
 
     /**
