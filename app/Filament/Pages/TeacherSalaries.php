@@ -1247,6 +1247,8 @@ class TeacherSalaries extends Page implements HasTable
             'paid_all_time' => 0.0,
             'balance' => 0.0,
             'advances_outstanding' => 0.0,
+            'last_paid_at' => null,
+            'days_since_last_payout' => null,
         ];
     }
 
@@ -1360,6 +1362,38 @@ class TeacherSalaries extends Page implements HasTable
                     ->badge()
                     ->getStateUsing(fn (Model $r): string => $this->money($this->salaryFor((int) $r->id)['balance']))
                     ->color(fn (Model $r): string => $this->salaryFor((int) $r->id)['balance'] > 0 ? 'warning' : 'success'),
+
+                Tables\Columns\TextColumn::make('days_since_last_payout')
+                    ->label('Дней без выплаты')
+                    ->alignCenter()
+                    ->visible(fn (): bool => RoleGate::accounting())
+                    ->getStateUsing(function (Model $r): string {
+                        $days = $this->salaryFor((int) $r->id)['days_since_last_payout'];
+
+                        return $days === null ? '—' : (string) $days;
+                    })
+                    ->color(function (Model $r): string {
+                        $days = $this->salaryFor((int) $r->id)['days_since_last_payout'];
+                        if ($days === null) {
+                            return 'gray';
+                        }
+
+                        return match (true) {
+                            $days >= 30 => 'danger',
+                            $days >= 14 => 'warning',
+                            default => 'gray',
+                        };
+                    })
+                    ->tooltip(function (Model $r): ?string {
+                        $row = $this->salaryFor((int) $r->id);
+                        if (empty($row['last_paid_at'])) {
+                            return 'Выплат ещё не было.';
+                        }
+
+                        $date = Carbon::parse($row['last_paid_at'])->format('d.m.Y');
+
+                        return 'Последняя выплата: '.$date.' · '.$this->money($row['paid_all_time']).' всего выплачено';
+                    }),
 
                 Tables\Columns\TextColumn::make('advances_outstanding')
                     ->label('Авансы (не зачтены)')
