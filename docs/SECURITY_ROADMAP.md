@@ -1,6 +1,6 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 08-08-2026_
+_Created: 03-07-2026 · Last updated: 09-08-2026_
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
@@ -218,7 +218,7 @@ non-reversed payment.
 **Unblocked by:** Wave 2 (institutionalize the review that produced the Wave-2 list; wire SAST
 once the known-defect backlog is drained so the baseline is clean).
 
-- [ ] **PHP SAST in CI** (D4): add a `semgrep` job with the PHP + Laravel security rulesets to
+- [x] **PHP SAST in CI** (D4): add a `semgrep` job with the PHP + Laravel security rulesets to
   [.github/workflows](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/.github/workflows),
   and/or `larastan/larastan` at a security-focused level. Start advisory (non-blocking) to
   triage the false-positive rate, then make it required once tuned. Fills the gap CodeQL
@@ -226,10 +226,18 @@ once the known-defect backlog is drained so the baseline is clean).
   - ✅ **Semgrep job added** (07-07-2026, Sonnet 5 `claude-sonnet-5`):
     [.github/workflows/semgrep.yml](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/semgrep.yml),
     `p/php` + `p/security-audit` + `p/owasp-top-ten` rulesets, `continue-on-error: true`
-    (advisory). **Still open:** ~2-week triage window, then flip to required and
-    document any dismissed rules (mirror `/cologne-alert-triage`). Larastan not
-    added — Semgrep's Laravel ruleset judged sufficient coverage to start; revisit
-    if the triage shows thin Laravel-specific sink coverage.
+    (advisory).
+  - ✅ **Triaged and promoted to required** (13-07-2026, Opus 4.8 `claude-opus-4-8`,
+    [H885](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H885-Opus_Systema-Sanscriticum_semgrep-sast-required-gate_13.07.26.md),
+    [PR #509](https://github.com/gasyoun/Systema-Sanscriticum/pull/509)): the 18
+    advisory findings were all non-PHP-source (`github-actions-mutable-action-tag`
+    ×13, `dependabot-missing-cooldown`, `plaintext-http-link` in a stray committed
+    nginx default page) — fixed by pinning Action `uses:` to commit SHAs, adding a
+    7-day Dependabot cooldown, and removing the stray HTML file. `semgrep.yml` then
+    dropped `continue-on-error` and added `--error`; "Semgrep scan" is now a required
+    branch-protection check on `main` (verified 09-08-2026). Larastan not added —
+    Semgrep's Laravel ruleset judged sufficient coverage; revisit if a future triage
+    shows thin Laravel-specific sink coverage.
 - [x] **Institutionalize the adversarial money-core review** (D4) — ✅ done
   (07-07-2026, Sonnet 5 `claude-sonnet-5`): the 02-07 multi-agent finder+verifier
   run is now a committed, repeatable harness —
