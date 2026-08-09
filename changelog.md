@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.88.17] - 2026-08-09
 ### Added
 - **H2316 TeacherSalaries: «Дней без выплаты» (accounting-only).** Новая колонка в таблице `/admin/teacher-salaries` — целых дней с `MAX(paid_at)` по всем `TeacherPayout` (regular + advance); «—» если выплат нет; желтый ≥14 д., красный ≥30 д.; тултип с датой и суммой всего выплачено. Видимость за `RoleGate::accounting()` (бухгалтер + супер-админ). Батч-запрос в `TeacherSalaryService::summaryForAll()`, нет N+1. Документировано в [`docs/accountant-guide.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/accountant-guide.md) §3.1. Executor: Sonnet 5 (`claude-sonnet-5`).
 
