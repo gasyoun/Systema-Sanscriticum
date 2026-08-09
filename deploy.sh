@@ -21,6 +21,7 @@ DEPLOY_LOG="storage/logs/deploys.log"
 
 USE_DOWN=0
 ROLLBACK_TO=""
+DEPLOY_SOFT_FAIL=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --down) USE_DOWN=1 ;;
@@ -39,8 +40,9 @@ done
 
 cd "$APP_DIR"
 
-say() { printf '\n\033[1;36m▶ %s\033[0m\n' "$*"; }
+say()  { printf '\n\033[1;36m▶ %s\033[0m\n' "$*"; }
 fail() { printf '\n\033[1;31m✖ %s\033[0m\n' "$*"; exit 1; }
+warn() { printf '\n\033[1;33m⚠ %s\033[0m\n' "$*"; }
 
 # ── 0. Предполётные проверки ─────────────────────────────────────────────────
 say "Предполётные проверки в $APP_DIR"
@@ -190,7 +192,7 @@ php artisan optimize:clear
 # Кеш Filament-компонентов optimize:clear НЕ трогает (bootstrap/cache/filament/);
 # без явного сброса новый виджет/страница ловит ComponentNotFoundException на
 # первом же update-запросе (см. docs/deploy.md, гочка LeadCostRangeWidget).
-php artisan filament:optimize-clear 2>/dev/null || true
+php artisan filament:optimize-clear 2>/dev/null || { warn "filament:optimize-clear failed — Filament component cache may be stale"; DEPLOY_SOFT_FAIL=1; }
 
 # На rollback команды может ещё не быть в старом коммите. Обычный деплой
 # проверяем ДО maintenance-mode и необратимых миграций.
@@ -201,7 +203,7 @@ fi
 
 if [ "$USE_DOWN" = 1 ]; then
   say "php artisan down"
-  php artisan down --retry=15 || true
+  php artisan down --retry=15 || { warn "artisan down --retry=15 failed — maintenance page may not have loaded"; DEPLOY_SOFT_FAIL=1; }
 fi
 
 if [ -n "$ROLLBACK_TO" ]; then
@@ -213,7 +215,7 @@ fi
 # ── 4. Прогрев кэшей под прод ────────────────────────────────────────────────
 say "Прогрев кэшей (config/route/view + filament)"
 php artisan optimize
-php artisan filament:optimize 2>/dev/null || true
+php artisan filament:optimize 2>/dev/null || { warn "filament:optimize failed — Filament caches not warmed"; DEPLOY_SOFT_FAIL=1; }
 
 # ── 5. OPcache: reload php-fpm (КРИТИЧНО — validate_timestamps=0) ───────────
 PHP_VER=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
@@ -302,4 +304,11 @@ if [ "$GUARDS_DRIFT" = 1 ]; then
   printf '\033[1;33m%s\033[0m\n' "  Следующий шаг: sudo bash scripts/server_guards_apply.sh && php artisan guards:verify"
   printf '\033[1;33m%s\033[0m\n' "  Exit 0 (issue #1143) — auto-deploy must not rollback managed-file drift"
   exit 0
+fi
+
+# H2305: soft-step failures exit non-zero so systema-auto-deploy-run.sh can
+# distinguish a clean deploy from one with degraded cache/maintenance state.
+if [ "$DEPLOY_SOFT_FAIL" = 1 ]; then
+  printf '\n\033[1;31m%s\033[0m\n' "✖ One or more optional deploy steps failed — see ⚠ warnings above"
+  exit 1
 fi
