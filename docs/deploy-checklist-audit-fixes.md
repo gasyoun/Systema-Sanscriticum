@@ -30,7 +30,7 @@ npm ci && npm run build             # если фронт собирается �
 php artisan optimize:clear
 php artisan config:cache
 php artisan filament:optimize-clear && php artisan filament:optimize   # новые Filament-ресурсы
-systemctl restart php8.2-fpm        # opcache
+systemctl restart php8.3-fpm        # opcache
 supervisorctl restart horizon       # именно так, НЕ horizon:terminate
 ps aux | grep '[h]orizon'           # проверить, что START обновился
 ```
