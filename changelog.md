@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2478 (Wave 4 doc-close): SECURITY_ROADMAP Wave 4 PHP 8.3 + Laravel 12 items closed.** PHP 8.3 runtime confirmed shipped — `composer.json` requires `^8.3`, CI tests PHP 8.3 only, prod runs PHP 8.3.32 live (nginx `php8.3-fpm.sock`, Horizon workers, confirmed 09-08-2026). Laravel reached v12.64.0 (via H862/H2477, far exceeding the 10→11 roadmap target). `SECURITY_ROADMAP.md` Wave 4 checklist items `[x]`; `deploy-checklist-audit-fixes.md` stale `php8.2-fpm` ref corrected to `php8.3-fpm`. Executor: Sonnet 5 (`claude-sonnet-5`).
+
 ## [1.88.13] - 2026-08-09
 ### Changed
 - **H2475: SECURITY Wave3 Semgrep triage residual closed (already done).** [docs/SECURITY_ROADMAP.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_ROADMAP.md) Wave 3 SAST checklist item said "still open: ~2-week triage window, then flip to required" — stale. Verified on `main`: `semgrep.yml` has had `--error` (no `continue-on-error`) since [PR #509](https://github.com/gasyoun/Systema-Sanscriticum/pull/509) (H885, 13-07-2026), and "Semgrep scan" is a required branch-protection check today. Checkbox ticked, roadmap prose updated to point at H885; no code/CI change. Executor: Sonnet 5 (`claude-sonnet-5`).

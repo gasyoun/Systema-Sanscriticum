@@ -260,10 +260,16 @@ merge; the adversarial review is a scheduled, documented step rather than a one-
 **Unblocked by:** Wave 3 (a clean SAST baseline and green money-core tests de-risk the upgrade).
 Overlaps the general roadmap's Laravel-11 item — this track owns the **security** rationale.
 
-- [ ] **Laravel 10 to 11** — off the security-EOL framework onto a supported release line.
-  Gate on the full suite green + the Wave-3 SAST baseline.
-- [ ] **PHP 8.2 to 8.3** (tracked in
-  [docs/php-8.3-upgrade.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/php-8.3-upgrade.md)).
+- [x] **Laravel 10 to 12** — ✅ done (H862 + H2477, reached Laravel 12 directly):
+  `composer.json` requires `"laravel/framework": "^12.61.1"`, current HEAD `91e216da`
+  (v12.64.0). Supersedes the 10→11 roadmap target.
+- [x] **PHP 8.2 to 8.3** — ✅ done (05-07-2026, [PR #298](https://github.com/gasyoun/Systema-Sanscriticum/pull/298);
+  H2478 doc-close 09-08-2026): `composer.json` requires `php: "^8.3"` with
+  `config.platform.php: "8.3.0"`; CI matrix `php: ["8.3"]` only
+  ([.github/workflows/ci.yml](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/ci.yml));
+  prod nginx serves via `php8.3-fpm.sock`, php-fpm and Horizon workers run PHP 8.3.32
+  (confirmed live 09-08-2026). Runbook:
+  [docs/php-8.3-upgrade.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/php-8.3-upgrade.md) (superseded/historical).
 - [ ] **Dependency posture review** — audit `composer.lock`/`package-lock.json` for abandoned or
   known-vulnerable packages once Dependabot alerts populate; pin and update.
 - [ ] **Deploy-surface review** — confirm `deploy.sh` / `docker-compose.yml` never echo secrets
