@@ -505,6 +505,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('weekly-backup-clean');
 
+        // Daily destination health check (H2303): alerts via configured notification
+        // channels if any destination is Unreachable or Unhealthy. Runs independently
+        // of the weekly backup:run so a broken destination surfaces within 24 h.
+        $schedule->command('backup:monitor')
+            ->dailyAt('04:35')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('backup-destination-health');
+
         // --- FAQ-СУГГЕСТЕР ОТВЕТОВ (H247, тикет S3) ---
         // Regex-префильтр поверх веб-чата и TG-support находит фактологические
         // вопросы (Zoom/записи/расписание) и собирает факт-черновик ответа из LMS —
