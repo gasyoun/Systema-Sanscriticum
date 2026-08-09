@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [1.88.18] - 2026-08-09
+
+### Fixed
+- **H2305 deploy-safety: specs 9–12 + D4.** `SoftAutoDeployRemediator` now refuses classification when `gitFetchQuiet()` fails even if a stale origin ref exists (classifying against stale data could silently discard divergent files); backs up the working-tree file to `storage/app/soft_remediate_backups/<timestamp>/` before any `checkoutPath` discard. `systema-auto-deploy-run.sh` adds a `STALL_FILE` counter (`incr_stall`) that trips the breaker after `MAX_STALL` (default 5) consecutive silent exits on lock-unwritable / lock-held / git-fetch-failed paths; the `RETRIES_FILE` write is fatalized so storage-full can no longer hide silently. `deploy.yml` missing-secret checks now `exit 1` with `::error::` instead of silently skipping the deploy as green; `ssh-keyscan 2>/dev/null` removed; `known_hosts` emptiness assertion added. `deploy.sh` replaces three `|| true` guards on optional Filament/artisan steps with `warn()` + `DEPLOY_SOFT_FAIL=1`, exiting 1 at end when any soft step failed (after the `GUARDS_DRIFT` exit-0 block so issue [#1143](https://github.com/gasyoun/Systema-Sanscriticum/issues/1143) priority is preserved). D4: `docs/deploy.md` prod host IP corrected (`31.129.104.252` → `193.232.229.92`). Two new PHPUnit regression tests. Executor: Sonnet 5 (`claude-sonnet-5`).
+
 ## [1.88.17] - 2026-08-09
 ### Added
 - **H2316 TeacherSalaries: «Дней без выплаты» (accounting-only).** Новая колонка в таблице `/admin/teacher-salaries` — целых дней с `MAX(paid_at)` по всем `TeacherPayout` (regular + advance); «—» если выплат нет; желтый ≥14 д., красный ≥30 д.; тултип с датой и суммой всего выплачено. Видимость за `RoleGate::accounting()` (бухгалтер + супер-админ). Батч-запрос в `TeacherSalaryService::summaryForAll()`, нет N+1. Документировано в [`docs/accountant-guide.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/accountant-guide.md) §3.1. Executor: Sonnet 5 (`claude-sonnet-5`).
