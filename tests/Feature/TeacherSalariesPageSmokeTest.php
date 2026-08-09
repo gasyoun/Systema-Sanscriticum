@@ -59,6 +59,36 @@ class TeacherSalariesPageSmokeTest extends TestCase
         $this->actingAs($manager)->get('/admin/teacher-salaries')->assertForbidden();
     }
 
+    public function test_days_since_last_payout_column_is_visible_to_accountant_and_shows_state(): void
+    {
+        $accountant = User::factory()->create(['role' => Roles::ACCOUNTANT]);
+        $teacher = Teacher::create(['name' => 'Иван Преподавалов']);
+        Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'salary_type' => 'percent',
+            'salary_value' => 10,
+        ]);
+        $teacher->payouts()->create([
+            'amount' => 1000,
+            'paid_at' => now()->subDays(7)->toDateString(),
+        ]);
+
+        Livewire::actingAs($accountant)
+            ->test(TeacherSalaries::class)
+            ->assertSee('Дней без выплаты')
+            ->assertSee('7');
+    }
+
+    public function test_days_since_last_payout_shows_em_dash_without_any_payout(): void
+    {
+        $accountant = User::factory()->create(['role' => Roles::ACCOUNTANT]);
+        Teacher::create(['name' => 'Без выплат']);
+
+        Livewire::actingAs($accountant)
+            ->test(TeacherSalaries::class)
+            ->assertSee('—');
+    }
+
     public function test_widget_period_follows_the_table_filter(): void
     {
         $accountant = User::factory()->create(['role' => Roles::ACCOUNTANT]);

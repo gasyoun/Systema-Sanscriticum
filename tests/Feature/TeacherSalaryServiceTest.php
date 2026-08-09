@@ -8,9 +8,11 @@ use App\Models\Course;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\Teacher;
+use App\Models\TeacherPayout;
 use App\Models\User;
 use App\Services\TeacherSalaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class TeacherSalaryServiceTest extends TestCase
@@ -246,5 +248,82 @@ class TeacherSalaryServiceTest extends TestCase
         $summary = $this->service->summaryForAll(now()->format('Y-m'));
 
         $this->assertSame(1500.0, $summary[$teacher->id]['paid_period']);
+    }
+
+    /** @test */
+    public function summary_reports_days_since_last_payout_for_recent_payment(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $teacher->payouts()->create([
+            'amount' => 1000,
+            'paid_at' => now()->subDays(5)->toDateString(),
+        ]);
+
+        $summary = $this->service->summaryForAll(now()->format('Y-m'));
+        $row = $summary[$teacher->id];
+
+        $this->assertSame(5, $row['days_since_last_payout']);
+        $this->assertIsInt($row['days_since_last_payout']);
+        $this->assertSame(now()->subDays(5)->toDateString(), $row['last_paid_at']);
+    }
+
+    /** @test */
+    public function summary_reports_null_days_since_last_payout_without_any_payout(): void
+    {
+        $teacher = Teacher::create(['name' => 'Без выплат']);
+
+        $summary = $this->service->summaryForAll(now()->format('Y-m'));
+        $row = $summary[$teacher->id];
+
+        $this->assertNull($row['days_since_last_payout']);
+        $this->assertNull($row['last_paid_at']);
+    }
+
+    /** @test */
+    public function summary_days_since_last_payout_uses_the_most_recent_of_regular_and_advance_payouts(): void
+    {
+        $teacher = Teacher::create(['name' => 'Препод']);
+        // Старая обычная выплата.
+        $teacher->payouts()->create([
+            'amount' => 1000,
+            'type' => TeacherPayout::TYPE_REGULAR,
+            'paid_at' => now()->subDays(20)->toDateString(),
+        ]);
+        // Более свежий аванс — должен «победить» в MAX(paid_at) (правило
+        // handoff-а: считаем по выплатам любого типа, не только regular).
+        $teacher->payouts()->create([
+            'amount' => 500,
+            'type' => TeacherPayout::TYPE_ADVANCE,
+            'paid_at' => now()->subDays(3)->toDateString(),
+        ]);
+
+        $summary = $this->service->summaryForAll(now()->format('Y-m'));
+        $row = $summary[$teacher->id];
+
+        $this->assertSame(3, $row['days_since_last_payout']);
+    }
+
+    /** @test */
+    public function summary_days_since_last_payout_counts_correctly_across_a_month_boundary(): void
+    {
+        // Регресс на границу дат (issue #935/H1996: toDateString() терял
+        // выплаты последнего дня окна). Здесь MAX(paid_at) не оконный, но
+        // выплата в последний календарный день месяца не должна «съезжать»
+        // на день из-за отсечения времени/часового пояса при парсинге.
+        Carbon::setTestNow(Carbon::create(2026, 2, 3, 10, 0, 0));
+
+        $teacher = Teacher::create(['name' => 'Препод']);
+        $teacher->payouts()->create([
+            'amount' => 1000,
+            'paid_at' => '2026-01-31',
+        ]);
+
+        $summary = $this->service->summaryForAll(now()->format('Y-m'));
+        $row = $summary[$teacher->id];
+
+        $this->assertSame('2026-01-31', $row['last_paid_at']);
+        $this->assertSame(3, $row['days_since_last_payout']);
+
+        Carbon::setTestNow();
     }
 }
