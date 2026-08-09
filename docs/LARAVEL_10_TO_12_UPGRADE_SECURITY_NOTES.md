@@ -54,14 +54,45 @@ Three dated consequences, all load-bearing for Wave 4's exit criterion:
   already pins 8.3 in CI, composer platform, and production — the usual blocker for a major
   Laravel bump is absent here.
 
-## Successor: the 12 → 13 move
+## Successor: the 12 → 13 move — audit done, two blockers found (H2506, 09-08-2026)
 
-Minted this pass as **H2506** (Opus 5) — *SECURITY Wave4: Laravel 12 to 13 upgrade*. Its first
-step is a **gating** package-compatibility audit (Filament `^3.0` and its five plugins, Horizon,
-Reverb, Sanctum, Socialite, `spatie/laravel-backup`, `danog/madelineproto`, dompdf, paratest
-`^7` / PHPUnit `^11`): if Filament blocks 13.x, the Filament major upgrade becomes its own
-handoff rather than being forced with `--ignore-platform-reqs`. Deadline is **24-02-2027**
-(security-fix end for 12), not 13-08-2026 — so the successor is schedulable, not urgent.
+**H2506** (Opus 5) ran the gating package-compatibility audit as its Step 1. Verdict:
+**INCONCLUSIVE-with-evidence** — the blocker is **not** core Filament (the audit's original
+framing) but two specific plugins with no Laravel-13-compatible release.
+
+Method: authoritative composer dependency resolution, not speculation —
+`composer require laravel/framework:^13.0 laravel/tinker:^3.0 -W --dry-run` in an isolated
+worktree, followed by isolation testing (temporarily removing suspect packages and re-running
+the dry-run) to confirm exactly which packages are load-bearing for the conflict.
+
+| Package | Constraint | Locked | Laravel 13 status | Fix path |
+|---|---|---|---|---|
+| `laravel/tinker` | `^2.8` | v2.11.1 | v3.0.0+ already supports `illuminate/support ^13.0` | trivial — bump constraint to `^3.0` |
+| `filament/filament` (core) | `^3.0` | v3.3.54 | already supports `illuminate/contracts ^10.45\|^11.0\|^12.0\|^13.0` | none needed — core is **not** a blocker |
+| `mokhosh/filament-kanban` | `^2.11` | v2.11.0 | no released version supports `illuminate/contracts` beyond `^12.0`; repo active (pushed 2026-06-22) but no `^13` release, PR, or issue | needs a fixed upstream release, a fork/patch, or a replacement package |
+| `saade/filament-fullcalendar` | `^3.0` | v3.2.4 | latest **stable** caps at `illuminate/contracts ^12.0`; the only `^13.0`-capable release is `v4.0.0-beta7`, which itself requires `filament/filament ^4.0\|^5.0` | wait for a stable v4/v5-track release, or accept the Filament-major bump as this plugin's specific fix path |
+
+Every other package in the require/require-dev block — Horizon, Reverb, Sanctum, Socialite
+(+ vkontakte/yandex providers), `spatie/laravel-backup`, `danog/madelineproto`, dompdf,
+`jenssegers/agent`, `flysystem-webdav`, `awcodes/filament-tiptap-editor`, and require-dev
+(paratest `^7`, PHPUnit `^11`, Pint, Mockery, Collision, Ignition, Faker, Sail) — resolved
+cleanly in the same dry-run. With both blocking plugins temporarily removed, the full
+`laravel/framework:^13.0` + `laravel/tinker:^3.0` resolution succeeds: "Lock file operations: 0
+installs, 13 updates, 2 removals" (framework v12.64.0→v13.0.0, tinker v2.11.1→v3.0.0, plus
+routine patch bumps to brick/math, guzzlehttp/guzzle+promises, laravel/prompts,
+league/commonmark, nesbot/carbon, symfony/console+http-foundation+http-kernel+mime+translation),
+with **no security vulnerability advisories** in the resulting lock.
+
+`mokhosh/filament-kanban` is used in 6 app files (`DealKanbanBoard.php`, `LeadKanbanBoard.php`,
+`UnifiedSalesBoard.php`, `WorkQueue.php`, the `Deal` and `Lead` models); `saade/filament-fullcalendar`
+in 3 (`CalendarPage.php`, `ScheduleCalendarWidget.php`, `AdminPanelProvider.php`).
+
+Per H2506's own stop condition, the framework bump was **not** attempted — chaining the
+Laravel 13 move with a Filament-major bump (needed only for the fullcalendar plugin) in one
+pass was explicitly out of scope. H2506 closed **INCONCLUSIVE-with-evidence**; a narrowly
+scoped successor was minted to unblock specifically these two plugins (not a blanket Filament
+v4/v5 upgrade — core Filament needs no change). Deadline remains **24-02-2027** (security-fix
+end for 12), not 13-08-2026 — schedulable, not urgent.
 
 ## What proves "money-core suite green"
 
@@ -80,10 +111,10 @@ platform via [.github/workflows/ci.yml](https://github.com/gasyoun/Systema-Sansc
 - The Laravel version facts come from `composer.json` / `composer.lock` / the live prod
   probe. No local test run backs this note: this checkout has no `vendor/`, so the suite
   evidence is CI on `main`, not a local execution.
-- Package-level readiness for Laravel 13 is **unverified** — Filament `^3.0`, Horizon
-  `^5.46`, Reverb `^1.10`, Sanctum `^4.0`, and the Filament plugin set each need a
-  compatibility check before a 13 upgrade is scheduled. That check is the first step of the
-  successor handoff, not a conclusion of this one.
+- Package-level readiness for Laravel 13 is now **verified** (H2506, above) — Filament
+  `^3.0` core, Horizon, Reverb, Sanctum, Socialite, and the rest of the plugin set resolve
+  cleanly; only `mokhosh/filament-kanban` and `saade/filament-fullcalendar` block, per the
+  table above. The residual is scoped to those two packages, not a blanket audit.
 - The two remaining Wave-4 items (dependency posture review, deploy-surface review) are
   untouched by this note.
 
