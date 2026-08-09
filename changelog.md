@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.88.13] - 2026-08-09
+### Changed
+- **H2475: SECURITY Wave3 Semgrep triage residual closed (already done).** [docs/SECURITY_ROADMAP.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_ROADMAP.md) Wave 3 SAST checklist item said "still open: ~2-week triage window, then flip to required" — stale. Verified on `main`: `semgrep.yml` has had `--error` (no `continue-on-error`) since [PR #509](https://github.com/gasyoun/Systema-Sanscriticum/pull/509) (H885, 13-07-2026), and "Semgrep scan" is a required branch-protection check today. Checkbox ticked, roadmap prose updated to point at H885; no code/CI change. Executor: Sonnet 5 (`claude-sonnet-5`).
+
 ## [1.88.12] - 2026-08-08
 ### Changed
 - **H2471: SECURITY Wave2 re-verify — referral reverse clawback (H071 #12).** On main: `ReferralService::reverseRewardForPayment` + `PaymentObserver` paid→failed/canceled path still present; regression tests `reward_is_clawed_back_when_referred_payment_is_reversed`, `clawback_floors_referrer_credit_at_zero_when_already_spent`, `both_sides_clawback_when_referred_amount_was_granted`. Original fix [PR #258](https://github.com/gasyoun/Systema-Sanscriticum/pull/258). Roadmap revenue-leak sub-bullet ticked. No money code change this PR. Executor: Grok 4.5 (`grok-4.5`).
