@@ -1,0 +1,245 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use App\Filament\Pages\CourseDesignAssets;
+use App\Models\Course;
+use App\Models\CourseDesignAsset;
+use App\Models\User;
+use App\Services\Design\CourseDesignAssetService;
+use App\Support\Roles;
+use Filament\Facades\Filament;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+/**
+ * Доступы к «Дизайну курсов»: admin + manager (super_admin — через RoleGate).
+ *
+ * Отдельно закреплено, что выдача PSD НЕ висит на /force-download: тот пускает
+ * по legacy-флагу is_admin, и manager — ради которого страница и делалась —
+ * через него не прошёл бы.
+ */
+class CourseDesignAccessTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Storage::fake('public');
+        Storage::fake('local');
+    }
+
+    private function user(?string $role): User
+    {
+        return User::factory()->create(['role' => $role]);
+    }
+
+    /** @test */
+    public function admin_manager_and_super_admin_reach_the_page(): void
+    {
+        foreach ([Roles::ADMIN, Roles::MANAGER, Roles::SUPER_ADMIN] as $role) {
+            $this->actingAs($this->user($role));
+            $this->assertTrue(CourseDesignAssets::canAccess(), $role.' должен видеть страницу');
+        }
+    }
+
+    /** @test */
+    public function teacher_accountant_and_student_do_not_reach_the_page(): void
+    {
+        foreach ([Roles::TEACHER, Roles::ACCOUNTANT, null] as $role) {
+            $this->actingAs($this->user($role));
+            $this->assertFalse(CourseDesignAssets::canAccess(), ($role ?? 'студент').' не должен видеть страницу');
+        }
+    }
+
+    /**
+     * Рендер матрицы целиком: колонки форматов, бейджи и подсказки собираются
+     * из замыканий, которые падают только при отрисовке, а не при загрузке
+     * класса. Курс с дырой и курс без единого баннера — обе ветки.
+     *
+     * @test
+     */
+    public function the_matrix_renders_for_a_manager(): void
+    {
+        $filled = Course::factory()->create(['title' => 'Курс с баннером', 'is_active' => true]);
+        Course::factory()->create(['title' => 'Курс без баннеров', 'is_active' => true]);
+
+        app(CourseDesignAssetService::class)->store(
+            $filled,
+            '16:9',
+            UploadedFile::fake()->image('b.jpg', 1600, 900),
+            'https://disk.example/psd',
+            null,
+            $this->user(Roles::ADMIN),
+        );
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($this->user(Roles::MANAGER));
+
+        Livewire::test(CourseDesignAssets::class)
+            ->assertOk()
+            ->assertSee('Курс с баннером')
+            ->assertSee('Курс без баннеров')
+            ->assertSee('16:9');
+    }
+
+    /**
+     * Главный рабочий режим страницы: «покажи, где дыры». Фильтр обязан отсечь
+     * полностью укомплектованный курс и оставить курс с недостающим форматом.
+     *
+     * @test
+     */
+    public function the_incomplete_filter_shows_exactly_the_courses_with_gaps(): void
+    {
+        $complete = Course::factory()->create(['title' => 'Полностью готов', 'is_active' => true]);
+        $partial = Course::factory()->create(['title' => 'Не хватает форматов', 'is_active' => true]);
+        $actor = $this->user(Roles::ADMIN);
+        $service = app(CourseDesignAssetService::class);
+
+        foreach ((array) config('design_assets.formats') as $format) {
+            $service->store($complete, (string) $format, UploadedFile::fake()->image('b.jpg', 1600, 900), 'https://disk.example/x', null, $actor);
+        }
+        $service->store($partial, '16:9', UploadedFile::fake()->image('b.jpg', 1600, 900), 'https://disk.example/y', null, $actor);
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($this->user(Roles::MANAGER));
+
+        Livewire::test(CourseDesignAssets::class)
+            ->filterTable('incomplete', true)
+            ->assertCanSeeTableRecords([$partial])
+            ->assertCanNotSeeTableRecords([$complete]);
+
+        Livewire::test(CourseDesignAssets::class)
+            ->filterTable('incomplete', false)
+            ->assertCanSeeTableRecords([$complete])
+            ->assertCanNotSeeTableRecords([$partial]);
+    }
+
+    /**
+     * Действие загрузки целиком: модалка → сервис → строка в БД → файл на диске.
+     * Проверяет проводку формы, а не только сервис (его гоняет отдельный тест).
+     *
+     * @test
+     */
+    public function the_upload_action_fills_a_slot(): void
+    {
+        $course = Course::factory()->create(['is_active' => true]);
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($this->user(Roles::MANAGER));
+
+        Livewire::test(CourseDesignAssets::class)
+            ->callTableAction('upload', $course, [
+                'format' => '9:16',
+                'image' => [UploadedFile::fake()->image('story.jpg', 1080, 1920)],
+                'psd_url' => 'https://disk.example/story',
+            ])
+            ->assertHasNoTableActionErrors();
+
+        $asset = CourseDesignAsset::where('course_id', $course->id)->where('format', '9:16')->first();
+
+        $this->assertNotNull($asset, 'слот должен появиться после действия');
+        $this->assertSame('https://disk.example/story', $asset->psd_url);
+        Storage::disk('public')->assertExists($asset->path);
+    }
+
+    /** @test */
+    public function the_upload_action_requires_the_psd_link(): void
+    {
+        $course = Course::factory()->create(['is_active' => true]);
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($this->user(Roles::MANAGER));
+
+        Livewire::test(CourseDesignAssets::class)
+            ->callTableAction('upload', $course, [
+                'format' => '16:9',
+                'image' => [UploadedFile::fake()->image('b.jpg', 1600, 900)],
+                'psd_url' => '',
+            ])
+            ->assertHasTableActionErrors(['psd_url']);
+
+        $this->assertDatabaseCount('course_design_assets', 0);
+    }
+
+    /** @test */
+    public function a_manager_can_download_the_psd_file(): void
+    {
+        $asset = $this->assetWithPsd();
+
+        $this->actingAs($this->user(Roles::MANAGER))
+            ->get(route('course-design.psd', $asset))
+            ->assertOk();
+    }
+
+    /** @test */
+    public function a_student_cannot_download_the_psd_file(): void
+    {
+        $asset = $this->assetWithPsd();
+
+        $this->actingAs($this->user(null))
+            ->get(route('course-design.psd', $asset))
+            ->assertForbidden();
+    }
+
+    /** @test */
+    public function a_guest_is_not_served_the_psd_file(): void
+    {
+        $asset = $this->assetWithPsd();
+
+        $this->get(route('course-design.psd', $asset))->assertRedirect();
+    }
+
+    /** @test */
+    public function a_slot_without_an_uploaded_psd_returns_404_not_an_error(): void
+    {
+        $course = Course::factory()->create();
+        $asset = app(CourseDesignAssetService::class)->store(
+            $course,
+            '16:9',
+            UploadedFile::fake()->image('b.jpg', 1600, 900),
+            'https://disk.example/only-a-link',
+            null,
+            $this->user(Roles::ADMIN),
+        );
+
+        $this->actingAs($this->user(Roles::ADMIN))
+            ->get(route('course-design.psd', $asset))
+            ->assertNotFound();
+    }
+
+    /** @test */
+    public function an_unknown_archive_token_returns_404(): void
+    {
+        $this->actingAs($this->user(Roles::ADMIN))
+            ->get(route('course-design.archive', ['token' => 'made-up.zip']))
+            ->assertNotFound();
+    }
+
+    /** @test */
+    public function a_student_cannot_pull_an_archive(): void
+    {
+        $this->actingAs($this->user(null))
+            ->get(route('course-design.archive', ['token' => 'made-up.zip']))
+            ->assertForbidden();
+    }
+
+    private function assetWithPsd(): CourseDesignAsset
+    {
+        return app(CourseDesignAssetService::class)->store(
+            Course::factory()->create(),
+            '16:9',
+            UploadedFile::fake()->image('banner.jpg', 1600, 900),
+            'https://disk.example/psd',
+            UploadedFile::fake()->create('source.psd', 8),
+            $this->user(Roles::ADMIN),
+        );
+    }
+}

@@ -50,13 +50,16 @@ use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
 use App\Http\Controllers\VkController;
 use App\Models\Course;
+use App\Models\CourseDesignAsset;
 use App\Models\LandingPage;
 use App\Models\Lesson;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Testimonial;
 use App\Models\User;
+use App\Services\Design\CourseDesignArchiver;
 use App\Support\RoleGate;
+use App\Support\Roles;
 use App\Support\TrajectoryPaths;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -696,6 +699,33 @@ Route::get('/admin/payments/{payment}/paypal-proof', function (Payment $payment)
 
     return Storage::disk('local')->download($payment->proof_path);
 })->middleware('auth')->name('paypal.proof');
+
+// Исходник PSD дизайнерского баннера: приватный диск, отдаём только персоналу.
+// Свой маршрут, а НЕ существующий /force-download: тот пускает по legacy-флагу
+// is_admin (синхронен с super_admin/admin), и manager — для которого страница
+// «Дизайн курсов» и делалась — через него не прошёл бы.
+Route::get('/admin/course-design/{asset}/psd', function (CourseDesignAsset $asset) {
+    abort_unless(RoleGate::any(Roles::ADMIN, Roles::MANAGER), 403);
+    abort_unless(
+        filled($asset->psd_path) && Storage::disk((string) $asset->psd_disk)->exists($asset->psd_path),
+        404
+    );
+
+    return Storage::disk((string) $asset->psd_disk)
+        ->download($asset->psd_path, $asset->psd_original_name ?: basename($asset->psd_path));
+})->middleware('auth')->name('course-design.psd');
+
+// Собранный ZIP с баннерами курса. Архив лежит во временном ПРИВАТНОМ каталоге
+// (не в public/archives), поэтому угадать имя мало — маршрут ещё и под гейтом.
+// Файл удаляется после отправки: это разовая выгрузка, а не витрина.
+Route::get('/admin/course-design/archive/{token}', function (string $token, CourseDesignArchiver $archiver) {
+    abort_unless(RoleGate::any(Roles::ADMIN, Roles::MANAGER), 403);
+
+    $path = $archiver->pathForToken($token);
+    abort_unless($path !== null, 404, 'Архив не найден — соберите его заново.');
+
+    return response()->download($path)->deleteFileAfterSend();
+})->middleware('auth')->name('course-design.archive');
 
 // Скачивание планировочных шаблонов «Нескучных финансов» (Финмодель, Бюджет,
 // План доходов/расходов) — гибридная стратегия H207: живые отчёты в панели +
