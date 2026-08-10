@@ -192,4 +192,46 @@ class HomeworkReviewModalTest extends TestCase
             'body' => 'Отличная работа',
         ]);
     }
+
+    public function test_comment_templates_include_file_and_good_luck_phrases(): void
+    {
+        foreach ([HomeworkSubmission::STATUS_ACCEPTED, HomeworkSubmission::STATUS_NEEDS_REVISION] as $status) {
+            $templates = HomeworkSubmissionResource::commentTemplates($status);
+            $this->assertArrayHasKey('Смотрите комментарии в приложенном файле.', $templates);
+            $this->assertArrayHasKey('Удачи!', $templates);
+        }
+    }
+
+    public function test_join_comment_templates_combines_with_blank_line(): void
+    {
+        $joined = HomeworkSubmissionResource::joinCommentTemplates([
+            'Смотрите комментарии в приложенном файле.',
+            'Удачи!',
+        ]);
+
+        $this->assertSame(
+            "Смотрите комментарии в приложенном файле.\n\nУдачи!",
+            $joined,
+        );
+        $this->assertNull(HomeworkSubmissionResource::joinCommentTemplates([]));
+        $this->assertNull(HomeworkSubmissionResource::joinCommentTemplates(null));
+    }
+
+    /** Multi-select шаблонов подставляет собранный текст в body. */
+    public function test_selecting_multiple_templates_fills_body(): void
+    {
+        $this->actingAsAdmin();
+        $submission = $this->submission();
+
+        $phrases = [
+            'Смотрите комментарии в приложенном файле.',
+            'Удачи!',
+        ];
+        $expected = HomeworkSubmissionResource::joinCommentTemplates($phrases);
+
+        Livewire::test(ViewHomeworkSubmission::class, ['record' => $submission->id])
+            ->mountAction('accept')
+            ->setActionData(['templates' => $phrases])
+            ->assertActionDataSet(['body' => $expected]);
+    }
 }

@@ -79,12 +79,25 @@ RETRIES_FILE="$APP_DIR/storage/framework/auto-deploy-retries"
 # Куда уезжает текст снятого предохранителя. След обязан пережить снятие —
 # иначе «почему прод не деплоился в 19:30» станет неотвечаемым вопросом.
 BREAKER_HISTORY="$APP_DIR/storage/logs/auto_deploy_breaker_history.log"
+# H2305: consecutive silent-exit (lock/fetch) counter; trips breaker after MAX_STALL.
+STALL_FILE="$APP_DIR/storage/framework/auto-deploy-stall"
+MAX_STALL=${SYSTEMA_AUTO_DEPLOY_MAX_STALL:-5}
 
 stamp() { date -u '+%Y-%m-%dT%H:%M:%SZ'; }
 trip() {
   printf '%s %s\n' "$(stamp)" "$1" >> "$BREAKER"
   echo "$(stamp) BREAKER TRIPPED: $1"
   exit 1
+}
+
+# H2305: increment preflight-stall counter; trip breaker once MAX_STALL is reached.
+incr_stall() {
+  local reason="$1"
+  local count
+  count=$(( $(cat "$STALL_FILE" 2>/dev/null || echo 0) + 1 ))
+  echo "$count" > "$STALL_FILE" || trip "[blocked-preflight] stall counter write failed — $reason"
+  echo "$(stamp) stall $count/$MAX_STALL: $reason"
+  [ "$count" -ge "$MAX_STALL" ] && trip "[blocked-preflight] $reason after $count consecutive stalls"
 }
 
 # Снимок root-crontab, читаемый www-data (H1941). Fail-open: crontab недоступен
@@ -193,14 +206,14 @@ maybe_clear_breaker() {
     sed 's/^/    /' "$BREAKER" 2>/dev/null
   } >> "$BREAKER_HISTORY" 2>/dev/null || true
 
-  echo "$((tries + 1))" > "$RETRIES_FILE" 2>/dev/null || true
+  echo "$((tries + 1))" > "$RETRIES_FILE" || trip "[stall-counter] auto-retries counter write failed — storage may be full or readonly"
   rm -f "$BREAKER"
   echo "$(stamp) AUTO-RETRY $((tries + 1))/$MAX_RETRIES: мягкий предохранитель снят, health чист — пробуем деплой снова"
   return 0
 }
 
-exec 9>"$LOCK" 2>/dev/null || exit 0
-flock -n 9 || exit 0            # прошлый прогон ещё идёт — молча пропускаем
+exec 9>"$LOCK" 2>/dev/null || { incr_stall "lock unwritable (storage full or permission error)"; exit 0; }
+flock -n 9 || { incr_stall "prior run still holds lock"; exit 0; }   # прошлый прогон ещё идёт
 
 # Зеркало — до breaker/early-exit: probe ходит каждые 15 мин и не должен
 # смотреть на вчерашний снимок, даже когда деплоить нечего или деплой стоит.
@@ -215,8 +228,11 @@ fi
 cd "$APP_DIR" || exit 1
 if ! git fetch -q origin; then
   echo "$(stamp) git fetch не прошёл (сеть?) — попробуем в следующем слоте"
+  incr_stall "git fetch failed (network?)"
   exit 0
 fi
+# H2305: lock acquired + fetch succeeded — reset the preflight-stall counter
+rm -f "$STALL_FILE"
 LOCAL=$(git rev-parse HEAD)
 REMOTE=$(git rev-parse origin/main)
 [ "$LOCAL" = "$REMOTE" ] && exit 0

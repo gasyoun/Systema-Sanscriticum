@@ -494,11 +494,24 @@ class TeacherSalaryService
             ->groupBy('teacher_id')
             ->pluck('total', 'teacher_id');
 
+        // Дата последней выплаты (любого типа: regular + advance) — батчем по
+        // всем преподам, для колонки «Дней без выплаты».
+        $lastPaidAt = TeacherPayout::query()
+            ->selectRaw('teacher_id, MAX(paid_at) AS last_paid_at')
+            ->groupBy('teacher_id')
+            ->pluck('last_paid_at', 'teacher_id');
+
         $result = [];
         foreach ($teachers as $teacher) {
             $period = $this->periodTotals($teacher, $start, $end, $opts);
             $earnedAll = $this->totalForTeacher($teacher, null, null, $opts);
             $paidAll = (float) ($paidAllTime[$teacher->id] ?? 0);
+
+            $lastPaidRaw = $lastPaidAt[$teacher->id] ?? null;
+            $lastPaidCarbon = $lastPaidRaw ? Carbon::parse($lastPaidRaw)->startOfDay() : null;
+            $daysSinceLastPayout = $lastPaidCarbon
+                ? (int) $lastPaidCarbon->diffInDays(Carbon::now()->startOfDay())
+                : null;
 
             // Прямые платежи на личный счёт преподавателя — зачёт по номиналу в
             // валюте выплаты. НЕ сводим с рублёвым balance (валюты разные): нетто
@@ -523,6 +536,9 @@ class TeacherSalaryService
                 'direct_receipts_period' => $directReceipts['total'],
                 'direct_receipts_all_time' => $directReceiptsAll['total'],
                 'direct_receipts_currency' => $directReceipts['currency'],
+                // Для колонки «Дней без выплаты» (любой тип выплаты, весь период).
+                'last_paid_at' => $lastPaidCarbon?->toDateString(),
+                'days_since_last_payout' => $daysSinceLastPayout,
             ];
         }
 

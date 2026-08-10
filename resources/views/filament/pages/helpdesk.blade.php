@@ -241,7 +241,25 @@
             white-space: pre-line;
             margin: 6px 0;
         }
-        .answer-banner-meta {
+                .answer-banner-cites {
+            margin-top: 8px;
+            padding: 8px 10px;
+            background: rgba(255,255,255,.55);
+            border-radius: 6px;
+            font-size: 11px;
+            color: #1e40af;
+            line-height: 1.35;
+        }
+        .answer-banner-cites strong { font-weight: 700; }
+        .answer-banner-cites code {
+            font-size: 10px;
+            background: rgba(37,99,235,.08);
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+        .dark .answer-banner-cites { background: rgba(15,23,42,.35); color: #bfdbfe; }
+        .dark .answer-banner-cites code { background: rgba(147,197,253,.12); }
+.answer-banner-meta {
             font-size: 11px;
             color: #3b82f6;
             margin-bottom: 8px;
@@ -655,6 +673,22 @@
                         <div class="answer-banner-meta">
                             На вопрос: «{{ \Illuminate\Support\Str::limit($answer->detected_text, 120) }}»
                         </div>
+                        @if(!empty($answer->facts['faq_citations']) && is_array($answer->facts['faq_citations']))
+                            <div class="answer-banner-cites">
+                                <strong>Источники FAQ (RAG):</strong>
+                                <ul style="margin: 4px 0 0; padding-left: 18px;">
+                                    @foreach(array_slice($answer->facts['faq_citations'], 0, 3) as $cite)
+                                        <li>
+                                            <code>{{ $cite['chunk_id'] ?? '' }}</code>
+                                            — {{ \Illuminate\Support\Str::limit($cite['title'] ?? '', 80) }}
+                                            @if(!empty($cite['snippet']))
+                                                <div style="opacity:.85; margin-top:2px;">{{ \Illuminate\Support\Str::limit($cite['snippet'], 160) }}</div>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                         <div class="answer-banner-actions">
                             <button type="button" class="answer-btn-accept" wire:click="acceptAnswerSuggestion({{ $answer->id }})">Принять</button>
                             <button type="button" class="answer-btn-edit" wire:click="editAnswerSuggestion({{ $answer->id }})">Изменить</button>
@@ -784,6 +818,22 @@
                         <div class="answer-banner-meta">
                             На вопрос: «{{ \Illuminate\Support\Str::limit($answer->detected_text, 120) }}»
                         </div>
+                        @if(!empty($answer->facts['faq_citations']) && is_array($answer->facts['faq_citations']))
+                            <div class="answer-banner-cites">
+                                <strong>Источники FAQ (RAG):</strong>
+                                <ul style="margin: 4px 0 0; padding-left: 18px;">
+                                    @foreach(array_slice($answer->facts['faq_citations'], 0, 3) as $cite)
+                                        <li>
+                                            <code>{{ $cite['chunk_id'] ?? '' }}</code>
+                                            — {{ \Illuminate\Support\Str::limit($cite['title'] ?? '', 80) }}
+                                            @if(!empty($cite['snippet']))
+                                                <div style="opacity:.85; margin-top:2px;">{{ \Illuminate\Support\Str::limit($cite['snippet'], 160) }}</div>
+                                            @endif
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                         <div class="answer-banner-actions">
                             <button type="button" class="answer-btn-accept" wire:click="acceptAnswerSuggestion({{ $answer->id }})">Принять</button>
                             <button type="button" class="answer-btn-edit" wire:click="editAnswerSuggestion({{ $answer->id }})">Изменить</button>

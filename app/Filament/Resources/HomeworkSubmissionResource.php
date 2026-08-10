@@ -92,22 +92,49 @@ class HomeworkSubmissionResource extends Resource
      */
     public static function commentTemplates(string $status): array
     {
+        $shared = [
+            'Смотрите комментарии в приложенном файле.' => 'Смотрите комментарии в приложенном файле.',
+            'Удачи!' => 'Удачи!',
+        ];
+
         return $status === HomeworkSubmission::STATUS_ACCEPTED
             ? [
                 'Отлично, работа принята! 🙏' => 'Отлично, работа принята! 🙏',
                 'Хорошо, зачтено — двигаемся дальше.' => 'Хорошо, зачтено — двигаемся дальше.',
                 'Принято. Обратите внимание на мелкие неточности в транслитерации.' => 'Принято. Обратите внимание на мелкие неточности в транслитерации.',
+                ...$shared,
             ]
             : [
                 'Проверьте, пожалуйста, транслитерацию (IAST) — есть ошибки.' => 'Проверьте, пожалуйста, транслитерацию (IAST) — есть ошибки.',
                 'Не хватает части задания — дополните и пришлите снова.' => 'Не хватает части задания — дополните и пришлите снова.',
                 'Посмотрите ещё раз склонение/спряжение в выделенных местах.' => 'Посмотрите ещё раз склонение/спряжение в выделенных местах.',
                 'Деванагари местами неверно — сверьтесь с уроком.' => 'Деванагари местами неверно — сверьтесь с уроком.',
+                ...$shared,
             ];
     }
 
     /**
-     * Поля «шаблон + комментарий» для форм проверки (массовой и одиночной).
+     * Собрать текст комментария из выбранных шаблонов (multi-select).
+     * Пустой выбор — null (не затирать ручной текст / черновик).
+     *
+     * @param  array<int|string, mixed>|string|null  $selected
+     */
+    public static function joinCommentTemplates(array|string|null $selected): ?string
+    {
+        $parts = array_values(array_filter(
+            array_map(static fn ($s): string => (string) $s, (array) $selected),
+            static fn (string $s): bool => $s !== '',
+        ));
+
+        if ($parts === []) {
+            return null;
+        }
+
+        return implode("\n\n", $parts);
+    }
+
+    /**
+     * Поля «шаблоны + комментарий» для форм проверки (массовой и одиночной).
      *
      * $draftKey задан → отзыв переживает закрытие модалки (черновик в localStorage
      * браузера, см. reviewDraftKey()). Для массовой проверки ключа нет: он должен
@@ -118,12 +145,19 @@ class HomeworkSubmissionResource extends Resource
     public static function reviewCommentFields(string $status, bool $bodyRequired, ?string $draftKey = null): array
     {
         return [
-            Forms\Components\Select::make('template')
-                ->label('Шаблон ответа')
+            Forms\Components\Select::make('templates')
+                ->label('Шаблоны ответа')
                 ->options(static::commentTemplates($status))
-                ->placeholder('— выбрать готовый текст —')
+                ->multiple()
+                ->placeholder('— выбрать готовые фразы —')
+                ->helperText('Можно несколько: подставятся в комментарий через пустую строку.')
                 ->live()
-                ->afterStateUpdated(fn ($state, Forms\Set $set) => filled($state) ? $set('body', $state) : null)
+                ->afterStateUpdated(function ($state, Forms\Set $set): void {
+                    $joined = static::joinCommentTemplates($state);
+                    if ($joined !== null) {
+                        $set('body', $joined);
+                    }
+                })
                 ->dehydrated(false),
             Forms\Components\Textarea::make('body')
                 ->label($status === HomeworkSubmission::STATUS_ACCEPTED

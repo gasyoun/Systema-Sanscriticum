@@ -1,6 +1,6 @@
 # SECURITY_ROADMAP.meta.md — metadoc about `SECURITY_ROADMAP`
 
-_Created: 13-07-2026 · Last updated: 13-07-2026_
+_Created: 13-07-2026 · Last updated: 09-08-2026_
 
 Companion metadoc for the [Security & Vulnerability-Avoidance Roadmap](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_ROADMAP.md) — the durable record of why that roadmap exists, who consumes it, and how it stays honest.
 
@@ -15,7 +15,7 @@ Companion metadoc for the [Security & Vulnerability-Avoidance Roadmap](https://g
 
 - **Subject created:** 03-07-2026 (from a `/roadmap-interview`, Fable 5 `claude-fable-5`, grounded in a posture audit).
 - **Metadoc authored:** 13-07-2026 (H887, Opus 4.8 `claude-opus-4-8`).
-- **Next hardening:** Wave 3 Semgrep flip-to-required delivered by H885 (PR #509); remaining live fronts are the Wave 1 webhook `.env` deploy (MG action) and the Wave 4 Laravel 10→11 / PHP 8.2→8.3 platform upgrade.
+- **Next hardening:** remaining live front is Wave 1 webhook `.env` deploy (MG `@DO` action — Telegram/VK/Zoom fail-closed secrets). Wave 4 Laravel + PHP platform upgrade is closed (H2478 doc-close 09-08-2026).
 
 ## Ranked improvement backlog
 
@@ -23,7 +23,7 @@ Companion metadoc for the [Security & Vulnerability-Avoidance Roadmap](https://g
 |---|---|---|---|
 | 1 | Make the Semgrep PHP SAST job a required, blocking gate after triage | Wave 3 exit criterion demands CI catch new PHP defects before merge, not merely advise | ✅ delivered by H885 (PR #509) — subject's "flip to required" line should be reconciled to done |
 | 2 | Flip the 3 fail-open webhooks (Telegram/VK/Zoom) to fail-closed via prod `.env` | Only remaining Wave 1 exit-criterion gap; inbound webhooks stay unauthenticated until deployed | parked (blocked on MG prod deploy action, tracked as a GTD `@DO`) |
-| 3 | Execute Wave 4 platform upgrade (Laravel 10→11, PHP 8.2→8.3) | Framework is security-EOL since ~Feb 2025; the largest standing exposure | parked (gated on Wave-3 clean SAST baseline + green suite; Q1–Q2 2027 window) |
+| 3 | Execute Wave 4 platform upgrade (Laravel 10→12, PHP 8.2→8.3) | Framework is security-EOL since ~Feb 2025; the largest standing exposure | ✅ done (H2478 doc-close 09-08-2026): Laravel v12.64.0 live; PHP 8.3.32 on prod nginx/fpm/Horizon; CI matrix PHP 8.3 only |
 | 4 | Close out the orphaned `8851c92` SHA via a GitHub Support GC request | Purged PII is still fetchable by exact 40-char SHA until GitHub GC | parked (optional acceleration; needs MG-account support ticket) |
 | 5 | Reconcile stale in-doc statuses after H885 (Semgrep now required) | The doc still reads "advisory / flip once tuned"; drift misleads a future reader | parked (doc-refresh pass, low risk) |
 
@@ -62,5 +62,6 @@ Companion metadoc for the [Security & Vulnerability-Avoidance Roadmap](https://g
 | Date | Event | Who |
 |---|---|---|
 | 13-07-2026 | metadoc created (H887) | Opus 4.8 `claude-opus-4-8` |
+| 09-08-2026 | Wave 4 backlog row #3 closed; provenance note updated (H2478) | Sonnet 5 `claude-sonnet-5` |
 
 _Dr. Mārcis Gasūns_
