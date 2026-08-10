@@ -42,7 +42,7 @@
                 </p>
             @endif
             
-            <div class="w-20 h-1.5 bg-[#E85C24] mx-auto rounded-full"></div>
+            <div class="w-20 h-1.5 bg-brand mx-auto rounded-full"></div>
         </div>
 
         @if($landings->count() > 0)
@@ -64,13 +64,13 @@
     {{-- Плашка (Бейдж) - ТЕПЕРЬ СНАРУЖИ БЛОКА С overflow-hidden --}}
     @if($landing->webinar_label)
         {{-- -left-4 вытаскивает её на 16px влево, -left-5 вытащит на 20px --}}
-        <span class="absolute top-6 -left-3 z-30 bg-[#E85C24] text-white text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-[0_4px_12px_rgba(232,92,36,0.4)]">
+        <span class="absolute top-6 -left-3 z-30 bg-brand text-white text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-[0_4px_12px_rgba(232,92,36,0.4)]">
             {{ $landing->webinar_label }}
         </span>
     @endif
 
     {{-- Сама Карточка --}}
-    <div class="flex flex-col h-full w-full bg-white border border-gray-100 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden transition-all duration-300 group-hover:border-[#E85C24]/30 group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)]">
+    <div class="flex flex-col h-full w-full bg-white border border-gray-100 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden transition-all duration-300 group-hover:border-brand/30 group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)]">
         
         {{-- Блок изображения --}}
         <div class="relative w-full aspect-[4/5] bg-gray-50 overflow-hidden shrink-0">
@@ -104,18 +104,18 @@
         <div class="p-6 md:p-8 flex flex-col flex-grow bg-white z-10">
             
             @if($landing->instructor_name)
-                <p class="text-[#E85C24] text-[10px] font-extrabold uppercase tracking-widest mb-2.5">
+                <p class="text-brand text-[10px] font-extrabold uppercase tracking-widest mb-2.5">
                     {{ $landing->instructor_name }}
                 </p>
             @endif
             
-            <h3 class="text-xl font-extrabold text-[#101010] mb-3 group-hover:text-[#E85C24] transition-colors leading-snug line-clamp-2">
+            <h3 class="text-xl font-extrabold text-[#101010] mb-3 group-hover:text-brand transition-colors leading-snug line-clamp-2">
                 {{ $landing->title }}
             </h3>
             
             @if($landing->webinar_date)
                 <div class="flex items-center text-xs text-gray-500 mb-4 bg-gray-50 self-start px-3 py-1.5 rounded-lg border border-gray-100">
-                    <i class="far fa-calendar-alt mr-2 text-[#E85C24]"></i>
+                    <i class="far fa-calendar-alt mr-2 text-brand"></i>
                     Старт: <span class="font-bold text-gray-800 ml-1">{{ \Carbon\Carbon::parse($landing->webinar_date)->translatedFormat('d F Y') }}</span>
                 </div>
             @endif
@@ -125,10 +125,10 @@
             </p>
 
             <div class="mt-auto pt-5 border-t border-gray-50 flex items-center justify-between">
-                <span class="inline-flex items-center text-sm font-extrabold uppercase tracking-widest text-[#101010] group-hover:text-[#E85C24] transition-colors">
+                <span class="inline-flex items-center text-sm font-extrabold uppercase tracking-widest text-[#101010] group-hover:text-brand transition-colors">
                     {{ $landing->button_text ?? 'Подробнее' }}
                 </span>
-                <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-[#E85C24] transition-all duration-300">
+                <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-brand transition-all duration-300">
                     <svg class="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                 </div>
             </div>
@@ -153,7 +153,7 @@
                 <div class="flex gap-2">
                     <template x-for="p in totalPages" :key="p">
                         <button @click="page = p"
-                                :class="page === p ? 'bg-[#E85C24] text-white border-[#E85C24] shadow-[0_4px_10px_rgba(232,92,36,0.3)]' : 'bg-white text-gray-700 border-gray-300 hover:bg-[#101010] hover:border-[#101010] hover:text-white'"
+                                :class="page === p ? 'bg-brand text-white border-brand shadow-[0_4px_10px_rgba(232,92,36,0.3)]' : 'bg-white text-gray-700 border-gray-300 hover:bg-[#101010] hover:border-[#101010] hover:text-white'"
                                 class="w-10 h-10 flex items-center justify-center rounded-full border font-extrabold text-xs transition-all shadow-sm"
                                 x-text="p">
                         </button>

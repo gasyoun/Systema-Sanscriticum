@@ -19,7 +19,7 @@
                         <img src="{{ Storage::url($teacher->photo_path) }}" alt="{{ $teacher->name }}"
                              class="w-24 h-24 rounded-2xl object-cover border border-[#1F2636]">
                     @else
-                        <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#E85C24] to-[#d04a15] flex items-center justify-center text-3xl font-extrabold text-white shadow-lg shadow-[#E85C24]/20">
+                        <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-brand to-brand-hover flex items-center justify-center text-3xl font-extrabold text-white shadow-lg shadow-brand/20">
                             {{ mb_strtoupper(mb_substr($teacher->name, 0, 1)) }}
                         </div>
                     @endif

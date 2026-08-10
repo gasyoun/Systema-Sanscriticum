@@ -22,9 +22,9 @@
         <h2 class="text-lg font-extrabold text-gray-900 mb-3">Новая колода</h2>
         <div class="flex flex-col sm:flex-row gap-3">
             <input type="text" wire:model="newDeckName" placeholder="Название колоды"
-                   class="flex-1 px-4 py-3 bg-gray-50 border-transparent rounded-xl focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all"/>
+                   class="flex-1 px-4 py-3 bg-gray-50 border-transparent rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"/>
             <button type="button" wire:click="createDeck"
-                    class="px-5 py-3 bg-[#E85C24] hover:bg-[#d24e1b] text-white font-bold rounded-xl transition-colors">
+                    class="px-5 py-3 bg-brand hover:bg-[#d24e1b] text-white font-bold rounded-xl transition-colors">
                 Создать
             </button>
         </div>
@@ -39,7 +39,7 @@
         <div class="mb-4">
             <label class="block text-sm font-bold text-gray-500 mb-2">Колода</label>
             <select wire:model.live="deckId"
-                    class="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl text-gray-700 focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all font-medium">
+                    class="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl text-gray-700 focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all font-medium">
                 @foreach($decks as $d)
                     <option value="{{ $d->id }}">{{ $d->name }} ({{ $d->cards_count }})</option>
                 @endforeach
@@ -65,7 +65,7 @@
                 </p>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <input type="text" wire:model="editSlug" placeholder="my-vocab"
-                           class="flex-1 px-4 py-3 bg-gray-50 border-transparent rounded-xl font-mono text-sm focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all"/>
+                           class="flex-1 px-4 py-3 bg-gray-50 border-transparent rounded-xl font-mono text-sm focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"/>
                     <button type="button" wire:click="updateSlug"
                             class="px-5 py-3 bg-gray-900 hover:bg-black text-white font-bold rounded-xl transition-colors">
                         Сохранить slug
@@ -78,16 +78,16 @@
                 <h3 class="text-lg font-extrabold text-gray-900">Добавить карточку</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <input type="text" wire:model="cardDevanagari" placeholder="Деванагари"
-                           class="px-4 py-3 bg-gray-50 border-transparent rounded-xl focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20"/>
+                           class="px-4 py-3 bg-gray-50 border-transparent rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20"/>
                     <input type="text" wire:model="cardIast" placeholder="IAST"
-                           class="px-4 py-3 bg-gray-50 border-transparent rounded-xl focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20"/>
+                           class="px-4 py-3 bg-gray-50 border-transparent rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20"/>
                     <input type="text" wire:model="cardCyrillic" placeholder="Кириллица"
-                           class="px-4 py-3 bg-gray-50 border-transparent rounded-xl focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20"/>
+                           class="px-4 py-3 bg-gray-50 border-transparent rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20"/>
                 </div>
                 <textarea wire:model="cardTranslation" rows="2" placeholder="Перевод *"
-                          class="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20"></textarea>
+                          class="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20"></textarea>
                 <button type="button" wire:click="addCard"
-                        class="w-full sm:w-auto px-5 py-3 bg-[#E85C24] hover:bg-[#d24e1b] text-white font-bold rounded-xl transition-colors">
+                        class="w-full sm:w-auto px-5 py-3 bg-brand hover:bg-[#d24e1b] text-white font-bold rounded-xl transition-colors">
                     Добавить
                 </button>
             </div>
@@ -97,7 +97,7 @@
                 <h3 class="text-lg font-extrabold text-gray-900">Вставить списком</h3>
                 <p class="text-sm text-gray-500">Одна карточка на строку: <code class="bg-gray-50 px-1 rounded">devanagari | iast | cyrillic | перевод</code> или <code class="bg-gray-50 px-1 rounded">лицо | перевод</code>.</p>
                 <textarea wire:model="pasteBulk" rows="6" placeholder="सत्य | satya | сатья | истина"
-                          class="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl font-mono text-sm focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20"></textarea>
+                          class="w-full px-4 py-3 bg-gray-50 border-transparent rounded-xl font-mono text-sm focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20"></textarea>
                 <button type="button" wire:click="importPaste"
                         class="px-5 py-3 bg-gray-900 hover:bg-black text-white font-bold rounded-xl transition-colors">
                     Вставить

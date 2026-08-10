@@ -192,7 +192,7 @@
                     <h2 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
                         {{ $title }}
                     </h2>
-                    <div class="w-12 h-1 bg-[#E85C24] mt-3 mb-3 rounded-full"></div>
+                    <div class="w-12 h-1 bg-brand mt-3 mb-3 rounded-full"></div>
                     <p class="text-gray-300 text-sm md:text-base max-w-xl">
                         {{ $subtitle }}
                     </p>
@@ -202,7 +202,7 @@
                         <button type="button"
                                 @click="prev()"
                                 aria-label="Предыдущие занятия"
-                                class="w-9 h-9 rounded-full border bg-[#161b28] border-gray-700/60 text-white hover:border-[#E85C24]/60 hover:text-[#E85C24] flex items-center justify-center transition-colors">
+                                class="w-9 h-9 rounded-full border bg-[#161b28] border-gray-700/60 text-white hover:border-brand/60 hover:text-brand flex items-center justify-center transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                             </svg>
@@ -210,7 +210,7 @@
                         <button type="button"
                                 @click="next()"
                                 aria-label="Следующие занятия"
-                                class="w-9 h-9 rounded-full border bg-[#161b28] border-gray-700/60 text-white hover:border-[#E85C24]/60 hover:text-[#E85C24] flex items-center justify-center transition-colors">
+                                class="w-9 h-9 rounded-full border bg-[#161b28] border-gray-700/60 text-white hover:border-brand/60 hover:text-brand flex items-center justify-center transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
@@ -226,7 +226,7 @@
                             @foreach($chunk as $card)
                                 <button type="button"
                                         @click="open(@js($card['options']))"
-                                        class="group flex flex-col text-left bg-[#161b28] border border-gray-700/60 hover:border-[#E85C24]/60 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 group-hover:shadow-[0_0_25px_rgba(232,92,36,0.15)]">
+                                        class="group flex flex-col text-left bg-[#161b28] border border-gray-700/60 hover:border-brand/60 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 group-hover:shadow-[0_0_25px_rgba(232,92,36,0.15)]">
 
                                     <div class="relative aspect-video bg-gray-800 overflow-hidden">
                                         @if($card['poster'])
@@ -244,7 +244,7 @@
 
                                         {{-- Play-кнопка по центру; затемнение только на hover, чтобы постер был ярким. --}}
                                         <div class="absolute inset-0 flex items-center justify-center bg-transparent group-hover:bg-black/30 transition-colors">
-                                            <span class="w-14 h-14 rounded-full bg-[#E85C24] flex items-center justify-center shadow-[0_0_25px_rgba(232,92,36,0.55)] transform transition-transform group-hover:scale-110">
+                                            <span class="w-14 h-14 rounded-full bg-brand flex items-center justify-center shadow-[0_0_25px_rgba(232,92,36,0.55)] transform transition-transform group-hover:scale-110">
                                                 <svg class="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M8 5v14l11-7z"/>
                                                 </svg>
@@ -270,7 +270,7 @@
                                                 {{ $card['course'] }}
                                             </p>
                                         @endif
-                                        <h3 class="font-bold text-white text-base leading-tight line-clamp-2 group-hover:text-[#E85C24] transition-colors">
+                                        <h3 class="font-bold text-white text-base leading-tight line-clamp-2 group-hover:text-brand transition-colors">
                                             {{ $card['title'] }}
                                         </h3>
                                     </div>
@@ -289,8 +289,8 @@
                                 x-bind:aria-label="{{ $i }} >= maxSlide ? 'Страница {{ $i + 1 }} — нужна авторизация' : 'Страница {{ $i + 1 }}'"
                                 class="h-2 rounded-full transition-all duration-300"
                                 x-bind:class="slide === {{ $i }}
-                                    ? 'w-6 bg-[#E85C24]'
-                                    : ({{ $i }} >= maxSlide ? 'w-2 bg-gray-600/40 ring-1 ring-[#E85C24]/40' : 'w-2 bg-gray-600/70')"></button>
+                                    ? 'w-6 bg-brand'
+                                    : ({{ $i }} >= maxSlide ? 'w-2 bg-gray-600/40 ring-1 ring-brand/40' : 'w-2 bg-gray-600/70')"></button>
                     @endfor
                 </div>
             @endif
@@ -315,7 +315,7 @@
                 <button type="button"
                         @click="close()"
                         aria-label="Закрыть"
-                        class="fixed top-4 right-4 md:top-6 md:right-6 w-11 h-11 bg-white/15 hover:bg-[#E85C24] text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors z-[10000]">
+                        class="fixed top-4 right-4 md:top-6 md:right-6 w-11 h-11 bg-white/15 hover:bg-brand text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors z-[10000]">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -397,14 +397,14 @@
                     <button type="button"
                             @click="authPromptOpen = false"
                             aria-label="Закрыть"
-                            class="absolute top-3 right-3 w-9 h-9 bg-white/10 hover:bg-[#E85C24] text-white rounded-full flex items-center justify-center transition-colors">
+                            class="absolute top-3 right-3 w-9 h-9 bg-white/10 hover:bg-brand text-white rounded-full flex items-center justify-center transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
 
                     <div class="text-center">
-                        <span class="mx-auto mb-4 flex w-14 h-14 items-center justify-center rounded-full bg-[#E85C24]/15 text-[#E85C24]">
+                        <span class="mx-auto mb-4 flex w-14 h-14 items-center justify-center rounded-full bg-brand/15 text-brand">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
@@ -423,14 +423,14 @@
                             <label class="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">Email</label>
                             <input type="email" x-ref="authEmail" x-model="authForm.email" required autocomplete="email"
                                    placeholder="you@example.com"
-                                   class="block w-full rounded-xl bg-[#0A0D14] border border-gray-700/60 text-white placeholder-slate-600 focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] py-3 px-4 transition">
+                                   class="block w-full rounded-xl bg-[#0A0D14] border border-gray-700/60 text-white placeholder-slate-600 focus:border-brand focus:ring-1 focus:ring-brand py-3 px-4 transition">
                         </div>
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">Пароль</label>
                             <input type="password" x-model="authForm.password" required autocomplete="current-password"
                                    placeholder="••••••••"
-                                   class="block w-full rounded-xl bg-[#0A0D14] border border-gray-700/60 text-white placeholder-slate-600 focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] py-3 px-4 transition">
+                                   class="block w-full rounded-xl bg-[#0A0D14] border border-gray-700/60 text-white placeholder-slate-600 focus:border-brand focus:ring-1 focus:ring-brand py-3 px-4 transition">
                         </div>
 
                         <template x-if="authError">
@@ -440,12 +440,12 @@
 
                         <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer select-none">
                             <input type="checkbox" x-model="authForm.remember"
-                                   class="rounded border-gray-700/60 bg-[#0A0D14] text-[#E85C24] focus:ring-[#E85C24]">
+                                   class="rounded border-gray-700/60 bg-[#0A0D14] text-brand focus:ring-brand">
                             Запомнить меня
                         </label>
 
                         <button type="submit" x-bind:disabled="authLoading"
-                                class="w-full flex justify-center items-center py-3.5 px-4 bg-[#E85C24] hover:bg-[#d04a15] disabled:opacity-60 disabled:cursor-not-allowed text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-[#E85C24]/20">
+                                class="w-full flex justify-center items-center py-3.5 px-4 bg-brand hover:bg-brand-hover disabled:opacity-60 disabled:cursor-not-allowed text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-brand/20">
                             <span x-show="!authLoading">Войти</span>
                             <span x-show="authLoading" x-cloak>
                                 <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">

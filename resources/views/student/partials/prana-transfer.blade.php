@@ -1,7 +1,7 @@
 {{-- P2P: подарить прану другому студенту. --}}
 <div class="mb-6 rounded-2xl border border-gray-100 bg-white p-5 md:p-6 shadow-sm">
     <div class="flex items-start gap-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-[#E85C24]/10 text-[#E85C24] flex items-center justify-center shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
             <i class="fas fa-hand-holding-heart"></i>
         </div>
         <div>
@@ -24,11 +24,11 @@
     <form action="{{ route('student.prana.transfer') }}" method="POST" class="flex flex-col sm:flex-row gap-2">
         @csrf
         <input type="email" name="email" required placeholder="email студента"
-               class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition">
+               class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition">
         <input type="number" name="amount" required min="1" placeholder="сколько праны"
-               class="sm:w-40 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition">
+               class="sm:w-40 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition">
         <button type="submit"
-                class="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#E85C24] hover:bg-[#d04a15] text-white text-sm font-bold transition-colors">
+                class="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-colors">
             <i class="fas fa-paper-plane"></i> Отправить
         </button>
     </form>

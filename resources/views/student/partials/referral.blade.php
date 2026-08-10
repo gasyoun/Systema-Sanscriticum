@@ -26,7 +26,7 @@
                class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 text-sm font-mono outline-none">
         <button type="button"
                 x-on:click="navigator.clipboard.writeText($refs.link.value); copiedLink = true; setTimeout(() => copiedLink = false, 2000)"
-                class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#E85C24] hover:bg-[#d04a15] text-white text-sm font-bold transition-colors">
+                class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-colors">
             <i class="fas" :class="copiedLink ? 'fa-check' : 'fa-copy'"></i>
             <span x-text="copiedLink ? 'Скопировано' : 'Скопировать'"></span>
         </button>

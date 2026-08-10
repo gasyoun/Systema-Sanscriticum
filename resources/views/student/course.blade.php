@@ -21,7 +21,7 @@
 
         <div class="relative z-10 flex flex-col md:flex-row gap-8 items-start">
             <div class="flex-1 w-full">
-                <div class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest bg-orange-50 text-[#E85C24] mb-5">
+                <div class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-widest bg-orange-50 text-brand mb-5">
                     <i class="fas fa-graduation-cap mr-2"></i> Программа курса
                 </div>
                 
@@ -46,11 +46,11 @@
                             <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Ваш прогресс</span>
                             <span class="text-sm font-bold text-gray-800">{{ $completed }} из {{ $total }} уроков пройдено</span>
                         </div>
-                        <div class="text-2xl font-extrabold text-[#E85C24]">{{ $percent }}%</div>
+                        <div class="text-2xl font-extrabold text-brand">{{ $percent }}%</div>
                     </div>
                     
                     <div class="bg-white rounded-full h-3 w-full overflow-hidden border border-gray-100 shadow-inner">
-                        <div class="h-full bg-[#E85C24] rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(232,92,36,0.5)] relative overflow-hidden" style="width: {{ $percent }}%">
+                        <div class="h-full bg-brand rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(232,92,36,0.5)] relative overflow-hidden" style="width: {{ $percent }}%">
                             {{-- Блик на прогресс-баре --}}
                             <div class="absolute inset-0 bg-white/20 w-full h-full -skew-x-12 translate-x-full animate-[shimmer_2s_infinite]"></div>
                         </div>
@@ -76,7 +76,7 @@
 @if($hasAnyMaterials)
 <div class="mt-6 flex justify-end">
     <a href="{{ route('student.course.materials.download', $course->slug) }}"
-       class="inline-flex items-center gap-2 px-5 py-3 bg-[#E85C24] hover:bg-[#d04a15] text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+       class="inline-flex items-center gap-2 px-5 py-3 bg-brand hover:bg-brand-hover text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
        onclick="this.classList.add('opacity-70','pointer-events-none'); this.querySelector('.btn-text').textContent='Готовим архив...';">
         <i class="fas fa-file-archive"></i>
         <span class="btn-text">Скачать все материалы</span>
@@ -95,7 +95,7 @@
 @if(config('features.course_library', false))
     <div class="mt-3 flex justify-end">
         <a href="{{ route('student.course.library', $course->slug) }}"
-           class="inline-flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 hover:border-[#E85C24]/40 text-gray-700 hover:text-[#E85C24] text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all">
+           class="inline-flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 hover:border-brand/40 text-gray-700 hover:text-brand text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all">
             <i class="fas fa-book-open"></i>
             <span>Библиотека курса</span>
         </a>
@@ -136,8 +136,8 @@
                 $lessonFindings = ($accessFindingsByLessonId ?? [])[$lesson->id] ?? [];
                 $cardClass = 'group block bg-white rounded-2xl border transition-all duration-300 relative overflow-hidden '
                     .($isUnlocked
-                        ? 'border-gray-100 hover:border-[#E85C24]/30 hover:shadow-lg hover:-translate-y-1'
-                        : 'border-gray-100 bg-gray-50/50 hover:border-[#E85C24]/40 hover:shadow-md hover:-translate-y-0.5');
+                        ? 'border-gray-100 hover:border-brand/30 hover:shadow-lg hover:-translate-y-1'
+                        : 'border-gray-100 bg-gray-50/50 hover:border-brand/40 hover:shadow-md hover:-translate-y-0.5');
             @endphp
 
             {{-- Open lessons: whole card is a link. Locked: div so «Почему закрыто?» can host forms. --}}
@@ -163,7 +163,7 @@
                     {{-- ИКОНКА / СТАТУС СЛЕВА --}}
                     <div class="flex-shrink-0">
                         @if(!$isUnlocked)
-                            <div class="w-12 h-12 rounded-2xl bg-gray-200 text-gray-400 flex items-center justify-center shadow-inner group-hover:bg-orange-50 group-hover:text-[#E85C24] transition-colors">
+                            <div class="w-12 h-12 rounded-2xl bg-gray-200 text-gray-400 flex items-center justify-center shadow-inner group-hover:bg-orange-50 group-hover:text-brand transition-colors">
                                 <i class="fas fa-lock text-lg"></i>
                             </div>
                         @elseif($isCompleted)
@@ -171,7 +171,7 @@
                                 <i class="fas fa-check text-xl"></i>
                             </div>
                         @else
-                            <div class="w-12 h-12 rounded-2xl bg-orange-50 text-[#E85C24] flex items-center justify-center border border-orange-100 group-hover:bg-[#E85C24] group-hover:text-white transition-colors">
+                            <div class="w-12 h-12 rounded-2xl bg-orange-50 text-brand flex items-center justify-center border border-orange-100 group-hover:bg-brand group-hover:text-white transition-colors">
                                 <i class="fas fa-play ml-1"></i>
                             </div>
                         @endif
@@ -180,7 +180,7 @@
                     {{-- ИНФОРМАЦИЯ ОБ УРОКЕ --}}
                     <div class="flex-1 min-w-0">
                         <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                            <span class="text-[10px] font-bold uppercase tracking-widest {{ $isUnlocked ? 'text-[#E85C24]' : 'text-gray-400 group-hover:text-[#E85C24] transition-colors' }}">
+                            <span class="text-[10px] font-bold uppercase tracking-widest {{ $isUnlocked ? 'text-brand' : 'text-gray-400 group-hover:text-brand transition-colors' }}">
                                 Урок {{ $index + 1 }}
                             </span>
                             @if(!$isUnlocked)
@@ -191,7 +191,7 @@
                         </div>
                         
                         <h3 class="text-lg md:text-xl font-bold truncate transition-colors leading-tight
-                                   {{ $isUnlocked ? 'text-gray-900 group-hover:text-[#E85C24]' : 'text-gray-600 group-hover:text-gray-900' }}">
+                                   {{ $isUnlocked ? 'text-gray-900 group-hover:text-brand' : 'text-gray-600 group-hover:text-gray-900' }}">
                             {{ $lesson->title }}
                         </h3>
                         
@@ -208,7 +208,7 @@
                             @endif
                             @if(!$isUnlocked)
                                 <a href="{{ route('shop.course.show', $course->slug) }}#tariffs"
-                                   class="text-[#E85C24] flex items-center bg-orange-50 px-2 py-0.5 rounded-md font-bold transition-colors hover:bg-[#E85C24] hover:text-white">
+                                   class="text-brand flex items-center bg-orange-50 px-2 py-0.5 rounded-md font-bold transition-colors hover:bg-brand hover:text-white">
                                     <i class="fas fa-shopping-cart mr-1.5"></i> Докупить блок {{ $lesson->block_number }}
                                 </a>
                             @endif
@@ -229,12 +229,12 @@
                                 Пройдено
                             </span>
                         @elseif($isUnlocked)
-                            <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#E85C24] group-hover:text-white transition-all group-hover:translate-x-1">
+                            <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-brand group-hover:text-white transition-all group-hover:translate-x-1">
                                 <i class="fas fa-chevron-right"></i>
                             </div>
                         @else
                             <a href="{{ route('shop.course.show', $course->slug) }}#tariffs"
-                               class="px-5 py-2.5 rounded-xl bg-gray-200 text-gray-600 font-extrabold text-xs uppercase tracking-widest hover:bg-[#E85C24] hover:text-white transition-all shadow-sm">
+                               class="px-5 py-2.5 rounded-xl bg-gray-200 text-gray-600 font-extrabold text-xs uppercase tracking-widest hover:bg-brand hover:text-white transition-all shadow-sm">
                                 Купить
                             </a>
                         @endif

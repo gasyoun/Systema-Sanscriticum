@@ -6,7 +6,7 @@
 
 @section('content')
     <header class="text-center mb-10">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-[#E85C24] tracking-tight">Транслитерация</h1>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-brand tracking-tight">Транслитерация</h1>
         <p class="mt-2 text-gray-400 text-sm max-w-xl mx-auto">
             IAST → деванагари + SLP1. Клиентский конвертер на
             <span class="text-gray-300">sanskrit-util</span> (CDSL) — без ручных таблиц.
@@ -25,7 +25,7 @@
                 autocomplete="off"
                 spellcheck="false"
                 placeholder="например: rāma, kṛṣṇa, Maria"
-                class="w-full rounded-xl bg-[#0f1420] border border-gray-700 text-gray-100 px-4 py-3 focus:outline-none focus:border-[#E85C24]"
+                class="w-full rounded-xl bg-[#0f1420] border border-gray-700 text-gray-100 px-4 py-3 focus:outline-none focus:border-brand"
             />
             <p class="mt-3 text-xs text-gray-500">Диакритика (вставка в позицию курсора):</p>
             <div id="hub-diacritics" class="mt-2 flex flex-wrap gap-2"></div>

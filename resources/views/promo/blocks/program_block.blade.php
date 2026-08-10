@@ -6,7 +6,7 @@
             <h2 class="text-2xl md:text-4xl font-extrabold text-[#101010] mb-4">
                 {{ $data['title'] ?? 'Программа обучения' }}
             </h2>
-            <div class="w-24 h-1.5 bg-[#E85C24] rounded-full"></div>
+            <div class="w-24 h-1.5 bg-brand rounded-full"></div>
         </div>
 
         @if(!empty($data['modules']))
@@ -24,18 +24,18 @@
                         <div class="flex items-center gap-5 md:gap-7">
                             {{-- Номер модуля --}}
                             <div class="flex-shrink-0 flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-2xl text-lg font-black transition-all duration-300"
-                                 :class="activeModule === {{ $index }} ? 'bg-[#E85C24] text-white rotate-6' : 'bg-gray-100 text-gray-400 group-hover:bg-orange-100 group-hover:text-[#E85C24]'">
+                                 :class="activeModule === {{ $index }} ? 'bg-brand text-white rotate-6' : 'bg-gray-100 text-gray-400 group-hover:bg-orange-100 group-hover:text-brand'">
                                 {{ $index + 1 }}
                             </div>
 
-                            <span class="text-lg md:text-2xl font-bold text-[#101010] group-hover:text-[#E85C24] transition-colors leading-tight">
+                            <span class="text-lg md:text-2xl font-bold text-[#101010] group-hover:text-brand transition-colors leading-tight">
                                 {{ $module['module_title'] }}
                             </span>
                         </div>
 
                         {{-- Иконка Стрелочка (более современно, чем +) --}}
                         <div class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all duration-500 shrink-0 ml-4"
-                             :class="activeModule === {{ $index }} ? 'bg-[#E85C24] text-white rotate-180' : 'bg-gray-100 text-gray-400'">
+                             :class="activeModule === {{ $index }} ? 'bg-brand text-white rotate-180' : 'bg-gray-100 text-gray-400'">
                             <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
                             </svg>
@@ -54,7 +54,7 @@
                                         [&>ul>li]:before:absolute [&>ul>li]:before:left-0 [&>ul>li]:before:top-1 
                                         [&>ul>li]:before:flex [&>ul>li]:before:items-center [&>ul>li]:before:justify-center
                                         [&>ul>li]:before:w-6 [&>ul>li]:before:h-6 [&>ul>li]:before:bg-orange-100 
-                                        [&>ul>li]:before:text-[#E85C24] [&>ul>li]:before:content-['✓'] 
+                                        [&>ul>li]:before:text-brand [&>ul>li]:before:content-['✓'] 
                                         [&>ul>li]:before:rounded-lg [&>ul>li]:before:font-black [&>ul>li]:before:text-sm">
                                 {!! $module['module_content'] !!}
                             </div>
@@ -62,7 +62,7 @@
                             {{-- Дополнительная плашка (если нужно выделить итог модуля) --}}
                             @if(!empty($module['module_footer']))
                             <div class="mt-6 p-4 rounded-2xl bg-gray-50 border border-gray-100 text-sm font-bold text-gray-500 flex items-center gap-3">
-                                <span class="w-2 h-2 rounded-full bg-[#E85C24]"></span>
+                                <span class="w-2 h-2 rounded-full bg-brand"></span>
                                 {{ $module['module_footer'] }}
                             </div>
                             @endif

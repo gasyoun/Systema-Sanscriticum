@@ -85,17 +85,17 @@
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 pl-1">Ваше имя</label>
                                 <input type="text" name="name" required placeholder="Имя и фамилия"
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm">
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 pl-1">Телефон / Telegram</label>
                                 <input type="text" name="contact" required placeholder="+7 999 000-00-00"
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm">
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 pl-1">Email</label>
                                 <input type="email" name="email" required placeholder="mail@example.com"
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm">
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm">
                             </div>
                             
                             {{-- Telegram / VK / Instagram (необязательное) --}}
@@ -107,17 +107,17 @@
     <input type="text" name="social" placeholder="@username или ссылка"
            maxlength="255"
            value="{{ old('social') }}"
-           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm">
+           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm">
 </div>
 
                             <div class="space-y-2.5 pt-2">
                                 {{-- Обязательная: согласие на обработку ПДн (гейтит кнопку) --}}
                                 <label class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
                                     <div class="flex items-center h-5 mt-px shrink-0">
-                                        <input type="checkbox" x-model="agreedForm" class="w-4 h-4 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer">
+                                        <input type="checkbox" x-model="agreedForm" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer">
                                     </div>
                                     <div class="text-xs text-gray-500 leading-relaxed select-none">
-                                        Я даю <a href="/docs/soglasie-pd.pdf" target="_blank" class="text-[#E85C24] hover:underline font-semibold">согласие</a> на обработку данных согласно <a href="/docs/privacy.pdf" target="_blank" class="text-[#E85C24] hover:underline font-semibold">политике конфиденциальности</a>
+                                        Я даю <a href="/docs/soglasie-pd.pdf" target="_blank" class="text-brand hover:underline font-semibold">согласие</a> на обработку данных согласно <a href="/docs/privacy.pdf" target="_blank" class="text-brand hover:underline font-semibold">политике конфиденциальности</a>
                                     </div>
                                 </label>
 
@@ -125,17 +125,17 @@
                                      читает LeadController::store; без неё лид сохраняется с is_promo_agreed=false. --}}
                                 <label class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
                                     <div class="flex items-center h-5 mt-px shrink-0">
-                                        <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-4 h-4 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer">
+                                        <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer">
                                     </div>
                                     <div class="text-xs text-gray-500 leading-relaxed select-none">
-                                        Я даю <a href="/docs/soglasie-promo.pdf" target="_blank" class="text-[#E85C24] hover:underline font-semibold">согласие</a> на получение рассылки
+                                        Я даю <a href="/docs/soglasie-promo.pdf" target="_blank" class="text-brand hover:underline font-semibold">согласие</a> на получение рассылки
                                     </div>
                                 </label>
                             </div>
 
                             <button type="submit"
                                     :disabled="!agreedForm"
-                                    :class="agreedForm ? 'bg-[#E85C24] hover:bg-[#d04a15] shadow-lg text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+                                    :class="agreedForm ? 'bg-brand hover:bg-brand-hover shadow-lg text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
                                     class="w-full font-extrabold py-3.5 rounded-xl transition-all duration-300 text-sm uppercase tracking-wider mt-4">
                                 Отправить заявку
                             </button>

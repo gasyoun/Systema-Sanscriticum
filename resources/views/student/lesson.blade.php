@@ -102,7 +102,7 @@
         function formatTimecodes($text) {
             if (!$text) return '';
             $pattern = '/\b(\d{1,2}:\d{2}(?::\d{2})?)\b/';
-            $replacement = '<button @click.prevent="seekTo(\'$1\')" class="inline-flex items-center gap-1.5 px-2 py-0.5 mx-1 rounded-md bg-[#E85C24]/10 text-[#E85C24] border border-[#E85C24]/30 hover:bg-[#E85C24] hover:text-white font-mono text-sm font-bold transition-all shadow-sm group"><i class="fas fa-play text-[10px] opacity-60 group-hover:opacity-100 group-hover:text-white transition-colors"></i>$1</button>';
+            $replacement = '<button @click.prevent="seekTo(\'$1\')" class="inline-flex items-center gap-1.5 px-2 py-0.5 mx-1 rounded-md bg-brand/10 text-brand border border-brand/30 hover:bg-brand hover:text-white font-mono text-sm font-bold transition-all shadow-sm group"><i class="fas fa-play text-[10px] opacity-60 group-hover:opacity-100 group-hover:text-white transition-colors"></i>$1</button>';
             return preg_replace($pattern, $replacement, $text);
         }
     }
@@ -276,10 +276,10 @@
                     @endphp
                     <div x-show="resumeOffered" x-cloak
                          class="absolute bottom-4 left-4 right-4 sm:right-auto z-10 flex items-center gap-3 bg-black/80 backdrop-blur rounded-2xl px-4 py-3 shadow-xl border border-white/10">
-                        <i class="fas fa-history text-[#E85C24]"></i>
+                        <i class="fas fa-history text-brand"></i>
                         <span class="text-white text-sm font-bold">Продолжить с {{ $resumeLabel }}?</span>
                         <button type="button" @click="resumePlayback()"
-                                class="px-3 py-1.5 rounded-lg bg-[#E85C24] hover:bg-[#d04a15] text-white text-xs font-extrabold uppercase tracking-wide transition-colors">
+                                class="px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-hover text-white text-xs font-extrabold uppercase tracking-wide transition-colors">
                             Продолжить
                         </button>
                         <button type="button" @click="resumeOffered = null" title="Начать с начала"
@@ -328,7 +328,7 @@
                 </div>
                 <div class="flex gap-2 flex-wrap">
                     @if($kinescopePilotActive)
-                        <button type="button" @click="player = 'kinescope'" :class="player === 'kinescope' ? 'bg-[#E85C24] text-white shadow-[0_0_15px_rgba(232,92,36,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
+                        <button type="button" @click="player = 'kinescope'" :class="player === 'kinescope' ? 'bg-brand text-white shadow-[0_0_15px_rgba(232,92,36,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
                             <i class="fas fa-film mr-2 text-sm"></i> Kinescope
                         </button>
                     @endif
@@ -369,7 +369,7 @@
         {{-- Левая часть: заголовок --}}
         <div class="flex-1 min-w-0">
             <div class="flex items-center gap-3 mb-2 flex-wrap">
-                <span class="bg-[#E85C24]/10 text-[#E85C24] px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">
+                <span class="bg-brand/10 text-brand px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider">
                     Урок {{ $lessonIndex }} из {{ $totalLessons }}
                 </span>
                 @if($lesson->duration ?? null)
@@ -407,7 +407,7 @@
             @else
                 <form action="{{ route('student.lesson.complete', [$course->slug, $lesson->id]) }}" method="POST">
                     @csrf
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-[#E85C24] hover:bg-[#d04a15] text-white rounded-xl font-extrabold text-xs md:text-sm leading-none transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 md:py-3 bg-brand hover:bg-brand-hover text-white rounded-xl font-extrabold text-xs md:text-sm leading-none transition-all shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
     Завершить
 </button>
                 </form>
@@ -423,7 +423,7 @@
         @click.away="navOpen = false"
         class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all text-left group">
     <div class="flex items-center gap-3 min-w-0">
-        <div class="w-9 h-9 rounded-lg bg-[#E85C24]/10 text-[#E85C24] flex items-center justify-center shrink-0">
+        <div class="w-9 h-9 rounded-lg bg-brand/10 text-brand flex items-center justify-center shrink-0">
             <i class="fas fa-list-ul text-sm"></i>
         </div>
         <div class="min-w-0">
@@ -457,10 +457,10 @@
                     @if($isUnlocked && !$isCurrent)
                         <a href="{{ route('student.lesson', [$course->slug, $l->id]) }}" 
                            class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors group">
-                            <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-gray-100 text-gray-600 text-xs font-extrabold group-hover:bg-[#E85C24] group-hover:text-white transition-colors">
+                            <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-gray-100 text-gray-600 text-xs font-extrabold group-hover:bg-brand group-hover:text-white transition-colors">
                                 {{ $idx + 1 }}
                             </span>
-                            <span class="flex-1 text-sm font-bold text-gray-800 truncate group-hover:text-[#E85C24] transition-colors">
+                            <span class="flex-1 text-sm font-bold text-gray-800 truncate group-hover:text-brand transition-colors">
                                 {{ $l->title }}
                             </span>
                             @if($isCompleted)
@@ -468,14 +468,14 @@
                             @endif
                         </a>
                     @elseif($isCurrent)
-                        <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-[#E85C24]/10 border border-[#E85C24]/30 cursor-default">
-                            <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-[#E85C24] text-white text-xs font-extrabold">
+                        <div class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-brand/10 border border-brand/30 cursor-default">
+                            <span class="w-7 h-7 shrink-0 flex items-center justify-center rounded-md bg-brand text-white text-xs font-extrabold">
                                 {{ $idx + 1 }}
                             </span>
-                            <span class="flex-1 text-sm font-extrabold text-[#E85C24] truncate">
+                            <span class="flex-1 text-sm font-extrabold text-brand truncate">
                                 {{ $l->title }}
                             </span>
-                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-[#E85C24] bg-white px-2 py-0.5 rounded shrink-0">
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider text-brand bg-white px-2 py-0.5 rounded shrink-0">
                                 Сейчас
                             </span>
                         </div>
@@ -502,7 +502,7 @@
         {{-- КОНТЕНТ УРОКА (Описание) --}}
         @if($lesson->content || $lesson->topic)
         <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 relative z-10">
-            <div class="prose prose-lg max-w-none text-gray-800 leading-relaxed font-nunito font-medium marker:bg-[#E85C24]/20 marker:text-[#1A1A1A]">
+            <div class="prose prose-lg max-w-none text-gray-800 leading-relaxed font-nunito font-medium marker:bg-brand/20 marker:text-[#1A1A1A]">
                 {!! formatTimecodes(nl2br(e($lesson->content ?? $lesson->topic))) !!}
             </div>
         </div>
@@ -534,7 +534,7 @@
             @if($hasTranscript)
             <button @click="activeTab = 'transcript'" 
                     class="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[13px] font-extrabold transition-all duration-300"
-                    :class="activeTab === 'transcript' ? 'bg-white text-[#E85C24] shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
+                    :class="activeTab === 'transcript' ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'">
                 <i class="fas fa-align-left text-base"></i> Текст
             </button>
             @endif
@@ -581,7 +581,7 @@
                     <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                     <input type="text" x-model="searchQuery" placeholder="Поиск фразы..." 
                            @input="autoScroll = (searchQuery === '')" 
-                           class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-[#E85C24] outline-none transition-all placeholder-gray-400 shadow-inner">
+                           class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-brand outline-none transition-all placeholder-gray-400 shadow-inner">
                 </div>
             </div>
 
@@ -590,12 +590,12 @@
                     <button @click.prevent="seekTo({{ $sentence['start'] }})"
                             x-show="matches({{ json_encode($sentence['safe_text']) }})"
                             :class="(currentTime >= {{ $sentence['start'] }} && currentTime <= {{ $sentence['end'] }}) 
-                                ? 'is-active-sentence bg-[#F4F1EA] border-l-4 border-[#E85C24] text-[#1A1A1A] font-bold z-10 relative' 
+                                ? 'is-active-sentence bg-[#F4F1EA] border-l-4 border-brand text-[#1A1A1A] font-bold z-10 relative' 
                                 : 'hover:bg-gray-50 border-l-4 border-transparent text-gray-600 font-medium'"
                             class="block w-full text-left p-3 rounded-r-xl transition-all duration-200 group">
                         
-                        <span class="inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-400 text-[10px] font-mono font-extrabold px-2 py-0.5 rounded mr-2 shadow-sm group-hover:border-[#E85C24] group-hover:text-[#E85C24] transition-colors"
-                              :class="(currentTime >= {{ $sentence['start'] }} && currentTime <= {{ $sentence['end'] }}) ? '!bg-[#E85C24] !border-[#E85C24] !text-white' : ''">
+                        <span class="inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-400 text-[10px] font-mono font-extrabold px-2 py-0.5 rounded mr-2 shadow-sm group-hover:border-brand group-hover:text-brand transition-colors"
+                              :class="(currentTime >= {{ $sentence['start'] }} && currentTime <= {{ $sentence['end'] }}) ? '!bg-brand !border-brand !text-white' : ''">
                             {{ $sentence['formatted_time'] }}
                         </span>
                         

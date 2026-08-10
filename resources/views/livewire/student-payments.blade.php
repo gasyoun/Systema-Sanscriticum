@@ -4,7 +4,7 @@
     <div class="mb-10">
         <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">Мои оплаты</h1>
         <p class="text-gray-500 text-lg">Здесь отображается история ваших платежей и доступов к курсам.</p>
-        <div class="w-16 h-1.5 bg-[#E85C24] rounded-full mt-4"></div>
+        <div class="w-16 h-1.5 bg-brand rounded-full mt-4"></div>
     </div>
 
     {{-- Сводка «Оплачено до» по курсам: прямой ответ на «сколько оплатил и до
@@ -25,7 +25,7 @@
                             @endif
                         </div>
                         @if($paidUntil->next_payment_deadline)
-                            <div class="text-[#E85C24] font-semibold mt-0.5">
+                            <div class="text-brand font-semibold mt-0.5">
                                 Следующий платеж до: {{ $paidUntil->next_payment_deadline->format('d.m.Y') }}, 00:00 (МСК)
                             </div>
                         @endif
@@ -62,7 +62,7 @@
 
                                 {{-- Описание (Название КУРСА и тариф) --}}
                                 <td class="px-6 py-5">
-                                    <div class="text-gray-800 font-semibold group-hover:text-[#E85C24] transition-colors line-clamp-2">
+                                    <div class="text-gray-800 font-semibold group-hover:text-brand transition-colors line-clamp-2">
                                         {{ $payment->course->title ?? 'Курс удален или не найден' }}
                                     </div>
                                     <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-1">

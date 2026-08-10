@@ -69,7 +69,7 @@
     <noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ $page->vk_pixel_id }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
     @endif
 </head>
-<body class="bg-white text-gray-900 antialiased selection:bg-[#E85C24] selection:text-white overflow-x-hidden"
+<body class="bg-white text-gray-900 antialiased selection:bg-brand selection:text-white overflow-x-hidden"
       x-data="{ 
           openConsent: false, 
           targetUrl: '', 
@@ -144,7 +144,7 @@
 
                     @if($page->webinar_date)
                         <div class="absolute -bottom-6 -left-2 md:-left-8 bg-white p-5 md:p-6 rounded-2xl shadow-xl z-20 animate-bounce" style="animation-duration: 3s;">
-                            <p class="text-3xl font-extrabold text-[#E85C24] leading-none mb-1">
+                            <p class="text-3xl font-extrabold text-brand leading-none mb-1">
                                 {{ $page->webinar_date->format('d') }} 
                                 <span class="text-gray-900 lowercase">
                                     {{ $page->webinar_date->translatedFormat('M') }}
@@ -161,7 +161,7 @@
                      :class="shown ? '!translate-x-0 !opacity-100' : ''">
                       
                     @if($page->subtitle)
-                    <p class="text-[#E85C24] font-bold tracking-widest uppercase text-xs md:text-sm mb-6 inline-block bg-orange-50 px-3 py-1 rounded-md">
+                    <p class="text-brand font-bold tracking-widest uppercase text-xs md:text-sm mb-6 inline-block bg-orange-50 px-3 py-1 rounded-md">
                         {{ $page->subtitle }}
                     </p>
                     @endif
@@ -171,12 +171,12 @@
                     </h1>
                     
                     @if($page->instructor_name)
-                    <h2 class="text-3xl md:text-5xl font-serif text-[#E85C24] mb-8 flex flex-col md:flex-row items-center md:items-baseline justify-center lg:justify-start gap-2">
+                    <h2 class="text-3xl md:text-5xl font-serif text-brand mb-8 flex flex-col md:flex-row items-center md:items-baseline justify-center lg:justify-start gap-2">
                         <span class="text-2xl md:text-4xl text-gray-400 font-bold font-sans">
                             {{ $page->instructor_label ?? 'с экспертом' }}
-                            <span class="relative inline-block text-[#E85C24] group cursor-default ml-1 md:ml-2">
+                            <span class="relative inline-block text-brand group cursor-default ml-1 md:ml-2">
                                 {{ $page->instructor_name }}
-                                <span class="absolute -bottom-1 left-0 w-full h-1 bg-[#E85C24] opacity-30 rounded transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                                <span class="absolute -bottom-1 left-0 w-full h-1 bg-brand opacity-30 rounded transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
                             </span>
                         </span>
                     </h2>
@@ -192,13 +192,13 @@
                     <div class="flex flex-col gap-4 mb-12 items-center lg:items-start">
                         @if($page->bullet_1)
                         <div class="flex items-center text-gray-700 font-medium bg-white px-4 py-2 rounded-lg shadow-sm w-full md:w-auto border border-gray-100 transition hover:shadow-md hover:-translate-y-0.5">
-                            <span class="w-6 h-6 bg-orange-100 text-[#E85C24] rounded-full flex items-center justify-center mr-3 text-sm font-bold shrink-0">✓</span>
+                            <span class="w-6 h-6 bg-orange-100 text-brand rounded-full flex items-center justify-center mr-3 text-sm font-bold shrink-0">✓</span>
                             {{ $page->bullet_1 }}
                         </div>
                         @endif
                         @if($page->bullet_2)
                         <div class="flex items-center text-gray-700 font-medium bg-white px-4 py-2 rounded-lg shadow-sm w-full md:w-auto border border-gray-100 transition hover:shadow-md hover:-translate-y-0.5">
-                            <span class="w-6 h-6 bg-orange-100 text-[#E85C24] rounded-full flex items-center justify-center mr-3 text-sm font-bold shrink-0">✓</span>
+                            <span class="w-6 h-6 bg-orange-100 text-brand rounded-full flex items-center justify-center mr-3 text-sm font-bold shrink-0">✓</span>
                             {{ $page->bullet_2 }}
                         </div>
                         @endif
@@ -209,13 +209,13 @@
                         @if($page->telegram_url)
                             <a href="{{ $page->telegram_url }}" 
                                @click.prevent="askConsent('{{ $page->telegram_url }}')"
-                               class="group inline-flex items-center justify-center bg-[#E85C24] text-white font-bold py-5 px-12 rounded-xl shadow-lg shadow-orange-500/30 hover:bg-[#d04a15] hover:-translate-y-1 transition-all duration-300 text-lg cursor-pointer">
+                               class="group inline-flex items-center justify-center bg-brand text-white font-bold py-5 px-12 rounded-xl shadow-lg shadow-orange-500/30 hover:bg-brand-hover hover:-translate-y-1 transition-all duration-300 text-lg cursor-pointer">
                                 {{ $page->button_text }}
                                 <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </a>
                         @else
                             <a href="#order-form-anchor" 
-                                class="group inline-flex items-center justify-center bg-[#E85C24] text-white font-bold py-5 px-12 rounded-xl shadow-lg shadow-orange-500/30 hover:bg-[#d04a15] hover:-translate-y-1 transition-all duration-300 text-lg cursor-pointer">
+                                class="group inline-flex items-center justify-center bg-brand text-white font-bold py-5 px-12 rounded-xl shadow-lg shadow-orange-500/30 hover:bg-brand-hover hover:-translate-y-1 transition-all duration-300 text-lg cursor-pointer">
                                 {{ $page->button_text }}
                                 <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </a>
@@ -241,12 +241,12 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 
                 <div class="group relative p-8 bg-white rounded-[2rem] border border-gray-100 hover:border-orange-200 transition-all duration-500 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2" x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false">
-                    <div class="w-20 h-20 mb-8 rounded-2xl bg-orange-50 shadow-sm flex items-center justify-center transition-all duration-500 group-hover:bg-[#E85C24] group-hover:rotate-3">
-                        <svg class="w-10 h-10 text-[#E85C24] transition-all duration-500 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="w-20 h-20 mb-8 rounded-2xl bg-orange-50 shadow-sm flex items-center justify-center transition-all duration-500 group-hover:bg-brand group-hover:rotate-3">
+                        <svg class="w-10 h-10 text-brand transition-all duration-500 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#E85C24] transition-colors">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-brand transition-colors">
                         {{ $page->feature_1_title ?? 'Системность' }}
                     </h3>
                     <p class="text-gray-500 leading-relaxed">
@@ -255,12 +255,12 @@
                 </div>
 
                 <div class="group relative p-8 bg-white rounded-[2rem] border border-gray-100 hover:border-orange-200 transition-all duration-500 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2" x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false">
-                    <div class="w-20 h-20 mb-8 rounded-2xl bg-orange-50 shadow-sm flex items-center justify-center transition-all duration-500 group-hover:bg-[#E85C24] group-hover:-rotate-3">
-                        <svg class="w-10 h-10 text-[#E85C24] transition-all duration-500 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="w-20 h-20 mb-8 rounded-2xl bg-orange-50 shadow-sm flex items-center justify-center transition-all duration-500 group-hover:bg-brand group-hover:-rotate-3">
+                        <svg class="w-10 h-10 text-brand transition-all duration-500 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#E85C24] transition-colors">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-brand transition-colors">
                         {{ $page->feature_2_title ?? 'Первоисточники' }}
                     </h3>
                     <p class="text-gray-500 leading-relaxed">
@@ -269,12 +269,12 @@
                 </div>
 
                 <div class="group relative p-8 bg-white rounded-[2rem] border border-gray-100 hover:border-orange-200 transition-all duration-500 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2" x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false">
-                    <div class="w-20 h-20 mb-8 rounded-2xl bg-orange-50 shadow-sm flex items-center justify-center transition-all duration-500 group-hover:bg-[#E85C24] group-hover:rotate-3">
-                        <svg class="w-10 h-10 text-[#E85C24] transition-all duration-500 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="w-20 h-20 mb-8 rounded-2xl bg-orange-50 shadow-sm flex items-center justify-center transition-all duration-500 group-hover:bg-brand group-hover:rotate-3">
+                        <svg class="w-10 h-10 text-brand transition-all duration-500 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-[#E85C24] transition-colors">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4 group-hover:text-brand transition-colors">
                         {{ $page->feature_3_title ?? 'Обратная связь' }}
                     </h3>
                     <p class="text-gray-500 leading-relaxed">
@@ -297,9 +297,9 @@
             <div class="mb-16 text-center"> 
                 <div class="text-center mb-10">
                     <h2 class="text-3xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
-                        Видео <span class="text-[#E85C24]">анонс</span>
+                        Видео <span class="text-brand">анонс</span>
                     </h2>
-                    <div class="w-24 h-2 bg-[#E85C24] mx-auto mt-5 rounded-full opacity-90 shadow-lg shadow-orange-200"></div>
+                    <div class="w-24 h-2 bg-brand mx-auto mt-5 rounded-full opacity-90 shadow-lg shadow-orange-200"></div>
                 </div>
 
                 <div class="relative rounded-3xl overflow-hidden shadow-xl group border border-gray-100 max-w-5xl mx-auto">
@@ -322,7 +322,7 @@
                 {{-- ЛЕВАЯ КОЛОНКА: ТЕКСТ (ШИРОКАЯ - 8/12) --}}
                 <div class="lg:col-span-8 flex flex-col">
                     <div class="relative bg-white rounded-3xl p-8 md:p-12 shadow-lg border border-gray-100 h-full">
-                        <div class="absolute top-0 left-0 w-1.5 h-full bg-[#E85C24]"></div>
+                        <div class="absolute top-0 left-0 w-1.5 h-full bg-brand"></div>
                         
                         {{-- Декор --}}
                         <div class="absolute -right-6 -top-6 text-gray-50 opacity-60 pointer-events-none">
@@ -330,7 +330,7 @@
                         </div>
 
                         <div class="relative z-10">
-                            <h3 class="text-xs font-bold text-[#E85C24] uppercase tracking-widest mb-6">Детали программы</h3>
+                            <h3 class="text-xs font-bold text-brand uppercase tracking-widest mb-6">Детали программы</h3>
                             <div class="prose prose-lg prose-slate max-w-none custom-content">
                                 {!! $page->description !!}
                             </div>
@@ -346,7 +346,7 @@
                          x-data="{ agreedForm: true, agreedPromoForm: true }">
                         
                         {{-- Декор формы --}}
-                        <div class="absolute top-0 right-0 w-48 h-48 bg-[#E85C24] rounded-full mix-blend-screen filter blur-3xl opacity-15 pointer-events-none"></div>
+                        <div class="absolute top-0 right-0 w-48 h-48 bg-brand rounded-full mix-blend-screen filter blur-3xl opacity-15 pointer-events-none"></div>
                         <div class="absolute bottom-0 left-0 w-32 h-32 bg-purple-600 rounded-full mix-blend-screen filter blur-3xl opacity-10 pointer-events-none"></div>
 
                         <div class="relative z-10 w-full"> {{-- w-full чтобы контент не плющило --}}
@@ -376,19 +376,19 @@
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Ваше имя</label>
                                         <input type="text" name="name" required 
-                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-[#E85C24] transition text-sm" 
+                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-brand transition text-sm" 
                                                placeholder="Иван">
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Телефон / Telegram</label>
                                         <input type="text" name="contact" required 
-                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-[#E85C24] transition text-sm" 
+                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-brand transition text-sm" 
                                                placeholder="+7 999 000-00-00">
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Email</label>
                                         <input type="email" name="email" required
-                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-[#E85C24] transition text-sm"
+                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-brand transition text-sm"
                                                placeholder="mail@example.com">
                                     </div>
                                     <div>
@@ -398,7 +398,7 @@
                                         </label>
                                         <input type="text" name="social" placeholder="@username или ссылка"
                                                maxlength="255" value="{{ old('social') }}"
-                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-[#E85C24] transition text-sm">
+                                               class="w-full px-4 py-3 rounded-xl border-none bg-white/5 text-white placeholder-gray-500 focus:bg-white/10 focus:ring-1 focus:ring-brand transition text-sm">
                                     </div>
                                 </div>
 
@@ -408,20 +408,20 @@
                                     {{-- 1. Согласие ПД --}}
                                     <label class="flex items-start gap-3 text-left p-3 rounded-xl cursor-pointer transition-all duration-300 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 group">
                                         <div class="flex items-center h-5 mt-0.5 shrink-0">
-                                            <input type="checkbox" x-model="agreedForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-[#E85C24] focus:ring-[#E85C24] checked:bg-[#E85C24] checked:border-transparent cursor-pointer transition-colors">
+                                            <input type="checkbox" x-model="agreedForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-brand focus:ring-brand checked:bg-brand checked:border-transparent cursor-pointer transition-colors">
                                         </div>
                                         <div class="text-xs text-gray-400 leading-relaxed select-none group-hover:text-gray-200 transition">
-                                            Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
+                                            Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
                                         </div>
                                     </label>
 
                                     {{-- 2. Рассылка --}}
                                     <label class="flex items-start gap-3 text-left p-3 rounded-xl cursor-pointer transition-all duration-300 border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 group">
                                         <div class="flex items-center h-5 mt-0.5 shrink-0">
-                                            <input type="checkbox" name="is_promo_agreed" x-model="agreedPromoForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-[#E85C24] focus:ring-[#E85C24] checked:bg-[#E85C24] checked:border-transparent cursor-pointer transition-colors">
+                                            <input type="checkbox" name="is_promo_agreed" x-model="agreedPromoForm" class="w-5 h-5 rounded border-white/20 bg-transparent text-brand focus:ring-brand checked:bg-brand checked:border-transparent cursor-pointer transition-colors">
                                         </div>
                                         <div class="text-xs text-gray-400 leading-relaxed select-none group-hover:text-gray-200 transition">
-                                            Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие на получение рассылки</span>
+                                            Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие на получение рассылки</span>
                                         </div>
                                     </label>
 
@@ -429,7 +429,7 @@
 
                                 <button type="submit" 
                                         :disabled="!agreedForm"
-                                        :class="agreedForm ? 'bg-[#E85C24] hover:bg-[#d04a15] shadow-lg shadow-orange-500/20 transform hover:scale-[1.02] text-white' : 'bg-white/10 text-gray-500 cursor-not-allowed'"
+                                        :class="agreedForm ? 'bg-brand hover:bg-brand-hover shadow-lg shadow-orange-500/20 transform hover:scale-[1.02] text-white' : 'bg-white/10 text-gray-500 cursor-not-allowed'"
                                         class="w-full font-bold py-4 rounded-xl transition-all duration-300 text-sm uppercase tracking-wide mt-2">
                                     {{ $page->button_text }}
                                 </button>
@@ -502,7 +502,7 @@
             
             <div class="mb-6">
                 <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 mb-4">
-                    <svg class="h-6 w-6 text-[#E85C24]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg class="h-6 w-6 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </div>
                 <h3 class="text-xl font-bold text-gray-900">Подтверждение</h3>
                 <p class="text-sm text-gray-500 mt-2">Для продолжения необходимо ваше согласие с условиями.</p>
@@ -512,26 +512,26 @@
                 
                 <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                     <div class="flex items-center h-5 mt-0.5 shrink-0">
-                        <input type="checkbox" x-model="agreed" class="w-5 h-5 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer transition-colors">
+                        <input type="checkbox" x-model="agreed" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                     </div>
                     <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
-                        Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
+                        Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
                     </div>
                 </label>
 
                 <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                     <div class="flex items-center h-5 mt-0.5 shrink-0">
-                        <input type="checkbox" x-model="agreedPromo" class="w-5 h-5 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer transition-colors">
+                        <input type="checkbox" x-model="agreedPromo" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                     </div>
                     <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
-                        Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие на получение рассылки</span>
+                        Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие на получение рассылки</span>
                     </div>
                 </label>
 
                 <div class="grid gap-3 mt-6">
                     <button @click="$dispatch('proceed-click'); proceed()" 
                             :disabled="!agreed"
-                            :class="agreed ? 'bg-[#E85C24] hover:bg-[#d04a15] shadow-lg shadow-orange-500/30' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+                            :class="agreed ? 'bg-brand hover:bg-brand-hover shadow-lg shadow-orange-500/30' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
                             class="w-full text-white font-bold py-3.5 rounded-xl transition-all duration-300 text-lg flex items-center justify-center">
                         Продолжить
                     </button>

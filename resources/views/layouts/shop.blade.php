@@ -45,7 +45,7 @@
                      alt="Общество ревнителей санскрита"
                      class="w-auto h-10 md:h-12 object-contain group-hover:scale-105 transition-transform duration-300">
                 <div class="hidden sm:flex flex-col leading-tight">
-                    <span class="text-sm md:text-base font-bold text-white group-hover:text-[#E85C24] transition-colors"
+                    <span class="text-sm md:text-base font-bold text-white group-hover:text-brand transition-colors"
                           style="font-family: 'Charter', 'Georgia', serif;">
                         Ревнители санскрита
                     </span>
@@ -90,8 +90,8 @@
                 @auth
                     <div x-data="{ userMenu: false }" class="relative" @click.outside="userMenu = false">
                         <button @click="userMenu = !userMenu"
-                                class="flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24] transition-all">
-                            <div class="w-7 h-7 rounded-lg bg-[#E85C24] text-white text-sm font-extrabold flex items-center justify-center shrink-0">
+                                class="flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl bg-[#111622] border border-[#1F2636] hover:border-brand transition-all">
+                            <div class="w-7 h-7 rounded-lg bg-brand text-white text-sm font-extrabold flex items-center justify-center shrink-0">
                                 {{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}
                             </div>
                             <span class="hidden sm:inline text-sm font-semibold text-white max-w-[140px] truncate">
@@ -108,7 +108,7 @@
                              class="absolute right-0 mt-2 w-56 bg-[#111622] rounded-xl shadow-2xl border border-[#1F2636] py-2 z-50">
 
                             <a href="{{ route('student.dashboard') }}"
-                               class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-[#1F2636] hover:text-[#E85C24] transition">
+                               class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-[#1F2636] hover:text-brand transition">
                                 <i class="fas fa-graduation-cap w-4 text-center text-[#38BDF8]"></i>
                                 Личный кабинет
                             </a>
@@ -126,7 +126,7 @@
                 @else
     <button type="button"
             id="shop-login-trigger"
-            class="inline-flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-[#E85C24] text-white text-sm font-bold hover:bg-[#d04a15] hover:shadow-lg hover:shadow-[#E85C24]/30 transition-all">
+            class="inline-flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-bold hover:bg-brand-hover hover:shadow-lg hover:shadow-brand/30 transition-all">
         <i class="fas fa-user text-xs"></i>
         <span>Войти</span>
     </button>
@@ -167,7 +167,7 @@
 
                 <div class="flex flex-col items-center gap-3 text-sm">
                     <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium">
-                        @include('partials.footer-docs', ['linkClass' => 'text-slate-400 hover:text-[#E85C24] transition-colors'])
+                        @include('partials.footer-docs', ['linkClass' => 'text-slate-400 hover:text-brand transition-colors'])
                     </div>
                     <p class="text-xs text-slate-600 mt-2">
                         &copy; {{ date('Y') }} Все права защищены
@@ -180,7 +180,7 @@
                         $socials = array_filter([
                             ['url' => config('social.vk'),       'icon' => 'fab fa-vk',             'hover' => 'hover:bg-[#0077FF]'],
                             ['url' => config('social.telegram'), 'icon' => 'fab fa-telegram-plane', 'hover' => 'hover:bg-[#229ED9]'],
-                            ['url' => config('social.website'),  'icon' => 'fas fa-globe',          'hover' => 'hover:bg-[#E85C24]'],
+                            ['url' => config('social.website'),  'icon' => 'fas fa-globe',          'hover' => 'hover:bg-brand'],
                         ], fn ($s) => !empty($s['url']));
                     @endphp
 

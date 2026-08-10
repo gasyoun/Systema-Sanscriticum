@@ -77,7 +77,7 @@
                 </div>
                 <p class="text-sm text-slate-400 leading-relaxed mb-4 grow">{{ $item['a'] }}</p>
                 <a href="{{ $item['href'] }}"
-                   class="inline-flex items-center gap-2 text-xs font-bold text-[#38BDF8] hover:text-[#E85C24] transition-colors">
+                   class="inline-flex items-center gap-2 text-xs font-bold text-[#38BDF8] hover:text-brand transition-colors">
                     {{ $item['cta'] }} <i class="fas fa-arrow-right text-[10px]"></i>
                 </a>
             </div>

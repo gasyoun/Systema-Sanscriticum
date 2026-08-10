@@ -27,8 +27,8 @@
                aria-selected="{{ $active ? 'true' : 'false' }}"
                class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-colors
                       {{ $active
-                          ? 'bg-[#E85C24] text-white'
-                          : 'bg-[#111622] text-slate-300 border border-[#1F2636] hover:border-[#E85C24]/50' }}">
+                          ? 'bg-brand text-white'
+                          : 'bg-[#111622] text-slate-300 border border-[#1F2636] hover:border-brand/50' }}">
                 {{ $label }}
             </a>
         @endforeach
@@ -56,9 +56,9 @@
                 @endphp
                 <li>
                     <a href="{{ url('/koloda/'.$segment) }}"
-                       class="flex items-center justify-between gap-4 p-5 rounded-2xl border border-[#1F2636] bg-[#111622] hover:border-[#E85C24]/50 transition-all group">
+                       class="flex items-center justify-between gap-4 p-5 rounded-2xl border border-[#1F2636] bg-[#111622] hover:border-brand/50 transition-all group">
                         <div>
-                            <div class="font-extrabold text-white group-hover:text-[#E85C24] transition-colors">
+                            <div class="font-extrabold text-white group-hover:text-brand transition-colors">
                                 {{ $deck->name }}
                             </div>
                             <div class="text-sm text-slate-400 mt-1">
@@ -67,7 +67,7 @@
                                 <span class="ml-2 text-slate-500">· учите {{ $taglineSubject }}</span>
                             </div>
                         </div>
-                        <span class="text-sm font-bold text-[#E85C24] whitespace-nowrap">Попробовать →</span>
+                        <span class="text-sm font-bold text-brand whitespace-nowrap">Попробовать →</span>
                     </a>
                 </li>
             @endforeach
@@ -76,7 +76,7 @@
 
     <p class="mt-8 text-center text-sm text-slate-500">
         Уже учитесь?
-        <a href="{{ url('/login') }}" class="text-[#E85C24] font-bold hover:underline">Войти в кабинет</a>
+        <a href="{{ url('/login') }}" class="text-brand font-bold hover:underline">Войти в кабинет</a>
     </p>
 </div>
 @endsection

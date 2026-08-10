@@ -19,11 +19,11 @@
             Наш сайт использует файлы cookie. Продолжая им пользоваться, вы соглашаетесь на
             обработку персональных данных в соответствии с
             <a href="{{ route('docs.show', 'privacy') }}"
-               class="text-[#E85C24] underline hover:no-underline">политикой конфиденциальности</a>.
+               class="text-brand underline hover:no-underline">политикой конфиденциальности</a>.
         </p>
         <button type="button"
                 @click="localStorage.setItem('cookie_consent_v1','1'); open = false"
-                class="shrink-0 px-5 py-2 rounded-lg bg-[#E85C24] text-white font-semibold hover:bg-[#d14e1a] transition-colors">
+                class="shrink-0 px-5 py-2 rounded-lg bg-brand text-white font-semibold hover:bg-brand-hover transition-colors">
             Принять все
         </button>
     </div>

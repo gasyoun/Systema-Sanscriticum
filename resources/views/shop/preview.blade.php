@@ -26,13 +26,13 @@
 @endphp
 
 <div class="min-h-screen bg-[#0A0D14] text-white font-sans relative overflow-hidden">
-    <div class="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-[#E85C24]/10 rounded-full blur-[150px] pointer-events-none"></div>
+    <div class="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-brand/10 rounded-full blur-[150px] pointer-events-none"></div>
 
     <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 lg:pt-28 lg:pb-24 relative z-10">
 
         {{-- Хлебная навигация назад к курсу --}}
         <a href="{{ route('shop.course.show', $course->slug) }}"
-           class="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-[#E85C24] transition-colors mb-6">
+           class="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-brand transition-colors mb-6">
             <i class="fas fa-arrow-left text-xs"></i>
             {{ $course->title }}
         </a>
@@ -73,7 +73,7 @@
         </div>
 
         {{-- CTA: понравилось — к тарифам --}}
-        <div class="mt-10 rounded-2xl border border-[#E85C24]/30 bg-gradient-to-r from-[#E85C24]/10 to-transparent p-6 lg:p-8 flex flex-col md:flex-row md:items-center gap-5">
+        <div class="mt-10 rounded-2xl border border-brand/30 bg-gradient-to-r from-brand/10 to-transparent p-6 lg:p-8 flex flex-col md:flex-row md:items-center gap-5">
             <div class="flex-1">
                 <h2 class="text-xl lg:text-2xl font-bold text-white mb-1">Понравился формат?</h2>
                 <p class="text-sm text-slate-400 leading-relaxed">
@@ -81,7 +81,7 @@
                 </p>
             </div>
             <a href="{{ route('shop.course.show', $course->slug) }}#tariffs"
-               class="md:flex-shrink-0 inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#E85C24] hover:bg-[#d64e1c] transition-all shadow-[0_0_20px_rgba(232,92,36,0.3)]">
+               class="md:flex-shrink-0 inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-brand hover:bg-brand-hover transition-all shadow-[0_0_20px_rgba(232,92,36,0.3)]">
                 Выбрать тариф
             </a>
         </div>

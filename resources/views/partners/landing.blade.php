@@ -24,11 +24,11 @@
 
         {{-- Hero / оффер --}}
         <section class="text-center mb-12">
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E85C24]/10 text-[#E85C24] text-sm font-bold mb-4">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 text-brand text-sm font-bold mb-4">
                 <i class="fas fa-handshake"></i> Партнерская программа
             </span>
             <h1 class="text-3xl md:text-5xl font-extrabold leading-tight mb-4">
-                Рекомендуйте нас — <span class="text-[#E85C24]">и получайте вознаграждение</span>
+                Рекомендуйте нас — <span class="text-brand">и получайте вознаграждение</span>
             </h1>
             <p class="text-gray-600 text-lg max-w-2xl mx-auto">
                 Мы ценим каждую связь, которая сложилась за время работы, — и предлагаем вывести ее
@@ -46,7 +46,7 @@
                 ['fa-ruble-sign', 'Вы получаете выплату', 'Когда приведенный клиент впервые оплачивает курс, вам начисляется фиксированное вознаграждение к выплате.'],
             ] as [$icon, $title, $text])
                 <div class="rounded-2xl border border-gray-100 bg-gray-50/60 p-5">
-                    <div class="w-11 h-11 rounded-xl bg-[#E85C24]/10 text-[#E85C24] flex items-center justify-center mb-3">
+                    <div class="w-11 h-11 rounded-xl bg-brand/10 text-brand flex items-center justify-center mb-3">
                         <i class="fas {{ $icon }}"></i>
                     </div>
                     <h3 class="font-extrabold mb-1">{{ $title }}</h3>
@@ -92,35 +92,35 @@
             <form method="POST" action="{{ route('partners.register') }}" class="space-y-4">
                 @csrf
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Ваше имя <span class="text-[#E85C24]">*</span></label>
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Ваше имя <span class="text-brand">*</span></label>
                     <input type="text" name="name" value="{{ old('name') }}" required
-                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-[#E85C24]">
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-brand">
                 </div>
                 <div class="grid sm:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Telegram</label>
                         <input type="text" name="telegram_username" value="{{ old('telegram_username') }}" placeholder="@username"
-                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-[#E85C24]">
+                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-brand">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Email</label>
                         <input type="email" name="email" value="{{ old('email') }}"
-                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-[#E85C24]">
+                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-brand">
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Телефон</label>
                         <input type="text" name="phone" value="{{ old('phone') }}"
-                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-[#E85C24]">
+                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-brand">
                     </div>
                 </div>
                 <p class="text-xs text-gray-500">Укажите хотя бы один контакт: Telegram, email или телефон.</p>
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1">Реквизиты для выплат <span class="text-gray-400 font-normal">(необязательно)</span></label>
                     <input type="text" name="payout_details" value="{{ old('payout_details') }}" placeholder="Карта / СБП — можно уточнить позже"
-                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-[#E85C24]">
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white outline-none focus:border-brand">
                 </div>
                 <button type="submit"
-                        class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#E85C24] hover:bg-[#d04a15] text-white font-bold transition-colors">
+                        class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand hover:bg-brand-hover text-white font-bold transition-colors">
                     <i class="fas fa-paper-plane"></i> Отправить заявку
                 </button>
             </form>

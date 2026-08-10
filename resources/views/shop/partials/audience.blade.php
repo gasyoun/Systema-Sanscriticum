@@ -6,7 +6,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         @foreach($audience as $item)
             <div class="flex items-start gap-3 rounded-2xl bg-[#111622] border border-[#1F2636] p-5">
-                <i class="fas fa-user-check text-[#E85C24] mt-1 shrink-0"></i>
+                <i class="fas fa-user-check text-brand mt-1 shrink-0"></i>
                 <p class="text-slate-300 leading-relaxed">{{ $item }}</p>
             </div>
         @endforeach

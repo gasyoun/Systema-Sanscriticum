@@ -12,13 +12,13 @@
                 type="text"
                 wire:model.live.debounce.350ms="search"
                 placeholder="Найти курс..."
-                class="w-full bg-[#111622]/80 backdrop-blur-md border border-[#1F2636] text-white pl-12 pr-12 py-4 rounded-2xl focus:outline-none focus:border-[#E85C24]/70 focus:ring-1 focus:ring-[#E85C24]/70 transition-all placeholder-slate-500 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+                class="w-full bg-[#111622]/80 backdrop-blur-md border border-[#1F2636] text-white pl-12 pr-12 py-4 rounded-2xl focus:outline-none focus:border-brand/70 focus:ring-1 focus:ring-brand/70 transition-all placeholder-slate-500 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
 
             @if($search !== '')
                 <button
                     type="button"
                     wire:click="$set('search', '')"
-                    class="absolute inset-y-0 right-4 flex items-center text-slate-500 hover:text-[#E85C24] transition-colors"
+                    class="absolute inset-y-0 right-4 flex items-center text-slate-500 hover:text-brand transition-colors"
                     title="Сбросить">
                     <i class="fas fa-times text-lg"></i>
                 </button>
@@ -32,7 +32,7 @@
                 @foreach($popularSearches as $term)
                     <button type="button"
                             wire:click="$set('search', '{{ $term }}')"
-                            class="text-slate-300 hover:text-[#E85C24] underline-offset-4 hover:underline transition-colors cursor-pointer">
+                            class="text-slate-300 hover:text-brand underline-offset-4 hover:underline transition-colors cursor-pointer">
                         {{ $term }}
                     </button>
                 @endforeach
@@ -51,8 +51,8 @@
             <button type="button" wire:click="$set('format', '')"
                     @class([
                         'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer',
-                        'bg-[#E85C24] text-white border-[#E85C24]' => $format === '',
-                        'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-[#E85C24]/50 hover:text-white' => $format !== '',
+                        'bg-brand text-white border-brand' => $format === '',
+                        'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-brand/50 hover:text-white' => $format !== '',
                     ])>
                 Все курсы
             </button>
@@ -90,8 +90,8 @@
                         <select wire:model.live="teacherId"
                                 @class([
                                     'appearance-none text-sm font-semibold rounded-full py-2 pl-4 pr-9 border transition cursor-pointer focus:outline-none',
-                                    'bg-[#E85C24]/15 text-white border-[#E85C24]/50' => $teacherId !== '',
-                                    'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-[#E85C24]/50' => $teacherId === '',
+                                    'bg-brand/15 text-white border-brand/50' => $teacherId !== '',
+                                    'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-brand/50' => $teacherId === '',
                                 ])>
                             <option value="">Все преподаватели</option>
                             @foreach($this->teachers as $t)
@@ -104,7 +104,7 @@
 
                 @if($this->hasActiveFilters)
                     <button type="button" wire:click="resetFilters"
-                            class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-[#E85C24] uppercase tracking-wider px-3 py-2 transition-colors">
+                            class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-brand uppercase tracking-wider px-3 py-2 transition-colors">
                         <i class="fas fa-times-circle"></i>
                         Сбросить
                     </button>
@@ -154,8 +154,8 @@
                     <button type="button" wire:click="resetCategories"
                             @class([
                                 'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer shrink-0',
-                                'bg-[#E85C24] text-white border-[#E85C24]' => empty($categoryIds),
-                                'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-[#E85C24]/50 hover:text-white' => ! empty($categoryIds),
+                                'bg-brand text-white border-brand' => empty($categoryIds),
+                                'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-brand/50 hover:text-white' => ! empty($categoryIds),
                             ])>
                         Все темы
                     </button>
@@ -167,8 +167,8 @@
                                 wire:key="cat-{{ $category->id }}"
                                 @class([
                                     'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer shrink-0',
-                                    'bg-[#E85C24] text-white border-[#E85C24]' => $active,
-                                    'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-[#E85C24]/50 hover:text-white' => ! $active,
+                                    'bg-brand text-white border-brand' => $active,
+                                    'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-brand/50 hover:text-white' => ! $active,
                                 ])>
                             @if($category->icon)<i class="fas {{ $category->icon }} text-[11px] opacity-80"></i>@endif
                             <span>{{ $category->name }}</span>
@@ -262,27 +262,27 @@
                             wire:click="toggleCategory({{ $topCategory->id }})"
                             @class([
                                 'group flex flex-col text-left rounded-2xl border p-5 transition-all cursor-pointer',
-                                'bg-[#E85C24]/10 border-[#E85C24]/50 ring-1 ring-[#E85C24]/30' => in_array($topCategory->id, $categoryIds, true),
-                                'bg-[#111622] border-[#1F2636] hover:border-[#E85C24]/50' => ! in_array($topCategory->id, $categoryIds, true),
+                                'bg-brand/10 border-brand/50 ring-1 ring-brand/30' => in_array($topCategory->id, $categoryIds, true),
+                                'bg-[#111622] border-[#1F2636] hover:border-brand/50' => ! in_array($topCategory->id, $categoryIds, true),
                             ])>
-                        <div class="w-10 h-10 rounded-xl bg-[#1F2636] flex items-center justify-center mb-3 group-hover:bg-[#E85C24]/15 transition-colors">
+                        <div class="w-10 h-10 rounded-xl bg-[#1F2636] flex items-center justify-center mb-3 group-hover:bg-brand/15 transition-colors">
                             @if($topCategory->icon)
-                                <i class="fas {{ $topCategory->icon }} text-[#E85C24]"></i>
+                                <i class="fas {{ $topCategory->icon }} text-brand"></i>
                             @else
-                                <i class="fas fa-bookmark text-[#E85C24]"></i>
+                                <i class="fas fa-bookmark text-brand"></i>
                             @endif
                         </div>
-                        <span class="text-base font-bold text-white group-hover:text-[#E85C24] transition-colors mb-1">{{ $topCategory->name }}</span>
+                        <span class="text-base font-bold text-white group-hover:text-brand transition-colors mb-1">{{ $topCategory->name }}</span>
                         <span class="text-sm text-slate-400 leading-snug">Тема с наибольшим выбором — {{ $topCategory->courses_count }} {{ \App\Support\Plural::ru((int) $topCategory->courses_count, 'курс', 'курса', 'курсов') }}.</span>
                     </button>
                 @else
                     <button type="button"
                             wire:click="resetFilters"
-                            class="group flex flex-col text-left rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 p-5 transition-all cursor-pointer">
-                        <div class="w-10 h-10 rounded-xl bg-[#1F2636] flex items-center justify-center mb-3 group-hover:bg-[#E85C24]/15 transition-colors">
-                            <i class="fas fa-th-large text-[#E85C24]"></i>
+                            class="group flex flex-col text-left rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 p-5 transition-all cursor-pointer">
+                        <div class="w-10 h-10 rounded-xl bg-[#1F2636] flex items-center justify-center mb-3 group-hover:bg-brand/15 transition-colors">
+                            <i class="fas fa-th-large text-brand"></i>
                         </div>
-                        <span class="text-base font-bold text-white group-hover:text-[#E85C24] transition-colors mb-1">Весь каталог</span>
+                        <span class="text-base font-bold text-white group-hover:text-brand transition-colors mb-1">Весь каталог</span>
                         <span class="text-sm text-slate-400 leading-snug">Сбросить фильтры и смотреть все курсы.</span>
                     </button>
                 @endif
@@ -297,7 +297,7 @@
         {{-- Индикатор перерасчёта фильтров --}}
         <div wire:loading wire:target="search,toggleCategory,resetCategories,teacherId,format,level,resetFilters"
              class="flex items-center gap-2 text-xs text-slate-400 mb-6">
-            <i class="fas fa-spinner fa-spin text-[#E85C24]"></i>
+            <i class="fas fa-spinner fa-spin text-brand"></i>
             Обновляем...
         </div>
 
@@ -356,7 +356,7 @@
                         <h3 class="text-2xl font-bold text-white mb-2">Ничего не найдено</h3>
                         <p class="text-slate-400 mb-6">Попробуйте изменить параметры фильтрации.</p>
                         <button wire:click="resetFilters"
-                                class="inline-flex items-center gap-2 bg-[#E85C24] hover:bg-[#E85C24]/90 text-white text-sm font-bold px-6 py-3 rounded-xl transition-all">
+                                class="inline-flex items-center gap-2 bg-brand hover:bg-brand/90 text-white text-sm font-bold px-6 py-3 rounded-xl transition-all">
                             <i class="fas fa-redo"></i>
                             Сбросить фильтры
                         </button>

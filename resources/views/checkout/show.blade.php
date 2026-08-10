@@ -395,13 +395,13 @@ document.addEventListener('alpine:init', () => {
                                 <div class="relative bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100 overflow-hidden">
                                     <div class="absolute -top-12 -right-12 w-40 h-40 bg-orange-100/40 rounded-full blur-3xl pointer-events-none"></div>
                                     <div class="relative flex items-start gap-4 mb-5">
-                                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-100 to-amber-50 text-[#E85C24] flex items-center justify-center shrink-0 text-2xl shadow-sm">
+                                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-100 to-amber-50 text-brand flex items-center justify-center shrink-0 text-2xl shadow-sm">
                                             <span aria-hidden="true">🪷</span>
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-2">
                                                 <h4 class="text-base font-extrabold text-gray-900 leading-tight">Списать прану</h4>
-                                                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-orange-50 text-[#E85C24] border border-orange-100">Скидка</span>
+                                                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-orange-50 text-brand border border-orange-100">Скидка</span>
                                             </div>
                                             <p class="text-xs text-gray-500 mt-1 leading-relaxed">
                                                 Доступно <span class="font-bold text-gray-700">{{ number_format($pranaBalance, 0, '.', ' ') }}</span> праны.
@@ -423,7 +423,7 @@ document.addEventListener('alpine:init', () => {
                                                 </div>
                                                 <div class="text-right">
                                                     <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Скидка</div>
-                                                    <div class="text-2xl font-black text-[#E85C24] tabular-nums">
+                                                    <div class="text-2xl font-black text-brand tabular-nums">
                                                         −<span x-text="$store.checkout.format($store.checkout.pranaRubles)"></span> ₽
                                                     </div>
                                                 </div>
@@ -442,7 +442,7 @@ document.addEventListener('alpine:init', () => {
                                                     Сбросить
                                                 </button>
                                                 <button type="button" @click="$store.checkout.prana = $store.checkout.maxPrana"
-                                                        class="text-xs font-bold text-[#E85C24] hover:text-white hover:bg-[#E85C24] border border-orange-200 hover:border-[#E85C24] rounded-lg px-3 py-1.5 transition-all">
+                                                        class="text-xs font-bold text-brand hover:text-white hover:bg-brand border border-orange-200 hover:border-brand rounded-lg px-3 py-1.5 transition-all">
                                                     Списать максимум — <span x-text="$store.checkout.format($store.checkout.maxPrana)"></span>
                                                 </button>
                                             </div>
@@ -513,7 +513,7 @@ document.addEventListener('alpine:init', () => {
                              Теперь перенос идёт МЕЖДУ блоками (подпись / сумма), а не
                              внутри слов; на sm+ всё по-прежнему в одну строку. --}}
                         <button type="submit" form="checkout-form"
-                                class="w-full flex flex-wrap justify-center items-center gap-x-2.5 py-4 px-4 sm:px-6 rounded-2xl shadow-lg shadow-orange-200/70 text-lg sm:text-xl font-extrabold text-white bg-gradient-to-r from-[#E85C24] to-[#d64e1c] hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[#E85C24]/30">
+                                class="w-full flex flex-wrap justify-center items-center gap-x-2.5 py-4 px-4 sm:px-6 rounded-2xl shadow-lg shadow-orange-200/70 text-lg sm:text-xl font-extrabold text-white bg-gradient-to-r from-brand to-brand-hover hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-brand/30">
                             <span class="inline-flex items-center whitespace-nowrap">
                                 <i class="fas fa-lock mr-2.5 opacity-90 text-sm sm:text-base"></i>К безопасной оплате
                             </span>
@@ -584,7 +584,7 @@ document.addEventListener('alpine:init', () => {
                         <div class="relative overflow-hidden rounded-3xl text-white shadow-2xl shadow-indigo-200/40">
                             <div class="absolute inset-0 bg-gradient-to-br from-indigo-950 via-indigo-900 to-[#1a1454]"></div>
                             <div class="absolute -top-20 -right-20 w-64 h-64 bg-indigo-400/10 rounded-full blur-3xl"></div>
-                            <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-[#E85C24]/15 rounded-full blur-3xl"></div>
+                            <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-brand/15 rounded-full blur-3xl"></div>
 
                             <div class="relative p-7 sm:p-8">
 
@@ -600,7 +600,7 @@ document.addEventListener('alpine:init', () => {
                                     </div>
                                 @elseif(!empty($isLoyal) && $isLoyal && empty($appliedPromo))
                                     <div class="mb-6 bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4 backdrop-blur-sm">
-                                        <div class="bg-gradient-to-br from-[#E85C24] to-[#d64e1c] text-white rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-900/30">
+                                        <div class="bg-gradient-to-br from-brand to-brand-hover text-white rounded-full w-10 h-10 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-900/30">
                                             <i class="fas fa-crown text-sm"></i>
                                         </div>
                                         <div>

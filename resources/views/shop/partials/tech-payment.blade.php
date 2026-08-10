@@ -18,7 +18,7 @@
         <div class="rounded-2xl bg-[#111622] border border-[#1F2636] p-6 lg:p-8">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-10 h-10 rounded-xl bg-[#1F2636] flex items-center justify-center shrink-0">
-                    <i class="fas fa-credit-card text-[#E85C24]"></i>
+                    <i class="fas fa-credit-card text-brand"></i>
                 </div>
                 <h3 class="text-xl font-bold text-white">Как проходит оплата</h3>
             </div>
@@ -33,7 +33,7 @@
                 @endphp
                 @foreach($steps as $i => $step)
                     <li class="flex items-start gap-3">
-                        <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-[#E85C24]/15 border border-[#E85C24]/30 text-[#E85C24] text-sm font-black shrink-0">
+                        <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-brand/15 border border-brand/30 text-brand text-sm font-black shrink-0">
                             {{ $i + 1 }}
                         </span>
                         <span class="text-sm text-slate-300 leading-relaxed pt-0.5">{{ $step }}</span>

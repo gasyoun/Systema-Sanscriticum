@@ -11,15 +11,15 @@
 <div class="container mx-auto px-4 max-w-3xl py-10 md:py-14 font-nunito">
 
     <nav class="mb-6 text-sm text-gray-500">
-        <a href="{{ url('/') }}" class="hover:text-[#E85C24] transition-colors">Главная</a>
+        <a href="{{ url('/') }}" class="hover:text-brand transition-colors">Главная</a>
         <span class="mx-2 text-gray-300">/</span>
-        <a href="{{ route('student.dashboard') }}" class="hover:text-[#E85C24] transition-colors">Кабинет</a>
+        <a href="{{ route('student.dashboard') }}" class="hover:text-brand transition-colors">Кабинет</a>
         <span class="mx-2 text-gray-300">/</span>
         <span class="text-gray-700">Домашние задания</span>
     </nav>
 
     <div class="flex items-center gap-3 mb-6">
-        <div class="w-12 h-12 rounded-xl bg-orange-50 text-[#E85C24] flex items-center justify-center shrink-0">
+        <div class="w-12 h-12 rounded-xl bg-orange-50 text-brand flex items-center justify-center shrink-0">
             <i class="fas fa-pen-nib text-lg"></i>
         </div>
         <div>
@@ -37,7 +37,7 @@
 
     <h2 class="text-xl font-bold text-gray-900 mb-3">Где сдавать</h2>
     <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed mb-8">
-        <li>Войти в <a href="{{ route('login') }}" class="text-[#E85C24] underline hover:no-underline">личный кабинет</a></li>
+        <li>Войти в <a href="{{ route('login') }}" class="text-brand underline hover:no-underline">личный кабинет</a></li>
         <li>Открыть свой <strong>курс</strong></li>
         <li>Открыть <strong>нужный урок</strong></li>
         <li>Ниже видео — блок <strong>«Домашнее задание»</strong></li>
@@ -110,7 +110,7 @@
 
     <p class="mt-8">
         <a href="{{ route('login') }}"
-           class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#E85C24] text-white font-extrabold text-sm hover:bg-[#d04a15] transition-colors">
+           class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-brand text-white font-extrabold text-sm hover:bg-brand-hover transition-colors">
             Войти в кабинет
             <i class="fas fa-arrow-right text-xs"></i>
         </a>

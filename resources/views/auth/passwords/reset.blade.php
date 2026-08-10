@@ -11,11 +11,11 @@
 
     <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden relative">
         {{-- Декоративная линия сверху --}}
-        <div class="absolute top-0 left-0 w-full h-1.5 bg-[#E85C24]"></div>
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-brand"></div>
 
         <div class="p-8 pt-10 sm:p-10">
             <div class="text-center mb-8">
-                <div class="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-[#E85C24]/10 text-[#E85C24]">
+                <div class="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-brand/10 text-brand">
                     <i class="fas fa-lock-open text-2xl"></i>
                 </div>
                 <h2 class="text-3xl font-extrabold mb-2 text-gray-900">Новый пароль</h2>
@@ -35,7 +35,7 @@
                             <i class="fas fa-envelope text-gray-400"></i>
                         </div>
                         <input type="email" name="email" id="email" required value="{{ old('email', $email) }}"
-                            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm"
+                            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm"
                             placeholder="student@example.com">
                     </div>
                     @error('email')
@@ -52,7 +52,7 @@
                             <i class="fas fa-lock text-gray-400"></i>
                         </div>
                         <input type="password" name="password" id="password" required autofocus
-                            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm"
+                            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm"
                             placeholder="Минимум 8 символов">
                     </div>
                     @error('password')
@@ -69,14 +69,14 @@
                             <i class="fas fa-lock text-gray-400"></i>
                         </div>
                         <input type="password" name="password_confirmation" id="password_confirmation" required
-                            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm"
+                            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm"
                             placeholder="••••••••">
                     </div>
                 </div>
 
                 <div class="pt-2">
                     <button type="submit"
-                        class="w-full bg-[#E85C24] hover:bg-[#d04a15] text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-wider">
+                        class="w-full bg-brand hover:bg-brand-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-wider">
                         Сохранить новый пароль
                     </button>
                 </div>
@@ -85,7 +85,7 @@
 
         <div class="bg-gray-50/80 px-8 py-5 border-t border-gray-100 text-center">
             <p class="text-xs text-gray-500">
-                <a href="{{ route('login') }}" class="text-[#E85C24] hover:underline font-semibold transition-colors">Вернуться ко входу</a>
+                <a href="{{ route('login') }}" class="text-brand hover:underline font-semibold transition-colors">Вернуться ко входу</a>
             </p>
         </div>
     </div>

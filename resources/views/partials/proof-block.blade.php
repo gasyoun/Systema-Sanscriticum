@@ -41,7 +41,7 @@
     <div class="grid grid-cols-2 lg:grid-cols-{{ count($proofNumbers) === 3 ? 3 : 4 }} gap-4 mb-8">
         @foreach($proofNumbers as $item)
             <div class="text-center rounded-2xl bg-[#111622] border border-[#1F2636] p-5">
-                <div class="text-2xl md:text-3xl font-extrabold text-[#E85C24] mb-1">{{ $item['value'] }}</div>
+                <div class="text-2xl md:text-3xl font-extrabold text-brand mb-1">{{ $item['value'] }}</div>
                 <p class="text-xs md:text-sm text-slate-400 leading-snug">{{ $item['label'] }}</p>
             </div>
         @endforeach

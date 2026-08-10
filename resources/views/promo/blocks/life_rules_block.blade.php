@@ -18,7 +18,7 @@
             <h2 class="text-2xl md:text-4xl font-extrabold text-[#101010] mb-4">
                 {{ $title }}
             </h2>
-            <div class="w-24 h-1.5 bg-[#E85C24] rounded-full"></div>
+            <div class="w-24 h-1.5 bg-brand rounded-full"></div>
 
             @if($epigraph)
                 <p class="mt-6 text-base md:text-lg text-gray-500 italic leading-relaxed max-w-2xl">
@@ -33,7 +33,7 @@
                 :style="expanded ? '' : 'max-height: {{ $collapsedCount * 220 }}px'">
                 @foreach($items as $index => $item)
                     <li class="flex gap-4 md:gap-5" @if($index >= $collapsedCount) x-show="expanded" x-cloak @endif>
-                        <span class="flex-shrink-0 flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-full bg-orange-50 text-[#E85C24] font-extrabold text-sm md:text-base">
+                        <span class="flex-shrink-0 flex items-center justify-center w-9 h-9 md:w-10 md:h-10 rounded-full bg-orange-50 text-brand font-extrabold text-sm md:text-base">
                             {{ $index + 1 }}
                         </span>
                         <p class="text-gray-700 text-base md:text-lg leading-relaxed pt-1">
@@ -51,7 +51,7 @@
                 <div class="relative mt-6 text-center">
                     <button type="button"
                             @click="expanded = !expanded"
-                            class="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-[#E85C24] border-2 border-[#E85C24] hover:bg-[#E85C24] hover:text-white transition-colors">
+                            class="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-brand border-2 border-brand hover:bg-brand hover:text-white transition-colors">
                         <span x-show="!expanded" x-cloak>Показать все {{ $items->count() }} правил</span>
                         <span x-show="expanded" x-cloak>Свернуть</span>
                     </button>

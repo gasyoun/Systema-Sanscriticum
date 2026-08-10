@@ -7,13 +7,13 @@
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
 
     <a href="{{ route('student.dashboard') }}"
-       class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-[#E85C24] transition-colors mb-6">
+       class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-brand transition-colors mb-6">
         <i class="fas fa-arrow-left text-xs"></i> В кабинет
     </a>
 
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
         <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 rounded-xl bg-orange-50 text-[#E85C24] flex items-center justify-center shrink-0">
+            <div class="w-12 h-12 rounded-xl bg-orange-50 text-brand flex items-center justify-center shrink-0">
                 <i class="fas fa-pen-nib text-lg"></i>
             </div>
             <div>
@@ -104,7 +104,7 @@
         </div>
 
         <p class="text-sm text-gray-500 leading-relaxed">
-            Не получается — напишите в <a href="{{ route('student.messages') }}" class="font-bold text-[#E85C24] hover:underline">сообщения / поддержку</a>
+            Не получается — напишите в <a href="{{ route('student.messages') }}" class="font-bold text-brand hover:underline">сообщения / поддержку</a>
             или куратору в чате группы: email входа, номер урока, что видите на экране.
         </p>
     </div>

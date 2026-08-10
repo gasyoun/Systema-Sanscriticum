@@ -51,7 +51,7 @@
          @keydown.escape.window="closeVideo()">
     
     {{-- Фоновый декоративный блик --}}
-    <div class="absolute top-0 right-0 w-[40rem] h-[40rem] bg-[#E85C24]/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+    <div class="absolute top-0 right-0 w-[40rem] h-[40rem] bg-brand/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
 
     <div class="container mx-auto px-4 relative z-10">
         
@@ -61,17 +61,17 @@
                 <h2 class="text-3xl md:text-4xl lg:text-4xl font-extrabold text-[#101010] mb-4 tracking-tight">
                     {{ $data['title'] ?? 'Отзывы учеников' }}
                 </h2>
-                <div class="w-20 h-1.5 bg-[#E85C24] rounded-full mx-auto"></div>
+                <div class="w-20 h-1.5 bg-brand rounded-full mx-auto"></div>
             </div>
 
             {{-- Кнопки (Десктоп) --}}
             <div class="hidden lg:flex gap-3 absolute right-0 bottom-0 top-0 items-center">
                 <button @click="$refs.slider.scrollBy({left: -380, behavior: 'smooth'})"
-                        class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-[#E85C24] hover:border-[#E85C24] hover:text-white hover:shadow-[0_4px_12px_rgba(232,92,36,0.3)] transition-all bg-white shadow-sm">
+                        class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-brand hover:border-brand hover:text-white hover:shadow-[0_4px_12px_rgba(232,92,36,0.3)] transition-all bg-white shadow-sm">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <button @click="$refs.slider.scrollBy({left: 380, behavior: 'smooth'})"
-                        class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-[#E85C24] hover:border-[#E85C24] hover:text-white hover:shadow-[0_4px_12px_rgba(232,92,36,0.3)] transition-all bg-white shadow-sm">
+                        class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-brand hover:border-brand hover:text-white hover:shadow-[0_4px_12px_rgba(232,92,36,0.3)] transition-all bg-white shadow-sm">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
                 </button>
             </div>
@@ -119,14 +119,14 @@
                     @endphp
 
                     <div class="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-[360px] snap-center pt-6">
-                        <div class="relative bg-white rounded-3xl p-6 md:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col h-full hover:shadow-[0_15px_40px_rgba(232,92,36,0.08)] hover:border-[#E85C24]/20 transition-all duration-300 group">
+                        <div class="relative bg-white rounded-3xl p-6 md:p-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col h-full hover:shadow-[0_15px_40px_rgba(232,92,36,0.08)] hover:border-brand/20 transition-all duration-300 group">
                             
                             {{-- Аватар --}}
                             <div class="absolute -top-8 left-6 w-16 h-16 rounded-full border-4 border-white shadow-md bg-gray-100 overflow-hidden z-20">
                                 @if(!empty($review['avatar']))
                                     <img src="{{ Storage::url($review['avatar']) }}" alt="" class="w-full h-full object-cover">
                                 @else
-                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50 text-[#E85C24] font-black text-xl">
+                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50 text-brand font-black text-xl">
                                         {{ mb_substr($review['name'], 0, 1) }}
                                     </div>
                                 @endif
@@ -167,7 +167,7 @@
                                         <div class="absolute inset-0 bg-black/20 group-hover/video:bg-black/35 transition-colors"></div>
                                     @else
                                         <div class="absolute inset-0 bg-gradient-to-br from-[#1a1c23] via-[#101010] to-black opacity-95 transition-transform duration-700 group-hover/video:scale-105"></div>
-                                        <div class="absolute -top-10 -right-10 w-32 h-32 bg-[#E85C24] rounded-full mix-blend-screen filter blur-[45px] opacity-30 group-hover/video:opacity-50 transition-opacity duration-500"></div>
+                                        <div class="absolute -top-10 -right-10 w-32 h-32 bg-brand rounded-full mix-blend-screen filter blur-[45px] opacity-30 group-hover/video:opacity-50 transition-opacity duration-500"></div>
                                         <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-500 rounded-full mix-blend-screen filter blur-[45px] opacity-20 group-hover/video:opacity-30 transition-opacity duration-500"></div>
                                     @endif
 
@@ -182,7 +182,7 @@
 
                                     {{-- Стеклянная кнопка Play --}}
                                     <div class="absolute inset-0 flex items-center justify-center z-10">
-                                        <div class="w-16 h-16 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover/video:bg-[#E85C24] group-hover/video:border-[#E85C24] group-hover/video:scale-110 group-hover/video:shadow-[0_8px_25px_rgba(232,92,36,0.5)]">
+                                        <div class="w-16 h-16 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full flex items-center justify-center shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover/video:bg-brand group-hover/video:border-brand group-hover/video:scale-110 group-hover/video:shadow-[0_8px_25px_rgba(232,92,36,0.5)]">
                                             <svg class="w-7 h-7 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                                         </div>
                                     </div>
@@ -212,7 +212,7 @@
 
                                     <button x-show="showButton" 
                                             @click="expanded = !expanded"
-                                            class="text-[#E85C24] text-[11px] font-extrabold uppercase tracking-widest mt-2 hover:text-[#d6501f] transition-colors focus:outline-none">
+                                            class="text-brand text-[11px] font-extrabold uppercase tracking-widest mt-2 hover:text-[#d6501f] transition-colors focus:outline-none">
                                         <span x-text="expanded ? 'Свернуть' : 'Читать полностью'"></span>
                                     </button>
                                 </div>
@@ -264,7 +264,7 @@
          style="display: none;"
          @keydown.escape.window="lightboxOpen = false; lightboxMedia = ''">
 
-        <button @click="lightboxOpen = false; lightboxMedia = ''" class="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-[#E85C24] text-white rounded-full flex items-center justify-center transition-colors z-[10000]">
+        <button @click="lightboxOpen = false; lightboxMedia = ''" class="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-brand text-white rounded-full flex items-center justify-center transition-colors z-[10000]">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
 
@@ -289,7 +289,7 @@
              x-transition:leave-end="opacity-0">
 
             <button type="button" @click="closeVideo()" aria-label="Закрыть"
-                    class="fixed top-4 right-4 md:top-6 md:right-6 w-11 h-11 bg-white/15 hover:bg-[#E85C24] text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors z-[10000]">
+                    class="fixed top-4 right-4 md:top-6 md:right-6 w-11 h-11 bg-white/15 hover:bg-brand text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors z-[10000]">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                 </svg>

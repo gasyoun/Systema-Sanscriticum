@@ -27,7 +27,7 @@
                 @if($title)
                     <div class="text-center mb-10">
                         <h2 class="text-2xl md:text-3xl lg:text-[32px] font-extrabold text-gray-900 mb-4 tracking-tight leading-tight">{{ $title }}</h2>
-                        <div class="w-16 h-1.5 bg-[#E85C24] mx-auto rounded-full shadow-[0_0_15px_rgba(232,92,36,0.4)]"></div>
+                        <div class="w-16 h-1.5 bg-brand mx-auto rounded-full shadow-[0_0_15px_rgba(232,92,36,0.4)]"></div>
                     </div>
                 @endif
                 

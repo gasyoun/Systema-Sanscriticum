@@ -7,14 +7,14 @@
 @if($streak > 0)
     <div class="mb-6 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 to-white p-5 md:p-6 shadow-sm">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-orange-100 text-[#E85C24] flex items-center justify-center text-2xl shrink-0">🔥</div>
+            <div class="w-12 h-12 rounded-xl bg-orange-100 text-brand flex items-center justify-center text-2xl shrink-0">🔥</div>
             <div class="flex-1 min-w-0">
                 {{-- НЕ trans_choice: при app.locale='en' он даёт «12 дня» — русские формы только через Plural::ru --}}
                 <h3 class="text-lg font-extrabold text-[#101010]">{{ $streak }} {{ \App\Support\Plural::ru($streak, 'день', 'дня', 'дней') }} подряд</h3>
                 @if($milestone)
                     <p class="text-gray-500 text-sm">
                         Еще {{ $milestone['remaining'] }} {{ \App\Support\Plural::ru($milestone['remaining'], 'день', 'дня', 'дней') }} до бонуса
-                        <span class="font-bold text-[#E85C24]">+{{ number_format((int) (config('prana.streak_bonuses')[$milestone['next']] ?? 0), 0, '.', ' ') }} <x-prana-lotus /></span>.
+                        <span class="font-bold text-brand">+{{ number_format((int) (config('prana.streak_bonuses')[$milestone['next']] ?? 0), 0, '.', ' ') }} <x-prana-lotus /></span>.
                     </p>
                 @else
                     <p class="text-amber-700 text-sm font-semibold">🏆 Все вехи серии пройдены — так держать!</p>
@@ -27,7 +27,7 @@
             @php($span = max(1, $milestone['next'] - $prevMin))
             @php($progress = (int) round(min(100, max(0, ($streak - $prevMin) / $span * 100))))
             <div class="mt-3 h-2 w-full rounded-full bg-orange-100 overflow-hidden">
-                <div class="h-2 rounded-full bg-[#E85C24]" style="width: {{ $progress }}%"></div>
+                <div class="h-2 rounded-full bg-brand" style="width: {{ $progress }}%"></div>
             </div>
         @endif
     </div>

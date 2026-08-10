@@ -59,7 +59,7 @@
         
         <div class="mb-6">
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 mb-4">
-                <svg class="h-6 w-6 text-[#E85C24]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <svg class="h-6 w-6 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-900">Подтверждение</h3>
             <p class="text-sm text-gray-500 mt-2">Для продолжения необходимо ваше согласие с условиями.</p>
@@ -70,20 +70,20 @@
             {{-- Чекбокс 1 --}}
             <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                 <div class="flex items-center h-5 mt-0.5 shrink-0">
-                    <input type="checkbox" x-model="localAgreed" @change="agreed = localAgreed" class="w-5 h-5 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer transition-colors">
+                    <input type="checkbox" x-model="localAgreed" @change="agreed = localAgreed" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                 </div>
                 <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
-                    Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие</span> на обработку персональных данных.
+                    Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку персональных данных.
                 </div>
             </label>
 
             {{-- Чекбокс 2 --}}
             <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                 <div class="flex items-center h-5 mt-0.5 shrink-0">
-                    <input type="checkbox" x-model="localPromo" class="w-5 h-5 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer transition-colors">
+                    <input type="checkbox" x-model="localPromo" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                 </div>
                 <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
-                    Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие на получение рассылки</span>.
+                    Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие на получение рассылки</span>.
                 </div>
             </label>
 
@@ -91,7 +91,7 @@
                 {{-- Кнопка Продолжить --}}
                 <button @click="if(localAgreed) { agreed = true; proceed(); }" 
                         :disabled="!localAgreed"
-                        :class="localAgreed ? 'bg-[#E85C24] hover:bg-[#d04a15] shadow-lg shadow-orange-500/30' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+                        :class="localAgreed ? 'bg-brand hover:bg-brand-hover shadow-lg shadow-orange-500/30' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
                         class="w-full text-white font-bold py-3.5 rounded-xl transition-all duration-300 text-lg flex items-center justify-center">
                     Продолжить
                 </button>

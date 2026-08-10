@@ -3,7 +3,7 @@
     <section class="mb-8 bg-white border border-gray-200 rounded-2xl shadow-[0_2px_14px_rgba(16,16,16,0.04)] p-5 md:p-6" aria-label="Продолжить обучение">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
             <div class="min-w-0 flex items-start gap-4">
-                <div class="w-11 h-11 rounded-xl bg-orange-50 border border-orange-100 text-[#E85C24] flex items-center justify-center shrink-0">
+                <div class="w-11 h-11 rounded-xl bg-orange-50 border border-orange-100 text-brand flex items-center justify-center shrink-0">
                     <i class="fas {{ ($action['kind'] ?? '') === 'debt' ? 'fa-credit-card' : ((($action['kind'] ?? '') === 'homework') ? 'fa-pen-nib' : 'fa-play') }} text-sm"></i>
                 </div>
                 <div class="min-w-0">
@@ -22,7 +22,7 @@
                                 <span>{{ $action['progress'] }}%</span>
                             </div>
                             <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                                <div class="h-full rounded-full bg-[#E85C24]" style="width: {{ $action['progress'] }}%"></div>
+                                <div class="h-full rounded-full bg-brand" style="width: {{ $action['progress'] }}%"></div>
                             </div>
                         </div>
                     @endif
@@ -37,18 +37,18 @@
                     @if(($cta['method'] ?? 'GET') === 'POST')
                         <form method="POST" action="{{ $cta['url'] }}">
                             @csrf
-                            <button type="submit" data-track-event="cabinet.continue.click" data-track-kind="{{ $trackKind }}" data-track-surface="continue-card" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#E85C24] hover:bg-[#d34f1c] text-white text-sm font-extrabold transition-colors shadow-sm">
+                            <button type="submit" data-track-event="cabinet.continue.click" data-track-kind="{{ $trackKind }}" data-track-surface="continue-card" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-extrabold transition-colors shadow-sm">
                                 <span>{{ $cta['label'] }}</span>
                                 <i class="fas fa-arrow-right text-xs opacity-80"></i>
                             </button>
                         </form>
                     @elseif(($cta['method'] ?? 'GET') === 'TAB')
-                        <button type="button" @click="activeTab = 'debts'" data-track-event="cabinet.continue.click" data-track-kind="{{ $trackKind }}" data-track-surface="continue-card" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#E85C24] hover:bg-[#d34f1c] text-white text-sm font-extrabold transition-colors shadow-sm">
+                        <button type="button" @click="activeTab = 'debts'" data-track-event="cabinet.continue.click" data-track-kind="{{ $trackKind }}" data-track-surface="continue-card" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-extrabold transition-colors shadow-sm">
                             <span>{{ $cta['label'] }}</span>
                             <i class="fas fa-arrow-right text-xs opacity-80"></i>
                         </button>
                     @else
-                        <a href="{{ $cta['url'] }}" data-track-event="cabinet.continue.click" data-track-kind="{{ $trackKind }}" data-track-surface="continue-card" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#E85C24] hover:bg-[#d34f1c] text-white text-sm font-extrabold transition-colors shadow-sm">
+                        <a href="{{ $cta['url'] }}" data-track-event="cabinet.continue.click" data-track-kind="{{ $trackKind }}" data-track-surface="continue-card" class="w-full lg:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-extrabold transition-colors shadow-sm">
                             <span>{{ $cta['label'] }}</span>
                             <i class="fas fa-arrow-right text-xs opacity-80"></i>
                         </a>

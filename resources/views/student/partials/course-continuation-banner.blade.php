@@ -20,13 +20,13 @@
         <div class="mt-4 flex flex-wrap gap-2">
             @if ($enrolled && ! empty($banner['first_lesson_url']))
                 <a href="{{ $banner['first_lesson_url'] }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#E85C24] text-white text-sm font-bold hover:bg-[#d04a15] transition-colors"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-bold hover:bg-brand-hover transition-colors"
                    data-testid="continuation-first-lesson">
                     Открыть 1-е занятие
                 </a>
             @endif
             <a href="{{ $banner['course_url'] }}"
-               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-sky-300 bg-white text-sky-900 text-sm font-bold hover:border-[#E85C24] hover:text-[#E85C24] transition-colors"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-sky-300 bg-white text-sky-900 text-sm font-bold hover:border-brand hover:text-brand transition-colors"
                data-testid="continuation-predecessor-course">
                 @if ($enrolled)
                     К курсу с началом

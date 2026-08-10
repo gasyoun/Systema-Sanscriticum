@@ -56,7 +56,7 @@
                 @endif
                 @if (! empty($c['cta']['url']))
                     <a href="{{ $c['cta']['url'] }}"
-                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E85C24] hover:bg-[#d04a15] text-white text-sm font-bold"
+                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold"
                        data-cabinet-event="cabinet.continue.click"
                        data-kind="{{ $c['kind'] ?? 'lesson' }}">
                         {{ $c['cta']['label'] ?? 'Открыть' }}
@@ -112,7 +112,7 @@
             <article class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
                 <div class="min-w-0">
                     <h3 class="text-base font-extrabold text-[#101010] truncate">
-                        <a href="{{ route('student.course', $course->slug) }}" class="hover:text-[#E85C24]">{{ $course->title }}</a>
+                        <a href="{{ route('student.course', $course->slug) }}" class="hover:text-brand">{{ $course->title }}</a>
                     </h3>
                     <p class="text-xs text-gray-500 mt-1">
                         @if ($debt)
@@ -125,7 +125,7 @@
                     </p>
                 </div>
                 <a href="{{ route('student.course', $course->slug) }}"
-                   class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:border-[#E85C24] hover:text-[#E85C24]">
+                   class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:border-brand hover:text-brand">
                     Открыть курс
                 </a>
             </article>
@@ -142,11 +142,11 @@
     <div class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Инструменты</div>
     <nav class="flex flex-wrap gap-4 text-sm font-bold text-gray-500" aria-label="Учебные инструменты">
         @if (config('srs.enabled'))
-            <a href="{{ route('student.srs') }}" class="hover:text-[#E85C24]">Карточки</a>
+            <a href="{{ route('student.srs') }}" class="hover:text-brand">Карточки</a>
         @endif
-        <a href="{{ route('student.dashboard') }}#prana" class="hover:text-[#E85C24]">Прана</a>
-        <a href="{{ route('student.progress') }}" class="hover:text-[#E85C24]">Сертификаты</a>
-        <a href="{{ route('student.open-lessons') }}" class="hover:text-[#E85C24]">Открытые уроки</a>
+        <a href="{{ route('student.dashboard') }}#prana" class="hover:text-brand">Прана</a>
+        <a href="{{ route('student.progress') }}" class="hover:text-brand">Сертификаты</a>
+        <a href="{{ route('student.open-lessons') }}" class="hover:text-brand">Открытые уроки</a>
     </nav>
 </div>
 

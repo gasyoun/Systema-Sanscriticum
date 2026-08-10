@@ -8,7 +8,7 @@
         @foreach($items as $t)
             <figure class="flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] p-6">
                 @if($t->rating)
-                    <div class="flex gap-0.5 mb-3 text-[#E85C24]">
+                    <div class="flex gap-0.5 mb-3 text-brand">
                         @for($i = 1; $i <= 5; $i++)
                             <i class="fa{{ $i <= $t->rating ? 's' : 'r' }} fa-star text-xs"></i>
                         @endfor

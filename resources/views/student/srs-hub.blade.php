@@ -37,8 +37,8 @@
                aria-selected="{{ $active ? 'true' : 'false' }}"
                class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-colors
                       {{ $active
-                          ? 'bg-[#E85C24] text-white'
-                          : 'bg-gray-50 text-gray-700 border border-gray-100 hover:border-[#E85C24]/40' }}">
+                          ? 'bg-brand text-white'
+                          : 'bg-gray-50 text-gray-700 border border-gray-100 hover:border-brand/40' }}">
                 {{ $label }}
             </a>
         @endforeach
@@ -61,9 +61,9 @@
                 @endphp
                 <li>
                     <a href="{{ url('/dvaram/koloda/'.$segment) }}"
-                       class="flex items-center justify-between gap-4 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-[#E85C24]/40 hover:shadow-md transition-all group">
+                       class="flex items-center justify-between gap-4 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-brand/40 hover:shadow-md transition-all group">
                         <div>
-                            <div class="font-extrabold text-gray-900 group-hover:text-[#E85C24] transition-colors">
+                            <div class="font-extrabold text-gray-900 group-hover:text-brand transition-colors">
                                 {{ $deck->name }}
                             </div>
                             <div class="text-sm text-gray-500 mt-1">
@@ -71,7 +71,7 @@
                                 <span class="ml-2">{{ $deck->cards_count }} карт.</span>
                             </div>
                         </div>
-                        <i class="fas fa-chevron-right text-gray-300 group-hover:text-[#E85C24]"></i>
+                        <i class="fas fa-chevron-right text-gray-300 group-hover:text-brand"></i>
                     </a>
                 </li>
             @endforeach

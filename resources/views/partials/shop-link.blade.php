@@ -3,13 +3,13 @@
     $variant = $variant ?? 'light';
 
     $base = $variant === 'dark'
-        ? 'bg-[#E85C24] text-white hover:bg-[#d04a15]'
-        : 'bg-[#E85C24] text-white hover:bg-[#d04a15]';
+        ? 'bg-brand text-white hover:bg-brand-hover'
+        : 'bg-brand text-white hover:bg-brand-hover';
 @endphp
 
 {{-- Десктоп: ссылка с текстом --}}
 <a href="{{ route('shop.index') }}"
-   class="hidden md:inline-flex items-center gap-2 px-3 lg:px-4 py-2 rounded-xl text-sm font-bold {{ $base }} hover:shadow-lg hover:shadow-[#E85C24]/30 transition-all">
+   class="hidden md:inline-flex items-center gap-2 px-3 lg:px-4 py-2 rounded-xl text-sm font-bold {{ $base }} hover:shadow-lg hover:shadow-brand/30 transition-all">
     <i class="fas fa-store text-xs"></i>
     <span>Магазин</span>
 </a>

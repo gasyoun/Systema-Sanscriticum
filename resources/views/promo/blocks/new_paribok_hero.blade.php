@@ -154,13 +154,13 @@
                     {{-- Имя --}}
                     <div>
                         <input type="text" name="name" required placeholder="Имя и фамилия"
-                               class="w-full h-[58px] bg-white rounded-[16px] border border-[#424242] px-4 font-semibold text-[18px] text-[#7e7e7e] placeholder-[#7e7e7e] focus:ring-2 focus:ring-[#E85C24] outline-none">
+                               class="w-full h-[58px] bg-white rounded-[16px] border border-[#424242] px-4 font-semibold text-[18px] text-[#7e7e7e] placeholder-[#7e7e7e] focus:ring-2 focus:ring-brand outline-none">
                     </div>
                     
                     {{-- Email --}}
                     <div>
                         <input type="email" name="email" required placeholder="Email"
-                               class="w-full h-[58px] bg-white rounded-[16px] border border-[#424242] px-4 font-semibold text-[18px] text-[#7e7e7e] placeholder-[#7e7e7e] focus:ring-2 focus:ring-[#E85C24] outline-none">
+                               class="w-full h-[58px] bg-white rounded-[16px] border border-[#424242] px-4 font-semibold text-[18px] text-[#7e7e7e] placeholder-[#7e7e7e] focus:ring-2 focus:ring-brand outline-none">
                     </div>
 
                     {{-- Телефон --}}
@@ -168,7 +168,7 @@
                         <div class="w-[83px] h-[58px] bg-white rounded-[16px] border border-[#424242] flex items-center justify-center shrink-0">
                             <img src="https://flagcdn.com/w20/ru.png" alt="RU" class="w-[21px] h-4 border border-[#d4d4dd]">
                         </div>
-                        <div class="flex-1 h-[58px] bg-white rounded-[16px] border border-[#424242] flex items-center px-4 focus-within:ring-2 focus-within:ring-[#E85C24] bg-white">
+                        <div class="flex-1 h-[58px] bg-white rounded-[16px] border border-[#424242] flex items-center px-4 focus-within:ring-2 focus-within:ring-brand bg-white">
                             <span class="font-semibold text-[18px] text-[#7e7e7e] mr-2">+7</span>
                             <input type="tel" name="contact" required placeholder="952 562 23 87"
                                    class="w-full bg-transparent outline-none border-none font-semibold text-[18px] text-[#7e7e7e] placeholder-[#7e7e7e] p-0 focus:ring-0">
@@ -180,14 +180,14 @@
                         <input type="text" name="social"
                                placeholder="Telegram / VK / Instagram (необязательно)"
                                maxlength="255" value="{{ old('social') }}"
-                               class="w-full h-[58px] bg-white rounded-[16px] border border-[#424242] px-4 font-semibold text-[18px] text-[#7e7e7e] placeholder-[#7e7e7e] focus:ring-2 focus:ring-[#E85C24] outline-none">
+                               class="w-full h-[58px] bg-white rounded-[16px] border border-[#424242] px-4 font-semibold text-[18px] text-[#7e7e7e] placeholder-[#7e7e7e] focus:ring-2 focus:ring-brand outline-none">
                     </div>
 
                     {{-- Чекбоксы --}}
                     <div class="pt-2 pb-2 space-y-3">
                         <label class="flex items-start gap-3 cursor-pointer group">
                             <div class="shrink-0 mt-0.5">
-                                <input type="checkbox" x-model="agreedForm" class="w-6 h-6 bg-[#f4f5fa] rounded border border-[#424242] text-[#424242] focus:ring-[#E85C24] cursor-pointer">
+                                <input type="checkbox" x-model="agreedForm" class="w-6 h-6 bg-[#f4f5fa] rounded border border-[#424242] text-[#424242] focus:ring-brand cursor-pointer">
                             </div>
                             <div class="font-normal text-[12px] leading-[15px] text-black">
                                 <span class="font-semibold">Я соглашаюсь на </span>
@@ -196,7 +196,7 @@
                         </label>
                         <label class="flex items-start gap-3 cursor-pointer group">
                             <div class="shrink-0 mt-0.5">
-                                <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-6 h-6 bg-[#f4f5fa] rounded border border-[#424242] text-[#424242] focus:ring-[#E85C24] cursor-pointer">
+                                <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-6 h-6 bg-[#f4f5fa] rounded border border-[#424242] text-[#424242] focus:ring-brand cursor-pointer">
                             </div>
                             <div class="font-normal text-[12px] leading-[15px] text-black">
                                 <span class="font-semibold">Я даю согласие на </span>

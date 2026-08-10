@@ -18,7 +18,7 @@
      x-init="init()">
 
     <p class="text-sm text-gray-500 mb-4">
-        <a href="{{ route('student.dashboard') }}" class="hover:text-[#E85C24] font-bold">← Сегодня</a>
+        <a href="{{ route('student.dashboard') }}" class="hover:text-brand font-bold">← Сегодня</a>
     </p>
 
     <header class="mb-6">
@@ -58,7 +58,7 @@
                :data-tab="tab.id"
                @click.prevent="show(tab.id, true)"
                :class="active === tab.id
-                    ? 'border-b-2 border-[#E85C24] text-[#E85C24]'
+                    ? 'border-b-2 border-brand text-brand'
                     : 'text-gray-500 hover:text-gray-800'"
                class="px-4 py-3 text-sm font-bold transition-colors"
                :aria-current="active === tab.id ? 'page' : null"
@@ -75,10 +75,10 @@
             <div class="mt-6 bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <div class="flex justify-between text-sm font-bold text-gray-700 mb-2">
                     <span>Прогресс</span>
-                    <span class="text-[#E85C24]">{{ $percent }}%</span>
+                    <span class="text-brand">{{ $percent }}%</span>
                 </div>
                 <div class="h-2 bg-white rounded-full overflow-hidden border border-gray-100">
-                    <div class="h-full bg-[#E85C24] rounded-full" style="width: {{ $percent }}%"></div>
+                    <div class="h-full bg-brand rounded-full" style="width: {{ $percent }}%"></div>
                 </div>
             </div>
         </div>
@@ -99,13 +99,13 @@
                 @endphp
                 <li class="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 {{ $unlocked ? '' : 'opacity-70' }}">
                     <span class="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-extrabold
-                        {{ $done ? 'bg-emerald-100 text-emerald-700' : ($unlocked ? 'bg-orange-50 text-[#E85C24]' : 'bg-gray-100 text-gray-400') }}">
+                        {{ $done ? 'bg-emerald-100 text-emerald-700' : ($unlocked ? 'bg-orange-50 text-brand' : 'bg-gray-100 text-gray-400') }}">
                         {{ $done ? '✓' : ($unlocked ? $loop->iteration : '🔒') }}
                     </span>
                     <div class="min-w-0 flex-1">
                         @if ($unlocked)
                             <a href="{{ route('student.lesson', [$course->slug, $lesson->id]) }}"
-                               class="font-bold text-[#101010] hover:text-[#E85C24]">
+                               class="font-bold text-[#101010] hover:text-brand">
                                 {{ $lesson->title }}
                             </a>
                         @else
@@ -133,7 +133,7 @@
         @endphp
         @if ($hasAnyMaterials)
             <a href="{{ route('student.course.materials.download', $course->slug) }}"
-               class="inline-flex items-center gap-2 px-5 py-3 bg-[#E85C24] hover:bg-[#d04a15] text-white text-sm font-bold rounded-xl shadow-md">
+               class="inline-flex items-center gap-2 px-5 py-3 bg-brand hover:bg-brand-hover text-white text-sm font-bold rounded-xl shadow-md">
                 <i class="fas fa-file-archive"></i> Скачать все материалы
             </a>
         @else
@@ -145,7 +145,7 @@
         @if(config('features.course_library', false))
             <div class="mt-3 flex justify-end">
                 <a href="{{ route('student.course.library', $course->slug) }}"
-                   class="inline-flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 hover:border-[#E85C24]/40 text-gray-700 hover:text-[#E85C24] text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all">
+                   class="inline-flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 hover:border-brand/40 text-gray-700 hover:text-brand text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all">
                     <i class="fas fa-book-open"></i>
                     <span>Библиотека курса</span>
                 </a>
@@ -161,7 +161,7 @@
                 Управление оплатой и доступом — на странице «Оплата и доступ».
             </p>
             <a href="{{ route('student.access') }}"
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:border-[#E85C24] hover:text-[#E85C24]">
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:border-brand hover:text-brand">
                 Открыть оплату и доступ
             </a>
         </div>
@@ -173,7 +173,7 @@
             <h3 class="font-extrabold text-lg mb-2">Помощь по курсу</h3>
             <p class="text-sm text-gray-600 mb-4">Напишите куратору — тема подставится из контекста курса.</p>
             <a href="{{ route('student.messages') }}"
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E85C24] text-white text-sm font-bold">
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand text-white text-sm font-bold">
                 Написать в помощь
             </a>
         </div>

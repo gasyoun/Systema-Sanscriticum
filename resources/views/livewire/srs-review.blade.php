@@ -30,12 +30,12 @@
      ">
 
     @if($isGuest)
-        <div class="mb-6 rounded-2xl border border-[#E85C24]/30 bg-orange-50 px-4 py-3 text-sm text-gray-700">
-            <span class="font-bold text-[#E85C24]">Пробный режим.</span>
+        <div class="mb-6 rounded-2xl border border-brand/30 bg-orange-50 px-4 py-3 text-sm text-gray-700">
+            <span class="font-bold text-brand">Пробный режим.</span>
             Прогресс не сохраняется.
-            <a href="{{ url('/login') }}" class="font-bold text-[#E85C24] underline hover:no-underline">Войдите</a>
+            <a href="{{ url('/login') }}" class="font-bold text-brand underline hover:no-underline">Войдите</a>
             или
-            <a href="{{ url('/login') }}" class="font-bold text-[#E85C24] underline hover:no-underline">зарегистрируйтесь</a>,
+            <a href="{{ url('/login') }}" class="font-bold text-brand underline hover:no-underline">зарегистрируйтесь</a>,
             чтобы учить с интервальными повторениями и сохранять результат.
         </div>
     @endif
@@ -64,7 +64,7 @@
             @endunless
             @if($decks->count() > 1)
                 <select wire:model.live="deckId"
-                        class="w-full sm:w-64 px-4 py-3 bg-gray-50 border-transparent rounded-xl text-gray-700 focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all font-medium cursor-pointer">
+                        class="w-full sm:w-64 px-4 py-3 bg-gray-50 border-transparent rounded-xl text-gray-700 focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all font-medium cursor-pointer">
                     @foreach($decks as $d)
                         <option value="{{ $d->id }}">{{ $d->name }}</option>
                     @endforeach
@@ -93,7 +93,7 @@
                         aria-selected="{{ $mode === $key ? 'true' : 'false' }}"
                         class="px-3 py-2 rounded-xl text-sm font-bold transition-colors
                             {{ $mode === $key
-                                ? 'bg-[#E85C24] text-white shadow-[0_2px_10px_rgba(232,92,36,0.25)]'
+                                ? 'bg-brand text-white shadow-[0_2px_10px_rgba(232,92,36,0.25)]'
                                 : 'bg-gray-50 text-gray-600 hover:bg-gray-100' }}">
                     {{ $label }}
                 </button>
@@ -103,7 +103,7 @@
 
     {{-- Счётчик --}}
     <div class="mb-4 flex items-center gap-2 text-sm font-bold text-gray-400">
-        <i class="fas fa-layer-group text-[#E85C24]"></i>
+        <i class="fas fa-layer-group text-brand"></i>
         @if($isGuest)
             <span>Осталось в пробе: <span class="text-gray-700">{{ $remaining }}</span></span>
         @elseif($mode === 'pairs')
@@ -115,7 +115,7 @@
         @endif
 
         @if($mode === 'speed' && ($card || false))
-            <span class="ml-auto inline-flex items-center gap-1 text-[#E85C24]"
+            <span class="ml-auto inline-flex items-center gap-1 text-brand"
                   x-text="'⏱ ' + speedSeconds + ' с'"></span>
         @endif
     </div>
@@ -138,7 +138,7 @@
                                 @disabled($done)
                                 class="w-full text-left px-4 py-3 rounded-2xl border font-bold transition-colors
                                     {{ $done ? 'opacity-40 border-green-200 bg-green-50 text-green-700' : '' }}
-                                    {{ ! $done && $pairSelectedLeft === $item['id'] ? 'border-[#E85C24] bg-orange-50 text-[#E85C24]' : '' }}
+                                    {{ ! $done && $pairSelectedLeft === $item['id'] ? 'border-brand bg-orange-50 text-brand' : '' }}
                                     {{ ! $done && $pairSelectedLeft !== $item['id'] ? 'border-gray-100 bg-white hover:border-gray-200 text-gray-900' : '' }}">
                             {{ $item['text'] }}
                         </button>
@@ -207,14 +207,14 @@
                     @foreach($mcChoices as $i => $choice)
                         <button type="button"
                                 wire:click="chooseMc({{ $i }})"
-                                class="w-full text-left px-5 py-4 rounded-2xl border border-gray-100 bg-white hover:border-[#E85C24] hover:bg-orange-50 font-semibold text-gray-800 transition-colors">
+                                class="w-full text-left px-5 py-4 rounded-2xl border border-gray-100 bg-white hover:border-brand hover:bg-orange-50 font-semibold text-gray-800 transition-colors">
                             {{ $choice['text'] }}
                         </button>
                     @endforeach
                     @if(count($mcChoices) === 0)
                         <p class="text-center text-gray-500 text-sm">Нужно больше карточек в колоде для вариантов ответа.</p>
                         <button type="button" wire:click="setMode('classic')"
-                                class="w-full py-3 text-[#E85C24] font-bold">Перейти в классику</button>
+                                class="w-full py-3 text-brand font-bold">Перейти в классику</button>
                     @endif
                 </div>
             @endif
@@ -229,10 +229,10 @@
                                wire:model="typedAnswer"
                                autocomplete="off"
                                autocapitalize="off"
-                               class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 font-medium text-gray-900"
+                               class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:border-brand focus:ring-2 focus:ring-brand/20 font-medium text-gray-900"
                                placeholder="ответ…">
                         <button type="submit"
-                                class="w-full py-4 bg-[#E85C24] hover:bg-[#d24e1b] text-white font-bold rounded-2xl transition-colors shadow-[0_4px_15px_rgba(232,92,36,0.3)]">
+                                class="w-full py-4 bg-brand hover:bg-[#d24e1b] text-white font-bold rounded-2xl transition-colors shadow-[0_4px_15px_rgba(232,92,36,0.3)]">
                             Проверить
                         </button>
                     </form>
@@ -268,7 +268,7 @@
             <div class="mt-6">
                 @unless($revealed)
                     <button type="button" wire:click="reveal"
-                            class="w-full py-4 bg-[#E85C24] hover:bg-[#d24e1b] text-white font-bold rounded-2xl transition-colors shadow-[0_4px_15px_rgba(232,92,36,0.3)]">
+                            class="w-full py-4 bg-brand hover:bg-[#d24e1b] text-white font-bold rounded-2xl transition-colors shadow-[0_4px_15px_rgba(232,92,36,0.3)]">
                         Показать ответ
                     </button>
                 @else
@@ -297,8 +297,8 @@
         @endif
 
     @elseif($guestLimitReached)
-        <div class="text-center py-16 bg-white rounded-[2rem] border border-dashed border-[#E85C24]/40 px-6">
-            <div class="w-20 h-20 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-4 text-[#E85C24]">
+        <div class="text-center py-16 bg-white rounded-[2rem] border border-dashed border-brand/40 px-6">
+            <div class="w-20 h-20 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-4 text-brand">
                 <i class="fas fa-lock text-3xl"></i>
             </div>
             <h3 class="text-xl font-bold text-gray-900 mb-2">Пробные карточки закончились</h3>
@@ -306,7 +306,7 @@
                 Зарегистрируйтесь бесплатно — прогресс сохранится, и интервальные повторения подстроятся под вас.
             </p>
             <a href="{{ url('/login') }}"
-               class="inline-flex items-center justify-center px-8 py-4 bg-[#E85C24] hover:bg-[#d24e1b] text-white font-bold rounded-2xl transition-colors shadow-[0_4px_15px_rgba(232,92,36,0.3)]">
+               class="inline-flex items-center justify-center px-8 py-4 bg-brand hover:bg-[#d24e1b] text-white font-bold rounded-2xl transition-colors shadow-[0_4px_15px_rgba(232,92,36,0.3)]">
                 Войти или зарегистрироваться
             </a>
         </div>

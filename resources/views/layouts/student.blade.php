@@ -80,8 +80,8 @@
 
         {{-- Логотип --}}
         <div class="h-20 flex items-center justify-center shrink-0 border-b border-[#2C2C32] bg-[#141417]">
-            <a href="{{ route('student.dashboard') }}" class="text-white text-2xl font-extrabold tracking-widest hover:text-[#E85C24] transition-colors">
-                ОРС<span class="text-[#E85C24]">LMS</span>
+            <a href="{{ route('student.dashboard') }}" class="text-white text-2xl font-extrabold tracking-widest hover:text-brand transition-colors">
+                ОРС<span class="text-brand">LMS</span>
             </a>
         </div>
 
@@ -91,46 +91,46 @@
             {{-- Основные ссылки — R29 job-named nav when cabinet_hybrid (H1481) --}}
             @if (config('features.cabinet_hybrid'))
             <a href="{{ route('student.dashboard') }}"
-               class="{{ request()->routeIs('student.dashboard') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-sun mr-3 w-5 text-center {{ request()->routeIs('student.dashboard') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.dashboard') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-sun mr-3 w-5 text-center {{ request()->routeIs('student.dashboard') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Сегодня
             </a>
             <a href="{{ route('student.calendar') }}"
-               class="{{ request()->routeIs('student.calendar') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-calendar-alt mr-3 w-5 text-center {{ request()->routeIs('student.calendar') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.calendar') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-calendar-alt mr-3 w-5 text-center {{ request()->routeIs('student.calendar') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Календарь
             </a>
             <a href="{{ route('student.library') }}"
-               class="{{ request()->routeIs('student.library') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-play-circle mr-3 w-5 text-center {{ request()->routeIs('student.library') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.library') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-play-circle mr-3 w-5 text-center {{ request()->routeIs('student.library') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Записи
             </a>
             <a href="{{ route('student.progress') }}"
-               class="{{ request()->routeIs('student.progress') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-chart-line mr-3 w-5 text-center {{ request()->routeIs('student.progress') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.progress') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-chart-line mr-3 w-5 text-center {{ request()->routeIs('student.progress') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Прогресс
             </a>
             <a href="{{ route('student.access') }}"
-               class="{{ request()->routeIs('student.access') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-credit-card mr-3 w-5 text-center {{ request()->routeIs('student.access') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.access') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-credit-card mr-3 w-5 text-center {{ request()->routeIs('student.access') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Оплата и доступ
             </a>
             @else
             <a href="{{ route('student.dashboard') }}"
-               class="{{ request()->routeIs('student.dashboard') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-th-large mr-3 w-5 text-center {{ request()->routeIs('student.dashboard') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.dashboard') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-th-large mr-3 w-5 text-center {{ request()->routeIs('student.dashboard') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Кабинет
             </a>
 
             <a href="{{ route('student.calendar') }}"
-               class="{{ request()->routeIs('student.calendar') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-calendar-alt mr-3 w-5 text-center {{ request()->routeIs('student.calendar') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.calendar') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-calendar-alt mr-3 w-5 text-center {{ request()->routeIs('student.calendar') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Расписание
             </a>
 
             <a href="{{ route('student.open-lessons') }}"
-               class="{{ request()->routeIs('student.open-lessons') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-lock-open mr-3 w-5 text-center {{ request()->routeIs('student.open-lessons') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.open-lessons') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-lock-open mr-3 w-5 text-center {{ request()->routeIs('student.open-lessons') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Открытые уроки
             </a>
             @endif
@@ -138,22 +138,22 @@
             {{-- Карточки SRS (H211) — только при включённом флаге srs.enabled --}}
             @if (config('srs.enabled'))
             <a href="{{ route('student.srs') }}"
-               class="{{ request()->routeIs('student.srs', 'student.srs.deck') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-layer-group mr-3 w-5 text-center {{ request()->routeIs('student.srs', 'student.srs.deck') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.srs', 'student.srs.deck') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-layer-group mr-3 w-5 text-center {{ request()->routeIs('student.srs', 'student.srs.deck') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Карточки
             </a>
 
             {{-- H1487 Wave 2 — student private-deck editor --}}
             <a href="{{ route('student.srs.decks') }}"
-               class="{{ request()->routeIs('student.srs.decks') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-pen-to-square mr-3 w-5 text-center {{ request()->routeIs('student.srs.decks') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.srs.decks') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-pen-to-square mr-3 w-5 text-center {{ request()->routeIs('student.srs.decks') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Мои колоды
             </a>
 
             {{-- H447 — статистика по карточкам, тот же флаг --}}
             <a href="{{ route('student.srs.stats') }}"
-               class="{{ request()->routeIs('student.srs.stats') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-chart-line mr-3 w-5 text-center {{ request()->routeIs('student.srs.stats') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.srs.stats') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-chart-line mr-3 w-5 text-center {{ request()->routeIs('student.srs.stats') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Статистика карточек
             </a>
             @endif
@@ -161,16 +161,16 @@
             {{-- H1680 — короткие тренажёры (не FSRS), свой флаг, независимо от srs.enabled --}}
             @if (config('features.games_skill_drills'))
             <a href="{{ route('student.skill-drills') }}"
-               class="{{ request()->routeIs('student.skill-drills') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-gamepad mr-3 w-5 text-center {{ request()->routeIs('student.skill-drills') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.skill-drills') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-gamepad mr-3 w-5 text-center {{ request()->routeIs('student.skill-drills') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Тренажёры
             </a>
             @endif
 
             {{-- Помощь / Сообщения (R29 job name when hybrid) --}}
             <a href="{{ route('student.messages') }}"
-               class="{{ request()->routeIs('student.messages') ? 'bg-[#2C2C32] text-white border-l-2 border-[#E85C24]' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
-                <i class="fas fa-life-ring mr-3 w-5 text-center {{ request()->routeIs('student.messages') ? 'text-[#E85C24]' : 'text-gray-500' }}"></i>
+               class="{{ request()->routeIs('student.messages') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-life-ring mr-3 w-5 text-center {{ request()->routeIs('student.messages') ? 'text-brand' : 'text-gray-500' }}"></i>
                 {{ config('features.cabinet_hybrid') ? 'Помощь' : 'Сообщения' }}
             </a>
         
@@ -181,7 +181,7 @@
                     {{-- Кнопка спойлера --}}
                     <button @click="coursesOpen = !coursesOpen" class="w-full flex items-center justify-between px-2 py-2 text-xs font-bold text-gray-500 uppercase tracking-widest hover:text-white transition-colors focus:outline-none group">
                         <span>Мои материалы</span>
-                        <i class="fas fa-chevron-down text-[10px] transition-transform duration-300" :class="coursesOpen ? 'rotate-180 text-[#E85C24]' : ''"></i>
+                        <i class="fas fa-chevron-down text-[10px] transition-transform duration-300" :class="coursesOpen ? 'rotate-180 text-brand' : ''"></i>
                     </button>
                     
                     {{-- Список курсов внутри спойлера --}}
@@ -190,10 +190,10 @@
                             @php $isActive = request()->is('course/' . $c->slug . '*'); @endphp
                             
                             <a href="{{ route('student.course', $c->slug) }}" 
-                               class="{{ $isActive ? 'bg-gradient-to-r from-[#E85C24] to-[#ff7a45] text-white shadow-lg' : 'bg-[#252529] text-gray-400 hover:text-white hover:bg-[#2C2C32]' }} group flex items-center justify-between p-3 text-sm font-semibold rounded-xl transition-all border border-transparent {{ $isActive ? '' : 'hover:border-[#E85C24]/30' }}">
+                               class="{{ $isActive ? 'bg-gradient-to-r from-brand to-[#ff7a45] text-white shadow-lg' : 'bg-[#252529] text-gray-400 hover:text-white hover:bg-[#2C2C32]' }} group flex items-center justify-between p-3 text-sm font-semibold rounded-xl transition-all border border-transparent {{ $isActive ? '' : 'hover:border-brand/30' }}">
                                 
                                 <div class="flex items-center truncate pr-2">
-                                    <i class="{{ $isActive ? 'fas fa-book-open text-white' : 'fas fa-book text-gray-500 group-hover:text-[#E85C24]' }} mr-3 shrink-0 transition-colors"></i>
+                                    <i class="{{ $isActive ? 'fas fa-book-open text-white' : 'fas fa-book text-gray-500 group-hover:text-brand' }} mr-3 shrink-0 transition-colors"></i>
                                     <span class="truncate">{{ $c->title }}</span>
                                 </div>
                                 
@@ -211,7 +211,7 @@
         {{-- Профиль пользователя (Внизу сайдбара) --}}
         <div class="border-t border-[#2C2C32] p-4 bg-[#141417] shrink-0">
             <div class="flex items-center">
-                <div class="w-10 h-10 rounded-xl bg-[#E85C24] flex items-center justify-center text-white font-extrabold text-sm shadow-[0_5px_15px_rgba(232,92,36,0.3)] shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-brand flex items-center justify-center text-white font-extrabold text-sm shadow-[0_5px_15px_rgba(232,92,36,0.3)] shrink-0">
                     {{ substr(Auth::user()->name, 0, 1) }}
                 </div>
                 <div class="ml-3 flex-1 overflow-hidden">
@@ -220,7 +220,7 @@
                 </div>
                 <form method="POST" action="{{ route('logout') }}" class="ml-2">
                     @csrf
-                    <button type="submit" class="w-8 h-8 flex items-center justify-center rounded-lg bg-[#252529] text-gray-400 hover:text-white hover:bg-[#E85C24] transition-colors" title="Выйти">
+                    <button type="submit" class="w-8 h-8 flex items-center justify-center rounded-lg bg-[#252529] text-gray-400 hover:text-white hover:bg-brand transition-colors" title="Выйти">
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </form>
@@ -244,7 +244,7 @@
     
     <div class="flex items-center min-w-0">
         {{-- Кнопка "Гамбургер" (видна и на ПК) --}}
-        <button @click="sidebarOpen = !sidebarOpen" class="w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 border border-gray-200 hover:text-[#E85C24] hover:bg-gray-100 active:scale-95 transition-all shrink-0">
+        <button @click="sidebarOpen = !sidebarOpen" class="w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 border border-gray-200 hover:text-brand hover:bg-gray-100 active:scale-95 transition-all shrink-0">
             <i class="fas fa-bars text-lg"></i>
         </button>
         
@@ -262,7 +262,7 @@
         @if(\App\Services\Prana\PranaSettings::isActive())
             <a href="{{ route('student.dashboard') }}#prana"
                title="Ваш баланс праны"
-               class="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 h-10 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 text-[#E85C24] hover:from-orange-100 hover:to-amber-100 transition-all">
+               class="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 h-10 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 text-brand hover:from-orange-100 hover:to-amber-100 transition-all">
                 <x-prana-lotus class="w-[1.15rem] h-[1.15rem] align-middle" />
                 <span class="text-sm font-extrabold tabular-nums">{{ number_format((int) (auth()->user()->prana_balance ?? 0), 0, '.', ' ') }}</span>
             </a>
@@ -289,7 +289,7 @@
                 'vk'       => ['url' => config('social.vk'),       'icon' => 'fab fa-vk',             'title' => 'ВКонтакте',  'hover' => 'hover:bg-[#0077FF]'],
                 'telegram' => ['url' => config('social.telegram'), 'icon' => 'fab fa-telegram-plane', 'title' => 'Telegram',   'hover' => 'hover:bg-[#229ED9]'],
                 'facebook' => ['url' => config('social.facebook'), 'icon' => 'fab fa-facebook-f',     'title' => 'Facebook',   'hover' => 'hover:bg-[#1877F2]'],
-                'website'  => ['url' => config('social.website'),  'icon' => 'fas fa-globe',          'title' => 'Наш сайт',   'hover' => 'hover:bg-[#E85C24]'],
+                'website'  => ['url' => config('social.website'),  'icon' => 'fas fa-globe',          'title' => 'Наш сайт',   'hover' => 'hover:bg-brand'],
             ], fn ($s) => !empty($s['url']));
         @endphp
 

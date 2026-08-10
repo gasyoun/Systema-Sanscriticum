@@ -11,7 +11,7 @@
                 <p class="text-gray-500">Прогресс по каждой колоде и разбор ошибок.</p>
             </div>
             <a href="{{ route('student.srs') }}"
-               class="text-sm font-bold text-[#E85C24] hover:text-[#c94c1c] transition-colors">
+               class="text-sm font-bold text-brand hover:text-[#c94c1c] transition-colors">
                 &larr; К карточкам
             </a>
         </div>
@@ -32,7 +32,7 @@
 
                     {{-- Прогресс-бар --}}
                     <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-6">
-                        <div class="h-full bg-[#E85C24] rounded-full transition-all"
+                        <div class="h-full bg-brand rounded-full transition-all"
                              style="width: {{ $s['progress_pct'] }}%"></div>
                     </div>
 

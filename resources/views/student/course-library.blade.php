@@ -68,7 +68,7 @@
             <div class="mb-10">
                 <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">
                     <a href="{{ route('student.lesson', ['slug' => $course->slug, 'lessonId' => $lessonId]) }}"
-                       class="hover:text-[#E85C24] transition-colors">
+                       class="hover:text-brand transition-colors">
                         К уроку: {{ $lesson->title }}
                     </a>
                 </h3>

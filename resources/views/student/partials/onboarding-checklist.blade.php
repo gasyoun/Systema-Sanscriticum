@@ -13,17 +13,17 @@
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-extrabold text-[#101010] flex items-center gap-2">
-                        <i class="fas fa-seedling text-[#E85C24]"></i> С чего начать
+                        <i class="fas fa-seedling text-brand"></i> С чего начать
                     </h3>
                     <p class="text-gray-500 text-sm mt-0.5">Несколько шагов — и вы освоитесь в кабинете.</p>
                 </div>
-                <span class="shrink-0 text-sm font-bold text-[#E85C24] tabular-nums">
+                <span class="shrink-0 text-sm font-bold text-brand tabular-nums">
                     {{ $onboarding['completed'] }} / {{ $onboarding['total'] }}
                 </span>
             </div>
 
             <div class="mt-3 h-2 w-full rounded-full bg-orange-100 overflow-hidden">
-                <div class="h-2 rounded-full bg-[#E85C24] transition-all" style="width: {{ $pct }}%"></div>
+                <div class="h-2 rounded-full bg-brand transition-all" style="width: {{ $pct }}%"></div>
             </div>
         </div>
 
@@ -38,7 +38,7 @@
                     <span @class([
                         'shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-base',
                         'bg-green-100 text-green-600' => $step['done'],
-                        'bg-orange-100 text-[#E85C24]' => ! $step['done'],
+                        'bg-orange-100 text-brand' => ! $step['done'],
                     ])>
                         <i class="fas {{ $step['done'] ? 'fa-check' : $step['icon'] }}"></i>
                     </span>
@@ -101,7 +101,7 @@
                         </div>
                     @elseif (! $step['done'] && $step['url'])
                         <a href="{{ $step['url'] }}"
-                           class="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#E85C24] text-white text-xs font-bold hover:bg-[#d24e1a] transition-colors">
+                           class="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand text-white text-xs font-bold hover:bg-[#d24e1a] transition-colors">
                             Перейти <i class="fas fa-arrow-right text-[10px]"></i>
                         </a>
                     @elseif ($step['done'])

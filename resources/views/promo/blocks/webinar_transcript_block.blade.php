@@ -79,7 +79,7 @@
         @endphp
         <div class="text-center mb-5">
             <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">{!! $titleHtml !!}</h2>
-            <div class="w-24 h-1.5 bg-[#E85C24] mx-auto mt-4 rounded-full opacity-80"></div>
+            <div class="w-24 h-1.5 bg-brand mx-auto mt-4 rounded-full opacity-80"></div>
         </div>
         @endif
 
@@ -97,10 +97,10 @@
             <div class="flex gap-2 justify-center mb-3">
                 <button type="button" @click="player = 'rutube'"
                         class="px-4 py-1.5 rounded-full text-sm font-bold border transition-colors"
-                        :class="player === 'rutube' ? 'bg-[#E85C24] text-white border-[#E85C24]' : 'bg-white text-gray-700 border-gray-200 hover:border-[#E85C24] hover:text-[#E85C24]'">RuTube</button>
+                        :class="player === 'rutube' ? 'bg-brand text-white border-brand' : 'bg-white text-gray-700 border-gray-200 hover:border-brand hover:text-brand'">RuTube</button>
                 <button type="button" @click="player = 'youtube'"
                         class="px-4 py-1.5 rounded-full text-sm font-bold border transition-colors"
-                        :class="player === 'youtube' ? 'bg-[#E85C24] text-white border-[#E85C24]' : 'bg-white text-gray-700 border-gray-200 hover:border-[#E85C24] hover:text-[#E85C24]'">YouTube</button>
+                        :class="player === 'youtube' ? 'bg-brand text-white border-brand' : 'bg-white text-gray-700 border-gray-200 hover:border-brand hover:text-brand'">YouTube</button>
             </div>
             @endif
 
@@ -136,7 +136,7 @@
                     @foreach($chapters as $ch)
                         <button type="button" @click="seekTo({{ $ch['start'] }})" data-start="{{ $ch['start'] }}"
                                 class="chapter-link flex items-start gap-2 w-full text-left p-2.5 rounded-xl hover:bg-gray-50 transition-colors">
-                            <span class="font-mono text-[11px] font-extrabold text-[#E85C24] bg-orange-50 rounded px-1.5 py-0.5 shrink-0">{{ $ch['time'] }}</span>
+                            <span class="font-mono text-[11px] font-extrabold text-brand bg-orange-50 rounded px-1.5 py-0.5 shrink-0">{{ $ch['time'] }}</span>
                             <span class="ch-title text-[13px] text-gray-700 leading-snug">{{ $ch['title'] }}</span>
                         </button>
                     @endforeach
@@ -155,7 +155,7 @@
                     </p>
                     <button @click="autoScroll = !autoScroll"
                             class="h-7 px-2.5 rounded-lg border flex items-center gap-1.5 text-[11px] font-bold transition-colors shrink-0"
-                            :class="autoScroll ? 'bg-white text-[#E85C24] border-white' : 'bg-transparent text-white border-white hover:bg-white hover:text-[#E85C24]'"
+                            :class="autoScroll ? 'bg-white text-brand border-white' : 'bg-transparent text-white border-white hover:bg-white hover:text-brand'"
                             title="Автопрокрутка: лента сама подсвечивает текущую фразу и прокручивается вслед за видео. Нажмите, чтобы включить или выключить.">
                         <i class="fas fa-location-arrow text-xs" :class="{'animate-pulse': autoScroll}"></i>
                         <span x-text="autoScroll ? 'Автопрокрутка вкл' : 'Автопрокрутка выкл'"></span>
@@ -172,7 +172,7 @@
                     <div class="relative w-full">
                         <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                         <input type="text" x-model="searchQuery" @input.debounce.250ms="onSearch()" placeholder="Поиск фразы..."
-                               class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-[#E85C24] outline-none transition-all placeholder-gray-400 shadow-inner">
+                               class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-brand outline-none transition-all placeholder-gray-400 shadow-inner">
                     </div>
                 </div>
 
@@ -187,7 +187,7 @@
                             <button type="button"
                                     data-start="{{ $sentence['start'] }}"
                                     class="transcript-line block w-full text-left p-3 rounded-r-xl transition-colors duration-200 group border-l-4 border-transparent text-gray-600 font-medium hover:bg-gray-50">
-                                <span class="ts-badge inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-400 text-[10px] font-mono font-extrabold px-2 py-0.5 rounded mr-2 shadow-sm group-hover:border-[#E85C24] group-hover:text-[#E85C24] transition-colors">{{ $sentence['formatted_time'] }}</span><span class="ts-text text-[14px] leading-relaxed">{{ $sentence['text'] }}</span>
+                                <span class="ts-badge inline-flex items-center gap-1.5 bg-white border border-gray-200 text-gray-400 text-[10px] font-mono font-extrabold px-2 py-0.5 rounded mr-2 shadow-sm group-hover:border-brand group-hover:text-brand transition-colors">{{ $sentence['formatted_time'] }}</span><span class="ts-text text-[14px] leading-relaxed">{{ $sentence['text'] }}</span>
                             </button>
                         @endforeach
                     </div>

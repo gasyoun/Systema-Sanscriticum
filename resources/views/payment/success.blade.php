@@ -74,7 +74,7 @@
                     </p>
 
                     <a href="{{ route('student.dashboard') }}"
-                       class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-[#E85C24] to-[#d64e1c] hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
+                       class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-brand to-brand-hover hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
                         Перейти к обучению
                     </a>
 
@@ -86,7 +86,7 @@
                         <p class="text-sm text-gray-500 leading-relaxed">
                             Если среди ваших знакомых есть человек, которому санскрит был бы в
                             радость, — поделитесь личной ссылкой из
-                            <a href="{{ route('student.dashboard') }}#referral" class="font-semibold text-[#E85C24] hover:underline">кабинета</a>.
+                            <a href="{{ route('student.dashboard') }}#referral" class="font-semibold text-brand hover:underline">кабинета</a>.
                             Когда приглашенный впервые оплатит курс, мы зачислим вам
                             {{ number_format((int) config('referral.credit_amount', 500), 0, '.', ' ') }} ₽
                             в знак благодарности — сумма зачтется при вашей следующей покупке автоматически.
@@ -113,7 +113,7 @@
                     </p>
                     <p class="text-gray-600 leading-relaxed mb-2">
                         Если через 10 минут доступа всё еще нет — напишите нам в
-                        <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#E85C24] hover:underline">Telegram</a>,
+                        <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand hover:underline">Telegram</a>,
                         мы разберемся.
                     </p>
                     <p class="text-sm text-gray-400 mb-8">
@@ -121,7 +121,7 @@
                     </p>
 
                     <a href="{{ route('student.dashboard') }}"
-                       class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-[#E85C24] to-[#d64e1c] hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
+                       class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-brand to-brand-hover hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
                         Перейти в личный кабинет
                     </a>
                 @endif
@@ -138,12 +138,12 @@
                 </p>
                 <p class="text-gray-600 leading-relaxed mb-8">
                     Если через 10 минут доступа всё еще нет — напишите нам в
-                    <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer" class="font-semibold text-[#E85C24] hover:underline">Telegram</a>,
+                    <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand hover:underline">Telegram</a>,
                     мы разберемся.
                 </p>
 
                 <a href="{{ route('login') }}"
-                   class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-[#E85C24] to-[#d64e1c] hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
+                   class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-brand to-brand-hover hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
                     Войти в аккаунт
                 </a>
             @endauth

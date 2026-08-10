@@ -13,8 +13,8 @@
         <div class="max-w-3xl mb-10 lg:mb-14">
             @if(!empty($data['badge']))
                 <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest
-                             bg-[#E85C24]/10 text-[#E85C24] border border-[#E85C24]/20">
-                    <span class="w-2 h-2 rounded-full bg-[#E85C24] animate-pulse"></span>
+                             bg-brand/10 text-brand border border-brand/20">
+                    <span class="w-2 h-2 rounded-full bg-brand animate-pulse"></span>
                     {{ $data['badge'] }}
                 </span>
             @endif
@@ -40,21 +40,21 @@
 
                         {{-- Залитый номер-бейдж --}}
                         <div class="flex-shrink-0 flex items-center justify-center w-11 h-11 md:w-12 md:h-12 rounded-2xl
-                                    bg-[#E85C24] text-white text-lg font-black shadow-sm
+                                    bg-brand text-white text-lg font-black shadow-sm
                                     group-hover:rotate-6 transition-transform duration-300">
                             {{ sprintf('%02d', $index + 1) }}
                         </div>
 
                         <div class="min-w-0 flex-1">
                             <h3 class="text-lg md:text-2xl font-bold text-[#101010] leading-tight transition-colors duration-300
-                                       group-hover:text-[#E85C24]">
+                                       group-hover:text-brand">
                                 {{ $topic['title'] }}
                             </h3>
 
                             @if(!empty($topic['description']))
                                 <div class="text-gray-500 text-sm md:text-base leading-relaxed mt-2 max-w-2xl
                                             [&_p]:mb-2 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_strong]:text-gray-700
-                                            [&_em]:italic [&_a]:text-[#E85C24] [&_a]:underline [&_a]:font-semibold
+                                            [&_em]:italic [&_a]:text-brand [&_a]:underline [&_a]:font-semibold
                                             [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mt-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mt-2 [&_li]:mb-1">
                                     {!! $topic['description'] !!}
                                 </div>
@@ -64,7 +64,7 @@
                         {{-- Стрелка --}}
                         <div class="shrink-0 self-center w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center
                                     border border-gray-200 text-gray-300 transition-all duration-300
-                                    group-hover:bg-[#E85C24] group-hover:border-[#E85C24] group-hover:text-white
+                                    group-hover:bg-brand group-hover:border-brand group-hover:text-white
                                     group-hover:translate-x-1">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
@@ -79,7 +79,7 @@
         @if(!empty($data['button_text']))
             <div class="mt-10 lg:mt-14 max-w-5xl">
                 <button type="button" @click.prevent="$dispatch('open-order-form')"
-                        class="group inline-flex items-center justify-center gap-3 bg-[#E85C24] hover:bg-[#d04a15] text-white
+                        class="group inline-flex items-center justify-center gap-3 bg-brand hover:bg-brand-hover text-white
                                font-extrabold py-4 px-10 rounded-xl text-base uppercase tracking-wider
                                shadow-lg shadow-orange-900/20 transform hover:-translate-y-0.5 transition-all duration-300">
                     {{ $data['button_text'] }}

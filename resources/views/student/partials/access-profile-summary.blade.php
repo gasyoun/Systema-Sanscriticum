@@ -19,11 +19,11 @@
                     </a>
                 @endif
                 <a href="{{ route('password.request') }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold hover:border-[#E85C24]">
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold hover:border-brand">
                     Сброс пароля / вход по email
                 </a>
                 <a href="{{ route('student.access') }}"
-                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold hover:border-[#E85C24]">
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 text-xs font-bold hover:border-brand">
                     Оплата и доступ
                 </a>
             </div>

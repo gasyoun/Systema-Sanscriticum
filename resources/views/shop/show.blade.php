@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     {{-- Декоративные блюры на фоне --}}
     <div class="absolute top-[-10%] left-[-10%] w-[800px] h-[800px] bg-indigo-900/10 rounded-full blur-[150px] pointer-events-none"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-[#E85C24]/10 rounded-full blur-[150px] pointer-events-none"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-brand/10 rounded-full blur-[150px] pointer-events-none"></div>
 
     {{-- ═════════════════ HERO ═════════════════ --}}
     <div class="relative pt-24 pb-16 lg:pt-32 lg:pb-24 border-b border-[#1F2636]">
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 В записи
                             </span>
                         @else
-                            <span class="bg-[#E85C24]/20 text-[#E85C24] text-xs font-black uppercase px-3 py-1.5 rounded-full tracking-widest border border-[#E85C24]/30">
+                            <span class="bg-brand/20 text-brand text-xs font-black uppercase px-3 py-1.5 rounded-full tracking-widest border border-brand/30">
                                 Онлайн-программа
                             </span>
                         @endif
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     {{-- One primary CTA (tariff) + optional secondary (sample) --}}
                     <div class="flex flex-wrap gap-3">
-                        <a href="#tariffs" class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#E85C24] hover:bg-[#d64e1c] transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,92,36,0.3)]">
+                        <a href="#tariffs" class="inline-flex justify-center items-center px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-brand hover:bg-brand-hover transition-all hover:-translate-y-1 shadow-[0_0_20px_rgba(232,92,36,0.3)]">
                             Выбрать тариф
                         </a>
                         @if($course->previewLesson)
@@ -171,8 +171,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     {{-- Кликабельный бейдж преподавателя — visual continuity with card teacher line --}}
                     @if($course->teacher)
                         <a href="{{ route('shop.index', ['teacher' => $course->teacher->id]) }}"
-                           class="group/teacher mt-6 inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 hover:bg-[#1A2235] transition-all duration-300 max-w-fit">
-                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[#E85C24] to-[#d04a15] flex items-center justify-center shrink-0 shadow-md shadow-[#E85C24]/20 overflow-hidden">
+                           class="group/teacher mt-6 inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 hover:bg-[#1A2235] transition-all duration-300 max-w-fit">
+                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-brand to-brand-hover flex items-center justify-center shrink-0 shadow-md shadow-brand/20 overflow-hidden">
                                 @if(! empty($course->teacher->photo_path))
                                     <img src="{{ Storage::url($course->teacher->photo_path) }}"
                                          alt="{{ $course->teacher->name }}"
@@ -182,14 +182,14 @@ document.addEventListener('DOMContentLoaded', function () {
                                 @endif
                             </div>
                             <div class="flex flex-col leading-tight">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover/teacher:text-[#E85C24] transition-colors">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover/teacher:text-brand transition-colors">
                                     Преподаватель
                                 </span>
                                 <span class="text-sm font-bold text-white">
                                     {{ $course->teacher->name }}
                                 </span>
                             </div>
-                            <i class="fas fa-arrow-right text-xs text-slate-500 group-hover/teacher:text-[#E85C24] group-hover/teacher:translate-x-1 transition-all ml-2"></i>
+                            <i class="fas fa-arrow-right text-xs text-slate-500 group-hover/teacher:text-brand group-hover/teacher:translate-x-1 transition-all ml-2"></i>
                         </a>
                     @endif
 
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="text-base font-bold text-white">{{ $block->title ?: 'Блок '.$block->number }}</span>
                                     @if($block->is_current)
-                                        <span class="inline-flex items-center gap-1 bg-[#E85C24] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                                        <span class="inline-flex items-center gap-1 bg-brand text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
                                             <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Сейчас идет
                                         </span>
                                     @endif
@@ -403,7 +403,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div>
                         {{-- Пилюля месяца --}}
                         <div class="mb-5">
-                            <span class="inline-block bg-[#111622] text-[#E85C24] text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full border border-[#E85C24]/30">
+                            <span class="inline-block bg-[#111622] text-brand text-xs font-black uppercase tracking-widest px-4 py-2 rounded-full border border-brand/30">
                                 {{ $month }}
                             </span>
                         </div>
@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="relative">
                         <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-1 px-1 [scrollbar-color:#1F2636_transparent] [scrollbar-width:thin] scroll-smooth">
                             @foreach($sessions as $session)
-                                <div class="relative snap-start shrink-0 w-[340px] max-w-[85vw] flex items-center gap-5 p-5 rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-[#E85C24]/50 hover:bg-[#1A2235] transition-all duration-300">
+                                <div class="relative snap-start shrink-0 w-[340px] max-w-[85vw] flex items-center gap-5 p-5 rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 hover:bg-[#1A2235] transition-all duration-300">
                                     {{-- Дата-бейдж: число + месяц --}}
                                     <div class="flex flex-col items-center justify-center shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-[#1F2636] to-[#0A0D14] border border-[#1F2636]">
                                         <span class="text-2xl font-extrabold text-white leading-none">{{ $session->start->translatedFormat('j') }}</span>
@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                                 {{ $session->start->translatedFormat('l') }}
                                             </span>
                                             @if($session->isLive())
-                                                <span class="inline-flex items-center gap-1 bg-[#E85C24] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                                                <span class="inline-flex items-center gap-1 bg-brand text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
                                                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> Идет сейчас
                                                 </span>
                                             @endif
@@ -457,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                         </button>
                                     @elseif($enrolled && $session->link)
                                         <a href="{{ $session->link }}" target="_blank" rel="noopener"
-                                           class="shrink-0 inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#E85C24] hover:bg-[#d64e1c] text-white text-xs font-bold transition-all whitespace-nowrap">
+                                           class="shrink-0 inline-flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-bold transition-all whitespace-nowrap">
                                             <i class="fas fa-video text-[11px]"></i>
                                             Подключиться
                                         </a>
@@ -517,9 +517,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 @php
                     $depositAmountLabel = number_format($courseDepositAmount, 0, '.', ' ');
                 @endphp
-                <div class="mb-8 max-w-3xl rounded-2xl border border-[#E85C24]/30 bg-gradient-to-r from-[#E85C24]/10 to-transparent p-5 lg:p-6 flex flex-col md:flex-row md:items-center gap-4">
+                <div class="mb-8 max-w-3xl rounded-2xl border border-brand/30 bg-gradient-to-r from-brand/10 to-transparent p-5 lg:p-6 flex flex-col md:flex-row md:items-center gap-4">
                     <div class="flex-1">
-                        <div class="text-[10px] font-black uppercase tracking-widest text-[#E85C24] mb-1.5">
+                        <div class="text-[10px] font-black uppercase tracking-widest text-brand mb-1.5">
                             <i class="fas fa-bookmark mr-1"></i> Начните погружение не дожидаясь старта
                         </div>
                         <h3 class="text-lg lg:text-xl font-bold text-white mb-1">
@@ -527,13 +527,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         </h3>
                         <p class="text-sm text-slate-400 leading-relaxed">
                             После предоплаты вы сразу получаете доступ к <span class="text-white font-semibold">открытым занятиям всей школы</span> —
-                            начните погружение прямо сейчас. Сумма <span class="text-[#E85C24] font-bold">{{ $depositAmountLabel }} ₽</span>
+                            начните погружение прямо сейчас. Сумма <span class="text-brand font-bold">{{ $depositAmountLabel }} ₽</span>
                             будет зачтена в стоимость тарифа этого курса при последующей оплате.
                         </p>
                     </div>
                     <button type="button"
                             onclick="window.dispatchEvent(new CustomEvent('open-deposit-modal', { detail: { action: @js(route('deposit.create', $course->slug)), title: @js($course->title), amount: {{ $courseDepositAmount }} } }))"
-                            class="md:flex-shrink-0 flex justify-center items-center py-3 px-5 bg-[#E85C24] hover:bg-[#d64e1c] text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-[#E85C24]/20">
+                            class="md:flex-shrink-0 flex justify-center items-center py-3 px-5 bg-brand hover:bg-brand-hover text-white text-sm font-bold rounded-xl transition-all shadow-lg shadow-brand/20">
                         <i class="fas fa-bookmark mr-2 text-xs"></i>
                         Забронировать
                     </button>
@@ -639,14 +639,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             $discount = auth()->check() ? $tariff->discountInfoForUser(auth()->user()) : ['label' => ''];
                         @endphp
 
-                        <div class="bg-gradient-to-b from-[#1A2235] to-[#111622] rounded-2xl p-6 border {{ $isPurchased ? 'border-emerald-500/50' : 'border-[#E85C24]/30 hover:border-[#E85C24] hover:-translate-y-1 hover:shadow-[0_12px_40px_-12px_rgba(232,92,36,0.35)]' }} transition-all duration-300 relative overflow-hidden group">
+                        <div class="bg-gradient-to-b from-[#1A2235] to-[#111622] rounded-2xl p-6 border {{ $isPurchased ? 'border-emerald-500/50' : 'border-brand/30 hover:border-brand hover:-translate-y-1 hover:shadow-[0_12px_40px_-12px_rgba(232,92,36,0.35)]' }} transition-all duration-300 relative overflow-hidden group">
 
                             @if($isPurchased)
                                 <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
                                     <i class="fas fa-check-circle mr-1"></i> КУПЛЕНО
                                 </div>
                             @else
-                                <div class="absolute top-0 right-0 bg-[#E85C24] text-white text-[10px] font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
+                                <div class="absolute top-0 right-0 bg-brand text-white text-[10px] font-black px-4 py-1.5 rounded-bl-xl tracking-wider">
                                     ВЫГОДНО
                                 </div>
                             @endif
@@ -694,7 +694,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </a>
                             @else
                                 <a href="{{ route('checkout.show', $tariff->id) }}"
-                                   class="w-full flex justify-center items-center py-4 px-4 bg-[#E85C24] text-white text-base font-bold rounded-xl hover:bg-[#d64e1c] hover:shadow-[0_0_20px_rgba(232,92,36,0.4)] transition-all">
+                                   class="w-full flex justify-center items-center py-4 px-4 bg-brand text-white text-base font-bold rounded-xl hover:bg-brand-hover hover:shadow-[0_0_20px_rgba(232,92,36,0.4)] transition-all">
                                     {{ $sellsRecordings ? 'Купить запись курса' : 'Записаться на курс' }}
                                 </a>
                             @endif
@@ -731,7 +731,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             if ($wholePurchased) {
                                 $borderClasses = 'border-emerald-500/50';
                             } elseif ($isCurrent) {
-                                $borderClasses = 'border-[#E85C24] shadow-[0_0_0_1px_rgba(232,92,36,0.4),0_12px_40px_-12px_rgba(232,92,36,0.45)] hover:-translate-y-1';
+                                $borderClasses = 'border-brand shadow-[0_0_0_1px_rgba(232,92,36,0.4),0_12px_40px_-12px_rgba(232,92,36,0.45)] hover:-translate-y-1';
                             } else {
                                 $borderClasses = 'border-[#1F2636] hover:border-[#38BDF8]/60 hover:-translate-y-1 hover:shadow-[0_12px_40px_-12px_rgba(56,189,248,0.3)]';
                             }
@@ -740,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="bg-gradient-to-b from-[#1A2235] to-[#111622] rounded-xl p-5 border {{ $borderClasses }} transition-all duration-300 group flex flex-col relative">
 
                             @if($isCurrent)
-                                <div class="absolute -top-2.5 left-4 inline-flex items-center gap-1.5 bg-[#E85C24] text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider shadow-md shadow-[#E85C24]/30">
+                                <div class="absolute -top-2.5 left-4 inline-flex items-center gap-1.5 bg-brand text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider shadow-md shadow-brand/30">
                                     <span class="relative flex h-1.5 w-1.5">
                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
@@ -751,7 +751,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             <div class="flex justify-between items-start mb-3 gap-3">
                                 <div class="min-w-0 flex-1">
-                                    <span class="inline-block text-[10px] font-black {{ $isCurrent ? 'text-[#E85C24] bg-[#E85C24]/10 border-[#E85C24]/30' : 'text-[#38BDF8] bg-[#38BDF8]/10 border-[#38BDF8]/20' }} px-2 py-1 rounded border {{ $hasCustomTitle ? 'mb-2' : '' }} tracking-widest uppercase">
+                                    <span class="inline-block text-[10px] font-black {{ $isCurrent ? 'text-brand bg-brand/10 border-brand/30' : 'text-[#38BDF8] bg-[#38BDF8]/10 border-[#38BDF8]/20' }} px-2 py-1 rounded border {{ $hasCustomTitle ? 'mb-2' : '' }} tracking-widest uppercase">
                                         БЛОК {{ $number }}
                                     </span>
                                     @if($hasCustomTitle)
@@ -837,7 +837,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     </a>
                                 @elseif($whole)
                                     <a href="{{ route('checkout.show', $whole->id) }}"
-                                       class="w-full flex justify-center items-center py-3 px-4 {{ $isCurrent ? 'bg-[#E85C24] hover:bg-[#d64e1c] text-white shadow-md shadow-[#E85C24]/20' : 'bg-[#1F2636] text-white hover:bg-[#38BDF8] hover:text-[#0A0D14]' }} text-sm font-bold rounded-lg transition-colors">
+                                       class="w-full flex justify-center items-center py-3 px-4 {{ $isCurrent ? 'bg-brand hover:bg-brand-hover text-white shadow-md shadow-brand/20' : 'bg-[#1F2636] text-white hover:bg-[#38BDF8] hover:text-[#0A0D14]' }} text-sm font-bold rounded-lg transition-colors">
                                         {{ $sellsRecordings ? 'Купить запись блока' : ($halves->isNotEmpty() ? 'Оплатить блок целиком' : 'Оплатить модуль') }}
                                     </a>
                                 @endif

@@ -11,25 +11,25 @@
     $isDark = $variant === 'dark';
     $contactsVariant = $isDark ? 'dark' : 'light';
     $hasContacts    = config('social.phone') || config('social.email');
-    $dividerColor   = $isDark ? 'bg-[#1F2636]' : 'bg-[#E85C24]/15';
+    $dividerColor   = $isDark ? 'bg-[#1F2636]' : 'bg-brand/15';
 
     $headerBg     = $isDark
         ? 'bg-[#0A0D14]/90 border-[#1F2636]'
-        : 'bg-[#FAF8F5]/85 border-[#E85C24]/10 shadow-sm';
+        : 'bg-[#FAF8F5]/85 border-brand/10 shadow-sm';
     $brandColor   = $isDark ? 'text-white' : 'text-[#1F1B16]';
     $subColor     = $isDark ? 'text-slate-500' : 'text-gray-500';
     $navIdle      = $isDark
         ? 'text-slate-300 hover:text-white hover:bg-[#1F2636]'
-        : 'text-gray-700 hover:text-[#E85C24] hover:bg-[#E85C24]/5';
+        : 'text-gray-700 hover:text-brand hover:bg-brand/5';
     $navActive    = $isDark
         ? 'text-white bg-[#1F2636]'
-        : 'text-[#E85C24] bg-[#E85C24]/10';
-    $btnPrimary   = 'bg-[#E85C24] text-white hover:bg-[#d04a15] hover:shadow-lg hover:shadow-[#E85C24]/30';
+        : 'text-brand bg-brand/10';
+    $btnPrimary   = 'bg-brand text-white hover:bg-brand-hover hover:shadow-lg hover:shadow-brand/30';
     $btnGhost     = $isDark
-        ? 'bg-[#111622] border border-[#1F2636] text-white hover:border-[#E85C24]'
-        : 'bg-white border border-[#E85C24]/20 text-[#1F1B16] hover:border-[#E85C24] hover:text-[#E85C24]';
-    $iconLink     = $isDark ? 'text-slate-400 hover:text-[#E85C24]' : 'text-gray-500 hover:text-[#E85C24]';
-    $iconColor    = $isDark ? 'text-[#E85C24]' : 'text-[#E85C24]';
+        ? 'bg-[#111622] border border-[#1F2636] text-white hover:border-brand'
+        : 'bg-white border border-brand/20 text-[#1F1B16] hover:border-brand hover:text-brand';
+    $iconLink     = $isDark ? 'text-slate-400 hover:text-brand' : 'text-gray-500 hover:text-brand';
+    $iconColor    = $isDark ? 'text-brand' : 'text-brand';
 
     $isHome  = request()->is('/');
     $isShop  = request()->is('online') || request()->is('online/*');
@@ -49,7 +49,7 @@
                  alt="Общество ревнителей санскрита"
                  class="w-auto h-9 md:h-11 object-contain group-hover:scale-105 transition-transform duration-300 shrink-0">
             <div class="hidden sm:flex flex-col leading-tight min-w-0">
-                <span class="text-sm md:text-base font-bold {{ $brandColor }} group-hover:text-[#E85C24] transition-colors truncate"
+                <span class="text-sm md:text-base font-bold {{ $brandColor }} group-hover:text-brand transition-colors truncate"
                       style="font-family: 'Charter', 'Bitstream Charter', 'Sitka Text', 'Georgia', serif;">
                     Ревнители санскрита
                 </span>
@@ -146,11 +146,11 @@
                         <a href="{{ $shopUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isShop ? $navActive : $navIdle }}">Все курсы</a>
                         <a href="{{ $articlesUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isBlog ? $navActive : $navIdle }}">Блог</a>
                         <a href="/lila/" class="px-4 py-2.5 rounded-lg text-sm font-semibold {{ $isGames ? $navActive : $navIdle }}">Игры</a>
-                        <div class="border-t {{ $isDark ? 'border-[#1F2636]' : 'border-[#E85C24]/10' }} my-2"></div>
+                        <div class="border-t {{ $isDark ? 'border-[#1F2636]' : 'border-brand/10' }} my-2"></div>
                     @elseif($noteText)
                         <a href="{{ $noteUrl ?: '#' }}" @if($noteUrl) target="_blank" rel="noopener" @endif
                            class="px-4 py-2.5 rounded-lg text-sm font-bold text-center {{ $btnGhost }}">{{ $noteText }}</a>
-                        <div class="border-t {{ $isDark ? 'border-[#1F2636]' : 'border-[#E85C24]/10' }} my-2"></div>
+                        <div class="border-t {{ $isDark ? 'border-[#1F2636]' : 'border-brand/10' }} my-2"></div>
                     @endif
                     @auth
                         <a href="{{ $cabinetUrl }}" class="px-4 py-2.5 rounded-lg text-sm font-bold {{ $btnGhost }}">Личный кабинет</a>

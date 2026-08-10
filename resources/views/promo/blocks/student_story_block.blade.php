@@ -20,7 +20,7 @@
             @if(!empty($data['subtitle']))
                 <p class="text-gray-500 text-base md:text-lg mb-5 leading-relaxed">{{ $data['subtitle'] }}</p>
             @endif
-            <div class="w-20 h-1.5 bg-[#E85C24] rounded-full mx-auto"></div>
+            <div class="w-20 h-1.5 bg-brand rounded-full mx-auto"></div>
         </div>
 
         @if(!empty($data['stories']))
@@ -39,7 +39,7 @@
                 @endphp
 
                 {{-- КАРТОЧКА ИСТОРИИ --}}
-                <article class="relative bg-white rounded-3xl p-7 md:p-9 border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_45px_rgba(232,92,36,0.10)] hover:border-[#E85C24]/20 transition-all duration-500 flex flex-col overflow-hidden group">
+                <article class="relative bg-white rounded-3xl p-7 md:p-9 border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_45px_rgba(232,92,36,0.10)] hover:border-brand/20 transition-all duration-500 flex flex-col overflow-hidden group">
 
                     {{-- Дата + трек (релевантность + свежесть, как у их кейсов) --}}
                     @if(!empty($story['date']) || !empty($story['track']))
@@ -62,7 +62,7 @@
                             @if($avatarUrl)
                                 <img src="{{ $avatarUrl }}" alt="{{ $story['name'] ?? '' }}" loading="lazy" class="w-full h-full object-cover">
                             @else
-                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50 text-[#E85C24] font-black text-xl">
+                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-50 text-brand font-black text-xl">
                                     {{ mb_substr($story['name'] ?? '?', 0, 1) }}
                                 </div>
                             @endif
@@ -94,7 +94,7 @@
                     {{-- Результат-цифра (конкретика вместо «улучшили») --}}
                     @if(!empty($story['result']))
                         <div class="flex items-start gap-3 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100/50 ring-1 ring-orange-100 p-4 mt-auto">
-                            <svg class="w-6 h-6 text-[#E85C24] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" /></svg>
+                            <svg class="w-6 h-6 text-brand shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" /></svg>
                             <p class="text-[#101010] font-bold text-[15px] md:text-base leading-snug">{{ $story['result'] }}</p>
                         </div>
                     @endif

@@ -11,9 +11,9 @@
 <section class="mb-16 lg:mb-20" data-analytics="trajectory-block">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         @foreach($steps as $i => $step)
-            <div class="relative flex flex-col h-full bg-[#161b28] border border-gray-700/60 rounded-2xl p-6 hover:border-[#E85C24]/60 transition-all duration-300">
+            <div class="relative flex flex-col h-full bg-[#161b28] border border-gray-700/60 rounded-2xl p-6 hover:border-brand/60 transition-all duration-300">
                 <div class="flex items-center gap-3 mb-3">
-                    <span class="w-8 h-8 shrink-0 rounded-full bg-[#E85C24]/15 text-[#E85C24] text-sm font-extrabold flex items-center justify-center">
+                    <span class="w-8 h-8 shrink-0 rounded-full bg-brand/15 text-brand text-sm font-extrabold flex items-center justify-center">
                         {{ $i + 1 }}
                     </span>
                     <h3 class="text-lg font-bold text-white leading-tight">{{ $step['title'] }}</h3>
@@ -30,7 +30,7 @@
                             Бесплатный первый шаг →
                         </a>
                     @endif
-                    <a href="{{ $step['url'] }}" class="text-sm font-bold text-white hover:text-[#E85C24] transition-colors">
+                    <a href="{{ $step['url'] }}" class="text-sm font-bold text-white hover:text-brand transition-colors">
                         Перейти к курсу →
                     </a>
                 </div>

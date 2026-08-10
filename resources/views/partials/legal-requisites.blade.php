@@ -8,5 +8,5 @@
 
 <p class="{{ $class }} leading-relaxed">
     ИП Гасунс Марцис · ОГРНИП 325400000076450 · ИНН 540861224623<br>
-    <a href="mailto:rusamskrtam@yandex.ru" class="underline-offset-2 hover:text-[#E85C24] hover:underline transition-colors">rusamskrtam@yandex.ru</a>
+    <a href="mailto:rusamskrtam@yandex.ru" class="underline-offset-2 hover:text-brand hover:underline transition-colors">rusamskrtam@yandex.ru</a>
 </p>

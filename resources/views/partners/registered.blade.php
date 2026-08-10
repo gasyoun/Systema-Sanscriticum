@@ -53,7 +53,7 @@
                        class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 text-sm font-mono outline-none">
                 <button type="button"
                         x-on:click="navigator.clipboard.writeText($refs.link.value); copied = true; setTimeout(() => copied = false, 2000)"
-                        class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#E85C24] hover:bg-[#d04a15] text-white text-sm font-bold transition-colors">
+                        class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-colors">
                     <i class="fas" :class="copied ? 'fa-check' : 'fa-copy'"></i>
                     <span x-text="copied ? 'Скопировано' : 'Скопировать'"></span>
                 </button>
@@ -66,13 +66,13 @@
                 </div>
                 <div class="rounded-xl bg-gray-50 py-3">
                     <div class="text-xs text-gray-500 mb-1">Вознаграждение за клиента</div>
-                    <div class="text-lg font-extrabold text-[#E85C24]">{{ number_format($reward, 0, '.', ' ') }} ₽</div>
+                    <div class="text-lg font-extrabold text-brand">{{ number_format($reward, 0, '.', ' ') }} ₽</div>
                 </div>
             </div>
         </div>
 
         <div class="text-center">
-            <a href="{{ url('/partners') }}" class="text-sm text-gray-500 hover:text-[#E85C24]">← К условиям программы</a>
+            <a href="{{ url('/partners') }}" class="text-sm text-gray-500 hover:text-brand">← К условиям программы</a>
         </div>
     </main>
 </body>

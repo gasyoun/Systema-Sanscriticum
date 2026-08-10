@@ -115,7 +115,7 @@
 </head>
 <body class="bg-gray-900 text-white min-h-screen relative overflow-x-hidden pb-20">
 
-    <div class="fixed top-0 left-0 w-96 h-96 bg-[#E85C24] rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob pointer-events-none"></div>
+    <div class="fixed top-0 left-0 w-96 h-96 bg-brand rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob pointer-events-none"></div>
     <div class="fixed bottom-0 right-0 w-96 h-96 bg-purple-600 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000 pointer-events-none"></div>
 
     <x-public-header variant="dark" />
@@ -129,7 +129,7 @@
         Санскрит с нуля — шаг за шагом, с преподавателем
     </h1>
 
-    <div class="w-24 h-1 bg-[#E85C24] mx-auto mb-6 rounded-full"></div>
+    <div class="w-24 h-1 bg-brand mx-auto mb-6 rounded-full"></div>
 
     <p class="text-xl text-gray-300 max-w-2xl mx-auto mb-2">
         От первой буквы деванагари до самостоятельного чтения текстов —
@@ -145,7 +145,7 @@
 
         <div class="text-center mb-16">
     <h2 class="text-3xl md:text-4xl font-bold">
-        <span class="text-[#E85C24]">Наши курсы:</span>
+        <span class="text-brand">Наши курсы:</span>
     </h2>
 </div>
 
@@ -154,7 +154,7 @@
                 @foreach($landings as $landing)
                     <a href="{{ url('/' . $landing->slug) }}" class="relative group block h-full transition-all duration-300 hover:-translate-y-1">
 
-                        <div class="flex flex-col sm:flex-row items-stretch h-full w-full bg-[#161b28] border border-gray-700/60 rounded-2xl overflow-hidden group-hover:border-[#E85C24]/60 group-hover:shadow-[0_0_25px_rgba(232,92,36,0.15)] transition-all duration-300">
+                        <div class="flex flex-col sm:flex-row items-stretch h-full w-full bg-[#161b28] border border-gray-700/60 rounded-2xl overflow-hidden group-hover:border-brand/60 group-hover:shadow-[0_0_25px_rgba(232,92,36,0.15)] transition-all duration-300">
                             
                             {{-- БЛОК ИЗОБРАЖЕНИЯ (Исправленный под Curator) --}}
                             <div class="relative w-full sm:w-64 shrink-0 bg-gray-800 h-56 sm:h-auto overflow-hidden">
@@ -183,7 +183,7 @@
 
                             <div class="p-5 flex flex-col flex-grow relative z-10 bg-[#161b28]">
                                 @if($landing->webinar_label)
-                                    <span class="self-start max-w-full mb-3 bg-[#E85C24] text-white text-[10px] sm:text-xs uppercase tracking-wider font-bold px-3 py-1.5 rounded-md leading-tight shadow-[0_5px_15px_rgba(232,92,36,0.4)]">
+                                    <span class="self-start max-w-full mb-3 bg-brand text-white text-[10px] sm:text-xs uppercase tracking-wider font-bold px-3 py-1.5 rounded-md leading-tight shadow-[0_5px_15px_rgba(232,92,36,0.4)]">
                                         {{ $landing->webinar_label }}
                                     </span>
                                 @endif
@@ -192,14 +192,14 @@
                                         {{ $landing->instructor_name }}
                                     </p>
                                 @endif
-                                <h3 class="text-lg md:text-xl font-bold text-white mb-2 group-hover:text-[#E85C24] transition-colors leading-tight pl-1 sm:pl-0">
+                                <h3 class="text-lg md:text-xl font-bold text-white mb-2 group-hover:text-brand transition-colors leading-tight pl-1 sm:pl-0">
                                     {{ $landing->title }}
                                 </h3>
                                 <p class="text-gray-400 text-sm line-clamp-3 mb-4 flex-grow pl-1 sm:pl-0">
                                     {{ $landing->showcase_description ?? 'Узнать подробнее о программе курса, расписании и стоимости.' }}
                                 </p>
                                 <div class="mt-auto pt-3 border-t border-gray-700/50 pl-1 sm:pl-0">
-                                    <span class="inline-flex items-center text-sm font-bold text-white group-hover:text-[#E85C24] transition-colors">
+                                    <span class="inline-flex items-center text-sm font-bold text-white group-hover:text-brand transition-colors">
                                         {{ $landing->button_text ?? 'Записаться' }}
                                         <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                     </span>
@@ -227,7 +227,7 @@
 
         <div class="mt-24 bg-gray-800/40 border border-gray-700/60 rounded-3xl p-8 md:p-12 relative overflow-hidden backdrop-blur-sm shadow-xl">
             <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-[#2AABEE] rounded-full mix-blend-screen filter blur-3xl opacity-10"></div>
-            <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-[#E85C24] rounded-full mix-blend-screen filter blur-3xl opacity-10"></div>
+            <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-brand rounded-full mix-blend-screen filter blur-3xl opacity-10"></div>
             
             <div class="relative z-10 max-w-4xl mx-auto text-center">
                 <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-6">О нашей платформе</h2>
@@ -268,7 +268,7 @@
 
             {{-- Документы --}}
             <div class="mt-8 flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium">
-                @include('partials.footer-docs', ['linkClass' => 'text-gray-400 hover:text-[#E85C24] transition-colors'])
+                @include('partials.footer-docs', ['linkClass' => 'text-gray-400 hover:text-brand transition-colors'])
             </div>
 
             <p class="mt-6 text-sm text-gray-600">

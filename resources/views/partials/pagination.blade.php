@@ -7,7 +7,7 @@
                 <i class="fas fa-chevron-left mr-1.5 text-xs"></i> Назад
             </span>
         @else
-            <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="px-4 py-2.5 text-sm font-medium text-slate-300 bg-[#111622] border border-[#1F2636] rounded-xl hover:bg-[#1F2636] hover:text-white hover:border-[#E85C24]/50 transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(232,92,36,0.15)]">
+            <a href="{{ $paginator->previousPageUrl() }}" rel="prev" class="px-4 py-2.5 text-sm font-medium text-slate-300 bg-[#111622] border border-[#1F2636] rounded-xl hover:bg-[#1F2636] hover:text-white hover:border-brand/50 transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(232,92,36,0.15)]">
                 <i class="fas fa-chevron-left mr-1.5 text-xs"></i> Назад
             </a>
         @endif
@@ -28,12 +28,12 @@
                     @foreach ($element as $page => $url)
                         @if ($page == $paginator->currentPage())
                             {{-- Активная страница --}}
-                            <span class="px-4 py-2.5 text-sm font-bold text-white bg-[#E85C24] border border-[#E85C24] rounded-xl shadow-[0_0_15px_rgba(232,92,36,0.4)]" aria-current="page">
+                            <span class="px-4 py-2.5 text-sm font-bold text-white bg-brand border border-brand rounded-xl shadow-[0_0_15px_rgba(232,92,36,0.4)]" aria-current="page">
                                 {{ $page }}
                             </span>
                         @else
                             {{-- Обычная страница --}}
-                            <a href="{{ $url }}" class="px-4 py-2.5 text-sm font-medium text-slate-400 bg-[#111622] border border-[#1F2636] rounded-xl hover:bg-[#1F2636] hover:text-white hover:border-[#E85C24]/50 transition-all duration-300">
+                            <a href="{{ $url }}" class="px-4 py-2.5 text-sm font-medium text-slate-400 bg-[#111622] border border-[#1F2636] rounded-xl hover:bg-[#1F2636] hover:text-white hover:border-brand/50 transition-all duration-300">
                                 {{ $page }}
                             </a>
                         @endif
@@ -44,7 +44,7 @@
 
         {{-- Кнопка "Вперед" --}}
         @if ($paginator->hasMorePages())
-            <a href="{{ $paginator->nextPageUrl() }}" rel="next" class="px-4 py-2.5 text-sm font-medium text-slate-300 bg-[#111622] border border-[#1F2636] rounded-xl hover:bg-[#1F2636] hover:text-white hover:border-[#E85C24]/50 transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(232,92,36,0.15)]">
+            <a href="{{ $paginator->nextPageUrl() }}" rel="next" class="px-4 py-2.5 text-sm font-medium text-slate-300 bg-[#111622] border border-[#1F2636] rounded-xl hover:bg-[#1F2636] hover:text-white hover:border-brand/50 transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(232,92,36,0.15)]">
                 Вперед <i class="fas fa-chevron-right ml-1.5 text-xs"></i>
             </a>
         @else

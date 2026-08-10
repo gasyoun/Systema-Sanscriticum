@@ -10,7 +10,7 @@
     {{-- ЗАГОЛОВОК СТРАНИЦЫ (Стильная плашка) --}}
     <div class="bg-gradient-to-r from-white to-gray-50 rounded-[2rem] p-8 md:p-10 shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
         {{-- Декорация --}}
-        <div class="absolute -right-20 -top-20 w-64 h-64 bg-[#E85C24]/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -right-20 -top-20 w-64 h-64 bg-brand/10 rounded-full blur-3xl pointer-events-none"></div>
         
         <div class="relative z-10">
             <h1 class="text-3xl font-black text-[#1A1A1A] mb-2 tracking-tight">Входящие сообщения</h1>
@@ -19,15 +19,15 @@
 
         {{-- Динамический счетчик --}}
         <div class="relative z-10 flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm transition-all duration-300"
-             :class="unreadCount > 0 ? 'ring-2 ring-[#E85C24]/20' : ''">
+             :class="unreadCount > 0 ? 'ring-2 ring-brand/20' : ''">
             
             {{-- Пульсирующая точка (исчезает, когда всё прочитано) --}}
-            <div x-show="unreadCount > 0" x-transition class="w-2.5 h-2.5 rounded-full bg-[#E85C24] animate-pulse"></div>
+            <div x-show="unreadCount > 0" x-transition class="w-2.5 h-2.5 rounded-full bg-brand animate-pulse"></div>
             <div x-show="unreadCount === 0" class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
             
             <span class="text-sm font-extrabold text-gray-700">
                 <template x-if="unreadCount > 0">
-                    <span>У вас <span class="text-[#E85C24]" x-text="unreadCount"></span> новых</span>
+                    <span>У вас <span class="text-brand" x-text="unreadCount"></span> новых</span>
                 </template>
                 <template x-if="unreadCount === 0">
                     <span class="text-gray-500">Всё прочитано</span>
@@ -50,12 +50,12 @@
                     
                     {{-- Индикатор непрочитанного (Красная точка) --}}
                     <div class="shrink-0 pt-1.5 sm:pt-0 w-3 flex justify-center">
-                        <div x-show="!isRead(id)" x-transition class="w-2.5 h-2.5 bg-[#E85C24] rounded-full shadow-[0_0_8px_rgba(232,92,36,0.6)]"></div>
+                        <div x-show="!isRead(id)" x-transition class="w-2.5 h-2.5 bg-brand rounded-full shadow-[0_0_8px_rgba(232,92,36,0.6)]"></div>
                     </div>
 
                     {{-- Иконка письма (Меняется при прочтении) --}}
                     <div class="shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm border"
-                         :class="!isRead(id) ? 'bg-white border-orange-200 text-[#E85C24]' : 'bg-gray-50 border-gray-100 text-gray-400'">
+                         :class="!isRead(id) ? 'bg-white border-orange-200 text-brand' : 'bg-gray-50 border-gray-100 text-gray-400'">
                         <i class="text-lg transition-all" :class="expanded ? 'far fa-envelope-open' : 'fas fa-envelope'"></i>
                     </div>
 
@@ -63,7 +63,7 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 mb-1.5">
                             <h3 class="font-extrabold text-lg truncate transition-colors duration-300"
-                                :class="!isRead(id) ? 'text-[#1A1A1A] group-hover:text-[#E85C24]' : 'text-gray-600'">
+                                :class="!isRead(id) ? 'text-[#1A1A1A] group-hover:text-brand' : 'text-gray-600'">
                                 {{ $msg->title }}
                             </h3>
                             <span class="text-[11px] font-bold text-gray-400 shrink-0 uppercase tracking-widest bg-white/50 px-2 py-1 rounded-md border border-gray-100/50">
@@ -105,15 +105,15 @@
 
                             {{-- Текст с красивыми стилями --}}
                             <div class="prose prose-base md:prose-lg max-w-none text-gray-700 leading-relaxed font-medium 
-                                        prose-a:text-[#E85C24] prose-a:font-bold prose-a:no-underline hover:prose-a:underline 
-                                        prose-p:mb-4 prose-ul:list-disc prose-ul:pl-5 marker:text-[#E85C24]">
+                                        prose-a:text-brand prose-a:font-bold prose-a:no-underline hover:prose-a:underline 
+                                        prose-p:mb-4 prose-ul:list-disc prose-ul:pl-5 marker:text-brand">
                                 {!! $msg->content !!}
                             </div>
 
                             {{-- Кнопка действия (если заполнена) --}}
                             @if($msg->button_text && $msg->button_url)
                                 <div class="mt-8 pt-6 border-t border-gray-100">
-                                    <a href="{{ $msg->button_url }}" target="_blank" class="inline-flex items-center justify-center px-8 py-3.5 bg-[#E85C24] hover:bg-[#d04a15] text-white font-extrabold text-sm rounded-xl shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase tracking-wide group">
+                                    <a href="{{ $msg->button_url }}" target="_blank" class="inline-flex items-center justify-center px-8 py-3.5 bg-brand hover:bg-brand-hover text-white font-extrabold text-sm rounded-xl shadow-[0_5px_15px_rgba(232,92,36,0.3)] hover:-translate-y-0.5 active:translate-y-0 transition-all uppercase tracking-wide group">
                                         {{ $msg->button_text }}
                                         <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
                                     </a>

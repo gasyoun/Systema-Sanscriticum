@@ -45,20 +45,20 @@
         </div>
 
         {{-- Ступень 3: живой курс --}}
-        <div class="flex flex-col rounded-2xl bg-[#111622] border border-[#E85C24]/40 p-6 relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-[#E85C24]/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col rounded-2xl bg-[#111622] border border-brand/40 p-6 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-brand/15 rounded-full blur-3xl pointer-events-none"></div>
             <div class="flex items-center gap-3 mb-4 relative">
-                <div class="w-10 h-10 rounded-xl bg-[#E85C24]/15 border border-[#E85C24]/30 flex items-center justify-center">
-                    <i class="fas fa-users text-[#E85C24]"></i>
+                <div class="w-10 h-10 rounded-xl bg-brand/15 border border-brand/30 flex items-center justify-center">
+                    <i class="fas fa-users text-brand"></i>
                 </div>
-                <span class="text-[10px] font-black uppercase tracking-widest text-[#E85C24]">
+                <span class="text-[10px] font-black uppercase tracking-widest text-brand">
                     Шаг 3 · Живой курс{{ $minBlockPrice ? ' · от '.number_format($minBlockPrice, 0, '.', ' ').' ₽/блок' : '' }}
                 </span>
             </div>
             <h3 class="text-lg font-bold text-white mb-2 relative">Занимайтесь с преподавателем</h3>
             <p class="text-sm text-slate-400 leading-relaxed flex-1 mb-5 relative">Живые занятия в группе, разбор вопросов, учебный чат. Оплата по блокам — не нужно платить за весь курс сразу.</p>
             <a href="{{ $catalogUrl }}?format=live"
-               class="inline-flex justify-center items-center w-full py-3 px-4 bg-[#E85C24] hover:bg-[#E85C24]/85 text-white text-xs font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(232,92,36,0.3)] relative">
+               class="inline-flex justify-center items-center w-full py-3 px-4 bg-brand hover:bg-brand/85 text-white text-xs font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(232,92,36,0.3)] relative">
                 Идут сейчас
             </a>
         </div>

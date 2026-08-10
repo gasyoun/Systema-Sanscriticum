@@ -10,7 +10,7 @@
 <div class="max-w-2xl mx-auto py-12 px-4">
 
     <div class="text-center mb-8">
-        <p class="text-xs font-black uppercase tracking-widest text-[#E85C24] mb-2">День 1 из 3</p>
+        <p class="text-xs font-black uppercase tracking-widest text-brand mb-2">День 1 из 3</p>
         <h1 class="text-2xl md:text-3xl font-black text-[#1A1A1A]">Санскрит роднее, чем кажется</h1>
     </div>
 
@@ -62,7 +62,7 @@
                                 class="text-left px-5 py-4 rounded-xl border font-semibold transition-all"
                                 :class="answered
                                     ? (i === step.correct ? 'border-green-400 bg-green-50 text-green-800' : (i === picked ? 'border-red-300 bg-red-50 text-red-700' : 'border-gray-200 text-gray-400'))
-                                    : 'border-gray-200 hover:border-[#E85C24]/60 hover:bg-[#E85C24]/5 text-gray-700 cursor-pointer'"
+                                    : 'border-gray-200 hover:border-brand/60 hover:bg-brand/5 text-gray-700 cursor-pointer'"
                                 x-text="opt"></button>
                     </template>
                 </div>
@@ -72,12 +72,12 @@
                         <template x-if="step.link && step.link.url">
                             <p class="mb-4">
                                 <a :href="step.link.url" target="_blank" rel="noopener noreferrer"
-                                   class="text-sm font-semibold text-[#E85C24] hover:underline"
+                                   class="text-sm font-semibold text-brand hover:underline"
                                    x-text="step.link.label || step.link.url"></a>
                             </p>
                         </template>
                         <button type="button" @click="next()"
-                                class="w-full px-6 py-3 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
+                                class="w-full px-6 py-3 bg-brand hover:bg-brand-hover text-white font-extrabold rounded-xl transition-colors">
                             <span x-text="isLast ? 'Готово' : 'Далее'"></span>
                         </button>
                     </div>
@@ -98,7 +98,7 @@
                         <span class="font-semibold text-[#1A1A1A]" x-text="Math.floor(durationSeconds() / 60) + ' мин ' + (durationSeconds() % 60) + ' сек'"></span>
                     </p>
                     <p class="text-sm text-gray-500 mb-6">Завтра — как устроено само слово: корень + аффикс.</p>
-                    <button type="submit" class="w-full px-6 py-3 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
+                    <button type="submit" class="w-full px-6 py-3 bg-brand hover:bg-brand-hover text-white font-extrabold rounded-xl transition-colors">
                         Завершить День 1
                     </button>
                 </div>

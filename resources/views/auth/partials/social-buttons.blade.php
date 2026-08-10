@@ -19,7 +19,7 @@
         <div class="grid gap-2">
             @foreach ($providers as $p)
                 <a href="{{ route('social.redirect', $p) }}"
-                   class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-[#E85C24] transition-colors">
+                   class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand transition-colors">
                     <i class="fab {{ $meta[$p][1] ?? 'fa-right-to-bracket' }}"></i>
                     {{ $meta[$p][0] ?? ucfirst($p) }}
                 </a>

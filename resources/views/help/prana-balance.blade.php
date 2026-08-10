@@ -7,7 +7,7 @@
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
 
     <a href="{{ route('student.dashboard') }}#prana"
-       class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-[#E85C24] transition-colors mb-6">
+       class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-brand transition-colors mb-6">
         <i class="fas fa-arrow-left text-xs"></i> Назад к пране
     </a>
 
@@ -21,7 +21,7 @@
 
         <p class="text-gray-600 leading-relaxed mb-6">
             Прана списывается только по этим причинам — каждая операция видна в
-            <a href="{{ route('student.dashboard') }}#prana" class="font-bold text-[#E85C24] hover:underline">истории на вкладке «Прана»</a>
+            <a href="{{ route('student.dashboard') }}#prana" class="font-bold text-brand hover:underline">истории на вкладке «Прана»</a>
             (стрелка вниз — списание).
         </p>
 

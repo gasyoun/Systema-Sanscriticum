@@ -110,7 +110,7 @@
                  x-transition:leave-end="opacity-0 scale-95">
                 
                 {{-- Кнопка закрыть (Крестик) --}}
-                <button @click="videoOpen = false" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-[#E85C24] text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors z-20">
+                <button @click="videoOpen = false" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-white/10 hover:bg-brand text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors z-20">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>

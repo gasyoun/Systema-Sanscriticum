@@ -8,12 +8,12 @@
     $variant      = $variant ?? 'light';
 
     $btnBase = $variant === 'dark'
-        ? 'bg-[#111622] text-slate-300 border-[#1F2636] hover:text-white hover:border-[#E85C24]'
-        : 'bg-gray-50 text-gray-600 border-gray-200 hover:text-[#E85C24] hover:bg-gray-100';
+        ? 'bg-[#111622] text-slate-300 border-[#1F2636] hover:text-white hover:border-brand'
+        : 'bg-gray-50 text-gray-600 border-gray-200 hover:text-brand hover:bg-gray-100';
 
     $linkText = $variant === 'dark'
         ? 'text-slate-300 hover:text-white'
-        : 'text-gray-700 hover:text-[#E85C24]';
+        : 'text-gray-700 hover:text-brand';
 @endphp
 
 <div class="flex items-center gap-2 md:gap-3">
@@ -23,7 +23,7 @@
         {{-- Десктоп: текст --}}
         <a href="tel:{{ $phoneClean }}"
            class="hidden lg:inline-flex items-center gap-2 text-sm font-semibold {{ $linkText }} transition-colors">
-            <i class="fas fa-phone text-xs text-[#E85C24]"></i>
+            <i class="fas fa-phone text-xs text-brand"></i>
             <span>{{ $phone }}</span>
         </a>
 
@@ -40,7 +40,7 @@
         {{-- Десктоп: текст --}}
         <a href="mailto:{{ $email }}"
            class="hidden xl:inline-flex items-center gap-2 text-sm font-semibold {{ $linkText }} transition-colors">
-            <i class="fas fa-envelope text-xs text-[#E85C24]"></i>
+            <i class="fas fa-envelope text-xs text-brand"></i>
             <span>{{ $email }}</span>
         </a>
 

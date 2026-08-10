@@ -40,12 +40,12 @@
             <div class="text-center">
                 @if($course)
                     <a href="{{ route('shop.course.show', $course) }}"
-                       class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-[#E85C24] to-[#d64e1c] hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
+                       class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-brand to-brand-hover hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
                         Попробовать снова
                     </a>
                 @else
                     <a href="{{ route('shop.index') }}"
-                       class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-[#E85C24] to-[#d64e1c] hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
+                       class="inline-flex justify-center items-center py-4 px-8 rounded-2xl shadow-lg shadow-orange-200/70 text-lg font-extrabold text-white bg-gradient-to-r from-brand to-brand-hover hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200">
                         Выбрать курс
                     </a>
                 @endif

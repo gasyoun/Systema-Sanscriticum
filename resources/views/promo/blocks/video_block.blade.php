@@ -62,7 +62,7 @@
             <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
                 {{ $d['title'] }}
             </h2>
-            <div class="w-24 h-1.5 bg-[#E85C24] mx-auto mt-4 rounded-full opacity-80"></div>
+            <div class="w-24 h-1.5 bg-brand mx-auto mt-4 rounded-full opacity-80"></div>
         </div>
         @endif
 
@@ -74,8 +74,8 @@
                     <button type="button" @click="select(k)"
                             class="px-4 py-2 rounded-full text-sm font-bold border transition-colors"
                             :class="current === k
-                                ? 'bg-[#E85C24] text-white border-[#E85C24]'
-                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#E85C24] hover:text-[#E85C24]'"
+                                ? 'bg-brand text-white border-brand'
+                                : 'bg-white text-gray-700 border-gray-200 hover:border-brand hover:text-brand'"
                             x-text="labels[k]"></button>
                 </template>
             </div>

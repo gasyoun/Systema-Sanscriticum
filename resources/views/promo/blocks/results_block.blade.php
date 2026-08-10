@@ -10,7 +10,7 @@
             <h2 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#101010] mb-5 tracking-tight">
                 {{ $data['title'] ?? 'Вот, что могут 90% наших учеников' }}
             </h2>
-            <div class="w-20 h-1.5 bg-[#E85C24] rounded-full mx-auto"></div>
+            <div class="w-20 h-1.5 bg-brand rounded-full mx-auto"></div>
         </div>
 
         @if(!empty($data['items']))
@@ -34,11 +34,11 @@
                 @endphp
 
                 {{-- КАРТОЧКА --}}
-                <div class="relative bg-white rounded-3xl p-7 md:p-8 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_22px_45px_rgba(232,92,36,0.12)] hover:border-[#E85C24]/20 hover:-translate-y-1 transition-all duration-500 group overflow-hidden flex flex-col
+                <div class="relative bg-white rounded-3xl p-7 md:p-8 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_22px_45px_rgba(232,92,36,0.12)] hover:border-brand/20 hover:-translate-y-1 transition-all duration-500 group overflow-hidden flex flex-col
                             {{ $isWide ? 'lg:col-span-2' : 'lg:col-span-1' }}">
 
                     {{-- НОМЕР (крупный, бледно-оранжевый) --}}
-                    <span class="absolute top-5 right-6 text-5xl md:text-6xl font-extrabold leading-none tabular-nums text-[#E85C24]/10 group-hover:text-[#E85C24]/25 transition-colors duration-500 select-none pointer-events-none">
+                    <span class="absolute top-5 right-6 text-5xl md:text-6xl font-extrabold leading-none tabular-nums text-brand/10 group-hover:text-brand/25 transition-colors duration-500 select-none pointer-events-none">
                         {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}
                     </span>
 
@@ -47,14 +47,14 @@
                         @if($iconUrl)
                             <img src="{{ $iconUrl }}" alt="" class="w-8 h-8 md:w-9 md:h-9 object-contain">
                         @else
-                            <svg class="w-7 h-7 md:w-8 md:h-8 text-[#E85C24]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            <svg class="w-7 h-7 md:w-8 md:h-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                         @endif
                     </div>
 
                     {{-- КОНТЕНТ --}}
                     <div class="relative z-10">
                         @if(!empty($item['title']))
-                            <h3 class="text-lg md:text-xl font-bold text-[#101010] leading-snug tracking-tight group-hover:text-[#E85C24] transition-colors">
+                            <h3 class="text-lg md:text-xl font-bold text-[#101010] leading-snug tracking-tight group-hover:text-brand transition-colors">
                                 {{ $item['title'] }}
                             </h3>
                         @endif
@@ -68,7 +68,7 @@
                     </div>
 
                     {{-- Тонкая оранжевая линия-акцент снизу, появляется на hover --}}
-                    <div class="mt-6 h-0.5 w-10 rounded-full bg-[#E85C24]/20 group-hover:w-16 group-hover:bg-[#E85C24]/60 transition-all duration-500"></div>
+                    <div class="mt-6 h-0.5 w-10 rounded-full bg-brand/20 group-hover:w-16 group-hover:bg-brand/60 transition-all duration-500"></div>
 
                 </div>
             @endforeach

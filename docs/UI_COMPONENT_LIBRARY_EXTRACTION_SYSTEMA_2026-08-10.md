@@ -5,7 +5,10 @@ _Created: 10-08-2026 · Last updated: 10-08-2026_
 **Handoff:** H2541 (Opus 5) — Systema UI component library: token collapse + piecemeal `x-ui` primitive
 extraction, with a parallel React mirror for Claude Design.
 **Measured and authored by:** Opus 5 (`claude-opus-5`), 10-08-2026.
-**Status:** plan only — nothing extracted yet. Phase 1 (tokens) is the first executable step.
+**Status:** **Phase 1 partially shipped** — the brand-orange collapse and the `tailwind.config.js`
+deletion landed under H2560 (Opus 5) on 10-08-2026; evidence in
+[docs/H2560_PHASE1_EVIDENCE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/H2560_PHASE1_EVIDENCE.md).
+The gray-literal replacement (step 3 below) and all of Phase 2+ remain unstarted.
 
 ## Why this document exists
 
@@ -92,17 +95,31 @@ w-full px-5 py-4  rounded-xl border border-transparent bg-[#252529] ... focus:bo
 
 Mechanical, low-risk, and it unblocks everything else. No component work in this phase.
 
-1. Define an `@theme` block in
-   [resources/css/app.css](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/css/app.css):
-   `--color-brand`, `--color-brand-hover`, `--color-ink`, `--color-surface`, `--radius-card`.
-2. Collapse the four oranges to `--color-brand` + `--color-brand-hover`. This alone retires a large
-   share of the 2,107 arbitrary-value classes.
-3. Replace hand-copied Tailwind grays (`#9CA3AF`, `#6B7280`, `#F3F4F6`, `#E5E7EB`, `#111827`) with
-   their native utilities — pure find-and-replace, no visual change.
-4. Delete [tailwind.config.js](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tailwind.config.js).
+1. ✅ **Done (H2560).** Define an `@theme` block in
+   [resources/css/app.css](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/css/app.css).
+   Shipped with `--color-brand` + `--color-brand-hover` only. `--color-ink`, `--color-surface` and
+   `--radius-card` were **deliberately not** defined: the surfaces they would name are exactly the
+   dark-palette question a human still owes a ruling on (see Open questions), and `--radius-card`
+   is a Phase-2 concern that belongs with the Card primitive, not ahead of it.
+2. ✅ **Done (H2560).** Collapse the oranges to `--color-brand` + `--color-brand-hover`.
+   314 arbitrary-value classes retired across 179 templates. Measured against the *in-scope*
+   surface the collapse was allowed to touch, that is 1,007 → 802 (the 2,107 figure in the table
+   above is repo-wide and includes `filament/`, `vendor/`, `emails/`, and the skins, all excluded).
+   Four hover oranges unified, not three — the census found `#D14E1A` (7×) in addition to
+   `#D04A15` / `#D64E1C` / `#D34F1C`; max pairwise delta ~7/255, so `#D04A15` won on plurality.
+3. ⬜ **Not started.** Replace hand-copied Tailwind grays (`#9CA3AF`, `#6B7280`, `#F3F4F6`,
+   `#E5E7EB`, `#111827`) with their native utilities — pure find-and-replace, no visual change.
+   Independent of the dark-palette ruling, so this is the next executable step in Phase 1.
+4. ✅ **Done (H2560).** Delete `tailwind.config.js` (no longer linkable — the file is gone as of
+   this phase; its last committed state is at
+   [tailwind.config.js@2eeb144b](https://github.com/gasyoun/Systema-Sanscriticum/blob/2eeb144b/tailwind.config.js)).
    **It is dead code:** Tailwind v4 only reads a JS config when the CSS names it via `@config`, and no
    `@config` directive exists anywhere in this repo. Its empty `theme.extend` was never the reason
    `bg-brand` didn't work — the file simply is not loaded.
+   **Caveat found during execution, not visible when this plan was written:** the dead file also
+   registered `@tailwindcss/typography`, so the `prose` classes in 9 templates are now unstyled.
+   Restoring the plugin is one line (`@plugin "@tailwindcss/typography";` in `app.css`) but it is a
+   *visual* change, so it was kept out of the mechanical pass and is queued as a human decision.
 
 Leave `#E3122C` and the dark-skin palettes alone for now; whether they are a second brand or drift is
 a question for a human, and Phase 1 must not smuggle in that decision.
@@ -190,9 +207,16 @@ done
 
 ## Open questions for a human
 
+- **Restore `@tailwindcss/typography`, or drop `prose`?** Raised by H2560, and the only one of these
+  with a live visual consequence *right now*: deleting the dead `tailwind.config.js` also removed the
+  plugin registration, so `prose` in 9 templates renders unstyled. Either add
+  `@plugin "@tailwindcss/typography";` to `app.css` (restores the previous look) or strip the `prose`
+  classes (accepts the plainer look). Both are one-liners; neither belongs in a mechanical pass.
 - Is `#E3122C` a second brand colour or drift? Phase 1 deliberately does not decide this.
 - Are the dark-skin palettes (`#1F2636`, `#101010`, `#111622`, `#0A0D14`) a real dark theme, or
-  accumulated one-off promo styling?
+  accumulated one-off promo styling? **This one blocks Phase 2** — it is 589 of the 802 remaining
+  in-scope arbitrary-value classes, so the answer decides whether they become
+  `--color-surface-*` tokens or simply get deleted.
 - Is Claude Design generation actually wanted? That single answer decides whether Phase 3 happens.
 
 _Dr. Mārcis Gasūns_

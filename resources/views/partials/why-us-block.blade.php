@@ -46,13 +46,13 @@
 @endphp
 <section class="mb-16 lg:mb-20" data-analytics="why-us-block">
     <h2 class="text-2xl md:text-3xl font-extrabold text-white text-center mb-8">
-        Почему <span class="text-[#E85C24]">именно мы</span>
+        Почему <span class="text-brand">именно мы</span>
     </h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         @foreach($whyUs as $item)
             <div class="flex items-start gap-4 rounded-2xl bg-[#111622] border border-[#1F2636] p-5">
                 <div class="w-11 h-11 rounded-xl bg-[#1F2636] flex items-center justify-center shrink-0">
-                    <i class="{{ $item['icon'] }} text-[#E85C24]"></i>
+                    <i class="{{ $item['icon'] }} text-brand"></i>
                 </div>
                 <div>
                     <div class="text-base font-bold text-white mb-1">{{ $item['title'] }}</div>
