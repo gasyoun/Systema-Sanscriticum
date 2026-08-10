@@ -1,6 +1,6 @@
-# ROADMAP — больше продаж, сильнее кабинет, editorial-витрина и полный JIVO · 2026H2
+# ROADMAP — больше продаж, нативное обучение, CRM и полный JIVO · 2026H2
 
-_Created: 07-08-2026 · Last updated: 07-08-2026_
+_Created: 07-08-2026 · Last updated: 08-08-2026_
 
 **Рамка:** AARRR (Acquisition → Activation → Revenue → Retention → Referral).
 **Контур:** samskrtam.ru/FAQ → samskrte.ru → checkout → кабинет `/dvaram` → support/повторная покупка.
@@ -12,6 +12,9 @@ _Created: 07-08-2026 · Last updated: 07-08-2026_
 [`ROADMAP_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SYSTEMA_SAMSKRTE_TIER0_2026_2027.md).
 Он соединяет четыре уже построенных, но разнесённых контура в одну выручечную последовательность:
 витрина, покупка, кабинет и JIVO-подобная поддержка.
+
+Полный execution-пакет после интервью 07–08-08-2026:
+[`PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md).
 
 ## 1. Evidence inventory — только зафиксированные источники
 
@@ -87,8 +90,16 @@ _Created: 07-08-2026 · Last updated: 07-08-2026_
    editorial completion of 3–5 flagship courses is a human content step, not new schema.
 3. **After H1582 GO and smoke:** H2380 adoption experiment; invitation batches ramp 100 → 200/day
    only while deliverability and complaints remain acceptable.
-4. **September:** H2381 operator workflow on the existing support models.
-5. **After H1200 email residual:** H2382 production acceptance, flag inventory and 14-day readout.
+4. **Native learning wave:** import one pinned VisualDCS release and ship verb trainer, nominal
+   trainer and concordance→passage together, with independent flags and Systema-owned progress.
+5. **School-operational JIVO parity:** H2381 operator workflow, H1200 email residual, then H2382
+   production acceptance, flag inventory and 14-day readout.
+6. **CRM Wave 1 immediately after parity:** unified customer timeline + pipeline stage + next
+   action + support/conversion attribution on existing Lead/Deal/FollowUpTask/inbox owners.
+7. **CRM Waves 2–3:** lifecycle automation through the existing Campaign stack, then forecasting
+   and manager dashboards over canonical Deal/Payment denominators.
+8. **Literal-Jivo Wave 4+:** telephony/callback, departments and capacity routing only after the
+   CRM spine and measured operator/voice volume; provider/legal packet before implementation.
 
 ## 6. Definition of synchronization
 
@@ -110,7 +121,8 @@ One source per fact:
 - no fake urgency, invented testimonials or unsupported trust numbers;
 - no pricing/discount change in this roadmap pass;
 - no autonomous bot outreach and no AI write to payments/access/homework;
-- no call-centre telephony or enterprise routing before real operator volume justifies it;
+- no call-centre telephony or enterprise routing **before** school parity + CRM and real operator
+  volume justify activation; these are later committed waves, not permanent non-goals;
 - no claim of revenue lift before repaired measurement and a complete cohort window.
 
 ## 8. Human gates
@@ -119,5 +131,15 @@ One source per fact:
 - legal/privacy sign-off for geo/presence and inbound-email retention;
 - 3–5 flagship courses: real preview lesson, teacher photo/bio, outcomes, FAQ and reviews;
 - any price, membership or payment-policy change goes through the money workflow separately.
+
+## 9. VisualDCS learner integration and CRM extension
+
+- VisualDCS publishes versioned schemas, checksums, manifests and stable learning-object IDs;
+  Systema imports a pinned release and renders native cabinet UI—no iframe or live `main` fetch.
+- Public preview is acquisition; full access calls existing course/tariff entitlement services.
+- Durable cross-device progress uses an idempotent external-learning projection plus existing
+  `ActivityEvent` telemetry; raw person-level data never returns to VisualDCS.
+- CRM builds on existing `Lead`, `Deal`, `FollowUpTask`, `Campaign`, attribution and support
+  owners. Customer 360 comes first; automation and forecasting are explicitly wanted next.
 
 _Dr. Mārcis Gasūns_
