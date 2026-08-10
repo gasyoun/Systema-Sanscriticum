@@ -674,10 +674,15 @@ The migration and backfill command are **not** run against prod by an agent (D16
 php artisan payments:audit-checkout-integrity
 ```
 
-Buckets: negative referral wallets · stranded deposit credit · promo counter
-mismatches · legacy pending promo without expiry · rejected webhook deliveries ·
-**paid-but-no-group** (оплаченный non-deposit платёж, студент не в `group_user` ни
-одной группы курса через `course_group`).
+Buckets (exit ≠ 0 при любом непустом): negative referral wallets · stranded deposit
+credit · promo counter mismatches · legacy pending promo without expiry · rejected
+webhook deliveries · **paid-but-no-group** — оплаченный **revenue**-платёж
+(не `deposit`/`trial`/`Расход`/`salary_payout`) на курсе, у которого **есть**
+`course_group`, а студент не в `group_user` ни одной из них.
+
+Отдельно печатается счётчик **Paid on group-less course (informational)** — исторический
+residue на курсах без групп; в exit code **не** входит (иначе daily cron вечно
+красный на тысячах старых строк).
 
 Ежедневный cron: `payments:audit-checkout-integrity` в 04:05 (см. `schedule:list`).
 Как алерт доходит до человека — §11.7.

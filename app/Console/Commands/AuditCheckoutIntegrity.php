@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
 use App\Models\PromoCode;
 use App\Models\User;
+use App\Services\TeacherSalaryService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -19,9 +20,20 @@ use Illuminate\Support\Facades\DB;
  * FAILURE so a scheduled run pages via Kernel onFailure (H2338 / audit spec 6).
  * Safe repairs (--apply-safe) only recalculate promo used_count, and only when
  * features.checkout_integrity_safe_repairs is ON.
+ *
+ * paid-but-no-group (H2338 refined): only **actionable** access holes fail the
+ * run — paid revenue tariffs on a course that **has** groups, user not in any.
+ * Non-revenue mirrors (`Расход`/`salary_payout`), deposit/trial, and paid rows
+ * on group-less courses are excluded from the failing bucket (group-less count
+ * is still printed as informational so operators see historical residue).
  */
 class AuditCheckoutIntegrity extends Command
 {
+    private const DEPOSIT_LIKE_TARIFFS = ['deposit', 'trial'];
+
+    /** Max payment ids listed in the FAILURE summary line (avoid megabyte logs). */
+    private const PAID_NO_GROUP_ID_LIST_LIMIT = 50;
+
     protected $signature = 'payments:audit-checkout-integrity
                             {--apply-safe : Recalculate promo used_count from paid, non-conditional payments}';
 
@@ -45,6 +57,7 @@ class AuditCheckoutIntegrity extends Command
         $legacyReservations = $this->legacyPendingPromoReservations();
         $rejectedWebhooks = $this->rejectedWebhookDeliveries();
         $paidNoGroup = $this->paidButNoGroupMembership();
+        $paidGrouplessCourse = $this->paidOnGrouplessCourseCount();
 
         $this->report(
             'Negative referral wallets',
@@ -76,6 +89,9 @@ class AuditCheckoutIntegrity extends Command
             ['payment_id', 'user_id', 'course_id', 'tariff', 'amount'],
             $paidNoGroup,
         );
+        // Informational only — does not contribute to exit code (historical group-less
+        // courses would permanently red-page the daily cron).
+        $this->line("Paid on group-less course (informational, not failing): {$paidGrouplessCourse}");
 
         if ($applySafe) {
             $updated = $this->recalculatePromoCounters();
@@ -112,8 +128,11 @@ class AuditCheckoutIntegrity extends Command
         }
 
         if ($paidNoGroup->isNotEmpty()) {
-            $ids = $paidNoGroup->pluck(0)->implode(', ');
-            $this->error("Paid-but-no-group payment id(s): {$ids}");
+            $ids = $paidNoGroup->pluck(0)->take(self::PAID_NO_GROUP_ID_LIST_LIMIT)->implode(', ');
+            $extra = $paidNoGroup->count() > self::PAID_NO_GROUP_ID_LIST_LIMIT
+                ? ' … (+'.($paidNoGroup->count() - self::PAID_NO_GROUP_ID_LIST_LIMIT).' more)'
+                : '';
+            $this->error("Paid-but-no-group payment id(s): {$ids}{$extra}");
         }
 
         return self::FAILURE;
@@ -223,17 +242,23 @@ class AuditCheckoutIntegrity extends Command
     }
 
     /**
-     * Paid non-deposit payment whose user is not a member of any group linked
-     * to the purchased course (course_group ↔ group_user). Residue of silent
-     * grantAccess on group-less courses and import paths (H2304 / audit #1, #15).
+     * Actionable access hole: paid revenue payment on a course that **has**
+     * groups, but the user is not in any of them (course_group ↔ group_user).
+     *
+     * Excludes deposit/trial (no group grant), non-revenue mirrors
+     * (`TeacherSalaryService::NON_REVENUE_TARIFFS`), and group-less courses
+     * (no membership is possible — those are counted informationally only).
+     *
+     * @see H2304 / audit #1, #15; H2338 refined after first prod page (2070 noise)
      */
     private function paidButNoGroupMembership(): Collection
     {
-        return Payment::query()
-            ->paid()
-            ->whereNotNull('user_id')
-            ->whereNotNull('course_id')
-            ->whereNotIn('tariff', ['deposit', 'trial'])
+        return $this->paidRevenueOnCourseQuery()
+            ->whereExists(function ($query): void {
+                $query->selectRaw('1')
+                    ->from('course_group')
+                    ->whereColumn('course_group.course_id', 'payments.course_id');
+            })
             ->whereNotExists(function ($query): void {
                 $query->selectRaw('1')
                     ->from('group_user')
@@ -250,6 +275,39 @@ class AuditCheckoutIntegrity extends Command
                 $payment->tariff,
                 number_format((float) $payment->amount, 2, '.', ''),
             ]);
+    }
+
+    /**
+     * Historical residue: paid revenue on a course with zero course_group rows.
+     * Informational — does not fail the command (would be permanently non-zero).
+     */
+    private function paidOnGrouplessCourseCount(): int
+    {
+        return $this->paidRevenueOnCourseQuery()
+            ->whereNotExists(function ($query): void {
+                $query->selectRaw('1')
+                    ->from('course_group')
+                    ->whereColumn('course_group.course_id', 'payments.course_id');
+            })
+            ->count();
+    }
+
+    /**
+     * Paid payments that should have granted course access (revenue path).
+     */
+    private function paidRevenueOnCourseQuery()
+    {
+        $excluded = array_values(array_unique(array_merge(
+            self::DEPOSIT_LIKE_TARIFFS,
+            TeacherSalaryService::NON_REVENUE_TARIFFS,
+        )));
+
+        return Payment::query()
+            ->paid()
+            ->real()
+            ->whereNotNull('user_id')
+            ->whereNotNull('course_id')
+            ->whereNotIn('tariff', $excluded);
     }
 
     private function expectedPromoCounts(): Collection
