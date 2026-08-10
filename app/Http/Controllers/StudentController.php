@@ -6,6 +6,7 @@ use App\Jobs\TrackLessonViewJob;
 use App\Models\ActivityEvent;
 use App\Models\Announcement;
 use App\Models\Course;
+use App\Models\CourseMaterial;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
@@ -1100,6 +1101,67 @@ class StudentController extends Controller
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    /**
+     * Библиотека курса — реестр ссылок на литературу (фаза 1).
+     *
+     * Доступ: курс активен + студент в группе курса. Тарифы НЕ гейтят страницу
+     * целиком — иначе общая библиография курса исчезала бы в промежутках между
+     * оплатами блоков. Материал, привязанный к уроку, наследует замок этого
+     * урока по той же формуле, что и showCourse().
+     */
+    public function courseLibrary(string $slug)
+    {
+        abort_unless((bool) config('features.course_library', false), 404);
+
+        $user = auth()->user();
+        $userGroupIds = $user->groups->pluck('id');
+
+        $course = Course::resolveBySlugOrFail($slug);
+        abort_unless($course->is_active, 404);
+        abort_unless(
+            $course->groups()->whereIn('groups.id', $userGroupIds)->exists(),
+            404
+        );
+
+        $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $course->slug);
+        $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
+
+        $materials = CourseMaterial::query()
+            ->with('lesson')
+            ->where('course_id', $course->id)
+            ->visible()
+            ->shelfOrder()
+            ->get()
+            ->filter(function (CourseMaterial $material) use ($unlockedTariffs, $grantedLessonIds): bool {
+                // Материал курса (без урока) виден всем, у кого есть курс.
+                if ($material->lesson_id === null) {
+                    return true;
+                }
+                $lesson = $material->lesson;
+                // Урок удалён/недоступен — материал не показываем.
+                if ($lesson === null) {
+                    return false;
+                }
+
+                return $lesson->is_free
+                    || $lesson->is_preview
+                    || in_array($lesson->id, $grantedLessonIds, true)
+                    || $lesson->isUnlockedBy($unlockedTariffs);
+            })
+            ->values();
+
+        // Полка курса отдельно от полок уроков — так студент видит общую
+        // библиографию, не пролистывая её сквозь уроки.
+        $courseWide = $materials->whereNull('lesson_id')->values();
+        $byLesson = $materials->whereNotNull('lesson_id')->groupBy('lesson_id');
+
+        return view('student.course-library', [
+            'course' => $course,
+            'courseWide' => $courseWide,
+            'byLesson' => $byLesson,
+        ]);
     }
 
     /**

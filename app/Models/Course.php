@@ -504,6 +504,42 @@ class Course extends Model
             ->orderBy('id');
     }
 
+    /**
+     * Баннеры курса по форматам (16:9 / 9:16 / 4:3) + исходники PSD к ним.
+     * Ровно одна строка на формат — держится unique-индексом в БД.
+     * НЕ путать с image_path: там обложка витрины, у неё другой потребитель.
+     */
+    public function designAssets(): HasMany
+    {
+        return $this->hasMany(CourseDesignAsset::class);
+    }
+
+    /**
+     * Сколько требуемых форматов закрыто и сколько всего требуется.
+     * Читает уже загруженную связь, если она есть, — страница-матрица тянет
+     * designAssets через with(), и лишний запрос на строку был бы N+1.
+     *
+     * @return array{done: int, total: int, missing: list<string>}
+     */
+    public function designReadiness(): array
+    {
+        /** @var list<string> $formats */
+        $formats = (array) config('design_assets.formats', []);
+
+        $present = $this->designAssets
+            ->filter(fn (CourseDesignAsset $a): bool => filled($a->path))
+            ->pluck('format')
+            ->all();
+
+        $missing = array_values(array_diff($formats, $present));
+
+        return [
+            'done' => count($formats) - count($missing),
+            'total' => count($formats),
+            'missing' => $missing,
+        ];
+    }
+
     // ==========================================
     // СВЯЗЬ: Один курс имеет много оплат
     // ==========================================
