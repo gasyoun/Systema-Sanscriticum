@@ -482,6 +482,12 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->middleware('course.canonical')
         ->name('student.course.materials.download');
 
+    // Библиотека курса — реестр ссылок на литературу (файлы лежат не у нас).
+    // За флагом features.course_library; выключен — 404.
+    Route::get('/c/{slug}/library', [StudentController::class, 'courseLibrary'])
+        ->middleware('course.canonical')
+        ->name('student.course.library');
+
     Route::post('/c/{slug}/u/{lessonId}/note', [StudentController::class, 'saveNote'])
         ->name('student.lesson.note');
 
