@@ -174,7 +174,8 @@ class TeacherBlockPayoutTest extends TestCase
 
         $this->assertSame(0.0, $this->service->blockGroupRevenue($course->id, 2, null));
     }
-/** @test */
+
+    /** @test */
     public function block_group_revenue_excludes_already_paid_share_keys(): void
     {
         // Регрессия (money-core, H071 lower-severity / H2465): base auto-fill must

@@ -143,7 +143,8 @@ class TeacherAdvanceTest extends TestCase
         // Зачёт денег не двигает (отдельная транзакция не создаётся).
         $this->assertSame(1, Payment::where('tariff', 'salary_payout')->count());
     }
-/** @test */
+
+    /** @test */
     public function settle_advances_for_block_payout_applies_fifo_up_to_limit(): void
     {
         // Регрессия (money-core, H071 lower-severity / H2466): block calculator path
