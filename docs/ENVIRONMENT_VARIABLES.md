@@ -95,6 +95,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CONVERSION_TREND_WEEKS` | optional | `8` | config/conversion.php:49 |
 | `CONVERSION_UNCLOSED_AFTER_DAYS` | optional | `3` | config/conversion.php:38 |
 | `CONVERSION_WARN_PCT` | optional | `50` | config/conversion.php:33 |
+| `COURSE_LIBRARY` | optional | `false` | config/features.php:799 |
 | `COURSE_RECORDINGS_SALES` | optional | `false` | config/features.php:143 |
 | `CRM_COCKPIT` | optional | `false` | config/features.php:78 |
 | `CRM_FOLLOW_UP_TASKS` | optional | `false` | config/features.php:622 |
