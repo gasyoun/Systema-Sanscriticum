@@ -1,6 +1,6 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 09-08-2026_
+_Created: 03-07-2026 · Last updated: 10-08-2026_
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
@@ -270,8 +270,33 @@ Overlaps the general roadmap's Laravel-11 item — this track owns the **securit
   window closed **12-03-2026**, so an 11-target upgrade would have moved prod from one EOL line
   to another. Laravel 12 takes security fixes until **24-02-2027**, but **bug-fix support ends
   13-08-2026** — from that date this is a security-fixes-only line, not a steady state.
-  Successor: **H2506** (12 → 13, gated on a Filament/Horizon/Reverb compatibility audit; PHP 8.3
-  already sits inside 13.x's 8.3–8.5 band, so no runtime move is needed).
+  Successor: **H2506** ran the gating package-compatibility audit (09-08-2026, evidence:
+  [docs/LARAVEL_10_TO_12_UPGRADE_SECURITY_NOTES.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/LARAVEL_10_TO_12_UPGRADE_SECURITY_NOTES.md)
+  § Successor). Verdict: **not** a Filament/Horizon/Reverb blanket blocker — core Filament
+  `^3.0` and everything else in the require block already resolve against Laravel 13; the
+  only two blockers are `mokhosh/filament-kanban` (no `^13`-compatible release) and
+  `saade/filament-fullcalendar` (stable caps at `^12`, only `v4.0.0-beta7` supports `^13` and
+  that requires a Filament major). H2506 closed INCONCLUSIVE-with-evidence per its own stop
+  condition; narrowly-scoped successor tracks unblocking just those two plugins. PHP 8.3
+  already sits inside 13.x's 8.3–8.5 band, so no runtime move is needed.
+- [x] **Laravel 12 to 13** — ✅ done. Shipped 10-08-2026 under **H2529** (Opus 5):
+  `composer.json` requires `"laravel/framework": "^13.24.0"` and `"laravel/tinker": "^3.0"`.
+  Both H2506 blockers were cleared **without** a Filament major bump — core Filament stays
+  `v3.3.54`. Each blocker needed only its declared `illuminate/contracts` constraint widened
+  to admit `^13.0` (no source changes), applied on an `l13-compatibility` branch in a fork
+  and consumed as a `vcs` repository:
+  [gasyoun/filament-kanban](https://github.com/gasyoun/filament-kanban/tree/l13-compatibility)
+  and [gasyoun/filament-fullcalendar](https://github.com/gasyoun/filament-fullcalendar/tree/l13-compatibility)
+  (cut from upstream `3.x`). Upstream fixes filed so the forks can be retired:
+  [mokhosh/filament-kanban#95](https://github.com/mokhosh/filament-kanban/pull/95) (ours) and
+  the pre-existing [saade/filament-fullcalendar#280](https://github.com/saade/filament-fullcalendar/pull/280).
+  A replacement kanban package was ruled out first: of 12 candidates on Packagist the only
+  `^13`-capable one (`sheavescapital/filament-kanban` v5.2) requires Filament `^4|^5`.
+  Laravel 13 (released 17-03-2026) takes bug fixes until **Q3 2027** and security fixes until
+  **17-03-2028** ([support policy](https://laravel.com/docs/13.x/releases#support-policy)), so
+  this exits the 12.x line *before* its **13-08-2026** bug-fix cutoff — three days ahead of it,
+  rather than sliding into a security-fixes-only steady state. PHP 8.3.32 already sits inside
+  13.x's 8.3–8.5 band, so no runtime move was needed.
 - [x] **PHP 8.2 to 8.3** — ✅ done (05-07-2026, [PR #298](https://github.com/gasyoun/Systema-Sanscriticum/pull/298);
   H2478 doc-close 09-08-2026): `composer.json` requires `php: "^8.3"` with
   `config.platform.php: "8.3.0"`; CI matrix `php: ["8.3"]` only
