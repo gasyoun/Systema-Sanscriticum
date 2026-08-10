@@ -60,10 +60,14 @@ class ViewHomeworkSubmission extends ViewRecord
     {
         return [
             Action::make('downloadImagesPdf')
-                ->label('Картинки → PDF')
+                ->label('Скачать PDF картинок')
                 ->icon('heroicon-o-document-arrow-down')
                 ->color('gray')
-                ->url(fn (): string => route('homework.submission.images-pdf', $this->getRecord()))
+                // PDF уже встроен в тред; кнопка — только принудительное скачивание.
+                ->url(fn (): string => route('homework.submission.images-pdf', [
+                    'submission' => $this->getRecord(),
+                    'download' => 1,
+                ]))
                 ->openUrlInNewTab()
                 ->visible(function (): bool {
                     if (! HomeworkSubmissionResource::canReview($this->getRecord())) {

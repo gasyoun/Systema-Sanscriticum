@@ -1,6 +1,6 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 08-08-2026_
+_Created: 03-07-2026 · Last updated: 10-08-2026_
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
@@ -185,7 +185,26 @@ handoff — this roadmap does not restate the findings, it sequences them.
       (`TeacherBlockPayoutTest::block_revenue_subtracts_refund_expense_rows` +
       `block_revenue_floors_at_zero_when_refunds_exceed_revenue`);
       verified on main 08-08-2026 (H2453).
-  - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071.
+    - [x] referral credit not clawed on paid→failed/canceled — reverse via
+      `ReferralService::reverseRewardForPayment` from `PaymentObserver` (floor at 0;
+      deletes `ReferralReward` so unique(referred_id) slot reopens) —
+      shipped [PR #258](https://github.com/gasyoun/Systema-Sanscriticum/pull/258)
+      (`ReferralProgramTest::reward_is_clawed_back_when_referred_payment_is_reversed` +
+      `clawback_floors_referrer_credit_at_zero_when_already_spent` +
+      `both_sides_clawback_when_referred_amount_was_granted`);
+      verified on main 08-08-2026 (H2471). No re-implementation — regression present.
+  - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071:
+    - [x] tariff loyalty wholesale count ignores conditional / 0₽ payments —
+      `Tariff::getDiscountPercentForUser` uses `->real()` + `where('amount', '>', 0)` —
+      shipped [PR #253](https://github.com/gasyoun/Systema-Sanscriticum/pull/253)
+      (`LoyaltyDiscountTest::conditional_and_zero_amount_payments_do_not_count_toward_loyalty`);
+      verified on main 08-08-2026 (H2463).
+    - [x] deposit partial consumption + upgrade credit keeps deposit half —
+      `Payment::consumeDepositsForCourse` drains by `deposit_credit_applied` / `consumed_amount`;
+      `Tariff::upgradeCreditForUser` sums `amount + COALESCE(deposit_credit_applied, 0)` —
+      shipped [PR #360](https://github.com/gasyoun/Systema-Sanscriticum/pull/360)
+      (`DepositPartialConsumptionTest`);
+      verified on main 08-08-2026 (H2464).
 - [ ] After each fix, extend the money-core test suite so the defect cannot regress silently.
 
 **Exit criterion:** every H071 finding is either fixed-with-test or explicitly ruled
@@ -199,7 +218,7 @@ non-reversed payment.
 **Unblocked by:** Wave 2 (institutionalize the review that produced the Wave-2 list; wire SAST
 once the known-defect backlog is drained so the baseline is clean).
 
-- [ ] **PHP SAST in CI** (D4): add a `semgrep` job with the PHP + Laravel security rulesets to
+- [x] **PHP SAST in CI** (D4): add a `semgrep` job with the PHP + Laravel security rulesets to
   [.github/workflows](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/.github/workflows),
   and/or `larastan/larastan` at a security-focused level. Start advisory (non-blocking) to
   triage the false-positive rate, then make it required once tuned. Fills the gap CodeQL
@@ -207,10 +226,18 @@ once the known-defect backlog is drained so the baseline is clean).
   - ✅ **Semgrep job added** (07-07-2026, Sonnet 5 `claude-sonnet-5`):
     [.github/workflows/semgrep.yml](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/semgrep.yml),
     `p/php` + `p/security-audit` + `p/owasp-top-ten` rulesets, `continue-on-error: true`
-    (advisory). **Still open:** ~2-week triage window, then flip to required and
-    document any dismissed rules (mirror `/cologne-alert-triage`). Larastan not
-    added — Semgrep's Laravel ruleset judged sufficient coverage to start; revisit
-    if the triage shows thin Laravel-specific sink coverage.
+    (advisory).
+  - ✅ **Triaged and promoted to required** (13-07-2026, Opus 4.8 `claude-opus-4-8`,
+    [H885](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H885-Opus_Systema-Sanscriticum_semgrep-sast-required-gate_13.07.26.md),
+    [PR #509](https://github.com/gasyoun/Systema-Sanscriticum/pull/509)): the 18
+    advisory findings were all non-PHP-source (`github-actions-mutable-action-tag`
+    ×13, `dependabot-missing-cooldown`, `plaintext-http-link` in a stray committed
+    nginx default page) — fixed by pinning Action `uses:` to commit SHAs, adding a
+    7-day Dependabot cooldown, and removing the stray HTML file. `semgrep.yml` then
+    dropped `continue-on-error` and added `--error`; "Semgrep scan" is now a required
+    branch-protection check on `main` (verified 09-08-2026). Larastan not added —
+    Semgrep's Laravel ruleset judged sufficient coverage; revisit if a future triage
+    shows thin Laravel-specific sink coverage.
 - [x] **Institutionalize the adversarial money-core review** (D4) — ✅ done
   (07-07-2026, Sonnet 5 `claude-sonnet-5`): the 02-07 multi-agent finder+verifier
   run is now a committed, repeatable harness —
@@ -233,10 +260,50 @@ merge; the adversarial review is a scheduled, documented step rather than a one-
 **Unblocked by:** Wave 3 (a clean SAST baseline and green money-core tests de-risk the upgrade).
 Overlaps the general roadmap's Laravel-11 item — this track owns the **security** rationale.
 
-- [ ] **Laravel 10 to 11** — off the security-EOL framework onto a supported release line.
-  Gate on the full suite green + the Wave-3 SAST baseline.
-- [ ] **PHP 8.2 to 8.3** (tracked in
-  [docs/php-8.3-upgrade.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/php-8.3-upgrade.md)).
+- [x] **Laravel 10 to 12** — ✅ done. Upgrade shipped 13-07-2026 under H862 (commit `34fbb0c3`,
+  [PR #505](https://github.com/gasyoun/Systema-Sanscriticum/pull/505)); the security rationale
+  and support-window record were written 09-08-2026 under H2477:
+  [docs/LARAVEL_10_TO_12_UPGRADE_SECURITY_NOTES.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/LARAVEL_10_TO_12_UPGRADE_SECURITY_NOTES.md).
+  `composer.json` requires `"laravel/framework": "^12.61.1"`; `composer.lock` **and the live
+  box** (`php artisan --version` in `/var/www/html`, probed 09-08-2026) both report **v12.64.0**
+  on PHP 8.3.32. Supersedes the 10→11 roadmap target for a dated reason: Laravel 11's security
+  window closed **12-03-2026**, so an 11-target upgrade would have moved prod from one EOL line
+  to another. Laravel 12 takes security fixes until **24-02-2027**, but **bug-fix support ends
+  13-08-2026** — from that date this is a security-fixes-only line, not a steady state.
+  Successor: **H2506** ran the gating package-compatibility audit (09-08-2026, evidence:
+  [docs/LARAVEL_10_TO_12_UPGRADE_SECURITY_NOTES.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/LARAVEL_10_TO_12_UPGRADE_SECURITY_NOTES.md)
+  § Successor). Verdict: **not** a Filament/Horizon/Reverb blanket blocker — core Filament
+  `^3.0` and everything else in the require block already resolve against Laravel 13; the
+  only two blockers are `mokhosh/filament-kanban` (no `^13`-compatible release) and
+  `saade/filament-fullcalendar` (stable caps at `^12`, only `v4.0.0-beta7` supports `^13` and
+  that requires a Filament major). H2506 closed INCONCLUSIVE-with-evidence per its own stop
+  condition; narrowly-scoped successor tracks unblocking just those two plugins. PHP 8.3
+  already sits inside 13.x's 8.3–8.5 band, so no runtime move is needed.
+- [x] **Laravel 12 to 13** — ✅ done. Shipped 10-08-2026 under **H2529** (Opus 5):
+  `composer.json` requires `"laravel/framework": "^13.24.0"` and `"laravel/tinker": "^3.0"`.
+  Both H2506 blockers were cleared **without** a Filament major bump — core Filament stays
+  `v3.3.54`. Each blocker needed only its declared `illuminate/contracts` constraint widened
+  to admit `^13.0` (no source changes), applied on an `l13-compatibility` branch in a fork
+  and consumed as a `vcs` repository:
+  [gasyoun/filament-kanban](https://github.com/gasyoun/filament-kanban/tree/l13-compatibility)
+  and [gasyoun/filament-fullcalendar](https://github.com/gasyoun/filament-fullcalendar/tree/l13-compatibility)
+  (cut from upstream `3.x`). Upstream fixes filed so the forks can be retired:
+  [mokhosh/filament-kanban#95](https://github.com/mokhosh/filament-kanban/pull/95) (ours) and
+  the pre-existing [saade/filament-fullcalendar#280](https://github.com/saade/filament-fullcalendar/pull/280).
+  A replacement kanban package was ruled out first: of 12 candidates on Packagist the only
+  `^13`-capable one (`sheavescapital/filament-kanban` v5.2) requires Filament `^4|^5`.
+  Laravel 13 (released 17-03-2026) takes bug fixes until **Q3 2027** and security fixes until
+  **17-03-2028** ([support policy](https://laravel.com/docs/13.x/releases#support-policy)), so
+  this exits the 12.x line *before* its **13-08-2026** bug-fix cutoff — three days ahead of it,
+  rather than sliding into a security-fixes-only steady state. PHP 8.3.32 already sits inside
+  13.x's 8.3–8.5 band, so no runtime move was needed.
+- [x] **PHP 8.2 to 8.3** — ✅ done (05-07-2026, [PR #298](https://github.com/gasyoun/Systema-Sanscriticum/pull/298);
+  H2478 doc-close 09-08-2026): `composer.json` requires `php: "^8.3"` with
+  `config.platform.php: "8.3.0"`; CI matrix `php: ["8.3"]` only
+  ([.github/workflows/ci.yml](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/ci.yml));
+  prod nginx serves via `php8.3-fpm.sock`, php-fpm and Horizon workers run PHP 8.3.32
+  (confirmed live 09-08-2026). Runbook:
+  [docs/php-8.3-upgrade.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/php-8.3-upgrade.md) (superseded/historical).
 - [ ] **Dependency posture review** — audit `composer.lock`/`package-lock.json` for abandoned or
   known-vulnerable packages once Dependabot alerts populate; pin and update.
 - [ ] **Deploy-surface review** — confirm `deploy.sh` / `docker-compose.yml` never echo secrets

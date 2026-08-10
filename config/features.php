@@ -109,6 +109,17 @@ return [
     'support_template_drafts' => (bool) env('SUPPORT_TEMPLATE_DRAFTS', false),
 
     /*
+     | FAQ RAG for Helpdesk suggester (H2448 Track B): BM25 top-3 chunks from
+     | resources/knowledge/faq.md with citations before template/LLM.
+     | ВЫКЛ по умолчанию. Requires support_answer_suggester (deploy + admin
+     | toggle) to produce suggestions at all; this flag only adds retrieval.
+     | Money/policy (category D): refuse draft if best BM25 score < threshold
+     | (config support.faq_rag.min_score). Never auto-sends to student.
+     | Enable: FAQ_RAG_SUGGESTER=true + config:cache after review. Flag OFF on prod.
+     */
+    'faq_rag_suggester' => (bool) env('FAQ_RAG_SUGGESTER', false),
+
+    /*
      | Гео/город посетителя веб-чата в панели куратора (H1196, Jivo-паритет
      | Pillar 1). Когда ВКЛ, при первом сообщении посетителя его IP резолвится
      | асинхронно (ResolveVisitorGeoJob → VisitorGeoResolver, драйвер из
@@ -764,4 +775,26 @@ return [
      | регистрируется и недоступна (canAccess false) даже для admin.
      */
     'manager_sales_report' => (bool) env('MANAGER_SALES_REPORT', false),
+
+    /*
+     |--------------------------------------------------------------------------
+     | Библиотека курса (фаза 1 — реестр ссылок)
+     |--------------------------------------------------------------------------
+     |
+     | Преподаватель выкладывает ссылку на PDF, она становится строкой в
+     | библиотеке курса. Файл НЕ забираем: рост хранилища нулевой — это
+     | осознанный выбор, потому что вложения уроков уже основной источник
+     | роста storage/app, а он целиком уходит в недельный бэкап.
+     |
+     | Фаза 2 (опциональное зеркалирование с лимитом размера) добавит
+     | disk/path/size/sha256 — до тех пор их нет намеренно.
+     |
+     | Внешние ссылки гниют, поэтому строки публикуются вручную
+     | (is_visible=false по умолчанию), а страница честно предупреждает
+     | студента, что файл лежит не у нас.
+     |
+     | Выключено — маршрут /c/{slug}/library отдаёт 404. Админка при этом
+     | работает независимо от флага: куратор может заранее собрать полку.
+     */
+    'course_library' => (bool) env('COURSE_LIBRARY', false),
 ];

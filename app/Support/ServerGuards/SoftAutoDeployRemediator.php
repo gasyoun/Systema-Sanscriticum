@@ -93,15 +93,22 @@ final class SoftAutoDeployRemediator
         }
 
         if ($blocking !== [] && ! $this->gitFetchQuiet($appDir)) {
-            // Still classify without fresh origin if possible; fail only if origin ref missing.
-            if (! $this->originExists($appDir)) {
-                return $this->errorResult('git fetch failed and origin/'.$this->branch.' missing', [
-                    'breaker_present' => $breakerPresent,
-                    'breaker_soft' => $breakerSoft,
-                    'breaker_last_line' => $breakerLast,
-                    'dirty' => $dirty,
-                ]);
-            }
+            // Stale origin ref is not a safe fallback — classifying against stale data
+            // can discard files that diverged after the last successful fetch. Refuse
+            // immediately and let the next remediation cycle retry with a fresh fetch.
+            return $this->result(
+                status: 'needs_human',
+                exitCode: 1,
+                message: 'git fetch failed — cannot verify origin/'.$this->branch.' is current; retry when network is available',
+                breakerPresent: $breakerPresent,
+                breakerSoft: $breakerSoft,
+                breakerLast: $breakerLast,
+                dirty: $dirty,
+                originEqual: [],
+                diverging: $blocking,
+                allowed: $allowed,
+                actions: $actions,
+            );
         }
 
         $originEqual = [];
@@ -118,6 +125,7 @@ final class SoftAutoDeployRemediator
             $applied = false;
             $detail = 'matches origin/'.$this->branch.' — safe discard';
             if (! $dryRun) {
+                $this->backupPath($appDir, $path);
                 $ok = $this->checkoutPath($appDir, $path);
                 $applied = $ok;
                 $detail = $ok
@@ -412,6 +420,19 @@ final class SoftAutoDeployRemediator
 
         // exit 0 = no diff; 1 = differs; other = error
         return $result->exitCode() === 0;
+    }
+
+    private function backupPath(string $appDir, string $path): void
+    {
+        $src = $appDir.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $path);
+        if (! is_file($src)) {
+            return;
+        }
+        $dest = $appDir.DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'app'
+            .DIRECTORY_SEPARATOR.'soft_remediate_backups'.DIRECTORY_SEPARATOR.date('YmdHis')
+            .DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $path);
+        @mkdir(dirname($dest), 0755, true);
+        @copy($src, $dest);
     }
 
     private function checkoutPath(string $appDir, string $path): bool

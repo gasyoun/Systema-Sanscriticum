@@ -46,6 +46,8 @@ class SupportAnswerSuggester
         private readonly SupportAnswerFactResolver $facts,
         private readonly SupportLlmDraftComposer $llm,
         private readonly SupportTemplateDraftResolver $templates,
+        private readonly Faq\Bm25FaqRetriever $faqRag,
+        private readonly Faq\FaqRagDraftBuilder $faqDrafts,
     ) {}
 
     public function isEnabled(): bool
@@ -162,7 +164,7 @@ class SupportAnswerSuggester
         }
 
         $resolved = $userId === null
-            ? $this->resolveGuest($category, $sourceType)
+            ? $this->resolveGuest($category, $sourceType, $text)
             : $this->resolveForUser($category, $userId, $text, $sourceType);
 
         if ($resolved === null) {
@@ -200,14 +202,41 @@ class SupportAnswerSuggester
             return null;
         }
 
+        // H2448 FAQ RAG (flag OFF by default): retrieve top chunks BEFORE
+        // template/LLM. Money/policy categories refuse without a hit above threshold.
+        $ragHits = $this->faqRagHits($text);
+        if ($this->faqRag->isEnabled()
+            && in_array($category, $this->faqRag->moneyPolicyCategories(), true)
+            && ! $this->faqRag->passesThreshold($ragHits)
+        ) {
+            return null;
+        }
+
+        if ($this->faqRag->isEnabled()
+            && $ragHits !== []
+            && $this->faqRag->passesThreshold($ragHits)
+            && in_array($category, SupportAnswerSuggestion::LLM_CATEGORIES, true)
+        ) {
+            // Cited FAQ draft first for D/E/F when retrieval is strong enough.
+            return $this->faqDrafts->fromHits($text, $ragHits, $category);
+        }
+
         // A/B/C — строковый шаблон из фактов (без LLM). D/E/F (S5) — LLM
         // формулирует по фактам LMS, за флагом support_ai_assist + дневным cap.
         // S9 (H1838): перед LLM — привязанный шаблон MessageTemplate; есть
         // привязка → черновик из шаблона, LLM не вызывается вовсе.
-        return in_array($category, SupportAnswerSuggestion::LLM_CATEGORIES, true)
+        $resolved = in_array($category, SupportAnswerSuggestion::LLM_CATEGORIES, true)
             ? $this->templates->resolve($category, $user)
                 ?? $this->llm->compose($category, $user, $text, $sourceType)
             : $this->facts->resolve($category, $user);
+
+        if ($resolved === null) {
+            return null;
+        }
+
+        return $this->faqRag->isEnabled()
+            ? $this->faqDrafts->attachCitations($resolved, $ragHits)
+            : $resolved;
     }
 
     /**
@@ -219,12 +248,40 @@ class SupportAnswerSuggester
      *
      * @return array{draft: string, facts: array<string, mixed>, confidence: float}|null
      */
-    private function resolveGuest(string $category, string $sourceType): ?array
+    private function resolveGuest(string $category, string $sourceType, string $text = ''): ?array
     {
         if ($category !== SupportAnswerSuggestion::CATEGORY_PAYMENT || $sourceType !== SupportAnswerSuggestion::SOURCE_CHAT_MESSAGE) {
             return null;
         }
 
-        return $this->facts->resolvePublicPricing();
+        // H2448: guest payment questions may use FAQ citations when flag ON.
+        $ragHits = $this->faqRagHits($text);
+        if ($this->faqRag->isEnabled()
+            && $ragHits !== []
+            && $this->faqRag->passesThreshold($ragHits)
+        ) {
+            return $this->faqDrafts->fromHits($text, $ragHits, $category);
+        }
+
+        $resolved = $this->facts->resolvePublicPricing();
+        if ($resolved === null) {
+            return null;
+        }
+
+        return $this->faqRag->isEnabled()
+            ? $this->faqDrafts->attachCitations($resolved, $ragHits)
+            : $resolved;
+    }
+
+    /**
+     * @return list<array{chunk_id: string, title: string, heading_path: list<string>, snippet: string, source: string, score: float}>
+     */
+    private function faqRagHits(string $text): array
+    {
+        if (! $this->faqRag->isEnabled() || trim($text) === '') {
+            return [];
+        }
+
+        return $this->faqRag->retrieve($text);
     }
 }
