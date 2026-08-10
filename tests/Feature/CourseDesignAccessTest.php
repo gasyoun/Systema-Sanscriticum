@@ -169,6 +169,34 @@ class CourseDesignAccessTest extends TestCase
         $this->assertDatabaseCount('course_design_assets', 0);
     }
 
+    /**
+     * Колонка «Объём» и карточка «Занято на диске» должны реально отрисоваться:
+     * сумма приходит из withSum-алиаса, а он ломается молча — колонка просто
+     * покажет прочерк.
+     *
+     * @test
+     */
+    public function the_matrix_shows_the_uploaded_volume(): void
+    {
+        $course = Course::factory()->create(['title' => 'Курс с объёмом', 'is_active' => true]);
+
+        $asset = app(CourseDesignAssetService::class)->store(
+            $course,
+            '16:9',
+            UploadedFile::fake()->image('b.jpg', 1600, 900),
+            'https://disk.example/psd',
+            null,
+            $this->user(Roles::ADMIN),
+        );
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($this->user(Roles::MANAGER));
+
+        Livewire::test(CourseDesignAssets::class)
+            ->assertOk()
+            ->assertSee(CourseDesignAssetService::formatBytes((int) $asset->size));
+    }
+
     /** @test */
     public function a_manager_can_download_the_psd_file(): void
     {
@@ -216,18 +244,34 @@ class CourseDesignAccessTest extends TestCase
     }
 
     /** @test */
-    public function an_unknown_archive_token_returns_404(): void
+    public function a_manager_can_pull_the_course_archive(): void
     {
+        $asset = $this->assetWithPsd();
+
+        $response = $this->actingAs($this->user(Roles::MANAGER))
+            ->get(route('course-design.archive', $asset->course));
+
+        $response->assertOk();
+        $this->assertStringContainsString('.zip', (string) $response->headers->get('content-disposition'));
+    }
+
+    /** @test */
+    public function a_course_without_banners_gives_404_not_a_broken_archive(): void
+    {
+        $course = Course::factory()->create();
+
         $this->actingAs($this->user(Roles::ADMIN))
-            ->get(route('course-design.archive', ['token' => 'made-up.zip']))
+            ->get(route('course-design.archive', $course))
             ->assertNotFound();
     }
 
     /** @test */
     public function a_student_cannot_pull_an_archive(): void
     {
+        $asset = $this->assetWithPsd();
+
         $this->actingAs($this->user(null))
-            ->get(route('course-design.archive', ['token' => 'made-up.zip']))
+            ->get(route('course-design.archive', $asset->course))
             ->assertForbidden();
     }
 

@@ -149,12 +149,39 @@ class CourseDesignAssetService
     }
 
     /**
+     * Человекочитаемый размер. Живёт здесь, а не в странице и виджете по копии:
+     * иначе колонка строки и карточка «Занято на диске» начали бы округлять
+     * по-разному и выглядеть как расхождение данных.
+     */
+    public static function formatBytes(int $bytes): string
+    {
+        if ($bytes <= 0) {
+            return '—';
+        }
+
+        if ($bytes < 1024 * 1024) {
+            return number_format($bytes / 1024, 0, ',', ' ').' КБ';
+        }
+
+        if ($bytes < 1024 * 1024 * 1024) {
+            return number_format($bytes / 1024 / 1024, 1, ',', ' ').' МБ';
+        }
+
+        return number_format($bytes / 1024 / 1024 / 1024, 2, ',', ' ').' ГБ';
+    }
+
+    /**
      * Сводка для виджета и бейджа навигации.
      *
-     * Считаем только по АКТИВНЫМ курсам: бейдж, который вечно горит красным
-     * из-за архивных курсов, приучает не смотреть на бейдж.
+     * Показатели готовности считаем только по АКТИВНЫМ курсам: бейдж, который
+     * вечно горит красным из-за архивных курсов, приучает не смотреть на бейдж.
      *
-     * @return array{courses: int, complete: int, missingSlots: int, withoutPsd: int, ratioMismatch: int}
+     * ОБЪЁМ — исключение: он считается по ВСЕМ строкам. Архивный курс место на
+     * диске занимает ровно так же, и «занято на диске», посчитанное по части
+     * файлов, было бы неправдой в отчёте, который заводят как раз ради контроля
+     * роста хранилища.
+     *
+     * @return array{courses: int, complete: int, missingSlots: int, withoutPsd: int, ratioMismatch: int, bytesImages: int, bytesPsd: int, bytesTotal: int}
      */
     public function snapshot(): array
     {
@@ -188,12 +215,19 @@ class CourseDesignAssetService
             }
         }
 
+        // По всем строкам, а не только по активным курсам — см. докблок выше.
+        $bytesImages = (int) CourseDesignAsset::query()->sum('size');
+        $bytesPsd = (int) CourseDesignAsset::query()->sum('psd_size');
+
         return [
             'courses' => $courses->count(),
             'complete' => $complete,
             'missingSlots' => $missingSlots,
             'withoutPsd' => $withoutPsd,
             'ratioMismatch' => $ratioMismatch,
+            'bytesImages' => $bytesImages,
+            'bytesPsd' => $bytesPsd,
+            'bytesTotal' => $bytesImages + $bytesPsd,
         ];
     }
 

@@ -715,16 +715,20 @@ Route::get('/admin/course-design/{asset}/psd', function (CourseDesignAsset $asse
         ->download($asset->psd_path, $asset->psd_original_name ?: basename($asset->psd_path));
 })->middleware('auth')->name('course-design.psd');
 
-// Собранный ZIP с баннерами курса. Архив лежит во временном ПРИВАТНОМ каталоге
-// (не в public/archives), поэтому угадать имя мало — маршрут ещё и под гейтом.
-// Файл удаляется после отправки: это разовая выгрузка, а не витрина.
-Route::get('/admin/course-design/archive/{token}', function (string $token, CourseDesignArchiver $archiver) {
+// ZIP с баннерами курса: маршрут сам собирает архив и тут же его отдаёт, удаляя
+// файл после отправки. Собирать в Filament-действии и редиректить сюда нельзя —
+// Filament оставляет после такого редиректа пустую модалку действия (поймано
+// прокликиванием). Заодно в пути нет ни токена, ни имени файла от пользователя.
+Route::get('/admin/course-design/{course}/archive', function (Course $course, CourseDesignArchiver $archiver) {
     abort_unless(RoleGate::any(Roles::ADMIN, Roles::MANAGER), 403);
 
-    $path = $archiver->pathForToken($token);
-    abort_unless($path !== null, 404, 'Архив не найден — соберите его заново.');
+    try {
+        $path = $archiver->build($course);
+    } catch (RuntimeException $e) {
+        abort(404, $e->getMessage());
+    }
 
-    return response()->download($path)->deleteFileAfterSend();
+    return response()->download($path, $archiver->downloadName($course))->deleteFileAfterSend();
 })->middleware('auth')->name('course-design.archive');
 
 // Скачивание планировочных шаблонов «Нескучных финансов» (Финмодель, Бюджет,

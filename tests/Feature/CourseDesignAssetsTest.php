@@ -267,6 +267,42 @@ class CourseDesignAssetsTest extends TestCase
         $this->assertSame(0, $snapshot['withoutPsd'], 'ссылка на облако считается учтённым исходником');
     }
 
+    /**
+     * Объём — единственный показатель снапшота, который считается по ВСЕМ
+     * курсам: архивный курс занимает диск ровно так же, как активный, и
+     * «занято на диске» по части файлов было бы неправдой.
+     *
+     * @test
+     */
+    public function the_snapshot_sums_bytes_across_all_courses_including_inactive(): void
+    {
+        $active = Course::factory()->create(['is_active' => true]);
+        $archived = Course::factory()->create(['is_active' => false]);
+        $actor = User::factory()->create();
+
+        $a = $this->service()->store($active, '16:9', $this->image(), 'https://disk.example/a', UploadedFile::fake()->create('a.psd', 64), $actor);
+        $b = $this->service()->store($archived, '4:3', $this->image(1200, 900), 'https://disk.example/b', null, $actor);
+
+        $snapshot = $this->service()->snapshot();
+
+        $this->assertSame(1, $snapshot['courses'], 'готовность по-прежнему считается только по активным');
+        $this->assertSame($a->size + $b->size, $snapshot['bytesImages'], 'картинки архивного курса тоже занимают диск');
+        $this->assertSame(64 * 1024, $snapshot['bytesPsd']);
+        $this->assertSame($snapshot['bytesImages'] + $snapshot['bytesPsd'], $snapshot['bytesTotal']);
+    }
+
+    /** @test */
+    public function replacing_a_slot_does_not_double_count_its_bytes(): void
+    {
+        $course = Course::factory()->create();
+        $actor = User::factory()->create();
+
+        $this->service()->store($course, '16:9', $this->image(), 'https://disk.example/a', null, $actor);
+        $new = $this->service()->store($course, '16:9', $this->image(1920, 1080), 'https://disk.example/a', null, $actor);
+
+        $this->assertSame($new->size, $this->service()->snapshot()['bytesImages'], 'замещённый файл удалён — его байты учитываться не должны');
+    }
+
     /** @test */
     public function the_archive_holds_the_banners_the_psd_file_and_the_links_list(): void
     {
@@ -284,10 +320,9 @@ class CourseDesignAssetsTest extends TestCase
         $this->service()->store($course, '9:16', $this->image(900, 1600, 'tall.jpg'), 'https://disk.example/tall', null, $actor);
 
         $archiver = app(CourseDesignArchiver::class);
-        $token = $archiver->build($course->refresh());
-        $path = $archiver->pathForToken($token);
+        $path = $archiver->build($course->refresh());
 
-        $this->assertNotNull($path);
+        $this->assertFileExists($path);
 
         $zip = new ZipFile;
         $zip->openFile($path);
@@ -312,11 +347,14 @@ class CourseDesignAssetsTest extends TestCase
     }
 
     /** @test */
-    public function the_archive_token_cannot_escape_its_directory(): void
+    public function the_download_name_is_readable_and_has_no_path_separators(): void
     {
-        $archiver = app(CourseDesignArchiver::class);
+        $course = Course::factory()->create(['slug' => 'sanskrit-osnovy']);
 
-        $this->assertNull($archiver->pathForToken('../../../.env'));
-        $this->assertNull($archiver->pathForToken('nope.zip'));
+        $name = app(CourseDesignArchiver::class)->downloadName($course);
+
+        $this->assertSame('sanskrit-osnovy-design.zip', $name);
+        $this->assertStringNotContainsString('/', $name);
+        $this->assertStringNotContainsString('\\', $name);
     }
 }

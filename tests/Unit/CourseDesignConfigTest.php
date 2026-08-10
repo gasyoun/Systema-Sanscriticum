@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Models\CourseDesignAsset;
+use App\Services\Design\CourseDesignAssetService;
 use Tests\TestCase;
 
 /**
@@ -50,6 +51,21 @@ class CourseDesignConfigTest extends TestCase
         foreach (['16:9', '9:16', '4:3'] as $required) {
             $this->assertContains($required, $formats);
         }
+    }
+
+    /**
+     * Формат размера один на страницу и на виджет — иначе колонка строки и
+     * карточка «Занято на диске» округляли бы по-разному и это читалось бы как
+     * расхождение данных.
+     *
+     * @test
+     */
+    public function bytes_are_formatted_readably(): void
+    {
+        $this->assertSame('—', CourseDesignAssetService::formatBytes(0));
+        $this->assertSame('6 КБ', CourseDesignAssetService::formatBytes(6 * 1024));
+        $this->assertSame('1,5 МБ', CourseDesignAssetService::formatBytes((int) (1.5 * 1024 * 1024)));
+        $this->assertSame('2,00 ГБ', CourseDesignAssetService::formatBytes(2 * 1024 * 1024 * 1024));
     }
 
     /** @test */

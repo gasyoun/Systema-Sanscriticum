@@ -30,7 +30,11 @@ class CourseDesignArchiver
     private const TMP_DIR = 'app/tmp/course-design-archives';
 
     /**
-     * Собрать архив и вернуть его токен (имя файла) для маршрута выдачи.
+     * Собрать архив и вернуть АБСОЛЮТНЫЙ путь к нему.
+     *
+     * Маршрут выдачи собирает архив сам и тут же его стримит с
+     * deleteFileAfterSend, поэтому наружу не уходит ни имя файла, ни токен —
+     * пользовательской строки в пути не появляется вовсе.
      *
      * @throws RuntimeException если у курса нет ни одного загруженного баннера
      */
@@ -106,23 +110,13 @@ class CourseDesignArchiver
             throw $e;
         }
 
-        return $token;
+        return $archivePath;
     }
 
-    /**
-     * Абсолютный путь к собранному архиву по токену.
-     * basename() — защита от path traversal, ровно как в /force-download.
-     */
-    public function pathForToken(string $token): ?string
+    /** Имя файла, которое увидит скачивающий. */
+    public function downloadName(Course $course): string
     {
-        $safe = basename($token);
-        if ($safe === '' || ! str_ends_with($safe, '.zip')) {
-            return null;
-        }
-
-        $path = storage_path(self::TMP_DIR).DIRECTORY_SEPARATOR.$safe;
-
-        return is_file($path) ? $path : null;
+        return (Str::slug($course->slug ?: (string) $course->id) ?: 'course').'-design.zip';
     }
 
     /**

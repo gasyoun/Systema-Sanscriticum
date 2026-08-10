@@ -7,7 +7,6 @@ namespace App\Filament\Pages;
 use App\Filament\Pages\CourseDesignAssets\CourseDesignStatsWidget;
 use App\Models\Course;
 use App\Models\CourseDesignAsset;
-use App\Services\Design\CourseDesignArchiver;
 use App\Services\Design\CourseDesignAssetService;
 use App\Support\RoleGate;
 use App\Support\Roles;
@@ -92,7 +91,12 @@ class CourseDesignAssets extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(Course::query()->with(['designAssets.uploader']))
+            ->query(Course::query()
+                ->with(['designAssets.uploader'])
+                // Суммы считает БД, а не PHP по загруженной связи: так колонка
+                // «Объём» ещё и сортируется, и это не ломается на большом списке.
+                ->withSum('designAssets as design_image_bytes', 'size')
+                ->withSum('designAssets as design_psd_bytes', 'psd_size'))
             ->defaultSort('title')
             ->columns([
                 TextColumn::make('title')->label('Курс')->searchable()->wrap()->limit(70),
@@ -111,6 +115,20 @@ class CourseDesignAssets extends Page implements HasTable
                         return $r['done'].'/'.$r['total'];
                     })
                     ->color(fn (Course $record): string => $record->designReadiness()['missing'] === [] ? 'success' : 'danger'),
+
+                // Объём картинок курса. Исходники PSD в цифру не входят —
+                // спрошено было про картинки, а исходник может быть в разы
+                // тяжелее и перекрыл бы смысл колонки. Он показан в подсказке,
+                // и он же учтён в карточке «Занято на диске».
+                TextColumn::make('design_image_bytes')->label('Объём')->alignRight()->sortable()
+                    ->getStateUsing(fn (Course $record): string => CourseDesignAssetService::formatBytes((int) $record->design_image_bytes))
+                    ->tooltip(function (Course $record): ?string {
+                        $psd = (int) $record->design_psd_bytes;
+
+                        return $psd > 0
+                            ? 'Плюс исходники PSD: '.CourseDesignAssetService::formatBytes($psd)
+                            : 'Залитых файлов PSD нет';
+                    }),
 
                 TextColumn::make('last_uploader')->label('Кто')->toggleable()
                     ->getStateUsing(fn (Course $record): string => self::latestAsset($record)?->uploader?->name ?? '—'),
@@ -290,7 +308,7 @@ class CourseDesignAssets extends Page implements HasTable
                     return;
                 }
 
-                self::forgetBadge();
+                $this->refreshStats();
 
                 $note = Notification::make()->title('Слот '.$asset->format.' сохранён')->success();
                 if (! $asset->ratioMatches()) {
@@ -301,24 +319,21 @@ class CourseDesignAssets extends Page implements HasTable
             });
     }
 
+    /**
+     * Ссылка, а не ->action(): собирать архив внутри действия и редиректить на
+     * выдачу нельзя — Filament оставляет после этого пустую модалку «ZIP» с
+     * Submit/Cancel (поймано прокликиванием). Сборку делает сам маршрут.
+     */
     private function downloadZipAction(): Tables\Actions\Action
     {
         return Tables\Actions\Action::make('downloadZip')
             ->label('ZIP')
             ->icon('heroicon-o-arrow-down-tray')
             ->color('gray')
-            ->visible(fn (Course $record): bool => $record->designAssets->isNotEmpty())
-            ->action(function (Course $record, CourseDesignArchiver $archiver) {
-                try {
-                    $token = $archiver->build($record);
-                } catch (\Throwable $e) {
-                    Notification::make()->title('Архив не собран')->body($e->getMessage())->danger()->send();
-
-                    return null;
-                }
-
-                return redirect()->route('course-design.archive', ['token' => $token]);
-            });
+            ->visible(fn (Course $record): bool => $record->designAssets->contains(
+                fn (CourseDesignAsset $a): bool => filled($a->path),
+            ))
+            ->url(fn (Course $record): string => route('course-design.archive', $record));
     }
 
     /** @return list<Tables\Actions\Action> */
@@ -378,7 +393,7 @@ class CourseDesignAssets extends Page implements HasTable
                 }
 
                 $service->delete($asset);
-                self::forgetBadge();
+                $this->refreshStats();
 
                 Notification::make()->title('Слот '.$data['format'].' очищен')->success()->send();
             });
@@ -397,8 +412,16 @@ class CourseDesignAssets extends Page implements HasTable
         return $file instanceof UploadedFile ? $file : null;
     }
 
-    private static function forgetBadge(): void
+    /**
+     * Сбросить кэш бейджа и перерисовать виджет-шапку.
+     *
+     * Без явного события карточки показывали бы прежние цифры («Пустых слотов 6»
+     * при пяти оставшихся) до перезагрузки страницы — таблица-то обновляется
+     * сама, а виджет живёт отдельным Livewire-компонентом.
+     */
+    private function refreshStats(): void
     {
         Cache::forget('course_design:missing_slots');
+        $this->dispatch('design-assets-updated');
     }
 }

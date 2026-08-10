@@ -16,6 +16,15 @@ class CourseDesignStatsWidget extends StatsOverviewWidget
 {
     protected static ?string $pollingInterval = null;
 
+    /**
+     * Виджет — отдельный Livewire-компонент, и обновление таблицы его не задевает.
+     * Без этого слушателя карточки держали бы прежние цифры до перезагрузки
+     * страницы: «Пустых слотов 6» при пяти оставшихся в таблице.
+     *
+     * @var array<string, string>
+     */
+    protected $listeners = ['design-assets-updated' => '$refresh'];
+
     protected function getStats(): array
     {
         $s = app(CourseDesignAssetService::class)->snapshot();
@@ -38,6 +47,15 @@ class CourseDesignStatsWidget extends StatsOverviewWidget
             Stat::make('Пропорция не совпала', (string) $s['ratioMismatch'])
                 ->description('проверьте, тот ли файл в слоте')
                 ->color($s['ratioMismatch'] === 0 ? 'success' : 'warning'),
+
+            // Единственный показатель, который считается по ВСЕМ курсам, а не
+            // только по активным: архивный курс занимает диск ровно так же.
+            Stat::make('Занято на диске', CourseDesignAssetService::formatBytes($s['bytesTotal']))
+                ->description(
+                    'картинки '.CourseDesignAssetService::formatBytes($s['bytesImages'])
+                    .' · исходники '.CourseDesignAssetService::formatBytes($s['bytesPsd'])
+                )
+                ->color('gray'),
         ];
     }
 }
