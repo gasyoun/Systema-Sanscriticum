@@ -2,6 +2,10 @@
 
 _Created: 07-08-2026 · Last updated: 07-08-2026_
 
+> This acceptance remains deliberately scoped to **school-operational parity**. The 08-08-2026
+> successor plan schedules CRM and later telephony/departments/routing only after this gate:
+> [PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md).
+
 **Model:** Grok 4.5 (`grok-4.5`) · handoff
 [H2382](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2382-Grok_Systema-Sanscriticum_support-parity-production-acceptance_07.08.26.md)
 

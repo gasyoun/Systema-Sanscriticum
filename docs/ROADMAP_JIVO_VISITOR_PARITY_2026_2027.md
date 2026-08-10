@@ -1,6 +1,13 @@
 # Roadmap: полный JIVO-паритет — visitor intelligence + Support Inbox 2026–2027
 
-_Created: 17-07-2026 · Last updated: 07-08-2026_
+_Created: 17-07-2026 · Last updated: 08-08-2026_
+
+> **Граница документа после решения MG 08-08-2026:** этот roadmap закрывает именно
+> school-operational parity и остаётся обязательным первым гейтом. Следующий план уже коммитит
+> CRM, а затем телефонию/отделы/routing как поздние волны:
+> [`PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md).
+> Поэтому старые формулировки «не строить» ниже читаются как «не строить ДО school parity + CRM»,
+> а не как вечный отказ.
 
 > Узкий roadmap **паритета с Jivo по «интеллекту посетителя»** — тому пласту, ради
 > которого Jivo и держат на [samskrtam.ru](https://samskrtam.ru): куратор видит, **из
