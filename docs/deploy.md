@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 02-08-2026_
+_Created: 02-07-2026 · Last updated: 09-08-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -212,7 +212,7 @@ SSH-ключ живет только в секретах GitHub Environment `pro
 2. Добавить **Required reviewers** = MG (сам гейт approval).
 3. Добавить секреты Environment (не repo-secrets — они видны всем workflow'ам,
    Environment-секреты видны только job'ам с `environment: production`):
-   - `DEPLOY_HOST` — IP/домен прода (`31.129.104.252`).
+   - `DEPLOY_HOST` — IP/домен прода (`193.232.229.92`).
    - `DEPLOY_USER` — `deploy` (пользователь из шага 1 выше, НЕ `root`).
    - `DEPLOY_SSH_KEY` — приватный ключ из шага 2 (весь PEM-блок, включая
      `-----BEGIN`/`-----END`).

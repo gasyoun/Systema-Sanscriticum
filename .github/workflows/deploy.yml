@@ -30,33 +30,29 @@ jobs:
     # Settings -> Environments человеком, не этим PR. См. docs/deploy.md.
     environment: production
     steps:
-      # Секреты DEPLOY_HOST/DEPLOY_USER/DEPLOY_SSH_KEY заводит человек в Settings
-      # -> Environments (см. комментарий вверху файла) — до этого их в репозитории
-      # нет. Раньше "Configure SSH" сразу падал на пустых секретах, красня main на
-      # каждый push. Пропускаем оставшиеся шаги (job завершается success/skipped),
-      # а не красим CI, пока прод-креды не заведены (H1355, 20-07-2026).
+      # workflow_dispatch only — failing loudly cannot redden main on push
+      # (H1355 concern no longer applies). Missing secrets must surface as a red
+      # job, not a silently-green skip that looks like a successful deploy.
       - name: Check deploy secrets present
-        id: check
         run: |
-          if [ -n "${{ secrets.DEPLOY_HOST }}" ] && [ -n "${{ secrets.DEPLOY_USER }}" ] && [ -n "${{ secrets.DEPLOY_SSH_KEY }}" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::DEPLOY_HOST/DEPLOY_USER/DEPLOY_SSH_KEY not set on the production Environment — skipping deploy (see docs/deploy.md)."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          fi
+          ok=1
+          [ -z "${{ secrets.DEPLOY_HOST }}"    ] && { echo "::error::DEPLOY_HOST secret missing — add to Settings → Environments → production"; ok=0; }
+          [ -z "${{ secrets.DEPLOY_USER }}"    ] && { echo "::error::DEPLOY_USER secret missing — add to Settings → Environments → production"; ok=0; }
+          [ -z "${{ secrets.DEPLOY_SSH_KEY }}" ] && { echo "::error::DEPLOY_SSH_KEY secret missing — add to Settings → Environments → production"; ok=0; }
+          [ "$ok" = 0 ] && exit 1
+          echo "All deploy secrets present"
 
       - name: Configure SSH
-        if: steps.check.outputs.ready == 'true'
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          [ -s ~/.ssh/known_hosts ] || { echo "::error::known_hosts empty after ssh-keyscan — DEPLOY_HOST may be unreachable"; exit 1; }
 
       - name: Run deploy.sh over SSH
-        if: steps.check.outputs.ready == 'true'
         run: |
           set -euo pipefail
           ssh -i ~/.ssh/deploy_key -o BatchMode=yes \
