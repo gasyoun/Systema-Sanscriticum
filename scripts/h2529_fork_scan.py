@@ -5,13 +5,16 @@ newest release (any stability) whose `illuminate/contracts` constraint admits
 ^13.0, together with its `filament/filament` constraint — the pair that decides
 whether it is a drop-in for Systema (Filament 3, Laravel 13).
 
+Result when run 10-08-2026: of the 12 candidates only sheavescapital/filament-kanban
+v5.2 admits ^13.0, and it requires filament/filament ^4.0|^5.0 — i.e. no drop-in
+replacement exists that keeps Filament 3, which is why H2529 patched forks instead.
+
 Usage: python scripts/h2529_fork_scan.py
 """
 
-import json
 import sys
-import urllib.error
-import urllib.request
+
+from packagist_client import fetch_package_versions, is_stable
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
@@ -32,17 +35,6 @@ CANDIDATES = [
 ]
 
 
-def fetch(pkg):
-    url = f"https://repo.packagist.org/p2/{pkg}.json"
-    with urllib.request.urlopen(url, timeout=30) as resp:
-        return json.load(resp)["packages"][pkg]
-
-
-def is_stable(version):
-    v = version.lower()
-    return not any(tag in v for tag in ("beta", "alpha", "rc", "dev"))
-
-
 def supports_13(constraint):
     return constraint is not None and "13" in constraint
 
@@ -53,10 +45,7 @@ def main():
     print("-" * 130)
     for pkg in CANDIDATES:
         try:
-            versions = fetch(pkg)
-        except urllib.error.HTTPError as exc:
-            print(f"{pkg:<42} HTTP {exc.code}")
-            continue
+            versions = fetch_package_versions(pkg)
         except Exception as exc:  # noqa: BLE001
             print(f"{pkg:<42} ERROR {exc}")
             continue

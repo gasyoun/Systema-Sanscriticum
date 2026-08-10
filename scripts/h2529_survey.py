@@ -6,9 +6,9 @@ Laravel 12 -> 13 move in Systema-Sanscriticum.
 Usage: python scripts/h2529_survey.py
 """
 
-import json
 import sys
-import urllib.request
+
+from packagist_client import fetch_package_versions, is_stable
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
@@ -26,21 +26,10 @@ PACKAGES = [
 KEYS = ("illuminate/contracts", "illuminate/support", "filament/filament", "php")
 
 
-def fetch(pkg):
-    url = f"https://repo.packagist.org/p2/{pkg}.json"
-    with urllib.request.urlopen(url, timeout=30) as resp:
-        return json.load(resp)["packages"][pkg]
-
-
-def is_stable(version):
-    v = version.lower()
-    return not any(tag in v for tag in ("beta", "alpha", "rc", "dev"))
-
-
 def main():
     for pkg in PACKAGES:
         try:
-            versions = fetch(pkg)
+            versions = fetch_package_versions(pkg)
         except Exception as exc:  # noqa: BLE001
             print(f"{pkg}: ERROR {exc}")
             continue
