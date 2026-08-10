@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Конфигурация ТОЛЬКО для Dusk (H2532). Отдельный файл принципиально:
+    `phpunit.xml` держит SQLite `:memory:` + SESSION_DRIVER=array, а Dusk — это
+    отдельный процесс браузера против живого HTTP-сервера. У браузера нет доступа
+    к in-memory БД тест-процесса, а сессия в `array` не переживает редирект после
+    логина. `php artisan dusk` подхватывает этот файл сам (DuskCommand ищет
+    phpunit.dusk.xml в base_path), поэтому `phpunit.xml` не тронут.
+
+    БД и APP_URL берутся из `.env.dusk.local` — см. docs/DUSK_LOCAL_WINDOWS.md.
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap_worktree.php"
+         backupGlobals="false"
+         beStrictAboutTestsThatDoNotTestAnything="false"
+         colors="true"
+         processIsolation="false"
+         stopOnError="false"
+         stopOnFailure="false"
+         cacheDirectory=".phpunit.cache"
+         backupStaticProperties="false">
+    <testsuites>
+        <testsuite name="Browser Test Suite">
+            <directory suffix="Test.php">./tests/Browser</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <!-- Никаких DB_*/SESSION_DRIVER здесь: их задаёт .env.dusk.local,
+             который читает и наш тест-процесс, и поднятый artisan serve. -->
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <!-- Userbot: тот же мотив, что в phpunit.xml — class_exists на реальном
+             MadelineProto регистрирует shutdown-хендлер, роняющий amp под Windows. -->
+        <env name="TELEGRAM_SUPPORT_ENABLED" value="false"/>
+        <!-- H1914 server guards: локальная машина — не прод, systemd/cron не аудируем. -->
+        <env name="SERVER_GUARDS_VERIFY" value="false"/>
+        <env name="CABINET_PROBE_CHECK_GUARDS" value="false"/>
+    </php>
+</phpunit>
