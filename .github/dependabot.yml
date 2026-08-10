@@ -10,6 +10,27 @@ updates:
     open-pull-requests-limit: 5
     cooldown:
       default-days: 7
+    # .github/workflows/codeql.yml pins init + autobuild + analyze to ONE SHA,
+    # and the action aborts when its config version and runtime version differ
+    # ("Loaded a configuration file for version X, but running version Y").
+    # Dependabot treats every action subpath as its own dependency, so an
+    # ungrouped bump opens one PR per subpath, each moving a single pin and
+    # leaving the other two behind — all of them then fail the *required*
+    # `Analyze (javascript)` check by construction, with no re-run or
+    # branch-update able to save them (see v1.89.5: PRs #1584, #1585, #1586
+    # closed unmerged, superseded by #1594). Grouping makes the next bump
+    # arrive as one PR that moves all three pins together.
+    # Two entries because `applies-to` defaults to version-updates only, and a
+    # CodeQL *security* bump would otherwise split the same way.
+    groups:
+      codeql-action:
+        applies-to: version-updates
+        patterns:
+          - "github/codeql-action*"
+      codeql-action-security:
+        applies-to: security-updates
+        patterns:
+          - "github/codeql-action*"
 
   - package-ecosystem: npm
     directory: /
