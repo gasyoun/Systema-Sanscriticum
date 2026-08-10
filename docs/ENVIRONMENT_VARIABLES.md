@@ -95,6 +95,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CONVERSION_TREND_WEEKS` | optional | `8` | config/conversion.php:49 |
 | `CONVERSION_UNCLOSED_AFTER_DAYS` | optional | `3` | config/conversion.php:38 |
 | `CONVERSION_WARN_PCT` | optional | `50` | config/conversion.php:33 |
+| `COURSE_LIBRARY` | optional | `false` | config/features.php:799 |
 | `COURSE_RECORDINGS_SALES` | optional | `false` | config/features.php:143 |
 | `CRM_COCKPIT` | optional | `false` | config/features.php:78 |
 | `CRM_FOLLOW_UP_TASKS` | optional | `false` | config/features.php:622 |
@@ -112,6 +113,11 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `DB_PORT` | optional | `'3306'` | config/database.php:50<br>config/database.php:70<br>config/database.php:85 |
 | `DB_SOCKET` | optional | `''` | config/database.php:54 |
 | `DB_USERNAME` | optional | `'forge'` | config/database.php:52<br>config/database.php:72<br>config/database.php:87 |
+| `DESIGN_IMAGE_DISK` | optional | `'public'` | config/design_assets.php:34 |
+| `DESIGN_MAX_IMAGE_KB` | optional | `10240` | config/design_assets.php:57 |
+| `DESIGN_MAX_PSD_KB` | optional | `98304` | config/design_assets.php:58 |
+| `DESIGN_PSD_DISK` | optional | `'local'` | config/design_assets.php:37 |
+| `DESIGN_RATIO_TOLERANCE` | optional | `0.02` | config/design_assets.php:72 |
 | `DICTIONARY_SEO_CURATED_ONLY` | optional | `true` | config/dictionary_seo.php:28 |
 | `DICTIONARY_SEO_INDEX_ENABLED` | feature-flag | `false` | config/dictionary_seo.php:18 |
 | `DICTIONARY_SEO_MIN_TRANSLATION` | optional | `40` | config/dictionary_seo.php:27 |

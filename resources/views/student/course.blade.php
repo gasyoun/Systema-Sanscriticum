@@ -89,6 +89,19 @@
         {{ session('error') }}
     </div>
 @endif
+
+{{-- Библиотека курса — реестр ссылок на литературу (файлы лежат не у нас).
+     За флагом features.course_library: выключен — ссылки нет, маршрут 404. --}}
+@if(config('features.course_library', false))
+    <div class="mt-3 flex justify-end">
+        <a href="{{ route('student.course.library', $course->slug) }}"
+           class="inline-flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 hover:border-[#E85C24]/40 text-gray-700 hover:text-[#E85C24] text-sm font-bold rounded-xl shadow-sm hover:shadow-md transition-all">
+            <i class="fas fa-book-open"></i>
+            <span>Библиотека курса</span>
+        </a>
+    </div>
+@endif
+
 @endif
 
             </div>

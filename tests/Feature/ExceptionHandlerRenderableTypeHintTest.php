@@ -38,9 +38,12 @@ class ExceptionHandlerRenderableTypeHintTest extends TestCase
         // failure mode this whole test exists to prevent.
         $armCount = $this->prepareExceptionArmCount();
         $this->assertSame(
-            9, // 8 conversion conditions (AuthorizationException has 2) + `default => $e`
+            // 9 conversion conditions (AuthorizationException has 2) + `default => $e`.
+            // Laravel 13 added the OriginMismatchException => HttpException(403) arm
+            // (was 9 arms on Laravel 12) — re-derived for 13.x under H2529.
+            10,
             $armCount,
-            "prepareException()'s match arm count is {$armCount}, not the expected 9 — ".
+            "prepareException()'s match arm count is {$armCount}, not the expected 10 — ".
             'the installed Laravel version changed this method\'s shape. Re-derive the '
             .'banned-type list for the new version before trusting this test.'
         );

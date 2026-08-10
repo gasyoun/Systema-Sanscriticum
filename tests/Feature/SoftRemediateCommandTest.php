@@ -167,6 +167,51 @@ class SoftRemediateCommandTest extends TestCase
         ])->assertExitCode(0);
     }
 
+    /** H2305: fetch failure must block remediation even when a stale origin ref exists */
+    public function test_fetch_failure_blocks_remediation_even_with_stale_ref(): void
+    {
+        // Dirty file that diverges from HEAD; break origin so git fetch fails
+        file_put_contents($this->repo.'/config/copy.php', "<?php return ['stale' => true];\n");
+        $this->git(['remote', 'set-url', 'origin', '/nonexistent/path.git']);
+
+        $r = (new SoftAutoDeployRemediator($this->repo))->remediate(dryRun: false);
+        $this->assertSame('needs_human', $r['status']);
+        $this->assertSame(1, $r['exit_code']);
+        $this->assertStringContainsString('git fetch failed', $r['message']);
+        // File must not have been modified
+        $this->assertStringContainsString('stale', (string) file_get_contents($this->repo.'/config/copy.php'));
+    }
+
+    /** H2305: backup of the working-tree file must exist before discard applies */
+    public function test_backup_created_before_discard(): void
+    {
+        // Origin-equal dirty: push v2 to origin, reset local HEAD to v1, working tree = v2
+        file_put_contents($this->repo.'/config/copy.php', "<?php return ['a' => 2];\n");
+        $this->git(['add', 'config/copy.php']);
+        $this->git(['commit', '-m', 'v2']);
+        $this->git(['push', 'origin', 'main']);
+        $this->git(['reset', '--soft', 'HEAD~1']);
+        $this->git(['reset', 'HEAD', 'config/copy.php']);  // unstage → dirty working tree = v2 = origin
+
+        $r = (new SoftAutoDeployRemediator($this->repo))->remediate(dryRun: false);
+        $this->assertSame('ok', $r['status']);
+        $this->assertContains('config/copy.php', $r['origin_equal']);
+
+        $backupRoot = $this->repo.DIRECTORY_SEPARATOR.'storage'.DIRECTORY_SEPARATOR.'app'
+            .DIRECTORY_SEPARATOR.'soft_remediate_backups';
+        $this->assertTrue(is_dir($backupRoot), 'backup root dir should exist');
+        $found = false;
+        foreach (new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($backupRoot, \FilesystemIterator::SKIP_DOTS)
+        ) as $f) {
+            if (str_ends_with((string) $f, 'copy.php')) {
+                $found = true;
+                $this->assertStringContainsString("'a' => 2", (string) file_get_contents((string) $f));
+            }
+        }
+        $this->assertTrue($found, 'backup of config/copy.php must exist under soft_remediate_backups/');
+    }
+
     /** @param  list<string>  $args */
     private function git(array $args): string
     {
