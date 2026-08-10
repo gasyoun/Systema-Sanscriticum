@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\CourseMaterial;
 use App\Support\MaterialUrl;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -111,7 +112,7 @@ class MaterialUrlTest extends TestCase
     {
         // KIND_BY_EXT и CourseMaterial::KINDS обязаны согласовываться, иначе
         // студент увидит сырой ключ вместо подписи.
-        $labelled = array_keys(\App\Models\CourseMaterial::KINDS);
+        $labelled = array_keys(CourseMaterial::KINDS);
 
         foreach (array_unique(array_values(MaterialUrl::KIND_BY_EXT)) as $kind) {
             $this->assertContains($kind, $labelled, "Тип {$kind} не имеет подписи в CourseMaterial::KINDS");
