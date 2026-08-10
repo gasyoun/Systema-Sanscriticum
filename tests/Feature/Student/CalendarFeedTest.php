@@ -17,6 +17,26 @@ class CalendarFeedTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Фид отдаёт только НЕистёкшие занятия (IcsFeedBuilder: `end >= now()`),
+     * поэтому фикстуры с абсолютными датами обязаны пиниться к фиксированному
+     * «сейчас» — иначе тест зелёный до 12:00Z того же дня и красный после
+     * (ровно это и случилось 10-08-2026, H2541).
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Carbon::setTestNow(Carbon::parse('2026-08-10 09:00:00', 'Europe/Moscow'));
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+
     private function studentInGroup(): array
     {
         $user = User::factory()->create();
