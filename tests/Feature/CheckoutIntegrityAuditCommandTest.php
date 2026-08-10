@@ -186,6 +186,52 @@ class CheckoutIntegrityAuditCommandTest extends TestCase
             ->assertSuccessful();
     }
 
+    public function test_non_revenue_tariffs_are_excluded_from_paid_but_no_group(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
+
+        foreach (['Расход', 'salary_payout'] as $tariff) {
+            Payment::withoutEvents(fn (): Payment => Payment::create([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'amount' => -1000,
+                'tariff' => $tariff,
+                'status' => 'paid',
+                'is_conditional' => false,
+            ]));
+        }
+
+        $this->artisan('payments:audit-checkout-integrity')
+            ->expectsOutputToContain('Paid but no course group membership: 0')
+            ->expectsOutputToContain('Paid on group-less course (informational, not failing): 0')
+            ->assertSuccessful();
+    }
+
+    public function test_groupless_course_paid_is_informational_not_failing(): void
+    {
+        $user = User::factory()->create();
+        // Course with no groups attached — historical residual, not an actionable hole.
+        $course = Course::factory()->create();
+
+        Payment::withoutEvents(fn (): Payment => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 5000,
+            'tariff' => 'full',
+            'status' => 'paid',
+            'is_conditional' => false,
+        ]));
+
+        $this->artisan('payments:audit-checkout-integrity')
+            ->expectsOutputToContain('Paid but no course group membership: 0')
+            ->expectsOutputToContain('Paid on group-less course (informational, not failing): 1')
+            ->expectsOutputToContain('All integrity buckets empty — OK.')
+            ->assertSuccessful();
+    }
+
     private function seedIntegrityIssues(): array
     {
         $user = User::factory()->create();
