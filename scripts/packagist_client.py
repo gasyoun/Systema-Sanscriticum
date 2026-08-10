@@ -8,6 +8,11 @@ arbitrary-file-read primitive, and Semgrep's
 
 `fetch_package_versions` therefore builds the URL from a validated package
 name and refuses anything that is not `https://repo.packagist.org/...`.
+
+The rule is an audit-class rule that cannot follow that validation through the
+call, so the `urlopen` carries a rule-scoped `# nosemgrep` — the same treatment
+`scripts/memrise_export.py` already uses for an identical fixed-https-host
+fetch. The guard, not the pragma, is what makes this safe; keep both.
 """
 
 import json
@@ -42,7 +47,7 @@ def fetch_package_versions(package: str, timeout: int = 30) -> list[dict]:
     request = urllib.request.Request(url, method="GET")  # noqa: S310 - scheme pinned above
     if request.type != "https":
         raise ValueError(f"refusing non-https scheme: {request.type!r}")
-    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
+    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed https host, name shape-validated  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
         return json.load(response)["packages"][package]
 
 
