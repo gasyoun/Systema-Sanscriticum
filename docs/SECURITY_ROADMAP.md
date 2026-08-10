@@ -148,8 +148,9 @@ every inbound webhook is authenticated fail-closed; secret pushes are blocked at
 existing [H071](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
 handoff — this roadmap does not restate the findings, it sequences them.
 
-- [ ] Land the ~15 remaining CONFIRMED money/access defects, **one small PR each, each with a
+- [x] Land the ~15 remaining CONFIRMED money/access defects, **one small PR each, each with a
   regression test, no auto-merge** (money core under special protection). Highest-impact first:
+  Closed 08-08-2026 (access + revenue verifies H2366–H2453/H2471 + lower-severity census H2474):
   - **Access leaks** (unpaid access / revenue-visible-to-anon):
     - [x] VIP/bundle tariff → `Tariff::accessKey()` not raw `type` so paid VIP unlocks
       lessons — shipped [PR #250](https://github.com/gasyoun/Systema-Sanscriticum/pull/250)
@@ -193,19 +194,43 @@ handoff — this roadmap does not restate the findings, it sequences them.
       `clawback_floors_referrer_credit_at_zero_when_already_spent` +
       `both_sides_clawback_when_referred_amount_was_granted`);
       verified on main 08-08-2026 (H2471). No re-implementation — regression present.
-  - **Lower-severity pricing/loyalty defects** — the remaining MEDIUM/LOW items in H071:
+  - **Lower-severity pricing/loyalty defects** — remaining MEDIUM/LOW items in H071
+    (census [docs/SECURITY_WAVE2_LOWER_SEVERITY_CENSUS_H2474_2026-08-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_WAVE2_LOWER_SEVERITY_CENSUS_H2474_2026-08-08.md), H2474):
     - [x] tariff loyalty wholesale count ignores conditional / 0₽ payments —
-      `Tariff::getDiscountPercentForUser` uses `->real()` + `where('amount', '>', 0)` —
+      Tariff::getDiscountPercentForUser uses ->real() + where('amount', '>', 0) —
       shipped [PR #253](https://github.com/gasyoun/Systema-Sanscriticum/pull/253)
-      (`LoyaltyDiscountTest::conditional_and_zero_amount_payments_do_not_count_toward_loyalty`);
-      verified on main 08-08-2026 (H2463).
+      (LoyaltyDiscountTest::conditional_and_zero_amount_payments_do_not_count_toward_loyalty);
+      verified on main 08-08-2026 (H2463 / H2474 census).
     - [x] deposit partial consumption + upgrade credit keeps deposit half —
-      `Payment::consumeDepositsForCourse` drains by `deposit_credit_applied` / `consumed_amount`;
-      `Tariff::upgradeCreditForUser` sums `amount + COALESCE(deposit_credit_applied, 0)` —
+      Payment::consumeDepositsForCourse drains by deposit_credit_applied / consumed_amount;
+      Tariff::upgradeCreditForUser sums mount + COALESCE(deposit_credit_applied, 0) —
       shipped [PR #360](https://github.com/gasyoun/Systema-Sanscriticum/pull/360)
-      (`DepositPartialConsumptionTest`);
-      verified on main 08-08-2026 (H2464).
-- [ ] After each fix, extend the money-core test suite so the defect cannot regress silently.
+      (DepositPartialConsumptionTest);
+      verified on main 08-08-2026 (H2464 / H2474 census).
+    - [x] block payout base excludes already-paid share keys (paidShareKeys in
+      lockGroupRevenueDetail when 	eacher_id set) —
+      TeacherSalaryService + SalaryPayoutLedgerTest /
+      TeacherBlockPayoutTest::block_group_revenue_excludes_already_paid_share_keys;
+      verified on main 08-08-2026 (H2465 / H2474).
+    - [x] block calculator deducts and settles unsettled advances —
+      dvanceOffsetForTotal + settleAdvancesForBlockPayout on TeacherSalaries /
+      TeacherAdvanceTest::settle_advances_for_block_payout_applies_fifo_up_to_limit;
+      verified on main 08-08-2026 (H2466 / H2474).
+    - [x] promo re-pending errors instead of silently charging full price —
+      shipped [PR #264](https://github.com/gasyoun/Systema-Sanscriticum/pull/264)
+      (PromoRecentPendingTest); verified on main 08-08-2026 (H2467 / H2474).
+    - [x] checkout loyalty badge from price engine (not dropped column) —
+      shipped [PR #256](https://github.com/gasyoun/Systema-Sanscriticum/pull/256)
+      (CheckoutLoyaltyStateTest); verified on main 08-08-2026 (H2468 / H2474).
+    - [x] paid→paid status re-fire does not regenerate student password —
+      shipped [PR #257](https://github.com/gasyoun/Systema-Sanscriticum/pull/257)
+      (WelcomePasswordRegenTest); verified on main 08-08-2026 (H2469 / H2474).
+    - [x] homework submit gate honors LessonAccessGrant —
+      shipped [PR #255](https://github.com/gasyoun/Systema-Sanscriticum/pull/255)
+      (HomeworkFlowTest::student_with_lesson_grant_can_submit_homework);
+      verified on main 08-08-2026 (H2470 / H2474).
+- [x] After each fix, extend the money-core test suite so the defect cannot regress silently
+  (suite present for every Wave 2 cite above; H2474 added two residual base-case tests).
 
 **Exit criterion:** every H071 finding is either fixed-with-test or explicitly ruled
 won't-fix with rationale in the handoff; no access path grants paid resources without a paid,

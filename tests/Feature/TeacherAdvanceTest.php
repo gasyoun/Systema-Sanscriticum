@@ -143,4 +143,40 @@ class TeacherAdvanceTest extends TestCase
         // Зачёт денег не двигает (отдельная транзакция не создаётся).
         $this->assertSame(1, Payment::where('tariff', 'salary_payout')->count());
     }
+
+    /** @test */
+    public function settle_advances_for_block_payout_applies_fifo_up_to_limit(): void
+    {
+        // Регрессия (money-core, H071 lower-severity / H2466): block calculator path
+        // calls settleAdvancesForBlockPayout after subtracting advance_offset from
+        // the computed total. API must FIFO-apply unsettled advances up to limit.
+        $teacher = $this->teacherEarning12000();
+
+        $a1 = $teacher->payouts()->create([
+            'amount' => 3000,
+            'type' => TeacherPayout::TYPE_ADVANCE,
+            'paid_at' => now()->subDay()->toDateString(),
+        ]);
+        $a2 = $teacher->payouts()->create([
+            'amount' => 4000,
+            'type' => TeacherPayout::TYPE_ADVANCE,
+            'paid_at' => now()->toDateString(),
+        ]);
+
+        $result = $this->service->settleAdvancesForBlockPayout($teacher->fresh(), 5000, null);
+
+        $this->assertSame(5000.0, $result['total']);
+        $this->assertCount(2, $result['lines']);
+
+        $a1->refresh();
+        $a2->refresh();
+        $this->assertNotNull($a1->settled_at);
+        $this->assertSame(3000.0, (float) $a1->settled_amount);
+        $this->assertNull($a2->settled_at);
+        $this->assertSame(2000.0, (float) $a2->settled_amount);
+
+        $row = $this->service->summaryForAll(now()->format('Y-m'))[$teacher->id];
+        // 4000 - 2000 remaining unsettled on a2
+        $this->assertSame(2000.0, $row['advances_outstanding']);
+    }
 }
