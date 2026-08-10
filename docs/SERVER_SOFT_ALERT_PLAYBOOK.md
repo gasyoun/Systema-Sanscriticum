@@ -181,6 +181,7 @@ Do not invent rows for chat-only speculation.
 
 | When (UTC) | Tag / fingerprint | Paths / SHA | Outcome | By | Notes |
 |---|---|---|---|---|---|
+| 2026-08-07 19:30 | tracked dirty `6795e22d` (#1193) | `app/Console/Commands/ImportStartChteniyaCohortSrsDeck.php` mid-deploy of `58efc74b` (H2106 trim fix) | **2026-08-08 triage:** self-healed same minute — `deploy.sh` discarded origin-equal dirty + OK `58efc74b`. Fuse never set. Prod green HEAD=`e29df61b`; removed leftover untracked `.bak.h2106.20260807192313`. Closed #1193. | Grok 4.5 | class: probe race during origin-equal dirty window + prod hotpatch bak; do not edit tracked PHP on VPS |
 | 2026-08-05 05:30–09:00 | `[rolled-back]` ×4 then `[blocked-preflight] auto-retry исчерпан (3/3)` | `/usr/local/sbin/systema-schedule-run.sh` vs repo after #1109 / `5a3b6035` (1.87.2); base `50e751b5` | **2026-08-06 triage:** site always 200; root cause = managed-file drift (reaper removed in #1109, sbin not re-applied). `server_guards_apply` path already refreshed sbin mtime 07:32Z 06-08; fuse **already absent**; retries file absent; `guards:verify` + `cabinet:probe` exit 0; HEAD=`origin/main`=`9561a1db`. No `rm` needed. | Grok 4.5 | class: template change without `server_guards_apply.sh` → deploy exit 1 → auto-rollback loop → soft fuse |
 | 2026-08-01 ~19:30 | `[blocked-preflight]` + dirty | `config/marathon_landing_copy.php` @ 852da14b stuck | later PR #1045 → fuse clear + deploy → 447bc544 | ops/H2147 | FINDINGS §280 |
 | 2026-08-02 | playbook + catalog authored | — | docs H2148 A | Grok 4.5 | this file |
