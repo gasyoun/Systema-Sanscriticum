@@ -113,7 +113,8 @@ Schema::create('season_leaderboard_cache', function (Blueprint $table) {
     $table->id();
     $table->foreignId('season_id')->constrained('seasons')->cascadeOnDelete();
     $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->unsignedInteger('prana_earned')->default(0); // lifetime earned за период сезона
+    $table->unsignedInteger('baseline_lifetime_prana')->default(0); // snapshot при season:open
+    $table->unsignedInteger('prana_earned')->default(0); // = current lifetime − baseline (P2P-immune)
     $table->unsignedInteger('rank_position')->default(0);
     $table->dateTime('computed_at')->useCurrent();
 
@@ -122,8 +123,37 @@ Schema::create('season_leaderboard_cache', function (Blueprint $table) {
 });
 ```
 
-Пересчёт: `prana_transactions` WHERE `created_at` BETWEEN `season.started_at`
-AND `season.ended_at` (или NOW()), group by `user_id`, amount > 0, sum → ранг.
+**Пересчёт (P2P-immune): delta `lifetime_prana`.**
+`season_leaderboard_cache.prana_earned` = `u.lifetime_prana` на момент снимка
+минус `u.lifetime_prana` в `season.started_at` (снятый и сохранённый при
+`season:open` в отдельное поле `baseline_lifetime_prana` в записи кэша).
+
+Почему НЕ `sum(prana_transactions amount > 0)`: метод `transfer()` создаёт
+транзакцию `p2p_received` с `amount > 0`, но `lifetime_prana` получателя
+**не изменяется** (см. `PranaService::transfer()` l.225-231). Группа
+координированных переводов может накачать `sum amount > 0` без реальной
+активности. Delta `lifetime_prana` иммунна к P2P по конструкции.
+
+```php
+// При season:open: зафиксировать baseline
+DB::table('season_leaderboard_cache')->updateOrInsert(
+    ['season_id' => $season->id, 'user_id' => $userId],
+    ['baseline_lifetime_prana' => $user->lifetime_prana, 'prana_earned' => 0,
+     'rank_position' => 0, 'computed_at' => now()]
+);
+
+// При season:refresh-leaderboard:
+// prana_earned = user.lifetime_prana - baseline_lifetime_prana
+DB::statement("
+    UPDATE season_leaderboard_cache slc
+    JOIN users u ON u.id = slc.user_id
+    SET slc.prana_earned = GREATEST(0, u.lifetime_prana - slc.baseline_lifetime_prana),
+        slc.computed_at = NOW()
+    WHERE slc.season_id = ?
+", [$season->id]);
+```
+
+Схема: добавить `baseline_lifetime_prana UNSIGNED INT DEFAULT 0` в `season_leaderboard_cache`.
 
 ---
 
@@ -270,9 +300,10 @@ $schedule->command('season:refresh-leaderboard')
 - [ ] `PRANA_DECAY_ENABLED` в проде сейчас `false` — нужен `.env`-апдейт
   при `season:open` или DB-driven config override (не hardcode в Artisan).
   Выбор механизма: `@DECIDE` перед имплементацией `season:open`.
-- [ ] Рейтинг-снимок: считать `prana_earned` как сумму `prana_transactions`
-  за период сезона (sum amount > 0) или как прирост `lifetime_prana`?
-  Первое точнее (не зависит от стартового баланса). Уточнить перед миграцией.
+- [x] **RESOLVED 10-08-2026.** `prana_earned` = delta `lifetime_prana`
+  (snap при `season:open` → `baseline_lifetime_prana`; earned = current −
+  baseline). P2P `transfer()` не трогает `lifetime_prana` получателя — метод
+  иммунен к накачке координированными переводами. Детали в §3.
 - [ ] Notify студентам о старте сезона (email / Telegram) — отдельный
   handoff, не блокирует архитектуру.
 
