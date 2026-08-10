@@ -6,7 +6,6 @@ use App\Models\Season;
 use App\Models\SeasonLeaderboardCache;
 use App\Models\User;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class SeasonOpenCommand extends Command
 {
@@ -22,6 +21,7 @@ class SeasonOpenCommand extends Command
             $season = Season::find($seasonId);
             if (! $season) {
                 $this->error("Season #{$seasonId} not found.");
+
                 return 1;
             }
         } else {
@@ -62,7 +62,7 @@ class SeasonOpenCommand extends Command
             );
         }
 
-        $this->info("Season #{$season->id} opened. Leaderboard baseline set for " . $users->count() . ' users.');
+        $this->info("Season #{$season->id} opened. Leaderboard baseline set for ".$users->count().' users.');
 
         // Включить decay через .env (§9 PLAN — @DECIDE mechanism)
         // Временное решение: вывести инструкцию оператору

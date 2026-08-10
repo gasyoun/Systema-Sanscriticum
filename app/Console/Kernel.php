@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Jobs\CloseStaleSessionsJob;
 use App\Jobs\PruneStaleVisitorPresencesJob;
 use App\Models\MarketingSetting;
+use App\Models\Season;
 use App\Support\ScheduleFailureSignal;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -259,7 +260,7 @@ class Kernel extends ConsoleKernel
         // Пересчёт лидерборда каждые 4 часа в период сезона
         $schedule->command('season:refresh-leaderboard')
             ->everyFourHours()
-            ->when(fn() => \App\Models\Season::isActive())
+            ->when(fn () => Season::isActive())
             ->onOneServer()
             ->name('season-leaderboard-refresh');
 

@@ -7,7 +7,10 @@ namespace Tests\Feature;
 use App\Models\Season;
 use App\Models\SeasonLeaderboardCache;
 use App\Models\User;
+use App\Support\Roles;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class SeasonTest extends TestCase
@@ -17,7 +20,7 @@ class SeasonTest extends TestCase
     /** lifetime_prana не fillable — массовое присваивание его теряет. */
     private function setLifetimePrana(User $user, int $value): void
     {
-        \Illuminate\Support\Facades\DB::table('users')
+        DB::table('users')
             ->where('id', $user->id)
             ->update(['lifetime_prana' => $value]);
 
@@ -85,7 +88,7 @@ class SeasonTest extends TestCase
         $user = User::factory()->create(['prana_balance' => 500]);
         $this->setLifetimePrana($user, 1000);
         // adminAdjust требует админа для аудита — роль, а не legacy-флаг is_admin.
-        User::factory()->create(['role' => \App\Support\Roles::SUPER_ADMIN]);
+        User::factory()->create(['role' => Roles::SUPER_ADMIN]);
         $season = Season::factory()->create([
             'is_active' => true,
             'rewards_config' => [
@@ -131,7 +134,7 @@ class SeasonTest extends TestCase
     /** @test */
     public function season_refresh_leaderboard_is_registered_in_schedule(): void
     {
-        $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
+        $schedule = $this->app->make(Schedule::class);
 
         $found = false;
         foreach ($schedule->events() as $event) {
@@ -147,7 +150,7 @@ class SeasonTest extends TestCase
     /** @test */
     public function season_open_is_registered_in_schedule(): void
     {
-        $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
+        $schedule = $this->app->make(Schedule::class);
 
         $found = false;
         foreach ($schedule->events() as $event) {
@@ -165,7 +168,7 @@ class SeasonTest extends TestCase
     /** @test */
     public function season_close_is_registered_in_schedule(): void
     {
-        $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
+        $schedule = $this->app->make(Schedule::class);
 
         $found = false;
         foreach ($schedule->events() as $event) {

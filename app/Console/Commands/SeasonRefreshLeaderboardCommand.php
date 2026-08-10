@@ -22,6 +22,7 @@ class SeasonRefreshLeaderboardCommand extends Command
 
         if (! $season) {
             $this->error('No active season found.');
+
             return 1;
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Http\Controllers\Api\GameTelemetryController;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  * H2553 §1 (R4-2, авторизовано MG 10-08-2026) — добавлен nullable `user_id`,
  * который отменяет прежний контракт «здесь вообще нет student-идентификатора»
  * (H1360/H1678). Колонку заполняет ТОЛЬКО сервер из web-сессии
- * ({@see \App\Http\Controllers\Api\GameTelemetryController::store}); аноним
+ * ({@see GameTelemetryController::store}); аноним
  * остаётся NULL, клиент этой колонкой не управляет. Нужен для метрики
  * «сыграл → сдал ДЗ», которую флаг `authenticated` посчитать не может.
  */

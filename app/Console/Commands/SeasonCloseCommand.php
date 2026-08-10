@@ -5,9 +5,10 @@ namespace App\Console\Commands;
 use App\Models\Season;
 use App\Models\SeasonLeaderboardCache;
 use App\Models\SeasonReward;
+use App\Models\User;
 use App\Services\Prana\PranaService;
+use App\Support\Roles;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class SeasonCloseCommand extends Command
 {
@@ -30,6 +31,7 @@ class SeasonCloseCommand extends Command
 
         if (! $season) {
             $this->error('No active season found.');
+
             return 1;
         }
 
@@ -74,8 +76,8 @@ class SeasonCloseCommand extends Command
             // иначе любого admin-like (роль, а не legacy-флаг is_admin).
             if ($type === 'prana') {
                 $user = $entry->user;
-                $admin = \App\Models\User::whereIn('role', \App\Support\Roles::adminLike())
-                    ->orderByRaw("CASE WHEN role = ? THEN 0 ELSE 1 END", [\App\Support\Roles::SUPER_ADMIN])
+                $admin = User::whereIn('role', Roles::adminLike())
+                    ->orderByRaw('CASE WHEN role = ? THEN 0 ELSE 1 END', [Roles::SUPER_ADMIN])
                     ->first();
 
                 if (! $admin) {
