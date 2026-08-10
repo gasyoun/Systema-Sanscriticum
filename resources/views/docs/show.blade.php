@@ -12,7 +12,7 @@
 
         {{-- Хлебная крошка --}}
         <nav class="mb-6 text-sm text-gray-500">
-            <a href="{{ url('/') }}" class="hover:text-[#E85C24] transition-colors">Главная</a>
+            <a href="{{ url('/') }}" class="hover:text-brand transition-colors">Главная</a>
             <span class="mx-2 text-gray-300">/</span>
             <span class="text-gray-700">Документы</span>
         </nav>
@@ -23,7 +23,7 @@
             </h1>
 
             <a href="{{ asset("docs/{$slug}.pdf") }}" download
-               class="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#E85C24] text-white font-semibold hover:bg-[#d14e1a] transition-colors shadow-sm">
+               class="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand text-white font-semibold hover:bg-brand-hover transition-colors shadow-sm">
                 <i class="fas fa-download"></i>
                 Скачать PDF
             </a>
@@ -39,7 +39,7 @@
         <p class="mt-4 text-sm text-gray-500">
             Если документ не отображается,
             <a href="{{ asset("docs/{$slug}.pdf") }}" target="_blank" rel="noopener"
-               class="text-[#E85C24] underline hover:no-underline">откройте PDF в новой вкладке</a>.
+               class="text-brand underline hover:no-underline">откройте PDF в новой вкладке</a>.
         </p>
     </div>
 @endsection

@@ -12,12 +12,12 @@
 
     <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden relative">
         {{-- Декоративная линия сверху --}}
-        <div class="absolute top-0 left-0 w-full h-1.5 bg-[#E85C24]"></div>
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-brand"></div>
 
         <div class="p-8 pt-10 sm:p-10">
             <div class="text-center mb-8">
                 {{-- Иконка пользователя/студента --}}
-                <div class="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-[#E85C24]/10 text-[#E85C24]">
+                <div class="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center bg-brand/10 text-brand">
                     <i class="fas fa-user-graduate text-2xl"></i>
                 </div>
                 <h2 class="text-3xl font-extrabold mb-2 text-gray-900">С возвращением!</h2>
@@ -49,7 +49,7 @@
                             <i class="fas fa-envelope text-gray-400"></i>
                         </div>
                         <input type="email" name="email" id="email" required autofocus
-                            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm"
+                            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm"
                             placeholder="student@example.com">
                     </div>
                     @error('email')
@@ -66,7 +66,7 @@
                             <i class="fas fa-lock text-gray-400"></i>
                         </div>
                         <input type="password" name="password" id="password" required
-                            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm"
+                            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm"
                             placeholder="••••••••">
                     </div>
                 </div>
@@ -76,13 +76,13 @@
                 <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none pl-1">
                     <input type="checkbox" name="remember" value="1"
                         @checked(old('remember'))
-                        class="rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24]">
+                        class="rounded border-gray-300 text-brand focus:ring-brand">
                     Запомнить меня
                 </label>
 
                 <div class="pt-2">
                     <button type="submit" 
-                        class="w-full bg-[#E85C24] hover:bg-[#d04a15] text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-wider">
+                        class="w-full bg-brand hover:bg-brand-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-wider">
                         Войти в кабинет
                     </button>
                 </div>
@@ -96,13 +96,13 @@
                  «регистрации» нет — вход по email заказа. --}}
             <p class="text-sm text-gray-600">
                 Первый раз входите или не помните пароль?<br>
-                <a href="{{ route('password.request') }}" class="text-[#E85C24] hover:underline font-bold transition-colors">Войдите по email заказа →</a>
+                <a href="{{ route('password.request') }}" class="text-brand hover:underline font-bold transition-colors">Войдите по email заказа →</a>
             </p>
             <p class="text-xs text-gray-500 leading-relaxed">
                 Аккаунт создан при оплате — сначала
-                <a href="{{ route('password.request') }}" class="text-[#E85C24] hover:underline font-semibold">проверьте email заказа</a>.
+                <a href="{{ route('password.request') }}" class="text-brand hover:underline font-semibold">проверьте email заказа</a>.
                 Не помните email или пароль?
-                <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="text-[#E85C24] hover:underline font-semibold">Куратор</a>
+                <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="text-brand hover:underline font-semibold">Куратор</a>
                 найдёт кабинет и пришлёт <span class="font-semibold text-gray-600">личную ссылку для входа</span>
                 в Telegram (без пароля). Новый кабинет заводить не нужно.
             </p>

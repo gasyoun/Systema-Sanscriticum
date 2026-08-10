@@ -16,12 +16,12 @@
         $sectionBg   = $isDark ? '' : 'bg-[#FAF8F5]';
         $titleColor  = $isDark ? 'text-white' : 'text-[#1F1B16]';
         $subColor    = $isDark ? 'text-gray-300' : 'text-[#6B6258]';
-        $accent      = $isDark ? 'text-[#E85C24]' : 'text-[#E85C24]';
-        $cardBg      = $isDark ? 'bg-[#161b28] border-gray-700/60 hover:border-[#E85C24]/60' : 'bg-white border-[#E8E0D2] hover:border-[#E85C24]/40';
+        $accent      = $isDark ? 'text-brand' : 'text-brand';
+        $cardBg      = $isDark ? 'bg-[#161b28] border-gray-700/60 hover:border-brand/60' : 'bg-white border-[#E8E0D2] hover:border-brand/40';
         $cardText    = $isDark ? 'text-white' : 'text-[#1F1B16]';
         $imgBg       = $isDark ? 'bg-gray-800' : 'bg-[#F2EBE1]';
         $priceMuted  = $isDark ? 'text-gray-400' : 'text-[#6B6258]';
-        $linkColor   = $isDark ? 'text-[#E85C24]' : 'text-[#E85C24]';
+        $linkColor   = $isDark ? 'text-brand' : 'text-brand';
         $hoverShadow = $isDark ? 'group-hover:shadow-[0_0_25px_rgba(232,92,36,0.15)]' : 'group-hover:shadow-lg';
         $allUrl      = route('shop.index') . '?format=recorded';
         $perPage     = 6;
@@ -29,10 +29,10 @@
         $pageCount   = $chunks->count();
         $hasSlider   = $pageCount > 1;
         $arrowBase   = $isDark
-            ? 'bg-[#161b28] border-gray-700/60 text-white hover:border-[#E85C24]/60 hover:text-[#E85C24]'
-            : 'bg-white border-[#E8E0D2] text-[#1F1B16] hover:border-[#E85C24]/60 hover:text-[#E85C24]';
+            ? 'bg-[#161b28] border-gray-700/60 text-white hover:border-brand/60 hover:text-brand'
+            : 'bg-white border-[#E8E0D2] text-[#1F1B16] hover:border-brand/60 hover:text-brand';
         $dotIdle     = $isDark ? 'bg-gray-600/70' : 'bg-[#E8E0D2]';
-        $dotActive   = 'bg-[#E85C24]';
+        $dotActive   = 'bg-brand';
         $maxWidth    = $width === 'wide' ? 'max-w-[88rem]' : 'max-w-7xl';
     @endphp
 
@@ -45,7 +45,7 @@
                     <h2 class="text-2xl md:text-3xl font-extrabold {{ $titleColor }} tracking-tight">
                         {{ $title }}
                     </h2>
-                    <div class="w-12 h-1 bg-[#E85C24] mt-3 mb-3 rounded-full"></div>
+                    <div class="w-12 h-1 bg-brand mt-3 mb-3 rounded-full"></div>
                     <p class="{{ $subColor }} text-sm md:text-base max-w-xl">
                         {{ $subtitle }}
                     </p>
@@ -108,7 +108,7 @@
                                         @endif
                                     </div>
 
-                                    <h3 class="font-bold {{ $cardText }} text-base leading-tight mb-3 line-clamp-2 group-hover:text-[#E85C24] transition-colors">
+                                    <h3 class="font-bold {{ $cardText }} text-base leading-tight mb-3 line-clamp-2 group-hover:text-brand transition-colors">
                                         {{ $course->title }}
                                     </h3>
 

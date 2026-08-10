@@ -1,2 +1,32 @@
 @import "tailwindcss";
 @source "../views";
+
+/* Design tokens — Phase 1 of the measured extraction plan in
+   docs/UI_COMPONENT_LIBRARY_EXTRACTION_SYSTEMA_2026-08-10.md
+
+   Tailwind v4 is CSS-first: each --color-* entry below generates the whole
+   utility family (bg- / text- / border- / ring- / shadow- / from- / to- / fill-,
+   each accepting an /opacity modifier). That is what the 1,100 [#RRGGBB]
+   arbitrary-value classes in resources/views were replaced by.
+
+   --color-brand-hover unifies four hand-written hover oranges that had drifted
+   apart (#D04A15 60x, #D64E1C 18x, #D34F1C 15x, #D14E1A 7x — max pairwise delta
+   ~7/255, i.e. visually indistinguishable). #D04A15 wins as the plurality value.
+
+   tailwind.config.js was DELETED alongside this block: it was never loaded, because
+   Tailwind v4 reads a JS config only when CSS names it via an @config directive and
+   this repo has never had one. Caveat worth knowing — that dead file also registered
+   @tailwindcss/typography, so the `prose` classes in 9 templates are currently
+   unstyled. Restoring it means `@plugin "@tailwindcss/typography";` here, which is a
+   visual change and so deliberately NOT bundled into this mechanical pass.
+
+   Not yet tokenised, pending one human decision (see the plan's open questions):
+   the dark surfaces (#1F2636 149x, #101010 114x, #111622 66x, #0A0D14 39x ...) and
+   the sky accent #38BDF8 111x are 589 of the 802 arbitrary-value classes that remain.
+   Whether they are a real dark theme or accumulated promo styling decides whether
+   they become --color-surface / --color-ink or simply get deleted, so Phase 1 does
+   not guess. #E3122C (a second brand red) is deferred for the same reason. */
+@theme {
+  --color-brand: #e85c24;
+  --color-brand-hover: #d04a15;
+}

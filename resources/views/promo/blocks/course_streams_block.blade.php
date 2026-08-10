@@ -17,7 +17,7 @@
             <h2 class="text-3xl md:text-4xl lg:text-4xl font-extrabold text-[#101010] mb-5 tracking-tight">
                 {{ $data['title'] ?? 'Выберите удобный поток' }}
             </h2>
-            <div class="w-20 h-1.5 bg-[#E85C24] rounded-full mb-6"></div>
+            <div class="w-20 h-1.5 bg-brand rounded-full mb-6"></div>
             @if(!empty($data['subtitle']))
                 <p class="text-gray-500 text-lg leading-relaxed">{{ $data['subtitle'] }}</p>
             @endif
@@ -59,7 +59,7 @@
                 {{-- 1. Дедлайн цены: дата и что изменится, без обратного отсчета --}}
                 <div class="w-full md:w-1/2 text-center md:text-left">
                     <div class="text-[11px] font-extrabold text-gray-500 uppercase tracking-widest mb-3 flex items-center justify-center md:justify-start gap-2">
-                        <svg class="w-4 h-4 text-[#E85C24]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <svg class="w-4 h-4 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         Текущая цена действует до
                     </div>
                     <div class="text-3xl font-black text-[#101010] leading-none">
@@ -82,7 +82,7 @@
                         <div class="text-3xl font-black text-[#101010] leading-none">{{ $seatsTotal - $seatsTaken }} <span class="text-sm text-gray-400 font-bold">из {{ $seatsTotal }}</span></div>
                     </div>
                     <div class="w-full bg-white rounded-full h-3.5 border border-orange-100 overflow-hidden shadow-inner p-0.5">
-                        <div class="h-full rounded-full bg-[#E85C24] transition-all duration-1000 ease-out" style="width: {{ $seatsPercent }}%"></div>
+                        <div class="h-full rounded-full bg-brand transition-all duration-1000 ease-out" style="width: {{ $seatsPercent }}%"></div>
                     </div>
                 </div>
                 @endif
@@ -115,12 +115,12 @@
 
                 <div class="relative flex flex-col bg-white rounded-3xl transition-all duration-300 h-full
                             {{ $isPopular
-                                ? 'shadow-[0_20px_50px_rgba(232,92,36,0.15)] ring-2 ring-[#E85C24] lg:-translate-y-2 z-10'
+                                ? 'shadow-[0_20px_50px_rgba(232,92,36,0.15)] ring-2 ring-brand lg:-translate-y-2 z-10'
                                 : 'shadow-lg hover:shadow-2xl border border-gray-100 hover:-translate-y-1'
                             }}">
 
                     @if($isPopular)
-                        <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#E85C24] to-orange-500 text-white text-[10px] font-black uppercase tracking-widest py-2 px-6 rounded-full shadow-[0_5px_15px_rgba(232,92,36,0.4)] z-20 flex items-center gap-1.5">
+                        <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-brand to-orange-500 text-white text-[10px] font-black uppercase tracking-widest py-2 px-6 rounded-full shadow-[0_5px_15px_rgba(232,92,36,0.4)] z-20 flex items-center gap-1.5">
                             <svg class="w-3 h-3 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>
                             Популярный
                         </div>
@@ -130,12 +130,12 @@
 
                         {{-- Шапка потока --}}
                         <div class="text-center mb-5 border-b border-gray-100 pb-5">
-                            <h3 class="text-base lg:text-lg font-black text-[#101010] uppercase tracking-wider mb-3 {{ $isPopular ? 'text-[#E85C24]' : '' }}">
+                            <h3 class="text-base lg:text-lg font-black text-[#101010] uppercase tracking-wider mb-3 {{ $isPopular ? 'text-brand' : '' }}">
                                 {{ $item['name'] ?? '' }}
                             </h3>
 
                             {{-- Расписание — ключевой акцент --}}
-                            <div class="inline-flex items-center gap-1.5 bg-orange-50 text-[#E85C24] font-extrabold text-sm px-3.5 py-2 rounded-xl border border-orange-100">
+                            <div class="inline-flex items-center gap-1.5 bg-orange-50 text-brand font-extrabold text-sm px-3.5 py-2 rounded-xl border border-orange-100">
                                 <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 <span>{{ $item['schedule'] ?? '' }}</span>
                             </div>
@@ -178,7 +178,7 @@
                             <a href="{{ $href }}"
                                class="block w-full py-3 rounded-xl font-extrabold text-xs uppercase tracking-widest text-center transition-all duration-300
                                       {{ $isPopular
-                                         ? 'bg-[#E85C24] text-white hover:bg-[#d04a15] shadow-[0_8px_20px_rgba(232,92,36,0.3)] hover:-translate-y-0.5'
+                                         ? 'bg-brand text-white hover:bg-brand-hover shadow-[0_8px_20px_rgba(232,92,36,0.3)] hover:-translate-y-0.5'
                                          : 'bg-gray-100 text-gray-900 hover:bg-gray-200 hover:-translate-y-0.5'
                                       }}">
                                 {{ $item['button_text'] ?? 'Выбрать поток' }}

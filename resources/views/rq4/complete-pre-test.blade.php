@@ -11,7 +11,7 @@
             и нажмите «Пройти второй тест».
         </p>
         <a href="{{ route('rq4.start-arm') }}"
-           class="inline-block px-5 py-2.5 rounded-lg bg-[#E85C24] text-white font-semibold hover:bg-[#d14e1a] transition-colors">
+           class="inline-block px-5 py-2.5 rounded-lg bg-brand text-white font-semibold hover:bg-brand-hover transition-colors">
             Перейти к материалу
         </a>
         <a href="{{ route('rq4.diagnostic', ['phase' => 'post_test']) }}"

@@ -14,7 +14,7 @@
             <p class="text-gray-500 text-lg">Управляйте своим обучением, материалами и оплатами.</p>
         </div>
         <button type="button" x-on:click="$dispatch('open-change-password')"
-                class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-[#E85C24] hover:text-[#E85C24] transition-colors shadow-sm">
+                class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
             <i class="fas fa-key"></i> Сменить пароль
         </button>
     </div>
@@ -112,7 +112,7 @@
              x-transition:enter="transition ease-out duration-200"
              x-transition:enter-start="opacity-0 scale-95"
              x-transition:enter-end="opacity-100 scale-100">
-            <div class="absolute top-0 left-0 w-full h-1.5 bg-[#E85C24]"></div>
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-brand"></div>
 
             <div class="flex items-center justify-between px-6 pt-6 pb-4">
                 <h3 class="text-lg font-extrabold text-gray-900">Смена пароля</h3>
@@ -128,7 +128,7 @@
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1" for="current_password">Текущий пароль</label>
                     <input type="password" name="current_password" id="current_password" required autocomplete="current-password"
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm"
                            placeholder="••••••••">
                     @error('current_password')
                         <p class="text-red-500 text-xs mt-2 pl-1 font-medium">{{ $message }}</p>
@@ -138,7 +138,7 @@
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1" for="new_password">Новый пароль</label>
                     <input type="password" name="password" id="new_password" required autocomplete="new-password"
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm"
                            placeholder="Минимум 8 символов">
                     @error('password')
                         <p class="text-red-500 text-xs mt-2 pl-1 font-medium">{{ $message }}</p>
@@ -148,12 +148,12 @@
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1" for="password_confirmation">Повторите новый пароль</label>
                     <input type="password" name="password_confirmation" id="password_confirmation" required autocomplete="new-password"
-                           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm"
                            placeholder="••••••••">
                 </div>
 
                 <button type="submit"
-                        class="w-full bg-[#E85C24] hover:bg-[#d04a15] text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl text-sm uppercase tracking-wider">
+                        class="w-full bg-brand hover:bg-brand-hover text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl text-sm uppercase tracking-wider">
                     Сохранить
                 </button>
             </form>
@@ -182,14 +182,14 @@
      x-transition:leave="transition ease-in duration-200"
      x-transition:leave-start="opacity-100 translate-y-0"
      x-transition:leave-end="opacity-0 -translate-y-2"
-     class="mb-8 relative bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-[#E85C24]/20 rounded-2xl p-5 md:p-6 shadow-[0_4px_20px_rgba(232,92,36,0.06)] overflow-hidden">
+     class="mb-8 relative bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-brand/20 rounded-2xl p-5 md:p-6 shadow-[0_4px_20px_rgba(232,92,36,0.06)] overflow-hidden">
     
     {{-- Декоративное свечение --}}
-    <div class="absolute top-0 right-0 w-40 h-40 bg-[#E85C24] blur-[60px] opacity-10 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
+    <div class="absolute top-0 right-0 w-40 h-40 bg-brand blur-[60px] opacity-10 rounded-full -mr-10 -mt-10 pointer-events-none"></div>
     
     <div class="flex items-start gap-4 relative z-10">
         {{-- Иконка --}}
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#E85C24] to-orange-500 text-white flex items-center justify-center shrink-0 shadow-[0_4px_14px_rgba(232,92,36,0.3)]">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand to-orange-500 text-white flex items-center justify-center shrink-0 shadow-[0_4px_14px_rgba(232,92,36,0.3)]">
             <i class="fas fa-tools text-lg"></i>
         </div>
         
@@ -208,7 +208,7 @@
                 все материалы появятся в ближайшее время.
             </p>
             <button type="button" @click="expanded = !expanded"
-                    class="sm:hidden mt-1 text-xs font-bold text-[#E85C24] hover:underline"
+                    class="sm:hidden mt-1 text-xs font-bold text-brand hover:underline"
                     x-text="expanded ? 'Свернуть' : 'Подробнее'"></button>
         </div>
         
@@ -356,42 +356,42 @@
          поверхность — вкладки главной кабинета. --}}
     <div class="flex space-x-6 border-b border-gray-200 overflow-x-auto custom-scrollbar">
         <button @click="activeTab = 'courses'" data-track-event="course.tab.view" data-track-tab="courses" data-track-surface="dashboard"
-                :class="activeTab === 'courses' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'" 
+                :class="activeTab === 'courses' ? 'text-brand border-b-2 border-brand font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'" 
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-graduation-cap mr-2"></i>Мои курсы
         </button>
 
         <button @click="activeTab = 'dictionaries'" data-track-event="course.tab.view" data-track-tab="dictionaries" data-track-surface="dashboard"
-                :class="activeTab === 'dictionaries' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'" 
+                :class="activeTab === 'dictionaries' ? 'text-brand border-b-2 border-brand font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'" 
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-book mr-2"></i>Словари
         </button>
 
         <button @click="activeTab = 'payments'" data-track-event="course.tab.view" data-track-tab="payments" data-track-surface="dashboard"
-                :class="activeTab === 'payments' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
+                :class="activeTab === 'payments' ? 'text-brand border-b-2 border-brand font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-wallet mr-2"></i>Мои оплаты
         </button>
 
         @if($debts->isNotEmpty())
             <button @click="activeTab = 'debts'" data-track-event="course.tab.view" data-track-tab="debts" data-track-surface="dashboard"
-                    :class="activeTab === 'debts' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
+                    :class="activeTab === 'debts' ? 'text-brand border-b-2 border-brand font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
                     class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
                 <i class="fas fa-exclamation-triangle mr-2"></i>Мои долги
-                <span class="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-[#E85C24] rounded-full">{{ $debts->count() }}</span>
+                <span class="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-brand rounded-full">{{ $debts->count() }}</span>
             </button>
         @endif
 
         @if(\App\Services\Prana\PranaSettings::isActive())
             <button @click="activeTab = 'prana'" data-track-event="course.tab.view" data-track-tab="prana" data-track-surface="dashboard"
-                    :class="activeTab === 'prana' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
+                    :class="activeTab === 'prana' ? 'text-brand border-b-2 border-brand font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
                     class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
                 <x-prana-lotus class="mr-2" />Прана
             </button>
         @endif
 
         <button @click="activeTab = 'chat'" data-track-event="course.tab.view" data-track-tab="chat" data-track-surface="dashboard"
-                :class="activeTab === 'chat' ? 'text-[#E85C24] border-b-2 border-[#E85C24] font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
+                :class="activeTab === 'chat' ? 'text-brand border-b-2 border-brand font-bold' : 'text-gray-500 hover:text-gray-800 hover:border-gray-300'"
                 class="pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outline-none">
             <i class="fas fa-headset mr-2"></i>Поддержка
         </button>
@@ -411,13 +411,13 @@
              съедает ширину, и при lg:3/xl:4 карточки ужимались до ~200px — кнопки переносились. --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mb-16">
             @forelse($courses as $course)
-                <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_15px_35px_rgba(232,92,36,0.08)] hover:border-[#E85C24]/30 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group overflow-hidden">
+                <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_15px_35px_rgba(232,92,36,0.08)] hover:border-brand/30 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group overflow-hidden">
                     
                     {{-- Обложка курса --}}
                     <div class="h-44 bg-[#101010] relative overflow-hidden shrink-0">
                         {{-- Темный абстрактный фон с оранжевым свечением, если нет картинки --}}
                         <div class="absolute inset-0 bg-[#101010] group-hover:scale-105 transition-transform duration-700">
-                            <div class="absolute top-0 right-0 w-32 h-32 bg-[#E85C24] blur-[50px] opacity-40 rounded-full -mr-10 -mt-10"></div>
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-brand blur-[50px] opacity-40 rounded-full -mr-10 -mt-10"></div>
                             <div class="absolute bottom-0 left-0 w-24 h-24 bg-purple-500 blur-[40px] opacity-20 rounded-full -ml-10 -mb-10"></div>
                         </div>
                         
@@ -433,7 +433,7 @@
 
                     {{-- Тело карточки --}}
                     <div class="p-6 flex-1 flex flex-col bg-white relative z-10">
-                        <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-[#E85C24] transition-colors leading-snug line-clamp-2">
+                        <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-brand transition-colors leading-snug line-clamp-2">
                             {{ $course->title }}
                         </h3>
 
@@ -473,13 +473,13 @@
                             </div>
                             
                             <div class="bg-gray-100 rounded-full h-1.5 w-full overflow-hidden mb-3">
-                                <div class="bg-[#E85C24] h-full rounded-full transition-all duration-1000 relative" style="width: {{ $percent }}%"></div>
+                                <div class="bg-brand h-full rounded-full transition-all duration-1000 relative" style="width: {{ $percent }}%"></div>
                             </div>
 
                             {{-- Подсказка «следующий урок»: куда ведёт кнопка. При 100% — курс пройден. --}}
                             @if($nextLesson)
                                 <div class="flex items-start gap-1.5 mb-4 text-xs text-gray-500 leading-snug">
-                                    <i class="fas fa-play-circle text-[#E85C24]/70 mt-0.5 shrink-0"></i>
+                                    <i class="fas fa-play-circle text-brand/70 mt-0.5 shrink-0"></i>
                                     <span class="line-clamp-1">
                                         <span class="text-gray-400">{{ $percent > 0 ? 'Следующий урок:' : 'Первый урок:' }}</span>
                                         <span class="font-semibold text-gray-700">{{ $nextLesson->title }}</span>
@@ -508,13 +508,13 @@
                                     </div>
                                 @else
                                     <button @click.prevent="activeTab = 'debts'"
-                                            class="block w-full mb-3 px-3 py-2 {{ $debt->promise_overdue ? 'bg-red-50 hover:bg-red-100 border-red-300' : 'bg-orange-50 hover:bg-orange-100 border-[#E85C24]/30' }} border rounded-lg text-left transition-colors"
+                                            class="block w-full mb-3 px-3 py-2 {{ $debt->promise_overdue ? 'bg-red-50 hover:bg-red-100 border-red-300' : 'bg-orange-50 hover:bg-orange-100 border-brand/30' }} border rounded-lg text-left transition-colors"
                                             title="Перейти в раздел «Мои долги»">
                                         <div class="flex items-start gap-2">
-                                            <i class="fas {{ $debt->promise_overdue ? 'fa-clock text-red-600' : 'fa-exclamation-triangle text-[#E85C24]' }} text-xs mt-0.5 shrink-0"></i>
+                                            <i class="fas {{ $debt->promise_overdue ? 'fa-clock text-red-600' : 'fa-exclamation-triangle text-brand' }} text-xs mt-0.5 shrink-0"></i>
                                             <div class="text-xs leading-snug flex-1">
                                                 <div>
-                                                    <span class="font-bold {{ $debt->promise_overdue ? 'text-red-700' : 'text-[#E85C24]' }}">Не оплачено:</span>
+                                                    <span class="font-bold {{ $debt->promise_overdue ? 'text-red-700' : 'text-brand' }}">Не оплачено:</span>
                                                     <span class="text-gray-700">{{ $debt->debt_label }}</span>
                                                 </div>
                                                 @if($debt->debt_amount)
@@ -540,7 +540,7 @@
                                             @endif
                                             @if($paidUntil->next_payment_deadline)
                                                 <div class="mt-1">
-                                                    <span class="font-bold text-[#E85C24]">Следующий платеж до:</span>
+                                                    <span class="font-bold text-brand">Следующий платеж до:</span>
                                                     <span class="text-gray-700">{{ $paidUntil->next_payment_deadline->format('d.m.Y') }}, 00:00 (МСК)</span>
                                                 </div>
                                             @endif
@@ -551,7 +551,7 @@
 
                             {{-- Кнопка: при наличии следующего урока ведём прямо в него,
                                  иначе (всё пройдено / нет уроков) — на страницу курса. --}}
-                            <a href="{{ $nextLesson ? route('student.lesson', [$course->slug, $nextLesson->id]) : route('student.course', $course->slug) }}" data-track-event="cabinet.continue.click" data-track-kind="{{ $nextLesson ? 'lesson' : 'course' }}" data-track-surface="course-row" class="flex items-center justify-center w-full px-4 py-2.5 bg-gray-50 text-gray-900 text-sm font-bold rounded-xl group-hover:bg-[#E85C24] group-hover:text-white transition-all duration-300">
+                            <a href="{{ $nextLesson ? route('student.lesson', [$course->slug, $nextLesson->id]) : route('student.course', $course->slug) }}" data-track-event="cabinet.continue.click" data-track-kind="{{ $nextLesson ? 'lesson' : 'course' }}" data-track-surface="course-row" class="flex items-center justify-center w-full px-4 py-2.5 bg-gray-50 text-gray-900 text-sm font-bold rounded-xl group-hover:bg-brand group-hover:text-white transition-all duration-300">
                                 <span>@if($nextLesson)@if($percent > 0) Продолжить @else Начать обучение @endif @else К курсу @endif</span>
                                 <i class="fas fa-arrow-right ml-2 text-xs opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                             </a>
@@ -623,16 +623,16 @@
                         </div>
                         
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-bold text-gray-800 truncate group-hover:text-[#E85C24] transition-colors">{{ str_replace('|', ' ', $cert->displayCourseTitle()) }}</p>
+                            <p class="text-sm font-bold text-gray-800 truncate group-hover:text-brand transition-colors">{{ str_replace('|', ' ', $cert->displayCourseTitle()) }}</p>
                             <p class="text-xs font-medium text-gray-400 mt-0.5">{{ $cert->isSpravka() ? 'Справка' : 'Сертификат' }} · {{ $cert->created_at->format('d.m.Y') }}</p>
                         </div>
 
                         <div class="flex items-center gap-2 shrink-0">
-                            <a href="{{ route('student.certificate.download', $cert->id) }}" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-[#E85C24] hover:text-white flex items-center justify-center text-gray-400 transition-colors" title="Скачать PDF">
+                            <a href="{{ route('student.certificate.download', $cert->id) }}" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-brand hover:text-white flex items-center justify-center text-gray-400 transition-colors" title="Скачать PDF">
                                 <i class="fas fa-download text-sm"></i>
                             </a>
                             @if(\App\Services\CertificateService::jpegSupported())
-                                <a href="{{ route('student.certificate.download.jpg', $cert->id) }}" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-[#E85C24] hover:text-white flex items-center justify-center text-gray-400 transition-colors" title="Скачать JPG">
+                                <a href="{{ route('student.certificate.download.jpg', $cert->id) }}" class="w-10 h-10 rounded-full bg-gray-50 hover:bg-brand hover:text-white flex items-center justify-center text-gray-400 transition-colors" title="Скачать JPG">
                                     <i class="fas fa-image text-sm"></i>
                                 </a>
                             @endif
@@ -700,8 +700,8 @@
             $debtsWithPlan = $debts->contains(fn ($d) => $d->promise_active || $d->promise_overdue);
             $debtsWithoutPlan = $debts->contains(fn ($d) => ! $d->promise_active && ! $d->promise_overdue);
         @endphp
-        <div class="mb-5 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-[#E85C24]/20 rounded-xl px-4 py-3 flex items-center gap-3">
-            <i class="fas fa-exclamation-triangle text-[#E85C24] shrink-0"></i>
+        <div class="mb-5 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-brand/20 rounded-xl px-4 py-3 flex items-center gap-3">
+            <i class="fas fa-exclamation-triangle text-brand shrink-0"></i>
             <p class="text-sm text-gray-700 leading-snug">
                 @if($debtsWithPlan && ! $debtsWithoutPlan)
                     <span class="font-bold text-gray-900">У вас согласована рассрочка.</span>
@@ -721,16 +721,16 @@
                 @php
                     $cardBorder = $debt->promise_active
                         ? 'border-emerald-200 hover:border-emerald-400'
-                        : ($debt->promise_overdue ? 'border-red-200 hover:border-red-400' : 'border-gray-100 hover:border-[#E85C24]/40');
+                        : ($debt->promise_overdue ? 'border-red-200 hover:border-red-400' : 'border-gray-100 hover:border-brand/40');
                     $iconBg = $debt->promise_active
                         ? 'bg-emerald-50 text-emerald-600'
-                        : ($debt->promise_overdue ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-[#E85C24]');
+                        : ($debt->promise_overdue ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-brand');
                     $accentLabel = $debt->promise_active
                         ? 'text-emerald-700'
-                        : ($debt->promise_overdue ? 'text-red-700' : 'text-[#E85C24]');
+                        : ($debt->promise_overdue ? 'text-red-700' : 'text-brand');
                     $accentBg = $debt->promise_active
                         ? 'bg-emerald-50/70 border-emerald-200/60'
-                        : ($debt->promise_overdue ? 'bg-red-50/70 border-red-200/60' : 'bg-orange-50/60 border-[#E85C24]/15');
+                        : ($debt->promise_overdue ? 'bg-red-50/70 border-red-200/60' : 'bg-orange-50/60 border-brand/15');
                 @endphp
 
                 <div class="bg-white rounded-xl border {{ $cardBorder }} hover:shadow-sm transition-all duration-200 p-4 flex flex-col">
@@ -834,7 +834,7 @@
                             @if($opts['next'])
                                 <form method="POST" action="{{ $opts['next']['url'] }}">
                                     @csrf
-                                    <button type="submit" data-track-event="access.renewal.start" data-track-kind="promise-next" class="w-full flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                    <button type="submit" data-track-event="access.renewal.start" data-track-kind="promise-next" class="w-full flex items-center justify-center px-3 py-2 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-lg transition-colors">
                                         <i class="fas fa-credit-card mr-1.5 text-[10px]"></i>
                                         <span>Оплатить{{ $opts['next']['amount'] ? ' '.number_format($opts['next']['amount'], 0, '.', ' ').' ₽' : '' }}</span>
                                     </button>
@@ -843,7 +843,7 @@
                             @if($opts['whole'])
                                 <form method="POST" action="{{ $opts['whole']['url'] }}">
                                     @csrf
-                                    <button type="submit" data-track-event="access.renewal.start" data-track-kind="promise-whole" class="w-full flex items-center justify-center px-3 py-1.5 border border-[#E85C24]/40 text-[#E85C24] hover:bg-orange-50 text-xs font-bold rounded-lg transition-colors">
+                                    <button type="submit" data-track-event="access.renewal.start" data-track-kind="promise-whole" class="w-full flex items-center justify-center px-3 py-1.5 border border-brand/40 text-brand hover:bg-orange-50 text-xs font-bold rounded-lg transition-colors">
                                         <span>Погасить всё{{ $opts['whole']['amount'] ? ' ('.number_format($opts['whole']['amount'], 0, '.', ' ').' ₽)' : '' }}</span>
                                     </button>
                                 </form>
@@ -865,7 +865,7 @@
                                                 <input type="number" name="prana_amount" step="{{ \App\Services\Prana\PranaSettings::rate() }}" min="0" max="{{ (int) (auth()->user()->prana_balance ?? 0) }}" value="0" class="mt-0.5 w-full rounded border-gray-300 text-xs">
                                             </label>
                                         @endif
-                                        <button type="submit" class="w-full px-3 py-1.5 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">Оплатить</button>
+                                        <button type="submit" class="w-full px-3 py-1.5 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-lg transition-colors">Оплатить</button>
                                     </form>
                                 </details>
                             @endif
@@ -887,7 +887,7 @@
                                  (access.renewal.start, спека §4); complete пишет
                                  PaymentTelemetryObserver по is_self_service+paid. --}}
                             @if($opts['full'])
-                                <a href="{{ $opts['full']['url'] }}" data-track-event="access.renewal.start" data-track-kind="full" class="flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                <a href="{{ $opts['full']['url'] }}" data-track-event="access.renewal.start" data-track-kind="full" class="flex items-center justify-center px-3 py-2 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-lg transition-colors">
                                     <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить курс</span>
                                 </a>
                             @else
@@ -895,20 +895,20 @@
                                     {{-- Бандл: весь многоблочный долг одним платежом. GET —
                                          штатный чекаут по bundle-тарифу; POST — fallback pay-bundle. --}}
                                     @if(($opts['bundle']['method'] ?? 'POST') === 'GET')
-                                        <a href="{{ $opts['bundle']['url'] }}" data-track-event="access.renewal.start" data-track-kind="bundle" class="flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                        <a href="{{ $opts['bundle']['url'] }}" data-track-event="access.renewal.start" data-track-kind="bundle" class="flex items-center justify-center px-3 py-2 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-lg transition-colors">
                                             <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить всё ({{ number_format($opts['bundle']['amount'], 0, '.', ' ') }} ₽)</span>
                                         </a>
                                     @else
                                         <form method="POST" action="{{ $opts['bundle']['url'] }}">
                                             @csrf
-                                            <button type="submit" data-track-event="access.renewal.start" data-track-kind="bundle" class="w-full flex items-center justify-center px-3 py-2 bg-[#E85C24] hover:bg-[#d34f1c] text-white text-xs font-bold rounded-lg transition-colors">
+                                            <button type="submit" data-track-event="access.renewal.start" data-track-kind="bundle" class="w-full flex items-center justify-center px-3 py-2 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-lg transition-colors">
                                                 <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить всё ({{ number_format($opts['bundle']['amount'], 0, '.', ' ') }} ₽)</span>
                                             </button>
                                         </form>
                                     @endif
                                 @endif
                                 @foreach($opts['blocks'] as $b)
-                                    <a href="{{ $b['url'] }}" data-track-event="access.renewal.start" data-track-kind="block" class="flex items-center justify-center px-3 py-{{ ($opts['bundle'] ?? null) ? '1.5' : '2' }} {{ ($opts['bundle'] ?? null) ? 'border border-[#E85C24]/40 text-[#E85C24] hover:bg-orange-50' : 'bg-[#E85C24] hover:bg-[#d34f1c] text-white' }} text-xs font-bold rounded-lg transition-colors">
+                                    <a href="{{ $b['url'] }}" data-track-event="access.renewal.start" data-track-kind="block" class="flex items-center justify-center px-3 py-{{ ($opts['bundle'] ?? null) ? '1.5' : '2' }} {{ ($opts['bundle'] ?? null) ? 'border border-brand/40 text-brand hover:bg-orange-50' : 'bg-brand hover:bg-brand-hover text-white' }} text-xs font-bold rounded-lg transition-colors">
                                         <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>{{ ($opts['bundle'] ?? null) ? 'Блок №'.$b['number'].' отдельно' : 'Оплатить блок №'.$b['number'] }}</span>
                                     </a>
                                 @endforeach
@@ -960,7 +960,7 @@
 
         {{-- Баланс --}}
         <div class="bg-gradient-to-br from-[#19191C] via-[#252529] to-[#19191C] text-white rounded-3xl p-8 md:p-10 mb-8 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-64 h-64 bg-[#E85C24] blur-[80px] opacity-30 rounded-full -mr-20 -mt-20 pointer-events-none"></div>
+            <div class="absolute top-0 right-0 w-64 h-64 bg-brand blur-[80px] opacity-30 rounded-full -mr-20 -mt-20 pointer-events-none"></div>
             <div class="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
                 <div>
                     <p class="text-xs font-bold text-orange-300 uppercase tracking-widest mb-3">Ваш баланс праны</p>
@@ -977,7 +977,7 @@
                     </a>
                 </div>
                 <a href="{{ route('shop.index') }}"
-                   class="inline-flex items-center justify-center px-6 py-3.5 bg-[#E85C24] hover:bg-[#d64e1c] text-white text-sm font-extrabold rounded-xl transition-all shadow-lg shadow-orange-900/30 hover:-translate-y-0.5">
+                   class="inline-flex items-center justify-center px-6 py-3.5 bg-brand hover:bg-brand-hover text-white text-sm font-extrabold rounded-xl transition-all shadow-lg shadow-orange-900/30 hover:-translate-y-0.5">
                     Выбрать курс
                     <i class="fas fa-arrow-right ml-2 text-xs"></i>
                 </a>
@@ -1009,7 +1009,7 @@
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-bold text-gray-900 truncate">{{ $label }}</p>
-                                <p class="text-xs text-[#E85C24] font-extrabold mt-0.5">+{{ $amount }} <x-prana-lotus /></p>
+                                <p class="text-xs text-brand font-extrabold mt-0.5">+{{ $amount }} <x-prana-lotus /></p>
                             </div>
                         </div>
                     @endif

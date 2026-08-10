@@ -37,7 +37,7 @@
         {{-- Шапка --}}
         <div class="flex items-center justify-between gap-4 mb-5">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-[#E85C24]/10 text-[#E85C24] flex items-center justify-center shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
                     <i class="fas fa-pen-nib"></i>
                 </div>
                 <div>
@@ -45,7 +45,7 @@
                     <p class="hidden sm:block text-[13px] text-gray-500">
                         {{ $awaitingPrompt ? 'Скоро здесь появится задание' : 'Выполните задание и отправьте на проверку' }}
                         ·
-                        <a href="{{ route('faq.dz') }}" class="text-[#E85C24] font-semibold hover:underline">как сдавать</a>
+                        <a href="{{ route('faq.dz') }}" class="text-brand font-semibold hover:underline">как сдавать</a>
                     </p>
                 </div>
             </div>
@@ -60,13 +60,13 @@
         {{-- Условие задания --}}
         @if($lesson->homework_prompt)
             <div class="bg-orange-50/60 border border-orange-100 rounded-2xl p-5 mb-6">
-                <p class="text-[11px] font-extrabold uppercase tracking-wider text-[#E85C24] mb-2">Задание</p>
+                <p class="text-[11px] font-extrabold uppercase tracking-wider text-brand mb-2">Задание</p>
                 <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed">{!! nl2br(e($lesson->homework_prompt)) !!}</div>
                 @if(count($hwRefFiles))
                     <div class="mt-4 flex flex-wrap gap-2">
                         @foreach($hwRefFiles as $rf)
                             <a href="{{ asset('storage/'.$rf) }}" target="_blank" download
-                               class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-orange-200 text-sm font-semibold text-gray-700 hover:border-[#E85C24] hover:text-[#E85C24] transition-colors">
+                               class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-orange-200 text-sm font-semibold text-gray-700 hover:border-brand hover:text-brand transition-colors">
                                 <i class="fas fa-paperclip text-xs"></i> {{ basename($rf) }}
                             </a>
                         @endforeach
@@ -139,7 +139,7 @@
                                         @endphp
                                         <span class="inline-flex items-center gap-1.5 rounded-lg bg-white border border-gray-200 text-xs font-semibold text-gray-700">
                                             <a href="{{ route('homework.file.download', $f) }}"
-                                               class="inline-flex items-center gap-2 px-3 py-1.5 hover:text-[#E85C24] transition-colors">
+                                               class="inline-flex items-center gap-2 px-3 py-1.5 hover:text-brand transition-colors">
                                                 <i class="fas {{ $f->isImage() ? 'fa-image' : 'fa-file-arrow-down' }} text-xs"></i>
                                                 {{ \Illuminate\Support\Str::limit($f->original_name, 28) }}
                                                 <span class="text-gray-400">{{ $f->humanSize() }}</span>
@@ -247,11 +247,11 @@
 
                 <label class="block text-[11px] font-extrabold uppercase tracking-wider text-gray-400 mb-1.5">Ваш ответ</label>
                 <textarea name="body" rows="5"
-                          class="w-full rounded-2xl border border-gray-200 bg-gray-50 p-4 focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition text-sm resize-y"
+                          class="w-full rounded-2xl border border-gray-200 bg-gray-50 p-4 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm resize-y"
                           placeholder="Опишите решение, добавьте комментарий для преподавателя...">{{ $lastStudentBody }}</textarea>
 
                 <div class="mt-4">
-                    <label class="flex flex-col items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 hover:border-[#E85C24] hover:bg-orange-50/30 transition-colors p-6 cursor-pointer">
+                    <label class="flex flex-col items-center justify-center gap-2 w-full rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 hover:border-brand hover:bg-orange-50/30 transition-colors p-6 cursor-pointer">
                         <i class="fas fa-cloud-arrow-up text-2xl text-gray-400"></i>
                         <span class="text-sm font-semibold text-gray-600">Прикрепить файлы (фото, видео, аудио, PDF, документы)</span>
                         <span class="text-xs text-gray-400">До {{ $hwMaxFiles }} файлов, каждый до {{ $hwMaxFileMb }} МБ, всего до {{ $hwTotalMaxMb }} МБ — можно добавлять по одному, разными форматами</span>
@@ -280,7 +280,7 @@
 
                 <div class="mt-5 flex flex-col sm:flex-row gap-3">
                     <button type="submit" name="action" value="submit"
-                            class="flex-1 bg-[#E85C24] hover:bg-[#d04a15] text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all text-sm uppercase tracking-wider">
+                            class="flex-1 bg-brand hover:bg-brand-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all text-sm uppercase tracking-wider">
                         <i class="fas {{ $hwIsSubmitted || $hwIsRework ? 'fa-rotate' : 'fa-paper-plane' }} mr-2"></i>
                         {{ $hwIsSubmitted ? 'Обновить работу' : ($hwIsRework ? 'Отправить снова' : 'Отправить на проверку') }}
                     </button>

@@ -10,7 +10,7 @@
     <h2 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#101010] mb-5 tracking-tight">
         {{ $data['title'] ?? 'Для кого этот курс' }}
     </h2>
-    <div class="w-20 h-1.5 bg-[#E85C24] mx-auto rounded-full"></div>
+    <div class="w-20 h-1.5 bg-brand mx-auto rounded-full"></div>
 </div>
 
         @if(!empty($data['items']))
@@ -20,7 +20,7 @@
             
             @foreach($data['items'] as $item)
                 {{-- ПРЕМИУМ-КАРТОЧКА --}}
-                <div class="relative bg-white rounded-[2rem] p-8 md:p-10 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(232,92,36,0.08)] hover:border-[#E85C24]/30 hover:-translate-y-2 transition-all duration-500 group flex flex-col h-full overflow-hidden">
+                <div class="relative bg-white rounded-[2rem] p-8 md:p-10 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(232,92,36,0.08)] hover:border-brand/30 hover:-translate-y-2 transition-all duration-500 group flex flex-col h-full overflow-hidden">
                     
                     {{-- Декоративный градиентный уголок (появляется при наведении) --}}
                     <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-orange-50 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0"></div>
@@ -28,7 +28,7 @@
                     {{-- Верхняя часть: Иконка и крупный номер --}}
                     <div class="mb-8 flex items-start justify-between relative z-10">
                         {{-- Иконка (Меняет цвет при наведении) --}}
-                        <div class="w-14 h-14 rounded-2xl bg-gray-50 group-hover:bg-[#E85C24] group-hover:shadow-[0_8px_20px_rgba(232,92,36,0.3)] transition-all duration-500 flex items-center justify-center border border-gray-100 group-hover:border-[#E85C24] shrink-0">
+                        <div class="w-14 h-14 rounded-2xl bg-gray-50 group-hover:bg-brand group-hover:shadow-[0_8px_20px_rgba(232,92,36,0.3)] transition-all duration-500 flex items-center justify-center border border-gray-100 group-hover:border-brand shrink-0">
                             <svg class="w-6 h-6 text-gray-400 group-hover:text-white transition-colors duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                             </svg>
@@ -42,7 +42,7 @@
 
                     {{-- Заголовок карточки --}}
                     @if(!empty($item['title']))
-                        <h3 class="text-xl md:text-2xl font-extrabold text-[#101010] mb-4 leading-snug group-hover:text-[#E85C24] transition-colors relative z-10">
+                        <h3 class="text-xl md:text-2xl font-extrabold text-[#101010] mb-4 leading-snug group-hover:text-brand transition-colors relative z-10">
                             {{ $item['title'] }}
                         </h3>
                     @endif

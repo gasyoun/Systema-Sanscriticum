@@ -26,7 +26,7 @@
                               class="inline-block mt-1.5">
                             @csrf
                             <button type="submit"
-                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#E85C24] hover:bg-[#d04a15] text-white text-[11px] font-bold">
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand hover:bg-brand-hover text-white text-[11px] font-bold">
                                 {{ $finding['action_label'] ?? 'Открыть оплаченные блоки' }}
                             </button>
                         </form>
@@ -42,7 +42,7 @@
                         </a>
                     @elseif ($action === 'check_payment' || $action === 'pay_debt')
                         <a href="{{ route('student.access') }}"
-                           class="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg border border-amber-300 bg-white text-amber-900 text-[11px] font-bold hover:border-[#E85C24]">
+                           class="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg border border-amber-300 bg-white text-amber-900 text-[11px] font-bold hover:border-brand">
                             {{ $finding['action_label'] ?? 'К оплате' }}
                         </a>
                     @elseif ($action === 'call_curator')

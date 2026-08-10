@@ -32,7 +32,7 @@
 
             <div class="flex items-center justify-between px-6 py-4 border-b border-[#1F2636]">
                 <h3 class="text-lg font-bold flex items-center gap-2">
-                    <i class="fas fa-bookmark text-[#E85C24]"></i>
+                    <i class="fas fa-bookmark text-brand"></i>
                     Забронировать курс
                 </h3>
                 <button type="button" x-on:click="open = false"
@@ -46,7 +46,7 @@
 
                 <p class="text-sm text-slate-400 leading-relaxed">
                     Бронируете курс <span class="font-bold text-white" x-text="courseTitle"></span>.
-                    Сумма <span class="font-bold text-[#E85C24]"><span x-text="amountFormatted"></span> ₽</span>
+                    Сумма <span class="font-bold text-brand"><span x-text="amountFormatted"></span> ₽</span>
                     будет зачтена в стоимость тарифа при последующей оплате.
                 </p>
 
@@ -66,14 +66,14 @@
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Имя</label>
                         <input type="text" name="name" required maxlength="255"
                                placeholder="Как к вам обращаться"
-                               class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] py-3 px-4 transition">
+                               class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-brand focus:ring-1 focus:ring-brand py-3 px-4 transition">
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Email</label>
                         <input type="email" name="email" required maxlength="255"
                                placeholder="you@example.com"
-                               class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] py-3 px-4 transition">
+                               class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-brand focus:ring-1 focus:ring-brand py-3 px-4 transition">
                     </div>
 
                     <p class="text-[11px] text-slate-500 leading-relaxed">
@@ -82,7 +82,7 @@
                 @endguest
 
                 <button type="submit"
-                        class="w-full flex justify-center items-center py-3.5 px-4 bg-[#E85C24] hover:bg-[#d64e1c] text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-[#E85C24]/20">
+                        class="w-full flex justify-center items-center py-3.5 px-4 bg-brand hover:bg-brand-hover text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-brand/20">
                     <i class="fas fa-credit-card mr-2"></i>
                     Оплатить <span class="ml-1" x-text="amountFormatted"></span>&nbsp;₽
                 </button>

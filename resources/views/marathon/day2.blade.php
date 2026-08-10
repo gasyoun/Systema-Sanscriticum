@@ -10,7 +10,7 @@
 <div class="max-w-2xl mx-auto py-12 px-4">
 
     <div class="text-center mb-8">
-        <p class="text-xs font-black uppercase tracking-widest text-[#E85C24] mb-2">День 2 из 3</p>
+        <p class="text-xs font-black uppercase tracking-widest text-brand mb-2">День 2 из 3</p>
         <h1 class="text-2xl md:text-3xl font-black text-[#1A1A1A]">Как устроено санскритское слово</h1>
     </div>
 
@@ -66,7 +66,7 @@
                                 class="text-left px-5 py-4 rounded-xl border font-semibold transition-all"
                                 :class="answered
                                     ? (i === step.correct ? 'border-green-400 bg-green-50 text-green-800' : (i === picked ? 'border-red-300 bg-red-50 text-red-700' : 'border-gray-200 text-gray-400'))
-                                    : 'border-gray-200 hover:border-[#E85C24]/60 hover:bg-[#E85C24]/5 text-gray-700 cursor-pointer'"
+                                    : 'border-gray-200 hover:border-brand/60 hover:bg-brand/5 text-gray-700 cursor-pointer'"
                                 x-text="opt"></button>
                     </template>
                 </div>
@@ -74,7 +74,7 @@
                     <div>
                         <p class="text-sm text-gray-600 bg-gray-50 rounded-xl p-4 mb-4" x-text="step.explain"></p>
                         <button type="button" @click="next()"
-                                class="w-full px-6 py-3 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
+                                class="w-full px-6 py-3 bg-brand hover:bg-brand-hover text-white font-extrabold rounded-xl transition-colors">
                             <span x-text="isLast ? 'Дальше — вопрос к консультации' : 'Далее'"></span>
                         </button>
                     </div>
@@ -100,8 +100,8 @@
                     </p>
                     <textarea name="question" rows="3" maxlength="2000"
                               placeholder="Например: с чего мне начать — грамматика или чтение текстов?"
-                              class="w-full rounded-xl border-gray-200 focus:border-[#E85C24] focus:ring-[#E85C24] mb-4">{{ $enrollment->day2_question }}</textarea>
-                    <button type="submit" class="w-full px-6 py-3 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
+                              class="w-full rounded-xl border-gray-200 focus:border-brand focus:ring-brand mb-4">{{ $enrollment->day2_question }}</textarea>
+                    <button type="submit" class="w-full px-6 py-3 bg-brand hover:bg-brand-hover text-white font-extrabold rounded-xl transition-colors">
                         Завершить День 2
                     </button>
                 </div>

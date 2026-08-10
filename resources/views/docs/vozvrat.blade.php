@@ -12,7 +12,7 @@
 
         {{-- Хлебная крошка --}}
         <nav class="mb-6 text-sm text-gray-500">
-            <a href="{{ url('/') }}" class="hover:text-[#E85C24] transition-colors">Главная</a>
+            <a href="{{ url('/') }}" class="hover:text-brand transition-colors">Главная</a>
             <span class="mx-2 text-gray-300">/</span>
             <span class="text-gray-700">Возврат денег</span>
         </nav>
@@ -24,7 +24,7 @@
         <p class="text-gray-600 leading-relaxed mb-8">
             Вы можете отказаться от оплаченной услуги в любое время — и до начала, и после.
             Ниже — сколько вернется и как подать заявление. Условия дословно следуют
-            <a href="{{ route('docs.show', 'oferta') }}" class="text-[#E85C24] underline hover:no-underline">оферте</a>
+            <a href="{{ route('docs.show', 'oferta') }}" class="text-brand underline hover:no-underline">оферте</a>
             (раздел 11 и приложение №1 «О порядке возврата денежных средств»);
             при любом расхождении текст оферты имеет приоритет.
         </p>
@@ -86,7 +86,7 @@
 
         <p class="text-gray-700 leading-relaxed mb-3">
             Направьте заявление на
-            <a href="{{ $refundMailto }}" class="text-[#E85C24] underline hover:no-underline">rusamskrtam@yandex.ru</a>.
+            <a href="{{ $refundMailto }}" class="text-brand underline hover:no-underline">rusamskrtam@yandex.ru</a>.
             В заявлении укажите:
         </p>
         <ul class="list-disc pl-5 space-y-1 text-gray-700 leading-relaxed mb-6">
@@ -99,12 +99,12 @@
 
         <div class="flex flex-col sm:flex-row gap-3 mb-3">
             <a href="{{ $refundMailto }}"
-               class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#E85C24] text-white font-semibold hover:bg-[#d14e1a] transition-colors shadow-sm">
+               class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand text-white font-semibold hover:bg-brand-hover transition-colors shadow-sm">
                 <i class="fas fa-envelope"></i>
                 Написать заявление
             </a>
             <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener"
-               class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:border-[#E85C24] hover:text-[#E85C24] transition-colors">
+               class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:border-brand hover:text-brand transition-colors">
                 <i class="fab fa-telegram"></i>
                 Написать в Telegram
             </a>

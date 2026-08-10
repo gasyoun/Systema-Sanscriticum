@@ -4,7 +4,7 @@
 
         {{-- Шапка --}}
         <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-100 shrink-0">
-            <div class="w-10 h-10 rounded-xl bg-[#E85C24]/10 text-[#E85C24] flex items-center justify-center">
+            <div class="w-10 h-10 rounded-xl bg-brand/10 text-brand flex items-center justify-center">
                 <i class="fas fa-headset"></i>
             </div>
             <div>
@@ -50,10 +50,10 @@
         <form wire:submit="send" class="border-t border-gray-100 p-3 flex items-end gap-2 shrink-0">
             <textarea wire:model="newMessage" rows="1"
                       placeholder="Напишите сообщение..."
-                      class="flex-1 resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:bg-white focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] outline-none transition"
+                      class="flex-1 resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition"
                       x-data x-on:keydown.enter.prevent="$wire.send()"></textarea>
             <button type="submit"
-                    class="shrink-0 bg-[#E85C24] hover:bg-[#d04a15] text-white font-bold w-12 h-12 rounded-xl shadow transition-colors flex items-center justify-center"
+                    class="shrink-0 bg-brand hover:bg-brand-hover text-white font-bold w-12 h-12 rounded-xl shadow transition-colors flex items-center justify-center"
                     wire:loading.attr="disabled">
                 <i class="fas fa-paper-plane"></i>
             </button>

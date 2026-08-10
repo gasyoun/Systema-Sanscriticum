@@ -5,7 +5,7 @@
 @section('content')
 <div class="min-h-screen bg-[#0A0D14] text-white py-16 lg:py-24 relative overflow-hidden font-sans">
 
-    <div class="absolute top-0 right-1/4 w-96 h-96 bg-[#E85C24]/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute top-0 right-1/4 w-96 h-96 bg-brand/10 rounded-full blur-[120px] pointer-events-none"></div>
     <div class="absolute bottom-1/3 left-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none"></div>
 
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10"
@@ -37,8 +37,8 @@
                                 @click="filter = '{{ $key }}'"
                                 class="px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer"
                                 :class="filter === '{{ $key }}'
-                                    ? 'bg-[#E85C24] border-[#E85C24] text-white shadow-[0_0_15px_rgba(232,92,36,0.3)]'
-                                    : 'bg-[#111622] border-[#1F2636] text-slate-300 hover:border-[#E85C24]/50 hover:text-white'">
+                                    ? 'bg-brand border-brand text-white shadow-[0_0_15px_rgba(232,92,36,0.3)]'
+                                    : 'bg-[#111622] border-[#1F2636] text-slate-300 hover:border-brand/50 hover:text-white'">
                             {{ $chip['label'] }}
                             <span class="ml-1 opacity-60">{{ $chip['count'] }}</span>
                         </button>
@@ -59,7 +59,7 @@
                         };
                     @endphp
 
-                    <div class="flex flex-col bg-[#111622] rounded-2xl border border-[#1F2636] hover:border-[#E85C24]/50 hover:shadow-[0_0_30px_rgba(232,92,36,0.05)] transition-all duration-300 group overflow-hidden"
+                    <div class="flex flex-col bg-[#111622] rounded-2xl border border-[#1F2636] hover:border-brand/50 hover:shadow-[0_0_30px_rgba(232,92,36,0.05)] transition-all duration-300 group overflow-hidden"
                          x-show="filter === 'all' || filter === '{{ $card['type'] }}'"
                          data-analytics="materials-card">
 
@@ -94,7 +94,7 @@
 
                             @if($card['type'] === 'video')
                                 <div class="absolute inset-0 flex items-center justify-center bg-transparent group-hover:bg-black/30 transition-colors">
-                                    <span class="w-12 h-12 rounded-full bg-[#E85C24] flex items-center justify-center shadow-[0_0_25px_rgba(232,92,36,0.55)] transform transition-transform group-hover:scale-110">
+                                    <span class="w-12 h-12 rounded-full bg-brand flex items-center justify-center shadow-[0_0_25px_rgba(232,92,36,0.55)] transform transition-transform group-hover:scale-110">
                                         <svg class="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                                     </span>
                                 </div>
@@ -110,7 +110,7 @@
                             @endif
 
                             <a href="{{ $card['url'] }}" @if($card['external']) target="_blank" rel="noopener noreferrer" @endif class="block">
-                                <h2 class="text-lg font-bold text-white leading-tight line-clamp-2 group-hover:text-[#E85C24] transition-colors mb-2">
+                                <h2 class="text-lg font-bold text-white leading-tight line-clamp-2 group-hover:text-brand transition-colors mb-2">
                                     {{ $card['title'] }}
                                 </h2>
                             </a>
@@ -122,7 +122,7 @@
                             {{-- Воронка: основное действие + funnel-CTA --}}
                             <div class="mt-auto pt-4 border-t border-[#1F2636]/60 flex items-center justify-between gap-3">
                                 <a href="{{ $card['url'] }}" @if($card['external']) target="_blank" rel="noopener noreferrer" @endif
-                                   class="text-xs font-bold text-white hover:text-[#E85C24] transition-colors">
+                                   class="text-xs font-bold text-white hover:text-brand transition-colors">
                                     {{ $card['type'] === 'text' ? 'Читать' : 'Смотреть' }} →
                                 </a>
                                 <a href="{{ $card['cta']['url'] }}"
@@ -140,7 +140,7 @@
                 <i class="fas fa-book-open text-3xl text-slate-600 mb-4"></i>
                 <p class="text-slate-400 mb-6">Раздел наполняется — бесплатные статьи и уроки появятся здесь совсем скоро.</p>
                 <a href="{{ route('shop.index') }}"
-                   class="inline-flex items-center gap-2 px-6 py-3 bg-[#E85C24] hover:bg-[#E85C24]/85 text-white text-sm font-bold rounded-xl transition-all">
+                   class="inline-flex items-center gap-2 px-6 py-3 bg-brand hover:bg-brand/85 text-white text-sm font-bold rounded-xl transition-all">
                     Смотреть курсы <i class="fas fa-arrow-right"></i>
                 </a>
             </div>

@@ -51,7 +51,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                             <div class="min-w-0">
                                 <h3 class="font-extrabold text-[#101010] text-lg">
-                                    <a href="{{ route('student.course', $card->course->slug) }}" class="hover:text-[#E85C24]">
+                                    <a href="{{ route('student.course', $card->course->slug) }}" class="hover:text-brand">
                                         {{ $card->course->title }}
                                     </a>
                                 </h3>
@@ -69,7 +69,7 @@
 
                                 @if ($card->total_lessons > 0)
                                     <div class="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden max-w-xs">
-                                        <div class="h-full bg-[#E85C24] rounded-full" style="width: {{ $card->percent }}%"></div>
+                                        <div class="h-full bg-brand rounded-full" style="width: {{ $card->percent }}%"></div>
                                     </div>
                                 @endif
 
@@ -80,7 +80,7 @@
                                             @php $done = in_array($lesson->id, $card->completed_ids, true); @endphp
                                             <a href="{{ route('student.lesson', [$card->course->slug, $lesson->id]) }}"
                                                class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-extrabold border
-                                                    {{ $done ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-white text-gray-500 border-gray-200 hover:border-[#E85C24] hover:text-[#E85C24]' }}"
+                                                    {{ $done ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-white text-gray-500 border-gray-200 hover:border-brand hover:text-brand' }}"
                                                title="{{ $lesson->title }}"
                                                data-track-event="library.rail.jump"
                                                data-track-course_id="{{ $card->course->id }}"
@@ -94,8 +94,8 @@
                             <a href="{{ $card->cta_url }}"
                                class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
                                     {{ $key === RecordingsCatalog::SHELF_LAPSED
-                                        ? 'bg-[#E85C24] text-white hover:bg-[#d04a15]'
-                                        : 'border border-gray-200 text-gray-700 hover:border-[#E85C24] hover:text-[#E85C24]' }}">
+                                        ? 'bg-brand text-white hover:bg-brand-hover'
+                                        : 'border border-gray-200 text-gray-700 hover:border-brand hover:text-brand' }}">
                                 {{ $card->cta_label }}
                             </a>
                         </div>

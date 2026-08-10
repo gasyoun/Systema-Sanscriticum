@@ -16,7 +16,7 @@
 --}}
 @php($srsAdd = $srsAdd ?? false)
 <header class="text-center mb-10">
-    <h1 class="text-3xl md:text-4xl font-extrabold text-[#E85C24] tracking-tight">{{ $pack['title'] }}</h1>
+    <h1 class="text-3xl md:text-4xl font-extrabold text-brand tracking-tight">{{ $pack['title'] }}</h1>
     <p class="mt-2 text-gray-400 text-sm">{{ $pack['ref'] }} · {{ $pack['text_name'] }} · {{ $pack['source'] }}</p>
     <p class="mt-3 text-gray-500 text-xs">
         <b class="text-gray-300">{{ $pack['stats']['sentences'] }}</b> предложений ·
@@ -31,8 +31,8 @@
     {{-- H2107 — student progress panel: opt-in, same $srsAdd gate as the add-to-SRS button. --}}
     @if($srsAdd)
         <p class="mt-3 text-gray-500 text-xs">
-            Разобрано слов: <b class="text-[#E85C24]">{{ $lookup_percent ?? 0 }}%</b> ·
-            в колоде: <b class="text-[#E85C24]">{{ $unique_lemmas ?? 0 }}</b> лемм
+            Разобрано слов: <b class="text-brand">{{ $lookup_percent ?? 0 }}%</b> ·
+            в колоде: <b class="text-brand">{{ $unique_lemmas ?? 0 }}</b> лемм
         </p>
     @endif
 </header>
@@ -41,7 +41,7 @@
     @php($srsWord = session('reading_srs_word'))
     <div class="max-w-3xl mx-auto mb-8">
         <div class="rounded-2xl border px-5 py-4 text-sm
-            @if(session('reading_srs_status') === 'added') border-[#E85C24]/50 bg-[#1d1410] text-gray-200
+            @if(session('reading_srs_status') === 'added') border-brand/50 bg-[#1d1410] text-gray-200
             @else border-gray-700/60 bg-[#161b28] text-gray-400 @endif">
             @if(session('reading_srs_status') === 'added')
                 Слово <b lang="sa-Latn">{{ $srsWord }}</b> добавлено в вашу колоду «Старт чтения».
@@ -65,7 +65,7 @@
                 <h2 class="text-sm font-black uppercase tracking-widest text-gray-500">Сложность текста</h2>
                 <span class="text-xs text-gray-500">№{{ $difficulty['order'] }} из {{ count($rankedPacks) }} оцененных — от простого к сложному</span>
             </div>
-            <div class="text-2xl font-extrabold text-[#E85C24]">{{ number_format($difficulty['difficulty'], 3) }}</div>
+            <div class="text-2xl font-extrabold text-brand">{{ number_format($difficulty['difficulty'], 3) }}</div>
             <div class="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-gray-400">
                 <div>лексика <b class="text-gray-200">{{ number_format($difficulty['vocab'], 2) }}</b></div>
                 <div>сандхи <b class="text-gray-200">{{ number_format($difficulty['sandhi'], 2) }}</b></div>
@@ -93,7 +93,7 @@
                             data-lookup-token="{{ $loop->index }}"
                         @endif
                     >
-                        <summary class="inline-block cursor-pointer px-1.5 py-0.5 rounded-md bg-gray-800/70 text-gray-100 hover:bg-gray-700 hover:text-[#E85C24] transition-colors marker:content-none [&::-webkit-details-marker]:hidden">{{ $token['form'] }}</summary>
+                        <summary class="inline-block cursor-pointer px-1.5 py-0.5 rounded-md bg-gray-800/70 text-gray-100 hover:bg-gray-700 hover:text-brand transition-colors marker:content-none [&::-webkit-details-marker]:hidden">{{ $token['form'] }}</summary>
                         <div class="mt-1 mb-2 text-xs font-sans normal-case tracking-normal text-gray-400 bg-[#0f1420] rounded-lg px-3 py-2 inline-block">
                             <span class="text-gray-300 font-semibold" lang="sa-Latn">{{ $token['lemma'] }}</span>
                             @if(!empty($token['morph']))
@@ -112,7 +112,7 @@
                                     @csrf
                                     <input type="hidden" name="sentence" value="{{ $sentenceIndex }}">
                                     <input type="hidden" name="token" value="{{ $loop->index }}">
-                                    <button type="submit" class="text-xs px-2 py-1 rounded-md border border-gray-600 text-gray-300 hover:border-[#E85C24] hover:text-[#E85C24] transition-colors">
+                                    <button type="submit" class="text-xs px-2 py-1 rounded-md border border-gray-600 text-gray-300 hover:border-brand hover:text-brand transition-colors">
                                         + в колоду
                                     </button>
                                 </form>
@@ -134,11 +134,11 @@
         </p>
         <ol class="space-y-1.5">
             @foreach($rankedPacks as $row)
-                <li class="flex items-baseline justify-between gap-4 px-3 py-2 rounded-lg {{ ($row['slug'] ?? null) === ($pack['slug'] ?? null) ? 'bg-[#161b28] border border-[#E85C24]/40' : 'bg-[#12151f]' }}">
+                <li class="flex items-baseline justify-between gap-4 px-3 py-2 rounded-lg {{ ($row['slug'] ?? null) === ($pack['slug'] ?? null) ? 'bg-[#161b28] border border-brand/40' : 'bg-[#12151f]' }}">
                     <span class="text-gray-300 text-sm">
                         <span class="text-gray-600 mr-2">{{ $row['order'] }}.</span>{{ $row['title'] }}
                         @if(($row['slug'] ?? null) === ($pack['slug'] ?? null))
-                            <span class="text-[#E85C24] text-xs ml-1">(эта страница)</span>
+                            <span class="text-brand text-xs ml-1">(эта страница)</span>
                         @endif
                     </span>
                     <span class="text-gray-500 text-xs shrink-0">{{ number_format($row['difficulty'], 3) }}</span>

@@ -5,7 +5,7 @@
 @section('content')
 <div class="min-h-screen bg-[#0A0D14] text-white py-16 lg:py-24 relative overflow-hidden font-sans">
 
-    <div class="absolute top-0 left-1/4 w-96 h-96 bg-[#E85C24]/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-brand/10 rounded-full blur-[120px] pointer-events-none"></div>
     <div class="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none"></div>
 
     <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
@@ -29,7 +29,7 @@
                 </a>
                 {{-- Лесенка цен (H1293): общесайтовые цены видны с первого экрана --}}
                 <a href="#ceny"
-                   class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#E85C24]/60 hover:bg-[#E85C24]/5 text-[#E85C24] text-sm font-bold rounded-xl transition-all">
+                   class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-brand/60 hover:bg-brand/5 text-brand text-sm font-bold rounded-xl transition-all">
                     <i class="fas fa-ruble-sign"></i>
                     Как устроены цены
                 </a>

@@ -90,10 +90,10 @@
                         <label class="flex items-start gap-3 text-left p-3 sm:p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                             <div class="flex items-center h-5 mt-0.5 shrink-0">
                                 {{-- Исправлено: x-model теперь совпадает с переменной x-data (agreedForm) --}}
-                                <input type="checkbox" x-model="agreedForm" class="w-5 h-5 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer transition-colors">
+                                <input type="checkbox" x-model="agreedForm" class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                             </div>
                             <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
-                                Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
+                                Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
                             </div>
                         </label>
 
@@ -104,10 +104,10 @@
                                 <input type="checkbox" 
                                        name="is_promo_agreed" 
                                        x-model="agreedPromo" 
-                                       class="w-5 h-5 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer transition-colors">
+                                       class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                             </div>
                             <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
-                                Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие</span> на получение рассылки
+                                Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на получение рассылки
                             </div>
                         </label>
                     </div>
@@ -116,7 +116,7 @@
                     {{-- Блокируется, если agreedForm == false --}}
                     <button type="submit" 
                             :disabled="!agreedForm"
-                            :class="agreedForm ? 'bg-[#E85C24] hover:bg-[#d04a15] transform hover:-translate-y-0.5 shadow-lg shadow-orange-900/20 text-white cursor-pointer' : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'"
+                            :class="agreedForm ? 'bg-brand hover:bg-brand-hover transform hover:-translate-y-0.5 shadow-lg shadow-orange-900/20 text-white cursor-pointer' : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'"
                             class="w-full font-extrabold py-4 rounded-xl transition-all duration-300 text-base uppercase tracking-wider mt-4">
                         {{ $data['button_text'] ?? 'ЗАПИСАТЬСЯ' }}
                     </button>

@@ -150,13 +150,13 @@
 
     {{-- Счётчик дней до вебинара — на уровне надзаголовочной плашки, слева от формы --}}
     @if($daysLeft !== null)
-        <div class="absolute top-6 lg:top-14 right-4 lg:right-[440px] xl:right-[480px] z-30 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-sm border border-[#E85C24]/20"
+        <div class="absolute top-6 lg:top-14 right-4 lg:right-[440px] xl:right-[480px] z-30 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-sm border border-brand/20"
              style="box-shadow: 0 4px 16px rgba(232,92,36,.12);">
             <span class="relative flex h-2 w-2 shrink-0">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E85C24] opacity-60"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-[#E85C24]"></span>
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-60"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
             </span>
-            <span class="text-[11px] md:text-xs font-extrabold uppercase tracking-wider text-[#E85C24] whitespace-nowrap">
+            <span class="text-[11px] md:text-xs font-extrabold uppercase tracking-wider text-brand whitespace-nowrap">
                 Осталось {{ $daysLeft }} {{ \App\Support\Plural::ru($daysLeft, 'день', 'дня', 'дней') }}
             </span>
         </div>
@@ -312,7 +312,7 @@
                         $consentRaw = $data['min_consent_note'] ?? 'Нажимая кнопку, вы соглашаетесь с {link}. Ссылку пришлем в Telegram — спросим контакт после.';
                         // {link} → кликабельная «политика конфиденциальности». e() экранирует
                         // пользовательский текст ДО подстановки служебного span — XSS-safe.
-                        $privacyLink = '<span @click.prevent.stop="viewDocument(\'Политика конфиденциальности\', \'/docs/privacy.pdf\')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>';
+                        $privacyLink = '<span @click.prevent.stop="viewDocument(\'Политика конфиденциальности\', \'/docs/privacy.pdf\')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>';
                         $consentHtml = nl2br(str_replace('{link}', $privacyLink, e($consentRaw)));
                     @endphp
                     <div>
@@ -327,7 +327,7 @@
                     </div>
 
                     <button type="submit"
-                            class="w-full font-extrabold py-3.5 rounded-xl bg-[#E85C24] hover:bg-[#d04a15] text-white transform hover:-translate-y-0.5 shadow-lg shadow-orange-900/20 transition-all duration-300 text-sm uppercase tracking-wider">
+                            class="w-full font-extrabold py-3.5 rounded-xl bg-brand hover:bg-brand-hover text-white transform hover:-translate-y-0.5 shadow-lg shadow-orange-900/20 transition-all duration-300 text-sm uppercase tracking-wider">
                         {{ $data['min_button_text'] ?? 'Занять бесплатное место →' }}
                     </button>
 
@@ -335,7 +335,7 @@
 
                     @if(!empty($data['min_tg_label']))
                         <div class="pt-1">
-                            <label class="block text-[11px] leading-snug text-[#d04a15] font-semibold mb-1.5 px-1">{{ $data['min_tg_label'] }}</label>
+                            <label class="block text-[11px] leading-snug text-brand-hover font-semibold mb-1.5 px-1">{{ $data['min_tg_label'] }}</label>
                             <input type="text" name="social" maxlength="255" value="{{ old('social') }}"
                                    placeholder="{{ $data['min_tg_placeholder'] ?? '@username' }}"
                                    class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E3122C] focus:ring-2 focus:ring-[#E3122C]/20 outline-none transition text-sm">
@@ -360,9 +360,9 @@
                 
                 <div>
     @if(!empty($data['social_gift_note']))
-        <div class="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl bg-[#E85C24]/5 border border-[#E85C24]/15">
+        <div class="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl bg-brand/5 border border-brand/15">
             <span class="text-base leading-none">🎁</span>
-            <span class="text-[11px] leading-snug text-[#d04a15] font-semibold">{{ $data['social_gift_note'] }}</span>
+            <span class="text-[11px] leading-snug text-brand-hover font-semibold">{{ $data['social_gift_note'] }}</span>
         </div>
     @endif
     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1">
@@ -378,25 +378,25 @@
                 <div class="space-y-2 pt-0">
                     <label class="flex items-start gap-3 text-left p-2.5 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                         <div class="flex items-center h-5 mt-px shrink-0">
-                            <input type="checkbox" x-model="agreedForm" class="w-4 h-4 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer transition-colors">
+                            <input type="checkbox" x-model="agreedForm" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                         </div>
                         <div class="text-xs text-gray-500 leading-relaxed select-none group-hover:text-gray-800 transition">
-                            Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
+                            Я даю <span @click.prevent.stop="viewDocument('Согласие на обработку персональных данных', '/docs/soglasie-pd.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на обработку моих персональных данных в соответствии с <span @click.prevent.stop="viewDocument('Политика конфиденциальности', '/docs/privacy.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">политикой конфиденциальности</span>
                         </div>
                     </label>
                     <label class="flex items-start gap-3 text-left p-2.5 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100 group">
                         <div class="flex items-center h-5 mt-px shrink-0">
-                            <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-4 h-4 rounded border-gray-300 text-[#E85C24] focus:ring-[#E85C24] cursor-pointer transition-colors">
+                            <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                         </div>
                         <div class="text-xs text-gray-500 leading-relaxed select-none group-hover:text-gray-800 transition">
-                            Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-[#E85C24] hover:text-[#d04a15] hover:underline font-semibold cursor-pointer">согласие</span> на получение рассылки
+                            Я даю <span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие</span> на получение рассылки
                         </div>
                     </label>
                 </div>
  
                 <button type="submit"
                         :disabled="!agreedForm"
-                        :class="agreedForm ? 'bg-[#E85C24] hover:bg-[#d04a15] transform hover:-translate-y-0.5 shadow-lg shadow-orange-900/20 text-white cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
+                        :class="agreedForm ? 'bg-brand hover:bg-brand-hover transform hover:-translate-y-0.5 shadow-lg shadow-orange-900/20 text-white cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'"
                         class="w-full font-extrabold py-3 rounded-xl transition-all duration-300 text-sm uppercase tracking-wider mt-1">
                     {{ $data['submit_text'] ?? $data['button_text'] ?? 'ЗАПИСАТЬСЯ' }}
                 </button>

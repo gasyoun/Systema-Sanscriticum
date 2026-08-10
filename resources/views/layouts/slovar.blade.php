@@ -43,7 +43,7 @@
 
     <footer class="mt-20 pt-10 border-t border-gray-800 text-center flex flex-col items-center container mx-auto px-4 max-w-5xl">
         <div class="mt-2 flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium">
-            @include('partials.footer-docs', ['linkClass' => 'text-gray-400 hover:text-[#E85C24] transition-colors'])
+            @include('partials.footer-docs', ['linkClass' => 'text-gray-400 hover:text-brand transition-colors'])
         </div>
         <p class="mt-6 text-sm text-gray-600">
             &copy; {{ date('Y') }} Общество ревнителей санскрита. Все права защищены.

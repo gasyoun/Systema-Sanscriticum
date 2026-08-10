@@ -10,7 +10,7 @@
     $showDeposit = $deposit?->deposit_enabled && $courseDepositAmount > 0 && ! $hasAnyPurchased;
 @endphp
 
-<div class="relative flex flex-col bg-[#111622] rounded-2xl border border-[#1F2636] hover:border-[#E85C24]/50 hover:shadow-[0_0_30px_rgba(232,92,36,0.05)] transition-all duration-300 group">
+<div class="relative flex flex-col bg-[#111622] rounded-2xl border border-[#1F2636] hover:border-brand/50 hover:shadow-[0_0_30px_rgba(232,92,36,0.05)] transition-all duration-300 group">
 
     {{-- ============================================ --}}
     {{-- ОБЛОЖКА                                        --}}
@@ -80,7 +80,7 @@
         @if($course->lessons_count || $course->hours_count)
             <div class="absolute bottom-3 left-3 z-20 flex items-center gap-1.5">
                 @if($course->lessons_count)
-                    <span class="inline-flex items-center gap-1.5 bg-[#E85C24] text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(232,92,36,0.5)] tracking-wider">
+                    <span class="inline-flex items-center gap-1.5 bg-brand text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(232,92,36,0.5)] tracking-wider">
                         <i class="fas fa-play-circle text-[9px]"></i>
                         {{-- НЕ trans_choice: при app.locale='en' он даёт «5 лекции» — русские формы через Plural::ru --}}
                         {{ $course->lessons_count }} {{ \App\Support\Plural::ru($course->lessons_count, 'лекция', 'лекции', 'лекций') }}
@@ -115,7 +115,7 @@
                                 @class([
                                     'text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded cursor-pointer transition-opacity hover:opacity-75',
                                     'ring-1 ring-inset ring-white/20' => $catActive,
-                                    'bg-[#E85C24] text-white' => $catActive && !$cat->color,
+                                    'bg-brand text-white' => $catActive && !$cat->color,
                                     'bg-[#1F2636] text-slate-300' => !$catActive && !$cat->color,
                                 ])
                                 @if($cat->color)
@@ -138,7 +138,7 @@
             </div>
 
             <a href="{{ route('shop.course.show', $course->slug) }}" class="block">
-                <h2 class="text-xl font-bold text-white mb-3 leading-tight group-hover:text-[#E85C24] transition-colors">
+                <h2 class="text-xl font-bold text-white mb-3 leading-tight group-hover:text-brand transition-colors">
                     {{ $course->title }}
                 </h2>
             </a>
@@ -229,7 +229,7 @@
                 @endif
 
                 <a href="{{ route('shop.course.show', $course->slug) }}#tariffs"
-                   class="flex justify-center items-center w-full py-3 px-4 bg-[#1F2636] hover:bg-[#E85C24] text-white text-xs font-bold rounded-xl transition-all duration-300 group/btn shadow-md hover:shadow-[0_0_15px_rgba(232,92,36,0.4)] hover:-translate-y-0.5">
+                   class="flex justify-center items-center w-full py-3 px-4 bg-[#1F2636] hover:bg-brand text-white text-xs font-bold rounded-xl transition-all duration-300 group/btn shadow-md hover:shadow-[0_0_15px_rgba(232,92,36,0.4)] hover:-translate-y-0.5">
                     Выбрать тариф
                     <i class="fas fa-arrow-right ml-2 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all duration-300"></i>
                 </a>
@@ -237,7 +237,7 @@
                 @if($showDeposit)
                     <button type="button"
                             onclick="window.dispatchEvent(new CustomEvent('open-deposit-modal', { detail: { action: @js(route('deposit.create', $course->slug)), title: @js($course->title), amount: {{ $courseDepositAmount }} } }))"
-                            class="mt-2 flex justify-center items-center w-full py-2.5 px-4 bg-transparent border border-[#E85C24]/40 hover:border-[#E85C24] hover:bg-[#E85C24]/10 text-[#E85C24] text-[11px] font-bold rounded-xl transition-all">
+                            class="mt-2 flex justify-center items-center w-full py-2.5 px-4 bg-transparent border border-brand/40 hover:border-brand hover:bg-brand/10 text-brand text-[11px] font-bold rounded-xl transition-all">
                         <i class="fas fa-bookmark mr-2 text-[10px]"></i>
                         Забронировать за {{ number_format($courseDepositAmount, 0, '.', ' ') }} ₽
                     </button>

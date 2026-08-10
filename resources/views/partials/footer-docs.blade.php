@@ -16,7 +16,7 @@
         })
         ->values();
 
-    $linkClass = $linkClass ?? 'text-gray-500 hover:text-[#E85C24] transition-colors';
+    $linkClass = $linkClass ?? 'text-gray-500 hover:text-brand transition-colors';
 @endphp
 
 @foreach ($files as $slug)

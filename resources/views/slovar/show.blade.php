@@ -29,7 +29,7 @@
         @if($primary->devanagari)
             <div class="deva text-6xl md:text-7xl text-white mb-3 leading-none">{{ $primary->devanagari }}</div>
         @endif
-        <h1 class="text-3xl md:text-4xl font-extrabold text-[#E85C24] tracking-tight">{{ $headword }}</h1>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-brand tracking-tight">{{ $headword }}</h1>
         <div class="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-gray-400 text-sm">
             @if($primary->iast)<span>IAST: <span lang="sa-Latn">{{ $primary->iast }}</span></span>@endif
             @if($primary->cyrillic)<span>кириллица: {{ $primary->cyrillic }}</span>@endif
@@ -101,7 +101,7 @@
     @endif
 
     <div class="max-w-3xl mx-auto mt-14 pt-8 border-t border-gray-800">
-        <a href="{{ route('slovar.index') }}" class="text-sm font-bold text-gray-400 hover:text-[#E85C24] transition-colors">
+        <a href="{{ route('slovar.index') }}" class="text-sm font-bold text-gray-400 hover:text-brand transition-colors">
             <i class="fas fa-arrow-left mr-2"></i> Ко всем словам
         </a>
     </div>

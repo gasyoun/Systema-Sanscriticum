@@ -30,14 +30,14 @@
                 <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Email</label>
                 <input type="email" x-ref="emailInput" x-model="form.email" required autocomplete="email"
                        placeholder="you@example.com"
-                       class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] py-3 px-4 transition">
+                       class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-brand focus:ring-1 focus:ring-brand py-3 px-4 transition">
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">Пароль</label>
                 <input type="password" x-model="form.password" required autocomplete="current-password"
                        placeholder="••••••••"
-                       class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-[#E85C24] focus:ring-1 focus:ring-[#E85C24] py-3 px-4 transition">
+                       class="block w-full rounded-xl bg-[#0A0D14] border border-[#1F2636] text-white placeholder-slate-600 focus:border-brand focus:ring-1 focus:ring-brand py-3 px-4 transition">
             </div>
 
             <template x-if="error">
@@ -47,12 +47,12 @@
 
             <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer select-none">
                 <input type="checkbox" x-model="form.remember"
-                       class="rounded border-[#1F2636] bg-[#0A0D14] text-[#E85C24] focus:ring-[#E85C24]">
+                       class="rounded border-[#1F2636] bg-[#0A0D14] text-brand focus:ring-brand">
                 Запомнить меня
             </label>
 
             <button type="submit" x-bind:disabled="loading"
-                    class="w-full flex justify-center items-center py-3.5 px-4 bg-[#E85C24] hover:bg-[#d64e1c] disabled:opacity-60 disabled:cursor-not-allowed text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-[#E85C24]/20">
+                    class="w-full flex justify-center items-center py-3.5 px-4 bg-brand hover:bg-brand-hover disabled:opacity-60 disabled:cursor-not-allowed text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-brand/20">
                 <span x-show="!loading">Войти</span>
                 <span x-show="loading" x-cloak>
                     <i class="fas fa-spinner fa-spin mr-2"></i> Входим...

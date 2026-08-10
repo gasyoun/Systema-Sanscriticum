@@ -119,7 +119,7 @@ window.sendGoal = function(goalName) {
         @yield('content')
 
         {{-- ═══════════════ ФУТЕР ═══════════════ --}}
-        <footer class="bg-[#F2EBE1] border-t border-[#E85C24]/10 text-gray-600 py-10 md:py-14 mt-20">
+        <footer class="bg-[#F2EBE1] border-t border-brand/10 text-gray-600 py-10 md:py-14 mt-20">
             <div class="container mx-auto px-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center text-center md:text-left">
 
@@ -134,7 +134,7 @@ window.sendGoal = function(goalName) {
                         </div>
 
                         <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium mb-4">
-                            @include('partials.footer-docs', ['linkClass' => 'text-gray-500 hover:text-[#E85C24] transition-colors duration-300'])
+                            @include('partials.footer-docs', ['linkClass' => 'text-gray-500 hover:text-brand transition-colors duration-300'])
                         </div>
 
                         <p class="text-gray-400 text-[13px] md:text-sm">
@@ -148,11 +148,11 @@ window.sendGoal = function(goalName) {
 
                     <div class="flex justify-center md:justify-end gap-4">
                         <a href="https://vk.com/samskrtamru" target="_blank" rel="noopener noreferrer"
-                           class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-[#E85C24]/20 text-[#E85C24] hover:bg-[#E85C24] hover:text-white hover:border-[#E85C24] shadow-sm hover:shadow-md transition-all duration-300 group">
+                           class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-brand/20 text-brand hover:bg-brand hover:text-white hover:border-brand shadow-sm hover:shadow-md transition-all duration-300 group">
                             <i class="fab fa-vk text-xl group-hover:scale-110 transition-transform"></i>
                         </a>
                         <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer"
-                           class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-[#E85C24]/20 text-[#E85C24] hover:bg-[#E85C24] hover:text-white hover:border-[#E85C24] shadow-sm hover:shadow-md transition-all duration-300 group">
+                           class="w-12 h-12 flex items-center justify-center rounded-full bg-white border border-brand/20 text-brand hover:bg-brand hover:text-white hover:border-brand shadow-sm hover:shadow-md transition-all duration-300 group">
                             <i class="fab fa-telegram-plane text-xl group-hover:scale-110 transition-transform"></i>
                         </a>
                     </div>

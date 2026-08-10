@@ -18,14 +18,14 @@
                 <input id="dictSearchInput"
                        wire:model.live.debounce.300ms="search" 
                        type="text" 
-                       class="block w-full pl-11 pr-4 py-3.5 bg-gray-50 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all text-base font-medium" 
+                       class="block w-full pl-11 pr-4 py-3.5 bg-gray-50 border-transparent rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all text-base font-medium" 
                        placeholder="Ищите деванагари, IAST, кириллицей или переводом: सत्य, satya, сатья, истина">
             </div>
 
             {{-- Фильтр --}}
             <div class="w-full md:w-64 shrink-0">
                 <select wire:model.live="dictionary_id" 
-                        class="block w-full px-4 py-3.5 bg-gray-50 border-transparent rounded-xl text-gray-700 focus:bg-white focus:border-[#E85C24] focus:ring-2 focus:ring-[#E85C24]/20 transition-all font-medium appearance-none cursor-pointer">
+                        class="block w-full px-4 py-3.5 bg-gray-50 border-transparent rounded-xl text-gray-700 focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all font-medium appearance-none cursor-pointer">
                     <option value="all">📚 Все словари</option>
                     @foreach($dictionaries as $dict)
                         <option value="{{ $dict->id }}">{{ $dict->name }}</option>
@@ -35,10 +35,10 @@
 
             {{-- Переключатель вида --}}
             <div class="hidden md:flex bg-gray-50 p-1 rounded-xl shrink-0">
-                <button @click="viewMode = 'list'; localStorage.setItem('dictionaryViewMode', 'list')" :class="viewMode === 'list' ? 'bg-white shadow-sm text-[#E85C24]' : 'text-gray-400 hover:text-gray-600'" class="px-4 py-2.5 rounded-lg transition-all">
+                <button @click="viewMode = 'list'; localStorage.setItem('dictionaryViewMode', 'list')" :class="viewMode === 'list' ? 'bg-white shadow-sm text-brand' : 'text-gray-400 hover:text-gray-600'" class="px-4 py-2.5 rounded-lg transition-all">
                     <i class="fas fa-list"></i>
                 </button>
-                <button @click="viewMode = 'grid'; localStorage.setItem('dictionaryViewMode', 'grid')" :class="viewMode === 'grid' ? 'bg-white shadow-sm text-[#E85C24]' : 'text-gray-400 hover:text-gray-600'" class="px-4 py-2.5 rounded-lg transition-all">
+                <button @click="viewMode = 'grid'; localStorage.setItem('dictionaryViewMode', 'grid')" :class="viewMode === 'grid' ? 'bg-white shadow-sm text-brand' : 'text-gray-400 hover:text-gray-600'" class="px-4 py-2.5 rounded-lg transition-all">
                     <i class="fas fa-border-all"></i>
                 </button>
             </div>
@@ -50,7 +50,7 @@
             @foreach(['ā','ī','ū','ṛ','ṝ','ḷ','ḹ','ṭ','ḍ','ṇ','ś','ṣ','ṃ','ḥ','ñ','ṅ'] as $char)
                 <button type="button" 
                         onclick="insertSanskritChar('{{ $char }}')" 
-                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 border border-gray-200 text-gray-700 font-medium hover:bg-[#E85C24] hover:text-white hover:border-[#E85C24] hover:shadow-md transition-all text-sm active:scale-95">
+                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-50 border border-gray-200 text-gray-700 font-medium hover:bg-brand hover:text-white hover:border-brand hover:shadow-md transition-all text-sm active:scale-95">
                     {{ $char }}
                 </button>
             @endforeach
@@ -65,13 +65,13 @@
                 if (empty(trim($search))) return nl2br(e($text)); 
                 $term = preg_quote(trim($search), '/');
                 $escaped = e($text);
-                $highlighted = preg_replace("/($term)/iu", "<mark class='bg-[#E85C24]/20 text-[#E85C24] font-bold rounded px-1'>$1</mark>", $escaped);
+                $highlighted = preg_replace("/($term)/iu", "<mark class='bg-brand/20 text-brand font-bold rounded px-1'>$1</mark>", $escaped);
                 return nl2br($highlighted);
             };
         @endphp
 
         <div wire:loading.flex style="display: none;" class="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 rounded-2xl items-start justify-center pt-12">
-            <div class="animate-spin rounded-full h-12 w-12 border-4 border-gray-100 border-t-[#E85C24]"></div>
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-gray-100 border-t-brand"></div>
         </div>
 
         <div :class="viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'">
@@ -79,7 +79,7 @@
             @forelse($words as $word)
                 <div wire:key="word-{{ $word->id }}"
                      onclick="openSanskritModal('{{ $word->id }}')" 
-                     class="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 hover:border-[#E85C24]/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer flex flex-col"
+                     class="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 hover:border-brand/30 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer flex flex-col"
                      :class="viewMode === 'list' ? 'md:flex-row md:items-center gap-6' : 'gap-4'">
                     
                     {{-- БАЗА ДАННЫХ КАРТОЧКИ --}}
@@ -166,7 +166,7 @@
             </button>
 
             <div class="bg-gray-50 p-8 sm:p-10 text-center relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-40 h-40 bg-[#E85C24]/10 blur-3xl rounded-full -mr-10 -mt-10 pointer-events-none"></div>
+                <div class="absolute top-0 right-0 w-40 h-40 bg-brand/10 blur-3xl rounded-full -mr-10 -mt-10 pointer-events-none"></div>
                 
                 <h2 id="modal-deva-title" class="text-6xl sm:text-7xl font-bold text-[#E3122C] mb-6 font-sanskrit relative z-10"></h2>
                 
@@ -192,7 +192,7 @@
                     <button onclick="playSanskritAudio(window.currentModalAudioText)" class="px-5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold rounded-xl transition-colors flex items-center">
                         <i class="fas fa-volume-up mr-2"></i> Слушать
                     </button>
-                    <button onclick="copySanskritText(window.currentModalCopyText, this)" class="px-5 py-2.5 bg-[#E85C24]/10 hover:bg-[#E85C24]/20 text-[#E85C24] font-bold rounded-xl transition-colors flex items-center w-[160px] justify-center">
+                    <button onclick="copySanskritText(window.currentModalCopyText, this)" class="px-5 py-2.5 bg-brand/10 hover:bg-brand/20 text-brand font-bold rounded-xl transition-colors flex items-center w-[160px] justify-center">
                         <i class="fas fa-copy mr-2"></i>
                         <span>Копировать</span>
                     </button>

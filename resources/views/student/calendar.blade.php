@@ -13,7 +13,7 @@
         <p class="text-gray-500 text-lg">
             Ваш личный календарь предстоящих вебинаров и онлайн-встреч.
         </p>
-        <div class="w-16 h-1.5 bg-[#E85C24] rounded-full mt-4"></div>
+        <div class="w-16 h-1.5 bg-brand rounded-full mt-4"></div>
         @if(session('attendance_notice_status'))
             <p class="mt-3 text-sm font-semibold text-green-700 bg-green-50 border border-green-100 rounded-xl px-3 py-2">
                 {{ session('attendance_notice_status') }}
@@ -25,7 +25,7 @@
     <div class="mb-8 bg-white rounded-2xl border border-gray-100 p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
         <div class="flex-1 min-w-0">
             <p class="font-bold text-[#101010] text-sm md:text-base mb-1">
-                <i class="far fa-calendar-plus text-[#E85C24] mr-1.5"></i>
+                <i class="far fa-calendar-plus text-brand mr-1.5"></i>
                 Подписаться на расписание в своем календаре
             </p>
             <p class="text-gray-500 text-xs md:text-sm">
@@ -37,7 +37,7 @@
         </div>
         <div class="flex flex-col sm:flex-row gap-2 shrink-0">
             <a href="{{ $webcalUrl }}"
-               class="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#E85C24] hover:bg-[#d6501f] text-white text-xs md:text-sm font-extrabold rounded-xl transition-all uppercase tracking-wide whitespace-nowrap">
+               class="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-brand hover:bg-[#d6501f] text-white text-xs md:text-sm font-extrabold rounded-xl transition-all uppercase tracking-wide whitespace-nowrap">
                 <i class="far fa-calendar-plus"></i>
                 Добавить в календарь
             </a>
@@ -51,7 +51,7 @@
                   onsubmit="return confirm('Старая ссылка перестанет работать. Продолжить?');">
                 @csrf
                 <button type="submit"
-                        class="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500 hover:text-[#E85C24] text-xs md:text-sm font-bold rounded-xl transition-all whitespace-nowrap w-full">
+                        class="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500 hover:text-brand text-xs md:text-sm font-bold rounded-xl transition-all whitespace-nowrap w-full">
                     <i class="fas fa-rotate"></i>
                     Обновить ссылку
                 </button>
@@ -67,7 +67,7 @@
                 {{-- Разделитель даты --}}
                 <div class="flex items-center gap-4 mb-5">
                     <div class="bg-[#101010] text-white px-4 py-1.5 rounded-lg text-sm font-extrabold tracking-widest uppercase shadow-sm flex items-center">
-                        <i class="far fa-calendar-alt text-[#E85C24] mr-2 text-base"></i>
+                        <i class="far fa-calendar-alt text-brand mr-2 text-base"></i>
                         {{ $date }}
                     </div>
                     <div class="flex-1 h-px bg-gray-200"></div>
@@ -84,14 +84,14 @@
                         @endphp
 
                         {{-- Карточка --}}
-                        <div class="bg-white rounded-2xl border {{ $isLive ? 'border-[#E85C24]/60 shadow-[0_10px_30px_rgba(232,92,36,0.15)]' : 'border-gray-100' }} p-4 md:p-5 hover:shadow-[0_10px_25px_rgba(0,0,0,0.06)] hover:border-[#E85C24]/30 transition-all duration-300 group flex flex-col h-full relative overflow-hidden">
+                        <div class="bg-white rounded-2xl border {{ $isLive ? 'border-brand/60 shadow-[0_10px_30px_rgba(232,92,36,0.15)]' : 'border-gray-100' }} p-4 md:p-5 hover:shadow-[0_10px_25px_rgba(0,0,0,0.06)] hover:border-brand/30 transition-all duration-300 group flex flex-col h-full relative overflow-hidden">
 
                             {{-- Оранжевая линия слева (всегда видна, если LIVE) --}}
-                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#E85C24] {{ $isLive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100' }} transition-opacity duration-300"></div>
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-brand {{ $isLive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100' }} transition-opacity duration-300"></div>
 
                             {{-- Бейдж LIVE --}}
                             @if($isLive)
-                                <div class="absolute top-3 right-3 inline-flex items-center gap-1.5 bg-[#E85C24] text-white text-[10px] font-extrabold uppercase tracking-widest px-2 py-1 rounded-md shadow-md">
+                                <div class="absolute top-3 right-3 inline-flex items-center gap-1.5 bg-brand text-white text-[10px] font-extrabold uppercase tracking-widest px-2 py-1 rounded-md shadow-md">
                                     <span class="relative flex h-2 w-2">
                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                                         <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
@@ -102,7 +102,7 @@
 
                             {{-- Верхний ряд: Время и Тег курса --}}
                             <div class="flex justify-between items-start gap-2 mb-3 {{ $isLive ? 'pr-24' : '' }}">
-                                <div class="inline-flex items-center text-xs md:text-sm font-extrabold text-[#E85C24] bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100/50 shrink-0">
+                                <div class="inline-flex items-center text-xs md:text-sm font-extrabold text-brand bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100/50 shrink-0">
                                     <i class="far fa-clock mr-1.5"></i>
                                     {{ $start->format('H:i') }}
                                     <span class="opacity-50 mx-1">–</span>
@@ -118,7 +118,7 @@
                             </div>
 
                             {{-- Название --}}
-                            <h3 class="text-base md:text-lg font-bold text-[#101010] group-hover:text-[#E85C24] transition-colors leading-tight mb-2 line-clamp-2">
+                            <h3 class="text-base md:text-lg font-bold text-[#101010] group-hover:text-brand transition-colors leading-tight mb-2 line-clamp-2">
                                 {{ $event->title ?? ($event->course->title ?? 'Событие') }}
                             </h3>
 
@@ -139,7 +139,7 @@
                                        target="_blank"
                                        rel="noopener noreferrer"
                                        aria-label="Подключиться к занятию через Zoom"
-                                       class="flex items-center justify-center gap-2 w-full px-4 py-3 bg-[#E85C24] hover:bg-[#d6501f] text-white text-sm md:text-base font-extrabold rounded-xl transition-all shadow-[0_4px_12px_rgba(232,92,36,0.25)] hover:shadow-[0_8px_20px_rgba(232,92,36,0.4)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
+                                       class="flex items-center justify-center gap-2 w-full px-4 py-3 bg-brand hover:bg-[#d6501f] text-white text-sm md:text-base font-extrabold rounded-xl transition-all shadow-[0_4px_12px_rgba(232,92,36,0.25)] hover:shadow-[0_8px_20px_rgba(232,92,36,0.4)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
                                         <i class="fas fa-video text-base"></i>
                                         На занятие
                                         @if($isLive)
@@ -170,7 +170,7 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
-                                                            class="text-[11px] font-bold text-gray-500 hover:text-[#E85C24] underline-offset-2 hover:underline">
+                                                            class="text-[11px] font-bold text-gray-500 hover:text-brand underline-offset-2 hover:underline">
                                                         Снять
                                                     </button>
                                                 </form>
@@ -184,8 +184,8 @@
                                                     <button type="submit"
                                                             class="w-full px-2 py-2 text-[11px] md:text-xs font-bold rounded-lg border transition-all
                                                             {{ $myNotice && $myNotice->status === $opt['status']
-                                                                ? 'bg-[#E85C24] border-[#E85C24] text-white'
-                                                                : 'bg-white border-gray-200 text-gray-700 hover:border-[#E85C24]/50 hover:text-[#E85C24]' }}">
+                                                                ? 'bg-brand border-brand text-white'
+                                                                : 'bg-white border-gray-200 text-gray-700 hover:border-brand/50 hover:text-brand' }}">
                                                         {{ $opt['emoji'] }} {{ $opt['short'] }}
                                                     </button>
                                                 </form>
@@ -197,7 +197,7 @@
                                 @if($event->course)
                                     {{-- Кнопка к материалам курса --}}
                                     <a href="{{ route('student.course', $event->course->slug) }}"
-                                       class="flex items-center justify-center gap-1.5 w-full px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 hover:text-[#E85C24] text-sm font-bold rounded-xl transition-all">
+                                       class="flex items-center justify-center gap-1.5 w-full px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 hover:text-brand text-sm font-bold rounded-xl transition-all">
                                         <i class="fas fa-book-open text-xs opacity-70"></i>
                                         Материалы курса
                                         <i class="fas fa-arrow-right ml-1 text-xs opacity-70"></i>
@@ -220,7 +220,7 @@
             {{-- ПУСТОЕ СОСТОЯНИЕ --}}
             <div class="text-center py-16 bg-white rounded-[2rem] border border-dashed border-gray-200 shadow-sm mt-8 max-w-2xl mx-auto">
                 <div class="bg-orange-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-5">
-                    <i class="far fa-calendar-times text-3xl text-[#E85C24]"></i>
+                    <i class="far fa-calendar-times text-3xl text-brand"></i>
                 </div>
                 <h3 class="text-2xl font-extrabold text-[#101010] mb-2">Нет предстоящих занятий</h3>
                 <p class="text-gray-500 text-base max-w-sm mx-auto">

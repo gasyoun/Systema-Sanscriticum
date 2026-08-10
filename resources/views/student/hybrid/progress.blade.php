@@ -33,7 +33,7 @@
                 $status = $station->status ?? GrammarLadder::STATUS_LOCKED;
                 $border = match ($status) {
                     GrammarLadder::STATUS_COMPLETED => 'border-emerald-200 bg-emerald-50/50',
-                    GrammarLadder::STATUS_CURRENT => 'border-[#E85C24]/40 bg-orange-50/40',
+                    GrammarLadder::STATUS_CURRENT => 'border-brand/40 bg-orange-50/40',
                     GrammarLadder::STATUS_AVAILABLE => 'border-gray-100 bg-white',
                     default => 'border-gray-100 bg-gray-50 opacity-80',
                 };
@@ -53,7 +53,7 @@
                             Станция {{ $i + 1 }}
                             <span class="ml-2 inline-flex px-2 py-0.5 rounded-full text-[10px] font-extrabold
                                 {{ $status === GrammarLadder::STATUS_COMPLETED ? 'bg-emerald-100 text-emerald-800' : '' }}
-                                {{ $status === GrammarLadder::STATUS_CURRENT ? 'bg-orange-100 text-[#E85C24]' : '' }}
+                                {{ $status === GrammarLadder::STATUS_CURRENT ? 'bg-orange-100 text-brand' : '' }}
                                 {{ $status === GrammarLadder::STATUS_LOCKED ? 'bg-gray-200 text-gray-600' : '' }}
                                 {{ $status === GrammarLadder::STATUS_AVAILABLE ? 'bg-indigo-50 text-indigo-700' : '' }}">
                                 {{ $badge[1] }}
@@ -73,7 +73,7 @@
                             </p>
                             @if ($station->has_access && $station->total_lessons > 0)
                                 <div class="mt-2 h-2 bg-white rounded-full overflow-hidden max-w-xs border border-gray-100">
-                                    <div class="h-full bg-[#E85C24] rounded-full" style="width: {{ $station->percent }}%"></div>
+                                    <div class="h-full bg-brand rounded-full" style="width: {{ $station->percent }}%"></div>
                                 </div>
                             @endif
                         @else
@@ -82,12 +82,12 @@
                     </div>
                     @if ($station->course && $station->has_access)
                         <a href="{{ route('student.course', $station->course->slug) }}"
-                           class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:border-[#E85C24] hover:text-[#E85C24]">
+                           class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:border-brand hover:text-brand">
                             Открыть
                         </a>
                     @elseif ($station->course)
                         <a href="{{ route('shop.course.show', $station->course->slug) }}"
-                           class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:border-[#E85C24] hover:text-[#E85C24]">
+                           class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:border-brand hover:text-brand">
                             На витрине
                         </a>
                     @endif
@@ -124,7 +124,7 @@
                     <p class="text-xs text-gray-500 mt-1">выдан {{ $cert->created_at?->format('d.m.Y') }}</p>
                 </div>
                 <a href="{{ route('student.certificate.download', $cert->id) }}"
-                   class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold hover:border-[#E85C24] hover:text-[#E85C24]">
+                   class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold hover:border-brand hover:text-brand">
                     Скачать PDF
                 </a>
             </article>

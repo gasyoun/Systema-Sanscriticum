@@ -1,7 +1,7 @@
 <section class="py-12 lg:py-20 bg-[#F9FAFB] font-nunito relative overflow-hidden">
     
     {{-- Скрытый фоновый блик --}}
-    <div class="absolute top-0 right-0 w-[40rem] h-[40rem] bg-[#E85C24]/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
+    <div class="absolute top-0 right-0 w-[40rem] h-[40rem] bg-brand/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
 
     <div class="container mx-auto px-4 relative z-10">
         
@@ -15,7 +15,7 @@
                     
     {{-- 1. БЛОК ФОТО --}}
     <div class="relative mb-10">
-        <div class="absolute top-4 left-4 w-full h-full border-2 border-[#E85C24]/30 rounded-[2.5rem] -z-0 translate-x-2 translate-y-2"></div>
+        <div class="absolute top-4 left-4 w-full h-full border-2 border-brand/30 rounded-[2.5rem] -z-0 translate-x-2 translate-y-2"></div>
         
         <div class="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] z-10 bg-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
             @php
@@ -34,7 +34,7 @@
         {{-- Мобильная плашка --}}
         <div class="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-white/50 text-center lg:hidden z-20">
             <h3 class="font-extrabold text-[#101010] text-xl">{{ $data['name'] ?? '' }}</h3>
-            <p class="text-[#E85C24] text-sm font-bold uppercase tracking-wider mt-1">{{ $data['role'] ?? '' }}</p>
+            <p class="text-brand text-sm font-bold uppercase tracking-wider mt-1">{{ $data['role'] ?? '' }}</p>
         </div>
     </div>
 
@@ -74,11 +74,11 @@
                         {{-- Текст --}}
                         <div class="w-full">
                             @if(!empty($pub['type']))
-                                <p class="text-[8px] md:text-[9px] font-extrabold uppercase tracking-widest text-[#E85C24] mb-1">
+                                <p class="text-[8px] md:text-[9px] font-extrabold uppercase tracking-widest text-brand mb-1">
                                     {{ $pub['type'] }}
                                 </p>
                             @endif
-                            <h4 class="text-xs md:text-sm font-bold text-[#101010] leading-snug transition-colors line-clamp-3 group-hover:text-[#E85C24]" title="{{ $pub['title'] ?? '' }}">
+                            <h4 class="text-xs md:text-sm font-bold text-[#101010] leading-snug transition-colors line-clamp-3 group-hover:text-brand" title="{{ $pub['title'] ?? '' }}">
                                 {{ $pub['title'] ?? '' }}
                             </h4>
                         </div>
@@ -97,10 +97,10 @@
                     
                     {{-- Шапка --}}
                     <div class="hidden lg:block mb-10">
-                        <span class="inline-flex items-center py-1.5 px-3.5 rounded-xl bg-orange-50 text-[#E85C24] font-extrabold text-[10px] uppercase tracking-widest mb-4 border border-orange-100/50">
+                        <span class="inline-flex items-center py-1.5 px-3.5 rounded-xl bg-orange-50 text-brand font-extrabold text-[10px] uppercase tracking-widest mb-4 border border-orange-100/50">
                             <span class="relative flex h-2 w-2 mr-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E85C24] opacity-50"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-[#E85C24]"></span>
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-50"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
                             </span>
                             Ваш наставник
                         </span>
@@ -114,11 +114,11 @@
                     @if(!empty($data['stats']))
                         <div class="flex flex-wrap gap-4 mb-10">
                             @foreach($data['stats'] as $stat)
-                                <div class="relative bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(232,92,36,0.08)] hover:border-[#E85C24]/30 transition-all duration-300 flex-1 min-w-[140px] group overflow-hidden">
+                                <div class="relative bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(232,92,36,0.08)] hover:border-brand/30 transition-all duration-300 flex-1 min-w-[140px] group overflow-hidden">
                                     <div class="absolute right-0 top-0 w-16 h-16 bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-bl-full -mr-4 -mt-4 transition-transform duration-500 group-hover:scale-[2.5] opacity-60 z-0"></div>
                                     
                                     <div class="relative z-10">
-                                        <div class="text-3xl lg:text-4xl font-black text-[#101010] mb-1 tracking-tighter group-hover:text-[#E85C24] transition-colors">
+                                        <div class="text-3xl lg:text-4xl font-black text-[#101010] mb-1 tracking-tighter group-hover:text-brand transition-colors">
                                             {{ $stat['value'] }}
                                         </div>
                                         <div class="text-[10px] md:text-[11px] text-gray-500 font-extrabold uppercase tracking-widest leading-snug">

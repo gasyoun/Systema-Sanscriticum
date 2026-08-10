@@ -104,10 +104,10 @@
         </div>
 
         {{-- Ступень 3: живой курс — блоками или целиком --}}
-        <div class="rounded-2xl bg-[#111622] border border-[#E85C24]/40 p-6 lg:p-8 md:flex md:items-start md:gap-8 relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-[#E85C24]/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="rounded-2xl bg-[#111622] border border-brand/40 p-6 lg:p-8 md:flex md:items-start md:gap-8 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-brand/15 rounded-full blur-3xl pointer-events-none"></div>
             <div class="md:w-64 shrink-0 mb-4 md:mb-0 relative">
-                <span class="text-[10px] font-black uppercase tracking-widest text-[#E85C24]">Живой курс</span>
+                <span class="text-[10px] font-black uppercase tracking-widest text-brand">Живой курс</span>
                 <h3 class="text-xl font-bold text-white mt-1">С преподавателем</h3>
                 @if ($ladder['minBlockPrice'])
                     <div class="text-sm font-bold text-white mt-2">от {{ number_format($ladder['minBlockPrice'], 0, '.', ' ') }} ₽ за блок</div>
@@ -128,7 +128,7 @@
                     </p>
                 @endif
                 <a href="{{ $ladder['catalogUrl'] }}?format=live"
-                   class="inline-flex items-center px-5 py-2.5 bg-[#E85C24] hover:bg-[#E85C24]/85 text-white text-xs font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(232,92,36,0.3)]">
+                   class="inline-flex items-center px-5 py-2.5 bg-brand hover:bg-brand/85 text-white text-xs font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(232,92,36,0.3)]">
                     Живые курсы
                 </a>
             </div>
