@@ -1,0 +1,130 @@
+# Laravel Dusk локально на Windows
+
+_Created: 10-08-2026 · Last updated: 10-08-2026_
+
+Как запустить браузерные тесты ([`tests/Browser/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/Browser)) на рабочей машине под Windows. Заведено в H2532; проверено на этой машине 10-08-2026.
+
+Dusk — **локальный инструмент**, в CI он не заводится: нужен живой HTTP-сервер и настоящий Chrome. Отдельное решение, не этот handoff.
+
+## Что стоит на машине (фактические версии на 10-08-2026)
+
+| Компонент | Версия | Откуда |
+|---|---|---|
+| Chrome | **150.0.7871.187** | `C:\Program Files\Google\Chrome\Application\chrome.exe` |
+| ChromeDriver | **150.0.7871.124** | поставлен `dusk:chrome-driver --detect` |
+| `laravel/dusk` | **v8.6.0** | мажор под `illuminate ^13.0` (проект на Laravel 13.24) |
+| PHP | 8.3.32 | `C:\php83\php.exe` |
+
+Мажор Dusk берётся по совместимости с Laravel, а не «самый свежий по привычке»: v8 — первый, объявляющий `illuminate/console ^13.0`.
+
+## Разовая настройка
+
+### 1. Пакет и каркас
+
+```
+php C:\php83\composer.phar install
+php C:\php83\composer.phar require --dev "laravel/dusk:^8.6"
+php C:\php83\composer.phar dump-autoload
+php artisan dusk:install
+```
+
+`dump-autoload` — не косметика: без него `php artisan dusk:install` падает с `Class "Laravel\Dusk\DuskServiceProvider" not found`, потому что пакет уже лежит в `vendor/`, но ещё не попал в `vendor/composer/autoload_psr4.php`.
+
+### 2. ChromeDriver (CA-сертификаты)
+
+У PHP на этой машине не задан ни `curl.cainfo`, ни `openssl.cafile`, поэтому скачивание драйвера падает с `cURL error 60: unable to get local issuer certificate`. Не правим глобальный `php.ini` — передаём бандл на один запуск:
+
+```
+php -d curl.cainfo="C:/Program Files/Git/usr/ssl/certs/ca-bundle.crt" ^
+    -d openssl.cafile="C:/Program Files/Git/usr/ssl/certs/ca-bundle.crt" ^
+    artisan dusk:chrome-driver --detect
+```
+
+`--detect` обязателен: при промахе мимо версии установленного Chrome тест падает на старте с `session not created`.
+
+### 3. `.env.dusk.local`
+
+Не в git (`.gitignore`: `.env.*.local`). Проще всего снять с рабочего `.env` и переопределить:
+
+```
+APP_ENV=local
+APP_URL=http://127.0.0.1:8010
+DB_CONNECTION=sqlite
+DB_DATABASE=C:/Users/<вы>/AppData/Local/Temp/dusk_systema.sqlite
+SESSION_DRIVER=file
+CACHE_DRIVER=file
+QUEUE_CONNECTION=sync
+MAIL_MAILER=array
+TELEGRAM_SUPPORT_ENABLED=false
+PULSE_ENABLED=false
+TELESCOPE_ENABLED=false
+SERVER_GUARDS_VERIFY=false
+CABINET_PROBE_CHECK_GUARDS=false
+```
+
+Почему именно так:
+
+- **Отдельная файловая БД.** Dusk гоняет по своей БД, не по БД продукта. `phpunit.xml` тут не годится в принципе: там SQLite `:memory:`, а браузер — отдельный процесс и в память тест-процесса не заглядывает.
+- **`SESSION_DRIVER=file`.** С `array` сессия не переживает редирект после логина — вход «не залипает».
+- **`APP_URL` совпадает с портом сервера.** Проект поднимается на `:8010`, Dusk по умолчанию ждёт `:8000`; рассинхрон даёт невнятные таймауты вместо ошибки.
+
+Прогнать миграции в эту БД:
+
+```
+php artisan migrate --env=dusk.local --force
+```
+
+### 4. Ассеты Filament
+
+ЛК преподавателя — это панель Filament, а `public/css/filament` и `public/js/filament` в git не хранятся (build-артефакты, см. `.gitignore`). Без них страница отдаёт 200 и **пустой белый экран**: HTML приходит, Alpine не стартует.
+
+```
+php artisan filament:assets
+```
+
+## Запуск
+
+Два окна. Первое — сервер (порт обязан совпасть с `APP_URL`):
+
+```
+php artisan serve --env=dusk.local --host=127.0.0.1 --port=8010
+```
+
+Второе — тесты:
+
+```
+php artisan dusk                                  # вся папка tests/Browser
+php artisan dusk tests/Browser/SmokeTest.php      # один файл
+```
+
+`Warning: TTY mode is not supported on Windows platform.` — ожидаемый шум, не ошибка.
+
+## Конфигурация
+
+`php artisan dusk` читает **`phpunit.dusk.xml`**, а не `phpunit.xml` — Dusk ищет его в `base_path()` сам. Поэтому конфигурация Feature-тестов не тронута, и трогать её не нужно.
+
+## Что уже проверено, не переоткрывать
+
+| Симптом | Причина | Что делать |
+|---|---|---|
+| `Class "Laravel\Dusk\DuskServiceProvider" not found` | автолоадер не пересобран | `composer dump-autoload` |
+| `cURL error 60` при `dusk:chrome-driver` | у PHP не задан CA-бандл | `-d curl.cainfo=...` на один запуск |
+| Страница пустая, белая, но HTTP 200 | не опубликованы ассеты Filament | `php artisan filament:assets` |
+| `session not created` | ChromeDriver ≠ версия Chrome | `dusk:chrome-driver --detect` |
+| Логин «не залипает», редирект на форму входа | `SESSION_DRIVER=array` | `file` в `.env.dusk.local` |
+| Непонятные таймауты на каждом `visit()` | `APP_URL` ≠ порт сервера | свести к одному порту |
+| `no such element: {"css selector":"body body"}` | `$browser->text('body')` — Dusk уже скоупится на `body` | не префиксовать селектор `body` |
+
+## Про сам smoke-тест
+
+[`tests/Browser/SmokeTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Browser/SmokeTest.php) логинится преподавателем через `loginAs()` и убеждается, что ЛК открылся.
+
+- **Отдельной панели преподавателя нет** — ЛК это Filament `/admin`; фейсконтроль в `User::canAccessPanel()`, ветка `default` пускает `isTeacher()`.
+- Панель редиректит `/admin` на первый доступный ресурс (у преподавателя — `/admin/lessons`), поэтому проверяется **префикс** пути.
+- **Якоря текстовые** (подписи навигации «Обучение», «Расписание»), не CSS-селекторы: редизайн ломает `nth-child`, а название раздела переживает.
+- **Имя пользователя якорем не годится** — Filament держит его в выпадающем меню аватара, в тексте страницы его нет.
+- `DatabaseTruncation`, не `RefreshDatabase`: транзакция последнего живёт в тест-процессе, браузер её не видит.
+
+Скриншотов гида этот тест не делает — это [H2502](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2502-Opus_Systema-Sanscriticum_teacher-guide-dusk-screenshots-w2_09.08.26.md), отдельная работа.
+
+_Dr. Mārcis Gasūns_
