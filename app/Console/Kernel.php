@@ -5,6 +5,7 @@ namespace App\Console;
 use App\Jobs\CloseStaleSessionsJob;
 use App\Jobs\PruneStaleVisitorPresencesJob;
 use App\Models\MarketingSetting;
+use App\Models\Season;
 use App\Support\ScheduleFailureSignal;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -243,6 +244,25 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('prana-decay');
+
+        // Сезон 1: старт 01.09.2026 00:00 MSK (UTC+3 → UTC 21:00 31.08)
+        $schedule->command('season:open 1')
+            ->cron('0 21 31 8 *')
+            ->onOneServer()
+            ->name('season-1-open');
+
+        // Сезон 1: закрытие 01.01.2027 00:00 MSK (UTC 21:00 31.12.2026)
+        $schedule->command('season:close 1')
+            ->cron('0 21 31 12 *')
+            ->onOneServer()
+            ->name('season-1-close');
+
+        // Пересчёт лидерборда каждые 4 часа в период сезона
+        $schedule->command('season:refresh-leaderboard')
+            ->everyFourHours()
+            ->when(fn () => Season::isActive())
+            ->onOneServer()
+            ->name('season-leaderboard-refresh');
 
         // Ежемесячный пост «сейчас идут курсы» в ВК/ТГ (через n8n-вебхук).
         $schedule->command('schedule:post-monthly')

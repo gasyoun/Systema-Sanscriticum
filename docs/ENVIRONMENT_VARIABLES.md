@@ -296,6 +296,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PRANA_DAILY_P2P_LIMIT` | optional | `30` | config/prana.php:12 |
 | `PRANA_DAILY_P2P_PER_USER` | optional | `10` | config/prana.php:13 |
 | `PRANA_DECAY_ENABLED` | feature-flag | `false` | config/prana.php:18 |
+| `PRANA_DECAY_FLOOR` | optional | `0` | config/prana.php:22 |
+| `PRANA_DECAY_FLOOR_MODE` | optional | `'rank_based'` | config/prana.php:21 |
 | `PRANA_DECAY_INACTIVE_DAYS` | optional | `30` | config/prana.php:19 |
 | `PRANA_DECAY_PERCENT` | optional | `10` | config/prana.php:20 |
 | `PROFIT_FUNDS_RESERVE_WARN_RATIO` | optional | `0.8` | config/profit_funds.php:64 |

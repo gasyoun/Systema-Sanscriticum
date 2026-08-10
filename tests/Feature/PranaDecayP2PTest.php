@@ -107,18 +107,83 @@ class PranaDecayP2PTest extends TestCase
     {
         config(['prana.decay.enabled' => true, 'prana.decay.inactive_days' => 30, 'prana.decay.percent' => 10]);
 
-        $inactive = $this->withBalance(100, lifetime: 100);
+        // H2553 §5.2 ввёл decay floor: при lifetime 100 (ранг Śiṣya) floor =
+        // 50% порога следующего ранга = 100. Прежняя фикстура (баланс 100)
+        // теперь целиком под floor и НЕ горит — это и есть смысл floor'а.
+        // Берём баланс выше floor, чтобы проверять то, что тест проверял всегда:
+        // неактивный горит, активный — нет. Клэмп сам покрыт тестом ниже.
+        $inactive = $this->withBalance(1000, lifetime: 100);
         $inactive->forceFill(['last_login_at' => now()->subDays(90), 'last_activity_at' => now()->subDays(60)])->save();
 
-        $active = $this->withBalance(100);
+        $active = $this->withBalance(1000);
         $active->forceFill(['last_login_at' => now()->subDays(90), 'last_activity_at' => now()->subHours(2)])->save();
 
         $affected = app(PranaService::class)->decayInactive();
 
         $this->assertSame(1, $affected);
-        $this->assertSame(90, (int) $inactive->fresh()->prana_balance);   // сожгли 10%
-        $this->assertSame(100, (int) $inactive->fresh()->lifetime_prana); // ранг не тронут
-        $this->assertSame(100, (int) $active->fresh()->prana_balance);    // активного не трогаем
+        $this->assertSame(900, (int) $inactive->fresh()->prana_balance);   // сожгли 10%
+        $this->assertSame(100, (int) $inactive->fresh()->lifetime_prana);  // ранг не тронут
+        $this->assertSame(1000, (int) $active->fresh()->prana_balance);    // активного не трогаем
+    }
+
+    /** @test */
+    public function decay_floor_clamps_the_burn_and_never_goes_below_it(): void
+    {
+        // H2553 §5.2: floor = 50% порога следующего ранга по lifetime_prana.
+        // lifetime 100 → ранг Śiṣya → следующий порог 200 → floor 100.
+        config(['prana.decay.enabled' => true, 'prana.decay.inactive_days' => 30, 'prana.decay.percent' => 10]);
+
+        // Баланс 105: обычные 10% сожгли бы 10 (→ 95), floor режет до 5 (→ 100).
+        $clamped = $this->withBalance(105, lifetime: 100);
+        $clamped->forceFill(['last_login_at' => now()->subDays(90), 'last_activity_at' => now()->subDays(60)])->save();
+
+        $this->assertSame(1, app(PranaService::class)->decayInactive());
+        $this->assertSame(100, (int) $clamped->fresh()->prana_balance);
+    }
+
+    /** @test */
+    public function decay_is_a_no_op_for_a_balance_already_at_or_below_the_floor(): void
+    {
+        config(['prana.decay.enabled' => true, 'prana.decay.inactive_days' => 30, 'prana.decay.percent' => 10]);
+
+        // Баланс 100 = floor для Śiṣya → жечь нечего, пользователь не в affected.
+        $atFloor = $this->withBalance(100, lifetime: 100);
+        $atFloor->forceFill(['last_login_at' => now()->subDays(90), 'last_activity_at' => now()->subDays(60)])->save();
+
+        $this->assertSame(0, app(PranaService::class)->decayInactive());
+        $this->assertSame(100, (int) $atFloor->fresh()->prana_balance);
+    }
+
+    /** @test */
+    public function top_rank_has_no_floor_and_decays_normally(): void
+    {
+        // Paṇḍita (lifetime ≥ 8000) — следующего ранга нет, floor = 0 (§5.2).
+        config(['prana.decay.enabled' => true, 'prana.decay.inactive_days' => 30, 'prana.decay.percent' => 10]);
+
+        $top = $this->withBalance(500, lifetime: 9000);
+        $top->forceFill(['last_login_at' => now()->subDays(90), 'last_activity_at' => now()->subDays(60)])->save();
+
+        $this->assertSame(1, app(PranaService::class)->decayInactive());
+        $this->assertSame(450, (int) $top->fresh()->prana_balance);
+    }
+
+    /** @test */
+    public function fixed_floor_mode_is_honoured(): void
+    {
+        config([
+            'prana.decay.enabled' => true,
+            'prana.decay.inactive_days' => 30,
+            'prana.decay.percent' => 10,
+            'prana.decay.floor_mode' => 'fixed',
+            'prana.decay.floor_fixed' => 480,
+        ]);
+
+        // Баланс 500, floor 480 → 10% (50) урезаны до 20.
+        $u = $this->withBalance(500, lifetime: 100);
+        $u->forceFill(['last_login_at' => now()->subDays(90), 'last_activity_at' => now()->subDays(60)])->save();
+
+        $this->assertSame(1, app(PranaService::class)->decayInactive());
+        $this->assertSame(480, (int) $u->fresh()->prana_balance);
     }
 
     /** @test */

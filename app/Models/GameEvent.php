@@ -4,14 +4,22 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Http\Controllers\Api\GameTelemetryController;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Одно анонимное событие воронки бесплатных тренажёров /lila (H1360).
+ * Одно событие воронки бесплатных тренажёров /lila (H1360).
  *
- * Append-only, без updated_at (как ActivityEvent). Никакого student-идентификатора,
- * ни IP, ни user-agent — только короткий anon_id с клиента (см. миграцию).
+ * Append-only, без updated_at (как ActivityEvent). Ни IP, ни user-agent —
+ * только короткий anon_id с клиента (см. миграцию).
+ *
+ * H2553 §1 (R4-2, авторизовано MG 10-08-2026) — добавлен nullable `user_id`,
+ * который отменяет прежний контракт «здесь вообще нет student-идентификатора»
+ * (H1360/H1678). Колонку заполняет ТОЛЬКО сервер из web-сессии
+ * ({@see GameTelemetryController::store}); аноним
+ * остаётся NULL, клиент этой колонкой не управляет. Нужен для метрики
+ * «сыграл → сдал ДЗ», которую флаг `authenticated` посчитать не может.
  */
 class GameEvent extends Model
 {
@@ -25,6 +33,8 @@ class GameEvent extends Model
         'event',
         'payload',
         'authenticated',
+        // H2553 §1 (R4-2): пишет только сервер из web-сессии, аноним -> NULL.
+        'user_id',
         'created_at',
     ];
 
@@ -91,13 +101,12 @@ class GameEvent extends Model
      * Play -> register KPI (H1678, locked D6/D10): among distinct anon_id
      * that clicked the register CTA in the window, the share that later
      * carries an `authenticated=true` event within 7 days of their first
-     * click. This is the guest -> user "merge" signal — deliberately
-     * computed from the existing `authenticated` flag rather than adding a
-     * `user_id` column, because `game_events` is intentionally kept
-     * outside the 152-FZ perimeter (no PII, see the create-table
-     * migration and `the_table_stores_no_ip_or_user_agent_by_design`):
-     * knowing THAT a guest later authenticated is enough for the KPI —
-     * WHO they are is not needed and must not be stored here.
+     * click. This KPI stays computed from the `authenticated` flag alone:
+     * knowing THAT a guest later authenticated is all it needs, so it must
+     * not start joining on `user_id` (added later by H2553 §1 for a
+     * different metric) — an anonymous clicker has NULL there, and using it
+     * here would silently drop exactly the pre-registration rows the rate
+     * is measuring. IP and user-agent remain absent by design (R20).
      *
      * @return array{clickers:int, registered:int, rate:?float, baseline_only:bool}
      */
