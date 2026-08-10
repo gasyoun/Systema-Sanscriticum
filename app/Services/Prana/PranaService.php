@@ -253,13 +253,22 @@ class PranaService
                 $q->whereNull('last_activity_at')->orWhere('last_activity_at', '<', $cutoff);
             })
             ->whereNotNull('last_login_at')
-            ->get(['id', 'prana_balance']);
+            ->get(['id', 'prana_balance', 'lifetime_prana']);
 
         $affected = 0;
         foreach ($users as $u) {
             $burn = (int) floor((int) $u->prana_balance * $percent / 100);
             if ($burn <= 0) {
                 continue;
+            }
+
+            // Decay floor: 50% от стоимости следующего ранга (§5.2)
+            $floor = $this->calculateDecayFloor($u->lifetime_prana, $cfg);
+            if ($u->prana_balance - $burn < $floor) {
+                $burn = max(0, $u->prana_balance - $floor);
+                if ($burn <= 0) {
+                    continue;
+                }
             }
 
             DB::transaction(function () use ($u, $burn) {
@@ -273,6 +282,35 @@ class PranaService
         }
 
         return $affected;
+    }
+
+    /**
+     * Вычисляет floor для decay по рангу пользователя.
+     * Возвращает 50% от порога следующего ранга (§5.2 PLAN_SYSTEMA_SEASON).
+     */
+    private function calculateDecayFloor(int $lifetimePrana, array $cfg): int
+    {
+        $mode = $cfg['floor_mode'] ?? 'rank_based';
+        if ($mode === 'fixed') {
+            return $cfg['floor_fixed'] ?? 0;
+        }
+
+        // rank_based: 50% от следующего ранга
+        $ranks = config('prana.ranks', []);
+        $nextThreshold = null;
+        foreach ($ranks as $rank) {
+            if ($lifetimePrana < $rank['min']) {
+                $nextThreshold = $rank['min'];
+                break;
+            }
+        }
+
+        // Для топ-ранга (Paṇḍita) — floor = 0
+        if ($nextThreshold === null) {
+            return 0;
+        }
+
+        return (int) floor($nextThreshold * 0.5);
     }
 
     /**

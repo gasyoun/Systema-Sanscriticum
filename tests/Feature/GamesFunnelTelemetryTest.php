@@ -54,11 +54,37 @@ class GamesFunnelTelemetryTest extends TestCase
     /** @test */
     public function the_table_stores_no_ip_or_user_agent_by_design(): void
     {
-        // Приватный контракт H1360: в game_events физически нет колонок для PII.
+        // Приватный контракт H1360 (в силе): ни IP, ни user-agent.
         $this->assertFalse(Schema::hasColumn('game_events', 'ip_address'));
         $this->assertFalse(Schema::hasColumn('game_events', 'ip'));
         $this->assertFalse(Schema::hasColumn('game_events', 'user_agent'));
-        $this->assertFalse(Schema::hasColumn('game_events', 'user_id'));
+    }
+
+    /** @test */
+    public function anonymous_hit_leaves_user_id_null(): void
+    {
+        // H2553 §1 сузил контракт: колонка user_id теперь ЕСТЬ (метрика
+        // «сыграл → сдал ДЗ»), но у анонима она обязана оставаться NULL.
+        $this->postJson(self::URL, [
+            'anon_id' => 'anon0003', 'drill' => 'roots', 'event' => 'start',
+        ])->assertNoContent();
+
+        $this->assertNull(GameEvent::first()->user_id);
+    }
+
+    /** @test */
+    public function user_id_is_taken_from_the_session_and_never_from_the_client(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        // Клиент пытается подделать чужой user_id — сервер его игнорирует.
+        $this->postJson(self::URL, [
+            'anon_id' => 'anon0004', 'drill' => 'roots', 'event' => 'complete',
+            'user_id' => 999999,
+        ])->assertNoContent();
+
+        $this->assertSame($user->id, GameEvent::first()->user_id);
     }
 
     /** @test */

@@ -18,6 +18,8 @@ return [
         'enabled' => (bool) env('PRANA_DECAY_ENABLED', false),
         'inactive_days' => (int) env('PRANA_DECAY_INACTIVE_DAYS', 30), // неактивен N+ дней
         'percent' => (int) env('PRANA_DECAY_PERCENT', 10),             // сжечь % баланса за прогон
+        'floor_mode' => env('PRANA_DECAY_FLOOR_MODE', 'rank_based'),
+        'floor_fixed' => (int) env('PRANA_DECAY_FLOOR', 0),
     ],
 
     // Сколько начислять за разные виды активности.
