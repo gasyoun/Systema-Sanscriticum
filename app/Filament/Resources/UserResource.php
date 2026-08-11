@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\HomeworkSubmission;
 use App\Models\ScheduledReminder;
 use App\Models\User;
+use App\Services\Access\LoginLinkNotifier;
 use App\Services\Access\StudentUnblockService;
 use App\Services\Prana\PranaService;
 use App\Services\StuckStudentsReport;
@@ -1070,24 +1071,28 @@ class UserResource extends Resource
                     ->tooltip('Разблокировать (ссылка для входа)')
                     ->visible(fn () => RoleGate::canIssueStudentLoginLink())
                     ->form([
+                        Toggle::make('send_email')
+                            ->label('Отправить ссылку на почту')
+                            ->helperText('Снимите, если у студента как раз сломана почта.')
+                            ->default(true),
+                        Toggle::make('send_messengers')
+                            ->label('Отправить ссылку в мессенджеры (Telegram / VK / Max)')
+                            ->helperText('Уйдёт в те каналы, которые привязаны к аккаунту.')
+                            ->default(true),
                         Toggle::make('reset_password')
                             ->label('Также сбросить пароль')
-                            ->helperText('Обычно не нужно: ссылка входит без пароля.')
+                            ->helperText('Обычно не нужно: ссылка входит без пароля. Пароль студенту не отправляется — передайте лично.')
                             ->default(false),
                     ])
                     ->modalHeading('Разблокировать студента?')
-                    ->modalDescription('Снимем троттл и создадим одноразовую ссылку для входа (24 ч), которую можно передать студенту напрямую — минуя почту.')
+                    ->modalDescription('Снимем троттл и создадим одноразовую ссылку для входа (24 ч): отправим её студенту сами, а копия останется у вас — на случай, если ни один канал не сработает.')
                     ->modalSubmitActionLabel('Разблокировать')
                     ->action(function (User $record, array $data) {
-                        $email = trim((string) $record->email);
-                        if (
-                            $email === ''
-                            || str_ends_with($email, '@no-email.com')
-                            || ! filter_var($email, FILTER_VALIDATE_EMAIL)
-                        ) {
+                        if (! LoginLinkNotifier::hasDeliverableEmail($record)) {
+                            $email = trim((string) $record->email);
                             Notification::make()
                                 ->title('Некорректный email')
-                                ->body("У студента невалидный адрес: «{$email}». Ссылка всё равно создана, но письмо ему не уйдёт — передайте ссылку вручную.")
+                                ->body("У студента невалидный адрес: «{$email}». Ссылка всё равно создана, но письмо ему не уйдёт — передайте ссылку вручную или мессенджером.")
                                 ->warning()
                                 ->send();
                         }
@@ -1095,13 +1100,21 @@ class UserResource extends Resource
                         $result = app(StudentUnblockService::class)
                             ->unblock($record, auth()->id(), (bool) ($data['reset_password'] ?? false));
 
-                        $body = "Одноразовая ссылка для входа (24 ч) — передайте студенту:\n{$result['login_link']}";
+                        $report = app(LoginLinkNotifier::class)->notify(
+                            $record,
+                            $result['login_link'],
+                            (bool) ($data['send_email'] ?? false),
+                            (bool) ($data['send_messengers'] ?? false),
+                        );
+
+                        $body = 'Доставка: '.LoginLinkNotifier::reportSummary($report);
+                        $body .= "\n\nОдноразовая ссылка для входа (24 ч) — если не дошла, передайте сами:\n{$result['login_link']}";
                         if ($result['password'] !== null) {
-                            $body .= "\n\nВременный пароль: {$result['password']}";
+                            $body .= "\n\nВременный пароль (студенту не отправлен): {$result['password']}";
                         }
 
                         Notification::make()
-                            ->title('Готово — скопируйте и передайте студенту')
+                            ->title('Готово — ссылка выдана')
                             ->body($body)
                             ->persistent()
                             ->success()
