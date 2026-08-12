@@ -169,6 +169,26 @@ jobs:
           python-version: "3.11"
       - run: python scripts/changelog_duplicate_bullets.py
 
+  teacher-guide-freshness:
+    name: Teacher guide — freshness warning
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    # Предупреждение, НЕ блокировка (H2501, решение R11): правка наблюдаемого
+    # файла бывает чисто внутренней и текста руководства не требует. Блок
+    # заставлял бы дописывать в документ пустую строку ради зелёного CI.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Warn when teacher-visible files moved without the guide
+        run: >-
+          git diff --name-only
+          ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+          | python scripts/teacher_guide_freshness.py
+
   yaml-lint:
     name: YAML lint
     runs-on: ubuntu-latest
