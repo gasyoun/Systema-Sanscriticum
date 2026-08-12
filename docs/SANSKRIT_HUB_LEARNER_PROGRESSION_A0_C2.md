@@ -1,6 +1,6 @@
 # Sanskrit-HUB — Learner Progression (A0 → C2)
 
-_Created: 10-07-2026 · Last updated: 01-08-2026_
+_Created: 10-07-2026 · Last updated: 12-08-2026_
 
 **Purpose.** A CEFR-shaped ladder for learning Sanskrit on
 [samskrtam.ru/sanskritHUB](https://samskrtam.ru/), where **every rung is powered by a real
@@ -28,6 +28,15 @@ write Devanāgarī → **A0 is Cyrillic-only**; script writing / recitation UGC 
 | **B2** | Classical text | Read epic prose/verse with grammar support | Read a Rāmāyaṇa sarga | RussianRamayana (H6), `corpus_lexicon` interlinear (A1), Samudra Manthanam (H4) |
 | **C1** | Vedic & commentary | Accented Vedic; follow a commentary | Read an RV hymn + its commentary | VedaWeb (M13), GRA, commentary apparatus, Whitney roots (B9–B11) |
 | **C2** | Scholar / lexicographer | Multi-dict philology, etymology, Skt-only defs | Write an evidence-graded gloss | CDSL all-dicts (G1), csl-atlas, etymology oracle (B7), SKD/VCP |
+
+**Проектирование с ИИ поверх этой лестницы:** какие интеллектуальные операции на какой
+ступени можно делегировать ИИ, а какие составляют сам осваиваемый результат, — в
+[ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md)
+(классы `constitutive` / `enabling` / `evidentiary` / `logistic` по ступеням, четыре функции
+оценивания F1–F4, санскритский слой). ⚠️ Проверено на данных лишь частично: замеры P0 и Q1
+шли на корпусе ДЗ **курса хинди**, поэтому санскритская привязка модели к этой лестнице
+пока не подтверждена — см.
+[VERIFICATION_AI_NATIVE_PEDAGOGICAL_DESIGN.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_AI_NATIVE_PEDAGOGICAL_DESIGN.md).
 
 **Paid cohort packaging (A0–B1):** the 5-week «Старт чтения» Akro-style pilot packages script → first continuous prose on Systema (Hitopadeśa-0 / subhāṣita interim). Register: [PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md). Distinct from the marathon 28-08 A0 diagnostic funnel.
 

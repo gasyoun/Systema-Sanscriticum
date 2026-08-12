@@ -1,6 +1,6 @@
 # Sanskrit-HUB — Asset → Pedagogy → NLP Use-Case Index
 
-_Created: 10-07-2026 · Last updated: 01-08-2026_
+_Created: 10-07-2026 · Last updated: 12-08-2026_
 
 **Purpose.** The single map that answers *"we already have asset X — what can a learner or an
 NLP developer actually DO with it on [samskrtam.ru/sanskritHUB](https://samskrtam.ru/)?"* Every
@@ -23,6 +23,16 @@ the layered picture is
 > [`Systema-Sanscriticum`](https://github.com/gasyoun/Systema-Sanscriticum). Model: **open core
 > + paid courses** — data, dictionaries and morphology API free (drives authority, SEO,
 > citations); revenue from the courses on top.
+
+---
+
+**Ограничение на делегирование ИИ поверх этих активов.** Где выход можно проверить
+детерминированным активом (`sanskrit-util`, словари CDSL, DCS, браузер парадигм), операция
+идёт **через актив, а не через языковую модель** — модель формулирует и объясняет, но не
+устанавливает факт языка. Правило и перечень режимов отказа (сандхи, морфология,
+транслитерация, перевод, этимология, ведийский акцент) — в
+[ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md) §5.
+Статус: сформулировано, **на санскритских данных не проверено**.
 
 ---
 
