@@ -1,0 +1,192 @@
+{
+    "generated_at": "2026-08-12T22:28:17+03:00",
+    "panel": "admin",
+    "teacher": {
+        "source": "fixture",
+        "role": "teacher",
+        "has_teacher_id": true
+    },
+    "total": 15,
+    "by_group": {
+        "Допматериалы": 3,
+        "Обучение": 11,
+        "Пользователи": 1
+    },
+    "items": [
+        {
+            "kind": "resource",
+            "group": "Допматериалы",
+            "label": "SRS — карточки",
+            "class": "App\\Filament\\Resources\\SrsCardResource",
+            "url": "http://localhost/admin/srs-cards"
+        },
+        {
+            "kind": "resource",
+            "group": "Допматериалы",
+            "label": "SRS — колоды",
+            "class": "App\\Filament\\Resources\\SrsDeckResource",
+            "url": "http://localhost/admin/srs-decks"
+        },
+        {
+            "kind": "resource",
+            "group": "Допматериалы",
+            "label": "Словарный Запас",
+            "class": "App\\Filament\\Resources\\DictionaryWordResource",
+            "url": "http://localhost/admin/dictionary-words"
+        },
+        {
+            "kind": "page",
+            "group": "Обучение",
+            "label": "Аналитика студентов",
+            "class": "App\\Filament\\Pages\\TeacherAnalytics",
+            "url": "http://localhost/admin/teacher-analytics"
+        },
+        {
+            "kind": "resource",
+            "group": "Обучение",
+            "label": "Библиотека курсов",
+            "class": "App\\Filament\\Resources\\CourseMaterialResource",
+            "url": "http://localhost/admin/course-materials"
+        },
+        {
+            "kind": "resource",
+            "group": "Обучение",
+            "label": "Домашние работы",
+            "class": "App\\Filament\\Resources\\HomeworkSubmissionResource",
+            "url": "http://localhost/admin/homework-submissions"
+        },
+        {
+            "kind": "page",
+            "group": "Обучение",
+            "label": "Календарь",
+            "class": "App\\Filament\\Pages\\CalendarPage",
+            "url": "http://localhost/admin/calendar-page"
+        },
+        {
+            "kind": "resource",
+            "group": "Обучение",
+            "label": "Курсы",
+            "class": "App\\Filament\\Resources\\CourseResource",
+            "url": "http://localhost/admin/courses"
+        },
+        {
+            "kind": "resource",
+            "group": "Обучение",
+            "label": "Мои ученики",
+            "class": "App\\Filament\\Resources\\StudentGroupResource",
+            "url": "http://localhost/admin/student-groups"
+        },
+        {
+            "kind": "page",
+            "group": "Обучение",
+            "label": "Нагрузка преподавателей",
+            "class": "App\\Filament\\Pages\\TeacherLoad",
+            "url": "http://localhost/admin/teacher-load"
+        },
+        {
+            "kind": "resource",
+            "group": "Обучение",
+            "label": "Расписание",
+            "class": "App\\Filament\\Resources\\ScheduleResource",
+            "url": "http://localhost/admin/schedules"
+        },
+        {
+            "kind": "page",
+            "group": "Обучение",
+            "label": "Руководство преподавателя",
+            "class": "App\\Filament\\Pages\\TeacherGuide",
+            "url": "http://localhost/admin/teacher-guide"
+        },
+        {
+            "kind": "page",
+            "group": "Обучение",
+            "label": "Старт чтения: застрявшие леммы",
+            "class": "App\\Filament\\Pages\\StartChteniyaStalledLemmas",
+            "url": "http://localhost/admin/start-chteniya-stalled-lemmas"
+        },
+        {
+            "kind": "resource",
+            "group": "Обучение",
+            "label": "Уроки",
+            "class": "App\\Filament\\Resources\\LessonResource",
+            "url": "http://localhost/admin/lessons"
+        },
+        {
+            "kind": "resource",
+            "group": "Пользователи",
+            "label": "Сертификаты",
+            "class": "App\\Filament\\Resources\\CertificateResource",
+            "url": "http://localhost/admin/certificates"
+        }
+    ],
+    "widgets": {
+        "dashboard_reachable": false,
+        "note": "Главная преподавателю недоступна (пункт меню скрыт либо срабатывает переадресация) — карточки ниже не отображаются, хотя их собственный гейт пропускает.",
+        "total": 9,
+        "items": [
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "AccountWidget",
+                "class": "Filament\\Widgets\\AccountWidget",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "FilamentInfoWidget",
+                "class": "Filament\\Widgets\\FilamentInfoWidget",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "DebtorsTotalWidget",
+                "class": "App\\Filament\\Widgets\\DebtorsTotalWidget",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "TeacherSalariesTotalWidget",
+                "class": "App\\Filament\\Widgets\\TeacherSalariesTotalWidget",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "StudentStatsOverview",
+                "class": "App\\Filament\\Widgets\\StudentStatsOverview",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "Нагрузка по направлениям",
+                "class": "App\\Filament\\Widgets\\TeacherLoadByDirectionChart",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "Выручка по курсам",
+                "class": "App\\Filament\\Widgets\\CourseEarningsChart",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "Скоро срок оплаты (7 дней)",
+                "class": "App\\Filament\\Widgets\\UpcomingPromisesWidget",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "Дисциплина по группам",
+                "class": "App\\Filament\\Widgets\\DisciplineByGroupWidget",
+                "url": null
+            }
+        ]
+    }
+}
