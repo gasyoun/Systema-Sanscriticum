@@ -150,8 +150,14 @@ class CourseDesignAccessTest extends TestCase
         Storage::disk('public')->assertExists($asset->path);
     }
 
-    /** @test */
-    public function the_upload_action_requires_the_psd_link(): void
+    /**
+     * Ссылка на исходник необязательна: картинку заливают раньше, чем дизайнер
+     * выложил PSD в облако, и требование ссылки блокировало загрузку баннера.
+     * Слот сохраняется, но исходник у него не учтён — сигнал остаётся.
+     *
+     * @test
+     */
+    public function the_upload_action_saves_a_slot_without_the_psd_link(): void
     {
         $course = Course::factory()->create(['is_active' => true]);
 
@@ -163,6 +169,30 @@ class CourseDesignAccessTest extends TestCase
                 'format' => '16:9',
                 'image' => [UploadedFile::fake()->image('b.jpg', 1600, 900)],
                 'psd_url' => '',
+            ])
+            ->assertHasNoTableActionErrors();
+
+        $asset = CourseDesignAsset::where('course_id', $course->id)->where('format', '16:9')->first();
+
+        $this->assertNotNull($asset, 'слот обязан появиться и без ссылки на исходник');
+        $this->assertNull($asset->psd_url);
+        $this->assertFalse($asset->hasPsd(), 'исходник не учтён — это и должно быть видно в интерфейсе');
+        Storage::disk('public')->assertExists($asset->path);
+    }
+
+    /** Невалидный URL по-прежнему отклоняется — необязательное поле не значит «любая строка». */
+    public function test_the_upload_action_still_rejects_a_malformed_psd_link(): void
+    {
+        $course = Course::factory()->create(['is_active' => true]);
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($this->user(Roles::MANAGER));
+
+        Livewire::test(CourseDesignAssets::class)
+            ->callTableAction('upload', $course, [
+                'format' => '16:9',
+                'image' => [UploadedFile::fake()->image('b.jpg', 1600, 900)],
+                'psd_url' => 'не-ссылка',
             ])
             ->assertHasTableActionErrors(['psd_url']);
 
