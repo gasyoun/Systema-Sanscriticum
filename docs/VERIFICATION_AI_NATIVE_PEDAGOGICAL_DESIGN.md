@@ -222,6 +222,7 @@ Google-таблице и затягиваются вебхуком n8n, кото
 | 12-08-2026 | P0.2 признак машинного происхождения | **GAP** | 0 полей происхождения; 0/180 без `author_id` | `Schema::getColumnListing('homework_comments')` + единственная миграция таблицы | Opus 5 (`claude-opus-5`) |
 | 12-08-2026 | P0.3 сопоставимость SRS со ступенями | **FAIL** — утверждение модели опровергнуто | 0/17 колод с `course_id`; 0/17 с `lesson_id`; 233 лога / 7 польз. | агрегаты по `srs_decks`, `srs_review_logs` | Opus 5 (`claude-opus-5`) |
 | 12-08-2026 | P0.4 гранулярность результата | **PARTIAL** | `ExamScore` 0 строк; 70 сертификатов / 3 курса; 527 просмотров / 253 урока | агрегаты по `exam_scores`, `certificates`, `lesson_views` | Opus 5 (`claude-opus-5`) |
-| — | P1–P5, Q1–Q3 | не запускалось | — | — | — |
+| 12-08-2026 | Q1 разметка реплик по F1–F4 | **PASS с оговорками** | n=81 · F1 62 (76,5 %) · F2 16 (19,8 %) · F3 36 · F4 36 · N 4 (4,9 %) · U 4 · все 36 F4-реплик несут `new_status` | [Q1_ASSESSMENT_FUNCTION_CODING_RESULTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1_ASSESSMENT_FUNCTION_CODING_RESULTS.md), рубрика зафиксирована до просмотра данных | Opus 5 (`claude-opus-5`) |
+| — | P1–P5, Q2, Q3 | не запускалось | — | — | — |
 
 _Dr. Mārcis Gasūns_
