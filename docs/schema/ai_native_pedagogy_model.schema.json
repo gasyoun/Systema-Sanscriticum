@@ -43,6 +43,37 @@
     "owner_repo": { "const": "Systema-Sanscriticum" },
     "handoff": { "type": "string", "pattern": "^H\\d+$" },
 
+    "trace_reality": {
+      "type": "object",
+      "description": "What each contour's data actually holds, measured. Distinct from `trace:` on an operation, which only asserts that a table exists.",
+      "required": ["measured_on", "measured_by", "contours"],
+      "additionalProperties": false,
+      "properties": {
+        "measured_on": { "type": "string", "format": "date" },
+        "measured_by": { "type": "string" },
+        "contours": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["contour", "rows", "answers", "cannot_answer"],
+            "additionalProperties": false,
+            "properties": {
+              "contour": { "type": "string" },
+              "rows": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+              "answers": { "type": "string" },
+              "cannot_answer": {
+                "type": "string",
+                "description": "Required. A contour with no stated limit has not been measured, only hoped for."
+              },
+              "falsified": { "type": "string" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
     "vocabularies": {
       "type": "object",
       "required": ["actor", "operation_class", "ai_mode", "rung"],

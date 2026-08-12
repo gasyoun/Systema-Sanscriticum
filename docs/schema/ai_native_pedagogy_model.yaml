@@ -13,10 +13,57 @@
 #   - No Systema code reads this file yet (H2585 scope is docs + schema only).
 #     It is shaped so that a later teacher-cabinet rule surface can.
 
-version: 0.1.0
+version: 0.2.0
 status: draft
 owner_repo: Systema-Sanscriticum
 handoff: H2585
+
+# P0 probes ran on prod 12-08-2026 (H2600). What they changed here:
+#   - trace_reality added below: what each contour can and cannot answer, measured.
+#   - SRS demoted from an outcome-by-rung trace to an activity-only trace
+#     (0 of 17 decks carry course_id or lesson_id -> no rung is derivable).
+#   - N4 marked unverifiable-by-construction in the homework contour
+#     (homework_comments has no origin field at all).
+# Full numbers: docs/VERIFICATION_AI_NATIVE_PEDAGOGICAL_DESIGN.md
+
+# What the trace layer can actually answer, measured rather than assumed.
+# A `trace:` entry below names a table that EXISTS; this block says what it HOLDS.
+trace_reality:
+  measured_on: "2026-08-12"
+  measured_by: Opus 5 (claude-opus-5), H2600
+  contours:
+    - contour: homework
+      rows: {HomeworkSubmission: 83, HomeworkComment: 180}
+      answers: >
+        Assessment functions F1/F2/F4 are present and legible - 81 teacher review
+        comments, mean body length 132.5 chars, 84.7% at or above 30 chars.
+      cannot_answer: >
+        Machine vs human origin. No origin column exists and every comment has a
+        human author_id, so N4 is unverifiable here by construction, not by policy.
+      note: >
+        F1 and F4 are FUSED in one record - the same teacher review comment carries
+        both new_status and the prose. Subtracting F1 is not a role split here; it
+        is a field split inside one human action.
+    - contour: srs
+      rows: {SrsReviewLog: 233, decks: 17, users: 7, cards: 85}
+      answers: learning ACTIVITY only - volume, rhythm, retention
+      cannot_answer: >
+        Anything by rung. 0 of 17 decks carry course_id or lesson_id, so no deck
+        maps to the A0-C2 ladder. The migration's "filled in Wave 2" never happened.
+      falsified: >
+        The v0.1 claim that SRS traces rung-level educational outcome. Corrected,
+        not softened.
+    - contour: outcomes
+      rows: {ExamScore: 0, Certificate: 70, LessonView: 527}
+      answers: course-level completion (certificates, 3 courses) and lesson-level reach
+      cannot_answer: >
+        Operation-level outcome. ExamScore is the only table with operation-adjacent
+        axes (score_clarity / score_letters / score_flow) and it is EMPTY - its n8n
+        webhook from the teacher's Google sheet has never delivered a row.
+    - contour: live_ai
+      rows: {SupportAiReplyEvent: 72}
+      answers: the only production AI trace in the org - support, not instruction
+      cannot_answer: anything about the instructional contour except as a transferred hypothesis
 
 # ---------------------------------------------------------------------------
 # Vocabularies
@@ -289,7 +336,11 @@ pilot_norms:
 
   - id: N4
     pilot: true
-    statement: Any AI output that reaches a student is labelled as machine-produced.
+    statement: >
+      Any AI output that reaches a student is labelled as machine-produced.
+      MEASURED 12-08-2026 (P0.2): UNVERIFIABLE in the homework contour by
+      construction - homework_comments has no origin column and 0 of 180 rows
+      lack a human author_id. Testable today only against the support contour.
     functions: [F1, F2, F3, F4]
     probe: VERIFICATION P4
     falsified_if: an unlabelled machine-produced artefact is reachable by a student
