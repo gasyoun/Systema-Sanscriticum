@@ -60,5 +60,9 @@ class DatabaseSeeder extends Seeder
         // Три встроенных сегмента GC-A1 (H1637) — идемпотентно; видны только
         // за флагом marketing_segments.
         $this->call(SegmentSeeder::class);
+
+        // Библиотека важных файлов админки (H2570) — идемпотентно; названия
+        // строк MG правит через AdminDocumentResource, сидер их не затирает.
+        $this->call(AdminDocumentSeeder::class);
     }
 }
