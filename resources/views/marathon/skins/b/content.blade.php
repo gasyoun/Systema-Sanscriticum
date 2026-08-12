@@ -23,7 +23,7 @@
 
         {{-- H1067 anti-urgency hero — no countdown, no "spots left", evergreen entry any day. --}}
         <div class="text-center mb-8">
-            <span class="inline-block text-[11px] font-extrabold uppercase tracking-wide text-[#E85C24] bg-orange-50 rounded-md px-2 py-1 mb-3">
+            <span class="inline-block text-[11px] font-extrabold uppercase tracking-wide text-brand bg-orange-50 rounded-md px-2 py-1 mb-3">
                 Бесплатная консультация
             </span>
             <h1 class="text-3xl md:text-4xl font-black text-stone-900 mb-4 leading-tight">
@@ -87,12 +87,12 @@
                         <div>
                             <label class="block text-sm font-bold text-stone-800 mb-1" for="marathon-pay-email">Email для чека</label>
                             <input id="marathon-pay-email" type="email" name="email" required
-                                   class="w-full rounded-xl border-stone-300 text-stone-900 bg-white focus:border-[#E85C24] focus:ring-[#E85C24]">
+                                   class="w-full rounded-xl border-stone-300 text-stone-900 bg-white focus:border-brand focus:ring-brand">
                         </div>
                         @error('email')
                             <p class="text-sm text-red-600">{{ $message }}</p>
                         @enderror
-                        <button type="submit" class="w-full px-6 py-3 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
+                        <button type="submit" class="w-full px-6 py-3 bg-brand hover:bg-brand-hover text-white font-extrabold rounded-xl transition-colors">
                             Оплатить {{ $paidTrackPrice }} ₽
                         </button>
                     </form>
@@ -113,7 +113,7 @@
                 <div class="grid gap-3">
                     @foreach ($days as $i => $day)
                         <div class="bg-white border border-stone-200 rounded-2xl p-4 grid grid-cols-[2.25rem_1fr] gap-3 items-start">
-                            <div class="w-9 h-9 rounded-full bg-orange-50 text-[#E85C24] font-extrabold flex items-center justify-center shrink-0">
+                            <div class="w-9 h-9 rounded-full bg-orange-50 text-brand font-extrabold flex items-center justify-center shrink-0">
                                 {{ $i + 1 }}
                             </div>
                             <div>
@@ -143,7 +143,7 @@
         @endif
 
         @if ($testimonial !== '')
-            <blockquote class="mb-10 p-6 bg-orange-50 border-l-4 border-[#E85C24] rounded-r-2xl text-stone-700 italic">
+            <blockquote class="mb-10 p-6 bg-orange-50 border-l-4 border-brand rounded-r-2xl text-stone-700 italic">
                 {{ $testimonial }}
             </blockquote>
         @endif
@@ -156,7 +156,7 @@
             <div>
                 <label for="marathon-quiz" class="block text-sm font-extrabold text-stone-800 mb-2">Что вас привлекает в санскрите?</label>
                 <select id="marathon-quiz" name="quiz_goal" required
-                        class="w-full rounded-xl border-stone-300 text-stone-900 bg-white focus:border-[#E85C24] focus:ring-[#E85C24]">
+                        class="w-full rounded-xl border-stone-300 text-stone-900 bg-white focus:border-brand focus:ring-brand">
                     <option value="">Выберите…</option>
                     @foreach ($quizGoals as $key => $label)
                         <option value="{{ $key }}" @selected(old('quiz_goal') === $key)>{{ $label }}</option>
@@ -171,7 +171,7 @@
                 <legend class="block text-sm font-extrabold text-stone-800 mb-2">Формат участия</legend>
                 <div class="grid gap-2" @error('track') aria-describedby="track-error" @enderror>
                     <label class="flex items-start gap-3 p-4 rounded-2xl border-[1.5px] cursor-pointer transition-colors"
-                           :class="track === 'free' ? 'border-[#E85C24] bg-orange-50' : 'border-stone-200'">
+                           :class="track === 'free' ? 'border-brand bg-orange-50' : 'border-stone-200'">
                         <input type="radio" name="track" value="free" x-model="track" class="mt-1">
                         <span>
                             <span class="font-extrabold block text-stone-900">Бесплатно</span>
@@ -179,7 +179,7 @@
                         </span>
                     </label>
                     <label class="flex items-start gap-3 p-4 rounded-2xl border-[1.5px] cursor-pointer transition-colors"
-                           :class="track === 'paid' ? 'border-[#E85C24] bg-orange-50' : 'border-stone-200'">
+                           :class="track === 'paid' ? 'border-brand bg-orange-50' : 'border-stone-200'">
                         <input type="radio" name="track" value="paid" x-model="track" class="mt-1">
                         <span>
                             <span class="font-extrabold block text-stone-900">«С проверкой» — {{ $paidTrackPrice }} ₽</span>
@@ -199,7 +199,7 @@
                 <label for="marathon-name" class="block text-sm font-extrabold text-stone-800 mb-2">Имя <span class="text-red-500">*</span></label>
                 <input id="marathon-name" type="text" name="name" required minlength="2" maxlength="255"
                        value="{{ old('name') }}"
-                       class="w-full rounded-xl border-stone-300 text-stone-900 bg-white focus:border-[#E85C24] focus:ring-[#E85C24]">
+                       class="w-full rounded-xl border-stone-300 text-stone-900 bg-white focus:border-brand focus:ring-brand">
                 @error('name')
                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                 @enderror
@@ -210,13 +210,13 @@
                 {{-- USEIT H5-1 — placeholder examples instead of a bare required field. --}}
                 <input id="marathon-contact" type="text" name="contact" required value="{{ old('contact') }}"
                        placeholder="+7… / name@mail.ru / @username"
-                       class="w-full rounded-xl border-stone-300 text-stone-900 bg-white focus:border-[#E85C24] focus:ring-[#E85C24]">
+                       class="w-full rounded-xl border-stone-300 text-stone-900 bg-white focus:border-brand focus:ring-brand">
                 @error('contact')
                     <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
-            <button type="submit" class="w-full px-6 py-3.5 bg-[#E85C24] hover:bg-[#d34f1c] text-white font-extrabold rounded-xl transition-colors">
+            <button type="submit" class="w-full px-6 py-3.5 bg-brand hover:bg-brand-hover text-white font-extrabold rounded-xl transition-colors">
                 {{ $cta }}
             </button>
             <p class="text-xs text-stone-500 text-center -mt-3">Без дедлайнов и «осталось N мест». Начать можно в любой день.</p>
@@ -233,7 +233,7 @@
                                 aria-controls="faq-panel-{{ $i }}"
                                 @click="open === {{ $i }} ? open = null : open = {{ $i }}">
                             <span>{{ $item['q'] }}</span>
-                            <span class="text-[#E85C24]" aria-hidden="true" x-text="open === {{ $i }} ? '−' : '+'"></span>
+                            <span class="text-brand" aria-hidden="true" x-text="open === {{ $i }} ? '−' : '+'"></span>
                         </button>
                         <div id="faq-panel-{{ $i }}" class="px-4 pb-4 text-sm text-stone-600 leading-relaxed" x-show="open === {{ $i }}" x-cloak>
                             {{ $item['a'] }}

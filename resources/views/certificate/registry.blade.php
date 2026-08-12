@@ -20,7 +20,7 @@
         <div class="flex flex-wrap items-center gap-3 mb-6">
             @foreach(['date' => 'По дате', 'name' => 'По алфавиту', 'group' => 'По группам'] as $key => $label)
                 <a href="{{ route('certificate.registry', array_filter(['sort' => $key, 'course' => $filters['course'], 'year' => $filters['year']])) }}"
-                   class="px-4 py-2 rounded-full text-sm font-bold transition-colors {{ $sort === $key ? 'bg-[#E85C24] text-white' : 'bg-[#111622] border border-[#1F2636] text-slate-300 hover:border-[#E85C24]' }}">
+                   class="px-4 py-2 rounded-full text-sm font-bold transition-colors {{ $sort === $key ? 'bg-brand text-white' : 'bg-[#111622] border border-[#1F2636] text-slate-300 hover:border-brand' }}">
                     {{ $label }}
                 </a>
             @endforeach
@@ -39,7 +39,7 @@
                         <option value="{{ $year }}" @selected((int) ($filters['year'] ?? 0) === $year)>{{ $year }}</option>
                     @endforeach
                 </select>
-                <button type="submit" class="px-4 py-2 rounded-xl bg-[#111622] border border-[#1F2636] text-sm font-bold text-slate-300 hover:border-[#E85C24] transition-colors">
+                <button type="submit" class="px-4 py-2 rounded-xl bg-[#111622] border border-[#1F2636] text-sm font-bold text-slate-300 hover:border-brand transition-colors">
                     Показать
                 </button>
             </form>
@@ -74,7 +74,7 @@
                                         </span>
                                     </td>
                                     <td class="px-5 py-3 whitespace-nowrap">
-                                        <a href="{{ route('certificate.verify', $cert->number) }}" class="font-mono font-semibold text-[#E85C24] hover:underline">
+                                        <a href="{{ route('certificate.verify', $cert->number) }}" class="font-mono font-semibold text-brand hover:underline">
                                             {{ $cert->number }}
                                         </a>
                                     </td>

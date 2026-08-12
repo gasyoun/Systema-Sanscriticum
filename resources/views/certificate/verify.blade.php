@@ -45,7 +45,7 @@
                                 @endforeach
                                 <div class="flex items-center justify-between text-sm pt-1.5 border-t border-[#1F2636]">
                                     <span class="font-bold text-white">Итого</span>
-                                    <span class="font-bold text-[#E85C24]">
+                                    <span class="font-bold text-brand">
                                         {{ \App\Models\Certificate::formatScore($certificate->examTotal()) }} / {{ \App\Models\Certificate::examTotalMax() }}
                                     </span>
                                 </div>
@@ -62,7 +62,7 @@
                         </div>
                         <div>
                             <div class="text-[11px] uppercase tracking-widest text-slate-500 font-bold mb-1">Номер</div>
-                            <div class="text-sm font-mono font-semibold text-[#E85C24]">{{ $certificate->number }}</div>
+                            <div class="text-sm font-mono font-semibold text-brand">{{ $certificate->number }}</div>
                         </div>
                     </div>
                 </div>
@@ -87,7 +87,7 @@
         @endif
 
         <div class="mt-6 text-center">
-            <a href="{{ route('shop.index') }}" class="text-sm font-semibold text-slate-400 hover:text-[#E85C24] transition-colors">
+            <a href="{{ route('shop.index') }}" class="text-sm font-semibold text-slate-400 hover:text-brand transition-colors">
                 <i class="fas fa-arrow-left mr-1.5"></i> На главную
             </a>
         </div>

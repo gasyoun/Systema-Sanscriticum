@@ -1,4 +1,4 @@
-_Created: 10-08-2026 · Last updated: 10-08-2026_
+_Created: 10-08-2026 · Last updated: 12-08-2026_
 
 # H2560 Phase 1 Evidence — Brand Orange Token Collapse
 
@@ -52,16 +52,46 @@ Every added line was a deleted line replaced in place (CRLF-preserving clone, so
 
 ## Residual measurement
 
-Zero brand-orange arbitrary-value classes remain in-scope:
+> **Corrected 12-08-2026 (H2599).** The check printed below was **vacuous** — the
+> character class `[0-1]` in position 5 cannot match the `2` of `E85C24`, so the
+> pattern does not match `[#E85C24]` even as a bare string
+> (`echo '[#E85C24]' | grep -c '\[#[ED][0-9A-F][0-5][0-9A-F][0-1][0-9A-F]\]'` → `0`).
+> It was therefore guaranteed to print `0` against any tree whatsoever, and it hid a
+> real residual: **25 brand-orange classes** survived in three files this sweep never
+> visited — `marathon/skins/b/content.blade.php` (the **default** skin; only `a`/`c`/`d`
+> were excluded by decision) and the two public `certificate/` surfaces (never in the
+> scoped directory list at all). Retired and replaced by the enumerated check below;
+> the collapse itself was finished under
+> [H2599](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2599-Opus_Systema-Sanscriticum_phase1-residual-brand-orange-skins-b-vacuous-regex_12.08.26.md).
+
+Original claim — *zero brand-orange arbitrary-value classes remain in-scope*:
 
 ```bash
 $ cd resources/views
 $ grep -roh --include=*.blade.php '\[#[ED][0-9A-F][0-5][0-9A-F][0-1][0-9A-F]\]' \
     student shop promo livewire components partials layouts marathon srs reading checkout articles auth | wc -l
+0          # ← vacuous: this pattern matches no brand-orange hex at all
+```
+
+**Replacement check — enumerate the retired colours literally, never a hue-range
+pattern.** A pattern over a hex range has to be *tested against the strings it is
+meant to catch*; a list of six literals cannot silently stop matching:
+
+```bash
+$ cd resources/views
+$ grep -rohiE '\[#(e85c24|d04a15|d34f1c|d64e1c|d14e1a|d35400)\]' --include=*.blade.php \
+    student shop promo livewire components partials layouts srs reading checkout \
+    articles auth certificate | wc -l
+0
+$ grep -rohiE '\[#(e85c24|d04a15|d34f1c|d64e1c|d14e1a|d35400)\]' --include=*.blade.php \
+    marathon --exclude-dir=a --exclude-dir=c --exclude-dir=d | wc -l
 0
 ```
 
-(Pattern matches `[#E___]` or `[#D___]` hex in the brand-orange hue range.)
+The `marathon` arm is split out because `skins/{a,c,d}` are out of scope **by
+decision** (intentional A/B directions) while `skins/b` is not — folding them into
+one command lets 46 legitimately-excluded hits mask an in-scope one, which is how
+`skins/b` stayed invisible.
 
 ## What was NOT tokenized (intentional)
 
