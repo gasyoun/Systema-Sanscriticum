@@ -1,0 +1,383 @@
+# AI-native pedagogical design model for Systema-Sanscriticum — machine-readable core.
+#
+# Created: 12-08-2026 · Last updated: 12-08-2026 · Author: Dr. Marcis Gasuns
+# Prose model: docs/ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md
+# Validator:   docs/schema/ai_native_pedagogy_model.schema.json
+# Verification: docs/VERIFICATION_AI_NATIVE_PEDAGOGICAL_DESIGN.md
+#
+# CONTRACT
+#   - This file is DESCRIPTIVE core + PILOT norms. Anything with `pilot: true`
+#     is a working rule awaiting evidence, never an established fact.
+#   - `class` is per-rung by construction: an operation is not constitutive or
+#     enabling in general, only at a given rung of the A0-C2 ladder.
+#   - No Systema code reads this file yet (H2585 scope is docs + schema only).
+#     It is shaped so that a later teacher-cabinet rule surface can.
+
+version: 0.2.0
+status: draft
+owner_repo: Systema-Sanscriticum
+handoff: H2585
+
+# P0 probes ran on prod 12-08-2026 (H2600). What they changed here:
+#   - trace_reality added below: what each contour can and cannot answer, measured.
+#   - SRS demoted from an outcome-by-rung trace to an activity-only trace
+#     (0 of 17 decks carry course_id or lesson_id -> no rung is derivable).
+#   - N4 marked unverifiable-by-construction in the homework contour
+#     (homework_comments has no origin field at all).
+# Full numbers: docs/VERIFICATION_AI_NATIVE_PEDAGOGICAL_DESIGN.md
+
+# What the trace layer can actually answer, measured rather than assumed.
+# A `trace:` entry below names a table that EXISTS; this block says what it HOLDS.
+trace_reality:
+  measured_on: "2026-08-12"
+  measured_by: Opus 5 (claude-opus-5), H2600
+  contours:
+    - contour: homework
+      rows: {HomeworkSubmission: 83, HomeworkComment: 180}
+      answers: >
+        Assessment functions F1/F2/F4 are present and legible - 81 teacher review
+        comments, mean body length 132.5 chars, 84.7% at or above 30 chars.
+      cannot_answer: >
+        Machine vs human origin. No origin column exists and every comment has a
+        human author_id, so N4 is unverifiable here by construction, not by policy.
+      note: >
+        F1 and F4 are FUSED in one record - the same teacher review comment carries
+        both new_status and the prose. Subtracting F1 is not a role split here; it
+        is a field split inside one human action.
+    - contour: srs
+      rows: {SrsReviewLog: 233, decks: 17, users: 7, cards: 85}
+      answers: learning ACTIVITY only - volume, rhythm, retention
+      cannot_answer: >
+        Anything by rung. 0 of 17 decks carry course_id or lesson_id, so no deck
+        maps to the A0-C2 ladder. The migration's "filled in Wave 2" never happened.
+      falsified: >
+        The v0.1 claim that SRS traces rung-level educational outcome. Corrected,
+        not softened.
+    - contour: outcomes
+      rows: {ExamScore: 0, Certificate: 70, LessonView: 527}
+      answers: course-level completion (certificates, 3 courses) and lesson-level reach
+      cannot_answer: >
+        Operation-level outcome. ExamScore is the only table with operation-adjacent
+        axes (score_clarity / score_letters / score_flow) and it is EMPTY - its n8n
+        webhook from the teacher's Google sheet has never delivered a row.
+    - contour: live_ai
+      rows: {SupportAiReplyEvent: 72}
+      answers: the only production AI trace in the org - support, not instruction
+      cannot_answer: anything about the instructional contour except as a transferred hypothesis
+
+# ---------------------------------------------------------------------------
+# Vocabularies
+# ---------------------------------------------------------------------------
+
+vocabularies:
+
+  actor:
+    - student
+    - teacher
+    - ai
+    - student+ai
+    - teacher+ai
+
+  # Relation of an operation to the educational outcome, at a given rung.
+  operation_class:
+    constitutive: Performing the operation IS the outcome being learned at this rung.
+    enabling:     Needed for learning but not itself the object of learning.
+    evidentiary:  Produces evidence about learning; a human adjudicates.
+    logistic:     No educational content.
+
+  # What the AI is permitted to do for an operation of a given class.
+  ai_mode:
+    perform:    Produces the finished output of the operation.
+    assist:     Partial scaffold only (hint, probing question, checking the student's own hypothesis) - never the output.
+    prepare:    Prepares material for a human decision; the human decides and owns it.
+    prohibited: No participation.
+
+  rung: [A0, A1, A2, B1, B2, C1, C2]
+
+# Which ai_mode values are admissible for which operation_class.
+# This is the model's central invariant; a violating entry is a schema error,
+# not a policy preference.
+delegation_matrix:
+  constitutive: [assist, prohibited]
+  enabling:     [perform, assist, prohibited]
+  evidentiary:  [prepare, assist, prohibited]
+  logistic:     [perform, prepare]
+
+# ---------------------------------------------------------------------------
+# Assessment functions - the split that the prose model insists on.
+# "Automate assessment" is meaningless until one of these is named.
+# ---------------------------------------------------------------------------
+
+assessment_functions:
+
+  - id: F1
+    label_ru: Вынесение оценки
+    label_en: Grading
+    does: Assigns a value on a scale to a piece of work.
+    class: evidentiary
+    ai_mode: prepare
+    human_owns: final value and responsibility for it
+    trace: [ExamScore, HomeworkSubmission]
+
+  - id: F2
+    label_ru: Диагностика мышления
+    label_en: Diagnosis of reasoning
+    does: Establishes how the student reasoned and where the reasoning broke.
+    class: evidentiary
+    ai_mode: prepare
+    ai_mode_exception:
+      when: the error class is Sanskrit-specific per sanskrit_layer.failure_modes
+      mode: prohibited
+    human_owns: the diagnosis
+    trace: [HomeworkComment]
+
+  - id: F3
+    label_ru: Выбор следующего действия
+    label_en: Next-step selection
+    does: Determines what the student does next.
+    class: evidentiary
+    ai_mode: prepare
+    human_owns: the pedagogical decision
+    trace: [SrsReviewState, LessonView, HomeworkComment]
+
+  - id: F4
+    label_ru: Развивающая обратная связь
+    label_en: Developmental feedback
+    does: Formulates a response intended to change the student's understanding.
+    class: constitutive          # for the teacher's own practice
+    class_for_system: evidentiary
+    ai_mode: assist
+    human_owns: everything the student reads as feedback
+    note: This is the paid product. Automating it does not save cost, it removes the good.
+    trace: [HomeworkComment]
+
+# ---------------------------------------------------------------------------
+# Operations. `class_by_rung` omits rungs where the operation does not occur.
+# ---------------------------------------------------------------------------
+
+operations:
+
+  - id: op.word_structure_hear
+    group: analysis
+    label_ru: Различить строение слова на слух (кириллица)
+    class_by_rung: {A0: constitutive}
+    ai_mode: assist
+    trace: [LessonView, SrsReviewLog]
+
+  - id: op.transliterate
+    group: generation
+    label_ru: Транслитерация IAST / SLP1 / деванагари
+    class_by_rung: {A0: enabling, A1: enabling, A2: enabling, B1: enabling, B2: enabling, C1: enabling, C2: enabling}
+    ai_mode: perform
+    must_route_through_asset: sanskrit-util
+    rationale: A language model drops diacritics and vowel length silently; a deterministic asset does not.
+    trace: [SrsReviewLog]
+
+  - id: op.aksara_read
+    group: analysis
+    label_ru: Распознавание акшары, чтение вслух
+    class_by_rung: {A1: constitutive, A2: constitutive}
+    ai_mode: assist
+    trace: [LessonView, SrsReviewLog]
+
+  - id: op.sandhi_split
+    group: analysis
+    label_ru: Снятие сандхи
+    class_by_rung: {A2: constitutive, B1: constitutive, B2: enabling, C1: enabling, C2: enabling}
+    ai_mode_by_rung: {A2: prohibited, B1: prohibited, B2: assist, C1: perform, C2: perform}
+    must_route_through_asset: [M10 Samsaadhanii, M11 Heritage, M14 vidyut]
+    rationale: A model produces a grammatically possible but unattested split with full confidence; the student cannot tell.
+    trace: [HomeworkSubmission, SrsReviewLog]
+
+  - id: op.morph_parse
+    group: analysis
+    label_ru: Морфологический разбор, определение формы
+    class_by_rung: {A2: constitutive, B1: constitutive, B2: enabling, C1: enabling, C2: enabling}
+    ai_mode_by_rung: {A2: prohibited, B1: assist, B2: assist, C1: assist, C2: assist}
+    constraint: any AI output must show competing homonymous readings, never a single form
+    trace: [HomeworkSubmission]
+
+  - id: op.translate_learning
+    group: generation
+    label_ru: Учебный перевод
+    class_by_rung: {B1: constitutive, B2: constitutive, C1: constitutive, C2: enabling}
+    ai_mode: assist
+    rationale: Fluent Russian over a wrong parse; fluency masks the error from student and teacher alike.
+    trace: [HomeworkSubmission, HomeworkFile]
+
+  - id: op.sentence_comprehend
+    group: analysis
+    label_ru: Связное понимание предложения или пассажа
+    class_by_rung: {B1: constitutive, B2: constitutive, C1: constitutive}
+    ai_mode: assist
+    trace: [HomeworkSubmission]
+
+  - id: op.commentary_reconstruct
+    group: analysis
+    label_ru: Реконструкция аргумента комментатора
+    class_by_rung: {C1: constitutive, C2: constitutive}
+    ai_mode: assist
+    trace: [HomeworkSubmission]
+
+  - id: op.evidence_weigh
+    group: generalization
+    label_ru: Оценка свидетельств, вынесение глоссы
+    class_by_rung: {C2: constitutive}
+    ai_mode: assist
+    trace: [HomeworkSubmission]
+
+  - id: op.etymology_cite
+    group: explanation
+    label_ru: Этимология и ссылка на словарную статью
+    class_by_rung: {B2: enabling, C1: enabling, C2: enabling}
+    ai_mode: prohibited
+    must_route_through_asset: [CDSL G1, kosha G3]
+    rationale: Models invent plausible dictionary citations; a fabricated reference is worse than none.
+    trace: [HomeworkComment]
+
+  - id: op.vedic_accent
+    group: analysis
+    label_ru: Ведийский акцент
+    class_by_rung: {C1: constitutive, C2: enabling}
+    ai_mode: prohibited
+    rationale: Training data is thin and the output looks normal; failure is invisible.
+    trace: [HomeworkSubmission]
+
+  - id: op.exercise_generate
+    group: generation
+    label_ru: Порождение тренировочных заданий и примеров
+    class_by_rung: {A0: enabling, A1: enabling, A2: enabling, B1: enabling, B2: enabling}
+    ai_mode: perform
+    constraint: generated items are teacher-reviewed before reaching a student
+    trace: [SrsCard, SrsDeck]
+
+  - id: op.rule_explain
+    group: explanation
+    label_ru: Объяснение грамматического правила
+    class_by_rung: {A1: enabling, A2: enabling, B1: enabling, B2: enabling}
+    ai_mode: perform
+    constraint: explanation only, never establishing a fact of the language (see sanskrit_layer.general_rule)
+    trace: [LessonView]
+
+  - id: op.select_review_items
+    group: regulation
+    label_ru: Выбор материала для повторения
+    class_by_rung: {A1: enabling, A2: enabling, B1: enabling, B2: enabling, C1: enabling}
+    ai_mode: perform
+    note: Already effectively delegated to the SRS scheduler - a non-generative algorithm.
+    trace: [SrsReviewState, SrsReviewLog]
+
+  - id: op.plan_own_study
+    group: regulation
+    label_ru: Планирование собственного обучения студентом
+    class_by_rung: {B1: constitutive, B2: constitutive, C1: constitutive, C2: constitutive}
+    ai_mode: assist
+    trace: [GoalCheckin, LessonView]
+
+  - id: op.remind_and_collect
+    group: logistics
+    label_ru: Напоминания, сбор работ, форматирование
+    class_by_rung: {A0: logistic, A1: logistic, A2: logistic, B1: logistic, B2: logistic, C1: logistic, C2: logistic}
+    ai_mode: perform
+    trace: [ScheduledReminder, ReminderSuggestion, HomeworkFile]
+
+# ---------------------------------------------------------------------------
+# Sanskrit layer - where plausibility does not correlate with correctness.
+# ---------------------------------------------------------------------------
+
+sanskrit_layer:
+
+  general_rule: >
+    Where an output can be checked by an existing deterministic project asset
+    (sanskrit-util, CDSL dictionaries, DCS, paradigm browser), the operation is
+    delegated THROUGH THE ASSET, not through a language model. A model may
+    formulate and explain; it must not establish a fact of the language.
+
+  failure_modes:
+    - operation: op.sandhi_split
+      failure: grammatically possible but unattested split, delivered confidently
+    - operation: op.morph_parse
+      failure: one of several homonymous forms returned without signalling ambiguity
+    - operation: op.transliterate
+      failure: silent loss of diacritics and vowel length, invisible in Cyrillic
+    - operation: op.translate_learning
+      failure: fluent target text over a wrong parse
+    - operation: op.etymology_cite
+      failure: fabricated dictionary entries and citations
+    - operation: op.vedic_accent
+      failure: thin data, normal-looking output
+
+# ---------------------------------------------------------------------------
+# Pilot norms - Systema-specific working rules, each awaiting evidence.
+# ---------------------------------------------------------------------------
+
+pilot_norms:
+
+  - id: N1
+    pilot: true
+    statement: AI does not issue a final grade without teacher confirmation, at any rung.
+    functions: [F1]
+    probe: VERIFICATION P1
+    falsified_if: a graded record exists whose value was set by AI with no teacher confirmation event
+
+  - id: N2
+    pilot: true
+    statement: AI does not author developmental feedback under its own name; a draft visible only to the teacher is allowed.
+    functions: [F4]
+    probe: VERIFICATION P2
+    falsified_if: a student-visible comment is machine-authored and not teacher-edited
+
+  - id: N3
+    pilot: true
+    statement: AI-assisted diagnosis of reasoning is allowed only where a reference analysis exists.
+    functions: [F2]
+    probe: VERIFICATION P3
+    falsified_if: an AI diagnosis was produced for a task with no reference analysis
+
+  - id: N4
+    pilot: true
+    statement: >
+      Any AI output that reaches a student is labelled as machine-produced.
+      MEASURED 12-08-2026 (P0.2): UNVERIFIABLE in the homework contour by
+      construction - homework_comments has no origin column and 0 of 180 rows
+      lack a human author_id. Testable today only against the support contour.
+    functions: [F1, F2, F3, F4]
+    probe: VERIFICATION P4
+    falsified_if: an unlabelled machine-produced artefact is reachable by a student
+
+  - id: N5
+    pilot: true
+    statement: >
+      An operation that is constitutive at the student's current rung is never
+      served by an AI surface that produces its finished output, even when the
+      same surface is legitimate at a higher rung.
+    functions: []
+    probe: VERIFICATION P5
+    falsified_if: a rung-A2 student can obtain a finished sandhi split from a product surface
+
+# ---------------------------------------------------------------------------
+# Existing production AI, described only (H2585 scope forbids changing it).
+# Each row is a real surface to be scored against the model in W2.
+# ---------------------------------------------------------------------------
+
+observed_ai_surfaces:
+
+  - surface: SupportAiReplyEvent
+    domain: student support, not instruction
+    model_verdict: logistic / evidentiary boundary - out of the instructional contour, but student-facing, so N4 applies
+    action: describe and score only
+
+  - surface: SupportAnswerSuggestion
+    domain: support
+    model_verdict: prepare - a human sends
+    action: describe and score only
+
+  - surface: PaymentPromiseSuggestion
+    domain: money
+    model_verdict: logistic
+    action: out of scope for the pedagogical model
+
+  - surface: ReminderSuggestion
+    domain: logistics
+    model_verdict: logistic
+    action: out of scope for the pedagogical model
