@@ -99,6 +99,40 @@ and Wave 1 must not start. Evidence and the exact continuation matrix are record
 
 H2597 (Codex) — Offline cabinet Wave 0: encrypted storage and cold-start capability spike.
 
+### Physical V0 successors
+
+H2597 is now a partial parent: the automated harness is green in draft
+[PR #1609](https://github.com/gasyoun/Systema-Sanscriticum/pull/1609), while three
+independent Claude Code handoffs own physical verification. They may run concurrently
+because each writes a separate evidence file and only its platform manifest row.
+
+**H2617 (Opus 5) — Android/WebView device verification**  
+Folder: `C:\Users\user\Documents\GitHub\Systema-Sanscriticum` · model: Opus 5 (`claude-opus-5`)
+
+```text
+Read C:\Users\user\Documents\GitHub\Uprava\handoffs\H2617-Opus_Systema-Sanscriticum_offline-cabinet-w0-android-webview-verification_12.08.26.md and execute it.
+```
+
+**H2618 (Sonnet 5) — Windows 11 installed Edge PWA verification**  
+Folder: `C:\Users\user\Documents\GitHub\Systema-Sanscriticum` · model: Sonnet 5 (`claude-sonnet-5`)
+
+```text
+Read C:\Users\user\Documents\GitHub\Uprava\handoffs\H2618-Sonnet_Systema-Sanscriticum_offline-cabinet-w0-windows-edge-pwa-verification_12.08.26.md and execute it.
+```
+
+**H2619 (Opus 5) — iPhone Safari/WKWebView device verification**  
+Folder: `C:\Users\user\Documents\GitHub\Systema-Sanscriticum` on macOS/Xcode · model: Opus 5 (`claude-opus-5`)
+
+```text
+Read C:\Users\user\Documents\GitHub\Uprava\handoffs\H2619-Opus_Systema-Sanscriticum_offline-cabinet-w0-iphone-wkwebview-verification_12.08.26.md and execute it.
+```
+
+H2597 (Codex) — Offline cabinet Wave 0: encrypted storage and cold-start capability spike
+closes only after all three return evidenced PASS or platform-scoped STOP verdicts and
+parent consolidation updates the aggregate report. A host-missing BLOCKED receipt is
+bounded and useful, but it does not satisfy parent closure.
+Until then PR #1609 stays draft, Wave 1 stays blocked, and no deploy/flag/pilot occurs.
+
 ```text
 Read C:\Users\user\Documents\GitHub\Systema-Sanscriticum\docs\PLAN_SYSTEMA_OFFLINE_CABINET_2026H2.md and execute it.
 ```
