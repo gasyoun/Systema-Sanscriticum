@@ -114,8 +114,10 @@ class AdminDocument extends Model
         static::updating(function (self $document): void {
             // Пересчитываем только когда изменился сам URL: иначе ручная правка
             // kind («это не таблица, а форма») затиралась бы при каждом save().
+            // При смене URL kind форсируется — иначе новый файл наследовал бы
+            // тип старого до тех пор, пока куратор не поставит его вручную.
             if ($document->isDirty('source_url')) {
-                $document->applyUrlDerivations();
+                $document->applyUrlDerivations(forceKind: true);
             }
         });
     }
@@ -190,11 +192,11 @@ class AdminDocument extends Model
      * и Docs незачем «скачивать» — админ открывает живой документ, а export-URL
      * отдал бы снапшот и потерял бы вкладку gid.
      */
-    protected function applyUrlDerivations(): void
+    protected function applyUrlDerivations(bool $forceKind = false): void
     {
         $this->host = MaterialUrl::host($this->source_url);
 
-        if (blank($this->kind) || $this->kind === 'link') {
+        if ($forceKind || blank($this->kind) || $this->kind === 'link') {
             $this->kind = self::guessKind($this->source_url);
         }
 
