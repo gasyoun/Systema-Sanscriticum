@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2597 (Codex) — Offline cabinet Wave 0: encrypted storage and cold-start capability spike начат без ослабления криптогейта.** Добавлен изолированный TypeScript-харнесс `resources/js/offline/spike.ts`: неэкспортируемый AES-256-GCM WebCrypto-ключ, сохранение `CryptoKey` в IndexedDB, независимые чанки по 1 МиБ с уникальным 96-битным IV и authenticated metadata, возобновление range-загрузки без повторного скачивания готовых чанков, отрицательная проверка переноса шифротекста на другой device key и fail-closed контракт для отсутствующего native `OfflineCrypto` bridge. Шесть тестов Vitest зелёные; официальные Capacitor 8 filesystem/file-transfer зависимости закреплены в `mobile/`. V0 **не закрыт**: реальные Android, Windows installed PWA и iPhone/WKWebView cold-start/device measurements отсутствуют, поэтому Wave 1 не разблокирована и plaintext fallback не добавлен. Evidence: `docs/OFFLINE_CABINET_WAVE0_SPIKE_2026-08-12.md`.
+
 ## [1.89.10] - 2026-08-12
 ### Added
 - Библиотека важных файлов (AdminDocumentResource) для суперадмина/админа — хранилище организационных документов с двухуровневым контролем доступа (H2570)
@@ -2363,4 +2366,3 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 [1.1.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.0.0
-

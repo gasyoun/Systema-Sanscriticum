@@ -1,6 +1,6 @@
 # Кабинет самскрте — mobile app (Capacitor wrapper)
 
-_Created: 12-07-2026 · Last updated: 12-07-2026_
+_Created: 12-07-2026 · Last updated: 12-08-2026_
 
 Wave 1 of the [mobile-app roadmap](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_MOBILE_APP_STUDENT_CABINET_2026_2027.md)
 (H824). This is a **Capacitor hybrid wrapper**: a native shell (Android + iOS) around
@@ -39,6 +39,19 @@ host stays in the WebView; Tochka and every other external host open externally.
 > The Android **debug APK build and on-device smoke** require the JDK + Android SDK
 > above (and a device/emulator). The scaffold itself (`npm install`, `cap sync`,
 > `cap add android`) needs only Node.
+
+## Offline-cabinet Wave 0 gate (H2597)
+
+The tracked wrapper now pins the official Capacitor 8 `@capacitor/filesystem` and
+`@capacitor/file-transfer` plugins for resumable asset experiments. They do **not**
+provide the encryption key boundary. Native offline content remains stopped until a
+tracked `OfflineCrypto` bridge proves that AES operations use an Android Keystore /
+iOS Keychain-backed non-exportable key and never returns raw key material to JavaScript.
+
+Do not substitute a generic secure key/value plugin: returning a serialized content
+key to JavaScript fails the plan's non-exportability gate even if the serialized value
+is encrypted at rest. The current evidence and device commands are in
+[`docs/OFFLINE_CABINET_WAVE0_SPIKE_2026-08-12.md`](../docs/OFFLINE_CABINET_WAVE0_SPIKE_2026-08-12.md).
 
 ## Setup
 

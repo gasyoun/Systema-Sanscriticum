@@ -19,6 +19,9 @@ and Windows; platform adapters exist only where storage/key APIs genuinely diffe
 
 ### Wave 0 — capability and security spike
 
+**Status: IN PROGRESS — automated web harness green; physical V0 platform matrix pending.**
+See the [12-08-2026 spike record](https://github.com/gasyoun/Systema-Sanscriticum/blob/codex/offline-cabinet-roadmap/docs/OFFLINE_CABINET_WAVE0_SPIKE_2026-08-12.md).
+
 Prove remote-origin Capacitor cold-start offline, native bridge reachability, non-exportable
 per-device keys, chunked AES-GCM performance, resumable encrypted storage, and Windows PWA key
 persistence. Android is first; Windows follows; iPhone must pass the common baseline. A failing

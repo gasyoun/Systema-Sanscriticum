@@ -6,19 +6,22 @@
     },
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "test:offline-spike": "vitest run resources/js/offline/spike.test.ts"
     },
     "devDependencies": {
         "@tailwindcss/postcss": "^4.3.3",
         "@tailwindcss/typography": "^0.5.20",
         "autoprefixer": "^10.5.4",
         "axios": "^1.19.0",
+        "fake-indexeddb": "^6.2.5",
         "laravel-echo": "^2.4.0",
         "laravel-vite-plugin": "^3.1.3",
         "postcss": "^8.5.25",
         "pusher-js": "^8.6.0",
         "tailwindcss": "^4.3.3",
-        "vite": "^8.2.0"
+        "vite": "^8.2.0",
+        "vitest": "^3.2.7"
     },
     "overrides": {
         "vite-plugin-full-reload": {

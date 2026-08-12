@@ -89,6 +89,14 @@ reused. Deployment and the student pilot remain correctly human-gated after impl
 
 ## Wave-0 execution
 
+**Status: IN PROGRESS / release gate remains closed (12-08-2026).** The automated
+PWA crypto/resume harness and tracked Capacitor filesystem dependencies shipped in
+the planning branch. Six automated checks pass. Real Android, installed Windows PWA,
+and iPhone/WKWebView cold-start measurements remain required by V0 and were not
+available on the executor machine; therefore Wave 0 is deliberately not marked done
+and Wave 1 must not start. Evidence and the exact continuation matrix are recorded in
+[`OFFLINE_CABINET_WAVE0_SPIKE_2026-08-12.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/codex/offline-cabinet-roadmap/docs/OFFLINE_CABINET_WAVE0_SPIKE_2026-08-12.md).
+
 H2597 (Codex) — Offline cabinet Wave 0: encrypted storage and cold-start capability spike.
 
 ```text
