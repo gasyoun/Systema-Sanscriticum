@@ -224,6 +224,7 @@ Google-таблице и затягиваются вебхуком n8n, кото
 | 12-08-2026 | P0.4 гранулярность результата | **PARTIAL** | `ExamScore` 0 строк; 70 сертификатов / 3 курса; 527 просмотров / 253 урока | агрегаты по `exam_scores`, `certificates`, `lesson_views` | Opus 5 (`claude-opus-5`) |
 | 12-08-2026 | Q1 разметка реплик по F1–F4 | **PASS с оговорками** | n=81 · F1 62 (76,5 %) · F2 16 (19,8 %) · F3 36 · F4 36 · N 4 (4,9 %) · U 4 · все 36 F4-реплик несут `new_status` | [Q1_ASSESSMENT_FUNCTION_CODING_RESULTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1_ASSESSMENT_FUNCTION_CODING_RESULTS.md), рубрика зафиксирована до просмотра данных | Opus 5 (`claude-opus-5`) |
 | 12-08-2026 | Q1b аудит приложений | **инфо** | 77 приложений на 58/81 реплик · машиночитаемы 5 (6,5 %) · 93,5 % графика · корпус 82,7 % хинди / 17,3 % санскрит | [Q1B_ATTACHMENT_FEEDBACK_AUDIT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1B_ATTACHMENT_FEEDBACK_AUDIT.md) | Opus 5 (`claude-opus-5`) |
+| 12-08-2026 | Q1c просмотр выборки картинок | **инфо** | 12 из 43 · только локализация 4 · верная форма 8 · диагностика **2** · правило+применение 1 | [Q1B_ATTACHMENT_FEEDBACK_AUDIT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1B_ATTACHMENT_FEEDBACK_AUDIT.md) §5b | Opus 5 (`claude-opus-5`) |
 | — | P1–P5, Q2, Q3 | не запускалось | — | — | — |
 
 _Dr. Mārcis Gasūns_
