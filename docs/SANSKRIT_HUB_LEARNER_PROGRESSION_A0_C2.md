@@ -33,9 +33,10 @@ write Devanāgarī → **A0 is Cyrillic-only**; script writing / recitation UGC 
 ступени можно делегировать ИИ, а какие составляют сам осваиваемый результат, — в
 [ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md)
 (классы `constitutive` / `enabling` / `evidentiary` / `logistic` по ступеням, четыре функции
-оценивания F1–F4, санскритский слой). ⚠️ Проверено на данных лишь частично: замеры P0 и Q1
-шли на корпусе ДЗ **курса хинди**, поэтому санскритская привязка модели к этой лестнице
-пока не подтверждена — см.
+оценивания F1–F4, санскритский слой). ⚠️ Проверено на данных лишь частично: корпус ДЗ, на
+котором шли замеры P0/Q1, — **82,7 % хинди и 17,3 % санскрит** (Кочергина), причём вся
+обратная связь санскритской ветки лежит в нечитаемых машиной картинках, поэтому
+санскритская привязка модели к этой лестнице пока не подтверждена — см.
 [VERIFICATION_AI_NATIVE_PEDAGOGICAL_DESIGN.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_AI_NATIVE_PEDAGOGICAL_DESIGN.md).
 
 **Paid cohort packaging (A0–B1):** the 5-week «Старт чтения» Akro-style pilot packages script → first continuous prose on Systema (Hitopadeśa-0 / subhāṣita interim). Register: [PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PRODUCT_START_CHTENIYA_AKRO_STYLE_2026.md). Distinct from the marathon 28-08 A0 diagnostic funnel.
