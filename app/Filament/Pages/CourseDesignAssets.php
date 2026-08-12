@@ -278,13 +278,17 @@ class CourseDesignAssets extends Page implements HasTable
                     ->maxSize((int) config('design_assets.max_image_kb'))
                     ->helperText('Оставьте пустым, чтобы поменять только исходник у уже загруженного слота.'),
 
+                // Ссылка необязательна: картинку часто заливают раньше, чем
+                // дизайнер выложил исходник в облако, и требование ссылки
+                // блокировало саму загрузку баннера. Незаполненный исходник
+                // видно по колонке PSD и подписи «исходник НЕ учтён» —
+                // сигнал остаётся, запрет снят.
                 Forms\Components\TextInput::make('psd_url')
                     ->label('Ссылка на исходник PSD')
                     ->url()
                     ->maxLength(255)
-                    ->required()
                     ->default(fn (): ?string => self::assetFor($record, $record->designReadiness()['missing'][0] ?? (self::formats()[0] ?? ''))?->psd_url)
-                    ->helperText('Обязательна: облачная папка (Яндекс.Диск, Drive) с исходником этого баннера.'),
+                    ->helperText('Необязательна: облачная папка (Яндекс.Диск, Drive) с исходником этого баннера. Без неё слот считается без учтённого исходника.'),
 
                 Forms\Components\FileUpload::make('psd')
                     ->label('Файл исходника (необязательно)')
