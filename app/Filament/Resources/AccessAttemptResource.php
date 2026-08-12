@@ -7,6 +7,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\AccessAttemptResource\Pages;
 use App\Models\AccessAttempt;
+use App\Services\Access\LoginLinkNotifier;
 use App\Services\Access\StudentUnblockService;
 use App\Support\RoleGate;
 use Filament\Forms\Components\Toggle;
@@ -133,12 +134,26 @@ class AccessAttemptResource extends Resource
                         && $record->handled_at === null
                         && RoleGate::canIssueStudentLoginLink())
                     ->form([
+                        // Умолчание — ВЫКЛЮЧЕНО: до этой правки кнопка студенту
+                        // не писала вообще, и куратор, привыкший «нажал →
+                        // скопировал → отправил сам», иначе слал бы второе
+                        // сообщение, не заметив галочек. Отправка включается
+                        // осознанно.
+                        Toggle::make('send_email')
+                            ->label('Отправить ссылку на почту')
+                            ->helperText('Не включайте, если у студента как раз сломана почта.')
+                            ->default(false),
+                        Toggle::make('send_messengers')
+                            ->label('Отправить ссылку в мессенджеры (Telegram / VK / Max)')
+                            ->helperText('Уйдёт в те каналы, которые привязаны к аккаунту.')
+                            ->default(false),
                         Toggle::make('reset_password')
                             ->label('Также сбросить пароль')
+                            ->helperText('Обычно не нужно: ссылка входит без пароля. Пароль студенту не отправляется — передайте лично.')
                             ->default(false),
                     ])
                     ->modalHeading('Разблокировать студента?')
-                    ->modalDescription('Снимем троттл и создадим одноразовую ссылку для входа (24 ч) для передачи студенту напрямую.')
+                    ->modalDescription('Снимем троттл и создадим одноразовую ссылку для входа (24 ч). Ссылку покажем вам; включите галочки, если хотите, чтобы мы отправили её студенту сами.')
                     ->modalSubmitActionLabel('Разблокировать')
                     ->action(function (AccessAttempt $record, array $data) {
                         $user = $record->user;
@@ -155,13 +170,21 @@ class AccessAttemptResource extends Resource
                         $result = app(StudentUnblockService::class)
                             ->unblock($user, auth()->id(), (bool) ($data['reset_password'] ?? false));
 
-                        $body = "Одноразовая ссылка для входа (24 ч) — передайте студенту:\n{$result['login_link']}";
+                        $report = app(LoginLinkNotifier::class)->notify(
+                            $user,
+                            $result['login_link'],
+                            (bool) ($data['send_email'] ?? false),
+                            (bool) ($data['send_messengers'] ?? false),
+                        );
+
+                        $body = 'Доставка: '.LoginLinkNotifier::reportSummary($report);
+                        $body .= "\n\nОдноразовая ссылка для входа (24 ч) — если не дошла, передайте сами:\n{$result['login_link']}";
                         if ($result['password'] !== null) {
-                            $body .= "\n\nВременный пароль: {$result['password']}";
+                            $body .= "\n\nВременный пароль (студенту не отправлен): {$result['password']}";
                         }
 
                         Notification::make()
-                            ->title('Готово — скопируйте и передайте студенту')
+                            ->title('Готово — ссылка выдана')
                             ->body($body)
                             ->persistent()
                             ->success()
