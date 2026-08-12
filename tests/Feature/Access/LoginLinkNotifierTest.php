@@ -159,6 +159,33 @@ class LoginLinkNotifierTest extends TestCase
         $this->assertNotNull($attempt->fresh()->handled_at);
     }
 
+    /**
+     * Отправка студенту — opt-in: до H849-доработки кнопка ему не писала вообще,
+     * и куратор, привыкший «нажал → скопировал → отправил сам», иначе продублировал
+     * бы сообщение. Умолчания закреплены тестом, чтобы их не вернули незаметно.
+     */
+    public function test_delivery_toggles_are_off_by_default(): void
+    {
+        Mail::fake();
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]));
+
+        $student = User::factory()->create(['email' => 'stuck@example.com', 'telegram_id' => '111222333']);
+        $attempt = AccessAttempt::create([
+            'user_id' => $student->id,
+            'email' => 'stuck@example.com',
+            'kind' => AccessAttempt::KIND_LOCKOUT,
+        ]);
+
+        Livewire::test(ListAccessAttempts::class)
+            ->mountTableAction('unblock', $attempt)
+            ->assertTableActionDataSet([
+                'send_email' => false,
+                'send_messengers' => false,
+                'reset_password' => false,
+            ]);
+    }
+
     /** Снятые тумблеры в модалке = ничего студенту не уходит. */
     public function test_unblock_action_respects_disabled_toggles(): void
     {

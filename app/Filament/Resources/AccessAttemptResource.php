@@ -134,21 +134,26 @@ class AccessAttemptResource extends Resource
                         && $record->handled_at === null
                         && RoleGate::canIssueStudentLoginLink())
                     ->form([
+                        // Умолчание — ВЫКЛЮЧЕНО: до этой правки кнопка студенту
+                        // не писала вообще, и куратор, привыкший «нажал →
+                        // скопировал → отправил сам», иначе слал бы второе
+                        // сообщение, не заметив галочек. Отправка включается
+                        // осознанно.
                         Toggle::make('send_email')
                             ->label('Отправить ссылку на почту')
-                            ->helperText('Снимите, если у студента как раз сломана почта.')
-                            ->default(true),
+                            ->helperText('Не включайте, если у студента как раз сломана почта.')
+                            ->default(false),
                         Toggle::make('send_messengers')
                             ->label('Отправить ссылку в мессенджеры (Telegram / VK / Max)')
                             ->helperText('Уйдёт в те каналы, которые привязаны к аккаунту.')
-                            ->default(true),
+                            ->default(false),
                         Toggle::make('reset_password')
                             ->label('Также сбросить пароль')
                             ->helperText('Обычно не нужно: ссылка входит без пароля. Пароль студенту не отправляется — передайте лично.')
                             ->default(false),
                     ])
                     ->modalHeading('Разблокировать студента?')
-                    ->modalDescription('Снимем троттл и создадим одноразовую ссылку для входа (24 ч): отправим её студенту сами, а копия останется у вас — на случай, если ни один канал не сработает.')
+                    ->modalDescription('Снимем троттл и создадим одноразовую ссылку для входа (24 ч). Ссылку покажем вам; включите галочки, если хотите, чтобы мы отправили её студенту сами.')
                     ->modalSubmitActionLabel('Разблокировать')
                     ->action(function (AccessAttempt $record, array $data) {
                         $user = $record->user;
