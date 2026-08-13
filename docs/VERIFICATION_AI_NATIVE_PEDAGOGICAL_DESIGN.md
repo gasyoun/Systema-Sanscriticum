@@ -1,6 +1,6 @@
 # Проверка AI-native модели на данных Systema
 
-_Created: 12-08-2026 · Last updated: 12-08-2026_
+_Created: 12-08-2026 · Last updated: 13-08-2026_
 
 **Что это.** Пробы, которыми модель из
 [ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md)
@@ -225,6 +225,7 @@ Google-таблице и затягиваются вебхуком n8n, кото
 | 12-08-2026 | Q1 разметка реплик по F1–F4 | **PASS с оговорками** | n=81 · F1 62 (76,5 %) · F2 16 (19,8 %) · F3 36 · F4 36 · N 4 (4,9 %) · U 4 · все 36 F4-реплик несут `new_status` | [Q1_ASSESSMENT_FUNCTION_CODING_RESULTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1_ASSESSMENT_FUNCTION_CODING_RESULTS.md), рубрика зафиксирована до просмотра данных | Opus 5 (`claude-opus-5`) |
 | 12-08-2026 | Q1b аудит приложений | **инфо** | 77 приложений на 58/81 реплик · машиночитаемы 5 (6,5 %) · 93,5 % графика · корпус 82,7 % хинди / 17,3 % санскрит | [Q1B_ATTACHMENT_FEEDBACK_AUDIT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1B_ATTACHMENT_FEEDBACK_AUDIT.md) | Opus 5 (`claude-opus-5`) |
 | 12-08-2026 | Q1c просмотр выборки картинок | **инфо** | 12 из 43 · только локализация 4 · верная форма 8 · диагностика **2** · правило+применение 1 | [Q1B_ATTACHMENT_FEEDBACK_AUDIT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1B_ATTACHMENT_FEEDBACK_AUDIT.md) §5b | Opus 5 (`claude-opus-5`) |
+| 13-08-2026 | Q1d полная перепись картинок | **инфо** | 43 из 52 · только локализация 15 (34,9 %) · верная форма 26 (60,5 %) · **диагностика 4 (9,3 %)** · правило+применение 3 | [Q1B_ATTACHMENT_FEEDBACK_AUDIT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1B_ATTACHMENT_FEEDBACK_AUDIT.md) §5c | Opus 5 (`claude-opus-5`) |
 | — | P1–P5, Q2, Q3 | не запускалось | — | — | — |
 
 _Dr. Mārcis Gasūns_
