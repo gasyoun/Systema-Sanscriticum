@@ -10,7 +10,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
 
     {{-- Tailwind + FontAwesome (в тон shop/index.blade.php) --}}
-    <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.tailwind-cdn')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
