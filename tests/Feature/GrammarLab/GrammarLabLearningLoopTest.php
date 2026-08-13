@@ -13,8 +13,8 @@ use App\Services\GrammarLab\ExercisePublisher;
 use App\Services\GrammarLab\ExerciseRollback;
 use App\Services\GrammarLab\GrammarMasteryProjector;
 use App\Services\GrammarLab\GrammarRecommender;
-use App\Services\Srs\ReviewService;
 use App\Services\Srs\Rating;
+use App\Services\Srs\ReviewService;
 use App\Support\GrammarLabSrsDeck;
 use DateTimeImmutable;
 

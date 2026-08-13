@@ -10,6 +10,7 @@ use App\Models\SrsCard;
 use App\Models\SrsReviewState;
 use App\Models\User;
 use App\Support\GrammarLabSrsDeck;
+use Illuminate\Support\Collection;
 
 /**
  * Transparent rule-based next-topic policy (H2494).
@@ -66,8 +67,8 @@ final class GrammarRecommender
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, GrammarTopic>  $topics
-     * @param  \Illuminate\Support\Collection<string, GrammarMastery>  $mastery
+     * @param  Collection<string, GrammarTopic>  $topics
+     * @param  Collection<string, GrammarMastery>  $mastery
      * @return Recommendation|null
      */
     private function unmetPrerequisite($topics, $mastery): ?array
@@ -95,8 +96,8 @@ final class GrammarRecommender
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, GrammarTopic>  $topics
-     * @param  \Illuminate\Support\Collection<string, GrammarMastery>  $mastery
+     * @param  Collection<string, GrammarTopic>  $topics
+     * @param  Collection<string, GrammarMastery>  $mastery
      * @return Recommendation|null
      */
     private function weakest($topics, $mastery): ?array
@@ -129,7 +130,7 @@ final class GrammarRecommender
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, GrammarTopic>  $topics
+     * @param  Collection<string, GrammarTopic>  $topics
      * @return Recommendation|null
      */
     private function overdue(User $user, $topics): ?array
@@ -156,8 +157,8 @@ final class GrammarRecommender
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<string, GrammarTopic>  $topics
-     * @param  \Illuminate\Support\Collection<string, GrammarMastery>  $mastery
+     * @param  Collection<string, GrammarTopic>  $topics
+     * @param  Collection<string, GrammarMastery>  $mastery
      * @return Recommendation|null
      */
     private function nextBand($topics, $mastery): ?array
