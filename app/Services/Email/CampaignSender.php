@@ -8,6 +8,7 @@ use App\Jobs\SendCampaignRecipient;
 use App\Models\Campaign;
 use App\Models\CampaignRecipient;
 use App\Models\SuppressedEmail;
+use App\Services\Cabinet\RecoveryStateResolver;
 use Illuminate\Support\Str;
 
 /**
@@ -30,10 +31,22 @@ class CampaignSender
         }
 
         $users = $this->segmentResolver->resolve($campaign->segment);
+        $already = $campaign->recipients()
+            ->pluck('email')
+            ->map(fn ($email) => mb_strtolower((string) $email))
+            ->all();
+        $isLifecycle = ($campaign->segment['type'] ?? null) === 'lifecycle';
+        $recovery = $isLifecycle ? app(RecoveryStateResolver::class) : null;
 
         foreach ($users as $user) {
             $email = mb_strtolower((string) $user->email);
             if ($email === '' || SuppressedEmail::isSuppressed($email)) {
+                continue;
+            }
+            if (in_array($email, $already, true)) {
+                continue;
+            }
+            if ($recovery !== null && $recovery->resolve($user)->suppressOffers()) {
                 continue;
             }
 
@@ -42,6 +55,7 @@ class CampaignSender
                 'email' => $email,
                 'pixel_token' => (string) Str::uuid(),
             ]);
+            $already[] = $email;
 
             SendCampaignRecipient::dispatch($recipient->id);
         }

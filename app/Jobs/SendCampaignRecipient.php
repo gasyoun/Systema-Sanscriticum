@@ -48,6 +48,10 @@ final class SendCampaignRecipient implements ShouldQueue
             return;
         }
 
+        if ($recipient->sent_at !== null) {
+            return;
+        }
+
         if (SuppressedEmail::isSuppressed($recipient->email)) {
             return;
         }

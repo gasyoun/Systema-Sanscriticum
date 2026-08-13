@@ -99,6 +99,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `COURSE_RECORDINGS_SALES` | optional | `false` | config/features.php:151 |
 | `CRM_COCKPIT` | optional | `false` | config/features.php:78 |
 | `CRM_CUSTOMER_360` | optional | `false` | config/features.php:86 |
+| `CRM_LIFECYCLE_AUTOMATION` | optional | `false` | config/features.php |
 | `CRM_FOLLOW_UP_TASKS` | optional | `false` | config/features.php:630 |
 | `CRM_PIPELINE_BOARD` | optional | `false` | config/features.php:577 |
 | `CRM_REMINDERS` | optional | `false` | config/features.php:67 |

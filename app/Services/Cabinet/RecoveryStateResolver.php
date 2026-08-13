@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Server-side recovery-state predicate (R29.2, H1481).
@@ -50,6 +51,31 @@ final class RecoveryStateResolver
         }
 
         return RecoveryState::normal();
+    }
+
+    /**
+     * Batch wrapper around {@see resolve()} so lifecycle eligibility uses
+     * the same recovery predicate as the cabinet (H2484). Restricted to
+     * the candidate set — never scans the whole user table.
+     *
+     * @param  iterable<int>  $restrictTo
+     * @return Collection<int, int>
+     */
+    public function recoveringUserIds(iterable $restrictTo): Collection
+    {
+        $ids = collect($restrictTo)->filter()->map(fn ($id): int => (int) $id)->unique()->values();
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        $out = collect();
+        foreach (User::query()->whereIn('id', $ids)->cursor() as $user) {
+            if ($this->resolve($user)->suppressOffers()) {
+                $out->push((int) $user->id);
+            }
+        }
+
+        return $out->values();
     }
 
     private function latestUnrecoveredDecline(User $user): ?Payment
