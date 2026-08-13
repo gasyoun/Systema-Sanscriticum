@@ -94,7 +94,23 @@
       "status": "published",
       "prompt_ru": "Какая ступень у kartum?",
       "choices": ["нулевая", "guṇa", "vṛddhi"],
-      "answer": "guṇa"
+      "answer": "guṇa",
+      "answer_normalized": "guṇa",
+      "distractors": ["нулевая", "vṛddhi"],
+      "approval_record": null,
+      "source_ids": ["whitney-sec:235-243", "zalizniak-1975:three-grade-alternation"]
+    },
+    {
+      "id": "ex:grammar-lab:type-vs-class-essay",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:ablaut-grades",
+      "risk_class": "interpretive",
+      "status": "approval-required",
+      "prompt_ru": "Почему тип I нельзя отождествлять с I классом?",
+      "answer": "Тип описывает чередование; класс — презенсную основу.",
+      "answer_normalized": "type=ablaut-by-position; class=present-stem",
+      "approval_record": null,
+      "source_ids": ["zalizniak-1975:type-i"]
     }
   ]
 }

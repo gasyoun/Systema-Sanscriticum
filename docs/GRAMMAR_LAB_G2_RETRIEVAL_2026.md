@@ -2,6 +2,8 @@
 
 _Created: 13-08-2026 · Last updated: 13-08-2026_
 
+G3 follow-on is documented separately.
+
 Systema import + explorer + offline search over the pinned G1 bundle
 ([SanskritGrammar v0.121.6](https://github.com/gasyoun/SanskritGrammar/releases/tag/v0.121.6)).
 
@@ -35,5 +37,7 @@ G4 may add subscription lifecycle; it must reuse this resolver.
 
 Lexical: exact/prefix aliases in RU/Deva/IAST/SLP1 + Okapi BM25.
 Vector: PHP twin of `charngram-hash-v1`. G1 pin is not semantic-ready.
+
+G3 learning loop: [GRAMMAR_LAB_G3_LEARNING_LOOP_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GRAMMAR_LAB_G3_LEARNING_LOOP_2026.md).
 
 _Dr. Mārcis Gasūns_

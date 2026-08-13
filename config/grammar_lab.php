@@ -45,4 +45,18 @@ return [
         'trim',
         explode(',', (string) env('GRAMMAR_LAB_COURSE_SLUGS', ''))
     ))),
+
+    /*
+     | H2494 publication policy. auto_publish is the import-time kill switch
+     | (not a learner-facing feature flag). Prod GRAMMAR_LAB stays OFF.
+     */
+    'publication' => [
+        'auto_publish' => filter_var(env('GRAMMAR_LAB_AUTO_PUBLISH', true), FILTER_VALIDATE_BOOLEAN),
+        'sample_fraction' => 0.2,
+        'sample_seed' => (string) env('GRAMMAR_LAB_SAMPLE_SEED', 'grammar-lab-g3-v1'),
+    ],
+
+    'mastery' => [
+        'correct_to_master' => 2,
+    ],
 ];

@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2494 Grammar Lab G3: risk-tiered drills, FSRS projection, mastery, explainable recommendations.** Deterministic exercises auto-publish only after validators, a reproducible 20% HMAC sample and a stored rollback version; interpretive items stay `approval_required` without `approval_record`. Import-time kill switch `GRAMMAR_LAB_AUTO_PUBLISH`. Rollback/kill hide content and never delete `grammar_attempts`. Practice at `/dvaram/grammar-lab/t/{slug}/practice` projects into the existing FSRS `ReviewService` via a private per-user `grammar-lab` deck. Mastery is a separate consecutive-correct projection. The recommender is rule-based (prerequisite → weakness → overdue card → next band) and shows its reason. Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.89.22] - 2026-08-13
 ### Added
 - **H2441 follow-up: плейлист находит потоки без категории `hindi`.** На проде такой категории нет (замер 13-08-2026, user 6494 / курсы 416·356·366). Сид: `config/programme.php` (id 416,356,366) + заголовок/slug `хинди`/`hindi`/`xindi` + предшественники H2333. Probe до правки: 0 оболочек; после — все три группы Виктории. Executor: Grok 4.6 (`grok-4.6`).
@@ -15,7 +18,6 @@
 - **Проверка домашних заданий клубу НЕ выдаётся, и это исполнено бездействием.** `HomeworkController` считает ключи сам и клубного не видит — так спецификационный запрет «no homework review · no curator time» держится механизмом, а не дисциплиной. Тест `test_club_gives_no_homework_review` упадёт, если кто-то добавит клуб и туда. Оговорка: тест доказывает «клуб не открывает домашку», но 403 в нём может приходить и по другой причине — это проверка запрета, а не проверка причины отказа.
 - **Отказ от продления гасит намерение, а не доступ.** Оплаченный период уже оплачен, отбирать его за «не продлевать» — отъём купленного; право доживает до `ends_at` и снимается демоном на общих основаниях. Текст в кабинете ограничен §2.4 спецификации: 1 703 из 1 705 уроков — *unlisted*-ссылки YouTube, открытая студентом ссылка продолжает работать и после конца подписки. Поэтому формулировка говорит, что заканчивается **право доступа** (клубные страницы перестают открываться, новые записи в полку не добавляются), а уже открытые уроки «мы у вас не отбираем». Обещать отзыв того, что механизм доставки отозвать не может, — ровно та форма заявления, из которой вырастает спор о возврате денег. Согласовать правки с [H2645](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2645-Fable_Systema-Sanscriticum_membership-landing-pricing-page-ru-copy_13.08.26.md).
 - **Полка клуба набирается человеком: `courses.club_included` = false у всех 128 курсов.** Полка не выводится из «курс активен» — курс живого потока, попавший в неё по недосмотру, отдал бы за ₽1 500 то, что стоит ₽6 000. `membership:club-catalogue` предлагает кандидатов по уже существующему признаку `Course::sellsRecordings()` и без `--apply` ничего не меняет; массового снятия полки нет намеренно.
-
 
 ## [1.89.21] - 2026-08-13
 ### Added

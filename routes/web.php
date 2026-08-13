@@ -478,6 +478,15 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::post('/dvaram/grammar-lab/t/{slug}/bookmark', [GrammarLabController::class, 'bookmark'])
         ->where('slug', '[A-Za-z0-9\-]+')
         ->name('student.grammar-lab.bookmark');
+    Route::get('/dvaram/grammar-lab/t/{slug}/practice', [GrammarLabController::class, 'practice'])
+        ->where('slug', '[A-Za-z0-9\-]+')
+        ->name('student.grammar-lab.practice');
+    Route::post('/dvaram/grammar-lab/t/{slug}/practice', [GrammarLabController::class, 'attempt'])
+        ->where('slug', '[A-Za-z0-9\-]+')
+        ->name('student.grammar-lab.attempt');
+    Route::post('/dvaram/grammar-lab/t/{slug}/srs', [GrammarLabController::class, 'addToSrs'])
+        ->where('slug', '[A-Za-z0-9\-]+')
+        ->name('student.grammar-lab.srs');
 
     Route::get('/dvaram/visualdcs', [VisualDcsController::class, 'hub'])
         ->name('student.visualdcs.hub');
