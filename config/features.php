@@ -86,6 +86,16 @@ return [
     'crm_customer_360' => (bool) env('CRM_CUSTOMER_360', false),
 
     /*
+     | CRM Wave 2 (H2484): lifecycle-правила готовят черновики Campaign /
+     | FollowUpTask по незавершённому чекауту, отсутствию первого действия
+     | в кабинете и следующему курсу. ВЫКЛ по умолчанию. Dry-run работает
+     | и при OFF; --apply и Filament-страница — только при ON. Отправка
+     | писем по-прежнему только через человеческое «Отправить» и флаг
+     | email_campaigns. Включение — CRM_LIFECYCLE_AUTOMATION=true.
+     */
+    'crm_lifecycle_automation' => (bool) env('CRM_LIFECYCLE_AUTOMATION', false),
+
+    /*
      | Авто-постинг ссылки на занятие в Telegram-чат группы за N минут до старта
      | (команда classes:post-group-link, P0 автоматизации «Отдела заботы»).
      | ВЫКЛЮЧЕН по умолчанию: включается флагом class_link_autopost_enabled в
