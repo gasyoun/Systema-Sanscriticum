@@ -606,6 +606,11 @@
         </div>
         @endif
 
+        {{-- КЛУБ (H2644): карточка членства + полка записей. Партиал сам решает,
+             рисовать ли себя: при выключенном флаге clubMembership = null и
+             clubShelf пуста, и кабинет остаётся прежним. --}}
+        @include('student.partials.club-membership')
+
         {{-- ДОСТИЖЕНИЯ (Сертификаты) --}}
         @if($certificates->isNotEmpty())
         <div class="mb-12">
