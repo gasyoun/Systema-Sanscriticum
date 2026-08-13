@@ -168,6 +168,8 @@ return [
     // telegram-support:sync (a second parallel session triggers AUTH_RESTART).
     'telegram_harvest' => [
         'enabled' => (bool) env('TELEGRAM_HARVEST_ENABLED', false),
+        'daily_enabled' => (bool) env('TELEGRAM_HARVEST_DAILY_ENABLED', false),
+        'daily_at' => env('TELEGRAM_HARVEST_DAILY_AT', '05:15'),
         // Own telegram_support_accounts row → cursor namespace separate from 'support'.
         'account_name' => env('TELEGRAM_HARVEST_ACCOUNT_NAME', 'harvester'),
         'history_limit' => (int) env('TELEGRAM_HARVEST_HISTORY_LIMIT', 200),

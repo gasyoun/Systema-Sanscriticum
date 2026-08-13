@@ -19,7 +19,8 @@ class SyncTelegramHarvest extends Command
 
     protected $signature = 'telegram-harvest:sync
         {--payload= : JSON file of pre-normalized harvest records (local import, no MadelineProto needed)}
-        {--peer=* : Override the configured peer list (repeatable)}';
+        {--peer=* : Override the configured peer list (repeatable)}
+        {--json : Emit one machine-readable JSON status object}';
 
     protected $description = 'Harvest Sanskrit groups/channels/DMs into the out-of-git corpus store (Track B).';
 
@@ -50,23 +51,48 @@ class SyncTelegramHarvest extends Command
 
             if ($result === null) {
                 Log::warning('Telegram harvest skipped: MadelineProto session busy.');
-                $this->warn('Telegram harvest: session_busy (another MadelineProto command holds the session).');
+                $this->emitStatus([
+                    'status' => 'session_busy',
+                    'retryable' => true,
+                    'harvested' => 0,
+                    'stored' => 0,
+                    'skipped_dupe' => 0,
+                    'failed' => 0,
+                ]);
 
-                return self::SUCCESS;
+                return self::FAILURE;
             }
         }
 
-        $line = 'Telegram harvest: '.$result['status']
-            .'; harvested='.($result['harvested'] ?? 0)
-            .'; stored='.($result['stored'] ?? 0)
-            .'; skipped_dupe='.($result['skipped_dupe'] ?? 0)
-            .'; failed='.($result['failed'] ?? 0);
-        if (! empty($result['error'])) {
-            $line .= '; error='.$result['error'];
+        $this->emitStatus($result);
+
+        return ($result['status'] ?? 'ok') === 'ok' && (int) ($result['failed'] ?? 0) === 0
+            ? self::SUCCESS
+            : self::FAILURE;
+    }
+
+    /** @param array<string, mixed> $result */
+    private function emitStatus(array $result): void
+    {
+        $safe = [
+            'status' => (string) ($result['status'] ?? 'unknown'),
+            'retryable' => (bool) ($result['retryable'] ?? false),
+            'harvested' => (int) ($result['harvested'] ?? 0),
+            'stored' => (int) ($result['stored'] ?? 0),
+            'skipped_dupe' => (int) ($result['skipped_dupe'] ?? 0),
+            'failed' => (int) ($result['failed'] ?? 0),
+        ];
+
+        if ($this->option('json')) {
+            $this->line((string) json_encode($safe, JSON_UNESCAPED_SLASHES));
+
+            return;
         }
 
-        $this->info($line);
-
-        return self::SUCCESS;
+        $this->info('Telegram harvest: '.$safe['status']
+            .'; harvested='.$safe['harvested']
+            .'; stored='.$safe['stored']
+            .'; skipped_dupe='.$safe['skipped_dupe']
+            .'; failed='.$safe['failed']);
     }
 }
