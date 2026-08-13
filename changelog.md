@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.89.23] - 2026-08-14
 ### Added
 - **H2494 Grammar Lab G3: risk-tiered drills, FSRS projection, mastery, explainable recommendations.** Deterministic exercises auto-publish only after validators, a reproducible 20% HMAC sample and a stored rollback version; interpretive items stay `approval_required` without `approval_record`. Import-time kill switch `GRAMMAR_LAB_AUTO_PUBLISH`. Rollback/kill hide content and never delete `grammar_attempts`. Practice at `/dvaram/grammar-lab/t/{slug}/practice` projects into the existing FSRS `ReviewService` via a private per-user `grammar-lab` deck. Mastery is a separate consecutive-correct projection. The recommender is rule-based (prerequisite → weakness → overdue card → next band) and shows its reason. Executor: Grok 4.6 (`grok-4.6`).
 
