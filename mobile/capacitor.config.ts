@@ -13,6 +13,21 @@ import type { CapacitorConfig } from '@capacitor/cli';
  * Config-driven host: the URL is NEVER hardcoded. It is selected by CAP_ENV
  * (staging|prod) and read from CAP_URL_STAGING / CAP_URL_PROD (see .env.example).
  * Missing config fails loud at build time rather than shipping a wrong host.
+ *
+ * OFFLINE CONTENT IS STOPPED ON THIS WRAPPER (H2634, 13-08-2026).
+ * `server.url` below is the remote cabinet origin — that is where the offline cabinet's
+ * device key and encrypted chunks are written. `server.errorPath` is served from the
+ * bundled `webDir` on the local scheme (`capacitor://localhost` on iOS), a DIFFERENT
+ * origin, which same-origin policy denies both. Capacitor hosts one origin per WebView,
+ * so no setting here reconciles them; offline reading is delivered on the same-origin
+ * installed-PWA surfaces instead. Ruling, rejected exits and the reopen path:
+ * `docs/ARCHITECTURE_SYSTEMA_OFFLINE_CABINET.md` § Load-bearing platform gate.
+ *
+ * Consequently, do NOT "fix" offline here by dropping `server.url` for a local-origin
+ * bundle (that is the native rewrite the roadmap's reuse ruling forbids), by adding a
+ * second store under the local origin, or by adding a secure key/value plugin that hands
+ * a serialized content key back to JavaScript. `assertOfflineStorageAllowed()` in
+ * `resources/js/offline/spike.ts` refuses the store on a native platform for this reason.
  */
 
 const ENV = (process.env.CAP_ENV ?? 'staging').toLowerCase();
