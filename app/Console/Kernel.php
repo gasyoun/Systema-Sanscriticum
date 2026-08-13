@@ -457,7 +457,7 @@ class Kernel extends ConsoleKernel
             $schedule->command('telegram-harvest:sync --json')
                 ->dailyAt((string) config('services.telegram_harvest.daily_sync_time', '05:30'))
                 ->timezone('Europe/Moscow')
-                ->withoutOverlapping($this->madelineSessionLockMinutes())
+                ->withoutOverlapping($this->madelineSessionLockMinutes(600))
                 ->onOneServer()
                 ->name('telegram-harvest-daily-sync');
         }
