@@ -797,4 +797,15 @@ return [
      | работает независимо от флага: куратор может заранее собрать полку.
      */
     'course_library' => (bool) env('COURSE_LIBRARY', false),
+
+    /*
+     | Native VisualDCS learner surfaces (H2482). Three independent flags so one
+     | surface can roll back without taking the other two down. All default OFF:
+     | routes 404 and the cabinet nav entry stays hidden until a human flips
+     | VISUALDCS_VERB / VISUALDCS_NOMINAL / VISUALDCS_PASSAGE after the 7-day
+     | baseline. Does not change prices, Payment qualification or identity.
+     */
+    'visualdcs_verb' => (bool) env('VISUALDCS_VERB', false),
+    'visualdcs_nominal' => (bool) env('VISUALDCS_NOMINAL', false),
+    'visualdcs_passage' => (bool) env('VISUALDCS_PASSAGE', false),
 ];

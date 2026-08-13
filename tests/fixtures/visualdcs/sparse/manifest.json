@@ -1,0 +1,38 @@
+{
+  "contractVersion": "1.0.0",
+  "releaseId": "vdcs-fixture-sparse-20260813",
+  "generatedAt": "2026-08-13T00:00:00+00:00",
+  "sourcePins": {
+    "fixture": "H2482 complete+sparse from vdcs-learner-v1-20260809"
+  },
+  "files": [
+    "verb-trainer.json",
+    "nominal-trainer.json",
+    "concordance-passage.json"
+  ],
+  "schemas": [],
+  "sha256": {
+    "verb-trainer.json": "e3d8ba19dcdfea20d4b30e619bcec1270c46edecd5df747f47cfe486a9115ddb",
+    "nominal-trainer.json": "2c09eed7fd9379d0ad116a815477c4fa9c8d15039aa6950fd48b81dce8abf4c5",
+    "concordance-passage.json": "b318cdbb348d56ad1e22cfcf5e10f48a5ed20e9ff95eb824b75fe98e900c4b2d"
+  },
+  "bytes": {
+    "verb-trainer.json": 2289,
+    "nominal-trainer.json": 1453,
+    "concordance-passage.json": 1109
+  },
+  "recordCount": {
+    "verb-trainer.json": 1,
+    "nominal-trainer.json": 1,
+    "concordance-passage.json": 1
+  },
+  "compatibility": {
+    "policy": "additive-only within v1; breaking changes require v2 contractVersion",
+    "previousRelease": null
+  },
+  "provenance": {
+    "handoff": "H2482 (Grok 4.6) — native VisualDCS fixtures",
+    "builtBy": "Grok 4.6 (grok-4.6)",
+    "plan": "docs/PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md"
+  }
+}

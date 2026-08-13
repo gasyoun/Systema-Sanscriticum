@@ -1,8 +1,28 @@
 # Results log
 
-_Created: 30-07-2026 · Last updated: 30-07-2026_
+_Created: 30-07-2026 · Last updated: 13-08-2026_
 
 Durable substantive-result tables for this repo. Newest first.
+
+## H2482 — native VisualDCS Wave L (13-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ Three surfaces, importer, entitlement matrix, progress.
+
+| Gate | Result |
+|---|---|
+| Flags default OFF | verb / nominal / passage all `false` |
+| Import complete fixture | promotes `vdcs-fixture-complete-20260813` |
+| Reimport same release | no-op |
+| Corrupt SHA-256 | rejected; previous release stays promoted |
+| Rollback | restores prior manifest |
+| Public preview | full-tier only (`ah`), no attested (`abhibhañj`) |
+| Unpaid / expired / deposit | preview only |
+| Paid-full / partial / admin | attested visible |
+| Progress upsert | one row, attempts increment, second device resumes |
+| Independent rollback | one flag 404s only that surface |
+
+Reproduce: `php artisan test --filter=VisualDcs` after `visualdcs:import tests/fixtures/visualdcs/complete`.
+
 
 ## H1946 — Synthetic prod user 6858 (H1939 pay probe) (30-07-2026)
 

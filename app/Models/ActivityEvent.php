@@ -105,6 +105,11 @@ class ActivityEvent extends Model
     /** H2107 — a student opened a token's disclosure panel in a «Старт чтения» reading pack. */
     public const TYPE_READING_TOKEN_LOOKUP = 'reading.token.lookup';
 
+    /** H2482 — VisualDCS native trainer progress (projection is external_learning_progress). */
+    public const VISUALDCS_PROGRESS_STARTED = 'visualdcs.progress.started';
+
+    public const VISUALDCS_PROGRESS_COMPLETED = 'visualdcs.progress.completed';
+
     /**
      * События §4, которые разрешено присылать с клиента (first-party JS,
      * POST student.telemetry). Серверные (home.view, mark.mastered,
