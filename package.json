@@ -7,7 +7,8 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "test:offline-spike": "vitest run resources/js/offline/spike.test.ts"
+        "test:offline-spike": "vitest run resources/js/offline/spike.test.ts",
+        "test:sw-cache-migration": "vitest run resources/js/offline/sw-cache-migration.test.ts"
     },
     "devDependencies": {
         "@tailwindcss/postcss": "^4.3.3",
