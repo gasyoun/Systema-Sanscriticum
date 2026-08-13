@@ -171,6 +171,8 @@ return [
         // Own telegram_support_accounts row → cursor namespace separate from 'support'.
         'account_name' => env('TELEGRAM_HARVEST_ACCOUNT_NAME', 'harvester'),
         'history_limit' => (int) env('TELEGRAM_HARVEST_HISTORY_LIMIT', 200),
+        'daily_sync_enabled' => (bool) env('TELEGRAM_HARVEST_DAILY_SYNC_ENABLED', false),
+        'daily_sync_time' => env('TELEGRAM_HARVEST_DAILY_SYNC_TIME', '05:30'),
         // Comma-separated peer list (@usernames or numeric ids); NOT the 20-dialog support cap.
         'peers' => array_values(array_filter(array_map('trim', explode(',', (string) env('TELEGRAM_HARVEST_PEERS', ''))))),
         // Optional JSON file with a managed peer list (merged with the env list).

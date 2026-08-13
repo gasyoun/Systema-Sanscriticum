@@ -19,6 +19,15 @@ class TelegramHarvestSyncTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_sync_command_json_is_machine_readable_and_disabled_is_failure(): void
+    {
+        config(['services.telegram_harvest.enabled' => false]);
+
+        $this->artisan('telegram-harvest:sync', ['--json' => true])
+            ->expectsOutput('{"status":"disabled","harvested":0,"stored":0,"skipped_dupe":0}')
+            ->assertExitCode(1);
+    }
+
     private string $store;
 
     protected function setUp(): void

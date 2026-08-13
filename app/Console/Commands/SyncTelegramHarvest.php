@@ -19,7 +19,8 @@ class SyncTelegramHarvest extends Command
 
     protected $signature = 'telegram-harvest:sync
         {--payload= : JSON file of pre-normalized harvest records (local import, no MadelineProto needed)}
-        {--peer=* : Override the configured peer list (repeatable)}';
+        {--peer=* : Override the configured peer list (repeatable)}
+        {--json : Emit one machine-readable JSON status object}';
 
     protected $description = 'Harvest Sanskrit groups/channels/DMs into the out-of-git corpus store (Track B).';
 
@@ -50,10 +51,32 @@ class SyncTelegramHarvest extends Command
 
             if ($result === null) {
                 Log::warning('Telegram harvest skipped: MadelineProto session busy.');
-                $this->warn('Telegram harvest: session_busy (another MadelineProto command holds the session).');
+                $result = [
+                    'status' => 'session_busy',
+                    'harvested' => 0,
+                    'stored' => 0,
+                    'skipped_dupe' => 0,
+                    'failed' => 0,
+                    'retryable' => true,
+                ];
+                $this->writeResult($result);
 
-                return self::SUCCESS;
+                return 75;
             }
+        }
+
+        $this->writeResult($result);
+
+        return $this->exitCode($result);
+    }
+
+    /** @param array<string, mixed> $result */
+    private function writeResult(array $result): void
+    {
+        if ($this->option('json')) {
+            $this->line((string) json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+            return;
         }
 
         $line = 'Telegram harvest: '.$result['status']
@@ -66,6 +89,17 @@ class SyncTelegramHarvest extends Command
         }
 
         $this->info($line);
+    }
+
+    /** @param array<string, mixed> $result */
+    private function exitCode(array $result): int
+    {
+        $status = (string) ($result['status'] ?? 'error');
+        if (($result['failed'] ?? 0) > 0 || in_array($status, [
+            'error', 'disabled', 'support_session_disabled', 'missing_madelineproto', 'no_peers',
+        ], true)) {
+            return self::FAILURE;
+        }
 
         return self::SUCCESS;
     }

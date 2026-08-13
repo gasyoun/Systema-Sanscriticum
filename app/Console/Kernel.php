@@ -450,6 +450,18 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('telegram-harvest-roster-groups');
 
+        // ORS private-insight pilot: one bounded daily acquisition pass. The
+        // command owns the shared Madeline-session lock and exits 75 when busy,
+        // allowing the scheduler to retry on the next day without a second login.
+        if (config('services.telegram_harvest.daily_sync_enabled')) {
+            $schedule->command('telegram-harvest:sync --json')
+                ->dailyAt((string) config('services.telegram_harvest.daily_sync_time', '05:30'))
+                ->timezone('Europe/Moscow')
+                ->withoutOverlapping($this->madelineSessionLockMinutes())
+                ->onOneServer()
+                ->name('telegram-harvest-daily-sync');
+        }
+
         // Track C (H164): @zapisi_ORSbot напоминает о занятии в чат группы прямо
         // из расписания (Schedule → group.telegram_chat_id). No-op, пока не включён
         // features.telegram_zapisi_bot; окно и дедуп (zapisi_reminded_at) — внутри команды.
