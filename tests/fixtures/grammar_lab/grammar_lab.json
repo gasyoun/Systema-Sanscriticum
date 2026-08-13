@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0.0",
+  "bundle_version": "1.0.0",
+  "topics": [
+    {
+      "id": "subject:grammar-lab:ablaut-grades",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Три ступени чередования",
+      "cluster": "grade",
+      "aliases": {
+        "ru": ["гуна", "вриддхи"],
+        "deva": ["गुण"],
+        "iast": ["guṇa"],
+        "slp1": ["guRa"]
+      },
+      "summary_ru": "Три огласовки: слабая, guṇa, vṛddhi.",
+      "alignment_note": "Shared phenomenon, different models.",
+      "prerequisites": [],
+      "difficulty": "intro",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:235-243",
+          "anchor_key_slp1": "",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "link_type": "thematic",
+          "confidence": 0.97
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:three-grade-alternation",
+          "anchor_key_slp1": "",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "link_type": "thematic",
+          "confidence": 0.97
+        }
+      ],
+      "dictionary_evidence": [
+        {"kind": "dictionary", "dict": "mw", "entry_id": "mw:54148", "root_slp1": "kf", "gloss": "make"}
+      ],
+      "corpus_evidence": [
+        {"kind": "corpus", "status": "attested", "dcs_freq": 1, "limitation": "fixture"}
+      ],
+      "exercise_ids": ["ex:grammar-lab:ablaut-grades"],
+      "provenance": {"curated_date": "13-08-2026", "curator": "fixture"}
+    },
+    {
+      "id": "subject:grammar-lab:set-anit-vet",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "seṭ, aniṭ и veṭ",
+      "cluster": "root-class",
+      "aliases": {
+        "ru": ["сет", "анит"],
+        "deva": ["सेट्"],
+        "iast": ["seṭ"],
+        "slp1": ["sew"]
+      },
+      "summary_ru": "Корни с i-вставкой и без неё.",
+      "alignment_note": "Descriptive labels, not identical inventories.",
+      "prerequisites": [],
+      "difficulty": "core",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:103",
+          "anchor_key_slp1": "",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "link_type": "thematic",
+          "confidence": 0.9
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:set-anit",
+          "anchor_key_slp1": "",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "link_type": "thematic",
+          "confidence": 0.9
+        }
+      ],
+      "dictionary_evidence": [],
+      "corpus_evidence": [{"kind": "corpus", "status": "attested", "limitation": "fixture"}],
+      "exercise_ids": [],
+      "provenance": {"curated_date": "13-08-2026"}
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex:grammar-lab:ablaut-grades",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:ablaut-grades",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Какая ступень у kartum?",
+      "choices": ["нулевая", "guṇa", "vṛddhi"],
+      "answer": "guṇa"
+    }
+  ]
+}

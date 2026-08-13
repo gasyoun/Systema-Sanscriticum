@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2493 Grammar Lab G2: idempotent G1 import, entitled Russian explorer, offline hybrid search.** Pins [SanskritGrammar v0.121.6](https://github.com/gasyoun/SanskritGrammar/releases/tag/v0.121.6) (32 topics) under `resources/data/grammar_lab/`. `php artisan grammar-lab:sync` vendors + upserts by stable `topic_id`/`content_hash`, retires missing topics, never deletes bookmarks or history. `GrammarLabAccess::canUse()` gates every protected route and JSON payload (`features.grammar_lab` default OFF). Lexical BM25 + four-script alias search ships live behind that flag; `features.grammar_lab_semantic` stays OFF because G1 `semantic_ready` is false (char n-gram hash sidecar + frozen eval in `grammar-lab:eval-search`). Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.89.20] - 2026-08-13
 ### Added
 - **H2484: CRM Wave 2 lifecycle automation on the existing campaign stack.** Three versioned rules (`uncompleted_checkout`, `missing_first_cabinet_action`, `next_product_eligible`) share one eligibility query for dry-run and live send. `crm:lifecycle-prepare` (default dry-run) and Filament `/admin/lifecycle-campaigns` prepare **draft** `Campaign` rows plus optional `FollowUpTask`; they never send. Recovery and `SuppressedEmail` stay out of eligible; retries cannot double-create recipients or re-mail (`sent_at` guard). Qualifying Payment denominator is `conversion.excluded_tariffs`. Flag `crm_lifecycle_automation` default **OFF**. Contract: [docs/CRM_LIFECYCLE_RULES_CONTRACT_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_LIFECYCLE_RULES_CONTRACT_2026.md). Executor: Grok 4.6 (`grok-4.6`).

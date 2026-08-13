@@ -21,6 +21,7 @@ use App\Http\Controllers\DictionaryPageController;
 use App\Http\Controllers\DocController;
 use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
+use App\Http\Controllers\GrammarLabController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\JoinClassController;
@@ -344,6 +345,10 @@ Route::get('/visualdcs/{surface}/preview', [VisualDcsController::class, 'preview
     ->where('surface', 'verb|nominal|passage')
     ->name('visualdcs.preview');
 
+// H2493 — Grammar Lab marketing landing (no topic/vector payload).
+Route::get('/grammar-lab', [GrammarLabController::class, 'landing'])
+    ->name('grammar-lab.landing');
+
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {
     $s = MarketingSetting::cached();
@@ -449,6 +454,24 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     // H2482 — native VisualDCS surfaces. Flags checked per request so one
     // surface can 404 without unregistering the other two.
+    // H2493 — Grammar Lab explorer. Controller 404s when features.grammar_lab
+    // is OFF and 403s (empty payload) when the user is not entitled.
+    Route::get('/dvaram/grammar-lab', [GrammarLabController::class, 'index'])
+        ->name('student.grammar-lab.index');
+    Route::get('/dvaram/grammar-lab/search', [GrammarLabController::class, 'search'])
+        ->name('student.grammar-lab.search');
+    Route::get('/dvaram/grammar-lab/history', [GrammarLabController::class, 'history'])
+        ->name('student.grammar-lab.history');
+    Route::get('/dvaram/grammar-lab/t/{slug}', [GrammarLabController::class, 'show'])
+        ->where('slug', '[A-Za-z0-9\-]+')
+        ->name('student.grammar-lab.show');
+    Route::get('/dvaram/grammar-lab/t/{slug}/compare', [GrammarLabController::class, 'compare'])
+        ->where('slug', '[A-Za-z0-9\-]+')
+        ->name('student.grammar-lab.compare');
+    Route::post('/dvaram/grammar-lab/t/{slug}/bookmark', [GrammarLabController::class, 'bookmark'])
+        ->where('slug', '[A-Za-z0-9\-]+')
+        ->name('student.grammar-lab.bookmark');
+
     Route::get('/dvaram/visualdcs', [VisualDcsController::class, 'hub'])
         ->name('student.visualdcs.hub');
     Route::get('/dvaram/visualdcs/{surface}', [VisualDcsController::class, 'index'])

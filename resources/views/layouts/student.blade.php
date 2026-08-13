@@ -167,6 +167,14 @@
             </a>
             @endif
 
+            @if (config('features.grammar_lab'))
+            <a href="{{ route('student.grammar-lab.index') }}"
+               class="{{ request()->routeIs('student.grammar-lab.*') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-book-open mr-3 w-5 text-center {{ request()->routeIs('student.grammar-lab.*') ? 'text-brand' : 'text-gray-500' }}"></i>
+                Грамматика
+            </a>
+            @endif
+
             {{-- H2482 — native VisualDCS; shown if ANY of the three flags is on --}}
             @if (config('features.visualdcs_verb') || config('features.visualdcs_nominal') || config('features.visualdcs_passage'))
             <a href="{{ route('student.visualdcs.hub') }}"

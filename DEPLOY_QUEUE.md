@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 13-08-2026 (H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 13-08-2026 (H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -78,6 +78,26 @@ _Создано: 08-07-2026 · Обновлено: 13-08-2026 (H2484 lifecycle f
    `php artisan visualdcs:rollback`.
 
 Не трогает цены, Payment, identity.
+
+---
+
+### ⚙️ H2493 — Grammar Lab G2 explorer — флаги ОСТАЮТСЯ OFF
+
+Код: `GRAMMAR_LAB` и `GRAMMAR_LAB_SEMANTIC` (оба default false). После merge:
+
+1. `php artisan migrate` — таблицы `grammar_topics`, `grammar_topic_sources`,
+   `grammar_topic_versions`, `grammar_exercises`, `grammar_bookmarks`,
+   `grammar_topic_views`, `grammar_lab_entitlements`, `grammar_lab_imports`.
+2. Импорт пина G1 (уже в репо под `resources/data/grammar_lab/`):  
+   `php artisan grammar-lab:sync --skip-copy`  
+   (или `grammar-lab:sync` с sibling SanskritGrammar). На проде до включения
+   флага маршруты 404, импорт можно отложить.
+3. Флаги **не включать** в этом деплое. `GRAMMAR_LAB=true` — отдельное решение
+   G4 / человека. `GRAMMAR_LAB_SEMANTIC` не включать, пока G1 `semantic_ready`
+   ложен (сейчас `charngram-hash-v1`).
+4. Откат: снять env + `config:cache`. Таблицы аддитивные.
+
+Не создаёт платежей и не включает подписку. Доступ — `GrammarLabAccess::canUse()`.
 
 ---
 
