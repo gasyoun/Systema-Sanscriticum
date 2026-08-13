@@ -637,6 +637,32 @@ class Kernel extends ConsoleKernel
         // cron — `systema-watchdog-run.sh "cabinet:probe" cabinet 120` в
         // scripts/server_guards/cron/app-user.crontab — со своим локом и
         // судьбой, не зависящей от schedule:run. Не возвращайте команду сюда.
+
+        // --- ЧЛЕНСТВО (H2644, запуск клуба 01-09-2026) ---
+        // Снятие клубного права по истечении оплаченного периода. Раньше выдачи
+        // бесплатного уровня в то же утро намеренно: истёкший вчера клубный член
+        // должен успеть стать кандидатом на бесплатный урок сегодня же, а не через
+        // сутки. Обе команды при выключенных флагах (features.club_membership /
+        // features.membership_free_tier) печатают отчёт и ничего не пишут —
+        // планировщик безопасен до запуска.
+        $schedule->command('membership:expire-club --apply')
+            ->dailyAt('05:10')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->onFailure(fn () => ScheduleFailureSignal::report('membership:expire-club'))
+            ->name('membership-expire-club');
+
+        // Месячный урок бесплатного уровня. Ежедневно, а не «первого числа»:
+        // право не копится (FreeTierLessonGranter), поэтому у каждого свой цикл
+        // от даты его последнего гранта, и ежедневный проход подбирает тех, у
+        // кого он истёк. «Первое число» собрало бы всех 350 в один пик и
+        // привязало бы подарок к календарю школы, а не к ритму студента.
+        $schedule->command('membership:grant-free-lesson --apply')
+            ->dailyAt('05:25')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->onFailure(fn () => ScheduleFailureSignal::report('membership:grant-free-lesson'))
+            ->name('membership-grant-free-lesson');
     }
 
     /**

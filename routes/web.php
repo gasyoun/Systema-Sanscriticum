@@ -28,6 +28,7 @@ use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MarathonController;
 use App\Http\Controllers\MaterialsController;
+use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\NewsletterSubscribeController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PasswordResetController;
@@ -510,6 +511,13 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::redirect('/help/homework', '/faq/dz', 301)->name('help.homework');
     Route::get('/progress', [StudentController::class, 'progress'])->name('student.progress');
     Route::get('/access', [StudentController::class, 'access'])->name('student.access');
+
+    // Клубное членство (H2644): самостоятельный отказ от продления и возврат.
+    // Флаг features.membership_cancellation проверяется в контроллере (404).
+    Route::post('/membership/cancel', [MembershipController::class, 'cancel'])
+        ->name('student.membership.cancel');
+    Route::post('/membership/resume', [MembershipController::class, 'resume'])
+        ->name('student.membership.resume');
 
     // Короткие URL кабинета: /c/{slug}, /c/{slug}/u/{lessonId} (урок).
     // Legacy /course/... → 301 (см. блок ниже, внутри auth).

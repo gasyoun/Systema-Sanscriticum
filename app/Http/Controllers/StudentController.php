@@ -17,6 +17,7 @@ use App\Models\PranaRedemption;
 use App\Models\Schedule;
 use App\Models\ScheduleAttendanceNotice;
 use App\Models\SubscriberMagnet;
+use App\Models\User;
 use App\Services\AccessDiagnosticsService;
 use App\Services\Activity\CabinetTelemetry;
 use App\Services\AttendanceNoticeService;
@@ -30,6 +31,8 @@ use App\Services\CourseMaterialsArchiver;
 use App\Services\DebtPaymentResolver;
 use App\Services\Leaderboard\LeaderboardService;
 use App\Services\Learning\ExternalLearningProgressService;
+use App\Services\Membership\ClubEntitlement;
+use App\Services\Membership\ClubMembershipService;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Services\StudentDebtsService;
@@ -52,7 +55,8 @@ class StudentController extends Controller
     private function getUserUnlockedTariffs($userId, $courseSlug): array
     {
         // 1. Находим ID курса по каноническому slug или alias
-        $courseId = Course::resolveBySlug($courseSlug)?->id;
+        $course = Course::resolveBySlug($courseSlug);
+        $courseId = $course?->id;
 
         // Если курс не найден, возвращаем пустой массив (нет доступов)
         if (! $courseId) {
@@ -62,11 +66,23 @@ class StudentController extends Controller
         // 2. Ищем оплаченные тарифы строго по ID КУРСА, а не лендинга.
         //    Учитываем оба статуса оплаты ('paid' и 'success') — иначе урок
         //    остаётся закрытым для success-платежей, хотя группа уже выдана.
-        return Payment::where('user_id', $userId)
+        $keys = Payment::where('user_id', $userId)
             ->where('course_id', $courseId)
             ->paid()
             ->pluck('tariff')
             ->toArray();
+
+        // 3. H2644: клубное членство добавляет виртуальный ключ на курсы полки
+        //    (club_included). Ключ существует только на время запроса и нигде
+        //    не сохраняется — истёкшее членство закрывает доступ немедленно,
+        //    без миграции и без «забытых» строк в payments.
+        return array_values(array_unique(array_merge(
+            $keys,
+            app(ClubEntitlement::class)->extraTariffKeys(
+                $userId ? User::find($userId) : null,
+                $course,
+            ),
+        )));
     }
 
     /**
@@ -317,6 +333,15 @@ class StudentController extends Controller
             'accessSelfService',
             'accessProfileSummary',
         );
+
+        // H2644: клубная полка и карточка членства. Оба ключа ВСЕГДА определены —
+        // партиалы решают по ним, рисовать ли себя; при выключенном флаге это
+        // null + пустая коллекция, и кабинет остаётся байт-стабильным.
+        $clubEntitlement = app(ClubEntitlement::class);
+        $viewData['clubMembership'] = $clubEntitlement->enabled()
+            ? app(ClubMembershipService::class)->activeFor($user)
+            : null;
+        $viewData['clubShelf'] = $clubEntitlement->shelfFor($user);
 
         // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
         // Flag OFF → byte-stable legacy dashboard (recovery vars unused there).
@@ -817,12 +842,24 @@ class StudentController extends Controller
         // СТАЛО: where('is_active', true)
         $course = Course::resolveBySlugOrFail($slug);
         abort_unless($course->is_active, 404);
+
+        // H2644: клубный член видит курс полки, не состоя ни в одной его группе —
+        // право даёт членство, а не запись на поток.
+        $clubCovers = app(ClubEntitlement::class)->coversCourse($user, $course);
+
         abort_unless(
-            $course->groups()->whereIn('groups.id', $userGroupIds)->exists(),
+            $clubCovers || $course->groups()->whereIn('groups.id', $userGroupIds)->exists(),
             404
         );
 
-        $lessons = $course->lessons()->forUserGroups($user)->orderBy('sort_order')->orderBy('created_at')->get();
+        // Групповой фильтр уроков (курс, разнесённый на два потока) для клубного
+        // члена неприменим: он не в потоке, а смотрит запись — иначе список
+        // оказался бы пустым при открытом курсе.
+        $lessonsQuery = $course->lessons();
+        if (! $clubCovers) {
+            $lessonsQuery->forUserGroups($user);
+        }
+        $lessons = $lessonsQuery->orderBy('sort_order')->orderBy('created_at')->get();
         $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $course->slug);
         $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
 
@@ -896,9 +933,13 @@ class StudentController extends Controller
         // обход и блок/full гейта, и группового: явный grant на этот урок главнее.
         $hasLessonGrant = LessonAccessGrant::userCanWatch($user, $lesson);
 
+        // H2644: клубное покрытие курса — такое же основание видеть урок, как
+        // персональный грант: членство не привязано к потоку.
+        $clubCovers = app(ClubEntitlement::class)->coversCourse($user, $course);
+
         // Урок другой группы курса (курс разнесён на 2 потока) — не показываем,
         // если только нет персонального гранта именно на этот урок.
-        if (! $hasLessonGrant && ! $lesson->isVisibleToGroupsOf($user)) {
+        if (! $hasLessonGrant && ! $clubCovers && ! $lesson->isVisibleToGroupsOf($user)) {
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок относится к другой группе курса.');
         }
