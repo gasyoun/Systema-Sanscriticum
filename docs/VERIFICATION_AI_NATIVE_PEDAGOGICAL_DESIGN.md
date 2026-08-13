@@ -226,6 +226,7 @@ Google-таблице и затягиваются вебхуком n8n, кото
 | 12-08-2026 | Q1b аудит приложений | **инфо** | 77 приложений на 58/81 реплик · машиночитаемы 5 (6,5 %) · 93,5 % графика · корпус 82,7 % хинди / 17,3 % санскрит | [Q1B_ATTACHMENT_FEEDBACK_AUDIT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1B_ATTACHMENT_FEEDBACK_AUDIT.md) | Opus 5 (`claude-opus-5`) |
 | 12-08-2026 | Q1c просмотр выборки картинок | **инфо** | 12 из 43 · только локализация 4 · верная форма 8 · диагностика **2** · правило+применение 1 | [Q1B_ATTACHMENT_FEEDBACK_AUDIT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1B_ATTACHMENT_FEEDBACK_AUDIT.md) §5b | Opus 5 (`claude-opus-5`) |
 | 13-08-2026 | Q1d полная перепись картинок | **инфо** | 43 из 52 · только локализация 15 (34,9 %) · верная форма 26 (60,5 %) · **диагностика 4 (9,3 %)** · правило+применение 3 | [Q1B_ATTACHMENT_FEEDBACK_AUDIT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1B_ATTACHMENT_FEEDBACK_AUDIT.md) §5c | Opus 5 (`claude-opus-5`) |
+| 13-08-2026 | Q1e перепись картинок ЗАКРЫТА | **инфо** | **52 из 52** · локализация 16 (30,8 %) · верная форма 34 (65,4 %) · **диагностика 4 (7,7 %)** · правило 3 · доля диагностики падала монотонно 16,7 → 9,3 → 7,7 % с ростом n | [Q1B_ATTACHMENT_FEEDBACK_AUDIT.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/Q1B_ATTACHMENT_FEEDBACK_AUDIT.md) §5d | Opus 5 (`claude-opus-5`) |
 | — | P1–P5, Q2, Q3 | не запускалось | — | — | — |
 
 _Dr. Mārcis Gasūns_
