@@ -9,11 +9,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="ОРС LMS">
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon-180.png') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Обучение') | ОРС LMS</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
-    <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.tailwind-cdn')
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap" rel="stylesheet">
@@ -164,6 +164,14 @@
                class="{{ request()->routeIs('student.skill-drills') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
                 <i class="fas fa-gamepad mr-3 w-5 text-center {{ request()->routeIs('student.skill-drills') ? 'text-brand' : 'text-gray-500' }}"></i>
                 Тренажёры
+            </a>
+            @endif
+
+            @if (config('features.grammar_lab'))
+            <a href="{{ route('student.grammar-lab.index') }}"
+               class="{{ request()->routeIs('student.grammar-lab.*') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-book-open mr-3 w-5 text-center {{ request()->routeIs('student.grammar-lab.*') ? 'text-brand' : 'text-gray-500' }}"></i>
+                Грамматика
             </a>
             @endif
 

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "bundle_version": "1.0.0",
+  "published_topic_count": 2,
+  "feeds": [
+    {
+      "id": "grammar_lab_bundle",
+      "path": "grammar_lab.json",
+      "sha256": "PLACEHOLDER"
+    }
+  ]
+}

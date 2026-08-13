@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 13-08-2026 (H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 13-08-2026 (H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -78,6 +78,26 @@ _Создано: 08-07-2026 · Обновлено: 13-08-2026 (H2482 VisualDCS f
    `php artisan visualdcs:rollback`.
 
 Не трогает цены, Payment, identity.
+
+---
+
+### ⚙️ H2493 — Grammar Lab G2 explorer — флаги ОСТАЮТСЯ OFF
+
+Код: `GRAMMAR_LAB` и `GRAMMAR_LAB_SEMANTIC` (оба default false). После merge:
+
+1. `php artisan migrate` — таблицы `grammar_topics`, `grammar_topic_sources`,
+   `grammar_topic_versions`, `grammar_exercises`, `grammar_bookmarks`,
+   `grammar_topic_views`, `grammar_lab_entitlements`, `grammar_lab_imports`.
+2. Импорт пина G1 (уже в репо под `resources/data/grammar_lab/`):  
+   `php artisan grammar-lab:sync --skip-copy`  
+   (или `grammar-lab:sync` с sibling SanskritGrammar). На проде до включения
+   флага маршруты 404, импорт можно отложить.
+3. Флаги **не включать** в этом деплое. `GRAMMAR_LAB=true` — отдельное решение
+   G4 / человека. `GRAMMAR_LAB_SEMANTIC` не включать, пока G1 `semantic_ready`
+   ложен (сейчас `charngram-hash-v1`).
+4. Откат: снять env + `config:cache`. Таблицы аддитивные.
+
+Не создаёт платежей и не включает подписку. Доступ — `GrammarLabAccess::canUse()`.
 
 ---
 
@@ -220,6 +240,8 @@ course without groups → 500 until groups attached.
 | № | Что (PR) | Команды на проде | Тип | Что разблокирует |
 |---|---|---|---|---|
 | 67 | H2448 FAQ RAG suggester | `FAQ_RAG_SUGGESTER=false` (default OFF — leave OFF). Optional later enable only after curator trial: `true` + `config:cache`. No migration. Parent `SUPPORT_ANSWER_SUGGESTER` unchanged. | pending |
+| 68 | **H2483 CRM Wave 1 — карточка клиента 360** | После авто-деплоя код инертен (`CRM_CUSTOMER_360=false`). Включение (human): `CRM_CUSTOMER_360=true` в `.env` → `php artisan config:clear`. Страница `/admin/customer-360` (admin/manager). Деньги/доступ только читаются. Смоук: открыть студента с оплатой и заявкой, проверить следующее действие и ссылку на владельца. Откат: флаг `false`. | ⚙️ флаг (без денег) |
+| 69 | **H2484 CRM Wave 2 — lifecycle-черновики** | После авто-деплоя код инертен (`CRM_LIFECYCLE_AUTOMATION=false`). Dry-run без флага: `php artisan crm:lifecycle-prepare --json`. Включение (human): `CRM_LIFECYCLE_AUTOMATION=true` + `php artisan config:clear`. Готовит только draft Campaign; отправка писем по-прежнему `EMAIL_CAMPAIGNS` + кнопка «Отправить». Смоук: `--json` показывает eligible/excluded/suppressed/recovery/deduplicated; `--apply` не диспатчит mail. Откат: флаг `false`. | ⚙️ флаг (без денег) |
 | 2 | **Признание выручки по начислению** ([PR #370](https://github.com/gasyoun/Systema-Sanscriticum/pull/370)) | ✅ **выполнено 31-07-2026.** `php artisan revenue:backfill-schedule` прогнан (было 7944 строк → стало 7962; всего платежей 9117, образуют выручку 7914). Сверка на реальном платеже (id 13612, курс «Грамматика по Кочергиной гр.60»): 7 строк признания, сумма 10.00 ₽ = сумме платежа — сходится. | backfill | 🚀 реальный ОПиУ по начислению + сверка отложенной выручки |
 | 3 | **Реверс остатка при возврате** ([PR #376](https://github.com/gasyoun/Systema-Sanscriticum/pull/376)) | ✅ **флаг уже `true` на проде, backfill прогнан 31-07-2026** (тот же прогон, что и №2 — `revenue:backfill-schedule` применяет обе логики разом). Сверка на реальном возврате: **привязанных возвратов (`refund_of_payment_id`) в проде пока 0** — честно нулевая проверка, не дефект (см. changelog H2003); механизм готов подхватить первый реальный возврат. | ⚙️ флаг + backfill | обработка возвратов в выручке |
 | 4 | **Контроль дебиторки** ([PR #365](https://github.com/gasyoun/Systema-Sanscriticum/pull/365)) | ✅ **проверено 31-07-2026.** Пороги — консервативные дефолты кода (`revenue_share=0.5`, `illiquid_after_days=14`, `max_installment_share=30%`, `max_concurrent=50`), финдир их не переопределил отдельными значениями. `receivables:check` подтверждён в `schedule:list` (ежедневно 04:00). Прогон на реальных данных: 6 800 ₽ дебиторки из 231 016.5 ₽ 30-дневной выручки (~3 %) — «под контролем». | ⚙️ флаг + ⏱ | 🚀 настройка порогов на реальной дебиторке |

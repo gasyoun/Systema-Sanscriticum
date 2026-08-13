@@ -78,6 +78,24 @@ return [
     'crm_cockpit' => (bool) env('CRM_COCKPIT', false),
 
     /*
+     | CRM Wave 1 (H2483): Filament «Карточка 360» — единая лента Lead/Deal/
+     | FollowUpTask/Payment/support/ActivityEvent без зеркала фактов.
+     | ВЫКЛ по умолчанию. Деньги и доступ только читаются. Включение —
+     | CRM_CUSTOMER_360=true + config:cache после ревью.
+     */
+    'crm_customer_360' => (bool) env('CRM_CUSTOMER_360', false),
+
+    /*
+     | CRM Wave 2 (H2484): lifecycle-правила готовят черновики Campaign /
+     | FollowUpTask по незавершённому чекауту, отсутствию первого действия
+     | в кабинете и следующему курсу. ВЫКЛ по умолчанию. Dry-run работает
+     | и при OFF; --apply и Filament-страница — только при ON. Отправка
+     | писем по-прежнему только через человеческое «Отправить» и флаг
+     | email_campaigns. Включение — CRM_LIFECYCLE_AUTOMATION=true.
+     */
+    'crm_lifecycle_automation' => (bool) env('CRM_LIFECYCLE_AUTOMATION', false),
+
+    /*
      | Авто-постинг ссылки на занятие в Telegram-чат группы за N минут до старта
      | (команда classes:post-group-link, P0 автоматизации «Отдела заботы»).
      | ВЫКЛЮЧЕН по умолчанию: включается флагом class_link_autopost_enabled в
@@ -832,4 +850,20 @@ return [
     'club_membership' => (bool) env('CLUB_MEMBERSHIP', false),
     'membership_free_tier' => (bool) env('MEMBERSHIP_FREE_TIER', false),
     'membership_cancellation' => (bool) env('MEMBERSHIP_CANCELLATION', false),
+
+    /*
+     | Grammar Lab explorer (H2493 / G2). Import and tables are additive;
+     | this flag gates every public/cabinet route and payload. Default OFF:
+     | /grammar-lab and /dvaram/grammar-lab 404 until a human flips
+     | GRAMMAR_LAB=true + config:cache. Does not create payments or flip
+     | a subscription. Semantic retrieval is a second flag.
+     */
+    'grammar_lab' => (bool) env('GRAMMAR_LAB', false),
+
+    /*
+     | Offline hybrid (BM25 + local embedding) for Grammar Lab search.
+     | Stays OFF until G1 semantic_ready=true AND frozen Recall@5 ≥ 0.85.
+     | Flag OFF leaves lexical BM25 live. Never substitutes a paid API.
+     */
+    'grammar_lab_semantic' => (bool) env('GRAMMAR_LAB_SEMANTIC', false),
 ];

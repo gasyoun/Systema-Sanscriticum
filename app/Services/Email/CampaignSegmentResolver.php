@@ -7,6 +7,7 @@ namespace App\Services\Email;
 use App\Models\Course;
 use App\Models\Lead;
 use App\Models\User;
+use App\Services\Crm\Lifecycle\LifecycleEligibility;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -34,8 +35,27 @@ class CampaignSegmentResolver
             'all_subscribers' => $this->allSubscribers(),
             'course' => $this->courseStudents($segment),
             'lead_stage' => $this->leadStageEmails($segment),
+            'lifecycle' => $this->lifecycleUsers($segment),
             default => $this->empty($type),
         };
+    }
+
+    /**
+     * Same eligibility query as `crm:lifecycle-prepare --dry-run`.
+     *
+     * @param  array<string, mixed>  $segment
+     * @return Collection<int, User>
+     */
+    private function lifecycleUsers(array $segment): Collection
+    {
+        $rule = $segment['rule'] ?? null;
+        if (! is_string($rule) || ! in_array($rule, LifecycleEligibility::rules(), true)) {
+            return $this->empty('lifecycle (missing/unknown rule)');
+        }
+
+        $users = app(LifecycleEligibility::class)->eligibleUsers($rule);
+
+        return new Collection($users->all());
     }
 
     /** @return Collection<int, User> */

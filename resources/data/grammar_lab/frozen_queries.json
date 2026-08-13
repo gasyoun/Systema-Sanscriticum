@@ -1,0 +1,1735 @@
+{
+  "schema_version": "1.0.0",
+  "split": "frozen-test",
+  "note": "G2 may tune fusion only on a designated development subset; this file is the frozen test set.",
+  "queries": [
+    {
+      "id": "q001",
+      "query": "гуна",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ablaut-grades"
+      ]
+    },
+    {
+      "id": "q002",
+      "query": "guṇa",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ablaut-grades"
+      ]
+    },
+    {
+      "id": "q003",
+      "query": "guRa",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ablaut-grades"
+      ]
+    },
+    {
+      "id": "q004",
+      "query": "गुण",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ablaut-grades"
+      ]
+    },
+    {
+      "id": "q005",
+      "query": "гуна",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ablaut-grades"
+      ]
+    },
+    {
+      "id": "q006",
+      "query": "Три ступени чередования",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ablaut-grades"
+      ]
+    },
+    {
+      "id": "q007",
+      "query": "ряд чередования",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:alternation-series"
+      ]
+    },
+    {
+      "id": "q008",
+      "query": "ablaut series",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:alternation-series"
+      ]
+    },
+    {
+      "id": "q009",
+      "query": "A1",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:alternation-series"
+      ]
+    },
+    {
+      "id": "q010",
+      "query": "गुणनपङ्क्ति",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:alternation-series"
+      ]
+    },
+    {
+      "id": "q011",
+      "query": "ряд чередования",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:alternation-series"
+      ]
+    },
+    {
+      "id": "q012",
+      "query": "Ряды чередования A–N",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:alternation-series"
+      ]
+    },
+    {
+      "id": "q013",
+      "query": "аорист",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:aorist-systems"
+      ]
+    },
+    {
+      "id": "q014",
+      "query": "aorist",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:aorist-systems"
+      ]
+    },
+    {
+      "id": "q015",
+      "query": "luN",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:aorist-systems"
+      ]
+    },
+    {
+      "id": "q016",
+      "query": "लुङ्",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:aorist-systems"
+      ]
+    },
+    {
+      "id": "q017",
+      "query": "аорист",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:aorist-systems"
+      ]
+    },
+    {
+      "id": "q018",
+      "query": "Системы аориста",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:aorist-systems"
+      ]
+    },
+    {
+      "id": "q019",
+      "query": "засвидетельствованная форма",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:attested-vs-predicted"
+      ]
+    },
+    {
+      "id": "q020",
+      "query": "attested",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:attested-vs-predicted"
+      ]
+    },
+    {
+      "id": "q021",
+      "query": "prayukta",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:attested-vs-predicted"
+      ]
+    },
+    {
+      "id": "q022",
+      "query": "प्रयुक्ता",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:attested-vs-predicted"
+      ]
+    },
+    {
+      "id": "q023",
+      "query": "засвидетельствованная форма",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:attested-vs-predicted"
+      ]
+    },
+    {
+      "id": "q024",
+      "query": "Засвидетельствованное и предсказанное",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:attested-vs-predicted"
+      ]
+    },
+    {
+      "id": "q025",
+      "query": "каузатив",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:causative-grade"
+      ]
+    },
+    {
+      "id": "q026",
+      "query": "causative",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:causative-grade"
+      ]
+    },
+    {
+      "id": "q027",
+      "query": "Ric",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:causative-grade"
+      ]
+    },
+    {
+      "id": "q028",
+      "query": "णिच्",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:causative-grade"
+      ]
+    },
+    {
+      "id": "q029",
+      "query": "каузатив",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:causative-grade"
+      ]
+    },
+    {
+      "id": "q030",
+      "query": "Ступень каузатива",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:causative-grade"
+      ]
+    },
+    {
+      "id": "q031",
+      "query": "будущее время",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:future-sya"
+      ]
+    },
+    {
+      "id": "q032",
+      "query": "sya-future",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:future-sya"
+      ]
+    },
+    {
+      "id": "q033",
+      "query": "lfw",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:future-sya"
+      ]
+    },
+    {
+      "id": "q034",
+      "query": "लृट्",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:future-sya"
+      ]
+    },
+    {
+      "id": "q035",
+      "query": "будущее время",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:future-sya"
+      ]
+    },
+    {
+      "id": "q036",
+      "query": "Будущее на -sya / -iṣya",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:future-sya"
+      ]
+    },
+    {
+      "id": "q037",
+      "query": "инфинитив",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:infinitive-tum"
+      ]
+    },
+    {
+      "id": "q038",
+      "query": "infinitive",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:infinitive-tum"
+      ]
+    },
+    {
+      "id": "q039",
+      "query": "tumun",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:infinitive-tum"
+      ]
+    },
+    {
+      "id": "q040",
+      "query": "तुमुन्",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:infinitive-tum"
+      ]
+    },
+    {
+      "id": "q041",
+      "query": "инфинитив",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:infinitive-tum"
+      ]
+    },
+    {
+      "id": "q042",
+      "query": "Инфинитив на -tum",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:infinitive-tum"
+      ]
+    },
+    {
+      "id": "q043",
+      "query": "морфологическая позиция",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:morphological-positions"
+      ]
+    },
+    {
+      "id": "q044",
+      "query": "morphological position",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:morphological-positions"
+      ]
+    },
+    {
+      "id": "q045",
+      "query": "1MP",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:morphological-positions"
+      ]
+    },
+    {
+      "id": "q046",
+      "query": "रूपस्थान",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:morphological-positions"
+      ]
+    },
+    {
+      "id": "q047",
+      "query": "морфологическая позиция",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:morphological-positions"
+      ]
+    },
+    {
+      "id": "q048",
+      "query": "Морфологические позиции 1/2/3",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:morphological-positions"
+      ]
+    },
+    {
+      "id": "q049",
+      "query": "носовое чередование",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:nasal-alternation"
+      ]
+    },
+    {
+      "id": "q050",
+      "query": "nasal alternation",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:nasal-alternation"
+      ]
+    },
+    {
+      "id": "q051",
+      "query": "M1",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:nasal-alternation"
+      ]
+    },
+    {
+      "id": "q052",
+      "query": "अनुनासिक",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:nasal-alternation"
+      ]
+    },
+    {
+      "id": "q053",
+      "query": "носовое чередование",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:nasal-alternation"
+      ]
+    },
+    {
+      "id": "q054",
+      "query": "Носовые чередования рядов M и N",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:nasal-alternation"
+      ]
+    },
+    {
+      "id": "q055",
+      "query": "открытый корень",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:open-vs-closed-roots"
+      ]
+    },
+    {
+      "id": "q056",
+      "query": "open root",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:open-vs-closed-roots"
+      ]
+    },
+    {
+      "id": "q057",
+      "query": "open",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:open-vs-closed-roots"
+      ]
+    },
+    {
+      "id": "q058",
+      "query": "व्यक्तधातु",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:open-vs-closed-roots"
+      ]
+    },
+    {
+      "id": "q059",
+      "query": "открытый корень",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:open-vs-closed-roots"
+      ]
+    },
+    {
+      "id": "q060",
+      "query": "Открытые и закрытые корни",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:open-vs-closed-roots"
+      ]
+    },
+    {
+      "id": "q061",
+      "query": "пассив",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:passive-ya"
+      ]
+    },
+    {
+      "id": "q062",
+      "query": "passive",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:passive-ya"
+      ]
+    },
+    {
+      "id": "q063",
+      "query": "kriyate",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:passive-ya"
+      ]
+    },
+    {
+      "id": "q064",
+      "query": "कर्मणि",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:passive-ya"
+      ]
+    },
+    {
+      "id": "q065",
+      "query": "пассив",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:passive-ya"
+      ]
+    },
+    {
+      "id": "q066",
+      "query": "Пассив на -ya",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:passive-ya"
+      ]
+    },
+    {
+      "id": "q067",
+      "query": "перфект",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:perfect-strong-weak"
+      ]
+    },
+    {
+      "id": "q068",
+      "query": "perfect",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:perfect-strong-weak"
+      ]
+    },
+    {
+      "id": "q069",
+      "query": "liw",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:perfect-strong-weak"
+      ]
+    },
+    {
+      "id": "q070",
+      "query": "लिट्",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:perfect-strong-weak"
+      ]
+    },
+    {
+      "id": "q071",
+      "query": "перфект",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:perfect-strong-weak"
+      ]
+    },
+    {
+      "id": "q072",
+      "query": "Перфект: сильная и слабая основы",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:perfect-strong-weak"
+      ]
+    },
+    {
+      "id": "q073",
+      "query": "причастие на ta",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ppp-ta-na"
+      ]
+    },
+    {
+      "id": "q074",
+      "query": "ta-participle",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ppp-ta-na"
+      ]
+    },
+    {
+      "id": "q075",
+      "query": "kta",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ppp-ta-na"
+      ]
+    },
+    {
+      "id": "q076",
+      "query": "क्त",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ppp-ta-na"
+      ]
+    },
+    {
+      "id": "q077",
+      "query": "причастие на ta",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ppp-ta-na"
+      ]
+    },
+    {
+      "id": "q078",
+      "query": "Причастие на -ta / -na",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:ppp-ta-na"
+      ]
+    },
+    {
+      "id": "q079",
+      "query": "десятый класс",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-aya-class"
+      ]
+    },
+    {
+      "id": "q080",
+      "query": "aya-present",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-aya-class"
+      ]
+    },
+    {
+      "id": "q081",
+      "query": "curAdi",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-aya-class"
+      ]
+    },
+    {
+      "id": "q082",
+      "query": "चुरादि",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-aya-class"
+      ]
+    },
+    {
+      "id": "q083",
+      "query": "десятый класс",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-aya-class"
+      ]
+    },
+    {
+      "id": "q084",
+      "query": "Презенс с -aya и X класс",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-aya-class"
+      ]
+    },
+    {
+      "id": "q085",
+      "query": "девятый класс",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-na-class"
+      ]
+    },
+    {
+      "id": "q086",
+      "query": "nā-class",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-na-class"
+      ]
+    },
+    {
+      "id": "q087",
+      "query": "kryAdi",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-na-class"
+      ]
+    },
+    {
+      "id": "q088",
+      "query": "क्र्यादि",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-na-class"
+      ]
+    },
+    {
+      "id": "q089",
+      "query": "девятый класс",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-na-class"
+      ]
+    },
+    {
+      "id": "q090",
+      "query": "Презенс IX класса (суффикс nā/nī)",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-na-class"
+      ]
+    },
+    {
+      "id": "q091",
+      "query": "седьмой класс",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nasal-infix"
+      ]
+    },
+    {
+      "id": "q092",
+      "query": "nasal infix",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nasal-infix"
+      ]
+    },
+    {
+      "id": "q093",
+      "query": "ruDAdi",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nasal-infix"
+      ]
+    },
+    {
+      "id": "q094",
+      "query": "रुधादि",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nasal-infix"
+      ]
+    },
+    {
+      "id": "q095",
+      "query": "седьмой класс",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nasal-infix"
+      ]
+    },
+    {
+      "id": "q096",
+      "query": "Презенс VII класса (носовой инфикс)",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nasal-infix"
+      ]
+    },
+    {
+      "id": "q097",
+      "query": "пятый класс",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nu-class"
+      ]
+    },
+    {
+      "id": "q098",
+      "query": "nu-class",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nu-class"
+      ]
+    },
+    {
+      "id": "q099",
+      "query": "svAdi",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nu-class"
+      ]
+    },
+    {
+      "id": "q100",
+      "query": "स्वादि",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nu-class"
+      ]
+    },
+    {
+      "id": "q101",
+      "query": "пятый класс",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nu-class"
+      ]
+    },
+    {
+      "id": "q102",
+      "query": "Презенс V/VIII классов (суффикс no/nu)",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-nu-class"
+      ]
+    },
+    {
+      "id": "q103",
+      "query": "третий класс",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-reduplicating"
+      ]
+    },
+    {
+      "id": "q104",
+      "query": "reduplicating class",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-reduplicating"
+      ]
+    },
+    {
+      "id": "q105",
+      "query": "juhotyAdi",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-reduplicating"
+      ]
+    },
+    {
+      "id": "q106",
+      "query": "जुहोत्यादि",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-reduplicating"
+      ]
+    },
+    {
+      "id": "q107",
+      "query": "третий класс",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-reduplicating"
+      ]
+    },
+    {
+      "id": "q108",
+      "query": "Презенс III класса (удваивающий)",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-reduplicating"
+      ]
+    },
+    {
+      "id": "q109",
+      "query": "второй класс",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-root-class"
+      ]
+    },
+    {
+      "id": "q110",
+      "query": "root class",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-root-class"
+      ]
+    },
+    {
+      "id": "q111",
+      "query": "adAdi",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-root-class"
+      ]
+    },
+    {
+      "id": "q112",
+      "query": "अदादि",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-root-class"
+      ]
+    },
+    {
+      "id": "q113",
+      "query": "второй класс",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-root-class"
+      ]
+    },
+    {
+      "id": "q114",
+      "query": "Презенс II класса (корневой)",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-root-class"
+      ]
+    },
+    {
+      "id": "q115",
+      "query": "первый класс",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-a"
+      ]
+    },
+    {
+      "id": "q116",
+      "query": "class 1",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-a"
+      ]
+    },
+    {
+      "id": "q117",
+      "query": "Bavati",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-a"
+      ]
+    },
+    {
+      "id": "q118",
+      "query": "भ्वादि",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-a"
+      ]
+    },
+    {
+      "id": "q119",
+      "query": "первый класс",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-a"
+      ]
+    },
+    {
+      "id": "q120",
+      "query": "Простой тематический презенс (I и VI)",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-a"
+      ]
+    },
+    {
+      "id": "q121",
+      "query": "тематическое спряжение",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ]
+    },
+    {
+      "id": "q122",
+      "query": "thematic",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ]
+    },
+    {
+      "id": "q123",
+      "query": "tematic",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ]
+    },
+    {
+      "id": "q124",
+      "query": "विकरण",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ]
+    },
+    {
+      "id": "q125",
+      "query": "тематическое спряжение",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ]
+    },
+    {
+      "id": "q126",
+      "query": "Тематическое и атематическое спряжение",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ]
+    },
+    {
+      "id": "q127",
+      "query": "четвёртый класс",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-ya-class"
+      ]
+    },
+    {
+      "id": "q128",
+      "query": "ya-class",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-ya-class"
+      ]
+    },
+    {
+      "id": "q129",
+      "query": "divAdi",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-ya-class"
+      ]
+    },
+    {
+      "id": "q130",
+      "query": "दिवादि",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-ya-class"
+      ]
+    },
+    {
+      "id": "q131",
+      "query": "четвёртый класс",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-ya-class"
+      ]
+    },
+    {
+      "id": "q132",
+      "query": "Презенс IV класса (суффикс ya)",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:present-ya-class"
+      ]
+    },
+    {
+      "id": "q133",
+      "query": "квазикорень",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:quasi-roots"
+      ]
+    },
+    {
+      "id": "q134",
+      "query": "quasi-root",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:quasi-roots"
+      ]
+    },
+    {
+      "id": "q135",
+      "query": "dad",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:quasi-roots"
+      ]
+    },
+    {
+      "id": "q136",
+      "query": "गौणधातु",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:quasi-roots"
+      ]
+    },
+    {
+      "id": "q137",
+      "query": "квазикорень",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:quasi-roots"
+      ]
+    },
+    {
+      "id": "q138",
+      "query": "Квазикорни",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:quasi-roots"
+      ]
+    },
+    {
+      "id": "q139",
+      "query": "обозначение корня",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-designation"
+      ]
+    },
+    {
+      "id": "q140",
+      "query": "root designation",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-designation"
+      ]
+    },
+    {
+      "id": "q141",
+      "query": "DAtu",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-designation"
+      ]
+    },
+    {
+      "id": "q142",
+      "query": "धातुसंज्ञा",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-designation"
+      ]
+    },
+    {
+      "id": "q143",
+      "query": "обозначение корня",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-designation"
+      ]
+    },
+    {
+      "id": "q144",
+      "query": "Обозначение корня: реальное и условное",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-designation"
+      ]
+    },
+    {
+      "id": "q145",
+      "query": "омонимия корней",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-homonymy"
+      ]
+    },
+    {
+      "id": "q146",
+      "query": "root homonymy",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-homonymy"
+      ]
+    },
+    {
+      "id": "q147",
+      "query": "as#1",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-homonymy"
+      ]
+    },
+    {
+      "id": "q148",
+      "query": "समानधातु",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-homonymy"
+      ]
+    },
+    {
+      "id": "q149",
+      "query": "омонимия корней",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-homonymy"
+      ]
+    },
+    {
+      "id": "q150",
+      "query": "Омонимия корней",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-homonymy"
+      ]
+    },
+    {
+      "id": "q151",
+      "query": "тип I",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-i"
+      ]
+    },
+    {
+      "id": "q152",
+      "query": "type I",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-i"
+      ]
+    },
+    {
+      "id": "q153",
+      "query": "typeI",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-i"
+      ]
+    },
+    {
+      "id": "q154",
+      "query": "प्रथमवर्ग",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-i"
+      ]
+    },
+    {
+      "id": "q155",
+      "query": "тип I",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-i"
+      ]
+    },
+    {
+      "id": "q156",
+      "query": "Тип I — полное чередование",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-i"
+      ]
+    },
+    {
+      "id": "q157",
+      "query": "тип II",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-ii"
+      ]
+    },
+    {
+      "id": "q158",
+      "query": "type II",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-ii"
+      ]
+    },
+    {
+      "id": "q159",
+      "query": "typeII",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-ii"
+      ]
+    },
+    {
+      "id": "q160",
+      "query": "द्वितीयवर्ग",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-ii"
+      ]
+    },
+    {
+      "id": "q161",
+      "query": "тип II",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-ii"
+      ]
+    },
+    {
+      "id": "q162",
+      "query": "Тип II — частичное чередование",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-ii"
+      ]
+    },
+    {
+      "id": "q163",
+      "query": "тип III",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iii"
+      ]
+    },
+    {
+      "id": "q164",
+      "query": "type III",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iii"
+      ]
+    },
+    {
+      "id": "q165",
+      "query": "typeIII",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iii"
+      ]
+    },
+    {
+      "id": "q166",
+      "query": "तृतीयवर्ग",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iii"
+      ]
+    },
+    {
+      "id": "q167",
+      "query": "тип III",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iii"
+      ]
+    },
+    {
+      "id": "q168",
+      "query": "Тип III — нуль во второй позиции",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iii"
+      ]
+    },
+    {
+      "id": "q169",
+      "query": "тип IV",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iv"
+      ]
+    },
+    {
+      "id": "q170",
+      "query": "type IV",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iv"
+      ]
+    },
+    {
+      "id": "q171",
+      "query": "typeIV",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iv"
+      ]
+    },
+    {
+      "id": "q172",
+      "query": "चतुर्थवर्г",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iv"
+      ]
+    },
+    {
+      "id": "q173",
+      "query": "тип IV",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iv"
+      ]
+    },
+    {
+      "id": "q174",
+      "query": "Тип IV — застывшая vṛddhi",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-type-iv"
+      ]
+    },
+    {
+      "id": "q175",
+      "query": "вариант корня",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-variants"
+      ]
+    },
+    {
+      "id": "q176",
+      "query": "root variant",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-variants"
+      ]
+    },
+    {
+      "id": "q177",
+      "query": "Dam",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-variants"
+      ]
+    },
+    {
+      "id": "q178",
+      "query": "धातुभेद",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-variants"
+      ]
+    },
+    {
+      "id": "q179",
+      "query": "вариант корня",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-variants"
+      ]
+    },
+    {
+      "id": "q180",
+      "query": "Варианты корня",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:root-variants"
+      ]
+    },
+    {
+      "id": "q181",
+      "query": "сампрасарана",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:samprasarana"
+      ]
+    },
+    {
+      "id": "q182",
+      "query": "samprasāraṇa",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:samprasarana"
+      ]
+    },
+    {
+      "id": "q183",
+      "query": "samprasAraRa",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:samprasarana"
+      ]
+    },
+    {
+      "id": "q184",
+      "query": "सम्प्रसारण",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:samprasarana"
+      ]
+    },
+    {
+      "id": "q185",
+      "query": "сампрасарана",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:samprasarana"
+      ]
+    },
+    {
+      "id": "q186",
+      "query": "Саспрасарана",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:samprasarana"
+      ]
+    },
+    {
+      "id": "q187",
+      "query": "сеṭ",
+      "script": "ru",
+      "intent": "exact",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:set-anit-vet"
+      ]
+    },
+    {
+      "id": "q188",
+      "query": "seṭ",
+      "script": "iast",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:set-anit-vet"
+      ]
+    },
+    {
+      "id": "q189",
+      "query": "sew",
+      "script": "slp1",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:set-anit-vet"
+      ]
+    },
+    {
+      "id": "q190",
+      "query": "सेट्",
+      "script": "deva",
+      "intent": "transliteration",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:set-anit-vet"
+      ]
+    },
+    {
+      "id": "q191",
+      "query": "сеṭ",
+      "script": "ru",
+      "intent": "russian",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:set-anit-vet"
+      ]
+    },
+    {
+      "id": "q192",
+      "query": "seṭ, aniṭ и veṭ",
+      "script": "ru",
+      "intent": "form-to-concept",
+      "acceptable_topic_ids": [
+        "subject:grammar-lab:set-anit-vet"
+      ]
+    }
+  ]
+}
