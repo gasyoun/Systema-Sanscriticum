@@ -8,6 +8,7 @@ use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Lesson;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\Membership\ClubEntitlement;
 
@@ -142,7 +143,7 @@ class ClubEntitlementAccessTest extends MembershipTestCase
         $course->groups()->attach($group->id);
         $user->groups()->syncWithoutDetaching([$group->id]);
         Lesson::factory()->create(['course_id' => $course->id, 'block_number' => 1]);
-        \App\Models\Payment::create([
+        Payment::create([
             'user_id' => $user->id,
             'course_id' => $course->id,
             'amount' => 12000,

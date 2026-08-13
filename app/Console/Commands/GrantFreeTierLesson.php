@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Services\Membership\FreeTierLessonGranter;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 
 /**
  * Месячная выдача урока бесплатного уровня «Свободный» (H2644).
@@ -92,7 +93,7 @@ class GrantFreeTierLesson extends Command
      * Принимаем и id, и email: список для кампании приходит из выгрузки, где
      * человек опознан почтой, а не первичным ключом.
      *
-     * @return \Illuminate\Support\Collection<int, User>|null
+     * @return Collection<int, User>|null
      */
     private function resolveUsers()
     {
