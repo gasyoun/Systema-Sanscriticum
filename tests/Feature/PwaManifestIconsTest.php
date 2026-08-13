@@ -10,16 +10,26 @@ use Tests\TestCase;
  * `manifest.webmanifest` declared `/images/logo.png` as both `192x192` and `512x512`,
  * but that file is 197x129. Chromium checks the decoded bitmap against the declared
  * `sizes` string and discards an icon that disagrees, which left only the 48x48 favicon
- * — below the mandatory 192 minimum — so the install entry never appeared and no error
- * surfaced to the user or the operator.
+ * — under its floor — so the install entry never appeared and no error surfaced to the
+ * user or the operator.
  *
- * These assertions are the install gate itself, not a proxy for it: a declared size that
- * does not match the real bitmap is exactly what the browser rejects.
+ * Verified against Chromium's own installability engine (CDP
+ * `Page.getInstallabilityErrors`), which is the code path that decides whether the
+ * browser offers to install:
+ *
+ *   before: {"errorId":"no-acceptable-icon","errorArguments":[{"name":
+ *           "minimum-icon-size-in-pixels","value":"144"}]}  -> INSTALLABLE false
+ *   after:  []                                              -> INSTALLABLE true
+ *
+ * Note the number Chromium reports: its floor is **144**, not 192. The constant below
+ * is deliberately stricter — 192 is what the manifest declares and what launchers
+ * actually want — but do not repeat "192 is the browser minimum" anywhere; it is not.
  *
  * Regenerate the icons with `python scripts/generate_pwa_icons.py`.
  */
 class PwaManifestIconsTest extends TestCase
 {
+    /** Chromium's own floor is 144; this project holds itself to the declared 192. */
     private const MIN_INSTALLABLE_PX = 192;
 
     /** Real pixel dimensions from a PNG's IHDR chunk. */
@@ -90,8 +100,9 @@ class PwaManifestIconsTest extends TestCase
         $this->assertGreaterThan(
             0,
             $usable,
-            'No square purpose=any PNG icon of at least '.self::MIN_INSTALLABLE_PX.'px — '
-                .'the browser will offer no install entry, silently.'
+            'No square purpose=any PNG icon of at least '.self::MIN_INSTALLABLE_PX.'px. '
+                .'Chromium reports no-acceptable-icon below 144px and then offers no install '
+                .'entry at all, silently.'
         );
     }
 
