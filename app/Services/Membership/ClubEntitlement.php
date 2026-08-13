@@ -60,7 +60,7 @@ final class ClubEntitlement
         return $this->clubCourse;
     }
 
-    /** Действующее членство. Кэш на запрос: гейты дёргают это в цикле по урокам. */
+    /** Действующее членство. Кэш на экземпляр: гейты дёргают это в цикле по урокам. */
     public function isMember(?User $user): bool
     {
         if (! $this->enabled() || ! $user instanceof User) {
