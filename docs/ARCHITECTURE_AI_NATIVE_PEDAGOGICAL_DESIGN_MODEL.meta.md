@@ -1,6 +1,6 @@
 # Метадок — AI-native педагогическая модель Systema
 
-_Created: 12-08-2026 · Last updated: 12-08-2026_
+_Created: 12-08-2026 · Last updated: 13-08-2026_
 
 Спутник документа
 [ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_AI_NATIVE_PEDAGOGICAL_DESIGN_MODEL.md).

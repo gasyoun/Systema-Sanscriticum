@@ -1,6 +1,6 @@
 # Q1 — результаты разметки 81 преподавательской реплики по F1–F4
 
-_Created: 12-08-2026 · Last updated: 12-08-2026_
+_Created: 12-08-2026 · Last updated: 13-08-2026_
 
 **Что сделано.** Все 81 преподавательские `review`-реплики из
 [`homework_comments`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/HomeworkComment.php)
