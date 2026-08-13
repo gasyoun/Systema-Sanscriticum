@@ -240,6 +240,44 @@ class HindiProgrammePlaylistTest extends TestCase
         $this->assertSame(3, collect($report['shells'])->sum('accessible'));
     }
 
+    public function test_probe_finds_shells_without_hindi_category(): void
+    {
+        config([
+            'features.hindi_programme_playlist' => false,
+            'programme.hindi.category_slug' => 'hindi',
+            'programme.hindi.course_ids' => [],
+        ]);
+
+        $course = Course::factory()->create([
+            'title' => 'Грамматика хинди гр. 3, пятница (2025)',
+            'slug' => 'grammatika-xindi-gr-3-pt',
+        ]);
+        $group = Group::create(['name' => 'H3-prod-shape']);
+        $course->groups()->attach($group->id);
+        $lesson = Lesson::factory()->for($course)->create([
+            'title' => '1-е занятие',
+            'sort_order' => 1,
+            'block_number' => 1,
+            'is_published' => true,
+        ]);
+        $user = User::factory()->create();
+        $user->groups()->attach($group->id);
+        Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 1000,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ]));
+
+        $this->assertFalse(Category::query()->where('slug', 'hindi')->exists());
+
+        $report = app(HindiProgrammePlaylist::class)->probe($user);
+        $this->assertSame(1, $report['accessible_total']);
+        $this->assertSame([$course->id], collect($report['shells'])->pluck('id')->all());
+        $this->assertTrue($lesson->isUnlockedBy(['full']));
+    }
+
     public function test_student_without_hindi_access_sees_empty_list(): void
     {
         config(['features.hindi_programme_playlist' => true, 'features.cabinet_hybrid' => false]);
