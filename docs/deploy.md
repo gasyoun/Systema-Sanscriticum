@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 09-08-2026_
+_Created: 02-07-2026 · Last updated: 13-08-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -90,6 +90,41 @@ location ^~ /exercises {
 ```
 
 После правки: `nginx -t && systemctl reload nginx`.
+
+## Nginx: `Content-Type` для `manifest.webmanifest`
+
+Прод отдавал `/manifest.webmanifest` как `application/octet-stream`: расширения
+`.webmanifest` нет в `/etc/nginx/mime.types`, поэтому срабатывал http-уровневый
+`default_type application/octet-stream` из `nginx.conf`. Исправлено 13-08-2026
+([scripts/nginx_webmanifest_mime.sh](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/nginx_webmanifest_mime.sh),
+идемпотентный, делает бэкап, откатывается сам при `nginx -t` FAIL):
+
+```nginx
+location = /manifest.webmanifest {
+    default_type application/manifest+json;
+}
+```
+
+**Почему именно так, а не двумя более очевидными способами.** Правка
+`/etc/nginx/mime.types` — это conffile пакета `nginx-common`: она спорит с dpkg на
+каждом обновлении и может быть молча откачена. Блок `types { … }` внутри `server`
+**заменяет** унаследованную таблицу типов, а не дополняет её (в nginx нет merge-семантики
+для `types`, и двух блоков `types` в одном контексте быть не может) — то есть ради одного
+типа можно сломать все остальные. Точное совпадение `location =` имеет наивысший приоритет
+маршрутизации и несёт только `default_type`, который применяется исключительно когда
+расширение не дало типа, поэтому разрешение MIME у остальных файлов не затрагивается;
+`root` наследуется от server-блока, файл отдаётся как обычно.
+
+**Это гигиена, а не починка установки PWA.** Chromium к типу манифеста нетребователен:
+до этой правки его движок установки (`Page.getInstallabilityErrors`) разбирал манифест с
+`manifestErrors: []`, а причиной неустановимости были иконки (см. `## [1.89.17]` в
+[changelog.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/changelog.md)).
+Проверка после правки: `curl -sI https://samskrte.ru/manifest.webmanifest` →
+`application/manifest+json`, при этом `image/png`, `image/x-icon`, `text/html` и
+`application/javascript` у остальной статики не изменились.
+
+Скрипт не входит в `deploy.sh` — это разовая настройка хоста, которую надо повторить
+только при пересборке сервера или переезде vhost.
 
 ## Первичная настройка (один раз)
 
