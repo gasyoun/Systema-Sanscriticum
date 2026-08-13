@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Category;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
@@ -122,13 +121,9 @@ final class HindiProgrammePlaylist
      */
     public function orderedShells(): Collection
     {
-        $seed = Course::query()
-            ->where('is_active', true)
-            ->whereHas('categories', fn ($q) => $q->where('slug', self::CATEGORY_SLUG))
-            ->with('groups')
-            ->get();
+        $seed = $this->seedShells();
 
-        if ($seed->isEmpty() && ! Category::query()->where('slug', self::CATEGORY_SLUG)->exists()) {
+        if ($seed->isEmpty()) {
             return collect();
         }
 
@@ -161,6 +156,37 @@ final class HindiProgrammePlaylist
         }
 
         return $this->orderByPredecessorChain($byId->values());
+    }
+
+    /**
+     * Category slug, configured prod IDs, then title/slug heuristic.
+     * Prod has no `hindi` category (H2441 probe 13-08-2026) — IDs + titles cover VicSable.
+     *
+     * @return Collection<int, Course>
+     */
+    private function seedShells(): Collection
+    {
+        $slug = (string) config('programme.hindi.category_slug', self::CATEGORY_SLUG);
+        $ids = array_values(array_filter(array_map(
+            'intval',
+            (array) config('programme.hindi.course_ids', []),
+        )));
+
+        return Course::query()
+            ->where('is_active', true)
+            ->where(function ($q) use ($slug, $ids): void {
+                if ($slug !== '') {
+                    $q->orWhereHas('categories', fn ($c) => $c->where('slug', $slug));
+                }
+                if ($ids !== []) {
+                    $q->orWhereIn('id', $ids);
+                }
+                $q->orWhere('title', 'like', '%хинди%')
+                    ->orWhere('slug', 'like', '%hindi%')
+                    ->orWhere('slug', 'like', '%xindi%');
+            })
+            ->with('groups')
+            ->get();
     }
 
     public function shellLabel(Course $course): string
