@@ -84,6 +84,11 @@ class Deal extends Model
         return $this->hasMany(DealTransition::class)->latest('created_at');
     }
 
+    public function followUpTasks(): HasMany
+    {
+        return $this->hasMany(FollowUpTask::class);
+    }
+
     public function scopeOpen(Builder $query): Builder
     {
         return $query->whereNull('closed_at');

@@ -290,7 +290,10 @@ document.addEventListener('alpine:init', () => {
             <div x-data class="grid grid-cols-1 md:grid-cols-12 md:gap-x-10 lg:gap-x-14">
 
                 {{-- ════════════════ ЛЕВАЯ КОЛОНКА ════════════════ --}}
-                <div class="md:col-span-7 space-y-6 mb-10 md:mb-0">
+                {{-- min-w-0: у элемента грида по умолчанию min-width: auto, поэтому
+                     любой нерасторжимо широкий потомок (длинное название курса в
+                     бейдже справа) раздвигал бы колонку шире вьюпорта. --}}
+                <div class="md:col-span-7 min-w-0 space-y-6 mb-10 md:mb-0">
 
                     <form action="{{ route('payment.create') }}" method="POST" id="checkout-form" class="space-y-6">
                         @csrf
@@ -545,12 +548,18 @@ document.addEventListener('alpine:init', () => {
                 </div>
 
                 {{-- ════════════════ ПРАВАЯ КОЛОНКА ════════════════ --}}
-                <div class="md:col-span-5 relative">
+                <div class="md:col-span-5 min-w-0 relative">
                     <div class="md:sticky md:top-6 space-y-6">
 
                         {{-- О тарифе --}}
                         <div class="bg-white p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100">
-                            <span class="inline-flex w-max items-center px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 mb-4">
+                            {{-- Раньше здесь стоял w-max (width: max-content): длинное
+                                 название курса («Напевный санскрит — гимн сутр
+                                 Патанджали, воскресенье 10:00 (2026)») растягивало бейдж
+                                 в одну строку на ~390px и утаскивало за собой всю
+                                 страницу — на телефоне появлялась горизонтальная
+                                 прокрутка. Переносим по словам внутри карточки. --}}
+                            <span class="inline-flex max-w-full items-center px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider leading-snug whitespace-normal bg-indigo-100 text-indigo-800 mb-4">
                                 {{ $tariff->course->title ?? 'Курс' }}
                             </span>
 
