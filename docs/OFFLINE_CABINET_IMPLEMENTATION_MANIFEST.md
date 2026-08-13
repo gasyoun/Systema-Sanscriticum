@@ -22,7 +22,7 @@ Automated Node/fake-IndexedDB results are supporting evidence, not a substitute 
 |---|---|---|---|---|
 | Recent iPhone | Installed Safari PWA | BLOCKED — host missing; **unobstructed since 13-08-2026** | No macOS/Xcode/iPhone. **B1 cleared** (H2634); B2/B3 do not apply — an installed PWA is same-origin end to end | [OFFLINE_CABINET_WAVE0_IPHONE_EVIDENCE_2026-08-12.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/codex/offline-cabinet-roadmap/docs/OFFLINE_CABINET_WAVE0_IPHONE_EVIDENCE_2026-08-12.md) |
 | Recent iPhone | Capacitor remote-origin WKWebView | **STOPPED — platform ruled out for offline content** (H2634 B2), no longer host-blocked | **B2** ruled 13-08-2026: the remote/local origin split is unresolvable without the forbidden local-origin rewrite. **B3** stopped with it — the bridge has no consumer | [ARCHITECTURE](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_OFFLINE_CABINET.md) § Load-bearing platform gate |
-| Recent Android | Installed Chrome PWA | BLOCKED — host missing; **unobstructed since 13-08-2026** | No Android device attached (USB enumerates a webcam, card reader and hubs only). **B1 cleared** (H2634); B2/B3 do not apply — an installed PWA is same-origin end to end. Needs **only a device with Chrome** — no JDK/SDK/ADB | [OFFLINE_CABINET_WAVE0_ANDROID_EVIDENCE_2026-08-12.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/codex/offline-cabinet-roadmap/docs/OFFLINE_CABINET_WAVE0_ANDROID_EVIDENCE_2026-08-12.md) |
+| Recent Android | Installed Chrome PWA | BLOCKED — host missing; **unobstructed since 13-08-2026** | No Android device attached (USB enumerates a webcam, card reader and hubs only). **B1 cleared** (H2634); B2/B3 do not apply — an installed PWA is same-origin end to end. Needs a device with Chrome **plus standalone `platform-tools`/ADB for the disk-inspection proof** — but none of the JDK 21 / SDK API 36 / system-image stack | [OFFLINE_CABINET_WAVE0_ANDROID_EVIDENCE_2026-08-12.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/codex/offline-cabinet-roadmap/docs/OFFLINE_CABINET_WAVE0_ANDROID_EVIDENCE_2026-08-12.md) |
 | Recent Android | Capacitor remote-origin WebView | **STOPPED — platform ruled out for offline content** (H2634 B2), no longer host-blocked | Same B2/B3 ruling as WKWebView — Capacitor hosts one origin per WebView regardless of platform. The JDK 21 / SDK API 36 / ADB inventory H2617 recorded belongs to **this** stopped lane | [ARCHITECTURE](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_OFFLINE_CABINET.md) § Load-bearing platform gate |
 
 B1–B3 were tracked-configuration defects, not host defects: each foreclosed PASS on a
@@ -31,8 +31,40 @@ booked. All three are now disposed of — B1 fixed, B2 and B3 stopped.
 
 **What a device session still owes after H2634:** installed-PWA cold-start evidence on
 Android Chrome, iPhone Safari, and a real Windows 11 Edge host. The Capacitor WKWebView /
-Android WebView rows are stopped, not pending, so no macOS or Xcode provisioning is needed
-for Wave 0 any more.
+Android WebView rows are stopped, not pending, so no **Xcode / Android SDK / JDK** — the
+*build* toolchains — are needed for Wave 0 any more.
+
+> **Corrected 13-08-2026 (Opus 5, `claude-opus-5`).** The sentence above previously ended
+> "…so no macOS or Xcode provisioning is needed for Wave 0 any more", which contradicted
+> the iPhone Safari PWA row three lines up still naming **macOS** as its blocker. The row
+> is right and the summary was wrong: dropping the Capacitor lane removes the *build*
+> toolchains, not the *debugging* hosts. **Safari Web Inspector against an iPhone requires
+> a Mac** — there is no other way to read that device's storage — so the iPhone Safari row
+> still owes a macOS host, just not Xcode. The same correction applies to the Android row's
+> "Needs **only** a device with Chrome — no JDK/SDK/ADB": true for installing and
+> cold-starting the PWA, but the **plaintext disk/cache inspection** proof needs
+> `platform-tools`/ADB (a ~10 MB standalone download — *not* the JDK + SDK + system-image
+> stack the stopped lane required). Stated plainly so nobody provisions against the summary
+> and discovers the gap with the hardware already in hand.
+
+## Who does what to close each row
+
+Splitting the remaining work by owner, because "provision hardware" hides that some proofs
+need a human physically holding the device and others need an agent session with that
+device attached.
+
+| Row | A human supplies | A human does by hand | An agent session does | Closes when |
+|---|---|---|---|---|
+| **Android Chrome PWA** | A recent Android phone + USB cable; `platform-tools` (ADB) on the session host for the disk-inspection proof only | Opens the cabinet in Chrome, taps **Install**, confirms the app appears on the home screen (an agent cannot tap "Install" on a phone) | Drives cold-start/force-stop, resume-after-interruption, cross-device-key rejection, disk inspection and timings over ADB; writes the evidence file | All five V0 proofs evidenced, or a STOP with receipts |
+| **iPhone Safari PWA** | A recent iPhone **and a macOS host** (Web Inspector is Mac-only); no Xcode | Opens the cabinet in Safari, **Add to Home Screen**, launches from the icon | Drives the same five proofs via Safari Web Inspector from the Mac | Same |
+| **Windows 11 Edge PWA** | A real Windows 11 host (the H2618 executor was Windows 10 build 19045) | Clicks **Install** in Edge's omnibox — and reports whether the install icon even appears, which settles H2618's open `no-manifest` question | Re-runs H2618's CDP harness against the installed window | Same, **plus** a ruling on whether `no-manifest` was a real defect or a CDP artifact |
+
+The Windows row carries an extra, cheaper action worth doing first: H2618 could not tell
+whether its `no-manifest` failure was a genuine product defect or an artifact of
+CDP-driven navigation. **A human manually clicking Install in Edge on any Windows box
+answers that in under a minute** — and if it is a real defect it blocks PWA installability
+for every user on every Windows version, which would make it a bug ahead of a
+verification-hardware question.
 
 ---
 
