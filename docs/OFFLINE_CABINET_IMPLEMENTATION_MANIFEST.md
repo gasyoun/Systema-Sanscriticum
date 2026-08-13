@@ -66,6 +66,43 @@ answers that in under a minute** — and if it is a real defect it blocks PWA in
 for every user on every Windows version, which would make it a bug ahead of a
 verification-hardware question.
 
+### ANSWERED 13-08-2026 — the install icon DOES appear; `no-manifest` was not a product defect
+
+A human opened [https://samskrte.ru/dvaram](https://samskrte.ru/dvaram) logged in, in
+**Chrome on Windows 10**, and the omnibox install icon **appeared**. Recorded by Opus 5
+(`claude-opus-5`) on the human's report.
+
+**What this rules out, precisely.** The site is genuinely installable to a real user on a
+real Chromium browser against the production manifest. So H2618's
+`Page.getInstallabilityErrors → {"errorId":"no-manifest"}` was **not** the product being
+broken — the expensive branch (PWA installability broken for every user on every Windows
+version, a bug outranking all V0 hardware work) is **closed**.
+
+**What it does not prove, stated rather than glossed.** The click was Chrome/Windows 10;
+H2618's row is Edge/Windows 11. Two narrower explanations survive and this test cannot
+separate them:
+
+1. the `no-manifest` was an artifact of CDP-driven navigation (H2618's own leading
+   hypothesis, and the one its five repair attempts circled), or
+2. something Edge-specific, or specific to H2618's local dev server, that production +
+   Chrome does not reproduce.
+
+Either way it is a **measurement** problem, not a product problem, so it no longer gates
+anything: the Windows 11 row still owes its host, and nothing needs fixing first.
+
+One confound was removed between H2618's run and this click, and is worth naming so the
+result is not over-read: production served the manifest as `application/octet-stream` until
+[`scripts/nginx_webmanifest_mime.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/nginx_webmanifest_mime.sh)
+(the H2634 follow-up) ran at 14:55:39Z on 13-08-2026; it now serves
+`application/manifest+json`. H2618 measured the *correct* type on its local server and still
+got `no-manifest`, so the MIME fix is not the explanation for the difference — but this
+click did run against the corrected header, and a re-test of the CDP path should note that.
+
+**Consequence for the still-owed rows:** the manifest, service worker and installability
+are proven good on real Chromium, so when an Android device arrives the human install step
+should simply work — the Android Chrome PWA lane's risk is now entirely in the five V0
+proofs, not in getting the app installed.
+
 ---
 
 _Dr. Mārcis Gasūns_
