@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.89.15] - 2026-08-13
 ### Added
 - **H2482: native VisualDCS verb / nominal / concordance→passage learning.** Pinned importer (`visualdcs:import` / `visualdcs:rollback`) verifies H2481 contract version + SHA-256 + size, stages then promotes atomically and never rewrites a promoted tree. Three OFF-by-default flags (`VISUALDCS_VERB` / `VISUALDCS_NOMINAL` / `VISUALDCS_PASSAGE`) expose `/dvaram/visualdcs` plus a public bounded preview; attested-tier items use existing access-granting payments (deposit/trial never count). Cross-device progress lives in `external_learning_progress` with idempotent upserts and allow-listed `ActivityEvent` rows — no person-level export, no second access engine, no live fetch of VisualDCS `main`. Fixtures: complete + sparse under `tests/fixtures/visualdcs/`. Executor: Grok 4.6 (`grok-4.6`).
 
@@ -2286,7 +2287,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 ai-wip: add CODE_OF_CONDUCT.md (Contributor Covenant 2.1)
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
-[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.7...HEAD
+[Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.15...HEAD
+[1.89.15]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.14...v1.89.15
 [1.89.7]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.6...v1.89.7
 [1.89.6]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.5...v1.89.6
 [1.89.5]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.4...v1.89.5
