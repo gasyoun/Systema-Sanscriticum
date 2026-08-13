@@ -25,6 +25,9 @@ class Tariff extends Model
         'description',
         'is_active',
         'is_recording',
+        // Клубное членство (H2644): срок тарифа в месяцах. NULL у всех обычных
+        // тарифов — колонка аддитивна и на них не влияет.
+        'membership_months',
     ];
 
     protected $casts = [
@@ -32,6 +35,7 @@ class Tariff extends Model
         'old_price' => 'decimal:2',
         'is_active' => 'boolean',
         'is_recording' => 'boolean',
+        'membership_months' => 'integer',
         'block_number' => 'integer',
         'block_half' => 'integer', // NULL = весь блок; 1/2 = половина блока
         'start_block' => 'integer',
@@ -49,9 +53,24 @@ class Tariff extends Model
      * Bundle БЕЗ диапазона (мульти-курсовой пакет без привязки к блокам) остаётся
      * 'full' — как и раньше. «Один ключ = один блок» не нарушается: диапазон живёт
      * в числовых колонках платежа, а не в ключе.
+     *
+     * КЛУБНОЕ ЧЛЕНСТВО (H2644) — ключ `club_{N}m`, где N = membership_months.
+     * Зачем отдельный ключ: три клубных тарифа (месяц/квартал/год) — не блочные,
+     * поэтому у всех троих accessKey() вернул бы 'full', а payments не хранит
+     * tariff_id — и срок оплаченного периода стало бы неоткуда взять. Ключ
+     * `club_{N}m` делает платёж самоописывающим, читаемым прямо в БД.
+     *
+     * Ветка срабатывает ТОЛЬКО при заполненном membership_months, а он NULL у
+     * 100 % существующих тарифов — поведение живого контура не меняется. Ключ
+     * намеренно не совпадает ни с одним Lesson::unlockingKeys() ('full'/'block_N'):
+     * клуб открывает каталог через ClubEntitlement, а не уроки курса-членства.
      */
     public function accessKey(): string
     {
+        if ($this->membership_months !== null && (int) $this->membership_months > 0) {
+            return 'club_'.(int) $this->membership_months.'m';
+        }
+
         if ($this->type === 'bundle' && $this->start_block !== null) {
             return 'block_'.$this->start_block;
         }

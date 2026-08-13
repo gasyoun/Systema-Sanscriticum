@@ -808,4 +808,28 @@ return [
     'visualdcs_verb' => (bool) env('VISUALDCS_VERB', false),
     'visualdcs_nominal' => (bool) env('VISUALDCS_NOMINAL', false),
     'visualdcs_passage' => (bool) env('VISUALDCS_PASSAGE', false),
+
+    /*
+     |--------------------------------------------------------------------------
+     | Членство: «Клуб» и бесплатный уровень «Свободный» (H2644, запуск 01-09-2026)
+     |--------------------------------------------------------------------------
+     |
+     | Три НЕЗАВИСИМЫХ флага, все ВЫКЛЮЧЕНЫ: контур денег, поэтому миграция
+     | deploy-инертна, а включение — отдельный ops-шаг человека, не деплой.
+     | Пока флаги OFF: период членства не заводится на оплате, клубное право
+     | не подмешивается ни в один гейт доступа, страница отказа от продления
+     | отдаёт 404, а обе команды печатают отчёт и ничего не пишут.
+     |
+     | Порядок включения на 01-09: club_membership → membership_cancellation →
+     | membership_free_tier. Бесплатный уровень последний намеренно: он выдаёт
+     | гранты 350 уснувшим плательщикам (D6 = вариант «а»), и включать его стоит,
+     | когда клубный контур уже проверен на живых оплатах.
+     |
+     | ВНИМАНИЕ: club_membership без заведённого в Filament курса-членства
+     | (slug из config/membership.php) — тоже no-op, но МОЛЧАЛИВЫЙ. Проверять
+     | командой `membership:rehearse` до объявления запуска.
+     */
+    'club_membership' => (bool) env('CLUB_MEMBERSHIP', false),
+    'membership_free_tier' => (bool) env('MEMBERSHIP_FREE_TIER', false),
+    'membership_cancellation' => (bool) env('MEMBERSHIP_CANCELLATION', false),
 ];

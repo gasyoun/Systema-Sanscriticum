@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\LessonAccessGrant;
 use App\Models\Payment;
+use App\Services\Membership\ClubEntitlement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -55,20 +56,35 @@ class CabinetController extends Controller
         $user = $request->user();
         $groupIds = $user->groups->pluck('id');
 
+        // H2644: клуб — второе основание открыть курс, наравне с группой.
+        $club = app(ClubEntitlement::class);
+
         $course = Course::query()
             ->where('slug', $slug)
             ->where('is_active', true)
-            ->whereHas('groups', fn ($q) => $q->whereIn('groups.id', $groupIds))
+            ->where(fn ($q) => $q
+                ->whereHas('groups', fn ($g) => $g->whereIn('groups.id', $groupIds))
+                ->orWhere(fn ($c) => $club->isMember($user)
+                    ? $c->where('club_included', true)
+                    : $c->whereRaw('1 = 0')))
             ->firstOrFail();
 
-        $lessons = $course->lessons()->forUserGroups($user)
-            ->orderBy('sort_order')->orderBy('created_at')->get();
+        $clubCovers = $club->coversCourse($user, $course);
 
-        $unlockedTariffs = Payment::where('user_id', $user->id)
-            ->where('course_id', $course->id)
-            ->paid()
-            ->pluck('tariff')
-            ->all();
+        $lessonsQuery = $course->lessons();
+        if (! $clubCovers) {
+            $lessonsQuery->forUserGroups($user);
+        }
+        $lessons = $lessonsQuery->orderBy('sort_order')->orderBy('created_at')->get();
+
+        $unlockedTariffs = array_values(array_unique(array_merge(
+            Payment::where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->paid()
+                ->pluck('tariff')
+                ->all(),
+            $club->extraTariffKeys($user, $course),
+        )));
         $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
         $completedIds = $user->completedLessons()->pluck('lessons.id')->all();
 

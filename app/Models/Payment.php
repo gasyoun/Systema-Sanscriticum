@@ -11,6 +11,7 @@ use App\Mail\TrialZoomLinkMail;
 use App\Models\Concerns\TracksBlame;
 use App\Services\BlockAccessMaterializer;
 use App\Services\CuratorNotifier;
+use App\Services\Membership\ClubMembershipService;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Prana\PranaService;
 use App\Services\PromiseAutoFulfiller;
@@ -717,6 +718,15 @@ class Payment extends Model
         DB::transaction(function () {
             $this->grantAccess();
             $this->enrollInCourse();
+
+            // H2644: оплаченный период клубного членства. No-op для любого
+            // платежа не на курсе-членстве и при выключенном флаге. Добавлено
+            // РЯДОМ с существующими шагами — grantAccess() не тронут (fence rule 3):
+            // группу по-прежнему выдаёт он, здесь только заводится период, по
+            // истечении которого демон это право снимет.
+            if (config('features.club_membership')) {
+                app(ClubMembershipService::class)->syncFromPayment($this);
+            }
 
             // Для conditional Payment (доступ под обещание) пропускаем
             // welcome-email и начисление праны — деньги не пришли,
