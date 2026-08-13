@@ -866,4 +866,13 @@ return [
      | Flag OFF leaves lexical BM25 live. Never substitutes a paid API.
      */
     'grammar_lab_semantic' => (bool) env('GRAMMAR_LAB_SEMANTIC', false),
+
+    /*
+     | Hindi programme playlist (H2441): one ordered list of owned Hindi
+     | lessons across course shells (category `hindi` + H2333 predecessor).
+     | Default OFF — route /dvaram/programme/hindi 404s, nav/card stay hidden.
+     | Does not grant access, merge courses, or depend on CABINET_HYBRID.
+     | Enable: HINDI_PROGRAMME_PLAYLIST=true + config:cache.
+     */
+    'hindi_programme_playlist' => (bool) env('HINDI_PROGRAMME_PLAYLIST', false),
 ];

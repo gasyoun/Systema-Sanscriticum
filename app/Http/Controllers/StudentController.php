@@ -29,6 +29,7 @@ use App\Services\CertificateService;
 use App\Services\CourseContinuationBanner;
 use App\Services\CourseMaterialsArchiver;
 use App\Services\DebtPaymentResolver;
+use App\Services\HindiProgrammePlaylist;
 use App\Services\Leaderboard\LeaderboardService;
 use App\Services\Learning\ExternalLearningProgressService;
 use App\Services\Membership\ClubEntitlement;
@@ -342,6 +343,13 @@ class StudentController extends Controller
             ? app(ClubMembershipService::class)->activeFor($user)
             : null;
         $viewData['clubShelf'] = $clubEntitlement->shelfFor($user);
+
+        // H2441: Hindi programme playlist card. Null when flag OFF so classic
+        // cabinet stays inert; the page itself never requires cabinet_hybrid.
+        $hindiPlaylistService = app(HindiProgrammePlaylist::class);
+        $viewData['hindiPlaylist'] = $hindiPlaylistService->enabled()
+            ? $hindiPlaylistService->summaryFor($user)
+            : null;
 
         // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
         // Flag OFF → byte-stable legacy dashboard (recovery vars unused there).

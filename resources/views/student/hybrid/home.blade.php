@@ -19,6 +19,8 @@
         <p class="text-gray-500 text-base">{{ now()->timezone(config('app.timezone'))->translatedFormat('l, d F') }}</p>
     </div>
 
+    @include('student.partials.hindi-programme-playlist-card', ['hindiPlaylist' => $hindiPlaylist ?? null])
+
     {{-- R29.2 recovery banner leads; offers suppressed --}}
     @if ($recovery->active)
         <section class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-5 md:p-6" aria-label="Проблема с доступом" data-cabinet-mode="recovery">

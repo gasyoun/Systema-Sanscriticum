@@ -46,6 +46,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SrsController;
 use App\Http\Controllers\Student\AccessSelfServiceController;
+use App\Http\Controllers\Student\HindiProgrammePlaylistController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TransliterateController;
@@ -421,6 +422,11 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     // features.kosha_reader AND StartChteniyaCohort::hasEntitlement($user), so a
     // logged-in student who has not bought the cohort gets 404, not a redirect.
     // Static segment before {slug}, same ordering discipline as /dvaram/koloda.
+    // H2441 — Hindi programme playlist. Controller 404s while the flag is OFF.
+    // Classic cabinet only: no hybrid /library intermediate.
+    Route::get('/dvaram/programme/hindi', [HindiProgrammePlaylistController::class, 'hindi'])
+        ->name('student.programme.hindi');
+
     Route::get('/dvaram/reading', [ReadingPackController::class, 'cabinetIndex'])
         ->name('student.reading.index');
 

@@ -170,6 +170,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
 | `HEARTBEAT_PING_URL` | optional | `''` | config/heartbeat.php:43 |
 | `HEARTBEAT_TIMEOUT` | optional | `10` | config/heartbeat.php:54 |
+| `HINDI_PROGRAMME_PLAYLIST` | optional | `false` | config/features.php:877 |
 | `HOMEWORK_AUTO_OPEN_ALIGN_HOUR` | optional | `9` | config/homework.php:127 |
 | `HOMEWORK_AUTO_OPEN_CHANNELS` | optional | `'telegram,vk'` | config/homework.php:133 |
 | `HOMEWORK_AUTO_OPEN_CLOSE_PREVIOUS` | optional | `false` | config/homework.php:138 |

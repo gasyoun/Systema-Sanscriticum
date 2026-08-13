@@ -219,6 +219,17 @@ class AccessDiagnosticsService
             ->all();
     }
 
+    /**
+     * Same open-gate as StudentController::showCourse / showLesson
+     * (free / preview / paid keys / LessonAccessGrant). H2441 playlist reuses this.
+     *
+     * @param  array<int, string>  $ownedKeys
+     */
+    public function isLessonAccessible(Lesson $lesson, array $ownedKeys, User $user, int $courseId): bool
+    {
+        return $this->lessonIsOpen($lesson, $ownedKeys, $user, $courseId);
+    }
+
     public function botConnected(User $user): bool
     {
         return filled($user->telegram_id) || filled($user->vk_id);
