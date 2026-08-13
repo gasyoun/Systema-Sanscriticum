@@ -406,6 +406,8 @@
          x-transition:enter="transition ease-out duration-300" 
          x-transition:enter-start="opacity-0 translate-y-4" 
          x-transition:enter-end="opacity-100 translate-y-0">
+
+        @include('student.partials.hindi-programme-playlist-card', ['hindiPlaylist' => $hindiPlaylist ?? null])
          
         {{-- Сетка 1-2-3-4 колонки со сдвигом на шаг вверх: фиксированный сайдбар (280px)
              съедает ширину, и при lg:3/xl:4 карточки ужимались до ~200px — кнопки переносились. --}}

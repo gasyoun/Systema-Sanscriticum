@@ -135,6 +135,15 @@
             </a>
             @endif
 
+            {{-- H2441 — Hindi programme playlist. Hidden while the flag is OFF. --}}
+            @if (config('features.hindi_programme_playlist'))
+            <a href="{{ route('student.programme.hindi') }}"
+               class="{{ request()->routeIs('student.programme.hindi') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-language mr-3 w-5 text-center {{ request()->routeIs('student.programme.hindi') ? 'text-brand' : 'text-gray-500' }}"></i>
+                Мой хинди
+            </a>
+            @endif
+
             {{-- Карточки SRS (H211) — только при включённом флаге srs.enabled --}}
             @if (config('srs.enabled'))
             <a href="{{ route('student.srs') }}"
