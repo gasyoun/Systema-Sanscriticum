@@ -450,15 +450,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('telegram-harvest-roster-groups');
 
-        // H2635: one bounded daily evidence ingest. The command and the support
+        // H2635: two bounded evidence ingests, exactly 12 hours apart. The command and the support
         // reader share the same Madeline session lock; session_busy exits
         // non-zero so the scheduler records an honest missed run for retry.
         $schedule->command('telegram-harvest:sync --json')
-            ->dailyAt((string) config('services.telegram_harvest.daily_at', '05:15'))
+            ->cron((string) config('services.telegram_harvest.daily_cron', '15 5,17 * * *'))
             ->withoutOverlapping($this->madelineSessionLockMinutes(600))
             ->onOneServer()
             ->when(fn (): bool => (bool) config('services.telegram_harvest.daily_enabled', false))
-            ->name('telegram-harvest-daily-sync');
+            ->name('telegram-harvest-twice-daily-sync');
 
         // Track C (H164): @zapisi_ORSbot напоминает о занятии в чат группы прямо
         // из расписания (Schedule → group.telegram_chat_id). No-op, пока не включён
