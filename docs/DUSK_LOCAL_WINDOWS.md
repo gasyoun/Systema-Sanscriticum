@@ -1,6 +1,6 @@
 # Laravel Dusk локально на Windows
 
-_Created: 10-08-2026 · Last updated: 10-08-2026_
+_Created: 10-08-2026 · Last updated: 13-08-2026_
 
 Как запустить браузерные тесты ([`tests/Browser/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/Browser)) на рабочей машине под Windows. Заведено в H2532; проверено на этой машине 10-08-2026.
 
@@ -82,19 +82,46 @@ php artisan migrate --env=dusk.local --force
 php artisan filament:assets
 ```
 
+### 5. Скомпилированные вьюхи
+
+```
+php artisan view:cache
+```
+
+Не оптимизация ради оптимизации: без неё первый рендер страницы Filament
+компилирует сотни blade-шаблонов в одном запросе и упирается в лимит времени
+(см. следующий пункт).
+
 ## Запуск
 
-Два окна. Первое — сервер (порт обязан совпасть с `APP_URL`):
+Два окна. Первое — сервер.
+
+**`php artisan serve` тут не годится, и это не придирка** (H2502, 13-08-2026).
+Он поднимает встроенный сервер PHP как отдельный процесс, а тот наследует
+`max_execution_time = 30` из `C:\php83\php.ini` (у CLI лимит снят, у SAPI
+`cli-server` — нет) и передать ему `-d` через `artisan serve` нечем. Первый
+рендер страницы панели на этой машине в тридцать секунд не укладывается, и тест
+падает на `assertSee`, показывая пустой экран — то есть выглядит как сломанная
+вёрстка, а не как таймаут. Поэтому сервер поднимается напрямую, из `public/`:
 
 ```
-php artisan serve --env=dusk.local --host=127.0.0.1 --port=8010
+cd public
+php -d max_execution_time=0 -d memory_limit=1024M ^
+    -S 127.0.0.1:8010 -t . ^
+    ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php
 ```
 
-Второе — тесты:
+`cd public` обязателен: роутер `server.php` ищет `index.php` в **текущем
+каталоге**, а не рядом с собой (`artisan serve` делает ровно это — запускает
+процесс с рабочим каталогом `public/`). Запуск из корня даёт
+`Failed opening required '.../index.php'`.
+
+Второе окно — тесты:
 
 ```
-php artisan dusk                                  # вся папка tests/Browser
-php artisan dusk tests/Browser/SmokeTest.php      # один файл
+php artisan dusk                                             # вся папка tests/Browser
+php artisan dusk tests/Browser/SmokeTest.php                 # харнес жив
+php artisan dusk tests/Browser/TeacherGuideScreenshotsTest.php  # кадры руководства
 ```
 
 `Warning: TTY mode is not supported on Windows platform.` — ожидаемый шум, не ошибка.
@@ -114,6 +141,10 @@ php artisan dusk tests/Browser/SmokeTest.php      # один файл
 | Логин «не залипает», редирект на форму входа | `SESSION_DRIVER=array` | `file` в `.env.dusk.local` |
 | Непонятные таймауты на каждом `visit()` | `APP_URL` ≠ порт сервера | свести к одному порту |
 | `no such element: {"css selector":"body body"}` | `$browser->text('body')` — Dusk уже скоупится на `body` | не префиксовать селектор `body` |
+| Страница без вёрстки, сверху `WARNING: MadelineProto runs around 10x slower…` | вендорный `echo` в stdout до первого байта HTML — ломает и разметку, и AJAX-JSON Livewire | `php scripts/silence_madeline_windows_polyfill.php` (обычно его дёргает `composer` хуком `post-autoload-dump`; после оборванного `composer install` — руками) |
+| Страница без вёрстки, иконки во весь экран | не собраны ассеты Vite (`public/build/`) | `npm ci && npm run build` |
+| `Maximum execution time of 30 seconds exceeded` на рендере страницы панели | `max_execution_time` из `php.ini` у SAPI `cli-server` | поднимать сервер напрямую с `-d max_execution_time=0` (см. «Запуск»), плюс `php artisan view:cache` |
+| `Failed opening required '<корень>/index.php'` | `php -S` запущен не из `public/` | `cd public` перед запуском |
 
 ## Про сам smoke-тест
 
@@ -125,6 +156,35 @@ php artisan dusk tests/Browser/SmokeTest.php      # один файл
 - **Имя пользователя якорем не годится** — Filament держит его в выпадающем меню аватара, в тексте страницы его нет.
 - `DatabaseTruncation`, не `RefreshDatabase`: транзакция последнего живёт в тест-процессе, браузер её не видит.
 
-Скриншотов гида этот тест не делает — это [H2502](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2502-Opus_Systema-Sanscriticum_teacher-guide-dusk-screenshots-w2_09.08.26.md), отдельная работа.
+Скриншотов гида этот тест не делает — это
+[`tests/Browser/TeacherGuideScreenshotsTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Browser/TeacherGuideScreenshotsTest.php),
+описанный ниже.
+
+## Про тест кадров руководства (H2502)
+
+[`tests/Browser/TeacherGuideScreenshotsTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Browser/TeacherGuideScreenshotsTest.php)
+пересобирает [`docs/screenshots/teacher-guide/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/screenshots/teacher-guide)
+с нуля: по одному PNG на каждый раздел переписи
+[`docs/generated/teacher_nav_census.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/generated/teacher_nav_census.json).
+
+- **Список экранов берётся из переписи, а не из кода теста.** Свой список
+  разъехался бы с меню при первой правке гейта.
+- **Денежные экраны не снимаются никогда** (`TeacherSalaries`,
+  `MutualSettlements`, `TeacherPayoutResource`, `PaymentResource`). Фильтр стоит
+  трижды: по классу, по URL и по именам готовых файлов.
+- **Данные под кадрами — фикстура теста**, не прод и не дамп: имена студентов,
+  курс, уроки и словарь заданы явно, чтобы diff показывал изменения интерфейса,
+  а не новые случайные имена от фейкера.
+- **`APP_NAME` попадает В КАДР** — это подпись в шапке панели. Перед пересъёмкой
+  сведите его со значением прода, иначе руководство научит преподавателя чужому
+  названию школы.
+- **Локаль панели `en` — это правда прода**, а не недоделка стенда:
+  `config/app.php` держит `'locale' => 'en'` константой, без env. Поэтому «New
+  lesson» и «Showing 1 to 3 of 3 results» на кадрах — ровно то, что видит
+  преподаватель.
+
+CI кадры не переснимает (Dusk локальный), поэтому недостачу ловит обычный
+Feature-тест `TeacherGuideCoverageTest::every_section_the_teacher_sees_has_a_screenshot`:
+появился раздел в меню — сборка краснеет, пока кадр не переснят.
 
 _Dr. Mārcis Gasūns_

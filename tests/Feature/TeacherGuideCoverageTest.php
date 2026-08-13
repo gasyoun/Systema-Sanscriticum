@@ -193,6 +193,100 @@ class TeacherGuideCoverageTest extends TestCase
         }
     }
 
+    /**
+     * Кадры разделов (H2502).
+     *
+     * Съёмку делает Dusk, а Dusk локальный — в CI его нет. Значит, тихо
+     * протухнуть могут именно ССЫЛКИ: раздел появился в меню, кадр никто не
+     * переснял, руководство показывает битую картинку либо не показывает
+     * ничего. Эта проверка идёт от переписи, а не от папки, и потому ловит
+     * недостачу, а не только лишнее.
+     *
+     * @test
+     */
+    public function every_section_the_teacher_sees_has_a_screenshot(): void
+    {
+        $census = $this->census();
+        $text = $this->guideText();
+        $dir = base_path('docs/screenshots/teacher-guide');
+
+        $missing = [];
+
+        foreach ($census['items'] as $item) {
+            $url = $item['url'] ?? null;
+
+            if (! is_string($url) || $url === '') {
+                continue;
+            }
+
+            $path = trim((string) parse_url($url, PHP_URL_PATH), '/');
+            $slug = str_replace('/', '-', preg_replace('#^admin/#', '', $path) ?? $path);
+            $reference = "screenshots/teacher-guide/{$slug}.png";
+
+            if (! str_contains($text, $reference)) {
+                $missing[] = $item['label'].' — нет ссылки '.$reference;
+
+                continue;
+            }
+
+            if (! is_file($dir.'/'.$slug.'.png')) {
+                $missing[] = $item['label'].' — ссылка есть, файла нет: '.$reference;
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $missing,
+            "Разделы переписи без кадра (переснимите: php artisan dusk tests/Browser/TeacherGuideScreenshotsTest.php):\n  "
+                .implode("\n  ", $missing)
+        );
+    }
+
+    /**
+     * Фенс H2502 в его самой дешёвой форме: денежному экрану неоткуда взяться в
+     * папке кадров, а если он там окажется — это увидит CI, а не читатель.
+     *
+     * @test
+     */
+    public function no_money_screen_screenshot_exists(): void
+    {
+        $found = [];
+
+        foreach (glob(base_path('docs/screenshots/teacher-guide').'/*.png') ?: [] as $file) {
+            $name = mb_strtolower(basename($file));
+
+            foreach (['salary', 'salaries', 'payout', 'settlement', 'payment', 'debtor', 'receivable', 'profit'] as $word) {
+                if (str_contains($name, $word)) {
+                    $found[] = $name;
+                    break;
+                }
+            }
+        }
+
+        $this->assertSame([], $found, 'Денежные кадры в руководстве: '.implode(', ', $found));
+    }
+
+    /**
+     * В файле путь к кадру относительный (так его понимают GitHub и сборка PDF),
+     * а браузеру страница обязана отдать абсолютный — иначе он ищет картинку
+     * внутри /admin/ и показывает битую.
+     *
+     * @test
+     */
+    public function the_panel_page_rewrites_relative_screenshot_paths(): void
+    {
+        $teacher = User::factory()->create(['role' => Roles::TEACHER]);
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($teacher);
+
+        $html = (new TeacherGuide)->guideHtml();
+
+        $this->assertIsString($html);
+        $this->assertStringContainsString(TeacherGuide::SCREENSHOT_BASE.'teacher-guide/', $html);
+        $this->assertStringNotContainsString('src="screenshots/', $html);
+    }
+
     /** @test */
     public function guide_page_is_open_to_a_teacher(): void
     {
