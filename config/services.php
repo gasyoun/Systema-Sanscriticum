@@ -285,7 +285,7 @@ return [
     'openrouter' => [
         'api_key' => env('OPENROUTER_API_KEY'),
         'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
-        'model' => env('OPENROUTER_MODEL', 'deepseek/deepseek-chat'),
+        'model' => env('OPENROUTER_MODEL', 'deepseek/deepseek-v4-flash'),
         // $ per 1M tokens, per OpenRouter model — source: openrouter.ai/<model>,
         // checked 12-07-2026 (H763). Unknown models fall back to null spend
         // rather than guessing a price (SupportObservability::llm()).

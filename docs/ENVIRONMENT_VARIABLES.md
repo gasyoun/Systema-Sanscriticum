@@ -273,7 +273,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ONRAMP_YOGA_PATTERN` | optional | `'Рецитаци'` | config/onramp.php:18 |
 | `OPENROUTER_API_KEY` | secret | `—` | config/services.php:286 |
 | `OPENROUTER_BASE_URL` | optional | `'https://openrouter.ai/api/v1'` | config/services.php:287 |
-| `OPENROUTER_MODEL` | optional | `'deepseek/deepseek-chat'` | config/services.php:288 |
+| `OPENROUTER_MODEL` | optional | `'deepseek/deepseek-v4-flash'` | config/services.php:288 |
 | `OPENROUTER_PRICE_DEEPSEEK_CHAT_COMPLETION` | optional | `0.8001` | config/services.php:295 |
 | `OPENROUTER_PRICE_DEEPSEEK_CHAT_PROMPT` | optional | `0.2002` | config/services.php:294 |
 | `PAPERTRAIL_PORT` | required | `—` | config/logging.php:92<br>config/logging.php:93 |

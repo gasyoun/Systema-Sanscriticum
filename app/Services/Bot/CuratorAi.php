@@ -69,7 +69,7 @@ class CuratorAi
      */
     public function chatWithUsage(array $messages): array
     {
-        $model = config('services.openrouter.model', 'deepseek/deepseek-chat');
+        $model = config('services.openrouter.model', 'deepseek/deepseek-v4-flash');
         $empty = ['content' => null, 'usage' => null, 'model' => $model];
 
         $apiKey = config('services.openrouter.api_key');
