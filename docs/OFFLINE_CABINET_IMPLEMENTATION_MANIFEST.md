@@ -1,6 +1,6 @@
 # Offline cabinet implementation manifest
 
-_Created: 12-08-2026 · Last updated: 12-08-2026_
+_Created: 12-08-2026 · Last updated: 13-08-2026_
 
 | Wave | Status | Flag | Implementation | Tests | Evidence |
 |---|---|---|---|---|---|
@@ -9,3 +9,13 @@ _Created: 12-08-2026 · Last updated: 12-08-2026_
 
 Wave 0 is not “done” until every required target has real device/installed-PWA evidence.
 Automated Node/fake-IndexedDB results are supporting evidence, not a substitute for V0.
+
+## V0 platform rows
+
+| Target | Lane | Verdict | Blockers | Evidence |
+|---|---|---|---|---|
+| Recent iPhone | Installed Safari PWA | BLOCKED — host missing | No macOS/Xcode/iPhone; **B1** service worker deletes the encrypted chunk cache on activation | [OFFLINE_CABINET_WAVE0_IPHONE_EVIDENCE_2026-08-12.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/codex/offline-cabinet-roadmap/docs/OFFLINE_CABINET_WAVE0_IPHONE_EVIDENCE_2026-08-12.md) |
+| Recent iPhone | Capacitor remote-origin WKWebView | BLOCKED — host missing | No macOS/Xcode/iPhone; **B2** remote/local origin split leaves the offline fallback without the store; **B3** no tracked `OfflineCrypto` bridge | same file |
+
+B1–B3 are tracked-configuration defects, not host defects: each forecloses PASS on a
+fully provisioned iPhone and must be cleared before macOS/device time is booked.
