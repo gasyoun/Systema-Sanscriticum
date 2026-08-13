@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Added
+- **H2483: CRM Wave 1 customer 360 workspace.** [`CustomerTimelineService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Crm/CustomerTimelineService.php) composes Lead / Deal / FollowUpTask / Payment / PaymentPromise / support / ActivityEvent / PartnerConversion without a mirror table. Filament [`Customer360`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Customer360.php) (`/admin/customer-360`) shows pipeline, next action, support outcome, read-only access/payment and attribution; next-action writes go through `FollowUpTask`, stage writes through `Deal::moveToStage()`. Flag `crm_customer_360` default **OFF**. Owner map: [docs/CRM_CUSTOMER_360_OWNER_MAP_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_CUSTOMER_360_OWNER_MAP_2026.md). Executor: Grok 4.6 (`grok-4.6`).
+
+
 ## [1.89.15] - 2026-08-13
 ### Added
 - **H2482: native VisualDCS verb / nominal / concordance→passage learning.** Pinned importer (`visualdcs:import` / `visualdcs:rollback`) verifies H2481 contract version + SHA-256 + size, stages then promotes atomically and never rewrites a promoted tree. Three OFF-by-default flags (`VISUALDCS_VERB` / `VISUALDCS_NOMINAL` / `VISUALDCS_PASSAGE`) expose `/dvaram/visualdcs` plus a public bounded preview; attested-tier items use existing access-granting payments (deposit/trial never count). Cross-device progress lives in `external_learning_progress` with idempotent upserts and allow-listed `ActivityEvent` rows — no person-level export, no second access engine, no live fetch of VisualDCS `main`. Fixtures: complete + sparse under `tests/fixtures/visualdcs/`. Executor: Grok 4.6 (`grok-4.6`).

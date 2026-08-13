@@ -78,6 +78,14 @@ return [
     'crm_cockpit' => (bool) env('CRM_COCKPIT', false),
 
     /*
+     | CRM Wave 1 (H2483): Filament «Карточка 360» — единая лента Lead/Deal/
+     | FollowUpTask/Payment/support/ActivityEvent без зеркала фактов.
+     | ВЫКЛ по умолчанию. Деньги и доступ только читаются. Включение —
+     | CRM_CUSTOMER_360=true + config:cache после ревью.
+     */
+    'crm_customer_360' => (bool) env('CRM_CUSTOMER_360', false),
+
+    /*
      | Авто-постинг ссылки на занятие в Telegram-чат группы за N минут до старта
      | (команда classes:post-group-link, P0 автоматизации «Отдела заботы»).
      | ВЫКЛЮЧЕН по умолчанию: включается флагом class_link_autopost_enabled в
