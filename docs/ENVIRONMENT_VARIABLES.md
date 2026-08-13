@@ -455,7 +455,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_CURATORS_CHAT_ID` | required | `—` | config/services.php:119 |
 | `TELEGRAM_HARVEST_ACCOUNT_NAME` | optional | `'harvester'` | config/services.php:174 |
 | `TELEGRAM_HARVEST_CORPUS_SILENCE_AFTER_HOURS` | optional | `48` | config/services.php:195 |
-| `TELEGRAM_HARVEST_DAILY_AT` | optional | `'05:15'` | config/services.php:172 |
+| `TELEGRAM_HARVEST_DAILY_CRON` | optional | `'15 5,17 * * *'` | config/services.php:172 |
 | `TELEGRAM_HARVEST_DAILY_ENABLED` | feature-flag | `false` | config/services.php:171 |
 | `TELEGRAM_HARVEST_ENABLED` | feature-flag | `false` | config/services.php:170 |
 | `TELEGRAM_HARVEST_HISTORY_LIMIT` | optional | `200` | config/services.php:175 |
