@@ -207,6 +207,20 @@ class TelegramHarvestSyncTest extends TestCase
         }
     }
 
+    public function test_sync_json_is_machine_readable_and_store_failures_exit_nonzero(): void
+    {
+        $payload = storage_path('framework/testing/harvest-payload-'.uniqid().'.json');
+        File::put($payload, json_encode([$this->record(987654321, 987654321, 'public', '2026-07-01T10:00:00+03:00')]));
+
+        try {
+            $this->artisan('telegram-harvest:sync', ['--payload' => $payload, '--json' => true])
+                ->expectsOutputToContain('"status":"ok"')
+                ->assertExitCode(0);
+        } finally {
+            File::delete($payload);
+        }
+    }
+
     public function test_live_sync_paginates_history_past_the_100_message_api_clamp(): void
     {
         config([
