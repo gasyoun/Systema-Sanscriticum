@@ -1,6 +1,6 @@
 # Verification and risks — Systema offline cabinet
 
-_Created: 12-08-2026 · Last updated: 12-08-2026_
+_Created: 12-08-2026 · Last updated: 13-08-2026_
 
 Plan: [PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_OFFLINE_CABINET_2026H2.md) ·
 roadmap: [ROADMAP](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SYSTEMA_OFFLINE_CABINET_2026H2.md) ·
@@ -11,7 +11,7 @@ steps: [IMPLEMENTATION](https://github.com/gasyoun/Systema-Sanscriticum/blob/mai
 
 | Gate | Required evidence |
 |---|---|
-| V0 capability | Cold-start offline and read encrypted content on recent Android/WebView, Windows 11 installed Edge PWA, and recent iPhone Safari/WKWebView; non-exportable key survives restart; ciphertext copied to another device fails; no plaintext fallback |
+| V0 capability | Cold-start offline and read encrypted content on recent Android Chrome installed PWA, Windows 11 installed Edge PWA, and recent iPhone Safari installed PWA; non-exportable key survives restart; ciphertext copied to another device fails; no plaintext fallback. **Capacitor WebView rows (Android WebView / iOS WKWebView) are STOPPED, not pending** — H2634 ruled the wrapper's remote/local origin split unresolvable without the forbidden local-origin rewrite; see [ARCHITECTURE](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_OFFLINE_CABINET.md) § Load-bearing platform gate |
 | V1 vertical slice | Download online, enable airplane mode, cold-start, read text/PDF, play/seek audio, complete one exercise, bookmark, mark complete |
 | V2 download integrity | Pause, app termination, network loss, Wi-Fi→cellular, duplicate tap, corrupt chunk, expired session, and manifest update all recover explicitly; checksum failure never marks complete |
 | V3 lease | Deterministic fixtures for day 23, day 30, day 31, forward/backward clock skew; warning and lock correct; unsynced operations survive expiry |
@@ -36,10 +36,10 @@ it is not required to begin Wave 1, but it is mandatory before broad release.
 
 | Risk | Response |
 |---|---|
-| Capacitor remote/local origin split prevents cold offline launch | V0 spike; stop affected platform; do not create a second store implicitly |
+| Capacitor remote/local origin split prevents cold offline launch | V0 spike; stop affected platform; do not create a second store implicitly — **fired 13-08-2026 (H2634): platform stopped for offline content; the "no second store" half is now enforced in code by `assertOfflineStorageAllowed()`** |
 | Secure-key plugin is unmaintained or requires ignored native edits | Reject it; select a tracked/regenerable alternative or stop platform |
 | WebCrypto lacks streaming AES-GCM | Independent bounded chunks; measure memory and overhead |
-| Current service worker deletes unrelated caches | Replace activation policy before storing content |
+| Current service worker deletes unrelated caches (the encrypted content store) | Replace activation policy before storing content — **fired 13-08-2026 (H2634, [#1630](https://github.com/gasyoun/Systema-Sanscriticum/issues/1630)): `public/sw.js` now owns only the `ors-cabinet-shell-` namespace, pinned by `npm run test:sw-cache-migration`** |
 | Browser/iOS eviction removes assets | Verify every open, expose repair/removal, request persistence where available |
 | Clock rollback extends a lease | Maximum trusted server time + bounded skew; document that client clocks are not DRM |
 | Replayed completion duplicates rewards | Unique operation UUID and transactional acknowledgement around shared mutation service |

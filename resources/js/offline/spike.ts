@@ -156,7 +156,9 @@ export class MemoryEncryptedChunkStore implements EncryptedChunkStore {
 }
 
 export class CacheEncryptedChunkStore implements EncryptedChunkStore {
-    constructor(private readonly cacheName = 'systema-offline-spike-encrypted-v1') {}
+    constructor(private readonly cacheName = 'systema-offline-spike-encrypted-v1') {
+        assertOfflineStorageAllowed();
+    }
 
     private request(identity: AssetIdentity, index: number): Request {
         const manifest = encodeURIComponent(identity.manifestVersion);
@@ -204,6 +206,45 @@ export class CacheEncryptedChunkStore implements EncryptedChunkStore {
     }
 }
 
+/**
+ * H2634 — the Capacitor wrapper is STOPPED for offline content.
+ *
+ * `server.url` puts the WebView on the remote cabinet origin, where the device key and
+ * ciphertext are written, while the offline fallback is served from the bundled local
+ * scheme — a different origin, denied both by same-origin policy. Capacitor hosts one
+ * origin per WebView, so no configuration makes the wrapper's offline page reach this
+ * store. The ruling and the rejected exits are in
+ * `docs/ARCHITECTURE_SYSTEMA_OFFLINE_CABINET.md` § Load-bearing platform gate.
+ *
+ * Offline content is delivered on the same-origin installed-PWA surfaces instead
+ * (Android Chrome, iPhone Safari, Windows Edge) — the capability is not stopped, the
+ * wrapper as a delivery vehicle is. This guard exists so the outcome the architecture
+ * explicitly forbids — "a second store implicitly" under the local origin — cannot be
+ * reached by an ordinary code path, only by deleting a documented refusal.
+ */
+export class OfflineStoragePlatformStopped extends Error {
+    constructor() {
+        super(
+            'Offline content storage is stopped on the Capacitor wrapper (H2634): the remote/local '
+            + 'origin split denies the offline page this store. Use an installed PWA. See '
+            + 'docs/ARCHITECTURE_SYSTEMA_OFFLINE_CABINET.md § Load-bearing platform gate.',
+        );
+        this.name = 'OfflineStoragePlatformStopped';
+    }
+}
+
+/** True when running inside the Capacitor native wrapper rather than a browser/PWA. */
+export function isCapacitorNativePlatform(): boolean {
+    return Boolean((globalThis as CapacitorWindow).Capacitor?.isNativePlatform?.());
+}
+
+/** Throws on the stopped platform; a no-op on every same-origin PWA surface. */
+export function assertOfflineStorageAllowed(): void {
+    if (isCapacitorNativePlatform()) {
+        throw new OfflineStoragePlatformStopped();
+    }
+}
+
 export type RangeFetcher = (start: number, endExclusive: number) => Promise<ArrayBuffer>;
 
 export async function resumeEncryptedAsset(
@@ -213,6 +254,7 @@ export async function resumeEncryptedAsset(
     totalBytes: number,
     fetchRange: RangeFetcher,
 ): Promise<{ downloaded: number[]; reused: number[]; ciphertextBytes: number }> {
+    assertOfflineStorageAllowed();
     const downloaded: number[] = [];
     const reused: number[] = [];
     let ciphertextBytes = 0;
@@ -262,6 +304,13 @@ type CapacitorWindow = typeof globalThis & {
  * Native PASS is deliberately impossible without a bridge that performs crypto
  * inside Android Keystore/iOS Keychain and never returns raw key material to JS.
  * A generic secure key/value plugin does not satisfy this contract.
+ *
+ * H2634: no such bridge is tracked, and none is owed. The bridge exists to protect a
+ * content key inside the Capacitor wrapper, and the wrapper is stopped for offline
+ * content (see `assertOfflineStorageAllowed` above), so an all-false probe on a native
+ * platform is now the correct steady state rather than a missing implementation. The
+ * probe is kept because it is the check that would have to pass first if the ruling is
+ * ever reopened.
  */
 export async function probeNativeCrypto(): Promise<NativeOfflineCryptoProbe> {
     const capacitor = (globalThis as CapacitorWindow).Capacitor;

@@ -1,6 +1,6 @@
 # Architecture — Systema offline cabinet
 
-_Created: 12-08-2026 · Last updated: 12-08-2026_
+_Created: 12-08-2026 · Last updated: 13-08-2026_
 
 This layer implements the rulings in the [PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_OFFLINE_CABINET_2026H2.md).
 See the [roadmap](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SYSTEMA_OFFLINE_CABINET_2026H2.md),
@@ -83,6 +83,60 @@ origin that cannot see remote-origin IndexedDB. Wave 0 must prove that the remot
 worker can satisfy a cold offline launch in Android/iOS WebViews and still reach native secure
 storage/filesystem bridges. A failure stops that platform. It does not authorize a second local
 store, a native rewrite, or plaintext.
+
+### Ruling — offline content is delivered on the same-origin PWA surface only (13-08-2026, H2634)
+
+**The Capacitor wrapper is STOPPED for offline content.** Online it is unchanged: it remains
+the remote-origin WebView shell that H824 shipped, and this ruling touches none of its Wave 1
+behaviour. What it may not do is store or read encrypted lesson content.
+
+The gate above is decided rather than left pending because the split is structural, not a
+misconfiguration.
+[`mobile/capacitor.config.ts`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/mobile/capacitor.config.ts)
+puts the WebView on `https://<cabinet-host>`, where the WebCrypto device key and the Cache
+Storage ciphertext are written; `server.errorPath` is served from the bundled `webDir` on the
+local scheme (`capacitor://localhost` on iOS). Same-origin policy denies the fallback page both
+the key and the chunks, so a cold offline launch reaches a retry screen no matter how well the
+crypto works. Capacitor's `server.url` model hosts **one** origin per WebView, so there is no
+configuration in which the online remote page and an offline local-origin reader share a store.
+
+Three exits existed. Only the third is available under the standing rulings:
+
+| Exit | Verdict |
+|---|---|
+| **Local-origin app shell** — drop `server.url`, bundle the reader, fetch everything cross-origin with token auth | **Rejected.** This is the native rewrite the gate above forbids and the reuse verdict below excludes ("Reuse; add small hooks and one offline reader" · "Extend H1488/H824; no replacement wrapper"). It also moves authentication off the reused web session onto a cross-origin token flow — the session/auth consequence named below — for a delivery vehicle whose offline capability is already available elsewhere. |
+| **Two origins in one WebView** — remote online, local offline, one store | **Not available.** Not a ruling but a platform fact: `server.url` fixes the WebView to a single origin, and the local bundle is reachable only as the load-error fallback. Any implementation degenerates into the exit above. |
+| **Remote-origin only, no offline content in the wrapper** | **Ruled.** This is the response the verification contract pre-committed to: *"Capacitor remote/local origin split prevents cold offline launch → V0 spike; stop affected platform; do not create a second store implicitly."* |
+
+**A platform stop here is not a capability stop.** Offline content is a same-origin problem, and
+the installed-PWA surfaces are same-origin end to end — the service worker, the device key, and
+the encrypted chunks all live under `https://<cabinet-host>`. Android Chrome and iPhone Safari
+installed PWAs therefore stay fully in scope for V0, as does Windows installed Edge. What is
+stopped is the store-wrapper *delivery vehicle*, not offline reading on Android or iOS.
+
+**Consequence for session and auth: none.** Precisely because the local-origin exit is rejected,
+the offline reader keeps the reused web session on the cabinet origin, and no cross-origin token
+flow, CORS asset policy, or second authentication path is introduced by Wave 1.
+
+**Consequence for the native secure-key bridge:** the tracked `OfflineCrypto` bridge exists to
+protect a content key inside Android Keystore / iOS Keychain *for the wrapper*. With the wrapper
+stopped for offline content, that bridge has no consumer, and it is stopped with it rather than
+implemented speculatively — see [`mobile/README.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/mobile/README.md)
+§ *Offline-cabinet Wave 0 gate*. `probeNativeCrypto()` continues to fail closed, which is now the
+correct steady state rather than a missing implementation.
+
+**Enforcement is mechanical, not prose.** `assertOfflineStorageAllowed()` in
+[`resources/js/offline/spike.ts`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/js/offline/spike.ts)
+refuses to construct the Cache Storage chunk store or resume a download when
+`Capacitor.isNativePlatform()` is true, so the "second store implicitly" outcome the gate forbids
+cannot be reached by an ordinary code path.
+
+**Reopening this ruling** needs a human decision, not a further spike, since the cost is a
+different product shape rather than an unknown. It becomes worth revisiting if a store release
+must ship offline reading *and* the installed PWA is judged insufficient on iOS (Safari's
+storage eviction being the plausible trigger). The reopen path is the rejected local-origin exit
+in full — bundled reader shell, cross-origin authenticated ranged asset delivery, and the
+session/auth rework — costed as its own wave, never as a configuration change.
 
 ## Build-versus-reuse verdict
 

@@ -1,17 +1,32 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+    CacheEncryptedChunkStore,
     ENCRYPTION_CHUNK_BYTES,
     IndexedDbDeviceKeyVault,
     MemoryEncryptedChunkStore,
+    OfflineStoragePlatformStopped,
+    assertOfflineStorageAllowed,
     createDeviceKey,
     decryptChunk,
     encryptChunk,
+    isCapacitorNativePlatform,
     measureWebCrypto,
     probeNativeCrypto,
     randomBytes,
     resumeEncryptedAsset,
 } from './spike';
+
+/** Pretend this process is the Capacitor native wrapper for the duration of one test. */
+function withNativePlatform<T>(run: () => T): T {
+    const scope = globalThis as typeof globalThis & { Capacitor?: unknown };
+    scope.Capacitor = { isNativePlatform: () => true, Plugins: {} };
+    try {
+        return run();
+    } finally {
+        delete scope.Capacitor;
+    }
+}
 
 describe('offline encrypted-storage capability spike', () => {
     beforeEach(() => {
@@ -79,6 +94,36 @@ describe('offline encrypted-storage capability spike', () => {
             keyPersistsAfterRestart: false,
             filesystemReachable: false,
         });
+    });
+
+    it('refuses to open the encrypted chunk store on the stopped Capacitor wrapper', () => {
+        expect(isCapacitorNativePlatform()).toBe(false);
+        expect(() => assertOfflineStorageAllowed()).not.toThrow();
+
+        withNativePlatform(() => {
+            expect(isCapacitorNativePlatform()).toBe(true);
+            expect(() => assertOfflineStorageAllowed()).toThrow(OfflineStoragePlatformStopped);
+            // The "second store implicitly" outcome the architecture forbids.
+            expect(() => new CacheEncryptedChunkStore()).toThrow(OfflineStoragePlatformStopped);
+        });
+    });
+
+    it('refuses to download encrypted content on the stopped Capacitor wrapper', async () => {
+        const key = await createDeviceKey();
+        const store = new MemoryEncryptedChunkStore();
+        const identity = { manifestVersion: '1', assetId: 'representative.pdf' };
+        let fetches = 0;
+        const fetchRange = async (start: number, end: number) => {
+            fetches += 1;
+            return randomBytes(end - start).buffer;
+        };
+
+        const attempt = withNativePlatform(() =>
+            resumeEncryptedAsset(key, store, identity, 1024, fetchRange));
+
+        await expect(attempt).rejects.toThrow(OfflineStoragePlatformStopped);
+        expect(fetches).toBe(0);
+        expect(await store.get(identity, 0)).toBeUndefined();
     });
 
     it('keeps encrypted chunk storage expansion below the 20% budget', async () => {

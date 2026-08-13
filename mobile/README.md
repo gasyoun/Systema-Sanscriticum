@@ -1,6 +1,6 @@
 # Кабинет самскрте — mobile app (Capacitor wrapper)
 
-_Created: 12-07-2026 · Last updated: 12-08-2026_
+_Created: 12-07-2026 · Last updated: 13-08-2026_
 
 Wave 1 of the [mobile-app roadmap](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_MOBILE_APP_STUDENT_CABINET_2026_2027.md)
 (H824). This is a **Capacitor hybrid wrapper**: a native shell (Android + iOS) around
@@ -40,18 +40,42 @@ host stays in the WebView; Tochka and every other external host open externally.
 > above (and a device/emulator). The scaffold itself (`npm install`, `cap sync`,
 > `cap add android`) needs only Node.
 
-## Offline-cabinet Wave 0 gate (H2597)
+## Offline-cabinet Wave 0 gate — STOPPED for this wrapper (H2634, 13-08-2026)
 
-The tracked wrapper now pins the official Capacitor 8 `@capacitor/filesystem` and
-`@capacitor/file-transfer` plugins for resumable asset experiments. They do **not**
-provide the encryption key boundary. Native offline content remains stopped until a
-tracked `OfflineCrypto` bridge proves that AES operations use an Android Keystore /
-iOS Keychain-backed non-exportable key and never returns raw key material to JavaScript.
+**This wrapper does not store or read offline lesson content, and no work here should try
+to make it.** Ruled 13-08-2026 in
+[`docs/ARCHITECTURE_SYSTEMA_OFFLINE_CABINET.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_OFFLINE_CABINET.md)
+§ *Load-bearing platform gate*; online behaviour is unchanged and nothing in Wave 1 above
+is affected.
+
+**Why.** `server.url` puts the WebView on the remote cabinet origin, where the device key
+and the encrypted chunks are written. `server.errorPath` is served from the bundled
+`webDir` on the local scheme (`capacitor://localhost` on iOS) — a different origin, denied
+both by same-origin policy. Capacitor hosts one origin per WebView, so no configuration
+lets the offline page reach the store; the only exit would be dropping `server.url` for a
+bundled local-origin app, which is the native rewrite the roadmap's reuse ruling forbids.
+Offline reading is delivered on the **same-origin installed-PWA** surfaces instead (Android
+Chrome, iPhone Safari, Windows Edge), so the capability is not stopped — this delivery
+vehicle is. Offline, the wrapper shows the local "Нет соединения" retry screen, as it
+already did.
+
+**`OfflineCrypto` is stopped with it, and is not owed.** The bridge exists to hold a
+content key in Android Keystore / iOS Keychain *for this wrapper*; with the wrapper
+stopped for offline content it has no consumer, so no tracked Swift/Kotlin plugin is
+required and none should be authored speculatively. `probeNativeCrypto()` in
+[`resources/js/offline/spike.ts`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/js/offline/spike.ts) keeps returning
+all-false on a native platform — now the correct steady state rather than a gap. If the
+ruling is ever reopened, that probe is the first thing that must pass, and the
+non-exportability contract below still governs it.
 
 Do not substitute a generic secure key/value plugin: returning a serialized content
 key to JavaScript fails the plan's non-exportability gate even if the serialized value
-is encrypted at rest. The current evidence and device commands are in
-[`docs/OFFLINE_CABINET_WAVE0_SPIKE_2026-08-12.md`](../docs/OFFLINE_CABINET_WAVE0_SPIKE_2026-08-12.md).
+is encrypted at rest.
+
+The pinned Capacitor 8 `@capacitor/filesystem` and `@capacitor/file-transfer` plugins stay
+— they are asset I/O, not an encryption boundary, and they are unaffected by this stop.
+Evidence and device commands:
+[`docs/OFFLINE_CABINET_WAVE0_SPIKE_2026-08-12.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/OFFLINE_CABINET_WAVE0_SPIKE_2026-08-12.md).
 
 ## Setup
 
