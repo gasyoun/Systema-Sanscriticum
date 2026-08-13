@@ -29,6 +29,7 @@ use App\Services\CourseContinuationBanner;
 use App\Services\CourseMaterialsArchiver;
 use App\Services\DebtPaymentResolver;
 use App\Services\Leaderboard\LeaderboardService;
+use App\Services\Learning\ExternalLearningProgressService;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Services\StudentDebtsService;
@@ -37,6 +38,7 @@ use App\Support\KinescopePilot;
 use App\Support\OnboardingChecklist;
 use App\Support\PranaLeaderboard;
 use App\Support\TranscriptParser;
+use App\Support\VisualDcsEntitlement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -631,6 +633,11 @@ class StudentController extends Controller
             ];
         }
 
+        $visualContinue = $this->continueLearningVisualDcs(auth()->user());
+        if ($visualContinue !== null) {
+            return $visualContinue;
+        }
+
         $firstCourse = $courses->first();
         if ($firstCourse) {
             return [
@@ -654,6 +661,54 @@ class StudentController extends Controller
             'cta' => [
                 'label' => 'Перейти в каталог',
                 'url' => route('shop.index'),
+                'method' => 'GET',
+            ],
+        ];
+    }
+
+    /**
+     * H2482 — resume a started VisualDCS object when no next lesson is waiting.
+     * Never outranks debt / homework / trial / next lesson.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function continueLearningVisualDcs($user): ?array
+    {
+        if (! $user) {
+            return null;
+        }
+        $anyFlag = config('features.visualdcs_verb')
+            || config('features.visualdcs_nominal')
+            || config('features.visualdcs_passage');
+        if (! $anyFlag || ! VisualDcsEntitlement::hasFullAccess($user)) {
+            return null;
+        }
+
+        $latest = app(ExternalLearningProgressService::class)->latestForUser($user);
+        if (! $latest) {
+            return null;
+        }
+
+        $flag = (string) (config('visualdcs.flag_by_surface.'.$latest->surface) ?? '');
+        if ($flag === '' || ! config('features.'.$flag, false)) {
+            return null;
+        }
+
+        return [
+            'kind' => 'visualdcs',
+            'title' => 'Продолжить тренажёр',
+            'body' => match ($latest->surface) {
+                'verb' => 'Глагол',
+                'nominal' => 'Имя',
+                default => 'Пассаж',
+            },
+            'meta' => $latest->object_id,
+            'cta' => [
+                'label' => 'Продолжить',
+                'url' => route('student.visualdcs.show', [
+                    $latest->surface,
+                    rawurlencode($latest->object_id),
+                ]),
                 'method' => 'GET',
             ],
         ];

@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 02-08-2026 (№65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 13-08-2026 (H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -60,6 +60,24 @@ _Создано: 08-07-2026 · Обновлено: 02-08-2026 (№65 H2110 «С�
 
 Смоук: `/paypal/{tariff}` и `/invoice/{tariff}` → 200. Tochka: sbp+card, cashbox `digitalKassaTochka`.
 ККТ (своя) — **не** в этой выкладке. Доки: [TOCHKA audit](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_PAYMENT_METHODS_AUDIT_2026-07-31.md).
+
+---
+
+### ⚙️ H2482 — native VisualDCS surfaces — флаги ОСТАЮТСЯ OFF
+
+Код: три независимых флага `VISUALDCS_VERB` / `VISUALDCS_NOMINAL` / `VISUALDCS_PASSAGE`
+(все default false). После merge:
+
+1. `php artisan migrate` — таблицы `visualdcs_releases`, `external_learning_progress`.
+2. Импорт пина (sibling VisualDCS или fixtures):  
+   `php artisan visualdcs:import /path/to/visual/contracts/v1`  
+   (на проде — только после решения включить; до этого каталог пуст, маршруты 404).
+3. Флаги **не включать** в этом деплое. Активация — отдельное решение после
+   7/14/30-дневного baseline в [docs/VISUALDCS_LEARNER_BASELINE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VISUALDCS_LEARNER_BASELINE_2026.md).
+4. Откат одной поверхности: снять её env-флаг + `config:clear`. Откат релиза:  
+   `php artisan visualdcs:rollback`.
+
+Не трогает цены, Payment, identity.
 
 ---
 

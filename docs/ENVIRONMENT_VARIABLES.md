@@ -514,6 +514,11 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `UPGRADE_CREDIT_REFUND_LINK` | optional | `false` | config/features.php:583 |
 | `VIDEO_RESUME` | optional | `false` | config/features.php:467 |
 | `VIEW_COMPILED_PATH` | optional | `realpath(storage_path('framework/views'))` | config/view.php:31 |
+| `VISUALDCS_COURSE_SLUGS` | optional | `''` | config/visualdcs.php:28 |
+| `VISUALDCS_NOMINAL` | optional | `false` | config/features.php:809 |
+| `VISUALDCS_PASSAGE` | optional | `false` | config/features.php:810 |
+| `VISUALDCS_PREVIEW_LIMIT` | optional | `5` | config/visualdcs.php:19 |
+| `VISUALDCS_VERB` | optional | `false` | config/features.php:808 |
 | `VK_BOT_TOKEN` | secret | `—` | config/services.php:258 |
 | `VK_CALLBACK_SECRET` | secret | `—` | config/services.php:263 |
 | `VK_CLIENT_ID` | required | `—` | config/services.php:353 |

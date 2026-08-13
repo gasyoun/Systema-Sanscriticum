@@ -48,6 +48,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
+use App\Http\Controllers\VisualDcsController;
 use App\Http\Controllers\VkController;
 use App\Models\Course;
 use App\Models\CourseDesignAsset;
@@ -338,6 +339,11 @@ Route::get('/reading/kosha-demo', [ReadingPackController::class, 'show'])
 Route::get('/transliterate', [TransliterateController::class, 'show'])
     ->name('hub.transliterate');
 
+// H2482 — public bounded VisualDCS preview (flag per surface, 404 when OFF).
+Route::get('/visualdcs/{surface}/preview', [VisualDcsController::class, 'preview'])
+    ->where('surface', 'verb|nominal|passage')
+    ->name('visualdcs.preview');
+
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {
     $s = MarketingSetting::cached();
@@ -440,6 +446,22 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         Route::get('/dvaram/skill-drills', [StudentController::class, 'skillDrills'])
             ->name('student.skill-drills');
     }
+
+    // H2482 — native VisualDCS surfaces. Flags checked per request so one
+    // surface can 404 without unregistering the other two.
+    Route::get('/dvaram/visualdcs', [VisualDcsController::class, 'hub'])
+        ->name('student.visualdcs.hub');
+    Route::get('/dvaram/visualdcs/{surface}', [VisualDcsController::class, 'index'])
+        ->where('surface', 'verb|nominal|passage')
+        ->name('student.visualdcs.index');
+    Route::get('/dvaram/visualdcs/{surface}/{id}', [VisualDcsController::class, 'show'])
+        ->where('surface', 'verb|nominal|passage')
+        ->where('id', '.+')
+        ->name('student.visualdcs.show');
+    Route::post('/dvaram/visualdcs/{surface}/{id}/progress', [VisualDcsController::class, 'storeProgress'])
+        ->where('surface', 'verb|nominal|passage')
+        ->where('id', '.+')
+        ->name('student.visualdcs.progress');
 
     // H987 — RQ4 user study (on-ramp-first vs Талмуд-first). За фича-флагом
     // features.rq4_study, ВЫКЛ по умолчанию (404 пока не включен).
