@@ -148,6 +148,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `GOOGLE_CLIENT_ID` | required | `—` | config/services.php:350 |
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:351 |
 | `GOOGLE_REDIRECT_URI` | optional | `'/auth/google/callback'` | config/services.php:352 |
+| `GRAMMAR_LAB` | optional | `false` | config/features.php:827 |
+| `GRAMMAR_LAB_COURSE_SLUGS` | optional | `''` | config/grammar_lab.php:46 |
+| `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:834 |
 | `GRANT_ACCESS_FAIL_CLOSED` | optional | `false` | config/features.php:411 |
 | `HEARTBEAT_CHECK_HORIZON` | optional | `true` | config/heartbeat.php:60 |
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
