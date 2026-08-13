@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- **H2621: ИИ-куратор OpenRouter — модель по умолчанию `deepseek/deepseek-chat` → `deepseek/deepseek-v4-flash`.** [config/services.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/services.php) + [app/Services/Bot/CuratorAi.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Bot/CuratorAi.php); прайс-таблица не тронута (для новой модели её нет, вне области). Остаток L03–L13 org bulk-label retarget ([H2490](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2490-Sonnet_Uprava_flash-bulk-label-retarget_08.08.26.md)). Executor: Sonnet 5 (`claude-sonnet-5`).
 
 ## [1.89.12] - 2026-08-12
 ### Added

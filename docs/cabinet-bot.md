@@ -116,7 +116,7 @@ php artisan telegram:webhooks --set    # перерегистрировать в
 Единый «мозг» для TG и VK. Параметры:
 
 - Провайдер: **OpenRouter**, endpoint `https://openrouter.ai/api/v1/chat/completions`.
-- Модель: `OPENROUTER_MODEL` (по умолчанию `deepseek/deepseek-chat`).
+- Модель: `OPENROUTER_MODEL` (по умолчанию `deepseek/deepseek-v4-flash`).
 - `temperature = 0.3`, `max_tokens = 2000`, `timeout = 45s`.
 - Контекст: системный промпт + **последние 15** сообщений диалога
   (`HISTORY_LIMIT`). Все не-`user` сообщения (`bot`/`curator`) подаются модели как
@@ -337,7 +337,7 @@ VK_BOT_TOKEN=...
 
 # ИИ (OpenRouter / DeepSeek)
 OPENROUTER_API_KEY=...
-OPENROUTER_MODEL=deepseek/deepseek-chat   # необязательно
+OPENROUTER_MODEL=deepseek/deepseek-v4-flash   # необязательно
 
 # Базовый URL (для ссылок на оплату в каталоге)
 APP_URL=https://samskrte.ru
