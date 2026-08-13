@@ -826,4 +826,20 @@ return [
     'visualdcs_verb' => (bool) env('VISUALDCS_VERB', false),
     'visualdcs_nominal' => (bool) env('VISUALDCS_NOMINAL', false),
     'visualdcs_passage' => (bool) env('VISUALDCS_PASSAGE', false),
+
+    /*
+     | Grammar Lab explorer (H2493 / G2). Import and tables are additive;
+     | this flag gates every public/cabinet route and payload. Default OFF:
+     | /grammar-lab and /dvaram/grammar-lab 404 until a human flips
+     | GRAMMAR_LAB=true + config:cache. Does not create payments or flip
+     | a subscription. Semantic retrieval is a second flag.
+     */
+    'grammar_lab' => (bool) env('GRAMMAR_LAB', false),
+
+    /*
+     | Offline hybrid (BM25 + local embedding) for Grammar Lab search.
+     | Stays OFF until G1 semantic_ready=true AND frozen Recall@5 ≥ 0.85.
+     | Flag OFF leaves lexical BM25 live. Never substitutes a paid API.
+     */
+    'grammar_lab_semantic' => (bool) env('GRAMMAR_LAB_SEMANTIC', false),
 ];

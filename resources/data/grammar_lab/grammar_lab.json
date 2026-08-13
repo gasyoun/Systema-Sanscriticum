@@ -1,0 +1,5040 @@
+{
+  "schema_version": "1.0.0",
+  "bundle_version": "1.0.0",
+  "topics": [
+    {
+      "id": "subject:grammar-lab:ablaut-grades",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Три ступени чередования",
+      "cluster": "grade",
+      "aliases": {
+        "ru": [
+          "гуна",
+          "вриддхи",
+          "нулевая ступень",
+          "три ступени"
+        ],
+        "deva": [
+          "गुण",
+          "वृद्धि"
+        ],
+        "iast": [
+          "guṇa",
+          "vṛddhi",
+          "zero-grade"
+        ],
+        "slp1": [
+          "guRa",
+          "vfdDi"
+        ]
+      },
+      "summary_ru": "Whitney описывает guṇa и vṛddhi как последовательные усиления гласного (§§235–243) без нулевой ступени как члена той же шкалы. Зализняк 1975/1978/2004 задаёт трёхчленную шкалу слабая / guṇa / vṛddhi. Это один наблюдаемый факт (три огласовки) и две разные модели: у Уитни нет абстракции «ряда» и нет нуля как обязательного третьего члена.",
+      "alignment_note": "Shared phenomenon, different models. Do not equate Whitney increment with 1975 position.",
+      "prerequisites": [],
+      "difficulty": "intro",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:235-243",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:ablaut-grades",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:three-grade-alternation",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:ablaut-grades",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:table-1",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:ablaut-grades",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:50",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:ablaut-grades",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:three-grade",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:ablaut-grades",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:ablaut-grades",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:ablaut-grades"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared phenomenon, different models. Do not equate Whitney increment with 1975 position."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:alternation-series",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Ряды чередования A–N",
+      "cluster": "alternation",
+      "aliases": {
+        "ru": [
+          "ряд чередования",
+          "ряд A",
+          "ряд I",
+          "ряд U",
+          "ряд R"
+        ],
+        "deva": [
+          "गुणनपङ्क्ति"
+        ],
+        "iast": [
+          "ablaut series",
+          "A-series",
+          "I-series",
+          "U-series"
+        ],
+        "slp1": [
+          "A1",
+          "I1",
+          "U1",
+          "R1"
+        ]
+      },
+      "summary_ru": "Зализняк группирует корни по чередующемуся элементу: ряды A, I, U, R, L, M, N с индексами 1/2. Уитни тех же чередований касается по гласным и по отдельным корням, но ряда как классификационного ключа не строит. Подписные варианты I0/M0 из базы /z/ — ошибка обработки, не категория Зализняка.",
+      "alignment_note": "Series is a Zalizniak abstraction. Whitney has the vowels, not the series calculus.",
+      "prerequisites": [
+        "subject:grammar-lab:ablaut-grades"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:235-243",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:alternation-series",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:table-1",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:alternation-series",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:table-2",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:alternation-series",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:60",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:alternation-series",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:three-grade",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:alternation-series",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:427",
+          "anchor_key_slp1": "nI",
+          "target_locus": "subject:grammar-lab:alternation-series",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:111189",
+          "root_slp1": "nI",
+          "whitney_no": 427,
+          "gloss": "lead",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=427 root_slp1=nI",
+          "dcs_freq": 2350,
+          "dcs_rank": 55,
+          "attested_forms": "nayet:180|nītvā:164|nayati:123|naya:121|nayanti:107|nītā:76|nināya:75|nīyate:73",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:alternation-series"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Series is a Zalizniak abstraction. Whitney has the vowels, not the series calculus."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:aorist-systems",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Системы аориста",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "аорист",
+          "сигматический аорист",
+          "корневой аорист"
+        ],
+        "deva": [
+          "लुङ्"
+        ],
+        "iast": [
+          "aorist",
+          "s-aorist",
+          "root aorist"
+        ],
+        "slp1": [
+          "luN"
+        ]
+      },
+      "summary_ru": "Уитни §§824–920 выделяет простой, удвоенный и сигматический аористы. Очерк §§139–147 нумерует семь типов. 1975 использует аорист 4/5 как диагностику позиции 3. Нумерации не совпадают один к одному: сверять по строению основы, не по номеру.",
+      "alignment_note": "Do not equate Whitney aorist numbers with Zalizniak 1–7 without the stem formula.",
+      "prerequisites": [
+        "subject:grammar-lab:morphological-positions"
+      ],
+      "difficulty": "advanced",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:824-827",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:aorist-systems",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:878-897",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:aorist-systems",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:aorist-systems",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:139",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:aorist-systems",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:144",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:aorist-systems",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:aorist-systems",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:aorist-systems",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:aorist-systems"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Do not equate Whitney aorist numbers with Zalizniak 1–7 without the stem formula."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:attested-vs-predicted",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Засвидетельствованное и предсказанное",
+      "cluster": "attestation",
+      "aliases": {
+        "ru": [
+          "засвидетельствованная форма",
+          "предсказанная форма"
+        ],
+        "deva": [
+          "प्रयुक्ता"
+        ],
+        "iast": [
+          "attested",
+          "predicted",
+          "grammarian form"
+        ],
+        "slp1": [
+          "prayukta"
+        ]
+      },
+      "summary_ru": "И Уитни, и Зализняк 1975 опираются на засвидетельствованные формы; места, где взяты показания индийских грамматистов, оговариваются отдельно. Отсутствие формы в DCS-снимке не доказывает, что форма невозможна, и не назначает тип.",
+      "alignment_note": "Both spines privilege attestation. Corpus gap ≠ linguistic claim.",
+      "prerequisites": [
+        "subject:grammar-lab:ablaut-grades"
+      ],
+      "difficulty": "intro",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:98-100",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:attested-vs-predicted",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:inventory-scope",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:attested-vs-predicted",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:109",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:attested-vs-predicted",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:morphonology",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:attested-vs-predicted",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:815",
+          "anchor_key_slp1": "Sru",
+          "target_locus": "subject:grammar-lab:attested-vs-predicted",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:223393",
+          "root_slp1": "Sru",
+          "whitney_no": 815,
+          "gloss": "hear",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=815 root_slp1=Sru",
+          "dcs_freq": 10505,
+          "dcs_rank": 9,
+          "attested_forms": "śrutvā:3776|śṛṇu:1453|śrutam:425|śrotum:392|śrūyate:298|śrutaṃ:275|śṛṇuṣva:214|śṛṇoti:200",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:attested-vs-predicted"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Both spines privilege attestation. Corpus gap ≠ linguistic claim."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:causative-grade",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Ступень каузатива",
+      "cluster": "grade",
+      "aliases": {
+        "ru": [
+          "каузатив",
+          "каузативная огласовка"
+        ],
+        "deva": [
+          "णिच्"
+        ],
+        "iast": [
+          "causative",
+          "kārayati",
+          "gamayati"
+        ],
+        "slp1": [
+          "Ric",
+          "kArayati"
+        ]
+      },
+      "summary_ru": "Уитни §§1041–1052; очерк §167: презенс каузатива = ступень 3 sg перфекта + aya. 1975 относит часть каузативов к позиции 3 (vṛddhi: kārayati, śrāvayati), часть — к позиции 2. gamayati с guṇa — оговорённое исключение, не опровержение правила.",
+      "alignment_note": "Shared causative. 1975 splits MP2/MP3 by root shape.",
+      "prerequisites": [
+        "subject:grammar-lab:morphological-positions"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:1041-1052",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:causative-grade",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:causative-grade",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:167",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:causative-grade",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:causative-grade",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:causative-grade",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:causative-grade"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared causative. 1975 splits MP2/MP3 by root shape."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:future-sya",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Будущее на -sya / -iṣya",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "будущее время",
+          "суффикс sya",
+          "простое будущее"
+        ],
+        "deva": [
+          "लृट्",
+          "स्य"
+        ],
+        "iast": [
+          "sya-future",
+          "bhaviṣyati",
+          "vakṣyati"
+        ],
+        "slp1": [
+          "lfw",
+          "sya"
+        ]
+      },
+      "summary_ru": "Уитни §§931–940; очерк §157: корень в guṇa + sya, у seṭ — iṣya. В 1975 это морфологическая позиция 2. Наличие i — отдельная ось seṭ/aniṭ, не смена ступени.",
+      "alignment_note": "Shared future stem. 1975 labels it MP2.",
+      "prerequisites": [
+        "subject:grammar-lab:set-anit-vet"
+      ],
+      "difficulty": "intro",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:931-940",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:future-sya",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:future-sya",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:157",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:future-sya",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:set-anit",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:future-sya",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:528",
+          "anchor_key_slp1": "BU",
+          "target_locus": "subject:grammar-lab:future-sya",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:151456",
+          "root_slp1": "BU",
+          "whitney_no": 528,
+          "gloss": "be",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=528 root_slp1=BU",
+          "dcs_freq": 40393,
+          "dcs_rank": 2,
+          "attested_forms": "bhavati:9633|bhavet:5615|bhavanti:3200|bhaviṣyati:2001|abhavat:1697|bhūtvā:1535|abhūt:1372|babhūva:1220",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:future-sya"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared future stem. 1975 labels it MP2."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:infinitive-tum",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Инфинитив на -tum",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "инфинитив",
+          "суффикс tum"
+        ],
+        "deva": [
+          "तुमुन्"
+        ],
+        "iast": [
+          "infinitive",
+          "kartum",
+          "bhavitum"
+        ],
+        "slp1": [
+          "tumun",
+          "kartum"
+        ]
+      },
+      "summary_ru": "Уитни §968; очерк §164: guṇa + tum / itum. В 1975 это позиция 2. Тип III как раз и виден тем, что инфинитив остаётся без guṇa (bhikṣitum).",
+      "alignment_note": "Shared infinitive. 1975 labels it MP2.",
+      "prerequisites": [
+        "subject:grammar-lab:set-anit-vet"
+      ],
+      "difficulty": "intro",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:968",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:infinitive-tum",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:infinitive-tum",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:164",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:infinitive-tum",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:set-anit",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:infinitive-tum",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:infinitive-tum",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:infinitive-tum"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared infinitive. 1975 labels it MP2."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:morphological-positions",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Морфологические позиции 1/2/3",
+      "cluster": "grade",
+      "aliases": {
+        "ru": [
+          "морфологическая позиция",
+          "позиция 1",
+          "позиция 2",
+          "позиция 3"
+        ],
+        "deva": [
+          "रूपस्थान"
+        ],
+        "iast": [
+          "morphological position",
+          "1MP",
+          "2MP",
+          "3MP"
+        ],
+        "slp1": [
+          "1MP",
+          "2MP",
+          "3MP"
+        ]
+      },
+      "summary_ru": "Статья 1975 вводит три морфологические позиции: 1 ждёт нулевую ступень (причастие на -ta, слабый перфект), 2 — guṇa (инфинитив, будущее), 3 — vṛddhi (часть сигматического аориста и каузатива). Уитни описывает те же формы через strong/middle/weakest и отдельные правила усиления; нумерованных позиций у него нет. Очерк 1978 и конспект 2004 эту примитивацию снимают.",
+      "alignment_note": "1975-only primitive. Whitney/1978/2004 are descriptive counterparts, not the same calculus.",
+      "prerequisites": [
+        "subject:grammar-lab:ablaut-grades"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:952-956",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:morphological-positions",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:931-940",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:morphological-positions",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:968",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:morphological-positions",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:morphological-positions",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:162",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:morphological-positions",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:157",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:morphological-positions",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:164",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:morphological-positions",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:morphonology",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:morphological-positions",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:morphological-positions",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:morphological-positions"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "1975-only primitive. Whitney/1978/2004 are descriptive counterparts, not the same calculus."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:nasal-alternation",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Носовые чередования рядов M и N",
+      "cluster": "alternation",
+      "aliases": {
+        "ru": [
+          "носовое чередование",
+          "ряд M",
+          "ряд N"
+        ],
+        "deva": [
+          "अनुनासिक"
+        ],
+        "iast": [
+          "nasal alternation",
+          "M-series",
+          "N-series"
+        ],
+        "slp1": [
+          "M1",
+          "N1"
+        ]
+      },
+      "summary_ru": "Ряды M/N Зализняка описывают gam / gataḥ, man / mataḥ, tan / tataḥ и сдвиги между носовым рядом и A1 (daṃś / daśati). Уитни даёт те же формы по классам и по PPP, не собирая их в ряды M/N. Часть корней исторически уходит в A1 — это смена нормы, не «невозможность» носовой ступени.",
+      "alignment_note": "Shared forms; series label is Zalizniak-only.",
+      "prerequisites": [
+        "subject:grammar-lab:alternation-series"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:952-956",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:nasal-alternation",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:683-696",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:nasal-alternation",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:series-mn",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:nasal-alternation",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:60",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:nasal-alternation",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:three-grade",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:nasal-alternation",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:170",
+          "anchor_key_slp1": "gam",
+          "target_locus": "subject:grammar-lab:nasal-alternation",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:63409",
+          "root_slp1": "gam",
+          "whitney_no": 170,
+          "gloss": "go",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=170 root_slp1=gam",
+          "dcs_freq": 18341,
+          "dcs_rank": 5,
+          "attested_forms": "gatvā:1938|gataḥ:1522|gatam:1155|jagāma:1140|gacchati:966|gaccha:890|gata:788|gatāḥ:730",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:nasal-alternation"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared forms; series label is Zalizniak-only."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:open-vs-closed-roots",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Открытые и закрытые корни",
+      "cluster": "alternation",
+      "aliases": {
+        "ru": [
+          "открытый корень",
+          "закрытый корень"
+        ],
+        "deva": [
+          "व्यक्तधातु"
+        ],
+        "iast": [
+          "open root",
+          "closed root"
+        ],
+        "slp1": [
+          "open",
+          "closed"
+        ]
+      },
+      "summary_ru": "Очерк §61: открытый корень кончается чередующимся элементом (sthā, i, śru), закрытый имеет после него согласную (chid, iṣ). Конспект 2004 повторяет деление. Уитни описывает те же исходы корня без этой пары терминов. Деление важно для выбора сильной/слабой основы и для seṭ.",
+      "alignment_note": "1978/2004 terms; Whitney describes finals without the labels.",
+      "prerequisites": [
+        "subject:grammar-lab:alternation-series"
+      ],
+      "difficulty": "intro",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:235-243",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:open-vs-closed-roots",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:series-a2",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:open-vs-closed-roots",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:61",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:open-vs-closed-roots",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:open-closed",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:open-vs-closed-roots",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:815",
+          "anchor_key_slp1": "Sru",
+          "target_locus": "subject:grammar-lab:open-vs-closed-roots",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:223393",
+          "root_slp1": "Sru",
+          "whitney_no": 815,
+          "gloss": "hear",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=815 root_slp1=Sru",
+          "dcs_freq": 10505,
+          "dcs_rank": 9,
+          "attested_forms": "śrutvā:3776|śṛṇu:1453|śrutam:425|śrotum:392|śrūyate:298|śrutaṃ:275|śṛṇuṣva:214|śṛṇoti:200",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:open-vs-closed-roots"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "1978/2004 terms; Whitney describes finals without the labels."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:passive-ya",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Пассив на -ya",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "пассив",
+          "пассив на ya"
+        ],
+        "deva": [
+          "कर्मणि",
+          "यक्"
+        ],
+        "iast": [
+          "passive",
+          "kriyate",
+          "bhūyate"
+        ],
+        "slp1": [
+          "kriyate"
+        ]
+      },
+      "summary_ru": "Уитни §§768–774; очерк §160. Основа пассива — слабая ступень + ya, окончания медиальные. В 1975 некаузативный пассив входит в позицию 1. Не IV класс (manyate) и не каузативный пассив.",
+      "alignment_note": "Shared passive. Distinct from class-4 ya.",
+      "prerequisites": [
+        "subject:grammar-lab:present-ya-class"
+      ],
+      "difficulty": "intro",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:768-774",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:passive-ya",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:passive-ya",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:160",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:passive-ya",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:passive-ya",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:passive-ya",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:passive-ya"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared passive. Distinct from class-4 ya."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:perfect-strong-weak",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Перфект: сильная и слабая основы",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "перфект",
+          "слабый перфект",
+          "сильный перфект"
+        ],
+        "deva": [
+          "लिट्"
+        ],
+        "iast": [
+          "perfect",
+          "cakāra",
+          "cakruḥ"
+        ],
+        "slp1": [
+          "liw",
+          "cakAra"
+        ]
+      },
+      "summary_ru": "Уитни §§781–823; очерк §§150–153. Сильный sg act. часто с guṇa/vṛddhi, слабые формы — с нулём или с e-заменой (seduḥ). В 1975 слабый удвоенный перфект входит в позицию 1. e-перфект (tepuḥ) — отдельное наложение, не клетка трёхступенчатой таблицы.",
+      "alignment_note": "Shared perfect stem facts. 1975 assigns weak reduplicated perfect to MP1.",
+      "prerequisites": [
+        "subject:grammar-lab:morphological-positions"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:781-823",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:perfect-strong-weak",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:perfect-strong-weak",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:150",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:perfect-strong-weak",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:152",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:perfect-strong-weak",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:perfect-strong-weak",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:perfect-strong-weak",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:perfect-strong-weak"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared perfect stem facts. 1975 assigns weak reduplicated perfect to MP1."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:ppp-ta-na",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Причастие на -ta / -na",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "причастие на ta",
+          "PPP",
+          "причастие на na"
+        ],
+        "deva": [
+          "क्त"
+        ],
+        "iast": [
+          "ta-participle",
+          "kṛta",
+          "chinna"
+        ],
+        "slp1": [
+          "kta",
+          "kfta"
+        ]
+      },
+      "summary_ru": "Уитни §§952–956; очерк §162. Диагностическая форма позиции 1 в 1975 (kṛtaḥ, chinnaḥ). seṭ даёт -ita- (patitaḥ). Отсутствие токена в DCS не отменяет словарный PPP Уитни.",
+      "alignment_note": "Shared PPP. 1975 uses it as MP1 diagnostic.",
+      "prerequisites": [
+        "subject:grammar-lab:morphological-positions"
+      ],
+      "difficulty": "intro",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:952-956",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:ppp-ta-na",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:ppp-ta-na",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:162",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:ppp-ta-na",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:set-anit",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:ppp-ta-na",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:ppp-ta-na",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:ppp-ta-na"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared PPP. 1975 uses it as MP1 diagnostic."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:present-aya-class",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Презенс с -aya и X класс",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "десятый класс",
+          "класс cur",
+          "суффикс aya"
+        ],
+        "deva": [
+          "चुरादि"
+        ],
+        "iast": [
+          "aya-present",
+          "class 10",
+          "cur-class"
+        ],
+        "slp1": [
+          "curAdi"
+        ]
+      },
+      "summary_ru": "Очерк §119: -aya у первичных редок (hvayati). X класс / каузатив Уитни §§775, 1041–1052 и очерк §167 — производная основа. Не смешивать hvaya- как презенс от варианта и kārayati как каузатив.",
+      "alignment_note": "Primary aya-present ≠ causative aya. Both spines distinguish them.",
+      "prerequisites": [
+        "subject:grammar-lab:present-thematic-a"
+      ],
+      "difficulty": "advanced",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:775",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-aya-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:1041-1052",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-aya-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:quasi-roots",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-aya-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:119",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-aya-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:167",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-aya-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-aya-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:present-aya-class",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:present-aya-class"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Primary aya-present ≠ causative aya. Both spines distinguish them."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:present-na-class",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Презенс IX класса (суффикс nā/nī)",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "девятый класс",
+          "класс krī"
+        ],
+        "deva": [
+          "क्र्यादि"
+        ],
+        "iast": [
+          "nā-class",
+          "class 9",
+          "krī-class"
+        ],
+        "slp1": [
+          "kryAdi"
+        ]
+      },
+      "summary_ru": "Уитни §§717–732; очерк §136: krīṇāti, gṛhṇāti, jānāti. Корень в слабой ступени. Не путать с каузативом на -aya.",
+      "alignment_note": "Shared class-9 description.",
+      "prerequisites": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:717-732",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-na-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-na-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:136",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-na-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-na-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:120",
+          "anchor_key_slp1": "krI",
+          "target_locus": "subject:grammar-lab:present-na-class",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:58088",
+          "root_slp1": "krI",
+          "whitney_no": 120,
+          "gloss": "buy",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=120 root_slp1=krI",
+          "dcs_freq": 439,
+          "dcs_rank": 388,
+          "attested_forms": "krīṇāti:71|krītvā:50|krīte:23|krīṇāni:23|krītaḥ:22|krīta:18|krītam:17|krītaṃ:17",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:present-na-class"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared class-9 description."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:present-nasal-infix",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Презенс VII класса (носовой инфикс)",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "седьмой класс",
+          "носовой инфикс",
+          "класс rudh"
+        ],
+        "deva": [
+          "रुधादि"
+        ],
+        "iast": [
+          "nasal infix",
+          "class 7",
+          "rudh-class"
+        ],
+        "slp1": [
+          "ruDAdi"
+        ]
+      },
+      "summary_ru": "Уитни §§683–696; очерк §134: chinatti / chindanti. Инфикс чередуется, корень в слабой ступени. Это презентная морфология, не ряд N.",
+      "alignment_note": "Shared class-7 description. Distinct from M/N ablaut series.",
+      "prerequisites": [
+        "subject:grammar-lab:nasal-alternation"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:683-696",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-nasal-infix",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-nasal-infix",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:134",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-nasal-infix",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-nasal-infix",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:242",
+          "anchor_key_slp1": "Cid",
+          "target_locus": "subject:grammar-lab:present-nasal-infix",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:75907",
+          "root_slp1": "Cid",
+          "whitney_no": 242,
+          "gloss": "cut off",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=242 root_slp1=Cid",
+          "dcs_freq": 2139,
+          "dcs_rank": 64,
+          "attested_forms": "cicheda:469|chinna:371|chittvā:318|chinnam:69|chinddhi:64|chinatti:60|chinnaṃ:50|chinnā:45",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:present-nasal-infix"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared class-7 description. Distinct from M/N ablaut series."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:present-nu-class",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Презенс V/VIII классов (суффикс no/nu)",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "пятый класс",
+          "восьмой класс",
+          "класс su",
+          "класс tan"
+        ],
+        "deva": [
+          "स्वादि",
+          "तनादि"
+        ],
+        "iast": [
+          "nu-class",
+          "class 5",
+          "class 8"
+        ],
+        "slp1": [
+          "svAdi",
+          "tanAdi"
+        ]
+      },
+      "summary_ru": "Очерк §135 объединяет индийские V и VIII: sunoti, tanoti, аномалия karoti/kurvanti. Уитни держит классы раздельно (§§697–716). śṛṇoti от śru построено по формуле VII.",
+      "alignment_note": "1978 unifies V+VIII; Whitney keeps them apart. Both describe the same stems.",
+      "prerequisites": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:697-716",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-nu-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-nu-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:135",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-nu-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-nu-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:815",
+          "anchor_key_slp1": "Sru",
+          "target_locus": "subject:grammar-lab:present-nu-class",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:223393",
+          "root_slp1": "Sru",
+          "whitney_no": 815,
+          "gloss": "hear",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=815 root_slp1=Sru",
+          "dcs_freq": 10505,
+          "dcs_rank": 9,
+          "attested_forms": "śrutvā:3776|śṛṇu:1453|śrutam:425|śrotum:392|śrūyate:298|śrutaṃ:275|śṛṇuṣva:214|śṛṇoti:200",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:present-nu-class"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "1978 unifies V+VIII; Whitney keeps them apart. Both describe the same stems."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:present-reduplicating",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Презенс III класса (удваивающий)",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "третий класс",
+          "удваивающий презенс",
+          "класс hu"
+        ],
+        "deva": [
+          "जुहोत्यादि"
+        ],
+        "iast": [
+          "reduplicating class",
+          "class 3",
+          "hu-class"
+        ],
+        "slp1": [
+          "juhotyAdi"
+        ]
+      },
+      "summary_ru": "Уитни §§642–682; очерк §130. Сильная основа juhoti, слабая juhvati. Не тип III 1975. Удвоение здесь презенсное, не перфектное (§113 очерка).",
+      "alignment_note": "Whitney class 3 = 1978 class III. Not 1975 type III.",
+      "prerequisites": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:642-682",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-reduplicating",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-reduplicating",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:130",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-reduplicating",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:113",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-reduplicating",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-reduplicating",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:919",
+          "anchor_key_slp1": "hu",
+          "target_locus": "subject:grammar-lab:present-reduplicating",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:263443",
+          "root_slp1": "hu",
+          "whitney_no": 919,
+          "gloss": "sacrifice",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=919 root_slp1=hu",
+          "dcs_freq": 6418,
+          "dcs_rank": 17,
+          "attested_forms": "juhoti:2019|juhuyāt:853|hutvā:853|hutam:213|juhvati:182|juhuyād:180|juhomi:172|juhoty:159",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:present-reduplicating"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Whitney class 3 = 1978 class III. Not 1975 type III."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:present-root-class",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Презенс II класса (корневой)",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "второй класс",
+          "корневой презенс",
+          "класс ad"
+        ],
+        "deva": [
+          "अदादि"
+        ],
+        "iast": [
+          "root class",
+          "class 2",
+          "ad-class"
+        ],
+        "slp1": [
+          "adAdi"
+        ]
+      },
+      "summary_ru": "Уитни §§611–641: основа равна корню, сильные формы с guṇa. Очерк §127. Не путать с типом II 1975. Образцы: dviṣ / dveṣṭi, as / asti.",
+      "alignment_note": "Whitney class 2 = 1978 class II. Not 1975 type II.",
+      "prerequisites": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:611-641",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-root-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-root-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:127",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-root-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-root-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:22",
+          "anchor_key_slp1": "as",
+          "target_locus": "subject:grammar-lab:present-root-class",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:20353",
+          "root_slp1": "as",
+          "whitney_no": 22,
+          "gloss": "be",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=22 root_slp1=as",
+          "dcs_freq": 35753,
+          "dcs_rank": 3,
+          "attested_forms": "syāt:5508|asi:5164|asti:3927|āsīt:1833|syād:1790|astu:1733|'si:1482|asmi:1460",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:present-root-class"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Whitney class 2 = 1978 class II. Not 1975 type II."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:present-thematic-a",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Простой тематический презенс (I и VI)",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "первый класс",
+          "шестой класс",
+          "тематический презенс"
+        ],
+        "deva": [
+          "भ्वादि",
+          "तुदादि"
+        ],
+        "iast": [
+          "class 1",
+          "class 6",
+          "bhavati",
+          "tudati"
+        ],
+        "slp1": [
+          "Bavati",
+          "tudati"
+        ]
+      },
+      "summary_ru": "Очерк §117: корень + a покрывает индийские I (ударение на корне, часто guṇa) и VI (ударение на a, часто нуль). Уитни §§733–758 держит классы раздельно. Не тип I 1975.",
+      "alignment_note": "1978 groups I+VI; Whitney separates them. Neither is 1975 type I.",
+      "prerequisites": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ],
+      "difficulty": "intro",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:733-758",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-thematic-a",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-thematic-a",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:117",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-thematic-a",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-thematic-a",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:528",
+          "anchor_key_slp1": "BU",
+          "target_locus": "subject:grammar-lab:present-thematic-a",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:151456",
+          "root_slp1": "BU",
+          "whitney_no": 528,
+          "gloss": "be",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=528 root_slp1=BU",
+          "dcs_freq": 40393,
+          "dcs_rank": 2,
+          "attested_forms": "bhavati:9633|bhavet:5615|bhavanti:3200|bhaviṣyati:2001|abhavat:1697|bhūtvā:1535|abhūt:1372|babhūva:1220",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:present-thematic-a"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "1978 groups I+VI; Whitney separates them. Neither is 1975 type I."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:present-thematic-vs-athematic",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Тематическое и атематическое спряжение",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "тематическое спряжение",
+          "атематическое спряжение"
+        ],
+        "deva": [
+          "विकरण"
+        ],
+        "iast": [
+          "thematic",
+          "athematic"
+        ],
+        "slp1": [
+          "tematic",
+          "atematic"
+        ]
+      },
+      "summary_ru": "Уитни делит презенс на a-спряжение и не-a. Очерк §114 — та же граница. Это морфология презенса, не тип корня 1975: один корень типа I может быть и тематическим (bhavati), и атематическим (karoti).",
+      "alignment_note": "Shared present-system cut. Independent of 1975 type I–IV.",
+      "prerequisites": [
+        "subject:grammar-lab:ablaut-grades"
+      ],
+      "difficulty": "intro",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:599-606",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-thematic-vs-athematic",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-thematic-vs-athematic",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:114",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-thematic-vs-athematic",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-thematic-vs-athematic",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:528",
+          "anchor_key_slp1": "BU",
+          "target_locus": "subject:grammar-lab:present-thematic-vs-athematic",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:151456",
+          "root_slp1": "BU",
+          "whitney_no": 528,
+          "gloss": "be",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=528 root_slp1=BU",
+          "dcs_freq": 40393,
+          "dcs_rank": 2,
+          "attested_forms": "bhavati:9633|bhavet:5615|bhavanti:3200|bhaviṣyati:2001|abhavat:1697|bhūtvā:1535|abhūt:1372|babhūva:1220",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:present-thematic-vs-athematic"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Shared present-system cut. Independent of 1975 type I–IV."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:present-ya-class",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Презенс IV класса (суффикс ya)",
+      "cluster": "tense-stem",
+      "aliases": {
+        "ru": [
+          "четвёртый класс",
+          "класс div"
+        ],
+        "deva": [
+          "दिवादि"
+        ],
+        "iast": [
+          "ya-class",
+          "class 4",
+          "divyati"
+        ],
+        "slp1": [
+          "divAdi"
+        ]
+      },
+      "summary_ru": "Уитни §§759–767; очерк §118: корень в слабой ступени + ya (manyate, nṛtyati). Не пассив на -ya (§160 очерка / Whitney §§768–774) и не тип IV 1975.",
+      "alignment_note": "Class 4 ≠ passive ya ≠ 1975 type IV.",
+      "prerequisites": [
+        "subject:grammar-lab:present-thematic-vs-athematic"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:759-767",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-ya-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:morphological-positions",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-ya-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:118",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-ya-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:verb-overview",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:present-ya-class",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:546",
+          "anchor_key_slp1": "man",
+          "target_locus": "subject:grammar-lab:present-ya-class",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:156626",
+          "root_slp1": "man",
+          "whitney_no": 546,
+          "gloss": "think",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=546 root_slp1=man",
+          "dcs_freq": 4697,
+          "dcs_rank": 25,
+          "attested_forms": "manye:620|mataḥ:359|manyate:351|manyase:324|matvā:305|matam:290|matā:287|manyante:200",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:present-ya-class"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Class 4 ≠ passive ya ≠ 1975 type IV."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:quasi-roots",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Квазикорни",
+      "cluster": "homonymy",
+      "aliases": {
+        "ru": [
+          "квазикорень",
+          "вторичный корень"
+        ],
+        "deva": [
+          "गौणधातु"
+        ],
+        "iast": [
+          "quasi-root",
+          "secondary root",
+          "dad"
+        ],
+        "slp1": [
+          "dad"
+        ]
+      },
+      "summary_ru": "Квазикорень 1975 (Whitney §66/§102 secondary root) извлекается из презенса и обслуживает часть парадигмы (dad от dā → dattaḥ). Это не отдельный первичный корень списка Уитни и не тип IV.",
+      "alignment_note": "Both spines name the phenomenon; 1975 treats it as a classification unit.",
+      "prerequisites": [
+        "subject:grammar-lab:root-variants"
+      ],
+      "difficulty": "advanced",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:66",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:quasi-roots",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:102",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:quasi-roots",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:quasi-roots",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:quasi-roots",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:131",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:quasi-roots",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:morphonology",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:quasi-roots",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:349",
+          "anchor_key_slp1": "dA",
+          "target_locus": "subject:grammar-lab:quasi-roots",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "whitney-roots",
+          "entry_id": "whitney-root:349",
+          "root_slp1": "dA",
+          "whitney_no": 349,
+          "gloss": "give",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=349 root_slp1=dA",
+          "dcs_freq": 12008,
+          "dcs_rank": 7,
+          "attested_forms": "dattvā:1825|dadyāt:1442|dadāti:791|dadau:699|datta:407|dehi:402|dattaṃ:389|dadyād:376",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:quasi-roots"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Both spines name the phenomenon; 1975 treats it as a classification unit."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:root-designation",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Обозначение корня: реальное и условное",
+      "cluster": "homonymy",
+      "aliases": {
+        "ru": [
+          "обозначение корня",
+          "условный корень",
+          "реальный корень"
+        ],
+        "deva": [
+          "धातुसंज्ञा"
+        ],
+        "iast": [
+          "root designation",
+          "conventional root"
+        ],
+        "slp1": [
+          "DAtu"
+        ]
+      },
+      "summary_ru": "Зализняк 1975 различает реальное обозначение (ru) и условное (kṛ / kṝ). Тип задаёт, какую ступень берут за заголовок: II — guṇa, III — нуль, IV — vṛddhi, I — зависит от ряда. Уитни Roots использует свой список заголовков; расхождения (krap ↔ kṛp, spardh ↔ spṛdh) — конвенция цитаты, не два корня.",
+      "alignment_note": "1975 states the convention; Whitney is the cited list, not a rival calculus.",
+      "prerequisites": [
+        "subject:grammar-lab:root-type-i"
+      ],
+      "difficulty": "advanced",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:98-100",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-designation",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:root-designation",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-designation",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:25",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-designation",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:morphonology",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-designation",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:root-designation",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:root-designation"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "1975 states the convention; Whitney is the cited list, not a rival calculus."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:root-homonymy",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Омонимия корней",
+      "cluster": "homonymy",
+      "aliases": {
+        "ru": [
+          "омонимия корней",
+          "два as",
+          "два vas"
+        ],
+        "deva": [
+          "समानधातु"
+        ],
+        "iast": [
+          "root homonymy"
+        ],
+        "slp1": [
+          "as#1",
+          "as#2"
+        ]
+      },
+      "summary_ru": "Одинаковое написание не есть один корень: as «быть» (тип I) и as «бросать» (тип II); vas «сиять» / vas «одевать». Уитни нумерует омонимы в Roots (whitney_no 22 vs 23). Свёртка DCS-частоты по омонимам в pin-срезе — ограничение снимка, не доказательство тождества.",
+      "alignment_note": "Both spines keep homonyms distinct. Do not merge frequencies into identity.",
+      "prerequisites": [
+        "subject:grammar-lab:root-type-i"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:608",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-homonymy",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:636",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-homonymy",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:homonymy",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-homonymy",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:127",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-homonymy",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:morphonology",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-homonymy",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:22",
+          "anchor_key_slp1": "as",
+          "target_locus": "subject:grammar-lab:root-homonymy",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:20353",
+          "root_slp1": "as",
+          "whitney_no": 22,
+          "gloss": "be",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=22 root_slp1=as",
+          "dcs_freq": 35753,
+          "dcs_rank": 3,
+          "attested_forms": "syāt:5508|asi:5164|asti:3927|āsīt:1833|syād:1790|astu:1733|'si:1482|asmi:1460",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:root-homonymy"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Both spines keep homonyms distinct. Do not merge frequencies into identity."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:root-type-i",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Тип I — полное чередование",
+      "cluster": "root-type",
+      "aliases": {
+        "ru": [
+          "тип I",
+          "полное чередование"
+        ],
+        "deva": [
+          "प्रथमवर्ग"
+        ],
+        "iast": [
+          "type I",
+          "full alternation"
+        ],
+        "slp1": [
+          "typeI"
+        ]
+      },
+      "summary_ru": "Тип I статьи 1975 — корни, которые в позиции 1 дают нуль, в позиции 2 — guṇa (kṛtaḥ / kartum). Это не I презентный класс Уитни (тематический bhū-класс). Очерк 1978 заменяет тип перекрёстными осями; конспект 2004 буквенного типа не имеет.",
+      "alignment_note": "1975 type I ≠ Whitney present class I.",
+      "prerequisites": [
+        "subject:grammar-lab:morphological-positions"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:235-243",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-i",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:952-956",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-i",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:type-i",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-i",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:type-calculus",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-i",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:50",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-i",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:partial-alternators",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-i",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:106",
+          "anchor_key_slp1": "kf",
+          "target_locus": "subject:grammar-lab:root-type-i",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:54148",
+          "root_slp1": "kf",
+          "whitney_no": 106,
+          "gloss": "make",
+          "homonym": "1"
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=106 root_slp1=kf",
+          "dcs_freq": 40799,
+          "dcs_rank": 1,
+          "attested_forms": "kṛtvā:6008|kuryāt:2720|kṛta:2601|karoti:2396|kṛtam:1646|kurute:1170|kṛtaṃ:1052|kuru:878",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:root-type-i"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "1975 type I ≠ Whitney present class I."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:root-type-ii",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Тип II — частичное чередование",
+      "cluster": "root-type",
+      "aliases": {
+        "ru": [
+          "тип II",
+          "неполноизменяемый"
+        ],
+        "deva": [
+          "द्वितीयवर्ग"
+        ],
+        "iast": [
+          "type II"
+        ],
+        "slp1": [
+          "typeII"
+        ]
+      },
+      "summary_ru": "Тип II держит guṇa там, где тип I даёт нуль: jñātaḥ, not *jñitaḥ; gaditaḥ. Конспект 2004 называет часть таких корней неполноизменяемыми. Уитни описывает те же формы как отсутствие ослабления, без типа II.",
+      "alignment_note": "1975 type II ≠ Whitney present class II (root class).",
+      "prerequisites": [
+        "subject:grammar-lab:root-type-i"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:952-956",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-ii",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:type-ii",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-ii",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:61",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-ii",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:partial-alternators",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-ii",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:269",
+          "anchor_key_slp1": "jYA",
+          "target_locus": "subject:grammar-lab:root-type-ii",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:80318",
+          "root_slp1": "jYA",
+          "whitney_no": 269,
+          "gloss": "know",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=269 root_slp1=jYA",
+          "dcs_freq": 5041,
+          "dcs_rank": 22,
+          "attested_forms": "jñātvā:995|jñeyā:308|jānāti:283|jñeyaṃ:258|jñeyaḥ:214|jñeyam:210|jānāmi:198|jāne:136",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:root-type-ii"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "1975 type II ≠ Whitney present class II (root class)."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:root-type-iii",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Тип III — нуль во второй позиции",
+      "cluster": "root-type",
+      "aliases": {
+        "ru": [
+          "тип III"
+        ],
+        "deva": [
+          "तृतीयवर्ग"
+        ],
+        "iast": [
+          "type III"
+        ],
+        "slp1": [
+          "typeIII"
+        ]
+      },
+      "summary_ru": "Тип III не имеет позиции 3 и в позиции 2 остаётся в нулевой ступени (bhikṣitum, cumbitum). Уитни фиксирует те же «неусиленные» инфинитивы как исключения к правилу guṇa перед -tum. Это не III презентный класс (удваивающий hu-класс).",
+      "alignment_note": "1975 type III ≠ Whitney present class III.",
+      "prerequisites": [
+        "subject:grammar-lab:root-type-i"
+      ],
+      "difficulty": "advanced",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:968",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-iii",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:type-iii",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-iii",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:series-iur",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-iii",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:164",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-iii",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:partial-alternators",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-iii",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:242",
+          "anchor_key_slp1": "Cid",
+          "target_locus": "subject:grammar-lab:root-type-iii",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:75907",
+          "root_slp1": "Cid",
+          "whitney_no": 242,
+          "gloss": "cut off",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=242 root_slp1=Cid",
+          "dcs_freq": 2139,
+          "dcs_rank": 64,
+          "attested_forms": "cicheda:469|chinna:371|chittvā:318|chinnam:69|chinddhi:64|chinatti:60|chinnaṃ:50|chinnā:45",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:root-type-iii"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "1975 type III ≠ Whitney present class III."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:root-type-iv",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Тип IV — застывшая vṛddhi",
+      "cluster": "root-type",
+      "aliases": {
+        "ru": [
+          "тип IV",
+          "застывшая вриддхи"
+        ],
+        "deva": [
+          "चतुर्थवर्г"
+        ],
+        "iast": [
+          "type IV"
+        ],
+        "slp1": [
+          "typeIV"
+        ]
+      },
+      "summary_ru": "Тип IV в 1975 — короткий закрытый список (ḍhauk, mārg, kāṅkṣ, vāñch, dhāv, cāy): корень задан в vṛddhi и почти не чередуется. Это не IV презентный класс Уитни (ya-класс divyati). Очерк 1978 такого списка типов не ведёт.",
+      "alignment_note": "1975 type IV ≠ Whitney present class IV.",
+      "prerequisites": [
+        "subject:grammar-lab:root-type-i"
+      ],
+      "difficulty": "advanced",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:235-243",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-iv",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:type-iv",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-iv",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:60",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-iv",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:partial-alternators",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-type-iv",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:528",
+          "anchor_key_slp1": "BU",
+          "target_locus": "subject:grammar-lab:root-type-iv",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:151456",
+          "root_slp1": "BU",
+          "whitney_no": 528,
+          "gloss": "be",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=528 root_slp1=BU",
+          "dcs_freq": 40393,
+          "dcs_rank": 2,
+          "attested_forms": "bhavati:9633|bhavet:5615|bhavanti:3200|bhaviṣyati:2001|abhavat:1697|bhūtvā:1535|abhūt:1372|babhūva:1220",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:root-type-iv"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "1975 type IV ≠ Whitney present class IV."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:root-variants",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Варианты корня",
+      "cluster": "homonymy",
+      "aliases": {
+        "ru": [
+          "вариант корня",
+          "параллельный корень"
+        ],
+        "deva": [
+          "धातुभेद"
+        ],
+        "iast": [
+          "root variant",
+          "dham // dhmā"
+        ],
+        "slp1": [
+          "Dam",
+          "DmA"
+        ]
+      },
+      "summary_ru": "1975 трактует dham // dhmā как два классификационных узла, из которых собирается одна парадигма. Уитни даёт такие пары как варианты одного корня или как отдельные статьи. Нельзя автоматически схлопывать вариант в омоним или в один тип.",
+      "alignment_note": "Variant ≠ homonym. Classification unit in 1975 is the variant.",
+      "prerequisites": [
+        "subject:grammar-lab:root-designation"
+      ],
+      "difficulty": "advanced",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:251",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-variants",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:root-variants",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-variants",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:111",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-variants",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:morphonology",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:root-variants",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:874",
+          "anchor_key_slp1": "sTA",
+          "target_locus": "subject:grammar-lab:root-variants",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:255316",
+          "root_slp1": "sTA",
+          "whitney_no": 874,
+          "gloss": "stand",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=874 root_slp1=sTA",
+          "dcs_freq": 9268,
+          "dcs_rank": 12,
+          "attested_forms": "sthitaḥ:903|tiṣṭhati:877|sthitam:622|sthitā:462|tiṣṭha:449|tasthau:419|sthitāḥ:383|sthito:328",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:root-variants"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Variant ≠ homonym. Classification unit in 1975 is the variant."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:samprasarana",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "Саспрасарана",
+      "cluster": "alternation",
+      "aliases": {
+        "ru": [
+          "сампрасарана",
+          "вокализация сонанта"
+        ],
+        "deva": [
+          "सम्प्रसारण"
+        ],
+        "iast": [
+          "samprasāraṇa",
+          "samprasarana"
+        ],
+        "slp1": [
+          "samprasAraRa"
+        ]
+      },
+      "summary_ru": "Саспрасарана — чередование ya/va/ra в полной ступени с i/u/ṛ в слабой (yaj / iṣṭaḥ, vac / uktaḥ, svap / suptaḥ). Уитни §252; Зализняк 1975 как ряды YA/VA/RA; очерк §50/52. Это не отдельный презентный класс.",
+      "alignment_note": "Same named process in both spines.",
+      "prerequisites": [
+        "subject:grammar-lab:alternation-series"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:252",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:samprasarana",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:samprasarana",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:samprasarana",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:50",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:samprasarana",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:52",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:samprasarana",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:three-grade",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:samprasarana",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:699",
+          "anchor_key_slp1": "vac",
+          "target_locus": "subject:grammar-lab:samprasarana",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:184615",
+          "root_slp1": "vac",
+          "whitney_no": 699,
+          "gloss": "speak",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=699 root_slp1=vac",
+          "dcs_freq": 33948,
+          "dcs_rank": 4,
+          "attested_forms": "uvāca:13880|ucyate:2868|uktam:2586|uktvā:2372|uktaḥ:1698|ūcuḥ:889|ukta:789|uktaṃ:704",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:samprasarana"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Same named process in both spines."
+      }
+    },
+    {
+      "id": "subject:grammar-lab:set-anit-vet",
+      "schema_version": "1.0.0",
+      "status": "published",
+      "title_ru": "seṭ, aniṭ и veṭ",
+      "cluster": "alternation",
+      "aliases": {
+        "ru": [
+          "сеṭ",
+          "аниṭ",
+          "веṭ",
+          "соединительная i"
+        ],
+        "deva": [
+          "सेट्",
+          "अनिट्",
+          "वेट्"
+        ],
+        "iast": [
+          "seṭ",
+          "aniṭ",
+          "veṭ",
+          "union-vowel i"
+        ],
+        "slp1": [
+          "sew",
+          "aniw",
+          "vew"
+        ]
+      },
+      "summary_ru": "Зализняк делит корни по наличию соединительного i перед согласным суффиксом (§63 очерка; конспект 2004). Уитни того же i называет union-vowel и описывает по формам (инфинитив, будущее, PPP), не вводя термины seṭ/aniṭ. Смешанный (veṭ) тип нельзя сводить к одному правилу.",
+      "alignment_note": "Same connective i; Whitney has no seṭ/aniṭ terms.",
+      "prerequisites": [
+        "subject:grammar-lab:ablaut-grades"
+      ],
+      "difficulty": "intermediate",
+      "sources": [
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:254",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:set-anit-vet",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:934-935",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:set-anit-vet",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:956",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:set-anit-vet",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-sec",
+          "anchor_id": "whitney-sec:968",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:set-anit-vet",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/WhitneyGrammar_1889",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1975",
+          "anchor_id": "zalizniak-1975:set-anit",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:set-anit-vet",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakMorphology_1975",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-1978-sec",
+          "anchor_id": "zalizniak-1978-sec:63",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:set-anit-vet",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakOcherk_1978",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "zalizniak-2004",
+          "anchor_id": "zalizniak-2004:set-anit",
+          "anchor_key_slp1": "",
+          "target_locus": "subject:grammar-lab:set-anit-vet",
+          "link_type": "thematic",
+          "source_dataset": "SanskritGrammar/ZalizniakKonspekt_2004",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        },
+        {
+          "anchor_type": "whitney-root",
+          "anchor_id": "whitney-root:528",
+          "anchor_key_slp1": "BU",
+          "target_locus": "subject:grammar-lab:set-anit-vet",
+          "link_type": "thematic",
+          "source_dataset": "WhitneyRoots/crosswalk/roots.csv",
+          "match_method": "curated",
+          "confidence": 0.97,
+          "evidence_count": null,
+          "date": "13-08-2026"
+        }
+      ],
+      "dictionary_evidence": [
+        {
+          "kind": "dictionary",
+          "dict": "mw",
+          "entry_id": "mw:151456",
+          "root_slp1": "BU",
+          "whitney_no": 528,
+          "gloss": "be",
+          "homonym": ""
+        }
+      ],
+      "corpus_evidence": [
+        {
+          "kind": "corpus",
+          "status": "attested",
+          "corpus_snapshot": "WhitneyRoots/crosswalk/roots.csv@b453ce0e dcs_freq",
+          "query": "whitney_no=528 root_slp1=BU",
+          "dcs_freq": 40393,
+          "dcs_rank": 2,
+          "attested_forms": "bhavati:9633|bhavet:5615|bhavanti:3200|bhaviṣyati:2001|abhavat:1697|bhūtvā:1535|abhūt:1372|babhūva:1220",
+          "limitation": "DCS token counts from the pinned WhitneyRoots roots.csv fold (revision b453ce0e); absence is snapshot-limited, not linguistic impossibility. Homonymous roster rows may share a folded frequency."
+        }
+      ],
+      "exercise_ids": [
+        "ex:grammar-lab:set-anit-vet"
+      ],
+      "provenance": {
+        "curated_date": "13-08-2026",
+        "curator": "Grok 4.6 (grok-4.6) H2492",
+        "source_snapshot": "WhitneyRoots@b453ce0e739c761aa0e32a1df6200d9875b148a5 roots.csv",
+        "notes": "Same connective i; Whitney has no seṭ/aniṭ terms."
+      }
+    }
+  ],
+  "exercises": [
+    {
+      "id": "ex:grammar-lab:ablaut-grades",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:ablaut-grades",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Какая ступень у корня kṛ в kartum (инфинитив на -tum)?",
+      "choices": [
+        "нулевая",
+        "guṇa",
+        "vṛddhi"
+      ],
+      "answer": "guṇa",
+      "answer_normalized": "guṇa",
+      "distractors": [
+        "нулевая",
+        "vṛddhi"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:235-243",
+        "zalizniak-1975:three-grade-alternation"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:alternation-series",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:alternation-series",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "К какому ряду Зализняк относит корень nī «вести»?",
+      "choices": [
+        "A1",
+        "I1",
+        "U1",
+        "R1"
+      ],
+      "answer": "I1",
+      "answer_normalized": "i1",
+      "distractors": [
+        "A1",
+        "U1",
+        "R1"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:235-243",
+        "zalizniak-1975:table-1"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:aorist-systems",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:aorist-systems",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "akārṣīt — это аорист с показателем…",
+      "choices": [
+        "нулевым (корневой)",
+        "s (сигматический)",
+        "тематическим -a"
+      ],
+      "answer": "s (сигматический)",
+      "answer_normalized": "s (сигматический)",
+      "distractors": [
+        "нулевым (корневой)",
+        "тематическим -a"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:824-827",
+        "whitney-sec:878-897"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:attested-vs-predicted",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:attested-vs-predicted",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "dcs_freq = 0 в pin-срезе значит…",
+      "choices": [
+        "форма невозможна",
+        "в этом снимке нет токенов"
+      ],
+      "answer": "в этом снимке нет токенов",
+      "answer_normalized": "в этом снимке нет токенов",
+      "distractors": [
+        "форма невозможна"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:98-100",
+        "zalizniak-1975:inventory-scope"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:causative-grade",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:causative-grade",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "kārayati имеет в корне ступень…",
+      "choices": [
+        "нулевую",
+        "guṇa",
+        "vṛddhi"
+      ],
+      "answer": "vṛddhi",
+      "answer_normalized": "vṛddhi",
+      "distractors": [
+        "нулевую",
+        "guṇa"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:1041-1052",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:future-sya",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:future-sya",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Будущее от bhū — это…",
+      "choices": [
+        "bhūsyati",
+        "bhaviṣyati",
+        "bhavsyati"
+      ],
+      "answer": "bhaviṣyati",
+      "answer_normalized": "bhaviṣyati",
+      "distractors": [
+        "bhūsyati",
+        "bhavsyati"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:931-940",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:infinitive-tum",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:infinitive-tum",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Инфинитив от kṛ — это…",
+      "choices": [
+        "kṛtum",
+        "kartum",
+        "kārtum"
+      ],
+      "answer": "kartum",
+      "answer_normalized": "kartum",
+      "distractors": [
+        "kṛtum",
+        "kārtum"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:968",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:morphological-positions",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:morphological-positions",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Какую ступень по Зализняку 1975 ждёт морфологическая позиция 1?",
+      "choices": [
+        "нулевую",
+        "guṇa",
+        "vṛddhi"
+      ],
+      "answer": "нулевую",
+      "answer_normalized": "нулевую",
+      "distractors": [
+        "guṇa",
+        "vṛddhi"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:952-956",
+        "whitney-sec:931-940"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:nasal-alternation",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:nasal-alternation",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "PPP от gam — это…",
+      "choices": [
+        "gamitaḥ",
+        "gataḥ",
+        "gāntaḥ"
+      ],
+      "answer": "gataḥ",
+      "answer_normalized": "gataḥ",
+      "distractors": [
+        "gamitaḥ",
+        "gāntaḥ"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:952-956",
+        "whitney-sec:683-696"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:open-vs-closed-roots",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:open-vs-closed-roots",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "chid «рассекать» по очерку §61 — это корень…",
+      "choices": [
+        "открытый",
+        "закрытый"
+      ],
+      "answer": "закрытый",
+      "answer_normalized": "закрытый",
+      "distractors": [
+        "открытый"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:235-243",
+        "zalizniak-1975:series-a2"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:passive-ya",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:passive-ya",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Пассив 3 sg от kṛ — это…",
+      "choices": [
+        "karoti",
+        "kriyate",
+        "kāryate"
+      ],
+      "answer": "kriyate",
+      "answer_normalized": "kriyate",
+      "distractors": [
+        "karoti",
+        "kāryate"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:768-774",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:perfect-strong-weak",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:perfect-strong-weak",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "3 pl перфекта от kṛ — это…",
+      "choices": [
+        "cakāra",
+        "cakruḥ",
+        "akārṣīt"
+      ],
+      "answer": "cakruḥ",
+      "answer_normalized": "cakruḥ",
+      "distractors": [
+        "cakāra",
+        "akārṣīt"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:781-823",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:ppp-ta-na",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:ppp-ta-na",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "PPP от kṛ — это…",
+      "choices": [
+        "kārtaḥ",
+        "kṛtaḥ",
+        "karitaḥ"
+      ],
+      "answer": "kṛtaḥ",
+      "answer_normalized": "kṛtaḥ",
+      "distractors": [
+        "kārtaḥ",
+        "karitaḥ"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:952-956",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:present-aya-class",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:present-aya-class",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "kārayati — это прежде всего…",
+      "choices": [
+        "первичный X класс без каузации",
+        "каузатив на -aya"
+      ],
+      "answer": "каузатив на -aya",
+      "answer_normalized": "каузатив на -aya",
+      "distractors": [
+        "первичный X класс без каузации"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:775",
+        "whitney-sec:1041-1052"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:present-na-class",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:present-na-class",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "3 sg презенса от krī — это…",
+      "choices": [
+        "krayati",
+        "krīṇāti",
+        "krīṇoti"
+      ],
+      "answer": "krīṇāti",
+      "answer_normalized": "krīṇāti",
+      "distractors": [
+        "krayati",
+        "krīṇoti"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:717-732",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:present-nasal-infix",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:present-nasal-infix",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "3 sg презенса от chid VII класса — это…",
+      "choices": [
+        "chidati",
+        "chinatti",
+        "chedati"
+      ],
+      "answer": "chinatti",
+      "answer_normalized": "chinatti",
+      "distractors": [
+        "chidati",
+        "chedati"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:683-696",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:present-nu-class",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:present-nu-class",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Презенс 3 sg от śru — это…",
+      "choices": [
+        "śravati",
+        "śṛṇoti",
+        "śṛṇāti"
+      ],
+      "answer": "śṛṇoti",
+      "answer_normalized": "śṛṇoti",
+      "distractors": [
+        "śravati",
+        "śṛṇāti"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:697-716",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:present-reduplicating",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:present-reduplicating",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "juhoti — презенс какого традиционного класса?",
+      "choices": [
+        "I",
+        "II",
+        "III",
+        "VII"
+      ],
+      "answer": "III",
+      "answer_normalized": "iii",
+      "distractors": [
+        "I",
+        "II",
+        "VII"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:642-682",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:present-root-class",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:present-root-class",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "asti относится к презентному классу…",
+      "choices": [
+        "I",
+        "II",
+        "IV",
+        "VI"
+      ],
+      "answer": "II",
+      "answer_normalized": "ii",
+      "distractors": [
+        "I",
+        "IV",
+        "VI"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:611-641",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:present-thematic-a",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:present-thematic-a",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "bhavati — традиционный презентный класс…",
+      "choices": [
+        "I",
+        "II",
+        "IV",
+        "X"
+      ],
+      "answer": "I",
+      "answer_normalized": "i",
+      "distractors": [
+        "II",
+        "IV",
+        "X"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:733-758",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:present-thematic-vs-athematic",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:present-thematic-vs-athematic",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "bhavati — форма…",
+      "choices": [
+        "тематическая",
+        "атематическая"
+      ],
+      "answer": "тематическая",
+      "answer_normalized": "тематическая",
+      "distractors": [
+        "атематическая"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:599-606",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:present-ya-class",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:present-ya-class",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "manyate — это презенс IV класса или пассив?",
+      "choices": [
+        "IV класс от man",
+        "пассив от man"
+      ],
+      "answer": "IV класс от man",
+      "answer_normalized": "iv класс от man",
+      "distractors": [
+        "пассив от man"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:759-767",
+        "zalizniak-1975:morphological-positions"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:quasi-roots",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:quasi-roots",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "dattaḥ от dā построен от…",
+      "choices": [
+        "первичного dā без изменения",
+        "квазикорня dad"
+      ],
+      "answer": "квазикорня dad",
+      "answer_normalized": "квазикорня dad",
+      "distractors": [
+        "первичного dā без изменения"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:66",
+        "whitney-sec:102"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:root-designation",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:root-designation",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Заголовок smṛ (не smar) выбран потому, что корень типа I ряда R. Это…",
+      "choices": [
+        "условное обозначение",
+        "единственный реальный алломорф"
+      ],
+      "answer": "условное обозначение",
+      "answer_normalized": "условное обозначение",
+      "distractors": [
+        "единственный реальный алломорф"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:98-100",
+        "zalizniak-1975:root-designation"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:root-homonymy",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:root-homonymy",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "as «быть» и as «бросать» у Зализняка 1975 — это…",
+      "choices": [
+        "один корень двух типов",
+        "два омонима разных типов"
+      ],
+      "answer": "два омонима разных типов",
+      "answer_normalized": "два омонима разных типов",
+      "distractors": [
+        "один корень двух типов"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:608",
+        "whitney-sec:636"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:root-type-i",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:root-type-i",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Какой тип 1975 у kṛ (kṛtaḥ / kartum)?",
+      "choices": [
+        "I",
+        "II",
+        "III",
+        "IV"
+      ],
+      "answer": "I",
+      "answer_normalized": "i",
+      "distractors": [
+        "II",
+        "III",
+        "IV"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:235-243",
+        "whitney-sec:952-956"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:root-type-ii",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:root-type-ii",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Какой тип 1975 у jñā (jñātaḥ, не *jñitaḥ)?",
+      "choices": [
+        "I",
+        "II",
+        "III",
+        "IV"
+      ],
+      "answer": "II",
+      "answer_normalized": "ii",
+      "distractors": [
+        "I",
+        "III",
+        "IV"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:952-956",
+        "zalizniak-1975:type-ii"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:root-type-iii",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:root-type-iii",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Тип III в позиции 2 даёт какую ступень?",
+      "choices": [
+        "нулевую",
+        "guṇa",
+        "vṛddhi"
+      ],
+      "answer": "нулевую",
+      "answer_normalized": "нулевую",
+      "distractors": [
+        "guṇa",
+        "vṛddhi"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:968",
+        "zalizniak-1975:type-iii"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:root-type-iv",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:root-type-iv",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Тип IV статьи 1975 — это то же, что IV класс Уитни (divyati)?",
+      "choices": [
+        "да",
+        "нет"
+      ],
+      "answer": "нет",
+      "answer_normalized": "нет",
+      "distractors": [
+        "да"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:235-243",
+        "zalizniak-1975:type-iv"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:root-variants",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:root-variants",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "dham и dhmā в классификации 1975 считаются…",
+      "choices": [
+        "одним узлом",
+        "двумя вариантами-узлами одной парадигмы"
+      ],
+      "answer": "двумя вариантами-узлами одной парадигмы",
+      "answer_normalized": "двумя вариантами-узлами одной парадигмы",
+      "distractors": [
+        "одним узлом"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:251",
+        "zalizniak-1975:root-variants"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:samprasarana",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:samprasarana",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Слабая ступень корня vac «говорить» — это…",
+      "choices": [
+        "vac",
+        "uc / ukta",
+        "vāc"
+      ],
+      "answer": "uc / ukta",
+      "answer_normalized": "uc / ukta",
+      "distractors": [
+        "vac",
+        "vāc"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:252",
+        "zalizniak-1975:samprasarana"
+      ]
+    },
+    {
+      "id": "ex:grammar-lab:set-anit-vet",
+      "schema_version": "1.0.0",
+      "topic_id": "subject:grammar-lab:set-anit-vet",
+      "risk_class": "deterministic",
+      "status": "published",
+      "prompt_ru": "Форма bhaviṣyati показывает, что bhū в будущем ведёт себя как…",
+      "choices": [
+        "aniṭ",
+        "seṭ",
+        "без соединительного гласного"
+      ],
+      "answer": "seṭ",
+      "answer_normalized": "seṭ",
+      "distractors": [
+        "aniṭ",
+        "без соединительного гласного"
+      ],
+      "approval_record": null,
+      "source_ids": [
+        "whitney-sec:254",
+        "whitney-sec:934-935"
+      ]
+    }
+  ],
+  "omissions": [
+    "subject:grammar-lab:type-equals-present-class"
+  ]
+}

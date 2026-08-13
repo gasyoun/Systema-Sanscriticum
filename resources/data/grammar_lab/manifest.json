@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0.0",
+  "bundle_version": "1.0.0",
+  "generated_at": "2026-08-13T13:47:50Z",
+  "generator": "scripts/build_grammar_lab.py",
+  "published_topic_count": 32,
+  "needs_review_count": 1,
+  "feeds": [
+    {
+      "id": "grammar_lab_bundle",
+      "path": "data/grammar_lab/export/grammar_lab.json",
+      "sha256": "7d94675dbe5d2da8f690e5df773dbec8c0be39ee0e936ff1b43c8a15522d693d",
+      "rights": "aggregate-public-safe"
+    },
+    {
+      "id": "typed_links",
+      "path": "data/grammar_lab/export/typed_links.tsv",
+      "sha256": "8a56828e7b071e0e688bdb942d4f6870298ef4fe80ea8eb02959c38e5fd4026b",
+      "rights": "aggregate-public-safe"
+    },
+    {
+      "id": "topic_vectors",
+      "path": "data/grammar_lab/export/topic_vectors.json",
+      "sha256": "e5150fab87e0848bdd133be4d298fac27693c8c8fdc2317733b287103e45ff0f",
+      "rights": "aggregate-public-safe"
+    },
+    {
+      "id": "frozen_queries",
+      "path": "data/grammar_lab/queries/frozen_queries.json",
+      "sha256": "9a19e9d121811f7bb204afd04f7210ad38a751b0272100bed4653507bea2c4b2",
+      "rights": "aggregate-public-safe"
+    },
+    {
+      "id": "evidence_contract",
+      "path": "data/grammar_lab/export/evidence_contract_report.json",
+      "sha256": "7da4190c9b4263fcbb713397d8b5dd59a1bdb5344925125a8ef68039ec98332a",
+      "rights": "aggregate-public-safe"
+    },
+    {
+      "id": "zalizniak_loci",
+      "path": "data/grammar_lab/loci/zalizniak_section_loci.yml",
+      "sha256": "34a2182669c93e802a2b554cce134be4916c078be317eea0df10de7b3160d0e0",
+      "rights": "pointer-only-no-bulk-gloss"
+    }
+  ],
+  "source_snapshot": {
+    "whitneyroots_revision": "b453ce0e739c761aa0e32a1df6200d9875b148a5",
+    "pin": "data/grammar_lab/pins/whitneyroots_roots_slice.csv",
+    "loci": "data/grammar_lab/loci/zalizniak_section_loci.yml"
+  },
+  "embedding": {
+    "model_name": "charngram-hash-v1",
+    "intended_sidecar_model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "revision": "algorithmic",
+    "dimensionality": 384,
+    "backend": "charngram-hash-v1",
+    "semantic_ready": false,
+    "source_text_sha256": "722fb6ab0fb8eb543d3cd05c304489edf8518379815b1c3c22c9c990d52e7e7d"
+  },
+  "omissions": [
+    "subject:grammar-lab:type-equals-present-class"
+  ]
+}
