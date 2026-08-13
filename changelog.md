@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.89.21] - 2026-08-13
 ### Added
 - **H2493 Grammar Lab G2: idempotent G1 import, entitled Russian explorer, offline hybrid search.** Pins [SanskritGrammar v0.121.6](https://github.com/gasyoun/SanskritGrammar/releases/tag/v0.121.6) (32 topics) under `resources/data/grammar_lab/`. `php artisan grammar-lab:sync` vendors + upserts by stable `topic_id`/`content_hash`, retires missing topics, never deletes bookmarks or history. `GrammarLabAccess::canUse()` gates every protected route and JSON payload (`features.grammar_lab` default OFF). Lexical BM25 + four-script alias search ships live behind that flag; `features.grammar_lab_semantic` stays OFF because G1 `semantic_ready` is false (char n-gram hash sidecar + frozen eval in `grammar-lab:eval-search`). Executor: Grok 4.6 (`grok-4.6`).
 
