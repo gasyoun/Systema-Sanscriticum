@@ -11,6 +11,7 @@ use App\Mail\TrialZoomLinkMail;
 use App\Models\Concerns\TracksBlame;
 use App\Services\BlockAccessMaterializer;
 use App\Services\CuratorNotifier;
+use App\Services\GrammarLab\GrammarLabEntitlementService;
 use App\Services\Membership\ClubMembershipService;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Prana\PranaService;
@@ -727,6 +728,11 @@ class Payment extends Model
             if (config('features.club_membership')) {
                 app(ClubMembershipService::class)->syncFromPayment($this);
             }
+
+            // H2495: provider-independent Grammar Lab grant. No-op unless
+            // the course slug is in grammar_lab.entitlement_course_slugs or
+            // subscription_course_slug. grantAccess() is untouched.
+            app(GrammarLabEntitlementService::class)->syncFromPayment($this);
 
             // Для conditional Payment (доступ под обещание) пропускаем
             // welcome-email и начисление праны — деньги не пришли,

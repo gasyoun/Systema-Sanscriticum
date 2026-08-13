@@ -22,6 +22,7 @@ use App\Http\Controllers\DocController;
 use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
 use App\Http\Controllers\GrammarLabController;
+use App\Http\Controllers\GrammarLabPilotController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\JoinClassController;
@@ -487,6 +488,12 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::post('/dvaram/grammar-lab/t/{slug}/srs', [GrammarLabController::class, 'addToSrs'])
         ->where('slug', '[A-Za-z0-9\-]+')
         ->name('student.grammar-lab.srs');
+    Route::get('/dvaram/grammar-lab/pilot', [GrammarLabPilotController::class, 'intro'])
+        ->name('student.grammar-lab.pilot');
+    Route::post('/dvaram/grammar-lab/pilot', [GrammarLabPilotController::class, 'enroll'])
+        ->name('student.grammar-lab.pilot.enroll');
+    Route::post('/dvaram/grammar-lab/pilot/confusion', [GrammarLabPilotController::class, 'confusion'])
+        ->name('student.grammar-lab.pilot.confusion');
 
     Route::get('/dvaram/visualdcs', [VisualDcsController::class, 'hub'])
         ->name('student.visualdcs.hub');

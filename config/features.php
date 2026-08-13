@@ -868,6 +868,13 @@ return [
     'grammar_lab_semantic' => (bool) env('GRAMMAR_LAB_SEMANTIC', false),
 
     /*
+     | Grammar Lab 5–10-student consented pilot (H2495 / G4). Default OFF.
+     | Consent routes 404 until a human flips GRAMMAR_LAB_PILOT=true.
+     | Does not charge, activate subscriptions, or invite a cohort.
+     */
+    'grammar_lab_pilot' => (bool) env('GRAMMAR_LAB_PILOT', false),
+
+    /*
      | Hindi programme playlist (H2441): one ordered list of owned Hindi
      | lessons across course shells (category `hindi` + H2333 predecessor).
      | Default OFF — route /dvaram/programme/hindi 404s, nav/card stay hidden.

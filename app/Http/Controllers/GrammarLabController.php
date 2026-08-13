@@ -9,6 +9,7 @@ use App\Models\GrammarExercise;
 use App\Models\GrammarMastery;
 use App\Models\GrammarTopic;
 use App\Models\GrammarTopicView;
+use App\Services\GrammarLab\GrammarLabPilot;
 use App\Services\GrammarLab\GrammarLabSearch;
 use App\Services\GrammarLab\GrammarMasteryProjector;
 use App\Services\GrammarLab\GrammarRecommender;
@@ -32,6 +33,7 @@ class GrammarLabController extends Controller
         private readonly GrammarLabSearch $search,
         private readonly GrammarRecommender $recommender,
         private readonly GrammarMasteryProjector $mastery,
+        private readonly GrammarLabPilot $pilot,
     ) {}
 
     public function landing(): View|Response
@@ -116,6 +118,9 @@ class GrammarLabController extends Controller
                 ->where('user_id', $request->user()->id)
                 ->where('topic_id', $topic->topic_id)
                 ->first(),
+            'pilotParticipant' => $this->pilot->participantFor($request->user()),
+            'pilotOn' => $this->pilot->flagOn(),
+            'confusionCodes' => GrammarLabPilot::CONFUSION_CODES,
         ]);
     }
 
@@ -124,6 +129,10 @@ class GrammarLabController extends Controller
         $this->assertEntitled($request);
         $topic = $this->publishedTopic($slug);
         $this->recordView($request, $topic);
+        $this->pilot->record($request->user(), GrammarLabPilot::EVENT_TASK, [
+            'topic_id' => $topic->topic_id,
+            'surface' => 'compare',
+        ]);
 
         return view('grammar-lab.compare', [
             'topic' => $topic,
@@ -184,6 +193,11 @@ class GrammarLabController extends Controller
         }
 
         $attempt = $this->mastery->record($request->user(), $exercise, $given);
+        $this->pilot->record($request->user(), GrammarLabPilot::EVENT_QUIZ, [
+            'topic_id' => $topic->topic_id,
+            'exercise_id' => $exercise->exercise_id,
+            'correct' => (bool) $attempt->correct,
+        ]);
 
         return view('grammar-lab.practice', [
             'topic' => $topic,

@@ -81,6 +81,22 @@
         </p>
     @endif
 
+    @if(!empty($pilotOn) && !empty($pilotParticipant))
+        <form method="post" action="{{ route('student.grammar-lab.pilot.confusion') }}" class="mt-8 p-4 rounded-xl bg-white border border-gray-200 space-y-3">
+            @csrf
+            <input type="hidden" name="topic_id" value="{{ $topic->topic_id }}">
+            <p class="text-sm font-bold text-gray-800">Что было непонятно?</p>
+            <select name="code" required class="w-full rounded-lg border-gray-300 text-sm">
+                @foreach($confusionCodes as $code)
+                    <option value="{{ $code }}">{{ $code }}</option>
+                @endforeach
+            </select>
+            <button type="submit" class="px-3 py-2 rounded-xl border border-gray-300 text-sm font-bold">
+                Отметить путаницу
+            </button>
+        </form>
+    @endif
+
     <p>
         <a href="{{ route('student.grammar-lab.index') }}" class="text-sm text-brand underline">Ко всем темам</a>
     </p>
