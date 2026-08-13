@@ -38,6 +38,21 @@ $converter = new CommonMarkConverter([
 $body = (string) $converter->convert($markdown);
 
 /*
+ * Кадры разделов (H2502) записаны в Markdown относительным путём
+ * `screenshots/teacher-guide/*.png` — так они рендерятся на GitHub. Dompdf же
+ * считает относительный путь от базы документа, а базы у строки HTML нет:
+ * `setBasePath()` тут не спасает, потому что до картинок дело доходит через
+ * `Helpers::build_url()` с проверкой chroot. Поэтому разворачиваем путь в
+ * абсолютный ПРЯМО В РАЗМЕТКЕ, а chroot ставим на docs/ — тогда сборка не
+ * читает ничего за пределами каталога руководства.
+ */
+$body = (string) preg_replace(
+    '#(<img[^>]+src=")screenshots/#i',
+    '$1'.str_replace('\\', '/', __DIR__).'/screenshots/',
+    $body
+);
+
+/*
  * Печатные стили. Шрифт DejaVu Sans выбран потому, что он покрывает кириллицу;
  * эмодзи он НЕ покрывает — поэтому маркеры обратимости в тексте руководства
  * заданы словами, а не цветными кружками (иначе в PDF были бы пустые
@@ -132,6 +147,8 @@ $options->set('defaultFont', 'DejaVu Sans');
 $options->set('isRemoteEnabled', false);
 $options->set('isHtml5ParserEnabled', true);
 $options->set('defaultMediaType', 'print');
+// Читать разрешено только каталог руководства — картинки лежат в нём.
+$options->setChroot([__DIR__]);
 
 $dompdf = new Dompdf($options);
 $dompdf->loadHtml($html, 'UTF-8');

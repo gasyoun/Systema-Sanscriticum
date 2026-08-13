@@ -26,6 +26,9 @@ class TeacherGuide extends Page
     /** Путь к источнику — КОНСТАНТА, никогда не из запроса. */
     public const SOURCE = 'docs/TEACHER_CABINET_GUIDE_RU.md';
 
+    /** Куда разворачиваются относительные пути кадров разделов (H2502). */
+    public const SCREENSHOT_BASE = 'https://raw.githubusercontent.com/gasyoun/Systema-Sanscriticum/main/docs/screenshots/';
+
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
     protected static ?string $navigationLabel = 'Руководство преподавателя';
@@ -88,6 +91,28 @@ class TeacherGuide extends Page
             return null;
         }
 
-        return Str::markdown($markdown);
+        return $this->resolveScreenshots(Str::markdown($markdown));
+    }
+
+    /**
+     * Кадры разделов (H2502) лежат в `docs/screenshots/teacher-guide/` и в
+     * Markdown записаны ОТНОСИТЕЛЬНЫМ путём — так они рендерятся на GitHub, где
+     * руководство читают чаще всего, и так же их находит сборка PDF (она задаёт
+     * базовым каталогом `docs/`).
+     *
+     * Браузеру этот путь не годится: страница живёт по `/admin/teacher-guide`, и
+     * относительный `screenshots/...` он попытался бы взять из `/admin/`.
+     * Публиковать копию папки в `public/` — значит завести вторую правду о
+     * пятнадцати файлах, поэтому здесь просто переписываем адрес на raw-ссылку
+     * публичного репозитория. Нет сети — сломается ровно картинка, текст
+     * руководства останется на месте.
+     */
+    private function resolveScreenshots(string $html): string
+    {
+        return (string) preg_replace(
+            '#(<img[^>]+src=")screenshots/#i',
+            '$1'.self::SCREENSHOT_BASE,
+            $html
+        );
     }
 }
