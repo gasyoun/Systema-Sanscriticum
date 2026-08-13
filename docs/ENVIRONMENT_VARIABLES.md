@@ -78,6 +78,11 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CHECKOUT_WEBHOOK_AMOUNT_TOLERANCE` | optional | `1.00` | config/checkout.php:41 |
 | `CLASS_LINK_AUTOPOST` | optional | `false` | config/features.php:105 |
 | `CLIP_MARKETING_ENABLED` | feature-flag | `false` | config/features.php:507 |
+| `CLUB_COURSE_SLUG` | optional | `'club'` | config/membership.php:24 |
+| `CLUB_DEFAULT_TERM_MONTHS` | optional | `1` | config/membership.php:39 |
+| `CLUB_GRACE_DAYS` | optional | `3` | config/membership.php:32 |
+| `CLUB_MAX_TERM_MONTHS` | optional | `12` | config/membership.php:45 |
+| `CLUB_MEMBERSHIP` | optional | `false` | config/features.php:850 |
 | `COMPANY_INVOICE_ENABLED` | feature-flag | `false` | config/billing.php:17 |
 | `CONTENT_AUTO_PUBLISH_PILOT` | feature-flag | `false` | config/features.php:553 |
 | `CONTENT_CALENDAR_AUTOPILOT` | optional | `false` | config/features.php:533 |
@@ -150,14 +155,16 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:65 |
 | `FAQ_RAG_SUGGESTER` | optional | `false` | config/features.php:138 |
 | `FILESYSTEM_DISK` | optional | `'local'` | config/filesystems.php:16 |
+| `FREE_TIER_GRANT_DAYS` | optional | `30` | config/membership.php:52 |
+| `FREE_TIER_GRANT_REASON` | optional | `'free_tier_monthly'` | config/membership.php:60 |
 | `FULL_COURSE_BLOCK_CREDIT` | optional | `false` | config/features.php:21 |
 | `GAMES_SKILL_DRILLS` | optional | `false` | config/features.php:712 |
 | `GOOGLE_CLIENT_ID` | required | `—` | config/services.php:350 |
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:351 |
 | `GOOGLE_REDIRECT_URI` | optional | `'/auth/google/callback'` | config/services.php:352 |
-| `GRAMMAR_LAB` | optional | `false` | config/features.php:837 |
+| `GRAMMAR_LAB` | optional | `false` | config/features.php:861 |
 | `GRAMMAR_LAB_COURSE_SLUGS` | optional | `''` | config/grammar_lab.php:46 |
-| `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:844 |
+| `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:868 |
 | `GRANT_ACCESS_FAIL_CLOSED` | optional | `false` | config/features.php:421 |
 | `HEARTBEAT_CHECK_HORIZON` | optional | `true` | config/heartbeat.php:60 |
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
@@ -255,6 +262,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MARATHON_TESTIMONIAL` | required | `—` | config/marathon.php:146 |
 | `MARATHON_WARM_TAIL_DAYS` | optional | `13` | config/marathon.php:41 |
 | `MARKETING_SEGMENTS` | optional | `false` | config/features.php:573 |
+| `MEMBERSHIP_CANCELLATION` | optional | `false` | config/features.php:852 |
+| `MEMBERSHIP_FREE_TIER` | optional | `false` | config/features.php:851 |
 | `MEMCACHED_HOST` | optional | `'127.0.0.1'` | config/cache.php:70 |
 | `MEMCACHED_PASSWORD` | secret | `—` | config/cache.php:63 |
 | `MEMCACHED_PERSISTENT_ID` | required | `—` | config/cache.php:60 |
