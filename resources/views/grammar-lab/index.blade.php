@@ -33,6 +33,17 @@
            class="px-3 py-1 rounded-full text-sm border border-gray-300 text-gray-700">закладки и история</a>
     </div>
 
+    @if(!empty($recommendation))
+        <div class="mb-6 px-4 py-3 rounded-xl border border-brand bg-white">
+            <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">Дальше</p>
+            <a href="{{ route('student.grammar-lab.show', $recommendation['slug']) }}"
+               class="font-bold text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+                {{ $recommendation['title_ru'] }}
+            </a>
+            <p class="text-sm text-gray-600 mt-1">{{ $recommendation['reason'] }}</p>
+        </div>
+    @endif
+
     @if($topics->isEmpty())
         <p class="text-sm text-gray-500">Темы ещё не импортированы. Куратор запускает <code>php artisan grammar-lab:sync</code>.</p>
     @else

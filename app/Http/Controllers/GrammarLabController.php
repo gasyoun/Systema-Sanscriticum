@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\GrammarBookmark;
+use App\Models\GrammarExercise;
+use App\Models\GrammarMastery;
 use App\Models\GrammarTopic;
 use App\Models\GrammarTopicView;
 use App\Services\GrammarLab\GrammarLabSearch;
+use App\Services\GrammarLab\GrammarMasteryProjector;
+use App\Services\GrammarLab\GrammarRecommender;
 use App\Support\GrammarLabAccess;
+use App\Support\GrammarLabSrsDeck;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +30,8 @@ class GrammarLabController extends Controller
 {
     public function __construct(
         private readonly GrammarLabSearch $search,
+        private readonly GrammarRecommender $recommender,
+        private readonly GrammarMasteryProjector $mastery,
     ) {}
 
     public function landing(): View|Response
@@ -62,6 +69,7 @@ class GrammarLabController extends Controller
             'cluster' => $cluster,
             'query' => (string) $request->query('q', ''),
             'bookmarks' => $this->bookmarkIds($request),
+            'recommendation' => $this->recommender->next($request->user()),
         ]);
     }
 
@@ -103,6 +111,11 @@ class GrammarLabController extends Controller
         return view('grammar-lab.show', [
             'topic' => $topic,
             'bookmarked' => $this->isBookmarked($request, $topic->topic_id),
+            'exercise' => $this->publishedExercise($topic),
+            'mastery' => GrammarMastery::query()
+                ->where('user_id', $request->user()->id)
+                ->where('topic_id', $topic->topic_id)
+                ->first(),
         ]);
     }
 
@@ -139,6 +152,62 @@ class GrammarLabController extends Controller
         }
 
         return back();
+    }
+
+    public function practice(Request $request, string $slug): View|Response
+    {
+        $this->assertEntitled($request);
+        $topic = $this->publishedTopic($slug);
+        $exercise = $this->publishedExercise($topic);
+        abort_if($exercise === null, 404);
+
+        return view('grammar-lab.practice', [
+            'topic' => $topic,
+            'exercise' => $exercise,
+            'payload' => is_array($exercise->payload) ? $exercise->payload : [],
+            'mastery' => $this->mastery->for($request->user(), $topic->topic_id),
+            'result' => null,
+            'recommendation' => null,
+        ]);
+    }
+
+    public function attempt(Request $request, string $slug): View|RedirectResponse|Response
+    {
+        $this->assertEntitled($request);
+        $topic = $this->publishedTopic($slug);
+        $exercise = $this->publishedExercise($topic);
+        abort_if($exercise === null, 404);
+
+        $given = trim((string) $request->input('answer', ''));
+        if ($given === '') {
+            return back()->withErrors(['answer' => 'Введите ответ']);
+        }
+
+        $attempt = $this->mastery->record($request->user(), $exercise, $given);
+
+        return view('grammar-lab.practice', [
+            'topic' => $topic,
+            'exercise' => $exercise,
+            'payload' => is_array($exercise->payload) ? $exercise->payload : [],
+            'mastery' => $this->mastery->for($request->user(), $topic->topic_id),
+            'result' => [
+                'correct' => $attempt->correct,
+                'given' => $attempt->given,
+            ],
+            'recommendation' => $this->recommender->next($request->user()),
+        ]);
+    }
+
+    public function addToSrs(Request $request, string $slug): RedirectResponse|Response
+    {
+        $this->assertEntitled($request);
+        $topic = $this->publishedTopic($slug);
+        $exercise = $this->publishedExercise($topic);
+        abort_if($exercise === null, 404);
+
+        GrammarLabSrsDeck::addExercise($request->user(), $exercise);
+
+        return back()->with('status', 'added_to_srs');
     }
 
     public function history(Request $request): View|Response
@@ -225,5 +294,19 @@ class GrammarLabController extends Controller
     private function isBookmarked(Request $request, string $topicId): bool
     {
         return in_array($topicId, $this->bookmarkIds($request), true);
+    }
+
+    private function publishedExercise(GrammarTopic $topic): ?GrammarExercise
+    {
+        $ids = is_array($topic->exercise_ids) ? $topic->exercise_ids : [];
+        $query = GrammarExercise::query()
+            ->where('topic_id', $topic->topic_id)
+            ->where('status', GrammarExercise::STATUS_PUBLISHED)
+            ->whereNull('killed_at');
+        if ($ids !== []) {
+            $query->whereIn('exercise_id', $ids);
+        }
+
+        return $query->orderBy('exercise_id')->first();
     }
 }

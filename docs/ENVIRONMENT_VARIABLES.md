@@ -163,7 +163,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:351 |
 | `GOOGLE_REDIRECT_URI` | optional | `'/auth/google/callback'` | config/services.php:352 |
 | `GRAMMAR_LAB` | optional | `false` | config/features.php:861 |
+| `GRAMMAR_LAB_AUTO_PUBLISH` | optional | `true` | config/grammar_lab.php:54 |
 | `GRAMMAR_LAB_COURSE_SLUGS` | optional | `''` | config/grammar_lab.php:46 |
+| `GRAMMAR_LAB_SAMPLE_SEED` | optional | `'grammar-lab-g3-v1'` | config/grammar_lab.php:56 |
 | `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:868 |
 | `GRANT_ACCESS_FAIL_CLOSED` | optional | `false` | config/features.php:421 |
 | `HEARTBEAT_CHECK_HORIZON` | optional | `true` | config/heartbeat.php:60 |

@@ -23,7 +23,16 @@
                 {{ $bookmarked ? 'Убрать из закладок' : 'В закладки' }}
             </button>
         </form>
+        @if(!empty($exercise))
+            <a href="{{ route('student.grammar-lab.practice', $topic->slug) }}"
+               class="px-3 py-2 rounded-xl border border-brand text-brand text-sm font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand">
+                Практика
+            </a>
+        @endif
     </div>
+    @if(!empty($mastery))
+        <p class="text-sm text-gray-600 mb-6">Освоение: {{ $mastery->state }}</p>
+    @endif
 
     <h2 class="text-lg font-bold mb-3">Свидетельства словарей</h2>
     <ul class="space-y-2 mb-8">

@@ -136,13 +136,22 @@ final class GrammarLabImporter
                 $report['retired']++;
             }
 
+            $publisher = app(ExercisePublisher::class);
             foreach ($bundle['exercises'] ?? [] as $exercise) {
-                if (! is_array($exercise) || ($exercise['status'] ?? '') !== 'published') {
+                if (! is_array($exercise) || ! isset($exercise['id'])) {
                     continue;
                 }
-                $this->upsertExercise($exercise);
+                $row = $publisher->ingest($exercise);
                 $report['exercises']++;
+                if ($row->status === GrammarExercise::STATUS_PUBLISHED) {
+                    $report['published_exercises'] = ($report['published_exercises'] ?? 0) + 1;
+                } elseif ($row->status === GrammarExercise::STATUS_REJECTED) {
+                    $report['rejected_exercises'] = ($report['rejected_exercises'] ?? 0) + 1;
+                }
             }
+            $sample = $publisher->drawReviewSample();
+            $report['sample_size'] = count($sample['sampled']);
+            $report['sample_path'] = $sample['path'];
 
             $import->upserted_count = $report['upserted'];
             $import->unchanged_count = $report['unchanged'];
@@ -230,18 +239,7 @@ final class GrammarLabImporter
      */
     private function upsertExercise(array $exercise): void
     {
-        $id = (string) $exercise['id'];
-        $hash = $this->contentHash($exercise);
-        GrammarExercise::query()->updateOrCreate(
-            ['exercise_id' => $id],
-            [
-                'topic_id' => (string) ($exercise['topic_id'] ?? ''),
-                'risk_class' => (string) ($exercise['risk_class'] ?? 'deterministic'),
-                'status' => 'imported',
-                'payload' => $exercise,
-                'content_hash' => $hash,
-            ]
-        );
+        app(ExercisePublisher::class)->ingest($exercise);
     }
 
     /**
