@@ -926,4 +926,16 @@ return [
      | config:cache.
      */
     'hindi_tg_curated_practice' => (bool) env('HINDI_TG_CURATED_PRACTICE', false),
+
+    /*
+     | Literal-Jivo Wave 4+ (H2486). All default OFF. Packet:
+     | docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md
+     | Thresholds: config/telephony.php. No purchase, number, call or
+     | recording in this pass. Do not flip without the packet's gates.
+     */
+    'telephony_callback_request' => (bool) env('TELEPHONY_CALLBACK_REQUEST', false),
+    'telephony_pstn' => (bool) env('TELEPHONY_PSTN', false),
+    'telephony_recording' => (bool) env('TELEPHONY_RECORDING', false),
+    'support_departments' => (bool) env('SUPPORT_DEPARTMENTS', false),
+    'support_capacity_routing' => (bool) env('SUPPORT_CAPACITY_ROUTING', false),
 ];

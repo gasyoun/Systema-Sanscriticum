@@ -74,9 +74,14 @@ and no denominator fork. Shipped H2485; flag `crm_sales_forecast` default OFF.
 
 ## 5. Literal-Jivo expansion after CRM
 
-First ship an evidence/provider packet: voice use cases, call volume, recording/retention/legal
-requirements, providers, costs, number ownership and failure modes. Only then add call events linked
-to the existing customer timeline, callback requests, departments and capacity routing. The inbox,
-identity and CRM models remain canonical; telephony is a channel adapter, not a new CRM.
+✅ H2486 packet: [PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md).
+**HOLD** — do not activate PSTN / departments / capacity routing.
+
+Telephony is a channel adapter onto `FollowUpTask::TYPE_CALL`, `CallEvent` and
+`CustomerTimelineService`. Identity stays on `social_accounts` + `users.phone`.
+Jivo VATS is Voximplant resale with a Jivo-owned default AON — rejected as a
+second inbox. Flags `telephony_callback_request`, `telephony_pstn`,
+`telephony_recording`, `support_departments`, `support_capacity_routing` default
+OFF. Thresholds live in `config/telephony.php`.
 
 _Dr. Mārcis Gasūns_

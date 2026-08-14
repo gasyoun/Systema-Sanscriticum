@@ -28,6 +28,8 @@ as telephony, departments and capacity routing come only after the CRM spine.
 6. CRM Wave 3: forecasting and manager dashboards over canonical Deal/Payment denominators. ✅ H2485 (flag `crm_sales_forecast` default OFF).
 7. Literal-Jivo expansion: provider/routing architecture, telephony/callback, departments and
    capacity routing—only after the CRM spine and measured demand justify each activation.
+   ✅ H2486 packet 14-08-2026 — **HOLD**, no activation.
+   [PACKET](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md).
 
 ## Decisions taken
 
