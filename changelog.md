@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.89.38] - 2026-08-14
 ### Added
 - **H2445: приватная колода «Мой хинди».** Словам из упражнений расшифровки (H2443), файлов занятия (H2444) или кнопке «в колоду» в плейлисте (H2441) соответствует колода `my-hindi` на студента (`visibility=private`). Флаг `features.hindi_my_srs_deck` / `HINDI_MY_SRS_DECK`, по умолчанию OFF. Не пишет в Hindi Core, не включает `srs.enabled`. Повтор той же леммы — одна карточка. Extractor отдаёт поле `lemma`; кэш упражнений `v5`. Документ: [docs/HINDI_MY_SRS_DECK_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/HINDI_MY_SRS_DECK_2026.md). Executor: Grok 4.6 (`grok-4.6`).
 
