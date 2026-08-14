@@ -101,6 +101,8 @@ _Created: 07-08-2026 · Last updated: 14-08-2026_
    (**H2485 shipped 14-08-2026**, flag `crm_sales_forecast` default OFF).
 8. **Literal-Jivo Wave 4+:** telephony/callback, departments and capacity routing only after the
    CRM spine and measured operator/voice volume; provider/legal packet before implementation.
+   ✅ H2486 packet 14-08-2026 (**HOLD** — do not buy/activate):
+   [PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md).
 
 ## 6. Definition of synchronization
 

@@ -466,6 +466,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_AI_INCLUDE_TELEGRAM` | optional | `false` | config/features.php:48 |
 | `SUPPORT_ANSWER_SUGGESTER` | optional | `false` | config/features.php:124 |
 | `SUPPORT_ANSWER_SUGGESTION_EXPIRY_DAYS` | optional | `14` | config/support.php:11 |
+| `SUPPORT_CAPACITY_ROUTING` | optional | `false` | config/features.php:940 |
+| `SUPPORT_DEPARTMENTS` | optional | `false` | config/features.php:939 |
 | `SUPPORT_FAQ_RAG_MIN_SCORE` | optional | `1.5` | config/support.php:74 |
 | `SUPPORT_FAQ_RAG_PATH` | required | `null` | config/support.php:71 |
 | `SUPPORT_FAQ_RAG_TOP_K` | optional | `3` | config/support.php:72 |
@@ -534,6 +536,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_ZAPISI_POLL_MAX_LIFETIME_SECONDS` | optional | `3600` | config/services.php:253 |
 | `TELEGRAM_ZAPISI_POLL_RETRY_SECONDS` | optional | `10` | config/services.php:256 |
 | `TELEGRAM_ZAPISI_POLL_TIMEOUT_SECONDS` | optional | `50` | config/services.php:250 |
+| `TELEPHONY_CALLBACK_REQUEST` | optional | `false` | config/features.php:936 |
+| `TELEPHONY_PSTN` | optional | `false` | config/features.php:937 |
+| `TELEPHONY_RECORDING` | optional | `false` | config/features.php:938 |
 | `TEST_MANAGER_EMAIL` | optional | `'smoke-manager@samskrte.ru'` | config/services.php:310 |
 | `TEST_MANAGER_NAME` | optional | `'Smoke Manager'` | config/services.php:312 |
 | `TEST_MANAGER_PASSWORD` | secret | `—` | config/services.php:311 |

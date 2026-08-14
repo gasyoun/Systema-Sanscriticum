@@ -61,8 +61,16 @@ programme. School parity is code+flag+production-canary evidence, not merged-cod
 
 ## Literal-Jivo Wave 4+
 
-Produce the provider/legal/volume decision packet, then implement telephony/callback and later
-departments/capacity routing as adapters to the existing inbox/customer timeline. Each activation
-gets its own flag, approved canary and rollback.
+✅ H2486 — packet shipped, **activation HOLD**.
+[PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md).
+
+Implement later, one flag each, only after the packet's live thresholds:
+
+1. Consented callback **request** → existing `FollowUpTask::TYPE_CALL` (no PSTN).
+2. Owned-number `CallProvider` webhook (Voximplant or Mango — not Jivo-owned AON).
+3. Extra `SupportConversation.queue` values as departments.
+4. Capacity cap on Helpdesk assignment.
+
+Recording, auto-dial and a Jivo widget inbox stay forbidden until a later packet.
 
 _Dr. Mārcis Gasūns_

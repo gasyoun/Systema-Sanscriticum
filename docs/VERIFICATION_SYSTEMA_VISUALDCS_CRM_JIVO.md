@@ -53,6 +53,15 @@ learning return, support load, paid conversion and revenue/active learner. For C
 aging, next-action coverage, response/follow-up completion, campaign outcomes and forecast error.
 No mandatory lift is invented; scale/hold/revert follows comparable observed cohorts.
 
+## Literal-Jivo telephony gate (H2486)
+
+- All five flags default OFF (`TelephonyGateConfigTest`).
+- `config('telephony.preferred_carrier')` is `none`; Jivo default AON is listed as forbidden.
+- `CallEvent` rejects unknown types; audio bytes are not on the DTO.
+- Live volume is re-read from `support:parity-report` / `crm:forecast-report` before any
+  phase unlocks. Missing evidence is INCONCLUSIVE, never PASS.
+- No production number, call, recording or contract in this pass.
+
 ## Stop/rollback
 
 Immediate halt and rollback on entitlement/payment regression, contract/data loss, privacy
