@@ -3,6 +3,9 @@
 ### Added
 - **H2486: Literal-Jivo telephony / departments / routing gate.** Decision packet holds activation: prod 30-day volume is Telegram-heavy (~941 incoming, 2 web responders, 0 conversation phones, 1 closed thread). Jivo VATS is Voximplant resale with a Jivo-owned default AON — rejected as a second inbox. Adapter contract is `FollowUpTask::TYPE_CALL` + `CallEvent` onto the existing timeline. Five flags default OFF (`TELEPHONY_CALLBACK_REQUEST`, `TELEPHONY_PSTN`, `TELEPHONY_RECORDING`, `SUPPORT_DEPARTMENTS`, `SUPPORT_CAPACITY_ROUTING`). Thresholds in [`config/telephony.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/telephony.php). Packet: [docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md). Executor: Grok 4.6 (`grok-4.6`).
 
+### Changed
+- **Личные Telegram-вопросы преподавателям — Гасунс, не бот.** В [docs/telegram-bots-inventory.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-bots-inventory.md): в личке он всегда Гасунс; `@samskrtamru_bot` — LMS. 14-08-2026 он лично спросил Костину про [issue #1709](https://github.com/gasyoun/Systema-Sanscriticum/issues/1709); бот слал ссылку отдельно. Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.89.48] - 2026-08-14
 ### Added
 - **H2740: преподаватель хинди видит свои потоки в «Мой хинди».** Костина (и любой `role=teacher` с `teacher_id` на оболочке программы) видит все опубликованные занятия своих потоков без студенческой оплаты и без записи в группу. Пока студенческие флаги OFF, ей открыты упражнения из файлов, колода и практика из чата — только ей. На `/dvaram` карточка «Задача по хинди» ведёт на [issue #1709](https://github.com/gasyoun/Systema-Sanscriticum/issues/1709). Студентам доступ не выдаётся. Executor: Grok 4.6 (`grok-4.6`).

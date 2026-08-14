@@ -12,6 +12,11 @@ Pilot: 10 teacher-authored items in
 [database/data/hindi_tg_curated/items.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/data/hindi_tg_curated/items.json).
 None of them were scraped from Telegram.
 
+Teacher brief: [issue #1709](https://github.com/gasyoun/Systema-Sanscriticum/issues/1709).
+14-08-2026 Гасунс спросил Костину **лично в Telegram** (в личке он всегда
+Гасунс). Бот кабинета `@samskrtamru_bot` в тот же день слал ссылку на issue —
+это не он.
+
 ## Why not harvest
 
 | Source already in the house | What it is | Why it is not this layer |
