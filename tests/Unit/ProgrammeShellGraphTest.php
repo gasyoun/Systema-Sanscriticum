@@ -9,7 +9,6 @@ use App\Models\Course;
 use App\Services\HindiProgrammePlaylist;
 use App\Services\ProgrammeShellGraph;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -68,11 +67,11 @@ class ProgrammeShellGraphTest extends TestCase
             'title' => 'Висячий предшественник',
             'slug' => 'dangling-pred',
         ]);
-        Schema::disableForeignKeyConstraints();
-        $leaf->forceFill(['predecessor_course_id' => 999999])->save();
-        Schema::enableForeignKeyConstraints();
+        // SQLite enforces the FK inside RefreshDatabase's transaction, so
+        // persist a real row then point the in-memory model at a missing id.
+        $leaf->predecessor_course_id = 999999;
 
-        $ids = app(ProgrammeShellGraph::class)->walkFrom($leaf->fresh())->pluck('id')->all();
+        $ids = app(ProgrammeShellGraph::class)->walkFrom($leaf)->pluck('id')->all();
 
         $this->assertSame([$leaf->id], $ids);
     }
