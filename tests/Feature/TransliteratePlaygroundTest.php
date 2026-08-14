@@ -91,10 +91,11 @@ class TransliteratePlaygroundTest extends TestCase
             $this->markTestSkipped('node is required to execute the vendored sanskrit-util fixture');
         }
 
-        $jsPath = str_replace('\\', '/', resource_path('js/vendor/sanskrit-util.js'));
+        $jsPath = resource_path('js/vendor/sanskrit-util.js');
+        $jsUrl = 'file:///'.str_replace('\\', '/', $jsPath);
         $runner = sys_get_temp_dir().DIRECTORY_SEPARATOR.'h2763_transliterate_fixture_'.getmypid().'.mjs';
         $src = <<<JS
-import { to_slp1, slp1_to_devanagari, iast_to_devanagari } from {$this->jsString($jsPath)};
+import { to_slp1, slp1_to_devanagari, iast_to_devanagari } from {$this->jsString($jsUrl)};
 const iast = 'rāma';
 const slp1 = to_slp1(iast);
 const deva = slp1_to_devanagari(slp1);
