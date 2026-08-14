@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Services\HindiAttachmentDrills;
+use App\Services\HindiProgrammePlaylist;
 use App\Services\HindiTranscriptDrillExtractor;
 use App\Services\HindiTranscriptDrills;
 use App\Support\HindiMySrsDeck;
@@ -30,27 +31,27 @@ class HindiTranscriptDrillsController extends Controller
         HindiTranscriptDrills $transcript,
         HindiAttachmentDrills $attachments,
     ): View {
-        abort_unless($transcript->enabled() || $attachments->enabled(), 404);
-
         $user = $request->user();
         abort_unless($user !== null, 403);
+        $teacherPreview = app(HindiProgrammePlaylist::class)->teachesHindi($user);
+        abort_unless($transcript->enabled() || $attachments->enabled() || $teacherPreview, 404);
 
         [$course, $lesson] = $this->resolveLesson($slug, $lessonId);
         abort_unless($transcript->isHindiLesson($lesson), 404);
         abort_unless($transcript->userCanAccess($user, $lesson), 403);
 
-        [$items, $handouts] = $this->bundle($lesson, $transcript, $attachments);
+        [$items, $handouts] = $this->bundle($lesson, $transcript, $attachments, $teacherPreview);
 
         return view('student.programme.hindi-drills', [
             'course' => $course,
             'lesson' => $lesson,
             'items' => $items,
             'handouts' => $handouts,
-            'attachmentsEnabled' => $attachments->enabled(),
-            'transcriptEnabled' => $transcript->enabled(),
+            'attachmentsEnabled' => $attachments->enabled() || $teacherPreview,
+            'transcriptEnabled' => $transcript->enabled() || $teacherPreview,
             'lessonUrl' => route('student.lesson', [$course->slug, $lesson->id]),
             'playlistEnabled' => (bool) config('features.hindi_programme_playlist', false),
-            'srsDeckEnabled' => HindiMySrsDeck::enabled(),
+            'srsDeckEnabled' => HindiMySrsDeck::enabled() || $teacherPreview,
         ]);
     }
 
@@ -61,10 +62,10 @@ class HindiTranscriptDrillsController extends Controller
         HindiTranscriptDrills $transcript,
         HindiAttachmentDrills $attachments,
     ): JsonResponse {
-        abort_unless($transcript->enabled() || $attachments->enabled(), 404);
-
         $user = $request->user();
         abort_unless($user !== null, 403);
+        $teacherPreview = app(HindiProgrammePlaylist::class)->teachesHindi($user);
+        abort_unless($transcript->enabled() || $attachments->enabled() || $teacherPreview, 404);
 
         [, $lesson] = $this->resolveLesson($slug, $lessonId);
         abort_unless($transcript->isHindiLesson($lesson), 404);
@@ -76,10 +77,10 @@ class HindiTranscriptDrillsController extends Controller
         ]);
 
         $item = null;
-        if ($transcript->enabled()) {
+        if ($transcript->enabled() || $teacherPreview) {
             $item = $transcript->findItem($lesson, $validated['item_id']);
         }
-        if ($item === null && $attachments->enabled()) {
+        if ($item === null && ($attachments->enabled() || $teacherPreview)) {
             $item = $attachments->findItem($lesson, $validated['item_id']);
         }
         abort_unless($item !== null, 404);
@@ -100,13 +101,14 @@ class HindiTranscriptDrillsController extends Controller
         Lesson $lesson,
         HindiTranscriptDrills $transcript,
         HindiAttachmentDrills $attachments,
+        bool $teacherPreview = false,
     ): array {
         $items = [];
-        if ($transcript->enabled()) {
+        if ($transcript->enabled() || $teacherPreview) {
             $items = $transcript->itemsFor($lesson);
         }
         $handouts = [];
-        if ($attachments->enabled()) {
+        if ($attachments->enabled() || $teacherPreview) {
             $items = array_merge($items, $attachments->itemsFor($lesson));
             $handouts = $attachments->handoutsFor($lesson);
         }

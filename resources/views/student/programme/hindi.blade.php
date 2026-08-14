@@ -16,8 +16,21 @@
                 Мой хинди
             </h1>
             <p class="text-gray-500 text-base md:text-lg leading-relaxed max-w-3xl">
-                Все занятия, к которым у вас уже есть доступ, по потокам хинди — в одном списке.
+                @if(!empty($hindiTeacherBrief))
+                    Все ваши потоки хинди — занятия видны вам как преподавателю, даже без студенческой оплаты.
+                @else
+                    Все занятия, к которым у вас уже есть доступ, по потокам хинди — в одном списке.
+                @endif
             </p>
+            @if(!empty($hindiTeacherBrief))
+                <a href="{{ $hindiTeacherBrief }}"
+                   target="_blank"
+                   rel="noopener"
+                   class="inline-flex items-center gap-2 mt-4 text-sm font-extrabold text-brand hover:underline"
+                   data-testid="hindi-teacher-brief">
+                    <i class="fas fa-external-link-alt text-xs"></i> Задача: что проверить
+                </a>
+            @endif
             <div class="mt-6 bg-gray-50 p-5 rounded-2xl border border-gray-100">
                 <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Открыто</span>
                 <span class="text-sm font-bold text-gray-800">{{ $count }} занятий</span>

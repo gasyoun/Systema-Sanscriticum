@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\User;
 use App\Services\HindiAttachmentDrills;
+use App\Services\HindiProgrammePlaylist;
 use App\Services\HindiTranscriptDrills;
 use App\Support\HindiMySrsDeck;
 use Illuminate\Http\RedirectResponse;
@@ -31,10 +32,9 @@ class HindiMySrsDeckController extends Controller
         HindiTranscriptDrills $drills,
         HindiAttachmentDrills $attachments,
     ): RedirectResponse {
-        abort_unless(HindiMySrsDeck::enabled(), 404);
-
         $user = $request->user();
         abort_unless($user !== null, 403);
+        abort_unless(HindiMySrsDeck::enabled() || app(HindiProgrammePlaylist::class)->teachesHindi($user), 404);
 
         [$course, $lesson] = $this->resolveLesson($slug, $lessonId);
         $this->authorizeHindiLesson($user, $lesson, $drills);
@@ -59,11 +59,10 @@ class HindiMySrsDeckController extends Controller
         HindiTranscriptDrills $drills,
         HindiAttachmentDrills $attachments,
     ): RedirectResponse {
-        abort_unless(HindiMySrsDeck::enabled(), 404);
-        abort_unless((bool) config('features.hindi_programme_playlist', false), 404);
-
         $user = $request->user();
         abort_unless($user !== null, 403);
+        abort_unless(HindiMySrsDeck::enabled() || app(HindiProgrammePlaylist::class)->teachesHindi($user), 404);
+        abort_unless((bool) config('features.hindi_programme_playlist', false), 404);
 
         $validated = $request->validate([
             'lesson_id' => ['required', 'integer', 'min:1'],

@@ -28,16 +28,19 @@ class HindiProgrammePlaylistController extends Controller
         abort_unless($user !== null, 403);
 
         $items = $playlist->itemsFor($user);
-        $srsOn = HindiMySrsDeck::enabled();
-        $tgOn = $tgPractice->enabled();
-        if ($drills->enabled() || $attachments->enabled() || $srsOn) {
-            $items = $items->map(function (array $row) use ($drills, $attachments, $srsOn): array {
+        $teacherPreview = $playlist->teachesHindi($user);
+        $srsOn = HindiMySrsDeck::enabled() || $teacherPreview;
+        $tgOn = $tgPractice->enabled() || $teacherPreview;
+        $drillsOn = $drills->enabled() || $teacherPreview;
+        $attachmentsOn = $attachments->enabled() || $teacherPreview;
+        if ($drillsOn || $attachmentsOn || $srsOn) {
+            $items = $items->map(function (array $row) use ($drills, $attachments, $drillsOn, $attachmentsOn, $srsOn): array {
                 $lesson = $row['lesson'];
                 $hasTranscript = $drills->hasItems($lesson);
                 $hasAttachmentPractice = $attachments->hasPracticePath($lesson);
                 $hasAttachmentItems = $attachments->hasItems($lesson);
-                $row['has_drills'] = ($drills->enabled() && $hasTranscript)
-                    || ($attachments->enabled() && $hasAttachmentPractice);
+                $row['has_drills'] = ($drillsOn && $hasTranscript)
+                    || ($attachmentsOn && $hasAttachmentPractice);
                 $row['drills_url'] = $row['has_drills']
                     ? route('student.lesson.drills', [$row['course']->slug, $lesson->id])
                     : null;
@@ -52,6 +55,7 @@ class HindiProgrammePlaylistController extends Controller
             'count' => $items->count(),
             'srsDeckEnabled' => $srsOn,
             'tgPracticeEnabled' => $tgOn,
+            'hindiTeacherBrief' => $teacherPreview ? HindiProgrammePlaylist::TEACHER_BRIEF_URL : null,
         ]);
     }
 }
