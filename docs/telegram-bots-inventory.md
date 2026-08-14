@@ -24,6 +24,7 @@ Lead-магнит / марафон drip  →  @samskrte_bot        (MarketingSet
 Служебные алерты LMS        →  TELEGRAM_BOT_*       (на проде: @testpodpiska12_bot)
 Саппорт / harvest чатов     →  userbot @rusamskrtam (TELEGRAM_SUPPORT_*, MTProto)
 «Написать в Telegram» (UX)  →  t.me/rusamskrtam     (человек/аккаунт, не LMS-бот)
+Grok в «Отделе заботы»      →  @grokusaurus_bot     (ПК Марциса, не VPS)
 Лендинги (отдельные)        →  landing_bots.*       (напр. @webinar_17june_bot)
 ```
 
@@ -98,6 +99,21 @@ Lead-магнит / марафон drip  →  @samskrte_bot        (MarketingSet
 roster/harvest peer (совместно с Track B).
 
 Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (см. DEPLOY_QUEUE №41).
+
+### 2.5. Grok в «Отделе заботы» (`@grokusaurus_bot`) — не LMS
+
+| | |
+|--|--|
+| **Username** | [@grokusaurus_bot](https://t.me/grokusaurus_bot) |
+| **Где живёт** | long-poll на **ПК Марциса**, не на VPS, не в `.env` прода |
+| **Чат** | «Отдел заботы \| Рабочая группа» |
+| **Токен** | только `C:\Users\user\.grok\channels\telegram\.env` (не коммитить) |
+
+**Назначение:** кураторы зовут локальный Grok Build, когда сайт / кабинет / ДЗ
+лежат. Не вебхук LMS, не `@samskrtamru_bot`, не userbot `@rusamskrtam`.
+Тег `@rusamskrtam` в том чате бот тоже читает как вызов себе.
+
+**Кураторам:** [MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md).
 
 ---
 

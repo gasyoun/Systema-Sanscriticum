@@ -737,6 +737,7 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 | Для кого | Документ |
 |---|---|
 | **Ученики / преподаватели** | [samskrte.ru/uptime](https://samskrte.ru/uptime) · [зеркало GitHub](https://gasyoun.github.io/Systema-Sanscriticum/uptime/) · тэг [@rusamskrtam](https://t.me/rusamskrtam) · [шпаргалка преподу](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TEACHER_SITE_DOWN_CHEATSHEET_RU.md) · [pin TG](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/teacher-site-down-telegram-pin.md) |
+| **Кураторы («Отдел заботы»)** | [MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md) — реплай / `@grokusaurus_bot` / `@rusamskrtam` |
 | **Иван / Марцис (ops)** | [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md) §2 |
 | **Агенты** (inventory, env, smoke) | [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) |
 

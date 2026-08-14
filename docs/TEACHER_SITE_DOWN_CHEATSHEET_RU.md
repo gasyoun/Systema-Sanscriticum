@@ -1,6 +1,6 @@
 # Шпаргалка преподавателю: сайт или ДЗ «не работают»
 
-_Created: 06-08-2026 · Last updated: 06-08-2026 (census: no teacher forward)_
+_Created: 06-08-2026 · Last updated: 14-08-2026_
 
 **Кому:** преподаватели (Костина, Литвиненко, …) и кураторы в учебных чатах.  
 **Не для ops:** красные мониторы Better Stack — только Иван / Марцис  
@@ -58,6 +58,11 @@ _Created: 06-08-2026 · Last updated: 06-08-2026 (census: no teacher forward)_
 
 **Шаг 3.** В Telegram-чате школы **отметьте** [@rusamskrtam](https://t.me/rusamskrtam)  
 (увидят **Иван и Марцис**). **Не пишите Артёму** — его зовут только ops, если мёртв сервер.
+
+**Кураторы в «Отделе заботы | Рабочая группа»:** кроме `@rusamskrtam` можно
+реплаем или `@grokusaurus_bot` позвать локальный Grok (ответ 2–5 мин, с телефона).
+Runbook: [MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md).
+Не звать этот бот в чатах учеников.
 
 ### Шаблон (скопировать)
 

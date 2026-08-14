@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2753: кураторский runbook Grok в «Отделе заботы».** [docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md) — реплай / `@grokusaurus_bot` / `@rusamskrtam`, ждать 2–5 мин, не звать в чатах учеников. Указатели: admin-manual §1.7, uptime RU, шпаргалка преподу, README, [telegram-bots-inventory.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-bots-inventory.md) §2.5. Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.89.49] - 2026-08-14
 ### Added
 - **H2486: Literal-Jivo telephony / departments / routing gate.** Decision packet holds activation: prod 30-day volume is Telegram-heavy (~941 incoming, 2 web responders, 0 conversation phones, 1 closed thread). Jivo VATS is Voximplant resale with a Jivo-owned default AON — rejected as a second inbox. Adapter contract is `FollowUpTask::TYPE_CALL` + `CallEvent` onto the existing timeline. Five flags default OFF (`TELEPHONY_CALLBACK_REQUEST`, `TELEPHONY_PSTN`, `TELEPHONY_RECORDING`, `SUPPORT_DEPARTMENTS`, `SUPPORT_CAPACITY_ROUTING`). Thresholds in [`config/telephony.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/telephony.php). Packet: [docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md). Executor: Grok 4.6 (`grok-4.6`).

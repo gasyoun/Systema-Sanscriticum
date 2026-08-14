@@ -1,12 +1,13 @@
 # Если сайт не открывается (Better Stack + Telegram)
 
-_Создано: 30-07-2026 · Обновлено: 06-08-2026_
+_Создано: 30-07-2026 · Обновлено: 14-08-2026_
 
 Три аудитории — **не смешивать**:
 
 | Кто | Что делать | Ссылка |
 |---|---|---|
 | **Ученик / преподаватель** | 3 проверки → написать в чат с `@rusamskrtam` | [ниже §1](#1-ученики-и-преподаватели--1-минута) · живая страница [samskrte.ru/uptime](https://samskrte.ru/uptime) |
+| **Куратор в «Отделе заботы»** | Реплай / `@grokusaurus_bot` / `@rusamskrtam` | [MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md) |
 | **Иван / Марцис** | Смотреть, *что* красное; чинить или звать агента / Артёма | [§2](#2-иван-и-марцис--ops) |
 | **Агенты / SSH** | Env, cron, smoke | [EN inventory](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) |
 
@@ -52,6 +53,10 @@ VPN: вкл / выкл
 
 Это увидят **Иван и Марцис**. Кто первый — запустит Claude/Grok или починит на сервере.  
 **Не пишите Артёму** и не ищите «красный монитор» в Better Stack — это не ваша зона.
+
+Кураторы **в штабном** чате «Отдел заботы | Рабочая группа» могут сразу звать
+[@grokusaurus_bot](https://t.me/grokusaurus_bot) (реплай надёжнее голого `@`).
+Как писать и сколько ждать: [MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md).
 
 ### Как узнать о падении *до* того, как «опять не пускает»
 
