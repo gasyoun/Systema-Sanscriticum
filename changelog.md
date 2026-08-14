@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2750: Phase 3–4 departments / capacity STOP.** Re-measured prod 14-08-2026 23:49 MSK: 0 staff closing ≥10 threads / 30 d (need ≥3); 1 assignee; 1 closed thread; 14-day median first response 244 s (need >900 s on an assigned queue; assigned n = 0). No extra `queue` values, no Helpdesk department filter, no assignment cap. `SUPPORT_DEPARTMENTS` / `SUPPORT_CAPACITY_ROUTING` stay OFF. Evidence: packet [docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md) section 11. Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.89.50] - 2026-08-14
 ### Added
 - **H2749: Phase 2 PSTN STOP.** Re-measured prod 14-08-2026 23:18 MSK: `FollowUpTask` type=call = 0 (need ≥20 completed / 30 d); H2747 callback request not live; Q-law-5 DPA / storage-region fact absent. No number bought, no `CallProvider`, `TELEPHONY_PSTN` / `TELEPHONY_RECORDING` stay OFF. Evidence: packet [docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md) section 10. Executor: Grok 4.6 (`grok-4.6`).
