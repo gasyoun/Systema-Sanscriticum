@@ -1,8 +1,11 @@
 ## [Unreleased]
 
-## [1.89.46] - 2026-08-14
+## [1.89.47] - 2026-08-14
 ### Added
 - **H2731: bounded Hindi PDF sidecar.** Offline artisan `hindi:pdf-sidecar {lesson}` (dry-run default; `--apply` writes sibling `.txt` for the H2444 extractor). Uses Ghostscript `txtwrite` already on prod (`/usr/bin/gs` 10.05.1); optional Tesseract only if the binary exists. Cap: first 8 pages, skip over 15 MB. No Telegram, no live OCR on a request, `HINDI_ATTACHMENT_DRILLS` stays OFF. Lesson 1723 measured 14-08-2026: 6 083 037 bytes, 148 pages, p1–8 = 12 338 chars with Devanagari + Cyrillic. Document: [docs/HINDI_ATTACHMENT_DRILLS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/HINDI_ATTACHMENT_DRILLS_2026.md). Executor: Grok 4.6 (`grok-4.6`).
+
+## [1.89.46] - 2026-08-14
+### Added
 - **H2446: отобранная практика из учебного чата хинди.** `/dvaram/programme/hindi/chat-practice` (флаг `features.hindi_tg_curated_practice` / `HINDI_TG_CURATED_PRACTICE`, по умолчанию OFF). Читает committed JSON, не вызывает Telegram/Madeline, не выгружает историю чата. Гейт PII отбрасывает `telegram_*` / `@username` / `t.me`. 10 пилотных заданий составил преподаватель (не скрап). Доступ как у H2441 (есть хотя бы одно открытое занятие хинди). Смоук: `php artisan hindi:tg-practice-probe --json`. Документ: [docs/HINDI_TG_CURATED_PRACTICE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/HINDI_TG_CURATED_PRACTICE_2026.md). Executor: Grok 4.6 (`grok-4.6`).
 
 ## [1.89.38] - 2026-08-14
