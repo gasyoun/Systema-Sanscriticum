@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.89.36] - 2026-08-14
 ### Added
 - **H2444: упражнения из файлов занятия хинди.** Тот же `/c/{slug}/u/{id}/drills` (флаг `features.hindi_attachment_drills` / `HINDI_ATTACHMENT_DRILLS`, по умолчанию OFF). Читает `attachments` и преподавательские `homework_attachments`: txt/md, docx через ZipArchive, PDF только если рядом лежит `*.txt`. Иначе раздатка открывается ссылкой, без OCR и без Telegram. Тот же доступ, что у H2443. Смоук: `php artisan hindi:attachments-census --json`. Документ: [docs/HINDI_ATTACHMENT_DRILLS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/HINDI_ATTACHMENT_DRILLS_2026.md). Executor: Grok 4.6 (`grok-4.6`).
 
