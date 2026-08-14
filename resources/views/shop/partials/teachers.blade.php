@@ -8,7 +8,7 @@
         ->values();
 @endphp
 @if($allTeachers->isNotEmpty())
-<section class="mb-16 lg:mb-20" data-analytics="teachers">
+<section id="teachers" class="mb-16 lg:mb-20" data-analytics="teachers">
     <h2 class="text-3xl font-bold text-white mb-8">{{ $allTeachers->count() > 1 ? 'Преподаватели' : 'Преподаватель' }}</h2>
 
     <div class="grid grid-cols-1 {{ $allTeachers->count() > 1 ? 'lg:grid-cols-2' : '' }} gap-6">
@@ -27,9 +27,14 @@
                 <div class="min-w-0">
                     <div class="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-1">Преподаватель</div>
                     <h3 class="text-xl font-bold text-white mb-3">{{ $teacher->name }}</h3>
-                    @if(filled($teacher->bio))
+                    @php
+                        $bioHtml = filled($teacher->bio)
+                            ? $teacher->bio
+                            : ($flagship['teacher_bio_html'] ?? null);
+                    @endphp
+                    @if(filled($bioHtml))
                         <div class="prose prose-invert prose-sm max-w-none text-slate-400 leading-relaxed [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline">
-                            {!! $teacher->bio !!}
+                            {!! $bioHtml !!}
                         </div>
                     @endif
                 </div>

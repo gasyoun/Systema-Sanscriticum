@@ -65,6 +65,11 @@ document.addEventListener('DOMContentLoaded', function () {
             ], fn ($v) => $v !== null)
             : null;
 
+        $schemaTeaches = collect($course->outcomes ?? [])->filter(fn ($x) => filled($x))->values();
+        if ($schemaTeaches->isEmpty() && ! empty(($flagship ?? [])['outcomes'])) {
+            $schemaTeaches = collect($flagship['outcomes']);
+        }
+
         $courseSchema = array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'Course',
@@ -78,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 '@id' => 'https://samskrte.ru/#org',
                 'name' => 'Общество ревнителей санскрита',
             ],
+            'teaches' => $schemaTeaches->isNotEmpty() ? $schemaTeaches->all() : null,
             'hasCourseInstance' => $courseInstance,
             'offers' => !empty($offers) ? $offers : null,
         ], fn ($v) => $v !== null);
@@ -242,6 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
         @include('shop.partials.trust-strip')
         @include('shop.partials.audience')
         @include('shop.partials.outcomes')
+        @include('shop.partials.flagship-free-step')
 
         {{-- ───── 1. О КУРСЕ (парная раскладка: текст + панель фактов) ───── --}}
         @php
@@ -394,8 +401,10 @@ document.addEventListener('DOMContentLoaded', function () {
         @if(!empty($scheduleGroups) && $scheduleGroups->isNotEmpty())
         <section id="schedule" class="mb-16 lg:mb-20">
             <div class="flex items-center gap-4 mb-8">
-                <h2 class="text-3xl font-bold text-white">Расписание</h2>
-                <span class="text-sm font-bold text-slate-500">ближайшие занятия</span>
+                <h2 class="text-3xl font-bold text-white">{{ ! empty($flagship) ? 'Ближайшие занятия' : 'Расписание' }}</h2>
+                @unless(! empty($flagship))
+                    <span class="text-sm font-bold text-slate-500">ближайшие занятия</span>
+                @endunless
             </div>
 
             <div class="space-y-10">
