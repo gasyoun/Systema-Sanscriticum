@@ -50,7 +50,17 @@ Works with the flag OFF. Answers are redacted (`***`).
 
 ## Enable on prod
 
-Leave OFF until a human flips it. Then `HINDI_TRANSCRIPT_DRILLS=true` +
-`config:cache`. Rollback: `false` + `config:cache`.
+✅ **ON 14-08-2026.** `HINDI_TRANSCRIPT_DRILLS=true` + `config:cache` on
+`319f33e6`. Rollback: `false` + `config:cache`.
+
+Live transcripts (only two Hindi lessons have `transcript_file` today):
+
+| Lesson | Course | Items | HTTP |
+|---|---|---|---|
+| 1863 Костина нач. 1 | 401 `hindi-1-sr800-2026` | 12 cloze | paid user 6738 → 200; guest → 302 |
+| 1854 Костина нач. 2 | 402 | 11 cloze + 1 vocab_pick | probe only |
+
+User 6494 (playlist 36) has no `transcript_file` on owned lessons, so her
+playlist rows do not show «Упражнения» until those transcripts land.
 
 _Dr. Mārcis Gasūns_
