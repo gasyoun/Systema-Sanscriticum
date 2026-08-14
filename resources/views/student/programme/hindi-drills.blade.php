@@ -68,9 +68,18 @@ function hindiTranscriptDrills() {
                         Мой хинди
                     </a>
                 @endif
+                @if(!empty($srsDeckEnabled) && config('srs.enabled'))
+                    <a href="{{ route('student.srs.deck', \App\Support\HindiMySrsDeck::DECK_SLUG) }}"
+                       class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-brand"
+                       data-testid="hindi-drills-open-deck">
+                        Открыть колоду
+                    </a>
+                @endif
             </div>
         </div>
     </div>
+
+    @include('student.partials.hindi-srs-flash')
 
     @if(!empty($attachmentsEnabled) && !empty($handouts))
         <section class="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 mb-6" data-testid="hindi-attachment-handouts">
@@ -145,6 +154,21 @@ function hindiTranscriptDrills() {
                x-show="results['{{ $item['id'] }}']"
                :class="results['{{ $item['id'] }}']?.status === 'ok' ? 'text-green-700' : 'text-red-600'"
                x-text="results['{{ $item['id'] }}']?.message || ''"></p>
+
+            @if(!empty($srsDeckEnabled) && !empty($item['answer']))
+                <form method="POST"
+                      action="{{ route('student.lesson.srs.add', [$course->slug, $lesson->id]) }}"
+                      class="mt-4"
+                      data-testid="hindi-drill-srs-form">
+                    @csrf
+                    <input type="hidden" name="item_id" value="{{ $item['id'] }}">
+                    <button type="submit"
+                            class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:border-brand hover:text-brand font-extrabold"
+                            data-testid="hindi-drill-srs">
+                        + в колоду
+                    </button>
+                </form>
+            @endif
         </article>
     @empty
         <div class="bg-white rounded-2xl border border-gray-100 p-8 text-gray-500" data-testid="hindi-drills-empty">

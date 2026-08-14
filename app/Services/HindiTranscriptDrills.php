@@ -59,6 +59,7 @@ final class HindiTranscriptDrills
      *     prompt: string,
      *     sentence: string,
      *     answer: string,
+     *     lemma: string,
      *     choices: list<string>|null,
      *     start: float
      * }>
@@ -71,7 +72,7 @@ final class HindiTranscriptDrills
         }
 
         $mtime = Storage::disk('public')->lastModified($path);
-        $cacheKey = 'hindi_transcript_drills:v4:'.md5($path).':'.$mtime;
+        $cacheKey = 'hindi_transcript_drills:v5:'.md5($path).':'.$mtime;
 
         return Cache::rememberForever($cacheKey, function () use ($path): array {
             $raw = Storage::disk('public')->get($path);
@@ -101,6 +102,7 @@ final class HindiTranscriptDrills
      *     prompt: string,
      *     sentence: string,
      *     answer: string,
+     *     lemma: string,
      *     choices: list<string>|null,
      *     start: float
      * }|null

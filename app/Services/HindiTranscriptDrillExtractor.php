@@ -53,6 +53,7 @@ final class HindiTranscriptDrillExtractor
      *     prompt: string,
      *     sentence: string,
      *     answer: string,
+     *     lemma: string,
      *     choices: list<string>|null,
      *     start: float
      * }>
@@ -80,6 +81,7 @@ final class HindiTranscriptDrillExtractor
                     'Как по-русски: '.$pair['hindi'],
                     $text,
                     $pair['gloss'],
+                    $pair['hindi'],
                     null,
                     $start,
                 );
@@ -99,6 +101,7 @@ final class HindiTranscriptDrillExtractor
                 count($items),
                 $prompt,
                 $text,
+                $target,
                 $target,
                 null,
                 $start,
@@ -121,6 +124,7 @@ final class HindiTranscriptDrillExtractor
                 $source['type'] === self::TYPE_CLOZE ? $source['prompt'] : $this->blankOnce($source['sentence'], $answer),
                 $source['sentence'],
                 $answer,
+                (string) ($source['lemma'] ?? $answer),
                 $this->stableShuffle($choices, $source['id']),
                 $source['start'],
             );
@@ -275,6 +279,7 @@ final class HindiTranscriptDrillExtractor
      *     prompt: string,
      *     sentence: string,
      *     answer: string,
+     *     lemma: string,
      *     choices: list<string>|null,
      *     start: float
      * }
@@ -285,6 +290,7 @@ final class HindiTranscriptDrillExtractor
         string $prompt,
         string $sentence,
         string $answer,
+        string $lemma,
         ?array $choices,
         float $start,
     ): array {
@@ -296,6 +302,7 @@ final class HindiTranscriptDrillExtractor
             'prompt' => $prompt,
             'sentence' => $sentence,
             'answer' => $answer,
+            'lemma' => $lemma,
             'choices' => $choices,
             'start' => $start,
         ];
