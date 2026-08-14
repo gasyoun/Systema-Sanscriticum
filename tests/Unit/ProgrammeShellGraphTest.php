@@ -64,12 +64,12 @@ class ProgrammeShellGraphTest extends TestCase
 
     public function test_missing_fk_is_skipped(): void
     {
-        Schema::disableForeignKeyConstraints();
         $leaf = Course::factory()->create([
             'title' => 'Висячий предшественник',
             'slug' => 'dangling-pred',
-            'predecessor_course_id' => 999999,
         ]);
+        Schema::disableForeignKeyConstraints();
+        $leaf->forceFill(['predecessor_course_id' => 999999])->save();
         Schema::enableForeignKeyConstraints();
 
         $ids = app(ProgrammeShellGraph::class)->walkFrom($leaf->fresh())->pluck('id')->all();
