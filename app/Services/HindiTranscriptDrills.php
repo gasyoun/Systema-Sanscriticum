@@ -71,7 +71,7 @@ final class HindiTranscriptDrills
         }
 
         $mtime = Storage::disk('public')->lastModified($path);
-        $cacheKey = 'hindi_transcript_drills:'.md5($path).':'.$mtime;
+        $cacheKey = 'hindi_transcript_drills:v2:'.md5($path).':'.$mtime;
 
         return Cache::rememberForever($cacheKey, function () use ($path): array {
             $sentences = TranscriptParser::sentencesFromPublicFile($path);

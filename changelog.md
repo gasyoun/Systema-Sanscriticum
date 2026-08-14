@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **H2443 follow-up: YouTube `ru-orig` captions ingest without becoming fake Hindi drills.** n8n has no further Deepgram payloads (Deepgram `ASR_PAYMENT_REQUIRED`, [issue #1692](https://github.com/gasyoun/Systema-Sanscriticum/issues/1692)). Older Hindi YouTube shells get auto-captions as `transcript_file` for the player. Lesson 938 measured 0 Devanagari; Latin hits were Zoom/Google/Telegram. Extractor stops those loans; drill cache key bumped to `v2`. Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.89.33] - 2026-08-14
 ### Fixed
 - **H2712: mobile `uuid` GHSA override.** `@capacitor/cli@8.5.0` still pulls `xcode@3.0.1` → `uuid@7.0.3`, which fails `npm audit --package-lock-only` ([GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq), Dependabot [alert 42](https://github.com/gasyoun/Systema-Sanscriticum/security/dependabot/42)). Latest Capacitor CLI is already 8.5.0; `npm audit fix --force` would downgrade it to 7.6.8 — refused. `mobile/package.json` now overrides `uuid` to **11.1.1** (last CommonJS 11.x; 12+ is ESM and would break `xcode`). CI mobile audit exits 0. Executor: Grok 4.6 (`grok-4.6`).

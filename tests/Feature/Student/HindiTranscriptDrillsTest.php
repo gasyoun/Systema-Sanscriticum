@@ -190,6 +190,23 @@ class HindiTranscriptDrillsTest extends TestCase
             ->assertDontSee('data-testid="hindi-playlist-drills"', false);
     }
 
+    public function test_english_classroom_loans_are_not_drill_targets(): void
+    {
+        $extractor = new \App\Services\HindiTranscriptDrillExtractor();
+        $items = $extractor->extract([
+            [
+                'text' => 'Я тут вижу пользователя Zoom и ссылку в Google документ.',
+                'start' => 1.0,
+            ],
+            [
+                'text' => 'Пришлите фото в Telegram или файл PDF.',
+                'start' => 2.0,
+            ],
+        ]);
+
+        $this->assertSame([], $items);
+    }
+
     public function test_probe_lists_redacted_items_with_flag_off(): void
     {
         config(['features.hindi_transcript_drills' => false]);
