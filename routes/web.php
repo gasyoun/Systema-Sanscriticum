@@ -153,6 +153,10 @@ Route::get('/klub', [MembershipController::class, 'landing'])->name('membership.
 // курса + уровни (H323, beginner on-ramp).
 Route::get('/online/s-chego-nachat', [ShopController::class, 'start'])->name('shop.start');
 
+// H2764 / R18 — путь через каталог (письмо/чтение → грамматика → тексты).
+// Слаг /online/put: столкновений с существующими /online/* нет.
+Route::get('/online/put', [ShopController::class, 'pathway'])->name('shop.pathway');
+
 // «Материалы» — журнальный хаб бесплатного контента над магазином (H387,
 // паттерн Arzamas): статьи + бесплатные беседы + preview-уроки одной сеткой
 // типизированных карточек. Блог остаётся на /s — здесь только агрегатор.

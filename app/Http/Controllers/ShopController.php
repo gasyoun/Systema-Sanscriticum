@@ -14,6 +14,7 @@ use App\Services\Activity\StorefrontAnalytics;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
 use App\Support\ProductLadderAnchors;
+use App\Support\TrajectoryPathway;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -183,6 +184,22 @@ class ShopController extends Controller
             'page', 'quiz', 'minBlockPrice', 'minRecordedPrice',
             'freePreviewCourse', 'freeUrl', 'catalogUrl', 'beginnerUrl'
         ));
+    }
+
+    /**
+     * H2764 / R18 — catalogue pathway: three tracks through the shop,
+     * not a second warehouse listing and not a why-us clone.
+     */
+    public function pathway()
+    {
+        $tracks = TrajectoryPathway::resolve();
+
+        $page = new LandingPage([
+            'title' => 'Путь через курсы санскрита',
+            'description' => 'Три направления каталога — письмо и чтение, грамматика, тексты. Ближайший старт и цена, как в магазине.',
+        ]);
+
+        return view('shop.put', compact('page', 'tracks'));
     }
 
     // МЕТОД 2: Страница одного конкретного курса

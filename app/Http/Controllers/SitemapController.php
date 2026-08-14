@@ -36,6 +36,12 @@ class SitemapController extends Controller
             ];
 
             $urls[] = [
+                'loc' => route('shop.pathway'),
+                'changefreq' => 'weekly',
+                'priority' => '0.7',
+            ];
+
+            $urls[] = [
                 'loc' => route('hub.sanskritorium'),
                 'changefreq' => 'monthly',
                 'priority' => '0.5',
