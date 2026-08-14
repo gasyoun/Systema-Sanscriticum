@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.89.50] - 2026-08-14
 ### Added
 - **H2749: Phase 2 PSTN STOP.** Re-measured prod 14-08-2026 23:18 MSK: `FollowUpTask` type=call = 0 (need ≥20 completed / 30 d); H2747 callback request not live; Q-law-5 DPA / storage-region fact absent. No number bought, no `CallProvider`, `TELEPHONY_PSTN` / `TELEPHONY_RECORDING` stay OFF. Evidence: packet [docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md) section 10. Executor: Grok 4.6 (`grok-4.6`).
 - **H2753: кураторский runbook Grok в «Отделе заботы».** [docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md) — реплай / `@grokusaurus_bot` / `@rusamskrtam`, ждать 2–5 мин, не звать в чатах учеников. Указатели: admin-manual §1.7, uptime RU, шпаргалка преподу, README, [telegram-bots-inventory.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-bots-inventory.md) §2.5. Executor: Grok 4.6 (`grok-4.6`).
