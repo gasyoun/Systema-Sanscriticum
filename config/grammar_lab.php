@@ -47,6 +47,19 @@ return [
     ))),
 
     /*
+     | Standalone Grammar Lab SKU (course slug). Empty = no subscription
+     | product is wired. Human fills this before production activation.
+     */
+    'subscription_course_slug' => trim((string) env('GRAMMAR_LAB_SUBSCRIPTION_COURSE_SLUG', '')),
+
+    'pilot' => [
+        'eligibility_course_slugs' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('GRAMMAR_LAB_PILOT_COURSE_SLUGS', ''))
+        ))),
+    ],
+
+    /*
      | H2494 publication policy. auto_publish is the import-time kill switch
      | (not a learner-facing feature flag). Prod GRAMMAR_LAB stays OFF.
      */

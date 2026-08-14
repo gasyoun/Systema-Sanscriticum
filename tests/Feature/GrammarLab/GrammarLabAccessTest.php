@@ -128,4 +128,19 @@ class GrammarLabAccessTest extends GrammarLabTestCase
         ]);
         $this->assertTrue(GrammarLabAccess::canUse($user->fresh()));
     }
+
+    public function test_admin_grant_is_not_the_same_as_admin_role(): void
+    {
+        $this->enableLab();
+        $user = $this->student();
+        GrammarLabEntitlement::query()->create([
+            'user_id' => $user->id,
+            'grant_kind' => 'admin',
+            'source_ref' => 'access-test:admin',
+            'starts_at' => now()->subMinute(),
+            'ends_at' => now()->addHour(),
+        ]);
+        $this->assertTrue(GrammarLabAccess::canUse($user));
+        $this->assertFalse($user->isAdminLike());
+    }
 }

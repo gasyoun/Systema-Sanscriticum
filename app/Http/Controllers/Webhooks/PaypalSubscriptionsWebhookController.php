@@ -12,6 +12,7 @@ use App\Models\BillingCommitment;
 use App\Models\BillingSubscription;
 use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
+use App\Services\GrammarLab\GrammarLabEntitlementService;
 use App\Services\Payments\PaypalSubscriptionsService;
 use App\Services\Payments\PaypalWebhookSignatureVerifier;
 use Illuminate\Http\Request;
@@ -173,6 +174,8 @@ final class PaypalSubscriptionsWebhookController extends Controller
             'status' => $status,
             'meta' => $meta,
         ]);
+
+        app(GrammarLabEntitlementService::class)->syncFromSubscription($row->fresh());
     }
 
     /**
