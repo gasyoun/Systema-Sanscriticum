@@ -27,6 +27,14 @@
                     <i class="fas fa-compass"></i>
                     Не знаете, с чего начать?
                 </a>
+                {{-- Клуб записей (H2645) — виден только при включённом контуре H2644 --}}
+                @if(config('features.club_membership'))
+                <a href="{{ route('membership.landing') }}"
+                   class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#38BDF8]/60 hover:bg-[#38BDF8]/5 text-[#38BDF8] text-sm font-bold rounded-xl transition-all">
+                    <i class="fas fa-box-archive"></i>
+                    Клуб: вся библиотека записей
+                </a>
+                @endif
                 {{-- Лесенка цен (H1293): общесайтовые цены видны с первого экрана --}}
                 <a href="#ceny"
                    class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-brand/60 hover:bg-brand/5 text-brand text-sm font-bold rounded-xl transition-all">

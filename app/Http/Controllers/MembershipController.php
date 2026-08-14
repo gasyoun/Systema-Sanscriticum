@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\ClubMembership;
+use App\Models\Course;
+use App\Models\Lesson;
 use App\Services\Membership\ClubMembershipService;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * Самостоятельный отказ от продления клуба и возврат продления (H2644).
+ * Самостоятельный отказ от продления клуба и возврат продления (H2644),
+ * плюс публичный лендинг + прайсинг клуба (H2645).
  *
  * Что здесь НЕ происходит и почему. Отказ НЕ снимает доступ: продление ручное,
  * оплаченный период уже оплачен, и отбирать его за «не продлевать» — это отъём
@@ -25,6 +29,41 @@ use Illuminate\Http\RedirectResponse;
 final class MembershipController extends Controller
 {
     public function __construct(private readonly ClubMembershipService $service) {}
+
+    /**
+     * Публичный лендинг клуба (H2645). Живёт только при включённом
+     * features.club_membership: страница не может появиться раньше, чем
+     * оплата реально создаёт членство, — иначе CTA продаёт то, чего система
+     * не выдаст. Цены берутся ТОЛЬКО из тарифов курса `club` (Filament) —
+     * прайсинг и чекаут читают одну и ту же строку БД.
+     */
+    public function landing(): View
+    {
+        abort_unless((bool) config('features.club_membership'), 404);
+
+        $course = Course::query()
+            ->where('slug', (string) config('membership.club.course_slug'))
+            ->first();
+        abort_if($course === null, 404);
+
+        $tariffs = $course->tariffs()
+            ->where('is_active', true)
+            ->whereNotNull('membership_months')
+            ->orderBy('membership_months')
+            ->get();
+        abort_if($tariffs->isEmpty(), 404);
+
+        return view('shop.club', [
+            'course' => $course,
+            'tariffs' => $tariffs,
+            'monthly' => $tariffs->firstWhere('membership_months', 1) ?? $tariffs->first(),
+            'shelfCount' => Course::query()->where('club_included', true)->count(),
+            'freeLessonsCount' => Lesson::query()->shownOnMain()->count(),
+            'freeTierOn' => (bool) config('features.membership_free_tier'),
+            'cancellationOn' => (bool) config('features.membership_cancellation'),
+            'grantDays' => (int) config('membership.free_tier.grant_days', 30),
+        ]);
+    }
 
     public function cancel(): RedirectResponse
     {

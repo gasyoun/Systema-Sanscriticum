@@ -140,6 +140,12 @@ Route::get('/', function () {
 // Витрина магазина курсов
 Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
 
+// Клубное членство (H2645): публичный лендинг + прайсинг. Флаг
+// features.club_membership проверяется в контроллере (404 до включения):
+// страница не может жить раньше, чем контур H2644 реально выдаёт доступ
+// за оплату. Цены читаются из тарифов курса `club` (Filament), не из Blade.
+Route::get('/klub', [MembershipController::class, 'landing'])->name('membership.landing');
+
 // «С чего начать» — вводная страница новичка: лесенка продуктов + квиз подбора
 // курса + уровни (H323, beginner on-ramp).
 Route::get('/online/s-chego-nachat', [ShopController::class, 'start'])->name('shop.start');

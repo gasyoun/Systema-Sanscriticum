@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 14-08-2026 (№72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 14-08-2026 (H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -47,6 +47,27 @@ _Создано: 08-07-2026 · Обновлено: 14-08-2026 (№72 H2485 `CRM_
 >
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
+
+### ⚙️🚀 H2645+H2644 — запуск клуба: включить флаги к 28-08-2026 (страница `/klub` уже в коде, 404 до флага)
+
+Код обоих контуров на проде авто-деплоем ([PR #1656](https://github.com/gasyoun/Systema-Sanscriticum/pull/1656) —
+жизненный цикл членства, [PR #1700](https://github.com/gasyoun/Systema-Sanscriticum/pull/1700) — лендинг + прайсинг).
+Курс `club` (id 444) и три тарифа (5038 месяц ₽1 500 / 5039 квартал ₽4 000 / 5040 год ₽15 000)
+уже заведены в Filament 13-08. Деньги — включение согласует MG (⚙️).
+
+Порядок включения (календарь запуска: страница живёт с 28-08, пост 31-08, запуск 01-09):
+
+1. **К 28-08:** в `.env` прода `CLUB_MEMBERSHIP=true`, затем `php artisan config:clear`
+   (или `config:cache`). После этого `/klub` и кнопка «Клуб» на `/online` живые,
+   оплата клубного тарифа создаёт членство. Проверка: `php artisan membership:rehearse`
+   (сквозная репетиция, пункт «d» приёмки H2644) + открыть `https://samskrte.ru/klub`.
+2. Той же правкой или следом: `MEMBERSHIP_CANCELLATION=true` — кнопка «Не продлевать»
+   в кабинете; страница `/klub` сама подхватит формулировку.
+3. **Последним, после проверки клуба на живых оплатах:** `MEMBERSHIP_FREE_TIER=true` —
+   месячные бесплатные гранты 350 уснувшим (D6 вариант «а», кампания H2566);
+   строка «Скоро» на `/klub` сама станет настоящим временем.
+4. Полка записей: `php artisan membership:club-catalogue --apply` — набрать
+   `club_included` (без неё клубный каталог пуст).
 
 ### H2017 — PayPal diaspora + счёт юрлицу **✅ на проде** (31-07-2026)
 
