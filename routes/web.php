@@ -46,6 +46,7 @@ use App\Http\Controllers\Rq4StudyController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SrsController;
+use App\Http\Controllers\StorefrontAnalyticsController;
 use App\Http\Controllers\Student\AccessSelfServiceController;
 use App\Http\Controllers\Student\HindiMySrsDeckController;
 use App\Http\Controllers\Student\HindiProgrammePlaylistController;
@@ -191,6 +192,10 @@ Route::get('/online/konsultaciya/level-quiz/{token}/result', [MarathonController
 Route::get('/k/{course:slug}', [ShopController::class, 'show'])
     ->middleware('course.canonical')
     ->name('shop.course.show');
+
+// H2762 R12 — next-step click logger (Kochergina card only when flag is on).
+Route::get('/online/next-step/{target}', [StorefrontAnalyticsController::class, 'nextStep'])
+    ->name('shop.next-step');
 
 // Публичный «Пример урока»: отдаёт ТОЛЬКО preview-урок этого курса (is_preview),
 // без auth. Никакого lesson-id в URL — гость не может запросить произвольный урок.

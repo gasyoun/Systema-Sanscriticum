@@ -157,8 +157,14 @@ document.addEventListener('DOMContentLoaded', function () {
                             Выбрать тариф
                         </a>
                         @if($course->previewLesson)
-                            <a href="#sample" class="inline-flex justify-center items-center gap-2 px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#38BDF8]/15 border border-[#38BDF8]/30 hover:bg-[#38BDF8]/25 transition-all">
-                                <i class="fas fa-play text-xs"></i> Смотреть пробный урок
+                            <a href="#sample"
+                               class="inline-flex justify-center items-center gap-2 px-8 py-4 text-sm md:text-base font-bold rounded-xl text-white bg-[#38BDF8]/15 border border-[#38BDF8]/30 hover:bg-[#38BDF8]/25 transition-all"
+                               @if(! empty($ctaAb))
+                                   data-cta-ab="{{ $ctaAb['variant'] }}"
+                                   data-analytics="flagship-cta"
+                               @endif
+                               onclick="if (typeof window.shopReachGoal === 'function') window.shopReachGoal('sample_play');">
+                                <i class="fas fa-play text-xs"></i> {{ $ctaAb['label'] ?? 'Смотреть пробный урок' }}
                             </a>
                         @else
                             <a href="{{ route('shop.index', $course->isLive() ? ['format' => 'live'] : ($course->format === 'recorded' ? ['format' => 'recorded'] : [])) }}"

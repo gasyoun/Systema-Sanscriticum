@@ -1,6 +1,6 @@
 # Funnel measurement map — samskrte.ru shop (H2378)
 
-_Created: 07-08-2026 · Last updated: 07-08-2026_
+_Created: 07-08-2026 · Last updated: 15-08-2026_
 
 **Model:** Grok 4.5 (`grok-4.5`) · handoff [H2378](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2378-Grok_Systema-Sanscriticum_sales-measurement-goals-dashboard_07.08.26.md)
 
@@ -21,6 +21,7 @@ _Created: 07-08-2026 · Last updated: 07-08-2026_
 | `begin_checkout` | Auth only | `begin_checkout` | user+tariff_id / day | `/checkout/{tariff}` |
 | `payment_success` | Auth, qualifying paid | `payment_success` | once / payment_id | status → paid/success + `/payment/success` |
 | `first_cabinet_action` | Auth | — | once / user ever | first `cabinet.home.view` (surface field) |
+| `card_impression` / `next_step_click` / `sample_play` | `storefront_events` (guests OK; H2762, Kochergina only) | same names | impression 1/visitor/day | flags `CATALOG_NEXT_STEP` / `FLAGSHIP_CTA_AB` default OFF |
 
 **Paid denominator (money truth):** `OrderPaymentConversionService` Rate A — real (non-conditional) `Payment` rows whose `tariff` is not in `config('conversion.excluded_tariffs')` (default `Расход,salary_payout,deposit,trial`); paid = status `paid|success`. Cohort by `payments.created_at`.
 

@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Teacher;
+use App\Support\FlagshipExperiments;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -170,12 +171,25 @@ class CourseCatalog extends Component
                 ->all();
         }
 
+        $nextStepByCourse = [];
+        if (FlagshipExperiments::nextStepEnabled()) {
+            $request = request();
+            foreach ($courses as $course) {
+                if (! FlagshipExperiments::isFlagship($course)) {
+                    continue;
+                }
+                $nextStepByCourse[$course->id] = FlagshipExperiments::nextStepLinks($course);
+                FlagshipExperiments::recordCardImpression($course, $request);
+            }
+        }
+
         return view('livewire.shop.course-catalog', [
             'courses' => $courses,
             'totalCount' => $totalCount,
             'sectionTotals' => $sectionTotals,
             'purchasedByCourse' => $purchasedByCourse,
             'deposit' => MarketingSetting::cached(),
+            'nextStepByCourse' => $nextStepByCourse,
         ]);
     }
 }

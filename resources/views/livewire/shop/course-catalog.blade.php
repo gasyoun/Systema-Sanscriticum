@@ -345,6 +345,7 @@
                                 :purchasedByCourse="$purchasedByCourse"
                                 :deposit="$deposit"
                                 :categoryIds="$categoryIds"
+                                :nextStep="$nextStepByCourse[$course->id] ?? []"
                                 wire:key="course-{{ $course->id }}" />
                         @endforeach
                     </div>

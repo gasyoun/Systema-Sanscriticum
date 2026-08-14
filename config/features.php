@@ -938,4 +938,20 @@ return [
     'telephony_recording' => (bool) env('TELEPHONY_RECORDING', false),
     'support_departments' => (bool) env('SUPPORT_DEPARTMENTS', false),
     'support_capacity_routing' => (bool) env('SUPPORT_CAPACITY_ROUTING', false),
+
+    /*
+     | H2762 R12 — next-step strip on ONE Kochergina catalog card.
+     | «После этого → Бюлер / тексты / рецитация». Default OFF. Isolated:
+     | other cards unchanged. Stop: n too small or layout break → hide.
+     | Rollback: CATALOG_NEXT_STEP=false. Not a revenue claim.
+     */
+    'catalog_next_step' => (bool) env('CATALOG_NEXT_STEP', false),
+
+    /*
+     | H2762 R15 — CTA label A/B on the same Kochergina course page only.
+     | One variable: «Смотреть пробный урок» vs «Записаться». Default OFF.
+     | After 30 days, if n is too thin → DEFER, do not ship a winner.
+     | Rollback: FLAGSHIP_CTA_AB=false restores the previous string.
+     */
+    'flagship_cta_ab' => (bool) env('FLAGSHIP_CTA_AB', false),
 ];
