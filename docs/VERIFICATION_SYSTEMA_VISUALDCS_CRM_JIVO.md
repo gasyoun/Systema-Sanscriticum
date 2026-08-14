@@ -1,6 +1,6 @@
 # VERIFICATION — Systema VisualDCS, CRM and literal-Jivo programme
 
-_Created: 08-08-2026 · Last updated: 08-08-2026_
+_Created: 08-08-2026 · Last updated: 14-08-2026_
 
 Parent: [PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md).
 
@@ -41,9 +41,10 @@ must all have evidence. Missing evidence is INCONCLUSIVE, never PASS.
 ### Forecasting
 
 - Open-Deal totals reconcile with pipeline; actual revenue reconciles with the qualifying Payment
-  denominator; probabilities/aging come from config.
-- Historical backtest reports unavailable history honestly and never fabricates snapshots.
-- Manager self-scope and admin all-scope match existing role gates.
+  denominator; probabilities/aging come from config. ✅ H2485 tests `SalesForecastServiceTest`.
+- Historical backtest reports unavailable history honestly and never fabricates snapshots. ✅
+  `test_backtest_labels_pre_history_windows_unavailable_without_inventing_forecast`.
+- Manager self-scope and admin all-scope match existing role gates. ✅ `SalesForecastPageTest`.
 
 ## Product evidence
 

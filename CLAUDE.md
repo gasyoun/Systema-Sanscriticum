@@ -188,6 +188,17 @@ breakdown into `OrderPaymentConversion` / its `RoleGate::finance()` gate** —
 that page deliberately excludes the `manager` role (locked by test), and this
 scoreboard's row-level self-scoping for managers requires its own surface.
 
+**CRM Wave 3 forecast is a third page** (H2485, flag `crm_sales_forecast` default
+**OFF**). `SalesForecast` (`/admin/sales-forecast`) weights open Deals by
+`config/crm_forecast.php` probabilities (never hardcode in Blade). Actuals call
+`OrderPaymentConversionService::qualifyingPaidRevenue()` — same qualifying
+Payment denominator. Manager scope reuses `RoleGate::managerSalesReport()`:
+pipeline join is `deals.assigned_to`, actuals join is
+`payments.created_by_user_id`. Backtest labels pre-journal windows unavailable
+instead of inventing snapshots. Artisan `crm:forecast-report` is read-only and
+works while the UI flag is off. Docs:
+`docs/CRM_SALES_FORECAST_METHODOLOGY_2026.md`.
+
 ### Group Recruitment (Набор курсов)
 
 H162: a paying student had no way to learn her forming group was under-enrolled

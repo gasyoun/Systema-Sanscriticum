@@ -1,6 +1,6 @@
 # ARCHITECTURE — native VisualDCS learning, CRM and full-Jivo layers
 
-_Created: 08-08-2026 · Last updated: 08-08-2026_
+_Created: 08-08-2026 · Last updated: 14-08-2026_
 
 Parent: [PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md).
 
@@ -67,8 +67,10 @@ approved campaign/follow-up. Default is draft/human approval; no AI or rule auto
 ### Wave 3 — forecasting
 
 `SalesForecastService` reads open Deals and the same qualifying Payment denominator used by
-conversion reporting. It publishes pipeline-weighted forecast, stage aging, next-action coverage,
-manager view and forecast-vs-actual. No invented revenue rows and no denominator fork.
+conversion reporting (`OrderPaymentConversionService::qualifyingPaidRevenue()`). It publishes
+pipeline-weighted forecast, stage aging, next-action coverage, manager view and
+forecast-vs-actual. Probabilities live in `config/crm_forecast.php`. No invented revenue rows
+and no denominator fork. Shipped H2485; flag `crm_sales_forecast` default OFF.
 
 ## 5. Literal-Jivo expansion after CRM
 

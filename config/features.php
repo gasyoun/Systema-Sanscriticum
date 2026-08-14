@@ -96,6 +96,15 @@ return [
     'crm_lifecycle_automation' => (bool) env('CRM_LIFECYCLE_AUTOMATION', false),
 
     /*
+     | CRM Wave 3 (H2485): pipeline-weighted sales forecast + manager dashboard.
+     | ВЫКЛ по умолчанию. Сервис и `crm:forecast-report` читают Deal/Payment
+     | и ничего не пишут; Filament `/admin/sales-forecast` виден только при ON.
+     | Вероятности/окна — config/crm_forecast.php, не в Blade.
+     | Включение — CRM_SALES_FORECAST=true + config:clear.
+     */
+    'crm_sales_forecast' => (bool) env('CRM_SALES_FORECAST', false),
+
+    /*
      | Авто-постинг ссылки на занятие в Telegram-чат группы за N минут до старта
      | (команда classes:post-group-link, P0 автоматизации «Отдела заботы»).
      | ВЫКЛЮЧЕН по умолчанию: включается флагом class_link_autopost_enabled в

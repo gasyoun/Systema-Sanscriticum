@@ -1,6 +1,6 @@
 # ROADMAP — больше продаж, нативное обучение, CRM и полный JIVO · 2026H2
 
-_Created: 07-08-2026 · Last updated: 08-08-2026_
+_Created: 07-08-2026 · Last updated: 14-08-2026_
 
 **Рамка:** AARRR (Acquisition → Activation → Revenue → Retention → Referral).
 **Контур:** samskrtam.ru/FAQ → samskrte.ru → checkout → кабинет `/dvaram` → support/повторная покупка.
@@ -96,8 +96,9 @@ _Created: 07-08-2026 · Last updated: 08-08-2026_
    production acceptance, flag inventory and 14-day readout.
 6. **CRM Wave 1 immediately after parity:** unified customer timeline + pipeline stage + next
    action + support/conversion attribution on existing Lead/Deal/FollowUpTask/inbox owners.
-7. **CRM Waves 2–3:** lifecycle automation through the existing Campaign stack, then forecasting
-   and manager dashboards over canonical Deal/Payment denominators.
+7. **CRM Waves 2–3:** lifecycle automation through the existing Campaign stack (H2484), then
+   forecasting and manager dashboards over canonical Deal/Payment denominators
+   (**H2485 shipped 14-08-2026**, flag `crm_sales_forecast` default OFF).
 8. **Literal-Jivo Wave 4+:** telephony/callback, departments and capacity routing only after the
    CRM spine and measured operator/voice volume; provider/legal packet before implementation.
 
