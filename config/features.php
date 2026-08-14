@@ -917,4 +917,13 @@ return [
      | Enable: HINDI_MY_SRS_DECK=true + config:cache.
      */
     'hindi_my_srs_deck' => (bool) env('HINDI_MY_SRS_DECK', false),
+
+    /*
+     | Curated Hindi study-chat practice (H2446). Default OFF — route
+     | /dvaram/programme/hindi/chat-practice 404s. Reads committed JSON
+     | only; never calls Telegram / Madeline. Privacy gate drops PII rows.
+     | Does not grant access. Enable: HINDI_TG_CURATED_PRACTICE=true +
+     | config:cache.
+     */
+    'hindi_tg_curated_practice' => (bool) env('HINDI_TG_CURATED_PRACTICE', false),
 ];
