@@ -125,6 +125,25 @@ final class HindiProgrammePlaylist
         return $this->graph->orderedShells('hindi');
     }
 
+    public function canAccessLesson(User $user, Lesson $lesson): bool
+    {
+        $course = $lesson->relationLoaded('course')
+            ? $lesson->course
+            : Course::query()->find($lesson->course_id);
+        if (! $course instanceof Course) {
+            return false;
+        }
+        if (! $this->orderedShells()->contains(
+            static fn (Course $shell): bool => (int) $shell->id === (int) $course->id,
+        )) {
+            return false;
+        }
+
+        return $this->accessibleLessons($user, $course)->contains(
+            static fn (Lesson $open): bool => (int) $open->id === (int) $lesson->id,
+        );
+    }
+
     public function shellLabel(Course $course): string
     {
         $title = (string) $course->title;

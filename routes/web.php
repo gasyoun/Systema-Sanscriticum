@@ -48,6 +48,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SrsController;
 use App\Http\Controllers\Student\AccessSelfServiceController;
 use App\Http\Controllers\Student\HindiProgrammePlaylistController;
+use App\Http\Controllers\Student\HindiTranscriptDrillsController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TransliterateController;
@@ -552,6 +553,12 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::get('/c/{slug}/u/{lessonId}', [StudentController::class, 'showLesson'])
         ->middleware('course.canonical')
         ->name('student.lesson');
+    Route::get('/c/{slug}/u/{lessonId}/drills', [HindiTranscriptDrillsController::class, 'show'])
+        ->middleware('course.canonical')
+        ->name('student.lesson.drills');
+    Route::post('/c/{slug}/u/{lessonId}/drills/check', [HindiTranscriptDrillsController::class, 'check'])
+        ->middleware('course.canonical')
+        ->name('student.lesson.drills.check');
 
     Route::post('/c/{slug}/u/{lessonId}/complete', [StudentController::class, 'completeLesson'])
         ->name('student.lesson.complete');

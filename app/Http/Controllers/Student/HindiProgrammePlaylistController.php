@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Services\HindiProgrammePlaylist;
+use App\Services\HindiTranscriptDrills;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -16,7 +17,7 @@ use Illuminate\View\View;
  */
 class HindiProgrammePlaylistController extends Controller
 {
-    public function hindi(Request $request, HindiProgrammePlaylist $playlist): View
+    public function hindi(Request $request, HindiProgrammePlaylist $playlist, HindiTranscriptDrills $drills): View
     {
         abort_unless($playlist->enabled(), 404);
 
@@ -24,6 +25,18 @@ class HindiProgrammePlaylistController extends Controller
         abort_unless($user !== null, 403);
 
         $items = $playlist->itemsFor($user);
+        if ($drills->enabled()) {
+            $items = $items->map(function (array $row) use ($drills): array {
+                $lesson = $row['lesson'];
+                $has = $drills->hasItems($lesson);
+                $row['has_drills'] = $has;
+                $row['drills_url'] = $has
+                    ? route('student.lesson.drills', [$row['course']->slug, $lesson->id])
+                    : null;
+
+                return $row;
+            });
+        }
 
         return view('student.programme.hindi', [
             'items' => $items,

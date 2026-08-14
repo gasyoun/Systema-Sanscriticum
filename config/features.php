@@ -882,4 +882,12 @@ return [
      | Enable: HINDI_PROGRAMME_PLAYLIST=true + config:cache.
      */
     'hindi_programme_playlist' => (bool) env('HINDI_PROGRAMME_PLAYLIST', false),
+
+    /*
+     | Hindi transcript drills (H2443): cloze / translate / vocab pick from
+     | Lesson.transcript_file. Default OFF — route /c/{slug}/u/{id}/drills 404s.
+     | Does not grant access; reuses H2441 playlist unlock rules. No LLM.
+     | Enable: HINDI_TRANSCRIPT_DRILLS=true + config:cache.
+     */
+    'hindi_transcript_drills' => (bool) env('HINDI_TRANSCRIPT_DRILLS', false),
 ];
