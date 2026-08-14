@@ -29,6 +29,7 @@ use App\Services\CertificateService;
 use App\Services\CourseContinuationBanner;
 use App\Services\CourseMaterialsArchiver;
 use App\Services\DebtPaymentResolver;
+use App\Services\HindiAttachmentDrills;
 use App\Services\HindiProgrammePlaylist;
 use App\Services\HindiTranscriptDrills;
 use App\Services\Leaderboard\LeaderboardService;
@@ -1057,7 +1058,11 @@ class StudentController extends Controller
 
         $hindiDrillsUrl = null;
         $hindiDrills = app(HindiTranscriptDrills::class);
-        if ($hindiDrills->enabled() && $hindiDrills->isHindiLesson($lesson) && $hindiDrills->hasItems($lesson)) {
+        $hindiAttachments = app(HindiAttachmentDrills::class);
+        $hindiOk = $hindiDrills->isHindiLesson($lesson);
+        $hasTranscriptItems = $hindiDrills->enabled() && $hindiOk && $hindiDrills->hasItems($lesson);
+        $hasAttachmentPath = $hindiAttachments->enabled() && $hindiOk && $hindiAttachments->hasPracticePath($lesson);
+        if ($hasTranscriptItems || $hasAttachmentPath) {
             $hindiDrillsUrl = route('student.lesson.drills', [$course->slug, $lesson->id]);
         }
 

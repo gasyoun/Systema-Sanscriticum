@@ -47,7 +47,13 @@ function hindiTranscriptDrills() {
                 {{ $lesson->title }}
             </h1>
             <p class="text-gray-500 text-base leading-relaxed max-w-2xl">
-                Задания собраны из расшифровки этого занятия: вставьте пропущенное слово хинди или переведите.
+                @if(!empty($attachmentsEnabled) && !empty($transcriptEnabled))
+                    Задания собраны из расшифровки и файлов этого занятия: вставьте пропущенное слово хинди или переведите.
+                @elseif(!empty($attachmentsEnabled))
+                    Задания собраны из файлов этого занятия: вставьте пропущенное слово хинди или переведите. Если текст из файла прочитать нельзя — откройте раздатку ниже.
+                @else
+                    Задания собраны из расшифровки этого занятия: вставьте пропущенное слово хинди или переведите.
+                @endif
             </p>
             <div class="mt-6 flex flex-wrap gap-3">
                 <a href="{{ $lessonUrl }}"
@@ -65,6 +71,31 @@ function hindiTranscriptDrills() {
             </div>
         </div>
     </div>
+
+    @if(!empty($attachmentsEnabled) && !empty($handouts))
+        <section class="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 mb-6" data-testid="hindi-attachment-handouts">
+            <h2 class="text-sm font-extrabold uppercase tracking-widest text-gray-400 mb-3">Раздатка</h2>
+            <ul class="space-y-2">
+                @foreach($handouts as $handout)
+                    <li class="flex items-center justify-between gap-3" data-testid="hindi-attachment-handout" data-extractable="{{ $handout['extractable'] ? '1' : '0' }}" data-reason="{{ $handout['reason'] ?? '' }}">
+                        <span class="min-w-0 truncate text-sm font-semibold text-gray-800">{{ $handout['name'] }}</span>
+                        <a href="{{ $handout['url'] }}"
+                           target="_blank"
+                           rel="noopener"
+                           class="shrink-0 text-sm font-extrabold text-brand hover:underline"
+                           data-testid="hindi-attachment-handout-link">
+                            Открыть
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+            @if(collect($handouts)->contains(fn ($h) => ($h['reason'] ?? '') === 'pdf_no_extract'))
+                <p class="mt-3 text-xs text-gray-500" data-testid="hindi-attachment-pdf-skip">
+                    PDF без текстового слоя здесь не разбирается. Откройте раздатку и повторите слова из неё.
+                </p>
+            @endif
+        </section>
+    @endif
 
     @forelse($items as $item)
         <article class="bg-white rounded-2xl border border-gray-100 p-5 md:p-6 mb-4"
@@ -117,7 +148,11 @@ function hindiTranscriptDrills() {
         </article>
     @empty
         <div class="bg-white rounded-2xl border border-gray-100 p-8 text-gray-500" data-testid="hindi-drills-empty">
-            Из расшифровки этого занятия пока не получилось собрать упражнения. Откройте текст занятия и повторите слова оттуда.
+            @if(!empty($attachmentsEnabled) && !empty($handouts))
+                Из файлов этого занятия упражнения автоматически не собрались. Откройте раздатку выше и повторите слова оттуда.
+            @else
+                Из расшифровки этого занятия пока не получилось собрать упражнения. Откройте текст занятия и повторите слова оттуда.
+            @endif
         </div>
     @endforelse
 </div>

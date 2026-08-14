@@ -899,4 +899,13 @@ return [
      | Enable: HINDI_TRANSCRIPT_DRILLS=true + config:cache.
      */
     'hindi_transcript_drills' => (bool) env('HINDI_TRANSCRIPT_DRILLS', false),
+
+    /*
+     | Hindi attachment drills (H2444): cloze / translate from files already
+     | on the lesson (attachments + teacher homework files). txt/md/docx
+     | extract; PDF only if a sibling .txt exists. Default OFF.
+     | Does not grant access, scrape Telegram, or OCR.
+     | Enable: HINDI_ATTACHMENT_DRILLS=true + config:cache.
+     */
+    'hindi_attachment_drills' => (bool) env('HINDI_ATTACHMENT_DRILLS', false),
 ];
