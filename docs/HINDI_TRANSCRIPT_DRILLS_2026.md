@@ -53,14 +53,22 @@ Works with the flag OFF. Answers are redacted (`***`).
 ✅ **ON 14-08-2026.** `HINDI_TRANSCRIPT_DRILLS=true` + `config:cache` on
 `319f33e6`. Rollback: `false` + `config:cache`.
 
-Live transcripts (only two Hindi lessons have `transcript_file` today):
+Live transcripts n8n already pushed (ZOOM 1.4 → `POST /api/lessons/{id}/transcript`):
 
 | Lesson | Course | Items | HTTP |
 |---|---|---|---|
 | 1863 Костина нач. 1 | 401 `hindi-1-sr800-2026` | 12 cloze | paid user 6738 → 200; guest → 302 |
 | 1854 Костина нач. 2 | 402 | 11 cloze + 1 vocab_pick | probe only |
+| 1853 Интенсив хинди | 438 | already on disk | n8n exec 830 |
 
-User 6494 (playlist 36) has no `transcript_file` on owned lessons, so her
-playlist rows do not show «Упражнения» until those transcripts land.
+**Backfill 14-08-2026 (no human, same n8n path):** 89 published Hindi lessons
+have YouTube and empty `transcript_file` (416: 12, 356: 36, 366: 24, plus 18
+on 401/402). Drive course folders hold only the ~1 KB TOC `.txt` n8n uploads,
+not Deepgram `words[]`. n8n retains 28 ZOOM executions; the only Hindi
+Deepgram payloads still in SQLite are 1853/1854/1863, all already ingested.
+A yt-dlp + Deepgram nova-3 retry for lesson 938 returned
+`ASR_PAYMENT_REQUIRED` (project has no credits and no overage). New Zoom
+classes will ingest automatically when Deepgram can bill; older shells stay
+dark until then.
 
 _Dr. Mārcis Gasūns_
