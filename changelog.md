@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.89.34] - 2026-08-14
 ### Added
 - **H2485: CRM Wave 3 sales forecast and manager dashboard.** [`SalesForecastService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Crm/SalesForecastService.php) weights open Deals by stage probabilities from [config/crm_forecast.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/crm_forecast.php) (never Blade). Actuals reuse `OrderPaymentConversionService::qualifyingPaidRevenue()` — same `conversion.excluded_tariffs` denominator as manager-sales. Filament [`SalesForecast`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/SalesForecast.php) (`/admin/sales-forecast`) shows pipeline, aging, next-action coverage, manager scope and backtest; windows before Deal-journal start are `unavailable` with a null forecast, not a fabricated zero. `crm:forecast-report` is read-only and works while the UI is off. Flag `crm_sales_forecast` default **OFF**. Methodology: [docs/CRM_SALES_FORECAST_METHODOLOGY_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_SALES_FORECAST_METHODOLOGY_2026.md). Executor: Grok 4.6 (`grok-4.6`).
 
