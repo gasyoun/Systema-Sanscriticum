@@ -10,6 +10,7 @@ use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\HindiTranscriptDrillExtractor;
 use App\Services\HindiTranscriptDrills;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -215,7 +216,7 @@ class HindiTranscriptDrillsTest extends TestCase
 
     public function test_cyrillic_whisper_hindi_is_a_cloze_target(): void
     {
-        $extractor = new \App\Services\HindiTranscriptDrillExtractor();
+        $extractor = new HindiTranscriptDrillExtractor;
         $items = $extractor->extract([
             [
                 'text' => 'Говорим Намасте и кланяемся.',
@@ -230,7 +231,7 @@ class HindiTranscriptDrillsTest extends TestCase
 
     public function test_english_classroom_loans_are_not_drill_targets(): void
     {
-        $extractor = new \App\Services\HindiTranscriptDrillExtractor();
+        $extractor = new HindiTranscriptDrillExtractor;
         $items = $extractor->extract([
             [
                 'text' => 'Я тут вижу пользователя Zoom и ссылку в Google документ.',

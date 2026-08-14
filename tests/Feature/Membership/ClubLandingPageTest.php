@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Membership;
 
-use App\Models\Tariff;
+use App\Models\User;
 
 /**
  * Лендинг + прайсинг клуба (H2645): страница живёт только при включённом
@@ -132,7 +132,7 @@ final class ClubLandingPageTest extends MembershipTestCase
     public function test_logged_in_student_is_routed_to_cabinet(): void
     {
         $this->makeTariffs();
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
 
         $this->actingAs($user)->get('/klub')->assertOk()
             ->assertSee('Открыть кабинет')
