@@ -61,6 +61,7 @@ No mandatory lift is invented; scale/hold/revert follows comparable observed coh
 - Live volume is re-read from `support:parity-report` / `crm:forecast-report` before any
   phase unlocks. Missing evidence is INCONCLUSIVE, never PASS.
 - No production number, call, recording or contract in this pass.
+- **H2749 (14-08-2026 23:18 MSK) STOP.** Live `FollowUpTask` type=call = 0 (created / done / all-time). H2747 not shipped. `telephony_pstn` and `telephony_recording` stay false. No adapter PR. See packet section 10.
 
 ## Stop/rollback
 
