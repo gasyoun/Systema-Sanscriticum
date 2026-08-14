@@ -19,7 +19,7 @@ _Created: 14-08-2026 · Last updated: 14-08-2026_
 
 | # | Улучшение | Зачем | Статус |
 |---|---|---|---|
-| 1 | Re-run the 30-day volume tables when Phase 1 ships | Thresholds go stale | parked (next implementer) |
+| 1 | Re-run the 30-day volume tables when Phase 1 ships | Thresholds go stale | H2749 re-ran 14-08-2026 23:18 MSK — still below gate; re-run after H2747 is live 30 d |
 | 2 | Record Q-law-4/5/6 answers next to the geo brief | Legal residuals are load-bearing | parked (human lawyer) |
 | 3 | Add carrier DPA path + storage-region fact | Unlocks Phase 2 | parked |
 | 4 | Replace list prices if a human gets a written quote | Public list ≠ contract | parked |
@@ -48,5 +48,6 @@ _Created: 14-08-2026 · Last updated: 14-08-2026_
 | Дата | Изменение | Модель |
 |---|---|---|
 | 14-08-2026 | first packet (H2486) | Grok 4.6 (`grok-4.6`) |
+| 14-08-2026 | H2749 Phase 2 STOP: live re-measure + DPA gap; no adapter / number | Grok 4.6 (`grok-4.6`) |
 
 _Dr. Mārcis Gasūns_

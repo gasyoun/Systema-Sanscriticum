@@ -12,7 +12,7 @@ Privacy surface: [BRIEF_PRESENCE_152FZ_GEO_PROVIDER_ADJUDICATION_2026-07.md](htt
 
 **HOLD. Do not activate PSTN, Jivo telephony, departments or capacity routing.**
 
-The CRM spine (Waves 1–3) exists. Measured school traffic is a Telegram-heavy inbox with **two** web responders in 30 days, **zero** conversation phone numbers, **zero** recorded voice events, and **one** closed thread. Jivo's own research doc already parked telephony and departments at this scale ([jivo.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/jivo.md)). This packet locks the adapter contracts and the numbers that would un-park each layer.
+The CRM spine (Waves 1–3) exists. Measured school traffic is a Telegram-heavy inbox with **two** web responders in 30 days, **zero** conversation phone numbers, **zero** recorded voice events, and **one** closed thread. H2749 re-measured the same day (23:18 MSK) and **stopped** Phase 2: 0 completed `FollowUpTask` type=call, H2747 not live. See section 10. Jivo's own research doc already parked telephony and departments at this scale ([jivo.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/jivo.md)). This packet locks the adapter contracts and the numbers that would un-park each layer.
 
 A human still has to sign a contract and flip a flag before any later implementation handoff may buy a number or turn a flag on. This packet is not that sign-off.
 
@@ -254,7 +254,87 @@ Thresholds are in [`config/telephony.php`](https://github.com/gasyoun/Systema-Sa
 - [x] Flags default OFF + test
 - [x] Canary / rollback (section 7)
 - [x] Separately mintable backlog (section 8)
+- [x] H2749 Phase 2 re-measure (14-08-2026 23:18 MSK) — **STOP** (0 completed call tasks vs ≥20; H2747 not live). Section 10.
+- [x] DPA / storage-region note — **absent**; recording stays OFF (section 10.3)
 - [ ] Human contract approval / flag flip — **not this session**
 - [ ] Q-law-4/5/6 — parked for a lawyer; they do not block Phase 0 design
+
+
+## 10. H2749 Phase 2 re-measure (14-08-2026 23:18 MSK) — STOP
+
+H2749 (Grok 4.6 `grok-4.6`) re-ran the packet volume half on prod `/var/www/html` the same calendar day as H2486. **Phase 2 is not implemented.** No number was purchased. No `CallProvider` landed. Flags stay OFF.
+
+### 10.1 Gate check
+
+| Gate | Threshold ([config/telephony.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/telephony.php)) | Live 14-08-2026 23:18 MSK | Result |
+|---|---|---|---|
+| H2747 (Sonnet 5) consented callback request live 30 d | Phase 1 shipped and `TELEPHONY_CALLBACK_REQUEST` on for 30 days | H2747 still queued; no PR; `telephony_callback_request=false` | FAIL |
+| Completed `FollowUpTask` `type=call` in 30 d | ≥ 20 (`activation.completed_manual_callbacks_per_30d`) | **0** created, **0** with `done_at`, **0** all-time | FAIL |
+| Q-law-5 DPA + storage-region fact | Written DPA + policy §7.3 telephony processor + RF storage region | No DPA in repo; policy still names payments / hosting / mail only | FAIL (recording) |
+
+U1 (callback requests ≥8 / 14 d) also fails: 0 call tasks exist.
+
+### 10.2 Support volume (same command as section 1)
+
+`php artisan support:parity-report --days=30 --json` at 2026-08-14T23:18:46+03:00. Window 16-07 → 14-08.
+
+| Channel | Conversations | Incoming | Outgoing | Unanswered | Unresolved >24h | Avg first response |
+|---|---:|---:|---:|---:|---:|---:|
+| telegram | 311 | 924 | 572 | 76 | 148 | 1 986 s |
+| telegram_bot | 9 | 12 | 12 | 0 | 6 | 18 s |
+| web | 4 | 6 | 5 | 0 | 2 | 5 s |
+| vk | 3 | 3 | 3 | 0 | 1 | 4 s |
+| **Total** | **327** | **945** | **592** | **76** | **157** | — |
+
+| Slice | Value |
+|---|---:|
+| `FollowUpTask` rows (all types) | 2 |
+| `FollowUpTask` `type=call` | **0** |
+| `FollowUpTask` `type=call` with `done_at` in 30 d | **0** |
+| `support_conversations.contact_phone` filled | **0** |
+| `features.telephony_callback_request` | false |
+| `features.telephony_pstn` | false |
+| `features.telephony_recording` | false |
+
+The inbox is still Telegram-heavy (~31 rollup incoming / day). Voice demand is still unmeasured. [jivo.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/jivo.md)'s 1–2 people / 1–100 messages/day line still holds.
+
+### 10.3 DPA / storage-region (Q-law-5) — recording stays OFF
+
+This is **not** a lawyer's opinion.
+
+| Fact | Source | Implication |
+|---|---|---|
+| Policy §1.5: processing and storage of personal data only on RF territory | [public/docs/privacy.pdf](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/docs/privacy.pdf) ред. 22-01-2026; same quote in [BRIEF_PRESENCE_152FZ_GEO_PROVIDER_ADJUDICATION_2026-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/BRIEF_PRESENCE_152FZ_GEO_PROVIDER_ADJUDICATION_2026-07.md) section 2.2 | A telephony processor whose recording or transcript store is outside the RF is blocked until a human lawyer answers Q-law-5 |
+| Policy §7.3 names payment systems, hosting, mail — **not** a telephony processor | same | Adding Voximplant or Mango as a processor needs a policy edit, not just a flag flip |
+| Policy §7.4: third-party transfer only under a concluded contract with confidentiality clauses | same | Need a written DPA (поручение / договор обработки) before any recording URL is accepted |
+| Policy §9.2: explicit checkbox for consent-gated purposes; voice can be biometric (ст. 11 152-ФЗ) if used to identify | packet section 5 T1 / Q-law-6 | Recording flag stays OFF; no default-on; no QA-scoring / voice biometrics |
+| Voximplant storage region | not in repo; carrier docs do not substitute for a signed DPA | Preferred *carrier* if Phase 2 later unlocks; **not** authorized to hold recordings |
+| Mango OFFICE | RF software registry + ISO 27001 (vendor claim, packet section 3 E) | Stronger RF story; still needs a written DPA and a §7.3 name; overkill at this volume |
+| Jivo default AON `+7 499 350-43-27` | packet section 3 B, `config/telephony.php` `forbidden_default_aon` | Still forbidden. School must be the subscriber if a later handoff buys a number |
+
+**Recording stays OFF.** `TELEPHONY_RECORDING` remains `false`. Do not copy audio into the app DB / S3 / git.
+
+### 10.4 Canary / rollback — PSTN lane not armed
+
+Section 7 table is unchanged. This pass does **not** arm the PSTN or recording canaries.
+
+| Lane | Armed this pass? | Rollback if someone flips the env anyway |
+|---|---|---|
+| Callback request | No — H2747 has not shipped | Flag false + `config:cache`. Rows stay |
+| PSTN | **No.** No adapter, no number, no webhook route | N/A. If a later PR adds the webhook: flag-off must 404; do not port a number away in the same hour |
+| Recording | **No.** Q-law-5 open | Flag false. Leave carrier TTL to expire |
+| Departments / capacity | No | Flag false |
+
+Hard stops from section 7 still apply: privacy exposure, identity/thread ambiguity, money/access writes, production send without approval, auto-dial debtors.
+
+### 10.5 What a later Phase 2 session must show
+
+Re-mint only when **all three** are true:
+
+1. H2747 merged **and** `TELEPHONY_CALLBACK_REQUEST` live for 30 days.
+2. `FollowUpTask::TYPE_CALL` with `done_at` in the last 30 days ≥ `config('telephony.activation.completed_manual_callbacks_per_30d')` (20).
+3. For recording only: Q-law-5 answered + DPA + policy §5/§7 edit. PSTN without recording can proceed after (1)+(2) and a written storage-region fact for signaling metadata; audio still OFF.
+
+Until then: do not buy a number, do not implement `CallProvider`, do not accept a Jivo VATS contract.
 
 _Dr. Mārcis Gasūns_
