@@ -101,8 +101,9 @@ final class ClubLandingPageTest extends MembershipTestCase
 
         $response = $this->get('/klub')->assertOk();
 
-        // Третий тариф не назван и не оценён.
-        $response->assertDontSee('5 000');
+        // Третий тариф не назван и не оценён: продаются ровно три тарифа из БД
+        // (наивный assertDontSee('5 000') ловил подстроку в «15 000»).
+        $this->assertSame(3, substr_count($response->getContent(), '/checkout/'));
         $response->assertDontSee('готовится');
 
         // Корпус не упоминается ни в каком регистре.
