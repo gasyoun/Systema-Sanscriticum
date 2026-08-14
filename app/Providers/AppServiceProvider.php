@@ -162,7 +162,7 @@ class AppServiceProvider extends ServiceProvider
         ContentCandidate::observe(ContentCandidateObserver::class);
 
         // H2365: site-wide free-intro / trial CTA date on all shop surfaces.
-        // Empty source → partial shows honest FALLBACK_LABEL (no invented dates).
+        // Empty source → banner omits the date line (H2760). Never invent a date.
         View::composer('layouts.shop', function ($view): void {
             if (array_key_exists('nextIntro', $view->getData())) {
                 return;

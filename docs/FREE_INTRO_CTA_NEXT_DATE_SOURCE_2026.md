@@ -1,12 +1,13 @@
 # Free-intro CTA — next-date source of truth (H2365)
 
-_Created: 07-08-2026 · Last updated: 07-08-2026_
+_Created: 07-08-2026 · Last updated: 15-08-2026_
 
 ## Goal
 
-Site-wide shop banner shows a **live** next intro date (or an honest empty-state
-label). No hard-coded promotional dates. One calendar — Systema DB — not a second
-ORS/WordPress calendar that drifts.
+Site-wide shop banner shows a **live** next intro date. Empty upcoming schedule
+omits the date line (H2760) — no «дата уточняется» placeholder. No hard-coded
+promotional dates. One calendar — Systema DB — not a second ORS/WordPress calendar
+that drifts.
 
 ## Source of truth
 
@@ -14,7 +15,7 @@ ORS/WordPress calendar that drifts.
 |---|---|---|---|
 | 1 | Course trial session | `courses.trial_schedule_id` → `schedules.start` for `is_visible` courses | Designated intro/trial class already wired to trial purchase |
 | 2 | Landing webinar | `landing_pages.webinar_date` (+ optional `webinar_label`) for `is_active` rows | Free webinar landings / lead forms |
-| empty | — | — | UI shows **`дата уточняется`** (`NextIntroSession::FALLBACK_LABEL`) |
+| empty | — | — | UI **omits** the date line (H2760). `FALLBACK_LABEL` is not rendered |
 
 Resolver: [`App\Support\NextIntroSession`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/NextIntroSession.php).
 
@@ -28,7 +29,7 @@ Cache: 120 s key `shop_next_intro_session_v1` (disabled in `testing`). Call
 | Case | Banner |
 |---|---|
 | Future trial schedule or webinar exists | «Ближайшее — {d MMMM Y, H:i}» + CTA to course or landing |
-| No future row | «Ближайшая дата — дата уточняется» + CTA to catalog |
+| No future row | Date line omitted + CTA «Смотреть курсы» |
 
 Never invents a date string when the source is empty.
 

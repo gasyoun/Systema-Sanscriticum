@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2760: hide stale storefront CTA dates and empty pay amounts.** Homepage / promo cards relabel a past dated webinar (e.g. «17 июня») as «Запись вебинара» and omit past `webinar_date` lines. Shop free-intro banner omits the date line when nothing is upcoming — no «дата уточняется». Book/trial modals do not emit «Оплатить ₽» / «Сумма ₽» without a number; pay control stays closed until `amount > 0`. Display-only: no grant or price path change. Tests: `StorefrontEventTest`, `StorefrontStaleCtaTest`, `FreeIntroBannerTest`. Executor: Grok 4.5 (`grok-4.5`).
+
 ## [1.89.51] - 2026-08-15
 ### Added
 - **H2750: Phase 3–4 departments / capacity STOP.** Re-measured prod 14-08-2026 23:49 MSK: 0 staff closing ≥10 threads / 30 d (need ≥3); 1 assignee; 1 closed thread; 14-day median first response 244 s (need >900 s on an assigned queue; assigned n = 0). No extra `queue` values, no Helpdesk department filter, no assignment cap. `SUPPORT_DEPARTMENTS` / `SUPPORT_CAPACITY_ROUTING` stay OFF. Evidence: packet [docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md) section 11. Executor: Grok 4.6 (`grok-4.6`).

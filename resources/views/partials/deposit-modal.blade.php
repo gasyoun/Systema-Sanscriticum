@@ -1,7 +1,8 @@
 {{-- Глобальная модалка «Забронировать курс».
      Включается один раз на странице через @include('partials.deposit-modal', ['deposit' => $deposit]).
      Триггер — window-событие `open-deposit-modal` с detail { action, title, amount }.
-     Сумма — per-course, прилетает в evente.detail.amount. --}}
+     Сумма — per-course, прилетает в evente.detail.amount.
+     H2760: pay control is not in the static HTML until amount > 0. --}}
 @if(($deposit ?? null)?->deposit_enabled)
     <div x-data="{
             open: false,
@@ -18,7 +19,7 @@
             action = $event.detail.action;
             courseTitle = $event.detail.title;
             amount = Number($event.detail.amount) || 0;
-            open = true;
+            open = amount > 0;
          "
          x-on:keydown.escape.window="open = false"
          class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
@@ -46,8 +47,10 @@
 
                 <p class="text-sm text-slate-400 leading-relaxed">
                     Бронируете курс <span class="font-bold text-white" x-text="courseTitle"></span>.
-                    Сумма <span class="font-bold text-brand"><span x-text="amountFormatted"></span> ₽</span>
-                    будет зачтена в стоимость тарифа при последующей оплате.
+                    <span x-show="amount > 0" x-cloak>
+                        Сумма <span class="font-bold text-brand" x-text="amountFormatted + ' ₽'"></span>
+                        будет зачтена в стоимость тарифа при последующей оплате.
+                    </span>
                 </p>
 
                 {{-- Главный мотив: предоплата ≠ ожидание. Открываются открытые уроки всей школы. --}}
@@ -82,9 +85,11 @@
                 @endguest
 
                 <button type="submit"
+                        x-show="amount > 0"
+                        x-cloak
                         class="w-full flex justify-center items-center py-3.5 px-4 bg-brand hover:bg-brand-hover text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-brand/20">
                     <i class="fas fa-credit-card mr-2"></i>
-                    Оплатить <span class="ml-1" x-text="amountFormatted"></span>&nbsp;₽
+                    <span x-text="amount > 0 ? ('Оплатить ' + amountFormatted + ' ₽') : ''"></span>
                 </button>
 
                 <p class="text-center text-[11px] text-slate-500 pt-1">

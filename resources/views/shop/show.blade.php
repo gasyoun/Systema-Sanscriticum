@@ -909,6 +909,10 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 
-@include('partials.deposit-modal', ['deposit' => $deposit])
-@include('partials.trial-modal')
+@if(! empty($showDepositCta))
+    @include('partials.deposit-modal', ['deposit' => $deposit])
+@endif
+@if(! empty($showTrialCta))
+    @include('partials.trial-modal')
+@endif
 @endsection
