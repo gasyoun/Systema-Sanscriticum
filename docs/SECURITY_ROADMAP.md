@@ -1,6 +1,6 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 10-08-2026_
+_Created: 03-07-2026 · Last updated: 14-08-2026_
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
@@ -273,7 +273,21 @@ once the known-defect backlog is drained so the baseline is clean).
   [docs/money-core-adversarial-review.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/money-core-adversarial-review.md)
   with cadence (per money-core release + quarterly, not per-PR) and the
   findings-to-PR discipline. → **[H081](#handoffs)**
-- [ ] Keep Dependabot auto-merge (already deployed) green so dependency CVEs close without a human.
+- [x] Keep Dependabot auto-merge (already deployed) green so dependency CVEs close without a human.
+  - ✅ **Verified + unblocked** (14-08-2026, Grok 4.6 `grok-4.6`,
+    [H2476](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2476-Grok_Systema-Sanscriticum_security-w3-dependabot-auto-merge-green_08.08.26.md)):
+    0 open Dependabot PRs; 0 open Dependabot alerts. Workflow
+    [.github/workflows/dependabot-auto-merge.yml](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/dependabot-auto-merge.yml)
+    still patch/minor-only (no force-merge of majors). Last queue (10-08-2026)
+    merged [#1580](https://github.com/gasyoun/Systema-Sanscriticum/pull/1580)–[#1583](https://github.com/gasyoun/Systema-Sanscriticum/pull/1583)
+    after a human armed auto-merge; CodeQL split [#1584](https://github.com/gasyoun/Systema-Sanscriticum/pull/1584)–[#1586](https://github.com/gasyoun/Systema-Sanscriticum/pull/1586)
+    stayed closed (grouped in [dependabot.yml](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/dependabot.yml)).
+    Root cause of the red path: Approve hard-failed with
+    `GitHub Actions is not permitted to approve pull requests` (repo
+    `can_approve_pull_request_reviews=false`; GTD `@DO` still open for the
+    org toggle) because [PR #1109](https://github.com/gasyoun/Systema-Sanscriticum/pull/1109)
+    dropped `|| true`. Approve is now `continue-on-error` so Enable auto-merge
+    still runs. Next weekly scan Monday 08:00 Europe/Moscow + 7-day cooldown.
 
 **Exit criterion:** a new injection or obvious access defect in PHP is caught by CI before
 merge; the adversarial review is a scheduled, documented step rather than a one-off.
@@ -366,6 +380,9 @@ Agent-doable Wave-1/Wave-3 work is packaged as executable handoffs in
   [H080-Opus_Systema-Sanscriticum_systema_security_exposure_purge_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H080-Opus_Systema-Sanscriticum_systema_security_exposure_purge_03.07.26.md)
 - **H081** — Wave 3 automated defense (PHP SAST CI job + recurring adversarial money-core review harness).
   [H081-Sonnet_Systema-Sanscriticum_systema_security_sast_and_review_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H081-Sonnet_Systema-Sanscriticum_systema_security_sast_and_review_03.07.26.md)
+- **H2476** — Wave 3 Dependabot auto-merge keep-green (14-08-2026): queue empty, Approve
+  no longer blocks Enable auto-merge.
+  [H2476-Grok_Systema-Sanscriticum_security-w3-dependabot-auto-merge-green_08.08.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2476-Grok_Systema-Sanscriticum_security-w3-dependabot-auto-merge-green_08.08.26.md)
 - **H071** — Wave 2 money/access findings (pre-existing).
   [H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
 
