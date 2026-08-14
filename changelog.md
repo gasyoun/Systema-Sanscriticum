@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.89.24] - 2026-08-14
 ### Added
 - **H2495 Grammar Lab G4: hybrid entitlement, sandbox matrix, consented pilot instrumentation.** `GrammarLabAccess::canUse()` is unchanged as the single product question. Course ownership still reads normalized paid keys; standalone subscription and time-bounded admin/pilot grants are `grammar_lab_entitlements` rows written by `GrammarLabEntitlementService` from `Payment::processSuccessfulPayment()` and PayPal subscription webhooks (activate → grant, cancel/expire → revoke). `php artisan grammar-lab:rehearse-entitlement` walks guest / unentitled / course / subscription / revoked / expired / admin-grant (dry-run default, `--apply` is sandbox-only). Pilot consent at `/dvaram/grammar-lab/pilot` is behind `GRAMMAR_LAB_PILOT` (default OFF); events stay in Systema; `grammar-lab:pilot-report` emits anonymized rates with exact denominators. Activation packet: [docs/GRAMMAR_LAB_G4_ACTIVATION_PACKET.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GRAMMAR_LAB_G4_ACTIVATION_PACKET.md). No production charge, flag flip, or cohort launch. Executor: Grok 4.6 (`grok-4.6`).
 
