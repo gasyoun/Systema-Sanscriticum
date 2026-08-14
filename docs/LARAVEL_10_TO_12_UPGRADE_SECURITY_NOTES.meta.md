@@ -1,6 +1,6 @@
 # LARAVEL_10_TO_12_UPGRADE_SECURITY_NOTES.meta.md — метадок
 
-_Created: 09-08-2026 · Last updated: 09-08-2026_
+_Created: 09-08-2026 · Last updated: 14-08-2026_
 
 Компаньон-метадок к
 [docs/LARAVEL_10_TO_12_UPGRADE_SECURITY_NOTES.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/LARAVEL_10_TO_12_UPGRADE_SECURITY_NOTES.md)
@@ -48,8 +48,8 @@ _Created: 09-08-2026 · Last updated: 09-08-2026_
   надо перечитывать, а не доверять ему.
 - Живой probe прода зафиксировал версии на 09-08-2026; документ не следит за прод-деплоем и
   не узнает, если прод откатят.
-- Документ не покрывает два оставшихся пункта Волны 4 (dependency posture review,
-  deploy-surface review) — они остаются открытыми в роадмапе.
+- Документ больше не утверждает, что dependency posture открыт — H2479 закрыл
+  его 14-08-2026. Остаётся только deploy-surface review (H2480).
 
 ## Intended use / known misuse (Назначение и антипаттерны)
 

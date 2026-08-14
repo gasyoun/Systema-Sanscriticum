@@ -53,3 +53,29 @@ updates:
     open-pull-requests-limit: 5
     cooldown:
       default-days: 7
+
+  # H2479: root npm Dependabot never opened version-update PRs for the
+  # Capacitor wrapper or the lecture-builder sidecar, even though security
+  # alerts #18–#27 / #38–#41 already fired on those manifests. Same cadence
+  # and cooldown as the root ecosystems so auto-merge (H2476) can take them.
+  - package-ecosystem: npm
+    directory: /mobile
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: Europe/Moscow
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: pip
+    directory: /lecture-builder
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: Europe/Moscow
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7

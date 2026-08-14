@@ -343,8 +343,19 @@ Overlaps the general roadmap's Laravel-11 item — this track owns the **securit
   prod nginx serves via `php8.3-fpm.sock`, php-fpm and Horizon workers run PHP 8.3.32
   (confirmed live 09-08-2026). Runbook:
   [docs/php-8.3-upgrade.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/php-8.3-upgrade.md) (superseded/historical).
-- [ ] **Dependency posture review** — audit `composer.lock`/`package-lock.json` for abandoned or
-  known-vulnerable packages once Dependabot alerts populate; pin and update.
+- [x] **Dependency posture review** — ✅ done 14-08-2026 under **H2479** (Grok 4.6
+  `grok-4.6`):
+  [docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md).
+  Re-verified on `origin/main` `520bbbad`: `composer audit --locked` reports
+  empty advisories and empty abandoned; root and `mobile/` `npm audit
+  --package-lock-only` report 0 vulnerabilities; Dependabot open-alert list
+  is empty (40 historical alerts, all `fixed`, including two critical
+  PhpSpreadsheet CVEs now locked at 1.30.6). No Packagist-abandoned direct
+  dep. Residual this PR: Dependabot now watches `/mobile` (npm) and
+  `/lecture-builder` (pip); CI gained a mobile lockfile audit job. Won't-fix
+  this pass: `jenssegers/agent` v2.6.4 (last tag 13-06-2020, telemetry-only
+  caller, not abandoned), Filament 3→5, Guzzle 7→8, and the H2529 `vcs`
+  forks (already tracked).
 - [ ] **Deploy-surface review** — confirm `deploy.sh` / `docker-compose.yml` never echo secrets
   to logs and that prod secrets come only from a non-committed `.env`.
 
@@ -383,6 +394,10 @@ Agent-doable Wave-1/Wave-3 work is packaged as executable handoffs in
 - **H2476** — Wave 3 Dependabot auto-merge keep-green (14-08-2026): queue empty, Approve
   no longer blocks Enable auto-merge.
   [H2476-Grok_Systema-Sanscriticum_security-w3-dependabot-auto-merge-green_08.08.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2476-Grok_Systema-Sanscriticum_security-w3-dependabot-auto-merge-green_08.08.26.md)
+- **H2479** — Wave 4 dependency posture review (14-08-2026): 0 open alerts,
+  0 Composer/npm advisories, residual Dependabot + CI coverage for
+  `mobile/` and `lecture-builder/`.
+  [H2479-Grok_Systema-Sanscriticum_security-w4-dependency-posture-review_08.08.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2479-Grok_Systema-Sanscriticum_security-w4-dependency-posture-review_08.08.26.md)
 - **H071** — Wave 2 money/access findings (pre-existing).
   [H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
 
