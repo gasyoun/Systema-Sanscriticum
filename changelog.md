@@ -4,7 +4,7 @@
 
 
 ### Fixed
-- **H2443 follow-up: YouTube `ru-orig` captions ingest without becoming fake Hindi drills.** n8n has no further Deepgram payloads (Deepgram `ASR_PAYMENT_REQUIRED`, [issue #1692](https://github.com/gasyoun/Systema-Sanscriticum/issues/1692)). Older Hindi YouTube shells get auto-captions as `transcript_file` for the player. Lesson 938 measured 0 Devanagari; Latin hits were Zoom/Google/Telegram. Extractor stops those loans; drill cache key bumped to `v2`. Executor: Grok 4.6 (`grok-4.6`).
+- **H2443 follow-up: YouTube `ru-orig` never becomes «Упражнения».** 89 Hindi shells now have `transcript_file` from YouTube auto-captions (player only). `metadata.source=youtube-auto-ru-orig` returns zero drill items (ASR mixes English/Tamil/Bengali). Cache key `v3`. Deepgram still required for real Hindi drills ([issue #1692](https://github.com/gasyoun/Systema-Sanscriticum/issues/1692)). Executor: Grok 4.6 (`grok-4.6`).
 
 ## [1.89.33] - 2026-08-14
 ### Fixed

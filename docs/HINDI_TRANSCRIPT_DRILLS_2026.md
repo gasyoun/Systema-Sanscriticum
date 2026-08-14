@@ -70,11 +70,11 @@ Deepgram on the n8n box returns `ASR_PAYMENT_REQUIRED` — Ivan:
 
 Older YouTube shells have auto-captions (`ru-orig`). Those are ingested as
 `transcript_file` for the lesson player (same Deepgram-shaped JSON the
-parser already reads). YouTube ASR is Russian classroom speech: lesson 938
-measured 0 Devanagari tokens; the only Latin hits were `google` / `telegram`
-/ `zoom` / `iphone` / `marina` / `pdf`. The extractor now stops those
-loans, so «Упражнения» stays hidden until a Deepgram (or other Hindi-token)
-transcript lands. New Zoom classes ingest automatically once Deepgram can
-bill.
+parser already reads). YouTube ASR is Russian classroom speech mixed with
+wrong-script tokens (Tamil/Bengali/English). `metadata.source =
+youtube-auto-ru-orig` therefore yields **zero** drill items — «Упражнения»
+stays hidden until a Deepgram (or other Hindi-token) transcript lands.
+14-08-2026 salvage: 88 + lesson 938 attached (0 fail). New Zoom classes
+ingest automatically once Deepgram can bill.
 
 _Dr. Mārcis Gasūns_

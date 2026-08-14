@@ -71,9 +71,18 @@ final class HindiTranscriptDrills
         }
 
         $mtime = Storage::disk('public')->lastModified($path);
-        $cacheKey = 'hindi_transcript_drills:v2:'.md5($path).':'.$mtime;
+        $cacheKey = 'hindi_transcript_drills:v3:'.md5($path).':'.$mtime;
 
         return Cache::rememberForever($cacheKey, function () use ($path): array {
+            $raw = Storage::disk('public')->get($path);
+            $data = json_decode((string) $raw, true);
+            $source = is_array($data) ? (string) data_get($data, 'metadata.source', '') : '';
+            // YouTube ru-orig is Russian classroom ASR: Hindi lands as
+            // Cyrillic/Tamil/English junk. Keep the file for the player.
+            if ($source === 'youtube-auto-ru-orig') {
+                return [];
+            }
+
             $sentences = TranscriptParser::sentencesFromPublicFile($path);
 
             return $this->extractor->extract($sentences);
