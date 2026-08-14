@@ -1,6 +1,6 @@
 # Архитектурная спецификация: продающие страницы курсов (samskrte.ru)
 
-_Created: 04-07-2026 · Last updated: 04-07-2026_
+_Created: 04-07-2026 · Last updated: 15-08-2026_
 
 Развитие существующей страницы курса `shop.course.show` в полноценную продающую
 страницу (landing) — первый слой из [vitrina.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/vitrina.md).
@@ -189,6 +189,10 @@ testimonials, faq, tech-payment, trust-strip, final-cta) — включаютс�
 - Один флагманский курс (напр. «Грамматика по Кочергиной» или «Бхагавад-гита») заполняется
   полностью как эталон и для визуальной отладки через скилл `blade-styling` (Playwright).
 - Тесты: Feature-тест, что страница рендерит новые блоки при заполненных данных и скрывает при пустых.
+
+## H2761 — три флагмана Гасунса
+
+Слоты `outcomes` / `audience` / `course_faqs` / `teachers.bio` уже в схеме. На проде у Кочергиной, «Старта чтения» и Бюлера они пустые, поэтому «Программа» остаётся календарём дат (E027). Overlay в [config/flagship_landing.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/flagship_landing.php): тематическое «Чему научитесь», первый шаг, FAQ, био из опубликованной страницы, если `bio` пусто. Заполненное поле админки побеждает. Бюлер: новый набор — осень 2027, не 2026. Документ: [docs/FLAGSHIP_LANDING_H2761.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FLAGSHIP_LANDING_H2761.md).
 
 ---
 

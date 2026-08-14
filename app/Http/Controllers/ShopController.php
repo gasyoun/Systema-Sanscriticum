@@ -9,6 +9,7 @@ use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Testimonial;
 use App\Services\Activity\FunnelTelemetry;
+use App\Support\FlagshipLanding;
 use App\Support\ProductLadderAnchors;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -266,7 +267,9 @@ class ShopController extends Controller
             $showTrialCta = ! $alreadyHasTrial;
         }
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'lessonsByBlock'));
+        $flagship = FlagshipLanding::for($course);
+
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'lessonsByBlock', 'flagship'));
     }
 
     /**

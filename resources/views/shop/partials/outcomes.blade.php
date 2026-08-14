@@ -1,7 +1,12 @@
-{{-- «Чему вы научитесь» — courses.outcomes (массив строк). Скрыт при пустых. --}}
-@php $outcomes = collect($course->outcomes ?? [])->filter(fn ($x) => filled($x))->values(); @endphp
+{{-- «Чему вы научитесь» — courses.outcomes, иначе flagship overlay (H2761). --}}
+@php
+    $outcomes = collect($course->outcomes ?? [])->filter(fn ($x) => filled($x))->values();
+    if ($outcomes->isEmpty() && ! empty($flagship['outcomes'])) {
+        $outcomes = collect($flagship['outcomes']);
+    }
+@endphp
 @if($outcomes->isNotEmpty())
-<section class="mb-16 lg:mb-20" data-analytics="outcomes">
+<section id="chemu-nauchites" class="mb-16 lg:mb-20" data-analytics="outcomes">
     <h2 class="text-3xl font-bold text-white mb-8">Чему вы научитесь</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
         @foreach($outcomes as $item)

@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2761: syllabus, free step, teacher, FAQ on three Gasuns flagships.** Kochergina / «Старт чтения» / Büehler course pages show thematic «Чему научитесь» (not `#1 15.07.26`), a per-track first step, teacher bio from the published Gasuns page when `teachers.bio` is empty, and six course FAQs plus «кому не подходит». Calendar «Ближайшие занятия» stays. Overlay in `config/flagship_landing.php` — existing `outcomes` / `audience` / `course_faqs` win when filled. Büehler first step is autumn 2027 or the current recording, never a 2026 intake. Tests: `FlagshipLandingTest`, `FlagshipLandingPageTest`. Doc: [docs/FLAGSHIP_LANDING_H2761.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FLAGSHIP_LANDING_H2761.md). Executor: Grok 4.6 (`grok-4.6`).
+
 ### Changed
 - **H2760: hide stale storefront CTA dates and empty pay amounts.** Homepage / promo cards relabel a past dated webinar (e.g. «17 июня») as «Запись вебинара» and omit past `webinar_date` lines. Shop free-intro banner omits the date line when nothing is upcoming — no «дата уточняется». Book/trial modals do not emit «Оплатить ₽» / «Сумма ₽» without a number; pay control stays closed until `amount > 0`. Display-only: no grant or price path change. Tests: `StorefrontEventTest`, `StorefrontStaleCtaTest`, `FreeIntroBannerTest`. Executor: Grok 4.5 (`grok-4.5`).
 
