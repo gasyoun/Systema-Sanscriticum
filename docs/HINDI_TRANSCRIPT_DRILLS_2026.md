@@ -60,15 +60,21 @@ Live transcripts n8n already pushed (ZOOM 1.4 → `POST /api/lessons/{id}/transc
 | 1863 Костина нач. 1 | 401 `hindi-1-sr800-2026` | 12 cloze | paid user 6738 → 200; guest → 302 |
 | 1854 Костина нач. 2 | 402 | 11 cloze + 1 vocab_pick | probe only |
 | 1853 Интенсив хинди | 438 | already on disk | n8n exec 830 |
+| 1830 Интенсив хинди #1 | 438 | on disk | n8n, already filled |
 
-**Backfill 14-08-2026 (no human, same n8n path):** 89 published Hindi lessons
-have YouTube and empty `transcript_file` (416: 12, 356: 36, 366: 24, plus 18
-on 401/402). Drive course folders hold only the ~1 KB TOC `.txt` n8n uploads,
-not Deepgram `words[]`. n8n retains 28 ZOOM executions; the only Hindi
-Deepgram payloads still in SQLite are 1853/1854/1863, all already ingested.
-A yt-dlp + Deepgram nova-3 retry for lesson 938 returned
-`ASR_PAYMENT_REQUIRED` (project has no credits and no overage). New Zoom
-classes will ingest automatically when Deepgram can bill; older shells stay
-dark until then.
+**Backfill 14-08-2026 (no human):** n8n ZOOM 1.4 already POSTed every Hindi
+Deepgram payload still in SQLite (1830 / 1853 / 1854 / 1863). Drive course
+folders hold only ~1 KB TOC `.txt` (agenda timestamps), not `words[]`.
+Deepgram on the n8n box returns `ASR_PAYMENT_REQUIRED` — Ivan:
+[issue #1692](https://github.com/gasyoun/Systema-Sanscriticum/issues/1692).
+
+Older YouTube shells have auto-captions (`ru-orig`). Those are ingested as
+`transcript_file` for the lesson player (same Deepgram-shaped JSON the
+parser already reads). YouTube ASR is Russian classroom speech: lesson 938
+measured 0 Devanagari tokens; the only Latin hits were `google` / `telegram`
+/ `zoom` / `iphone` / `marina` / `pdf`. The extractor now stops those
+loans, so «Упражнения» stays hidden until a Deepgram (or other Hindi-token)
+transcript lands. New Zoom classes ingest automatically once Deepgram can
+bill.
 
 _Dr. Mārcis Gasūns_

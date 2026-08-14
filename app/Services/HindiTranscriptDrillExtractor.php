@@ -25,6 +25,11 @@ final class HindiTranscriptDrillExtractor
         'the', 'and', 'for', 'you', 'this', 'that', 'with', 'from',
         'have', 'was', 'are', 'not', 'but', 'his', 'her', 'she',
         'they', 'them', 'our', 'your', 'what', 'when', 'who', 'how',
+        // YouTube ru-orig / classroom English — not Hindi (measured on lesson 938).
+        'zoom', 'google', 'telegram', 'whatsapp', 'youtube', 'iphone',
+        'android', 'marina', 'pdf', 'chat', 'file', 'document', 'skype',
+        'email', 'online', 'offline', 'hello', 'thanks', 'please',
+        'okay', 'yes', 'okey', 'http', 'https', 'www',
     ];
 
     /**
