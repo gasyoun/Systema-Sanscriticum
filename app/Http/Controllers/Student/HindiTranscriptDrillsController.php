@@ -10,6 +10,7 @@ use App\Models\Lesson;
 use App\Services\HindiAttachmentDrills;
 use App\Services\HindiTranscriptDrillExtractor;
 use App\Services\HindiTranscriptDrills;
+use App\Support\HindiMySrsDeck;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -49,6 +50,7 @@ class HindiTranscriptDrillsController extends Controller
             'transcriptEnabled' => $transcript->enabled(),
             'lessonUrl' => route('student.lesson', [$course->slug, $lesson->id]),
             'playlistEnabled' => (bool) config('features.hindi_programme_playlist', false),
+            'srsDeckEnabled' => HindiMySrsDeck::enabled(),
         ]);
     }
 

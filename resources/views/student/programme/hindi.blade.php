@@ -22,8 +22,17 @@
                 <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Открыто</span>
                 <span class="text-sm font-bold text-gray-800">{{ $count }} занятий</span>
             </div>
+            @if(!empty($srsDeckEnabled) && config('srs.enabled'))
+                <a href="{{ route('student.srs.deck', \App\Support\HindiMySrsDeck::DECK_SLUG) }}"
+                   class="inline-flex items-center gap-2 mt-4 text-sm font-extrabold text-brand hover:underline"
+                   data-testid="hindi-playlist-open-deck">
+                    <i class="fas fa-clone text-xs"></i> Открыть колоду «Мой хинди»
+                </a>
+            @endif
         </div>
     </div>
+
+    @include('student.partials.hindi-srs-flash')
 
     <div class="space-y-4">
         @forelse($items as $row)
@@ -56,13 +65,29 @@
                                 {{ $lesson->title }}
                             </h2>
                         </a>
-                        @if(!empty($row['drills_url']))
-                            <a href="{{ $row['drills_url'] }}"
-                               class="inline-flex items-center gap-1.5 mt-3 text-sm font-extrabold text-brand hover:underline"
-                               data-testid="hindi-playlist-drills">
-                                <i class="fas fa-pen-fancy text-xs"></i> Упражнения
-                            </a>
-                        @endif
+                        <div class="flex flex-wrap items-center gap-3 mt-3">
+                            @if(!empty($row['drills_url']))
+                                <a href="{{ $row['drills_url'] }}"
+                                   class="inline-flex items-center gap-1.5 text-sm font-extrabold text-brand hover:underline"
+                                   data-testid="hindi-playlist-drills">
+                                    <i class="fas fa-pen-fancy text-xs"></i> Упражнения
+                                </a>
+                            @endif
+                            @if(!empty($row['has_srs_items']))
+                                <form method="POST"
+                                      action="{{ route('student.programme.hindi.srs') }}"
+                                      class="inline"
+                                      data-testid="hindi-playlist-srs-form">
+                                    @csrf
+                                    <input type="hidden" name="lesson_id" value="{{ $lesson->id }}">
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-1.5 text-sm font-extrabold text-gray-600 hover:text-brand"
+                                            data-testid="hindi-playlist-srs">
+                                        + в колоду
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
                     <a href="{{ $row['url'] }}" class="text-gray-300 group-hover:text-brand mt-2" aria-hidden="true">
                         <i class="fas fa-chevron-right"></i>

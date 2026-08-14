@@ -47,6 +47,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SrsController;
 use App\Http\Controllers\Student\AccessSelfServiceController;
+use App\Http\Controllers\Student\HindiMySrsDeckController;
 use App\Http\Controllers\Student\HindiProgrammePlaylistController;
 use App\Http\Controllers\Student\HindiTranscriptDrillsController;
 use App\Http\Controllers\StudentController;
@@ -435,6 +436,11 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::get('/dvaram/programme/hindi', [HindiProgrammePlaylistController::class, 'hindi'])
         ->name('student.programme.hindi');
 
+    // H2445 — «в колоду» from the playlist row. Item text is read from the
+    // transcript extractor server-side. Not behind srs.enabled (H2106 fence).
+    Route::post('/dvaram/programme/hindi/srs', [HindiMySrsDeckController::class, 'addLesson'])
+        ->name('student.programme.hindi.srs');
+
     Route::get('/dvaram/reading', [ReadingPackController::class, 'cabinetIndex'])
         ->name('student.reading.index');
 
@@ -565,6 +571,9 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::post('/c/{slug}/u/{lessonId}/drills/check', [HindiTranscriptDrillsController::class, 'check'])
         ->middleware('course.canonical')
         ->name('student.lesson.drills.check');
+    Route::post('/c/{slug}/u/{lessonId}/srs', [HindiMySrsDeckController::class, 'addItem'])
+        ->middleware('course.canonical')
+        ->name('student.lesson.srs.add');
 
     Route::post('/c/{slug}/u/{lessonId}/complete', [StudentController::class, 'completeLesson'])
         ->name('student.lesson.complete');

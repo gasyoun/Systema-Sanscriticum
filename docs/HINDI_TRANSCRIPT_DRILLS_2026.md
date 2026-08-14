@@ -80,4 +80,7 @@ Cyrillic classroom lexicon. Remaining 88 youtube-auto shells are
 queued on `/tmp/run_hindi_reasr.py`. New Zoom classes still need
 Deepgram credits ([issue #1692](https://github.com/gasyoun/Systema-Sanscriticum/issues/1692)).
 
+**H2445 (14-08-2026):** each item now carries `lemma` (the Hindi headword;
+vocab_pick inherits it from the source item). Cache key is `v5`.
+
 _Dr. Mārcis Gasūns_

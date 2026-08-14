@@ -908,4 +908,13 @@ return [
      | Enable: HINDI_ATTACHMENT_DRILLS=true + config:cache.
      */
     'hindi_attachment_drills' => (bool) env('HINDI_ATTACHMENT_DRILLS', false),
+
+    /*
+     | Private «Мой хинди» SRS deck (H2445). Default OFF — «в колоду» on
+     | playlist/drills 404s. Does not grant access, does not write the public
+     | Hindi Core deck, and does not flip srs.enabled. Review stays on
+     | /dvaram/koloda/my-hindi when SRS is already on.
+     | Enable: HINDI_MY_SRS_DECK=true + config:cache.
+     */
+    'hindi_my_srs_deck' => (bool) env('HINDI_MY_SRS_DECK', false),
 ];
