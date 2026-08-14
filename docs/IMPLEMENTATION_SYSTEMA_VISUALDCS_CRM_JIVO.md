@@ -1,6 +1,6 @@
 # IMPLEMENTATION — Systema learner/CRM/Jivo sequence
 
-_Created: 08-08-2026 · Last updated: 08-08-2026_
+_Created: 08-08-2026 · Last updated: 14-08-2026_
 
 Parent: [PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md).
 
@@ -53,11 +53,11 @@ programme. School parity is code+flag+production-canary evidence, not merged-cod
 
 ## CRM Wave 3 — forecasting
 
-1. Lock stage probabilities and aging windows in config, never a Blade page.
-2. Build forecast service on open Deals plus canonical qualifying Payment actuals.
-3. Add manager/all-company views, next-action coverage and forecast-vs-actual.
+1. Lock stage probabilities and aging windows in config, never a Blade page. ✅ H2485 — [config/crm_forecast.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/crm_forecast.php)
+2. Build forecast service on open Deals plus canonical qualifying Payment actuals. ✅ [`SalesForecastService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Crm/SalesForecastService.php) + `OrderPaymentConversionService::qualifyingPaidRevenue()`
+3. Add manager/all-company views, next-action coverage and forecast-vs-actual. ✅ `/admin/sales-forecast`, flag `crm_sales_forecast` default OFF
 4. Backtest on historical cohorts; if Deal history cannot reproduce a period, label it unavailable
-   rather than reconstructing fictional history.
+   rather than reconstructing fictional history. ✅ [docs/CRM_SALES_FORECAST_BACKTEST_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_SALES_FORECAST_BACKTEST_2026.md)
 
 ## Literal-Jivo Wave 4+
 

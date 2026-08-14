@@ -347,6 +347,32 @@ class OrderPaymentConversionService
     }
 
     /**
+     * Qualifying paid revenue in [from, to). Same {@see orders()} filter as
+     * conversion snapshot / manager scoreboard — H2485 forecast actuals must
+     * not fork this denominator. $onlyCreatedBy is payments.created_by_user_id
+     * (F5 a), identical to managerScoreboard scoping.
+     *
+     * @return array{paid_count:int, paid_amount:float, from:string, to:string, denominator:string}
+     */
+    public function qualifyingPaidRevenue(Carbon $from, Carbon $to, ?int $onlyCreatedBy = null): array
+    {
+        $q = $this->orders()
+            ->whereIn('payments.status', ['paid', 'success'])
+            ->where('payments.created_at', '>=', $from)
+            ->where('payments.created_at', '<', $to)
+            ->when($onlyCreatedBy !== null, fn (Builder $q) => $q->where('payments.created_by_user_id', $onlyCreatedBy));
+
+        return [
+            'paid_count' => (int) (clone $q)->count(),
+            'paid_amount' => Money::round((float) (clone $q)->sum('payments.amount')),
+            'from' => $from->toDateTimeString(),
+            'to' => $to->toDateTimeString(),
+            'denominator' => 'Payment is_conditional=false AND tariff NOT IN conversion.excluded_tariffs AND status IN (paid,success); cohort by payments.created_at'
+                .($onlyCreatedBy === null ? '' : '; scoped payments.created_by_user_id='.$onlyCreatedBy),
+        ];
+    }
+
+    /**
      * Конверсия по менеджеру, СОЗДАВШЕМУ строку платежа (F5 a RULED:
      * payments.created_by_user_id — blame-колонка, не leads.assigned_to;
      * см. managerScoreboard() docblock). Самостоятельные покупки и

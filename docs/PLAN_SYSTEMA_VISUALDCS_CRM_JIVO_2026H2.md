@@ -1,6 +1,6 @@
 # PLAN — native VisualDCS learning, full JIVO and CRM sequence · 2026H2
 
-_Created: 08-08-2026 · Last updated: 08-08-2026_
+_Created: 08-08-2026 · Last updated: 14-08-2026_
 
 ## Goal
 
@@ -25,7 +25,7 @@ as telephony, departments and capacity routing come only after the CRM spine.
 3. Complete and prove school-operational support parity through H2381/H1200/H2382.
 4. CRM Wave 1: unified customer timeline, pipeline stage, next action and attribution.
 5. CRM Wave 2: lifecycle automation using the existing Campaign/recipient/message stack.
-6. CRM Wave 3: forecasting and manager dashboards over canonical Deal/Payment denominators.
+6. CRM Wave 3: forecasting and manager dashboards over canonical Deal/Payment denominators. ✅ H2485 (flag `crm_sales_forecast` default OFF).
 7. Literal-Jivo expansion: provider/routing architecture, telephony/callback, departments and
    capacity routing—only after the CRM spine and measured demand justify each activation.
 
