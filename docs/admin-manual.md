@@ -1,6 +1,6 @@
 # Руководство администратора — функции последнего месяца (06.06–06.07.2026)
 
-_Created: 06-07-2026 · Last updated: 01-08-2026_
+_Created: 06-07-2026 · Last updated: 14-08-2026_
 
 > **Клипы лекций / n8n:** операторское руководство — [MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md); установка n8n — [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666).
 
@@ -152,6 +152,17 @@ TG-support) и, опознав вопрос одной из шести кате�
 
 **Готчас:** черновик без фактов не создаётся вовсе — пустых подсказок куратор не
 видит; pending-черновики старше 14 дней истекают автоматически.
+
+### 1.7. Grok в «Отделе заботы» (`@grokusaurus_bot`)
+
+**Где:** Telegram-чат **«Отдел заботы | Рабочая группа»**, не админка.  
+**Доступ:** кураторы этого чата. Не ученики, не учебные группы.
+
+Реплай на [@grokusaurus_bot](https://t.me/grokusaurus_bot) или тег
+`@grokusaurus_bot` / `@rusamskrtam` запускает локальный Grok на ПК Марциса
+(проверка сайта, не LMS-бот кабинета). Ждать 2–5 минут.
+
+Runbook: [MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md).
 
 ---
 
