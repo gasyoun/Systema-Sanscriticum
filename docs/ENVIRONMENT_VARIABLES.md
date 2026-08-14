@@ -62,6 +62,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_TIMEOUT` | optional | `15` | config/cabinet_probe.php:47 |
 | `CACHE_DRIVER` | optional | `'file'` | config/cache.php:18 |
 | `CACHE_PREFIX` | optional | `Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'` | config/cache.php:109 |
+| `CATALOG_NEXT_STEP` | optional | `false` | config/features.php:948 |
 | `CERTIFICATE_MATERIAL_MIN_MENTIONS` | optional | `3` | config/certificates.php:9 |
 | `CHECKOUT_DEPOSIT_REVERSAL` | optional | `true` | config/features.php:374 |
 | `CHECKOUT_INACTIVE_TARIFF_GUARD` | optional | `true` | config/features.php:357 |
@@ -167,6 +168,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:65 |
 | `FAQ_RAG_SUGGESTER` | optional | `false` | config/features.php:147 |
 | `FILESYSTEM_DISK` | optional | `'local'` | config/filesystems.php:16 |
+| `FLAGSHIP_CTA_AB` | optional | `false` | config/features.php:956 |
+| `FLAGSHIP_EXPERIMENT_STARTED_AT` | optional | `''` | config/flagship_experiments.php:28 |
 | `FREE_TIER_GRANT_DAYS` | optional | `30` | config/membership.php:52 |
 | `FREE_TIER_GRANT_REASON` | optional | `'free_tier_monthly'` | config/membership.php:60 |
 | `FULL_COURSE_BLOCK_CREDIT` | optional | `false` | config/features.php:21 |

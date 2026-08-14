@@ -1,4 +1,4 @@
-@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => []])
+@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => [], 'nextStep' => []])
 
 @php
     $courseKeys = $purchasedByCourse[$course->id] ?? [];
@@ -146,6 +146,23 @@
             @if($course->description)
                 <p class="text-sm text-slate-400 line-clamp-3 leading-relaxed mb-4">
                     {{ Str::limit(strip_tags($course->description), 100) }}
+                </p>
+            @endif
+
+            @if(! empty($nextStep))
+                <p id="flagship-next-step-{{ $course->id }}"
+                   class="text-[11px] text-slate-500 leading-snug mb-4"
+                   data-analytics="next-step"
+                   data-flagship="kochergina">
+                    <span class="font-bold uppercase tracking-wider text-slate-400">{{ \App\Support\FlagshipExperiments::nextStepEyebrow() }}</span>
+                    @foreach($nextStep as $i => $step)
+                        @if($i > 0)<span class="text-slate-600" aria-hidden="true"> / </span>@endif
+                        <a href="{{ $step['url'] }}"
+                           class="text-[#38BDF8] hover:text-white underline-offset-2 hover:underline"
+                           data-analytics="next-step-click"
+                           data-next-step="{{ $step['key'] }}"
+                           onclick="if (typeof window.shopReachGoal === 'function') window.shopReachGoal('next_step_click');">{{ $step['label'] }}</a>
+                    @endforeach
                 </p>
             @endif
         </div>

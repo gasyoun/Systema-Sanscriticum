@@ -194,6 +194,10 @@ testimonials, faq, tech-payment, trust-strip, final-cta) — включаютс�
 
 Слоты `outcomes` / `audience` / `course_faqs` / `teachers.bio` уже в схеме. На проде у Кочергиной, «Старта чтения» и Бюлера они пустые, поэтому «Программа» остаётся календарём дат (E027). Overlay в [config/flagship_landing.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/flagship_landing.php): тематическое «Чему научитесь», первый шаг, FAQ, био из опубликованной страницы, если `bio` пусто. Заполненное поле админки побеждает. Бюлер: новый набор — осень 2027, не 2026. Документ: [docs/FLAGSHIP_LANDING_H2761.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FLAGSHIP_LANDING_H2761.md).
 
+## H2762 — isolated tests on Kochergina only
+
+R12 next-step strip and R15 CTA label A/B live behind `CATALOG_NEXT_STEP` / `FLAGSHIP_CTA_AB` (default OFF). One flagship (`kocerginoi`). Events in `storefront_events`. Doc: [docs/FLAGSHIP_EXPERIMENTS_H2762.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FLAGSHIP_EXPERIMENTS_H2762.md).
+
 ---
 
 ## Аналитика (флаг, вне v1-кода)

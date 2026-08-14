@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\LandingPage;
 use App\Models\PromoCode;
-use App\Models\StudentDiscount; // Не забываем импортировать модель!
+use App\Models\StorefrontAnalyticsEvent; // Не забываем импортировать модель!
+use App\Models\StudentDiscount;
 use App\Models\Tariff;
 use App\Services\Activity\FunnelTelemetry;
+use App\Services\Activity\StorefrontAnalytics;
 use App\Services\CuratorNotifier;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Support\FlagshipExperiments;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +31,21 @@ class CheckoutController extends Controller
                 (int) $tariff->id,
                 $tariff->course_id ? (int) $tariff->course_id : null,
                 $request,
+            );
+        }
+
+        $tariff->loadMissing('course');
+        $course = $tariff->course;
+        if ($course
+            && FlagshipExperiments::ctaAbEnabled()
+            && FlagshipExperiments::isFlagship($course)
+        ) {
+            app(StorefrontAnalytics::class)->record(
+                event: StorefrontAnalyticsEvent::BEGIN_CHECKOUT,
+                experiment: StorefrontAnalyticsEvent::EXPERIMENT_CTA_AB,
+                request: $request,
+                course: $course,
+                variant: FlagshipExperiments::ctaVariantFromRequest($request),
             );
         }
 

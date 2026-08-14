@@ -7,8 +7,11 @@ use App\Models\LandingPage;
 use App\Models\LessonAccessGrant;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
+use App\Models\StorefrontAnalyticsEvent;
 use App\Models\Testimonial;
 use App\Services\Activity\FunnelTelemetry;
+use App\Services\Activity\StorefrontAnalytics;
+use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
 use App\Support\ProductLadderAnchors;
 use Illuminate\Http\Request;
@@ -268,8 +271,9 @@ class ShopController extends Controller
         }
 
         $flagship = FlagshipLanding::for($course);
+        $ctaAb = FlagshipExperiments::ctaFor($course, request());
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'lessonsByBlock', 'flagship'));
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'lessonsByBlock', 'flagship', 'ctaAb'));
     }
 
     /**
@@ -280,7 +284,7 @@ class ShopController extends Controller
      * lesson-id, поэтому гость физически не может запросить произвольный урок —
      * ни соседний платный, ни урок другого курса. Нет preview-урока → 404.
      */
-    public function preview(Course $course)
+    public function preview(Course $course, Request $request, StorefrontAnalytics $storefront)
     {
         if (! $course->is_visible) {
             abort(404, 'Курс не найден');
@@ -295,6 +299,16 @@ class ShopController extends Controller
             ->first();
 
         abort_if($lesson === null, 404, 'У этого курса нет пробного урока');
+
+        if (FlagshipExperiments::ctaAbEnabled() && FlagshipExperiments::isFlagship($course)) {
+            $storefront->record(
+                event: StorefrontAnalyticsEvent::SAMPLE_PLAY,
+                experiment: StorefrontAnalyticsEvent::EXPERIMENT_CTA_AB,
+                request: $request,
+                course: $course,
+                variant: FlagshipExperiments::ctaVariantFromRequest($request),
+            );
+        }
 
         return view('shop.preview', compact('course', 'lesson'));
     }

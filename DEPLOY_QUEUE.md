@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 14-08-2026 (№73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 15-08-2026 (H2762 Kochergina next-step/CTA A/B flags stay OFF; №73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -47,6 +47,17 @@ _Создано: 08-07-2026 · Обновлено: 14-08-2026 (№73 H2444 `HIND
 >
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
+
+### H2762 — next-step + CTA A/B on Kochergina — флаги ОСТАЮТСЯ OFF
+
+Код инертный, пока оба флага выключены. Это не денежный грант: только витринная подпись и полоска «после этого» на одной карточке Кочергиной.
+
+1. Когда нужен 30-дневный прогон: `CATALOG_NEXT_STEP=true` и/или `FLAGSHIP_CTA_AB=true`, плюс `FLAGSHIP_EXPERIMENT_STARTED_AT=2026-08-15` (дата включения), затем `php artisan config:clear`.
+2. Смоук: `/online` — полоска только на карточке Кочергиной; `/k/grammatika-po-kocerginoi-gr61` — hero CTA с `data-cta-ab`; другие курсы без изменений.
+3. Счёт: `php artisan shop:flagship-experiments --days=7`.
+4. Стоп: тонкий n или поломка вёрстки → оба флага `false`. Победителя не выкатывать.
+
+Док: [docs/FLAGSHIP_EXPERIMENTS_H2762.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FLAGSHIP_EXPERIMENTS_H2762.md).
 
 ### ⚙️🚀 H2645+H2644 — запуск клуба: включить флаги к 28-08-2026 (страница `/klub` уже в коде, 404 до флага)
 
