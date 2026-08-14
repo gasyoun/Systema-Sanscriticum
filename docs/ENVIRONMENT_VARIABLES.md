@@ -163,18 +163,21 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:351 |
 | `GOOGLE_REDIRECT_URI` | optional | `'/auth/google/callback'` | config/services.php:352 |
 | `GRAMMAR_LAB` | optional | `false` | config/features.php:861 |
-| `GRAMMAR_LAB_AUTO_PUBLISH` | optional | `true` | config/grammar_lab.php:54 |
+| `GRAMMAR_LAB_AUTO_PUBLISH` | optional | `true` | config/grammar_lab.php:67 |
 | `GRAMMAR_LAB_COURSE_SLUGS` | optional | `''` | config/grammar_lab.php:46 |
-| `GRAMMAR_LAB_SAMPLE_SEED` | optional | `'grammar-lab-g3-v1'` | config/grammar_lab.php:56 |
+| `GRAMMAR_LAB_PILOT` | feature-flag | `false` | config/features.php:875 |
+| `GRAMMAR_LAB_PILOT_COURSE_SLUGS` | optional | `''` | config/grammar_lab.php:58 |
+| `GRAMMAR_LAB_SAMPLE_SEED` | optional | `'grammar-lab-g3-v1'` | config/grammar_lab.php:69 |
 | `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:868 |
+| `GRAMMAR_LAB_SUBSCRIPTION_COURSE_SLUG` | optional | `''` | config/grammar_lab.php:53 |
 | `GRANT_ACCESS_FAIL_CLOSED` | optional | `false` | config/features.php:421 |
 | `HEARTBEAT_CHECK_HORIZON` | optional | `true` | config/heartbeat.php:60 |
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
 | `HEARTBEAT_PING_URL` | optional | `''` | config/heartbeat.php:43 |
 | `HEARTBEAT_TIMEOUT` | optional | `10` | config/heartbeat.php:54 |
-| `HINDI_PROGRAMME_CATEGORY_SLUG` | optional | `'hindi'` | config/programme.php:13 |
-| `HINDI_PROGRAMME_COURSE_IDS` | optional | `'416,356,366'` | config/programme.php:16 |
-| `HINDI_PROGRAMME_PLAYLIST` | optional | `false` | config/features.php:877 |
+| `HINDI_PROGRAMME_CATEGORY_SLUG` | optional | `'hindi'` | config/programme.php:17 |
+| `HINDI_PROGRAMME_COURSE_IDS` | optional | `'416,356,366'` | config/programme.php:20 |
+| `HINDI_PROGRAMME_PLAYLIST` | optional | `false` | config/features.php:884 |
 | `HOMEWORK_AUTO_OPEN_ALIGN_HOUR` | optional | `9` | config/homework.php:127 |
 | `HOMEWORK_AUTO_OPEN_CHANNELS` | optional | `'telegram,vk'` | config/homework.php:133 |
 | `HOMEWORK_AUTO_OPEN_CLOSE_PREVIOUS` | optional | `false` | config/homework.php:138 |
