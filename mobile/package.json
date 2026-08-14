@@ -26,5 +26,8 @@
   "devDependencies": {
     "dotenv": "^17.4.2",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "uuid": "11.1.1"
   }
 }

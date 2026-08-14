@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **H2712: mobile `uuid` GHSA override.** `@capacitor/cli@8.5.0` still pulls `xcode@3.0.1` → `uuid@7.0.3`, which fails `npm audit --package-lock-only` ([GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq), Dependabot [alert 42](https://github.com/gasyoun/Systema-Sanscriticum/security/dependabot/42)). Latest Capacitor CLI is already 8.5.0; `npm audit fix --force` would downgrade it to 7.6.8 — refused. `mobile/package.json` now overrides `uuid` to **11.1.1** (last CommonJS 11.x; 12+ is ESM and would break `xcode`). CI mobile audit exits 0. Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.89.32] - 2026-08-14
 ### Added
 - **H2480: SECURITY Wave 4 deploy-surface review.** `deploy.sh`, CI deploy, and webhook-preflight do not echo secret values; prod secrets stay in a non-committed `.env`. Sail MySQL healthcheck no longer compose-interpolates `${DB_PASSWORD}` (`docker compose config` would have printed it). Report: [docs/SECURITY_W4_DEPLOY_SURFACE_REVIEW_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_W4_DEPLOY_SURFACE_REVIEW_2026-08-14.md). Gate: `tests/Unit/DeploySurfaceSecretsTest.php`. Executor: Grok 4.6 (`grok-4.6`).

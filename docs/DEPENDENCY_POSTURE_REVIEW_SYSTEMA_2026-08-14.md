@@ -32,7 +32,9 @@ Every historical Dependabot CVE on this repo is **fixed**, not ignored. Actions 
 
 | Ecosystem | Package | CVE / GHSA | Severity | Action |
 |---|---|---|---|---|
-| — | — | — | — | **None open.** Fail condition "silent ignore of a known CVE" does not apply. |
+| npm (`mobile/`) | `uuid` (via `xcode` ← `@capacitor/cli@8.5.0`) | [GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq) / Dependabot [#42](https://github.com/gasyoun/Systema-Sanscriticum/security/dependabot/42) | medium | **Closed same day (H2712).** `mobile/package.json` `overrides.uuid = 11.1.1`. Did **not** run `npm audit fix --force` (that downgrades Capacitor CLI to 7.6.8). Latest `xcode` is still 3.0.1 on `uuid ^7`. |
+
+The H2479 measurement (0 vulns at `520bbbad`) was true at that SHA. Alert 42 appeared after the Capacitor 8.5 mobile bumps later the same day.
 
 ## Historical Dependabot CVEs (all fixed — not ignored)
 
@@ -52,6 +54,7 @@ Forty alerts, numbered 1–41 with #40 unused. Grouped by package. Current lock 
 | `picomatch` | [package-lock.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/package-lock.json) | #28 [CVE-2026-33671](https://github.com/advisories/GHSA-c2c7-rcm5-vvqj) high, #29 [CVE-2026-33672](https://github.com/advisories/GHSA-3v7f-55p6-f55p) | high | 04-08-2026 | pinned via `overrides` to **2.3.2** in [package.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/package.json) |
 | `form-data` | package-lock.json | #30 [CVE-2026-12143](https://github.com/advisories/GHSA-hmw2-7cc7-3qxx) | high | 03-07-2026 | root `npm audit` clean |
 | `brace-expansion` | [mobile/package-lock.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/mobile/package-lock.json) | #41 [CVE-2026-69152](https://github.com/advisories/GHSA-rgw5-rvv9-x895) | high | 04-08-2026 | mobile `npm audit` clean |
+| `uuid` | [mobile/package-lock.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/mobile/package-lock.json) | #42 [GHSA-w5hq-g745-h8pq](https://github.com/advisories/GHSA-w5hq-g745-h8pq) | medium | 14-08-2026 (H2712) | **11.1.1** via `overrides` |
 | `tar` | mobile/package-lock.json | #39 [GHSA-r292-9mhp-454m](https://github.com/advisories/GHSA-r292-9mhp-454m) | medium | 26-07-2026 | mobile `npm audit` clean |
 | `yt-dlp` | [lecture-builder/requirements.txt](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/lecture-builder/requirements.txt) | #22, #24–#27, #38 | high | 26-07-2026 | **2026.7.4** |
 | `python-dotenv` | lecture-builder/requirements.txt | #23 [CVE-2026-28684](https://github.com/advisories/GHSA-mf9w-mj56-hr94) | medium | 03-07-2026 | **1.2.2** |
