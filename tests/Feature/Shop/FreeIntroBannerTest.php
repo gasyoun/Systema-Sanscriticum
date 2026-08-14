@@ -30,7 +30,7 @@ class FreeIntroBannerTest extends TestCase
     }
 
     /** @test */
-    public function empty_source_shows_honest_fallback_not_a_fake_date(): void
+    public function empty_source_omits_date_line_and_does_not_invent_a_date(): void
     {
         $this->assertNull(NextIntroSession::resolve(useCache: false));
         $this->assertSame(NextIntroSession::FALLBACK_LABEL, NextIntroSession::dateLabel(useCache: false));
@@ -40,7 +40,9 @@ class FreeIntroBannerTest extends TestCase
         $this->assertStringContainsString('data-analytics="free-intro-banner"', $html);
         $this->assertStringContainsString('data-intro-source="empty"', $html);
         $this->assertStringContainsString('data-intro-has-date="0"', $html);
-        $this->assertStringContainsString(NextIntroSession::FALLBACK_LABEL, $html);
+        $this->assertStringNotContainsString(NextIntroSession::FALLBACK_LABEL, $html);
+        $this->assertStringNotContainsString('Ближайшая дата', $html);
+        $this->assertStringContainsString('Смотреть курсы', $html);
         // No invented promotional calendar year in the empty path.
         $this->assertStringNotContainsString('2027', $html);
     }
@@ -124,6 +126,11 @@ class FreeIntroBannerTest extends TestCase
             NextIntroSession::FALLBACK_LABEL,
             NextIntroSession::dateLabel(useCache: false)
         );
+
+        $html = $this->get(route('shop.index'))->assertOk()->getContent();
+        $this->assertStringNotContainsString(NextIntroSession::FALLBACK_LABEL, $html);
+        $this->assertStringNotContainsString('1 июля', $html);
+        $this->assertStringNotContainsString('01 июня', $html);
     }
 
     /** @test */
@@ -155,6 +162,6 @@ class FreeIntroBannerTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/\b202[6-9]\b/', $src);
         $this->assertDoesNotMatchRegularExpression('/\b20[3-9]\d\b/', $src);
         $this->assertStringContainsString('NextIntroSession', $src);
-        $this->assertStringContainsString('FALLBACK_LABEL', $src);
+        $this->assertStringNotContainsString('дата уточняется', $src);
     }
 }

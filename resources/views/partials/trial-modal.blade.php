@@ -3,7 +3,8 @@
      Триггер — window-событие `open-trial-modal` с detail { action, title, amount }.
      При ошибке валидации (bag `trial`, напр. гость ввёл существующий email) модалка
      сама открывается заново с сообщением и сохранёнными полями — иначе редирект
-     назад выглядел бы как «тихая перезагрузка». --}}
+     назад выглядел бы как «тихая перезагрузка».
+     H2760: pay control is not in the static HTML until amount > 0. --}}
 @php($trialErrors = $errors->getBag('trial'))
 <div x-data="{
         open: {{ $trialErrors->isNotEmpty() ? 'true' : 'false' }},
@@ -24,7 +25,7 @@
         amount = Number($event.detail.amount) || 0;
         sessionDate = $event.detail.date || '';
         isRecording = $event.detail.isRecording || false;
-        open = true;
+        open = amount > 0;
      "
      x-on:keydown.escape.window="open = false"
      class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
@@ -59,8 +60,10 @@
             <p class="text-sm text-slate-400 leading-relaxed">
                 <span class="font-bold text-white" x-text="isRecording ? 'Запись занятия' : 'Живое занятие'"></span> курса
                 <span class="font-bold text-white" x-text="courseTitle"></span><span x-show="sessionDate"> — <span class="text-[#38BDF8] font-semibold" x-text="sessionDate"></span></span>.
-                Сумма <span class="font-bold text-[#38BDF8]"><span x-text="amountFormatted"></span> ₽</span>
-                будет зачтена в стоимость тарифа при последующей оплате.
+                <span x-show="amount > 0" x-cloak>
+                    Сумма <span class="font-bold text-[#38BDF8]" x-text="amountFormatted + ' ₽'"></span>
+                    будет зачтена в стоимость тарифа при последующей оплате.
+                </span>
             </p>
 
             {{-- Живое занятие --}}
@@ -137,9 +140,11 @@
             @endguest
 
             <button type="submit"
+                    x-show="amount > 0"
+                    x-cloak
                     class="w-full flex justify-center items-center py-3.5 px-4 bg-[#38BDF8] hover:bg-[#2da4dd] text-white text-base font-bold rounded-xl transition-all shadow-lg shadow-[#38BDF8]/20">
                 <i class="fas fa-credit-card mr-2"></i>
-                Оплатить <span class="ml-1" x-text="amountFormatted"></span>&nbsp;₽
+                <span x-text="amount > 0 ? ('Оплатить ' + amountFormatted + ' ₽') : ''"></span>
             </button>
         </form>
     </div>

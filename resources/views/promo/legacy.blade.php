@@ -142,7 +142,7 @@
                         @endif
                     </div>
 
-                    @if($page->webinar_date)
+                    @if($page->webinar_date && \App\Support\StorefrontEvent::isUpcoming($page))
                         <div class="absolute -bottom-6 -left-2 md:-left-8 bg-white p-5 md:p-6 rounded-2xl shadow-xl z-20 animate-bounce" style="animation-duration: 3s;">
                             <p class="text-3xl font-extrabold text-brand leading-none mb-1">
                                 {{ $page->webinar_date->format('d') }} 

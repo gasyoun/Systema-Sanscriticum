@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\StorefrontEvent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -119,6 +120,24 @@ class LandingPage extends Model
         $now ??= now();
 
         return $now->betweenIncluded($this->magnetWindowOpensAt(), $this->magnetWindowClosesAt());
+    }
+
+    /** Storefront heading: past dated webinar titles become a recording label (H2760). */
+    public function storefrontTitle(?Carbon $now = null): string
+    {
+        return StorefrontEvent::storefrontTitle($this, $now);
+    }
+
+    /** Storefront badge; dated past labels are hidden or relabeled. */
+    public function storefrontBadge(?Carbon $now = null): ?string
+    {
+        return StorefrontEvent::storefrontBadge($this, $now);
+    }
+
+    /** CTA on a listing card. Past dated webinars are not «Записаться». */
+    public function storefrontButtonText(?Carbon $now = null): string
+    {
+        return StorefrontEvent::storefrontButtonText($this, $now);
     }
 
     // Связь с лидами (если понадобится)

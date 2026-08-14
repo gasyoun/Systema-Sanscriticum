@@ -21,7 +21,8 @@ use Illuminate\Support\Facades\Cache;
  * 2. Else earliest future webinar_date on an active LandingPage
  *    — free webinar landings (lead form).
  *
- * Empty source → null; UI must show {@see FALLBACK_LABEL}, never a fake date.
+ * Empty source → null; UI omits the date line (H2760). Never invent a date.
+ * {@see FALLBACK_LABEL} is kept for programmatic callers only — shop Blade must not render it.
  */
 class NextIntroSession
 {

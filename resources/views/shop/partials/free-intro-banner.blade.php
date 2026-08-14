@@ -1,15 +1,15 @@
 {{--
-  Site-wide free-intro / trial CTA (H2365).
+  Site-wide free-intro / trial CTA (H2365 / H2760).
 
   Consumes App\Support\NextIntroSession via $nextIntro (View composer on layouts.shop).
-  Empty source → honest FALLBACK_LABEL ("дата уточняется"), never a hard-coded date.
+  Empty source → omit the date line. Never invent a date and never show FALLBACK_LABEL.
 --}}
 @php
     use App\Support\NextIntroSession;
 
     $intro = $nextIntro ?? NextIntroSession::resolve();
-    $dateLabel = $intro['date_label'] ?? NextIntroSession::FALLBACK_LABEL;
-    $hasDate = $intro !== null;
+    $hasDate = $intro !== null && ! empty($intro['date_label']);
+    $dateLabel = $hasDate ? $intro['date_label'] : null;
     $ctaUrl = $intro['cta_url'] ?? route('shop.index');
     $ctaLabel = $intro['cta_label'] ?? 'Бесплатное вводное занятие';
     $titleLine = $intro['course_title'] ?? null;
@@ -29,16 +29,14 @@
                 <p class="text-[11px] font-black uppercase tracking-widest text-brand/90 mb-0.5">
                     {{ $isFree ? 'Бесплатное вводное' : 'Пробное занятие' }}
                 </p>
-                <p class="text-sm sm:text-base font-semibold text-white leading-snug">
-                    @if($hasDate)
+                @if($hasDate)
+                    <p class="text-sm sm:text-base font-semibold text-white leading-snug">
                         Ближайшее — <span class="text-[#38BDF8]">{{ $dateLabel }}</span>
                         @if($titleLine)
                             <span class="text-slate-400 font-medium"> · {{ $titleLine }}</span>
                         @endif
-                    @else
-                        Ближайшая дата — <span class="text-slate-300">{{ $dateLabel }}</span>
-                    @endif
-                </p>
+                    </p>
+                @endif
             </div>
         </div>
         <a href="{{ $ctaUrl }}"
