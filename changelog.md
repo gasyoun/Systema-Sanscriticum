@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.89.30] - 2026-08-14
 ### Added
 - **H2479 (SECURITY Wave4): dependency posture review — 0 open CVEs, residual coverage for `mobile/` and `lecture-builder/`.** `composer audit --locked` and both npm lockfiles are clean; Dependabot has 0 open alerts (40 historical, all fixed). Report: [docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md). Dependabot now watches `/mobile` (npm) and `/lecture-builder` (pip) on the same weekly + 7-day cooldown as root; CI gained `npm audit --package-lock-only` for the Capacitor lock. Won't-fix this pass: `jenssegers/agent` (stale 2020 tag, telemetry-only), Filament 3→5, H2529 `vcs` forks. Executor: Grok 4.6 (`grok-4.6`).
 
