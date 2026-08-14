@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Models\MarketingSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -137,5 +138,69 @@ class DeliverMarathonWarmTailTest extends TestCase
         $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
 
         Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'Преподаю Шивананда-йогу 20 лет. Созрела.'));
+    }
+
+    public function test_marks_day_12_sent_on_telegram_timeout_and_does_not_resend(): void
+    {
+        Http::fake(function () {
+            throw new ConnectionException('cURL error 28: Operation timed out after 30001 milliseconds');
+        });
+        $enrollment = $this->enrollment([
+            'day0_started_at' => now()->subDays(15),
+            'warm_tail_last_day_sent' => 11,
+        ]);
+
+        $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
+
+        $this->assertSame(12, $enrollment->fresh()->warm_tail_last_day_sent);
+
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
+
+        Http::assertNothingSent();
+        $this->assertSame(12, $enrollment->fresh()->warm_tail_last_day_sent);
+    }
+
+    public function test_does_not_mark_day_sent_on_telegram_api_error(): void
+    {
+        Http::fake(['*' => Http::response([
+            'ok' => false,
+            'description' => 'Forbidden: bot was blocked by the user',
+        ], 403)]);
+        $enrollment = $this->enrollment([
+            'day0_started_at' => now()->subDays(15),
+            'warm_tail_last_day_sent' => 11,
+        ]);
+
+        $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
+
+        $this->assertSame(11, $enrollment->fresh()->warm_tail_last_day_sent);
+    }
+
+    public function test_timeout_on_one_enrollment_does_not_stop_the_rest(): void
+    {
+        $timedOut = $this->enrollment([
+            'day0_started_at' => now()->subDays(15),
+            'warm_tail_last_day_sent' => 11,
+        ]);
+        $ok = $this->enrollment([
+            'day0_started_at' => now()->subDays(15),
+            'warm_tail_last_day_sent' => 11,
+        ]);
+
+        $calls = 0;
+        Http::fake(function () use (&$calls) {
+            $calls++;
+            if ($calls === 1) {
+                throw new ConnectionException('cURL error 28: Operation timed out after 30001 milliseconds');
+            }
+
+            return Http::response(['ok' => true], 200);
+        });
+
+        $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
+
+        $this->assertSame(12, $timedOut->fresh()->warm_tail_last_day_sent);
+        $this->assertSame(12, $ok->fresh()->warm_tail_last_day_sent);
     }
 }
