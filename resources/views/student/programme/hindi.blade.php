@@ -32,8 +32,7 @@
                 $course = $row['course'];
                 $isCompleted = auth()->user()->completedLessons->contains($lesson->id);
             @endphp
-            <a href="{{ $row['url'] }}"
-               class="group block bg-white rounded-2xl border border-gray-100 hover:border-brand/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+            <div class="group bg-white rounded-2xl border border-gray-100 hover:border-brand/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
                data-testid="hindi-playlist-item"
                data-course-id="{{ $course->id }}"
                data-lesson-id="{{ $lesson->id }}">
@@ -41,9 +40,9 @@
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>
                 @endif
                 <div class="p-5 md:p-6 flex items-start gap-4">
-                    <div class="shrink-0 w-10 h-10 rounded-xl bg-orange-50 text-brand flex items-center justify-center font-extrabold text-sm">
+                    <a href="{{ $row['url'] }}" class="shrink-0 w-10 h-10 rounded-xl bg-orange-50 text-brand flex items-center justify-center font-extrabold text-sm">
                         <i class="fas fa-play"></i>
-                    </div>
+                    </a>
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-2 mb-1">
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-gray-100 text-gray-600"
@@ -52,13 +51,24 @@
                                 <span class="text-[10px] font-bold uppercase tracking-widest text-green-700">Пройдено</span>
                             @endif
                         </div>
-                        <h2 class="text-lg font-bold text-gray-900 group-hover:text-brand transition-colors leading-snug">
-                            {{ $lesson->title }}
-                        </h2>
+                        <a href="{{ $row['url'] }}" class="block">
+                            <h2 class="text-lg font-bold text-gray-900 group-hover:text-brand transition-colors leading-snug">
+                                {{ $lesson->title }}
+                            </h2>
+                        </a>
+                        @if(!empty($row['drills_url']))
+                            <a href="{{ $row['drills_url'] }}"
+                               class="inline-flex items-center gap-1.5 mt-3 text-sm font-extrabold text-brand hover:underline"
+                               data-testid="hindi-playlist-drills">
+                                <i class="fas fa-pen-fancy text-xs"></i> Упражнения
+                            </a>
+                        @endif
                     </div>
-                    <i class="fas fa-chevron-right text-gray-300 group-hover:text-brand mt-2"></i>
+                    <a href="{{ $row['url'] }}" class="text-gray-300 group-hover:text-brand mt-2" aria-hidden="true">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
                 </div>
-            </a>
+            </div>
         @empty
             <div class="bg-white rounded-2xl border border-gray-100 p-8 text-gray-500" data-testid="hindi-playlist-empty">
                 Пока нет открытых занятий хинди. Если вы оплатили поток, откройте его карточку в кабинете или напишите куратору.

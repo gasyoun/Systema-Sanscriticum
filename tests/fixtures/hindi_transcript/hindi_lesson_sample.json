@@ -1,0 +1,36 @@
+{
+  "results": {
+    "channels": [
+      {
+        "alternatives": [
+          {
+            "words": [
+              {"word": "Сегодня", "punctuated_word": "Сегодня", "start": 0.0, "end": 0.3},
+              {"word": "слово", "punctuated_word": "слово", "start": 0.3, "end": 0.55},
+              {"word": "kitāb", "punctuated_word": "«kitāb»", "start": 0.55, "end": 1.1},
+              {"word": "это", "punctuated_word": "—", "start": 1.1, "end": 1.2},
+              {"word": "это", "punctuated_word": "это", "start": 1.2, "end": 1.4},
+              {"word": "книга", "punctuated_word": "книга.", "start": 1.4, "end": 1.8},
+
+              {"word": "По-хинди", "punctuated_word": "По-хинди", "start": 10.0, "end": 10.4},
+              {"word": "नमस्ते", "punctuated_word": "नमस्ते", "start": 10.4, "end": 11.0},
+              {"word": "значит", "punctuated_word": "значит", "start": 11.0, "end": 11.3},
+              {"word": "здравствуйте", "punctuated_word": "здравствуйте.", "start": 11.3, "end": 12.0},
+
+              {"word": "Повторите", "punctuated_word": "Повторите", "start": 20.0, "end": 20.4},
+              {"word": "слово", "punctuated_word": "слово", "start": 20.4, "end": 20.6},
+              {"word": "पानी", "punctuated_word": "पानी", "start": 20.6, "end": 21.1},
+              {"word": "ещё", "punctuated_word": "ещё", "start": 21.1, "end": 21.3},
+              {"word": "раз", "punctuated_word": "раз.", "start": 21.3, "end": 21.6},
+
+              {"word": "Скажите", "punctuated_word": "Скажите", "start": 30.0, "end": 30.3},
+              {"word": "aap", "punctuated_word": "aap", "start": 30.3, "end": 30.5},
+              {"word": "kaise", "punctuated_word": "kaise", "start": 30.5, "end": 30.9},
+              {"word": "hai", "punctuated_word": "hai.", "start": 30.9, "end": 31.2}
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

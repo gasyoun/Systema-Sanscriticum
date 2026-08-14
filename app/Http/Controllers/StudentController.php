@@ -30,6 +30,7 @@ use App\Services\CourseContinuationBanner;
 use App\Services\CourseMaterialsArchiver;
 use App\Services\DebtPaymentResolver;
 use App\Services\HindiProgrammePlaylist;
+use App\Services\HindiTranscriptDrills;
 use App\Services\Leaderboard\LeaderboardService;
 use App\Services\Learning\ExternalLearningProgressService;
 use App\Services\Membership\ClubEntitlement;
@@ -1054,8 +1055,14 @@ class StudentController extends Controller
                 ->first();
         }
 
+        $hindiDrillsUrl = null;
+        $hindiDrills = app(HindiTranscriptDrills::class);
+        if ($hindiDrills->enabled() && $hindiDrills->isHindiLesson($lesson) && $hindiDrills->hasItems($lesson)) {
+            $hindiDrillsUrl = route('student.lesson.drills', [$course->slug, $lesson->id]);
+        }
+
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl'));
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl'));
     }
 
     /**
