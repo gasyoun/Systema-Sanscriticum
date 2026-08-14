@@ -356,8 +356,13 @@ Overlaps the general roadmap's Laravel-11 item — this track owns the **securit
   this pass: `jenssegers/agent` v2.6.4 (last tag 13-06-2020, telemetry-only
   caller, not abandoned), Filament 3→5, Guzzle 7→8, and the H2529 `vcs`
   forks (already tracked).
-- [ ] **Deploy-surface review** — confirm `deploy.sh` / `docker-compose.yml` never echo secrets
-  to logs and that prod secrets come only from a non-committed `.env`.
+- [x] **Deploy-surface review** — ✅ done (14-08-2026, H2480): `deploy.sh` / CI deploy /
+  webhook-preflight never echo secret **values**; prod secrets come only from a
+  non-committed `.env`. One FAIL closed in the same pass — Sail MySQL healthcheck
+  no longer compose-interpolates `${DB_PASSWORD}` (`docker compose config` would
+  have printed it). Evidence:
+  [docs/SECURITY_W4_DEPLOY_SURFACE_REVIEW_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_W4_DEPLOY_SURFACE_REVIEW_2026-08-14.md);
+  gate: [tests/Unit/DeploySurfaceSecretsTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Unit/DeploySurfaceSecretsTest.php).
 
 **Exit criterion:** production runs a supported Laravel/PHP with no open high/critical
 Dependabot alerts and no secret material in deploy tooling.
@@ -398,6 +403,9 @@ Agent-doable Wave-1/Wave-3 work is packaged as executable handoffs in
   0 Composer/npm advisories, residual Dependabot + CI coverage for
   `mobile/` and `lecture-builder/`.
   [H2479-Grok_Systema-Sanscriticum_security-w4-dependency-posture-review_08.08.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2479-Grok_Systema-Sanscriticum_security-w4-dependency-posture-review_08.08.26.md)
+- **H2480** — Wave 4 deploy-surface review (14-08-2026): no secret echo in
+  `deploy.sh` / CI; Sail healthcheck no longer interpolates `${DB_PASSWORD}`.
+  [H2480-Grok_Systema-Sanscriticum_security-w4-deploy-surface-review_08.08.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2480-Grok_Systema-Sanscriticum_security-w4-deploy-surface-review_08.08.26.md)
 - **H071** — Wave 2 money/access findings (pre-existing).
   [H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
 

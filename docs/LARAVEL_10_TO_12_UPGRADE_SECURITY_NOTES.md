@@ -189,9 +189,11 @@ platform via [.github/workflows/ci.yml](https://github.com/gasyoun/Systema-Sansc
   merge and tag. Until then the app tracks two branch heads rather than immutable tags, so a
   force-push in either fork would change what installs — the forks are under `gasyoun`
   precisely so no third party can do that.
-- Wave 4 dependency posture is now closed under H2479
+- Wave 4 dependency posture closed 14-08-2026 under H2479
   ([docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md)).
-  The remaining Wave-4 item is the deploy-surface review (H2480).
+- Wave 4 deploy-surface review closed 14-08-2026 under H2480
+  ([docs/SECURITY_W4_DEPLOY_SURFACE_REVIEW_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_W4_DEPLOY_SURFACE_REVIEW_2026-08-14.md)).
+  The Wave 4 checklist is complete.
 
 ## References
 

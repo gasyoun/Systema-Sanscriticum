@@ -15,7 +15,7 @@ Companion metadoc for the [Security & Vulnerability-Avoidance Roadmap](https://g
 
 - **Subject created:** 03-07-2026 (from a `/roadmap-interview`, Fable 5 `claude-fable-5`, grounded in a posture audit).
 - **Metadoc authored:** 13-07-2026 (H887, Opus 4.8 `claude-opus-4-8`).
-- **Next hardening:** remaining live front is Wave 1 webhook `.env` deploy (MG `@DO` action — Telegram/VK/Zoom fail-closed secrets). Wave 3 Dependabot auto-merge keep-green closed (H2476, 14-08-2026). Wave 4 Laravel + PHP platform upgrade is closed (H2478/H2529). Wave 4 dependency posture closed (H2479, 14-08-2026). Remaining Wave 4 item: deploy-surface review (H2480).
+- **Next hardening:** remaining live front is Wave 1 webhook `.env` deploy (MG `@DO` action — Telegram/VK/Zoom fail-closed secrets). Wave 3 Dependabot auto-merge keep-green closed (H2476, 14-08-2026). Wave 4 is closed (Laravel/PHP H2478/H2529, dependency posture H2479, deploy-surface H2480).
 
 ## Ranked improvement backlog
 
@@ -65,5 +65,6 @@ Companion metadoc for the [Security & Vulnerability-Avoidance Roadmap](https://g
 | 09-08-2026 | Wave 4 backlog row #3 closed; provenance note updated (H2478) | Sonnet 5 `claude-sonnet-5` |
 | 14-08-2026 | Wave 3 Dependabot auto-merge keep-green closed (H2476); Approve no longer blocks Enable | Grok 4.6 `grok-4.6` |
 | 14-08-2026 | Wave 4 dependency posture closed (H2479); report + Dependabot/CI coverage for mobile and lecture-builder | Grok 4.6 `grok-4.6` |
+| 14-08-2026 | Wave 4 deploy-surface review closed (H2480); Sail healthcheck no longer interpolates `${DB_PASSWORD}` | Grok 4.6 `grok-4.6` |
 
 _Dr. Mārcis Gasūns_

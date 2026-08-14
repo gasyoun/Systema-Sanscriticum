@@ -44,7 +44,10 @@ services:
         networks:
             - sail
         healthcheck:
-            test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
+            # H2480: do not compose-interpolate the host DB password here —
+            # `docker compose config` would print it. $$ defers to the
+            # container env (MYSQL_ROOT_PASSWORD is already set above).
+            test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
             retries: 3
             timeout: 5s
 networks:
