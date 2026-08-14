@@ -33,6 +33,19 @@ final class HindiTranscriptDrillExtractor
     ];
 
     /**
+     * Hindi classroom words as Whisper-ru writes them (Cyrillic).
+     * Distinctive 4+ letter forms only — not нам/ту/хай/мат.
+     *
+     * @var list<string>
+     */
+    private const CYR_HINDI = [
+        'намасте', 'намаскар', 'китаб', 'китааб', 'пани',
+        'кайсе', 'кайса', 'кайси', 'деванагари', 'акшар',
+        'шатрандж', 'сакахари', 'мансахари', 'ларка', 'ларки',
+        'меронам', 'апка', 'апка', 'китаб',
+    ];
+
+    /**
      * @param  list<array{formatted_time?:string,start?:float,end?:float,text?:string,safe_text?:string}>  $sentences
      * @return list<array{
      *     id: string,
@@ -167,6 +180,7 @@ final class HindiTranscriptDrillExtractor
     {
         $tokens = $this->tokens($text);
         $devanagari = [];
+        $cyrHindi = [];
         $latin = [];
         foreach ($tokens as $token) {
             $bare = trim($token, "«»\"'");
@@ -175,6 +189,8 @@ final class HindiTranscriptDrillExtractor
             }
             if ($this->isDevanagari($bare) && mb_strlen($bare) >= 2) {
                 $devanagari[] = $bare;
+            } elseif ($this->isCyrillicHindi($bare)) {
+                $cyrHindi[] = $bare;
             } elseif ($this->isLatinHindi($bare)) {
                 $latin[] = $bare;
             }
@@ -182,6 +198,9 @@ final class HindiTranscriptDrillExtractor
 
         if ($devanagari !== []) {
             return $this->longest($devanagari);
+        }
+        if ($cyrHindi !== []) {
+            return $this->longest($cyrHindi);
         }
         if ($latin !== []) {
             return $this->longest($latin);
@@ -203,6 +222,16 @@ final class HindiTranscriptDrillExtractor
     private function isDevanagari(string $token): bool
     {
         return (bool) preg_match('/\p{Devanagari}/u', $token);
+    }
+
+    private function isCyrillicHindi(string $token): bool
+    {
+        $lower = mb_strtolower($token);
+        if (in_array($lower, self::CYR_HINDI, true)) {
+            return true;
+        }
+
+        return str_starts_with($lower, 'намаст') && mb_strlen($lower) <= 10;
     }
 
     private function isLatinHindi(string $token): bool
