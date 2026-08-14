@@ -211,7 +211,7 @@ class HindiTranscriptDrillsTest extends TestCase
         ], JSON_UNESCAPED_UNICODE));
         $lesson->forceFill(['transcript_file' => $path])->save();
 
-        $this->assertSame([], app(\App\Services\HindiTranscriptDrills::class)->itemsFor($lesson));
+        $this->assertSame([], app(HindiTranscriptDrills::class)->itemsFor($lesson));
     }
 
     public function test_cyrillic_whisper_hindi_is_a_cloze_target(): void
