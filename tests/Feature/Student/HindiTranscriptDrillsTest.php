@@ -213,6 +213,21 @@ class HindiTranscriptDrillsTest extends TestCase
         $this->assertSame([], app(\App\Services\HindiTranscriptDrills::class)->itemsFor($lesson));
     }
 
+    public function test_cyrillic_whisper_hindi_is_a_cloze_target(): void
+    {
+        $extractor = new \App\Services\HindiTranscriptDrillExtractor();
+        $items = $extractor->extract([
+            [
+                'text' => 'Говорим Намасте и кланяемся.',
+                'start' => 1.0,
+            ],
+        ]);
+
+        $this->assertNotSame([], $items);
+        $this->assertSame('cloze', $items[0]['type']);
+        $this->assertSame('Намасте', $items[0]['answer']);
+    }
+
     public function test_english_classroom_loans_are_not_drill_targets(): void
     {
         $extractor = new \App\Services\HindiTranscriptDrillExtractor();

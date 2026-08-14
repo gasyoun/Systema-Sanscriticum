@@ -68,13 +68,16 @@ folders hold only ~1 KB TOC `.txt` (agenda timestamps), not `words[]`.
 Deepgram on the n8n box returns `ASR_PAYMENT_REQUIRED` — Ivan:
 [issue #1692](https://github.com/gasyoun/Systema-Sanscriticum/issues/1692).
 
-Older YouTube shells have auto-captions (`ru-orig`). Those are ingested as
-`transcript_file` for the lesson player (same Deepgram-shaped JSON the
-parser already reads). YouTube ASR is Russian classroom speech mixed with
-wrong-script tokens (Tamil/Bengali/English). `metadata.source =
-youtube-auto-ru-orig` therefore yields **zero** drill items — «Упражнения»
-stays hidden until a Deepgram (or other Hindi-token) transcript lands.
-14-08-2026 salvage: 88 + lesson 938 attached (0 fail). New Zoom classes
-ingest automatically once Deepgram can bill.
+Older YouTube shells first got `ru-orig` auto-captions for the lesson
+player. `metadata.source = youtube-auto-ru-orig` still yields **zero**
+drill items.
+
+**Re-ASR 14-08-2026 (H2717, Deepgram still 402):** lesson 938 was
+re-transcribed with faster-whisper `small` / `language=ru` on the app
+host (8454 words, ~15 min). Whisper writes Hindi in Cyrillic
+(`Намасте`), so the extractor now matches a short distinctive
+Cyrillic classroom lexicon. Remaining 88 youtube-auto shells are
+queued on `/tmp/run_hindi_reasr.py`. New Zoom classes still need
+Deepgram credits ([issue #1692](https://github.com/gasyoun/Systema-Sanscriticum/issues/1692)).
 
 _Dr. Mārcis Gasūns_
