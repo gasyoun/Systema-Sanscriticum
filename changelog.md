@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2740: преподаватель хинди видит свои потоки в «Мой хинди».** Костина (и любой `role=teacher` с `teacher_id` на оболочке программы) видит все опубликованные занятия своих потоков без студенческой оплаты и без записи в группу. Пока студенческие флаги OFF, ей открыты упражнения из файлов, колода и практика из чата — только ей. На `/dvaram` карточка «Задача по хинди» ведёт на [issue #1709](https://github.com/gasyoun/Systema-Sanscriticum/issues/1709). Студентам доступ не выдаётся. Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.89.47] - 2026-08-14
 ### Added
 - **H2731: bounded Hindi PDF sidecar.** Offline artisan `hindi:pdf-sidecar {lesson}` (dry-run default; `--apply` writes sibling `.txt` for the H2444 extractor). Uses Ghostscript `txtwrite` already on prod (`/usr/bin/gs` 10.05.1); optional Tesseract only if the binary exists. Cap: first 8 pages, skip over 15 MB. No Telegram, no live OCR on a request, `HINDI_ATTACHMENT_DRILLS` stays OFF. Lesson 1723 measured 14-08-2026: 6 083 037 bytes, 148 pages, p1–8 = 12 338 chars with Devanagari + Cyrillic. Document: [docs/HINDI_ATTACHMENT_DRILLS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/HINDI_ATTACHMENT_DRILLS_2026.md). Executor: Grok 4.6 (`grok-4.6`).

@@ -22,6 +22,9 @@ final class HindiProgrammePlaylist
 {
     public const CATEGORY_SLUG = 'hindi';
 
+    /** Brief for the Hindi teacher (Kostina). Not a student surface. */
+    public const TEACHER_BRIEF_URL = 'https://github.com/gasyoun/Systema-Sanscriticum/issues/1709';
+
     public function __construct(
         private readonly AccessDiagnosticsService $diagnostics,
         private readonly ClubEntitlement $club,
@@ -125,6 +128,34 @@ final class HindiProgrammePlaylist
         return $this->graph->orderedShells('hindi');
     }
 
+    /**
+     * Hindi teacher of any programme shell (H2740). Does not grant
+     * student payments. Used so the teacher sees her own streams in
+     * /dvaram and can preview drills / chat practice while student
+     * flags stay OFF.
+     */
+    public function teachesHindi(User $user): bool
+    {
+        if (! $user->isTeacher() || $user->teacher_id === null) {
+            return false;
+        }
+
+        $tid = (int) $user->teacher_id;
+
+        return $this->orderedShells()->contains(
+            static fn (Course $shell): bool => $shell->isTaughtBy($tid),
+        );
+    }
+
+    public function teachesShell(User $user, Course $shell): bool
+    {
+        if (! $user->isTeacher() || $user->teacher_id === null) {
+            return false;
+        }
+
+        return $shell->isTaughtBy((int) $user->teacher_id);
+    }
+
     public function canAccessLesson(User $user, Lesson $lesson): bool
     {
         $course = $lesson->relationLoaded('course')
@@ -137,6 +168,10 @@ final class HindiProgrammePlaylist
             static fn (Course $shell): bool => (int) $shell->id === (int) $course->id,
         )) {
             return false;
+        }
+
+        if ($this->teachesShell($user, $course)) {
+            return (bool) $lesson->is_published;
         }
 
         return $this->accessibleLessons($user, $course)->contains(
@@ -162,6 +197,15 @@ final class HindiProgrammePlaylist
      */
     private function accessibleLessons(User $user, Course $shell): Collection
     {
+        if ($this->teachesShell($user, $shell)) {
+            return Lesson::query()
+                ->where('course_id', $shell->id)
+                ->where('is_published', true)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get();
+        }
+
         $inGroup = $shell->relationLoaded('groups')
             ? $shell->groups->pluck('id')->intersect($user->groups->pluck('id'))->isNotEmpty()
             : $shell->groups()->whereIn('groups.id', $user->groups->pluck('id'))->exists();

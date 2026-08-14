@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Services\HindiProgrammePlaylist;
 use App\Services\HindiTgCuratedPractice;
 use App\Services\HindiTranscriptDrillExtractor;
 use Illuminate\Http\JsonResponse;
@@ -19,12 +20,12 @@ use Illuminate\View\View;
  */
 class HindiTgCuratedPracticeController extends Controller
 {
-    public function show(Request $request, HindiTgCuratedPractice $practice): View
+    public function show(Request $request, HindiTgCuratedPractice $practice, HindiProgrammePlaylist $playlist): View
     {
-        abort_unless($practice->enabled(), 404);
-
         $user = $request->user();
         abort_unless($user !== null, 403);
+        $teacherPreview = $playlist->teachesHindi($user);
+        abort_unless($practice->enabled() || $teacherPreview, 404);
         abort_unless($practice->userCanAccess($user), 403);
 
         return view('student.programme.hindi-tg-practice', [
@@ -33,12 +34,11 @@ class HindiTgCuratedPracticeController extends Controller
         ]);
     }
 
-    public function check(Request $request, HindiTgCuratedPractice $practice): JsonResponse
+    public function check(Request $request, HindiTgCuratedPractice $practice, HindiProgrammePlaylist $playlist): JsonResponse
     {
-        abort_unless($practice->enabled(), 404);
-
         $user = $request->user();
         abort_unless($user !== null, 403);
+        abort_unless($practice->enabled() || $playlist->teachesHindi($user), 404);
         abort_unless($practice->userCanAccess($user), 403);
 
         $validated = $request->validate([

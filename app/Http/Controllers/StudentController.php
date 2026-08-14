@@ -352,6 +352,9 @@ class StudentController extends Controller
         $viewData['hindiPlaylist'] = $hindiPlaylistService->enabled()
             ? $hindiPlaylistService->summaryFor($user)
             : null;
+        $viewData['hindiTeacherBrief'] = $hindiPlaylistService->teachesHindi($user)
+            ? HindiProgrammePlaylist::TEACHER_BRIEF_URL
+            : null;
 
         // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
         // Flag OFF → byte-stable legacy dashboard (recovery vars unused there).
@@ -1060,8 +1063,9 @@ class StudentController extends Controller
         $hindiDrills = app(HindiTranscriptDrills::class);
         $hindiAttachments = app(HindiAttachmentDrills::class);
         $hindiOk = $hindiDrills->isHindiLesson($lesson);
-        $hasTranscriptItems = $hindiDrills->enabled() && $hindiOk && $hindiDrills->hasItems($lesson);
-        $hasAttachmentPath = $hindiAttachments->enabled() && $hindiOk && $hindiAttachments->hasPracticePath($lesson);
+        $hindiTeacherPreview = app(HindiProgrammePlaylist::class)->teachesHindi($user);
+        $hasTranscriptItems = ($hindiDrills->enabled() || $hindiTeacherPreview) && $hindiOk && $hindiDrills->hasItems($lesson);
+        $hasAttachmentPath = ($hindiAttachments->enabled() || $hindiTeacherPreview) && $hindiOk && $hindiAttachments->hasPracticePath($lesson);
         if ($hasTranscriptItems || $hasAttachmentPath) {
             $hindiDrillsUrl = route('student.lesson.drills', [$course->slug, $lesson->id]);
         }

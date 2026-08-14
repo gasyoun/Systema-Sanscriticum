@@ -9,8 +9,10 @@ use App\Models\Course;
 use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\Payment;
+use App\Models\Teacher;
 use App\Models\User;
 use App\Services\HindiProgrammePlaylist;
+use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -288,5 +290,54 @@ class HindiProgrammePlaylistTest extends TestCase
             ->get(route('student.programme.hindi'))
             ->assertOk()
             ->assertSee('data-testid="hindi-playlist-empty"', false);
+    }
+
+    public function test_hindi_teacher_sees_her_published_lessons_without_payment(): void
+    {
+        config([
+            'features.hindi_programme_playlist' => true,
+            'features.hindi_tg_curated_practice' => false,
+            'features.hindi_attachment_drills' => false,
+            'features.hindi_my_srs_deck' => false,
+            'features.cabinet_hybrid' => false,
+        ]);
+        $hindi = Category::factory()->create(['name' => 'Хинди', 'slug' => 'hindi']);
+        $staff = Teacher::create(['name' => 'Екатерина Костина']);
+        $course = Course::factory()->create([
+            'title' => 'Хинди гр. 1',
+            'slug' => 'hindi-gr1-teacher',
+            'teacher_id' => $staff->id,
+        ]);
+        $course->categories()->attach($hindi->id);
+        $lesson = Lesson::factory()->for($course)->create([
+            'title' => '1-е занятие',
+            'sort_order' => 1,
+            'block_number' => 1,
+            'is_published' => true,
+            'is_free' => false,
+        ]);
+        $teacher = User::factory()->create([
+            'role' => Roles::TEACHER,
+            'teacher_id' => $staff->id,
+        ]);
+
+        $this->actingAs($teacher)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('data-testid="hindi-programme-playlist-card"', false)
+            ->assertSee('data-testid="hindi-teacher-brief"', false)
+            ->assertSee(HindiProgrammePlaylist::TEACHER_BRIEF_URL, false);
+
+        $this->actingAs($teacher)
+            ->get(route('student.programme.hindi'))
+            ->assertOk()
+            ->assertSee($lesson->title, false)
+            ->assertSee('data-testid="hindi-playlist-tg-practice"', false)
+            ->assertSee('data-testid="hindi-teacher-brief"', false);
+
+        $this->actingAs($teacher)
+            ->get(route('student.programme.hindi.tg'))
+            ->assertOk()
+            ->assertSee('data-testid="hindi-tg-curated-practice"', false);
     }
 }
