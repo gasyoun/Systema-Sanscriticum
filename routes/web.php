@@ -49,6 +49,7 @@ use App\Http\Controllers\SrsController;
 use App\Http\Controllers\Student\AccessSelfServiceController;
 use App\Http\Controllers\Student\HindiMySrsDeckController;
 use App\Http\Controllers\Student\HindiProgrammePlaylistController;
+use App\Http\Controllers\Student\HindiTgCuratedPracticeController;
 use App\Http\Controllers\Student\HindiTranscriptDrillsController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TelegramController;
@@ -440,6 +441,12 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     // transcript extractor server-side. Not behind srs.enabled (H2106 fence).
     Route::post('/dvaram/programme/hindi/srs', [HindiMySrsDeckController::class, 'addLesson'])
         ->name('student.programme.hindi.srs');
+
+    // H2446 — curated TG practice (JSON store, no live Telegram). Flag OFF → 404.
+    Route::get('/dvaram/programme/hindi/chat-practice', [HindiTgCuratedPracticeController::class, 'show'])
+        ->name('student.programme.hindi.tg');
+    Route::post('/dvaram/programme/hindi/chat-practice/check', [HindiTgCuratedPracticeController::class, 'check'])
+        ->name('student.programme.hindi.tg.check');
 
     Route::get('/dvaram/reading', [ReadingPackController::class, 'cabinetIndex'])
         ->name('student.reading.index');

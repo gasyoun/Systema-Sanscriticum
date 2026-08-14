@@ -192,6 +192,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HINDI_PROGRAMME_CATEGORY_SLUG` | optional | `'hindi'` | config/programme.php:17 |
 | `HINDI_PROGRAMME_COURSE_IDS` | optional | `'416,356,366'` | config/programme.php:20 |
 | `HINDI_PROGRAMME_PLAYLIST` | optional | `false` | config/features.php:893 |
+| `HINDI_TG_CURATED_PRACTICE` | optional | `false` | config/features.php:928 |
 | `HINDI_TRANSCRIPT_DRILLS` | optional | `false` | config/features.php:901 |
 | `HOMEWORK_AUTO_OPEN_ALIGN_HOUR` | optional | `9` | config/homework.php:127 |
 | `HOMEWORK_AUTO_OPEN_CHANNELS` | optional | `'telegram,vk'` | config/homework.php:133 |

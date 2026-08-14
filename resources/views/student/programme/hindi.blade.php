@@ -29,6 +29,13 @@
                     <i class="fas fa-clone text-xs"></i> Открыть колоду «Мой хинди»
                 </a>
             @endif
+            @if(!empty($tgPracticeEnabled))
+                <a href="{{ route('student.programme.hindi.tg') }}"
+                   class="inline-flex items-center gap-2 mt-4 {{ (!empty($srsDeckEnabled) && config('srs.enabled')) ? 'ml-4' : '' }} text-sm font-extrabold text-brand hover:underline"
+                   data-testid="hindi-playlist-tg-practice">
+                    <i class="fas fa-comments text-xs"></i> Практика из чата
+                </a>
+            @endif
         </div>
     </div>
 

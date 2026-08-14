@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "items": [
+    {
+      "id": "htg-ok",
+      "type": "translate",
+      "prompt": "Как по-русски: kitāb",
+      "answer": "книга",
+      "lemma": "kitāb",
+      "curator": "teacher",
+      "source": "teacher_curated"
+    },
+    {
+      "id": "htg-pii-key",
+      "type": "translate",
+      "prompt": "Как по-русски: पानी",
+      "answer": "вода",
+      "telegram_user_id": 123456,
+      "source": "teacher_curated"
+    },
+    {
+      "id": "htg-pii-username",
+      "type": "translate",
+      "prompt": "Как сказал @ivan_student в чате",
+      "answer": "книга",
+      "source": "teacher_curated"
+    },
+    {
+      "id": "htg-pii-url",
+      "type": "translate",
+      "prompt": "Смотри t.me/c/123/45",
+      "answer": "книга",
+      "source": "teacher_curated"
+    }
+  ]
+}
