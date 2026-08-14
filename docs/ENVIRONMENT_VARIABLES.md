@@ -224,7 +224,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HORIZON_NAME` | required | `—` | config/horizon.php:18 |
 | `HORIZON_PATH` | optional | `'horizon'` | config/horizon.php:44 |
 | `HORIZON_PREFIX` | optional | `Str::slug(env('APP_NAME', 'laravel'), '_').'_horizon:'` | config/horizon.php:70 |
-| `HUB_TRANSLITERATE` | optional | `false` | config/features.php:214 |
+| `HUB_TRANSLITERATE` | optional | `false` | config/features.php:214; gates `/transliterate` only. Public `/sanskritorium` (H2763) ignores this flag. |
 | `INVEST_ACCEPTABLE_PAYBACK_YEARS` | optional | `4` | config/investment.php:35 |
 | `INVEST_DISCOUNT_RATE_PCT` | optional | `20` | config/investment.php:27 |
 | `INVEST_HORIZON_YEARS` | optional | `5` | config/investment.php:30 |

@@ -38,6 +38,7 @@ Tier-0 rule. But A is the differentiator that makes C credible — never starve 
 - **B:** Run the **28 Aug marathon** (A0, Cyrillic-only) — H440 Phase 2. Diagnostic quiz → placement seed. `Read C:\Users\user\Documents\GitHub\Uprava\handoffs\H440-Sonnet_Systema-Sanscriticum_marathon_diagnostic_3day_09.07.26.md and execute it.`
 - **A:** **Cascade lemmatizer v0** (DCS E27 → vidyut E29 → Heritage D19) behind one internal function; `/transliterate` live (sanskrit-util L1).
   - ✅ **First slice shipped (H1463, 23-07-2026)** — Grok 4.5 (`grok-4.5`) under user-authorized Opus-lock override: flag `hub_transliterate` (default OFF), `/transliterate` playground + vendored `sanskrit-util`, `App\Services\Nlp\CascadeLemmatizer` (DCS stage on 341-form Nala/DCS-attested slice; vidyut/Heritage interface-stubbed). **Claude/Opus: verify after** (cascade order, key normalizer, slice provenance). PR link in CHANGELOG.
+  - ✅ **Public wrapper (H2763, 15-08-2026)** — Grok 4.5 (`grok-4.5`): `/sanskritorium` is the indexable public path over the same view + JS. Flag stays OFF for `/transliterate`.
 - **C:** `sanskritHUB` landing page on samskrtam.ru; Dataset JSON-LD from the kosha directory (J21); SEO playbook §9.
 - **D:** Wire **Indische Sprüche** (F33) as the first B1 reading unit.
 - **KPI gate:** marathon runs; lemmatizer answers a form end-to-end; landing indexed.

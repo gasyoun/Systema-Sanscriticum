@@ -353,9 +353,12 @@ Route::get('/reading/kosha-demo', [ReadingPackController::class, 'show'])
 // ═══════════════════════════════════════════════════════════════
 // H1463 — Sanskrit-HUB L5 /transliterate playground (Workstream A v0).
 // features.hub_transliterate, ВЫКЛ по умолчанию (404 пока не включен).
+// H2763 — public /sanskritorium wrapper; always 200, same view+JS.
 // ═══════════════════════════════════════════════════════════════
 Route::get('/transliterate', [TransliterateController::class, 'show'])
     ->name('hub.transliterate');
+Route::get('/sanskritorium', [TransliterateController::class, 'sanskritorium'])
+    ->name('hub.sanskritorium');
 
 // H2482 — public bounded VisualDCS preview (flag per surface, 404 when OFF).
 Route::get('/visualdcs/{surface}/preview', [VisualDcsController::class, 'preview'])
