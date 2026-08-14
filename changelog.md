@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.89.46] - 2026-08-14
 ### Added
 - **H2446: отобранная практика из учебного чата хинди.** `/dvaram/programme/hindi/chat-practice` (флаг `features.hindi_tg_curated_practice` / `HINDI_TG_CURATED_PRACTICE`, по умолчанию OFF). Читает committed JSON, не вызывает Telegram/Madeline, не выгружает историю чата. Гейт PII отбрасывает `telegram_*` / `@username` / `t.me`. 10 пилотных заданий составил преподаватель (не скрап). Доступ как у H2441 (есть хотя бы одно открытое занятие хинди). Смоук: `php artisan hindi:tg-practice-probe --json`. Документ: [docs/HINDI_TG_CURATED_PRACTICE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/HINDI_TG_CURATED_PRACTICE_2026.md). Executor: Grok 4.6 (`grok-4.6`).
 
