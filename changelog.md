@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2479 (SECURITY Wave4): dependency posture review — 0 open CVEs, residual coverage for `mobile/` and `lecture-builder/`.** `composer audit --locked` and both npm lockfiles are clean; Dependabot has 0 open alerts (40 historical, all fixed). Report: [docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md). Dependabot now watches `/mobile` (npm) and `/lecture-builder` (pip) on the same weekly + 7-day cooldown as root; CI gained `npm audit --package-lock-only` for the Capacitor lock. Won't-fix this pass: `jenssegers/agent` (stale 2020 tag, telemetry-only), Filament 3→5, H2529 `vcs` forks. Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.89.29] - 2026-08-14
 ### Changed
 - **H2476: SECURITY Wave3 Dependabot auto-merge unblocked.** Zero open Dependabot PRs and zero open alerts (14-08-2026). The 10-08-2026 patch/minor queue ([#1581](https://github.com/gasyoun/Systema-Sanscriticum/pull/1581)/[#1582](https://github.com/gasyoun/Systema-Sanscriticum/pull/1582)/[#1583](https://github.com/gasyoun/Systema-Sanscriticum/pull/1583)) failed the auto-merge job on `GitHub Actions is not permitted to approve pull requests` after [PR #1109](https://github.com/gasyoun/Systema-Sanscriticum/pull/1109) dropped `|| true` from Approve — Enable auto-merge never ran. Approve is now `continue-on-error`; majors still get neither approve nor `--auto` (no force-merge). Roadmap Wave 3 checkbox ticked. Executor: Grok 4.6 (`grok-4.6`).

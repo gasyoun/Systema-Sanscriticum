@@ -1,6 +1,6 @@
 # Laravel 10 → 12 upgrade — security rationale and support-window notes
 
-_Created: 09-08-2026 · Last updated: 10-08-2026_
+_Created: 09-08-2026 · Last updated: 14-08-2026_
 
 The **security rationale** half of SECURITY_ROADMAP Wave 4 (H2477). The upgrade itself
 shipped earlier under H862; this document records *why* it landed on Laravel 12 instead of
@@ -189,8 +189,9 @@ platform via [.github/workflows/ci.yml](https://github.com/gasyoun/Systema-Sansc
   merge and tag. Until then the app tracks two branch heads rather than immutable tags, so a
   force-push in either fork would change what installs — the forks are under `gasyoun`
   precisely so no third party can do that.
-- The two remaining Wave-4 items (dependency posture review, deploy-surface review) are
-  untouched by this note.
+- Wave 4 dependency posture is now closed under H2479
+  ([docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md)).
+  The remaining Wave-4 item is the deploy-surface review (H2480).
 
 ## References
 
