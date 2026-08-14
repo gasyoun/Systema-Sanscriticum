@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2645: лендинг + прайсинг клуба на `/klub`.** Публичная страница двух уровней («Свободный» 0 ₽ / «Клуб» помесячно-квартально-годово) с видимыми исключениями обоих уровней; цены и названия тарифов читаются из курса `club` в Filament (id 444, тарифы 5038–5040), CTA каждого тарифа ведёт в `/checkout/{tariff}`. Текст «Что происходит, когда клуб заканчивается» — дословно из карточки кабинета H2644 (заканчивается право, открытые уроки не отбираются). Страница отдаёт 404 до включения `features.club_membership` — CTA не может продавать раньше, чем контур H2644 выдаёт доступ; строка про месячный бесплатный урок помечена «Скоро» до включения `membership_free_tier`. Клубной скидки на живые курсы на странице НЕТ (механизма доставки не существует — см. PR). Третий тариф и корпус не упоминаются. Гейт: `tests/Feature/Membership/ClubLandingPageTest.php`. Executor: Fable 5 (`claude-fable-5`).
+
 ### Fixed
 - **H2717: Whisper-ru Hindi drills.** faster-whisper writes classroom Hindi in Cyrillic (`Намасте`). Extractor now cloze-targets a short distinctive Cyrillic lexicon; cache `v4`. Lesson 938 re-ASR is `faster-whisper-ru` (8454 words). Remaining 88 YouTube-auto shells still queued. Executor: Grok 4.6 (`grok-4.6`).
 
