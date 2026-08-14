@@ -190,6 +190,29 @@ class HindiTranscriptDrillsTest extends TestCase
             ->assertDontSee('data-testid="hindi-playlist-drills"', false);
     }
 
+    public function test_youtube_auto_ru_orig_source_yields_no_drills(): void
+    {
+        config(['features.hindi_transcript_drills' => true]);
+        [$user, $course, $lesson] = $this->seedHindiLessonWithFixture();
+        $path = 'transcripts/youtube_auto.json';
+        Storage::disk('public')->put($path, json_encode([
+            'metadata' => ['source' => 'youtube-auto-ru-orig'],
+            'results' => [
+                'channels' => [[
+                    'alternatives' => [[
+                        'words' => [
+                            ['word' => 'नमस्ते', 'punctuated_word' => 'नमस्ते', 'start' => 0.1, 'end' => 0.4],
+                            ['word' => 'kitāb', 'punctuated_word' => 'kitāb.', 'start' => 0.4, 'end' => 0.8],
+                        ],
+                    ]],
+                ]],
+            ],
+        ], JSON_UNESCAPED_UNICODE));
+        $lesson->forceFill(['transcript_file' => $path])->save();
+
+        $this->assertSame([], app(\App\Services\HindiTranscriptDrills::class)->itemsFor($lesson));
+    }
+
     public function test_english_classroom_loans_are_not_drill_targets(): void
     {
         $extractor = new \App\Services\HindiTranscriptDrillExtractor();
