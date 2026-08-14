@@ -31,6 +31,15 @@ class TelephonyGateConfigTest extends TestCase
         $this->assertFalse((bool) config('telephony.recording.send_transcript_to_llm'));
     }
 
+    public function test_department_and_capacity_thresholds_match_packet(): void
+    {
+        $this->assertSame(3, (int) config('telephony.activation.department_staff'));
+        $this->assertSame(10, (int) config('telephony.activation.department_closed_threads_per_staff_30d'));
+        $this->assertSame(4, (int) config('telephony.activation.capacity_concurrent_operators'));
+        $this->assertSame(900, (int) config('telephony.activation.capacity_median_first_response_seconds'));
+        $this->assertSame(14, (int) config('telephony.activation.capacity_window_days'));
+    }
+
     public function test_call_event_rejects_unknown_type(): void
     {
         $this->expectException(InvalidArgumentException::class);

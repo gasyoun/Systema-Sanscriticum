@@ -256,6 +256,7 @@ Thresholds are in [`config/telephony.php`](https://github.com/gasyoun/Systema-Sa
 - [x] Separately mintable backlog (section 8)
 - [x] H2749 Phase 2 re-measure (14-08-2026 23:18 MSK) — **STOP** (0 completed call tasks vs ≥20; H2747 not live). Section 10.
 - [x] DPA / storage-region note — **absent**; recording stays OFF (section 10.3)
+- [x] H2750 Phase 3–4 re-measure (14-08-2026 23:49 MSK) — **STOP** (0 staff at the close bar; 14-day median FR 244 s; 1 assignee). Section 11.
 - [ ] Human contract approval / flag flip — **not this session**
 - [ ] Q-law-4/5/6 — parked for a lawyer; they do not block Phase 0 design
 
@@ -323,7 +324,7 @@ Section 7 table is unchanged. This pass does **not** arm the PSTN or recording c
 | Callback request | No — H2747 has not shipped | Flag false + `config:cache`. Rows stay |
 | PSTN | **No.** No adapter, no number, no webhook route | N/A. If a later PR adds the webhook: flag-off must 404; do not port a number away in the same hour |
 | Recording | **No.** Q-law-5 open | Flag false. Leave carrier TTL to expire |
-| Departments / capacity | No | Flag false |
+| Departments / capacity | **No.** H2750 STOP (section 11) | Flag false |
 
 Hard stops from section 7 still apply: privacy exposure, identity/thread ambiguity, money/access writes, production send without approval, auto-dial debtors.
 
@@ -336,5 +337,77 @@ Re-mint only when **all three** are true:
 3. For recording only: Q-law-5 answered + DPA + policy §5/§7 edit. PSTN without recording can proceed after (1)+(2) and a written storage-region fact for signaling metadata; audio still OFF.
 
 Until then: do not buy a number, do not implement `CallProvider`, do not accept a Jivo VATS contract.
+
+## 11. H2750 Phase 3–4 re-measure (14-08-2026 23:49 MSK) — STOP
+
+H2750 (Grok 4.6 `grok-4.6`) re-measured the department and capacity gates on prod `/var/www/html` the same calendar day as H2486 / H2749. **Phase 3 (extra `queue` values + Helpdesk filter) is not implemented. Phase 4 (capacity cap) is not implemented.** No `departments` table. No client-facing department picker. No Jivo Corporate routing clone. Flags stay OFF.
+
+Packet numbers win over the 30-day Telegram *average* first response (~1 986 s). The capacity gate is **median** first response on an **assigned** queue over 14 days.
+
+### 11.1 Gate check
+
+| Gate | Threshold ([config/telephony.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/telephony.php)) | Live 14-08-2026 23:49 MSK | Result |
+|---|---|---|---|
+| Phase 3 staff × closed threads | ≥ 3 staff each closing ≥ 10 threads / 30 d (`department_staff` × `department_closed_threads_per_staff_30d`) | **0** staff meet the bar. Closed threads 30 d = **1**, and that row has `assigned_to` null | FAIL |
+| Phase 3 topic split | Measured sales vs access vs schedule on the existing `SupportTopicRule` taxonomy | Access 123 / payment 52 / schedule 46 chat-days (same 30 d window). Split exists; it is **not** a new department object | FAIL (staff bar first) |
+| Phase 4 concurrent operators | ≥ 4 concurrent online operators (`capacity_concurrent_operators`) | Distinct assignees = **1**. Web `answered_by` 30 d = **2**, 14 d = **0**. Telegram `responder_user_id` 30 d = **0**. Open assigned threads = **1** | FAIL |
+| Phase 4 median first response | 14-day median FR > 900 s **on an assigned queue** (`capacity_median_first_response_seconds`, `capacity_window_days`) | Assigned-queue median: **n = 0** (no assigned rollup in 14 d). Overall 14-day median FR = **244 s** (n = 66). Overall 14-day *average* FR = 2 399 s (outliers; not the gate) | FAIL |
+
+Implementing extra queues or a cap on today's 1-assignee inbox is the packet fail case. The existing `queue` values stay `technical` / `general` (live: 118 technical, 1 general, 7 empty). Helpdesk already filters `queue=technical` on the «Тех.» tab via `assigned_to` + `queue` — that is not a department picker.
+
+### 11.2 Support volume (same command as section 1)
+
+`php artisan support:parity-report --days=30 --json` at 2026-08-14T23:48:02+03:00. Window 16-07 → 14-08.
+
+| Slice | Value |
+|---|---:|
+| `support_conversations` | 126 |
+| open / closed | 125 / **1** |
+| closed in 30 d | **1** |
+| assigned / distinct assignees | 1 / **1** |
+| staff closing ≥10 threads / 30 d | **0** |
+| web responders 30 d / 14 d | 2 / 0 |
+| 14-day median first response (all rollups) | 244 s |
+| 14-day median first response (assigned queue) | n/a (n = 0) |
+| `features.support_departments` | false |
+| `features.support_capacity_routing` | false |
+
+The inbox is still the 14-08-2026 shape: two web responders, one assignee, one closed thread. [jivo.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/jivo.md)'s 1–2 people / 1–100 messages/day line still holds.
+
+### 11.3 What was not built
+
+| Temptation | Why not |
+|---|---|
+| Extra `SupportConversation.queue` labels (sales / access / schedule) | Phase 3 staff bar failed. Topic taxonomy already exists (`SupportTopicRule`) |
+| Helpdesk department filter behind `support_departments` | Same. No second queue has operators |
+| Client-facing department picker | Packet forbids until two queues have operators |
+| Cap on assigned open threads (`support_capacity_routing`) | Phase 4 both OR-branches failed. One assignee; assigned-queue median FR unmeasurable |
+| New `departments` table | Packet forbids while `queue` + `assigned_to` exist |
+| Geo-IP routing | 152-ФЗ geo brief still closed |
+
+### 11.4 Canary / rollback — department and capacity lanes not armed
+
+Section 7 table is unchanged.
+
+| Lane | Armed this pass? | Rollback if someone flips the env anyway |
+|---|---|---|
+| Departments | **No.** No extra queue values, no new Helpdesk filter | `SUPPORT_DEPARTMENTS=false` + `config:cache`. `queue=general` remains |
+| Capacity routing | **No.** No assignment cap | `SUPPORT_CAPACITY_ROUTING=false`. Assignment stays manual |
+
+### 11.5 What a later Phase 3 / 4 session must show
+
+Re-mint only when the matching gate is true. Packet numbers still win.
+
+**Phase 3 (departments = extra `queue` + Helpdesk filter, no client picker):**
+
+1. Distinct staff each with ≥ `config('telephony.activation.department_closed_threads_per_staff_30d')` (10) closed `SupportConversation` rows in 30 days ≥ `config('telephony.activation.department_staff')` (3).
+2. The existing topic split still shows at least two operator-relevant categories (access / payment / schedule already do). Do **not** rebuild `SupportTopicRule` as departments.
+
+**Phase 4 (capacity cap + fallback "invite all"):**
+
+1. ≥ `config('telephony.activation.capacity_concurrent_operators')` (4) concurrent online operators, **or**
+2. 14-day **median** first response on an **assigned** queue > `config('telephony.activation.capacity_median_first_response_seconds')` (900). Average FR and unassigned rollups do not count.
+
+Until then: do not add queue values, do not cap assignment, do not flip `SUPPORT_DEPARTMENTS` or `SUPPORT_CAPACITY_ROUTING`.
 
 _Dr. Mārcis Gasūns_
