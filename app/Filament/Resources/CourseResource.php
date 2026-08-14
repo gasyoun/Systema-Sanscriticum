@@ -6,8 +6,10 @@ use App\Filament\Resources\CourseResource\Pages;
 use App\Models\Course;
 use App\Models\Schedule;
 use App\Models\Teacher;
+use App\Services\ProgrammeShellGraph;
 use App\Support\RoleGate;
 use App\Support\Roles;
+use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -248,11 +250,22 @@ class CourseResource extends Resource
                                         'predecessor',
                                         'title',
                                         fn ($query) => $query->orderBy('title'),
+                                        ignoreRecord: true,
                                     )
                                     ->searchable()
                                     ->preload()
                                     ->nullable()
-                                    ->helperText('Если этот поток — продолжение (в ЛК с N-го занятия), укажите курс, где лежат записи с 1-го. Студент увидит баннер «начало здесь» без куратора (H2333).')
+                                    ->helperText('Если этот поток — продолжение, укажите курс с более ранними занятиями. Цепочка строится по одному предшественнику на поток (гр. 5 → гр. 3 → гр. 2). Цикл (A→B→A) сохранить нельзя. Баннер в кабинете — одно звено; плейлист читает всю цепочку.')
+                                    ->rule(function (?Course $record): Closure {
+                                        return function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                            if ($value === null || $value === '' || $record === null) {
+                                                return;
+                                            }
+                                            if (app(ProgrammeShellGraph::class)->wouldCycle((int) $record->id, (int) $value)) {
+                                                $fail('Цепочка курсов не может содержать цикл (A→B→A). Выберите другого предшественника.');
+                                            }
+                                        };
+                                    })
                                     ->columnSpanFull(),
 
                                 Forms\Components\TextInput::make('continues_from_lesson')
