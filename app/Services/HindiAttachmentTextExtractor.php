@@ -13,7 +13,8 @@ use ZipArchive;
  *
  * Reads Lesson.attachments and teacher-posted homework_attachments.
  * txt/md: UTF-8 read. docx: ZipArchive + word/document.xml (no PhpWord).
- * PDF: only a sibling .txt extract, never OCR, never a Telegram fetch.
+ * PDF: only a sibling .txt extract (written offline by HindiPdfSidecarWriter),
+ * never live OCR on a request, never a Telegram fetch.
  */
 final class HindiAttachmentTextExtractor
 {
