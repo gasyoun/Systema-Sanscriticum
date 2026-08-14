@@ -107,7 +107,11 @@ JSON redacts extract text.
 
 ## Enable on prod
 
-Default **OFF**. After deploy: `HINDI_ATTACHMENT_DRILLS=true` + `config:cache`.
-Rollback: `false` + `config:cache`. Writing a sidecar does not require the flag.
+✅ **ON 14-08-2026.** `HINDI_ATTACHMENT_DRILLS=true` + `config:cache`.
+Rollback: `false` + `config:cache`.
+
+| Lesson | Course | Items | HTTP |
+|---|---|---|---|
+| 1723 Костина нач. №5 | 366 `hindi-5-vt1500-2026` | 12 from sidecar (H2731, first 8 pages) | paid user 6767 → 200 (handout + items); guest → 302 |
 
 _Dr. Mārcis Gasūns_
