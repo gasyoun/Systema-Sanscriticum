@@ -1,12 +1,15 @@
 ## [Unreleased]
 
+## [1.89.32] - 2026-08-14
+### Added
+- **H2480: SECURITY Wave 4 deploy-surface review.** `deploy.sh`, CI deploy, and webhook-preflight do not echo secret values; prod secrets stay in a non-committed `.env`. Sail MySQL healthcheck no longer compose-interpolates `${DB_PASSWORD}` (`docker compose config` would have printed it). Report: [docs/SECURITY_W4_DEPLOY_SURFACE_REVIEW_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_W4_DEPLOY_SURFACE_REVIEW_2026-08-14.md). Gate: `tests/Unit/DeploySurfaceSecretsTest.php`. Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.89.31] - 2026-08-14
 ### Added
 - **H2443: упражнения из расшифровки занятия хинди.** `/c/{slug}/u/{id}/drills` (флаг `features.hindi_transcript_drills` / `HINDI_TRANSCRIPT_DRILLS`, по умолчанию OFF). Из `transcript_file` через `TranscriptParser` собираются cloze / перевод / выбор слова — без LLM и без санскритских правил. Доступ тот же, что у плейлиста H2441 (группа / грант / оплаченный ключ); доступ сам по себе не выдаётся. Вход: ссылка «Упражнения» в «Мой хинди» и карточка на странице занятия. Смоук: `php artisan hindi:drills-probe {lesson} --json`. Документ: [docs/HINDI_TRANSCRIPT_DRILLS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/HINDI_TRANSCRIPT_DRILLS_2026.md). Executor: Grok 4.6 (`grok-4.6`).
 
 ## [1.89.30] - 2026-08-14
 ### Added
-- **H2480: SECURITY Wave 4 deploy-surface review.** `deploy.sh`, CI deploy, and webhook-preflight do not echo secret values; prod secrets stay in a non-committed `.env`. Sail MySQL healthcheck no longer compose-interpolates `${DB_PASSWORD}` (`docker compose config` would have printed it). Report: [docs/SECURITY_W4_DEPLOY_SURFACE_REVIEW_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_W4_DEPLOY_SURFACE_REVIEW_2026-08-14.md). Gate: `tests/Unit/DeploySurfaceSecretsTest.php`. Executor: Grok 4.6 (`grok-4.6`).
 - **H2479 (SECURITY Wave4): dependency posture review — 0 open CVEs, residual coverage for `mobile/` and `lecture-builder/`.** `composer audit --locked` and both npm lockfiles are clean; Dependabot has 0 open alerts (40 historical, all fixed). Report: [docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md). Dependabot now watches `/mobile` (npm) and `/lecture-builder` (pip) on the same weekly + 7-day cooldown as root; CI gained `npm audit --package-lock-only` for the Capacitor lock. Won't-fix this pass: `jenssegers/agent` (stale 2020 tag, telemetry-only), Filament 3→5, H2529 `vcs` forks. Executor: Grok 4.6 (`grok-4.6`).
 
 ## [1.89.29] - 2026-08-14
