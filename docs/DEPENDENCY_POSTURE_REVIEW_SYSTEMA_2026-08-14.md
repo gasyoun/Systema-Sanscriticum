@@ -4,6 +4,7 @@ _Created: 14-08-2026 · Last updated: 14-08-2026_
 
 **Handoff:** [H2479 (Grok 4.6) — SECURITY Wave4: dependency posture review](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2479-Grok_Systema-Sanscriticum_security-w4-dependency-posture-review_08.08.26.md)
 **Executor:** Grok 4.6 (`grok-4.6`)
+**PR:** [#1671](https://github.com/gasyoun/Systema-Sanscriticum/pull/1671)
 **Tree:** `origin/main` at `520bbbad` (release [v1.89.29](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.89.29)), re-verified 14-08-2026.
 
 ## Verdict

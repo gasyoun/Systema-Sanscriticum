@@ -344,7 +344,7 @@ Overlaps the general roadmap's Laravel-11 item — this track owns the **securit
   (confirmed live 09-08-2026). Runbook:
   [docs/php-8.3-upgrade.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/php-8.3-upgrade.md) (superseded/historical).
 - [x] **Dependency posture review** — ✅ done 14-08-2026 under **H2479** (Grok 4.6
-  `grok-4.6`):
+  `grok-4.6`, [PR #1671](https://github.com/gasyoun/Systema-Sanscriticum/pull/1671)):
   [docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DEPENDENCY_POSTURE_REVIEW_SYSTEMA_2026-08-14.md).
   Re-verified on `origin/main` `520bbbad`: `composer audit --locked` reports
   empty advisories and empty abandoned; root and `mobile/` `npm audit
