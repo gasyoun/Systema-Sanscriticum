@@ -210,6 +210,7 @@ return [
      | IAST→деванагари+SLP1 playground на vendored sanskrit-util (CDSL).
      | ВЫКЛ по умолчанию — маршрут отвечает 404 (prod-inert, как kosha_reader).
      | Lemmatizer HTTP route нет — только внутренний сервис.
+     | H2763: публичный /sanskritorium — тот же playground, без флага (indexable).
      */
     'hub_transliterate' => (bool) env('HUB_TRANSLITERATE', false),
 

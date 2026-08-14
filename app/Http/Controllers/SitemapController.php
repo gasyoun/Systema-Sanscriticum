@@ -36,6 +36,12 @@ class SitemapController extends Controller
             ];
 
             $urls[] = [
+                'loc' => route('hub.sanskritorium'),
+                'changefreq' => 'monthly',
+                'priority' => '0.5',
+            ];
+
+            $urls[] = [
                 'loc' => route('articles.index'),
                 'lastmod' => optional(Article::published()->max('updated_at'))
                     ?->format(DATE_ATOM),

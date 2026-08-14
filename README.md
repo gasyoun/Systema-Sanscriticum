@@ -1,6 +1,6 @@
 # Systema Sanscriticum — платформа онлайн-обучения санскриту
 
-_Created: 13-02-2026 · Last updated: 31-07-2026_
+_Created: 13-02-2026 · Last updated: 15-08-2026_
 
 Laravel-приложение для школы санскрита: учебный кабинет со словарем, домашними
 заданиями и интервальными повторениями (SRS), магазин курсов с гибкими тарифами,
@@ -59,6 +59,13 @@ Laravel-приложение для школы санскрита: учебны�
 Наполнение словаря — импортом CSV в админке через
 [DictionaryWordImporter.php](app/Filament/Imports/DictionaryWordImporter.php)
 (колонки: деванагари, IAST, кириллица, перевод, страница).
+
+### Транслитерация (`/sanskritorium`)
+
+Публичный конвертер IAST → деванагари + SLP1 на vendored
+`resources/js/vendor/sanskrit-util.js`. Тот же движок, что у флаг-гейта
+`/transliterate` (H1463); второй транскодер не заводится. Путь композиции:
+`to_slp1` → `slp1_to_devanagari` (`iast_to_devanagari` сломан и не вызывается).
 
 ### Интервальные повторения — «Anki для санскрита» (`/koloda`, `/dvaram/koloda`)
 

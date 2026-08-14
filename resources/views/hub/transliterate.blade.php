@@ -1,17 +1,32 @@
+@php
+    $indexable = $indexable ?? false;
+@endphp
 @extends('layouts.slovar')
 
-@section('title', 'Транслитерация санскрита (IAST → деванагари + SLP1) | Общество ревнителей санскрита')
-@section('meta_description', 'Живой конвертер IAST → деванагари и SLP1 на vendored sanskrit-util (CDSL).')
-@section('robots', 'noindex, follow')
+@section('title', $indexable
+    ? 'Транслитерация санскрита: IAST, SLP1 и деванагари | Общество ревнителей санскрита'
+    : 'Транслитерация санскрита (IAST → деванагари + SLP1) | Общество ревнителей санскрита')
+@section('meta_description', $indexable
+    ? 'Конвертер транслитерации санскрита: IAST в деванагари и SLP1. Работает в браузере на sanskrit-util (CDSL).'
+    : 'Живой конвертер IAST → деванагари и SLP1 на vendored sanskrit-util (CDSL).')
+@section('robots', $indexable ? 'index, follow' : 'noindex, follow')
+@if($indexable)
+    @section('canonical', url('/sanskritorium'))
+    @section('og_title', 'Транслитерация санскрита: IAST, SLP1 и деванагари')
+@endif
 
 @section('content')
     <header class="text-center mb-10">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-brand tracking-tight">Транслитерация</h1>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-brand tracking-tight">
+            {{ $indexable ? 'Транслитерация санскрита' : 'Транслитерация' }}
+        </h1>
         <p class="mt-2 text-gray-400 text-sm max-w-xl mx-auto">
             IAST → деванагари + SLP1. Клиентский конвертер на
             <span class="text-gray-300">sanskrit-util</span> (CDSL) — без ручных таблиц.
         </p>
-        <p class="mt-3 text-gray-500 text-xs">Демо · флаг <code class="text-gray-400">hub_transliterate</code> · noindex</p>
+        @unless($indexable)
+            <p class="mt-3 text-gray-500 text-xs">Демо · флаг <code class="text-gray-400">hub_transliterate</code> · noindex</p>
+        @endunless
     </header>
 
     <div class="max-w-3xl mx-auto space-y-6">
