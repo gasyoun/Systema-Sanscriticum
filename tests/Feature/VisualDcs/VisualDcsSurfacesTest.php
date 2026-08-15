@@ -7,6 +7,7 @@ namespace Tests\Feature\VisualDcs;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Learning\ExternalLearningCatalog;
 use App\Services\Learning\VisualDcsReleaseImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -71,6 +72,44 @@ class VisualDcsSurfacesTest extends TestCase
             ->assertOk()
             ->assertSee('Manusmṛti')
             ->assertDontSee('Hitopadeśa');
+    }
+
+    public function test_index_paginates_and_search_keeps_fixture_head(): void
+    {
+        config([
+            'features.visualdcs_verb' => true,
+            'features.visualdcs_nominal' => true,
+            'features.visualdcs_passage' => true,
+            'visualdcs.page_size' => 1,
+        ]);
+        $user = $this->paidUser();
+
+        $this->actingAs($user)
+            ->get('/dvaram/visualdcs/verb')
+            ->assertOk()
+            ->assertSee('ah')
+            ->assertDontSee('abhibhañj')
+            ->assertSee('страница 1');
+
+        $this->actingAs($user)
+            ->get('/dvaram/visualdcs/verb?page=2')
+            ->assertOk()
+            ->assertSee('abhibhañj');
+
+        $this->actingAs($user)
+            ->get('/dvaram/visualdcs/nominal?q=deva')
+            ->assertOk()
+            ->assertSee('deva')
+            ->assertDontSee('indriya');
+    }
+
+    public function test_list_summaries_omit_cells(): void
+    {
+        $items = app(ExternalLearningCatalog::class)
+            ->list('verb', false, true);
+        $this->assertNotEmpty($items);
+        $this->assertArrayNotHasKey('cells', $items[0]);
+        $this->assertArrayNotHasKey('raw', $items[0]);
     }
 
     public function test_hub_lists_only_enabled_surfaces(): void

@@ -296,7 +296,9 @@ final class VisualDcsReleaseImporter
     private function absoluteDir(string $sourceDir): string
     {
         $path = $sourceDir;
-        if (! str_starts_with($path, DIRECTORY_SEPARATOR) && ! preg_match('/^[A-Za-z]:\\\\/', $path)) {
+        $absolute = str_starts_with($path, DIRECTORY_SEPARATOR)
+            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
+        if (! $absolute) {
             $path = base_path($sourceDir);
         }
         $real = realpath($path);

@@ -102,7 +102,8 @@ _Создано: 08-07-2026 · Обновлено: 15-08-2026 (H2762 Kochergina 
 
 1. `php artisan migrate` — таблицы `visualdcs_releases`, `external_learning_progress`.
 2. Импорт пина (sibling VisualDCS или fixtures):  
-   `php artisan visualdcs:import /path/to/visual/contracts/v1`  
+   `php artisan visualdcs:import C:/Users/user/Documents/GitHub/VisualDCS/visual/contracts/v1`  
+   Пин H2499 keep #110 = `vdcs-learner-v1-20260809` (hashes in `tests/fixtures/visualdcs/published-v1-pin.json`).  
    (на проде — только после решения включить; до этого каталог пуст, маршруты 404).
 3. Флаги **не включать** в этом деплое. Активация — отдельное решение после
    7/14/30-дневного baseline в [docs/VISUALDCS_LEARNER_BASELINE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VISUALDCS_LEARNER_BASELINE_2026.md).
