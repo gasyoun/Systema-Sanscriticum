@@ -8,6 +8,8 @@ use App\Filament\Pages\CourseDesignAssets\CourseDesignStatsWidget;
 use App\Models\Course;
 use App\Models\CourseDesignAsset;
 use App\Services\Design\CourseDesignAssetService;
+use App\Services\Design\CoverImportOutcome;
+use App\Services\Design\CoverToBannerImporter;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
@@ -23,7 +25,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 /**
  * «Дизайн курсов» — учёт работы дизайнера: матрица курс × формат баннера.
@@ -51,6 +55,15 @@ class CourseDesignAssets extends Page implements HasTable
     protected static ?string $slug = 'course-design';
 
     protected static string $view = 'filament.pages.course-design-assets';
+
+    /**
+     * Сколько курсов переносим за один массовый заход.
+     *
+     * Кадрирование синхронное и упирается в max_execution_time; выбрать «все»
+     * при сотне курсов — это гарантированный обрыв на середине без внятного
+     * сообщения. Потолок мягкий: выборку просят разбить, а не режут молча.
+     */
+    private const BULK_LIMIT = 100;
 
     public static function canAccess(): bool
     {
@@ -168,10 +181,14 @@ class CourseDesignAssets extends Page implements HasTable
                 $this->uploadAction(),
                 $this->downloadZipAction(),
                 Tables\Actions\ActionGroup::make([
+                    $this->importCoverAction(),
                     ...$this->openImageActions(),
                     ...$this->openPsdActions(),
                     $this->clearSlotAction(),
                 ])->label('Файлы')->icon('heroicon-m-ellipsis-horizontal'),
+            ])
+            ->bulkActions([
+                $this->importCoversBulkAction(),
             ])
             ->defaultPaginationPageOption(50)
             ->paginated([25, 50, 100, 'all']);
@@ -400,6 +417,133 @@ class CourseDesignAssets extends Page implements HasTable
                 $this->refreshStats();
 
                 Notification::make()->title('Слот '.$data['format'].' очищен')->success()->send();
+            });
+    }
+
+    /**
+     * Перенос обложки витрины в пустой слот 4:3.
+     *
+     * В группе «Файлы», а не четвёртой кнопкой в строке: строка уже несёт
+     * «Загрузить» и «ZIP», а это разовая операция по курсу — массовый сценарий
+     * закрывает bulk-действие ниже.
+     */
+    private function importCoverAction(): Tables\Actions\Action
+    {
+        return Tables\Actions\Action::make('importCover')
+            ->label('Обложка → '.CoverToBannerImporter::FORMAT)
+            ->icon('heroicon-o-scissors')
+            ->visible(fn (Course $record): bool => filled($record->image_path))
+            ->disabled(fn (Course $record): bool => filled(self::assetFor($record, CoverToBannerImporter::FORMAT)?->path))
+            ->tooltip(fn (Course $record): string => filled(self::assetFor($record, CoverToBannerImporter::FORMAT)?->path)
+                ? 'Слот '.CoverToBannerImporter::FORMAT.' уже занят — переносим только в пустой'
+                : 'Кадрируем обложку витрины по центру; на витрине она останется прежней')
+            ->requiresConfirmation()
+            ->modalHeading('Перенести обложку в слот '.CoverToBannerImporter::FORMAT)
+            ->modalDescription('Обложку витрины кадрируем по центру до пропорции '.CoverToBannerImporter::FORMAT.' и кладём в пустой слот. Картинка на витрине не меняется, слот с уже загруженным баннером не трогаем.')
+            ->modalSubmitActionLabel('Перенести')
+            ->action(function (Course $record, CoverToBannerImporter $importer): void {
+                $result = $importer->import($record, auth()->user());
+
+                if ($result->isImported()) {
+                    $this->refreshStats();
+
+                    Notification::make()
+                        ->title('Слот '.$result->asset->format.' заполнен')
+                        ->body('Обложка кадрирована до '.$result->asset->width.'×'.$result->asset->height.'. Картинка на витрине не изменилась.')
+                        ->success()
+                        ->send();
+
+                    return;
+                }
+
+                $failed = $result->outcome === CoverImportOutcome::Failed;
+
+                $note = Notification::make()
+                    ->title($failed ? 'Не перенесли' : 'Переносить нечего')
+                    ->body(trim(Str::ucfirst($result->outcome->label()).($failed ? '. Подробности в журнале.' : '.')));
+
+                $failed ? $note->danger() : $note->warning();
+                $note->send();
+            });
+    }
+
+    /**
+     * То же самое для выделенных курсов.
+     *
+     * Отчёт агрегированный по конструкции: при полусотне выделенных поимённый
+     * список превратился бы в простыню, а «пропустили 12 (слот уже занят — 9,
+     * нет обложки витрины — 3)» человек читает за секунду и понимает, что
+     * делать дальше.
+     */
+    private function importCoversBulkAction(): Tables\Actions\BulkAction
+    {
+        return Tables\Actions\BulkAction::make('importCovers')
+            ->label('Обложки → слот '.CoverToBannerImporter::FORMAT)
+            ->icon('heroicon-o-scissors')
+            ->color('gray')
+            ->requiresConfirmation()
+            ->modalHeading('Перенести обложки в слот '.CoverToBannerImporter::FORMAT)
+            ->modalDescription('У выделенных курсов возьмём обложку витрины, кадрируем её по центру и положим в пустой слот. Курсы без обложки и уже занятые слоты пропустим, картинки на витрине останутся прежними.')
+            ->modalSubmitActionLabel('Перенести')
+            ->deselectRecordsAfterCompletion()
+            ->action(function (Collection $records, CoverToBannerImporter $importer): void {
+                if ($records->count() > self::BULK_LIMIT) {
+                    Notification::make()
+                        ->title('Выделено слишком много курсов')
+                        ->body('За один заход переносим не больше '.self::BULK_LIMIT.' курсов — иначе запрос не успеет отработать. Разбейте выборку.')
+                        ->warning()
+                        ->send();
+
+                    return;
+                }
+
+                $actor = auth()->user();
+                $done = 0;
+                $failed = 0;
+                /** @var array<string, int> $skips причина → сколько курсов */
+                $skips = [];
+
+                foreach ($records as $course) {
+                    $outcome = $importer->import($course, $actor)->outcome;
+
+                    if ($outcome === CoverImportOutcome::Imported) {
+                        $done++;
+                    } elseif ($outcome === CoverImportOutcome::Failed) {
+                        $failed++;
+                    } else {
+                        $skips[$outcome->label()] = ($skips[$outcome->label()] ?? 0) + 1;
+                    }
+                }
+
+                if ($done > 0) {
+                    $this->refreshStats();
+                }
+
+                $body = [];
+                if ($skips !== []) {
+                    $parts = [];
+                    foreach ($skips as $why => $count) {
+                        $parts[] = $why.' — '.$count;
+                    }
+                    $body[] = 'Пропустили: '.array_sum($skips).' ('.implode(', ', $parts).')';
+                }
+                if ($failed > 0) {
+                    $body[] = 'Ошибок: '.$failed.', подробности в журнале.';
+                }
+
+                $note = Notification::make()
+                    ->title('Перенесли обложек: '.$done)
+                    ->body($body === [] ? null : implode(' · ', $body));
+
+                if ($failed > 0) {
+                    $note->danger()->persistent();
+                } elseif ($done > 0) {
+                    $note->success();
+                } else {
+                    $note->warning()->persistent();
+                }
+
+                $note->send();
             });
     }
 

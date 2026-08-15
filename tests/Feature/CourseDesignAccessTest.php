@@ -200,6 +200,68 @@ class CourseDesignAccessTest extends TestCase
     }
 
     /**
+     * Перенос обложки витрины через действие страницы: проводка модалки до
+     * импортёра. Сама арифметика кадрирования закреплена CourseCoverImportTest.
+     *
+     * @test
+     */
+    public function the_import_action_fills_the_four_to_three_slot(): void
+    {
+        $course = Course::factory()->create(['is_active' => true]);
+        Storage::disk('public')->put('courses/cover.jpg', (string) UploadedFile::fake()->image('cover.jpg', 1600, 900)->get());
+        $course->update(['image_path' => 'courses/cover.jpg']);
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($this->user(Roles::MANAGER));
+
+        Livewire::test(CourseDesignAssets::class)
+            ->callTableAction('importCover', $course)
+            ->assertHasNoTableActionErrors();
+
+        $asset = CourseDesignAsset::where('course_id', $course->id)->where('format', '4:3')->first();
+
+        $this->assertNotNull($asset, 'слот 4:3 должен появиться после переноса');
+        $this->assertSame([1200, 900], [$asset->width, $asset->height]);
+        Storage::disk('public')->assertExists($asset->path);
+        // Витрина не тронута.
+        $this->assertSame('courses/cover.jpg', $course->fresh()->image_path);
+        Storage::disk('public')->assertExists('courses/cover.jpg');
+    }
+
+    /**
+     * Массовый перенос: считает перенесённые и пропущенные, занятый слот не
+     * перезаписывает.
+     *
+     * @test
+     */
+    public function the_bulk_import_fills_only_the_empty_slots(): void
+    {
+        $withCover = Course::factory()->create(['is_active' => true]);
+        Storage::disk('public')->put('courses/a.jpg', (string) UploadedFile::fake()->image('a.jpg', 1600, 900)->get());
+        $withCover->update(['image_path' => 'courses/a.jpg']);
+
+        $withoutCover = Course::factory()->create(['is_active' => true, 'image_path' => null]);
+
+        $taken = Course::factory()->create(['is_active' => true]);
+        Storage::disk('public')->put('courses/c.jpg', (string) UploadedFile::fake()->image('c.jpg', 1600, 900)->get());
+        $taken->update(['image_path' => 'courses/c.jpg']);
+        $handMade = app(CourseDesignAssetService::class)->store(
+            $taken, '4:3', UploadedFile::fake()->image('hand.jpg', 1200, 900), null, null, $this->user(Roles::ADMIN),
+        );
+
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($this->user(Roles::MANAGER));
+
+        Livewire::test(CourseDesignAssets::class)
+            ->callTableBulkAction('importCovers', [$withCover, $withoutCover, $taken])
+            ->assertHasNoTableBulkActionErrors();
+
+        $this->assertNotNull(CourseDesignAsset::where('course_id', $withCover->id)->where('format', '4:3')->first());
+        $this->assertSame(0, CourseDesignAsset::where('course_id', $withoutCover->id)->count());
+        $this->assertSame($handMade->path, $handMade->fresh()->path, 'занятый слот перезаписывать нельзя');
+    }
+
+    /**
      * Колонка «Объём» и карточка «Занято на диске» должны реально отрисоваться:
      * сумма приходит из withSum-алиаса, а он ломается молча — колонка просто
      * покажет прочерк.
