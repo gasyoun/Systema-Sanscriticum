@@ -1,6 +1,6 @@
 # SEO P2 — dictionary indexation wave log (2026)
 
-_Created: 15-08-2026 · Last updated: 15-08-2026_
+_Created: 15-08-2026 · Last updated: 16-08-2026_
 
 Wave log for the `/slovar` curated-core indexation promotion
 ([H210](https://github.com/gasyoun/Uprava/blob/main/handoffs/H210-Opus_Systema-Sanscriticum_seo_p2_wave1_indexation_and_wikidata_matcher_05.07.26.md)
@@ -28,15 +28,26 @@ prefix of the file and `--limit=N` is all a wave needs:
 | 3 | Приложение 5 (`pril5`) | 5,902 | periodized cores, ordered by period spread DESC |
 | 4 | Сборное ядро (`sbornoe`) | 783 | consolidated remainder |
 
-## Measured coverage against the prod dictionary (15-08-2026)
+## Measured coverage against the prod dictionary (16-08-2026, re-measured post-deploy)
 
-Dry runs only — `--dry-run` writes nothing. Prod dictionary = **11,892** rows.
+Dry runs only — `--dry-run` writes nothing. Prod dictionary = **11,892** rows. These figures
+come from the **deployed** command on prod, not from a pre-deploy estimate — see the note
+below, which corrects the first two rows.
 
-| Wave | Command | Headword slugs resolving | Rows promoted |
-|---|---|---:|---:|
-| 1 | `--limit=435` (tier 2 exactly) | 381 | **785** |
-| 2 | `--limit=2000` | 1,556 | 2,785 (delta +2,000) |
-| full | no `--limit` | 3,106 | 4,773 |
+| Wave | Command | Headword slugs taken | Slugs resolving | Rows promoted |
+|---|---|---:|---:|---:|
+| 1 | `--limit=435` (≈ tier 2) | 435 | 394 | **805** |
+| 2 | `--limit=2000` | 2,000 | 1,617 | 2,884 |
+| full | no `--limit` | 6,635 | 3,106 | 4,773 |
+
+> **Correction (16-08-2026).** The first version of this table said 785 and 2,785. Those came
+> from truncating the raw **file lines** and then deduplicating; the shipped `--limit`
+> deduplicates to canonical headword slugs **first** and then takes N of them, so a given N
+> reaches slightly further down the list. The deployed numbers above are the ones to plan
+> against. One consequence for wave 1: `--limit=435` no longer means "tier 2 exactly" —
+> because 7,120 IAST headwords collapse to 6,635 distinct slugs, 435 slugs reach a little
+> past the 435-line tier-2 boundary. That is harmless (the next entries are the strongest of
+> tier 3), but say "≈ tier 2", not "tier 2 exactly".
 
 Only ~44 % of the list resolves to a dictionary row — the cores are corpus lemmas, the
 dictionary is a curated teaching lexicon, so the intersection is the meaningful set. The
