@@ -18,13 +18,17 @@ use Illuminate\Support\Collection;
  *  1. declined_payment — recent failed/canceled/cancelled non-conditional
  *     payment with no later successful payment on the same course;
  *  2. expired_promise — PaymentPromise STATUS_EXPIRED (access-on-credit
- *     that was not paid).
+ *     that was not paid) with no later real payment on the same course.
  *
  * Explicitly NOT recovery (adversarial money-boundary):
  *  - bare pending (webhook-delayed bank redirect — over-inclusion trap);
  *  - plain «next block due» debt without a failed payment/expired promise
  *    (that stays a continue-band debt CTA, not a home-mode switch);
- *  - ancient failures after a later paid recovery on the same course.
+ *  - ancient failures after a later paid recovery on the same course;
+ *  - an expired promise the student has since settled off the linked-payment
+ *    path, which leaves the row at STATUS_EXPIRED forever (see
+ *    {@see latestExpiredPromise()} — that clearance was missing until H1481's
+ *    intended-tier review, and was the one asymmetry between the two branches).
  *
  * Does not authorize access, grant, or revoke anything — pure read predicate.
  * Money core stays authoritative; this only shapes cabinet UI mode + offer
@@ -116,14 +120,50 @@ final class RecoveryStateResolver
         return null;
     }
 
+    /**
+     * An expired promise that a later real payment on the same course has NOT settled.
+     *
+     * The clearance check is not cosmetic. A promise only flips to STATUS_FULFILLED
+     * when the payment carries an explicit `linked_promise_id` (PromiseAutoFulfiller)
+     * or an admin closes that exact promise (PromiseFulfillment). A student who
+     * settles the same course by any other route — a manually recorded transfer, a
+     * checkout that never set the link — leaves the row at STATUS_EXPIRED forever.
+     * Without this check that student stays in recovery mode indefinitely with ALL
+     * offers suppressed, and (via recoveringUserIds → LifecycleEligibility) out of
+     * lifecycle campaigns too. The declined-payment branch above has always had this
+     * clearance; the asymmetry was the defect.
+     *
+     * Deliberately NOT added here: a FAULT_LOOKBACK_DAYS-style time bound. Whether an
+     * old *unpaid* promise should stop suppressing offers after N days is a revenue
+     * policy question, not a correctness one, and a human should decide it.
+     */
     private function latestExpiredPromise(User $user): ?PaymentPromise
     {
-        return PaymentPromise::query()
+        $candidates = PaymentPromise::query()
             ->where('user_id', $user->id)
             ->where('status', PaymentPromise::STATUS_EXPIRED)
             ->whereNotNull('course_id')
             ->orderByDesc('promised_at')
-            ->first();
+            ->get();
+
+        foreach ($candidates as $promise) {
+            $settled = Payment::query()
+                ->where('user_id', $user->id)
+                ->where('course_id', $promise->course_id)
+                ->whereIn('status', Payment::PAID_STATUSES)
+                ->where('is_conditional', false)
+                ->when(
+                    $promise->promised_at !== null,
+                    fn ($q) => $q->where('updated_at', '>=', $promise->promised_at)
+                )
+                ->exists();
+
+            if (! $settled) {
+                return $promise;
+            }
+        }
+
+        return null;
     }
 
     private function fromDeclinedPayment(Payment $payment): RecoveryState

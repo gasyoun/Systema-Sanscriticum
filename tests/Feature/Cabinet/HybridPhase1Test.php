@@ -262,6 +262,103 @@ class HybridPhase1Test extends TestCase
         $this->assertTrue($state->suppressOffers());
     }
 
+    /**
+     * Twin of later_paid_payment_clears_declined_recovery for the promise branch.
+     *
+     * A promise only flips to STATUS_FULFILLED when the payment carries an explicit
+     * linked_promise_id, or an admin closes that exact promise. Settling the same
+     * course by any other route leaves the row at STATUS_EXPIRED forever — so without
+     * a clearance check the student is held in recovery mode indefinitely with every
+     * offer suppressed, despite having paid. On the pre-fix resolver this test fails
+     * with the state still active.
+     *
+     * @test
+     */
+    public function later_paid_payment_clears_expired_promise_recovery(): void
+    {
+        $this->enableHybrid();
+        ['user' => $user, 'course' => $course] = $this->studentWithCourse();
+
+        PaymentPromise::withoutEvents(fn () => PaymentPromise::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'promised_at' => now()->subDays(30),
+            'amount' => 4800,
+            // Left at STATUS_EXPIRED on purpose: this is the real-world shape when the
+            // settling payment never carried linked_promise_id.
+            'status' => PaymentPromise::STATUS_EXPIRED,
+        ]));
+
+        Payment::withoutEvents(function () use ($user, $course) {
+            $paid = Payment::create([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'amount' => 4800,
+                'tariff' => 'block_2',
+                'status' => 'paid',
+                'is_conditional' => false,
+            ]);
+            $paid->forceFill([
+                'created_at' => now()->subDays(2),
+                'updated_at' => now()->subDays(2),
+            ])->saveQuietly();
+        });
+
+        $state = app(RecoveryStateResolver::class)->resolve($user);
+        $this->assertFalse(
+            $state->active,
+            'A later real payment on the same course must clear expired-promise recovery'
+        );
+        $this->assertFalse($state->suppressOffers());
+    }
+
+    /** @test */
+    public function unpaid_expired_promise_still_suppresses_offers(): void
+    {
+        $this->enableHybrid();
+        ['user' => $user, 'course' => $course] = $this->studentWithCourse();
+
+        PaymentPromise::withoutEvents(fn () => PaymentPromise::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'promised_at' => now()->subDays(30),
+            'amount' => 4800,
+            'status' => PaymentPromise::STATUS_EXPIRED,
+        ]));
+
+        // A payment BEFORE the promise date cannot be what settles it, and a
+        // conditional payment is not real money — neither may clear the fault.
+        Payment::withoutEvents(function () use ($user, $course) {
+            Payment::create([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'amount' => 4800,
+                'tariff' => 'block_1',
+                'status' => 'paid',
+                'is_conditional' => false,
+            ])->forceFill([
+                'created_at' => now()->subDays(90),
+                'updated_at' => now()->subDays(90),
+            ])->saveQuietly();
+
+            Payment::create([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'amount' => 4800,
+                'tariff' => 'block_2',
+                'status' => 'paid',
+                'is_conditional' => true,
+            ])->forceFill([
+                'created_at' => now()->subDay(),
+                'updated_at' => now()->subDay(),
+            ])->saveQuietly();
+        });
+
+        $state = app(RecoveryStateResolver::class)->resolve($user);
+        $this->assertTrue($state->active, 'An unsettled expired promise must still suppress offers');
+        $this->assertSame(RecoveryState::REASON_EXPIRED_PROMISE, $state->reason);
+    }
+
     /** @test */
     public function homework_rework_appears_in_today_band_only_when_returned(): void
     {
