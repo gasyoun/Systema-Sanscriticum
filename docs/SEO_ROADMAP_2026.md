@@ -1,6 +1,6 @@
 # SEO Roadmap — samskrte.ru (Общество ревнителей санскрита)
 
-_Created: 05-07-2026 · Last updated: 08-07-2026_
+_Created: 05-07-2026 · Last updated: 15-08-2026_
 
 **Primary engine: Yandex. Secondary: Google.** Framing method: entity/semantic-SEO
 concepts from [seobythesea.com](https://www.seobythesea.com) (Bill Slawski — Google-patent-derived:
@@ -115,7 +115,8 @@ each carrying:
 - ✅ **Wave-1 mechanisms built offline (H210, 08-07-2026 — ready to flip on deploy):**
   - Track A / D1 — curated-core allowlist: `dictionary_words.is_indexable` column + [`dictionary:mark-core-indexable`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MarkCoreIndexable.php) (feeds it from the «Сборное ядро» / DCS-attested list by headword slug); [`DictionaryWord::isIndexable()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/DictionaryWord.php) now gates on the allowlist under `curated_only`. Default-closed — flipping `index_enabled` still indexes nothing until the list is fed.
   - Track B / D4 — Wikidata `sameAs` matcher: [`WikidataSameAsMatcher`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Seo/WikidataSameAsMatcher.php) + [`dictionary:match-wikidata`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MatchWikidataSameAs.php) (exact Devanāgarī signal + P31 instance-of filter; **propose-only, `--write` after a spot-check**). Spot-check + residual-FP analysis: [`docs/WIKIDATA_SAMEAS_SPOTCHECK.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/WIKIDATA_SAMEAS_SPOTCHECK.md).
-- ⏳ **Deploy-gated activation (human, prod):** flip `DICTIONARY_SEO_INDEX_ENABLED=true`, run `dictionary:mark-core-indexable <list>` + `dictionary:match-wikidata --write`, submit the sitemap chunk to Yandex.Webmaster, promote in monitored waves (D2).
+- ✅ **Wave machinery completed + measured on prod (H210, 15-08-2026, Opus 5 `claude-opus-5`):** the allowlist the command had never been given now ships as [`database/data/seo/seo_core_headwords_dcs_lexical_cores.txt`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/data/seo/seo_core_headwords_dcs_lexical_cores.txt) (7,120 IAST headwords consumed from the DCS lexical cores, **ordered** tier 2 pril10 → tier 3 pril5 → tier 4 sbornoe), and `dictionary:mark-core-indexable` gained `--limit=N` so a D2 wave is a prefix of that file. Dry-run against prod: wave 1 (`--limit=435`) = **785 rows**, `--limit=2000` = 2,785, full list = 4,773 of 11,892. Log: [`docs/SEO_P2_INDEXATION_WAVE_LOG_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_P2_INDEXATION_WAVE_LOG_2026.md).
+- ⏳ **Deploy-gated activation (human, prod):** `DICTIONARY_SEO_INDEX_ENABLED` is **already true** on prod, but `is_indexable` is 4 and `wikidata_qid` is 0, so nothing indexes yet and `/slovar` still emits `noindex, follow`. Remaining: run `dictionary:mark-core-indexable database/data/seo/seo_core_headwords_dcs_lexical_cores.txt --limit=435` **while watching Yandex.Webmaster** (D2's back-off signal — an agent has no Webmaster account), submit the sitemap chunk, record the wave row; and review then `dictionary:match-wikidata --write` (D4 — the spot-check found 2 of 5 exact matches conceptually wrong, so that review is not skippable).
 
 ### 5.3 ⚠️ Risk — thin-content / over-indexation on Yandex
 Thousands of near-empty word pages (headword + one gloss) can trigger Yandex **thin-content /

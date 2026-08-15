@@ -17,8 +17,15 @@ use Illuminate\Console\Command;
  * every flag so the allowlist is authoritative (a headword dropped from the list is
  * demoted back to noindex on the next run).
  *
+ * The shipped list is database/data/seo/seo_core_headwords_dcs_lexical_cores.txt (7,120
+ * IAST headwords). Its ORDER is the D2 promotion order — tier 2 pril10 ultra-core first,
+ * then tier 3 pril5 by period spread, then the tier 4 sbornoe remainder — so a wave is a
+ * prefix of the file and --limit=N is all a wave needs.
+ *
  * Usage:
- *   php artisan dictionary:mark-core-indexable path/to/core_headwords.txt
+ *   php artisan dictionary:mark-core-indexable database/data/seo/seo_core_headwords_dcs_lexical_cores.txt --dry-run
+ *   php artisan dictionary:mark-core-indexable database/data/seo/seo_core_headwords_dcs_lexical_cores.txt --limit=435   # wave 1 = tier 2
+ *   php artisan dictionary:mark-core-indexable database/data/seo/seo_core_headwords_dcs_lexical_cores.txt --limit=2000  # wave 2 (idempotent, adds the delta)
  *   php artisan dictionary:mark-core-indexable core.txt --reset --dry-run
  *
  * List format: one headword per line (IAST / Cyrillic / Devanagari). Blank lines and
@@ -29,6 +36,7 @@ class MarkCoreIndexable extends Command
     protected $signature = 'dictionary:mark-core-indexable
         {file : Path to the curated-core headword list}
         {--reset : Clear every is_indexable flag before applying the list (list becomes authoritative)}
+        {--limit= : Promote only the first N headwords of the list — one D2 wave}
         {--dry-run : Report the counts without writing}';
 
     protected $description = 'Flag the curated-core headwords (D1) as index-eligible from a headword list file';
@@ -49,6 +57,21 @@ class MarkCoreIndexable extends Command
             $this->error('No usable headwords parsed from the list.');
 
             return self::FAILURE;
+        }
+
+        // D2 — promote in monitored waves, not all at once. The list file's own order is
+        // the promotion order (strongest lexical core first), so a wave is a prefix of it.
+        $limit = $this->option('limit');
+        if ($limit !== null && $limit !== '') {
+            if (! ctype_digit((string) $limit) || (int) $limit < 1) {
+                $this->error('--limit must be a positive integer.');
+
+                return self::FAILURE;
+            }
+
+            $parsed = count($slugs);
+            $slugs = array_slice($slugs, 0, (int) $limit);
+            $this->line(sprintf('Wave: taking the first %d of %d list headword(s).', count($slugs), $parsed));
         }
 
         // How many DB rows the list actually resolves to (distinct slugs present).
