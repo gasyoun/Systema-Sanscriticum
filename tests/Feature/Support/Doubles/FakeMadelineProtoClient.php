@@ -77,6 +77,14 @@ class FakeMadelineProtoClient
              */
             public function sendMessage(array $params): array
             {
+                // Повторяем валидацию реального клиента (Connection.php:520-522,
+                // MadelineProto 8.x): плоский reply_to_msg_id отвергается на
+                // входе. Без неё двойник пропускал бы формат, на котором
+                // 15-08-2026 упали первые же отправки, дожившие до API.
+                if (isset($params['reply_to_msg_id'])) {
+                    throw new \RuntimeException('reply_to_msg_id is deprecated, please use reply_to or the new sendMessage/sendVideo/etc... methods instead!');
+                }
+
                 FakeMadelineProtoClient::$sent[] = $params;
 
                 return [

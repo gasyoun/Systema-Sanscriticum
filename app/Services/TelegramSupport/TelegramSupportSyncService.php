@@ -608,7 +608,15 @@ class TelegramSupportSyncService
             'message' => $text,
         ];
         if ($replyToMsgId !== null && $replyToMsgId > 0) {
-            $params['reply_to_msg_id'] = $replyToMsgId;
+            // Плоский reply_to_msg_id MadelineProto 8.x отвергает на входе:
+            // «reply_to_msg_id is deprecated, please use reply_to…» — на этом
+            // 15-08-2026 (21:03) упали первые же отправки, дожившие до API.
+            // Формат конструктора — как в его собственных high-level методах
+            // (vendor: MTProtoTools/UpdateHandler.php, inputReplyToMessage).
+            $params['reply_to'] = [
+                '_' => 'inputReplyToMessage',
+                'reply_to_msg_id' => $replyToMsgId,
+            ];
         }
 
         $result = $this->openClient($clientClass)->messages->sendMessage($params);
