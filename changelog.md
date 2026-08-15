@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H2817: slim always-on `CLAUDE.md` 9,251 → ~2,370 approx. tokens.** Architecture essays moved to the docs they already named (`deploy.md`, soft-alert playbook, finance/settlement architecture). Always-on now carries watcher-safe-commit, money-contour, deploy / `ops:soft-remediate`, and the CRM homework-pause one-liner. AGENTS.md generated-block regenerated (TOC only). Gate: `python scripts/test_context_budget.py`. Report: [docs/REPORT_SYSTEMA_CONTEXT_SLIM_H2817_15.08.26.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/REPORT_SYSTEMA_CONTEXT_SLIM_H2817_15.08.26.md). Executor: Grok 4.6 (`grok-4.6`).
+
 ### Fixed
 - **Дренаж досыла не находил ждущие ответы.** Выборка брала `orderBy('id')->limit($batch * 4)` **до** отсева в PHP, и при 8670 исходящих окно целиком набивалось древним импортом: два реально ждущих ответа (id 10978 и 15255) не попадали в него никогда, дренаж молча выбирал ноль. После выката #1734 синк отработал успешно, но ни одного досыла не произошло. Добавлен предфильтр по отрицательному `telegram_message_id` (placeholder недоставленного; успешная доставка заменяет его настоящим), лимит применяется только после фильтрации. Регрессия закрыта `test_a_pending_reply_far_behind_delivered_ones_is_still_found` — на исходной комбинации он падает с «0 is identical to 1», проверено подстановкой. Executor: Claude Opus 5 (`claude-opus-5`).
 

@@ -1,499 +1,140 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+_Created: 07-05-2026 · Last updated: 15-08-2026_
+
+**Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru)
+(cabinet, shop, homework, finance, Telegram/VK bots). Org spine still applies;
+this file is only repo-local always-on. Do **not** read it end-to-end — open
+the section that matches the task.
 
 ## Stack
 
-- **Backend**: Laravel 12, PHP 8.3
-- **Frontend**: Vite 8 (Node.js 20.19+ or 22.12+), Tailwind CSS 4, Axios
-- **Admin**: Filament v3 (two panels: `admin` at `/admin`, `editor` at `/editor`)
-- **Queue**: Laravel Horizon (Redis-backed)
-- **DB**: MySQL (production), SQLite in-memory (tests)
-- **Docker**: Laravel Sail (`./vendor/bin/sail`)
+Laravel 12 / PHP 8.3 · Vite 8 + Tailwind 4 · Filament v3 (`/admin`, `/editor`) ·
+Horizon/Redis · MySQL prod, SQLite tests · Sail for Docker.
 
-## Ops / uptime (production)
+## Watcher (always-on)
 
-- **Agents (EN inventory + smoke + §5 runbook):**  
-  [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)  
-  Better Stack team, HTTP vs heartbeat, samskrte/samskrtam/Cologne, VPS cron paths.  
-  Do not re-derive from chat; tokens stay on the VPS only.
-- **Humans (RU):**  
-  [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md)  
-  §1 students/teachers → [samskrte.ru/uptime](https://samskrte.ru/uptime) + tag `@rusamskrtam`;  
-  curators in «Отдел заботы» → [MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md) (`@grokusaurus_bot`);  
-  teacher pin/cheatsheet → [TEACHER_SITE_DOWN_CHEATSHEET_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TEACHER_SITE_DOWN_CHEATSHEET_RU.md) · [teacher-site-down-telegram-pin.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/marketing/teacher-site-down-telegram-pin.md);  
-  §2 Ivan/Marcis (red monitors; Artem only via ops). Mirror: `uptime/` on GitHub Pages.
-- **OS resource guards (OOM/cron):**  
-  [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md)
-- **Soft TG «Кабинет: soft-сбой (guards)» + `auto_deploy.disabled` / tracked dirty ≠ падение кабинета.**  
-  **Человеку нужно:** код/тексты — PR → `main` → auto-deploy; отзыв — env/MarketingSetting; PDF — `public/docs/*.pdf`.  
-  **Человеку не нужно:** править tracked (`config/`, `app/`, …) на проде.  
-  **Primary agent playbook (catalog + safe/never-auto + incident log):**  
-  [docs/SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md).  
-  Safe auto: `php artisan ops:soft-remediate` (origin-equal dirty only; never blind fuse clear).  
-  Webhook→issue→agent skeleton (OFF until env set): [docs/ops/SOFT_ALERT_WEBHOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/SOFT_ALERT_WEBHOOK.md).  
-  Лестница + случай 01-08-2026 (`config/marathon_landing_copy.php`) — **по-русски** в  
-  [docs/server-resource-guards.md §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) ·  
-  dirty-gate: [docs/deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md) ·  
-  class: [Uprava FINDINGS §280](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md) ·  
-  danger: [Uprava DANGER_FACTS Systema](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md).
+An external watcher **reverts uncommitted working-tree changes**. HEAD survives.
+Use [`/watcher-safe-commit`](https://github.com/gasyoun/claude-config/blob/main/commands/watcher-safe-commit.md):
+author outside the tree, land+commit in **one** shell invocation, verify vs HEAD.
+Layer-1 hook auto-commits Write/Edit; shell/`cp` writes are **not** covered.
+Never `git worktree remove` / `git branch -D` a worktree without
+`git status --short` inside it first (H2535: untracked files have no reflog).
 
-## Editorial style guide of record (RU copy)
+## Money contour (always-on)
 
-Весь русский текст для читателя (blade-шаблоны витрины, письма, лендинги, CTA) обязан
-следовать редакционному style guide of record:
-[Uprava/docs/SAMSKRTE_SAMSKRTAM_EDITORIAL_STYLE_GUIDE_2026.md](https://github.com/gasyoun/Uprava/blob/main/docs/SAMSKRTE_SAMSKRTAM_EDITORIAL_STYLE_GUIDE_2026.md)
-(H1856, 04-08-2026; приватный Uprava — ссылка работает для участников org). Главное:
-только «вы» со строчной; без ALL-CAPS; ё обязательна; цены `4 800 ₽`; санскритские
-слова в прозе — практической кириллицей (IAST только в научном слое); зонтичное имя —
-«Общество ревнителей санскрита»; датированный CTA обязан иметь поведение истечения;
-голых URL в прозе нет. Proof-цифры — только из
-[config/trust.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/trust.php).
-Юридические формулировки (`dpo/ip-gasuns/CONVENTIONS.md`, «встречи сообщества», ЭО и ДОТ)
-сильнее гида. Где существующий текст расходится — прав гид, правим при касании.
+Revenue/access diffs (Tochka/PayPal webhooks, tariffs, `Payment::grantAccess()`,
+refunds) go through [`/money-pr-land`](https://github.com/gasyoun/claude-config/blob/main/commands/money-pr-land.md):
+worktree off `origin/main`, feature flag **default OFF**, watcher-safe commit,
+money/access tests mandatory. The PR-body marker `money-contour: no-auto-merge`
+is a **flag/test reminder, not a merge ban** — `gasyoun/*` PRs merge without
+reasking. Prod flag flip stays a separate ops step.
+
+There is **no manual group assignment**. `PaymentObserver` →
+`Payment::grantAccess()` adds the user to the course `Group`. Tariff keys:
+`full`, `block_N`, `block_N_hH` (half). `Tariff::accessKey()` /
+`Lesson::unlockingKeys()` / `Lesson::isUnlockedBy()` are the single source of
+truth. Thresholds live in `config/receivables.php`, `config/profit_funds.php`,
+`config/conversion.php`, `config/investment.php` — **never hardcode**.
+Installment policy is a finance-lead decision (Алохомора anti-case). Rhythm:
+[docs/FINANCE_REVIEW_RHYTHM.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md).
+
+**Never grant homework review via `course_teacher`** — that pivot feeds
+`TeacherSalaryService` and would pay the reviewer. Use `group_reviewer`
+(`users.id`). Settlement arithmetic lives only in `MutualSettlementService`;
+school revenue is untouched; settlement is deducted **before** payout.
+Architecture:
+[docs/ARCHITECTURE_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS.md).
+
+## Deploy / soft-alert (always-on)
+
+Only [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
+— never a hand `git pull` on prod. Ritual and dirty-gate:
+[docs/deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md).
+OOM/cron guards:
+[docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
+Soft TG «Кабинет: soft-сбой» + `auto_deploy.disabled` / tracked dirty ≠ cabinet
+down. Humans: code via PR → `main` → auto-deploy; testimonials via
+env/MarketingSetting; PDFs in `public/docs/*.pdf`. **Do not** edit tracked
+`app/`/`config/` on the VPS. Playbook (safe/never-auto + incident log):
+[docs/SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md).
+Safe auto: `php artisan ops:soft-remediate` (origin-equal dirty only; never
+blind fuse clear). Webhook skeleton (OFF until env):
+[docs/ops/SOFT_ALERT_WEBHOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/SOFT_ALERT_WEBHOOK.md).
+Uptime inventory:
+[docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)
+(EN agents) ·
+[docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md)
+(RU humans).
+
+## CRM homework-pause
+
+Student «ДЗ + больничный/застой/догоню» → **append** a dated line to
+`users.note`. Do not invent a `HomeworkSubmission` status. Product + agent rule:
+[docs/CRM_HOMEWORK_PAUSE_NOTE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_HOMEWORK_PAUSE_NOTE_2026.md).
+
+## Editorial style (RU copy)
+
+Student-facing Russian follows
+[Uprava/docs/SAMSKRTE_SAMSKRTAM_EDITORIAL_STYLE_GUIDE_2026.md](https://github.com/gasyoun/Uprava/blob/main/docs/SAMSKRTE_SAMSKRTAM_EDITORIAL_STYLE_GUIDE_2026.md).
+Proof figures only from
+[`config/trust.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/trust.php).
+Legal copy (`dpo/ip-gasuns/CONVENTIONS.md`) wins over the guide.
 
 ## Commands
 
 ```bash
-# Frontend
-npm run dev       # Vite dev server
-npm run build     # Production build
-
-# Backend
-php artisan serve
-php artisan migrate
-php artisan migrate:fresh --seed
-
-# Tests (SQLite in-memory by default; CI also runs the money/webhook slice on MySQL 8.4)
-php artisan test
-php artisan test --filter=TestName
-php artisan test tests/Unit/
-php artisan test tests/Feature/
-
-# Linting
-./vendor/bin/pint           # Format PHP (Laravel Pint)
-
-# Queue
-php artisan horizon         # Queue monitor at /horizon
-php artisan queue:work
+npm run dev / npm run build
+php artisan serve | migrate | migrate:fresh --seed
+php artisan test [--filter=TestName]
+./vendor/bin/pint
+php artisan horizon
 ```
 
-## Architecture
+Iterate with `--filter`; full suite (~11 min) once before the PR. Pin time in
+tests via `Carbon::setTestNow` — absolute-date fixtures vs `now()` filters are
+time bombs
+([CalendarFeedTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Student/CalendarFeedTest.php),
+H2541).
 
-### Dual Filament Admin Panels
+## Architecture (routing)
 
-Two separate Filament panels exist with distinct providers:
-- `app/Providers/Filament/AdminPanelProvider.php` — full admin, guarded by `is_admin`
-- `app/Providers/Filament/LectureEditorPanelProvider.php` — lecture editing only, guarded by `is_lecture_editor`
-
-Resources live in `app/Filament/Resources/` (18 resources) and `app/Filament/Editor/`.
-
-### Payment-Driven Access Control
-
-There is **no manual group assignment**. The `PaymentObserver` (`app/Observers/PaymentObserver.php`) calls `Payment::grantAccess()` automatically on successful payment, which adds the user to the relevant course `Group`. Access to lessons is filtered by the user's groups at query time.
-
-### Block-Based Course Structure
-
-Courses have `CourseBlock` records (time-windowed sections with `starts_at`/`ends_at`). `Tariff` models can scope access to specific blocks. Access is keyed by string tariff keys stored in `payments.tariff` and matched against lessons: `full`, `block_N` (whole block), and `block_N_hH` (half of a block, H ∈ {1,2}). A block can be sold "in halves": lessons carry `lesson.block_half` (1/2; null = not split), and `Tariff::accessKey()` / `Lesson::unlockingKeys()` / `Lesson::isUnlockedBy()` are the single source of truth for key generation and access checks. `Tariff::calculateFinalPriceForUser()` handles loyalty discounts (via `MarketingSetting`), deposit credits, and upgrade credit via `Tariff::upgradeCreditForUser()` (containment model: buying a whole block credits its already-paid halves; buying `full` credits all paid blocks/halves).
-
-### Receivables & Installments Governance
-
-Installments are **not a separate model** — an installment plan is a group of
-`PaymentPromise` rows sharing an `installment_group_id` (created by
-`InstallmentPlanCreator`). "Receivables" (дебиторка) = the sum of **unmet**
-promises (status `active`/`expired` with an `amount`). The `Debtors` page shows
-*who* owes; `ReceivablesGovernanceService` + the `ReceivablesGovernance` Filament
-page ("Дебиторка: план-факт", `RoleGate::finance()`) are the *control loop*:
-current receivables vs a "max allowable receivables" threshold, illiquid
-(overdue) share, week-over-week delta (reconstructed from the promise ledger — no
-snapshot table), installment-vs-other split, and the three installment limits
-(share of sales, concurrent plans, term). Thresholds and limits live in
-`config/receivables.php` (env-backed) — **never hardcode them in a page/service**.
-The `receivables:check` daily command alerts finance-role users when the threshold
-or a limit is breached (replaces the owner's manual monitoring).
-
-**Commercial policy for installments (условия рассрочки — first-instalment %,
-number of payments, term, and the limits above) is approved by the finance lead
-(финдир), not changed by sales in isolation.** This mirrors the "Алохомора"
-anti-case: installments introduced without finance sign-off produced ~2M ₽ of
-illiquid receivables in 3 weeks. When widening a limit in `config/receivables.php`
-or `installment_limits`, treat it as a finance decision, not a routine tweak.
-
-### Profit Funds & Delegation KPI
-
-The management capstone of the noboring `/cases/education` plan (H259, phase D).
-Two Filament pages under the "Финансы" group, both gated by `RoleGate::finance()`:
-
-- **`ProfitFunds`** ("Фонды прибыли", `/admin/profit-funds`) over
-  `ProfitFundsService`: distributes **accrual net profit** (EBITDA from the
-  accrual ОПиУ, phase B) across configurable funds (default 60 % dividends / 20 %
-  reserve / 10 % team / 10 % company), accumulates over a window, and reconciles
-  the **reserve fund against real cash** (accumulated ДДС net flow) — an accrued
-  reserve with no cash behind it is flagged. Only positive-profit months fund;
-  shares/window live in `config/profit_funds.php` (env-backed, **never hardcode**).
-  Fund accumulation is a management earmark, not a bank ledger (the LMS has no
-  bank-balance account) — this is labeled honestly in the UI.
-- **`DelegationKpi`** ("KPI делегирования", `/admin/delegation-kpi`, first in the
-  group) over `DelegationKpiService`: one operator screen aggregating all four
-  phases with traffic lights — A (LTV/CAC payback), B (accrual profit + deferred
-  revenue), C (receivables vs threshold), D (reserve fund). Each card links to its
-  detail page. The whole point is to run the business **without the owner**.
-
-**Review rhythm is part of the deliverable, not optional.** The anti-case
-"Лингвистик" shows a perfect finance plan is useless if nobody owns it and there's
-no cadence. The **owner of the numbers** is the delegated finance lead
-(`RoleGate::finance()`); the weekly/monthly checklist, thresholds, and the exact
-person (@DECIDE MG) live in [`docs/FINANCE_REVIEW_RHYTHM.md`](docs/FINANCE_REVIEW_RHYTHM.md).
-The `finance:kpi-digest` command (weekly, Mondays 09:00) pushes the KPI summary to
-finance-role users so the rhythm has teeth. **БДР план-факт** is deferred until MG
-picks a canonical budget template (@DECIDE) — shown as an explicit grey "awaiting
-template" card, not silently dropped.
-
-### Order→Payment Conversion (Sales Funnel)
-
-The phase-F superstructure of the noboring `/cases/education` plan (H262). One
-Filament page under the "Продажи" group, gated by `RoleGate::finance()`:
-
-- **`OrderPaymentConversion`** ("Конверсия заказ→оплата",
-  `/admin/order-payment-conversion`) over `OrderPaymentConversionService`: the
-  operational funnel report from the noboring case "Нашли и обезвредили слабое
-  место в продажах" (order→payment was only 47 %). An **order** = a real
-  (`is_conditional=false`) `Payment` excluding accounting/micro-purchase tariffs
-  (`config('conversion.excluded_tariffs')` = `Расход`/`salary_payout`/`deposit`/
-  `trial`). Conversion is measured **cohort-by-creation-date**: of orders placed
-  in a period, the share that reached `paid`/`success`. Shows a headline
-  conversion + traffic light (green ≥ `target_pct`, yellow ≥ `warn_pct`, else
-  red), week/quarter trend, per-course and per-channel (`users.utm_source`)
-  breakdowns, and a **недожатые заказы** working list (pending > `unclosed_after_days`).
-  The недожатые list is an **early signal before receivables** — its data source
-  (pending `Payment` rows) is distinct from `ReceivablesGovernance` (unmet
-  `PaymentPromise`); the two do not share logic. A yellow nav badge shows the
-  недожатые count so the operator sees the leak without opening the page.
-  Thresholds/windows live in `config/conversion.php` (env-backed, **never
-  hardcode**). Reuses the channel derivation of `ChannelConversionReport` (which
-  measures channel→paid at the *user* level monthly — a different question).
-
-**GC-C2 manager attribution is a SEPARATE page, not a breakdown on this one**
-(H2058 residual, `docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md` §4, F5 RULED
-02-08-2026). `ManagerSalesReport` ("Продажи по менеджеру",
-`/admin/manager-sales-report`, flag `manager_sales_report` default **OFF**) over
-`OrderPaymentConversionService::managerScoreboard()` groups the same order
-denominator by **`payments.created_by_user_id`** (who created the payment row —
-a blame column) — **not** `leads.assigned_to`, which is near-empty by
-construction on conversion-eligible tariffs (populated only on deposit/trial/
-marathon, and deposit/trial are excluded from the order denominator anyway).
-Visibility: `super_admin`/`admin`/`accountant` see all rows (incl. the "Без
-менеджера" unassigned bucket for self-serve/webhook orders); `manager` sees
-only their own rows, via `RoleGate::managerSalesReport()`. **Do not fold this
-breakdown into `OrderPaymentConversion` / its `RoleGate::finance()` gate** —
-that page deliberately excludes the `manager` role (locked by test), and this
-scoreboard's row-level self-scoping for managers requires its own surface.
-
-**CRM Wave 3 forecast is a third page** (H2485, flag `crm_sales_forecast` default
-**OFF**). `SalesForecast` (`/admin/sales-forecast`) weights open Deals by
-`config/crm_forecast.php` probabilities (never hardcode in Blade). Actuals call
-`OrderPaymentConversionService::qualifyingPaidRevenue()` — same qualifying
-Payment denominator. Manager scope reuses `RoleGate::managerSalesReport()`:
-pipeline join is `deals.assigned_to`, actuals join is
-`payments.created_by_user_id`. Backtest labels pre-journal windows unavailable
-instead of inventing snapshots. Artisan `crm:forecast-report` is read-only and
-works while the UI flag is off. Docs:
-`docs/CRM_SALES_FORECAST_METHODOLOGY_2026.md`.
-
-### Group Recruitment (Набор курсов)
-
-H162: a paying student had no way to learn her forming group was under-enrolled
-on the expected start day — the curator answered manually in chat. `Group` now
-carries recruitment state: `status` (`forming`/`active`/`archived`), `min_size`,
-`planned_start_date`, `start_date_override` (manual reschedule, priority over
-planned), `recruitment_notified_at` (dedup, mirrors `Schedule.reminded_at`).
-`Group::effectiveStartDate()` = `start_date_override ?? planned_start_date`;
-changing the override resets `recruitment_notified_at` so the warning cycle
-re-arms for the new date. `Group::isRecruited()` = `min_size` unset (size not
-checked) or `activeUsers()->count() >= min_size` — status is **not** auto-flipped
-on attach (many entry points: `PaymentObserver`, `GroupMembershipManager`,
-Filament); the curator flips `forming → active` manually via `GroupResource`.
-
-Daily `groups:notify-forming-shortfall` (same slot as `debts:remind`) finds
-`forming` groups whose `effectiveStartDate()` lands `recruitment_notify_lead_days`
-(default 2, `MarketingSetting`) days out and still under `min_size`, then:
-`GroupRecruitmentNotifier::notifyShortfall()` messages the group's `activeUsers()`
-via `SendMessengerAlerts` (honest status, not silence), and
-`CuratorNotifier::groupUnderEnrolled()` alerts the curators chat symmetrically.
-The same notifier fires immediately from `GroupResource`'s "Зафиксировать дату"
-action when a curator sets `start_date_override`, instead of waiting for the next
-lead-window. Toggle: `recruitment_notify_enabled` (`MarketingSetting`).
-
-**Availability-preference collection already existed — no new table.** Before
-building a planned `enrollment_preferences` table, `/prior-art` found
-`WaitlistEntry.preferred_schedule`/`timezone_note` (H230, feeds off `Intake`)
-already captures "кому когда удобно" at the waitlist stage, before a `Group`
-exists. `GroupResource`'s "Предпочтения" action reads them straight off
-`Group::intake->waitlistEntries()` (free-text list, not a parsed day×time grid —
-the source data is free text) so the curator can eyeball the popular slot before
-fixing a group's date.
-
-### Group Reviewers (проверяющие домашек по группам)
-
-H1729: преподаватель мог проверять домашки только тех курсов, где он **основной**
-препод (`course.teacher_id`). Чтобы дать человеку проверку чужих групп, нужен был
-грант, не касающийся зарплаты.
-
-`group_reviewer` — pivot `groups` × **`users`** (не `teachers`!). Привязка к
-`users.id` сознательна: `homework_submissions.reviewed_by` уже указывает туда, а
-главное — со-препод в pivot `course_teacher` попадает в `Course::salaryTermsFor()`
-(возвращает `['type' => $co->pivot->salary_type, ...]`, то есть **не** `null`), и
-`TeacherSalaryService` начал бы начислять проверяющему ЗП с выручки чужих курсов.
-**Никогда не выдавайте доступ к домашкам через `course_teacher`** — это закрыто
-регрессионным тестом `grant_does_not_accrue_salary_for_the_reviewer`.
-
-Правило видимости — `HomeworkSubmission::scopeInReviewableGroups()`, единственный
-источник правды (им же питается `reviewGroupIds()` для уведомлений): у урока
-проставлена `group_id` — сверяем по ней; урок общий — требуем, чтобы **нашлась**
-группа из гранта, в которой состоит автор работы **И** к которой привязан курс
-работы. Без второй половины проверяющий группы 60 увидел бы работы того же ученика
-по чужому курсу — ученик может состоять в нескольких группах. Своя работа в свою
-очередь проверки не попадает никогда.
-
-Грант расширяет ровно две поверхности: очередь домашек (`HomeworkSubmissionResource`,
-ветка `orWhere` **рядом** со «своими курсами», не вместо — препод может вести своё и
-проверять чужое) и состав группы (`StudentGroupResource`). Курсы, уроки, расписание,
-сертификаты и карточки учеников грантом не открываются. `AttendanceDashboard`
-править не пришлось: он вообще не скоупится по `teacher_id` — любой `role=teacher`
-уже видит посещаемость всех групп (предсуществующее поведение, не вводится здесь).
-
-Уведомления — `HomeworkNotifier`: проверяющим с `notify=true` идут колокольчик
-(`sendToDatabase`), письмо и Telegram (каналы в `config/homework.php`), а
-преподавателю курса персональные письма **заменяются** недельной сводкой
-`homework:reviewer-digest` — но только если у группы есть активный проверяющий;
-курсы без проверяющих ведут себя ровно как раньше. Раздаёт гранты только админ
-(действие «Проверяющие» в `GroupResource`).
-
-### Mutual Settlement (взаимозачёт преподаватель-ученик)
-
-H1730, волна B того же плана, что и Group Reviewers выше. Один человек платит
-школе как ученик и получает от неё гонорар как преподаватель; гоняя деньги в обе
-стороны, школа теряет 6 % НПД на каждом проходе. Ruling MG 27-07-2026: **зачёт
-считается и вычитается ДО создания выплаты**.
-
-`MutualSettlementService` — единственное место, где живёт арифметика (страница и
-команда только рисуют). Две дисциплины, которые нельзя нарушать:
-
-1. **Второго расчёта ЗП не заводить.** Зарплатная цифра берётся у
-   `TeacherSalaryService::totalForTeacher()`; здесь только разбивка по курсам
-   поверх. Список нерасходных тарифов — `TeacherSalaryService::NON_REVENUE_TARIFFS`
-   (она публичная **именно поэтому**), а не своя копия: разъехавшись, две копии
-   дали бы две «правды» об одних деньгах.
-2. **Выручка школы не трогается.** Её платежи остаются доходом в полном объёме,
-   зачёт живёт исключительно на выплатной стороне. Путь «100 % скидка ученику»
-   отвергнут именно поэтому, `TeacherPayout.type=advance`/`settled_amount` — как
-   искажающий отчётность по авансам.
-
-`mutual_settlements` — снимок на блок/поток. **Фиксация ЗАМОРАЖИВАЕТ числа, а не
-пересчитывает:** после `status=fixed` суммы читаются из строки, иначе поздняя
-оплата задним числом сдвинула бы уже подписанную цифру. Пересмотр создаёт новую
-строку и переводит прежнюю в `superseded` — история полная.
-
-Зачёт в выплате — `TeacherSalaries`, **единственная точка касания зарплатного
-контура**. Правка аддитивна: `blockPayoutTotal()` не тронут, вычет сделан по
-образцу аванса (взаимозачёт, затем аванс от остатка — аванс это деньги, уже
-выданные на руки, и зачитывать их сверх реально остающегося нельзя). Без акта
-`afterSettlement === grossTotal`, поэтому существующие ветки считают ровно как
-считали; закреплено тестом `payout_without_a_settlement_is_unchanged` и прогоном
-зарплатного набора до/после (78 passed / 265 assertions, идентично).
-Однократность акта — условным `update` по `payout_id` (`consume()`), а не
-проверкой в коде: две параллельные выплаты один акт зачесть не могут.
-
-Гейт страницы `/admin/mutual-settlements` — `RoleGate::accounting()`, **тот же,
-что у `TeacherSalaries`**, а не `finance()`: обычный админ на зарплатный контур
-не проходит. `settlement:preview` — разовая сверка, только чтение, ни одной
-записи.
-
-### Investment Model (NPV / IRR / payback)
-
-The phase-E superstructure of the noboring `/cases/education` plan (H261),
-independent of the A–D core. One Filament page under the "Финансы" group, gated
-by `RoleGate::finance()`:
-
-- **`InvestmentModel`** ("Инвест-решение", `/admin/investment-model`) over
-  `InvestmentModelService`: a scenario calculator for a **large forward-looking
-  spend** (book print run, hire, offline point, expensive course launch), from
-  the case "Юный чемпион" where a CFO talked the owner out of opening a branch by
-  the numbers. Enter capex + annual additional revenue/expense (+ optional revenue
-  growth %), a discount rate and horizon; get **NPV, IRR, simple + discounted
-  payback, breakeven annual cash flow**, a year-by-year cash flow table, and a
-  traffic-light verdict — **two scenarios side by side** (as in the case, "with
-  purchase" vs "without"). The finance math (`npv`/`irr` via bisection/`annuityFactor`/
-  `paybackTime`) lives in reusable static methods on the service; it moves no money
-  and stores nothing (planning-only). **Live figures** (avg check/LTV, CAC, EBITDA
-  margin, monthly accrual profit) are pulled from `StudentUnitEconomicsService` +
-  `FinanceCockpitReport` via `defaults()` as *starting reference points* for the
-  manual scenario entry — not an auto-built scenario. Discount rate, horizon, and
-  acceptable-payback threshold live in `config/investment.php` (env-backed,
-  **never hardcode**; @DECIDE MG: exact cost of capital, horizon+threshold, which
-  spend types to model first). The page is prefilled with the published
-  "Юный чемпион" worked example (14.5M capex / 160k-mo rent → IRR ~1 %, payback in
-  year 6), which doubles as the correctness validation against the real case.
-
-### Marathon Landing Visual Skins (`/online/konsultaciya`)
-
-H1975: [`resources/views/marathon/show.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/marathon/show.blade.php)
-is a thin shell — it resolves a **visual** variant key (`a`/`b`/`c`/`d`) via
-`App\Support\MarathonVisual::variantKey()` and includes
-`marathon.skins.{key}.content`. This axis is independent of
-`MarathonLandingCopy`'s **copy** variant (`MARATHON_LANDING_COPY_VARIANT`) — one
-config controls tokens/layout, the other controls text; do not conflate them.
-`MARATHON_LANDING_VISUAL_VARIANT` (env, default `b`) picks the durable variant;
-`?skin=` is a **QA-only override that does not survive the register() POST →
-redirect → GET cycle** (documented, not a bug — `MarathonVisual`'s own docblock
-says so).
-
-**Adding a new skin:** add the letter to `MarathonVisual::VARIANTS`, create
-`resources/views/marathon/skins/{x}/content.blade.php` reading the same `$copy`/
-`$days`/`$benefits`/`$faq`/`$testimonial` variables the existing skins already
-consume (b/a/c share this contract; keep it), and update the stub in
-`show.blade.php`'s fallback list. Each skin's own `better-interface full`
-accessibility/contrast pass lives alongside the mockup in
-[`marketing/marathon-2026-08/redesign/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/marketing/marathon-2026-08/redesign)
-(`BETTER_INTERFACE_PASS_{A,B,C,D}_*.md`) — treat contrast pairs as **computed,
-not assumed** (WCAG relative-luminance formula), same discipline all four
-passes used. As of 31-07-2026: B (light island, default), A (dark-native), C
-(warm paper), D (stepped Alpine wizard, H1978 — the one skin whose `quiz_goal`
-field is radio cards rather than the others' `<select>`, matching its own
-mockup; same field name/values) all shipped. Multi-direction is a deliberate
-policy (H1966) — no single-winner pick, ship concurrent variants.
-
-### Vendored reading packs (`resources/data/cohort_start_chteniya/`)
-
-H2110. `/dvaram/reading{,/slug}` рендерит пакеты чтения для когорты «Старт чтения»
-через `ReadingPackController`. Гейт двойной и **оба условия обязательны**:
-`features.kosha_reader` (env `KOSHA_READER`, по умолчанию `false`) **И**
-`StartChteniyaCohort::hasEntitlement($user)` — не купивший когорту получает 404,
-а не редирект. Публичный `/reading/kosha-demo` живёт отдельно и этой правкой не
-затронут.
-
-**Данные пакета — замороженная КОПИЯ, а не источник.** `hitopadesa-0.json` +
-`MANIFEST.json` вендорятся из kosha-датасета `cohort-start-chteniya-pack-freeze`
-(H2109) скриптом
-[`scripts/vendor_cohort_start_chteniya_packs.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/vendor_cohort_start_chteniya_packs.py),
-который сверяет sha256 и размер **до** записи. Правило синхронизации: правится
-пакет — правится он в [kosha](https://github.com/gasyoun/kosha), затем
-перевендоривается скриптом; **руками файлы под `resources/data/cohort_start_chteniya/`
-не редактируются никогда** — ручная правка расходится с манифестом молча, и
-следующий прогон скрипта её затрёт. Второй пакет (`subhashita-beginner`)
-сознательно не импортирован: его схема другая, и импорт «заодно» ввёл бы вторую
-схему в кодовую базу.
-
-**Cohort SRS import (H2106, `srs:import-start-chteniya-cohort`).** Импортирует
-вендоренный `lemmas_for_srs.tsv` (тот же H2109-фриз, тот же скрипт-вендор выше)
-в **приватную** SRS-колоду на каждого оплаченного студента когорты —
-никогда не в общую `system`/`public` колоду. Причина: `SrsController` показывает
-`system`/`public` колоды всем залогиненным пользователям без проверки оплаты
-(гейт там только глобальный `srs.enabled`), поэтому единственный способ закрыть
-колоду от не-когортных студентов — держать её `visibility=private` с
-`user_id` конкретного студента; `StartChteniyaCohort::entitledUsers()` — общий
-источник списка оплативших (используется и здесь, и потенциально другими
-потребителями H2105-гейта). Гейт команды — `features.start_chteniya_cohort`
-(тот же флаг, что у H2105/H2110/H2111), **не** `config('srs.enabled')` — H2106
-фенс явно запрещает трогать глобальный SRS-флаг.
-
-**Кнопка «в колоду» в панели слова (H2111).** `POST /dvaram/reading/{slug}/srs`
-(`ReadingPackController::addToSrs`) добавляет лемму нажатого слова в ту же приватную
-колоду когорты. Гейт — тот же двойной, что у чтения (флаг + entitlement), и снова
-**не** `config('srs.enabled')`. Два свойства, которые нельзя потерять при правке:
-
-1. **Клиент присылает только ПОЗИЦИИ** (индекс предложения + индекс токена), никогда
-   лемму, глоссу или slp1. Текст карточки читается на сервере из sha256-пиннутого
-   фриза, поэтому подделанный POST не запишет в чужую колоду произвольную строку.
-2. **Определение колоды — одно.** Слаг, note type, список полей и ключ дедупликации
-   `pack|lemma_slp1` живут в
-   [`app/Support/StartChteniyaSrsDeck.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/StartChteniyaSrsDeck.php)
-   и используются и командой H2106, и этой кнопкой. Не заводите вторую копию: разъехавшись,
-   массовый импорт и кнопка дали бы две колоды или два экземпляра одной леммы.
-
-Токен без `lemma` кнопки не получает — читалка деградирует, а не требует всегда включённого
-каскадного лемматизатора (H1463): «require lemmatizer always-on» — это прямо описанный
-режим отказа H2111. Публичная `/reading/kosha-demo` рендерит тот же партиал без opt-in
-переменной `$srsAdd`, поэтому её вывод не меняется.
-
-### Landing Page Builder
-
-`LandingPage` stores JSON blocks in a `content` column. The catch-all route at the bottom of `routes/web.php` resolves `/{slug}` to a landing page. Block Blade components live in `resources/views/promo/blocks/`.
-
-### Lecture Subsystem
-
-A separate microservice-style subdirectory (`lecture-builder/`, `lecture-ui/`) is bridged via:
-- `LectureBuilderClient` — HTTP client to lecture builder microservice
-- `LectureAiClient` — AI-powered features
-- `LecturePatcher` / `LecturePublisher` — draft lifecycle management
-- `LectureDraft` model — stores draft state before publishing
-
-### Activity Tracking
-
-Three-layer system:
-1. `TrackUserActivity` middleware — updates `users.last_activity_at` on every request
-2. `ActivityTracker` service — appends to `ActivityEvent` (append-only log)
-3. `LessonView` model — per-lesson open count, time spent, heartbeat timestamp (AJAX `/api/heartbeat` from the lesson player page)
-
-### Key Domain Relationships
+| Area | Always-on fact | Essay |
+|---|---|---|
+| Filament | `AdminPanelProvider` (`is_admin`) vs `LectureEditorPanelProvider` (`is_lecture_editor`). Resources in `app/Filament/Resources/` + `app/Filament/Editor/`. | — |
+| Access | Payment-driven groups; tariff keys above. | this file, Money |
+| Finance screens | `RoleGate::finance()` pages; never hardcode thresholds. Manager scoreboard is a **separate** page (`manager_sales_report` OFF). Forecast is a third page (`crm_sales_forecast` OFF). | [FINANCE_REVIEW_RHYTHM.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md) · [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md) · [CRM_SALES_FORECAST_METHODOLOGY_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_SALES_FORECAST_METHODOLOGY_2026.md) |
+| Groups | `forming`/`active`/`archived`; curator flips status; `groups:notify-forming-shortfall`. Preferences already live on `WaitlistEntry` — no new table. | — |
+| Reviewers / settlement | `group_reviewer` ≠ `course_teacher`. Settlement before payout. | architecture doc above |
+| Reading packs | Frozen copy under `resources/data/cohort_start_chteniya/` — **never hand-edit**; re-vendor from [kosha](https://github.com/gasyoun/kosha) via [`scripts/vendor_cohort_start_chteniya_packs.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/vendor_cohort_start_chteniya_packs.py). Dual gate: `features.kosha_reader` **AND** `StartChteniyaCohort::hasEntitlement`. SRS import/button: private per-student deck; client sends **positions only**; deck definition is only [`StartChteniyaSrsDeck.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/StartChteniyaSrsDeck.php). | — |
+| Marathon `/online/konsultaciya` | Visual variant (`MARATHON_LANDING_VISUAL_VARIANT`) ≠ copy variant. `?skin=` is QA-only. | — |
+| Other | `LandingPage` catch-all `/{slug}`. Lecture-builder is a sidecar HTTP client. Activity: middleware + `ActivityEvent` + `LessonView` heartbeat. | — |
 
 ```
 User ──< Payment >── Tariff ──> Course
 User ──< UserGroup >── Group ──< LessonGroup >── Lesson
-Course ──< CourseBlock
-Course ──< Lesson
-Teacher ──< TeacherPayout (salary models: percent | per_student | per_block | fixed)
-LandingPage ──> JSON blocks
+Course ──< CourseBlock / Lesson
+Teacher ──< TeacherPayout
 ```
 
-## External Integrations
+## External integrations
 
-- **Tochka Bank** — payment provider; webhook at `/api/webhooks/tochka`
-- **Telegram** — bot webhook at `/api/telegram/webhook`; `User::sendTelegramMessage()`
-- **VK** — webhook at `/api/vk-webhook`; `User::sendVkMessage()`
-- **DomPDF** — certificate PDF generation via `CertificateService`
+- Tochka `/api/webhooks/tochka` · Telegram `/api/telegram/webhook` · VK `/api/vk-webhook` · DomPDF certificates.
+- Lead-magnet bots: `/api/webhooks/telegram-magnet`, `/vk-magnet`, `/max-magnet/{secret}` (secret **in the path** — rotate in `MarketingSetting` after any log leak, then `php artisan max:set-magnet-webhook`). Secrets use Eloquent `encrypted` cast.
 
-### Lead-magnet bots (Telegram / VK / MAX)
+## Environment / worktrees
 
-Отдельные webhook-эндпоинты для доставки lead-магнита, не пересекающиеся с основными:
+- Timezone `Europe/Moscow`. Flags in `config/features.php`. HTTPS forced in production.
+- Composer pins PHP 8.3 + Unix `pcntl`/`posix`; `platform-check=false` so Windows resolves the lock. Do not drop `composer check-platform-reqs` (CI + `deploy.sh --no-dev`).
+- **New worktree:** [`scripts/worktree_bootstrap.ps1`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/worktree_bootstrap.ps1) (robocopy `vendor/`, ~60s). Never junction/symlink `vendor/` — PHP `__DIR__` resolves to the physical target and the worktree silently runs another tree's `app/` ([#713](https://github.com/gasyoun/Systema-Sanscriticum/issues/713)).
+- This repo tracks [`changelog.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/changelog.md) **lowercase**. `git add CHANGELOG.md` is a silent no-op on Windows (`core.ignorecase=true`). Take the case from `git ls-files`, then `git diff --cached --name-only` ([Uprava FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)).
+- `preg_split('/\R/', ...)` without `/u` splits inside Cyrillic (`х` = `D1 85`). Use `preg_split('/\r\n|\n|\r/', ...)` (H1914).
 
-- Telegram: `POST /api/webhooks/telegram-magnet` (header-secret `X-Telegram-Bot-Api-Secret-Token`)
-- VK: `POST /api/webhooks/vk-magnet` (secret в body)
-- MAX: `POST /api/webhooks/max-magnet/{secret}` (secret в **path** — Max Bot API не поддерживает header/body-секрет)
+## Operational hazards
 
-**Ротация `max_webhook_secret`:** так как у Max секрет идет в URL, он может всплыть в логах reverse-прокси, CDN и в access-логах nginx. При любом инциденте (доступ к логам, утечка дампа БД) — перегенерировать секрет в админке `MarketingSetting` и заново запустить `php artisan max:set-magnet-webhook`. Аналогично — после смены админ-аккаунта.
+Destructive-risk facts: [Uprava DANGER_FACTS.md](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md)
+(org-private). Public-safe subset is in the generated block of
+[AGENTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/AGENTS.md).
+Check them before anything that writes.
 
-Все webhook-секреты и bot-токены шифруются в БД через Eloquent `encrypted` cast (`MarketingSetting::$casts`).
-
-## Environment Notes
-
-- Timezone is hardcoded to `Europe/Moscow` in `config/app.php`
-- Feature flags in `config/features.php`
-- Admin seeding credentials from `ADMIN_EMAIL` / `ADMIN_PASSWORD` env vars
-- Force HTTPS is applied in `AppServiceProvider` for production
-- **Composer is deliberately cross-platform, not unchecked.** `config.platform`
-  pins PHP 8.3 and the Unix-only `pcntl`/`posix` extensions so Windows can
-  resolve the same lock file; `platform-check=false` prevents Composer's
-  generated runtime guard from rejecting that Windows checkout. CI runs both
-  `composer check-platform-reqs` and `composer audit --locked`; production
-  `deploy.sh` runs
-  `composer check-platform-reqs --no-dev` against the real server after install.
-  Do not remove either enforcement step when changing the Windows workaround.
-- **Поднимайте свежий worktree через [`scripts/worktree_bootstrap.ps1`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/worktree_bootstrap.ps1), а не через `composer install` руками** (H1929). Полный `composer install` в новом дереве идёт **~11 минут** — измерено 30-07-2026 на правке, которая сама стоила сорока. Скрипт делает **физическую копию** `vendor/` из главного дерева (robocopy, ~60 с) и только при совпадении `composer.lock`; при расхождении честно зовёт `composer install`. Физическая копия безопасна там, где junction смертелен (см. следующий пункт): пути в `vendor/composer/autoload_*.php` считаются от `__DIR__` в момент выполнения, поэтому копия указывает на СВОЙ worktree — скрипт это ещё и проверяет отдельным пробником и падает, если автозагрузчик резолвится в чужое дерево. Он же ставит `.env` + `APP_KEY`, а `-Teardown` сносит worktree и доводит удаление до конца, когда Windows держит хэндл и `git worktree remove` оставляет осиротевший каталог.
-- **Ритм тестов: `--filter` на итерации, полный набор ОДИН раз в конце** (H1929). `php artisan test` целиком — ~11 минут (2478 тестов); гонять его после каждой правки означает потерять час на пустом месте. На итерации `php artisan test --filter=<Набор>` (секунды), полный прогон — один раз перед PR и лучше в фоне; `./vendor/bin/pint --test` быстр всегда.
-- **Never junction/symlink a worktree's `vendor/` to another worktree's (or the main tree's) `vendor/` to skip `composer install`.** On Windows, PHP's `__DIR__`/realpath resolution for a file accessed through an NTFS junction resolves to the junction's real physical target, not the path used to reach it — so Composer's `$baseDir` computation inside `vendor/composer/autoload_*.php` always resolves to wherever `vendor/` physically lives, never the worktree accessing it through the junction. With `"optimize-autoloader": true` in `composer.json` (this repo's default), that silently makes the whole worktree run **the vendor's owning tree's `app/` code** instead of its own — a green `php artisan test` run proves nothing about the code actually being edited. Confirmed twice in practice (25/26-07-2026, [Systema-Sanscriticum#713](https://github.com/gasyoun/Systema-Sanscriticum/issues/713)): two independent sessions each hit this, then "fixed" it locally by hand-baking their own worktree's name into the shared classmap header, silently breaking every other consumer of that vendor. Run an independent `composer install` per worktree instead. If a worktree already has a `vendor/` junction (check with `Get-Item vendor | Select LinkType,Target` in PowerShell — `LinkType` shows `Junction`), remove it (`cmd /c rmdir <path>\vendor`, not `rm -rf`) and reinstall before trusting any test output from it.
-
-- **Этот репозиторий трекает `changelog.md` СТРОЧНЫМИ буквами — `git add CHANGELOG.md` молча не стейджит ничего** (H2541, 10-08-2026). На Windows/macOS (`core.ignorecase=true`) `git add CHANGELOG.md` возвращает **exit 0**, при `-v` печатает **0 байт** и не добавляет в индекс ничего: git находит файл на диске без учёта регистра, но отказывается создавать вторую запись индекса, отличающуюся только регистром — сообщать не о чем. Тот же pathspec для `git commit -m x CHANGELOG.md` падает громко (**exit 1**, `error: pathspec ... did not match any file(s) known to git`), потому что `commit` разрешает путь по **индексу**, а `add` — по **файловой системе**. На Linux (`ignorecase=false`) это тоже громкая ошибка (**exit 128**), поэтому CI такое не воспроизводит. Уже стоило одного коммита `297168fe`, ушедшего **без записи в changelog** при «успешном» `git add`. Правило: берите регистр из `git ls-files | grep -i changelog`, а после стейджа проверяйте `git diff --cached --name-only` — не доверяйте exit-коду `git add`. Та же ловушка сидела в [`.gitattributes`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.gitattributes): строка `CHANGELOG.md export-ignore` совпадала с файлом **только** на Windows, а на Linux/CI `export-ignore` оказывался `unspecified`, и changelog попадал в `git archive` вопреки замыслу — исправлено на `changelog.md` (проверено `git check-attr` при обоих значениях `core.ignorecase`). Подробный разбор: [Uprava FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md).
-
-- **Фикстура с АБСОЛЮТНОЙ датой против кода, фильтрующего по `now()`, — бомба с часовым механизмом: зелёный CI до момента X и красный после, без единого изменения в коде** (H2541, 10-08-2026). Найдено на [tests/Feature/Student/CalendarFeedTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Student/CalendarFeedTest.php): занятие жёстко задано на `2026-08-10 15:00–16:00 MSK` (= `12:00–13:00Z`), а [IcsFeedBuilder](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Calendar/IcsFeedBuilder.php) намеренно отдаёт только неистёкшие занятия (`where('end', '>=', now())`) — после 13:00Z фид пуст и ассерт падает. **Диагностическая ловушка:** упало в PR, менявшем только документацию и одну строку `.gitattributes`, поэтому `Failures: 1` из 3153 читается как «сломал я» или как флейк; на `main` дефект уже сидел, а последний зелёный прогон там был за 7 минут до истечения — то есть прошёл по случайности, и «main зелёный» здесь **не** доказательство, что причина в PR. Прежде чем искать причину в своём диффе, сверьте время прогона CI с абсолютными датами в упавшем тесте. Идиома репозитория (28 тестов): пините время через `Carbon::setTestNow(...)` в `setUp()` и сбрасывайте `Carbon::setTestNow()` в `tearDown()` — относительные фикстуры (`now()->addHours(2)`) тоже годятся, но пининг честнее, когда тест ассертит конкретные UTC-строки.
-
-- **`preg_split('/\R/', ...)` без модификатора `/u` РЕЖЕТ русский текст посреди буквы** (H1914). `\R` в не-UTF-режиме матчит сырой байт `0x85`, а он встречается ВТОРЫМ БАЙТОМ внутри UTF-8-последовательностей кириллицы — например `х` (U+0445) кодируется как `D1 85`. В репозитории, где почти все комментарии и почти все конфиги русские, это не экзотика, а ловушка по умолчанию: разбор `scripts/server_guards.conf` разваливался на строке с комментарием. Пишите `preg_split('/\r\n|\n|\r/', ...)` — либо добавляйте `/u` осознанно.
-
-## Operational hazard notes
-
-Destructive-risk facts for this repo (do-not-rerun scripts, decoys, traps) are
-registered centrally in an org-private hub
-([Uprava DANGER_FACTS.md](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md),
-org members only); the public-safe subset is mirrored in the generated block of
-[AGENTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/AGENTS.md). Check them
-before running anything that writes.
+_Dr. Mārcis Gasūns_
