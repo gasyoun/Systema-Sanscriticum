@@ -140,7 +140,12 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `DB_PORT` | optional | `'3306'` | config/database.php:50<br>config/database.php:70<br>config/database.php:85 |
 | `DB_SOCKET` | optional | `''` | config/database.php:54 |
 | `DB_USERNAME` | optional | `'forge'` | config/database.php:52<br>config/database.php:72<br>config/database.php:87 |
+| `DESIGN_COVER_DISK` | optional | `'public'` | config/design_assets.php:97 |
 | `DESIGN_IMAGE_DISK` | optional | `'public'` | config/design_assets.php:34 |
+| `DESIGN_IMPORT_COPY_TOLERANCE` | optional | `0.0` | config/design_assets.php:99 |
+| `DESIGN_IMPORT_JPEG_QUALITY` | optional | `88` | config/design_assets.php:101 |
+| `DESIGN_IMPORT_PNG_COMPRESSION` | optional | `6` | config/design_assets.php:103 |
+| `DESIGN_IMPORT_WEBP_QUALITY` | optional | `88` | config/design_assets.php:102 |
 | `DESIGN_MAX_IMAGE_KB` | optional | `10240` | config/design_assets.php:57 |
 | `DESIGN_MAX_PSD_KB` | optional | `98304` | config/design_assets.php:58 |
 | `DESIGN_PSD_DISK` | optional | `'local'` | config/design_assets.php:37 |

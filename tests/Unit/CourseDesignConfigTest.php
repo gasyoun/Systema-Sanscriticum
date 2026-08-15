@@ -68,6 +68,40 @@ class CourseDesignConfigTest extends TestCase
         $this->assertSame('2,00 ГБ', CourseDesignAssetService::formatBytes(2 * 1024 * 1024 * 1024));
     }
 
+    /**
+     * Диск обложек задан отдельным ключом, а не унаследован от
+     * filesystems.default — значит его легко опечатать, и тогда перенос будет
+     * молча отвечать «файл не найден» на каждом курсе.
+     *
+     * @test
+     */
+    public function the_cover_disk_is_a_configured_filesystem(): void
+    {
+        $disk = (string) config('design_assets.cover_disk');
+
+        $this->assertNotSame('', $disk);
+        $this->assertNotEmpty(
+            config('filesystems.disks.'.$disk),
+            "диск «{$disk}» не описан в config/filesystems.php — перенос обложек не найдёт ни одного файла",
+        );
+    }
+
+    /** @test */
+    public function the_import_quality_stays_in_a_sane_range(): void
+    {
+        $this->assertGreaterThanOrEqual(60, (int) config('design_assets.import_jpeg_quality'), 'ниже 60 на кириллице в баннере лезут артефакты');
+        $this->assertLessThanOrEqual(100, (int) config('design_assets.import_jpeg_quality'));
+
+        $this->assertGreaterThanOrEqual(60, (int) config('design_assets.import_webp_quality'));
+        $this->assertLessThanOrEqual(100, (int) config('design_assets.import_webp_quality'));
+
+        // Сжатие PNG — это 0…9 у GD, всё остальное он трактует непредсказуемо.
+        $this->assertGreaterThanOrEqual(0, (int) config('design_assets.import_png_compression'));
+        $this->assertLessThanOrEqual(9, (int) config('design_assets.import_png_compression'));
+
+        $this->assertGreaterThanOrEqual(0.0, (float) config('design_assets.import_copy_tolerance'));
+    }
+
     /** @test */
     public function the_psd_disk_is_not_the_public_one(): void
     {
