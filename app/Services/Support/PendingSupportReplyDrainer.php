@@ -39,11 +39,20 @@ class PendingSupportReplyDrainer
         $batch = max(1, (int) config('services.telegram_support.pending_delivery_batch', 20));
         $maxAttempts = max(1, (int) config('services.telegram_support.pending_delivery_max_attempts', 3));
 
+        // Предфильтр по ОТРИЦАТЕЛЬНОМУ telegram_message_id: недоставленные несут
+        // placeholder из createPendingOutgoing(), а успешная доставка заменяет
+        // его настоящим, положительным. Точно и не зависит от диалекта СУБД —
+        // в отличие от запроса по полю JSON.
+        //
+        // ЛИМИТ ТОЛЬКО ПОСЛЕ ОТСЕВА. В первой версии здесь стоял
+        // `orderBy('id')->limit($batch * 4)` ДО фильтрации в PHP, и при 8670
+        // исходящих окно целиком набивалось древним импортом: ждущие сообщения
+        // 10978 и 15255 в него не попадали никогда, дренаж молча выбирал ноль.
         $pending = TelegramSupportMessage::query()
             ->where('direction', 'outgoing')
+            ->where('telegram_message_id', '<', 0)
             ->whereNotNull('raw_payload')
             ->orderBy('id')
-            ->limit($batch * 4) // фильтр по JSON делаем в PHP — см. ниже
             ->get()
             ->filter(fn (TelegramSupportMessage $m): bool => $this->isPending($m))
             ->take($batch);

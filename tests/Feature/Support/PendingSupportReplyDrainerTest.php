@@ -68,6 +68,49 @@ class PendingSupportReplyDrainerTest extends TestCase
         ]);
     }
 
+    /** Доставленное/импортированное исходящее: настоящий положительный id. */
+    private function alreadyDelivered(int $telegramMessageId, int $chatId = 5001): TelegramSupportMessage
+    {
+        $account = TelegramSupportAccount::firstOrCreate(['name' => 'support']);
+        $chat = TelegramSupportChat::firstOrCreate(['telegram_chat_id' => $chatId]);
+
+        return TelegramSupportMessage::create([
+            'telegram_support_account_id' => $account->id,
+            'telegram_support_chat_id' => $chat->id,
+            'telegram_chat_id' => $chatId,
+            'telegram_message_id' => $telegramMessageId,
+            'direction' => 'outgoing',
+            'role' => 'human',
+            'text' => 'Старое сообщение из синка',
+            'raw_payload' => ['from_sync' => true],
+            'sent_at' => now()->subMonth(),
+        ]);
+    }
+
+    /**
+     * Ждущее сообщение находится, даже когда перед ним лежат СОТНИ доставленных.
+     *
+     * Первая версия дренажа брала `orderBy('id')->limit($batch * 4)` ДО отсева в
+     * PHP: на проде при 8670 исходящих окно набивалось древним импортом, и два
+     * реально ждущих ответа (id 10978 и 15255) не попадали в него никогда —
+     * дренаж молча выбирал ноль. Лимит применяется только ПОСЛЕ фильтрации.
+     */
+    public function test_a_pending_reply_far_behind_delivered_ones_is_still_found(): void
+    {
+        config(['services.telegram_support.pending_delivery_batch' => 5]);
+
+        for ($i = 1; $i <= 60; $i++) {
+            $this->alreadyDelivered($i);
+        }
+        $message = $this->outgoing(['pending_delivery' => true]);
+
+        $sync = $this->syncReturning(['status' => 'ok', 'telegram_message_id' => 999]);
+        $stats = app(PendingSupportReplyDrainer::class)->drain($sync);
+
+        $this->assertSame(1, $stats['delivered'], 'ждущее сообщение обязано находиться независимо от количества доставленных перед ним');
+        $this->assertSame(999, $message->fresh()->telegram_message_id);
+    }
+
     public function test_a_pending_reply_is_delivered_and_marked(): void
     {
         $message = $this->outgoing(['pending_delivery' => true, 'reply_to_msg_id' => 202240]);

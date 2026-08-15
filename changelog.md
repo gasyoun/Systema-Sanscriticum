@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **Дренаж досыла не находил ждущие ответы.** Выборка брала `orderBy('id')->limit($batch * 4)` **до** отсева в PHP, и при 8670 исходящих окно целиком набивалось древним импортом: два реально ждущих ответа (id 10978 и 15255) не попадали в него никогда, дренаж молча выбирал ноль. После выката #1734 синк отработал успешно, но ни одного досыла не произошло. Добавлен предфильтр по отрицательному `telegram_message_id` (placeholder недоставленного; успешная доставка заменяет его настоящим), лимит применяется только после фильтрации. Регрессия закрыта `test_a_pending_reply_far_behind_delivered_ones_is_still_found` — на исходной комбинации он падает с «0 is identical to 1», проверено подстановкой. Executor: Claude Opus 5 (`claude-opus-5`).
+
 ## [1.89.52] - 2026-08-15
 ### Added
 - **Consume the H2499-verified VisualDCS v1 pin at published scale.** `visualdcs:import` now accepts a Windows `C:/` path. The catalog no longer dumps 7,689 / 31,753 paradigm cells into `/dvaram/visualdcs/{surface}` — lists are summaries, 50 per page, with search; `find()` materialises one object. Hub shows counts only. Published pin hashes live in `tests/fixtures/visualdcs/published-v1-pin.json` (keep #110). Flags stay OFF. Tests: `VisualDcsPublishedPinTest`, `VisualDcsSurfacesTest`. Executor: Grok 4.6 (`grok-4.6`).
