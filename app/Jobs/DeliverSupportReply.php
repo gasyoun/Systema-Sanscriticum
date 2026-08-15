@@ -68,6 +68,8 @@ class DeliverSupportReply implements ShouldQueue
 
         $payload['pending_delivery'] = false;
         $payload['delivered_at'] = now()->toIso8601String();
+        // Досланное сообщение не должно таскать труп прежней ошибки.
+        unset($payload['delivery_failed_at'], $payload['delivery_error']);
 
         $update = ['raw_payload' => $payload];
         if (! empty($result['telegram_message_id'])) {
@@ -77,11 +79,39 @@ class DeliverSupportReply implements ShouldQueue
         $message->forceFill($update)->save();
     }
 
+    /**
+     * Пометить сообщение как не доставленное.
+     *
+     * До 15-08-2026 здесь была только запись в лог, и зависший ответ выглядел в
+     * ленте куратора ровно как отправленный — инцидент с сообщением 15255
+     * (сессия юзербота умерла, три попытки провисели на мёртвом IPC) заметили
+     * только по жалобе студентки.
+     *
+     * ИНВАРИАНТ: `pending_delivery` НЕ трогаем. Сообщение по-прежнему не
+     * доставлено, и SupportObservability::delivery() обязан считать его в
+     * pending ровно как считал; `delivery_failed_at` — это уточнение о pending,
+     * а не замена ему. Закреплено тестом в SupportObservabilityTest.
+     */
     public function failed(\Throwable $exception): void
     {
         Log::warning('DeliverSupportReply failed permanently', [
             'message_id' => $this->messageId,
             'error' => $exception->getMessage(),
         ]);
+
+        $message = TelegramSupportMessage::find($this->messageId);
+        if (! $message) {
+            return;
+        }
+
+        $payload = $message->raw_payload ?? [];
+        if (empty($payload['pending_delivery'])) {
+            return; // успели доставить между падением и failed() — не портим факт
+        }
+
+        $payload['delivery_failed_at'] = now()->toIso8601String();
+        $payload['delivery_error'] = mb_substr($exception->getMessage(), 0, 300);
+
+        $message->forceFill(['raw_payload' => $payload])->save();
     }
 }

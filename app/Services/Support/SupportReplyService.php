@@ -12,6 +12,7 @@ use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -30,6 +31,20 @@ class SupportReplyService
     public const CHANNEL_WEB = 'web';
 
     public const CHANNEL_TELEGRAM_SUPPORT = 'telegram_support';
+
+    /** Исходы ручного досыла — каждый отображается в свой тост хелпдеска. */
+    public const RESEND_QUEUED = 'queued';
+
+    public const RESEND_ALREADY_DELIVERED = 'already_delivered';
+
+    public const RESEND_NOT_TRACKED = 'not_tracked';
+
+    public const RESEND_DISABLED = 'disabled';
+
+    public const RESEND_THROTTLED = 'throttled';
+
+    /** Пауза между ручными досылами одного сообщения, секунды. */
+    private const RESEND_THROTTLE_SECONDS = 30;
 
     public function __construct(private readonly SupportConversationManager $conversations) {}
 
@@ -161,6 +176,69 @@ class SupportReplyService
         ]);
 
         return $message;
+    }
+
+    /**
+     * Ручной досыл зависшего ответа (кнопка «Дослать» в ленте хелпдеска).
+     *
+     * Автодобора по расписанию сознательно нет — заказчик выбрал ручную кнопку,
+     * чтобы не плодить фоновую команду ради двух случаев на 8670 отправок.
+     *
+     * `pending_delivery` здесь НЕ трогаем: снимает его только успешная доставка в
+     * DeliverSupportReply::handle(), и её же идемпотентность защищает от дубля,
+     * если исходный джоб внезапно оживёт.
+     *
+     * @return self::RESEND_* исход, который вызывающий превращает в уведомление
+     */
+    public function resendPendingDelivery(TelegramSupportMessage $message, ?User $curator = null): string
+    {
+        $payload = $message->raw_payload ?? [];
+
+        if (! is_array($payload) || ! array_key_exists('pending_delivery', $payload)) {
+            return self::RESEND_NOT_TRACKED;
+        }
+
+        if (! $payload['pending_delivery']) {
+            // Лента отстаёт на такт поллинга, поэтому проверка обязана быть здесь,
+            // а не в шаблоне: иначе досыл продублировал бы доставленный ответ.
+            return self::RESEND_ALREADY_DELIVERED;
+        }
+
+        if (! config('services.telegram_support.enabled')) {
+            // Диспатчить нельзя: джоб отработает, deliverMessage() вернёт
+            // disabled, напишет info и оставит pending — молчаливый no-op с
+            // видом успеха. Куратору честнее сказать, что досылать нечем.
+            return self::RESEND_DISABLED;
+        }
+
+        $lastRetry = $payload['delivery_retry_at'] ?? null;
+        if (is_string($lastRetry) && $lastRetry !== '') {
+            try {
+                if (Carbon::parse($lastRetry)->gt(now()->subSeconds(self::RESEND_THROTTLE_SECONDS))) {
+                    return self::RESEND_THROTTLED;
+                }
+            } catch (\Throwable) {
+                // Битую отметку игнорируем и досылаем.
+            }
+        }
+
+        unset($payload['delivery_failed_at'], $payload['delivery_error']);
+        $payload['delivery_retry_at'] = now()->toIso8601String();
+        $payload['delivery_retries'] = (int) ($payload['delivery_retries'] ?? 0) + 1;
+        $payload['delivery_retried_by'] = $curator?->id;
+
+        $message->forceFill(['raw_payload' => $payload])->save();
+
+        DeliverSupportReply::dispatch($message->id);
+
+        Log::info('SupportReplyService: ручной досыл ответа', [
+            'message_id' => $message->id,
+            'chat_id' => $message->telegram_chat_id,
+            'curator_id' => $curator?->id,
+            'attempt' => $payload['delivery_retries'],
+        ]);
+
+        return self::RESEND_QUEUED;
     }
 
     private function resolveTargetChat(User $user, ?SupportConversation $thread): ?TelegramSupportChat

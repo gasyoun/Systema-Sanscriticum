@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Support;
 
 use App\Filament\Pages\Helpdesk;
+use App\Jobs\DeliverSupportReply;
 use App\Models\ChatMessage;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
@@ -13,6 +14,7 @@ use App\Models\User;
 use App\Services\Support\SupportReplyService;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -125,6 +127,59 @@ class SupportReplyServiceTest extends TestCase
             'user_id' => $student->id,
             'role' => 'curator',
             'text' => 'Ответ в веб',
+        ]);
+    }
+
+    /** Второй клик подряд не должен ставить второй джоб — троттлинг на сервере. */
+    public function test_resend_is_throttled_on_a_double_click(): void
+    {
+        Bus::fake();
+        config(['services.telegram_support.enabled' => true]);
+
+        $message = $this->pendingOutgoingMessage(['pending_delivery' => true]);
+        $service = app(SupportReplyService::class);
+
+        $this->assertSame(SupportReplyService::RESEND_QUEUED, $service->resendPendingDelivery($message));
+        $this->assertSame(SupportReplyService::RESEND_THROTTLED, $service->resendPendingDelivery($message->fresh()));
+
+        Bus::assertDispatchedTimes(DeliverSupportReply::class, 1);
+    }
+
+    /**
+     * Импортированное синком исходящее ключа pending_delivery не имеет — его
+     * доставку мы не отслеживаем и досылать не берёмся.
+     */
+    public function test_resend_refuses_an_untracked_imported_message(): void
+    {
+        Bus::fake();
+        config(['services.telegram_support.enabled' => true]);
+
+        $message = $this->pendingOutgoingMessage(['from_sync' => true]);
+
+        $this->assertSame(
+            SupportReplyService::RESEND_NOT_TRACKED,
+            app(SupportReplyService::class)->resendPendingDelivery($message),
+        );
+
+        Bus::assertNotDispatched(DeliverSupportReply::class);
+    }
+
+    /** @param  array<string, mixed>  $payload */
+    private function pendingOutgoingMessage(array $payload): TelegramSupportMessage
+    {
+        $account = TelegramSupportAccount::create(['name' => 'support-resend']);
+        $chat = TelegramSupportChat::create(['telegram_chat_id' => 9600]);
+
+        return TelegramSupportMessage::create([
+            'telegram_support_account_id' => $account->id,
+            'telegram_support_chat_id' => $chat->id,
+            'telegram_chat_id' => 9600,
+            'telegram_message_id' => -7,
+            'direction' => 'outgoing',
+            'role' => 'human',
+            'text' => 'Ответ куратора',
+            'raw_payload' => $payload,
+            'sent_at' => now(),
         ]);
     }
 }

@@ -340,11 +340,17 @@ class Helpdesk extends Page
     }
 
     /**
-     * Сообщения активного гостевого треда в хронологии (H536 Phase 5). Гость —
-     * только веб-чат (нет TG-канала), поэтому читаем chatMessages напрямую, а не
-     * через UnifiedInboxReader (тот user-keyed).
+     * Сообщения активного гостевого треда в хронологии (H536 Phase 5).
      *
-     * @return Collection<int, ChatMessage>
+     * Раньше для telegram-тредов здесь собирались НЕСОХРАНЁННЫЕ ChatMessage:
+     * шаблон ленты звал на элементах методы модели, а голый stdClass ронял
+     * страницу пятисоткой («Call to undefined method»). Подпорка стоила дорого —
+     * вместе с моделью терялся raw_payload, а с ним и статус доставки, поэтому
+     * зависший ответ выглядел в ленте в точности как отправленный (инцидент
+     * 15-08-2026, сообщение 15255). Теперь обе ленты говорят на одном языке
+     * UnifiedMessage, и общий партиал показывает статус в обеих.
+     *
+     * @return Collection<int, UnifiedMessage>
      */
     public function getGuestMessagesProperty(): Collection
     {
@@ -354,33 +360,7 @@ class Helpdesk extends Page
             return collect();
         }
 
-        // Техвопрос из Telegram-чата: переписка в telegram_support_messages.
-        // Отдаём НЕСОХРАНЁННЫЕ ChatMessage, а не голые объекты: шаблон ленты общий
-        // и зовёт на элементах методы модели (htmlForWeb() экранирует текст).
-        // Простой stdClass ронял страницу пятисоткой — «Call to undefined method».
-        if ($thread->source_telegram_chat_id !== null) {
-            return $thread->telegramMessages()
-                ->orderBy('sent_at') // импорт мог идти пачками вразнобой, id ≠ хронология
-                ->orderBy('id')
-                ->get()
-                ->map(function (TelegramSupportMessage $message): ChatMessage {
-                    $view = new ChatMessage([
-                        'text' => (string) $message->text,
-                        'role' => $message->direction === 'outgoing' ? 'curator' : 'user',
-                    ]);
-
-                    $view->id = $message->id;
-                    $view->created_at = $message->sent_at;
-                    $view->exists = false; // ничего не сохраняем, это только для вывода
-
-                    return $view;
-                });
-        }
-
-        return $thread->chatMessages()
-            ->with('answeredBy:id,name')
-            ->orderBy('id')
-            ->get();
+        return app(UnifiedInboxReader::class)->forConversation($thread);
     }
 
     /**
@@ -446,7 +426,103 @@ class Helpdesk extends Page
         $this->newMessage = '';
         $this->loadUsersList();
 
-        Notification::make()->title('Ответ отправлен в Telegram')->success()->send();
+        // Тост говорит ровно то, что произошло: строка записана и доставка
+        // поставлена в очередь. До 15-08-2026 здесь было «Ответ отправлен в
+        // Telegram», и куратор считал сорванную доставку успехом.
+        $this->notifyQueuedForTelegram();
+    }
+
+    /**
+     * Ручной досыл зависшего ответа прямо из ленты.
+     *
+     * Гейт в три слоя, потому что id приходит из браузера: доступ к странице,
+     * направление сообщения и принадлежность открытому диалогу. Livewire-запрос
+     * авторизацию маршрута Filament сам не перепроверяет, поэтому abort_unless
+     * стоит явно.
+     */
+    public function resendDelivery(int $messageId): void
+    {
+        abort_unless(static::canAccess(), 403);
+
+        $message = TelegramSupportMessage::query()
+            ->with(['chat', 'contact'])
+            ->where('direction', 'outgoing')
+            ->find($messageId);
+
+        if (! $message || ! $this->ownsMessage($message)) {
+            return;
+        }
+
+        $result = app(SupportReplyService::class)->resendPendingDelivery($message, auth()->user());
+
+        match ($result) {
+            SupportReplyService::RESEND_QUEUED => Notification::make()
+                ->title('Досылаем')
+                ->body('Поставили в очередь на отправку в Telegram. Статус обновится прямо в ленте.')
+                ->success()->send(),
+            SupportReplyService::RESEND_ALREADY_DELIVERED => Notification::make()
+                ->title('Уже доставлено')
+                ->body('Это сообщение ушло в Telegram — повторять не нужно.')
+                ->warning()->send(),
+            SupportReplyService::RESEND_DISABLED => Notification::make()
+                ->title('Досылать некуда')
+                ->body('Телеграм-юзербот сейчас выключен, отправить нечем. Сообщение остаётся в очереди — дошлите его, когда синк включат.')
+                ->danger()->send(),
+            SupportReplyService::RESEND_THROTTLED => Notification::make()
+                ->title('Уже досылаем')
+                ->body('Повтор поставлен в очередь только что. Подождите минуту.')
+                ->warning()->send(),
+            default => Notification::make()
+                ->title('Нечего досылать')
+                ->body('Это сообщение пришло из синка, а не из хелпдеска — его доставку мы не отслеживаем.')
+                ->warning()->send(),
+        };
+
+        $this->loadUsersList();
+    }
+
+    /**
+     * Принадлежит ли сообщение открытому сейчас диалогу.
+     *
+     * Связь берём той же, какой её видит UnifiedInboxReader: гостевой тред — по
+     * support_conversation_id, студент — по linked_user_id чата или контакта.
+     */
+    private function ownsMessage(TelegramSupportMessage $message): bool
+    {
+        if ($this->activeGuestId) {
+            return (int) $message->support_conversation_id === (int) $this->activeGuestId;
+        }
+
+        if (! $this->activeUserId) {
+            return false;
+        }
+
+        return (int) ($message->chat?->linked_user_id ?? 0) === (int) $this->activeUserId
+            || (int) ($message->contact?->linked_user_id ?? 0) === (int) $this->activeUserId;
+    }
+
+    /**
+     * Уведомление об ответе, ушедшем через юзербот: обещаем очередь, а не
+     * доставку, и отдельно предупреждаем, когда юзербот выключен и отправлять
+     * сообщение сейчас некому.
+     */
+    private function notifyQueuedForTelegram(): void
+    {
+        if (! config('services.telegram_support.enabled')) {
+            Notification::make()
+                ->title('Ответ сохранён, но не отправлен')
+                ->body('Телеграм-юзербот выключен — сообщение ждёт отправки. Дошлите его кнопкой в ленте, когда синк включат.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->title('Ответ поставлен в очередь')
+            ->body('Уйдёт в Telegram в ближайшую минуту. Статус доставки — под сообщением в ленте.')
+            ->success()
+            ->send();
     }
 
     /**
@@ -714,7 +790,7 @@ class Helpdesk extends Page
                 $this->newMessage = '';
                 $this->loadUsersList();
 
-                Notification::make()->title('Ответ отправлен в Telegram-support')->success()->send();
+                $this->notifyQueuedForTelegram();
 
                 return;
             }

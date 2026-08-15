@@ -318,6 +318,38 @@
             color: #9ca3af;
             margin-top: 4px;
         }
+        /* Статус доставки исходящего в Telegram. До 15-08-2026 куратор видел
+           зелёный тост и больше ничего: зависший ответ выглядел отправленным. */
+        .msg-delivery {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            margin-top: 4px;
+        }
+        .msg-delivery.delivered { color: #16a34a; }
+        .msg-delivery.pending { color: #b45309; }
+        .msg-delivery.failed { color: #b91c1c; font-weight: 700; }
+        .msg-delivery-retry {
+            border: 1px solid currentColor;
+            background: transparent;
+            color: inherit;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 99px;
+            cursor: pointer;
+        }
+        .msg-delivery-retry:disabled { opacity: .5; cursor: default; }
+        .msg-delivery-error {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 2px;
+            max-width: 320px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
         /* === ВВОД СООБЩЕНИЯ === */
         .chat-input-area {
@@ -392,6 +424,10 @@
         .dark .msg-channel.telegram { background: rgba(14,165,233,.25); color: #7dd3fc; }
         .dark .msg-channel.vk { background: rgba(59,130,246,.25); color: #93c5fd; }
         .dark .msg-channel.telegram_bot { background: rgba(6,182,212,.25); color: #67e8f9; }
+        .dark .msg-delivery.delivered { color: #86efac; }
+        .dark .msg-delivery.pending { color: #fcd34d; }
+        .dark .msg-delivery.failed { color: #fca5a5; }
+        .dark .msg-delivery-error { color: #6b7280; }
         .dark .reminder-banner { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.35); }
         .dark .reminder-banner-text { color: #fcd34d; }
         .dark .reminder-banner-meta { color: #fbbf24; }
@@ -700,7 +736,11 @@
                 {{-- Сообщения: единый поток веб-чата и импортированного TG-support --}}
                 <div class="messages-area" id="chat-messages" wire:poll.5s>
                     @forelse($this->messages as $message)
-                        <div class="msg-wrapper {{ $message->wrapperClass() }}">
+                        {{-- wire:key обязателен: лента под wire:poll.5s, а внутри
+                             интерактивная кнопка «Дослать». Канал в ключе потому,
+                             что id из chat_messages и telegram_support_messages
+                             в едином потоке сталкиваются. --}}
+                        <div class="msg-wrapper {{ $message->wrapperClass() }}" wire:key="msg-{{ $message->channel }}-{{ $message->sourceId }}">
                             <div class="msg-content">
                                 <div class="msg-sender">
                                     {{ $message->senderLabel() }}
@@ -710,6 +750,7 @@
                                     {!! $message->htmlText() !!}
                                 </div>
                                 <div class="msg-time" title="{{ \App\Support\ChatTimestamp::full($message->sentAt) }}">{{ \App\Support\ChatTimestamp::label($message->sentAt) }}</div>
+                                @include('filament.pages.partials.helpdesk-delivery-status', ['message' => $message])
                             </div>
                         </div>
                     @empty
@@ -843,11 +884,12 @@
                 @endforeach
 
                 <div class="messages-area" wire:poll.5s>
-                    @forelse($this->guestMessages as $m)
-                        <div class="msg-wrapper {{ $m->role }}">
+                    @forelse($this->guestMessages as $message)
+                        <div class="msg-wrapper {{ $message->wrapperClass() }}" wire:key="msg-{{ $message->channel }}-{{ $message->sourceId }}">
                             <div class="msg-content">
-                                <div class="msg-bubble {{ $m->role }}-bubble">{!! $m->htmlForWeb() !!}</div>
-                                <div class="msg-time" title="{{ \App\Support\ChatTimestamp::full($m->created_at) }}">{{ \App\Support\ChatTimestamp::label($m->created_at) }}</div>
+                                <div class="msg-bubble {{ $message->bubbleClass() }}">{!! $message->htmlText() !!}</div>
+                                <div class="msg-time" title="{{ \App\Support\ChatTimestamp::full($message->sentAt) }}">{{ \App\Support\ChatTimestamp::label($message->sentAt) }}</div>
+                                @include('filament.pages.partials.helpdesk-delivery-status', ['message' => $message])
                             </div>
                         </div>
                     @empty
@@ -855,16 +897,28 @@
                     @endforelse
                 </div>
 
+                {{-- Канал ответа. До 15-08-2026 бейдж был захардкожен как
+                     «Веб-чат сайта» и врал в telegram-тредах: куратор думал, что
+                     пишет в виджет сайта, а ответ уходил юзерботом в Telegram.
+                     Шапка диалога выше ветвилась правильно — расходились именно
+                     эти две надписи. --}}
                 <div class="reply-channel">
                     <span>Отвечаю в:</span>
-                    <span class="reply-channel-badge web">🌐 Веб-чат сайта</span>
+                    @if($isTelegramThread)
+                        <span class="reply-channel-badge telegram">🔹 Telegram-чат</span>
+                        @unless(config('services.telegram_support.enabled'))
+                            <span style="color: #b45309;">· юзербот выключен, ответ встанет в очередь</span>
+                        @endunless
+                    @else
+                        <span class="reply-channel-badge web">🌐 Веб-чат сайта</span>
+                    @endif
                 </div>
 
                 <div class="chat-input-area">
                     <form wire:submit.prevent="replyToGuest" class="input-group">
                         <textarea wire:model.defer="newMessage"
                             class="chat-textarea"
-                            placeholder="Ответить гостю..."
+                            placeholder="{{ $isTelegramThread ? 'Ответить в Telegram…' : 'Ответить гостю…' }}"
                             required
                             oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"
                             onkeydown="if(event.keyCode===13 && !event.shiftKey) { event.preventDefault(); @this.replyToGuest(); }"
