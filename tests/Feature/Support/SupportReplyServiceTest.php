@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature\Support;
 
 use App\Filament\Pages\Helpdesk;
-use App\Jobs\DeliverSupportReply;
 use App\Models\ChatMessage;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
@@ -14,7 +13,6 @@ use App\Models\User;
 use App\Services\Support\SupportReplyService;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Bus;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -130,10 +128,9 @@ class SupportReplyServiceTest extends TestCase
         ]);
     }
 
-    /** Второй клик подряд не должен ставить второй джоб — троттлинг на сервере. */
+    /** Второй клик подряд ничего не меняет — троттлинг на сервере. */
     public function test_resend_is_throttled_on_a_double_click(): void
     {
-        Bus::fake();
         config(['services.telegram_support.enabled' => true]);
 
         $message = $this->pendingOutgoingMessage(['pending_delivery' => true]);
@@ -142,7 +139,35 @@ class SupportReplyServiceTest extends TestCase
         $this->assertSame(SupportReplyService::RESEND_QUEUED, $service->resendPendingDelivery($message));
         $this->assertSame(SupportReplyService::RESEND_THROTTLED, $service->resendPendingDelivery($message->fresh()));
 
-        Bus::assertDispatchedTimes(DeliverSupportReply::class, 1);
+        $this->assertSame(1, (int) $message->fresh()->raw_payload['delivery_retries']);
+    }
+
+    /**
+     * Ручной досыл перевзводит сообщение для дренажа: снимает пометку о провале
+     * и обнуляет счётчик попыток, иначе исчерпавшее лимит сообщение отсеялось бы
+     * сразу же. Сам ничего не отправляет — увозит синк.
+     */
+    public function test_resend_rearms_the_message_for_the_next_sync_pass(): void
+    {
+        config(['services.telegram_support.enabled' => true]);
+
+        $message = $this->pendingOutgoingMessage([
+            'pending_delivery' => true,
+            'delivery_attempts' => 3,
+            'delivery_failed_at' => now()->subHour()->toIso8601String(),
+            'delivery_error' => 'fiber deadlock',
+        ]);
+
+        $this->assertSame(
+            SupportReplyService::RESEND_QUEUED,
+            app(SupportReplyService::class)->resendPendingDelivery($message),
+        );
+
+        $payload = $message->fresh()->raw_payload;
+        $this->assertTrue($payload['pending_delivery'], 'досыл не имеет права объявлять сообщение доставленным');
+        $this->assertSame(0, (int) $payload['delivery_attempts']);
+        $this->assertArrayNotHasKey('delivery_failed_at', $payload);
+        $this->assertArrayNotHasKey('delivery_error', $payload);
     }
 
     /**
@@ -151,7 +176,6 @@ class SupportReplyServiceTest extends TestCase
      */
     public function test_resend_refuses_an_untracked_imported_message(): void
     {
-        Bus::fake();
         config(['services.telegram_support.enabled' => true]);
 
         $message = $this->pendingOutgoingMessage(['from_sync' => true]);
@@ -161,7 +185,7 @@ class SupportReplyServiceTest extends TestCase
             app(SupportReplyService::class)->resendPendingDelivery($message),
         );
 
-        Bus::assertNotDispatched(DeliverSupportReply::class);
+        $this->assertSame(['from_sync' => true], $message->fresh()->raw_payload);
     }
 
     /** @param  array<string, mixed>  $payload */

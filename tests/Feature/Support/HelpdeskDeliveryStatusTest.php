@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature\Support;
 
 use App\Filament\Pages\Helpdesk;
-use App\Jobs\DeliverSupportReply;
 use App\Models\ChatMessage;
 use App\Models\SupportConversation;
 use App\Models\TelegramSupportAccount;
@@ -15,7 +14,6 @@ use App\Models\User;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Bus;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -208,15 +206,14 @@ class HelpdeskDeliveryStatusTest extends TestCase
             ->assertDontSee('доставлено в Telegram');
     }
 
-    public function test_resend_queues_the_delivery_again_and_clears_the_failure_marker(): void
+    public function test_resend_rearms_the_message_and_clears_the_failure_marker(): void
     {
-        Bus::fake();
-
         $thread = $this->telegramThread();
         $message = $this->outgoing($thread, [
             'pending_delivery' => true,
+            'delivery_attempts' => 3,
             'delivery_failed_at' => now()->toIso8601String(),
-            'delivery_error' => 'has timed out',
+            'delivery_error' => 'fiber deadlock',
         ]);
 
         Livewire::actingAs($this->admin())
@@ -224,10 +221,9 @@ class HelpdeskDeliveryStatusTest extends TestCase
             ->call('selectGuest', $thread->id)
             ->call('resendDelivery', $message->id);
 
-        Bus::assertDispatched(DeliverSupportReply::class, fn ($job): bool => $job->messageId === $message->id);
-
         $payload = $message->fresh()->raw_payload;
         $this->assertTrue($payload['pending_delivery'], 'досыл не имеет права объявлять сообщение доставленным');
+        $this->assertSame(0, (int) $payload['delivery_attempts'], 'счётчик попыток обязан обнулиться, иначе дренаж отсеет сообщение');
         $this->assertArrayNotHasKey('delivery_failed_at', $payload);
         $this->assertArrayNotHasKey('delivery_error', $payload);
         $this->assertSame(1, $payload['delivery_retries']);
@@ -235,8 +231,6 @@ class HelpdeskDeliveryStatusTest extends TestCase
 
     public function test_resend_of_a_delivered_message_does_nothing(): void
     {
-        Bus::fake();
-
         $thread = $this->telegramThread();
         $message = $this->outgoing($thread, ['pending_delivery' => false, 'delivered_at' => now()->toIso8601String()]);
 
@@ -245,12 +239,13 @@ class HelpdeskDeliveryStatusTest extends TestCase
             ->call('selectGuest', $thread->id)
             ->call('resendDelivery', $message->id);
 
-        Bus::assertNotDispatched(DeliverSupportReply::class);
+        $payload = $message->fresh()->raw_payload;
+        $this->assertFalse($payload['pending_delivery']);
+        $this->assertArrayNotHasKey('delivery_retries', $payload);
     }
 
-    public function test_resend_does_not_queue_anything_when_the_userbot_is_off(): void
+    public function test_resend_changes_nothing_when_the_userbot_is_off(): void
     {
-        Bus::fake();
         config(['services.telegram_support.enabled' => false]);
 
         $thread = $this->telegramThread();
@@ -261,14 +256,12 @@ class HelpdeskDeliveryStatusTest extends TestCase
             ->call('selectGuest', $thread->id)
             ->call('resendDelivery', $message->id);
 
-        Bus::assertNotDispatched(DeliverSupportReply::class);
+        $this->assertSame(['pending_delivery' => true], $message->fresh()->raw_payload);
     }
 
     /** id приходит из браузера, поэтому чужое сообщение досылать нельзя. */
     public function test_resend_refuses_a_message_from_another_dialog(): void
     {
-        Bus::fake();
-
         $opened = $this->telegramThread();
         $other = SupportConversation::create([
             'source_telegram_chat_id' => -100888,
@@ -283,7 +276,7 @@ class HelpdeskDeliveryStatusTest extends TestCase
             ->call('selectGuest', $opened->id)
             ->call('resendDelivery', $foreign->id);
 
-        Bus::assertNotDispatched(DeliverSupportReply::class);
+        $this->assertSame(['pending_delivery' => true], $foreign->fresh()->raw_payload);
     }
 
     public function test_replying_to_a_telegram_thread_promises_a_queue_not_a_delivery(): void

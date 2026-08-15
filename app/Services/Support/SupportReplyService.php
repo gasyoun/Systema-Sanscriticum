@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Support;
 
-use App\Jobs\DeliverSupportReply;
 use App\Models\ChatMessage;
 use App\Models\SupportConversation;
 use App\Models\TelegramSupportAccount;
@@ -22,9 +21,14 @@ use Illuminate\Support\Facades\Log;
  *
  * Веб/бот-каналы отвечает как прежде сам Helpdesk (ChatMessage + bot API). Этот
  * сервис добавляет ветку для импортированного TG-support (userbot): пишет
- * ИСХОДЯЩЕЕ TelegramSupportMessage, привязывает к треду и ставит в очередь
- * доставку через userbot ([[DeliverSupportReply]]). Пока userbot не настроен —
- * запись остаётся pending, job тихо выходит.
+ * ИСХОДЯЩЕЕ TelegramSupportMessage и привязывает его к треду. Сам он ничего не
+ * отправляет: запись остаётся pending, а увозит её ближайший заход синка
+ * ({@see PendingSupportReplyDrainer}).
+ *
+ * Отправлять отсюда или из очереди НЕЛЬЗЯ. До 15-08-2026 доставку делал джоб в
+ * воркере Horizon — MadelineProto ловил там SIGTERM и разваливал событийный
+ * цикл, и за всё время не ушло ни одного сообщения. Единственный владелец
+ * MTProto-сессии — короткоживущий процесс telegram-support:sync.
  */
 class SupportReplyService
 {
@@ -110,17 +114,11 @@ class SupportReplyService
 
         $this->conversations->recordMessage($user, $message, $message->sent_at);
 
-        $queued = (bool) config('services.telegram_support.enabled');
-        if ($queued) {
-            DeliverSupportReply::dispatch($message->id);
-        }
-
         Log::info('SupportReplyService: ответ записан в TG-support', [
             'user_id' => $user->id,
             'chat_id' => $chat->telegram_chat_id,
             'message_id' => $message->id,
             'reply_to_msg_id' => $replyToMsgId,
-            'delivery_queued' => $queued,
         ]);
 
         return $message;
@@ -130,7 +128,8 @@ class SupportReplyService
      * Ответ в тред БЕЗ users-записи — техвопрос из Telegram-чата от непривязанного
      * автора. Отличие от {@see replyViaSupportChannel} только в том, откуда берётся
      * чат: там от пользователя, здесь от самого треда. Дальше всё то же — pending
-     * outgoing + DeliverSupportReply, который пишет юзерботом по chat_id.
+     * outgoing, который увозит ближайший заход синка
+     * ({@see PendingSupportReplyDrainer}).
      */
     public function replyToUnlinkedThread(SupportConversation $thread, string $text, ?User $curator): ?TelegramSupportMessage
     {
@@ -163,16 +162,10 @@ class SupportReplyService
 
         $this->conversations->attach($thread, $message, $message->sent_at);
 
-        $queued = (bool) config('services.telegram_support.enabled');
-        if ($queued) {
-            DeliverSupportReply::dispatch($message->id);
-        }
-
         Log::info('SupportReplyService: ответ в тред без привязки записан', [
             'thread_id' => $thread->id,
             'chat_id' => $chat->telegram_chat_id,
             'message_id' => $message->id,
-            'delivery_queued' => $queued,
         ]);
 
         return $message;
@@ -181,12 +174,13 @@ class SupportReplyService
     /**
      * Ручной досыл зависшего ответа (кнопка «Дослать» в ленте хелпдеска).
      *
-     * Автодобора по расписанию сознательно нет — заказчик выбрал ручную кнопку,
-     * чтобы не плодить фоновую команду ради двух случаев на 8670 отправок.
+     * Ничего не отправляет сам и очередь не трогает: снимает пометку о провале и
+     * обнуляет счётчик попыток, после чего сообщение снова попадает в выборку
+     * PendingSupportReplyDrainer и уходит ближайшим заходом синка. Отправлять
+     * отсюда нельзя — веб-процесс так же непригоден для MadelineProto, как и
+     * воркер очереди.
      *
-     * `pending_delivery` здесь НЕ трогаем: снимает его только успешная доставка в
-     * DeliverSupportReply::handle(), и её же идемпотентность защищает от дубля,
-     * если исходный джоб внезапно оживёт.
+     * `pending_delivery` НЕ трогаем: снимает его только фактическая доставка.
      *
      * @return self::RESEND_* исход, который вызывающий превращает в уведомление
      */
@@ -205,9 +199,9 @@ class SupportReplyService
         }
 
         if (! config('services.telegram_support.enabled')) {
-            // Диспатчить нельзя: джоб отработает, deliverMessage() вернёт
-            // disabled, напишет info и оставит pending — молчаливый no-op с
-            // видом успеха. Куратору честнее сказать, что досылать нечем.
+            // Перевзводить незачем: синк при выключенном юзерботе не запускается
+            // вовсе, и сообщение просто лежало бы дальше. Куратору честнее
+            // сказать, что досылать сейчас нечем.
             return self::RESEND_DISABLED;
         }
 
@@ -223,13 +217,14 @@ class SupportReplyService
         }
 
         unset($payload['delivery_failed_at'], $payload['delivery_error']);
+        // Счётчик попыток обнуляем — иначе перевзведённое сообщение сразу же
+        // отсеялось бы дренажом как исчерпавшее лимит.
+        $payload['delivery_attempts'] = 0;
         $payload['delivery_retry_at'] = now()->toIso8601String();
         $payload['delivery_retries'] = (int) ($payload['delivery_retries'] ?? 0) + 1;
         $payload['delivery_retried_by'] = $curator?->id;
 
         $message->forceFill(['raw_payload' => $payload])->save();
-
-        DeliverSupportReply::dispatch($message->id);
 
         Log::info('SupportReplyService: ручной досыл ответа', [
             'message_id' => $message->id,

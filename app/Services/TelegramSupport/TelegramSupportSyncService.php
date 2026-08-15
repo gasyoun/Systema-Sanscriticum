@@ -10,6 +10,7 @@ use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Support\HomeworkPauseNoteRecorder;
+use App\Services\Support\PendingSupportReplyDrainer;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\TechnicalIssueRouter;
 use App\Services\Telegram\MadelineClientFactory;
@@ -63,11 +64,13 @@ class TelegramSupportSyncService
                     'synced' => 0,
                     'dates' => [],
                     'auto_linked' => $linkResult['linked'],
+                    'delivered' => $this->drainPendingReplies(),
                 ], true, []);
             }
 
             $result = $this->syncNormalizedMessages($messages, $account->name);
             $this->updateSyncState($account->refresh(), $messages);
+            $result['delivered'] = $this->drainPendingReplies();
 
             return $this->finish($account, $result, true, $messages);
         } catch (Throwable $e) {
@@ -94,6 +97,32 @@ class TelegramSupportSyncService
             }
 
             return $this->fail($account, $e);
+        }
+    }
+
+    /**
+     * Разослать ответы куратора, ждущие доставки.
+     *
+     * Живёт в заходе синка, а не в очереди: MadelineProto не выживает в воркере
+     * Horizon (`Amp\SignalException` → fiber deadlock), и прежний джоб
+     * DeliverSupportReply не доставил ни одного сообщения за всё время. Здесь мы
+     * в короткоживущем CLI-процессе, где MTProto работает каждую минуту.
+     *
+     * Падение досыла не должно ронять сам синк: заход уже прошёл успешно, и
+     * терять его результат из-за одного неотправленного ответа нельзя.
+     *
+     * @return int сколько ответов ушло за этот заход
+     */
+    private function drainPendingReplies(): int
+    {
+        try {
+            return app(PendingSupportReplyDrainer::class)->drain($this)['delivered'];
+        } catch (Throwable $e) {
+            Log::warning('Досыл ответов куратора сорвался, заход синка это не отменяет', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return 0;
         }
     }
 

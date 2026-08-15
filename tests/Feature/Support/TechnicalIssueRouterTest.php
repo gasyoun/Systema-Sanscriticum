@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Support;
 
-use App\Jobs\DeliverSupportReply;
 use App\Models\SupportConversation;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
@@ -346,9 +345,9 @@ class TechnicalIssueRouterTest extends TestCase
         $this->assertNotNull($sent);
         $this->assertSame(-100123, (int) $sent->telegram_chat_id);
         $this->assertSame('outgoing', $sent->direction);
-        // Ответ привязан к тому же треду и поставлен в доставку юзерботом.
+        // Ответ привязан к тому же треду и ждёт доставки ближайшим заходом синка.
         $this->assertSame($thread->id, (int) $sent->support_conversation_id);
-        Queue::assertPushed(DeliverSupportReply::class);
+        $this->assertTrue((bool) ($sent->raw_payload['pending_delivery'] ?? false));
     }
 
     /** Второе сообщение того же автора — тот же тред, без дубля. */
@@ -442,8 +441,7 @@ class TechnicalIssueRouterTest extends TestCase
         $this->assertNotNull($outgoing);
         $this->assertSame(-100888, (int) $outgoing->telegram_chat_id);
         $this->assertSame(88, (int) ($outgoing->raw_payload['reply_to_msg_id'] ?? 0));
+        // Ждёт доставки: увезёт ближайший заход синка, очередь тут не участвует.
         $this->assertTrue((bool) ($outgoing->raw_payload['pending_delivery'] ?? false));
-
-        Queue::assertPushed(DeliverSupportReply::class, fn (DeliverSupportReply $job) => $job->messageId === $outgoing->id);
     }
 }
