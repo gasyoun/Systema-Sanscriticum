@@ -226,6 +226,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HOMEWORK_TG_TAG_POST_OPEN_INVITE` | optional | `true` | config/homework.php:199 |
 | `HOMEWORK_TOTAL_MAX_KB` | optional | `92160` | config/homework.php:47 |
 | `HORIZON_DOMAIN` | required | `—` | config/horizon.php:31 |
+| `HORIZON_MEMORY_LIMIT` | optional | `128` | config/horizon.php:208 |
 | `HORIZON_NAME` | required | `—` | config/horizon.php:18 |
 | `HORIZON_PATH` | optional | `'horizon'` | config/horizon.php:44 |
 | `HORIZON_PREFIX` | optional | `Str::slug(env('APP_NAME', 'laravel'), '_').'_horizon:'` | config/horizon.php:70 |
