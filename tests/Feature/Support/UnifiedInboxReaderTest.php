@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature\Support;
 
 use App\Models\ChatMessage;
+use App\Models\SupportConversation;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Support\UnifiedInboxReader;
+use App\Support\SupportDeliveryStatus;
 use App\Support\UnifiedMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -18,6 +20,78 @@ use Tests\TestCase;
 class UnifiedInboxReaderTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * Тред без users-записи читается forConversation(), а не forUser(). Раньше
+     * Helpdesk собирал для него несохранённые ChatMessage и терял raw_payload —
+     * вместе со статусом доставки (инцидент 15-08-2026).
+     */
+    public function test_for_conversation_reads_a_telegram_thread_with_delivery_status(): void
+    {
+        $thread = SupportConversation::create([
+            'source_telegram_chat_id' => 9300,
+            'guest_name' => 'Маргарита',
+            'status' => SupportConversation::STATUS_OPEN,
+            'last_message_at' => now(),
+        ]);
+
+        $account = TelegramSupportAccount::create(['name' => 'support']);
+        $chat = TelegramSupportChat::create(['telegram_chat_id' => 9300]);
+
+        $base = [
+            'support_conversation_id' => $thread->id,
+            'telegram_support_account_id' => $account->id,
+            'telegram_support_chat_id' => $chat->id,
+            'telegram_chat_id' => 9300,
+        ];
+
+        TelegramSupportMessage::create($base + [
+            'telegram_message_id' => 1,
+            'direction' => 'incoming',
+            'text' => 'Не могу войти',
+            'sent_at' => '2026-08-15 11:05:00',
+        ]);
+        TelegramSupportMessage::create($base + [
+            'telegram_message_id' => -1,
+            'direction' => 'outgoing',
+            'role' => 'human',
+            'text' => 'Выслали данные',
+            'raw_payload' => ['pending_delivery' => true, 'via' => 'helpdesk_unified_reply'],
+            'sent_at' => '2026-08-15 12:20:00',
+        ]);
+
+        $stream = app(UnifiedInboxReader::class)->forConversation($thread);
+
+        $this->assertCount(2, $stream);
+        $this->assertNull($stream[0]->delivery, 'у входящего статуса доставки быть не может');
+        $this->assertSame(SupportDeliveryStatus::STATE_PENDING, $stream[1]->delivery?->state);
+        $this->assertTrue($stream[1]->delivery->canRetry());
+    }
+
+    public function test_for_conversation_reads_a_web_guest_thread_without_delivery_status(): void
+    {
+        $thread = SupportConversation::create([
+            'guest_token' => 'tok-'.bin2hex(random_bytes(8)),
+            'guest_name' => 'Аня',
+            'status' => SupportConversation::STATUS_OPEN,
+            'last_message_at' => now(),
+        ]);
+
+        ChatMessage::create([
+            'support_conversation_id' => $thread->id,
+            'user_id' => null,
+            'role' => 'user',
+            'text' => 'Вопрос по курсу',
+            'is_read' => false,
+        ]);
+
+        $stream = app(UnifiedInboxReader::class)->forConversation($thread);
+
+        $this->assertCount(1, $stream);
+        $this->assertSame(UnifiedMessage::CHANNEL_WEB, $stream[0]->channel);
+        // У chat_messages статуса доставки нет вовсе — и выдумывать его нельзя.
+        $this->assertNull($stream[0]->delivery);
+    }
 
     public function test_chat_message_roles_map_to_direction_and_responder_type(): void
     {

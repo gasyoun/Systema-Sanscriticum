@@ -111,6 +111,56 @@ class DeliverSupportReplyTest extends TestCase
         $this->assertCount(0, FakeMadelineApi::$sent);
     }
 
+    /**
+     * Инцидент 15-08-2026: джоб умирал по таймауту на зависшей сессии юзербота,
+     * а в базе не оставалось ничего, кроме строчки в логе — в ленте зависший
+     * ответ выглядел как отправленный.
+     */
+    public function test_permanent_failure_marks_the_message_without_flipping_pending(): void
+    {
+        $message = $this->pendingOutgoing(User::factory()->create());
+
+        (new DeliverSupportReply($message->id))->failed(new \RuntimeException('App\Jobs\DeliverSupportReply has timed out.'));
+
+        $payload = $message->refresh()->raw_payload;
+
+        // ИНВАРИАНТ: сообщение по-прежнему не доставлено, и SupportObservability
+        // обязан считать его в pending ровно как считал.
+        $this->assertTrue($payload['pending_delivery']);
+        $this->assertArrayHasKey('delivery_failed_at', $payload);
+        $this->assertStringContainsString('has timed out', $payload['delivery_error']);
+    }
+
+    public function test_permanent_failure_does_not_touch_an_already_delivered_message(): void
+    {
+        $message = $this->pendingOutgoing(User::factory()->create());
+        $message->forceFill(['raw_payload' => ['pending_delivery' => false, 'delivered_at' => now()->toIso8601String()]])->save();
+
+        (new DeliverSupportReply($message->id))->failed(new \RuntimeException('поздний таймаут'));
+
+        $payload = $message->refresh()->raw_payload;
+        $this->assertFalse($payload['pending_delivery']);
+        $this->assertArrayNotHasKey('delivery_failed_at', $payload);
+    }
+
+    public function test_successful_delivery_clears_a_previous_failure_marker(): void
+    {
+        $this->enableUserbot();
+        $message = $this->pendingOutgoing(User::factory()->create());
+        $message->forceFill(['raw_payload' => [
+            'pending_delivery' => true,
+            'delivery_failed_at' => now()->subHour()->toIso8601String(),
+            'delivery_error' => 'has timed out',
+        ]])->save();
+
+        (new DeliverSupportReply($message->id))->handle(app(TelegramSupportSyncService::class));
+
+        $payload = $message->refresh()->raw_payload;
+        $this->assertFalse($payload['pending_delivery']);
+        $this->assertArrayNotHasKey('delivery_failed_at', $payload);
+        $this->assertArrayNotHasKey('delivery_error', $payload);
+    }
+
     public function test_already_delivered_message_is_not_resent(): void
     {
         $this->enableUserbot();

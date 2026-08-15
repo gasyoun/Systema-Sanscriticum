@@ -41,6 +41,48 @@ class SupportObservabilityTest extends TestCase
         $this->assertFalse(SupportObservability::canAccess());
     }
 
+    /**
+     * Пометка о провале доставки (delivery_failed_at, 15-08-2026) — это уточнение
+     * о ЖДУЩЕМ сообщении, а не отдельное состояние. Если будущий рефакторинг
+     * «услужливо» перекинет pending_delivery в false при падении, дашборд начнёт
+     * рапортовать 100 % доставки на недоставленных ответах. Пусть падает тест.
+     *
+     * @test
+     */
+    public function a_failed_delivery_marker_does_not_change_the_pending_count(): void
+    {
+        config(['features.support_observability' => true]);
+
+        $account = TelegramSupportAccount::create(['name' => 'support-fail', 'is_enabled' => true]);
+        $chat = TelegramSupportChat::create(['telegram_chat_id' => 777002]);
+
+        TelegramSupportMessage::create([
+            'telegram_support_account_id' => $account->id,
+            'telegram_support_chat_id' => $chat->id,
+            'telegram_chat_id' => $chat->telegram_chat_id,
+            'telegram_message_id' => -1,
+            'direction' => 'outgoing',
+            'role' => 'human',
+            'raw_payload' => [
+                'pending_delivery' => true,
+                'delivery_failed_at' => now()->toIso8601String(),
+                'delivery_error' => 'has timed out',
+            ],
+            'sent_at' => now()->subHour(),
+        ]);
+
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs($admin);
+
+        $report = (new SupportObservability)->report();
+
+        $this->assertSame(1, $report['delivery']['tracked']);
+        $this->assertSame(1, $report['delivery']['pending']);
+        $this->assertSame(0, $report['delivery']['delivered']);
+        $this->assertSame(0.0, $report['delivery']['rate']);
+    }
+
     /** @test */
     public function metrics_compute_and_page_renders_for_admin(): void
     {

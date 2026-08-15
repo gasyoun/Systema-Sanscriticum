@@ -59,6 +59,15 @@ final class UnifiedMessage
          * У веб-стороны такого поля нет — там всегда null.
          */
         public readonly ?string $responderMarker = null,
+        /**
+         * Состояние доставки исходящего ответа куратора — только у TG-support и
+         * только у тех сообщений, которые отправлял хелпдеск (см.
+         * SupportDeliveryStatus::fromRawPayload). null означает «доставку этого
+         * сообщения мы не отслеживаем», и это НЕ синоним «доставлено»: у
+         * chat_messages статуса доставки нет вовсе, поэтому зелёная галочка там
+         * была бы выдумкой — ровно того же сорта, что здесь и чинится.
+         */
+        public readonly ?SupportDeliveryStatus $delivery = null,
     ) {}
 
     public function isIncoming(): bool
@@ -178,6 +187,9 @@ final class UnifiedMessage
             sentAt: $message->sent_at,
             isRead: true,
             responderMarker: $message->responder_marker,
+            delivery: $message->direction === self::DIRECTION_OUTGOING
+                ? SupportDeliveryStatus::fromRawPayload($message->raw_payload, $message->sent_at)
+                : null,
         );
     }
 }

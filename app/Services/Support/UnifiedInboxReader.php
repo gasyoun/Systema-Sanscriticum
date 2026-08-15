@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Support;
 
 use App\Models\ChatMessage;
+use App\Models\SupportConversation;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Support\UnifiedMessage;
@@ -47,6 +48,38 @@ class UnifiedInboxReader
 
         return $web->concat($telegram)
             ->sortBy(fn (UnifiedMessage $message) => $message->sentAt->getTimestamp())
+            ->values();
+    }
+
+    /**
+     * Сообщения одного треда — для диалогов БЕЗ привязки к пользователю
+     * (веб-гость и техвопрос из Telegram от автора без users-записи), где
+     * forUser() неприменим по определению.
+     *
+     * Тред живёт ровно в одном хранилище: есть source_telegram_chat_id — вся
+     * переписка в telegram_support_messages, иначе в chat_messages. Поэтому
+     * слияния здесь нет, в отличие от forUser().
+     *
+     * @return Collection<int, UnifiedMessage>
+     */
+    public function forConversation(SupportConversation $thread): Collection
+    {
+        if ($thread->source_telegram_chat_id !== null) {
+            return $thread->telegramMessages()
+                ->with(['chat', 'contact', 'responder:id,name'])
+                // Импорт мог идти пачками вразнобой, поэтому id ≠ хронология.
+                ->orderBy('sent_at')
+                ->orderBy('id')
+                ->get()
+                ->map(fn (TelegramSupportMessage $message) => UnifiedMessage::fromTelegramSupportMessage($message))
+                ->values();
+        }
+
+        return $thread->chatMessages()
+            ->with('answeredBy:id,name')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (ChatMessage $message) => UnifiedMessage::fromChatMessage($message))
             ->values();
     }
 }
