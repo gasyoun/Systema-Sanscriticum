@@ -1,6 +1,6 @@
 # Metadoc — SERVER_SOFT_ALERT_PLAYBOOK.md
 
-_Created: 02-08-2026 · Last updated: 02-08-2026 (H2187 fixtures)_
+_Created: 02-08-2026 · Last updated: 15-08-2026 (H2803 horizon 64 MB row)_
 
 | Field | Value |
 |---|---|
@@ -31,6 +31,7 @@ _Created: 02-08-2026 · Last updated: 02-08-2026 (H2187 fixtures)_
 
 | Date | Change | Who |
 |---|---|---|
+| 15-08-2026 | Incident log: `[rolled-back]` ×2 from Horizon master 64 MB / exit 12; #1729 already on main | Grok 4.6 (`grok-4.6`) H2803 |
 | 02-08-2026 | Dry-run fixtures + SoftRemediateDryRunFixturesTest + §4.0 smoke one-liner | Grok 4.5 (`grok-4.5`) H2187 |
 | 02-08-2026 | Initial playbook + catalog + incident log skeleton | Grok 4.5 (`grok-4.5`) H2148 |
 
