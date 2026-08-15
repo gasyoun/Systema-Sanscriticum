@@ -199,7 +199,16 @@
                 <i class="fas fa-life-ring mr-3 w-5 text-center {{ request()->routeIs('student.messages') ? 'text-brand' : 'text-gray-500' }}"></i>
                 {{ config('features.cabinet_hybrid') ? 'Помощь' : 'Сообщения' }}
             </a>
-        
+
+            {{-- H2747 — обратный звонок (Phase 0/1 телефонии). Флаг OFF по умолчанию. --}}
+            @if (config('features.telephony_callback_request'))
+            <a href="{{ route('student.support.callback') }}"
+               class="{{ request()->routeIs('student.support.callback') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-phone mr-3 w-5 text-center {{ request()->routeIs('student.support.callback') ? 'text-brand' : 'text-gray-500' }}"></i>
+                Обратный звонок
+            </a>
+            @endif
+
             {{-- БЛОК КУРСОВ (Спойлер/Аккордеон) --}}
             @if($menuCourses->isNotEmpty())
                 <div x-data="{ coursesOpen: true }" class="mt-4 pt-4 border-t border-[#2C2C32]">
