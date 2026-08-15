@@ -96,7 +96,12 @@ class SupportReplyDeliveryViaSyncTest extends TestCase
         $this->assertCount(1, FakeMadelineProtoClient::$sent);
         $this->assertSame(self::PEER, FakeMadelineProtoClient::$sent[0]['peer']);
         $this->assertSame('Выслали вам данные для входа', FakeMadelineProtoClient::$sent[0]['message']);
-        $this->assertSame(4242, FakeMadelineProtoClient::$sent[0]['reply_to_msg_id']);
+        // Формат MadelineProto 8.x: конструктор inputReplyToMessage, а не
+        // плоский reply_to_msg_id — тот двойник отвергает, как реальный API.
+        $this->assertSame(
+            ['_' => 'inputReplyToMessage', 'reply_to_msg_id' => 4242],
+            FakeMadelineProtoClient::$sent[0]['reply_to'],
+        );
 
         $fresh = $message->fresh();
         $this->assertSame(555, $fresh->telegram_message_id);
