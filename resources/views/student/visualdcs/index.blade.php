@@ -9,10 +9,36 @@
         @if(in_array($state, ['preview', 'unpaid', 'expired'], true))
             Показаны только частотные единицы. Полный список откроется при действующем доступе к курсу.
         @else
-            Полный каталог текущего релиза{{ $release ? ' '.$release->release_id : '' }}.
+            Каталог релиза{{ $release ? ' '.$release->release_id : '' }}
+            — {{ $total }} единиц, страница {{ $page }}.
         @endif
     </p>
 
+    <form method="GET" action="{{ route('student.visualdcs.index', $surface) }}" class="mb-6">
+        <label for="q" class="sr-only">Поиск</label>
+        <div class="flex gap-2">
+            <input id="q" name="q" value="{{ $q }}" type="search"
+                   class="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                   placeholder="корень / лемма / заголовок">
+            <button type="submit" class="px-4 py-2 rounded-xl bg-brand text-white text-sm font-bold focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">Найти</button>
+        </div>
+    </form>
+
     @include('student.visualdcs._list', ['items' => $items, 'surface' => $surface, 'preview' => false, 'progressById' => $progressById])
+
+    @if(($total ?? 0) > ($perPage ?? 50))
+        <nav class="mt-6 flex items-center justify-between text-sm" aria-label="Страницы">
+            @if($page > 1)
+                <a class="text-brand underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                   href="{{ route('student.visualdcs.index', ['surface' => $surface, 'page' => $page - 1, 'q' => $q ?: null]) }}">← назад</a>
+            @else
+                <span></span>
+            @endif
+            @if(($page * $perPage) < $total)
+                <a class="text-brand underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                   href="{{ route('student.visualdcs.index', ['surface' => $surface, 'page' => $page + 1, 'q' => $q ?: null]) }}">дальше →</a>
+            @endif
+        </nav>
+    @endif
 </div>
 @endsection

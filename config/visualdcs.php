@@ -18,6 +18,8 @@ return [
 
     'preview_limit' => (int) env('VISUALDCS_PREVIEW_LIMIT', 5),
 
+    'page_size' => (int) env('VISUALDCS_PAGE_SIZE', 50),
+
     /*
      | Course slugs whose access-granting payments unlock attested-tier items.
      | Empty = any real paid non-deposit/non-trial payment unlocks full access.

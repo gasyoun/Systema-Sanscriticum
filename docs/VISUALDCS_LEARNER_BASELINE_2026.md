@@ -1,6 +1,6 @@
 # VisualDCS native learner — pre-activation baseline
 
-_Created: 13-08-2026 · Last updated: 13-08-2026_
+_Created: 13-08-2026 · Last updated: 15-08-2026_
 
 H2482 shipped the importer, three `/dvaram/visualdcs` surfaces and
 `external_learning_progress`. All three flags stay **OFF**. This file is the
@@ -18,9 +18,23 @@ target is invented here.
 | Paid conversion of preview visitors | n/a | `/visualdcs/{surface}/preview` + checkout |
 | Revenue / active learner | n/a | qualifying Payment denominator (do not fork) |
 
+## Published pin (H2499 keep #110)
+
+Local consume target is the dual-run-confirmed release
+`vdcs-learner-v1-20260809`. Hashes live in
+[`tests/fixtures/visualdcs/published-v1-pin.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/fixtures/visualdcs/published-v1-pin.json).
+Import (does not flip flags):
+
+```text
+php artisan visualdcs:import C:/Users/user/Documents/GitHub/VisualDCS/visual/contracts/v1
+```
+
+Catalog pages paginate (50) and do not embed paradigm cells in the index.
+Flags stay **OFF** until a human activation decision.
+
 ## Activation (human only)
 
-1. Import a pinned H2481 release (`visualdcs:import`).
+1. Import the H2499 pin (`visualdcs:import` on the sibling `visual/contracts/v1`).
 2. Flip `VISUALDCS_VERB`, `VISUALDCS_NOMINAL`, `VISUALDCS_PASSAGE` independently.
 3. At day 7 / 14 / 30 fill the same table. Scale / hold / revert from comparable
    cohorts — never from a promised lift.

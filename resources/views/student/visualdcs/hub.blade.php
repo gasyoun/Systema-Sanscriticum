@@ -23,7 +23,7 @@
                     <a href="{{ route('student.visualdcs.index', $surface) }}"
                        class="flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-white border border-gray-200 hover:border-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">
                         <span class="font-bold text-gray-900">{{ $surface === 'verb' ? 'Глагол' : ($surface === 'nominal' ? 'Имя' : 'Пассаж') }}</span>
-                        <span class="text-sm text-gray-500">{{ count($pack['items']) }} единиц</span>
+                        <span class="text-sm text-gray-500">{{ $pack['count'] }} единиц</span>
                     </a>
                 </li>
             @endforeach

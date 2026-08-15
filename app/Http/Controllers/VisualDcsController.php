@@ -48,8 +48,7 @@ class VisualDcsController extends Controller
             }
             $surfaces[$surface] = [
                 'enabled' => true,
-                'items' => $this->visibleItems($surface, $user),
-                'progress' => $user ? $this->progress->forUser($user, $surface) : [],
+                'count' => $this->visibleCount($surface, $user),
             ];
         }
 
@@ -65,9 +64,17 @@ class VisualDcsController extends Controller
         $this->assertSurface($surface);
         $user = $request->user();
 
+        $page = max(1, (int) $request->query('page', 1));
+        $q = trim((string) $request->query('q', ''));
+        $pack = $this->visiblePage($surface, $user, $page, $q !== '' ? $q : null);
+
         return view('student.visualdcs.index', [
             'surface' => $surface,
-            'items' => $this->visibleItems($surface, $user),
+            'items' => $pack['items'],
+            'total' => $pack['total'],
+            'page' => $pack['page'],
+            'perPage' => $pack['perPage'],
+            'q' => $q,
             'state' => VisualDcsEntitlement::matrixState($user),
             'progressById' => $this->progressMap($user, $surface),
             'release' => $this->catalog->promoted(),
@@ -158,6 +165,33 @@ class VisualDcsController extends Controller
             $surface,
             previewOnly: ! $full,
             includeAttested: VisualDcsEntitlement::canSeeAttested($user),
+        );
+    }
+
+    private function visibleCount(string $surface, $user): int
+    {
+        $full = VisualDcsEntitlement::hasFullAccess($user);
+
+        return $this->catalog->count(
+            $surface,
+            previewOnly: ! $full,
+            includeAttested: VisualDcsEntitlement::canSeeAttested($user),
+        );
+    }
+
+    /**
+     * @return array{items: list<array<string, mixed>>, total: int, page: int, perPage: int}
+     */
+    private function visiblePage(string $surface, $user, int $page, ?string $q): array
+    {
+        $full = VisualDcsEntitlement::hasFullAccess($user);
+
+        return $this->catalog->page(
+            $surface,
+            previewOnly: ! $full,
+            includeAttested: VisualDcsEntitlement::canSeeAttested($user),
+            page: $page,
+            q: $q,
         );
     }
 

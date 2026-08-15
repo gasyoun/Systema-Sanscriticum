@@ -1,0 +1,21 @@
+{
+  "releaseId": "vdcs-learner-v1-20260809",
+  "contractVersion": "1.0.0",
+  "handoff": "H2499 keep VisualDCS #110",
+  "siblingPath": "visual/contracts/v1",
+  "sha256": {
+    "verb-trainer.json": "5276b7d04ee409c58c8fe7426b26efdabc2cbc1d3d4d05082f5ed1d593f2d4f6",
+    "nominal-trainer.json": "13b5a16f5b45e886744f56f3464e8122730d60e1a677323f5b67024684de6663",
+    "concordance-passage.json": "b1d676e358e20d12eee85817c9fc9c32e735dfb050019ecece88d08f1912a08d"
+  },
+  "bytes": {
+    "verb-trainer.json": 11219452,
+    "nominal-trainer.json": 15591893,
+    "concordance-passage.json": 45833
+  },
+  "recordCount": {
+    "verb-trainer.json": 7689,
+    "nominal-trainer.json": 31753,
+    "concordance-passage.json": 40
+  }
+}
