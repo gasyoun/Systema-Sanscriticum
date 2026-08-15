@@ -11,6 +11,7 @@ use App\Http\Controllers\AttendanceNoticeController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CalendarFeedController;
+use App\Http\Controllers\CallbackRequestController;
 use App\Http\Controllers\CertificateRegistryController;
 use App\Http\Controllers\CertificateVerificationController;
 use App\Http\Controllers\CheckoutController;
@@ -552,6 +553,14 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     });
 
     Route::get('/messages', [StudentController::class, 'messages'])->name('student.messages');
+
+    // H2747 — Phase 0/1 consented callback request (H2486 packet §4.3/§8).
+    // Controller 404s while features.telephony_callback_request is OFF.
+    // No provider HTTP, no PSTN — writes FollowUpTask + CallEvent::requested only.
+    Route::get('/support/callback', [CallbackRequestController::class, 'show'])
+        ->name('student.support.callback');
+    Route::post('/support/callback', [CallbackRequestController::class, 'store'])
+        ->name('student.support.callback.store');
 
     // H1481 hybrid chassis (R29 Phase 1): job-named pages. Controllers 404 when
     // features.cabinet_hybrid is OFF so prod is unchanged until the flag flips.
