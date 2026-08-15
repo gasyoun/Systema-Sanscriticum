@@ -457,8 +457,8 @@ class Helpdesk extends Page
 
         match ($result) {
             SupportReplyService::RESEND_QUEUED => Notification::make()
-                ->title('Досылаем')
-                ->body('Поставили в очередь на отправку в Telegram. Статус обновится прямо в ленте.')
+                ->title('Дошлём')
+                ->body('Ответ уйдёт ближайшим заходом синка — это до минуты. Статус обновится прямо в ленте.')
                 ->success()->send(),
             SupportReplyService::RESEND_ALREADY_DELIVERED => Notification::make()
                 ->title('Уже доставлено')
@@ -466,11 +466,11 @@ class Helpdesk extends Page
                 ->warning()->send(),
             SupportReplyService::RESEND_DISABLED => Notification::make()
                 ->title('Досылать некуда')
-                ->body('Телеграм-юзербот сейчас выключен, отправить нечем. Сообщение остаётся в очереди — дошлите его, когда синк включат.')
+                ->body('Телеграм-юзербот сейчас выключен, синк не ходит. Сообщение ждёт — дошлите его, когда юзербот включат.')
                 ->danger()->send(),
             SupportReplyService::RESEND_THROTTLED => Notification::make()
                 ->title('Уже досылаем')
-                ->body('Повтор поставлен в очередь только что. Подождите минуту.')
+                ->body('Ответ перевзведён только что и ждёт ближайшего захода синка. Подождите минуту.')
                 ->warning()->send(),
             default => Notification::make()
                 ->title('Нечего досылать')
@@ -519,8 +519,8 @@ class Helpdesk extends Page
         }
 
         Notification::make()
-            ->title('Ответ поставлен в очередь')
-            ->body('Уйдёт в Telegram в ближайшую минуту. Статус доставки — под сообщением в ленте.')
+            ->title('Ответ записан, отправляем')
+            ->body('Уйдёт в Telegram ближайшим заходом синка — это до минуты. Статус доставки — под сообщением в ленте.')
             ->success()
             ->send();
     }
