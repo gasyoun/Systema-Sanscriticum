@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
+use Tests\Feature\Support\Doubles\FakeMadelineProtoClient;
 use Tests\TestCase;
 
 class TelegramSupportAnalyticsTest extends TestCase
@@ -906,74 +907,6 @@ class TelegramSupportAnalyticsTest extends TestCase
     }
 }
 
-class FakeMadelineProtoClient
-{
-    /** @var array<int, array<int, array<string, mixed>>> */
-    public static array $histories = [];
-
-    /** @var array<int, array<int, array<string, mixed>>> */
-    public static array $users = [];
-
-    /** @var array<int, array<string, mixed>> */
-    public static array $profiles = [];
-
-    /** @var array<int, array<string, mixed>> */
-    public static array $lastHistoryRequests = [];
-
-    /** @var array<int, string> */
-    public static array $startFailures = [];
-
-    public static int $startCalls = 0;
-
-    public object $messages;
-
-    public function __construct(string $session, mixed $settings)
-    {
-        $this->messages = new class
-        {
-            /**
-             * @param  array<string, mixed>  $params
-             * @return array<string, mixed>
-             */
-            public function getHistory(array $params): array
-            {
-                FakeMadelineProtoClient::$lastHistoryRequests[] = $params;
-                $peer = (int) $params['peer'];
-                $minId = (int) $params['min_id'];
-
-                return [
-                    'messages' => collect(FakeMadelineProtoClient::$histories[$peer] ?? [])
-                        ->filter(fn (array $message) => (int) $message['id'] > $minId)
-                        ->values()
-                        ->all(),
-                    'users' => FakeMadelineProtoClient::$users[$peer] ?? [],
-                ];
-            }
-        };
-    }
-
-    public function start(): void
-    {
-        self::$startCalls++;
-
-        if (self::$startFailures !== []) {
-            throw new \RuntimeException(array_shift(self::$startFailures));
-        }
-    }
-
-    /**
-     * @return array<int>
-     */
-    public function getDialogIds(): array
-    {
-        return array_keys(self::$histories);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function getInfo(int $id): array
-    {
-        return self::$profiles[$id] ?? [];
-    }
-}
+// FakeMadelineProtoClient переехал в tests/Feature/Support/Doubles/ (PSR-4):
+// inline-класс в чужом тест-файле был недоступен другим сьютам, а двойник,
+// умеющий и читать и слать, нужен тесту инварианта «один клиент на заход».

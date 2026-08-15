@@ -26,6 +26,24 @@ class TelegramSupportSyncService
 {
     private static bool $loggedMissingTelegramIdColumn = false;
 
+    /**
+     * Один MadelineProto-клиент на ВЕСЬ заход (чтение + досыл ответов).
+     *
+     * Каждый `new API()` создаёт новый глобальный Logger, а тот в режиме
+     * FILE_LOGGER — фоновый Amp-фибер pipe(), навсегда оседающий в статическом
+     * Logger::$closePromises. На shutdown Logger::finalize() делает await() по
+     * всем пайпам внутри register_shutdown_function, где Revolt уже не может
+     * возобновить фибер, — «Event loop terminated without resuming the current
+     * suspension (fiber deadlock)». Именно так до 15-08-2026 не доставился НИ
+     * ОДИН ответ куратора: deliverMessage() открывал нового клиента на каждое
+     * сообщение. Read-only заход с одним клиентом завершается чисто каждую
+     * минуту — этот кеш и держит инвариант «один клиент на процесс».
+     *
+     * Кеш живёт на экземпляре, а сервис не singleton — то есть «на заход» по
+     * построению. НЕ делайте сервис singleton'ом, не пересмотрев это.
+     */
+    private ?object $client = null;
+
     public function __construct(
         private readonly SupportDailyRollupAggregator $aggregator,
         private readonly SupportContactUserAutoLinker $autoLinker,
@@ -142,6 +160,13 @@ class TelegramSupportSyncService
             }
 
             Log::warning('Telegram support sync restarting MadelineProto auth flow after AUTH_RESTART');
+
+            // Повтор обязан идти со СВЕЖИМ клиентом (прежняя семантика ретрая).
+            // На проде AUTH_RESTART может прилететь и ПОСЛЕ успешного start()
+            // (из getHistory) — тогда в кеше отравленный клиент. Обнуление
+            // безопасно: __destruct реального API лишь регистрирует
+            // async-деструктор, await по нему — только на shutdown.
+            $this->client = null;
 
             return $this->fetchIncrementalMadelineMessages($account->refresh(), $clientClass);
         }
@@ -520,8 +545,25 @@ class TelegramSupportSyncService
         return array_slice($dialogs, 0, $limit);
     }
 
-    /** Открыть залогиненный MadelineProto-клиент (та же сессия, что и для sync). */
+    /**
+     * Залогиненный MadelineProto-клиент — ОДИН на заход (см. докблок $client).
+     *
+     * Кеш присваивается только ПОСЛЕ успешного createClient(): если start()
+     * бросил (AUTH_RESTART), кеш обязан остаться пустым, чтобы ретрай создал
+     * свежий клиент. В recover-ветках (dead IPC / FD exhaustion) кеш сознательно
+     * НЕ сбрасывается: они терминальные, процесс завершается сразу после них.
+     */
     protected function openClient(string $clientClass): object
+    {
+        if ($this->client instanceof $clientClass) {
+            return $this->client;
+        }
+
+        return $this->client = $this->createClient($clientClass);
+    }
+
+    /** Создать и залогинить клиент. Точка переопределения для тест-двойников. */
+    protected function createClient(string $clientClass): object
     {
         // Абсолютный путь через фабрику: дефолт конфига — storage_path() (уже
         // абсолютный), оборачивать его в base_path() нельзя (задвоение пути).
@@ -538,7 +580,11 @@ class TelegramSupportSyncService
      * Отправить исходящее сообщение через userbot в указанный чат. Возвращает
      * статус + реальный telegram_message_id при успехе. Гварды повторяют sync():
      * без enabled/creds/клиента — просто статус, без открытия клиента. Ошибки
-     * самой отправки пробрасываются (job их ретраит).
+     * самой отправки пробрасываются — их ловит и ретраит PendingSupportReplyDrainer.
+     *
+     * Клиент берётся из кеша захода (openClient), НЕ создаётся заново: второй
+     * new API() в процессе — это второй Logger-пайп и fiber deadlock на
+     * shutdown, из-за которого доставка не работала никогда (см. $client).
      *
      * @return array{status: string, telegram_message_id?: int|null}
      */
