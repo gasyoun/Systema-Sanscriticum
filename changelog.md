@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.89.57] - 2026-08-16
 ### Added
 - **H2893 (Grok 4.6 `grok-4.6`): samskrte.ru SEO H2 wave-1 money-page hygiene.** Unique `meta_title` / `meta_description` for every public `/k/` URL via committed [database/data/seo/course_meta_h2.csv](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/data/seo/course_meta_h2.csv) + `seo:fill-course-meta` (`--dry-run`, `--reset-slugs`). Sitemap course priorities: donate 0.3, recorded 0.6, live 0.8. Homepage and `/online` copy aligned on «курсы санскрита с нуля» vs catalog title. P2 wave-1 packet is docs-only — [docs/SEO_P2_WAVE1_ACTIVATION_PACKET_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_P2_WAVE1_ACTIVATION_PACKET_2026.md); `dictionary:mark-core-indexable` was not run without `--dry-run`. Tests: `tests/Feature/Seo/`.
 - **GEO audit of samskrte.ru (16-08-2026).** Score 66/100. `/llms.txt` 404; AI crawlers inherit `User-agent: *`; 5 000+ vs 7 000 student-count clash; YouTube missing from Organization `sameAs`. Maps onto H2 W3 without overriding the generated-route ruling: [docs/SEO_GEO_AUDIT_SAMSKRTE_16.08.26.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_GEO_AUDIT_SAMSKRTE_16.08.26.md). Executor: Grok 4.6 (`grok-4.6`).
