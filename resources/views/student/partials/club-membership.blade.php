@@ -86,8 +86,12 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach($clubShelf as $clubCourse)
             <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100 hover:border-[#38BDF8]/40 hover:shadow-[0_15px_35px_rgba(56,189,248,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col p-6">
+                @php($clubScope = app(\App\Services\Membership\ClubEntitlement::class)->scopeLabelFor($clubCourse))
                 <span class="self-start px-2.5 py-1 bg-sky-50 text-sky-600 text-[10px] font-bold uppercase tracking-widest rounded border border-sky-100 mb-3">
-                    По клубу
+                    {{-- H2886: объём назван на карточке. Курс, от которого клуб даёт один
+                         блок, не должен читаться как курс целиком — иначе полка обещает
+                         больше, чем открывает, и разбираться будет уже оплативший. --}}
+                    По клубу@if($clubScope) · {{ $clubScope }}@endif
                 </span>
                 <h4 class="text-lg font-bold text-gray-900 mb-4 leading-snug line-clamp-2">{{ $clubCourse->title }}</h4>
                 <a href="{{ route('student.course', $clubCourse->slug) }}"

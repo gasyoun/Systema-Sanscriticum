@@ -22,16 +22,38 @@ class ClubCatalogue extends Command
 {
     protected $signature = 'membership:club-catalogue
         {--course=* : конкретные id или slug курсов (вместо авто-подбора)}
+        {--key= : объём доступа — full (по умолчанию) или block_N / block_N_hH (H2886)}
         {--remove : убрать из полки вместо добавления}
         {--apply : записать (без флага — сухой прогон)}';
 
-    protected $description = 'Клуб: показать/проставить courses.club_included для полки записей (H2644).';
+    protected $description = 'Клуб: показать/проставить courses.club_included + объём доступа для полки записей (H2644, H2886).';
 
     public function handle(ClubEntitlement $entitlement): int
     {
         $apply = (bool) $this->option('apply');
         $remove = (bool) $this->option('remove');
         $explicit = array_filter(array_map('trim', (array) $this->option('course')));
+
+        // Объём доступа. Валидируем ФОРМУ здесь, а не при чтении: опечатка
+        // «block1» вместо «block_1» дала бы ключ, который не совпадает ни с
+        // одним Lesson::unlockingKeys, то есть курс в полке и ноль открытых
+        // уроков — ровно тот молчаливый провал, ради которого написан H2886.
+        $key = trim((string) $this->option('key'));
+        if ($key !== '' && $key !== 'full' && preg_match('/^block_\d+(_h\d+)?$/', $key) !== 1) {
+            $this->error('--key должен быть full, block_N или block_N_hH; получено: '.$key);
+
+            return self::FAILURE;
+        }
+        if ($key !== '' && $remove) {
+            $this->error('--key бессмысленен вместе с --remove: снятие с полки обнуляет объём.');
+
+            return self::FAILURE;
+        }
+        if ($key !== '' && $explicit === []) {
+            $this->error('--key требует явного --course=: назначать объём авто-подбором нельзя.');
+
+            return self::FAILURE;
+        }
 
         $query = Course::query();
 
@@ -61,11 +83,41 @@ class ClubCatalogue extends Command
         }
 
         $target = ! $remove;
-        $changing = $courses->filter(fn (Course $c) => (bool) $c->club_included !== $target);
+        // Объём тоже считается изменением: курс может УЖЕ лежать в полке, но с
+        // другим ключом, и молча оставить старый объём — значит отдать за ₽1 500
+        // не то, что решили.
+        $targetKey = $remove ? null : ($key === '' ? null : $key);
+        $changing = $courses->filter(function (Course $c) use ($target, $targetKey, $key): bool {
+            if ((bool) $c->club_included !== $target) {
+                return true;
+            }
+
+            return $key !== '' && (string) ($c->club_access_key ?? '') !== (string) $targetKey;
+        });
 
         if ($changing->isEmpty()) {
+            // H2886 / FINDINGS §418: НЕ схлопывать «нечего менять» и «нечего
+            // выбрать» в одну строку. Пустая выборка при авто-подборе — это не
+            // «уже сделано», это «команда структурно не могла ничего предложить»,
+            // и раньше обе читались как зелёный успех.
+            if ($courses->isEmpty()) {
+                $this->warn('НЕЧЕГО ВЫБРАТЬ: под критерий не подошёл НИ ОДИН курс — это не «уже набрано».');
+                if ($explicit === []) {
+                    $this->line('  Авто-подбор идёт через Course::sellsRecordings(), которому нужны ОДНОВРЕМЕННО:');
+                    $this->line('    features.course_recordings_sales = '
+                        .var_export((bool) config('features.course_recordings_sales', false), true)
+                        .' и is_completed=true у курса ('
+                        .Course::query()->where('is_active', true)->where('is_completed', true)->count()
+                        .' из '.Course::query()->where('is_active', true)->count().' активных).');
+                    $this->line('  Рабочая форма — явный список: --course=<id|slug> --course=… [--key=block_N] --apply');
+                }
+
+                return self::FAILURE;
+            }
+
             $this->info('Менять нечего: подходящих курсов '.$courses->count()
-                .', все уже '.($target ? 'в полке' : 'вне полки').'.');
+                .', все уже '.($target ? 'в полке' : 'вне полки')
+                .($key !== '' ? ' с объёмом '.$key : '').'.');
 
             return self::SUCCESS;
         }
@@ -76,14 +128,21 @@ class ClubCatalogue extends Command
                 $c->id,
                 (string) $c->slug,
                 mb_substr((string) $c->title, 0, 48),
-                $c->club_included ? 'в полке' : '—',
-                $target ? 'в полке' : '—',
+                $c->club_included ? 'в полке ('.$entitlement->accessKeyFor($c).')' : '—',
+                $target ? 'в полке ('.($targetKey ?? 'full').')' : '—',
             ])->values()->all(),
         );
 
         if ($apply) {
-            Course::query()->whereIn('id', $changing->pluck('id'))->update(['club_included' => $target]);
-            $this->info(($target ? 'ДОБАВЛЕНО В ПОЛКУ: ' : 'УБРАНО ИЗ ПОЛКИ: ').$changing->count());
+            $update = ['club_included' => $target];
+            // При снятии с полки объём обнуляем: иначе оставшийся block_N тихо
+            // воскреснет, когда курс вернут в полку без --key.
+            if ($remove || $key !== '') {
+                $update['club_access_key'] = $targetKey;
+            }
+            Course::query()->whereIn('id', $changing->pluck('id'))->update($update);
+            $this->info(($target ? 'ДОБАВЛЕНО В ПОЛКУ: ' : 'УБРАНО ИЗ ПОЛКИ: ').$changing->count()
+                .($target ? ', объём '.($targetKey ?? 'full') : ''));
         } else {
             $this->info('СУХОЙ ПРОГОН: изменилось бы '.$changing->count().' курс(ов). Записать: --apply');
         }

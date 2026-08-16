@@ -199,6 +199,13 @@ D6 = вариант «а» сделал бесплатный уровень ме
 - **Набор полки** — `membership:club-catalogue --course=<id|slug> … --apply` (явный список;
   голый `--apply` на проде предлагает ноль курсов — §7).
 - **Включение флагов** и один живой чекаут руками (ссылку печатает `membership:rehearse`).
-- **Слияние PR вручную** — денежный контур не берёт auto-merge (H2017/H2026).
+- **Слияние PR** — ~~вручную, денежный контур не берёт auto-merge (H2017/H2026)~~.
+  **Поправлено H2886 (16-08-2026):** always-on [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md)
+  § «Money contour» говорит прямо, что маркер `money-contour: no-auto-merge` —
+  напоминание про флаг и обязательные тесты, **а не запрет слияния**; `gasyoun/*`
+  PR мержатся без переспрашивания. Человеку остаётся не merge, а **флип флага на
+  проде** — отдельный ops-шаг.
+- **Объём полки** (`club_access_key`) — какой блок курса входит в подписку;
+  задаётся `membership:club-catalogue --key=block_N` (H2886).
 
 _Dr. Mārcis Gasūns_
