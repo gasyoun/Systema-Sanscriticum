@@ -462,6 +462,29 @@ document.addEventListener('alpine:init', () => {
                         @endauth
                     </form>
 
+                    {{-- H2166 — inert Mode-A "auto-pay monthly" radio, Nalopākhyāna only.
+                         Hidden unless features.tochka_recurring AND features.nala_subscriptions_live
+                         are BOTH on for THIS course (App\Support\NalaCheckoutBillingUi). The second
+                         option stays disabled in the DOM even when shown — H2026 Phase 1
+                         (real Tochka subscription create) is a separate, not-yet-built handoff. --}}
+                    @if(\App\Support\NalaCheckoutBillingUi::subscriptionRadioVisibleFor($tariff->course))
+                        <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100" data-testid="nala-subscription-billing-mode">
+                            <h4 class="text-base font-extrabold text-gray-900 mb-4">Способ оплаты</h4>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="radio" name="nala_billing_mode" value="one_shot" checked
+                                           class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                    <span class="text-sm text-gray-700">Оплатить сразу целиком</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-not-allowed opacity-60">
+                                    <input type="radio" name="nala_billing_mode" value="auto_monthly" disabled
+                                           class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                    <span class="text-sm text-gray-500">Автоплатёж ежемесячно (скоро)</span>
+                                </label>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- ─── Промокод (AJAX) ─── --}}
                     <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100">
                         <template x-if="$store.checkout.appliedPromo">

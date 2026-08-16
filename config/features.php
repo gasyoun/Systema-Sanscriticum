@@ -741,6 +741,23 @@ return [
     ))),
 
     /*
+     | H2166 — Nalopākhyāna Mode-A subscription checkout radio kill-switch.
+     | Nala launches on the existing one-shot checkout (ARCHITECTURE_NALOPAKHYANA_
+     | SUBHASHITA_COURSES_2026.md §4); this flag ONLY gates whether the (inert,
+     | disabled) "auto-pay monthly" radio renders on the Nala checkout page.
+     | Deliberately SEPARATE from the master `tochka_recurring` switch above — a
+     | human sets this true only after Systema-Sanscriticum#998 (Tochka
+     | subscriptions product) is confirmed live AND a sandbox charge has been
+     | proven; other courses/modes may enable `tochka_recurring` independently
+     | without this flag moving. Even when both this AND `tochka_recurring` are
+     | ON, the radio option itself stays disabled in the DOM — H2026 Phase 1
+     | (TochkaPaymentService::createSubscriptionWithReceipt) is a separate,
+     | not-yet-built handoff. ВЫКЛ по умолчанию — deploy-рубильник.
+     | Enable: NALA_SUBSCRIPTIONS_LIVE=true + config:cache (human only, money PR).
+     */
+    'nala_subscriptions_live' => (bool) env('NALA_SUBSCRIPTIONS_LIVE', false),
+
+    /*
      | Режим просмотра за пользователя — «войти как» (H1947). Когда ВКЛ,
      | СУПЕР-АДМИН (и только он) может из карточки пользователя открыть кабинет
      | студента или панель куратора (manager), не меняя users.role и не зная
