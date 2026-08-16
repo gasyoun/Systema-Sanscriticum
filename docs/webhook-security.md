@@ -51,21 +51,17 @@ _Created: 07-07-2026 · Last updated: 16-08-2026_
 `max_webhook_secret` в админке (`MarketingSetting`) → `php artisan max:set-magnet-webhook`.
 То же — после смены админ-аккаунта. См. `CLAUDE.md` (раздел lead-magnet bots).
 
-## Деплой-чек-лист (прод-секреты для уже fail-closed легаси-эндпоинтов)
+## Деплой-чек-лист (прод-секреты)
 
-Код для Telegram- и VK-бот-вебхуков уже fail-closed (правок не требуется) — до
-задания прод-секретов эти два эндпоинта просто отвечают 403 всем, включая
-настоящий Telegram/VK. Задать в проде (точные команды и статус — в
-[`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) § «Telegram — вопросы и действия оператору», пункт T3):
+**Closed 16-08-2026 (H2896).** Laravel config on the live box reports
+`TELEGRAM_BOT_WEBHOOK_SECRET`, `VK_CALLBACK_SECRET`, `ZOOM_WEBHOOK_SECRET`, and
+`LESSON_SYNC_SECRET` as **SET** (values not logged). Unsigned live POSTs:
+`/api/telegram/webhook` 403, `/api/vk-webhook` 403, `/api/webhooks/zoom` 403,
+`/api/webhooks/tochka` 401, `/api/sync-lessons` 401. Empty Zoom secret would
+return 503 — 403 means the secret is present and the signature check fired.
 
-- `services.telegram.bot_webhook_secret` (`TELEGRAM_BOT_WEBHOOK_SECRET`) +
-  переустановить вебхук Telegram с тем же `secret_token` через Bot API `setWebhook`.
-- `services.vk.callback_secret` (`VK_CALLBACK_SECRET`) + тот же секрет в настройках
-  Callback API группы VK.
+Rotate after an incident the same way as before: new env value + re-register
+with the provider (`setWebhook` secret_token / VK Callback API secret / Zoom
+Event Subscription secret).
 
-Остаётся один настоящий деплой-переключатель fail-open → fail-closed (код без правок,
-просто задать секрет, см. выше):
-- `ZOOM_WEBHOOK_SECRET` (+ Event Subscription на `/api/webhooks/zoom`).
-
-После задания секрета соответствующий эндпоинт автоматически переходит в fail-closed
-(правки кода не требуется).
+_Dr. Mārcis Gasūns_
