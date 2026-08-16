@@ -2,6 +2,8 @@
 
 _Created: 05-07-2026 · Last updated: 16-08-2026_
 
+**H2 execution pack (16-08-2026):** next work is [PLAN_SYSTEMA_SAMSKRTE_SEO_H2_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_SEO_H2_2026.md) (waves W1–W5, 25 interview rulings). This file stays the **P0/P1/P2 status ledger** — do not rebuild the spine below.
+
 **Primary engine: Yandex. Secondary: Google.** Framing method: entity/semantic-SEO
 concepts from [seobythesea.com](https://www.seobythesea.com) (Bill Slawski — Google-patent-derived:
 entity salience, knowledge-graph triplets, topical authority) re-ranked for a Yandex-first
