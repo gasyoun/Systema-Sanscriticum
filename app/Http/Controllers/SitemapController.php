@@ -81,7 +81,7 @@ class SitemapController extends Controller
                 });
 
             Course::where('is_visible', true)
-                ->select(['slug', 'updated_at'])
+                ->select(['slug', 'format', 'updated_at'])
                 ->orderBy('updated_at', 'desc')
                 ->chunk(500, function ($courses) use (&$urls) {
                     foreach ($courses as $course) {
@@ -89,7 +89,7 @@ class SitemapController extends Controller
                             'loc' => route('shop.course.show', $course->slug),
                             'lastmod' => optional($course->updated_at)->format(DATE_ATOM),
                             'changefreq' => 'weekly',
-                            'priority' => '0.8',
+                            'priority' => self::coursePriority($course),
                         ];
                     }
                 });
@@ -149,5 +149,22 @@ class SitemapController extends Controller
         return response($xml, 200, [
             'Content-Type' => 'application/xml; charset=utf-8',
         ]);
+    }
+
+    /**
+     * H2893 / H2-15: donate 0.3, recorded 0.6, live (and unknown) 0.8.
+     * Donate wins on the slug even if format is recorded.
+     */
+    public static function coursePriority(Course $course): string
+    {
+        if (str_contains(mb_strtolower((string) $course->slug), 'donat')) {
+            return '0.3';
+        }
+
+        if ($course->format === 'recorded') {
+            return '0.6';
+        }
+
+        return '0.8';
     }
 }
