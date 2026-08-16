@@ -109,6 +109,15 @@ php artisan membership:club-catalogue --course=<id|slug> --course=<id|slug> --ap
 («never create or mutate prices … or course ownership»). Ошибка в списке необратима
 для тех, кто уже купил.
 
+**Обновление 16-08-2026: состав назван, механика доработана.** MG назвал три
+позиции — и две из них оказались **блоками**, а не курсами, чего полка на тот
+момент не умела: `club_included` булев, а клубное право выдавало жёстко зашитый
+`full`. Правка [H2886](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2886-Opus_Systema-Sanscriticum_club-shelf-per-course-access-key_16.08.26.md)
+добавила `courses.club_access_key`, так что объём теперь выражается ключом
+`block_N` — той же формы, которой уже пользуются 1 085 боевых тарифов. Точные
+команды — §5 шаг 1. Сам шаг по-прежнему делает человек: агент не проставляет,
+что входит в подписку.
+
 **Что будет, если этого не сделать до 28-08.** Флаг включится, `/klub` откроется,
 оплата пройдёт, членство создастся — и клубный каталог будет **пуст**. Молча:
 никакой ошибки, никакого письма, просто пустая полка у заплатившего человека.
@@ -139,21 +148,42 @@ php artisan membership:club-catalogue --course=<id|slug> --course=<id|slug> --ap
 `failed_jobs` без новых 554.
 
 **Шаг 1 (ОБЯЗАТЕЛЬНО, блокер C3) — набрать полку записей.**
-Сначала посмотреть, что вообще можно положить в клуб:
+
+Состав полки MG назвал 16-08-2026. Объём задаётся ключом `--key`
+([H2886](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2886-Opus_Systema-Sanscriticum_club-shelf-per-course-access-key_16.08.26.md)):
+до той правки полка умела только «курс целиком», и «начальный блок» был
+невыразим.
+
+| Курс | Объём | Что откроется |
+|---|---|---|
+| #397 Напевный санскрит — гимн Гуру стотрам (2024), Уша Санка | весь курс | 8 уроков |
+| #343 Грамматика по Бюллеру гр.27, Гасунс | **блок 1** | уроки блока 1 из 31 (блоки 1–9); блоки 2–9 остаются платными по ₽8 000 |
+| #274 Логика (2024), Толчельников | **блок 1** | уроки блока 1 из 32 (блоки 1–4); остальное платно, весь курс ₽16 500 |
+
+Сначала сухой прогон — печатает таблицу «сейчас → станет» вместе с объёмом:
 
 ```bash
-php artisan tinker --execute="foreach(App\Models\Course::where('is_active',true)->orderBy('id')->get(['id','slug','title']) as \$c){ echo \$c->id.' '.\$c->slug.' '.\$c->title.PHP_EOL; }"
+php artisan membership:club-catalogue --course=397
+php artisan membership:club-catalogue --course=343 --key=block_1
+php artisan membership:club-catalogue --course=274 --key=block_1
 ```
 
-Затем — явным списком, сначала без `--apply` (сухой прогон печатает таблицу
-«сейчас → станет»):
+Затем записать:
 
 ```bash
-php artisan membership:club-catalogue --course=<id> --course=<id> --course=<slug>
-php artisan membership:club-catalogue --course=<id> --course=<id> --course=<slug> --apply
+php artisan membership:club-catalogue --course=397 --apply
+php artisan membership:club-catalogue --course=343 --key=block_1 --apply
+php artisan membership:club-catalogue --course=274 --key=block_1 --apply
 ```
 
-Проверка: `php artisan membership:rehearse` — шаг 3 «полка записей» должен стать PASS.
+Проверка: `php artisan membership:rehearse` — шаг 3 «полка записей» должен стать
+PASS и напечатать объём. Откат одного курса: `--course=<id> --remove --apply`
+(объём обнуляется вместе с полкой).
+
+> **Не класть в полку #308/#309/#310 «Ежедневные молитвы с Ушей Санкой» (2024).**
+> Это буквальное совпадение по названию, но во всех трёх **ноль уроков** — клубный
+> член увидел бы пустой курс. Если эти записи нужны в клубе, уроки сперва заводит
+> человек в Filament.
 
 **Шаг 2 (к 28-08) — включить клуб.**
 

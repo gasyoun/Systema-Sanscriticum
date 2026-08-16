@@ -78,17 +78,26 @@ class RehearseClubMembership extends Command
             ->where('is_active', true)
             ->whereKeyNot($course->id)
             ->first();
+        // H2886: репетировать надо на уроке, который клуб ДОЛЖЕН открыть. При
+        // объёме block_N первый по порядку урок курса может лежать в другом
+        // блоке — тогда шаг 6 покажет FAIL на верной конфигурации.
+        $shelfKey = $shelfCourse instanceof Course ? $entitlement->accessKeyFor($shelfCourse) : 'full';
         $shelfLesson = $shelfCourse instanceof Course
             ? Lesson::query()
                 ->where('course_id', $shelfCourse->id)
                 ->where('is_published', true)
                 ->where('is_free', false)
                 ->where('is_preview', false)
+                ->when(
+                    preg_match('/^block_(\d+)/', $shelfKey, $m) === 1,
+                    fn ($q) => $q->where('block_number', (int) $m[1]),
+                )
                 ->orderBy('block_number')->orderBy('sort_order')->first()
             : null;
         $this->record('3. полка записей', $shelfLesson instanceof Lesson ? 'PASS' : 'FAIL',
             $shelfCourse instanceof Course
-                ? 'курс «'.$shelfCourse->title.'», платный урок: '.($shelfLesson?->id ?? 'НЕТ')
+                ? 'курс «'.$shelfCourse->title.'», объём '.$shelfKey
+                    .', платный урок: '.($shelfLesson?->id ?? 'НЕТ — в этом объёме нет ни одного платного урока')
                 : 'ни одного курса с club_included=true — наберите полку ЯВНЫМ списком: '
                     .'membership:club-catalogue --course=<id|slug> --course=… --apply. '
                     .'Голый --apply на проде 16-08-2026 предлагает НОЛЬ курсов: авто-подбор идёт через '
@@ -158,7 +167,33 @@ class RehearseClubMembership extends Command
             $unlocked = $shelfLesson->isUnlockedBy($keys);
             $this->record('6. каталог виден', ($covers && $unlocked) ? 'PASS' : 'FAIL',
                 'курс «'.$shelfCourse->title.'» покрыт: '.($covers ? 'да' : 'НЕТ')
+                .', объём '.$shelfKey
                 .', урок #'.$shelfLesson->id.' открыт: '.($unlocked ? 'да' : 'НЕТ'));
+
+            // ── Шаг 6b. Частичный объём НЕ открывает лишнего ─────────────────
+            // Половина контракта block_N, которую шаг 6 проверить не может: он
+            // доказывает, что нужное открылось, и молчит о том, что остальное
+            // осталось закрытым. Именно эта половина стоит денег.
+            if ($shelfKey !== 'full') {
+                $outside = Lesson::query()
+                    ->where('course_id', $shelfCourse->id)
+                    ->where('is_published', true)
+                    ->where('is_free', false)
+                    ->where('is_preview', false)
+                    ->where('block_number', '!=', $shelfLesson->block_number)
+                    ->orderBy('block_number')->orderBy('sort_order')->first();
+
+                if (! $outside instanceof Lesson) {
+                    $this->record('6b. вне объёма закрыто', 'SKIP',
+                        'у курса нет платных уроков за пределами блока '.$shelfLesson->block_number
+                        .' — проверять нечего (объём совпал с курсом целиком)');
+                } else {
+                    $leaked = $outside->isUnlockedBy($keys);
+                    $this->record('6b. вне объёма закрыто', $leaked ? 'FAIL' : 'PASS',
+                        'урок #'.$outside->id.' (блок '.$outside->block_number.') '
+                        .($leaked ? 'ОТКРЫТ — утечка объёма' : 'закрыт, как и должен'));
+                }
+            }
 
             // ── Шаг 7. Истечение → право снято ───────────────────────────────
             // Двигаем ТОЛЬКО дату конца — сам механизм снятия не подменяем,
