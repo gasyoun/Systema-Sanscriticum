@@ -1,6 +1,6 @@
 # money-access-core-manual.meta.md — metadoc for `money-access-core-manual`
 
-_Created: 25-07-2026 · Last updated: 01-08-2026_
+_Created: 25-07-2026 · Last updated: 16-08-2026_
 
 Companion record for
 [money-access-core-manual.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/money-access-core-manual.md) —
@@ -11,6 +11,15 @@ restating the manual's content.
 LAST_VERIFIED: 01-08-2026
 VERIFIED_BY: Grok 4.5 (grok-4.5), H2078 (COMMANDS_SPOT_RUN integer fix + path/php spot; full H1405 suite not re-run — no vendor in worktree)
 COMMANDS_SPOT_RUN: 2
+
+> **LAST_VERIFIED deliberately NOT bumped on 16-08-2026 (H2886).** That pass added
+> §1.7 (club membership as a second key source) and verified only what it wrote —
+> the club/entitlement paths, via `tests/Feature/Membership` + `tests/Feature/Cabinet`,
+> 104 passed / 326 assertions. It did **not** re-run this manual's own command
+> suite, so the staleness alarm (371 commits vs a 293 threshold) is still true and
+> must keep firing. Bumping the date here would have silenced an alarm nobody
+> resolved — the failure mode [Uprava FINDINGS §396](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)
+> records, where a repair is recorded as done because a neighbouring gate went quiet.
 
 ## Subject
 
@@ -126,6 +135,7 @@ authored in this wave).
 
 | Date | Event | Model |
 |---|---|---|
+| 16-08-2026 | H2886: new §1.7 — club membership is a **second source of access keys**, virtual and never a `Payment` row, which the manual did not mention at all while claiming to be the money/access-core reference. Records the deliberate visibility/unlocking asymmetry (`coversCourse()` vs the key) and the per-course `club_access_key` that makes a shelf entry one `block_N` instead of the whole course. Staleness at the time: 371 commits vs a 293 threshold | Opus 5 (`claude-opus-5`) |
 | 01-08-2026 | H2078: COMMANDS_SPOT_RUN forced to integer (was free-text UNPARSEABLE); LAST_VERIFIED refresh; path+php presence spots | Grok 4.5 (grok-4.5) |
 | 25-07-2026 | Manual + metadoc authored; C1/C2/C3 claim-verified; 4 spot-runs recorded | Fable 5 (`claude-fable-5`), H1405 |
 | 25-07-2026 | §9 C3 amended after the adversarial pass: `withoutEvents` create-as-paid paths (silent promise fulfillment) + the new-value-only audit walk make the guard blind to silently-created paid payments — "trail complete going forward" retracted | Fable 5 (`claude-fable-5`), H1405 |
