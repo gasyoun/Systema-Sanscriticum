@@ -7,6 +7,7 @@ namespace App\Services\Design;
 use App\Models\Course;
 use App\Models\CourseDesignAsset;
 use App\Models\User;
+use App\Support\RasterImageMemory;
 use GdImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -311,37 +312,17 @@ class CoverToBannerImporter
         }
     }
 
-    /** Влезет ли распакованный растр в остаток memory_limit. */
+    /**
+     * Влезет ли распакованный растр в остаток memory_limit.
+     *
+     * Арифметика уехала в общий RasterImageMemory (16-08-2026, когда та же
+     * проверка понадобилась ревью-PDF домашек): четыре байта на пиксель у
+     * truecolor плюс запас — холст и исходник какое-то время живут в памяти
+     * одновременно.
+     */
     private function fitsInMemory(int $width, int $height): bool
     {
-        $limit = $this->memoryLimitBytes();
-        if ($limit === null) {
-            return true;
-        }
-
-        // Четыре байта на пиксель у truecolor плюс запас: холст и исходник
-        // какое-то время живут в памяти одновременно.
-        $needed = (int) ($width * $height * 4 * 2.2);
-
-        return memory_get_usage(true) + $needed < $limit;
-    }
-
-    private function memoryLimitBytes(): ?int
-    {
-        $raw = trim((string) ini_get('memory_limit'));
-        if ($raw === '' || $raw === '-1') {
-            return null;
-        }
-
-        $value = (int) $raw;
-        $unit = strtolower(substr($raw, -1));
-
-        return match ($unit) {
-            'g' => $value * 1024 * 1024 * 1024,
-            'm' => $value * 1024 * 1024,
-            'k' => $value * 1024,
-            default => $value,
-        };
+        return RasterImageMemory::fits($width, $height, 4 * 2.2);
     }
 
     private function tmpDir(): string
