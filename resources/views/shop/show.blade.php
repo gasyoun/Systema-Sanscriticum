@@ -321,6 +321,8 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </section>
 
+        @include('partials.samskrtam-related', ['samskrtamKey' => $course->slug])
+
         {{-- ───── 1.2 ПРОГРАММА КУРСА (аккордеон по блокам) ───── --}}
         @php
             // Русская плюрализация «занятий».

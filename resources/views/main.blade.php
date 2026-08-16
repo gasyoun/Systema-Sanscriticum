@@ -141,6 +141,8 @@
 
         @include('partials.why-us-block')
 
+        @include('partials.samskrtam-related', ['samskrtamKey' => '_home'])
+
         @include('partials.proof-block', ['testimonials' => $featuredTestimonials ?? null])
 
         <div class="text-center mb-16">
