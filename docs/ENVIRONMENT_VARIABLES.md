@@ -62,7 +62,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_TIMEOUT` | optional | `15` | config/cabinet_probe.php:47 |
 | `CACHE_DRIVER` | optional | `'file'` | config/cache.php:18 |
 | `CACHE_PREFIX` | optional | `Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'` | config/cache.php:109 |
-| `CATALOG_NEXT_STEP` | optional | `false` | config/features.php:949 |
+| `CATALOG_NEXT_STEP` | optional | `false` | config/features.php:966 |
 | `CERTIFICATE_MATERIAL_MIN_MENTIONS` | optional | `3` | config/certificates.php:9 |
 | `CHECKOUT_DEPOSIT_REVERSAL` | optional | `true` | config/features.php:375 |
 | `CHECKOUT_INACTIVE_TARIFF_GUARD` | optional | `true` | config/features.php:358 |
@@ -83,7 +83,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CLUB_DEFAULT_TERM_MONTHS` | optional | `1` | config/membership.php:39 |
 | `CLUB_GRACE_DAYS` | optional | `3` | config/membership.php:32 |
 | `CLUB_MAX_TERM_MONTHS` | optional | `12` | config/membership.php:45 |
-| `CLUB_MEMBERSHIP` | optional | `false` | config/features.php:860 |
+| `CLUB_MEMBERSHIP` | optional | `false` | config/features.php:877 |
 | `COMPANY_INVOICE_ENABLED` | feature-flag | `false` | config/billing.php:17 |
 | `CONTENT_AUTO_PUBLISH_PILOT` | feature-flag | `false` | config/features.php:563 |
 | `CONTENT_CALENDAR_AUTOPILOT` | optional | `false` | config/features.php:543 |
@@ -101,7 +101,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CONVERSION_TREND_WEEKS` | optional | `8` | config/conversion.php:49 |
 | `CONVERSION_UNCLOSED_AFTER_DAYS` | optional | `3` | config/conversion.php:38 |
 | `CONVERSION_WARN_PCT` | optional | `50` | config/conversion.php:33 |
-| `COURSE_LIBRARY` | optional | `false` | config/features.php:827 |
+| `COURSE_LIBRARY` | optional | `false` | config/features.php:844 |
 | `COURSE_RECORDINGS_SALES` | optional | `false` | config/features.php:170 |
 | `CRM_COCKPIT` | optional | `false` | config/features.php:78 |
 | `CRM_CUSTOMER_360` | optional | `false` | config/features.php:86 |
@@ -173,7 +173,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:65 |
 | `FAQ_RAG_SUGGESTER` | optional | `false` | config/features.php:147 |
 | `FILESYSTEM_DISK` | optional | `'local'` | config/filesystems.php:16 |
-| `FLAGSHIP_CTA_AB` | optional | `false` | config/features.php:957 |
+| `FLAGSHIP_CTA_AB` | optional | `false` | config/features.php:974 |
 | `FLAGSHIP_EXPERIMENT_STARTED_AT` | optional | `''` | config/flagship_experiments.php:28 |
 | `FREE_TIER_GRANT_DAYS` | optional | `30` | config/membership.php:52 |
 | `FREE_TIER_GRANT_REASON` | optional | `'free_tier_monthly'` | config/membership.php:60 |
@@ -182,26 +182,26 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `GOOGLE_CLIENT_ID` | required | `—` | config/services.php:365 |
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:366 |
 | `GOOGLE_REDIRECT_URI` | optional | `'/auth/google/callback'` | config/services.php:367 |
-| `GRAMMAR_LAB` | optional | `false` | config/features.php:871 |
+| `GRAMMAR_LAB` | optional | `false` | config/features.php:888 |
 | `GRAMMAR_LAB_AUTO_PUBLISH` | optional | `true` | config/grammar_lab.php:67 |
 | `GRAMMAR_LAB_COURSE_SLUGS` | optional | `''` | config/grammar_lab.php:46 |
-| `GRAMMAR_LAB_PILOT` | feature-flag | `false` | config/features.php:885 |
+| `GRAMMAR_LAB_PILOT` | feature-flag | `false` | config/features.php:902 |
 | `GRAMMAR_LAB_PILOT_COURSE_SLUGS` | optional | `''` | config/grammar_lab.php:58 |
 | `GRAMMAR_LAB_SAMPLE_SEED` | optional | `'grammar-lab-g3-v1'` | config/grammar_lab.php:69 |
-| `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:878 |
+| `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:895 |
 | `GRAMMAR_LAB_SUBSCRIPTION_COURSE_SLUG` | optional | `''` | config/grammar_lab.php:53 |
 | `GRANT_ACCESS_FAIL_CLOSED` | optional | `false` | config/features.php:431 |
 | `HEARTBEAT_CHECK_HORIZON` | optional | `true` | config/heartbeat.php:60 |
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
 | `HEARTBEAT_PING_URL` | optional | `''` | config/heartbeat.php:43 |
 | `HEARTBEAT_TIMEOUT` | optional | `10` | config/heartbeat.php:54 |
-| `HINDI_ATTACHMENT_DRILLS` | optional | `false` | config/features.php:911 |
-| `HINDI_MY_SRS_DECK` | optional | `false` | config/features.php:920 |
+| `HINDI_ATTACHMENT_DRILLS` | optional | `false` | config/features.php:928 |
+| `HINDI_MY_SRS_DECK` | optional | `false` | config/features.php:937 |
 | `HINDI_PROGRAMME_CATEGORY_SLUG` | optional | `'hindi'` | config/programme.php:17 |
 | `HINDI_PROGRAMME_COURSE_IDS` | optional | `'416,356,366'` | config/programme.php:20 |
-| `HINDI_PROGRAMME_PLAYLIST` | optional | `false` | config/features.php:894 |
-| `HINDI_TG_CURATED_PRACTICE` | optional | `false` | config/features.php:929 |
-| `HINDI_TRANSCRIPT_DRILLS` | optional | `false` | config/features.php:902 |
+| `HINDI_PROGRAMME_PLAYLIST` | optional | `false` | config/features.php:911 |
+| `HINDI_TG_CURATED_PRACTICE` | optional | `false` | config/features.php:946 |
+| `HINDI_TRANSCRIPT_DRILLS` | optional | `false` | config/features.php:919 |
 | `HOMEWORK_AUTO_OPEN_ALIGN_HOUR` | optional | `9` | config/homework.php:127 |
 | `HOMEWORK_AUTO_OPEN_CHANNELS` | optional | `'telegram,vk'` | config/homework.php:133 |
 | `HOMEWORK_AUTO_OPEN_CLOSE_PREVIOUS` | optional | `false` | config/homework.php:138 |
@@ -279,7 +279,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MAIL_THROTTLE_PER_MINUTE` | optional | `30` | config/mail.php:129 |
 | `MAIL_URL` | required | `—` | config/mail.php:39 |
 | `MAIL_USERNAME` | required | `—` | config/mail.php:43 |
-| `MANAGER_SALES_REPORT` | optional | `false` | config/features.php:805 |
+| `MANAGER_SALES_REPORT` | optional | `false` | config/features.php:822 |
 | `MARATHON_CHANNEL_CHAT_ID` | optional | `'@samskrte'` | config/marathon_landing_copy.php:30 |
 | `MARATHON_COUPON_AMOUNT` | optional | `1000` | config/marathon.php:21 |
 | `MARATHON_HOST_NAME` | optional | `'к.ф.н. М.Ю. Гасунс'` | config/marathon.php:25 |
@@ -295,8 +295,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MARATHON_TESTIMONIAL` | required | `—` | config/marathon.php:146 |
 | `MARATHON_WARM_TAIL_DAYS` | optional | `13` | config/marathon.php:41 |
 | `MARKETING_SEGMENTS` | optional | `false` | config/features.php:583 |
-| `MEMBERSHIP_CANCELLATION` | optional | `false` | config/features.php:862 |
-| `MEMBERSHIP_FREE_TIER` | optional | `false` | config/features.php:861 |
+| `MEMBERSHIP_CANCELLATION` | optional | `false` | config/features.php:879 |
+| `MEMBERSHIP_FREE_TIER` | optional | `false` | config/features.php:878 |
 | `MEMCACHED_HOST` | optional | `'127.0.0.1'` | config/cache.php:70 |
 | `MEMCACHED_PASSWORD` | secret | `—` | config/cache.php:63 |
 | `MEMCACHED_PERSISTENT_ID` | required | `—` | config/cache.php:60 |
@@ -317,6 +317,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `N8N_SCHEDULE_SHEET_WEBHOOK` | required | `—` | config/services.php:73 |
 | `N8N_SOCIAL_POST_SECRET` | secret | `—` | config/services.php:94 |
 | `N8N_SOCIAL_POST_WEBHOOK` | required | `—` | config/services.php:93 |
+| `NALA_SUBSCRIPTIONS_LIVE` | optional | `false` | config/features.php:758 |
 | `NALOPAKHYANA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:22 |
 | `NALOPAKHYANA_COURSE_SLUG` | optional | `'nalopakhyana'` | config/cohort_courses.php:21 |
 | `NEWSLETTER_BLOCKED_DOMAINS` | optional | `'immenseignite.info,swagpapa.com'` | config/newsletter.php:37 |
@@ -346,7 +347,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PAYPAL_ME_LINK` | required | `—` | config/services.php:387 |
 | `PAYPAL_RECIPIENT` | required | `—` | config/services.php:388 |
 | `PAYPAL_SKIP_WEBHOOK_SIGNATURE` | optional | `false` | config/services.php:399 |
-| `PAYPAL_SUBSCRIPTIONS_ENABLED` | feature-flag | `false` | config/features.php:769<br>config/services.php:393 |
+| `PAYPAL_SUBSCRIPTIONS_ENABLED` | feature-flag | `false` | config/features.php:786<br>config/services.php:393 |
 | `PAYPAL_WEBHOOK_ID` | required | `—` | config/services.php:397 |
 | `POSTMARK_TOKEN` | secret | `—` | config/services.php:27 |
 | `PRANA_DAILY_P2P_LIMIT` | optional | `30` | config/prana.php:12 |
@@ -458,8 +459,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SRS_FUZZ` | optional | `true` | config/srs.php:29 |
 | `SRS_GUEST_TRIAL_CARDS` | optional | `10` | config/srs.php:33 |
 | `SRS_NEW_PER_DAY` | optional | `20` | config/srs.php:23 |
-| `STAFF_IMPERSONATION` | optional | `false` | config/features.php:760 |
-| `START_CHTENIYA_COHORT_ENABLED` | feature-flag | `false` | config/features.php:787 |
+| `STAFF_IMPERSONATION` | optional | `false` | config/features.php:777 |
+| `START_CHTENIYA_COHORT_ENABLED` | feature-flag | `false` | config/features.php:804 |
 | `START_CHTENIYA_COURSE_SLUG` | optional | `'start-chteniya'` | config/start_chteniya.php:17 |
 | `STORAGE_WATCH_ARCHIVES_MB` | optional | `500` | config/storage_watch.php:37 |
 | `STORAGE_WATCH_HOMEWORK_MB` | optional | `2000` | config/storage_watch.php:35 |
@@ -479,8 +480,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_AI_INCLUDE_TELEGRAM` | optional | `false` | config/features.php:48 |
 | `SUPPORT_ANSWER_SUGGESTER` | optional | `false` | config/features.php:124 |
 | `SUPPORT_ANSWER_SUGGESTION_EXPIRY_DAYS` | optional | `14` | config/support.php:11 |
-| `SUPPORT_CAPACITY_ROUTING` | optional | `false` | config/features.php:941 |
-| `SUPPORT_DEPARTMENTS` | optional | `false` | config/features.php:940 |
+| `SUPPORT_CAPACITY_ROUTING` | optional | `false` | config/features.php:958 |
+| `SUPPORT_DEPARTMENTS` | optional | `false` | config/features.php:957 |
 | `SUPPORT_FAQ_RAG_MIN_SCORE` | optional | `1.5` | config/support.php:74 |
 | `SUPPORT_FAQ_RAG_PATH` | required | `null` | config/support.php:71 |
 | `SUPPORT_FAQ_RAG_TOP_K` | optional | `3` | config/support.php:72 |
@@ -552,9 +553,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_ZAPISI_POLL_MAX_LIFETIME_SECONDS` | optional | `3600` | config/services.php:268 |
 | `TELEGRAM_ZAPISI_POLL_RETRY_SECONDS` | optional | `10` | config/services.php:271 |
 | `TELEGRAM_ZAPISI_POLL_TIMEOUT_SECONDS` | optional | `50` | config/services.php:265 |
-| `TELEPHONY_CALLBACK_REQUEST` | optional | `false` | config/features.php:937 |
-| `TELEPHONY_PSTN` | optional | `false` | config/features.php:938 |
-| `TELEPHONY_RECORDING` | optional | `false` | config/features.php:939 |
+| `TELEPHONY_CALLBACK_REQUEST` | optional | `false` | config/features.php:954 |
+| `TELEPHONY_PSTN` | optional | `false` | config/features.php:955 |
+| `TELEPHONY_RECORDING` | optional | `false` | config/features.php:956 |
 | `TEST_MANAGER_EMAIL` | optional | `'smoke-manager@samskrte.ru'` | config/services.php:325 |
 | `TEST_MANAGER_NAME` | optional | `'Smoke Manager'` | config/services.php:327 |
 | `TEST_MANAGER_PASSWORD` | secret | `—` | config/services.php:326 |
@@ -583,11 +584,11 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `VIDEO_RESUME` | optional | `false` | config/features.php:495 |
 | `VIEW_COMPILED_PATH` | optional | `realpath(storage_path('framework/views'))` | config/view.php:31 |
 | `VISUALDCS_COURSE_SLUGS` | optional | `''` | config/visualdcs.php:30 |
-| `VISUALDCS_NOMINAL` | optional | `false` | config/features.php:837 |
+| `VISUALDCS_NOMINAL` | optional | `false` | config/features.php:854 |
 | `VISUALDCS_PAGE_SIZE` | optional | `50` | config/visualdcs.php:21 |
-| `VISUALDCS_PASSAGE` | optional | `false` | config/features.php:838 |
+| `VISUALDCS_PASSAGE` | optional | `false` | config/features.php:855 |
 | `VISUALDCS_PREVIEW_LIMIT` | optional | `5` | config/visualdcs.php:19 |
-| `VISUALDCS_VERB` | optional | `false` | config/features.php:836 |
+| `VISUALDCS_VERB` | optional | `false` | config/features.php:853 |
 | `VK_BOT_TOKEN` | secret | `—` | config/services.php:275 |
 | `VK_CALLBACK_SECRET` | secret | `—` | config/services.php:280 |
 | `VK_CLIENT_ID` | required | `—` | config/services.php:370 |
