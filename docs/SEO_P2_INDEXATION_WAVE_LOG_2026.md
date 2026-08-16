@@ -2,6 +2,10 @@
 
 _Created: 15-08-2026 · Last updated: 16-08-2026_
 
+Wave-1 **activation packet** (command, ~805-row expectation, `--reset`, Webmaster steps):
+[SEO_P2_WAVE1_ACTIVATION_PACKET_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_P2_WAVE1_ACTIVATION_PACKET_2026.md).
+**An agent must not run the write.**
+
 Wave log for the `/slovar` curated-core indexation promotion
 ([H210](https://github.com/gasyoun/Uprava/blob/main/handoffs/H210-Opus_Systema-Sanscriticum_seo_p2_wave1_indexation_and_wikidata_matcher_05.07.26.md)
 Track A, decisions D1 + D2; roadmap

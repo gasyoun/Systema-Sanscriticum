@@ -1,6 +1,10 @@
 @extends('layouts.shop')
 
-@section('title', 'Общество ревнителей санскрита')
+@section('title', 'Курсы санскрита онлайн')
+
+@push('head')
+    <meta name="description" content="Каталог курсов санскрита и хинди: живые группы и записи. От первой буквы до чтения текстов.">
+@endpush
 
 @section('content')
 <div class="min-h-screen bg-[#0A0D14] text-white py-16 lg:py-24 relative overflow-hidden font-sans">
