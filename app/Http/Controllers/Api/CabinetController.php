@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\LessonAccessGrant;
 use App\Models\Payment;
 use App\Services\Membership\ClubEntitlement;
+use App\Services\Membership\RecordingAccessPolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -64,7 +65,7 @@ class CabinetController extends Controller
             ->where('is_active', true)
             ->where(fn ($q) => $q
                 ->whereHas('groups', fn ($g) => $g->whereIn('groups.id', $groupIds))
-                ->orWhere(fn ($c) => $club->isMember($user)
+                ->orWhere(fn ($c) => $club->allows($user, 'recordings')
                     ? $c->where('club_included', true)
                     : $c->whereRaw('1 = 0')))
             ->firstOrFail();
@@ -87,11 +88,20 @@ class CabinetController extends Controller
         )));
         $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
         $completedIds = $user->completedLessons()->pluck('lessons.id')->all();
+        $recordings = app(RecordingAccessPolicy::class);
 
-        $payload = $lessons->map(function ($lesson) use ($unlockedTariffs, $grantedLessonIds, $completedIds): array {
+        $payload = $lessons->map(function ($lesson) use ($user, $course, $recordings, $unlockedTariffs, $grantedLessonIds, $completedIds): array {
             $unlocked = $lesson->is_free
                 || in_array($lesson->id, $grantedLessonIds, true)
                 || $lesson->isUnlockedBy($unlockedTariffs);
+
+            $recording = $recordings->decide(
+                $user,
+                $course,
+                $lesson,
+                in_array($lesson->id, $grantedLessonIds, true),
+                'api_recording',
+            );
 
             return [
                 'id' => $lesson->id,
@@ -99,6 +109,8 @@ class CabinetController extends Controller
                 'is_free' => (bool) $lesson->is_free,
                 'is_completed' => in_array($lesson->id, $completedIds, true),
                 'locked' => ! $unlocked,
+                'recording_locked' => ! $recording->allowed,
+                'recording_mode' => $recording->mode,
             ];
         })->values();
 

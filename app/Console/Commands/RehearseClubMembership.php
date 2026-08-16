@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\MembershipTier;
 use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\Lesson;
@@ -12,6 +13,7 @@ use App\Models\Tariff;
 use App\Models\User;
 use App\Services\Membership\ClubEntitlement;
 use App\Services\Membership\ClubMembershipService;
+use App\Services\Membership\RecordingAccessPolicy;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -43,13 +45,16 @@ class RehearseClubMembership extends Command
         {--apply : выполнить репетицию (без флага — только проверка предпосылок)}
         {--keep : не откатывать созданное (для разбора после падения)}';
 
-    protected $description = 'Клуб: сквозная репетиция оплата → группа → каталог → истечение → снятие, PASS/FAIL по шагам (H2644).';
+    protected $description = 'Членство: tiers/prices → payment → access → shadow/pilot → expiry/rollback (H2644/H2744).';
 
     /** @var list<array{step:string, verdict:string, detail:string}> */
     private array $results = [];
 
-    public function handle(ClubMembershipService $service, ClubEntitlement $entitlement): int
-    {
+    public function handle(
+        ClubMembershipService $service,
+        ClubEntitlement $entitlement,
+        RecordingAccessPolicy $recordings,
+    ): int {
         $apply = (bool) $this->option('apply');
 
         // ── Шаг 1. Предпосылки, которые заводит человек ──────────────────────
@@ -65,6 +70,37 @@ class RehearseClubMembership extends Command
         $this->record('1. курс-членство', $tariffs->isEmpty() ? 'FAIL' : 'PASS',
             'курс #'.$course->id.' «'.$course->title.'», тарифов со сроком: '.$tariffs->count()
             .($tariffs->isEmpty() ? ' — заполните membership_months (1/3/12) на трёх тарифах' : ''));
+
+        if ((bool) config('features.membership_tiered', false)) {
+            $missing = [];
+            foreach ([MembershipTier::Basic, MembershipTier::Club] as $tier) {
+                foreach ([1, 3, 12] as $months) {
+                    $tariff = $tariffs->first(fn (Tariff $candidate): bool => $candidate->membership_tier === $tier && (int) $candidate->membership_months === $months);
+                    if (! $tariff instanceof Tariff || ! $tariff->hasExpectedMembershipPrice()) {
+                        $missing[] = $tier->value.'_'.$months.'m='.number_format($tier->priceForTerm($months), 0, '.', ' ').'₽';
+                    }
+                }
+            }
+            $unclassified = ClubMembership::query()->whereNull('tier_code')->count()
+                + $tariffs->whereNull('membership_tier')->count();
+            $this->record('1b. tiers + 1/3/12', $missing === [] && $unclassified === 0 ? 'PASS' : 'FAIL',
+                'Free=0; Basic=1 000; Club=2 000; скидки 0/5/15 %. '
+                .($missing === [] ? 'шесть тарифов/цен точны' : 'исправить: '.implode(', ', $missing))
+                .'; неклассифицировано='.$unclassified);
+        } else {
+            $this->record('1b. tiers + 1/3/12', 'WARN',
+                'MEMBERSHIP_TIERED=OFF (dark deploy); сначала membership:classify-tiers dry/apply, затем шесть тарифов Basic/Club');
+        }
+
+        $capabilityMatrix = [
+            'free' => ! MembershipTier::Free->allows(MembershipTier::Basic),
+            'basic' => MembershipTier::Basic->allows(MembershipTier::Basic) && ! MembershipTier::Basic->allows(MembershipTier::Club),
+            'club' => MembershipTier::Club->allows(MembershipTier::Club) && ! MembershipTier::Club->allows(MembershipTier::Top),
+            'top' => MembershipTier::Top->allows(MembershipTier::Top),
+        ];
+        $this->record('1c. матрица Free/Basic/Club/Top', ! in_array(false, $capabilityMatrix, true) ? 'PASS' : 'FAIL',
+            collect($capabilityMatrix)->map(fn (bool $ok, string $tier): string => $tier.'='.($ok ? 'ok' : 'FAIL'))->implode(', ')
+            .'; Top go/no-go='.((bool) config('features.membership_top') ? 'ON' : 'OFF (безопасный default)'));
 
         $clubGroupIds = $course->groups()->pluck('groups.id')->all();
         $groups = $service->detachableClubGroupIds();
@@ -110,6 +146,10 @@ class RehearseClubMembership extends Command
             $this->record('4. флаг', 'PASS', 'features.club_membership включён');
         }
 
+        $this->record('4b. recording rollout', 'PASS',
+            'mode='.$recordings->modeFor(new User).'; shadow/pilot/full независимы; pilot '
+            .count($recordings->pilotUserIds()).'/20 на 48h; rollback: все три флага OFF + config:clear; строки оплат/групп не меняются');
+
         if (! $apply) {
             $this->record('5–8. сквозной прогон', 'SKIP', 'проверены только предпосылки; выполнить: --apply --user=<id|email>');
 
@@ -139,7 +179,10 @@ class RehearseClubMembership extends Command
 
         try {
             // ── Шаг 5. «Оплата» → период + группа ────────────────────────────
-            $tariff = $tariffs->sortBy('membership_months')->first();
+            $tariff = (bool) config('features.membership_tiered', false)
+                ? $tariffs->first(fn (Tariff $candidate): bool => $candidate->membership_tier === MembershipTier::Club
+                    && (int) $candidate->membership_months === 1)
+                : $tariffs->sortBy('membership_months')->first();
             $payment = Payment::withoutEvents(fn () => Payment::create([
                 'user_id' => $user->id,
                 'course_id' => $course->id,

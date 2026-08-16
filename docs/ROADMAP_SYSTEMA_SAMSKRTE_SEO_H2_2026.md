@@ -15,9 +15,11 @@ Primary engine: **Yandex**. Secondary: Google. Goal rank (locked): (1) course sa
 
 Each wave names what it unblocks. Do not start a later wave's *product* work before the earlier wave's acceptance is green, except where marked parallel-safe.
 
-### Wave 1 — Money-page hygiene (now)
+### Wave 1 — Money-page hygiene (shipped 16-08-2026)
 
 **Unblocks:** unique SERP snippets for every public course; honest sitemap weights; a human-ready `/slovar` packet.
+
+**Shipped:** [H2893 (Grok 4.6) — samskrte.ru SEO H2 wave-1 money-page hygiene](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2893-Grok_Systema-Sanscriticum_samskrte-seo-h2-w1_16.08.26.md) · [PR #1761](https://github.com/gasyoun/Systema-Sanscriticum/pull/1761) · [v1.89.57](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.89.57) · evidence [SEO_H2_W1_EVIDENCE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_H2_W1_EVIDENCE_2026.md). Live curls PASS. P2 write still fenced.
 
 - Unique `meta_title` / `meta_description` for **every** sitemap `/k/{slug}` (title ≤60, description ≤160). Store in existing columns. Source of truth = committed UTF-8 CSV + `seo:fill-course-meta`.
 - Tighten homepage (`resources/views/main.blade.php`) and `/online` (`shop/index`) RU copy so title/description/H1 say «курсы санскрита с нуля» without a visual redesign.

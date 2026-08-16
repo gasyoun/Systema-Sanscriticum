@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MembershipTier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +29,7 @@ class Tariff extends Model
         // Клубное членство (H2644): срок тарифа в месяцах. NULL у всех обычных
         // тарифов — колонка аддитивна и на них не влияет.
         'membership_months',
+        'membership_tier',
     ];
 
     protected $casts = [
@@ -36,6 +38,7 @@ class Tariff extends Model
         'is_active' => 'boolean',
         'is_recording' => 'boolean',
         'membership_months' => 'integer',
+        'membership_tier' => MembershipTier::class,
         'block_number' => 'integer',
         'block_half' => 'integer', // NULL = весь блок; 1/2 = половина блока
         'start_block' => 'integer',
@@ -68,6 +71,12 @@ class Tariff extends Model
     public function accessKey(): string
     {
         if ($this->membership_months !== null && (int) $this->membership_months > 0) {
+            if ($this->membership_tier instanceof MembershipTier) {
+                return 'membership_'.$this->membership_tier->value.'_'.(int) $this->membership_months.'m';
+            }
+
+            // Legacy H2644 tariff. It remains readable while tier rollout is dark;
+            // membership:classify-tiers assigns the explicit code before activation.
             return 'club_'.(int) $this->membership_months.'m';
         }
 
@@ -82,6 +91,22 @@ class Tariff extends Model
         return $this->block_half
             ? 'block_'.$this->block_number.'_h'.$this->block_half
             : 'block_'.$this->block_number;
+    }
+
+    public function expectedMembershipPrice(): ?int
+    {
+        if (! $this->membership_tier instanceof MembershipTier || $this->membership_months === null) {
+            return null;
+        }
+
+        return $this->membership_tier->priceForTerm((int) $this->membership_months);
+    }
+
+    public function hasExpectedMembershipPrice(): bool
+    {
+        $expected = $this->expectedMembershipPrice();
+
+        return $expected !== null && abs((float) $this->price - $expected) < 0.01;
     }
 
     /**
