@@ -8,6 +8,7 @@ use App\Enums\MembershipTier;
 use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\Group;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\Membership\ClubMembershipService;
 

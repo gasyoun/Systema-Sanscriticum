@@ -19,9 +19,9 @@ final class ClubLandingPageTest extends MembershipTestCase
     {
         $monthly = $this->clubTariff(1);
         $quarterly = $this->clubTariff(3);
-        $quarterly->update(['price' => 4000, 'description' => 'Три месяца сразу, выгоднее помесячной оплаты на 11 %.']);
+        $quarterly->update(['price' => 5700, 'description' => 'Три месяца сразу, скидка 5 %.']);
         $yearly = $this->clubTariff(12);
-        $yearly->update(['price' => 15000, 'description' => 'Год сразу, выгоднее помесячной оплаты на 17 %.']);
+        $yearly->update(['price' => 20400, 'description' => 'Год сразу, скидка 15 %.']);
 
         return [$monthly, $quarterly->fresh(), $yearly->fresh()];
     }
@@ -51,9 +51,9 @@ final class ClubLandingPageTest extends MembershipTestCase
         $response = $this->get('/klub')->assertOk();
 
         // Цены — из строк БД, в формате магазина.
-        $response->assertSee('1 500');
-        $response->assertSee('4 000');
-        $response->assertSee('15 000');
+        $response->assertSee('2 000');
+        $response->assertSee('5 700');
+        $response->assertSee('20 400');
 
         // CTA каждого тарифа ведёт в реальный чекаут этого тарифа.
         foreach ([$monthly, $quarterly, $yearly] as $tariff) {

@@ -68,6 +68,7 @@ final class MembershipTierTest extends MembershipTestCase
             '--expected-tariffs' => 999,
         ])->assertFailed();
 
+        config()->set('features.membership_tiered', false);
         $this->artisan('membership:classify-tiers', [
             '--apply' => true,
             '--expected-memberships' => 1,
