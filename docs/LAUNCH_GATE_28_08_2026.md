@@ -23,14 +23,23 @@ _Created: 16-08-2026 · Last updated: 16-08-2026_
 | Контур | Вердикт | Одной строкой |
 |---|---|---|
 | **Марафон 28-08** | **GO при одном условии** | Вся машина живая и доказанно шлёт; открыт только почтовый канал (E) |
-| **Членство / клуб** | **GO** (было NO-GO до 16-08 13:0x MSK) | Полка набрана, `membership:rehearse` все шаги PASS; остаётся человеческое включение флагов |
-| **Деньги/доступ** | **не тронуты** | Все три флага OFF, `club_memberships=0`, `free_tier_grants=0` |
+| **Членство / клуб** | **ЗАПУЩЕН** (было NO-GO утром 16-08) | `CLUB_MEMBERSHIP=true` включён по указанию MG; `/klub` отдаёт 200 с тремя ценами, полка набрана, `membership:rehearse` все шаги PASS |
+| **Деньги/доступ** | изменён **ровно один** флаг, по указанию MG | `club_membership=true`; `membership_cancellation` и `membership_free_tier` — **OFF**. Ничего не создано: членств 0, платежей по курсу 444 — 0, `free_tier_grants=0` |
 
-**Обновление 16-08-2026 13:0x MSK — шлюз C3 ЗАКРЫТ, блокеров запуска не осталось.**
-MG назвал состав полки, механику «клуб отдаёт БЛОК, а не курс целиком» добавил
-[H2886](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2886-Opus_Systema-Sanscriticum_club-shelf-per-course-access-key_16.08.26.md),
-и полка набрана на проде. `membership:rehearse` — **все выполненные шаги PASS**,
-код выхода 0. Осталось только человеческое включение флагов (§5 шаги 2–4).
+**Обновление 16-08-2026 — шлюз C3 закрыт, клуб ВКЛЮЧЁН.** MG назвал состав полки,
+механику «клуб отдаёт БЛОК, а не курс целиком» добавил
+[H2886](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2886-Opus_Systema-Sanscriticum_club-shelf-per-course-access-key_16.08.26.md),
+полка набрана, и по прямому указанию MG включён `CLUB_MEMBERSHIP=true`.
+`membership:rehearse` — все шаги PASS, `/klub` → 200.
+
+> **Календарь опережён на 12 дней.** Планом страница жила с 28-08 (пост 31-08,
+> запуск 01-09) — сейчас она публична с 16-08. Если это не входило в замысел,
+> откат одной строкой: убрать `CLUB_MEMBERSHIP=true` из прод-`.env` и
+> `php artisan config:cache`. Откат безопасен: членств нет, платежей по клубному
+> курсу нет, отменять нечего. Бэкап: `.env.bak-h2886-20260816-115203`.
+
+Осталось человеку: `MEMBERSHIP_CANCELLATION` (§5 шаг 3), `MEMBERSHIP_FREE_TIER`
+**последним** (§5 шаг 4) и один живой чекаут для проверки денежного пути.
 
 **Марафон может стартовать 28-08 и без почты** — воронка ведёт в Telegram, и
 Telegram доказанно работает; письмо дублирует ссылку, которую студент и так видит
@@ -75,11 +84,11 @@ Telegram доказанно работает; письмо дублирует с
 | C1 | Курс-членство и тарифы | **PASS** | Курс #444 `club`, активен. Тарифы: #5038 «Клуб — месяц» ₽1 500 / 1 мес · #5039 «Клуб — квартал» ₽4 000 / 3 мес · #5040 «Клуб — год» ₽15 000 / 12 мес — все активны, `membership_months` заполнен | — | ничего |
 | C2 | Клубная группа | **PASS** | `membership:rehearse` шаг 2: групп у курса 1, отцепляемых 1, общих с другим курсом нет | — | ничего |
 | C3 | **Полка записей** | **PASS** — закрыто 16-08-2026 (было NO-GO) | `membership:rehearse` шаг 3 = **PASS**, код выхода 0. На полке 3 курса: #274 Логика (2024) объём `block_1` → 8 из 32 уроков · #343 Бюллер гр.27 объём `block_1` → 4 из 31 · #397 Гимн Гуру стотрам (2024) объём `full` → 8 из 8. Состав назвал MG; блочный объём стал выразим благодаря [H2886](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2886-Opus_Systema-Sanscriticum_club-shelf-per-course-access-key_16.08.26.md) | — | ничего; откат `--course=<id> --remove --apply` |
-| C4 | Страница `/klub` | **PASS в ожидании флага** | `https://samskrte.ru/klub` → **404** — это КОРРЕКТНОЕ предпусковое состояние (`CLUB_MEMBERSHIP=false`). `ClubLandingPageTest` зелён; рендер с override дал 200 и все три цены ещё в H2645 | MG | §5 шаг 2 |
+| C4 | Страница `/klub` | **PASS — ЖИВАЯ с 16-08-2026** | `CLUB_MEMBERSHIP=true` включён по прямому указанию MG. `https://samskrte.ru/klub` → **200**, все три цены (₽1 500 / ₽4 000 / ₽15 000) и чекауты `/checkout/5038|5039|5040` на месте; кнопка «Клуб» на `/online` живая; `/online`, `/`, `/online/konsultaciya` по-прежнему 200 | — | ничего |
 | C5 | Отмена подписки | **PASS в ожидании флага** | `MEMBERSHIP_CANCELLATION` отсутствует в `.env` → маршруты 404. `MembershipCancellationTest` 8/8 зелён, включая «routes are 404 while the flag is off» и «отменивший сохраняет полку до конца оплаченного периода» | MG | §5 шаг 3 |
 | C6 | Бесплатный уровень | **PASS в ожидании флага** | `MEMBERSHIP_FREE_TIER` отсутствует → демон инертен. Проверено данными: `lesson_access_grants` с `reason like 'free_tier%'` = **0**, при том что `membership:grant-free-lesson --apply` стоит в кроне ежедневно в 05:25. Тест «daemon mode writes nothing while the flag is off» зелён | MG | §5 шаг 4 — **последним** |
 | C7 | Сквозная репетиция `--apply` | **N/A — ограждение, не блокер** | C3 больше не мешает (шаг 3 PASS), но `--apply` создаёт строку `Payment` — агенту это запрещено ограждением H2865. Один прогон делает человек после включения флага | MG | §5 шаг 2 |
-| C8 | Денежные флаги не тронуты | **PASS** | `club_membership=false`, `membership_cancellation=false`, `membership_free_tier=false`; `club_memberships=0`; `free_tier_grants=0`. Ни один флаг за эту сессию не менялся | — | — |
+| C8 | Денежные флаги | **PASS — изменён РОВНО один, по указанию MG** | `club_membership=**true**` (включён 16-08-2026, MG); `membership_cancellation=false`, `membership_free_tier=false` — **не тронуты**. Ничего не создано: `club_memberships=0`, платежей по курсу 444 — **0**, `free_tier_grants=0`. Бэкап прод-`.env`: `.env.bak-h2886-20260816-115203` | — | откат: убрать строку из `.env` + `php artisan config:cache` |
 
 ### C3 — разбор, ради которого написан этот документ
 
@@ -190,15 +199,21 @@ PASS и напечатать объём. Откат одного курса: `--
 > член увидел бы пустой курс. Если эти записи нужны в клубе, уроки сперва заводит
 > человек в Filament.
 
-**Шаг 2 (к 28-08) — включить клуб.**
+**Шаг 2 — ✅ ВЫПОЛНЕНО 16-08-2026 по указанию MG.** Клуб включён; повторять не нужно.
 
 ```bash
-# в .env прода:
+# в .env прода (строка 356):
 CLUB_MEMBERSHIP=true
-php artisan config:clear
-php artisan membership:rehearse
-curl -s -o /dev/null -w "%{http_code}\n" https://samskrte.ru/klub   # ждём 200, не 404
+php artisan config:cache   # НЕ config:clear — конфиг на проде закэширован
+php artisan membership:rehearse                                     # все шаги PASS
+curl -s -o /dev/null -w "%{http_code}\n" https://samskrte.ru/klub   # 200 ✅
 ```
+
+**Почему `config:cache`, а не `config:clear`.** На проде лежит
+`bootstrap/cache/config.php` — его пересобирает авто-деплой. `config:clear` снял
+бы кэш и оставил приложение читать `.env` напрямую до следующей выкладки; это
+работает, но меняет режим работы прода на несколько часов. `config:cache` делает
+ровно то, что делает деплой.
 
 Полная сквозная репетиция (создаёт и откатывает репетиционный платёж — поэтому её
 делает человек, не агент):
