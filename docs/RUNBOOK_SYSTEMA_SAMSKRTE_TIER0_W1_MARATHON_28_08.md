@@ -1,6 +1,13 @@
 # Marathon 28-08 — LIVE runbook + evidence log
 
-_Created: 30-07-2026 · Last updated: 30-07-2026_
+_Created: 30-07-2026 · Last updated: 16-08-2026_
+
+> **Пересверено на проде 16-08-2026 ([H2865](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2865-Opus_Systema-Sanscriticum_28aug-integrated-launch-gate_16.08.26.md), Opus 5).
+> Вердикт `BLOCKED` ниже — снимок 30-07 и УСТАРЕЛ по трём строкам: D (Telegram) теперь
+> PASS с живыми доказательствами, «бот-админ канала» закрыт, канал вебхуков доказан.
+> Открытым остаётся E (почта).** Актуальный интегрированный вердикт по марафону И
+> членству — [docs/LAUNCH_GATE_28_08_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/LAUNCH_GATE_28_08_2026.md).
+> Журнал доказательств ниже — append-only, поэтому старые строки не переписаны.
 
 **Umbrella ID:** SAMSKRTE-TIER0 · **Wave-1 handoff:** [H1939](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1939-Grok_Systema-Sanscriticum_marathon-28-08-wave1-live_30.07.26.md) · **Pack:** /ask samskrte.ru 30-07-2026 · **Stem:** *_SYSTEMA_SAMSKRTE_TIER0_*
 
@@ -45,6 +52,20 @@ Append-only. Format: `YYYY-MM-DD HH:MM TZ · actor/model · action · result · 
 30-07-2026 15:03 MSK · Grok 4.5 (grok-4.5) · ORS1 · PASS · https://samskrte.ru/ homepage card href https://samskrte.ru/konsultaciya-po-onlayn-kursam → HTTP 200 LandingPage after variant-a upsert · funnel register remains https://samskrte.ru/online/konsultaciya
 30-07-2026 15:01 MSK · Grok 4.5 (grok-4.5) · Auth surface · PASS (GET) · /login 200 with CSRF meta + H1774 csrf refresh script · /shop/login GET 405 allow POST (expected for that route shape)
 30-07-2026 15:15 MSK · Grok 4.5 (grok-4.5) · Verdict · BLOCKED not LIVE · A B C + DEP + ORS1 green; D E DR off-site/TG residual · no money/access code edited · no force-push · no secrets committed
+16-08-2026 09:06 MSK · Opus 5 (claude-opus-5) · H2865 re-verification start · read-only prod probes only · no money/access flag touched
+16-08-2026 08:31 MSK · Opus 5 (claude-opus-5) · DEP1 · PASS · prod HEAD 4d0f12f2eedfbdfacdc7c8b09d85ee64095e91f1 == origin/main (v1.89.53) · APP_ENV=production · migrate:status pending=0
+16-08-2026 08:40 MSK · Opus 5 (claude-opus-5) · Smoke D token · PASS (was FAIL 30-07) · MarketingSetting tg_bot_token is now a real BotFather token · getMe ok id=8722284265 username=samskrte_bot · the 25-char placeholder is GONE
+16-08-2026 08:42 MSK · Opus 5 (claude-opus-5) · Webhook channel · PASS · getWebhookInfo → https://103.112.71.201/api/webhooks/telegram-magnet pending_update_count=0 · entry node is the DOCUMENTED one (docs/telegram-userbot-inventory.md §4.3), not a stale host
+16-08-2026 08:44 MSK · Opus 5 (claude-opus-5) · Tunnel liveness · PASS · tg-reverse.service active+enabled since 05-08 · GET через входной узел → HTTP 405 (Laravel method-not-allowed на POST-роуте) за 0.29s = апдейты доходят до приложения · CAVEAT NRestarts=593 (флапает)
+16-08-2026 08:48 MSK · Opus 5 (claude-opus-5) · Drip live proof · PASS · laravel-2026-08-1*.log: warm-tail Day 8/9/10/11/12/13 sent, по одному в день 10–15.08, enrollment #5 · движок реально шлёт в Telegram
+16-08-2026 08:49 MSK · Opus 5 (claude-opus-5) · Drip reliability · CAVEAT · 2 падения scheduled-command за 7 дней (14.08 warm-tail, 15.08 deliver-due), причина cURL 28 timeout к api.telegram.org · 15-мин ретрай добрал (Day 12 ушёл в 00:15 после падения в 00:00)
+16-08-2026 08:52 MSK · Opus 5 (claude-opus-5) · Scheduler · PASS · cron живёт в crontab **www-data** (`* * * * * /usr/local/sbin/systema-schedule-run.sh`), НЕ в root — root-крон держит только авто-деплой · schedule.log пишется сейчас
+16-08-2026 08:55 MSK · Opus 5 (claude-opus-5) · Channel admin · PASS (был OPEN 30-07) · getChatMember(@samskrte, bot) status=administrator can_post_messages=true · пост №1 ушёл 04-08 (marathon_channel_posts_sent run_key=once) · пост №2 в кроне на 28-08 10:00 MSK
+16-08-2026 08:58 MSK · Opus 5 (claude-opus-5) · Smoke E · FAIL (без изменений с 30-07) · failed_jobs: 20 отказов 554 5.7.1 «Message rejected under suspicion of SPAM», последний 06-08-2026 12:27 · в текущем окне ещё и «Expected response code 250 but got empty code»
+16-08-2026 09:00 MSK · Opus 5 (claude-opus-5) · Membership prereq · PARTIAL · membership:rehearse: курс #444 «Клуб» PASS, 3 тарифа со сроком PASS, клубная группа PASS, **полка записей FAIL (0 курсов club_included)**, флаг WARN (OFF, ожидаемо)
+16-08-2026 09:02 MSK · Opus 5 (claude-opus-5) · Shelf root cause · NO-GO · `membership:club-catalogue` (сухой прогон) → «подходящих курсов 0» · Course::sellsRecordings() требует features.course_recordings_sales (OFF) И is_completed=true (0 из 100 активных) · голый --apply в DEPLOY_QUEUE был бы no-op
+16-08-2026 09:04 MSK · Opus 5 (claude-opus-5) · HTTP smoke · PASS · /online/konsultaciya 200 · /konsultaciya-po-onlayn-kursam 200 · /online 200 · / 200 · /klub 404 (флаг OFF — корректное предпусковое состояние)
+16-08-2026 09:05 MSK · Opus 5 (claude-opus-5) · Money/access flags · UNCHANGED · club_membership=false membership_cancellation=false membership_free_tier=false · club_memberships=0 · free_tier_grants=0 · ни один флаг не тронут
 ```
 
 ## PARK / residual secrets
@@ -52,12 +73,13 @@ Append-only. Format: `YYYY-MM-DD HH:MM TZ · actor/model · action · result · 
 | Item | Needed for | Status |
 |---|---|---|
 | Yandex WebDAV app password (`YANDEX_DISK_LOGIN` + `YANDEX_DISK_APP_PASSWORD` on **server** `.env`) | DR1 off-site | **PARK** — local backup OK; WebDAV Unauthorized |
-| Real BotFather token for `@samskrte_bot` in Filament Marketing Settings (`tg_bot_token`) | D (Day 1 drip) + channel posts admin | **OPEN @DO** — current value is 25-char non-token placeholder; LandingBots same class |
+| Real BotFather token for `@samskrte_bot` in Filament Marketing Settings (`tg_bot_token`) | D (Day 1 drip) + channel posts admin | **✅ CLOSED 16-08-2026 (H2865)** — real token installed, `getMe` ok, drip proven sending (warm-tail Days 8–13) |
 | SPF/DKIM/DMARC + clean Yandex sender reputation for `rusamskrtam@yandex.ru` (or chosen mailbox) | E transactional mail | **OPEN** — SMTP configured but 554 spam; tracks [#504](https://github.com/gasyoun/Systema-Sanscriticum/issues/504) / H1449 |
 | GitHub Actions `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` | DR2 TG dry-fire | **PARK** — uptime HTTP job already green without them |
 | GitHub Environment `production` secrets `DEPLOY_HOST`/`DEPLOY_USER`/`DEPLOY_SSH_KEY` + required reviewers | GHA deploy.yml truth (#828) | **OPEN @DO human** — agent path is auto-deploy cron (DEP2 PASS without these) |
 | Tochka live test policy (complete ₽500 with real card) | optional full C success-callback | **NOT RUN** — hosted page reached; charge left for ops-safe window |
-| Make magnet bot admin of `@samskrte` channel | H1936 channel posts | **OPEN** (Telegram-side only; prior handoff) |
+| Make magnet bot admin of `@samskrte` channel | H1936 channel posts | **✅ CLOSED 16-08-2026 (H2865)** — `getChatMember` status=administrator, `can_post_messages=true`; post #1 sent 04-08 |
+| Club shelf `courses.club_included` (which recordings the ₽1 500 club covers) | Membership launch 28-08 | **OPEN @DO human — NEW, found 16-08-2026 (H2865)** — 0 courses on the shelf; the documented `--apply` is a no-op, needs an explicit `--course=` list |
 
 ## Final verdict
 
