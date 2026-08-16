@@ -21,6 +21,8 @@
     <meta property="og:title" content="@yield('og_title', 'Словарь санскрита')">
     <meta property="og:description" content="@yield('meta_description', 'Санскритско-русские словарные статьи.')">
     <meta property="og:image" content="{{ asset('images/logo.png') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
