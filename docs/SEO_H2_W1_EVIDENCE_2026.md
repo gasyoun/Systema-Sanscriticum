@@ -2,8 +2,9 @@
 
 _Created: 16-08-2026 · Last updated: 16-08-2026_
 
-**Handoff:** [H2893 (Grok 4.6) — samskrte.ru SEO H2 wave-1 money-page hygiene](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2893-Grok_Systema-Sanscriticum_samskrte-seo-h2-w1_16.08.26.md)
+**Handoff:** [H2893 (Grok 4.6) — samskrte.ru SEO H2 wave-1 money-page hygiene](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2893-Grok_Systema-Sanscriticum_samskrte-seo-h2-w1_16.08.26.md) — registry ✅ closed.
 **PR:** [Systema-Sanscriticum#1761](https://github.com/gasyoun/Systema-Sanscriticum/pull/1761) merged as `a059eff2`.
+**Release:** [v1.89.57](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.89.57).
 **Executor:** Grok 4.6 (`grok-4.6`).
 
 ## Code
