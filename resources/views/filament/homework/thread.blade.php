@@ -106,7 +106,7 @@
                             @endif
                             @if($canManageFiles)
                                 <form action="{{ route('homework.file.destroy', $f) }}" method="POST" class="pr-1"
-                                      onsubmit="return confirm('Удалить файл «{{ addslashes($f->original_name) }}»?');">
+                                      onsubmit="return confirm(@js('Удалить файл «'.$f->original_name.'»?'));">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
