@@ -15,6 +15,32 @@ declare(strict_types=1);
  */
 return [
 
+    'tiers' => [
+        'free' => ['monthly_price' => 0],
+        'basic' => ['monthly_price' => 1000],
+        'club' => ['monthly_price' => 2000],
+        // Top is deliberately unpriced for checkout until its separate go/no-go.
+        'top' => ['monthly_price' => 5000],
+    ],
+
+    'terms' => [
+        1 => ['discount_percent' => 0],
+        3 => ['discount_percent' => 5],
+        12 => ['discount_percent' => 15],
+    ],
+
+    'capabilities' => [
+        'enhanced_cabinet' => 'basic',
+        'library' => 'basic',
+        'standard_exercises' => 'basic',
+        'benefits' => 'basic',
+        'recordings' => 'club',
+        'personalised_exercises' => 'club',
+        'maximum_tooling' => 'club',
+        'private_archives' => 'top',
+        'additive_samudra' => 'top',
+    ],
+
     'club' => [
         /*
          | Slug курса-членства. Курс и три тарифа (месяц/квартал/год) заводит

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Membership;
 
+use App\Enums\MembershipTier;
 use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\User;
@@ -43,8 +44,8 @@ final class ClubEntitlement
 
     private bool $clubCourseResolved = false;
 
-    /** @var array<int, bool> */
-    private array $activeCache = [];
+    /** @var array<int, MembershipTier|null> */
+    private array $tierCache = [];
 
     public function enabled(): bool
     {
@@ -67,14 +68,59 @@ final class ClubEntitlement
     /** Действующее членство. Кэш на экземпляр: гейты дёргают это в цикле по урокам. */
     public function isMember(?User $user): bool
     {
+        return $this->activeTierFor($user) instanceof MembershipTier;
+    }
+
+    public function activeTierFor(?User $user): ?MembershipTier
+    {
         if (! $this->enabled() || ! $user instanceof User) {
+            return null;
+        }
+
+        if (array_key_exists($user->id, $this->tierCache)) {
+            return $this->tierCache[$user->id];
+        }
+
+        $memberships = ClubMembership::query()
+            ->where('user_id', $user->id)
+            ->active()
+            ->get(['tier_code']);
+
+        if ($memberships->isEmpty()) {
+            return $this->tierCache[$user->id] = null;
+        }
+
+        // Dark rollout preserves H2644 exactly until classification is complete.
+        if (! (bool) config('features.membership_tiered', false)) {
+            return $this->tierCache[$user->id] = MembershipTier::Club;
+        }
+
+        $tier = $memberships
+            ->map(fn (ClubMembership $membership) => $membership->tier_code)
+            ->filter(fn ($value) => $value instanceof MembershipTier)
+            ->sortByDesc(fn (MembershipTier $value) => $value->rank())
+            ->first();
+
+        if ($tier === MembershipTier::Top && ! (bool) config('features.membership_top', false)) {
+            $tier = MembershipTier::Club;
+        }
+
+        return $this->tierCache[$user->id] = $tier;
+    }
+
+    public function allows(?User $user, string $capability): bool
+    {
+        if (! (bool) config('features.membership_advanced_features', false)
+            && $capability !== 'recordings') {
             return false;
         }
 
-        return $this->activeCache[$user->id] ??= ClubMembership::query()
-            ->where('user_id', $user->id)
-            ->active()
-            ->exists();
+        $minimum = MembershipTier::tryFrom((string) config("membership.capabilities.{$capability}", ''));
+        $active = $this->activeTierFor($user);
+
+        return $minimum instanceof MembershipTier
+            && $active instanceof MembershipTier
+            && $active->allows($minimum);
     }
 
     /**
@@ -94,7 +140,7 @@ final class ClubEntitlement
 
     public function coversCourse(?User $user, ?Course $course): bool
     {
-        return $this->courseIsIncluded($course) && $this->isMember($user);
+        return $this->courseIsIncluded($course) && $this->allows($user, 'recordings');
     }
 
     /**
@@ -161,7 +207,7 @@ final class ClubEntitlement
      */
     public function shelfFor(?User $user): Collection
     {
-        if (! $this->isMember($user)) {
+        if (! $this->allows($user, 'recordings')) {
             /** @var Collection<int, Course> $empty */
             $empty = Course::query()->whereRaw('1 = 0')->get();
 

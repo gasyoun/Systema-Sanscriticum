@@ -875,6 +875,12 @@ return [
      | командой `membership:rehearse` до объявления запуска.
      */
     'club_membership' => (bool) env('CLUB_MEMBERSHIP', false),
+    // H2744 staged rollout. Tier interpretation is dark until legacy rows and
+    // tariffs have been explicitly classified by membership:classify-tiers.
+    'membership_tiered' => (bool) env('MEMBERSHIP_TIERED', false),
+    'membership_advanced_features' => (bool) env('MEMBERSHIP_ADVANCED_FEATURES', false),
+    // Separate 01-10 go/no-go. OFF caps Top rows at Club capabilities and hides checkout.
+    'membership_top' => (bool) env('MEMBERSHIP_TOP', false),
     'membership_free_tier' => (bool) env('MEMBERSHIP_FREE_TIER', false),
     'membership_cancellation' => (bool) env('MEMBERSHIP_CANCELLATION', false),
 

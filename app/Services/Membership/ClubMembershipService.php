@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Membership;
 
+use App\Enums\MembershipTier;
 use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\Payment;
@@ -64,11 +65,30 @@ final class ClubMembershipService
         $default = max(1, (int) config('membership.club.default_term_months', 1));
         $max = max($default, (int) config('membership.club.max_term_months', 12));
 
-        if (is_string($payment->tariff) && preg_match('/^club_(\d+)m$/', $payment->tariff, $m) === 1) {
+        if (is_string($payment->tariff) && preg_match('/^(?:club|membership_(?:free|basic|club|top))_(\d+)m$/', $payment->tariff, $m) === 1) {
             return max(1, min($max, (int) $m[1]));
         }
 
         return $default;
+    }
+
+    /** Tier is encoded in the immutable payment key; amounts are never classified. */
+    public function tierFor(Payment $payment): ?MembershipTier
+    {
+        if (! is_string($payment->tariff)) {
+            return null;
+        }
+
+        if (preg_match('/^membership_(free|basic|club|top)_\d+m$/', $payment->tariff, $m) === 1) {
+            return MembershipTier::tryFrom($m[1]);
+        }
+
+        // H2644's key already states "club" explicitly. This is not amount guessing.
+        if (preg_match('/^club_\d+m$/', $payment->tariff) === 1) {
+            return MembershipTier::Club;
+        }
+
+        return null;
     }
 
     /**
@@ -84,6 +104,17 @@ final class ClubMembershipService
             return null;
         }
 
+        $tier = $this->tierFor($payment);
+        if ((bool) config('features.membership_tiered', false) && ! $tier instanceof MembershipTier) {
+            Log::critical('membership: payment has no explicit tier; period refused', [
+                'payment_id' => $payment->id,
+                'tariff_key' => $payment->tariff,
+            ]);
+
+            return null;
+        }
+        $tier ??= MembershipTier::Club;
+
         $existing = ClubMembership::query()->where('payment_id', $payment->id)->first();
         if ($existing instanceof ClubMembership) {
             return $existing;
@@ -95,12 +126,14 @@ final class ClubMembershipService
         // Встык к самому позднему НЕ снятому периоду, даже если его грейс уже
         // вышел, но демон ещё не отработал: иначе поздний прогон демона
         // укоротил бы только что купленный период.
+        $activeTier = $this->activeTierFor($payment->user);
+        $isUpgrade = $activeTier instanceof MembershipTier && $tier->rank() > $activeTier->rank();
         $tailEndsAt = ClubMembership::query()
             ->where('user_id', $payment->user_id)
             ->whereNull('revoked_at')
             ->max('ends_at');
 
-        $startsAt = $tailEndsAt !== null && Carbon::parse($tailEndsAt)->isFuture()
+        $startsAt = ! $isUpgrade && $tailEndsAt !== null && Carbon::parse($tailEndsAt)->isFuture()
             ? Carbon::parse($tailEndsAt)
             : now();
 
@@ -109,6 +142,7 @@ final class ClubMembershipService
         return ClubMembership::create([
             'user_id' => $payment->user_id,
             'payment_id' => $payment->id,
+            'tier_code' => $tier,
             'term_months' => $months,
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
@@ -119,7 +153,12 @@ final class ClubMembershipService
     }
 
     /** Ручная выдача периода (репетиция, компенсация) — без платежа. */
-    public function grantManualPeriod(User $user, int $months, string $source = ClubMembership::SOURCE_MANUAL): ClubMembership
+    public function grantManualPeriod(
+        User $user,
+        int $months,
+        string $source = ClubMembership::SOURCE_MANUAL,
+        MembershipTier $tier = MembershipTier::Club,
+    ): ClubMembership
     {
         $graceDays = max(0, (int) config('membership.club.grace_days', 3));
         $startsAt = now();
@@ -128,6 +167,7 @@ final class ClubMembershipService
         return ClubMembership::create([
             'user_id' => $user->id,
             'payment_id' => null,
+            'tier_code' => $tier,
             'term_months' => max(1, $months),
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
@@ -149,6 +189,28 @@ final class ClubMembershipService
     public function hasActive(User $user): bool
     {
         return $this->activeFor($user) !== null;
+    }
+
+    public function activeTierFor(User $user): ?MembershipTier
+    {
+        $memberships = ClubMembership::query()
+            ->where('user_id', $user->id)
+            ->active()
+            ->get(['tier_code']);
+
+        if ($memberships->isEmpty()) {
+            return null;
+        }
+
+        if (! (bool) config('features.membership_tiered', false)) {
+            return MembershipTier::Club;
+        }
+
+        return $memberships
+            ->map(fn (ClubMembership $membership) => $membership->tier_code)
+            ->filter(fn ($tier) => $tier instanceof MembershipTier)
+            ->sortByDesc(fn (MembershipTier $tier) => $tier->rank())
+            ->first();
     }
 
     /**

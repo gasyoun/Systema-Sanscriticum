@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Membership;
 
+use App\Enums\MembershipTier;
 use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\Group;
@@ -30,7 +31,8 @@ class ClubMembershipLifecycleTest extends MembershipTestCase
         $membership = ClubMembership::where('payment_id', $payment->id)->first();
         $this->assertNotNull($membership, 'период членства не заведён по оплате');
         $this->assertSame(3, $membership->term_months);
-        $this->assertSame('club_3m', $payment->tariff, 'ключ доступа должен быть самоописывающим');
+        $this->assertSame(MembershipTier::Club, $membership->tier_code);
+        $this->assertSame('membership_club_3m', $payment->tariff, 'ключ доступа должен быть самоописывающим');
         $this->assertTrue($membership->isActive());
         $this->assertTrue(
             $user->fresh()->groups()->where('groups.id', $this->clubGroup->id)->exists(),
@@ -63,6 +65,46 @@ class ClubMembershipLifecycleTest extends MembershipTestCase
             'продление обязано начинаться с конца текущего периода, а не «сейчас» — иначе студент дарит школе остаток месяца'
         );
         $this->assertTrue($second->ends_at->greaterThan($first->ends_at));
+    }
+
+    public function test_higher_tier_starts_now_without_shortening_the_paid_basic_period(): void
+    {
+        config()->set('features.membership_tiered', true);
+        $user = User::factory()->create();
+        $basic = ClubMembership::where('payment_id', $this->payClub($user, 3, MembershipTier::Basic)->id)->firstOrFail();
+        $this->travel(10)->days();
+
+        $club = ClubMembership::where('payment_id', $this->payClub($user, 1, MembershipTier::Club)->id)->firstOrFail();
+
+        $this->assertTrue($club->starts_at->isSameDay(now()));
+        $this->assertTrue($basic->fresh()->ends_at->greaterThan(now()));
+        $this->assertSame(MembershipTier::Club, $this->service()->activeTierFor($user->fresh()));
+    }
+
+    public function test_terms_have_exact_zero_five_and_fifteen_percent_prices(): void
+    {
+        $this->assertSame(1000, MembershipTier::Basic->priceForTerm(1));
+        $this->assertSame(2850, MembershipTier::Basic->priceForTerm(3));
+        $this->assertSame(10200, MembershipTier::Basic->priceForTerm(12));
+        $this->assertSame(2000, MembershipTier::Club->priceForTerm(1));
+        $this->assertSame(5700, MembershipTier::Club->priceForTerm(3));
+        $this->assertSame(20400, MembershipTier::Club->priceForTerm(12));
+    }
+
+    public function test_tiered_mode_refuses_an_untyped_membership_payment(): void
+    {
+        config()->set('features.membership_tiered', true);
+        $user = User::factory()->create();
+        $payment = Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $this->clubCourse->id,
+            'amount' => 1000,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ]));
+
+        $this->assertNull($this->service()->syncFromPayment($payment));
+        $this->assertSame(0, ClubMembership::where('payment_id', $payment->id)->count());
     }
 
     public function test_lapse_job_never_revokes_before_the_grace_window_closes(): void
