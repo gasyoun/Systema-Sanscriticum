@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Added
+- **H2164: generalize «Старт чтения»'s single-cohort entitlement helper into a slug-keyed registry.** H2105's `App\Support\StartChteniyaCohort` was hardwired to one `config('start_chteniya.course_slug')`; with Nalopākhyāna and Subhāṣita as two more independent courses needing the same "real, paid, access-granting `Payment`" gate, `App\Support\CourseCohortEntitlement::hasEntitlement($user, $slug)` / `::course($slug)` / `::entitledUsers($slug)` reuse H2105's filter body almost verbatim, keyed by `config/cohort_courses.php` (`nalopakhyana`, `subhashita`, each independently env-flagged, default OFF). H2105's own helper and config are left untouched — no wrapper, per the plan's default. Read-only consumer of `Payment`; no `Payment`/`Tariff`/checkout code changed. 8 new tests including the one behavior a single cohort never needed: paying for course A must not entitle course B (`CourseCohortEntitlementTest::paid_on_course_a_does_not_entitle_course_b`). Foundation for H2166/H2167 course scaffolds. Executor: Claude Sonnet 5 (`claude-sonnet-5`).
 
 ## [1.89.53] - 2026-08-16
 ### Fixed
