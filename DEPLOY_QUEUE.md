@@ -77,8 +77,15 @@ _Создано: 08-07-2026 · Обновлено: 15-08-2026 (H2762 Kochergina 
 3. **Последним, после проверки клуба на живых оплатах:** `MEMBERSHIP_FREE_TIER=true` —
    месячные бесплатные гранты 350 уснувшим (D6 вариант «а», кампания H2566);
    строка «Скоро» на `/klub` сама станет настоящим временем.
-4. Полка записей: `php artisan membership:club-catalogue --apply` — набрать
-   `club_included` (без неё клубный каталог пуст).
+4. **Полка записей — ПЕРВЫМ шагом, ЯВНЫМ списком; голый `--apply` не работает**
+   (замерено на проде 16-08-2026, [H2865](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2865-Opus_Systema-Sanscriticum_28aug-integrated-launch-gate_16.08.26.md)):
+   `php artisan membership:club-catalogue --course=<id|slug> --course=… --apply`.
+   Авто-подбор предлагает **ноль** курсов — `Course::sellsRecordings()` требует
+   одновременно `COURSE_RECORDINGS_SALES` (на проде OFF) и `is_completed=true`
+   (0 из 100 активных курсов). Без полки клубный каталог **пуст**, шаг 3
+   `membership:rehearse` = FAIL, и купивший за ₽1 500 не получает ничего.
+   Какие записи входят в клуб — решение человека (живой курс стоит ₽6 000).
+   Разбор и точная последовательность: [docs/LAUNCH_GATE_28_08_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/LAUNCH_GATE_28_08_2026.md).
 
 ### H2017 — PayPal diaspora + счёт юрлицу **✅ на проде** (31-07-2026)
 

@@ -1,10 +1,21 @@
 # Марафон «Консультация по онлайн-курсам ОРС» — чек-лист активации на проде
 
-_Создано: 10-07-2026 · Обновлено: 10-07-2026_
+_Создано: 10-07-2026 · Обновлено: 16-08-2026_
+
+> **Свежая сверка с продом 16-08-2026 ([H2865](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2865-Opus_Systema-Sanscriticum_28aug-integrated-launch-gate_16.08.26.md)):
+> пункты 1–6 уже ВЫПОЛНЕНЫ на проде, открыт только пункт 7 (после эфира).**
+> Построчные доказательства и вердикт по каждому шлюзу — в
+> [docs/LAUNCH_GATE_28_08_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/LAUNCH_GATE_28_08_2026.md).
+> Этот файл остаётся описанием того, ЧТО делает каждый шаг; актуальное состояние — там.
 
 Все 6 фаз H440 влиты в `main` ([H446](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H446-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase1-landing-capture_10.07.26.md)/[H464](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H464-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase2-drip-engine_10.07.26.md)/[H483](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H483-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase3b-tap-choice-ui_10.07.26.md)/[H471](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H471-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase4-paid-track-checkout_10.07.26.md)/[H487](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H487-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase5-live-consultation_10.07.26.md)/[H489](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H489-Sonnet_Systema-Sanscriticum_marathon-diagnostic-phase6-warm-tail_10.07.26.md)), код-комплит. Это единый чек-лист активации, консолидирующий [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) пункты №12–17 в один документ — прогнать по порядку перед первым запуском когорты **28-08-2026**.
 
-⚠️ **Деплой делает человек на сервере — у агента нет доступа (ограничение прав, не хостинга).** Прод — root-VPS (Ubuntu, Beget). Обычный путь — `sudo bash deploy.sh`.
+⚠️ **Устарело с 30-07-2026 (H1933): код деплоится САМ** — root-крон на проде каждые
+30 минут выкатывает `origin/main` через `deploy.sh`. Прежняя формулировка «деплой делает
+человек, у агента нет доступа» **неверна дважды**: ручной шаг ушёл, и SSH/root у агента
+есть (`root@193.232.229.92`, исправлено ещё в H478). Человеку остаются только флаги,
+разовые artisan-команды и внешние шаги (Точка/BotFather/Filament). Прод — root-VPS
+(Ubuntu, Beget); ручной fallback при сбое авто-деплоя — `sudo bash deploy.sh`.
 
 ---
 
