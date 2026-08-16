@@ -28,7 +28,7 @@ final class RichHtml
 
     private static function sanitizer(): HtmlSanitizer
     {
-        $config = (new HtmlSanitizerConfig())
+        $config = (new HtmlSanitizerConfig)
             ->allowSafeElements()
             ->allowLinkSchemes(['https', 'http', 'mailto'])
             ->allowMediaSchemes(['https', 'http'])
