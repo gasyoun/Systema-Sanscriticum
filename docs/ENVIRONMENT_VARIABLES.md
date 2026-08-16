@@ -317,6 +317,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `N8N_SCHEDULE_SHEET_WEBHOOK` | required | `—` | config/services.php:73 |
 | `N8N_SOCIAL_POST_SECRET` | secret | `—` | config/services.php:94 |
 | `N8N_SOCIAL_POST_WEBHOOK` | required | `—` | config/services.php:93 |
+| `NALOPAKHYANA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:22 |
+| `NALOPAKHYANA_COURSE_SLUG` | optional | `'nalopakhyana'` | config/cohort_courses.php:21 |
 | `NEWSLETTER_BLOCKED_DOMAINS` | optional | `'immenseignite.info,swagpapa.com'` | config/newsletter.php:37 |
 | `NEWSLETTER_MAX_FORM_AGE_SECONDS` | optional | `12 * 60 * 60` | config/newsletter.php:30 |
 | `NEWSLETTER_MIN_FILL_SECONDS` | optional | `3` | config/newsletter.php:25 |
@@ -470,6 +472,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `STORAGE_WATCH_WARN_RATIO` | optional | `0.8` | config/storage_watch.php:47 |
 | `STUDENT_TELEGRAM_BOT_TOKEN` | secret | `—` | config/services.php:110 |
 | `STUDENT_TELEGRAM_BOT_USERNAME` | required | `—` | config/services.php:111 |
+| `SUBHASHITA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:27 |
+| `SUBHASHITA_COURSE_SLUG` | optional | `'subhashita'` | config/cohort_courses.php:26 |
 | `SUPPORT_AI_ASSIST` | optional | `false` | config/features.php:39 |
 | `SUPPORT_AI_DAILY_CAP` | optional | `100` | config/features.php:57 |
 | `SUPPORT_AI_INCLUDE_TELEGRAM` | optional | `false` | config/features.php:48 |
