@@ -73,11 +73,6 @@ class Course extends Model
     }
 
     /**
-     * При записи Zoom-ссылки автоматически вытаскиваем числовой meeting_id
-     * (.../j/{id} или .../my/{name} → null). Единый источник для резолва
-     * посещаемости — вебхук и Reports API приходят с этим id.
-     */
-    /**
      * Tiptap `simple` HTML for `{!! !!}` sinks. Sanitized on read so rows
      * written before H2896 #8 cannot still carry script / event handlers.
      */
@@ -98,6 +93,11 @@ class Course extends Model
         $this->attributes['description'] = $trimmed === '' ? '' : RichHtml::sanitize($trimmed);
     }
 
+    /**
+     * При записи Zoom-ссылки автоматически вытаскиваем числовой meeting_id
+     * (.../j/{id} или .../my/{name} → null). Единый источник для резолва
+     * посещаемости — вебхук и Reports API приходят с этим id.
+     */
     public function setZoomLinkAttribute(?string $value): void
     {
         $value = $value !== null ? trim($value) : null;
