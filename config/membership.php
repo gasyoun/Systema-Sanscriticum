@@ -41,6 +41,13 @@ return [
         'additive_samudra' => 'top',
     ],
 
+    'recording_gate' => [
+        'pilot_user_ids' => env('MEMBERSHIP_RECORDING_PILOT_USERS', ''),
+        'pilot_started_at' => env('MEMBERSHIP_RECORDING_PILOT_STARTED_AT', ''),
+        'pilot_size' => 20,
+        'pilot_hours' => 48,
+    ],
+
     'club' => [
         /*
          | Slug курса-членства. Курс и три тарифа (месяц/квартал/год) заводит

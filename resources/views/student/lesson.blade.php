@@ -7,7 +7,7 @@
 
 <div x-data="lessonHeartbeat({ lessonId: {{ $lesson->id }} })" x-init="init()" class="hidden"></div>
 
-@if(!empty($kinescopeEmbedUrl))
+@if(($recordingAccess->allowed ?? true) && !empty($kinescopeEmbedUrl))
     {{-- Kinescope Player SDK (H1451 W3) — enables W2 video-resume kinescope adapter --}}
     <script src="https://player.kinescope.io/latest/iframe.player.js" defer></script>
 @endif
@@ -68,9 +68,10 @@
 </style>
 
 @php
+    $recordingAllowed = $recordingAccess->allowed ?? true;
     // --- УМНЫЙ ПАРСЕР ССЫЛОК YOUTUBE ---
     $cleanYoutubeId = null;
-    $rawYoutube = $youtubeId ?? $lesson->youtube_url ?? null;
+    $rawYoutube = $recordingAllowed ? ($youtubeId ?? $lesson->youtube_url ?? null) : null;
     if (!empty($rawYoutube)) {
         if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $rawYoutube, $match)) {
             $cleanYoutubeId = $match[1];
@@ -81,7 +82,7 @@
 
     // --- УМНЫЙ ПАРСЕР ССЫЛОК RUTUBE ---
     $cleanRutubeId = null;
-    $rawRutube = $rutubeId ?? $lesson->rutube_url ?? null;
+    $rawRutube = $recordingAllowed ? ($rutubeId ?? $lesson->rutube_url ?? null) : null;
     if (!empty($rawRutube)) {
         if (preg_match('/rutube\.ru\/(?:video|play\/embed)\/([a-zA-Z0-9_-]+)/i', $rawRutube, $match)) {
             $cleanRutubeId = $match[1];
@@ -91,7 +92,7 @@
     }
 
     // --- Kinescope pilot (H1451 W3): only when flag + pilot course + video_url ---
-    $kinescopeEmbedUrl = $kinescopeEmbedUrl ?? null;
+    $kinescopeEmbedUrl = $recordingAllowed ? ($kinescopeEmbedUrl ?? null) : null;
     $kinescopePilotActive = !empty($kinescopeEmbedUrl);
 
     // --- ПАРСЕР ТАЙМКОДОВ ---
@@ -290,7 +291,14 @@
                 @endif
 
                 <div x-show="player === 'none'" class="absolute inset-0 flex items-center justify-center bg-[#19191C] px-6">
-                    @if(!empty($upcomingSession))
+                    @if(!$recordingAllowed)
+                        <div class="text-center text-white max-w-lg px-6" data-membership-recording-gate>
+                            <i class="fas fa-lock text-4xl text-brand mb-4"></i>
+                            <p class="text-lg font-bold mb-2">Запись закрыта уровнем членства</p>
+                            <p class="text-gray-300 text-sm leading-relaxed">{{ $recordingAccess->notice() }}</p>
+                            <a href="{{ route('membership.landing') }}" class="inline-flex mt-5 px-5 py-2.5 bg-brand hover:bg-brand-hover text-white font-bold rounded-xl">Выбрать уровень</a>
+                        </div>
+                    @elseif(!empty($upcomingSession))
                         {{-- Живое занятие ещё не прошло (например, оплаченное пробное): зовём в Zoom.
                              После занятия n8n зальёт запись, и здесь появится видео. --}}
                         <div class="text-center text-white max-w-md">
@@ -345,6 +353,12 @@
                 </div>
             </div>
         </div>
+
+        @if($recordingAccess->notice())
+            <div class="mt-3 rounded-2xl border border-amber-300/40 bg-amber-50 px-5 py-4 text-sm text-amber-950" data-membership-recording-notice>
+                {{ $recordingAccess->notice() }}
+            </div>
+        @endif
 
         {{-- ПЛАШКА: Название урока + Навигация + Действия --}}
 <div x-data="{ navOpen: false }" 
