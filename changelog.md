@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Added
+- **GEO audit of samskrte.ru (16-08-2026).** Score 66/100. `/llms.txt` 404; AI crawlers inherit `User-agent: *`; 5 000+ vs 7 000 student-count clash; YouTube missing from Organization `sameAs`. Maps onto H2 W3 without overriding the generated-route ruling: [docs/SEO_GEO_AUDIT_SAMSKRTE_16.08.26.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_GEO_AUDIT_SAMSKRTE_16.08.26.md). Executor: Grok 4.6 (`grok-4.6`).
 
 ## [1.89.56] - 2026-08-16
 ### Added

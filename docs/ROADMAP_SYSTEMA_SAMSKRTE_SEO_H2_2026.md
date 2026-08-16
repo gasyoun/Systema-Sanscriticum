@@ -39,6 +39,8 @@ Each wave names what it unblocks. Do not start a later wave's *product* work bef
 
 ### Wave 3 — GEO + technical
 
+Evidence snapshot (16-08-2026, score 66/100): [SEO_GEO_AUDIT_SAMSKRTE_16.08.26.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_GEO_AUDIT_SAMSKRTE_16.08.26.md). Generated `/llms.txt` stays; do not replace it with a static dump.
+
 **Unblocks:** AI citation surface + crawl hygiene that does not touch Metrika.
 
 - Public route `GET /llms.txt` listing org facts + live public courses (cached). Live is 404 today.
