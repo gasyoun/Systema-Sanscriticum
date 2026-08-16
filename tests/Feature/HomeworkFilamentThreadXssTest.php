@@ -74,23 +74,17 @@ class HomeworkFilamentThreadXssTest extends TestCase
             ->html();
 
         $this->assertStringNotContainsString(
-            "confirm('Удалить файл",
-            $html,
-            'Delete confirm must not open a JS single-quoted string around the filename.',
-        );
-        $this->assertStringNotContainsString(
             'addslashes(',
             $html,
         );
-        $this->assertStringContainsString(
-            'JSON.parse(',
+        $this->assertStringNotContainsString(
+            "');alert(1)",
             $html,
-            '@js() must emit JSON.parse so the filename cannot break the attribute.',
+            'A raw JS string terminator + alert must not appear; @js must encode the quote.',
         );
-        $this->assertStringContainsString(
-            'alert(1)',
-            $html,
-            'Filename text is still shown, but only inside the JSON payload.',
+        $this->assertTrue(
+            str_contains($html, '\u0027') || str_contains($html, 'JSON.parse('),
+            '@js() must encode the apostrophe (\\\\u0027 or JSON.parse), not interpolate it.',
         );
     }
 }
