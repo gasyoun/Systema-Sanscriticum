@@ -207,6 +207,50 @@ class FreeTierLessonGrantTest extends MembershipTestCase
             'кампания и демон обязаны видеть гранты друг друга — иначе человек получит два урока');
     }
 
+    public function test_daemon_does_not_auto_grant_by_default_even_with_the_flag_on(): void
+    {
+        // H2899. Флаг ВКЛЮЧЁН — и демон всё равно ничего не пишет. Это и есть
+        // предмет правки: `MEMBERSHIP_FREE_TIER` во всех документах назван
+        // кампанией на 350 молчащих >12 мес, а правило демона давности не знает
+        // и на проде видит 923 — раздача в 2,5 раза шире написанного, молча.
+        config()->set('features.membership_free_tier', true);
+        config()->set('membership.free_tier.daemon_apply', false);
+        [$user] = $this->dormantPayer();
+
+        $this->artisan('membership:grant-free-lesson --apply')->assertSuccessful();
+
+        $this->assertSame(0, LessonAccessGrant::where('user_id', $user->id)->count(),
+            'демон обязан молчать, пока авто-выдача не разрешена явно');
+    }
+
+    public function test_daemon_auto_grants_once_the_knob_is_explicitly_on(): void
+    {
+        // Обратная половина: запрет должен сниматься, иначе это не рубильник,
+        // а удаление функции.
+        config()->set('features.membership_free_tier', true);
+        config()->set('membership.free_tier.daemon_apply', true);
+        [$user] = $this->dormantPayer();
+
+        $this->artisan('membership:grant-free-lesson --apply')->assertSuccessful();
+
+        $this->assertSame(1, LessonAccessGrant::where('user_id', $user->id)->count());
+    }
+
+    public function test_campaign_still_grants_while_the_daemon_is_muted(): void
+    {
+        // Кампания — единственный разрешённый путь доставки, и запрет демона
+        // не должен её задеть: иначе «сузить до явного списка» превратилось бы
+        // в «выключить бесплатный уровень совсем».
+        config()->set('features.membership_free_tier', true);
+        config()->set('membership.free_tier.daemon_apply', false);
+        [$user] = $this->dormantPayer();
+
+        $this->artisan('membership:grant-free-lesson --apply --user='.$user->id.' --reason=free_tier_h2566')
+            ->assertSuccessful();
+
+        $this->assertSame(1, LessonAccessGrant::where('user_id', $user->id)->count());
+    }
+
     public function test_daemon_mode_writes_nothing_while_the_flag_is_off(): void
     {
         config()->set('features.membership_free_tier', false);
