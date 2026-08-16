@@ -89,7 +89,7 @@ class HomeworkService
      */
     public function deleteStudentFile(HomeworkFile $file, User $student): void
     {
-        DB::transaction(function () use ($file, $student) {
+        $submission = DB::transaction(function () use ($file, $student) {
             $file->loadMissing('comment.submission');
             $comment = $file->comment;
             $submission = $comment?->submission;
@@ -113,8 +113,13 @@ class HomeworkService
             $submission->last_activity_at = now();
             $submission->save();
 
-            app(HomeworkImagePdfService::class)->rebuildQuietly($submission->fresh(['comments.files', 'user', 'lesson', 'course']));
+            return $submission;
         });
+
+        // Пересборка PDF — ПОСЛЕ коммита (паттерн clearStudentFiles): смерть
+        // процесса внутри сборки не должна держать открытую транзакцию до
+        // таймаута соединения.
+        app(HomeworkImagePdfService::class)->rebuildQuietly($submission->fresh(['comments.files', 'user', 'lesson', 'course']) ?? $submission);
     }
 
     /**
@@ -147,9 +152,10 @@ class HomeworkService
 
             $submission->last_activity_at = now();
             $submission->save();
-
-            app(HomeworkImagePdfService::class)->rebuildQuietly($submission->fresh(['comments.files', 'user', 'lesson', 'course']));
         });
+
+        // Пересборка PDF — после коммита, не внутри транзакции (см. deleteStudentFile).
+        app(HomeworkImagePdfService::class)->rebuildQuietly($submission->fresh(['comments.files', 'user', 'lesson', 'course']) ?? $submission);
     }
 
     /**
@@ -228,7 +234,7 @@ class HomeworkService
      * На диске путь обновляется на homework/{user}/{target_lesson}/…; в обоих
      * тредах — служебные отметки.
      */
-    public function moveFileToLesson(HomeworkFile $file, Lesson $targetLesson, User $actor): HomeworkSubmission
+    public function moveFileToLesson(HomeworkFile $file, Lesson $targetLesson, User $actor, bool $rebuildPdf = true): HomeworkSubmission
     {
         $file->loadMissing('comment.submission.course', 'comment.submission.lesson', 'comment.submission.user');
         $comment = $file->comment;
@@ -317,9 +323,14 @@ class HomeworkService
             return $target->fresh(['comments.files', 'lesson', 'course', 'user']);
         });
 
-        $pdf = app(HomeworkImagePdfService::class);
-        $pdf->rebuildQuietly($source->fresh(['comments.files', 'user', 'lesson', 'course']) ?? $source);
-        $pdf->rebuildQuietly($target->fresh(['comments.files', 'user', 'lesson', 'course']));
+        // $rebuildPdf = false — для массового переноса: N файлов дали бы 2N
+        // полных пересборок PDF в одном запросе, moveAllStudentFiles делает
+        // по одной на каждую затронутую сдачу в конце.
+        if ($rebuildPdf) {
+            $pdf = app(HomeworkImagePdfService::class);
+            $pdf->rebuildQuietly($source->fresh(['comments.files', 'user', 'lesson', 'course']) ?? $source);
+            $pdf->rebuildQuietly($target->fresh(['comments.files', 'user', 'lesson', 'course']));
+        }
 
         return $target;
     }
@@ -343,8 +354,23 @@ class HomeworkService
                 continue;
             }
             foreach ($comment->files->all() as $file) {
-                $this->moveFileToLesson($file, $targetLesson, $staff);
+                $this->moveFileToLesson($file, $targetLesson, $staff, rebuildPdf: false);
                 $moved++;
+            }
+        }
+
+        // По одной пересборке на затронутую сдачу вместо 2N внутри цикла.
+        if ($moved > 0) {
+            $pdf = app(HomeworkImagePdfService::class);
+            $pdf->rebuildQuietly($source->fresh(['comments.files', 'user', 'lesson', 'course']) ?? $source);
+
+            $target = HomeworkSubmission::query()
+                ->where('user_id', $source->user_id)
+                ->where('lesson_id', $targetLesson->id)
+                ->with(['comments.files', 'user', 'lesson', 'course'])
+                ->first();
+            if ($target) {
+                $pdf->rebuildQuietly($target);
             }
         }
 
@@ -391,7 +417,7 @@ class HomeworkService
      */
     public function deleteStudentComment(HomeworkComment $comment, User $student): void
     {
-        DB::transaction(function () use ($comment, $student) {
+        $submission = DB::transaction(function () use ($comment, $student) {
             $comment->loadMissing(['submission', 'files']);
             $submission = $comment->submission;
 
@@ -430,7 +456,14 @@ class HomeworkService
 
             $submission->last_activity_at = now();
             $submission->save();
+
+            return $submission;
         });
+
+        // Раньше PDF здесь не пересобирался вовсе: удалённые с комментарием
+        // картинки оставались жить в combined-images.pdf. Пересборка — после
+        // коммита, как во всех остальных путях удаления.
+        app(HomeworkImagePdfService::class)->rebuildQuietly($submission->fresh(['comments.files', 'user', 'lesson', 'course']) ?? $submission);
     }
 
     /**

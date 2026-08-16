@@ -32,12 +32,31 @@ class HomeworkImagePdfDownscaleTest extends TestCase
 {
     use RefreshDatabase;
 
+    private string $previousMemoryLimit = '';
+
     protected function setUp(): void
     {
         parent::setUp();
         Queue::fake();
         Mail::fake();
         Storage::fake('local');
+
+        // Набор проверяет ГЕОМЕТРИЮ конвейера, и ему нужны настоящие крупные
+        // картинки; CLI-лимит 256M в длинной связке сьютов не вмещает даже их
+        // генерацию (`php artisan test` не пробрасывает -d memory_limit —
+        // см. память проекта). Поведение при голоде памяти покрыто отдельным
+        // guard-тестом с крафтовым заголовком, которому декод не нужен вовсе.
+        $this->previousMemoryLimit = (string) ini_get('memory_limit');
+        ini_set('memory_limit', '1G');
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->previousMemoryLimit !== '') {
+            ini_set('memory_limit', $this->previousMemoryLimit);
+        }
+
+        parent::tearDown();
     }
 
     private function service(): HomeworkImagePdfService
