@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Membership;
 
-use App\Models\User;
 use App\Enums\MembershipTier;
+use App\Models\User;
 
 /**
  * Лендинг + прайсинг клуба (H2645): страница живёт только при включённом

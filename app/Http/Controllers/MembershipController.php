@@ -50,17 +50,15 @@ final class MembershipController extends Controller
         $tariffs = $course->tariffs()
             ->where('is_active', true)
             ->whereNotNull('membership_months')
-            ->when(! (bool) config('features.membership_top'), fn ($query) =>
-                $query->where(fn ($tiers) => $tiers
-                    ->whereNull('membership_tier')
-                    ->orWhere('membership_tier', '!=', MembershipTier::Top->value)))
+            ->when(! (bool) config('features.membership_top'), fn ($query) => $query->where(fn ($tiers) => $tiers
+                ->whereNull('membership_tier')
+                ->orWhere('membership_tier', '!=', MembershipTier::Top->value)))
             ->orderBy('membership_tier')
             ->orderBy('membership_months')
             ->get();
         abort_if($tariffs->isEmpty(), 404);
 
-        $byTier = $tariffs->groupBy(fn ($tariff): string =>
-            $tariff->membership_tier?->value ?? MembershipTier::Club->value);
+        $byTier = $tariffs->groupBy(fn ($tariff): string => $tariff->membership_tier?->value ?? MembershipTier::Club->value);
         if ((bool) config('features.membership_tiered')) {
             abort_if(($byTier[MembershipTier::Basic->value] ?? collect())->isEmpty(), 404);
             abort_if(($byTier[MembershipTier::Club->value] ?? collect())->isEmpty(), 404);

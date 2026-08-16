@@ -54,8 +54,7 @@ class RehearseClubMembership extends Command
         ClubMembershipService $service,
         ClubEntitlement $entitlement,
         RecordingAccessPolicy $recordings,
-    ): int
-    {
+    ): int {
         $apply = (bool) $this->option('apply');
 
         // ── Шаг 1. Предпосылки, которые заводит человек ──────────────────────
@@ -76,8 +75,7 @@ class RehearseClubMembership extends Command
             $missing = [];
             foreach ([MembershipTier::Basic, MembershipTier::Club] as $tier) {
                 foreach ([1, 3, 12] as $months) {
-                    $tariff = $tariffs->first(fn (Tariff $candidate): bool =>
-                        $candidate->membership_tier === $tier && (int) $candidate->membership_months === $months);
+                    $tariff = $tariffs->first(fn (Tariff $candidate): bool => $candidate->membership_tier === $tier && (int) $candidate->membership_months === $months);
                     if (! $tariff instanceof Tariff || ! $tariff->hasExpectedMembershipPrice()) {
                         $missing[] = $tier->value.'_'.$months.'m='.number_format($tier->priceForTerm($months), 0, '.', ' ').'₽';
                     }
@@ -148,7 +146,6 @@ class RehearseClubMembership extends Command
             $this->record('4. флаг', 'PASS', 'features.club_membership включён');
         }
 
-
         $this->record('4b. recording rollout', 'PASS',
             'mode='.$recordings->modeFor(new User).'; shadow/pilot/full независимы; pilot '
             .count($recordings->pilotUserIds()).'/20 на 48h; rollback: все три флага OFF + config:clear; строки оплат/групп не меняются');
@@ -183,8 +180,7 @@ class RehearseClubMembership extends Command
         try {
             // ── Шаг 5. «Оплата» → период + группа ────────────────────────────
             $tariff = (bool) config('features.membership_tiered', false)
-                ? $tariffs->first(fn (Tariff $candidate): bool =>
-                    $candidate->membership_tier === MembershipTier::Club
+                ? $tariffs->first(fn (Tariff $candidate): bool => $candidate->membership_tier === MembershipTier::Club
                     && (int) $candidate->membership_months === 1)
                 : $tariffs->sortBy('membership_months')->first();
             $payment = Payment::withoutEvents(fn () => Payment::create([

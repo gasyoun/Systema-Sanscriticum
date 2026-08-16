@@ -158,8 +158,7 @@ final class ClubMembershipService
         int $months,
         string $source = ClubMembership::SOURCE_MANUAL,
         MembershipTier $tier = MembershipTier::Club,
-    ): ClubMembership
-    {
+    ): ClubMembership {
         $graceDays = max(0, (int) config('membership.club.grace_days', 3));
         $startsAt = now();
         $endsAt = $startsAt->copy()->addMonthsNoOverflow(max(1, $months));
