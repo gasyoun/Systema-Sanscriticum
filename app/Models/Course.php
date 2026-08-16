@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\RichHtml;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -69,6 +70,27 @@ class Course extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_course');
+    }
+
+    /**
+     * Tiptap `simple` HTML for `{!! !!}` sinks. Sanitized on read so rows
+     * written before H2896 #8 cannot still carry script / event handlers.
+     */
+    public function getDescriptionHtmlAttribute(): string
+    {
+        return RichHtml::sanitize($this->attributes['description'] ?? null);
+    }
+
+    public function setDescriptionAttribute(?string $value): void
+    {
+        if ($value === null) {
+            $this->attributes['description'] = null;
+
+            return;
+        }
+
+        $trimmed = trim($value);
+        $this->attributes['description'] = $trimmed === '' ? '' : RichHtml::sanitize($trimmed);
     }
 
     /**
