@@ -6,9 +6,9 @@ namespace App\Services;
 
 use App\Models\Course;
 use App\Models\User;
+use App\Support\PublicDiskPath;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 use PhpZip\Constants\ZipCompressionMethod;
 use PhpZip\ZipFile;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -94,10 +94,12 @@ class CourseMaterialsArchiver
                 $lessonNum = str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT);
                 $lessonFolder = $courseFolder.'/Урок '.$lessonNum.' - '.$this->sanitizeFolderName($lesson->title);
 
-                foreach ($lesson->attachments as $relativePath) {
-                    $absolutePath = Storage::disk('public')->path($relativePath);
-
-                    if (! is_file($absolutePath)) {
+                foreach ($lesson->attachments as $item) {
+                    $relativePath = is_array($item)
+                        ? (string) ($item['path'] ?? $item['name'] ?? '')
+                        : (string) $item;
+                    $absolutePath = PublicDiskPath::absoluteFile($relativePath);
+                    if ($absolutePath === null) {
                         continue;
                     }
 

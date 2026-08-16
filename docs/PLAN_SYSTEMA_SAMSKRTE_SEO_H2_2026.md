@@ -2,7 +2,7 @@
 
 _Created: 16-08-2026 · Last updated: 16-08-2026_
 
-**Umbrella ID:** `SAMSKRTE-SEO-H2` · **Wave-1 handoff:** [H2893 (Grok 4.6) — samskrte.ru SEO H2 wave-1 money-page hygiene](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2893-Grok_Systema-Sanscriticum_samskrte-seo-h2-w1_16.08.26.md) · **Pack:** `/ask` samskrte.ru SEO 16-08-2026 · **Stem:** `*_SYSTEMA_SAMSKRTE_SEO_H2_*` · **Interview model:** Grok 4.6 (`grok-4.6`)
+**Umbrella ID:** `SAMSKRTE-SEO-H2` · **Wave-1 handoff:** [H2893 (Grok 4.6) — samskrte.ru SEO H2 wave-1 money-page hygiene](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2893-Grok_Systema-Sanscriticum_samskrte-seo-h2-w1_16.08.26.md) · **Wave-2 handoff:** [H2918 (Grok 4.6) — samskrte.ru SEO H2 wave-2 contextual links to samskrtam.ru](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2918-Grok_Systema-Sanscriticum_samskrte-seo-h2-w2_16.08.26.md) · **Pack:** `/ask` samskrte.ru SEO 16-08-2026 · **Stem:** `*_SYSTEMA_SAMSKRTE_SEO_H2_*` · **Interview model:** Grok 4.6 (`grok-4.6`)
 
 > One family: every layer file shares the stem **`SAMSKRTE_SEO_H2`**. This pack is the H2 *execution* plan. The status ledger for shipped P0/P1/P2 markup stays [SEO_ROADMAP_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_ROADMAP_2026.md) — do not rebuild that spine.
 
@@ -22,6 +22,8 @@ Worktree off `origin/main`. Layer docs:
 | Architecture | [ARCHITECTURE_SYSTEMA_SAMSKRTE_SEO_H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_SAMSKRTE_SEO_H2.md) |
 | Implementation (wave-1) | [IMPLEMENTATION_SYSTEMA_SAMSKRTE_SEO_H2_W1.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_SAMSKRTE_SEO_H2_W1.md) |
 | Verification (wave-1) | [VERIFICATION_SYSTEMA_SAMSKRTE_SEO_H2_W1.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SYSTEMA_SAMSKRTE_SEO_H2_W1.md) |
+| Implementation (wave-2) | [IMPLEMENTATION_SYSTEMA_SAMSKRTE_SEO_H2_W2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_SAMSKRTE_SEO_H2_W2.md) |
+| Verification (wave-2) | [VERIFICATION_SYSTEMA_SAMSKRTE_SEO_H2_W2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SYSTEMA_SAMSKRTE_SEO_H2_W2.md) |
 
 Companion metadoc: [PLAN_SYSTEMA_SAMSKRTE_SEO_H2_2026.meta.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_SEO_H2_2026.meta.md).
 

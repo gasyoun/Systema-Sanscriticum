@@ -207,6 +207,89 @@ class FreeTierLessonGrantTest extends MembershipTestCase
             'кампания и демон обязаны видеть гранты друг друга — иначе человек получит два урока');
     }
 
+    /** Файл когорты во временном каталоге теста; возвращает абсолютный путь. */
+    private function cohortFile(array $lines): string
+    {
+        $path = storage_path('app/testing-cohort-'.uniqid().'.txt');
+        @mkdir(dirname($path), 0777, true);
+        file_put_contents($path, implode("\n", $lines)."\n");
+        config()->set('membership.free_tier.cohort_file', $path);
+
+        return $path;
+    }
+
+    public function test_daemon_grants_exactly_the_cohort_file_and_nobody_else(): void
+    {
+        // H2915. Смысл файла: демон работает, но раздаёт СПИСОК, а не выборку.
+        config()->set('features.membership_free_tier', true);
+        config()->set('membership.free_tier.daemon_apply', false);
+        [$listed] = $this->dormantPayer();
+        [$unlisted] = $this->dormantPayer();
+        $this->cohortFile(['# когорта', (string) $listed->id]);
+
+        $this->artisan('membership:grant-free-lesson --apply')->assertSuccessful();
+
+        $this->assertSame(1, LessonAccessGrant::where('user_id', $listed->id)->count());
+        $this->assertSame(0, LessonAccessGrant::where('user_id', $unlisted->id)->count(),
+            'кандидат авто-подбора вне файла не должен получить ничего');
+    }
+
+    public function test_cohort_file_grants_without_the_daemon_apply_knob(): void
+    {
+        // Файл — это и есть человеческое решение, ради которого H2899 требовал
+        // отдельного разрешения. Требовать вдобавок knob значило бы просить
+        // подтвердить дважды одно и то же.
+        config()->set('features.membership_free_tier', true);
+        config()->set('membership.free_tier.daemon_apply', false);
+        [$listed] = $this->dormantPayer();
+        $this->cohortFile([(string) $listed->id]);
+
+        $this->artisan('membership:grant-free-lesson --apply')->assertSuccessful();
+
+        $this->assertSame(1, LessonAccessGrant::where('user_id', $listed->id)->count());
+    }
+
+    public function test_missing_cohort_file_fails_and_never_falls_back_to_auto_selection(): void
+    {
+        // ГЛАВНЫЙ инвариант правки. Опечатка в пути не должна превращать
+        // адресную раздачу в раздачу всем 923 — поэтому отказ, а не откат.
+        config()->set('features.membership_free_tier', true);
+        config()->set('membership.free_tier.daemon_apply', true); // даже с поднятым knob
+        config()->set('membership.free_tier.cohort_file', storage_path('app/no-such-cohort-'.uniqid().'.txt'));
+        [$candidate] = $this->dormantPayer();
+
+        $this->artisan('membership:grant-free-lesson --apply')->assertFailed();
+
+        $this->assertSame(0, LessonAccessGrant::where('user_id', $candidate->id)->count(),
+            'недоступный файл обязан остановить раздачу, а не расширить её до авто-подбора');
+    }
+
+    public function test_empty_cohort_file_fails_rather_than_reading_as_nobody(): void
+    {
+        // «Когорта задана и пуста» почти всегда означает сорванную выгрузку,
+        // а не решение никому не дарить; тихое «кандидатов нет» скрыло бы это.
+        config()->set('features.membership_free_tier', true);
+        $this->cohortFile(['# только комментарий']);
+        [$candidate] = $this->dormantPayer();
+
+        $this->artisan('membership:grant-free-lesson --apply')->assertFailed();
+
+        $this->assertSame(0, LessonAccessGrant::where('user_id', $candidate->id)->count());
+    }
+
+    public function test_cohort_file_accepts_email_exactly_like_the_campaign(): void
+    {
+        // Одна и та же строка списка обязана давать один и тот же охват, каким
+        // бы путём она ни попала в команду.
+        config()->set('features.membership_free_tier', true);
+        [$listed] = $this->dormantPayer();
+        $this->cohortFile([(string) $listed->email]);
+
+        $this->artisan('membership:grant-free-lesson --apply')->assertSuccessful();
+
+        $this->assertSame(1, LessonAccessGrant::where('user_id', $listed->id)->count());
+    }
+
     public function test_daemon_does_not_auto_grant_by_default_even_with_the_flag_on(): void
     {
         // H2899. Флаг ВКЛЮЧЁН — и демон всё равно ничего не пишет. Это и есть

@@ -70,7 +70,7 @@
     <section class="tab-panel" id="tab-obzor" x-show="active === 'obzor'" x-cloak>
         <div class="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mb-6">
             <div class="text-gray-600 prose prose-slate max-w-none">
-                {!! $course->description !!}
+                {!! $course->description_html !!}
             </div>
             <div class="mt-6 bg-gray-50 rounded-xl p-4 border border-gray-100">
                 <div class="flex justify-between text-sm font-bold text-gray-700 mb-2">

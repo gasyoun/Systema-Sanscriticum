@@ -31,6 +31,8 @@ Each wave names what it unblocks. Do not start a later wave's *product* work bef
 
 ### Wave 2 — Contextual links to samskrtam.ru
 
+**Handoff:** [H2918 (Grok 4.6) — samskrte.ru SEO H2 wave-2 contextual links to samskrtam.ru](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2918-Grok_Systema-Sanscriticum_samskrte-seo-h2-w2_16.08.26.md). Execute via `/go 2918` in a Grok chat. Do not start W3 here.
+
 **Unblocks:** Yandex/YATI depth without a second essay archive.
 
 - Related-reading blocks on `/k/{slug}` and the homepage that point **only** at samskrtam.ru URLs the agent has fetched as HTTP 200.
