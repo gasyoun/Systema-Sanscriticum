@@ -21,6 +21,9 @@ class HomepageAndCatalogMetaTest extends TestCase
         );
         $this->assertStringContainsString('курсы санскрита с нуля', mb_strtolower($html));
         $this->assertStringContainsString('#org', $html);
+        $this->assertStringContainsString('@samskrtamru', $html);
+        $this->assertStringContainsString('og:image:width', $html);
+        $this->assertStringContainsString('content="1200"', $html);
         $this->assertMatchesRegularExpression('/<h1[^>]*>.*курсы санскрита с нуля/su', mb_strtolower($html));
     }
 

@@ -26,6 +26,8 @@
     <meta property="og:title" content="{{ $pageTitle }}">
     <meta property="og:description" content="{{ $description }}">
     <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="{{ $siteName }}">
 
     <meta name="twitter:card" content="summary_large_image">
@@ -55,6 +57,7 @@
                     'sameAs' => [
                         'https://vk.com/samskrtamru',
                         'https://t.me/rusamskrtam',
+                        'https://www.youtube.com/@samskrtamru',
                     ],
                 ],
                 [

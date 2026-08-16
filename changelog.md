@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Added
+- **H2935 (Grok 4.6 `grok-4.6`): samskrte.ru SEO H2 wave-3 generated `/llms.txt`.** Public `GET /llms.txt` from [LlmsTxtController](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/LlmsTxtController.php) (live `is_visible` courses, published `/s/` articles, `/` `/online` `/slovar`; not a committed dump). Hourly cache, flushed with sitemap. Homepage + slovar + promo-legacy `og:image` width/height. Organization `sameAs` adds [YouTube @samskrtamru](https://www.youtube.com/@samskrtamru) (HTTP 200 on 16-08-2026). HSTS/Referrer-Policy and IndexNow skipped. No `robots.txt`, Metrika, money/checkout, or `is_indexable` edits. Tests: `tests/Feature/Seo/LlmsTxtTest.php`.
 
 ## [1.89.59] - 2026-08-16
 ### Added

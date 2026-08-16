@@ -28,6 +28,7 @@ use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\MarathonController;
 use App\Http\Controllers\MaterialsController;
 use App\Http\Controllers\MembershipController;
@@ -900,6 +901,9 @@ Route::middleware(['web', 'auth'])
 // --- SITEMAP ДЛЯ ПОИСКОВЫХ РОБОТОВ ---
 // ВАЖНО: до catch-all /{slug}
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
+// Generated /llms.txt (SAMSKRTE-SEO-H2 W3). Not a static dump.
+Route::get('/llms.txt', [LlmsTxtController::class, 'index'])->name('llms.txt');
 
 // --- ВЕРИФИКАЦИЯ СЕРТИФИКАТА (ссылка из QR-кода) ---
 // ВАЖНО: до catch-all /{slug}, публичный без auth.
