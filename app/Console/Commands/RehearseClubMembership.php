@@ -89,7 +89,11 @@ class RehearseClubMembership extends Command
         $this->record('3. полка записей', $shelfLesson instanceof Lesson ? 'PASS' : 'FAIL',
             $shelfCourse instanceof Course
                 ? 'курс «'.$shelfCourse->title.'», платный урок: '.($shelfLesson?->id ?? 'НЕТ')
-                : 'ни одного курса с club_included=true — наберите полку: membership:club-catalogue --apply');
+                : 'ни одного курса с club_included=true — наберите полку ЯВНЫМ списком: '
+                    .'membership:club-catalogue --course=<id|slug> --course=… --apply. '
+                    .'Голый --apply на проде 16-08-2026 предлагает НОЛЬ курсов: авто-подбор идёт через '
+                    .'Course::sellsRecordings(), а тот требует features.course_recordings_sales (OFF) '
+                    .'И is_completed=true (0 из 100 активных курсов)');
 
         if (! config('features.club_membership')) {
             $this->record('4. флаг', 'WARN', 'features.club_membership ВЫКЛЮЧЕН — право не подмешивается в гейты; включите CLUB_MEMBERSHIP=true перед репетицией');
