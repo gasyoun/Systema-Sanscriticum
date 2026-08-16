@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.89.59] - 2026-08-16
+### Added
+- **H2918 live evidence:** [SEO_H2_W2_EVIDENCE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_H2_W2_EVIDENCE_2026.md) — [PR #1774](https://github.com/gasyoun/Systema-Sanscriticum/pull/1774) `2ff193e0` deployed; homepage / mapped `/k/` / donate curls + href re-GET all PASS.
+
 ## [1.89.58] - 2026-08-16
 ### Added
 - **H2918 (Grok 4.6 `grok-4.6`): samskrte.ru SEO H2 wave-2 contextual links to samskrtam.ru.** Blade partial [samskrtam-related.blade.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/samskrtam-related.blade.php) on `/` (`_home` ≥3) and mapped `/k/` pages; unmapped slugs and donate render nothing. Allowlist [samskrtam_related.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/data/seo/samskrtam_related.json) + committed lock from `seo:lock-samskrtam-related`. Runtime never HTTP-fetches. Tests: `tests/Feature/Seo/SamskrtamRelatedTest.php`.
