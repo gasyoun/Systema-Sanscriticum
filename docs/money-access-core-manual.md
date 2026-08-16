@@ -1,6 +1,6 @@
 # Money / access-core systems manual — Systema-Sanscriticum
 
-_Created: 25-07-2026 · Last updated: 07-08-2026_
+_Created: 25-07-2026 · Last updated: 16-08-2026_
 
 The deep systems manual for the money and access core of the Systema-Sanscriticum LMS
 (samskrte.ru): how a payment becomes access, how a price is computed, how the bank
@@ -127,6 +127,42 @@ every financial aggregate by `real()`. When a real payment for the same scope la
 model: real `full` covers any conditional on the course; real `block_N` covers only
 conditional `block_N`) and closes the linked `PaymentPromise` once no open
 conditional rows remain on it.
+
+### 1.7 Club membership — the one access key that is never a `Payment` row (H2644, H2886)
+
+**Read this before concluding that "access key" and "paid tariff key" are the same
+thing.** They were, until the club shipped. Everything above resolves access from
+`payments.tariff`; club membership adds a **virtual** key that exists only for the
+duration of a request and is never persisted, so an expired period closes access
+immediately with no data migration and no stale `payments` row to clean up.
+
+- Source of truth: [`ClubEntitlement`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Membership/ClubEntitlement.php).
+  `extraTariffKeys($user, $course)` is what every gate merges into the owned-key
+  set; there is no other way club access enters the system.
+- The key is **not** hard-coded. Until H2886 it was a literal `full`; it now comes
+  from `courses.club_access_key` (empty ⇒ `full`), so a shelf entry can grant one
+  `block_N` of a course rather than the whole thing. The key vocabulary is exactly
+  §2's — nothing new was invented, and containment in §2 is unaffected because no
+  `Payment` row is created.
+- **Two gates, not one, and they are deliberately asymmetric.** `coversCourse()`
+  is boolean and governs *visibility* — it is what lets a member open the course
+  and lesson pages while belonging to no group of that course. The key governs
+  *unlocking*. A `block_1` scope therefore reads as "member sees the course, block 1
+  plays, the rest sits behind the normal paid gate". Collapsing the two would
+  either 404 the member out of the block they paid for, or open the whole course.
+- Membership grants **no homework review**: `HomeworkController` is untouched on
+  purpose, and that omission is the enforcement of "no curator time".
+- Shelf composition (`club_included` + `club_access_key`) is set by
+  `membership:club-catalogue --course=<id|slug> [--key=block_N] --apply`. Auto
+  selection runs through `Course::sellsRecordings()`, which needs **both**
+  `features.course_recordings_sales` and `is_completed=true`; when either is false
+  the command now fails rather than reporting "nothing to change"
+  ([Uprava FINDINGS §418](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)).
+- Rehearsal on prod: `membership:rehearse` (prerequisites only) and
+  `--apply --user=<id>` for the end-to-end run. Step **6b** asserts the negative
+  half — a lesson outside the granted block stays locked. Note `--apply` creates a
+  `Payment` row inside `withoutEvents()` and rolls it back, which is why it is a
+  human step, not an agent one.
 
 ---
 
