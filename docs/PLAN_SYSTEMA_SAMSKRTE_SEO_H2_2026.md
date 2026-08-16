@@ -2,7 +2,7 @@
 
 _Created: 16-08-2026 · Last updated: 16-08-2026_
 
-**Umbrella ID:** `SAMSKRTE-SEO-H2` · **Wave-1 handoff:** minted same pass (see starter below) · **Pack:** `/ask` samskrte.ru SEO 16-08-2026 · **Stem:** `*_SYSTEMA_SAMSKRTE_SEO_H2_*` · **Interview model:** Grok 4.6 (`grok-4.6`)
+**Umbrella ID:** `SAMSKRTE-SEO-H2` · **Wave-1 handoff:** [H2893 (Grok 4.6) — samskrte.ru SEO H2 wave-1 money-page hygiene](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2893-Grok_Systema-Sanscriticum_samskrte-seo-h2-w1_16.08.26.md) · **Pack:** `/ask` samskrte.ru SEO 16-08-2026 · **Stem:** `*_SYSTEMA_SAMSKRTE_SEO_H2_*` · **Interview model:** Grok 4.6 (`grok-4.6`)
 
 > One family: every layer file shares the stem **`SAMSKRTE_SEO_H2`**. This pack is the H2 *execution* plan. The status ledger for shipped P0/P1/P2 markup stays [SEO_ROADMAP_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_ROADMAP_2026.md) — do not rebuild that spine.
 
