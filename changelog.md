@@ -1,5 +1,6 @@
 ## [Unreleased]
 ### Fixed
+- **H2917 (Grok 4.6 `grok-4.6`): teacher `course.description` is sanitized before `{!! !!}`.** Residual #8 of [H2896](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2896-Grok_Systema-Sanscriticum_systema-app-vuln-audit-2026-08-16_16.08.26.md). `App\Support\RichHtml` (symfony/html-sanitizer, already locked) strips script / event handlers / `javascript:` on save and on read; shop + cabinet blades render `description_html`. Tests: `RichHtmlTest`, `CourseDescriptionHtmlTest`.
 - **H2903 (Grok 4.6 `grok-4.6`): Filament homework delete confirm no longer interpolates the student filename through `addslashes`.** Residual #7 of [H2896](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2896-Grok_Systema-Sanscriticum_systema-app-vuln-audit-2026-08-16_16.08.26.md). Staff thread now uses `@js(...)` like the student cabinet twin, so a name such as `x\');alert(1);//.jpg` cannot break out of the `onsubmit` confirm. Test: `HomeworkFilamentThreadXssTest`.
 
 ## [1.89.57] - 2026-08-16

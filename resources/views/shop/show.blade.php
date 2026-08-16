@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="prose prose-invert prose-lg prose-slate max-w-none lg:flex-1">
                     @if($course->description)
                         <div class="text-slate-300 leading-relaxed space-y-6 [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline">
-                            {!! $course->description !!}
+                            {!! $course->description_html !!}
                         </div>
                     @else
                         <p class="text-slate-500 italic">Подробное описание курса скоро появится.</p>

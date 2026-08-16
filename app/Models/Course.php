@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\RichHtml;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -76,6 +77,27 @@ class Course extends Model
      * (.../j/{id} или .../my/{name} → null). Единый источник для резолва
      * посещаемости — вебхук и Reports API приходят с этим id.
      */
+    /**
+     * Tiptap `simple` HTML for `{!! !!}` sinks. Sanitized on read so rows
+     * written before H2896 #8 cannot still carry script / event handlers.
+     */
+    public function getDescriptionHtmlAttribute(): string
+    {
+        return RichHtml::sanitize($this->attributes['description'] ?? null);
+    }
+
+    public function setDescriptionAttribute(?string $value): void
+    {
+        if ($value === null) {
+            $this->attributes['description'] = null;
+
+            return;
+        }
+
+        $trimmed = trim($value);
+        $this->attributes['description'] = $trimmed === '' ? '' : RichHtml::sanitize($trimmed);
+    }
+
     public function setZoomLinkAttribute(?string $value): void
     {
         $value = $value !== null ? trim($value) : null;
