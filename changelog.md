@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Added
+- **SAMSKRTE-SEO-H2 `/ask` pack (16-08-2026).** Five-layer plan for samskrte.ru SEO H2 ([PLAN_SYSTEMA_SAMSKRTE_SEO_H2_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_SEO_H2_2026.md)): W1 unique `/k/` meta + homepage/`/online` copy + sitemap donate/recorded priorities + non-executing P2 packet; W2 samskrtam contextual links; W3 generated `/llms.txt`; W4 human `/slovar` waves; W5 GSC/Yandex if credentials appear. 25 interview rulings. Does not rebuild P0 schema. Executor of the pack: Grok 4.6 (`grok-4.6`).
 
 ## [1.89.55] - 2026-08-16
 ### Added
