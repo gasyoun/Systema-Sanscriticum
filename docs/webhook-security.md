@@ -1,21 +1,22 @@
 # Безопасность вебхуков — матрица доступа и fail-policy
 
+_Created: 07-07-2026 · Last updated: 16-08-2026_
+
 Сводка по всем входящим вебхук-/push-эндпоинтам: чем аутентифицируется, что
 происходит при **пустом** секрете (fail-open / fail-closed) и где это покрыто
 тестом. Составлено в ходе security-прохода (roadmap A.3); **гэпов не найдено** —
 документ фиксирует текущую (корректную) посту́ру, чтобы ее не пере-выводить.
 
-> **Принцип «enforce-if-configured» (fail-open):** легаси-эндпоинты, которые были
-> в проде ДО появления проверки подписи, изначально при пустом секрете пропускали
-> запрос — чтобы включение секрета не сломало живой трафик. Telegram- и
-> VK-бот-вебхуки переведены на **fail-closed** 02-07-2026
+> **Fail-closed is the rule.** Telegram- and VK-bot webhooks have been fail-closed
+> since 02-07-2026
 > ([`VerifyTelegramBotWebhook`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Middleware/VerifyTelegramBotWebhook.php),
-> [`VerifyVkBotWebhook`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Middleware/VerifyVkBotWebhook.php));
-> остался один легаси-эндпоинт с enforce-if-configured — Zoom (см. ниже, там это
-> осознанный выбор из-за Event Subscription URL-валидации). Новые эндпоинты —
-> fail-closed с рождения (пустой секрет = эндпоинт выключен, 403/401). Перевод
-> оставшегося Zoom-эндпоинта в fail-closed — это деплой-действие (задать секрет),
-> а не правка кода; трекается в `Uprava/GTD_NEXT_ACTIONS.md`.
+> [`VerifyVkBotWebhook`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Middleware/VerifyVkBotWebhook.php)).
+> Zoom is also fail-closed in code: empty `ZOOM_WEBHOOK_SECRET` → 503
+> (`ZoomWebhookTest::missing_secret_returns_503_*`). URL-validation still answers
+> the HMAC challenge **after** the secret is present — it does not skip auth when
+> the secret is missing. New endpoints are fail-closed from birth (empty secret =
+> 403/401). Prod secrets for Telegram / VK / Zoom / lesson-sync were **SET** on
+> 16-08-2026 (H2896; values not logged).
 
 ## Матрица
 
@@ -24,7 +25,7 @@
 | `POST /api/webhooks/tochka` | `WebhookController::handleTochkaWebhook` | RS256 JWT (публичный ключ Точки, fallback-константа) | **fail-closed** (ключ всегда есть; невалид → 401) | 💰 выдает доступ | `TochkaWebhookTest` (подпись + идемпотентность) |
 | `POST /api/sync-lessons` | `Api\LessonController::sync` → `guard()` | `X-Secret-Key` = `services.lesson_sync.secret`, `hash_equals` | **fail-closed** (пусто → 401) | 🔒 пишет уроки | общий `guard()` покрыт `LessonFromZoomTest` |
 | `POST /api/lessons/from-zoom` | `Api\LessonController::storeFromZoom` → `guard()` | то же | **fail-closed** (пусто → 401) | 🔒 пишет уроки | `LessonFromZoomTest` (нет/неверный секрет → 401) |
-| `POST /api/webhooks/zoom` | `Webhooks\ZoomWebhookController::handle` | `x-zm-signature` = `v0=HMAC_SHA256("v0:{ts}:{body}")`, `ZOOM_WEBHOOK_SECRET` | **fail-open** (enforce-if-configured) | 🔒 пишет уроки/посещаемость | `ZoomWebhookTest` (плохая/нет подписи → 403, пустой секрет → пропуск) |
+| `POST /api/webhooks/zoom` | `Webhooks\ZoomWebhookController::handle` | `x-zm-signature` = `v0=HMAC_SHA256("v0:{ts}:{body}")`, `ZOOM_WEBHOOK_SECRET` | **fail-closed** (пусто → 503; неверная подпись → 403) | 🔒 пишет посещаемость | `ZoomWebhookTest` (`missing_secret_returns_503_*`) |
 | `POST /api/telegram/webhook` | `verify.tg.bot` (`VerifyTelegramBotWebhook`) | заголовок `X-Telegram-Bot-Api-Secret-Token`, `services.telegram.bot_webhook_secret` | **fail-closed** с 02-07-2026 (пусто → 403; ранее было enforce-if-configured) | уведомления | `BotWebhookSignatureTest` |
 | `POST /api/vk-webhook` | `verify.vk.bot` (`VerifyVkBotWebhook`) | body-поле `secret`, `services.vk.callback_secret`; `type=confirmation` пропускается | **fail-closed** с 02-07-2026 (пусто → 403; ранее было enforce-if-configured) | уведомления | `BotWebhookSignatureTest` |
 | `POST /api/webhooks/telegram-magnet[/{webhookKey}]` | `verify.tg.magnet` (`VerifyTelegramMagnetWebhook`) | `X-Telegram-Bot-Api-Secret-Token`; per-bot секрет `LandingBot.tg_webhook_secret` либо `MarketingSetting.tg_webhook_secret` | **fail-closed** (пусто → 403) | лид-магнит | `TelegramMagnetWebhookTest`, `LandingBotMagnetTest` |
@@ -39,7 +40,7 @@
 
 - **Сравнение секретов — `hash_equals`** во всех middleware (constant-time, защита от timing-атак).
 - **Секреты шифруются в БД.** `MarketingSetting` кастует `tg_bot_token`/`tg_webhook_secret`/`vk_access_token`/`vk_callback_secret`/`max_bot_token`/`max_webhook_secret`/`zapisi_bot_token`/`zapisi_webhook_secret` как `encrypted` (Eloquent cast, свойство `$casts`). Утечка дампа БД не раскрывает секреты.
-- **Все деньги-/доступ-критичные эндпоинты fail-closed** (Tochka, sync-lessons, from-zoom), **как и легаси-бот-вебхуки** (Telegram, VK — с 02-07-2026). Fail-open остается только у Zoom — там это осознанный enforce-if-configured (Event Subscription URL-валидация).
+- **Все деньги-/доступ-критичные эндпоинты fail-closed** (Tochka, sync-lessons, from-zoom), **как и легаси-бот-вебхуки** (Telegram, VK — с 02-07-2026) **и Zoom** (пусто → 503). URL-validation is a signed challenge once the secret exists; it is not a fail-open gate.
 - **Идемпотентность** на эффектах: Tochka — `lockForUpdate` на платеже; from-zoom/zoom-recording — upsert по `(course_id, group_id, lesson_date)`; vk/max-magnet — по токену привязки.
 
 ## Секрет Max в URL — особый риск
@@ -50,21 +51,17 @@
 `max_webhook_secret` в админке (`MarketingSetting`) → `php artisan max:set-magnet-webhook`.
 То же — после смены админ-аккаунта. См. `CLAUDE.md` (раздел lead-magnet bots).
 
-## Деплой-чек-лист (прод-секреты для уже fail-closed легаси-эндпоинтов)
+## Деплой-чек-лист (прод-секреты)
 
-Код для Telegram- и VK-бот-вебхуков уже fail-closed (правок не требуется) — до
-задания прод-секретов эти два эндпоинта просто отвечают 403 всем, включая
-настоящий Telegram/VK. Задать в проде (точные команды и статус — в
-[`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) § «Telegram — вопросы и действия оператору», пункт T3):
+**Closed 16-08-2026 (H2896).** Laravel config on the live box reports
+`TELEGRAM_BOT_WEBHOOK_SECRET`, `VK_CALLBACK_SECRET`, `ZOOM_WEBHOOK_SECRET`, and
+`LESSON_SYNC_SECRET` as **SET** (values not logged). Unsigned live POSTs:
+`/api/telegram/webhook` 403, `/api/vk-webhook` 403, `/api/webhooks/zoom` 403,
+`/api/webhooks/tochka` 401, `/api/sync-lessons` 401. Empty Zoom secret would
+return 503 — 403 means the secret is present and the signature check fired.
 
-- `services.telegram.bot_webhook_secret` (`TELEGRAM_BOT_WEBHOOK_SECRET`) +
-  переустановить вебхук Telegram с тем же `secret_token` через Bot API `setWebhook`.
-- `services.vk.callback_secret` (`VK_CALLBACK_SECRET`) + тот же секрет в настройках
-  Callback API группы VK.
+Rotate after an incident the same way as before: new env value + re-register
+with the provider (`setWebhook` secret_token / VK Callback API secret / Zoom
+Event Subscription secret).
 
-Остаётся один настоящий деплой-переключатель fail-open → fail-closed (код без правок,
-просто задать секрет, см. выше):
-- `ZOOM_WEBHOOK_SECRET` (+ Event Subscription на `/api/webhooks/zoom`).
-
-После задания секрета соответствующий эндпоинт автоматически переходит в fail-closed
-(правки кода не требуется).
+_Dr. Mārcis Gasūns_

@@ -1,6 +1,6 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 14-08-2026_
+_Created: 03-07-2026 · Last updated: 16-08-2026_
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).
@@ -50,11 +50,11 @@ platform upgrade.
 - ✅ **H071 money/access defects fully drained** (07-07-2026) — all findings from the 02-07
   adversarial review fixed, one PR each with a regression test; last two ([PR #360](https://github.com/gasyoun/Systema-Sanscriticum/pull/360))
   await manual MG review per the money-core no-auto-merge discipline.
-- 🟠 3 webhooks (Telegram-bot / VK-bot / Zoom) still **fail-open** pending a prod `.env` deploy step.
+- ✅ **Telegram / VK / Zoom webhook secrets SET on prod** and code fail-closed (16-08-2026, [H2896](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2896-Grok_Systema-Sanscriticum_systema-app-vuln-audit-2026-08-16_16.08.26.md)): unsigned POST → 403/401; empty Zoom secret would be 503, live Zoom returns 403 (secret present). Wave 1 webhook deploy item is closed.
 - ✅ **PHP SAST added** (07-07-2026) — [Semgrep job](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/semgrep.yml)
   (`p/php` + `p/security-audit` + `p/owasp-top-ten`), advisory/non-blocking during triage. CodeQL still
   can't cover PHP directly, but the gap is now filled.
-- 🟡 **Laravel 10.50.2** — security-EOL since ~Feb 2025 — on PHP 8.2.
+- ✅ **Laravel 13 + PHP 8.3.32** on prod (Wave 4 closed; snapshot below is historical).
 - ✅ 23 tracked PNG screenshots **audited** (05-07-2026) — all synthetic UI/design/marketing
   renders (blank certificate template, placeholder `Иван`/`mail@example.com` forms, module
   grids); no real student PII, none purged.
@@ -115,8 +115,7 @@ Recorded from the 03-07-2026 interview (MG rulings):
 
 ## Wave 1 — Kill the exposure (Q3 2026, now)
 
-**Unblocked by:** nothing — this is the entry point. **Complete** (05-07-2026) except the two
-MG-action items (webhook `.env` deploy).
+**Unblocked by:** nothing — this is the entry point. **Complete** (16-08-2026). History purge + branch protection landed 05-07-2026; prod webhook secrets confirmed SET 16-08-2026 (H2896). Residual optional: GitHub Support GC of orphaned SHA `8851c92`.
 
 - ✅ Enable GitHub secret scanning, push protection, Dependabot alerts + auto-fixes, private
   vulnerability reporting. **(done this session)**
@@ -129,11 +128,7 @@ MG-action items (webhook `.env` deploy).
 - ✅ **Audit the 23 tracked PNG screenshots** for embedded student PII — all synthetic
   UI/design renders (blank certificate, placeholder forms, module grids); none showed real
   student data, none purged. **(done 05-07-2026)** → **[H080](#handoffs)**
-- [ ] **Flip the 3 fail-open webhooks to fail-closed** — a prod deploy action (set
-  `TELEGRAM_BOT_WEBHOOK_SECRET`, `VK_CALLBACK_SECRET`, `ZOOM_WEBHOOK_SECRET` and register them
-  with each provider). Matrix:
-  [docs/webhook-security.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md).
-  Already a GTD `@DO` — **MG action**.
+- [x] **Flip the 3 fail-open webhooks to fail-closed** — code was already fail-closed; prod `.env` now has `TELEGRAM_BOT_WEBHOOK_SECRET`, `VK_CALLBACK_SECRET`, `ZOOM_WEBHOOK_SECRET` **SET** (probed 16-08-2026 via Laravel config, values not logged). Live unsigned POST: `/api/telegram/webhook` 403, `/api/vk-webhook` 403, `/api/webhooks/zoom` 403 (would be 503 if Zoom secret empty), `/api/webhooks/tochka` 401, `/api/sync-lessons` 401. Matrix: [docs/webhook-security.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md). → **[H2896](#handoffs)**
 - ✅ **Add required-review branch protection on `main`** — 1 approving review required, force-push
   + deletion blocked (codifies the "no auto-merge on money core" convention as a gate). **(done 05-07-2026)**
 
@@ -406,6 +401,8 @@ Agent-doable Wave-1/Wave-3 work is packaged as executable handoffs in
 - **H2480** — Wave 4 deploy-surface review (14-08-2026): no secret echo in
   `deploy.sh` / CI; Sail healthcheck no longer interpolates `${DB_PASSWORD}`.
   [H2480-Grok_Systema-Sanscriticum_security-w4-deploy-surface-review_08.08.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2480-Grok_Systema-Sanscriticum_security-w4-deploy-surface-review_08.08.26.md)
+- **H2896** — App vulnerability audit 16-08-2026: July AUDIT_PLAN items re-verified fixed; Wave 1 prod webhook secrets confirmed; residuals numbered in the handoff (latent `$fillable`, lecture-builder localhost fail-open, trusted-author `{!! !!}`, `ADMIN_EMAIL` default).
+  [H2896-Grok_Systema-Sanscriticum_systema-app-vuln-audit-2026-08-16_16.08.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2896-Grok_Systema-Sanscriticum_systema-app-vuln-audit-2026-08-16_16.08.26.md)
 - **H071** — Wave 2 money/access findings (pre-existing).
   [H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H071-Fable_Systema-Sanscriticum_systema_money_core_findings_03.07.26.md)
 
