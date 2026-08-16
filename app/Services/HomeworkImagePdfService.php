@@ -271,15 +271,21 @@ class HomeworkImagePdfService
         $isJpeg = in_array(strtolower($mime), ['image/jpeg', 'image/jpg'], true);
 
         if (extension_loaded('imagick')) {
-            // Для JPEG хинт jpeg:size заставляет libjpeg декодировать сразу в
-            // уменьшенном DCT-масштабе — оцениваем память по уменьшенным
-            // габаритам, а не по полным.
-            [$estW, $estH] = $isJpeg
+            // Хинт jpeg:size заставляет libjpeg декодировать сразу в уменьшенном
+            // DCT-масштабе — оцениваем память по уменьшенным габаритам, а не по
+            // полным. Ставим его ТОЛЬКО когда исходник заведомо больше хинта:
+            // для маленького JPEG libjpeg по нему масштабирует ВВЕРХ (640×480 с
+            // хинтом 3200 декодировался в 1280×960 — поймано CI-тестом
+            // small_image_keeps_its_dimensions), а при неизвестных габаритах
+            // рисковать апскейлом нельзя.
+            $useJpegHint = $isJpeg && $width > 0 && max($width, $height) > 2 * $maxEdge;
+
+            [$estW, $estH] = $useJpegHint
                 ? $this->jpegHintedDimensions($width, $height, $maxEdge)
                 : [$width, $height];
 
             if ($width === 0 || RasterImageMemory::fits($estW, $estH, self::BPP_IMAGICK)) {
-                $jpeg = $this->convertWithImagick($bytes, $maxEdge, $quality, $isJpeg);
+                $jpeg = $this->convertWithImagick($bytes, $maxEdge, $quality, $useJpegHint);
                 if ($jpeg !== null) {
                     return $jpeg;
                 }
@@ -350,7 +356,7 @@ class HomeworkImagePdfService
         return [$width, $height];
     }
 
-    private function convertWithImagick(string $bytes, int $maxEdge, int $quality, bool $isJpeg): ?string
+    private function convertWithImagick(string $bytes, int $maxEdge, int $quality, bool $useJpegHint): ?string
     {
         try {
             $im = new \Imagick;
@@ -360,7 +366,9 @@ class HomeworkImagePdfService
             $im->setResourceLimit(\Imagick::RESOURCETYPE_MEMORY, 64 * 1024 * 1024);
             $im->setResourceLimit(\Imagick::RESOURCETYPE_MAP, 128 * 1024 * 1024);
 
-            if ($isJpeg) {
+            // Только для JPEG, заведомо большего хинта: на маленьком libjpeg
+            // масштабирует по хинту ВВЕРХ (см. convertToPdfJpeg).
+            if ($useJpegHint) {
                 $im->setOption('jpeg:size', (2 * $maxEdge).'x'.(2 * $maxEdge));
             }
 
