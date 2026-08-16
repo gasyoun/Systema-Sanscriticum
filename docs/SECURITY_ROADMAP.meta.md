@@ -1,6 +1,6 @@
 # SECURITY_ROADMAP.meta.md — metadoc about `SECURITY_ROADMAP`
 
-_Created: 13-07-2026 · Last updated: 14-08-2026_
+_Created: 13-07-2026 · Last updated: 16-08-2026_
 
 Companion metadoc for the [Security & Vulnerability-Avoidance Roadmap](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SECURITY_ROADMAP.md) — the durable record of why that roadmap exists, who consumes it, and how it stays honest.
 
@@ -15,14 +15,14 @@ Companion metadoc for the [Security & Vulnerability-Avoidance Roadmap](https://g
 
 - **Subject created:** 03-07-2026 (from a `/roadmap-interview`, Fable 5 `claude-fable-5`, grounded in a posture audit).
 - **Metadoc authored:** 13-07-2026 (H887, Opus 4.8 `claude-opus-4-8`).
-- **Next hardening:** remaining live front is Wave 1 webhook `.env` deploy (MG `@DO` action — Telegram/VK/Zoom fail-closed secrets). Wave 3 Dependabot auto-merge keep-green closed (H2476, 14-08-2026). Wave 4 is closed (Laravel/PHP H2478/H2529, dependency posture H2479, deploy-surface H2480).
+- **Next hardening:** Wave 1 webhook `.env` deploy **closed 16-08-2026** (H2896 — secrets SET on prod, unsigned POSTs 403/401). Optional leftover: GitHub Support GC of orphaned SHA `8851c92`. Wave 3/4 already closed (H2476 / H2478–H2480 / H2529). App residuals from H2896 are latent hardening, not Wave-1 exposure.
 
 ## Ranked improvement backlog
 
 | # | Improvement | Why | Status |
 |---|---|---|---|
 | 1 | Make the Semgrep PHP SAST job a required, blocking gate after triage | Wave 3 exit criterion demands CI catch new PHP defects before merge, not merely advise | ✅ delivered by H885 (PR #509) — subject's "flip to required" line should be reconciled to done |
-| 2 | Flip the 3 fail-open webhooks (Telegram/VK/Zoom) to fail-closed via prod `.env` | Only remaining Wave 1 exit-criterion gap; inbound webhooks stay unauthenticated until deployed | parked (blocked on MG prod deploy action, tracked as a GTD `@DO`) |
+| 2 | Flip the 3 fail-open webhooks (Telegram/VK/Zoom) to fail-closed via prod `.env` | Wave 1 exit-criterion gap | ✅ closed 16-08-2026 (H2896): code fail-closed + prod secrets SET; live unsigned POST 403/401 |
 | 3 | Execute Wave 4 platform upgrade (Laravel 10→12, PHP 8.2→8.3) | Framework is security-EOL since ~Feb 2025; the largest standing exposure | ✅ done (H2478 doc-close 09-08-2026): Laravel v12.64.0 live; PHP 8.3.32 on prod nginx/fpm/Horizon; CI matrix PHP 8.3 only |
 | 4 | Close out the orphaned `8851c92` SHA via a GitHub Support GC request | Purged PII is still fetchable by exact 40-char SHA until GitHub GC | parked (optional acceleration; needs MG-account support ticket) |
 | 5 | Reconcile stale in-doc statuses after H885 (Semgrep now required) | The doc still reads "advisory / flip once tuned"; drift misleads a future reader | parked (doc-refresh pass, low risk) |
