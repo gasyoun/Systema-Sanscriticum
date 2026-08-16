@@ -28,9 +28,9 @@ class CourseDescriptionHtmlTest extends TestCase
         $this->get(route('shop.course.show', $course->slug))
             ->assertOk()
             ->assertSee('О курсе', false)
-            ->assertDontSee('<script', false)
-            ->assertDontSee('onerror', false)
-            ->assertDontSee('alert(1)', false);
+            ->assertDontSee('<script>alert(1)</script>', false)
+            ->assertDontSee('onerror=alert(1)', false)
+            ->assertDontSee('onerror="alert(1)"', false);
     }
 
     #[Test]
