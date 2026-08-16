@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Membership;
 
 use App\Models\User;
+use App\Enums\MembershipTier;
 
 /**
  * Лендинг + прайсинг клуба (H2645): страница живёт только при включённом
@@ -69,6 +70,7 @@ final class ClubLandingPageTest extends MembershipTestCase
 
         // Уровни.
         $response->assertSee('Свободный');
+        $response->assertSee('Базовый');
         $response->assertSee('Клуб');
 
         // Исключения — на странице, не спрятаны.
@@ -76,6 +78,24 @@ final class ClubLandingPageTest extends MembershipTestCase
         $response->assertSee('Проверка домашних заданий');
         $response->assertSee('Сертификат');
         $response->assertSee('Платные курсы, которые вы не покупали');
+    }
+
+    public function test_tiered_landing_requires_and_renders_basic_and_club_terms(): void
+    {
+        config()->set('features.membership_tiered', true);
+        foreach ([1, 3, 12] as $months) {
+            $this->clubTariff($months, MembershipTier::Basic);
+            $this->clubTariff($months, MembershipTier::Club);
+        }
+
+        $this->get('/klub')
+            ->assertOk()
+            ->assertSee('Базовый')
+            ->assertSee('Клуб')
+            ->assertSee('2 850')
+            ->assertSee('10 200')
+            ->assertSee('5 700')
+            ->assertSee('20 400');
     }
 
     public function test_retained_access_statement_matches_cabinet_verbatim(): void

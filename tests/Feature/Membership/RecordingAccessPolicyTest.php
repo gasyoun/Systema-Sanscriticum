@@ -153,4 +153,19 @@ final class RecordingAccessPolicyTest extends MembershipTestCase
             ->expectsOutputToContain('pilot=NOT READY')
             ->assertSuccessful();
     }
+
+    public function test_rehearsal_accepts_the_complete_basic_club_term_matrix(): void
+    {
+        foreach ([MembershipTier::Basic, MembershipTier::Club] as $tier) {
+            foreach ([1, 3, 12] as $months) {
+                $this->clubTariff($months, $tier);
+            }
+        }
+
+        $this->artisan('membership:rehearse')
+            ->expectsOutputToContain('tiers + 1/3/12')
+            ->expectsOutputToContain('Free/Basic/Club/Top')
+            ->expectsOutputToContain('recording rollout')
+            ->assertSuccessful();
+    }
 }
