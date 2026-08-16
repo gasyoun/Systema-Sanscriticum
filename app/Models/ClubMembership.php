@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\MembershipTier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,6 +40,7 @@ class ClubMembership extends Model
     protected $fillable = [
         'user_id',
         'payment_id',
+        'tier_code',
         'term_months',
         'starts_at',
         'ends_at',
@@ -52,6 +54,7 @@ class ClubMembership extends Model
 
     protected $casts = [
         'term_months' => 'integer',
+        'tier_code' => MembershipTier::class,
         'grace_days' => 'integer',
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',

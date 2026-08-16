@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H2744 (Codex `GPT-5`): explicit Free / Basic / Club membership and a recording-only October gate.** `MembershipTier` is stored on tariffs and periods; Basic ₽1,000 and Club ₽2,000 use exact 1/3/12-month totals with 0/5/15% discounts, keep three-day grace and never create skipped-month debt. Legacy H2644 rows are classified only by a guarded dry-run command with exact-count confirmation—never from amounts. `RecordingAccessPolicy` adds September shadow verdicts, an exactly-20-user/48-hour pilot, full enforcement and immediate restoration after Club payment while leaving schedule, live links, lesson text, homework and communication purchase-based. Top is capped behind an independent OFF flag. Rollout/rollback: [docs/MEMBERSHIP_THREE_TIER_RECORDING_GATE_2026.md](docs/MEMBERSHIP_THREE_TIER_RECORDING_GATE_2026.md). Tests: membership 89/259; focused H2744 38/149; Pint and reversible SQLite migration green. All new flags default OFF; merge/deploy is dark.
+
 ## [1.89.59] - 2026-08-16
 ### Added
 - **H2918 live evidence:** [SEO_H2_W2_EVIDENCE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_H2_W2_EVIDENCE_2026.md) — [PR #1774](https://github.com/gasyoun/Systema-Sanscriticum/pull/1774) `2ff193e0` deployed; homepage / mapped `/k/` / donate curls + href re-GET all PASS.
@@ -2602,4 +2605,3 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 [1.1.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.0.0
-

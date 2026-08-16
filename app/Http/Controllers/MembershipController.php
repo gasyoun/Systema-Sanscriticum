@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\MembershipTier;
 use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\Lesson;
@@ -49,14 +50,29 @@ final class MembershipController extends Controller
         $tariffs = $course->tariffs()
             ->where('is_active', true)
             ->whereNotNull('membership_months')
+            ->when(! (bool) config('features.membership_top'), fn ($query) => $query->where(fn ($tiers) => $tiers
+                ->whereNull('membership_tier')
+                ->orWhere('membership_tier', '!=', MembershipTier::Top->value)))
+            ->orderBy('membership_tier')
             ->orderBy('membership_months')
             ->get();
         abort_if($tariffs->isEmpty(), 404);
 
+        $byTier = $tariffs->groupBy(fn ($tariff): string => $tariff->membership_tier?->value ?? MembershipTier::Club->value);
+        if ((bool) config('features.membership_tiered')) {
+            abort_if(($byTier[MembershipTier::Basic->value] ?? collect())->isEmpty(), 404);
+            abort_if(($byTier[MembershipTier::Club->value] ?? collect())->isEmpty(), 404);
+        }
+
+        $clubTariffs = $byTier[MembershipTier::Club->value] ?? $tariffs;
+        $basicTariffs = $byTier[MembershipTier::Basic->value] ?? collect();
+
         return view('shop.club', [
             'course' => $course,
             'tariffs' => $tariffs,
-            'monthly' => $tariffs->firstWhere('membership_months', 1) ?? $tariffs->first(),
+            'monthly' => $clubTariffs->firstWhere('membership_months', 1) ?? $clubTariffs->first(),
+            'basicMonthly' => $basicTariffs->firstWhere('membership_months', 1),
+            'tariffsByTier' => $byTier,
             'shelfCount' => Course::query()->where('club_included', true)->count(),
             'freeLessonsCount' => Lesson::query()->shownOnMain()->count(),
             'freeTierOn' => (bool) config('features.membership_free_tier'),

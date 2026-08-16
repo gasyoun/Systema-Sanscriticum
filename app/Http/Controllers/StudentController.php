@@ -36,6 +36,7 @@ use App\Services\Leaderboard\LeaderboardService;
 use App\Services\Learning\ExternalLearningProgressService;
 use App\Services\Membership\ClubEntitlement;
 use App\Services\Membership\ClubMembershipService;
+use App\Services\Membership\RecordingAccessPolicy;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Services\StudentDebtsService;
@@ -967,6 +968,16 @@ class StudentController extends Controller
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок доступен в Блоке '.$lesson->block_number.'. Для просмотра необходимо оплатить доступ.');
         }
+
+        // H2744: this decision gates only the recording payload. The lesson
+        // route, texts, homework, schedule and live links remain purchase-based.
+        $recordingAccess = app(RecordingAccessPolicy::class)->decide(
+            $user,
+            $course,
+            $lesson,
+            $hasLessonGrant,
+            'web_recording',
+        );
         // ==========================================
         // --- ТРЕКИНГ ПРОСМОТРА УРОКА (async) ---
         // ==========================================
@@ -1071,7 +1082,7 @@ class StudentController extends Controller
         }
 
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl'));
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl', 'recordingAccess'));
     }
 
     /**

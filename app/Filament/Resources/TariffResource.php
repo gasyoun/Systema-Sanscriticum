@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\MembershipTier;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\TariffResource\Pages;
 use App\Models\CourseBlock;
@@ -150,6 +151,24 @@ class TariffResource extends Resource
                             ->label('Тариф-запись (evergreen)')
                             ->default(false)
                             ->helperText('Продаёт ЗАПИСЬ завершённого курса, а не участие в живом потоке. Доступ и цена — как обычно (ключ full/block_N, тот же чекаут). На лендинге завершённого курса CTA станет «Купить запись» (когда включён флаг course_recordings_sales).'),
+
+                        Forms\Components\Select::make('membership_tier')
+                            ->label('Уровень членства')
+                            ->options([
+                                MembershipTier::Basic->value => 'Базовый — 1 000 ₽/мес',
+                                MembershipTier::Club->value => 'Клуб — 2 000 ₽/мес',
+                                MembershipTier::Top->value => 'Top — закрыт до отдельного go/no-go',
+                            ])
+                            ->nullable()
+                            ->live()
+                            ->helperText('Не выводится из цены. Top остаётся недоступным при MEMBERSHIP_TOP=false.'),
+
+                        Forms\Components\Select::make('membership_months')
+                            ->label('Срок членства')
+                            ->options([1 => '1 месяц · 0%', 3 => '3 месяца · −5%', 12 => '12 месяцев · −15%'])
+                            ->required(fn (Forms\Get $get) => filled($get('membership_tier')))
+                            ->nullable()
+                            ->helperText('Итог: Basic 1/3/12 = 1 000 / 2 850 / 10 200 ₽; Club = 2 000 / 5 700 / 20 400 ₽.'),
                     ])->columns(2),
             ]);
     }
@@ -216,6 +235,11 @@ class TariffResource extends Resource
                     ->trueIcon('heroicon-o-film')
                     ->falseIcon('heroicon-o-minus-small')
                     ->falseColor('gray'),
+
+                Tables\Columns\TextColumn::make('membership_tier')
+                    ->label('Членство')
+                    ->badge()
+                    ->formatStateUsing(fn ($state): string => $state instanceof MembershipTier ? $state->value : (string) ($state ?? '—')),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('course_id')

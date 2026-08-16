@@ -62,8 +62,8 @@
             </div>
         </div>
 
-        {{-- ═══════════ Два уровня: что входит и что НЕ входит ═══════════ --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20">
+        {{-- ═══════════ Free / Basic / Club ═══════════ --}}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-20">
 
             {{-- Свободный --}}
             <div class="bg-[#101521] border border-[#1F2636] rounded-2xl p-8 flex flex-col">
@@ -130,6 +130,22 @@
                 </div>
             </div>
 
+            {{-- Базовый --}}
+            <div class="bg-[#101521] border border-[#38BDF8]/40 rounded-2xl p-8 flex flex-col">
+                <div class="flex items-baseline justify-between mb-1">
+                    <h2 class="text-2xl font-extrabold text-white">Базовый</h2>
+                    <span class="text-2xl font-extrabold text-white">{{ number_format((float) ($basicMonthly?->price ?? 1000), 0, '.', ' ') }} ₽<span class="text-sm text-slate-400 font-bold">/мес</span></span>
+                </div>
+                <p class="text-sm text-slate-500 mb-6">Улучшенный кабинет без архива видео.</p>
+                <ul class="space-y-3 mb-6 text-slate-300 text-sm">
+                    <li><i class="fas fa-check text-emerald-400 mr-2"></i>Библиотека и стандартные упражнения</li>
+                    <li><i class="fas fa-check text-emerald-400 mr-2"></i>Улучшения кабинета и льготы</li>
+                    <li><i class="fas fa-xmark text-rose-400/80 mr-2"></i>Записи купленных курсов не входят</li>
+                    <li><i class="fas fa-xmark text-rose-400/80 mr-2"></i>Персональные упражнения и максимум инструментов не входят</li>
+                </ul>
+                <a href="#tarify" class="mt-auto flex items-center justify-center w-full px-4 py-3 bg-[#141A28] border border-[#38BDF8]/40 text-white text-sm font-bold rounded-xl">Выбрать срок</a>
+            </div>
+
             {{-- Клуб --}}
             <div class="bg-[#101521] border-2 border-brand/50 rounded-2xl p-8 flex flex-col relative">
                 <div class="flex items-baseline justify-between mb-1">
@@ -194,13 +210,20 @@
                 Одно и то же наполнение на любой срок. Разница только в цене месяца.
             </p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($tariffs as $tariff)
                     @php
                         $months = max(1, (int) $tariff->membership_months);
                         $perMonth = (int) round(((float) $tariff->price) / $months);
+                        $tierLabel = match($tariff->membership_tier?->value) {
+                            'basic' => 'Базовый',
+                            'club', null => 'Клуб',
+                            'top' => 'Top',
+                            default => $tariff->membership_tier?->value,
+                        };
                     @endphp
                     <div class="bg-[#101521] border {{ $months === 12 ? 'border-brand/50' : 'border-[#1F2636]' }} rounded-2xl p-6 flex flex-col">
+                        <p class="text-[11px] font-black uppercase tracking-widest text-brand mb-2">{{ $tierLabel }}</p>
                         <h3 class="text-lg font-bold text-white mb-2">{{ $tariff->title }}</h3>
                         <div class="mb-1">
                             <span class="text-3xl font-extrabold text-white tabular-nums">{{ number_format((float) $tariff->price, 0, '.', ' ') }}</span>

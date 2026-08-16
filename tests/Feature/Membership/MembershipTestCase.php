@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Membership;
 
+use App\Enums\MembershipTier;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Lesson;
@@ -70,20 +71,21 @@ abstract class MembershipTestCase extends TestCase
     }
 
     /** Клубный тариф на N месяцев — ключ доступа станет `club_{N}m`. */
-    protected function clubTariff(int $months): Tariff
+    protected function clubTariff(int $months, MembershipTier $tier = MembershipTier::Club): Tariff
     {
         return Tariff::factory()->create([
             'course_id' => $this->clubCourse->id,
-            'title' => 'Клуб — '.$months.' мес',
-            'price' => $months * 1500,
+            'title' => $tier->value.' — '.$months.' мес',
+            'price' => $tier->priceForTerm($months),
             'membership_months' => $months,
+            'membership_tier' => $tier,
         ]);
     }
 
     /** Оплата клубного тарифа по обычному пути (через processSuccessfulPayment). */
-    protected function payClub(User $user, int $months = 1): Payment
+    protected function payClub(User $user, int $months = 1, MembershipTier $tier = MembershipTier::Club): Payment
     {
-        $tariff = $this->clubTariff($months);
+        $tariff = $this->clubTariff($months, $tier);
 
         return Payment::create([
             'user_id' => $user->id,
