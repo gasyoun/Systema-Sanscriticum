@@ -48,6 +48,10 @@ abstract class MembershipTestCase extends TestCase
         config()->set('membership.club.course_slug', 'club');
         config()->set('membership.club.grace_days', 3);
         config()->set('membership.free_tier.grant_days', 30);
+        // H2915: по умолчанию эти тесты говорят про режим АВТО-ПОДБОРА, значит
+        // файла когорты нет. Тесты про файл ставят путь сами — так режим виден
+        // в самом тесте, а не наследуется молча из боевого дефолта конфига.
+        config()->set('membership.free_tier.cohort_file', '');
 
         $this->clubCourse = Course::factory()->create(['slug' => 'club', 'title' => 'Клуб']);
         $this->clubGroup = Group::create(['name' => 'Клуб — участники']);

@@ -175,6 +175,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `FILESYSTEM_DISK` | optional | `'local'` | config/filesystems.php:16 |
 | `FLAGSHIP_CTA_AB` | optional | `false` | config/features.php:974 |
 | `FLAGSHIP_EXPERIMENT_STARTED_AT` | optional | `''` | config/flagship_experiments.php:28 |
+| `FREE_TIER_COHORT_FILE` | optional | `'membership/free_tier_cohort.txt'` | config/membership.php:104 |
 | `FREE_TIER_DAEMON_APPLY` | optional | `false` | config/membership.php:82 |
 | `FREE_TIER_GRANT_DAYS` | optional | `30` | config/membership.php:52 |
 | `FREE_TIER_GRANT_REASON` | optional | `'free_tier_monthly'` | config/membership.php:60 |
