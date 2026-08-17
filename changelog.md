@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.89.65] - 2026-08-17
 ### Fixed
 - **H2994 (Grok 4.6 `grok-4.6`): Filament `/admin` больше не падает HTTP 500 после root-`artisan optimize`.** `deploy.sh` компилирует Blade от root; php-fpm (`www-data`) затем не может `touch()` скомпилированный файл (`Utime failed: Operation not permitted` в `BladeCompiler.php`). Главная и `/login` оставались 200, `cabinet:probe` краснел на `/admin`. На проде снят владелец с 661 файла в `storage/framework/views`; каждый следующий деплой делает `chown` после `optimize`. Тест: `DeploySurfaceSecretsTest::test_deploy_sh_chowns_compiled_views_after_optimize`. Executor: Grok 4.6 (`grok-4.6`).
 - **H2988 (Grok 4.6 `grok-4.6`): `telegram-support:sync` больше не крутит 120-секундный холодный старт сразу после kill watchdog'а.** На проде 16–17-08-2026 сторож H1915 отработал правильно (`exit 75`, не 10 470 с): 18 таймаутов за ~100 мин при здоровом заходе 11–41 с. Уборка убивает демон сессии, следующая минута сразу поднимает его заново на том же DC — и снова упирается в 120 с. После kill ставится кулдаун 600 с (`TELEGRAM_SUPPORT_SYNC_TIMEOUT_COOLDOWN_SECONDS`, 0 выключает): живой MTProto пропускается, `schedule:run` отпускает flock. Потолок 120 с, `exit 75` и запрет `runInBackground()` не тронуты. В лог таймаута пишется фаза (`client_start` / `history:{peer}` / `drain_pending`). Тесты: `MadelineSyncGuardsTest`.
