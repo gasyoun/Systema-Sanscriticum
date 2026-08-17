@@ -20,7 +20,8 @@
     <div class="top"><div><div class="pill">каталог</div><h1>Осень 2026</h1></div><div class="version">feed {{ $feed['version'] }}</div></div>
     <section class="grid">
         @forelse($feed['offers'] as $offer)
-            <article class="card" data-offer-id="{{ $offer['id'] }}" data-commercial='@json(collect($offer)->only(["id","starts_on","status","price_rub","tariff_id","tier","term_months"]))'>
+            @php($commercial = collect($offer)->only(['id', 'starts_on', 'status', 'price_rub', 'tariff_id', 'tier', 'term_months']))
+            <article class="card" data-offer-id="{{ $offer['id'] }}" data-commercial='@json($commercial)'>
                 <span class="pill">{{ $offer['kind'] }} · {{ $offer['status'] }}</span><h2>{{ $offer['title'] }}</h2>
                 <div class="meta">Старт {{ \Illuminate\Support\Carbon::parse($offer['starts_on'])->format('d.m.Y') }}@if($offer['term_months']) · {{ $offer['term_months'] }} мес.@endif</div>
                 <div class="price">{{ number_format($offer['price_rub'], 0, ',', ' ') }} ₽</div>

@@ -96,7 +96,12 @@ final class MembershipCommerceFeedTest extends MembershipTestCase
     public function test_private_archive_is_payment_derived_noindex_non_enumerated_audited_and_killable(): void
     {
         $source = Course::factory()->create(['slug' => 'eligible-yoga', 'is_visible' => true, 'is_active' => true]);
-        $offer = Course::factory()->create(['slug' => 'private-yoga-offer', 'is_visible' => true, 'is_active' => true]);
+        $offer = Course::factory()->create([
+            'title' => 'H2745 PRIVATE YOGA OFFER SENTINEL',
+            'slug' => 'private-yoga-offer',
+            'is_visible' => true,
+            'is_active' => true,
+        ]);
         $tariff = Tariff::create([
             'course_id' => $offer->id,
             'title' => 'Записи целиком',

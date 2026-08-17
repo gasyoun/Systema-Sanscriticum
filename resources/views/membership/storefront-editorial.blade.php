@@ -20,7 +20,8 @@
 <body><main data-storefront="samskrte" data-feed-version="{{ $feed['version'] }}">
     <header><div class="eyebrow">Общество ревнителей санскрита · календарь</div><h1>Осень<br>2026</h1><p class="intro">Даты, статусы и цены берутся из одного канонического потока Systema. Здесь — редакционный календарь: сначала время, затем курс.</p></header>
     @forelse($feed['offers'] as $offer)
-        <article data-offer-id="{{ $offer['id'] }}" data-commercial='@json(collect($offer)->only(["id","starts_on","status","price_rub","tariff_id","tier","term_months"]))'>
+        @php($commercial = collect($offer)->only(['id', 'starts_on', 'status', 'price_rub', 'tariff_id', 'tier', 'term_months']))
+        <article data-offer-id="{{ $offer['id'] }}" data-commercial='@json($commercial)'>
             <div class="date">{{ \Illuminate\Support\Carbon::parse($offer['starts_on'])->translatedFormat('d F') }}</div>
             <div><h2>{{ $offer['title'] }}</h2><div class="meta">{{ $offer['status'] }} · {{ number_format($offer['price_rub'], 0, ',', ' ') }} ₽@if($offer['term_months']) · {{ $offer['term_months'] }} мес.@endif</div></div>
             <a class="buy" href="{{ $offer['checkout_urls'][$sourceSite] }}">Выбрать →</a>
