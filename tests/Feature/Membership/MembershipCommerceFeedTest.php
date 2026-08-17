@@ -201,7 +201,7 @@ final class MembershipCommerceFeedTest extends MembershipTestCase
     public function test_anonymous_checkout_source_survives_account_creation(): void
     {
         config()->set('features.membership_funnel_analytics', true);
-        [$course, $tariff] = $this->autumnCourse('anonymous-source', '2026-09-22', 7200);
+        $tariff = $this->clubTariff(1, MembershipTier::Basic);
 
         $this->get(route('checkout.show', [
             'tariff' => $tariff,
@@ -209,11 +209,14 @@ final class MembershipCommerceFeedTest extends MembershipTestCase
         ]))->assertOk();
 
         $user = User::factory()->create();
-        $payment = Payment::factory()->for($user)->create([
-            'course_id' => $course->id,
+        $payment = Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $tariff->course_id,
+            'amount' => $tariff->price,
             'tariff' => $tariff->accessKey(),
-            'status' => Payment::STATUS_PAID,
-        ]);
+            'status' => 'paid',
+            'is_conditional' => false,
+        ]));
 
         app(MembershipFunnelAnalytics::class)->recordPayment($payment);
 
