@@ -134,6 +134,37 @@ class StorageUsageWatchdogTest extends TestCase
     }
 
     /** @test */
+    public function unreadable_nested_directory_does_not_crash_the_watchdog(): void
+    {
+        if (\PHP_OS_FAMILY === 'Windows') {
+            $this->markTestSkipped('POSIX directory modes');
+        }
+
+        $dir = storage_path('app/storage-watch-test/secret');
+        @mkdir($dir, 0700, true);
+        file_put_contents($dir.'/x.bin', 'x');
+        chmod($dir, 0000);
+
+        config([
+            'storage_watch.watched' => ['storage-watch-test' => 100],
+            'storage_watch.total_mb' => 100000,
+            'storage_watch.min_free_disk_mb' => 0,
+        ]);
+
+        try {
+            $snapshot = app(StorageUsageService::class)->snapshot();
+        } finally {
+            chmod($dir, 0700);
+            @unlink($dir.'/x.bin');
+            @rmdir($dir);
+            @rmdir(storage_path('app/storage-watch-test'));
+        }
+
+        $this->assertIsArray($snapshot);
+        $this->assertArrayHasKey('ok', $snapshot);
+    }
+
+    /** @test */
     public function missing_directory_measures_as_zero_not_as_an_error(): void
     {
         config([

@@ -38,10 +38,11 @@ return [
                     base_path('vendor'),
                     base_path('node_modules'),
                     storage_path('app/livewire-tmp'),
+                    storage_path('app/telegram-harvest/pilot'),
                 ],
 
                 'follow_links' => false,
-                'ignore_unreadable_directories' => false,
+                'ignore_unreadable_directories' => true,
                 'relative_path' => null,
             ],
 

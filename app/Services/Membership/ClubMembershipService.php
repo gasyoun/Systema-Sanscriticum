@@ -192,24 +192,7 @@ final class ClubMembershipService
 
     public function activeTierFor(User $user): ?MembershipTier
     {
-        $memberships = ClubMembership::query()
-            ->where('user_id', $user->id)
-            ->active()
-            ->get(['tier_code']);
-
-        if ($memberships->isEmpty()) {
-            return null;
-        }
-
-        if (! (bool) config('features.membership_tiered', false)) {
-            return MembershipTier::Club;
-        }
-
-        return $memberships
-            ->map(fn (ClubMembership $membership) => $membership->tier_code)
-            ->filter(fn ($tier) => $tier instanceof MembershipTier)
-            ->sortByDesc(fn (MembershipTier $tier) => $tier->rank())
-            ->first();
+        return $this->entitlement->storedActiveTierFor($user);
     }
 
     /**

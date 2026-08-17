@@ -127,24 +127,33 @@ class StorageUsageService
             return [0, false]; // каталог ещё не создан — это ноль, а не ошибка
         }
 
+        if (! is_readable($absolutePath)) {
+            return [0, true];
+        }
+
         $bytes = 0;
         $seen = 0;
 
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($absolutePath, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::LEAVES_ONLY
-        );
+        try {
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($absolutePath, FilesystemIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::LEAVES_ONLY,
+                RecursiveIteratorIterator::CATCH_GET_CHILD
+            );
 
-        foreach ($iterator as $file) {
-            if (! $file->isFile()) {
-                continue;
+            foreach ($iterator as $file) {
+                if (! $file->isFile()) {
+                    continue;
+                }
+
+                $bytes += (int) $file->getSize();
+
+                if (++$seen >= $fileCap && $fileCap > 0) {
+                    return [$bytes, true];
+                }
             }
-
-            $bytes += (int) $file->getSize();
-
-            if (++$seen >= $fileCap && $fileCap > 0) {
-                return [$bytes, true];
-            }
+        } catch (\UnexpectedValueException) {
+            return [$bytes, true];
         }
 
         return [$bytes, false];

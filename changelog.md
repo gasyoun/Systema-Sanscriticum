@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Fixed
+- **H2971 (Grok 4.6 `grok-4.6`): `/dvaram` больше не падает HTTP 500, если колонки `club_memberships.tier_code` нет.** Тёмный контур H2744 (`MEMBERSHIP_TIERED=false`) ходил в `get(['tier_code'])` на каждый дашборд — 16-08-2026 23:30 UTC оба probe-логина (manager + student) отдали 500 на 15 минут. Теперь тёмный путь и отсутствие колонки читают только «есть ли живой период» и ведут себя как H2644 Club. `cabinet:probe --fail-on-critical` подключён к `deploy.sh` после публичного смоука (софт-сбой по-прежнему код 0). `storage:check` / Spatie backup больше не валятся на `root:root` каталоге `telegram-harvest/pilot`. Executor: Grok 4.6 (`grok-4.6`).
 
 ## [1.89.63] - 2026-08-17
 ### Added

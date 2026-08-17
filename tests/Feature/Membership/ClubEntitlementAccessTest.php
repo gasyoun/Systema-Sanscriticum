@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Membership;
 
+use App\Enums\MembershipTier;
 use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\Group;
@@ -11,6 +12,8 @@ use App\Models\Lesson;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Membership\ClubEntitlement;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Право клубного члена на каталог (H2644) — и три границы, которые оно не
@@ -93,6 +96,27 @@ class ClubEntitlementAccessTest extends MembershipTestCase
         $this->assertFalse($entitlement->coversCourse($user, $this->clubCourse->fresh()),
             'курс-членство — товар, а не содержимое; иначе клуб «открывал» бы сам себя');
         $this->assertFalse($entitlement->shelfFor($user)->contains('id', $this->clubCourse->id));
+    }
+
+    public function test_dvaram_stays_up_when_tier_code_column_is_missing(): void
+    {
+        config()->set('features.membership_tiered', false);
+        $user = $this->clubMember();
+
+        Schema::table('club_memberships', function (Blueprint $table): void {
+            $table->dropIndex(['tier_code']);
+            $table->dropColumn('tier_code');
+        });
+        $this->assertFalse(Schema::hasColumn('club_memberships', 'tier_code'));
+
+        $this->assertSame(
+            MembershipTier::Club,
+            app(ClubEntitlement::class)->activeTierFor($user),
+        );
+
+        $this->actingAs($user)
+            ->get(route('student.dashboard'))
+            ->assertOk();
     }
 
     public function test_club_gives_no_homework_review(): void

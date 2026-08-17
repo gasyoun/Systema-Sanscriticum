@@ -110,4 +110,25 @@ class CabinetProbeHardeningTest extends TestCase
         Artisan::call('cabinet:probe', ['--dry' => true]);
         $this->assertSame(0, CabinetProbeRun::query()->count());
     }
+
+    public function test_fail_on_critical_exits_nonzero_only_when_asked(): void
+    {
+        User::factory()->create([
+            'email' => 'mgr@example.com',
+            'password' => Hash::make('mgr-pass'),
+            'role' => Roles::MANAGER,
+        ]);
+        config([
+            'services.test_manager.email' => 'mgr@example.com',
+            'services.test_manager.password' => 'wrong-pass',
+            'services.test_student.password' => '',
+            'cabinet_probe.ping_url' => '',
+        ]);
+
+        $this->artisan('cabinet:probe', ['--dry' => true])->assertSuccessful();
+        $this->artisan('cabinet:probe', [
+            '--dry' => true,
+            '--fail-on-critical' => true,
+        ])->assertFailed();
+    }
 }
