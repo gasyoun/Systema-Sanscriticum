@@ -29,6 +29,7 @@ class CheckoutController extends Controller
 
         $sourceSite = (string) $request->query('source_site', '');
         if (in_array($sourceSite, ['samskrte', 'samskrtam', 'private_archive'], true)) {
+            $request->session()->put("membership_checkout_source.{$tariff->id}", $sourceSite);
             $membershipAnalytics->record(
                 MembershipFunnelEvent::CHECKOUT,
                 $sourceSite,

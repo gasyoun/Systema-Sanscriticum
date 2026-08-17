@@ -80,7 +80,11 @@ final class MembershipFunnelAnalytics
             ->latest('id')
             ->first();
 
-        $source = $prior?->source_site ?? 'system';
+        $sessionSource = request()->hasSession()
+            ? request()->session()->get("membership_checkout_source.{$tariff->id}")
+            : null;
+        $source = $prior?->source_site
+            ?? (is_string($sessionSource) && $sessionSource !== '' ? $sessionSource : 'system');
         $event = $tariff->membership_tier instanceof MembershipTier
             ? $this->paymentLifecycleEvent($payment)
             : MembershipFunnelEvent::PAYMENT;

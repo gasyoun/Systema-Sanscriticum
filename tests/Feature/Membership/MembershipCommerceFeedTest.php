@@ -198,6 +198,31 @@ final class MembershipCommerceFeedTest extends MembershipTestCase
         $this->assertSame('samskrtam', $paid->source_site);
     }
 
+    public function test_anonymous_checkout_source_survives_account_creation(): void
+    {
+        config()->set('features.membership_funnel_analytics', true);
+        [$course, $tariff] = $this->autumnCourse('anonymous-source', '2026-09-22', 7200);
+
+        $this->get(route('checkout.show', [
+            'tariff' => $tariff,
+            'source_site' => 'samskrte',
+        ]))->assertOk();
+
+        $user = User::factory()->create();
+        $payment = Payment::factory()->for($user)->create([
+            'course_id' => $course->id,
+            'tariff' => $tariff->accessKey(),
+            'status' => Payment::STATUS_PAID,
+        ]);
+
+        app(MembershipFunnelAnalytics::class)->recordPayment($payment);
+
+        $this->assertSame('samskrte', MembershipFunnelEvent::query()
+            ->where('payment_id', $payment->id)
+            ->sole()
+            ->source_site);
+    }
+
     public function test_renewal_restoration_and_lapse_events_keep_tier_and_term_dimensions(): void
     {
         $user = User::factory()->create();
