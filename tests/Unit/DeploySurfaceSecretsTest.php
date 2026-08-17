@@ -45,14 +45,20 @@ final class DeploySurfaceSecretsTest extends TestCase
         );
 
         $optimizePos = strpos($script, "php artisan optimize\n");
-        $chownPos = strpos($script, 'storage/framework/views');
+        $probePos = strpos($script, 'php artisan cabinet:probe --fail-on-critical');
         $this->assertNotFalse($optimizePos);
-        $this->assertNotFalse($chownPos);
-        $this->assertGreaterThan(
-            $optimizePos,
-            $chownPos,
-            'chown of compiled views must run after artisan optimize writes them',
+        $this->assertNotFalse($probePos);
+        $this->assertSame(
+            3,
+            substr_count($script, 'chown_compiled_views'),
+            'helper definition plus chown after optimize AND after cabinet:probe',
         );
+        $afterOptimize = strpos($script, 'chown_compiled_views', $optimizePos);
+        $afterProbe = strpos($script, 'chown_compiled_views', $probePos);
+        $this->assertNotFalse($afterOptimize);
+        $this->assertNotFalse($afterProbe);
+        $this->assertGreaterThan($optimizePos, $afterOptimize);
+        $this->assertGreaterThan($probePos, $afterProbe);
     }
 
     public function test_deploy_sh_does_not_dump_env_or_secret_variables(): void
