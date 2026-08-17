@@ -465,6 +465,22 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::get('/dvaram/reading', [ReadingPackController::class, 'cabinetIndex'])
         ->name('student.reading.index');
 
+    // H2168 — per-COURSE reading packs (Nalopākhyāna 3 packs, Subhāṣita 1).
+    // Registered BEFORE /dvaram/reading/{slug} on purpose: `kurs` would otherwise
+    // match that wildcard, same static-segment-first discipline as /dvaram/koloda.
+    // Gate is CourseCohortEntitlement::hasEntitlement($user, $course) — the course's
+    // own `cohort_courses.<slug>.enabled` switch (default OFF) plus a real paid
+    // payment for THAT course, so it is prod-inert until ops enables it and a
+    // payment on one course never opens the other's reader.
+    Route::get('/dvaram/reading/kurs/{course}', [ReadingPackController::class, 'courseIndex'])
+        ->name('student.reading.course.index')
+        ->where('course', '[a-z0-9_\-]+');
+
+    Route::get('/dvaram/reading/kurs/{course}/{slug}', [ReadingPackController::class, 'coursePack'])
+        ->name('student.reading.course.pack')
+        ->where('course', '[a-z0-9_\-]+')
+        ->where('slug', '[a-z0-9\-]+');
+
     Route::get('/dvaram/reading/{slug}', [ReadingPackController::class, 'cabinetShow'])
         ->name('student.reading.pack')
         ->where('slug', '[a-z0-9\-]+');
