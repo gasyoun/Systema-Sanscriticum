@@ -21,8 +21,13 @@ _Model: Grok 4.6 (`grok-4.6`)._ Baseline window: prod `laravel-2026-08-16.log` +
 | File:line | [`MadelineSyncWatchdog.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Telegram/MadelineSyncWatchdog.php) `exit(75)`; [`SyncTelegramSupport.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SyncTelegramSupport.php) `killDaemons()`; hang is `API::start()` or `messages->getHistory()` in [`TelegramSupportSyncService.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TelegramSupport/TelegramSupportSyncService.php) |
 | Not this | session lock wait · reply-drain · roster collision · raised ceiling · `runInBackground()` |
 | Fix | 600 s post-timeout cooldown; phase breadcrumb on the timeout log |
+| PR / SHA | [PR #1795](https://github.com/gasyoun/Systema-Sanscriticum/pull/1795) `91469e72` |
+| Deploy | PASS 17-08-2026: `7af6a6bc → 91469e72`; homepage 200; `cabinet:probe` 1699 ms OK; `guards:verify` OK |
+| Live config | `php artisan config:show services.telegram_support.sync_timeout_cooldown_seconds` = **600** |
+| Release | [v1.89.65](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.89.65) |
+| Tests | `MadelineSyncGuardsTest` 9 passed, 1 skipped (pcntl on Windows); `EXIT_TIMED_OUT = 75` asserted |
 
-Reproduce count: `grep -c 'Telegram support sync timed out' /var/www/html/storage/logs/laravel-YYYY-MM-DD.log`. Tests: `php artisan test --filter=MadelineSync`.
+Reproduce count: `grep -c 'Telegram support sync timed out' /var/www/html/storage/logs/laravel-YYYY-MM-DD.log`. Tests: `php artisan test --filter=MadelineSync`. Next proof: same grep tomorrow vs the 18-hit baseline.
 
 
 ## H2482 — native VisualDCS Wave L (13-08-2026)
