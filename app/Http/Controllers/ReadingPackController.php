@@ -206,15 +206,17 @@ class ReadingPackController extends Controller
         // course offers are readable, so both traversal and cross-course reads 404.
         abort_unless(CourseReadingPacks::offers($course, $slug), 404);
 
-        $pack = CourseReadingPacks::read($slug);
-        $difficulty = $this->readDifficulty($pack['slug'] ?? null);
-
         return view('student.reading-course-pack', [
             'course' => $course,
             'courseTitle' => CourseReadingPacks::courseTitle($course),
-            'pack' => $pack,
-            'difficulty' => $difficulty['own'],
-            'rankedPacks' => $difficulty['ranked'],
+            'pack' => CourseReadingPacks::read($slug),
+            // H965's advisory difficulty score and its "graded reading" list are a
+            // PUBLIC-DEMO feature and stay there: the list is kosha's cross-corpus
+            // ranking, and its own caption ("only the text above is wired up") is
+            // simply false on a course page that offers three. The partial guards
+            // both blocks, so a course page is a pure reader.
+            'difficulty' => null,
+            'rankedPacks' => [],
         ]);
     }
 

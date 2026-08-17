@@ -245,6 +245,13 @@ class CourseReadingPackTest extends TestCase
         $this->assertStringNotContainsString('в колоду', $html);
         $this->assertStringNotContainsString('data-lookup-track', $html);
         $this->assertStringNotContainsString('/srs', $html);
+
+        // H965's advisory difficulty block and its cross-corpus "graded reading"
+        // list stay on the public demo: the list's own caption says only the text
+        // above is wired up, which is false on a course offering three packs.
+        $this->assertStringNotContainsString('Сложность текста', $html);
+        $this->assertStringNotContainsString('Градуированное чтение', $html);
+        $this->assertStringNotContainsString('Kirātārjunīya', $html);
     }
 
     /**
@@ -256,21 +263,30 @@ class CourseReadingPackTest extends TestCase
     {
         config(['features.kosha_reader' => true]);
 
+        // Both courses and their entitled students exist for BOTH renders, so the
+        // single variable under test is the course path's own switch — not the
+        // presence of Course/Payment rows, which any number of unrelated pages
+        // legitimately react to.
+        $this->entitledUser('nalopakhyana', 'nalopakhyana');
+        $this->entitledUser('subhashita', 'subhashita');
+
         // Course path OFF (the shipped default: both switches false).
         config([
             'cohort_courses.nalopakhyana.enabled' => false,
             'cohort_courses.subhashita.enabled' => false,
         ]);
-        $before = $this->get('/reading/kosha-demo')->assertOk()->getContent();
+        $off = $this->get('/reading/kosha-demo')->assertOk()->getContent();
 
-        // Course path ON, with real Course rows and an entitled student present.
-        $this->entitledUser('nalopakhyana', 'nalopakhyana');
-        $this->entitledUser('subhashita', 'subhashita');
-        $after = $this->get('/reading/kosha-demo')->assertOk()->getContent();
+        // Course path ON.
+        config([
+            'cohort_courses.nalopakhyana.enabled' => true,
+            'cohort_courses.subhashita.enabled' => true,
+        ]);
+        $on = $this->get('/reading/kosha-demo')->assertOk()->getContent();
 
         $this->assertSame(
-            $before,
-            $after,
+            $off,
+            $on,
             'H2168 is additive: turning the course reader on must not change one byte of /reading/kosha-demo.'
         );
     }
