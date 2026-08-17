@@ -11,6 +11,7 @@ use App\Models\StorefrontAnalyticsEvent;
 use App\Models\Testimonial;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
+use App\Services\Membership\PrivateArchiveEligibility;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
 use App\Support\ProductLadderAnchors;
@@ -25,7 +26,7 @@ class ShopController extends Controller
     {
         $search = $request->input('search');
 
-        $courses = Course::where('is_visible', true)
+        $courses = PrivateArchiveEligibility::scopePublic(Course::where('is_visible', true))
             ->when($search, fn ($q, $s) => $q->where('title', 'LIKE', '%'.str_replace(['%', '_'], ['\%', '\_'], $s).'%'))
             ->with(['tariffs' => function ($query) {
                 $query->where('is_active', true)->orderBy('price', 'asc');
@@ -96,7 +97,7 @@ class ShopController extends Controller
         // Рекомендованные курсы под ветки квиза (первый видимый по паттерну).
         $recommended = [];
         foreach (config('onramp.recommendations', []) as $key => $pattern) {
-            $recommended[$key] = Course::query()
+            $recommended[$key] = PrivateArchiveEligibility::scopePublic(Course::query())
                 ->where('is_visible', true)
                 ->where('title', 'LIKE', '%'.str_replace(['%', '_'], ['\%', '\_'], $pattern).'%')
                 ->orderBy('id')
@@ -205,6 +206,11 @@ class ShopController extends Controller
     // МЕТОД 2: Страница одного конкретного курса
     public function show(Course $course, Request $request, FunnelTelemetry $funnel)
     {
+        if ((bool) config('features.membership_private_archives', false)
+            && in_array($course->slug, PrivateArchiveEligibility::privateOfferSlugs(), true)) {
+            abort(404, 'Курс не найден');
+        }
+
         if (! $course->is_visible) {
             abort(404, 'Курс не найден');
         }

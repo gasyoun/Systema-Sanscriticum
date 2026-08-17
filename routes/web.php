@@ -31,6 +31,7 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LlmsTxtController;
 use App\Http\Controllers\MarathonController;
 use App\Http\Controllers\MaterialsController;
+use App\Http\Controllers\MembershipCommerceController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\NewsletterSubscribeController;
 use App\Http\Controllers\PartnerController;
@@ -150,6 +151,18 @@ Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
 // страница не может жить раньше, чем контур H2644 реально выдаёт доступ
 // за оплату. Цены читаются из тарифов курса `club` (Filament), не из Blade.
 Route::get('/klub', [MembershipController::class, 'landing'])->name('membership.landing');
+Route::get('/api/public/v1/autumn-membership', [MembershipCommerceController::class, 'feed'])
+    ->name('membership.feed.v1');
+Route::domain((string) config('membership.public_feed.samskrte_host'))
+    ->get('/osen-2026', [MembershipCommerceController::class, 'samskrte'])
+    ->name('membership.storefront.samskrte');
+Route::domain((string) config('membership.public_feed.samskrtam_host'))
+    ->get('/courses/autumn-2026', [MembershipCommerceController::class, 'samskrtam'])
+    ->name('membership.storefront.samskrtam');
+Route::get('/dvaram/private-archive/{archive}', [MembershipCommerceController::class, 'privateArchive'])
+    ->middleware('auth')
+    ->where('archive', 'yoga_sutras|soboleva_ayurveda|druzhinin_ayurveda')
+    ->name('membership.private-archive');
 
 // «С чего начать» — вводная страница новичка: лесенка продуктов + квиз подбора
 // курса + уровни (H323, beginner on-ramp).

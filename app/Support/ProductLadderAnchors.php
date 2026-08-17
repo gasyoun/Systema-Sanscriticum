@@ -6,6 +6,7 @@ namespace App\Support;
 
 use App\Models\Course;
 use App\Models\Tariff;
+use App\Services\Membership\PrivateArchiveEligibility;
 
 /**
  * Якоря «лесенки продуктов» (H323/H387) — единственная точка правды для всех
@@ -27,12 +28,12 @@ class ProductLadderAnchors
         $minBlockPrice = Tariff::query()
             ->where('is_active', true)
             ->where('type', 'block')
-            ->whereHas('course', fn ($q) => $q->where('is_visible', true))
+            ->whereHas('course', fn ($q) => PrivateArchiveEligibility::scopePublic($q->where('is_visible', true)))
             ->min('price');
 
         $minRecordedPrice = Tariff::query()
             ->where('is_active', true)
-            ->whereHas('course', fn ($q) => $q->where('is_visible', true)->where('format', 'recorded'))
+            ->whereHas('course', fn ($q) => PrivateArchiveEligibility::scopePublic($q->where('is_visible', true))->where('format', 'recorded'))
             ->min('price');
 
         // Живой курс целиком (H1293): full-тариф видимого живого курса — одна
@@ -40,11 +41,11 @@ class ProductLadderAnchors
         $minLiveFullPrice = Tariff::query()
             ->where('is_active', true)
             ->where('type', 'full')
-            ->whereHas('course', fn ($q) => $q->where('is_visible', true)->where('format', 'live'))
+            ->whereHas('course', fn ($q) => PrivateArchiveEligibility::scopePublic($q->where('is_visible', true))->where('format', 'live'))
             ->min('price');
 
         // Бесплатная ступень: любой видимый курс с публичным preview-уроком.
-        $freePreviewCourse = Course::query()
+        $freePreviewCourse = PrivateArchiveEligibility::scopePublic(Course::query())
             ->where('is_visible', true)
             ->whereHas('previewLesson')
             ->orderBy('id')

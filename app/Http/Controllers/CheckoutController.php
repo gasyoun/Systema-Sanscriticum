@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\LandingPage;
-use App\Models\PromoCode;
-use App\Models\StorefrontAnalyticsEvent; // Не забываем импортировать модель!
+use App\Models\MembershipFunnelEvent;
+use App\Models\PromoCode; // Не забываем импортировать модель!
+use App\Models\StorefrontAnalyticsEvent;
 use App\Models\StudentDiscount;
 use App\Models\Tariff;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
 use App\Services\CuratorNotifier;
+use App\Services\Membership\MembershipFunnelAnalytics;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Support\FlagshipExperiments;
@@ -19,10 +21,25 @@ use Illuminate\Support\Facades\Auth;
 
 class CheckoutController extends Controller
 {
-    public function show(Request $request, Tariff $tariff, PranaService $prana, FunnelTelemetry $funnel)
+    public function show(Request $request, Tariff $tariff, PranaService $prana, FunnelTelemetry $funnel, MembershipFunnelAnalytics $membershipAnalytics)
     {
         if (! $tariff->is_active) {
             abort(404, 'Тариф недоступен для покупки.');
+        }
+
+        $sourceSite = (string) $request->query('source_site', '');
+        if (in_array($sourceSite, ['samskrte', 'samskrtam', 'private_archive'], true)) {
+            $request->session()->put("membership_checkout_source.{$tariff->id}", $sourceSite);
+            $membershipAnalytics->record(
+                MembershipFunnelEvent::CHECKOUT,
+                $sourceSite,
+                $request->user(),
+                $tariff,
+                archiveKey: $request->query('archive'),
+                feature: $sourceSite === 'private_archive' ? 'private_archive_checkout' : 'autumn_storefront_checkout',
+                request: $request,
+                metadata: ['campaign' => (string) $request->query('campaign', '')],
+            );
         }
 
         if (Auth::check()) {

@@ -886,6 +886,12 @@ return [
     'membership_recording_enforce' => (bool) env('MEMBERSHIP_RECORDING_ENFORCE', false),
     'membership_free_tier' => (bool) env('MEMBERSHIP_FREE_TIER', false),
     'membership_cancellation' => (bool) env('MEMBERSHIP_CANCELLATION', false),
+    // H2745: one canonical commercial feed, two host-specific renderings.
+    'membership_public_feed' => (bool) env('MEMBERSHIP_PUBLIC_FEED', false),
+    // H2745: authenticated, payment-derived archive offers; all dark by default.
+    'membership_private_archives' => (bool) env('MEMBERSHIP_PRIVATE_ARCHIVES', false),
+    // H2745: append-only funnel dimensions (tier/term/source/course/feature).
+    'membership_funnel_analytics' => (bool) env('MEMBERSHIP_FUNNEL_ANALYTICS', false),
 
     /*
      | Grammar Lab explorer (H2493 / G2). Import and tables are additive;

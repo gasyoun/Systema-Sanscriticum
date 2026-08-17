@@ -8,6 +8,7 @@ use App\Models\ActivityEvent;
 use App\Models\Payment;
 use App\Services\Activity\CabinetTelemetry;
 use App\Services\Activity\FunnelTelemetry;
+use App\Services\Membership\MembershipFunnelAnalytics;
 
 /**
  * Телеметрия оплат для baseline ремейка кабинета (H962, Phase 0):
@@ -27,6 +28,7 @@ class PaymentTelemetryObserver
     public function __construct(
         private readonly CabinetTelemetry $telemetry,
         private readonly FunnelTelemetry $funnel,
+        private readonly MembershipFunnelAnalytics $membershipFunnel,
     ) {}
 
     public function updated(Payment $payment): void
@@ -73,5 +75,6 @@ class PaymentTelemetryObserver
         }
 
         $this->funnel->emitPaymentSuccess($payment->user, $payment);
+        $this->membershipFunnel->recordPayment($payment);
     }
 }
