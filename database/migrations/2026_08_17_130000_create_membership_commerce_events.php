@@ -48,8 +48,8 @@ return new class extends Migration
             $table->string('request_hash', 64)->nullable();
             $table->timestamp('created_at')->useCurrent();
 
-            $table->index(['archive_key', 'action', 'created_at']);
-            $table->index(['user_id', 'archive_key']);
+            $table->index(['archive_key', 'action', 'created_at'], 'archive_access_action_created');
+            $table->index(['user_id', 'archive_key'], 'archive_access_user_archive');
         });
     }
 
