@@ -31,10 +31,36 @@ abstract class GrammarLabTestCase extends TestCase
         ]);
     }
 
+    /**
+     * Per-process, per-class suffix for the staged fixture bundle.
+     *
+     * CI runs `php artisan test --parallel`, and this staging directory used to be
+     * one fixed path shared by every GrammarLab test class. That is safe only while
+     * all of them treat it as read-only -- and
+     * GrammarLabImportSearchTest::test_removed_topic_is_retired_not_deleted does not:
+     * it drops a topic from grammar_lab.json and rewrites manifest.json with the new
+     * digest. A concurrent process then reads either a half-written manifest
+     * ("invalid JSON: .../manifest.json") or a manifest whose sha256 no longer
+     * describes the bundle beside it ("grammar_lab.json sha256 mismatch"). Both
+     * errors were observed together on main in run 31996750191.
+     *
+     * The failure is a race, so it is intermittent -- the same commit passes on a
+     * rerun, which is exactly how it survived long enough to block an unrelated PR.
+     * `TEST_TOKEN` is what Laravel's parallel runner sets per worker; the pid is the
+     * fallback for a plain sequential `php artisan test`, and the class hash keeps two
+     * classes in one worker from sharing a directory either.
+     */
+    private function fixtureToken(): string
+    {
+        $worker = (string) (getenv('TEST_TOKEN') ?: getmypid());
+
+        return $worker.'-'.substr(sha1(static::class), 0, 8);
+    }
+
     protected function fixtureDir(): string
     {
         $src = base_path('tests/fixtures/grammar_lab');
-        $dir = storage_path('framework/testing/grammar_lab');
+        $dir = storage_path('framework/testing/grammar_lab-'.$this->fixtureToken());
         if (! is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
