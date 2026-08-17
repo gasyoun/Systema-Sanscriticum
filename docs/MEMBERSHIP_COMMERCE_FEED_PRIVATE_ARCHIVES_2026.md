@@ -118,6 +118,8 @@ without first archiving them under the applicable retention policy.
   commercial parity, source preservation, private discovery probes, eligibility,
   audit, kill/restore, and lifecycle dimensions.
 - Membership regression slice: 103 tests / 343 assertions.
+- Full application suite: 3,681 passed / 20,303 assertions; three expected
+  platform/opt-in skips.
 - `membership:commerce-verify`: PASS on a migrated disposable SQLite fixture;
   four public offers, zero private slugs, Top held.
 - Browser QA: 1440×1000 and 390×844; identical commercial payloads, distinct
@@ -125,4 +127,3 @@ without first archiving them under the applicable retention policy.
 - Screenshots: `docs/evidence/h2745/storefront-*.png`.
 - Public Samudra is untouched; no route, controller, config, or access policy for
   it changed.
-
