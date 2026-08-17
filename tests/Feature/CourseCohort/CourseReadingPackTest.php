@@ -270,6 +270,14 @@ class CourseReadingPackTest extends TestCase
         $this->entitledUser('nalopakhyana', 'nalopakhyana');
         $this->entitledUser('subhashita', 'subhashita');
 
+        // Warm-up render, discarded. Livewire injects its <style>/<script> block
+        // (and a data-csrf attribute) into the FIRST response of a PHP process and
+        // never again, so without this the first captured render would carry a
+        // preamble the second one cannot have — a difference that has nothing to do
+        // with this handoff. Absorbing it here keeps the assertion below a real
+        // byte-for-byte comparison instead of a normalised one.
+        $this->get('/reading/kosha-demo')->assertOk();
+
         // Course path OFF (the shipped default: both switches false).
         config([
             'cohort_courses.nalopakhyana.enabled' => false,
