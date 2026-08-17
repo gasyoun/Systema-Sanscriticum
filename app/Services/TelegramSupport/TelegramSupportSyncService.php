@@ -15,6 +15,7 @@ use App\Services\Support\SupportConversationManager;
 use App\Services\Support\TechnicalIssueRouter;
 use App\Services\Telegram\MadelineClientFactory;
 use App\Services\Telegram\MadelineSessionReaper;
+use App\Services\Telegram\MadelineSyncPhase;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
@@ -134,6 +135,8 @@ class TelegramSupportSyncService
     private function drainPendingReplies(): int
     {
         try {
+            MadelineSyncPhase::mark('drain_pending');
+
             return app(PendingSupportReplyDrainer::class)->drain($this)['delivered'];
         } catch (Throwable $e) {
             Log::warning('Досыл ответов куратора сорвался, заход синка это не отменяет', [
@@ -491,6 +494,7 @@ class TelegramSupportSyncService
 
         $limit = (int) config('services.telegram_support.history_limit', 50);
         $self = $this->resolveSelfIdentity($client);
+        MadelineSyncPhase::mark('dialogs');
         $dialogs = $this->dialogsWithTechGroups($client, $this->limitedDialogs($client->getDialogIds()));
         $messages = [];
         $peerState = $account->sync_state['peers'] ?? [];
@@ -500,6 +504,7 @@ class TelegramSupportSyncService
             $cursor = $peerId ? ($peerState[(string) $peerId] ?? []) : [];
             $minId = (int) ($cursor['last_message_id'] ?? 0);
 
+            MadelineSyncPhase::mark('history:'.($peerId ?: 'unknown'));
             $history = $client->messages->getHistory([
                 'peer' => $peer,
                 'offset_id' => 0,
@@ -570,8 +575,10 @@ class TelegramSupportSyncService
         $session = MadelineClientFactory::sessionPath();
         File::ensureDirectoryExists(dirname($session));
 
+        MadelineSyncPhase::mark('client_start');
         $client = new $clientClass($session, $this->madelineSettings($clientClass));
         $client->start();
+        MadelineSyncPhase::mark('client_ready');
 
         return $client;
     }

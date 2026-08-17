@@ -159,6 +159,10 @@ return [
         // окажутся два экземпляра, каждый со своим IPC-демоном. Kernel::schedule()
         // выводит TTL замка отсюда, так что инвариант держится сам.
         'sync_timeout_seconds' => (int) env('TELEGRAM_SUPPORT_SYNC_TIMEOUT_SECONDS', 120),
+        // After a watchdog kill the daemon is reaped. Immediate retry cold-starts
+        // the same DC and, on a transient stall, dies at 120 s again (H2988:
+        // 18 kills / ~100 min). 0 disables the skip. Does not raise the ceiling.
+        'sync_timeout_cooldown_seconds' => (int) env('TELEGRAM_SUPPORT_SYNC_TIMEOUT_COOLDOWN_SECONDS', 600),
         // Auto-heal IPC hang (01.08.2026): healthcheck → recover (kill worker,
         // clear ipc/locks, unlock madeline-session, one sync). Default OFF —
         // flip TELEGRAM_SUPPORT_AUTO_HEAL=true on prod after smoke.

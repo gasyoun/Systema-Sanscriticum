@@ -1,8 +1,29 @@
 # Results log
 
-_Created: 30-07-2026 · Last updated: 13-08-2026_
+_Created: 30-07-2026 · Last updated: 17-08-2026_
 
 Durable substantive-result tables for this repo. Newest first.
+
+## H2988 — telegram-support:sync watchdog timeout cluster (17-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ Baseline window: prod `laravel-2026-08-16.log` + `laravel-2026-08-17.log` (app tz Europe/Moscow). Query: `Telegram support sync timed out`.
+
+| Metric | Value |
+|---|---|
+| Timeouts 16-08 | 10 (23:25, 23:28, 23:31, 23:34, 23:37, 23:40, 23:43, 23:46, 23:50, 23:54) |
+| Timeouts 17-08 | 8 (00:01, 00:07, 00:15, 00:25, 00:33, 00:36, 00:43, 01:04) |
+| 24h count (to 17-08 ~08:40) | **18** |
+| After 01:04 same day | 0 (healthy 11–41 s, typical 36–37 s) |
+| `session_busy` / dead IPC / AUTH_RESTART / EMFILE | 0 / 0 / 0 / 0 |
+| First kill | `killed_processes=2`, removed `ipcState.php` |
+| Later kills | `killed_processes=1`, no files removed |
+| Root class | DC stall (same class as H1915, now correctly killed) + immediate cold-start after `cleanUpAfterTimeout` daemon reap |
+| File:line | [`MadelineSyncWatchdog.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Telegram/MadelineSyncWatchdog.php) `exit(75)`; [`SyncTelegramSupport.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SyncTelegramSupport.php) `killDaemons()`; hang is `API::start()` or `messages->getHistory()` in [`TelegramSupportSyncService.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TelegramSupport/TelegramSupportSyncService.php) |
+| Not this | session lock wait · reply-drain · roster collision · raised ceiling · `runInBackground()` |
+| Fix | 600 s post-timeout cooldown; phase breadcrumb on the timeout log |
+
+Reproduce count: `grep -c 'Telegram support sync timed out' /var/www/html/storage/logs/laravel-YYYY-MM-DD.log`. Tests: `php artisan test --filter=MadelineSync`.
+
 
 ## H2482 — native VisualDCS Wave L (13-08-2026)
 

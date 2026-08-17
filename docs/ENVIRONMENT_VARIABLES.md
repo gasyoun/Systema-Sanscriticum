@@ -541,8 +541,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_ONBOARDING_CHAT_ID` | required | `—` | config/services.php:125 |
 | `TELEGRAM_SUPPORT_API_HASH` | required | `—` | config/services.php:131 |
 | `TELEGRAM_SUPPORT_API_ID` | required | `—` | config/services.php:130 |
-| `TELEGRAM_SUPPORT_AUTO_HEAL` | optional | `false` | config/services.php:165 |
-| `TELEGRAM_SUPPORT_AUTO_HEAL_COOLDOWN_MINUTES` | optional | `30` | config/services.php:166 |
+| `TELEGRAM_SUPPORT_AUTO_HEAL` | optional | `false` | config/services.php:169 |
+| `TELEGRAM_SUPPORT_AUTO_HEAL_COOLDOWN_MINUTES` | optional | `30` | config/services.php:170 |
 | `TELEGRAM_SUPPORT_CLIENT_CLASS` | required | `—` | config/services.php:136 |
 | `TELEGRAM_SUPPORT_DIALOG_LIMIT` | optional | `20` | config/services.php:134 |
 | `TELEGRAM_SUPPORT_ENABLED` | feature-flag | `false` | config/services.php:129 |
@@ -554,6 +554,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_SUPPORT_SESSION` | optional | `storage_path('app/telegram-support/session.madeline')` | config/services.php:132 |
 | `TELEGRAM_SUPPORT_STALE_AFTER_MINUTES` | optional | `15` | config/services.php:140 |
 | `TELEGRAM_SUPPORT_SYNC_TIMEOUT_SECONDS` | optional | `120` | config/services.php:161 |
+| `TELEGRAM_SUPPORT_SYNC_TIMEOUT_COOLDOWN_SECONDS` | optional | `600` | config/services.php:165 |
 | `TELEGRAM_SUPPORT_TECH_GROUP_PEERS` | optional | `''` | config/services.php:174<br>config/support_tech.php:20 |
 | `TELEGRAM_SUPPORT_USERNAME` | optional | `''` | config/services.php:176<br>config/support_tech.php:28 |
 | `TELEGRAM_WEBHOOK_BASE_URL` | required | `—` | config/services.php:242 |

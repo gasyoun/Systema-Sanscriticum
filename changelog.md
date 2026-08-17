@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Fixed
+- **H2988 (Grok 4.6 `grok-4.6`): `telegram-support:sync` больше не крутит 120-секундный холодный старт сразу после kill watchdog'а.** На проде 16–17-08-2026 сторож H1915 отработал правильно (`exit 75`, не 10 470 с): 18 таймаутов за ~100 мин при здоровом заходе 11–41 с. Уборка убивает демон сессии, следующая минута сразу поднимает его заново на том же DC — и снова упирается в 120 с. После kill ставится кулдаун 600 с (`TELEGRAM_SUPPORT_SYNC_TIMEOUT_COOLDOWN_SECONDS`, 0 выключает): живой MTProto пропускается, `schedule:run` отпускает flock. Потолок 120 с, `exit 75` и запрет `runInBackground()` не тронуты. В лог таймаута пишется фаза (`client_start` / `history:{peer}` / `drain_pending`). Тесты: `MadelineSyncGuardsTest`.
 
 ## [1.89.64] - 2026-08-17
 ### Fixed

@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Console\Concerns\LocksMadelineSession;
 use App\Models\TelegramSupportAccount;
 use App\Services\Telegram\MadelineSessionReaper;
+use App\Services\Telegram\MadelineSyncPhase;
 use App\Services\Telegram\MadelineSyncWatchdog;
 use App\Services\TelegramSupport\TelegramSupportSyncService;
 use Illuminate\Console\Command;
@@ -43,6 +44,21 @@ class SyncTelegramSupport extends Command
             $result = $sync->syncNormalizedMessages($payload);
         } else {
             $timeout = (int) config('services.telegram_support.sync_timeout_seconds', 120);
+            $cooldown = (int) config('services.telegram_support.sync_timeout_cooldown_seconds', 600);
+
+            // После watchdog-kill демон сессии сброшен. Следующая минута
+            // cold-start'ит тот же DC; если столл ещё жив — снова 120 с и
+            // снова kill. Прод 16–17-08-2026: 18 таких кругов за ~100 мин при
+            // здоровом заходе 11–41 с. Кулдаун режет частоту, не потолок.
+            if ($cooldown > 0 && MadelineSyncPhase::cooldownActive()) {
+                Log::warning('Telegram support sync skipped: post-timeout cooldown', [
+                    'cooldown_seconds' => $cooldown,
+                    'last_phase' => MadelineSyncPhase::current(),
+                ]);
+                $this->warn('Telegram support sync: post_timeout_cooldown (waiting after watchdog kill).');
+
+                return self::SUCCESS;
+            }
 
             // Потолок времени взводим ТОЛЬКО на live-пути: импорт из payload в сеть
             // не ходит и зависнуть не может. Без потолка заход живёт часами, замок
@@ -114,10 +130,15 @@ class SyncTelegramSupport extends Command
         $killed = $reaper->killDaemons();
         $removed = $reaper->clearIpcArtifacts();
 
+        $cooldown = (int) config('services.telegram_support.sync_timeout_cooldown_seconds', 600);
+        MadelineSyncPhase::armCooldown($cooldown);
+
         Log::error('Telegram support sync timed out — process stopped by watchdog', [
             'timeout_seconds' => $seconds,
             'killed_processes' => $killed,
             'removed_files' => $removed,
+            'phase' => MadelineSyncPhase::current(),
+            'cooldown_seconds' => $cooldown,
         ]);
 
         // Аккаунт мог ещё не существовать (первый же заход завис) — тогда просто
