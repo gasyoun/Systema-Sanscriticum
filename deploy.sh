@@ -44,6 +44,16 @@ say()  { printf '\n\033[1;36m▶ %s\033[0m\n' "$*"; }
 fail() { printf '\n\033[1;31m✖ %s\033[0m\n' "$*"; exit 1; }
 warn() { printf '\n\033[1;33m⚠ %s\033[0m\n' "$*"; }
 
+# artisan optimize / cabinet:probe run as root and write compiled Blade as
+# root:755. php-fpm is www-data; BladeCompiler::touch() then 500s /admin
+# (17-08-2026). Call after every root artisan that may compile views.
+chown_compiled_views() {
+  say "chown compiled views → ${APP_USER:-www-data}"
+  chown -R "${APP_USER:-www-data}:${APP_USER:-www-data}" \
+    "$APP_DIR/storage/framework/views" \
+    || warn "chown compiled views failed — /admin may 500 on next Blade recompile"
+}
+
 # ── 0. Предполётные проверки ─────────────────────────────────────────────────
 say "Предполётные проверки в $APP_DIR"
 [ -f artisan ] || fail "Здесь нет artisan — APP_DIR указывает не на приложение?"
@@ -217,16 +227,8 @@ say "Прогрев кэшей (config/route/view + filament)"
 php artisan optimize
 php artisan filament:optimize 2>/dev/null || { warn "filament:optimize failed — Filament caches not warmed"; DEPLOY_SOFT_FAIL=1; }
 
-# `php artisan optimize` (view:cache) runs as root. php-fpm is www-data.
-# BladeCompiler::compile() then touch()es the compiled file; root:755
-# → "Utime failed: Operation not permitted" → HTTP 500 on /admin (17-08-2026).
-# Homepage stayed 200; cabinet:probe went critical on filament /admin.
-# Public smoke does not see this. chown after every root optimize.
-if [ "$(id -u)" = 0 ]; then
-  say "chown compiled views → ${APP_USER:-www-data}"
-  chown -R "${APP_USER:-www-data}:${APP_USER:-www-data}" \
-    "$APP_DIR/storage/framework/views"
-fi
+# After view:cache. Probe below also compiles as root — chown again there.
+chown_compiled_views
 
 # ── 5. OPcache: reload php-fpm (КРИТИЧНО — validate_timestamps=0) ───────────
 PHP_VER=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
@@ -276,6 +278,9 @@ echo "OK: $SMOKE_URL → 200"
 say "Смоук кабинета: php artisan cabinet:probe --fail-on-critical"
 php artisan cabinet:probe --fail-on-critical \
   || fail "cabinet:probe: critical после деплоя — кабинет нездоров"
+# Probe is artisan-as-root and can rewrite compiled views after the
+# post-optimize chown (H2994 live deploy 17-08 07:18Z left 660 files root).
+chown_compiled_views
 
 # ── 7b. Ресурсные предохранители ОС (H1914) ─────────────────────────────────
 # Только ПРОВЕРКА, никогда не apply: выкладка кода не должна молча менять
