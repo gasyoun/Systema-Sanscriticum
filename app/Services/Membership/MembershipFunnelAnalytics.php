@@ -25,6 +25,9 @@ final class MembershipFunnelAnalytics
         ?string $feature = null,
         ?Request $request = null,
         array $metadata = [],
+        ?string $tier = null,
+        ?int $termMonths = null,
+        ?int $courseId = null,
     ): void {
         if (! (bool) config('features.membership_funnel_analytics', false)) {
             return;
@@ -38,12 +41,12 @@ final class MembershipFunnelAnalytics
             MembershipFunnelEvent::create([
                 'event_name' => $event,
                 'user_id' => $user?->id,
-                'course_id' => $tariff?->course_id ?? $payment?->course_id,
+                'course_id' => $tariff?->course_id ?? $payment?->course_id ?? $courseId,
                 'tariff_id' => $tariff?->id,
                 'payment_id' => $payment?->id,
                 'visitor_hash' => $request ? hash('sha256', $request->session()->getId()) : null,
-                'tier' => $tariff?->membership_tier?->value,
-                'term_months' => $tariff?->membership_months,
+                'tier' => $tariff?->membership_tier?->value ?? $tier,
+                'term_months' => $tariff?->membership_months ?? $termMonths,
                 'source_site' => $sourceSite,
                 'archive_key' => $archiveKey,
                 'feature' => $feature,
@@ -91,6 +94,8 @@ final class MembershipFunnelAnalytics
             'system',
             $user,
             metadata: ['membership_id' => $membershipId, 'tier' => $tier, 'term_months' => $termMonths],
+            tier: $tier,
+            termMonths: $termMonths,
         );
     }
 

@@ -6,6 +6,7 @@ namespace Tests\Feature\Membership;
 
 use App\Enums\MembershipTier;
 use App\Models\Course;
+use App\Models\ClubMembership;
 use App\Models\Group;
 use App\Models\MembershipFunnelEvent;
 use App\Models\Payment;
@@ -91,6 +92,10 @@ final class MembershipCommerceFeedTest extends MembershipTestCase
             ->where('event_name', MembershipFunnelEvent::OFFER_VIEW)
             ->where('feature', 'autumn_storefront')
             ->count());
+
+        $this->artisan('membership:commerce-verify')
+            ->expectsOutput('H2745 commerce verification: PASS')
+            ->assertSuccessful();
     }
 
     public function test_private_archive_is_payment_derived_noindex_non_enumerated_audited_and_killable(): void
@@ -191,6 +196,78 @@ final class MembershipCommerceFeedTest extends MembershipTestCase
         $this->assertSame('club', $paid->tier);
         $this->assertSame(3, $paid->term_months);
         $this->assertSame('samskrtam', $paid->source_site);
+    }
+
+    public function test_renewal_restoration_and_lapse_events_keep_tier_and_term_dimensions(): void
+    {
+        $user = User::factory()->create();
+        $tariff = $this->clubTariff(1, MembershipTier::Basic);
+        $historicPayment = Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $tariff->course_id,
+            'amount' => $tariff->price,
+            'tariff' => $tariff->accessKey(),
+            'status' => 'paid',
+            'is_conditional' => false,
+        ]));
+        ClubMembership::create([
+            'user_id' => $user->id,
+            'payment_id' => $historicPayment->id,
+            'tier_code' => MembershipTier::Basic,
+            'term_months' => 1,
+            'starts_at' => now()->subMonths(2),
+            'ends_at' => now()->subMonth(),
+            'grace_until' => now()->subMonth()->addDays(3),
+            'grace_days' => 3,
+            'revoked_at' => now()->subWeeks(3),
+            'revoke_reason' => ClubMembership::REVOKE_LAPSED,
+            'source' => ClubMembership::SOURCE_PAYMENT,
+        ]);
+
+        $restorationPayment = Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $tariff->course_id,
+            'amount' => $tariff->price,
+            'tariff' => $tariff->accessKey(),
+            'status' => 'paid',
+            'is_conditional' => false,
+        ]));
+        app(MembershipFunnelAnalytics::class)->recordPayment($restorationPayment);
+        $restoration = MembershipFunnelEvent::query()->where('payment_id', $restorationPayment->id)->firstOrFail();
+        $this->assertSame(MembershipFunnelEvent::RESTORATION, $restoration->event_name);
+        $this->assertSame('basic', $restoration->tier);
+        $this->assertSame(1, $restoration->term_months);
+
+        ClubMembership::create([
+            'user_id' => $user->id,
+            'payment_id' => $restorationPayment->id,
+            'tier_code' => MembershipTier::Basic,
+            'term_months' => 1,
+            'starts_at' => now(),
+            'ends_at' => now()->addMonth(),
+            'grace_until' => now()->addMonth()->addDays(3),
+            'grace_days' => 3,
+            'source' => ClubMembership::SOURCE_PAYMENT,
+        ]);
+        $renewalPayment = Payment::withoutEvents(fn () => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $tariff->course_id,
+            'amount' => $tariff->price,
+            'tariff' => $tariff->accessKey(),
+            'status' => 'paid',
+            'is_conditional' => false,
+        ]));
+        app(MembershipFunnelAnalytics::class)->recordPayment($renewalPayment);
+        $renewal = MembershipFunnelEvent::query()->where('payment_id', $renewalPayment->id)->firstOrFail();
+        $this->assertSame(MembershipFunnelEvent::RENEWAL, $renewal->event_name);
+        $this->assertSame('basic', $renewal->tier);
+        $this->assertSame(1, $renewal->term_months);
+
+        app(MembershipFunnelAnalytics::class)->recordLapse($user, 'basic', 1, 999);
+        $lapse = MembershipFunnelEvent::query()->where('event_name', MembershipFunnelEvent::LAPSE)->firstOrFail();
+        $this->assertSame('basic', $lapse->tier);
+        $this->assertSame(1, $lapse->term_months);
+        $this->assertSame('system', $lapse->source_site);
     }
 
     /** @return list<array<string,mixed>> */
