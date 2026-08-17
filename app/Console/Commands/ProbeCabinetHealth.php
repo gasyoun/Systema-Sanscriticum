@@ -44,7 +44,8 @@ class ProbeCabinetHealth extends Command
 
     protected $signature = 'cabinet:probe
         {--dry : Прогнать проверки, не слать healthchecks/Telegram и не писать history}
-        {--force-alert : Игнорировать TG-cooldown (critical и soft)}';
+        {--force-alert : Игнорировать TG-cooldown (critical и soft)}
+        {--fail-on-critical : Exit 1 if a critical surface failed (deploy.sh)}';
 
     protected $description = 'Пульс кабинета: public + manager (+ student) surfaces, history, TG';
 
@@ -136,6 +137,10 @@ class ProbeCabinetHealth extends Command
 
         $this->reportToHealthchecks($criticalHealthy, array_column($criticalFails, 'message'));
         $this->reportToTelegram($criticalHealthy, $criticalFails, $softFails);
+
+        if ($this->option('fail-on-critical') && ! $criticalHealthy) {
+            return self::FAILURE;
+        }
 
         return self::SUCCESS;
     }

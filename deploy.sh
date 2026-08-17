@@ -259,6 +259,13 @@ HTTP_CODE=$(curl -fsS -o /dev/null -w '%{http_code}' "$SMOKE_URL" || echo "000")
 [ "$HTTP_CODE" = "200" ] || fail "Смоук провален: $SMOKE_URL вернул $HTTP_CODE"
 echo "OK: $SMOKE_URL → 200"
 
+# Public smoke can stay 200 while /dvaram 500s (16-08-2026 23:30 UTC:
+# homepage fine, cabinet:probe critical on missing club_memberships.tier_code).
+# Soft-only findings still exit 0 — do not revive the #1143 rollback loop.
+say "Смоук кабинета: php artisan cabinet:probe --fail-on-critical"
+php artisan cabinet:probe --fail-on-critical \
+  || fail "cabinet:probe: critical после деплоя — кабинет нездоров"
+
 # ── 7b. Ресурсные предохранители ОС (H1914) ─────────────────────────────────
 # Только ПРОВЕРКА, никогда не apply: выкладка кода не должна молча менять
 # системный конфиг. Предохранители 29-07-2026 живут вне репозитория, и пересборка

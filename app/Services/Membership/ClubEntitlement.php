@@ -9,6 +9,7 @@ use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Право клубного члена смотреть записи (H2644) — единственный источник правды
@@ -81,18 +82,32 @@ final class ClubEntitlement
             return $this->tierCache[$user->id];
         }
 
-        $memberships = ClubMembership::query()
-            ->where('user_id', $user->id)
-            ->active()
-            ->get(['tier_code']);
+        return $this->tierCache[$user->id] = $this->storedActiveTierFor($user);
+    }
 
-        if ($memberships->isEmpty()) {
-            return $this->tierCache[$user->id] = null;
+    /**
+     * Tier stored on live periods. Does not consult the product flag.
+     *
+     * Dark H2744 must not SELECT tier_code: that column is new, the flag is
+     * OFF on prod, and /dvaram still walks this path for the club shelf.
+     * 16-08-2026 23:30 UTC cabinet 500 was get(['tier_code']) while the
+     * column was absent. Missing-column failsafe keeps H2644 Club behaviour.
+     */
+    public function storedActiveTierFor(User $user): ?MembershipTier
+    {
+        $query = ClubMembership::query()
+            ->where('user_id', $user->id)
+            ->active();
+
+        if (! (bool) config('features.membership_tiered', false)
+            || ! Schema::hasColumn('club_memberships', 'tier_code')) {
+            return $query->exists() ? MembershipTier::Club : null;
         }
 
-        // Dark rollout preserves H2644 exactly until classification is complete.
-        if (! (bool) config('features.membership_tiered', false)) {
-            return $this->tierCache[$user->id] = MembershipTier::Club;
+        $memberships = $query->get(['tier_code']);
+
+        if ($memberships->isEmpty()) {
+            return null;
         }
 
         $tier = $memberships
@@ -105,7 +120,7 @@ final class ClubEntitlement
             $tier = MembershipTier::Club;
         }
 
-        return $this->tierCache[$user->id] = $tier;
+        return $tier;
     }
 
     public function allows(?User $user, string $capability): bool
