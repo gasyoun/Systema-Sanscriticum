@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\LandingPage;
-use App\Models\PromoCode;
-use App\Models\StorefrontAnalyticsEvent; // Не забываем импортировать модель!
+use App\Models\MembershipFunnelEvent;
+use App\Models\PromoCode; // Не забываем импортировать модель!
+use App\Models\StorefrontAnalyticsEvent;
 use App\Models\StudentDiscount;
 use App\Models\Tariff;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
-use App\Services\Membership\MembershipFunnelAnalytics;
-use App\Models\MembershipFunnelEvent;
 use App\Services\CuratorNotifier;
+use App\Services\Membership\MembershipFunnelAnalytics;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
 use App\Support\FlagshipExperiments;

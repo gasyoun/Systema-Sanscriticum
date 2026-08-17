@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Membership;
 
 use App\Enums\MembershipTier;
-use App\Models\Course;
 use App\Models\ClubMembership;
+use App\Models\Course;
 use App\Models\Group;
 use App\Models\MembershipFunnelEvent;
 use App\Models\Payment;

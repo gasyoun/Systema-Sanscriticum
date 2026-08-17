@@ -11,11 +11,11 @@ use App\Models\StorefrontAnalyticsEvent;
 use App\Models\Testimonial;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
+use App\Services\Membership\PrivateArchiveEligibility;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
 use App\Support\ProductLadderAnchors;
 use App\Support\TrajectoryPathway;
-use App\Services\Membership\PrivateArchiveEligibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

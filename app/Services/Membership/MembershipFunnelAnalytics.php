@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Membership;
 
 use App\Enums\MembershipTier;
-use App\Models\MembershipFunnelEvent;
 use App\Models\ClubMembership;
+use App\Models\MembershipFunnelEvent;
 use App\Models\Payment;
 use App\Models\Tariff;
 use App\Models\User;
