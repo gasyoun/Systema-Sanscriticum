@@ -7,6 +7,7 @@ use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\DictionaryWord;
 use App\Models\LandingPage;
+use App\Services\Membership\PrivateArchiveEligibility;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -80,7 +81,7 @@ class SitemapController extends Controller
                     }
                 });
 
-            Course::where('is_visible', true)
+            PrivateArchiveEligibility::scopePublic(Course::where('is_visible', true))
                 ->select(['slug', 'format', 'updated_at'])
                 ->orderBy('updated_at', 'desc')
                 ->chunk(500, function ($courses) use (&$urls) {

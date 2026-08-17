@@ -10,6 +10,7 @@ use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Support\FlagshipExperiments;
+use App\Services\Membership\PrivateArchiveEligibility;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -72,7 +73,7 @@ class CourseCatalog extends Component
     /** Базовый запрос с применёнными фильтрами — переиспользуется для count и для выборки */
     private function baseQuery()
     {
-        return Course::query()
+        return PrivateArchiveEligibility::scopePublic(Course::query())
             ->where('is_visible', true)
             ->when($this->search !== '', function ($q) {
                 $escaped = str_replace(['%', '_'], ['\%', '\_'], $this->search);
@@ -98,7 +99,7 @@ class CourseCatalog extends Component
         return Category::query()
             ->where('is_visible', true)
             ->orderBy('sort_order')
-            ->withCount(['courses' => fn ($q) => $q->where('is_visible', true)])
+            ->withCount(['courses' => fn ($q) => PrivateArchiveEligibility::scopePublic($q->where('is_visible', true))])
             ->get();
     }
 
@@ -106,7 +107,7 @@ class CourseCatalog extends Component
     public function teachers()
     {
         return Teacher::query()
-            ->whereHas('courses', fn ($q) => $q->where('is_visible', true))
+            ->whereHas('courses', fn ($q) => PrivateArchiveEligibility::scopePublic($q->where('is_visible', true)))
             ->orderBy('name')
             ->get(['id', 'name']);
     }
@@ -119,7 +120,7 @@ class CourseCatalog extends Component
     #[Computed]
     public function levelCounts(): array
     {
-        return Course::query()
+        return PrivateArchiveEligibility::scopePublic(Course::query())
             ->where('is_visible', true)
             ->whereNotNull('level')
             ->selectRaw('level, count(*) as cnt')
