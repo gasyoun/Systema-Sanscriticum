@@ -9,6 +9,8 @@ use App\Models\StudentDiscount;
 use App\Models\Tariff;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
+use App\Services\Membership\MembershipFunnelAnalytics;
+use App\Models\MembershipFunnelEvent;
 use App\Services\CuratorNotifier;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
@@ -19,10 +21,24 @@ use Illuminate\Support\Facades\Auth;
 
 class CheckoutController extends Controller
 {
-    public function show(Request $request, Tariff $tariff, PranaService $prana, FunnelTelemetry $funnel)
+    public function show(Request $request, Tariff $tariff, PranaService $prana, FunnelTelemetry $funnel, MembershipFunnelAnalytics $membershipAnalytics)
     {
         if (! $tariff->is_active) {
             abort(404, 'Тариф недоступен для покупки.');
+        }
+
+        $sourceSite = (string) $request->query('source_site', '');
+        if (in_array($sourceSite, ['samskrte', 'samskrtam', 'private_archive'], true)) {
+            $membershipAnalytics->record(
+                MembershipFunnelEvent::CHECKOUT,
+                $sourceSite,
+                $request->user(),
+                $tariff,
+                archiveKey: $request->query('archive'),
+                feature: $sourceSite === 'private_archive' ? 'private_archive_checkout' : 'autumn_storefront_checkout',
+                request: $request,
+                metadata: ['campaign' => (string) $request->query('campaign', '')],
+            );
         }
 
         if (Auth::check()) {

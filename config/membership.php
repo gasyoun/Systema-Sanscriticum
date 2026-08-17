@@ -48,6 +48,55 @@ return [
         'pilot_hours' => 48,
     ],
 
+    'public_feed' => [
+        'version' => env('MEMBERSHIP_PUBLIC_FEED_VERSION', '2026-08-17.1'),
+        'window_start' => env('MEMBERSHIP_PUBLIC_FEED_WINDOW_START', '2026-09-01'),
+        'window_end' => env('MEMBERSHIP_PUBLIC_FEED_WINDOW_END', '2026-10-31'),
+        'membership_launch_date' => env('MEMBERSHIP_LAUNCH_DATE', '2026-09-01'),
+        'samskrte_host' => env('MEMBERSHIP_SAMSKRTE_HOST', 'samskrte.ru'),
+        'samskrtam_host' => env('MEMBERSHIP_SAMSKRTAM_HOST', 'samskrtam.ru'),
+    ],
+
+    /*
+     | H2745 private archive offers. The public feed reads none of these rows.
+     | Eligibility is derived from paid Payments on the listed historical
+     | courses; no emails, contact lists or purchaser identities enter config.
+     */
+    'private_archives' => [
+        'archives' => [
+            'yoga_sutras' => [
+                'title' => 'Архив «Йога-сутры Патанджали»',
+                'description' => 'Закрытое предложение для подтверждённых участников прежних потоков.',
+                'enabled' => (bool) env('PRIVATE_ARCHIVE_YOGA_SUTRAS', false),
+                'offer_course_slug' => env('PRIVATE_ARCHIVE_YOGA_OFFER_SLUG', 'ioga-sutry-patandzali-1-potok-2025'),
+                'eligibility_course_slugs' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+                    'PRIVATE_ARCHIVE_YOGA_ELIGIBILITY_SLUGS',
+                    'ioga-sutry-patandzali-1-potok-2025,ioga-sutry-patandzali-2-potok-2025-2026'
+                ))))),
+            ],
+            'soboleva_ayurveda' => [
+                'title' => 'Архив аюрведы Е. Соболевой',
+                'description' => 'Закрытое предложение для подтверждённых покупателей курса.',
+                'enabled' => (bool) env('PRIVATE_ARCHIVE_SOBOLEVA_AYURVEDA', false),
+                'offer_course_slug' => env('PRIVATE_ARCHIVE_SOBOLEVA_OFFER_SLUG', 'aiurveda-soboleva-v-zapisi'),
+                'eligibility_course_slugs' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+                    'PRIVATE_ARCHIVE_SOBOLEVA_ELIGIBILITY_SLUGS',
+                    'osnovy-aiurvedy-ocno'
+                ))))),
+            ],
+            'druzhinin_ayurveda' => [
+                'title' => 'Архив аюрведы А. Дружинина',
+                'description' => 'Закрытое предложение для подтверждённых покупателей курса.',
+                'enabled' => (bool) env('PRIVATE_ARCHIVE_DRUZHININ_AYURVEDA', false),
+                'offer_course_slug' => env('PRIVATE_ARCHIVE_DRUZHININ_OFFER_SLUG', 'povtornaia-aiurveda-v-zapisi'),
+                'eligibility_course_slugs' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+                    'PRIVATE_ARCHIVE_DRUZHININ_ELIGIBILITY_SLUGS',
+                    'povtornaia-aiurveda'
+                ))))),
+            ],
+        ],
+    ],
+
     'club' => [
         /*
          | Slug курса-членства. Курс и три тарифа (месяц/квартал/год) заводит

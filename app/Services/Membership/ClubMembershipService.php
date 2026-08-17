@@ -33,7 +33,10 @@ use Illuminate\Support\Facades\Log;
  */
 final class ClubMembershipService
 {
-    public function __construct(private readonly ClubEntitlement $entitlement) {}
+    public function __construct(
+        private readonly ClubEntitlement $entitlement,
+        private readonly MembershipFunnelAnalytics $funnel,
+    ) {}
 
     /** Курс-членство. NULL, пока человек не завёл его в Filament. */
     public function clubCourse(): ?Course
@@ -364,6 +367,14 @@ final class ClubMembershipService
                     'action' => $action,
                     'detached_groups' => $detached,
                 ]);
+                if ($action === 'lapsed') {
+                    $this->funnel->recordLapse(
+                        $user,
+                        $membership->tier_code?->value ?? MembershipTier::Club->value,
+                        (int) ($membership->term_months ?? 1),
+                        (int) $membership->id,
+                    );
+                }
             }
         }
 
