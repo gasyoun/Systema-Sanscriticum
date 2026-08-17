@@ -21,7 +21,7 @@
     "@capacitor/core": "^8.4.1",
     "@capacitor/ios": "^8.5.0",
     "@capacitor/splash-screen": "^8.0.2",
-    "@capacitor/status-bar": "^8.0.2"
+    "@capacitor/status-bar": "^8.0.3"
   },
   "devDependencies": {
     "dotenv": "^17.4.2",
