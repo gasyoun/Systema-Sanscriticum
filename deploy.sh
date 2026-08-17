@@ -217,6 +217,17 @@ say "Прогрев кэшей (config/route/view + filament)"
 php artisan optimize
 php artisan filament:optimize 2>/dev/null || { warn "filament:optimize failed — Filament caches not warmed"; DEPLOY_SOFT_FAIL=1; }
 
+# `php artisan optimize` (view:cache) runs as root. php-fpm is www-data.
+# BladeCompiler::compile() then touch()es the compiled file; root:755
+# → "Utime failed: Operation not permitted" → HTTP 500 on /admin (17-08-2026).
+# Homepage stayed 200; cabinet:probe went critical on filament /admin.
+# Public smoke does not see this. chown after every root optimize.
+if [ "$(id -u)" = 0 ]; then
+  say "chown compiled views → ${APP_USER:-www-data}"
+  chown -R "${APP_USER:-www-data}:${APP_USER:-www-data}" \
+    "$APP_DIR/storage/framework/views"
+fi
+
 # ── 5. OPcache: reload php-fpm (КРИТИЧНО — validate_timestamps=0) ───────────
 PHP_VER=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
 say "systemctl reload php${PHP_VER}-fpm (сброс OPcache)"
