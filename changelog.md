@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Added
+- **H2748 (Sonnet 5 `claude-sonnet-5`): `CustomerTimelineService` компонует allow-listed `CallEvent`-типы (packet §4.2) из `ActivityEvent` как собственную строку таймлайна, без зеркальной `call_events` таблицы.** Раньше все `ActivityEvent` (включая `call.requested`/`call.started`/`call.answered`/`call.missed`/`call.ended`/`call.recording_available`, allow-list `config/telephony.php`) шли одним потоком в `learningSummary()`/`recommendNextAction()`/таймлайн — оплативший студент, у которого случился только звонок (H2747), мог не получить `ACTION_LEARNING_NUDGE`, потому что звонок читался как первое действие в кабинете. `compose()` теперь делит `ActivityEvent` на `$callActivities`/`$learningActivities`; звонки получают строку `kind: call, owner: CallEvent` с человекочитаемой русской меткой (`callEventLabel()`) вместо сырого `event_type`, и никогда не засчитываются как cabinet-сигнал. Persistence — вариант 1 из packet §4.2 (ActivityEvent, уже существующая append-only телеметрия); аудио по-прежнему нигде не хранится. Тесты: `CustomerTimelineServiceTest` — 2 новых (звонок = отдельная ветка таймлайна; звонок не гасит `learning_nudge`), 132 зелёных по Crm/Callback/Telephony, Pint чист.
 
 ## [1.89.65] - 2026-08-17
 ### Fixed
