@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Console\Commands\SyncTelegramSupport;
 use App\Services\Telegram\MadelineSessionReaper;
+use App\Services\Telegram\MadelineSyncPhase;
 use App\Services\Telegram\MadelineSyncWatchdog;
 use App\Support\ServerGuards\GuardSpec;
+use Illuminate\Console\OutputStyle;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use ReflectionMethod;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
@@ -32,6 +38,55 @@ class MadelineSyncGuardsTest extends TestCase
         // 0 — осознанное «без потолка»; вызывающий должен видеть, что не взвелось.
         $this->assertFalse($watchdog->arm(0));
         $this->assertFalse($watchdog->arm(-5));
+    }
+
+    /**
+     * H2988: after a watchdog kill the next live minutes must not immediately
+     * cold-start the same DC. Skip is SUCCESS so schedule:run releases its flock.
+     */
+    public function test_sync_skips_during_post_timeout_cooldown(): void
+    {
+        config(['services.telegram_support.sync_timeout_cooldown_seconds' => 600]);
+        MadelineSyncPhase::armCooldown(600);
+
+        $this->artisan('telegram-support:sync')
+            ->expectsOutput('Telegram support sync: post_timeout_cooldown (waiting after watchdog kill).')
+            ->assertExitCode(0);
+    }
+
+    public function test_timeout_cleanup_arms_post_timeout_cooldown_and_keeps_exit_75(): void
+    {
+        $this->assertSame(75, MadelineSyncWatchdog::EXIT_TIMED_OUT);
+
+        config(['services.telegram_support.sync_timeout_cooldown_seconds' => 600]);
+        $this->assertFalse(MadelineSyncPhase::cooldownActive());
+
+        MadelineSyncPhase::mark('client_start');
+
+        $this->invokeTimeoutCleanup();
+
+        $this->assertTrue(MadelineSyncPhase::cooldownActive());
+        $this->assertSame('client_start', MadelineSyncPhase::current());
+    }
+
+    public function test_zero_cooldown_does_not_skip_and_cleanup_does_not_arm(): void
+    {
+        config(['services.telegram_support.sync_timeout_cooldown_seconds' => 0]);
+
+        $this->invokeTimeoutCleanup();
+
+        $this->assertFalse(MadelineSyncPhase::cooldownActive());
+    }
+
+    private function invokeTimeoutCleanup(): void
+    {
+        $command = app(SyncTelegramSupport::class);
+        $command->setLaravel($this->app);
+        $command->setOutput(new OutputStyle(new ArrayInput([]), new NullOutput));
+
+        $cleanup = new ReflectionMethod(SyncTelegramSupport::class, 'cleanUpAfterTimeout');
+        $cleanup->setAccessible(true);
+        $cleanup->invoke($command, app(MadelineSessionReaper::class), 120);
     }
 
     /**
