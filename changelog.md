@@ -1,6 +1,6 @@
 ## [Unreleased]
 ### Fixed
-- **H2994 (Grok 4.6 `grok-4.6`): Filament `/admin` больше не падает HTTP 500 после root-`artisan optimize`.** `deploy.sh` компилирует Blade от root; php-fpm (`www-data`) затем не может `touch()` скомпилированный файл (`Utime failed: Operation not permitted` в `BladeCompiler.php`). Главная и `/login` оставались 200, `cabinet:probe` краснел на `/admin`. На проде снят владелец с 661 файла в `storage/framework/views`; каждый следующий деплой делает `chown` после `optimize`. Тест: `DeploySurfaceSecretsTest::test_deploy_sh_chowns_compiled_views_after_optimize`. Executor: Grok 4.6 (`grok-4.6`).
+- **H2994 (Grok 4.6 `grok-4.6`): Filament `/admin` больше не падает HTTP 500 после root-`artisan optimize`.** `deploy.sh` компилирует Blade от root; php-fpm (`www-data`) затем не может `touch()` скомпилированный файл (`Utime failed: Operation not permitted` в `BladeCompiler.php`). Главная и `/login` оставались 200, `cabinet:probe` краснел на `/admin`. На проде снят владелец с 661 файла в `storage/framework/views`; каждый деплой делает `chown` после `optimize` **и снова после** `cabinet:probe` (probe сам крутится от root и перезаписывает вьюхи). Тест: `DeploySurfaceSecretsTest::test_deploy_sh_chowns_compiled_views_after_optimize`. Executor: Grok 4.6 (`grok-4.6`).
 
 ## [1.89.64] - 2026-08-17
 ### Fixed
