@@ -198,17 +198,17 @@ handoff — this roadmap does not restate the findings, it sequences them.
       verified on main 08-08-2026 (H2463 / H2474 census).
     - [x] deposit partial consumption + upgrade credit keeps deposit half —
       Payment::consumeDepositsForCourse drains by deposit_credit_applied / consumed_amount;
-      Tariff::upgradeCreditForUser sums mount + COALESCE(deposit_credit_applied, 0) —
+      Tariff::upgradeCreditForUser sums amount + COALESCE(deposit_credit_applied, 0) —
       shipped [PR #360](https://github.com/gasyoun/Systema-Sanscriticum/pull/360)
       (DepositPartialConsumptionTest);
       verified on main 08-08-2026 (H2464 / H2474 census).
     - [x] block payout base excludes already-paid share keys (paidShareKeys in
-      lockGroupRevenueDetail when 	eacher_id set) —
+      blockGroupRevenueDetail when 	eacher_id set) —
       TeacherSalaryService + SalaryPayoutLedgerTest /
       TeacherBlockPayoutTest::block_group_revenue_excludes_already_paid_share_keys;
       verified on main 08-08-2026 (H2465 / H2474).
     - [x] block calculator deducts and settles unsettled advances —
-      dvanceOffsetForTotal + settleAdvancesForBlockPayout on TeacherSalaries /
+      advanceOffsetForTotal + settleAdvancesForBlockPayout on TeacherSalaries /
       TeacherAdvanceTest::settle_advances_for_block_payout_applies_fifo_up_to_limit;
       verified on main 08-08-2026 (H2466 / H2474).
     - [x] promo re-pending errors instead of silently charging full price —
