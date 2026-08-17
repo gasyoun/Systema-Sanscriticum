@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Services\Crm\Customer360Snapshot;
 use App\Services\Crm\CustomerTimelineService;
 use App\Support\Roles;
+use App\Support\Telephony\CallEvent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -218,6 +219,56 @@ class CustomerTimelineServiceTest extends TestCase
         $this->assertSame('paid', $payment->fresh()->status);
         $this->assertSame(4800, (int) $payment->fresh()->amount);
         $this->assertSame(1, Payment::query()->count());
+    }
+
+    /**
+     * H2748 — packet §4.2. CallEvent types are allow-listed ActivityEvent
+     * rows (option 1, no call_events table); the timeline gives them their
+     * own CallEvent-branded row instead of the generic ActivityEvent one.
+     *
+     * @test
+     */
+    public function call_requested_activity_composes_as_its_own_call_event_row(): void
+    {
+        $user = User::factory()->create();
+        ActivityEvent::create([
+            'user_id' => $user->id,
+            'event_type' => CallEvent::REQUESTED,
+            'event_data' => ['support_conversation_id' => null, 'follow_up_task_id' => null],
+            'created_at' => now(),
+        ]);
+
+        $snap = $this->service()->forUser($user);
+
+        $callRow = collect($snap->timeline)->first(fn (array $row): bool => $row['kind'] === 'call');
+        $this->assertNotNull($callRow, 'call.requested must appear on the timeline as its own row');
+        $this->assertSame('CallEvent', $callRow['owner']);
+        $this->assertSame('Запрошен обратный звонок', $callRow['title']);
+
+        // Not double-counted as a generic learning row, and the learning
+        // summary owner stays empty — a call is not cabinet activity.
+        $this->assertFalse(collect($snap->timeline)->contains(fn (array $row): bool => $row['kind'] === 'learning'));
+        $this->assertNull($snap->learning);
+    }
+
+    /** @test */
+    public function call_events_never_satisfy_the_learning_nudge_next_action(): void
+    {
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+        $this->sale($user, $course);
+        Deal::factory()->won()->create(['user_id' => $user->id, 'course_id' => $course->id]);
+        ActivityEvent::create([
+            'user_id' => $user->id,
+            'event_type' => CallEvent::REQUESTED,
+            'created_at' => now(),
+        ]);
+
+        $snap = $this->service()->forUser($user);
+
+        // A call.requested event must not be read as first-cabinet-action —
+        // the learning nudge still fires because no real learning happened.
+        $this->assertSame(Customer360Snapshot::ACTION_LEARNING_NUDGE, $snap->nextActionCode());
     }
 
     /** @test */

@@ -15,6 +15,7 @@ use App\Models\PaymentPromise;
 use App\Models\SupportConversation;
 use App\Models\User;
 use App\Services\Support\SupportConversationTopicService;
+use App\Support\Telephony\CallEvent;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
@@ -127,6 +128,19 @@ final class CustomerTimelineService
                 ->limit(25)
                 ->get();
 
+        // H2748 — CallEvent types (packet §4.2) are allow-listed telephony
+        // telemetry stored as ActivityEvent (option 1, no call_events table).
+        // Split them out so learning/next-action logic never treats a call as
+        // a lesson-view signal, and the timeline can give them their own
+        // CallEvent-branded row the same way FollowUpTask gets its own row.
+        $callTypes = config('telephony.event_types', []);
+        $callActivities = $activities->filter(
+            fn (ActivityEvent $e): bool => in_array($e->event_type, $callTypes, true)
+        )->values();
+        $learningActivities = $activities->reject(
+            fn (ActivityEvent $e): bool => in_array($e->event_type, $callTypes, true)
+        )->values();
+
         $conversion = $userIds->isEmpty()
             ? null
             : PartnerConversion::query()
@@ -143,7 +157,7 @@ final class CustomerTimelineService
         $pipeline = $this->pipeline($deals, $leads);
         $support = $this->supportSummary($conversations);
         $access = $this->accessSummary($payments, $promises);
-        $learning = $this->learningSummary($activities);
+        $learning = $this->learningSummary($learningActivities);
         $attribution = $this->attributionSummary($leads, $conversion);
         $next = $this->recommendNextAction(
             $followUps,
@@ -152,7 +166,7 @@ final class CustomerTimelineService
             $conversations,
             $promises,
             $payments,
-            $activities,
+            $learningActivities,
         );
         $timeline = $this->timeline(
             $leads,
@@ -161,7 +175,8 @@ final class CustomerTimelineService
             $payments,
             $promises,
             $conversations,
-            $activities,
+            $learningActivities,
+            $callActivities,
             $conversion,
         );
 
@@ -599,7 +614,8 @@ final class CustomerTimelineService
      * @param  Collection<int, Payment>  $payments
      * @param  Collection<int, PaymentPromise>  $promises
      * @param  Collection<int, SupportConversation>  $conversations
-     * @param  Collection<int, ActivityEvent>  $activities
+     * @param  Collection<int, ActivityEvent>  $learningActivities  non-call ActivityEvent rows
+     * @param  Collection<int, ActivityEvent>  $callActivities  allow-listed CallEvent types (packet §4.2), branded separately
      * @return list<array<string, mixed>>
      */
     private function timeline(
@@ -609,7 +625,8 @@ final class CustomerTimelineService
         Collection $payments,
         Collection $promises,
         Collection $conversations,
-        Collection $activities,
+        Collection $learningActivities,
+        Collection $callActivities,
         ?PartnerConversion $conversion,
     ): array {
         $rows = collect();
@@ -675,13 +692,25 @@ final class CustomerTimelineService
                 $thread->id,
             ));
         }
-        foreach ($activities as $event) {
+        foreach ($learningActivities as $event) {
             $rows->push($this->row(
                 $event->created_at,
                 'learning',
                 'ActivityEvent',
                 'Событие '.$event->event_type,
                 $event->user_id ? $this->userUrl($event->user_id) : null,
+                $event->id,
+            ));
+        }
+        foreach ($callActivities as $event) {
+            $data = $event->event_data ?? [];
+            $conversationId = $data['support_conversation_id'] ?? null;
+            $rows->push($this->row(
+                $event->created_at,
+                'call',
+                'CallEvent',
+                $this->callEventLabel($event->event_type),
+                $conversationId ? $this->helpdeskUrl() : ($event->user_id ? $this->userUrl($event->user_id) : null),
                 $event->id,
             ));
         }
@@ -749,5 +778,22 @@ final class CustomerTimelineService
     private function helpdeskUrl(): string
     {
         return '/admin/dialogs';
+    }
+
+    /**
+     * H2748 — packet §4.2 allow-listed CallEvent types get a human label on
+     * the timeline instead of the raw dotted event_type string.
+     */
+    private function callEventLabel(string $type): string
+    {
+        return match ($type) {
+            CallEvent::REQUESTED => 'Запрошен обратный звонок',
+            CallEvent::STARTED => 'Звонок начат',
+            CallEvent::ANSWERED => 'Звонок отвечен',
+            CallEvent::MISSED => 'Пропущенный звонок',
+            CallEvent::ENDED => 'Звонок завершён',
+            CallEvent::RECORDING_AVAILABLE => 'Доступна запись звонка (метаданные)',
+            default => 'Звонок: '.$type,
+        };
     }
 }
