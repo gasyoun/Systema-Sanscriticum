@@ -7,6 +7,8 @@ namespace App\Http\Controllers;
 use App\Models\ActivityEvent;
 use App\Services\Activity\ActivityTracker;
 use App\Services\StartChteniyaProgress;
+use App\Support\CourseCohortEntitlement;
+use App\Support\CourseReadingPacks;
 use App\Support\StartChteniyaCohort;
 use App\Support\StartChteniyaSrsDeck;
 use Illuminate\Http\RedirectResponse;
@@ -69,6 +71,29 @@ use RuntimeException;
  * writes the private cohort SRS deck. `App\Services\StartChteniyaProgress` reads both
  * to compute per-student lookup % / unique-lemma count and the teacher-facing
  * top-stalled-lemma ranking (lookups that never converted to a collected card).
+ *
+ * H2168 adds the MULTI-COURSE dimension the shape above could not express. Everything
+ * up to here is one cohort with a flat pack list (self::COHORT_PACKS) gated by
+ * StartChteniyaCohort; Nalopākhyāna (3 packs) and Subhāṣita (1 pack) are two courses
+ * sold separately, so `courseIndex()`/`coursePack()` resolve packs by COURSE slug
+ * through App\Support\CourseReadingPacks and gate on H2164's
+ * CourseCohortEntitlement::hasEntitlement($user, $courseSlug) — a payment on one of
+ * them never opens the other.
+ *
+ * Three deliberate properties of that additive path:
+ *
+ *  - it does NOT read config('features.kosha_reader'). Its own OFF switch is the
+ *    per-course `cohort_courses.<slug>.enabled` (default false, checked inside
+ *    hasEntitlement()), so the older demo flag keeps meaning exactly what it meant:
+ *    with the course path off, /reading/kosha-demo and /dvaram/reading render
+ *    byte-identically to before (pinned by a regression test);
+ *  - it is RENDER-ONLY. No srsAdd, no lookup telemetry, no new POST route — the
+ *    tap-token/SRS half is explicitly outside H2168's fence, so a course pack page
+ *    is a read-only reader like the public demo;
+ *  - the pack feeds are a separate vendored freeze (kosha H2165,
+ *    resources/data/nala_subhashita/) and the legacy nala-1 demo feed at
+ *    resources/data/kosha_reading_pack_nala_1.json is left exactly where it was,
+ *    even though the freeze also carries a nala-1.
  */
 class ReadingPackController extends Controller
 {
@@ -138,6 +163,72 @@ class ReadingPackController extends Controller
         // srsAdd is what turns the tap panel's «в колоду» buttons on. Only here: the
         // public demo route renders the same partial and must stay a read-only page.
         return view('student.reading-pack', $viewData + ['srsAdd' => true]);
+    }
+
+    /**
+     * H2168 — the reading list of ONE cohort COURSE (Nalopākhyāna, Subhāṣita, ...).
+     *
+     * Gated by CourseCohortEntitlement, which is false unless that course's own
+     * `cohort_courses.<slug>.enabled` switch is on AND the user has a real
+     * non-deposit/non-trial paid payment for THAT course — so a Nala student 404s on
+     * the Subhāṣita reader and vice versa. An unknown or pack-less course slug 404s
+     * too, before any file is touched.
+     */
+    public function courseIndex(Request $request, string $course): View
+    {
+        $this->authorizeCourseReader($request, $course);
+
+        $slugs = CourseReadingPacks::packSlugs($course);
+        abort_if($slugs === [], 404);
+
+        $packs = [];
+        foreach ($slugs as $position => $slug) {
+            $pack = CourseReadingPacks::read($slug);
+            // Narrative position, 1-based — the durable half of the sequential
+            // decision (see CourseReadingPacks' docblock). Not a lock.
+            $pack['position'] = $position + 1;
+            $packs[] = $pack;
+        }
+
+        return view('student.reading-course-index', [
+            'course' => $course,
+            'courseTitle' => CourseReadingPacks::courseTitle($course),
+            'packs' => $packs,
+        ]);
+    }
+
+    /** H2168 — one pack of one course. Render-only: no srsAdd, no lookup telemetry. */
+    public function coursePack(Request $request, string $course, string $slug): View
+    {
+        $this->authorizeCourseReader($request, $course);
+
+        // Never resolve an arbitrary slug from the URL into a path: only packs THIS
+        // course offers are readable, so both traversal and cross-course reads 404.
+        abort_unless(CourseReadingPacks::offers($course, $slug), 404);
+
+        return view('student.reading-course-pack', [
+            'course' => $course,
+            'courseTitle' => CourseReadingPacks::courseTitle($course),
+            'pack' => CourseReadingPacks::read($slug),
+            // H965's advisory difficulty score and its "graded reading" list are a
+            // PUBLIC-DEMO feature and stay there: the list is kosha's cross-corpus
+            // ranking, and its own caption ("only the text above is wired up") is
+            // simply false on a course page that offers three. The partial guards
+            // both blocks, so a course page is a pure reader.
+            'difficulty' => null,
+            'rankedPacks' => [],
+        ]);
+    }
+
+    /**
+     * H2168 — the course path's single gate, deliberately NOT stacked on
+     * features.kosha_reader: each course carries its own deploy switch inside
+     * config/cohort_courses.php, checked by hasEntitlement(). Fails closed for a
+     * guest, an unknown slug, a disabled course and a non-payer alike.
+     */
+    private function authorizeCourseReader(Request $request, string $course): void
+    {
+        abort_unless(CourseCohortEntitlement::hasEntitlement($request->user(), $course), 404);
     }
 
     /**

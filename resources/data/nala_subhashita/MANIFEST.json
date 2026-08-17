@@ -1,0 +1,132 @@
+{
+  "id": "nala-subhashita-pack-freeze",
+  "title": "Nalopākhyāna + subhāṣita-beginner course pack freeze (nala-1/2/3 + subhāṣita-beginner)",
+  "cohort_slug": "nala_subhashita",
+  "built": "2026-08-16",
+  "handoff": "H2165",
+  "executor": "Sonnet 5 (claude-sonnet-5)",
+  "goal": "Pin owned packs for reader-wiring embed without new linguistics",
+  "fence": "No new analysis layers; no human-overlay overwrite; freeze only; no changes to underlying reading-pack JSON content",
+  "consumers": [
+    "H2168 Systema-Sanscriticum reader wiring (ReadingPackController multi-course multi-pack)"
+  ],
+  "packs": [
+    {
+      "slug": "nala-1",
+      "kind": "reading_pack",
+      "source_path": "reading/data/nala-1.json",
+      "pin_path": "data/nala_subhashita/nala-1.json",
+      "sha256": "f93f9e8e080e15e20794a94a96fb1ed7d82fd9f4df0534ced1565a90b3bf2e62",
+      "bytes": 172105,
+      "built_source": "2026-07-13",
+      "schema": "reading_pack_v1 (sentences[].tokens[] with form/lemma/upos/morph/gloss/slp1; optional gloss_ru)",
+      "adapter_note": null,
+      "gloss_ru_coverage": "430/439 tokens have gloss_ru (97.9%)",
+      "stats": {
+        "sentences": 65,
+        "tokens": 439,
+        "linked_tokens": 434,
+        "link_rate_pct": 98.9,
+        "tier_counts": {
+          "exact": 434,
+          "relaxed": 2,
+          "none": 3
+        }
+      }
+    },
+    {
+      "slug": "nala-2",
+      "kind": "reading_pack",
+      "source_path": "reading/data/nala-2.json",
+      "pin_path": "data/nala_subhashita/nala-2.json",
+      "sha256": "60397cdadc6017780eb748365de02c00a10a8c3d910a49ba9095fd3626f47a58",
+      "bytes": 153529,
+      "built_source": "2026-07-15",
+      "schema": "reading_pack_v1 (sentences[].tokens[] with form/lemma/upos/morph/gloss/slp1; optional gloss_ru)",
+      "adapter_note": null,
+      "gloss_ru_coverage": "385/392 tokens have gloss_ru (98.2%)",
+      "stats": {
+        "sentences": 61,
+        "tokens": 392,
+        "linked_tokens": 385,
+        "link_rate_pct": 98.2,
+        "tier_counts": {
+          "exact": 385,
+          "none": 6,
+          "relaxed": 1
+        }
+      }
+    },
+    {
+      "slug": "nala-3",
+      "kind": "reading_pack",
+      "source_path": "reading/data/nala-3.json",
+      "pin_path": "data/nala_subhashita/nala-3.json",
+      "sha256": "b55bd55b55ca1792aa4638981ca23410aaf7b85276a0ccc674342ce45714d0c1",
+      "bytes": 134029,
+      "built_source": "2026-07-15",
+      "schema": "reading_pack_v1 (sentences[].tokens[] with form/lemma/upos/morph/gloss/slp1; optional gloss_ru)",
+      "adapter_note": null,
+      "gloss_ru_coverage": "342/351 tokens have gloss_ru (97.4%)",
+      "stats": {
+        "sentences": 51,
+        "tokens": 351,
+        "linked_tokens": 337,
+        "link_rate_pct": 96.0,
+        "tier_counts": {
+          "exact": 337,
+          "none": 13,
+          "relaxed": 1
+        }
+      }
+    },
+    {
+      "slug": "subhashita-beginner",
+      "kind": "subhashita_reader_pack",
+      "source_path": "data/subhashita/subhashita_beginner_pack.json",
+      "pin_path": "data/nala_subhashita/subhashita_beginner_pack.json",
+      "sha256": "2c617a1151e8904505c57759a937e94e22ca089fe6ee4bf8fa717171802ec46c",
+      "bytes": 519889,
+      "built_source": "2026-07-19",
+      "schema": "subhashita_reader_pack (sayings[] with lines[].chunks[] tokens; NOT sentences/tokens reading_pack shape)",
+      "adapter_note": "Schema delta vs reading_pack_v1: top-level sayings[] not sentences[]; tokens live under lines[].chunks[] as t/lemma_slp1/gloss_ru triples; German translation_de not EN gloss. Reader wiring (H2168) must adapt or normalize — do not invent a second schema silently. Same pin content as H2109's cohort_start_chteniya freeze; pinned again here so the Nala+Subhāṣita course has one self-contained manifest (H2165 decision, logged in .ai_state.md).",
+      "gloss_ru_coverage": "lemma-layer RU gloss 85.3% (1288/1510 tokens); status: present — H1312 re-run joined the W-RU-a public site-tier layers (surface/lemma/",
+      "stats": {
+        "sayings": 106,
+        "difficulty_min": 0.2841,
+        "difficulty_max": 0.4063,
+        "junctions": 1294,
+        "junctions_labelled": 187,
+        "internal_seams": 247,
+        "internal_seams_resolved": 247,
+        "cross_boundary_rules": 62,
+        "seg_source_chunks": {
+          "dm": 770,
+          "cheda": 437,
+          "surface": 56
+        },
+        "metres": [
+          "anuṣṭubh",
+          "indravajrā",
+          "rathoddhatā",
+          "toṭaka",
+          "udgīti",
+          "upagīti",
+          "vaṃśastha",
+          "āryā",
+          "āryāgīti"
+        ],
+        "gloss_ru_tokens": 1510,
+        "gloss_ru_lemma_tagged": 1346,
+        "gloss_ru_lemma_hit": 1288,
+        "gloss_ru_lemma_tag_coverage_pct": 89.1,
+        "gloss_ru_coverage_pct": 85.3
+      }
+    }
+  ],
+  "notes": [
+    "nala-1/2/3 is the Nalopākhyāna sequence (MBh 3.50-3.52), built 13/15-07-2026, 96-99% link rate.",
+    "subhashita-beginner is the same 106-saying pack already frozen under data/cohort_start_chteniya/ by H2109 — pinned again here under its own manifest so this course is self-contained; H2109's cohort_start_chteniya freeze is left untouched.",
+    "Decision (per H2165 work step 3): fresh manifest, not an extension of H2109's cohort_start_chteniya/MANIFEST.json — nala+subhashita is a distinct course from the \"Старт чтения\" cohort (hitopadesa-0 + sandhi L1-3), so a separate freeze keeps the two courses' pin sets independently verifiable and avoids growing an unrelated manifest."
+  ]
+}
