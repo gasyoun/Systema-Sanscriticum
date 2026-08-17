@@ -304,6 +304,9 @@ fi
 say "Предохранители ОС: php artisan guards:verify"
 GUARDS_DRIFT=0
 php artisan guards:verify || GUARDS_DRIFT=1
+# Last artisan-as-root in this script. 17-08 07:38Z left 8 compiled files
+# root after probe+guards even with the post-probe chown.
+chown_compiled_views
 if [ "$GUARDS_DRIFT" = 1 ]; then
   printf '\n\033[1;31m%s\033[0m\n' "✖ ПРЕДОХРАНИТЕЛИ ПРОДА РАСХОДЯТСЯ С РЕПОЗИТОРИЕМ (см. список выше)"
   printf '\033[1;31m%s\033[0m\n' "  Вернуть: sudo bash scripts/server_guards_apply.sh"

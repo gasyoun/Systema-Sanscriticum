@@ -49,9 +49,9 @@ final class DeploySurfaceSecretsTest extends TestCase
         $this->assertNotFalse($optimizePos);
         $this->assertNotFalse($probePos);
         $this->assertSame(
-            3,
+            4,
             substr_count($script, 'chown_compiled_views'),
-            'helper definition plus chown after optimize AND after cabinet:probe',
+            'helper plus chown after optimize, cabinet:probe, and guards:verify',
         );
         $afterOptimize = strpos($script, 'chown_compiled_views', $optimizePos);
         $afterProbe = strpos($script, 'chown_compiled_views', $probePos);
