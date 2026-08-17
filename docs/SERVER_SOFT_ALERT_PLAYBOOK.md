@@ -1,6 +1,6 @@
 # Soft server alerts — agent playbook + cause catalog
 
-_Created: 02-08-2026 · Last updated: 17-08-2026 (H2971 cabinet tier_code 500)_
+_Created: 02-08-2026 · Last updated: 17-08-2026 (compiled Blade root:755 /admin 500)_
 
 **Audience:** agents (Grok / Claude / Codex) and ops.  
 **Scope:** Telegram soft path from `cabinet:probe` («Кабинет: soft-сбой …»),  
@@ -79,6 +79,7 @@ Severity is what `guards:verify` / TG already use (H2066 + H2104).
 | root cron missing `systema-auto-deploy-run.sh` | auto-deploy silently dead | 200 | none | invent cron from memory | `server_guards_apply.sh` + mirror |
 | earlyoom / MemAvailable / OOM | resource pressure | maybe down | none | random process kills | [server-resource-guards.md §7](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) |
 | hybrid soft surfaces | `/library` etc. optional | 200 elsewhere | none | “fix” by disabling hybrid blindly | feature flags / hybrid docs |
+| `touch(): Utime failed` / root-owned `storage/framework/views` | Filament `/admin` HTTP 500; `cabinet:probe` critical; public `/` and `/login` 200 | /admin 500 | `chown -R www-data:www-data storage/framework/views` | disable probe; `nano` compiled views; restart healthy php-fpm | `deploy.sh` `artisan optimize` as root compiles Blade; php-fpm cannot `touch()`; next deploy.sh chowns after optimize |
 
 **Allowed dirty without blocking deploy:** `public/docs/*.pdf` only (legal PDFs).
 
@@ -181,6 +182,7 @@ Do not invent rows for chat-only speculation.
 
 | When (UTC) | Tag / fingerprint | Paths / SHA | Outcome | By | Notes |
 |---|---|---|---|---|---|
+| 2026-08-17 05:15–05:45 | critical `cabinet:probe` Filament `/admin` HTTP 500 | `touch(): Utime failed: Operation not permitted` at `BladeCompiler.php:215`; 660 compiled views `root:root` 755 after `deploy.sh` `artisan optimize`. User 6856 (probe login). Public `/` 200, `/login` 200, `/dvaram` 302. Prod HEAD then `91ed66ae`. | **Triage 17-08 05:57Z:** php-fpm/nginx/disk OK; latest probe already green (compiled files readable until next recompile). `chown -R www-data:www-data storage/framework/views` (661 files). Re-probe 1594 ms all-OK. Failsafe: deploy.sh chowns views after every root `optimize`. Leftover `telegram-support:sync` watchdog is H2988 (Grok 4.6) — telegram-support:sync still hits 120s watchdog after H1915, not this turn. | Grok 4.6 | class: root-compiled Blade; public smoke 200 does not see /admin |
 | 2026-08-16 23:30 | critical `cabinet:probe` manager+student `/dvaram` HTTP 500 | `ClubEntitlement::activeTierFor` `get(['tier_code'])`; SQLSTATE 42S22 on `club_memberships`; user 6856. Recovered 23:45 without deploy. Prod HEAD then `ea1eb6bd`. | **Triage 17-08 04:10Z:** site live; column present; `MEMBERSHIP_TIERED=false`; php-fpm/nginx/disk OK; `cabinet:probe` 1634 ms green. Harvest `pilot/` was `root:700` — `chown www-data` so `storage:check`/`backup:run` stop throwing. Code failsafe H2971. | Grok 4.6 | class: dark membership SELECT of a new column; public smoke 200 does not see /dvaram |
 | 2026-08-15 08:30–08:57 | `[rolled-back]` ×2 (08:30 then 08:44 auto-retry) | Horizon master `memory_limit` 64 MB; attempted `bd70a1a5` (#1727 banner). Rollback SHA `3ae0854e`. | **Triage:** site always 200; root cause is Horizon master exit 12 (`Using 65/64MB`), ~5054 restarts from 04:59Z, not the banner commit. [#1729](https://github.com/gasyoun/Systema-Sanscriticum/pull/1729) (`378f5376`) raised master to 128 (`HORIZON_MEMORY_LIMIT`). Fuse already gone and HEAD=`origin/main`=`378f5376` at 08:57 (deploy.sh, not the wrapper). This session rebuilt `config:cache` (live had drifted to 256 from a gitignored hotfix) → 128, restarted Horizon, `cabinet:probe` + `guards:verify` green. | Grok 4.6 | class: Laravel default master 64 MB too small for this app boot; health_check greps RUNNING during crash-loop and rolls back a healthy SHA |
 | 2026-08-07 19:30 | tracked dirty `6795e22d` (#1193) | `app/Console/Commands/ImportStartChteniyaCohortSrsDeck.php` mid-deploy of `58efc74b` (H2106 trim fix) | **2026-08-08 triage:** self-healed same minute — `deploy.sh` discarded origin-equal dirty + OK `58efc74b`. Fuse never set. Prod green HEAD=`e29df61b`; removed leftover untracked `.bak.h2106.20260807192313`. Closed #1193. | Grok 4.5 | class: probe race during origin-equal dirty window + prod hotpatch bak; do not edit tracked PHP on VPS |

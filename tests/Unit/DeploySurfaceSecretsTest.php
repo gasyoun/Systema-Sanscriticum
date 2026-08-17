@@ -29,6 +29,32 @@ final class DeploySurfaceSecretsTest extends TestCase
         return $body;
     }
 
+    public function test_deploy_sh_chowns_compiled_views_after_optimize(): void
+    {
+        $script = $this->readRepoFile('deploy.sh');
+
+        $this->assertMatchesRegularExpression(
+            '/^php artisan optimize$/m',
+            $script,
+            'deploy.sh must still warm caches via artisan optimize',
+        );
+        $this->assertMatchesRegularExpression(
+            '/chown\s+-R\s+"\$\{APP_USER:-www-data\}:\$\{APP_USER:-www-data\}"\s+\\\s*\n\s+"\$APP_DIR\/storage\/framework\/views"/',
+            $script,
+            'root-owned compiled Blade 500s php-fpm on touch() — chown views after optimize',
+        );
+
+        $optimizePos = strpos($script, "php artisan optimize\n");
+        $chownPos = strpos($script, 'storage/framework/views');
+        $this->assertNotFalse($optimizePos);
+        $this->assertNotFalse($chownPos);
+        $this->assertGreaterThan(
+            $optimizePos,
+            $chownPos,
+            'chown of compiled views must run after artisan optimize writes them',
+        );
+    }
+
     public function test_deploy_sh_does_not_dump_env_or_secret_variables(): void
     {
         $script = $this->readRepoFile('deploy.sh');

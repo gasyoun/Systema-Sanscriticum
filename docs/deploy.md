@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 13-08-2026_
+_Created: 02-07-2026 · Last updated: 17-08-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -56,6 +56,10 @@ _Created: 02-07-2026 · Last updated: 13-08-2026_
    виджет/страница падает `ComponentNotFoundException` на update-запросе)
    → `php artisan migrate --force`.
 6. Прогрев: `php artisan optimize` (config/route/view) + `filament:optimize`.
+   Then, if deploy is running as root, `chown -R www-data:www-data storage/framework/views`.
+   `optimize` writes compiled Blade as root; php-fpm is www-data. Without the
+   chown, the next Blade recompile does `touch()` and 500s Filament `/admin`
+   (`Utime failed: Operation not permitted`, 17-08-2026). Homepage stays 200.
 7. **`systemctl reload php{ver}-fpm`** — сброс OPcache (версия PHP определяется
    автоматически, переживет апгрейд 8.1 → 8.3).
 8. `supervisorctl restart horizon` — `horizon:terminate` на этом проде воркеры
