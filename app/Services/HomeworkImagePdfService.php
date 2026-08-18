@@ -104,6 +104,16 @@ class HomeworkImagePdfService
             return null;
         }
 
+        $maxPages = max(0, (int) config('homework.image_pdf.max_pages', 40));
+        if ($maxPages > 0 && $images->count() > $maxPages) {
+            Log::warning('HomeworkImagePdf: page cap reached', [
+                'submission_id' => $submission->id,
+                'images' => $images->count(),
+                'max_pages' => $maxPages,
+            ]);
+            $images = $images->take($maxPages);
+        }
+
         $pages = [];
         foreach ($images as $file) {
             $dataUri = $this->dataUriFor($file);
@@ -120,6 +130,7 @@ class HomeworkImagePdfService
                 'data_uri' => $dataUri,
                 'name' => $file->original_name,
             ];
+            unset($dataUri);
         }
 
         if ($pages === []) {
@@ -200,34 +211,80 @@ class HomeworkImagePdfService
 
         $mime = strtolower((string) ($file->mime ?: 'image/jpeg'));
         $converted = $this->normalizeToDompdfImage($bytes, $mime);
+        // Оригинал больше не нужен: до 18-08-2026 он доживал до base64 и
+        // держал лишние мегабайты ровно там, где память и кончалась.
+        unset($bytes);
+
         if ($converted === null) {
             return null;
         }
 
-        return 'data:'.$converted['mime'].';base64,'.base64_encode($converted['bytes']);
+        $uri = 'data:'.$converted['mime'].';base64,'.base64_encode($converted['bytes']);
+        unset($converted);
+
+        return $uri;
     }
 
     /**
-     * dompdf уверенно ест jpeg/png; heic/webp/прочее — через imagick/GD если есть.
+     * Одна страница PDF — это один jpeg, ужатый до `max_edge_px` по длинной
+     * стороне и повёрнутый по EXIF.
+     *
+     * До 18-08-2026 jpeg/png/gif уходили в dompdf КАК ЕСТЬ, и это клало
+     * php-fpm с его 128 МБ на обычной сдаче с телефона: снимок айфона —
+     * 4032×3024 (~5,5 МБ), значит ~7,4 МБ строки на base64 каждой страницы
+     * плюс полноразмерный декод кадра внутри dompdf (~42 МБ). Семь страниц
+     * (гр.60, «Кочергина 3 (читка)», 18.08.2026) переполняли лимит.
+     *
+     * Почему это ломало именно СДАЧУ, а не только PDF: исчерпание памяти —
+     * фатальная ошибка PHP, её не ловит `try/catch`, поэтому страховка
+     * `rebuildQuietly()` не срабатывала. Падал весь POST, студент получал
+     * 500 на уже сохранённой в базе работе и повторял отправку по кругу,
+     * а `notifyTeacher()` за сборкой PDF не выполнялся — проверяющий о
+     * работе не узнавал. Ужатие здесь и есть то, что делает обещание
+     * «падение сборки не откатывает сдачу» правдой.
      *
      * @return array{bytes: string, mime: string}|null
      */
     private function normalizeToDompdfImage(string $bytes, string $mime): ?array
     {
         $mime = strtolower($mime);
-
-        if (in_array($mime, ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'], true)) {
-            return ['bytes' => $bytes, 'mime' => $mime === 'image/jpg' ? 'image/jpeg' : $mime];
-        }
+        $maxEdge = max(320, (int) config('homework.image_pdf.max_edge_px', 1600));
+        $quality = min(95, max(40, (int) config('homework.image_pdf.jpeg_quality', 82)));
 
         if (extension_loaded('imagick')) {
             try {
                 $im = new \Imagick;
                 $im->readImageBlob($bytes);
-                $im->setImageFormat('jpeg');
-                $im->setImageCompressionQuality(85);
 
-                return ['bytes' => $im->getImageBlob(), 'mime' => 'image/jpeg'];
+                // Многокадровый heic/gif: в PDF идёт первый кадр, остальные
+                // только едят память.
+                if ($im->getNumberImages() > 1) {
+                    $im->setIteratorIndex(0);
+                    $frame = $im->getImage();
+                    $im->clear();
+                    $im->destroy();
+                    $im = $frame;
+                }
+
+                // Фото с телефона почти всегда лежит «боком» с EXIF-флагом
+                // поворота. dompdf его не читает — без autoOrient страница
+                // уезжает набок, и это стало бы заметно именно после ужатия.
+                if (method_exists($im, 'autoOrient')) {
+                    $im->autoOrient();
+                }
+
+                $im->thumbnailImage($maxEdge, $maxEdge, true, false);
+                $im->setImageFormat('jpeg');
+                $im->setImageCompressionQuality($quality);
+                $im->stripImage();
+
+                $jpeg = $im->getImageBlob();
+                $im->clear();
+                $im->destroy();
+
+                if ($jpeg !== '') {
+                    return ['bytes' => $jpeg, 'mime' => 'image/jpeg'];
+                }
             } catch (\Throwable) {
                 // fall through to GD
             }
@@ -236,8 +293,9 @@ class HomeworkImagePdfService
         if (function_exists('imagecreatefromstring')) {
             $gd = @imagecreatefromstring($bytes);
             if ($gd !== false) {
+                $gd = $this->downscaleGd($gd, $maxEdge);
                 ob_start();
-                imagejpeg($gd, null, 85);
+                imagejpeg($gd, null, $quality);
                 $jpeg = (string) ob_get_clean();
                 imagedestroy($gd);
                 if ($jpeg !== '') {
@@ -246,11 +304,43 @@ class HomeworkImagePdfService
             }
         }
 
-        // Последняя попытка: отдать как есть (webp иногда проходит).
-        if (str_starts_with($mime, 'image/')) {
-            return ['bytes' => $bytes, 'mime' => $mime];
+        // Ни imagick, ни GD не прочитали (обычно heic без делегата). Отдать
+        // как есть можно только если кадр заведомо мал: несжатый оригинал
+        // здесь — ровно тот путь, который и приводил к падению.
+        $rawMax = max(0, (int) config('homework.image_pdf.raw_passthrough_max_kb', 512)) * 1024;
+        if (str_starts_with($mime, 'image/') && strlen($bytes) <= $rawMax) {
+            return ['bytes' => $bytes, 'mime' => $mime === 'image/jpg' ? 'image/jpeg' : $mime];
         }
 
         return null;
+    }
+
+    /**
+     * GD-ветка ужатия. Отдельным методом, потому что у GD нет thumbnailImage
+     * и пропорции приходится считать руками.
+     *
+     * @param  \GdImage  $gd
+     * @return \GdImage
+     */
+    private function downscaleGd($gd, int $maxEdge)
+    {
+        $w = imagesx($gd);
+        $h = imagesy($gd);
+        $edge = max($w, $h);
+
+        if ($edge <= $maxEdge || $edge === 0) {
+            return $gd;
+        }
+
+        $ratio = $maxEdge / $edge;
+        $small = imagescale($gd, max(1, (int) round($w * $ratio)), max(1, (int) round($h * $ratio)));
+
+        if ($small === false) {
+            return $gd;
+        }
+
+        imagedestroy($gd);
+
+        return $small;
     }
 }
