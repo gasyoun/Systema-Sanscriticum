@@ -10,9 +10,11 @@ use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\HomeworkAutoOpener;
 use App\Support\HomeworkAutoOpenScope;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -154,6 +156,60 @@ class UnreviewedCourseHomeworkTest extends TestCase
 
         $this->assertStringContainsString('Сдано', $html);
         $this->assertStringNotContainsString('Работа у куратора', $html);
+    }
+
+    // ===================================================================
+    // Открытие на непроверяемом курсе не проходит мимо человека (H3087)
+    // ===================================================================
+
+    /**
+     * MG 18-08-2026: «не надо там ничего открывать молча». Молчание было не в
+     * сторону студентов — им пуш уходит как обычно, — а в человеческую.
+     */
+    /** @test */
+    public function opening_on_an_unreviewed_course_tells_the_curator(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]])]);
+        config([
+            'homework.reviewers.unreviewed_open_alert' => true,
+            'services.telegram.bot_token' => 'ADMINTOKEN',
+            'services.telegram.admin_id' => '12345',
+        ]);
+
+        $course = Course::factory()->create(['slug' => 'prodlenka-sanskrita-2026']);
+        $lesson = Lesson::factory()->for($course)->create([
+            'homework_enabled' => false,
+            'recording_attached_at' => now(),
+        ]);
+
+        app(HomeworkAutoOpener::class)->open($lesson, notify: false);
+
+        $this->assertTrue((bool) $lesson->fresh()->homework_enabled);
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && str_contains((string) ($request['text'] ?? ''), 'БЕЗ проверки'));
+    }
+
+    /** На обычном курсе такого сообщения нет — иначе это был бы шум. */
+    /** @test */
+    public function opening_on_a_normal_course_does_not_tell_the_curator(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 1]])]);
+        config([
+            'homework.reviewers.unreviewed_open_alert' => true,
+            'services.telegram.bot_token' => 'ADMINTOKEN',
+            'services.telegram.admin_id' => '12345',
+        ]);
+
+        $course = Course::factory()->create(['slug' => 'grammatika-po-kocerginoi-gr79']);
+        $lesson = Lesson::factory()->for($course)->create([
+            'homework_enabled' => false,
+            'recording_attached_at' => now(),
+        ]);
+
+        app(HomeworkAutoOpener::class)->open($lesson, notify: false);
+
+        Http::assertNotSent(fn ($request) => str_contains((string) ($request['text'] ?? ''), 'БЕЗ проверки'));
     }
 
     /** @return array{0: Course, 1: Lesson} */

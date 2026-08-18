@@ -129,7 +129,7 @@ class HomeworkNotifier
      *
      * @return Collection<int, User>
      */
-    private function studentsFor(Lesson $lesson): Collection
+    public function studentsFor(Lesson $lesson): Collection
     {
         if ($lesson->group_id) {
             return Group::with('activeUsers')
