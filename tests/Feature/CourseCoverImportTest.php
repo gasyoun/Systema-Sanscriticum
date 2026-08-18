@@ -32,6 +32,14 @@ class CourseCoverImportTest extends TestCase
 
         Storage::fake('public');
         Storage::fake('local');
+
+        // Предмет этого набора — импортёр баннеров, а не автоперевод обложек в
+        // WebP (H3082). Фикстуры здесь — нарочно собранные байты PNG/JPEG, и
+        // наблюдатель, переписывающий обложку при сохранении курса, ломал бы
+        // ровно те проверки, ради которых байты и собирались (побайтовая копия,
+        // «jpeg остаётся jpeg», центр кадра). Композицию двух механизмов
+        // проверяет CoversToWebpTest::a_converted_cover_still_imports_into_a_banner_slot.
+        config()->set('media.webp.enabled', false);
     }
 
     protected function tearDown(): void

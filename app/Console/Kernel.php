@@ -18,6 +18,15 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Второй рубеж автоперевода обложек в WebP (H3082). Наблюдатель
+        // ловит загрузку через Eloquent; эта уборка подбирает всё, что
+        // прошло мимо модели, чтобы формат не зависел от человека.
+        $schedule->command('media:covers-to-webp')
+            ->dailyAt('02:40')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('media-covers-to-webp');
+
         $schedule->command('archives:cleanup --hours=24')
             ->dailyAt('03:00')
             ->withoutOverlapping(10)

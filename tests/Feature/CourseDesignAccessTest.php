@@ -34,6 +34,13 @@ class CourseDesignAccessTest extends TestCase
 
         Storage::fake('public');
         Storage::fake('local');
+
+        // Предмет набора — страница «Дизайн курсов» и её действия, а не
+        // автоперевод обложек в WebP (H3082). Наблюдатель переписывал бы
+        // `courses/cover.jpg` при $course->update(), и проверка «витрина не
+        // тронута ДЕЙСТВИЕМ переноса» сравнивала бы уже не то. Тот же приём и
+        // по той же причине применён в CourseCoverImportTest.
+        config()->set('media.webp.enabled', false);
     }
 
     private function user(?string $role): User
