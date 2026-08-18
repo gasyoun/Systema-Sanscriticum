@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\VisualDcsUnit;
 use App\Services\Learning\VisualDcsReleaseImporter;
 use Illuminate\Console\Command;
 use Throwable;
@@ -30,18 +31,23 @@ class VisualDcsImportCommand extends Command
         }
 
         $release = $result['release'];
+        $units = VisualDcsUnit::query()
+            ->where('visualdcs_release_id', $release->id)
+            ->count();
+
         if ($result['noop']) {
-            $this->info('Already promoted '.$release->release_id.' — no-op.');
+            $this->info('Already promoted '.$release->release_id.' — no-op. Units: '.$units.'.');
 
             return self::SUCCESS;
         }
 
         $this->info(sprintf(
-            'Imported %s (%s) status=%s hash=%s',
+            'Imported %s (%s) status=%s hash=%s units=%d',
             $release->release_id,
             $release->contract_version,
             $release->status,
             $release->manifest_hash,
+            $units,
         ));
 
         return self::SUCCESS;
