@@ -22,17 +22,29 @@ class HomeworkSubmittedMail extends Mailable implements ShouldQueue
 
     public $isResubmission;
 
-    /** Есть ли PDF-картинок в приложении (для текста письма). */
-    public bool $hasImagesPdfAttachment = false;
-
     public function __construct(HomeworkSubmission $submission, string $reviewUrl, bool $isResubmission = false)
     {
         $this->submission = $submission->loadMissing(['user', 'lesson', 'course']);
         $this->reviewUrl = $reviewUrl;
         $this->isResubmission = $isResubmission;
-        $this->hasImagesPdfAttachment = app(HomeworkImagePdfService::class)
-            ->canAttachToMail($this->submission);
         $this->onQueue('mailing');
+    }
+
+    /**
+     * Есть ли PDF картинок в приложении (для текста письма).
+     *
+     * Считается ЛЕНИВО — на воркере в момент отправки, вместе с
+     * `attachments()`, а не в конструкторе на пути запроса (H3095). Раньше
+     * конструктор был единственным, что требовало готового PDF в момент
+     * постановки письма в очередь, и тем самым привязывал уведомление к
+     * сборке. Теперь сборка идёт своей очередью (`BuildHomeworkImagesPdfJob`),
+     * а письмо просто смотрит, успел PDF или нет: успел — вложение и строка о
+     * нём, не успел — только ссылка «Проверить работу» (по ней PDF досбирается
+     * лениво в `HomeworkController::downloadImagesPdf()`).
+     */
+    public function hasImagesPdfAttachment(): bool
+    {
+        return app(HomeworkImagePdfService::class)->canAttachToMail($this->submission);
     }
 
     public function envelope(): Envelope
@@ -48,8 +60,11 @@ class HomeworkSubmittedMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
+        // `content()` вызывается при рендере на воркере — здесь ленивый флаг
+        // уже знает, успела ли сборка PDF.
         return new Content(
             view: 'emails.homework.submitted',
+            with: ['hasImagesPdfAttachment' => $this->hasImagesPdfAttachment()],
         );
     }
 
