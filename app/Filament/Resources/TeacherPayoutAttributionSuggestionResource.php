@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
-use App\Filament\Concerns\AccountingOnly;
+use App\Filament\Concerns\FinanceAccess;
 use App\Filament\Resources\TeacherPayoutAttributionSuggestionResource\Pages;
 use App\Models\TeacherPayoutAttributionSuggestion;
 use Filament\Forms;
@@ -28,7 +28,7 @@ use Filament\Tables\Table;
  */
 class TeacherPayoutAttributionSuggestionResource extends Resource
 {
-    use AccountingOnly;
+    use FinanceAccess;
 
     protected static ?string $model = TeacherPayoutAttributionSuggestion::class;
 
