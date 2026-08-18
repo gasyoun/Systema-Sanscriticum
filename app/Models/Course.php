@@ -22,6 +22,10 @@ class Course extends Model
     protected $fillable = [
         'title',
         'slug',
+        // H3083 — «семья потоков»: ярлык, ставящий несколько курсов-потоков
+        // одной программы в одну таблицу сравнения. NULL = вне семьи.
+        // Заполненное значение всегда побеждает автоопределение по названию.
+        'course_family',
         'image_path',
         'description',
         'chat_url',
@@ -155,6 +159,17 @@ class Course extends Model
         }
 
         return $query->where('level', $level);
+    }
+
+    /**
+     * H3083 — курсы одной «семьи потоков» (потоки одной программы).
+     * Пустое значение фильтр не применяет: семья не задана — сравнивать нечего.
+     */
+    public function scopeInFamily($query, ?string $family)
+    {
+        $family = trim((string) $family);
+
+        return $family === '' ? $query : $query->where('course_family', $family);
     }
 
     /** Курс считается новинкой, если создан за последние 30 дней. */

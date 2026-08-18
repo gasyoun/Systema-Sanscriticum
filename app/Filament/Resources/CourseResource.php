@@ -108,6 +108,12 @@ class CourseResource extends Resource
                                     ->unique(ignoreRecord: true)
                                     ->label('URL-адрес (slug)')
                                     ->helperText('Короткий канон: кабинет /c/{slug}/u/{id}, витрина /k/{slug}. Пример: hindi-2_sb1300-2026. При смене старый slug сохраняется как 301-алиас.'),
+
+                                Forms\Components\TextInput::make('course_family')
+                                    ->label('Семья потоков')
+                                    ->maxLength(190)
+                                    ->placeholder('kasmirskii-sivaizm')
+                                    ->helperText('Заполняется автоматически по названию (команда courses:backfill-families); ручное значение всегда побеждает. Курсы с одинаковым значением встают в одну таблицу «Потоки курса». Пусто — курс вне семьи.'),
                             ]),
 
                         // БЛОК 2: Описание

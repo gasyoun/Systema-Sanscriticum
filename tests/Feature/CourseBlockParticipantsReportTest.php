@@ -82,10 +82,17 @@ class CourseBlockParticipantsReportTest extends TestCase
         $this->assertSame(['whole', 'whole', null], array_values($byStudent[$d->id]['blocks']));
     }
 
-    /** @test */
-    public function page_renders_for_admin_and_shows_blocks(): void
+    /**
+     * H3083: экран переведён с adminOnly() на accounting() — его смотрит
+     * бухгалтер, рядом с «Потоками курса». Обычный админ его больше не видит;
+     * это сознательное сужение доступа (решение №7 интервью 18-08-2026),
+     * отражённое в §1 и §4i инструкции бухгалтера.
+     *
+     * @test
+     */
+    public function page_renders_for_accountant_and_shows_blocks(): void
     {
-        $admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]);
+        $accountant = User::factory()->create(['role' => Roles::ACCOUNTANT]);
         $course = Course::factory()->create(['is_active' => true]);
         CourseBlock::create(['course_id' => $course->id, 'number' => 1, 'title' => 'Первый']);
 
@@ -95,7 +102,7 @@ class CourseBlockParticipantsReportTest extends TestCase
             'amount' => 100, 'status' => 'paid', 'tariff' => 'full',
         ]));
 
-        Livewire::actingAs($admin)->test(CourseBlockParticipants::class)
+        Livewire::actingAs($accountant)->test(CourseBlockParticipants::class)
             ->assertSuccessful()
             ->assertSet('courseId', $course->id)
             ->assertSee('Участников в группах курса')
