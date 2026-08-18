@@ -14,6 +14,7 @@ use App\Models\Testimonial;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
 use App\Services\Membership\PrivateArchiveEligibility;
+use App\Support\CourseCadence;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
 use App\Support\ProductLadderAnchors;
@@ -303,6 +304,11 @@ class ShopController extends Controller
         $scheduleGroups = $course->upcomingSchedules()
             ->groupBy(fn ($s) => $s->start->translatedFormat('F Y'));
 
+        // Ритм курса из календаря: день/время, ближайшее занятие, сколько
+        // осталось. Раньше шапка показывала только ручное «Идет сейчас», и
+        // покупатель не видел ни дня, ни того, что поток на 14-м из 16.
+        $cadence = CourseCadence::for($course);
+
         $currentBlock = $course->currentBlock();
         $currentBlockNumber = $currentBlock?->number;
 
@@ -350,7 +356,7 @@ class ShopController extends Controller
         $flagship = FlagshipLanding::for($course);
         $ctaAb = FlagshipExperiments::ctaFor($course, request());
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'lessonsByBlock', 'flagship', 'ctaAb'));
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb'));
     }
 
     /**
