@@ -21,6 +21,7 @@
 
     {{-- Канонический URL — страницы могут переопределить --}}
     <link rel="canonical" href="@yield('canonical', url()->current())">
+    <meta name="robots" content="@yield('robots', 'index, follow')">
 
     {{-- Шрифты: Montserrat (основной) + Lora (serif в статьях) грузятся из article.css --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

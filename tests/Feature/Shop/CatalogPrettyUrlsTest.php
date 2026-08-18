@@ -30,7 +30,7 @@ class CatalogPrettyUrlsTest extends TestCase
     public function test_category_path_shows_only_matching_courses_and_is_indexable(): void
     {
         $grammar = Category::factory()->create(['slug' => 'grammatika']);
-        $other = Category::factory()->create(['slug' => 'khindi']);
+        $other = Category::factory()->create(['slug' => 'hindi']);
 
         $matching = Course::factory()->create(['title' => 'Grammar Course Zzz']);
         $matching->categories()->attach($grammar->id);

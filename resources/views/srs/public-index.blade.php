@@ -2,6 +2,11 @@
 
 @section('title', 'Карточки — интервальные повторения')
 
+@push('head')
+    <link rel="canonical" href="{{ url($langWord ? '/koloda/yazyk/'.$langWord : '/koloda') }}">
+    <meta name="robots" content="index, follow">
+@endpush
+
 @section('content')
 <div class="container mx-auto px-4 py-10 max-w-3xl">
     <div class="mb-8">
@@ -18,11 +23,12 @@
             'hi' => 'Хинди',
             'all' => 'Все',
         ];
+        $wordForLang = ['sa' => null, 'hi' => 'hindi', 'all' => 'vse'];
     @endphp
     <div class="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Язык колод">
         @foreach($tabs as $code => $label)
-            @php $active = $lang === $code; @endphp
-            <a href="{{ url('/koloda').($code === 'sa' ? '' : '?lang='.$code) }}"
+            @php $active = $lang === $code; $tabWord = $wordForLang[$code]; @endphp
+            <a href="{{ $tabWord ? route('srs.index.lang', ['word' => $tabWord]) : route('srs.index') }}"
                role="tab"
                aria-selected="{{ $active ? 'true' : 'false' }}"
                class="inline-flex items-center px-4 py-2 rounded-xl text-sm font-bold transition-colors

@@ -2,6 +2,8 @@
 
 @section('title', 'Статьи о санскрите — Общество ревнителей санскрита')
 @section('meta_description', 'Статьи о санскрите: грамматика, философия, практика, культура. Честный разбор без мистики и пафоса.')
+@section('canonical', url($canonicalPath))
+@section('robots', $indexable ? 'index, follow' : 'noindex, follow')
 
 @section('content')
 
@@ -24,29 +26,30 @@
             <h4>Поиск</h4>
             <input type="search"
                    name="q"
-                   value="{{ request('q') }}"
+                   value="{{ $search }}"
                    placeholder="Название статьи..."
                    class="search-input"
                    autocomplete="off">
-            {{-- Скрытое поле, чтобы поиск не сбрасывал выбранную рубрику --}}
-            @if(request('category'))
-                <input type="hidden" name="category" value="{{ request('category') }}">
+            {{-- Скрытое поле, чтобы поиск не сбрасывал выбранную рубрику —
+                 контроллер собирает ?category=+?q= обратно в /s/rubrika/.../poisk/... --}}
+            @if($categorySlug)
+                <input type="hidden" name="category" value="{{ $categorySlug }}">
             @endif
         </form>
 
         <h4>Рубрики</h4>
         <ul class="category-list">
             <li>
-                <a href="{{ route('articles.index', array_filter(['q' => request('q')])) }}"
-                   class="{{ !request('category') ? 'active' : '' }}">
+                <a href="{{ route('articles.index') }}"
+                   class="{{ !$categorySlug ? 'active' : '' }}">
                     <span>Все статьи</span>
                     <span class="count">{{ $totalCount }}</span>
                 </a>
             </li>
             @foreach($categories as $cat)
                 <li>
-                    <a href="{{ route('articles.index', array_filter(['category' => $cat->slug, 'q' => request('q')])) }}"
-                       class="{{ request('category') === $cat->slug ? 'active' : '' }}">
+                    <a href="{{ route('articles.index.facets', ['facets' => 'rubrika/'.$cat->slug]) }}"
+                       class="{{ $categorySlug === $cat->slug ? 'active' : '' }}">
                         <span>{{ $cat->name }}</span>
                         <span class="count">{{ $cat->published_articles_count }}</span>
                     </a>
@@ -61,7 +64,7 @@
             <div class="articles-empty">
                 <i class="far fa-folder-open"></i>
                 <p>
-                    @if(request('q') || request('category'))
+                    @if($search || $categorySlug)
                         По вашему запросу ничего не найдено.
                         <br>
                         <a href="{{ route('articles.index') }}" style="color: var(--art-accent); font-weight: 600;">Сбросить фильтры</a>
@@ -72,13 +75,13 @@
             </div>
         @else
             {{-- Подсказка о текущих фильтрах --}}
-            @if(request('q') || request('category'))
+            @if($search || $categorySlug)
                 <div style="margin-bottom: 20px; font-size: .9rem; color: var(--art-text-muted);">
                     Найдено: <strong>{{ $articles->total() }}</strong>
-                    @if(request('q'))
-                        по запросу «<strong>{{ request('q') }}</strong>»
+                    @if($search)
+                        по запросу «<strong>{{ $search }}</strong>»
                     @endif
-                    @if(request('category') && ($activeCategory = $categories->firstWhere('slug', request('category'))))
+                    @if($categorySlug && ($activeCategory = $categories->firstWhere('slug', $categorySlug)))
                         в рубрике «<strong>{{ $activeCategory->name }}</strong>»
                     @endif
                 </div>
