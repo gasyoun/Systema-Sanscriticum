@@ -6,7 +6,9 @@
 @section('content')
 <div class="max-w-3xl mx-auto px-4 sm:px-6 pb-12 overflow-x-hidden">
     <p class="text-sm text-gray-500 mb-4">
-        <a href="{{ route('student.visualdcs.index', $surface) }}" class="text-brand underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">← к списку</a>
+        {{-- H2869: оранжевый текст на кремовом фоне — 3.3:1 < AA; тёмный текст
+             с фирменным подчёркиванием сохраняет акцент и проходит аудит. --}}
+        <a href="{{ route('student.visualdcs.index', $surface) }}" class="font-bold text-gray-900 underline decoration-brand decoration-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">← к списку</a>
     </p>
 
     @if (session('success'))
@@ -14,7 +16,8 @@
     @endif
 
     <article class="bg-white border border-gray-200 rounded-2xl p-5 space-y-4">
-        <p class="text-xs uppercase tracking-widest text-gray-400">{{ $surface }} · {{ $item['tier'] }}</p>
+        {{-- H2869: gray-400 на белой карточке — 2.5:1, далеко до AA 4.5:1. --}}
+        <p class="text-xs uppercase tracking-widest text-gray-500">{{ $surface }} · {{ $item['tier'] }}</p>
         <h1 class="text-2xl font-extrabold text-gray-900 break-words">{{ $item['title'] }}</h1>
 
         @if($surface === 'passage')
@@ -48,7 +51,7 @@
                                     @forelse(($cell['forms'] ?? []) as $form)
                                         <span class="mr-2">{{ is_array($form) ? ($form[1] ?? '') : $form }}</span>
                                     @empty
-                                        <span class="text-gray-400">нет</span>
+                                        <span class="text-gray-500">нет</span>
                                     @endforelse
                                 </td>
                             </tr>

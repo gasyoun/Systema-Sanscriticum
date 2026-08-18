@@ -5,7 +5,10 @@
 
 @section('content')
 <div class="max-w-3xl mx-auto px-4 sm:px-6 pb-12">
-    <p class="text-sm text-gray-500 mb-6">
+    {{-- H2869: gray-600 и тёмные ссылки с фирменным подчёркиванием — кремовый
+         фон кабинета (#F4F1EA) валит gray-500 (4.2:1) и оранжевый текст
+         (3.3:1) ниже WCAG AA; замер — Dusk-аудит контраста. --}}
+    <p class="text-sm text-gray-600 mb-6">
         @if(in_array($state, ['preview', 'unpaid', 'expired'], true))
             Показаны только частотные единицы. Полный список откроется при действующем доступе к курсу.
         @else
@@ -29,13 +32,13 @@
     @if(($total ?? 0) > ($perPage ?? 50))
         <nav class="mt-6 flex items-center justify-between text-sm" aria-label="Страницы">
             @if($page > 1)
-                <a class="text-brand underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                <a class="font-bold text-gray-900 underline decoration-brand decoration-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                    href="{{ route('student.visualdcs.index', ['surface' => $surface, 'page' => $page - 1, 'q' => $q ?: null]) }}">← назад</a>
             @else
                 <span></span>
             @endif
             @if(($page * $perPage) < $total)
-                <a class="text-brand underline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                <a class="font-bold text-gray-900 underline decoration-brand decoration-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                    href="{{ route('student.visualdcs.index', ['surface' => $surface, 'page' => $page + 1, 'q' => $q ?: null]) }}">дальше →</a>
             @endif
         </nav>

@@ -5,7 +5,9 @@
 
 @section('content')
 <div class="max-w-3xl mx-auto px-4 sm:px-6 pb-12">
-    <p class="text-sm text-gray-500 mb-6">
+    {{-- H2869: фон кабинета кремовый (#F4F1EA) — gray-500 прямо на нём даёт
+         4.2:1 < AA 4.5:1; в белых карточках gray-500 остаётся (4.8:1). --}}
+    <p class="text-sm text-gray-600 mb-6">
         Три независимых тренажёра по корпусу DCS: глагол, имя, пассаж.
         @if(($state ?? '') === 'preview' || ($state ?? '') === 'unpaid')
             Сейчас открыт публичный просмотр частотных единиц.
@@ -15,7 +17,7 @@
     </p>
 
     @if(empty($surfaces))
-        <p class="text-sm text-gray-500">Тренажёры выключены.</p>
+        <p class="text-sm text-gray-600">Тренажёры выключены.</p>
     @else
         <ul class="space-y-3">
             @foreach($surfaces as $surface => $pack)
