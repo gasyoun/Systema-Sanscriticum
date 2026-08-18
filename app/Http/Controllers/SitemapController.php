@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\ArticleCategory;
 use App\Models\Category;
 use App\Models\Certificate;
 use App\Models\Course;
@@ -72,6 +73,32 @@ class SitemapController extends Controller
                 'changefreq' => 'weekly',
                 'priority' => '0.7',
             ];
+
+            // Рубрики статей — единственная facet-комбинация /s/{facets} с
+            // index,follow (см. ArticleController::index); поиск — noindex.
+            // whereHas, не having(withCount-алиас) — валит SQLite без GROUP BY.
+            ArticleCategory::query()
+                ->whereHas('publishedArticles')
+                ->select(['slug', 'updated_at'])
+                ->orderBy('slug')
+                ->chunk(500, function ($categories) use (&$urls) {
+                    foreach ($categories as $category) {
+                        $urls[] = [
+                            'loc' => route('articles.index.facets', ['facets' => 'rubrika/'.$category->slug]),
+                            'lastmod' => optional($category->updated_at)->format(DATE_ATOM),
+                            'changefreq' => 'weekly',
+                            'priority' => '0.5',
+                        ];
+                    }
+                });
+
+            // Карточки /koloda (публичная проба SRS без входа) — три языковых
+            // страницы, ни одна не сворачивается (одна facet-размерность).
+            if (config('srs.enabled')) {
+                $urls[] = ['loc' => route('srs.index'), 'changefreq' => 'weekly', 'priority' => '0.5'];
+                $urls[] = ['loc' => route('srs.index.lang', ['word' => 'hindi']), 'changefreq' => 'weekly', 'priority' => '0.4'];
+                $urls[] = ['loc' => route('srs.index.lang', ['word' => 'vse']), 'changefreq' => 'weekly', 'priority' => '0.4'];
+            }
 
             // Публичный реестр сертификатов/справок (один URL, без query-вариантов).
             $urls[] = [

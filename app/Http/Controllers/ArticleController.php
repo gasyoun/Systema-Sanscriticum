@@ -8,25 +8,62 @@ use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\MarketingSetting;
 use App\Services\ArticleViewTracker;
+use App\Support\ArticlesCatalogUrl;
 use App\Support\ProductLadderAnchors;
+use App\Support\ShopCatalogUrl;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class ArticleController extends Controller
 {
     /**
-     * Список статей: /s/
-     * Поддерживает фильтрацию по рубрике (?category=slug) и поиск (?q=...).
+     * Список статей: /s/{facets} — рубрика/поиск словами в пути (H3093-паттерн),
+     * без query string. Старые ?category=/?q= 301-редиректят на эквивалент;
+     * пагинация (?page=) остаётся query-параметром поверх пути.
      */
-    public function index(Request $request): View
+    public function index(Request $request, ?string $facets = null): View|RedirectResponse
     {
-        // Валидируем входящие параметры — никакого доверия query string
-        $validated = $request->validate([
-            'q' => ['nullable', 'string', 'max:100'],
-            'category' => ['nullable', 'string', 'max:255', 'exists:article_categories,slug'],
-            'page' => ['nullable', 'integer', 'min:1'],
-        ]);
+        if ($request->hasAny(['category', 'q'])) {
+            $request->validate([
+                'q' => ['nullable', 'string', 'max:100'],
+                'category' => ['nullable', 'string', 'max:255', 'exists:article_categories,slug'],
+            ]);
+
+            $target = ArticlesCatalogUrl::build($request->input('category'), $request->input('q'));
+            if ($request->filled('page')) {
+                $target .= '?page='.(int) $request->input('page');
+            }
+
+            return redirect()->to($target, 301);
+        }
+
+        $categorySlug = null;
+        $search = null;
+        $indexable = true;
+
+        if ($facets !== null) {
+            $parsed = ArticlesCatalogUrl::parse($facets);
+            abort_if($parsed === null, 404);
+
+            if (isset($parsed['rubrika'])) {
+                $categorySlug = $parsed['rubrika'];
+                abort_unless(ArticleCategory::where('slug', $categorySlug)->exists(), 404);
+            }
+
+            if (isset($parsed['poisk'])) {
+                $search = ShopCatalogUrl::decodeWords($parsed['poisk']);
+            }
+
+            // Индексируем только «пусто» и «одна рубрика» — поиск (с рубрикой или без)
+            // canonical-складывается вниз, как /online/{facets} для формата/уровня/поиска.
+            $indexable = array_keys($parsed) === ['rubrika'];
+        }
+
+        // canonical всегда складывается до «пусто» или «одна рубрика», даже
+        // когда индексируемость (ниже) уже false из-за активного поиска.
+        $canonicalPath = ArticlesCatalogUrl::build($categorySlug, null);
 
         // ── Базовый запрос опубликованных статей ──
         $query = Article::published()
@@ -39,21 +76,23 @@ class ArticleController extends Controller
             ->latest('published_at');
 
         // ── Фильтр по рубрике ──
-        if (! empty($validated['category'])) {
-            $query->whereHas('category', function ($q) use ($validated): void {
-                $q->where('slug', $validated['category']);
+        if ($categorySlug !== null) {
+            $query->whereHas('category', function ($q) use ($categorySlug): void {
+                $q->where('slug', $categorySlug);
             });
         }
 
         // ── Поиск (scope на модели, экранирует % и _) ──
-        $query->search($validated['q'] ?? null);
+        $query->search($search);
 
         $articles = $query->paginate(9)->withQueryString();
 
         // ── Сайдбар: рубрики с кол-вом опубликованных статей ──
+        // whereHas, не having(withCount-алиас) — HAVING без GROUP BY на алиас
+        // валит SQLite (тестовая БД), хотя MySQL это терпит молча.
         $categories = ArticleCategory::query()
+            ->whereHas('publishedArticles') // скрываем пустые рубрики
             ->withCount('publishedArticles')
-            ->having('published_articles_count', '>', 0) // скрываем пустые рубрики
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
@@ -61,7 +100,9 @@ class ArticleController extends Controller
         // Общее число опубликованных — для пункта "Все статьи" в сайдбаре
         $totalCount = Article::published()->count();
 
-        return view('articles.index', compact('articles', 'categories', 'totalCount'));
+        return view('articles.index', compact(
+            'articles', 'categories', 'totalCount', 'categorySlug', 'search', 'canonicalPath', 'indexable'
+        ));
     }
 
     /**

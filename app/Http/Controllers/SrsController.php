@@ -9,6 +9,7 @@ use App\Models\SrsReviewLog;
 use App\Models\SrsReviewState;
 use App\Services\Srs\Rating;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -25,14 +26,27 @@ use Illuminate\View\View;
  */
 class SrsController extends Controller
 {
+    /** Путь /koloda/yazyk/{word} вместо ?lang= — словом, не кодом (H3093-паттерн). */
+    private const PUBLIC_LANG_WORDS = ['sanskrit' => 'sa', 'hindi' => 'hi', 'vse' => 'all'];
+
     /**
-     * Public hub of system/public decks (marketing trial, no login).
+     * Public hub of system/public decks (marketing trial, no login). Язык —
+     * словесный сегмент пути (/koloda/yazyk/{word}), а не ?lang=: только одна
+     * facet-размерность с тремя значениями, комбинаторики нет — все три
+     * страницы index,follow, без сворачивания canonical.
      */
-    public function publicIndex(Request $request): View
+    public function publicIndex(Request $request, ?string $word = null): View|RedirectResponse
     {
         abort_unless((bool) config('srs.enabled'), 404);
 
-        $lang = $this->resolveLanguageFilter($request);
+        if ($request->filled('lang')) {
+            $legacyLang = strtolower((string) $request->query('lang'));
+            $legacyWord = $legacyLang === 'sa' ? null : array_search($legacyLang, self::PUBLIC_LANG_WORDS, true);
+
+            return redirect()->to($legacyWord ? '/koloda/yazyk/'.$legacyWord : '/koloda', 301);
+        }
+
+        $lang = $word !== null ? self::PUBLIC_LANG_WORDS[$word] : 'sa';
 
         $decks = SrsDeck::query()
             ->whereIn('visibility', ['system', 'public'])
@@ -45,6 +59,7 @@ class SrsController extends Controller
         return view('srs.public-index', [
             'decks' => $decks,
             'lang' => $lang,
+            'langWord' => $word,
         ]);
     }
 

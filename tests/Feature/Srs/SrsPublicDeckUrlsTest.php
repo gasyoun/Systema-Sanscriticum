@@ -74,6 +74,7 @@ class SrsPublicDeckUrlsTest extends TestCase
     public function test_public_routes_registered_when_enabled(): void
     {
         $this->assertTrue(app('router')->has('srs.index'));
+        $this->assertTrue(app('router')->has('srs.index.lang'));
         $this->assertTrue(app('router')->has('srs.deck'));
         $this->assertTrue(app('router')->has('student.srs.deck'));
     }
@@ -214,15 +215,30 @@ class SrsPublicDeckUrlsTest extends TestCase
             ->assertSee('Санскрит — ядро')
             ->assertDontSee('Hindi Core 100');
 
-        $this->get('/koloda?lang=hi')
+        $this->get('/koloda/yazyk/hindi')
             ->assertOk()
             ->assertSee('Hindi Core 100')
             ->assertDontSee('Санскрит — ядро');
 
-        $this->get('/koloda?lang=all')
+        $this->get('/koloda/yazyk/vse')
             ->assertOk()
             ->assertSee('Санскрит — ядро')
             ->assertSee('Hindi Core 100');
+    }
+
+    public function test_legacy_lang_query_redirects_to_pretty_word_path(): void
+    {
+        $this->get('/koloda?lang=hi')->assertRedirect('/koloda/yazyk/hindi');
+        $this->get('/koloda?lang=all')->assertRedirect('/koloda/yazyk/vse');
+        $this->get('/koloda?lang=sa')->assertRedirect('/koloda');
+    }
+
+    public function test_pretty_lang_paths_have_index_follow_canonical(): void
+    {
+        $html = $this->get('/koloda/yazyk/hindi')->assertOk()->getContent();
+
+        $this->assertStringContainsString('<link rel="canonical" href="'.url('/koloda/yazyk/hindi').'">', $html);
+        $this->assertStringContainsString('name="robots" content="index, follow"', $html);
     }
 
     public function test_cabinet_hub_filters_by_language(): void

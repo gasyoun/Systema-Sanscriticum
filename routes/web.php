@@ -284,6 +284,13 @@ Route::post('/api/games/srs-onboarding-import', [GamesSrsOnboardingController::c
 // Must sit BEFORE the promo catch-all /{slug}. Same srs.enabled gate as cabinet.
 if (config('srs.enabled')) {
     Route::get('/koloda', [SrsController::class, 'publicIndex'])->name('srs.index');
+
+    // Язык словом в пути вместо ?lang= (H3093-паттерн). ДО /koloda/{slug} —
+    // иначе implicit slug съел бы /koloda/yazyk как имя колоды.
+    Route::get('/koloda/yazyk/{word}', [SrsController::class, 'publicIndex'])
+        ->where('word', 'sanskrit|hindi|vse')
+        ->name('srs.index.lang');
+
     Route::get('/koloda/{slug}', [SrsController::class, 'publicReview'])->name('srs.deck');
 
     // Legacy /srs → /koloda (301). Keep old Telegram/blog links working.
@@ -351,6 +358,13 @@ Route::view('/uptime', 'uptime')->name('uptime.show');
 Route::prefix('s')->name('articles.')->group(function () {
     Route::get('/', [ArticleController::class, 'index'])
         ->name('index');
+
+    // Словесные пути вместо ?category=/?q= (H3093-паттерн, теперь на статьи).
+    // Строгий where() + регистрация ДО /{article:slug} — иначе однословный
+    // /s/rubrika без значения дальше решился бы implicit binding как slug статьи.
+    Route::get('/{facets}', [ArticleController::class, 'index'])
+        ->where('facets', '(rubrika|poisk)(/.+)*')
+        ->name('index.facets');
 
     Route::get('/{article:slug}', [ArticleController::class, 'show'])
         ->name('show');
