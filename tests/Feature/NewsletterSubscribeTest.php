@@ -218,7 +218,12 @@ class NewsletterSubscribeTest extends TestCase
         $this->get('/magic/'.$plaintext)->assertNotFound();
     }
 
-    public function test_floating_popup_renders_on_home_with_student_count(): void
+    /**
+     * H3022: поп-ап продаёт пользой, а не размером толпы. «Присоединяйтесь к N студентам» —
+     * соцдоказательство навалом, запрещённый приём плейбука возражений; assertDontSee ниже
+     * держит его мёртвым, а не полагается на память следующего автора копии.
+     */
+    public function test_floating_popup_renders_without_bulk_social_proof(): void
     {
         config([
             'features.newsletter_subscribe' => true,
@@ -228,9 +233,9 @@ class NewsletterSubscribeTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('data-analytics="newsletter-subscribe-popup"', false)
-            ->assertSee('5 000+', false)
-            ->assertSee('русскоязычным студентам санскрита', false)
-            ->assertSee('utm_source" value="newsletter_popup"', false);
+            ->assertSee('Анонсы курсов, открытые занятия и бесплатные материалы', false)
+            ->assertSee('utm_source" value="newsletter_popup"', false)
+            ->assertDontSee('русскоязычным студентам санскрита', false);
     }
 
     public function test_floating_popup_hidden_when_flag_off(): void
