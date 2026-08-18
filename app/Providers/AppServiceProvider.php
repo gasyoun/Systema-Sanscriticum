@@ -15,6 +15,7 @@ use App\Models\Payment;
 use App\Models\Schedule;
 use App\Observers\ArticleViewObserver;
 use App\Observers\ContentCandidateObserver;
+use App\Observers\CourseCoverWebpObserver;
 use App\Observers\LandingPageObserver;
 use App\Observers\LeadAuditObserver;
 use App\Observers\LectureClipObserver;
@@ -124,6 +125,10 @@ class AppServiceProvider extends ServiceProvider
         Modal::closedByClickingAway(false);
 
         ArticleView::observe(ArticleViewObserver::class);
+
+        // Обложка витрины переводится в WebP в том же запросе, в котором её
+        // загрузили (H3082). Второй рубеж — ежедневная media:covers-to-webp.
+        Course::observe(CourseCoverWebpObserver::class);
 
         Payment::observe(PaymentObserver::class);
 

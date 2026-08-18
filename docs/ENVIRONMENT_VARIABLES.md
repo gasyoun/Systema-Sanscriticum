@@ -312,6 +312,11 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MARATHON_TESTIMONIAL` | required | `—` | config/marathon.php:146 |
 | `MARATHON_WARM_TAIL_DAYS` | optional | `13` | config/marathon.php:41 |
 | `MARKETING_SEGMENTS` | optional | `false` | config/features.php:583 |
+| `MEDIA_WEBP_DELETE_ORIGINAL` | optional | `true` | config/media.php:37 |
+| `MEDIA_WEBP_DISK` | optional | `'public'` | config/media.php:26 |
+| `MEDIA_WEBP_ENABLED` | feature-flag | `true` | config/media.php:24 |
+| `MEDIA_WEBP_MIN_GAIN` | optional | `0.10` | config/media.php:33 |
+| `MEDIA_WEBP_QUALITY` | optional | `82` | config/media.php:29 |
 | `MEMBERSHIP_ADVANCED_FEATURES` | optional | `false` | config/features.php:881 |
 | `MEMBERSHIP_CANCELLATION` | optional | `false` | config/features.php:888 |
 | `MEMBERSHIP_FREE_TIER` | optional | `false` | config/features.php:887 |
