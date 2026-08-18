@@ -1,5 +1,9 @@
 @php
     use App\Support\CourseFamilyMatcher;
+    // Plural::ru, а не trans_choice: locale приложения — 'en', и правило
+    // множественного числа там английское, поэтому «6 платежа» вместо
+    // «6 платежей» (H3084).
+    use App\Support\Plural;
 
     $roleLabel = fn (string $role): string => match ($role) {
         CourseFamilyMatcher::ROLE_LIVE => 'живой поток',
@@ -185,7 +189,7 @@
                     </p>
                     <p class="mt-1 text-amber-900/80 dark:text-amber-200/80">
                         {{ count($salary['pending_candidates']) }}
-                        {{ trans_choice('платёж|платежа|платежей', count($salary['pending_candidates'])) }}
+                        {{ Plural::ru(count($salary['pending_candidates']), 'платёж', 'платежа', 'платежей') }}
                         на {{ $money($salary['pending_total']) }} ₽ проведены по этим курсам как «Расход», но из данных
                         неотличимы от аренды или рекламы: они заведены на служебного пользователя, а не на
                         преподавателя. Пока человек не подтвердит, что это именно выплаты преподавателю, они
@@ -195,6 +199,16 @@
                         Если подтвердить все {{ count($salary['pending_candidates']) }} — остаток станет
                         <b>{{ $money($salary['remainder_if_all_confirmed']) }} ₽</b>.
                     </p>
+                    {{-- H3084: очередь подтверждения. Ссылка появляется только у того,
+                         кому ресурс доступен — гейт тот же, RoleGate::accounting(). --}}
+                    @if (\App\Filament\Resources\TeacherPayoutAttributionSuggestionResource::canViewAny())
+                        <p class="mt-2">
+                            <a href="{{ \App\Filament\Resources\TeacherPayoutAttributionSuggestionResource::getUrl() }}"
+                               class="font-semibold text-amber-800 underline dark:text-amber-300">
+                                Открыть очередь подтверждения →
+                            </a>
+                        </p>
+                    @endif
 
                     <div class="mt-3 overflow-x-auto">
                         <table class="w-full text-xs">
@@ -243,7 +257,7 @@
                 @foreach ($report['crossover']['pairs'] as $pair)
                     <div class="rounded-xl bg-gray-50 p-4 text-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
                         <b class="text-gray-900 dark:text-white">{{ $pair['count'] }}</b>
-                        {{ trans_choice('человек|человека|человек', $pair['count']) }} есть и в «{{ $pair['from_title'] }}», и в «{{ $pair['to_title'] }}».
+                        {{ Plural::ru($pair['count'], 'человек', 'человека', 'человек') }} есть и в «{{ $pair['from_title'] }}», и в «{{ $pair['to_title'] }}».
                         @if (count($pair['users']))
                             <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 {{ collect($pair['users'])->pluck('name')->implode(', ') }}
