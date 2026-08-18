@@ -35,12 +35,12 @@ class CourseBlockParticipants extends Page
 
     public static function canAccess(): bool
     {
-        return RoleGate::accounting();
+        return RoleGate::finance();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return RoleGate::accounting();
+        return RoleGate::finance();
     }
 
     public function mount(): void

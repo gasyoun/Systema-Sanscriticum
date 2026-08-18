@@ -83,10 +83,9 @@ class CourseBlockParticipantsReportTest extends TestCase
     }
 
     /**
-     * H3083: экран переведён с adminOnly() на accounting() — его смотрит
-     * бухгалтер, рядом с «Потоками курса». Обычный админ его больше не видит;
-     * это сознательное сужение доступа (решение №7 интервью 18-08-2026),
-     * отражённое в §1 и §4i инструкции бухгалтера.
+     * H3083 переводил экран с adminOnly() на accounting(); MG (18-08-2026)
+     * отменил это сужение — admin всегда видит все и вся, гейт RoleGate::finance()
+     * (admin ИЛИ accountant, + super_admin через any()).
      *
      * @test
      */
@@ -108,5 +107,18 @@ class CourseBlockParticipantsReportTest extends TestCase
             ->assertSee('Участников в группах курса')
             ->assertSee('Блок 1')
             ->assertSee('Иван Тестов'); // студент виден в матрице
+    }
+
+    /** @test */
+    public function page_renders_for_admin_too(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $course = Course::factory()->create(['is_active' => true]);
+
+        $this->actingAs($admin);
+        $this->assertTrue(CourseBlockParticipants::canAccess());
+
+        Livewire::actingAs($admin)->test(CourseBlockParticipants::class)
+            ->assertSuccessful();
     }
 }
