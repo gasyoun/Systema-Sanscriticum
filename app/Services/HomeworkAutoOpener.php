@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Lesson;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Support\HomeworkAutoOpenScope;
+use App\Support\HomeworkReviewPolicy;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -227,8 +228,60 @@ class HomeworkAutoOpener
         }
 
         $this->warnIfMappingMissing($lesson);
+        $this->announceUnreviewedOpen($lesson);
 
         return true;
+    }
+
+    /**
+     * Открытие на курсе, где работы никто не разбирает (H3087, рулинг MG
+     * 18-08-2026: «не надо там ничего открывать молча»).
+     *
+     * Студентам пуш уходит как обычно — молчание было не в их сторону, а в
+     * человеческую: автомат включал приём на «Продлёнке» и «Напевном
+     * санскрите» и рассылал десяткам студентов «открылось домашнее задание»,
+     * причём разбирать эти работы никто не собирался, и ни один человек об
+     * этом не узнавал. Теперь узнаёт.
+     *
+     * Шлётся и при бэкфилле (`notify: false`): тот молчит в сторону студентов,
+     * но человеку знать надо тем более.
+     */
+    private function announceUnreviewedOpen(Lesson $lesson): void
+    {
+        if (! HomeworkReviewPolicy::isUnreviewedLesson($lesson)) {
+            return;
+        }
+
+        Log::info('HomeworkAutoOpener: открыт приём на курсе без проверки', [
+            'lesson_id' => $lesson->id,
+            'course_id' => $lesson->course_id,
+        ]);
+
+        if (! config('homework.reviewers.unreviewed_open_alert', true)) {
+            return;
+        }
+
+        try {
+            $lesson->loadMissing('course');
+            $url = $lesson->course
+                ? route('student.lesson', [$lesson->course->slug, $lesson->id])
+                : '';
+            $recipients = $this->notifier->studentsFor($lesson)->count();
+
+            app(TelegramAdminNotifier::class)->notifyAdmins(
+                '📥 Открыл приём ДЗ на курсе БЕЗ проверки: <b>'
+                .e((string) ($lesson->course?->title ?: $lesson->course?->slug ?: '—')).'</b>'."\n"
+                .'Урок: '.e((string) $lesson->title)."\n"
+                .'Студентам ушло уведомление ('.$recipients.' чел.), но разбирать работы никто не будет — '
+                .'курс в списке «приём без проверки».'
+                .($url !== '' ? "\n".$url : ''),
+            );
+        } catch (\Throwable $e) {
+            Log::warning('HomeworkAutoOpener: unreviewed-open alert failed', [
+                'lesson_id' => $lesson->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
