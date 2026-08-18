@@ -204,16 +204,18 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HINDI_PROGRAMME_PLAYLIST` | optional | `false` | config/features.php:926 |
 | `HINDI_TG_CURATED_PRACTICE` | optional | `false` | config/features.php:961 |
 | `HINDI_TRANSCRIPT_DRILLS` | optional | `false` | config/features.php:934 |
-| `HOMEWORK_AUTO_OPEN_ALIGN_HOUR` | optional | `9` | config/homework.php:127 |
-| `HOMEWORK_AUTO_OPEN_CHANNELS` | optional | `'telegram,vk'` | config/homework.php:133 |
-| `HOMEWORK_AUTO_OPEN_CLOSE_PREVIOUS` | optional | `false` | config/homework.php:138 |
+| `HOMEWORK_AUTO_OPEN_ALIGN_HOUR` | optional | `9` | config/homework.php:142 |
+| `HOMEWORK_AUTO_OPEN_CHANNELS` | optional | `'telegram,vk'` | config/homework.php:148 |
+| `HOMEWORK_AUTO_OPEN_CLOSE_PREVIOUS` | optional | `false` | config/homework.php:153 |
 | `HOMEWORK_AUTO_OPEN_COURSES` | optional | `''` | config/homework.php:111 |
-| `HOMEWORK_AUTO_OPEN_DELAY_HOURS` | optional | `12` | config/homework.php:124 |
+| `HOMEWORK_AUTO_OPEN_DELAY_HOURS` | optional | `12` | config/homework.php:139 |
 | `HOMEWORK_AUTO_OPEN_ENABLED` | feature-flag | `true` | config/homework.php:106 |
-| `HOMEWORK_AUTO_OPEN_GENERIC_COURSES` | optional | `''` | config/homework.php:165 |
-| `HOMEWORK_AUTO_OPEN_GENERIC_IMMEDIATE` | optional | `true` | config/homework.php:174 |
-| `HOMEWORK_AUTO_OPEN_GENERIC_PROMPT` | optional | `'Домашнее задание',` | config/homework.php:168 |
-| `HOMEWORK_AUTO_OPEN_LESSONS` | optional | `'1,2,3,4,5'` | config/homework.php:119 |
+| `HOMEWORK_AUTO_OPEN_GENERIC_COURSES` | optional | `''` | config/homework.php:180 |
+| `HOMEWORK_AUTO_OPEN_GENERIC_IMMEDIATE` | optional | `true` | config/homework.php:189 |
+| `HOMEWORK_AUTO_OPEN_GENERIC_PROMPT` | optional | `'Домашнее задание',` | config/homework.php:183 |
+| `HOMEWORK_AUTO_OPEN_LESSONS` | optional | `'1,2,3,4,5'` | config/homework.php:134 |
+| `HOMEWORK_AUTO_OPEN_MISSING_MAPPING_ALERT` | optional | `true` | config/homework.php:127 |
+| `HOMEWORK_AUTO_OPEN_WITHOUT_TEXTBOOK_LESSON` | optional | `true` | config/homework.php:123 |
 | `HOMEWORK_FEEDBACK_MAX_FILE_KB` | optional | `40960` | config/homework.php:42 |
 | `HOMEWORK_MAX_FILES` | optional | `10` | config/homework.php:31 |
 | `HOMEWORK_MAX_FILE_KB` | optional | `30720` | config/homework.php:35 |
@@ -222,10 +224,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HOMEWORK_REVIEWER_DIGEST_DAY` | optional | `1` | config/homework.php:85 |
 | `HOMEWORK_REVIEWER_DIGEST_ENABLED` | feature-flag | `true` | config/homework.php:82 |
 | `HOMEWORK_REVIEWER_DIGEST_TIME` | optional | `'09:00'` | config/homework.php:86 |
-| `HOMEWORK_TG_TAG_ENABLED` | feature-flag | `true` | config/homework.php:193 |
-| `HOMEWORK_TG_TAG_LOOKBACK_HOURS` | optional | `72` | config/homework.php:196 |
-| `HOMEWORK_TG_TAG_PENDING_TTL` | optional | `60` | config/homework.php:202 |
-| `HOMEWORK_TG_TAG_POST_OPEN_INVITE` | optional | `true` | config/homework.php:199 |
+| `HOMEWORK_TG_TAG_ENABLED` | feature-flag | `true` | config/homework.php:208 |
+| `HOMEWORK_TG_TAG_LOOKBACK_HOURS` | optional | `72` | config/homework.php:211 |
+| `HOMEWORK_TG_TAG_PENDING_TTL` | optional | `60` | config/homework.php:217 |
+| `HOMEWORK_TG_TAG_POST_OPEN_INVITE` | optional | `true` | config/homework.php:214 |
 | `HOMEWORK_TOTAL_MAX_KB` | optional | `92160` | config/homework.php:47 |
 | `HORIZON_DOMAIN` | required | `—` | config/horizon.php:31 |
 | `HORIZON_MEMORY_LIMIT` | optional | `128` | config/horizon.php:208 |
@@ -239,7 +241,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `INVEST_MAX_HORIZON_YEARS` | optional | `30` | config/investment.php:39 |
 | `KINESCOPE_PILOT` | feature-flag | `false` | config/features.php:504 |
 | `KINESCOPE_PILOT_COURSE_ID` | required | `—` | config/video.php:16 |
-| `KOCHERGINA_SOURCE_PATH` | optional | `base_path('../SanskritGrammar/KocherginaUchebnik_1998/Kochergina_un…` | config/homework.php:143 |
+| `KOCHERGINA_SOURCE_PATH` | optional | `base_path('../SanskritGrammar/KocherginaUchebnik_1998/Kochergina_un…` | config/homework.php:158 |
 | `KOSHA_READER` | optional | `false` | config/features.php:205 |
 | `KOSHA_SRS` | optional | `false` | config/features.php:194 |
 | `LADDER_GRAMMAR_II_PATTERN` | optional | `'II ступ'` | config/grammar_ladder.php:33 |
