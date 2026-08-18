@@ -1,6 +1,6 @@
 # VisualDCS native learner — pre-activation baseline
 
-_Created: 13-08-2026 · Last updated: 15-08-2026_
+_Created: 13-08-2026 · Last updated: 19-08-2026_
 
 H2482 shipped the importer, three `/dvaram/visualdcs` surfaces and
 `external_learning_progress`. All three flags stay **OFF**. This file is the
@@ -32,11 +32,25 @@ php artisan visualdcs:import C:/Users/user/Documents/GitHub/VisualDCS/visual/con
 Catalog pages paginate (50) and do not embed paradigm cells in the index.
 Flags stay **OFF** until a human activation decision.
 
-## Activation (human only)
+## Activation (human authorizes; agent runs the recipe)
 
-1. Import the H2499 pin (`visualdcs:import` on the sibling `visual/contracts/v1`).
-2. Flip `VISUALDCS_VERB`, `VISUALDCS_NOMINAL`, `VISUALDCS_PASSAGE` independently.
-3. At day 7 / 14 / 30 fill the same table. Scale / hold / revert from comparable
-   cohorts — never from a promised lift.
+First attempt 18-08-2026 (H3116): flags flipped before catalog units existed →
+request-path json_decode of the 26-МБ payload OOM-killed php-fpm
+(`memory_limit=128M`), all surfaces 500, flags rolled back within minutes.
+Since H3116 the catalog serves from `visualdcs_units` (materialized at
+import); the import step below is therefore **mandatory before any flip**.
+
+1. Import the H2499 pin (`php artisan visualdcs:import <dir with manifest>`).
+   The command prints `units=…` — for v1 expect **39 482** (7 689 verb +
+   31 753 nominal + 40 passages). `units=0` → do NOT flip; re-run import.
+2. Flip `VISUALDCS_VERB`, `VISUALDCS_NOMINAL`, `VISUALDCS_PASSAGE`
+   independently in `.env`, then `php artisan config:cache` **and**
+   `systemctl reload php8.3-fpm` (prod OPcache runs
+   `validate_timestamps=0` — without the reload the web SAPI keeps the old
+   config; deploy.sh step 5).
+3. Smoke: `/visualdcs/{verb,nominal,passage}/preview` → 200; no
+   `memory size exhausted` lines in `/var/log/nginx/error.log`.
+4. At day 7 / 14 / 30 fill the same table. Scale / hold / revert from
+   comparable cohorts — never from a promised lift.
 
 _Dr. Mārcis Gasūns_
