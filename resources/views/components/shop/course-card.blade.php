@@ -82,8 +82,9 @@
                 @if($course->lessons_count)
                     <span class="inline-flex items-center gap-1.5 bg-brand text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(232,92,36,0.5)] tracking-wider">
                         <i class="fas fa-play-circle text-[9px]"></i>
-                        {{-- НЕ trans_choice: при app.locale='en' он даёт «5 лекции» — русские формы через Plural::ru --}}
-                        {{ $course->lessons_count }} {{ \App\Support\Plural::ru($course->lessons_count, 'лекция', 'лекции', 'лекций') }}
+                        {{-- НЕ trans_choice: при app.locale='en' он даёт «5 лекции» — русские формы через Plural::ru.
+                             «Занятие», не «лекция» — большинство курсов ОРС не читает лекции. --}}
+                        {{ $course->lessons_count }} {{ \App\Support\Plural::ru($course->lessons_count, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий') }}
                     </span>
                 @endif
                 @if($course->hours_count)

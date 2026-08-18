@@ -26,7 +26,9 @@
                 </div>
                 <div class="min-w-0">
                     <div class="text-[11px] font-black uppercase tracking-widest text-slate-500 mb-1">Преподаватель</div>
-                    <h3 class="text-xl font-bold text-white mb-3">{{ $teacher->name }}</h3>
+                    <h3 class="text-xl font-bold text-white mb-3">
+                        <a href="{{ route('shop.index', ['teacher' => $teacher->id]) }}" class="hover:text-brand transition-colors">{{ $teacher->name }}</a>
+                    </h3>
                     @php
                         $bioHtml = filled($teacher->bio)
                             ? $teacher->bio
