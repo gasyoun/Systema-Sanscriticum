@@ -35,9 +35,13 @@ class AutoOpenHomeworkCommand extends Command
             return self::SUCCESS;
         }
 
-        $slugs = (array) config('homework.auto_open.course_slugs', []);
-        if ($slugs === []) {
-            $this->warn('homework.auto_open.course_slugs пуст — ни один курс не в охвате, ничего не делаю.');
+        // H3078: охват больше не список слагов, а правило (дата первого урока +
+        // denylist). Пустой `course_slugs` теперь НЕ значит «фича спит» — это
+        // значит «исключений из общего охвата нет». Прежний ранний выход здесь
+        // был бы тем же тихим отказом, ради устранения которого всё и делалось.
+        if ((string) config('homework.auto_open.scope', 'all') === 'listed'
+            && (array) config('homework.auto_open.course_slugs', []) === []) {
+            $this->warn('scope=listed, но course_slugs пуст — ни один курс не в охвате, ничего не делаю.');
 
             return self::SUCCESS;
         }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\HomeworkAutoOpener;
 use App\Services\Srs\LessonFlashCardsSync;
+use App\Support\HomeworkAutoOpenScope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -269,23 +270,37 @@ class Lesson extends Model
      */
     public function scopeAutoOpenCandidates(Builder $query): Builder
     {
-        $slugs = (array) config('homework.auto_open.course_slugs', []);
         $textbookLessons = (array) config('homework.auto_open.textbook_lessons', []);
 
-        if ($slugs === [] || $textbookLessons === []) {
+        if ($textbookLessons === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        // Охват считается ОДНИМ запросом по курсам и подставляется списком id
+        // (H3078). Коррелированный подзапрос по `MIN(lesson_date)` тут был бы
+        // хрупок: `lessons.course_id` — varchar, а `courses.id` — bigint, и
+        // сравнение живёт на неявном приведении, разном в MySQL и SQLite.
+        $courseIds = HomeworkAutoOpenScope::courseIdsInScope();
+
+        if ($courseIds === []) {
             return $query->whereRaw('1 = 0');
         }
 
         $allowMissing = (bool) config('homework.auto_open.open_without_textbook_lesson', true);
+        $epoch = HomeworkAutoOpenScope::policyEpoch();
 
         return $query
-            ->whereHas('course', fn (Builder $c) => $c->whereIn('slug', $slugs))
+            ->whereIn('course_id', $courseIds)
             ->where(fn (Builder $q) => $q
                 ->whereIn('textbook_lesson', $textbookLessons)
                 ->when($allowMissing, fn (Builder $qq) => $qq->orWhereNull('textbook_lesson')))
             ->where('homework_enabled', false)
             ->whereNull('homework_auto_opened_at')
             ->whereNotNull('homework_opens_at')
+            // Эпоха политики: урок, чей момент открытия уже в прошлом на день
+            // выкатки, не открывается никогда. Без неё инверсия охвата вывалила
+            // бы 41 урок и пачку уведомлений за прошедшие недели.
+            ->when($epoch !== null, fn (Builder $q) => $q->where('homework_opens_at', '>=', $epoch))
             ->where('homework_opens_at', '<=', now());
     }
 
