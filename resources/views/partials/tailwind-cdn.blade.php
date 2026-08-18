@@ -19,6 +19,8 @@
   Подключать CDN мимо этого партиала нельзя: тот же тест проверяет, что голого
   тега `cdn.tailwindcss.com` в других шаблонах нет.
 --}}
+{{-- preconnect: DNS+TLS до Play CDN стоил ~1.3 c в замере 18-08-2026 --}}
+<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
     tailwind.config = {
