@@ -65,6 +65,15 @@ Special *non-access* values of `payments.tariff` that never match any lesson key
 (teacher payout). These route to their own handlers (§3.2) and are excluded from
 revenue/loyalty/credit queries by the `real()` scope and explicit `whereNotIn` lists.
 
+A **seventh** non-access family: when `membership_months` is set on the tariff,
+`accessKey()` returns `club_{months}m` (legacy) or, once a `membership_tier` enum value
+is classified, `membership_{tier}_{months}m` (H2644/H2744). Neither form ever appears
+in `Lesson::unlockingKeys()` — a membership *purchase* payment is bookkeeping/billing
+only (parsed back by `ClubMembershipService::tierFor()` to drive tier/term state); the
+lesson-gating key a club member actually owns is the **virtual** one injected per-request
+by `ClubEntitlement` (§1.7), not this stored string. Do not expect a `club_3m` row to
+open any lesson by itself.
+
 ### 1.2 `Lesson::unlockingKeys()` — what a lesson accepts
 
 ```
@@ -254,13 +263,18 @@ sharing the group).
 ### 3.4 Checkout — where the price is computed
 
 `POST /payment/create` ([PaymentController::createPayment()](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PaymentController.php)):
-guest resolution is **anti-takeover** (a guest checkout on an existing email is
-refused — otherwise the first-payment welcome email would regenerate the owner's
-password); the DB write happens in one transaction *before* the Tochka HTTP call
-(a slow bank must not hold row locks); a zero-total order is marked paid immediately
-and never reaches the bank. Five default-OFF hardening flags (inactive-tariff guard,
-referral-wallet lock, deposit reversal, promo reservations, integrity safe-repairs)
-and the three H1396 session-lapse flags are catalogued in §8.
+a course with **zero** groups refuses checkout up front — `ValidationException` before
+any `Payment` row or Tochka HTTP call — so a group-less course can never even reach a
+paid state that later needs repair (unconditional, not a flag; belt to the webhook's
+suspenders in §5.3). Guest resolution is **anti-takeover** (a guest checkout on an
+existing email is refused — otherwise the first-payment welcome email would
+regenerate the owner's password); the DB write happens in one transaction *before* the
+Tochka HTTP call (a slow bank must not hold row locks); a zero-total order is marked
+paid immediately and never reaches the bank. Five default-OFF hardening flags
+(inactive-tariff guard, referral-wallet lock, deposit reversal, promo reservations,
+integrity safe-repairs), the three H1396 session-lapse flags, and
+`grant_access_fail_closed` (the other five paid routes' groups guard) are catalogued in
+§8.
 
 ---
 
@@ -384,13 +398,15 @@ deliveries are journaled too), `bank_status`, `reported_amount`, `decision`:
 | `rejected_resurrection` | success for a paid-then-reversed payment — refused |
 | `rejected_amount_mismatch` | bank amount diverges from the order beyond tolerance — refused |
 | `unmatched` | valid signature but no local payment matched |
+| `hold_not_captured` | Tochka two-stage-card hold (`authorized`), not a capture — **unconditionally never** grants access (§5.1); status stays `pending`. Independent of `tochka_webhook_guard`. |
+| `rejected_charge` | **PayPal Subscriptions only** ([`PaypalSubscriptionsWebhookController`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/Webhooks/PaypalSubscriptionsWebhookController.php), H2304 spec 3) — a charge event fails a structural check (no/ambiguous commitment, missing `subscription_id`, or amount vs. `meta.expected_charge_amount`/`_currency` beyond `checkout.paypal_webhook_amount_tolerance`, default 1.00). Journaled **outside** the rolled-back transaction under a per-attempt hash so a PayPal retry reprocesses after repair; HTTP 422. The whole subscriptions surface stays behind `features.paypal_subscriptions` (default OFF, §7b) — this decision exists in the ledger vocabulary but is dark in prod. |
 
-### 5.3 The three refusal guards — flag `tochka_webhook_guard` (default OFF)
+### 5.3 The three refusal guards — flag `tochka_webhook_guard` (**default ON** since 01-08-2026)
 
 With the flag OFF the ledger still records everything but **behavior is unchanged**
 (proven by the flag-OFF parity tests, including the deliberately-vulnerable
 `flag_off_paid_then_failed_then_replay_still_resurrects`). With
-`TOCHKA_WEBHOOK_GUARD=true`:
+`TOCHKA_WEBHOOK_GUARD=true` (the shipped default; `TOCHKA_WEBHOOK_GUARD=false` opts out):
 
 - **(a) Duplicate delivery** (same `event_hash`) → 200 no-op before the transaction;
   the unique index remains the race-proof backstop.
@@ -407,17 +423,32 @@ With the flag OFF the ledger still records everything but **behavior is unchange
 
 All webhook processing for a matched payment runs under `lockForUpdate()` in one
 transaction — parallel deliveries for one order serialize, so the paid path (groups +
-welcome email) cannot fire twice. The whole surface is covered by the 13 tests of
+welcome email) cannot fire twice. The whole surface is covered by
 [TochkaWebhookTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Webhooks/TochkaWebhookTest.php)
-(47 assertions, green in this worktree — metadoc spot-run #1) — **the template every
-new money test should follow** (flag-OFF parity proof + flag-ON behavior).
+— **30 tests, 112 assertions, green in this worktree (18-08-2026 re-verification;
+grew from 13/47 at authoring as H2337/H2304 added the hold/settled-matrix and
+missing-groups-fail-closed coverage)** — **the template every new money test should
+follow** (flag-OFF parity proof + flag-ON behavior).
+
+**A fourth refusal is unconditional, not behind `tochka_webhook_guard`:** a settled
+delivery for a payment whose course has **zero** groups throws inside the transaction
+— the status update and the ledger row both roll back, so Tochka's retry of the exact
+same JWT succeeds once an operator attaches a group (H2085 / H2304 spec 2; see
+[TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/TOCHKA_SETTLEMENT_STATUS_MATRIX_2026-08-07.md)
+row "settled + course has no groups"). This check is local to the webhook path and does
+**not** go through the flag-gated `Payment::grantAccess()` throw described in §8
+(`grant_access_fail_closed`) — the webhook already guarantees groups exist before it
+ever marks the payment `paid`, so that flag only matters for the other five paid
+routes.
 
 ### 5.4 Operator surface
 
 `php artisan payments:audit-checkout-integrity` (read-only without flags) prints,
-among other invariants, the **"Rejected webhook deliveries"** block — operators see
-resurrections and amount mismatches without DB access. §11 (RU runbook) tells the
-operator what to do with each.
+among other invariants, the **"Rejected webhook deliveries"** block — every decision in
+`PaymentWebhookEvent::REJECTED_DECISIONS` (resurrections, amount mismatches, bank
+holds not yet captured, and rejected PayPal Subscriptions charges, §5.2) without DB
+access. §11 (RU runbook) tells the operator what to do with each; a `hold_not_captured`
+row is not an error to chase — it means "wait for the later capture webhook".
 
 ---
 
@@ -532,12 +563,18 @@ after any `.env` change on a config-cached deployment run `php artisan config:ca
 | `checkout_promo_survives_session` | `CHECKOUT_PROMO_SURVIVES_SESSION` | **ON** | H1396 §1: promo carried in a hidden field, re-resolved authoritatively; lapsed ⇒ explicit price confirmation |
 | `checkout_session_lapse_relogin` | `CHECKOUT_SESSION_LAPSE_RELOGIN` | **ON** | H1396 §2: lapsed-session submit → login with return to checkout |
 | `checkout_signed_return_url` | `CHECKOUT_SIGNED_RETURN_URL` | **ON** | H1396 §3: signed bank return URLs carrying the payment id |
+| `grant_access_fail_closed` | `GRANT_ACCESS_FAIL_CLOSED` | OFF | H2304 spec 2: `Payment::grantAccess()` **throws** (instead of log-and-return) when the course has no groups, on the other five paid routes — zero-price checkout, Filament admin, PayPal claim, PayPal-subscriptions claim, conditional grants, import. The Tochka webhook has its own independent unconditional check (§5.3) and ignores this flag. |
+| `paypal_subscriptions` | `PAYPAL_SUBSCRIPTIONS_ENABLED` | OFF | H2027/H2304: the PayPal Subscriptions auto-bill webhook ledger, amount-parity guard (`rejected_charge`, §5.2) and route stay dark; claim path (§7b) remains the live default. |
 
 Non-flag money knobs: `checkout.webhook_amount_tolerance` (1.00 ₽ default, §5.3c),
-`checkout.legacy_pending_days` (30) / `checkout.stale_pending_minutes` (180, reserved)
+`checkout.paypal_webhook_amount_tolerance` (1.00 ₽ default, the `rejected_charge`
+mirror for PayPal Subscriptions, §5.2), `checkout.legacy_pending_days` (30) /
+`checkout.stale_pending_minutes` (180, reserved)
 in [config/checkout.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/checkout.php);
 prana rate/cap/rewards in [config/prana.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/prana.php);
-`referral.credit_amount` (500 ₽); the §6 receivables/conversion/profit-funds/
+`referral.credit_amount` (500 ₽, to the referrer) and `referral.referred_credit_amount`
+(0 ₽ default = **dark**, to the referred student — "both-sides referral", 02-08-2026);
+the §6 receivables/conversion/profit-funds/
 investment threshold families. Loyalty thresholds and several operational toggles
 live in the DB (`MarketingSetting`, cached singleton), not in config.
 
@@ -739,6 +776,10 @@ residue на курсах без групп; в exit code **не** входит 
    старый), деньги сверить с банком.
 4. Статус «Оплачено», а уроки закрыты: проверить, что у курса привязаны группы
    (админка курса → «Группы») и что ключ тарифа соответствует блоку урока (§10.1).
+5. Вебхук Точки вернул **500**, платёж остался `pending`: у курса нет ни одной группы
+   — это единственная безусловная (не за флагом) причина отказа вебхука. Привязать
+   группу в админке курса; повторную доставку того же события Точка пришлёт сама —
+   доступ выдастся автоматически, вручную ничего переводить не нужно (§5.3).
 
 ### 11.2 «Студент говорит, что платил дважды»
 
