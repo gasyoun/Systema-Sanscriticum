@@ -8,6 +8,10 @@
     $cadenceSlot = $cadence?->slotLabel();
     $cadenceNext = $cadence?->nextLabel();
     $cadenceProgress = $cadence?->progressLabel();
+    // H3115: у курса может быть несколько потоков одной программы. Общий остаток
+    // тогда молчит (он описывал бы студента, которого нет), а прогресс называется
+    // по каждому потоку отдельно.
+    $cadenceStreams = $cadence?->streamLines() ?? [];
     // Ручные часы приоритетны; пусто — считаем астрономические по календарю.
     $heroHours = $course->hours_count ?: $cadence?->hours();
 @endphp
@@ -165,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     {{-- Когда именно «идет сейчас»: день, время, ближайшее занятие,
                          сколько осталось. Всё выведено из `schedules` — бейдж
                          формата ручной и об этом ничего не знает. --}}
-                    @if($cadenceSlot || $cadenceNext || $cadenceProgress)
+                    @if($cadenceSlot || $cadenceNext || $cadenceProgress || $cadenceStreams)
                         <p class="-mt-4 mb-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-300"
                            data-testid="course-hero-cadence">
                             @if($cadenceSlot)
@@ -181,6 +185,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <i class="fas fa-hourglass-half text-[11px]"></i>{{ $cadenceProgress }}
                                 </span>
                             @endif
+                            @foreach($cadenceStreams as $streamLine)
+                                <span class="inline-flex items-center gap-2 text-amber-400 font-bold" data-testid="course-stream-line">
+                                    <i class="fas fa-hourglass-half text-[11px]"></i>{{ $streamLine }}
+                                </span>
+                            @endforeach
                             @if($cadenceSlot || $cadenceNext)
                                 <a href="#schedule" class="text-[#38BDF8] hover:text-white underline-offset-2 hover:underline">все даты</a>
                             @endif
@@ -716,7 +725,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <i class="fas fa-circle-info mr-1"></i> Курс уже идёт — что вы получите
                             </div>
                             <p class="text-sm text-slate-300 leading-relaxed">
-                                {{ $cadence->progressLabel() }}@if($cadence->slotLabel()), они пройдут {{ $cadence->slotLabel() }}@endif.
+                                {{-- H3115: при нескольких потоках общего остатка нет — называем каждый поток отдельно. --}}
+                                @if($cadenceStreams)
+                                    Курс идёт в {{ count($cadenceStreams) }} {{ \App\Support\Plural::ru(count($cadenceStreams), 'потоке', 'потоках', 'потоках') }}:
+                                    {{ implode('; ', $cadenceStreams) }}. Вы занимаетесь в одном из них.
+                                @else
+                                    {{ $cadence->progressLabel() }}@if($cadence->slotLabel()), они пройдут {{ $cadence->slotLabel() }}@endif.
+                                @endif
                                 Покупая весь курс, вы получаете и <span class="text-white font-semibold">записи всех прошедших занятий</span> —
                                 они открываются в личном кабинете сразу после оплаты@if($recordedLessons > 0), сейчас их {{ $recordedLessons }}@endif.
                                 Остальные занятия вы проходите вживую вместе с группой.

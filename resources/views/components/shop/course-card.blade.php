@@ -15,6 +15,9 @@
     $cadenceSlot = $cadence?->slotLabel();
     $cadenceNext = $cadence?->nextLabel();
     $cadenceProgress = $cadence?->progressLabel();
+    // H3115: несколько потоков — на карточке общий остаток молчит (он ничей),
+    // вместо него короткое «2 потока»; поштучно они названы на странице курса.
+    $cadenceStreamCount = $cadence?->hasMultipleStreams() ? $cadence->streams()->count() : 0;
     // Ручные часы приоритетны (владелец мог задать академические), календарные — фолбэк.
     $cardHours = $course->hours_count ?: $cadence?->hours();
 @endphp
@@ -163,7 +166,7 @@
             {{-- Ритм живого потока: день/время и сколько занятий осталось. Всё —
                  из `schedules`; бейдж «Идет сейчас» сам по себе не отвечал ни
                  «когда», ни «успею ли я ещё». Нет календаря — строки нет. --}}
-            @if($cadenceSlot || $cadenceNext || $cadenceProgress)
+            @if($cadenceSlot || $cadenceNext || $cadenceProgress || $cadenceStreamCount > 1)
                 <p class="text-[11px] text-slate-400 leading-snug mb-3 flex flex-wrap items-center gap-x-2 gap-y-1"
                    data-testid="course-card-cadence">
                     @if($cadenceSlot)
@@ -174,6 +177,11 @@
                     @endif
                     @if($cadenceProgress)
                         <span class="text-amber-400/90 font-bold">{{ $cadenceProgress }}</span>
+                    @endif
+                    @if($cadenceStreamCount > 1)
+                        <span class="text-amber-400/90 font-bold" data-testid="course-card-streams">
+                            {{ $cadenceStreamCount }} {{ \App\Support\Plural::ru($cadenceStreamCount, 'поток', 'потока', 'потоков') }}
+                        </span>
                     @endif
                 </p>
             @endif
