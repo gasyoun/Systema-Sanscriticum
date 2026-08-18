@@ -1,4 +1,4 @@
-@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => [], 'nextStep' => []])
+@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => [], 'nextStep' => [], 'eager' => false])
 
 @php
     $courseKeys = $purchasedByCourse[$course->id] ?? [];
@@ -19,8 +19,15 @@
        class="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] flex items-center justify-center border-b border-[#1F2636] overflow-hidden group/img block rounded-t-2xl">
 
         @if($course->image_path)
+            {{-- H-perf: каталог отдаётся целиком (~90 карточек). Без lazy это ~28 МБ
+                 обложек в первом же запросе. Первый ряд (до 4 карточек в сетке)
+                 грузим eager — это LCP; остальное по мере прокрутки. --}}
             <img src="{{ Storage::url($course->image_path) }}"
                  alt="{{ $course->title }}"
+                 width="533" height="400"
+                 loading="{{ $eager ? 'eager' : 'lazy' }}"
+                 @if($eager) fetchpriority="high" @endif
+                 decoding="async"
                  class="absolute inset-0 w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-700 opacity-80">
             <div class="absolute inset-0 bg-gradient-to-t from-[#111622] via-transparent to-transparent opacity-80"></div>
         @else
