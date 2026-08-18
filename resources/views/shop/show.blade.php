@@ -553,6 +553,22 @@ document.addEventListener('DOMContentLoaded', function () {
             // H266 (M1): «режим записи» — завершённый курс с активным тарифом-записью
             // при включённом флаге. Меняет ТОЛЬКО текст CTA (доступ/цена/чекаут те же).
             $sellsRecordings = $course->sellsRecordings();
+
+            // H3100: покупателю, пришедшему в середине потока, надо сказать, что он
+            // получит за уже прошедшие блоки. Раньше «Полный курс 22 000 ₽» и «БЛОК 1»
+            // стояли рядом с «СЕЙЧАС ИДЕТ БЛОК 4» без единого слова про записи.
+            // Всё считаем по факту: `full` открывает уроки ЛЮБОГО блока
+            // (Lesson::unlockingKeys), а запись у урока есть, когда есть ссылка.
+            $courseUnderway = $cadence?->isUnderway() ?? false;
+            $recordedLessons = (int) ($course->recorded_lessons_count ?? 0);
+
+            // Блок считаем прошедшим по его же `ends_at`; без даты — не считаем
+            // (лучше промолчать, чем назвать прошедшим идущий блок).
+            $finishedBlockNumbers = $course->blocks
+                ->filter(fn ($b) => $b->ends_at && $b->ends_at->isPast())
+                ->pluck('number')
+                ->map(fn ($n) => (int) $n)
+                ->all();
         @endphp
         <section id="tariffs" class="mb-16 lg:mb-20"
                  x-data="{ tab: '{{ $defaultTab }}' }"
@@ -690,6 +706,24 @@ document.addEventListener('DOMContentLoaded', function () {
                      x-transition:enter-end="opacity-100 translate-y-0"
                      class="grid grid-cols-1 gap-6 {{ $fullTariffs->count() > 1 ? 'md:grid-cols-2' : 'md:max-w-2xl md:mx-auto' }}" x-cloak>
 
+                    {{-- H3100: что получает опоздавший. Показываем только когда поток
+                         реально начат и не закончен — на ещё не стартовавшем курсе
+                         эта врезка была бы шумом. --}}
+                    @if($courseUnderway)
+                        <div class="{{ $fullTariffs->count() > 1 ? 'md:col-span-2' : '' }} rounded-2xl border border-[#38BDF8]/25 bg-[#38BDF8]/5 p-5"
+                             data-testid="tariffs-underway-notice">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-[#38BDF8] mb-1.5">
+                                <i class="fas fa-circle-info mr-1"></i> Курс уже идёт — что вы получите
+                            </div>
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                {{ $cadence->progressLabel() }}@if($cadence->slotLabel()), они пройдут {{ $cadence->slotLabel() }}@endif.
+                                Покупая весь курс, вы получаете и <span class="text-white font-semibold">записи всех прошедших занятий</span> —
+                                они открываются в личном кабинете сразу после оплаты@if($recordedLessons > 0), сейчас их {{ $recordedLessons }}@endif.
+                                Остальные занятия вы проходите вживую вместе с группой.
+                            </p>
+                        </div>
+                    @endif
+
                     @foreach($fullTariffs as $tariff)
                         @php
                             $tariffKey = $tariff->type === 'block' ? 'block_' . $tariff->block_number : 'full';
@@ -786,6 +820,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             $defaultBlockTitle = 'Блок ' . $number;
                             $hasCustomTitle = $whole && $whole->title && trim($whole->title) !== $defaultBlockTitle;
                             $isCurrent = !$wholePurchased && $number === ($currentBlockNumber ?? null);
+                            // H3100: блок уже прошёл — покупка остаётся, но это доступ
+                            // к записям, а не к живым занятиям. Молчать об этом значит
+                            // продавать «БЛОК 1» так же, как идущий «БЛОК 4».
+                            $isFinishedBlock = !$wholePurchased && !$isCurrent
+                                && in_array($number, $finishedBlockNumbers, true);
 
                             if ($wholePurchased) {
                                 $borderClasses = 'border-emerald-500/50';
@@ -805,6 +844,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                         <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
                                     </span>
                                     СЕЙЧАС ИДЕТ
+                                </div>
+                            @elseif($isFinishedBlock)
+                                <div class="absolute -top-2.5 left-4 inline-flex items-center gap-1.5 bg-[#1F2636] border border-[#38BDF8]/30 text-[#38BDF8] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider"
+                                     data-testid="tariffs-finished-block">
+                                    <i class="fas fa-play-circle text-[9px]"></i>
+                                    УЖЕ ПРОШЁЛ — В ЗАПИСИ
                                 </div>
                             @endif
 
@@ -897,7 +942,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 @elseif($whole)
                                     <a href="{{ route('checkout.show', $whole->id) }}"
                                        class="w-full flex justify-center items-center py-3 px-4 {{ $isCurrent ? 'bg-brand hover:bg-brand-hover text-white shadow-md shadow-brand/20' : 'bg-[#1F2636] text-white hover:bg-[#38BDF8] hover:text-[#0A0D14]' }} text-sm font-bold rounded-lg transition-colors">
-                                        {{ $sellsRecordings ? 'Купить запись блока' : ($halves->isNotEmpty() ? 'Оплатить блок целиком' : 'Оплатить модуль') }}
+                                        {{-- H3100: у прошедшего блока «Оплатить модуль» обещает живые занятия, которых уже не будет. --}}
+                                        {{ $sellsRecordings ? 'Купить запись блока' : ($isFinishedBlock ? 'Купить записи блока' : ($halves->isNotEmpty() ? 'Оплатить блок целиком' : 'Оплатить модуль')) }}
                                     </a>
                                 @endif
                             </div>
