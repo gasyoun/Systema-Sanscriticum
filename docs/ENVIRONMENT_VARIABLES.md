@@ -68,6 +68,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CHECKOUT_INACTIVE_TARIFF_GUARD` | optional | `true` | config/features.php:358 |
 | `CHECKOUT_INTEGRITY_SAFE_REPAIRS` | optional | `false` | config/features.php:350 |
 | `CHECKOUT_LEGACY_PENDING_DAYS` | optional | `30` | config/checkout.php:31 |
+| `CHECKOUT_NEAR_DUPLICATE_EMAIL_GUARD` | optional | `false` | config/features.php:1003 |
 | `CHECKOUT_PAYPAL_WEBHOOK_AMOUNT_TOLERANCE` | optional | `1.00` | config/checkout.php:52 |
 | `CHECKOUT_PROMO_RESERVATIONS` | optional | `true` | config/features.php:342 |
 | `CHECKOUT_PROMO_SURVIVES_SESSION` | optional | `true` | config/features.php:409 |
