@@ -56,6 +56,14 @@ class HomeworkAutoOpenScope
             $query->whereNotIn('slug', $exclude);
         }
 
+        // Исключение по формату курса (H3081): «Айтарея без домашки» — правило
+        // про чтения вообще, а не про один поток 2026 года.
+        foreach ((array) config('homework.auto_open.exclude_course_prefixes', []) as $prefix) {
+            if ((string) $prefix !== '') {
+                $query->where('slug', 'not like', $prefix.'%');
+            }
+        }
+
         $ids = $query->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         $minStart = self::minCourseStart();
