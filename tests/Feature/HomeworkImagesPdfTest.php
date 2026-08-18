@@ -180,4 +180,86 @@ class HomeworkImagesPdfTest extends TestCase
         $this->assertSame(HomeworkSubmission::STATUS_DRAFT, $submission->status);
         $this->assertFalse(app(HomeworkImagePdfService::class)->exists($submission));
     }
+
+    /**
+     * Регрессия: фото 4032×3024 с телефона уходило в dompdf в исходном
+     * размере, и сборка PDF валила php-fpm по памяти — вместе с POST сдачи
+     * (гр.60, «Кочергина 3 (читка)», 18.08.2026).
+     *
+     * @test
+     */
+    public function full_size_phone_photo_is_downscaled_before_embedding(): void
+    {
+        config(['homework.image_pdf.max_edge_px' => 800]);
+
+        $big = imagecreatetruecolor(4032, 3024);
+        ob_start();
+        imagejpeg($big, null, 90);
+        $bytes = (string) ob_get_clean();
+        imagedestroy($big);
+
+        $method = new \ReflectionMethod(HomeworkImagePdfService::class, 'normalizeToDompdfImage');
+        $method->setAccessible(true);
+
+        $converted = $method->invoke(app(HomeworkImagePdfService::class), $bytes, 'image/jpeg');
+
+        $this->assertIsArray($converted);
+        $this->assertSame('image/jpeg', $converted['mime']);
+
+        [$width, $height] = getimagesizefromstring($converted['bytes']);
+        $this->assertLessThanOrEqual(800, max($width, $height));
+        $this->assertLessThan(strlen($bytes), strlen($converted['bytes']));
+    }
+
+    /**
+     * Кадр, который не читают ни imagick, ни GD, больше не вклеивается
+     * в исходном виде, если он крупный: именно этот путь и раздувал сборку.
+     *
+     * @test
+     */
+    public function unreadable_oversized_frame_is_skipped_not_embedded_raw(): void
+    {
+        config(['homework.image_pdf.raw_passthrough_max_kb' => 1]);
+
+        $method = new \ReflectionMethod(HomeworkImagePdfService::class, 'normalizeToDompdfImage');
+        $method->setAccessible(true);
+
+        $garbage = str_repeat('x', 200 * 1024);
+
+        $this->assertNull(
+            $method->invoke(app(HomeworkImagePdfService::class), $garbage, 'image/heic'),
+        );
+    }
+
+    /** @test */
+    public function pdf_page_count_is_capped_but_submission_keeps_every_file(): void
+    {
+        config(['homework.image_pdf.max_pages' => 2]);
+
+        [$course, $lesson] = $this->makeLessonWithHomework();
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->post(
+            route('student.homework.store', [$course->slug, $lesson->id]),
+            [
+                'action' => 'submit',
+                'body' => null,
+                'files' => [
+                    UploadedFile::fake()->image('p1.jpg', 120, 90),
+                    UploadedFile::fake()->image('p2.jpg', 120, 90),
+                    UploadedFile::fake()->image('p3.jpg', 120, 90),
+                    UploadedFile::fake()->image('p4.jpg', 120, 90),
+                ],
+            ]
+        )->assertRedirect();
+
+        $submission = HomeworkSubmission::where('user_id', $student->id)->first();
+        $this->assertNotNull($submission);
+
+        $pdf = app(HomeworkImagePdfService::class);
+        $this->assertTrue($pdf->exists($submission));
+
+        // Потолок режет только сборку — сами файлы работы остаются на месте.
+        $this->assertCount(4, $pdf->studentImageFiles($submission));
+    }
 }
