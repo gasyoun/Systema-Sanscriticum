@@ -19,6 +19,10 @@ use RuntimeException;
  */
 final class VisualDcsReleaseImporter
 {
+    public function __construct(
+        private readonly VisualDcsUnitMaterializer $materializer,
+    ) {}
+
     /**
      * @return array{release: VisualDcsRelease, noop: bool}
      */
@@ -33,6 +37,10 @@ final class VisualDcsReleaseImporter
 
         $existing = VisualDcsRelease::query()->where('release_id', $releaseId)->first();
         if ($existing && $existing->manifest_hash === $manifestHash && $existing->status === VisualDcsRelease::STATUS_PROMOTED) {
+            // Идемпотентный no-op релиза — но единицы каталога могли ещё не
+            // быть материализованы (релиз импортирован до H2869). Дострой.
+            $this->materializer->ensureMaterialized($existing);
+
             return ['release' => $existing, 'noop' => true];
         }
 
@@ -66,6 +74,11 @@ final class VisualDcsReleaseImporter
 
             return $release->fresh();
         });
+
+        // H2869: тяжёлая часть — вне пути запроса. Единицы каталога строятся
+        // здесь, в CLI-команде импорта, и путь запроса payload-файлы больше
+        // не открывает.
+        $this->materializer->ensureMaterialized($release);
 
         return ['release' => $release, 'noop' => false];
     }
