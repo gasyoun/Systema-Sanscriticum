@@ -188,7 +188,7 @@ class CourseShowTest extends TestCase
             ->assertSee('Коротко о курсе')
             ->assertSee('Иван Толчельников')
             ->assertSee('Идет сейчас')
-            ->assertSee('12 лекций')
+            ->assertSee('12 онлайн-занятий')
             ->assertSee('10 часов');
     }
 

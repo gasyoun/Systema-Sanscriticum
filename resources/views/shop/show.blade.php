@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold text-slate-400 sm:ml-1">
                             @if($course->lessons_count)
-                                <span class="flex items-center"><i class="fas fa-play-circle mr-2 text-indigo-400"></i> {{ $course->lessons_count }} {{ \App\Support\Plural::ru((int) $course->lessons_count, 'лекция', 'лекции', 'лекций') }}</span>
+                                <span class="flex items-center"><i class="fas fa-play-circle mr-2 text-indigo-400"></i> {{ $course->lessons_count }} {{ \App\Support\Plural::ru((int) $course->lessons_count, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий') }}</span>
                             @endif
                             @if($course->hours_count)
                                 <span class="flex items-center"><i class="far fa-clock mr-2 text-indigo-400"></i> {{ $course->hours_count }} ч</span>
@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     ? ['icon' => 'fas fa-broadcast-tower', 'label' => 'Формат', 'value' => $course->formatLabel()]
                     : null,
                 $course->lessons_count
-                    ? ['icon' => 'fas fa-play-circle', 'label' => 'Занятий', 'value' => $course->lessons_count.' лекций']
+                    ? ['icon' => 'fas fa-play-circle', 'label' => 'Занятий', 'value' => $course->lessons_count.' '.\App\Support\Plural::ru((int) $course->lessons_count, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий')]
                     : null,
                 $course->hours_count
                     ? ['icon' => 'far fa-clock', 'label' => 'Длительность', 'value' => $course->hours_count.' часов']
