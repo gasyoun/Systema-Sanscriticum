@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\TeacherPayoutAttributionSuggestionResource\Pages;
 
+use App\Filament\Pages\PayoutAttributionGuide;
 use App\Filament\Resources\TeacherPayoutAttributionSuggestionResource;
+use Filament\Actions\Action;
 use Filament\Resources\Pages\ListRecords;
 
 /**
@@ -34,5 +36,22 @@ class ListTeacherPayoutAttributionSuggestions extends ListRecords
     {
         return 'Отметьте, какие платежи-«Расходы» были выплатами преподавателю. '
             .'Подтверждение меняет только эту отметку — строк в «Историю выплат» и «Финансы» оно не создаёт.';
+    }
+
+    /**
+     * Кнопка на инструкцию. Инструкция живёт ЗДЕСЬ ЖЕ, в кабинете, а не во
+     * внешней переписке: ruling MG 18-08-2026.
+     *
+     * @return array<int, Action>
+     */
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('guide')
+                ->label('Как это делать')
+                ->icon('heroicon-o-academic-cap')
+                ->color('gray')
+                ->url(PayoutAttributionGuide::getUrl()),
+        ];
     }
 }
