@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\CourseStreamComparison;
+use App\Filament\Resources\TeacherPayoutAttributionSuggestionResource;
 use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\Lesson;
@@ -14,6 +16,7 @@ use App\Models\TeacherPayoutAttributionSuggestion;
 use App\Models\User;
 use App\Services\TeacherPayoutReconciliation;
 use App\Services\TeacherSettlementActPdf;
+use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -402,6 +405,50 @@ class TeacherPayoutTruthTest extends TestCase
 
         $this->assertSame($before, $this->moneyFingerprint(), 'ни строк, ни сумм в teacher_payouts / payments не изменилось');
         $this->assertSame(0, DB::table('teacher_payouts')->where('created_at', '>', now()->subMinute())->where('amount', '!=', 1000)->count());
+    }
+
+    /**
+     * Очередь подтверждения стоит на том же гейте, что «Потоки курса», с
+     * которых на неё ведёт ссылка. Разъедься эти два гейта — админ открывал бы
+     * экран с жёлтой плашкой «подтвердите разметку» и упирался в 403 по ссылке
+     * из неё. MG 18-08-2026: администратор всегда видит всё.
+     *
+     * @test
+     */
+    public function the_confirmation_queue_stands_on_the_same_gate_as_the_screen_that_links_to_it(): void
+    {
+        $cases = [
+            Roles::ACCOUNTANT => true,
+            Roles::SUPER_ADMIN => true,
+            Roles::ADMIN => true,
+            Roles::MANAGER => false,
+            Roles::TEACHER => false,
+        ];
+
+        foreach ($cases as $role => $allowed) {
+            $this->actingAs(User::factory()->create(['role' => $role]));
+
+            $this->assertSame(
+                $allowed,
+                TeacherPayoutAttributionSuggestionResource::canViewAny(),
+                "очередь подтверждения для роли {$role}",
+            );
+            $this->assertSame(
+                CourseStreamComparison::canAccess(),
+                TeacherPayoutAttributionSuggestionResource::canViewAny(),
+                "гейты «Потоки курса» и очереди разошлись на роли {$role}",
+            );
+        }
+    }
+
+    /** @test */
+    public function nobody_can_create_a_suggestion_by_hand(): void
+    {
+        // Предложение рождается только детектором: строка, заведённая руками,
+        // означала бы «выплату», которой не соответствует ни один платёж.
+        $this->actingAs(User::factory()->create(['role' => Roles::ACCOUNTANT]));
+
+        $this->assertFalse(TeacherPayoutAttributionSuggestionResource::canCreate());
     }
 
     /** @test */
