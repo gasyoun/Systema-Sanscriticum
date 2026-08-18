@@ -2,58 +2,89 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Course;
 use App\Models\LandingPage;
 use App\Models\LessonAccessGrant;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\StorefrontAnalyticsEvent;
+use App\Models\Teacher;
 use App\Models\Testimonial;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
 use App\Services\Membership\PrivateArchiveEligibility;
+use App\Support\CourseCadence;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
 use App\Support\ProductLadderAnchors;
+use App\Support\ShopCatalogUrl;
 use App\Support\TrajectoryPathway;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ShopController extends Controller
 {
-    // МЕТОД 1: Витрина со всеми курсами
-    public function index(Request $request)
+    /**
+     * МЕТОД 1: Витрина со всеми курсами. Фильтры каталога живут в
+     * /online/{facets} словами (kategoriya/format/uroven/prepodavatel/poisk),
+     * без query string — см. App\Support\ShopCatalogUrl. Старые
+     * ?cat[]=/?q=/?teacher=/?format=/?level= 301-редиректят на эквивалент.
+     */
+    public function index(Request $request, ?string $facets = null)
     {
-        $search = $request->input('search');
-
-        $courses = PrivateArchiveEligibility::scopePublic(Course::where('is_visible', true))
-            ->when($search, fn ($q, $s) => $q->where('title', 'LIKE', '%'.str_replace(['%', '_'], ['\%', '\_'], $s).'%'))
-            ->with(['tariffs' => function ($query) {
-                $query->where('is_active', true)->orderBy('price', 'asc');
-            }])
-            ->paginate(9)
-            ->withQueryString();
-
-        // Предзагружаем купленные ключи по всем курсам на странице — одним запросом
-        $purchasedByCourse = [];
-        if (Auth::check()) {
-            $courseIds = $courses->pluck('id')->all();
-
-            $purchasedByCourse = Payment::query()
-                ->real() // conditional-доступ «под обещание» — не покупка, блок должен остаться оплачиваемым
-                ->where('user_id', Auth::id())
-                ->whereIn('course_id', $courseIds)
-                ->paid()
-                ->get(['course_id', 'tariff'])
-                ->groupBy('course_id')
-                ->map(fn ($rows) => $rows->pluck('tariff')->filter()->unique()->values()->all())
-                ->all();
+        if ($request->hasAny(['cat', 'q', 'search', 'teacher', 'format', 'level'])) {
+            return redirect()->to($this->legacyQueryToPrettyPath($request), 301);
         }
 
-        $page = new LandingPage([
-            'title' => 'Общество ревнителей санскрита',
-            'description' => 'Выберите курс и начните обучение',
-        ]);
+        $initial = [
+            'initialCategoryIds' => [],
+            'initialTeacherId' => '',
+            'initialFormat' => '',
+            'initialLevel' => '',
+            'initialSearch' => '',
+        ];
+        $categorySlugs = [];
+        $indexable = true;
+
+        if ($facets !== null) {
+            $parsed = ShopCatalogUrl::parse($facets);
+            abort_if($parsed === null, 404);
+
+            if (isset($parsed['kategoriya'])) {
+                $categorySlugs = array_values(array_unique(explode(',', $parsed['kategoriya'])));
+                $categories = Category::whereIn('slug', $categorySlugs)->get(['id']);
+                abort_if($categories->count() !== count($categorySlugs), 404);
+                $initial['initialCategoryIds'] = $categories->pluck('id')->all();
+            }
+
+            if (isset($parsed['format'])) {
+                abort_unless(in_array($parsed['format'], ['live', 'recorded'], true), 404);
+                $initial['initialFormat'] = $parsed['format'];
+            }
+
+            if (isset($parsed['uroven'])) {
+                abort_unless(array_key_exists($parsed['uroven'], Course::LEVELS), 404);
+                $initial['initialLevel'] = $parsed['uroven'];
+            }
+
+            if (isset($parsed['prepodavatel'])) {
+                $teacher = Teacher::where('name', ShopCatalogUrl::decodeWords($parsed['prepodavatel']))->first();
+                abort_if($teacher === null, 404);
+                $initial['initialTeacherId'] = (string) $teacher->id;
+            }
+
+            if (isset($parsed['poisk'])) {
+                $initial['initialSearch'] = ShopCatalogUrl::decodeWords($parsed['poisk']);
+            }
+
+            // Индексируем только «пусто» и «одна категория» — остальные комбинации
+            // canonical-складываются вниз, иначе комбинаторика facet'ов даёт Google
+            // бесконечный набор тонких дублей (тот же риск, что и у ?cat[]=, только хуже).
+            $indexable = array_keys($parsed) === ['kategoriya'] && count($categorySlugs) === 1;
+        }
+
+        $canonicalPath = ShopCatalogUrl::build($indexable ? $categorySlugs : array_slice($categorySlugs, 0, 1));
 
         $deposit = MarketingSetting::cached();
 
@@ -69,7 +100,31 @@ class ShopController extends Controller
         // «С чего начать», конец статьи и хаб «Материалы».
         $ladder = ProductLadderAnchors::resolve();
 
-        return view('shop.index', compact('courses', 'page', 'search', 'purchasedByCourse', 'deposit', 'featuredTestimonials', 'ladder'));
+        return view('shop.index', array_merge($initial, compact(
+            'deposit', 'featuredTestimonials', 'ladder', 'canonicalPath', 'indexable'
+        )));
+    }
+
+    /** Старые query-параметры каталога -> эквивалентный словесный путь (301). */
+    private function legacyQueryToPrettyPath(Request $request): string
+    {
+        $categoryIds = array_map('intval', (array) $request->input('cat', []));
+        $categorySlugs = $categoryIds === []
+            ? []
+            : Category::whereIn('id', $categoryIds)->pluck('slug')->all();
+
+        $teacherName = null;
+        if ($request->filled('teacher')) {
+            $teacherName = optional(Teacher::find($request->input('teacher')))->name;
+        }
+
+        return ShopCatalogUrl::build(
+            categorySlugs: $categorySlugs,
+            format: (string) $request->input('format', ''),
+            level: (string) $request->input('level', ''),
+            teacherName: $teacherName,
+            search: (string) ($request->input('q') ?? $request->input('search') ?? ''),
+        );
     }
 
     /**
@@ -249,6 +304,11 @@ class ShopController extends Controller
         $scheduleGroups = $course->upcomingSchedules()
             ->groupBy(fn ($s) => $s->start->translatedFormat('F Y'));
 
+        // Ритм курса из календаря: день/время, ближайшее занятие, сколько
+        // осталось. Раньше шапка показывала только ручное «Идет сейчас», и
+        // покупатель не видел ни дня, ни того, что поток на 14-м из 16.
+        $cadence = CourseCadence::for($course);
+
         $currentBlock = $course->currentBlock();
         $currentBlockNumber = $currentBlock?->number;
 
@@ -296,7 +356,7 @@ class ShopController extends Controller
         $flagship = FlagshipLanding::for($course);
         $ctaAb = FlagshipExperiments::ctaFor($course, request());
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'lessonsByBlock', 'flagship', 'ctaAb'));
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb'));
     }
 
     /**

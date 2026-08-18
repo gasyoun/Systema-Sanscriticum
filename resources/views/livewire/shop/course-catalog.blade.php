@@ -48,17 +48,17 @@
         {{-- ===== Строка A: формат + преподаватель + сброс ===== --}}
         <div class="flex flex-wrap items-center gap-2">
             {{-- Все курсы --}}
-            <button type="button" wire:click="$set('format', '')"
+            <a href="{{ route('shop.index') }}" wire:click.prevent="$set('format', '')"
                     @class([
                         'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer',
                         'bg-brand text-white border-brand' => $format === '',
                         'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-brand/50 hover:text-white' => $format !== '',
                     ])>
                 Все курсы
-            </button>
+            </a>
 
             {{-- Идут сейчас --}}
-            <button type="button" wire:click="$set('format', 'live')"
+            <a href="{{ route('shop.index.facets', ['facets' => 'format/live']) }}" wire:click.prevent="$set('format', 'live')"
                     @class([
                         'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer',
                         'bg-rose-500 text-white border-rose-500' => $format === 'live',
@@ -70,10 +70,10 @@
                     'bg-rose-400' => $format !== 'live',
                 ])></span>
                 Идут сейчас
-            </button>
+            </a>
 
             {{-- В записи --}}
-            <button type="button" wire:click="$set('format', 'recorded')"
+            <a href="{{ route('shop.index.facets', ['facets' => 'format/recorded']) }}" wire:click.prevent="$set('format', 'recorded')"
                     @class([
                         'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer',
                         'bg-indigo-500 text-white border-indigo-500' => $format === 'recorded',
@@ -81,7 +81,7 @@
                     ])>
                 <i class="fas fa-play-circle text-[11px]"></i>
                 В записи
-            </button>
+            </a>
 
             {{-- Правый край: преподаватель + сброс всех --}}
             <div class="ml-auto flex items-center gap-2">
@@ -103,11 +103,11 @@
                 @endif
 
                 @if($this->hasActiveFilters)
-                    <button type="button" wire:click="resetFilters"
+                    <a href="{{ route('shop.index') }}" wire:click.prevent="resetFilters"
                             class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-brand uppercase tracking-wider px-3 py-2 transition-colors">
                         <i class="fas fa-times-circle"></i>
                         Сбросить
-                    </button>
+                    </a>
                 @endif
             </div>
         </div>
@@ -119,8 +119,8 @@
                 @foreach(\App\Models\Course::LEVELS as $levelKey => $levelLabel)
                     @if(($this->levelCounts[$levelKey] ?? 0) > 0)
                         @php $levelActive = $level === $levelKey; @endphp
-                        <button type="button"
-                                wire:click="$set('level', '{{ $levelActive ? '' : $levelKey }}')"
+                        <a href="{{ $levelActive ? route('shop.index') : route('shop.index.facets', ['facets' => 'uroven/'.$levelKey]) }}"
+                                wire:click.prevent="$set('level', '{{ $levelActive ? '' : $levelKey }}')"
                                 wire:key="level-{{ $levelKey }}"
                                 @class([
                                     'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer',
@@ -134,7 +134,7 @@
                                 'text-white/70' => $levelActive,
                                 'text-slate-500' => ! $levelActive,
                             ])>{{ $this->levelCounts[$levelKey] }}</span>
-                        </button>
+                        </a>
                     @endif
                 @endforeach
                 <a href="{{ route('shop.start') }}"
@@ -151,19 +151,19 @@
             <div class="relative">
                 <div class="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:thin] [scrollbar-color:#1F2636_transparent] scroll-smooth">
                     {{-- Все темы --}}
-                    <button type="button" wire:click="resetCategories"
+                    <a href="{{ route('shop.index') }}" wire:click.prevent="resetCategories"
                             @class([
                                 'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer shrink-0',
                                 'bg-brand text-white border-brand' => empty($categoryIds),
                                 'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-brand/50 hover:text-white' => ! empty($categoryIds),
                             ])>
                         Все темы
-                    </button>
+                    </a>
 
                     @foreach($this->categories as $category)
                         @php $active = in_array($category->id, $categoryIds, true); @endphp
-                        <button type="button"
-                                wire:click="toggleCategory({{ $category->id }})"
+                        <a href="{{ route('shop.index.facets', ['facets' => 'kategoriya/'.$category->slug]) }}"
+                                wire:click.prevent="toggleCategory({{ $category->id }})"
                                 wire:key="cat-{{ $category->id }}"
                                 @class([
                                     'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer shrink-0',
@@ -177,7 +177,7 @@
                                 'text-white/70' => $active,
                                 'text-slate-500' => ! $active,
                             ])>{{ $category->courses_count }}</span>
-                        </button>
+                        </a>
                     @endforeach
                 </div>
                 <div class="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[#0A0D14] via-[#0A0D14]/80 to-transparent sm:hidden"
@@ -218,8 +218,8 @@
                 </a>
 
                 {{-- Идут сейчас → format filter --}}
-                <button type="button"
-                        wire:click="$set('format', 'live')"
+                <a href="{{ route('shop.index.facets', ['facets' => 'format/live']) }}"
+                        wire:click.prevent="$set('format', 'live')"
                         @class([
                             'group flex flex-col text-left rounded-2xl border p-5 transition-all cursor-pointer',
                             'bg-rose-500/10 border-rose-500/50 ring-1 ring-rose-500/30' => $format === 'live',
@@ -234,11 +234,11 @@
                     </div>
                     <span class="text-base font-bold text-white group-hover:text-rose-300 transition-colors mb-1">Идут сейчас</span>
                     <span class="text-sm text-slate-400 leading-snug">Живые потоки с преподавателем — можно присоединиться.</span>
-                </button>
+                </a>
 
                 {{-- Библиотека записей → format filter (явный режим, не «остатки») --}}
-                <button type="button"
-                        wire:click="$set('format', 'recorded')"
+                <a href="{{ route('shop.index.facets', ['facets' => 'format/recorded']) }}"
+                        wire:click.prevent="$set('format', 'recorded')"
                         @class([
                             'group flex flex-col text-left rounded-2xl border p-5 transition-all cursor-pointer',
                             'bg-indigo-500/10 border-indigo-500/50 ring-1 ring-indigo-500/30' => $format === 'recorded',
@@ -253,13 +253,13 @@
                     </div>
                     <span class="text-base font-bold text-white group-hover:text-indigo-300 transition-colors mb-1">Библиотека записей</span>
                     <span class="text-sm text-slate-400 leading-snug">Смотрите в своём темпе — доступ к материалам бессрочный.</span>
-                </button>
+                </a>
 
                 {{-- Топ-категория (если есть) или fallback «Все курсы» --}}
                 @php $topCategory = $this->categories->sortByDesc('courses_count')->first(); @endphp
                 @if($topCategory)
-                    <button type="button"
-                            wire:click="toggleCategory({{ $topCategory->id }})"
+                    <a href="{{ route('shop.index.facets', ['facets' => 'kategoriya/'.$topCategory->slug]) }}"
+                            wire:click.prevent="toggleCategory({{ $topCategory->id }})"
                             @class([
                                 'group flex flex-col text-left rounded-2xl border p-5 transition-all cursor-pointer',
                                 'bg-brand/10 border-brand/50 ring-1 ring-brand/30' => in_array($topCategory->id, $categoryIds, true),
@@ -274,17 +274,17 @@
                         </div>
                         <span class="text-base font-bold text-white group-hover:text-brand transition-colors mb-1">{{ $topCategory->name }}</span>
                         <span class="text-sm text-slate-400 leading-snug">Тема с наибольшим выбором — {{ $topCategory->courses_count }} {{ \App\Support\Plural::ru((int) $topCategory->courses_count, 'курс', 'курса', 'курсов') }}.</span>
-                    </button>
+                    </a>
                 @else
-                    <button type="button"
-                            wire:click="resetFilters"
+                    <a href="{{ route('shop.index') }}"
+                            wire:click.prevent="resetFilters"
                             class="group flex flex-col text-left rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 p-5 transition-all cursor-pointer">
                         <div class="w-10 h-10 rounded-xl bg-[#1F2636] flex items-center justify-center mb-3 group-hover:bg-brand/15 transition-colors">
                             <i class="fas fa-th-large text-brand"></i>
                         </div>
                         <span class="text-base font-bold text-white group-hover:text-brand transition-colors mb-1">Весь каталог</span>
                         <span class="text-sm text-slate-400 leading-snug">Сбросить фильтры и смотреть все курсы.</span>
-                    </button>
+                    </a>
                 @endif
             </div>
         </section>
@@ -346,6 +346,7 @@
                                 :deposit="$deposit"
                                 :categoryIds="$categoryIds"
                                 :nextStep="$nextStepByCourse[$course->id] ?? []"
+                                :cadence="$cadenceByCourse[$course->id] ?? null"
                                 :eager="$loop->index < 4"
                                 wire:key="course-{{ $course->id }}" />
                         @endforeach

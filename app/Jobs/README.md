@@ -40,6 +40,15 @@ Upsert-запись в `lesson_views`: счетчик открытий, врем
 Пишет событие `lesson_open` в `ActivityEvent`.  
 Использует очередь `tracking` (отдельная от основной, чтобы не задерживать важные задачи).
 
+### `BuildHomeworkImagesPdfJob`
+Собирает `combined-images.pdf` одной сдачи ДЗ (`HomeworkImagePdfService::rebuild()`).
+Очередь `imports` на `redis-long`: сборка тяжёлая по памяти, а у воркера лимит из
+CLI-ini (768M против 128M у php-fpm).
+Ставится из `HomeworkService` вместо прежнего синхронного вызова на пути запроса —
+уведомление проверяющего от неё больше не зависит (H3095, разбор в
+[docs/DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md)).
+Ошибки не глушатся: падение видно в `/horizon`, а PDF досбирается лениво при открытии.
+
 ## Очереди
 
 | Очередь | Задачи | Приоритет |
@@ -47,5 +56,6 @@ Upsert-запись в `lesson_views`: счетчик открытий, врем
 | `default` | `GenerateCertificatesArchive`, `SendMessengerAlerts`, `SendPaymentToSheetJob`, `BuildLectureHtmlJob`, `PreprocessLectureDraftJob` | Средний |
 | `tracking` | `TrackLessonViewJob` | Низкий |
 | `mailing` | `StudentWelcomeMail`, `CourseWelcomeMail`, `AnnouncementMail` | Средний |
+| `imports` | `BuildHomeworkImagesPdfJob` | Средний |
 
 Настройки воркеров для каждой очереди — в `config/horizon.php`.

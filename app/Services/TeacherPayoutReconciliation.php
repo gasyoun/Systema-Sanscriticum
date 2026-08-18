@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
+use App\Models\TeacherPayoutAttributionSuggestion;
 use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -27,9 +28,16 @@ use Illuminate\Support\Facades\DB;
  *
  * Всё остальное — «Расходы» на служебного пользователя «Системные расходы» —
  * из данных неотличимо от аренды и рекламы, поэтому попадает не в `paid_out`,
- * а в отдельный список кандидатов и ждёт подтверждения человеком (волна 2,
- * H3084). Пока в этом списке есть хоть одна строка, `attribution_confirmed`
- * равен false, и интерфейс ОБЯЗАН печатать остаток со словом «предварительно».
+ * а в отдельный список кандидатов и ждёт подтверждения человеком. Пока в этом
+ * списке есть хоть одна строка, `attribution_confirmed` равен false, и
+ * интерфейс ОБЯЗАН печатать остаток со словом «предварительно».
+ *
+ * H3084 (волна 2) добавил третий источник `paid_out` — подтверждённые
+ * предложения атрибуции (`teacher_payout_attribution_suggestions`), и четвёртый
+ * исход для «Расхода»: отклонённое предложение значит «это не выплата», и такой
+ * платёж уходит из сверки совсем. Подтверждение НЕ создаёт строк в
+ * `teacher_payouts` и `payments` — перенос в выплатной реестр остаётся
+ * отдельным действием человека.
  *
  * База начисления берётся ВАЛОВАЯ (`subtract_returns => false`). Причина —
  * в §4 PLAN и в журнале решений: те же семь «Расходов» рассматриваются как
@@ -102,8 +110,14 @@ class TeacherPayoutReconciliation
     /**
      * Преподаватель семьи — тот, кому начисляется большинство её курсов.
      * Курс без `teacher_id` (как 424 до волны 2) голоса не имеет.
+     *
+     * Публичный с H3084: тем же правилом пользуется детектор атрибуций
+     * `salary:detect-payout-attributions`, и второй копии правила «чей это
+     * поток» в системе быть не должно.
+     *
+     * @param  Collection<int, Course>  $courses
      */
-    private function dominantTeacherId(Collection $courses): ?int
+    public function dominantTeacherId(Collection $courses): ?int
     {
         $votes = [];
         foreach ($courses as $course) {
@@ -166,8 +180,18 @@ class TeacherPayoutReconciliation
             }
         }
 
-        // 2. Платежи-«Расходы» курсов семьи: явно на преподавателя — в paid_out,
-        //    все прочие — в очередь подтверждения.
+        // 2. Платежи-«Расходы» курсов семьи. Три исхода:
+        //      - заведён прямо на пользователя преподавателя → в paid_out;
+        //      - подтверждённое предложение атрибуции (H3084)  → в paid_out;
+        //      - отклонённое предложение                       → это не выплата
+        //        (аренда, реклама), человек так решил — из сверки уходит;
+        //      - всё остальное                                 → в очередь.
+        //
+        // ⚠️ Дедупликация идёт по `payment_id`, а не по сумме: суммы в этой
+        // семье не уникальны, а платёж, УЖЕ учтённый напрямую, легко получает
+        // ещё и подтверждённое предложение — на боевых данных это #13573 на
+        // 50 000 ₽. Учтя его дважды, сверка занизила бы остаток ровно на эту
+        // сумму (риск, описанный в H3084 до начала работ).
         $teacherUserIds = $teacherId
             ? DB::table('users')->where('teacher_id', $teacherId)->pluck('id')->map(fn ($id): int => (int) $id)->all()
             : [];
@@ -180,17 +204,34 @@ class TeacherPayoutReconciliation
             ->orderBy('created_at')
             ->get();
 
+        $suggestions = $teacherId
+            ? TeacherPayoutAttributionSuggestion::query()
+                ->where('teacher_id', $teacherId)
+                ->whereIn('payment_id', $expenses->pluck('id')->map(fn ($id): int => (int) $id)->all())
+                ->get()
+                ->keyBy(fn (TeacherPayoutAttributionSuggestion $s): int => (int) $s->payment_id)
+            : collect();
+
+        /** @var array<int, true> $countedPaymentIds */
+        $countedPaymentIds = [];
+
         foreach ($expenses as $e) {
             $amount = abs((float) $e->amount);
             if ($amount <= 0.0) {
                 continue;
             }
 
+            $paymentId = (int) $e->id;
+            if (isset($countedPaymentIds[$paymentId])) {
+                continue;
+            }
+
             if ($e->user_id && in_array((int) $e->user_id, $teacherUserIds, true)) {
+                $countedPaymentIds[$paymentId] = true;
                 $paidOut += $amount;
                 $lines[] = [
                     'source' => 'payment_expense_direct',
-                    'payment_id' => (int) $e->id,
+                    'payment_id' => $paymentId,
                     'payout_id' => null,
                     'course_id' => $e->course_id ? (int) $e->course_id : null,
                     'amount' => Money::round($amount),
@@ -201,8 +242,35 @@ class TeacherPayoutReconciliation
                 continue;
             }
 
+            $suggestion = $suggestions->get($paymentId);
+
+            if ($suggestion?->status === TeacherPayoutAttributionSuggestion::STATUS_CONFIRMED) {
+                $countedPaymentIds[$paymentId] = true;
+                $paidOut += $amount;
+                $lines[] = [
+                    'source' => 'attribution_confirmed',
+                    'payment_id' => $paymentId,
+                    'payout_id' => null,
+                    'course_id' => $e->course_id ? (int) $e->course_id : null,
+                    'amount' => Money::round($amount),
+                    'date' => $e->created_at?->format('Y-m-d'),
+                    'note' => 'разметка подтверждена'
+                        .($suggestion->resolved_at ? ' '.$suggestion->resolved_at->format('d.m.Y') : '')
+                        .($suggestion->resolver?->name ? ' · '.$suggestion->resolver->name : ''),
+                ];
+
+                continue;
+            }
+
+            if ($suggestion?->status === TeacherPayoutAttributionSuggestion::STATUS_REJECTED) {
+                // Человек сказал «это не выплата преподавателю». Вопрос закрыт:
+                // в очереди строка больше не висит и «предварительно» с экрана
+                // из-за неё не печатается.
+                continue;
+            }
+
             $pending[] = [
-                'payment_id' => (int) $e->id,
+                'payment_id' => $paymentId,
                 'course_id' => $e->course_id ? (int) $e->course_id : null,
                 'course_title' => (string) ($e->course?->title ?? '—'),
                 'user_id' => $e->user_id ? (int) $e->user_id : null,

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-_Created: 07-05-2026 · Last updated: 17-08-2026_
+_Created: 07-05-2026 · Last updated: 18-08-2026_
 
 **Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru)
 (cabinet, shop, homework, finance, Telegram/VK bots). Org spine still applies;
@@ -108,6 +108,7 @@ H2541).
 | Reviewers / settlement | `group_reviewer` ≠ `course_teacher`. Settlement before payout. | architecture doc above |
 | Reading packs | Two frozen copies under `resources/data/` — **never hand-edit**; re-vendor from [kosha](https://github.com/gasyoun/kosha) via [`vendor_cohort_start_chteniya_packs.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/vendor_cohort_start_chteniya_packs.py) (`cohort_start_chteniya/`) and [`vendor_nala_subhashita_packs.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/vendor_nala_subhashita_packs.py) (`nala_subhashita/`). **Two gates, do not mix:** «Старт чтения» = `features.kosha_reader` **AND** `StartChteniyaCohort::hasEntitlement`; per-course `/dvaram/reading/kurs/{course}` = `CourseCohortEntitlement::hasEntitlement($user, $course)` alone (each course's own `cohort_courses.<slug>.enabled`, default OFF) — it must never gain a `kosha_reader` dependency, or the demo route stops being independently switchable. `subhashita-beginner` is normalised to `reading_pack_v1` at READ time by [`SubhashitaReadingPackAdapter`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/SubhashitaReadingPackAdapter.php); never write a normalised copy to disk (the sha256 pin check dies). SRS import/button: «Старт чтения» only; private per-student deck; client sends **positions only**; deck definition is only [`StartChteniyaSrsDeck.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/StartChteniyaSrsDeck.php). | — |
 | Marathon `/online/konsultaciya` | Visual variant (`MARATHON_LANDING_VISUAL_VARIANT`) ≠ copy variant. `?skin=` is QA-only. | — |
+| Очереди / тяжёлая работа после коммита | Ничего тяжёлого на пути запроса: сборка идёт job'ой (`BuildHomeworkImagesPdfJob`, очередь `imports` на `redis-long`). **Конструктор `ShouldQueue`-Mailable выполняется В ЗАПРОСЕ** — `ShouldQueue` откладывает `handle()`/`attachments()`, но не `__construct()`; не считать там ничего, что читает диск или БД. `dispatch()` под драйвером `sync` выполняет job инлайн, поэтому постановку в очередь оборачивать в `try/catch`, если за ней стоит обязательная работа. Регрессию писать на `sync`, а не на `Queue::fake()` (тот не выполняет job и зеленеет без страховки). | [DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md) |
 | Other | `LandingPage` catch-all `/{slug}`. Lecture-builder is a sidecar HTTP client. Activity: middleware + `ActivityEvent` + `LessonView` heartbeat. | — |
 
 ```

@@ -1,6 +1,17 @@
 @extends('layouts.shop')
 @section('title', $course->meta_title ?: $course->title)
 
+@php
+    // Ритм курса, выведенный из `schedules` (App\Support\CourseCadence).
+    // Ручной бейдж формата отвечает «идёт / в записи», но не «когда» и не
+    // «сколько осталось» — эти три строки закрывают именно это.
+    $cadenceSlot = $cadence?->slotLabel();
+    $cadenceNext = $cadence?->nextLabel();
+    $cadenceProgress = $cadence?->progressLabel();
+    // Ручные часы приоритетны; пусто — считаем астрономические по календарю.
+    $heroHours = $course->hours_count ?: $cadence?->hours();
+@endphp
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -45,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Обязательные для CourseInstance: courseMode + (courseWorkload ИЛИ courseSchedule).
         // courseWorkload берём из hours_count (ISO-8601 «PTnH»); если часов нет — instance
         // не добавляем (базовый Course + offers остаётся валидным сам по себе).
-        $courseWorkload = $course->hours_count ? 'PT'.((int) $course->hours_count).'H' : null;
+        $courseWorkload = $heroHours ? 'PT'.((int) $heroHours).'H' : null;
         $ciStart = $course->blocks->filter(fn ($b) => $b->starts_at)->min('starts_at');
         $ciEnd = $course->blocks->filter(fn ($b) => $b->ends_at)->max('ends_at');
         $courseInstance = $courseWorkload
@@ -141,15 +152,40 @@ document.addEventListener('DOMContentLoaded', function () {
                             @if($course->lessons_count)
                                 <span class="flex items-center"><i class="fas fa-play-circle mr-2 text-indigo-400"></i> {{ $course->lessons_count }} {{ \App\Support\Plural::ru((int) $course->lessons_count, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий') }}</span>
                             @endif
-                            @if($course->hours_count)
-                                <span class="flex items-center"><i class="far fa-clock mr-2 text-indigo-400"></i> {{ $course->hours_count }} ч</span>
+                            @if($heroHours)
+                                <span class="flex items-center"><i class="far fa-clock mr-2 text-indigo-400"></i> {{ $heroHours }} ч</span>
                             @endif
                         </div>
                     </div>
-                    
+
                     <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-8 leading-tight">
                         {{ $course->title }}
                     </h1>
+
+                    {{-- Когда именно «идет сейчас»: день, время, ближайшее занятие,
+                         сколько осталось. Всё выведено из `schedules` — бейдж
+                         формата ручной и об этом ничего не знает. --}}
+                    @if($cadenceSlot || $cadenceNext || $cadenceProgress)
+                        <p class="-mt-4 mb-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-300"
+                           data-testid="course-hero-cadence">
+                            @if($cadenceSlot)
+                                <span class="inline-flex items-center gap-2 bg-[#111622] border border-[#1F2636] rounded-lg px-3 py-1.5 font-bold">
+                                    <i class="far fa-calendar-alt text-[#38BDF8]"></i>{{ $cadenceSlot }}
+                                </span>
+                            @endif
+                            @if($cadenceNext)
+                                <span class="text-slate-400">Ближайшее занятие — <span class="text-white font-semibold">{{ $cadenceNext }}</span></span>
+                            @endif
+                            @if($cadenceProgress)
+                                <span class="inline-flex items-center gap-2 text-amber-400 font-bold">
+                                    <i class="fas fa-hourglass-half text-[11px]"></i>{{ $cadenceProgress }}
+                                </span>
+                            @endif
+                            @if($cadenceSlot || $cadenceNext)
+                                <a href="#schedule" class="text-[#38BDF8] hover:text-white underline-offset-2 hover:underline">все даты</a>
+                            @endif
+                        </p>
+                    @endif
                     
                     {{-- One primary CTA (tariff) + optional secondary (sample) --}}
                     <div class="flex flex-wrap gap-3">
@@ -274,11 +310,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 $course->lessons_count
                     ? ['icon' => 'fas fa-play-circle', 'label' => 'Занятий', 'value' => $course->lessons_count.' '.\App\Support\Plural::ru((int) $course->lessons_count, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий')]
                     : null,
-                $course->hours_count
-                    ? ['icon' => 'far fa-clock', 'label' => 'Длительность', 'value' => $course->hours_count.' часов']
+                $heroHours
+                    ? ['icon' => 'far fa-clock', 'label' => 'Длительность', 'value' => $heroHours.' '.\App\Support\Plural::ru((int) $heroHours, 'час', 'часа', 'часов')]
+                    : null,
+                $cadenceSlot
+                    ? ['icon' => 'fas fa-calendar-day', 'label' => 'День и время', 'value' => $cadenceSlot.' МСК']
                     : null,
                 $courseStart
                     ? ['icon' => 'far fa-calendar-alt', 'label' => 'Даты проведения', 'value' => $courseStart->translatedFormat('F Y').($courseEnd && $courseEnd->format('Y-m') !== $courseStart->format('Y-m') ? ' – '.$courseEnd->translatedFormat('F Y') : '')]
+                    : null,
+                $cadenceNext
+                    ? ['icon' => 'fas fa-hourglass-half', 'label' => 'Ближайшее занятие', 'value' => $cadenceNext.($cadenceProgress ? ', '.$cadenceProgress : '')]
                     : null,
             ])->filter()->values();
         @endphp

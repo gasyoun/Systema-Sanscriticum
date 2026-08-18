@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\BuildHomeworkImagesPdfJob;
 use App\Mail\HomeworkSubmittedMail;
 use App\Models\Course;
 use App\Models\HomeworkSubmission;
@@ -46,6 +47,26 @@ class HomeworkImagesPdfTest extends TestCase
         return [$course, $lesson, $teacher];
     }
 
+    /**
+     * Выполнить сборки PDF, поставленные в очередь запросом (H3095).
+     *
+     * С 18-08-2026 `combined-images.pdf` собирается не на пути запроса, а
+     * джобой на воркере. В тестах очередь подменена (`Queue::fake()`), поэтому
+     * там, где проверяется сам PDF, воркера надо сыграть руками.
+     *
+     * @return int сколько сборок было в очереди
+     */
+    private function runQueuedImagesPdfJobs(): int
+    {
+        $jobs = Queue::pushed(BuildHomeworkImagesPdfJob::class);
+
+        foreach ($jobs as $job) {
+            $job->handle(app(HomeworkImagePdfService::class));
+        }
+
+        return $jobs->count();
+    }
+
     /** @test */
     public function submit_with_images_builds_combined_pdf_and_attaches_to_mail(): void
     {
@@ -72,6 +93,13 @@ class HomeworkImagesPdfTest extends TestCase
         $this->assertNotNull($submission);
 
         $pdf = app(HomeworkImagePdfService::class);
+
+        // Сборка ушла в очередь (H3095): на пути запроса PDF ещё нет.
+        $this->assertFalse($pdf->exists($submission));
+        Queue::assertPushed(BuildHomeworkImagesPdfJob::class, fn (BuildHomeworkImagesPdfJob $job) => $job->submissionId === (int) $submission->id);
+
+        $this->assertSame(1, $this->runQueuedImagesPdfJobs());
+
         $this->assertTrue($pdf->exists($submission));
         $path = $pdf->pathFor($submission);
         Storage::disk('local')->assertExists($path);
@@ -79,9 +107,10 @@ class HomeworkImagesPdfTest extends TestCase
         $head = Storage::disk('local')->get($path);
         $this->assertStringStartsWith('%PDF', $head);
 
+        // Флаг вложения ленивый: считается на воркере, когда PDF уже собран.
         Mail::assertQueued(HomeworkSubmittedMail::class, function (HomeworkSubmittedMail $m) use ($submission) {
             return (int) $m->submission->id === (int) $submission->id
-                && $m->hasImagesPdfAttachment === true
+                && $m->hasImagesPdfAttachment() === true
                 && count($m->attachments()) === 1;
         });
     }
@@ -104,10 +133,11 @@ class HomeworkImagesPdfTest extends TestCase
         )->assertRedirect();
 
         $submission = HomeworkSubmission::where('user_id', $student->id)->first();
+        $this->runQueuedImagesPdfJobs();
         $this->assertFalse(app(HomeworkImagePdfService::class)->exists($submission));
 
         Mail::assertQueued(HomeworkSubmittedMail::class, function (HomeworkSubmittedMail $m) {
-            return $m->hasImagesPdfAttachment === false
+            return $m->hasImagesPdfAttachment() === false
                 && count($m->attachments()) === 0;
         });
     }
@@ -178,6 +208,7 @@ class HomeworkImagesPdfTest extends TestCase
 
         $submission = HomeworkSubmission::where('user_id', $student->id)->first();
         $this->assertSame(HomeworkSubmission::STATUS_DRAFT, $submission->status);
+        Queue::assertNotPushed(BuildHomeworkImagesPdfJob::class);
         $this->assertFalse(app(HomeworkImagePdfService::class)->exists($submission));
     }
 
@@ -255,6 +286,8 @@ class HomeworkImagesPdfTest extends TestCase
 
         $submission = HomeworkSubmission::where('user_id', $student->id)->first();
         $this->assertNotNull($submission);
+
+        $this->runQueuedImagesPdfJobs();
 
         $pdf = app(HomeworkImagePdfService::class);
         $this->assertTrue($pdf->exists($submission));

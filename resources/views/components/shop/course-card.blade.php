@@ -1,4 +1,4 @@
-@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => [], 'nextStep' => [], 'eager' => false])
+@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => [], 'nextStep' => [], 'cadence' => null, 'eager' => false])
 
 @php
     $courseKeys = $purchasedByCourse[$course->id] ?? [];
@@ -8,6 +8,15 @@
     $blockTariff = $course->tariffs->where('type', 'block')->sortBy('price')->first();
     $courseDepositAmount = (float) ($course->deposit_amount ?? 0);
     $showDeposit = $deposit?->deposit_enabled && $courseDepositAmount > 0 && ! $hasAnyPurchased;
+
+    // «Идет сейчас» — ручной enum `courses.format`; сам по себе он не говорит НИ
+    // когда идёт, НИ сколько осталось. Дальше — только выведенное из расписания;
+    // нет расписания → строки просто нет (никаких выдуманных дат).
+    $cadenceSlot = $cadence?->slotLabel();
+    $cadenceNext = $cadence?->nextLabel();
+    $cadenceProgress = $cadence?->progressLabel();
+    // Ручные часы приоритетны (владелец мог задать академические), календарные — фолбэк.
+    $cardHours = $course->hours_count ?: $cadence?->hours();
 @endphp
 
 <div class="relative flex flex-col bg-[#111622] rounded-2xl border border-[#1F2636] hover:border-brand/50 hover:shadow-[0_0_30px_rgba(232,92,36,0.05)] transition-all duration-300 group">
@@ -84,7 +93,7 @@
         </div>
 
         {{-- Мета-бейджи: лекции, часы --}}
-        @if($course->lessons_count || $course->hours_count)
+        @if($course->lessons_count || $cardHours)
             <div class="absolute bottom-3 left-3 z-20 flex items-center gap-1.5">
                 @if($course->lessons_count)
                     <span class="inline-flex items-center gap-1.5 bg-brand text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(232,92,36,0.5)] tracking-wider">
@@ -94,10 +103,10 @@
                         {{ $course->lessons_count }} {{ \App\Support\Plural::ru($course->lessons_count, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий') }}
                     </span>
                 @endif
-                @if($course->hours_count)
+                @if($cardHours)
                     <span class="inline-flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md tracking-wider border border-white/10">
                         <i class="far fa-clock text-[9px]"></i>
-                        {{ $course->hours_count }} ч
+                        {{ $cardHours }} ч
                     </span>
                 @endif
             </div>
@@ -117,8 +126,8 @@
                         @php $catActive = in_array($cat->id, $categoryIds, true); @endphp
                         {{-- Клик по тегу фильтрует каталог по этой категории (ловит родительский Livewire-компонент) --}}
                         {{-- Активный тег (категория уже в фильтре) — заливка цветом, иначе полупрозрачный фон --}}
-                        <button type="button"
-                                wire:click.stop="toggleCategory({{ $cat->id }})"
+                        <a href="{{ route('shop.index.facets', ['facets' => 'kategoriya/'.$cat->slug]) }}"
+                                wire:click.stop.prevent="toggleCategory({{ $cat->id }})"
                                 title="{{ $catActive ? 'Убрать фильтр по теме' : 'Показать курсы темы' }} «{{ $cat->name }}»"
                                 @class([
                                     'text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded cursor-pointer transition-opacity hover:opacity-75',
@@ -133,15 +142,15 @@
                                     ])
                                 @endif>
                             {{ $cat->name }}
-                        </button>
+                        </a>
                     @endforeach
                 </div>
             @endif
 
             <div class="text-[#38BDF8] text-[10px] font-black uppercase tracking-widest mb-2 flex justify-between items-center">
                 <span>{{ $course->teacher?->name ?? 'Онлайн-программа' }}</span>
-                @if($course->hours_count)
-                    <span class="text-slate-500"><i class="far fa-clock mr-1"></i>{{ $course->hours_count }}ч</span>
+                @if($cardHours)
+                    <span class="text-slate-500"><i class="far fa-clock mr-1"></i>{{ $cardHours }}ч</span>
                 @endif
             </div>
 
@@ -150,6 +159,24 @@
                     {{ $course->title }}
                 </h2>
             </a>
+
+            {{-- Ритм живого потока: день/время и сколько занятий осталось. Всё —
+                 из `schedules`; бейдж «Идет сейчас» сам по себе не отвечал ни
+                 «когда», ни «успею ли я ещё». Нет календаря — строки нет. --}}
+            @if($cadenceSlot || $cadenceNext || $cadenceProgress)
+                <p class="text-[11px] text-slate-400 leading-snug mb-3 flex flex-wrap items-center gap-x-2 gap-y-1"
+                   data-testid="course-card-cadence">
+                    @if($cadenceSlot)
+                        <span class="font-bold text-slate-300"><i class="far fa-calendar-alt mr-1 text-[#38BDF8]"></i>{{ $cadenceSlot }}</span>
+                    @endif
+                    @if($cadenceNext)
+                        <span class="text-slate-500">ближайшее — {{ $cadenceNext }}</span>
+                    @endif
+                    @if($cadenceProgress)
+                        <span class="text-amber-400/90 font-bold">{{ $cadenceProgress }}</span>
+                    @endif
+                </p>
+            @endif
 
             @if($course->description)
                 <p class="text-sm text-slate-400 line-clamp-3 leading-relaxed mb-4">

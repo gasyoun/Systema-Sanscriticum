@@ -10,34 +10,30 @@ use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Services\Membership\PrivateArchiveEligibility;
+use App\Support\CourseCadence;
 use App\Support\FlagshipExperiments;
+use App\Support\ShopCatalogUrl;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class CourseCatalog extends Component
 {
-    #[Url(as: 'q', except: '')]
     public string $search = '';
 
     /**
      * Список ID выбранных категорий.
      * Всегда переиндексирован, иначе ломается сериализация в URL.
      */
-    #[Url(as: 'cat', except: [])]
     public array $categoryIds = [];
 
-    #[Url(as: 'teacher', except: '')]
     public string $teacherId = '';
 
     /** Возможные значения: '' | 'live' | 'recorded' */
-    #[Url(as: 'format', except: '')]
     public string $format = '';
 
     /** Уровень: '' | ключ из Course::LEVELS (beginner/continuing/advanced). */
-    #[Url(as: 'level', except: '')]
     public string $level = '';
 
     /**
@@ -46,6 +42,28 @@ class CourseCatalog extends Component
      * не приводил к пустой выдаче.
      */
     public array $popularSearches = ['Грамматика', 'Санскрит', 'Хинди', 'Бхагавад-гита', 'Кочергина'];
+
+    /**
+     * Начальное состояние фильтров резолвится контроллером из
+     * /online/{facets} (App\Support\ShopCatalogUrl) — сам компонент больше не
+     * управляет query string (H3xxx: /online?cat[0]=3 читался как плохой
+     * SEO-слаг). Адрес после клика синхронизируется в render() ниже.
+     *
+     * @param  int[]  $initialCategoryIds
+     */
+    public function mount(
+        array $initialCategoryIds = [],
+        string $initialTeacherId = '',
+        string $initialFormat = '',
+        string $initialLevel = '',
+        string $initialSearch = '',
+    ): void {
+        $this->categoryIds = array_values($initialCategoryIds);
+        $this->teacherId = $initialTeacherId;
+        $this->format = $initialFormat;
+        $this->level = $initialLevel;
+        $this->search = $initialSearch;
+    }
 
     public function toggleCategory(int $id): void
     {
@@ -139,8 +157,38 @@ class CourseCatalog extends Component
             || $this->level !== '';
     }
 
+    /**
+     * Адрес в браузере всегда пересобирается канонически из текущего состояния
+     * (App\Support\ShopCatalogUrl::FACET_ORDER), а не накапливается по клику —
+     * так на одно состояние фильтров всегда один URL, независимо от порядка
+     * кликов. replaceState (не pushState) — один тап «назад» уводит с
+     * каталога целиком, а не откручивает фильтры по одному.
+     */
+    private function syncBrowserUrl(): void
+    {
+        $categorySlugs = $this->categoryIds === []
+            ? []
+            : Category::whereIn('id', $this->categoryIds)->orderBy('slug')->pluck('slug')->all();
+
+        $teacherName = $this->teacherId === ''
+            ? null
+            : optional(Teacher::find($this->teacherId))->name;
+
+        $path = ShopCatalogUrl::build(
+            categorySlugs: $categorySlugs,
+            format: $this->format,
+            level: $this->level,
+            teacherName: $teacherName,
+            search: $this->search,
+        );
+
+        $this->js('history.replaceState(history.state, "", '.json_encode($path).')');
+    }
+
     public function render(): View
     {
+        $this->syncBrowserUrl();
+
         // Каталог отдаётся целиком (как у online.synchronize.ru) — без догрузки порциями.
         // При нескольких сотнях курсов это всё ещё один лёгкий запрос.
         $courses = $this->baseQuery()
@@ -184,8 +232,13 @@ class CourseCatalog extends Component
             }
         }
 
+        // Ритм живых потоков (день/время/сколько осталось) — из расписания.
+        // Считаем ОДНИМ проходом только по live-курсам: у записей календаря нет.
+        $cadenceByCourse = CourseCadence::forMany($courses->where('format', 'live')->values());
+
         return view('livewire.shop.course-catalog', [
             'courses' => $courses,
+            'cadenceByCourse' => $cadenceByCourse,
             'totalCount' => $totalCount,
             'sectionTotals' => $sectionTotals,
             'purchasedByCourse' => $purchasedByCourse,

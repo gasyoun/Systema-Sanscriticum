@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
+use App\Models\Category;
 use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\DictionaryWord;
@@ -35,6 +36,22 @@ class SitemapController extends Controller
                 'changefreq' => 'daily',
                 'priority' => '0.9',
             ];
+
+            // Категории каталога — единственная facet-комбинация с index,follow
+            // (см. ShopController::index); остальные /online/{facets} noindex.
+            Category::where('is_visible', true)
+                ->select(['slug', 'updated_at'])
+                ->orderBy('slug')
+                ->chunk(500, function ($categories) use (&$urls) {
+                    foreach ($categories as $category) {
+                        $urls[] = [
+                            'loc' => route('shop.index.facets', ['facets' => 'kategoriya/'.$category->slug]),
+                            'lastmod' => optional($category->updated_at)->format(DATE_ATOM),
+                            'changefreq' => 'weekly',
+                            'priority' => '0.6',
+                        ];
+                    }
+                });
 
             $urls[] = [
                 'loc' => route('shop.pathway'),
