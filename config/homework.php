@@ -111,6 +111,21 @@ return [
             explode(',', (string) env('HOMEWORK_AUTO_OPEN_COURSES', '')),
         ))),
 
+        // Урок в охвате, у которого `textbook_lesson` не проставлен, ВСЁ РАВНО
+        // открывается — с отсылочной формулировкой KocherginaExerciseSource::
+        // fallbackPrompt(null). До 18-08-2026 такой урок молча выпадал из
+        // выборки: пилот гр.60/гр.61 встал 28.07.26 на занятии #3 и студенты
+        // три недели не имели куда прикрепить работу (H3068). Ровно этот риск
+        // был записан в VERIFICATION §«textbook_lesson никто не проставит» и
+        // отложен в волну 3 — здесь он закрыт с другой стороны: отсутствие
+        // маппинга ухудшает ТЕКСТ задания, но не отменяет приём.
+        // false — вернуть прежнее поведение (жёсткое требование маппинга).
+        'open_without_textbook_lesson' => (bool) env('HOMEWORK_AUTO_OPEN_WITHOUT_TEXTBOOK_LESSON', true),
+
+        // Кому слать напоминание «урок открыт без textbook_lesson»: пусто —
+        // не слать. Значения: admins (TelegramAdminNotifier).
+        'missing_mapping_alert' => (bool) env('HOMEWORK_AUTO_OPEN_MISSING_MAPPING_ALERT', true),
+
         // Какие занятия учебника участвуют (lessons.textbook_lesson).
         'textbook_lessons' => array_values(array_filter(array_map(
             'intval',

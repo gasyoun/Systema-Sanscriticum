@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Lesson;
+use App\Services\Access\TelegramAdminNotifier;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -112,22 +113,9 @@ class HomeworkAutoOpener
             return false;
         }
 
-        $opened = $this->open($lesson, notify: true);
-
-        // Волна 2: якорь в чате группы для reply #ДЗ (звено C). Только generic —
-        // Kochergina по-прежнему без группового поста.
-        if ($opened) {
-            try {
-                app(HomeworkTelegramTagService::class)->postOpenInvite($lesson);
-            } catch (\Throwable $e) {
-                Log::warning('HomeworkAutoOpener: postOpenInvite failed', [
-                    'lesson_id' => $lesson->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        return $opened;
+        // Якорь в чате группы (звено C) шлёт сам open() при notify: true —
+        // с 18-08-2026 по обоим трекам, не только generic (H3068).
+        return $this->open($lesson, notify: true);
     }
 
     /**
@@ -168,9 +156,13 @@ class HomeworkAutoOpener
             return collect();
         }
 
+        $allowMissing = (bool) config('homework.auto_open.open_without_textbook_lesson', true);
+
         return Lesson::query()
             ->whereHas('course', fn ($c) => $c->whereIn('slug', $slugs))
-            ->whereIn('textbook_lesson', $textbookLessons)
+            ->where(fn ($q) => $q
+                ->whereIn('textbook_lesson', $textbookLessons)
+                ->when($allowMissing, fn ($qq) => $qq->orWhereNull('textbook_lesson')))
             ->where('homework_enabled', false)
             ->whereNull('homework_auto_opened_at')
             ->whereNotNull('recording_attached_at')
@@ -209,9 +201,75 @@ class HomeworkAutoOpener
         // синхронный HTTP внутри транзакции держать нельзя.
         if ($notify) {
             $this->notifier->opened($lesson);
+
+            // Якорь в чате группы (звено C для reply #ДЗ) — и, что важнее для
+            // студента, ссылка на урок ТАМ, ГДЕ ЗАДАЮТ ВОПРОС. До 18-08-2026
+            // пост уходил только по generic-треку, поэтому группы Кочергиной
+            // спрашивали куратора «куда прикреплять ДЗ» вручную (H3068).
+            $this->postGroupInvite($lesson);
         }
 
+        $this->warnIfMappingMissing($lesson);
+
         return true;
+    }
+
+    /**
+     * Пост «Приём ДЗ открыт» в чат(ы) группы. Ошибку глотаем: недоступный
+     * Telegram не должен откатывать уже совершённое открытие (для добора есть
+     * `php artisan homework:repost-open-invite`).
+     */
+    private function postGroupInvite(Lesson $lesson): void
+    {
+        try {
+            app(HomeworkTelegramTagService::class)->postOpenInvite($lesson);
+        } catch (\Throwable $e) {
+            Log::warning('HomeworkAutoOpener: postOpenInvite failed', [
+                'lesson_id' => $lesson->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Урок открылся без `textbook_lesson` — приём работает, но условие
+     * отсылочное вместо текста упражнений. Это уже не тихий отказ (урок
+     * открыт), а деградация качества, поэтому напоминание, а не блокировка.
+     */
+    private function warnIfMappingMissing(Lesson $lesson): void
+    {
+        if (filled($lesson->textbook_lesson) || $this->isGenericPilot($lesson)) {
+            return;
+        }
+
+        Log::warning('HomeworkAutoOpener: урок открыт без textbook_lesson — условие отсылочное', [
+            'lesson_id' => $lesson->id,
+            'course_id' => $lesson->course_id,
+        ]);
+
+        if (! config('homework.auto_open.missing_mapping_alert', true)) {
+            return;
+        }
+
+        try {
+            $lesson->loadMissing('course');
+            $url = $lesson->course
+                ? route('student.lesson', [$lesson->course->slug, $lesson->id])
+                : '';
+
+            app(TelegramAdminNotifier::class)->notifyAdmins(
+                '📝 Приём ДЗ открыт БЕЗ <code>textbook_lesson</code>: <b>'
+                .e((string) $lesson->title).'</b>'."\n"
+                .'Условие отсылочное («все упражнения к этому занятию»). '
+                .'Проставьте номер занятия учебника в админке урока, чтобы подставился текст.'
+                .($url !== '' ? "\n".$url : ''),
+            );
+        } catch (\Throwable $e) {
+            Log::warning('HomeworkAutoOpener: missing-mapping alert failed', [
+                'lesson_id' => $lesson->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
