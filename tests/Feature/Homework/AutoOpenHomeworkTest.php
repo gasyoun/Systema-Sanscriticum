@@ -34,6 +34,9 @@ class AutoOpenHomeworkTest extends TestCase
 
     private const MARKER = 'СИНТЕТИЧЕСКОЕ УПРАЖНЕНИЕ ДЛЯ ТЕСТА';
 
+    /** Текст учебника подставляется только курсам Кочергиной (H3078). */
+    private const KOCHERGINA_PREFIX = 'grammatika-po-kocerginoi-';
+
     private ?string $sourcePath = null;
 
     protected function setUp(): void
@@ -54,6 +57,18 @@ class AutoOpenHomeworkTest extends TestCase
             'homework.auto_open.align_hour' => 9,
             'homework.auto_open.notify_channels' => ['telegram', 'vk'],
             'services.telegram.student_bot_token' => 'TESTTOKEN',
+
+            // H3078. Две прод-отсечки гасятся здесь НАМЕРЕННО: фикстуры этого
+            // класса живут в июле 2026, а прод-эпоха — 18-08-2026, так что с
+            // боевыми значениями не открылось бы ничего и все A1–A16 стали бы
+            // зелёными по ложной причине. Сами отсечки проверяются отдельно —
+            // A17/A18, где даты заданы явно.
+            'homework.auto_open.scope' => 'all',
+            'homework.auto_open.min_course_start' => '',
+            'homework.auto_open.policy_epoch' => '',
+            'homework.auto_open.exclude_course_slugs' => [],
+            'homework.auto_open.kochergina_slug_prefix' => self::KOCHERGINA_PREFIX,
+            'homework.auto_open.kochergina_max_homeworks' => 5,
         ]);
     }
 
@@ -283,16 +298,43 @@ class AutoOpenHomeworkTest extends TestCase
         // Тот же курс, но занятие учебника вне списка.
         $outByLesson = $this->lessonWithRecording($course, ['textbook_lesson' => 6]);
 
-        // Курс вне охвата.
-        $otherCourse = Course::factory()->create();
-        $outByCourse = $this->lessonWithRecording($otherCourse, ['textbook_lesson' => 1]);
+        // Курс, названный в исключениях. С 18-08-2026 (H3078) «вне охвата»
+        // значит именно это: не «не внесён в allowlist», а явно вычеркнут.
+        $excluded = Course::factory()->create(['slug' => 'kurs-vne-ohvata']);
+        config(['homework.auto_open.exclude_course_slugs' => [$excluded->slug]]);
+        $outByCourse = $this->lessonWithRecording($excluded, ['textbook_lesson' => 1]);
 
         Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
         $this->artisan('homework:auto-open')->assertSuccessful();
 
         $this->assertTrue((bool) $inScope->fresh()->homework_enabled);
         $this->assertFalse((bool) $outByLesson->fresh()->homework_enabled, 'Открыт урок с занятием вне списка.');
-        $this->assertFalse((bool) $outByCourse->fresh()->homework_enabled, 'Открыт урок курса вне охвата.');
+        $this->assertFalse((bool) $outByCourse->fresh()->homework_enabled, 'Открыт урок вычеркнутого курса.');
+    }
+
+    /**
+     * Обратная сторона инверсии и её главный смысл: курс, которого нет ни в
+     * одном списке, теперь В охвате. Ровно этот случай молчал на гр.62.
+     */
+    /** @test */
+    public function unlisted_course_is_now_in_scope(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+
+        $course = Course::factory()->create(['slug' => 'nikogda-ne-vnosili-v-spisok']);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
+        $lesson = $this->lessonWithRecording($course, ['textbook_lesson' => null]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $fresh = $lesson->fresh();
+        $this->assertTrue((bool) $fresh->homework_enabled, 'Курс вне списков не попал в охват.');
+
+        // И текст задания — общий, а не «упражнения к занятию учебника
+        // Кочергиной»: курс к учебнику отношения не имеет.
+        $this->assertSame('Домашнее задание', $fresh->homework_prompt);
     }
 
     // ===================================================================
@@ -354,8 +396,7 @@ class AutoOpenHomeworkTest extends TestCase
     {
         Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
 
-        $course = Course::factory()->create();
-        config(['homework.auto_open.course_slugs' => [$course->slug]]);
+        $course = $this->kocherginaCourse();
 
         Carbon::setTestNow(Carbon::parse('2026-07-20 10:00', 'Europe/Moscow'));
         $older = $this->lessonWithRecording($course, ['textbook_lesson' => 1]);
@@ -390,8 +431,7 @@ class AutoOpenHomeworkTest extends TestCase
     {
         Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
 
-        $course = Course::factory()->create();
-        config(['homework.auto_open.course_slugs' => [$course->slug]]);
+        $course = $this->kocherginaCourse();
 
         Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
         $lesson = $this->lessonWithRecording($course, ['textbook_lesson' => null]);
@@ -415,8 +455,7 @@ class AutoOpenHomeworkTest extends TestCase
     {
         config(['homework.auto_open.open_without_textbook_lesson' => false]);
 
-        $course = Course::factory()->create();
-        config(['homework.auto_open.course_slugs' => [$course->slug]]);
+        $course = $this->kocherginaCourse();
 
         Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
         $lesson = $this->lessonWithRecording($course, ['textbook_lesson' => null]);
@@ -431,8 +470,7 @@ class AutoOpenHomeworkTest extends TestCase
     /** @test */
     public function out_of_range_textbook_lesson_is_still_excluded(): void
     {
-        $course = Course::factory()->create();
-        config(['homework.auto_open.course_slugs' => [$course->slug]]);
+        $course = $this->kocherginaCourse();
 
         Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
         $lesson = $this->lessonWithRecording($course, ['textbook_lesson' => 6]);
@@ -486,6 +524,167 @@ class AutoOpenHomeworkTest extends TestCase
     }
 
     // ===================================================================
+    // A17 — две прод-отсечки инверсии охвата (H3078)
+    // ===================================================================
+
+    /**
+     * Нижняя граница по дате первого урока курса. Без неё инверсия открыла бы
+     * архивные потоки гр.51/53/55/57/58 — сотни уроков с записями.
+     */
+    /** @test */
+    public function course_that_started_before_the_floor_is_out_of_scope(): void
+    {
+        config(['homework.auto_open.min_course_start' => '2026-06-01']);
+
+        $archive = Course::factory()->create(['slug' => 'arhivnyi-potok']);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
+        $old = $this->lessonWithRecording($archive, ['lesson_date' => '2026-03-10']);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $this->assertFalse(
+            (bool) $old->fresh()->homework_enabled,
+            'Открыт урок курса, начавшегося до нижней границы.'
+        );
+    }
+
+    /** Курс, начавшийся ПОСЛЕ границы, в охвате — граница режет только прошлое. */
+    /** @test */
+    public function course_that_started_after_the_floor_is_in_scope(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+        config(['homework.auto_open.min_course_start' => '2026-06-01']);
+
+        $fresh = Course::factory()->create(['slug' => 'letnii-potok']);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
+        $lesson = $this->lessonWithRecording($fresh, ['lesson_date' => '2026-07-28']);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $this->assertTrue((bool) $lesson->fresh()->homework_enabled);
+    }
+
+    /**
+     * Эпоха политики. Курс в охвате и момент открытия наступил — но он в
+     * прошлом относительно выкатки, значит приём не открывается НИКОГДА.
+     * Без этого включение инверсии вывалило бы 41 урок и пачку уведомлений
+     * за прошедшие недели.
+     */
+    /** @test */
+    public function lesson_due_before_the_policy_epoch_never_opens(): void
+    {
+        config(['homework.auto_open.policy_epoch' => '2026-08-18']);
+
+        $course = $this->kocherginaCourse();
+
+        Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
+        $stale = $this->lessonWithRecording($course, ['textbook_lesson' => 1]);
+
+        // Сильно позже момента открытия — «просто ещё не время» тут не при чём.
+        Carbon::setTestNow(Carbon::parse('2026-08-20 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $this->assertFalse(
+            (bool) $stale->fresh()->homework_enabled,
+            'Открыт урок, чей момент открытия раньше эпохи политики.'
+        );
+    }
+
+    /** Урок ПОСЛЕ эпохи открывается обычным порядком. */
+    /** @test */
+    public function lesson_due_after_the_policy_epoch_opens(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+        config(['homework.auto_open.policy_epoch' => '2026-08-18']);
+
+        $course = $this->kocherginaCourse();
+
+        Carbon::setTestNow(Carbon::parse('2026-08-19 06:00', 'Europe/Moscow'));
+        $lesson = $this->lessonWithRecording($course, ['textbook_lesson' => 1]);
+
+        Carbon::setTestNow(Carbon::parse('2026-08-20 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $this->assertTrue((bool) $lesson->fresh()->homework_enabled);
+    }
+
+    // ===================================================================
+    // A18 — потолок обязательных ДЗ Кочергиной (H3078)
+    // ===================================================================
+
+    /**
+     * «Обязательная сдача в группах санскрита заканчивается до 6 урока
+     * Кочергиной, 6 уже не сдают» (MG 18-08-2026).
+     */
+    /** @test */
+    public function kochergina_course_stops_after_five_homeworks(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+
+        $course = $this->kocherginaCourse();
+
+        // Пять уроков курса уже с приёмом — потолок выбран.
+        Lesson::factory()->count(5)->for($course)->create(['homework_enabled' => true]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
+        $sixth = $this->lessonWithRecording($course, ['textbook_lesson' => null]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $this->assertFalse(
+            (bool) $sixth->fresh()->homework_enabled,
+            'Шестое ДЗ Кочергиной открылось вопреки потолку.'
+        );
+    }
+
+    /** Потолок — только для Кочергиной; у хинди и прочих курсов его нет. */
+    /** @test */
+    public function cap_does_not_apply_outside_kochergina(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+
+        $course = Course::factory()->create(['slug' => 'hindi-test-potok']);
+        Lesson::factory()->count(5)->for($course)->create(['homework_enabled' => true]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
+        $sixth = $this->lessonWithRecording($course, ['textbook_lesson' => null]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $this->assertTrue((bool) $sixth->fresh()->homework_enabled);
+    }
+
+    /**
+     * Потолок держится ВНУТРИ одного прогона: два урока курса при четырёх уже
+     * открытых дают ровно один новый, а не два. Предварительный фильтр этого
+     * не ловит — счёт меняется по ходу.
+     */
+    /** @test */
+    public function cap_holds_within_a_single_run(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+
+        $course = $this->kocherginaCourse();
+        Lesson::factory()->count(4)->for($course)->create(['homework_enabled' => true]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
+        $first = $this->lessonWithRecording($course, ['textbook_lesson' => null]);
+        $second = $this->lessonWithRecording($course, ['textbook_lesson' => null]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $opened = (int) $first->fresh()->homework_enabled + (int) $second->fresh()->homework_enabled;
+        $this->assertSame(1, $opened, 'Потолок пропустил два урока в одном прогоне.');
+    }
+
+    // ===================================================================
     // Помощники
     // ===================================================================
 
@@ -497,13 +696,23 @@ class AutoOpenHomeworkTest extends TestCase
      */
     private function scopedLessonWithRecording(array $attributes = []): array
     {
-        $course = Course::factory()->create();
-        config(['homework.auto_open.course_slugs' => [$course->slug]]);
+        $course = $this->kocherginaCourse();
 
         Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
         $lesson = $this->lessonWithRecording($course, $attributes + ['textbook_lesson' => 1]);
 
         return [$course, $lesson];
+    }
+
+    /**
+     * Курс Кочергиной — узнаётся по слагу (H3078). Слаг решает две вещи:
+     * подставится ли текст учебника и действует ли потолок обязательных ДЗ.
+     */
+    private function kocherginaCourse(): Course
+    {
+        return Course::factory()->create([
+            'slug' => self::KOCHERGINA_PREFIX.'test-'.uniqid(),
+        ]);
     }
 
     /** Урок с уже приложенной записью — отметку ставит хук `Lesson::saving`. */

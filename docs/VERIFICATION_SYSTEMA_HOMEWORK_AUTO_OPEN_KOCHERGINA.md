@@ -25,6 +25,8 @@ _Created: 27-07-2026 · Last updated: 18-08-2026_
 | A13 | Бэкфилл D11 | `--backfill-last` открывает РОВНО один урок на курс и не шлёт уведомлений | `backfill_touches_only_the_last_lesson` |
 | A14 | Ничего не сломано | зарплатный и платёжный наборы тестов зелёные до и после, с тем же числом ассертов | прогон до/после, числа в PR |
 | A15 | **Пустой `textbook_lesson` не глушит приём** (H3068) | урок курса в охвате с `textbook_lesson = NULL` открывается и получает отсылочную формулировку; выключатель `open_without_textbook_lesson = false` возвращает прежний отказ; занятие `6` по-прежнему вне охвата | `lesson_without_textbook_lesson_still_opens` · `missing_textbook_lesson_can_still_be_required` · `out_of_range_textbook_lesson_is_still_excluded` |
+| A17 | **Две отсечки инверсии охвата** (H3078) | курс, начавшийся до `min_course_start`, вне охвата; начавшийся после — в охвате; урок с моментом открытия раньше `policy_epoch` не открывается никогда, позже — открывается | `course_that_started_before_the_floor_is_out_of_scope` · `course_that_started_after_the_floor_is_in_scope` · `lesson_due_before_the_policy_epoch_never_opens` · `lesson_due_after_the_policy_epoch_opens` |
+| A18 | **Потолок обязательных ДЗ Кочергиной** (H3078) | при пяти уже выданных ДЗ шестое не открывается; вне Кочергиной потолка нет; потолок держится внутри одного прогона (два урока → один) | `kochergina_course_stops_after_five_homeworks` · `cap_does_not_apply_outside_kochergina` · `cap_holds_within_a_single_run` |
 | A16 | **Пост в чат группы по обоим трекам** (H3068) | открытие шлёт «Приём ДЗ открыт» со ссылкой в `groups.telegram_chat_id` и записывает якорь `lesson_telegram_hooks` — не только на generic-треке | `opening_posts_the_invite_into_the_group_chat` |
 
 ## Команды проверки

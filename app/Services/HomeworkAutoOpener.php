@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Lesson;
 use App\Services\Access\TelegramAdminNotifier;
+use App\Support\HomeworkAutoOpenScope;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -149,17 +150,20 @@ class HomeworkAutoOpener
             return collect();
         }
 
-        $slugs = (array) config('homework.auto_open.course_slugs', []);
         $textbookLessons = (array) config('homework.auto_open.textbook_lessons', []);
+        $courseIds = HomeworkAutoOpenScope::courseIdsInScope();
 
-        if ($slugs === [] || $textbookLessons === []) {
+        if ($courseIds === [] || $textbookLessons === []) {
             return collect();
         }
 
         $allowMissing = (bool) config('homework.auto_open.open_without_textbook_lesson', true);
 
+        // Бэкфилл эпохой НЕ режется: он и существует затем, чтобы догнать один
+        // прошедший урок на курс осознанным ручным вызовом (D11). Эпоха
+        // защищает автоматический hourly-проход, а не явную команду человека.
         return Lesson::query()
-            ->whereHas('course', fn ($c) => $c->whereIn('slug', $slugs))
+            ->whereIn('course_id', $courseIds)
             ->where(fn ($q) => $q
                 ->whereIn('textbook_lesson', $textbookLessons)
                 ->when($allowMissing, fn ($qq) => $qq->orWhereNull('textbook_lesson')))
@@ -183,6 +187,19 @@ class HomeworkAutoOpener
     public function open(Lesson $lesson, bool $notify = true): bool
     {
         if (filled($lesson->homework_auto_opened_at)) {
+            return false;
+        }
+
+        // Потолок Кочергиной (H3078): «обязательная сдача заканчивается до 6
+        // урока, 6 уже не сдают». Проверяется ЗДЕСЬ, а не только в выборке:
+        // если два урока курса подошли в один прогон, первый добирает потолок,
+        // и второй обязан упереться — предварительный фильтр этого не видит.
+        if (HomeworkAutoOpenScope::kocherginaCapReached($lesson)) {
+            Log::info('HomeworkAutoOpener: потолок обязательных ДЗ курса достигнут — урок не открыт', [
+                'lesson_id' => $lesson->id,
+                'course_id' => $lesson->course_id,
+            ]);
+
             return false;
         }
 
@@ -280,6 +297,16 @@ class HomeworkAutoOpener
     private function promptFor(Lesson $lesson): string
     {
         if ($this->isGenericPilot($lesson)) {
+            return (string) config('homework.auto_open.generic_prompt', 'Домашнее задание');
+        }
+
+        // H3078: с инверсией охвата в трек попали курсы, не имеющие к учебнику
+        // Кочергиной никакого отношения («Продлёнка санскрита», «Напевный
+        // санскрит», «Чтение Айтареи»). Подставлять им «упражнения к занятию
+        // учебника Кочергиной» было бы прямой ложью в тексте задания.
+        $lesson->loadMissing('course');
+
+        if (! HomeworkAutoOpenScope::isKochergina($lesson->course?->slug)) {
             return (string) config('homework.auto_open.generic_prompt', 'Домашнее задание');
         }
 
