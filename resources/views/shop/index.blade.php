@@ -4,6 +4,8 @@
 
 @push('head')
     <meta name="description" content="Каталог курсов санскрита и хинди: живые группы и записи. От первой буквы до чтения текстов.">
+    <link rel="canonical" href="{{ url($canonicalPath) }}">
+    <meta name="robots" content="{{ $indexable ? 'index, follow' : 'noindex, follow' }}">
 @endpush
 
 @section('content')
@@ -60,7 +62,13 @@
         {{-- Первые вопросы новичка (H1868, custdev-обоснованная ориентация) --}}
         @include('shop.partials.first-questions')
 
-        @livewire('shop.course-catalog')
+        @livewire('shop.course-catalog', [
+            'initialCategoryIds' => $initialCategoryIds,
+            'initialTeacherId' => $initialTeacherId,
+            'initialFormat' => $initialFormat,
+            'initialLevel' => $initialLevel,
+            'initialSearch' => $initialSearch,
+        ])
 
         {{-- Лесенка цен с позиционированием (H1293) --}}
         @include('shop.partials.price-ladder-narrative', ['ladder' => $ladder])
