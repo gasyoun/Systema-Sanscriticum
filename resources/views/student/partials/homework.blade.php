@@ -1,9 +1,16 @@
 @php
     $hwStatus = $homeworkSubmission->status ?? null;
     $hwEditable = ! $homeworkSubmission || $homeworkSubmission->isEditableByStudent();
+    // Курс формата «приём есть, проверки нет» (H3081): обещать «На проверке»
+    // здесь было бы неправдой — работу никто не разбирает и статус никогда не
+    // сменится. Студенту говорим ровно то, что происходит.
+    $hwUnreviewed = \App\Support\HomeworkReviewPolicy::isUnreviewedLesson($lesson);
     $hwBadge = match($hwStatus) {
-        'submitted' => ['bg-blue-50 text-blue-700 border-blue-200', 'fa-hourglass-half', 'На проверке',
-            'Работа у куратора. Можно дополнить или исправить — ниже появится новое сообщение в переписке.'],
+        'submitted' => $hwUnreviewed
+            ? ['bg-gray-100 text-gray-700 border-gray-200', 'fa-inbox', 'Сдано',
+                'Работа сохранена. На этом курсе задания не разбирает преподаватель — сдача нужна вам самим, для ритма и самопроверки. Дополнить или переслать можно в любой момент.']
+            : ['bg-blue-50 text-blue-700 border-blue-200', 'fa-hourglass-half', 'На проверке',
+                'Работа у куратора. Можно дополнить или исправить — ниже появится новое сообщение в переписке.'],
         'needs_revision' => ['bg-red-50 text-red-700 border-red-200', 'fa-rotate-left', 'На доработку',
             'Куратор вернул работу с комментариями — прочитайте замечания и отправьте снова.'],
         'accepted' => ['bg-emerald-50 text-emerald-700 border-emerald-200', 'fa-circle-check', 'Принято',
@@ -43,7 +50,11 @@
                 <div>
                     <h3 class="text-lg font-extrabold text-gray-900 leading-tight">Домашнее задание</h3>
                     <p class="hidden sm:block text-[13px] text-gray-500">
-                        {{ $awaitingPrompt ? 'Скоро здесь появится задание' : 'Выполните задание и отправьте на проверку' }}
+                        {{ $awaitingPrompt
+                            ? 'Скоро здесь появится задание'
+                            : ($hwUnreviewed
+                                ? 'Выполните задание и сохраните — на этом курсе его не разбирает преподаватель'
+                                : 'Выполните задание и отправьте на проверку') }}
                         ·
                         <a href="{{ route('faq.dz') }}" class="text-brand font-semibold hover:underline">как сдавать</a>
                     </p>

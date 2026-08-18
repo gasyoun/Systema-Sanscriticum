@@ -10,6 +10,7 @@ use App\Models\Group;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\User;
+use App\Support\HomeworkReviewPolicy;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Collection;
@@ -32,6 +33,14 @@ class HomeworkNotifier
 {
     public function submitted(HomeworkSubmission $submission, bool $isResubmission = false): void
     {
+        // Курс формата «приём есть, проверки нет» (H3081): работа принимается и
+        // хранится, но никого не дёргает. Проверка стоит ПЕРЕД `reviewersFor`,
+        // потому что молчать надо в обе стороны — и проверяющим группы, и
+        // преподавателю курса, которому иначе ушло бы письмо на каждую работу.
+        if (HomeworkReviewPolicy::isUnreviewedSubmission($submission)) {
+            return;
+        }
+
         $reviewers = $this->reviewersFor($submission);
 
         foreach ($reviewers as $reviewer) {
