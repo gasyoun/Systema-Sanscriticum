@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Filament\Pages\CourseStreamComparison;
+use App\Filament\Pages\PayoutAttributionGuide;
 use App\Filament\Resources\TeacherPayoutAttributionSuggestionResource;
 use App\Models\Course;
 use App\Models\CourseBlock;
@@ -438,6 +439,51 @@ class TeacherPayoutTruthTest extends TestCase
                 TeacherPayoutAttributionSuggestionResource::canViewAny(),
                 "гейты «Потоки курса» и очереди разошлись на роли {$role}",
             );
+            $this->assertSame(
+                $allowed,
+                PayoutAttributionGuide::canAccess(),
+                "инструкция в кабинете для роли {$role}",
+            );
+        }
+    }
+
+    /**
+     * Инструкция живёт В КАБИНЕТЕ и питается живой очередью, а не переписанным
+     * от руки списком: инструкция, разошедшаяся с экраном, хуже отсутствующей.
+     * Ruling MG 18-08-2026 — рабочие указания сотруднику не выкладываются на
+     * всеобщее обозрение, поэтому копии этого текста в публичном репозитории
+     * быть не должно.
+     *
+     * @test
+     */
+    public function the_in_cabinet_guide_lists_exactly_what_the_queue_holds(): void
+    {
+        $this->seedExpenses();
+        $this->artisan('salary:detect-payout-attributions --apply')->assertSuccessful();
+
+        $this->actingAs(User::factory()->create(['role' => Roles::ACCOUNTANT]));
+
+        $rendered = $this->get(PayoutAttributionGuide::getUrl())->assertOk();
+
+        foreach (TeacherPayoutAttributionSuggestion::pending()->get() as $row) {
+            $rendered->assertSee((string) $row->payment_id);
+        }
+
+        $rendered->assertSee('не переводит никаких денег', false);
+        $rendered->assertSee($this->teacher->name);
+    }
+
+    /** @test */
+    public function the_public_repository_carries_no_copy_of_the_staff_instruction(): void
+    {
+        // Публичный репозиторий: фамилия преподавателя, номера платежей и суммы
+        // в файле памятки — это и есть «всеобщее обозрение», которое запрещено.
+        foreach ([
+            'docs/MANUAL_ACCOUNTANT_PAYOUT_ATTRIBUTION_RU.md',
+            'docs/MANUAL_ACCOUNTANT_PAYOUT_ATTRIBUTION_RU.meta.md',
+            'docs/img/h3084',
+        ] as $path) {
+            $this->assertFileDoesNotExist(base_path($path), "«{$path}» вернулся в публичный репозиторий");
         }
     }
 
