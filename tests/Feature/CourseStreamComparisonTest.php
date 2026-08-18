@@ -224,12 +224,12 @@ class CourseStreamComparisonTest extends TestCase
     }
 
     /** @test */
-    public function both_screens_are_closed_to_manager_and_teacher_and_open_to_accountant(): void
+    public function both_screens_are_closed_to_manager_and_teacher_and_open_to_accountant_and_admin(): void
     {
         $cases = [
             Roles::ACCOUNTANT => true,
             Roles::SUPER_ADMIN => true,
-            Roles::ADMIN => false,   // сознательное сужение доступа, решение №7
+            Roles::ADMIN => true,   // MG 18-08-2026: admin always sees everything, gate reverted to finance()
             Roles::MANAGER => false,
             Roles::TEACHER => false,
         ];
