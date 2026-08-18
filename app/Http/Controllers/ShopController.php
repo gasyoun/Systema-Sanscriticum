@@ -309,6 +309,13 @@ class ShopController extends Controller
         // покупатель не видел ни дня, ни того, что поток на 14-м из 16.
         $cadence = CourseCadence::for($course);
 
+        // H3100: сколько прошедших занятий уже лежит записями. Отдельным
+        // агрегатом, а не по $course->lessons — та коллекция грузится урезанным
+        // select без ссылок на видео, и hasVideo() по ней всегда дал бы false.
+        $course->loadCount([
+            'lessons as recorded_lessons_count' => fn ($q) => $q->where('is_published', true)->withRecording(),
+        ]);
+
         $currentBlock = $course->currentBlock();
         $currentBlockNumber = $currentBlock?->number;
 
