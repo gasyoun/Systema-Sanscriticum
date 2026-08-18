@@ -6,10 +6,12 @@ namespace App\Filament\Pages;
 
 use App\Exports\CourseStreamComparisonExport;
 use App\Services\CourseStreamComparisonReport;
+use App\Services\TeacherSettlementActPdf;
 use App\Support\RoleGate;
 use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * H3083 — «Потоки курса»: потоки одной программы бок о бок.
@@ -75,7 +77,32 @@ class CourseStreamComparison extends Page
                 ->icon('heroicon-o-arrow-down-tray')
                 ->visible(fn (): bool => $this->family !== null)
                 ->action(fn (): ?BinaryFileResponse => $this->exportExcel()),
+
+            // H3084 — акт сверки одной страницей, с пустой строкой под решение
+            // о доплате. Всё считает сервис отчёта; действие только отдаёт файл.
+            Action::make('settlementAct')
+                ->label('Акт сверки (PDF)')
+                ->icon('heroicon-o-document-text')
+                ->visible(fn (): bool => $this->family !== null)
+                ->action(fn (): ?StreamedResponse => $this->downloadSettlementAct()),
         ];
+    }
+
+    public function downloadSettlementAct(): ?StreamedResponse
+    {
+        if ($this->family === null) {
+            return null;
+        }
+
+        $service = app(TeacherSettlementActPdf::class);
+        $pdf = $service->make($this->family);
+        if ($pdf === null) {
+            return null;
+        }
+
+        $filename = $service->filename($this->family);
+
+        return response()->streamDownload(fn () => print $pdf->output(), $filename);
     }
 
     public function exportExcel(): ?BinaryFileResponse
