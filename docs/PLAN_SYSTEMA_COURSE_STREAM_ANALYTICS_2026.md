@@ -104,6 +104,8 @@ _Created: 18-08-2026 · Last updated: 18-08-2026_
 
 **Полномочия.** Экран, экспорт, документация — коммит, PR и мерж самостоятельно. Миграции, правка курса 424, `users.teacher_id`, даты блоков — отдельный PR с маркером `money-contour: no-auto-merge`, мержит человек.
 
+Оговорка, чтобы исполнитель не перепутал основание: по [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md) сам маркер `money-contour: no-auto-merge` — напоминание про флаг и тесты, **а не запрет на мерж**; `gasyoun/*` обычно мержатся без переспроса. Запрет здесь идёт не от маркера, а от прямого решения №19 этого интервью. Маркер ставится дополнительно, чтобы PR был опознаваем как денежный.
+
 **Фенс — не трогать:**
 
 1. [`TeacherSalaryService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TeacherSalaryService.php) и любую логику начисления ЗП — отчёт её только читает; правка арифметики заденет все 23 преподавателя;
