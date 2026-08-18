@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.89.75] - 2026-08-18
 ### Fixed
 - **H3093 (Sonnet 5 `claude-sonnet-5`): [/online](https://samskrte.ru/online) читал категории как `?cat[0]=3` — MG отметил как плохой SEO-слаг.** Все пять фильтров каталога (категория/формат/уровень/преподаватель/поиск) теперь словесные пути (`/online/kategoriya/{slug}`, `/online/format/live`, …) через новый `App\Support\ShopCatalogUrl` — без query string нигде на странице. Старые `?cat[]=`/`?q=`/`?teacher=`/`?format=`/`?level=` 301-редиректят на эквивалент. Попутно закрыт независимый пробел: у `/online` вообще не было canonical-тега; теперь голая витрина и одна категория — `index,follow` self-canonical, любая другая комбинация фильтров — `noindex,follow` со сворачиванием canonical к одной категории (иначе комбинаторика facet'ов дала бы Google больше тонких дублей, чем давал query string). Чипы категорий/формата/уровня стали настоящими `<a href>` (были только `wire:click`-кнопки без ссылки — Google не находил бы даже новый красивый URL). Категории добавлены в sitemap. Тесты: новый `CatalogPrettyUrlsTest` 10/10, `Shop` 125/125, `Seo` 43/43 без регрессий, Pint чист.
 
