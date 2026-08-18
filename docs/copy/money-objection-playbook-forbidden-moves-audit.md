@@ -71,6 +71,8 @@ Handoff [H3022](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3022-Opus_
 
 > Анонсы курсов, открытые занятия и бесплатные материалы — на почту. Отписка в один клик.
 
+Запрет закреплён тестом, а не памятью следующего автора копии: `test_floating_popup_renders_without_bulk_social_proof` в [NewsletterSubscribeTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/NewsletterSubscribeTest.php) проверяет новую формулировку **и** `assertDontSee` на старую рамку толпы.
+
 ## Копия ботов — чисто, и не случайно
 
 Это была заявленная зона риска handoff'а: проход 19-07-2026 ботов не смотрел.
