@@ -136,6 +136,8 @@ class TeacherPayoutAttributionSuggestionResource extends Resource
                         'Сумма войдёт в «выплачено» на экране «Потоки курса». '
                         .'Строка в реестре выплат при этом НЕ создаётся.'
                     )
+                    ->modalSubmitActionLabel('Да, это выплата')
+                    ->modalCancelActionLabel('Отмена')
                     ->visible(fn (TeacherPayoutAttributionSuggestion $record): bool => $record->status === TeacherPayoutAttributionSuggestion::STATUS_PENDING)
                     ->action(function (TeacherPayoutAttributionSuggestion $record): void {
                         $record->update([
@@ -154,6 +156,8 @@ class TeacherPayoutAttributionSuggestionResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('Отклонить разметку')
                     ->modalDescription('Платёж останется расходом (аренда, реклама и т.п.) и в сверку выплат не войдёт.')
+                    ->modalSubmitActionLabel('Да, это не выплата')
+                    ->modalCancelActionLabel('Отмена')
                     ->visible(fn (TeacherPayoutAttributionSuggestion $record): bool => $record->status === TeacherPayoutAttributionSuggestion::STATUS_PENDING)
                     ->action(function (TeacherPayoutAttributionSuggestion $record): void {
                         $record->update([
@@ -170,6 +174,10 @@ class TeacherPayoutAttributionSuggestionResource extends Resource
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('gray')
                     ->requiresConfirmation()
+                    ->modalHeading('Вернуть строку в очередь')
+                    ->modalDescription('Решение будет снято, строка снова станет «Ожидает».')
+                    ->modalSubmitActionLabel('Вернуть')
+                    ->modalCancelActionLabel('Отмена')
                     ->visible(fn (TeacherPayoutAttributionSuggestion $record): bool => $record->status !== TeacherPayoutAttributionSuggestion::STATUS_PENDING)
                     ->action(function (TeacherPayoutAttributionSuggestion $record): void {
                         $record->update([
@@ -181,7 +189,7 @@ class TeacherPayoutAttributionSuggestionResource extends Resource
                         Notification::make()->title('Строка вернулась в очередь')->send();
                     }),
 
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()->label('Подробнее'),
             ]);
     }
 

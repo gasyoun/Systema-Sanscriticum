@@ -437,6 +437,10 @@ _Created: 02-07-2026 · Last updated: 18-08-2026_
    администратор). Сама она ничего не подтверждает — все строки приходят в статусе
    «Ожидает».
 
+Пошаговая инструкция со скриншотами — от входа в админку до результата на экране
+«Потоки курса»:
+[MANUAL_ACCOUNTANT_PAYOUT_ATTRIBUTION_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_ACCOUNTANT_PAYOUT_ATTRIBUTION_RU.md).
+
 ## 4j. Ведомость ЗП преподавателей / фикс-vs-процент what-if
 
 **Где:** «Зарплаты» → кнопка **«Экспорт»** (ведомость, `TeacherSalariesExporter`) и
