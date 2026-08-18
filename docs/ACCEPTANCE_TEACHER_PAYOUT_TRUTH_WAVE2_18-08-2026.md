@@ -22,7 +22,7 @@ _Created: 18-08-2026 · Last updated: 18-08-2026_
 | 15 | Подтверждённая разметка входит в «выплачено», дедупликация по `payment_id` | [TeacherPayoutReconciliation.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TeacherPayoutReconciliation.php) |
 | 16 | PDF-акт сверки с пустой строкой «решение о доплате сверх остатка» | [TeacherSettlementActPdf.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TeacherSettlementActPdf.php) · [teacher-settlement-act.blade.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/pdf/teacher-settlement-act.blade.php) |
 
-Инструкция бухгалтера дополнена § 4l «Разметка выплат» и картой меню —
+Инструкция бухгалтера дополнена § 4l «Подтверждение выплат преподавателям» и картой меню —
 [accountant-guide.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/accountant-guide.md).
 
 ## 2. Замер боевых данных (read-only, до единой правки)
@@ -224,7 +224,7 @@ handoff до начала работ.
    php artisan courses:backfill-block-dates
    php artisan salary:detect-payout-attributions
    ```
-3. **Разметить шесть платежей** на 183 390 ₽ в «Финансы» → «Разметка выплат».
+3. **Разметить шесть платежей** на 183 390 ₽ в «Финансы» → «Подтверждение выплат преподавателям».
    Седьмой (#13573) размечать не нужно — он уже посчитан.
 4. **Снять блокировку с инструкции бухгалтера**
    [Systema-Sanscriticum#1832](https://github.com/gasyoun/Systema-Sanscriticum/issues/1832)

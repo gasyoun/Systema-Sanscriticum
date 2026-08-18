@@ -38,9 +38,9 @@ class TeacherPayoutAttributionSuggestionResource extends Resource
 
     protected static ?string $navigationGroup = 'Финансы';
 
-    protected static ?string $navigationLabel = 'Разметка выплат';
+    protected static ?string $navigationLabel = 'Подтверждение выплат преподавателям';
 
-    protected static ?string $pluralModelLabel = 'Разметка выплат преподавателям';
+    protected static ?string $pluralModelLabel = 'Подтверждение выплат преподавателям';
 
     protected static ?string $modelLabel = 'Предложение разметки';
 
