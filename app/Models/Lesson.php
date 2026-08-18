@@ -215,6 +215,21 @@ class Lesson extends Model
         return filled($this->youtube_url) || filled($this->rutube_url) || filled($this->video_url);
     }
 
+    /**
+     * Запросный близнец hasVideo() — нужен там, где считать записи по загруженной
+     * коллекции нельзя (витрина грузит уроки урезанным select без ссылок, H3100).
+     * Условие обязано совпадать с hasVideo(): `filled()` отбрасывает и NULL, и
+     * пустую строку, поэтому здесь тоже две проверки, а не один whereNotNull.
+     */
+    public function scopeWithRecording(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            foreach (['youtube_url', 'rutube_url', 'video_url'] as $column) {
+                $q->orWhere(fn (Builder $w) => $w->whereNotNull($column)->where($column, '!=', ''));
+            }
+        });
+    }
+
     public function attachmentsCount(): int
     {
         return is_array($this->attachments) ? count($this->attachments) : 0;
