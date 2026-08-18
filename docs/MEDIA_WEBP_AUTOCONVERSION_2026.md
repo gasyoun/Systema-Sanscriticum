@@ -1,0 +1,117 @@
+# Автоперевод обложек в WebP — как это работает и что делать, если сломалось
+
+_Created: 18-08-2026 · Last updated: 18-08-2026_
+
+H3082 (Opus 5) — Витрина /online: 28 МБ обложек, Play CDN и HTTP/1.1 — аудит и разгон.
+
+## Зачем
+
+Замер витрины [/online](https://samskrte.ru/online) 18-08-2026: 89 обложек курсов
+суммарно на **27,6 МБ**. Образец — 533×399 px и **488 КБ**, то есть фотография,
+сохранённая в PNG. Пиксельный размер при этом ровно под карточку `aspect-[4/3]`:
+лишний вес даёт **только формат**, примерно десятикратно. Тот же кадр в WebP q82
+весит около 40 КБ.
+
+Разовой конвертации мало: следующая же обложка, залитая через админку, вернула бы
+PNG. Поэтому механизм работает **без участия человека и без модели** — два рубежа.
+
+## Два рубежа
+
+| Рубеж | Что делает | Где |
+|---|---|---|
+| **1. Наблюдатель** | Переводит обложку в WebP в том же запросе, в котором её загрузили — через любую форму, лишь бы запись шла через Eloquent | [`app/Observers/CourseCoverWebpObserver.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Observers/CourseCoverWebpObserver.php) |
+| **2. Уборка** | Ежедневно в 02:40 подбирает всё, что прошло мимо модели: сиды, прямой SQL, будущий импортёр | [`app/Console/Commands/ConvertImagesToWebpCommand.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ConvertImagesToWebpCommand.php) |
+
+Второй рубеж — не перестраховка ради красоты. Наблюдатель видит только записи через
+Eloquent; новый путь загрузки (импорт, сид, миграция) остался бы незамеченным, и
+витрина месяцами отдавала бы тяжёлые PNG, а заметил бы это человек. С ежедневной
+уборкой такой путь чинится сам максимум за сутки.
+
+Обе точки ходят в один [`ModelImageWebpConverter`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Media/ModelImageWebpConverter.php),
+поэтому порядок операций один на всех: **перекодировать → записать путь в БД → и
+только потом удалить оригинал**. Обратный порядок оставил бы курс с обложкой,
+которой уже нет на диске, если запись в БД не доедет.
+
+## Ручной запуск
+
+```bash
+php artisan media:covers-to-webp --dry-run   # посмотреть кандидатов
+php artisan media:covers-to-webp             # перевести
+php artisan media:covers-to-webp --limit=10  # осторожно, порциями
+```
+
+Команда идемпотентна: после полного прогона следующий не находит работы.
+
+## Настройки
+
+Всё в [`config/media.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/media.php).
+
+| Ключ | По умолчанию | Смысл |
+|---|---|---|
+| `MEDIA_WEBP_ENABLED` | `true` | Общий выключатель обоих рубежей |
+| `MEDIA_WEBP_QUALITY` | `82` | Точка «глазом не отличить» для фотографических обложек |
+| `MEDIA_WEBP_MIN_GAIN` | `0.10` | Ниже этого выигрыша формат не меняем |
+| `MEDIA_WEBP_DELETE_ORIGINAL` | `true` | Удалять исходник после того, как путь доехал до БД |
+| `MEDIA_WEBP_DISK` | `public` | Диск Storage |
+
+## Что сознательно НЕ конвертируется
+
+Это самая важная часть файла — список составлен по последствиям, а не по удобству.
+
+- **`announcements.image_path`** — уходит в Telegram и VK через
+  [`AnnouncementDispatcher`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/AnnouncementDispatcher.php).
+  Telegram принимает `.webp` как **стикер**, а не как фото; перевод формата
+  сломал бы рассылку молча.
+- **`landing_pages.image_path`** — это `og:image` промо-страниц
+  ([`layouts/promo.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/layouts/promo.blade.php)).
+  Парсеры превью у соцсетей к WebP относятся неровно, а проверяется это только
+  живой раскладкой.
+- **Числовые значения в колонке** — у части записей там лежит id медиа Curator,
+  а не путь к файлу. Конвертер такие пропускает по причине `curator-id`.
+- **Картинки без выигрыша по весу.** Плоская графика (схемы, скриншоты с
+  крупной заливкой) в PNG нередко ЛЕГЧЕ, чем в WebP. Менять формат ради
+  проигрыша бессмысленно, а обратной дороги у перезаписанной обложки нет.
+
+`courses.image_path` безопасен: его читают только blade-шаблоны витрины и JSON-LD
+`Course.image` (WebP входит в список форматов, поддерживаемых Google), а
+[`CoverToBannerImporter`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Design/CoverToBannerImporter.php)
+уже держит `IMAGETYPE_WEBP` в своей карте кодеков — это проверено тестом
+`CoversToWebpTest::a_converted_cover_still_imports_into_a_banner_slot`.
+
+Добавить новую колонку в охват — одна строка в `media.webp.sweep`. Но сначала
+пройдите по списку выше: у каждой картинки надо знать ВСЕХ потребителей, а не
+только браузер.
+
+## Грабли, на которые уже наступили
+
+**`wasChanged()` не работает на INSERT.** Laravel вызывает `syncChanges()` в
+`performUpdate()`, но не в `performInsert()`, поэтому у только что вставленной
+строки `wasChanged('image_path')` всегда `false`. Наблюдатель, построенный на
+одном `wasChanged()`, пропускал бы ровно первую загрузку обложки — то есть самый
+частый случай. Отсюда отдельная проверка `wasRecentlyCreated`.
+
+**Фикстура «как фотография» — не любой синтетический шум.** Первая версия теста
+рисовала узор по модулю (`($x * 7 + $y * 3) % 256`). PNG сжимает такие линейные
+рампы почти идеально (16 КБ), а lossy WebP на резких разрывах модуля раздувается
+до 90 КБ — конвертер честно отказывался, и тест падал на ровном месте. Работает
+плавный тон **плюс мелкое зерно**: 533×399 даёт PNG ~435 КБ против WebP ~40 КБ,
+ровно те же 10×, что и на боевых обложках.
+
+**Тесты соседа пришлось развести явно.**
+[`CourseCoverImportTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/CourseCoverImportTest.php)
+проверяет импортёр баннеров на нарочно собранных байтах PNG/JPEG («jpeg остаётся
+jpeg», побайтовая копия, центр кадра). Наблюдатель переписывал обложку при
+сохранении курса и ломал четыре такие проверки. В его `setUp()` теперь
+`media.webp.enabled = false`: предмет того набора — импортёр, а композицию двух
+механизмов проверяет отдельный тест в `CoversToWebpTest`.
+
+## Если сломалось
+
+1. `MEDIA_WEBP_ENABLED=false` в `.env` на проде — оба рубежа замолкают сразу.
+2. Оригиналы за прогон **удаляются**. Откат — только из бэкапа
+   `storage/app/public/courses/`; перед разовой миграцией 18-08-2026 такой
+   бэкап снят на боксе (`/root/courses-before-webp-*.tar.gz`).
+3. `MEDIA_WEBP_DELETE_ORIGINAL=false` оставляет исходники на диске — режим для
+   осторожного прогона, если понадобится повторить на другой колонке.
+
+_Dr. Mārcis Gasūns_
