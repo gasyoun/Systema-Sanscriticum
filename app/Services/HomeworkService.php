@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Filament\Resources\HomeworkSubmissionResource;
+use App\Jobs\BuildHomeworkImagesPdfJob;
 use App\Mail\HomeworkReviewedMail;
 use App\Models\HomeworkComment;
 use App\Models\HomeworkFile;
@@ -69,10 +70,16 @@ class HomeworkService
             return $submission;
         });
 
-        // PDF из картинок — после коммита, до письма: вложение в mail уже готово.
-        // Падение сборки не откатывает сдачу (rebuildQuietly).
+        // H3095, вариант B: сборка PDF ушла в очередь, уведомление НЕ зависит
+        // от её исхода. Порядок «сборка, потом уведомление» и был дефектом —
+        // обязательное стояло за необязательным и наследовало все его способы
+        // умереть, включая фатальный OOM, который `try/catch` не ловит.
+        // Постановка в очередь идёт первой только чтобы дать сборке фору
+        // (вложение чаще успевает к письму); от её успеха уведомление
+        // отвязано в `queueImagesPdfRebuild()`. Обоснование развилки —
+        // docs/DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md.
         if ($finalize) {
-            app(HomeworkImagePdfService::class)->rebuildQuietly($submission);
+            $this->queueImagesPdfRebuild($submission);
             $this->notifyTeacher($submission, $isResubmission);
         }
 
@@ -89,7 +96,7 @@ class HomeworkService
      */
     public function deleteStudentFile(HomeworkFile $file, User $student): void
     {
-        DB::transaction(function () use ($file, $student) {
+        $submission = DB::transaction(function () use ($file, $student) {
             $file->loadMissing('comment.submission');
             $comment = $file->comment;
             $submission = $comment?->submission;
@@ -113,8 +120,10 @@ class HomeworkService
             $submission->last_activity_at = now();
             $submission->save();
 
-            app(HomeworkImagePdfService::class)->rebuildQuietly($submission->fresh(['comments.files', 'user', 'lesson', 'course']));
+            return $submission;
         });
+
+        $this->queueImagesPdfRebuild($submission);
     }
 
     /**
@@ -147,9 +156,9 @@ class HomeworkService
 
             $submission->last_activity_at = now();
             $submission->save();
-
-            app(HomeworkImagePdfService::class)->rebuildQuietly($submission->fresh(['comments.files', 'user', 'lesson', 'course']));
         });
+
+        $this->queueImagesPdfRebuild($submission);
     }
 
     /**
@@ -212,10 +221,8 @@ class HomeworkService
             return $deleted;
         });
 
-        // Картинок больше нет — combined PDF тоже убираем.
-        app(HomeworkImagePdfService::class)->rebuildQuietly(
-            $submission->fresh(['comments.files', 'user', 'lesson', 'course']) ?? $submission
-        );
+        // Картинок больше нет — combined PDF тоже убираем (job удалит старый).
+        $this->queueImagesPdfRebuild($submission);
 
         return $deleted;
     }
@@ -317,9 +324,8 @@ class HomeworkService
             return $target->fresh(['comments.files', 'lesson', 'course', 'user']);
         });
 
-        $pdf = app(HomeworkImagePdfService::class);
-        $pdf->rebuildQuietly($source->fresh(['comments.files', 'user', 'lesson', 'course']) ?? $source);
-        $pdf->rebuildQuietly($target->fresh(['comments.files', 'user', 'lesson', 'course']));
+        $this->queueImagesPdfRebuild($source);
+        $this->queueImagesPdfRebuild($target);
 
         return $target;
     }
@@ -573,6 +579,36 @@ class HomeworkService
                 'original_name' => $file['original_name'],
                 'size' => $file['size'] ?? 0,
                 'mime' => $file['mime'] ?? null,
+            ]);
+        }
+    }
+
+    /**
+     * Поставить пересборку `combined-images.pdf` в очередь (H3095).
+     *
+     * До 18-08-2026 сборка шла прямо здесь, на пути запроса. Она держит в
+     * памяти base64 всех страниц, и на php-fpm с его 128M исчерпание памяти —
+     * ФАТАЛЬНАЯ ошибка, которую `try/catch` внутри `rebuildQuietly()` не ловит:
+     * падал весь POST сдачи, а `notifyTeacher()` за сборкой не выполнялся
+     * (H3092 / H3095, [FINDINGS §483]).
+     *
+     * `try/catch` здесь — не про сборку (она теперь на воркере), а про саму
+     * постановку в очередь: недоступный Redis или драйвер `sync` в чужой среде
+     * не должны утащить за собой уведомление проверяющего. Это и есть то, что
+     * делает обещание «уведомление не зависит от сборки» безусловным.
+     */
+    private function queueImagesPdfRebuild(?HomeworkSubmission $submission): void
+    {
+        if ($submission === null) {
+            return;
+        }
+
+        try {
+            BuildHomeworkImagesPdfJob::dispatch((int) $submission->id);
+        } catch (\Throwable $e) {
+            Log::warning('HomeworkImagePdf rebuild dispatch failed', [
+                'submission_id' => $submission->id,
+                'error' => $e->getMessage(),
             ]);
         }
     }
