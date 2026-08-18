@@ -34,6 +34,12 @@ Flags stay **OFF** until a human activation decision.
 
 ## Activation (human authorizes; agent runs the recipe)
 
+**ACTIVATED 19-08-2026, ~02:17 MSK (H3116, Fable 5 `claude-fable-5`, MG
+«import, flip»).** `visualdcs:import` reported `units=39482`; all three flags
+ON; smoke: `/visualdcs/{verb,nominal,passage}/preview` → 200 at 130–165 ms;
+no new memory errors in nginx log. Day-7 report due ~26-08-2026 (fill the
+Snapshot table above).
+
 First attempt 18-08-2026 (H3116): flags flipped before catalog units existed →
 request-path json_decode of the 26-МБ payload OOM-killed php-fpm
 (`memory_limit=128M`), all surfaces 500, flags rolled back within minutes.
