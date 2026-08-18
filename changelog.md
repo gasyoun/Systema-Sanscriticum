@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.89.71] - 2026-08-18
 ### Fixed
 - **H3079 (Sonnet 5 `claude-sonnet-5`): "N лекций" читалось как lecture-count вместо "N онлайн-занятий" на карточках курсов и странице курса; имя преподавателя в блоке «Преподаватель(и)» не было ссылкой.** Куратор указал на `/k/letnii-intensiv-hindi-2026`: ОРС почти никогда не читает лекции, и формулировка была неверна не только для хинди. `course-card.blade.php` и `shop/show.blade.php` (hero + панель «Коротко о курсе») теперь всегда пишут склонение "N онлайн-занятий" через `Plural::ru`. Имя преподавателя в `shop/partials/teachers.blade.php` теперь ссылка на `route('shop.index', ['teacher' => id])`, как уже было у бейджа в hero. Тесты: `CourseShowTest` 17/17, `ShopVisualPolishTest` 7/7, Pint чист. PR [#1811](https://github.com/gasyoun/Systema-Sanscriticum/pull/1811).
 
