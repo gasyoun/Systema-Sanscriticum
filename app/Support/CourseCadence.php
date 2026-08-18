@@ -125,16 +125,44 @@ final class CourseCadence
         return $this->sessions->isNotEmpty();
     }
 
-    /** Всего занятий в календаре курса. */
-    public function total(): int
+    /**
+     * Потоки курса — занятия, сгруппированные по группе-потоку (H3115).
+     *
+     * У курса может быть НЕСКОЛЬКО потоков одной программы: «Бхагавадгита 2ч
+     * 2026» идёт по вторникам 11:30 (группа 125) и по субботам 12:00
+     * (группа 128). Складывать их календари нельзя: получалось «осталось 10
+     * занятий из 24» и «24 часа» у курса из 16 занятий — числа, не описывающие
+     * ни одного реального студента, потому что каждый ходит ровно в один поток.
+     *
+     * Занятия без группы (`group_id` NULL) — общекурсовые, свой единственный
+     * «поток».
+     *
+     * @return Collection<array-key, Collection<int, Schedule>>
+     */
+    public function streams(): Collection
     {
-        return $this->sessions->count();
+        return $this->sessions->groupBy(fn (Schedule $s) => $s->group_id ?? 'course');
     }
 
-    /** Занятий уже прошло (по времени окончания). */
+    /** У курса больше одного потока на календаре. */
+    public function hasMultipleStreams(): bool
+    {
+        return $this->streams()->count() > 1;
+    }
+
+    /**
+     * Длина курса в занятиях. При нескольких потоках это ДЛИННЕЙШИЙ поток, а не
+     * сумма: программа одна, потоки её повторяют.
+     */
+    public function total(): int
+    {
+        return (int) ($this->streams()->map->count()->max() ?? 0);
+    }
+
+    /** Занятий уже прошло в самом «продвинутом» потоке. */
     public function past(): int
     {
-        return $this->sessions->filter(fn (Schedule $s) => $this->endOf($s)->lt($this->now))->count();
+        return (int) ($this->streams()->map(fn (Collection $s) => $this->pastIn($s))->max() ?? 0);
     }
 
     /** Занятий осталось, считая идущее сейчас. */
@@ -143,16 +171,34 @@ final class CourseCadence
         return $this->total() - $this->past();
     }
 
-    /** Все занятия по календарю уже прошли. */
-    public function isFinished(): bool
+    /** @param  Collection<int, Schedule>  $sessions */
+    private function pastIn(Collection $sessions): int
     {
-        return $this->hasCalendar() && $this->remaining() === 0;
+        return $sessions->filter(fn (Schedule $s) => $this->endOf($s)->lt($this->now))->count();
     }
 
-    /** Курс начался, но ещё не кончился. */
+    /** Все занятия по календарю уже прошли — во ВСЕХ потоках. */
+    public function isFinished(): bool
+    {
+        if (! $this->hasCalendar()) {
+            return false;
+        }
+
+        return $this->streams()->every(
+            fn (Collection $s) => $this->pastIn($s) === $s->count()
+        );
+    }
+
+    /** Хотя бы один поток начался и ещё не кончился. */
     public function isUnderway(): bool
     {
-        return $this->hasCalendar() && $this->past() > 0 && $this->remaining() > 0;
+        if (! $this->hasCalendar()) {
+            return false;
+        }
+
+        return $this->streams()->contains(
+            fn (Collection $s) => $this->pastIn($s) > 0 && $this->pastIn($s) < $s->count()
+        );
     }
 
     /** Ближайшее (или идущее сейчас) занятие. */
@@ -181,18 +227,46 @@ final class CourseCadence
             return null;
         }
 
+        if (! $this->hasMultipleStreams()) {
+            return $this->slotOf($this->sessions, long: true);
+        }
+
+        // Несколько потоков — короткой формой каждый: «вт 11:30 · сб 12:00».
+        $slots = $this->streams()
+            ->map(fn (Collection $sessions) => $this->slotOf($sessions))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        return $slots->isEmpty() ? null : $slots->implode(' · ');
+    }
+
+    /**
+     * Слот одного набора занятий. `long` даёт «по вторникам в 11:30», иначе
+     * «вт 11:30». Больше трёх разных дней — это уже не слот, честнее промолчать
+     * и показать ближайшее занятие датой.
+     *
+     * @param  Collection<int, Schedule>  $sessions
+     */
+    private function slotOf(Collection $sessions, bool $long = false): ?string
+    {
+        if ($sessions->isEmpty()) {
+            return null;
+        }
+
         /** @var Collection<int, Collection<int, Schedule>> $byWeekday */
-        $byWeekday = $this->sessions->groupBy(fn (Schedule $s) => $s->start->dayOfWeekIso);
+        $byWeekday = $sessions->groupBy(fn (Schedule $s) => $s->start->dayOfWeekIso);
 
         if ($byWeekday->count() === 1) {
             $isoDay = (int) $byWeekday->keys()->first();
             $time = $this->modalTime($byWeekday->first());
 
-            return 'по '.self::WEEKDAYS_PLURAL[$isoDay].' в '.$time;
+            return $long
+                ? 'по '.self::WEEKDAYS_PLURAL[$isoDay].' в '.$time
+                : self::WEEKDAYS_SHORT[$isoDay].' '.$time;
         }
 
-        // 4+ разных дней — это уже не «слот», честнее промолчать и показать
-        // ближайшее занятие датой.
         if ($byWeekday->count() > 3) {
             return null;
         }
@@ -216,33 +290,84 @@ final class CourseCadence
             .$next->start->format('H:i');
     }
 
-    /** «осталось 2 занятия из 16» — честный прогресс вместо тишины. */
+    /**
+     * «осталось 2 занятия из 16» — честный прогресс вместо тишины.
+     *
+     * При НЕСКОЛЬКИХ потоках молчит: один общий остаток описывал бы студента,
+     * которого не существует (каждый ходит ровно в один поток). Поштучно потоки
+     * называет {@see streamLines()}.
+     */
     public function progressLabel(): ?string
     {
-        if (! $this->hasCalendar()) {
+        if (! $this->hasCalendar() || $this->hasMultipleStreams()) {
             return null;
         }
 
-        if ($this->isFinished()) {
-            return 'все '.$this->total().' '
-                .Plural::ru($this->total(), 'занятие прошло', 'занятия прошли', 'занятий прошли');
-        }
-
-        if ($this->past() === 0) {
-            return null; // курс ещё не начался — «осталось 16 из 16» ничего не сообщает
-        }
-
-        $remaining = $this->remaining();
-
-        return 'осталось '.$remaining.' '
-            .Plural::ru($remaining, 'занятие', 'занятия', 'занятий')
-            .' из '.$this->total();
+        return $this->progressIn($this->sessions);
     }
 
     /**
-     * Астрономические часы по календарю: сумма длительностей занятий.
-     * Нужны как честная замена ручному `courses.hours_count`, который у двух
-     * из трёх живых потоков просто не заполнен.
+     * Прогресс по каждому потоку отдельно: «вт 11:30 — осталось 2 из 16».
+     * Один поток — пустой список (для него есть progressLabel()).
+     *
+     * @return array<int, string>
+     */
+    public function streamLines(): array
+    {
+        if (! $this->hasMultipleStreams()) {
+            return [];
+        }
+
+        return $this->streams()
+            ->map(function (Collection $sessions) {
+                $slot = $this->slotOf($sessions);
+                $progress = $this->progressIn($sessions);
+
+                if ($slot === null) {
+                    return $progress;
+                }
+
+                return $progress === null ? $slot : $slot.' — '.$progress;
+            })
+            ->filter()
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    /** @param  Collection<int, Schedule>  $sessions */
+    private function progressIn(Collection $sessions): ?string
+    {
+        if ($sessions->isEmpty()) {
+            return null;
+        }
+
+        $total = $sessions->count();
+        $past = $this->pastIn($sessions);
+
+        if ($past === $total) {
+            return 'все '.$total.' '
+                .Plural::ru($total, 'занятие прошло', 'занятия прошли', 'занятий прошли');
+        }
+
+        if ($past === 0) {
+            return null; // поток ещё не начался — «осталось 16 из 16» ничего не сообщает
+        }
+
+        $remaining = $total - $past;
+
+        return 'осталось '.$remaining.' '
+            .Plural::ru($remaining, 'занятие', 'занятия', 'занятий')
+            .' из '.$total;
+    }
+
+    /**
+     * Астрономические часы по календарю. Нужны как честная замена ручному
+     * `courses.hours_count`, который у большинства живых потоков не заполнен.
+     *
+     * При нескольких потоках — часы ДЛИННЕЙШЕГО потока, а не сумма: студент
+     * проходит программу один раз, в своём потоке. Сумма давала «24 часа» у
+     * курса из 16 часовых занятий (H3115).
      */
     public function hours(): ?int
     {
@@ -250,11 +375,13 @@ final class CourseCadence
             return null;
         }
 
-        $minutes = $this->sessions->sum(
-            fn (Schedule $s) => $s->start->diffInMinutes($this->endOf($s))
+        $hours = (int) round(
+            (float) $this->streams()->map(
+                fn (Collection $sessions) => $sessions->sum(
+                    fn (Schedule $s) => $s->start->diffInMinutes($this->endOf($s))
+                )
+            )->max() / 60
         );
-
-        $hours = (int) round($minutes / 60);
 
         return $hours > 0 ? $hours : null;
     }
