@@ -146,6 +146,14 @@ Route::get('/', function () {
 // Витрина магазина курсов
 Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
 
+// Фильтры каталога словами в пути, без query string (H3xxx — /online?cat[0]=3
+// читался как плохой SEO-слаг). Строгий where() значит порядок регистрации
+// относительно /online/kursy/{slug} и т.п. не важен — совпадёт только
+// настоящий facet-путь. Парсинг/канонизация: App\Support\ShopCatalogUrl.
+Route::get('/online/{facets}', [ShopController::class, 'index'])
+    ->where('facets', '(kategoriya|format|uroven|prepodavatel|poisk)(/.+)*')
+    ->name('shop.index.facets');
+
 // Клубное членство (H2645): публичный лендинг + прайсинг. Флаг
 // features.club_membership проверяется в контроллере (404 до включения):
 // страница не может жить раньше, чем контур H2644 реально выдаёт доступ
