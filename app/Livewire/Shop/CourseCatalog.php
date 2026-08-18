@@ -10,6 +10,7 @@ use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Services\Membership\PrivateArchiveEligibility;
+use App\Support\CourseCadence;
 use App\Support\FlagshipExperiments;
 use App\Support\ShopCatalogUrl;
 use Illuminate\Contracts\View\View;
@@ -231,8 +232,13 @@ class CourseCatalog extends Component
             }
         }
 
+        // Ритм живых потоков (день/время/сколько осталось) — из расписания.
+        // Считаем ОДНИМ проходом только по live-курсам: у записей календаря нет.
+        $cadenceByCourse = CourseCadence::forMany($courses->where('format', 'live')->values());
+
         return view('livewire.shop.course-catalog', [
             'courses' => $courses,
+            'cadenceByCourse' => $cadenceByCourse,
             'totalCount' => $totalCount,
             'sectionTotals' => $sectionTotals,
             'purchasedByCourse' => $purchasedByCourse,

@@ -346,6 +346,7 @@
                                 :deposit="$deposit"
                                 :categoryIds="$categoryIds"
                                 :nextStep="$nextStepByCourse[$course->id] ?? []"
+                                :cadence="$cadenceByCourse[$course->id] ?? null"
                                 :eager="$loop->index < 4"
                                 wire:key="course-{{ $course->id }}" />
                         @endforeach

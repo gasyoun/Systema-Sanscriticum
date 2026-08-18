@@ -1,6 +1,6 @@
 # Архитектура: взаимозачёт и групповые проверяющие
 
-_Created: 27-07-2026 · Last updated: 27-07-2026_
+_Created: 27-07-2026 · Last updated: 18-08-2026_
 
 Слой «как устроено» для [PLAN_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS_2026H2.md).
 
@@ -72,6 +72,8 @@ _Created: 27-07-2026 · Last updated: 27-07-2026_
 - **проверяющие группы** с `notify = true` — колокольчик в админке, письмо (`HomeworkSubmittedMail`), Telegram при наличии привязки.
 
 Дайджест — команда `homework:reviewer-digest`, понедельник 09:00, тот же слот, что `finance:kpi-digest`: что сдано за неделю, что проверил проверяющий, что до сих пор ждёт. Каналы, включение и время — в `config/homework.php`, не в коде команды.
+
+**Доставка уведомления не зависит от сборки PDF (H3095, 18-08-2026).** До 18-08-2026 `notifyTeacher()` стоял в `recordSubmission()` **за** синхронной сборкой `combined-images.pdf`, и фатальная ошибка сборки (OOM, `try/catch` её не ловит) уносила уведомление с собой — работа сохранялась, проверяющий о ней не узнавал. Теперь сборка идёт отдельной job'ой, а флаг вложения в `HomeworkSubmittedMail` считается лениво на воркере. Где этот раздел и решение разойдутся — **выигрывает решение**: [DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DECISION_HOMEWORK_IMAGES_PDF_OFF_REQUEST_PATH_2026.md).
 
 ### Включение «только для неё»
 
