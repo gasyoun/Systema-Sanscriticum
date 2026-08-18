@@ -152,8 +152,8 @@
     @if($daysLeft !== null)
         <div class="absolute top-6 lg:top-14 right-4 lg:right-[440px] xl:right-[480px] z-30 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-sm border border-brand/20"
              style="box-shadow: 0 4px 16px rgba(232,92,36,.12);">
+            {{-- H3022: точка статична — пульсация была театром срочности (постановление D4). --}}
             <span class="relative flex h-2 w-2 shrink-0">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-60"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-brand"></span>
             </span>
             <span class="text-[11px] md:text-xs font-extrabold uppercase tracking-wider text-brand whitespace-nowrap">

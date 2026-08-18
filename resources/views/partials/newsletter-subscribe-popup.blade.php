@@ -14,10 +14,6 @@
 --}}
 @if (config('features.newsletter_subscribe'))
     @php
-        // 5 000 — публичная цифра с витрины (карточка вебинара «…5 000 учеников»).
-        // trust.graduates_count перекрывает, если задан честный env.
-        $studentsCount = config('trust.graduates_count') ?: 5000;
-        $studentsLabel = number_format((int) $studentsCount, 0, '.', ' ').'+';
         $justSubscribed = (bool) session('newsletter_subscribed');
         $hasFormErrors = $errors->has('email') || $errors->has('is_promo_agreed');
         $isSubscriber = auth()->check() && method_exists(auth()->user(), 'isNewsletterSubscriber')
@@ -192,8 +188,8 @@
                 @else
                     <div class="nsp-title">Новости санскрита</div>
                     <p class="nsp-blurb">
-                        Присоединяйтесь к <strong>{{ $studentsLabel }} русскоязычным студентам санскрита</strong> —
-                        анонсы курсов, открытые занятия и бесплатные материалы.
+                        Анонсы курсов, открытые занятия и бесплатные материалы — на почту.
+                        <strong>Отписка в один клик.</strong>
                     </p>
 
                     @error('email')
