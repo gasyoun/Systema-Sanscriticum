@@ -1,6 +1,6 @@
 # Laravel Dusk локально на Windows
 
-_Created: 10-08-2026 · Last updated: 13-08-2026_
+_Created: 10-08-2026 · Last updated: 18-08-2026_
 
 Как запустить браузерные тесты ([`tests/Browser/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tests/Browser)) на рабочей машине под Windows. Заведено в H2532; проверено на этой машине 10-08-2026.
 
@@ -122,7 +122,13 @@ php -d max_execution_time=0 -d memory_limit=1024M ^
 php artisan dusk                                             # вся папка tests/Browser
 php artisan dusk tests/Browser/SmokeTest.php                 # харнес жив
 php artisan dusk tests/Browser/TeacherGuideScreenshotsTest.php  # кадры руководства
+php artisan dusk tests/Browser/VisualDcsLearnerEvidenceTest.php # H2869: кадры+аудит VisualDCS
+php artisan dusk tests/Browser/VisualDcsReducedMotionTest.php   # H2869: reduced-motion ветка
 ```
+
+Для пары VisualDCS-тестов нужны `VISUALDCS_VERB/NOMINAL/PASSAGE=true` в
+`.env.dusk.local` (только dusk-окружение; при выключенных флагах тесты
+скипаются с подсказкой).
 
 `Warning: TTY mode is not supported on Windows platform.` — ожидаемый шум, не ошибка.
 

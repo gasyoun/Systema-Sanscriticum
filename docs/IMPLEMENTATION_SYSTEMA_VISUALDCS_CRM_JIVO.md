@@ -1,6 +1,6 @@
 # IMPLEMENTATION — Systema learner/CRM/Jivo sequence
 
-_Created: 08-08-2026 · Last updated: 14-08-2026_
+_Created: 08-08-2026 · Last updated: 18-08-2026_
 
 Parent: [PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VISUALDCS_CRM_JIVO_2026H2.md).
 
@@ -19,7 +19,9 @@ Parent: [PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PL
 7. Add progress resume, score/completion, duplicate retry handling and cabinet continue-learning
    links. No person-level export.
 8. Browser-verify complete+sparse fixtures at 1440px and 390px; fix keyboard/focus/contrast/reduced
-   motion/overflow before enabling any flag.
+   motion/overflow before enabling any flag. ✅ H2869 (18-08-2026) — Dusk evidence suite + 18
+   committed frames + contrast fixes; see
+   [VISUALDCS_LEARNER_CONTACT_SHEET_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VISUALDCS_LEARNER_CONTACT_SHEET_2026.md).
 9. Promote all three surfaces in one release window but flip/rollback flags independently. Save the
    baseline and schedule 7/14/30-day reports.
 
