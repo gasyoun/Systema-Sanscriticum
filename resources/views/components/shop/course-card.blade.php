@@ -117,8 +117,8 @@
                         @php $catActive = in_array($cat->id, $categoryIds, true); @endphp
                         {{-- Клик по тегу фильтрует каталог по этой категории (ловит родительский Livewire-компонент) --}}
                         {{-- Активный тег (категория уже в фильтре) — заливка цветом, иначе полупрозрачный фон --}}
-                        <button type="button"
-                                wire:click.stop="toggleCategory({{ $cat->id }})"
+                        <a href="{{ route('shop.index.facets', ['facets' => 'kategoriya/'.$cat->slug]) }}"
+                                wire:click.stop.prevent="toggleCategory({{ $cat->id }})"
                                 title="{{ $catActive ? 'Убрать фильтр по теме' : 'Показать курсы темы' }} «{{ $cat->name }}»"
                                 @class([
                                     'text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded cursor-pointer transition-opacity hover:opacity-75',
@@ -133,7 +133,7 @@
                                     ])
                                 @endif>
                             {{ $cat->name }}
-                        </button>
+                        </a>
                     @endforeach
                 </div>
             @endif
