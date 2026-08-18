@@ -276,9 +276,13 @@ class Lesson extends Model
             return $query->whereRaw('1 = 0');
         }
 
+        $allowMissing = (bool) config('homework.auto_open.open_without_textbook_lesson', true);
+
         return $query
             ->whereHas('course', fn (Builder $c) => $c->whereIn('slug', $slugs))
-            ->whereIn('textbook_lesson', $textbookLessons)
+            ->where(fn (Builder $q) => $q
+                ->whereIn('textbook_lesson', $textbookLessons)
+                ->when($allowMissing, fn (Builder $qq) => $qq->orWhereNull('textbook_lesson')))
             ->where('homework_enabled', false)
             ->whereNull('homework_auto_opened_at')
             ->whereNotNull('homework_opens_at')

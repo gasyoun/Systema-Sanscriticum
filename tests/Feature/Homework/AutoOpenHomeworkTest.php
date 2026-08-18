@@ -12,6 +12,7 @@ use App\Services\HomeworkAutoOpener;
 use App\Services\KocherginaExerciseSource;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -372,6 +373,116 @@ class AutoOpenHomeworkTest extends TestCase
 
         // D11: бэкфилл открывает молча — пуш задним числом не шлётся.
         Http::assertNothingSent();
+    }
+
+    // ===================================================================
+    // A15 — пустой textbook_lesson не глушит приём (H3068)
+    // ===================================================================
+
+    /**
+     * Гр.60/гр.61 встали 28.07.26: у уроков #3+ никто не проставил
+     * `textbook_lesson`, урок выпадал из выборки, приём не открывался, и
+     * студенты три недели спрашивали куратора «куда прикреплять ДЗ».
+     * Отсутствие маппинга теперь ухудшает ТЕКСТ задания, а не отменяет приём.
+     */
+    /** @test */
+    public function lesson_without_textbook_lesson_still_opens(): void
+    {
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true])]);
+
+        $course = Course::factory()->create();
+        config(['homework.auto_open.course_slugs' => [$course->slug]]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
+        $lesson = $this->lessonWithRecording($course, ['textbook_lesson' => null]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $fresh = $lesson->fresh();
+        $this->assertTrue((bool) $fresh->homework_enabled, 'Урок без textbook_lesson не открылся.');
+        $this->assertNotNull($fresh->homework_auto_opened_at);
+        $this->assertSame(
+            'Выполните все упражнения к этому занятию учебника Кочергиной.',
+            $fresh->homework_prompt,
+            'Ожидалась отсылочная формулировка fallbackPrompt(null).',
+        );
+    }
+
+    /** Выключатель возвращает прежнее поведение — жёсткое требование маппинга. */
+    /** @test */
+    public function missing_textbook_lesson_can_still_be_required(): void
+    {
+        config(['homework.auto_open.open_without_textbook_lesson' => false]);
+
+        $course = Course::factory()->create();
+        config(['homework.auto_open.course_slugs' => [$course->slug]]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
+        $lesson = $this->lessonWithRecording($course, ['textbook_lesson' => null]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $this->assertFalse((bool) $lesson->fresh()->homework_enabled);
+    }
+
+    /** Занятие вне списка (6) по-прежнему вне охвата — NULL ≠ «любой номер». */
+    /** @test */
+    public function out_of_range_textbook_lesson_is_still_excluded(): void
+    {
+        $course = Course::factory()->create();
+        config(['homework.auto_open.course_slugs' => [$course->slug]]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-28 06:00', 'Europe/Moscow'));
+        $lesson = $this->lessonWithRecording($course, ['textbook_lesson' => 6]);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        $this->assertFalse((bool) $lesson->fresh()->homework_enabled);
+    }
+
+    // ===================================================================
+    // A16 — пост в чат группы по треку Кочергиной (H3068)
+    // ===================================================================
+
+    /**
+     * Вопрос «куда прикреплять ДЗ» задают в чате группы — туда же должна
+     * приходить ссылка на урок. До 18-08-2026 пост уходил только по
+     * generic-треку.
+     */
+    /** @test */
+    public function opening_posts_the_invite_into_the_group_chat(): void
+    {
+        // Свежая фабрика: `Http::fake()` без аргументов в setUp() ставит
+        // catch-all, который выигрывает у любого более позднего стаба и вернул
+        // бы пустое тело — sendHtml не увидел бы `result.message_id` и якорь
+        // не записался бы по причине харнесса, а не продукта.
+        Http::swap(new HttpFactory);
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 4242]])]);
+
+        config([
+            'homework.tg_tag.enabled' => true,
+            'homework.tg_tag.post_open_invite' => true,
+        ]);
+
+        [$course, $lesson] = $this->scopedLessonWithRecording();
+
+        Group::find($lesson->group_id)->update(['telegram_chat_id' => '-1001234567890']);
+
+        Carbon::setTestNow(Carbon::parse('2026-07-29 09:30', 'Europe/Moscow'));
+        $this->artisan('homework:auto-open')->assertSuccessful();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'sendMessage')
+            && ($request['chat_id'] ?? null) === '-1001234567890'
+            && str_contains((string) ($request['text'] ?? ''), 'Приём ДЗ открыт'));
+
+        $this->assertDatabaseHas('lesson_telegram_hooks', [
+            'lesson_id' => $lesson->id,
+            'telegram_chat_id' => '-1001234567890',
+            'purpose' => 'open_invite',
+        ]);
     }
 
     // ===================================================================
