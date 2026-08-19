@@ -623,11 +623,26 @@ final class ServerGuardsAuditor
 
         $expected = $this->spec->bytes('TMP_TMPFS_SIZE');
         if (preg_match('/(?:^|,)size=(\d+)([kKmMgG]?)(?:,|$)/', $options, $m) !== 1) {
+            // Кто монтировал — решает, кому этот потолок ставить. uid= с
+            // ненулевым значением означает tmpfs, созданный ВНЕ нашего
+            // пространства имён (idmap LXC: хост монтирует с uid=100000).
+            // Изнутри такой mount не перемонтировать вовсе — ядро заново
+            // разбирает сохранённый uid и падает на «Invalid uid '100000'»,
+            // и ни drop-in к tmp.mount, ни строка в /etc/fstab этого не
+            // меняют: обе поверхности принадлежат systemd контейнера, а
+            // монтирует не он. Замерено на .92 19-08-2026 (H3181).
+            $foreign = preg_match('/(?:^|,)uid=([1-9]\d*)(?:,|$)/', $options) === 1;
+
             return [GuardFinding::critical(
                 'tmpfs-cap',
                 '/tmp смонтирован tmpfs БЕЗ явного size= — это потолок в половину памяти ХОСТА, '
                 .'то есть заявка на RAM без ограничения (19-08-2026: 7.6 ГиБ скретча съели своп). '
-                .'Вернуть: scripts/server_guards_apply.sh',
+                .($foreign
+                    ? 'Монтировал НЕ контейнер (в опциях чужой uid=): изнутри не чинится — '
+                      .'потолок ставится на стороне хоста Proxmox, это задача Артёма (P5 плана '
+                      .'PLAN_SYSTEMA_SERVER_UPTIME_GUARDRAILS_2026H2.md). '
+                      .'scripts/server_guards_apply.sh здесь бессилен, звать его незачем'
+                    : 'Вернуть: scripts/server_guards_apply.sh'),
             )];
         }
 

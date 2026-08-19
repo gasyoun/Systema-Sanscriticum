@@ -213,6 +213,7 @@ Nothing in this plan rebuilds an existing asset.
 | P2 | Confirm the alerting Telegram bot; `@testpodpiska12_bot` still reads as a test bot | MG | No — existing channel keeps working |
 | P3 | Host-side swap sizing review for `.91` (2 G against 8 G RAM is thin) | Artem | No |
 | P4 | A human-present window for Wave 4 (firewall) | MG | **Yes, for Wave 4 only** |
+| P5 | **`/tmp` tmpfs `size=` on the host side for both CTs** — measured 19-08-2026 (H3181): the tmpfs is mounted by the host outside the container's user namespace (`uid=100000`), so `remount` from inside dies on `Invalid uid`, and neither a `tmp.mount` drop-in nor `/etc/fstab` can reach it. The cap is a Proxmox-side setting | Artem (`@t3t3r1n`) | **No** — the aging rule and the `tmpfs-cap` alarm are in place; the cap itself is not |
 
 These land as rows in [Uprava/GTD_NEXT_ACTIONS.md](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md).
 

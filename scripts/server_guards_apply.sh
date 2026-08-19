@@ -336,6 +336,12 @@ else
     if touched 'tmp.mount.d'; then
       if mount -o "remount,size=${G[TMP_TMPFS_SIZE]}" /tmp 2>/dev/null; then
         ok "/tmp перемонтирован с size=${G[TMP_TMPFS_SIZE]} (drop-in вступит в силу и при следующей загрузке)"
+      elif findmnt -no OPTIONS /tmp 2>/dev/null | grep -qE '(^|,)uid=[1-9]'; then
+        # Замер .92 19-08-2026: tmpfs смонтирован ХОСТОМ вне пространства имён
+        # контейнера (idmap LXC, uid=100000). remount изнутри падает на
+        # «Invalid uid», и ни этот drop-in, ни /etc/fstab делу не помогут —
+        # обещать «вступит в силу после перезагрузки» здесь было бы неправдой.
+        warn "/tmp смонтирован ХОСТОМ (в опциях чужой uid=) — изнутри потолок не ставится ВООБЩЕ, ни remount'ом, ни после перезагрузки. Это сторона Proxmox: P5 плана, задача Артёма. Подробности: docs/server-resource-guards.md §10.1"
       else
         warn "/tmp не перемонтировался — потолок вступит в силу после перезагрузки. Проверить: findmnt -no OPTIONS /tmp"
       fi
