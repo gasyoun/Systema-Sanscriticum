@@ -597,8 +597,8 @@ git diff origin/main -- <грязный-файл>    # пусто → безоп
 # если пусто (dirty == origin/main):
 rm -v storage/auto_deploy.disabled
 bash deploy.sh
-sudo -u www-data php artisan guards:verify
-sudo -u www-data php artisan cabinet:probe
+sudo -u www-data env HOME=/tmp php artisan guards:verify
+sudo -u www-data env HOME=/tmp php artisan cabinet:probe
 # если НЕ пусто: fuse НЕ снимать вслепую — сначала PR уникального hotfix
 # или stash/checkout, потом deploy
 ```
@@ -682,7 +682,7 @@ cat /var/www/html/storage/framework/auto-deploy-retries              # скол�
 > ```sh
 > cd /var/www/html && bash deploy.sh           # код доехал; exit 0 при drift — ОЖИДАЕМО
 > bash scripts/server_guards_apply.sh          # ставит новый managed-файл
-> sudo -u www-data php artisan guards:verify   # «все проверки пройдены»
+> sudo -u www-data env HOME=/tmp php artisan guards:verify   # «все проверки пройдены»
 > ```
 >
 > `ops:soft-remediate` **не** предлагает снять fuse, если в причине есть
@@ -833,8 +833,20 @@ cat /proc/$(pgrep -f 'MadelineProto worker')/cgroup     # НЕ cron.service
 ls /proc/$(pgrep -f 'MadelineProto worker')/fd | wc -l  # должно быть ~120, не тысячи
 cat /sys/fs/cgroup/system.slice/cron.service/memory.events   # high не растёт
 journalctl -u systema-madeline-daemon -n 50
-sudo -u www-data php /var/www/html/artisan guards:verify
+sudo -u www-data env HOME=/tmp php /var/www/html/artisan guards:verify
 ```
+
+> **`env HOME=/tmp` здесь обязателен — без него проверка врёт КРАСНЫМ.**
+> `sudo -u www-data` оставляет `HOME=/var/www`, и в таком окружении
+> `Process::run()` внутри `ShellSystemInspector` не запускается вовсе: каждый
+> `systemctl` и `crontab` возвращает null, а `guards:verify` печатает 14
+> «пропавших предохранителей», включая «crontab www-data пуст» и «cron не
+> active» — на совершенно здоровой машине. Настоящий крон эту ловушку обходит,
+> потому что `HOME=/tmp` стоит первой строкой в
+> [`cron/app-user.crontab`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/cron/app-user.crontab);
+> руками про это забывают. Поймано 19-08-2026 (H3121): красный вывод сначала
+> приняли за настоящую поломку прода. Проверка от root (`php artisan
+> guards:verify` в `/var/www/html`) достоверна всегда.
 
 Кто держит замок планировщика, если `schedule.log` снова полон `SKIP`:
 
