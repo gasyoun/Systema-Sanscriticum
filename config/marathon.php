@@ -252,10 +252,56 @@ return [
             ],
 
             // H445 Phase 4 (H546) — Day-2 mantra reading + curator voice
-            // review, blocked on one MG @DECIDE (which mantra to use). Own
-            // future phase.
-            // 'day2_message' => '...',
-            // 'day2_quiz' => ['steps' => [...]],
+            // review. Mantra chosen by MG (@DECIDE resolved 19-08-2026): a
+            // well-known purification śloka (Garuḍa Purāṇa tradition,
+            // Viṣṇu-smaraṇa) — a small, memorable, and widely-taught first
+            // line, matching H445 §1's "reading a real mantra/line" intent.
+            // `MarathonController::day()` reads `day2_mantra` for the deva
+            // cohort's Day 2 (in place of the tap-choice `day2_quiz` the
+            // `zero` cohort uses — see resources/views/marathon/day2.blade.php).
+            //
+            // No rights-clear reference AUDIO recording exists yet (H546 §1's
+            // second @DECIDE axis, still open) — this MVP ships the written
+            // word-by-word breakdown only (IAST carries the exact
+            // pronunciation: macron = long vowel, underdot = retroflex,
+            // ḥ = visarga, a soft aspirated echo of the vowel). A reference
+            // recording is a follow-up, not a blocker for this phase.
+            'day2_message' => 'День 2. Прочитайте мантру на деванагари 🕉️'."\n\n"
+                .'Разберём строку по словам — и вы прочитаете её вслух, голосовым '
+                .'сообщением сюда же, в бота @samskrte.'."\n\n"
+                .'{link}',
+
+            'day2_mantra' => [
+                'devanagari' => 'अपवित्रः पवित्रो वा सर्वावस्थां गतोऽपि वा ।'."\n"
+                    .'यः स्मरेत् पुण्डरीकाक्षं स बाह्याभ्यन्तरश्शुचिः ॥',
+                'iast' => "apavitraḥ pavitro vā sarvāvasthāṃ gato'pi vā ।\n"
+                    .'yaḥ smaret puṇḍarīkākṣaṃ sa bāhyābhyantaraśśuciḥ ॥',
+                'translation' => 'Нечист ли [человек] или чист, или прошёл через любое '
+                    .'состояние — тот, кто вспомнит лотосоокого (Виṣṇу), становится '
+                    .'чист и внешне, и внутренне.',
+                'source' => 'Пураническая шлока памятования Вишну (традиция Гаруда-пураны) — '
+                    .'один из самых известных и часто цитируемых очистительных стихов, '
+                    .'общественное достояние.',
+                // Word-by-word, in reading order. `word` is IAST as it appears in
+                // the line (post-sandhi where relevant); `gloss` is the RU sense.
+                'words' => [
+                    ['word' => 'apavitraḥ', 'gloss' => 'нечистый'],
+                    ['word' => 'pavitro', 'gloss' => 'чистый (перед vā)'],
+                    ['word' => 'vā', 'gloss' => 'или'],
+                    ['word' => 'sarvāvasthāṃ', 'gloss' => 'во всяком состоянии'],
+                    ['word' => "gato'pi", 'gloss' => 'даже пребывающий (в нём)'],
+                    ['word' => 'vā', 'gloss' => 'или'],
+                    ['word' => 'yaḥ', 'gloss' => 'кто'],
+                    ['word' => 'smaret', 'gloss' => 'вспомнит, будет памятовать'],
+                    ['word' => 'puṇḍarīkākṣaṃ', 'gloss' => 'лотосоокого (Вишну)'],
+                    ['word' => 'sa', 'gloss' => 'тот'],
+                    ['word' => 'bāhyābhyantaraśśuciḥ', 'gloss' => 'чист внешне и внутренне'],
+                ],
+                'pronunciation_note' => 'Черта над гласной (ā, ī, ū) — долгий звук, вдвое дольше '
+                    .'краткого. Точка под согласной (ṇ, ṭ, ḍ, ṣ) — ретрофлексный звук, язык '
+                    .'загнут к нёбу. ḥ (висарга) в конце слова — лёгкое эхо предшествующей '
+                    .'гласной с придыханием: aḥ звучит примерно как «ах(х)».',
+            ],
 
             // H445 Phase 2 — level-quiz, layered ON TOP OF the intent-quiz
             // (quiz_goal), read via MarathonController::levelQuiz(). Content

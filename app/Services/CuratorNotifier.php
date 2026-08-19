@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Filament\Pages\Debtors;
+use App\Filament\Pages\MarathonMantraReviews;
 use App\Filament\Resources\CourseResource;
 use App\Filament\Resources\GroupResource;
 use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
 use App\Models\Group;
+use App\Models\MarathonEnrollment;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\Tariff;
@@ -366,6 +368,32 @@ class CuratorNotifier
         }
         $lines[] = '';
         $lines[] = '👉 <a href="'.$url.'">Открыть курс (вкладка «Вехи сертификатов»)</a>';
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * H445 Phase 4 (H546) — paid-track marathon enrollee sent their Day-2
+     * mantra-reading voice note; queue it for a curator to listen + note.
+     * Free track is self-assessed and never reaches this notifier.
+     */
+    public function marathonMantraVoiceReceived(MarathonEnrollment $enrollment): void
+    {
+        $lead = $enrollment->lead;
+
+        $lines = [
+            '🎙️ <b>Голосовое — марафон, День 2 (мантра)</b>',
+            '',
+            'Студент: <b>'.e((string) ($lead?->name ?? '#'.$enrollment->lead_id)).'</b>',
+        ];
+
+        try {
+            $url = MarathonMantraReviews::getUrl();
+        } catch (\Throwable) {
+            $url = url('/admin');
+        }
+        $lines[] = '';
+        $lines[] = '👉 <a href="'.$url.'">Открыть очередь на проверку</a>';
 
         $this->dispatchToCurators($this->join($lines));
     }

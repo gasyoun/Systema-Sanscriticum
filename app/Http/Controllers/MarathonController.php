@@ -319,10 +319,20 @@ class MarathonController extends Controller
         // H445 Phase 1 — per-cohort content (falls back to the shared `zero`
         // default when the enrollment's cohort has no day{N}_quiz override).
         $quiz = $enrollment->content("day{$day}_quiz");
-        abort_if($quiz === null, 404);
+
+        // H445 Phase 4 (H546) — `deva` cohort's Day 2 is mantra reading, not
+        // the `zero` cohort's tap-choice grammar quiz. `$quiz` still resolves
+        // (falls back to the shared default) but is unused by the view once
+        // `$mantra` is present — see resources/views/marathon/day2.blade.php.
+        $mantra = ($day === 2 && $enrollment->isDevaCohort())
+            ? $enrollment->content('day2_mantra')
+            : null;
+
+        abort_if($quiz === null && $mantra === null, 404);
 
         return view("marathon.day{$day}", [
             'quiz' => $quiz,
+            'mantra' => $mantra,
             'day' => $day,
             'token' => $token,
             'enrollment' => $enrollment,
