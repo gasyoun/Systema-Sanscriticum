@@ -40,7 +40,7 @@ class NotifyFormingShortfall extends Command
             ->whereNull('recruitment_notified_at')
             ->get()
             ->filter(fn (Group $g): bool => $g->effectiveStartDate()?->isSameDay(today()->addDays($leadDays)) ?? false)
-            ->filter(fn (Group $g): bool => $g->min_size !== null && $g->activeUsers()->count() < $g->min_size);
+            ->filter(fn (Group $g): bool => $g->min_size !== null && $g->membersTowardMinSize() < $g->min_size);
 
         $recipients = 0;
         foreach ($groups as $group) {

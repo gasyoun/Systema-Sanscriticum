@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -87,10 +88,62 @@ class Group extends Model
         return $this->start_date_override ?? $this->planned_start_date;
     }
 
-    /** Группа набрана: min_size не задан (не проверяем размер) или активный состав его достиг. */
+    /** Статус курсового участия, означающий заявленное льготное место. */
+    public const STATUS_PRIVILEGED = 'Льготник';
+
+    /** Группа набрана: min_size не задан (не проверяем размер) или порог достигнут. */
     public function isRecruited(): bool
     {
-        return $this->min_size === null || $this->activeUsers()->count() >= $this->min_size;
+        return $this->min_size === null || $this->membersTowardMinSize() >= $this->min_size;
+    }
+
+    /**
+     * Сколько участников считается в порог набора `min_size` (H3118).
+     *
+     * Порог — про платные места, а `activeUsers()` считает вообще всех, кто не
+     * помечен вышедшим. Рулинг MG 19-08-2026: **льготников считать, полностью
+     * бесплатных — нет, тут и везде.**
+     *
+     * Эти две категории в данных различимы. «Льготник» — заявленный статус
+     * льготного места (97 человек на 19-08-2026, 95 из них с нулевой оплатой):
+     * место занято осознанно, оно в порог входит. А «Записался» с нулевой
+     * оплатой — необъявленный бесплатник (23 человека): такие есть и у Уши на
+     * субботнем потоке, и порог они завышали.
+     *
+     * Считаем участника, если он льготник ИЛИ хоть раз заплатил по курсу группы
+     * ненулевую сумму. Группа без курсов сравнивается по активному составу —
+     * сопоставлять не с чем, а молча отдавать ноль хуже.
+     */
+    public function membersTowardMinSize(): int
+    {
+        $courseIds = $this->courses()->pluck('courses.id')->all();
+
+        if ($courseIds === []) {
+            return $this->activeUsers()->count();
+        }
+
+        return $this->activeUsers()
+            ->where(function (Builder $q) use ($courseIds): void {
+                $q->whereExists(function ($sub) use ($courseIds): void {
+                    $sub->selectRaw('1')
+                        ->from('payments')
+                        ->whereColumn('payments.user_id', 'users.id')
+                        ->whereIn('payments.course_id', $courseIds)
+                        ->where('payments.status', 'paid')
+                        // «Доступ под обещание» — тоже строка paid на 0 ₽
+                        // (Payment::real()); денег за ней ещё нет, места она не
+                        // занимает. Заплатит — сразу попадёт в порог.
+                        ->where('payments.is_conditional', false)
+                        ->where('payments.amount', '>', 0);
+                })->orWhereExists(function ($sub) use ($courseIds): void {
+                    $sub->selectRaw('1')
+                        ->from('course_user')
+                        ->whereColumn('course_user.user_id', 'users.id')
+                        ->whereIn('course_user.course_id', $courseIds)
+                        ->where('course_user.status', self::STATUS_PRIVILEGED);
+                });
+            })
+            ->count();
     }
 
     public function statusLabel(): string
