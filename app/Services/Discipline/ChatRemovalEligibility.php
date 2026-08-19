@@ -102,10 +102,10 @@ class ChatRemovalEligibility
         foreach ($rows as $row) {
             $userId = (int) $row->id;
             $courseId = (int) $row->course_id;
-            $user = User::find($userId);
-            if (! $user instanceof User) {
-                continue;
-            }
+            // Корневая модель отчёта — User (joinSub с полями долга поверх),
+            // так что строка УЖЕ является User. Повторный User::find() здесь
+            // стоил бы одного лишнего запроса на каждого должника.
+            $user = $row;
 
             $refNumber = $row->ref_block_number !== null ? (int) $row->ref_block_number : null;
             $daysOverdue = $refNumber !== null
