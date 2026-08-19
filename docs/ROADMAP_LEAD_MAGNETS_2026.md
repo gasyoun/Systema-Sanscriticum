@@ -1,6 +1,8 @@
 # Roadmap: Interactive Lead-Magnet Fleet 2026 (Q3 2026 →)
 
-_Created: 07-07-2026 · Last updated: 10-07-2026_
+_Created: 07-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** флот ЛМ жив, но мост доходимости съехал ещё дальше, чем говорит заметка 10-07. Диагностический марафон стал живым продуктом с датой запуска 28-08-2026 и общим GO/NO-GO гейтом с клубным членством — [H2865](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2865-Opus_Systema-Sanscriticum_28aug-integrated-launch-gate_16.08.26.md). Читать §4 как «single dated Zoom class» нельзя ни в каком виде; этот блок — указатель.
 
 > **10-07-2026 update (Sonnet 5 `claude-sonnet-5`):** the §4 «FREE first Zoom webinar
 > class» доходимость-bridge step is now **superseded** by the 3-day diagnostic

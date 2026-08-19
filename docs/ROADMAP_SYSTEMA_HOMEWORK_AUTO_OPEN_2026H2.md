@@ -1,6 +1,8 @@
 # Дорожная карта: автооткрытие приёма домашних заданий, 2026H2
 
-_Created: 27-07-2026 · Last updated: 18-08-2026_
+_Created: 27-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** проверен и **честен без правок** — файл уже обновлён 18-08-2026 под H3078 (охват автооткрытия из allowlist в правило); текущий план программы — [PLAN_SYSTEMA_HOMEWORK_AUTO_OPEN_KOCHERGINA_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_HOMEWORK_AUTO_OPEN_KOCHERGINA_2026H2.md).
 
 Слой дорожной карты плана
 [PLAN_SYSTEMA_HOMEWORK_AUTO_OPEN_KOCHERGINA_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_HOMEWORK_AUTO_OPEN_KOCHERGINA_2026H2.md).

@@ -1,6 +1,8 @@
 # Roadmap — GetCourse-parity Wave 1 + the R20 second front (2026H2)
 
-_Created: 17-07-2026 · Last updated: 17-07-2026_
+_Created: 17-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** у программы есть текущий план — [PLAN_SYSTEMA_GETCOURSE_PARITY_WAVE1_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_GETCOURSE_PARITY_WAVE1_2026H2.md). Этот роадмап — исходная рамка волны 1; работать по плану, а не по нему.
 
 Sequencing doc of the plan set indexed by
 [PLAN_SYSTEMA_GETCOURSE_PARITY_WAVE1_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_GETCOURSE_PARITY_WAVE1_2026H2.md).

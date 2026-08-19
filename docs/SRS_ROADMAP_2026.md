@@ -1,6 +1,8 @@
 # SRS Flashcards Roadmap — "Anki for Sanskrit & Hindi"
 
-_Created: 05-07-2026 · Last updated: 24-07-2026_
+_Created: 05-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** продуктовое имя сменилось: пути `/srs` переписаны на `/koloda` (31-07-2026), а контентный конвейер живёт в [PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md). Читать этот файл как источник путей нельзя.
 
 A native, web-only spaced-repetition system built into the Systema-Sanscriticum student
 cabinet — decks, cards, an FSRS scheduler, and a review loop — with no dependency on the

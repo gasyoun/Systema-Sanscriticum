@@ -1,6 +1,8 @@
 # ROADMAP — PWG Arzamas-style material (Systema, 2026)
 
-_Created: 24-07-2026 · Last updated: 24-07-2026_
+_Created: 24-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** основная посылка **вычеркнута**: путь импорта арзамасовских лонгридов на samskrte.ru ретаргетирован на сайт самого «Арзамаса» (H1928, 30-07-2026) — материалы к нам не приезжают. Что осталось от программы, живёт в [PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md); визуальная часть входов доехала отдельно (H2379, 07-08-2026).
 
 Parent index: [PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PWG_ARZAMAS_MATERIAL_2026.md)
 

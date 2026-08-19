@@ -1,6 +1,8 @@
 # Роадмап: Система Праны (Gamification)
 
-_Created: 07-05-2026 · Last updated: 11-07-2026_
+_Created: 07-05-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** геймификация получила отдельный текущий план и код: [PLAN_SYSTEMA_SEASON_LIVE_SERVICE_SEPT_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SEASON_LIVE_SERVICE_SEPT_2026.md) (H2549) и отгруженный live-service сезонов (H2553, 10-08-2026: таблицы `seasons` / `season_leaderboard_cache` / `season_rewards`, лидерборд, decay floor). Этот роадмап — первоисточник идеи «Праны», а не текущий план работ; за сезонным контуром идти в PLAN.
 
 > Прана — не игровая монета. Это визуализация когнитивного усилия.  
 > Система должна ощущаться как монастырская дисциплина, а не мобильная игра.

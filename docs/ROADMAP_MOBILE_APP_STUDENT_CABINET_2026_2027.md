@@ -1,6 +1,8 @@
 # Mobile App (Student Cabinet) Roadmap — 2026–2027
 
-_Created: 12-07-2026 · Last updated: 12-07-2026_
+_Created: 12-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** волна 1 (Capacitor-обвязка) больше не «queued as H824» — каталог [mobile/](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/mobile) существует, лежит в CI и обслуживается: Capacitor 8.5.0, отдельный `npm audit --package-lock-only`, override `uuid` (H2712, 14-08-2026). Магазинных публикаций нет — волны 2+ не начинались.
 
 Android + iPhone app for the samskrte.ru student cabinet (личный кабинет). This
 roadmap is **decision-locked**: every fork below was ruled by MG in a two-round

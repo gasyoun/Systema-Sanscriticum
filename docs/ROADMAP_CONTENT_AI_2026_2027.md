@@ -1,6 +1,8 @@
 # Roadmap: Content-Ops Inbox & Weekly Content AI 2026–2027 (Q3 2026 → Q2 2027)
 
-_Created: 07-07-2026 · Last updated: 29-07-2026_
+_Created: 07-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** плана-двойника у программы нет, и роадмап остаётся действующим документом. Сдвинулось смежное: контентные поверхности ушли в VK/ORS-календарь ([PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md)), а инбокс поддержки — в support-автоматизацию. Собственный inbox контент-опса не начинался.
 
 > Narrow roadmap for the **Postmypost-inspired** slice of support/marketing: unifying public
 > social engagement (VK/Instagram comments, story replies) alongside the existing private

@@ -1,6 +1,8 @@
 # Дорожная карта: взаимозачёт и групповые проверяющие (2026 H2)
 
-_Created: 27-07-2026 · Last updated: 27-07-2026_
+_Created: 27-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** у программы есть текущий план — [PLAN_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS_2026H2.md). Волна A взаимозачёта (проверяющие по группам, H1729) отгружена 27-07-2026.
 
 Слой «что и в каком порядке» для [PLAN_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_TEACHER_STUDENT_SETTLEMENT_GROUP_REVIEWERS_2026H2.md).
 

@@ -1,6 +1,8 @@
 # ROADMAP — VK/ORS content calendar (2026 H2)
 
-_Created: 24-07-2026 · Last updated: 28-07-2026 (H1754 voice contract; earlier: H1566 Wave 3, H1567 Wave 4)_
+_Created: 24-07-2026 · Last updated: 19-08-2026 (H1754 voice contract; earlier: H1566 Wave 3, H1567 Wave 4)_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** у программы есть текущий план — [PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md).
 
 Index: [`docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_VK_ORS_CONTENT_CALENDAR_2026H2.md).
 

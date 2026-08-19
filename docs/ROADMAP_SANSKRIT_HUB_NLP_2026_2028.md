@@ -1,6 +1,8 @@
 # Roadmap — Sanskrit-HUB & Sanskrit NLP (2026 Q3 → 2028 Q2)
 
-_Created: 10-07-2026 · Last updated: 10-07-2026_
+_Created: 10-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** заголовок врал о собственном файле — «Last updated: 10-07-2026» стоял на файле, который правился 15-08-2026. Дата исправлена. Из пяти потоков сдвинулся ровно поток A: [/transliterate](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php) с каскадным лемматизатором (H1463, 23-07) и публичная обёртка [/sanskritorium](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php) (H2763, 15-08). Потоки B–E не двигались — документ остаётся планом, не отчётом.
 
 **Goal.** Make [samskrtam.ru/sanskritHUB](https://samskrtam.ru/) **the number-one place for
 Sanskrit on the internet** — a unified platform where a **learner-facing pedagogy track (A0→C2)**
