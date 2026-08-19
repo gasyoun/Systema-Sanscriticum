@@ -1,6 +1,8 @@
 # Roadmap: паритет с getcourse.ru — Q3 2026
 
-_Created: 09-07-2026 · Last updated: 29-07-2026_
+_Created: 09-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** верхнеуровневый паритет-роадмап; исполняемая часть — [PLAN_SYSTEMA_GETCOURSE_PARITY_WAVE1_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_GETCOURSE_PARITY_WAVE1_2026H2.md). Строки C2/C3/F6 уже прожаты 29-07 (менеджерская атрибуция продаж, прод-миграция в очереди); денежный контур с тех пор ушёл к fail-closed гейтам шести платных маршрутов (H2304, 06-08).
 
 > **Производственная спецификация programme-of-record — [GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GETCOURSE_PARITY_PRODUCTION_SPEC_2026.md)** (H1144, 18-07-2026, R29-эквивалент по R-1). Этот роадмап остается **анализом-of-record** (gap-анализ + 7 рулингов MG); спецификация — **вход для сборки волны 2**: состояния всех 14 тикетов, сверенные с деревом на `9b63861`, правило границы денежного ядра (§2), производственная глубина по GC-C1/GC-C2 (§3–§4) и 8 названных развилок (§7). Где §1 спецификации расходится с §3 ниже — **верна спецификация** (сверка с деревом свежее): GC-B2 ✅ done, **GC-B3 частично сдан** ([PR #549](https://github.com/gasyoun/Systema-Sanscriticum/pull/549) — не «Later», как в §4), GC-C1 частично (канбан+стадии сданы по `Lead`, сущности `Deal` нет).
 

@@ -1,6 +1,8 @@
 # ROADMAP — Teacher-load report + public schedule widget (Systema-Sanscriticum, 2026H2)
 
-_Created: 21-07-2026 · Last updated: 21-07-2026_
+_Created: 21-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** обе волны отгружены в день написания роадмапа: отчёт нагрузки преподавателя (H1426, страница Filament) и публичная лента расписания с встраиваемым iframe (H1427, волна 1b), 21-07-2026. Текущий план программы — [PLAN_SYSTEMA_TEACHER_LOAD_PUBLIC_SCHEDULE_WIDGET_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_TEACHER_LOAD_PUBLIC_SCHEDULE_WIDGET_2026H2.md). Роадмап оставлен как запись происхождения.
 
 Cover doc: [PLAN_SYSTEMA_TEACHER_LOAD_PUBLIC_SCHEDULE_WIDGET_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_TEACHER_LOAD_PUBLIC_SCHEDULE_WIDGET_2026H2.md).
 

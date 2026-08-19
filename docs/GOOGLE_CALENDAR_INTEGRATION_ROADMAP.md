@@ -1,6 +1,8 @@
 # Google Calendar Integration — Roadmap
 
-_Created: 04-07-2026 · Last updated: 04-07-2026_
+_Created: 04-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** документ честен и перепроверен. Фаза 1 (студенческая лента iCal/webcal, [CalendarFeedController](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/CalendarFeedController.php)) отгружена 04-07-2026 и в тексте уже отмечена; фазы 2–4 не начинались и по-прежнему заперты внешним гейтом — верификацией Google на чувствительный scope `calendar`. Это внешний шаг, не инженерный долг: пока его нет, документ не устаревает.
 
 Design blueprint for a real, two-way Google Calendar integration in
 Systema-Sanscriticum. Scoped by an MG decision interview on 04-07-2026; nothing

@@ -1,6 +1,8 @@
 # ROADMAP — Anton operational gaps (Systema-Sanscriticum, 2026 H2 → 2027 Q1)
 
-_Created: 22-07-2026 · Last updated: 22-07-2026_
+_Created: 22-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** у программы есть текущий план — [PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md). Роадмап — рамка, план — работа.
 
 Waves that close the three operational capabilities Anton has and we lack, in the order ruled
 in the interview (D9): **Email → Resume → Kinescope → Clips**. Cover, decisions, and the

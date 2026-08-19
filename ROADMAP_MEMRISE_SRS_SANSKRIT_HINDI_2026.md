@@ -1,6 +1,8 @@
 # ROADMAP — Memrise-clone vocabulary trainer in Systema (Sanskrit + Hindi)
 
-_Created: 11-07-2026 · Last updated: 31-07-2026_
+_Created: 11-07-2026 · Last updated: 19-08-2026_
+
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** тренажёр отгружен и переименован в «колоду»: колоды привязаны к урокам (H1991, 02-08-2026), приватная колода `my-hindi` из плейлистных дриллов (H2445, 14-08-2026), тап-токен «в колоду» из читалки (H2111, 05-08-2026). Текущий план — [PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md).
 
 Bring the full Memrise learning loop — spaced-repetition review, every test mode,
 gamification, and user mnemonics — into the [Systema-Sanscriticum](https://github.com/gasyoun/Systema-Sanscriticum)
