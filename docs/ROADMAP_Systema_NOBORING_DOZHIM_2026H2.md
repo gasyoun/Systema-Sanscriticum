@@ -1,6 +1,6 @@
 # ROADMAP — Noboring «дожим» adoption (Systema + samskrte)
 
-_Created: 01-08-2026 · Last updated: 07-08-2026_
+_Created: 01-08-2026 · Last updated: 19-08-2026_
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
@@ -173,8 +173,27 @@ Executor: Grok 4.5 (`grok-4.5`). Parent programme H-A: [H2058](https://github.co
 
 ### Wave 2 — NF Education next case
 
-- [ ] [Антикейс языковой школы](https://noboring-finance.ru/cases/antikejs-yazykovoj-shkoly-produkt-horoshij-deneg-net/) — unit economics / P&L product gaps
-- [ ] Optional siblings: дебиторка antikeis, «собственник из операционки», «тратим меньше / зарабатываем больше»
+- [x] [Антикейс языковой школы](https://noboring-finance.ru/cases/antikejs-yazykovoj-shkoly-produkt-horoshij-deneg-net/) — unit economics / P&L product gaps — **read + mapped 19-08-2026 (Sonnet 5 `claude-sonnet-5`, via `/drain`)**.
+
+  Case is a **cautionary anti-case, not a proven lever**: offline «Lingvistik» language school
+  (3 physical locations, kids+adults+summer camps) — the owner had every gap NF flags (CAC>LTV,
+  underpriced product, no churn tracking, fixed teacher comp regardless of enrollment, 2/3
+  locations unprofitable) diagnosed correctly and **never executed the fix**; the school closed.
+  No measured outcome to port — the transferable content is the gap checklist itself.
+
+  | NF gap flagged | Systema-Sanscriticum today | Verdict |
+  |---|---|---|
+  | CAC > LTV blindness | [`UnitEconomicsService::forBlock()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/UnitEconomicsService.php) takes CAC as a first-class param per course/block; [`UnitEconomics`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/UnitEconomics.php) + [`StudentUnitEconomics`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/StudentUnitEconomics.php) Filament pages | **Already covered** |
+  | No churn/retention tracking | [`RetentionChart`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Widgets/RetentionChart.php) widget (lesson-completion doходимость, admin/manager-visible); Rq4 study retention pipeline | **Already covered** |
+  | Teacher comp fixed regardless of enrollment | Default `salary_type` is **`percent`** (revenue-share, scales with enrollment automatically); `fix_per_student` variant also exists in [`TeacherSalaries`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/TeacherSalaries.php) — the fixed-regardless-of-size mode the case describes is not Systema's default | **Already avoided** |
+  | Unprofitable physical locations | N/A — Systema is online-only, no physical-location P&L to split | **Not applicable** |
+  | Pricing too low relative to quality/cost | No dedicated pricing-strategy review surface found; existing `trial_price` / tariff config is mechanical, not a margin-vs-quality audit | **Residual — business call, not engineering** |
+
+  **Net finding:** Systema's product surface already has instrumented answers for 3 of the 5
+  gaps this anti-case warns about (unlike «Lingvistik», which had none); the 4th doesn't apply
+  (no physical locations); the 5th (pricing strategy) is a pricing-policy question for a human,
+  not a missing engineering surface — no code gap to close here.
+- [ ] Optional siblings: дебиторка antikeis, «собственник из операционки», «тратим меньше / зарабатываем больше» — not yet read.
 
 ### Wave 3 — Connect front funnel (ORS sales Phase 1 leftovers)
 
