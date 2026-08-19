@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Learning;
 
 use App\Models\VisualDcsRelease;
+use App\Support\ParallelSafePath;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
@@ -303,7 +304,9 @@ final class VisualDcsReleaseImporter
     {
         $safe = preg_replace('/[^A-Za-z0-9._-]+/', '-', $releaseId) ?: 'release';
 
-        return storage_path('app/'.trim((string) config('visualdcs.storage_root', 'visualdcs'), '/').'/releases/'.$safe);
+        // Тот же класс гонки, что у GrammarLab: под --parallel воркеры
+        // импортируют разные фикстуры в ОДИН каталог релиза (H3156).
+        return ParallelSafePath::storage('app/'.trim((string) config('visualdcs.storage_root', 'visualdcs'), '/').'/releases/'.$safe);
     }
 
     private function absoluteDir(string $sourceDir): string
