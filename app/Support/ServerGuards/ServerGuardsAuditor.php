@@ -40,6 +40,9 @@ final class ServerGuardsAuditor
             $this->auditSwap(),
             $this->auditCronCgroupPressure(),
             $this->auditSchedulerStamp(),
+            $this->auditTmpfsCap(),
+            $this->auditFailedUnits(),
+            $this->auditBackupFreshness(),
         );
     }
 
@@ -576,6 +579,207 @@ final class ServerGuardsAuditor
         }
 
         return [];
+    }
+
+    /**
+     * У /tmp есть ЯВНЫЙ потолок (H-1, 19-08-2026).
+     *
+     * Чего эта проверка стоит. Стоковый tmp.mount просит size=50%, и внутри LXC
+     * ядро считает эти проценты от памяти ХОСТА: 126 ГиБ при 16 ГиБ у гостя.
+     * Запись в /tmp — это заявка на RAM, и ни один существовавший
+     * предохранитель её не видел: earlyoom смотрит на процессы, memwatch — на
+     * итог, cgroup-проверка — на бюджет крона. 7.6 ГиБ брошенного ASR-скретча
+     * держали своп на 5.5 ГиБ из 8.
+     *
+     * Fail-open: нет /proc/mounts, нет отдельного /tmp, /tmp не tmpfs — молчим.
+     * Проверка обязана быть бесплатной и на dev-машине, и в CI.
+     *
+     * @return list<GuardFinding>
+     */
+    private function auditTmpfsCap(): array
+    {
+        if (! $this->spec->has('TMP_TMPFS_SIZE')) {
+            return [];
+        }
+        $mounts = $this->sys->fileContents('/proc/mounts');
+        if ($mounts === null) {
+            return [];
+        }
+
+        $options = null;
+        foreach (preg_split('/\r\n|\n|\r/', $mounts) ?: [] as $line) {
+            $fields = preg_split('/\s+/', trim($line)) ?: [];
+            if (count($fields) < 4 || $fields[1] !== '/tmp') {
+                continue;
+            }
+            if ($fields[2] !== 'tmpfs') {
+                return []; // /tmp на диске — это не заявка на память.
+            }
+            $options = $fields[3];
+        }
+        if ($options === null) {
+            return []; // /tmp не отдельная точка монтирования — капать нечего.
+        }
+
+        $expected = $this->spec->bytes('TMP_TMPFS_SIZE');
+        if (preg_match('/(?:^|,)size=(\d+)([kKmMgG]?)(?:,|$)/', $options, $m) !== 1) {
+            return [GuardFinding::critical(
+                'tmpfs-cap',
+                '/tmp смонтирован tmpfs БЕЗ явного size= — это потолок в половину памяти ХОСТА, '
+                .'то есть заявка на RAM без ограничения (19-08-2026: 7.6 ГиБ скретча съели своп). '
+                .'Вернуть: scripts/server_guards_apply.sh',
+            )];
+        }
+
+        $actual = (int) $m[1] * match (strtolower($m[2])) {
+            'k' => 1024,
+            'm' => 1024 ** 2,
+            'g' => 1024 ** 3,
+            default => 1,
+        };
+        if ($actual > $expected) {
+            // Потолок есть, но выше нашего — кто-то поднял его сознательно
+            // (риск R1: законному конвейеру не хватило места). Сказать об этом
+            // надо, валить машину — нет.
+            return [GuardFinding::warning(
+                'tmpfs-cap',
+                '/tmp: size='.intdiv($actual, 1024 ** 2).' МиБ, в server_guards.conf '
+                .intdiv($expected, 1024 ** 2).' МиБ — потолок подняли мимо репозитория',
+            )];
+        }
+
+        return [];
+    }
+
+    /**
+     * Ни один юнит не лежит в failed (H-2, 19-08-2026).
+     *
+     * samudra-health-monitor.service падал каждые 15 минут с 14-08 по 19-08:
+     * `/opt/samudra/logs` принадлежал root, а юнит ходит от samudra. Монитор
+     * публичного поиска был мёртв пять суток, и сказать об этом было некому —
+     * `systemctl --failed` не смотрел никто.
+     *
+     * Warning, а не critical, сознательно: упавший юнит — это мёртвый сторож, а
+     * не обязательно мёртвый сайт, и разделение мягкого и жёсткого в
+     * docs/SERVER_SOFT_ALERT_PLAYBOOK.md существует ровно затем, чтобы
+     * «что-то не так» не читалось как «кабинет лежит».
+     *
+     * @return list<GuardFinding>
+     */
+    private function auditFailedUnits(): array
+    {
+        if (! $this->spec->has('FAILED_UNITS_ALLOWLIST')) {
+            return [];
+        }
+        $failed = $this->sys->failedUnits();
+        if ($failed === null) {
+            return [];
+        }
+
+        $allowed = $this->spec->csv('FAILED_UNITS_ALLOWLIST');
+        $findings = [];
+        foreach ($failed as $unit) {
+            if (in_array($unit, $allowed, true)) {
+                continue;
+            }
+            $findings[] = GuardFinding::warning(
+                'failed-units',
+                "{$unit} в состоянии failed — `systemctl status {$unit}` и `journalctl -u {$unit} -n 50`. "
+                .'Осознанно терпимый провал вносить в FAILED_UNITS_ALLOWLIST с причиной, а не удалять проверку',
+            );
+        }
+
+        return $findings;
+    }
+
+    /**
+     * У каждого назначения бэкапа есть СВЕЖИЙ и ПРАВДОПОДОБНЫЙ архив (H-3).
+     *
+     * Замер 19-08-2026, ради которого проверка и написана: `backup:monitor`
+     * называл yandex_disk ЗДОРОВЫМ, а лежали там два обрезка по 11.7 МиБ —
+     * остатки оборвавшихся загрузок 1.4-ГиБ архива (HTTP 413, затем «Empty
+     * reply from server»). Возраст сходился, содержимого не было. Поэтому
+     * проверок здесь две: возраст И размер. Возраст без размера — зелёная
+     * лампочка над пустым сейфом.
+     *
+     * Off-site строже локального: локальная копия делит судьбу с контейнером,
+     * который она защищает.
+     *
+     * @return list<GuardFinding>
+     */
+    private function auditBackupFreshness(): array
+    {
+        if (! $this->spec->has('BACKUP_MAX_AGE_DAYS')) {
+            return [];
+        }
+        $destinations = $this->sys->backupDestinations();
+        if ($destinations === null) {
+            return [];
+        }
+
+        $maxAgeDays = (int) $this->spec->get('BACKUP_MAX_AGE_DAYS');
+        $minBytes = $this->spec->has('BACKUP_MIN_ARCHIVE_MB')
+            ? (int) $this->spec->get('BACKUP_MIN_ARCHIVE_MB') * 1024 ** 2
+            : 0;
+        $offsite = $this->spec->has('BACKUP_OFFSITE_DISKS') ? $this->spec->csv('BACKUP_OFFSITE_DISKS') : [];
+        $requireOffsite = $this->spec->has('BACKUP_REQUIRE_OFFSITE')
+            && $this->spec->get('BACKUP_REQUIRE_OFFSITE') === '1';
+
+        $findings = [];
+        $liveOffsite = 0;
+
+        foreach ($destinations as $row) {
+            $disk = $row['disk'];
+            $isOffsite = in_array($disk, $offsite, true);
+            $severity = $isOffsite ? GuardFinding::CRITICAL : GuardFinding::WARNING;
+            $where = $isOffsite ? 'off-site' : 'локальный';
+
+            if (! $row['reachable']) {
+                $findings[] = new GuardFinding($severity, 'backup-fresh', "{$where} диск {$disk} недостижим — бэкап туда не доедет");
+
+                continue;
+            }
+            if ($row['newestAt'] === null) {
+                $findings[] = new GuardFinding($severity, 'backup-fresh', "на {$where} диске {$disk} нет ни одного архива");
+
+                continue;
+            }
+
+            $ageDays = intdiv(max(0, time() - $row['newestAt']), 86400);
+            $fresh = $maxAgeDays <= 0 || $ageDays <= $maxAgeDays;
+            if (! $fresh) {
+                $findings[] = new GuardFinding(
+                    $severity,
+                    'backup-fresh',
+                    "новейший архив на {$where} диске {$disk} старше {$maxAgeDays} суток ({$ageDays}) — "
+                    .'смотреть storage/logs на провал backup:run',
+                );
+            }
+
+            $bytes = $row['newestBytes'];
+            if ($minBytes > 0 && $bytes !== null && $bytes < $minBytes) {
+                $findings[] = new GuardFinding(
+                    $severity,
+                    'backup-fresh',
+                    "новейший архив на {$where} диске {$disk} — ".intdiv($bytes, 1024 ** 2).' МиБ при пороге '
+                    .intdiv($minBytes, 1024 ** 2).' МиБ: это почти наверняка ОБРЕЗОК оборвавшейся загрузки, '
+                    .'а не резервная копия. Дата у такого обрезка свежая, и backup:monitor называет его здоровым',
+                );
+            }
+
+            if ($isOffsite && $fresh && ($minBytes === 0 || $bytes === null || $bytes >= $minBytes)) {
+                $liveOffsite++;
+            }
+        }
+
+        if ($requireOffsite && $liveOffsite === 0) {
+            $findings[] = GuardFinding::critical(
+                'backup-fresh',
+                'нет ни одного живого off-site назначения — единственная копия делит судьбу с контейнером, который защищает',
+            );
+        }
+
+        return $findings;
     }
 
     private function normalize(string $text): string

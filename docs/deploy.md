@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 17-08-2026_
+_Created: 02-07-2026 · Last updated: 19-08-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -272,5 +272,100 @@ sudo bash deploy.sh                # прогонит тот же ритуал �
 
 Миграции назад не откатываются автоматически — при необходимости
 `php artisan migrate:rollback --step=N` руками, глядя на конкретные миграции.
+
+## Восстановление из резервной копии (H3181, 19-08-2026)
+
+Резервная копия, которую никто не разворачивал, — это гипотеза. Ниже путь,
+проверенный 19-08-2026 на архиве `2026-08-10-02-01-48.zip`.
+
+**Данные людей.** Дамп содержит `users`, `payments`, переписку — персональные
+данные учеников. Он не попадает ни в issue, ни в PR, ни на любую публичную
+поверхность, а рабочая копия уничтожается сразу после сверки
+(`~/.claude/rules/staff-instructions-live-in-the-cabinet.md`).
+
+### Шаг 1. Достать дамп, не разворачивая весь архив (на сервере)
+
+Архив весит 1.4 ГиБ, из них SQL — 91 МиБ. Распаковывать целиком незачем:
+
+```bash
+ssh root@193.232.229.92
+mkdir -p /root/restore-drill && cd /root/restore-drill
+unzip -o -j /var/www/html/storage/app/Laravel/<АРХИВ>.zip \
+      db-dumps/mysql-laravel.sql -d /root/restore-drill
+gzip -9 -f mysql-laravel.sql          # 91 МиБ → ~10 МиБ
+```
+
+### Шаг 2. Целостность — до всякого разворачивания
+
+Три проверки, каждая отвечает на свой вопрос, и все три read-only:
+
+```bash
+# а) архив не побился: CRC всех записей
+unzip -t /var/www/html/storage/app/Laravel/<АРХИВ>.zip | tail -3
+#    ждём: «No errors detected in compressed data»
+
+# б) дамп дописан до конца, а не оборван на середине.
+#    mariadb-dump пишет восстановление SET-переменных ТОЛЬКО в самом конце,
+#    поэтому наличие этого хвоста и есть доказательство завершённости.
+zcat mysql-laravel.sql.gz | tail -3
+#    ждём: /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+# в) сколько таблиц внутри
+zcat mysql-laravel.sql.gz | grep -c "^CREATE TABLE"
+```
+
+### Шаг 3. Строки в дампе против строк на живой базе
+
+Дамп пишется с ОДНИМ кортежем на строку (не `),(` в одну длинную строку), так
+что строки считаются построчно:
+
+```bash
+for t in users payments lessons; do
+  n=$(zcat mysql-laravel.sql.gz | sed -n "/^INSERT INTO \`$t\` VALUES/,/;\$/p" | grep -c "^(")
+  echo "$t: $n"
+done
+
+# живые значения, для сравнения
+cd /var/www/html && sudo -u www-data env HOME=/tmp php artisan tinker --execute="
+foreach ([\"users\",\"payments\",\"lessons\"] as \$t) { echo \$t.': '.DB::table(\$t)->count().PHP_EOL; }"
+```
+
+Замер 19-08-2026 (архив от 09-08, живая база — 19-08):
+
+| Таблица | В дампе | Живая | Разница за 10 суток |
+|---|---|---|---|
+| `users` | 1015 | 1021 | +6 |
+| `payments` | 9175 | 9234 | +59 |
+| `lessons` | 1698 | 1716 | +18 |
+
+Разница обязана быть **небольшой и положительной**. Ноль строк, полное
+совпадение с живой базой или отрицательная разница — повод остановиться и
+разобраться, а не разворачивать.
+
+### Шаг 4. Разворачивание в черновую базу — ТОЛЬКО на машине разработчика
+
+**Никогда на проде.** Прод-сервер MySQL не является площадкой для проверки
+бэкапов ни в каком виде, включая «отдельную базу рядом».
+
+```bash
+# на машине разработчика, куда дамп скачан
+scp root@193.232.229.92:/root/restore-drill/mysql-laravel.sql.gz .
+mysql -u root -e "DROP DATABASE IF EXISTS restore_drill; CREATE DATABASE restore_drill;"
+zcat mysql-laravel.sql.gz | mysql -u root restore_drill
+mysql -u root restore_drill -e "
+  SELECT 'users' t, COUNT(*) n FROM users
+  UNION ALL SELECT 'payments', COUNT(*) FROM payments
+  UNION ALL SELECT 'lessons',  COUNT(*) FROM lessons;"
+```
+
+Числа обязаны совпасть с колонкой «В дампе» из шага 3.
+
+### Шаг 5. Убрать за собой — обязательно
+
+```bash
+mysql -u root -e "DROP DATABASE restore_drill;"     # на машине разработчика
+rm -f mysql-laravel.sql.gz                          # локальная копия дампа
+ssh root@193.232.229.92 'rm -rf /root/restore-drill' # рабочий каталог на сервере
+```
 
 _Dr. Mārcis Gasūns_

@@ -96,7 +96,9 @@ for k in APP_DIR APP_USER PHP_VERSION PHP_BIN SCHEDULE_MAX_SECONDS \
          MADELINE_MEMORY_HIGH MADELINE_MEMORY_MAX MADELINE_TASKS_MAX \
          MADELINE_DAEMON_MAX_RSS_MB MADELINE_DAEMON_MAX_FDS \
          MADELINE_DAEMON_MAX_AGE_HOURS MADELINE_DAEMON_CHECK_SECONDS \
-         SCHEDULER_STAMP_MAX_MINUTES; do
+         SCHEDULER_STAMP_MAX_MINUTES \
+         TMP_TMPFS_SIZE TMP_TMPFS_MODE TMP_AGE_DAYS \
+         BACKUP_MAX_AGE_DAYS BACKUP_REQUIRE_OFFSITE BACKUP_MIN_ARCHIVE_MB; do
   need "$k" >/dev/null
 done
 
@@ -319,6 +321,33 @@ else
     fi
     if touched 'fpm/pool.d'; then
       systemctl reload "php$PHP_VERSION-fpm" && ok "php$PHP_VERSION-fpm перезагружен"
+    fi
+    # H3181 — правила старения /tmp. --create применяет их сразу; чистку делает
+    # штатный systemd-tmpfiles-clean.timer, здесь её не зовём: удаление файлов
+    # обязано происходить по расписанию, а не как побочный эффект применения
+    # предохранителей.
+    if touched 'tmpfiles.d'; then
+      systemd-tmpfiles --create >/dev/null 2>&1 && ok "systemd-tmpfiles --create" \
+        || warn "systemd-tmpfiles --create ругнулся: systemd-tmpfiles --create (посмотреть вывод)"
+    fi
+    # H3181 — потолок /tmp. Drop-in действует со следующей загрузки, а
+    # `systemctl restart tmp.mount` РАЗМОНТИРОВАЛ бы живой /tmp вместе с чужими
+    # открытыми файлами. remount меняет size на месте, никого не роняя.
+    if touched 'tmp.mount.d'; then
+      if mount -o "remount,size=${G[TMP_TMPFS_SIZE]}" /tmp 2>/dev/null; then
+        ok "/tmp перемонтирован с size=${G[TMP_TMPFS_SIZE]} (drop-in вступит в силу и при следующей загрузке)"
+      else
+        warn "/tmp не перемонтировался — потолок вступит в силу после перезагрузки. Проверить: findmnt -no OPTIONS /tmp"
+      fi
+    fi
+    # H3181 — Restart=on-failure у nginx. Политику рестарта systemd берёт на
+    # daemon-reload (он выше), сам nginx перезапускать НЕ надо: это уронило бы
+    # сайт ради настройки, которая нужна именно чтобы он не лежал.
+    if touched 'nginx.service.d'; then
+      eff_nginx_restart=$(systemctl show nginx -p Restart --value 2>/dev/null || echo '')
+      [ "$eff_nginx_restart" = "on-failure" ] \
+        && ok "nginx: Restart=on-failure" \
+        || warn "nginx: Restart=$eff_nginx_restart — ожидалось on-failure"
     fi
     systemctl enable --now rsyslog >/dev/null 2>&1 || true
 

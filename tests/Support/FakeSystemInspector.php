@@ -38,6 +38,12 @@ final class FakeSystemInspector implements SystemInspector
     /** @var list<string>|null null = git unavailable; [] = clean tree */
     public ?array $trackedDirtyPaths = [];
 
+    /** @var list<string>|null null = спросить нечем; [] = ни один юнит не упал */
+    public ?array $failedUnits = [];
+
+    /** @var list<array{disk: string, reachable: bool, newestAt: int|null, newestBytes: int|null}>|null */
+    public ?array $backupDestinations = null;
+
     public static function healthy(GuardSpec $spec, string $templateRoot, string $manifestBody): self
     {
         $fake = new self;
@@ -92,6 +98,21 @@ final class FakeSystemInspector implements SystemInspector
             (string) time()."\n";
 
         $fake->phpCliMemoryLimit = $spec->get('PHP_CLI_MEMORY_LIMIT');
+
+        // H3181: здоровый прод — /tmp с явным потолком, ни одного упавшего
+        // юнита, свежие и правдоподобные копии на обоих назначениях. Все три
+        // проверки молчаливы по построению (fail-open), и без явного здорового
+        // значения они молчали бы всегда — в том числе и сломанные.
+        $fake->files['/proc/mounts'] =
+            "sysfs /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0\n"
+            .'tmpfs /tmp tmpfs rw,nosuid,nodev,size='
+            .intdiv($spec->bytes('TMP_TMPFS_SIZE'), 1024)."k,nr_inodes=1048576,mode=1777 0 0\n";
+
+        $plausible = ((int) $spec->get('BACKUP_MIN_ARCHIVE_MB') + 1) * 1024 ** 2;
+        $fake->backupDestinations = [
+            ['disk' => 'local', 'reachable' => true, 'newestAt' => time() - 3600, 'newestBytes' => $plausible],
+            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => time() - 3600, 'newestBytes' => $plausible],
+        ];
 
         return $fake;
     }
@@ -149,5 +170,15 @@ final class FakeSystemInspector implements SystemInspector
     public function trackedDirtyPaths(string $repoDir): ?array
     {
         return $this->trackedDirtyPaths;
+    }
+
+    public function failedUnits(): ?array
+    {
+        return $this->failedUnits;
+    }
+
+    public function backupDestinations(): ?array
+    {
+        return $this->backupDestinations;
     }
 }

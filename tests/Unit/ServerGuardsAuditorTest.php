@@ -491,4 +491,139 @@ class ServerGuardsAuditorTest extends TestCase
             $this->assertStringStartsWith('/', $row['dest'], 'путь установки обязан быть абсолютным');
         }
     }
+
+    // ── H3181, волна 1: четыре живые опасности .92 ──────────────────────────
+
+    public function test_tmpfs_without_an_explicit_size_is_critical(): void
+    {
+        $sys = $this->healthy();
+        // Ровно то, что показывал прод 19-08-2026: tmpfs без size=, то есть
+        // потолок в половину памяти ХОСТА.
+        $sys->files['/proc/mounts'] = "tmpfs /tmp tmpfs rw,nosuid,nodev,nr_inodes=1048576 0 0\n";
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('[critical] tmpfs-cap: /tmp смонтирован tmpfs БЕЗ явного size=', $this->lines($findings));
+    }
+
+    public function test_tmpfs_raised_above_the_repo_value_is_a_warning_not_a_failure(): void
+    {
+        $sys = $this->healthy();
+        $sys->files['/proc/mounts'] = 'tmpfs /tmp tmpfs rw,size='
+            .intdiv($this->spec->bytes('TMP_TMPFS_SIZE') * 4, 1024)."k 0 0\n";
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertStringContainsString('[warning] tmpfs-cap: /tmp: size=', $this->lines($findings));
+    }
+
+    public function test_tmp_on_a_real_disk_is_not_a_finding(): void
+    {
+        $sys = $this->healthy();
+        $sys->files['/proc/mounts'] = "/dev/sda2 /tmp ext4 rw,relatime 0 0\n";
+
+        $this->assertStringNotContainsString('tmpfs-cap', $this->lines($this->auditor($sys)->audit()));
+    }
+
+    public function test_a_failed_unit_is_named(): void
+    {
+        $sys = $this->healthy();
+        $sys->failedUnits = ['samudra-health-monitor.service'];
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString(
+            '[warning] failed-units: samudra-health-monitor.service в состоянии failed',
+            $this->lines($findings),
+        );
+    }
+
+    public function test_an_allowlisted_failed_unit_is_silent(): void
+    {
+        $sys = $this->healthy();
+        $sys->failedUnits = ['knowingly-broken.service'];
+        $spec = GuardSpec::fromString(
+            (string) file_get_contents(base_path('scripts/server_guards.conf'))
+            ."\nFAILED_UNITS_ALLOWLIST=\"knowingly-broken.service\"\n"
+        );
+
+        $findings = (new ServerGuardsAuditor($spec, $sys, $this->templateRoot))->audit();
+
+        $this->assertStringNotContainsString('failed-units', $this->lines($findings));
+    }
+
+    public function test_unreadable_failed_unit_list_is_not_a_finding(): void
+    {
+        $sys = $this->healthy();
+        $sys->failedUnits = null; // не Linux / нет systemd
+
+        $this->assertStringNotContainsString('failed-units', $this->lines($this->auditor($sys)->audit()));
+    }
+
+    public function test_a_stale_offsite_backup_is_critical_and_a_stale_local_one_is_not(): void
+    {
+        $old = time() - (((int) $this->spec->get('BACKUP_MAX_AGE_DAYS') + 3) * 86400);
+        $plausible = ((int) $this->spec->get('BACKUP_MIN_ARCHIVE_MB') + 1) * 1024 ** 2;
+
+        $sys = $this->healthy();
+        $sys->backupDestinations = [
+            ['disk' => 'local', 'reachable' => true, 'newestAt' => $old, 'newestBytes' => $plausible],
+            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+        ];
+        $lines = $this->lines($this->auditor($sys)->audit());
+        $this->assertStringContainsString('[warning] backup-fresh: новейший архив на локальный диске local старше', $lines);
+
+        $sys = $this->healthy();
+        $sys->backupDestinations = [
+            ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => $plausible],
+            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => $old, 'newestBytes' => $plausible],
+        ];
+        $lines = $this->lines($this->auditor($sys)->audit());
+        $this->assertStringContainsString('[critical] backup-fresh: новейший архив на off-site диске yandex_disk старше', $lines);
+    }
+
+    /**
+     * Ровно замер 19-08-2026: два обрезка по 11.7 МиБ со свежей датой, и
+     * backup:monitor называет назначение здоровым. Без порога размера эта
+     * проверка была бы такой же зелёной лампочкой над пустым сейфом.
+     */
+    public function test_a_fresh_but_truncated_offsite_archive_is_critical(): void
+    {
+        $sys = $this->healthy();
+        $sys->backupDestinations = [
+            ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => 1425272697],
+            ['disk' => 'yandex_disk', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => 11757968],
+        ];
+
+        $findings = $this->auditor($sys)->audit();
+        $lines = $this->lines($findings);
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('ОБРЕЗОК оборвавшейся загрузки', $lines);
+        $this->assertStringContainsString('нет ни одного живого off-site назначения', $lines);
+    }
+
+    public function test_an_unreachable_offsite_destination_is_critical(): void
+    {
+        $sys = $this->healthy();
+        $sys->backupDestinations = [
+            ['disk' => 'local', 'reachable' => true, 'newestAt' => time(), 'newestBytes' => 1425272697],
+            ['disk' => 'yandex_disk', 'reachable' => false, 'newestAt' => null, 'newestBytes' => null],
+        ];
+
+        $this->assertStringContainsString(
+            '[critical] backup-fresh: off-site диск yandex_disk недостижим',
+            $this->lines($this->auditor($sys)->audit()),
+        );
+    }
+
+    public function test_backup_destinations_that_cannot_be_read_are_not_a_finding(): void
+    {
+        $sys = $this->healthy();
+        $sys->backupDestinations = null; // Spatie не отвечает / пакет выключен
+
+        $this->assertStringNotContainsString('backup-fresh', $this->lines($this->auditor($sys)->audit()));
+    }
 }
