@@ -1,0 +1,12 @@
+[Unit]
+Description=restic hourly backup — systema + samudra
+After=network-online.target mariadb.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/systema-restic-run.sh
+MemoryMax=1500M
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

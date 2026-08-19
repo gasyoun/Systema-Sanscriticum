@@ -1,0 +1,9 @@
+[Unit]
+Description=restic forget/prune — SFTP repo retention (24 hourly / 14 daily / 8 weekly / 12 monthly)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/systema-restic-forget.sh
+MemoryMax=1500M
