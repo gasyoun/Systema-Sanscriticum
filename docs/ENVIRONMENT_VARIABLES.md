@@ -64,6 +64,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CACHE_PREFIX` | optional | `Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'` | config/cache.php:109 |
 | `CATALOG_NEXT_STEP` | optional | `false` | config/features.php:981 |
 | `CERTIFICATE_MATERIAL_MIN_MENTIONS` | optional | `3` | config/certificates.php:9 |
+| `CHAT_REMOVAL_MIN_DAYS_OVERDUE` | optional | `30` | config/chat_removal.php:20 |
+| `CHAT_REMOVAL_MIN_UNANSWERED_CONTACTS` | optional | `2` | config/chat_removal.php:27 |
+| `CHAT_REMOVAL_REINSTATEMENT_FEE` | optional | `1000` | config/chat_removal.php:34 |
 | `CHECKOUT_DEPOSIT_REVERSAL` | optional | `true` | config/features.php:375 |
 | `CHECKOUT_INACTIVE_TARIFF_GUARD` | optional | `true` | config/features.php:358 |
 | `CHECKOUT_INTEGRITY_SAFE_REPAIRS` | optional | `false` | config/features.php:350 |
