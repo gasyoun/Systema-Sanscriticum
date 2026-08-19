@@ -727,6 +727,25 @@ class Debtors extends Page implements HasTable
     }
 
     /**
+     * Сбросить статические кэши пар. Странице они не мешают — она живёт один
+     * HTTP-запрос, — но `debtBlocks()` дёргают и снаружи: из консольных отчётов
+     * (`debts:chat-removal-report`, H2746) и из тестов, где процесс переживает
+     * несколько прогонов, а `user_id`/`course_id` после отката БД начинаются
+     * заново. Тогда ключ «1:1» второго прогона попадает в кэш первого, и расчёт
+     * долга молча считает по чужим платежам.
+     */
+    public static function flushPairCaches(): void
+    {
+        self::$paymentCache = [];
+        self::$disciplineCache = [];
+        self::$courseBlockNumbersCache = [];
+        self::$blockYearsCache = [];
+        self::$userCoursePaymentsCache = [];
+        self::$debtAmountCache = [];
+        self::$joinedAtBlockCache = [];
+    }
+
+    /**
      * Кандидаты для подсчёта долга: номера блоков курса ≤ reference. При
      * активной год-линзе ($years непусто) оставляем только блоки, чья дата
      * (starts_at) попадает в выбранные годы (блоки без даты отбрасываются).
