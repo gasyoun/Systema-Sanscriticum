@@ -58,7 +58,13 @@ LimitNOFILE=@@LIMIT_NOFILE@@
 # «Found left-over process … in control group», что чинили 28-07-2026).
 OOMPolicy=kill
 KillMode=control-group
-TimeoutStopSec=30s
+# 10 с, а не 30. Измерено на проде 19-08-2026: сам надзор на SIGTERM выходит
+# мгновенно, но KillMode=control-group шлёт SIGTERM и ДЕМОНУ, а его shutdown
+# падает в `Revolt\EventLoop … DriverSuspension` — он игнорирует сигнал и всё
+# равно уходит по SIGKILL. Ждать 30 секунд заведомо несбыточного «мягкого»
+# выхода — значит держать окно, в которое очередной заход cron поднимет
+# демона под кроном. Ждём десять и добиваем.
+TimeoutStopSec=10s
 
 # Вывод — в journal, а не в файл: journald здесь настроен persistent
 # (journald.conf.d/99-persistent.conf), а `append:` в файл пережил бы logrotate

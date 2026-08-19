@@ -248,6 +248,18 @@ else
   php artisan horizon:terminate || echo "Horizon не запущен — пропускаю."
 fi
 
+# H3121: у надзора за демоном MadelineProto та же болезнь, что у Horizon —
+# долгоживущий CLI-процесс держит код, загруженный при старте, и без рестарта
+# крутил бы его вечно. try-restart, а не restart: на машине, где юнита нет
+# (dev-бокс, свежая установка до server_guards_apply.sh), это тихий no-op.
+# Окно без демона — ~10 с (TimeoutStopSec); заход cron в это окно поднимет
+# демона под кроном, и следующий заход надзора его погасит. Само лечится.
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl try-restart systema-madeline-daemon.service 2>/dev/null \
+    && echo "systema-madeline-daemon перезапущен (свежий код надзора)" \
+    || echo "systema-madeline-daemon не запущен — пропускаю."
+fi
+
 # ── 6b. Track C: рестарт АВАРИЙНОГО поллера @zapisi_ORSbot, если он запущен ──
 # Тот же случай, что и с Horizon: долгоживущий процесс держит старый код, пока
 # его не перезапустить.
