@@ -1,6 +1,6 @@
 # Roadmap: полный JIVO-паритет — visitor intelligence + Support Inbox 2026–2027
 
-_Created: 17-07-2026 · Last updated: 08-08-2026_
+_Created: 17-07-2026 · Last updated: 19-08-2026_
 
 > **Граница документа после решения MG 08-08-2026:** этот roadmap закрывает именно
 > school-operational parity и остаётся обязательным первым гейтом. Следующий план уже коммитит
@@ -49,7 +49,7 @@ Code-grounded source of truth:
 | EdTech context beside chat | 🟡 | payments/promises/discounts/attendance есть; courses/groups/block access/next lesson/recent tickets incomplete |
 | Support follow-up | 🔴 | CRM/academic reminders are not a task-from-dialog workflow |
 | Support→payment/access/attendance outcomes | 🔴 | rollups exist, correlation dashboard missing |
-| Inbound email | 🔴 | H1200 residual; do not mint a duplicate implementation |
+| Inbound email | 🔴 | H1200 residual; spec done 19-08-2026 ([INBOUND_EMAIL_CHANNEL_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INBOUND_EMAIL_CHANNEL_SPEC_2026.md)); build gated on MG mailbox/provider @DECIDE; do not mint a duplicate implementation |
 
 **Completion sequence:**
 
@@ -243,8 +243,14 @@ Full product sequencing and kill criteria:
     Ивана. Прод-переключатель и код уже готовы (`support_unified_reply`); канарейка сама остаётся
     ручным шагом человека, как и было задокументировано в [`ROADMAP_TELEGRAM_SCALING`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md) §6 WS1.3.
   - ⏸️ **Inbound email как канал** — later-phase и у самого Jivo (низший приоритет из трёх);
-    не начато в этом проходе, полноценная почтовая инфраструктура (входящий webhook/polling,
-    маппинг в тред) — отдельный по объёму хэндофф.
+    полноценная почтовая инфраструктура (входящий webhook/polling, маппинг в тред) остаётся
+    отдельным по объёму хэндоффом. **19-08-2026 (Sonnet 5 `claude-sonnet-5`):** спека/скелет
+    написаны — [`docs/INBOUND_EMAIL_CHANNEL_SPEC_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INBOUND_EMAIL_CHANNEL_SPEC_2026.md) —
+    целевая форма (переиспользует `chat_messages.source`/`UnifiedMessage`, без новой схемы),
+    три варианта приёма почты с trade-offs, и явные **@DECIDE** человека (какой ящик, какой
+    провайдер) — без них ingestion-код писать рано. Код не добавлен намеренно (неиспользуемая
+    `UnifiedMessage::CHANNEL_EMAIL`-ветка без потребителя — мёртвый код, см. спеку «Why no code
+    yet»).
 
 ---
 
