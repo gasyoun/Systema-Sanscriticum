@@ -65,7 +65,7 @@ class QuizIntentRoutingTest extends TestCase
                     $opt['next'],
                     $targets,
                     "Option «{$opt['label']}» of '{$key}' routes to '{$opt['next']}', "
-                    ."which is neither a question nor a result — a dead end for a real student."
+                    .'which is neither a question nor a result — a dead end for a real student.'
                 );
                 $checked++;
             }
