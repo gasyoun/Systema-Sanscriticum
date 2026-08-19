@@ -121,7 +121,7 @@ Stated so nobody mistakes silence for coverage:
 | Spike | Question it answers | Blocks |
 |---|---|---|
 | S1 | Does `yandex_disk` actually receive? `backup:list` answers it in one command | W1c's shape — verification vs repair |
-| S2 | Is `/tmp` on these LXC guests systemd-managed (`tmp.mount`) or fstab/container-config? | W1a's mechanism (IMPLEMENTATION §1.2 has a default either way, so this is a spike, not a blocker) |
+| S2 | ~~Is `/tmp` on these LXC guests systemd-managed (`tmp.mount`) or fstab/container-config?~~ **ANSWERED 19-08-2026 on `.92`: neither.** The host mounts it outside the container's user namespace (`uid=100000`); systemd merely *adopts* it (`journalctl -b -u tmp.mount` empty, `/etc/fstab` unconfigured), and `remount` from inside fails with `Invalid uid '100000'` even given an explicit `uid=0`. **Both of IMPLEMENTATION §1.2's defaults are therefore inoperative here** — the cap is host-side, now P5. Detail: [server-resource-guards.md §10.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) | W1a's mechanism — resolved, and it changed the answer |
 | S3 | What is n8n's real steady-state memory ceiling across a full day, including the heaviest workflow? | W2b's `mem_limit` value. **Do this before setting a limit**, not after |
 | S4 | Does Better Stack's free tier have room for 3 more monitors? | W3a/W3b prioritisation |
 

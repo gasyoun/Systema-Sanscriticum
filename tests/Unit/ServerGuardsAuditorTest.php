@@ -507,6 +507,36 @@ class ServerGuardsAuditorTest extends TestCase
         $this->assertStringContainsString('[critical] tmpfs-cap: /tmp смонтирован tmpfs БЕЗ явного size=', $this->lines($findings));
     }
 
+    /**
+     * Замер .92 19-08-2026: /tmp несёт uid=100000 — его смонтировал ХОСТ, вне
+     * пространства имён контейнера. Ни drop-in, ни fstab там не работают, а
+     * `mount -o remount` падает на «Invalid uid '100000'». Critical обязан
+     * остаться (опасность та же), но посылать человека в applier — врать ему.
+     */
+    public function test_a_host_mounted_tmpfs_names_the_host_as_the_place_to_fix_it(): void
+    {
+        $sys = $this->healthy();
+        $sys->files['/proc/mounts'] =
+            "tmpfs /tmp tmpfs rw,nosuid,nodev,nr_inodes=1048576,uid=100000,gid=100000,inode64 0 0\n";
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString('[critical] tmpfs-cap:', $lines);
+        $this->assertStringContainsString('на стороне хоста Proxmox', $lines);
+        $this->assertStringNotContainsString('Вернуть: scripts/server_guards_apply.sh', $lines);
+    }
+
+    public function test_a_container_owned_tmpfs_still_points_at_the_applier(): void
+    {
+        $sys = $this->healthy();
+        $sys->files['/proc/mounts'] = "tmpfs /tmp tmpfs rw,nosuid,nodev,nr_inodes=1048576 0 0\n";
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString('Вернуть: scripts/server_guards_apply.sh', $lines);
+        $this->assertStringNotContainsString('Proxmox', $lines);
+    }
+
     public function test_tmpfs_raised_above_the_repo_value_is_a_warning_not_a_failure(): void
     {
         $sys = $this->healthy();
