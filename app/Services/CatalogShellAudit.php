@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Support\CourseFamilyMatcher;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Поиск ПУСТЫХ курсов и групп-оболочек — кандидатов на удаление (H3122).
@@ -28,6 +29,9 @@ class CatalogShellAudit
 {
     /** Где ищем упоминания слага: код, конфиги, шаблоны, маршруты, миграции/сиды. */
     private const CODE_DIRS = ['app', 'config', 'resources', 'routes', 'database'];
+
+    /** @var array<string, list<string>> */
+    private array $tableCache = [];
 
     public function __construct(private readonly CourseFamilyMatcher $families) {}
 
@@ -94,12 +98,60 @@ class CatalogShellAudit
         return $rows;
     }
 
-    /** Оболочка = ни одного урока, ни одной оплаты, ни одного занятия в расписании. */
+    /**
+     * Таблицы, которые НЕ считаются содержимым: чистые связки и таксономия.
+     * Всё остальное, что ссылается на курс или группу, — данные, и их наличие
+     * запрещает удаление.
+     */
+    private const LINK_TABLES = [
+        'course_user',        // запись на курс — разбирается правилом «близнеца»
+        'course_group',       // связка курс↔группа
+        'category_course',    // таксономия витрины
+        'course_slug_aliases', // редиректы старых слагов
+        'group_user',         // состав группы — проверяется отдельно
+    ];
+
+    /**
+     * Оболочка = НИ ОДНОЙ строки ни в одной таблице, ссылающейся на курс,
+     * кроме чистых связок.
+     *
+     * Список таблиц берётся ИЗ СХЕМЫ, а не руками: `course_id` есть в 38
+     * таблицах (сертификаты, экзамены, домашки, тарифы, сделки, выплаты…), и
+     * перечислять их вручную — гарантированный способ однажды не заметить одну
+     * и стереть данные. Ровно тот риск, который MG назвал недопустимым.
+     */
     private function isShell(int $courseId): bool
     {
-        return DB::table('lessons')->where('course_id', $courseId)->doesntExist()
-            && DB::table('payments')->where('course_id', $courseId)->where('status', 'paid')->doesntExist()
-            && DB::table('schedules')->where('course_id', $courseId)->doesntExist();
+        return $this->firstNonEmptyTable('course_id', $courseId) === null;
+    }
+
+    /**
+     * Таблицы со столбцом $column, кроме чистых связок.
+     *
+     * @return list<string>
+     */
+    private function referencingTables(string $column): array
+    {
+        return $this->tableCache[$column] ??= collect(Schema::getTableListing())
+            ->map(fn (string $t) => str_contains($t, '.') ? substr((string) strrchr($t, '.'), 1) : $t)
+            ->reject(fn (string $t) => in_array($t, self::LINK_TABLES, true))
+            ->filter(fn (string $t) => in_array($column, Schema::getColumnListing($t), true))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Первая таблица, в которой у объекта есть данные (для объяснения вердикта).
+     */
+    private function firstNonEmptyTable(string $column, int $id): ?string
+    {
+        foreach ($this->referencingTables($column) as $table) {
+            if (DB::table($table)->where($column, $id)->exists()) {
+                return $table;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -160,11 +212,19 @@ class CatalogShellAudit
         return $orphans;
     }
 
+    /**
+     * Пустая группа = ни состава, ни единой строки в любой таблице со
+     * столбцом `group_id`. Список опять из схемы: помимо очевидных занятий и
+     * уроков туда входят СЕРТИФИКАТЫ и telegram-хуки уроков — удалив группу
+     * по трём проверкам, можно было бы осиротить выданный сертификат.
+     */
     private function isEmptyGroup(Group $group): bool
     {
-        return DB::table('group_user')->where('group_id', $group->id)->doesntExist()
-            && DB::table('schedules')->where('group_id', $group->id)->doesntExist()
-            && DB::table('lessons')->where('group_id', $group->id)->doesntExist();
+        if (DB::table('group_user')->where('group_id', $group->id)->exists()) {
+            return false;
+        }
+
+        return $this->firstNonEmptyTable('group_id', (int) $group->id) === null;
     }
 
     /** @return list<string> */

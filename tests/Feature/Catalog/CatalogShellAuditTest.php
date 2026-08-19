@@ -9,10 +9,12 @@ use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\Payment;
 use App\Models\Schedule;
+use App\Models\Tariff;
 use App\Models\User;
 use App\Services\CatalogShellAudit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -225,5 +227,32 @@ class CatalogShellAuditTest extends TestCase
 
         $this->assertDatabaseHas('courses', ['id' => $shell->id]);
         $this->assertDatabaseHas('groups', ['id' => $emptyGroup->id]);
+    }
+
+    /** @test */
+    public function a_course_holding_a_certificate_is_not_a_shell(): void
+    {
+        // Сертификат — ровно та «запись», потерю которой MG запретил. Он живёт
+        // в таблице, которой не было в первой, ручной версии проверок.
+        $course = Course::factory()->create(['is_visible' => false]);
+        DB::table('certificates')->insert([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => $course->id,
+            'number' => 'TEST-1',
+            'issued_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->assertNull($this->courseRow($course->id), 'курс с сертификатом не оболочка');
+    }
+
+    /** @test */
+    public function a_course_holding_a_tariff_is_not_a_shell(): void
+    {
+        $course = Course::factory()->create(['is_visible' => false]);
+        Tariff::factory()->for($course)->create();
+
+        $this->assertNull($this->courseRow($course->id));
     }
 }
