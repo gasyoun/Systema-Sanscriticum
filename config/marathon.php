@@ -14,6 +14,17 @@ return [
     // not seeded here — matches how every other production landing is set up).
     'landing_slug' => env('MARATHON_LANDING_SLUG', 'konsultaciya-po-onlayn-kursam'),
 
+    // H445 Phase 5 — January `deva`-cohort landing (the piece H445 §0/§2
+    // explicitly deferred until slug/copy were decided). MG ruling
+    // 19-08-2026: slug `Janvar-27`, launch 13-01-2027. Separate LandingPage
+    // row (`marathon:apply-landing-copy --january`), separate slug — never
+    // conflated with the August `zero` cohort's row above. The Day-3 live
+    // consultation still reads the ONE shared `schedule_id` below (H445 §1:
+    // engine unchanged) — a human points it at a January Schedule row closer
+    // to launch, same as the August cohort's own activation (see DEPLOY_QUEUE.md).
+    'january_landing_slug' => env('MARATHON_JANUARY_LANDING_SLUG', 'Janvar-27'),
+    'january_launch_date' => env('MARATHON_JANUARY_LAUNCH_DATE', '2027-01-13'),
+
     // Paid track «с проверкой» — tripwire price, ₽.
     'paid_track_price' => (int) env('MARATHON_PAID_TRACK_PRICE', 500),
 

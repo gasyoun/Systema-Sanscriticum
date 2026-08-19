@@ -216,6 +216,14 @@ Route::post('/online/konsultaciya/level-quiz/{token}/complete', [MarathonControl
 Route::get('/online/konsultaciya/level-quiz/{token}/result', [MarathonController::class, 'levelQuizResult'])
     ->name('marathon.level-quiz.result');
 
+// H445 Phase 5 — January `deva`-cohort landing (MG ruling 19-08-2026: slug
+// `Janvar-27`, launch 13-01-2027). Separate show/register/pay trio, own
+// route names — day()/completeDay()/levelQuiz() above stay SHARED (keyed by
+// magnet_token, not by which landing created the enrollment).
+Route::get('/online/Janvar-27', [MarathonController::class, 'showJanuary'])->name('marathon.january.show');
+Route::post('/online/Janvar-27', [MarathonController::class, 'registerJanuary'])->name('marathon.january.register');
+Route::post('/online/Janvar-27/pay', [MarathonController::class, 'payJanuary'])->name('marathon.january.pay');
+
 // Страница одного курса (короткий path /k/{slug}; legacy /online/kursy/* → 301 ниже)
 Route::get('/k/{course:slug}', [ShopController::class, 'show'])
     ->middleware('course.canonical')

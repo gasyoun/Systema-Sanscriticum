@@ -307,6 +307,214 @@ class MarathonController extends Controller
     }
 
     /**
+     * H445 Phase 5 — January `deva`-cohort landing (the piece H445 §0/§2
+     * explicitly deferred). Separate, duplicated show/register/pay trio
+     * rather than parametrizing the `zero` cohort's — this repo's money
+     * contour convention favours isolation over DRY on the paid-checkout
+     * path (see CLAUDE.md "Money contour"). No A/B copy split, no visual
+     * skin variance — always skin `b`, the converged default.
+     */
+    public function showJanuary(Request $request): View
+    {
+        $landing = LandingPage::where('slug', config('marathon.january_landing_slug'))->first();
+        $copy = MarathonLandingCopy::forJanuaryView();
+
+        return view('marathon.show', [
+            'landing' => $landing,
+            'copy' => $copy,
+            'skin' => 'b',
+            'quizGoals' => self::QUIZ_GOALS,
+            'paidTrackPrice' => config('marathon.paid_track_price'),
+            'couponAmount' => config('marathon.coupon_amount'),
+            'hostName' => config('marathon.host_name'),
+            'showRoute' => 'marathon.january.show',
+            'registerRoute' => 'marathon.january.register',
+            'payRoute' => 'marathon.january.pay',
+        ]);
+    }
+
+    public function registerJanuary(Request $request): RedirectResponse
+    {
+        $rlKey = 'marathon-january-register:'.$request->ip();
+        if (RateLimiter::tooManyAttempts($rlKey, 1)) {
+            abort(429, 'Слишком частые запросы. Подождите несколько секунд.');
+        }
+        RateLimiter::hit($rlKey, 5);
+
+        $validated = $request->validate([
+            'name' => 'required|string|min:2|max:255',
+            'contact' => 'required|string',
+            'email' => 'nullable|email',
+            'social' => 'nullable|string|max:255',
+            'track' => 'required|in:'.MarathonEnrollment::TRACK_FREE.','.MarathonEnrollment::TRACK_PAID,
+            'quiz_goal' => 'required|in:'.implode(',', array_keys(self::QUIZ_GOALS)),
+            'is_promo_agreed' => 'nullable',
+        ]);
+
+        $landing = LandingPage::where('slug', config('marathon.january_landing_slug'))->first();
+
+        $leadData = [
+            'name' => $validated['name'],
+            'contact' => $validated['contact'],
+            'email' => $validated['email'] ?? null,
+            'social' => $validated['social'] ?? null,
+            'landing_page_id' => $landing?->id,
+            'landing_copy_variant' => null,
+            'is_promo_agreed' => $request->has('is_promo_agreed'),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ];
+
+        if (empty($leadData['email']) && filter_var($leadData['contact'], FILTER_VALIDATE_EMAIL)) {
+            $leadData['email'] = $leadData['contact'];
+        }
+
+        // Dedup scoped to the January `landing_page_id` specifically — a lead
+        // who already did the August `zero` consultation can still enrol
+        // separately here (different landing row, different personal clock).
+        [$dupColumn, $dupValue] = ! empty($leadData['email'])
+            ? ['email', $leadData['email']]
+            : ['contact', $leadData['contact']];
+
+        $query = Lead::where($dupColumn, $dupValue);
+        if ($landing) {
+            $query->where('landing_page_id', $landing->id);
+        }
+        $existingLead = $query->first();
+
+        if ($existingLead) {
+            $enrollment = MarathonEnrollment::where('lead_id', $existingLead->id)->first();
+            if ($enrollment) {
+                $this->attachTelegramMagnet($existingLead);
+
+                return redirect()->route('marathon.january.show')
+                    ->with('marathon_result', $enrollment->quiz_goal)
+                    ->with('marathon_telegram_link', $this->deepLink($existingLead))
+                    ->with('marathon_track', $enrollment->track)
+                    ->with('marathon_paid', $enrollment->isPaidConfirmed())
+                    ->with('marathon_contact', $existingLead->contact);
+            }
+            $lead = $existingLead;
+        } else {
+            $lead = Lead::create($leadData);
+        }
+
+        $enrollment = MarathonEnrollment::create([
+            'lead_id' => $lead->id,
+            'track' => $validated['track'],
+            'cohort' => MarathonEnrollment::COHORT_DEVA,
+            'quiz_goal' => $validated['quiz_goal'],
+            'ab_arm' => MarathonEnrollment::computeArm($lead->id),
+            'day0_started_at' => now(),
+        ]);
+
+        $this->attachTelegramMagnet($lead);
+
+        return redirect()->route('marathon.january.show')
+            ->with('marathon_result', $enrollment->quiz_goal)
+            ->with('marathon_telegram_link', $this->deepLink($lead))
+            ->with('marathon_track', $enrollment->track)
+            ->with('marathon_paid', $enrollment->isPaidConfirmed())
+            ->with('marathon_contact', $lead->contact);
+    }
+
+    /** H445 Phase 5 — mirrors pay(), scoped to the January landing/redirect. */
+    public function payJanuary(Request $request, TochkaPaymentService $tochka): RedirectResponse
+    {
+        $rlKey = 'marathon-january-pay:'.$request->ip();
+        if (RateLimiter::tooManyAttempts($rlKey, 1)) {
+            abort(429, 'Слишком частые запросы. Подождите несколько секунд.');
+        }
+        RateLimiter::hit($rlKey, 5);
+
+        $validated = $request->validate([
+            'contact' => 'required|string',
+            'email' => 'required|email',
+        ]);
+
+        $landing = LandingPage::where('slug', config('marathon.january_landing_slug'))->first();
+
+        $leadQuery = Lead::where('contact', $validated['contact']);
+        if ($landing) {
+            $leadQuery->where('landing_page_id', $landing->id);
+        }
+        $lead = $leadQuery->first();
+
+        if (! $lead) {
+            return back()->with('error', 'Сначала зарегистрируйтесь на марафон — контакт не найден.');
+        }
+
+        $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->first();
+
+        abort_unless(
+            $enrollment && $enrollment->isPaidTrack(),
+            403,
+            'Трек «с проверкой» не выбран при регистрации на марафон.'
+        );
+
+        if ($enrollment->isPaidConfirmed()) {
+            return redirect()->route('marathon.january.show')
+                ->with('marathon_result', $enrollment->quiz_goal)
+                ->with('marathon_track', $enrollment->track)
+                ->with('marathon_paid', true);
+        }
+
+        try {
+            $user = $this->resolveUserForCheckout($validated['email'], $lead);
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
+
+        $amount = (float) config('marathon.paid_track_price');
+
+        $payment = DB::transaction(function () use ($user, $lead, $amount): Payment {
+            return Payment::create([
+                'user_id' => $user->id,
+                'lead_id' => $lead->id,
+                'course_id' => null,
+                'amount' => $amount,
+                'tariff' => 'marathon_paid',
+                'status' => 'pending',
+            ]);
+        });
+
+        $purpose = 'Заказ №'.$payment->id.' | Марафон «с проверкой» (деванагари)';
+
+        try {
+            $response = $tochka->createPaymentWithReceipt(
+                user: $user,
+                amount: $amount,
+                purpose: $purpose,
+                itemName: 'Марафон «Консультация по онлайн-курсам ОРС» (деванагари) — трек «с проверкой»',
+            );
+        } catch (ConnectionException $e) {
+            $payment->update(['status' => 'failed']);
+
+            Log::error('Tochka недоступна (marathon_paid_january)', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+        }
+
+        if ($response->successful() && isset($response['Data']['paymentLink'])) {
+            $payment->update(['transaction_id' => $response['Data']['paymentLinkId']]);
+
+            return redirect()->away($response['Data']['paymentLink']);
+        }
+
+        $payment->update(['status' => 'failed']);
+
+        Log::error('Ошибка Точка Эквайринг (marathon_paid_january)', [
+            'payment_id' => $payment->id,
+            'status' => $response->status(),
+        ]);
+
+        return back()->with('error', 'Сервис оплаты временно недоступен. Попробуйте позже.');
+    }
+
+    /**
      * H483 — Day 1/2 tap-choice recognition page. Keyed by the lead's
      * existing magnet_token (H446/H464), no new token needed. 404 for an
      * unknown token or a day that doesn't match an enrolled lead.
