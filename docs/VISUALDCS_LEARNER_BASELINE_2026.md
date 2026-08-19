@@ -59,4 +59,34 @@ import); the import step below is therefore **mandatory before any flip**.
 4. At day 7 / 14 / 30 fill the same table. Scale / hold / revert from
    comparable cohorts — never from a promised lift.
 
+## Day-0 verification (19-08-2026, Fable 5 `claude-fable-5`)
+
+Read-only prod probe ~12 h after activation, so the day-7 fill is not waiting
+a week on a dead pipeline:
+
+| Check | Result |
+|---|---|
+| Flags (verb/nominal/passage) | 1/1/1 |
+| `visualdcs_units` rows | 39 482 (matches import) |
+| `external_learning_progress` rows | 0 |
+| `activity_events` with `visualdcs.%` | 0 |
+| Learner traffic on `/visualdcs/*` | 0 today (the 02:17 smoke's 15 hits rotated into `access.log.1`) |
+| Live re-smoke | `https://samskrte.ru/visualdcs/verb/preview` -> 200 at 104 ms |
+| Eligible-learner denominator | **932** (`Payment::paid()->real()`, distinct `user_id`) |
+
+The zeros are real no-traffic zeros, not broken instrumentation: the event
+constants exist
+([app/Models/ActivityEvent.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/ActivityEvent.php)
+`VISUALDCS_PROGRESS_STARTED` / `VISUALDCS_PROGRESS_COMPLETED`) and the progress
+route is wired
+([routes/web.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php)
+`student.visualdcs.progress`) — though no progress event has yet been exercised
+end-to-end by a real learner.
+
+Day-7 re-measure gotchas: the `activity_events` column is **`event_type`**, not
+`type` — query `event_type LIKE 'visualdcs%'`. There is no
+`App\Models\VisualdcsUnit` Eloquent model; count `visualdcs_units` via
+`DB::table`. Zero traffic 12 h in also flags discoverability: nothing announces
+the surfaces to learners yet — whether/when to announce is a human decision.
+
 _Dr. Mārcis Gasūns_
