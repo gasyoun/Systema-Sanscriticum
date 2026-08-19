@@ -12,11 +12,22 @@ use Illuminate\Database\Eloquent\Model;
  */
 class DebtReminder extends Model
 {
+    /** Отправила авто-лестница `debts:remind`. */
+    public const SOURCE_AUTO = 'auto';
+
+    /** Отправил человек кнопкой «Напомнить» (H3156). */
+    public const SOURCE_MANUAL = 'manual';
+
     protected $fillable = [
         'user_id',
         'course_id',
         'block_number',
         'sent_at',
+        'source',
+    ];
+
+    protected $attributes = [
+        'source' => self::SOURCE_AUTO,
     ];
 
     protected $casts = [

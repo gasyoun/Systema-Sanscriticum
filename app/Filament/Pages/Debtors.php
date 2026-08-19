@@ -11,6 +11,7 @@ use App\Jobs\SendMessengerAlerts;
 use App\Mail\DebtorReminderMail;
 use App\Models\Course;
 use App\Models\CourseBlock;
+use App\Models\DebtReminder;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
@@ -1315,6 +1316,9 @@ class Debtors extends Page implements HasTable
                     (bool) ($data['to_telegram'] ?? false),
                     (bool) ($data['to_vk'] ?? false),
                     (bool) ($data['to_email'] ?? false),
+                    // H3156: ручной контакт оставляет след — иначе правило
+                    // H2746 «два обращения без ответа» его не видит.
+                    logSource: DebtReminder::SOURCE_MANUAL,
                 );
 
                 if (! $ok) {
@@ -1720,6 +1724,19 @@ class Debtors extends Page implements HasTable
                         Mail::to($record->email)->queue(new DebtorReminderMail($subject, $rendered, $record->name));
                         $sentEmail++;
                     }
+
+                    // H3156: массовая рассылка идёт мимо DebtorReminderDispatcher
+                    // (текст рендерится здесь), поэтому строку контакта пишем
+                    // сами — и только для тех, кому реально ушёл хоть один канал.
+                    DebtReminder::create([
+                        'user_id' => (int) $record->id,
+                        'course_id' => (int) $record->course_id,
+                        'block_number' => $record->ref_block_number !== null
+                            ? (int) $record->ref_block_number
+                            : null,
+                        'sent_at' => now(),
+                        'source' => DebtReminder::SOURCE_MANUAL,
+                    ]);
                 }
 
                 Notification::make()

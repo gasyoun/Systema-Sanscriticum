@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Jobs\SendMessengerAlerts;
 use App\Mail\DebtorReminderMail;
 use App\Models\Course;
+use App\Models\DebtReminder;
 use App\Models\User;
 use App\Support\MessagePlaceholders;
 use Illuminate\Support\Facades\Mail;
@@ -38,6 +39,12 @@ class DebtorReminderDispatcher
      * 00:00 по Москве»). Оба — готовые предложения-фрагменты (ведущий пробел
      * + точка) или null/"" при отсутствии данных, подставляются в
      * {paid_until}/{deadline} в DEFAULT_TEXT.
+     *
+     * $logSource (H3156) — записать факт контакта в `debt_reminders` с этим
+     * источником, но ТОЛЬКО если хоть один канал реально ушёл. Opt-in, а не
+     * дефолт: у авто-команды свой вызов create (ей нужен ещё и дедуп), а у
+     * реактивации — свой журнал `debt_win_back_attempts`, и двойная запись
+     * превратила бы одно письмо в два «контакта» для правила H2746.
      */
     public function send(
         User $user,
@@ -50,6 +57,7 @@ class DebtorReminderDispatcher
         bool $toEmail,
         ?string $paidUntilLabel = null,
         ?string $deadlineLabel = null,
+        ?string $logSource = null,
     ): bool {
         $hasTg = $toTelegram && ! empty($user->telegram_id);
         $hasVk = $toVk && ! empty($user->vk_id);
@@ -71,6 +79,16 @@ class DebtorReminderDispatcher
         if ($hasEmail) {
             $subject = strtr($subjectTpl, $replacements);
             Mail::to($user->email)->queue(new DebtorReminderMail($subject, $rendered, $user->name));
+        }
+
+        if ($logSource !== null) {
+            DebtReminder::create([
+                'user_id' => $user->id,
+                'course_id' => $courseId,
+                'block_number' => $blockNumber,
+                'sent_at' => now(),
+                'source' => $logSource,
+            ]);
         }
 
         return true;

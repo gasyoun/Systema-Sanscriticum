@@ -77,12 +77,14 @@ class DebtContactEvidenceCollector
             ->when($since !== null, fn ($q) => $q->where('sent_at', '>=', $since))
             ->where('sent_at', '<=', $now)
             ->orderBy('sent_at')
-            ->get(['id', 'sent_at', 'block_number'])
+            ->get(['id', 'sent_at', 'block_number', 'source'])
             ->each(function ($r) use ($rows): void {
                 $rows->push([
                     'source' => self::SOURCE_DEBT_REMINDER,
                     'at' => Carbon::parse($r->sent_at),
-                    'channel' => 'auto',
+                    // H3156: авто-лестница или человек кнопкой. Для правила
+                    // контакт есть контакт — различие нужно аудиту, а не счёту.
+                    'channel' => (string) ($r->source ?? DebtReminder::SOURCE_AUTO),
                     'ref_id' => (int) $r->id,
                 ]);
             });

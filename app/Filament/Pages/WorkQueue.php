@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\LeadResource;
 use App\Filament\Resources\UserResource;
 use App\Models\Deal;
+use App\Models\DebtReminder;
 use App\Models\FollowUpTask;
 use App\Models\Lead;
 use App\Models\PaymentPromise;
@@ -171,6 +172,7 @@ class WorkQueue extends Page
             ! empty($user->telegram_id),
             ! empty($user->vk_id),
             filter_var($user->email, FILTER_VALIDATE_EMAIL) !== false,
+            logSource: DebtReminder::SOURCE_MANUAL, // H3156 — контакт по обещанию тоже след
         );
 
         if (! $ok) {
