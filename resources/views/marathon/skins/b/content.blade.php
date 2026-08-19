@@ -81,7 +81,7 @@
                         Оплатите {{ $paidTrackPrice }} ₽ — куратор будет проверять вашу практику Дней 1–2,
                         и вам гарантировано место на живой консультации Дня 3.
                     </p>
-                    <form method="POST" action="{{ route('marathon.pay') }}" class="space-y-3">
+                    <form method="POST" action="{{ route($payRoute ?? 'marathon.pay') }}" class="space-y-3">
                         @csrf
                         <input type="hidden" name="contact" value="{{ session('marathon_contact') }}">
                         <div>
@@ -148,7 +148,7 @@
             </blockquote>
         @endif
 
-        <form method="POST" action="{{ route('marathon.register') }}"
+        <form method="POST" action="{{ route($registerRoute ?? 'marathon.register') }}"
               x-data="{ track: '{{ old('track', 'free') }}' }"
               class="bg-white rounded-[20px] shadow-sm border border-stone-200 p-6 md:p-8 space-y-6">
             @csrf

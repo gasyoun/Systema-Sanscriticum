@@ -82,6 +82,20 @@ class MarathonLandingCopyPublishTest extends TestCase
         $this->assertStringContainsString('Пойми, как устроен', (string) data_get($page->content, '0.data.title', ''));
     }
 
+    /** H445 Phase 5 — January deva-cohort landing upsert (separate slug, single ruled copy). */
+    public function test_apply_landing_copy_january_flag_upserts_separate_row(): void
+    {
+        $this->artisan('marathon:apply-landing-copy', ['--january' => true])
+            ->assertSuccessful();
+
+        $januaryPage = LandingPage::where('slug', config('marathon.january_landing_slug'))->first();
+        $this->assertNotNull($januaryPage);
+        $this->assertStringContainsString('деванагари', (string) data_get($januaryPage->content, '0.data.title', ''));
+
+        // Never touches the zero-cohort row.
+        $this->assertNull(LandingPage::where('slug', config('marathon.landing_slug'))->first());
+    }
+
     public function test_channel_posts_dry_run_does_not_hit_telegram(): void
     {
         Http::fake();
