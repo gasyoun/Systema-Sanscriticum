@@ -75,7 +75,21 @@ final class FakeSystemInspector implements SystemInspector
             'cron|Restart' => 'always',
             'supervisor|MemoryHigh' => (string) $spec->bytes('SUPERVISOR_MEMORY_HIGH'),
             'supervisor|MemoryMax' => (string) $spec->bytes('SUPERVISOR_MEMORY_MAX'),
+            // H3121: у демона MadelineProto свой юнит и свой бюджет.
+            'systema-madeline-daemon|MemoryHigh' => (string) $spec->bytes('MADELINE_MEMORY_HIGH'),
+            'systema-madeline-daemon|MemoryMax' => (string) $spec->bytes('MADELINE_MEMORY_MAX'),
+            'systema-madeline-daemon|TasksMax' => $spec->get('MADELINE_TASKS_MAX'),
+            'systema-madeline-daemon|OOMPolicy' => 'kill',
         ];
+
+        // H3121: здоровый прод — группа крона далеко под порогом, а отметка
+        // завершённого schedule:run свежая. Тест на «ноль находок» обязан
+        // проверять и это: обе проверки молчаливы по построению, и без явного
+        // здорового значения они молчали бы всегда, в том числе и сломанные.
+        $fake->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) intdiv($spec->bytes('CRON_MEMORY_HIGH'), 10)."\n";
+        $fake->files[rtrim($spec->get('APP_DIR'), '/').'/storage/framework/schedule-run.stamp'] =
+            (string) time()."\n";
 
         $fake->phpCliMemoryLimit = $spec->get('PHP_CLI_MEMORY_LIMIT');
 

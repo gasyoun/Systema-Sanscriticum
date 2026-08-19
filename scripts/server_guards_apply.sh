@@ -92,7 +92,11 @@ for k in APP_DIR APP_USER PHP_VERSION PHP_BIN SCHEDULE_MAX_SECONDS \
          PHP_CLI_MEMORY_LIMIT FPM_MAX_CHILDREN FPM_MAX_REQUESTS \
          AUTO_DEPLOY_SCHEDULE AUTO_DEPLOY_MAX_SECONDS \
          AUTO_DEPLOY_MIN_AVAILABLE_MB AUTO_DEPLOY_SMOKE_URL \
-         AUTO_DEPLOY_RETRY_AFTER_MINUTES AUTO_DEPLOY_MAX_AUTO_RETRIES; do
+         AUTO_DEPLOY_RETRY_AFTER_MINUTES AUTO_DEPLOY_MAX_AUTO_RETRIES \
+         MADELINE_MEMORY_HIGH MADELINE_MEMORY_MAX MADELINE_TASKS_MAX \
+         MADELINE_DAEMON_MAX_RSS_MB MADELINE_DAEMON_MAX_FDS \
+         MADELINE_DAEMON_MAX_AGE_HOURS MADELINE_DAEMON_CHECK_SECONDS \
+         SCHEDULER_STAMP_MAX_MINUTES; do
   need "$k" >/dev/null
 done
 
@@ -324,6 +328,16 @@ else
     eff_cron_max=$(systemctl show cron -p MemoryMax --value 2>/dev/null || echo '')
     if touched 'cron.service.d' && [ -n "$eff_cron_max" ]; then
       systemctl restart cron && ok "cron перезапущен (лимиты вступили в силу)"
+    fi
+    # H3121: юнит демона MadelineProto. enable --now, а не restart: если он уже
+    # крутится, перезапуск убил бы живого демона на ровном месте — а изменение
+    # файла юнита без смены чисел этого не требует. Числа меняются достаточно
+    # редко, чтобы перезапуск делал человек осознанно.
+    if touched 'systema-madeline-daemon'; then
+      systemctl enable --now systema-madeline-daemon.service >/dev/null 2>&1 \
+        && ok "systema-madeline-daemon включён" \
+        || warn "systema-madeline-daemon не поднялся: journalctl -u systema-madeline-daemon -n 50"
+      systemctl try-restart systema-madeline-daemon.service >/dev/null 2>&1 || true
     fi
     if touched 'supervisor.service.d'; then
       if [ "$RESTART_SUPERVISOR" = 1 ]; then

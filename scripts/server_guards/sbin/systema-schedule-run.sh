@@ -63,9 +63,23 @@ fi
 touch "$LOCK"
 
 cd "$APP_DIR" || exit 1
-timeout -k 30s "${MAX_SECONDS}s" @@PHP_BIN@@ artisan schedule:run
+# `9>&-` — НЕ косметика. Демон MadelineProto рождается внутри schedule:run,
+# отцепляется к PPID 1 и живёт сутками; вместе с ним по наследству уезжает
+# ЛЮБОЙ открытый дескриптор родителя, включая наш fd 9. flock отпускается
+# только когда закрыт ПОСЛЕДНИЙ держащий его fd, поэтому демон держал замок
+# планировщика всю свою жизнь: ни timeout, ни kill, ни exit(75) освободить его
+# не могут — 19-08-2026 планировщик из-за этого шёл раз в 31 минуту вместо раза
+# в минуту (H3121; предсказано в шапке этого же файла, пункт 3). Замок остаётся
+# у НАС: в родительской оболочке fd 9 открыт до самого выхода.
+timeout -k 30s "${MAX_SECONDS}s" @@PHP_BIN@@ artisan schedule:run 9>&-
 rc=$?
 if [ "$rc" -ge 124 ]; then
   echo "$(ts) TIMEOUT: schedule:run exceeded ${MAX_SECONDS}s (rc=$rc) — process group terminated by timeout"
+else
+  # Отметка «планировщик реально ДОШЁЛ до конца». Пропуск по замку её не
+  # обновляет — в этом весь смысл: 19-08-2026 SKIP шёл каждую минуту, а
+  # cabinet:probe и guards:verify видели «крон на месте, файлы на месте» и
+  # молчали семь часов. Возраст отметки читает guards:verify (scheduler-stamp).
+  date -u +%s > "$APP_DIR/storage/framework/schedule-run.stamp" 2>/dev/null || true
 fi
 exit 0

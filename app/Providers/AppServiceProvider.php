@@ -31,6 +31,8 @@ use App\Services\Lecture\LectureAiClient;
 use App\Services\Lecture\LectureBuilderClient;
 use App\Services\Payments\HttpPaypalWebhookSignatureVerifier;
 use App\Services\Payments\PaypalWebhookSignatureVerifier;
+use App\Services\Telegram\DaemonProcessProbe;
+use App\Services\Telegram\ProcDaemonProcessProbe;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
 use App\Support\NextIntroSession;
@@ -84,6 +86,12 @@ class AppServiceProvider extends ServiceProvider
             HttpPaypalWebhookSignatureVerifier::class,
         );
         $this->app->bind(SystemInspector::class, ShellSystemInspector::class);
+
+        // H3121: тот же шов для надзора за демоном MadelineProto. bind, а не
+        // singleton, по той же причине — тест подменяет пробу на фейковую и
+        // доказывает, что демон в ЧУЖОЙ cgroup будет погашен, не имея под
+        // рукой ни /proc, ни systemd.
+        $this->app->bind(DaemonProcessProbe::class, ProcDaemonProcessProbe::class);
     }
 
     /**

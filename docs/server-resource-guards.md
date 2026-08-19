@@ -1,6 +1,6 @@
 # Ресурсные предохранители прода: почему сервер зависал и что теперь этого не даёт
 
-_Created: 29-07-2026 · Last updated: 06-08-2026_
+_Created: 29-07-2026 · Last updated: 19-08-2026_
 
 > **Язык для человека:** разделы «что делать / чего не делать» (профилактика, запреты, runbook для Ивана/MG) — **всегда по-русски**. Технические идентификаторы, пути и shell-команды можно оставлять как есть.
 
@@ -695,5 +695,101 @@ cat /var/www/html/storage/framework/auto-deploy-retries              # скол�
 > исполнив ни строки проверяемой логики: `flock` не нашёлся в сброшенном `PATH`,
 > `|| exit 0` сработал, а сообщение об ошибке ушло в `/dev/null`. Поэтому тест
 > подменяет строку `export PATH=` и проверяет, что подмена удалась.
+
+## 9. Демон MadelineProto: своя cgroup, свой потолок (H3121, 19-08-2026)
+
+Диагностика и лечение — Opus 5 (`claude-opus-5`), handoff
+[H3121](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3121-Opus_Systema-Sanscriticum_madeline-daemon-pins-cron-cgroup-throttles-all-cron_19.08.26.md).
+
+### 9.1 Что случилось
+
+Ночью 18→19-08-2026 прод встал на семь часов **при 8.5 ГиБ свободной памяти на
+хосте**. Ни одна существовавшая проверка этого не увидела: memwatch показывал
+норму, earlyoom молчал, `health_check` в авто-деплое был зелёным, cabinet:probe
+сообщил ровно одно — «авто-деплой остановлен предохранителем».
+
+Причина: демон `MadelineProto worker`, поднятый 17-08 внутри `schedule:run`,
+**остался в cgroup `system.slice/cron.service`**. cgroup наследуется на fork и
+не меняется от того, что процесс отцепился к `PPID 1`. За 33 часа он вырос до
+**2.29 ГиБ RSS + 2.0 ГиБ swap** и утёк **2 774 дескрипторами, все на один файл**
+`storage/logs/madelineproto.log`. Он постоянно висел над `MemoryHigh=2G` — тем
+самым потолком из §4, — и ядро тормозило **всю группу** в
+`mem_cgroup_handle_over_high`.
+
+| Что стояло | Как это выглядело |
+|---|---|
+| Авто-деплой (`*/30`, root) | `composer install` 3 с → **16 мин**, 5 провалов, предохранитель 4×, прод отстал на 3 коммита |
+| `schedule:run` (`* * * * *`) | `TIMEOUT: exceeded 900s` каждую минуту — планировщик не доделал ничего за ~7 часов |
+| `cabinet:probe` (`*/15`) | `WATCHDOG TIMEOUT: exceeded 120s` — лежал сам сторож |
+| `heartbeat:ping` (`*/5`) | `WATCHDOG TIMEOUT: exceeded 60s` — пропущен пульс Better Stack |
+| Хост | swap 8 191/8 192 МиБ (`SwapFree: 28 kB`), load ~3.9 при простаивающем CPU |
+
+**Диагностический признак, который всё расшифровал:** один и тот же
+`composer install --no-dev` шёл **3 секунды по SSH** (там своя slice) и
+**16 минут под кроном**. Любой разбор «прод тормозит», который меряет только по
+SSH, этот класс аварий не увидит никогда.
+
+### 9.2 Чего делать НЕЛЬЗЯ
+
+- **Поднимать `MemoryHigh`/`MemoryMax` у `cron.service`.** Потолок отработал
+  ровно как задуман: превратил OOM (§1) в торможение. Виноват не он, а то, ЧЕЙ
+  бюджет тратил демон.
+- **Поднимать `SYSTEMA_AUTO_DEPLOY_MAX` выше 1500 с.** Деплой — жертва, не
+  причина; каждый провалившийся прогон печатал `npm skip`.
+- **Убивать демона по таймеру, не меняя cgroup.** Он родится там же и снова
+  начнёт есть чужой бюджет.
+
+### 9.3 Что поставлено
+
+1. **Юнит `systema-madeline-daemon.service`** — главный процесс
+   `php artisan telegram-support:daemon` живёт в собственной cgroup, и демон,
+   рождаясь из него, наследует именно её. Числа —
+   `MADELINE_MEMORY_HIGH` / `MADELINE_MEMORY_MAX` / `MADELINE_TASKS_MAX` в
+   [`scripts/server_guards.conf`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards.conf).
+   Здоровый демон — ~106 МиБ, потолок 1 ГиБ.
+2. **Потолки надзора** (`MADELINE_DAEMON_MAX_RSS_MB`, `..._MAX_FDS`,
+   `..._MAX_AGE_HOURS`): демона гасят и поднимают заново, не дожидаясь ядра.
+   Безопасно ровно потому, что демон теперь свой — перезапуск не задевает ни
+   cron, ни supervisor. Течь дескрипторов — дефект vendor'а MadelineProto,
+   починить нельзя, **ограничить можно**.
+3. **`9>&-` во всех трёх обёртках** (`schedule`, `watchdog`, `auto-deploy`).
+   Второй дефект того же инцидента: демон, рождённый внутри `schedule:run`,
+   уносил с собой **открытый fd 9** — тот самый, на котором висит `flock`
+   планировщика. `flock` отпускается только при закрытии ПОСЛЕДНЕГО fd, поэтому
+   ни `timeout`, ни `kill`, ни `exit(75)` замок освободить не могли: планировщик
+   деградировал до одного прогона в 31 минуту (реклейм по `STALE_SECONDS`).
+   Регрессия закреплена — тесты 4 и 5 в
+   [`test_systema_schedule_run.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/test_systema_schedule_run.sh)
+   падают, если убрать `9>&-`.
+4. **`guards:verify` научился видеть троттлинг и мёртвый планировщик:**
+   - `cgroup` — `cron.service` над `memory.high` → critical (≥80 % → warning);
+   - `scheduler-stamp` — возраст отметки завершённого `schedule:run`
+     (`storage/framework/schedule-run.stamp`, пишет обёртка; SKIP её **не**
+     обновляет) старше `SCHEDULER_STAMP_MAX_MINUTES` → critical.
+   Обе находки уезжают в Telegram тем же плечом, что и все остальные
+   (`cabinet:probe` → §5).
+5. **`health_check()` авто-деплоя** больше не смотрит только на хост: строка
+   `cgroup:cron-over-high(<current>/<high>)` появляется в `$fails`.
+6. **Текст предохранителя называет реальный шаг.** Было — «разобрать npm/vite
+   или MAX=1500s» при `npm skip` в том же логе. Стало — последняя строка
+   `deploy.sh` из `storage/logs/auto_deploy_last_run.log` плюс приписка про
+   троттлинг, когда он есть.
+
+### 9.4 Как проверить руками
+
+```
+systemctl status systema-madeline-daemon
+cat /proc/$(pgrep -f 'MadelineProto worker')/cgroup     # НЕ cron.service
+ls /proc/$(pgrep -f 'MadelineProto worker')/fd | wc -l  # должно быть ~120, не тысячи
+cat /sys/fs/cgroup/system.slice/cron.service/memory.events   # high не растёт
+journalctl -u systema-madeline-daemon -n 50
+sudo -u www-data php /var/www/html/artisan guards:verify
+```
+
+Кто держит замок планировщика, если `schedule.log` снова полон `SKIP`:
+
+```
+ls -l /proc/*/fd 2>/dev/null | grep schedule-run.lock
+```
 
 _Dr. Mārcis Gasūns_
