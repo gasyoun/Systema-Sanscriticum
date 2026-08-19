@@ -65,6 +65,7 @@ use App\Models\Course;
 use App\Models\CourseDesignAsset;
 use App\Models\LandingPage;
 use App\Models\Lesson;
+use App\Models\MarathonEnrollment;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Testimonial;
@@ -882,6 +883,18 @@ Route::get('/admin/payments/{payment}/paypal-proof', function (Payment $payment)
 
     return Storage::disk('local')->download($payment->proof_path);
 })->middleware('auth')->name('paypal.proof');
+
+// H445 Phase 4 (H546) — Day-2 mantra-reading voice note (marathon).
+// Диск 'local' (не public) — приватная запись голоса, не публичный медиафайл.
+Route::get('/admin/marathon/mantra-voice/{enrollment}', function (MarathonEnrollment $enrollment) {
+    abort_unless(RoleGate::adminOnly(), 403);
+    abort_unless(
+        filled($enrollment->day2_voice_path) && Storage::disk((string) $enrollment->day2_voice_disk)->exists($enrollment->day2_voice_path),
+        404
+    );
+
+    return Storage::disk((string) $enrollment->day2_voice_disk)->download($enrollment->day2_voice_path);
+})->middleware('auth')->name('admin.marathon.mantra-voice.download');
 
 // Исходник PSD дизайнерского баннера: приватный диск, отдаём только персоналу.
 // Свой маршрут, а НЕ существующий /force-download: тот пускает по legacy-флагу

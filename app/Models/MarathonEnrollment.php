@@ -52,6 +52,12 @@ class MarathonEnrollment extends Model
         'quiz_level',
         'ab_arm',
         'day2_question',
+        'day2_voice_telegram_file_id',
+        'day2_voice_disk',
+        'day2_voice_path',
+        'day2_voice_received_at',
+        'day2_voice_reviewed_at',
+        'day2_voice_curator_note',
         'day0_started_at',
         'day1_completed_at',
         'day2_completed_at',
@@ -71,6 +77,8 @@ class MarathonEnrollment extends Model
         'day2_completed_at' => 'datetime',
         'day1_engaged_at' => 'datetime',
         'day2_engaged_at' => 'datetime',
+        'day2_voice_received_at' => 'datetime',
+        'day2_voice_reviewed_at' => 'datetime',
         'day1_quiz_seconds' => 'integer',
         'day2_quiz_seconds' => 'integer',
         'consultation_booked_at' => 'datetime',
@@ -139,6 +147,23 @@ class MarathonEnrollment extends Model
     public function isDevaCohort(): bool
     {
         return $this->cohort === self::COHORT_DEVA;
+    }
+
+    /** H445 Phase 4 (H546) — has the Day-2 mantra-reading voice note arrived from Telegram? */
+    public function hasSubmittedDay2Voice(): bool
+    {
+        return $this->day2_voice_received_at !== null;
+    }
+
+    /**
+     * H546 §2 — curator review is a paid-track-only lane; the free track is
+     * self-assessed (H445 §1) and never enters the review queue.
+     */
+    public function needsDay2VoiceReview(): bool
+    {
+        return $this->isPaidTrack()
+            && $this->hasSubmittedDay2Voice()
+            && $this->day2_voice_reviewed_at === null;
     }
 
     /**

@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Models\LandingBot;
 use App\Models\Lead;
+use App\Models\MarathonEnrollment;
 use App\Services\Leads\LeadMagnetDispatcher;
 use App\Services\Marathon\MarathonDay1Sender;
 use App\Services\Messaging\DeliveryChannelManager;
@@ -52,6 +53,16 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             return;
         }
 
+        // H445 Phase 4 (H546) — Day-2 mantra-reading voice note. Checked before
+        // the /start-only early return below, since a voice message carries no
+        // text. Resolved purely by chat_id (already linked at /start time) —
+        // there is no token in a voice message to key off of.
+        if (isset($message['voice']['file_id'])) {
+            $this->handleMantraVoice($chatId, (string) $message['voice']['file_id']);
+
+            return;
+        }
+
         if (! str_starts_with($text, '/start')) {
             return;
         }
@@ -88,6 +99,43 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
         // Сразу, если у лендинга нет вебинара или окно [старт−offset; старт+грейс]
         // уже открыто; иначе выдаст планировщик magnets:deliver-due.
         LeadMagnetDispatcher::deliverOrDefer($lead, 'telegram');
+    }
+
+    /**
+     * H445 Phase 4 (H546) — matches an incoming voice note to a `deva`-cohort
+     * enrollee still awaiting their Day-2 mantra reading, dispatches the
+     * download, and acks the student. Silent no-op for any other voice
+     * message (unlinked chat, no pending deva Day-2 task, or already
+     * submitted) — a marathon lead-magnet bot getting a random voice note
+     * from someone with no reading task open is not an error.
+     */
+    private function handleMantraVoice(int $chatId, string $fileId): void
+    {
+        $lead = Lead::where('telegram_chat_id', $chatId)->latest('id')->first();
+        if (! $lead) {
+            return;
+        }
+
+        $enrollment = MarathonEnrollment::query()
+            ->where('lead_id', $lead->id)
+            ->where('cohort', MarathonEnrollment::COHORT_DEVA)
+            ->whereNull('day2_voice_received_at')
+            ->latest('id')
+            ->first();
+
+        if (! $enrollment) {
+            return;
+        }
+
+        DownloadMarathonMantraVoice::dispatch($enrollment->id, $fileId);
+
+        $channel = app(DeliveryChannelManager::class)->get('telegram');
+        $channel->sendMessage(
+            (string) $chatId,
+            $enrollment->isPaidTrack()
+                ? '🙏 Получили! Куратор прослушает и даст обратную связь.'
+                : '🙏 Получили! Сверьтесь с разбором по словам выше — это самопроверка, отдельного ответа не будет.',
+        );
     }
 
     /**
