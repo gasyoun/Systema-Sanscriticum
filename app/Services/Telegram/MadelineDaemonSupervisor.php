@@ -216,11 +216,27 @@ class MadelineDaemonSupervisor
     }
 
     /**
-     * Путь сессии как literal-паттерн для `pgrep -f` (тот трактует аргумент
-     * как ERE). Копия правила из {@see MadelineSessionReaper::pgrepPattern()}.
+     * Паттерн для `pgrep -f`: маркер демона, пробел, путь сессии.
+     *
+     * Путь сессии экранируется как литерал (pgrep трактует аргумент как ERE) —
+     * то же правило, что в {@see MadelineSessionReaper::pgrepPattern()}. А вот
+     * ОДНОГО пути мало, и это выяснилось на живом проде 19-08-2026, в первом же
+     * заходе супервизора: строка разбора
+     * `for p in $(pgrep -f "MadelineProto worker"); do cat /proc/$p/cgroup`
+     * сама попадает в собственную выборку — путь сессии есть и в её командной
+     * строке. Реаперу это безразлично (он бьёт SIGTERM под замком сессии), а
+     * супервизор гасит всё, что живёт в ЧУЖОЙ cgroup, — и диагностическая
+     * оболочка администратора всегда живёт в чужой. Без маркера человек,
+     * посмотревший на демона, через минуту терял свой ssh.
+     *
+     * Маркеров два, и оба в этой же форме: воркер называет себя
+     * `MadelineProto worker <session>` (cli_set_process_title), раннер —
+     * `madeline-ipc <session> <startupId>`.
      */
     private function pgrepPattern(string $session): string
     {
-        return preg_replace('~([.\[\]()*+?^$|{}\\\\])~', '\\\\$1', $session) ?? $session;
+        $literal = preg_replace('~([.\[\]()*+?^$|{}\\\\])~', '\\\\$1', $session) ?? $session;
+
+        return '(MadelineProto worker|madeline-ipc) '.$literal;
     }
 }

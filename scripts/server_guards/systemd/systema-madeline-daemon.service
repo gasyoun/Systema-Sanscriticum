@@ -24,6 +24,14 @@ After=network-online.target mysql.service redis-server.service
 Wants=network-online.target
 # Дохлый крон не должен утаскивать за собой этот юнит и наоборот: связи нет
 # сознательно — вся суть в том, что судьбы у них теперь разные.
+#
+# Перезапуск не должен упереться в start-limit и оставить сессию без демона
+# насовсем — та же причина, что у cron.service.d/99-systema-limits.conf.
+# Директива живёт ИМЕННО в [Unit]: в [Service] systemd её молча игнорирует
+# («Unknown key 'StartLimitIntervalSec' in section [Service], ignoring» в
+# journal), то есть предохранителя просто не было бы. Поймано на живом проде
+# 19-08-2026, в первом же запуске юнита.
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
@@ -37,9 +45,6 @@ ExecStart=@@PHP_BIN@@ @@APP_DIR@@/artisan telegram-support:daemon
 # так умеют холодный старт, просто теперь холодный старт им не понадобится.
 Restart=always
 RestartSec=10s
-# Перезапуск не должен упереться в start-limit и оставить сессию без демона
-# насовсем — ровно та же причина, что у cron.service.d/99-systema-limits.conf.
-StartLimitIntervalSec=0
 
 # ── Потолки. ЕДИНСТВЕННОЕ место, где они заданы для этого юнита ────────────
 # Здоровый демон — ~106 МиБ. MemoryMax=1G оставляет десятикратный запас и при

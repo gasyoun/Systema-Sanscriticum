@@ -35,8 +35,13 @@ final class FakeDaemonProcessProbe implements DaemonProcessProbe
         $this->processes[$pid] = ['cgroup' => $cgroup, 'rss_kb' => $rssKb, 'fds' => $fds, 'age_s' => $ageS];
     }
 
+    /** Паттерны, с которыми звали pgrep — тест проверяет их отдельно. */
+    public array $patterns = [];
+
     public function pidsMatching(string $pattern): array
     {
+        $this->patterns[] = $pattern;
+
         return array_map(intval(...), array_keys($this->processes));
     }
 

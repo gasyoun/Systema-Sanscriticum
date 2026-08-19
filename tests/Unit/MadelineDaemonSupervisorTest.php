@@ -163,6 +163,28 @@ class MadelineDaemonSupervisorTest extends TestCase
         $this->assertStringContainsString('не настроен', (string) $result['spawn_error']);
     }
 
+    public function test_the_search_pattern_needs_a_daemon_marker_not_just_the_session_path(): void
+    {
+        // Поймано на живом проде 19-08-2026, в первом же заходе супервизора:
+        //   for p in $(pgrep -f "MadelineProto worker"); do cat /proc/$p/cgroup
+        // содержит путь сессии в собственной командной строке и попадала в
+        // выборку. Оболочка администратора всегда живёт в ЧУЖОЙ cgroup —
+        // значит, человек, посмотревший на демона, через минуту терял ssh.
+        $probe = new FakeDaemonProcessProbe;
+        $this->supervisor($probe, new UnconfiguredFactoryStub)->tick();
+
+        $this->assertCount(1, $probe->patterns);
+        $regex = '~'.$probe->patterns[0].'~';
+        $session = '/var/www/html/storage/app/telegram-support/session.madeline';
+
+        $this->assertSame(1, preg_match($regex, "MadelineProto worker {$session}"));
+        $this->assertSame(1, preg_match($regex, "madeline-ipc {$session} 1755585600"));
+        $this->assertSame(0, preg_match($regex, 'bash -c for p in $(pgrep -f "MadelineProto worker"); do cat /proc/$p/cgroup; done'));
+        $this->assertSame(0, preg_match($regex, "php artisan telegram-support:sync --session={$session}"));
+        // Экранирование точки на месте: чужой каталог с похожим именем не ловим.
+        $this->assertSame(0, preg_match($regex, 'MadelineProto worker /var/www/html/storage/app/telegram-support/sessionXmadeline'));
+    }
+
     public function test_without_a_readable_cgroup_nothing_is_killed(): void
     {
         // Не Linux / нет /proc: fail-open. Убивать демона по незнанию нельзя.
