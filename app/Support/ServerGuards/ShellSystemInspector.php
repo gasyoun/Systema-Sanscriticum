@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Support\ServerGuards;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Process;
+use Spatie\Backup\BackupDestination\BackupDestination;
 use Throwable;
 
 /**
@@ -13,6 +15,9 @@ use Throwable;
  */
 final class ShellSystemInspector implements SystemInspector
 {
+    /** Как долго держать ответ off-site назначения, секунд. */
+    private const BACKUP_PROBE_TTL_SECONDS = 3600;
+
     /** @var array<string, string|null> */
     private array $unitPropertyCache = [];
 
@@ -128,6 +133,92 @@ final class ShellSystemInspector implements SystemInspector
         }
 
         return (int) $m[1] * 1024;
+    }
+
+    public function failedUnits(): ?array
+    {
+        // --plain: без него systemctl рисует «●» перед именем, и юнит уезжает
+        // в тревогу с бусиной в названии.
+        $out = $this->run(['systemctl', '--failed', '--no-legend', '--plain', '--no-pager']);
+        if ($out === null) {
+            return null; // Нет systemd / команда не отработала — спросить нечем.
+        }
+
+        $units = [];
+        foreach (preg_split('/\r\n|\n|\r/', $out) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            // «samudra-health-monitor.service loaded failed failed Описание»
+            $name = preg_split('/\s+/', $line)[0] ?? '';
+            if ($name !== '') {
+                $units[] = $name;
+            }
+        }
+
+        return $units;
+    }
+
+    public function backupDestinations(): ?array
+    {
+        // Каждые 15 минут (cabinet:probe) ходить по WebDAV нельзя: одна
+        // зависшая выдача остановила бы всю проверку предохранителей. Час —
+        // достаточно мелкое зерно для порога в 8 СУТОК и достаточно редкое,
+        // чтобы off-site не превратился в источник нагрузки.
+        try {
+            return Cache::remember(
+                'server_guards.backup_destinations',
+                self::BACKUP_PROBE_TTL_SECONDS,
+                fn (): ?array => $this->readBackupDestinations(),
+            );
+        } catch (Throwable) {
+            // Кеш недоступен (redis лёг) — спросим напрямую, но молча.
+            try {
+                return $this->readBackupDestinations();
+            } catch (Throwable) {
+                return null;
+            }
+        }
+    }
+
+    /**
+     * @return list<array{disk: string, reachable: bool, newestAt: int|null, newestBytes: int|null}>|null
+     */
+    private function readBackupDestinations(): ?array
+    {
+        if (! class_exists(BackupDestination::class)) {
+            return null;
+        }
+
+        /** @var list<string> $disks */
+        $disks = (array) config('backup.backup.destination.disks', []);
+        $name = (string) config('backup.backup.name', '');
+        if ($disks === [] || $name === '') {
+            return null;
+        }
+
+        $rows = [];
+        foreach ($disks as $disk) {
+            $disk = (string) $disk;
+            try {
+                $destination = BackupDestination::create($disk, $name);
+                $reachable = $destination->isReachable();
+                $newest = $reachable ? $destination->backups()->newest() : null;
+                $rows[] = [
+                    'disk' => $disk,
+                    'reachable' => $reachable,
+                    'newestAt' => $newest?->date()->getTimestamp(),
+                    'newestBytes' => $newest === null ? null : (int) $newest->sizeInBytes(),
+                ];
+            } catch (Throwable) {
+                // Отдельное назначение не ответило — это и есть «недостижимо»,
+                // а не повод потерять сведения об остальных.
+                $rows[] = ['disk' => $disk, 'reachable' => false, 'newestAt' => null, 'newestBytes' => null];
+            }
+        }
+
+        return $rows;
     }
 
     public function trackedDirtyPaths(string $repoDir): ?array

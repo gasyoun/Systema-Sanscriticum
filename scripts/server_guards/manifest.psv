@@ -24,3 +24,6 @@ systemd/sysstat-collect.timer.d/99-every-minute.conf|/etc/systemd/system/sysstat
 php/cli-99-memory-cap.ini|/etc/php/@@PHP_VERSION@@/cli/conf.d/99-memory-cap.ini|644|critical
 default/earlyoom|/etc/default/earlyoom|644|critical
 logrotate/systema-app|/etc/logrotate.d/systema-app|644|warning
+systemd/tmp.mount.d/99-systema-size.conf|/etc/systemd/system/tmp.mount.d/99-systema-size.conf|644|critical
+tmpfiles/systema-tmp.conf|/etc/tmpfiles.d/systema-tmp.conf|644|warning
+systemd/nginx.service.d/99-systema-restart.conf|/etc/systemd/system/nginx.service.d/99-systema-restart.conf|644|critical
