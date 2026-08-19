@@ -29,6 +29,9 @@ class RemindDebtors extends Command
 
     private int $cadence;
 
+    /** Считать ли ручной контакт основанием пропустить авто-напоминание (H3156). */
+    private bool $manualSuppressesAuto;
+
     private bool $toTg;
 
     private bool $toVk;
@@ -54,6 +57,7 @@ class RemindDebtors extends Command
         $this->settings = $s;
         $lead = max(0, (int) ($s->debt_reminder_lead_days ?? 7));
         $this->cadence = max(1, (int) ($s->debt_reminder_cadence_days ?? 7));
+        $this->manualSuppressesAuto = (bool) ($s->debt_reminder_manual_suppresses_auto ?? false);
         $this->toTg = (bool) $s->debt_reminder_to_telegram;
         $this->toVk = (bool) $s->debt_reminder_to_vk;
         $this->toEmail = (bool) $s->debt_reminder_to_email;
@@ -172,9 +176,15 @@ class RemindDebtors extends Command
      */
     private function deliver(User $user, int $courseId, ?int $block): void
     {
+        // Какие строки считаются «мы уже писали» для анти-спама (H3156).
+        // Ручное сообщение куратора глушит следующее авто-напоминание ТОЛЬКО
+        // если это включено явно: до H3156 ручная отправка вообще не оставляла
+        // строки, и молча замедлить лестницу (а с ней и эскалацию
+        // DunningStage) починкой отчёта H2746 было бы подменой политики.
         $recent = DebtReminder::query()
             ->where('user_id', $user->id)
             ->where('course_id', $courseId)
+            ->when(! $this->manualSuppressesAuto, fn ($q) => $q->where('source', DebtReminder::SOURCE_AUTO))
             ->when($block !== null, fn ($q) => $q->where('block_number', $block))
             ->when($block === null, fn ($q) => $q->whereNull('block_number'))
             ->where('sent_at', '>=', $this->now->copy()->subDays($this->cadence))
@@ -201,6 +211,7 @@ class RemindDebtors extends Command
                 'course_id' => $courseId,
                 'block_number' => $block,
                 'sent_at' => $this->now,
+                'source' => DebtReminder::SOURCE_AUTO,
             ]);
             $this->sent++;
         } else {

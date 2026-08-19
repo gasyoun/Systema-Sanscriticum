@@ -157,6 +157,11 @@ class MarketingSettingResource extends Resource
                             ->numeric()->minValue(1)->maxValue(60)->suffix('дн')->default(7)
                             ->helperText('Анти-спам: повтор одному студенту по курсу не раньше.')
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
+                        Forms\Components\Toggle::make('debt_reminder_manual_suppresses_auto')
+                            ->label('Ручное напоминание глушит следующее авто')
+                            ->default(false)
+                            ->helperText('Выкл (по умолчанию): куратор написал сам — лестница всё равно идёт своим ритмом. Вкл: ручное сообщение считается контактом и для анти-спама, следующее авто-напоминание не уйдёт весь период выше (H3156).')
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
                         Forms\Components\Toggle::make('debt_reminder_to_telegram')->label('Канал: Telegram')->default(true)
                             ->visible(fn (Forms\Get $get): bool => (bool) $get('debt_reminders_enabled')),
                         Forms\Components\Toggle::make('debt_reminder_to_vk')->label('Канал: VK')->default(true)
