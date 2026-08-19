@@ -62,6 +62,19 @@ class RunTelegramSupportDaemon extends Command
         $interval = max(5, $interval);
         $maxTicks = $this->option('once') ? 1 : (int) $this->option('max-ticks');
 
+        // Без этого `systemctl restart` ждал полный TimeoutStopSec=30s и добивал
+        // нас SIGKILL: процесс спал в sleep(60) и сигнала не видел, а systemd
+        // писал «Failed with result 'timeout'». Плата не косметическая —
+        // KillMode=control-group сносит вместе с нами и демона, и всё это время
+        // демона нет, а значит очередной cron-заход поднимет свой, под кроном.
+        // Тридцать секунд такого окна против одной — вот и вся разница.
+        $stopping = false;
+        if (defined('SIGTERM')) {
+            $this->trap([SIGTERM, SIGINT], function () use (&$stopping): void {
+                $stopping = true;
+            });
+        }
+
         $this->stamp('supervisor up: interval='.$interval.'s, ceilings rss='
             .$this->number($spec, 'MADELINE_DAEMON_MAX_RSS_MB').'MB fds='
             .$this->number($spec, 'MADELINE_DAEMON_MAX_FDS').' age='
@@ -73,7 +86,15 @@ class RunTelegramSupportDaemon extends Command
             if ($maxTicks !== 0 && $tick >= $maxTicks) {
                 break;
             }
-            $probe->sleep($interval);
+            // Спим посекундно, а не одним sleep($interval): иначе сигнал ждал бы
+            // конца интервала, и вся ловушка выше была бы бутафорией.
+            for ($slept = 0; $slept < $interval && ! $stopping; $slept++) {
+                $probe->sleep(1);
+            }
+            if ($stopping) {
+                $this->stamp('SIGTERM — выхожу; демон остаётся на попечении systemd');
+                break;
+            }
         }
 
         return self::SUCCESS;
