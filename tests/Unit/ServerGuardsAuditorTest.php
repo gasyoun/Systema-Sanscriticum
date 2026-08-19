@@ -393,6 +393,94 @@ class ServerGuardsAuditorTest extends TestCase
         GuardSpec::fromString("A=1\n")->render('value = @@NOT_IN_CONF@@');
     }
 
+    // ── H3121: cgroup крона и живость планировщика ─────────────────────────
+
+    public function test_cron_cgroup_over_memory_high_is_critical(): void
+    {
+        $sys = $this->healthy();
+        // Ровно состояние 19-08-2026: группа НАД порогом. Хостовой памяти при
+        // этом было 8.5 ГиБ — то есть все остальные проверки зелены.
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) ($this->spec->bytes('CRON_MEMORY_HIGH') + 1);
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('[critical] cgroup: cron.service занял', $this->lines($findings));
+        $this->assertStringContainsString('ТОРМОЗИТ всю группу', $this->lines($findings));
+    }
+
+    public function test_cron_cgroup_near_memory_high_is_only_a_warning(): void
+    {
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) (int) ($this->spec->bytes('CRON_MEMORY_HIGH') * 0.85);
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertStringContainsString('[warning] cgroup:', $this->lines($findings));
+        $this->assertStringNotContainsString('[critical] cgroup:', $this->lines($findings));
+    }
+
+    public function test_unreadable_cgroup_is_not_a_finding(): void
+    {
+        // Не cgroup v2 / чужая машина / CI: проверка обязана молчать, а не
+        // выдумывать аварию там, где смотреть не на что.
+        $sys = $this->healthy();
+        unset($sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current']);
+
+        $this->assertStringNotContainsString('cgroup:', $this->lines($this->auditor($sys)->audit()));
+    }
+
+    public function test_stale_scheduler_stamp_is_critical(): void
+    {
+        $sys = $this->healthy();
+        $path = rtrim($this->spec->get('APP_DIR'), '/').'/storage/framework/schedule-run.stamp';
+        $stale = (int) $this->spec->get('SCHEDULER_STAMP_MAX_MINUTES') + 5;
+        $sys->files[$path] = (string) (time() - $stale * 60);
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('[critical] scheduler-stamp:', $this->lines($findings));
+        $this->assertStringContainsString('schedule-run.lock', $this->lines($findings));
+    }
+
+    public function test_absent_scheduler_stamp_is_info_not_alarm(): void
+    {
+        $sys = $this->healthy();
+        unset($sys->files[rtrim($this->spec->get('APP_DIR'), '/').'/storage/framework/schedule-run.stamp']);
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertStringContainsString('[info] scheduler-stamp:', $this->lines($findings));
+        $this->assertFalse(ServerGuardsAuditor::hasBlocking($findings));
+    }
+
+    public function test_madeline_daemon_unit_without_a_ceiling_is_critical(): void
+    {
+        $sys = $this->healthy();
+        $sys->unitProperties['systema-madeline-daemon|MemoryMax'] = 'infinity';
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('systema-madeline-daemon.service: MemoryMax=infinity', $this->lines($findings));
+        $this->assertStringContainsString('потолка НЕТ', $this->lines($findings));
+    }
+
+    public function test_stopped_madeline_daemon_unit_is_reported_by_name(): void
+    {
+        // Юнит стоит → демон при следующей же надобности родится под кроном,
+        // то есть дефект H3121 вернётся целиком.
+        $sys = $this->healthy();
+        $sys->active['systema-madeline-daemon'] = false;
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertStringContainsString('[critical] unit-active: systema-madeline-daemon не active', $this->lines($findings));
+    }
+
     public function test_every_manifest_row_points_at_an_existing_template(): void
     {
         foreach ($this->auditor($this->healthy())->manifest() as $row) {

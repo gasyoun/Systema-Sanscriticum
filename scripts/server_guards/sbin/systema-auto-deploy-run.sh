@@ -79,11 +79,35 @@ RETRIES_FILE="$APP_DIR/storage/framework/auto-deploy-retries"
 # Куда уезжает текст снятого предохранителя. След обязан пережить снятие —
 # иначе «почему прод не деплоился в 19:30» станет неотвечаемым вопросом.
 BREAKER_HISTORY="$APP_DIR/storage/logs/auto_deploy_breaker_history.log"
+# H3121: вывод ТОЛЬКО последнего прогона deploy.sh, отдельно от общего лога.
+# Нужен ради одной строки в тексте предохранителя — «на каком шаге встали».
+# 19-08-2026 предохранитель писал «разобрать npm/vite» при том, что тот же лог
+# двумя строками выше говорил `npm skip`, и человек ушёл искать сборку фронта
+# вместо троттлинга cgroup. Перезаписывается каждым прогоном: это снимок, а не
+# история — история и так лежит в auto_deploy.log.
+STAGE_LOG="$APP_DIR/storage/logs/auto_deploy_last_run.log"
 # H2305: consecutive silent-exit (lock/fetch) counter; trips breaker after MAX_STALL.
 STALL_FILE="$APP_DIR/storage/framework/auto-deploy-stall"
 MAX_STALL=${SYSTEMA_AUTO_DEPLOY_MAX_STALL:-5}
 
 stamp() { date -u '+%Y-%m-%dT%H:%M:%SZ'; }
+
+# Последняя непустая строка вывода deploy.sh — «где именно встали» (H3121).
+# Обрезаем: строка едет в текст предохранителя, а его читают в Telegram.
+last_stage() {
+  local line
+  line=$(grep -v '^[[:space:]]*$' "$STAGE_LOG" 2>/dev/null | tail -n 1)
+  [ -n "$line" ] || { printf 'deploy.sh не напечатал ничего'; return; }
+  printf '%.140s' "$line"
+}
+
+# Приписка про троттлинг — только когда он есть. Пустая строка в норме, чтобы
+# текст предохранителя не рос впустую.
+cgroup_note() {
+  local cg
+  cg=$(cgroup_over_high) || return 0
+  printf '; cron.service НАД memory.high (%s) — деплой ЖЕРТВА троттлинга, а не причина (H3121)' "$cg"
+}
 trip() {
   printf '%s %s\n' "$(stamp)" "$1" >> "$BREAKER"
   echo "$(stamp) BREAKER TRIPPED: $1"
@@ -123,13 +147,35 @@ refresh_root_crontab_mirror() {
 # $avail НЕ local — успешная строка лога печатает «mem ${avail}MB», и при
 # local она всю жизнь печатала «mem ?MB» (косметика, но врала человеку,
 # который читает лог во время разбора).
+
+# ── Троттлинг собственной cgroup: то, чего health_check не видел ────────────
+# 19-08-2026 (H3121) прод стоял семь часов при MemAvailable 8.5 ГиБ — то есть
+# health_check был зелёным ВСЁ ВРЕМЯ. Память кончилась не на хосте, а в группе
+# system.slice/cron.service: демон MadelineProto, унаследовавший её cgroup,
+# упёрся в MemoryHigh=2G, и ядро притормозило КАЖДЫЙ процесс группы, включая
+# сам деплой (composer 3 с → 16 мин). Хостовая проверка такое не видит
+# структурно, поэтому смотрим на бюджет ИМЕННО ТОЙ группы, в которой бежим.
+# Печатает «<current>MiB/<high>MiB» и возвращает 0, только когда группа НАД
+# порогом; всё остальное (нет cgroup v2, нет потолка) — молча 1, fail-open.
+CRON_CGROUP=${SYSTEMA_CRON_CGROUP:-/sys/fs/cgroup/system.slice/cron.service}
+cgroup_over_high() {
+  local cur high
+  cur=$(cat "$CRON_CGROUP/memory.current" 2>/dev/null) || return 1
+  high=$(cat "$CRON_CGROUP/memory.high" 2>/dev/null) || return 1
+  case "$high" in ''|*[!0-9]*) return 1 ;; esac   # «max» = потолка нет
+  case "$cur"  in ''|*[!0-9]*) return 1 ;; esac
+  [ "$cur" -lt "$high" ] && return 1
+  echo "$((cur / 1048576))MiB/$((high / 1048576))MiB"
+}
+
 health_check() {
   fails=""
-  local code unit
+  local code unit cg
   code=$(curl -fsS -o /dev/null -m 30 -w '%{http_code}' "$SMOKE_URL" 2>/dev/null || echo 000)
   [ "$code" = "200" ] || fails="$fails smoke:$code"
   avail=$(awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo)
   [ "${avail:-0}" -ge "$MIN_MB" ] || fails="$fails mem:${avail}MB<${MIN_MB}MB"
+  cg=$(cgroup_over_high) && fails="$fails cgroup:cron-over-high($cg)"
   for unit in php@@PHP_VERSION@@-fpm mysql cron; do
     systemctl is-active --quiet "$unit" || fails="$fails unit:$unit"
   done
@@ -257,24 +303,33 @@ fail_deploy() {
     trip "$reason; в деплое есть миграции — автооткат запрещён, нужен человек СРОЧНО"
   fi
   echo "$(stamp) ROLLBACK: возвращаю $(git rev-parse --short "$LOCAL")"
-  if timeout -k 30s "${MAX}s" bash "$DEPLOY_SH" --rollback "$LOCAL" && health_check; then
+  if timeout -k 30s "${MAX}s" bash "$DEPLOY_SH" --rollback "$LOCAL" 9>&- && health_check; then
     trip "[rolled-back] $reason; автоматически откатились на $(git rev-parse --short "$LOCAL"), сайт жив — чинить можно без спешки"
   fi
 
   # H2104: timeout (124) / SIGKILL (137) при живом smoke — не «требует Артёма».
   # Инцидент 01-08-2026: vite 1500s → rollback 124 → critical при HTTP 200.
   if health_check && { [ "$deploy_rc" -eq 124 ] || [ "$deploy_rc" -eq 137 ]; }; then
-    trip "[timeout-alive] $reason; автооткат не уложился/не помог, но health чист (smoke 200) — сайт жив, Артём не нужен; разобрать npm/vite или MAX=${MAX}s, снять auto_deploy.disabled"
+    trip "[timeout-alive] $reason; автооткат не уложился/не помог, но health чист (smoke 200) — сайт жив, Артём не нужен; встали на шаге «$(last_stage)»; MAX=${MAX}s, снять auto_deploy.disabled"
   fi
   if health_check; then
-    trip "[timeout-alive] $reason; автооткат НЕ помог, health чист — сайт жив; разобрать и снять fuse (не host-down)"
+    trip "[timeout-alive] $reason; автооткат НЕ помог, health чист — сайт жив; встали на шаге «$(last_stage)»; разобрать и снять fuse (не host-down)"
   fi
-  trip "$reason; автооткат НЕ помог — сервер требует человека немедленно"
+  # Единственная жёсткая ветка: сюда попадаем ровно тогда, когда health НЕ чист.
+  # $fails здесь свежий (его выставил последний health_check выше) и с H3121
+  # умеет сказать «cgroup:cron-over-high» — до этого критический текст молчал о
+  # причине, и человек шёл читать не тот лог.
+  trip "$reason; автооткат НЕ помог, health:$fails — сервер требует человека немедленно; встали на шаге «$(last_stage)»$(cgroup_note)"
 }
 
 echo "$(stamp) AUTO-DEPLOY: $(git rev-parse --short "$LOCAL") -> $(git rev-parse --short "$REMOTE")"
-timeout -k 30s "${MAX}s" bash "$DEPLOY_SH"
-rc=$?
+# tee, а не «> файл»: вывод обязан продолжать течь в auto_deploy.log ЖИВЬЁМ —
+# именно по живому потоку 19-08-2026 стало видно, что composer идёт 16 минут.
+# Копия в $STAGE_LOG нужна лишь last_stage(). rc берём из PIPESTATUS[0]:
+# без этого «$?» вернул бы код tee, то есть всегда 0 (H3121).
+# 9>&- закрывает ребёнку lock-fd — та же гигиена, что в schedule/watchdog.
+timeout -k 30s "${MAX}s" bash "$DEPLOY_SH" 9>&- 2>&1 | tee "$STAGE_LOG"
+rc=${PIPESTATUS[0]}
 # 75 = deploy.sh success with managed-guard drift only (#1143). Code is already
 # on origin/main; rolling back would re-create the 2026-08-05 loop (deploy →
 # GUARDS DRIFT → rollback → retry → fuse). Keep HEAD, skip fail_deploy, still

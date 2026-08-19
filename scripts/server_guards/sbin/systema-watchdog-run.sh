@@ -20,7 +20,11 @@ exec 9>"$LOCK" 2>/dev/null || exit 0
 flock -n 9 || exit 0          # previous watchdog still running: silently skip
 
 cd "$APP_DIR" || exit 1
-timeout -k 10s "${MAX}s" @@PHP_BIN@@ artisan $CMD >/dev/null 2>&1
+# `9>&-`: тот же наследуемый-дескриптор капкан, что и в systema-schedule-run.sh
+# (H3121). Сторожа сами демона не поднимают, но правило «ребёнку — ни одного
+# нашего lock-fd» обязано быть одинаковым во всех трёх обёртках: иначе следующая
+# команда, которой однажды понадобится MadelineProto, воскресит дефект здесь.
+timeout -k 10s "${MAX}s" @@PHP_BIN@@ artisan $CMD >/dev/null 2>&1 9>&-
 rc=$?
 if [ "$rc" -ge 124 ]; then
   echo "$(date -u '+%Y-%m-%dT%H:%M:%SZ') WATCHDOG TIMEOUT: '$CMD' exceeded ${MAX}s"

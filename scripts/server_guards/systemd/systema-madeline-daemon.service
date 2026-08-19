@@ -1,0 +1,66 @@
+[Unit]
+# MANAGED FILE — scripts/server_guards_apply.sh. Числа — из scripts/server_guards.conf.
+#
+# Зачем юнит вообще существует (H3121, 19-08-2026).
+#
+# Фоновый демон MadelineProto не выбирает, где ему жить: cgroup наследуется на
+# fork и сама собой не меняется, даже когда процесс отцепляется к PPID 1.
+# Пока первым, кто просил открыть сессию, был `schedule:run` под cron, демон
+# оказывался внутри system.slice/cron.service — и тратил ЧУЖОЙ бюджет
+# MemoryHigh=2G, поставленный туда после OOM 28-07-2026 (H1904). За 33 часа он
+# дорос до 2.29 ГиБ RSS и 2 774 дескрипторов на один madelineproto.log, упёрся
+# в порог, и ядро затормозило ВСЮ группу: авто-деплой (composer 3 с → 16 мин),
+# планировщик (таймаут 900 с каждую минуту, ~7 часов простоя), оба сторожа.
+#
+# Лечится не поднятием потолка cron.service — тот потолок отработал ровно так,
+# как задуман, превратив OOM в торможение. Лечится тем, что у долгоживущего
+# демона появляется СВОЙ бюджет: главный процесс этого юнита порождает демон из
+# своей cgroup, и демон наследует именно её.
+#
+# Разбор: docs/server-resource-guards.md §9.
+Description=Systema — надзор за демоном MadelineProto (своя cgroup, свой потолок)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md
+After=network-online.target mysql.service redis-server.service
+Wants=network-online.target
+# Дохлый крон не должен утаскивать за собой этот юнит и наоборот: связи нет
+# сознательно — вся суть в том, что судьбы у них теперь разные.
+
+[Service]
+Type=simple
+User=@@APP_USER@@
+Group=@@APP_USER@@
+WorkingDirectory=@@APP_DIR@@
+ExecStart=@@PHP_BIN@@ @@APP_DIR@@/artisan telegram-support:daemon
+
+# Своя судьба. Перезапуск дешёвый: демон поднимается за секунды, а клиенты
+# (telegram-support:sync, telegram-harvest:sync) переживают его смерть — они и
+# так умеют холодный старт, просто теперь холодный старт им не понадобится.
+Restart=always
+RestartSec=10s
+# Перезапуск не должен упереться в start-limit и оставить сессию без демона
+# насовсем — ровно та же причина, что у cron.service.d/99-systema-limits.conf.
+StartLimitIntervalSec=0
+
+# ── Потолки. ЕДИНСТВЕННОЕ место, где они заданы для этого юнита ────────────
+# Здоровый демон — ~106 МиБ. MemoryMax=1G оставляет десятикратный запас и при
+# этом гарантирует: даже полностью потёкший демон убивает только себя.
+MemoryHigh=@@MADELINE_MEMORY_HIGH@@
+MemoryMax=@@MADELINE_MEMORY_MAX@@
+TasksMax=@@MADELINE_TASKS_MAX@@
+LimitNOFILE=@@LIMIT_NOFILE@@
+# OOM внутри группы валит группу целиком, а не один процесс: иначе systemd
+# перезапустит главный процесс поверх осиротевшего воркера (та же ловушка
+# «Found left-over process … in control group», что чинили 28-07-2026).
+OOMPolicy=kill
+KillMode=control-group
+TimeoutStopSec=30s
+
+# Вывод — в journal, а не в файл: journald здесь настроен persistent
+# (journald.conf.d/99-persistent.conf), а `append:` в файл пережил бы logrotate
+# со старым дескриптором и молча писал бы в удалённый inode.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=systema-madeline
+
+[Install]
+WantedBy=multi-user.target

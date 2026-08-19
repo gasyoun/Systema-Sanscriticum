@@ -38,6 +38,8 @@ final class ServerGuardsAuditor
             $this->auditRequiredUnits(),
             $this->auditEarlyoomArgs(),
             $this->auditSwap(),
+            $this->auditCronCgroupPressure(),
+            $this->auditSchedulerStamp(),
         );
     }
 
@@ -312,6 +314,15 @@ final class ServerGuardsAuditor
             ['supervisor', 'MemoryMax', (string) $this->spec->bytes('SUPERVISOR_MEMORY_MAX'), GuardFinding::CRITICAL],
         ];
 
+        // H3121: у демона MadelineProto обязан быть СВОЙ потолок. Без него он
+        // снова поедет на чужом бюджете — том, чей cgroup ему достанется первым.
+        if ($this->spec->has('MADELINE_MEMORY_HIGH')) {
+            $expectations[] = ['systema-madeline-daemon', 'MemoryHigh', (string) $this->spec->bytes('MADELINE_MEMORY_HIGH'), GuardFinding::CRITICAL];
+            $expectations[] = ['systema-madeline-daemon', 'MemoryMax', (string) $this->spec->bytes('MADELINE_MEMORY_MAX'), GuardFinding::CRITICAL];
+            $expectations[] = ['systema-madeline-daemon', 'TasksMax', $this->spec->get('MADELINE_TASKS_MAX'), GuardFinding::WARNING];
+            $expectations[] = ['systema-madeline-daemon', 'OOMPolicy', 'kill', GuardFinding::WARNING];
+        }
+
         foreach ($expectations as [$unit, $property, $expected, $severity]) {
             $actual = $this->sys->unitProperty($unit, $property);
             if ($actual === null) {
@@ -477,6 +488,94 @@ final class ServerGuardsAuditor
             'swap',
             'свопа нет: у ядра нет упругости, livelock физически возможен. Внутри LXC не заводится — только на хосте Proxmox (pct set <vmid> -swap 4096)',
         )];
+    }
+
+    /**
+     * Группа cron.service ЖИВЁТ над своим memory.high (H3121).
+     *
+     * Чего эта проверка стоит. 19-08-2026 прод стоял семь часов при
+     * MemAvailable 8.5 ГиБ: хостовой памяти было сколько угодно, кончился
+     * бюджет ОДНОЙ cgroup, и ядро тормозило каждый процесс в ней —
+     * авто-деплой, планировщик, обоих сторожей. Все существовавшие проверки
+     * (health_check, memwatch, earlyoom, cabinet:probe) смотрят на хост и
+     * структурно не могли этого увидеть. Смотреть надо на бюджет группы.
+     *
+     * Fail-open: нет cgroup v2, не читается memory.current, у cron нет потолка
+     * — молчим. Проверка обязана быть бесплатной на любой машине, включая CI.
+     *
+     * @return list<GuardFinding>
+     */
+    private function auditCronCgroupPressure(): array
+    {
+        $current = $this->sys->fileContents('/sys/fs/cgroup/system.slice/cron.service/memory.current');
+        if ($current === null || preg_match('/^\d+$/', trim($current)) !== 1) {
+            return [];
+        }
+        $high = $this->sys->unitProperty('cron', 'MemoryHigh');
+        if ($high === null || preg_match('/^\d+$/', trim($high)) !== 1 || (int) $high === 0) {
+            return [];
+        }
+
+        $cur = (int) trim($current);
+        $lim = (int) trim($high);
+        $curMib = intdiv($cur, 1024 ** 2);
+        $limMib = intdiv($lim, 1024 ** 2);
+
+        if ($cur >= $lim) {
+            return [GuardFinding::critical(
+                'cgroup',
+                "cron.service занял {$curMib} МиБ при memory.high {$limMib} МиБ — ядро ТОРМОЗИТ всю группу: "
+                .'планировщик, сторожа и авто-деплой идут в разы дольше. Искать долгоживущий процесс в этой группе '
+                .'(`systemd-cgls /system.slice/cron.service`), а НЕ поднимать потолок',
+            )];
+        }
+        if ($cur * 5 >= $lim * 4) { // ≥80 %
+            return [GuardFinding::warning(
+                'cgroup',
+                "cron.service занял {$curMib} МиБ из {$limMib} МиБ (≥80 %) — до троттлинга близко",
+            )];
+        }
+
+        return [];
+    }
+
+    /**
+     * Планировщик реально ДОХОДИЛ до конца в последние N минут (H3121).
+     *
+     * Отметку пишет systema-schedule-run.sh только после завершившегося
+     * прогона; пропуск по замку её не трогает. Это единственный сигнал,
+     * отличающий «крон на месте, файлы на месте» от «каждую минуту SKIP уже
+     * семь часов» — ровно то состояние, которое 19-08-2026 не заметил никто.
+     *
+     * @return list<GuardFinding>
+     */
+    private function auditSchedulerStamp(): array
+    {
+        if (! $this->spec->has('SCHEDULER_STAMP_MAX_MINUTES')) {
+            return [];
+        }
+
+        $path = rtrim($this->spec->get('APP_DIR'), '/').'/storage/framework/schedule-run.stamp';
+        $raw = $this->sys->fileContents($path);
+        if ($raw === null || preg_match('/^\d+$/', trim($raw)) !== 1) {
+            // Отметки ещё нет (свежая установка, обёртка ни разу не доработала
+            // до конца). Info, а не тревога: на первом же успешном прогоне она
+            // появится сама, а падать из-за её отсутствия — ложный сигнал.
+            return [GuardFinding::info('scheduler-stamp', 'отметки завершённого schedule:run ещё нет — появится после первого прогона')];
+        }
+
+        $ageMin = intdiv(max(0, time() - (int) trim($raw)), 60);
+        $maxMin = (int) $this->spec->get('SCHEDULER_STAMP_MAX_MINUTES');
+        if ($maxMin > 0 && $ageMin > $maxMin) {
+            return [GuardFinding::critical(
+                'scheduler-stamp',
+                "последний ЗАВЕРШЁННЫЙ schedule:run был {$ageMin} мин назад (порог {$maxMin}) — планировщик стоит: "
+                .'смотреть storage/logs/schedule.log на SKIP-шторм и кто держит storage/framework/schedule-run.lock '
+                .'(`ls -l /proc/*/fd | grep schedule-run.lock`)',
+            )];
+        }
+
+        return [];
     }
 
     private function normalize(string $text): string
