@@ -14,6 +14,8 @@
 /public/js/filament
 /public/vendor/livewire
 /storage/*.key
+# Per-worker storage под `php artisan test --parallel` (ParallelSafePath, H3156).
+/storage/parallel
 /vendor
 .env
 .env.backup

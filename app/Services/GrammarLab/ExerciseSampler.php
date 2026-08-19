@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\GrammarLab;
 
+use App\Support\ParallelSafePath;
+
 /**
  * Reproducible 20% expert-review sample (H2494).
  *
@@ -66,7 +68,8 @@ final class ExerciseSampler
      */
     public function write(array $manifest, ?string $path = null): string
     {
-        $path = $path ?? storage_path('app/grammar_lab_sample.json');
+        // Фиксированный путь под --parallel — гонка между воркерами (H3156).
+        $path = $path ?? ParallelSafePath::storage('app/grammar_lab_sample.json');
         $dir = dirname($path);
         if (! is_dir($dir) && ! mkdir($dir, 0775, true) && ! is_dir($dir)) {
             throw new \RuntimeException("Cannot create {$dir}");
