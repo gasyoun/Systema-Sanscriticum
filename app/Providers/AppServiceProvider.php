@@ -35,6 +35,7 @@ use App\Services\Telegram\DaemonProcessProbe;
 use App\Services\Telegram\ProcDaemonProcessProbe;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
+use App\Support\Backup\BackupRunCommand;
 use App\Support\NextIntroSession;
 use App\Support\ServerGuards\ShellSystemInspector;
 use App\Support\ServerGuards\SystemInspector;
@@ -49,6 +50,7 @@ use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
 use League\Flysystem\WebDAV\WebDAVAdapter;
 use Sabre\DAV\Client;
+use Spatie\Backup\Commands\BackupCommand;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -92,6 +94,12 @@ class AppServiceProvider extends ServiceProvider
         // доказывает, что демон в ЧУЖОЙ cgroup будет погашен, не имея под
         // рукой ни /proc, ни systemd.
         $this->app->bind(DaemonProcessProbe::class, ProcDaemonProcessProbe::class);
+
+        // H3195 / FINDINGS §513: Spatie Zip::addFile defaults to LENGTH_TO_END,
+        // so a live storage/app member that shrinks between add and close()
+        // fails backup:run with ER_DATA_LENGTH. Bind our command so the zip
+        // path snapshots each member next to the archive before addFile.
+        $this->app->bind(BackupCommand::class, BackupRunCommand::class);
     }
 
     /**
