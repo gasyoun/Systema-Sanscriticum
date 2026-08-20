@@ -39,7 +39,6 @@ use App\Support\Backup\BackupRunCommand;
 use App\Support\NextIntroSession;
 use App\Support\ServerGuards\ShellSystemInspector;
 use App\Support\ServerGuards\SystemInspector;
-use Spatie\Backup\Commands\BackupCommand;
 use Filament\Support\View\Components\Modal;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Support\Carbon;
@@ -51,6 +50,7 @@ use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
 use League\Flysystem\WebDAV\WebDAVAdapter;
 use Sabre\DAV\Client;
+use Spatie\Backup\Commands\BackupCommand;
 
 class AppServiceProvider extends ServiceProvider
 {
