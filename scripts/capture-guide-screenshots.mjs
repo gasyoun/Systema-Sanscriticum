@@ -2,8 +2,10 @@
  * H3212 — Playwright capture for cabinet guides.
  *
  *   node scripts/capture-guide-screenshots.mjs --guide student --base-url http://127.0.0.1:8000
+ *   node scripts/capture-guide-screenshots.mjs --guide curator --base-url http://127.0.0.1:8000
  *
- * Login: STUDENT_GUIDE_EMAIL / STUDENT_GUIDE_PASSWORD (fixture, never prod).
+ * Login student: STUDENT_GUIDE_EMAIL / STUDENT_GUIDE_PASSWORD (fixture, never prod).
+ * Login curator: CURATOR_GUIDE_EMAIL / CURATOR_GUIDE_PASSWORD (fixture, never prod).
  * No Chromium: exit 2; commit text+manifest, do not invent PNGs.
  */
 import { chromium } from 'playwright';
@@ -21,27 +23,51 @@ function arg(name, fallback = '') {
 
 const guide = arg('--guide', 'student');
 const baseUrl = arg('--base-url', process.env.BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
-const email = process.env.STUDENT_GUIDE_EMAIL || '';
-const password = process.env.STUDENT_GUIDE_PASSWORD || '';
 const widths = [1440, 390];
 
-if (guide !== 'student') {
-  console.error('Unknown --guide (wave 1 is student).');
+const guides = {
+  student: {
+    manifest: 'docs/generated/student_guide_shots.json',
+    email: process.env.STUDENT_GUIDE_EMAIL || '',
+    password: process.env.STUDENT_GUIDE_PASSWORD || '',
+    authName: 'student',
+    loginPath: '/login',
+    defaultOut: 'docs/screenshots/student-guide',
+    log: 'docs/generated/student_guide_shots_last_run.json',
+  },
+  curator: {
+    manifest: 'docs/generated/curator_guide_shots.json',
+    email: process.env.CURATOR_GUIDE_EMAIL || '',
+    password: process.env.CURATOR_GUIDE_PASSWORD || '',
+    authName: 'manager',
+    loginPath: '/admin/login',
+    defaultOut: 'docs/screenshots/curator-guide',
+    log: 'docs/generated/curator_guide_shots_last_run.json',
+  },
+};
+
+if (!guides[guide]) {
+  console.error('Unknown --guide (student|curator).');
   process.exit(1);
 }
 
-const manifestPath = join(ROOT, 'docs/generated/student_guide_shots.json');
+const cfg = guides[guide];
+const email = cfg.email;
+const password = cfg.password;
+const manifestPath = join(ROOT, cfg.manifest);
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-const outDir = join(ROOT, manifest.outDir || 'docs/screenshots/student-guide');
+const outDir = join(ROOT, manifest.outDir || cfg.defaultOut);
 mkdirSync(outDir, { recursive: true });
 
 async function login(page) {
   if (!email || !password) {
     return false;
   }
-  await page.goto(baseUrl + '/login', { waitUntil: 'domcontentloaded', timeout: 30000 });
-  await page.fill('#email', email);
-  await page.fill('#password', password);
+  await page.goto(baseUrl + cfg.loginPath, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  const emailSel = page.locator('#email, input[type="email"]').first();
+  const passSel = page.locator('#password, input[type="password"]').first();
+  await emailSel.fill(email);
+  await passSel.fill(password);
   await Promise.all([
     page.waitForURL((u) => !u.pathname.includes('/login'), { timeout: 30000 }).catch(() => {}),
     page.click('button[type="submit"]'),
@@ -66,9 +92,10 @@ async function main() {
 
   try {
     for (const shot of manifest.shots) {
-      if (shot.auth === 'student') {
+      const needsAuth = shot.auth && shot.auth !== 'guest';
+      if (needsAuth) {
         if (!email || !password) {
-          console.warn(`skip ${shot.slug}: no STUDENT_GUIDE_EMAIL/PASSWORD (fixture only)`);
+          console.warn(`skip ${shot.slug}: no fixture email/password`);
           continue;
         }
         if (!loggedIn) {
@@ -112,7 +139,7 @@ async function main() {
     await browser.close();
   }
 
-  const logPath = join(ROOT, 'docs/generated/student_guide_shots_last_run.json');
+  const logPath = join(ROOT, cfg.log);
   writeFileSync(logPath, JSON.stringify({ at: new Date().toISOString(), written, count: written.length }, null, 2));
   console.log(`done: ${written.length} files`);
   if (written.length === 0) {
