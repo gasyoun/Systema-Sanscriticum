@@ -35,9 +35,11 @@ use App\Services\Telegram\DaemonProcessProbe;
 use App\Services\Telegram\ProcDaemonProcessProbe;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
+use App\Support\Backup\BackupRunCommand;
 use App\Support\NextIntroSession;
 use App\Support\ServerGuards\ShellSystemInspector;
 use App\Support\ServerGuards\SystemInspector;
+use Spatie\Backup\Commands\BackupCommand;
 use Filament\Support\View\Components\Modal;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Support\Carbon;
@@ -92,6 +94,12 @@ class AppServiceProvider extends ServiceProvider
         // доказывает, что демон в ЧУЖОЙ cgroup будет погашен, не имея под
         // рукой ни /proc, ни systemd.
         $this->app->bind(DaemonProcessProbe::class, ProcDaemonProcessProbe::class);
+
+        // H3195 / FINDINGS §513: Spatie Zip::addFile defaults to LENGTH_TO_END,
+        // so a live storage/app member that shrinks between add and close()
+        // fails backup:run with ER_DATA_LENGTH. Bind our command so the zip
+        // path uses LENGTH_UNCHECKED.
+        $this->app->bind(BackupCommand::class, BackupRunCommand::class);
     }
 
     /**
