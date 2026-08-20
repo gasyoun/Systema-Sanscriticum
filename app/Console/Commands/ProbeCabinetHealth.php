@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\CabinetProbeRun;
 use App\Models\User;
 use App\Support\Roles;
+use App\Support\ServerGuards\CabinetProbeAlertState;
 use App\Support\ServerGuards\GuardFinding;
 use App\Support\ServerGuards\GuardSpec;
 use App\Support\ServerGuards\ServerGuardsAuditor;
@@ -17,7 +18,6 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -32,20 +32,11 @@ use Throwable;
  */
 class ProbeCabinetHealth extends Command
 {
-    private const CACHE_WAS_DOWN = 'cabinet_probe:was_down';
-
-    private const CACHE_LAST_ALERT_AT = 'cabinet_probe:last_tg_alert_at';
-
-    /** Soft-only path (H1941 spam): last send time. */
-    private const CACHE_LAST_SOFT_ALERT_AT = 'cabinet_probe:last_soft_tg_alert_at';
-
-    /** Soft-only path: fingerprint of last alerted soft failure set. */
-    private const CACHE_LAST_SOFT_FINGERPRINT = 'cabinet_probe:last_soft_fingerprint';
-
     protected $signature = 'cabinet:probe
         {--dry : Прогнать проверки, не слать healthchecks/Telegram и не писать history}
         {--force-alert : Игнорировать TG-cooldown (critical и soft)}
-        {--fail-on-critical : Exit 1 if a critical surface failed (deploy.sh)}';
+        {--no-alert : Не слать Telegram (deploy.sh — сторож */15 остаётся ртом)}
+        {--fail-on-critical : Exit 1 if an HTTP/cabinet surface failed (deploy.sh)}';
 
     protected $description = 'Пульс кабинета: public + manager (+ student) surfaces, history, TG';
 
@@ -135,10 +126,27 @@ class ProbeCabinetHealth extends Command
             $this->recordHistory($criticalHealthy && $softFails === [], $criticalHealthy, $durationMs, $failures);
         }
 
-        $this->reportToHealthchecks($criticalHealthy, array_column($criticalFails, 'message'));
-        $this->reportToTelegram($criticalHealthy, $criticalFails, $softFails);
+        // HTTP/cabinet 5xx vs host guards (tmpfs, backup, earlyoom, …).
+        // Host-only must not SOS, must not /fail Better Stack, must not
+        // fail deploy.sh — that is the 19–20-08 spam class (H3197).
+        $httpCritical = array_values(array_filter(
+            $criticalFails,
+            fn ($f) => ! $this->isHostGuardFailure($f),
+        ));
+        $hostCritical = array_values(array_filter(
+            $criticalFails,
+            fn ($f) => $this->isHostGuardFailure($f),
+        ));
+        $httpHealthy = $httpCritical === [];
 
-        if ($this->option('fail-on-critical') && ! $criticalHealthy) {
+        $this->reportToHealthchecks($httpHealthy, array_column($httpCritical, 'message'));
+        if (! $this->option('no-alert')) {
+            $this->reportToTelegram($httpHealthy, $httpCritical, array_merge($softFails, $hostCritical));
+        } else {
+            $this->comment('TG: --no-alert (сторож */15 шлёт, если надо)');
+        }
+
+        if ($this->option('fail-on-critical') && ! $httpHealthy) {
             return self::FAILURE;
         }
 
@@ -452,30 +460,26 @@ class ProbeCabinetHealth extends Command
             $softIds = $criticalIds;
         }
 
-        $wasDown = (bool) Cache::get(self::CACHE_WAS_DOWN, false);
-        $cooldown = max(1, (int) config('cabinet_probe.telegram_cooldown_minutes', 60));
+        $state = app(CabinetProbeAlertState::class);
         $force = (bool) $this->option('force-alert');
+        $reminderHours = max(0, (int) config('cabinet_probe.telegram_soft_reminder_hours', 24));
 
-        // Soft-only: alert soft chats without flipping critical downtime.
-        // H1941: fingerprint so */15 does not spam.
-        // H2335: normalize fuse timestamps/SHAs; sticky same-set until green
-        // (or soft_reminder_hours re-nudge). New class → alert immediately.
+        // Soft + host-guard-critical (tmpfs/backup): sticky, not SOS.
+        // H1941/H2335 + H3197: same class silent until green or reminder.
         if ($criticalHealthy && $softFails !== []) {
             $fingerprint = SoftFailureFingerprint::hash($softFails);
-            $lastSoftAt = Cache::get(self::CACHE_LAST_SOFT_ALERT_AT);
-            $lastFp = Cache::get(self::CACHE_LAST_SOFT_FINGERPRINT);
+            $lastSoftAt = $state->getTime(CabinetProbeAlertState::LAST_SOFT_ALERT_AT);
+            $lastFp = $state->getString(CabinetProbeAlertState::LAST_SOFT_FP);
             $sameSet = is_string($lastFp) && $lastFp === $fingerprint;
             if (! $force && $sameSet && $lastSoftAt !== null) {
-                // 0 = once until green; >0 = re-nudge after N hours still open.
-                $reminderHours = max(0, (int) config('cabinet_probe.telegram_soft_reminder_hours', 24));
                 if ($reminderHours === 0) {
-                    $this->comment('TG soft-sticky: тот же soft-класс, без re-alert до зелёного (reminder=0)');
+                    $this->comment('TG soft-sticky: тот же soft/host-класс, без re-alert до зелёного (reminder=0)');
 
                     return;
                 }
                 $elapsedH = (int) now()->diffInHours($lastSoftAt, absolute: true);
                 if ($elapsedH < $reminderHours) {
-                    $this->comment('TG soft-sticky: ~'.($reminderHours - $elapsedH).' ч до reminder (тот же soft-класс)');
+                    $this->comment('TG soft-sticky: ~'.($reminderHours - $elapsedH).' ч до reminder (тот же soft/host-класс)');
 
                     return;
                 }
@@ -483,8 +487,12 @@ class ProbeCabinetHealth extends Command
 
             $scopeRaw = $this->softAlertScope($softFails);
             $scope = e($scopeRaw);
+            $hostOnly = $this->softFailsAreHostGuards($softFails);
+            $heading = $hostOnly
+                ? "⚠️ <b>Кабинет: host/ops</b> ({$scope})"
+                : "⚠️ <b>Кабинет: soft-сбой</b> ({$scope})";
             $lines = array_map(fn ($f) => '• '.e($f['message']), array_slice($softFails, 0, 8));
-            $text = "⚠️ <b>Кабинет: soft-сбой</b> ({$scope})\n\n"
+            $text = $heading."\n\n"
                 .$this->telegramUrlBlock()."\n"
                 .implode("\n", $lines)."\n\n"
                 .$this->telegramRunbook();
@@ -492,32 +500,35 @@ class ProbeCabinetHealth extends Command
                 ? $this->sendTelegram($token, $softIds, $text)
                 : false;
 
-            // H2148 C: outbound soft webhook (default off) — same cooldown gate as TG.
             $webhook = app(SoftAlertWebhookNotifier::class)->notify($scopeRaw, $fingerprint, $softFails);
             if ($webhook['attempted']) {
                 $this->comment('soft-webhook: '.$webhook['detail']);
             }
 
             if ($sent || $webhook['ok']) {
-                Cache::put(self::CACHE_LAST_SOFT_ALERT_AT, now(), now()->addDays(2));
-                Cache::put(self::CACHE_LAST_SOFT_FINGERPRINT, $fingerprint, now()->addDays(2));
+                $state->put([
+                    CabinetProbeAlertState::LAST_SOFT_ALERT_AT => now(),
+                    CabinetProbeAlertState::LAST_SOFT_FP => $fingerprint,
+                ]);
             }
 
             return;
         }
 
         if ($token === '') {
-            // Soft webhook handled above; critical recovery/down still needs TG token.
             return;
         }
 
         if ($criticalHealthy) {
-            Cache::forget(self::CACHE_WAS_DOWN);
-            Cache::forget(self::CACHE_LAST_ALERT_AT);
-            // Soft path cleared: full green ends soft spam state too.
-            Cache::forget(self::CACHE_LAST_SOFT_ALERT_AT);
-            Cache::forget(self::CACHE_LAST_SOFT_FINGERPRINT);
-            if (! $wasDown) {
+            $wasHttpDown = $state->getBool(CabinetProbeAlertState::HTTP_DOWN);
+            $state->forget(
+                CabinetProbeAlertState::HTTP_DOWN,
+                CabinetProbeAlertState::LAST_HTTP_ALERT_AT,
+                CabinetProbeAlertState::LAST_HTTP_FP,
+                CabinetProbeAlertState::LAST_SOFT_ALERT_AT,
+                CabinetProbeAlertState::LAST_SOFT_FP,
+            );
+            if (! $wasHttpDown) {
                 return;
             }
             $text = "✅ <b>Личный кабинет снова работает</b>\n\n"
@@ -530,11 +541,19 @@ class ProbeCabinetHealth extends Command
             return;
         }
 
-        $lastAt = Cache::get(self::CACHE_LAST_ALERT_AT);
-        if (! $force && $wasDown && $lastAt !== null) {
-            $elapsed = now()->diffInMinutes($lastAt, absolute: true);
-            if ($elapsed < $cooldown) {
-                $this->comment('TG-cooldown: ~'.($cooldown - (int) $elapsed).' мин.');
+        $fingerprint = SoftFailureFingerprint::hash($criticalFails);
+        $lastFp = $state->getString(CabinetProbeAlertState::LAST_HTTP_FP);
+        $lastAt = $state->getTime(CabinetProbeAlertState::LAST_HTTP_ALERT_AT);
+        $sameSet = is_string($lastFp) && $lastFp === $fingerprint;
+        if (! $force && $sameSet && $lastAt !== null) {
+            if ($reminderHours === 0) {
+                $this->comment('TG HTTP-sticky: тот же кабинет-класс, без re-alert до зелёного');
+
+                return;
+            }
+            $elapsedH = (int) now()->diffInHours($lastAt, absolute: true);
+            if ($elapsedH < $reminderHours) {
+                $this->comment('TG HTTP-sticky: ~'.($reminderHours - $elapsedH).' ч до reminder');
 
                 return;
             }
@@ -542,7 +561,7 @@ class ProbeCabinetHealth extends Command
 
         $lines = array_map(fn ($f) => '• '.e($f['message']), array_slice($criticalFails, 0, 8));
         if ($softFails !== []) {
-            $lines[] = '— soft —';
+            $lines[] = '— host/soft —';
             foreach (array_slice($softFails, 0, 4) as $f) {
                 $lines[] = '• '.e($f['message']);
             }
@@ -555,10 +574,40 @@ class ProbeCabinetHealth extends Command
             .$this->telegramRunbook();
 
         $sent = $this->sendTelegram($token, $criticalIds, $text);
-        Cache::put(self::CACHE_WAS_DOWN, true, now()->addDays(2));
+        $state->put([CabinetProbeAlertState::HTTP_DOWN => true]);
         if ($sent) {
-            Cache::put(self::CACHE_LAST_ALERT_AT, now(), now()->addDays(2));
+            $state->put([
+                CabinetProbeAlertState::LAST_HTTP_ALERT_AT => now(),
+                CabinetProbeAlertState::LAST_HTTP_FP => $fingerprint,
+            ]);
         }
+    }
+
+    /**
+     * @param  array{message?: string, severity?: string}  $failure
+     */
+    private function isHostGuardFailure(array $failure): bool
+    {
+        $m = (string) ($failure['message'] ?? '');
+
+        return str_starts_with($m, 'guards/') || str_starts_with($m, 'guards:');
+    }
+
+    /**
+     * @param  list<array{message: string, severity: string}>  $fails
+     */
+    private function softFailsAreHostGuards(array $fails): bool
+    {
+        if ($fails === []) {
+            return false;
+        }
+        foreach ($fails as $f) {
+            if (! $this->isHostGuardFailure($f)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

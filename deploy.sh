@@ -287,13 +287,15 @@ echo "OK: $SMOKE_URL → 200"
 # Public smoke can stay 200 while /dvaram 500s (16-08-2026 23:30 UTC:
 # homepage fine, cabinet:probe critical on missing club_memberships.tier_code).
 # Soft-only findings still exit 0 — do not revive the #1143 rollback loop.
-say "Смоук кабинета: php artisan cabinet:probe --fail-on-critical"
+say "Смоук кабинета: php artisan cabinet:probe --fail-on-critical --no-alert"
 # Probe is artisan-as-root and compiles Blade after the post-optimize chown
 # (H2994: 660 files root). `fail` is `exit 1` — if it runs first, the chown
 # below never happens. 19-08-2026 21:01Z and 20-08 SOS: probe --fail-on-critical
 # died on tmpfs-cap/backup-fresh, left 8 compiled views root:root, php-fpm
 # `touch()` 500'd Filament /admin until a manual chown (H3194).
-php artisan cabinet:probe --fail-on-critical
+# --no-alert: deploy retries must not SOS; watchdog */15 is the mouth (H3197).
+# --fail-on-critical is HTTP/cabinet only (host guards no longer fail deploy).
+php artisan cabinet:probe --fail-on-critical --no-alert
 probe_rc=$?
 chown_compiled_views
 [ "$probe_rc" = 0 ] || fail "cabinet:probe: critical после деплоя — кабинет нездоров"

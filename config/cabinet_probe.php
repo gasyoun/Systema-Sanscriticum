@@ -38,9 +38,13 @@ return [
         env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),
     ),
 
-    // Hours before re-nudging the *same* soft class while still open (H2335).
-    // 0 = once until green (quietest). Default 24 ≈ max one soft TG/day per fuse.
+    // Hours before re-nudging the *same* soft/HTTP class while still open (H2335 / H3197).
+    // 0 = once until green (quietest). Default 24 ≈ max one TG/day per class.
     'telegram_soft_reminder_hours' => (int) env('CABINET_PROBE_TELEGRAM_SOFT_REMINDER_HOURS', 24),
+
+    // Durable TG state path. Empty → storage/app/cabinet_probe_tg_state.json
+    // (survives optimize:clear). Tests override this; no extra .env key.
+    'tg_state_path' => '',
 
     'cron' => (string) env('CABINET_PROBE_CRON', '*/15 * * * *'),
 
