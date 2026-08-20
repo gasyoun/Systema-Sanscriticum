@@ -14,6 +14,10 @@
             <p class="text-gray-500 text-lg">Управляйте своим обучением, материалами и оплатами.</p>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 shrink-0">
+            <a href="{{ route('student.help') }}"
+               class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
+                <i class="fas fa-book-open"></i> Как пользоваться
+            </a>
             <a href="{{ route('student.cabinet-mastery') }}"
                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
                 <i class="fas fa-clipboard-check"></i> Проверить кабинет

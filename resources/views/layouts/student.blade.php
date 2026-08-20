@@ -139,6 +139,12 @@
             </a>
             @endif
 
+            <a href="{{ route('student.help') }}"
+               class="{{ request()->routeIs('student.help') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
+                <i class="fas fa-book-open mr-3 w-5 text-center {{ request()->routeIs('student.help') ? 'text-brand' : 'text-gray-500' }}"></i>
+                Как пользоваться
+            </a>
+
             {{-- H2441 — Hindi programme playlist. Hidden while the flag is OFF. --}}
             @if (config('features.hindi_programme_playlist'))
             <a href="{{ route('student.programme.hindi') }}"

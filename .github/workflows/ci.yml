@@ -82,6 +82,10 @@ jobs:
 
       - name: PHPUnit tests
         # --no-interaction is a Laravel artisan flag but PHPUnit 10 rejects it
+        # GUIDE_SHOTS_OPTIONAL: Playwright не в CI (решение 15 плана гидов).
+        # Нет кадров — skip файловой проверки, не красный прогон и не фейковые PNG.
+        env:
+          GUIDE_SHOTS_OPTIONAL: "1"
         run: php artisan test --parallel
 
   frontend-build:
@@ -204,6 +208,23 @@ jobs:
           git diff --name-only
           ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
           | python scripts/teacher_guide_freshness.py
+
+  student-guide-freshness:
+    name: Student guide — freshness warning
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Warn when student-visible files moved without the guide
+        run: >-
+          git diff --name-only
+          ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+          | python scripts/student_guide_freshness.py
 
   yaml-lint:
     name: YAML lint

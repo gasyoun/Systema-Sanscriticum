@@ -1,0 +1,24 @@
+{
+  "guide": "student",
+  "outDir": "docs/screenshots/student-guide",
+  "fixture": {
+    "name": "Анна Учебная",
+    "note": "Логин из STUDENT_GUIDE_EMAIL / STUDENT_GUIDE_PASSWORD. Не прод."
+  },
+  "shots": [
+    {"slug": "voiti", "path": "/login", "auth": "guest", "wait": "h2"},
+    {"slug": "otkryt-urok", "path": "/dvaram", "auth": "student", "wait": "h2"},
+    {"slug": "sdat-dz", "path": "/faq/dz", "auth": "guest", "wait": "h1, h2, article"},
+    {"slug": "slovar", "path": "/dvaram", "auth": "student", "click": "[data-track-tab=\"dictionaries\"]", "wait": "h2"},
+    {"slug": "oplati-dolg", "path": "/dvaram", "auth": "student", "click": "[data-track-tab=\"payments\"]", "wait": "h2"},
+    {"slug": "pochemu-zakryt", "path": "/dvaram", "auth": "student", "wait": "h2"},
+    {"slug": "pozvat-kuratora", "path": "/dvaram", "auth": "student", "click": "[data-track-tab=\"chat\"]", "wait": "h2"},
+    {"slug": "tab-kursy", "path": "/dvaram", "auth": "student", "wait": "h2"},
+    {"slug": "tab-oplaty", "path": "/dvaram", "auth": "student", "click": "[data-track-tab=\"payments\"]", "wait": "h2"},
+    {"slug": "tab-dolgi", "path": "/dvaram", "auth": "student", "click": "[data-track-tab=\"debts\"]", "wait": "h2"},
+    {"slug": "tab-prana", "path": "/dvaram", "auth": "student", "click": "[data-track-tab=\"prana\"]", "wait": "h2"},
+    {"slug": "koloda", "path": "/dvaram/koloda", "auth": "student", "wait": "h1, h2"},
+    {"slug": "lila", "path": "/lila/", "auth": "guest", "wait": "h1, h2, title"},
+    {"slug": "profil", "path": "/dvaram", "auth": "student", "wait": "h2"}
+  ]
+}
