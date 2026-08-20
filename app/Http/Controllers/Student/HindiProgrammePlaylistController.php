@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Services\HindiAttachmentDrills;
+use App\Services\HindiDictionaryDrills;
 use App\Services\HindiProgrammePlaylist;
 use App\Services\HindiTgCuratedPractice;
 use App\Services\HindiTranscriptDrills;
@@ -20,7 +21,7 @@ use Illuminate\View\View;
  */
 class HindiProgrammePlaylistController extends Controller
 {
-    public function hindi(Request $request, HindiProgrammePlaylist $playlist, HindiTranscriptDrills $drills, HindiAttachmentDrills $attachments, HindiTgCuratedPractice $tgPractice): View
+    public function hindi(Request $request, HindiProgrammePlaylist $playlist, HindiTranscriptDrills $drills, HindiAttachmentDrills $attachments, HindiTgCuratedPractice $tgPractice, HindiDictionaryDrills $dictDrills): View
     {
         abort_unless($playlist->enabled(), 404);
 
@@ -31,6 +32,7 @@ class HindiProgrammePlaylistController extends Controller
         $teacherPreview = $playlist->teachesHindi($user);
         $srsOn = HindiMySrsDeck::enabled() || $teacherPreview;
         $tgOn = $tgPractice->enabled() || $teacherPreview;
+        $dictOn = $dictDrills->enabled() || $teacherPreview;
         $drillsOn = $drills->enabled() || $teacherPreview;
         $attachmentsOn = $attachments->enabled() || $teacherPreview;
         if ($drillsOn || $attachmentsOn || $srsOn) {
@@ -55,7 +57,9 @@ class HindiProgrammePlaylistController extends Controller
             'count' => $items->count(),
             'srsDeckEnabled' => $srsOn,
             'tgPracticeEnabled' => $tgOn,
+            'dictDrillsEnabled' => $dictOn,
             'hindiTeacherBrief' => $teacherPreview ? HindiProgrammePlaylist::TEACHER_BRIEF_URL : null,
+            'hindiAgentDrillsReviewUrl' => $teacherPreview ? url('/admin/hindi-agent-drills') : null,
             'youtubeAsrReview' => $teacherPreview ? $drills->youtubeNova3ReviewRows($user) : [],
         ]);
     }

@@ -201,6 +201,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HEARTBEAT_PING_URL` | optional | `''` | config/heartbeat.php:43 |
 | `HEARTBEAT_TIMEOUT` | optional | `10` | config/heartbeat.php:54 |
 | `HINDI_ATTACHMENT_DRILLS` | optional | `false` | config/features.php:952 |
+| `HINDI_DICTIONARY_DRILLS` | optional | `false` | config/features.php:978 |
 | `HINDI_MY_SRS_DECK` | optional | `false` | config/features.php:961 |
 | `HINDI_PROGRAMME_CATEGORY_SLUG` | optional | `'hindi'` | config/programme.php:17 |
 | `HINDI_PROGRAMME_COURSE_IDS` | optional | `'416,356,366'` | config/programme.php:20 |

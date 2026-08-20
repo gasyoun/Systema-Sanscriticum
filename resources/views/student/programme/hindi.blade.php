@@ -49,6 +49,13 @@
                     <i class="fas fa-comments text-xs"></i> Практика из чата
                 </a>
             @endif
+            @if(!empty($dictDrillsEnabled))
+                <a href="{{ route('student.programme.hindi.vocab') }}"
+                   class="inline-flex items-center gap-2 mt-4 text-sm font-extrabold text-brand hover:underline"
+                   data-testid="hindi-playlist-kostina-dict">
+                    <i class="fas fa-book text-xs"></i> Словарь Костиной
+                </a>
+            @endif
         </div>
     </div>
 
@@ -64,6 +71,13 @@
                 Студентам эти карточки сейчас не показываем. Откройте несколько занятий и напишите в Telegram:
                 можно показывать / нельзя / что поправить.
             </p>
+            @if(!empty($hindiAgentDrillsReviewUrl))
+                <a href="{{ $hindiAgentDrillsReviewUrl }}"
+                   class="inline-flex items-center gap-2 mb-5 text-sm font-extrabold text-brand hover:underline"
+                   data-testid="hindi-agent-drills-review-link">
+                    Все агентские упражнения одним списком
+                </a>
+            @endif
             <ul class="space-y-3">
                 @foreach($youtubeAsrReview as $row)
                     <li class="flex flex-wrap items-center gap-3" data-testid="hindi-youtube-asr-review-item">
