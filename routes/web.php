@@ -57,6 +57,7 @@ use App\Http\Controllers\Student\HindiMySrsDeckController;
 use App\Http\Controllers\Student\HindiProgrammePlaylistController;
 use App\Http\Controllers\Student\HindiTgCuratedPracticeController;
 use App\Http\Controllers\Student\HindiTranscriptDrillsController;
+use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TransliterateController;
@@ -463,6 +464,9 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->name('student.cabinet-mastery');
     Route::post('/dvaram/proverka', [CabinetMasteryController::class, 'submit'])
         ->name('student.cabinet-mastery.submit');
+
+    Route::get('/dvaram/help', [StudentCabinetGuideController::class, 'show'])
+        ->name('student.help');
 
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
 

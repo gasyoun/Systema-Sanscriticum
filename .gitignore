@@ -60,6 +60,7 @@ tinker-*.txt
 /.playwright-mcp/
 /*.png
 /*.pdf
+/docs/generated/student_guide_shots_last_run.json
 
 # Личная промпт-заметка (scratch), не проектный файл — не коммитится
 /docs/fable5.md
