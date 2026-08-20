@@ -1,6 +1,6 @@
 # n8n ZOOM 1.4 — записи не ушли в Telegram-группы (18–20-08-2026)
 
-_Created: 20-08-2026 · Last updated: 20-08-2026_
+_Created: 20-08-2026 · Last updated: 21-08-2026_
 
 **Audience:** ops / agents. Diagnosis from the 20-08-2026 SOS (Grok 4.6 `grok-4.6`).  
 **Hosts:** n8n `root@193.232.229.91`; Laravel `root@193.232.229.92`.  
@@ -54,8 +54,28 @@ Groups with `telegram_chat_id`:
 
 n8n container was Up 6 days; swap 2/2 GiB on `.91` is **not** the fail class. Anthropic on this OpenRouter account is not something an agent can unban; DeepSeek is the live workaround.
 
-## Watcher (does not exist yet)
+## Watcher (H3209)
 
-No `recordings:gap*` command. Spec and acceptance: [H3209](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3209-Grok_Systema-Sanscriticum_recording-gap-watcher-n8n_20.08.26.md) — daily 08:00 Europe/Moscow, alert if yesterday had a schedule and no matching recording, attach last `1EIqqNzMl5NNIxST` exec id + error class.
+`php artisan recordings:gap-watch` — Kernel `dailyAt('08:00')` Europe/Moscow.
+
+- Join: `schedules.start` date + `course_id` → published `lessons` with `video_url` / `rutube_url` / `youtube_url` / `recording_attached_at`.
+- Default skips groups without `telegram_chat_id` (`--all` includes them).
+- Staff meetings: `config/recording_gap.php` `skip_title_substrings` (env `RECORDING_GAP_SKIP_TITLE_SUBSTRINGS`), not a hardcoded SQL title.
+- TG: `RECORDING_GAP_TELEGRAM_CHAT_ID` → same ids as `cabinet:probe`. Dedupe key `recording_gap:YYYY-MM-DD`.
+- n8n: read-only `GET /api/v1/executions?workflowId=1EIqqNzMl5NNIxST&limit=3` with `N8N_API_KEY`. Empty key or timeout = skip-soft. **Does not retry the workflow.**
+
+Reproduce the 18–20-08 gap on prod:
+
+```
+cd /var/www/html && php artisan recordings:gap-watch --dry --from=2026-08-18 --until=2026-08-20
+```
+
+If Laravel cannot reach n8n, SSH `.91` (not a cron):
+
+```
+sqlite3 /opt/n8n/storage/database.sqlite "SELECT id,status,startedAt FROM execution_entity WHERE workflowId='1EIqqNzMl5NNIxST' ORDER BY startedAt DESC LIMIT 1;"
+```
+
+Inactive twin `MtN1h7FdF3JTmrse` is not live.
 
 _Dr. Mārcis Gasūns_

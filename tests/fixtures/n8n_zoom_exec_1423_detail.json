@@ -1,0 +1,14 @@
+{
+  "id": "1423",
+  "status": "error",
+  "startedAt": "2026-08-20T11:42:00.000Z",
+  "workflowId": "1EIqqNzMl5NNIxST",
+  "data": {
+    "resultData": {
+      "error": {
+        "message": "The request is prohibited due to a violation of provider Terms Of Service",
+        "httpCode": "403"
+      }
+    }
+  }
+}

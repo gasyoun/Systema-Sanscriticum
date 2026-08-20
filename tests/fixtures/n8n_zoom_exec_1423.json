@@ -1,0 +1,24 @@
+{
+  "data": {
+    "results": [
+      {
+        "id": "1423",
+        "finished": true,
+        "mode": "webhook",
+        "retryOf": null,
+        "status": "error",
+        "startedAt": "2026-08-20T11:42:00.000Z",
+        "stoppedAt": "2026-08-20T13:21:00.000Z",
+        "workflowId": "1EIqqNzMl5NNIxST",
+        "data": {
+          "resultData": {
+            "error": {
+              "message": "The request is prohibited due to a violation of provider Terms Of Service",
+              "httpCode": "403"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

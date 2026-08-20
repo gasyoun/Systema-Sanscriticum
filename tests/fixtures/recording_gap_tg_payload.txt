@@ -1,0 +1,8 @@
+<b>Записи не в кабинете / ТГ</b> за 18-08-2026
+
+• 2026-08-18 20:00 · course 9 Курс тест · group 3 Группа А · no-lesson
+
+n8n ZOOM 1.4 TEST 1EIqqNzMl5NNIxST · exec 1423 · error · tos_forbidden · started 2026-08-20T11:42:00.000Z
+
+Не перезапускать ZOOM 1.4 с вебхука (повторный YouTube/Rutube). Resume с AI Agent1.
+<code>php artisan recordings:gap-watch --dry</code>

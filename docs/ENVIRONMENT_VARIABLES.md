@@ -12,7 +12,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ACCESS_SELF_SERVICE` | optional | `false` | config/features.php:712 |
 | `ADMIN_EMAIL` | optional | `'pe4kin.85@mail.ru'` | config/services.php:322 |
 | `ADMIN_PASSWORD` | secret | `—` | config/services.php:323 |
-| `ADMIN_TELEGRAM_ID` | optional | `''` | config/cabinet_probe.php:23<br>config/services.php:116 |
+| `ADMIN_TELEGRAM_ID` | optional | `''` | config/cabinet_probe.php:23<br>config/recording_gap.php:28<br>config/services.php:116 |
 | `APP_DEBUG` | optional | `false` | config/app.php:55 |
 | `APP_ENV` | optional | `'production'` | config/app.php:42<br>config/server_guards.php:35 |
 | `APP_KEY` | required | `—` | config/app.php:135 |
@@ -54,7 +54,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_CRON` | optional | `'*/15 * * * *'` | config/cabinet_probe.php:49 |
 | `CABINET_PROBE_HISTORY_KEEP` | optional | `500` | config/cabinet_probe.php:54 |
 | `CABINET_PROBE_PING_URL` | optional | `''` | config/cabinet_probe.php:20 |
-| `CABINET_PROBE_TELEGRAM_CHAT_ID` | optional | `env('ADMIN_TELEGRAM_ID', '')` | config/cabinet_probe.php:23 |
+| `CABINET_PROBE_TELEGRAM_CHAT_ID` | optional | `env('ADMIN_TELEGRAM_ID', '')` | config/cabinet_probe.php:23<br>config/recording_gap.php:28 |
 | `CABINET_PROBE_TELEGRAM_COOLDOWN` | optional | `60` | config/cabinet_probe.php:29<br>config/cabinet_probe.php:38 |
 | `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` | optional | `''` | config/cabinet_probe.php:26 |
 | `CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN` | optional | `env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),` | config/cabinet_probe.php:36 |
@@ -349,6 +349,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MEMCACHED_PORT` | optional | `11211` | config/cache.php:71 |
 | `MEMCACHED_USERNAME` | required | `—` | config/cache.php:62 |
 | `MYSQL_ATTR_SSL_CA` | required | `—` | config/database.php:62 |
+| `N8N_API_BASE_URL` | optional | `'https://context-ai.ru'` | config/recording_gap.php:31 |
+| `N8N_API_KEY` | secret | `''` | config/recording_gap.php:34 |
+| `N8N_API_TIMEOUT` | optional | `8` | config/recording_gap.php:38 |
 | `N8N_CALENDAR_POST_SECRET` | secret | `—` | config/services.php:99 |
 | `N8N_CALENDAR_POST_WEBHOOK` | required | `—` | config/services.php:98 |
 | `N8N_CLIP_CALLBACK_SECRET` | secret | `—` | config/services.php:89 |
@@ -363,6 +366,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `N8N_SCHEDULE_SHEET_WEBHOOK` | required | `—` | config/services.php:73 |
 | `N8N_SOCIAL_POST_SECRET` | secret | `—` | config/services.php:94 |
 | `N8N_SOCIAL_POST_WEBHOOK` | required | `—` | config/services.php:93 |
+| `N8N_ZOOM_WORKFLOW_ID` | optional | `'1EIqqNzMl5NNIxST'` | config/recording_gap.php:36 |
 | `NALA_SUBSCRIPTIONS_LIVE` | optional | `false` | config/features.php:758 |
 | `NALOPAKHYANA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:29 |
 | `NALOPAKHYANA_COURSE_SLUG` | optional | `'nalopakhyana'` | config/cohort_courses.php:28 |
@@ -438,6 +442,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `RECEIVABLES_THRESHOLD_MODE` | optional | `'revenue_share'` | config/receivables.php:30 |
 | `RECEIVABLES_THRESHOLD_REVENUE_SHARE` | optional | `0.5` | config/receivables.php:35 |
 | `RECEIVABLES_WARN_RATIO` | optional | `0.8` | config/receivables.php:68 |
+| `RECORDING_GAP_SKIP_COURSE_IDS` | optional | `''` | config/recording_gap.php:48 |
+| `RECORDING_GAP_SKIP_TITLE_SUBSTRINGS` | optional | `'Созвон отдела Заботы'` | config/recording_gap.php:43 |
+| `RECORDING_GAP_TELEGRAM_CHAT_ID` | optional | `env('CABINET_PROBE_TELEGRAM_CHAT_ID', env('ADMIN_TELEGRAM_ID', '')),` | config/recording_gap.php:26 |
 | `REDIS_CACHE_DB` | optional | `'1'` | config/database.php:146 |
 | `REDIS_CLIENT` | optional | `'phpredis'` | config/database.php:124 |
 | `REDIS_CLUSTER` | optional | `'redis'` | config/database.php:127 |
