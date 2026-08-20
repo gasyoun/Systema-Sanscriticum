@@ -1,0 +1,227 @@
+{
+    "generated_at": "2026-08-21T02:47:09+03:00",
+    "panel": "admin",
+    "manager": {
+        "source": "fixture",
+        "role": "manager"
+    },
+    "total": 20,
+    "by_group": {
+        "Без группы": 3,
+        "Обучение": 3,
+        "Пользователи": 7,
+        "Продажи": 7
+    },
+    "items": [
+        {
+            "kind": "page",
+            "group": "Без группы",
+            "label": "Dashboard",
+            "class": "App\\Filament\\Pages\\Dashboard",
+            "url": "http://localhost/admin"
+        },
+        {
+            "kind": "resource",
+            "group": "Без группы",
+            "label": "Media",
+            "class": "Awcodes\\Curator\\Resources\\MediaResource",
+            "url": "http://localhost/admin/media"
+        },
+        {
+            "kind": "page",
+            "group": "Без группы",
+            "label": "Чат с куратором",
+            "class": "App\\Filament\\Pages\\Helpdesk",
+            "url": "http://localhost/admin/dialogs"
+        },
+        {
+            "kind": "page",
+            "group": "Обучение",
+            "label": "Дизайн курсов",
+            "class": "App\\Filament\\Pages\\CourseDesignAssets",
+            "url": "http://localhost/admin/course-design"
+        },
+        {
+            "kind": "page",
+            "group": "Обучение",
+            "label": "Проверка кабинета",
+            "class": "App\\Filament\\Pages\\CabinetMasteryQuiz",
+            "url": "http://localhost/admin/cabinet-mastery"
+        },
+        {
+            "kind": "page",
+            "group": "Обучение",
+            "label": "Руководство",
+            "class": "App\\Filament\\Pages\\CuratorGuide",
+            "url": "http://localhost/admin/curator-guide"
+        },
+        {
+            "kind": "page",
+            "group": "Пользователи",
+            "label": "Telegram support",
+            "class": "App\\Filament\\Clusters\\TelegramSupport",
+            "url": "http://localhost/admin/telegram-support"
+        },
+        {
+            "kind": "page",
+            "group": "Пользователи",
+            "label": "Аналитика",
+            "class": "App\\Filament\\Pages\\TelegramSupportAnalytics",
+            "url": "http://localhost/admin/telegram-support/telegram-support-analytics"
+        },
+        {
+            "kind": "resource",
+            "group": "Пользователи",
+            "label": "Контакты",
+            "class": "App\\Filament\\Resources\\TelegramSupportContactResource",
+            "url": "http://localhost/admin/telegram-support/telegram-support-contacts"
+        },
+        {
+            "kind": "resource",
+            "group": "Пользователи",
+            "label": "Ответчики",
+            "class": "App\\Filament\\Resources\\SupportResponderMappingResource",
+            "url": "http://localhost/admin/telegram-support/support-responder-mappings"
+        },
+        {
+            "kind": "resource",
+            "group": "Пользователи",
+            "label": "Проблемы со входом",
+            "class": "App\\Filament\\Resources\\AccessAttemptResource",
+            "url": "http://localhost/admin/access-attempts"
+        },
+        {
+            "kind": "resource",
+            "group": "Пользователи",
+            "label": "Студенты",
+            "class": "App\\Filament\\Resources\\UserResource",
+            "url": "http://localhost/admin/users"
+        },
+        {
+            "kind": "resource",
+            "group": "Пользователи",
+            "label": "Темы",
+            "class": "App\\Filament\\Resources\\SupportTopicRuleResource",
+            "url": "http://localhost/admin/telegram-support/support-topic-rules"
+        },
+        {
+            "kind": "page",
+            "group": "Продажи",
+            "label": "Воронка тренажёров",
+            "class": "App\\Filament\\Pages\\GamesFunnel",
+            "url": "http://localhost/admin/games-funnel"
+        },
+        {
+            "kind": "resource",
+            "group": "Продажи",
+            "label": "Заявки (Лиды)",
+            "class": "App\\Filament\\Resources\\LeadResource",
+            "url": "http://localhost/admin/leads"
+        },
+        {
+            "kind": "page",
+            "group": "Продажи",
+            "label": "Заявки — доска",
+            "class": "App\\Filament\\Pages\\LeadKanbanBoard",
+            "url": "http://localhost/admin/leads-board"
+        },
+        {
+            "kind": "resource",
+            "group": "Продажи",
+            "label": "Лист набора",
+            "class": "App\\Filament\\Resources\\WaitlistEntryResource",
+            "url": "http://localhost/admin/waitlist-entries"
+        },
+        {
+            "kind": "resource",
+            "group": "Продажи",
+            "label": "Наборы",
+            "class": "App\\Filament\\Resources\\IntakeResource",
+            "url": "http://localhost/admin/intakes"
+        },
+        {
+            "kind": "page",
+            "group": "Продажи",
+            "label": "Стоимость лида",
+            "class": "App\\Filament\\Pages\\LeadCost\\LeadCostDashboard",
+            "url": "http://localhost/admin/lead-cost"
+        },
+        {
+            "kind": "resource",
+            "group": "Продажи",
+            "label": "Финансы",
+            "class": "App\\Filament\\Resources\\PaymentResource",
+            "url": "http://localhost/admin/payments"
+        }
+    ],
+    "widgets": {
+        "dashboard_reachable": true,
+        "note": "Главная доступна: карточки ниже куратор видит.",
+        "total": 9,
+        "items": [
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "AccountWidget",
+                "class": "Filament\\Widgets\\AccountWidget",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "FilamentInfoWidget",
+                "class": "Filament\\Widgets\\FilamentInfoWidget",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "DebtorsTotalWidget",
+                "class": "App\\Filament\\Widgets\\DebtorsTotalWidget",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "TeacherSalariesTotalWidget",
+                "class": "App\\Filament\\Widgets\\TeacherSalariesTotalWidget",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "StudentStatsOverview",
+                "class": "App\\Filament\\Widgets\\StudentStatsOverview",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "Выручка по курсам",
+                "class": "App\\Filament\\Widgets\\CourseEarningsChart",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "Скоро срок оплаты (7 дней)",
+                "class": "App\\Filament\\Widgets\\UpcomingPromisesWidget",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "SalesFunnelChart",
+                "class": "App\\Filament\\Widgets\\SalesFunnelChart",
+                "url": null
+            },
+            {
+                "kind": "widget",
+                "group": "Виджеты",
+                "label": "Доходимость уроков (Retention)",
+                "class": "App\\Filament\\Widgets\\RetentionChart",
+                "url": null
+            }
+        ]
+    }
+}

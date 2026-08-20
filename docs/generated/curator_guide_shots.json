@@ -1,0 +1,17 @@
+{
+  "guide": "curator",
+  "outDir": "docs/screenshots/curator-guide",
+  "skipMoneyPaths": ["/admin/payments", "/admin/debtors"],
+  "fixture": {
+    "name": "Куратор Учебный",
+    "note": "Логин из CURATOR_GUIDE_EMAIL / CURATOR_GUIDE_PASSWORD. Не прод. Денежные экраны не снимать."
+  },
+  "shots": [
+    {"slug": "tiket", "path": "/admin/dialogs", "auth": "manager", "wait": "h1, h2"},
+    {"slug": "magic-link", "path": "/admin/users", "auth": "manager", "wait": "h1, h2"},
+    {"slug": "nayti-kartochku", "path": "/admin/users", "auth": "manager", "wait": "h1, h2"},
+    {"slug": "domashka", "path": "/admin/users", "auth": "manager", "wait": "h1, h2"},
+    {"slug": "perevod-gruppy", "path": "/admin/users", "auth": "manager", "wait": "h1, h2"},
+    {"slug": "obeshchanie", "path": "/admin", "auth": "manager", "wait": "h1, h2"}
+  ]
+}
