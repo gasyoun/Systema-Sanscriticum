@@ -49,6 +49,8 @@ class HindiTranscriptDrillsController extends Controller
             'handouts' => $handouts,
             'attachmentsEnabled' => $attachments->enabled() || $teacherPreview,
             'transcriptEnabled' => $transcript->enabled() || $teacherPreview,
+            'youtubeNova3Draft' => $teacherPreview && $transcript->isYoutubeNova3($lesson)
+                && ! $transcript->youtubeNova3StudentVisible(),
             'lessonUrl' => route('student.lesson', [$course->slug, $lesson->id]),
             'playlistEnabled' => (bool) config('features.hindi_programme_playlist', false),
             'srsDeckEnabled' => HindiMySrsDeck::enabled() || $teacherPreview,
@@ -78,7 +80,7 @@ class HindiTranscriptDrillsController extends Controller
 
         $item = null;
         if ($transcript->enabled() || $teacherPreview) {
-            $item = $transcript->findItem($lesson, $validated['item_id']);
+            $item = $transcript->findItem($lesson, $validated['item_id'], $teacherPreview);
         }
         if ($item === null && ($attachments->enabled() || $teacherPreview)) {
             $item = $attachments->findItem($lesson, $validated['item_id']);
@@ -105,7 +107,7 @@ class HindiTranscriptDrillsController extends Controller
     ): array {
         $items = [];
         if ($transcript->enabled() || $teacherPreview) {
-            $items = $transcript->itemsFor($lesson);
+            $items = $transcript->itemsFor($lesson, $teacherPreview);
         }
         $handouts = [];
         if ($attachments->enabled() || $teacherPreview) {

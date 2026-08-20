@@ -33,7 +33,7 @@ class HindiDrillsProbeCommand extends Command
             return self::FAILURE;
         }
 
-        $items = $drills->itemsFor($lesson);
+        $items = $drills->itemsFor($lesson, true);
         $attachmentItems = $attachments->itemsFor($lesson);
         $handouts = $attachments->handoutsFor($lesson);
         $report = [

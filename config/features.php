@@ -934,6 +934,15 @@ return [
     'hindi_transcript_drills' => (bool) env('HINDI_TRANSCRIPT_DRILLS', false),
 
     /*
+     | Student-visible drills from YouTube re-ASR (metadata.source =
+     | deepgram-nova-3). Default OFF — Hindi teachers still preview via
+     | teachesHindi(); students keep Zoom/n8n transcripts (no source) and
+     | attachment drills. Enable only after the Hindi teacher says the
+     | YouTube cards are usable: HINDI_YOUTUBE_NOVA3_DRILLS=true + config:cache.
+     */
+    'hindi_youtube_nova3_drills' => (bool) env('HINDI_YOUTUBE_NOVA3_DRILLS', false),
+
+    /*
      | Hindi attachment drills (H2444): cloze / translate from files already
      | on the lesson (attachments + teacher homework files). txt/md/docx
      | extract; PDF only if a sibling .txt exists. Default OFF.

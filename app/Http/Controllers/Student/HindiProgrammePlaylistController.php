@@ -34,9 +34,9 @@ class HindiProgrammePlaylistController extends Controller
         $drillsOn = $drills->enabled() || $teacherPreview;
         $attachmentsOn = $attachments->enabled() || $teacherPreview;
         if ($drillsOn || $attachmentsOn || $srsOn) {
-            $items = $items->map(function (array $row) use ($drills, $attachments, $drillsOn, $attachmentsOn, $srsOn): array {
+            $items = $items->map(function (array $row) use ($drills, $attachments, $drillsOn, $attachmentsOn, $srsOn, $teacherPreview): array {
                 $lesson = $row['lesson'];
-                $hasTranscript = $drills->hasItems($lesson);
+                $hasTranscript = $drills->hasItems($lesson, $teacherPreview);
                 $hasAttachmentPractice = $attachments->hasPracticePath($lesson);
                 $hasAttachmentItems = $attachments->hasItems($lesson);
                 $row['has_drills'] = ($drillsOn && $hasTranscript)
@@ -56,6 +56,7 @@ class HindiProgrammePlaylistController extends Controller
             'srsDeckEnabled' => $srsOn,
             'tgPracticeEnabled' => $tgOn,
             'hindiTeacherBrief' => $teacherPreview ? HindiProgrammePlaylist::TEACHER_BRIEF_URL : null,
+            'youtubeAsrReview' => $teacherPreview ? $drills->youtubeNova3ReviewRows($user) : [],
         ]);
     }
 }

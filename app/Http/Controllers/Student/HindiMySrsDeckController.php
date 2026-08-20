@@ -73,7 +73,8 @@ class HindiMySrsDeckController extends Controller
         abort_unless($course instanceof Course, 404);
         $this->authorizeHindiLesson($user, $lesson, $drills);
 
-        $items = array_merge($drills->itemsFor($lesson), $attachments->itemsFor($lesson));
+        $teacherPreview = app(HindiProgrammePlaylist::class)->teachesHindi($user);
+        $items = array_merge($drills->itemsFor($lesson, $teacherPreview), $attachments->itemsFor($lesson));
         if ($items === []) {
             return back()->with('hindi_srs_status', 'no_items');
         }

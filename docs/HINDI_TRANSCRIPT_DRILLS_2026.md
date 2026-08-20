@@ -1,6 +1,6 @@
 # Hindi transcript drills (H2443)
 
-_Created: 14-08-2026 · Last updated: 14-08-2026_
+_Created: 14-08-2026 · Last updated: 20-08-2026_
 
 ## What ships
 
@@ -16,6 +16,13 @@ no LLM, no Telegram dump, no Sanskrit grammar invented.
 | Playlist + lesson CTA | Entry from [H2441](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2441-Grok_Systema-Sanscriticum_hindi-programme-playlist-one-list_08.08.26.md) row and the lesson page |
 
 Flag: `features.hindi_transcript_drills` / `HINDI_TRANSCRIPT_DRILLS`, default **OFF**.
+
+YouTube re-ASR (`metadata.source = deepgram-nova-3`) is a **second** flag:
+`features.hindi_youtube_nova3_drills` / `HINDI_YOUTUBE_NOVA3_DRILLS`, default **OFF**.
+Students do not see those cards until the Hindi teacher says they are usable.
+Teachers still preview them on [Мой хинди](https://samskrte.ru/dvaram/programme/hindi)
+(`data-testid="hindi-youtube-asr-review"`). Zoom/n8n transcripts with no `source`
+are unchanged. Cache key `v6`.
 
 Access: `HindiProgrammePlaylist::canAccessLesson` — same group / grant / paid-key
 rules as the playlist. The feature does not write payments or grants.
@@ -81,6 +88,14 @@ queued on `/tmp/run_hindi_reasr.py`. New Zoom classes still need
 Deepgram credits ([issue #1692](https://github.com/gasyoun/Systema-Sanscriticum/issues/1692)).
 
 **H2445 (14-08-2026):** each item now carries `lemma` (the Hindi headword;
-vocab_pick inherits it from the source item). Cache key is `v5`.
+vocab_pick inherits it from the source item). Cache key was `v5`.
+
+**H2758 (20-08-2026):** 89 published YouTube shells now have
+`metadata.source = deepgram-nova-3` (the remaining `youtube-auto-ru-orig`
+drain). Drill quality from that ASR is a teacher gate, not a student
+rollout: `HINDI_YOUTUBE_NOVA3_DRILLS` stays OFF; n8n lessons 1830/1853/1854/1863
+were not overwritten. Cache key `v6`. Do not relaunch `/tmp/hindi_reasr`
+(that scratch was 7.6 GiB and was deleted on 19-08-2026 as part of the
+`.92` tmpfs cleanup).
 
 _Dr. Mārcis Gasūns_
