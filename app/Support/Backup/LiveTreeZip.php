@@ -6,6 +6,7 @@ namespace App\Support\Backup;
 
 use Spatie\Backup\Exceptions\BackupFailed;
 use Spatie\Backup\Tasks\Backup\Zip;
+use ZipArchive;
 
 /**
  * Spatie 10.3.1 {@see Zip} that freezes each member to a sibling snapshot
@@ -32,6 +33,11 @@ class LiveTreeZip extends Zip
 
         $compressionMethod = $this->config->backup->destination->compressionMethod;
         $compressionLevel = $this->config->backup->destination->compressionLevel;
+        // ZipArchive::CM_DEFAULT is -1. setCompressionName(-1) is ZIP_ER_INVAL
+        // on some libzip builds (CI PHP 8.3.33: close() Invalid argument).
+        if ($compressionMethod < 0) {
+            $compressionMethod = ZipArchive::CM_DEFLATE;
+        }
 
         foreach ($files as $file) {
             if (is_dir($file)) {
