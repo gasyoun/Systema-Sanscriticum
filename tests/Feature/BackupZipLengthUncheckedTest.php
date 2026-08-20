@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Support\Backup\BackupRunCommand;
 use App\Support\Backup\LiveTreeZip;
 use Illuminate\Support\Facades\Artisan;
+use Spatie\Backup\Config\Config;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -31,6 +32,12 @@ class BackupZipLengthUncheckedTest extends TestCase
         $member = $dir.DIRECTORY_SEPARATOR.'member.bin';
         $zipPath = $dir.DIRECTORY_SEPARATOR.'out.zip';
         file_put_contents($member, str_repeat('a', 20_000));
+
+        // .env.example has BACKUP_ARCHIVE_PASSWORD= (empty string, not unset).
+        // Spatie treats that as "encrypt with empty password" and ZipArchive::close()
+        // then raises Invalid argument on CI libzip.
+        config(['backup.backup.password' => null]);
+        $this->app->forgetInstance(Config::class);
 
         try {
             $zip = new LiveTreeZip($zipPath);
