@@ -62,7 +62,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_TIMEOUT` | optional | `15` | config/cabinet_probe.php:51 |
 | `CACHE_DRIVER` | optional | `'file'` | config/cache.php:18 |
 | `CACHE_PREFIX` | optional | `Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'` | config/cache.php:109 |
-| `CATALOG_NEXT_STEP` | optional | `false` | config/features.php:990 |
+| `CATALOG_NEXT_STEP` | optional | `false` | config/features.php:998 |
 | `CERTIFICATE_MATERIAL_MIN_MENTIONS` | optional | `3` | config/certificates.php:9 |
 | `CHAT_REMOVAL_MIN_DAYS_OVERDUE` | optional | `30` | config/chat_removal.php:20 |
 | `CHAT_REMOVAL_MIN_UNANSWERED_CONTACTS` | optional | `2` | config/chat_removal.php:27 |
@@ -176,7 +176,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:65 |
 | `FAQ_RAG_SUGGESTER` | optional | `false` | config/features.php:147 |
 | `FILESYSTEM_DISK` | optional | `'local'` | config/filesystems.php:16 |
-| `FLAGSHIP_CTA_AB` | optional | `false` | config/features.php:998 |
+| `FLAGSHIP_CTA_AB` | optional | `false` | config/features.php:1006 |
 | `FLAGSHIP_EXPERIMENT_STARTED_AT` | optional | `''` | config/flagship_experiments.php:28 |
 | `FREE_TIER_COHORT_FILE` | optional | `'membership/free_tier_cohort.txt'` | config/membership.php:186 |
 | `FREE_TIER_DAEMON_APPLY` | optional | `false` | config/membership.php:164 |
@@ -535,8 +535,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_AI_INCLUDE_TELEGRAM` | optional | `false` | config/features.php:48 |
 | `SUPPORT_ANSWER_SUGGESTER` | optional | `false` | config/features.php:124 |
 | `SUPPORT_ANSWER_SUGGESTION_EXPIRY_DAYS` | optional | `14` | config/support.php:11 |
-| `SUPPORT_CAPACITY_ROUTING` | optional | `false` | config/features.php:982 |
-| `SUPPORT_DEPARTMENTS` | optional | `false` | config/features.php:981 |
+| `SUPPORT_CAPACITY_ROUTING` | optional | `false` | config/features.php:990 |
+| `SUPPORT_DEPARTMENTS` | optional | `false` | config/features.php:989 |
 | `SUPPORT_FAQ_RAG_MIN_SCORE` | optional | `1.5` | config/support.php:74 |
 | `SUPPORT_FAQ_RAG_PATH` | required | `null` | config/support.php:71 |
 | `SUPPORT_FAQ_RAG_TOP_K` | optional | `3` | config/support.php:72 |
@@ -609,9 +609,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_ZAPISI_POLL_MAX_LIFETIME_SECONDS` | optional | `3600` | config/services.php:272 |
 | `TELEGRAM_ZAPISI_POLL_RETRY_SECONDS` | optional | `10` | config/services.php:275 |
 | `TELEGRAM_ZAPISI_POLL_TIMEOUT_SECONDS` | optional | `50` | config/services.php:269 |
-| `TELEPHONY_CALLBACK_REQUEST` | optional | `false` | config/features.php:978 |
-| `TELEPHONY_PSTN` | optional | `false` | config/features.php:979 |
-| `TELEPHONY_RECORDING` | optional | `false` | config/features.php:980 |
+| `TELEPHONY_CALLBACK_REQUEST` | optional | `false` | config/features.php:986 |
+| `TELEPHONY_PSTN` | optional | `false` | config/features.php:987 |
+| `TELEPHONY_RECORDING` | optional | `false` | config/features.php:988 |
 | `TEST_MANAGER_EMAIL` | optional | `'smoke-manager@samskrte.ru'` | config/services.php:329 |
 | `TEST_MANAGER_NAME` | optional | `'Smoke Manager'` | config/services.php:331 |
 | `TEST_MANAGER_PASSWORD` | secret | `—` | config/services.php:330 |
