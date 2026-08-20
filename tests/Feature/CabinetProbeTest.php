@@ -405,11 +405,9 @@ class CabinetProbeTest extends TestCase
         Http::assertNothingSent();
 
         // After reminder window elapses → one re-nudge.
-        Cache::put(
-            'cabinet_probe:last_soft_tg_alert_at',
-            now()->subHours(25),
-            now()->addDay(),
-        );
+        app(CabinetProbeAlertState::class)->put([
+            CabinetProbeAlertState::LAST_SOFT_ALERT_AT => now()->subHours(25),
+        ]);
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
         ]);
@@ -445,7 +443,9 @@ class CabinetProbeTest extends TestCase
         Artisan::call('cabinet:probe');
         Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage'));
 
-        Cache::put('cabinet_probe:last_soft_tg_alert_at', now()->subDays(3), now()->addDay());
+        app(CabinetProbeAlertState::class)->put([
+            CabinetProbeAlertState::LAST_SOFT_ALERT_AT => now()->subDays(3),
+        ]);
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
         ]);
