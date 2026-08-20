@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Support\Roles;
+use App\Support\ServerGuards\CabinetProbeAlertState;
 use App\Support\ServerGuards\GuardSpec;
 use App\Support\ServerGuards\SystemInspector;
 use Illuminate\Console\Scheduling\Schedule;
@@ -45,6 +46,9 @@ class CabinetProbeTest extends TestCase
         Cache::forget('cabinet_probe:last_tg_alert_at');
         Cache::forget('cabinet_probe:last_soft_tg_alert_at');
         Cache::forget('cabinet_probe:last_soft_fingerprint');
+        $statePath = sys_get_temp_dir().DIRECTORY_SEPARATOR.'cabinet_probe_tg_'.getmypid().'.json';
+        @unlink($statePath);
+        config()->set('cabinet_probe.tg_state_path', $statePath);
 
         // Legacy H1777 tests isolate manager surfaces; public/student covered in CabinetProbeHardeningTest.
         config()->set('cabinet_probe.public_surfaces', []);
@@ -332,7 +336,9 @@ class CabinetProbeTest extends TestCase
         config()->set('cabinet_probe.ping_url', '');
         config()->set('cabinet_probe.telegram_chat_id', '999001');
         config()->set('services.telegram.bot_token', 'test-bot-token');
-        Cache::put('cabinet_probe:was_down', true, now()->addHour());
+        app(CabinetProbeAlertState::class)->put([
+            CabinetProbeAlertState::HTTP_DOWN => true,
+        ]);
 
         Http::fake([
             'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
@@ -444,6 +450,91 @@ class CabinetProbeTest extends TestCase
             'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
         ]);
         Artisan::call('cabinet:probe');
+        Http::assertNothingSent();
+    }
+
+    public function test_cache_flush_does_not_re_send_http_sos(): void
+    {
+        $this->seedManager('correct-pass');
+        config(['services.test_manager.password' => 'wrong-pass']);
+        config()->set('cabinet_probe.ping_url', '');
+        config()->set('cabinet_probe.telegram_chat_id', '999001');
+        config()->set('cabinet_probe.telegram_soft_reminder_hours', 24);
+        config()->set('services.telegram.bot_token', 'test-bot-token');
+
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe');
+        Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), 'Личный кабинет не работает'));
+
+        Cache::flush();
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        Artisan::call('cabinet:probe');
+        Http::assertNothingSent();
+    }
+
+    public function test_host_guard_critical_is_ops_not_sos_and_does_not_fail_deploy(): void
+    {
+        config([
+            'services.test_manager.password' => '',
+            'services.test_student.password' => '',
+            'cabinet_probe.public_surfaces' => [],
+            'cabinet_probe.ping_url' => '',
+            'cabinet_probe.check_server_guards' => true,
+            'server_guards.verify_enabled' => true,
+            'server_guards.spec_path' => base_path('scripts/server_guards.conf'),
+            'server_guards.template_root' => base_path('scripts/server_guards'),
+            'cabinet_probe.telegram_chat_id' => '999001',
+            'services.telegram.bot_token' => 'test-bot-token',
+        ]);
+
+        $spec = GuardSpec::fromFile(base_path('scripts/server_guards.conf'));
+        $fake = FakeSystemInspector::healthy(
+            $spec,
+            base_path('scripts/server_guards'),
+            (string) file_get_contents(base_path('scripts/server_guards/manifest.psv')),
+        );
+        $fake->active['earlyoom'] = false;
+        $this->app->instance(SystemInspector::class, $fake);
+
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        $this->artisan('cabinet:probe', ['--fail-on-critical' => true])
+            ->expectsOutputToContain('Кабинет болен')
+            ->expectsOutputToContain('earlyoom')
+            ->assertSuccessful();
+
+        Http::assertSent(function ($r) {
+            $text = (string) ($r['text'] ?? '');
+
+            return str_contains($text, 'host/ops')
+                && ! str_contains($text, 'Личный кабинет не работает');
+        });
+
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        $this->artisan('cabinet:probe', ['--fail-on-critical' => true])->assertSuccessful();
+        Http::assertNothingSent();
+    }
+
+    public function test_no_alert_skips_telegram(): void
+    {
+        $this->seedManager('correct-pass');
+        config(['services.test_manager.password' => 'wrong-pass']);
+        config()->set('cabinet_probe.ping_url', '');
+        config()->set('cabinet_probe.telegram_chat_id', '999001');
+        config()->set('services.telegram.bot_token', 'test-bot-token');
+
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        $this->artisan('cabinet:probe', ['--no-alert' => true])->assertSuccessful();
         Http::assertNothingSent();
     }
 }

@@ -1,6 +1,6 @@
 # Soft server alerts — agent playbook + cause catalog
 
-_Created: 02-08-2026 · Last updated: 20-08-2026 (H3194 probe-fail skipped chown)_
+_Created: 02-08-2026 · Last updated: 20-08-2026 (H3197 host-guards not SOS)_
 
 **Audience:** agents (Grok / Claude / Codex) and ops.  
 **Scope:** Telegram soft path from `cabinet:probe` («Кабинет: soft-сбой …»),  
@@ -80,6 +80,7 @@ Severity is what `guards:verify` / TG already use (H2066 + H2104).
 | earlyoom / MemAvailable / OOM | resource pressure | maybe down | none | random process kills | [server-resource-guards.md §7](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) |
 | hybrid soft surfaces | `/library` etc. optional | 200 elsewhere | none | “fix” by disabling hybrid blindly | feature flags / hybrid docs |
 | `touch(): Utime failed` / root-owned `storage/framework/views` | Filament `/admin` HTTP 500; `cabinet:probe` critical; public `/` and `/login` 200 | /admin 500 | `chown -R www-data:www-data storage/framework/views` | disable probe; `nano` compiled views; restart healthy php-fpm | `deploy.sh` artisan-as-root compiles Blade; php-fpm cannot `touch()`. Chown after optimize **and** after probe, **before** `fail` (H3194: `fail` is `exit 1`) |
+| host-only `guards/tmpfs-cap` / `backup-fresh` as SOS | 🚨 «кабинет не работает» while HTTP 200; deploy `--fail-on-critical` trips fuse; TG storm after `optimize:clear` | 200 | do **not** `rm` fuse as the fix; H3197 splits HTTP vs host | treat host guards as cabinet-down; `cache:clear` as the TG store | SOS + Better Stack `/fail` + deploy fail = HTTP/cabinet only; host/ops sticky; TG state file not cache; `deploy.sh --no-alert` |
 
 **Allowed dirty without blocking deploy:** `public/docs/*.pdf` only (legal PDFs).
 

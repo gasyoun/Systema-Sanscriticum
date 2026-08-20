@@ -1,6 +1,6 @@
 # Metadoc — SERVER_SOFT_ALERT_PLAYBOOK.md
 
-_Created: 02-08-2026 · Last updated: 20-08-2026 (H3194 /admin 500 after failed probe)_
+_Created: 02-08-2026 · Last updated: 20-08-2026 (H3197 host-guards not SOS)_
 
 | Field | Value |
 |---|---|
@@ -31,6 +31,7 @@ _Created: 02-08-2026 · Last updated: 20-08-2026 (H3194 /admin 500 after failed 
 
 | Date | Change | Who |
 |---|---|---|
+| 20-08-2026 | Catalog: host-only guards are not SOS; sticky TG state file (H3197) | Grok 4.6 (`grok-4.6`) H3197 |
 | 20-08-2026 | Incident log: Filament `/admin` 500 from 8 root-owned compiled views after `deploy.sh` `fail` skipped post-probe chown; H3194 | Grok 4.6 (`grok-4.6`) H3194 |
 | 15-08-2026 | Incident log: `[rolled-back]` ×2 from Horizon master 64 MB / exit 12; #1729 already on main | Grok 4.6 (`grok-4.6`) H2803 |
 | 02-08-2026 | Dry-run fixtures + SoftRemediateDryRunFixturesTest + §4.0 smoke one-liner | Grok 4.5 (`grok-4.5`) H2187 |
