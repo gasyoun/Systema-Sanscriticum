@@ -45,7 +45,9 @@ class HindiAgentDrillsReview extends Page
 
     public static function shouldRegisterNavigation(): bool
     {
-        return static::canAccess();
+        // Keep off the teacher-guide census (heading + Dusk screenshot).
+        // Entry is the playlist link «Все агентские упражнения одним списком».
+        return false;
     }
 
     /**
