@@ -52,6 +52,32 @@
         </div>
     </div>
 
+    @if(!empty($youtubeAsrReview))
+        <div class="bg-orange-50 rounded-[2rem] border border-orange-100 p-8 md:p-10 mb-10"
+             data-testid="hindi-youtube-asr-review">
+            <div class="text-[10px] font-extrabold uppercase tracking-widest text-brand mb-2">Для преподавателя</div>
+            <h2 class="text-2xl font-extrabold text-[#101010] mb-3 tracking-tight">
+                Черновик упражнений из старых записей
+            </h2>
+            <p class="text-gray-600 text-base leading-relaxed max-w-3xl mb-5">
+                Это упражнения из расшифровки занятий, которые лежат на YouTube, не из Zoom.
+                Студентам эти карточки сейчас не показываем. Откройте несколько занятий и напишите в Telegram:
+                можно показывать / нельзя / что поправить.
+            </p>
+            <ul class="space-y-3">
+                @foreach($youtubeAsrReview as $row)
+                    <li class="flex flex-wrap items-center gap-3" data-testid="hindi-youtube-asr-review-item">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-white text-gray-600">{{ $row['shell_label'] }}</span>
+                        <a href="{{ $row['drills_url'] }}"
+                           class="text-sm font-extrabold text-brand hover:underline">
+                            Упражнения · {{ $row['lesson']->title }}
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @include('student.partials.hindi-srs-flash')
 
     <div class="space-y-4">

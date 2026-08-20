@@ -1075,7 +1075,7 @@ class StudentController extends Controller
         $hindiAttachments = app(HindiAttachmentDrills::class);
         $hindiOk = $hindiDrills->isHindiLesson($lesson);
         $hindiTeacherPreview = app(HindiProgrammePlaylist::class)->teachesHindi($user);
-        $hasTranscriptItems = ($hindiDrills->enabled() || $hindiTeacherPreview) && $hindiOk && $hindiDrills->hasItems($lesson);
+        $hasTranscriptItems = ($hindiDrills->enabled() || $hindiTeacherPreview) && $hindiOk && $hindiDrills->hasItems($lesson, $hindiTeacherPreview);
         $hasAttachmentPath = ($hindiAttachments->enabled() || $hindiTeacherPreview) && $hindiOk && $hindiAttachments->hasPracticePath($lesson);
         if ($hasTranscriptItems || $hasAttachmentPath) {
             $hindiDrillsUrl = route('student.lesson.drills', [$course->slug, $lesson->id]);

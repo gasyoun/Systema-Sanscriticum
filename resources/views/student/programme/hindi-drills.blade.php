@@ -55,6 +55,12 @@ function hindiTranscriptDrills() {
                     Задания собраны из расшифровки этого занятия: вставьте пропущенное слово хинди или переведите.
                 @endif
             </p>
+            @if(!empty($youtubeNova3Draft))
+                <p class="mt-4 text-sm font-bold text-brand bg-orange-50 border border-orange-100 rounded-2xl px-4 py-3"
+                   data-testid="hindi-youtube-asr-draft-banner">
+                    Черновик: студенты эти задания пока не видят. Напишите в Telegram, можно ли так оставлять.
+                </p>
+            @endif
             <div class="mt-6 flex flex-wrap gap-3">
                 <a href="{{ $lessonUrl }}"
                    class="inline-flex items-center gap-2 text-sm font-bold text-brand hover:underline"

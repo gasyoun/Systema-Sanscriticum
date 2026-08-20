@@ -9,9 +9,11 @@ use App\Models\Course;
 use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\Payment;
+use App\Models\Teacher;
 use App\Models\User;
 use App\Services\HindiTranscriptDrillExtractor;
 use App\Services\HindiTranscriptDrills;
+use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -246,6 +248,101 @@ class HindiTranscriptDrillsTest extends TestCase
         $this->assertSame([], $items);
     }
 
+    public function test_youtube_nova3_hidden_from_students_until_flag(): void
+    {
+        config([
+            'features.hindi_transcript_drills' => true,
+            'features.hindi_youtube_nova3_drills' => false,
+            'features.hindi_programme_playlist' => true,
+            'features.hindi_attachment_drills' => false,
+            'features.cabinet_hybrid' => false,
+        ]);
+        [$user, $course, $lesson] = $this->seedHindiLessonWithFixture();
+        $this->putNova3On($lesson);
+
+        $drills = app(HindiTranscriptDrills::class);
+        $this->assertSame([], $drills->itemsFor($lesson));
+        $this->assertNotSame([], $drills->itemsFor($lesson, true));
+
+        $this->actingAs($user)
+            ->get(route('student.programme.hindi'))
+            ->assertOk()
+            ->assertDontSee('data-testid="hindi-playlist-drills"', false)
+            ->assertDontSee('data-testid="hindi-youtube-asr-review"', false);
+
+        $this->actingAs($user)
+            ->get(route('student.lesson', [$course->slug, $lesson->id]))
+            ->assertOk()
+            ->assertDontSee('data-testid="hindi-transcript-drills-cta"', false);
+    }
+
+    public function test_youtube_nova3_visible_to_students_when_flag_on(): void
+    {
+        config([
+            'features.hindi_transcript_drills' => true,
+            'features.hindi_youtube_nova3_drills' => true,
+            'features.hindi_programme_playlist' => true,
+            'features.hindi_attachment_drills' => false,
+            'features.cabinet_hybrid' => false,
+        ]);
+        [$user, $course, $lesson] = $this->seedHindiLessonWithFixture();
+        $this->putNova3On($lesson);
+
+        $this->assertNotSame([], app(HindiTranscriptDrills::class)->itemsFor($lesson));
+
+        $this->actingAs($user)
+            ->get(route('student.programme.hindi'))
+            ->assertOk()
+            ->assertSee('data-testid="hindi-playlist-drills"', false)
+            ->assertDontSee('data-testid="hindi-youtube-asr-review"', false);
+    }
+
+    public function test_hindi_teacher_sees_youtube_nova3_review_while_student_flag_off(): void
+    {
+        config([
+            'features.hindi_transcript_drills' => true,
+            'features.hindi_youtube_nova3_drills' => false,
+            'features.hindi_programme_playlist' => true,
+            'features.hindi_attachment_drills' => false,
+            'features.hindi_tg_curated_practice' => false,
+            'features.hindi_my_srs_deck' => false,
+            'features.cabinet_hybrid' => false,
+        ]);
+        $hindi = Category::factory()->create(['name' => 'Хинди', 'slug' => 'hindi']);
+        $staff = Teacher::create(['name' => 'Hindi teacher']);
+        $course = Course::factory()->create([
+            'title' => 'Хинди гр. 1',
+            'slug' => 'hindi-gr1-asr-review',
+            'teacher_id' => $staff->id,
+        ]);
+        $course->categories()->attach($hindi->id);
+        $lesson = Lesson::factory()->for($course)->create([
+            'title' => '1-е занятие',
+            'sort_order' => 1,
+            'block_number' => 1,
+            'is_published' => true,
+            'is_free' => false,
+            'transcript_file' => $this->putFixture(),
+        ]);
+        $this->putNova3On($lesson);
+        $teacher = User::factory()->create([
+            'role' => Roles::TEACHER,
+            'teacher_id' => $staff->id,
+        ]);
+
+        $this->actingAs($teacher)
+            ->get(route('student.programme.hindi'))
+            ->assertOk()
+            ->assertSee('data-testid="hindi-youtube-asr-review"', false)
+            ->assertSee('data-testid="hindi-youtube-asr-review-item"', false)
+            ->assertSee('data-testid="hindi-playlist-drills"', false);
+
+        $this->actingAs($teacher)
+            ->get(route('student.lesson.drills', [$course->slug, $lesson->id]))
+            ->assertOk()
+            ->assertSee('data-testid="hindi-youtube-asr-draft-banner"', false);
+    }
+
     public function test_probe_lists_redacted_items_with_flag_off(): void
     {
         config(['features.hindi_transcript_drills' => false]);
@@ -301,5 +398,17 @@ class HindiTranscriptDrillsTest extends TestCase
         );
 
         return $path;
+    }
+
+    private function putNova3On(Lesson $lesson): void
+    {
+        $path = 'transcripts/lesson-'.$lesson->id.'-nova3.json';
+        $data = json_decode(
+            (string) file_get_contents(base_path('tests/fixtures/hindi_transcript/hindi_lesson_sample.json')),
+            true,
+        );
+        $data['metadata'] = ['source' => HindiTranscriptDrills::SOURCE_YOUTUBE_NOVA3];
+        Storage::disk('public')->put($path, (string) json_encode($data, JSON_UNESCAPED_UNICODE));
+        $lesson->forceFill(['transcript_file' => $path])->save();
     }
 }

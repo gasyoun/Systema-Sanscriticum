@@ -20,6 +20,10 @@ use Illuminate\Support\Facades\Storage;
  */
 final class HindiTranscriptDrills
 {
+    public const SOURCE_YOUTUBE_AUTO = 'youtube-auto-ru-orig';
+
+    public const SOURCE_YOUTUBE_NOVA3 = 'deepgram-nova-3';
+
     public function __construct(
         private readonly HindiTranscriptDrillExtractor $extractor,
         private readonly HindiProgrammePlaylist $playlist,
@@ -52,6 +56,11 @@ final class HindiTranscriptDrills
         return $this->playlist->canAccessLesson($user, $lesson);
     }
 
+    public function youtubeNova3StudentVisible(): bool
+    {
+        return (bool) config('features.hindi_youtube_nova3_drills', false);
+    }
+
     /**
      * @return list<array{
      *     id: string,
@@ -64,35 +73,87 @@ final class HindiTranscriptDrills
      *     start: float
      * }>
      */
-    public function itemsFor(Lesson $lesson): array
+    public function itemsFor(Lesson $lesson, bool $includeYoutubeNova3 = false): array
     {
-        $path = $lesson->transcript_file;
-        if (! is_string($path) || $path === '' || ! Storage::disk('public')->exists($path)) {
+        $payload = $this->cachedPayload($lesson);
+        if ($payload === null) {
+            return [];
+        }
+        if ($payload['source'] === self::SOURCE_YOUTUBE_NOVA3
+            && ! $this->youtubeNova3StudentVisible()
+            && ! $includeYoutubeNova3) {
             return [];
         }
 
-        $mtime = Storage::disk('public')->lastModified($path);
-        $cacheKey = 'hindi_transcript_drills:v5:'.md5($path).':'.$mtime;
-
-        return Cache::rememberForever($cacheKey, function () use ($path): array {
-            $raw = Storage::disk('public')->get($path);
-            $data = json_decode((string) $raw, true);
-            $source = is_array($data) ? (string) data_get($data, 'metadata.source', '') : '';
-            // YouTube ru-orig is Russian classroom ASR: Hindi lands as
-            // Cyrillic/Tamil/English junk. Keep the file for the player.
-            if ($source === 'youtube-auto-ru-orig') {
-                return [];
-            }
-
-            $sentences = TranscriptParser::sentencesFromPublicFile($path);
-
-            return $this->extractor->extract($sentences);
-        });
+        return $payload['items'];
     }
 
-    public function hasItems(Lesson $lesson): bool
+    public function transcriptSource(Lesson $lesson): string
     {
-        return $this->itemsFor($lesson) !== [];
+        $payload = $this->cachedPayload($lesson);
+
+        return is_array($payload) ? (string) $payload['source'] : '';
+    }
+
+    public function isYoutubeNova3(Lesson $lesson): bool
+    {
+        return $this->transcriptSource($lesson) === self::SOURCE_YOUTUBE_NOVA3;
+    }
+
+    public function hasItems(Lesson $lesson, bool $includeYoutubeNova3 = false): bool
+    {
+        return $this->itemsFor($lesson, $includeYoutubeNova3) !== [];
+    }
+
+    /**
+     * First YouTube-re-ASR lesson per Hindi shell the teacher can open.
+     * Empty for students. Live from transcripts, not a static list.
+     *
+     * @return list<array{
+     *     lesson: Lesson,
+     *     course: Course,
+     *     shell_label: string,
+     *     url: string,
+     *     drills_url: string
+     * }>
+     */
+    public function youtubeNova3ReviewRows(User $user): array
+    {
+        if (! $this->playlist->teachesHindi($user)) {
+            return [];
+        }
+
+        $firstPerShell = [];
+        foreach ($this->playlist->itemsFor($user) as $row) {
+            $cid = (int) $row['course']->id;
+            if (isset($firstPerShell[$cid])) {
+                continue;
+            }
+            $firstPerShell[$cid] = $row;
+        }
+
+        $out = [];
+        foreach ($firstPerShell as $row) {
+            $lesson = $row['lesson'];
+            if (! $this->isYoutubeNova3($lesson)) {
+                continue;
+            }
+            if ($this->itemsFor($lesson, true) === []) {
+                continue;
+            }
+            $out[] = [
+                'lesson' => $lesson,
+                'course' => $row['course'],
+                'shell_label' => $row['shell_label'],
+                'url' => $row['url'],
+                'drills_url' => route('student.lesson.drills', [$row['course']->slug, $lesson->id]),
+            ];
+            if (count($out) >= 5) {
+                break;
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -107,14 +168,46 @@ final class HindiTranscriptDrills
      *     start: float
      * }|null
      */
-    public function findItem(Lesson $lesson, string $itemId): ?array
+    public function findItem(Lesson $lesson, string $itemId, bool $includeYoutubeNova3 = false): ?array
     {
-        foreach ($this->itemsFor($lesson) as $item) {
+        foreach ($this->itemsFor($lesson, $includeYoutubeNova3) as $item) {
             if ($item['id'] === $itemId) {
                 return $item;
             }
         }
 
         return null;
+    }
+
+    /**
+     * @return array{source: string, items: list<array<string, mixed>>}|null
+     */
+    private function cachedPayload(Lesson $lesson): ?array
+    {
+        $path = $lesson->transcript_file;
+        if (! is_string($path) || $path === '' || ! Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        $mtime = Storage::disk('public')->lastModified($path);
+        $cacheKey = 'hindi_transcript_drills:v6:'.md5($path).':'.$mtime;
+
+        return Cache::rememberForever($cacheKey, function () use ($path): array {
+            $raw = Storage::disk('public')->get($path);
+            $data = json_decode((string) $raw, true);
+            $source = is_array($data) ? (string) data_get($data, 'metadata.source', '') : '';
+            // YouTube ru-orig is Russian classroom ASR: Hindi lands as
+            // Cyrillic/Tamil/English junk. Keep the file for the player.
+            if ($source === self::SOURCE_YOUTUBE_AUTO) {
+                return ['source' => $source, 'items' => []];
+            }
+
+            $sentences = TranscriptParser::sentencesFromPublicFile($path);
+
+            return [
+                'source' => $source,
+                'items' => $this->extractor->extract($sentences),
+            ];
+        });
     }
 }
