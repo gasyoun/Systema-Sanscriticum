@@ -60,6 +60,10 @@ _Created: 02-07-2026 · Last updated: 19-08-2026_
    `optimize` writes compiled Blade as root; php-fpm is www-data. Without the
    chown, the next Blade recompile does `touch()` and 500s Filament `/admin`
    (`Utime failed: Operation not permitted`, 17-08-2026). Homepage stays 200.
+   The same chown must run **before** `fail` when `cabinet:probe --fail-on-critical`
+   exits 1: `fail` is `exit 1`, so a post-probe chown after `|| fail` never
+   runs. 19-08-2026 21:01Z left 8 `root:root` compiled views that way; 20-08
+   SOS Filament `/admin` 500 until a manual chown (H3194).
 7. **`systemctl reload php{ver}-fpm`** — сброс OPcache (версия PHP определяется
    автоматически, переживет апгрейд 8.1 → 8.3).
 8. `supervisorctl restart horizon` — `horizon:terminate` на этом проде воркеры
