@@ -288,11 +288,15 @@ echo "OK: $SMOKE_URL → 200"
 # homepage fine, cabinet:probe critical on missing club_memberships.tier_code).
 # Soft-only findings still exit 0 — do not revive the #1143 rollback loop.
 say "Смоук кабинета: php artisan cabinet:probe --fail-on-critical"
-php artisan cabinet:probe --fail-on-critical \
-  || fail "cabinet:probe: critical после деплоя — кабинет нездоров"
-# Probe is artisan-as-root and can rewrite compiled views after the
-# post-optimize chown (H2994 live deploy 17-08 07:18Z left 660 files root).
+# Probe is artisan-as-root and compiles Blade after the post-optimize chown
+# (H2994: 660 files root). `fail` is `exit 1` — if it runs first, the chown
+# below never happens. 19-08-2026 21:01Z and 20-08 SOS: probe --fail-on-critical
+# died on tmpfs-cap/backup-fresh, left 8 compiled views root:root, php-fpm
+# `touch()` 500'd Filament /admin until a manual chown (H3194).
+php artisan cabinet:probe --fail-on-critical
+probe_rc=$?
 chown_compiled_views
+[ "$probe_rc" = 0 ] || fail "cabinet:probe: critical после деплоя — кабинет нездоров"
 
 # ── 7b. Ресурсные предохранители ОС (H1914) ─────────────────────────────────
 # Только ПРОВЕРКА, никогда не apply: выкладка кода не должна молча менять

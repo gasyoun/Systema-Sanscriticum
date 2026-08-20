@@ -55,10 +55,17 @@ final class DeploySurfaceSecretsTest extends TestCase
         );
         $afterOptimize = strpos($script, 'chown_compiled_views', $optimizePos);
         $afterProbe = strpos($script, 'chown_compiled_views', $probePos);
+        $failPos = strpos($script, 'cabinet:probe: critical после деплоя');
         $this->assertNotFalse($afterOptimize);
         $this->assertNotFalse($afterProbe);
+        $this->assertNotFalse($failPos);
         $this->assertGreaterThan($optimizePos, $afterOptimize);
         $this->assertGreaterThan($probePos, $afterProbe);
+        $this->assertGreaterThan(
+            $afterProbe,
+            $failPos,
+            'chown_compiled_views must run before fail() when probe is critical (H3194: fail is exit 1)',
+        );
     }
 
     public function test_deploy_sh_does_not_dump_env_or_secret_variables(): void
