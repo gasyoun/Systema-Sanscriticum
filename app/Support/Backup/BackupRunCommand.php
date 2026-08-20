@@ -14,7 +14,7 @@ use Spatie\Backup\Notifications\EventHandler;
 
 /**
  * Spatie backup:run with {@see BackupJobFactory} so zip creation uses
- * {@see LengthUncheckedZip} (FINDINGS §513 / H3195).
+ * {@see LiveTreeZip} (FINDINGS §513 / H3195).
  *
  * Keep option handling in lockstep with spatie/laravel-backup 10.3.1
  * BackupCommand::handle — the only delta is the factory class.

@@ -9,7 +9,7 @@ use Spatie\Backup\Tasks\Backup\BackupJob as SpatieBackupJob;
 use Spatie\Backup\Tasks\Backup\Manifest;
 
 /**
- * Same as Spatie 10.3.1 BackupJob except the zip is {@see LengthUncheckedZip}.
+ * Same as Spatie 10.3.1 BackupJob except the zip is {@see LiveTreeZip}.
  */
 class BackupJob extends SpatieBackupJob
 {
@@ -19,7 +19,7 @@ class BackupJob extends SpatieBackupJob
 
         $pathToZip = $this->temporaryDirectory->path($this->config->backup->destination->filenamePrefix.$this->filename);
 
-        $zip = LengthUncheckedZip::createForManifest($manifest, $pathToZip);
+        $zip = LiveTreeZip::createForManifest($manifest, $pathToZip);
 
         backupLogger()->info("Created zip containing {$zip->count()} files and directories. Size is {$zip->humanReadableSize()}");
 

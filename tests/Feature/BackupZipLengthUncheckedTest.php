@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Support\Backup\BackupRunCommand;
-use App\Support\Backup\LengthUncheckedZip;
+use App\Support\Backup\LiveTreeZip;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
 use ZipArchive;
@@ -16,7 +16,7 @@ use ZipArchive;
 class BackupZipLengthUncheckedTest extends TestCase
 {
     /** @test */
-    public function backup_run_resolves_to_the_length_unchecked_command(): void
+    public function backup_run_resolves_to_the_live_tree_command(): void
     {
         $command = Artisan::all()['backup:run'] ?? null;
 
@@ -24,7 +24,7 @@ class BackupZipLengthUncheckedTest extends TestCase
     }
 
     /** @test */
-    public function length_unchecked_zip_close_survives_a_shrunk_member(): void
+    public function live_tree_zip_close_survives_a_shrunk_member_and_keeps_the_size_at_add(): void
     {
         $dir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'h3195-zip-'.uniqid();
         mkdir($dir);
@@ -33,7 +33,7 @@ class BackupZipLengthUncheckedTest extends TestCase
         file_put_contents($member, str_repeat('a', 20_000));
 
         try {
-            $zip = new LengthUncheckedZip($zipPath);
+            $zip = new LiveTreeZip($zipPath);
             $zip->add($member, 'member.bin');
             file_put_contents($member, str_repeat('a', 1_000));
             $zip->close();
@@ -44,44 +44,15 @@ class BackupZipLengthUncheckedTest extends TestCase
             $reader = new ZipArchive;
             $this->assertTrue($reader->open($zipPath, ZipArchive::RDONLY));
             $this->assertSame(1, $reader->numFiles);
+            $stat = $reader->statIndex(0);
+            $this->assertIsArray($stat);
+            $this->assertSame(20_000, $stat['size']);
             $reader->close();
         } finally {
             @unlink($zipPath);
             @unlink($member);
+            @rmdir($dir.DIRECTORY_SEPARATOR.'live-tree-snap');
             @rmdir($dir);
-        }
-    }
-
-    /** @test */
-    public function default_ziparchive_close_rejects_a_shrunk_member(): void
-    {
-        $dir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'h3195-zip-default-'.uniqid();
-        mkdir($dir);
-        $member = $dir.DIRECTORY_SEPARATOR.'member.bin';
-        $zipPath = $dir.DIRECTORY_SEPARATOR.'out.zip';
-        file_put_contents($member, str_repeat('a', 20_000));
-
-        $archive = new ZipArchive;
-        $this->assertTrue($archive->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE));
-        $archive->addFile($member, 'member.bin');
-        file_put_contents($member, str_repeat('a', 1_000));
-
-        $message = null;
-        $closed = null;
-        try {
-            $closed = $archive->close();
-        } catch (\Throwable $e) {
-            $message = $e->getMessage();
-        } finally {
-            @unlink($zipPath);
-            @unlink($member);
-            @rmdir($dir);
-        }
-
-        if ($message === null) {
-            $this->assertFalse($closed);
-        } else {
-            $this->assertStringContainsString('Unexpected length of data', $message);
         }
     }
 }
