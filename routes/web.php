@@ -10,6 +10,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AttendanceNoticeController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CabinetMasteryController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CallbackRequestController;
 use App\Http\Controllers\CertificateRegistryController;
@@ -457,6 +458,11 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->whereNumber('schedule')
         ->name('student.calendar.notice.destroy');
     Route::get('/dvaram', [StudentController::class, 'dashboard'])->name('student.dashboard');
+
+    Route::get('/dvaram/proverka', [CabinetMasteryController::class, 'show'])
+        ->name('student.cabinet-mastery');
+    Route::post('/dvaram/proverka', [CabinetMasteryController::class, 'submit'])
+        ->name('student.cabinet-mastery.submit');
 
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
 

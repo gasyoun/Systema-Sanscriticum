@@ -13,10 +13,16 @@
             <h2 class="text-3xl md:text-4xl font-extrabold text-[#101010] tracking-tight mb-2">Добро пожаловать, {{ auth()->user()->name }}!</h2>
             <p class="text-gray-500 text-lg">Управляйте своим обучением, материалами и оплатами.</p>
         </div>
-        <button type="button" x-on:click="$dispatch('open-change-password')"
-                class="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
-            <i class="fas fa-key"></i> Сменить пароль
-        </button>
+        <div class="flex flex-col sm:flex-row gap-2 shrink-0">
+            <a href="{{ route('student.cabinet-mastery') }}"
+               class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
+                <i class="fas fa-clipboard-check"></i> Проверить кабинет
+            </a>
+            <button type="button" x-on:click="$dispatch('open-change-password')"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
+                <i class="fas fa-key"></i> Сменить пароль
+            </button>
+        </div>
     </div>
 
     @include('student.partials.onboarding-checklist')
