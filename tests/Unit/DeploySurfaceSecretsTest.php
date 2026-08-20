@@ -45,7 +45,7 @@ final class DeploySurfaceSecretsTest extends TestCase
         );
 
         $optimizePos = strpos($script, "php artisan optimize\n");
-        $probePos = strpos($script, 'php artisan cabinet:probe --fail-on-critical');
+        $probePos = strpos($script, 'php artisan cabinet:probe --fail-on-critical --no-alert');
         $this->assertNotFalse($optimizePos);
         $this->assertNotFalse($probePos);
         $this->assertSame(
