@@ -1,0 +1,8979 @@
+{
+  "schema_version": 1,
+  "title": "Словари Костиной — «Хинди для начинающих», модули M1–M12",
+  "curator": "Kostina",
+  "source": "pdf_module_dictionaries",
+  "stats": {
+    "in": 1016,
+    "student": 976,
+    "ocr_repair": 62,
+    "dropped_no_ru": 18,
+    "dropped_broken": 12,
+    "gender_split": 543
+  },
+  "per_module": {
+    "M1": 17,
+    "M2": 21,
+    "M3": 35,
+    "M4": 45,
+    "M5": 48,
+    "M6": 75,
+    "M7": 393,
+    "M8": 98,
+    "M9": 92,
+    "M10": 49,
+    "M11": 60,
+    "M12": 43
+  },
+  "entries": [
+    {
+      "id": "M1-0001",
+      "module": "M1",
+      "page": 1,
+      "hindi": "अकबर",
+      "ru": "Акбар (имя собств.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0002",
+      "module": "M1",
+      "page": 1,
+      "hindi": "अमर",
+      "ru": "Амар (имя собств.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0003",
+      "module": "M1",
+      "page": 1,
+      "hindi": "अरमान",
+      "ru": "Арман (имя собств.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0004",
+      "module": "M1",
+      "page": 1,
+      "hindi": "आदाब",
+      "ru": "здравствуйте (мус.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0005",
+      "module": "M1",
+      "page": 1,
+      "hindi": "आप",
+      "ru": "Вы",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0006",
+      "module": "M1",
+      "page": 1,
+      "hindi": "आपका",
+      "ru": "Ваш",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0007",
+      "module": "M1",
+      "page": 1,
+      "hindi": "क्या",
+      "ru": "какой? что?",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0008",
+      "module": "M1",
+      "page": 1,
+      "hindi": "दादा",
+      "ru": "старший брат; дедушка (со стороны отца)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0009",
+      "module": "M1",
+      "page": 1,
+      "hindi": "न",
+      "ru": "нет",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0010",
+      "module": "M1",
+      "page": 1,
+      "hindi": "नमस्कार",
+      "ru": "здравствуйте, до свидания",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0011",
+      "module": "M1",
+      "page": 1,
+      "hindi": "नमस्ते",
+      "ru": "здравствуйте, до свидания",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0012",
+      "module": "M1",
+      "page": 1,
+      "hindi": "नाम",
+      "ru": "имя",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0013",
+      "module": "M1",
+      "page": 1,
+      "hindi": "बाप",
+      "ru": "отец",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0014",
+      "module": "M1",
+      "page": 1,
+      "hindi": "बाप रे बाप",
+      "ru": "батюшки! (восклицание удивления, смущения)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0015",
+      "module": "M1",
+      "page": 2,
+      "hindi": "मेरा",
+      "ru": "мой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0016",
+      "module": "M1",
+      "page": 2,
+      "hindi": "सलाम",
+      "ru": "здравствуйте, привет (мус.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M1-0017",
+      "module": "M1",
+      "page": 2,
+      "hindi": "है",
+      "ru": "есть (форма 3 лица, ед. числа от глагола со значением «быть, существовать»)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0018",
+      "module": "M2",
+      "page": 1,
+      "hindi": "और",
+      "ru": "и, а",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0019",
+      "module": "M2",
+      "page": 1,
+      "hindi": "कलम",
+      "ru": "ручка, перо (для письма)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0020",
+      "module": "M2",
+      "page": 1,
+      "hindi": "कागज़",
+      "ru": "бумага, документ",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0021",
+      "module": "M2",
+      "page": 1,
+      "hindi": "काला",
+      "ru": "черный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0022",
+      "module": "M2",
+      "page": 1,
+      "hindi": "केला",
+      "ru": "банан",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0023",
+      "module": "M2",
+      "page": 1,
+      "hindi": "कैसा",
+      "ru": "какой?",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0024",
+      "module": "M2",
+      "page": 1,
+      "hindi": "कौन",
+      "ru": "кто?",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0025",
+      "module": "M2",
+      "page": 1,
+      "hindi": "गरम",
+      "ru": "горячий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0026",
+      "module": "M2",
+      "page": 1,
+      "hindi": "चाय",
+      "ru": "чай",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0027",
+      "module": "M2",
+      "page": 1,
+      "hindi": "दोस्त",
+      "ru": "друг",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0028",
+      "module": "M2",
+      "page": 1,
+      "hindi": "नाश्ता",
+      "ru": "завтрак",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0029",
+      "module": "M2",
+      "page": 1,
+      "hindi": "प्याला",
+      "ru": "чашка",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0030",
+      "module": "M2",
+      "page": 1,
+      "hindi": "मोहन",
+      "ru": "Мохан (имя собств.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0031",
+      "module": "M2",
+      "page": 1,
+      "hindi": "यह",
+      "ru": "это, этот / эта",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0032",
+      "module": "M2",
+      "page": 2,
+      "hindi": "या",
+      "ru": "или",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0033",
+      "module": "M2",
+      "page": 2,
+      "hindi": "रमेश",
+      "ru": "Рамеш (имя собств.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0034",
+      "module": "M2",
+      "page": 2,
+      "hindi": "लाल",
+      "ru": "красный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0035",
+      "module": "M2",
+      "page": 2,
+      "hindi": "वह",
+      "ru": "то, тот / та",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0036",
+      "module": "M2",
+      "page": 2,
+      "hindi": "सफ़ेद",
+      "ru": "белый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0037",
+      "module": "M2",
+      "page": 2,
+      "hindi": "सेब",
+      "ru": "яблоко",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M2-0038",
+      "module": "M2",
+      "page": 2,
+      "hindi": "हरा",
+      "ru": "зеленый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0039",
+      "module": "M3",
+      "page": 1,
+      "hindi": "अलमारी",
+      "ru": "шкаф",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0040",
+      "module": "M3",
+      "page": 1,
+      "hindi": "इसका",
+      "ru": "его, ее, этого, этой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0041",
+      "module": "M3",
+      "page": 1,
+      "hindi": "ईमानदार",
+      "ru": "честный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0042",
+      "module": "M3",
+      "page": 1,
+      "hindi": "उदार",
+      "ru": "благородный, щедрый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0043",
+      "module": "M3",
+      "page": 1,
+      "hindi": "उसका",
+      "ru": "его, ее, того",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0044",
+      "module": "M3",
+      "page": 1,
+      "hindi": "कमरा",
+      "ru": "комната",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0045",
+      "module": "M3",
+      "page": 1,
+      "hindi": "काला",
+      "ru": "черный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0046",
+      "module": "M3",
+      "page": 1,
+      "hindi": "कितना",
+      "ru": "зд. насколько",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0047",
+      "module": "M3",
+      "page": 1,
+      "hindi": "किसका",
+      "ru": "чей?",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0048",
+      "module": "M3",
+      "page": 1,
+      "hindi": "कुरसी",
+      "ru": "стул",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0049",
+      "module": "M3",
+      "page": 1,
+      "hindi": "गुलाबी",
+      "ru": "розовый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0050",
+      "module": "M3",
+      "page": 1,
+      "hindi": "चĖल (चंचल)",
+      "ru": "подвижный, шаловливый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0051",
+      "module": "M3",
+      "page": 1,
+      "hindi": "तस्वीर",
+      "ru": "картина",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0052",
+      "module": "M3",
+      "page": 1,
+      "hindi": "तुम्हारा",
+      "ru": "твой, ваш (нейтральное)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0053",
+      "module": "M3",
+      "page": 2,
+      "hindi": "दरवाज़ा",
+      "ru": "дверь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0054",
+      "module": "M3",
+      "page": 2,
+      "hindi": "दीदी",
+      "ru": "сестрица, старшая сестра",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0055",
+      "module": "M3",
+      "page": 2,
+      "hindi": "दीवार",
+      "ru": "стена",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0056",
+      "module": "M3",
+      "page": 2,
+      "hindi": "नीला",
+      "ru": "голубой, синий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0057",
+      "module": "M3",
+      "page": 2,
+      "hindi": "पलď (पलंग)",
+      "ru": "кровать",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0058",
+      "module": "M3",
+      "page": 2,
+      "hindi": "पसन्दीदा (पसंदीदा)",
+      "ru": "нравящийся, любимый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0059",
+      "module": "M3",
+      "page": 2,
+      "hindi": "पीला",
+      "ru": "желтый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0060",
+      "module": "M3",
+      "page": 2,
+      "hindi": "प्यारा",
+      "ru": "дорогой, милый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0061",
+      "module": "M3",
+      "page": 2,
+      "hindi": "बहन",
+      "ru": "сестра",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0062",
+      "module": "M3",
+      "page": 2,
+      "hindi": "बहुत",
+      "ru": "очень, много",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0063",
+      "module": "M3",
+      "page": 2,
+      "hindi": "मकान",
+      "ru": "дом",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0064",
+      "module": "M3",
+      "page": 2,
+      "hindi": "मगर",
+      "ru": "но, однако",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0065",
+      "module": "M3",
+      "page": 2,
+      "hindi": "मुन्नी",
+      "ru": "Мунни (имя собств.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0066",
+      "module": "M3",
+      "page": 2,
+      "hindi": "मेज़",
+      "ru": "стол",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0067",
+      "module": "M3",
+      "page": 2,
+      "hindi": "रď (रंग)",
+      "ru": "цвет",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0068",
+      "module": "M3",
+      "page": 3,
+      "hindi": "रďìला (रंगीला)",
+      "ru": "цветной",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0069",
+      "module": "M3",
+      "page": 3,
+      "hindi": "रुपया",
+      "ru": "рупия",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M3-0070",
+      "module": "M3",
+      "page": 3,
+      "hindi": "रूपा",
+      "ru": "Рупа (имя собств.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0071",
+      "module": "M3",
+      "page": 3,
+      "hindi": "वाह",
+      "ru": "зд. восклицание, выражающее удивление, восхищение",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0072",
+      "module": "M3",
+      "page": 3,
+      "hindi": "हमारा",
+      "ru": "наш",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M3-0073",
+      "module": "M3",
+      "page": 3,
+      "hindi": "हरा",
+      "ru": "зеленый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0074",
+      "module": "M4",
+      "page": 1,
+      "hindi": "इतना",
+      "ru": "столький, настолько",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0075",
+      "module": "M4",
+      "page": 1,
+      "hindi": "उत्तर (uttar)",
+      "ru": "север",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0076",
+      "module": "M4",
+      "page": 1,
+      "hindi": "उत्तर प्रदेश",
+      "ru": "Уттар Прадеш (штат Индии)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0077",
+      "module": "M4",
+      "page": 1,
+      "hindi": "उत्तरांचल",
+      "ru": "Уттаранчал (штат Индии)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0078",
+      "module": "M4",
+      "page": 1,
+      "hindi": "एक",
+      "ru": "один, некий (может не переводиться)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0079",
+      "module": "M4",
+      "page": 1,
+      "hindi": "कन्याकुमारी",
+      "ru": "Каньякумари (самый южный город Индии)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0080",
+      "module": "M4",
+      "page": 1,
+      "hindi": "कश्मीर",
+      "ru": "Кашмир (историческая область Индии)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0081",
+      "module": "M4",
+      "page": 1,
+      "hindi": "कहाँ",
+      "ru": "где? куда?",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0082",
+      "module": "M4",
+      "page": 1,
+      "hindi": "कितना",
+      "ru": "насколько? сколько?",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0083",
+      "module": "M4",
+      "page": 1,
+      "hindi": "कोई",
+      "ru": "какой-то; кто-нибудь, что-нибудь, кто-то, что-то",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0084",
+      "module": "M4",
+      "page": 1,
+      "hindi": "क्रूज़",
+      "ru": "круиз",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0085",
+      "module": "M4",
+      "page": 1,
+      "hindi": "चिंंता",
+      "ru": "беспокойство, озабоченность не стоит беспокоиться",
+      "gender": "ж. р.",
+      "examples": [
+        "चिंIंता की कोई बात नहीं (है)"
+      ]
+    },
+    {
+      "id": "M4-0086",
+      "module": "M4",
+      "page": 1,
+      "hindi": "जाना",
+      "ru": "ехать, идти",
+      "gender": "н/п",
+      "examples": []
+    },
+    {
+      "id": "M4-0087",
+      "module": "M4",
+      "page": 2,
+      "hindi": "जी नहीं",
+      "ru": "нет (вежливая форма)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0088",
+      "module": "M4",
+      "page": 2,
+      "hindi": "जी हाँ",
+      "ru": "да (вежливая форма)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0089",
+      "module": "M4",
+      "page": 2,
+      "hindi": "दूर",
+      "ru": "далекий; далеко",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0090",
+      "module": "M4",
+      "page": 2,
+      "hindi": "देश",
+      "ru": "страна",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0091",
+      "module": "M4",
+      "page": 2,
+      "hindi": "नगर",
+      "ru": "город",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0092",
+      "module": "M4",
+      "page": 2,
+      "hindi": "नहीं",
+      "ru": "нет, не",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0093",
+      "module": "M4",
+      "page": 2,
+      "hindi": "पंजाब",
+      "ru": "Пенджаб (штат Индии)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0094",
+      "module": "M4",
+      "page": 2,
+      "hindi": "पता है",
+      "ru": "зд. известие неизвестно известно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0095",
+      "module": "M4",
+      "page": 2,
+      "hindi": "पर",
+      "ru": "на",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0096",
+      "module": "M4",
+      "page": 2,
+      "hindi": "पश्चिĲम (paścim)",
+      "ru": "запад",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0097",
+      "module": "M4",
+      "page": 2,
+      "hindi": "पश्चिĲम बंगाल",
+      "ru": "Западная Бенгалия (штат Индии)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0098",
+      "module": "M4",
+      "page": 2,
+      "hindi": "पूर्व (pūrva)",
+      "ru": "восток",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0099",
+      "module": "M4",
+      "page": 3,
+      "hindi": "प्रदेश",
+      "ru": "штат (Индии), территория",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0100",
+      "module": "M4",
+      "page": 3,
+      "hindi": "प्लेन",
+      "ru": "самолет",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0101",
+      "module": "M4",
+      "page": 3,
+      "hindi": "बात",
+      "ru": "слово, речь, дело",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0102",
+      "module": "M4",
+      "page": 3,
+      "hindi": "बिहार",
+      "ru": "Бихар (штат Индии)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0103",
+      "module": "M4",
+      "page": 3,
+      "hindi": "में",
+      "ru": "в",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0104",
+      "module": "M4",
+      "page": 3,
+      "hindi": "मैप",
+      "ru": "карта",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0105",
+      "module": "M4",
+      "page": 3,
+      "hindi": "मोबाइल",
+      "ru": "мобильный телефон",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0106",
+      "module": "M4",
+      "page": 3,
+      "hindi": "यहाँ",
+      "ru": "здесь, сюда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0107",
+      "module": "M4",
+      "page": 3,
+      "hindi": "यहाँ से",
+      "ru": "отсюда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0108",
+      "module": "M4",
+      "page": 3,
+      "hindi": "राज्य",
+      "ru": "царство, княжество; штат (Индии)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0109",
+      "module": "M4",
+      "page": 3,
+      "hindi": "रास्ता",
+      "ru": "дорога, путь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0110",
+      "module": "M4",
+      "page": 3,
+      "hindi": "रूस",
+      "ru": "Россия",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0111",
+      "module": "M4",
+      "page": 3,
+      "hindi": "लंबा",
+      "ru": "длинный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0112",
+      "module": "M4",
+      "page": 3,
+      "hindi": "हाँ",
+      "ru": "там, туда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0113",
+      "module": "M4",
+      "page": 3,
+      "hindi": "शहर",
+      "ru": "город",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0114",
+      "module": "M4",
+      "page": 4,
+      "hindi": "शिमला",
+      "ru": "Шимла (город на севере Индии)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0115",
+      "module": "M4",
+      "page": 4,
+      "hindi": "से",
+      "ru": "с, с помощью чего, чем, от чего",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0116",
+      "module": "M4",
+      "page": 4,
+      "hindi": "हाय",
+      "ru": "ох! ах! ой!",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M4-0117",
+      "module": "M4",
+      "page": 4,
+      "hindi": "âहदुस्तान",
+      "ru": "Индостан, Индия",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M4-0118",
+      "module": "M4",
+      "page": 4,
+      "hindi": "ही",
+      "ru": "только, именно, же, лишь",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0119",
+      "module": "M5",
+      "page": 1,
+      "hindi": "अब",
+      "ru": "теперь",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0120",
+      "module": "M5",
+      "page": 1,
+      "hindi": "अम्मा",
+      "ru": "мама, матушка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0121",
+      "module": "M5",
+      "page": 1,
+      "hindi": "अरे",
+      "ru": "эй, ой, ах",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0122",
+      "module": "M5",
+      "page": 1,
+      "hindi": "ऋचा",
+      "ru": "Рича (имя собств.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0123",
+      "module": "M5",
+      "page": 1,
+      "hindi": "कई",
+      "ru": "несколько",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0124",
+      "module": "M5",
+      "page": 1,
+      "hindi": "कमाल",
+      "ru": "чудо; чрезвычайный",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0125",
+      "module": "M5",
+      "page": 1,
+      "hindi": "कमीज़",
+      "ru": "рубашка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0126",
+      "module": "M5",
+      "page": 1,
+      "hindi": "कहानी",
+      "ru": "рассказ",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0127",
+      "module": "M5",
+      "page": 1,
+      "hindi": "किताब",
+      "ru": "книга",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0128",
+      "module": "M5",
+      "page": 1,
+      "hindi": "कुताª",
+      "ru": "рубаха",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0129",
+      "module": "M5",
+      "page": 1,
+      "hindi": "कॉपी",
+      "ru": "тетрадь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0130",
+      "module": "M5",
+      "page": 2,
+      "hindi": "कोई बात नहीं",
+      "ru": "не за что; нет никакого повода (для благодарности, переживаний, извинения и т. п.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0131",
+      "module": "M5",
+      "page": 2,
+      "hindi": "क्या",
+      "ru": "1) местоимение «что»; 2) вопросительная частица (общий вопрос) что, что именно (мн. ч.)",
+      "gender": "",
+      "examples": [
+        "क्या-क्या"
+      ]
+    },
+    {
+      "id": "M5-0132",
+      "module": "M5",
+      "page": 2,
+      "hindi": "चप्पल",
+      "ru": "открытая туфля, шлепанец",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0133",
+      "module": "M5",
+      "page": 2,
+      "hindi": "चश्मा",
+      "ru": "очки",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0134",
+      "module": "M5",
+      "page": 2,
+      "hindi": "चादर",
+      "ru": "покрывало, простыня",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0135",
+      "module": "M5",
+      "page": 2,
+      "hindi": "चीज़",
+      "ru": "предмет, вещь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0136",
+      "module": "M5",
+      "page": 2,
+      "hindi": "ज़रूरी",
+      "ru": "необходимый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0137",
+      "module": "M5",
+      "page": 2,
+      "hindi": "जी",
+      "ru": "1) да, так 2) уважительная частица; уважаемый, почтенный (в переводе часто опускается)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0138",
+      "module": "M5",
+      "page": 2,
+      "hindi": "जूता",
+      "ru": "ботинок, туфля; пара ботинок",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0139",
+      "module": "M5",
+      "page": 2,
+      "hindi": "दराज़",
+      "ru": "ящик",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0140",
+      "module": "M5",
+      "page": 2,
+      "hindi": "दादी",
+      "ru": "бабушка (со стороны отца)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0141",
+      "module": "M5",
+      "page": 2,
+      "hindi": "दो",
+      "ru": "два",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0142",
+      "module": "M5",
+      "page": 3,
+      "hindi": "नया",
+      "ru": "новый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0143",
+      "module": "M5",
+      "page": 3,
+      "hindi": "नॉर्मल",
+      "ru": "нормальный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0144",
+      "module": "M5",
+      "page": 3,
+      "hindi": "पतलून (м. р., ж. р.)",
+      "ru": "брюки",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0145",
+      "module": "M5",
+      "page": 3,
+      "hindi": "पाजामा",
+      "ru": "штаны",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0146",
+      "module": "M5",
+      "page": 3,
+      "hindi": "पास",
+      "ru": "рядом, около",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0147",
+      "module": "M5",
+      "page": 3,
+      "hindi": "पुराना",
+      "ru": "старый, древний",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0148",
+      "module": "M5",
+      "page": 3,
+      "hindi": "पुस्तक",
+      "ru": "книга",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0149",
+      "module": "M5",
+      "page": 3,
+      "hindi": "पेन (м. р., ж. р.)",
+      "ru": "ручка (для письма)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0150",
+      "module": "M5",
+      "page": 3,
+      "hindi": "पेन्सिÆल",
+      "ru": "карандаш",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0151",
+      "module": "M5",
+      "page": 3,
+      "hindi": "फ़र्श",
+      "ru": "пол",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0152",
+      "module": "M5",
+      "page": 3,
+      "hindi": "बस",
+      "ru": "хватит, достаточно, верно, одним словом",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0153",
+      "module": "M5",
+      "page": 3,
+      "hindi": "बैग",
+      "ru": "сумка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0154",
+      "module": "M5",
+      "page": 3,
+      "hindi": "माँ",
+      "ru": "мама",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0155",
+      "module": "M5",
+      "page": 3,
+      "hindi": "माता",
+      "ru": "мать, мама",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0156",
+      "module": "M5",
+      "page": 4,
+      "hindi": "मेरे पास",
+      "ru": "у меня, при мне",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0157",
+      "module": "M5",
+      "page": 4,
+      "hindi": "मोज़ा",
+      "ru": "чулок, носок",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0158",
+      "module": "M5",
+      "page": 4,
+      "hindi": "यानी",
+      "ru": "то есть, а именно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0159",
+      "module": "M5",
+      "page": 4,
+      "hindi": "मगर",
+      "ru": "но",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0160",
+      "module": "M5",
+      "page": 4,
+      "hindi": "लवार (सलवार)",
+      "ru": "шаровары",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0161",
+      "module": "M5",
+      "page": 4,
+      "hindi": "बहुत बहुत शुक्रिøया",
+      "ru": "спасибо большое спасибо большое-пребольшое спасибо",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0162",
+      "module": "M5",
+      "page": 4,
+      "hindi": "सब",
+      "ru": "все",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0163",
+      "module": "M5",
+      "page": 4,
+      "hindi": "सही",
+      "ru": "верный, правильный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0164",
+      "module": "M5",
+      "page": 4,
+      "hindi": "सहेली",
+      "ru": "подруга",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M5-0165",
+      "module": "M5",
+      "page": 4,
+      "hindi": "सुंदर",
+      "ru": "красивый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M5-0166",
+      "module": "M5",
+      "page": 4,
+      "hindi": "âहदी",
+      "ru": "хинди",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0167",
+      "module": "M6",
+      "page": 1,
+      "hindi": "अँग्रेज़",
+      "ru": "англичанин",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0168",
+      "module": "M6",
+      "page": 1,
+      "hindi": "अँग्रेज़ी",
+      "ru": "английский (язык)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0169",
+      "module": "M6",
+      "page": 1,
+      "hindi": "अच्छा",
+      "ru": "хороший; хорошо, ладно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0170",
+      "module": "M6",
+      "page": 1,
+      "hindi": "अजीब",
+      "ru": "удивительный, необыкновенный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0171",
+      "module": "M6",
+      "page": 1,
+      "hindi": "अभ्यास",
+      "ru": "упражнение, тренировка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0172",
+      "module": "M6",
+      "page": 1,
+      "hindi": "अर्थ",
+      "ru": "смысл, значение",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0173",
+      "module": "M6",
+      "page": 1,
+      "hindi": "आदमी",
+      "ru": "человек, мужчина",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0174",
+      "module": "M6",
+      "page": 1,
+      "hindi": "इंतज़ार",
+      "ru": "ожидание",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0175",
+      "module": "M6",
+      "page": 1,
+      "hindi": "ईरान",
+      "ru": "Иран",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0176",
+      "module": "M6",
+      "page": 1,
+      "hindi": "ईरानी",
+      "ru": "иранский; иранец",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0177",
+      "module": "M6",
+      "page": 1,
+      "hindi": "उदास",
+      "ru": "печальный, унылый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0178",
+      "module": "M6",
+      "page": 1,
+      "hindi": "उदासी",
+      "ru": "печаль, уныние",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0179",
+      "module": "M6",
+      "page": 1,
+      "hindi": "एक",
+      "ru": "один Один путь — две цели / два дела. = Одним выстрелом убить двух зайцев",
+      "gender": "",
+      "examples": [
+        "एक पंथ दो काज"
+      ]
+    },
+    {
+      "id": "M6-0180",
+      "module": "M6",
+      "page": 2,
+      "hindi": "औरत",
+      "ru": "женщина",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0181",
+      "module": "M6",
+      "page": 2,
+      "hindi": "करना",
+      "ru": "делать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M6-0182",
+      "module": "M6",
+      "page": 2,
+      "hindi": "काज",
+      "ru": "дело, цель, действие",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0183",
+      "module": "M6",
+      "page": 2,
+      "hindi": "कुछ",
+      "ru": "немного, несколько, что-нибудь, кое-что",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0184",
+      "module": "M6",
+      "page": 2,
+      "hindi": "कि",
+      "ru": "что, чтобы",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0185",
+      "module": "M6",
+      "page": 2,
+      "hindi": "के परे",
+      "ru": "по ту сторону, вне досягаемости, за пределом",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0186",
+      "module": "M6",
+      "page": 2,
+      "hindi": "के साथ",
+      "ru": "вместе с",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0187",
+      "module": "M6",
+      "page": 2,
+      "hindi": "क्यों",
+      "ru": "почему?",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0188",
+      "module": "M6",
+      "page": 2,
+      "hindi": "क्लास (м. р., ж. р.)",
+      "ru": "класс",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0189",
+      "module": "M6",
+      "page": 2,
+      "hindi": "ख़राब",
+      "ru": "плохой, испорченный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0190",
+      "module": "M6",
+      "page": 2,
+      "hindi": "ग़ज़ब",
+      "ru": "беда; чудо, необыкновенная вещь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0191",
+      "module": "M6",
+      "page": 2,
+      "hindi": "चेहरा",
+      "ru": "лицо",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0192",
+      "module": "M6",
+      "page": 2,
+      "hindi": "छात्र",
+      "ru": "студент, ученик",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0193",
+      "module": "M6",
+      "page": 2,
+      "hindi": "छात्रा",
+      "ru": "студентка, ученица",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0194",
+      "module": "M6",
+      "page": 3,
+      "hindi": "छोकरा",
+      "ru": "парень",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0195",
+      "module": "M6",
+      "page": 3,
+      "hindi": "छोकरी",
+      "ru": "девушка, девчонка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0196",
+      "module": "M6",
+      "page": 3,
+      "hindi": "जर्मन",
+      "ru": "немецкий; немец",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0197",
+      "module": "M6",
+      "page": 3,
+      "hindi": "जर्मनी",
+      "ru": "Германия",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0198",
+      "module": "M6",
+      "page": 3,
+      "hindi": "ज़िंंदगी",
+      "ru": "жизнь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0199",
+      "module": "M6",
+      "page": 3,
+      "hindi": "जीवन",
+      "ru": "жизнь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0200",
+      "module": "M6",
+      "page": 3,
+      "hindi": "तबीयत",
+      "ru": "здоровье, самочувствие",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0201",
+      "module": "M6",
+      "page": 3,
+      "hindi": "तो",
+      "ru": "1) то; 2) же, ведь, -то (эмфатическая частица)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0202",
+      "module": "M6",
+      "page": 3,
+      "hindi": "दिल",
+      "ru": "сердце, душа",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0203",
+      "module": "M6",
+      "page": 3,
+      "hindi": "दो",
+      "ru": "два",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0204",
+      "module": "M6",
+      "page": 3,
+      "hindi": "दोस्त",
+      "ru": "друг",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0205",
+      "module": "M6",
+      "page": 3,
+      "hindi": "दोस्ती",
+      "ru": "дружба",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0206",
+      "module": "M6",
+      "page": 3,
+      "hindi": "दोस्ती करना (н. п.)",
+      "ru": "дружить",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0207",
+      "module": "M6",
+      "page": 3,
+      "hindi": "न",
+      "ru": "зд. разве нет? не так ли?",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0208",
+      "module": "M6",
+      "page": 3,
+      "hindi": "पंथ",
+      "ru": "дорога, путь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0209",
+      "module": "M6",
+      "page": 4,
+      "hindi": "पर",
+      "ru": "зд. но, однако",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0210",
+      "module": "M6",
+      "page": 4,
+      "hindi": "परेशान",
+      "ru": "обеспокоенный, встревоженный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0211",
+      "module": "M6",
+      "page": 4,
+      "hindi": "परेशान करना",
+      "ru": "беспокоить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M6-0212",
+      "module": "M6",
+      "page": 4,
+      "hindi": "परेशानी",
+      "ru": "беспокойство, тревога",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0213",
+      "module": "M6",
+      "page": 4,
+      "hindi": "फ़र्क",
+      "ru": "разница, различие",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0214",
+      "module": "M6",
+      "page": 4,
+      "hindi": "फ़ायदा",
+      "ru": "польза, выгода",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0215",
+      "module": "M6",
+      "page": 4,
+      "hindi": "फिर",
+      "ru": "потом, еще, в таком случае, тогда, кроме того",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0216",
+      "module": "M6",
+      "page": 4,
+      "hindi": "फ़्राँस",
+      "ru": "Франция",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0217",
+      "module": "M6",
+      "page": 4,
+      "hindi": "फ्रॉसीसी",
+      "ru": "французский; француз",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0218",
+      "module": "M6",
+      "page": 4,
+      "hindi": "रमेश का दोस्त बना",
+      "ru": "становиться, делаться подружиться с … (стать чьим-то другом) стать другом Рамеша",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0219",
+      "module": "M6",
+      "page": 4,
+      "hindi": "रमेश को दोस्त बनाना",
+      "ru": "делать, создавать подружиться с … (сделать кого-то другом) сделать Рамеша другом; подружиться с Рамешем",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0220",
+      "module": "M6",
+      "page": 4,
+      "hindi": "बातें करना",
+      "ru": "беседовать",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0221",
+      "module": "M6",
+      "page": 5,
+      "hindi": "बीमार",
+      "ru": "больной",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0222",
+      "module": "M6",
+      "page": 5,
+      "hindi": "बीमारी",
+      "ru": "болезнь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0223",
+      "module": "M6",
+      "page": 5,
+      "hindi": "भारत",
+      "ru": "Индия",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0224",
+      "module": "M6",
+      "page": 5,
+      "hindi": "भारतीय",
+      "ru": "индийский, индиец",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0225",
+      "module": "M6",
+      "page": 5,
+      "hindi": "भी",
+      "ru": "тоже, также",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0226",
+      "module": "M6",
+      "page": 5,
+      "hindi": "मतलब",
+      "ru": "смысл, значение",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0227",
+      "module": "M6",
+      "page": 5,
+      "hindi": "मर्द",
+      "ru": "мужчина",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0228",
+      "module": "M6",
+      "page": 5,
+      "hindi": "माँ-बाप",
+      "ru": "родители",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0229",
+      "module": "M6",
+      "page": 5,
+      "hindi": "मिलना (н. п.)",
+      "ru": "встречаться",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0230",
+      "module": "M6",
+      "page": 5,
+      "hindi": "मैत्री",
+      "ru": "дружба",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0231",
+      "module": "M6",
+      "page": 5,
+      "hindi": "यार",
+      "ru": "друг, приятель, подруга",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0232",
+      "module": "M6",
+      "page": 5,
+      "hindi": "रूसी",
+      "ru": "русский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0233",
+      "module": "M6",
+      "page": 6,
+      "hindi": "वास्तव",
+      "ru": "действительность в действительности, на самом деле",
+      "gender": "м. р.",
+      "examples": [
+        "वास्तव में"
+      ]
+    },
+    {
+      "id": "M6-0234",
+      "module": "M6",
+      "page": 6,
+      "hindi": "व्यÎक्त",
+      "ru": "личность, человек",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0235",
+      "module": "M6",
+      "page": 6,
+      "hindi": "शब्द",
+      "ru": "слово",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0236",
+      "module": "M6",
+      "page": 6,
+      "hindi": "सपना",
+      "ru": "сон, сновидение, мечта",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M6-0237",
+      "module": "M6",
+      "page": 6,
+      "hindi": "सलामत",
+      "ru": "благополучный, здоровый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0238",
+      "module": "M6",
+      "page": 6,
+      "hindi": "सही",
+      "ru": "верный, правильный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0239",
+      "module": "M6",
+      "page": 6,
+      "hindi": "âहदुस्तानी",
+      "ru": "индийский, индиец",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0240",
+      "module": "M6",
+      "page": 6,
+      "hindi": "होना (н. п.)",
+      "ru": "быть, существовать; совершаться; происходить случаться",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M6-0241",
+      "module": "M6",
+      "page": 6,
+      "hindi": "होशियार",
+      "ru": "умный, умелый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0242",
+      "module": "M7",
+      "page": 1,
+      "hindi": "अब",
+      "ru": "теперь до сих пор",
+      "gender": "",
+      "examples": [
+        "अब तक"
+      ]
+    },
+    {
+      "id": "M7-0243",
+      "module": "M7",
+      "page": 1,
+      "hindi": "अलग",
+      "ru": "отдельный, исключенный (из какого-либо множества)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0244",
+      "module": "M7",
+      "page": 1,
+      "hindi": "आँख",
+      "ru": "глаз",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0245",
+      "module": "M7",
+      "page": 1,
+      "hindi": "आदमी",
+      "ru": "человек",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0246",
+      "module": "M7",
+      "page": 1,
+      "hindi": "इन",
+      "ru": "перед послелогом с этими подругами",
+      "gender": "",
+      "examples": [
+        "ये",
+        "इन सहेलिaयों से"
+      ]
+    },
+    {
+      "id": "M7-0247",
+      "module": "M7",
+      "page": 1,
+      "hindi": "ऐसा",
+      "ru": "такой, такого рода; так",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0248",
+      "module": "M7",
+      "page": 1,
+      "hindi": "काफ़ी",
+      "ru": "достаточно, довольно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0249",
+      "module": "M7",
+      "page": 1,
+      "hindi": "सब कुछ",
+      "ru": "немного, несколько; что-нибудь ничего такого всё",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0250",
+      "module": "M7",
+      "page": 1,
+      "hindi": "के पास",
+      "ru": "около, рядом, у",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0251",
+      "module": "M7",
+      "page": 1,
+      "hindi": "के बारे में",
+      "ru": "о (чем)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0252",
+      "module": "M7",
+      "page": 1,
+      "hindi": "के लिए",
+      "ru": "для",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0253",
+      "module": "M7",
+      "page": 2,
+      "hindi": "ख़ामोश",
+      "ru": "тихий, молчаливый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0254",
+      "module": "M7",
+      "page": 2,
+      "hindi": "ख़ास तौर से (पर , पे)",
+      "ru": "особенно, особо",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0255",
+      "module": "M7",
+      "page": 2,
+      "hindi": "ख़ुश",
+      "ru": "довольный, радостный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0256",
+      "module": "M7",
+      "page": 2,
+      "hindi": "ख़ुशबू",
+      "ru": "аромат",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0257",
+      "module": "M7",
+      "page": 2,
+      "hindi": "ख़ूबसूरत",
+      "ru": "красивый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0258",
+      "module": "M7",
+      "page": 2,
+      "hindi": "ख़ैर",
+      "ru": "хорошо, ладно, не важно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0259",
+      "module": "M7",
+      "page": 2,
+      "hindi": "ख़्वाहमख़्वाह",
+      "ru": "напрасно, зря",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0260",
+      "module": "M7",
+      "page": 2,
+      "hindi": "गोरा",
+      "ru": "светлокожий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0261",
+      "module": "M7",
+      "page": 2,
+      "hindi": "घुंघराला",
+      "ru": "волнистый (о волосах)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0262",
+      "module": "M7",
+      "page": 2,
+      "hindi": "चेहरा",
+      "ru": "лицо",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0263",
+      "module": "M7",
+      "page": 2,
+      "hindi": "जानकारी",
+      "ru": "знание",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0264",
+      "module": "M7",
+      "page": 2,
+      "hindi": "तक",
+      "ru": "до",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0265",
+      "module": "M7",
+      "page": 2,
+      "hindi": "दूसरा",
+      "ru": "второй, зд. другой, иной",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0266",
+      "module": "M7",
+      "page": 2,
+      "hindi": "दोनों",
+      "ru": "оба, двое",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0267",
+      "module": "M7",
+      "page": 2,
+      "hindi": "नाराज़",
+      "ru": "недовольный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0268",
+      "module": "M7",
+      "page": 3,
+      "hindi": "परंपरा",
+      "ru": "традиция",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0269",
+      "module": "M7",
+      "page": 3,
+      "hindi": "परिचय",
+      "ru": "знакомство",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0270",
+      "module": "M7",
+      "page": 3,
+      "hindi": "परिचय करना",
+      "ru": "знакомиться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0271",
+      "module": "M7",
+      "page": 3,
+      "hindi": "बाक़ी",
+      "ru": "оставшийся, остальной",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0272",
+      "module": "M7",
+      "page": 3,
+      "hindi": "बाल",
+      "ru": "волос",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0273",
+      "module": "M7",
+      "page": 3,
+      "hindi": "बिलकुल = बिल्कुल",
+      "ru": "совершенно, совсем",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0274",
+      "module": "M7",
+      "page": 3,
+      "hindi": "भाई",
+      "ru": "брат",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0275",
+      "module": "M7",
+      "page": 3,
+      "hindi": "भी",
+      "ru": "тоже, также",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0276",
+      "module": "M7",
+      "page": 3,
+      "hindi": "मसाला",
+      "ru": "пряность, специя",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0277",
+      "module": "M7",
+      "page": 3,
+      "hindi": "मालूम",
+      "ru": "известный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0278",
+      "module": "M7",
+      "page": 3,
+      "hindi": "मेहमान",
+      "ru": "гость",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0279",
+      "module": "M7",
+      "page": 3,
+      "hindi": "युवती",
+      "ru": "девушка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0280",
+      "module": "M7",
+      "page": 3,
+      "hindi": "रीति-रिवाज़",
+      "ru": "обычай, традиция",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0281",
+      "module": "M7",
+      "page": 3,
+      "hindi": "लोग",
+      "ru": "народ, люди",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0282",
+      "module": "M7",
+      "page": 3,
+      "hindi": "विदेशी",
+      "ru": "иностранный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0283",
+      "module": "M7",
+      "page": 4,
+      "hindi": "सावला",
+      "ru": "смуглый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0284",
+      "module": "M7",
+      "page": 4,
+      "hindi": "सारा",
+      "ru": "весь, целый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0285",
+      "module": "M7",
+      "page": 4,
+      "hindi": "सीधा",
+      "ru": "прямой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0286",
+      "module": "M7",
+      "page": 4,
+      "hindi": "सदर",
+      "ru": "красивый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0287",
+      "module": "M7",
+      "page": 4,
+      "hindi": "स्वागत करना",
+      "ru": "приветствовать",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0288",
+      "module": "M7",
+      "page": 4,
+      "hindi": "हैरान",
+      "ru": "удивленный; встревоженный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0289",
+      "module": "M7",
+      "page": 5,
+      "hindi": "अपना",
+      "ru": "свой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0290",
+      "module": "M7",
+      "page": 5,
+      "hindi": "अपार्टमेंट",
+      "ru": "квартира",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0291",
+      "module": "M7",
+      "page": 5,
+      "hindi": "अभी",
+      "ru": "уже, теперь, в данный момент",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0292",
+      "module": "M7",
+      "page": 5,
+      "hindi": "आना",
+      "ru": "прибывать, приходить, приезжать",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0293",
+      "module": "M7",
+      "page": 5,
+      "hindi": "आया =",
+      "ru": "прибыл, пришел (= и вот я здесь)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0294",
+      "module": "M7",
+      "page": 5,
+      "hindi": "आपस में",
+      "ru": "между собой, взаимно, вместе, друг с другом",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0295",
+      "module": "M7",
+      "page": 5,
+      "hindi": "इधर",
+      "ru": "здесь, сюда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0296",
+      "module": "M7",
+      "page": 5,
+      "hindi": "इमारत",
+      "ru": "(ж. р.) здание",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0297",
+      "module": "M7",
+      "page": 5,
+      "hindi": "उतरना",
+      "ru": "спускаться, выходить из транспорта",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0298",
+      "module": "M7",
+      "page": 5,
+      "hindi": "उधर",
+      "ru": "там, туда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0299",
+      "module": "M7",
+      "page": 5,
+      "hindi": "ऊँचा",
+      "ru": "высокий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0300",
+      "module": "M7",
+      "page": 5,
+      "hindi": "ओर",
+      "ru": "сторона",
+      "gender": "ж.р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0301",
+      "module": "M7",
+      "page": 5,
+      "hindi": "कल",
+      "ru": "вчера, завтра",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0302",
+      "module": "M7",
+      "page": 5,
+      "hindi": "कहना",
+      "ru": "говорить, называть",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0303",
+      "module": "M7",
+      "page": 6,
+      "hindi": "काम",
+      "ru": "работа, дело",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0304",
+      "module": "M7",
+      "page": 6,
+      "hindi": "किराया",
+      "ru": "аренда, арендная плата, плата за проезд",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0305",
+      "module": "M7",
+      "page": 6,
+      "hindi": "के बाद",
+      "ru": "после",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0306",
+      "module": "M7",
+      "page": 6,
+      "hindi": "के यहाँ",
+      "ru": "у, к, при",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0307",
+      "module": "M7",
+      "page": 6,
+      "hindi": "खड़ा होना",
+      "ru": "стоять",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0308",
+      "module": "M7",
+      "page": 6,
+      "hindi": "ख़ुशी",
+      "ru": "радость",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0309",
+      "module": "M7",
+      "page": 6,
+      "hindi": "गाँव",
+      "ru": "деревня",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0310",
+      "module": "M7",
+      "page": 6,
+      "hindi": "घर",
+      "ru": "дом",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0311",
+      "module": "M7",
+      "page": 6,
+      "hindi": "बस में चढ़ना",
+      "ru": "подниматься; входить в транспорт подниматься по лестнице садиться в автобус",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0312",
+      "module": "M7",
+      "page": 6,
+      "hindi": "चलना",
+      "ru": "идти, двигаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0313",
+      "module": "M7",
+      "page": 6,
+      "hindi": "चारों",
+      "ru": "(все) четверо, вчетвером",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0314",
+      "module": "M7",
+      "page": 6,
+      "hindi": "चारों ओर देखना",
+      "ru": "осматриваться по сторонам",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0315",
+      "module": "M7",
+      "page": 6,
+      "hindi": "चौड़ा",
+      "ru": "широкий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0316",
+      "module": "M7",
+      "page": 7,
+      "hindi": "चौराहा",
+      "ru": "перекресток",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0317",
+      "module": "M7",
+      "page": 7,
+      "hindi": "छुट्टी",
+      "ru": "выходной, праздник; мн. ч. выходные, каникулы, отпуск",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0318",
+      "module": "M7",
+      "page": 7,
+      "hindi": "छोटा",
+      "ru": "маленький",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0319",
+      "module": "M7",
+      "page": 7,
+      "hindi": "छोड़ना",
+      "ru": "оставлять, покидать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0320",
+      "module": "M7",
+      "page": 7,
+      "hindi": "ज़रा",
+      "ru": "маленький, немного; -ка",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0321",
+      "module": "M7",
+      "page": 7,
+      "hindi": "ज़रूर",
+      "ru": "обязательно, необходимо; конечно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0322",
+      "module": "M7",
+      "page": 7,
+      "hindi": "जल्दी",
+      "ru": "спешка, поспешность",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0323",
+      "module": "M7",
+      "page": 7,
+      "hindi": "ज़्यादा",
+      "ru": "большой, чрезмерный; много, больше",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0324",
+      "module": "M7",
+      "page": 7,
+      "hindi": "टेक्सी",
+      "ru": "такси",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0325",
+      "module": "M7",
+      "page": 7,
+      "hindi": "ठीक",
+      "ru": "верный, правильный; верно, точно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0326",
+      "module": "M7",
+      "page": 7,
+      "hindi": "ठीक है",
+      "ru": "Правильно! Ладно!",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0327",
+      "module": "M7",
+      "page": 7,
+      "hindi": "तरफ़",
+      "ru": "(ж. р.) сторона",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0328",
+      "module": "M7",
+      "page": 7,
+      "hindi": "तीनों",
+      "ru": "трое, втроем",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0329",
+      "module": "M7",
+      "page": 7,
+      "hindi": "तीसरा",
+      "ru": "третий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0330",
+      "module": "M7",
+      "page": 8,
+      "hindi": "थोड़ा",
+      "ru": "маленький; немного",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0331",
+      "module": "M7",
+      "page": 8,
+      "hindi": "दाईं तरफ़",
+      "ru": "направо, справа",
+      "gender": "",
+      "examples": [
+        "= दाएँ =",
+        "सीधे हाथ"
+      ]
+    },
+    {
+      "id": "M7-0332",
+      "module": "M7",
+      "page": 8,
+      "hindi": "दायाँ",
+      "ru": "правый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0333",
+      "module": "M7",
+      "page": 8,
+      "hindi": "दिन",
+      "ru": "день",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0334",
+      "module": "M7",
+      "page": 8,
+      "hindi": "दिल्ली",
+      "ru": "Дели",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0335",
+      "module": "M7",
+      "page": 8,
+      "hindi": "देखना",
+      "ru": "смотреть, видеть",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0336",
+      "module": "M7",
+      "page": 8,
+      "hindi": "दोनों",
+      "ru": "оба, обе, двое, вдвоем",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0337",
+      "module": "M7",
+      "page": 8,
+      "hindi": "दोबारा",
+      "ru": "во второй раз, снова, повторно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0338",
+      "module": "M7",
+      "page": 8,
+      "hindi": "धन्यवाद",
+      "ru": "спасибо",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0339",
+      "module": "M7",
+      "page": 8,
+      "hindi": "ध्यान",
+      "ru": "внимание, сосредоточенность внимательно, сосредоточенно",
+      "gender": "м. р.",
+      "examples": [
+        "ध्यान से"
+      ]
+    },
+    {
+      "id": "M7-0340",
+      "module": "M7",
+      "page": 8,
+      "hindi": "नया",
+      "ru": "Новый Дели",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0341",
+      "module": "M7",
+      "page": 8,
+      "hindi": "नंबर",
+      "ru": "номер",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0342",
+      "module": "M7",
+      "page": 8,
+      "hindi": "नीचा",
+      "ru": "низкий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0343",
+      "module": "M7",
+      "page": 9,
+      "hindi": "पकड़ना",
+      "ru": "хватать, ловить садиться на автобус",
+      "gender": "",
+      "examples": [
+        "बस पकड़ना"
+      ]
+    },
+    {
+      "id": "M7-0344",
+      "module": "M7",
+      "page": 9,
+      "hindi": "पढ़ाई",
+      "ru": "учеба",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0345",
+      "module": "M7",
+      "page": 9,
+      "hindi": "पता",
+      "ru": "адрес",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0346",
+      "module": "M7",
+      "page": 9,
+      "hindi": "पहला",
+      "ru": "первый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0347",
+      "module": "M7",
+      "page": 9,
+      "hindi": "पहले",
+      "ru": "раньше, прежде; сначала, сперва",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0348",
+      "module": "M7",
+      "page": 9,
+      "hindi": "पार करना",
+      "ru": "пересекать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0349",
+      "module": "M7",
+      "page": 9,
+      "hindi": "पुराना",
+      "ru": "Старый Дели",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0350",
+      "module": "M7",
+      "page": 9,
+      "hindi": "प्यार",
+      "ru": "любовь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0351",
+      "module": "M7",
+      "page": 9,
+      "hindi": "प्रेम",
+      "ru": "любовь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0352",
+      "module": "M7",
+      "page": 9,
+      "hindi": "फिर मिलेंगे",
+      "ru": "встретимся снова, до свидания!",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0353",
+      "module": "M7",
+      "page": 9,
+      "hindi": "फ़ोन करना",
+      "ru": "звонить (по телефону)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0354",
+      "module": "M7",
+      "page": 9,
+      "hindi": "बड़ा",
+      "ru": "большой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0355",
+      "module": "M7",
+      "page": 9,
+      "hindi": "बताना",
+      "ru": "говорить, рассказывать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0356",
+      "module": "M7",
+      "page": 9,
+      "hindi": "बस",
+      "ru": "автобус",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0357",
+      "module": "M7",
+      "page": 10,
+      "hindi": "बस-स्टैंड",
+      "ru": "остановка автобуса (место)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0358",
+      "module": "M7",
+      "page": 10,
+      "hindi": "बहुत",
+      "ru": "очень",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0359",
+      "module": "M7",
+      "page": 10,
+      "hindi": "बाईं तरफ़ =",
+      "ru": "налево, слева, влево",
+      "gender": "",
+      "examples": [
+        "बाएँ = उल्टे हाथ"
+      ]
+    },
+    {
+      "id": "M7-0360",
+      "module": "M7",
+      "page": 10,
+      "hindi": "बायाँ",
+      "ru": "левый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0361",
+      "module": "M7",
+      "page": 10,
+      "hindi": "बोलना",
+      "ru": "говорить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0362",
+      "module": "M7",
+      "page": 10,
+      "hindi": "भैया",
+      "ru": "брат, братец (часто в обращениях)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0363",
+      "module": "M7",
+      "page": 10,
+      "hindi": "और",
+      "ru": "зд. этаж",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0364",
+      "module": "M7",
+      "page": 10,
+      "hindi": "मत",
+      "ru": "не (запретительная частица); не ходи",
+      "gender": "",
+      "examples": [
+        "मत जाओ"
+      ]
+    },
+    {
+      "id": "M7-0365",
+      "module": "M7",
+      "page": 10,
+      "hindi": "महँगा",
+      "ru": "дорогой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0366",
+      "module": "M7",
+      "page": 10,
+      "hindi": "माफ़ करना",
+      "ru": "извинять",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0367",
+      "module": "M7",
+      "page": 10,
+      "hindi": "मिनट",
+      "ru": "минута",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0368",
+      "module": "M7",
+      "page": 10,
+      "hindi": "मिलना",
+      "ru": "встречаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0369",
+      "module": "M7",
+      "page": 10,
+      "hindi": "मुड़ना",
+      "ru": "поворачивать (куда-либо), оборачиваться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0370",
+      "module": "M7",
+      "page": 10,
+      "hindi": "यूनिवर्सििटी",
+      "ru": "университет",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0371",
+      "module": "M7",
+      "page": 11,
+      "hindi": "राजधानी",
+      "ru": "столица",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0372",
+      "module": "M7",
+      "page": 11,
+      "hindi": "रूसी",
+      "ru": "русский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0373",
+      "module": "M7",
+      "page": 11,
+      "hindi": "लिखना",
+      "ru": "писать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0374",
+      "module": "M7",
+      "page": 11,
+      "hindi": "लेना",
+      "ru": "брать, получать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0375",
+      "module": "M7",
+      "page": 11,
+      "hindi": "विज़िटिगं कार्ड",
+      "ru": "визитка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0376",
+      "module": "M7",
+      "page": 11,
+      "hindi": "शुभनाम",
+      "ru": "благое, счастливое (= официальное) имя",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0377",
+      "module": "M7",
+      "page": 11,
+      "hindi": "सँकरा",
+      "ru": "узкий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0378",
+      "module": "M7",
+      "page": 11,
+      "hindi": "सच",
+      "ru": "правда; правильный, действительный",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0379",
+      "module": "M7",
+      "page": 11,
+      "hindi": "सड़क",
+      "ru": "(ж. р.) улица",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0380",
+      "module": "M7",
+      "page": 11,
+      "hindi": "स्ता",
+      "ru": "дешевый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0381",
+      "module": "M7",
+      "page": 11,
+      "hindi": "सीधे",
+      "ru": "прямо, перед",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0382",
+      "module": "M7",
+      "page": 11,
+      "hindi": "सुना",
+      "ru": "слушать, слышать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0383",
+      "module": "M7",
+      "page": 11,
+      "hindi": "स्टॉप",
+      "ru": "остановка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0384",
+      "module": "M7",
+      "page": 12,
+      "hindi": "हाल",
+      "ru": "положение, состояние дел Как дела?",
+      "gender": "м. р.",
+      "examples": [
+        "क्या हाल है ?"
+      ]
+    },
+    {
+      "id": "M7-0385",
+      "module": "M7",
+      "page": 12,
+      "hindi": "हुई",
+      "ru": "стала, произошла «быть, существовать»)",
+      "gender": "ж.р.",
+      "examples": [
+        "(форма ед. числа ж. р. глагола होना"
+      ]
+    },
+    {
+      "id": "M7-0386",
+      "module": "M7",
+      "page": 13,
+      "hindi": "अगला",
+      "ru": "следующий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0387",
+      "module": "M7",
+      "page": 13,
+      "hindi": "अगली बार",
+      "ru": "в следующий раз",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0388",
+      "module": "M7",
+      "page": 13,
+      "hindi": "अतिथि",
+      "ru": "гость",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0389",
+      "module": "M7",
+      "page": 13,
+      "hindi": "अनेक",
+      "ru": "несколько, много",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0390",
+      "module": "M7",
+      "page": 13,
+      "hindi": "आज",
+      "ru": "сегодня",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0391",
+      "module": "M7",
+      "page": 13,
+      "hindi": "आम तौर पर",
+      "ru": "обычно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0392",
+      "module": "M7",
+      "page": 13,
+      "hindi": "इंजीनियर",
+      "ru": "инженер",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0393",
+      "module": "M7",
+      "page": 13,
+      "hindi": "इसलिए",
+      "ru": "поэтому",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0394",
+      "module": "M7",
+      "page": 13,
+      "hindi": "एअर इंडिया",
+      "ru": "Air India, крупнейший авиаперевозчик Индии",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0395",
+      "module": "M7",
+      "page": 13,
+      "hindi": "एक दूसरे से",
+      "ru": "друг друга",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0396",
+      "module": "M7",
+      "page": 13,
+      "hindi": "कभी-कभी",
+      "ru": "иногда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0397",
+      "module": "M7",
+      "page": 13,
+      "hindi": "काम",
+      "ru": "работа",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0398",
+      "module": "M7",
+      "page": 13,
+      "hindi": "काम करना",
+      "ru": "работать",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0399",
+      "module": "M7",
+      "page": 13,
+      "hindi": "की तरह",
+      "ru": "подобно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0400",
+      "module": "M7",
+      "page": 14,
+      "hindi": "की बग़ल में",
+      "ru": "рядом, под боком",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0401",
+      "module": "M7",
+      "page": 14,
+      "hindi": "कुछ",
+      "ru": "немного",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0402",
+      "module": "M7",
+      "page": 14,
+      "hindi": "के अलावा",
+      "ru": "кроме, помимо",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0403",
+      "module": "M7",
+      "page": 14,
+      "hindi": "के पीछे",
+      "ru": "позади",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0404",
+      "module": "M7",
+      "page": 14,
+      "hindi": "के साथ",
+      "ru": "вместе с",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0405",
+      "module": "M7",
+      "page": 14,
+      "hindi": "के सामने",
+      "ru": "перед",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0406",
+      "module": "M7",
+      "page": 14,
+      "hindi": "कोलकाता",
+      "ru": "Колката (Калькутта)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0407",
+      "module": "M7",
+      "page": 14,
+      "hindi": "खाना",
+      "ru": "есть, кушать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0408",
+      "module": "M7",
+      "page": 14,
+      "hindi": "खाना पकाना",
+      "ru": "еда есть, кушать готовить еду готовить еду",
+      "gender": "п.",
+      "examples": [
+        "खाना बनाना (п.)"
+      ]
+    },
+    {
+      "id": "M7-0409",
+      "module": "M7",
+      "page": 14,
+      "hindi": "ख़ुद",
+      "ru": "сам",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0410",
+      "module": "M7",
+      "page": 14,
+      "hindi": "गाना",
+      "ru": "петь",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0411",
+      "module": "M7",
+      "page": 14,
+      "hindi": "चखना",
+      "ru": "пробовать (еду)",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0412",
+      "module": "M7",
+      "page": 15,
+      "hindi": "चाचा",
+      "ru": "дядя (младший брат отца)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0413",
+      "module": "M7",
+      "page": 15,
+      "hindi": "चाची",
+      "ru": "тетя (жена младшего брата отца)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0414",
+      "module": "M7",
+      "page": 15,
+      "hindi": "जाना",
+      "ru": "знать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0415",
+      "module": "M7",
+      "page": 15,
+      "hindi": "झाँसी",
+      "ru": "Джханси",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0416",
+      "module": "M7",
+      "page": 15,
+      "hindi": "ताऊ",
+      "ru": "дядя (старший брат отца)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0417",
+      "module": "M7",
+      "page": 15,
+      "hindi": "ताई",
+      "ru": "тетя (жена старшего брата отца)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0418",
+      "module": "M7",
+      "page": 15,
+      "hindi": "तैयार",
+      "ru": "готовый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0419",
+      "module": "M7",
+      "page": 15,
+      "hindi": "दुकान",
+      "ru": "магазин",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0420",
+      "module": "M7",
+      "page": 15,
+      "hindi": "देखने के लिए आना",
+      "ru": "приходить в гости (повидать кого-то)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0421",
+      "module": "M7",
+      "page": 15,
+      "hindi": "नाती",
+      "ru": "внук (сын дочери)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0422",
+      "module": "M7",
+      "page": 15,
+      "hindi": "पोती",
+      "ru": "внучка (дочь дочери)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0423",
+      "module": "M7",
+      "page": 15,
+      "hindi": "नाना",
+      "ru": "дедушка (со стороны матери)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0424",
+      "module": "M7",
+      "page": 15,
+      "hindi": "नानी",
+      "ru": "бабушка (со стороны матери)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0425",
+      "module": "M7",
+      "page": 15,
+      "hindi": "नौकर",
+      "ru": "слуга",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0426",
+      "module": "M7",
+      "page": 16,
+      "hindi": "नौकरी करना",
+      "ru": "работать (о служащих, тех, чья профессия не связана с физическим трудом)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0427",
+      "module": "M7",
+      "page": 16,
+      "hindi": "पड़ोस",
+      "ru": "соседство",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0428",
+      "module": "M7",
+      "page": 16,
+      "hindi": "पति",
+      "ru": "муж",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0429",
+      "module": "M7",
+      "page": 16,
+      "hindi": "पत्नी",
+      "ru": "жена",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0430",
+      "module": "M7",
+      "page": 16,
+      "hindi": "परिवार (५.०)",
+      "ru": "семья",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0431",
+      "module": "M7",
+      "page": 16,
+      "hindi": "पहले",
+      "ru": "раньше, прежде",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0432",
+      "module": "M7",
+      "page": 16,
+      "hindi": "पालन-पोषण",
+      "ru": "воспитание, забота о детях",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0433",
+      "module": "M7",
+      "page": 16,
+      "hindi": "पोता",
+      "ru": "внук (сын сына)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0434",
+      "module": "M7",
+      "page": 16,
+      "hindi": "पोती",
+      "ru": "внучка (дочь сына)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0435",
+      "module": "M7",
+      "page": 16,
+      "hindi": "प्यार करना",
+      "ru": "любить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0436",
+      "module": "M7",
+      "page": 16,
+      "hindi": "प्रकाशित",
+      "ru": "изданный, опубликованный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0437",
+      "module": "M7",
+      "page": 16,
+      "hindi": "प्राध्यापक",
+      "ru": "старший преподаватель, профессор",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0438",
+      "module": "M7",
+      "page": 16,
+      "hindi": "फ़ोटो",
+      "ru": "фотография",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0439",
+      "module": "M7",
+      "page": 16,
+      "hindi": "फ़ोटो खींचना = फ़ोटो",
+      "ru": "фотографировать",
+      "gender": "",
+      "examples": [
+        "लेना = फ़ोटो उतारना",
+        "(кого-то किस",
+        "ी की फ़ोटो खींचना )"
+      ]
+    },
+    {
+      "id": "M7-0440",
+      "module": "M7",
+      "page": 17,
+      "hindi": "बच्चा",
+      "ru": "ребенок",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0441",
+      "module": "M7",
+      "page": 17,
+      "hindi": "बहन",
+      "ru": "сестра",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0442",
+      "module": "M7",
+      "page": 17,
+      "hindi": "बारी",
+      "ru": "очередь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0443",
+      "module": "M7",
+      "page": 17,
+      "hindi": "बाहर",
+      "ru": "вне, снаружи",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0444",
+      "module": "M7",
+      "page": 17,
+      "hindi": "बिकना",
+      "ru": "продаваться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0445",
+      "module": "M7",
+      "page": 17,
+      "hindi": "बुधवार",
+      "ru": "среда",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0446",
+      "module": "M7",
+      "page": 17,
+      "hindi": "बृहस्पतिवार",
+      "ru": "четверг",
+      "gender": "",
+      "examples": [
+        "गुरुवार (м. р)"
+      ]
+    },
+    {
+      "id": "M7-0447",
+      "module": "M7",
+      "page": 17,
+      "hindi": "बेटा",
+      "ru": "сын",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0448",
+      "module": "M7",
+      "page": 17,
+      "hindi": "बेटी",
+      "ru": "дочь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0449",
+      "module": "M7",
+      "page": 17,
+      "hindi": "बैठना",
+      "ru": "садиться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0450",
+      "module": "M7",
+      "page": 17,
+      "hindi": "मंगलवार",
+      "ru": "вторник",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0451",
+      "module": "M7",
+      "page": 17,
+      "hindi": "मज़दूरी करना",
+      "ru": "работать, заниматься физическим трудом",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0452",
+      "module": "M7",
+      "page": 17,
+      "hindi": "मामा",
+      "ru": "дядя (брат матери)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0453",
+      "module": "M7",
+      "page": 18,
+      "hindi": "मामी",
+      "ru": "тетя (жена брата матери)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0454",
+      "module": "M7",
+      "page": 18,
+      "hindi": "देखने के लिए आना",
+      "ru": "приходить в гости",
+      "gender": "н/п.",
+      "examples": [
+        "(встретиться с кем-то, послелог से)"
+      ]
+    },
+    {
+      "id": "M7-0455",
+      "module": "M7",
+      "page": 18,
+      "hindi": "मौसा",
+      "ru": "дядя (муж сестры матери)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0456",
+      "module": "M7",
+      "page": 18,
+      "hindi": "मौसी",
+      "ru": "тетя (сестра матери)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0457",
+      "module": "M7",
+      "page": 18,
+      "hindi": "रविवार, इतवार",
+      "ru": "воскресенье",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0458",
+      "module": "M7",
+      "page": 18,
+      "hindi": "रसोइया",
+      "ru": "повар",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0459",
+      "module": "M7",
+      "page": 18,
+      "hindi": "रहना",
+      "ru": "жить; зд. оставаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0460",
+      "module": "M7",
+      "page": 18,
+      "hindi": "रिटायर",
+      "ru": "вышедший на пенсию",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0461",
+      "module": "M7",
+      "page": 18,
+      "hindi": "रेडियो",
+      "ru": "радио",
+      "gender": "м.р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0462",
+      "module": "M7",
+      "page": 18,
+      "hindi": "रेस्तराँ",
+      "ru": "ресторан",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0463",
+      "module": "M7",
+      "page": 18,
+      "hindi": "लाना",
+      "ru": "приносить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0464",
+      "module": "M7",
+      "page": 18,
+      "hindi": "विश्विद्यालय",
+      "ru": "университет",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0465",
+      "module": "M7",
+      "page": 18,
+      "hindi": "व्यस्त",
+      "ru": "занятый, поглощенный быть занятым поглощенным какой-либо деятельностью",
+      "gender": "",
+      "examples": [
+        "व्यस्त रहना (н/п.)"
+      ]
+    },
+    {
+      "id": "M7-0466",
+      "module": "M7",
+      "page": 19,
+      "hindi": "शनिवार",
+      "ru": "суббота",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0467",
+      "module": "M7",
+      "page": 19,
+      "hindi": "शास्त्रीय संगीत",
+      "ru": "классическая индийская музыка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0468",
+      "module": "M7",
+      "page": 19,
+      "hindi": "शुक्रवार",
+      "ru": "пятница",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0469",
+      "module": "M7",
+      "page": 19,
+      "hindi": "संगीत",
+      "ru": "музыка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0470",
+      "module": "M7",
+      "page": 19,
+      "hindi": "संगीतकार",
+      "ru": "музыкант",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0471",
+      "module": "M7",
+      "page": 19,
+      "hindi": "संगीतज्ञ",
+      "ru": "знаток музыки",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0472",
+      "module": "M7",
+      "page": 19,
+      "hindi": "संस्कृति",
+      "ru": "культура",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0473",
+      "module": "M7",
+      "page": 19,
+      "hindi": "सप्ताह",
+      "ru": "неделя",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0474",
+      "module": "M7",
+      "page": 19,
+      "hindi": "सभी",
+      "ru": "все",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0475",
+      "module": "M7",
+      "page": 19,
+      "hindi": "समय",
+      "ru": "время",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0476",
+      "module": "M7",
+      "page": 19,
+      "hindi": "सामने",
+      "ru": "перед, впереди",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0477",
+      "module": "M7",
+      "page": 19,
+      "hindi": "साहित्य",
+      "ru": "литература",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0478",
+      "module": "M7",
+      "page": 19,
+      "hindi": "सिखाना",
+      "ru": "учить, обучать, преподавать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0479",
+      "module": "M7",
+      "page": 19,
+      "hindi": "सोमवार",
+      "ru": "понедельник",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0480",
+      "module": "M7",
+      "page": 19,
+      "hindi": "हफ़्ता",
+      "ru": "неделя",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0481",
+      "module": "M7",
+      "page": 20,
+      "hindi": "अक्सर",
+      "ru": "часто",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0482",
+      "module": "M7",
+      "page": 20,
+      "hindi": "अच्छा लगना",
+      "ru": "нравиться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0483",
+      "module": "M7",
+      "page": 20,
+      "hindi": "अदरक",
+      "ru": "имбирь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0484",
+      "module": "M7",
+      "page": 20,
+      "hindi": "आई =",
+      "ru": "пришла (= и вот я здесь)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0485",
+      "module": "M7",
+      "page": 20,
+      "hindi": "आराम",
+      "ru": "довольство, комфорт, отдых удобно, комфортно",
+      "gender": "м. р.",
+      "examples": [
+        "आराम से"
+      ]
+    },
+    {
+      "id": "M7-0486",
+      "module": "M7",
+      "page": 20,
+      "hindi": "इमली",
+      "ru": "тамаринд",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0487",
+      "module": "M7",
+      "page": 20,
+      "hindi": "इंडियन",
+      "ru": "индийский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0488",
+      "module": "M7",
+      "page": 20,
+      "hindi": "एतराज़",
+      "ru": "возражение я (не) возражаю",
+      "gender": "м. р.",
+      "examples": [
+        "मुझे एतराज़ (नहीं) है"
+      ]
+    },
+    {
+      "id": "M7-0489",
+      "module": "M7",
+      "page": 20,
+      "hindi": "कड़वा",
+      "ru": "горький",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0490",
+      "module": "M7",
+      "page": 20,
+      "hindi": "कश्मीरी",
+      "ru": "кашмирский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0491",
+      "module": "M7",
+      "page": 20,
+      "hindi": "कोफ़्ता",
+      "ru": "тефтели, фрикадельки",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0492",
+      "module": "M7",
+      "page": 20,
+      "hindi": "खजूर",
+      "ru": "финик",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0493",
+      "module": "M7",
+      "page": 20,
+      "hindi": "खट्टा",
+      "ru": "кислый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0494",
+      "module": "M7",
+      "page": 21,
+      "hindi": "ख़याल = ख़्याल",
+      "ru": "мнение, представление по моему мнению",
+      "gender": "м. р.",
+      "examples": [
+        "मेरे ख़याल से"
+      ]
+    },
+    {
+      "id": "M7-0495",
+      "module": "M7",
+      "page": 21,
+      "hindi": "खारा",
+      "ru": "горький",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0496",
+      "module": "M7",
+      "page": 21,
+      "hindi": "गुलाब-जामुन",
+      "ru": "гулаб джамун (сладкое лакомство)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0497",
+      "module": "M7",
+      "page": 21,
+      "hindi": "घबराना",
+      "ru": "беспокоиться, волноваться, смущаться",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0498",
+      "module": "M7",
+      "page": 21,
+      "hindi": "चटनी",
+      "ru": "соус",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0499",
+      "module": "M7",
+      "page": 21,
+      "hindi": "चपाती",
+      "ru": "лепешка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0500",
+      "module": "M7",
+      "page": 21,
+      "hindi": "चावल",
+      "ru": "рис (очищенный или вареный)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0501",
+      "module": "M7",
+      "page": 21,
+      "hindi": "चाहना",
+      "ru": "хотеть, желать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0502",
+      "module": "M7",
+      "page": 21,
+      "hindi": "चाहिए",
+      "ru": "нужно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0503",
+      "module": "M7",
+      "page": 21,
+      "hindi": "ज़रूरत",
+      "ru": "(ж. р.) необходимость, потребность придется, букв. «выпадет необходимость»",
+      "gender": "",
+      "examples": [
+        "ज़रूरत पड़ेगी"
+      ]
+    },
+    {
+      "id": "M7-0504",
+      "module": "M7",
+      "page": 21,
+      "hindi": "जीरा",
+      "ru": "зира, кумин",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0505",
+      "module": "M7",
+      "page": 21,
+      "hindi": "तरह",
+      "ru": "вид, род, сорт различный, разнообразный",
+      "gender": "ж. р.",
+      "examples": [
+        "तरह तरह का"
+      ]
+    },
+    {
+      "id": "M7-0506",
+      "module": "M7",
+      "page": 22,
+      "hindi": "नमकीन",
+      "ru": "соленый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0507",
+      "module": "M7",
+      "page": 22,
+      "hindi": "नॉन-वेज",
+      "ru": "не вегетарианский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0508",
+      "module": "M7",
+      "page": 22,
+      "hindi": "पकोड़ा",
+      "ru": "пирожок из гороховой муки",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0509",
+      "module": "M7",
+      "page": 22,
+      "hindi": "पराठा",
+      "ru": "слоеная лепешка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0510",
+      "module": "M7",
+      "page": 22,
+      "hindi": "पसंद होना",
+      "ru": "нравиться мне нравится",
+      "gender": "н/п.",
+      "examples": [
+        "मुझे पसंद होना है"
+      ]
+    },
+    {
+      "id": "M7-0511",
+      "module": "M7",
+      "page": 22,
+      "hindi": "पूरी",
+      "ru": "лепешка, приготовленная во фритюре",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0512",
+      "module": "M7",
+      "page": 22,
+      "hindi": "फ़ीनिक (м. р., ж. р.)",
+      "ru": "устар. финик",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0513",
+      "module": "M7",
+      "page": 22,
+      "hindi": "बटर-नान",
+      "ru": "лепешка из муки тонкого помола",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0514",
+      "module": "M7",
+      "page": 22,
+      "hindi": "बार",
+      "ru": "раз",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0515",
+      "module": "M7",
+      "page": 22,
+      "hindi": "बिरयानी",
+      "ru": "вид плова",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0516",
+      "module": "M7",
+      "page": 22,
+      "hindi": "भाषा",
+      "ru": "язык",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0517",
+      "module": "M7",
+      "page": 22,
+      "hindi": "भोजन",
+      "ru": "еда, прием пищи",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0518",
+      "module": "M7",
+      "page": 22,
+      "hindi": "मछली",
+      "ru": "рыба",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0519",
+      "module": "M7",
+      "page": 22,
+      "hindi": "मरज़ी, मर्ज़ी",
+      "ru": "желание, распоряжение, воля по вашему желанию; как вам угодно",
+      "gender": "ж. р.",
+      "examples": [
+        "आपकी मरज़ी"
+      ]
+    },
+    {
+      "id": "M7-0520",
+      "module": "M7",
+      "page": 23,
+      "hindi": "मशहूर",
+      "ru": "известный, знаменитый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0521",
+      "module": "M7",
+      "page": 23,
+      "hindi": "मॉसाहारी",
+      "ru": "потребляющий мясо",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0522",
+      "module": "M7",
+      "page": 23,
+      "hindi": "मीठा",
+      "ru": "сладкий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0523",
+      "module": "M7",
+      "page": 23,
+      "hindi": "मेन्यू",
+      "ru": "меню",
+      "gender": "м.р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0524",
+      "module": "M7",
+      "page": 23,
+      "hindi": "रोग़न जोश",
+      "ru": "роган джош (название блюда)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0525",
+      "module": "M7",
+      "page": 23,
+      "hindi": "रोटी",
+      "ru": "лепешка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0526",
+      "module": "M7",
+      "page": 23,
+      "hindi": "लिखा है",
+      "ru": "написан, написано",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0527",
+      "module": "M7",
+      "page": 23,
+      "hindi": "वेज",
+      "ru": "вегетарианский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0528",
+      "module": "M7",
+      "page": 23,
+      "hindi": "व्यंजन",
+      "ru": "блюдо, угощение",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0529",
+      "module": "M7",
+      "page": 23,
+      "hindi": "शाकाहारी",
+      "ru": "вегетарианский; вегетарианец",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0530",
+      "module": "M7",
+      "page": 23,
+      "hindi": "स्वादिष्ट",
+      "ru": "очень вкусный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0531",
+      "module": "M7",
+      "page": 23,
+      "hindi": "हर",
+      "ru": "каждый всевозможный",
+      "gender": "",
+      "examples": [
+        "हर तरह का"
+      ]
+    },
+    {
+      "id": "M7-0532",
+      "module": "M7",
+      "page": 23,
+      "hindi": "हाथ",
+      "ru": "рука (кисть)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0533",
+      "module": "M7",
+      "page": 23,
+      "hindi": "हिंंदी",
+      "ru": "хинди",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0534",
+      "module": "M7",
+      "page": 24,
+      "hindi": "अंतर",
+      "ru": "промежуток, различие",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0535",
+      "module": "M7",
+      "page": 24,
+      "hindi": "आकाश",
+      "ru": "небо разница, как между небом и землей",
+      "gender": "м. р.",
+      "examples": [
+        "आकाश-पताल का अंतर"
+      ]
+    },
+    {
+      "id": "M7-0536",
+      "module": "M7",
+      "page": 24,
+      "hindi": "आवाज़",
+      "ru": "голос",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0537",
+      "module": "M7",
+      "page": 24,
+      "hindi": "इलाज",
+      "ru": "лечение",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0538",
+      "module": "M7",
+      "page": 24,
+      "hindi": "इलाज करना",
+      "ru": "лечить (кого-то или что-то",
+      "gender": "",
+      "examples": [
+        "किस",
+        "ी का इलाज करना)"
+      ]
+    },
+    {
+      "id": "M7-0539",
+      "module": "M7",
+      "page": 24,
+      "hindi": "उठना",
+      "ru": "вставать, просыпаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0540",
+      "module": "M7",
+      "page": 24,
+      "hindi": "उतरना",
+      "ru": "спускаться, опускаться, снижаться (о высокой температуре)",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0541",
+      "module": "M7",
+      "page": 24,
+      "hindi": "कमज़ोर",
+      "ru": "слабый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0542",
+      "module": "M7",
+      "page": 24,
+      "hindi": "क़रीबन",
+      "ru": "приблизительно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0543",
+      "module": "M7",
+      "page": 24,
+      "hindi": "के अंदर",
+      "ru": "внутри",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0544",
+      "module": "M7",
+      "page": 24,
+      "hindi": "के ऊपर",
+      "ru": "сверх, помимо",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0545",
+      "module": "M7",
+      "page": 24,
+      "hindi": "के नीचे",
+      "ru": "под",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0546",
+      "module": "M7",
+      "page": 25,
+      "hindi": "ख़याल रखना",
+      "ru": "заботиться, думать (о ком-то или о чем-то",
+      "gender": "",
+      "examples": [
+        "किस",
+        "ी का ख़याल रखना )"
+      ]
+    },
+    {
+      "id": "M7-0547",
+      "module": "M7",
+      "page": 25,
+      "hindi": "ख़राब",
+      "ru": "испорченный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0548",
+      "module": "M7",
+      "page": 25,
+      "hindi": "खाँसी",
+      "ru": "кашель",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0549",
+      "module": "M7",
+      "page": 25,
+      "hindi": "ख़ास",
+      "ru": "особый, очень хороший, отличный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0550",
+      "module": "M7",
+      "page": 25,
+      "hindi": "गला",
+      "ru": "горло",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0551",
+      "module": "M7",
+      "page": 25,
+      "hindi": "छत",
+      "ru": "крыша",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0552",
+      "module": "M7",
+      "page": 25,
+      "hindi": "छुपना",
+      "ru": "прятаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0553",
+      "module": "M7",
+      "page": 25,
+      "hindi": "जल्दी",
+      "ru": "1) поспешность, быстрота; 2) быстро, скоро",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0554",
+      "module": "M7",
+      "page": 25,
+      "hindi": "ज़ुकाम",
+      "ru": "насморк, простуда",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0555",
+      "module": "M7",
+      "page": 25,
+      "hindi": "ज़ोर ;",
+      "ru": "сила, усиление; сильнее; зд. громче",
+      "gender": "м. р.",
+      "examples": [
+        "ज़ोर से"
+      ]
+    },
+    {
+      "id": "M7-0556",
+      "module": "M7",
+      "page": 25,
+      "hindi": "तभी",
+      "ru": "именно тогда, как раз в то время",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0557",
+      "module": "M7",
+      "page": 25,
+      "hindi": "दर्द",
+      "ru": "боль, страдание",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0558",
+      "module": "M7",
+      "page": 25,
+      "hindi": "दादी-माँ",
+      "ru": "бабушка",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0559",
+      "module": "M7",
+      "page": 26,
+      "hindi": "दुखना",
+      "ru": "болеть у меня болит рука",
+      "gender": "н/п.",
+      "examples": [
+        "मेरा हाथ दुखता है"
+      ]
+    },
+    {
+      "id": "M7-0560",
+      "module": "M7",
+      "page": 26,
+      "hindi": "दूध",
+      "ru": "молоко",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0561",
+      "module": "M7",
+      "page": 26,
+      "hindi": "निकालना",
+      "ru": "доставать, зд. находить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0562",
+      "module": "M7",
+      "page": 26,
+      "hindi": "पताल",
+      "ru": "подземное пространство",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0563",
+      "module": "M7",
+      "page": 26,
+      "hindi": "पाना (н/п. модальный)",
+      "ru": "суметь, быть в состоянии расслышать, суметь услышать",
+      "gender": "",
+      "examples": [
+        "सुन पाना"
+      ]
+    },
+    {
+      "id": "M7-0564",
+      "module": "M7",
+      "page": 26,
+      "hindi": "पार्क",
+      "ru": "парк",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0565",
+      "module": "M7",
+      "page": 26,
+      "hindi": "पीना",
+      "ru": "пить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0566",
+      "module": "M7",
+      "page": 26,
+      "hindi": "बढ़ना",
+      "ru": "увеличиваться, расти",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0567",
+      "module": "M7",
+      "page": 26,
+      "hindi": "बाद, बाद में",
+      "ru": "потом, после",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0568",
+      "module": "M7",
+      "page": 26,
+      "hindi": "बारिश",
+      "ru": "дождь идет дождь",
+      "gender": "ж. р.",
+      "examples": [
+        "बारिश हो रही है"
+      ]
+    },
+    {
+      "id": "M7-0569",
+      "module": "M7",
+      "page": 26,
+      "hindi": "बुख़ार",
+      "ru": "жар, лихорадка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0570",
+      "module": "M7",
+      "page": 26,
+      "hindi": "भगवान",
+      "ru": "бог, всевышний",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0571",
+      "module": "M7",
+      "page": 26,
+      "hindi": "भीगना",
+      "ru": "мокнуть",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0572",
+      "module": "M7",
+      "page": 27,
+      "hindi": "भूलना",
+      "ru": "забывать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0573",
+      "module": "M7",
+      "page": 27,
+      "hindi": "मद",
+      "ru": "помощь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0574",
+      "module": "M7",
+      "page": 27,
+      "hindi": "रखना",
+      "ru": "держать, ставить, класть; зд. класть /вешать телефонную трубку",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0575",
+      "module": "M7",
+      "page": 27,
+      "hindi": "रात",
+      "ru": "ночь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0576",
+      "module": "M7",
+      "page": 27,
+      "hindi": "लगना",
+      "ru": "казаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0577",
+      "module": "M7",
+      "page": 27,
+      "hindi": "लाइन",
+      "ru": "линия",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0578",
+      "module": "M7",
+      "page": 27,
+      "hindi": "सकना",
+      "ru": "мочь",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0579",
+      "module": "M7",
+      "page": 27,
+      "hindi": "सबसे पहले",
+      "ru": "прежде всего, в первую очередь",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0580",
+      "module": "M7",
+      "page": 27,
+      "hindi": "समस्या (*. ०)",
+      "ru": "проблема находить решение проблемы",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0581",
+      "module": "M7",
+      "page": 27,
+      "hindi": "सलाह",
+      "ru": "совет",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0582",
+      "module": "M7",
+      "page": 28,
+      "hindi": "सात बजे",
+      "ru": "7 часов, в 7 часов; букв. “прозвонили”",
+      "gender": "",
+      "examples": [
+        "बजे"
+      ]
+    },
+    {
+      "id": "M7-0583",
+      "module": "M7",
+      "page": 28,
+      "hindi": "सिर, सर (न. ०)",
+      "ru": "голова",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0584",
+      "module": "M7",
+      "page": 28,
+      "hindi": "सुनाई देना",
+      "ru": "слышаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0585",
+      "module": "M7",
+      "page": 28,
+      "hindi": "सुबह",
+      "ru": "утро",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0586",
+      "module": "M7",
+      "page": 28,
+      "hindi": "सोना",
+      "ru": "спать",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0587",
+      "module": "M7",
+      "page": 28,
+      "hindi": "सो जाना",
+      "ru": "засыпать",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0588",
+      "module": "M7",
+      "page": 28,
+      "hindi": "हमेशा",
+      "ru": "всегда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0589",
+      "module": "M7",
+      "page": 28,
+      "hindi": "हल",
+      "ru": "решение",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0590",
+      "module": "M7",
+      "page": 28,
+      "hindi": "हल्दी",
+      "ru": "куркума",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0591",
+      "module": "M7",
+      "page": 28,
+      "hindi": "हे",
+      "ru": "о!, эй!",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0592",
+      "module": "M7",
+      "page": 29,
+      "hindi": "अस्पताल",
+      "ru": "больница",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0593",
+      "module": "M7",
+      "page": 29,
+      "hindi": "आराम",
+      "ru": "отдых отдыхать",
+      "gender": "м. р.",
+      "examples": [
+        "आराम करना"
+      ]
+    },
+    {
+      "id": "M7-0594",
+      "module": "M7",
+      "page": 29,
+      "hindi": "उतारना",
+      "ru": "спускать, снимать (одежду)",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0595",
+      "module": "M7",
+      "page": 29,
+      "hindi": "और",
+      "ru": "зд. другой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0596",
+      "module": "M7",
+      "page": 29,
+      "hindi": "क़रीब",
+      "ru": "близкий; приблизительно, около",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0597",
+      "module": "M7",
+      "page": 29,
+      "hindi": "कहना",
+      "ru": "зд. указание, совет",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0598",
+      "module": "M7",
+      "page": 29,
+      "hindi": "क्राबिल",
+      "ru": "способный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0599",
+      "module": "M7",
+      "page": 29,
+      "hindi": "कृपा",
+      "ru": "прощение, милость",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0600",
+      "module": "M7",
+      "page": 29,
+      "hindi": "ख़बर",
+      "ru": "известие, новость",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0601",
+      "module": "M7",
+      "page": 29,
+      "hindi": "खाँसना (/)",
+      "ru": "кашлять",
+      "gender": "",
+      "examples": [
+        "ा (н/п.)"
+      ]
+    },
+    {
+      "id": "M7-0602",
+      "module": "M7",
+      "page": 29,
+      "hindi": "खुलना",
+      "ru": "открываться, раскрываться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0603",
+      "module": "M7",
+      "page": 29,
+      "hindi": "खुला",
+      "ru": "открытый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0604",
+      "module": "M7",
+      "page": 29,
+      "hindi": "खोलना",
+      "ru": "открывать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0605",
+      "module": "M7",
+      "page": 29,
+      "hindi": "गोली",
+      "ru": "испорченный",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0606",
+      "module": "M7",
+      "page": 30,
+      "hindi": "चक्कर",
+      "ru": "пилюля, таблетка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0607",
+      "module": "M7",
+      "page": 30,
+      "hindi": "चोट",
+      "ru": "удар, ушиб случился/произошел ушиб/удар",
+      "gender": "ж. р.",
+      "examples": [
+        "चोट लगी"
+      ]
+    },
+    {
+      "id": "M7-0608",
+      "module": "M7",
+      "page": 30,
+      "hindi": "जाँच करना",
+      "ru": "производить осмотр, проверку",
+      "gender": "",
+      "examples": [
+        "(кого-то или чего-то किस",
+        "ी की",
+        "जाँच कर",
+        "ना )"
+      ]
+    },
+    {
+      "id": "M7-0609",
+      "module": "M7",
+      "page": 30,
+      "hindi": "जाँचना",
+      "ru": "осматривать (больного)",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0610",
+      "module": "M7",
+      "page": 30,
+      "hindi": "डरना",
+      "ru": "бояться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0611",
+      "module": "M7",
+      "page": 30,
+      "hindi": "डराना",
+      "ru": "пугать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0612",
+      "module": "M7",
+      "page": 30,
+      "hindi": "डाक्टर",
+      "ru": "доктор",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0613",
+      "module": "M7",
+      "page": 30,
+      "hindi": "डिग्री",
+      "ru": "градус",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0614",
+      "module": "M7",
+      "page": 30,
+      "hindi": "दवा",
+      "ru": "лекарство",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0615",
+      "module": "M7",
+      "page": 30,
+      "hindi": "देना",
+      "ru": "давать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0616",
+      "module": "M7",
+      "page": 30,
+      "hindi": "नापना",
+      "ru": "измерять",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0617",
+      "module": "M7",
+      "page": 31,
+      "hindi": "ज़रूरत पड़ेगी",
+      "ru": "зд. приходиться, выпадать; букв. “падать” придется отправиться понадобится, букв. “выпадет необходимость” если будет необходимость, то…",
+      "gender": "",
+      "examples": [
+        "ज़रूरत पड़े तो …"
+      ]
+    },
+    {
+      "id": "M7-0618",
+      "module": "M7",
+      "page": 31,
+      "hindi": "परीक्षा",
+      "ru": "обследование, осмотр",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0619",
+      "module": "M7",
+      "page": 31,
+      "hindi": "फ़ारेनहाइट",
+      "ru": "Фаренгейт",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0620",
+      "module": "M7",
+      "page": 31,
+      "hindi": "बदलना (н/п., п.)",
+      "ru": "изменять(ся), превращать(ся)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0621",
+      "module": "M7",
+      "page": 31,
+      "hindi": "बेहोशी",
+      "ru": "бессознательное состояние, беспамятство, обморок",
+      "gender": "ж.р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0622",
+      "module": "M7",
+      "page": 31,
+      "hindi": "मत",
+      "ru": "не (запретительная частица)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0623",
+      "module": "M7",
+      "page": 31,
+      "hindi": "मरीज़",
+      "ru": "больной, пациент",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0624",
+      "module": "M7",
+      "page": 31,
+      "hindi": "मुँह",
+      "ru": "рот, лицо",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0625",
+      "module": "M7",
+      "page": 31,
+      "hindi": "लगना",
+      "ru": "быть приложенным",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0626",
+      "module": "M7",
+      "page": 31,
+      "hindi": "वजह",
+      "ru": "причина, основание по причине",
+      "gender": "ж. р.",
+      "examples": [
+        "(की) वजह से"
+      ]
+    },
+    {
+      "id": "M7-0627",
+      "module": "M7",
+      "page": 31,
+      "hindi": "शर्ट",
+      "ru": "рубашка (мужская)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0628",
+      "module": "M7",
+      "page": 32,
+      "hindi": "साँस लेना",
+      "ru": "дыхание задерживать дыхание, не дышать дышать, вдыхать",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0629",
+      "module": "M7",
+      "page": 32,
+      "hindi": "साथ",
+      "ru": "вместе брать с собой (кого-то)",
+      "gender": "",
+      "examples": [
+        "साथ लेना"
+      ]
+    },
+    {
+      "id": "M7-0630",
+      "module": "M7",
+      "page": 32,
+      "hindi": "साहब",
+      "ru": "господин",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0631",
+      "module": "M7",
+      "page": 32,
+      "hindi": "सिरप",
+      "ru": "микстура, сироп",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M7-0632",
+      "module": "M7",
+      "page": 32,
+      "hindi": "सूजना",
+      "ru": "опухать, воспаляться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M7-0633",
+      "module": "M7",
+      "page": 32,
+      "hindi": "सूजी",
+      "ru": "опухший, воспаленный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M7-0634",
+      "module": "M7",
+      "page": 32,
+      "hindi": "सेल्सियस",
+      "ru": "Цельсий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0635",
+      "module": "M8",
+      "page": 1,
+      "hindi": "अपना",
+      "ru": "свой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0636",
+      "module": "M8",
+      "page": 1,
+      "hindi": "अपार्टमेंट",
+      "ru": "квартира",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0637",
+      "module": "M8",
+      "page": 1,
+      "hindi": "अभी",
+      "ru": "уже, теперь, в данный момент",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0638",
+      "module": "M8",
+      "page": 1,
+      "hindi": "आना",
+      "ru": "прибывать, приходить, приезжать",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0639",
+      "module": "M8",
+      "page": 1,
+      "hindi": "आया हूँ",
+      "ru": "прибыл, пришел (= и вот я здесь)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0640",
+      "module": "M8",
+      "page": 1,
+      "hindi": "आपस में",
+      "ru": "между собой, взаимно, вместе, друг с другом",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0641",
+      "module": "M8",
+      "page": 1,
+      "hindi": "इधर",
+      "ru": "здесь, сюда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0642",
+      "module": "M8",
+      "page": 1,
+      "hindi": "इमारत",
+      "ru": "здание",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0643",
+      "module": "M8",
+      "page": 1,
+      "hindi": "उतरना",
+      "ru": "спускаться, выходить из транспорта",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0644",
+      "module": "M8",
+      "page": 1,
+      "hindi": "उधर",
+      "ru": "там, туда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0645",
+      "module": "M8",
+      "page": 1,
+      "hindi": "ऊँचा",
+      "ru": "высокий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0646",
+      "module": "M8",
+      "page": 1,
+      "hindi": "ओर",
+      "ru": "сторона",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0647",
+      "module": "M8",
+      "page": 1,
+      "hindi": "कल",
+      "ru": "вчера, завтра",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0648",
+      "module": "M8",
+      "page": 1,
+      "hindi": "कहना",
+      "ru": "говорить, сказать, называть",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0649",
+      "module": "M8",
+      "page": 2,
+      "hindi": "काम",
+      "ru": "работа, дело",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0650",
+      "module": "M8",
+      "page": 2,
+      "hindi": "किराया",
+      "ru": "аренда, арендная плата, плата за проезд",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0651",
+      "module": "M8",
+      "page": 2,
+      "hindi": "के बाद",
+      "ru": "после",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0652",
+      "module": "M8",
+      "page": 2,
+      "hindi": "के यहाँ",
+      "ru": "у, к, при",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0653",
+      "module": "M8",
+      "page": 2,
+      "hindi": "खड़ा होना",
+      "ru": "стоять",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0654",
+      "module": "M8",
+      "page": 2,
+      "hindi": "ख़ुशी",
+      "ru": "радость",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0655",
+      "module": "M8",
+      "page": 2,
+      "hindi": "गाँव",
+      "ru": "деревня",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0656",
+      "module": "M8",
+      "page": 2,
+      "hindi": "घर",
+      "ru": "дом",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0657",
+      "module": "M8",
+      "page": 2,
+      "hindi": "बस में चढ़ना",
+      "ru": "подниматься; входить в транспорт подниматься по лестнице садиться в автобус",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0658",
+      "module": "M8",
+      "page": 2,
+      "hindi": "चलना",
+      "ru": "идти, двигаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0659",
+      "module": "M8",
+      "page": 2,
+      "hindi": "चारों",
+      "ru": "(все) четверо, вчетвером",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0660",
+      "module": "M8",
+      "page": 2,
+      "hindi": "चारों ओर देखना",
+      "ru": "осматриваться по сторонам",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0661",
+      "module": "M8",
+      "page": 2,
+      "hindi": "चौड़ा",
+      "ru": "широкий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0662",
+      "module": "M8",
+      "page": 3,
+      "hindi": "चौराहा",
+      "ru": "перекресток",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0663",
+      "module": "M8",
+      "page": 3,
+      "hindi": "छुट्टी",
+      "ru": "выходной, праздник; мн. ч. выходные, каникулы, отпуск",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0664",
+      "module": "M8",
+      "page": 3,
+      "hindi": "छोटा",
+      "ru": "маленький",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0665",
+      "module": "M8",
+      "page": 3,
+      "hindi": "छोड़ना",
+      "ru": "оставлять, покидать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0666",
+      "module": "M8",
+      "page": 3,
+      "hindi": "ज़रा",
+      "ru": "маленький, немного; -ка",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0667",
+      "module": "M8",
+      "page": 3,
+      "hindi": "ज़रूर",
+      "ru": "обязательно, необходимо; конечно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0668",
+      "module": "M8",
+      "page": 3,
+      "hindi": "जल्दी",
+      "ru": "спешка, поспешность",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0669",
+      "module": "M8",
+      "page": 3,
+      "hindi": "ज़्यादा",
+      "ru": "большой, чрезмерный; много, больше",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0670",
+      "module": "M8",
+      "page": 3,
+      "hindi": "टेक्सी",
+      "ru": "такси",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0671",
+      "module": "M8",
+      "page": 3,
+      "hindi": "ठीक",
+      "ru": "верный, правильный; верно, точно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0672",
+      "module": "M8",
+      "page": 3,
+      "hindi": "ठीक है !",
+      "ru": "Правильно! Ладно!",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0673",
+      "module": "M8",
+      "page": 3,
+      "hindi": "तरफ़",
+      "ru": "сторона",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0674",
+      "module": "M8",
+      "page": 3,
+      "hindi": "तीनों",
+      "ru": "трое, втроем",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0675",
+      "module": "M8",
+      "page": 3,
+      "hindi": "तीसरा",
+      "ru": "третий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0676",
+      "module": "M8",
+      "page": 4,
+      "hindi": "थोड़ा",
+      "ru": "маленький; немного",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0677",
+      "module": "M8",
+      "page": 4,
+      "hindi": "दाइ« तरफ़ = दाएँ =",
+      "ru": "направо, справа",
+      "gender": "",
+      "examples": [
+        "सीधे हाथ"
+      ]
+    },
+    {
+      "id": "M8-0678",
+      "module": "M8",
+      "page": 4,
+      "hindi": "दायाँ",
+      "ru": "правый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0679",
+      "module": "M8",
+      "page": 4,
+      "hindi": "दिन",
+      "ru": "день",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0680",
+      "module": "M8",
+      "page": 4,
+      "hindi": "दिल्ली",
+      "ru": "Дели",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0681",
+      "module": "M8",
+      "page": 4,
+      "hindi": "देखना",
+      "ru": "смотреть, видеть",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0682",
+      "module": "M8",
+      "page": 4,
+      "hindi": "दोनों",
+      "ru": "оба, обе, двое, вдвоем",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0683",
+      "module": "M8",
+      "page": 4,
+      "hindi": "दोबारा",
+      "ru": "во второй раз, снова, повторно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0684",
+      "module": "M8",
+      "page": 4,
+      "hindi": "धन्यवाद",
+      "ru": "спасибо",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0685",
+      "module": "M8",
+      "page": 4,
+      "hindi": "ध्यान",
+      "ru": "внимание, сосредоточенность внимательно, сосредоточенно",
+      "gender": "м. р.",
+      "examples": [
+        "ध्यान से"
+      ]
+    },
+    {
+      "id": "M8-0686",
+      "module": "M8",
+      "page": 4,
+      "hindi": "नया",
+      "ru": "Новый Дели",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0687",
+      "module": "M8",
+      "page": 4,
+      "hindi": "नंबर",
+      "ru": "номер",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0688",
+      "module": "M8",
+      "page": 4,
+      "hindi": "नीचा",
+      "ru": "низкий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0689",
+      "module": "M8",
+      "page": 5,
+      "hindi": "पकड़ना",
+      "ru": "хватать, ловить садиться на автобус",
+      "gender": "",
+      "examples": [
+        "बस पकड़ना"
+      ]
+    },
+    {
+      "id": "M8-0690",
+      "module": "M8",
+      "page": 5,
+      "hindi": "पढ़ाई",
+      "ru": "учеба",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0691",
+      "module": "M8",
+      "page": 5,
+      "hindi": "पता",
+      "ru": "адрес",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0692",
+      "module": "M8",
+      "page": 5,
+      "hindi": "पहला",
+      "ru": "первый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0693",
+      "module": "M8",
+      "page": 5,
+      "hindi": "पहले",
+      "ru": "раньше, прежде; сначала, сперва",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0694",
+      "module": "M8",
+      "page": 5,
+      "hindi": "पार करना",
+      "ru": "пересекать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0695",
+      "module": "M8",
+      "page": 5,
+      "hindi": "पुराना",
+      "ru": "Старый Дели",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0696",
+      "module": "M8",
+      "page": 5,
+      "hindi": "प्यार",
+      "ru": "любовь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0697",
+      "module": "M8",
+      "page": 5,
+      "hindi": "प्रेम",
+      "ru": "любовь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0698",
+      "module": "M8",
+      "page": 5,
+      "hindi": "फिर मिलेंगे",
+      "ru": "встретимся снова, до свидания!",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0699",
+      "module": "M8",
+      "page": 5,
+      "hindi": "फ़ोन करना",
+      "ru": "звонить (по телефону)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0700",
+      "module": "M8",
+      "page": 5,
+      "hindi": "बड़ा",
+      "ru": "большой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0701",
+      "module": "M8",
+      "page": 5,
+      "hindi": "बताना",
+      "ru": "говорить, рассказывать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0702",
+      "module": "M8",
+      "page": 5,
+      "hindi": "बस",
+      "ru": "автобус",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0703",
+      "module": "M8",
+      "page": 6,
+      "hindi": "बस-स्टैंड",
+      "ru": "остановка автобуса (место)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0704",
+      "module": "M8",
+      "page": 6,
+      "hindi": "बहुत",
+      "ru": "очень",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0705",
+      "module": "M8",
+      "page": 6,
+      "hindi": "बाइ« तरफ़ =",
+      "ru": "налево, слева, влево",
+      "gender": "",
+      "examples": [
+        "बाएँ = उल्टे हाथ"
+      ]
+    },
+    {
+      "id": "M8-0706",
+      "module": "M8",
+      "page": 6,
+      "hindi": "बायाँ",
+      "ru": "левый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0707",
+      "module": "M8",
+      "page": 6,
+      "hindi": "बोलना",
+      "ru": "говорить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0708",
+      "module": "M8",
+      "page": 6,
+      "hindi": "भैया",
+      "ru": "брат, братец (часто в обращениях)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0709",
+      "module": "M8",
+      "page": 6,
+      "hindi": "और",
+      "ru": "зд. этаж",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0710",
+      "module": "M8",
+      "page": 6,
+      "hindi": "मत",
+      "ru": "не (запретительная частица); не ходи",
+      "gender": "",
+      "examples": [
+        "मत जाओ"
+      ]
+    },
+    {
+      "id": "M8-0711",
+      "module": "M8",
+      "page": 6,
+      "hindi": "महँगा",
+      "ru": "дорогой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0712",
+      "module": "M8",
+      "page": 6,
+      "hindi": "माफ़ करना",
+      "ru": "извинять",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0713",
+      "module": "M8",
+      "page": 6,
+      "hindi": "मिनट",
+      "ru": "минута",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0714",
+      "module": "M8",
+      "page": 6,
+      "hindi": "मिलना",
+      "ru": "встречаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0715",
+      "module": "M8",
+      "page": 6,
+      "hindi": "मुड़ना",
+      "ru": "поворачивать (куда-либо), оборачиваться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0716",
+      "module": "M8",
+      "page": 6,
+      "hindi": "यूनिवर्सििटी",
+      "ru": "университет",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0717",
+      "module": "M8",
+      "page": 7,
+      "hindi": "राजधानी",
+      "ru": "столица",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0718",
+      "module": "M8",
+      "page": 7,
+      "hindi": "रूसी",
+      "ru": "русский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0719",
+      "module": "M8",
+      "page": 7,
+      "hindi": "लिखना",
+      "ru": "писать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0720",
+      "module": "M8",
+      "page": 7,
+      "hindi": "लेना",
+      "ru": "брать, получать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0721",
+      "module": "M8",
+      "page": 7,
+      "hindi": "विज़िटिगं कार्ड",
+      "ru": "визитка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0722",
+      "module": "M8",
+      "page": 7,
+      "hindi": "शुभनाम",
+      "ru": "благое, счастливое (= официальное) имя",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0723",
+      "module": "M8",
+      "page": 7,
+      "hindi": "सँकरा",
+      "ru": "узкий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0724",
+      "module": "M8",
+      "page": 7,
+      "hindi": "सच",
+      "ru": "правда; правильный, действительный",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0725",
+      "module": "M8",
+      "page": 7,
+      "hindi": "सड़क",
+      "ru": "улица",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0726",
+      "module": "M8",
+      "page": 7,
+      "hindi": "स्ता",
+      "ru": "дешевый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0727",
+      "module": "M8",
+      "page": 7,
+      "hindi": "सीधा",
+      "ru": "прямой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0728",
+      "module": "M8",
+      "page": 7,
+      "hindi": "सीधे",
+      "ru": "прямо, перед",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M8-0729",
+      "module": "M8",
+      "page": 7,
+      "hindi": "सुना",
+      "ru": "слушать, слышать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M8-0730",
+      "module": "M8",
+      "page": 7,
+      "hindi": "स्टॉप",
+      "ru": "остановка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M8-0731",
+      "module": "M8",
+      "page": 8,
+      "hindi": "हाल",
+      "ru": "положение, состояние дел Как дела?",
+      "gender": "м. р.",
+      "examples": [
+        "क्या हाल है ?"
+      ]
+    },
+    {
+      "id": "M8-0732",
+      "module": "M8",
+      "page": 8,
+      "hindi": "हुई",
+      "ru": "стала, произошла «быть, существовать»)",
+      "gender": "ж.р.",
+      "examples": [
+        "(форма ед. числа ж. р. глагола होना"
+      ]
+    },
+    {
+      "id": "M9-0733",
+      "module": "M9",
+      "page": 1,
+      "hindi": "अगला",
+      "ru": "следующий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0734",
+      "module": "M9",
+      "page": 1,
+      "hindi": "अगली बार",
+      "ru": "в следующий раз",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0735",
+      "module": "M9",
+      "page": 1,
+      "hindi": "अनेक",
+      "ru": "несколько, много",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0736",
+      "module": "M9",
+      "page": 1,
+      "hindi": "आज",
+      "ru": "сегодня",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0737",
+      "module": "M9",
+      "page": 1,
+      "hindi": "आम तौर पर",
+      "ru": "обычно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0738",
+      "module": "M9",
+      "page": 1,
+      "hindi": "इंजीनियर",
+      "ru": "инженер",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0739",
+      "module": "M9",
+      "page": 1,
+      "hindi": "इसलिए",
+      "ru": "поэтому",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0740",
+      "module": "M9",
+      "page": 1,
+      "hindi": "एक दूसरे से",
+      "ru": "друг друга",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0741",
+      "module": "M9",
+      "page": 1,
+      "hindi": "कभी-कभी",
+      "ru": "иногда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0742",
+      "module": "M9",
+      "page": 1,
+      "hindi": "काम",
+      "ru": "работа",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0743",
+      "module": "M9",
+      "page": 1,
+      "hindi": "काम करना",
+      "ru": "работать",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0744",
+      "module": "M9",
+      "page": 1,
+      "hindi": "की तरह",
+      "ru": "подобно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0745",
+      "module": "M9",
+      "page": 2,
+      "hindi": "की बग़ल में",
+      "ru": "рядом, под боком",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0746",
+      "module": "M9",
+      "page": 2,
+      "hindi": "कुछ",
+      "ru": "немного",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0747",
+      "module": "M9",
+      "page": 2,
+      "hindi": "के अलावा",
+      "ru": "кроме, помимо",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0748",
+      "module": "M9",
+      "page": 2,
+      "hindi": "के पीछे",
+      "ru": "позади",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0749",
+      "module": "M9",
+      "page": 2,
+      "hindi": "के बारे में",
+      "ru": "о (чем)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0750",
+      "module": "M9",
+      "page": 2,
+      "hindi": "के साथ",
+      "ru": "вместе с",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0751",
+      "module": "M9",
+      "page": 2,
+      "hindi": "के सामने",
+      "ru": "перед",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0752",
+      "module": "M9",
+      "page": 2,
+      "hindi": "कोलकाता",
+      "ru": "Колката (Калькутта)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0753",
+      "module": "M9",
+      "page": 2,
+      "hindi": "खाना",
+      "ru": "есть, кушать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M9-0754",
+      "module": "M9",
+      "page": 2,
+      "hindi": "खाना पकाना",
+      "ru": "еда есть, кушать готовить еду готовить еду",
+      "gender": "п.",
+      "examples": [
+        "खाना बनाना (п.)"
+      ]
+    },
+    {
+      "id": "M9-0755",
+      "module": "M9",
+      "page": 2,
+      "hindi": "ख़ुद",
+      "ru": "сам",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0756",
+      "module": "M9",
+      "page": 2,
+      "hindi": "गाना",
+      "ru": "петь",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M9-0757",
+      "module": "M9",
+      "page": 2,
+      "hindi": "चखना",
+      "ru": "пробовать (еду)",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M9-0758",
+      "module": "M9",
+      "page": 3,
+      "hindi": "चाचा",
+      "ru": "дядя (младший брат отца)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0759",
+      "module": "M9",
+      "page": 3,
+      "hindi": "चाची",
+      "ru": "тетя (жена младшего брата отца)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0760",
+      "module": "M9",
+      "page": 3,
+      "hindi": "जाना",
+      "ru": "знать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M9-0761",
+      "module": "M9",
+      "page": 3,
+      "hindi": "झाँसी",
+      "ru": "Джханси",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0762",
+      "module": "M9",
+      "page": 3,
+      "hindi": "ताऊ",
+      "ru": "дядя (старший брат отца)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0763",
+      "module": "M9",
+      "page": 3,
+      "hindi": "ताई",
+      "ru": "тетя (жена старшего брата отца)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0764",
+      "module": "M9",
+      "page": 3,
+      "hindi": "तैयार",
+      "ru": "готовый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0765",
+      "module": "M9",
+      "page": 3,
+      "hindi": "दिल्ली",
+      "ru": "Дели",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0766",
+      "module": "M9",
+      "page": 3,
+      "hindi": "दुकान",
+      "ru": "магазин",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0767",
+      "module": "M9",
+      "page": 3,
+      "hindi": "देखने के लिए आना",
+      "ru": "приходить в гости (повидать кого-то)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0768",
+      "module": "M9",
+      "page": 3,
+      "hindi": "नाती",
+      "ru": "внук (сын дочери)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0769",
+      "module": "M9",
+      "page": 3,
+      "hindi": "पोती",
+      "ru": "внучка (дочь дочери)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0770",
+      "module": "M9",
+      "page": 3,
+      "hindi": "नाना",
+      "ru": "дедушка (со стороны матери)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0771",
+      "module": "M9",
+      "page": 3,
+      "hindi": "नानी",
+      "ru": "бабушка (со стороны матери)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0772",
+      "module": "M9",
+      "page": 3,
+      "hindi": "नौकर",
+      "ru": "слуга",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0773",
+      "module": "M9",
+      "page": 4,
+      "hindi": "नौकरी करना",
+      "ru": "работать (о служащих, тех, чья профессия не связана с физическим трудом)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0774",
+      "module": "M9",
+      "page": 4,
+      "hindi": "पड़ोस",
+      "ru": "соседство",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0775",
+      "module": "M9",
+      "page": 4,
+      "hindi": "पत्नी",
+      "ru": "жена",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0776",
+      "module": "M9",
+      "page": 4,
+      "hindi": "परिवार (५.०)",
+      "ru": "семья",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0777",
+      "module": "M9",
+      "page": 4,
+      "hindi": "पहले",
+      "ru": "раньше, прежде",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0778",
+      "module": "M9",
+      "page": 4,
+      "hindi": "पालन-पोषण",
+      "ru": "воспитание, забота о детях",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0779",
+      "module": "M9",
+      "page": 4,
+      "hindi": "पोता",
+      "ru": "внук (сын сына)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0780",
+      "module": "M9",
+      "page": 4,
+      "hindi": "पोती",
+      "ru": "внучка (дочь сына)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0781",
+      "module": "M9",
+      "page": 4,
+      "hindi": "प्यार करना",
+      "ru": "любить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M9-0782",
+      "module": "M9",
+      "page": 4,
+      "hindi": "प्रकाशित",
+      "ru": "изданный, опубликованный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0783",
+      "module": "M9",
+      "page": 4,
+      "hindi": "प्राध्यापक",
+      "ru": "старший преподаватель, профессор",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0784",
+      "module": "M9",
+      "page": 4,
+      "hindi": "फ़ोटो",
+      "ru": "фотография",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0785",
+      "module": "M9",
+      "page": 4,
+      "hindi": "फ़ोटो खींचना = फ़ोटो",
+      "ru": "фотографировать",
+      "gender": "",
+      "examples": [
+        "लेना = फ़ोटो उतारना",
+        "(кого-то किसी की फ़ोटो खींचना )"
+      ]
+    },
+    {
+      "id": "M9-0786",
+      "module": "M9",
+      "page": 5,
+      "hindi": "बच्चा",
+      "ru": "ребенок",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0787",
+      "module": "M9",
+      "page": 5,
+      "hindi": "बहन",
+      "ru": "сестра",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0788",
+      "module": "M9",
+      "page": 5,
+      "hindi": "बारी",
+      "ru": "очередь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0789",
+      "module": "M9",
+      "page": 5,
+      "hindi": "बाहर",
+      "ru": "вне, снаружи",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0790",
+      "module": "M9",
+      "page": 5,
+      "hindi": "बिकना",
+      "ru": "продаваться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M9-0791",
+      "module": "M9",
+      "page": 5,
+      "hindi": "बुधवार",
+      "ru": "среда",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0792",
+      "module": "M9",
+      "page": 5,
+      "hindi": "बेटा",
+      "ru": "сын",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0793",
+      "module": "M9",
+      "page": 5,
+      "hindi": "बेटी",
+      "ru": "дочь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0794",
+      "module": "M9",
+      "page": 5,
+      "hindi": "बैठना",
+      "ru": "садиться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M9-0795",
+      "module": "M9",
+      "page": 5,
+      "hindi": "भाई",
+      "ru": "брат",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0796",
+      "module": "M9",
+      "page": 5,
+      "hindi": "मंगलवार",
+      "ru": "вторник",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0797",
+      "module": "M9",
+      "page": 5,
+      "hindi": "मज़दूरी करना",
+      "ru": "работать, заниматься физическим трудом",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0798",
+      "module": "M9",
+      "page": 5,
+      "hindi": "मामा",
+      "ru": "дядя (брат матери)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0799",
+      "module": "M9",
+      "page": 6,
+      "hindi": "मामी",
+      "ru": "тетя (жена брата матери)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0800",
+      "module": "M9",
+      "page": 6,
+      "hindi": "देखने के लिए आना",
+      "ru": "приходить в гости",
+      "gender": "н/п.",
+      "examples": [
+        "(встретиться с кем-то, послелог से)"
+      ]
+    },
+    {
+      "id": "M9-0801",
+      "module": "M9",
+      "page": 6,
+      "hindi": "मौसा",
+      "ru": "дядя (муж сестры матери)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0802",
+      "module": "M9",
+      "page": 6,
+      "hindi": "मौसी",
+      "ru": "тетя (сестра матери)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0803",
+      "module": "M9",
+      "page": 6,
+      "hindi": "रविवार",
+      "ru": "воскресенье",
+      "gender": "",
+      "examples": [
+        "इतवार (м. р.)"
+      ]
+    },
+    {
+      "id": "M9-0804",
+      "module": "M9",
+      "page": 6,
+      "hindi": "रसोइया",
+      "ru": "повар",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0805",
+      "module": "M9",
+      "page": 6,
+      "hindi": "रहना",
+      "ru": "жить; зд. оставаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M9-0806",
+      "module": "M9",
+      "page": 6,
+      "hindi": "रिटायर",
+      "ru": "вышедший на пенсию",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0807",
+      "module": "M9",
+      "page": 6,
+      "hindi": "रेस्तराँ",
+      "ru": "ресторан",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0808",
+      "module": "M9",
+      "page": 6,
+      "hindi": "लाना",
+      "ru": "приносить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M9-0809",
+      "module": "M9",
+      "page": 6,
+      "hindi": "विश्विद्यालय",
+      "ru": "университет",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0810",
+      "module": "M9",
+      "page": 6,
+      "hindi": "व्यस्त",
+      "ru": "занятый, поглощенный быть занятым поглощенным какой-либо деятельностью",
+      "gender": "",
+      "examples": [
+        "व्यस्त रहना (н/п.)"
+      ]
+    },
+    {
+      "id": "M9-0811",
+      "module": "M9",
+      "page": 7,
+      "hindi": "शनिवार",
+      "ru": "суббота",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0812",
+      "module": "M9",
+      "page": 7,
+      "hindi": "शास्त्रीय संगीत",
+      "ru": "классическая индийская музыка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0813",
+      "module": "M9",
+      "page": 7,
+      "hindi": "शुक्रवार",
+      "ru": "пятница",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0814",
+      "module": "M9",
+      "page": 7,
+      "hindi": "संगीत",
+      "ru": "музыка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0815",
+      "module": "M9",
+      "page": 7,
+      "hindi": "संगीतकार",
+      "ru": "музыкант",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0816",
+      "module": "M9",
+      "page": 7,
+      "hindi": "संगीतज्ञ",
+      "ru": "знаток музыки",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0817",
+      "module": "M9",
+      "page": 7,
+      "hindi": "सप्ताह",
+      "ru": "неделя",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0818",
+      "module": "M9",
+      "page": 7,
+      "hindi": "सभी",
+      "ru": "все",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0819",
+      "module": "M9",
+      "page": 7,
+      "hindi": "समय",
+      "ru": "время",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0820",
+      "module": "M9",
+      "page": 7,
+      "hindi": "सामने",
+      "ru": "перед, впереди",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M9-0821",
+      "module": "M9",
+      "page": 7,
+      "hindi": "साहित्य",
+      "ru": "литература",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0822",
+      "module": "M9",
+      "page": 7,
+      "hindi": "सिखाना",
+      "ru": "учить, обучать, преподавать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M9-0823",
+      "module": "M9",
+      "page": 7,
+      "hindi": "सोमवार",
+      "ru": "понедельник",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M9-0824",
+      "module": "M9",
+      "page": 7,
+      "hindi": "हफ़्ता",
+      "ru": "неделя",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0825",
+      "module": "M10",
+      "page": 1,
+      "hindi": "अक्सर",
+      "ru": "часто",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0826",
+      "module": "M10",
+      "page": 1,
+      "hindi": "अच्छा लगना",
+      "ru": "нравиться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M10-0827",
+      "module": "M10",
+      "page": 1,
+      "hindi": "अदरक",
+      "ru": "имбирь",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0828",
+      "module": "M10",
+      "page": 1,
+      "hindi": "आई हूँ",
+      "ru": "пришла (и вот я здесь)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0829",
+      "module": "M10",
+      "page": 1,
+      "hindi": "आराम",
+      "ru": "довольство, комфорт, отдых удобно, комфортно",
+      "gender": "м. р.",
+      "examples": [
+        "आराम से"
+      ]
+    },
+    {
+      "id": "M10-0830",
+      "module": "M10",
+      "page": 1,
+      "hindi": "इमली",
+      "ru": "тамаринд",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0831",
+      "module": "M10",
+      "page": 1,
+      "hindi": "इंडियन",
+      "ru": "индийский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0832",
+      "module": "M10",
+      "page": 1,
+      "hindi": "एतराज़",
+      "ru": "возражение я (не) возражаю",
+      "gender": "м. р.",
+      "examples": [
+        "मुझे एतराज़ (नहीं) है"
+      ]
+    },
+    {
+      "id": "M10-0833",
+      "module": "M10",
+      "page": 1,
+      "hindi": "कड़वा",
+      "ru": "горький",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0834",
+      "module": "M10",
+      "page": 1,
+      "hindi": "कश्मीरी",
+      "ru": "кашмирский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0835",
+      "module": "M10",
+      "page": 1,
+      "hindi": "कोफ़्ता",
+      "ru": "тефтели, фрикадельки",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0836",
+      "module": "M10",
+      "page": 1,
+      "hindi": "खट्टा",
+      "ru": "кислый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0837",
+      "module": "M10",
+      "page": 2,
+      "hindi": "ख़याल = ख़्याल",
+      "ru": "мнение, представление по моему мнению",
+      "gender": "м. р.",
+      "examples": [
+        "मेरे ख़याल से"
+      ]
+    },
+    {
+      "id": "M10-0838",
+      "module": "M10",
+      "page": 2,
+      "hindi": "खारा",
+      "ru": "горький",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0839",
+      "module": "M10",
+      "page": 2,
+      "hindi": "ख़ुशी",
+      "ru": "радость",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0840",
+      "module": "M10",
+      "page": 2,
+      "hindi": "गुलाब-जामुन",
+      "ru": "гулаб джамун (сладкое лакомство)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0841",
+      "module": "M10",
+      "page": 2,
+      "hindi": "घबराना",
+      "ru": "беспокоиться, волноваться, смущаться",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0842",
+      "module": "M10",
+      "page": 2,
+      "hindi": "चटनी",
+      "ru": "соус",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0843",
+      "module": "M10",
+      "page": 2,
+      "hindi": "चपाती",
+      "ru": "лепешка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0844",
+      "module": "M10",
+      "page": 2,
+      "hindi": "चावल",
+      "ru": "рис (очищенный или вареный)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0845",
+      "module": "M10",
+      "page": 2,
+      "hindi": "चाहना",
+      "ru": "хотеть, желать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M10-0846",
+      "module": "M10",
+      "page": 2,
+      "hindi": "ज़रूरत",
+      "ru": "необходимость, потребность придется, букв. «выпадет необходимость»",
+      "gender": "ж. р.",
+      "examples": [
+        "ज़रूरत पड़ेगी"
+      ]
+    },
+    {
+      "id": "M10-0847",
+      "module": "M10",
+      "page": 2,
+      "hindi": "जीरा",
+      "ru": "зира, кумин",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0848",
+      "module": "M10",
+      "page": 2,
+      "hindi": "तरह",
+      "ru": "вид, род, сорт различный, разнообразный",
+      "gender": "ж. р.",
+      "examples": [
+        "तरह तरह का"
+      ]
+    },
+    {
+      "id": "M10-0849",
+      "module": "M10",
+      "page": 3,
+      "hindi": "नॉन-वेज",
+      "ru": "не вегетарианский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0850",
+      "module": "M10",
+      "page": 3,
+      "hindi": "पकोड़ा",
+      "ru": "пирожок из гороховой муки",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0851",
+      "module": "M10",
+      "page": 3,
+      "hindi": "पराठा",
+      "ru": "слоеная лепешка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0852",
+      "module": "M10",
+      "page": 3,
+      "hindi": "पसंद होना",
+      "ru": "нравиться мне нравится",
+      "gender": "н/п.",
+      "examples": [
+        "मुझे पसंद है"
+      ]
+    },
+    {
+      "id": "M10-0853",
+      "module": "M10",
+      "page": 3,
+      "hindi": "पूरी",
+      "ru": "лепешка, приготовленная во фритюре",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0854",
+      "module": "M10",
+      "page": 3,
+      "hindi": "बटर-नान",
+      "ru": "лепешка из муки тонкого помола",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0855",
+      "module": "M10",
+      "page": 3,
+      "hindi": "बार",
+      "ru": "раз",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0856",
+      "module": "M10",
+      "page": 3,
+      "hindi": "बिरयानी",
+      "ru": "вид плова",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0857",
+      "module": "M10",
+      "page": 3,
+      "hindi": "भाषा",
+      "ru": "язык",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0858",
+      "module": "M10",
+      "page": 3,
+      "hindi": "भोजन",
+      "ru": "еда, прием пищи",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0859",
+      "module": "M10",
+      "page": 3,
+      "hindi": "मछली",
+      "ru": "рыба",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0860",
+      "module": "M10",
+      "page": 3,
+      "hindi": "मरज़ी = मर्ज़ी",
+      "ru": "желание, распоряжение, воля по вашему желанию; как вам угодно",
+      "gender": "ж. р.",
+      "examples": [
+        "आप की मरज़ी"
+      ]
+    },
+    {
+      "id": "M10-0861",
+      "module": "M10",
+      "page": 4,
+      "hindi": "मशहूर",
+      "ru": "известный, знаменитый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0862",
+      "module": "M10",
+      "page": 4,
+      "hindi": "माँसाहारी",
+      "ru": "потребляющий мясо",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0863",
+      "module": "M10",
+      "page": 4,
+      "hindi": "मीठा",
+      "ru": "сладкий",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0864",
+      "module": "M10",
+      "page": 4,
+      "hindi": "मेन्यू",
+      "ru": "меню",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0865",
+      "module": "M10",
+      "page": 4,
+      "hindi": "रोग़न जोश",
+      "ru": "роган джош (название блюда)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0866",
+      "module": "M10",
+      "page": 4,
+      "hindi": "रोटी",
+      "ru": "лепешка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0867",
+      "module": "M10",
+      "page": 4,
+      "hindi": "िलखा है",
+      "ru": "написан, написано (м. р.)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0868",
+      "module": "M10",
+      "page": 4,
+      "hindi": "वेज",
+      "ru": "вегетарианский",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0869",
+      "module": "M10",
+      "page": 4,
+      "hindi": "व्यंजन",
+      "ru": "блюдо, угощение",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M10-0870",
+      "module": "M10",
+      "page": 4,
+      "hindi": "शाकाहारी",
+      "ru": "вегетарианский; вегетарианец",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0871",
+      "module": "M10",
+      "page": 4,
+      "hindi": "स्वादिष्ट",
+      "ru": "очень вкусный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M10-0872",
+      "module": "M10",
+      "page": 4,
+      "hindi": "हर",
+      "ru": "каждый всевозможный",
+      "gender": "",
+      "examples": [
+        "हर तरह का"
+      ]
+    },
+    {
+      "id": "M10-0873",
+      "module": "M10",
+      "page": 4,
+      "hindi": "हाथ",
+      "ru": "рука (кисть)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0874",
+      "module": "M11",
+      "page": 1,
+      "hindi": "अंतर",
+      "ru": "промежуток, различие",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0875",
+      "module": "M11",
+      "page": 1,
+      "hindi": "आकाश",
+      "ru": "небо разница, как между небом и землей",
+      "gender": "м. р.",
+      "examples": [
+        "आकाश-पताल का अंतर"
+      ]
+    },
+    {
+      "id": "M11-0876",
+      "module": "M11",
+      "page": 1,
+      "hindi": "आवाज़",
+      "ru": "голос",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0877",
+      "module": "M11",
+      "page": 1,
+      "hindi": "इलाज",
+      "ru": "лечение",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0878",
+      "module": "M11",
+      "page": 1,
+      "hindi": "इलाज करना",
+      "ru": "лечить (кого-то или что-то",
+      "gender": "",
+      "examples": [
+        "किसी का इलाज करना )"
+      ]
+    },
+    {
+      "id": "M11-0879",
+      "module": "M11",
+      "page": 1,
+      "hindi": "उठना",
+      "ru": "вставать, просыпаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0880",
+      "module": "M11",
+      "page": 1,
+      "hindi": "उतरना",
+      "ru": "спускаться, опускаться, снижаться (о высокой температуре)",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0881",
+      "module": "M11",
+      "page": 1,
+      "hindi": "कमज़ोर",
+      "ru": "слабый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0882",
+      "module": "M11",
+      "page": 1,
+      "hindi": "क़रीबन",
+      "ru": "приблизительно",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0883",
+      "module": "M11",
+      "page": 1,
+      "hindi": "के अंदर",
+      "ru": "внутри",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0884",
+      "module": "M11",
+      "page": 1,
+      "hindi": "के ऊपर",
+      "ru": "сверх, помимо",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0885",
+      "module": "M11",
+      "page": 1,
+      "hindi": "के नीचे",
+      "ru": "под",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0886",
+      "module": "M11",
+      "page": 2,
+      "hindi": "ख़याल रखना",
+      "ru": "заботиться, думать (о ком-то или о чем-то",
+      "gender": "",
+      "examples": [
+        "किसी का ख़याल रखना )"
+      ]
+    },
+    {
+      "id": "M11-0887",
+      "module": "M11",
+      "page": 2,
+      "hindi": "ख़राब",
+      "ru": "испорченный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0888",
+      "module": "M11",
+      "page": 2,
+      "hindi": "खाँसी",
+      "ru": "кашель",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0889",
+      "module": "M11",
+      "page": 2,
+      "hindi": "ख़ास",
+      "ru": "особый, очень хороший, отличный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0890",
+      "module": "M11",
+      "page": 2,
+      "hindi": "गला",
+      "ru": "горло",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0891",
+      "module": "M11",
+      "page": 2,
+      "hindi": "छत",
+      "ru": "крыша",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0892",
+      "module": "M11",
+      "page": 2,
+      "hindi": "छुपना",
+      "ru": "прятаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0893",
+      "module": "M11",
+      "page": 2,
+      "hindi": "जल्दी",
+      "ru": "1) поспешность, быстрота; 2) быстро, скоро",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0894",
+      "module": "M11",
+      "page": 2,
+      "hindi": "ज़ुकाम",
+      "ru": "насморк, простуда",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0895",
+      "module": "M11",
+      "page": 2,
+      "hindi": "ज़ोर ;",
+      "ru": "сила, усиление; сильнее; зд. громче",
+      "gender": "м. р.",
+      "examples": [
+        "ज़ोर से"
+      ]
+    },
+    {
+      "id": "M11-0896",
+      "module": "M11",
+      "page": 2,
+      "hindi": "तभी",
+      "ru": "именно тогда, как раз в то время",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0897",
+      "module": "M11",
+      "page": 2,
+      "hindi": "द",
+      "ru": "боль, страдание",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0898",
+      "module": "M11",
+      "page": 2,
+      "hindi": "दादी-माँ",
+      "ru": "бабушка",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0899",
+      "module": "M11",
+      "page": 3,
+      "hindi": "दुखना",
+      "ru": "болеть у меня болит рука",
+      "gender": "н/п.",
+      "examples": [
+        "मेरा हाथ दुखता है"
+      ]
+    },
+    {
+      "id": "M11-0900",
+      "module": "M11",
+      "page": 3,
+      "hindi": "दूध",
+      "ru": "молоко",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0901",
+      "module": "M11",
+      "page": 3,
+      "hindi": "निकालना",
+      "ru": "доставать, зд. находить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0902",
+      "module": "M11",
+      "page": 3,
+      "hindi": "पताल",
+      "ru": "подземное пространство",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0903",
+      "module": "M11",
+      "page": 3,
+      "hindi": "पाना (н/п. модальный)",
+      "ru": "суметь, быть в состоянии расслышать, суметь услышать",
+      "gender": "",
+      "examples": [
+        "सुन पाना"
+      ]
+    },
+    {
+      "id": "M11-0904",
+      "module": "M11",
+      "page": 3,
+      "hindi": "पार्क",
+      "ru": "парк",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0905",
+      "module": "M11",
+      "page": 3,
+      "hindi": "पीना",
+      "ru": "пить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0906",
+      "module": "M11",
+      "page": 3,
+      "hindi": "बढ़ना",
+      "ru": "увеличиваться, расти",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0907",
+      "module": "M11",
+      "page": 3,
+      "hindi": "बाद, बाद में",
+      "ru": "потом, после",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0908",
+      "module": "M11",
+      "page": 3,
+      "hindi": "बारिश",
+      "ru": "дождь идет дождь",
+      "gender": "ж. р.",
+      "examples": [
+        "बारिश हो रही है"
+      ]
+    },
+    {
+      "id": "M11-0909",
+      "module": "M11",
+      "page": 3,
+      "hindi": "बुख़ार",
+      "ru": "жар, лихорадка",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0910",
+      "module": "M11",
+      "page": 3,
+      "hindi": "भगवान",
+      "ru": "бог, всевышний",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0911",
+      "module": "M11",
+      "page": 3,
+      "hindi": "भीगना",
+      "ru": "мокнуть",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0912",
+      "module": "M11",
+      "page": 4,
+      "hindi": "भूलना",
+      "ru": "забывать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0913",
+      "module": "M11",
+      "page": 4,
+      "hindi": "भैया",
+      "ru": "брат, братец (часто в обращениях)",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0914",
+      "module": "M11",
+      "page": 4,
+      "hindi": "मद",
+      "ru": "помощь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0915",
+      "module": "M11",
+      "page": 4,
+      "hindi": "रखना",
+      "ru": "держать, ставить, класть; зд. класть /вешать телефонную трубку",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0916",
+      "module": "M11",
+      "page": 4,
+      "hindi": "रात",
+      "ru": "ночь",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0917",
+      "module": "M11",
+      "page": 4,
+      "hindi": "लगना",
+      "ru": "казаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0918",
+      "module": "M11",
+      "page": 4,
+      "hindi": "लाइन",
+      "ru": "линия",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0919",
+      "module": "M11",
+      "page": 4,
+      "hindi": "लाना",
+      "ru": "приносить",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0920",
+      "module": "M11",
+      "page": 4,
+      "hindi": "सकना",
+      "ru": "мочь",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0921",
+      "module": "M11",
+      "page": 4,
+      "hindi": "सबसे पहले",
+      "ru": "прежде всего, в первую очередь",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0922",
+      "module": "M11",
+      "page": 4,
+      "hindi": "समस्या",
+      "ru": "проблема находить решение проблемы",
+      "gender": "ж. р.",
+      "examples": [
+        "समस्या का हल निकालना"
+      ]
+    },
+    {
+      "id": "M11-0923",
+      "module": "M11",
+      "page": 4,
+      "hindi": "सलाह",
+      "ru": "совет",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0924",
+      "module": "M11",
+      "page": 5,
+      "hindi": "सात बजे",
+      "ru": "7 часов, в 7 часов; букв. “прозвонили”",
+      "gender": "",
+      "examples": [
+        "बजे"
+      ]
+    },
+    {
+      "id": "M11-0925",
+      "module": "M11",
+      "page": 5,
+      "hindi": "सिर, सर (न. ०)",
+      "ru": "голова",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0926",
+      "module": "M11",
+      "page": 5,
+      "hindi": "सुनाई देना",
+      "ru": "слышаться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0927",
+      "module": "M11",
+      "page": 5,
+      "hindi": "सुबह",
+      "ru": "утро",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0928",
+      "module": "M11",
+      "page": 5,
+      "hindi": "सोना",
+      "ru": "спать",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0929",
+      "module": "M11",
+      "page": 5,
+      "hindi": "सो जाना",
+      "ru": "засыпать",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M11-0930",
+      "module": "M11",
+      "page": 5,
+      "hindi": "हमेशा",
+      "ru": "всегда",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M11-0931",
+      "module": "M11",
+      "page": 5,
+      "hindi": "हल",
+      "ru": "решение",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0932",
+      "module": "M11",
+      "page": 5,
+      "hindi": "हल्दी",
+      "ru": "куркума",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M11-0933",
+      "module": "M11",
+      "page": 5,
+      "hindi": "हे",
+      "ru": "о!, эй!",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0934",
+      "module": "M12",
+      "page": 1,
+      "hindi": "अस्पताल",
+      "ru": "больница",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0935",
+      "module": "M12",
+      "page": 1,
+      "hindi": "आराम",
+      "ru": "отдых отдыхать",
+      "gender": "м. р.",
+      "examples": [
+        "आराम करना"
+      ]
+    },
+    {
+      "id": "M12-0936",
+      "module": "M12",
+      "page": 1,
+      "hindi": "उतारना",
+      "ru": "спускать, снимать (одежду)",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M12-0937",
+      "module": "M12",
+      "page": 1,
+      "hindi": "और",
+      "ru": "зд. другой",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0938",
+      "module": "M12",
+      "page": 1,
+      "hindi": "क़रीब",
+      "ru": "близкий; приблизительно, около",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0939",
+      "module": "M12",
+      "page": 1,
+      "hindi": "कहना",
+      "ru": "зд. указание, совет",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0940",
+      "module": "M12",
+      "page": 1,
+      "hindi": "क्राबिल",
+      "ru": "способный",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0941",
+      "module": "M12",
+      "page": 1,
+      "hindi": "कृपा",
+      "ru": "прощение, милость",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0942",
+      "module": "M12",
+      "page": 1,
+      "hindi": "ख़बर",
+      "ru": "известие, новость",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0943",
+      "module": "M12",
+      "page": 1,
+      "hindi": "खाँसना",
+      "ru": "кашлять",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M12-0944",
+      "module": "M12",
+      "page": 1,
+      "hindi": "खुलना",
+      "ru": "открываться, раскрываться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M12-0945",
+      "module": "M12",
+      "page": 1,
+      "hindi": "खुला",
+      "ru": "открытый",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0946",
+      "module": "M12",
+      "page": 1,
+      "hindi": "खोलना",
+      "ru": "открывать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M12-0947",
+      "module": "M12",
+      "page": 1,
+      "hindi": "गोली",
+      "ru": "пилюля, таблетка",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0948",
+      "module": "M12",
+      "page": 2,
+      "hindi": "चक्कर",
+      "ru": "зд. головокружение; круг, окружность",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0949",
+      "module": "M12",
+      "page": 2,
+      "hindi": "चोट",
+      "ru": "удар, ушиб случился/произошел ушиб/удар",
+      "gender": "ж. р.",
+      "examples": [
+        "चोट लगी"
+      ]
+    },
+    {
+      "id": "M12-0950",
+      "module": "M12",
+      "page": 2,
+      "hindi": "जाँच करना",
+      "ru": "производить осмотр, проверку",
+      "gender": "",
+      "examples": [
+        "(кого-то или чего-то किसी की",
+        "जाँच करना )"
+      ]
+    },
+    {
+      "id": "M12-0951",
+      "module": "M12",
+      "page": 2,
+      "hindi": "जाँचना",
+      "ru": "осматривать (больного)",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M12-0952",
+      "module": "M12",
+      "page": 2,
+      "hindi": "डरना",
+      "ru": "бояться",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M12-0953",
+      "module": "M12",
+      "page": 2,
+      "hindi": "डराना",
+      "ru": "пугать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M12-0954",
+      "module": "M12",
+      "page": 2,
+      "hindi": "डॉक्टर",
+      "ru": "доктор",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0955",
+      "module": "M12",
+      "page": 2,
+      "hindi": "डिग्री",
+      "ru": "градус",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0956",
+      "module": "M12",
+      "page": 2,
+      "hindi": "दवा",
+      "ru": "лекарство",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0957",
+      "module": "M12",
+      "page": 2,
+      "hindi": "देना",
+      "ru": "давать",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M12-0958",
+      "module": "M12",
+      "page": 2,
+      "hindi": "धन्यवाद",
+      "ru": "спасибо",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0959",
+      "module": "M12",
+      "page": 2,
+      "hindi": "नापना",
+      "ru": "измерять",
+      "gender": "п.",
+      "examples": []
+    },
+    {
+      "id": "M12-0960",
+      "module": "M12",
+      "page": 3,
+      "hindi": "ज़रूरत पड़ेगी",
+      "ru": "зд. приходиться, выпадать; букв. “падать” придется отправиться понадобится, букв. “выпадет необходимость” если будет необходимость, то…",
+      "gender": "",
+      "examples": [
+        "ज़रूरत पड़े तो …"
+      ]
+    },
+    {
+      "id": "M12-0961",
+      "module": "M12",
+      "page": 3,
+      "hindi": "परीक्षा",
+      "ru": "обследование, осмотр",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0962",
+      "module": "M12",
+      "page": 3,
+      "hindi": "फ़ारेनहाइट",
+      "ru": "Фаренгейт",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0963",
+      "module": "M12",
+      "page": 3,
+      "hindi": "बदलना (н/п., п.)",
+      "ru": "изменять(ся), превращать(ся)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0964",
+      "module": "M12",
+      "page": 3,
+      "hindi": "बेहोशी",
+      "ru": "бессознательное состояние, беспамятство, обморок",
+      "gender": "ж.р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0965",
+      "module": "M12",
+      "page": 3,
+      "hindi": "मत",
+      "ru": "не (запретительная частица)",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0966",
+      "module": "M12",
+      "page": 3,
+      "hindi": "मरीज़",
+      "ru": "больной, пациент",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0967",
+      "module": "M12",
+      "page": 3,
+      "hindi": "मुँह",
+      "ru": "рот, лицо",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0968",
+      "module": "M12",
+      "page": 3,
+      "hindi": "लगना",
+      "ru": "быть приложенным",
+      "gender": "н/п.",
+      "examples": []
+    },
+    {
+      "id": "M12-0969",
+      "module": "M12",
+      "page": 3,
+      "hindi": "वजह",
+      "ru": "причина, основание по причине",
+      "gender": "ж. р.",
+      "examples": [
+        "(की) वजह से"
+      ]
+    },
+    {
+      "id": "M12-0970",
+      "module": "M12",
+      "page": 3,
+      "hindi": "शर्ट",
+      "ru": "рубашка (мужская)",
+      "gender": "ж. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0971",
+      "module": "M12",
+      "page": 4,
+      "hindi": "साँस लेना",
+      "ru": "дыхание задерживать дыхание, не дышать дышать, вдыхать",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0972",
+      "module": "M12",
+      "page": 4,
+      "hindi": "साथ",
+      "ru": "вместе брать с собой (кого-то)",
+      "gender": "",
+      "examples": [
+        "साथ लेना"
+      ]
+    },
+    {
+      "id": "M12-0973",
+      "module": "M12",
+      "page": 4,
+      "hindi": "साहब",
+      "ru": "господин",
+      "gender": "",
+      "examples": []
+    },
+    {
+      "id": "M12-0974",
+      "module": "M12",
+      "page": 4,
+      "hindi": "सिरप",
+      "ru": "микстура, сироп",
+      "gender": "м. р.",
+      "examples": []
+    },
+    {
+      "id": "M12-0975",
+      "module": "M12",
+      "page": 4,
+      "hindi": "सूजना",
+      "ru": "опухать, воспаляться опухшая, воспаленная (ж. р.)",
+      "gender": "н/п.",
+      "examples": [
+        "सूजी"
+      ]
+    },
+    {
+      "id": "M12-0976",
+      "module": "M12",
+      "page": 4,
+      "hindi": "सेल्सिÐियस",
+      "ru": "Цельсий",
+      "gender": "",
+      "examples": []
+    }
+  ]
+}

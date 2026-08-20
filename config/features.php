@@ -970,6 +970,14 @@ return [
     'hindi_tg_curated_practice' => (bool) env('HINDI_TG_CURATED_PRACTICE', false),
 
     /*
+     | Kostina Hindi module dictionaries → student drills (H3206).
+     | Default OFF — /dvaram/programme/hindi/vocab 404s. Hindi teachers
+     | still preview. Enable: HINDI_DICTIONARY_DRILLS=true + config:cache.
+     | Does not grant access. Does not turn transcript/attachment drills on.
+     */
+    'hindi_dictionary_drills' => (bool) env('HINDI_DICTIONARY_DRILLS', false),
+
+    /*
      | Literal-Jivo Wave 4+ (H2486). All default OFF. Packet:
      | docs/PACKET_JIVO_TELEPHONY_PROVIDER_ROUTING_GATE_2026.md
      | Thresholds: config/telephony.php. No purchase, number, call or

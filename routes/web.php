@@ -51,6 +51,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SrsController;
 use App\Http\Controllers\StorefrontAnalyticsController;
 use App\Http\Controllers\Student\AccessSelfServiceController;
+use App\Http\Controllers\Student\HindiDictionaryDrillsController;
 use App\Http\Controllers\Student\HindiMySrsDeckController;
 use App\Http\Controllers\Student\HindiProgrammePlaylistController;
 use App\Http\Controllers\Student\HindiTgCuratedPracticeController;
@@ -505,6 +506,16 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->name('student.programme.hindi.tg');
     Route::post('/dvaram/programme/hindi/chat-practice/check', [HindiTgCuratedPracticeController::class, 'check'])
         ->name('student.programme.hindi.tg.check');
+
+    // H3206 — Kostina module dictionaries. Static segment before {module}.
+    Route::get('/dvaram/programme/hindi/vocab', [HindiDictionaryDrillsController::class, 'index'])
+        ->name('student.programme.hindi.vocab');
+    Route::get('/dvaram/programme/hindi/vocab/{module}', [HindiDictionaryDrillsController::class, 'show'])
+        ->name('student.programme.hindi.vocab.show')
+        ->where('module', 'M(?:[1-9]|1[0-2])');
+    Route::post('/dvaram/programme/hindi/vocab/{module}/check', [HindiDictionaryDrillsController::class, 'check'])
+        ->name('student.programme.hindi.vocab.check')
+        ->where('module', 'M(?:[1-9]|1[0-2])');
 
     Route::get('/dvaram/reading', [ReadingPackController::class, 'cabinetIndex'])
         ->name('student.reading.index');
