@@ -12,6 +12,7 @@ use App\Models\SupportConversation;
 use App\Models\User;
 use App\Services\Crm\Customer360Snapshot;
 use App\Services\Crm\CustomerTimelineService;
+use App\Services\Crm\TrialBookingService;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
@@ -61,6 +62,8 @@ class Customer360 extends Page implements HasForms
     public ?int $taskDealId = null;
 
     public ?int $moveStageId = null;
+
+    public ?string $trialOutcome = null;
 
     public static function canAccess(): bool
     {
@@ -207,6 +210,23 @@ class Customer360 extends Page implements HasForms
         }
 
         Notification::make()->title('Стадия сделки обновлена')->success()->send();
+    }
+
+    public function applyTrialOutcome(): void
+    {
+        if (! config('features.crm_trial_booking')) {
+            return;
+        }
+
+        $deal = $this->getSnapshot()?->primaryDeal();
+        if (! $deal instanceof Deal || ! $deal->isTrial() || ! $this->trialOutcome) {
+            Notification::make()->title('Нет пробной сделки')->danger()->send();
+
+            return;
+        }
+
+        app(TrialBookingService::class)->applyOutcome($deal, $this->trialOutcome, auth()->user());
+        Notification::make()->title('Исход пробника сохранён')->success()->send();
     }
 
     public function form(Form $form): Form

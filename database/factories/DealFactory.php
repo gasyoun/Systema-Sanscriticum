@@ -29,7 +29,30 @@ class DealFactory extends Factory
             'closed_at' => null,
             'closed_reason' => null,
             'source_payment_id' => null,
+            'kind' => Deal::KIND_COURSE,
+            'schedule_id' => null,
+            'trial_source' => null,
+            'trial_outcome' => null,
         ];
+    }
+
+    public function trialFree(): static
+    {
+        return $this->state(fn (): array => [
+            'kind' => Deal::KIND_TRIAL,
+            'trial_source' => Deal::TRIAL_SOURCE_FREE,
+            'trial_outcome' => Deal::TRIAL_OUTCOME_BOOKED,
+            'amount' => 0,
+        ]);
+    }
+
+    public function trialPaid(): static
+    {
+        return $this->state(fn (): array => [
+            'kind' => Deal::KIND_TRIAL,
+            'trial_source' => Deal::TRIAL_SOURCE_PAID,
+            'trial_outcome' => Deal::TRIAL_OUTCOME_BOOKED,
+        ]);
     }
 
     /** Сделка на выигрышной стадии (закрытая). */

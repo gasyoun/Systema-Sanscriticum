@@ -614,6 +614,22 @@ return [
     'crm_pipeline_board' => (bool) env('CRM_PIPELINE_BOARD', false),
 
     /*
+     | H3247 cluster 1: пробное занятие как Deal.kind=trial (бесплатный intro +
+     | платный SKU tariff=trial). TrialBookingService, Zoom-сверка, черновик
+     | FollowUpTask, бейдж «Пробник». ВЫКЛ по умолчанию. Не выдаёт доступ и не
+     | пишет payments. Включение — CRM_TRIAL_BOOKING=true + config:cache
+     | (human ops после staff smoke). Виджет записи — отдельный ключ ниже.
+     */
+    'crm_trial_booking' => (bool) env('CRM_TRIAL_BOOKING', false),
+
+    /*
+     | H3248 cluster 2: публичная кнопка «Записаться» на /widgets/schedule.
+     | POST 404 пока OFF. Требует также crm_trial_booking. Не включать в
+     | этом PR — только заготовка ключа, default false.
+     */
+    'crm_trial_widget_public' => (bool) env('CRM_TRIAL_WIDGET_PUBLIC', false),
+
+    /*
      | Атрибуция возвратов по ссылке «Возврат за платёж №…» в зачёте докупки
      | (H1405 C2). Ветка целого блока в Tariff::upgradeRefundsForUser видит
      | только Расход-строки с покрывающим диапазоном блоков, а админ-форма

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Deal;
 use App\Models\DealStage;
+use App\Services\Crm\TrialBookingService;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Notifications\Notification;
@@ -95,5 +96,31 @@ class DealKanbanBoard extends KanbanBoard
         }
 
         $record->moveToStage($stage, auth()->id());
+    }
+
+    /**
+     * Staff override of trial_outcome (H3247). Hidden when the flag is off.
+     */
+    public function applyTrialOutcome(int $dealId, string $outcome): void
+    {
+        if (! config('features.crm_trial_booking')) {
+            return;
+        }
+
+        $deal = Deal::query()->find($dealId);
+        if ($deal === null || ! $deal->isTrial()) {
+            return;
+        }
+
+        app(TrialBookingService::class)->applyOutcome(
+            $deal,
+            $outcome,
+            auth()->user(),
+        );
+
+        Notification::make()
+            ->title('Исход пробника сохранён')
+            ->success()
+            ->send();
     }
 }

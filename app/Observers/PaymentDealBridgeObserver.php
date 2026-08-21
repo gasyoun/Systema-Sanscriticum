@@ -9,6 +9,7 @@ use App\Models\DealStage;
 use App\Models\DealTransition;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Services\Crm\TrialBookingService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -75,6 +76,7 @@ class PaymentDealBridgeObserver
     public function created(Payment $payment): void
     {
         $this->sync($payment);
+        $this->maybeTagTrial($payment);
     }
 
     public function updated(Payment $payment): void
@@ -84,6 +86,7 @@ class PaymentDealBridgeObserver
         }
 
         $this->sync($payment);
+        $this->maybeTagTrial($payment);
     }
 
     /**
@@ -95,6 +98,27 @@ class PaymentDealBridgeObserver
      * Ловим всё и логируем: сделка — производная сущность, её потеря никогда
      * не должна стоить денежной строки (найдено adversarial-ревью H1641).
      */
+    /**
+     * H3247: trial SKU is excluded from isCourseSaleShape (H2102 stays).
+     * When crm_trial_booking is on, tag (or open) exactly one Deal as kind=trial.
+     * Rank 4: still no access / payment writes. Swallowed like sync().
+     */
+    private function maybeTagTrial(Payment $payment): void
+    {
+        if (! config('features.crm_trial_booking') || ! $payment->isTrial()) {
+            return;
+        }
+
+        try {
+            app(TrialBookingService::class)->tagPaidPayment($payment);
+        } catch (\Throwable $e) {
+            Log::error('H3247: trial Deal tag failed, платёж не тронут', [
+                'payment_id' => $payment->id,
+                'exception' => $e->getMessage(),
+            ]);
+        }
+    }
+
     private function sync(Payment $payment): void
     {
         // Флаг ВЫКЛ по умолчанию → на проде мост инертен.

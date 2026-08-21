@@ -360,6 +360,13 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('sync-zoom-attendance');
 
+        // H3247: пробные Deal после Zoom-сверки. Гейт внутри команды.
+        $schedule->command('crm:reconcile-trial-attendance')
+            ->dailyAt('04:18')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('reconcile-trial-attendance');
+
         // --- ЛИД-МАГНИТ ЗА N МИНУТ ДО ВЕБИНАРА ---
         // Окно проверяется внутри команды (isMagnetWindowOpen у лендинга).
         $schedule->command('magnets:deliver-due')
