@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.90.7] - 2026-08-21
 ### Added
 - **H3204 (Grok 4.6 `grok-4.6`): G31 remaining clauses — consultation page/checkout smoke plus launch-date gating to 28-08-2026.** `ConsultationProductLaunchGateTest` (`--filter=Consultation`) reads price off `config('marathon.paid_track_price')` and the rendered page (no hardcoded ₽500 / title). `marathon.launch_date` is the one-shot gate for Kernel channel post 2; Days 1–2 stay Cyrillic, Devanagari stays on the January cohort. Does not join G42's `*Marathon*Test.php` glob. Money contour not changed (checkout math untouched).
 - **H3214 (Grok 4.6 `grok-4.6`): операционная книга бухгалтера в `/admin`.** Страница «Как работать бухгалтеру» (`/admin/accountant-guide`), гейт finance(), источник [docs/ACCOUNTANT_CABINET_GUIDE_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ACCOUNTANT_CABINET_GUIDE_RU.md). Шесть сценариев (проводка, зарплата, расход, штурвал, потоки, разметка). Кадры в `storage/app/guide-shots/accountant/` (gitignore), не в `docs/screenshots`. Живая очередь остаётся на [PayoutAttributionGuide](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/PayoutAttributionGuide.php). Публичный `accountant-guide.md` — карта + «открой в кабинете». PDF на стенде, не в публичный репо. Нет Chrome — текст и манифест, PNG не выдумываются.
