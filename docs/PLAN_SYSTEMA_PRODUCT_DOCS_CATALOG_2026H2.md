@@ -11,7 +11,7 @@ _Created: 21-08-2026 · Last updated: 21-08-2026_
 - [IMPLEMENTATION_SYSTEMA_PRODUCT_DOCS_CATALOG_W1.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_PRODUCT_DOCS_CATALOG_W1.md) — шаги волны 1
 - [VERIFICATION_SYSTEMA_PRODUCT_DOCS_CATALOG.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SYSTEMA_PRODUCT_DOCS_CATALOG.md) — приёмка и риски
 
-Исполнение (ID подставит `/handoff-mint` в том же проходе): волна 1 — каталог + поиск; волна 2 — FAQ harvest + банки teacher/accountant в `cabinet_mastery`. `/go` волны 1 исполняет слой реализации, не этот индекс как «уже сделано».
+Исполнение: [H3243 (Grok 4.6) — Wave 1: superadmin/admin product documentation catalog at /admin/documentation](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3243-Grok_Systema-Sanscriticum_product-docs-catalog_21.08.26.md), затем [H3244 (Grok 4.6) — Wave 2: per-book FAQ harvest and teacher/accountant cabinet-mastery banks](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3244-Grok_Systema-Sanscriticum_product-docs-faq-mastery_21.08.26.md). `/go` волны 1 исполняет слой реализации, не этот индекс как «уже сделано». Слияние PR с планом **не** закрывает H3243.
 
 ## 1. Что уже есть (аудит 21-08-2026)
 
