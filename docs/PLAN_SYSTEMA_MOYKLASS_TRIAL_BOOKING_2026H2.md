@@ -2,6 +2,8 @@
 
 _Created: 21-08-2026 · Last updated: 21-08-2026_
 
+Gap snapshot (table of record): [COMPARISON_MOYKLASS_LANGUAGE_SCHOOL_CRM_21-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/COMPARISON_MOYKLASS_LANGUAGE_SCHOOL_CRM_21-08-2026.md).
+
 ## Goal
 
 Close the language-school CRM gap that [Мой Класс](https://moyklass.com/crm-dlja-jazykovyh-shkol) names as «пробное занятие → дожим» and «виджет записи», **for our school only**: keep the LMS and money truth, add a live-group trial object on existing `Deal` + `Schedule`, then a book button on the already-shipped public schedule iframe.
