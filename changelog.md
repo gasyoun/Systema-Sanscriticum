@@ -2,6 +2,9 @@
 ### Added
 - **H3219 (Grok 4.6 `grok-4.6`): админ видит преподавательские поверхности; «войти как преподаватель»; преподаватель видит свой расчёт ЗП.** Правило: `RoleGate::seesTeacherSurfaces()` (`admin` / `super_admin`) — «Мой хинди», черновик, гид, нагрузка. Режим H1947: «Войти как преподаватель» (Костина и другие `teacher`, только `super_admin`). Свой расчёт: `RoleGate::seesOwnSalary()` — пункт «Моя зарплата», только своя карточка, без записи выплаты. Школьная ведомость по-прежнему `accounting()`. [docs/STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026.md).
 
+### Added
+- **Gap: RAG из [#1633](https://github.com/gasyoun/Systema-Sanscriticum/issues/1633) vs учебный год (двое в Telegram).** Полный Ollama/bge-m3 стек не собран; к сентябрю не он узкое место, а маршрут «простое → бот, сложное → подсказка в Telegram» и счётчик 🍎. H2448 BM25 живёт только в Helpdesk (флаг OFF); кабинетный бот по-прежнему кладёт весь FAQ в промпт. На машине сессии GTX 1050, не 16 ГБ из issue. [docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md). Executor: Grok 4.6 (`grok-4.6`).
+
 ## [1.90.7] - 2026-08-21
 ### Added
 - **H3204 (Grok 4.6 `grok-4.6`): G31 remaining clauses — consultation page/checkout smoke plus launch-date gating to 28-08-2026.** `ConsultationProductLaunchGateTest` (`--filter=Consultation`) reads price off `config('marathon.paid_track_price')` and the rendered page (no hardcoded ₽500 / title). `marathon.launch_date` is the one-shot gate for Kernel channel post 2; Days 1–2 stay Cyrillic, Devanagari stays on the January cohort. Does not join G42's `*Marathon*Test.php` glob. Money contour not changed (checkout math untouched).

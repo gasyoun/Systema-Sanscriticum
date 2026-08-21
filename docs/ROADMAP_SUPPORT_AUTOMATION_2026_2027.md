@@ -1,6 +1,6 @@
 # Roadmap: автоматизация поддержки 2026–2027 (Q3 2026 → Q2 2027)
 
-_Created: 06-07-2026 · Last updated: 19-08-2026 (H1938: scheduled verify + web_backfill_days=2 ruled)_
+_Created: 06-07-2026 · Last updated: 21-08-2026 (year-start RAG overlay: #1633 vs двое в Telegram)_
 
 > **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** самый живой из «июльских» — по нему продолжают отгружать (двухканальные сводки и канальный сплит ранжирования 30-07, шаблоны canreply H2339 07-08, статус доставки ответа куратору 15-08, cooldown после kill watchdog-а синка H2988 17-08). Плана-двойника нет и не нужно: документ ведут правками по месту.
 
@@ -76,6 +76,10 @@ Roadmap составлен Fable 5 (`claude-fable-5`), 06-07-2026, по хэнд
   с дешевым префильтром (паттерн [`ReminderRequestDetector`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reminders/ReminderRequestDetector.php), H187).
 - **Боты НЕ отвечают студентам сами** — только pending-черновики куратору (как `ReminderSuggestion`
   и `SupportAiService::suggestReply`). Автоотправка — нигде в этом roadmap.
+  **Исключение уже в проде:** кабинетный бот (`CuratorAi`) отвечает студенту сам. 21-08-2026 overlay
+  (двое кураторов в Telegram, подсказки на сложные, счётчик 🍎) зафиксирован в
+  [docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md);
+  автоответ в личках саппорт-аккаунта — отдельный флип, не молчаливое расширение этого пункта.
 - **Приватность**: импортированные TG-ЛС не уходят во внешний LLM без `support_ai_include_telegram`
   (MG разрешил включить в проде 02-07-2026, но дефолт в коде остается ВЫКЛ).
 - **Всё за фича-флагами** (`config/features.php` + `MarketingSetting`), выключено по умолчанию,
