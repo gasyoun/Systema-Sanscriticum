@@ -22,13 +22,15 @@ class CabinetMasteryQuiz extends Page
 
     protected static ?string $navigationGroup = 'Обучение';
 
-    protected static ?string $navigationLabel = 'Проверка кабинета';
+    protected static ?string $navigationParentItem = 'Руководство';
 
-    protected static ?string $title = 'Проверка: кабинет глазами куратора';
+    protected static ?string $navigationLabel = 'Проверка овладения кабинетом';
+
+    protected static ?string $title = 'Проверка овладения кабинетом';
 
     protected static ?string $slug = 'cabinet-mastery';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     protected static string $view = 'filament.pages.cabinet-mastery-quiz';
 

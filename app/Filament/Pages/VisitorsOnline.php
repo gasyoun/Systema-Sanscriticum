@@ -30,7 +30,7 @@ class VisitorsOnline extends Page
 
     protected static ?string $navigationLabel = 'Посетители онлайн';
 
-    protected static ?string $title = 'Посетители на сайте сейчас';
+    protected static ?string $title = 'Посетители на samskrte.ru сейчас';
 
     protected static ?string $slug = 'visitors-online';
 

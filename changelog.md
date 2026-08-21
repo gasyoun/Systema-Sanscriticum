@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **H3277 (Grok 4.6 `grok-4.6`): админские подписи и пустые экраны.** «Неактивен 119.246… дн.» → целые недели/месяцы; «ждет с 5 дней назад» → «ждет 5 дней». Посетители — на **samskrte.ru**. «К выплате (Баланс)» → «Сейчас к выплате» (начислено минус выплачено, учёт в ₽, PayPal может быть ₹/€/$). Нагрузка преподавателей подписана как текущие группы без отсечки по периоду. Шапка курсов: «N онлайн-курсов, с … по …, из них прямо сейчас продолжаются занятия в M». Библиотека ссылок пуста (0 строк на проде) — еженедельные файлы хинди живут в уроках, таблица файлов на той же странице. Материалы уроков кликабельны. Тренд посещаемости показывает нулевые недели, а не пустой график. Проверка овладения кабинетом — подпункт руководства куратора.
+
 ### Added
 - **super_admin vs /dvaram «студент» (Grok 4.6 `grok-4.6`, 21-08-2026).** `gasyoun@ya.ru` (id 6755) already has `role=super_admin`; the student badge is `global_status` plus the `/dvaram` cabinet, not a missing staff role. Second live super_admin remains `pe4kinsmart@gmail.com` (id 937). [docs/SUPERADMIN_ROLE_VS_DVARAM_STUDENT_STATUS_21-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SUPERADMIN_ROLE_VS_DVARAM_STUDENT_STATUS_21-08-2026.md).
 
