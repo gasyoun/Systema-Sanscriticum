@@ -340,4 +340,38 @@ class HindiProgrammePlaylistTest extends TestCase
             ->assertOk()
             ->assertSee('data-testid="hindi-tg-curated-practice"', false);
     }
+
+    public function test_admin_sees_hindi_teacher_preview_without_payment(): void
+    {
+        config([
+            'features.hindi_programme_playlist' => true,
+            'features.hindi_tg_curated_practice' => false,
+            'features.hindi_attachment_drills' => false,
+            'features.hindi_my_srs_deck' => false,
+            'features.cabinet_hybrid' => false,
+        ]);
+        $hindi = Category::factory()->create(['name' => 'Хинди', 'slug' => 'hindi']);
+        $staff = Teacher::create(['name' => 'Екатерина Костина']);
+        $course = Course::factory()->create([
+            'title' => 'Хинди гр. 1',
+            'slug' => 'hindi-gr1-admin-preview',
+            'teacher_id' => $staff->id,
+        ]);
+        $course->categories()->attach($hindi->id);
+        $lesson = Lesson::factory()->for($course)->create([
+            'title' => '1-е занятие',
+            'sort_order' => 1,
+            'block_number' => 1,
+            'is_published' => true,
+            'is_free' => false,
+        ]);
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+
+        $this->actingAs($admin)
+            ->get(route('student.programme.hindi'))
+            ->assertOk()
+            ->assertSee($lesson->title, false)
+            ->assertSee('data-testid="hindi-teacher-brief"', false)
+            ->assertSee('data-testid="hindi-agent-drills-review-link"', false);
+    }
 }

@@ -94,12 +94,16 @@ class ImpersonationAuditResource extends Resource
                 Tables\Columns\TextColumn::make('mode')
                     ->label('Режим')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => $state === Impersonation::MODE_MANAGER
-                        ? 'Куратор'
-                        : 'Студент')
-                    ->color(fn (string $state): string => $state === Impersonation::MODE_MANAGER
-                        ? 'warning'
-                        : 'info'),
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        Impersonation::MODE_MANAGER => 'Куратор',
+                        Impersonation::MODE_TEACHER => 'Преподаватель',
+                        default => 'Студент',
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        Impersonation::MODE_MANAGER => 'warning',
+                        Impersonation::MODE_TEACHER => 'success',
+                        default => 'info',
+                    }),
 
                 Tables\Columns\TextColumn::make('ip')
                     ->label('IP')
@@ -117,6 +121,7 @@ class ImpersonationAuditResource extends Resource
                     ->options([
                         Impersonation::MODE_STUDENT => 'Студент',
                         Impersonation::MODE_MANAGER => 'Куратор',
+                        Impersonation::MODE_TEACHER => 'Преподаватель',
                     ]),
 
                 Tables\Filters\Filter::make('open')

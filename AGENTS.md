@@ -20,6 +20,13 @@ As of 2026-06-30 the active order is:
 Keep README public/product-facing. Keep `.ai_state.md` as the concise agent
 handoff with concrete next steps, blockers, validation, and deploy notes.
 
+## Teacher surfaces (H3219)
+
+Admins see teacher screens via `RoleGate::seesTeacherSurfaces()` (overlay) or
+impersonation `MODE_TEACHER` (super_admin, «войти как»). Teachers see their own
+salary calculation (`seesOwnSalary()`), not the school payroll. Policy:
+`docs/STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026.md`.
+
 ## High-Risk Areas
 
 - **Money and access:** `Payment`, `Tariff`, checkout, promo/deposit/loyalty,

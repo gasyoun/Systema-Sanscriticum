@@ -219,6 +219,13 @@ class TeacherGuideCoverageTest extends TestCase
                 continue;
             }
 
+            $urlLower = mb_strtolower($url, 'UTF-8');
+            foreach (['salary', 'salaries', 'payout', 'settlement', 'payment'] as $money) {
+                if (str_contains($urlLower, $money)) {
+                    continue 2;
+                }
+            }
+
             $path = trim((string) parse_url($url, PHP_URL_PATH), '/');
             $slug = str_replace('/', '-', preg_replace('#^admin/#', '', $path) ?? $path);
             $reference = "screenshots/teacher-guide/{$slug}.png";

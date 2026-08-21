@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\TeacherSalaries;
 use App\Filament\Resources\ImpersonationAuditResource;
 use App\Models\ImpersonationAudit;
+use App\Models\Teacher;
 use App\Models\User;
 use App\Support\Impersonation;
 use App\Support\RoleGate;
@@ -139,9 +141,11 @@ class StaffImpersonationTest extends TestCase
         $this->assertTrue(Impersonation::canImpersonate($manager, Impersonation::MODE_MANAGER));
         $this->assertFalse(Impersonation::canImpersonate($manager, Impersonation::MODE_STUDENT));
 
-        // Преподаватель/бухгалтер — вне области этого хэндоффа (явный non-goal).
         $this->assertFalse(Impersonation::canImpersonate($teacher, Impersonation::MODE_MANAGER));
         $this->assertFalse(Impersonation::canImpersonate($teacher, Impersonation::MODE_STUDENT));
+        $this->assertTrue(Impersonation::canImpersonate($teacher, Impersonation::MODE_TEACHER));
+        $this->assertFalse(Impersonation::canImpersonate($student, Impersonation::MODE_TEACHER));
+        $this->assertFalse(Impersonation::canImpersonate($manager, Impersonation::MODE_TEACHER));
 
         $this->assertFalse(Impersonation::canImpersonate($super, Impersonation::MODE_STUDENT), 'сам под себя');
     }
@@ -259,6 +263,28 @@ class StaffImpersonationTest extends TestCase
         $this->assertFalse(RoleGate::finance(), 'финотчёты');
         $this->assertFalse(ImpersonationAuditResource::canViewAny(), 'журнал режима');
         $this->assertFalse(auth()->user()->isSuperAdmin());
+    }
+
+    /** @test */
+    public function teacher_mode_opens_admin_as_that_teacher(): void
+    {
+        $super = $this->user(Roles::SUPER_ADMIN);
+        $card = Teacher::create(['name' => 'Екатерина Костина']);
+        $teacher = User::factory()->create([
+            'role' => Roles::TEACHER,
+            'teacher_id' => $card->id,
+        ]);
+
+        $this->actingAs($super);
+        $this->start($teacher, Impersonation::MODE_TEACHER)->assertRedirect('/admin');
+
+        $this->assertAuthenticatedAs($teacher);
+        $this->assertSame(Impersonation::MODE_TEACHER, Impersonation::mode());
+        $this->assertFalse(RoleGate::isSuperAdmin());
+        $this->assertFalse(RoleGate::accounting(), 'школьная ведомость бухгалтера закрыта');
+        $this->assertTrue(RoleGate::seesOwnSalary(), 'свой расчёт ЗП в режиме преподавателя открыт');
+        $this->assertTrue(TeacherSalaries::canAccess());
+        $this->assertTrue(auth()->user()->isTeacher());
     }
 
     /**

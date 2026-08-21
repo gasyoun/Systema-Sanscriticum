@@ -31,6 +31,13 @@
                     <i class="fas fa-external-link-alt text-xs"></i> Задача: что проверить
                 </a>
             @endif
+            @if(!empty($hindiAgentDrillsReviewUrl))
+                <a href="{{ $hindiAgentDrillsReviewUrl }}"
+                   class="inline-flex items-center gap-2 mt-4 text-sm font-extrabold text-brand hover:underline"
+                   data-testid="hindi-agent-drills-review-link">
+                    <i class="fas fa-list text-xs"></i> Все агентские упражнения одним списком
+                </a>
+            @endif
             <div class="mt-6 bg-gray-50 p-5 rounded-2xl border border-gray-100">
                 <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Открыто</span>
                 <span class="text-sm font-bold text-gray-800">{{ $count }} занятий</span>
@@ -71,13 +78,6 @@
                 Студентам эти карточки сейчас не показываем. Откройте несколько занятий и напишите в Telegram:
                 можно показывать / нельзя / что поправить.
             </p>
-            @if(!empty($hindiAgentDrillsReviewUrl))
-                <a href="{{ $hindiAgentDrillsReviewUrl }}"
-                   class="inline-flex items-center gap-2 mb-5 text-sm font-extrabold text-brand hover:underline"
-                   data-testid="hindi-agent-drills-review-link">
-                    Все агентские упражнения одним списком
-                </a>
-            @endif
             <ul class="space-y-3">
                 @foreach($youtubeAsrReview as $row)
                     <li class="flex flex-wrap items-center gap-3" data-testid="hindi-youtube-asr-review-item">

@@ -34,6 +34,8 @@ final class Impersonation
 
     public const MODE_MANAGER = 'manager';
 
+    public const MODE_TEACHER = 'teacher';
+
     /** id настоящего сотрудника, к которому возвращает «выйти из режима». */
     public const SESSION_IMPERSONATOR = 'impersonator_id';
 
@@ -44,7 +46,7 @@ final class Impersonation
     /** @return array<int,string> */
     public static function modes(): array
     {
-        return [self::MODE_STUDENT, self::MODE_MANAGER];
+        return [self::MODE_STUDENT, self::MODE_MANAGER, self::MODE_TEACHER];
     }
 
     public static function enabled(): bool
@@ -106,9 +108,12 @@ final class Impersonation
             return false;
         }
 
-        return $mode === self::MODE_STUDENT
-            ? self::isStudentTarget($target)
-            : $target->isManager();
+        return match ($mode) {
+            self::MODE_STUDENT => self::isStudentTarget($target),
+            self::MODE_MANAGER => $target->isManager(),
+            self::MODE_TEACHER => $target->isTeacher(),
+            default => false,
+        };
     }
 
     /**
