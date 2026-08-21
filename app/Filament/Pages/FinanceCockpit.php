@@ -6,6 +6,7 @@ namespace App\Filament\Pages;
 
 use App\Support\FinanceCockpitReport;
 use App\Support\RoleGate;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Illuminate\Support\Carbon;
 
@@ -45,6 +46,12 @@ class FinanceCockpit extends Page
     public static function shouldRegisterNavigation(): bool
     {
         return RoleGate::finance();
+    }
+
+    /** @return array<int, Action> */
+    protected function getHeaderActions(): array
+    {
+        return [AccountantGuide::openAction()];
     }
 
     public function mount(): void

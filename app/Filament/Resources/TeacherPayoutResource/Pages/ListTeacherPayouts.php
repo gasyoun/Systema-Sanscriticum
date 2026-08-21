@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TeacherPayoutResource\Pages;
 
+use App\Filament\Pages\AccountantGuide;
 use App\Filament\Resources\TeacherPayoutResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -14,6 +15,7 @@ class ListTeacherPayouts extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+            AccountantGuide::openAction(),
         ];
     }
 }

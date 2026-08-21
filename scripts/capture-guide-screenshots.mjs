@@ -3,9 +3,12 @@
  *
  *   node scripts/capture-guide-screenshots.mjs --guide student --base-url http://127.0.0.1:8000
  *   node scripts/capture-guide-screenshots.mjs --guide curator --base-url http://127.0.0.1:8000
+ *   node scripts/capture-guide-screenshots.mjs --guide accountant --base-url http://127.0.0.1:8000
  *
  * Login student: STUDENT_GUIDE_EMAIL / STUDENT_GUIDE_PASSWORD (fixture, never prod).
  * Login curator: CURATOR_GUIDE_EMAIL / CURATOR_GUIDE_PASSWORD (fixture, never prod).
+ * Login accountant: ACCOUNTANT_GUIDE_EMAIL / ACCOUNTANT_GUIDE_PASSWORD (fixture, never prod).
+ * Accountant PNG → storage/app/guide-shots/accountant/ (not git).
  * No Chromium: exit 2; commit text+manifest, do not invent PNGs.
  */
 import { chromium } from 'playwright';
@@ -44,10 +47,19 @@ const guides = {
     defaultOut: 'docs/screenshots/curator-guide',
     log: 'docs/generated/curator_guide_shots_last_run.json',
   },
+  accountant: {
+    manifest: 'docs/generated/accountant_guide_shots.json',
+    email: process.env.ACCOUNTANT_GUIDE_EMAIL || '',
+    password: process.env.ACCOUNTANT_GUIDE_PASSWORD || '',
+    authName: 'accountant',
+    loginPath: '/admin/login',
+    defaultOut: 'storage/app/guide-shots/accountant',
+    log: 'docs/generated/accountant_guide_shots_last_run.json',
+  },
 };
 
 if (!guides[guide]) {
-  console.error('Unknown --guide (student|curator).');
+  console.error('Unknown --guide (student|curator|accountant).');
   process.exit(1);
 }
 

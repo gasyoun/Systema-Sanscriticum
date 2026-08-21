@@ -85,6 +85,8 @@ class CourseStreamComparison extends Page
                 ->icon('heroicon-o-document-text')
                 ->visible(fn (): bool => $this->family !== null)
                 ->action(fn (): ?StreamedResponse => $this->downloadSettlementAct()),
+
+            AccountantGuide::openAction(),
         ];
     }
 

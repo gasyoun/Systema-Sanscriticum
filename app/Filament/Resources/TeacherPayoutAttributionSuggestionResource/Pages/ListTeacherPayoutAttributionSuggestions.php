@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\TeacherPayoutAttributionSuggestionResource\Pages;
 
+use App\Filament\Pages\AccountantGuide;
 use App\Filament\Pages\PayoutAttributionGuide;
 use App\Filament\Resources\TeacherPayoutAttributionSuggestionResource;
 use Filament\Actions\Action;
@@ -52,6 +53,7 @@ class ListTeacherPayoutAttributionSuggestions extends ListRecords
                 ->icon('heroicon-o-academic-cap')
                 ->color('gray')
                 ->url(PayoutAttributionGuide::getUrl()),
+            AccountantGuide::openAction(),
         ];
     }
 }

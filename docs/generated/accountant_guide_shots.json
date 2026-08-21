@@ -1,0 +1,16 @@
+{
+  "guide": "accountant",
+  "outDir": "storage/app/guide-shots/accountant",
+  "fixture": {
+    "name": "Бухгалтер Учебный",
+    "note": "Логин из ACCOUNTANT_GUIDE_EMAIL / ACCOUNTANT_GUIDE_PASSWORD. Не прод. PNG не в git."
+  },
+  "shots": [
+    {"slug": "provodka", "path": "/admin/payments", "auth": "accountant", "wait": "h1, h2"},
+    {"slug": "zarplata", "path": "/admin/teacher-salaries", "auth": "accountant", "wait": "h1, h2"},
+    {"slug": "raskhod", "path": "/admin/expenses", "auth": "accountant", "wait": "h1, h2"},
+    {"slug": "shturval", "path": "/admin/finance-cockpit", "auth": "accountant", "wait": "h1, h2"},
+    {"slug": "potoki", "path": "/admin/course-stream-comparison", "auth": "accountant", "wait": "h1, h2"},
+    {"slug": "razmetka", "path": "/admin/payout-attribution-guide", "auth": "accountant", "wait": "h1, h2"}
+  ]
+}

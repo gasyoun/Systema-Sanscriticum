@@ -1,9 +1,10 @@
 # Памятка: ответить на вопрос про следующий поток за пять минут
 
-_Created: 18-08-2026 · Last updated: 19-08-2026_
+_Created: 18-08-2026 · Last updated: 21-08-2026_
 
-Одна страница для бухгалтера. Полное описание раздела — §4k
-[инструкции бухгалтера](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/accountant-guide.md).
+Одна страница для бухгалтера. Полное описание раздела — в кабинете
+[https://samskrte.ru/admin/accountant-guide](https://samskrte.ru/admin/accountant-guide)
+(сценарий «Сравнить потоки одной программы»).
 
 ## Куда зайти
 

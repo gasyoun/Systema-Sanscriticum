@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\PaymentResource\Pages;
 
+use App\Filament\Pages\AccountantGuide;
 use App\Filament\Resources\PaymentResource;
 use App\Models\Course;
 use App\Services\PaymentImportService;
@@ -33,6 +34,8 @@ class ListPayments extends ListRecords
                 ->modalWidth('3xl')
                 ->form(fn () => $this->getImportFormSchema())
                 ->action(fn (array $data, PaymentImportService $service) => $this->handleImport($data, $service)),
+
+            AccountantGuide::openAction(),
         ];
     }
 

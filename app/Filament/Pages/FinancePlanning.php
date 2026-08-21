@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Support\RoleGate;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 
 /**
@@ -37,6 +38,12 @@ class FinancePlanning extends Page
     public static function shouldRegisterNavigation(): bool
     {
         return RoleGate::finance();
+    }
+
+    /** @return array<int, Action> */
+    protected function getHeaderActions(): array
+    {
+        return [AccountantGuide::openAction()];
     }
 
     /**
