@@ -303,21 +303,22 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MAIL_USERNAME` | required | `—` | config/mail.php:43 |
 | `MANAGER_SALES_REPORT` | optional | `false` | config/features.php:822 |
 | `MARATHON_CHANNEL_CHAT_ID` | optional | `'@samskrte'` | config/marathon_landing_copy.php:30 |
-| `MARATHON_COUPON_AMOUNT` | optional | `1000` | config/marathon.php:32 |
-| `MARATHON_HOST_NAME` | optional | `'к.ф.н. М.Ю. Гасунс'` | config/marathon.php:36 |
+| `MARATHON_COUPON_AMOUNT` | optional | `1000` | config/marathon.php:38 |
+| `MARATHON_HOST_NAME` | optional | `'к.ф.н. М.Ю. Гасунс'` | config/marathon.php:42 |
 | `MARATHON_JANUARY_LANDING_SLUG` | optional | `'Janvar-27'` | config/marathon.php:25 |
 | `MARATHON_JANUARY_LAUNCH_DATE` | optional | `'2027-01-13'` | config/marathon.php:26 |
 | `MARATHON_LANDING_COPY_AB_TEST_UNTIL` | optional | `'2026-11-01'` | config/marathon_landing_copy.php:27 |
 | `MARATHON_LANDING_COPY_VARIANT` | optional | `'a'` | config/marathon_landing_copy.php:23 |
 | `MARATHON_LANDING_SLUG` | optional | `'konsultaciya-po-onlayn-kursam'` | config/marathon.php:15 |
 | `MARATHON_LANDING_VISUAL_VARIANT` | optional | `'b'` | config/marathon_visual.php:14 |
-| `MARATHON_LEADERBOARD_UNMASK_ENABLED` | feature-flag | `false` | config/marathon.php:49 |
+| `MARATHON_LAUNCH_DATE` | optional | `'2026-08-28'` | config/marathon.php:35 |
+| `MARATHON_LEADERBOARD_UNMASK_ENABLED` | feature-flag | `false` | config/marathon.php:55 |
 | `MARATHON_PAID_TRACK_PRICE` | optional | `500` | config/marathon.php:29 |
 | `MARATHON_PUBLIC_LANDING_URL` | optional | `'https://samskrte.ru/online/konsultaciya'` | config/marathon_landing_copy.php:33 |
-| `MARATHON_SCHEDULE_ID` | required | `—` | config/marathon.php:59 |
-| `MARATHON_TELEGRAM_CHANNEL_URL` | optional | `'https://t.me/samskrte'` | config/marathon.php:39 |
-| `MARATHON_TESTIMONIAL` | required | `—` | config/marathon.php:157 |
-| `MARATHON_WARM_TAIL_DAYS` | optional | `13` | config/marathon.php:52 |
+| `MARATHON_SCHEDULE_ID` | required | `—` | config/marathon.php:65 |
+| `MARATHON_TELEGRAM_CHANNEL_URL` | optional | `'https://t.me/samskrte'` | config/marathon.php:45 |
+| `MARATHON_TESTIMONIAL` | required | `—` | config/marathon.php:163 |
+| `MARATHON_WARM_TAIL_DAYS` | optional | `13` | config/marathon.php:58 |
 | `MARKETING_SEGMENTS` | optional | `false` | config/features.php:583 |
 | `MEDIA_WEBP_DELETE_ORIGINAL` | optional | `true` | config/media.php:37 |
 | `MEDIA_WEBP_DISK` | optional | `'public'` | config/media.php:26 |
