@@ -140,7 +140,8 @@ final class TochkaBalanceService
 
     private function tail(string $accountId): string
     {
-        $digits = preg_replace('/\D+/', '', $accountId) ?? '';
+        $local = explode('/', $accountId, 2)[0];
+        $digits = preg_replace('/\D+/', '', $local) ?? '';
 
         return $digits === '' ? '????' : substr($digits, -6);
     }
