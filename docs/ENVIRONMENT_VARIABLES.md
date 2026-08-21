@@ -630,6 +630,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TEST_STUDENT_EMAIL` | optional | `'smoke-student@samskrte.ru'` | config/services.php:339 |
 | `TEST_STUDENT_NAME` | optional | `'Smoke Student'` | config/services.php:341 |
 | `TEST_STUDENT_PASSWORD` | secret | `—` | config/services.php:340 |
+| `TEACHER_WEEKLY_PAYOUT_CALENDAR` | optional | `false` | config/features.php |
 | `TOCHKA_API_TOKEN` | secret | `—` | config/services.php:43 |
 | `TOCHKA_API_URL` | required | `—` | config/services.php:42 |
 | `TOCHKA_BALANCE_CACHE_SECONDS` | optional | `60` | config/services.php:54 |
