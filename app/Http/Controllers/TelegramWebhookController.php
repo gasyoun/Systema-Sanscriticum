@@ -172,6 +172,22 @@ class TelegramWebhookController extends Controller
             return;
         }
 
+        // 1.55. SELF-SERVICE: Zoom / запись / расписание из LMS (ORS-FAQ 04/05/06).
+        $lmsFact = app(StudentSelfService::class)->lmsFactReply($user, $question);
+        if ($lmsFact !== null) {
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $lmsFact,
+                'is_read' => true,
+                'source' => 'telegram_bot',
+            ]);
+
+            $this->sendMessage($chatId, $lmsFact);
+
+            return;
+        }
+
         // 1.6. SELF-SERVICE: «мои задания» — статус ДЗ из БД, минуя ИИ (H1357).
         if (app(StudentSelfService::class)->matchesHomeworkIntent($question)) {
             $summary = app(StudentSelfService::class)->homeworkSummary($user);

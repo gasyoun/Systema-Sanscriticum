@@ -108,6 +108,22 @@ final class ProcessVkBotMessage implements ShouldQueue
             return;
         }
 
+        // SELF-SERVICE: Zoom / запись / расписание из LMS (ORS-FAQ 04/05/06).
+        $lmsFact = app(StudentSelfService::class)->lmsFactReply($user, $text);
+        if ($lmsFact !== null) {
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $lmsFact,
+                'is_read' => true,
+                'source' => 'vk',
+            ]);
+
+            $this->sendVkMessage($vkId, $lmsFact);
+
+            return;
+        }
+
         // SELF-SERVICE: «мои задания» — статус ДЗ из БД, минуя ИИ (H1357).
         if (app(StudentSelfService::class)->matchesHomeworkIntent($text)) {
             $summary = app(StudentSelfService::class)->homeworkSummary($user);
