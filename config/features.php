@@ -451,7 +451,6 @@ return [
      */
     'teacher_weekly_payout_calendar' => (bool) env('TEACHER_WEEKLY_PAYOUT_CALENDAR', false),
 
-
     /*
      | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
      | (fail closed на всех платных маршрутах: zero-price checkout, Filament,

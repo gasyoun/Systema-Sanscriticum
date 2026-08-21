@@ -11,6 +11,7 @@ use App\Models\TeacherPayout;
 use App\Models\User;
 use App\Services\Payments\TochkaBalanceService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * H3280 — ISO-week due calendar for teacher payouts. READ ONLY.
@@ -213,7 +214,7 @@ final class TeacherWeeklyPayoutCalendarService
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, Teacher>  $teachers
+     * @param  Collection<int, Teacher>  $teachers
      * @return array<int, list<Carbon>>
      */
     private function block4EndsByTeacher(int $year, $teachers): array
