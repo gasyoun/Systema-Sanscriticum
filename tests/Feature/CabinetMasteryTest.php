@@ -71,7 +71,7 @@ class CabinetMasteryTest extends TestCase
         $manager = User::factory()->create(['role' => Roles::MANAGER]);
         $this->actingAs($manager);
         $this->assertTrue(CabinetMasteryQuiz::canAccess());
-        $this->get(CabinetMasteryQuiz::getUrl())->assertOk()->assertSee('Проверка: кабинет глазами куратора', false);
+        $this->get(CabinetMasteryQuiz::getUrl())->assertOk()->assertSee('Проверка овладения кабинетом', false);
 
         $teacher = User::factory()->create(['role' => Roles::TEACHER]);
         $this->actingAs($teacher);

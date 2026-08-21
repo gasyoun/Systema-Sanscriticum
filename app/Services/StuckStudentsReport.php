@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\HomeworkSubmission;
 use App\Models\User;
+use App\Support\DurationLabel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
@@ -72,9 +73,8 @@ class StuckStudentsReport
         // (см. как UserResource всюду оборачивает их в Carbon::parse) — парсим сами.
         $lastActivity = $user->last_activity_at ? Carbon::parse($user->last_activity_at) : null;
         if ($user->last_login_at && (! $lastActivity || $lastActivity->lt(now()->subDays(self::INACTIVE_DAYS)))) {
-            $days = $lastActivity ? $lastActivity->diffInDays(now()) : null;
-            $reasons[] = $days !== null
-                ? "Неактивен {$days} дн."
+            $reasons[] = $lastActivity
+                ? 'Неактивен '.DurationLabel::since($lastActivity)
                 : 'Ни разу не заходил после регистрации';
         }
 

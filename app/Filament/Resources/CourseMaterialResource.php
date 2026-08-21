@@ -232,6 +232,14 @@ class CourseMaterialResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
+            ->emptyStateHeading('Библиотека ссылок пуста')
+            ->emptyStateDescription('Сюда кладут литературу ссылкой (Dropbox, Google Drive). Еженедельные файлы хинди и других курсов прикрепляются к уроку — таблица файлов на этой же странице выше, либо карточка урока.')
+            ->emptyStateActions([
+                Tables\Actions\Action::make('openLessons')
+                    ->label('Открыть уроки')
+                    ->url(fn (): string => LessonResource::getUrl('index')),
+                Tables\Actions\CreateAction::make(),
+            ])
             ->defaultSort('sort_order');
     }
 

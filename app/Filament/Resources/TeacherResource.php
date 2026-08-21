@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\TeacherResource\Pages;
 use App\Models\Teacher;
+use App\Models\TeacherPayout;
 use App\Models\User;
 use App\Services\TeacherAccountService;
 use Carbon\Carbon;
@@ -100,9 +101,13 @@ class TeacherResource extends Resource
                             ->columnSpanFull(),
                         Select::make('payout_currency')
                             ->label('Валюта выплаты (PayPal)')
-                            ->options(['EUR' => 'Евро (€)', 'USD' => 'Доллары ($)'])
+                            ->options([
+                                'EUR' => 'Евро (€)',
+                                'USD' => 'Доллары ($)',
+                                'INR' => 'Рупии (₹)',
+                            ])
                             ->placeholder('Рубли (по умолчанию)')
-                            ->helperText('Если задана — в расчёте ЗП появится поле «Курс PayPal» и сумма в валюте.'),
+                            ->helperText('В какой валюте преподаватель получает на PayPal. Остаток в таблице всегда в рублях: перевод делаем в ₽.'),
                         RichEditor::make('bio')
                             ->label('Биография / Регалии')
                             ->columnSpanFull(),
@@ -145,15 +150,20 @@ class TeacherResource extends Resource
 
                 // КОЛОНКА "БАЛАНС" С ВЫПАДАЮЩИМ ОКНОМ
                 TextColumn::make('balance')
-                    ->label('К выплате (Баланс)')
+                    ->label('Сейчас к выплате')
+                    ->tooltip('Остаток: начислено за всё время минус уже выплачено. Это не годовой заработок и не «получил на руки». Учёт всегда в рублях; PayPal может быть в другой валюте.')
                     ->state(function (Teacher $record) {
                         $earned = $record->calculateEarnings();
                         $paid = $record->payouts()->sum('amount');
+                        $owed = number_format($earned - $paid, 0, '.', ' ').' ₽';
+                        $paypal = $record->payout_currency
+                            ? ' · PayPal '.TeacherPayout::currencySymbol($record->payout_currency)
+                            : '';
 
-                        return number_format($earned - $paid, 0, '.', ' ').' ₽';
+                        return $owed.$paypal;
                     })
                     ->badge()
-                    ->color(fn (string $state) => str_contains($state, '-') || $state === '0 ₽' ? 'success' : 'warning')
+                    ->color(fn (string $state) => str_contains($state, '-') || str_starts_with($state, '0 ₽') ? 'success' : 'warning')
                     ->icon('heroicon-m-wallet')
                     ->action(
                         // ДЕЙСТВИЕ ПРИ КЛИКЕ: Открываем окно статистики и выплат

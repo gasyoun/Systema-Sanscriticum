@@ -107,7 +107,7 @@
                 <div class="wq-row" wire:key="support-{{ $conv->id }}">
                     <div class="wq-main">
                         <div class="wq-name">{{ $conv->user?->name ?: ($conv->user?->email ?: 'Студент') }}</div>
-                        <div class="wq-meta">ждет с {{ $item['waiting_since']->diffForHumans() }}</div>
+                        <div class="wq-meta">ждет {{ \App\Support\DurationLabel::since($item['waiting_since']) }}</div>
                     </div>
                     <a href="{{ $this->dialogUrl($conv->user_id) }}" class="wq-btn">Открыть диалог</a>
                 </div>

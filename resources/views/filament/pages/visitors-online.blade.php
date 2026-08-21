@@ -6,14 +6,14 @@
         class="fi-visitors-online"
     >
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Посетители на сайте прямо сейчас — обновляется автоматически. Вы можете написать первым:
-            сообщение всплывет в чат-виджете посетителя. Список пуст, если сейчас никого нет онлайн
-            (или отслеживание присутствия выключено).
+            Посетители на <strong>samskrte.ru</strong> прямо сейчас (витрина курсов, лендинги и кабинет) —
+            обновляется автоматически. Вы можете написать первым: сообщение всплывёт в чат-виджете
+            посетителя. Список пуст, если сейчас никого нет онлайн (или отслеживание присутствия выключено).
         </p>
 
         @if ($this->visitors->isEmpty())
             <div class="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
-                Сейчас на сайте нет активных посетителей.
+                Сейчас на samskrte.ru нет активных посетителей.
             </div>
         @else
             <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">

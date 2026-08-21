@@ -12,22 +12,29 @@
     {{-- Тренд по неделям --}}
     <x-filament::section>
         <x-slot name="heading">Тренд посещаемости по неделям</x-slot>
-        <x-slot name="description">Доля пришедших/перешедших по ссылке от ожидавшихся, по неделям начала занятия.</x-slot>
+        <x-slot name="description">Последние {{ (int) config('attendance.default_window_days') }} дней. Столбик — доля пришедших или перешедших по ссылке от ожидавшихся. Нулевой столбик значит: занятие в календаре было, отметок Zoom/клика нет.</x-slot>
 
         @if ($weekly->isEmpty())
-            <p class="text-gray-400 text-sm">Нет занятий за выбранный период.</p>
+            <p class="text-gray-400 text-sm">В календаре занятий (Zoom-расписание) за последние {{ (int) config('attendance.default_window_days') }} дней нет строк. Уроки с датой в карточке курса сюда не попадают.</p>
         @else
             <div class="flex items-end gap-1 h-40" style="min-height: 10rem;">
                 @foreach ($weekly as $week => $row)
-                    <div class="flex-1 flex flex-col items-center justify-end h-full" title="{{ $week }}: {{ $row['rate'] }}%">
-                        <div class="w-full rounded-t bg-primary-500/80"
-                             style="height: {{ $row['rate'] > 0 ? max(4, round($row['rate'] / $maxWeekly * 100)) : 0 }}%"></div>
+                    @php
+                        $bar = $row['rate'] > 0
+                            ? max(8, (int) round($row['rate'] / $maxWeekly * 100))
+                            : 6;
+                    @endphp
+                    <div class="flex-1 flex flex-col items-center justify-end h-full min-w-0"
+                         title="Неделя с {{ $week }}: {{ $row['rate'] }}% ({{ $row['attended'] }} из {{ $row['expected'] }})">
+                        <div class="text-[10px] tabular-nums text-gray-500 mb-1">{{ $row['rate'] }}%</div>
+                        <div class="w-full rounded-t {{ $row['rate'] > 0 ? 'bg-primary-500/80' : 'bg-gray-300 dark:bg-gray-600' }}"
+                             style="height: {{ $bar }}%"></div>
                     </div>
                 @endforeach
             </div>
             <div class="flex justify-between text-xs text-gray-400 mt-2">
-                <span>{{ $weekly->keys()->first() }}</span>
-                <span>{{ $weekly->keys()->last() }}</span>
+                <span>{{ \Illuminate\Support\Carbon::parse($weekly->keys()->first())->format('d.m') }}</span>
+                <span>{{ \Illuminate\Support\Carbon::parse($weekly->keys()->last())->format('d.m') }}</span>
             </div>
         @endif
     </x-filament::section>

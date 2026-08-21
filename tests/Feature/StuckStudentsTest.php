@@ -33,7 +33,11 @@ class StuckStudentsTest extends TestCase
 
         $reasons = StuckStudentsReport::reasonsFor($stuck->fresh());
         $this->assertNotEmpty($reasons);
-        $this->assertStringContainsString('Неактивен', implode(' ', $reasons));
+        $joined = implode(' ', $reasons);
+        $this->assertStringContainsString('Неактивен', $joined);
+        $this->assertStringContainsString('недел', $joined);
+        $this->assertDoesNotMatchRegularExpression('/\d+[.,]\d+/', $joined);
+        $this->assertStringNotContainsString('дн.', $joined);
     }
 
     /** @test */

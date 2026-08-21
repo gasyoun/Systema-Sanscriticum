@@ -17,7 +17,7 @@ class Teacher extends Model
         'name', 'email', 'phone', 'telegram', 'vk', 'requisites', 'bio',
         // Фото для блока «Преподаватель» на продающей странице курса.
         'photo_path',
-        // Валюта выплаты через PayPal (EUR/USD); null = только ₽.
+        // Валюта выплаты через PayPal (EUR/USD/INR); null = только ₽. Остаток в кабинете всегда в ₽.
         'payout_currency',
     ];
 

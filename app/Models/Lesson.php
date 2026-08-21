@@ -235,6 +235,37 @@ class Lesson extends Model
         return is_array($this->attachments) ? count($this->attachments) : 0;
     }
 
+    /**
+     * Пути вложений как плоский список строк (Filament FileUpload хранит
+     * строку или массив с path/name).
+     *
+     * @return list<string>
+     */
+    public function attachmentPaths(): array
+    {
+        $paths = [];
+        foreach ((array) ($this->attachments ?? []) as $item) {
+            $path = is_array($item) ? (string) ($item['path'] ?? $item['name'] ?? '') : (string) $item;
+            $path = ltrim($path, '/');
+            if ($path !== '') {
+                $paths[] = $path;
+            }
+        }
+
+        return $paths;
+    }
+
+    /** @return list<string> */
+    public function attachmentBasenames(): array
+    {
+        return array_values(array_map('basename', $this->attachmentPaths()));
+    }
+
+    public function attachmentPublicUrl(string $path): string
+    {
+        return asset('storage/'.ltrim($path, '/'));
+    }
+
     public function hasTranscript(): bool
     {
         return filled($this->transcript_file);
