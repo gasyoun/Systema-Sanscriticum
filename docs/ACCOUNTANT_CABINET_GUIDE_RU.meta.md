@@ -15,8 +15,8 @@ GitHub-файл `accountant-guide.md` никто не читал как рабо
 ## Происхождение
 
 - **Волна 3 плана:** [PLAN_SYSTEMA_AUDIENCE_CABINET_GUIDES_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_AUDIENCE_CABINET_GUIDES_2026H2.md)
-- **Handoff:** [H3214 (Grok 4.6) — Wave 3: accountant operational book in /admin, screenshots from storage not git](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3214-Grok_Systema-Sanscriticum_accountant-cabinet-guide-illustrated_21.08.26.md)
-- **Исполнитель:** Grok 4.6 (`grok-4.6`), 21-08-2026
+- **Handoff:** [H3214 (Grok 4.6) — Wave 3: accountant operational book in /admin, screenshots from storage not git](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3214-Grok_Systema-Sanscriticum_accountant-cabinet-guide-illustrated_21.08.26.md) · [H3276 (Grok 4.6) — Wave 1: accountant money-map Part 0 and missing weekly scenarios in the cabinet book](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3276-Grok_Systema-Sanscriticum_accountant-money-map-cabinet_21.08.26.md)
+- **Исполнитель:** Grok 4.6 (`grok-4.6`), 21-08-2026. H3276 добавил Часть 0 (постер в git) и четыре еженедельных сценария.
 
 ## Что перепроверено, чтобы не строить заново
 
