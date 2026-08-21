@@ -477,7 +477,7 @@ Personal access tokens на `User` (`HasApiTokens`): `POST /api/v1/auth/login`
 `courses/{slug}/lessons` (флаги `locked` / `is_completed`). Та же логика доступа,
 что и в вебе: группы + оплаченные тарифы + grant.
 
-### 12. Telegram support analytics (`/admin/telegram-support-analytics`)
+### 12. Telegram support analytics (`/admin/telegram-support/telegram-support-analytics`)
 
 Отдельный аналитический слой для **support-аккаунта Telegram**: импортирует
 сообщения через MadelineProto, нормализует их в `telegram_support_messages`,
@@ -498,7 +498,7 @@ php artisan telegram-support:sync --payload=storage/app/support-sample.json
 `TELEGRAM_SUPPORT_DIALOG_LIMIT`, `TELEGRAM_SUPPORT_PROFILE_BACKFILL_LIMIT`.
 
 Админка дает:
-- страницу аналитики `/admin/telegram-support-analytics`;
+- страницу аналитики `/admin/telegram-support/telegram-support-analytics`;
 - CRUD keyword-топиков и responder-mapping;
 - ручную привязку Telegram support contact → `User`;
 - авто-привязку контактов по `telegram_id`, username и имени, когда это однозначно.
@@ -574,7 +574,7 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 - **Масштабирование Telegram — активная программа.** Support-аналитика (импорт истории
   support-аккаунта через MadelineProto → нормализованные сообщения, дневные conversations,
   first-time / unanswered / human-vs-AI метрики, keyword-топики, страница
-  `/admin/telegram-support-analytics`) выросла в отдельную многопоточную дорожную карту
+  `/admin/telegram-support/telegram-support-analytics`) выросла в отдельную многопоточную дорожную карту
   (userbot / MTProto-раннер, live-доставка, автопривязка контактов, лимиты против flood).
   Детали и PR-уровневая карта реализации — в
   [`docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_TELEGRAM_SCALING_2026_2027.md).

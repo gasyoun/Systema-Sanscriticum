@@ -169,6 +169,14 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('recordings-gap-watch');
 
+        // H3242: вчерашняя сводка поддержки на ADMIN_TELEGRAM_ID (gasyoun).
+        // 08:10, после gap-watch; гейт флага — внутри команды (default ON).
+        $schedule->command('support:daily-digest')
+            ->dailyAt('08:10')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('support-daily-digest');
+
         // Напоминание студенту: завтра срок оплаты по обещанию/рассрочке.
         // Время редактируется в админке (MarketingSetting); schedule() читается
         // на каждый schedule:run, поэтому смена подхватывается без деплоя.
