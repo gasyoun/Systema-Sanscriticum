@@ -4,7 +4,7 @@
 на DeepSeek, передача диалога живому куратору, форматирование, источники знаний,
 уведомления и эксплуатация.
 
-> Аудитория: разработчики и администраторы Академии. Версия актуальна на 2026-06.
+> Аудитория: разработчики и администраторы Академии. Версия актуальна на 21-08-2026 (gap: [docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md)).
 
 ---
 
@@ -152,6 +152,8 @@ FAQ (faq.md)         ─┤
   - форматирование под Telegram-HTML (`<b>`/`<i>`), эмодзи-маркеры.
 - **FAQ** — `resources/knowledge/faq.md` (см. §7).
 - **Каталог** — `CourseCatalogProvider` (см. §9).
+
+`$userQuestion` в `systemPrompt()` по-прежнему зарезервирован: BM25 из H2448 подключён только к Helpdesk-черновикам (`FAQ_RAG_SUGGESTER` default OFF), не к этому промпту. Разрыв к учебному году (двое кураторов, подсказки в Telegram, счётчик 🍎, GTX 1050 ≠ 16 ГБ из [#1633](https://github.com/gasyoun/Systema-Sanscriticum/issues/1633)): [docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md).
 
 ---
 
