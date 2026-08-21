@@ -1,6 +1,6 @@
 # Gap: RAG из #1633 vs учебный год (двое в Telegram)
 
-_Created: 21-08-2026 · Last updated: 21-08-2026_
+_Created: 21-08-2026 · Last updated: 21-08-2026 (ruling: B now, A rollback, C Ivan GPU by 01-10)_
 
 **Model:** Grok 4.6 (`grok-4.6`)
 **Issue:** [gasyoun/Systema-Sanscriticum#1633](https://github.com/gasyoun/Systema-Sanscriticum/issues/1633) (Иван, 13-08-2026) — RAG на локальных моделях: гибридный поиск (BM25 + bge-m3) в Laravel, Ollama на внешнем узле
@@ -98,6 +98,6 @@ Ollama / bge-m3 / лекции — после, когда есть узел с 1
 | Риск | низкий | средний: roadmap до сих пор запрещает автоотправку здесь | не успеет к 1 сентября |
 | Если никто не тикнет | этап 1 всё равно можно делать; лички остаются ручными | сентябрьский пик ложится на двоих | то же |
 
-Рекомендация этой сессии: **A сейчас**. B — только по явному «в личках саппорта бот тоже шлёт простые». C не выбирать, пока нет другого GPU.
+**Ruling 21-08-2026:** **B**. A остаётся откатом (`SUPPORT_DM_AUTO_REPLY=false`). C / GPU — не на GTX 1050 Гасунса; Иван возвращается в сентябре; пакет [docs/EXPERIMENT_OLLAMA_GPU_OCT1_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/EXPERIMENT_OLLAMA_GPU_OCT1_2026.md) + [H3234](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3234-Grok_Systema-Sanscriticum_ollama-gpu-experiment-oct1_21.08.26.md), цель 01-10-2026. Код B: [H3233](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3233-Grok_Systema-Sanscriticum_support-dm-simple-auto-reply_21.08.26.md).
 
 _Dr. Mārcis Gasūns_

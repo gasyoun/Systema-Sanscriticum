@@ -147,6 +147,15 @@ return [
     'faq_rag_suggester' => (bool) env('FAQ_RAG_SUGGESTER', false),
 
     /*
+     | H3233 B: автоответ простых A/B/C в личке саппорт-аккаунта + подсказка
+     | кураторам на сложные. ВЫКЛ по умолчанию = откат на A (кабинетный бот,
+     | Helpdesk-черновики, люди печатают в Telegram). Деньги (D) не автоотвечает.
+     | Доставка — pending + telegram-support:sync, не Horizon.
+     | Включение: SUPPORT_DM_AUTO_REPLY=true + config:cache.
+     */
+    'support_dm_auto_reply' => (bool) env('SUPPORT_DM_AUTO_REPLY', false),
+
+    /*
      | Гео/город посетителя веб-чата в панели куратора (H1196, Jivo-паритет
      | Pillar 1). Когда ВКЛ, при первом сообщении посетителя его IP резолвится
      | асинхронно (ResolveVisitorGeoJob → VisitorGeoResolver, драйвер из
