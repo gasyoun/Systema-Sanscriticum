@@ -1,6 +1,6 @@
 # Metadoc — SERVER_SOFT_ALERT_PLAYBOOK.md
 
-_Created: 02-08-2026 · Last updated: 21-08-2026 (H3227 cgroup MiB fingerprint)_
+_Created: 02-08-2026 · Last updated: 21-08-2026 (H3227 backup-fresh walk)_
 
 | Field | Value |
 |---|---|
@@ -31,6 +31,7 @@ _Created: 02-08-2026 · Last updated: 21-08-2026 (H3227 cgroup MiB fingerprint)_
 
 | Date | Change | Who |
 |---|---|---|
+| 21-08-2026 | Incident log: yandex 11 MiB stub vs live restic; do not run SOS runbook on host/ops | Grok 4.6 (`grok-4.6`) H3227 |
 | 21-08-2026 | Fingerprint: `guards/<name>:` ignores live RSS/MiB (H3227 host/ops 15-min spam) | Grok 4.6 (`grok-4.6`) H3227 |
 | 20-08-2026 | Catalog: host-only guards are not SOS; sticky TG state file (H3197) | Grok 4.6 (`grok-4.6`) H3197 |
 | 20-08-2026 | Incident log: Filament `/admin` 500 from 8 root-owned compiled views after `deploy.sh` `fail` skipped post-probe chown; H3194 | Grok 4.6 (`grok-4.6`) H3194 |
