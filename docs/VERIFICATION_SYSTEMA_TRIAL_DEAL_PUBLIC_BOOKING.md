@@ -20,6 +20,8 @@ Parent: [PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PL
 
 Staff smoke (after merge, **human** env flip of `CRM_TRIAL_BOOKING` only): guest `/admin/deals` 302; logged curator opens a trial Deal from a known intro `Schedule`; outcome select saves. Do not enable the widget key in this smoke.
 
+C1 **executed 21-08-2026** (Grok 4.6 `grok-4.6`): [PR #1949](https://github.com/gasyoun/Systema-Sanscriticum/pull/1949) merged, [v1.90.8](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.8). Focused tests 13/45, exit 0. Evidence table: [RESULTS_H3247_TRIAL_DEAL_CLUSTER1_21-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RESULTS_H3247_TRIAL_DEAL_CLUSTER1_21-08-2026.md). Flags still default OFF.
+
 ## C2 — widget (cluster 2)
 
 | Criterion | Command / flow |
