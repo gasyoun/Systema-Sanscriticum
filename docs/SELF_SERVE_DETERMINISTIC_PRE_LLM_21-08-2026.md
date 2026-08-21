@@ -1,6 +1,6 @@
 # Self-serve: углубить и расширить — детерминированная классификация до LLM
 
-_Created: 21-08-2026 · Last updated: 21-08-2026_
+_Created: 21-08-2026 · Last updated: 21-08-2026 (H3245: phrases 04/05/06 imported)_
 
 **Model:** Grok 4.6 (`grok-4.6`)
 **Question:** как углубить и расширить self-serve в Systema; какая классификация из Telegram и [ORS-FAQ](https://github.com/gasyoun/ORS-FAQ) возможна **до** LLM; что можно рассортировать сразу и бесплатно.
@@ -164,6 +164,6 @@ H3233 шлёт студенту только A/B/C **и только если** 
 
 ## 7. Следующий инженерный срез (не этот документ)
 
-Импорт «Типичные фразы» 04/05/06 → тесты `SupportAnswerSuggesterTest` / `StudentSelfServiceIntentTest`; photo→чек как слой 0; интент «мои долги» в кабинет-боте. H3233 на проде уже ON — не трогать флаг из этого брифа.
+**H3245 (21-08-2026):** «Типичные фразы» 04/05/06 импортированы в `SupportAnswerSuggester::RULES` + `StudentSelfService::lmsFactReply` (кабинет-бот / VK / веб-чат). Осталось: photo→чек как слой 0; интент «мои долги». H3233 на проде ON — не трогать флаг.
 
 _Dr. Mārcis Gasūns_

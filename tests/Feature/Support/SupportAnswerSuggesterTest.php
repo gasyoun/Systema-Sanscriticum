@@ -94,6 +94,43 @@ class SupportAnswerSuggesterTest extends TestCase
         $this->assertNull($suggester->categorize(''));
     }
 
+    /**
+     * Verbatim «Типичные фразы учеников» from ORS-FAQ wiki/topics 04/05/06.
+     *
+     * @dataProvider orsFaqTypicalPhrases
+     */
+    public function test_ors_faq_typical_phrases_map_without_llm(string $text, string $category): void
+    {
+        $this->assertSame(
+            $category,
+            app(SupportAnswerSuggester::class)->categorize($text),
+            $text,
+        );
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: string}>
+     */
+    public static function orsFaqTypicalPhrases(): array
+    {
+        return [
+            '04 zoom будет ссылка' => ['Будет ссылка на занятие?', SupportAnswerSuggestion::CATEGORY_ZOOM],
+            '04 zoom пришлите ссылку' => ['Пришлите ссылку на урок', SupportAnswerSuggestion::CATEGORY_ZOOM],
+            '04 zoom как подключиться' => ['Как подключиться?', SupportAnswerSuggestion::CATEGORY_ZOOM],
+            '04 zoom вводное Ивана' => ['Пришлите ссылку на вводное занятие Ивана', SupportAnswerSuggestion::CATEGORY_ZOOM],
+            '05 recording смотреть в записи' => ['Будет ли возможность смотреть в записи?', SupportAnswerSuggestion::CATEGORY_RECORDING],
+            '05 recording доступ к записи' => ['Пропустила, есть ли доступ к записи?', SupportAnswerSuggestion::CATEGORY_RECORDING],
+            '05 recording занятие пропустила' => ['Первое занятие пропустила, к сожалению', SupportAnswerSuggestion::CATEGORY_RECORDING],
+            '05 recording переслушиваю' => ['Переслушиваю лекции по 2–3 раза', SupportAnswerSuggestion::CATEGORY_RECORDING],
+            '06 schedule во сколько начало' => ['Во сколько начало?', SupportAnswerSuggestion::CATEGORY_SCHEDULE],
+            '06 schedule каково расписание' => ['Каково расписание?', SupportAnswerSuggestion::CATEGORY_SCHEDULE],
+            '06 schedule ссылка на расписание' => ['Пришлите ссылку на расписание курсов', SupportAnswerSuggestion::CATEGORY_SCHEDULE],
+            '06 schedule в какое время' => ['Начинаем 1-го марта — в какое время?', SupportAnswerSuggestion::CATEGORY_SCHEDULE],
+            'regression ссылка на запись stays B' => ['Скиньте ссылку на запись', SupportAnswerSuggestion::CATEGORY_RECORDING],
+            'regression payment stays D' => ['Сколько стоит курс?', SupportAnswerSuggestion::CATEGORY_PAYMENT],
+        ];
+    }
+
     public function test_unrelated_message_creates_no_suggestion(): void
     {
         $this->enableFeature();

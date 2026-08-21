@@ -6,8 +6,11 @@ namespace App\Services\Bot;
 
 use App\Models\HomeworkSubmission;
 use App\Models\Schedule;
+use App\Models\SupportAnswerSuggestion;
 use App\Models\User;
 use App\Services\AttendanceNoticeService;
+use App\Services\Support\SupportAnswerFactResolver;
+use App\Services\Support\SupportAnswerSuggester;
 
 /**
  * Детерминированные self-service ответы студенту в боте (TG/VK) — данные, которые
@@ -114,6 +117,7 @@ class StudentSelfService
         return "🤖 <b>Что я умею</b>\n\n"
             ."📚 <b>мои группы</b> — ваши группы, курсы и ближайшее занятие\n"
             ."📝 <b>мои задания</b> — статус домашних работ\n"
+            ."🔗 ссылка на занятие / запись / расписание — из ваших групп, без ИИ\n"
             .$noticeLine
             ."🙋 «позови куратора» — переключиться на живого человека\n\n"
             .'Обычные вопросы по обучению, курсам, оплате и доступу я тоже понимаю — просто напишите их своими словами.';
@@ -165,6 +169,28 @@ class StudentSelfService
         'статус домашки',
         'статус домашней работы',
     ];
+
+    /**
+     * A/B/C с живым фактом LMS (Zoom / запись / расписание) — тот же
+     * SupportAnswerSuggester, что лички саппорта. Без факта возвращает null,
+     * вызывающий идёт в ИИ. Деньги (D) не перехватываются.
+     */
+    public function lmsFactReply(User $user, string $text): ?string
+    {
+        $category = app(SupportAnswerSuggester::class)->categorize($text);
+        if (! in_array($category, [
+            SupportAnswerSuggestion::CATEGORY_ZOOM,
+            SupportAnswerSuggestion::CATEGORY_RECORDING,
+            SupportAnswerSuggestion::CATEGORY_SCHEDULE,
+        ], true)) {
+            return null;
+        }
+
+        $resolved = app(SupportAnswerFactResolver::class)->resolve($category, $user);
+        $draft = trim((string) ($resolved['draft'] ?? ''));
+
+        return $draft === '' ? null : e($draft);
+    }
 
     /** Похоже ли сообщение на запрос статуса домашних заданий. */
     public function matchesHomeworkIntent(string $text): bool
