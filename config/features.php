@@ -614,6 +614,22 @@ return [
     'crm_pipeline_board' => (bool) env('CRM_PIPELINE_BOARD', false),
 
     /*
+     | H3247 cluster 1 — trial Deal as funnel object (kind=trial).
+     | Staff booking + Zoom reconcile + paid-trial observer tag.
+     | ВЫКЛ по умолчанию. Не выдаёт доступ, не пишет payments.
+     | Prod-enable (human, after staff smoke): CRM_TRIAL_BOOKING=true + config:cache.
+     | Widget POST is a separate key (cluster 2).
+     */
+    'crm_trial_booking' => (bool) env('CRM_TRIAL_BOOKING', false),
+
+    /*
+     | H3248 cluster 2 — public book CTA on /widgets/schedule.
+     | ВЫКЛ по умолчанию. POST is 404 while OFF. Requires crm_trial_booking
+     | as well (ARCHITECTURE §7). Do not flip in the cluster-1 PR.
+     */
+    'crm_trial_widget_public' => (bool) env('CRM_TRIAL_WIDGET_PUBLIC', false),
+
+    /*
      | Атрибуция возвратов по ссылке «Возврат за платёж №…» в зачёте докупки
      | (H1405 C2). Ветка целого блока в Tariff::upgradeRefundsForUser видит
      | только Расход-строки с покрывающим диапазоном блоков, а админ-форма

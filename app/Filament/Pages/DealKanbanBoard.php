@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Deal;
 use App\Models\DealStage;
+use App\Services\Crm\TrialBookingService;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Notifications\Notification;
@@ -65,9 +66,34 @@ class DealKanbanBoard extends KanbanBoard
             ]);
     }
 
+    public ?int $trialDealId = null;
+
+    public ?string $trialOutcome = null;
+
     protected function getEloquentQuery(): Builder
     {
         return Deal::query()->with(['user', 'lead', 'course'])->orderByDesc('created_at');
+    }
+
+    public function applyTrialOutcome(): void
+    {
+        if (! config('features.crm_trial_booking')) {
+            return;
+        }
+
+        $deal = Deal::query()->find($this->trialDealId);
+        if (! $deal instanceof Deal || $deal->kind !== Deal::KIND_TRIAL) {
+            Notification::make()->title('Нет пробной сделки')->danger()->send();
+
+            return;
+        }
+
+        app(TrialBookingService::class)->applyOutcome(
+            $deal,
+            (string) $this->trialOutcome,
+            auth()->user(),
+        );
+        Notification::make()->title('Исход пробника сохранён')->success()->send();
     }
 
     public function onStatusChanged(int|string $recordId, string $status, array $fromOrderedIds, array $toOrderedIds): void

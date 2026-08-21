@@ -360,6 +360,14 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('sync-zoom-attendance');
 
+        // H3247: after Zoom pull, mark trial Deals from webinar_attendances.
+        // Command short-circuits while CRM_TRIAL_BOOKING is false.
+        $schedule->command('crm:reconcile-trial-attendance')
+            ->dailyAt('04:25')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('reconcile-trial-attendance');
+
         // --- ЛИД-МАГНИТ ЗА N МИНУТ ДО ВЕБИНАРА ---
         // Окно проверяется внутри команды (isMagnetWindowOpen у лендинга).
         $schedule->command('magnets:deliver-due')

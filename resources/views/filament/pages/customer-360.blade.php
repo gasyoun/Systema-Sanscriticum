@@ -108,6 +108,39 @@
             </div>
         </div>
 
+        @if(config('features.crm_trial_booking'))
+            @php
+                $trialDeals = $snap->deals->filter(fn ($d) => $d->kind === \App\Models\Deal::KIND_TRIAL);
+            @endphp
+            @if($trialDeals->isNotEmpty())
+                <div class="c360-card" style="margin-bottom:16px" data-testid="c360-trial">
+                    <div class="c360-k">Пробник — исход</div>
+                    @foreach($trialDeals as $trialDeal)
+                        <div class="c360-row">
+                            <div>
+                                <strong>Пробник</strong>
+                                <div class="c360-src">{{ $trialDeal->trial_outcome ?: 'booked' }} · {{ $trialDeal->trial_source }}</div>
+                            </div>
+                        </div>
+                    @endforeach
+                    <div class="c360-form">
+                        <select wire:model="trialDealId">
+                            @foreach($trialDeals as $trialDeal)
+                                <option value="{{ $trialDeal->id }}">#{{ $trialDeal->id }}</option>
+                            @endforeach
+                        </select>
+                        <select wire:model="trialOutcome">
+                            <option value="booked">записан</option>
+                            <option value="attended">был</option>
+                            <option value="no_show">не был</option>
+                            <option value="converted">купил</option>
+                        </select>
+                        <button type="button" class="c360-btn" wire:click="applyTrialOutcome">Сохранить исход</button>
+                    </div>
+                </div>
+            @endif
+        @endif
+
         @if($snap->primaryDeal())
             <div class="c360-card" style="margin-bottom:16px">
                 <div class="c360-k">Сменить стадию сделки (через Deal::moveToStage)</div>

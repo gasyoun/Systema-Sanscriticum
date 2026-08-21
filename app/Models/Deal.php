@@ -29,6 +29,22 @@ class Deal extends Model
 
     public const REASON_LOST = 'lost';
 
+    public const KIND_COURSE = 'course';
+
+    public const KIND_TRIAL = 'trial';
+
+    public const TRIAL_SOURCE_FREE = 'free';
+
+    public const TRIAL_SOURCE_PAID = 'paid';
+
+    public const TRIAL_OUTCOME_BOOKED = 'booked';
+
+    public const TRIAL_OUTCOME_ATTENDED = 'attended';
+
+    public const TRIAL_OUTCOME_NO_SHOW = 'no_show';
+
+    public const TRIAL_OUTCOME_CONVERTED = 'converted';
+
     protected $fillable = [
         'lead_id',
         'user_id',
@@ -41,6 +57,10 @@ class Deal extends Model
         'closed_reason',
         'source_payment_id',
         'installment_group_id',
+        'kind',
+        'schedule_id',
+        'trial_source',
+        'trial_outcome',
     ];
 
     protected $casts = [
@@ -79,6 +99,27 @@ class Deal extends Model
         return $this->belongsTo(Payment::class, 'source_payment_id');
     }
 
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(Schedule::class);
+    }
+
+    /** @return list<string> */
+    public static function trialOutcomes(): array
+    {
+        return [
+            self::TRIAL_OUTCOME_BOOKED,
+            self::TRIAL_OUTCOME_ATTENDED,
+            self::TRIAL_OUTCOME_NO_SHOW,
+            self::TRIAL_OUTCOME_CONVERTED,
+        ];
+    }
+
+    public function scopeTrial(Builder $query): Builder
+    {
+        return $query->where('kind', self::KIND_TRIAL);
+    }
+
     public function transitions(): HasMany
     {
         return $this->hasMany(DealTransition::class)->latest('created_at');
@@ -100,8 +141,13 @@ class Deal extends Model
         $who = $this->user?->name
             ?: ($this->lead?->name ?: ($this->lead?->contact ?: null));
         $what = $this->course?->title;
+        $title = trim(($who ?: 'Сделка #'.$this->id).($what ? ' — '.$what : ''));
 
-        return trim(($who ?: 'Сделка #'.$this->id).($what ? ' — '.$what : ''));
+        if (config('features.crm_trial_booking') && $this->kind === self::KIND_TRIAL) {
+            return 'Пробник · '.$title;
+        }
+
+        return $title;
     }
 
     /**

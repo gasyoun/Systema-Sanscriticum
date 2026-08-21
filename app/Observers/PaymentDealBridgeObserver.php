@@ -9,6 +9,7 @@ use App\Models\DealStage;
 use App\Models\DealTransition;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Services\Crm\TrialBookingService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -98,31 +99,59 @@ class PaymentDealBridgeObserver
     private function sync(Payment $payment): void
     {
         // Флаг ВЫКЛ по умолчанию → на проде мост инертен.
-        if (! config('features.crm_pipeline_board')) {
+        if (config('features.crm_pipeline_board')) {
+            try {
+                if (in_array($payment->status, self::REVERSAL_STATUSES, true)) {
+                    $this->reopenDealClosedBy($payment);
+                } elseif ($this->qualifiesAsSale($payment)) {
+                    $this->closeOrRecordDeal($payment);
+                } elseif ($this->qualifiesAsPayableIntent($payment)) {
+                    $this->openDealForIntent($payment);
+                }
+            } catch (\Throwable $e) {
+                Log::error('GC-C1: мост сделок упал, платёж не тронут', [
+                    'payment_id' => $payment->id,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $this->maybeTagPaidTrial($payment);
+    }
+
+    /**
+     * H3247: paid-trial SKU tags (or opens) one Deal.kind=trial.
+     * Predicate is Payment::isTrial() (tariff=trial) — the same checkout
+     * already uses. Independent of crm_pipeline_board so a trial never
+     * becomes a second course Deal.
+     */
+    private function maybeTagPaidTrial(Payment $payment): void
+    {
+        if (! config('features.crm_trial_booking')) {
+            return;
+        }
+        if (! $payment->isTrial()) {
+            return;
+        }
+        if (in_array($payment->status, self::REVERSAL_STATUSES, true)) {
+            return;
+        }
+        $isPaid = in_array($payment->status, Payment::PAID_STATUSES, true);
+        $isPending = $payment->status === 'pending';
+        if (! $isPaid && ! $isPending) {
             return;
         }
 
         try {
-            if (in_array($payment->status, self::REVERSAL_STATUSES, true)) {
-                $this->reopenDealClosedBy($payment);
-
+            $service = app(TrialBookingService::class);
+            $deal = $service->findOpenDealForPaidTrial($payment)
+                ?? $service->openPaidTrialShell($payment);
+            if ($deal === null) {
                 return;
             }
-
-            // Paid path first: close/record won deal (H1641).
-            if ($this->qualifiesAsSale($payment)) {
-                $this->closeOrRecordDeal($payment);
-
-                return;
-            }
-
-            // Pending payable intent → open Deal for dozhim queue (H2102).
-            // Never grants access; source_payment_id stays null until paid close.
-            if ($this->qualifiesAsPayableIntent($payment)) {
-                $this->openDealForIntent($payment);
-            }
+            $service->tagPaidDeal($deal, $payment);
         } catch (\Throwable $e) {
-            Log::error('GC-C1: мост сделок упал, платёж не тронут', [
+            Log::error('H3247: trial Deal tag failed, payment not touched', [
                 'payment_id' => $payment->id,
                 'exception' => $e->getMessage(),
             ]);

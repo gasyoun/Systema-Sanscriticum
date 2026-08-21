@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 21-08-2026 (№79 H3233 `SUPPORT_DM_AUTO_REPLY` ON) (H2758 №77 `HINDI_YOUTUBE_NOVA3_DRILLS` stay OFF; H2762 Kochergina next-step/CTA A/B flags stay OFF; №73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 21-08-2026 (H3247 `CRM_TRIAL_BOOKING` stay OFF; №79 H3233 `SUPPORT_DM_AUTO_REPLY` ON) (H2758 №77 `HINDI_YOUTUBE_NOVA3_DRILLS` stay OFF; H2762 Kochergina next-step/CTA A/B flags stay OFF; №73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -47,6 +47,15 @@ _Создано: 08-07-2026 · Обновлено: 21-08-2026 (№79 H3233 `SUPP
 >
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
+
+### H3247 — trial Deal staff flag stays OFF (human smoke first)
+
+Code is inert until `CRM_TRIAL_BOOKING=true`. Widget POST (`CRM_TRIAL_WIDGET_PUBLIC`) stays false — that is cluster 2 (H3248).
+
+1. After auto-deploy of this PR: `php artisan migrate` (column add on `deals`). No env change.
+2. Staff smoke (curator): open `/admin/deals-board` with pipeline board already on, or Customer 360. Guest `/admin/deals` still 302.
+3. Only then: `CRM_TRIAL_BOOKING=true` + `php artisan config:cache`. Do **not** set `CRM_TRIAL_WIDGET_PUBLIC`.
+4. Rollback: flag false + `config:cache`. Columns may stay.
 
 ### H2762 — next-step + CTA A/B on Kochergina — флаги ОСТАЮТСЯ OFF
 
