@@ -70,4 +70,49 @@ final class SoftFailureFingerprintTest extends TestCase
             ],
         ];
     }
+
+    public function test_cgroup_rss_mib_does_not_change_hash(): void
+    {
+        $a = 'guards/cgroup: cron.service занял 2029 МиБ из 2048 МиБ (≥80 %) — до троттлинга близко';
+        $b = 'guards/cgroup: cron.service занял 1802 МиБ из 2048 МиБ (≥80 %) — до троттлинга близко';
+        $this->assertSame(
+            SoftFailureFingerprint::hash([['message' => $a, 'severity' => 'soft']]),
+            SoftFailureFingerprint::hash([['message' => $b, 'severity' => 'soft']]),
+        );
+        $this->assertSame('guards/cgroup', SoftFailureFingerprint::normalizeMessage($a));
+    }
+
+    public function test_backup_size_and_age_collapse_to_guard_name(): void
+    {
+        $a = 'guards/backup-fresh: новейший архив на off-site диске yandex_disk — 11 МиБ при пороге 200 МиБ';
+        $b = 'guards/backup-fresh: новейший архив на off-site диске yandex_disk — 12 МиБ при пороге 200 МиБ';
+        $this->assertSame(
+            SoftFailureFingerprint::hash([['message' => $a]]),
+            SoftFailureFingerprint::hash([['message' => $b]]),
+        );
+        $this->assertSame('guards/backup-fresh', SoftFailureFingerprint::normalizeMessage($a));
+        $this->assertSame(
+            'guards/tmpfs-cap',
+            SoftFailureFingerprint::normalizeMessage(
+                'guards/tmpfs-cap: /tmp смонтирован tmpfs БЕЗ явного size='
+            ),
+        );
+    }
+
+    public function test_host_ops_set_stable_when_only_cgroup_rss_moves(): void
+    {
+        $tmpfs = 'guards/tmpfs-cap: /tmp смонтирован tmpfs БЕЗ явного size= — потолок хоста';
+        $backup = 'guards/backup-fresh: нет ни одного живого off-site назначения';
+        $setA = [
+            ['message' => 'guards/cgroup: cron.service занял 2029 МиБ из 2048 МиБ (≥80 %)', 'severity' => 'soft'],
+            ['message' => $tmpfs, 'severity' => 'critical'],
+            ['message' => $backup, 'severity' => 'critical'],
+        ];
+        $setB = [
+            ['message' => 'guards/cgroup: cron.service занял 1802 МиБ из 2048 МиБ (≥80 %)', 'severity' => 'soft'],
+            ['message' => $tmpfs, 'severity' => 'critical'],
+            ['message' => $backup, 'severity' => 'critical'],
+        ];
+        $this->assertSame(SoftFailureFingerprint::hash($setA), SoftFailureFingerprint::hash($setB));
+    }
 }

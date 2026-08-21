@@ -537,4 +537,28 @@ class CabinetProbeTest extends TestCase
         $this->artisan('cabinet:probe', ['--no-alert' => true])->assertSuccessful();
         Http::assertNothingSent();
     }
+
+    public function test_dry_does_not_post_soft_webhook(): void
+    {
+        $this->seedManager();
+        config()->set('cabinet_probe.surfaces', [
+            ['name' => 'student.dashboard', 'label' => 'manager /dvaram', 'severity' => 'critical'],
+        ]);
+        config()->set('features.cabinet_hybrid', true);
+        config()->set('cabinet_probe.hybrid_surfaces', [
+            ['name' => 'student.route.that.does.not.exist', 'label' => 'hybrid /library', 'severity' => 'soft'],
+        ]);
+        config()->set('cabinet_probe.ping_url', '');
+        config()->set('cabinet_probe.telegram_chat_id', '999001');
+        config()->set('cabinet_probe.soft_webhook_url', 'https://example.test/soft-hook');
+        config()->set('services.telegram.bot_token', 'test-bot-token');
+
+        Http::fake([
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+            'https://example.test/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $this->artisan('cabinet:probe', ['--dry' => true])->assertSuccessful();
+        Http::assertNothingSent();
+    }
 }

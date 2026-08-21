@@ -79,6 +79,13 @@ final class SoftFailureFingerprint
             return 'guards/auto-deploy:cron-missing';
         }
 
+        // Live host-guard metrics (cgroup RSS MiB, backup age/size) change
+        // every */15 tick and must not re-open TG (H3227). Fuse/dirty above
+        // keep a finer class; other guards/<name>: collapse to the name.
+        if (preg_match('#^guards/([a-z0-9_-]+)\b#i', $m, $gm)) {
+            return 'guards/'.strtolower($gm[1]);
+        }
+
         $m = (string) preg_replace('/\s+/u', ' ', $m);
 
         return $m;

@@ -500,9 +500,12 @@ class ProbeCabinetHealth extends Command
                 ? $this->sendTelegram($token, $softIds, $text)
                 : false;
 
-            $webhook = app(SoftAlertWebhookNotifier::class)->notify($scopeRaw, $fingerprint, $softFails);
-            if ($webhook['attempted']) {
-                $this->comment('soft-webhook: '.$webhook['detail']);
+            $webhook = ['attempted' => false, 'ok' => false, 'detail' => 'skipped'];
+            if (! $this->option('dry')) {
+                $webhook = app(SoftAlertWebhookNotifier::class)->notify($scopeRaw, $fingerprint, $softFails);
+                if ($webhook['attempted']) {
+                    $this->comment('soft-webhook: '.$webhook['detail']);
+                }
             }
 
             if ($sent || $webhook['ok']) {
