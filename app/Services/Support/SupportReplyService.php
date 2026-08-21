@@ -125,6 +125,41 @@ class SupportReplyService
     }
 
     /**
+     * Pending исходящее от бота в личку саппорта (H3233). Куратор = null,
+     * responder_type=ai. Увозит ближайший заход синка, как человеческий ответ.
+     */
+    public function queueAiReply(User $user, string $text, ?int $replyToMsgId = null): ?TelegramSupportMessage
+    {
+        $thread = $this->conversations->currentFor($user);
+        $chat = $this->resolveTargetChat($user, $thread);
+
+        if (! $chat) {
+            return null;
+        }
+
+        $accountId = $chat->messages()->max('telegram_support_account_id')
+            ?? TelegramSupportAccount::query()->min('id');
+
+        if (! $accountId) {
+            return null;
+        }
+
+        $message = $this->createPendingOutgoing(
+            (int) $accountId,
+            $chat,
+            $text,
+            null,
+            $replyToMsgId,
+            SupportDmAutoReply::VIA,
+            'ai',
+        );
+
+        $this->conversations->recordMessage($user, $message, $message->sent_at);
+
+        return $message;
+    }
+
+    /**
      * Ответ в тред БЕЗ users-записи — техвопрос из Telegram-чата от непривязанного
      * автора. Отличие от {@see replyViaSupportChannel} только в том, откуда берётся
      * чат: там от пользователя, здесь от самого треда. Дальше всё то же — pending
@@ -279,7 +314,11 @@ class SupportReplyService
         string $text,
         ?User $curator,
         ?int $replyToMsgId = null,
+        string $via = 'helpdesk_unified_reply',
+        string $responderType = 'human',
     ): TelegramSupportMessage {
+        $isAi = $responderType === 'ai';
+
         for ($attempt = 0; ; $attempt++) {
             try {
                 return TelegramSupportMessage::create([
@@ -288,13 +327,14 @@ class SupportReplyService
                     'telegram_chat_id' => $chat->telegram_chat_id,
                     'telegram_message_id' => $this->nextPendingMessageId($accountId, (int) $chat->telegram_chat_id),
                     'direction' => 'outgoing',
-                    'role' => 'human',
-                    'responder_type' => 'human',
-                    'responder_user_id' => $curator?->id,
+                    'role' => $isAi ? 'ai' : 'human',
+                    'responder_type' => $isAi ? 'ai' : 'human',
+                    'responder_user_id' => $isAi ? null : $curator?->id,
+                    'ai_state' => $isAi ? 'sent' : null,
                     'text' => $text,
                     'raw_payload' => array_filter([
                         'pending_delivery' => true,
-                        'via' => 'helpdesk_unified_reply',
+                        'via' => $via,
                         'reply_to_msg_id' => $replyToMsgId,
                     ], static fn ($v) => $v !== null),
                     'sent_at' => now(),

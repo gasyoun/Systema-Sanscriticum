@@ -12,6 +12,8 @@ use App\Models\User;
 use App\Services\Support\HomeworkPauseNoteRecorder;
 use App\Services\Support\PendingSupportReplyDrainer;
 use App\Services\Support\SupportConversationManager;
+use App\Services\Support\SupportDmAutoReply;
+use App\Services\Support\SupportOutgoingAttribution;
 use App\Services\Support\TechnicalIssueRouter;
 use App\Services\Telegram\MadelineClientFactory;
 use App\Services\Telegram\MadelineSessionReaper;
@@ -52,6 +54,8 @@ class TelegramSupportSyncService
         private readonly TechnicalIssueRouter $techRouter,
         private readonly MadelineSessionReaper $reaper,
         private readonly HomeworkPauseNoteRecorder $homeworkPauseNotes,
+        private readonly SupportDmAutoReply $dmAutoReply,
+        private readonly SupportOutgoingAttribution $outgoingAttribution,
     ) {}
 
     public function sync(): array
@@ -405,6 +409,8 @@ class TelegramSupportSyncService
 
         if ($direction === 'incoming') {
             $this->techRouter->handleIncoming($message, $payload, $linkedUserId ? (int) $linkedUserId : null, $chatType ?: 'private');
+
+            $this->dmAutoReply->handle($message, $linkedUserId ? (int) $linkedUserId : null, $chatType ?: 'private');
 
             // H2320: «пауза по ДЗ» → users.note when student is linked.
             if ($linkedUserId) {
@@ -1172,7 +1178,11 @@ class TelegramSupportSyncService
             ];
         }
 
-        $marker = $payload['responder_marker'] ?? null;
+        $text = (string) ($payload['text'] ?? '');
+        $marker = $this->outgoingAttribution->markerFromOutgoingText($text);
+        if (($payload['responder_marker'] ?? null) && $marker !== SupportOutgoingAttribution::APPLE_MARKER) {
+            $marker = (string) $payload['responder_marker'];
+        }
         $mapping = $marker
             ? SupportResponderMapping::where('marker_label', $marker)->where('is_active', true)->first()
             : null;

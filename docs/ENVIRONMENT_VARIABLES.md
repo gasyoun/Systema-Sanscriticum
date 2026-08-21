@@ -175,6 +175,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `EMAIL_CAMPAIGNS` | optional | `false` | config/features.php:483 |
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:65 |
 | `FAQ_RAG_SUGGESTER` | optional | `false` | config/features.php:147 |
+| `SUPPORT_DM_AUTO_REPLY` | optional | `false` | config/features.php |
 | `FILESYSTEM_DISK` | optional | `'local'` | config/filesystems.php:16 |
 | `FLAGSHIP_CTA_AB` | optional | `false` | config/features.php:1006 |
 | `FLAGSHIP_EXPERIMENT_STARTED_AT` | optional | `''` | config/flagship_experiments.php:28 |
