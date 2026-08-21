@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Services\TeacherSalaryService;
+use App\Support\RoleGate;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
@@ -29,6 +30,13 @@ class TeacherSalariesTotalWidget extends BaseWidget
     {
         $periodMonth = $this->period ?: now()->format('Y-m');
         $summary = app(TeacherSalaryService::class)->summaryForAll($periodMonth);
+        $ownId = RoleGate::ownTeacherId();
+        if ($ownId !== null) {
+            $summary = array_values(array_filter(
+                $summary,
+                static fn (array $row): bool => (int) ($row['teacher_id'] ?? 0) === $ownId,
+            ));
+        }
 
         $earnedGross = 0.0;
         $returnsPeriod = 0.0;
@@ -60,7 +68,9 @@ class TeacherSalariesTotalWidget extends BaseWidget
                 ->color('success'),
 
             Stat::make('К выплате (всего)', number_format($balance, 0, '.', ' ').' ₽')
-                ->description('Начислено всего − выплачено всего, по всем преподам')
+                ->description($ownId !== null
+                    ? 'Начислено всего − выплачено всего'
+                    : 'Начислено всего − выплачено всего, по всем преподам')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color($balance > 0 ? 'warning' : 'success'),
 

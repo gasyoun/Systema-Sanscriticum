@@ -52,6 +52,45 @@ class TeacherSalariesPageSmokeTest extends TestCase
         $this->actingAs($admin)->get('/admin/teacher-salaries')->assertForbidden();
     }
 
+    public function test_teacher_sees_own_salary_row_and_not_another_teacher(): void
+    {
+        $mine = Teacher::create(['name' => 'Своя карточка']);
+        $other = Teacher::create(['name' => 'Чужая карточка']);
+        Course::factory()->create([
+            'teacher_id' => $mine->id,
+            'salary_type' => 'percent',
+            'salary_value' => 10,
+        ]);
+        Course::factory()->create([
+            'teacher_id' => $other->id,
+            'salary_type' => 'percent',
+            'salary_value' => 10,
+        ]);
+        $user = User::factory()->create([
+            'role' => Roles::TEACHER,
+            'teacher_id' => $mine->id,
+        ]);
+
+        $this->actingAs($user)->get('/admin/teacher-salaries')->assertSuccessful();
+
+        Livewire::actingAs($user)
+            ->test(TeacherSalaries::class)
+            ->assertSee('Своя карточка')
+            ->assertDontSee('Чужая карточка')
+            ->assertDontSee('Записать выплату')
+            ->assertDontSee('Рассчитать выплату по блоку');
+    }
+
+    public function test_teacher_without_card_cannot_access_salaries(): void
+    {
+        $user = User::factory()->create([
+            'role' => Roles::TEACHER,
+            'teacher_id' => null,
+        ]);
+
+        $this->actingAs($user)->get('/admin/teacher-salaries')->assertForbidden();
+    }
+
     public function test_manager_cannot_access_salaries(): void
     {
         $manager = User::factory()->create(['role' => 'manager', 'is_admin' => true]);

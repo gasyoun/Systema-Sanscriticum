@@ -31,6 +31,56 @@ final class RoleGate
     }
 
     /**
+     * Standing rule (H3219): admin-like staff see every teacher surface
+     * (playlist preview, draft drills, load, homework). Overlay, not a role
+     * change. To see a named teacher's own rows, use impersonation MODE_TEACHER.
+     * Does not open school-wide salary/payout tables — those stay accounting()
+     * except {@see seesOwnSalary()} for the logged-in teacher's own card.
+     */
+    public static function seesTeacherSurfaces(?User $user = null): bool
+    {
+        $user ??= auth()->user();
+
+        return $user instanceof User && $user->isAdminLike();
+    }
+
+    /**
+     * Own salary calculation: accountant/super_admin (all rows) or a teacher
+     * with teacher_id (own card only). Ordinary admin without impersonation
+     * does not pass — same as accounting().
+     */
+    public static function seesOwnSalary(?User $user = null): bool
+    {
+        if (self::accounting()) {
+            return true;
+        }
+
+        $user ??= auth()->user();
+
+        return $user instanceof User
+            && $user->isTeacher()
+            && $user->teacher_id !== null;
+    }
+
+    /**
+     * Teacher card to scope salary/load rows. Null means «all teachers»
+     * (accounting). Non-accounting teachers get their teacher_id.
+     */
+    public static function ownTeacherId(): ?int
+    {
+        if (self::accounting()) {
+            return null;
+        }
+
+        $user = auth()->user();
+        if ($user instanceof User && $user->isTeacher() && $user->teacher_id !== null) {
+            return (int) $user->teacher_id;
+        }
+
+        return null;
+    }
+
+    /**
      * Выдача одноразовой magic-ссылки в кабинет студента (H849 /login-link).
      * Куратор (manager) и admin — оба; student/teacher/accountant — нет.
      * super_admin проходит через any().

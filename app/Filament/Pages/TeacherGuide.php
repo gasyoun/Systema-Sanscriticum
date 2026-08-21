@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Support\RoleGate;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -55,7 +56,7 @@ class TeacherGuide extends Page
             return false;
         }
 
-        return (bool) $user->is_admin
+        return RoleGate::seesTeacherSurfaces($user)
             || (bool) $user->is_lecture_editor
             || $user->teacher_id !== null
             || $user->isTeacher();
