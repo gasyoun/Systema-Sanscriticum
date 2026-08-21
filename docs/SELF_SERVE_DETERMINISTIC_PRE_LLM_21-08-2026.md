@@ -1,6 +1,6 @@
 # Self-serve: углубить и расширить — детерминированная классификация до LLM
 
-_Created: 21-08-2026 · Last updated: 21-08-2026 (H3245: phrases 04/05/06 imported)_
+_Created: 21-08-2026 · Last updated: 21-08-2026 («сколько стоит» is classified D, not auto-replied)_
 
 **Model:** Grok 4.6 (`grok-4.6`)
 **Question:** как углубить и расширить self-serve в Systema; какая классификация из Telegram и [ORS-FAQ](https://github.com/gasyoun/ORS-FAQ) возможна **до** LLM; что можно рассортировать сразу и бесплатно.
@@ -165,5 +165,33 @@ H3233 шлёт студенту только A/B/C **и только если** 
 ## 7. Следующий инженерный срез (не этот документ)
 
 **H3245 (21-08-2026):** «Типичные фразы» 04/05/06 импортированы в `SupportAnswerSuggester::RULES` + `StudentSelfService::lmsFactReply` (кабинет-бот / VK / веб-чат). Осталось: photo→чек как слой 0; интент «мои долги». H3233 на проде ON — не трогать флаг.
+
+---
+
+## 8. Почему «сколько стоит» не перехватывается (21-08-2026)
+
+**Симптом.** В кабинет-боте или в личке саппорта пишут «Сколько стоит» — бот не отвечает каталогом, вопрос уходит в ИИ или куратору. Кажется, что regex «не ловит».
+
+**Факт.** Фраза **ловится**. Категория **D** (оплата/цена). Студенту ответ **не шлётся** — это запрет в двух живых каналах, не дыра в классификаторе.
+
+Regex в [`SupportAnswerSuggester.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportAnswerSuggester.php): `сколько\s+стоит` → `CATEGORY_PAYMENT`. Дальше:
+
+| Канал | Что делает D | Код |
+|---|---|---|
+| Кабинет-бот (TG/VK/веб) | `lmsFactReply` отвечает только A/B/C. D → `null` → [`CuratorAi`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Bot/CuratorAi.php) | [`StudentSelfService.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Bot/StudentSelfService.php) («Деньги (D) не перехватываются»); вызов в [`TelegramWebhookController.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/TelegramWebhookController.php) шаг 1.55 |
+| Личка саппорта | A/B/C с фактом LMS уходят студенту. D → hint на `ADMIN_TELEGRAM_ID`, студенту ничего | [`SupportDmAutoReply.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportDmAutoReply.php) `SIMPLE_CATEGORIES` |
+
+Тесты, которые **запрещают** перехват (сломать их = сменить политику, не «починить regex»):
+
+- [`StudentSelfServiceLmsFactTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Bot/StudentSelfServiceLmsFactTest.php) `test_payment_phrase_is_not_intercepted` — «Сколько стоит курс?» → `null`
+- [`SupportDmAutoReplyTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Support/SupportDmAutoReplyTest.php) `test_payment_question_hints_admins_and_does_not_send_to_student` — `hinted`, категория `D`, исходящих 0
+
+[H3245 (Grok 4.6) — import ORS-FAQ 04/05/06 phrases into A/B/C and cabinet bot](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3245-Grok_Systema-Sanscriticum_ors-faq-phrases-abc_21.08.26.md) влил темы 04/05/06. Тема 02 «Стоимость» туда не входила.
+
+Публичные «от N ₽» уже собирает [`SupportAnswerFactResolver::resolvePublicPricing()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportAnswerFactResolver.php) — **только гостевой веб-чат** (суггестер куратору, H1198), не ответ студенту. `resolve($category, $user)` для D возвращает `null`.
+
+**Второй слой (другая фраза).** «Сколько **это** стоит» не проходит `сколько\s+стоит` (между словами вклинивается «это»). На буквальное «Сколько стоит» это не похоже.
+
+Дверь 3 в §4 этого документа («Сколько стоит / как записаться» → каталог) **не построена** как автоответ. Пока человек не снимет запрет D, симптом останется.
 
 _Dr. Mārcis Gasūns_
