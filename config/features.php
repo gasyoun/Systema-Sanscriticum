@@ -156,6 +156,14 @@ return [
     'support_dm_auto_reply' => (bool) env('SUPPORT_DM_AUTO_REPLY', false),
 
     /*
+     | H3242: утренняя сводка вчерашней поддержки в Telegram на ADMIN_TELEGRAM_ID
+     | (gasyoun). ВКЛ по умолчанию — админский дайджест по явной просьбе, не
+     | студенческий автоответ. Выкл: SUPPORT_DAILY_DIGEST=false + config:cache.
+     | Команда support:daily-digest, слот 08:10 Europe/Moscow.
+     */
+    'support_daily_digest' => (bool) env('SUPPORT_DAILY_DIGEST', true),
+
+    /*
      | Гео/город посетителя веб-чата в панели куратора (H1196, Jivo-паритет
      | Pillar 1). Когда ВКЛ, при первом сообщении посетителя его IP резолвится
      | асинхронно (ResolveVisitorGeoJob → VisitorGeoResolver, драйвер из
