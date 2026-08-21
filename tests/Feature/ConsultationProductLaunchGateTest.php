@@ -67,7 +67,6 @@ class ConsultationProductLaunchGateTest extends TestCase
         return Carbon::parse((string) config('marathon.launch_date'), 'Europe/Moscow');
     }
 
-    /** @param mixed $value */
     private function assertNoDevanagari(mixed $value, string $where): void
     {
         $text = is_string($value) ? $value : json_encode($value, JSON_UNESCAPED_UNICODE);
