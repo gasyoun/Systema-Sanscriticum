@@ -14,9 +14,9 @@ _Created: 21-08-2026 · Last updated: 21-08-2026_
 | Ось | Что это | Уже есть | Как углублять |
 |---|---|---|---|
 | **Кабинет / бот студента** | Студент сам видит группы, ДЗ, «почему закрыто», платит долг | [`StudentSelfService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Bot/StudentSelfService.php) · [`AccessDiagnosticsService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/AccessDiagnosticsService.php) · debtor Phase 1–2 | Больше **намерений**, которые отвечают данными LMS, не текстом FAQ |
-| **Лички саппорт-аккаунта** | Человек пишет куратору в Telegram | Keyword rollup · regex A–F · [H3233 (Grok 4.6) — B: auto-send simple LMS facts on support DMs](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3233-Grok_Systema-Sanscriticum_support-dm-simple-auto-reply_21.08.26.md) влито ([PR #1939](https://github.com/gasyoun/Systema-Sanscriticum/pull/1939)), флаг `SUPPORT_DM_AUTO_REPLY` default **OFF** | Включить флаг после смоука; расширить A/B/C фразами ORS-FAQ; D/E/F — дверь в кабинет, не автоответ деньгами |
+| **Лички саппорт-аккаунта** | Человек пишет куратору в Telegram | Keyword rollup · regex A–F · [H3233 (Grok 4.6) — B: auto-send simple LMS facts on support DMs](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3233-Grok_Systema-Sanscriticum_support-dm-simple-auto-reply_21.08.26.md) влито ([PR #1939](https://github.com/gasyoun/Systema-Sanscriticum/pull/1939)); флаг `SUPPORT_DM_AUTO_REPLY` **ON на проде 21-08-2026** ([PR #1941](https://github.com/gasyoun/Systema-Sanscriticum/pull/1941), [DEPLOY_QUEUE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) №79). Default в репо всё ещё `false` — прод переопределяет `.env` | Расширить A/B/C фразами ORS-FAQ; D/E/F — дверь в кабинет, не автоответ деньгами. Откат A: `SUPPORT_DM_AUTO_REPLY=false` |
 
-Документ-рамка на сегодня: [docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md). Кабинетный бот уже отвечает сам (OpenRouter). Лички — нет, пока флаг OFF.
+Документ-рамка на сегодня: [docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GAP_RAG_YEAR_START_CURATOR_CAPACITY_21-08-2026.md). Кабинетный бот уже отвечает сам (OpenRouter). Лички саппорта: A/B/C с фактом LMS уходят ботом (флаг ON).
 
 ---
 
@@ -116,7 +116,7 @@ H3233 шлёт студенту только A/B/C **и только если** 
 4. **Чек = тип вложения**, не NLP. Photo/document во входящем саппорта → очередь «подтверждение оплаты», куратор видит сумму/курс из CRM.
 5. **Кабинетные двери вместо ответа.** D/E: не генерировать «вам надо оплатить X». Кнопка «Мои долги» / «Почему закрыто» / magic-link.
 6. **Фразы ORS-FAQ → правила.** Секция «Типичные фразы учеников» в 11 файлах — импорт в `SupportTopicRule` **или** в `RULES` (один канон). Не второй словарь в n8n.
-7. **Флаги.** `SUPPORT_DM_AUTO_REPLY` и `FAQ_RAG_SUGGESTER` default OFF. Код H3233 инертнен, пока №79 в [DEPLOY_QUEUE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) не включён. Смоук на A/B/C с известным студентом, затем ON.
+7. **Флаги.** `SUPPORT_DM_AUTO_REPLY` на проде **ON** с 21-08-2026 (№79). `FAQ_RAG_SUGGESTER` default OFF. Следующий рычаг — покрытие фраз A/B/C и слой 0 (чек/CRM), не повторное включение.
 
 ---
 
@@ -164,6 +164,6 @@ H3233 шлёт студенту только A/B/C **и только если** 
 
 ## 7. Следующий инженерный срез (не этот документ)
 
-Импорт «Типичные фразы» 04/05/06 → тесты `SupportAnswerSuggesterTest` / `StudentSelfServiceIntentTest`; photo→чек как слой 0; интент «мои долги» в кабинет-боте. Флаг H3233 не включать из этого брифa — это отдельный смоук на проде.
+Импорт «Типичные фразы» 04/05/06 → тесты `SupportAnswerSuggesterTest` / `StudentSelfServiceIntentTest`; photo→чек как слой 0; интент «мои долги» в кабинет-боте. H3233 на проде уже ON — не трогать флаг из этого брифа.
 
 _Dr. Mārcis Gasūns_

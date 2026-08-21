@@ -23,7 +23,7 @@ _Created: 21-08-2026 · Last updated: 21-08-2026_
 | 2 | Photo/document → маршрут «чек» без NLP | Тема 01 = 1 из 5 диалогов | open |
 | 3 | CRM-state tie-break в `categorize` | Один текст, разные двери | open |
 | 4 | Интент «мои долги» / magic-link в `StudentSelfService` | Кабинет-бот всё ещё отдаёт оплату в LLM | open |
-| 5 | Включить `SUPPORT_DM_AUTO_REPLY` после смоука | Код H3233 инертен (DEPLOY_QUEUE №79) | parked (прод-флаг) |
+| 5 | `SUPPORT_DM_AUTO_REPLY` | ON на проде 21-08-2026 (№79 / [PR #1941](https://github.com/gasyoun/Systema-Sanscriticum/pull/1941)) | done |
 | 6 | H300 UX-аудит кабинета | Другой deliverable | не этот файл |
 
 ## Ограничения
