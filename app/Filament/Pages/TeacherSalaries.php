@@ -30,6 +30,7 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -62,12 +63,22 @@ class TeacherSalaries extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return RoleGate::accounting();
+        return RoleGate::seesOwnSalary();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return RoleGate::accounting();
+        return RoleGate::seesOwnSalary();
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return RoleGate::accounting() ? 'Зарплаты' : 'Моя зарплата';
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return RoleGate::accounting() ? 'Зарплаты преподавателей' : 'Моя зарплата';
     }
 
     protected function getHeaderWidgets(): array
@@ -88,6 +99,10 @@ class TeacherSalaries extends Page implements HasTable
 
     protected function getHeaderActions(): array
     {
+        if (! RoleGate::accounting()) {
+            return [];
+        }
+
         return [$this->blockPayoutAction(), AccountantGuide::openAction()];
     }
 
@@ -1311,8 +1326,14 @@ class TeacherSalaries extends Page implements HasTable
 
     public function table(Table $table): Table
     {
+        $teachers = Teacher::query()->withCount('courses');
+        $ownId = RoleGate::ownTeacherId();
+        if ($ownId !== null) {
+            $teachers->whereKey($ownId);
+        }
+
         return $table
-            ->query(Teacher::query()->withCount('courses'))
+            ->query($teachers)
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Преподаватель')
@@ -1427,16 +1448,17 @@ class TeacherSalaries extends Page implements HasTable
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     $this->breakdownAction(),
-                    $this->recordPayoutAction(),
-                    $this->issueAdvanceAction(),
-                    $this->toggleCloseAction(),
-                    $this->openCardAction(),
+                    $this->recordPayoutAction()->visible(fn (): bool => RoleGate::accounting()),
+                    $this->issueAdvanceAction()->visible(fn (): bool => RoleGate::accounting()),
+                    $this->toggleCloseAction()->visible(fn (): bool => RoleGate::accounting()),
+                    $this->openCardAction()->visible(fn (): bool => RoleGate::accounting()),
                 ]),
             ])
             ->headerActions([
                 Tables\Actions\ExportAction::make()
                     ->exporter(TeacherSalariesExporter::class)
-                    ->label('Экспорт'),
+                    ->label('Экспорт')
+                    ->visible(fn (): bool => RoleGate::accounting()),
             ])
             ->defaultSort('name', 'asc')
             ->emptyStateHeading('Преподавателей нет')

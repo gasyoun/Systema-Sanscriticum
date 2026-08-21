@@ -843,7 +843,7 @@ Route::get('/login-link/{token}', [AdminLoginLinkController::class, 'login'])
 // плашки. При выключенном features.staff_impersonation оба отдают 404.
 Route::middleware(['auth', 'signed'])
     ->get('/impersonate/{user}/{mode}', [ImpersonationController::class, 'start'])
-    ->where('mode', 'student|manager')
+    ->where('mode', 'student|manager|teacher')
     ->name('impersonate.start');
 Route::middleware('auth')
     ->post('/impersonate/stop', [ImpersonationController::class, 'stop'])

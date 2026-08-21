@@ -9,6 +9,7 @@ use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
 use App\Models\User;
 use App\Services\Membership\ClubEntitlement;
+use App\Support\RoleGate;
 use Illuminate\Support\Collection;
 
 /**
@@ -129,13 +130,15 @@ final class HindiProgrammePlaylist
     }
 
     /**
-     * Hindi teacher of any programme shell (H2740). Does not grant
-     * student payments. Used so the teacher sees her own streams in
-     * /dvaram and can preview drills / chat practice while student
-     * flags stay OFF.
+     * Hindi teacher of any programme shell (H2740), or admin-like staff
+     * (H3219 — they see every teacher surface). Does not grant student payments.
      */
     public function teachesHindi(User $user): bool
     {
+        if (RoleGate::seesTeacherSurfaces($user)) {
+            return $this->orderedShells()->isNotEmpty();
+        }
+
         if (! $user->isTeacher() || $user->teacher_id === null) {
             return false;
         }
@@ -149,6 +152,12 @@ final class HindiProgrammePlaylist
 
     public function teachesShell(User $user, Course $shell): bool
     {
+        if (RoleGate::seesTeacherSurfaces($user)) {
+            return $this->orderedShells()->contains(
+                static fn (Course $s): bool => (int) $s->id === (int) $shell->id,
+            );
+        }
+
         if (! $user->isTeacher() || $user->teacher_id === null) {
             return false;
         }

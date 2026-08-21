@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-_Created: 07-05-2026 · Last updated: 19-08-2026_
+_Created: 07-05-2026 · Last updated: 21-08-2026_
 
 **Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru)
 (cabinet, shop, homework, finance, Telegram/VK bots). Org spine still applies;
@@ -66,6 +66,15 @@ Uptime inventory:
 (EN agents) ·
 [docs/UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md)
 (RU humans).
+
+## Teacher surfaces (H3219)
+
+Admin-like staff see every teacher surface (`RoleGate::seesTeacherSurfaces()`).
+To sit in a named teacher's seat (Kostina, …) use impersonation `MODE_TEACHER`
+— super_admin only, flag `STAFF_IMPERSONATION`. A teacher with a card sees
+**own** salary (`seesOwnSalary()`, «Моя зарплата»); school-wide payroll stays
+`accounting()`. Policy:
+[docs/STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026.md).
 
 ## CRM homework-pause
 

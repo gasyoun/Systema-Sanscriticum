@@ -30,9 +30,11 @@ class ImpersonationController extends Controller
 
         Impersonation::start($user, $mode, $request);
 
-        return $mode === Impersonation::MODE_MANAGER
-            ? redirect()->to('/admin')
-            : redirect()->route('student.dashboard');
+        if ($mode === Impersonation::MODE_STUDENT) {
+            return redirect()->route('student.dashboard');
+        }
+
+        return redirect()->to('/admin');
     }
 
     public function stop(Request $request): RedirectResponse

@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Added
+- **H3219 (Grok 4.6 `grok-4.6`): админ видит преподавательские поверхности; «войти как преподаватель»; преподаватель видит свой расчёт ЗП.** Правило: `RoleGate::seesTeacherSurfaces()` (`admin` / `super_admin`) — «Мой хинди», черновик, гид, нагрузка. Режим H1947: «Войти как преподаватель» (Костина и другие `teacher`, только `super_admin`). Свой расчёт: `RoleGate::seesOwnSalary()` — пункт «Моя зарплата», только своя карточка, без записи выплаты. Школьная ведомость по-прежнему `accounting()`. [docs/STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STANDING_POLICY_ADMIN_SEES_TEACHER_SURFACES_2026.md).
 
 ## [1.90.7] - 2026-08-21
 ### Added

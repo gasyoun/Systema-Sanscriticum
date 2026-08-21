@@ -905,6 +905,20 @@ class UserResource extends Resource
                         Impersonation::startUrl($record, Impersonation::MODE_MANAGER)
                     )),
 
+                Tables\Actions\Action::make('impersonate_teacher')
+                    ->iconButton()
+                    ->icon('heroicon-o-academic-cap')
+                    ->color('info')
+                    ->tooltip('Войти как преподаватель')
+                    ->visible(fn (User $record) => Impersonation::canImpersonate($record, Impersonation::MODE_TEACHER))
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (User $record) => 'Войти как преподаватель «'.$record->name.'»?')
+                    ->modalDescription('Панель, «Мой хинди» и «Моя зарплата» будут как у этого преподавателя: права супер-админа на время режима не действуют. Вернуться — кнопкой в верхней плашке.')
+                    ->modalSubmitActionLabel('Войти как преподаватель')
+                    ->action(fn (User $record) => redirect()->to(
+                        Impersonation::startUrl($record, Impersonation::MODE_TEACHER)
+                    )),
+
                 Tables\Actions\Action::make('grant_prana')
                     ->iconButton()
                     ->icon('heroicon-o-sparkles')
