@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.90.8] - 2026-08-21
 ### Added
 - **H3247 (Grok 4.6 `grok-4.6`): пробник как `Deal.kind=trial`.** Колонки `kind` / `schedule_id` / `trial_source` / `trial_outcome`. `TrialBookingService::bookFree` (Lead+Deal, без доступа), paid-trial тег через `PaymentDealBridgeObserver` (тот же Deal, `Payment::isTrial()` = `tariff=trial`), `crm:reconcile-trial-attendance` после Zoom, черновик `FollowUpTask`, бейдж «Пробник». Флаги `CRM_TRIAL_BOOKING` и `CRM_TRIAL_WIDGET_PUBLIC` default **OFF**. Rank 4: сервис не пишет `payments` / `course_group` / `LessonAccessGrant`. Тесты: `php artisan test --filter=TrialBooking`.
 - **`/ask` план: каталог документации продукта в `/admin` (Grok 4.6 `grok-4.6`, 21-08-2026).** Указатель живых книг (студент / преподаватель / куратор / бухгалтер + `/faq/dz` + прана + разметка выплат + строка на «Важные файлы»), поиск по заголовкам, FAQ остаётся Частью IV той же книги. Не слияние с H2570. Волна 2 — harvest FAQ и квизы преподавателя/бухгалтера на `CabinetMastery`. 23 решения, шлюз автономности PASS. [PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md) · [ROADMAP](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md).
