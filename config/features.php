@@ -445,6 +445,13 @@ return [
     'tochka_balance_on_salaries' => (bool) env('TOCHKA_BALANCE_ON_SALARIES', false),
 
     /*
+     | H3280: ISO-week teacher payout due calendar.
+     | Default OFF. Enable: TEACHER_WEEKLY_PAYOUT_CALENDAR=true + config:cache.
+     | Read-only. Never writes teacher_payouts / payments.
+     */
+    'teacher_weekly_payout_calendar' => (bool) env('TEACHER_WEEKLY_PAYOUT_CALENDAR', false),
+
+    /*
      | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
      | (fail closed на всех платных маршрутах: zero-price checkout, Filament,
      | PayPal, PayPal-claim, conditional, импорт), а не log-and-return «оплачено
