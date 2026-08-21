@@ -1,15 +1,15 @@
 # accountant-guide.meta.md — метадок о `accountant-guide.md`
 
-_Created: 13-07-2026 · Last updated: 19-08-2026_
+_Created: 13-07-2026 · Last updated: 21-08-2026_
 
 Метадок-спутник к [`accountant-guide.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/accountant-guide.md) — хранит то, что вокруг документа (назначение, происхождение, план улучшений, ограничения), но не пересказывает его содержание.
 
 ## Предмет
 
 - **Документ:** [`accountant-guide.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/accountant-guide.md)
-- **Назначение:** пользовательская инструкция для роли «Бухгалтер» в админ-панели ОРС (samskrte.ru/admin) — что видно, что можно делать, типовые задачи.
+- **Назначение:** карта меню + указатель в кабинет. Операционная книга с 21-08-2026 — [`ACCOUNTANT_CABINET_GUIDE_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ACCOUNTANT_CABINET_GUIDE_RU.md) на `/admin/accountant-guide`.
 - **Аудитория:** не-технический сотрудник-бухгалтер; вторично — администратор/владелец, приходящий из [`finance-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/finance-manual.md).
-- **Формат / контракт:** справочник по разделам админки (нумерованные разделы 1–7, карта меню, cookbook, глоссарий); привязан к фактическому поведению Filament-ресурсов и `RoleGate`; каждая доработка (§4a–4k) помечена своим H###/#PR-номером.
+- **Формат / контракт:** карта меню без пошаговых сумм (H3214). Живые сценарии — в кабинете.
 
 ## Происхождение
 

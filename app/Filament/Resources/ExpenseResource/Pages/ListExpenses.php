@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\ExpenseResource\Pages;
 
+use App\Filament\Pages\AccountantGuide;
 use App\Filament\Resources\ExpenseResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -16,6 +17,7 @@ class ListExpenses extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+            AccountantGuide::openAction(),
         ];
     }
 }

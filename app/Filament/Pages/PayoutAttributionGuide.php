@@ -9,6 +9,7 @@ use App\Models\TeacherPayoutAttributionSuggestion;
 use App\Support\Money;
 use App\Support\Plural;
 use App\Support\RoleGate;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 
 /**
@@ -48,6 +49,12 @@ class PayoutAttributionGuide extends Page
     public static function shouldRegisterNavigation(): bool
     {
         return RoleGate::finance();
+    }
+
+    /** @return array<int, Action> */
+    protected function getHeaderActions(): array
+    {
+        return [AccountantGuide::openAction()];
     }
 
     /** @return array<string, mixed> */

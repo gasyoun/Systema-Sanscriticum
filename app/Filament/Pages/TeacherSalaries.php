@@ -88,7 +88,7 @@ class TeacherSalaries extends Page implements HasTable
 
     protected function getHeaderActions(): array
     {
-        return [$this->blockPayoutAction()];
+        return [$this->blockPayoutAction(), AccountantGuide::openAction()];
     }
 
     /**

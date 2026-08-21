@@ -61,6 +61,10 @@ tinker-*.txt
 /*.png
 /*.pdf
 /docs/generated/student_guide_shots_last_run.json
+/docs/generated/accountant_guide_shots_last_run.json
+
+# H3214 — кадры и PDF книги бухгалтера (H3084: не в публичный git)
+/storage/app/guide-shots/
 
 # Личная промпт-заметка (scratch), не проектный файл — не коммитится
 /docs/fable5.md

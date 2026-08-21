@@ -23,4 +23,18 @@ class MarkdownGuideTest extends TestCase
     {
         $this->assertNull(MarkdownGuide::html('docs/THIS_GUIDE_DOES_NOT_EXIST.md'));
     }
+
+    public function test_custom_screenshot_base_rewrites_accountant_prefix(): void
+    {
+        $html = MarkdownGuide::html(
+            'tests/fixtures/guides/sample.md',
+            '/staff/accountant-guide-shots/',
+            'screenshots/student-guide/',
+        );
+
+        $this->assertIsString($html);
+        $this->assertStringContainsString('/staff/accountant-guide-shots/sample-1440.png', $html);
+        $this->assertStringNotContainsString('src="screenshots/', $html);
+        $this->assertStringNotContainsString(MarkdownGuide::SCREENSHOT_BASE, $html);
+    }
 }

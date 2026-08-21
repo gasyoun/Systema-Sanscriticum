@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Resources\UserResource;
+use App\Http\Controllers\AccountantGuideShotController;
 use App\Http\Controllers\AdminLoginLinkController;
 use App\Http\Controllers\Api\CabinetTelemetryController;
 use App\Http\Controllers\Api\GamesSrsOnboardingController;
@@ -960,6 +961,12 @@ Route::get('/admin/course-design/{course}/archive', function (Course $course, Co
 // План доходов/расходов) — гибридная стратегия H207: живые отчёты в панели +
 // эти workbooks вручную. Доступ — админ ИЛИ бухгалтер (+ супер-админ).
 // Имена берём из белого списка, чтобы исключить обход каталога.
+// H3214 — кадры книги бухгалтера из storage (не git). Basename only.
+Route::get('/staff/accountant-guide-shots/{file}', [AccountantGuideShotController::class, 'show'])
+    ->middleware('auth')
+    ->where('file', '[A-Za-z0-9._-]+')
+    ->name('accountant-guide.shot');
+
 Route::get('/admin/finance-templates/{name}', function (string $name) {
     abort_unless(RoleGate::finance(), 403);
 
