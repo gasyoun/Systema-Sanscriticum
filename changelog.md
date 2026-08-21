@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **super_admin vs /dvaram «студент» (Grok 4.6 `grok-4.6`, 21-08-2026).** `gasyoun@ya.ru` (id 6755) already has `role=super_admin`; the student badge is `global_status` plus the `/dvaram` cabinet, not a missing staff role. Second live super_admin remains `pe4kinsmart@gmail.com` (id 937). [docs/SUPERADMIN_ROLE_VS_DVARAM_STUDENT_STATUS_21-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SUPERADMIN_ROLE_VS_DVARAM_STUDENT_STATUS_21-08-2026.md).
+
 ## [1.90.8] - 2026-08-21
 ### Added
 - **H3276 (Grok 4.6 `grok-4.6`): карта денег школы в книге бухгалтера.** Часть 0 — постер трёх слоёв без живых ФИО и сумм (`docs/screenshots/accountant-map/`, git). Четыре новых сценария: взаимозачёт, история выплат, возврат, бронь/предоплата. Блок «вне кабинета» (выписка, НПД, ИП). Живые кадры экранов по-прежнему storage; карта отдаётся тем же `/staff/accountant-guide-shots/` с запасным чтением из git. [PLAN](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ACCOUNTANT_MONEY_MAP_2026H2.md).
