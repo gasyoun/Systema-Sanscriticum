@@ -393,8 +393,14 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('marathon-channel-post-1-announce');
 
+        // G31 / H3204 — start-post cron + when() both read marathon.launch_date
+        // so a later 28 August cannot re-publish the cohort-zero «день старта».
+        $launchDate = (string) config('marathon.launch_date', '2026-08-28');
+        $launch = Carbon::parse($launchDate, 'Europe/Moscow');
         $schedule->command('marathon:publish-channel-posts --post=2 --live')
-            ->cron('0 10 28 8 *')->timezone('Europe/Moscow')
+            ->cron(sprintf('0 10 %d %d *', $launch->day, $launch->month))
+            ->timezone('Europe/Moscow')
+            ->when(fn () => now('Europe/Moscow')->toDateString() === $launchDate)
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('marathon-channel-post-2-start');

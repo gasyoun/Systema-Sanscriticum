@@ -28,6 +28,12 @@ return [
     // Paid track «с проверкой» — tripwire price, ₽.
     'paid_track_price' => (int) env('MARATHON_PAID_TRACK_PRICE', 500),
 
+    // Cohort-zero student-facing launch (G31). Channel post 2 («день старта»)
+    // and Kernel's when() gate read this; Days 1–2 stay Cyrillic. Devanagari
+    // is january_launch_date, not this date. Do not bring forward without a
+    // human re-dating the intake.
+    'launch_date' => env('MARATHON_LAUNCH_DATE', '2026-08-28'),
+
     // Coupon on the first course purchase after the marathon (MG decision).
     'coupon_amount' => (int) env('MARATHON_COUPON_AMOUNT', 1000),
 
