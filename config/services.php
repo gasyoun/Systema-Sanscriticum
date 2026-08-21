@@ -50,6 +50,8 @@ return [
         // подтвердить у бухгалтера/в кабинете Точки до боевой проверки.
         'tax_system_code' => env('TOCHKA_TAX_SYSTEM_CODE'), // СНО: usn_income | usn_income_outcome | osn | patent | ...
         'vat_type' => env('TOCHKA_VAT_TYPE', 'none'),       // ставка НДС позиции; в чеке «не облагается» → none
+        'open_banking_url' => env('TOCHKA_OPEN_BANKING_URL') ?: 'https://enter.tochka.com/uapi/open-banking/v1.0',
+        'balance_cache_seconds' => (int) env('TOCHKA_BALANCE_CACHE_SECONDS', 60),
     ],
 
     'lesson_sync' => [

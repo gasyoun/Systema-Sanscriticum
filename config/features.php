@@ -438,6 +438,13 @@ return [
     'tochka_webhook_guard' => (bool) env('TOCHKA_WEBHOOK_GUARD', true),
 
     /*
+     | H3280: live Tochka ClosingAvailable on /admin/teacher-salaries.
+     | Read-only Open Banking GET. Default OFF. Enable: TOCHKA_BALANCE_ON_SALARIES=true
+     | + config:cache. Teachers on «Моя зарплата» never see it (RoleGate::accounting).
+     */
+    'tochka_balance_on_salaries' => (bool) env('TOCHKA_BALANCE_ON_SALARIES', false),
+
+    /*
      | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
      | (fail closed на всех платных маршрутах: zero-price checkout, Filament,
      | PayPal, PayPal-claim, conditional, импорт), а не log-and-return «оплачено
