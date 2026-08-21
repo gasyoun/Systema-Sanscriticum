@@ -77,6 +77,7 @@ class TochkaBalanceWidgetTest extends TestCase
         $this->assertTrue($snap['ok']);
         $this->assertEquals(248387.93, $snap['closing_total']);
         $this->assertCount(2, $snap['accounts']);
+        $this->assertSame(['863757', '877617'], array_column($snap['accounts'], 'tail'));
         $this->assertSame($payouts, TeacherPayout::query()->count());
         $this->assertSame($payments, Payment::query()->count());
     }
