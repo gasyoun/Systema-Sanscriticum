@@ -1,6 +1,11 @@
 # Стратегия роста 2026–2027 — членство как годовой поток
 
-_Created: 06-07-2026 · Last updated: 06-07-2026_
+_Created: 06-07-2026 · Last updated: 22-08-2026 (superseded by MONETIZATION_PLAN_2026H2)_
+
+> **SUPERSEDED 22-08-2026:** заменён единым планом монетизации
+> [MONETIZATION_PLAN_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MONETIZATION_PLAN_2026H2.md)
+> (решения MG 22-08-2026). Живые решения перенесены туда; этот документ —
+> исторический контекст ставки «членство как годовой поток».
 
 Слой go-to-market **над** инженерным
 [роадмапом](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md)
