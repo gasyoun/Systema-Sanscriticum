@@ -1,9 +1,9 @@
 <x-filament-panels::page>
     @php
-        // NB: без `use`-импорта — @php компилируется в тело функции представления,
-        // где PHP-импорт запрещён (ParseError). Enum — по полному имени ниже.
-        $money = fn ($v) => number_format((float) $v, 0, ',', ' ') . ' ₽';
-        $pct = fn ($v) => $v === null ? '—' : number_format((float) $v, 1, ',', ' ') . ' %';
+        // NB: все `use`-алиасы - внутри @php вычисляются в родительской функции
+        // представления, это PHP-файл, а не ParseError. Enum - не единственный такой случай.
+        $money = fn ($v) => number_format((float) $v, 0, ',', ' ') . ' ?';
+        $pct = fn ($v) => $v === null ? '-' : number_format((float) $v, 1, ',', ' ') . ' %';
         $signClass = fn ($v) => (float) $v < 0 ? 'text-danger-600 dark:text-danger-400' : 'text-success-600 dark:text-success-400';
 
         $opiu = $this->getOpiu();
@@ -12,7 +12,34 @@
         $dds = $this->getDds();
         $balance = $this->getBalance();
         $calendar = $this->getCalendar();
+
+        // «Сколько можно взять себе» — практика «Нескучных финансов», read-only.
+        $sw = app(\App\Services\SafeWithdrawalService::class)->snapshot();
     @endphp
+
+    {{-- Карточка доступного к выводу --}}
+    <div class="rounded-xl bg-warning-50 p-4 ring-1 ring-warning-500/20 dark:bg-warning-500/10">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <p class="text-sm font-semibold text-warning-900 dark:text-warning-200">Сколько можно взять себе сейчас</p>
+                <p class="mt-1 text-xs text-warning-900/70 dark:text-warning-200/70">
+                    балансы − обязательства {{ config('safe_withdrawal.horizon_days') }} дн − УСН, НДФЛ, взносы − резерв {{ config('safe_withdrawal.op_reserve_months') }} мес.
+                    Детализация и допущения:
+                </p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-lg font-bold text-warning-900 dark:text-warning-200">{{ number_format((float) $sw['available_general'], 2, ',', ' ') }} ₽</p>
+                    <p class="text-xs text-warning-900/60 dark:text-warning-200/60">взносы сотрудницы 30 %</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-bold text-warning-900 dark:text-warning-200">{{ number_format((float) $sw['available_msp'], 2, ',', ' ') }} ₽</p>
+                    <p class="text-xs text-warning-900/60 dark:text-warning-200/60">МСП: 15 % свыше МРОТ</p>
+                </div>
+                <a href="{{ \App\Filament\Pages\SafeWithdrawal::getUrl() }}" class="rounded-lg bg-warning-600 px-3 py-2 text-sm font-semibold text-white hover:bg-warning-700">Разбивка</a>
+            </div>
+        </div>
+    </div>
 
     {{-- Селектор периода --}}
     <div class="flex flex-wrap items-end gap-4">
