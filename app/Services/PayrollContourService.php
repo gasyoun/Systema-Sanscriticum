@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\CourseBlock;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
@@ -148,6 +149,93 @@ final class PayrollContourService
                 'amount' => round((float) $total['amount'], 2),
                 'by_course' => array_map(fn ($v) => round((float) $v, 2), $total['by_course']),
             ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * «Должники платят»: реальные оплаты студентов на курсах преподавателя за
+     * последние $days дней — кто, сколько, за какие блоки и с какой задержкой
+     * относительно старта самого раннего покрытого блока. Задержка <0 = заплатил
+     * заранее; null = блоки без дат, задержку определить нельзя.
+     *
+     * @return array<int, array{teacher_id: int, name: string, rows: list<array<string, mixed>>}>
+     */
+    public function recentPaymentsByTeacher(int $days = 35): array
+    {
+        $paymentsBefore = Payment::query()->count();
+        $payoutsBefore = TeacherPayout::query()->count();
+
+        $since = now()->subDays(max(1, $days))->startOfDay();
+
+        $out = [];
+        foreach (Teacher::query()->orderBy('id')->get() as $teacher) {
+            $rows = [];
+            foreach ($teacher->allTaughtCourses() as $course) {
+                if ($course->salaryTermsFor((int) $teacher->id) === null) {
+                    continue;
+                }
+
+                $blockStarts = CourseBlock::query()
+                    ->where('course_id', $course->id)
+                    ->whereNotNull('starts_at')
+                    ->pluck('starts_at', 'number');
+
+                $payments = Payment::query()
+                    ->with('user:id,name')
+                    ->where('course_id', $course->id)
+                    ->paid()
+                    ->real()
+                    ->schoolReceived()
+                    ->whereNotIn('tariff', TeacherSalaryService::NON_REVENUE_TARIFFS)
+                    ->where('amount', '>', 0)
+                    ->where('created_at', '>=', $since)
+                    ->orderByDesc('created_at')
+                    ->limit(100)
+                    ->get(['id', 'user_id', 'amount', 'tariff', 'start_block', 'end_block', 'created_at']);
+
+                foreach ($payments as $p) {
+                    $covered = [];
+                    foreach ($blockStarts as $number => $start) {
+                        if (DebtorsReport::paymentCovers($p->start_block, $p->end_block, (int) $number)) {
+                            $covered[(int) $number] = Carbon::parse($start);
+                        }
+                    }
+                    ksort($covered);
+
+                    $delayDays = null;
+                    if ($covered !== [] && $p->created_at !== null) {
+                        $earliestStart = $covered[min(array_keys($covered))]->copy()->startOfDay();
+                        $delayDays = (int) $earliestStart->diffInDays($p->created_at->copy()->startOfDay(), false);
+                    }
+
+                    $rows[] = [
+                        'student' => (string) ($p->user?->name ?? ('#'.$p->user_id)),
+                        'course' => (string) $course->title,
+                        'blocks' => DebtorsReport::formatBlockRanges(array_map(intval(...), array_keys($covered))),
+                        'amount' => round((float) $p->amount, 2),
+                        'paid_at' => $p->created_at?->toDateString(),
+                        'delay_days' => $delayDays,
+                    ];
+                }
+            }
+
+            if ($rows === []) {
+                continue;
+            }
+            usort($rows, fn ($a, $b) => strcasecmp((string) $a['paid_at'], (string) $b['paid_at']));
+            $out[] = [
+                'teacher_id' => (int) $teacher->id,
+                'name' => (string) $teacher->name,
+                'rows' => $rows,
+            ];
+        }
+
+        $moved = Payment::query()->count() !== $paymentsBefore
+            || TeacherPayout::query()->count() !== $payoutsBefore;
+        if ($moved) { // @codeCoverageIgnore
+            report(new \RuntimeException('payroll contour: money tables moved during a read-only slice'));
         }
 
         return $out;

@@ -154,6 +154,48 @@ class PayrollContourServiceTest extends TestCase
     }
 
     /** @test */
+    public function recent_payments_slice_reports_student_amount_and_delay(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Препод Срез']);
+        $course = Course::factory()->create(['is_active' => true]);
+        $course->forceFill(['teacher_id' => $teacher->id])->saveQuietly();
+
+        CourseBlock::factory()
+            ->withDates(now()->subDays(12)->startOfDay(), now()->subDays(5))
+            ->create(['course_id' => $course->id, 'number' => 2]);
+
+        $late = User::factory()->create(['name' => 'Опоздавший Фикстура']);
+        $early = User::factory()->create(['name' => 'Заранее Фикстура']);
+
+        foreach ([[$late, now()->subDays(2)], [$early, now()->subDays(15)]] as [$u, $when]) {
+            $p = Payment::create([
+                'user_id' => $u->id,
+                'course_id' => $course->id,
+                'amount' => 6000,
+                'tariff' => 'block_2',
+                'status' => 'paid',
+                'start_block' => 2,
+                'end_block' => 2,
+            ]);
+            $p->forceFill(['created_at' => $when])->saveQuietly();
+        }
+
+        $out = app(PayrollContourService::class)->recentPaymentsByTeacher(35);
+        $row = collect($out)->firstWhere('teacher_id', $teacher->id);
+
+        $this->assertNotNull($row);
+        $this->assertCount(2, $row['rows']);
+
+        $byStudent = collect($row['rows'])->keyBy('student');
+        $this->assertSame(6000.0, $byStudent->get('Опоздавший Фикстура')['amount']);
+        $this->assertSame('№2', $byStudent->get('Опоздавший Фикстура')['blocks']);
+        $this->assertGreaterThan(3, $byStudent->get('Опоздавший Фикстура')['delay_days']);
+
+        $earlyRow = $byStudent->get('Заранее Фикстура');
+        $this->assertLessThan(0, $earlyRow['delay_days']);
+    }
+
+    /** @test */
     public function calendar_page_renders_contour_sections_for_finance_role(): void
     {
         config(['features.teacher_weekly_payout_calendar' => true]);

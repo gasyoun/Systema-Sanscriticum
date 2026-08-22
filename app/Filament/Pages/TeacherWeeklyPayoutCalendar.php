@@ -59,6 +59,7 @@ class TeacherWeeklyPayoutCalendar extends Page
             'grid' => $grid,
             'staff' => $contour->staffPayees(),
             'debts' => $contour->collectionReadinessByTeacher(),
+            'recentPayments' => $contour->recentPaymentsByTeacher(35),
             'attributionUrl' => PayoutAttributionGuide::getUrl(),
             'salariesUrl' => TeacherSalaries::getUrl(),
             'debtorsUrl' => Debtors::getUrl(),

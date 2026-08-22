@@ -131,6 +131,71 @@
         </table>
     </div>
 
+    @php
+        $staff = $staff ?? ['payees' => [], 'totals' => ['monthly_estimate' => 0, 'owed_estimate' => 0]];
+        $debts = $debts ?? [];
+        $recentPayments = $recentPayments ?? [];
+        $delayLabel = function ($d): string {
+            if ($d === null) {
+                return 'блоки без дат';
+            }
+            if ($d < 0) {
+                return 'заранее на '.abs($d).' дн';
+            }
+            if ($d <= 3) {
+                return 'вовремя';
+            }
+
+            return 'опоздал '.$d.' дн';
+        };
+    @endphp
+
+    <h2 class="mt-8 text-sm font-semibold text-gray-500 dark:text-gray-400">Должники платят: оплаты за последние 35 дней</h2>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        По каждому преподавателю: кто оплатил, сколько, за какие блоки и с какой задержкой относительно старта самого раннего покрытого блока. Срез для ежемесячных выплат.
+    </p>
+    <div class="mt-2 space-y-4">
+        @forelse ($recentPayments as $t)
+            <div class="overflow-x-auto rounded-xl ring-1 ring-gray-950/5 dark:ring-white/10">
+                <p class="bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-500 dark:bg-white/5 dark:text-gray-400">
+                    #{{ $t['teacher_id'] }} {{ $t['name'] }} — {{ count($t['rows']) }} опл.
+                </p>
+                <table class="w-full text-sm">
+                    <thead class="text-xs text-gray-500 dark:text-gray-400">
+                        <tr>
+                            <th class="px-3 py-1 text-left">Студент</th>
+                            <th class="px-3 py-1 text-left">Курс</th>
+                            <th class="px-3 py-1 text-left">Блоки</th>
+                            <th class="px-3 py-1 text-right">Сумма</th>
+                            <th class="px-3 py-1 text-left">Дата</th>
+                            <th class="px-3 py-1 text-left">Задержка</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($t['rows'] as $r)
+                            <tr class="border-t border-gray-100 dark:border-white/10">
+                                <td class="px-3 py-1">{{ $r['student'] }}</td>
+                                <td class="px-3 py-1">{{ $r['course'] }}</td>
+                                <td class="px-3 py-1">{{ $r['blocks'] }}</td>
+                                <td class="px-3 py-1 text-right">{{ $money($r['amount']) }}</td>
+                                <td class="px-3 py-1">{{ $r['paid_at'] }}</td>
+                                <td class="px-3 py-1">
+                                    @if ($r['delay_days'] !== null && $r['delay_days'] > 3)
+                                        <span class="rounded bg-danger-100 px-1 text-xs text-danger-800">{{ $delayLabel($r['delay_days']) }}</span>
+                                    @else
+                                        <span class="text-gray-600 dark:text-gray-300">{{ $delayLabel($r['delay_days']) }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @empty
+            <p class="text-sm text-gray-500">За последние 35 дней оплат не было.</p>
+        @endforelse
+    </div>
+
     <h2 class="mt-8 text-sm font-semibold text-gray-500 dark:text-gray-400">Весь контур: персонал и повторяемые получатели (не преподаватели)</h2>
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
         Ставка — среднее последних ≤3 плативших месяцев; «оценка долга» — ставка × полные месяцы тишины.
