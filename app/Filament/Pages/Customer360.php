@@ -118,10 +118,28 @@ class Customer360 extends Page implements HasForms
             return;
         }
 
+        $tokens = array_values(array_filter(
+            preg_split('/\s+/u', $q) ?: [],
+            fn (string $t): bool => $t !== ''
+        ));
+        if ($tokens === []) {
+            return;
+        }
+
+        $allTokensInName = function ($query) use ($tokens): void {
+            $query->where(function ($name) use ($tokens): void {
+                foreach ($tokens as $token) {
+                    $name->where('name', 'like', '%'.$token.'%');
+                }
+            });
+        };
+
         $user = User::query()
-            ->where('email', $q)
-            ->orWhere('name', 'like', '%'.$q.'%')
-            ->orWhere('phone', $q)
+            ->where(function ($query) use ($q, $allTokensInName): void {
+                $query->where('email', $q)
+                    ->orWhere('phone', $q)
+                    ->orWhere($allTokensInName);
+            })
             ->first();
         if ($user !== null) {
             $this->redirect(self::urlForUser($user->id));
@@ -130,13 +148,23 @@ class Customer360 extends Page implements HasForms
         }
 
         $lead = Lead::query()
-            ->where('email', $q)
-            ->orWhere('contact', $q)
-            ->orWhere('name', 'like', '%'.$q.'%')
+            ->where(function ($query) use ($q, $allTokensInName): void {
+                $query->where('email', $q)
+                    ->orWhere('contact', $q)
+                    ->orWhere($allTokensInName);
+            })
             ->first();
         if ($lead !== null) {
             $this->redirect(self::urlForLead($lead->id));
+
+            return;
         }
+
+        Notification::make()
+            ->title('Клиент не найден')
+            ->body('Попробуйте фамилию одним словом, либо точный email / телефон.')
+            ->warning()
+            ->send();
     }
 
     public function completeTask(int $taskId): void
