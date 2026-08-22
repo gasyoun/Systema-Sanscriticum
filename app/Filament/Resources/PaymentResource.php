@@ -225,6 +225,18 @@ class PaymentResource extends Resource
                             ->default('paid')
                             ->required(),
 
+                        Forms\Components\Select::make('payment_method')
+                            ->label('Способ оплаты')
+                            ->options([
+                                'card' => 'Карта',
+                                'sbp' => 'СБП',
+                                'dolyame' => 'Долями',
+                                'cash' => 'Наличные',
+                            ])
+                            ->native(false)
+                            ->placeholder('Не задан (Точка проставит сама)')
+                            ->helperText('Для наличных и прочих ручных проводок ставьте явно. Карта/СБП/Долями приходят с вебхука Точки — не затирайте, если уже стоят.'),
+
                         Forms\Components\TextInput::make('transaction_id')
                             ->label('ID транзакции (Банк / Расход)')
                             ->maxLength(255),
@@ -412,12 +424,14 @@ class PaymentResource extends Resource
                         'card' => 'info',
                         'sbp' => 'success',
                         'dolyame' => 'warning',
+                        'cash' => 'gray',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
                         'card' => 'Карта',
                         'sbp' => 'СБП',
                         'dolyame' => 'Долями',
+                        'cash' => 'Наличные',
                         default => (string) $state,
                     })
                     ->placeholder('—')
@@ -493,6 +507,7 @@ class PaymentResource extends Resource
                         'card' => 'Карта',
                         'sbp' => 'СБП',
                         'dolyame' => 'Долями (рассрочка)',
+                        'cash' => 'Наличные',
                         'unknown' => 'Не определён',
                     ])
                     ->query(fn ($query, array $data) => $query->when(

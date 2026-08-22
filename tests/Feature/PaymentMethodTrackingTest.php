@@ -52,23 +52,27 @@ class PaymentMethodTrackingTest extends TestCase
         $card = $this->payment('card');
         $sbp = $this->payment('sbp');
         $dolyame = $this->payment('dolyame');
+        $cash = $this->payment('cash');
         $manual = $this->payment(null);
 
         Livewire::test(ListPayments::class)
             ->assertOk()
-            ->assertCanSeeTableRecords([$card, $sbp, $dolyame, $manual])
+            ->assertCanSeeTableRecords([$card, $sbp, $dolyame, $cash, $manual])
             ->filterTable('payment_method', 'card')
             ->assertCanSeeTableRecords([$card])
-            ->assertCanNotSeeTableRecords([$sbp, $dolyame, $manual])
+            ->assertCanNotSeeTableRecords([$sbp, $dolyame, $cash, $manual])
             ->filterTable('payment_method', 'sbp')
             ->assertCanSeeTableRecords([$sbp])
-            ->assertCanNotSeeTableRecords([$card, $dolyame, $manual])
+            ->assertCanNotSeeTableRecords([$card, $dolyame, $cash, $manual])
             ->filterTable('payment_method', 'dolyame')
             ->assertCanSeeTableRecords([$dolyame])
-            ->assertCanNotSeeTableRecords([$card, $sbp, $manual])
+            ->assertCanNotSeeTableRecords([$card, $sbp, $cash, $manual])
+            ->filterTable('payment_method', 'cash')
+            ->assertCanSeeTableRecords([$cash])
+            ->assertCanNotSeeTableRecords([$card, $sbp, $dolyame, $manual])
             // «Не определён» — NULL: ручной платёж / PayPal / вебхук до поля.
             ->filterTable('payment_method', 'unknown')
             ->assertCanSeeTableRecords([$manual])
-            ->assertCanNotSeeTableRecords([$card, $sbp, $dolyame]);
+            ->assertCanNotSeeTableRecords([$card, $sbp, $dolyame, $cash]);
     }
 }
