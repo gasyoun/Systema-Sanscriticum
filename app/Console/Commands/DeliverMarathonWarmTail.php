@@ -59,17 +59,34 @@ final class DeliverMarathonWarmTail extends Command
                 continue;
             }
 
-            $template = (string) ($messages[$day] ?? '');
+            // H3330 — sequential waves: the wave is fixed by the enrolment
+            // moment (not by send time), so a registrant's series never mixes
+            // offers mid-flight even when the cutoff flips between sends.
+            $wave = $enrollment->warmTailWave();
+            $waveMessages = (array) config('marathon.warm_tail_messages_wave2', []);
+            $template = (string) (($wave === MarathonEnrollment::WAVE_MEMBERSHIP && $waveMessages !== []
+                ? $waveMessages
+                : $messages)[$day] ?? '');
             if ($template === '') {
                 continue;
             }
 
             $text = str_replace(
-                ['{host}', '{coupon}', '{testimonial}'],
+                [
+                    '{host}',
+                    '{coupon}',
+                    '{testimonial}',
+                    '{basic_price}',
+                    '{club_price}',
+                    '{klub_url}',
+                ],
                 [
                     (string) config('marathon.host_name'),
                     (string) config('marathon.coupon_amount'),
                     $this->testimonialText(),
+                    (string) config('marathon.membership_basic_month_price', 1000),
+                    (string) config('marathon.membership_club_month_price', 2000),
+                    (string) config('marathon.membership_klub_url', 'https://samskrte.ru/klub'),
                 ],
                 $template
             );
@@ -96,7 +113,9 @@ final class DeliverMarathonWarmTail extends Command
 
             $enrollment->update(['warm_tail_last_day_sent' => $day]);
             $sent++;
-            Log::info("marathon:deliver-warm-tail — Day {$day} sent, enrollment #{$enrollment->id}");
+            Log::info("marathon:deliver-warm-tail — Day {$day} sent, enrollment #{$enrollment->id}", [
+                'wave' => $wave,
+            ]);
         }
 
         $this->info("Marathon warm-tail delivery: sent {$sent} message(s).");

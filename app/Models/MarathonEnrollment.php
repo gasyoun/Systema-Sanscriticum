@@ -44,6 +44,18 @@ class MarathonEnrollment extends Model
     /** Arm B — treatment, un-masked leaderboard. Gated OFF by default, see config/marathon.php. */
     public const ARM_B = 'b';
 
+    /**
+     * H3330 — sequential warm-tail waves (MG ruling 22-08-2026,
+     * MONETIZATION_PLAN_2026H2 §3). Wave 1 keeps the flagship coupon series;
+     * wave 2 receives the membership-offer variant. NOT a random split —
+     * assignment is fixed by the enrolment moment against the config cutoff
+     * (marathon.warm_tail_wave2_from), so every launch window sees exactly
+     * one offer and the mapping is reproducible from data alone.
+     */
+    public const WAVE_FLAGSHIP = 'flagship';
+
+    public const WAVE_MEMBERSHIP = 'membership';
+
     protected $fillable = [
         'lead_id',
         'track',
@@ -228,6 +240,30 @@ class MarathonEnrollment extends Model
         }
 
         return $warmTailDay;
+    }
+
+    /**
+     * H3330 — which sequential wave this registrant's warm tail belongs to.
+     * Fixed by the enrolment moment (day0_started_at) against the config
+     * cutoff marathon.warm_tail_wave2_from: starts before the cutoff date
+     * (or whenever the cutoff is unset/empty) stay on the flagship-coupon
+     * series; starts on/after it get the membership-offer variant. Stable
+     * for a given enrolment forever — flipping the cutoff mid-flight never
+     * re-brands an already-started tail, it only routes new enrolments.
+     */
+    public function warmTailWave(): string
+    {
+        $from = trim((string) config('marathon.warm_tail_wave2_from', ''));
+
+        if ($from === '') {
+            return self::WAVE_FLAGSHIP;
+        }
+
+        $cutoff = Carbon::parse($from)->startOfDay();
+
+        return $this->day0_started_at->startOfDay()->greaterThanOrEqualTo($cutoff)
+            ? self::WAVE_MEMBERSHIP
+            : self::WAVE_FLAGSHIP;
     }
 
     /**
