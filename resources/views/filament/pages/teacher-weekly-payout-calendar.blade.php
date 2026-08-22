@@ -13,6 +13,17 @@
         </p>
     </div>
 
+    <div class="mt-4 rounded-xl bg-white p-4 text-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
+        <p class="font-semibold">Недельный ритуал владельца</p>
+        <ol class="mt-2 list-decimal space-y-1 pl-5 text-gray-700 dark:text-gray-300">
+            <li>Ниже — кого платим на этой неделе (преподаватели) и кто молчит слишком долго (персонал).</li>
+            <li>Проверить сборность должников по курсам получателя — раздел «Собранность должников».</li>
+            <li>Заплатить: Точка ₽ / PayPal EUR (вручную).</li>
+            <li>Записать: калькулятор «Записать выплату» на «Зарплатах» / занести opex в Финансы.</li>
+            <li>Разметить новые «Расходы» в очереди разметки. НПД-чек самозанятым: зачёт до выплаты, −6 %.</li>
+        </ol>
+    </div>
+
     <div class="mt-4 grid gap-3 sm:grid-cols-2">
         <div class="rounded-xl bg-white p-4 text-sm ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
             <p class="font-semibold">Точка, к трате (ClosingAvailable)</p>
@@ -83,6 +94,154 @@
                     @endforeach
                 @endforeach
             </tbody>
+        </table>
+    </div>
+
+    @php
+        $staff = $staff ?? ['payees' => [], 'totals' => ['monthly_estimate' => 0, 'owed_estimate' => 0]];
+        $debts = $debts ?? [];
+    @endphp
+
+    <h2 class="mt-8 text-sm font-semibold text-gray-500 dark:text-gray-400">Собранность должников по преподавателям</h2>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        Студенты активных курсов, ещё не оплатившие текущий блок. Выплата без учёта несобранного — неполная картина.
+    </p>
+    <div class="mt-2 overflow-x-auto rounded-xl ring-1 ring-gray-950/5 dark:ring-white/10">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-xs text-gray-500 dark:bg-white/5 dark:text-gray-400">
+                <tr>
+                    <th class="px-3 py-2 text-left">Преподаватель</th>
+                    <th class="px-3 py-2 text-left">Должников</th>
+                    <th class="px-3 py-2 text-left">Не собрано, ₽</th>
+                    <th class="px-3 py-2 text-left">Должники</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($debts as $d)
+                    <tr class="border-t border-gray-100 dark:border-white/10">
+                        <td class="px-3 py-2">#{{ $d['teacher_id'] }} {{ $d['name'] }}</td>
+                        <td class="px-3 py-2">{{ $d['pairs'] }}</td>
+                        <td class="px-3 py-2">{{ $money($d['amount']) }}</td>
+                        <td class="px-3 py-2"><a href="{{ $debtorsUrl }}" class="underline">открыть раздел</a></td>
+                    </tr>
+                @empty
+                    <tr><td colspan="4" class="px-3 py-2 text-gray-500">Должников нет.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    @php
+        $staff = $staff ?? ['payees' => [], 'totals' => ['monthly_estimate' => 0, 'owed_estimate' => 0]];
+        $debts = $debts ?? [];
+        $recentPayments = $recentPayments ?? [];
+        $delayLabel = function ($d): string {
+            if ($d === null) {
+                return 'блоки без дат';
+            }
+            if ($d < 0) {
+                return 'заранее на '.abs($d).' дн';
+            }
+            if ($d <= 3) {
+                return 'вовремя';
+            }
+
+            return 'опоздал '.$d.' дн';
+        };
+    @endphp
+
+    <h2 class="mt-8 text-sm font-semibold text-gray-500 dark:text-gray-400">Должники платят: оплаты за последние 35 дней</h2>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        По каждому преподавателю: кто оплатил, сколько, за какие блоки и с какой задержкой относительно старта самого раннего покрытого блока. Срез для ежемесячных выплат.
+    </p>
+    <div class="mt-2 space-y-4">
+        @forelse ($recentPayments as $t)
+            <div class="overflow-x-auto rounded-xl ring-1 ring-gray-950/5 dark:ring-white/10">
+                <p class="bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-500 dark:bg-white/5 dark:text-gray-400">
+                    #{{ $t['teacher_id'] }} {{ $t['name'] }} — {{ count($t['rows']) }} опл.
+                </p>
+                <table class="w-full text-sm">
+                    <thead class="text-xs text-gray-500 dark:text-gray-400">
+                        <tr>
+                            <th class="px-3 py-1 text-left">Студент</th>
+                            <th class="px-3 py-1 text-left">Курс</th>
+                            <th class="px-3 py-1 text-left">Блоки</th>
+                            <th class="px-3 py-1 text-right">Сумма</th>
+                            <th class="px-3 py-1 text-left">Дата</th>
+                            <th class="px-3 py-1 text-left">Задержка</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($t['rows'] as $r)
+                            <tr class="border-t border-gray-100 dark:border-white/10">
+                                <td class="px-3 py-1">{{ $r['student'] }}</td>
+                                <td class="px-3 py-1">{{ $r['course'] }}</td>
+                                <td class="px-3 py-1">{{ $r['blocks'] }}</td>
+                                <td class="px-3 py-1 text-right">{{ $money($r['amount']) }}</td>
+                                <td class="px-3 py-1">{{ $r['paid_at'] }}</td>
+                                <td class="px-3 py-1">
+                                    @if ($r['delay_days'] !== null && $r['delay_days'] > 3)
+                                        <span class="rounded bg-danger-100 px-1 text-xs text-danger-800">{{ $delayLabel($r['delay_days']) }}</span>
+                                    @else
+                                        <span class="text-gray-600 dark:text-gray-300">{{ $delayLabel($r['delay_days']) }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @empty
+            <p class="text-sm text-gray-500">За последние 35 дней оплат не было.</p>
+        @endforelse
+    </div>
+
+    <h2 class="mt-8 text-sm font-semibold text-gray-500 dark:text-gray-400">Весь контур: персонал и повторяемые получатели (не преподаватели)</h2>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        Ставка — среднее последних ≤3 плативших месяцев; «оценка долга» — ставка × полные месяцы тишины.
+        Это экстраполяция (предварительно), а не начисление: решение о сумме — за человеком.
+    </p>
+    <div class="mt-2 overflow-x-auto rounded-xl ring-1 ring-gray-950/5 dark:ring-white/10">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-xs text-gray-500 dark:bg-white/5 dark:text-gray-400">
+                <tr>
+                    <th class="px-3 py-2 text-left">Получатель</th>
+                    <th class="px-3 py-2 text-left">Категория</th>
+                    <th class="px-3 py-2 text-left">Ставка/мес</th>
+                    <th class="px-3 py-2 text-left">Последняя проводка</th>
+                    <th class="px-3 py-2 text-left">Мес. тишины</th>
+                    <th class="px-3 py-2 text-left">Оценка долга</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($staff['payees'] as $p)
+                    <tr class="border-t border-gray-100 dark:border-white/10">
+                        <td class="px-3 py-2">{{ $p['name'] }}</td>
+                        <td class="px-3 py-2">{{ $p['category'] }}</td>
+                        <td class="px-3 py-2">{{ $p['monthly_rate'] !== null ? $money($p['monthly_rate']).' ₽' : '—' }}</td>
+                        <td class="px-3 py-2">{{ $p['last_month'] ?? '—' }}</td>
+                        <td class="px-3 py-2">{{ $p['silent_months'] > 0 ? $p['silent_months'] : '—' }}</td>
+                        <td class="px-3 py-2">
+                            {{ $p['owed_estimate'] > 0 ? $money($p['owed_estimate']).' ₽' : '—' }}
+                            @if ($p['assumption'])
+                                <span class="ml-1 rounded bg-warning-100 px-1 text-xs text-warning-800">предварительно</span>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="px-3 py-2 text-gray-500">За 12 месяцев получателей не найдено.</td></tr>
+                @endforelse
+            </tbody>
+            @if (count($staff['payees']) > 0)
+                <tfoot class="bg-gray-50 text-xs dark:bg-white/5">
+                    <tr>
+                        <td class="px-3 py-2 font-semibold" colspan="2">Итого по персоналу (экстраполяция)</td>
+                        <td class="px-3 py-2 font-semibold">{{ $money($staff['totals']['monthly_estimate']) }} ₽/мес</td>
+                        <td class="px-3 py-2" colspan="2"></td>
+                        <td class="px-3 py-2 font-semibold">{{ $money($staff['totals']['owed_estimate']) }} ₽</td>
+                    </tr>
+                </tfoot>
+            @endif
         </table>
     </div>
 </x-filament-panels::page>
