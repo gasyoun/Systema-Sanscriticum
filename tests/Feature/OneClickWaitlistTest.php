@@ -104,6 +104,45 @@ class OneClickWaitlistTest extends TestCase
     }
 
     /** @test */
+    public function vk_id_beats_max_and_max_beats_email_in_contact_chain(): void
+    {
+        // ВК и Max допустимы без Телеграма (рулинг MG 22-08-2026); ВК раньше Max.
+        $vkUser = User::factory()->create([
+            'phone' => null,
+            'telegram_username' => null,
+            'vk_id' => 4242,
+            'max_user_id' => 777,
+            'email' => 'vk-first@example.com',
+        ]);
+        $this->postOneClick($vkUser)->assertRedirect();
+        $this->assertSame('vk:4242', Lead::latest('id')->first()->contact);
+
+        RateLimiter::clear('lead-submit:127.0.0.1');
+
+        $maxUser = User::factory()->create([
+            'phone' => null,
+            'telegram_username' => null,
+            'vk_id' => null,
+            'max_user_id' => 777,
+            'email' => 'max-only@example.com',
+        ]);
+        $this->postOneClick($maxUser)->assertRedirect();
+        $this->assertSame('max:777', Lead::latest('id')->first()->contact);
+
+        RateLimiter::clear('lead-submit:127.0.0.1');
+
+        $emailOnly = User::factory()->create([
+            'phone' => null,
+            'telegram_username' => null,
+            'vk_id' => null,
+            'max_user_id' => null,
+            'email' => 'last@example.com',
+        ]);
+        $this->postOneClick($emailOnly)->assertRedirect();
+        $this->assertSame('last@example.com', Lead::latest('id')->first()->contact);
+    }
+
+    /** @test */
     public function guest_cannot_use_one_click_endpoint(): void
     {
         RateLimiter::clear('lead-submit:127.0.0.1');

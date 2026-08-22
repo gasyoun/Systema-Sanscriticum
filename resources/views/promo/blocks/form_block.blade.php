@@ -76,7 +76,7 @@
                                            class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                                 </div>
                                 <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
-                                    {{ $data['promo_text'] ?? 'Хочу получать анонсы школы — примерно 2–4 сообщения в месяц: старты потоков, расписание, набор групп' }} (<span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие на рассылку</span>)
+                                    {{ $data['promo_text'] ?? 'Хочу получать анонсы школы — примерно раз в месяц: старты потоков, расписание, набор групп' }} (<span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие на рассылку</span>)
                                 </div>
                             </label>
                         </div>
@@ -180,7 +180,7 @@
                                            class="w-5 h-5 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer transition-colors">
                                 </div>
                                 <div class="text-xs sm:text-sm text-gray-600 leading-relaxed select-none group-hover:text-gray-900 transition">
-                                    {{ $data['promo_text'] ?? 'Хочу получать анонсы школы — примерно 2–4 сообщения в месяц: старты потоков, расписание, набор групп' }} (<span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие на рассылку</span>)
+                                    {{ $data['promo_text'] ?? 'Хочу получать анонсы школы — примерно раз в месяц: старты потоков, расписание, набор групп' }} (<span @click.prevent.stop="viewDocument('Рассылка', '/docs/soglasie-promo.pdf')" class="text-brand hover:text-brand-hover hover:underline font-semibold cursor-pointer">согласие на рассылку</span>)
                                 </div>
                             </label>
                         </div>
