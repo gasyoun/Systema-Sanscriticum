@@ -135,7 +135,15 @@ class SplitUploadToYandex
             }
         }
 
-        $this->pruneOldGroups($target, $dir, $stem, $keepDays);
+        // Чистка идёт ПОСЛЕ PUT'ов: отравленный хендл может уронить листинг —
+        // это не провал выгрузки, недочищенное подберёт следующий запуск.
+        try {
+            $this->pruneOldGroups($target, $dir, $stem, $keepDays);
+        } catch (Throwable $e) {
+            Log::warning('split-upload: ретеншн-чистка не прошла, отложено на следующий запуск', [
+                'exception' => $e->getMessage(),
+            ]);
+        }
 
         Log::info('split-upload: off-site обновлён', [
             'disk' => $targetDiskName,
@@ -212,12 +220,12 @@ class SplitUploadToYandex
                 $target->delete($part['path']);
                 $target->writeStream($part['path'], $chunk);
 
-                $written = (int) $target->size($part['path']);
-                if ($written !== $part['length']) {
-                    throw new RuntimeException(
-                        "split-upload: {$part['path']} записался как {$written} байт вместо {$part['length']}"
-                    );
-                }
+                // ВЕРИМ HTTP-статусу: адаптер бросает на любом не-2xx. Сознательно
+                // НЕ читаем size() следом: у sabre один персистентный curl-хендл на
+                // процесс, и после PUT с телом обратные запросы (PROPFIND) падают
+                // с «necessary data rewind was not possible» — прод 22-08-2026:
+                // части реально лежали на Яндексе, а стек рапортовал Not Found.
+                // Целостность проверит отдельный процесс: guards/backup:monitor.
             } finally {
                 fclose($chunk);
             }
