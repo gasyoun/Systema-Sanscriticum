@@ -48,6 +48,15 @@ _Создано: 08-07-2026 · Обновлено: 21-08-2026 (№80 H3247 `CRM_
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
 
+### H3298 — SMTP 554 / E-channel — @DECIDE MG (вариант B/C), потом paste-kit
+
+Диагноз: [docs/DIAG_SYSTEMA_SMTP_554_H3298_22-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DIAG_SYSTEMA_SMTP_554_H3298_22-08-2026.md). Бесплатный ящик `rusamskrtam@yandex.ru` ловит `554 spam` на чеках покупок (11 в августе); samskrte.ru без SPF/DMARC/MX.
+
+1. MG выбирает B (Yandex 360 на samskrte.ru) или C (UniOne/SendPulse) → DNS-записи по паст-киту из диага.
+2. Сервер `.env`: новые MAIL_USERNAME/MAIL_FROM_ADDRESS/пароль → `php artisan config:cache`.
+3. Smoke E из диага §4 (`SENT_OK` + письмо получено) → retry 12 потерянных чеков (`queue:retry` по списку id).
+4. Стоп: при отказе от смены — ничего не трогать, вариант A осознанно принят.
+
 ### H3247 — trial Deal CRM — флаги ОСТАЮТСЯ OFF
 
 Код инертный, пока оба ключа выключены. Это не денежный грант: CRM-карточка пробника и черновик FollowUpTask. Публичная кнопка записи — H3248 (`CRM_TRIAL_WIDGET_PUBLIC`).

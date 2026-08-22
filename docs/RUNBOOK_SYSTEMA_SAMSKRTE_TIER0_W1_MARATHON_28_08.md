@@ -66,6 +66,7 @@ Append-only. Format: `YYYY-MM-DD HH:MM TZ · actor/model · action · result · 
 16-08-2026 09:02 MSK · Opus 5 (claude-opus-5) · Shelf root cause · NO-GO · `membership:club-catalogue` (сухой прогон) → «подходящих курсов 0» · Course::sellsRecordings() требует features.course_recordings_sales (OFF) И is_completed=true (0 из 100 активных) · голый --apply в DEPLOY_QUEUE был бы no-op
 16-08-2026 09:04 MSK · Opus 5 (claude-opus-5) · HTTP smoke · PASS · /online/konsultaciya 200 · /konsultaciya-po-onlayn-kursam 200 · /online 200 · / 200 · /klub 404 (флаг OFF — корректное предпусковое состояние)
 16-08-2026 09:05 MSK · Opus 5 (claude-opus-5) · Money/access flags · UNCHANGED · club_membership=false membership_cancellation=false membership_free_tier=false · club_memberships=0 · free_tier_grants=0 · ни один флаг не тронут
+22-08-2026 12:30 MSK · Ox Alpha (x-preview-f-free) · H3298 E-channel diagnosis · ROOT-CAUSED (diagnose-only, zero config changes) · 554 = free-mailbox reputation on rusamskrtam@yandex.ru (11 чеков потеряно в августе); «empty code» = дроп соединения; samskrte.ru без SPF/DMARC/MX; PasswordReset-фейл — RFC-баг на @handle в users.email, не SMTP. Решение и паст-кит: [docs/DIAG_SYSTEMA_SMTP_554_H3298_22-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DIAG_SYSTEMA_SMTP_554_H3298_22-08-2026.md) · D (TG) подтверждён зелёным 16-08, paste-kit токена более не требуется
 ```
 
 ## PARK / residual secrets
