@@ -228,15 +228,18 @@ class AppServiceProvider extends ServiceProvider
             //    полтора часа, curl без таймаутов блокировался навечно.
             //    Рвём: коннект дольше 30 с; скорость ниже 1 КБ/с дольше 180 с
             //    (здоровая выгрузка ~230 КБ/с порог не задевает).
-            // 2) «Призрачные успехи»: sabre по умолчанию ставит FOLLOWLOCATION,
-            //    и 30x на PUT превращался curl'ом в GET → 200 → адаптер верил,
-            //    что файл записан, а на диске его не было. Запрещаем следовать
-            //    редиректам: любой 30x станет честной HTTP-ошибкой, которую
-            //    подберёт ретрай части в SplitUploadToYandex.
+            // 2) «Призрачные успехи»/обрывы: sabre ходит на автонеготиации —
+            //    первый PUT уходит БЕЗ Authorization (CURLOPT_VERBOSE, прод:
+            //    «upload completely sent off … < HTTP/1.1 401 Unauthorized»),
+            //    Яндекс отвечает 401, curl пытается переиграть запрос с телом
+            //    → «necessary data rewind was not possible»; часть фронтендов
+            //    при этом отвечала 2xx не сохранив ничего. Принудительный BASIC
+            //    в ПЕРВОМ запросе снимает весь класс проблем.
             $client->addCurlSetting(CURLOPT_CONNECTTIMEOUT, 30);
             $client->addCurlSetting(CURLOPT_LOW_SPEED_LIMIT, 1024);
             $client->addCurlSetting(CURLOPT_LOW_SPEED_TIME, 180);
             $client->addCurlSetting(CURLOPT_FOLLOWLOCATION, false);
+            $client->addCurlSetting(CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
 
             $adapter = new WebDAVAdapter($client, $config['prefix'] ?? '');
 
