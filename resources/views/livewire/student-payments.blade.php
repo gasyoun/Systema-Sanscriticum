@@ -23,6 +23,9 @@
                             @if($paidUntil->block->ends_at)
                                 (до {{ $paidUntil->block->ends_at->format('d.m.Y') }})
                             @endif
+                            @if(! empty($paidUntil->extra_paid_blocks))
+                                , плюс блоки {{ $paidUntil->extra_paid_blocks_label }}
+                            @endif
                         </div>
                         @if($paidUntil->next_payment_deadline)
                             <div class="text-brand font-semibold mt-0.5">

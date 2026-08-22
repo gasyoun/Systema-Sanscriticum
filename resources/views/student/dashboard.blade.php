@@ -550,6 +550,9 @@
                                             @if($paidUntil->block->ends_at)
                                                 <span class="text-gray-500">(до {{ $paidUntil->block->ends_at->format('d.m.Y') }})</span>
                                             @endif
+                                            @if(! empty($paidUntil->extra_paid_blocks))
+                                                <span class="text-gray-700">, плюс блоки {{ $paidUntil->extra_paid_blocks_label }}</span>
+                                            @endif
                                             @if($paidUntil->next_payment_deadline)
                                                 <div class="mt-1">
                                                     <span class="font-bold text-brand">Следующий платеж до:</span>

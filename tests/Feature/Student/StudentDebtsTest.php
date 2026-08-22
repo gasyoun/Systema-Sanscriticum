@@ -234,4 +234,76 @@ class StudentDebtsTest extends TestCase
 
         $this->assertTrue($debts->isEmpty());
     }
+
+    /** @test */
+    public function paid_until_stops_at_gap_but_reports_later_paid_blocks(): void
+    {
+        // Реальный кейс: блок №64 пропущен целиком (не оплачен и оплачиваться
+        // не будет), оплаты возобновились с №65. «Оплачено до» честно
+        // останавливается на №63, но отдельно оплаченный №65 не должен
+        // исчезнуть из сводки.
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+
+        foreach ([62, 63] as $n) {
+            CourseBlock::factory()->for($course)->create(['number' => $n]);
+        }
+        $gapStarts = now()->addWeek()->startOfDay();
+        CourseBlock::factory()->for($course)->create(['number' => 64, 'starts_at' => $gapStarts]);
+        foreach ([65, 66] as $n) {
+            CourseBlock::factory()->for($course)->create(['number' => $n]);
+        }
+
+        // Цепочка: №62–63 оплачены одним платежом.
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 4000, 'tariff' => 'block_62', 'status' => 'paid',
+            'start_block' => 62, 'end_block' => 63,
+        ]);
+        // №64 — разрыв; оплата возобновилась с №65.
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 3000, 'tariff' => 'block_65', 'status' => 'paid',
+            'start_block' => 65, 'end_block' => 65,
+        ]);
+
+        $paidUntil = app(StudentDebtsService::class)
+            ->paidUntilForUser($user, [$course->id])
+            ->get($course->id);
+
+        $this->assertNotNull($paidUntil);
+        $this->assertSame(63, (int) $paidUntil->block->number, 'Непрерывная цепочка заканчивается на №63.');
+        $this->assertSame(64, (int) $paidUntil->next_block->number, 'Следующий к оплате — именно пропущенный №64.');
+        $this->assertEquals($gapStarts, $paidUntil->next_payment_deadline);
+        $this->assertSame([65], $paidUntil->extra_paid_blocks, '№65 оплачен после разрыва и должен попасть в extra_paid_blocks.');
+        $this->assertSame('№65', $paidUntil->extra_paid_blocks_label);
+        $this->assertSame(7000.0, $paidUntil->amount_paid, 'Сумма считается по всем реальным оплатам, включая «островок» после разрыва.');
+    }
+
+    /** @test */
+    public function paid_until_without_gap_has_no_extra_paid_blocks(): void
+    {
+        // Непрерывная оплата без разрывов: extra_paid_blocks пуст, label null —
+        // прежнее поведение сводки не меняется.
+        $user = User::factory()->create();
+        $course = Course::factory()->create(['is_active' => true]);
+        foreach ([1, 2, 3] as $n) {
+            CourseBlock::factory()->for($course)->create(['number' => $n]);
+        }
+
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 12000, 'tariff' => 'full', 'status' => 'paid',
+        ]);
+
+        $paidUntil = app(StudentDebtsService::class)
+            ->paidUntilForUser($user, [$course->id])
+            ->get($course->id);
+
+        $this->assertNotNull($paidUntil);
+        $this->assertSame(3, (int) $paidUntil->block->number);
+        $this->assertNull($paidUntil->next_block);
+        $this->assertSame([], $paidUntil->extra_paid_blocks);
+        $this->assertNull($paidUntil->extra_paid_blocks_label);
+    }
 }
