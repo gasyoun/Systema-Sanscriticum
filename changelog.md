@@ -2828,3 +2828,4 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 [1.1.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.0.0
+
