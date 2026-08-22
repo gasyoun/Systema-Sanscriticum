@@ -118,7 +118,21 @@ class SplitUploadToYandex
         // Реверс: последняя часть может быть короткой, а guards смотрят на
         // размер новейшего файла — пусть новейшей будет гарантированно полная.
         foreach (array_reverse($plan) as $part) {
-            $this->uploadPart($sourceDisk, $target, $sourcePath, $part);
+            // Мёртвый ствол TCP рвётся low-speed таймаутом (AppServiceProvider);
+            // одна попытка — одно соединение, вторая открывает свежее.
+            foreach ([1, 2] as $attempt) {
+                try {
+                    $this->uploadPart($sourceDisk, $target, $sourcePath, $part);
+                    break;
+                } catch (Throwable $e) {
+                    if ($attempt === 2) {
+                        throw $e;
+                    }
+                    Log::warning("split-upload: часть {$part['path']} не доехала, ретраю", [
+                        'exception' => $e->getMessage(),
+                    ]);
+                }
+            }
         }
 
         $this->pruneOldGroups($target, $dir, $stem, $keepDays);

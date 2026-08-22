@@ -223,6 +223,16 @@ class AppServiceProvider extends ServiceProvider
                 'password' => $config['password'] ?? null,
             ]);
 
+            // Прод-кейс 22-08-2026: PUT бэкапа к Яндексе встал мёртвым стволом —
+            // Send-Q 4 МБ не дренировался полтора часа, а curl без таймаутов
+            // блокировался навечно. Рвём: коннект дольше 30 с; скорость ниже
+            // 1 КБ/с дольше 180 с (здоровая выгрузка идёт на ~230 КБ/с и этот
+            // порог не задевает). curl вернёт ошибку 28 → sabre бросит
+            // исключение → вызывающий код (SplitUploadToYandex) ретраит часть.
+            $client->addCurlSetting(CURLOPT_CONNECTTIMEOUT, 30);
+            $client->addCurlSetting(CURLOPT_LOW_SPEED_LIMIT, 1024);
+            $client->addCurlSetting(CURLOPT_LOW_SPEED_TIME, 180);
+
             $adapter = new WebDAVAdapter($client, $config['prefix'] ?? '');
 
             return new LaravelFilesystemAdapter(new Filesystem($adapter, $config), $adapter, $config);
