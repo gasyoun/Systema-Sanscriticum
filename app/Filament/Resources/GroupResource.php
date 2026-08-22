@@ -17,6 +17,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
 
 class GroupResource extends Resource
 {
@@ -232,7 +233,7 @@ class GroupResource extends Resource
                         app(WaitlistNotifier::class)->notify(
                             $record,
                             WaitlistNotifier::KIND_TRANSFER,
-                            WaitlistNotifier::transferText($record, \Illuminate\Support\Carbon::parse($data['start_date_override'])),
+                            WaitlistNotifier::transferText($record, Carbon::parse($data['start_date_override'])),
                         );
                     }),
 

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Jobs\SendMessengerAlerts;
 use App\Models\Group;
+use App\Models\Schedule;
 use App\Models\User;
 use App\Models\WaitlistEntry;
 use App\Models\WaitlistOutreach;
@@ -81,7 +82,7 @@ class WaitlistNotifier
             return $line;
         }
 
-        $next = \App\Models\Schedule::where('group_id', $group->id)
+        $next = Schedule::where('group_id', $group->id)
             ->where('start', '>=', now())
             ->orderBy('start')
             ->first();
