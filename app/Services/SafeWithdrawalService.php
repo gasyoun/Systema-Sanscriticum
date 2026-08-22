@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Payment;
+use App\Models\Teacher;
 use App\Models\TeacherPayout;
 use App\Models\User;
 use App\Services\Payments\TochkaBalanceService;
-use App\Support\FinanceCockpitReport;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +34,6 @@ final class SafeWithdrawalService
         private readonly TochkaBalanceService $tochka,
         private readonly TeacherWeeklyPayoutCalendarService $calendar,
         private readonly PayrollContourService $contour,
-        private readonly FinanceCockpitReport $report,
     ) {}
 
     /** @return array<string, mixed> */
@@ -56,9 +55,13 @@ final class SafeWithdrawalService
         ];
 
         // ── Обязательства горизонта ──────────────────────────────────────────
+        // Регистровые балансы преподавателей завышены историческими «Расход»-
+        // пачками мимо регистра (см. таблицу правды), поэтому обязательство по
+        // каждому преподавателю = MIN(баланс регистра, начисление за 3 мес) —
+        // потолок «сколько реально могло накопиться недавно».
         $year = (int) $now->year;
         $grid = $this->calendar->grid($year);
-        $teacherRub = 0.0;
+        $dueRubTeachers = []; // teacher_id => ['balance' => float]
         $teacherEurDue = false;
         foreach ($grid['weeks'] as $week) {
             $start = Carbon::parse($week['start']);
@@ -74,16 +77,43 @@ final class SafeWithdrawalService
 
                     continue;
                 }
-                $teacherRub += max(0.0, (float) ($due['balance'] ?? 0));
+                $tid = (int) ($due['teacher_id'] ?? 0);
+                $bal = max(0.0, (float) ($due['balance'] ?? 0));
+                if ($tid === 0 || $bal <= 0.0) {
+                    continue;
+                }
+                $dueRubTeachers[$tid] = ['balance' => max($bal, $dueRubTeachers[$tid]['balance'] ?? 0.0)];
             }
         }
 
+        $salary = app(TeacherSalaryService::class);
+        $teacherRub = 0.0;
+        foreach ($dueRubTeachers as $tid => $info) {
+            $t = Teacher::find($tid);
+            if ($t === null) {
+                continue;
+            }
+            $earned3 = (float) $salary->periodTotals($t, $now->copy()->subMonths(3)->startOfDay(), $now)['net'];
+            $teacherRub += min($info['balance'], max(0.0, $earned3));
+        }
+        $teacherRub = round($teacherRub, 2);
+
+        // Персонал: только АКТИВНЫЕ обязательства — ставка учитывается, если
+        // получатель платился в текущем или прошлом месяце; кто молчит ≥2 полных
+        // месяцев (Кузнецова с мая и т.п.) в горизонт не попадает.
         $staff = $this->contour->staffPayees();
         $staffMonthly = 0.0;
+        $staffStale = [];
         foreach ($staff['payees'] as $p) {
-            if ($p['category'] === 'персонал' && $p['monthly_rate'] !== null) {
-                $staffMonthly += (float) $p['monthly_rate'];
+            if ($p['category'] !== 'персонал' || $p['monthly_rate'] === null) {
+                continue;
             }
+            if ((int) $p['silent_months'] >= 2) {
+                $staffStale[] = $p['name'];
+
+                continue;
+            }
+            $staffMonthly += (float) $p['monthly_rate'];
         }
         $staffHorizonMonths = (int) ceil($horizonDays / 30);
         $staffObligation = round($staffMonthly * $staffHorizonMonths, 2);
@@ -92,11 +122,12 @@ final class SafeWithdrawalService
 
         $opexObligation = round($opexMonthly * ($horizonDays / 30), 2);
         $obligations = [
-            'teachers_rub' => round($teacherRub, 2),
+            'teachers_rub' => $teacherRub,
             'teachers_eur_due' => $teacherEurDue,
             'staff_monthly' => round($staffMonthly, 2),
             'staff_horizon_months' => $staffHorizonMonths,
             'staff_total' => $staffObligation,
+            'staff_stale_excluded' => $staffStale,
             'opex_monthly' => round($opexMonthly, 2),
             'opex_assumption' => $opexAssumption,
             'opex_total' => $opexObligation,
@@ -142,7 +173,9 @@ final class SafeWithdrawalService
         ];
 
         // ── Операционный резерв ─────────────────────────────────────────────
-        $avgExpenses = $this->avgMonthlyExpenses($now);
+        // База = активные месячные оттоки зарплатного контура (персонал) + opex;
+        // преподаватели не дублируются — их ритм уже в обязательствах горизонта.
+        $avgExpenses = $staffMonthly + $opexMonthly;
         $opReserve = round($avgExpenses * (float) $cfg['op_reserve_months'], 2);
 
         $deductConservative = $obligations['total'] + $usnReserve + $ndfl + $insGeneral + $ipFixed + $ipExtra + $opReserve;
@@ -192,37 +225,9 @@ final class SafeWithdrawalService
     }
 
     /**
-     * Среднемесячные расходы для операционного резерва: ОПиУ штурвала за
-     * последние 3 месяца (расходная часть), fallback — средний «Расход».
-     *
-     * @return array{0: float, 1: bool} [сумма, assumption]
+     * Fallback-оценка opex — см. opexMonthly(). Удалено: ОПиУ/ДДС включал
+     * зарплаты и давал двойной счёт с обязательствами горизонта.
      */
-    private function avgMonthlyExpenses(Carbon $now): float
-    {
-        $sums = [];
-        for ($i = 1; $i <= 3; $i++) {
-            $m = $now->copy()->subMonthsNoOverflow($i)->format('Y-m');
-            $dds = $this->report->dds($m);
-            $out = abs(min(0.0, (float) ($dds['net'] ?? 0)));
-            if ($out > 0) {
-                $sums[] = $out;
-            }
-        }
-        if ($sums === []) {
-            $since = $now->copy()->subMonths(6)->startOfMonth();
-            $avg = (float) DB::table('payments')
-                ->where('tariff', 'Расход')
-                ->whereIn('status', Payment::PAID_STATUSES)
-                ->whereNull('refund_of_payment_id')
-                ->where('created_at', '>=', $since)
-                ->sum('amount');
-
-            return abs($avg) / 6;
-        }
-
-        return array_sum($sums) / count($sums);
-    }
-
     private function usnOffsetNote(float $usnGross, float $insGeneral): string
     {
         $half = Money::round($usnGross / 2);
@@ -243,17 +248,17 @@ final class SafeWithdrawalService
         }
 
         // Fallback: среднее «Расхода» за 6 месяцев минус получатели зарплатного
-        // контура (их обязательства уже учтены отдельными строками). Смешанный
-        // opex и разовые получатели НЕ исключаются — это и есть прочие расходы.
-        $staffIds = [];
+        // контура И смешанная корзина opex («Системные расходы» — там реклама,
+        // аренда и зарплаты вперемешку, ставкой её считать нельзя). Остаются
+        // именные разовые/прочие получатели; итог почти наверняка ниже реального
+        // opex из ручного реестра → плашка «предварительно» + подсказка override.
+        $excluded = User::query()->whereNotNull('teacher_id')->pluck('id');
         foreach ($this->contour->staffPayees()['payees'] as $p) {
-            if ($p['category'] === 'персонал') {
-                $staffIds[] = (int) $p['user_id'];
+            if (in_array($p['category'], ['персонал', 'смешанный opex'], true)) {
+                $excluded->push((int) $p['user_id']);
             }
         }
-        $excluded = User::query()->whereNotNull('teacher_id')->pluck('id')
-            ->merge($staffIds)
-            ->unique();
+        $excluded = $excluded->unique();
 
         $sum = (float) DB::table('payments')
             ->where('tariff', 'Расход')

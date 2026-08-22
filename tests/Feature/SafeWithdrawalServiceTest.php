@@ -102,13 +102,13 @@ class SafeWithdrawalServiceTest extends TestCase
         // ИП фикс: yearly/12 × 2 мес.
         $this->assertSame(round((float) config('safe_withdrawal.ip_fixed_yearly') / 12 * 2, 2), $sw['taxes']['ip_fixed']);
 
-        // Операционный резерв: override 30 000 × 1 мес.
-        $this->assertSame(30000.0, $sw['op_reserve']['total']);
+        // Операционный резерв: активные оттоки (персонал 60 000 + opex override 30 000) × 1 мес.
+        $this->assertSame(90000.0, $sw['op_reserve']['total']);
 
         // Доступно = баланс − обязательства − УСН − НДФЛ − взносы(схема) − ИП − резерв.
         $expectedGeneral = 500000.0
             - ($sw['obligations']['teachers_rub'] + 120000.0 + 60000.0)
-            - 12000.0 - 15600.0 - 36000.0 - $sw['taxes']['ip_fixed'] - 30000.0;
+            - 12000.0 - 15600.0 - 36000.0 - $sw['taxes']['ip_fixed'] - 90000.0;
         $this->assertEqualsWithDelta($expectedGeneral, $sw['available_general'], 0.01);
         $this->assertGreaterThan($sw['available_general'], $sw['available_msp']); // МСП дешевле
 
