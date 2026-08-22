@@ -218,8 +218,15 @@ class StudentDebtsService
      * блоков) — next_block/next_payment_deadline будут null, платить пока
      * нечего.
      *
+     * Разрыв цепочки не обрывает подсчёт: если студент пропустил блок и
+     * вернулся дальше («пропустил 64 — оплатил 65»), непрерывная цепочка
+     * честно останавливается на 63, а отдельно оплаченные блоки после
+     * разрыва собираются в extra_paid_blocks (+ готовый extra_paid_blocks_label),
+     * чтобы сводки не делали вид, что этих оплат нет.
+     *
      * Возвращает коллекцию объектов {course_id, block (CourseBlock),
-     * amount_paid, next_block (?CourseBlock), next_payment_deadline (?Carbon)},
+     * amount_paid, next_block (?CourseBlock), next_payment_deadline (?Carbon),
+     * extra_paid_blocks (list<int>), extra_paid_blocks_label (?string)},
      * ключ — course_id.
      *
      * @param  iterable<int>  $courseIds
@@ -267,6 +274,8 @@ class StudentDebtsService
 
             $lastCovered = null;
             $nextBlock = null;
+            // Отдельно оплаченные блоки ПОСЛЕ первого разрыва цепочки.
+            $extraPaidBlocks = [];
             foreach ($blocks as $block) {
                 $n = (int) $block->number;
                 if ($floor !== null && $n < $floor) {
@@ -280,12 +289,20 @@ class StudentDebtsService
                     }
                 }
                 if (! $covered) {
-                    // Первый разрыв — дальше цепочка не непрерывна, стоп. Этот
-                    // блок и есть «следующий», за который нужно платить.
-                    $nextBlock = $block;
-                    break;
+                    // Первый разрыв — дальше цепочка не непрерывна. Этот блок
+                    // и есть «следующий», за который нужно платить; но идём
+                    // дальше — оплаты после разрыва собираем в extra_paid_blocks.
+                    if ($nextBlock === null) {
+                        $nextBlock = $block;
+                    }
+
+                    continue;
                 }
-                $lastCovered = $block;
+                if ($nextBlock === null) {
+                    $lastCovered = $block;
+                } else {
+                    $extraPaidBlocks[] = $n;
+                }
             }
 
             if ($lastCovered === null) {
@@ -298,6 +315,10 @@ class StudentDebtsService
                 'amount_paid' => (float) $payments->sum('amount'),
                 'next_block' => $nextBlock,
                 'next_payment_deadline' => $nextBlock?->starts_at?->copy()->startOfDay(),
+                'extra_paid_blocks' => $extraPaidBlocks,
+                'extra_paid_blocks_label' => $extraPaidBlocks === []
+                    ? null
+                    : DebtorsReport::formatBlockRanges($extraPaidBlocks),
             ]);
         }
 
