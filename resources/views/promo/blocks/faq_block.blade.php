@@ -83,7 +83,7 @@
                                         [&>ul>li]:before:rounded-lg [&>ul>li]:before:font-black [&>ul>li]:before:text-sm
                                         [&>ol]:list-decimal [&>ol]:pl-6 [&>ol]:mt-3
                                         [&>ol>li]:mb-2 [&>ol>li]:pl-2">
-                                {!! $item['answer'] !!}
+                                {!! \App\Support\SanitizedHtml::render($item['answer']) !!}
                             </div>
                         </div>
                     </div>

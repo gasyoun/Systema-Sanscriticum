@@ -56,7 +56,7 @@
                                             [&_p]:mb-2 [&_p:last-child]:mb-0 [&_strong]:font-bold [&_strong]:text-gray-700
                                             [&_em]:italic [&_a]:text-brand [&_a]:underline [&_a]:font-semibold
                                             [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mt-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:mt-2 [&_li]:mb-1">
-                                    {!! $topic['description'] !!}
+                                    {!! \App\Support\SanitizedHtml::render($topic['description']) !!}
                                 </div>
                             @endif
                         </div>

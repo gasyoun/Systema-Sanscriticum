@@ -141,7 +141,7 @@
         <div class="course-container">
         
         <div class="course-title">
-            {!! str_replace('|', '<br>', $course_title) !!}
+            {!! str_replace('|', '<br>', e($course_title)) !!}
         </div>
 
         @unless($certificate->isSpravka())

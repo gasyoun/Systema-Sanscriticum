@@ -6,7 +6,7 @@
             {{-- Описание перед формой (если есть) --}}
             @if(!empty($data['description']))
                 <div class="text-center mb-10 prose prose-lg prose-slate mx-auto">
-                    {!! $data['description'] !!}
+                    {!! \App\Support\SanitizedHtml::render($data['description']) !!}
                 </div>
             @endif
 
