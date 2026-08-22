@@ -223,15 +223,20 @@ class AppServiceProvider extends ServiceProvider
                 'password' => $config['password'] ?? null,
             ]);
 
-            // Прод-кейс 22-08-2026: PUT бэкапа к Яндексе встал мёртвым стволом —
-            // Send-Q 4 МБ не дренировался полтора часа, а curl без таймаутов
-            // блокировался навечно. Рвём: коннект дольше 30 с; скорость ниже
-            // 1 КБ/с дольше 180 с (здоровая выгрузка идёт на ~230 КБ/с и этот
-            // порог не задевает). curl вернёт ошибку 28 → sabre бросит
-            // исключение → вызывающий код (SplitUploadToYandex) ретраит часть.
+            // Прод-кейсы 22-08-2026 (в порядке находок):
+            // 1) PUT вставал мёртвым стволом — Send-Q 4 МБ не дренировался
+            //    полтора часа, curl без таймаутов блокировался навечно.
+            //    Рвём: коннект дольше 30 с; скорость ниже 1 КБ/с дольше 180 с
+            //    (здоровая выгрузка ~230 КБ/с порог не задевает).
+            // 2) «Призрачные успехи»: sabre по умолчанию ставит FOLLOWLOCATION,
+            //    и 30x на PUT превращался curl'ом в GET → 200 → адаптер верил,
+            //    что файл записан, а на диске его не было. Запрещаем следовать
+            //    редиректам: любой 30x станет честной HTTP-ошибкой, которую
+            //    подберёт ретрай части в SplitUploadToYandex.
             $client->addCurlSetting(CURLOPT_CONNECTTIMEOUT, 30);
             $client->addCurlSetting(CURLOPT_LOW_SPEED_LIMIT, 1024);
             $client->addCurlSetting(CURLOPT_LOW_SPEED_TIME, 180);
+            $client->addCurlSetting(CURLOPT_FOLLOWLOCATION, false);
 
             $adapter = new WebDAVAdapter($client, $config['prefix'] ?? '');
 
