@@ -1,8 +1,21 @@
 # Results log
 
-_Created: 30-07-2026 · Last updated: 17-08-2026_
+_Created: 30-07-2026 · Last updated: 22-08-2026_
 
 Durable substantive-result tables for this repo. Newest first.
+
+## Student manuals behind login (22-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ Full prose: [docs/CENSUS_STUDENT_LOGGED_IN_MANUALS_22-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CENSUS_STUDENT_LOGGED_IN_MANUALS_22-08-2026.md).
+
+| Kind | Title | URL | Login? |
+|---|---|---|---|
+| Product book | Как пользоваться кабинетом | [https://samskrte.ru/dvaram/help](https://samskrte.ru/dvaram/help) | yes |
+| Short help | Почему баланс праны уменьшился | [https://samskrte.ru/help/prana-balance](https://samskrte.ru/help/prana-balance) | yes |
+| Checklist | Онбординг | [https://samskrte.ru/dvaram](https://samskrte.ru/dvaram) | yes |
+| Public FAQ | Как сдавать ДЗ | [https://samskrte.ru/faq/dz](https://samskrte.ru/faq/dz) | no |
+| Staff map | student-manual.md | [blob](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/student-manual.md) | n/a |
+| Games HTML | lila-games-manual.html | [blob](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/lila-games-manual.html) | n/a |
 
 ## H2988 — telegram-support:sync watchdog timeout cluster (17-08-2026)
 
