@@ -1053,10 +1053,14 @@ class LandingPageResource extends Resource
                                     ->label('Статус набора группы (живой)')
                                     ->icon('heroicon-m-signal')
                                     ->schema([
+                                        TextInput::make('group_id')
+                                            ->label('ID группы (точная привязка)')
+                                            ->numeric()
+                                            ->helperText('Явная привязка к группе. Если пусто — берётся набирающаяся группа семьи ниже с заданным порогом min_size и датой старта; оболочки без порога/даты игнорируются.'),
                                         TextInput::make('course_family')
                                             ->label('Семья потоков (courses.course_family)')
                                             ->placeholder('kasmirskii-sivaizm')
-                                            ->helperText('Блок ищет набирающуюся группу этой семьи и показывает живой статус + словарь статусов подписки. Пока группы нет — блок не рисуется.'),
+                                            ->helperText('Фолбэк-поиск по семье, когда ID группы не указан. Пока подходящей группы нет — блок молчит.'),
                                     ]),
 
                                 // 9. FORM (С ДЕФИЦИТОМ)
