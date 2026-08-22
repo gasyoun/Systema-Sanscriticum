@@ -55,8 +55,12 @@ class StudentController extends Controller
     /**
      * === ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Получение купленных тарифов ===
      * Железобетонный метод проверки доступов строго по ID КУРСА
+     *
+     * H3308: public static — тот же доступ-список переиспользует гейт
+     * GatedAssetController (стенограмма/материалы/файлы ДЗ), чтобы не плодить
+     * вторую реализацию правила «что куплено».
      */
-    private function getUserUnlockedTariffs($userId, $courseSlug): array
+    public static function getUserUnlockedTariffs($userId, $courseSlug): array
     {
         // 1. Находим ID курса по каноническому slug или alias
         $course = Course::resolveBySlug($courseSlug);
@@ -1054,7 +1058,7 @@ class StudentController extends Controller
         // ==========================================
         // Разбор JSON-расшифровки в предложения с таймкодами вынесен в TranscriptParser
         // (переиспользуется блоком лендинга «Стенограмма вебинара»). Кэш — внутри сервиса.
-        $transcriptSentences = TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
+        $transcriptSentences = TranscriptParser::sentencesFromStoredFile($lesson->transcript_file);
 
         // Открыт ли приём работ ИМЕННО ДЛЯ ЭТОГО студента (H1764). Считается
         // один раз здесь и передаётся в шаблон: витрина и серверный гейт

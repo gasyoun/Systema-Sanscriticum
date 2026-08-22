@@ -24,6 +24,7 @@ use App\Http\Controllers\DictionaryPageController;
 use App\Http\Controllers\DocController;
 use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
+use App\Http\Controllers\GatedAssetController;
 use App\Http\Controllers\GrammarLabController;
 use App\Http\Controllers\GrammarLabPilotController;
 use App\Http\Controllers\HomeworkController;
@@ -688,6 +689,18 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::post('/c/{slug}/u/{lessonId}/complete', [StudentController::class, 'completeLesson'])
         ->name('student.lesson.complete');
+
+    // H3308: гейт-выдача контента урока, снятого с публичного диска —
+    // стенограмма, материалы, справочные файлы ДЗ. Гейт тот же, что у плеера.
+    Route::get('/c/{slug}/u/{lessonId}/transcript', [GatedAssetController::class, 'transcript'])
+        ->whereNumber('lessonId')
+        ->name('student.lesson.transcript');
+    Route::get('/c/{slug}/u/{lessonId}/materials/{file}', [GatedAssetController::class, 'material'])
+        ->whereNumber('lessonId')->where('file', '[A-Za-z0-9._-]+')
+        ->name('student.lesson.material');
+    Route::get('/c/{slug}/u/{lessonId}/homework-files/{file}', [GatedAssetController::class, 'homeworkRef'])
+        ->whereNumber('lessonId')->where('file', '[A-Za-z0-9._-]+')
+        ->name('student.lesson.homework-file');
 
     Route::get('/c/{slug}/materials/download', [StudentController::class, 'downloadCourseMaterials'])
         ->middleware('course.canonical')
