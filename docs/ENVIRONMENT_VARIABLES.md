@@ -317,12 +317,16 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MARATHON_LANDING_VISUAL_VARIANT` | optional | `'b'` | config/marathon_visual.php:14 |
 | `MARATHON_LAUNCH_DATE` | optional | `'2026-08-28'` | config/marathon.php:35 |
 | `MARATHON_LEADERBOARD_UNMASK_ENABLED` | feature-flag | `false` | config/marathon.php:55 |
+| `MARATHON_MEMBERSHIP_BASIC_MONTH_PRICE` | optional | `1000` | config/marathon.php:229 |
+| `MARATHON_MEMBERSHIP_CLUB_MONTH_PRICE` | optional | `2000` | config/marathon.php:230 |
+| `MARATHON_MEMBERSHIP_KLUB_URL` | optional | `'https://samskrte.ru/klub'` | config/marathon.php:231 |
 | `MARATHON_PAID_TRACK_PRICE` | optional | `500` | config/marathon.php:29 |
 | `MARATHON_PUBLIC_LANDING_URL` | optional | `'https://samskrte.ru/online/konsultaciya'` | config/marathon_landing_copy.php:33 |
 | `MARATHON_SCHEDULE_ID` | required | `—` | config/marathon.php:65 |
 | `MARATHON_TELEGRAM_CHANNEL_URL` | optional | `'https://t.me/samskrte'` | config/marathon.php:45 |
 | `MARATHON_TESTIMONIAL` | required | `—` | config/marathon.php:163 |
 | `MARATHON_WARM_TAIL_DAYS` | optional | `13` | config/marathon.php:58 |
+| `MARATHON_WARM_TAIL_WAVE2_FROM` | required | `—` | config/marathon.php:224 |
 | `MARKETING_SEGMENTS` | optional | `false` | config/features.php:614 |
 | `MEDIA_WEBP_DELETE_ORIGINAL` | optional | `true` | config/media.php:37 |
 | `MEDIA_WEBP_DISK` | optional | `'public'` | config/media.php:26 |
