@@ -89,6 +89,7 @@ class UnitEconomicsService
             match ($m) {
                 'card' => $cardRev += $share,
                 'sbp' => $sbpRev += $share,
+                'cash' => null, // касса: эквайринга нет
                 default => $unknownRev += $share,
             };
         }
