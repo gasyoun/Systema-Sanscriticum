@@ -9,12 +9,15 @@ use App\Models\User;
 use App\Services\ClassAttendanceService;
 use App\Services\CuratorNotifier;
 use App\Services\GroupRecruitmentNotifier;
+use App\Services\WaitlistNotifier;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
 
 class GroupResource extends Resource
 {
@@ -225,6 +228,42 @@ class GroupResource extends Resource
                             app(GroupRecruitmentNotifier::class)->notifyShortfall($record);
                             app(CuratorNotifier::class)->groupUnderEnrolled($record);
                         }
+
+                        // Лист ожидания всегда узнаёт о переносе — независимо от набора.
+                        app(WaitlistNotifier::class)->notify(
+                            $record,
+                            WaitlistNotifier::KIND_TRANSFER,
+                            WaitlistNotifier::transferText($record, Carbon::parse($data['start_date_override'])),
+                        );
+                    }),
+
+                // Ручная рассылка статуса листу ожидания (H3327): куратор решает
+                // момент и видит текст перед отправкой; доставку ведут мессенджер-алерты,
+                // аудит каждой отправки — в waitlist_outreaches. Админ подстраховывает:
+                // экран доступен только админам (AdminOnly).
+                Tables\Actions\Action::make('notify_waitlist')
+                    ->label('Сообщить листу ожидания')
+                    ->icon('heroicon-m-megaphone')
+                    ->color('info')
+                    ->form([
+                        Forms\Components\Textarea::make('text')
+                            ->label('Текст сообщения')
+                            ->rows(4)
+                            ->default(fn (Group $record): string => app(WaitlistNotifier::class)->statusText($record))
+                            ->required(),
+                    ])
+                    ->action(function (Group $record, array $data): void {
+                        $result = app(WaitlistNotifier::class)->notify(
+                            $record,
+                            WaitlistNotifier::KIND_MANUAL,
+                            $data['text'],
+                            auth()->user(),
+                        );
+
+                        Notification::make()
+                            ->title('Лист ожидания уведомлён')
+                            ->body("Доставлено в мессенджеры: {$result['messengers']}. Без кабинета (вручную): {$result['manual']}.")
+                            ->send();
                     }),
 
                 // Грант «проверяющий ↔ группа» (H1729): кто, кроме преподавателя

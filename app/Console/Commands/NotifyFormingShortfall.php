@@ -8,6 +8,7 @@ use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Services\CuratorNotifier;
 use App\Services\GroupRecruitmentNotifier;
+use App\Services\WaitlistNotifier;
 use Illuminate\Console\Command;
 
 /**
@@ -23,7 +24,7 @@ class NotifyFormingShortfall extends Command
 
     protected $description = 'Шлёт студентам и кураторам уведомление о недоборе группы за N дней до плановой даты старта.';
 
-    public function handle(GroupRecruitmentNotifier $notifier, CuratorNotifier $curatorNotifier): int
+    public function handle(GroupRecruitmentNotifier $notifier, CuratorNotifier $curatorNotifier, WaitlistNotifier $waitlistNotifier): int
     {
         $settings = MarketingSetting::cached();
         if ($settings && ! $settings->recruitment_notify_enabled) {
@@ -46,6 +47,10 @@ class NotifyFormingShortfall extends Command
         foreach ($groups as $group) {
             $recipients += $notifier->notifyShortfall($group);
             $curatorNotifier->groupUnderEnrolled($group);
+
+            // H3327: тот же статус за 2 дня до старта получает и лист ожидания
+            // («дата под вопросом, до запуска ещё N») — дедуп на день внутри сервиса.
+            $waitlistNotifier->autoReminder($group);
         }
 
         $this->info("Уведомления о недоборе: групп {$groups->count()}, получателей {$recipients}.");
