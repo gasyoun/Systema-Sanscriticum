@@ -1048,6 +1048,17 @@ class LandingPageResource extends Resource
                                             ->defaultItems(2),
                                     ]),
 
+                                // 8b. СТАТУС НАБОРА (живые данные группы, H3327)
+                                Block::make('status_block')
+                                    ->label('Статус набора группы (живой)')
+                                    ->icon('heroicon-m-signal')
+                                    ->schema([
+                                        TextInput::make('course_family')
+                                            ->label('Семья потоков (courses.course_family)')
+                                            ->placeholder('kasmirskii-sivaizm')
+                                            ->helperText('Блок ищет набирающуюся группу этой семьи и показывает живой статус + словарь статусов подписки. Пока группы нет — блок не рисуется.'),
+                                    ]),
+
                                 // 9. FORM (С ДЕФИЦИТОМ)
                                 Block::make('form_block')
                                     ->label('9. Форма заявки (CTA + Дефицит)')
