@@ -79,7 +79,7 @@ class LessonMaterialTagger
     /** Число упоминаний ключевых слов в стенограмме урока. */
     public function mentionCount(Lesson $lesson, array $keywords): int
     {
-        $sentences = TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
+        $sentences = TranscriptParser::sentencesFromStoredFile($lesson->transcript_file);
         if ($sentences === [] || $keywords === []) {
             return 0;
         }

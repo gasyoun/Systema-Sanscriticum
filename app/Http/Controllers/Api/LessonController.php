@@ -179,12 +179,15 @@ class LessonController extends Controller
             ], 422);
         }
 
+        // H3308: стенограмма платного урока — не для статической раздачи /storage.
+        // Пишем на приватный диск; студентам её отдаёт гейт-роут
+        // student.lesson.transcript с той же цепочкой доступа, что у плеера.
         $path = 'transcripts/lesson-'.$lesson->id.'.json';
-        Storage::disk('public')->put($path, json_encode($payload, JSON_UNESCAPED_UNICODE));
+        Storage::disk('local')->put($path, json_encode($payload, JSON_UNESCAPED_UNICODE));
 
         $lesson->forceFill(['transcript_file' => $path])->save();
 
-        $sentences = TranscriptParser::sentencesFromPublicFile($path);
+        $sentences = TranscriptParser::sentencesFromStoredFile($path);
 
         // Авторазметка материала для material_count-вех сертификатов — в очередь,
         // чтобы разбор стенограммы не задерживал ответ n8n.

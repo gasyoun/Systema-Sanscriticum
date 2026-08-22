@@ -48,6 +48,14 @@ _Создано: 08-07-2026 · Обновлено: 21-08-2026 (№80 H3247 `CRM_
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
 
+### H3308 — приватизация контента уроков — прогон миграции на проде
+
+Код инертен для новых записей (они уже пишут в `local`), но существующие файлы лежат в `storage/app/public` и статически раздавались из `/storage`. После деплоя:
+
+1. `php artisan lessons:privatize-gated-assets` — dry-run: покажет, сколько файлов уйдёт (transcripts/, lesson-materials/, homework-prompts/; `lectures/` не трогает).
+2. `php artisan lessons:privatize-gated-assets --apply` — копия на private + удаление публичных оригиналов после сверки размера.
+3. Smoke: анонимный `GET /storage/transcripts/lesson-<N>.json` → 404; студент с оплаченным курсом открывает урок → стенограмма и материалы грузятся через `/c/{slug}/u/{id}/...`.
+
 ### H3298 — SMTP 554 / E-channel — @DECIDE MG (вариант B/C), потом paste-kit
 
 Диагноз: [docs/DIAG_SYSTEMA_SMTP_554_H3298_22-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DIAG_SYSTEMA_SMTP_554_H3298_22-08-2026.md). Бесплатный ящик `rusamskrtam@yandex.ru` ловит `554 spam` на чеках покупок (11 в августе); samskrte.ru без SPF/DMARC/MX.

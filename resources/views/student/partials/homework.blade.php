@@ -76,7 +76,7 @@
                 @if(count($hwRefFiles))
                     <div class="mt-4 flex flex-wrap gap-2">
                         @foreach($hwRefFiles as $rf)
-                            <a href="{{ asset('storage/'.$rf) }}" target="_blank" download
+                            <a href="{{ route('student.lesson.homework-file', [$course->slug, $lesson->id, basename($rf)]) }}" target="_blank" download
                                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-orange-200 text-sm font-semibold text-gray-700 hover:border-brand hover:text-brand transition-colors">
                                 <i class="fas fa-paperclip text-xs"></i> {{ basename($rf) }}
                             </a>

@@ -732,7 +732,7 @@
                                     </p>
                                 </div>
                             </div>
-                            <a href="{{ asset('storage/' . $file) }}" download target="_blank" class="ml-3 w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-400 hover:text-white hover:bg-blue-500 hover:border-blue-500 transition-colors shadow-sm shrink-0" title="Скачать">
+                            <a href="{{ route('student.lesson.material', [$course->slug, $lesson->id, basename($file)]) }}" download target="_blank" class="ml-3 w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-400 hover:text-white hover:bg-blue-500 hover:border-blue-500 transition-colors shadow-sm shrink-0" title="Скачать">
                                 <i class="fas fa-download text-xs"></i>
                             </a>
                         </div>
@@ -740,7 +740,7 @@
                         @if($isAudio)
                             <div class="px-4 pb-4 pt-1">
                                 <audio controls class="w-full h-8 custom-audio-player outline-none">
-                                    <source src="{{ asset('storage/' . $file) }}" type="{{ $mimeType }}">
+                                    <source src="{{ route('student.lesson.material', [$course->slug, $lesson->id, basename($file)]) }}" type="{{ $mimeType }}">
                                 </audio>
                             </div>
                         @endif
@@ -748,7 +748,7 @@
                         @if($isVideo)
                             <div class="px-2 pb-2">
                                 <video controls class="w-full rounded-xl bg-black max-h-32 object-cover outline-none">
-                                    <source src="{{ asset('storage/' . $file) }}" type="{{ $mimeType }}">
+                                    <source src="{{ route('student.lesson.material', [$course->slug, $lesson->id, basename($file)]) }}" type="{{ $mimeType }}">
                                 </video>
                             </div>
                         @endif

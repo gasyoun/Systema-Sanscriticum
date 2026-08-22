@@ -67,7 +67,7 @@ final class SocialDraftGenerator
             return null;
         }
 
-        $sentences = TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
+        $sentences = TranscriptParser::sentencesFromStoredFile($lesson->transcript_file);
         foreach ($sentences as $sentence) {
             if ($sentence['start'] >= (float) $start && $sentence['start'] < (float) $end) {
                 $text = trim((string) ($sentence['text'] ?? ''));

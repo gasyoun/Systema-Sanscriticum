@@ -202,7 +202,7 @@ final class HindiTranscriptDrills
                 return ['source' => $source, 'items' => []];
             }
 
-            $sentences = TranscriptParser::sentencesFromPublicFile($path);
+            $sentences = TranscriptParser::sentencesFromStoredFile($path);
 
             return [
                 'source' => $source,

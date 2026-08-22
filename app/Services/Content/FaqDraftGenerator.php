@@ -37,7 +37,7 @@ final class FaqDraftGenerator
             return [];
         }
 
-        $sentences = TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
+        $sentences = TranscriptParser::sentencesFromStoredFile($lesson->transcript_file);
         if ($sentences === []) {
             return [];
         }
