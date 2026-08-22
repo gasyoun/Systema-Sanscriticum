@@ -1,18 +1,8 @@
 @php
-    // Живой статус набора одной группы курса (H3327). Привязка: явный group_id
-    // из данных блока, иначе — набирающаяся группа семьи с заданным порогом
-    // min_size и датой старта (оболочки без порога/даты не считаются).
-    $family = $data['course_family'] ?? null;
-    $group = null;
-    if (! empty($data['group_id'])) {
-        $group = \App\Models\Group::find($data['group_id']);
-    }
-    if (! $group && $family) {
-        $launchable = fn ($query) => $query->whereNotNull('min_size')->whereNotNull('planned_start_date');
-        $byFamily = fn ($query) => $query->whereHas('courses', fn ($c) => $c->where('courses.course_family', $family));
-        $group = \App\Models\Group::where('status', 'forming')->where($launchable)->where($byFamily)->latest('id')->first()
-            ?? \App\Models\Group::where('status', 'active')->where($byFamily)->latest('id')->first();
-    }
+    // Живой статус набора одной группы курса (H3327). Привязка — общий
+    // резолвер App\Support\StatusBlock (его же используют гейт выдачи
+    // binding-токена и матчинг гостей при рассылке, H3339).
+    $group = \App\Support\StatusBlock::resolveGroup($data ?? null);
 @endphp
 
 @if($group)

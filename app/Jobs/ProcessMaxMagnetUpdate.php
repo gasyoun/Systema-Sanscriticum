@@ -6,6 +6,8 @@ namespace App\Jobs;
 
 use App\Models\Lead;
 use App\Services\Leads\LeadMagnetDispatcher;
+use App\Services\Leads\WaitlistWelcome;
+use App\Services\Messaging\DeliveryChannelManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -67,6 +69,9 @@ final class ProcessMaxMagnetUpdate implements ShouldQueue
 
         if (! $lead->max_user_id) {
             $lead->update(['max_user_id' => $userId]);
+
+            // H3339: подписчик статусов получает словарь при первой привязке.
+            WaitlistWelcome::sendIfFreshlyBound($lead->fresh() ?? $lead, 'max', $userId, app(DeliveryChannelManager::class));
         }
 
         LeadMagnetDispatcher::deliverOrDefer($lead, 'max');

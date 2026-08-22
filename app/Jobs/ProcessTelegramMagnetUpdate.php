@@ -8,6 +8,7 @@ use App\Models\LandingBot;
 use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Services\Leads\LeadMagnetDispatcher;
+use App\Services\Leads\WaitlistWelcome;
 use App\Services\Marathon\MarathonDay1Sender;
 use App\Services\Messaging\DeliveryChannelManager;
 use Illuminate\Bus\Queueable;
@@ -87,6 +88,10 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
 
         if (! $lead->telegram_chat_id) {
             $lead->update(['telegram_chat_id' => $chatId]);
+
+            // H3339: подписчик статусов (status_block без магнита) первым
+            // сообщением получает полный словарь статусов курса.
+            WaitlistWelcome::sendIfFreshlyBound($lead->fresh() ?? $lead, 'telegram', (string) $chatId, app(DeliveryChannelManager::class));
         }
 
         // H1939 residual / product ruling: Day 1 marathon drip immediately after

@@ -36,8 +36,15 @@ final class LeadFlashBuilder
 
         // Lead-magnet flash имеет приоритет над redirect_after_submit_url:
         // без этого юзер уйдёт на лендинг и не получит файл.
-        if ($lead->magnet_token && $lead->magnet_channel) {
+        // H3339: magnet_token теперь бывает и у «подписочных» лидов (без файла),
+        // поэтому файловая ветка гейтится настоящим магнитом на лендинге.
+        if ($lead->magnet_token && $lead->magnet_channel
+            && ($landing === null || $landing->hasLeadMagnet())) {
             $this->applyMagnetDeepLink($flash, $lead, $landing);
+        }
+
+        if ($landing && $landing->hasStatusBlock() && $lead->magnet_token) {
+            $flash['status_connect_links'] = $this->statusConnectLinks($lead, $landing);
         }
 
         if (! $landing && ! empty($validated['source_article_id'])) {
@@ -62,6 +69,36 @@ final class LeadFlashBuilder
         if (! empty($landing->redirect_after_submit_url)) {
             $flash['redirect_url'] = $landing->redirect_after_submit_url;
         }
+    }
+
+    /**
+     * Кнопки «Подключить уведомления» (H3339): deep-link каждого настроенного
+     * канала на один и тот же binding-токен лида. Без авто-редиректа — юзер
+     * остаётся на странице и выбирает мессенджер сам.
+     *
+     * @return array<string, string> channel => url
+     */
+    public function statusConnectLinks(Lead $lead, ?LandingPage $landing): array
+    {
+        if (! $lead->magnet_token) {
+            return [];
+        }
+
+        $marketing = MarketingSetting::cached();
+
+        // Только полностью настроенные каналы — иначе кнопка ведёт в «мёртвого» бота.
+        $links = [];
+        foreach ($marketing?->configuredChannels() ?? [] as $channelName) {
+            $links[$channelName] = $this->channels->get($channelName)->buildDeepLink($lead->magnet_token);
+        }
+
+        // «Свой бот на лендинг»: telegram перекрывается ботом лендинга, если он есть.
+        $bot = $landing?->bot;
+        if ($bot && $bot->isUsable()) {
+            $links['telegram'] = $bot->deepLink($lead->magnet_token);
+        }
+
+        return $links;
     }
 
     private function applyMagnetDeepLink(array &$flash, Lead $lead, ?LandingPage $landing): void
