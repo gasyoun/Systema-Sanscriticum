@@ -132,11 +132,13 @@ class LeadController extends Controller
         $user = $request->user();
 
         // Контакты ТОЛЬКО из профиля — форма полей не показывает.
+        // Если нет Телеграма, подходит ВК или Max (рулинг MG 22-08-2026).
         $email = filled($user->email) ? $user->email : null;
         $contact = collect([
             $user->phone,
             filled($user->telegram_username) ? '@'.$user->telegram_username : null,
             filled($user->vk_id) ? 'vk:'.$user->vk_id : null,
+            filled($user->max_user_id) ? 'max:'.$user->max_user_id : null,
         ])->first(fn ($value) => filled($value)) ?? $email;
 
         if (blank($contact)) {
