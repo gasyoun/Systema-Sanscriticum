@@ -39,6 +39,13 @@ return [
                     base_path('node_modules'),
                     storage_path('app/livewire-tmp'),
                     storage_path('app/telegram-harvest/pilot'),
+                    // Сам каталог назначения бэкапов и временный каталог Zip:
+                    // без исключения каждый архив заворачивал внутрь себя все
+                    // предыдущие (рекурсивный рост: 22-08-2026 архив 1.87 ГБ,
+                    // внутри — прошлонедельные 1.4 ГБ) и раздувался каждую
+                    // неделю. См. также split_upload ниже.
+                    storage_path('app/Laravel'),
+                    storage_path('app/backup-temp'),
                 ],
 
                 'follow_links' => false,
@@ -63,14 +70,31 @@ return [
             'compression_method' => ZipArchive::CM_DEFAULT,
             'compression_level' => 9,
             'filename_prefix' => '',
-            // local — на сервере; yandex_disk — off-site, синхронизируется дальше
-            // на ПК десктоп-клиентом Яндекс.Диска. Отсутствие YANDEX_DISK_LOGIN
-            // в .env просто даёт неудачную запись на этот диск (лог + уведомление
-            // BackupHasFailedNotification), local-копия при этом не страдает.
+            // Только local: spatie льёт архив одним WebDAV-PUT, а Yandex режет
+            // PUT >1 ГБ по HTTP 413 (история: обрезки по 11 МиБ, потом отказ).
+            // Off-site нога переехала в SplitUploadToYandex (событие
+            // BackupWasSuccessful): архив делится на части <1 ГБ и льётся
+            // по частям. Аудит свежести yandex_disk живёт в
+            // ShellSystemInspector::readBackupDestinations — он добавляет диск
+            // из split_upload.disk к этому списку, поэтому guards продолжают
+            // мерить off-site, хотя spatie туда больше не пишет напрямую.
             'disks' => [
                 'local',
-                'yandex_disk',
             ],
+        ],
+
+        // Off-site через части: Yandex Disk не принимает файлы больше ~1 ГБ
+        // ни по WebDAV, ни по простому REST-upload — единственный честный путь
+        // для архива любого размера. Восстановление: скачать все части одной
+        // группы, склеить `cat *.part-*-of-*.zip > backup.zip`, распаковать.
+        'split_upload' => [
+            // Куда льём части (должен совпадать с диском из destination.disks,
+            // который НЕ local).
+            'disk' => 'yandex_disk',
+            // Потолок одной части с запасом под лимит Яндекса (~1 ГБ).
+            'max_part_mb' => (int) env('BACKUP_SPLIT_PART_MB', 700),
+            // Ретеншн частей на off-site: зеркалит keep_daily_backups_for_days.
+            'keep_parts_days' => (int) env('BACKUP_KEEP_PARTS_DAYS', 16),
         ],
 
         'temporary_directory' => storage_path('app/backup-temp'),

@@ -193,6 +193,13 @@ final class ShellSystemInspector implements SystemInspector
 
         /** @var list<string> $disks */
         $disks = (array) config('backup.backup.destination.disks', []);
+        // Off-site нога переехала из destination.disks в split_upload (Yandex
+        // WebDAV режет PUT >1 ГБ — spatie туда больше не пишет напрямую), но
+        // свежесть частей на этом диске аудитить по-прежнему обязательно.
+        $splitDisk = (string) config('backup.backup.split_upload.disk', '');
+        if ($splitDisk !== '' && ! in_array($splitDisk, $disks, true)) {
+            $disks[] = $splitDisk;
+        }
         $name = (string) config('backup.backup.name', '');
         if ($disks === [] || $name === '') {
             return null;
