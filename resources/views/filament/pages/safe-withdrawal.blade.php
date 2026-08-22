@@ -65,11 +65,11 @@
         <table class="w-full text-sm">
             <tbody>
                 <tr class="border-t border-gray-100 dark:border-white/10">
-                    <td class="px-3 py-2">Преподаватели — недельная сетка Календаря выплат (₽-дорожка; EUR отдельно в PayPal)</td>
+                    <td class="px-3 py-2">Преподаватели — сетка Календаря выплат; на каждого: MIN(баланс регистра, начисление за 3 мес) — регистровые балансы завышены старыми «Расход»-пачками мимо регистра (₽-дорожка; EUR отдельно в PayPal)</td>
                     <td class="px-3 py-2 text-right">{{ $money2($obl['teachers_rub'] ?? 0) }} ₽ @if ($obl['teachers_eur_due'] ?? false)<span class="ml-1 rounded bg-warning-100 px-1 text-xs text-warning-800">+ EUR</span>@endif</td>
                 </tr>
                 <tr class="border-t border-gray-100 dark:border-white/10">
-                    <td class="px-3 py-2">Персонал: {{ $money2($obl['staff_monthly'] ?? 0) }} ₽/мес × {{ $obl['staff_horizon_months'] ?? 0 }} мес</td>
+                    <td class="px-3 py-2">Персонал: {{ $money2($obl['staff_monthly'] ?? 0) }} ₽/мес × {{ $obl['staff_horizon_months'] ?? 0 }} мес @if (!empty($obl['staff_stale_excluded']))<span class="text-xs text-gray-500">(без молчащих ≥2 мес: {{ implode(', ', $obl['staff_stale_excluded']) }})</span>@endif</td>
                     <td class="px-3 py-2 text-right">{{ $money2($obl['staff_total'] ?? 0) }} ₽</td>
                 </tr>
                 <tr class="border-t border-gray-100 dark:border-white/10">
@@ -128,7 +128,7 @@
         <table class="w-full text-sm">
             <tbody>
                 <tr class="border-t border-gray-100 dark:border-white/10">
-                    <td class="px-3 py-2">Среднемесячные расходы (ОПиУ штурвала, 3 мес) × {{ $opr['months'] ?? 1 }} мес</td>
+                    <td class="px-3 py-2">Активные месячные оттоки (персонал + прочие opex) × {{ $opr['months'] ?? 1 }} мес; преподаватели — в обязательствах горизонта, здесь не дублируются</td>
                     <td class="px-3 py-2 text-right">{{ $money2($opr['total'] ?? 0) }} ₽</td>
                 </tr>
             </tbody>
