@@ -524,8 +524,13 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SAFE_WITHDRAWAL_TOCHKA_EXCLUDED_TAILS` | optional | `'877617'` | config/safe_withdrawal.php:59 |
 | `SAFE_WITHDRAWAL_USN_RATE` | optional | `0.06` | config/safe_withdrawal.php:65 |
 | `SANCTUM_STATEFUL_DOMAINS` | optional | `sprintf( '%s%s', 'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000…` | config/sanctum.php:21 |
+<<<<<<< HEAD
 | `SANCTUM_TOKEN_EXPIRATION` | secret | `60 * 24 * 90` | config/sanctum.php:58 |
 | `SANCTUM_TOKEN_PREFIX` | secret | `''` | config/sanctum.php:73 |
+=======
+| `SANCTUM_TOKEN_PREFIX` | secret | `''` | config/sanctum.php:67 |
+| `SEASON1_NOTIFY_ENABLED` | feature-flag | `false` | config/season.php:11 |
+>>>>>>> e48fdbd0 (docs(env): regenerate env inventory for SEASON1_NOTIFY_ENABLED (H3297))
 | `SERVER_GUARDS_SPEC` | optional | `base_path('scripts/server_guards.conf')` | config/server_guards.php:18 |
 | `SERVER_GUARDS_TEMPLATES` | optional | `base_path('scripts/server_guards')` | config/server_guards.php:20 |
 | `SERVER_GUARDS_VERIFY` | optional | `PHP_OS_FAMILY === 'Linux' && env('APP_ENV') === 'production'` | config/server_guards.php:33 |
