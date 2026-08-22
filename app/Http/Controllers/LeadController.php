@@ -109,6 +109,84 @@ class LeadController extends Controller
             ->with($flashBuilder->build($lead, $landing, $validated));
     }
 
+    /**
+     * Заявка одним кликом от вошедшего ученика (лист ожидания нового потока).
+     * Поля не вводятся: имя/контакт/почта берутся из профиля; дедуп тот же,
+     * что у полной формы (email ?? contact + landing_page_id), поэтому повторный
+     * клик не плодит дублей — человек просто снова видит подтверждение.
+     */
+    public function oneClick(Request $request)
+    {
+        // Тот же троттлинг, что у lead-формы: 1 запрос / 5 сек / IP.
+        $rlKey = 'lead-submit:'.$request->ip();
+        if (RateLimiter::tooManyAttempts($rlKey, 1)) {
+            abort(429, 'Слишком частые запросы. Подождите несколько секунд.');
+        }
+        RateLimiter::hit($rlKey, 5);
+
+        $validated = $request->validate([
+            'landing_page_id' => ['required', 'integer'],
+            'is_promo_agreed' => ['nullable'],
+        ]);
+
+        $user = $request->user();
+
+        // Контакты ТОЛЬКО из профиля — форма полей не показывает.
+        $email = filled($user->email) ? $user->email : null;
+        $contact = collect([
+            $user->phone,
+            filled($user->telegram_username) ? '@'.$user->telegram_username : null,
+            filled($user->vk_id) ? 'vk:'.$user->vk_id : null,
+        ])->first(fn ($value) => filled($value)) ?? $email;
+
+        if (blank($contact)) {
+            return back()->with('error', 'В профиле нет ни телефона, ни мессенджера — напишите куратору напрямую.');
+        }
+
+        [$dupColumn, $dupValue] = $email !== null ? ['email', $email] : ['contact', $contact];
+
+        $existing = Lead::where($dupColumn, $dupValue)
+            ->where('landing_page_id', $validated['landing_page_id'])
+            ->first();
+
+        if ($existing) {
+            return back()->with('success', 'Вы уже в листе ожидания — напишем вам при открытии набора.');
+        }
+
+        $lead = Lead::create([
+            'landing_page_id' => $validated['landing_page_id'],
+            'name' => $user->name,
+            'contact' => $contact,
+            'email' => $email,
+            'is_promo_agreed' => $request->has('is_promo_agreed'),
+            // Метка канала в CRM: заявка создана кнопкой из кабинета, не формой.
+            'utm_content' => '[one-click]',
+            'utm_source' => $request->input('utm_source'),
+            'utm_medium' => $request->input('utm_medium'),
+            'utm_campaign' => $request->input('utm_campaign'),
+            'utm_term' => $request->input('utm_term'),
+            'click_id' => $request->input('click_id'),
+            'referrer' => $request->headers->get('referer'),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'user_id' => $user->id,
+        ]);
+
+        // Согласие на анонсы от действующего ученика — сразу в его настройки.
+        // Только additive: снять галочку он может в кабинете, здесь ничего не выключаем.
+        if ($request->has('is_promo_agreed')) {
+            $user->forceFill([
+                'wants_email_announcements' => true,
+                'wants_messenger_announcements' => true,
+            ])->save();
+        }
+
+        // Уведомление маркетологам в Telegram (no-op, если чат не настроен).
+        app(LeadNotifier::class)->newLead($lead);
+
+        return back()->with('success', 'Готово! Вы в листе ожидания — напишем вам при открытии набора.');
+    }
+
     public function export()
     {
         abort_unless(auth()->check() && auth()->user()->is_admin, 403, 'Доступ к выгрузке запрещен.');

@@ -810,6 +810,11 @@ Route::get('/force-download/{file}', function (string $file) {
 // --- ОТПРАВКА ФОРМЫ ---
 Route::post('/leads/store', [LeadController::class, 'store'])->name('leads.store');
 
+// Один клик от вошедшего ученика: поля заполняются из кабинета, форма их не показывает.
+Route::post('/leads/one-click', [LeadController::class, 'oneClick'])
+    ->middleware('auth')
+    ->name('leads.one-click');
+
 // --- ПОДПИСКА НА РАССЫЛКУ (H324) — email-only → кабинет + magic-link + магниты.
 // Оба маршрута самогейтятся по фича-флагу newsletter_subscribe (404 при OFF).
 // Строго до catch-all /{slug} ниже. Публичные; троттлинг в контроллере/middleware.

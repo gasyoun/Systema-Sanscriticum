@@ -58,6 +58,7 @@ class Lead extends Model
         // Основные данные
         'landing_page_id',
         'landing_copy_variant',
+        'user_id',          // заявка одним кликом от вошедшего ученика
         'name',
         'contact',
         'email',            // <--- Важно: Добавили Email
