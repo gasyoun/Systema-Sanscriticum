@@ -9,6 +9,8 @@ use App\Models\Lesson;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
+use Filament\Forms\Components\BaseFileUpload;
+use Filament\Forms\Components\TemporaryUploadedFile;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -278,7 +280,7 @@ class LessonResource extends Resource
                     // клиентского (путь/имя от клиента больше не попадают в /storage).
                     ->disk('local')
                     ->directory('lesson-materials')
-                    ->getUploadedFileNameUsing(fn ($file) => self::safeStoredName($file))
+                    ->getUploadedFileNameForStorageUsing(fn (BaseFileUpload $component, TemporaryUploadedFile $file) => self::safeStoredName($file))
                     ->reorderable() // Позволяет менять порядок файлов перетаскиванием
                     ->appendFiles() // Позволяет добавлять новые файлы к уже загруженным
                     ->downloadable() // Можно скачать из админки
@@ -326,7 +328,7 @@ class LessonResource extends Resource
                             // H3308: приватный диск + сгенерированное имя — как у материалов.
                             ->disk('local')
                             ->directory('homework-prompts')
-                            ->getUploadedFileNameUsing(fn ($file) => self::safeStoredName($file))
+                            ->getUploadedFileNameForStorageUsing(fn (BaseFileUpload $component, TemporaryUploadedFile $file) => self::safeStoredName($file))
                             ->downloadable()
                             ->openable()
                             ->maxSize(51200)
