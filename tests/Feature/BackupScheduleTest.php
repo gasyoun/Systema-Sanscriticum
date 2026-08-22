@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Support\ServerGuards\ShellSystemInspector;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,12 +53,23 @@ class BackupScheduleTest extends TestCase
     }
 
     /** @test */
-    public function backup_destinations_include_local_and_yandex_disk(): void
+    public function local_is_the_only_direct_destination_and_yandex_goes_through_split_upload(): void
     {
+        // Yandex WebDAV режет PUT >1 ГБ по HTTP 413, поэтому spatie больше не
+        // пишет туда напрямую: off-site нога — SplitUploadToYandex (части).
         $disks = config('backup.backup.destination.disks');
 
-        $this->assertContains('local', $disks);
-        $this->assertContains('yandex_disk', $disks);
+        $this->assertSame(['local'], $disks);
+        $this->assertSame('yandex_disk', config('backup.backup.split_upload.disk'));
+
+        // Аудит свежести guards обязан видеть оба диска, несмотря на то что
+        // в destination.disks остался только local.
+        $inspector = new ShellSystemInspector;
+        $rows = $inspector->backupDestinations();
+        $this->assertNotNull($rows);
+        $audited = array_column($rows, 'disk');
+        $this->assertContains('local', $audited);
+        $this->assertContains('yandex_disk', $audited);
     }
 
     /** @test */
