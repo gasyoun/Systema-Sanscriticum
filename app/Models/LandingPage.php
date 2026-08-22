@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\StatusBlock;
 use App\Support\StorefrontEvent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -81,6 +82,22 @@ class LandingPage extends Model
     public function hasLeadMagnet(): bool
     {
         return $this->lead_magnet_enabled && ! empty($this->lead_magnet_file_path);
+    }
+
+    /**
+     * Лендинг обещает подписку на статусы курса (блок status_block) — заявке на
+     * нём выдаётся binding-токен, даже если файла-магнита нет (H3339). Файл при
+     * этом никогда не доставляется: гейт hasLeadMagnet() остаётся в пути выдачи.
+     */
+    public function hasStatusBlock(): bool
+    {
+        return StatusBlock::inContent($this->content);
+    }
+
+    /** Группа, чьи статусы обещает status_block этого лендинга (или null). */
+    public function statusBlockGroup(): ?Group
+    {
+        return StatusBlock::resolveGroup(StatusBlock::data($this->content));
     }
 
     /**
