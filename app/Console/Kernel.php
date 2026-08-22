@@ -286,6 +286,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('season-1-open');
 
+        // Сезон 1: уведомление студентам о старте — T-24h (30-08 21:00 UTC).
+        // Идемпотентно (season_notifications) и безопасно при выключенном
+        // SEASON1_NOTIFY_ENABLED: без флага живая отправка не выполняется.
+        $schedule->command('season:notify-start 1')
+            ->cron('0 21 30 8 *')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('season-1-notify-start');
+
         // Сезон 1: закрытие 01.01.2027 00:00 MSK (UTC 21:00 31.12.2026)
         $schedule->command('season:close 1')
             ->cron('0 21 31 12 *')
