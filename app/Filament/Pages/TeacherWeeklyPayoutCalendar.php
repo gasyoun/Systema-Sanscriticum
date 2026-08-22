@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Services\PayrollContourService;
 use App\Services\TeacherWeeklyPayoutCalendarService;
 use App\Support\RoleGate;
 use Filament\Pages\Page;
@@ -11,6 +12,8 @@ use Filament\Pages\Page;
 /**
  * H3280 — ISO-week who-is-due grid. Live queries. RoleGate::finance().
  * Does not write teacher_payouts / payments. PayPal cover is «open the bank».
+ * Расширение «весь контур» (без бухгалтера): персонал/повторяемые получатели
+ * и собранность должников по преподавателям — тоже read-only.
  */
 class TeacherWeeklyPayoutCalendar extends Page
 {
@@ -22,7 +25,7 @@ class TeacherWeeklyPayoutCalendar extends Page
 
     protected static ?int $navigationSort = 46;
 
-    protected static ?string $title = 'Календарь выплат преподавателям';
+    protected static ?string $title = 'Календарь выплат';
 
     protected static ?string $slug = 'teacher-weekly-payout-calendar';
 
@@ -50,11 +53,16 @@ class TeacherWeeklyPayoutCalendar extends Page
     protected function getViewData(): array
     {
         $grid = app(TeacherWeeklyPayoutCalendarService::class)->grid($this->year);
+        $contour = app(PayrollContourService::class);
 
         return [
             'grid' => $grid,
+            'staff' => $contour->staffPayees(),
+            'debts' => $contour->collectionReadinessByTeacher(),
+            'recentPayments' => $contour->recentPaymentsByTeacher(35),
             'attributionUrl' => PayoutAttributionGuide::getUrl(),
             'salariesUrl' => TeacherSalaries::getUrl(),
+            'debtorsUrl' => Debtors::getUrl(),
         ];
     }
 }
