@@ -19,6 +19,14 @@ return [
     // Операционный резерв в месяцах среднемесячных расходов (НФ: 1–3 мес).
     'op_reserve_months' => (float) env('SAFE_WITHDRAWAL_OP_RESERVE_MONTHS', 1),
 
+    // Получатели персонала, которые АКТИВНЫ даже если в LMS молчат ≥2 мес
+    // (платят себе/получают мимо LMS). Список имён через запятую, совпадение
+    // по подстроке.
+    'staff_active_names' => collect(explode(',', (string) env('SAFE_WITHDRAWAL_STAFF_ACTIVE', 'Ильюшина')))
+        ->map(fn ($s) => trim($s))
+        ->filter()
+        ->all(),
+
     // УСН «доходы», ставка налога.
     'usn_rate' => (float) env('SAFE_WITHDRAWAL_USN_RATE', 0.06),
 
