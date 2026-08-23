@@ -5,7 +5,7 @@
     <title>Заявка получена</title>
 </head>
 <body style="font-family: 'Georgia', serif; background-color: #fcf9f2; color: #3e3a37; line-height: 1.6; margin: 0; padding: 40px 20px;">
-    <span style="display:none; max-height:0; overflow:hidden;">@if($trusted)Доступ к курсу уже открыт.@elseСверим платеж — обычно в течение одного рабочего дня — и откроем доступ.@endif</span>
+    <span style="display:none; max-height:0; overflow:hidden;">@if($trusted)Доступ к курсу открыт.@elseСверим платеж — обычно в течение одного рабочего дня — и откроем доступ.@endif</span>
 
     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px 30px; border-top: 6px solid #d35400; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
 

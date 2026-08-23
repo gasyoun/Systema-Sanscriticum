@@ -39,10 +39,22 @@ final class PaypalClaimController extends Controller
 
         $tariff->load('course');
 
+        // MG 23-08-2026: рублевую цену на форме не показываем (в PayPal платят
+        // только EUR/USD и дороже рублевых). Валютная цена за блок берется из
+        // конфига по course_id и показывается только блочным тарифам.
+        $foreignPrice = null;
+        if ($tariff->type === 'block') {
+            $fp = config('services.paypal.foreign_block_prices')[$tariff->course_id] ?? null;
+            if (is_array($fp) && isset($fp['eur'], $fp['usd'])) {
+                $foreignPrice = $fp;
+            }
+        }
+
         return view('paypal.claim', [
             'tariff' => $tariff,
             'course' => $tariff->course,
             'price' => (float) $tariff->price,
+            'foreignPrice' => $foreignPrice,
             'meLink' => (string) config('services.paypal.me_link'),
             'recipient' => (string) config('services.paypal.recipient'),
         ]);
@@ -122,7 +134,7 @@ final class PaypalClaimController extends Controller
         Mail::to($user)->send(new PaypalClaimStudentAckMail($payment));
 
         $success = $trusted
-            ? 'Спасибо, заявка получена — доступ к курсу уже открыт. Подтверждение с деталями уходит на ваш email.'
+            ? 'Спасибо, заявка получена — доступ к курсу открыт. Подтверждение с деталями уходит на ваш email.'
             : 'Спасибо, заявка получена — подтверждение уже уходит на ваш email. Мы сверим платеж, обычно в течение одного рабочего дня, и откроем доступ; для нового аккаунта пароль придет на email.';
 
         return redirect()
