@@ -248,6 +248,46 @@ class AutoReplyTrialTest extends TestCase
         $this->assertSame(0, SupportAiReplyEvent::query()->count());
     }
 
+    public function test_stale_backlog_message_is_skipped_silently(): void
+    {
+        config([
+            'features.support_auto_reply_templates' => true,
+            'features.support_auto_ack' => true,
+        ]);
+        $this->boundTemplate('D');
+
+        $user = User::factory()->create();
+        $account = $this->account(true);
+        $chat = TelegramSupportChat::firstOrCreate(
+            ['telegram_chat_id' => 9101],
+            ['linked_user_id' => $user->id, 'last_message_at' => now()],
+        );
+
+        // Первичный history-забор: месяцы старых входящих.
+        foreach (['А это свободный доступ или есть цена?', 'Доброе утро, оплатила 1 блок'] as $i => $text) {
+            $stale = TelegramSupportMessage::create([
+                'telegram_support_account_id' => $account->id,
+                'telegram_support_chat_id' => $chat->id,
+                'telegram_chat_id' => 9101,
+                'telegram_message_id' => 500 + $i,
+                'direction' => 'incoming',
+                'text' => $text,
+                'sent_at' => now()->subDays(30 - $i),
+            ]);
+
+            $result = app(SupportDmAutoReply::class)->handle($stale, $user->id, 'private');
+            $this->assertSame('stale_skip', $result['status']);
+        }
+
+        $this->assertSame(0, TelegramSupportMessage::query()->where('direction', 'outgoing')->count());
+        $this->assertSame(0, SupportAiReplyEvent::query()->count());
+
+        // А свежее сообщение в том же чате отвечает как обычно.
+        $fresh = $this->incoming($user, 'сколько стоит курс и как оплатить', $account);
+        $result = app(SupportDmAutoReply::class)->handle($fresh, $user->id, 'private');
+        $this->assertSame('sent', $result['status']);
+    }
+
     public function test_session_context_scopes_lock_and_phase_keys(): void
     {
         $this->assertSame('madeline-session', MadelineSessionContext::lockName());
