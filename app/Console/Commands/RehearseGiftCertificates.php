@@ -14,6 +14,8 @@ use App\Services\GiftCertificateService;
 use DomainException;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -91,14 +93,32 @@ class RehearseGiftCertificates extends Command
 
     private function stepPurchaseAndPay(): void
     {
-        $course = Course::factory()->create(['title' => 'REHEARSE gift course']);
-        $group = Group::factory()->create();
+        // Прямые create(), БЕЗ Eloquent-фабрик: прод живёт на composer --no-dev
+        // (fakerphp/faker отсутствует), а репетиция обязана работать именно там.
+        $course = Course::create([
+            'title' => 'REHEARSE gift course',
+            'slug' => 'rehearse-gift-'.$this->stamp(),
+            'is_visible' => true,
+            'is_active' => true,
+            'format' => 'recorded',
+        ]);
+        $group = Group::create([
+            'name' => 'Rehearse Gift Group '.$this->stamp(),
+            'slug' => 'rehearse-gift-group-'.$this->stamp(),
+        ]);
         $course->groups()->attach($group->id);
-        Tariff::factory()->for($course)->create(['title' => 'Весь курс (репетиция)', 'price' => 6000]);
+        Tariff::create([
+            'course_id' => $course->id,
+            'title' => 'Весь курс (репетиция)',
+            'type' => 'full',
+            'block_number' => null,
+            'price' => 6000,
+            'is_active' => true,
+        ]);
 
         // Платёж-покупка ровно той формы, которую пишет чекаут в режиме
         // «подарить» (PaymentController::createPayment): tariff='gift' + снимок.
-        $buyer = User::factory()->create();
+        $buyer = $this->rehearseUser('buyer');
         $this->payment = Payment::create([
             'user_id' => $buyer->id,
             'course_id' => $course->id,
@@ -168,7 +188,7 @@ class RehearseGiftCertificates extends Command
         // «Грязная» форма кода из письма: строчный регистр и пробелы вместо
         // дефисов — нормализация обязана съесть разницу.
         $dirty = strtolower(str_replace('-', ' ', self::REHEARSAL_CODES[0]));
-        $recipient = User::factory()->create();
+        $recipient = $this->rehearseUser('recipient');
 
         try {
             $activated = $service->redeem($dirty, $recipient);
@@ -223,7 +243,7 @@ class RehearseGiftCertificates extends Command
             return;
         }
 
-        $secondUser = User::factory()->create();
+        $secondUser = $this->rehearseUser('second');
 
         try {
             $service->redeem(self::REHEARSAL_CODES[0], $secondUser);
@@ -298,7 +318,7 @@ class RehearseGiftCertificates extends Command
         // Вторая покупка-репетиция на том же курсе (транзакция общая, откат общий).
         config(['queue.default' => 'null', 'mail.default' => 'log']);
 
-        $refundBuyer = User::factory()->create();
+        $refundBuyer = $this->rehearseUser('refund-buyer');
         $refundPayment = Payment::create([
             'user_id' => $refundBuyer->id,
             'course_id' => $this->payment?->course_id,
@@ -331,7 +351,7 @@ class RehearseGiftCertificates extends Command
         }
 
         try {
-            $service->redeem(self::REHEARSAL_CODES[1], User::factory()->create());
+            $service->redeem(self::REHEARSAL_CODES[1], $this->rehearseUser('extra'));
             $this->record('9. отзыв при возврате оплаты', 'FAIL', 'отозванный сертификат активировался');
 
             return;
@@ -370,5 +390,21 @@ class RehearseGiftCertificates extends Command
             count($this->results) - $failed, $failed));
 
         return $failed === 0 ? self::SUCCESS : self::FAILURE;
+    }
+
+    private function rehearseUser(string $role): User
+    {
+        return User::create([
+            'name' => 'Rehearse '.$role.' '.$this->stamp(),
+            'email' => sprintf('rehearse-%s-%s@rehearse.invalid', $role, $this->stamp()),
+            'email_verified_at' => now(),
+            'password' => Hash::make(Str::random(16)),
+            'remember_token' => Str::random(10),
+        ]);
+    }
+
+    private function stamp(): string
+    {
+        return now()->format('Ymd-His-v');
     }
 }
