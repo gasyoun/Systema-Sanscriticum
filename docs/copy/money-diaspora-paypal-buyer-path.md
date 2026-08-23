@@ -31,6 +31,19 @@ Ruling 22-08-2026 detail: авто-доверие пишется в `claim_meta.
 запускает штатный откат (группы снимаются, финансы пересчитываются;
 course_user pivot не трогается by design).
 
+### Ученик прислал только скриншот PayPal (без заявки)
+
+Скрин — хорошо, но не создает записи платежа. Канонический путь: отправить
+ученику шаблон `/оплата-paypal-скрин`
+([ORS-FAQ/Telegram_templates.md](https://github.com/gasyoun/ORS-FAQ/blob/main/Telegram_templates.md))
+— заявка на сайте своим ученикам открывает доступ сразу. Фолбэк, если форма
+ученику недоступна совсем: куратор создает Payment вручную в Filament
+(Payments → New: user, course, тариф `block_N`, amount = рублевый номинал,
+`foreign_amount`/`foreign_currency`, provider **PayPal**, status **paid** для
+своего / **pending** для нового) — дальше конвейер тот же. Прямая ссылка на
+форму конкретного тарифа строится как `/paypal/{tariff_id}` (id виден в
+админке тарифов и в URL чекаута).
+
 Historical note: H1292 shipped behind a dark flag; H2017 opened prod after MG asked to enable diaspora path. SMTP/queue: see current prod mail status (issue #504 was later re-diagnosed / closed in other work — treat live Horizon `mailing` as source of truth).
 
 ## Зачем этот лейн
