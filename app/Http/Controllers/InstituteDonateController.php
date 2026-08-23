@@ -37,7 +37,7 @@ final class InstituteDonateController extends Controller
     public function page(): View
     {
         return view('institute.mecenaty', [
-            'gratitudes' => DonationGratitude::query()->publicList()->get(),
+            'gratitudes' => DonationGratitude::query()->publicList()->with('payment')->get(),
         ]);
     }
 
@@ -54,6 +54,8 @@ final class InstituteDonateController extends Controller
             $claimMeta['gratitude'] = [
                 'consent' => true,
                 'name' => trim((string) $request->input('gratitude_name')),
+                // Сумма в реестре — только по отдельной просьбе человека (MG 23-08).
+                'show_amount' => $request->boolean('gratitude_amount'),
             ];
         }
 

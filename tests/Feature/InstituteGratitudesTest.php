@@ -70,6 +70,49 @@ class InstituteGratitudesTest extends TestCase
             ->assertSee('Анонимный филолог');
     }
 
+    public function test_amount_shown_only_on_separate_request(): void
+    {
+        // Согласие + отдельная просьба показать сумму.
+        Http::fake(['enter.tochka.com/*' => Http::response([
+            'Data' => ['paymentLink' => 'https://pay.tochka.com/r1', 'paymentLinkId' => 't_a'],
+        ])]);
+        config(['institute.donations_enabled' => true]);
+        $this->post(route('institute.donate'), [
+            'amount' => 2500,
+            'name' => 'Иван',
+            'email' => 'with-amount@example.test',
+            'gratitude_name' => 'Открытый меценат',
+            'gratitude_consent' => '1',
+            'gratitude_amount' => '1',
+        ]);
+        Payment::query()->where('tariff', 'donation')->latest()->firstOrFail()->update(['status' => 'paid']);
+
+        // Только согласие, без просьбы о сумме — вторым, уже другим гостем.
+        $this->app['auth']->guard()->logout();
+        Http::fake(['enter.tochka.com/*' => Http::response([
+            'Data' => ['paymentLink' => 'https://pay.tochka.com/r2', 'paymentLinkId' => 't_b'],
+        ])]);
+        $this->post(route('institute.donate'), [
+            'amount' => 900,
+            'name' => 'Пётр',
+            'email' => 'quiet@example.test',
+            'gratitude_name' => 'Скромный меценат',
+            'gratitude_consent' => '1',
+        ]);
+        $secondId = (int) Payment::query()->where('tariff', 'donation')->max('id');
+        $this->assertGreaterThan(0, $secondId);
+        Payment::findOrFail($secondId)->update(['status' => 'paid']);
+
+        $this->assertTrue(DonationGratitude::query()->where('name_display', 'Открытый меценат')->sole()->show_amount);
+        $this->assertFalse(DonationGratitude::query()->where('name_display', 'Скромный меценат')->sole()->show_amount);
+
+        $html = $this->get('/mecenaty')->assertOk()->getContent();
+        $this->assertStringContainsString('Открытый меценат', $html);
+        $this->assertStringContainsString('2 500', $html);
+        $this->assertStringContainsString('Скромный меценат', $html);
+        $this->assertStringNotContainsString('— 900', $html);
+    }
+
     public function test_without_consent_nothing_is_registered(): void
     {
         $payment = $this->donateWithConsent(gratName: null);

@@ -71,10 +71,16 @@
                 <div>
                     <label for="gratitude_name" class="block text-sm font-bold text-slate-200 mb-1">Имя для благодарности</label>
                     <input type="text" id="gratitude_name" name="gratitude_name" maxlength="120"
-                           placeholder="Как подписать вас в списке"
+                           placeholder="Как указать вас в списке"
                            class="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100">
                     @error('gratitude_name')<p class="text-sm text-red-400 mt-1">{{ $message }}</p>@enderror
                 </div>
+                <label class="flex items-start gap-2 text-sm text-slate-300 pl-6">
+                    <input type="checkbox" name="gratitude_amount" value="1"
+                           class="mt-0.5 rounded border-slate-500 bg-slate-800">
+                    <span>Указать рядом и сумму пожертвования (только по вашему отдельному желанию)</span>
+                </label>
+            </div>
             </div>
 
             <button type="submit"
@@ -95,7 +101,11 @@
         <div class="rounded-xl border border-slate-700 p-4 mb-6">
             <ul class="space-y-1 text-slate-200">
                 @foreach($gratitudes as $gratitude)
-                    <li>{{ $gratitude->name_display }}</li>
+                    <li>
+                        {{ $gratitude->name_display }}@if($gratitude->show_amount && $gratitude->payment)
+                            — {{ number_format((float) $gratitude->payment->amount, 0, '', ' ') }} ₽
+                        @endif
+                    </li>
                 @endforeach
             </ul>
             <p class="text-sm text-slate-400 mt-3">Имена публикуются только с согласия каждого мецената.</p>
