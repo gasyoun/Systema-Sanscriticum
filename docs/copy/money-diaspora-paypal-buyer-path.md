@@ -1,6 +1,6 @@
 # Диаспорный путь оплаты (PayPal) — финальная копия (H1292)
 
-_Created: 20-07-2026 · Last updated: 06-08-2026_
+_Created: 20-07-2026 · Last updated: 23-08-2026_
 
 _Parser residual (same day): DE P2P email sample retune after H2215 ship._
 
@@ -10,13 +10,16 @@ _Parser residual (same day): DE P2P email sample retune after H2215 ship._
 [handoff](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1292-Fable_Systema-Sanscriticum_money-diaspora-paypal-buyer-path_19.07.26.md)).
 Исполнено Fable 5 (`claude-fable-5`), 20-07-2026.
 **Prod enable + claim fields H2017** (Grok 4.5 (`grok-4.5`), 31-07-2026, [PR #969](https://github.com/gasyoun/Systema-Sanscriticum/pull/969)).
+**QR в шапке + прямая ссылка** (ox-alpha (`x-preview-f-free`), 23-08-2026,
+[PR #2012](https://github.com/gasyoun/Systema-Sanscriticum/pull/2012) /
+[PR #2014](https://github.com/gasyoun/Systema-Sanscriticum/pull/2014)).
 
 ## ✅ Prod status (31-07-2026)
 
 | Item | Value |
 |---|---|
 | Flag | `PAYPAL_CLAIM_ENABLED=true` |
-| Student pays to | **gasyoun@gmail.com** (`PAYPAL_RECIPIENT`) via `https://www.paypal.com/paypalme/gasyoun` |
+| Student pays to | **gasyoun@gmail.com** (`PAYPAL_RECIPIENT`); кнопка `PAYPAL_ME_LINK` (`paypalme/gasyoun`), постоянная строка **paypal.me/gasuns** (hardcoded, MG 23-08-2026) либо QR из шапки claim-страницы |
 | Checkout CTA | Visible («Оплатить через PayPal») |
 | Claim form | /paypal/{tariff} — «Уведомление об оплате через PayPal»: triple from/date/amount, optional txn/proof (H2017); валюта по умолчанию EUR; payer = только email; комиссия на отправителе (+пересчет/доплата); валютный прайс блока из services.paypal.foreign_block_prices — рублевую цену не показываем (MG 23-08-2026) |
 | Trust (ruling 22-08-2026) | Заявка **существующего ученика** (вошел в кабинет) сразу `paid` — доступ/финансы немедленно; флаг `PAYPAL_TRUST_EXISTING_STUDENTS` (default ON). Гости с новым email — по-прежнему pending → ручная сверка |
@@ -128,6 +131,23 @@ CHF conversion/fee lines are ignored (form only accepts USD/EUR). EN/RU syntheti
 fixtures remain regression coverage.
 
 ### Страница заявки (`paypal/claim.blade.php`)
+
+**Шапка (QR + вводный абзац, #2012):** справа от заголовка и вводного абзаца —
+QR оплаты (`w-24 sm:w-28`, скругленная рамка) с подписью:
+
+> Или отсканируйте QR в приложении PayPal
+
+QR ведет на managed-ссылку PayPal (`paypal.com/qrcodes/managed/d83566ef-…`),
+которая раскрывается только внутри приложения PayPal. Ассет статический,
+без build-шага.
+
+**Прямая ссылка (шаг 1, #2014):** под кнопкой `PAYPAL_ME_LINK` — постоянная
+строка, не зависящая от env:
+
+> Прямая ссылка для перевода: **paypal.me/gasuns**
+
+На checkout-CTA сырая ссылка сознательно не добавлена: оплата мимо страницы
+заявки выпадает из уведомления и ручной сверки.
 
 **Вводный абзац:**
 
