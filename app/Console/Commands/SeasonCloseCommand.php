@@ -96,17 +96,16 @@ class SeasonCloseCommand extends Command
             }
         }
 
-        // Закрыть сезон
+        // Закрыть сезон и погасить decay-флаг (H3297 / R4-1: decay не живёт
+        // вне сезона — гасим явно, хотя is_active=false уже исключает его из
+        // PranaService::isDecayEnabled()).
         $season->update([
             'ended_at' => now(),
             'is_active' => false,
+            'decay_enabled' => false,
         ]);
 
-        $this->info("Season #{$season->id} closed.");
-
-        // Выключить decay
-        $this->warn('MANUAL STEP: Set PRANA_DECAY_ENABLED=false in .env and restart workers.');
-        $this->warn('TODO: Implement automated .env write or DB-driven config override (H2553 open question).');
+        $this->info("Season #{$season->id} closed. Decay выключен (seasons.decay_enabled=false).");
 
         return 0;
     }
