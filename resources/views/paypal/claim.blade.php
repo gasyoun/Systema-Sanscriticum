@@ -57,6 +57,11 @@
                 Ориентировочная стоимость — <span class="font-bold text-gray-900">{{ number_format($price, 0, '.', ' ') }} ₽</span>
                 (уточните текущий курс валют перед переводом).
             </p>
+            {{-- MG 23-08-2026: комиссию за перевод платит отправитель — иначе сумма
+                 приходит неполной и ручная сверка расходится с заявкой. --}}
+            <p class="mt-2 text-sm font-semibold text-amber-800">
+                Комиссию PayPal за перевод оплачивает отправитель.
+            </p>
             @if($meLink)
                 <a href="{{ $meLink }}" target="_blank" rel="noopener"
                    class="mt-4 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#0070BA] hover:bg-[#005ea6] text-white font-bold text-sm transition">
