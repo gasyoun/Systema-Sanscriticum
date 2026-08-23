@@ -38,10 +38,13 @@
         <table class="w-full text-sm">
             <tbody>
                 <tr class="border-t border-gray-100 dark:border-white/10">
-                    <td class="px-3 py-2">Точка, к трате (ClosingAvailable, оба счёта)</td>
+                    <td class="px-3 py-2">Точка, к трате (ClosingAvailable, без исключённых счетов)</td>
                     <td class="px-3 py-2 text-right font-semibold">
                         @if ($bal['tochka_ok'] ?? false)
                             {{ $money2($bal['tochka_closing']) }} ₽
+                            @if (!empty($bal['tochka_excluded']))
+                                <span class="text-xs text-gray-500">(исключены накопительные: {{ implode(', ', array_map(fn ($a) => '…'.$a['tail'].' '.$money2($a['closing']).' ₽', $bal['tochka_excluded'])) }})</span>
+                            @endif
                         @else
                             <span class="text-danger-600">нет данных банка</span>
                         @endif
@@ -74,7 +77,7 @@
                         @if (($obl['staff_overrides_monthly'] ?? 0) > 0)
                             <span class="text-xs text-gray-500">(в т.ч. по ручному реестру: {{ $money2($obl['staff_overrides_monthly']) }} ₽/мес — Ильюшина, Кравченко, Кузнецова, Головченко)</span>
                         @endif
-                        @if (!empty($obl['staff_quits']))<span class="text-xs text-gray-500">· уволены 15-08 (расчёт при увольнении — вне этого экрана): {{ implode(', ', $obl['staff_quits']) }}</span>@endif
+                        @if (!empty($obl['staff_quits']))<span class="text-xs text-gray-500">· уволены 15-08, расчёты произведены: {{ implode(', ', $obl['staff_quits']) }}</span>@endif
                         @if (!empty($obl['staff_stale_excluded']))<span class="text-xs text-gray-500">· без молчащих ≥2 мес: {{ implode(', ', $obl['staff_stale_excluded']) }}</span>@endif
                     </td>
                     <td class="px-3 py-2 text-right">{{ $money2($obl['staff_total'] ?? 0) }} ₽</td>
