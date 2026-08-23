@@ -48,6 +48,15 @@ _Создано: 08-07-2026 · Обновлено: 21-08-2026 (№80 H3247 `CRM_
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
 
+### H3312 — superadmin email вычищен из кода: прод .env получает ADMIN_EMAIL (fail-closed)
+
+Личный email суперадмина больше не захардкожен в коде ([PR #1988](https://github.com/gasyoun/Systema-Sanscriticum/pull/1988)): Horizon gate, получатель backup-уведомлений и `services.admin.email` теперь читают единый `ADMIN_EMAIL`; пусто = все три функции отключены (Horizon deny + backup notify skip, с warning в логе, без крашей). До выката PR на прод:
+
+1. `.env` прода добавить: `ADMIN_EMAIL=<личный адрес суперадмина>` — **значение в git не пишем**; взять тот же адрес, что был в `app/Providers/HorizonServiceProvider.php` до H3312 (история git), т.к. Horizon-доступ у этого адреса должен сохраниться. Внимание: раньше backup-письма уходили на ДРУГОЙ личный адрес (`config/backup.php` до H3312) — после правки оба канола получают один и тот же адрес из `ADMIN_EMAIL`.
+2. После правки `.env`: `php artisan config:clear`, затем обычный деплой.
+3. Smoke: вход под суперадмином → `/horizon` открывается; под обычным студентом → по-прежнему нет. Если `ADMIN_EMAIL` пуст — `/horizon` 403 для всех + в логе warning `viewHorizon denied`, backup-уведомления skip (`ADMIN_EMAIL is not configured`) — это ожидаемое fail-closed поведение, не авария.
+4. Откат: убрать `ADMIN_EMAIL` из `.env` — безопасно, все ветки fail-closed.
+
 ### H3311 — конфиг-закалка: прод .env перед деплоем (Secure-cookie / TRUSTED_PROXIES / CORS_ALLOWED_ORIGINS)
 
 Код инертен к same-origin фронту и локальной разработке, но прод обязан выставить три ключа в `.env` **до** следующего `deploy.sh` (новый шаг предсброса `php artisan deploy:config-preflight` проверяет первый жёстко):

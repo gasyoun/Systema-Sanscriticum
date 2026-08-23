@@ -323,8 +323,15 @@ return [
         ],
     ],
 
+    // H3312: единый канонический адрес суперадмина - только из env, без
+    // литерального фолбэка (литерал в публичном репо = раскрытие логина
+    // super_admin). Fail-closed: пустой ADMIN_EMAIL отключает админ-функции
+    // (Horizon deny, backup-уведомления skip, админ-письма по платежам skip),
+    // а не уводит их на «угаданный» адрес. Прод получает значение через
+    // DEPLOY_QUEUE (Uprava); DatabaseSeeder дополнительно требует
+    // непустой ADMIN_PASSWORD перед сидированием.
     'admin' => [
-        'email' => env('ADMIN_EMAIL', 'pe4kin.85@mail.ru'),
+        'email' => env('ADMIN_EMAIL', ''),
         'password' => env('ADMIN_PASSWORD'),
     ],
 
