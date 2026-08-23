@@ -54,3 +54,16 @@ _Created: 22-08-2026 · Last updated: 22-08-2026_
 правил MG по §3 (гвард хендоффа: тарифы/цены не менять).
 
 _Dr. Mārcis Gasūns_
+
+---
+
+## 5. Исполнение решений MG (22-08-2026, вечер)
+
+| Развилка | Решение | Статус |
+|---|---|---|
+| Дата активации тиров | **01-09-2026 08:00 MSK** | ✅ подготовлено: [scripts/activate_tiered_pricing.sh](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/activate_tiered_pricing.sh) (`6df5b0ee`) задеплоен, cron `/etc/cron.d/tier-activation` срабатывает **07:50 MSK**; гвард rehearse, авто-откат флага при провале, self-disabling marker |
+| M12 почта (554/empty code) | чинить | ✅ **ПОЧИНЕНО**: корень — порт 465 молча рвёт соединение; переключено на **587/STARTTLS** (`.env.bak-m12fix`), живая отправка через Laravel mailer подтверждена. Остаток: ежедневный Telegram «chat not found» (09:46/19:46 job) — отдельный ops-пункт |
+| VK go | по паку §5 | шаги §5 — **человеческие** (кабинет VK Ads, бюджет); инструментация агента готова |
+| Волна 2 | ожидает даты `MARATHON_WAVE2_FROM` | механика: [MARATHON_WARM_TAIL_WAVE_AB_2026](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MARATHON_WARM_TAIL_WAVE_AB_2026.md); рекомендация 2026-09-05 |
+
+После 01-09 08:00: проверка `membership:rehearse` + витрина /klub показывает шесть тарифов; затем единственный живой чекаут MG как приёмка.
