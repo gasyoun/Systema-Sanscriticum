@@ -43,7 +43,7 @@ Proxmox-restart, host-side правки (**в отпуске до конца с�
 
 1. **Узел лежит** (и `.91` тоже лег или лагает) → только Пудлинк: звонок +7 812 6708800, статус дата-центра. Ждать.
 2. **Только `.92` висла, `.91` жив** → нужен **Proxmox-restart**: это Артём (или панель, доступа у MG нет). Одно сообщение Артёму: «restart VM .92 в Proxmox, please». Пока он в отпуске — совмещать с пунктом 1 (один звонок решает оба случая).
-3. **VM потеряна безвозвратно** → переезд по [ops/migrate/RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ops/migrate/RUNBOOK.md) из restic-репозитория на `.91` (он жив отдельно от `.92`). Время: ~3 часа механики после VPS+ключа.
+3. **VM потеряна безвозвратно** → переезд по [ops/migrate/RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ops/migrate/RUNBOOK.md) из restic-репозитория на `.91` (он жив отдельно от `.92`). Время: ~3 часа механики после VPS+ключа. **Прецедент отработан 23-08**: Aeza SWEs-1 (1c/2GB, Debian 13) доведён до прода за один вечер — кейс в [RUNBOOK](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ops/migrate/RUNBOOK.md); погашение панели: my.aeza.ru → service 624477.
 
 ### 1.3 nginx отвечает, приложение нет (502/504)
 

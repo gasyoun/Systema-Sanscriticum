@@ -139,6 +139,8 @@ restic-push шёл до 17:01 UTC; lane Артёма). Пока ждём сня�
 5. Известные ограничения темпа: Telegram MadelineProto daemon не поднят (TG-поддержка деградировала),
    kosha/samudra/pe4kinsmart vhosts с .92 не перенесены, Reverb/websockets не запущен, `/apps?/` прокси (8080) отсутствует.
 
+> **Решение MG 23-08 поздним вечером:** временный хост погасить — не понадобился (Pudlink снял null-route, `.92` снова прод). Панель my.aeza.ru → service 624477 → выключить/не продлевать (срок до 30.08). Личный VPN MG на Aeze — отдельная услуга, не трогается. Процедура зафиксирована как прецедент: [ops/migrate/RUNBOOK.md, кейс 23-08](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ops/migrate/RUNBOOK.md).
+
 C4 — за гейтом выводов пилота A1. Ограждения: анти-срочность во всех продающих текстах; ценники —
 money row, слово MG, нератифицированное не публикуется; C7-олимпиадная за гейтом H253; книги — 2027;
 UTM-схема каждому новому каналу с первого дня ([харнесс](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VK_PAID_TEST_INSTRUMENTATION_H3333_2026.md)).
