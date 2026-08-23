@@ -72,3 +72,6 @@ tinker-*.txt
 # Local MCP / agent index (machine-local; dirty-tree-sweep 02-08-2026)
 .repowise/
 .claude/CLAUDE.md
+
+# H3397 hiring exam staging: student works/keys/artifacts never enter git
+/hiring-quarantine/
