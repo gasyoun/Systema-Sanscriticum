@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H3311 (Ox Alpha `x-preview-f-free`): конфиг-закалка HTTP-слоя — Secure-cookie дефолт, CORS allowlist, TrustProxies из env, прод-предсброс деплоя.** `SESSION_SECURE_COOKIE` теперь по умолчанию **true** (unset больше не даёт куку без Secure; локальный http-dev выключает через `.env`, прод проверяет новый `php artisan deploy:config-preflight`, вызываемый из `deploy.sh`: любое не-true значение в APP_ENV=production останавливает выкладку; пустой `TRUSTED_PROXIES` в проде — warning). CORS для `/api/*` переведён с `'allowed_origins' => ['*']` на env-allowlist `CORS_ALLOWED_ORIGINS` (пусто = cross-origin запрещён; same-origin фронту не нужен). `TrustProxies` вместо жёсткого `'*'` читает `TRUSTED_PROXIES` (IP/CIDR через запятую; пусто = не доверять никому) — спуфинг `X-Forwarded-*` мимо прокси больше не отравляет `request()->ip()`. Дубликат ключа `'yandex'` в `config/services.php` устранён: speech-блок переименован в `yandex_speech` (раньше PHP last-wins молча выбрасывал api_key/folder_id/agent_id). `.env.example`: `APP_DEBUG=false`. Тесты: `php artisan test --filter=ConfigHardening`.
+
 ## [1.90.9] - 2026-08-22
 
 ### Fixed

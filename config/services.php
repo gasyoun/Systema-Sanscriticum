@@ -286,7 +286,10 @@ return [
         'callback_secret' => env('VK_CALLBACK_SECRET'),
     ],
 
-    'yandex' => [
+    // H3311: раньше этот блок и Socialite-блок ниже оба назывались 'yandex';
+    // PHP last-wins молча выбрасывал api_key/folder_id/agent_id. Читатели
+    // речи/агента теперь обязаны ходить в services.yandex_speech.
+    'yandex_speech' => [
         'api_key' => env('YANDEX_API_KEY'),
         'folder_id' => env('YANDEX_FOLDER_ID'),
         'agent_id' => env('YANDEX_AGENT_ID'),
