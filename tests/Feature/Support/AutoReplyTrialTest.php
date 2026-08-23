@@ -184,6 +184,70 @@ class AutoReplyTrialTest extends TestCase
         $this->assertSame(1, $acks->count());
     }
 
+    public function test_pure_greeting_gets_warm_reply_not_ack(): void
+    {
+        config([
+            'features.support_auto_reply_templates' => false,
+            'features.support_auto_ack' => true,
+        ]);
+
+        $user = User::factory()->create();
+        $incoming = $this->incoming($user, 'Намо намах!');
+
+        $result = app(SupportDmAutoReply::class)->handle($incoming, $user->id, 'private');
+
+        $this->assertSame('sent', $result['status']);
+        $outgoing = TelegramSupportMessage::query()->where('direction', 'outgoing')->first();
+        $this->assertStringContainsString('Напишите, по какому курсу', (string) $outgoing->text);
+        $this->assertStringNotContainsString('Получили ваше сообщение', (string) $outgoing->text);
+
+        $event = SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_SENT)->first();
+        $this->assertSame('greeting', $event?->meta['kind']);
+    }
+
+    public function test_second_greeting_in_cooldown_is_silent(): void
+    {
+        config(['features.support_auto_ack' => true]);
+
+        $user = User::factory()->create();
+        app(SupportDmAutoReply::class)
+            ->handle($this->incoming($user, 'Намасте'), $user->id, 'private');
+
+        $second = app(SupportDmAutoReply::class)
+            ->handle($this->incoming($user, 'Здравствуйте!'), $user->id, 'private');
+
+        $this->assertSame('skip', $second['status']);
+        $this->assertSame(1, TelegramSupportMessage::query()->where('direction', 'outgoing')->count());
+    }
+
+    public function test_greeting_with_question_goes_normal_pipeline(): void
+    {
+        config(['features.support_auto_ack' => true]);
+        $this->boundTemplate('D');
+
+        $user = User::factory()->create();
+        $incoming = $this->incoming($user, 'Намасте! Сколько стоит курс и как оплатить?');
+        config(['features.support_auto_reply_templates' => true]);
+
+        $result = app(SupportDmAutoReply::class)->handle($incoming, $user->id, 'private');
+
+        $this->assertSame('sent', $result['status']);
+        $this->assertSame('D', $result['category']);
+    }
+
+    public function test_thanks_alone_is_silently_skipped(): void
+    {
+        Http::fake();
+        $user = User::factory()->create();
+        $incoming = $this->incoming($user, 'Спасибо большое!');
+
+        $result = app(SupportDmAutoReply::class)->handle($incoming, $user->id, 'private');
+
+        $this->assertSame('skip', $result['status']);
+        $this->assertSame(0, TelegramSupportMessage::query()->where('direction', 'outgoing')->count());
+        $this->assertSame(0, SupportAiReplyEvent::query()->count());
+    }
+
     public function test_session_context_scopes_lock_and_phase_keys(): void
     {
         $this->assertSame('madeline-session', MadelineSessionContext::lockName());

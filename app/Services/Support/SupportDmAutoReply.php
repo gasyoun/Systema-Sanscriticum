@@ -95,6 +95,37 @@ final class SupportDmAutoReply
         $category = $this->suggester->categorize($text);
         $user = $linkedUserId ? User::query()->find($linkedUserId) : null;
 
+        // H3380 v2 (урок первого смоука): «Намо намах!» — это приветствие,
+        // а не заявка; болванка «получили, ответим» на него — глупость.
+        $smallTalk = $this->pureSmallTalkKind($text);
+
+        if ($smallTalk === 'thanks') {
+            // Благодарность не требует работы: молчим, куратору не дёргаем.
+            return ['status' => 'skip', 'category' => null];
+        }
+
+        if ($smallTalk === 'greeting') {
+            // Один тёплый ответ на приветствие за cooldown-окно чата; повторные
+            // «намасте» и ответы студента на наш бот-ответ молчанием.
+            if ($user !== null
+                && $this->accountAllowsAutoReply($incoming)
+                && ! $this->recentOutgoingInChat($incoming)
+            ) {
+                return $this->sendAuto(
+                    $incoming,
+                    $user,
+                    null,
+                    (string) config(
+                        'services.telegram_support.auto_greeting_text',
+                        "Намасте!\n\nРады вас видеть. Напишите, по какому курсу или расписанию вопрос — с радостью поможем.",
+                    ),
+                    'greeting',
+                );
+            }
+
+            return ['status' => 'skip', 'category' => null];
+        }
+
         if ($user !== null
             && $category !== null
             && in_array($category, self::SIMPLE_CATEGORIES, true)
@@ -164,15 +195,7 @@ final class SupportDmAutoReply
             return false;
         }
 
-        $hours = max(1, (int) config('services.telegram_support.auto_ack_cooldown_hours', 6));
-
-        $recentOutgoing = TelegramSupportMessage::query()
-            ->where('telegram_chat_id', $incoming->telegram_chat_id)
-            ->where('direction', 'outgoing')
-            ->where('sent_at', '>=', now()->subHours($hours))
-            ->exists();
-
-        return ! $recentOutgoing;
+        return ! $this->recentOutgoingInChat($incoming);
     }
 
     /**
@@ -184,6 +207,87 @@ final class SupportDmAutoReply
         $account = TelegramSupportAccount::query()->find($incoming->telegram_support_account_id);
 
         return $account !== null && (bool) $account->auto_reply_enabled;
+    }
+
+    /**
+     * Чистый small talk без вопроса: 'greeting' | 'thanks' | null.
+     *
+     * «Чистый» = после вырезания приветственных/благодарных оборотов и
+     * вежливых обстоятельств («большое», «вам») не остаётся содержательного
+     * слова. «Намасте, сколько стоит курс?» — НЕ small talk, идёт обычным
+     * конвейером.
+     */
+    private function pureSmallTalkKind(string $text): ?string
+    {
+        $normalized = mb_strtolower(trim($text));
+        $stripped = preg_replace('~[^\p{L}\p{N}\s]~u', ' ', $normalized) ?? '';
+        $stripped = (string) preg_replace('~\s+~u', ' ', trim($stripped));
+
+        if ($stripped === '') {
+            return null;
+        }
+
+        $thanksWords = ['спасибо', 'спс', 'благодарю', 'благодарочка', 'thanks', 'thank you'];
+        // Всё на «нам…»: намасте/намо/намах и производные школы.
+        $greetingWords = ['привет', 'здравствуйте', 'добрый день', 'добрый вечер',
+            'доброе утро', 'hello', 'hi', 'добрый'];
+        $courtesyWords = ['большое', 'огромное', 'вам', 'тебе', 'пожалуйста', 'всем'];
+
+        $isGreeting = false;
+        $isThanks = false;
+        $hasContent = false;
+
+        foreach (explode(' ', $stripped) as $token) {
+            $token = trim($token);
+            if ($token === '') {
+                continue;
+            }
+
+            if (in_array($token, $thanksWords, true)) {
+                $isThanks = true;
+
+                continue;
+            }
+
+            if (in_array($token, $greetingWords, true) || str_starts_with($token, 'нам')) {
+                $isGreeting = true;
+
+                continue;
+            }
+
+            if (in_array($token, $courtesyWords, true)) {
+                continue;
+            }
+
+            $hasContent = true;
+        }
+
+        if ($hasContent) {
+            return null;
+        }
+        if ($isGreeting) {
+            return 'greeting';
+        }
+        if ($isThanks) {
+            return 'thanks';
+        }
+
+        return null;
+    }
+
+    /**
+     * Было ли исходящее в этом чате внутри cooldown-окна (любой автор):
+     * свежий ответ куратора или бота снимает и ack, и повторное приветствие.
+     */
+    private function recentOutgoingInChat(TelegramSupportMessage $incoming): bool
+    {
+        $hours = max(1, (int) config('services.telegram_support.auto_ack_cooldown_hours', 6));
+
+        return TelegramSupportMessage::query()
+            ->where('telegram_chat_id', $incoming->telegram_chat_id)
+            ->where('direction', 'outgoing')
+            ->where('sent_at', '>=', now()->subHours($hours))
+            ->exists();
     }
 
     /**
