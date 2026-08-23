@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Prana;
 
 use App\Models\PranaTransaction;
+use App\Models\Season;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
@@ -233,17 +234,38 @@ class PranaService
     }
 
     /**
+     * Включён ли decay. Два независимых ключа (H3297, закрытие @DECIDE §9
+     * PLAN_SYSTEMA_SEASON_LIVE_SERVICE_SEPT_2026 — документированный дефолт,
+     * вариант B: DB-driven оверрайд, читаемый PranaService):
+     *
+     *  1. legacy .env-флаг PRANA_DECAY_ENABLED (config prana.decay.enabled) —
+     *     ручной операторский выключатель, работает как раньше;
+     *  2. seasons.decay_enabled у АКТИВНОГО сезона — ставится season:open,
+     *     гасится season:close. Сезон закрыт/флага нет → decay вне сезона
+     *     невозможен даже при забытом true в строке неактивного сезона.
+     */
+    public static function isDecayEnabled(): bool
+    {
+        if ((bool) config('prana.decay.enabled', false)) {
+            return true;
+        }
+
+        return Season::where('is_active', true)->where('decay_enabled', true)->exists();
+    }
+
+    /**
      * Сгорание праны за бездействие: у студентов, неактивных N+ дней, сжигается
      * процент тратимого баланса. lifetime/ранг не затрагивается. Возвращает число
-     * затронутых студентов. Управляется config('prana.decay').
+     * затронутых студентов. Управляется config('prana.decay') + DB-оверрайд
+     * активного сезона ({@see isDecayEnabled()}, H3297).
      */
     public function decayInactive(): int
     {
-        $cfg = config('prana.decay', []);
-        if (empty($cfg['enabled'])) {
+        if (! self::isDecayEnabled()) {
             return 0;
         }
 
+        $cfg = config('prana.decay', []);
         $cutoff = now()->subDays((int) ($cfg['inactive_days'] ?? 30));
         $percent = max(1, min(100, (int) ($cfg['percent'] ?? 10)));
 

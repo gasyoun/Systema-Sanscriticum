@@ -22,10 +22,12 @@ class DonationGratitude extends Model
         'payment_id',
         'name_display',
         'is_public',
+        'show_amount',
     ];
 
     protected $casts = [
         'is_public' => 'boolean',
+        'show_amount' => 'boolean',
     ];
 
     public function payment(): BelongsTo

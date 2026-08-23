@@ -1071,7 +1071,12 @@ class Payment extends Model
 
         DonationGratitude::firstOrCreate(
             ['payment_id' => $this->getKey()],
-            ['name_display' => trim((string) $gratitude['name'])]
+            [
+                'name_display' => trim((string) $gratitude['name']),
+                // Ратифицировано MG 23-08: сумма в реестре — только по отдельной
+                // просьбе конкретного человека (чекбокс «показать сумму»).
+                'show_amount' => (bool) ($gratitude['show_amount'] ?? false),
+            ]
         );
     }
 
