@@ -48,6 +48,18 @@ _Создано: 08-07-2026 · Обновлено: 21-08-2026 (№80 H3247 `CRM_
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
 
+### H3311 — конфиг-закалка: прод .env перед деплоем (Secure-cookie / TRUSTED_PROXIES / CORS_ALLOWED_ORIGINS)
+
+Код инертен к same-origin фронту и локальной разработке, но прод обязан выставить три ключа в `.env` **до** следующего `deploy.sh` (новый шаг предсброса `php artisan deploy:config-preflight` проверяет первый жёстко):
+
+1. `.env` прода добавить/проверить:
+   - `SESSION_SECURE_COOKIE=true` (или оставить незаданной — код теперь дефолтит true; явное `false` = деплой заблокирован);
+   - `TRUSTED_PROXIES=127.0.0.1` — адрес nginx/LB, с которого реально приходит трафик (иначе warning + клиентские IP во всех ip()-зависимых местах станут адресом прокси);
+   - `CORS_ALLOWED_ORIGINS=https://samskrtam.ru,https://samskrte.ru` (+ staging-домен при необходимости; пусто = cross-origin запрещён).
+2. После правки: `php artisan config:cache`, затем `sudo bash deploy.sh` — предсброс должен ответить `deploy:config-preflight OK`.
+3. Smoke: логин студента и чекаут проходят (кука с Secure на https), `/api/public/schedule` отвечает same-origin без CORS-ошибок.
+4. Стоп: если smoke красный по кукам — `SESSION_SECURE_COOKIE=false` только как аварийный откат с пониманием риска (http-only трафик видит куку).
+
 ### H3310 — гигиена публичного диска (архивы сертификатов + CSV импорта) — план миграции на прод
 
 После выката кода новые записи уже пишут в `local`; на сервере остаются legacy-файлы в `storage/app/public/archives` (групповые ZIP сертификатов, собранные до миграции). После деплоя:

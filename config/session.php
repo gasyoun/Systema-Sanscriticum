@@ -166,9 +166,16 @@ return [
     | to the server if the browser has a HTTPS connection. This will keep
     | the cookie from being sent to you when it can't be done securely.
     |
+    | H3311: по умолчанию Secure ВКЛЮЧЁН — незаданная переменная больше не
+    | означает «кука без Secure» (та же дыра накрывает и remember-me recaller,
+    | который наследует дефолты сессии). Локальный http-dev выключает через
+    | SESSION_SECURE_COOKIE=false в .env; прод проверяет deploy.sh предсбросом
+    | (php artisan deploy:config-preflight): любое не-true значение в
+    | APP_ENV=production останавливает выкладку.
+    |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => env('SESSION_SECURE_COOKIE', true),
 
     /*
     |--------------------------------------------------------------------------
