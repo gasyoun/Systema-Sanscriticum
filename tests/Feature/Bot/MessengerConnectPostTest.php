@@ -89,12 +89,16 @@ class MessengerConnectPostTest extends TestCase
         $this->assertStringStartsWith('https://vk.me/club12345?ref=', (string) $response->headers->get('Location'));
     }
 
-    public function test_start_routes_reject_plain_get(): void
+    public function test_connect_paths_only_accept_get_and_post(): void
     {
+        // GET на /connect легитимен (инструкционная страница), POST выдаёт
+        // токен; прочие методы не должны проходить (405).
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get(route('telegram.connect.start'))->assertStatus(405);
-        $this->actingAs($user)->get(route('vk.connect.start'))->assertStatus(405);
+        foreach (['put', 'patch', 'delete'] as $method) {
+            $this->actingAs($user)->{$method}(route('telegram.connect'))->assertStatus(405);
+            $this->actingAs($user)->{$method}(route('vk.connect'))->assertStatus(405);
+        }
 
         $user->refresh();
         $this->assertNull($user->telegram_auth_token);
