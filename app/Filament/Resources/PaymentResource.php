@@ -523,6 +523,14 @@ class PaymentResource extends Resource
                     ->query(fn ($query) => $query->paypalPending())
                     ->toggle(),
 
+                // Авто-доверенные PayPal-заявки своих учеников (ruling 22-08-2026):
+                // доступ выдан сразу, здесь — очередь ВЫБОРОЧНОЙ сверки пост-фактум.
+                // Просмотренные (verified_at) из очереди исчезают.
+                Tables\Filters\Filter::make('paypal_unverified')
+                    ->label('PayPal: без сверки')
+                    ->query(fn ($query) => $query->paypalUnverified())
+                    ->toggle(),
+
                 Tables\Filters\Filter::make('invoice_pending')
                     ->label('Счета юрлиц на проверке')
                     ->query(fn ($query) => $query->invoicePending())
@@ -590,6 +598,36 @@ class PaymentResource extends Resource
                         .', сумма '.($record->foreignAmountLabel() ?: '—')
                         .'. После подтверждения студенту откроется доступ и (для новых аккаунтов) уйдёт пароль на email.')
                     ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                // Выборочная сверка авто-доверенной заявки: платеж нашли в личном
+                // PayPal — снимаем с очереди «без сверки» (verified_at).
+                Tables\Actions\Action::make('markPaypalVerified')
+                    ->label('Сверка пройдена')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (Payment $record) => $record->isAutoTrustedPaypal() && $record->claimMeta('verified_at') === null)
+                    ->requiresConfirmation()
+                    ->modalHeading('Сверка пройдена')
+                    ->modalDescription(fn (Payment $record): string => 'Платеж найден в личном PayPal: с '
+                        .($record->claimMeta('paypal_payer') ?: '—')
+                        .', дата '.($record->claimMeta('paid_on') ?: '—')
+                        .', сумма '.($record->foreignAmountLabel() ?: '—')
+                        .'. Заявка уйдет из очереди «PayPal: без сверки».')
+                    ->action(fn (Payment $record) => $record->markPaypalVerified()),
+
+                // Платеж так и не нашелся: отзываем авто-доверие. canceled на paid
+                // запускает штатный откат — доступ закрывается, финансы пересчитываются.
+                Tables\Actions\Action::make('rejectPaypalClaim')
+                    ->label('Нет платежа — отменить')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Payment $record) => $record->isAutoTrustedPaypal()
+                        && in_array($record->status, Payment::PAID_STATUSES, true)
+                        && $record->claimMeta('verified_at') === null)
+                    ->requiresConfirmation()
+                    ->modalHeading('Отменить заявку без подтверждения')
+                    ->modalDescription('Платеж не найден в личном PayPal. Доступ будет отозван, запись в финансах отменена. Студенту стоит написать, почему доступ закрылся.')
+                    ->action(fn (Payment $record) => $record->update(['status' => 'canceled'])),
 
                 Tables\Actions\Action::make('confirmInvoice')
                     ->label('Подтвердить счет')

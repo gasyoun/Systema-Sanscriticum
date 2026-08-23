@@ -402,6 +402,12 @@ return [
         'enabled' => (bool) env('PAYPAL_CLAIM_ENABLED', false),
         'me_link' => env('PAYPAL_ME_LINK'),      // напр. https://www.paypal.com/paypalme/xxx
         'recipient' => env('PAYPAL_RECIPIENT'),  // email/имя получателя для инструкции студенту
+        // Ruling 22-08-2026: заявка СУЩЕСТВУЮЩЕГО ученика (вошедшего в кабинет)
+        // сразу становится paid — доступ/финансы открываются немедленно, сверка
+        // выборочная и пост-фактум (фильтр «PayPal: без сверки»). Гости с новым
+        // email идут по-старому через pending → ручную сверку.
+        // false → откат к ручной сверке для всех, без деплоя логики.
+        'trust_existing_students' => (bool) env('PAYPAL_TRUST_EXISTING_STUDENTS', true),
         // H2027 PayPal Subscriptions API (auto-bill diaspora) — separate from claim.
         // Master flag default OFF; secrets never committed. See
         // docs/ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md

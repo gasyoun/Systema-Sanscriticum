@@ -8,6 +8,7 @@ use App\Mail\PaypalClaimReceivedMail;
 use App\Mail\PaypalClaimStudentAckMail;
 use App\Mail\StudentWelcomeMail;
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Tariff;
@@ -322,5 +323,143 @@ class PaypalClaimTest extends TestCase
         $payment = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->latest()->firstOrFail();
         $this->assertSame($user->id, $payment->user_id);
         $this->assertSame('EUR', $payment->foreign_currency);
+    }
+
+    /** @test */
+    public function logged_in_existing_student_claim_is_paid_immediately_with_access(): void
+    {
+        // Ruling 22-08-2026: свой ученик (вошел в кабинет) получает доступ
+        // сразу — заявка создается paid, сверка делается после и выборочно.
+        $tariff = $this->blockTariff();
+        $user = User::factory()->create(['email' => 'student@example.test']);
+
+        $response = $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
+            'foreign_amount' => 40,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-08-22',
+            'foreign_currency' => 'EUR',
+            'paypal_txn' => 'TX-TRUST',
+        ]);
+
+        $response->assertRedirect(route('paypal.claim.show', $tariff));
+        $response->assertSessionHas('success');
+
+        $payment = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->latest()->firstOrFail();
+
+        $this->assertSame('paid', $payment->status);
+        $this->assertTrue($payment->isAutoTrustedPaypal());
+        $this->assertNotNull($payment->claimMeta('trusted_at'));
+        $this->assertNull($payment->claimMeta('verified_at'));
+
+        // Штатный конвейер отработал без ручного шага: студент записан на курс.
+        $this->assertTrue(
+            $payment->user->fresh()->courses()->where('courses.id', $tariff->course_id)->exists(),
+            'Авто-доверенная заявка должна открыть доступ немедленно.'
+        );
+
+        // Подтверждение студенту и сигнал кураторам уходят в обеих ветках.
+        Mail::assertQueued(PaypalClaimStudentAckMail::class, fn ($mail) => $mail->hasTo('student@example.test'));
+        Mail::assertQueued(PaypalClaimReceivedMail::class);
+    }
+
+    /** @test */
+    public function trusted_claim_sits_in_unverified_queue_until_spot_check(): void
+    {
+        $tariff = $this->blockTariff();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
+            'foreign_amount' => 40,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-08-22',
+            'foreign_currency' => 'EUR',
+        ]);
+
+        $payment = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->latest()->firstOrFail();
+
+        // В очереди выборочной сверки, пока «Сверка пройдена» не нажата.
+        $this->assertSame(1, Payment::query()->paypalUnverified()->whereKey($payment->getKey())->count());
+
+        $payment->markPaypalVerified();
+
+        $this->assertSame(0, Payment::query()->paypalUnverified()->whereKey($payment->getKey())->count());
+        $this->assertNotNull($payment->fresh()->claimMeta('verified_at'));
+    }
+
+    /** @test */
+    public function rejecting_trusted_claim_revokes_group_access(): void
+    {
+        // Курс с группой: grantAccess выдает группу, откат canceled ее снимает.
+        $course = Course::factory()->create();
+        $group = Group::factory()->create();
+        $group->courses()->attach($course);
+        $tariff = Tariff::factory()->for($course)->block(2)->create(['price' => 4800]);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
+            'foreign_amount' => 40,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-08-22',
+            'foreign_currency' => 'EUR',
+        ]);
+
+        $payment = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->latest()->firstOrFail();
+        $this->assertSame(1, $payment->user->groups()->count(), 'Доступ выдан сразу.');
+
+        // «Нет платежа — отменить»: canceled на paid запускает штатный откат.
+        $payment->update(['status' => 'canceled']);
+
+        $this->assertSame(0, $payment->user->fresh()->groups()->count(), 'Отзыв доступа должен снять группу.');
+    }
+
+    /** @test */
+    public function trust_flag_disabled_keeps_manual_pending_flow(): void
+    {
+        config(['services.paypal.trust_existing_students' => false]);
+        $tariff = $this->blockTariff();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
+            'foreign_amount' => 40,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-07-30',
+            'foreign_currency' => 'EUR',
+        ]);
+
+        $payment = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->latest()->firstOrFail();
+
+        $this->assertSame('pending', $payment->status);
+        $this->assertFalse($payment->isAutoTrustedPaypal());
+        $this->assertSame(0, $payment->user->groups()->count());
+        $this->assertSame(0, Payment::query()->paypalUnverified()->whereKey($payment->getKey())->count());
+    }
+
+    /** @test */
+    public function student_ack_mail_renders_trusted_variant(): void
+    {
+        $tariff = $this->blockTariff();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
+            'foreign_amount' => 40,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-08-22',
+            'foreign_currency' => 'EUR',
+        ]);
+
+        $payment = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->latest()->firstOrFail();
+        $mail = new PaypalClaimStudentAckMail($payment);
+
+        $html = $mail->render();
+
+        // Своя ветка копии: доступ уже открыт, ожидания сверки нет.
+        $this->assertStringContainsString('открыт сразу', $html);
+        $this->assertStringContainsString('без ожидания', $html);
+        $this->assertStringNotContainsString('одного рабочего дня', $html);
+        $this->assertStringContainsString('40.00 €', $html);
+        $this->assertSame('Заявка получена — доступ уже открыт', $mail->envelope()->subject);
+
+        // Контракт голоса: без ё в новой копии (правило D13).
+        $this->assertStringNotContainsString('ё', $html);
     }
 }
