@@ -187,6 +187,25 @@
                 <h4 class="text-base font-extrabold text-gray-900">Что будет дальше</h4>
             </div>
             <ol class="space-y-3 text-sm text-gray-600 leading-relaxed list-none">
+                @auth
+                {{-- Ruling 22-08-2026: своему ученику доступ открывается сразу,
+                     сверка делается после и выборочно. --}}
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">1.</span>
+                    <span>Сразу после отправки пришлем на email подтверждение с деталями заявки.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">2.</span>
+                    <span><strong>Доступ к курсу уже открыт</strong> — вы наш ученик. Уроки и материалы ждут
+                    в личном кабинете; сверку платежа мы сделаем после и выборочно.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">3.</span>
+                    <span>Если деньги списались повторно или что-то не так —
+                    <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="font-semibold text-indigo-700 hover:text-indigo-900">напишите нам в Telegram</a>,
+                    обычно отвечаем в течение рабочего дня.</span>
+                </li>
+                @else
                 <li class="flex gap-3">
                     <span class="shrink-0 font-bold text-gray-400">1.</span>
                     <span>Сразу после отправки пришлем на email подтверждение, что заявка получена.</span>
@@ -194,7 +213,8 @@
                 <li class="flex gap-3">
                     <span class="shrink-0 font-bold text-gray-400">2.</span>
                     <span>Обычно в течение одного рабочего дня сверим платеж в PayPal и откроем доступ.
-                    Для нового аккаунта на email придет пароль от личного кабинета.</span>
+                    Для нового аккаунта на email придет пароль от личного кабинета. Уже учитесь у нас?
+                    Войдите в кабинет перед отправкой — тогда доступ откроется сразу.</span>
                 </li>
                 <li class="flex gap-3">
                     <span class="shrink-0 font-bold text-gray-400">3.</span>
@@ -202,6 +222,7 @@
                     <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="font-semibold text-indigo-700 hover:text-indigo-900">напишите нам в Telegram</a>,
                     обычно отвечаем в течение рабочего дня.</span>
                 </li>
+                @endauth
             </ol>
         </div>
     </div>

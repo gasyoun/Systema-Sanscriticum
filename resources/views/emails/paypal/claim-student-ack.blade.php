@@ -5,7 +5,7 @@
     <title>Заявка получена</title>
 </head>
 <body style="font-family: 'Georgia', serif; background-color: #fcf9f2; color: #3e3a37; line-height: 1.6; margin: 0; padding: 40px 20px;">
-    <span style="display:none; max-height:0; overflow:hidden;">Сверим платеж — обычно в течение одного рабочего дня — и откроем доступ.</span>
+    <span style="display:none; max-height:0; overflow:hidden;">@if($trusted)Доступ к курсу уже открыт.@elseСверим платеж — обычно в течение одного рабочего дня — и откроем доступ.@endif</span>
 
     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px 30px; border-top: 6px solid #d35400; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
 
@@ -33,6 +33,17 @@
         </table>
 
         <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 20px; margin: 25px 0; border-radius: 0 4px 4px 0;">
+            @if ($trusted)
+            <p style="margin: 0 0 12px; font-size: 16px;">
+                Вы наш ученик, поэтому доступ к курсу открыт сразу — без ожидания
+                сверки. Мы все равно сверим платеж по вашим данным; если что-то
+                не сойдется, напишем вам.
+            </p>
+            <p style="margin: 0; font-size: 16px;">
+                Если деньги списались — не платите повторно: напишите нам, мы проверим платеж
+                и либо откроем доступ, либо вернем деньги.
+            </p>
+            @else
             <p style="margin: 0 0 12px; font-size: 16px;">
                 Платеж сверяем вручную: PayPal не поддерживает автосписание на нашей
                 платформе. Обычно сверка занимает не больше одного рабочего дня — как только
@@ -43,11 +54,18 @@
                 Если деньги списались — не платите повторно: напишите нам, мы проверим платеж
                 и либо откроем доступ, либо вернем деньги.
             </p>
+            @endif
         </div>
 
+        @if ($trusted)
+        <p style="font-size: 16px;">
+            Уроки и материалы ждут вас в личном кабинете.
+        </p>
+        @else
         <p style="font-size: 16px;">
             Если рабочий день прошел, а доступа нет — <a href="https://t.me/rusamskrtam" style="color: #d35400;">напишите нам в Telegram</a>.
         </p>
+        @endif
 
         <hr style="border: none; border-top: 1px solid #f0e6d2; margin: 35px 0 25px;">
 
