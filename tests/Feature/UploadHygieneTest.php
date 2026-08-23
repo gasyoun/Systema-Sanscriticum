@@ -167,7 +167,8 @@ class UploadHygieneTest extends TestCase
             ->get('/force-download/'.$fileName)
             ->assertForbidden();
 
-        $this->post('/force-download/'.$fileName)->assertRedirect();
+        $this->app['auth']->logout();
+        $this->get('/force-download/'.$fileName)->assertRedirect();
     }
 
     /** @test */
