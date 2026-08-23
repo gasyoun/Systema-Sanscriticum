@@ -95,6 +95,10 @@ return [
             'max_part_mb' => (int) env('BACKUP_SPLIT_PART_MB', 700),
             // Ретеншн частей на off-site: зеркалит keep_daily_backups_for_days.
             'keep_parts_days' => (int) env('BACKUP_KEEP_PARTS_DAYS', 16),
+            // Свежепроцессная верификация каждой части (backup:verify-yandex-part):
+            // Яндекс изредка отвечал 2xx ничего не сохранив — верим только
+            // отдельному процессу со свежим curl-хендлом.
+            'verify' => (bool) env('BACKUP_VERIFY_PARTS', true),
         ],
 
         'temporary_directory' => storage_path('app/backup-temp'),
