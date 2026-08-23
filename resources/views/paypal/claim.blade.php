@@ -59,6 +59,11 @@
                     <i class="fab fa-paypal"></i> Перейти к оплате на PayPal
                 </a>
             @endif
+            <p class="mt-3 text-sm text-gray-600">
+                Прямая ссылка для перевода:
+                <a href="https://paypal.me/gasuns" target="_blank" rel="noopener"
+                   class="font-semibold text-[#0070BA] hover:text-[#005ea6] underline decoration-[#0070BA]/30 hover:decoration-[#0070BA]/60">paypal.me/gasuns</a>
+            </p>
             @if($recipient)
                 <p class="mt-3 text-xs text-gray-500">Получатель PayPal: <span class="font-semibold text-gray-700">{{ $recipient }}</span></p>
             @endif
