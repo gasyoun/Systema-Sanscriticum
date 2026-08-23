@@ -109,6 +109,7 @@ final class SafeWithdrawalService
         $staffMonthly = 0.0;
         $staffStale = [];
         $activeNames = (array) config('safe_withdrawal.staff_active_names', []);
+        $quitNames = (array) config('safe_withdrawal.staff_quits', []);
         foreach ($staff['payees'] as $p) {
             if ($p['category'] !== 'персонал' || $p['monthly_rate'] === null) {
                 continue;
@@ -117,8 +118,11 @@ final class SafeWithdrawalService
                 fn (array $o) => ($o['match'] ?? '') !== ''
                     && mb_stripos((string) $p['name'], (string) $o['match']) !== false
             );
-            if ($coveredByOverride) {
-                continue; // уже учтены по реестру — двойного счёта нет
+            $isQuit = collect($quitNames)->contains(
+                fn (string $needle) => $needle !== '' && mb_stripos((string) $p['name'], $needle) !== false
+            );
+            if ($coveredByOverride || $isQuit) {
+                continue; // оверрайд уже учтён / уволен — в горизонт не попадает
             }
             $alwaysActive = collect($activeNames)->contains(
                 fn (string $needle) => $needle !== '' && mb_stripos((string) $p['name'], $needle) !== false
@@ -131,6 +135,7 @@ final class SafeWithdrawalService
             $staffMonthly += (float) $p['monthly_rate'];
         }
         $staffMonthly += $overrideMonthly;
+
         $staffHorizonMonths = (int) ceil($horizonDays / 30);
         $staffObligation = round($staffMonthly * $staffHorizonMonths, 2);
 
@@ -145,6 +150,7 @@ final class SafeWithdrawalService
             'staff_horizon_months' => $staffHorizonMonths,
             'staff_total' => $staffObligation,
             'staff_stale_excluded' => $staffStale,
+            'staff_quits' => $quitNames,
             'opex_monthly' => round($opexMonthly, 2),
             'opex_assumption' => $opexAssumption,
             'opex_total' => $opexObligation,
