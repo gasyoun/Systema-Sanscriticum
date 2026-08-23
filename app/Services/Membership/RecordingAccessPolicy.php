@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Membership;
 
+use App\Enums\MembershipTier;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\MembershipAccessVerdict;
@@ -27,16 +28,20 @@ final class RecordingAccessPolicy
             return new RecordingAccessDecision(true, true, false, 'off', 'no_recording');
         }
 
+        $openLectureAccess = $this->hasOpenLectureRecordingAccess($user, $course, $lesson);
+
         $wouldAllow = $lesson->is_free
             || $lesson->is_preview
             || $hasLessonGrant
             || ($this->hasPurchasedLesson($user, $course, $lesson)
                 && $this->membership->allows($user, 'recordings'))
-            || $this->membership->coversCourse($user, $course);
+            || $this->membership->coversCourse($user, $course)
+            || $openLectureAccess;
 
         $reason = match (true) {
             $lesson->is_free || $lesson->is_preview => 'free_or_preview',
             $hasLessonGrant => 'lesson_grant',
+            $openLectureAccess => 'open_lecture',
             ! $this->hasPurchasedLesson($user, $course, $lesson)
                 && ! $this->membership->coversCourse($user, $course) => 'course_not_purchased',
             $wouldAllow => 'club_or_top',
@@ -110,6 +115,38 @@ final class RecordingAccessPolicy
     private function hasRecording(Lesson $lesson): bool
     {
         return filled($lesson->youtube_url) || filled($lesson->rutube_url) || filled($lesson->video_url);
+    }
+
+    /**
+     * Открытые лекции МГ (план института N5, решение MG 23-08 поздним вечером):
+     * живьём лекция бесплатна всем и этой политикой не трогается (она гейтит
+     * только видеопayload записей); запись бесплатна при ЛЮБОМ действующем
+     * платном членстве (Basic ₽1 000 и Club ₽2 000 — уточнение против клубного
+     * минимума 'club' в capabilities), а неплатный покупает запись как обычный
+     * товар курса — без требования членства.
+     *
+     * Применяется ТОЛЬКО к курсам из institute.lecture_course_ids: остальные
+     * курсы живут прежними правилами. Роллаут — тот же staged-конвейер
+     * off → shadow → pilot → full, отдельного пути нет.
+     */
+    private function hasOpenLectureRecordingAccess(User $user, Course $course, Lesson $lesson): bool
+    {
+        /** @var list<int> $lectureCourseIds */
+        $lectureCourseIds = config('institute.lecture_course_ids', []);
+
+        if (! in_array((int) $course->id, $lectureCourseIds, true)) {
+            return false;
+        }
+
+        // Любое платное членство (basic и выше) — запись включена всегда.
+        $tier = $this->membership->activeTierFor($user);
+
+        if ($tier !== null && $tier !== MembershipTier::Free) {
+            return true;
+        }
+
+        // Неплатный покупает саму запись тарифом этого курса.
+        return $this->hasPurchasedLesson($user, $course, $lesson);
     }
 
     private function hasPurchasedLesson(User $user, Course $course, Lesson $lesson): bool
