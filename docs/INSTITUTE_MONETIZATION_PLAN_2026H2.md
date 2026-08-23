@@ -135,9 +135,17 @@ restic-push шёл до 17:01 UTC; lane Артёма). Пока ждём сня�
 2. ✅ Данные из restic-снапшота 17:01 UTC (1023 пользователя, оплаты целы); `.env` целиком из бэкапа
    + `INSTITUTE_DONATIONS_LIVE=true`, `PARTNER_PROGRAM_ENABLED=true`; миграции актуальны.
 3. ✅ Смоук HTTP: `/`, /mecenaty (форма + пресеты 500/1000/2500/5000), /institut, /online, /partners — все 200.
-4. ⏳ **Осталось за MG:** A-record samskrte.ru у reg.ru → `178.236.251.98`; затем `certbot --nginx -d samskrte.ru -d www.samskrte.ru`.
-5. Известные ограничения темпа: Telegram MadelineProto daemon не поднят (TG-поддержка деградировала),
+4. **Рулинг MG 23-08 поздним вечером: Aeza = запасная площадка, DNS НЕ переключаем** — `.92` остаётся
+   основной после снятия null-route. Failover остаётся одной командой: A-record → `178.236.251.98`
+   у reg.ru + `certbot --nginx -d samskrte.ru -d www.samskrte.ru`.
+5. ✅ Оборудование резерва: ufw 22/80/443 (после урока с lockout — правила до enable, проверено извне);
+   SSH только по ключу; health-зонд `systema-standby-health.timer` каждые 5 минут с TG-алертом
+   при смене состояния; скрипт догоняющей синхронизации `/usr/local/bin/systema-standby-sync`
+   (restore последнего снапшота .91 → storage/env/БД → migrate; флаги института сохраняются) —
+   запуск после снятия null-route или по слову MG.
+6. Известные ограничения темпа: Telegram MadelineProto daemon не поднят (TG-поддержка деградировала),
    kosha/samudra/pe4kinsmart vhosts с .92 не перенесены, Reverb/websockets не запущен, `/apps?/` прокси (8080) отсутствует.
+   Аренда до 30.08 — решение о продлении по слову MG ближе к марафону 28-08.
 
 > **Решение MG 23-08 поздним вечером:** временный хост погасить — не понадобился (Pudlink снял null-route, `.92` снова прод). Панель my.aeza.ru → service 624477 → выключить/не продлевать (срок до 30.08). Личный VPN MG на Aeze — отдельная услуга, не трогается. Процедура зафиксирована как прецедент: [ops/migrate/RUNBOOK.md, кейс 23-08](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ops/migrate/RUNBOOK.md).
 
