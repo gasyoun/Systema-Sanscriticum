@@ -172,6 +172,12 @@ return [
             "Намасте!\n\nПолучили ваше сообщение и уже разбираемся. Ответим в течение рабочего дня.",
         ),
         'auto_ack_cooldown_hours' => (int) env('TELEGRAM_SUPPORT_AUTO_ACK_COOLDOWN_HOURS', 6),
+        // H3380 v2: тёплый ответ на чистое приветствие («Намасте!») — один раз
+        // за то же cooldown-окно чата. Благодарности молча не отвечаются.
+        'auto_greeting_text' => env(
+            'TELEGRAM_SUPPORT_AUTO_GREETING_TEXT',
+            "Намасте!\n\nРады вас видеть. Напишите, по какому курсу или расписанию вопрос — с радостью поможем.",
+        ),
         // Auto-heal IPC hang (01.08.2026): healthcheck → recover (kill worker,
         // clear ipc/locks, unlock madeline-session, one sync). Default OFF —
         // flip TELEGRAM_SUPPORT_AUTO_HEAL=true on prod after smoke.
