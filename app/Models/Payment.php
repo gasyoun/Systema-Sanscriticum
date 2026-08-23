@@ -695,7 +695,10 @@ class Payment extends Model
 
         // Пожертвование — донорская рамка без встречных благ (решение MG 23-08,
         // план института N2): доступ/группы/членство/лиды/депозиты не трогаем.
+        // Единственное побочное действие — благодарность при согласии донора (N3).
         if ($payment->isDonation()) {
+            $payment->processDonationGratitude();
+
             return;
         }
 
@@ -1048,6 +1051,28 @@ class Payment extends Model
     public function processGiftCertificate(): void
     {
         app(GiftCertificateService::class)->issueForPayment($this);
+    }
+
+    /**
+     * Пожертвование (план института N2/N3): при paid фиксируем благодарность,
+     * если донор дал явное согласие на /mecenaty. Идемпотентно по уникальному
+     * payment_id; без согласия — ничего. Никаких других побочных действий:
+     * доступ/членство/лиды не трогаются (см. fireOnPaid).
+     */
+    public function processDonationGratitude(): void
+    {
+        $gratitude = is_array($this->claim_meta) ? ($this->claim_meta['gratitude'] ?? null) : null;
+
+        if (! is_array($gratitude)
+            || empty($gratitude['consent'])
+            || blank($gratitude['name'] ?? null)) {
+            return;
+        }
+
+        DonationGratitude::firstOrCreate(
+            ['payment_id' => $this->getKey()],
+            ['name_display' => trim((string) $gratitude['name'])]
+        );
     }
 
     /**

@@ -62,6 +62,21 @@
                 </div>
             @endguest
 
+            <div class="rounded-lg border border-slate-700 p-3 space-y-2">
+                <label class="flex items-start gap-2 text-sm text-slate-300">
+                    <input type="checkbox" name="gratitude_consent" value="1"
+                           class="mt-0.5 rounded border-slate-500 bg-slate-800">
+                    <span>Указать моё имя в благодарностях меценатам (публичный список ниже; по желанию)</span>
+                </label>
+                <div>
+                    <label for="gratitude_name" class="block text-sm font-bold text-slate-200 mb-1">Имя для благодарности</label>
+                    <input type="text" id="gratitude_name" name="gratitude_name" maxlength="120"
+                           placeholder="Как подписать вас в списке"
+                           class="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100">
+                    @error('gratitude_name')<p class="text-sm text-red-400 mt-1">{{ $message }}</p>@enderror
+                </div>
+            </div>
+
             <button type="submit"
                     class="rounded-lg bg-brand px-6 py-2 font-bold text-white hover:opacity-90">
                 Поддержать
@@ -72,6 +87,18 @@
             <p>Перевод по реквизитам ИП Гасунс М. Ю.:</p>
             <p class="whitespace-pre-line font-mono text-sm">{{ config('institute.donate_requisites') }}</p>
             <p class="text-sm text-slate-400">Назначение платежа: «Добровольное пожертвование».</p>
+        </div>
+    @endif
+
+    @if($gratitudes->isNotEmpty())
+        <h2 class="text-xl font-bold text-white mb-3">Благодарности меценатам</h2>
+        <div class="rounded-xl border border-slate-700 p-4 mb-6">
+            <ul class="space-y-1 text-slate-200">
+                @foreach($gratitudes as $gratitude)
+                    <li>{{ $gratitude->name_display }}</li>
+                @endforeach
+            </ul>
+            <p class="text-sm text-slate-400 mt-3">Имена публикуются только с согласия каждого мецената.</p>
         </div>
     @endif
 

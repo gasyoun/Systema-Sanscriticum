@@ -434,8 +434,9 @@ Route::post('/institut/zayavka', [InstituteController::class, 'apply'])
     ->name('institute.apply');
 
 // Меценаты Института — страница добровольных пожертвований (ст. 582 ГК,
-// свободная сумма, без встречного пакета благ; реквизиты — config/institute.php).
-Route::view('/mecenaty', 'institute.mecenaty')->name('institute.mecenaty');
+// свободная сумма, без встречного пакета благ; реквизиты — config/institute.php)
+// + публичный реестр благодарностей меценатам (план института N3).
+Route::get('/mecenaty', [InstituteDonateController::class, 'page'])->name('institute.mecenaty');
 
 // Онлайн-приём пожертвований через Точку (план института N2). Контроллер сам
 // 404-ит при institute.donations_enabled=false — тёмный деплой безопасен.

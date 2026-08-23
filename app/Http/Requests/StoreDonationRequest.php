@@ -40,6 +40,11 @@ final class StoreDonationRequest extends FormRequest
             $rules['email'] = ['required', 'email', 'max:255'];
         }
 
+        // Благодарность (N3): имя публикуется только при явном согласии;
+        // без согласия поле имени игнорируется целиком.
+        $rules['gratitude_consent'] = ['nullable', 'boolean'];
+        $rules['gratitude_name'] = ['nullable', 'string', 'max:120'];
+
         return $rules;
     }
 }
