@@ -26,6 +26,15 @@
 
         <p style="font-size: 16px;">Никакого расписания сверху: ваш темп — ваш. Но первый шаг легче всего дается в первые дни.</p>
 
+        {{-- MG 23-08-2026: surfacing self-serve кабинета — единственный контакт до входа это письмо. --}}
+        <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 20px; margin: 25px 0; border-radius: 0 4px 4px 0;">
+            <p style="margin: 0 0 10px; font-size: 16px;"><strong>Кабинет сам умеет:</strong></p>
+            <p style="margin: 0 0 6px; font-size: 15px;">— погасить долг или взнос по рассрочке, без куратора;<br>
+            — показать, почему урок закрыт, и открыть оплаченные блоки одной кнопкой;<br>
+            — подсказать на каждом экране: пошаговый гид со скриншотами.</p>
+            <p style="margin: 0; font-size: 15px;">Весь гид: <a href="https://samskrte.ru/dvaram/help" style="color: #d35400; font-weight: bold;">samskrte.ru/dvaram/help</a></p>
+        </div>
+
         <hr style="border: none; border-top: 1px solid #f0e6d2; margin: 35px 0 25px;">
 
         <p style="margin-top: 0; font-size: 15px; color: #95a5a6; text-align: center;">
