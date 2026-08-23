@@ -219,6 +219,22 @@ final class SupportDmAutoReply
     }
 
     /**
+     * Кому слать подсказки на этом аккаунте (H3393): hint_recipients строки,
+     * пусто — прежнее поведение (админы).
+     *
+     * @return list<string>
+     */
+    private function accountHintRecipients(TelegramSupportMessage $incoming): array
+    {
+        /** @var TelegramSupportAccount|null $account */
+        $account = TelegramSupportAccount::query()->find($incoming->telegram_support_account_id);
+
+        $recipients = $account?->hint_recipients;
+
+        return is_array($recipients) ? array_values(array_map('strval', $recipients)) : [];
+    }
+
+    /**
      * Чистый small talk без вопроса: 'greeting' | 'thanks' | null.
      *
      * «Чистый» = после вырезания приветственных/благодарных оборотов и
@@ -385,7 +401,14 @@ final class SupportDmAutoReply
         $lines[] = '';
         $lines[] = 'Студенту ничего не ушло. Ответьте в этом же Telegram.';
 
-        $this->admins->notifyAdmins(implode("\n", $lines));
+        // H3393: подсказка уходит тому, кто реально отвечает на этом аккаунте
+        // (hint_recipients), иначе — админам, как раньше.
+        $recipients = $this->accountHintRecipients($incoming);
+        if ($recipients !== []) {
+            $this->admins->notifyRecipients($recipients, implode("\n", $lines));
+        } else {
+            $this->admins->notifyAdmins(implode("\n", $lines));
+        }
 
         SupportAiReplyEvent::create([
             'telegram_support_message_id' => $incoming->id,

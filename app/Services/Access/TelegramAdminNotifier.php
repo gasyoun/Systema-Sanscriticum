@@ -21,15 +21,28 @@ class TelegramAdminNotifier
      */
     public function notifyAdmins(string $text, ?array $inlineKeyboard = null): array
     {
+        return $this->notifyRecipients($this->adminChatIds(), $text, $inlineKeyboard);
+    }
+
+    /**
+     * H3393: отправка явному списку chat_id (подсказки куратору конкретного
+     * аккаунта поддержки). Тот же бот, тот же формат; пустой список — no-op.
+     *
+     * @param  list<string>  $chatIds
+     * @param  array<int,array<int,array{text:string,callback_data:string}>>|null  $inlineKeyboard
+     * @return list<string> кому реально ушло
+     */
+    public function notifyRecipients(array $chatIds, string $text, ?array $inlineKeyboard = null): array
+    {
         $token = (string) config('services.telegram.bot_token');
-        if ($token === '') {
+        if ($token === '' || $chatIds === []) {
             return [];
         }
 
         $delivered = [];
-        foreach ($this->adminChatIds() as $chatId) {
-            if ($this->send($token, $chatId, $text, $inlineKeyboard)) {
-                $delivered[] = $chatId;
+        foreach ($chatIds as $chatId) {
+            if ($this->send($token, (string) $chatId, $text, $inlineKeyboard)) {
+                $delivered[] = (string) $chatId;
             }
         }
 
