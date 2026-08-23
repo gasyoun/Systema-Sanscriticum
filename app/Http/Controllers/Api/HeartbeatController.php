@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Activity\HeartbeatRequest;
 use App\Models\Lesson;
 use App\Models\LessonView;
+use App\Services\Access\LessonGate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -55,22 +56,30 @@ final class HeartbeatController extends Controller
                 return response()->json(['ok' => true, 'throttled' => true]);
             }
         } catch (\Throwable $e) {
-            Log::warning('Heartbeat throttle Redis failed', ['error' => $e->getMessage()]);
-            // Даже если Redis упал — не блокируем heartbeat
+            // H3315: Redis лёг — консервативно ПРОПУСКАЕМ запись watch-time
+            // (fail-open раздувал статистику повторными дельтами), но клиенту
+            // отвечаем как throttled — телеметрия не имеет права ронять плеер.
+            Log::warning('Heartbeat throttle Redis failed — skipping write', ['error' => $e->getMessage()]);
+
+            return response()->json(['ok' => true, 'throttled' => true]);
         }
 
-        // Cold-path: lesson_views ещё не существует — нужен course_id из урока.
-        // На hot-path (запись уже есть) Lesson::find НЕ выполняется.
+        // H3315: watch-time пишется только за урок, который студент реально
+        // может смотреть, — тот же гейт, что у плеера (единый LessonGate,
+        // цепочка StudentController::showLesson / H3308 GatedAssetController).
+        // Не прошедшим — 404 (no-oracle: неотличимо от «урока нет»).
+        $lesson = Lesson::find($lessonId);
+        if ($lesson === null || ! app(LessonGate::class)->canWatch($user, $lesson)) {
+            return response()->json(['ok' => false], 404);
+        }
+
+        // Cold-path: lesson_views ещё не существует — course_id берём из уже
+        // загруженного урока. На hot-path (запись есть) второй запрос не нужен.
         $view = LessonView::firstOrNew(
             ['user_id' => $user->id, 'lesson_id' => $lessonId]
         );
 
         if (! $view->exists) {
-            $lesson = Lesson::find($lessonId);
-            if (! $lesson) {
-                return response()->json(['ok' => false], 404);
-            }
-
             $view->fill([
                 'course_id' => $lesson->course_id,
                 'first_opened_at' => now(),
