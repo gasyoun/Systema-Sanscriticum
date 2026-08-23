@@ -9,14 +9,25 @@
             <a href="{{ route('checkout.show', $tariff) }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 transition mb-4">
                 <i class="fas fa-arrow-left mr-2 text-xs"></i> Назад к оформлению
             </a>
-            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Уведомление об оплате через PayPal</h1>
-            <p class="mt-2 text-base text-gray-500">
-                Этот путь — для оплаты из-за рубежа, где карта РФ не работает. PayPal не
-                поддерживает автосписание на нашей платформе, поэтому оплата идет в два шага:
-                вы переводите оплату и подаете уведомление здесь. Своим ученикам доступ
-                открывается сразу после отправки уведомления; новым — после ручной сверки,
-                обычно в течение одного рабочего дня.
-            </p>
+            <div class="flex items-start justify-between gap-6">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Уведомление об оплате через PayPal</h1>
+                    <p class="mt-2 text-base text-gray-500">
+                        Этот путь — для оплаты из-за рубежа, где карта РФ не работает. PayPal не
+                        поддерживает автосписание на нашей платформе, поэтому оплата идет в два шага:
+                        вы переводите оплату и подаете уведомление здесь. Своим ученикам доступ
+                        открывается сразу после отправки уведомления; новым — после ручной сверки,
+                        обычно в течение одного рабочего дня.
+                    </p>
+                </div>
+                <figure class="shrink-0 mt-1">
+                    <img src="{{ asset('images/paypal-qr.png') }}" alt="QR-код для оплаты через PayPal"
+                         class="w-24 sm:w-28 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm">
+                    <figcaption class="mt-2 max-w-[7rem] text-xs text-gray-500 text-center leading-snug">
+                        Или отсканируйте QR в приложении PayPal
+                    </figcaption>
+                </figure>
+            </div>
         </div>
 
 {{-- Шаг 1: куда платить --}}
