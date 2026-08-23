@@ -1,6 +1,6 @@
 # ROADMAP — Noboring «дожим» adoption (Systema + samskrte)
 
-_Created: 01-08-2026 · Last updated: 19-08-2026_
+_Created: 01-08-2026 · Last updated: 24-08-2026_
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
@@ -236,7 +236,12 @@ Executor: Grok 4.5 (`grok-4.5`). Parent programme H-A: [H2058](https://github.co
 
 Only after wave-1 rates are visible:
 
-- [ ] «С чего начать», quiz, intro CTA site-wide (existing sales roadmap — not reinvented here)
+- [x] «С чего начать», quiz, intro CTA site-wide (existing sales roadmap — not reinvented here) — **verdict: already shipped, no gap** (audited 24-08-2026, Sonnet 5 `claude-sonnet-5`, via `/roadmap-item-exec`). All three sub-parts confirmed merged to `main` and cross-checked against [ORS-FAQ roadmap_samskrte_sales.md](https://github.com/gasyoun/ORS-FAQ/blob/main/docs/roadmap_samskrte_sales.md) lines 267/268/272 (its own execution tracker, already `[x]`):
+  - «С чего начать» page — [`ShopController::start()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/ShopController.php), route `shop.start` → `/online/s-chego-nachat`, [`shop/start.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/shop/start.blade.php) — done H323 ([PR #385](https://github.com/gasyoun/Systema-Sanscriticum/pull/385)).
+  - Quiz embed on that page — Alpine onramp quiz, recommendations from [`config/onramp.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/onramp.php) — same PR.
+  - Free-intro CTA site-wide with next date — [`NextIntroSession`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/NextIntroSession.php) + [`free-intro-banner.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/shop/partials/free-intro-banner.blade.php) rendered site-wide via `layouts/shop.blade.php` — done H2365 ([PR #1185](https://github.com/gasyoun/Systema-Sanscriticum/pull/1185)), hardened H2760 ([PR #1722](https://github.com/gasyoun/Systema-Sanscriticum/pull/1722)).
+
+  No code change landed in this pass — this was a stale checkbox on a feature already live on prod; closing it here only.
 
 ## Non-goals
 
