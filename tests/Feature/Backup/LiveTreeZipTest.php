@@ -35,7 +35,7 @@ class LiveTreeZipTest extends TestCase
         // override-ами, иначе конструктор возьмёт конфиг из чужого теста.
         $this->app->instance(
             BackupConfig::class,
-            BackupConfig::fromArray(config('backup'))
+            BackupConfig::fromArray(config('backup.backup'))
         );
 
         $dir = sys_get_temp_dir().'/livetree-'.uniqid();
