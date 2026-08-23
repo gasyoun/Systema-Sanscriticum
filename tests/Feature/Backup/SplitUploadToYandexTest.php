@@ -24,6 +24,9 @@ class SplitUploadToYandexTest extends TestCase
             // 1 МиБ — мелкие части, чтобы тест гонял быстро.
             'backup.backup.split_upload.max_part_mb' => 1,
             'backup.backup.split_upload.keep_parts_days' => 16,
+            // Свежепроцессная верификация в тестах выключена: subprocess не
+            // видит Storage::fake. Сама команда покрыта VerifyYandexPartTest.
+            'backup.backup.split_upload.verify' => false,
         ]);
         Storage::fake('local');
         Storage::fake('yandex_disk');
