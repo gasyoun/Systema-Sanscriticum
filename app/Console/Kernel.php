@@ -603,6 +603,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('weekly-backup-clean');
 
+        // H3371: докатка незавершённых групп split-upload (обрыв связи посреди
+        // группы, лаг консистентности Яндекс WebDAV). Ежедневно до
+        // backup:monitor — оборванная группа доплывает максимум за сутки.
+        $schedule->command('backup:resume-yandex-parts')
+            ->dailyAt('04:10')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('yandex-split-resume');
+
         // Daily destination health check (H2303): alerts via configured notification
         // channels if any destination is Unreachable or Unhealthy. Runs independently
         // of the weekly backup:run so a broken destination surfaces within 24 h.
