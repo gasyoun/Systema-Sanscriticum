@@ -1,3 +1,5 @@
+> **SUPERSEDED 23-08 поздним вечером:** актуальный комплект под Debian 13 - [ops/migrate/RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ops/migrate/RUNBOOK.md) с исполняемыми скриптами `ops/migrate/debian13/*.sh`. Этот документ оставлен как черновик-первоисточник (Ubuntu-формулировки).
+
 # Аварийный переезд Systema на новый VPS — механический runbook
 
 _Created: 23-08-2026 · Контекст: null-route публичного IP `.92` у ООО «Пудлинк», Артём в отпуске
