@@ -71,10 +71,14 @@
                                         </form>
                                     </span>
                                 @else
-                                    <a href="{{ route('telegram.connect') }}" target="_blank"
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0088cc] hover:bg-[#0077b5] text-white text-xs font-bold transition-colors">
-                                        <i class="fab fa-telegram-plane"></i> Telegram
-                                    </a>
+                                    {{-- H3313: привязка через CSRF-защищённый POST --}}
+                                    <form method="POST" action="{{ route('telegram.connect.start') }}" target="_blank" class="inline-flex">
+                                        @csrf
+                                        <button type="submit"
+                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0088cc] hover:bg-[#0077b5] text-white text-xs font-bold transition-colors">
+                                            <i class="fab fa-telegram-plane"></i> Telegram
+                                        </button>
+                                    </form>
                                 @endif
                             @endif
 
@@ -92,10 +96,14 @@
                                         </form>
                                     </span>
                                 @else
-                                    <a href="{{ route('vk.connect') }}" target="_blank"
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0077FF] hover:bg-[#005ce6] text-white text-xs font-bold transition-colors">
-                                        <i class="fab fa-vk"></i> VK
-                                    </a>
+                                    {{-- H3313: привязка через CSRF-защищённый POST --}}
+                                    <form method="POST" action="{{ route('vk.connect.start') }}" target="_blank" class="inline-flex">
+                                        @csrf
+                                        <button type="submit"
+                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0077FF] hover:bg-[#005ce6] text-white text-xs font-bold transition-colors">
+                                            <i class="fab fa-vk"></i> VK
+                                        </button>
+                                    </form>
                                 @endif
                             @endif
                         </div>
