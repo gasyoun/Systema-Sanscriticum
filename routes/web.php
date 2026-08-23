@@ -782,10 +782,13 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->middleware('admin')
         ->name('leads.export');
 
+    // H3313: GET — инструкция, выдача токена только CSRF-защищённым POST.
     Route::get('/telegram/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
+    Route::post('/telegram/connect', [TelegramController::class, 'start'])->name('telegram.connect.start');
 
     // Привязка VK через одноразовый токен (вместо сырого ?ref={user_id}) — см. VkController.
     Route::get('/vk/connect', [VkController::class, 'connect'])->name('vk.connect');
+    Route::post('/vk/connect', [VkController::class, 'start'])->name('vk.connect.start');
 
     // Отвязка мессенджера (TG/VK) из кабинета — кнопка «Отвязать»
     Route::post('/profile/messenger/{channel}/disconnect', [StudentController::class, 'disconnectMessenger'])

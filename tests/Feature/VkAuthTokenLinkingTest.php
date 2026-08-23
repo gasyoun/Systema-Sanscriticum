@@ -48,11 +48,12 @@ class VkAuthTokenLinkingTest extends TestCase
     }
 
     /** @test */
-    public function connect_route_issues_a_token_and_redirects_with_it(): void
+    public function connect_post_issues_a_token_and_redirects_with_it(): void
     {
         $user = User::factory()->create(['vk_id' => null, 'vk_auth_token' => null]);
 
-        $response = $this->actingAs($user)->get(route('vk.connect'));
+        // H3313: выдача токена переехала с GET на CSRF-защищённый POST.
+        $response = $this->actingAs($user)->post(route('vk.connect.start'));
 
         $user->refresh();
         $this->assertNotNull($user->vk_auth_token);
