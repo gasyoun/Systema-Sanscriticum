@@ -100,14 +100,25 @@ final class SafeWithdrawalService
 
         // Персонал: только АКТИВНЫЕ обязательства — ставка учитывается, если
         // получатель платился в текущем или прошлом месяце; кто молчит ≥2 полных
-        // месяцев (Кузнецова с мая и т.п.) в горизонт не попадает.
+        // месяцев (Кузнецова с мая и т.п.) в горизонт не попадает. Поверх —
+        // staff_overrides из ручного реестра Марии: перекрывают LMS-ставку при
+        // совпадении подстроки и добавляют тех, кого в LMS нет вовсе.
         $staff = $this->contour->staffPayees();
+        $overrides = collect((array) config('safe_withdrawal.staff_overrides', []));
+        $overrideMonthly = round($overrides->sum(fn ($o) => (float) ($o['monthly'] ?? 0)), 2);
         $staffMonthly = 0.0;
         $staffStale = [];
         $activeNames = (array) config('safe_withdrawal.staff_active_names', []);
         foreach ($staff['payees'] as $p) {
             if ($p['category'] !== 'персонал' || $p['monthly_rate'] === null) {
                 continue;
+            }
+            $coveredByOverride = $overrides->contains(
+                fn (array $o) => ($o['match'] ?? '') !== ''
+                    && mb_stripos((string) $p['name'], (string) $o['match']) !== false
+            );
+            if ($coveredByOverride) {
+                continue; // уже учтены по реестру — двойного счёта нет
             }
             $alwaysActive = collect($activeNames)->contains(
                 fn (string $needle) => $needle !== '' && mb_stripos((string) $p['name'], $needle) !== false
@@ -119,6 +130,7 @@ final class SafeWithdrawalService
             }
             $staffMonthly += (float) $p['monthly_rate'];
         }
+        $staffMonthly += $overrideMonthly;
         $staffHorizonMonths = (int) ceil($horizonDays / 30);
         $staffObligation = round($staffMonthly * $staffHorizonMonths, 2);
 
@@ -129,6 +141,7 @@ final class SafeWithdrawalService
             'teachers_rub' => $teacherRub,
             'teachers_eur_due' => $teacherEurDue,
             'staff_monthly' => round($staffMonthly, 2),
+            'staff_overrides_monthly' => $overrideMonthly,
             'staff_horizon_months' => $staffHorizonMonths,
             'staff_total' => $staffObligation,
             'staff_stale_excluded' => $staffStale,

@@ -503,17 +503,18 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `REVERB_TELESCOPE_INGEST_INTERVAL` | optional | `15` | config/reverb.php:54 |
 | `RQ4_STUDY` | optional | `false` | config/features.php:245 |
 | `SAFE_WITHDRAWAL_HORIZON_DAYS` | optional | `60` | config/safe_withdrawal.php:17 |
-| `SAFE_WITHDRAWAL_INSURANCE_RATE` | optional | `0.30` | config/safe_withdrawal.php:37 |
-| `SAFE_WITHDRAWAL_IP_EXTRA_RATE` | optional | `0.01` | config/safe_withdrawal.php:43 |
-| `SAFE_WITHDRAWAL_IP_EXTRA_THRESHOLD` | optional | `300000.00` | config/safe_withdrawal.php:44 |
-| `SAFE_WITHDRAWAL_IP_FIXED_YEARLY` | optional | `57390.00` | config/safe_withdrawal.php:42 |
-| `SAFE_WITHDRAWAL_MROT_MONTHLY` | optional | `27093.00` | config/safe_withdrawal.php:39 |
-| `SAFE_WITHDRAWAL_MSP_SUPPER_RATE` | optional | `0.15` | config/safe_withdrawal.php:38 |
-| `SAFE_WITHDRAWAL_NDFL_RATE` | optional | `0.13` | config/safe_withdrawal.php:34 |
-| `SAFE_WITHDRAWAL_OPEX_MONTHLY` | required | `—` | config/safe_withdrawal.php:50 |
+| `SAFE_WITHDRAWAL_INSURANCE_RATE` | optional | `0.30` | config/safe_withdrawal.php:53 |
+| `SAFE_WITHDRAWAL_IP_EXTRA_RATE` | optional | `0.01` | config/safe_withdrawal.php:59 |
+| `SAFE_WITHDRAWAL_IP_EXTRA_THRESHOLD` | optional | `300000.00` | config/safe_withdrawal.php:60 |
+| `SAFE_WITHDRAWAL_IP_FIXED_YEARLY` | optional | `57390.00` | config/safe_withdrawal.php:58 |
+| `SAFE_WITHDRAWAL_MROT_MONTHLY` | optional | `27093.00` | config/safe_withdrawal.php:55 |
+| `SAFE_WITHDRAWAL_MSP_SUPPER_RATE` | optional | `0.15` | config/safe_withdrawal.php:54 |
+| `SAFE_WITHDRAWAL_NDFL_RATE` | optional | `0.13` | config/safe_withdrawal.php:50 |
+| `SAFE_WITHDRAWAL_OPEX_MONTHLY` | required | `—` | config/safe_withdrawal.php:66 |
 | `SAFE_WITHDRAWAL_OP_RESERVE_MONTHS` | optional | `1` | config/safe_withdrawal.php:20 |
 | `SAFE_WITHDRAWAL_STAFF_ACTIVE` | optional | `'Ильюшина'` | config/safe_withdrawal.php:25 |
-| `SAFE_WITHDRAWAL_USN_RATE` | optional | `0.06` | config/safe_withdrawal.php:31 |
+| `SAFE_WITHDRAWAL_STAFF_OVERRIDES` | optional | `json_encode([ ['match' => 'Ильюшина', 'monthly' => 30000.0], ['matc…` | config/safe_withdrawal.php:35 |
+| `SAFE_WITHDRAWAL_USN_RATE` | optional | `0.06` | config/safe_withdrawal.php:47 |
 | `SANCTUM_STATEFUL_DOMAINS` | optional | `sprintf( '%s%s', 'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000…` | config/sanctum.php:21 |
 | `SANCTUM_TOKEN_EXPIRATION` | secret | `60 * 24 * 90` | config/sanctum.php:58 |
 | `SANCTUM_TOKEN_PREFIX` | secret | `''` | config/sanctum.php:73 |
