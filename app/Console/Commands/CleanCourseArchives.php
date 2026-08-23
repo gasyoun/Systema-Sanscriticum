@@ -10,16 +10,18 @@ class CleanCourseArchives extends Command
 {
     protected $signature = 'archives:cleanup {--hours=24 : Удалять архивы старше N часов}';
 
-    protected $description = 'Удаляет старые ZIP-архивы: материалы курсов (tmp/course-archives) и сертификаты группы (public/archives)';
+    protected $description = 'Удаляет старые ZIP-архивы: материалы курсов (tmp/course-archives) и сертификаты группы (archives/, до H3310 — public/archives)';
 
     public function handle(): int
     {
-        // Два независимых каталога ZIP-архивов. Сертификатные архивы кладёт
-        // GenerateCertificatesArchive в public/archives и раньше не чистились —
-        // копились бессрочно. Чистим оба по одному порогу --hours.
+        // Три независимых каталога ZIP-архивов. Сертификатные архивы с H3310
+        // кладёт GenerateCertificatesArchive в приватный storage/app/archives;
+        // legacy public/archives доезжает с прода после разовой миграции —
+        // чистим все три по одному порогу --hours.
         $dirs = [
             storage_path('app/tmp/course-archives'),
             storage_path('app/public/archives'),
+            storage_path('app/archives'),
         ];
 
         $threshold = now()->subHours((int) $this->option('hours'))->timestamp;
