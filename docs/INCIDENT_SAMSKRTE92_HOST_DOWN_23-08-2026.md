@@ -2,10 +2,10 @@
 
 _Created: 23-08-2026 · Last updated: 23-08-2026_
 
-**Status:** ONGOING — бокс недоступен с ~12:33 UTC; причина не подтверждена,
-различить версии может только консоль Proxmox (Артём, `@t3t3r1n`).
-Строка №5 в [INCIDENT_LEDGER_SYSTEMA_UPTIME.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INCIDENT_LEDGER_SYSTEMA_UPTIME.md);
-строка в инцидент-логе [SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md).
+**Status:** RESOLVED — network/provider-side: **null-route/анти-DDoS блочок провайдера (Пудлинк)**. Бокс не падал ни на минуту:
+аптайм с 29-07, nginx без рестартов с 19-08, ноль стартов/стопов в journal за окно;
+Артём подтверждал доступность из нескольких локаций посреди нашего блэкаута.
+Строка №6 леджера — корректирующая.
 
 ---
 
@@ -98,5 +98,13 @@ swap-sizing ноды (P3).
   `.91:/var/backups/samskrtam150/`); DNS — reg.ru, A → 193.232.229.92.
   Вариант А: временно поднять на `.91` (жив, 8 Ги RAM, но там прод-n8n).
   Вариант B: свежий VPS + runbook vps-prod-standup. Решение за МГ.
+
+
+## Исход (вечер 23-08-2026)
+
+- **Подтвержден класс network/provider**: null-route/анти-DDoS блочок Пудлинка — исходящий LAN жил, публичный вход был закрыт; снят ≈18:50 UTC. V1 и V3 опровергнуты логами бокса (аптайм непрерывен с 29-07). Диагноз-рунбук и эскалация Пудлинку: [SERVER_INCIDENT_MANUAL.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_INCIDENT_MANUAL.md).
+- Трассировщики обеих сторон сходятся на предпоследнем хопе `213.108.130.201` (провайдер-эдж); во время окна путь умирал выше него.
+- Урок для мониторинга: «бокс недоступен ИЗ ОДНОГо места» ≠ «бокс лежит». Прежде чем звать Артёма — вторая независимая локация (мобильный интернет). Кандидат в плейбук/гварды: внешний HTTP-проб уже есть (Better Stack), но вывод агента обязан сверять два вантажа до эскалации host-down.
+- H3385 применена сразу после восстановления связи: мёртвый чат `197649919` убран из `ADMIN_TELEGRAM_ID` и `CABINET_PROBE_TELEGRAM_CHAT_ID`, тест нотифайера доставлен в оба живых чата, новых 403 нет (счётчик дня заморожен на 747). Бэкап `.env`: `/var/www/html/.env.bak-h3385`.
 
 _OxAlpha (`opencode/x-preview-f-free`) · SOS-ход 23-08-2026_
