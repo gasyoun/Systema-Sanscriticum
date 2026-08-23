@@ -403,9 +403,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `OPENROUTER_PRICE_DEEPSEEK_CHAT_PROMPT` | optional | `0.2002` | config/services.php:327 |
 | `PAPERTRAIL_PORT` | required | `—` | config/logging.php:92<br>config/logging.php:93 |
 | `PAPERTRAIL_URL` | required | `—` | config/logging.php:91<br>config/logging.php:93 |
-| `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:33 |
+| `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:40 |
 | `PARTNER_PROGRAM_ENABLED` | feature-flag | `false` | config/partner.php:24 |
-| `PARTNER_REWARD_AMOUNT` | optional | `1000` | config/partner.php:29 |
+| `PARTNER_REWARD_AMOUNT` | optional | `1000` | config/partner.php:30 |
+| `PARTNER_REWARD_PERCENT` | optional | `0` | config/partner.php:36 |
 | `PAYMENT_RECOVERY_CTA` | optional | `false` | config/features.php:765 |
 | `PAYPAL_API_BASE_URL` | required | `—` | config/services.php:437 |
 | `PAYPAL_API_MODE` | optional | `'sandbox'` | config/services.php:431 |
