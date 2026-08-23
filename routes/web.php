@@ -431,6 +431,10 @@ Route::post('/institut/zayavka', [InstituteController::class, 'apply'])
     ->middleware('throttle:6,1')
     ->name('institute.apply');
 
+// Меценаты Института — страница добровольных пожертвований (ст. 582 ГК,
+// свободная сумма, без встречного пакета благ; реквизиты — config/institute.php).
+Route::view('/mecenaty', 'institute.mecenaty')->name('institute.mecenaty');
+
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {
     $s = MarketingSetting::cached();
