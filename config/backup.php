@@ -1,6 +1,6 @@
 <?php
 
-use Spatie\Backup\Notifications\Notifiable;
+use App\Notifications\BackupNotifiable;
 use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
 use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification;
 use Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification;
@@ -114,10 +114,17 @@ return [
             CleanupWasSuccessfulNotification::class => ['mail'],
         ],
 
-        'notifiable' => Notifiable::class,
+        'notifiable' => BackupNotifiable::class,
 
         'mail' => [
-            'to' => 'pe4kin.85@mail.ru',
+            // H3312: реального получателя решает App\Notifications\BackupNotifiable
+            // через config('services.admin.email') (env ADMIN_EMAIL), fail-closed:
+            // пусто -> отправка skip с warning, без краша. Само поле 'to' spatie
+            // валидирует filter_var и бросает InvalidConfig на пустой/битой
+            // строке (краш парсинга конфига = crash loop бэкапов), поэтому здесь
+            // стоит синтаксически валидный плейсхолдер, который НЕ используется
+            // как адресат. Не менять на пустую строку!
+            'to' => 'backup-notifications-unset@example.com',
 
             'from' => [
                 'address' => env('MAIL_FROM_ADDRESS', 'robot@tvoy-sayt.ru'),
