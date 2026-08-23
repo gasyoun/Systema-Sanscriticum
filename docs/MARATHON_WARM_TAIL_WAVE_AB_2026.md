@@ -17,8 +17,8 @@ _Created: 22-08-2026 · Last updated: 22-08-2026_
 
 - Якорь — персональные часы регистрации `marathon_enrollments.day0_started_at`
   (`MarathonEnrollment::warmTailWave()`), не момент отправки.
-- Срез — `config('marathon.warm_tail_wave2_from')`, env **`MARATHON_WAVE2_FROM`** (`YYYY-MM-DD`).
-  **Пусто/не задано = все на волне 1** (текущее поведение до решения MG о переключении).
+- Срез — `config('marathon.warm_tail_wave2_from')`, env **`MARATHON_WARM_TAIL_WAVE2_FROM`** (`YYYY-MM-DD`).
+  **Пусто/не задано = все на волне 1**. Решение MG 23-08-2026: выставлено **`MARATHON_WARM_TAIL_WAVE2_FROM=2026-09-05`** — волна 2 достаётся запускам с 5 сентября.
 - Переключение: выставить env → `php artisan config:cache`. Уже идущие хвосты **не перекрашиваются** —
   волна зафиксирована стартом энрола; срез маршрутизирует только новых.
 
