@@ -433,7 +433,14 @@ Route::post('/institut/zayavka', [InstituteController::class, 'apply'])
 
 // Меценаты Института — страница добровольных пожертвований (ст. 582 ГК,
 // свободная сумма, без встречного пакета благ; реквизиты — config/institute.php).
-Route::view('/mecenaty', 'institute.mecenaty')->name('institute.mecenaty');
+// Онлайн-приём через Точку (N2) и реестр благодарностей (N3) — за флагом
+// INSTITUTE_DONATE_ONLINE, default OFF (money contour).
+Route::get('/mecenaty', [InstituteController::class, 'mecenaty'])->name('institute.mecenaty');
+Route::post('/mecenaty/donate', [InstituteController::class, 'donate'])
+    ->middleware('throttle:6,1')
+    ->name('institute.donate');
+Route::get('/mecenaty/blagodarnosti', [InstituteController::class, 'gratitudeRegistry'])
+    ->name('institute.gratitude');
 
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {

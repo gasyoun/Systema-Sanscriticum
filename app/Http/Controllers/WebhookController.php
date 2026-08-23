@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\InstituteDonation;
 use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
 use Firebase\JWT\JWK;
@@ -59,6 +60,19 @@ class WebhookController extends Controller
             // Сумма из банка — для сверки с payments.amount (H1359, guard c).
             // Извлекается так же оборонительно, как способ оплаты: отсутствует => null => не сверяем.
             $reportedAmount = $this->extractReportedAmount($payload);
+
+            // Институтские пожертвования (N2): purpose «…№D{id}» намеренно не
+            // матчится в «Заказ №» — успех меняет только строку institute_donations,
+            // платёжный success-путь с доступами не трогается.
+            if (preg_match('/№\s*D\s*(\d+)/u', $purpose, $donationMatches)) {
+                $this->handleDonationWebhook(
+                    (int) $donationMatches[1],
+                    is_string($statusFromBank) ? mb_strtolower(trim($statusFromBank)) : null,
+                    $reportedAmount,
+                );
+
+                return response('OK', 200);
+            }
 
             // Логируем только статус — без полного payload (там ФИО/суммы/атрибуты
             // покупателя, которые не должны копиться в файловых логах). Трассировка
@@ -295,5 +309,53 @@ class WebhookController extends Controller
         Log::info('Tochka webhook: нераспознанный способ оплаты', ['raw' => $v]);
 
         return null;
+    }
+
+    /**
+     * N2: завершение пожертвования Института. Идемпотентно по статусу строки:
+     * повторный success-вебхук на уже оплаченный донат — no-op. Сумма банка
+     * сверяется с заказанной; hold (AUTHORIZED) игнорируется до capture.
+     */
+    private function handleDonationWebhook(int $donationId, ?string $normalizedBankStatus, ?float $reportedAmount): void
+    {
+        $success = ['approved', 'captured', 'completed', 'paid'];
+        $failure = ['rejected', 'canceled', 'cancelled', 'failed'];
+
+        $donation = InstituteDonation::find($donationId);
+
+        if (! $donation) {
+            Log::warning("Вебхук: пожертвование D{$donationId} не найдено в базе");
+
+            return;
+        }
+
+        // Аудит: последнее сырое состояние от банка (без payload с ФИО).
+        $donation->forceFill(['last_bank_status' => mb_substr((string) $normalizedBankStatus, 0, 64)])->save();
+
+        if (in_array($normalizedBankStatus, $success, true)) {
+            if ($donation->status === InstituteDonation::STATUS_PAID) {
+                return; // идемпотентность: успех уже применён
+            }
+
+            if ($reportedAmount !== null
+                && abs($reportedAmount - (float) $donation->amount) > 0.01) {
+                Log::warning("Вебхук: сумма банка {$reportedAmount} расходится с пожертвованием D{$donation->id} ({$donation->amount})");
+
+                return;
+            }
+
+            $donation->update([
+                'status' => InstituteDonation::STATUS_PAID,
+                'paid_at' => now(),
+            ]);
+            Log::info("Пожертвование D{$donation->id} оплачено");
+
+            return;
+        }
+
+        if (in_array($normalizedBankStatus, $failure, true)
+            && $donation->status === InstituteDonation::STATUS_PENDING) {
+            $donation->update(['status' => InstituteDonation::STATUS_FAILED]);
+        }
     }
 }

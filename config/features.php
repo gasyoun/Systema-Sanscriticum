@@ -1051,4 +1051,12 @@ return [
      | Rollback: FLAGSHIP_CTA_AB=false restores the previous string.
      */
     'flagship_cta_ab' => (bool) env('FLAGSHIP_CTA_AB', false),
+
+    /*
+     | Институт: онлайн-приём пожертвований на /mecenaty через Точку (N2 плана
+     | INSTITUTE_MONETIZATION_PLAN_2026H2). Money contour: default OFF, включается
+     | MG после ратификации пресетов и юр-формулировки ст. 582. Rollback:
+     | INSTITUTE_DONATE_ONLINE=false — форма и вебхук-ветка гаснут, реквизиты остаются.
+     */
+    'institute_donate_online' => (bool) env('INSTITUTE_DONATE_ONLINE', false),
 ];
