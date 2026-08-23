@@ -92,6 +92,15 @@ final class SupportDmAutoReply
             return ['status' => 'duplicate', 'category' => null];
         }
 
+        // H3380 v2.2 (урок первого бэклог-реплея): первичный history-забор
+        // приносит МЕСЯЦЫ старых входящих; автоответ/подсказка на них —
+        // спам студентам и админам. Реагируем только на свежие сообщения.
+        if ($incoming->sent_at !== null
+            && $incoming->sent_at->lt(now()->subHours((int) config('services.telegram_support.auto_reply_max_age_hours', 6)))
+        ) {
+            return ['status' => 'stale_skip', 'category' => null];
+        }
+
         $category = $this->suggester->categorize($text);
         $user = $linkedUserId ? User::query()->find($linkedUserId) : null;
 
