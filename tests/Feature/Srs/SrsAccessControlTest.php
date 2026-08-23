@@ -128,7 +128,7 @@ class SrsAccessControlTest extends TestCase
         $victim = User::factory()->create();
         $victimDeck = $this->makePrivateDeckWithSecretCard($victim);
 
-        $component = new SrsReview();
+        $component = new SrsReview;
         $component->deckId = $victimDeck->id;
 
         $gate = new \ReflectionMethod(SrsReview::class, 'currentDeck');
@@ -150,7 +150,7 @@ class SrsAccessControlTest extends TestCase
         // Легитимный гостевой путь не сломан: system/public колода доступна.
         $deck = $this->makeSystemDeck();
 
-        $component = new SrsReview();
+        $component = new SrsReview;
         $component->deckId = $deck->id;
 
         $gate = new \ReflectionMethod(SrsReview::class, 'currentDeck');
