@@ -61,12 +61,31 @@ class PaypalClaimTest extends TestCase
     {
         $tariff = $this->blockTariff();
 
+        // MG 23-08-2026: это УВЕДОМЛЕНИЕ об оплате, не сама оплата.
         $this->get(route('paypal.claim.show', $tariff))
             ->assertOk()
-            ->assertSee('Оплата через PayPal')
+            ->assertSee('Уведомление об оплате через PayPal')
             ->assertSee('Сообщите нам об оплате')
             ->assertSee('С какого PayPal платили')
-            ->assertSee('Дата оплаты');
+            ->assertSee('Дата оплаты')
+            ->assertSee('Комиссию PayPal за перевод оплачивает отправитель');
+    }
+
+    /** @test */
+    public function block_tariff_shows_foreign_price_from_config(): void
+    {
+        // MG 23-08-2026: рублевую цену на форме не показываем; в PayPal платят
+        // EUR (предпочтительно) / USD по валютному прайсу из конфига.
+        config(['services.paypal.foreign_block_prices' => [1 => ['eur' => 90, 'usd' => 105]]]);
+        $tariff = $this->blockTariff(); // course id = 1 на чистой базе
+
+        $this->get(route('paypal.claim.show', $tariff))
+            ->assertOk()
+            ->assertSee('90 €', false)
+            ->assertSee('(предпочтительно)', false)
+            ->assertSee('105 $', false)
+            ->assertDontSee('8 000 ₽')
+            ->assertDontSee(number_format((float) $tariff->price, 0, '.', ' ').' ₽', false);
     }
 
     /** @test */
@@ -457,7 +476,7 @@ class PaypalClaimTest extends TestCase
         $this->assertStringContainsString('без ожидания', $html);
         $this->assertStringNotContainsString('одного рабочего дня', $html);
         $this->assertStringContainsString('40.00 €', $html);
-        $this->assertSame('Заявка получена — доступ уже открыт', $mail->envelope()->subject);
+        $this->assertSame('Заявка получена — доступ открыт', $mail->envelope()->subject);
 
         // Контракт голоса: без ё в новой копии (правило D13).
         $this->assertStringNotContainsString('ё', $html);
