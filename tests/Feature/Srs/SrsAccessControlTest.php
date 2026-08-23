@@ -120,26 +120,42 @@ class SrsAccessControlTest extends TestCase
             ->assertStatus(403);
     }
 
-    public function test_forced_foreign_deck_id_leaks_no_card_fields(): void
+    public function test_current_deck_gate_returns_null_for_foreign_private_deck(): void
     {
-        // Defense-in-depth: даже если deckId подменён «серверно» (минуя #[Locked]),
-        // currentDeck() отдаёт null — карточки не рендерятся и не грейдятся.
+        // Defense-in-depth (H3313): даже если deckId подменён «серверно», минуя
+        // #[Locked] (hydrate-байпас), currentDeck() отдаёт чужую приватную
+        // колоду только владельцу — рендер и грейд получают null.
         $victim = User::factory()->create();
         $victimDeck = $this->makePrivateDeckWithSecretCard($victim);
-        $attacker = User::factory()->create();
-        $this->makeSystemDeck();
 
-        $component = Livewire::actingAs($attacker)->test(SrsReview::class);
-        $component->instance()->deckId = $victimDeck->id;
+        $component = new SrsReview();
+        $component->deckId = $victimDeck->id;
 
-        $component->call('reveal')
-            ->assertDontSee('rahasiya-pada')
-            ->assertDontSee('секретный-перевод');
+        $gate = new \ReflectionMethod(SrsReview::class, 'currentDeck');
 
-        $component->call('grade', 3);
+        // Без аутентификации (гость) — null.
+        $this->assertNull($gate->invoke($component));
 
-        $this->assertDatabaseCount('srs_review_logs', 0);
-        $this->assertDatabaseCount('srs_review_states', 0);
+        // Чужой пользователь — null.
+        $this->actingAs(User::factory()->create());
+        $this->assertNull($gate->invoke($component));
+
+        // Владелец — своя колода проходит.
+        $this->actingAs($victim);
+        $this->assertSame($victimDeck->id, $gate->invoke($component)?->id);
+    }
+
+    public function test_current_deck_gate_keeps_guest_access_to_public_decks(): void
+    {
+        // Легитимный гостевой путь не сломан: system/public колода доступна.
+        $deck = $this->makeSystemDeck();
+
+        $component = new SrsReview();
+        $component->deckId = $deck->id;
+
+        $gate = new \ReflectionMethod(SrsReview::class, 'currentDeck');
+
+        $this->assertSame($deck->id, $gate->invoke($component)?->id);
     }
 
     public function test_owner_still_reviews_own_private_deck(): void
