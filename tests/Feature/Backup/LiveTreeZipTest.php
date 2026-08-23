@@ -6,6 +6,8 @@ namespace Tests\Feature\Backup;
 
 use App\Support\Backup\LiveTreeZip;
 use Illuminate\Support\Facades\Log;
+use ReflectionClass;
+use Spatie\Backup\Config\BackupConfig;
 use Tests\TestCase;
 use ZipArchive;
 
@@ -20,6 +22,21 @@ class LiveTreeZipTest extends TestCase
         if (DIRECTORY_SEPARATOR === '\\') {
             $this->markTestSkipped('POSIX chmod required to model an unreadable member');
         }
+
+        // FINDINGS §513: у libzip части раннеров close() падает «Invalid
+        // argument» на компрессионных параметрах — тестируем пропуск члена,
+        // а не компрессию, поэтому STORE без уровня.
+        config([
+            'backup.backup.destination.compression_method' => ZipArchive::CM_STORE,
+            'backup.backup.destination.compression_level' => 0,
+            'backup.backup.password' => null,
+        ]);
+        // BackupConfig — контейнерный синглтон: подменяем свежим с нашими
+        // override-ами, иначе конструктор возьмёт конфиг из чужого теста.
+        $this->app->instance(
+            BackupConfig::class,
+            BackupConfig::fromArray(config('backup'))
+        );
 
         $dir = sys_get_temp_dir().'/livetree-'.uniqid();
         mkdir($dir.'/sub', 0777, true);
@@ -36,11 +53,19 @@ class LiveTreeZipTest extends TestCase
             $zipPath = $dir.'/out.zip';
             $zip = new LiveTreeZip($zipPath);
             $zip->add([$readable, $unreadable]);
+
+            // Контракт пропуска виден уже до close(): нечитаемый член не попал.
+            $za = (new ReflectionClass($zip))->getProperty('zipFile');
+            $za->setAccessible(true);
+            $archive = $za->getValue($zip);
+            $this->assertSame(1, $archive->numFiles);
+            $this->assertNotFalse($archive->locateName(ltrim($readable, '/')));
+
             $zip->close();
 
             $check = new ZipArchive;
-            $this->assertTrue((bool) $check->open($zipPath, ZipArchive::CHECKCONS));
-            $this->assertSame(1, $check->numFiles, 'Нечитаемый член не должен попасть в архив.');
+            $this->assertTrue((bool) $check->open($zipPath));
+            $this->assertSame(1, $check->numFiles);
             $this->assertNotFalse($check->locateName(ltrim($readable, '/')));
             $check->close();
 
