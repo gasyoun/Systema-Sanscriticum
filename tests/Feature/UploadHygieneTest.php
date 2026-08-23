@@ -12,6 +12,7 @@ use App\Models\CourseDesignAsset;
 use App\Models\Group;
 use App\Models\User;
 use App\Services\CertificateService;
+use App\Services\Design\CourseDesignAssetService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -38,9 +39,9 @@ class UploadHygieneTest extends TestCase
         Storage::fake('local');
     }
 
-    private function service(): \App\Services\Design\CourseDesignAssetService
+    private function service(): CourseDesignAssetService
     {
-        return app(\App\Services\Design\CourseDesignAssetService::class);
+        return app(CourseDesignAssetService::class);
     }
 
     /** @test */
