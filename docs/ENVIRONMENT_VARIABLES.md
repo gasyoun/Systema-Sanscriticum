@@ -16,7 +16,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `APP_DEBUG` | optional | `false` | config/app.php:55 |
 | `APP_ENV` | optional | `'production'` | config/app.php:42<br>config/server_guards.php:35 |
 | `APP_KEY` | required | `—` | config/app.php:135 |
-| `APP_NAME` | optional | `'Laravel'` | config/app.php:29<br>config/backup.php:21<br>config/backup.php:155<br>config/cache.php:109<br>config/database.php:128<br>config/horizon.php:72<br>config/session.php:131 |
+| `APP_NAME` | optional | `'Laravel'` | config/app.php:29<br>config/backup.php:21<br>config/backup.php:158<br>config/cache.php:109<br>config/database.php:128<br>config/horizon.php:72<br>config/session.php:131 |
 | `APP_URL` | optional | `'http://localhost'` | config/app.php:68<br>config/filesystems.php:42 |
 | `ASSET_URL` | required | `—` | config/app.php:70 |
 | `ATTENDANCE_CHRONIC_THRESHOLD` | optional | `3` | config/attendance.php:16 |
@@ -31,13 +31,13 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `AWS_SECRET_ACCESS_KEY` | secret | `—` | config/cache.php:86<br>config/filesystems.php:66<br>config/queue.php:57<br>config/services.php:32 |
 | `AWS_URL` | required | `—` | config/filesystems.php:69 |
 | `AWS_USE_PATH_STYLE_ENDPOINT` | optional | `false` | config/filesystems.php:71 |
-| `BACKUP_ARCHIVE_PASSWORD` | secret | `—` | config/backup.php:105 |
-| `BACKUP_CLEANUP_MB` | optional | `1000` | config/backup.php:182 |
-| `BACKUP_KEEP_PARTS_DAYS` | optional | `16` | config/backup.php:97 |
-| `BACKUP_MAX_AGE_DAYS` | optional | `8` | config/backup.php:164 |
-| `BACKUP_MAX_STORAGE_MB` | optional | `1200` | config/backup.php:165 |
-| `BACKUP_SPLIT_PART_MB` | optional | `700` | config/backup.php:95 |
-| `BACKUP_VERIFY_PARTS` | optional | `true` | config/backup.php:101 |
+| `BACKUP_ARCHIVE_PASSWORD` | secret | `—` | config/backup.php:108 |
+| `BACKUP_CLEANUP_MB` | optional | `1000` | config/backup.php:185 |
+| `BACKUP_KEEP_PARTS_DAYS` | optional | `16` | config/backup.php:100 |
+| `BACKUP_MAX_AGE_DAYS` | optional | `8` | config/backup.php:167 |
+| `BACKUP_MAX_STORAGE_MB` | optional | `1200` | config/backup.php:168 |
+| `BACKUP_SPLIT_PART_MB` | optional | `50` | config/backup.php:98 |
+| `BACKUP_VERIFY_PARTS` | optional | `true` | config/backup.php:104 |
 | `BCRYPT_ROUNDS` | optional | `12` | config/hashing.php:32 |
 | `BILLING_ACCOUNT` | optional | `''` | config/billing.php:52 |
 | `BILLING_BANK_NAME` | optional | `''` | config/billing.php:50 |
@@ -190,6 +190,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `FREE_TIER_GRANT_REASON` | optional | `'free_tier_monthly'` | config/membership.php:142 |
 | `FULL_COURSE_BLOCK_CREDIT` | optional | `false` | config/features.php:21 |
 | `GAMES_SKILL_DRILLS` | optional | `false` | config/features.php:769 |
+| `GIFT_CERTIFICATES` | optional | `false` | config/features.php:1070 |
 | `GOOGLE_CLIENT_ID` | required | `—` | config/services.php:381 |
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:382 |
 | `GOOGLE_REDIRECT_URI` | optional | `'/auth/google/callback'` | config/services.php:383 |
@@ -260,6 +261,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HORIZON_PREFIX` | optional | `Str::slug(env('APP_NAME', 'laravel'), '_').'_horizon:'` | config/horizon.php:70 |
 | `HUB_TRANSLITERATE` | optional | `false` | config/features.php:232 |
 | `INSTITUTE_DONATE_REQUISITES` | optional | `''` | config/institute.php:6 |
+| `INSTITUTE_DONATIONS_LIVE` | optional | `false` | config/institute.php:12 |
 | `INVEST_ACCEPTABLE_PAYBACK_YEARS` | optional | `4` | config/investment.php:35 |
 | `INVEST_DISCOUNT_RATE_PCT` | optional | `20` | config/investment.php:27 |
 | `INVEST_HORIZON_YEARS` | optional | `5` | config/investment.php:30 |
@@ -300,7 +302,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MAIL_BOUNCE_SCAN_ENABLED` | feature-flag | `false` | config/mail.php:149 |
 | `MAIL_EHLO_DOMAIN` | required | `—` | config/mail.php:46 |
 | `MAIL_ENCRYPTION` | optional | `'tls'` | config/mail.php:42 |
-| `MAIL_FROM_ADDRESS` | optional | `'robot@tvoy-sayt.ru'` | config/backup.php:134<br>config/mail.php:111 |
+| `MAIL_FROM_ADDRESS` | optional | `'robot@tvoy-sayt.ru'` | config/backup.php:137<br>config/mail.php:111 |
 | `MAIL_FROM_NAME` | optional | `'Example'` | config/mail.php:112 |
 | `MAIL_HOST` | optional | `'smtp.mailgun.org'` | config/mail.php:40 |
 | `MAIL_LOG_CHANNEL` | required | `—` | config/mail.php:75 |
