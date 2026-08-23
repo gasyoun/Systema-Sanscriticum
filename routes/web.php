@@ -26,6 +26,7 @@ use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
 use App\Http\Controllers\GatedAssetController;
 use App\Http\Controllers\GrammarLabController;
+use App\Http\Controllers\InstituteController;
 use App\Http\Controllers\GrammarLabPilotController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\ImpersonationController;
@@ -423,6 +424,12 @@ Route::get('/visualdcs/{surface}/preview', [VisualDcsController::class, 'preview
 // H2493 — Grammar Lab marketing landing (no topic/vector payload).
 Route::get('/grammar-lab', [GrammarLabController::class, 'landing'])
     ->name('grammar-lab.landing');
+
+// Институт исследования санскрита — витрина ДПП ПК «Санскрит» 72 ч (заявочная форма).
+Route::get('/institut', [InstituteController::class, 'landing'])->name('institute.landing');
+Route::post('/institut/zayavka', [InstituteController::class, 'apply'])
+    ->middleware('throttle:6,1')
+    ->name('institute.apply');
 
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {
