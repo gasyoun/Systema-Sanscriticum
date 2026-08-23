@@ -44,8 +44,19 @@ return [
         true
     ),
 
-    // Уволенные (информационная строка на экране; в обязательства не входят).
-    'staff_quits' => collect(explode('|', (string) env('SAFE_WITHDRAWAL_STAFF_QUITS', 'Кузнецова Анастасия|Григорьева Марина')))
+    // Уволенные (информационная строка на экране; расчёты произведены, в
+    // обязательства не входят).
+    'staff_quits' => collect(explode('|', (string) env('SAFE_WITHDRAWAL_STAFF_QUITS', '')))
+        ->map(fn ($s) => trim($s))
+        ->filter()
+        ->all(),
+
+    // Хвосты счетов Точки, ИСКЛАЁМЫЕ из «доступно к выводу» (накопительные/
+    // резервные). Через запятую. Пусто = учитываются все счета.
+
+    // По умолчанию …877617 — накопительный (MG 23-08: в Точке сейчас даже
+    // 200 000 нет; операционный счёт …863757).
+    'tochka_excluded_tails' => collect(explode(',', (string) env('SAFE_WITHDRAWAL_TOCHKA_EXCLUDED_TAILS', '877617')))
         ->map(fn ($s) => trim($s))
         ->filter()
         ->all(),

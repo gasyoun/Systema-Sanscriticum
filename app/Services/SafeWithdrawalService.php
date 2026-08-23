@@ -48,9 +48,26 @@ final class SafeWithdrawalService
 
         // ── Балансы ──────────────────────────────────────────────────────────
         $tochka = $this->tochka->snapshot();
+        $excludedTails = (array) config('safe_withdrawal.tochka_excluded_tails', []);
+        $includedClosing = 0.0;
+        $excludedAccounts = [];
+        foreach (($tochka['accounts'] ?? []) as $acc) {
+            $tail = (string) ($acc['tail'] ?? '');
+            if ($excludedTails !== [] && in_array($tail, $excludedTails, true)) {
+                $excludedAccounts[] = ['tail' => $tail, 'closing' => round((float) $acc['closing'], 2)];
+
+                continue;
+            }
+            $includedClosing += (float) ($acc['closing'] ?? 0);
+        }
+        if (($tochka['ok'] ?? false) && ($tochka['accounts'] ?? []) === []) {
+            // нет детализации счетов — fallback на агрегат
+            $includedClosing = (float) ($tochka['closing_total'] ?? 0);
+        }
         $balances = [
-            'tochka_closing' => $tochka['ok'] ? round((float) $tochka['closing_total'], 2) : null,
+            'tochka_closing' => $tochka['ok'] ? round($includedClosing, 2) : null,
             'tochka_ok' => (bool) $tochka['ok'],
+            'tochka_excluded' => $excludedAccounts,
             'paypal' => self::COVER_PAYPAL,
         ];
 
@@ -205,7 +222,6 @@ final class SafeWithdrawalService
         $deductMsp = $obligations['total'] + $usnReserve + $ndfl + $insMsp + $ipFixed + $ipExtra + $opReserve;
 
         $balanceTotal = (float) ($balances['tochka_closing'] ?? 0);
-
         $moved = Payment::query()->count() !== $paymentsBefore
             || TeacherPayout::query()->count() !== $payoutsBefore;
 
