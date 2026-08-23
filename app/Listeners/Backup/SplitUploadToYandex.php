@@ -388,9 +388,6 @@ class SplitUploadToYandex
      * мусор (обрыв при другом конфиге, архив убран cleanup'ом): её не трогаем,
      * retention-чистка удалит как обычно. Так прогон 22–23-08 не превращается
      * в источник ложных «успехов» и не переливает байты зря.
-     *
-     * @param  Filesystem  $sourceDisk
-     * @param  Filesystem  $target
      */
     private function resumePendingGroups(
         Filesystem $sourceDisk,
