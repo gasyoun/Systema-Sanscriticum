@@ -18,7 +18,7 @@ _Parser residual (same day): DE P2P email sample retune after H2215 ship._
 | Flag | `PAYPAL_CLAIM_ENABLED=true` |
 | Student pays to | **gasyoun@gmail.com** (`PAYPAL_RECIPIENT`) via `https://www.paypal.com/paypalme/gasyoun` |
 | Checkout CTA | Visible («Оплатить через PayPal») |
-| Claim form | `/paypal/{tariff}` — **required:** from-account + paid date + amount; optional txn/proof (H2017) |
+| Claim form | /paypal/{tariff} — «Уведомление об оплате через PayPal»: triple from/date/amount, optional txn/proof (H2017); валюта по умолчанию EUR; payer = только email; комиссия на отправителе (+пересчет/доплата); валютный прайс блока из services.paypal.foreign_block_prices — рублевую цену не показываем (MG 23-08-2026) |
 | Trust (ruling 22-08-2026) | Заявка **существующего ученика** (вошел в кабинет) сразу `paid` — доступ/финансы немедленно; флаг `PAYPAL_TRUST_EXISTING_STUDENTS` (default ON). Гости с новым email — по-прежнему pending → ручная сверка |
 | Selective check | Filament фильтр **«PayPal: без сверки»** (`paypalUnverified`) → «Сверка пройдена» (штампует `verified_at`) / «Нет платежа — отменить» (paid→canceled, штатный откат доступа/финансов) |
 | Admin confirm | Filament → filter «Заявки PayPal на проверке» → «Подтвердить PayPal» (только гостевые pending) |
