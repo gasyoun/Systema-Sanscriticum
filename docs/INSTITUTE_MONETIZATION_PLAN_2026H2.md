@@ -124,6 +124,21 @@ U1 ✅ · U2 ✅ витрина жива: [/institut](https://samskrte.ru/instit
 1. Задеплоить main (институтские коммиты вплоть до `cc0f7bae`) + `php artisan migrate --force` (партнёрский процент и show_amount реестра).
 2. Проверить .env: `INSTITUTE_DONATIONS_LIVE=true` — если бокс восстанавливался из образа, ключ мог не дожить; выставить заново.
 3. `php artisan config:cache`; смоук [/mecenaty](https://samskrte.ru/mecenaty): пресеты 500/1000/2500/5000, форма доната, согласие+чекбокс суммы.
+
+### Временный хост Aeza (23-08 вечер, решение MG после null-route .92)
+
+Диагноз уточнён: `.92` не «умер» — **IP в null-route анти-DDoS провайдера PUDLINK** (бокс жив,
+restic-push шёл до 17:01 UTC; lane Артёма). Пока ждём снятие, samskrte.ru поднят на временном
+боксе Aeza `178.236.251.98` (SWEs-1, 1c/2GB, до 30.08, продление по решению MG):
+
+1. ✅ Стек: nginx + PHP 8.3 (sury) + MariaDB 11.8 + redis; очередь systemd-unit `systema-queue`; cron schedule:run.
+2. ✅ Данные из restic-снапшота 17:01 UTC (1023 пользователя, оплаты целы); `.env` целиком из бэкапа
+   + `INSTITUTE_DONATIONS_LIVE=true`, `PARTNER_PROGRAM_ENABLED=true`; миграции актуальны.
+3. ✅ Смоук HTTP: `/`, /mecenaty (форма + пресеты 500/1000/2500/5000), /institut, /online, /partners — все 200.
+4. ⏳ **Осталось за MG:** A-record samskrte.ru у reg.ru → `178.236.251.98`; затем `certbot --nginx -d samskrte.ru -d www.samskrte.ru`.
+5. Известные ограничения темпа: Telegram MadelineProto daemon не поднят (TG-поддержка деградировала),
+   kosha/samudra/pe4kinsmart vhosts с .92 не перенесены, Reverb/websockets не запущен, `/apps?/` прокси (8080) отсутствует.
+
 C4 — за гейтом выводов пилота A1. Ограждения: анти-срочность во всех продающих текстах; ценники —
 money row, слово MG, нератифицированное не публикуется; C7-олимпиадная за гейтом H253; книги — 2027;
 UTM-схема каждому новому каналу с первого дня ([харнесс](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VK_PAID_TEST_INSTRUMENTATION_H3333_2026.md)).
