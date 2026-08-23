@@ -19,9 +19,17 @@ _Parser residual (same day): DE P2P email sample retune after H2215 ship._
 | Student pays to | **gasyoun@gmail.com** (`PAYPAL_RECIPIENT`) via `https://www.paypal.com/paypalme/gasyoun` |
 | Checkout CTA | Visible («Оплатить через PayPal») |
 | Claim form | `/paypal/{tariff}` — **required:** from-account + paid date + amount; optional txn/proof (H2017) |
-| Admin confirm | Filament → filter «Заявки PayPal на проверке» → «Подтвердить PayPal» |
-| Access | Only after human `pending` → `paid` (personal PayPal, no business API) |
-| Claim notify mail | Still `ADMIN_EMAIL` (curator mailbox); student ack via `PaypalClaimStudentAckMail` |
+| Trust (ruling 22-08-2026) | Заявка **существующего ученика** (вошел в кабинет) сразу `paid` — доступ/финансы немедленно; флаг `PAYPAL_TRUST_EXISTING_STUDENTS` (default ON). Гости с новым email — по-прежнему pending → ручная сверка |
+| Selective check | Filament фильтр **«PayPal: без сверки»** (`paypalUnverified`) → «Сверка пройдена» (штампует `verified_at`) / «Нет платежа — отменить» (paid→canceled, штатный откат доступа/финансов) |
+| Admin confirm | Filament → filter «Заявки PayPal на проверке» → «Подтвердить PayPal» (только гостевые pending) |
+| Access | Своим — мгновенно; гостям — только после human `pending` → `paid` (personal PayPal, no business API) |
+| Claim notify mail | Still `ADMIN_EMAIL` (curator mailbox); student ack via `PaypalClaimStudentAckMail` (два варианта копии: trusted / guest) |
+
+Ruling 22-08-2026 detail: авто-доверие пишется в `claim_meta.auto_trusted=true` +
+`trusted_at`; выборочная сверка пост-фактум закрывается `verified_at`. Отмена
+мошеннической заявки — кнопка «Нет платежа — отменить»: canceled на paid
+запускает штатный откат (группы снимаются, финансы пересчитываются;
+course_user pivot не трогается by design).
 
 Historical note: H1292 shipped behind a dark flag; H2017 opened prod after MG asked to enable diaspora path. SMTP/queue: see current prod mail status (issue #504 was later re-diagnosed / closed in other work — treat live Horizon `mailing` as source of truth).
 

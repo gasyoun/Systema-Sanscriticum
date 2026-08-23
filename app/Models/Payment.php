@@ -294,6 +294,23 @@ class Payment extends Model
         return $meta[$key];
     }
 
+    /**
+     * PayPal-заявка существующего ученика, получившая доступ сразу (ruling
+     * 22-08-2026), — кандидат выборочной сверки, пока verified_at не проставлен.
+     */
+    public function isAutoTrustedPaypal(): bool
+    {
+        return $this->isPaypal() && (bool) $this->claimMeta('auto_trusted');
+    }
+
+    /** Отметка «сверка пройдена» для авто-доверенной PayPal-заявки. */
+    public function markPaypalVerified(): void
+    {
+        $meta = is_array($this->claim_meta) ? $this->claim_meta : [];
+        $meta['verified_at'] = now()->toIso8601String();
+        $this->update(['claim_meta' => $meta]);
+    }
+
     /** Human invoice number for printable счёт (stable per payment id). */
     public function invoiceNumber(): string
     {
@@ -443,6 +460,19 @@ class Payment extends Model
     public function scopePaypalPending(Builder $query): Builder
     {
         return $query->where('provider', self::PROVIDER_PAYPAL)->where('status', 'pending');
+    }
+
+    /**
+     * Авто-доверенные PayPal-заявки существующих учеников (ruling 22-08-2026):
+     * сразу paid, сверка — выборочная и пост-фактум. Фильтр показывает только
+     * ещё НЕ просмотренные (verified_at не проставлен).
+     */
+    public function scopePaypalUnverified(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_PAYPAL)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->whereNotNull('claim_meta->auto_trusted')
+            ->whereNull('claim_meta->verified_at');
     }
 
     /** Неподтверждённые счета юрлиц, ожидающие сверки банковского поступления. */
