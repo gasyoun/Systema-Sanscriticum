@@ -33,6 +33,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('archives-cleanup');
 
+        // H3314: prune истёкших Sanctum-токенов мобильного API (expires_at в
+        // прошлом) плюс legacy-строк старше окна sanctum.expiration - таблица
+        // personal_access_tokens не растёт бесконечно, закат токенов задокумент-
+        // ирован в DEPLOY_QUEUE.
+        $schedule->command('tokens:prune-expired')
+            ->dailyAt('03:20')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('sanctum-token-prune');
+
         // Перевод просроченных promises в статус expired — ночью.
         // onFailure → ScheduleFailureSignal (H2338 / audit spec 7): log+admin
         // bell; without it, money crons fail only into laravel.log.

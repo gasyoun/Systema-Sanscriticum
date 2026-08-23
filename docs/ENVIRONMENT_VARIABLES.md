@@ -278,6 +278,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `LECTURE_BUILDER_URL` | optional | `'http://127.0.0.1:5001'` | config/services.php:355 |
 | `LESSON_SYNC_SECRET` | secret | `—` | config/services.php:58 |
 | `LIVEWIRE_UPLOAD_MAX_KB` | optional | `102400` | config/livewire.php:42 |
+| `LOGIN_THROTTLE_DECAY_SECONDS` | optional | `60` | config/login_throttle.php:24 |
+| `LOGIN_THROTTLE_ENABLED` | feature-flag | `true` | config/login_throttle.php:20 |
+| `LOGIN_THROTTLE_MAX_ATTEMPTS` | optional | `5` | config/login_throttle.php:22 |
 | `LOG_CHANNEL` | optional | `'stack'` | config/logging.php:22 |
 | `LOG_DEPRECATIONS_CHANNEL` | optional | `'null'` | config/logging.php:36 |
 | `LOG_LEVEL` | optional | `'debug'` | config/logging.php:65<br>config/logging.php:72<br>config/logging.php:82<br>config/logging.php:88<br>config/logging.php:100<br>config/logging.php:111<br>config/logging.php:118 |
@@ -514,7 +517,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SAFE_WITHDRAWAL_STAFF_OVERRIDES` | optional | `json_encode([ ['match' => 'Ильюшина', 'monthly' => 30000.0], ['matc…` | config/safe_withdrawal.php:35 |
 | `SAFE_WITHDRAWAL_USN_RATE` | optional | `0.06` | config/safe_withdrawal.php:47 |
 | `SANCTUM_STATEFUL_DOMAINS` | optional | `sprintf( '%s%s', 'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000…` | config/sanctum.php:21 |
-| `SANCTUM_TOKEN_PREFIX` | secret | `''` | config/sanctum.php:67 |
+| `SANCTUM_TOKEN_EXPIRATION` | secret | `60 * 24 * 90` | config/sanctum.php:58 |
+| `SANCTUM_TOKEN_PREFIX` | secret | `''` | config/sanctum.php:73 |
 | `SERVER_GUARDS_SPEC` | optional | `base_path('scripts/server_guards.conf')` | config/server_guards.php:18 |
 | `SERVER_GUARDS_TEMPLATES` | optional | `base_path('scripts/server_guards')` | config/server_guards.php:20 |
 | `SERVER_GUARDS_VERIFY` | optional | `PHP_OS_FAMILY === 'Linux' && env('APP_ENV') === 'production'` | config/server_guards.php:33 |
