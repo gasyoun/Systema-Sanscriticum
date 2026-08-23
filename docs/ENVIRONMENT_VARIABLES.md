@@ -190,6 +190,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `FREE_TIER_GRANT_REASON` | optional | `'free_tier_monthly'` | config/membership.php:142 |
 | `FULL_COURSE_BLOCK_CREDIT` | optional | `false` | config/features.php:21 |
 | `GAMES_SKILL_DRILLS` | optional | `false` | config/features.php:786 |
+| `GIFT_CERTIFICATES` | optional | `false` | config/features.php:1087 |
 | `GOOGLE_CLIENT_ID` | required | `—` | config/services.php:388 |
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:389 |
 | `GOOGLE_REDIRECT_URI` | optional | `'/auth/google/callback'` | config/services.php:390 |
