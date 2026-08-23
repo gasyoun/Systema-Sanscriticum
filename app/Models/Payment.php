@@ -268,6 +268,16 @@ class Payment extends Model
         return $this->tariff === 'marathon_paid';
     }
 
+    /**
+     * Добровольное пожертвование на деятельность Института (/mecenaty, план
+     * института N2). Донорская рамка без встречного пакета благ: доступа,
+     * групп, членства и лид-конверсии не несёт — только бухгалтерская строка.
+     */
+    public function isDonation(): bool
+    {
+        return $this->tariff === 'donation';
+    }
+
     /** Заявка об оплате из-за рубежа (PayPal), поданная студентом. */
     public function isPaypal(): bool
     {
@@ -661,6 +671,12 @@ class Payment extends Model
         // Системный расход / возврат и выплата ЗП преподавателю — только
         // бухгалтерская строка. Никакого доступа, писем, праны, Telegram.
         if ($payment->isExpense() || $payment->isSalaryPayout()) {
+            return;
+        }
+
+        // Пожертвование — донорская рамка без встречных благ (решение MG 23-08,
+        // план института N2): доступ/группы/членство/лиды/депозиты не трогаем.
+        if ($payment->isDonation()) {
             return;
         }
 

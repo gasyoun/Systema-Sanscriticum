@@ -415,6 +415,14 @@ return [
         // email идут по-старому через pending → ручную сверку.
         // false → откат к ручной сверке для всех, без деплоя логики.
         'trust_existing_students' => (bool) env('PAYPAL_TRUST_EXISTING_STUDENTS', true),
+        // MG 23-08-2026: в PayPal платят только EUR (предпочтительно) и USD,
+        // и дороже рублевых — рублевую цену тарифа на форме НЕ показываем.
+        // Валютная цена за БЛОК по course_id; показывается только блочным
+        // тарифам. Источник прайса: Google-таблица цен (гр.53 Кочергиной =
+        // тот же блок 8000 ₽ = 105 $/90 €).
+        'foreign_block_prices' => [
+            434 => ['eur' => 90, 'usd' => 105], // Грамматика по Кочергиной
+        ],
         // H2027 PayPal Subscriptions API (auto-bill diaspora) — separate from claim.
         // Master flag default OFF; secrets never committed. See
         // docs/ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md
