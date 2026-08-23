@@ -1,8 +1,25 @@
 # Results log
 
-_Created: 30-07-2026 · Last updated: 22-08-2026_
+_Created: 30-07-2026 · Last updated: 23-08-2026_
 
 Durable substantive-result tables for this repo. Newest first.
+
+## S9 template drafts — activation on H2339 census texts + first measurement (23-08-2026)
+
+_Model: OxAlpha (`opencode/x-preview-f-free`)._ Full prose: [docs/S9_TEMPLATE_DRAFTS_ACTIVATION_2026-08-23.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/S9_TEMPLATE_DRAFTS_ACTIVATION_2026-08-23.md).
+
+| Fact | Value |
+|---|---|
+| H2339 seeder on prod | had **never run** — executed 23-08: 12 canreplies (id 12–26) + 4 dozhim stubs created, idempotent |
+| Flag `SUPPORT_TEMPLATE_DRAFTS` | already true since 30-07-2026 (session instruction); untouched |
+| Bindings after pass | one per category: D→D2 «куда оплатить» · E→E1 «forgot-password» · F→F2 «сдать ДЗ»; old generic blanks unbound; E2 never auto-bound (`{login_link}` is curator-manual) |
+| `answer_template_drafted` | 10 all-time (9 = 30-07 activation burst, 1 real 03-08 cat=F) |
+| `answer_llm_drafted` | **0 ever** — template path fully replaced LLM on D/E/F; no LLM denominator → A/B not computable yet |
+| Template draft outcomes | accepted 0 · edited 0 · discarded 2 |
+| Suggestion mix by facts.type | recording 27 · zoom 16 · template 10 · schedule 2 · untyped 17 |
+| Audit trail | all binding changes in `message_template_audits` id 24–33 as «Система» |
+
+Next proof: re-query drafted/outcome counters in ~2–4 weeks; volume ~1 draft/week means acceptability verdicts need weeks, not days. Known gaps: `{course}` renders empty in suggester drafts; manual canreply sends are uninstrumented; 456 uncategorized topics dilute the next census.
 
 ## Student manuals behind login (22-08-2026)
 
