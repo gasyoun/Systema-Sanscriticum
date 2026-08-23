@@ -324,4 +324,28 @@ class GiftCertificateTest extends TestCase
         $this->assertDatabaseCount('gift_certificates', 1);
         $this->assertSame($firstHash, GiftCertificate::query()->where('payment_id', $payment->id)->value('code_hash'));
     }
+
+    /** @test */
+    public function gift_checkout_purpose_keeps_tochka_webhook_order_number_invariant(): void
+    {
+        $user = User::factory()->create();
+        $tariff = $this->tariffWithGroup();
+
+        config(['features.gift_certificates' => true]);
+
+        $this->actingAs($user)
+            ->post(route('payment.create'), ['tariff_id' => $tariff->id, 'gift' => '1'])
+            ->assertRedirect();
+
+        // Контракт вебхука Точки: purpose начинается с «Заказ №{id}»
+        // (WebhookController матчит строго /Заказ №(\d+)/). Body может прийти
+        // и строкой — декодируем сами.
+        Http::assertSent(function ($request): bool {
+            $payload = json_decode((string) $request->body(), true);
+            // Конверт Точки: purpose внутри Data.
+            $purpose = $payload['Data']['purpose'] ?? $payload['purpose'] ?? '';
+
+            return str_starts_with((string) $purpose, 'Заказ №');
+        });
+    }
 }

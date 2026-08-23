@@ -416,8 +416,12 @@ class PaymentController extends Controller
         }
 
         // 6. ОТПРАВЛЯЕМ ЗАПРОС В ТОЧКУ — ПОСЛЕ commit (с фискализацией: чек уйдёт на email студента)
-        $purpose = ($isGift ? 'Подарочный сертификат №' : 'Заказ №').$payment->id
-            .' | '.($tariff->course->title ?? 'Курс').' - '.$tariff->title;
+        // Инвариант вебхука Точки: purpose обязан начинаться с «Заказ №{id}» —
+        // WebhookController матчит строго /Заказ №(\d+)/. Подарочный префикс рвал
+        // матчинг: paid-переход не наступал и сертификат не выпускался.
+        $purpose = 'Заказ №'.$payment->id
+            .' | '.($isGift ? 'Подарочный сертификат — ' : '')
+            .($tariff->course->title ?? 'Курс').' - '.$tariff->title;
 
         $promoTtlMinutes = config('features.checkout_promo_reservations') && $payment->promo_code_id
             ? PromoCode::PAYMENT_LINK_TTL_MINUTES
