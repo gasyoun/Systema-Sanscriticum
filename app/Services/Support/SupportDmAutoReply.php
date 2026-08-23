@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Support;
 
+use App\Models\MessageTemplate;
 use App\Models\SupportAiReplyEvent;
 use App\Models\SupportAnswerSuggestion;
+use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
@@ -17,10 +19,20 @@ use Illuminate\Support\Facades\Log;
  * кураторам в Telegram. Откат на A: SUPPORT_DM_AUTO_REPLY=false (флаг default OFF).
  *
  * Простое = категории A/B/C с живыми фактами LMS (Zoom / запись / расписание).
- * Деньги (D) и всё без фактов — не отправляем студенту.
+ *
+ * H3380 (рулинг MG 23-08-2026, проба 2 недели на аккаунте rusamskrtam):
+ *  - шаблонные ответы D/E/F: если у категории есть привязанный MessageTemplate
+ *    (S9/H1838) и аккаунт включил auto_reply_enabled, бот отправляет шаблон сам
+ *    (SUPPORT_AUTO_REPLY_TEMPLATES). Прежний запрет «Деньги (D) не автоотвечаем»
+ *    снят ЯВНО владельцем для этого испытания; тексты — выверенные канреплаи
+ *    ревизии H2339, не свободная генерация.
+ *  - ack (SUPPORT_AUTO_ACK): когда автоответить нечем, короткое «приняли,
+ *    ответим в течение рабочего дня», не чаще одного раза в cooldown-окно чата.
+ *  - всё остальное — прежняя подсказка кураторам (hint), студенту молчание.
  *
  * Доставка исходящего — pending + ближайший telegram-support:sync
- * ({@see PendingSupportReplyDrainer}). Отсюда MadelineProto не открываем.
+ * ({@see PendingSupportReplyDrainer}, дрен по аккаунту захода). Отсюда
+ * MadelineProto не открываем.
  */
 final class SupportDmAutoReply
 {
@@ -36,6 +48,14 @@ final class SupportDmAutoReply
         SupportAnswerSuggestion::CATEGORY_RECORDING,
         SupportAnswerSuggestion::CATEGORY_SCHEDULE,
     ];
+
+    /**
+     * Категории с привязанными канреплаями (D/E/F). Автоответ шлёт только
+     * текст выверенного шаблона, а не LLM — потому и разрешён на деньгах.
+     *
+     * @var list<string>
+     */
+    private const TEMPLATE_CATEGORIES = SupportAnswerSuggestion::LLM_CATEGORIES;
 
     public function __construct(
         private readonly SupportAnswerSuggester $suggester,
@@ -81,21 +101,105 @@ final class SupportDmAutoReply
         ) {
             $resolved = $this->facts->resolve($category, $user);
             if ($resolved !== null && trim((string) $resolved['draft']) !== '') {
-                return $this->sendSimple($incoming, $user, $category, (string) $resolved['draft']);
+                return $this->sendAuto($incoming, $user, $category, (string) $resolved['draft'], 'facts');
             }
+        }
+
+        // H3380: шаблонный автоответ D/E/F по привязке S9 — только на аккаунтах
+        // с auto_reply_enabled, поведение основного support-аккаунта не меняется.
+        if ($user !== null
+            && $category !== null
+            && in_array($category, self::TEMPLATE_CATEGORIES, true)
+            && (bool) config('features.support_auto_reply_templates', false)
+            && $this->accountAllowsAutoReply($incoming)
+        ) {
+            $template = MessageTemplate::query()
+                ->boundToSuggesterCategory($category)
+                ->orderByDesc('updated_at')
+                ->first();
+
+            if ($template !== null) {
+                $draft = $template->render($user);
+
+                if (trim($draft) !== '') {
+                    return $this->sendAuto($incoming, $user, $category, $draft, 'template', [
+                        'template_id' => $template->id,
+                        'template_title' => $template->title,
+                    ]);
+                }
+            }
+        }
+
+        // H3380: ack «приняли, ответим», когда автоответить нечем. Раз в
+        // cooldown-окно на чат: серия сообщений студента не плодит серию болванок.
+        // Без linked-пользователя очередь не построить — только hint.
+        if ($user !== null && $this->ackEnabledFor($incoming)) {
+            return $this->sendAuto(
+                $incoming,
+                $user,
+                $category,
+                (string) config(
+                    'services.telegram_support.auto_ack_text',
+                    "Намасте!\n\nПолучили ваше сообщение и уже разбираемся. Ответим в течение рабочего дня.",
+                ),
+                'ack',
+            );
         }
 
         return $this->hintComplex($incoming, $user, $category, $text);
     }
 
     /**
-     * @return array{status: string, category: string}
+     * Ack включён и уместен: флаг, аккаунт, привязанный студент и ни одного
+     * исходящего в чате внутри cooldown-окна (свежий человеческий ответ
+     * снимает необходимость ack'а).
      */
-    private function sendSimple(
+    private function ackEnabledFor(TelegramSupportMessage $incoming): bool
+    {
+        if (! (bool) config('features.support_auto_ack', false)) {
+            return false;
+        }
+
+        if (! $this->accountAllowsAutoReply($incoming)) {
+            return false;
+        }
+
+        $hours = max(1, (int) config('services.telegram_support.auto_ack_cooldown_hours', 6));
+
+        $recentOutgoing = TelegramSupportMessage::query()
+            ->where('telegram_chat_id', $incoming->telegram_chat_id)
+            ->where('direction', 'outgoing')
+            ->where('sent_at', '>=', now()->subHours($hours))
+            ->exists();
+
+        return ! $recentOutgoing;
+    }
+
+    /**
+     * Разрешает ли этот конкретный аккаунт автоответы (колонка H3380).
+     */
+    private function accountAllowsAutoReply(TelegramSupportMessage $incoming): bool
+    {
+        /** @var TelegramSupportAccount|null $account */
+        $account = TelegramSupportAccount::query()->find($incoming->telegram_support_account_id);
+
+        return $account !== null && (bool) $account->auto_reply_enabled;
+    }
+
+    /**
+     * Поставить pending-исходящее и записать событие. $kind различает
+     * facts / template / ack в meta одного события dm_auto_sent.
+     *
+     * @param  array<string, mixed>  $metaExtra
+     * @return array{status: string, category: ?string}
+     */
+    private function sendAuto(
         TelegramSupportMessage $incoming,
         User $user,
-        string $category,
+        ?string $category,
         string $draft,
+        string $kind,
+        array $metaExtra = [],
     ): array {
         $outgoing = $this->replies->queueAiReply(
             $user,
@@ -107,6 +211,7 @@ final class SupportDmAutoReply
             Log::warning('SupportDmAutoReply: не удалось поставить pending исходящее', [
                 'user_id' => $user->id,
                 'incoming_id' => $incoming->id,
+                'kind' => $kind,
             ]);
 
             return $this->hintComplex($incoming, $user, $category, (string) $incoming->text);
@@ -117,8 +222,10 @@ final class SupportDmAutoReply
             'event_type' => self::EVENT_SENT,
             'meta' => [
                 'via' => self::VIA,
+                'kind' => $kind,
                 'category' => $category,
                 'source_telegram_message_id' => (int) $incoming->telegram_message_id,
+                ...$metaExtra,
             ],
         ]);
 
