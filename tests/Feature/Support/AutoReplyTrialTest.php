@@ -275,7 +275,7 @@ class AutoReplyTrialTest extends TestCase
                 'sent_at' => now()->subDays(30 - $i),
             ]);
 
-            $result = app(\App\Services\Support\SupportDmAutoReply::class)->handle($stale, $user->id, 'private');
+            $result = app(SupportDmAutoReply::class)->handle($stale, $user->id, 'private');
             $this->assertSame('stale_skip', $result['status']);
         }
 
@@ -284,7 +284,7 @@ class AutoReplyTrialTest extends TestCase
 
         // А свежее сообщение в том же чате отвечает как обычно.
         $fresh = $this->incoming($user, 'сколько стоит курс и как оплатить', $account);
-        $result = app(\App\Services\Support\SupportDmAutoReply::class)->handle($fresh, $user->id, 'private');
+        $result = app(SupportDmAutoReply::class)->handle($fresh, $user->id, 'private');
         $this->assertSame('sent', $result['status']);
     }
 
