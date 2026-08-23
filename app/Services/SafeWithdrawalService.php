@@ -104,11 +104,15 @@ final class SafeWithdrawalService
         $staff = $this->contour->staffPayees();
         $staffMonthly = 0.0;
         $staffStale = [];
+        $activeNames = (array) config('safe_withdrawal.staff_active_names', []);
         foreach ($staff['payees'] as $p) {
             if ($p['category'] !== 'персонал' || $p['monthly_rate'] === null) {
                 continue;
             }
-            if ((int) $p['silent_months'] >= 2) {
+            $alwaysActive = collect($activeNames)->contains(
+                fn (string $needle) => $needle !== '' && mb_stripos((string) $p['name'], $needle) !== false
+            );
+            if ((int) $p['silent_months'] >= 2 && ! $alwaysActive) {
                 $staffStale[] = $p['name'];
 
                 continue;
