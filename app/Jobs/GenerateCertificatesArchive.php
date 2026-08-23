@@ -114,19 +114,22 @@ class GenerateCertificatesArchive implements ShouldBeUnique, ShouldQueue
         // operationId is serialized with the job, so a Redis redelivery reuses
         // the same output instead of creating a second archive and notification.
         $fileName = 'certificates_group_'.$this->groupId.'_'.$this->operationId.'.zip';
+        // H3310: приватный диск вместо storage/app/public/archives. UUID в имени
+        // — не секрет: ссылку /storage/archives/... угадать нельзя, но подсмотреть
+        // (логи, шаринги, история браузера) можно. Архив с персональными
+        // сертификатами отдаёт только staff-маршрут force-download.
         $relativePath = 'archives/'.$fileName;
-        // Сохраняем в storage/app/public/archives
-        $zipPath = Storage::disk('public')->path($relativePath);
+        $zipPath = Storage::disk('local')->path($relativePath);
         $temporaryZipPath = $zipPath.'.tmp';
 
-        if (Storage::disk('public')->exists($relativePath)) {
+        if (Storage::disk('local')->exists($relativePath)) {
             $this->notifyArchiveReady($group, $certificates->count(), $fileName);
 
             return;
         }
 
         // Создаем папку если нет
-        Storage::disk('public')->makeDirectory('archives');
+        Storage::disk('local')->makeDirectory('archives');
 
         $zip = new ZipArchive;
         // Раньше сборка шла в `if (open === true) { ... }`, а уведомление «Архив
@@ -138,7 +141,9 @@ class GenerateCertificatesArchive implements ShouldBeUnique, ShouldQueue
             throw new \RuntimeException("Не удалось создать ZIP-архив: {$temporaryZipPath}");
         }
 
-        $service = new CertificateService;
+        // Через контейнер, а не `new`: тесты подменяют генератор PDF свапом,
+        // не гоняя DomPDF и внешний QR-сервис в каждом прогоне.
+        $service = app(CertificateService::class);
 
         foreach ($certificates as $cert) {
             try {

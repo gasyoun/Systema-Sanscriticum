@@ -39,7 +39,10 @@ class ListUsers extends ListRecords
                     FileUpload::make('csv_file')
                         ->label('Файл CSV')
                         ->acceptedFileTypes(['text/csv', 'text/plain', 'application/vnd.ms-excel'])
-                        ->disk('public')
+                        // H3310: приватный диск. В CSV — имена, email и
+                        // дефолтные пароли; на disk('public') файл в окне
+                        // импорта был доступен всем по /storage/imports/...
+                        ->disk('local')
                         ->directory('imports')
                         ->required()
                         // --- КНОПКА СКАЧИВАНИЯ ШАБЛОНА ---
@@ -56,71 +59,7 @@ class ListUsers extends ListRecords
                                 })
                         ),
                 ])
-                ->action(function (array $data) {
-                    // 1. Получаем путь к файлу
-                    $fileData = $data['csv_file'];
-                    $pathString = is_array($fileData) ? reset($fileData) : $fileData;
-
-                    // ПОЛУЧАЕМ ПРАВИЛЬНЫЙ ПОЛНЫЙ ПУТЬ С ДИСКА PUBLIC
-                    $filePath = Storage::disk('public')->path($pathString);
-
-                    // 2. Читаем файл
-                    if (! file_exists($filePath)) {
-                        Notification::make()
-                            ->title('Ошибка')
-                            ->body('Файл не найден. Попробуйте еще раз.')
-                            ->danger()
-                            ->send();
-
-                        return;
-                    }
-
-                    $file = fopen($filePath, 'r');
-                    $importedCount = 0;
-                    $firstRow = true;
-
-                    while (($row = fgetcsv($file, 1000, ',')) !== false) {
-                        if ($firstRow) {
-                            $firstRow = false;
-                            if (strtolower(trim($row[0])) === 'name' || strtolower(trim($row[0])) === 'имя') {
-                                continue;
-                            }
-                        }
-
-                        $name = $row[0] ?? null;
-                        $email = $row[1] ?? null;
-
-                        if ($name && $email && str_contains($email, '@')) {
-                            $cleanEmail = trim($email);
-                            $cleanName = trim($name);
-
-                            // Создаем или находим
-                            $user = User::firstOrCreate(
-                                ['email' => $cleanEmail],
-                                [
-                                    'name' => $cleanName,
-                                    'password' => Hash::make('sanskrit108'),
-                                ]
-                            );
-
-                            // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Проверяем, выбрана ли группа ---
-                            if (! empty($data['group_id'])) {
-                                $user->groups()->syncWithoutDetaching([$data['group_id']]);
-                            }
-
-                            $importedCount++;
-                        }
-                    }
-
-                    fclose($file);
-                    Storage::disk('public')->delete($pathString);
-
-                    Notification::make()
-                        ->title('Импорт завершен')
-                        ->body("Обработано студентов: $importedCount")
-                        ->success()
-                        ->send();
-                }),
+                ->action(fn (array $data) => $this->importFromCsv($data)),
 
             Actions\ExportAction::make('exportConnectedBot')
                 ->label('Экспорт подключивших бота')
@@ -136,5 +75,76 @@ class ListUsers extends ListRecords
 
             Actions\CreateAction::make(),
         ];
+    }
+
+    /**
+     * Читает CSV с приватного диска (H3310) и создаёт пользователей.
+     * Семантика прежняя, диск сменился public → local вместе с полем формы.
+     */
+    public function importFromCsv(array $data): int
+    {
+        // Путь к файлу: FileUpload без storeFiles(false) кладёт строку пути,
+        // но на всякий случай разворачиваем и массив — так было и раньше.
+        $fileData = $data['csv_file'];
+        $pathString = is_array($fileData) ? reset($fileData) : $fileData;
+
+        $filePath = Storage::disk('local')->path((string) $pathString);
+
+        if (! file_exists($filePath)) {
+            Notification::make()
+                ->title('Ошибка')
+                ->body('Файл не найден. Попробуйте еще раз.')
+                ->danger()
+                ->send();
+
+            return 0;
+        }
+
+        $file = fopen($filePath, 'r');
+        $importedCount = 0;
+        $firstRow = true;
+
+        while (($row = fgetcsv($file, 1000, ',')) !== false) {
+            if ($firstRow) {
+                $firstRow = false;
+                if (strtolower(trim($row[0])) === 'name' || strtolower(trim($row[0])) === 'имя') {
+                    continue;
+                }
+            }
+
+            $name = $row[0] ?? null;
+            $email = $row[1] ?? null;
+
+            if ($name && $email && str_contains($email, '@')) {
+                $cleanEmail = trim($email);
+                $cleanName = trim($name);
+
+                // Создаем или находим
+                $user = User::firstOrCreate(
+                    ['email' => $cleanEmail],
+                    [
+                        'name' => $cleanName,
+                        'password' => Hash::make('sanskrit108'),
+                    ]
+                );
+
+                if (! empty($data['group_id'])) {
+                    $user->groups()->syncWithoutDetaching([$data['group_id']]);
+                }
+
+                $importedCount++;
+            }
+        }
+
+        fclose($file);
+        Storage::disk('local')->delete((string) $pathString);
+
+        Notification::make()
+            ->title('Импорт завершен')
+            ->body("Обработано студентов: $importedCount")
+            ->success()
+            ->send();
+
+        return $importedCount;
     }
 }

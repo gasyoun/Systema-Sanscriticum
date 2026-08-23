@@ -34,7 +34,7 @@ return [
         'public/lesson-materials' => (int) env('STORAGE_WATCH_LESSON_MATERIALS_MB', 5000),
         'homework' => (int) env('STORAGE_WATCH_HOMEWORK_MB', 2000),
         'public/subscriber-magnets' => (int) env('STORAGE_WATCH_MAGNETS_MB', 500),
-        'public/archives' => (int) env('STORAGE_WATCH_ARCHIVES_MB', 500),
+        'archives' => (int) env('STORAGE_WATCH_ARCHIVES_MB', 500),
         'lectures' => (int) env('STORAGE_WATCH_LECTURES_MB', 500),
     ],
 
