@@ -44,7 +44,13 @@ class SafeWithdrawalServiceTest extends TestCase
     public function formula_rows_compute_and_money_tables_untouched(): void
     {
         $this->fakeBank(500000.0);
-        config(['safe_withdrawal.opex_monthly_override' => 30000]);
+        config([
+            'safe_withdrawal.opex_monthly_override' => 30000,
+            // Оверрайд по несуществующему в LMS получателю — должен добавиться целиком.
+            'safe_withdrawal.staff_overrides' => [
+                ['match' => 'Тестовый Оверрайд', 'monthly' => 25000.0],
+            ],
+        ]);
 
         // Персонал: единственная сотрудница со ставкой 60 000/мес.
         $staff = User::factory()->create(['name' => 'Сотрудница Фикстура']);
@@ -80,8 +86,9 @@ class SafeWithdrawalServiceTest extends TestCase
         // Балансы.
         $this->assertSame(500000.0, $sw['balance_total']);
 
-        // Обязательства: персонал 60 000 × ceil(60/30)=2 мес; opex override 30 000 × 2.
-        $this->assertSame(120000.0, $sw['obligations']['staff_total']);
+        // Обязательства: персонал 60 000 × ceil(60/30)=2 мес + оверрайд 25 000 × 2; opex override 30 000 × 2.
+        $this->assertSame(round(60000.0 * 2 + 25000.0 * 2, 2), $sw['obligations']['staff_total']);
+        $this->assertSame(25000.0, $sw['obligations']['staff_overrides_monthly']);
         $this->assertSame(60000.0, $sw['obligations']['opex_total']);
         $this->assertGreaterThan(0.0, $sw['obligations']['teachers_rub']);
         $this->assertGreaterThan(180000.0, $sw['obligations']['total']);
@@ -90,25 +97,25 @@ class SafeWithdrawalServiceTest extends TestCase
         $this->assertSame(200000.0, $sw['taxes']['usn_qtd_revenue']);
         $this->assertSame(12000.0, $sw['taxes']['usn_reserve']);
 
-        // НДФЛ: 13% × 60 000 × 2 = 15 600.
-        $this->assertSame(15600.0, $sw['taxes']['ndfl']);
+        // НДФЛ: 13% × (60 000 LMS + 25 000 оверрайд) × 2 = 22 100.
+        $this->assertSame(22100.0, $sw['taxes']['ndfl']);
 
-        // Взносы за сотрудницу: 30% схема = 36 000; МСП = (МРОТ×30% + (60т−МРОТ)×15%)×2.
+        // Взносы за сотрудницу: 30% схема от 85 000 × 2 = 51 000; МСП ниже.
         $mrot = (float) config('safe_withdrawal.mrot_monthly');
-        $this->assertSame(36000.0, $sw['taxes']['insurance_general']);
-        $this->assertSame(round(($mrot * 0.30 + (60000 - $mrot) * 0.15) * 2, 2), $sw['taxes']['insurance_msp']);
+        $this->assertSame(51000.0, $sw['taxes']['insurance_general']);
+        $this->assertSame(round(($mrot * 0.30 + (85000 - $mrot) * 0.15) * 2, 2), $sw['taxes']['insurance_msp']);
         $this->assertLessThan($sw['taxes']['insurance_general'], $sw['taxes']['insurance_msp']);
 
         // ИП фикс: yearly/12 × 2 мес.
         $this->assertSame(round((float) config('safe_withdrawal.ip_fixed_yearly') / 12 * 2, 2), $sw['taxes']['ip_fixed']);
 
-        // Операционный резерв: активные оттоки (персонал 60 000 + opex override 30 000) × 1 мес.
-        $this->assertSame(90000.0, $sw['op_reserve']['total']);
+        // Операционный резерв: активные оттоки (персонал 60 000 + оверрайд 25 000 + opex override 30 000) × 1 мес.
+        $this->assertSame(115000.0, $sw['op_reserve']['total']);
 
         // Доступно = баланс − обязательства − УСН − НДФЛ − взносы(схема) − ИП − резерв.
         $expectedGeneral = 500000.0
-            - ($sw['obligations']['teachers_rub'] + 120000.0 + 60000.0)
-            - 12000.0 - 15600.0 - 36000.0 - $sw['taxes']['ip_fixed'] - 90000.0;
+            - ($sw['obligations']['teachers_rub'] + (60000.0 * 2 + 25000.0 * 2) + 60000.0)
+            - 12000.0 - 22100.0 - 51000.0 - $sw['taxes']['ip_fixed'] - 115000.0;
         $this->assertEqualsWithDelta($expectedGeneral, $sw['available_general'], 0.01);
         $this->assertGreaterThan($sw['available_general'], $sw['available_msp']); // МСП дешевле
 

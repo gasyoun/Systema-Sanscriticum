@@ -27,6 +27,22 @@ return [
         ->filter()
         ->all(),
 
+    // Постоянный штат с оплатой мимо LMS (источник — ручной реестр Марии,
+    // скрапится ежемесячно). Перекрывает LMS-ставку при совпадении подстроки
+    // и добавляет тех, кого в LMS нет вовсе. Цифры — по реестру за июль 2026;
+    // править здесь или через SAFE_WITHDRAWAL_STAFF_OVERRIDES (JSON).
+    'staff_overrides' => json_decode(
+        (string) env('SAFE_WITHDRAWAL_STAFF_OVERRIDES',
+            json_encode([
+                ['match' => 'Ильюшина', 'monthly' => 30000.0],
+                ['match' => 'Кравченко', 'monthly' => 26511.93],
+                ['match' => 'Кузнецова', 'monthly' => 60000.0],
+                ['match' => 'Головченко', 'monthly' => 26010.0],
+            ], JSON_UNESCAPED_UNICODE)
+        ) ?: '[]',
+        true
+    ),
+
     // УСН «доходы», ставка налога.
     'usn_rate' => (float) env('SAFE_WITHDRAWAL_USN_RATE', 0.06),
 
