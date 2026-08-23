@@ -31,6 +31,7 @@ use App\Http\Controllers\GrammarLabPilotController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\InstituteController;
+use App\Http\Controllers\InstituteDonateController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LlmsTxtController;
@@ -435,6 +436,12 @@ Route::post('/institut/zayavka', [InstituteController::class, 'apply'])
 // Меценаты Института — страница добровольных пожертвований (ст. 582 ГК,
 // свободная сумма, без встречного пакета благ; реквизиты — config/institute.php).
 Route::view('/mecenaty', 'institute.mecenaty')->name('institute.mecenaty');
+
+// Онлайн-приём пожертвований через Точку (план института N2). Контроллер сам
+// 404-ит при institute.donations_enabled=false — тёмный деплой безопасен.
+Route::post('/mecenaty/donate', [InstituteDonateController::class, 'donate'])
+    ->middleware('throttle:6,1')
+    ->name('institute.donate');
 
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {

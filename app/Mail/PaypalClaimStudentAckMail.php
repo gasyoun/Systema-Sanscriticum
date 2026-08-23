@@ -34,7 +34,7 @@ class PaypalClaimStudentAckMail extends Mailable implements ShouldQueue
     {
         return new Envelope(
             subject: $this->payment->isAutoTrustedPaypal()
-                ? 'Заявка получена — доступ уже открыт'
+                ? 'Заявка получена — доступ открыт'
                 : 'Заявка получена — сверяем ваш платеж PayPal',
         );
     }
