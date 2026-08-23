@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDonationRequest;
+use App\Models\DonationGratitude;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\AttributionService;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 
 /**
  * Онлайн-приём пожертвований на /mecenaty через Точку (план института N2,
@@ -28,11 +30,32 @@ use Illuminate\Validation\ValidationException;
  */
 final class InstituteDonateController extends Controller
 {
+    /**
+     * Страница /mecenaty: вступление, форма онлайн-взноса (при включённом
+     * флаге), реквизиты и публичный реестр благодарностей (N3).
+     */
+    public function page(): View
+    {
+        return view('institute.mecenaty', [
+            'gratitudes' => DonationGratitude::query()->publicList()->get(),
+        ]);
+    }
+
     public function donate(StoreDonationRequest $request, TochkaPaymentService $tochka): RedirectResponse
     {
         abort_unless((bool) config('institute.donations_enabled'), 404);
 
         $amount = (int) $request->validated('amount');
+
+        // Благодарность (N3): согласие фиксируем вместе с платежом — строка
+        // реестра появится только после фактической оплаты (processDonationGratitude).
+        $claimMeta = [];
+        if ($request->boolean('gratitude_consent') && filled($request->input('gratitude_name'))) {
+            $claimMeta['gratitude'] = [
+                'consent' => true,
+                'name' => trim((string) $request->input('gratitude_name')),
+            ];
+        }
 
         // Резолв пользователя — вне транзакции: может бросить ValidationException
         // (гость указал email уже существующего аккаунта).
@@ -47,6 +70,7 @@ final class InstituteDonateController extends Controller
             'amount' => $amount,
             'tariff' => 'donation',
             'status' => 'pending',
+            'claim_meta' => $claimMeta,
         ]));
 
         // Purpose обязан содержать «Заказ №{id}» — иначе вебхук Точки
