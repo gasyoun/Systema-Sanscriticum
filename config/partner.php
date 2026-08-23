@@ -24,9 +24,16 @@ return [
     'enabled' => (bool) env('PARTNER_PROGRAM_ENABLED', false),
 
     // Фиксированное вознаграждение (₽) за одного приведённого клиента, впервые
-    // оплатившего курс. Может быть переопределено на конкретном партнёре
-    // (partners.reward_amount_override) — напр. для особых условий.
+    // оплатившего курс. Действует, когда reward_percent = 0. Может быть
+    // переопределено на конкретном партнёре (partners.reward_amount_override) —
+    // напр. для особых условий.
     'reward_amount' => (float) env('PARTNER_REWARD_AMOUNT', 1000),
+
+    // Процент от первого реального платежа приведённого клиента вместо фикса
+    // (решение MG 23-08 для программы со студиями: 10 %). > 0 — проценты
+    // вытесняют фиксированную ставку; персональный override партнёра сильнее
+    // обоих. Округление до копеек.
+    'reward_percent' => (float) env('PARTNER_REWARD_PERCENT', 0),
 
     // Общий секрет API внешнего Telegram-бота (X-Partner-Bot-Secret).
     // Обязателен при PARTNER_PROGRAM_ENABLED=true; пустой → endpoint 503.

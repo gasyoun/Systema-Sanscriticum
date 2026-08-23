@@ -90,7 +90,13 @@ class PartnerResource extends Resource
                     Forms\Components\TextInput::make('reward_amount_override')
                         ->label('Индивидуальная ставка, ₽')
                         ->numeric()
-                        ->helperText('Пусто — используется глобальная ставка из config/partner.php ('.(int) config('partner.reward_amount', 1000).' ₽).'),
+                        ->helperText(function (): string {
+                            $percent = (float) config('partner.reward_percent', 0);
+
+                            return $percent > 0
+                                ? sprintf('Пусто — действует глобальный процент %.1f%% от первого платежа. Заполните поле, чтобы закрепить партнёру фикс вместо процента.', $percent)
+                                : 'Пусто — используется глобальная ставка из config/partner.php ('.(int) config('partner.reward_amount', 1000).' ₽).';
+                        }),
                     Forms\Components\TextInput::make('payout_method')->label('Способ выплаты')->placeholder('карта / СБП'),
                     Forms\Components\Textarea::make('payout_details')->label('Реквизиты')->rows(2)->columnSpanFull(),
                     Forms\Components\Textarea::make('notes')->label('Заметки')->rows(2)->columnSpanFull(),

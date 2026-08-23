@@ -30,6 +30,7 @@ class PartnerController extends Controller
 
         return view('partners.landing', [
             'reward' => (float) config('partner.reward_amount', 1000),
+            'rewardPercent' => (float) config('partner.reward_percent', 0),
             'fromBot' => $request->query('src') === 'bot',
         ]);
     }
@@ -104,6 +105,7 @@ class PartnerController extends Controller
         return view('partners.registered', [
             'partner' => $partner,
             'reward' => $partner->rewardAmount(),
+            'rewardPercent' => (float) config('partner.reward_percent', 0),
             'justRegistered' => (bool) $request->session()->get('partner_just_registered', false),
         ]);
     }

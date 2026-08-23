@@ -89,6 +89,26 @@ class Partner extends Model
         return (float) config('partner.reward_amount', 1000);
     }
 
+    /**
+     * Вознаграждение за КОНКРЕТНЫЙ платёж приведённого клиента (решение MG
+     * 23-08, вариант А): персональный override сильнее всего; иначе глобальный
+     * процент от суммы платежа (partner.reward_percent > 0); иначе фикс.
+     */
+    public function rewardForPaymentAmount(float $paymentAmount): float
+    {
+        if (filled($this->reward_amount_override) && (float) $this->reward_amount_override > 0) {
+            return (float) $this->reward_amount_override;
+        }
+
+        $percent = (float) config('partner.reward_percent', 0);
+
+        if ($percent > 0) {
+            return round($paymentAmount * $percent / 100, 2);
+        }
+
+        return $this->rewardAmount();
+    }
+
     /** Публичная партнёрская ссылка: last-touch атрибуция клиента по коду. */
     public function referralLink(): string
     {

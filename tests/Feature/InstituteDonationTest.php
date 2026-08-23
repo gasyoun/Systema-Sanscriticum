@@ -45,7 +45,21 @@ class InstituteDonationTest extends TestCase
         $this->get('/mecenaty')
             ->assertOk()
             ->assertSee('Свободная сумма')
-            ->assertSee(route('institute.donate'));
+            ->assertSee(route('institute.donate'))
+            // Ратифицированные MG 23-08 пресеты.
+            ->assertSee('500 ₽')
+            ->assertSee('2 000 ₽')
+            ->assertSee('5 000 ₽');
+    }
+
+    public function test_flag_on_keeps_requisites_block_for_offline_donors(): void
+    {
+        config(['institute.donations_enabled' => true]);
+
+        $this->get('/mecenaty')
+            ->assertOk()
+            ->assertSee('Перевод по реквизитам')
+            ->assertSee('Назначение платежа');
     }
 
     public function test_guest_donation_creates_pending_payment_and_redirects_to_tochka(): void

@@ -82,13 +82,14 @@
                 Поддержать
             </button>
         </form>
-    @else
-        <div class="rounded-xl border border-slate-700 p-4 mb-6 text-slate-200 space-y-2">
-            <p>Перевод по реквизитам ИП Гасунс М. Ю.:</p>
-            <p class="whitespace-pre-line font-mono text-sm">{{ config('institute.donate_requisites') }}</p>
-            <p class="text-sm text-slate-400">Назначение платежа: «Добровольное пожертвование».</p>
-        </div>
     @endif
+
+    {{-- Реквизиты остаются рядом и при онлайн-приёме: офлайн-доноры никуда не деваются. --}}
+    <div class="rounded-xl border border-slate-700 p-4 mb-6 text-slate-200 space-y-2">
+        <p>Перевод по реквизитам ИП Гасунс М. Ю.:</p>
+        <p class="whitespace-pre-line font-mono text-sm">{{ config('institute.donate_requisites') }}</p>
+        <p class="text-sm text-slate-400">Назначение платежа: «Добровольное пожертвование».</p>
+    </div>
 
     @if($gratitudes->isNotEmpty())
         <h2 class="text-xl font-bold text-white mb-3">Благодарности меценатам</h2>

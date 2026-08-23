@@ -66,7 +66,12 @@
                 </div>
                 <div class="rounded-xl bg-gray-50 py-3">
                     <div class="text-xs text-gray-500 mb-1">Вознаграждение за клиента</div>
-                    <div class="text-lg font-extrabold text-brand">{{ number_format($reward, 0, '.', ' ') }} ₽</div>
+                    @if($rewardPercent > 0)
+                        <div class="text-lg font-extrabold text-brand">{{ str_replace('.', ',', rtrim(rtrim(number_format($rewardPercent, 1, '.', ''), '0'), '.')) }} %</div>
+                        <div class="text-xs text-gray-500">от первого платежа</div>
+                    @else
+                        <div class="text-lg font-extrabold text-brand">{{ number_format($reward, 0, '.', ' ') }} ₽</div>
+                    @endif
                 </div>
             </div>
         </div>
