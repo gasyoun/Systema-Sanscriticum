@@ -24,7 +24,7 @@ class ClassifierPrecisionTest extends TestCase
     /** @return array<int, array{t: string, cat: ?string}> */
     private function corpus(): array
     {
-        $raw = file_get_contents(__DIR__.'/../../Fixtures/Support/classifier_corpus_2026_08.json');
+        $raw = file_get_contents(__DIR__.'/../../fixtures/Support/classifier_corpus_2026_08.json');
         $decoded = json_decode((string) $raw, true, 512, JSON_THROW_ON_ERROR);
 
         return $decoded['cases'];
