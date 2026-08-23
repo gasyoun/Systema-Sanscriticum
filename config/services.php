@@ -165,6 +165,13 @@ return [
         // the same DC and, on a transient stall, dies at 120 s again (H2988:
         // 18 kills / ~100 min). 0 disables the skip. Does not raise the ceiling.
         'sync_timeout_cooldown_seconds' => (int) env('TELEGRAM_SUPPORT_SYNC_TIMEOUT_COOLDOWN_SECONDS', 600),
+        // H3380: текст ack'а автоответчика («приняли, ответим») и cooldown-окно
+        // в часах: пока в чате есть исходящее моложе окна, ack не шлётся.
+        'auto_ack_text' => env(
+            'TELEGRAM_SUPPORT_AUTO_ACK_TEXT',
+            "Намасте!\n\nПолучили ваше сообщение и уже разбираемся. Ответим в течение рабочего дня.",
+        ),
+        'auto_ack_cooldown_hours' => (int) env('TELEGRAM_SUPPORT_AUTO_ACK_COOLDOWN_HOURS', 6),
         // Auto-heal IPC hang (01.08.2026): healthcheck → recover (kill worker,
         // clear ipc/locks, unlock madeline-session, one sync). Default OFF —
         // flip TELEGRAM_SUPPORT_AUTO_HEAL=true on prod after smoke.

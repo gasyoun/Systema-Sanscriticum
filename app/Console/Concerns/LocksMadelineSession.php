@@ -2,6 +2,7 @@
 
 namespace App\Console\Concerns;
 
+use App\Services\Telegram\MadelineSessionContext;
 use App\Services\Telegram\MadelineSyncWatchdog;
 use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -18,6 +19,11 @@ use Illuminate\Support\Facades\Cache;
  * cross-command lock prevents that race. Laravel's own ->withoutOverlapping()
  * only guards a command against ITSELF, not against a different command that
  * shares the session — which is exactly how the two daemons appeared on prod.
+ *
+ * H3380: имя замка пер-сессийное ({@see MadelineSessionContext::lockName()}).
+ * Для легаси-сессии по умолчанию это прежний 'madeline-session' — сериализация
+ * support-sync ↔ harvest-sync не меняется. Второй аккаунт (rusamskrtam) получает
+ * собственный замок и НЕ спорит с первым о владении.
  */
 trait LocksMadelineSession
 {
@@ -41,7 +47,7 @@ trait LocksMadelineSession
      */
     protected function withMadelineSessionLock(callable $work, int $wait = 5): mixed
     {
-        $lock = $this->madelineSessionLock = Cache::lock('madeline-session', 900);
+        $lock = $this->madelineSessionLock = Cache::lock(MadelineSessionContext::lockName(), 900);
 
         try {
             $lock->block($wait);
