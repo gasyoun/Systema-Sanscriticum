@@ -16,6 +16,7 @@ use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CallbackRequestController;
 use App\Http\Controllers\CertificateRegistryController;
 use App\Http\Controllers\CertificateVerificationController;
+use App\Http\Controllers\GiftCertificateController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CompanyInvoiceController;
 use App\Http\Controllers\DebtPaymentController;
@@ -1055,6 +1056,22 @@ Route::get('/sertifikaty', function () {
 
     return redirect('/sertifikat'.($query ? '?'.$query : ''), 301);
 });
+
+// --- ПОДАРОЧНЫЕ СЕРТИФИКАТЫ (H3334) ---
+// ВАЖНО: до catch-all /{slug}. Каждая поверхность самогейтится флагом
+// features.gift_certificates (404 при OFF — см. GiftCertificateController).
+// Активация — только для залогиненных (доступ открывается конкретному юзеру);
+// POST троттлится против перебора кодов; верификация публична, как /verify/{number}.
+Route::get('/gift/activate', [GiftCertificateController::class, 'showActivate'])
+    ->name('gift.activate');
+Route::post('/gift/activate', [GiftCertificateController::class, 'activate'])
+    ->middleware('throttle:10,1')
+    ->name('gift.activate.attempt');
+Route::get('/gift/verify/{number}', [GiftCertificateController::class, 'verify'])
+    ->name('gift.verify');
+Route::get('/gift/{certificate}/download', [GiftCertificateController::class, 'download'])
+    ->middleware(['auth', 'throttle:10,1'])
+    ->name('gift.download');
 
 // --- КОРОТКАЯ ССЫЛКА НА КАРТОЧКУ СТУДЕНТА (для заметок в Telegram-контактах) ---
 // ВАЖНО: до catch-all /{slug}. Префикс /u (а не /s — тот занят блогом, prefix('s')).

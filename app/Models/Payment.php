@@ -11,6 +11,7 @@ use App\Mail\TrialZoomLinkMail;
 use App\Models\Concerns\TracksBlame;
 use App\Services\BlockAccessMaterializer;
 use App\Services\CuratorNotifier;
+use App\Services\GiftCertificateService;
 use App\Services\GrammarLab\GrammarLabEntitlementService;
 use App\Services\Membership\ClubMembershipService;
 use App\Services\Messaging\DeliveryChannelManager;
@@ -274,6 +275,17 @@ class Payment extends Model
         return $this->provider === self::PROVIDER_PAYPAL;
     }
 
+    /**
+     * Покупка подарочного сертификата (H3334): деньги записаны, но доступ
+     * покупателю НЕ открывается — вместо этого выпускается одноразовый код
+     * активации получателю. Отдельный процессор в fireOnPaid (как deposit/
+     * trial/marathon), чтобы штатный grantAccess покупателя в группы не добавлял.
+     */
+    public function isGiftCertificate(): bool
+    {
+        return $this->tariff === 'gift';
+    }
+
     /** Счёт на оплату юрлицу / ИП (безнал), ожидает ручной сверки. */
     public function isCompanyInvoice(): bool
     {
@@ -412,6 +424,7 @@ class Payment extends Model
             $this->isTrial() => '🎟 Пробное занятие',
             $this->isExpense() => '💸 Технический расход / возврат',
             $this->isSalaryPayout() => '👨‍🏫 Выплата преподавателю',
+            $this->isGiftCertificate() => '🎁 Подарочный сертификат',
             $this->tariff === 'full' => 'Весь курс',
             default => $this->blockLabel(),
         };
@@ -623,6 +636,12 @@ class Payment extends Model
                     // после отката основного платежа.
                     app(BlockAccessMaterializer::class)->removeSiblingsOf($payment);
                     $payment->reconcileAccessAfterReversal();
+
+                    // H3334: неактивированный подарочный сертификат отзывается,
+                    // если оплата за него вернулась. Уже активированный не трогаем.
+                    if ($payment->isGiftCertificate()) {
+                        app(GiftCertificateService::class)->revokeForPayment($payment);
+                    }
                 }
             }
         });
@@ -681,6 +700,15 @@ class Payment extends Model
         // помечает энрол оплаченным (H471). course_id у такого платежа нет.
         if ($payment->isMarathonPaid()) {
             $payment->processMarathonPaid();
+
+            return;
+        }
+
+        // Подарочный сертификат (H3334): доступ покупателю не открываем —
+        // выпускаем одноразовый код; доступ получит активировавший по тарифной
+        // модели (см. GiftCertificateService::redeem).
+        if ($payment->isGiftCertificate()) {
+            $payment->processGiftCertificate();
 
             return;
         }
@@ -992,6 +1020,18 @@ class Payment extends Model
         }
 
         app(CuratorNotifier::class)->paymentPaid($this);
+    }
+
+    /**
+     * Подарочный сертификат (H3334) — отдельный путь: доступ покупателю НЕ
+     * открывается (никаких групп/писем-доступа/праны за «покупку курса»).
+     * Вместо этого выпускается GiftCertificate с одноразовым хэшированным
+     * кодом; сырой код уходит покупателю одним письмом с PDF.
+     * Идемпотентно: повторный paid-переход не перегенерирует код.
+     */
+    public function processGiftCertificate(): void
+    {
+        app(GiftCertificateService::class)->issueForPayment($this);
     }
 
     /**
