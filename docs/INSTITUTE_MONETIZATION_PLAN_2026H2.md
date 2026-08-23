@@ -119,6 +119,11 @@ U1 ✅ · U2 ✅ витрина жива: [/institut](https://samskrte.ru/instit
 | N4 ✅ механика | партнёрская программа со студиями: захват `?pref=CODE` + `PartnerService` + Filament-админка партнёров; процент в коде (`partners.reward_percent`, приоритетнее фикс-ставки) | ✅ ратифицирована MG 23-08 схема **А: 10 % первого платежа** приведённого ученика ([меморандум](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PARTNER_PROGRAM_STUDIOS_OPTIONS_2026-08.md)); конкретные партнёрские записи заводит MG в Filament при подключении студий |
 | N5 ✅ сборка | платная запись открытых лекций поверх единственной RecordingAccessPolicy — [PR #2016 слит](https://github.com/gasyoun/Systema-Sanscriticum/pull/2016): живьём бесплатно всем, запись бесплатна при любом платном членстве, неплатный покупает как обычный тариф; только курсы из `INSTITUTE_LECTURE_COURSE_IDS`, тот же staged-конвейер | ✅ цена ратифицирована MG 23-08 («закрываю все 4 — да»): **А 1 000 ₽ за запись · сезон 5 000 ₽** (рекомендация [меморандума N5](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INSTITUTE_LECTURE_RECORDINGS_N5_OPTIONS_2026-08.md)); тарифы и `INSTITUTE_LECTURE_COURSE_IDS` — по runbook меморандума, когда появится первый курс лекций |
 
+### После восстановления хоста .92 (инцидент 23-08 ~12:30Z, lane Артёма)
+
+1. Задеплоить main (институтские коммиты вплоть до `cc0f7bae`) + `php artisan migrate --force` (партнёрский процент и show_amount реестра).
+2. Проверить .env: `INSTITUTE_DONATIONS_LIVE=true` — если бокс восстанавливался из образа, ключ мог не дожить; выставить заново.
+3. `php artisan config:cache`; смоук [/mecenaty](https://samskrte.ru/mecenaty): пресеты 500/1000/2500/5000, форма доната, согласие+чекбокс суммы.
 C4 — за гейтом выводов пилота A1. Ограждения: анти-срочность во всех продающих текстах; ценники —
 money row, слово MG, нератифицированное не публикуется; C7-олимпиадная за гейтом H253; книги — 2027;
 UTM-схема каждому новому каналу с первого дня ([харнесс](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VK_PAID_TEST_INSTRUMENTATION_H3333_2026.md)).
