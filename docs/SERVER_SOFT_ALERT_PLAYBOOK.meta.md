@@ -31,6 +31,7 @@ _Created: 02-08-2026 · Last updated: 21-08-2026 (H3227 cgroup MiB fingerprint)_
 
 | Date | Change | Who |
 |---|---|---|
+| 23-08-2026 | Incident log: yandex WebDAV uplink measured 130 KB/s, PUT dies ~31 MiB; off-site restored via .92→MG→.91 relay (sha256 ×3); H3371+H3372 minted | ox-alpha (`opencode/x-preview-f-free`) SOS |
 | 21-08-2026 | Fingerprint: `guards/<name>:` ignores live RSS/MiB (H3227 host/ops 15-min spam) | Grok 4.6 (`grok-4.6`) H3227 |
 | 20-08-2026 | Catalog: host-only guards are not SOS; sticky TG state file (H3197) | Grok 4.6 (`grok-4.6`) H3197 |
 | 20-08-2026 | Incident log: Filament `/admin` 500 from 8 root-owned compiled views after `deploy.sh` `fail` skipped post-probe chown; H3194 | Grok 4.6 (`grok-4.6`) H3194 |
