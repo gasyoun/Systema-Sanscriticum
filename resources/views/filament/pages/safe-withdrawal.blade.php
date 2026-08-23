@@ -74,6 +74,7 @@
                         @if (($obl['staff_overrides_monthly'] ?? 0) > 0)
                             <span class="text-xs text-gray-500">(в т.ч. по ручному реестру: {{ $money2($obl['staff_overrides_monthly']) }} ₽/мес — Ильюшина, Кравченко, Кузнецова, Головченко)</span>
                         @endif
+                        @if (!empty($obl['staff_quits']))<span class="text-xs text-gray-500">· уволены 15-08 (расчёт при увольнении — вне этого экрана): {{ implode(', ', $obl['staff_quits']) }}</span>@endif
                         @if (!empty($obl['staff_stale_excluded']))<span class="text-xs text-gray-500">· без молчащих ≥2 мес: {{ implode(', ', $obl['staff_stale_excluded']) }}</span>@endif
                     </td>
                     <td class="px-3 py-2 text-right">{{ $money2($obl['staff_total'] ?? 0) }} ₽</td>

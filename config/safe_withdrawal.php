@@ -31,17 +31,24 @@ return [
     // скрапится ежемесячно). Перекрывает LMS-ставку при совпадении подстроки
     // и добавляет тех, кого в LMS нет вовсе. Цифры — по реестру за июль 2026;
     // править здесь или через SAFE_WITHDRAWAL_STAFF_OVERRIDES (JSON).
+    // Уволены с 15-08-2026 (MG): Кузнецова Анастасия, Григорьева Марина —
+    // из обязательств убраны; расчёт при увольнении — вне этого экрана.
     'staff_overrides' => json_decode(
         (string) env('SAFE_WITHDRAWAL_STAFF_OVERRIDES',
             json_encode([
                 ['match' => 'Ильюшина', 'monthly' => 30000.0],
                 ['match' => 'Кравченко', 'monthly' => 26511.93],
-                ['match' => 'Кузнецова', 'monthly' => 60000.0],
                 ['match' => 'Головченко', 'monthly' => 26010.0],
             ], JSON_UNESCAPED_UNICODE)
         ) ?: '[]',
         true
     ),
+
+    // Уволенные (информационная строка на экране; в обязательства не входят).
+    'staff_quits' => collect(explode('|', (string) env('SAFE_WITHDRAWAL_STAFF_QUITS', 'Кузнецова Анастасия|Григорьева Марина')))
+        ->map(fn ($s) => trim($s))
+        ->filter()
+        ->all(),
 
     // УСН «доходы», ставка налога.
     'usn_rate' => (float) env('SAFE_WITHDRAWAL_USN_RATE', 0.06),
