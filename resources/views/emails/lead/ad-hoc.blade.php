@@ -14,7 +14,7 @@
 
         {{-- Тело письма — готовый HTML из RichEditor (вводит менеджер в админке). --}}
         <div style="font-size: 17px;">
-            {!! $bodyText !!}
+            {!! \App\Support\SanitizedHtml::render($bodyText) !!}
         </div>
 
         <hr style="border: none; border-top: 1px solid #f0e6d2; margin: 36px 0;">

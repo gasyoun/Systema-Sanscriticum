@@ -51,7 +51,7 @@
                 @foreach($data['publications'] as $pub)
                     @php
                         $tag = !empty($pub['url']) ? 'a' : 'div';
-                        $href = !empty($pub['url']) ? 'href="'.$pub['url'].'" target="_blank"' : '';
+                        $href = !empty($pub['url']) ? 'href="'.e($pub['url']).'" target="_blank" rel="noopener noreferrer"' : '';
                         // Достаем картинку книги из Curator
                         $pubImageUrl = !empty($pub['image']) ? \Awcodes\Curator\Models\Media::find($pub['image'])?->url : null;
                     @endphp
@@ -181,7 +181,7 @@
                     </style>
                     
                     <div class="premium-bio text-gray-600 text-base md:text-lg mb-0">
-                        {!! $data['bio'] ?? '' !!}
+                        {!! \App\Support\SanitizedHtml::render($data['bio'] ?? '') !!}
                     </div>
 
                 </div>

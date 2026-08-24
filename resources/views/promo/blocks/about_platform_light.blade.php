@@ -34,7 +34,7 @@
                 {{-- Текст (ПО ЛЕВОМУ КРАЮ) --}}
                 @if($content)
                     <div class="custom-rich-text text-left">
-                        {!! $content !!}
+                        {!! \App\Support\SanitizedHtml::render($content) !!}
                     </div>
                 @endif
                 

@@ -43,6 +43,14 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('sanctum-token-prune');
 
+        // H3445: еженедельное обновление GeoLite2-City для SUPPORT_GEO_DRIVER=maxmind.
+        // Команда сама выходит, если учётные данные MaxMind не заданы.
+        $schedule->command('support:geo-update-maxmind')
+            ->weeklyOn(0, '4:40')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('support-geo-maxmind-update');
+
         // Перевод просроченных promises в статус expired — ночью.
         // onFailure → ScheduleFailureSignal (H2338 / audit spec 7): log+admin
         // bell; without it, money crons fail only into laravel.log.
@@ -170,6 +178,18 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('dozhim-drip');
+
+        // Решение MG 24-08-2026 (гибрид): будни 10:00 MSK — TG-сводка недожатых
+        // владельцу очереди. Гейт dozhim_operator_notify — внутри команды;
+        // пустая очередь молчит. Europe/Moscow = Минск круглый год, Рига
+        // расходится только зимой (10:00 MSK = 09:00 EET).
+        $schedule->command('dozhim:notify-operator')
+            ->weekdays()
+            ->dailyAt('10:00')
+            ->timezone('Europe/Moscow')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('dozhim-notify-operator');
 
         // H3209: вчера был слот в schedules, а записи в кабинете/ТГ нет.
         // Дедуп recording_gap:YYYY-MM-DD; n8n ZOOM 1.4 только читается, не ретраится.

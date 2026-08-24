@@ -1,6 +1,6 @@
-"""Keep the Keep-a-Changelog comparison-link table in changelog.md complete.
+"""Keep the Keep-a-Changelog comparison-link table in CHANGELOG.md complete.
 
-The table at the bottom of changelog.md maps every `## [x.y.z]` section to a
+The table at the bottom of CHANGELOG.md maps every `## [x.y.z]` section to a
 GitHub compare URL. Nothing verified it, so it silently stopped being maintained
 after v1.12.0 and 39 releases shipped without a link; this script rebuilds it
 from the section headings and the real git tags.
@@ -49,7 +49,7 @@ def git_tags(repo):
 def main():
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     apply_changes = '--apply' in sys.argv
-    path = os.path.join(repo, 'changelog.md')
+    path = os.path.join(repo, 'CHANGELOG.md')
 
     with open(path, encoding='utf-8') as fh:
         lines = fh.read().split('\n')
@@ -73,7 +73,7 @@ def main():
             link_idx.append(i)
 
     if not link_idx:
-        print('no link table found in changelog.md')
+        print('no link table found in CHANGELOG.md')
         return 1
 
     ordered = sorted(doc_versions, key=version_key, reverse=True)

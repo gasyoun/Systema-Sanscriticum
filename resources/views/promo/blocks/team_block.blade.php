@@ -87,7 +87,7 @@
                                     [&>ol]:list-decimal [&>ol]:pl-5 [&>ol]:mb-4 [&>ol]:mt-4 [&>ol>li]:mb-2 [&>ol>li::marker]:text-[var(--accent)] [&>ol>li::marker]:font-bold
                                     [&>strong]:text-[var(--text-primary)] [&>strong]:font-extrabold 
                                     [&>em]:text-[var(--accent)]">
-                            {!! $item['description'] !!}
+                            {!! \App\Support\SanitizedHtml::render($item['description']) !!}
                         </div>
                     @endif
 

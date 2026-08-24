@@ -98,7 +98,7 @@ never even polled, since `this.player` only ever becomes `'youtube'`/`'rutube'`/
 
 ## Step C8 — changelog + activation row
 
-Files: `changelog.md` (`[Unreleased]` → `### Added`), `DEPLOY_QUEUE.md` (row 46:
+Files: `CHANGELOG.md` (`[Unreleased]` → `### Added`), `DEPLOY_QUEUE.md` (row 46:
 migration is part of the standard `php artisan migrate`, activation is
 `VIDEO_RESUME=true` + `config:clear`, no external prerequisite — no VK app
 approval needed since VK isn't live in this wave). Depends on: all above.
