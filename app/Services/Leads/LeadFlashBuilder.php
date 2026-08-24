@@ -57,11 +57,12 @@ final class LeadFlashBuilder
     private function applyLandingPixels(array &$flash, LandingPage $landing): void
     {
         if (! empty($landing->yandex_metrika_id)) {
-            $flash['yandex_id'] = $landing->yandex_metrika_id;
+            // (int): id уходит в inline-JS на thank-you — строка сломала бы контекст.
+            $flash['yandex_id'] = (int) $landing->yandex_metrika_id;
         }
 
         if (! empty($landing->vk_pixel_id)) {
-            $flash['vk_id'] = $landing->vk_pixel_id;
+            $flash['vk_id'] = (int) $landing->vk_pixel_id;
         }
 
         $flash['conversion_event'] = 'lead';
@@ -155,11 +156,11 @@ final class LeadFlashBuilder
         }
 
         if (! empty($marketing->blog_yandex_metrika_id)) {
-            $flash['yandex_id'] = $marketing->blog_yandex_metrika_id;
+            $flash['yandex_id'] = (int) $marketing->blog_yandex_metrika_id;
         }
 
         if (! empty($marketing->blog_vk_pixel_id)) {
-            $flash['vk_id'] = $marketing->blog_vk_pixel_id;
+            $flash['vk_id'] = (int) $marketing->blog_vk_pixel_id;
         }
 
         $flash['conversion_event'] = 'lead_from_article';

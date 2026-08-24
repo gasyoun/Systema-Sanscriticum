@@ -56,7 +56,7 @@
                                         [&>ul>li]:before:w-6 [&>ul>li]:before:h-6 [&>ul>li]:before:bg-orange-100 
                                         [&>ul>li]:before:text-brand [&>ul>li]:before:content-['✓'] 
                                         [&>ul>li]:before:rounded-lg [&>ul>li]:before:font-black [&>ul>li]:before:text-sm">
-                                {!! $module['module_content'] !!}
+                                {!! \App\Support\RichHtml::sanitize($module['module_content']) !!}
                             </div>
                             
                             {{-- Дополнительная плашка (если нужно выделить итог модуля) --}}

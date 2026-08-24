@@ -27,14 +27,14 @@
            (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
 
            // Инициализируем счетчик с ID, который пришел из Контроллера
-           ym({{ session('yandex_id') }}, "init", {
+           ym({{ (int) session('yandex_id') }}, "init", {
                 clickmap:true,
                 trackLinks:true,
                 accurateTrackBounce:true,
                 webvisor:true
            });
         </script>
-        <noscript><div><img src="https://mc.yandex.ru/watch/{{ session('yandex_id') }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+        <noscript><div><img src="https://mc.yandex.ru/watch/{{ (int) session('yandex_id') }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     @endif
 
     {{-- =========================================== --}}
@@ -43,7 +43,7 @@
     @if(session('vk_id'))
         <script type="text/javascript">
             var _tmr = window._tmr || (window._tmr = []);
-            _tmr.push({id: "{{ session('vk_id') }}", type: "pageView", start: (new Date()).getTime()});
+            _tmr.push({id: "{{ (int) session('vk_id') }}", type: "pageView", start: (new Date()).getTime()});
             (function (d, w, id) {
                 if (d.getElementById(id)) return;
                 var ts = d.createElement("script"); ts.type = "text/javascript"; ts.async = true; ts.id = id;
@@ -52,7 +52,7 @@
                 if (w.opera == "[object Opera]") { d.addEventListener("DOMContentLoaded", f, false); } else { f(); }
             })(document, window, "tmr-code");
         </script>
-        <noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ session('vk_id') }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
+        <noscript><div><img src="https://top-fwz1.mail.ru/counter?id={{ (int) session('vk_id') }};js=na" style="position:absolute;left:-9999px;" alt="Top.Mail.Ru" /></div></noscript>
     @endif
     
 </head>
@@ -168,7 +168,7 @@
                     @if($meta)
                         <a href="{{ $url }}" target="_blank" rel="noopener noreferrer"
                            @if(session('yandex_id'))
-                               onclick="ym({{ session('yandex_id') }}, 'reachGoal', 'magnet_{{ $channel }}_click'); return true;"
+                               onclick="ym({{ (int) session('yandex_id') }}, 'reachGoal', 'magnet_{{ $channel }}_click'); return true;"
                            @endif
                            class="group inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-lg text-white
                                   bg-gradient-to-r {{ $meta['gradient'] }} hover:brightness-110
@@ -201,7 +201,7 @@
             @php $tgUrl = session('redirect_url') ?: 'https://t.me/rusamskrtam'; @endphp
             <a href="{{ $tgUrl }}" target="_blank" rel="noopener noreferrer"
                @if(session('yandex_id'))
-                   onclick="ym({{ session('yandex_id') }}, 'reachGoal', 'telegram_click'); return true;"
+                   onclick="ym({{ (int) session('yandex_id') }}, 'reachGoal', 'telegram_click'); return true;"
                @endif
                class="group inline-flex items-center justify-center px-6 py-3 text-base font-bold text-white rounded-xl transition-all duration-300 hover:scale-105
                       bg-gradient-to-r from-[#2AABEE] to-[#0088cc] hover:brightness-110
@@ -247,7 +247,7 @@
         // Конфигурация редиректа (если URL передан из контроллера)
         // ====================================================
         @if(session('redirect_url'))
-            var redirectUrl       = @json(session('redirect_url'));
+            var redirectUrl       = @js(session('redirect_url'));
             var redirectFired     = false;
             var MIN_DISPLAY_MS    = 4000; // минимум, сколько пользователь видит страницу "Спасибо"
             var FALLBACK_MS       = 6000; // страховка: если Метрика не вызовет callback вообще
@@ -281,12 +281,12 @@
         // ====================================================
         @if(session('yandex_id'))
             if (typeof ym !== 'undefined') {
-                ym({{ session('yandex_id') }}, 'reachGoal', '{{ session('conversion_event', 'lead') }}'
+                ym({{ (int) session('yandex_id') }}, 'reachGoal', '{{ session('conversion_event', 'lead') }}'
                     @if(session('redirect_url'))
                         , {}, fireRedirectWithMinDelay
                     @endif
                 );
-                console.log('Yandex Goal sent: {{ session('conversion_event', 'lead') }} for ID: {{ session('yandex_id') }}');
+                console.log('Yandex Goal sent: {{ session('conversion_event', 'lead') }} for ID: {{ (int) session('yandex_id') }}');
             }
         @endif
 
@@ -295,8 +295,8 @@
         // ====================================================
         @if(session('vk_id'))
             var _tmr = window._tmr || (window._tmr = []);
-            _tmr.push({ type: 'reachGoal', id: "{{ session('vk_id') }}", goal: 'lead_form' });
-            console.log('VK Goal sent: lead_form for ID: {{ session('vk_id') }}');
+            _tmr.push({ type: 'reachGoal', id: "{{ (int) session('vk_id') }}", goal: 'lead_form' });
+            console.log('VK Goal sent: lead_form for ID: {{ (int) session('vk_id') }}');
         @endif
 
         // ====================================================

@@ -334,7 +334,7 @@
                         <div class="relative z-10">
                             <h3 class="text-xs font-bold text-brand uppercase tracking-widest mb-6">Детали программы</h3>
                             <div class="prose prose-lg prose-slate max-w-none custom-content">
-                                {!! $page->description !!}
+                                {!! \App\Support\RichHtml::sanitize($page->description) !!}
                             </div>
                         </div>
                     </div>

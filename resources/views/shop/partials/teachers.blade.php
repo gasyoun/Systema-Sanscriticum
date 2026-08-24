@@ -36,7 +36,7 @@
                     @endphp
                     @if(filled($bioHtml))
                         <div class="prose prose-invert prose-sm max-w-none text-slate-400 leading-relaxed [&_a]:text-indigo-400 [&_a:hover]:text-indigo-300 [&_a]:underline">
-                            {!! $bioHtml !!}
+                            {!! \App\Support\RichHtml::sanitize($bioHtml) !!}
                         </div>
                     @endif
                 </div>

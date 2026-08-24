@@ -31,7 +31,7 @@
                             <p style="color: #555555; font-size: 16px; line-height: 1.6;">Намасте, {{ $user->name }}!</p>
 
                             <div style="color: #333333; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-                                {!! $announcement->content !!}
+                                {!! \App\Support\RichHtml::sanitize($announcement->content) !!}
                             </div>
 
                             @if($announcement->button_text && $announcement->button_url)

@@ -42,13 +42,14 @@
     @endphp
     @if (!empty($ladderOffers))
     <script type="application/ld+json">
+{{-- JSON_HEX_TAG: названия курсов в <script>-контексте не могут закрыть тег --}}
 {!! json_encode([
     '@context' => 'https://schema.org',
     '@type' => 'OfferCatalog',
     'name' => 'Форматы обучения санскриту',
     'url' => $ladder['catalogUrl'].'#ceny',
     'itemListElement' => $ladderOffers,
-]) !!}
+], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}
     </script>
     @endif
 @endpush

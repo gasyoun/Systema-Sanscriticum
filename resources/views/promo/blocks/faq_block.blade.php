@@ -83,7 +83,7 @@
                                         [&>ul>li]:before:rounded-lg [&>ul>li]:before:font-black [&>ul>li]:before:text-sm
                                         [&>ol]:list-decimal [&>ol]:pl-6 [&>ol]:mt-3
                                         [&>ol>li]:mb-2 [&>ol>li]:pl-2">
-                                {!! $item['answer'] !!}
+                                {!! \App\Support\RichHtml::sanitize($item['answer']) !!}
                             </div>
                         </div>
                     </div>
@@ -110,7 +110,8 @@
         ];
     @endphp
     <script type="application/ld+json">
-        {!! json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
+        {{-- JSON_HEX_*: staff-текст в <script>-контексте не может закрыть тег (</script>) --}}
+        {!! json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) !!}
     </script>
 </section>
 

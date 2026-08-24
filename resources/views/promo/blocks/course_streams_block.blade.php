@@ -167,7 +167,7 @@
                                         [&>ul>li]:relative [&>ul>li]:pl-7 [&>ul>li]:py-2.5
                                         [&>ul>li]:before:absolute [&>ul>li]:before:left-0 [&>ul>li]:before:top-3
                                         [&>ul>li]:before:w-4 [&>ul>li]:before:h-4 [&>ul>li]:before:bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23E85C24%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%2220%206%209%2017%204%2012%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] [&>ul>li]:before:bg-no-repeat [&>ul>li]:before:bg-center">
-                                {!! $item['features'] !!}
+                                {!! \App\Support\RichHtml::sanitize($item['features']) !!}
                             </div>
                         @else
                             <div class="flex-grow"></div>

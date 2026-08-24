@@ -107,7 +107,7 @@
                             <div class="prose prose-base md:prose-lg max-w-none text-gray-700 leading-relaxed font-medium 
                                         prose-a:text-brand prose-a:font-bold prose-a:no-underline hover:prose-a:underline 
                                         prose-p:mb-4 prose-ul:list-disc prose-ul:pl-5 marker:text-brand">
-                                {!! $msg->content !!}
+                                {!! \App\Support\RichHtml::sanitize($msg->content) !!}
                             </div>
 
                             {{-- Кнопка действия (если заполнена) --}}
