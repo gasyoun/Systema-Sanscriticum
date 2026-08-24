@@ -263,7 +263,7 @@ Executor: Grok 4.5 (`grok-4.5`). Parent programme H-A: [H2058](https://github.co
 
 Only after wave-1 rates are visible:
 
-- [ ] «С чего начать», quiz, intro CTA site-wide (existing sales roadmap — not reinvented here)
+- [x] «С чего начать», quiz, intro CTA site-wide (existing sales roadmap — not reinvented here) — **already shipped, verified live 24-08-2026 (A05 drain)**: all three sub-items were done under [ORS-FAQ roadmap_samskrte_sales.md](https://github.com/gasyoun/ORS-FAQ/blob/main/docs/roadmap_samskrte_sales.md) (its own source of truth, not duplicated here) — «С чего начать» page + quiz embed [PR #385](https://github.com/gasyoun/Systema-Sanscriticum/pull/385) (H323), free-intro CTA site-wide [PR #1185](https://github.com/gasyoun/Systema-Sanscriticum/pull/1185) (H2365) + [PR #1722](https://github.com/gasyoun/Systema-Sanscriticum/pull/1722) (H2760). Live check: `https://samskrte.ru/online/s-chego-nachat` → HTTP 200 with onramp quiz present; `https://samskrte.ru/online` → HTTP 200 with `free-intro-banner` block present.
 
 ## Non-goals
 
