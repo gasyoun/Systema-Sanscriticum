@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [1.90.14] - 2026-08-24
+
+### Changed
+- **H3136, строка 10 (Fable 5 `claude-fable-5`, 24-08-2026, решение MG «B-reword»): общая строка 5 «Кабинет сам умеет» переписана в трех письмах.** Первая строка блока в [purchase-confirmation](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/purchase-confirmation.blade.php), [onboarding/day1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/onboarding/day1.blade.php) и [paypal/claim-student-ack](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/paypal/claim-student-ack.blade.php): «погасить долг или взнос по рассрочке, без куратора» → «внести очередную часть оплаты или закрыть просроченный платеж — без куратора» — по лексике H1290 («оплата по частям») и посылке контракта «читатель — ученик, а не должник». [_shared_strings.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/_shared_strings.md) и [VOICE_CONTRACT_MONEY_SURFACES_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VOICE_CONTRACT_MONEY_SURFACES_RU.md) (§2.8, §5, таблица) обновлены; открытых расхождений в контракте не осталось.
+
 ## [1.90.13] - 2026-08-24
 
 ### Changed
