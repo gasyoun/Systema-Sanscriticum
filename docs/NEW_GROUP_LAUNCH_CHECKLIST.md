@@ -76,7 +76,7 @@ _Created: 22-08-2026 · Last updated: 22-08-2026_
 - Канал школы: пост со ссылкой на лендинг п.4.
 - Учебный чат новой группы: поле `telegram_chat_id` у **группы**, когда решение «идём» уже принято. До порога чат не обязателен.
 - Недобор: ежедневная `groups:notify-forming-shortfall` (нужны `forming` + дата + `min_size`).
-- Запись занятий: сторож `recordings:gap-watch` смотрит `schedules` + `telegram_chat_id`.
+- Запись занятий: сторож `recordings:gap-watch` (08:00 МСК) смотрит `schedules` + `telegram_chat_id`; алерт уходит в админский пульс и в чат отдела заботы. Если запись упала на раннем шаге конвейера — `php artisan recordings:gap-watch --retry-failed` ретраит безопасно ([INCIDENT_N8N_ZOOM_RECORDING_JAM_20-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INCIDENT_N8N_ZOOM_RECORDING_JAM_20-08-2026.md) § Resolution).
 
 ### 7. Открыть кассу (сентябрь, если порог набран)
 
