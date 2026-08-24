@@ -262,6 +262,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `HORIZON_PATH` | optional | `'horizon'` | config/horizon.php:44 |
 | `HORIZON_PREFIX` | optional | `Str::slug(env('APP_NAME', 'laravel'), '_').'_horizon:'` | config/horizon.php:70 |
 | `HUB_TRANSLITERATE` | optional | `false` | config/features.php:249 |
+| `INBOUND_EMAIL_WEBHOOK_SECRET` | optional | `null` | config/services.php:108 |
 | `INSTITUTE_DONATE_REQUISITES` | optional | `''` | config/institute.php:6 |
 | `INSTITUTE_DONATIONS_LIVE` | optional | `false` | config/institute.php:12 |
 | `INSTITUTE_LECTURE_COURSE_IDS` | optional | `''` | config/institute.php:32 |
@@ -604,6 +605,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_HOMEWORK_PAUSE_NOTE_QUOTE_MAX` | optional | `120` | config/support.php:38 |
 | `SUPPORT_HOURS_ENABLED` | feature-flag | `false` | config/support_hours.php:22 |
 | `SUPPORT_HOURS_TIMEZONE` | optional | `'Europe/Moscow'` | config/support_hours.php:24 |
+| `SUPPORT_INBOUND_EMAIL` | optional | `false` | config/features.php:193 |
 | `SUPPORT_LEAD_CAPTURE` | optional | `false` | config/features.php:348 |
 | `SUPPORT_OBSERVABILITY` | optional | `false` | config/features.php:305 |
 | `SUPPORT_PRESENCE_BEACON_SECONDS` | optional | `20` | config/support_presence.php:25 |
