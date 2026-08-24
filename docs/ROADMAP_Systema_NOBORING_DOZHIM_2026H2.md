@@ -184,6 +184,7 @@ Executor: Grok 4.5 (`grok-4.5`). Parent programme H-A: [H2058](https://github.co
 - [x] Auto-drip via existing Messaging channels (TG/email) — linear only; no n8n branch required for wave-1 — **done H2059**: `dozhim:drip` (daily 08:00), `WorkQueueReport::agedOpenDeals()` (ungated twin of `unpaidOpenDeals()` — visibility and delivery are independent flags), `DozhimDripDispatcher` (TG/VK/email, reuses `MessagePlaceholders` + `DebtorReminderMail`), `DozhimDripLog` idempotency (deal_id, step unique). One step per deal per run, never skips a step even if the deal aged past a later one.
 - [x] Flag `dozhim_queue` default OFF — **done H2119** (pinned in features + test)
 - [x] Flag `dozhim_drip` default OFF — **done H2059** (pinned in `config/features.php` + tests)
+- [x] Operator daily TG digest + drip enabled — **done MG ruling 24-08-2026** (`dozhim:drip` enabled in prod 24-08, first run delivered day-0 to all aged deals; `dozhim:notify-operator` будни 10:00 MSK → Telegram сводка владельцу очереди, flag `dozhim_operator_notify`, recipient `DOZHIM_OPERATOR_TG_CHAT_ID` / manager-with-tg fallback; guide [docs/MANAGER_DOZHIM_GUIDE_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANAGER_DOZHIM_GUIDE_RU.md))
 
 **Unblocks:** H-C front mirror; live operator use. All Wave 1b checkboxes closed; Wave 1c (H-C) closed by H2060 (roadmap ticks H2363).
 

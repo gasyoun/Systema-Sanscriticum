@@ -179,6 +179,18 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('dozhim-drip');
 
+        // Решение MG 24-08-2026 (гибрид): будни 10:00 MSK — TG-сводка недожатых
+        // владельцу очереди. Гейт dozhim_operator_notify — внутри команды;
+        // пустая очередь молчит. Europe/Moscow = Минск круглый год, Рига
+        // расходится только зимой (10:00 MSK = 09:00 EET).
+        $schedule->command('dozhim:notify-operator')
+            ->weekdays()
+            ->dailyAt('10:00')
+            ->timezone('Europe/Moscow')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('dozhim-notify-operator');
+
         // H3209: вчера был слот в schedules, а записи в кабинете/ТГ нет.
         // Дедуп recording_gap:YYYY-MM-DD; n8n ZOOM 1.4 только читается, не ретраится.
         $schedule->command('recordings:gap-watch')

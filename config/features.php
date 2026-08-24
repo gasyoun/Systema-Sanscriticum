@@ -739,6 +739,19 @@ return [
     'dozhim_drip' => (bool) env('DOZHIM_DRIP', false),
 
     /*
+     | NOBORING дожим, операторская сводка (решение MG 24-08-2026, гибрид):
+     | будни 10:00 Europe/Moscow — Telegram-сообщение владельцу очереди со
+     | списком недожатых open Deal (WorkQueueReport::agedOpenDeals(), без гейта
+     | dozhim_queue — видимость и доставка независимы, как у dozhim:drip).
+     | Получатель: DOZHIM_OPERATOR_TG_CHAT_ID (числовой chat_id, сырой sendMessage
+     | через основной бот) либо первый User роли manager с привязанным telegram_id.
+     | Пустая очередь НЕ отправляет ничего (тишина = всё дожато).
+     |
+     | ВЫКЛ по умолчанию. Включение — DOZHIM_OPERATOR_NOTIFY=true + config:cache.
+     */
+    'dozhim_operator_notify' => (bool) env('DOZHIM_OPERATOR_NOTIFY', false),
+
+    /*
      | H2186 / NOBORING Rate B: stamp Lead.converted_at on ordinary course paid path.
      | Deposit / trial / marathon already call markConverted always. Course checkout
      | historically did not (GETCOURSE_PARITY_PRODUCTION_SPEC §2.4) — Rate B on prod
