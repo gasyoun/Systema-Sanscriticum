@@ -49,7 +49,7 @@ Code-grounded source of truth:
 | EdTech context beside chat | 🟡 | payments/promises/discounts/attendance есть; courses/groups/block access/next lesson/recent tickets incomplete |
 | Support follow-up | 🔴 | CRM/academic reminders are not a task-from-dialog workflow |
 | Support→payment/access/attendance outcomes | 🔴 | rollups exist, correlation dashboard missing |
-| Inbound email | 🔴 | H1200 residual; spec done 19-08-2026 ([INBOUND_EMAIL_CHANNEL_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INBOUND_EMAIL_CHANNEL_SPEC_2026.md)); build gated on MG mailbox/provider @DECIDE; do not mint a duplicate implementation |
+| Inbound email | 🟢 built 24-08-2026 (H3462): zabota@samskrte.ru → forwarder → secret-verified webhook ([InboundEmailWebhookTest](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Support/InboundEmailWebhookTest.php)); флаг `SUPPORT_INBOUND_EMAIL` default OFF, активация — DEPLOY_QUEUE №82; reply-out остаётся ⛔ ручным шагом человека | spec: [INBOUND_EMAIL_CHANNEL_SPEC_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INBOUND_EMAIL_CHANNEL_SPEC_2026.md) |
 
 **Completion sequence:**
 
@@ -71,7 +71,7 @@ Full product sequencing and kill criteria:
 | 1 | Живой чат с оператором (real-time) | ✅ **Готово** (H536; Reverb-push в проде + фолбэк-опрос) | — (residual reply-out канарейка — S5) |
 | 2 | Авто-ответы / сценарии | ⚠️ Частично (AI-куратор + FAQ-суггестер H247 — оператору; веб-виджет без сценариев) | [H1198](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1198-Sonnet_Systema-Sanscriticum_jivo-parity-s3of5-webchat-scenarios_17.07.26.md) (S3) |
 | 3 | Сбор контактов / заявки (лиды) | 🟢 **S4 сделано 18-07-2026** (см. §4) | [H1199](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1199-Sonnet_Systema-Sanscriticum_jivo-parity-s4of5-lead-capture_17.07.26.md) (S4) |
-| 4 | Каналы TG / VK / почта | ⚠️ Частично (TG+VK есть, теперь **разбейджены** 18-07-2026; почты нет; reply-out канарейка — ⛔ ручной шаг человека, см. §4) | [H1200](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1200-Sonnet_Systema-Sanscriticum_jivo-parity-s5of5-email-channel-badging_17.07.26.md) (S5) |
+| 4 | Каналы TG / VK / почта | ✅ **инбаунд почты построен 24-08-2026 (H3462)**: zabota@samskrte.ru → вебхук, source='email', бейдж Email, дедуп Message-ID, очередь нераспознанных; флаг `SUPPORT_INBOUND_EMAIL` default OFF (активация — DEPLOY_QUEUE №82); reply-out канарейка — по-прежнему ⛔ ручной шаг человека (см. §4) | [H1200](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1200-Sonnet_Systema-Sanscriticum_jivo-parity-s5of5-email-channel-badging_17.07.26.md) (S5), [H3462](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3462-OxAlpha_Systema-Sanscriticum_inbound-email-zabota-forwarder_24.08.26.md) |
 | 5 | **Город посетителя** в панели куратора | 🟢 **S1 сделан этой сессией** (см. §2) | [H1196](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1196-Opus_Systema-Sanscriticum_jivo-parity-s1of5-visitor-geo-city_17.07.26.md) (S1, Pillar 1) |
 | 6 | **Написать первым** + видеть, что делает на сайте | 🟢 **S2 сделан этой сессией** (см. §3) | [H1197](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1197-Opus_Systema-Sanscriticum_jivo-parity-s2of5-proactive-visitor-monitor_17.07.26.md) (S2, Pillar 2) |
 

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\VkBotController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\Webhooks\ExamScoresWebhookController;
+use App\Http\Controllers\Webhooks\InboundEmailWebhookController;
 use App\Http\Controllers\Webhooks\LeadStepWebhookController;
 use App\Http\Controllers\Webhooks\LectureClipCallbackWebhookController;
 use App\Http\Controllers\Webhooks\MaxMagnetWebhookController;
@@ -136,6 +137,15 @@ Route::post('/webhooks/lecture-clip-callback', [LectureClipCallbackWebhookContro
 Route::post('/webhooks/telegram-zapisi', [TelegramZapisiWebhookController::class, 'handle'])
     ->middleware('verify.tg.zapisi')
     ->name('webhook.zapisi.telegram');
+
+// === ВХОДЯЩИЙ EMAIL (H3462): zabota@samskrte.ru → проводник (n8n на .91) → сюда ===
+// Письмо раскладывается в chat_messages (source='email') через InboundEmailIngester:
+// дедуп по Message-ID, нераспознанный отправитель — в видимую очередь, не в никуда.
+// Секрет пути проверяет verify.inbound.email (fail-closed 403); флаг
+// support_inbound_email OFF → контроллер 404. Троттлинг против перебора секрета.
+Route::post('/webhooks/inbound-email/{secret}', [InboundEmailWebhookController::class, 'handle'])
+    ->middleware(['verify.inbound.email', 'throttle:30,1'])
+    ->name('webhook.inbound-email');
 
 // === ПАРТНЁРСКИЙ БОТ (агентская программа) ===
 // Внешний Telegram-бот (@Partner_..._bot, ?start=agent) регистрирует партнёров

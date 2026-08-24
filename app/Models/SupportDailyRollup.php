@@ -28,11 +28,14 @@ class SupportDailyRollup extends Model
 
     public const CHANNEL_TELEGRAM_BOT = UnifiedMessage::CHANNEL_TELEGRAM_BOT;
 
+    public const CHANNEL_EMAIL = UnifiedMessage::CHANNEL_EMAIL;
+
     /** Каналы, живущие в `chat_messages` (агрегирует WebSupportRollupAggregator). */
     public const WEB_SIDE_CHANNELS = [
         self::CHANNEL_WEB,
         self::CHANNEL_VK,
         self::CHANNEL_TELEGRAM_BOT,
+        self::CHANNEL_EMAIL,
     ];
 
     protected $fillable = [
