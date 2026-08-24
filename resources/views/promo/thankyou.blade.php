@@ -27,7 +27,7 @@
            (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
 
            // Инициализируем счетчик с ID, который пришел из Контроллера
-           ym({{ session('yandex_id') }}, "init", {
+           ym(@intval(session('yandex_id')), "init", {
                 clickmap:true,
                 trackLinks:true,
                 accurateTrackBounce:true,
@@ -168,7 +168,7 @@
                     @if($meta)
                         <a href="{{ $url }}" target="_blank" rel="noopener noreferrer"
                            @if(session('yandex_id'))
-                               onclick="ym({{ session('yandex_id') }}, 'reachGoal', 'magnet_{{ $channel }}_click'); return true;"
+                               onclick="ym(@intval(session('yandex_id')), 'reachGoal', 'magnet_{{ $channel }}_click'); return true;"
                            @endif
                            class="group inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-lg text-white
                                   bg-gradient-to-r {{ $meta['gradient'] }} hover:brightness-110
@@ -201,7 +201,7 @@
             @php $tgUrl = session('redirect_url') ?: 'https://t.me/rusamskrtam'; @endphp
             <a href="{{ $tgUrl }}" target="_blank" rel="noopener noreferrer"
                @if(session('yandex_id'))
-                   onclick="ym({{ session('yandex_id') }}, 'reachGoal', 'telegram_click'); return true;"
+                   onclick="ym(@intval(session('yandex_id')), 'reachGoal', 'telegram_click'); return true;"
                @endif
                class="group inline-flex items-center justify-center px-6 py-3 text-base font-bold text-white rounded-xl transition-all duration-300 hover:scale-105
                       bg-gradient-to-r from-[#2AABEE] to-[#0088cc] hover:brightness-110

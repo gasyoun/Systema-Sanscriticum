@@ -88,19 +88,19 @@
 
                 <div class="btn-group">
                     @if($lesson->video_url)
-                        <button class="btn-yt" onclick="openVideo('{{ $lesson->video_url }}')">
+                        <button class="btn-yt" onclick="openVideo(@js($lesson->video_url))">
                             ▶ YouTube
                         </button>
                     @endif
 
                     @if($lesson->rutube_url)
-                        <button class="btn-rt" onclick="openVideo('{{ $lesson->rutube_url }}')">
+                        <button class="btn-rt" onclick="openVideo(@js($lesson->rutube_url))">
                             ▶ Rutube
                         </button>
                     @endif
 
                     @if($lesson->flash_cards)
-                        <button class="btn-flash" onclick='startFlash(@json($lesson->flash_cards))'>
+                        <button class="btn-flash" onclick="startFlash(@js($lesson->flash_cards))">
                             🎴 Карточки для запоминания
                         </button>
                     @endif
