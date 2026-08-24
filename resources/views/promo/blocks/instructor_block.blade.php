@@ -51,7 +51,12 @@
                 @foreach($data['publications'] as $pub)
                     @php
                         $tag = !empty($pub['url']) ? 'a' : 'div';
-                        $href = !empty($pub['url']) ? 'href="'.e($pub['url']).'" target="_blank" rel="noopener noreferrer"' : '';
+                        // Хелпер: разрешаем только безопасные URL-схемы (anti-XSS: javascript: и data: запрещены).
+                        $safeUrl = '';
+                        if (!empty($pub['url']) && preg_match('#^https?://#i', $pub['url'])) {
+                            $safeUrl = 'href="'.e($pub['url']).'" target="_blank" rel="noopener noreferrer"';
+                        }
+                        $href = $safeUrl;
                         // Достаем картинку книги из Curator
                         $pubImageUrl = !empty($pub['image']) ? \Awcodes\Curator\Models\Media::find($pub['image'])?->url : null;
                     @endphp
