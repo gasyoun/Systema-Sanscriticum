@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Models\MarketingSetting;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
+use App\Support\TelegramSendGuard;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -39,6 +40,19 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
 
     public function handle(): void
     {
+        // Дедуп по update_id (TelegramSendGuard::claimUpdate): вебхук может быть
+        // передиспетчирован, поллер после падения принимает апдейт повторно —
+        // без этого клейма повтор шёл бы и в корпус, и форвардом в n8n, и в
+        // ответы #ДЗ. Повторная обработка того же апдейта подавляется целиком.
+        $updateId = isset($this->update['update_id']) ? (int) $this->update['update_id'] : null;
+        if ($updateId !== null && ! TelegramSendGuard::claimUpdate('zapisi', $updateId)) {
+            Log::info('ProcessTelegramZapisiUpdate: update already processed, duplicate suppressed', [
+                'update_id' => $updateId,
+            ]);
+
+            return;
+        }
+
         // Дублируем апдейт в n8n ДО любых фильтров: у бота может быть ровно один
         // вебхук, и пока его держал n8n, наш прод не видел сообщений. Теперь вебхук
         // наш, а n8n получает тот же поток, что раньше слал ему Telegram — иначе

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 
 /**
@@ -30,24 +31,69 @@ use Illuminate\Support\Facades\Redis;
  *
  * Итог: дубликаты невозможны; ценой является редкая потеря сообщения при
  * транспортном сбое — каждая такая потеря фиксируется warning'ом в логе.
+ * Исключение — недоступный Redis: клейм тогда fail-open (шлём без защиты,
+ * громкий warning), потому что дедуп — оптимизация против дублей, а не гейт
+ * доставки.
  */
 final class TelegramSendGuard
 {
-    /** Окно подавления дублей. Суточное расписание укладывается с запасом. */
+    /** Окно подавления дублей контента. Суточное расписание укладывается с запасом. */
     private const TTL_SECONDS = 86400;
+
+    /** Окно подавления повторных апдейтов вебхука/поллера (ределивери Telegram). */
+    private const UPDATE_TTL_SECONDS = 3600;
 
     public static function claim(string $chatId, string $text): bool
     {
-        return (bool) Redis::set(self::key($chatId, $text), now()->toIso8601String(), 'EX', self::TTL_SECONDS, 'NX');
+        return self::claimKey(self::key($chatId, $text), self::TTL_SECONDS);
     }
 
     public static function release(string $chatId, string $text): void
     {
-        Redis::del(self::key($chatId, $text));
+        try {
+            Redis::del(self::key($chatId, $text));
+        } catch (\Throwable $exception) {
+            Log::warning('TelegramSendGuard: release failed (redis unavailable)', [
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     public static function key(string $chatId, string $text): string
     {
         return 'tg:once:'.hash('sha256', $chatId."\x00".$text);
+    }
+
+    /**
+     * Клейм по произвольному ключу — для дедупа НЕ контентных сущностей
+     * (update_id вебхука и т.п.). false = уже видели, обрабатывать не надо.
+     *
+     * FAIL-OPEN при недоступном Redis: дедуп — защита от дублей, а не гейт
+     * доставки. В проде очередь стоит вместе с Redis, но вебхук-дорожка может
+     * работать и без него — сообщение лучше отправить без защиты, чем потерять;
+     * деградация фиксируется громким warning'ом.
+     */
+    public static function claimKey(string $key, int $ttlSeconds = self::UPDATE_TTL_SECONDS): bool
+    {
+        try {
+            return (bool) Redis::set($key, now()->toIso8601String(), 'EX', max(1, $ttlSeconds), 'NX');
+        } catch (\Throwable $exception) {
+            Log::warning('TelegramSendGuard: redis unavailable, dedup disabled for this send', [
+                'key' => $key,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return true;
+        }
+    }
+
+    /**
+     * Дедуп входящего Telegram-апдейта по update_id: ределивери вебхука после
+     * медленного/упавшего обработчика и повторный приём поллером не должны
+     * приводить к повторной обработке (двойной ответ бота, двойной форвард).
+     */
+    public static function claimUpdate(string $scope, int|string $updateId): bool
+    {
+        return self::claimKey('tg:upd:'.$scope.':'.$updateId);
     }
 }

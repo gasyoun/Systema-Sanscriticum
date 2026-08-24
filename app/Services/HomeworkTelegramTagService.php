@@ -9,6 +9,7 @@ use App\Models\Lesson;
 use App\Models\LessonTelegramHook;
 use App\Models\MarketingSetting;
 use App\Models\User;
+use App\Support\TelegramSendGuard;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -489,6 +490,20 @@ class HomeworkTelegramTagService
     {
         $token = $this->botToken();
         if ($token === '' || $chatId === '') {
+            return null;
+        }
+
+        // Идемпотентность (TelegramSendGuard): сервис вызывается и из вебхука
+        // (ределивери Telegram), и из ProcessTelegramZapisiUpdate (tries=3) —
+        // повторная обработка того же тега не должна дать второй ответ в чат.
+        // Клейм по тексту; раскладка кнопок в ключ не входит (текст у разных
+        // клавиатур различается).
+        if (! TelegramSendGuard::claim($chatId, $html)) {
+            Log::info('HomeworkTelegramTagService: identical message already sent, duplicate suppressed', [
+                'chat_id' => $chatId,
+                'dedup_key' => TelegramSendGuard::key($chatId, $html),
+            ]);
+
             return null;
         }
 
