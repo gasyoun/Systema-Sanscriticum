@@ -48,12 +48,14 @@ class DozhimNotifyOperatorCommand extends Command
         [$recipient, $via] = $this->recipient();
 
         if ($recipient === null || $recipient === '') {
+            // Не FAILURE: расписание будничное, и постоянные красные прогоны
+            // будут спамить мониторинг до момента привязки Telegram оператором.
             Log::warning('dozhim:notify-operator — получатель не найден', [
                 'hint' => 'задайте DOZHIM_OPERATOR_TG_CHAT_ID или привяжите telegram_id пользователю роли manager',
             ]);
-            $this->error('Получатель не найден: DOZHIM_OPERATOR_TG_CHAT_ID / manager с telegram_id.');
+            $this->warn('Получатель не найден: DOZHIM_OPERATOR_TG_CHAT_ID / manager с telegram_id.');
 
-            return self::FAILURE;
+            return self::SUCCESS;
         }
 
         $text = $this->renderDigest($deals, $report);
