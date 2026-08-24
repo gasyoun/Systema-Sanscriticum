@@ -71,11 +71,12 @@ class BackupScheduleTest extends TestCase
         $this->assertContains('local', $audited);
         $this->assertContains('yandex_disk', $audited);
 
-        // Контракт размера: 50 МиБ — эмпирически проходящий через Яндекс класс
-        // (большие тела он иногда «сохраняет» 2xx без записи). Порог
-        // BACKUP_MIN_ARCHIVE_MB в scripts/server_guards.conf стоит НИЖЕ этой
-        // величины — связка меняется только парой.
-        $this->assertSame(50, (int) config('backup.backup.split_upload.max_part_mb'));
+        // Контракт размера: 20 МиБ — класс, переживающий Яндекс 22–24-08-2026
+        // (решение MG 24-08-2026: срез с 50 после TLS-stall на 50 МиБ частях;
+        // ≤~20 МиБ доезжали честно все дни наблюдений). Порог
+        // BACKUP_MIN_ARCHIVE_MB в scripts/server_guards.conf стоит НИЖЕ суммы
+        // полной группы — связка меняется только парой.
+        $this->assertSame(20, (int) config('backup.backup.split_upload.max_part_mb'));
     }
 
     /** @test */
