@@ -337,6 +337,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MARATHON_WARM_TAIL_DAYS` | optional | `13` | config/marathon.php:58 |
 | `MARATHON_WARM_TAIL_WAVE2_FROM` | required | `—` | config/marathon.php:224 |
 | `MARKETING_SEGMENTS` | optional | `false` | config/features.php:631 |
+| `MAXMIND_ACCOUNT_ID` | optional | `''` | config/support_geo.php:45 |
+| `MAXMIND_LICENSE_KEY` | optional | `''` | config/support_geo.php:46 |
 | `MEDIA_WEBP_DELETE_ORIGINAL` | optional | `true` | config/media.php:37 |
 | `MEDIA_WEBP_DISK` | optional | `'public'` | config/media.php:26 |
 | `MEDIA_WEBP_ENABLED` | feature-flag | `true` | config/media.php:24 |
@@ -592,9 +594,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_FAQ_RAG_PATH` | required | `null` | config/support.php:71 |
 | `SUPPORT_FAQ_RAG_TOP_K` | optional | `3` | config/support.php:72 |
 | `SUPPORT_FOLLOW_UP_TASKS` | optional | `false` | config/features.php:365 |
-| `SUPPORT_GEO_DRIVER` | optional | `'null'` | config/support_geo.php:28 |
-| `SUPPORT_GEO_IPAPI_ENDPOINT` | optional | `'http://ip-api.com/json/'` | config/support_geo.php:34 |
-| `SUPPORT_GEO_TIMEOUT` | optional | `3` | config/support_geo.php:31 |
+| `SUPPORT_GEO_DRIVER` | optional | `'null'` | config/support_geo.php:32 |
+| `SUPPORT_GEO_IPAPI_ENDPOINT` | optional | `'http://ip-api.com/json/'` | config/support_geo.php:38 |
+| `SUPPORT_GEO_MAXMIND_PATH` | optional | `storage_path('app/geo/GeoLite2-City.mmdb')` | config/support_geo.php:42 |
+| `SUPPORT_GEO_TIMEOUT` | optional | `3` | config/support_geo.php:35 |
 | `SUPPORT_HOMEWORK_PAUSE_NOTE` | optional | `true` | config/support.php:37 |
 | `SUPPORT_HOMEWORK_PAUSE_NOTE_QUOTE_MAX` | optional | `120` | config/support.php:38 |
 | `SUPPORT_HOURS_ENABLED` | feature-flag | `false` | config/support_hours.php:22 |
