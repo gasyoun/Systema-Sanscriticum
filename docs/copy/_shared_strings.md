@@ -1,10 +1,13 @@
 # Общие строки волны revenue-copy — единый источник
 
-_Created: 19-07-2026 · Last updated: 20-07-2026_
+_Created: 19-07-2026 · Last updated: 24-08-2026_
 
-Четыре строки, которые волна H1285–H1294 обязана переиспользовать дословно, а не
-переизобретать по лейнам (контракт §5 в
-[ARCHITECTURE_SYSTEMA_REVENUE_COPY_VOICE_CONTRACT.md](https://github.com/gasyoun/Uprava/blob/main/docs/ARCHITECTURE_SYSTEMA_REVENUE_COPY_VOICE_CONTRACT.md)).
+Пять строк, которые волна H1285–H1294 и все последующие правки денежных
+поверхностей обязаны переиспользовать дословно, а не переизобретать по лейнам
+(контракт §5 в
+[ARCHITECTURE_SYSTEMA_REVENUE_COPY_VOICE_CONTRACT.md](https://github.com/gasyoun/Uprava/blob/main/docs/ARCHITECTURE_SYSTEMA_REVENUE_COPY_VOICE_CONTRACT.md);
+пост-фактум норма и таблица расхождений — H3136,
+[VOICE_CONTRACT_MONEY_SURFACES_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VOICE_CONTRACT_MONEY_SURFACES_RU.md)).
 Файл создан лейном H1285 (первым дошедшим до общих строк); лейн, меняющий строку,
 обновляет её здесь и во всех уже использующих поверхностях в одном PR.
 
@@ -65,5 +68,25 @@ _Created: 19-07-2026 · Last updated: 20-07-2026_
 страница [/vozvrat](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/docs/vozvrat.blade.php).
 Полный разбор и term-by-term diff:
 [money-refund-policy-student-surface.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-refund-policy-student-surface.md).
+
+## Строка 5 — «Кабинет сам умеет» (self-serve после оплаты)
+
+Используют: письмо-подтверждение покупки (H1286), онбординг день 1 (H1286),
+подтверждение PayPal-заявки своего ученика (H1292).
+
+Автор — MG, 23-08-2026; зарегистрирована постфактум H3136 (24-08-2026), потому
+что повторяется в трех письмах дословно. Текущая редакция:
+
+> **Кабинет сам умеет:**
+> — погасить долг или взнос по рассрочке, без куратора;
+> — показать, почему урок закрыт, и открыть оплаченные блоки одной кнопкой;
+> — подсказать на каждом экране: пошаговый гид со скриншотами.
+> Весь гид: samskrte.ru/dvaram/help
+
+Открытый вопрос (VOICE_CONTRACT_MONEY_SURFACES_RU §2.2, §2.8, таблица строка
+10): «долг» и «рассрочка» расходятся с лексикой H1290 («оплата по частям») и с
+посылкой «читатель — ученик, а не должник». Предложенная замена первой строки:
+«внести очередную часть оплаты или закрыть просроченный платеж — без куратора».
+Решает человек; правка — во всех трех письмах одним PR.
 
 _Dr. Mārcis Gasūns_
