@@ -1,6 +1,6 @@
 # ROADMAP — Noboring «дожим» adoption (Systema + samskrte)
 
-_Created: 01-08-2026 · Last updated: 19-08-2026_
+_Created: 01-08-2026 · Last updated: 24-08-2026_
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
@@ -34,7 +34,7 @@ Prod was still on pre-H2094 deploy at probe time — numbers from the same filte
 | 30 d | 125 | 82 | 40 | 3 | **65.6%** | 50 | 0 | **0.0%** |
 | 90 d | 574 | 492 | 40 | 42 | **85.7%** | 217 | 5 | **2.3%** |
 
-**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay; product fix shipped flag-OFF in H2186, not yet enabled on prod).
+**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay; product fix shipped flag-OFF in H2186, **enabled in prod 02-08-2026** — see the § Rate B residual below and the [24-08 check-in](#post-enable-check-in-2026-08-24-prod-19323222992)).
 
 #### H2188 re-verify — live `dozhim:baseline --json` (prod, as_of `2026-08-02 19:26:05`)
 
@@ -55,7 +55,7 @@ Command **present** on box after deploy. Artifact: [docs/ops/dozhim_baseline_pro
 |---|---|---|
 | Deposit / trial checkout | Yes (email match) | Yes on paid webhook |
 | Marathon paid | Yes (enrollment) | Yes |
-| **Ordinary course checkout** | **No** (until flag ON) | **No** by default |
+| **Ordinary course checkout** | Yes since **02-08-2026** (prod env ON; code default still false) | Yes since **02-08-2026** (prod env ON) |
 
 **Owner path shipped (code default still false; env is the deploy rubilnik):**
 
@@ -68,6 +68,32 @@ Command **present** on box after deploy. Artifact: [docs/ops/dozhim_baseline_pro
 **Prod enable (human, 02-08-2026):** on `193.232.229.92` `/var/www/html` — `.env` has `LEAD_CONVERTED_AT_ON_COURSE_PAID=true` (backup `.env.bak.h2186.20260802`), `php artisan config:cache` rebuilt; `php artisan config:show features.lead_converted_at_on_course_paid` → **true**.
 
 **Post-enable baseline** (`php artisan dozhim:baseline --json`, as_of `2026-08-02 19:26:28`): Rate A 30d **61.7%** (74/120) / 90d **85.0%** (482/567); Rate B 30d **0.0%** (0/50) / 90d **2.3%** (5/216) — still sparse, as expected (no historical backfill). Forward-looking only: Rate B numerator fills for **new** course paid events. Primary H-B targets stay on **Rate A**. Re-check after ~1 week of paid volume.
+
+#### Post-enable check-in (24-08-2026, prod `193.232.229.92`, deploy `04ad4f3a`)
+
+Fresh `php artisan dozhim:baseline --json` + read-only usage counters (H3440; full method + evidence in [Uprava SYSTEMA_NOBORING_PROD_USAGE_AUDIT_24-08-2026.md](https://github.com/gasyoun/Uprava/blob/main/SYSTEMA_NOBORING_PROD_USAGE_AUDIT_24-08-2026.md)):
+
+| Window | A orders | A paid | A pending | A lost | **Rate A** | B leads | B converted | **Rate B** |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 30 d | 147 | 116 | 30 | 1 | **78.9%** | 16 | 1 | **6.3%** |
+| 90 d | 512 | 412 | 30 | 70 | **80.5%** | 179 | 17 | **9.5%** |
+
+Trend line Rate A 30d: 65.6% (01-08) → 61.7% (02-08) → **78.9%** (24-08) — above green `CONVERSION_WARN_PCT` band (63) and above NF's post-dozhim band (63–67%). **Causality is NOT proven: no controlled experiment was run** (recovery CTA enablement, queue, seasonality and mix all moved together); the number is a check-in, not an effect claim. Rate B is filling forward since the 02-08 instrumentation enable but stays sparse (16 leads in 30d).
+
+Usage counters (same probe): `dozhim_drip_logs` total **0** (auto-drip never fired — `dozhim_drip=false` in prod, the only OFF flag); follow-ups with `deal_id` created in 30d **3**, closed **0** (operator queue not being worked); active landings using `student_story_block` **0** (block built 10-08-2026, unused).
+
+Flag status — code default vs prod `.env` (verified 24-08-2026 via live `config()`):
+
+| Flag | Code default | Prod |
+|---|---|---|
+| `payment_recovery_cta` | false | ✅ true (07-08-2026) |
+| `lead_converted_at_on_course_paid` | false | ✅ true (02-08-2026) |
+| `manager_sales_report` | false | ✅ true |
+| `dozhim_queue` | false | ✅ true |
+| `dozhim_drip` | false | ❌ false — the only OFF flag |
+| `crm_pipeline_board` | false | ✅ true |
+
+Earlier sections below keep their historical wording («default OFF», «not yet enabled») as dated records of their time; this table is the current state.
 
 #### «Заявка» definition (PLAN D3/D7 + `config/conversion.php`)
 
