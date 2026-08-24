@@ -47,7 +47,7 @@ class DozhimNotifyOperatorCommand extends Command
 
         [$recipient, $via] = $this->recipient();
 
-        if ($recipient === null || $recipient === '' ) {
+        if ($recipient === null || $recipient === '') {
             Log::warning('dozhim:notify-operator — получатель не найден', [
                 'hint' => 'задайте DOZHIM_OPERATOR_TG_CHAT_ID или привяжите telegram_id пользователю роли manager',
             ]);
