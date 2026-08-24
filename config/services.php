@@ -116,6 +116,12 @@ return [
         // проверка отключена (см. App\Http\Middleware\VerifyTelegramBotWebhook).
         'bot_webhook_secret' => env('TELEGRAM_BOT_WEBHOOK_SECRET'),
         'admin_id' => env('ADMIN_TELEGRAM_ID'),
+
+        // Оператор дожима (решение MG 24-08-2026): числовой chat_id получателя
+        // будничной 10:00 сводки dozhim:notify-operator. Пусто → фолбэк на
+        // первого User роли manager с привязанным telegram_id (см.
+        // DozhimNotifyOperatorCommand::recipient()).
+        'dozhim_operator_tg_chat_id' => env('DOZHIM_OPERATOR_TG_CHAT_ID'),
         // Чат кураторов: общий group chat, куда добавлен основной бот.
         // Пусто → curator-уведомления отключены (см. App\Services\CuratorNotifier).
         'curators_chat_id' => env('TELEGRAM_CURATORS_CHAT_ID'),
