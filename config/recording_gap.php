@@ -21,7 +21,43 @@ return [
     |   sqlite3 /opt/n8n/storage/database.sqlite \
     |     "SELECT id,status,startedAt FROM execution_entity WHERE workflowId='1EIqqNzMl5NNIxST' ORDER BY startedAt DESC LIMIT 1;"
     |
+    | The scheduled run NEVER touches n8n. Retries are a separate opt-in lane
+    | (23-08-2026 class: executions dying on "Get row(s) in sheet" before any
+    | upload): `recordings:gap-watch --retry-failed`, gated by
+    | RECORDING_GAP_RETRY_FAILED_ENABLED, safe only when the executed-node set
+    | of the failed run is entirely pre-upload (see retry_safe_early_nodes).
+    | Late failures (AI Agent / uploads) stay human-only — resume from AI Agent1.
+    |
     */
+
+    // Master kill-switch for the --retry-failed lane. Default OFF.
+    'retry_enabled' => (bool) env('RECORDING_GAP_RETRY_FAILED_ENABLED', false),
+
+    // Upper bound per invocation — a jam day had three recordings at once.
+    'retry_max_per_run' => (int) env('RECORDING_GAP_RETRY_MAX_PER_RUN', 5),
+
+    // Zoom cloud recording lands hours after the lesson; widen the execution
+    // startedAt window by this many days past the lesson-date range.
+    'retry_window_slack_days' => (int) env('RECORDING_GAP_RETRY_WINDOW_SLACK_DAYS', 1),
+
+    // Nodes whose execution proves nothing was downloaded/uploaded yet, so a
+    // full replay cannot duplicate YouTube/Rutube. Anything outside this set
+    // in runData marks the execution unsafe for full retry.
+    'retry_safe_early_nodes' => [
+        'ZOOM',
+        'Switch',
+        'Switch1',
+        'Switch2',
+        'Code in JavaScript',
+        'Code in JavaScript1',
+        'Code in JavaScript2',
+        'Code in JavaScript5',
+        'Respond to Webhook',
+        'Respond to Webhook1',
+        'Respond to Webhook2',
+        'Get row(s) in sheet',
+        'Get row(s) in sheet1',
+    ],
 
     'telegram_chat_id' => env(
         'RECORDING_GAP_TELEGRAM_CHAT_ID',
