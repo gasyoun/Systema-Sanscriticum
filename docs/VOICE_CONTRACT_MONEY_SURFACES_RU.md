@@ -128,9 +128,9 @@ H1290 сознательно ушел от «рассрочки» — слово
 Вставка MG 23-08-2026 повторяется дословно в трех письмах
 (purchase-confirmation, onboarding/day1, paypal/claim-student-ack) и потому
 регистрируется в `_shared_strings.md` как строка 5 — менять только во всех
-трех сразу. Ее лексика («погасить долг», «взнос по рассрочке») расходится с
-§2.2 и с посылкой контракта «читатель — ученик, а не должник» — см. таблицу,
-строка 10: решение за человеком.
+трех сразу. Ее исходная лексика («погасить долг», «взнос по рассрочке»)
+расходилась с §2.2 и с посылкой контракта «читатель — ученик, а не должник» —
+см. таблицу, строка 10: по решению MG первая строка переписана.
 
 ## 3. Таблица расхождений
 
@@ -149,7 +149,7 @@ H1290 сознательно ушел от «рассрочки» — слово
 | 7 | [student/partials/referral.blade.php:57](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/student/partials/referral.blade.php) | «Кредит за рекомендации» — читается как банковский кредит рядом с «без кредитных анкет» | §2.2 → «Начислено за рекомендации» | исправлено (+ пин в [ReferralAskSurfacesTest](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/ReferralAskSurfacesTest.php)) |
 | 8 | [student/partials/referral.blade.php:19](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/student/partials/referral.blade.php) | «рекомендация студента» | §2.1 → «рекомендация ученика» | исправлено |
 | 9 | [installments-cta.blade.php:14](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/installments-cta.blade.php) | «Куратор свяжется с вами — обычно отвечаем в течение рабочего дня» — третье лицо + первое множественное в одной фразе | §2.3 → «Запрос у куратора — обычно отвечаем в течение рабочего дня» (общая строка 3 сохранена дословно) | исправлено |
-| 10 | [purchase-confirmation.blade.php:50](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/purchase-confirmation.blade.php) · [day1.blade.php:32](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/onboarding/day1.blade.php) · [claim-student-ack.blade.php:67](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/paypal/claim-student-ack.blade.php) | блок MG 23-08-2026 «погасить долг или взнос по рассрочке, без куратора» — «долг» в приветственном письме сразу после оплаты; «рассрочка» против «оплаты по частям» (H1290); строка не зарегистрирована как общая | §2.2, §2.8; предложение: «внести очередную часть оплаты или закрыть просроченный платеж — без куратора» | **человек** (зарегистрирована как строка 5 дословно; текст MG суточной давности не правится агентом) |
+| 10 | [purchase-confirmation.blade.php:50](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/purchase-confirmation.blade.php) · [day1.blade.php:32](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/onboarding/day1.blade.php) · [claim-student-ack.blade.php:67](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/paypal/claim-student-ack.blade.php) | блок MG 23-08-2026 «погасить долг или взнос по рассрочке, без куратора» — «долг» в приветственном письме сразу после оплаты; «рассрочка» против «оплаты по частям» (H1290); строка не зарегистрирована как общая | §2.2, §2.8 → «внести очередную часть оплаты или закрыть просроченный платеж — без куратора» | исправлено (решение MG «B-reword» 24-08-2026, вторым PR во всех трех письмах; строка 5 в `_shared_strings.md` обновлена) |
 | 11 | [paypal-cta.blade.php:11–12](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/paypal-cta.blade.php) · [claim.blade.php:20](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/paypal/claim.blade.php) · [claim-student-ack.blade.php:49](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/paypal/claim-student-ack.blade.php) | «в течение одного рабочего дня» (сверка) рядом с «в течение рабочего дня» (ответ) | §2.3: два разных обещания, обе формы законны | норма |
 | 12 | [success.blade.php:78, 125, 147](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/payment/success.blade.php) · письма (`В личный кабинет`, капитель CSS) · [day1.blade.php:17](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/onboarding/day1.blade.php) | пять подписей кнопки в кабинет: «Перейти к обучению» / «Перейти в личный кабинет» / «В личный кабинет» / «Войти в аккаунт» / «Открыть первый урок» | §2.7: каждая привязана к состоянию (подтверждено / ждем / гость / первый шаг) | норма |
 | 13 | темы писем (см. §2.6) | day1 с двоеточием, day5 вопросом | §2.6: онбординг — не денежная тема | норма |
@@ -178,12 +178,12 @@ H1290 сознательно ушел от «рассрочки» — слово
 4. Чекаут: «Запрос у куратора — обычно отвечаем в течение рабочего дня.»
 5. `_shared_strings.md`: строка 5 зарегистрирована.
 
-## 5. Что ждет человека
+## 5. Что ждало человека — решено
 
-Строка 10 таблицы — единственное расхождение, которое агент не правит:
-текст авторства MG от 23-08-2026, повторенный в трех письмах. Варианты и
-рекомендация — в handoff-отчете H3136 и в `.ai_state.md`; после решения
-правка делается во всех трех письмах одним PR (§2.8).
+Строка 10 таблицы (блок MG «Кабинет сам умеет» в трех письмах) была
+единственным расхождением, которое агент не правил сам. MG выбрал «B-reword»
+24-08-2026; первая строка блока переписана во всех трех письмах вторым PR,
+строка 5 в `_shared_strings.md` обновлена (§2.8). Открытых расхождений нет.
 
 ## 6. Как применять следующей линии
 
