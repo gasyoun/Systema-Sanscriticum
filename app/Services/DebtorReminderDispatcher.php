@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Mail;
 class DebtorReminderDispatcher
 {
     /** Плейсхолдеры: {name}, {course}, {block}, {pay_link}, {paid_until}, {deadline}. */
-    public const DEFAULT_TEXT = "Намасте, {name}!\n\nБлок №{block} курса «{course}» уже идёт (или скоро начнётся), а оплата ещё не поступила.{paid_until}{deadline} Чтобы не потерять доступ к материалам, оформите оплату.\n\nОплатить курс: {pay_link}\n\nЕсли оплата уже внесена — просто проигнорируйте это сообщение.";
+    public const DEFAULT_TEXT = "Намасте, {name}!\n\nБлок №{block} курса «{course}» уже идет или скоро начнется, а оплата пока не поступила.{paid_until}{deadline}\n\nОплатить курс: {pay_link}\n\nЕсли оплата уже внесена — просто проигнорируйте это сообщение.";
 
     public const DEFAULT_SUBJECT = 'Напоминание об оплате — {course}';
 

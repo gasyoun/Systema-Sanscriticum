@@ -128,7 +128,7 @@
                     <input type="text" name="paypal_payer" required maxlength="255" value="{{ old('paypal_payer') }}"
                            placeholder="ваш PayPal-адрес (email)"
                            class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
-                    <p class="mt-1 text-xs text-gray-500">Email вашего PayPal-аккаунта — так мы найдем перевод в личном PayPal (не business-аккаунт).</p>
+                    <p class="mt-1 text-xs text-gray-500">Email вашего PayPal-аккаунта — так мы найдем перевод в личном PayPal (не бизнес-аккаунт).</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -199,16 +199,16 @@
                 </li>
                 <li class="flex gap-3">
                     <span class="shrink-0 font-bold text-gray-400">2.</span>
-                    <span>Вы наш студент — доступ к курсу откроется сразу после отправки
-                    заявки Вами. Уроки и материалы ждут в личном кабинете; сверку платежа
+                    <span>Вы наш ученик — доступ к курсу откроется сразу после отправки
+                    заявки. Уроки и материалы ждут в личном кабинете; сверку платежа
                     мы сделаем после и выборочно.</span>
                 </li>
                 <li class="flex gap-3">
                     <span class="shrink-0 font-bold text-gray-400">3.</span>
-                    <span>Если деньги списались повторно или что-то не так —
+                    <span>Если деньги списались — не платите повторно:
                     <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="font-semibold text-indigo-700 hover:text-indigo-900">напишите нам в Telegram</a>,
-                    обычно отвечаем в течение рабочего дня. Не платите повторно — проверим
-                    платеж и вернем деньги.</span>
+                    мы проверим платеж и либо откроем доступ, либо вернем деньги.
+                    Обычно отвечаем в течение рабочего дня.</span>
                 </li>
                 @else
                 <li class="flex gap-3">
@@ -223,9 +223,9 @@
                 </li>
                 <li class="flex gap-3">
                     <span class="shrink-0 font-bold text-gray-400">3.</span>
-                    <span>Если деньги списались дважды — не платите повторно: напишите нам,
-                    проверим платеж и вернем деньги. Если рабочий день прошел, а доступа
-                    нет —
+                    <span>Если деньги списались — не платите повторно: напишите нам,
+                    мы проверим платеж и либо откроем доступ, либо вернем деньги.
+                    Если рабочий день прошел, а доступа нет —
                     <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="font-semibold text-indigo-700 hover:text-indigo-900">напишите нам в Telegram</a>,
                     обычно отвечаем в течение рабочего дня.</span>
                 </li>
