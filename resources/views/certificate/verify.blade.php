@@ -2,6 +2,23 @@
 
 @section('title', 'Проверка сертификата')
 
+@push('head')
+    @if($certificate)
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:title" content="{{ $certificate->isSpravka() ? 'Справка подтверждена' : 'Сертификат подтверждён' }}: {{ $certificate->displayStudentName() }}">
+        <meta property="og:description" content="{{ str_replace('|', ' · ', $certificate->displayCourseTitle()) }} — выдан {{ \Carbon\Carbon::parse($certificate->issued_at)->format('d.m.Y') }} · проверено Обществом ревнителей санскрита">
+    @else
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:title" content="Сертификат не найден">
+        <meta property="og:description" content="Документ с таким номером не зарегистрирован — проверьте ссылку или QR-код.">
+    @endif
+    <meta property="og:image" content="{{ asset('images/og-main-preview.jpg') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+@endpush
+
 @section('content')
 <div class="container mx-auto px-4 py-12 md:py-20 flex justify-center">
     <div class="w-full max-w-xl">
@@ -67,6 +84,13 @@
                     </div>
                 </div>
             </div>
+
+            @include('certificate.partials.share', [
+                'url' => url('/verify/'.$certificate->number),
+                'text' => ($certificate->isSpravka() ? 'Моя справка' : 'Мой сертификат')
+                    .' Общества ревнителей санскрита: '
+                    .str_replace('|', ' ', $certificate->displayCourseTitle()),
+            ])
         @else
             {{-- ═══ НЕ НАЙДЕН ═══ --}}
             <div class="bg-[#111622] border border-[#1F2636] rounded-3xl overflow-hidden shadow-2xl">
