@@ -105,7 +105,7 @@ _Создано: 08-07-2026 · Обновлено: 23-08-2026 (№81 H3314 — �
 
 1. В `.env`: `MAXMIND_ACCOUNT_ID=<id>`, `MAXMIND_LICENSE_KEY=<ключ с maxmind.com>` (бесплатная регистрация).
 2. `php artisan support:geo-update-maxmind --dry-run` → затем без флага. База ляжет в `storage/app/geo/GeoLite2-City.mmdb`.
-3. Правка текста политики приватности (раздел данных: «гео-город анонимного посетителя, резолв локально, IP не передаётся третьим лицам») → подтверждение MG.
+3. Правка текста политики приватности: готовые формулировки — [docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md) (блоки §4.1 / §5.4 / примечание к §7.3; человек вставляет в мастер и переопубликует PDF) → подтверждение MG.
 4. Только тогда: `SUPPORT_GEO_DRIVER=maxmind`, `SUPPORT_VISITOR_GEO=true` (+ presence `SUPPORT_VISITOR_PRESENCE=true` отдельно).
 5. Стоп: `SUPPORT_GEO_DRIVER=null`, флаги `false`. База остаётся на диске безвредно.
 
