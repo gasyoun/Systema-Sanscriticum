@@ -100,7 +100,7 @@
                     @endif
 
                     @if($lesson->flash_cards)
-                        <button class="btn-flash" onclick='startFlash(@js($lesson->flash_cards))'>
+                        <button class="btn-flash" onclick="startFlash(@js($lesson->flash_cards))">
                             🎴 Карточки для запоминания
                         </button>
                     @endif

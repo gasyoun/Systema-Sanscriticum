@@ -94,6 +94,7 @@ class XssRenderSanitizerTest extends TestCase
                 'type' => 'instructor_block',
                 'data' => [
                     'name' => 'Инструктор',
+                    'role' => 'Инструктор санскрита',
                     'bio' => self::EVIL_HTML,
                     'publications' => [
                         ['title' => 'Книга', 'url' => 'javascript:alert(4)" onmouseover="alert(5)'],
