@@ -64,6 +64,12 @@ return [
         env('CABINET_PROBE_TELEGRAM_CHAT_ID', env('ADMIN_TELEGRAM_ID', '')),
     ),
 
+    // MG 24-08-2026: when a recording is stuck past the morning check, the
+    // care department must hear it too, not only the ops pulse. Same payload,
+    // same 08:00 run. The sending bot (services.telegram.bot_token) has to be
+    // a member of that chat; empty = admin-only (previous behaviour).
+    'care_telegram_chat_id' => env('RECORDING_GAP_CARE_TELEGRAM_CHAT_ID', ''),
+
     'n8n_api_base' => rtrim((string) env('N8N_API_BASE_URL', 'https://context-ai.ru'), '/'),
 
     // Never commit the value. Empty → skip-soft (table still prints).

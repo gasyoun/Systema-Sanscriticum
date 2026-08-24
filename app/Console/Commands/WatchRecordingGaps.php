@@ -276,6 +276,10 @@ class WatchRecordingGaps extends Command
     {
         $token = (string) config('services.telegram.bot_token', '');
         $chatIds = $this->parseChatIds(config('recording_gap.telegram_chat_id'));
+        $careId = trim((string) config('recording_gap.care_telegram_chat_id', ''));
+        if ($careId !== '' && ! in_array($careId, $chatIds, true)) {
+            $chatIds[] = $careId;
+        }
         if ($token === '' || $chatIds === []) {
             $this->warn('TELEGRAM_BOT_TOKEN или RECORDING_GAP_TELEGRAM_CHAT_ID пусты — алерт не ушёл.');
 
@@ -297,6 +301,9 @@ class WatchRecordingGaps extends Command
                     $this->info('TG → '.$chatId);
                 } else {
                     Log::warning('recordings:gap-watch tg fail', ['chat_id' => $chatId, 'body' => $response->body()]);
+                    if ($chatId === $careId && $careId !== '') {
+                        $this->warn('Отдел заботы ('.$careId.') не получил алерт: '.mb_substr($response->body(), 0, 120));
+                    }
                 }
             } catch (Throwable $e) {
                 Log::warning('recordings:gap-watch tg error', ['chat_id' => $chatId, 'error' => $e->getMessage()]);
