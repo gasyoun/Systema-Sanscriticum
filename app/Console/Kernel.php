@@ -43,6 +43,14 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('sanctum-token-prune');
 
+        // H3445: еженедельное обновление GeoLite2-City для SUPPORT_GEO_DRIVER=maxmind.
+        // Команда сама выходит, если учётные данные MaxMind не заданы.
+        $schedule->command('support:geo-update-maxmind')
+            ->weeklyOn(0, '4:40')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('support-geo-maxmind-update');
+
         // Перевод просроченных promises в статус expired — ночью.
         // onFailure → ScheduleFailureSignal (H2338 / audit spec 7): log+admin
         // bell; without it, money crons fail only into laravel.log.

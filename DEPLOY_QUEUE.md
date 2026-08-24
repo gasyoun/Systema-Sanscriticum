@@ -95,13 +95,19 @@ _Создано: 08-07-2026 · Обновлено: 23-08-2026 (№81 H3314 — �
 3. Smoke E из диага §4 (`SENT_OK` + письмо получено) → retry 12 потерянных чеков (`queue:retry` по списку id).
 4. Стоп: при отказе от смены — ничего не трогать, вариант A осознанно принят.
 
-### H3247 — trial Deal CRM — флаги ОСТАЮТСЯ OFF
+### H3247/H3248 — trial Deal CRM — ✅ ОБА ФЛАГА ВКЛЮЧЕНЫ 24-08-2026
 
-Код инертный, пока оба ключа выключены. Это не денежный грант: CRM-карточка пробника и черновик FollowUpTask. Публичная кнопка записи — H3248 (`CRM_TRIAL_WIDGET_PUBLIC`).
+**Статус (24-08-2026):** `CRM_TRIAL_BOOKING=true` + `CRM_TRIAL_WIDGET_PUBLIC=true` в прод `.env`, config:cache пересобран. Смок OxAlpha PASS: tinker-заявка через `TrialBookingService::bookFree` на реальном ближайшем пробнике создала Lead+Deal (`kind=trial`, `booked`), повтор идемпотентен, User/гранты/группы не создавались (Rank 4), тестовые строки удалены — ноль остатков. Публичная кнопка «Записаться» на `/widgets/schedule` жива по отдельному рулингу MG 24-08 («оставить ON»). Откат: оба ключа `false` + `config:cache`.
 
-1. После staff smoke в `/admin/deals-board`: `CRM_TRIAL_BOOKING=true`, затем `php artisan config:cache`. Виджет **не** включать.
-2. Смоук: гость `/admin/deals` 302; куратор видит бейдж «Пробник» на сделке с `kind=trial`; исход сохраняется.
-3. Стоп: `CRM_TRIAL_BOOKING=false` + `config:cache`.
+### H3445 — гео-город посетителя: драйвер MaxMind GeoLite2 (локальная база)
+
+Рулинг MG 24-08-2026: провайдер города = **MaxMind GeoLite2 локально** (Cloudflare отклонён как заграничный процессор; ip-api.com исключён лицензионно). Код драйвера `'maxmind'` в `VisitorGeoResolver` + команда `support:geo-update-maxmind` (еженедельно вс 04:40). Включение — ПОСЛЕ правки политики приватности (бриф H1234, C(i)):
+
+1. В `.env`: `MAXMIND_ACCOUNT_ID=<id>`, `MAXMIND_LICENSE_KEY=<ключ с maxmind.com>` (бесплатная регистрация).
+2. `php artisan support:geo-update-maxmind --dry-run` → затем без флага. База ляжет в `storage/app/geo/GeoLite2-City.mmdb`.
+3. Правка текста политики приватности (раздел данных: «гео-город анонимного посетителя, резолв локально, IP не передаётся третьим лицам») → подтверждение MG.
+4. Только тогда: `SUPPORT_GEO_DRIVER=maxmind`, `SUPPORT_VISITOR_GEO=true` (+ presence `SUPPORT_VISITOR_PRESENCE=true` отдельно).
+5. Стоп: `SUPPORT_GEO_DRIVER=null`, флаги `false`. База остаётся на диске безвредно.
 
 ### №81 — H3314 — закат мобильных Sanctum-токенов (90 дней) + per-credential login throttle
 

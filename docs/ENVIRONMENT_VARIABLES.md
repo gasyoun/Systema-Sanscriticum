@@ -594,7 +594,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_FOLLOW_UP_TASKS` | optional | `false` | config/features.php:365 |
 | `SUPPORT_GEO_DRIVER` | optional | `'null'` | config/support_geo.php:28 |
 | `SUPPORT_GEO_IPAPI_ENDPOINT` | optional | `'http://ip-api.com/json/'` | config/support_geo.php:34 |
+| `SUPPORT_GEO_MAXMIND_PATH` | optional | `storage_path('app/geo/GeoLite2-City.mmdb')` | config/support_geo.php:38 |
 | `SUPPORT_GEO_TIMEOUT` | optional | `3` | config/support_geo.php:31 |
+| `MAXMIND_ACCOUNT_ID` | optional (needed for `support:geo-update-maxmind` and driver `maxmind`) | `''` | config/support_geo.php:41 |
+| `MAXMIND_LICENSE_KEY` | secret (same as above) | `''` | config/support_geo.php:42 |
 | `SUPPORT_HOMEWORK_PAUSE_NOTE` | optional | `true` | config/support.php:37 |
 | `SUPPORT_HOMEWORK_PAUSE_NOTE_QUOTE_MAX` | optional | `120` | config/support.php:38 |
 | `SUPPORT_HOURS_ENABLED` | feature-flag | `false` | config/support_hours.php:22 |
