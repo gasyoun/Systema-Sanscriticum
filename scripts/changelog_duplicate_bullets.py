@@ -59,7 +59,15 @@ def find_duplicates(text):
 
 def main():
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    path = os.path.join(repo, 'changelog.md')
+    # Файл встречается в обоих регистрах (case-rename changelog.md -> CHANGELOG.md
+    # на case-insensitive Windows не меняет запись в старых клонах) — берём то,
+    # что реально лежит на диске, иначе Linux-CI падает на FileNotFoundError.
+    candidates = ['CHANGELOG.md', 'changelog.md']
+    path = next(
+        (os.path.join(repo, name) for name in candidates if os.path.isfile(os.path.join(repo, name))),
+        os.path.join(repo, candidates[0]),
+    )
+    display_name = os.path.basename(path)
     as_json = '--json' in sys.argv
 
     with open(path, encoding='utf-8') as fh:
@@ -79,10 +87,10 @@ def main():
 
     total = sum(len(h) for _, h in dupes)
     if not dupes:
-        print('changelog.md: no duplicated bullets')
+        print(display_name + ': no duplicated bullets')
         return 0
 
-    print('changelog.md: {0} bullet(s) duplicated, {1} copies total\n'.format(
+    print(display_name + ': {0} bullet(s) duplicated, {1} copies total\n'.format(
         len(dupes), total))
     for bullet, hits in dupes:
         sections = sorted(set(s for s, _ in hits))
