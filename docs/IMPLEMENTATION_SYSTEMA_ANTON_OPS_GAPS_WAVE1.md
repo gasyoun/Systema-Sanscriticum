@@ -90,7 +90,7 @@ already a dep), pick segment, send, and read open/click counts (aggregate over
 on: B7.
 
 **Step B9 — changelog + activation row.**
-Files: `changelog.md` (`[Unreleased]` → `### Added`), `DEPLOY_QUEUE.md` (append an activation
+Files: `CHANGELOG.md` (`[Unreleased]` → `### Added`), `DEPLOY_QUEUE.md` (append an activation
 row: set `MAIL_MAILER` + mailbox creds, run the new migrations, flip `EMAIL_CAMPAIGNS=true`,
 `config:cache`; note the SPF/DKIM/DMARC + first-segment-on-staging prerequisites). Per the
 changelog-cadence rule this is mandatory in the same pass. Depends on: all above.

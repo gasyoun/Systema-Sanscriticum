@@ -66,7 +66,7 @@ First-screen docs the fat file told the agent to open (unchanged; they stay on-d
 | `worktree_bootstrap.ps1` | always-on safety | Kept. |
 | Test-filter rhythm | procedure | One line. |
 | Never junction `vendor/` | always-on safety | Kept ([#713](https://github.com/gasyoun/Systema-Sanscriticum/issues/713)). |
-| `changelog.md` lowercase trap | always-on safety | Kept ([Uprava FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)). |
+| `CHANGELOG.md` lowercase trap | always-on safety | Kept ([Uprava FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)). |
 | Absolute-date fixture bomb | procedure + history | One line + [CalendarFeedTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Student/CalendarFeedTest.php). |
 | `preg_split('/\R/')` | always-on safety | Kept (H1914). |
 | Operational hazard notes | always-on safety | Kept + [DANGER_FACTS.md](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md). |

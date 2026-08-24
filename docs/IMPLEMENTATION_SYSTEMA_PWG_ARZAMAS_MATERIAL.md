@@ -144,7 +144,7 @@ public/images/materials/pwg/   # raster/SVG assets
 
 ## Step 10 — Ship
 
-1. changelog.md `[Unreleased]` bullet  
+1. CHANGELOG.md `[Unreleased]` bullet  
 2. PR (non-money; auto-merge OK if green)  
 3. Production: deploy + `php artisan materials:import-pwg-arzamas --publish`  
 4. Browser smoke: TOC, images, CTA, Materials card  
@@ -163,7 +163,7 @@ public/images/materials/pwg/   # raster/SVG assets
 | `public/images/materials/pwg/*` | add |
 | `app/Console/Commands/ImportPwgArzamasMaterial.php` | add |
 | `tests/Feature/PwgArzamasMaterialTest.php` | add |
-| `changelog.md` | edit Unreleased |
+| `CHANGELOG.md` | edit Unreleased |
 | Plan docs already on main | no change unless FOLLOWUPS |
 
 ---

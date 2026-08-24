@@ -50,7 +50,7 @@ Do only what is one-line or already a missing twin of shipped markup:
 
 1. PHPUnit `tests/Feature/Seo/LlmsTxtTest.php` + homepage og/sameAs assertions.
 2. Pint on touched PHP.
-3. [changelog.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/changelog.md) `[Unreleased]` Added bullet. `/cut-release` after merge.
+3. [CHANGELOG.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CHANGELOG.md) `[Unreleased]` Added bullet. `/cut-release` after merge.
 4. PR, merge (`gasyoun/*` always-merge). Remove the worktree after the push is confirmed.
 
 ### Step 5 — Deploy + live curl

@@ -91,7 +91,7 @@ Pint на новые PHP.
 
 ## Шаг 8 — журнал, CHANGELOG, PR
 
-- `changelog.md` `[Unreleased] ### Added` одна пуля с полным URL плана.
+- `CHANGELOG.md` `[Unreleased] ### Added` одна пуля с полным URL плана.
 - Журнал решений в теле PR, если сработал дефолт 11 (видимость студенческих URL).
 - PR → мерж → деплой Systema → смоук.
 

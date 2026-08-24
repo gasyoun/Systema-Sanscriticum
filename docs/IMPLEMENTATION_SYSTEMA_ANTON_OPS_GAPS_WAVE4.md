@@ -74,7 +74,7 @@ Depends on: all above.
 
 ## Step B9 — changelog + DEPLOY_QUEUE activation
 
-Files: `changelog.md` `[Unreleased]`, `DEPLOY_QUEUE.md` row №47 (VK app + Video/Wall token,
+Files: `CHANGELOG.md` `[Unreleased]`, `DEPLOY_QUEUE.md` row №47 (VK app + Video/Wall token,
 import n8n workflow, set `N8N_CLIP_*` secrets, migrate, flip `CLIP_MARKETING_ENABLED`).
 Depends on: all above.
 
