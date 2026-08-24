@@ -181,6 +181,19 @@ return [
     'support_daily_digest' => (bool) env('SUPPORT_DAILY_DIGEST', true),
 
     /*
+     | H3462 (рулинг MG 24-08-2026): входящий email как канал поддержки.
+     | Ящик zabota@samskrte.ru пересылает почту в проводник (n8n на .91, без
+     | нового платного вендора), проводник POSTит payload на
+     | /api/webhooks/inbound-email/{secret}; письмо пишется в chat_messages
+     | (source='email') с дедупом по Message-ID; нераспознанный отправитель —
+     | в видимую очередь (/admin/inbound-emails), не в никуда. ВЫКЛ по
+     | умолчанию: маршрут 404. Включение: SUPPORT_INBOUND_EMAIL=true +
+     | INBOUND_EMAIL_WEBHOOK_SECRET + config:cache (шаги — DEPLOY_QUEUE H3462;
+     | сначала завести ящик и пересылку).
+     */
+    'support_inbound_email' => (bool) env('SUPPORT_INBOUND_EMAIL', false),
+
+    /*
      | Гео/город посетителя веб-чата в панели куратора (H1196, Jivo-паритет
      | Pillar 1). Когда ВКЛ, при первом сообщении посетителя его IP резолвится
      | асинхронно (ResolveVisitorGeoJob → VisitorGeoResolver, драйвер из

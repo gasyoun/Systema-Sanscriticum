@@ -19,6 +19,7 @@ use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\ValidateSignature;
 use App\Http\Middleware\VerifyCsrfToken;
 use App\Http\Middleware\VerifyExamScoresWebhook;
+use App\Http\Middleware\VerifyInboundEmailWebhook;
 use App\Http\Middleware\VerifyLeadStepWebhook;
 use App\Http\Middleware\VerifyLectureClipCallbackWebhook;
 use App\Http\Middleware\VerifyMaxMagnetWebhook;
@@ -134,6 +135,8 @@ class Kernel extends HttpKernel
         'verify.partner.bot' => VerifyPartnerBotWebhook::class,
         // --- TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ---
         'verify.tg.zapisi' => VerifyTelegramZapisiWebhook::class,
+        // --- ВХОДЯЩИЙ EMAIL (H3462): zabota@ → вебхук, секрет в пути ---
+        'verify.inbound.email' => VerifyInboundEmailWebhook::class,
         // Канонический slug курса: alias в URL → 301 на courses.slug
         'course.canonical' => RedirectToCanonicalCourseSlug::class,
     ];
