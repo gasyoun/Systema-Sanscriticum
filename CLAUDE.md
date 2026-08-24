@@ -133,7 +133,7 @@ always-on invariants.
 - Timezone `Europe/Moscow`. Flags in `config/features.php`. HTTPS forced in production.
 - Composer pins PHP 8.3 + Unix `pcntl`/`posix`; `platform-check=false` so Windows resolves the lock. Do not drop `composer check-platform-reqs` (CI + `deploy.sh --no-dev`).
 - **New worktree:** [`scripts/worktree_bootstrap.ps1`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/worktree_bootstrap.ps1) (robocopy `vendor/`, ~60s). Never junction/symlink `vendor/` — PHP `__DIR__` resolves to the physical target and the worktree silently runs another tree's `app/` ([#713](https://github.com/gasyoun/Systema-Sanscriticum/issues/713)).
-- The tracked changelog filename **changed case on 24-08-2026**: `changelog.md` (lowercase) → [`CHANGELOG.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CHANGELOG.md). On Windows (`core.ignorecase=true`) `git add` with the wrong case is a silent no-op — take the case from `git ls-files`, then verify with `git diff --cached --name-only` ([Uprava FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)).
+- This repo tracks [`changelog.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/changelog.md) **lowercase**. `git add CHANGELOG.md` is a silent no-op on Windows (`core.ignorecase=true`). Take the case from `git ls-files`, then `git diff --cached --name-only` ([Uprava FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)).
 - `preg_split('/\R/', ...)` without `/u` splits inside Cyrillic (`х` = `D1 85`). Use `preg_split('/\r\n|\n|\r/', ...)` (H1914).
 
 ## Operational hazards
