@@ -1111,4 +1111,20 @@ return [
      | только через решение MG). Анти-срочность: никаких дедлайн-механик.
      */
     'gift_certificates' => (bool) env('GIFT_CERTIFICATES', false),
+
+    /*
+     | H3231 (Wave 3, agent-ops overlay): bounded student agent — ровно три
+     | job'а (homework hint / dictionary lookup / cabinet FAQ), жёсткий
+     | allow-list инструментов в StudentAgentService, НЕ свободный чат с
+     | куратором. Шаблон/БД-поиск/H2448-ретривер побеждают LLM (тот же
+     | порядок, что у support_answer_suggester); LLM-фолбэк только для
+     | homework_hint и только по названию урока — тело работы, файлы и
+     | Telegram DM никогда не уходят в LLM. cabinet_faq требует ВКЛЮЧЁННОГО
+     | faq_rag_suggester — второго нерегулируемого пути в него это не
+     | открывает. ВЫКЛ по умолчанию — deploy-рубильник: пока OFF,
+     | POST /dvaram/agent отдаёт 404 байт-в-байт как раньше (маршрута не
+     | существовало). Включение — осознанный шаг человека:
+     | STUDENT_AGENT_ENABLED=true + config:cache после ревью.
+     */
+    'student_agent' => (bool) env('STUDENT_AGENT_ENABLED', false),
 ];
