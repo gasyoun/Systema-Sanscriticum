@@ -481,17 +481,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('telegram-support-sync');
 
-        // H3380: вторая MTProto-сессия (rusamskrtam). Свой замок сессии
-        // (MadelineSessionContext::lockName()), свой cooldown фаз, свой дрен —
-        // с основным заходом не пересекаются. Каждые 5 минут достаточно:
-        // автоответ и суфлер не обязаны быть секундными. No-op, пока у аккаунта
-        // нет session_path (интерактивный логин) или is_enabled=false.
-        $schedule->command('telegram-support:sync --account=rusamskrtam')
-            ->everyFiveMinutes()
-            ->withoutOverlapping($syncLockMinutes)
-            ->onOneServer()
-            ->name('telegram-support-sync-rusamskrtam');
-
+        // H3380 (24-08): вторая сессия rusamskrtam ВЫКЛЮЧЕНА. Открытие дня:
+        // давний support-сеанс и так был аккаунтом @rusamskrtam (getSelf
+        // id=5487293147), второй логин создавал дубль того же аккаунта —
+        // нарушение D1 (два MTProto-логина = AUTH_RESTART пинг-понг).
+        // Автоответ-проба продолжается на ОСНОВНОМ лейне: строке support
+        // выставлены auto_reply_enabled=1 + hint_recipients; флаги те же.
+        // Слот --account=rusamskrtam убран из расписания осознанно; строка
+        // аккаунта оставлена is_enabled=0 с историей. Вернуть отдельную
+        // сессию можно только для ДРУГОГО аккаунта.
         // W3.1 healthcheck (H595): алерт админам, если синк протух или
         // последний проход упал ошибкой — не чаще раза в 15 мин, no-op при
         // отсутствии включённых аккаунтов.

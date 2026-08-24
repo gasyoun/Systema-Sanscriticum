@@ -184,6 +184,14 @@ class SyncTelegramSupport extends Command
             return "Аккаунт «{$accountName}» не заведён в telegram_support_accounts.";
         }
 
+        // H3380 (урок 24-08): named-аккаунт может совпасть личностью с основным
+        // support-аккаунтом — тогда вторая сессия того же аккаунта нарушает D1
+        // (два MTProto-логина = AUTH_RESTART пинг-понг). Отключённая строка
+        // (is_enabled=0) не открывается вовсе.
+        if (! $account->is_enabled) {
+            return "Аккаунт «{$accountName}» отключён (is_enabled=0) — синк не запускается.";
+        }
+
         if ((string) $account->session_path === '') {
             return "У аккаунта «{$accountName}» не задан session_path — интерактивный логин ещё не выполнялся.";
         }

@@ -309,6 +309,19 @@ class AutoReplyTrialTest extends TestCase
         }
     }
 
+    public function test_sync_command_refuses_disabled_named_account(): void
+    {
+        TelegramSupportAccount::create([
+            'name' => 'rusamskrtam',
+            'session_path' => 'storage/app/telegram-support/rusamskrtam/session.madeline',
+            'is_enabled' => false,
+        ]);
+
+        $this->artisan('telegram-support:sync', ['--account' => 'rusamskrtam'])
+            ->expectsOutputToContain('отключён (is_enabled=0)')
+            ->assertExitCode(1);
+    }
+
     public function test_drainer_is_scoped_to_own_account(): void
     {
         $this->skipWithoutMadelineProto();
