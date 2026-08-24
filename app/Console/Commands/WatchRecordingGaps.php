@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Services\Recordings\N8nZoomExecutionProbe;
+use App\Services\Recordings\N8nZoomExecutionRetrier;
 use App\Services\Recordings\RecordingGapFinder;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -15,7 +16,9 @@ use Throwable;
 
 /**
  * H3209: lesson happened, recording not in cabinet/TG by next morning.
- * Scheduled 08:00 Europe/Moscow. Never retries n8n ZOOM 1.4.
+ * Scheduled 08:00 Europe/Moscow. The scheduled run never touches n8n;
+ * --retry-failed is an explicit opt-in lane for early-failed executions
+ * (died pre-upload), see N8nZoomExecutionRetrier.
  */
 class WatchRecordingGaps extends Command
 {
@@ -25,11 +28,12 @@ class WatchRecordingGaps extends Command
         {--force : Send even if recording_gap:DATE already alerted}
         {--date= : Single day YYYY-MM-DD (default: yesterday, app tz)}
         {--from= : Inclusive start YYYY-MM-DD (overrides --date)}
-        {--until= : Inclusive end YYYY-MM-DD}';
+        {--until= : Inclusive end YYYY-MM-DD}
+        {--retry-failed : Retry n8n executions that died before any upload (needs RECORDING_GAP_RETRY_FAILED_ENABLED)}';
 
     protected $description = 'Alert when yesterday had a schedule but no matching published recording (H3209).';
 
-    public function handle(RecordingGapFinder $finder, N8nZoomExecutionProbe $n8n): int
+    public function handle(RecordingGapFinder $finder, N8nZoomExecutionProbe $n8n, N8nZoomExecutionRetrier $retrier): int
     {
         [$from, $until] = $this->window();
         $includeWithoutChat = (bool) $this->option('all');
@@ -59,12 +63,30 @@ class WatchRecordingGaps extends Command
         $this->table(['date', 'start', 'course_id', 'course', 'group_id', 'group', 'reason'], $rows);
         $this->line($this->n8nLine($n8nExec));
 
-        $payload = $this->buildTelegram($gaps, $n8nExec, $from, $until);
+        $retryReport = ['items' => [], 'posted' => 0];
+        if ((bool) $this->option('retry-failed')) {
+            if (! (bool) config('recording_gap.retry_enabled')) {
+                $this->warn('Ретрай выключен: RECORDING_GAP_RETRY_FAILED_ENABLED=false — только алерт.');
+            } else {
+                $retryReport = $this->runRetryLane(
+                    $retrier,
+                    $from,
+                    $until,
+                    execute: ! $this->option('dry'),
+                );
+                $this->renderRetryTable($retryReport['items']);
+            }
+        }
+
+        $payload = $this->buildTelegram($gaps, $n8nExec, $from, $until, $retryReport['items']);
         $this->line('--- TG payload ---');
         $this->line($payload);
 
         if ($this->option('dry')) {
             $this->comment('--dry: Telegram не отправлен.');
+            if ((bool) $this->option('retry-failed') && (bool) config('recording_gap.retry_enabled')) {
+                $this->comment('--dry: ретраи не отправлены.');
+            }
 
             return self::FAILURE;
         }
@@ -117,8 +139,9 @@ class WatchRecordingGaps extends Command
     /**
      * @param  list<array{schedule_id: int, lesson_date: string, start: string, course_id: int, course: string, group_id: ?int, group: string, chat_id: string, reason: string}>  $gaps
      * @param  array{reachable: bool, skipped: bool, id:?string, status:?string, started_at:?string, error_class:?string, note:?string}  $n8n
+     * @param  list<array{id: string, started_at: ?string, last_node: ?string, safe: bool, superseded: bool, retried_before: bool, error_class: ?string, action: string}>  $retryItems
      */
-    private function buildTelegram(array $gaps, array $n8n, CarbonImmutable $from, CarbonImmutable $until): string
+    private function buildTelegram(array $gaps, array $n8n, CarbonImmutable $from, CarbonImmutable $until, array $retryItems = []): string
     {
         $range = $from->toDateString() === $until->toDateString()
             ? $from->format('d-m-Y')
@@ -136,6 +159,14 @@ class WatchRecordingGaps extends Command
                 .' · course '.$gap['course_id'].' '.$course
                 .' · group '.$gid.' '.$group
                 .' · '.$gap['reason'];
+        }
+        if ($retryItems !== []) {
+            $lines[] = '';
+            $lines[] = '<b>Ретрай упавших запусков (--retry-failed)</b>';
+            foreach ($retryItems as $item) {
+                $node = $item['last_node'] !== null ? ' на «'.$item['last_node'].'»' : '';
+                $lines[] = '• exec '.$item['id'].$node.' — '.e($item['action']);
+            }
         }
         $lines[] = '';
         $lines[] = $this->n8nLine($n8n);
@@ -170,6 +201,75 @@ class WatchRecordingGaps extends Command
         }
 
         return implode(' · ', $parts);
+    }
+
+    /**
+     * Opt-in lane: classify failed executions in the widened window and
+     * (when $execute) POST n8n retries for the safe, unclaimed ones.
+     *
+     * @param  bool  $execute  false in --dry: verdicts only, nothing posted
+     * @return array{items: list<array{id: string, started_at: ?string, last_node: ?string, safe: bool, superseded: bool, retried_before: bool, error_class: ?string, action: string}>, posted: int}
+     */
+    private function runRetryLane(N8nZoomExecutionRetrier $retrier, CarbonImmutable $from, CarbonImmutable $until, bool $execute): array
+    {
+        $slack = max(0, (int) config('recording_gap.retry_window_slack_days', 1));
+        $max = max(1, (int) config('recording_gap.retry_max_per_run', 5));
+
+        $failed = $retrier->failedInWindow(
+            $from->utc()->startOfDay(),
+            $until->utc()->endOfDay()->addDays($slack),
+        );
+
+        usort($failed, fn (array $a, array $b): int => strcmp((string) $a['started_at'], (string) $b['started_at']));
+
+        $posted = 0;
+        foreach ($failed as &$item) {
+            if ($item['retried_before']) {
+                $item['action'] = 'skip: уже ретраили ранее';
+            } elseif ($item['superseded']) {
+                $item['action'] = 'skip: уже есть успешный ретрай';
+            } elseif (! $item['safe']) {
+                $item['action'] = 'skip: не безопасен — вручную, resume с AI Agent1';
+            } elseif ($execute && $posted < $max) {
+                $result = $retrier->retry($item['id']);
+                if ($result['ok']) {
+                    $posted++;
+                    $item['action'] = 'ретрай отправлен (HTTP '.$result['http'].')';
+                } else {
+                    $item['action'] = 'ошибка ретрая (HTTP '.$result['http'].')'.($result['note'] !== null ? ': '.$result['note'] : '');
+                }
+            } elseif ($execute) {
+                $item['action'] = 'skip: лимит ретраев на прогон ('.$max.')';
+            } else {
+                $item['action'] = 'был бы отправлен (dry)';
+            }
+        }
+        unset($item);
+
+        return ['items' => $failed, 'posted' => $posted];
+    }
+
+    /**
+     * @param  list<array{id: string, started_at: ?string, last_node: ?string, safe: bool, superseded: bool, retried_before: bool, error_class: ?string, action: string}>  $items
+     */
+    private function renderRetryTable(array $items): void
+    {
+        if ($items === []) {
+            $this->line('Ретрай: упавших запусков в окне нет.');
+
+            return;
+        }
+        $rows = [];
+        foreach ($items as $item) {
+            $rows[] = [
+                $item['id'],
+                (string) $item['started_at'],
+                (string) ($item['error_class'] ?? '—'),
+                (string) ($item['last_node'] ?? '—'),
+                $item['action'],
+            ];
+        }
+        $this->table(['exec', 'started', 'error', 'last node', 'action'], $rows);
     }
 
     private function sendTelegram(string $text): bool
