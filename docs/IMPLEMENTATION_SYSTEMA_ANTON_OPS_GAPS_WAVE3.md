@@ -80,7 +80,7 @@ Files:
 
 ## Step C8 — changelog + activation row
 
-Files: `changelog.md` (`[Unreleased]` → `### Added`), `DEPLOY_QUEUE.md`
+Files: `CHANGELOG.md` (`[Unreleased]` → `### Added`), `DEPLOY_QUEUE.md`
 (row 48: no migration; activation is Kinescope account +
 `KINESCOPE_PILOT_COURSE_ID=<id>` + `KINESCOPE_PILOT=true` + `config:clear`).
 Depends on: all above.

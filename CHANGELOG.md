@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+## [1.90.11] - 2026-08-24
+
+
 ### Added
 - **H3445 (OxAlpha `x-preview-f-free`, 24-08-2026): драйвер гео `'maxmind'` — локальная GeoLite2-база, решение MG по @DECIDE провайдера города.** [VisitorGeoResolver](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/VisitorGeoResolver.php) получил ветку `maxmind`: IP→город/регион/страна читаются с диска (`SUPPORT_GEO_MAXMIND_PATH`, дефолт `storage/app/geo/GeoLite2-City.mmdb`) через официальный [maxmind-db/reader](https://packagist.org/packages/maxmind-db/reader) — IP посетителя не покидает сервер (RF-only-совместимо; Cloudflare отклонён MG как заграничный процессор, ip-api.com исключён лицензионно — [бриф H1234](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/BRIEF_PRESENCE_152FZ_GEO_PROVIDER_ADJUDICATION_2026-07.md)). Ошибки (нет базы, битая база, IP не найден) — тихий null + warning в лог: гео не роняет тред. Новая команда [`support:geo-update-maxmind`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/UpdateMaxMindGeoDatabase.php) (MAXMIND_ACCOUNT_ID + MAXMIND_LICENSE_KEY): скачивание → распаковка tar.gz → атомарная замена .mmdb на том же томе, `--dry-run`; расписание вс 04:40. Флаги на проде НЕ включены: сначала правка текста политики приватности (C(i) из брифа), потом `SUPPORT_GEO_DRIVER=maxmind` + `SUPPORT_VISITOR_GEO=true` ([DEPLOY_QUEUE H3445](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md)). Тесты: VisitorGeoMaxmindTest 6 (маппинг/fail-тихо/приватный IP/нет файла) + MaxmindUpdateCommandTest 5 (настоящий tar.gz через PharData, Http::fake, dry-run не трогает рабочий файл), Pint clean.
 - **Записи: опциональное плечо `recordings:gap-watch --retry-failed` — безопасный авто-ретрай упавших n8n ZOOM-исполнений (класс 23-08).** В тот день все три записи уроков (в т.ч. «Синтаксис с Лейтаном» #65 → видео #259) легли за ~20 с на первом внешнем шаге — чтение Google Sheets («Get row(s) in sheet»: 2×ECONNRESET + смерть прокси-CONNECT через privoxy→socks-nl; сам туннель не падал ни разу, журнал чист) — и висели до ручных UI-ретраев следующим утром: так видео доезжает до студентов только на следующий день. Новый [N8nZoomExecutionRetrier](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Recordings/N8nZoomExecutionRetrier.php) находит error-исполнения live-воркфлоу в окне урока (+1 день запаса под Zoom-processing) и шлёт `POST /api/v1/executions/{id}/retry`, но только когда исполнение: не имеет успешного потомка по `retryOf` (нет дубля), не ретраилось нами ранее (cache-маркер 30 дней), и его `runData` целиком из pre-upload allow-list (`config/recording_gap.php` `retry_safe_early_nodes`) — полный повтор позднего падения может задвоить YouTube/Rutube, такие остаются человеку (resume с AI Agent1). Гейты: флаг `--retry-failed` + env `RECORDING_GAP_RETRY_FAILED_ENABLED` (default OFF), лимит на прогон `RECORDING_GAP_RETRY_MAX_PER_RUN`; крон 08:00 остаётся alert-only; `--dry` печатает вердикты без POST; TG-payload получает секцию «Ретрай упавших запусков» с вердиктом по каждому exec. Рулинг MG 24-08 (тот же день): флаг включён на проде (`RECORDING_GAP_RETRY_FAILED_ENABLED=true`), и утренний алерт дублируется в чат отдела заботы — env `RECORDING_GAP_CARE_TELEGRAM_CHAT_ID` (пусто = прежнее поведение только для админов); шлёт тот же `services.telegram.bot_token`, бот должен состоять в чате. Параллельно на .91 обеим Sheets-нодам воркфлоу подняли бэкофф 5×5с→5×60с (версия aef47bcb, соединения/состав нод байт-в-байт прежние). Тесты: `php artisan test --filter=RecordingsGapWatchRetryTest` (8), смежные `--filter=RecordingsGapWatchTest` (10).
@@ -20,7 +23,6 @@
 - **H3315 (OxAlpha `x-preview-f-free`): heartbeat-телеметрия гейтится доступом к уроку, отказ Redis-троттлинга больше не fail-open; очки /lila серверные.** Две дыры game-integrity fresh-eyes аудита 22-08. (1) `POST /api/heartbeat` записывал watch-time по ЛЮБОМУ lesson_id от любого залогиненного — раздувание аналитики по неоткрытому контенту; теперь перед записью работает единый гейт плеера `App\Services\Access\LessonGate::canWatch()` (грант / клубное покрытие / видимость по группе + is_free/is_preview/оплаченные ключи — та же цепочка, что у StudentController::showLesson и H3308 GatedAssetController, который теперь делегирует в тот же сервис вместо своей копии); не прошедшим 404 (no-oracle). Отказ Redis троттлинга перестал открывать запись: консервативный skip-write с ответом ok/throttled — никогда не 500 и не дубль-дельты. (2) `POST /api/games/event` брал `payload.score` клиента в LilaScoreEvent (cap 500/событие) — тривиально накручиваемый ранг `/lila`; теперь очки выводит сервер из константной таблицы EVENT_POINTS по типу события (complete = 10 = прежний тариф config leaderboards.lila_complete_points, нигде не переопределявшийся), клиентский score игнорируется полностью, cap 500 оставлен страховкой; лидерборды читают как раньше. HeartbeatResume-тесты обновлены под новый контракт (free-уроки + фасад Redis вместо недоступного в тестовой среде сервера). Тесты: `php artisan test --filter=TelemetryIntegrity`, Pint clean.
 - **H3313 (OxAlpha `x-preview-f-free`): Livewire `deckId` в SrsReview закрыт ownership-гейтом; выдача токенов привязки Telegram/VK переведена с GET на CSRF-защищённый POST.** MED: `SrsReview::$deckId` был тамперабельным (`public`, без `#[Locked]`), а `currentDeck()` делал голый `SrsDeck::find()` — любой залогиненный мог подменой Livewire-payload читать карточки чужой приватной колоды. Теперь `$deckId` помечен `#[Locked]` (клиентский апдейт отклоняется), `selectDeck()` гейтится как в `SrsDeckEditor` (403 до присваивания), `currentDeck()` перепроверяет доступ (defense-in-depth для hydrate-байпаса); выбор колоды в UI навигируется по URL вместо записи свойства. LOW: `GET /telegram/connect` и `GET /vk/connect` больше не вращают binding-токены (любая сторонняя страница могла CSRF-навигацией заставить браузер перегенерить токен) — GET стал инструкционной страницей, токен выдаёт только POST `*.connect.start` c `@csrf`; все кнопки привязки в кабинете/онбординге переведены на POST-формы. Тесты: `php artisan test --filter=SrsAccessControl`, `--filter=MessengerConnectPostTest`.
 - **H3310 (OxAlpha `opencode/x-preview-f-free`): джейл расширений у баннеров курса; сертификатные ZIP и CSV импорта пользователей сняты с публичного диска.** Три дыры fresh-eyes аудита 22-08: (1) слот баннера сохранял клиентское расширение файла — JPEG-байты под именем `shell.php` ложились веб-исполняемым файлом на `/storage/course-design/...`; теперь `CourseDesignAssetService` требует расширение из белого списка (jpg/jpeg/png/webp/gif, SVG отклонён) И опознанный по содержимому MIME, а имя на диске всегда генерируется (`16x9-A1b2C3d4.jpg`), имя клиента не участвует; Filament-поле получило точный `acceptedFileTypes` вместо широкого `->image()`. Легитимные загрузки и уже лежащие файлы не затронуты. (2) Групповые ZIP сертификатов собирались в `storage/app/public/archives` — единственным барьером был UUID в имени; теперь пишут на приватный `disk('local')`, скачивание только через staff-маршрут `/force-download/{file}` (гейт админ/редактор/преподаватель сохранён). Разовая миграция `php artisan archives:move-public-to-local [--dry-run]` переносит legacy-архивы идемпотентно; `archives:cleanup` чистит оба каталога; storage-watch следит за новым путём (`archives`). (3) CSV импорта пользователей (имена+email+дефолтные пароли) во время окна импорта лежал на публичном диске — `ListUsers` переведён на `disk('local')`, чтение/удаление без изменений семантики. Тесты: `php artisan test --filter=UploadHygiene`.
-
 ## [1.90.9] - 2026-08-22
 
 ### Fixed
@@ -523,7 +525,7 @@
 - **Dependabot groups for `github/codeql-action/*` — the next CodeQL patch bump will arrive as one combined PR instead of three structurally unmergeable ones.** Added two `groups:` entries to the **github-actions entry only** in [.github/dependabot.yml](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/dependabot.yml): `codeql-action` (applies-to: `version-updates`, pattern `github/codeql-action*`) and `codeql-action-security` (applies-to: `security-updates`, same pattern). The split-PR failure class this prevents (v1.89.5, PRs #1584/#1585/#1586 all unmergeable by construction) is explained in the inline comment. Two groups instead of one because `applies-to` defaults to `version-updates` only, so a security bump would otherwise still split. Pattern validated against the three REAL dependency names (`github/codeql-action/{analyze,init,autobuild}`) from Dependabot's own branch names, with a negative control proving that `github/super-linter` is correctly excluded. The npm and composer ecosystems are deliberately untouched (no `groups:` added — no multi-subpath action families there). Executor: Opus 5 (`claude-opus-5`).
 
 ### Fixed
-- **`.gitattributes` export-ignore pattern case-corrected: `CHANGELOG.md` → `changelog.md`.** The tracked file is lowercase; `CHANGELOG.md export-ignore` matched only under `core.ignorecase=true` (Windows/macOS), while under `ignorecase=false` (Linux/CI) `git check-attr` returned `unspecified` and `git archive` included the file — so release tarballs built in CI shipped the changelog that was explicitly excluded. Verified by `git check-attr` under both settings in a scratch repo with a `core.ignorecase` control: archive excludes the file under both settings after the fix. Root cause belongs to the same case-mismatch family as the silent `git add CHANGELOG.md` no-op (Uprava [FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md), also 10-08-2026); the failure direction is inverted — the `add` trap is silent on Windows, this one is silent on Linux. Rule added to [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md) Environment Notes for future sessions. Executor: Opus 5 (`claude-opus-5`).
+- **`.gitattributes` export-ignore pattern case-corrected: `CHANGELOG.md` → `CHANGELOG.md`.** The tracked file is lowercase; `CHANGELOG.md export-ignore` matched only under `core.ignorecase=true` (Windows/macOS), while under `ignorecase=false` (Linux/CI) `git check-attr` returned `unspecified` and `git archive` included the file — so release tarballs built in CI shipped the changelog that was explicitly excluded. Verified by `git check-attr` under both settings in a scratch repo with a `core.ignorecase` control: archive excludes the file under both settings after the fix. Root cause belongs to the same case-mismatch family as the silent `git add CHANGELOG.md` no-op (Uprava [FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md), also 10-08-2026); the failure direction is inverted — the `add` trap is silent on Windows, this one is silent on Linux. Rule added to [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md) Environment Notes for future sessions. Executor: Opus 5 (`claude-opus-5`).
 - **`CalendarFeedTest` был бомбой с часовым механизмом — становился красным в 12:00Z каждый день, начиная с 10-08-2026; починено пинингом `Carbon::setTestNow()`.** Фикстура [tests/Feature/Student/CalendarFeedTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Student/CalendarFeedTest.php) жёстко задавала занятие на `2026-08-10 15:00–16:00 MSK` (= `12:00–13:00Z`), а [IcsFeedBuilder](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Calendar/IcsFeedBuilder.php) намеренно отдаёт только неистёкшие занятия (`where('end', '>=', now())`, l.59) — поэтому после 13:00Z фид пустой и `assertStringContainsString('SUMMARY:Занятие по грамматике')` падает. **Дефект принадлежит `main`, а не PR, в котором он всплыл:** последний прогон на `main` был в 12:39Z (за 7 минут до истечения) и прошёл по случайности; первый прогон после 13:00Z был красным, и таким остался бы каждый следующий. Симптом обманчив — `Failures: 1` из 3153 в PR, который менял только документацию и одну строку `.gitattributes`, читается как флейк или как «сломал я», тогда как календарное время — единственная переменная. Починка следует уже принятой в репозитории идиоме (28 тестов используют `Carbon::setTestNow`/`travelTo`): `setUp()` пинит «сейчас» к `2026-08-10 09:00 MSK`, `tearDown()` сбрасывает. Тест `regenerate_revokes_old_token_and_issues_a_new_one` под замороженным временем безопасен — старый токен получает `revoked_at`, поэтому `whereNull('revoked_at')->latest()` возвращает ровно одну строку и одинаковые `created_at` не создают ничьей. Absolute-date фикстуры против `now()`-фильтрующего кода — это класс, а не единичный случай: та же форма даёт зелёный CI до момента X и красный после, без изменений в коде. Executor: Opus 5 (`claude-opus-5`).
 
 ## [1.89.6] - 2026-08-10
@@ -1394,7 +1396,7 @@ eatures.rq4_study. Smoke: schema_version=1.0.0, items=24, first_item=yat, flag O
   `CampaignResource` modeled on `AnnouncementResource` (compose, pick
   segment, send, open/click stats, "Догнать неоткрывших" action). All new
   mail uses `Mail::fake()`-safe/`array`-transport tests — no live sends.
-  `changelog.md`/`DEPLOY_QUEUE.md` carry the activation prerequisites
+  `CHANGELOG.md`/`DEPLOY_QUEUE.md` carry the activation prerequisites
   (mailbox creds, SPF/DKIM/DMARC, migrations, flag flip).
 
 ### Changed
@@ -2737,10 +2739,127 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 - 2026-05-29 fix(ci): proper Vite manifest stub with entry keys
 
 [Unreleased]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.15...HEAD
+[1.90.11]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.90.9...v1.90.11
+[1.90.9]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.90.8...v1.90.9
+[1.90.8]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.90.7...v1.90.8
+[1.90.7]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.90.6...v1.90.7
+[1.90.6]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.90.5...v1.90.6
+[1.90.5]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.90.4...v1.90.5
+[1.90.4]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.90.3...v1.90.4
+[1.90.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.90.2...v1.90.3
+[1.90.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.90.1...v1.90.2
+[1.90.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.90.0...v1.90.1
+[1.90.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.89...v1.90.0
+[1.89.89]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.88...v1.89.89
+[1.89.88]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.87...v1.89.88
+[1.89.87]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.86...v1.89.87
+[1.89.86]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.85...v1.89.86
+[1.89.85]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.84...v1.89.85
+[1.89.84]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.83...v1.89.84
+[1.89.83]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.82...v1.89.83
+[1.89.82]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.81...v1.89.82
+[1.89.81]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.80...v1.89.81
+[1.89.80]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.79...v1.89.80
+[1.89.79]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.77...v1.89.79
+[1.89.77]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.76...v1.89.77
+[1.89.76]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.75...v1.89.76
+[1.89.75]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.74...v1.89.75
+[1.89.74]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.73...v1.89.74
+[1.89.73]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.72...v1.89.73
+[1.89.72]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.71...v1.89.72
+[1.89.71]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.70...v1.89.71
+[1.89.70]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.69...v1.89.70
+[1.89.69]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.68...v1.89.69
+[1.89.68]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.67...v1.89.68
+[1.89.67]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.66...v1.89.67
+[1.89.66]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.65...v1.89.66
+[1.89.65]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.64...v1.89.65
+[1.89.64]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.63...v1.89.64
+[1.89.63]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.62...v1.89.63
+[1.89.62]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.61...v1.89.62
+[1.89.61]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.60...v1.89.61
+[1.89.60]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.59...v1.89.60
+[1.89.59]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.58...v1.89.59
+[1.89.58]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.57...v1.89.58
+[1.89.57]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.56...v1.89.57
+[1.89.56]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.55...v1.89.56
+[1.89.55]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.54...v1.89.55
+[1.89.54]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.53...v1.89.54
+[1.89.53]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.52...v1.89.53
+[1.89.52]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.51...v1.89.52
+[1.89.51]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.50...v1.89.51
+[1.89.50]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.49...v1.89.50
+[1.89.49]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.48...v1.89.49
+[1.89.48]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.47...v1.89.48
+[1.89.47]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.46...v1.89.47
+[1.89.46]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.38...v1.89.46
+[1.89.38]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.36...v1.89.38
+[1.89.36]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.35...v1.89.36
+[1.89.35]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.34...v1.89.35
+[1.89.34]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.33...v1.89.34
+[1.89.33]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.32...v1.89.33
+[1.89.32]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.31...v1.89.32
+[1.89.31]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.30...v1.89.31
+[1.89.30]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.29...v1.89.30
+[1.89.29]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.28...v1.89.29
+[1.89.28]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.24...v1.89.28
+[1.89.24]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.23...v1.89.24
+[1.89.23]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.22...v1.89.23
+[1.89.22]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.21...v1.89.22
+[1.89.21]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.20...v1.89.21
+[1.89.20]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.18...v1.89.20
+[1.89.18]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.17...v1.89.18
+[1.89.17]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.15...v1.89.17
 [1.89.15]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.14...v1.89.15
+[1.89.14]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.13...v1.89.14
+[1.89.13]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.12...v1.89.13
+[1.89.12]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.11...v1.89.12
+[1.89.11]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.10...v1.89.11
+[1.89.10]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.9...v1.89.10
+[1.89.9]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.8...v1.89.9
+[1.89.8]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.7...v1.89.8
 [1.89.7]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.6...v1.89.7
 [1.89.6]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.5...v1.89.6
 [1.89.5]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.4...v1.89.5
+[1.89.4]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.3...v1.89.4
+[1.89.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.2...v1.89.3
+[1.89.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.1...v1.89.2
+[1.89.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.89.0...v1.89.1
+[1.89.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.19...v1.89.0
+[1.88.19]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.17...v1.88.19
+[1.88.17]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.16...v1.88.17
+[1.88.16]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.15...v1.88.16
+[1.88.15]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.14...v1.88.15
+[1.88.14]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.13...v1.88.14
+[1.88.13]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.12...v1.88.13
+[1.88.12]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.11...v1.88.12
+[1.88.11]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.9...v1.88.11
+[1.88.9]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.6...v1.88.9
+[1.88.6]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.5...v1.88.6
+[1.88.5]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.4...v1.88.5
+[1.88.4]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.3...v1.88.4
+[1.88.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.2...v1.88.3
+[1.88.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.1...v1.88.2
+[1.88.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.88.0...v1.88.1
+[1.88.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.87.4...v1.88.0
+[1.87.4]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.87.3...v1.87.4
+[1.87.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.87.2...v1.87.3
+[1.87.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.87.1...v1.87.2
+[1.87.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.87.0...v1.87.1
+[1.87.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.86.2...v1.87.0
+[1.86.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.86.1...v1.86.2
+[1.86.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.86.0...v1.86.1
+[1.86.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.85.0...v1.86.0
+[1.85.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.84.0...v1.85.0
+[1.84.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.83.1...v1.84.0
+[1.83.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.83.0...v1.83.1
+[1.83.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.82.1...v1.83.0
+[1.82.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.82.0...v1.82.1
+[1.82.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.81.5...v1.82.0
+[1.81.5]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.81.4...v1.81.5
+[1.81.4]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.81.3...v1.81.4
+[1.81.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.81.2...v1.81.3
+[1.81.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.81.1...v1.81.2
 [1.81.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.81.0...v1.81.1
 [1.81.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.15...v1.81.0
 [1.80.15]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.80.14...v1.80.15
@@ -2764,6 +2883,8 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 [1.79.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.79.0...v1.79.1
 [1.79.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.78.0...v1.79.0
 [1.78.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.77.0...v1.78.0
+[1.77.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.4...v1.77.0
+[1.76.4]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.3...v1.76.4
 [1.76.3]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.2...v1.76.3
 [1.76.2]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.1...v1.76.2
 [1.76.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.76.0...v1.76.1

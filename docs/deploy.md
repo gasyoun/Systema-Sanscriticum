@@ -126,7 +126,7 @@ location = /manifest.webmanifest {
 **Это гигиена, а не починка установки PWA.** Chromium к типу манифеста нетребователен:
 до этой правки его движок установки (`Page.getInstallabilityErrors`) разбирал манифест с
 `manifestErrors: []`, а причиной неустановимости были иконки (см. `## [1.89.17]` в
-[changelog.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/changelog.md)).
+[CHANGELOG.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CHANGELOG.md)).
 Проверка после правки: `curl -sI https://samskrte.ru/manifest.webmanifest` →
 `application/manifest+json`, при этом `image/png`, `image/x-icon`, `text/html` и
 `application/javascript` у остальной статики не изменились.

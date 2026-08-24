@@ -120,7 +120,7 @@ git -C <клон> worktree add -b h3212-student-guide ../Systema-Sanscriticum-h3
 
 1. Шапка [student-manual.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/student-manual.md): «ученику — /dvaram/help; этот файл — командная карта».
 2. Метадок `docs/STUDENT_CABINET_GUIDE_RU.meta.md`.
-3. `changelog.md` `[Unreleased]` → Added, затем `/cut-release`.
+3. `CHANGELOG.md` `[Unreleased]` → Added, затем `/cut-release`.
 4. `.ai_state.md` Next Steps: указатель на план и на H3213.
 5. Не удалять onboarding-student.
 
