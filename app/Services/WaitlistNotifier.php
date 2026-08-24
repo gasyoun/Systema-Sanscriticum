@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Jobs\SendMessengerAlerts;
+use App\Jobs\SendWaitlistGuestStatus;
 use App\Models\Group;
+use App\Models\LandingPage;
+use App\Models\Lead;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Models\WaitlistEntry;
 use App\Models\WaitlistOutreach;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Обратная связь листу ожидания по ОДНОЙ группе курса (H3327).
@@ -51,6 +55,23 @@ class WaitlistNotifier
             'transfer' => 'Перенос даты (бывает несколько подряд)',
             'postponed' => 'Отложено на другой сезон',
         ];
+    }
+
+    /**
+     * Приветствие бота при привязке чата к заявке (H3339): полный словарь
+     * статусов + честное обещание тишины. Текст без HTML-спецсимволов —
+     * Telegram-канал шлёт с parse_mode HTML.
+     */
+    public static function welcomeText(): string
+    {
+        $items = collect(self::vocabulary())->values()
+            ->map(fn (string $label, int $i) => ($i + 1).'. '.$label)
+            ->implode("\n");
+
+        return "Уведомления подключены ✅\n\n"
+            ."Вы будете получать только статусы этого курса:\n"
+            .$items."\n\n"
+            .'Других сообщений по этому курсу не будет.';
     }
 
     /** Сколько участников осталось до min_size; null — порог не задан. */
@@ -112,7 +133,8 @@ class WaitlistNotifier
 
     /**
      * Разошлет $text активным записям листа этой группы. Возвращает
-     * [messengers => доставлено ботом/алертами, manual => осталось вручную].
+     * [messengers => доставлено ботом/алертами, guests => из них связанным
+     * гостям, manual => осталось вручную].
      */
     public function notify(Group $group, string $kind, ?string $text = null, ?User $actor = null): array
     {
@@ -133,16 +155,59 @@ class WaitlistNotifier
             $entry->forceFill(['last_outreach_at' => today()])->save();
         }
 
+        // Связанные гости (H3339): заявившиеся на лендинге с status_block и
+        // привязавшие чат боту. Доставляем тем же текстом — ручной хвост
+        // честно уменьшается ровно на реально охваченных.
+        $guestLeads = $this->boundGuestLeads($group);
+        foreach ($guestLeads as $lead) {
+            SendWaitlistGuestStatus::dispatch($lead->id, $text);
+        }
+        $delivered = $messengers + $guestLeads->count();
+
         WaitlistOutreach::create([
             'group_id' => $group->id,
             'kind' => $kind,
             'text' => $text,
             'actor_id' => $actor?->id,
-            'messengers_count' => $messengers,
-            'manual_count' => max(0, $entries->count() - $messengers),
+            'messengers_count' => $delivered,
+            'manual_count' => max(0, $entries->count() - $delivered),
         ]);
 
-        return ['messengers' => $messengers, 'manual' => max(0, $entries->count() - $messengers)];
+        return [
+            'messengers' => $delivered,
+            'guests' => $guestLeads->count(),
+            'manual' => max(0, $entries->count() - $delivered),
+        ];
+    }
+
+    /**
+     * Гости с привязанным чатом, чей лендинг обещает статусы именно этой
+     * группы: у лида нет аккаунта (сматченные ученики получают через
+     * SendMessengerAlerts), есть binding-токен и хотя бы один канал.
+     *
+     * @return Collection<int, Lead>
+     */
+    public function boundGuestLeads(Group $group): Collection
+    {
+        $landingIds = LandingPage::query()
+            ->get()
+            ->filter(fn (LandingPage $landing) => $landing->statusBlockGroup()?->is($group))
+            ->pluck('id');
+
+        if ($landingIds->isEmpty()) {
+            return collect();
+        }
+
+        return Lead::query()
+            ->whereNull('user_id')
+            ->whereNotNull('magnet_token')
+            ->whereIn('landing_page_id', $landingIds)
+            ->where(function ($q) {
+                $q->whereNotNull('telegram_chat_id')
+                    ->orWhereNotNull('vk_user_id')
+                    ->orWhereNotNull('max_user_id');
+            })
+            ->get();
     }
 
     /** Авто-напоминание за N дней до старта; один прогон в день на группу. */

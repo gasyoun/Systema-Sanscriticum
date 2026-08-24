@@ -1,8 +1,40 @@
 # Results log
 
-_Created: 30-07-2026 · Last updated: 22-08-2026_
+_Created: 30-07-2026 · Last updated: 23-08-2026_
 
 Durable substantive-result tables for this repo. Newest first.
+
+## H3380 trial live — rusamskrtam second session + auto-reply activation (23-08-2026)
+
+_Model: OxAlpha (`opencode/x-preview-f-free`)._ PRs: [#2011](https://github.com/gasyoun/Systema-Sanscriticum/pull/2011) (infra + v1) · [#2021](https://github.com/gasyoun/Systema-Sanscriticum/pull/2021) (small-talk v2). Handoff: [H3380](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3380-OxAlpha_Systema-Sanscriticum_rusamskrtam-second-session-autoreply-trial_23.08.26.md).
+
+| Step | Result |
+|---|---|
+| MG interactive login | `telegram-support:login --account=rusamskrtam` — session written, row id=3 enabled |
+| Gotcha 1 | session dir created root-owned by the login shell → sync as www-data got `Permission denied`; fixed `chown 33:33`. Runbook rule: future logins via `sudo -u www-data php artisan telegram-support:login ...` |
+| Gotcha 2 | `config:cache` freezes env — per-process env override of the sync ceiling does NOT work; temporary `TELEGRAM_SUPPORT_SYNC_TIMEOUT_SECONDS=600` appended to prod .env for first-pass backlog (per-session locks make this safe; revisit at week-3 review) |
+| First pass | watchdog killed at 120 s on heavy group history (`phase=history:-1003671345641`); after chown+600 s ceiling: `ok`, cursors set, incremental runs light |
+| Live | schedule ticks every 5 min autonomously (15:06, no errors); support lane untouched (per-session lock/phase/cooldown keys) |
+| Flags ON | `SUPPORT_DM_AUTO_REPLY` · `SUPPORT_AUTO_REPLY_TEMPLATES` · `SUPPORT_AUTO_ACK`; gate `auto_reply_enabled=1` on rusamskrtam only; registry updated |
+| Smoke lesson | «Намо намах!» → ack boilerplate. v2 (#2021): pure greeting → warm reply once per window (`kind=greeting`), pure thanks → silent skip, greeting+question → normal pipeline |
+| Pending verification | v2 deploy evidence + first real `dm_auto_sent` events — blocked by fail2ban ban of the operator IP (178.236.251.98), left to expire naturally per MG |
+
+## S9 template drafts — activation on H2339 census texts + first measurement (23-08-2026)
+
+_Model: OxAlpha (`opencode/x-preview-f-free`)._ Full prose: [docs/S9_TEMPLATE_DRAFTS_ACTIVATION_2026-08-23.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/S9_TEMPLATE_DRAFTS_ACTIVATION_2026-08-23.md).
+
+| Fact | Value |
+|---|---|
+| H2339 seeder on prod | had **never run** — executed 23-08: 12 canreplies (id 12–26) + 4 dozhim stubs created, idempotent |
+| Flag `SUPPORT_TEMPLATE_DRAFTS` | already true since 30-07-2026 (session instruction); untouched |
+| Bindings after pass | one per category: D→D2 «куда оплатить» · E→E1 «forgot-password» · F→F2 «сдать ДЗ»; old generic blanks unbound; E2 never auto-bound (`{login_link}` is curator-manual) |
+| `answer_template_drafted` | 10 all-time (9 = 30-07 activation burst, 1 real 03-08 cat=F) |
+| `answer_llm_drafted` | **0 ever** — template path fully replaced LLM on D/E/F; no LLM denominator → A/B not computable yet |
+| Template draft outcomes | accepted 0 · edited 0 · discarded 2 |
+| Suggestion mix by facts.type | recording 27 · zoom 16 · template 10 · schedule 2 · untyped 17 |
+| Audit trail | all binding changes in `message_template_audits` id 24–33 as «Система» |
+
+Next proof: re-query drafted/outcome counters in ~2–4 weeks; volume ~1 draft/week means acceptability verdicts need weeks, not days. Known gaps: `{course}` renders empty in suggester drafts; manual canreply sends are uninstrumented; 456 uncategorized topics dilute the next census.
 
 ## Student manuals behind login (22-08-2026)
 

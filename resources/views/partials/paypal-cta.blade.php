@@ -7,8 +7,9 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div class="text-sm text-gray-600 leading-relaxed">
                 <span class="font-bold text-gray-900">Оплата из-за рубежа?</span>
-                Оплатите через PayPal и сообщите нам — доступ откроем после сверки платежа,
-                обычно в течение одного рабочего дня.
+                Оплатите через PayPal и сообщите нам. Уже учитесь у нас и войдете в кабинет —
+                доступ откроется сразу; новым ученикам — после сверки платежа, обычно
+                в течение одного рабочего дня.
             </div>
             <a href="{{ route('paypal.claim.show', $tariff) }}"
                class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 transition">

@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Console\Concerns\LocksMadelineSession;
 use App\Models\TelegramSupportAccount;
+use App\Services\Telegram\MadelineSessionContext;
 use App\Services\Telegram\MadelineSessionReaper;
 use App\Services\Telegram\MadelineSyncPhase;
 use App\Services\Telegram\MadelineSyncWatchdog;
@@ -16,7 +17,9 @@ class SyncTelegramSupport extends Command
 {
     use LocksMadelineSession;
 
-    protected $signature = 'telegram-support:sync {--payload= : JSON file with normalized Telegram messages for local import}';
+    protected $signature = 'telegram-support:sync
+        {--payload= : JSON file with normalized Telegram messages for local import}
+        {--account=support : Named telegram_support_accounts row whose session this run opens}';
 
     protected $description = 'Sync Telegram support-account messages and rebuild daily support analytics.';
 
@@ -26,6 +29,7 @@ class SyncTelegramSupport extends Command
         MadelineSessionReaper $reaper,
     ): int {
         $payloadPath = $this->option('payload');
+        $accountName = (string) ($this->option('account') ?: 'support');
 
         if ($payloadPath) {
             if (! File::exists($payloadPath)) {
@@ -41,8 +45,20 @@ class SyncTelegramSupport extends Command
                 return self::FAILURE;
             }
 
-            $result = $sync->syncNormalizedMessages($payload);
+            $result = $sync->syncNormalizedMessages($payload, $accountName);
         } else {
+            // H3380: не-дефолтный аккаунт = другая сессия. Переключаем контекст
+            // ДО замка/watchdog'а/клиента: замок, фазы, reaper и фабрика читают
+            // путь в момент вызова и разойдутся по сессиям сами.
+            if ($accountName !== 'support') {
+                $prepared = $this->prepareNamedAccountSession($accountName);
+                if ($prepared !== true) {
+                    $this->error((string) $prepared);
+
+                    return self::FAILURE;
+                }
+            }
+
             $timeout = (int) config('services.telegram_support.sync_timeout_seconds', 120);
             $cooldown = (int) config('services.telegram_support.sync_timeout_cooldown_seconds', 600);
 
@@ -68,7 +84,7 @@ class SyncTelegramSupport extends Command
             // Уборка передаётся В watchdog, а не пишется в catch: обработчик
             // таймаута завершает процесс через exit(), и никакой catch/finally
             // здесь уже не отработает (H1915 — почему не через исключение).
-            $armed = $watchdog->arm($timeout, fn (int $seconds) => $this->cleanUpAfterTimeout($reaper, $seconds));
+            $armed = $watchdog->arm($timeout, fn (int $seconds) => $this->cleanUpAfterTimeout($reaper, $seconds, $accountName));
 
             if (! $armed && $timeout > 0) {
                 // ГРОМКО, а не только в verbose: без watchdog'а единственной оградой
@@ -77,6 +93,7 @@ class SyncTelegramSupport extends Command
                 // значит обещать инвариант, которого нет.
                 Log::error('Telegram support sync идёт БЕЗ потолка времени: watchdog не взвёлся (нет расширения pcntl).', [
                     'timeout_seconds' => $timeout,
+                    'account' => $accountName,
                 ]);
                 $this->warn('Watchdog недоступен (нет расширения pcntl) — заход идёт без потолка времени.');
             }
@@ -84,7 +101,7 @@ class SyncTelegramSupport extends Command
             try {
                 // Live path opens the shared MadelineProto session — serialise it
                 // against telegram-harvest:sync / :peers (see LocksMadelineSession).
-                $result = $this->withMadelineSessionLock(fn () => $sync->sync());
+                $result = $this->withMadelineSessionLock(fn () => $sync->sync($accountName));
             } finally {
                 $watchdog->disarm();
             }
@@ -123,7 +140,7 @@ class SyncTelegramSupport extends Command
      * Затем демон этой сессии — иначе он переживёт нас и продолжит держать
      * дескрипторы (тот самый EMFILE 27.07.2026). И только потом след оператору.
      */
-    private function cleanUpAfterTimeout(MadelineSessionReaper $reaper, int $seconds): void
+    private function cleanUpAfterTimeout(MadelineSessionReaper $reaper, int $seconds, string $accountName = 'support'): void
     {
         $this->releaseMadelineSessionLock();
 
@@ -135,6 +152,7 @@ class SyncTelegramSupport extends Command
 
         Log::error('Telegram support sync timed out — process stopped by watchdog', [
             'timeout_seconds' => $seconds,
+            'account' => $accountName,
             'killed_processes' => $killed,
             'removed_files' => $removed,
             'phase' => MadelineSyncPhase::current(),
@@ -144,12 +162,46 @@ class SyncTelegramSupport extends Command
         // Аккаунт мог ещё не существовать (первый же заход завис) — тогда просто
         // нечего помечать, вся диагностика уже в логе.
         TelegramSupportAccount::query()
-            ->where('name', 'support')
+            ->where('name', $accountName)
             ->update([
                 'last_synced_at' => now(),
                 'last_sync_error' => "Заход прерван по таймауту ({$seconds} с); демон сессии сброшен.",
             ]);
 
         $this->error("Telegram support sync: timeout после {$seconds} с — процесс остановлен, демон сессии сброшен.");
+    }
+
+    /**
+     * Переключить этот процесс на сессию именованного аккаунта. Возвращает true
+     * либо текст ошибки для --error.
+     */
+    private function prepareNamedAccountSession(string $accountName): bool|string
+    {
+        /** @var TelegramSupportAccount|null $account */
+        $account = TelegramSupportAccount::query()->where('name', $accountName)->first();
+
+        if ($account === null) {
+            return "Аккаунт «{$accountName}» не заведён в telegram_support_accounts.";
+        }
+
+        // H3380 (урок 24-08): named-аккаунт может совпасть личностью с основным
+        // support-аккаунтом — тогда вторая сессия того же аккаунта нарушает D1
+        // (два MTProto-логина = AUTH_RESTART пинг-понг). Отключённая строка
+        // (is_enabled=0) не открывается вовсе.
+        if (! $account->is_enabled) {
+            return "Аккаунт «{$accountName}» отключён (is_enabled=0) — синк не запускается.";
+        }
+
+        if ((string) $account->session_path === '') {
+            return "У аккаунта «{$accountName}» не задан session_path — интерактивный логин ещё не выполнялся.";
+        }
+
+        $sessionPath = preg_match('~^(?:[A-Za-z]:[\\\\/]|[\\\\/])~', (string) $account->session_path) === 1
+            ? (string) $account->session_path
+            : base_path((string) $account->session_path);
+
+        MadelineSessionContext::useSession($sessionPath);
+
+        return true;
     }
 }

@@ -9,27 +9,40 @@ use App\Models\Lesson;
 use App\Models\LessonView;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
  * In-video resume (H1450, Anton ops-gaps W2). position/duration едут поверх
  * СУЩЕСТВУЮЩЕГО POST /api/heartbeat — никакого нового эндпоинта.
+ *
+ * H3315: heartbeat пишет watch-time только entitled-зрителю (гейт плеера,
+ * LessonGate), поэтому уроки здесь открытые (free), а Redis-троттлинг
+ * подменяется фасадом (в тестовой среде Redis недоступен).
  */
 class HeartbeatResumeTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Троттлинг-Redis отвечает «слот захвачен» без реального сервера. */
+    private function allowThrottle(): void
+    {
+        Redis::shouldReceive('set')->andReturn(true);
+    }
+
     private function lessonFor(User $user): Lesson
     {
         $course = Course::factory()->create();
 
-        return Lesson::factory()->for($course)->create();
+        // free: любой залогиненный может смотреть — гейт H3315 пропускает.
+        return Lesson::factory()->free()->for($course)->create();
     }
 
     /** @test */
     public function first_heartbeat_with_position_persists_last_and_max_position(): void
     {
+        $this->allowThrottle();
         $user = User::factory()->create();
         $lesson = $this->lessonFor($user);
 
@@ -52,6 +65,7 @@ class HeartbeatResumeTest extends TestCase
     /** @test */
     public function max_position_seconds_never_regresses_below_a_previously_stored_value(): void
     {
+        $this->allowThrottle();
         $user = User::factory()->create();
         $lesson = $this->lessonFor($user);
 
@@ -89,6 +103,7 @@ class HeartbeatResumeTest extends TestCase
     /** @test */
     public function heartbeat_without_position_behaves_exactly_as_before(): void
     {
+        $this->allowThrottle();
         $user = User::factory()->create();
         $lesson = $this->lessonFor($user);
 

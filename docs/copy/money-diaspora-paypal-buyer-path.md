@@ -1,6 +1,6 @@
 # Диаспорный путь оплаты (PayPal) — финальная копия (H1292)
 
-_Created: 20-07-2026 · Last updated: 06-08-2026_
+_Created: 20-07-2026 · Last updated: 23-08-2026_
 
 _Parser residual (same day): DE P2P email sample retune after H2215 ship._
 
@@ -10,18 +10,44 @@ _Parser residual (same day): DE P2P email sample retune after H2215 ship._
 [handoff](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1292-Fable_Systema-Sanscriticum_money-diaspora-paypal-buyer-path_19.07.26.md)).
 Исполнено Fable 5 (`claude-fable-5`), 20-07-2026.
 **Prod enable + claim fields H2017** (Grok 4.5 (`grok-4.5`), 31-07-2026, [PR #969](https://github.com/gasyoun/Systema-Sanscriticum/pull/969)).
+**QR в шапке + прямая ссылка** (ox-alpha (`x-preview-f-free`), 23-08-2026,
+[PR #2012](https://github.com/gasyoun/Systema-Sanscriticum/pull/2012) /
+[PR #2014](https://github.com/gasyoun/Systema-Sanscriticum/pull/2014)).
+**Канон хэндла — gasuns, prod `PAYPAL_ME_LINK` переведен на него**
+(ox-alpha, 23-08-2026; рулинг MG в чате).
 
-## ✅ Prod status (31-07-2026)
+## ✅ Prod status (23-08-2026)
 
 | Item | Value |
 |---|---|
 | Flag | `PAYPAL_CLAIM_ENABLED=true` |
-| Student pays to | **gasyoun@gmail.com** (`PAYPAL_RECIPIENT`) via `https://www.paypal.com/paypalme/gasyoun` |
+| Student pays to | **gasyoun@gmail.com** (`PAYPAL_RECIPIENT`); канонический хэндл **paypal.me/gasuns** (MG 23-08-2026): кнопка `PAYPAL_ME_LINK` (prod `.env` переведен с устаревшего `paypalme/gasyoun`, бэкап `.env.bak.paypalme-gasuns.20260823`), постоянная строка в шаге 1 и QR из шапки claim-страницы — все ведут на gasuns |
 | Checkout CTA | Visible («Оплатить через PayPal») |
-| Claim form | `/paypal/{tariff}` — **required:** from-account + paid date + amount; optional txn/proof (H2017) |
-| Admin confirm | Filament → filter «Заявки PayPal на проверке» → «Подтвердить PayPal» |
-| Access | Only after human `pending` → `paid` (personal PayPal, no business API) |
-| Claim notify mail | Still `ADMIN_EMAIL` (curator mailbox); student ack via `PaypalClaimStudentAckMail` |
+| Claim form | /paypal/{tariff} — «Уведомление об оплате через PayPal»: triple from/date/amount, optional txn/proof (H2017); валюта по умолчанию EUR; payer = только email; комиссия на отправителе (+пересчет/доплата); валютный прайс блока из services.paypal.foreign_block_prices — рублевую цену не показываем (MG 23-08-2026) |
+| Trust (ruling 22-08-2026) | Заявка **существующего ученика** (вошел в кабинет) сразу `paid` — доступ/финансы немедленно; флаг `PAYPAL_TRUST_EXISTING_STUDENTS` (default ON). Гости с новым email — по-прежнему pending → ручная сверка |
+| Selective check | Filament фильтр **«PayPal: без сверки»** (`paypalUnverified`) → «Сверка пройдена» (штампует `verified_at`) / «Нет платежа — отменить» (paid→canceled, штатный откат доступа/финансов) |
+| Admin confirm | Filament → filter «Заявки PayPal на проверке» → «Подтвердить PayPal» (только гостевые pending) |
+| Access | Своим — мгновенно; гостям — только после human `pending` → `paid` (personal PayPal, no business API) |
+| Claim notify mail | Still `ADMIN_EMAIL` (curator mailbox); student ack via `PaypalClaimStudentAckMail` (два варианта копии: trusted / guest) |
+
+Ruling 22-08-2026 detail: авто-доверие пишется в `claim_meta.auto_trusted=true` +
+`trusted_at`; выборочная сверка пост-фактум закрывается `verified_at`. Отмена
+мошеннической заявки — кнопка «Нет платежа — отменить»: canceled на paid
+запускает штатный откат (группы снимаются, финансы пересчитываются;
+course_user pivot не трогается by design).
+
+### Ученик прислал только скриншот PayPal (без заявки)
+
+Скрин — хорошо, но не создает записи платежа. Канонический путь: отправить
+ученику шаблон `/оплата-paypal-скрин`
+([ORS-FAQ/Telegram_templates.md](https://github.com/gasyoun/ORS-FAQ/blob/main/Telegram_templates.md))
+— заявка на сайте своим ученикам открывает доступ сразу. Фолбэк, если форма
+ученику недоступна совсем: куратор создает Payment вручную в Filament
+(Payments → New: user, course, тариф `block_N`, amount = рублевый номинал,
+`foreign_amount`/`foreign_currency`, provider **PayPal**, status **paid** для
+своего / **pending** для нового) — дальше конвейер тот же. Прямая ссылка на
+форму конкретного тарифа строится как `/paypal/{tariff_id}` (id виден в
+админке тарифов и в URL чекаута).
 
 Historical note: H1292 shipped behind a dark flag; H2017 opened prod after MG asked to enable diaspora path. SMTP/queue: see current prod mail status (issue #504 was later re-diagnosed / closed in other work — treat live Horizon `mailing` as source of truth).
 
@@ -107,6 +133,23 @@ CHF conversion/fee lines are ignored (form only accepts USD/EUR). EN/RU syntheti
 fixtures remain regression coverage.
 
 ### Страница заявки (`paypal/claim.blade.php`)
+
+**Шапка (QR + вводный абзац, #2012):** справа от заголовка и вводного абзаца —
+QR оплаты (`w-24 sm:w-28`, скругленная рамка) с подписью:
+
+> Или отсканируйте QR в приложении PayPal
+
+QR ведет на managed-ссылку PayPal (`paypal.com/qrcodes/managed/d83566ef-…`),
+которая раскрывается только внутри приложения PayPal. Ассет статический,
+без build-шага.
+
+**Прямая ссылка (шаг 1, #2014):** под кнопкой `PAYPAL_ME_LINK` — постоянная
+строка, не зависящая от env:
+
+> Прямая ссылка для перевода: **paypal.me/gasuns**
+
+На checkout-CTA сырая ссылка сознательно не добавлена: оплата мимо страницы
+заявки выпадает из уведомления и ручной сверки.
 
 **Вводный абзац:**
 

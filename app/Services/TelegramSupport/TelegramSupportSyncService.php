@@ -16,6 +16,7 @@ use App\Services\Support\SupportDmAutoReply;
 use App\Services\Support\SupportOutgoingAttribution;
 use App\Services\Support\TechnicalIssueRouter;
 use App\Services\Telegram\MadelineClientFactory;
+use App\Services\Telegram\MadelineSessionContext;
 use App\Services\Telegram\MadelineSessionReaper;
 use App\Services\Telegram\MadelineSyncPhase;
 use Carbon\CarbonImmutable;
@@ -58,7 +59,14 @@ class TelegramSupportSyncService
         private readonly SupportOutgoingAttribution $outgoingAttribution,
     ) {}
 
-    public function sync(): array
+    /**
+     * @param  string  $accountName  H3380: какой telegram_support_accounts рядок
+     *                               открываем. Контекст сессии уже переключён
+     *                               командой ({@see MadelineSessionContext});
+     *                               имя нужно здесь только для записи курсоров
+     *                               в правильный рядок.
+     */
+    public function sync(string $accountName = 'support'): array
     {
         if (! config('services.telegram_support.enabled')) {
             Log::info('Telegram support sync skipped', ['status' => 'disabled']);
@@ -66,7 +74,7 @@ class TelegramSupportSyncService
             return ['status' => 'disabled', 'synced' => 0];
         }
 
-        $account = $this->supportAccount();
+        $account = $this->supportAccount($accountName);
 
         if (! config('services.telegram_support.api_id') || ! config('services.telegram_support.api_hash')) {
             return $this->finish($account, ['status' => 'unconfigured', 'synced' => 0]);
@@ -87,13 +95,13 @@ class TelegramSupportSyncService
                     'synced' => 0,
                     'dates' => [],
                     'auto_linked' => $linkResult['linked'],
-                    'delivered' => $this->drainPendingReplies(),
+                    'delivered' => $this->drainPendingReplies($account),
                 ], true, []);
             }
 
             $result = $this->syncNormalizedMessages($messages, $account->name);
             $this->updateSyncState($account->refresh(), $messages);
-            $result['delivered'] = $this->drainPendingReplies();
+            $result['delivered'] = $this->drainPendingReplies($account);
 
             return $this->finish($account, $result, true, $messages);
         } catch (Throwable $e) {
@@ -136,12 +144,15 @@ class TelegramSupportSyncService
      *
      * @return int сколько ответов ушло за этот заход
      */
-    private function drainPendingReplies(): int
+    private function drainPendingReplies(TelegramSupportAccount $account): int
     {
         try {
             MadelineSyncPhase::mark('drain_pending');
 
-            return app(PendingSupportReplyDrainer::class)->drain($this)['delivered'];
+            // H3380: дрен строго по аккаунту захода. Pending-ответы чужой сессии
+            // через эту сессию не доставляются (peer может быть неизвестен) — их
+            // заберёт свой telegram-support:sync --account=...
+            return app(PendingSupportReplyDrainer::class)->drain($this, $account->id)['delivered'];
         } catch (Throwable $e) {
             Log::warning('Досыл ответов куратора сорвался, заход синка это не отменяет', [
                 'error' => $e->getMessage(),

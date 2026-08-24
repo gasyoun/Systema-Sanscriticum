@@ -77,6 +77,12 @@ class PaymentController extends Controller
 
         $tariff = $tariffQuery->findOrFail($request->input('tariff_id'));
 
+        // H3334 — режим «подарить»: тот же тариф, та же цена, но доступ
+        // покупателю не открывается — после оплаты выпускается подарочный
+        // сертификат с одноразовым кодом (см. GiftCertificateService).
+        // Флаг OFF → параметр игнорируется, поведение байт-в-байт прежнее.
+        $isGift = (bool) config('features.gift_certificates') && $request->boolean('gift');
+
         // A paid entitlement has no deliverable without a course group. Refuse the
         // checkout before creating a Payment or asking Tochka for a bank link; once
         // the course is configured, the customer can submit the checkout again.
@@ -147,7 +153,7 @@ class PaymentController extends Controller
         // Только запись в БД — в транзакции. HTTP-вызов в Tochka делается ПОСЛЕ
         // commit, иначе медленный/упавший эквайринг держит row-lock на
         // promo_codes/users/payments всё время сетевого запроса (см. DepositController).
-        $result = DB::transaction(function () use ($request, $prana, $user, $tariff) {
+        $result = DB::transaction(function () use ($request, $prana, $user, $tariff, $isGift) {
             // Auth может держать модель User, загруженную до начала транзакции.
             // При включённом флаге перечитываем и лочим кошелёк первым действием:
             // все расчёты и списание ниже используют один DB-authoritative снимок.
@@ -346,10 +352,22 @@ class PaymentController extends Controller
                 'prana_spent' => $pranaToSpend,
                 'referral_credit_applied' => $referralCreditApplied > 0 ? $referralCreditApplied : null,
                 'deposit_credit_applied' => $depositCreditApplied,
-                'tariff' => $tariffKey,
+                // H3334: в payments.tariff пишется маркер 'gift', а снимок
+                // «что подарено» (ключ доступа из Tariff::accessKey(), название,
+                // диапазон блоков bundle) — в claim_meta; GiftCertificateService
+                // выпустит по нему сертификат при оплате. Containment-модель
+                // не тронута: получатель при активации получит платёж с тем же
+                // accessKey, каким открылся бы обычный чекаут этого тарифа.
+                'tariff' => $isGift ? 'gift' : $tariffKey,
                 'status' => 'pending',
                 'start_block' => $startBlock,
                 'end_block' => $endBlock,
+                'claim_meta' => $isGift ? [
+                    'gift_tariff_key' => $tariffKey,
+                    'gift_tariff_title' => (string) $tariff->title,
+                    'gift_start_block' => $startBlock,
+                    'gift_end_block' => $endBlock,
+                ] : null,
             ]);
 
             // Списываем реферальный кредит ровно сейчас, в той же транзакции (как прану).
@@ -398,7 +416,12 @@ class PaymentController extends Controller
         }
 
         // 6. ОТПРАВЛЯЕМ ЗАПРОС В ТОЧКУ — ПОСЛЕ commit (с фискализацией: чек уйдёт на email студента)
-        $purpose = 'Заказ №'.$payment->id.' | '.($tariff->course->title ?? 'Курс').' - '.$tariff->title;
+        // Инвариант вебхука Точки: purpose обязан начинаться с «Заказ №{id}» —
+        // WebhookController матчит строго /Заказ №(\d+)/. Подарочный префикс рвал
+        // матчинг: paid-переход не наступал и сертификат не выпускался.
+        $purpose = 'Заказ №'.$payment->id
+            .' | '.($isGift ? 'Подарочный сертификат — ' : '')
+            .($tariff->course->title ?? 'Курс').' - '.$tariff->title;
 
         $promoTtlMinutes = config('features.checkout_promo_reservations') && $payment->promo_code_id
             ? PromoCode::PAYMENT_LINK_TTL_MINUTES

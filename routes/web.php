@@ -25,10 +25,13 @@ use App\Http\Controllers\DocController;
 use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
 use App\Http\Controllers\GatedAssetController;
+use App\Http\Controllers\GiftCertificateController;
 use App\Http\Controllers\GrammarLabController;
 use App\Http\Controllers\GrammarLabPilotController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\InstituteController;
+use App\Http\Controllers\InstituteDonateController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LlmsTxtController;
@@ -424,6 +427,23 @@ Route::get('/visualdcs/{surface}/preview', [VisualDcsController::class, 'preview
 Route::get('/grammar-lab', [GrammarLabController::class, 'landing'])
     ->name('grammar-lab.landing');
 
+// Институт исследования санскрита — витрина ДПП ПК «Санскрит» 72 ч (заявочная форма).
+Route::get('/institut', [InstituteController::class, 'landing'])->name('institute.landing');
+Route::post('/institut/zayavka', [InstituteController::class, 'apply'])
+    ->middleware('throttle:6,1')
+    ->name('institute.apply');
+
+// Меценаты Института — страница добровольных пожертвований (ст. 582 ГК,
+// свободная сумма, без встречного пакета благ; реквизиты — config/institute.php)
+// + публичный реестр благодарностей меценатам (план института N3).
+Route::get('/mecenaty', [InstituteDonateController::class, 'page'])->name('institute.mecenaty');
+
+// Онлайн-приём пожертвований через Точку (план института N2). Контроллер сам
+// 404-ит при institute.donations_enabled=false — тёмный деплой безопасен.
+Route::post('/mecenaty/donate', [InstituteDonateController::class, 'donate'])
+    ->middleware('throttle:6,1')
+    ->name('institute.donate');
+
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {
     $s = MarketingSetting::cached();
@@ -782,10 +802,13 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->middleware('admin')
         ->name('leads.export');
 
+    // H3313: GET — инструкция, выдача токена только CSRF-защищённым POST.
     Route::get('/telegram/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
+    Route::post('/telegram/connect', [TelegramController::class, 'start'])->name('telegram.connect.start');
 
     // Привязка VK через одноразовый токен (вместо сырого ?ref={user_id}) — см. VkController.
     Route::get('/vk/connect', [VkController::class, 'connect'])->name('vk.connect');
+    Route::post('/vk/connect', [VkController::class, 'start'])->name('vk.connect.start');
 
     // Отвязка мессенджера (TG/VK) из кабинета — кнопка «Отвязать»
     Route::post('/profile/messenger/{channel}/disconnect', [StudentController::class, 'disconnectMessenger'])
@@ -808,14 +831,16 @@ Route::get('/force-download/{file}', function (string $file) {
     abort_unless($u && ($u->is_admin || $u->is_lecture_editor || $u->teacher_id), 403);
 
     $safeFileName = basename($file); // защита от path traversal
-    // Архивы сертификатов кладёт GenerateCertificatesArchive в подкаталог archives/.
+    // Архивы сертификатов кладёт GenerateCertificatesArchive в приватный
+    // каталог archives/ на disk('local') (H3310) — раньше это был публичный
+    // диск, и файл дублировался по прямому /storage/archives/... URL.
     $path = 'archives/'.$safeFileName;
 
-    if (! Storage::disk('public')->exists($path)) {
+    if (! Storage::disk('local')->exists($path)) {
         abort(404, 'Файл не найден.');
     }
 
-    return Storage::disk('public')->download($path);
+    return Storage::disk('local')->download($path);
 })->middleware('auth')->name('force-download');
 
 // Debug-маршрут удалён из production (см. BUGS_REPORT.md #1.1)
@@ -1039,6 +1064,22 @@ Route::get('/sertifikaty', function () {
 
     return redirect('/sertifikat'.($query ? '?'.$query : ''), 301);
 });
+
+// --- ПОДАРОЧНЫЕ СЕРТИФИКАТЫ (H3334) ---
+// ВАЖНО: до catch-all /{slug}. Каждая поверхность самогейтится флагом
+// features.gift_certificates (404 при OFF — см. GiftCertificateController).
+// Активация — только для залогиненных (доступ открывается конкретному юзеру);
+// POST троттлится против перебора кодов; верификация публична, как /verify/{number}.
+Route::get('/gift/activate', [GiftCertificateController::class, 'showActivate'])
+    ->name('gift.activate');
+Route::post('/gift/activate', [GiftCertificateController::class, 'activate'])
+    ->middleware('throttle:10,1')
+    ->name('gift.activate.attempt');
+Route::get('/gift/verify/{number}', [GiftCertificateController::class, 'verify'])
+    ->name('gift.verify');
+Route::get('/gift/{certificate}/download', [GiftCertificateController::class, 'download'])
+    ->middleware(['auth', 'throttle:10,1'])
+    ->name('gift.download');
 
 // --- КОРОТКАЯ ССЫЛКА НА КАРТОЧКУ СТУДЕНТА (для заметок в Telegram-контактах) ---
 // ВАЖНО: до catch-all /{slug}. Префикс /u (а не /s — тот занят блогом, prefix('s')).

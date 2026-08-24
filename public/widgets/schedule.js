@@ -1,5 +1,5 @@
 /*
- * Публичный виджет расписания (H1427, wave 1b).
+ * Публичный виджет расписания (H1427, wave 1b; запись на пробное — H3248).
  *
  * Обычный vanilla-JS IIFE, без зависимостей и без сборки (тот же стиль, что и
  * public/lila/telemetry.js). Тянет /api/public/schedule, строит фильтруемую
@@ -9,12 +9,17 @@
  * Данные приходят строго через allowlist PublicScheduleResource, но названия
  * курсов/преподавателей вводит администратор — поэтому весь текст экранируется
  * перед вставкой в DOM, а ссылки пропускаются только http(s).
+ *
+ * H3248: у строк с bookable:true (флаг CRM_TRIAL_WIDGET_PUBLIC включён) рисуется
+ * мини-форма «e-mail + Записаться»; POST /api/public/schedule/book создаёт
+ * пробную заявку. Успех — без всяких ссылок на занятие: «Мы напишем вам».
  */
 (function () {
     "use strict";
 
     var script = document.currentScript;
     var FEED_URL = (script && script.dataset && script.dataset.feedUrl) || "/api/public/schedule";
+    var BOOK_URL = (script && script.dataset && script.dataset.bookUrl) || "";
 
     var WEEKDAYS = {
         1: "Понедельник",
@@ -106,6 +111,25 @@
         return true;
     }
 
+    function bookFormHtml(item) {
+        if (!BOOK_URL || !item.bookable || !item.book_token) { return ""; }
+        return (
+            '<div class="sw-book" data-token="' + esc(item.book_token) + '">' +
+                '<input type="email" class="sw-email-input" placeholder="Ваш e-mail" aria-label="Электронная почта">' +
+                '<button type="button" class="sw-btn">Записаться</button>' +
+            "</div>"
+        );
+    }
+
+    function setBookMessage(wrap, text, isError) {
+        var old = wrap.querySelector(".sw-book-msg");
+        if (old) { old.parentNode.removeChild(old); }
+        var msg = document.createElement("span");
+        msg.className = "sw-book-msg " + (isError ? "is-err" : "is-ok");
+        msg.textContent = text;
+        wrap.appendChild(msg);
+    }
+
     function rowHtml(item) {
         var url = item.course ? safeUrl(item.course.url) : "";
         var courseTitle = item.course ? esc(item.course.title) : esc(item.title);
@@ -126,6 +150,7 @@
                 '<span class="sw-time">' + esc(item.time || "") + "</span>" +
                 '<span class="sw-title">' + titleHtml +
                     (metaParts.length ? '<span class="sw-meta">' + metaParts.join(" · ") + "</span>" : "") +
+                    bookFormHtml(item) +
                 "</span>" +
                 badge +
             "</div>"
@@ -183,6 +208,53 @@
 
     if (directionSelect) { directionSelect.addEventListener("change", render); }
     if (teacherSelect) { teacherSelect.addEventListener("change", render); }
+
+    // Делегирование на #sw-schedule: render() перерисовывает innerHTML,
+    // а обработчик выживает и обслуживает кнопки «Записаться» всех строк.
+    if (root && BOOK_URL) {
+        root.addEventListener("click", function (event) {
+            var target = event.target;
+            var btn = target && target.closest ? target.closest(".sw-book .sw-btn") : null;
+            if (!btn) { return; }
+            var wrap = btn.closest(".sw-book");
+            if (!wrap || wrap.getAttribute("data-done") === "1") { return; }
+            var input = wrap.querySelector(".sw-email-input");
+            var token = wrap.getAttribute("data-token") || "";
+            var email = input ? String(input.value || "").trim() : "";
+
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                setBookMessage(wrap, "Укажите корректный e-mail", true);
+                if (input) { input.focus(); }
+                return;
+            }
+
+            btn.disabled = true;
+
+            fetch(BOOK_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                credentials: "omit",
+                body: JSON.stringify({ book_token: token, email: email })
+            })
+                .then(function (response) {
+                    if (!response.ok) { throw new Error("HTTP " + response.status); }
+                    wrap.setAttribute("data-done", "1");
+                    if (input) { input.parentNode.removeChild(input); }
+                    btn.parentNode.removeChild(btn);
+                    setBookMessage(wrap, "Спасибо! Мы напишем вам о подключении.", false);
+                    postHeight();
+                })
+                .catch(function () {
+                    btn.disabled = false;
+                    setBookMessage(wrap, "Не удалось записаться. Попробуйте позже.", true);
+                });
+        });
+    }
+
     window.addEventListener("load", postHeight);
 
     load();

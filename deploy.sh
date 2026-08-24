@@ -209,6 +209,13 @@ php artisan filament:optimize-clear 2>/dev/null || { warn "filament:optimize-cle
 if [ -z "$ROLLBACK_TO" ]; then
   say "Проверка секретов webhook"
   php artisan deploy:webhook-preflight
+
+  # H3311: прод не выкладывается с небезопасной сессионной кукой —
+  # SESSION_SECURE_COOKIE обязан быть true (unset теперь тоже true благодаря
+  # дефолту в config/session.php, но явное false/мусор останавливает деплой).
+  # Пустой TRUSTED_PROXIES в проде даёт warning (не блок). Rollback не блочим.
+  say "Проверка конфиг-безопасности (SESSION_SECURE_COOKIE)"
+  php artisan deploy:config-preflight
 fi
 
 if [ "$USE_DOWN" = 1 ]; then

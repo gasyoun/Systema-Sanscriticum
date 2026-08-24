@@ -61,28 +61,9 @@
     <div class="container mx-auto px-4 relative z-10 text-center max-w-2xl">
 
     @php
-        // Мета каналов мессенджеров (label / gradient / shadow / svg).
-        // Объявлено здесь, чтобы было доступно и в ветке дубликата, и в ветке новой заявки.
-        $channelMeta = [
-            'telegram' => [
-                'label' => 'Telegram',
-                'gradient' => 'from-[#2AABEE] to-[#0088cc]',
-                'shadow' => 'shadow-[0_0_15px_rgba(0,136,204,0.3)] hover:shadow-[0_0_25px_rgba(0,136,204,0.5)]',
-                'svg' => '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 11.944 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.697.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.628 4.476-1.636z"/></svg>',
-            ],
-            'vk' => [
-                'label' => 'ВКонтакте',
-                'gradient' => 'from-[#0077FF] to-[#005BBB]',
-                'shadow' => 'shadow-[0_0_15px_rgba(0,119,255,0.3)] hover:shadow-[0_0_25px_rgba(0,119,255,0.5)]',
-                'svg' => '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M13.162 18.994c.609 0 .858-.406.851-.915-.031-1.917.714-2.949 2.059-1.604 1.488 1.488 1.796 2.519 3.603 2.519h3.2c.808 0 1.126-.26 1.126-.668 0-.863-1.421-2.386-2.677-3.5-1.61-1.495-1.737-1.523-.4-3.221 1.262-1.602 2.972-3.682 2.972-4.776 0-.408-.318-.668-1.126-.668h-3.2c-1.807 0-1.823.967-3.171 2.668-1.512 1.906-2.169 2.013-2.5 2.013-.611 0-.444-.81-.444-1.946V6.946c0-.665-.225-1.065-1.4-1.065h-3.8c-.8 0-1.292.36-1.292.852 0 .906 1.292.764 1.292 2.836v4.176c0 .908-.149 1.142-.503 1.142-.939 0-2.31-2.08-3.398-4.7-.232-.557-.4-1.115-1.385-1.115H1.795C1.182 9.072.5 9.343.5 9.832c0 .91 1.4 6.218 6.4 11.227 3.066 3.073 7.34 4.435 8.262 3.935z"/></svg>',
-            ],
-            'max' => [
-                'label' => 'Max',
-                'gradient' => 'from-[#FFC83D] to-[#FFB100]',
-                'shadow' => 'shadow-[0_0_15px_rgba(255,179,0,0.35)] hover:shadow-[0_0_25px_rgba(255,179,0,0.6)]',
-                'svg' => '<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"/><path d="M5 17V7l4 6 4-6v10M16 17V7l3 6 3-6" stroke-linecap="round" stroke-linejoin="round" stroke="currentColor"/></svg>',
-            ],
-        ];
+        // Мета каналов мессенджеров (label / gradient / shadow / svg) — единый
+        // источник, чтобы дубликат-ветка и блок подписки не расходились.
+        $channelMeta = \App\Support\ChannelMeta::all();
     @endphp
 
     @if(session('is_duplicate'))
@@ -132,6 +113,11 @@
             </a>
         @endif
 
+        {{-- H3339: дубликат тоже видит полный блок «Подключить уведомления». --}}
+        @if(session('status_connect_links'))
+            @include('promo.partials.status-connect', ['links' => session('status_connect_links')])
+        @endif
+
     @else
 
         {{-- Состояние: новая заявка принята --}}
@@ -148,6 +134,10 @@
             $magnetTitle = session('magnet_title');
             $deepLinks = session('magnet_deep_links', []);
             $hasMagnet = ! empty($deepLinks);
+            // H3339: подписка на статусы курса — кнопки каналов вместо
+            // хардкод-кнопки Telegram.
+            $statusLinks = session('status_connect_links', []);
+            $hasStatus = ! empty($statusLinks);
         @endphp
 
         <p class="text-xl text-gray-300 mb-10 leading-relaxed">
@@ -162,6 +152,8 @@
                 @endif
             @elseif($hasAutoRedirect)
                 Сейчас вы будете перенаправлены в наш Telegram-канал…
+            @elseif($hasStatus)
+                Хотите получать статусы этого курса в мессенджер? Подключите уведомления ниже.
             @else
                 Чтобы ускорить процесс, напишите нам в Telegram прямо сейчас.
             @endif
@@ -203,8 +195,9 @@
                     Сейчас откроем выбранный мессенджер автоматически. Если перенаправление не сработало — нажмите кнопку выше.
                 </p>
             @endif
+        @elseif($hasStatus)
+            {{-- H3339: без магнита кнопки каналов рендерит блок подписки ниже. --}}
         @else
-            {{-- Без магнита — fallback: одна кнопка "Написать в Telegram" --}}
             @php $tgUrl = session('redirect_url') ?: 'https://t.me/rusamskrtam'; @endphp
             <a href="{{ $tgUrl }}" target="_blank" rel="noopener noreferrer"
                @if(session('yandex_id'))
@@ -227,6 +220,11 @@
                     Если перенаправление не сработало — нажмите кнопку выше.
                 </p>
             @endif
+        @endif
+
+        {{-- H3339: блок «Подключить уведомления» — всем заявившимся на лендинг с status_block. --}}
+        @if($hasStatus)
+            @include('promo.partials.status-connect', ['links' => $statusLinks])
         @endif
 
         @include('promo.partials.curator-call-notice')

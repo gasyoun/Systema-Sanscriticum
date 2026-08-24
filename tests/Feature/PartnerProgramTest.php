@@ -143,6 +143,35 @@ class PartnerProgramTest extends TestCase
     }
 
     /** @test */
+    /** @test */
+    public function ratified_percent_of_first_payment_beats_fixed_rates(): void
+    {
+        // Схема А (MG 23-08): 10 % первого платежа приведённого ученика.
+        $partner = $this->activePartner(['reward_percent' => 10]);
+        $client = $this->clientOf($partner);
+
+        // paidPayment создаёт платёж на 4800 -> 10 % = 480.
+        $this->paidPayment($client);
+
+        $this->assertDatabaseHas('partner_conversions', [
+            'partner_id' => $partner->id,
+            'user_id' => $client->id,
+            'reward_amount' => '480.00',
+            'status' => PartnerConversion::STATUS_ACCRUED,
+        ]);
+    }
+
+    /** @test */
+    public function percent_wins_over_override_when_both_filled(): void
+    {
+        $partner = $this->activePartner(['reward_percent' => 10, 'reward_amount_override' => 9999]);
+        $client = $this->clientOf($partner);
+
+        $this->paidPayment($client);
+
+        $this->assertSame(480.0, $partner->fresh()->amountOwed());
+    }
+
     public function reward_is_granted_only_once_per_client(): void
     {
         $partner = $this->activePartner();

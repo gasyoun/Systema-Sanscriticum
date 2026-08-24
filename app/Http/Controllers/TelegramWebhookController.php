@@ -16,6 +16,7 @@ use App\Services\Bot\TelegramFormatter;
 use App\Services\Bot\UnblockBotCommand;
 use App\Services\HomeworkTelegramTagService; // Добавили для переключения на человека
 use App\Services\Support\HomeworkPauseNoteRecorder;
+use App\Support\TelegramSendGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -27,6 +28,18 @@ class TelegramWebhookController extends Controller
     {
         // Получаем все данные, которые прислал Telegram
         $data = $request->all();
+
+        // Дедуп update_id (TelegramSendGuard::claimUpdate): при медленном/упавшем
+        // обработчике Telegram перешилёт апдейт — без клейма студент получил бы
+        // второй ответ бота (включая повторный AI-вызов). Повтор молча
+        // подтверждаем «ok»: обработка уже была (или не удалась — но повтором
+        // это не лечится, см. контракт at-most-once в TelegramSendGuard).
+        $updateId = isset($data['update_id']) && is_numeric($data['update_id'])
+            ? (int) $data['update_id']
+            : null;
+        if ($updateId !== null && ! TelegramSendGuard::claimUpdate('main', $updateId)) {
+            return response()->json(['status' => 'ok']);
+        }
 
         // Нажатие inline-кнопки (например «Разблокировать» из алерта H849).
         if (isset($data['callback_query'])) {

@@ -1,6 +1,6 @@
 <?php
 
-use Spatie\Backup\Notifications\Notifiable;
+use App\Notifications\BackupNotifiable;
 use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
 use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification;
 use Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification;
@@ -83,18 +83,30 @@ return [
             ],
         ],
 
-        // Off-site через части: Yandex Disk не принимает файлы больше ~1 ГБ
-        // ни по WebDAV, ни по простому REST-upload — единственный честный путь
-        // для архива любого размера. Восстановление: скачать все части одной
-        // группы, склеить `cat *.part-*-of-*.zip > backup.zip`, распаковать.
+        // Off-site через части: Яндекс не переваривает большие тела — 413 на
+        // >1 ГБ, а крупные тела ведут себя непредсказуемо: 22–23-08-2026 сотни
+        // МБ «сохранялись» 2xx без записи (чёрная дыра, три «успеха» на ~2 ГБ,
+        // части 404), 24-08-2026 strace показал TLS-stall (sendto EAGAIN, байты
+        // не уходят минутами) на 50 МиБ частях. Класс ≤~20 МиБ доезжает честно:
+        // 11.7 / 18.6 МиБ зипы легли целиком во все дни наблюдений. Восстановление:
+        // скачать все части одной группы, склеить `cat *.part-*-of-*.zip >
+        // backup.zip`, распаковать.
         'split_upload' => [
             // Куда льём части (должен совпадать с диском из destination.disks,
             // который НЕ local).
             'disk' => 'yandex_disk',
-            // Потолок одной части с запасом под лимит Яндекса (~1 ГБ).
-            'max_part_mb' => (int) env('BACKUP_SPLIT_PART_MB', 700),
+            // Размер части. 20 МиБ = класс, переживающий Яндекс 22–24-08-2026
+            // (решение MG 24-08-2026: срез с 50). Порог guards
+            // BACKUP_MIN_ARCHIVE_MB в scripts/server_guards.conf стоит ниже
+            // суммы полной группы; одинокая часть полным архивом не считается
+            // (SplitGroupMath).
+            'max_part_mb' => (int) env('BACKUP_SPLIT_PART_MB', 20),
             // Ретеншн частей на off-site: зеркалит keep_daily_backups_for_days.
             'keep_parts_days' => (int) env('BACKUP_KEEP_PARTS_DAYS', 16),
+            // Свежепроцессная верификация каждой части (backup:verify-yandex-part):
+            // Яндекс изредка отвечал 2xx ничего не сохранив — верим только
+            // отдельному процессу со свежим curl-хендлом.
+            'verify' => (bool) env('BACKUP_VERIFY_PARTS', true),
         ],
 
         'temporary_directory' => storage_path('app/backup-temp'),
@@ -114,10 +126,17 @@ return [
             CleanupWasSuccessfulNotification::class => ['mail'],
         ],
 
-        'notifiable' => Notifiable::class,
+        'notifiable' => BackupNotifiable::class,
 
         'mail' => [
-            'to' => 'pe4kin.85@mail.ru',
+            // H3312: реального получателя решает App\Notifications\BackupNotifiable
+            // через config('services.admin.email') (env ADMIN_EMAIL), fail-closed:
+            // пусто -> отправка skip с warning, без краша. Само поле 'to' spatie
+            // валидирует filter_var и бросает InvalidConfig на пустой/битой
+            // строке (краш парсинга конфига = crash loop бэкапов), поэтому здесь
+            // стоит синтаксически валидный плейсхолдер, который НЕ используется
+            // как адресат. Не менять на пустую строку!
+            'to' => 'backup-notifications-unset@example.com',
 
             'from' => [
                 'address' => env('MAIL_FROM_ADDRESS', 'robot@tvoy-sayt.ru'),

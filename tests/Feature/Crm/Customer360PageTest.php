@@ -112,6 +112,62 @@ class Customer360PageTest extends TestCase
     }
 
     /** @test */
+    public function search_finds_user_by_name_tokens_in_any_order(): void
+    {
+        $admin = $this->admin();
+        $student = User::factory()->create(['name' => 'Цыди Анна Петровна, Швейцария']);
+        User::factory()->create(['name' => 'Смирнова Анна Сергеевна']);
+
+        Livewire::actingAs($admin)
+            ->test(Customer360::class)
+            ->set('lookup', 'Анна Цыди')
+            ->call('search')
+            ->assertHasNoErrors()
+            ->assertRedirect(Customer360::urlForUser($student->id));
+    }
+
+    /** @test */
+    public function search_finds_lead_by_name_tokens_in_any_order(): void
+    {
+        $admin = $this->admin();
+        $lead = Lead::factory()->create(['name' => 'Цыди Анна Петровна, Швейцария']);
+
+        Livewire::actingAs($admin)
+            ->test(Customer360::class)
+            ->set('lookup', 'Анна Цыди')
+            ->call('search')
+            ->assertHasNoErrors()
+            ->assertRedirect(Customer360::urlForLead($lead->id));
+    }
+
+    /** @test */
+    public function search_still_finds_user_by_exact_email(): void
+    {
+        $admin = $this->admin();
+        $student = User::factory()->create(['email' => 'tsidi@example.test']);
+
+        Livewire::actingAs($admin)
+            ->test(Customer360::class)
+            ->set('lookup', 'tsidi@example.test')
+            ->call('search')
+            ->assertHasNoErrors()
+            ->assertRedirect(Customer360::urlForUser($student->id));
+    }
+
+    /** @test */
+    public function search_warns_when_no_client_matches(): void
+    {
+        $admin = $this->admin();
+
+        Livewire::actingAs($admin)
+            ->test(Customer360::class)
+            ->set('lookup', 'Несуществующая Фамилия')
+            ->call('search')
+            ->assertHasNoErrors()
+            ->assertNotified('Клиент не найден');
+    }
+
+    /** @test */
     public function page_does_not_write_payments_when_creating_a_task(): void
     {
         $admin = $this->admin();

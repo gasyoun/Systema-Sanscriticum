@@ -627,4 +627,38 @@ PEM;
         $this->assertSame('paid', $paymentOk->fresh()->status);
         $this->assertTrue($userOk->fresh()->groups->contains($groupOk->id));
     }
+
+    /** @test */
+    public function approved_webhook_pays_gift_payment_and_issues_certificate(): void
+    {
+        // H3334 e2e по ПРОДАКШЕН-триггеру: единственный автопереход «оплачено»
+        // в проде — этот вебхук. Прямое update(['status'=>'paid']) в
+        // GiftCertificateTest вебхук-контракт не проверяет.
+        $this->useTestKey();
+
+        $buyer = User::factory()->create();
+        $payment = Payment::create([
+            'user_id' => $buyer->id,
+            'course_id' => null,
+            'amount' => 6000.0,
+            'deposit_credit_applied' => 0.0,
+            'tariff' => 'gift',
+            'status' => 'pending',
+            'claim_meta' => [
+                'gift_tariff_key' => 'full',
+                'gift_tariff_title' => 'Весь курс',
+                'gift_start_block' => null,
+                'gift_end_block' => null,
+            ],
+        ]);
+
+        $jwt = $this->sign(['purpose' => "Заказ №{$payment->id}", 'status' => 'APPROVED']);
+        $this->postJwt($jwt)->assertOk();
+
+        $this->assertSame('paid', $payment->fresh()->status);
+        $this->assertDatabaseCount('gift_certificates', 1);
+
+        // Покупателю доступ НЕ открывается — только выпуск сертификата.
+        $this->assertSame(0, $buyer->groups()->count());
+    }
 }

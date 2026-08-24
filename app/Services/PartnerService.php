@@ -93,7 +93,7 @@ class PartnerService
             return;
         }
 
-        $amount = $partner->rewardAmount();
+        $amount = $partner->rewardOnPayment($payment);
         if ($amount <= 0) {
             return;
         }

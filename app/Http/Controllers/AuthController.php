@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\LoginThrottle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -39,16 +41,32 @@ class AuthController extends Controller
         // входе приводим ввод к тому же виду (иначе «Anna@Mail.ru» не найдёт аккаунт).
         $credentials['email'] = User::normalizeEmail($credentials['email']);
 
+        $email = $credentials['email'];
+        $ip = (string) $request->ip();
+
+        // H3314 — per-credential lockout поверх IP-throttle роута: 6-я попытка
+        // брутфорса одной учётки ловит 429 даже с другого IP.
+        if (LoginThrottle::tooManyAttempts($email, $ip)) {
+            LoginThrottle::fireLockout($request);
+
+            throw ValidationException::withMessages([
+                'email' => [LoginThrottle::LOCKOUT_MESSAGE],
+            ]);
+        }
+
+        // Один lookup вместо exists()+value(): нужен и для H1949 remember-гварда,
+        // и для равного времени ответа на несуществующем email.
+        $knownUser = User::where('email', $email)->first();
+
         // H1949 — opt-in long-lived cookie; default off when checkbox absent.
         // Admins never get remember: Filament shares the web guard and
         // SESSION_LIFETIME was capped at 1 day for that reason (28-07-2026) —
         // a weeks-long recaller would re-auth admin after idle expiry.
         $remember = $request->boolean('remember')
-            && ! (bool) User::query()
-                ->where('email', $credentials['email'])
-                ->value('is_admin');
+            && ! (bool) ($knownUser->is_admin ?? false);
 
         if (Auth::attempt($credentials, $remember)) {
+            LoginThrottle::clear($email, $ip);
             $request->session()->regenerate();
 
             // Если это Админ -> в админку
@@ -61,7 +79,14 @@ class AuthController extends Controller
             return redirect()->intended(route('student.dashboard'));
         }
 
-        // Если пароль не подошел
+        // Если пароль не подошел — счётчик по email и по email|ip вверх;
+        // на неизвестном email дожигаем bcrypt-цикл, чтобы время ответа не
+        // раскрывало существование адреса.
+        LoginThrottle::hit($email, $ip);
+        if (! $knownUser) {
+            LoginThrottle::equalizeTiming((string) $request->input('password'));
+        }
+
         return back()->withErrors([
             'email' => 'Неверный email или пароль.',
         ])->onlyInput('email');
@@ -91,20 +116,39 @@ class AuthController extends Controller
 
         $credentials['email'] = User::normalizeEmail($credentials['email']);
 
+        $email = $credentials['email'];
+        $ip = (string) $request->ip();
+
+        // H3314 — тот же per-credential lockout, что и в /login, но JSON-ответом.
+        if (LoginThrottle::tooManyAttempts($email, $ip)) {
+            LoginThrottle::fireLockout($request);
+
+            return response()->json([
+                'success' => false,
+                'message' => LoginThrottle::LOCKOUT_MESSAGE,
+            ], 429);
+        }
+
+        $knownUser = User::where('email', $email)->first();
+
         // Same admin guard as login(): shop is student-facing, but still refuse
         // a long-lived cookie if an admin account is used here by mistake.
         $remember = $request->boolean('remember')
-            && ! (bool) User::query()
-                ->where('email', $credentials['email'])
-                ->value('is_admin');
+            && ! (bool) ($knownUser->is_admin ?? false);
 
         if (! Auth::attempt($credentials, $remember)) {
+            LoginThrottle::hit($email, $ip);
+            if (! $knownUser) {
+                LoginThrottle::equalizeTiming((string) $request->input('password'));
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Неверный email или пароль.',
             ], 422);
         }
 
+        LoginThrottle::clear($email, $ip);
         $request->session()->regenerate();
 
         $user = Auth::user();

@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
+use App\Support\TrialBookToken;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,6 +26,10 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * детерминированно от курса, даже когда у самой строки расписания course_id пуст
  * (только group_id).
  *
+ * H3248: при включённом `crm_trial_widget_public` строка пробного занятия курса
+ * (`Course.trial_schedule_id`) дополнительно помечается `bookable: true` и несёт
+ * HMAC `book_token` ({@see TrialBookToken}) — по-прежнему БЕЗ числовых id.
+ *
  * @mixin Schedule
  */
 class PublicScheduleResource extends JsonResource
@@ -36,7 +41,11 @@ class PublicScheduleResource extends JsonResource
         /** @var Group|null $group */
         $group = $this->group;
 
-        return [
+        $bookable = (bool) config('features.crm_trial_widget_public')
+            && $course !== null
+            && (int) $course->trial_schedule_id === (int) $this->getKey();
+
+        $row = [
             'title' => $this->title,
             'start' => $this->start?->toIso8601String(),
             'end' => $this->end?->toIso8601String(),
@@ -65,5 +74,14 @@ class PublicScheduleResource extends JsonResource
                 'is_recruited' => $group->isRecruited(),
             ],
         ];
+
+        // Ключ book_token появляется ТОЛЬКО у записываемой строки при
+        // включённом флаге: «нет book_token в JSON» при выключенном — тест.
+        $row['bookable'] = $bookable;
+        if ($bookable) {
+            $row['book_token'] = TrialBookToken::for((int) $this->getKey());
+        }
+
+        return $row;
     }
 }

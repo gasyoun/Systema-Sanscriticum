@@ -44,12 +44,14 @@ class Partner extends Model
         'payout_details',
         'user_id',
         'reward_amount_override',
+        'reward_percent',
         'notes',
         'approved_at',
     ];
 
     protected $casts = [
         'reward_amount_override' => 'decimal:2',
+        'reward_percent' => 'decimal:2',
         'approved_at' => 'datetime',
     ];
 
@@ -87,6 +89,20 @@ class Partner extends Model
         }
 
         return (float) config('partner.reward_amount', 1000);
+    }
+
+    /**
+     * Ратифицированная MG 23-08 схема А: процент первого платежа приведённого
+     * ученика. Приоритет: reward_percent > reward_amount_override > глобальный
+     * дефолт. Процент считается от фактической суммы qualifying-платежа.
+     */
+    public function rewardOnPayment(Payment $payment): float
+    {
+        if (filled($this->reward_percent) && (float) $this->reward_percent > 0) {
+            return round(((float) $this->reward_percent / 100) * (float) $payment->amount, 2);
+        }
+
+        return $this->rewardAmount();
     }
 
     /** Публичная партнёрская ссылка: last-touch атрибуция клиента по коду. */

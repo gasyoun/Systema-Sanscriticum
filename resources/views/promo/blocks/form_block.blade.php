@@ -41,6 +41,11 @@
                         </div>
                     @endif
 
+                    {{-- H3339: заявившийся из кабинета тоже подключает уведомления. --}}
+                    @if(session('status_connect_links'))
+                        @include('promo.partials.status-connect', ['links' => session('status_connect_links')])
+                    @endif
+
                     <form action="{{ route('leads.one-click') }}" method="POST" class="space-y-5">
                         @csrf
 

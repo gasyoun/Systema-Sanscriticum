@@ -295,9 +295,14 @@
             </div>
 
             @unless($tgConnected)
-                <a href="{{ route('telegram.connect') }}" target="_blank" class="relative z-10 shrink-0 px-6 py-3.5 bg-[#0088cc] hover:bg-[#0077b5] text-white text-sm font-extrabold rounded-xl transition-all duration-300 shadow-[0_4px_14px_rgba(0,136,204,0.3)] hover:shadow-[0_6px_20px_rgba(0,136,204,0.4)] hover:-translate-y-0.5 flex items-center w-full xl:w-auto justify-center">
-                    Подключить за 10 секунд
-                </a>
+                {{-- H3313: привязка через CSRF-защищённый POST --}}
+                <form method="POST" action="{{ route('telegram.connect.start') }}" target="_blank"
+                      class="relative z-10 shrink-0 flex items-center w-full xl:w-auto justify-center">
+                    @csrf
+                    <button type="submit" class="px-6 py-3.5 bg-[#0088cc] hover:bg-[#0077b5] text-white text-sm font-extrabold rounded-xl transition-all duration-300 shadow-[0_4px_14px_rgba(0,136,204,0.3)] hover:shadow-[0_6px_20px_rgba(0,136,204,0.4)] hover:-translate-y-0.5 w-full xl:w-auto">
+                        Подключить за 10 секунд
+                    </button>
+                </form>
             @endunless
         </div>
         @endif
@@ -347,9 +352,14 @@
             </div>
 
             @unless($vkConnected)
-                <a href="{{ route('vk.connect') }}" target="_blank" class="relative z-10 shrink-0 px-6 py-3.5 bg-[#0077FF] hover:bg-[#005ce6] text-white text-sm font-extrabold rounded-xl transition-all duration-300 shadow-[0_4px_14px_rgba(0,119,255,0.3)] hover:shadow-[0_6px_20px_rgba(0,119,255,0.4)] hover:-translate-y-0.5 flex items-center w-full xl:w-auto justify-center">
-                    Подключить ВК-бота
-                </a>
+                {{-- H3313: привязка через CSRF-защищённый POST --}}
+                <form method="POST" action="{{ route('vk.connect.start') }}" target="_blank"
+                      class="relative z-10 shrink-0 flex items-center w-full xl:w-auto justify-center">
+                    @csrf
+                    <button type="submit" class="px-6 py-3.5 bg-[#0077FF] hover:bg-[#005ce6] text-white text-sm font-extrabold rounded-xl transition-all duration-300 shadow-[0_4px_14px_rgba(0,119,255,0.3)] hover:shadow-[0_6px_20px_rgba(0,119,255,0.4)] hover:-translate-y-0.5 w-full xl:w-auto">
+                        Подключить ВК-бота
+                    </button>
+                </form>
             @endunless
         </div>
         @endif

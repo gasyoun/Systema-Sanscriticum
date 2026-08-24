@@ -117,6 +117,46 @@ class DeliverMarathonWarmTailTest extends TestCase
         Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'Тестовый Ведущий'));
     }
 
+    public function test_wave2_enrollment_receives_the_membership_offer_variant(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        config(['marathon.warm_tail_wave2_from' => now()->subDays(20)->toDateString()]);
+        // started on/after the cutoff -> membership-offer series
+        $this->enrollment(['day0_started_at' => now()->subDays(15), 'warm_tail_last_day_sent' => 11]);
+
+        $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
+
+        Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'Членство школы')
+            && str_contains((string) $req['text'], '₽1000')
+            && str_contains((string) $req['text'], '₽2000')
+            && str_contains((string) $req['text'], 'https://samskrte.ru/klub'));
+    }
+
+    public function test_enrolment_moment_fixes_the_wave_even_after_the_cutoff_flips(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        config(['marathon.warm_tail_wave2_from' => now()->subDays(14)->toDateString()]);
+        // started BEFORE the cutoff -> keeps the flagship coupon series
+        $this->enrollment(['day0_started_at' => now()->subDays(15), 'warm_tail_last_day_sent' => 11]);
+
+        $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
+
+        Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'Скидка после марафона всё еще доступна')
+            && ! str_contains((string) $req['text'], 'Членство школы'));
+    }
+
+    public function test_without_a_cutoff_everyone_stays_on_the_flagship_series(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        config(['marathon.warm_tail_wave2_from' => null]);
+        $this->enrollment(['day0_started_at' => now()->subDays(4)]);
+
+        $this->artisan('marathon:deliver-warm-tail')->assertSuccessful();
+
+        Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'Как вам марафон')
+            && ! str_contains((string) $req['text'], 'Членство школы'));
+    }
+
     public function test_day5_falls_back_to_a_safe_message_without_a_fabricated_quote(): void
     {
         Http::fake(['*' => Http::response(['ok' => true], 200)]);

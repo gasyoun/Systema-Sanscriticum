@@ -29,6 +29,23 @@ use Illuminate\Support\Facades\Schema;
  */
 class GameTelemetryController extends Controller
 {
+    /**
+     * H3315 — серверная таблица очков /lila по типу события. Единственный
+     * источник очков лидерборда: payload.score клиента больше не читается
+     * вовсе (раньше им можно было накрутить ранг вплоть до cap 500/событие).
+     * COMPLETE сохраняет прежний базовый тариф 10 (= config
+     * leaderboards.lila_complete_points, нигде не переопределявшийся);
+     * остальные события в борд не пишутся (0) — место в таблице под них
+     * зарезервировано явно.
+     */
+    private const EVENT_POINTS = [
+        GameEvent::START => 0,
+        GameEvent::COMPLETE => 10,
+        GameEvent::GATE_SHOWN => 0,
+        GameEvent::GATE_CTA_CLICK => 0,
+        GameEvent::ITEM_SEEN => 0,
+    ];
+
     public function store(Request $request): JsonResponse
     {
         $event = (string) $request->input('event', '');
@@ -66,15 +83,15 @@ class GameTelemetryController extends Controller
 
         // H2052 — authenticated completes feed the /lila leaderboards (separate
         // table so game_events stay anonymous / 152-FZ clean).
+        //
+        // H3315 — очки СЕРВЕРНЫЕ: таблица EVENT_POINTS по типу события,
+        // клиентский payload.score игнорируется полностью. Cap 500 оставлен
+        // как страховка (belt-and-braces) на случай будущего роста тарифов.
         if ($user !== null
             && $event === GameEvent::COMPLETE
             && Schema::hasTable('lila_score_events')) {
             try {
-                $points = (int) config('leaderboards.lila_complete_points', 10);
-                $payloadScore = $request->input('payload.score');
-                if (is_numeric($payloadScore) && (int) $payloadScore > 0) {
-                    $points = min(500, (int) $payloadScore);
-                }
+                $points = min(500, self::EVENT_POINTS[$event] ?? 0);
                 LilaScoreEvent::create([
                     'user_id' => $user->id,
                     'drill' => $drill,

@@ -24,6 +24,9 @@ class SplitUploadToYandexTest extends TestCase
             // 1 МиБ — мелкие части, чтобы тест гонял быстро.
             'backup.backup.split_upload.max_part_mb' => 1,
             'backup.backup.split_upload.keep_parts_days' => 16,
+            // Свежепроцессная верификация в тестах выключена: subprocess не
+            // видит Storage::fake. Сама команда покрыта VerifyYandexPartTest.
+            'backup.backup.split_upload.verify' => false,
         ]);
         Storage::fake('local');
         Storage::fake('yandex_disk');
@@ -126,5 +129,62 @@ class SplitUploadToYandexTest extends TestCase
             Storage::disk('local')->exists(self::NAME.'/2026-08-22-17-09-58.zip'),
             'Сбой off-site ноги не должен портить локальную копию.'
         );
+    }
+
+    public function test_resume_completes_partial_group_from_previous_run(): void
+    {
+        // Старый архив A: обрыв прошлым прогоном оставил на диске части 01+02.
+        $originalA = random_bytes(2 * 1024 * 1024 + 500);
+        $stemA = '2026-08-22-17-09-58';
+        Storage::disk('local')->put(self::NAME."/{$stemA}.zip", $originalA);
+        $target = Storage::disk('yandex_disk');
+        $target->put(self::NAME."/{$stemA}.part-01-of-03.zip", substr($originalA, 0, 1024 * 1024));
+        $target->put(self::NAME."/{$stemA}.part-02-of-03.zip", substr($originalA, 1024 * 1024, 1024 * 1024));
+
+        // Новейший локальный архив B — основной ствол этого прогона.
+        $this->seedLocalArchive('2026-08-23-10-00-00', 100);
+
+        (new SplitUploadToYandex)->handle(new BackupWasSuccessful('local', self::NAME));
+
+        $tail = $target->get(self::NAME."/{$stemA}.part-03-of-03.zip");
+        $this->assertSame(substr($originalA, 2 * 1024 * 1024), $tail, 'Докатка обязана долить точный хвост архива.');
+        $this->assertSame(
+            $originalA,
+            $target->get(self::NAME."/{$stemA}.part-01-of-03.zip")
+                .$target->get(self::NAME."/{$stemA}.part-02-of-03.zip")
+                .(string) $tail,
+            'Склейка докачанной группы обязана дать байт-в-байт исходный архив.'
+        );
+        $this->assertTrue($target->exists(self::NAME.'/2026-08-23-10-00-00.zip'), 'Основной ствол прогона не должен пострадать от докатки.');
+    }
+
+    public function test_resume_skips_group_whose_local_archive_is_gone(): void
+    {
+        // Неполная группа без локального архива — недокатываема: живёт до
+        // retention-чистки, трогать её нельзя.
+        $target = Storage::disk('yandex_disk');
+        $target->put(self::NAME.'/2026-08-19-00-00-00.part-01-of-02.zip', 'x');
+
+        $this->seedLocalArchive('2026-08-22-17-09-58', 100);
+        (new SplitUploadToYandex)->handle(new BackupWasSuccessful('local', self::NAME));
+
+        $this->assertTrue($target->exists(self::NAME.'/2026-08-19-00-00-00.part-01-of-02.zip'));
+        $this->assertFalse($target->exists(self::NAME.'/2026-08-19-00-00-00.part-02-of-02.zip'));
+    }
+
+    public function test_resume_skips_group_laid_out_by_other_part_size(): void
+    {
+        // Группа из другого конфига (total=2 при текущем раскладе в 4 части) —
+        // не докатывается: байты не сойдутся, мусор доживает до retention.
+        $target = Storage::disk('yandex_disk');
+        $target->put(self::NAME.'/2026-08-21-00-00-00.part-01-of-02.zip', 'x');
+
+        Storage::disk('local')->put(self::NAME.'/2026-08-21-00-00-00.zip', str_repeat('A', 3 * 1024 * 1024 + 500));
+        $this->seedLocalArchive('2026-08-22-17-09-58', 100);
+
+        (new SplitUploadToYandex)->handle(new BackupWasSuccessful('local', self::NAME));
+
+        $this->assertSame('x', $target->get(self::NAME.'/2026-08-21-00-00-00.part-01-of-02.zip'));
+        $this->assertFalse($target->exists(self::NAME.'/2026-08-21-00-00-00.part-02-of-02.zip'));
     }
 }

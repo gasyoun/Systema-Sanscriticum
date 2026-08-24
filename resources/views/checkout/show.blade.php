@@ -241,9 +241,35 @@ document.addEventListener('alpine:init', () => {
             <a href="{{ url()->previous() }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 transition mb-4">
                 <i class="fas fa-arrow-left mr-2 text-xs"></i> Назад
             </a>
-            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Оформление заказа</h1>
-            <p class="mt-2 text-base text-gray-500">Проверьте детали и подтвердите оплату — доступ откроется сразу после.</p>
+            @if(!empty($isGift))
+                {{-- H3334 — подарочный режим: нейтральная подача, без дедлайнов
+                     и срочности (анти-срочностное правило хендоффа). --}}
+                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Подарочный сертификат</h1>
+                <p class="mt-2 text-base text-gray-500">
+                    Оформляем «{{ $tariff->title }}»{{ isset($tariff->course) && $tariff->course ? ' — '.$tariff->course->title : '' }} в подарок.
+                    После оплаты вы получите на почту одноразовый код активации и PDF-сертификат:
+                    передайте их получателю, когда будете готовы. Покупатель доступ к курсу не получает —
+                    его откроет получатель после ввода кода.
+                </p>
+            @else
+                <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Оформление заказа</h1>
+                <p class="mt-2 text-base text-gray-500">Проверьте детали и подтвердите оплату — доступ откроется сразу после.</p>
+            @endif
         </div>
+
+        @if(config('features.gift_certificates'))
+            {{-- H3334 — переключатель подарочного режима (флаг features.gift_certificates). --}}
+            <div class="mb-8 flex items-center gap-2 text-sm bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm w-fit">
+                <i class="fas fa-gift text-indigo-500"></i>
+                @if(!empty($isGift))
+                    <span class="text-gray-600">Подарочный режим включён.</span>
+                    <a href="{{ route('checkout.show', $tariff) }}" class="font-medium text-indigo-600 hover:text-indigo-700">Купить для себя</a>
+                @else
+                    <span class="text-gray-600">Хотите оформить как подарок?</span>
+                    <a href="{{ route('checkout.show', ['tariff' => $tariff, 'gift' => 1]) }}" class="font-medium text-indigo-600 hover:text-indigo-700">Подарить</a>
+                @endif
+            </div>
+        @endif
 
         @guest
             <div class="mb-10">
@@ -299,6 +325,13 @@ document.addEventListener('alpine:init', () => {
                         @csrf
                         <input type="hidden" name="tariff_id" value="{{ $tariff->id }}">
                         <input type="hidden" name="prana_amount" :value="$store.checkout.prana">
+                        {{-- H3334 — режим «подарить»: рендерится только при isGift
+                             (флаг features.gift_certificates). Сервер перепроверяет
+                             флаг авторитетно; клиентское поле сам по себе ничего
+                             не включает. --}}
+                        @if(!empty($isGift))
+                            <input type="hidden" name="gift" value="1">
+                        @endif
                         {{-- H1396 §1 — carry the applied promo in the form, not only in the
                              session: the anti-419 refresh can mint a fresh empty session and
                              lose it, which used to charge full price silently. Re-resolved

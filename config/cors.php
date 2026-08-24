@@ -13,13 +13,19 @@ return [
     |
     | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
     |
+    | H3311: allowlist через env, по умолчанию ПУСТО = cross-origin запрещён.
+    | Same-origin запросам CORS не нужен — фронт сайта продолжает работать.
+    | Локальная разработка добавляет localhost-происхождения; прод — свои
+    | домены (samskrtam.ru/samskrte.ru/staging). Пример:
+    |   CORS_ALLOWED_ORIGINS=https://samskrtam.ru,https://samskrte.ru,http://localhost:3000
+    |
     */
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('CORS_ALLOWED_ORIGINS', ''))))),
 
     'allowed_origins_patterns' => [],
 

@@ -165,6 +165,23 @@ return [
         // the same DC and, on a transient stall, dies at 120 s again (H2988:
         // 18 kills / ~100 min). 0 disables the skip. Does not raise the ceiling.
         'sync_timeout_cooldown_seconds' => (int) env('TELEGRAM_SUPPORT_SYNC_TIMEOUT_COOLDOWN_SECONDS', 600),
+        // H3380: текст ack'а автоответчика («приняли, ответим») и cooldown-окно
+        // в часах: пока в чате есть исходящее моложе окна, ack не шлётся.
+        'auto_ack_text' => env(
+            'TELEGRAM_SUPPORT_AUTO_ACK_TEXT',
+            "Намасте!\n\nПолучили ваше сообщение и уже разбираемся. Ответим в течение рабочего дня.",
+        ),
+        'auto_ack_cooldown_hours' => (int) env('TELEGRAM_SUPPORT_AUTO_ACK_COOLDOWN_HOURS', 6),
+        // H3380 v2.2: входящие старше этого возраста (часов) не порождают ни
+        // автоответа, ни подсказки — первичный history-забор новой сессии
+        // приносит месяцы старых сообщений, реагировать на них нельзя.
+        'auto_reply_max_age_hours' => (int) env('TELEGRAM_SUPPORT_AUTO_REPLY_MAX_AGE_HOURS', 6),
+        // H3380 v2: тёплый ответ на чистое приветствие («Намасте!») — один раз
+        // за то же cooldown-окно чата. Благодарности молча не отвечаются.
+        'auto_greeting_text' => env(
+            'TELEGRAM_SUPPORT_AUTO_GREETING_TEXT',
+            "Намасте!\n\nРады вас видеть. Напишите, по какому курсу или расписанию вопрос — с радостью поможем.",
+        ),
         // Auto-heal IPC hang (01.08.2026): healthcheck → recover (kill worker,
         // clear ipc/locks, unlock madeline-session, one sync). Default OFF —
         // flip TELEGRAM_SUPPORT_AUTO_HEAL=true on prod after smoke.
@@ -286,7 +303,10 @@ return [
         'callback_secret' => env('VK_CALLBACK_SECRET'),
     ],
 
-    'yandex' => [
+    // H3311: раньше этот блок и Socialite-блок ниже оба назывались 'yandex';
+    // PHP last-wins молча выбрасывал api_key/folder_id/agent_id. Читатели
+    // речи/агента теперь обязаны ходить в services.yandex_speech.
+    'yandex_speech' => [
         'api_key' => env('YANDEX_API_KEY'),
         'folder_id' => env('YANDEX_FOLDER_ID'),
         'agent_id' => env('YANDEX_AGENT_ID'),
@@ -320,8 +340,15 @@ return [
         ],
     ],
 
+    // H3312: единый канонический адрес суперадмина - только из env, без
+    // литерального фолбэка (литерал в публичном репо = раскрытие логина
+    // super_admin). Fail-closed: пустой ADMIN_EMAIL отключает админ-функции
+    // (Horizon deny, backup-уведомления skip, админ-письма по платежам skip),
+    // а не уводит их на «угаданный» адрес. Прод получает значение через
+    // DEPLOY_QUEUE (Uprava); DatabaseSeeder дополнительно требует
+    // непустой ADMIN_PASSWORD перед сидированием.
     'admin' => [
-        'email' => env('ADMIN_EMAIL', 'pe4kin.85@mail.ru'),
+        'email' => env('ADMIN_EMAIL', ''),
         'password' => env('ADMIN_PASSWORD'),
     ],
 
@@ -392,6 +419,20 @@ return [
         'enabled' => (bool) env('PAYPAL_CLAIM_ENABLED', false),
         'me_link' => env('PAYPAL_ME_LINK'),      // напр. https://www.paypal.com/paypalme/xxx
         'recipient' => env('PAYPAL_RECIPIENT'),  // email/имя получателя для инструкции студенту
+        // Ruling 22-08-2026: заявка СУЩЕСТВУЮЩЕГО ученика (вошедшего в кабинет)
+        // сразу становится paid — доступ/финансы открываются немедленно, сверка
+        // выборочная и пост-фактум (фильтр «PayPal: без сверки»). Гости с новым
+        // email идут по-старому через pending → ручную сверку.
+        // false → откат к ручной сверке для всех, без деплоя логики.
+        'trust_existing_students' => (bool) env('PAYPAL_TRUST_EXISTING_STUDENTS', true),
+        // MG 23-08-2026: в PayPal платят только EUR (предпочтительно) и USD,
+        // и дороже рублевых — рублевую цену тарифа на форме НЕ показываем.
+        // Валютная цена за БЛОК по course_id; показывается только блочным
+        // тарифам. Источник прайса: Google-таблица цен (гр.53 Кочергиной =
+        // тот же блок 8000 ₽ = 105 $/90 €).
+        'foreign_block_prices' => [
+            434 => ['eur' => 90, 'usd' => 105], // Грамматика по Кочергиной
+        ],
         // H2027 PayPal Subscriptions API (auto-bill diaspora) — separate from claim.
         // Master flag default OFF; secrets never committed. See
         // docs/ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md

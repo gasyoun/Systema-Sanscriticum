@@ -156,6 +156,23 @@ return [
     'support_dm_auto_reply' => (bool) env('SUPPORT_DM_AUTO_REPLY', false),
 
     /*
+     | H3380 (рулинг MG 23-08-2026): шаблонные автоответы D/E/F по привязке S9.
+     | Шлётся ТОЛЬКО текст выверенного канреплая (H2339), не LLM, и только на
+     | аккаунтах с telegram_support_accounts.auto_reply_enabled=true — проба
+     | 2 недели на rusamskrtam. Требует support_dm_auto_reply. Деньги: D2/D3
+     | разрешены владельцем на срок испытания; откат — false + config:cache,
+     | либо auto_reply_enabled=false на аккаунте.
+     */
+    'support_auto_reply_templates' => (bool) env('SUPPORT_AUTO_REPLY_TEMPLATES', false),
+
+    /*
+     | H3380: ack «приняли, ответим» когда автоответить нечем. Не чаще одного
+     | раза в services.telegram_support.auto_ack_cooldown_hours на чат; без
+     | linked-пользователя не шлём (некуда ставить очередь). Откат: false.
+     */
+    'support_auto_ack' => (bool) env('SUPPORT_AUTO_ACK', false),
+
+    /*
      | H3242: утренняя сводка вчерашней поддержки в Telegram на ADMIN_TELEGRAM_ID
      | (gasyoun). ВКЛ по умолчанию — админский дайджест по явной просьбе, не
      | студенческий автоответ. Выкл: SUPPORT_DAILY_DIGEST=false + config:cache.
@@ -1051,4 +1068,21 @@ return [
      | Rollback: FLAGSHIP_CTA_AB=false restores the previous string.
      */
     'flagship_cta_ab' => (bool) env('FLAGSHIP_CTA_AB', false),
+
+    /*
+     | Подарочные сертификаты (H3334): тариф «в подарок» + одноразовый код
+     | активации поверх существующей тарифной модели. Деньги — обычный разовый
+     | чекаут (payments.tariff='gift'), доступ покупателю не открывается; после
+     | оплаты выпускается сертификат с sha256-хэшем кода, получатель активирует
+     | его на /gift/activate — и получает доступ штатным PaymentObserver-контуром.
+     |
+     | ВЫКЛ по умолчанию — deploy-рубильник money-контура: пока флаг OFF,
+     | /gift/* отдают 404, кнопка «Подарить» на чекауте скрыта, параметр
+     | gift=1 игнорируется полностью (поведение байт-в-байт прежнее). Включение
+     | — осознанный шаг человека: GIFT_CERTIFICATES=true + config:cache ПОСЛЕ
+     | репетиции `gift-certificates:rehearse` и ревью цен номиналов (money row MG:
+     | цена подарка = цена underlying-тарифа; отдельные подарочные ценники —
+     | только через решение MG). Анти-срочность: никаких дедлайн-механик.
+     */
+    'gift_certificates' => (bool) env('GIFT_CERTIFICATES', false),
 ];

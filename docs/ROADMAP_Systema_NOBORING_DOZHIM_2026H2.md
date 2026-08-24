@@ -1,6 +1,6 @@
 # ROADMAP — Noboring «дожим» adoption (Systema + samskrte)
 
-_Created: 01-08-2026 · Last updated: 19-08-2026_
+_Created: 01-08-2026 · Last updated: 24-08-2026_
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
@@ -34,7 +34,7 @@ Prod was still on pre-H2094 deploy at probe time — numbers from the same filte
 | 30 d | 125 | 82 | 40 | 3 | **65.6%** | 50 | 0 | **0.0%** |
 | 90 d | 574 | 492 | 40 | 42 | **85.7%** | 217 | 5 | **2.3%** |
 
-**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay; product fix shipped flag-OFF in H2186, not yet enabled on prod).
+**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay; product fix shipped flag-OFF in H2186, **enabled in prod 02-08-2026** — see the § Rate B residual below and the [24-08 check-in](#post-enable-check-in-2026-08-24-prod-19323222992)).
 
 #### H2188 re-verify — live `dozhim:baseline --json` (prod, as_of `2026-08-02 19:26:05`)
 
@@ -55,7 +55,7 @@ Command **present** on box after deploy. Artifact: [docs/ops/dozhim_baseline_pro
 |---|---|---|
 | Deposit / trial checkout | Yes (email match) | Yes on paid webhook |
 | Marathon paid | Yes (enrollment) | Yes |
-| **Ordinary course checkout** | **No** (until flag ON) | **No** by default |
+| **Ordinary course checkout** | Yes since **02-08-2026** (prod env ON; code default still false) | Yes since **02-08-2026** (prod env ON) |
 
 **Owner path shipped (code default still false; env is the deploy rubilnik):**
 
@@ -68,6 +68,32 @@ Command **present** on box after deploy. Artifact: [docs/ops/dozhim_baseline_pro
 **Prod enable (human, 02-08-2026):** on `193.232.229.92` `/var/www/html` — `.env` has `LEAD_CONVERTED_AT_ON_COURSE_PAID=true` (backup `.env.bak.h2186.20260802`), `php artisan config:cache` rebuilt; `php artisan config:show features.lead_converted_at_on_course_paid` → **true**.
 
 **Post-enable baseline** (`php artisan dozhim:baseline --json`, as_of `2026-08-02 19:26:28`): Rate A 30d **61.7%** (74/120) / 90d **85.0%** (482/567); Rate B 30d **0.0%** (0/50) / 90d **2.3%** (5/216) — still sparse, as expected (no historical backfill). Forward-looking only: Rate B numerator fills for **new** course paid events. Primary H-B targets stay on **Rate A**. Re-check after ~1 week of paid volume.
+
+#### Post-enable check-in (24-08-2026, prod `193.232.229.92`, deploy `04ad4f3a`)
+
+Fresh `php artisan dozhim:baseline --json` + read-only usage counters (H3440; full method + evidence in [Uprava SYSTEMA_NOBORING_PROD_USAGE_AUDIT_24-08-2026.md](https://github.com/gasyoun/Uprava/blob/main/SYSTEMA_NOBORING_PROD_USAGE_AUDIT_24-08-2026.md)):
+
+| Window | A orders | A paid | A pending | A lost | **Rate A** | B leads | B converted | **Rate B** |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 30 d | 147 | 116 | 30 | 1 | **78.9%** | 16 | 1 | **6.3%** |
+| 90 d | 512 | 412 | 30 | 70 | **80.5%** | 179 | 17 | **9.5%** |
+
+Trend line Rate A 30d: 65.6% (01-08) → 61.7% (02-08) → **78.9%** (24-08) — above green `CONVERSION_WARN_PCT` band (63) and above NF's post-dozhim band (63–67%). **Causality is NOT proven: no controlled experiment was run** (recovery CTA enablement, queue, seasonality and mix all moved together); the number is a check-in, not an effect claim. Rate B is filling forward since the 02-08 instrumentation enable but stays sparse (16 leads in 30d).
+
+Usage counters (same probe): `dozhim_drip_logs` total **0** (auto-drip never fired — `dozhim_drip=false` in prod, the only OFF flag); follow-ups with `deal_id` created in 30d **3**, closed **0** (operator queue not being worked); active landings using `student_story_block` **0** (block built 10-08-2026, unused).
+
+Flag status — code default vs prod `.env` (verified 24-08-2026 via live `config()`):
+
+| Flag | Code default | Prod |
+|---|---|---|
+| `payment_recovery_cta` | false | ✅ true (07-08-2026) |
+| `lead_converted_at_on_course_paid` | false | ✅ true (02-08-2026) |
+| `manager_sales_report` | false | ✅ true |
+| `dozhim_queue` | false | ✅ true |
+| `dozhim_drip` | false | ❌ false — the only OFF flag |
+| `crm_pipeline_board` | false | ✅ true |
+
+Earlier sections below keep their historical wording («default OFF», «not yet enabled») as dated records of their time; this table is the current state.
 
 #### «Заявка» definition (PLAN D3/D7 + `config/conversion.php`)
 
@@ -193,7 +219,44 @@ Executor: Grok 4.5 (`grok-4.5`). Parent programme H-A: [H2058](https://github.co
   gaps this anti-case warns about (unlike «Lingvistik», which had none); the 4th doesn't apply
   (no physical locations); the 5th (pricing strategy) is a pricing-policy question for a human,
   not a missing engineering surface — no code gap to close here.
-- [ ] Optional siblings: дебиторка antikeis, «собственник из операционки», «тратим меньше / зарабатываем больше» — not yet read.
+- [x] Optional siblings: дебиторка antikeis, «собственник из операционки», «тратим меньше / зарабатываем больше» — **read + mapped 23-08-2026 (ox-alpha `x-preview-f-free`, via `/drain`)**.
+
+  Same NF Education series as the anti-case above (programme parent [H259](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H259-Opus_Systema-Sanscriticum_profit_funds_bdr_kpi_06.07.26.md)); all three are narratives with no directly transferable metric — the transferable content is again the gap checklist. Surfaces verified against `origin/main` today; source pages fetched live 23-08-2026.
+
+  **1. Дебиторка antikeis** — [Антикейс: онлайн-школа и невозвратная дебиторка](https://noboring-finance.ru/cases/antikeis/) («Алохомора», 17.02.2023): school launched half-upfront installments without telling its финдир → ~2 млн ₽ uncollectible receivables in 3 weeks + кассовый разрыв; collection calls degenerated into re-selling the unpaid half.
+
+  | NF gap flagged | Systema-Sanscriticum today | Verdict |
+  |---|---|---|
+  | Installments launched ad hoc, outside the finmodel | Installments are first-class: [`PaymentPromise`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/PaymentPromise.php) + conditional access [`ConditionalAccessGranter`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/ConditionalAccessGranter.php), Dolyami webhook — a modeled surface, not a sales-desk improvisation | **Already covered** |
+  | ДЗ invisible until the balance exposed it | [`ReceivablesGovernance`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/ReceivablesGovernance.php) «Дебиторка и рассрочка — план-факт», [`Debtors`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/Debtors.php), daily `receivables:check` 04:00, [`config/receivables.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/receivables.php) | **Already covered** |
+  | «Collections» calls that are really re-selling | Debt work is split by design: automated [`DozhimDripDispatcher`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/DozhimDripDispatcher.php) + [`DebtorReminderMail`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Mail/DebtorReminderMail.php); curator gets suggestion templates, explicitly «подсказка куратору, а не автопродажа» | **Already covered** |
+  | Commercial policy: ceiling on installment share/count vs cash plan | Plan-fact reporting exists, but no explicit ceiling number anywhere in config or docs — a finance-policy ruling, not a missing surface | **Residual — business call** |
+
+  **Net finding:** the exact trap described here (informal installments → silent uncollectible debt discovered only from the balance) is structurally closed in Systema — promises are modeled, aged, reminded, drip-chased and reported план-факт. Residue is one policy number (allowed receivables ceiling) that only MG can set.
+
+  **2. «Собственник из операционки»** — [Онлайн-школа: наладили процессы и вывели собственника из операционки](https://noboring-finance.ru/cases/onlayn-schkola-viveli-sobstvennika-iz-operacionki/) («Аура», 12.09.2024): кассовый учёт → ДДС/ОПиУ/баланс, поэтапное признание выручки годового курса, фонды прибыли, БДР, отдел маркетинга; собственник вышел из операционки за 9 месяцев (+33% заказов, +700 тыс ₽ прибыли).
+
+  | NF move | Systema-Sanscriticum today | Verdict |
+  |---|---|---|
+  | Detailize opaque marketplace payouts (who bought what) | Payments are first-party natively (payments ↔ students ↔ courses, Deal bridge) — no weekly anonymous platform lump to untangle | **Not applicable** |
+  | Accrual revenue recognition per control point on long courses | No deferred-revenue / recognition engine found in `app/`; risk bounded by short course cycles + funds discipline, but the accounting-policy choice itself is MG's | **Residual — business call** |
+  | Funds system (дивиденды / резерв / развитие) | [`ProfitFunds`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/ProfitFunds.php) «Фонды прибыли — распределение и резерв» | **Already covered** |
+  | БДР plan-fact + weekly management rhythm | [`FINANCE_REVIEW_RHYTHM.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md) weekly finance-KPI review, [`DelegationKpi`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/DelegationKpi.php), [`FinanceCockpit`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/FinanceCockpit.php), opex entry ruled [#953](https://github.com/gasyoun/Systema-Sanscriticum/issues/953) | **Already covered** |
+  | Owner exits operations (trained ops director takes the levers) | Delegation plumbing exists (`RoleGate::finance()`, accountant role, curator lanes); actually handing over is a life/business decision, not a code gap | **Residual — owner call** |
+
+  **Net finding:** the financial machinery «Аура» spent 9 months building already exists here instrumented (funds, KPI dashboards, delegated finance roles). Two honest residues are human by nature: accrual-recognition policy for long courses, and how much операционки MG chooses to keep.
+
+  **3. «Тратим меньше / зарабатываем больше»** — [Стали тратить на миллион меньше, а зарабатывать на миллион больше](https://noboring-finance.ru/cases/stali-tratit-na-reklamu/) («Мандаринка», 03.02.2022): еженедельный план-факт по выручке и расходам на рекламу, конверсия в продажу по менеджерам с роутингом лидов к конвертирующим, ROMI по каналам с отказом от слабых: план 53%→68%, доля рекламы в выручке 65%→26,5%.
+
+  | NF move | Systema-Sanscriticum today | Verdict |
+  |---|---|---|
+  | Еженедельный план-факт выручка vs расходы | Weekly [`FINANCE_REVIEW_RHYTHM.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md) cadence + [`SalesForecastService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Crm/SalesForecastService.php) forecast baseline | **Already covered** |
+  | Конверсия в продажу по менеджерам, лиды — к конвертирующим (>20%) | [`ManagerSalesReport`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/ManagerSalesReport.php) «Продажи по менеджеру» + двухзнаменательный [`OrderPaymentConversionService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Reports/OrderPaymentConversionService.php) (rate A/B); кто получает лид — остаётся операционной практикой, не поверхностью | **Already covered** (роутинг — практика) |
+  | ROMI по каналам, отказ от неэффективных | Расходный ledger есть — [`AdPostSpend`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/AdPostSpend.php) (budget/writers на пост); доходная атрибуция принадлежит конвенции UTM из ORS-FAQ sales roadmap + целям Метрики — объединённый ROMI-view здесь бы её продублировал | **Partial — routed to Sales UTM lane** |
+  | Рассрочка на этапе оплаты, чтобы не терять клиентов | [`PaymentPromise`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/PaymentPromise.php) + Dolyami webhook | **Already covered** |
+  | Ещё бесплатные вебинары (объём верха воронки) | Редакционно-контентное решение МГ, не код-поверхность | **Residual — owner call** |
+
+  **Net finding:** mechanical half of «Мандаринки» уже покрыто (per-manager conversion, план-факт ритм, рассрочки); единственный реальный стык — ROMI-картинка — сознательно живёт в Sales UTM lane (ORS-FAQ), а не новым отчётом тут. Wave 3 «Connect front funnel» остаётся правильным следующим шагом.
 
 ### Wave 3 — Connect front funnel (ORS sales Phase 1 leftovers)
 

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\LoginThrottle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -26,16 +27,40 @@ class AuthController extends Controller
             'device_name' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $user = User::where('email', User::normalizeEmail($data['email']))->first();
+        $email = User::normalizeEmail($data['email']);
+        $ip = (string) $request->ip();
+
+        // H3314 — per-credential lockout поверх IP-throttle роута:
+        // распределённый брутфорс одной учётки упирается в счётчик по email.
+        if (LoginThrottle::tooManyAttempts($email, $ip)) {
+            LoginThrottle::fireLockout($request);
+
+            return response()->json(['message' => LoginThrottle::LOCKOUT_MESSAGE], 429);
+        }
+
+        $user = User::where('email', $email)->first();
+
+        // Равное время ответа для «нет такого email» и «неверный пароль» —
+        // без оракула существования адреса.
+        if (! $user) {
+            LoginThrottle::equalizeTiming($data['password']);
+        }
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
+            LoginThrottle::hit($email, $ip);
+
             throw ValidationException::withMessages([
                 'email' => ['Неверный email или пароль.'],
             ]);
         }
 
+        LoginThrottle::clear($email, $ip);
+
         $device = $data['device_name'] ?? 'mobile';
-        $token = $user->createToken($device)->plainTextToken;
+        // H3314 — новый токен получает явный expires_at (окно из конфига Sanctum,
+        // 90 дней по умолчанию). Старые токены досиживают своё created_at-окно.
+        $expiresAt = now()->addMinutes(max(1, (int) config('sanctum.expiration', 60 * 24 * 90)));
+        $token = $user->createToken($device, ['*'], $expiresAt)->plainTextToken;
 
         return response()->json([
             'token' => $token,

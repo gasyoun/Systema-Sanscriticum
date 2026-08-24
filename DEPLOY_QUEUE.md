@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 21-08-2026 (№80 H3247 `CRM_TRIAL_BOOKING` stay OFF; №79 H3233 `SUPPORT_DM_AUTO_REPLY` ON) (H2758 №77 `HINDI_YOUTUBE_NOVA3_DRILLS` stay OFF; H2762 Kochergina next-step/CTA A/B flags stay OFF; №73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 23-08-2026 (№81 H3314 — закат мобильных токенов 90 дней после деплоя, throttle ON; №80 H3247 `CRM_TRIAL_BOOKING` stay OFF; №79 H3233 `SUPPORT_DM_AUTO_REPLY` ON) (H2758 №77 `HINDI_YOUTUBE_NOVA3_DRILLS` stay OFF; H2762 Kochergina next-step/CTA A/B flags stay OFF; №73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -48,6 +48,36 @@ _Создано: 08-07-2026 · Обновлено: 21-08-2026 (№80 H3247 `CRM_
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
 
+### H3312 — superadmin email вычищен из кода: прод .env получает ADMIN_EMAIL (fail-closed)
+
+Личный email суперадмина больше не захардкожен в коде ([PR #1988](https://github.com/gasyoun/Systema-Sanscriticum/pull/1988)): Horizon gate, получатель backup-уведомлений и `services.admin.email` теперь читают единый `ADMIN_EMAIL`; пусто = все три функции отключены (Horizon deny + backup notify skip, с warning в логе, без крашей). До выката PR на прод:
+
+1. `.env` прода добавить: `ADMIN_EMAIL=<личный адрес суперадмина>` — **значение в git не пишем**; взять тот же адрес, что был в `app/Providers/HorizonServiceProvider.php` до H3312 (история git), т.к. Horizon-доступ у этого адреса должен сохраниться. Внимание: раньше backup-письма уходили на ДРУГОЙ личный адрес (`config/backup.php` до H3312) — после правки оба канола получают один и тот же адрес из `ADMIN_EMAIL`.
+2. После правки `.env`: `php artisan config:clear`, затем обычный деплой.
+3. Smoke: вход под суперадмином → `/horizon` открывается; под обычным студентом → по-прежнему нет. Если `ADMIN_EMAIL` пуст — `/horizon` 403 для всех + в логе warning `viewHorizon denied`, backup-уведомления skip (`ADMIN_EMAIL is not configured`) — это ожидаемое fail-closed поведение, не авария.
+4. Откат: убрать `ADMIN_EMAIL` из `.env` — безопасно, все ветки fail-closed.
+
+### H3311 — конфиг-закалка: прод .env перед деплоем (Secure-cookie / TRUSTED_PROXIES / CORS_ALLOWED_ORIGINS)
+
+Код инертен к same-origin фронту и локальной разработке, но прод обязан выставить три ключа в `.env` **до** следующего `deploy.sh` (новый шаг предсброса `php artisan deploy:config-preflight` проверяет первый жёстко):
+
+1. `.env` прода добавить/проверить:
+   - `SESSION_SECURE_COOKIE=true` (или оставить незаданной — код теперь дефолтит true; явное `false` = деплой заблокирован);
+   - `TRUSTED_PROXIES=127.0.0.1` — адрес nginx/LB, с которого реально приходит трафик (иначе warning + клиентские IP во всех ip()-зависимых местах станут адресом прокси);
+   - `CORS_ALLOWED_ORIGINS=https://samskrtam.ru,https://samskrte.ru` (+ staging-домен при необходимости; пусто = cross-origin запрещён).
+2. После правки: `php artisan config:cache`, затем `sudo bash deploy.sh` — предсброс должен ответить `deploy:config-preflight OK`.
+3. Smoke: логин студента и чекаут проходят (кука с Secure на https), `/api/public/schedule` отвечает same-origin без CORS-ошибок.
+4. Стоп: если smoke красный по кукам — `SESSION_SECURE_COOKIE=false` только как аварийный откат с пониманием риска (http-only трафик видит куку).
+
+### H3310 — гигиена публичного диска (архивы сертификатов + CSV импорта) — план миграции на прод
+
+После выката кода новые записи уже пишут в `local`; на сервере остаются legacy-файлы в `storage/app/public/archives` (групповые ZIP сертификатов, собранные до миграции). После деплоя:
+
+1. `php artisan archives:move-public-to-local --dry-run` — показать план: сколько ZIP уедет.
+2. `php artisan archives:move-public-to-local` — идемпотентный перенос в приватный `storage/app/archives`, опустевший каталог удаляется сам. Прямые ссылки `/storage/archives/...` начинают отдавать 404, скачивание остаётся только через staff-маршрут `/force-download/{file}` (кнопка «Скачать ZIP» в колокольчике Filament).
+3. Smoke: не-стаффу `GET /force-download/<файл>` → 403/редирект на логин; стаффу → скачивание; старый прямой URL `GET /storage/archives/<имя>.zip` → 404.
+4. Cron `archives:cleanup` правки не требует — чистит и новый каталог, и остатки legacy по одному порогу.
+
 ### H3308 — приватизация контента уроков — прогон миграции на проде
 
 Код инертен для новых записей (они уже пишут в `local`), но существующие файлы лежат в `storage/app/public` и статически раздавались из `/storage`. После деплоя:
@@ -72,6 +102,14 @@ _Создано: 08-07-2026 · Обновлено: 21-08-2026 (№80 H3247 `CRM_
 1. После staff smoke в `/admin/deals-board`: `CRM_TRIAL_BOOKING=true`, затем `php artisan config:cache`. Виджет **не** включать.
 2. Смоук: гость `/admin/deals` 302; куратор видит бейдж «Пробник» на сделке с `kind=trial`; исход сохраняется.
 3. Стоп: `CRM_TRIAL_BOOKING=false` + `config:cache`.
+
+### №81 — H3314 — закат мобильных Sanctum-токенов (90 дней) + per-credential login throttle
+
+Деплой активирует 90-дневное окно `sanctum.expiration` (`SANCTUM_TOKEN_EXPIRATION=129600`) и per-credential login throttle (`LOGIN_THROTTLE_*`, порог 5/60 сек, аварийный выключатель `LOGIN_THROTTLE_ENABLED=true` — дефолт ON). **Коммуникация мобильным пользователям:** после деплоя каждый существующий мобильный токен умрёт не позднее чем через 90 дней от его создания (токены старше 90 дней — сразу при деплое); приложение само повторно логинится по email+паролю, действий от студента не требуется, но поддержка должна знать про возможные «меня выкинуло из приложения». Новые токены получают явный `expires_at`; ежедневная команда `tokens:prune-expired` (03:20 MSK) подчищает мёртвые строки.
+
+1. После деплоя проверить: `php artisan tokens:prune-expired --hours=1` (сухой прогон счётчиком), логин в мобильном API `/api/v1/auth/login` → 200 с `expires_at` ≈ +90 дней.
+2. Мониторинг: рост 429 на `/login`, `/shop/login`, `/api/v1/auth/login` первые сутки (легитимные студенты при NAT/опечатках) — при массовых ложных блокировках: `LOGIN_THROTTLE_ENABLED=false` + `config:cache`.
+3. Откат окна токенов (только по решению MG): `SANCTUM_TOKEN_EXPIRATION=` пусто в `.env` не отключает окно — ставить большое значение или править дефолт; throttle выключается флагом из п.2.
 
 Док: [docs/PLAN_SYSTEMA_MOYKLASS_TRIAL_BOOKING_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_MOYKLASS_TRIAL_BOOKING_2026H2.md).
 

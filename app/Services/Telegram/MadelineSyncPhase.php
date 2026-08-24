@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\Cache;
  * cooldown so the next live MTProto attempt waits instead of re-entering the
  * death spiral. Does not change the watchdog, the 120 s ceiling, or the
  * kill-on-timeout cleanup.
+ *
+ * H3380: ключи пер-сессийные ({@see MadelineSessionContext::phaseSuffix()}).
+ * Легаси-сессия использует прежние ключи без суффикса; второй аккаунт ведёт
+ * свои фазы и свой cooldown — таймаут одного не глушит заходы другого.
  */
 final class MadelineSyncPhase
 {
@@ -27,12 +31,12 @@ final class MadelineSyncPhase
 
     public static function mark(string $phase): void
     {
-        Cache::put(self::PHASE_KEY, $phase, 180);
+        Cache::put(self::PHASE_KEY.self::keySuffix(), $phase, 180);
     }
 
     public static function current(): ?string
     {
-        $phase = Cache::get(self::PHASE_KEY);
+        $phase = Cache::get(self::PHASE_KEY.self::keySuffix());
 
         return is_string($phase) && $phase !== '' ? $phase : null;
     }
@@ -43,7 +47,7 @@ final class MadelineSyncPhase
             return;
         }
 
-        Cache::put(self::COOLDOWN_KEY, [
+        Cache::put(self::COOLDOWN_KEY.self::keySuffix(), [
             'armed_at' => now()->toIso8601String(),
             'seconds' => $seconds,
             'phase' => self::current(),
@@ -52,6 +56,11 @@ final class MadelineSyncPhase
 
     public static function cooldownActive(): bool
     {
-        return Cache::has(self::COOLDOWN_KEY);
+        return Cache::has(self::COOLDOWN_KEY.self::keySuffix());
+    }
+
+    private static function keySuffix(): string
+    {
+        return MadelineSessionContext::phaseSuffix();
     }
 }

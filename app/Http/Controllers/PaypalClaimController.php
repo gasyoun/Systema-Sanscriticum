@@ -39,10 +39,22 @@ final class PaypalClaimController extends Controller
 
         $tariff->load('course');
 
+        // MG 23-08-2026: рублевую цену на форме не показываем (в PayPal платят
+        // только EUR/USD и дороже рублевых). Валютная цена за блок берется из
+        // конфига по course_id и показывается только блочным тарифам.
+        $foreignPrice = null;
+        if ($tariff->type === 'block') {
+            $fp = config('services.paypal.foreign_block_prices')[$tariff->course_id] ?? null;
+            if (is_array($fp) && isset($fp['eur'], $fp['usd'])) {
+                $foreignPrice = $fp;
+            }
+        }
+
         return view('paypal.claim', [
             'tariff' => $tariff,
             'course' => $tariff->course,
             'price' => (float) $tariff->price,
+            'foreignPrice' => $foreignPrice,
             'meLink' => (string) config('services.paypal.me_link'),
             'recipient' => (string) config('services.paypal.recipient'),
         ]);
@@ -51,6 +63,15 @@ final class PaypalClaimController extends Controller
     public function store(StorePaypalClaimRequest $request, Tariff $tariff, CuratorNotifier $curators): RedirectResponse
     {
         $this->abortUnlessEnabled($tariff);
+
+        // Ruling 22-08-2026: заявка СУЩЕСТВУЮЩЕГО ученика (вошедшего в кабинет)
+        // сразу paid — доступ/финансы открываются немедленно штатным
+        // Payment::booted(), сверка выборочная и пост-фактум. Гость с новым
+        // email идет по-старому: pending → ручная сверка в Filament.
+        // Флаг читаем ДО resolveUser: он логинит только что созданного гостя,
+        // и после него auth()->check() уже не отличит своего от нового.
+        $trusted = auth()->check()
+            && (bool) config('services.paypal.trust_existing_students', true);
 
         // Резолв пользователя — вне транзакции, может бросить ValidationException
         // (гость указал email уже существующего аккаунта → отказ).
@@ -69,8 +90,12 @@ final class PaypalClaimController extends Controller
         if ($txn = $request->validated('paypal_txn')) {
             $claimMeta['txn'] = (string) $txn;
         }
+        if ($trusted) {
+            $claimMeta['auto_trusted'] = true;
+            $claimMeta['trusted_at'] = now()->toIso8601String();
+        }
 
-        $payment = DB::transaction(function () use ($user, $tariff, $request, $proofPath, $startBlock, $endBlock, $claimMeta): Payment {
+        $payment = DB::transaction(function () use ($user, $tariff, $request, $proofPath, $startBlock, $endBlock, $claimMeta, $trusted): Payment {
             return Payment::create([
                 'user_id' => $user->id,
                 'course_id' => $tariff->course_id,
@@ -83,7 +108,9 @@ final class PaypalClaimController extends Controller
                 'tariff' => $tariff->accessKey(),
                 'start_block' => $startBlock,
                 'end_block' => $endBlock,
-                'status' => 'pending',
+                // trusted → сразу paid: fireOnPaid на created открывает доступ,
+                // письма, прану и проводит сумму по учёту без ручного шага.
+                'status' => $trusted ? 'paid' : 'pending',
                 'provider' => Payment::PROVIDER_PAYPAL,
                 'proof_path' => $proofPath,
                 'claim_meta' => $claimMeta,
@@ -91,9 +118,10 @@ final class PaypalClaimController extends Controller
             ]);
         });
 
-        // Уведомления: кураторам в Telegram + письмо админу. Google Sheet НЕ
-        // трогаем — финансовая таблица наполняется только по paid-платежам
-        // (PaymentObserver::isSyncable), т.е. после ручного подтверждения.
+        // Уведомления: кураторам в Telegram + письмо админу — в ОБЕИХ ветках:
+        // для trusted это вход выборочной сверки, для pending — сигнал ручной
+        // проверки. Google Sheet НЕ трогаем руками — он наполняется по
+        // paid-платежам (PaymentObserver::isSyncable), т.е. сразу для trusted.
         $curators->paypalClaimReceived($payment);
 
         $adminEmail = (string) config('services.admin.email');
@@ -105,9 +133,13 @@ final class PaypalClaimController extends Controller
         // ничего и не знал, дошла ли она. Админское письмо выше не меняется.
         Mail::to($user)->send(new PaypalClaimStudentAckMail($payment));
 
+        $success = $trusted
+            ? 'Спасибо, заявка получена — доступ к курсу открыт. Подтверждение с деталями уходит на ваш email.'
+            : 'Спасибо, заявка получена — подтверждение уже уходит на ваш email. Мы сверим платеж, обычно в течение одного рабочего дня, и откроем доступ; для нового аккаунта пароль придет на email.';
+
         return redirect()
             ->route('paypal.claim.show', $tariff)
-            ->with('success', 'Спасибо, заявка получена — подтверждение уже уходит на ваш email. Мы сверим платеж, обычно в течение одного рабочего дня, и откроем доступ; для нового аккаунта пароль придет на email.');
+            ->with('success', $success);
     }
 
     private function abortUnlessEnabled(Tariff $tariff): void

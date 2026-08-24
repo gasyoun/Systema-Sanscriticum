@@ -76,6 +76,39 @@
             white-space: nowrap;
         }
         .sw-state { color: var(--muted); padding: 16px 0; }
+        .sw-book {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            margin-top: 6px;
+        }
+        .sw-email-input {
+            font: inherit;
+            padding: 5px 9px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--fg);
+            width: 200px;
+            max-width: 100%;
+        }
+        .sw-email-input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+        .sw-btn {
+            font: inherit;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .sw-btn:hover { filter: brightness(1.08); }
+        .sw-btn:disabled { opacity: .55; cursor: default; }
+        .sw-book-msg { font-size: 13px; }
+        .sw-book-msg.is-err { color: #b42318; }
+        .sw-book-msg.is-ok { color: var(--recruiting-fg); }
         @media (max-width: 480px) {
             .sw-row { grid-template-columns: 52px 1fr; }
             .sw-badge { grid-column: 2; justify-self: start; margin-top: 4px; }
@@ -102,6 +135,6 @@
         <p class="sw-state">Загрузка расписания…</p>
     </div>
 
-    <script src="{{ asset('widgets/schedule.js') }}" data-feed-url="{{ $feedUrl }}"></script>
+    <script src="{{ asset('widgets/schedule.js') }}" data-feed-url="{{ $feedUrl }}" data-book-url="{{ route('api.public.schedule.book') }}"></script>
 </body>
 </html>

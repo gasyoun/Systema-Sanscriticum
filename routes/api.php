@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CabinetController;
 use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\PartnerBotController;
 use App\Http\Controllers\Api\PublicScheduleController;
+use App\Http\Controllers\Api\PublicTrialBookController;
 use App\Http\Controllers\Api\VkBotController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\WebhookController;
@@ -41,6 +42,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/public/schedule', [PublicScheduleController::class, 'index'])
     ->middleware('throttle:30,1')
     ->name('api.public.schedule');
+
+// H3248: публичная запись на бесплатное пробное занятие из виджета. Требует ОБА
+// флага (crm_trial_widget_public + crm_trial_booking), иначе контроллер 404.
+// В ответе никогда нет ссылки Zoom или внутренних id. Троттлинг 5/мин.
+Route::post('/public/schedule/book', PublicTrialBookController::class)
+    ->middleware('throttle:5,1')
+    ->name('api.public.schedule.book');
 
 // === МОБИЛЬНОЕ ПРИЛОЖЕНИЕ (Sanctum personal access tokens) ===
 Route::prefix('v1')->group(function () {

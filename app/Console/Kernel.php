@@ -33,6 +33,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('archives-cleanup');
 
+        // H3314: prune истёкших Sanctum-токенов мобильного API (expires_at в
+        // прошлом) плюс legacy-строк старше окна sanctum.expiration - таблица
+        // personal_access_tokens не растёт бесконечно, закат токенов задокумент-
+        // ирован в DEPLOY_QUEUE.
+        $schedule->command('tokens:prune-expired')
+            ->dailyAt('03:20')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('sanctum-token-prune');
+
         // Перевод просроченных promises в статус expired — ночью.
         // onFailure → ScheduleFailureSignal (H2338 / audit spec 7): log+admin
         // bell; without it, money crons fail only into laravel.log.
@@ -276,6 +286,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('season-1-open');
 
+        // Сезон 1: уведомление студентам о старте — T-24h (30-08 21:00 UTC).
+        // Идемпотентно (season_notifications) и безопасно при выключенном
+        // SEASON1_NOTIFY_ENABLED: без флага живая отправка не выполняется.
+        $schedule->command('season:notify-start 1')
+            ->cron('0 21 30 8 *')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('season-1-notify-start');
+
         // Сезон 1: закрытие 01.01.2027 00:00 MSK (UTC 21:00 31.12.2026)
         $schedule->command('season:close 1')
             ->cron('0 21 31 12 *')
@@ -462,6 +481,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('telegram-support-sync');
 
+        // H3380 (24-08): вторая сессия rusamskrtam ВЫКЛЮЧЕНА. Открытие дня:
+        // давний support-сеанс и так был аккаунтом @rusamskrtam (getSelf
+        // id=5487293147), второй логин создавал дубль того же аккаунта —
+        // нарушение D1 (два MTProto-логина = AUTH_RESTART пинг-понг).
+        // Автоответ-проба продолжается на ОСНОВНОМ лейне: строке support
+        // выставлены auto_reply_enabled=1 + hint_recipients; флаги те же.
+        // Слот --account=rusamskrtam убран из расписания осознанно; строка
+        // аккаунта оставлена is_enabled=0 с историей. Вернуть отдельную
+        // сессию можно только для ДРУГОГО аккаунта.
         // W3.1 healthcheck (H595): алерт админам, если синк протух или
         // последний проход упал ошибкой — не чаще раза в 15 мин, no-op при
         // отсутствии включённых аккаунтов.
@@ -572,6 +600,15 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(30)
             ->onOneServer()
             ->name('weekly-backup-clean');
+
+        // H3371: докатка незавершённых групп split-upload (обрыв связи посреди
+        // группы, лаг консистентности Яндекс WebDAV). Ежедневно до
+        // backup:monitor — оборванная группа доплывает максимум за сутки.
+        $schedule->command('backup:resume-yandex-parts')
+            ->dailyAt('04:10')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('yandex-split-resume');
 
         // Daily destination health check (H2303): alerts via configured notification
         // channels if any destination is Unreachable or Unhealthy. Runs independently

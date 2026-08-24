@@ -1,13 +1,8 @@
 @php
-    // Живой статус набора одной группы курса (H3327). Группа ищется по семье
-    // потоков: пока курса/группы нет — блок молчит, ничего не обещает.
-    $family = $data['course_family'] ?? null;
-    $group = null;
-    if ($family) {
-        $byFamily = fn ($query) => $query->whereHas('courses', fn ($c) => $c->where('courses.course_family', $family));
-        $group = \App\Models\Group::where('status', 'forming')->where($byFamily)->latest('id')->first()
-            ?? \App\Models\Group::where('status', 'active')->where($byFamily)->latest('id')->first();
-    }
+    // Живой статус набора одной группы курса (H3327). Привязка — общий
+    // резолвер App\Support\StatusBlock (его же используют гейт выдачи
+    // binding-токена и матчинг гостей при рассылке, H3339).
+    $group = \App\Support\StatusBlock::resolveGroup($data ?? null);
 @endphp
 
 @if($group)

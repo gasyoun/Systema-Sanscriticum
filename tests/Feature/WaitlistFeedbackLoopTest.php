@@ -178,4 +178,27 @@ class WaitlistFeedbackLoopTest extends TestCase
         $response->assertSee('Группа набрана');
         $response->assertSee('Отложено на другой сезон');
     }
+
+    /** @test */
+    public function stale_shell_groups_without_threshold_or_date_are_ignored(): void
+    {
+        $course = Course::factory()->create(['course_family' => 'shell-family']);
+        $shell = Group::create([
+            'name' => 'Оболочка без порога',
+            'slug' => 'shell-'.uniqid(),
+            'status' => 'forming', // нет min_size и planned_start_date — не запуск
+        ]);
+        $course->groups()->attach($shell->id);
+
+        $landing = LandingPage::create([
+            'title' => 'Пусто',
+            'slug' => 'empty-'.uniqid(),
+            'is_active' => true,
+            'content' => [['type' => 'status_block', 'data' => ['course_family' => 'shell-family']]],
+        ]);
+
+        $this->get('/'.$landing->slug)
+            ->assertOk()
+            ->assertDontSee('Статус курса');
+    }
 }

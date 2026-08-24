@@ -291,6 +291,10 @@ class CourseDesignAssets extends Page implements HasTable
                 Forms\Components\FileUpload::make('image')
                     ->label('Картинка')
                     ->image()
+                    // Точный список вместо широкого ->image(): тот пускает и
+                    // SVG, а он исполняем в браузере. Серверный джейл в
+                    // CourseDesignAssetService остаётся главной защитой.
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
                     ->storeFiles(false)
                     ->maxSize((int) config('design_assets.max_image_kb'))
                     ->helperText('Оставьте пустым, чтобы поменять только исходник у уже загруженного слота.'),

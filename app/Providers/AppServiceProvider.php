@@ -221,7 +221,26 @@ class AppServiceProvider extends ServiceProvider
                 'baseUri' => $config['baseUri'],
                 'userName' => $config['username'] ?? null,
                 'password' => $config['password'] ?? null,
+                // КРИТИЧНО (прод 22-08-2026): без явного AUTH_BASIC sabre ходит
+                // на автонеготиации — первый PUT уходит БЕЗ Authorization
+                // (CURLOPT_VERBOSE: «upload completely sent off … < HTTP/1.1
+                // 401 Unauthorized»), Яндекс отвечает 401 уже после тела, curl
+                // не может переиграть запрос → «necessary data rewind was not
+                // possible», а часть фронтендов отвечала 2xx вообще ничего не
+                // сохранив («призрачные успехи» всей этой саги). BASIC в
+                // первом же запросе снимает весь класс проблем.
+                'authType' => Client::AUTH_BASIC,
             ]);
+
+            // 1) Мёртвые стволы TCP: PUT висел с недренируемым Send-Q часами.
+            //    Рвём: коннект дольше 30 с; скорость ниже 1 КБ/с дольше 180 с
+            //    (здоровая выгрузка ~230 КБ/с порог не задевает).
+            // 2) FOLLOWLOCATION выключен: редирект на PUT обязан быть ошибкой,
+            //    а не молчаливой сменой метода.
+            $client->addCurlSetting(CURLOPT_CONNECTTIMEOUT, 30);
+            $client->addCurlSetting(CURLOPT_LOW_SPEED_LIMIT, 1024);
+            $client->addCurlSetting(CURLOPT_LOW_SPEED_TIME, 180);
+            $client->addCurlSetting(CURLOPT_FOLLOWLOCATION, false);
 
             $adapter = new WebDAVAdapter($client, $config['prefix'] ?? '');
 

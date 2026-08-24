@@ -63,10 +63,17 @@
                 </a>
             @endunless
             @if($decks->count() > 1)
-                <select wire:model.live="deckId"
+                {{-- deckId теперь #[Locked] (H3313): выбор колоды навигируется
+                     по URL, а не пишет Livewire-свойство из клиента. --}}
+                <select x-on:change="window.location.href = $event.target.value"
+                        aria-label="Выбор колоды"
                         class="w-full sm:w-64 px-4 py-3 bg-gray-50 border-transparent rounded-xl text-gray-700 focus:bg-white focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all font-medium cursor-pointer">
                     @foreach($decks as $d)
-                        <option value="{{ $d->id }}">{{ $d->name }}</option>
+                        @php
+                            $deckSegment = \App\Livewire\SrsReview::deckPathSegment($d);
+                            $deckUrl = url((($isGuest || request()->routeIs('srs.*')) ? '/koloda/' : '/dvaram/koloda/').$deckSegment);
+                        @endphp
+                        <option value="{{ $deckUrl }}" @selected((int) $d->id === (int) ($deck?->id))>{{ $d->name }}</option>
                     @endforeach
                 </select>
             @endif

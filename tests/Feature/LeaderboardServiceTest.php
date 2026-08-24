@@ -200,8 +200,10 @@ class LeaderboardServiceTest extends TestCase
     }
 
     /** @test */
-    public function game_telemetry_complete_writes_lila_score_for_authenticated_user(): void
+    public function game_telemetry_complete_writes_server_derived_points_ignoring_client_score(): void
     {
+        // H3315: очки берутся из серверной таблицы по типу события (complete = 10),
+        // payload.score клиента игнорируется — раньше forged score накручивал борд.
         $user = User::factory()->create(['is_admin' => false]);
 
         $this->actingAs($user)
@@ -209,14 +211,14 @@ class LeaderboardServiceTest extends TestCase
                 'event' => 'complete',
                 'drill' => 'cloze',
                 'band' => 'b1',
-                'payload' => ['score' => 42],
+                'payload' => ['score' => 999999],
             ])
             ->assertNoContent();
 
         $this->assertDatabaseHas('lila_score_events', [
             'user_id' => $user->id,
             'drill' => 'cloze',
-            'points' => 42,
+            'points' => 10,
         ]);
     }
 }

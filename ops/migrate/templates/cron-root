@@ -1,0 +1,15 @@
+# /etc/cron.d/systema-migrate — cron нового бокса (перенос со старого, triage 23-08)
+# SHELL/PATH как у прод-крона; строки правит 05-services.sh (__APP_DIR__)
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# автодеплой main каждые 30 минут (скрипт из scripts/server_guards/sbin/)
+*/30 * * * * root /usr/local/sbin/systema-auto-deploy-run.sh >> /var/log/systema-auto-deploy.log 2>&1
+
+# watchdog и расписание (интервалы повторяют старый бокс; сверить при доступе к нему)
+*/5 * * * * root /usr/local/sbin/systema-watchdog-run.sh >> /var/log/systema-watchdog.log 2>&1
+*/10 * * * * root /usr/local/sbin/systema-schedule-run.sh >> /var/log/systema-schedule.log 2>&1
+*/15 * * * * root /usr/local/sbin/memwatch.sh >> /var/log/memwatch.log 2>&1
+
+# restic-бэкапы: почасовой бэкап + forget (retention) — unit'ы ops/backup/*.timer
+# включаются отдельно (systemctl enable --now restic-backup.timer restic-forget.timer)

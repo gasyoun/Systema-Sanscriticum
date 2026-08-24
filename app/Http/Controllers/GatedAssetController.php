@@ -6,9 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Lesson;
-use App\Models\LessonAccessGrant;
 use App\Models\User;
-use App\Services\Membership\ClubEntitlement;
+use App\Services\Access\LessonGate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -97,8 +96,12 @@ class GatedAssetController extends Controller
     }
 
     /**
-     * Разрешение урока + гейт доступа плеера (StudentController::showLesson).
-     * Возвращает [Course, Lesson] либо 404.
+     * Разрешение урока + гейт доступа плеера. Возвращает [Course, Lesson] либо 404.
+     *
+     * H3315: цепочка вынесена в общий сервис {@see LessonGate} (дословно та же,
+     * что была здесь: грант на урок / клубное покрытие / видимость по группе —
+     * основания прохода, бесплатность/оплата — отдельное условие из тех же
+     * оснований); единый источник правды теперь и для heartbeat-телеметрии.
      *
      * @return array{0: Course, 1: Lesson}
      */
@@ -109,19 +112,7 @@ class GatedAssetController extends Controller
         $course = Course::resolveBySlugOrFail($slug);
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
 
-        // Гейт — дословно как в плеере (StudentController::showLesson):
-        // грант на урок / клубное покрытие / видимость по группе — основания
-        // ПРОХОДА мимо группового фильтра; бесплатность/оплата — отдельное
-        // ИЗ ТЕХ ЖЕ оснований условие (грант обходит и его).
-        $hasLessonGrant = LessonAccessGrant::userCanWatch($user, $lesson);
-        $clubCovers = app(ClubEntitlement::class)->coversCourse($user, $course);
-
-        $visible = $hasLessonGrant || $clubCovers || $lesson->isVisibleToGroupsOf($user);
-        $entitled = (bool) $lesson->is_free
-            || $hasLessonGrant
-            || $lesson->isUnlockedBy(StudentController::getUserUnlockedTariffs($user->id, $course->slug));
-
-        abort_unless($visible && $entitled, 404);
+        abort_unless(app(LessonGate::class)->canWatch($user, $lesson), 404);
 
         return [$course, $lesson];
     }

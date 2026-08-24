@@ -40,10 +40,14 @@ class SeasonOpenCommand extends Command
             ]);
         }
 
-        // Установить started_at и is_active
+        // Установить started_at, is_active и включить decay на строке сезона
+        // (H3297: DB-driven оверрайд — документированный дефолт @DECIDE §9
+        // PLAN_SYSTEMA_SEASON; вариант B вместо правки .env, которой требует
+        // deploy-цикл и рестарт воркеров, а cron стреляет без присмотра).
         $season->update([
             'started_at' => $season->started_at ?? now(),
             'is_active' => true,
+            'decay_enabled' => true,
         ]);
 
         // Инициализировать season_leaderboard_cache для всех пользователей
@@ -64,10 +68,10 @@ class SeasonOpenCommand extends Command
 
         $this->info("Season #{$season->id} opened. Leaderboard baseline set for ".$users->count().' users.');
 
-        // Включить decay через .env (§9 PLAN — @DECIDE mechanism)
-        // Временное решение: вывести инструкцию оператору
-        $this->warn('MANUAL STEP: Set PRANA_DECAY_ENABLED=true in .env and restart workers.');
-        $this->warn('TODO: Implement automated .env write or DB-driven config override (H2553 open question).');
+        // Decay включён флагом seasons.decay_enabled=true на строке сезона —
+        // PranaService::isDecayEnabled() читает его из БД (H3297). Гасится
+        // автоматически season:close (R4-1: decay не живёт вне сезона).
+        $this->info('Decay включён DB-флагом seasons.decay_enabled=true (сезон #'.$season->id.').');
 
         return 0;
     }

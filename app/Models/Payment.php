@@ -11,6 +11,7 @@ use App\Mail\TrialZoomLinkMail;
 use App\Models\Concerns\TracksBlame;
 use App\Services\BlockAccessMaterializer;
 use App\Services\CuratorNotifier;
+use App\Services\GiftCertificateService;
 use App\Services\GrammarLab\GrammarLabEntitlementService;
 use App\Services\Membership\ClubMembershipService;
 use App\Services\Messaging\DeliveryChannelManager;
@@ -268,10 +269,31 @@ class Payment extends Model
         return $this->tariff === 'marathon_paid';
     }
 
+    /**
+     * Добровольное пожертвование на деятельность Института (/mecenaty, план
+     * института N2). Донорская рамка без встречного пакета благ: доступа,
+     * групп, членства и лид-конверсии не несёт — только бухгалтерская строка.
+     */
+    public function isDonation(): bool
+    {
+        return $this->tariff === 'donation';
+    }
+
     /** Заявка об оплате из-за рубежа (PayPal), поданная студентом. */
     public function isPaypal(): bool
     {
         return $this->provider === self::PROVIDER_PAYPAL;
+    }
+
+    /**
+     * Покупка подарочного сертификата (H3334): деньги записаны, но доступ
+     * покупателю НЕ открывается — вместо этого выпускается одноразовый код
+     * активации получателю. Отдельный процессор в fireOnPaid (как deposit/
+     * trial/marathon), чтобы штатный grantAccess покупателя в группы не добавлял.
+     */
+    public function isGiftCertificate(): bool
+    {
+        return $this->tariff === 'gift';
     }
 
     /** Счёт на оплату юрлицу / ИП (безнал), ожидает ручной сверки. */
@@ -292,6 +314,23 @@ class Payment extends Model
         }
 
         return $meta[$key];
+    }
+
+    /**
+     * PayPal-заявка существующего ученика, получившая доступ сразу (ruling
+     * 22-08-2026), — кандидат выборочной сверки, пока verified_at не проставлен.
+     */
+    public function isAutoTrustedPaypal(): bool
+    {
+        return $this->isPaypal() && (bool) $this->claimMeta('auto_trusted');
+    }
+
+    /** Отметка «сверка пройдена» для авто-доверенной PayPal-заявки. */
+    public function markPaypalVerified(): void
+    {
+        $meta = is_array($this->claim_meta) ? $this->claim_meta : [];
+        $meta['verified_at'] = now()->toIso8601String();
+        $this->update(['claim_meta' => $meta]);
     }
 
     /** Human invoice number for printable счёт (stable per payment id). */
@@ -395,6 +434,7 @@ class Payment extends Model
             $this->isTrial() => '🎟 Пробное занятие',
             $this->isExpense() => '💸 Технический расход / возврат',
             $this->isSalaryPayout() => '👨‍🏫 Выплата преподавателю',
+            $this->isGiftCertificate() => '🎁 Подарочный сертификат',
             $this->tariff === 'full' => 'Весь курс',
             default => $this->blockLabel(),
         };
@@ -443,6 +483,19 @@ class Payment extends Model
     public function scopePaypalPending(Builder $query): Builder
     {
         return $query->where('provider', self::PROVIDER_PAYPAL)->where('status', 'pending');
+    }
+
+    /**
+     * Авто-доверенные PayPal-заявки существующих учеников (ruling 22-08-2026):
+     * сразу paid, сверка — выборочная и пост-фактум. Фильтр показывает только
+     * ещё НЕ просмотренные (verified_at не проставлен).
+     */
+    public function scopePaypalUnverified(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_PAYPAL)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->whereNotNull('claim_meta->auto_trusted')
+            ->whereNull('claim_meta->verified_at');
     }
 
     /** Неподтверждённые счета юрлиц, ожидающие сверки банковского поступления. */
@@ -593,6 +646,12 @@ class Payment extends Model
                     // после отката основного платежа.
                     app(BlockAccessMaterializer::class)->removeSiblingsOf($payment);
                     $payment->reconcileAccessAfterReversal();
+
+                    // H3334: неактивированный подарочный сертификат отзывается,
+                    // если оплата за него вернулась. Уже активированный не трогаем.
+                    if ($payment->isGiftCertificate()) {
+                        app(GiftCertificateService::class)->revokeForPayment($payment);
+                    }
                 }
             }
         });
@@ -634,6 +693,15 @@ class Payment extends Model
             return;
         }
 
+        // Пожертвование — донорская рамка без встречных благ (решение MG 23-08,
+        // план института N2): доступ/группы/членство/лиды/депозиты не трогаем.
+        // Единственное побочное действие — благодарность при согласии донора (N3).
+        if ($payment->isDonation()) {
+            $payment->processDonationGratitude();
+
+            return;
+        }
+
         if ($payment->isDeposit()) {
             $payment->processDeposit();
 
@@ -651,6 +719,15 @@ class Payment extends Model
         // помечает энрол оплаченным (H471). course_id у такого платежа нет.
         if ($payment->isMarathonPaid()) {
             $payment->processMarathonPaid();
+
+            return;
+        }
+
+        // Подарочный сертификат (H3334): доступ покупателю не открываем —
+        // выпускаем одноразовый код; доступ получит активировавший по тарифной
+        // модели (см. GiftCertificateService::redeem).
+        if ($payment->isGiftCertificate()) {
+            $payment->processGiftCertificate();
 
             return;
         }
@@ -962,6 +1039,45 @@ class Payment extends Model
         }
 
         app(CuratorNotifier::class)->paymentPaid($this);
+    }
+
+    /**
+     * Подарочный сертификат (H3334) — отдельный путь: доступ покупателю НЕ
+     * открывается (никаких групп/писем-доступа/праны за «покупку курса»).
+     * Вместо этого выпускается GiftCertificate с одноразовым хэшированным
+     * кодом; сырой код уходит покупателю одним письмом с PDF.
+     * Идемпотентно: повторный paid-переход не перегенерирует код.
+     */
+    public function processGiftCertificate(): void
+    {
+        app(GiftCertificateService::class)->issueForPayment($this);
+    }
+
+    /**
+     * Пожертвование (план института N2/N3): при paid фиксируем благодарность,
+     * если донор дал явное согласие на /mecenaty. Идемпотентно по уникальному
+     * payment_id; без согласия — ничего. Никаких других побочных действий:
+     * доступ/членство/лиды не трогаются (см. fireOnPaid).
+     */
+    public function processDonationGratitude(): void
+    {
+        $gratitude = is_array($this->claim_meta) ? ($this->claim_meta['gratitude'] ?? null) : null;
+
+        if (! is_array($gratitude)
+            || empty($gratitude['consent'])
+            || blank($gratitude['name'] ?? null)) {
+            return;
+        }
+
+        DonationGratitude::firstOrCreate(
+            ['payment_id' => $this->getKey()],
+            [
+                'name_display' => trim((string) $gratitude['name']),
+                // Ратифицировано MG 23-08: сумма в реестре — только по отдельной
+                // просьбе конкретного человека (чекбокс «показать сумму»).
+                'show_amount' => (bool) ($gratitude['show_amount'] ?? false),
+            ]
+        );
     }
 
     /**
