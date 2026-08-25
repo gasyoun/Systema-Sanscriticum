@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- **CLAUDE.md: рефлекс инвентаря env записан в раздел «Environment / worktrees» (Opus 5 `claude-opus-5`, 25-08-2026).** Гейт `Environment inventory` краснел на `main` дважды по одной причине: агент дописывает `env()`-ключ в `config/*.php`, а `php scripts/generate_env_inventory.php` в том же проходе не запускает — и ничто в самом PR об этом не предупреждает. Теперь правило стоит рядом с `config/features.php` и называет команду, гейт и цену промаха (25-08: шесть ключей `BANK_*`, `main` красный 2 ч 50 мин, четыре коммита поверх). Правило положено в [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md), а не в [AGENTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/AGENTS.md): у последнего генерируемый блок, ручная правка в нём разошлась бы с генератором.
 
 ## [1.90.17] - 2026-08-25
 ### Fixed
