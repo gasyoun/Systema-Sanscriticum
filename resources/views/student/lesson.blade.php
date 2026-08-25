@@ -538,6 +538,23 @@
         </section>
         @endif
 
+        {{-- H3521: Learn Your Way — вкладка рендерится только при LYW_ENABLED (default OFF). --}}
+        @if(!empty($lywUrl))
+        <section class="font-nunito" data-testid="lyw-lesson-tab">
+            <a href="{{ $lywUrl }}"
+               class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6 flex items-center gap-4 hover:border-brand/30 hover:shadow-lg transition-all">
+                <span class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-route"></i>
+                </span>
+                <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-extrabold text-gray-900">Learn Your Way</span>
+                    <span class="block text-sm text-gray-500">Персональный разбор занятия: текст под ваш уровень и интерес, вопросы, мнемоники, mind map</span>
+                </span>
+                <i class="fas fa-chevron-right text-gray-300"></i>
+            </a>
+        </section>
+        @endif
+
         {{-- ДОМАШНЕЕ ЗАДАНИЕ — внутри центральной колонки (ширина как плеер/описание) --}}
         @if($homeworkOpen ?? $lesson->homework_enabled)
             @include('student.partials.homework')

@@ -302,6 +302,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `LOG_PAPERTRAIL_HANDLER` | optional | `SyslogUdpHandler::class` | config/logging.php:89 |
 | `LOG_SLACK_WEBHOOK_URL` | required | `—` | config/logging.php:79 |
 | `LOG_STDERR_FORMATTER` | required | `—` | config/logging.php:102 |
+| `LYW_ENABLED` | feature-flag | `false` | config/lyw.php:24 |
+| `LYW_PACKS_PATH` | optional | `storage_path('app/lesson-packs')` | config/lyw.php:30 |
 | `MAILGUN_DOMAIN` | required | `—` | config/services.php:20 |
 | `MAILGUN_ENDPOINT` | optional | `'api.mailgun.net'` | config/services.php:22 |
 | `MAILGUN_SECRET` | secret | `—` | config/services.php:21 |
