@@ -632,6 +632,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_VISITOR_GEO` | optional | `false` | config/features.php:206 |
 | `SUPPORT_VISITOR_PRESENCE` | optional | `false` | config/features.php:348 |
 | `SUPPORT_WEB_ROLLUPS` | optional | `false` | config/features.php:333 |
+| `SURVEYS_ENABLED` | feature-flag | `false` | config/surveys.php:12 |
+| `SURVEY_REWARD_PRANA_RUBLES` | optional | `500` | config/surveys.php:14 |
 | `SYSTEMA_SCHEDULE_MAX_SECONDS` | optional | `900` | config/schedule_guard.php:24 |
 | `TEACHER_WEEKLY_PAYOUT_CALENDAR` | optional | `false` | config/features.php:482 |
 | `TELEGRAM_BOT_TOKEN` | secret | `—` | config/services.php:112 |

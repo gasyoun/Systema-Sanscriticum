@@ -64,6 +64,7 @@ use App\Http\Controllers\Student\HindiTgCuratedPracticeController;
 use App\Http\Controllers\Student\HindiTranscriptDrillsController;
 use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SurveyPageController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
@@ -1077,6 +1078,20 @@ Route::post('/gift/activate', [GiftCertificateController::class, 'activate'])
     ->name('gift.activate.attempt');
 Route::get('/gift/verify/{number}', [GiftCertificateController::class, 'verify'])
     ->name('gift.verify');
+
+// --- ПУБЛИЧНЫЕ АНКЕТЫ (движок опросов; рулинг MG 24-08-2026 — вариант Б) ---
+// ВАЖНО: до catch-all /{slug}. Самогейтится флагом SURVEYS_ENABLED (404 при OFF).
+// POST троттлится против спама + ханипот в форме (SurveyPageController@store).
+Route::get('/anketa/{slug}', [SurveyPageController::class, 'show'])
+    ->name('survey.show');
+Route::post('/anketa/{slug}', [SurveyPageController::class, 'store'])
+    ->middleware('throttle:20,60')
+    ->name('survey.store');
+
+// Выгрузка ответов CSV для куратора (админ/менеджер).
+Route::get('/admin/surveys/{slug}/export', [SurveyPageController::class, 'exportCsv'])
+    ->middleware('throttle:30,60')
+    ->name('survey.export');
 Route::get('/gift/{certificate}/download', [GiftCertificateController::class, 'download'])
     ->middleware(['auth', 'throttle:10,1'])
     ->name('gift.download');
