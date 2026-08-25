@@ -1,6 +1,6 @@
 # n8n ZOOM 1.4 — записи не ушли в Telegram-группы (18–20-08-2026)
 
-_Created: 20-08-2026 · Last updated: 21-08-2026_
+_Created: 20-08-2026 · Last updated: 24-08-2026_
 
 **Audience:** ops / agents. Diagnosis from the 20-08-2026 SOS (Grok 4.6 `grok-4.6`).  
 **Hosts:** n8n `root@193.232.229.91`; Laravel `root@193.232.229.92`.  
@@ -62,7 +62,7 @@ n8n container was Up 6 days; swap 2/2 GiB on `.91` is **not** the fail class. An
 - Default skips groups without `telegram_chat_id` (`--all` includes them).
 - Staff meetings: `config/recording_gap.php` `skip_title_substrings` (env `RECORDING_GAP_SKIP_TITLE_SUBSTRINGS`), not a hardcoded SQL title.
 - TG: `RECORDING_GAP_TELEGRAM_CHAT_ID` → same ids as `cabinet:probe`. Dedupe key `recording_gap:YYYY-MM-DD`.
-- n8n: read-only `GET /api/v1/executions?workflowId=1EIqqNzMl5NNIxST&limit=3` with `N8N_API_KEY`. Empty key or timeout = skip-soft. **Does not retry the workflow.**
+- n8n: read-only `GET /api/v1/executions?workflowId=1EIqqNzMl5NNIxST&limit=3` with `N8N_API_KEY`. Empty key or timeout = skip-soft. The scheduled run never retries the workflow; the opt-in `--retry-failed` lane is separate (see Resolution below).
 
 Reproduce the 18–20-08 gap on prod:
 
@@ -77,5 +77,16 @@ sqlite3 /opt/n8n/storage/database.sqlite "SELECT id,status,startedAt FROM execut
 ```
 
 Inactive twin `MtN1h7FdF3JTmrse` is not live.
+
+## Resolution & follow-ups (24-08-2026)
+
+The DeepSeek switch held; this 18–20 jam class (OpenRouter credits/TOS on `AI Agent1`) has not recurred.
+
+**New class found on 23-08** — executions dying in ~20 s at the FIRST external step (`Get row(s) in sheet`, Google Sheets: 2×ECONNRESET + one proxy-CONNECT death via privoxy→socks-nl), leaving a lesson video unpublished until manual UI retries the next morning. Full forensics + fixes: [SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md) incident-log row 2026-08-23. Shipped:
+
+1. **Workflow hardened on `.91`**: both Sheets nodes backoff 5×5s → 5×60s (workflow version `aef47bcb`, connections/nodes diff-clean, pre-patch backup `/root/wf_backup_pre_patch_1EIqqNzMl5NNIxST.json`).
+2. **Opt-in retry lane** ([PR #2050](https://github.com/gasyoun/Systema-Sanscriticum/pull/2050)): `php artisan recordings:gap-watch --retry-failed` POSTs `executions/{id}/retry` only for error-executions whose runData stayed inside the pre-upload allow-list (no YouTube/Rutube duplication possible), with no-successful-retryOf and cache guards. Late failures stay human-only: resume from `AI Agent1`, never re-run from the webhook.
+3. **Care department duplicate recipient** ([PR #2054](https://github.com/gasyoun/Systema-Sanscriticum/pull/2054)): same morning alert also goes to `RECORDING_GAP_CARE_TELEGRAM_CHAT_ID` («Отдел заботы | Рабочая группа» `-1002079934542`, MG 24-08); bot must be a chat member.
+4. **Activated on prod per MG ruling 24-08**: `RECORDING_GAP_RETRY_FAILED_ENABLED=true`, `N8N_API_KEY` set in `.env` (REST leg no longer skip-soft), care chat wired and test-delivered. Backups: `.env.bak.n8n-api-key-20260824`.
 
 _Dr. Mārcis Gasūns_
