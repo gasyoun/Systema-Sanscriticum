@@ -164,7 +164,26 @@ else
     || crit "backup" "новейший архив $size_mb МиБ — меньше пола ${G[N8N_BACKUP_MIN_MB]} МиБ, похоже на обрезок"
 fi
 if [ -n "${G[N8N_BACKUP_OFFSITE_REPO]:-}" ]; then
-  ok "off-site назначение задано"
+  # Задано — этого мало. «Назначение прописано» и «копия туда доехала» — разные
+  # утверждения, и зелёная лампочка над первым из них ровно та ошибка, которую
+  # уже поймали на yandex_disk у .92 (H3181). Спрашиваем сам репозиторий.
+  pass="${G[N8N_BACKUP_OFFSITE_PASSFILE]:-}"
+  if [ ! -s "$pass" ]; then
+    crit "backup-offsite" "нет файла пароля ${pass:-<пусто>} — до репозитория не достучаться"
+  else
+    last=$(restic -r "${G[N8N_BACKUP_OFFSITE_REPO]}" --password-file "$pass" \
+             snapshots --tag n8n --latest 1 --json 2>/dev/null \
+           | grep -o '"time":"[^"]*"' | head -1 | cut -d'"' -f4)
+    if [ -z "$last" ]; then
+      crit "backup-offsite" "репозиторий ${G[N8N_BACKUP_OFFSITE_REPO]} не отвечает или в нём нет ни одного снимка n8n"
+    else
+      last_s=$(date -d "$last" +%s 2>/dev/null || echo 0)
+      age_h=$(( ( $(date +%s) - last_s ) / 3600 ))
+      [ "$age_h" -le "${G[N8N_BACKUP_MAX_AGE_HOURS]}" ] \
+        && ok "off-site снимок $age_h ч назад (${G[N8N_BACKUP_OFFSITE_REPO]})" \
+        || crit "backup-offsite" "новейший off-site снимок $age_h ч назад, порог ${G[N8N_BACKUP_MAX_AGE_HOURS]} ч"
+    fi
+  fi
 else
   crit "backup-offsite" "off-site назначение НЕ задано: копия локальная и делит судьбу машины. Что делать — см. секцию off-site в server_guards_n8n.conf"
 fi

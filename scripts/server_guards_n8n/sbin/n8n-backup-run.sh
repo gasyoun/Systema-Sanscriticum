@@ -83,6 +83,13 @@ if [ -n "$OFFSITE_REPO" ]; then
   restic -r "$OFFSITE_REPO" --password-file "$OFFSITE_PASS" backup "$ARCHIVE" --tag n8n \
     && say "ok  off-site: $OFFSITE_REPO" \
     || die "off-site push не прошёл: $OFFSITE_REPO"
+  # Ретенция НА УДАЛЁННОЙ стороне. Без неё репозиторий растёт вечно и однажды
+  # заполнит .92 — то есть бэкап .91 уронил бы прод samskrte.ru. --prune делает
+  # место реально освобождённым, а не просто помеченным.
+  restic -r "$OFFSITE_REPO" --password-file "$OFFSITE_PASS" \
+      forget --tag n8n --keep-daily '@@N8N_OFFSITE_KEEP_DAILY@@' --prune >/dev/null 2>&1 \
+    && say "ok  off-site ретенция: keep-daily @@N8N_OFFSITE_KEEP_DAILY@@" \
+    || say "WARN off-site forget/prune не прошёл — место на .92 не освобождено"
 else
   say "WARN off-site назначение НЕ задано (N8N_BACKUP_OFFSITE_REPO пуст) — копия локальная и делит судьбу машины"
 fi
