@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Fixed
+- **ДЗ: защита от повторной отправки тех же файлов при «зависшей» сдаче ([H3524](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3524-OxAlpha_Systema-Sanscriticum_homework-duplicate-submission-guard_25.08.26.md), OxAlpha `x-preview-f-free`, 25-08-2026; рулинг MG после подтверждения куратора).** Пока работа стоит `submitted`, точный дубль последнего набора файлов (оригинальное имя + байтовый размер, мультимножество) отклоняется с внятным «Эти файлы уже приняты — работа на проверке…» и не создаёт ни комментария-сдачи, ни повторного письма проверяющему — кейс зависания 25-08 (16×HTTP 400 → ручные повторы студента №6735, гр.60) больше не может задублировать работу. Смешанный набор (старые + новый файл), текст без файлов и сдача после `needs_revision` работают как раньше; mime вне подписи намеренно (heic/heif у iPhone нестабилен — fail-open безопаснее ложного блока). Тесты: [tests/Feature/HomeworkDuplicateSubmissionTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/HomeworkDuplicateSubmissionTest.php), 5 сценариев; регресс HomeworkFlowTest зелёный; Pint чист.
 
 ## [1.90.18] - 2026-08-25
 ### Changed
