@@ -640,14 +640,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('weekly-backup-clean');
 
-        // H3371: докатка незавершённых групп split-upload (обрыв связи посреди
-        // группы, лаг консистентности Яндекс WebDAV). Ежедневно до
-        // backup:monitor — оборванная группа доплывает максимум за сутки.
-        $schedule->command('backup:resume-yandex-parts')
-            ->dailyAt('04:10')
-            ->withoutOverlapping(30)
-            ->onOneServer()
-            ->name('yandex-split-resume');
+        // H3371 → H3410: докатка незавершённых групп split-upload (обрыв связи
+        // посреди группы, лаг консистентности Яндекс WebDAV) БОЛЬШЕ НЕ живёт
+        // здесь. 24-08-2026 SOS-разбор нашёл PUT, застрявший в TLS sendto()
+        // EAGAIN без прогресса 30+ минут — под cron.service это повторило бы
+        // класс аварий §2/§9 docs/server-resource-guards.md (зависшая команда
+        // держит schedule:run в foreground, планировщик копится под чужим
+        // MemoryHigh). Теперь её поднимает systema-yandex-resume.service/.timer
+        // — свой бюджет, свой таймаут, часовой такт вместо суточного (докатка
+        // дешева, когда докатывать нечего). Разбор: docs/server-resource-guards.md §12.
 
         // Daily destination health check (H2303): alerts via configured notification
         // channels if any destination is Unreachable or Unhealthy. Runs independently

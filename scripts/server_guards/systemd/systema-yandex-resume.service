@@ -1,0 +1,52 @@
+[Unit]
+# MANAGED FILE — scripts/server_guards_apply.sh. Числа — из scripts/server_guards.conf.
+#
+# Зачем юнит вообще существует (H3410, 25-08-2026).
+#
+# backup:resume-yandex-parts раньше жил строкой в Kernel.php::schedule() и
+# исполнялся под cron.service — тем же поддеревом, чей потолок MemoryHigh=2G
+# ловил OOM 28-07-2026 (H1904) и троттлинг демона MadelineProto 19-08-2026
+# (H3121, §9 этого же документа). 24-08-2026 (SOS-разбор) команда сама стала
+# кандидатом на зависание: strace показал PUT, застрявший в TLS sendto()
+# EAGAIN-цикле БЕЗ прогресса 30+ минут, пока планировщик ждал её в foreground
+# ровно как ждал telegram-support:sync 28-07 (docs/server-resource-guards.md
+# §2). Застрявшая докатка под кроном повторила бы тот же класс аварии на
+# новом виновнике.
+#
+# Лечится тем же рецептом, что и демон: у долгоживущей/потенциально
+# зависающей команды появляется СВОЙ бюджет памяти, отдельный от
+# CRON_MEMORY_HIGH, а таймаут этого юнита рвёт зависший PUT не ценой всего
+# планировщика.
+#
+# Разбор: docs/server-resource-guards.md §12.
+Description=Systema — докатка незавершённых Yandex-частей off-site бэкапа (своя cgroup, свой потолок)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md
+After=network-online.target mysql.service
+Wants=network-online.target
+# Как у демона: дохлый cron не должен утаскивать этот юнит и наоборот.
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+User=@@APP_USER@@
+Group=@@APP_USER@@
+WorkingDirectory=@@APP_DIR@@
+ExecStart=@@PHP_BIN@@ @@APP_DIR@@/artisan backup:resume-yandex-parts
+
+# Жёсткий потолок на весь прогон: если куда-то дальше просочится ещё один
+# зависающий PUT мимо curl-таймаутов AppServiceProvider, systemd убьёт
+# ПРОЦЕСС, не дожидаясь ядра. Щедрее CURLOPT_TIMEOUT=300 на один PUT — здесь
+# может быть несколько частей за прогон.
+TimeoutStartSec=@@YANDEX_RESUME_TIMEOUT_SECONDS@@
+
+# ── Потолки. ЕДИНСТВЕННОЕ место, где они заданы для этого юнита ────────────
+MemoryHigh=@@YANDEX_RESUME_MEMORY_HIGH@@
+MemoryMax=@@YANDEX_RESUME_MEMORY_MAX@@
+TasksMax=@@YANDEX_RESUME_TASKS_MAX@@
+LimitNOFILE=@@LIMIT_NOFILE@@
+OOMPolicy=kill
+KillMode=control-group
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=systema-yandex-resume

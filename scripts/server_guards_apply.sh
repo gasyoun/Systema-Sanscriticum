@@ -374,6 +374,13 @@ else
         || warn "systema-madeline-daemon не поднялся: journalctl -u systema-madeline-daemon -n 50"
       systemctl try-restart systema-madeline-daemon.service >/dev/null 2>&1 || true
     fi
+    # H3410: таймер, не сервис — enable --now просто ставит следующий тик,
+    # ничего не перезапускает и не может уронить текущий прогон докатки.
+    if touched 'systema-yandex-resume'; then
+      systemctl enable --now systema-yandex-resume.timer >/dev/null 2>&1 \
+        && ok "systema-yandex-resume.timer включён" \
+        || warn "systema-yandex-resume.timer не включился: systemctl status systema-yandex-resume.timer"
+    fi
     if touched 'supervisor.service.d'; then
       if [ "$RESTART_SUPERVISOR" = 1 ]; then
         systemctl restart supervisor && ok "supervisor перезапущен"
