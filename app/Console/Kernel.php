@@ -199,6 +199,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('recordings-gap-watch');
 
+        // MG 24-08-2026: дневной урок не должен ждать утреннего прохода —
+        // сегодня начатый слот старше RECORDING_GAP_STALE_HOURS без записи
+        // тревожит в тот же день. Kill-switch RECORDING_GAP_STALE_ENABLED (default ON).
+        $schedule->command('recordings:gap-watch', ['--stale' => true])
+            ->hourlyAt(41)
+            ->when(fn () => (bool) config('recording_gap.stale_enabled'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('recordings-gap-watch-stale');
+
         // H3242: вчерашняя сводка поддержки на ADMIN_TELEGRAM_ID (gasyoun).
         // 08:10, после gap-watch; гейт флага — внутри команды (default ON).
         $schedule->command('support:daily-digest')

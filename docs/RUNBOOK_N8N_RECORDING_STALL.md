@@ -7,11 +7,15 @@ _Created: 24-08-2026 · Last updated: 24-08-2026_
 **Live-воркфлоу:** `ZOOM 1.4 (Final) + АДМИНКА ТЕСТ`, id [`1EIqqNzMl5NNIxST`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INCIDENT_N8N_ZOOM_RECORDING_JAM_20-08-2026.md). Неактивный близнец `MtN1h7FdF3JTmrse` — не трогать.
 **Постмортемы-первоисточники:** [INCIDENT_N8N_ZOOM_RECORDING_JAM_20-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INCIDENT_N8N_ZOOM_RECORDING_JAM_20-08-2026.md) §Resolution · [SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md) строки 18–20-08 и 23-08.
 
-## 0. Что «норма» по времени (когда паниковать рано)
+## 0. Что «норма» по времени (и когда детект начинается)
 
 1. Урок закончился → Zoom готовит cloud-запись → вебхук приходит через ~0,5–2 ч.
 2. Полный прогон воркфлоу ~2 ч 20 мин (скачать MP4 → YouTube+Rutube → таймкоды DeepSeek → урок в кабинете → пост в TG-группу).
-3. Итого вечерний урок 20:00 МСК штатно даёт запись к ~23:00–01:00. **До 08:00 следующего утра ничего делать не нужно** — сторож [`recordings:gap-watch`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/WatchRecordingGaps.php) сам проверит и пошлёт алерт в админский пульс и в чат отдела заботы.
+3. Штатное окно появления записи после начала урока ≈ 3–4 ч. **SLA-контроль двухступенчатый**:
+   - **погодинный stale-тик** (`:41` каждого часа): сегодняшний слот, начатый ≥ 4 ч назад ([`RECORDING_GAP_STALE_HOURS`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/recording_gap.php)), без записи → алерт в админский пульс + отделу заботы **в тот же день** (MG 24-08; kill-switch `RECORDING_GAP_STALE_ENABLED`);
+   - **утренний проход 08:00**: полный охват вчерашнего дня (вечерние уроки, чей SLA истекает ночью).
+
+Урок 12:00 без записи к ~16:00–17:00 уже тревожит — ждать утра не требуется.
 
 ## 1. Быстрая триаж-лестница (по алерту или вопросу куратора)
 
@@ -37,10 +41,10 @@ cd /var/www/html && php artisan recordings:gap-watch --dry
 Падение ДО всякой загрузки ⇒ полный повтор не может задвоить YouTube/Rutube. Ретрай-плечо включено на проде (MG 24-08):
 
 ```
-cd /var/www/html && php artisan recordings:gap-watch --retry-failed
+cd /var/www/html && php artisan recordings:gap-watch --retry-failed --date=<сегодня YYYY-MM-DD>
 ```
 
-Команда сама отбракует небезопасные/уже отретраенные/имеющие успешного потомка и напечатает вердикт по каждому exec; тот же текст уйдёт в TG. Проверка через ~2,5 ч: урок с `youtube_url`/`rutube_url` появился в кабинете, пост в учебном чате есть.
+Окно ретрая по умолчанию — вчера; для сегодняшнего урока передавайте `--date`. Команда сама отбракует небезопасные/уже отретраенные/имеющие успешного потомка и напечатает вердикт по каждому exec; тот же текст уйдёт в TG. Проверка через ~2,5 ч: урок с `youtube_url`/`rutube_url` появился в кабинете, пост в учебном чате есть.
 
 Лимиты/геймы: `RECORDING_GAP_RETRY_FAILED_ENABLED=true` · `RECORDING_GAP_RETRY_MAX_PER_RUN=5` · cache-маркер 30 дней против повторного ретрая того же exec.
 
