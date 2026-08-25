@@ -21,6 +21,7 @@ use App\Http\Controllers\CompanyInvoiceController;
 use App\Http\Controllers\DebtPaymentController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\DictionaryPageController;
+use App\Http\Controllers\DiglitController;
 use App\Http\Controllers\DocController;
 use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
@@ -176,6 +177,13 @@ Route::domain((string) config('membership.public_feed.samskrte_host'))
 Route::domain((string) config('membership.public_feed.samskrtam_host'))
     ->get('/courses/autumn-2026', [MembershipCommerceController::class, 'samskrtam'])
     ->name('membership.storefront.samskrtam');
+
+// «Основы цифровой грамотности» — поток октября 2026. Тот же принцип, что
+// /klub: флаг проверяется в контроллере (404 до включения), цены читаются
+// из тарифов курса diglit-2026 (Filament). Лестница MG 24-08-2026:
+// ранние птицы 14 900 · основной 19 900 · VIP 34 900 · записи+чат 8 900.
+Route::get('/online/cifrovaya-gramotnost', [DiglitController::class, 'landing'])
+    ->name('diglit.landing');
 Route::get('/dvaram/private-archive/{archive}', [MembershipCommerceController::class, 'privateArchive'])
     ->middleware('auth')
     ->where('archive', 'yoga_sutras|soboleva_ayurveda|druzhinin_ayurveda')

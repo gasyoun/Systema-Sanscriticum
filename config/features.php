@@ -965,6 +965,12 @@ return [
      | командой `membership:rehearse` до объявления запуска.
      */
     'club_membership' => (bool) env('CLUB_MEMBERSHIP', false),
+
+    // «Основы цифровой грамотности» — поток октября 2026 (лестница MG 24-08-2026,
+    // Uprava docs/COURSE_DIGLIT_PRICING_RU_MARKET_24-08-2026.md). OFF до явного
+    // включения: страница /online/cifrovaya-gramotnost не появляется раньше,
+    // чем курс diglit-2026 и четыре тарифа заведены в Filament и набор открыт.
+    'diglit_landing' => (bool) env('DIGLIT_LANDING', false),
     // H2744 staged rollout. Tier interpretation is dark until legacy rows and
     // tariffs have been explicitly classified by membership:classify-tiers.
     'membership_tiered' => (bool) env('MEMBERSHIP_TIERED', false),
