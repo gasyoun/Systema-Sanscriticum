@@ -37,6 +37,19 @@ class RecordingsGapStaleTest extends TestCase
             'recording_gap.stale_hours' => 4,
             'recording_gap.stale_enabled' => true,
         ]);
+
+        // Фризим «сейчас» в середину московского дня: без этого слот
+        // «6 часов назад», засеянный около полуночи MSK, уезжает на предыдущий
+        // день и same-day логика законно его не находит (красный вечерний CI
+        // 25-08-2026 на зелёном днём main).
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-08-25 14:00', 'Europe/Moscow'));
+    }
+
+    protected function tearDown(): void
+    {
+        CarbonImmutable::setTestNow();
+
+        parent::tearDown();
     }
 
     public function test_recent_slot_below_sla_is_not_flagged(): void
