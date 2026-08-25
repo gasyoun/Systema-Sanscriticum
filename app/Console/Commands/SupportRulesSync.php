@@ -200,8 +200,8 @@ class SupportRulesSync extends Command
     }
 
     /**
-     * @param list<string> $patterns
-     * @param list<string> $negations
+     * @param  list<string>  $patterns
+     * @param  list<string>  $negations
      */
     private function patternHash(array $patterns, array $negations): string
     {

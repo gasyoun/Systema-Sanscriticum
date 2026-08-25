@@ -26,12 +26,33 @@ class SupportRulesSyncTest extends TestCase
      */
     private function expectedRuleCount(): int
     {
+        return collect($this->ruleFiles())->sum(fn (array $rules): int => count($rules));
+    }
+
+    /**
+     * Сколько правил источника сидятся включёнными (enabled:false в YAML
+     * синхронизируется выключенным).
+     */
+    private function expectedEnabledRuleCount(): int
+    {
+        return collect($this->ruleFiles())->sum(
+            fn (array $rules): int => count(array_filter($rules, fn (array $rule): bool => (bool) ($rule['enabled'] ?? true))),
+        );
+    }
+
+    /**
+     * @return list<list<array<string, mixed>>>
+     */
+    private function ruleFiles(): array
+    {
         $files = File::glob(base_path('tools/message-intent-classifier/rules/v1/*.json'));
 
         $this->assertNotEmpty($files, 'vendored rules/v1/*.json missing — vendor step broken');
 
         return collect($files)
-            ->sum(fn (string $path): int => count(json_decode((string) file_get_contents($path), true)['rules'] ?? []));
+            ->map(fn (string $path): array => json_decode((string) file_get_contents($path), true)['rules'] ?? [])
+            ->values()
+            ->all();
     }
 
     public function test_sync_seeds_all_vendored_rules_and_is_idempotent(): void
@@ -134,9 +155,11 @@ class SupportRulesSyncTest extends TestCase
 
         $this->artisan('support:rules-sync')->assertExitCode(0);
 
-        // Актуальный набор восстановлен полностью…
+        // Актуальный набор восстановлен полностью: включённых строк под
+        // ключами пакета ровно столько, сколько в источнике enabled:true,
+        // плюс одна выключенная строка с чужим (stale) ключом.
         $this->assertSame(
-            $this->expectedRuleCount(),
+            $this->expectedEnabledRuleCount(),
             SupportTopicRule::query()->whereNotNull('pattern_hash')->where('is_enabled', true)->count(),
         );
         // …а строка с несуществующим ключом выключена, но жива.

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use Illuminate\Support\Facades\File;
+use MessageClassifier\Classifier;
+use MessageClassifier\Loader;
 use Symfony\Component\Yaml\Yaml;
 use Tests\TestCase;
 
@@ -35,15 +37,15 @@ class VendoredMessageClassifierParityTest extends TestCase
         require_once $packageRoot.'/php/MessageClassifier/Loader.php';
         require_once $packageRoot.'/php/MessageClassifier/Classifier.php';
 
-        $loader = new \MessageClassifier\Loader($packageRoot);
-        $classifier = new \MessageClassifier\Classifier($loader);
+        $loader = new Loader($packageRoot);
+        $classifier = new Classifier($loader);
 
         $failures = [];
 
         foreach ($vectors as $vector) {
             $got = $classifier->classifyAll((string) $vector['text']);
 
-            foreach (\MessageClassifier\Loader::PLANES as $plane) {
+            foreach (Loader::PLANES as $plane) {
                 $want = $vector['expect'][$plane] ?? null;
                 $have = $got[$plane];
 

@@ -8,6 +8,7 @@ use App\Filament\Pages\TelegramSupportAnalytics;
 use App\Models\SupportDailyRollup;
 use App\Models\SupportTopicAssignment;
 use App\Models\User;
+use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -25,7 +26,7 @@ class SupportCoveragePanelTest extends TestCase
     {
         config(['app.timezone' => 'Europe/Moscow']);
 
-        $admin = User::factory()->create(['role' => \App\Support\Roles::ADMIN]);
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
         $studentA = User::factory()->create();
         $studentB = User::factory()->create();
 
@@ -37,7 +38,7 @@ class SupportCoveragePanelTest extends TestCase
                 'web_user_id' => $webUserId,
                 'conversation_date' => '2026-08-25 00:00:00',
                 'incoming_count' => 1,
-            });
+            ]);
 
             SupportTopicAssignment::create([
                 'support_daily_rollup_id' => $rollup->id,
@@ -55,20 +56,24 @@ class SupportCoveragePanelTest extends TestCase
             'incoming_count' => 1,
         ]);
 
-        Livewire::actingAs($admin)
-            ->withQueryParams(['selectedDate' => '2026-08-25'])
-            ->test(TelegramSupportAnalytics::class)
-            ->set('selectedDate', '2026-08-25')
-            ->assertViewHas('coverage', function (array $coverage): void {
-                $rows = collect($coverage['rows'])->keyBy('channel');
+        $component = Livewire::actingAs($admin)
+            ->test(TelegramSupportAnalytics::class);
+        $component->set('selectedDate', '2026-08-25');
 
-                $this->assertSame(3, $coverage['total']);
-                $this->assertSame(50, $rows['web']['coverage'], 'web: 1 of 2 categorized');
-                $this->assertSame(0, $rows['vk']['coverage'], 'vk: assignment-less conversation is uncategorized');
-                $this->assertSame(2, $coverage['categorized']);
-                $this->assertSame(33, $coverage['coverage'], 'overall: 2 of 3');
-            })
-            ->assertSee('Coverage классификации')
+        // Числа сверяются напрямую с вычисляемым свойством страницы (Livewire
+        // computed properties не попадают в data массив вью, поэтому через
+        // instance, а не assertViewHas).
+        $coverage = $component->instance()->coverage;
+        $rows = collect($coverage['rows'])->keyBy('channel');
+
+        $this->assertSame(3, $coverage['total']);
+        $this->assertSame(50, $rows['web']['coverage'], 'web: 1 of 2 categorized');
+        $this->assertSame(0, $rows['vk']['coverage'], 'vk: assignment-less conversation is uncategorized');
+        $this->assertSame(1, $coverage['categorized']);
+        $this->assertSame(33, $coverage['coverage'], 'overall: 1 of 3');
+
+        // Секция реально рисуется на странице.
+        $component->assertSee('Coverage классификации')
             ->assertSeeHtml('data-testid="support-coverage-panel"');
     }
 
