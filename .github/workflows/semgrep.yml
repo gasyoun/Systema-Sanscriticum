@@ -49,5 +49,6 @@ jobs:
             --exclude bootstrap \
             --exclude lecture-ui \
             --exclude lecture-builder \
+            --exclude tools/message-intent-classifier \
             --exclude '*.min.js' \
             --metrics=off

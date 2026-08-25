@@ -290,16 +290,32 @@ jobs:
       - name: Read pinned SHA
         id: pin
         run: echo "sha=$(cat tools/message-intent-classifier/PINNED_SHA)" >> "$GITHUB_OUTPUT"
+      # gasyoun/message-intent-classifier is PRIVATE: GITHUB_TOKEN cannot read it.
+      # The full tree-parity gate activates the moment a fine-grained read-only
+      # PAT (contents:read on that repo) is added as the MIC_UPSTREAM_TOKEN
+      # Actions secret; until then only JSON freshness + pin sanity run.
+      - name: Resolve upstream access
+        id: access
+        env:
+          MIC_UPSTREAM_TOKEN: ${{ secrets.MIC_UPSTREAM_TOKEN }}
+        run: echo "token_set=$([ -n "$MIC_UPSTREAM_TOKEN" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       - name: Checkout upstream at pin
+        if: steps.access.outputs.token_set == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: gasyoun/message-intent-classifier
           ref: ${{ steps.pin.outputs.sha }}
+          token: ${{ secrets.MIC_UPSTREAM_TOKEN }}
           path: _upstream-mic
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
       - run: pip install pyyaml
       - name: Drift + generated-JSON parity check
-        run: python tools/check_mic_vendor_drift.py --upstream _upstream-mic
+        run: |
+          if [ "${{ steps.access.outputs.token_set }}" = "true" ]; then
+            python tools/check_mic_vendor_drift.py --upstream _upstream-mic
+          else
+            python tools/check_mic_vendor_drift.py --self-only
+          fi
 

@@ -10,9 +10,14 @@ Two checks, both mandatory:
    tools/gen_mic_rules_json.py regenerates from that YAML right now.
 
 Usage (CI):
-    python tools/check_mic_vendor_drift.py --upstream _upstream-mic
-Local:
-    python tools/check_mic_vendor_drift.py --upstream /tmp/mic-clone
+    python tools/check_mic_vendor_drift.py --upstream _upstream-mic   # full gate
+    python tools/check_mic_vendor_drift.py --self-only                # no upstream access
+
+`--upstream` verifies tree byte-parity against a checkout of
+gasyoun/message-intent-classifier at the pinned SHA. The package repo is
+PRIVATE, so CI can only run the full gate once a read-only PAT is added as
+the MIC_UPSTREAM_TOKEN Actions secret; until then CI runs --self-only
+(generated-JSON freshness + pin sanity) and says so loudly.
 """
 
 from __future__ import annotations
@@ -46,7 +51,13 @@ def collect(rel_root: Path) -> dict[str, Path]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--upstream", required=True, help="checkout of gasyoun/message-intent-classifier at the pinned SHA")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--upstream", help="checkout of gasyoun/message-intent-classifier at the pinned SHA")
+    group.add_argument(
+        "--self-only",
+        action="store_true",
+        help="skip upstream tree parity (private repo without MIC_UPSTREAM_TOKEN); verify JSON freshness + pin sanity only",
+    )
     args = parser.parse_args()
 
     pin = (VENDOR_DIR / "PINNED_SHA").read_text(encoding="utf-8").strip()
@@ -55,36 +66,41 @@ def main() -> int:
         return 1
 
     failures: list[str] = []
-
-    vendored = {
-        rel: path
-        for rel, path in collect(VENDOR_DIR).items()
-        if rel not in LOCAL_ONLY and not Path(rel).match(GENERATED)
-    }
-    upstream = collect(Path(args.upstream))
-
-    missing = sorted(set(upstream) - set(vendored))
-    extra = sorted(set(vendored) - set(upstream))
-    if missing:
-        failures.append(f"files missing from vendor dir: {missing}")
-    if extra:
-        failures.append(f"files in vendor dir absent from pin {pin[:12]}: {extra}")
-
-    changed = sorted(
-        rel
-        for rel in set(vendored) & set(upstream)
-        if not filecmp.cmp(vendored[rel], upstream[rel], shallow=False)
-    )
-    if changed:
-        failures.append(f"vendored copies drifted from pin {pin[:12]}: {changed}")
-
-    # Generated JSON parity.
-    sys.path.insert(0, str(REPO_ROOT / "tools"))
-    import gen_mic_rules_json  # noqa: E402  (local tool)
-
     yaml_files = sorted((VENDOR_DIR / "rules" / "v1").glob("*.yaml"))
     if not yaml_files:
         failures.append("no rules/v1/*.yaml found in vendor dir")
+
+    if args.upstream is not None:
+        vendored = {
+            rel: path
+            for rel, path in collect(VENDOR_DIR).items()
+            if rel not in LOCAL_ONLY and not Path(rel).match(GENERATED)
+        }
+        upstream = collect(Path(args.upstream))
+
+        missing = sorted(set(upstream) - set(vendored))
+        extra = sorted(set(vendored) - set(upstream))
+        if missing:
+            failures.append(f"files missing from vendor dir: {missing}")
+        if extra:
+            failures.append(f"files in vendor dir absent from pin {pin[:12]}: {extra}")
+
+        changed = sorted(
+            rel
+            for rel in set(vendored) & set(upstream)
+            if not filecmp.cmp(vendored[rel], upstream[rel], shallow=False)
+        )
+        if changed:
+            failures.append(f"vendored copies drifted from pin {pin[:12]}: {changed}")
+    else:
+        print(
+            "::warning::upstream tree parity NOT verified (private repo; set the "
+            "MIC_UPSTREAM_TOKEN Actions secret to enable the full gate)"
+        )
+
+    # Generated JSON parity (always on — needs no upstream access).
+    sys.path.insert(0, str(REPO_ROOT / "tools"))
+    import gen_mic_rules_json  # noqa: E402  (local tool)
 
     for yaml_path in yaml_files:
         payload = gen_mic_rules_json.convert(yaml_path)
