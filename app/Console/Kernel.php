@@ -226,6 +226,19 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('support-daily-digest');
 
+        // H3392: недельный разбор пробы автоответов H3380 — «разбираем что
+        // пошло не так» само-сборкой. Воскресенье 18:00 MSK; гейт флага
+        // SUPPORT_AUTO_REPLY_WEEKLY_REPORT (default OFF): пока OFF, слот молчит;
+        // ручной просмотр — php artisan support:auto-reply-weekly --dry.
+        $schedule->command('support:auto-reply-weekly')
+            ->sundays()
+            ->at('18:00')
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.support_auto_reply_weekly_report'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('support-auto-reply-weekly');
+
         // Напоминание студенту: завтра срок оплаты по обещанию/рассрочке.
         // Время редактируется в админке (MarketingSetting); schedule() читается
         // на каждый schedule:run, поэтому смена подхватывается без деплоя.

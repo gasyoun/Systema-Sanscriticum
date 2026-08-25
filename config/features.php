@@ -181,6 +181,17 @@ return [
     'support_daily_digest' => (bool) env('SUPPORT_DAILY_DIGEST', true),
 
     /*
+     | H3392: недельный разбор пробы автоответов H3380 («разбираем что пошло
+     | не так») на ADMIN_TELEGRAM_ID: счётчики по event_type × kind × категории,
+     | подсказки без ответа, объём stale/backlog-пропусков, медиана латентности
+     | человеческого ответа после ack/шаблона. ВЫКЛ по умолчанию — новый
+     | исходящий контур админам: включение сознательный шаг после первого
+     | просмотра (php artisan support:auto-reply-weekly --dry работает и при
+     | OFF). Слот расписания — воскресенье 18:00 Europe/Moscow.
+     */
+    'support_auto_reply_weekly_report' => (bool) env('SUPPORT_AUTO_REPLY_WEEKLY_REPORT', false),
+
+    /*
      | H3462 (рулинг MG 24-08-2026): входящий email как канал поддержки.
      | Ящик zabota@samskrte.ru пересылает почту в проводник (n8n на .91, без
      | нового платного вендора), проводник POSTит payload на
