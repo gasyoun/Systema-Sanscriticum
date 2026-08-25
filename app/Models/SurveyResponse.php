@@ -16,6 +16,7 @@ class SurveyResponse extends Model
 {
     protected $fillable = [
         'survey_slug',
+        'user_id',
         'answers',
         'contact',
         'reward_choice',

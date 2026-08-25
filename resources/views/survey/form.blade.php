@@ -76,15 +76,16 @@
                                     @endforeach
                                 </div>
                             @elseif($question['type'] === 'scale')
+                                @php $smin = $question['min'] ?? 1; $smax = $question['max'] ?? 5; @endphp
                                 <div class="flex flex-wrap gap-2">
-                                    @foreach(range(1, 5) as $n)
+                                    @foreach(range($smin, $smax) as $n)
                                         <label class="cursor-pointer">
                                             <input type="radio" name="{{ $question['id'] }}" value="{{ $n }}"
                                                    @checked($old == $n) class="peer sr-only">
                                             <span class="inline-flex w-10 h-10 items-center justify-center rounded-lg bg-[#0A0D14]/60 border border-[#1F2636] text-sm font-bold text-slate-300 peer-checked:bg-brand peer-checked:text-white peer-checked:border-brand transition-colors">{{ $n }}</span>
                                         </label>
                                     @endforeach
-                                    <span class="text-xs text-slate-500 self-center ml-2">совсем нет → очень</span>
+                                    <span class="text-xs text-slate-500 self-center ml-2">{{ $smin }} → {{ $smax }}</span>
                                 </div>
                             @elseif($question['type'] === 'textarea')
                                 <textarea name="{{ $question['id'] }}" rows="3" maxlength="2000"
@@ -118,7 +119,7 @@
                                 <label class="block text-sm font-bold text-slate-200 mb-2">
                                     Куда начислить (email или @telegram) <span class="text-brand">*</span>
                                 </label>
-                                <input type="text" name="contact" value="{{ old('contact') }}" maxlength="200"
+                                <input type="text" name="contact" value="{{ old('contact', $auth_email ?? '') }}" maxlength="200"
                                        placeholder="you@mail.ru или @username"
                                        class="w-full rounded-lg bg-[#0A0D14]/60 border border-[#1F2636] focus:border-brand outline-none px-3 py-2 text-sm text-slate-200">
                                 @error('contact')

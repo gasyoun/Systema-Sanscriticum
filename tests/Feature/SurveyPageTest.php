@@ -138,4 +138,57 @@ class SurveyPageTest extends TestCase
 
         $this->assertSame(1, SurveyResponse::where('survey_slug', 'exit-price')->count());
     }
+
+    /** @test */
+    public function wave_two_slugs_render_and_store(): void
+    {
+        foreach (['onboarding', 'churn-block', 'post3m', 'yoga-sutras-revive'] as $slug) {
+            $this->get('/anketa/'.$slug)->assertOk();
+        }
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/anketa/onboarding', [
+                'what_brought' => 'Йога, практика и мантры',
+                'level' => 'С нуля, ещё не начинал(а)',
+                'source' => 'По рекомендации знакомых',
+                'birth_year' => '1988',
+            ])->assertRedirect();
+
+        $row = SurveyResponse::where('survey_slug', 'onboarding')->firstOrFail();
+        $this->assertSame($user->id, $row->user_id);
+        $this->assertSame('Йога, практика и мантры', $row->answers['what_brought']);
+        $this->assertSame(1988, $row->answers['birth_year']);
+
+        $this->post('/anketa/churn-block', [
+            'stopped_because' => 'Не хватило времени',
+            'return_intent' => 'Вернусь к этому же курсу',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->post('/anketa/post3m', [
+            'nps' => 9,
+            'want_next' => 'Продолжение грамматики (синтаксис, Бюлер)',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->post('/anketa/yoga-sutras-revive', [
+            'remember' => 'Помню хорошо',
+            'would_want' => 'Курс в записи, в своём темпе',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertSame(1, SurveyResponse::where('survey_slug', 'churn-block')->count());
+        $this->assertSame(1, SurveyResponse::where('survey_slug', 'post3m')->count());
+        $this->assertSame(1, SurveyResponse::where('survey_slug', 'yoga-sutras-revive')->count());
+    }
+
+    /** @test */
+    public function scale_out_of_range_is_rejected(): void
+    {
+        $this->post('/anketa/post3m', [
+            'nps' => 11,
+            'want_next' => 'Хинди',
+        ])->assertSessionHasErrors('nps');
+
+        $this->assertSame(0, SurveyResponse::count());
+    }
 }
