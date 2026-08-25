@@ -23,8 +23,17 @@ class SupportTopicClassifier
 
         $matched = false;
 
+        // H3529 (помеченный дефолт, run-log волны): синхронизированные из
+        // пакета правила (pattern_hash NOT NULL) хранятся в БД как staging,
+        // но рантайму пока НЕ видны — текущий матчинг это плоский mb_stripos,
+        // а 7 YAML-паттернов не содержат метасимволов («техподдержк»,
+        // «не работает», «кабинет», «нет доступа», «можно попробовать») и при
+        // включении изменили бы живую классификацию до прогона через гейт
+        // precision ≥93% (VERIFICATION_SELF_SERVE_CLASSIFIER_2026H2.md).
+        // Переключение = отдельное решение той волны.
         SupportTopicRule::query()
             ->where('is_enabled', true)
+            ->whereNull('pattern_hash')
             ->orderBy('priority')
             ->orderBy('category')
             ->get()

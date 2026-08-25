@@ -1,0 +1,1587 @@
+{
+  "version": 1,
+  "frozen": "2026-08-25",
+  "note": "Golden vectors frozen from the reference Python engine at commit-time. Both engines (engine_py and php/MessageClassifier) must reproduce every 'expect' byte-for-byte; planes absent from 'expect' must be null. Rule changes require an intentional golden refresh in the same PR.",
+  "vectors": [
+    {
+      "id": "t-rec-01",
+      "text": "Пришлите, пожалуйста, ссылку на запись занятия.",
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:запис[а-я]*( занятия| урока| лекции)?"
+        }
+      }
+    },
+    {
+      "id": "t-rec-02",
+      "text": "Где посмотреть видеозаписи прошлых уроков?",
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:видеозапис[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-rec-03",
+      "text": "Не успела на лекцию, где пересмотр?",
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:пересмотр[а-я]*"
+        },
+        "objection": {
+          "category": "b1_time",
+          "reason": "keyword:не успе[а-я]*|пропу[стщ][а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-rec-04",
+      "text": "Есть ли тайм-коды у записи вебинара?",
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:запис[а-я]*( занятия| урока| лекции)?"
+        }
+      }
+    },
+    {
+      "id": "t-rec-05",
+      "text": "Пропустила занятие по Гите, где смотреть запись?",
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:запис[а-я]*( занятия| урока| лекции)?"
+        },
+        "objection": {
+          "category": "b1_time",
+          "reason": "keyword:не успе[а-я]*|пропу[стщ][а-я]*"
+        }
+      }
+    },
+    {
+      "id": "g-neg-a",
+      "text": "Где скачать ссылку на запись занятия?",
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:запис[а-я]*( занятия| урока| лекции)?"
+        }
+      }
+    },
+    {
+      "id": "g-neg-b",
+      "text": "Ссылка на запись не открывается — это к техподдержке?",
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:техподдержк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-neg-01",
+      "text": "Ссылка на запись не работает, напишите в техподдержку.",
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:техподдержк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-neg-02",
+      "text": "Техподдержка: видео записи не открывается уже час.",
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:техподдержк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-neg-03",
+      "text": "Хочу записаться на курс с нуля.",
+      "expect": {
+        "intent": {
+          "category": "learn_start",
+          "reason": "keyword:с чего начать|записаться на курс|запишусь на курс"
+        }
+      }
+    },
+    {
+      "id": "t-neg-04",
+      "text": "Записи не открываются в кабинете.",
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:(?<![а-я])кабинет|личн(ый|ым|ого) кабинет"
+        }
+      }
+    },
+    {
+      "id": "m-ht-neg",
+      "text": "По вопросу техподдержки пишите в бот.",
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:техподдержк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-tec-01",
+      "text": "Ошибка 404 при входе на платформу.",
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:ошибк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-tec-02",
+      "text": "Платформа виснет на середине урока.",
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:сбой|зависает|виснет|вылетает|лагает"
+        }
+      }
+    },
+    {
+      "id": "t-tec-03",
+      "text": "Вылетает приложение на телефоне при воспроизведении.",
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:сбой|зависает|виснет|вылетает|лагает"
+        }
+      }
+    },
+    {
+      "id": "t-sch-01",
+      "text": "Когда будет следующее занятие по ведам?",
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:когда (занятие|урок|начн[а-я]*|следующ[а-я]*|будет|стартует|пара)"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:когда (занятие|урок|старт|начало|будет|следующ[а-я]*)"
+        }
+      }
+    },
+    {
+      "id": "t-sch-02",
+      "text": "Пришлите, пожалуйста, ссылку на расписание группы.",
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:(?<![а-я])(ссылк|линк)[а-я]*.{0,48}расписан[а-я]*"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:расписан[а-я]*|во ?сколько|в какое время|какой день"
+        }
+      }
+    },
+    {
+      "id": "t-sch-03",
+      "text": "Во сколько начинается урок в субботу?",
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:во ?сколько"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:расписан[а-я]*|во ?сколько|в какое время|какой день"
+        }
+      }
+    },
+    {
+      "id": "t-sch-04",
+      "text": "Возможен перенос занятия на другой день?",
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:перенос|перенес"
+        }
+      }
+    },
+    {
+      "id": "t-sch-05",
+      "text": "В каком чате график занятий группы?",
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:в какой день|график занят|в какое время"
+        }
+      }
+    },
+    {
+      "id": "t-pay-01",
+      "text": "Сколько стоит курс по санскриту?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        }
+      }
+    },
+    {
+      "id": "t-pay-02",
+      "text": "Не нашла ссылку на оплату, пришлите еще раз.",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:(?<![а-я])(ссылк|линк)[а-я]*.{0,48}(оплат|плат|тариф|цен|стои)"
+        }
+      }
+    },
+    {
+      "id": "t-pay-03",
+      "text": "Какая цена курса и есть ли рассрочка?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:(?<![а-я])дорог(о|а|ой|ие)(?![а-я])|скидк[а-я]*|рассрочк[а-я]*"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])|стоимост[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-pay-04",
+      "text": "Есть ли скидки для студентов йоги?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:скидк[а-я]*|промокод"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:(?<![а-я])дорог(о|а|ой|ие)(?![а-я])|скидк[а-я]*|рассрочк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-pay-05",
+      "text": "Можно оплатить из-за рубежа картой?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "objection": {
+          "category": "b7_logistics",
+          "reason": "keyword:за рубеж|за границ|из другого города|из другого региона"
+        }
+      }
+    },
+    {
+      "id": "t-pay-06",
+      "text": "Сколько будет стоить второй блок и где ссылка?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:(оплат|тариф|цен|стои)[а-я]*.{0,48}(?<![а-я])(ссылк|линк)[а-я]*"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        }
+      }
+    },
+    {
+      "id": "t-zoom-01",
+      "text": "Не могу найти ссылку на Zoom.",
+      "expect": {
+        "topic": {
+          "category": "zoom_link",
+          "reason": "keyword:зум|zoom|(?<![a-z])join(?![a-z])"
+        }
+      }
+    },
+    {
+      "id": "t-zoom-02",
+      "text": "Как войти на занятие через зум?",
+      "expect": {
+        "topic": {
+          "category": "zoom_link",
+          "reason": "keyword:зум|zoom|(?<![a-z])join(?![a-z])"
+        }
+      }
+    },
+    {
+      "id": "t-zoom-03",
+      "text": "Пришлите линк на трансляцию.",
+      "expect": {
+        "topic": {
+          "category": "zoom_link",
+          "reason": "keyword:(?<![а-я])(ссылк|линк)[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-zoom-04",
+      "text": "Подключиться к вебинару не получается.",
+      "expect": {
+        "topic": {
+          "category": "zoom_link",
+          "reason": "keyword:подключ[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-zoom-05",
+      "text": "Join button не активен, что делать?",
+      "expect": {
+        "topic": {
+          "category": "zoom_link",
+          "reason": "keyword:зум|zoom|(?<![a-z])join(?![a-z])"
+        }
+      }
+    },
+    {
+      "id": "t-acc-01",
+      "text": "Кабинет не открывается после оплаты.",
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:(?<![а-я])кабинет|личн(ый|ым|ого) кабинет"
+        }
+      }
+    },
+    {
+      "id": "t-acc-02",
+      "text": "Не могу войти в личный кабинет, пароль не подходит.",
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:не могу (попасть|войти|зайти|открыт[а-я]*)"
+        }
+      }
+    },
+    {
+      "id": "t-acc-03",
+      "text": "Я в какой группе учусь? Вроде зачисление прошло.",
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:в какой (я )?группе|моя группа|какая у меня группа"
+        }
+      }
+    },
+    {
+      "id": "t-acc-04",
+      "text": "Нет доступа к материалам второго модуля.",
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:нет доступа"
+        }
+      }
+    },
+    {
+      "id": "t-acc-05",
+      "text": "Логин не принимается при входе.",
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:логин|парол[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-mat-01",
+      "text": "Какие учебники нужны для курса грамматики?",
+      "expect": {
+        "topic": {
+          "category": "materials_content",
+          "reason": "keyword:презентац[а-я]*|раздаточ[а-я]*|учебник[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-mat-02",
+      "text": "Будет ли методичка к курсу Бхагавадгиты?",
+      "expect": {
+        "topic": {
+          "category": "materials_content",
+          "reason": "keyword:материал[а-я]*|методичк[а-я]*|конспект[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-mat-03",
+      "text": "Где лежат презентации с лекций?",
+      "expect": {
+        "topic": {
+          "category": "materials_content",
+          "reason": "keyword:презентац[а-я]*|раздаточ[а-я]*|учебник[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-mat-04",
+      "text": "Нужны ли конспекты или своя тетрадь?",
+      "expect": {
+        "topic": {
+          "category": "materials_content",
+          "reason": "keyword:материал[а-я]*|методичк[а-я]*|конспект[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-hw-01",
+      "text": "Домашнее задание второго урока уже проверено?",
+      "expect": {
+        "topic": {
+          "category": "homework_progress",
+          "reason": "keyword:домашн[а-я]*|домашк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-hw-02",
+      "text": "Куда прикреплять выполненную домашку?",
+      "expect": {
+        "topic": {
+          "category": "homework_progress",
+          "reason": "keyword:домашн[а-я]*|домашк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-hw-03",
+      "text": "Сколько времени занимает ДЗ по фонетике?",
+      "expect": {
+        "topic": {
+          "category": "homework_progress",
+          "reason": "keyword:(?<![а-я])дз(?![а-я])"
+        }
+      }
+    },
+    {
+      "id": "t-hw-04",
+      "text": "Не поняла задание по песням дева-гандхарвов.",
+      "expect": {
+        "topic": {
+          "category": "homework_progress",
+          "reason": "keyword:задани[а-я]*|прикрепл[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-cert-01",
+      "text": "Выдается ли сертификат после курса?",
+      "expect": {
+        "topic": {
+          "category": "certificate",
+          "reason": "keyword:сертификат[а-я]*|диплом[а-я]*|удостоверен[а-я]*"
+        },
+        "objection": {
+          "category": "b11_what_next",
+          "reason": "keyword:после курса|что дальше"
+        }
+      }
+    },
+    {
+      "id": "t-cert-02",
+      "text": "Нужен официальный диплом для работы преподавателем.",
+      "expect": {
+        "topic": {
+          "category": "certificate",
+          "reason": "keyword:сертификат[а-я]*|диплом[а-я]*|удостоверен[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-cert-03",
+      "text": "Можно получить удостоверение о повышении квалификации?",
+      "expect": {
+        "topic": {
+          "category": "certificate",
+          "reason": "keyword:сертификат[а-я]*|диплом[а-я]*|удостоверен[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-cert-04",
+      "text": "Сертификат присылают в электронном виде?",
+      "expect": {
+        "topic": {
+          "category": "certificate",
+          "reason": "keyword:сертификат[а-я]*|диплом[а-я]*|удостоверен[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-mem-01",
+      "text": "Как вступить в клуб выпускников?",
+      "expect": {
+        "topic": {
+          "category": "membership_club",
+          "reason": "keyword:клуб[а-я]*|членство|подписк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-mem-02",
+      "text": "Что дает членство в клубе?",
+      "expect": {
+        "topic": {
+          "category": "membership_club",
+          "reason": "keyword:клуб[а-я]*|членство|подписк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-mem-03",
+      "text": "Продлевается ли подписка автоматически?",
+      "expect": {
+        "topic": {
+          "category": "membership_club",
+          "reason": "keyword:клуб[а-я]*|членство|подписк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "t-mem-04",
+      "text": "Есть ли общий чат клуба для студентов?",
+      "expect": {
+        "topic": {
+          "category": "membership_club",
+          "reason": "keyword:клуб[а-я]*|членство|подписк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "o-b1-01",
+      "text": "Просто нет времени на язык вообще.",
+      "expect": {
+        "objection": {
+          "category": "b1_time",
+          "reason": "keyword:нет времени|не хватает времени"
+        }
+      }
+    },
+    {
+      "id": "o-b1-02",
+      "text": "Уезжаю в командировку на месяц, что с занятиями?",
+      "expect": {
+        "objection": {
+          "category": "b1_time",
+          "reason": "keyword:в отъезде|командировк[а-я]*|буду занят"
+        }
+      }
+    },
+    {
+      "id": "o-b1-03",
+      "text": "Не успеваю за группой, отстаю все сильнее.",
+      "expect": {
+        "objection": {
+          "category": "b1_time",
+          "reason": "keyword:не успе[а-я]*|пропу[стщ][а-я]*"
+        }
+      }
+    },
+    {
+      "id": "o-b1-04",
+      "text": "Пропущу две недели августа, это критично?",
+      "expect": {
+        "objection": {
+          "category": "b1_time",
+          "reason": "keyword:не успе[а-я]*|пропу[стщ][а-я]*"
+        }
+      }
+    },
+    {
+      "id": "o-b2-01",
+      "text": "Для меня это слишком дорого сейчас.",
+      "expect": {
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:(?<![а-я])дорог(о|а|ой|ие)(?![а-я])|скидк[а-я]*|рассрочк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "o-b2-02",
+      "text": "А есть скидки или рассрочка платежа?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:тариф[а-я]*|рассрочк[а-я]*|предоплат[а-я]*|доплат[а-я]*"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:(?<![а-я])дорог(о|а|ой|ие)(?![а-я])|скидк[а-я]*|рассрочк[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "o-b2-03",
+      "text": "Боюсь не потянуть всю сумму сразу.",
+      "expect": {
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:не потян[а-я]*|нет денег|мало денег|цена кусается"
+        }
+      }
+    },
+    {
+      "id": "o-b2-04",
+      "text": "Сколько стоит полный курс, если честно?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        }
+      }
+    },
+    {
+      "id": "o-b3-01",
+      "text": "Не поздно ли начинать в пятьдесят?",
+      "expect": {
+        "objection": {
+          "category": "b3_self_doubt",
+          "reason": "keyword:не поздно|сложн[а-я]* для меня|слишком сложн"
+        }
+      }
+    },
+    {
+      "id": "o-b3-02",
+      "text": "Осилю ли я грамматику, если в школе было плохо?",
+      "expect": {
+        "objection": {
+          "category": "b3_self_doubt",
+          "reason": "keyword:осил[а-я]*|справлюсь|способност[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "o-b3-03",
+      "text": "Боюсь, память уже не та для заучивания форм.",
+      "expect": {
+        "objection": {
+          "category": "b3_self_doubt",
+          "reason": "keyword:боюсь|переживаю|в моем возрасте|не рано ли|память уже"
+        }
+      }
+    },
+    {
+      "id": "o-b3-04",
+      "text": "Говорят, санскрит слишком сложный для меня.",
+      "expect": {
+        "objection": {
+          "category": "b3_self_doubt",
+          "reason": "keyword:не поздно|сложн[а-я]* для меня|слишком сложн"
+        }
+      }
+    },
+    {
+      "id": "o-b4-01",
+      "text": "Зачем мне санскрит, если я просто хожу на йогу?",
+      "expect": {
+        "objection": {
+          "category": "b4_purpose",
+          "reason": "keyword:зачем мне|зачем учить|зачем санскрит"
+        }
+      }
+    },
+    {
+      "id": "o-b4-02",
+      "text": "Что это мне даст практически?",
+      "expect": {
+        "objection": {
+          "category": "b4_purpose",
+          "reason": "keyword:что это мне даст|что мне даст|для чего мне"
+        }
+      }
+    },
+    {
+      "id": "o-b4-03",
+      "text": "Есть ли смысл учить мертвый язык?",
+      "expect": {
+        "objection": {
+          "category": "b4_purpose",
+          "reason": "keyword:стоит ли учить|есть ли смысл"
+        }
+      }
+    },
+    {
+      "id": "o-b4-04",
+      "text": "Зачем учить древний язык, а не хинди?",
+      "expect": {
+        "objection": {
+          "category": "b4_purpose",
+          "reason": "keyword:зачем мне|зачем учить|зачем санскрит"
+        }
+      }
+    },
+    {
+      "id": "o-b5-01",
+      "text": "Какой курс выбрать, если я полный ноль?",
+      "expect": {
+        "objection": {
+          "category": "b5_course_fit",
+          "reason": "keyword:какой курс|что выбрать|как выбрать курс"
+        }
+      }
+    },
+    {
+      "id": "o-b5-02",
+      "text": "Мой уровень — читала Гиту в переводе. Куда идти?",
+      "expect": {
+        "objection": {
+          "category": "b5_course_fit",
+          "reason": "keyword:мой уровень|какой уровень|с нуля ли|возьмете с нуля|полный ноль"
+        }
+      }
+    },
+    {
+      "id": "o-b5-03",
+      "text": "Не понимаю, как выбрать курс из вашего списка.",
+      "expect": {
+        "objection": {
+          "category": "b5_course_fit",
+          "reason": "keyword:какой курс|что выбрать|как выбрать курс"
+        }
+      }
+    },
+    {
+      "id": "o-b5-04",
+      "text": "Возьмете с нуля или нужен базовый уровень?",
+      "expect": {
+        "objection": {
+          "category": "b5_course_fit",
+          "reason": "keyword:мой уровень|какой уровень|с нуля ли|возьмете с нуля|полный ноль"
+        }
+      }
+    },
+    {
+      "id": "o-b6-01",
+      "text": "Когда стартует новый поток?",
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:когда (занятие|урок|начн[а-я]*|следующ[а-я]*|будет|стартует|пара)"
+        },
+        "objection": {
+          "category": "b6_start_date",
+          "reason": "keyword:старт[а-я]*|поток[а-я]*|набор[а-я]*|наберет"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:когда (занятие|урок|старт|начало|будет|следующ[а-я]*)"
+        }
+      }
+    },
+    {
+      "id": "o-b6-02",
+      "text": "Успею к потоку, если внесу оплату на этой неделе?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "objection": {
+          "category": "b6_start_date",
+          "reason": "keyword:старт[а-я]*|поток[а-я]*|набор[а-я]*|наберет"
+        }
+      }
+    },
+    {
+      "id": "o-b6-03",
+      "text": "Курс уже идет или набор еще открыт?",
+      "expect": {
+        "objection": {
+          "category": "b6_start_date",
+          "reason": "keyword:старт[а-я]*|поток[а-я]*|набор[а-я]*|наберет"
+        }
+      }
+    },
+    {
+      "id": "o-b6-04",
+      "text": "Дата старта известна точно?",
+      "expect": {
+        "objection": {
+          "category": "b6_start_date",
+          "reason": "keyword:старт[а-я]*|поток[а-я]*|набор[а-я]*|наберет"
+        }
+      }
+    },
+    {
+      "id": "o-b7-01",
+      "text": "Я живу за рубежом, получится заниматься?",
+      "expect": {
+        "objection": {
+          "category": "b7_logistics",
+          "reason": "keyword:за рубеж|за границ|из другого города|из другого региона"
+        }
+      }
+    },
+    {
+      "id": "o-b7-02",
+      "text": "Занятия идут по московскому времени? Часовой пояс у меня другой.",
+      "expect": {
+        "objection": {
+          "category": "b7_logistics",
+          "reason": "keyword:часовой пояс|по моему времени"
+        }
+      }
+    },
+    {
+      "id": "o-b7-03",
+      "text": "Из другого города подключусь без проблем?",
+      "expect": {
+        "topic": {
+          "category": "zoom_link",
+          "reason": "keyword:подключ[а-я]*"
+        },
+        "objection": {
+          "category": "b7_logistics",
+          "reason": "keyword:за рубеж|за границ|из другого города|из другого региона"
+        }
+      }
+    },
+    {
+      "id": "o-b7-04",
+      "text": "Технически получится слушать с телефона в дороге?",
+      "expect": {
+        "objection": {
+          "category": "b7_logistics",
+          "reason": "keyword:технически получится|с телефона получится"
+        }
+      }
+    },
+    {
+      "id": "o-b8-01",
+      "text": "Как оплатить курс из Казахстана?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "objection": {
+          "category": "b8_payment_mechanics",
+          "reason": "keyword:как записаться|как оплатить|где оплат"
+        }
+      }
+    },
+    {
+      "id": "o-b8-02",
+      "text": "Куда платить, если я не из России?",
+      "expect": {
+        "objection": {
+          "category": "b8_payment_mechanics",
+          "reason": "keyword:куда платить|куда писать|реквизит[а-я]*|как заплатить"
+        }
+      }
+    },
+    {
+      "id": "o-b8-03",
+      "text": "Пришлите реквизиты для перевода.",
+      "expect": {
+        "objection": {
+          "category": "b8_payment_mechanics",
+          "reason": "keyword:куда платить|куда писать|реквизит[а-я]*|как заплатить"
+        }
+      }
+    },
+    {
+      "id": "o-b8-04",
+      "text": "Как записаться на пробное занятие?",
+      "expect": {
+        "objection": {
+          "category": "b8_payment_mechanics",
+          "reason": "keyword:как записаться|как оплатить|где оплат"
+        },
+        "intent": {
+          "category": "trial_request",
+          "reason": "keyword:пробн(ое|ый|ые)( занятие| урок)?"
+        }
+      }
+    },
+    {
+      "id": "o-b9-01",
+      "text": "А вдруг мне не подойдет формат группы?",
+      "expect": {
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:не подойдет|если не подойдет|а вдруг"
+        }
+      }
+    },
+    {
+      "id": "o-b9-02",
+      "text": "Если курс не подойдет, возможен возврат?",
+      "expect": {
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:пробн[а-я]*|возврат[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "o-b9-03",
+      "text": "Хочу сначала взять пробное бесплатное занятие.",
+      "expect": {
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:пробн[а-я]*|возврат[а-я]*"
+        },
+        "intent": {
+          "category": "trial_request",
+          "reason": "keyword:пробн(ое|ый|ые)( занятие| урок)?"
+        }
+      }
+    },
+    {
+      "id": "o-b9-04",
+      "text": "Страшно платить за весь курс сразу.",
+      "expect": {
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:рискованно|страшно платить"
+        }
+      }
+    },
+    {
+      "id": "o-b10-01",
+      "text": "Это не секта случаем?",
+      "expect": {
+        "objection": {
+          "category": "b10_trust",
+          "reason": "keyword:секта|религи[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "o-b10-02",
+      "text": "Кто вы такие, расскажите о школе.",
+      "expect": {
+        "objection": {
+          "category": "b10_trust",
+          "reason": "keyword:кто вы такие|настоящий ли|это правда вы"
+        }
+      }
+    },
+    {
+      "id": "o-b10-03",
+      "text": "Почему вам можно верить? Отзывов мало.",
+      "expect": {
+        "objection": {
+          "category": "b10_trust",
+          "reason": "keyword:почему вам можно верить|не разведете"
+        }
+      }
+    },
+    {
+      "id": "o-b10-04",
+      "text": "Есть ли религиозная подоплека у обучения?",
+      "expect": {
+        "objection": {
+          "category": "b10_trust",
+          "reason": "keyword:секта|религи[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "o-b11-01",
+      "text": "Что дальше после курса для продолжающих?",
+      "expect": {
+        "objection": {
+          "category": "b11_what_next",
+          "reason": "keyword:после курса|что дальше"
+        }
+      }
+    },
+    {
+      "id": "o-b11-02",
+      "text": "Есть ли следующий курс по Упанишадам?",
+      "expect": {
+        "objection": {
+          "category": "b11_what_next",
+          "reason": "keyword:следующ(ий|ая) (курс|ступен)|продолжить обучение|куда расти"
+        }
+      }
+    },
+    {
+      "id": "o-b11-03",
+      "text": "Хочу продолжить обучение углубленно.",
+      "expect": {
+        "objection": {
+          "category": "b11_what_next",
+          "reason": "keyword:следующ(ий|ая) (курс|ступен)|продолжить обучение|куда расти"
+        }
+      }
+    },
+    {
+      "id": "o-b11-04",
+      "text": "Куда расти после базовой ступени?",
+      "expect": {
+        "objection": {
+          "category": "b11_what_next",
+          "reason": "keyword:следующ(ий|ая) (курс|ступен)|продолжить обучение|куда расти"
+        }
+      }
+    },
+    {
+      "id": "i-pq-01",
+      "text": "Подскажите стоимость интенсива по санскриту.",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:стоимост[а-я]*"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])|стоимост[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "i-pq-02",
+      "text": "Какая цена у вводного блока?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])|стоимост[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "i-sq-01",
+      "text": "В какое время проходят занятия по вторникам?",
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:в какой день|график занят|в какое время"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:расписан[а-я]*|во ?сколько|в какое время|какой день"
+        }
+      }
+    },
+    {
+      "id": "i-cb-01",
+      "text": "Какие курсы сейчас открыты?",
+      "expect": {
+        "intent": {
+          "category": "catalog_browse",
+          "reason": "keyword:какие курсы|какие есть курсы|курсы есть"
+        }
+      }
+    },
+    {
+      "id": "i-cb-02",
+      "text": "Есть ли каталог всех программ?",
+      "expect": {
+        "intent": {
+          "category": "catalog_browse",
+          "reason": "keyword:каталог|список курсов|что изучаете|что преподаете"
+        }
+      }
+    },
+    {
+      "id": "i-cb-03",
+      "text": "Что изучаете на первом этапе?",
+      "expect": {
+        "intent": {
+          "category": "catalog_browse",
+          "reason": "keyword:каталог|список курсов|что изучаете|что преподаете"
+        }
+      }
+    },
+    {
+      "id": "i-cb-04",
+      "text": "Покажите список курсов для начинающих.",
+      "expect": {
+        "intent": {
+          "category": "catalog_browse",
+          "reason": "keyword:каталог|список курсов|что изучаете|что преподаете"
+        }
+      }
+    },
+    {
+      "id": "i-ls-01",
+      "text": "Хочу научиться читать деванагари.",
+      "expect": {
+        "intent": {
+          "category": "learn_start",
+          "reason": "keyword:хочу научиться|хочу изучать|хочу учить|хочу начать"
+        }
+      }
+    },
+    {
+      "id": "i-ls-02",
+      "text": "С чего начать изучение классического языка?",
+      "expect": {
+        "intent": {
+          "category": "learn_start",
+          "reason": "keyword:с чего начать|записаться на курс|запишусь на курс"
+        }
+      }
+    },
+    {
+      "id": "i-ls-03",
+      "text": "Мечтаю читать Гиту в оригинале.",
+      "expect": {
+        "intent": {
+          "category": "learn_start",
+          "reason": "keyword:мечтаю читать|начать заниматься"
+        }
+      }
+    },
+    {
+      "id": "i-ls-04",
+      "text": "Готова начать заниматься с нового сезона.",
+      "expect": {
+        "intent": {
+          "category": "learn_start",
+          "reason": "keyword:мечтаю читать|начать заниматься"
+        }
+      }
+    },
+    {
+      "id": "i-tr-01",
+      "text": "Можно ли попасть на пробный урок до оплаты?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:пробн[а-я]*|возврат[а-я]*"
+        },
+        "intent": {
+          "category": "trial_request",
+          "reason": "keyword:пробн(ое|ый|ые)( занятие| урок)?"
+        }
+      }
+    },
+    {
+      "id": "i-tr-02",
+      "text": "Есть ли бесплатные вводные занятия?",
+      "expect": {
+        "intent": {
+          "category": "trial_request",
+          "reason": "keyword:бесплатн[а-я]* (занятие|вводн[а-я]*)|вводные занятия"
+        }
+      }
+    },
+    {
+      "id": "i-bs-01",
+      "text": "Хочу оплатить участие, выставите счет.",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "intent": {
+          "category": "buy_signal",
+          "reason": "keyword:хочу оплатить|оплачу|выставите счет|готов(а)? оплатить"
+        }
+      }
+    },
+    {
+      "id": "i-bs-02",
+      "text": "Готов купить курс целиком.",
+      "expect": {
+        "intent": {
+          "category": "buy_signal",
+          "reason": "keyword:готов(а)? купить|хочу купить|куплю курс"
+        }
+      }
+    },
+    {
+      "id": "i-bs-03",
+      "text": "Решилась, куплю курс по ведической литературе.",
+      "expect": {
+        "intent": {
+          "category": "buy_signal",
+          "reason": "keyword:готов(а)? купить|хочу купить|куплю курс"
+        }
+      }
+    },
+    {
+      "id": "i-bs-04",
+      "text": "Выставите счет на оплату второго блока, пожалуйста.",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "intent": {
+          "category": "buy_signal",
+          "reason": "keyword:хочу оплатить|оплачу|выставите счет|готов(а)? оплатить"
+        }
+      }
+    },
+    {
+      "id": "i-cp-01",
+      "text": "Я жалуюсь на игнор три недели.",
+      "expect": {
+        "intent": {
+          "category": "complaint",
+          "reason": "keyword:жалуюсь|жалоба|возмутительн|неприемлемо|безобрази"
+        }
+      }
+    },
+    {
+      "id": "i-cp-02",
+      "text": "Это возмутительно, ответа нет!",
+      "expect": {
+        "intent": {
+          "category": "complaint",
+          "reason": "keyword:жалуюсь|жалоба|возмутительн|неприемлемо|безобрази"
+        }
+      }
+    },
+    {
+      "id": "i-cp-03",
+      "text": "Вы игнорируете мои сообщения уже который день.",
+      "expect": {
+        "intent": {
+          "category": "complaint",
+          "reason": "keyword:верните деньги|обман|мошенник|игнорируете"
+        }
+      }
+    },
+    {
+      "id": "i-cp-04",
+      "text": "Верните деньги за оплаченный блок.",
+      "expect": {
+        "intent": {
+          "category": "complaint",
+          "reason": "keyword:верните деньги|обман|мошенник|игнорируете"
+        }
+      }
+    },
+    {
+      "id": "i-sp-01",
+      "text": "Как отписаться от вашей рассылки?",
+      "expect": {
+        "intent": {
+          "category": "spam_noise",
+          "reason": "keyword:отписаться|рассылк[а-я]*|реклам[а-я]*|(?<![а-я])спам"
+        }
+      }
+    },
+    {
+      "id": "i-sp-02",
+      "text": "Слишком много рекламы в канале.",
+      "expect": {
+        "intent": {
+          "category": "spam_noise",
+          "reason": "keyword:отписаться|рассылк[а-я]*|реклам[а-я]*|(?<![а-я])спам"
+        }
+      }
+    },
+    {
+      "id": "i-sp-03",
+      "text": "Это спам, не пишите мне больше.",
+      "expect": {
+        "intent": {
+          "category": "spam_noise",
+          "reason": "keyword:отписаться|рассылк[а-я]*|реклам[а-я]*|(?<![а-я])спам"
+        }
+      }
+    },
+    {
+      "id": "i-sp-04",
+      "text": "Промоакция пришла на чужую почту.",
+      "expect": {
+        "intent": {
+          "category": "spam_noise",
+          "reason": "keyword:промоакция|акция только"
+        }
+      }
+    },
+    {
+      "id": "m-ht-01",
+      "text": "Позовите куратора, пожалуйста.",
+      "expect": {
+        "meta": {
+          "category": "human_trigger",
+          "reason": "keyword:куратор|живой|человек"
+        }
+      }
+    },
+    {
+      "id": "m-ht-02",
+      "text": "Хочу поговорить с живым человеком.",
+      "expect": {
+        "meta": {
+          "category": "human_trigger",
+          "reason": "keyword:куратор|живой|человек"
+        }
+      }
+    },
+    {
+      "id": "m-ht-03",
+      "text": "Позвоните мне вечером, объясните про оплату.",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "meta": {
+          "category": "human_trigger",
+          "reason": "keyword:напишите мне|позвоните"
+        }
+      }
+    },
+    {
+      "id": "m-ht-04",
+      "text": "Мне нужна реальная поддержка человека.",
+      "expect": {
+        "meta": {
+          "category": "human_trigger",
+          "reason": "keyword:куратор|живой|человек"
+        }
+      }
+    },
+    {
+      "id": "m-ur-01",
+      "text": "Срочно, завтра оплата истекает!",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "meta": {
+          "category": "urgent",
+          "reason": "keyword:срочн[а-я]*|как можно скорее|экстренн[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "m-ur-02",
+      "text": "Нужен ответ как можно скорее, завтра занятие.",
+      "expect": {
+        "meta": {
+          "category": "urgent",
+          "reason": "keyword:срочн[а-я]*|как можно скорее|экстренн[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "m-ur-03",
+      "text": "Горит дедлайн по домашке!",
+      "expect": {
+        "topic": {
+          "category": "homework_progress",
+          "reason": "keyword:домашн[а-я]*|домашк[а-я]*"
+        },
+        "meta": {
+          "category": "urgent",
+          "reason": "keyword:горит|сегодня же"
+        }
+      }
+    },
+    {
+      "id": "m-ur-04",
+      "text": "Экстренная ситуация: пропал доступ.",
+      "expect": {
+        "meta": {
+          "category": "urgent",
+          "reason": "keyword:срочн[а-я]*|как можно скорее|экстренн[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "m-st-01",
+      "text": "Как склоняется слово дхарма в деванагари — धर्म?",
+      "expect": {
+        "meta": {
+          "category": "sanskrit_term",
+          "reason": "keyword:[ऀ-ॿ]"
+        }
+      }
+    },
+    {
+      "id": "m-st-02",
+      "text": "Проверьте транслитерацию: āśrama или āśram?",
+      "expect": {
+        "meta": {
+          "category": "sanskrit_term",
+          "reason": "keyword:[āīūṛṝḷḹṭḍṇṅñṃśḥṣ]"
+        }
+      }
+    },
+    {
+      "id": "m-st-03",
+      "text": "Как произносить р в Ригведе — как в IAST ṛgveda?",
+      "expect": {
+        "meta": {
+          "category": "sanskrit_term",
+          "reason": "keyword:[āīūṛṝḷḹṭḍṇṅñṃśḥṣ]"
+        }
+      }
+    },
+    {
+      "id": "m-st-04",
+      "text": "Переведите термин saṃsāra, пожалуйста.",
+      "expect": {
+        "meta": {
+          "category": "sanskrit_term",
+          "reason": "keyword:[āīūṛṝḷḹṭḍṇṅñṃśḥṣ]"
+        }
+      }
+    },
+    {
+      "id": "m-nc-01",
+      "text": "Здравствуйте, я тут впервые.",
+      "expect": {
+        "meta": {
+          "category": "new_contact",
+          "reason": "keyword:впервые|первый раз"
+        }
+      }
+    },
+    {
+      "id": "m-nc-02",
+      "text": "Только зарегистрировалась на сайте.",
+      "expect": {
+        "meta": {
+          "category": "new_contact",
+          "reason": "keyword:только зарегистрировал|только что купил|только что купила"
+        }
+      }
+    },
+    {
+      "id": "m-nc-03",
+      "text": "Первый раз пробую такой формат обучения.",
+      "expect": {
+        "meta": {
+          "category": "new_contact",
+          "reason": "keyword:впервые|первый раз"
+        }
+      }
+    },
+    {
+      "id": "m-nc-04",
+      "text": "Только что купил доступ, с чего начать?",
+      "expect": {
+        "intent": {
+          "category": "learn_start",
+          "reason": "keyword:с чего начать|записаться на курс|запишусь на курс"
+        },
+        "meta": {
+          "category": "new_contact",
+          "reason": "keyword:только зарегистрировал|только что купил|только что купила"
+        }
+      }
+    },
+    {
+      "id": "n-001",
+      "text": "   ПРИШЛИТЕ    ССЫЛКУ на ЗАПИСЬ   занятия  ",
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:запис[а-я]*( занятия| урока| лекции)?"
+        }
+      }
+    },
+    {
+      "id": "n-002",
+      "text": "ВСЕГО ОДИН вопрос: скОлько стОит обучение?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        }
+      }
+    },
+    {
+      "id": "n-003",
+      "text": "Ссылка\ton\tрасписание\nзанятий, будьте добры",
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:(?<![а-я])(ссылк|линк)[а-я]*.{0,48}расписан[а-я]*"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:расписан[а-я]*|во ?сколько|в какое время|какой день"
+        }
+      }
+    },
+    {
+      "id": "n-004",
+      "text": "",
+      "expect": {}
+    },
+    {
+      "id": "n-005",
+      "text": "     ",
+      "expect": {}
+    },
+    {
+      "id": "n-006",
+      "text": "ZOOM ЗУМ срочно!!",
+      "expect": {
+        "topic": {
+          "category": "zoom_link",
+          "reason": "keyword:зум|zoom|(?<![a-z])join(?![a-z])"
+        },
+        "meta": {
+          "category": "urgent",
+          "reason": "keyword:срочн[а-я]*|как можно скорее|экстренн[а-я]*"
+        }
+      }
+    }
+  ]
+}

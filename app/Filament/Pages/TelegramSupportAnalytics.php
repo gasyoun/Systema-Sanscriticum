@@ -78,6 +78,120 @@ class TelegramSupportAnalytics extends Page
         return app(SupportDashboardPacketBuilder::class)->build($this->selectedDate);
     }
 
+    /**
+     * H3529: дневной coverage классификации по каналам для выбранной даты.
+     * Coverage% = доля разговоров дня, у которых есть хоть одно назначение
+     * темы кроме uncategorized; uncategorized rate — обратная доля (включая
+     * разговоры без назначений вовсе). Числа читаются из того же
+     * support_topic_assignments, что и вся страница, поэтому сходятся с SQL
+     * по определению построения.
+     *
+     * @return array{rows: list<array{channel:string,label:string,total:int,categorized:int,coverage:int|null,uncategorized:int}>, total:int, categorized:int, coverage:int|null, uncategorized_rate:int|null}
+     */
+    public function getCoverageProperty(): array
+    {
+        $rollups = SupportDailyRollup::query()
+            ->whereDate('conversation_date', $this->selectedDate)
+            ->withCount([
+                'topicAssignments as categorized_count' => fn ($query) => $query->where('category', '!=', 'uncategorized'),
+            ])
+            ->get();
+
+        $byChannel = [];
+
+        foreach ($rollups as $rollup) {
+            $channel = $rollup->channel ?? '';
+            $bucket = $byChannel[$channel] ??= ['total' => 0, 'categorized' => 0];
+            $bucket['total']++;
+            $bucket['categorized'] += ($rollup->categorized_count ?? 0) > 0 ? 1 : 0;
+            $byChannel[$channel] = $bucket;
+        }
+
+        $order = [
+            SupportDailyRollup::CHANNEL_TELEGRAM,
+            SupportDailyRollup::CHANNEL_TELEGRAM_BOT,
+            SupportDailyRollup::CHANNEL_WEB,
+            SupportDailyRollup::CHANNEL_VK,
+            SupportDailyRollup::CHANNEL_EMAIL,
+        ];
+
+        $make = static function (int $total, int $categorized): array {
+            return [
+                'total' => $total,
+                'categorized' => $categorized,
+                'coverage' => $total > 0 ? (int) round($categorized / $total * 100) : null,
+                'uncategorized' => $total - $categorized,
+            ];
+        };
+
+        $rows = [];
+
+        foreach ($order as $channel) {
+            if (! isset($byChannel[$channel])) {
+                continue;
+            }
+
+            $stats = $make($byChannel[$channel]['total'], $byChannel[$channel]['categorized']);
+            $stats['channel'] = $channel;
+            $stats['label'] = (new SupportDailyRollup(['channel' => $channel]))->channelLabel();
+            $rows[] = $stats;
+        }
+
+        // Каналы вне канонического списка (страховка от новых значений enum).
+        foreach ($byChannel as $channel => $counts) {
+            if (in_array($channel, $order, true)) {
+                continue;
+            }
+
+            $stats = $make($counts['total'], $counts['categorized']);
+            $stats['channel'] = $channel;
+            $stats['label'] = (new SupportDailyRollup(['channel' => $channel]))->channelLabel();
+            $rows[] = $stats;
+        }
+
+        $total = $rollups->count();
+        $categorized = (int) collect($rows)->sum('categorized');
+        $coverage = $total > 0 ? (int) round($categorized / $total * 100) : null;
+        $uncategorized = $total - $categorized;
+
+        return [
+            'rows' => $rows,
+            'total' => $total,
+            'categorized' => $categorized,
+            'coverage' => $coverage,
+            'uncategorized_rate' => $total > 0 ? (int) round($uncategorized / $total * 100) : null,
+        ];
+    }
+
+    /**
+     * H3529: ссылка на последний замороженный отчёт харнесса пакета
+     * (reports/*.md vendored-снапшота), закреплённая за pin-SHA. Пока отчётов
+     * нет (волна 1 шаг 4 не заморозила baseline) — null, секция ссылки не
+     * рисует.
+     */
+    public function getHarnessReportUrlProperty(): ?string
+    {
+        $reportsDir = base_path('tools/message-intent-classifier/reports');
+
+        $reports = is_dir($reportsDir) ? collect(glob($reportsDir.'/*.md') ?: [])->sort()->values() : collect([]);
+
+        if ($reports->isEmpty()) {
+            return null;
+        }
+
+        $sha = trim((string) @file_get_contents(base_path('tools/message-intent-classifier/PINNED_SHA')));
+
+        if ($sha === '') {
+            return null;
+        }
+
+        return sprintf(
+            'https://github.com/gasyoun/message-intent-classifier/blob/%s/reports/%s',
+            $sha,
+            basename((string) $reports->last()),
+        );
+    }
+
     public function getConversationsProperty(): EloquentCollection
     {
         return SupportDailyRollup::query()

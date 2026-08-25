@@ -1,0 +1,39 @@
+# Таксономия плоскости topic — о чём речь во входящем сообщении.
+# Источник категорий: ARCHITECTURE_MESSAGE_INTENT_CLASSIFIER_2026.md § Таксономия v1.
+plane: topic
+categories:
+  - key: zoom_link
+    title: "Ссылка Zoom / подключение к занятию"
+    description: "Где ссылка, как войти/подключиться к live-занятию."
+  - key: recording_access
+    title: "Доступ к записям занятий"
+    description: "Записи, видеозаписи, пересмотр, тайм-коды."
+  - key: schedule
+    title: "Расписание и переносы"
+    description: "Когда занятие, график, переносы, в какое время."
+  - key: payment_billing
+    title: "Оплата и тарифы"
+    description: "Стоимость, ссылки на оплату, рассрочка, скидки, промокоды."
+  - key: access_login
+    title: "Доступ и вход (кабинет, пароль)"
+    description: "Кабинет не открывается, пароль, логин, группа."
+  - key: materials_content
+    title: "Материалы курса"
+    description: "Учебники, методички, конспекты, презентации."
+  - key: tech_issue
+    title: "Технический сбой"
+    description: "Не работает/не открывается/ошибка — тема техподдержки."
+  - key: homework_progress
+    title: "Домашние задания и прогресс"
+    description: "Домашка, задания, куда прикреплять выполненное."
+  - key: certificate
+    title: "Сертификаты и подтверждения"
+    description: "Сертификат, диплом, удостоверение."
+  - key: membership_club
+    title: "Клуб и членство"
+    description: "Членство в клубе, подписка."
+  - key: other_support
+    title: "Прочая поддержка (резерв)"
+    description: >
+      Резервная корзина для ручной разметки корпусов. Правил с авто-срабатыванием
+      НЕ имеет (enabled: false) — иначе она уничтожает метрику coverage.
