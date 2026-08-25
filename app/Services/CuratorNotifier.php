@@ -131,7 +131,8 @@ class CuratorNotifier
     /**
      * Новый счёт юрлицу — ждёт банковского поступления, затем «Подтвердить счёт».
      */
-    public function companyInvoiceReceived(Payment $payment): void    {
+    public function companyInvoiceReceived(Payment $payment): void
+    {
         $lines = [
             '🏢 <b>Счет для юрлица</b> — ждем поступление',
             '',
