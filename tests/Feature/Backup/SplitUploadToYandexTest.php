@@ -6,6 +6,7 @@ namespace Tests\Feature\Backup;
 
 use App\Listeners\Backup\SplitUploadToYandex;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Backup\Events\BackupWasSuccessful;
 use Tests\TestCase;
@@ -186,5 +187,48 @@ class SplitUploadToYandexTest extends TestCase
 
         $this->assertSame('x', $target->get(self::NAME.'/2026-08-21-00-00-00.part-01-of-02.zip'));
         $this->assertFalse($target->exists(self::NAME.'/2026-08-21-00-00-00.part-02-of-02.zip'));
+    }
+
+    /**
+     * H3410: resumeOffsite() (точка входа backup:resume-yandex-parts, теперь
+     * поднимается systema-yandex-resume.timer вне cron.service) обязана
+     * закончиться ГРОМКОЙ строкой исхода даже когда докатывать было нечего —
+     * тихий выход неотличим от «упал до первой строки».
+     */
+    public function test_resume_offsite_logs_a_loud_completion_line_when_nothing_is_incomplete(): void
+    {
+        $this->seedLocalArchive('2026-08-22-17-09-58', 100);
+
+        Log::spy();
+
+        (new SplitUploadToYandex)->resumeOffsite();
+
+        Log::shouldHaveReceived('info')
+            ->with('split-upload: докатка завершена, неполных групп не осталось')
+            ->once();
+    }
+
+    /**
+     * H3410: каждый PUT части логирует свою длительность и байты/сек —
+     * единственный способ увидеть стагнацию ДО того, как она станет
+     * получасовым зависанием (24-08-2026 SOS-разбор).
+     */
+    public function test_uploading_a_part_logs_duration_and_throughput(): void
+    {
+        $this->seedLocalArchive('2026-08-22-17-09-58', 2 * 1024 * 1024 + 500);
+
+        Log::spy();
+
+        (new SplitUploadToYandex)->handle(new BackupWasSuccessful('local', self::NAME));
+
+        Log::shouldHaveReceived('info')
+            ->withArgs(function (string $message, array $context): bool {
+                return str_contains($message, 'PUT')
+                    && str_contains($message, 'завершён')
+                    && array_key_exists('bytes', $context)
+                    && array_key_exists('seconds', $context)
+                    && array_key_exists('bytes_per_sec', $context);
+            })
+            ->atLeast()->times(1);
     }
 }

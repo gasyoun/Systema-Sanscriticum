@@ -17,6 +17,8 @@ systemd/cron.service.d/nofile.conf|/etc/systemd/system/cron.service.d/nofile.con
 systemd/supervisor.service.d/memory-cap.conf|/etc/systemd/system/supervisor.service.d/memory-cap.conf|644|critical
 systemd/supervisor.service.d/nofile.conf|/etc/systemd/system/supervisor.service.d/nofile.conf|644|warning
 systemd/systema-madeline-daemon.service|/etc/systemd/system/systema-madeline-daemon.service|644|critical
+systemd/systema-yandex-resume.service|/etc/systemd/system/systema-yandex-resume.service|644|warning
+systemd/systema-yandex-resume.timer|/etc/systemd/system/systema-yandex-resume.timer|644|warning
 systemd/memwatch.service|/etc/systemd/system/memwatch.service|644|warning
 systemd/memwatch.timer|/etc/systemd/system/memwatch.timer|644|warning
 systemd/journald.conf.d/99-persistent.conf|/etc/systemd/journald.conf.d/99-persistent.conf|644|warning

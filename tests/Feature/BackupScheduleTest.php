@@ -101,4 +101,18 @@ class BackupScheduleTest extends TestCase
         $this->assertNotNull($event);
         $this->assertStringNotContainsString('--only-db', (string) $event->command);
     }
+
+    /** @test */
+    public function resume_yandex_parts_is_no_longer_scheduled_inside_cron_service(): void
+    {
+        // H3410 (25-08-2026): a stalled PUT under cron.service would repeat the
+        // 28-07-2026 OOM class (§2 of docs/server-resource-guards.md). The
+        // command now runs under its own systemd unit/timer
+        // (scripts/server_guards/systemd/systema-yandex-resume.{service,timer}),
+        // never as a Kernel::schedule() entry.
+        $this->assertNull(
+            $this->eventFor('backup:resume-yandex-parts'),
+            'backup:resume-yandex-parts must not run inside cron.service — see systema-yandex-resume.timer'
+        );
+    }
 }
