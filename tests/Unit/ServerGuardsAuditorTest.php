@@ -447,6 +447,71 @@ class ServerGuardsAuditorTest extends TestCase
         $this->assertStringNotContainsString('cgroup:', $this->lines($this->auditor($sys)->audit()));
     }
 
+    // ── PSI-гейт предупреждения cgroup (25-08-2026) ─────────────────────────
+
+    private function pressureFile(string $someAvg10): string
+    {
+        return "some avg10={$someAvg10} avg60=0.00 avg300=0.00 total=0\n"
+            ."full avg10=0.00 avg60=0.00 avg300=0.00 total=0\n";
+    }
+
+    public function test_cgroup_warning_without_psi_stall_is_suppressed_as_cache(): void
+    {
+        // Флап 25-08: 85 % заполнения почти целиком из page cache, PSI нулевой —
+        // ядро вытесняет кеш сам, никто не стоит в очереди. Это НЕ тревога.
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) (int) ($this->spec->bytes('CRON_MEMORY_HIGH') * 0.85);
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.pressure'] =
+            $this->pressureFile('0.00');
+
+        $this->assertStringNotContainsString('cgroup:', $this->lines($this->auditor($sys)->audit()));
+    }
+
+    public function test_cgroup_warning_with_real_psi_stall_fires_and_names_the_evidence(): void
+    {
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) (int) ($this->spec->bytes('CRON_MEMORY_HIGH') * 0.85);
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.pressure'] =
+            $this->pressureFile('2.50');
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString('[warning] cgroup:', $lines);
+        $this->assertStringContainsString('PSI some avg10=2.50', $lines);
+    }
+
+    public function test_cgroup_warning_keeps_old_sensitivity_when_psi_is_unreadable(): void
+    {
+        // Fail-open к прежнему поведению: PSI не читается (psi=off, старое
+        // ядро) — гейт не имеет права заглушить проверку молча.
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) (int) ($this->spec->bytes('CRON_MEMORY_HIGH') * 0.85);
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString('[warning] cgroup:', $lines);
+        $this->assertStringContainsString('PSI недоступен', $lines);
+    }
+
+    public function test_cgroup_critical_is_not_gated_by_psi(): void
+    {
+        // current ≥ high — ядро уже на пределе по определению; PSI тут ничего
+        // добавлять не должен, и убирать критичность тоже.
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) ($this->spec->bytes('CRON_MEMORY_HIGH') + 1);
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.pressure'] =
+            $this->pressureFile('0.00');
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('[critical] cgroup:', $this->lines($findings));
+    }
+
     public function test_stale_scheduler_stamp_is_critical(): void
     {
         $sys = $this->healthy();

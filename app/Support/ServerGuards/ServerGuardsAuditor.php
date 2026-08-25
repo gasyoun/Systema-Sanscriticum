@@ -579,6 +579,20 @@ final class ServerGuardsAuditor
      * (health_check, memwatch, earlyoom, cabinet:probe) смотрят на хост и
      * структурно не могли этого увидеть. Смотреть надо на бюджет группы.
      *
+     * Заполненность ≠ давление (25-08-2026, гейт PSI). Замер .92 того же дня:
+     * memory.stat группы = anon 63 МиБ + file cache 1.5 ГиБ — «память» почти
+     * целиком page cache от GB-scale IO кронских детей, который ядро и так
+     * вытесняет без чьего-либо ведома. Мгновенный порог «≥80 % от high» из-за
+     * этого флапал вокруг деплоев (1547→1855 МиБ за час): красный блок в каждом
+     * деплое (exit 75, #1143) и смены soft-fingerprint → повторные Telegram
+     * поверх sticky. Предупреждение теперь требует СВИДЕТЕЛЬСТВА реального
+     * троттлинга — memory.pressure группы (PSI some avg10 ≥
+     * CGROUP_PSI_SOME_PCT): ядро само призналось, что задачи стояли в очереди
+     * за памятью. Critical (current ≥ high) не гейтуется: там ядро уже на
+     * пределе по определению. PSI не читается (старое ядро, psi=off) — старое
+     * поведение без гейта: fail-open к прежней чувствительности, числа молча
+     * не подняты.
+     *
      * Fail-open: нет cgroup v2, не читается memory.current, у cron нет потолка
      * — молчим. Проверка обязана быть бесплатной на любой машине, включая CI.
      *
@@ -609,13 +623,49 @@ final class ServerGuardsAuditor
             )];
         }
         if ($cur * 5 >= $lim * 4) { // ≥80 %
+            [$psiSomePct, $psiReadable] = $this->cronCgroupPressureStallPct();
+            if ($psiReadable && $psiSomePct < $this->psiThresholdPct()) {
+                return []; // заполненность без давления: чистый page cache, ядро вытесняет сам.
+            }
+            $evidence = $psiReadable
+                ? sprintf('подтверждено давлением: PSI some avg10=%.2f %% ≥ %.1f %%', $psiSomePct, $this->psiThresholdPct())
+                : 'PSI недоступен — гейт не применён';
+
             return [GuardFinding::warning(
                 'cgroup',
-                "cron.service занял {$curMib} МиБ из {$limMib} МиБ (≥80 %) — до троттлинга близко",
+                "cron.service занял {$curMib} из {$limMib} МиБ (≥80 %), {$evidence} — до троттлинга близко",
             )];
         }
 
         return [];
+    }
+
+    /**
+     * [some avg10 в процентах, читается ли PSI] для cron.service.
+     *
+     * Формат memory.pressure: «some avg10=0.00 avg60=… total=…» / «full …».
+     *
+     * @return array{0: float, 1: bool}
+     */
+    private function cronCgroupPressureStallPct(): array
+    {
+        $raw = $this->sys->fileContents('/sys/fs/cgroup/system.slice/cron.service/memory.pressure');
+        if ($raw === null || preg_match('/^some\s+avg10=([\d.]+)/m', $raw, $m) !== 1) {
+            return [0.0, false];
+        }
+
+        return [(float) $m[1], true];
+    }
+
+    private function psiThresholdPct(): float
+    {
+        // Числа живут только в server_guards.conf; ключ появился позже файла —
+        // дефолт для dev/CI, где conf обновляется вместе с кодом, а не до него.
+        if (! $this->spec->has('CGROUP_PSI_SOME_PCT')) {
+            return 1.0;
+        }
+
+        return (float) str_replace(',', '.', trim($this->spec->get('CGROUP_PSI_SOME_PCT')));
     }
 
     /**
