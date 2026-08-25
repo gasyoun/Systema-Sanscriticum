@@ -28,7 +28,7 @@ final class ServerGuardsAuditor
      */
     public function audit(): array
     {
-        return array_merge(
+        return $this->applyWaivers(array_merge(
             $this->auditManagedFiles(),
             $this->auditCrontab(),
             $this->auditAutoDeploy(),
@@ -43,7 +43,83 @@ final class ServerGuardsAuditor
             $this->auditTmpfsCap(),
             $this->auditFailedUnits(),
             $this->auditBackupFreshness(),
-        );
+        ));
+    }
+
+    /**
+     * Waiver: осознанно терпимые находки (2026-08-25).
+     *
+     * Зачем. tmpfs-cap на .92 критичен с 19-08-2026 и не может перестать им
+     * быть изнутри гостя: монтирование сделано на хосте Proxmox (чужой uid=),
+     * потолок ставит только человек со стороны хоста. Каждый деплой печатал
+     * красный блок «предохранители расходятся» (exit 75, #1143), probe каждые
+     * сутки напоминал в Telegram — сигнал, который нельзя выполнить, приучает
+     * его игнорировать («мальчик и волк»), а рядом с ним тонет настоящий drift.
+     *
+     * Как работает. Имена из GUARD_WAIVERS до даты GUARD_WAIVERS_EXPIRES
+     * понижаются до info: находка остаётся видимой (ℹ в verify, комментарий в
+     * probe), но не блокирует verify и не будит Telegram.
+     *
+     * Три правила против гниения:
+     *   • fail-closed — даты нет / не YYYY-MM-DD / истекла: waiver НЕ
+     *     действует, находка остаётся как была (сама и есть тревога);
+     *   • misconfig виден: GUARD_WAIVERS задан, а EXPIRES сломан — отдельный
+     *     warning поверх нетронутых находок;
+     *   • имя, которому нечего вайвить (предохранитель снова здоров или
+     *     опечатка), даёт info «убери из GUARD_WAIVERS» — конфиг не должен
+     *     молчать о том, что стал мёртвым текстом.
+     *
+     * @param  list<GuardFinding>  $findings
+     * @return list<GuardFinding>
+     */
+    private function applyWaivers(array $findings): array
+    {
+        if (! $this->spec->has('GUARD_WAIVERS')) {
+            return $findings;
+        }
+
+        $names = $this->spec->csv('GUARD_WAIVERS');
+        if ($names === []) {
+            return $findings;
+        }
+
+        $expiresRaw = $this->spec->has('GUARD_WAIVERS_EXPIRES')
+            ? trim($this->spec->get('GUARD_WAIVERS_EXPIRES'))
+            : '';
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $expiresRaw) !== 1) {
+            return [...$findings, GuardFinding::warning(
+                'waiver',
+                'GUARD_WAIVERS задан ('.implode(', ', $names).'), но GUARD_WAIVERS_EXPIRES '
+                .'отсутствует или не дата YYYY-MM-DD — waiver НЕ действует',
+            )];
+        }
+
+        $expires = strtotime($expiresRaw.' 23:59:59');
+        if ($expires === false || time() > $expires) {
+            return $findings; // истёк: находки остаются как были — это и есть тревога.
+        }
+
+        $waived = [];
+        foreach ($findings as $i => $finding) {
+            if (! in_array($finding->guard, $names, true) || $finding->severity === GuardFinding::INFO) {
+                continue;
+            }
+            $findings[$i] = new GuardFinding(
+                GuardFinding::INFO,
+                $finding->guard,
+                $finding->message.' [waiver до '.$expiresRaw.']',
+            );
+            $waived[] = $finding->guard;
+        }
+
+        foreach (array_values(array_diff($names, array_unique($waived))) as $stale) {
+            $findings[] = GuardFinding::info(
+                'waiver',
+                "waiver не понадобился: {$stale} нет среди находок — убрать из GUARD_WAIVERS (server_guards.conf)",
+            );
+        }
+
+        return $findings;
     }
 
     /**
