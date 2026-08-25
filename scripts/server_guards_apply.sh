@@ -254,6 +254,16 @@ if [ "$DRY_RUN" = 0 ]; then
   MIRROR_DIR="$APP_DIR/storage/app/server_guards"
   MIRROR="$MIRROR_DIR/crontab-root.installed"
   mkdir -p "$MIRROR_DIR"
+  # H3410 (25-08-2026): mkdir -p inherits root's umask — measured live on .92
+  # as drwxr-x--- root:root, which blocks www-data from even traversing the
+  # directory (Permission denied on a 644 file inside it, regardless of the
+  # file's own mode). The mirror's whole point (H1941) is that www-data-run
+  # guards:verify can read it — a wrong DIRECTORY group silently defeated
+  # that for as long as the directory existed, since `ok mirror …` never
+  # re-checks permissions once the file content matches. Explicit every run,
+  # not just on first creation.
+  chgrp "$APP_USER" "$MIRROR_DIR" 2>/dev/null || true
+  chmod 750 "$MIRROR_DIR" 2>/dev/null || true
   if crontab -l > "$MIRROR.tmp" 2>/dev/null; then
     if [ ! -f "$MIRROR" ] || ! cmp -s "$MIRROR.tmp" "$MIRROR"; then
       install -m 644 "$MIRROR.tmp" "$MIRROR"
