@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Changed
+- **H3496 (OxAlpha `x-preview-f-free`, 25-08-2026): курс «Напевный санскрит - гимн сутр Патанджали…» переименован в «Йога-сутры Патанджали, {день} {время} (2026)» (рулинг MG — «гимн» неверно называет рецитацию сутр).** Прод-БД .92 уже обновлена напрямую (courses 381/433: title + meta_title + meta_description; slug'и и URL не тронуты, публичные страницы проверены curl'ом); здесь репо-след: [course_aliases.csv](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/data/course_aliases.csv) — таргет строки «…гимн сутр Патанджали 2026» переведён на новое семейство имён + добавлены rename-алиасы обоих СТАРЫХ полных тайтлов (исторические импорты/оплаты мастер-таблицы резолвятся в актуальные названия курсов), комментарий бейджа [checkout/show.blade.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/checkout/show.blade.php) синхронизирован. Лестница ORS-FAQ (usha vs Парибок) защищена отдельным PR там же. Одностраничник первого теста PayPal self-serve: [docs/copy/PAYPAL_FIRST_TEST_RUNBOOK_RU_25-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/PAYPAL_FIRST_TEST_RUNBOOK_RU_25-08-2026.md).
 
 ## [1.90.16] - 2026-08-25
 ### Added
