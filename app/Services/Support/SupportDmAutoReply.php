@@ -42,6 +42,8 @@ final class SupportDmAutoReply
 
     public const EVENT_HINTED = 'dm_hinted';
 
+    public const EVENT_STALE_SKIP = 'dm_stale_skip';
+
     /** @var list<string> */
     private const SIMPLE_CATEGORIES = [
         SupportAnswerSuggestion::CATEGORY_ZOOM,
@@ -98,6 +100,18 @@ final class SupportDmAutoReply
         if ($incoming->sent_at !== null
             && $incoming->sent_at->lt(now()->subHours((int) config('services.telegram_support.auto_reply_max_age_hours', 6)))
         ) {
+            // H3392: пропуск остаётся тихим для студента и куратора, но
+            // помечается ОДНИМ маркером на сообщение (firstOrCreate — повторные
+            // проходы синка дублей не плодят), иначе недельный отчёт пробы
+            // support:auto-reply-weekly не видит объём бэклога.
+            SupportAiReplyEvent::firstOrCreate(
+                [
+                    'telegram_support_message_id' => $incoming->id,
+                    'event_type' => self::EVENT_STALE_SKIP,
+                ],
+                ['meta' => ['via' => self::VIA]],
+            );
+
             return ['status' => 'stale_skip', 'category' => null];
         }
 

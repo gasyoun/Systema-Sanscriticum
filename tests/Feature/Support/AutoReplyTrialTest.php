@@ -264,8 +264,9 @@ class AutoReplyTrialTest extends TestCase
         );
 
         // Первичный history-забор: месяцы старых входящих.
+        $staleMessages = [];
         foreach (['А это свободный доступ или есть цена?', 'Доброе утро, оплатила 1 блок'] as $i => $text) {
-            $stale = TelegramSupportMessage::create([
+            $staleMessages[] = TelegramSupportMessage::create([
                 'telegram_support_account_id' => $account->id,
                 'telegram_support_chat_id' => $chat->id,
                 'telegram_chat_id' => 9101,
@@ -274,13 +275,26 @@ class AutoReplyTrialTest extends TestCase
                 'text' => $text,
                 'sent_at' => now()->subDays(30 - $i),
             ]);
+        }
 
+        foreach ($staleMessages as $stale) {
             $result = app(SupportDmAutoReply::class)->handle($stale, $user->id, 'private');
             $this->assertSame('stale_skip', $result['status']);
         }
 
         $this->assertSame(0, TelegramSupportMessage::query()->where('direction', 'outgoing')->count());
-        $this->assertSame(0, SupportAiReplyEvent::query()->count());
+
+        // H3392: студенту и куратору по-прежнему тишина; в журнале остаются
+        // только дедуп-маркеры dm_stale_skip — данные недельного отчёта пробы.
+        $this->assertSame(
+            [SupportDmAutoReply::EVENT_STALE_SKIP],
+            SupportAiReplyEvent::query()->distinct()->pluck('event_type')->all(),
+        );
+        $this->assertSame(2, SupportAiReplyEvent::query()->count());
+
+        // Повторный проход синка того же сообщения маркер не дублирует.
+        app(SupportDmAutoReply::class)->handle($staleMessages[0], $user->id, 'private');
+        $this->assertSame(2, SupportAiReplyEvent::query()->count());
 
         // А свежее сообщение в том же чате отвечает как обычно.
         $fresh = $this->incoming($user, 'сколько стоит курс и как оплатить', $account);
