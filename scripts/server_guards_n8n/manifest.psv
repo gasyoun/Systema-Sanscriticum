@@ -19,7 +19,7 @@ sbin/n8n-restore-drill.sh|/usr/local/sbin/n8n-restore-drill.sh|755|warning
 sbin/n8n-container-limits.sh|/usr/local/sbin/n8n-container-limits.sh|755|critical
 default/earlyoom|/etc/default/earlyoom|644|critical
 docker/daemon.json|/etc/docker/daemon.json|644|critical
-docker/docker-compose.override.yml|@@N8N_DIR@@/docker-compose.override.yml|644|critical
+docker/docker-compose.override.yml.tpl|@@N8N_DIR@@/docker-compose.override.yml|644|critical
 systemd/memwatch.service|/etc/systemd/system/memwatch.service|644|warning
 systemd/memwatch.timer|/etc/systemd/system/memwatch.timer|644|warning
 systemd/n8n-backup.service|/etc/systemd/system/n8n-backup.service|644|critical
