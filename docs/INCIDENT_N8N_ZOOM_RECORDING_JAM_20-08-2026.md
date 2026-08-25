@@ -3,6 +3,7 @@
 _Created: 20-08-2026 · Last updated: 24-08-2026_
 
 **Audience:** ops / agents. Diagnosis from the 20-08-2026 SOS (Grok 4.6 `grok-4.6`).  
+**Runbook (что запускать при падении/задержке):** [RUNBOOK_N8N_RECORDING_STALL.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_N8N_RECORDING_STALL.md).  
 **Hosts:** n8n `root@193.232.229.91`; Laravel `root@193.232.229.92`.  
 **Watcher residual:** [H3209](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3209-Grok_Systema-Sanscriticum_recording-gap-watcher-n8n_20.08.26.md).  
 **Playbook row:** [SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md) incident log 2026-08-18 08:37 – 2026-08-20 13:21.
