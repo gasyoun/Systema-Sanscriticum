@@ -99,13 +99,24 @@ _Создано: 08-07-2026 · Обновлено: 23-08-2026 (№81 H3314 — �
 
 **Статус (24-08-2026):** `CRM_TRIAL_BOOKING=true` + `CRM_TRIAL_WIDGET_PUBLIC=true` в прод `.env`, config:cache пересобран. Смок OxAlpha PASS: tinker-заявка через `TrialBookingService::bookFree` на реальном ближайшем пробнике создала Lead+Deal (`kind=trial`, `booked`), повтор идемпотентен, User/гранты/группы не создавались (Rank 4), тестовые строки удалены — ноль остатков. Публичная кнопка «Записаться» на `/widgets/schedule` жива по отдельному рулингу MG 24-08 («оставить ON»). Откат: оба ключа `false` + `config:cache`.
 
+### №82 — H3462 — входящий email-канал поддержки: zabota@samskrte.ru → вебхук
+
+Код в main тёмным: эндпоинт `POST /api/webhooks/inbound-email/{secret}` (секрет пути, fail-closed), таблица `inbound_emails`, очередь нераспознанных отправителей `/admin/inbound-emails`, бейдж Email в Helpdesk. Флаг `SUPPORT_INBOUND_EMAIL` default **OFF** → маршрут 404. Человеческие шаги — почта/DNS/пересылка:
+
+1. Завести ящик `zabota@samskrte.ru` в панели хостинга (почта домена samskrte.ru).
+2. Пересылка БЕЗ нового платного вендора: n8n на .91 забирает ящик (IMAP-poll по расписанию) и POSTит на `https://samskrte.ru/api/webhooks/inbound-email/<секрет>` JSON `{message_id, from_email, from_name?, subject?, text, received_at?}`.
+3. `.env` прода: `INBOUND_EMAIL_WEBHOOK_SECRET=<openssl rand -hex 24>`, тот же секрет вписать в проводник, затем `php artisan config:cache`.
+4. Smoke (флаг ещё OFF): POST от проводника → 404 (флаг гейтит), секрет неверный → 403. Потом `SUPPORT_INBOUND_EMAIL=true` + config:cache.
+5. Живой smoke: письмо со студенческого адреса → «Принято» в `/admin/inbound-emails` + бейдж Email в Helpdesk; с незнакомого адреса → «В очереди» (привязать вручную там же).
+6. Стоп: `SUPPORT_INBOUND_EMAIL=false` + config:cache → снова 404; ящик/пересылку можно оставить.
+
 ### H3445 — гео-город посетителя: драйвер MaxMind GeoLite2 (локальная база)
 
 Рулинг MG 24-08-2026: провайдер города = **MaxMind GeoLite2 локально** (Cloudflare отклонён как заграничный процессор; ip-api.com исключён лицензионно). Код драйвера `'maxmind'` в `VisitorGeoResolver` + команда `support:geo-update-maxmind` (еженедельно вс 04:40). Включение — ПОСЛЕ правки политики приватности (бриф H1234, C(i)):
 
 1. В `.env`: `MAXMIND_ACCOUNT_ID=<id>`, `MAXMIND_LICENSE_KEY=<ключ с maxmind.com>` (бесплатная регистрация).
 2. `php artisan support:geo-update-maxmind --dry-run` → затем без флага. База ляжет в `storage/app/geo/GeoLite2-City.mmdb`.
-3. Правка текста политики приватности (раздел данных: «гео-город анонимного посетителя, резолв локально, IP не передаётся третьим лицам») → подтверждение MG.
+3. Правка текста политики приватности: готовые формулировки — [docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md) (блоки §4.1 / §5.4 / примечание к §7.3; человек вставляет в мастер и переопубликует PDF) → подтверждение MG.
 4. Только тогда: `SUPPORT_GEO_DRIVER=maxmind`, `SUPPORT_VISITOR_GEO=true` (+ presence `SUPPORT_VISITOR_PRESENCE=true` отдельно).
 5. Стоп: `SUPPORT_GEO_DRIVER=null`, флаги `false`. База остаётся на диске безвредно.
 

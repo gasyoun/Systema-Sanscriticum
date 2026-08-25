@@ -64,7 +64,7 @@
         {{-- MG 23-08-2026: surfacing self-serve кабинета в момент первой PayPal-заявки своего ученика. --}}
         <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 20px; margin: 25px 0; border-radius: 0 4px 4px 0;">
             <p style="margin: 0 0 10px; font-size: 16px;"><strong>Кабинет сам умеет:</strong></p>
-            <p style="margin: 0 0 6px; font-size: 15px;">— погасить долг или взнос по рассрочке, без куратора;<br>
+            <p style="margin: 0 0 6px; font-size: 15px;">— внести очередную часть оплаты или закрыть просроченный платеж — без куратора;<br>
             — показать, почему урок закрыт, и открыть оплаченные блоки одной кнопкой;<br>
             — подсказать на каждом экране: пошаговый гид со скриншотами.</p>
             <p style="margin: 0; font-size: 15px;">Весь гид: <a href="https://samskrte.ru/dvaram/help" style="color: #d35400; font-weight: bold;">samskrte.ru/dvaram/help</a></p>
