@@ -209,6 +209,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('recordings-gap-watch-stale');
 
+        // MG 24-08-2026: остаток OpenRouter + прогноз исчерпания по своим
+        // снапшотам; за 14 дней до нуля — просьба пополнить на год вперёд.
+        $schedule->command('openrouter:balance-check')
+            ->dailyAt('09:20')
+            ->when(fn () => (bool) config('openrouter.enabled'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('openrouter-balance-check');
+
         // H3242: вчерашняя сводка поддержки на ADMIN_TELEGRAM_ID (gasyoun).
         // 08:10, после gap-watch; гейт флага — внутри команды (default ON).
         $schedule->command('support:daily-digest')

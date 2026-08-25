@@ -50,7 +50,9 @@ cd /var/www/html && php artisan recordings:gap-watch --retry-failed --date=<се
 
 ## 3. Play A-2 — OpenRouter: кредиты/TOS
 
-Признак в ошибке exec: `more credits … can only afford` (=402) либо `prohibited due to a violation of provider Terms Of Service` (=403) на ноде `AI Agent1`.
+Признак в ошибке exec: `402 credits` / `403 Terms Of Service` на ноде `AI Agent1`.
+
+**Прогноз остатка** (ежедневно 09:20 МСК, [`openrouter.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/openrouter.php)): команда `php artisan openrouter:balance-check --dry` печатает остаток, скользящий расход/день по собственным снапшотам ([`openrouter_balance_snapshots`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/OpenrouterBalanceSnapshot.php), базовая линия ≥7 дней), дату исчерпания; за 14 дней до нуля шлёт TG с суммой пополнения на год ×1.25. Kill-switch `OPENROUTER_BALANCE_CHECK_ENABLED`. Требует account-ключ в прод-`.env`: `OPENROUTER_API_KEY=sk-or-v1-…` (dashboard → Keys; именно account-ключ, не provisioned).
 
 1. На .91 открыть воркфлоу `1EIqqNzMl5NNIxST`, нода **OpenRouter Chat Model1**: если модель снова `anthropic/*` — переключить на `deepseek/deepseek-v4-pro` (рецепт 20-08; standalone `таймкоды` уже на нём).
 2. Прогон возобновить из UI n8n: открыть упавший exec → **Resume from `AI Agent1`**. НЕ перезапускать с вебхука.
