@@ -38,6 +38,12 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `BACKUP_MAX_STORAGE_MB` | optional | `1200` | config/backup.php:173 |
 | `BACKUP_SPLIT_PART_MB` | optional | `20` | config/backup.php:103 |
 | `BACKUP_VERIFY_PARTS` | optional | `true` | config/backup.php:109 |
+| `BANK_CLAIM_ENABLED` | feature-flag | `false` | config/services.php:468 |
+| `BANK_RECIPIENT_BANK_NAME` | optional | `''` | config/services.php:476 |
+| `BANK_RECIPIENT_BIC` | optional | `''` | config/services.php:475 |
+| `BANK_RECIPIENT_IBAN` | optional | `''` | config/services.php:474 |
+| `BANK_RECIPIENT_NAME` | optional | `''` | config/services.php:473 |
+| `BANK_TRUST_EXISTING_STUDENTS` | optional | `true` | config/services.php:471 |
 | `BCRYPT_ROUNDS` | optional | `12` | config/hashing.php:32 |
 | `BILLING_ACCOUNT` | optional | `''` | config/billing.php:52 |
 | `BILLING_BANK_NAME` | optional | `''` | config/billing.php:50 |
