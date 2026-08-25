@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Публичные анкеты /anketa/{slug} (движок опросов, рулинг MG 24-08-2026 —
@@ -83,7 +84,7 @@ class SurveyPageController extends Controller
     }
 
     /** CSV-выгрузка для куратора: колонки — вопросы из конфига, BOM для Excel. */
-    public function exportCsv(string $slug): \Symfony\Component\HttpFoundation\Response
+    public function exportCsv(string $slug): Response
     {
         abort_unless(RoleGate::any(Roles::ADMIN, Roles::MANAGER), 403);
 
@@ -105,7 +106,7 @@ class SurveyPageController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        return response()->streamDownload(function () use ($slug, $definition, $labels, $rows) {
+        return response()->streamDownload(function () use ($labels, $rows) {
             $out = fopen('php://output', 'wb');
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, array_merge(['ID', 'Дата'], array_values($labels)), ';');
