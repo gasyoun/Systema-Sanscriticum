@@ -48,6 +48,7 @@ use App\Http\Controllers\BankClaimController;
 use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\PublicCabinetGuideController;
 use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\PublicPresenceController;
 use App\Http\Controllers\PublicWidgetController;
@@ -366,6 +367,12 @@ Route::view('/faq/dz', 'faq.dz')->name('faq.dz');
 // FAQ: способы оплаты, рассрочка, что делать, если платёж не проходит — публично
 // (H2060, linked from student.access recovery CTA behind payment_recovery_cta).
 Route::view('/faq/payment', 'faq.payment')->name('faq.payment');
+
+// Публичный гид личного кабинета (H3499) — БЕЗ auth, для ещё не вошедших:
+// рассылки students:send-login-invites, анонсы в Telegram, скрипты куратора.
+// Тот же источник, что кабинетный /dvaram/help. Строго до catch-all /{slug}.
+Route::get('/help/kabinet', [PublicCabinetGuideController::class, 'show'])
+    ->name('help.cabinet-guide');
 
 // Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
 // До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.

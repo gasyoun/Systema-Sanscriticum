@@ -6,7 +6,7 @@ _Created: 21-08-2026 · Last updated: 21-08-2026_
 Если открыли вкладку и не понимаете, что это — часть II.
 
 Печатная копия совпадает с этой страницей. Актуальная версия всегда здесь:
-[https://samskrte.ru/dvaram/help](https://samskrte.ru/dvaram/help).
+[https://samskrte.ru/help/kabinet](https://samskrte.ru/help/kabinet).
 
 ## Содержание
 
