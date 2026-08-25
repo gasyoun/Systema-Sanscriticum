@@ -1582,6 +1582,190 @@
           "reason": "keyword:срочн[а-я]*|как можно скорее|экстренн[а-я]*"
         }
       }
+    },
+    {
+      "id": "m-human-05",
+      "text": "Позовите менеджера, нужна помощь.",
+      "expect": {
+        "meta": {
+          "category": "human_trigger",
+          "reason": "keyword:помощь|менеджер"
+        }
+      }
+    },
+    {
+      "id": "m-human-06",
+      "text": "Менеджер нужен срочно.",
+      "expect": {
+        "meta": {
+          "category": "human_trigger",
+          "reason": "keyword:помощь|менеджер"
+        }
+      }
+    },
+    {
+      "id": "t-tech-06",
+      "text": "Белый экран вместо видео урока.",
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:белый экран"
+        }
+      }
+    },
+    {
+      "id": "t-tech-07",
+      "text": "Преподавателя меня не слышно.",
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:не слышно"
+        }
+      }
+    },
+    {
+      "id": "t-tech-08",
+      "text": "Вебинар в kinescope не воспроизводится.",
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:(?:вебинар|kinescope)[^\\n]{0,48}(?:не работает|не открыв|не грузит|не воспроизводит|ошибк)|(?:не работает|не открыв|не грузит|не воспроизводит|ошибк)[^\\n]{0,48}(?:вебинар|kinescope)"
+        }
+      }
+    },
+    {
+      "id": "t-acc-06",
+      "text": "Где я учусь и в каких группах?",
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:в каких группах"
+        }
+      }
+    },
+    {
+      "id": "t-acc-07",
+      "text": "Какие у меня курсы в этом семестре?",
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:какие у меня курсы"
+        }
+      }
+    },
+    {
+      "id": "t-acc-08",
+      "text": "Помогите со входом на платформу.",
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:вход"
+        }
+      }
+    },
+    {
+      "id": "t-hw-05",
+      "text": "/hw",
+      "expect": {
+        "topic": {
+          "category": "homework_progress",
+          "reason": "keyword:(?<![a-z])hw(?![a-z])"
+        }
+      }
+    },
+    {
+      "id": "i-help-01",
+      "text": "/help",
+      "expect": {
+        "intent": {
+          "category": "help_menu",
+          "reason": "keyword:(?<![a-z])(help|menu)(?![a-z])"
+        }
+      }
+    },
+    {
+      "id": "i-help-02",
+      "text": "Покажи меню бота.",
+      "expect": {
+        "intent": {
+          "category": "help_menu",
+          "reason": "keyword:меню"
+        }
+      }
+    },
+    {
+      "id": "i-help-03",
+      "text": "Что ты умеешь?",
+      "expect": {
+        "intent": {
+          "category": "help_menu",
+          "reason": "keyword:что ты умеешь"
+        }
+      }
+    },
+    {
+      "id": "i-help-04",
+      "text": "Скиньте список команд.",
+      "expect": {
+        "intent": {
+          "category": "help_menu",
+          "reason": "keyword:список команд|какие команды"
+        }
+      }
+    },
+    {
+      "id": "i-price-03",
+      "text": "А какой прайс на курс?",
+      "expect": {
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:прайс"
+        }
+      }
+    },
+    {
+      "id": "i-price-04",
+      "text": "Тарифы какие действуют?",
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:тариф[а-я]*|рассрочк[а-я]*|предоплат[а-я]*|доплат[а-я]*"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:тариф[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "i-sched-04",
+      "text": "Подскажите дни занятий.",
+      "expect": {
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:день недели|дни занятий"
+        }
+      }
+    },
+    {
+      "id": "i-sched-05",
+      "text": "Когда закончится первый блок?",
+      "expect": {
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:закончится"
+        }
+      }
+    },
+    {
+      "id": "i-cat-04",
+      "text": "Что сейчас идет по курсу?",
+      "expect": {
+        "intent": {
+          "category": "catalog_browse",
+          "reason": "keyword:что идет|что сейчас"
+        }
+      }
     }
   ]
 }
