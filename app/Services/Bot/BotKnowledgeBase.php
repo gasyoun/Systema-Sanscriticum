@@ -48,8 +48,34 @@ class BotKnowledgeBase
     /**
      * Персона и правила поведения ИИ-куратора. Сведено из прежних промптов
      * VK/TG в единый текст.
+     *
+     * H3520 — каркас мульти-персоны: $key выбирает голос из
+     * config/bot_personas.php, но ТОЛЬКО при features.bot_multi_persona=true.
+     * Пока флаг OFF (прод по умолчанию), любой ключ возвращает дефолтный
+     * контракт FAQ-куратора байт-в-байт; неизвестный/выключенный ключ при ON
+     * тоже падает в default.
      */
-    public function persona(): string
+    public function persona(string $key = 'default'): string
+    {
+        if (! config('features.bot_multi_persona', false)) {
+            return $this->defaultPersona();
+        }
+
+        $personas = (array) config('bot_personas.personas', []);
+        $entry = $personas[$key] ?? null;
+
+        if (! is_array($entry) || empty($entry['enabled'])) {
+            return $this->defaultPersona();
+        }
+
+        $text = $entry['text'] ?? null;
+
+        return is_string($text) && trim($text) !== ''
+            ? $text
+            : $this->defaultPersona();
+    }
+
+    private function defaultPersona(): string
     {
         return <<<'TXT'
         Ты — ИИ-куратор Академии Санскрита (ОРС). Помогаешь студентам по вопросам обучения,
