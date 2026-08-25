@@ -116,8 +116,8 @@ _Создано: 08-07-2026 · Обновлено: 23-08-2026 (№81 H3314 — �
 
 1. В `.env`: `MAXMIND_ACCOUNT_ID=<id>`, `MAXMIND_LICENSE_KEY=<ключ с maxmind.com>` (бесплатная регистрация).
 2. `php artisan support:geo-update-maxmind --dry-run` → затем без флага. База ляжет в `storage/app/geo/GeoLite2-City.mmdb`.
-3. Правка текста политики приватности: готовые формулировки — [docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md) (блоки §4.1 / §5.4 / примечание к §7.3; человек вставляет в мастер и переопубликует PDF) → подтверждение MG.
-4. Только тогда: `SUPPORT_GEO_DRIVER=maxmind`, `SUPPORT_VISITOR_GEO=true` (+ presence `SUPPORT_VISITOR_PRESENCE=true` отдельно).
+3. ✅ **Политика опубликована 25-08-2026 (OxAlpha, поручение MG «публикуй сам»):** rev. «24» августа 2026 — категория «Посетители сайта» (§4.1), гео-город с локальным резолвом GeoLite2 + данные активности с 15-мин автоудалением (§5.4), примечание к §7.3 «перечень третьих лиц не расширяется». Живой PDF: https://samskrte.ru/docs/privacy.pdf (md5 `86AEEF42B41E54F5B04FF0668547A226` = коммит 190614b2). Формулировки-исходник: [docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md). Q-law-1/Q-law-2 остаются юристу (форма согласия для presence).
+4. Только тогда: `SUPPORT_GEO_DRIVER=maxmind`, `SUPPORT_VISITOR_GEO=true` (+ presence `SUPPORT_VISITOR_PRESENCE=true` отдельно, после юриста).
 5. Стоп: `SUPPORT_GEO_DRIVER=null`, флаги `false`. База остаётся на диске безвредно.
 
 ### №81 — H3314 — закат мобильных Sanctum-токенов (90 дней) + per-credential login throttle
