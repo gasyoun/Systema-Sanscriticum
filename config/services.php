@@ -461,4 +461,19 @@ return [
         ],
     ],
 
+    // H3497 — заявка об оплате банковским переводом (SEPA/SWIFT на внешний счёт
+    // получателя школы за рубежом). Флаг default OFF: маршрут отвечает 404, пока
+    // MG не скажет включать. Реквизиты получателя — только из env, не хардкод.
+    'bank_claim' => [
+        'enabled' => (bool) env('BANK_CLAIM_ENABLED', false),
+        // Заявка вошедшего существующего ученика сразу paid (зеркало рулинга
+        // 22-08-2026 из PayPal-канала); гость с новым email → ручная сверка.
+        'trust_existing_students' => (bool) env('BANK_TRUST_EXISTING_STUDENTS', true),
+        // Реквизиты для шага 1 формы (показываются ученику).
+        'recipient_name' => env('BANK_RECIPIENT_NAME', ''),
+        'iban' => env('BANK_RECIPIENT_IBAN', ''),
+        'bic' => env('BANK_RECIPIENT_BIC', ''),
+        'bank_name' => env('BANK_RECIPIENT_BANK_NAME', ''),
+    ],
+
 ];

@@ -44,6 +44,7 @@ use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaypalClaimController;
+use App\Http\Controllers\BankClaimController;
 use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
@@ -932,6 +933,15 @@ Route::get('/paypal/{tariff}', [PaypalClaimController::class, 'show'])
 Route::post('/paypal/{tariff}', [PaypalClaimController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('paypal.claim.store');
+
+// Оплата банковским переводом (SEPA/SWIFT на внешний счёт получателя школы,
+// H3497): зеркало PayPal-заявки. Флаг BANK_CLAIM_ENABLED default OFF (404).
+// Строго до catch-all /{slug}; throttle:5,1 — защита от спама pending-платежей.
+Route::get('/bank/{tariff}', [BankClaimController::class, 'show'])
+    ->name('bank.claim.show');
+Route::post('/bank/{tariff}', [BankClaimController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('bank.claim.store');
 
 // Счёт для компании / ИП (безнал). Flag COMPANY_INVOICE_ENABLED; pending until
 // admin confirms bank transfer. Print path BEFORE /invoice/{tariff} so "print"

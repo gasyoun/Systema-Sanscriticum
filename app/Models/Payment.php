@@ -111,6 +111,14 @@ class Payment extends Model
     public const PROVIDER_INVOICE = 'invoice';
 
     /**
+     * Заявка об оплате банковским переводом на внешний счёт получателя школы
+     * за рубежом (H3497, SEPA/SWIFT в Австрию). Автосверки нет — pending до
+     * ручного подтверждения в Filament; trusted-студентам paid сразу
+     * (зеркало рулинга 22-08-2026 из PayPal-канала).
+     */
+    public const PROVIDER_BANK_SEPA = 'bank_sepa';
+
+    /**
      * Providers that wait for human reconciliation and must never be reaped by
      * payments:expire-stale-checkouts (they are not abandoned bank links).
      *
@@ -119,6 +127,7 @@ class Payment extends Model
     public const MANUAL_CLAIM_PROVIDERS = [
         self::PROVIDER_PAYPAL,
         self::PROVIDER_INVOICE,
+        self::PROVIDER_BANK_SEPA,
     ];
 
     protected $casts = [
@@ -300,6 +309,21 @@ class Payment extends Model
     public function isCompanyInvoice(): bool
     {
         return $this->provider === self::PROVIDER_INVOICE;
+    }
+
+    /** Заявка об оплате банковским переводом (SEPA/SWIFT, H3497). */
+    public function isBankSepa(): bool
+    {
+        return $this->provider === self::PROVIDER_BANK_SEPA;
+    }
+
+    /**
+     * Банковская заявка существующего ученика с мгновенным доступом (зеркало
+     * рулинга 22-08-2026) — кандидат выборочной сверки до verified_at.
+     */
+    public function isAutoTrustedBankClaim(): bool
+    {
+        return $this->isBankSepa() && (bool) $this->claimMeta('auto_trusted');
     }
 
     /**
@@ -502,6 +526,24 @@ class Payment extends Model
     public function scopeInvoicePending(Builder $query): Builder
     {
         return $query->where('provider', self::PROVIDER_INVOICE)->where('status', 'pending');
+    }
+
+    /** Неподтверждённые банковские (SEPA/SWIFT) заявки — ручная сверка в админке. */
+    public function scopeBankSepaPending(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_BANK_SEPA)->where('status', 'pending');
+    }
+
+    /**
+     * Авто-доверенные банковские заявки своих учеников: сразу paid, сверка
+     * выборочная и пост-фактум (зеркало scopePaypalUnverified).
+     */
+    public function scopeBankUnverified(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_BANK_SEPA)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->whereNotNull('claim_meta->auto_trusted')
+            ->whereNull('claim_meta->verified_at');
     }
 
     /** Цвет Filament-бейджа статуса — единая точка вместо дублей match по вьюхам. */
