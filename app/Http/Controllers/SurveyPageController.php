@@ -33,6 +33,7 @@ class SurveyPageController extends Controller
             'slug' => $slug,
             'definition' => $definition,
             'done' => $request->boolean('done'),
+            'auth_email' => auth()->user()?->email,
         ]);
     }
 
@@ -60,6 +61,9 @@ class SurveyPageController extends Controller
                 'scale' => (int) $request->input($id, 0),
                 default => trim((string) $request->input($id, '')),
             };
+            if (($question['numeric'] ?? false) && $value !== '' && $value !== []) {
+                $value = (int) $value;
+            }
             if ($value !== [] && $value !== '') {
                 $answers[$id] = $value;
             }
@@ -72,6 +76,7 @@ class SurveyPageController extends Controller
 
         $response = SurveyResponse::create([
             'survey_slug' => $slug,
+            'user_id' => auth()->id(),
             'answers' => $answers,
             'contact' => $contact,
             'reward_choice' => $definition['reward_enabled'] ? $rewardChoice : null,
@@ -161,7 +166,7 @@ class SurveyPageController extends Controller
                 ),
                 'scale' => array_merge(
                     (($question['required'] ?? false) ? ['required'] : ['nullable']),
-                    ['integer', 'min:1', 'max:5'],
+                    ['integer', 'min:'.($question['min'] ?? 1), 'max:'.($question['max'] ?? 5)],
                 ),
                 'text' => array_merge(
                     (($question['required'] ?? false) ? ['required'] : ['nullable']),
