@@ -64,6 +64,7 @@ use App\Http\Controllers\Student\HindiMySrsDeckController;
 use App\Http\Controllers\Student\HindiProgrammePlaylistController;
 use App\Http\Controllers\Student\HindiTgCuratedPracticeController;
 use App\Http\Controllers\Student\HindiTranscriptDrillsController;
+use App\Http\Controllers\Student\LessonPackController;
 use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SurveyPageController;
@@ -715,6 +716,12 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::post('/c/{slug}/u/{lessonId}/srs', [HindiMySrsDeckController::class, 'addItem'])
         ->middleware('course.canonical')
         ->name('student.lesson.srs.add');
+
+    // H3521: Learn Your Way — персонализированный пак занятия. Default-OFF
+    // (LYW_ENABLED): флаг выключен => 404 и вкладка на уроке не рендерится.
+    Route::get('/c/{slug}/u/{lessonId}/learn', [LessonPackController::class, 'show'])
+        ->middleware('course.canonical')
+        ->name('student.lesson.lessonpack');
 
     Route::post('/c/{slug}/u/{lessonId}/complete', [StudentController::class, 'completeLesson'])
         ->name('student.lesson.complete');
