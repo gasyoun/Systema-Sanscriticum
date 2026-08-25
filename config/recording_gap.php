@@ -33,6 +33,12 @@ return [
     // Master kill-switch for the --retry-failed lane. Default OFF.
     'retry_enabled' => (bool) env('RECORDING_GAP_RETRY_FAILED_ENABLED', false),
 
+    // Same-day stale pass (MG 24-08-2026): hourly tick flags today's slots
+    // whose start is this many hours in the past with still no recording.
+    // Kill-switch RECORDING_GAP_STALE_ENABLED (default ON).
+    'stale_enabled' => (bool) env('RECORDING_GAP_STALE_ENABLED', true),
+    'stale_hours' => (int) env('RECORDING_GAP_STALE_HOURS', 4),
+
     // Upper bound per invocation — a jam day had three recordings at once.
     'retry_max_per_run' => (int) env('RECORDING_GAP_RETRY_MAX_PER_RUN', 5),
 

@@ -29,7 +29,8 @@ class WatchRecordingGaps extends Command
         {--date= : Single day YYYY-MM-DD (default: yesterday, app tz)}
         {--from= : Inclusive start YYYY-MM-DD (overrides --date)}
         {--until= : Inclusive end YYYY-MM-DD}
-        {--retry-failed : Retry n8n executions that died before any upload (needs RECORDING_GAP_RETRY_FAILED_ENABLED)}';
+        {--retry-failed : Retry n8n executions that died before any upload (needs RECORDING_GAP_RETRY_FAILED_ENABLED)}
+        {--stale : Today-only pass: flag slots started >= stale_hours ago with no recording}';
 
     protected $description = 'Alert when yesterday had a schedule but no matching published recording (H3209).';
 
@@ -39,6 +40,14 @@ class WatchRecordingGaps extends Command
         $includeWithoutChat = (bool) $this->option('all');
 
         $gaps = $finder->gaps($from, $until, $includeWithoutChat);
+        if ((bool) $this->option('stale')) {
+            $gaps = $this->filterStale($gaps);
+            if ($gaps === []) {
+                $this->info('Сегодняшних слотов старше '.(int) config('recording_gap.stale_hours', 4).' ч без записи нет.');
+
+                return self::SUCCESS;
+            }
+        }
         $n8nExec = $n8n->lastLiveZoomExecution();
 
         if ($gaps === []) {
@@ -111,10 +120,34 @@ class WatchRecordingGaps extends Command
     }
 
     /**
+     * --stale pass keeps only today's slots whose start is at least
+     * stale_hours in the past (Zoom+pipeline SLA) and still has no recording.
+     *
+     * @param  list<array{schedule_id: int, lesson_date: string, start: string, course_id: int, course: string, group_id: ?int, group: string, chat_id: string, reason: string}>  $gaps
+     * @return list<array{schedule_id: int, lesson_date: string, start: string, course_id: int, course: string, group_id: ?int, group: string, chat_id: string, reason: string}>
+     */
+    private function filterStale(array $gaps): array
+    {
+        $tz = (string) config('app.timezone', 'Europe/Moscow');
+        $threshold = CarbonImmutable::now($tz)->subHours(max(1, (int) config('recording_gap.stale_hours', 4)));
+
+        return array_values(array_filter(
+            $gaps,
+            static fn (array $gap): bool => CarbonImmutable::parse($gap['start'], $tz)->lte($threshold),
+        ));
+    }
+
+    /**
      * @return array{0: CarbonImmutable, 1: CarbonImmutable}
      */
     private function window(): array
     {
+        if ((bool) $this->option('stale')) {
+            $today = CarbonImmutable::now((string) config('app.timezone', 'Europe/Moscow'));
+
+            return [$today->startOfDay(), $today];
+        }
+
         $tz = (string) config('app.timezone', 'Europe/Moscow');
         $fromOpt = $this->option('from');
         $untilOpt = $this->option('until');

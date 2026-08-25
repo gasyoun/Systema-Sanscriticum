@@ -12,7 +12,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ACCESS_SELF_SERVICE` | optional | `false` | config/features.php:802 |
 | `ADMIN_EMAIL` | optional | `''` | config/services.php:364 |
 | `ADMIN_PASSWORD` | secret | `—` | config/services.php:365 |
-| `ADMIN_TELEGRAM_ID` | optional | `''` | config/cabinet_probe.php:23<br>config/recording_gap.php:64<br>config/services.php:125 |
+| `ADMIN_TELEGRAM_ID` | optional | `''` | config/cabinet_probe.php:23<br>config/openrouter.php:30<br>config/recording_gap.php:70<br>config/services.php:125 |
 | `APP_DEBUG` | optional | `false` | config/app.php:55 |
 | `APP_ENV` | optional | `'production'` | config/app.php:42<br>config/server_guards.php:35 |
 | `APP_KEY` | required | `—` | config/app.php:135 |
@@ -57,7 +57,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_CRON` | optional | `'*/15 * * * *'` | config/cabinet_probe.php:49 |
 | `CABINET_PROBE_HISTORY_KEEP` | optional | `500` | config/cabinet_probe.php:54 |
 | `CABINET_PROBE_PING_URL` | optional | `''` | config/cabinet_probe.php:20 |
-| `CABINET_PROBE_TELEGRAM_CHAT_ID` | optional | `env('ADMIN_TELEGRAM_ID', '')` | config/cabinet_probe.php:23<br>config/recording_gap.php:64 |
+| `CABINET_PROBE_TELEGRAM_CHAT_ID` | optional | `env('ADMIN_TELEGRAM_ID', '')` | config/cabinet_probe.php:23<br>config/openrouter.php:30<br>config/recording_gap.php:70 |
 | `CABINET_PROBE_TELEGRAM_COOLDOWN` | optional | `60` | config/cabinet_probe.php:29<br>config/cabinet_probe.php:38 |
 | `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` | optional | `''` | config/cabinet_probe.php:26 |
 | `CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN` | optional | `env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),` | config/cabinet_probe.php:36 |
@@ -372,9 +372,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MEMCACHED_PORT` | optional | `11211` | config/cache.php:71 |
 | `MEMCACHED_USERNAME` | required | `—` | config/cache.php:62 |
 | `MYSQL_ATTR_SSL_CA` | required | `—` | config/database.php:62 |
-| `N8N_API_BASE_URL` | optional | `'https://context-ai.ru'` | config/recording_gap.php:73 |
-| `N8N_API_KEY` | secret | `''` | config/recording_gap.php:76 |
-| `N8N_API_TIMEOUT` | optional | `8` | config/recording_gap.php:80 |
+| `N8N_API_BASE_URL` | optional | `'https://context-ai.ru'` | config/recording_gap.php:79 |
+| `N8N_API_KEY` | secret | `''` | config/recording_gap.php:82 |
+| `N8N_API_TIMEOUT` | optional | `8` | config/recording_gap.php:86 |
 | `N8N_CALENDAR_POST_SECRET` | secret | `—` | config/services.php:101 |
 | `N8N_CALENDAR_POST_WEBHOOK` | required | `—` | config/services.php:100 |
 | `N8N_CLIP_CALLBACK_SECRET` | secret | `—` | config/services.php:91 |
@@ -389,7 +389,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `N8N_SCHEDULE_SHEET_WEBHOOK` | required | `—` | config/services.php:75 |
 | `N8N_SOCIAL_POST_SECRET` | secret | `—` | config/services.php:96 |
 | `N8N_SOCIAL_POST_WEBHOOK` | required | `—` | config/services.php:95 |
-| `N8N_ZOOM_WORKFLOW_ID` | optional | `'1EIqqNzMl5NNIxST'` | config/recording_gap.php:78 |
+| `N8N_ZOOM_WORKFLOW_ID` | optional | `'1EIqqNzMl5NNIxST'` | config/recording_gap.php:84 |
 | `NALA_SUBSCRIPTIONS_LIVE` | optional | `false` | config/features.php:848 |
 | `NALOPAKHYANA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:29 |
 | `NALOPAKHYANA_COURSE_SLUG` | optional | `'nalopakhyana'` | config/cohort_courses.php:28 |
@@ -401,11 +401,20 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ONRAMP_GRAMMAR_PATTERN` | optional | `'Грамматика'` | config/onramp.php:16 |
 | `ONRAMP_PHILO_PATTERN` | optional | `'Йога-сутры'` | config/onramp.php:20 |
 | `ONRAMP_YOGA_PATTERN` | optional | `'Рецитаци'` | config/onramp.php:18 |
-| `OPENROUTER_API_KEY` | secret | `—` | config/services.php:342 |
-| `OPENROUTER_BASE_URL` | optional | `'https://openrouter.ai/api/v1'` | config/services.php:343 |
+| `OPENROUTER_ALERT_WITHIN_DAYS` | optional | `14` | config/openrouter.php:15 |
+| `OPENROUTER_API_KEY` | secret | `''` | config/openrouter.php:7<br>config/services.php:342 |
+| `OPENROUTER_BALANCE_CHECK_ENABLED` | feature-flag | `true` | config/openrouter.php:34 |
+| `OPENROUTER_BASE_URL` | optional | `'https://openrouter.ai/api/v1'` | config/openrouter.php:9<br>config/services.php:343 |
+| `OPENROUTER_HORIZON_DAYS` | optional | `365` | config/openrouter.php:17 |
+| `OPENROUTER_LOOKBACK_DAYS` | optional | `28` | config/openrouter.php:24 |
+| `OPENROUTER_MIN_BASELINE_DAYS` | optional | `7` | config/openrouter.php:22 |
 | `OPENROUTER_MODEL` | optional | `'deepseek/deepseek-v4-flash'` | config/services.php:344 |
 | `OPENROUTER_PRICE_DEEPSEEK_CHAT_COMPLETION` | optional | `0.8001` | config/services.php:351 |
 | `OPENROUTER_PRICE_DEEPSEEK_CHAT_PROMPT` | optional | `0.2002` | config/services.php:350 |
+| `OPENROUTER_SAFETY_FACTOR` | optional | `1.25` | config/openrouter.php:19 |
+| `OPENROUTER_TELEGRAM_CHAT_ID` | optional | `env('CABINET_PROBE_TELEGRAM_CHAT_ID', env('ADMIN_TELEGRAM_ID', '')),` | config/openrouter.php:28 |
+| `OPENROUTER_TIMEOUT` | optional | `10` | config/openrouter.php:11 |
+| `OPENROUTER_TOPUP_ROUND_TO` | optional | `10` | config/openrouter.php:26 |
 | `PAPERTRAIL_PORT` | required | `—` | config/logging.php:92<br>config/logging.php:93 |
 | `PAPERTRAIL_URL` | required | `—` | config/logging.php:91<br>config/logging.php:93 |
 | `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:33 |
@@ -466,13 +475,15 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `RECEIVABLES_THRESHOLD_MODE` | optional | `'revenue_share'` | config/receivables.php:30 |
 | `RECEIVABLES_THRESHOLD_REVENUE_SHARE` | optional | `0.5` | config/receivables.php:35 |
 | `RECEIVABLES_WARN_RATIO` | optional | `0.8` | config/receivables.php:68 |
-| `RECORDING_GAP_CARE_TELEGRAM_CHAT_ID` | optional | `''` | config/recording_gap.php:71 |
+| `RECORDING_GAP_CARE_TELEGRAM_CHAT_ID` | optional | `''` | config/recording_gap.php:77 |
 | `RECORDING_GAP_RETRY_FAILED_ENABLED` | feature-flag | `false` | config/recording_gap.php:34 |
-| `RECORDING_GAP_RETRY_MAX_PER_RUN` | optional | `5` | config/recording_gap.php:37 |
-| `RECORDING_GAP_RETRY_WINDOW_SLACK_DAYS` | optional | `1` | config/recording_gap.php:41 |
-| `RECORDING_GAP_SKIP_COURSE_IDS` | optional | `''` | config/recording_gap.php:90 |
-| `RECORDING_GAP_SKIP_TITLE_SUBSTRINGS` | optional | `'Созвон отдела Заботы'` | config/recording_gap.php:85 |
-| `RECORDING_GAP_TELEGRAM_CHAT_ID` | optional | `env('CABINET_PROBE_TELEGRAM_CHAT_ID', env('ADMIN_TELEGRAM_ID', '')),` | config/recording_gap.php:62 |
+| `RECORDING_GAP_RETRY_MAX_PER_RUN` | optional | `5` | config/recording_gap.php:43 |
+| `RECORDING_GAP_RETRY_WINDOW_SLACK_DAYS` | optional | `1` | config/recording_gap.php:47 |
+| `RECORDING_GAP_SKIP_COURSE_IDS` | optional | `''` | config/recording_gap.php:96 |
+| `RECORDING_GAP_SKIP_TITLE_SUBSTRINGS` | optional | `'Созвон отдела Заботы'` | config/recording_gap.php:91 |
+| `RECORDING_GAP_STALE_ENABLED` | feature-flag | `true` | config/recording_gap.php:39 |
+| `RECORDING_GAP_STALE_HOURS` | optional | `4` | config/recording_gap.php:40 |
+| `RECORDING_GAP_TELEGRAM_CHAT_ID` | optional | `env('CABINET_PROBE_TELEGRAM_CHAT_ID', env('ADMIN_TELEGRAM_ID', '')),` | config/recording_gap.php:68 |
 | `REDIS_CACHE_DB` | optional | `'1'` | config/database.php:146 |
 | `REDIS_CLIENT` | optional | `'phpredis'` | config/database.php:124 |
 | `REDIS_CLUSTER` | optional | `'redis'` | config/database.php:127 |
