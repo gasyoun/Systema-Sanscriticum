@@ -281,3 +281,25 @@ jobs:
                   print(f'::error file={f}::{e}'); fail = 1
           sys.exit(fail)
           "
+
+  mic-vendor-drift:
+    name: Vendored message-intent-classifier drift check (pin)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Read pinned SHA
+        id: pin
+        run: echo "sha=$(cat tools/message-intent-classifier/PINNED_SHA)" >> "$GITHUB_OUTPUT"
+      - name: Checkout upstream at pin
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: gasyoun/message-intent-classifier
+          ref: ${{ steps.pin.outputs.sha }}
+          path: _upstream-mic
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - run: pip install pyyaml
+      - name: Drift + generated-JSON parity check
+        run: python tools/check_mic_vendor_drift.py --upstream _upstream-mic
+

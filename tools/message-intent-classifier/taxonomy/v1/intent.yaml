@@ -1,0 +1,28 @@
+# Таксономия плоскости intent — что человек хочет сделать.
+# Источник категорий: ARCHITECTURE_MESSAGE_INTENT_CLASSIFIER_2026.md § Таксономия v1.
+plane: intent
+categories:
+  - key: price_query
+    title: "Спросить цену"
+    description: "Сколько стоит, какая цена, стоимость."
+  - key: schedule_query
+    title: "Спросить расписание"
+    description: "Когда занятие, во сколько, какой день."
+  - key: catalog_browse
+    title: "Смотреть каталог курсов"
+    description: "Какие курсы есть, что изучаете, список."
+  - key: learn_start
+    title: "Начать учиться"
+    description: "Хочу научиться, с чего начать, записаться на курс."
+  - key: trial_request
+    title: "Попросить пробное занятие"
+    description: "Пробное, бесплатное вводное, можно попробовать."
+  - key: buy_signal
+    title: "Готов купить / оплатить"
+    description: "Хочу оплатить, выставите счет, как оплатить."
+  - key: complaint
+    title: "Жалоба"
+    description: "Жалуюсь, обман, верните деньги, игнорируете."
+  - key: spam_noise
+    title: "Спам / шум"
+    description: "Рассылки, реклама, отписаться."

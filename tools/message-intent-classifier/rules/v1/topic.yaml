@@ -1,0 +1,132 @@
+# Правила плоскости topic. Порядок = приоритет (меньше = раньше), первый матч
+# выигрывает. Семантика порядка перенесена из SupportAnswerSuggester RULES
+# (H247 + H3394): запись раньше zoom; узкие руки «ссылк+расписан» и
+# «деньги+ссылк» раньше широкой руки «ссылк»; кабинет-случаи не уводить в tech.
+# Ограничения переносимости: без \w \b \d \s \uXXXX; только [а-я], [0-9],
+# литеральные диапазоны; lookaround фиксированной ширины; символы / и #
+# запрещены (разделители PCRE).
+rules:
+  - plane: topic
+    category: recording_access
+    priority: 10
+    patterns:
+      - 'видеозапис[а-я]*'
+      - 'пересмотр[а-я]*'
+      - 'переслуш[а-я]*'
+      - 'тайм ?код[а-я]*'
+      - 'rutube|youtube'
+      - 'запис[а-я]*( занятия| урока| лекции)?'
+      - 'пропуст[а-я]*.{0,40}(занят|урок|лекц)'
+      - '(занят|урок|лекц)[а-я]*.{0,40}пропуст[а-я]*'
+    negations:
+      - 'техподдержк'
+      - 'не работает|не открыва[а-я]*'
+      - 'записаться|запишусь'
+    source: >-
+      SupportAnswerSuggester CATEGORY_RECORDING hand; negation guards = golden
+      negation pair H3525 («ссылка на запись не работает, техподдержка») and
+      enrollment phrases («запишусь/как записаться» — это онбординг, не записи).
+  - plane: topic
+    category: schedule
+    priority: 20
+    patterns:
+      - '(?<![а-я])(ссылк|линк)[а-я]*.{0,48}расписан[а-я]*'
+      - 'расписан[а-я]*.{0,48}(?<![а-я])(ссылк|линк)[а-я]*'
+    source: SupportAnswerSuggester CATEGORY_SCHEDULE narrow link-hand (узкая C раньше A, иначе `ссылк` крадёт тему 06)
+  - plane: topic
+    category: payment_billing
+    priority: 30
+    patterns:
+      - '(?<![а-я])(ссылк|линк)[а-я]*.{0,48}(оплат|плат|тариф|цен|стои)'
+      - '(оплат|тариф|цен|стои)[а-я]*.{0,48}(?<![а-я])(ссылк|линк)[а-я]*'
+    source: "SupportAnswerSuggester CATEGORY_PAYMENT narrow hand (H3394: деньги рядом со «ссылкой» — D, а не Zoom)"
+  - plane: topic
+    category: tech_issue
+    priority: 35
+    patterns:
+      - 'техподдержк[а-я]*'
+      - 'не работает'
+      - 'не открыва[а-я]*'
+      - 'не загружа[а-я]*'
+      - 'ошибк[а-я]*'
+      - 'сбой|зависает|виснет|вылетает|лагает'
+    negations:
+      - 'кабинет'
+    source: FAQ техподдержка note (В7 recovery); кабинет-negation держит «Кабинет не открывается» в access_login (H3394)
+  - plane: topic
+    category: zoom_link
+    priority: 40
+    patterns:
+      - 'зум|zoom|(?<![a-z])join(?![a-z])'
+      - 'подключ[а-я]*'
+      - '(?<![а-я])(ссылк|линк)[а-я]*'
+      - 'как (мне )?(войти|зайти|попасть)'
+      - 'войти в (занятие|урок|встреч[а-я]*)'
+    source: SupportAnswerSuggester CATEGORY_ZOOM broad hand
+  - plane: topic
+    category: schedule
+    priority: 50
+    patterns:
+      - 'расписан[а-я]*'
+      - 'когда (занятие|урок|начн[а-я]*|следующ[а-я]*|будет|стартует|пара)'
+      - 'во ?сколько'
+      - 'время (занят|урок)'
+      - 'перенос|перенес'
+      - 'в какой день|график занят|в какое время'
+    source: SupportAnswerSuggester CATEGORY_SCHEDULE broad hand
+  - plane: topic
+    category: payment_billing
+    priority: 60
+    patterns:
+      - 'сколько стоит|сколько.{0,24}стои'
+      - 'стоимост[а-я]*'
+      - '(?<![а-я])цен[ауыое](?![а-я])'
+      - 'тариф[а-я]*|рассрочк[а-я]*|предоплат[а-я]*|доплат[а-я]*'
+      - 'скидк[а-я]*|промокод'
+      - 'по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат'
+    negations:
+      - 'кабинет'
+    source: "SupportAnswerSuggester CATEGORY_PAYMENT broad hand (H3394); кабинет-negation держит «Кабинет не открывается» в access_login"
+  - plane: topic
+    category: access_login
+    priority: 70
+    patterns:
+      - 'нет доступа'
+      - 'не могу (попасть|войти|зайти|открыт[а-я]*)'
+      - '(?<![а-я])кабинет|личн(ый|ым|ого) кабинет'
+      - 'в какой (я )?группе|моя группа|какая у меня группа'
+      - 'логин|парол[а-я]*'
+    source: "SupportAnswerSuggester CATEGORY_ACCESS (H3394: голое «кабинет», «пароля»)"
+  - plane: topic
+    category: materials_content
+    priority: 80
+    patterns:
+      - 'материал[а-я]*|методичк[а-я]*|конспект[а-я]*'
+      - 'презентац[а-я]*|раздаточ[а-я]*|учебник[а-я]*'
+    source: SupportAnswerSuggester CATEGORY_MATERIALS (материальная половина; сертификат выделен отдельно по таксономии v1)
+  - plane: topic
+    category: homework_progress
+    priority: 85
+    patterns:
+      - 'домашн[а-я]*|домашк[а-я]*'
+      - '(?<![а-я])дз(?![а-я])'
+      - 'задани[а-я]*|прикрепл[а-я]*'
+    source: SupportAnswerSuggester CATEGORY_MATERIALS (H3394 домашняя половина) → отдельная категория v1
+  - plane: topic
+    category: certificate
+    priority: 86
+    patterns:
+      - 'сертификат[а-я]*|диплом[а-я]*|удостоверен[а-я]*'
+    source: SupportAnswerSuggester CATEGORY_MATERIALS (сертификатная половина) → отдельная категория v1
+  - plane: topic
+    category: membership_club
+    priority: 90
+    patterns:
+      - 'клуб[а-я]*|членство|подписк[а-я]*'
+    source: taxonomy v1 membership_club seed
+  - plane: topic
+    category: other_support
+    priority: 99
+    enabled: false
+    patterns: []
+    source: резервная корзина — авто-срабатывание выключено (см. taxonomy/v1/topic.yaml)
