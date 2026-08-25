@@ -18,6 +18,23 @@
 #   sudo bash scripts/server_guards_apply.sh --diff           # то же + unified diff
 #   sudo bash scripts/server_guards_apply.sh --no-install     # не ставить пакеты
 #   sudo bash scripts/server_guards_apply.sh --restart-supervisor
+#   sudo bash scripts/server_guards_apply.sh --profile n8n    # машина .91, см. ниже
+#
+# ПРОФИЛИ (H3182, 25-08-2026). Предохранители понадобились на ВТОРОЙ машине —
+# .91 (samskrtam50): n8n и Caddy в Docker, ни PHP, ни nginx, ни supervisor.
+# Форк этого скрипта означал бы две расходящиеся копии одной дисциплины, поэтому
+# машина выбирается флагом, а не копией файла:
+#
+#   app (по умолчанию) — .92 samskrtam150: PHP-прод samskrte.ru
+#                        шаблоны scripts/server_guards/, числа server_guards.conf
+#   n8n                — .91 samskrtam50: хост автоматизации
+#                        шаблоны scripts/server_guards_n8n/, числа server_guards_n8n.conf
+#
+# Разделы, осмысленные только для «app» (crontab прикладного пользователя,
+# авто-деплой, пул php-fpm, supervisor, демон MadelineProto), под профилем n8n
+# ПРОПУСКАЮТСЯ — не падают, а именно пропускаются: на .91 этих юнитов нет.
+# Разделы, осмысленные только для n8n (daemon.json, потолки контейнеров),
+# симметрично пропускаются под app.
 #
 # ДЕПЛОЙ ЭТОГО НЕ ЗОВЁТ. deploy.sh делает только `guards:verify` — выкладка кода
 # не должна молча менять системный конфиг.
@@ -25,13 +42,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TPL_ROOT="$SCRIPT_DIR/server_guards"
-CONF_FILE="${SERVER_GUARDS_CONF:-$SCRIPT_DIR/server_guards.conf}"
 
 DRY_RUN=0
 SHOW_DIFF=0
 INSTALL_PACKAGES=1
 RESTART_SUPERVISOR=0
+PROFILE="${SERVER_GUARDS_PROFILE:-app}"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -39,11 +55,26 @@ while [ $# -gt 0 ]; do
     --diff) SHOW_DIFF=1 ;;
     --no-install) INSTALL_PACKAGES=0 ;;
     --restart-supervisor) RESTART_SUPERVISOR=1 ;;
-    -h|--help) sed -n '2,30p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    --profile) shift; [ $# -gt 0 ] || { echo "--profile требует имя (app|n8n)" >&2; exit 2; }; PROFILE="$1" ;;
+    --profile=*) PROFILE="${1#--profile=}" ;;
+    -h|--help) sed -n '2,46p' "${BASH_SOURCE[0]}"; exit 0 ;;
     *) echo "Неизвестный аргумент: $1" >&2; exit 2 ;;
   esac
   shift
 done
+
+case "$PROFILE" in
+  app)
+    TPL_ROOT="$SCRIPT_DIR/server_guards"
+    CONF_FILE="${SERVER_GUARDS_CONF:-$SCRIPT_DIR/server_guards.conf}"
+    ;;
+  n8n)
+    TPL_ROOT="$SCRIPT_DIR/server_guards_n8n"
+    CONF_FILE="${SERVER_GUARDS_CONF:-$SCRIPT_DIR/server_guards_n8n.conf}"
+    ;;
+  *)
+    echo "Неизвестный профиль: $PROFILE (есть app, n8n)" >&2; exit 2 ;;
+esac
 
 BOLD=$(printf '\033[1m'); RED=$(printf '\033[1;31m'); GRN=$(printf '\033[1;32m')
 YLW=$(printf '\033[1;33m'); CYA=$(printf '\033[1;36m'); OFF=$(printf '\033[0m')
@@ -86,25 +117,53 @@ while IFS= read -r line || [ -n "$line" ]; do
 done < "$CONF_FILE"
 
 need() { [ -n "${G[$1]:-}" ] || die "$CONF_FILE: не задан $1"; printf '%s' "${G[$1]}"; }
-for k in APP_DIR APP_USER PHP_VERSION PHP_BIN SCHEDULE_MAX_SECONDS \
-         CRON_MEMORY_HIGH CRON_MEMORY_MAX CRON_TASKS_MAX \
-         SUPERVISOR_MEMORY_HIGH SUPERVISOR_MEMORY_MAX LIMIT_NOFILE \
-         PHP_CLI_MEMORY_LIMIT FPM_MAX_CHILDREN FPM_MAX_REQUESTS \
-         AUTO_DEPLOY_SCHEDULE AUTO_DEPLOY_MAX_SECONDS \
-         AUTO_DEPLOY_MIN_AVAILABLE_MB AUTO_DEPLOY_SMOKE_URL \
-         AUTO_DEPLOY_RETRY_AFTER_MINUTES AUTO_DEPLOY_MAX_AUTO_RETRIES \
-         MADELINE_MEMORY_HIGH MADELINE_MEMORY_MAX MADELINE_TASKS_MAX \
-         MADELINE_DAEMON_MAX_RSS_MB MADELINE_DAEMON_MAX_FDS \
-         MADELINE_DAEMON_MAX_AGE_HOURS MADELINE_DAEMON_CHECK_SECONDS \
-         SCHEDULER_STAMP_MAX_MINUTES \
-         TMP_TMPFS_SIZE TMP_TMPFS_MODE TMP_AGE_DAYS \
-         BACKUP_MAX_AGE_DAYS BACKUP_REQUIRE_OFFSITE BACKUP_MIN_ARCHIVE_MB; do
+
+# Обязательные ключи — СВОИ у каждого профиля. Общий список падал бы на .91 на
+# первом же APP_DIR, которого там нет и быть не должно.
+if [ "$PROFILE" = app ]; then
+  REQUIRED_KEYS="APP_DIR APP_USER PHP_VERSION PHP_BIN SCHEDULE_MAX_SECONDS
+         CRON_MEMORY_HIGH CRON_MEMORY_MAX CRON_TASKS_MAX
+         SUPERVISOR_MEMORY_HIGH SUPERVISOR_MEMORY_MAX LIMIT_NOFILE
+         PHP_CLI_MEMORY_LIMIT FPM_MAX_CHILDREN FPM_MAX_REQUESTS
+         AUTO_DEPLOY_SCHEDULE AUTO_DEPLOY_MAX_SECONDS
+         AUTO_DEPLOY_MIN_AVAILABLE_MB AUTO_DEPLOY_SMOKE_URL
+         AUTO_DEPLOY_RETRY_AFTER_MINUTES AUTO_DEPLOY_MAX_AUTO_RETRIES
+         MADELINE_MEMORY_HIGH MADELINE_MEMORY_MAX MADELINE_TASKS_MAX
+         MADELINE_DAEMON_MAX_RSS_MB MADELINE_DAEMON_MAX_FDS
+         MADELINE_DAEMON_MAX_AGE_HOURS MADELINE_DAEMON_CHECK_SECONDS
+         SCHEDULER_STAMP_MAX_MINUTES
+         TMP_TMPFS_SIZE TMP_TMPFS_MODE TMP_AGE_DAYS
+         BACKUP_MAX_AGE_DAYS BACKUP_REQUIRE_OFFSITE BACKUP_MIN_ARCHIVE_MB"
+else
+  REQUIRED_KEYS="GUARDS_STAGING_DIR N8N_DIR N8N_CONTAINER CADDY_CONTAINER N8N_HEALTH_URL
+         N8N_MEMORY_LIMIT N8N_MEMORY_RESERVATION N8N_PIDS_LIMIT
+         CADDY_MEMORY_LIMIT CADDY_MEMORY_RESERVATION CADDY_PIDS_LIMIT CADDY_IMAGE_PIN
+         N8N_HEALTHCHECK_INTERVAL N8N_HEALTHCHECK_TIMEOUT
+         N8N_HEALTHCHECK_RETRIES N8N_HEALTHCHECK_START_PERIOD
+         EARLYOOM_REPORT_INTERVAL EARLYOOM_TERM_PERCENT EARLYOOM_KILL_PERCENT
+         EARLYOOM_AVOID_RE EARLYOOM_PREFER_RE
+         MEMWATCH_THRESHOLD_PCT JOURNAL_MAX_USE JOURNAL_KEEP_FREE
+         JOURNAL_MAX_FILE_SIZE JOURNAL_RETENTION SYSSTAT_HISTORY_DAYS
+         DOCKER_LOG_MAX_SIZE DOCKER_LOG_MAX_FILE
+         TMP_AGE_DAYS TMP_TMPFS_MODE
+         N8N_BACKUP_DIR N8N_BACKUP_SCHEDULE N8N_BACKUP_KEEP
+         N8N_BACKUP_MAX_AGE_HOURS N8N_BACKUP_MIN_MB"
+fi
+for k in $REQUIRED_KEYS; do
   need "$k" >/dev/null
 done
 
-APP_DIR=${G[APP_DIR]}
-APP_USER=${G[APP_USER]}
-PHP_VERSION=${G[PHP_VERSION]}
+# Пустая строка — законное значение для off-site назначения (см. комментарий в
+# server_guards_n8n.conf), поэтому оно НЕ в списке обязательных, но подстановка
+# в шаблонах должна состояться. Задаём явно, чтобы render не упал на @@…@@.
+if [ "$PROFILE" = n8n ]; then
+  G[N8N_BACKUP_OFFSITE_REPO]="${G[N8N_BACKUP_OFFSITE_REPO]:-}"
+  G[N8N_BACKUP_OFFSITE_PASSFILE]="${G[N8N_BACKUP_OFFSITE_PASSFILE]:-/root/.restic-pass-n8n}"
+fi
+
+APP_DIR=${G[APP_DIR]:-}
+APP_USER=${G[APP_USER]:-}
+PHP_VERSION=${G[PHP_VERSION]:-}
 
 render() { # render <template-path> → stdout
   local body
@@ -177,12 +236,24 @@ ensure_directive() { # ensure_directive <file> <key> <value> <sep> — прав�
 }
 
 # ── 1. Пакеты ───────────────────────────────────────────────────────────────
-say "Пакеты предохранителей (earlyoom, rsyslog, sysstat, util-linux/flock)"
 MISSING_PKGS=()
-command -v earlyoom  >/dev/null 2>&1 || MISSING_PKGS+=(earlyoom)
-command -v rsyslogd  >/dev/null 2>&1 || MISSING_PKGS+=(rsyslog)
-command -v sar       >/dev/null 2>&1 || MISSING_PKGS+=(sysstat)
-command -v flock     >/dev/null 2>&1 || MISSING_PKGS+=(util-linux)
+if [ "$PROFILE" = app ]; then
+  say "Пакеты предохранителей (earlyoom, rsyslog, sysstat, util-linux/flock)"
+  command -v earlyoom  >/dev/null 2>&1 || MISSING_PKGS+=(earlyoom)
+  command -v rsyslogd  >/dev/null 2>&1 || MISSING_PKGS+=(rsyslog)
+  command -v sar       >/dev/null 2>&1 || MISSING_PKGS+=(sysstat)
+  command -v flock     >/dev/null 2>&1 || MISSING_PKGS+=(util-linux)
+else
+  # .91: rsyslog не нужен — журнал здесь persistent через journald, а второго
+  # получателя логов на этой машине нет. Зато нужны sqlite3 и restic: на них
+  # стоит ночной дамп n8n (W2c), и без них он молча не состоится.
+  say "Пакеты предохранителей (earlyoom, sysstat, util-linux/flock, sqlite3, restic)"
+  command -v earlyoom  >/dev/null 2>&1 || MISSING_PKGS+=(earlyoom)
+  command -v sar       >/dev/null 2>&1 || MISSING_PKGS+=(sysstat)
+  command -v flock     >/dev/null 2>&1 || MISSING_PKGS+=(util-linux)
+  command -v sqlite3   >/dev/null 2>&1 || MISSING_PKGS+=(sqlite3)
+  command -v restic    >/dev/null 2>&1 || MISSING_PKGS+=(restic)
+fi
 if [ ${#MISSING_PKGS[@]} -eq 0 ]; then
   ok "все на месте"
 elif [ "$INSTALL_PACKAGES" = 0 ] || [ "$DRY_RUN" = 1 ]; then
@@ -205,6 +276,12 @@ while IFS='|' read -r m_tpl m_dest m_mode m_sev || [ -n "$m_tpl" ]; do
   case "$m_dest" in *@@*) die "$MANIFEST: неподставленная @@…@@ в пути $m_dest" ;; esac
   install_file "$m_tpl" "$m_dest" "$m_mode"
 done < "$MANIFEST"
+
+# ═══ РАЗДЕЛЫ 3–5, ОСМЫСЛЕННЫЕ ТОЛЬКО ДЛЯ ПРОФИЛЯ app ════════════════════════
+# Планировщик Laravel, авто-деплой, инвариант memory-cap на cron/supervisor и
+# пул php-fpm. На .91 нет ни одного из этих юнитов: там Docker, node и Caddy.
+# Блок именно ПРОПУСКАЕТСЯ, а не падает — иначе профиль n8n был бы форком.
+if [ "$PROFILE" = app ]; then
 
 # ── 3. crontab прикладного пользователя ─────────────────────────────────────
 say "crontab $APP_USER (планировщик через обёртку + две сторожевые строки)"
@@ -302,6 +379,26 @@ FPM_POOL="/etc/php/$PHP_VERSION/fpm/pool.d/www.conf"
 ensure_directive "$FPM_POOL" pm.max_children "${G[FPM_MAX_CHILDREN]}"
 ensure_directive "$FPM_POOL" pm.max_requests "${G[FPM_MAX_REQUESTS]}"
 
+fi
+# ═══ КОНЕЦ РАЗДЕЛОВ, ОСМЫСЛЕННЫХ ТОЛЬКО ДЛЯ app ════════════════════════════
+
+# ── 5b. Потолки контейнеров и ротация логов Docker (только n8n) ─────────────
+# Почему потолки навешиваются скриптом, а не только записаны в compose: ограда
+# волны 2 (PLAN §4, D19) запрещает `docker compose up`-пересоздание без человека,
+# а числа из compose вступают в силу ТОЛЬКО при пересоздании. `docker update`
+# меняет cgroup-лимиты у работающего контейнера немедленно и никого не роняет.
+if [ "$PROFILE" = n8n ]; then
+  say "Потолки контейнеров n8n/Caddy (docker update — без пересоздания)"
+  if [ "$DRY_RUN" = 1 ]; then
+    warn "dry-run: потолки контейнеров не трогаю"
+  elif command -v docker >/dev/null 2>&1; then
+    /usr/local/sbin/n8n-container-limits.sh || warn "потолки контейнеров не применились — см. вывод выше"
+  else
+    warn "docker не найден — потолки контейнеров пропущены"
+  fi
+fi
+
+# Наблюдаемость общая для обоих профилей: sysstat одинаково нужен и там, и там.
 ensure_directive /etc/sysstat/sysstat HISTORY "${G[SYSSTAT_HISTORY_DAYS]}" "="
 ensure_directive /etc/default/sysstat ENABLED '"true"' "="
 
@@ -329,7 +426,7 @@ else
       systemctl enable --now sysstat.service >/dev/null 2>&1 || true
       systemctl restart sysstat-collect.timer >/dev/null 2>&1 && ok "sysstat-collect.timer перезапущен"
     fi
-    if touched 'fpm/pool.d'; then
+    if [ "$PROFILE" = app ] && touched 'fpm/pool.d'; then
       systemctl reload "php$PHP_VERSION-fpm" && ok "php$PHP_VERSION-fpm перезагружен"
     fi
     # H3181 — правила старения /tmp. --create применяет их сразу; чистку делает
@@ -356,6 +453,8 @@ else
         warn "/tmp не перемонтировался — потолок вступит в силу после перезагрузки. Проверить: findmnt -no OPTIONS /tmp"
       fi
     fi
+    # ── Перезапуски, осмысленные только для app ─────────────────────────────
+    if [ "$PROFILE" = app ]; then
     # H3181 — Restart=on-failure у nginx. Политику рестарта systemd берёт на
     # daemon-reload (он выше), сам nginx перезапускать НЕ надо: это уронило бы
     # сайт ради настройки, которая нужна именно чтобы он не лежал.
@@ -398,6 +497,41 @@ else
         warn "лимиты supervisor.service вступят в силу после перезапуска: systemctl restart supervisor (или --restart-supervisor). Это перезапустит Horizon/Reverb."
       fi
     fi
+    fi
+    # ── Перезапуски, осмысленные только для n8n ─────────────────────────────
+    if [ "$PROFILE" = n8n ]; then
+      # daemon.json читается Docker'ом только при СТАРТЕ демона. Полный рестарт
+      # Docker'а уронил бы оба контейнера ради настройки ротации логов — цена
+      # несоразмерна. `live-restore: true` в самом daemon.json существует ровно
+      # для этого: с ним будущий рестарт демона НЕ роняет контейнеры. Поэтому
+      # здесь только reload (подхватывает часть опций) и честное предупреждение.
+      if touched 'docker/daemon.json' || touched '/etc/docker/daemon.json'; then
+        systemctl reload docker >/dev/null 2>&1 \
+          && ok "docker reload (ротация логов вступит в силу для НОВЫХ контейнеров)" \
+          || warn "docker reload не прошёл"
+        warn "ротация логов применится к уже работающим контейнерам только после их пересоздания — это законный шаг человека, не этого скрипта"
+      fi
+      if touched 'n8n-container-limits'; then
+        systemctl enable --now n8n-container-limits.service >/dev/null 2>&1 \
+          && ok "n8n-container-limits.service включён (потолки переутверждаются после старта Docker)" \
+          || warn "n8n-container-limits.service не включился: systemctl status n8n-container-limits.service"
+      fi
+      if touched 'n8n-backup'; then
+        systemctl enable --now n8n-backup.timer >/dev/null 2>&1 \
+          && ok "n8n-backup.timer включён" \
+          || warn "n8n-backup.timer не включился: systemctl status n8n-backup.timer"
+      fi
+      if touched 'n8n-guards-verify'; then
+        # Каталог статуса — внутри ChrootDirectory пользователя restic-push
+        # (/srv/restic), чтобы .92 читала его уже выданным sftp-ключом. Права
+        # 755 обязательны: chroot требует, чтобы корень и путь к нему не были
+        # доступны на запись никому, кроме root.
+        mkdir -p /srv/restic/status && chmod 755 /srv/restic/status
+        systemctl enable --now n8n-guards-verify.timer >/dev/null 2>&1 \
+          && ok "n8n-guards-verify.timer включён (статус для .92 в /srv/restic/status)" \
+          || warn "n8n-guards-verify.timer не включился: systemctl status n8n-guards-verify.timer"
+      fi
+    fi
     [ -d "$BACKUP_DIR" ] && ok "бэкап изменённых файлов: $BACKUP_DIR"
   fi
 fi
@@ -408,7 +542,19 @@ if [ "$DRY_RUN" = 1 ]; then
   printf '  dry-run: %d файлов разошлись с репозиторием\n' "${#CHANGED[@]}"
   exit 0
 fi
-if [ ! -f "$APP_DIR/artisan" ]; then
+if [ "$PROFILE" = n8n ]; then
+  # На .91 нет Laravel и не будет: громкую проверку делает свой скрипт, а не
+  # artisan. Ровно та же роль — сверить живую машину с числами из conf.
+  if [ -x "$SCRIPT_DIR/server_guards_n8n_verify.sh" ]; then
+    if bash "$SCRIPT_DIR/server_guards_n8n_verify.sh"; then
+      printf '\n%s✔ Предохранители .91 на месте (%d изменений в этот прогон).%s\n' "$GRN" "${#CHANGED[@]}" "$OFF"
+    else
+      die "server_guards_n8n_verify.sh недоволен — см. список выше"
+    fi
+  else
+    warn "нет $SCRIPT_DIR/server_guards_n8n_verify.sh — проверить нечем"
+  fi
+elif [ ! -f "$APP_DIR/artisan" ]; then
   warn "нет $APP_DIR/artisan — guards:verify не запущен"
 elif ! sudo -u "$APP_USER" "${G[PHP_BIN]}" "$APP_DIR/artisan" list --raw 2>/dev/null | grep -q '^guards:verify'; then
   # Предохранители можно ставить и на машину, где код ещё не выложен (первый

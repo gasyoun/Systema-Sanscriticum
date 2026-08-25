@@ -1,0 +1,22 @@
+[Unit]
+Description=Verify .91 guards and publish status where .92 can read it — H3182 (W2d)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SERVER_UPTIME_GUARDRAILS_2026H2.md
+After=docker.service
+
+[Service]
+Type=oneshot
+# --publish кладёт статус в /srv/restic/status/n8n-guards.json. Этот каталог —
+# внутри ChrootDirectory пользователя restic-push, то есть с .92 файл виден как
+# /status/n8n-guards.json по УЖЕ выданному sftp-ключу. Второе ребро доверия
+# между двумя продовыми машинами ради проверки не заводится.
+ExecStart=@@GUARDS_STAGING_DIR@@/scripts/server_guards_n8n_verify.sh --publish
+# Проверка не должна ронять систему из-за собственных находок: critical (rc=1) и
+# warning (rc=2) — это РЕЗУЛЬТАТ проверки, а не сбой юнита. Иначе systemd начал
+# бы считать сломанным сам термометр.
+SuccessExitStatus=0 1 2
+MemoryMax=256M
+TasksMax=32
+Nice=19
+
+[Install]
+WantedBy=multi-user.target
