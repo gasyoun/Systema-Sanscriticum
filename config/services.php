@@ -101,6 +101,13 @@ return [
         'calendar_post_secret' => env('N8N_CALENDAR_POST_SECRET'),
     ],
 
+    // Входящий email-канал поддержки (H3462): секрет пути вебхука
+    // POST /api/webhooks/inbound-email/{secret}. Пусто → эндпоинт всегда 403
+    // (выключен, fail-closed — как verify.max.magnet).
+    'inbound_email' => [
+        'webhook_secret' => env('INBOUND_EMAIL_WEBHOOK_SECRET'),
+    ],
+
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'bot_username' => env('TELEGRAM_BOT_USERNAME'),
