@@ -91,10 +91,47 @@ class CuratorNotifier
     }
 
     /**
+     * Банковская заявка студента (SEPA/SWIFT, H3497) — ждёт сверки по выписке
+     * получателя, затем «Подтвердить перевод» в Filament.
+     */
+    public function bankClaimReceived(Payment $payment): void
+    {
+        $headline = $payment->isAutoTrustedBankClaim()
+            ? '🏦 <b>Банковская оплата ученика</b> — доступ открыт сразу, сверка выборочная'
+            : '🏦 <b>Заявка на оплату банковским переводом</b> — нужна сверка';
+        $lines = [
+            $headline,
+            '',
+            $this->studentLine($payment->user),
+            $this->courseLine($payment->course),
+            $this->tariffLine($payment),
+            'Заявлено: <b>'.($payment->foreignAmountLabel() ?: '—').'</b>',
+            'Номинал: <b>'.$this->money((float) $payment->amount).'</b>',
+        ];
+        if ($sender = $payment->claimMeta('sender_name')) {
+            $lines[] = 'Отправитель: <code>'.e((string) $sender).'</code>';
+        }
+        if ($paidOn = $payment->claimMeta('paid_on')) {
+            $lines[] = 'Дата оплаты: <b>'.e((string) $paidOn).'</b>';
+        }
+        if ($ref = $payment->claimMeta('reference')) {
+            $lines[] = 'Референция: <code>'.e((string) $ref).'</code>';
+        }
+        if (! empty($payment->payer_note)) {
+            $lines[] = 'Примечание: '.e($payment->payer_note);
+        }
+        if (! empty($payment->proof_path)) {
+            $lines[] = '📎 Приложен файл подтверждения';
+        }
+        $lines[] = $this->adminLink($payment->user);
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
      * Новый счёт юрлицу — ждёт банковского поступления, затем «Подтвердить счёт».
      */
-    public function companyInvoiceReceived(Payment $payment): void
-    {
+    public function companyInvoiceReceived(Payment $payment): void    {
         $lines = [
             '🏢 <b>Счет для юрлица</b> — ждем поступление',
             '',
