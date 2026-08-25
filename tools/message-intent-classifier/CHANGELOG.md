@@ -3,6 +3,27 @@
 All notable changes to this project are documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] — 26-08-2026
+
+### Added
+
+- H3526 legacy harvest: config/support_tech.php keywords (белый экран,
+  не слышно, микрофон дословно; вебинар/kinescope отказ-композитом; вход в
+  access_login), StudentSelfService GROUP_PHRASES + HOMEWORK_PHRASES
+  слэш-команды и «мои группы/курсы…», answerer.py _live_intent фразы
+  (прайс, тариф, день недели, дни занятий, начало курса, закончится,
+  что идет, что сейчас), StudentChatService HUMAN_TRIGGERS («помощь»,
+  «менеджер»).
+- Новая категория intent/help_menu (StudentSelfService HELP_PHRASES) в
+  taxonomy/v1/intent.yaml + правило priority 50.
+- reports/rules-seed-census.md — по-источниковая таблица переноса со
+  скип-нотами (сайт/приложение/регистрац/доступ-расширения).
+
+### Changed
+
+- vectors/golden.json: intentional golden refresh 143 → 161 (+18 векторов на
+  новую покрытие; 0 flips по замороженным). Оба движка зелёные byte-identical.
+
 ## [0.1.0] — 25-08-2026
 
 ### Added

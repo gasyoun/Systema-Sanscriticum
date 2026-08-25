@@ -26,3 +26,6 @@ categories:
   - key: spam_noise
     title: "Спам / шум"
     description: "Рассылки, реклама, отписаться."
+  - key: help_menu
+    title: "Вызвать меню/справку бота"
+    description: "Меню, что ты умеешь, список команд, /help, /menu."

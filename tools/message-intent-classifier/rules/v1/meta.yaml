@@ -1,6 +1,8 @@
 # Правила плоскости meta — служебные флаги.
 # human_trigger: 9 регулярок escalation.py дословно (кроме (?<!тех)поддержк —
-# он выражен парой pattern+negation, это каноническая механика движка).
+# он выражен парой pattern+negation, это каноническая механика движка) +
+# HUMAN_TRIGGERS StudentChatService («помощь», «менеджер» — H3526; «куратор/
+# человек/админ/оператор» уже входили в escalation-набор).
 rules:
   - plane: meta
     category: human_trigger
@@ -10,9 +12,12 @@ rules:
       - 'напишите мне|позвоните'
       - '(?<![а-я])(реальный|админ|оператор)(?![а-я])'
       - 'поддержк[а-я]*'
+      - 'помощь|менеджер'
     negations:
       - 'техподдержк'
-    source: escalation.py _ESCALATION_PATTERNS; «поддержка» без «тех-» = живой человек, «техподдержка» — FAQ-тема
+    source: >-
+      escalation.py _ESCALATION_PATTERNS + StudentChatService HUMAN_TRIGGERS;
+      «поддержка» без «тех-» = живой человек, «техподдержка» — FAQ-тема
   - plane: meta
     category: urgent
     priority: 15
