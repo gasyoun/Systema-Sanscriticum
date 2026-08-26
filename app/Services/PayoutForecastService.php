@@ -85,6 +85,7 @@ final class PayoutForecastService
 
                         continue;
                     }
+                    $on = Carbon::parse((string) $due['due_on']);
                     $week['due'][$i] = $due + [
                         'recipient_kind' => 'teacher',
                         'channel' => 'tochka_maria',
@@ -96,6 +97,7 @@ final class PayoutForecastService
 
                     continue;
                 }
+                $on = Carbon::parse((string) $due['due_on']);
                 $res = $this->rates->netFor($slug, $on, [
                     'receipts_rub' => [$receipts],
                     'fx_rate' => $rcpt['lane'] === 'EUR' ? $fx['rate'] : null,
