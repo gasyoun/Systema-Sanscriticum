@@ -238,12 +238,25 @@ class SurveyPageController extends Controller
             return;
         }
 
+        // Одна награда на человека за опрос: повторная отправка той же анкеты
+        // не начисляет прану второй раз. DB-идемпотентность prana_transactions
+        // (user_id, reason, source_type, source_id) здесь не работает — вызов
+        // шёл без morph-source, а NULL-столбцы MySQL unique-индексом не
+        // ограничиваются (H3546).
+        $alreadyRewarded = SurveyResponse::query()
+            ->where('survey_slug', $response->survey_slug)
+            ->where('reward_user_id', $user->id)
+            ->whereNotNull('reward_sent_at')
+            ->exists();
+        if ($alreadyRewarded) {
+            return;
+        }
+
         $rubles = max(1, (int) config('surveys.reward_prana_rubles', 500));
         $amount = max(1, (int) round($rubles * PranaSettings::rate()));
 
-        if (app(PranaService::class)->award($user, 'survey_reward', amount: $amount, meta: [
+        if (app(PranaService::class)->award($user, 'survey_reward', source: $response, amount: $amount, meta: [
             'survey' => $response->survey_slug,
-            'response_id' => $response->id,
         ])) {
             $response->forceFill(['reward_user_id' => $user->id, 'reward_sent_at' => now()])->save();
         }

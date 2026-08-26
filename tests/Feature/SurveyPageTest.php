@@ -191,4 +191,72 @@ class SurveyPageTest extends TestCase
 
         $this->assertSame(0, SurveyResponse::count());
     }
+
+    /** @test */
+    public function repeat_submission_with_same_email_awards_prana_once(): void
+    {
+        $user = User::factory()->create(['email' => 'farm@example.ru']);
+        $payload = [
+            'what_happened' => 'Не было времени',
+            'reward_choice' => 'prana',
+            'contact' => 'Farm@Example.ru',
+        ];
+
+        $this->post('/anketa/exit-price', $payload)->assertRedirect();
+        $first = SurveyResponse::firstOrFail();
+        $balanceAfterFirst = (int) $user->fresh()->prana_balance;
+        $this->assertNotNull($first->reward_sent_at);
+        $this->assertGreaterThan(0, $balanceAfterFirst);
+
+        // Повторная отправка той же анкеты тем же человеком (фарм награды):
+        // ответ сохраняется, прана НЕ начисляется второй раз.
+        $this->post('/anketa/exit-price', [
+            'what_happened' => 'Не помню деталей',
+            'reward_choice' => 'prana',
+            'contact' => 'farm@example.ru',
+        ])->assertRedirect('/anketa/exit-price?done=1');
+
+        $this->assertSame(2, SurveyResponse::count());
+        $second = SurveyResponse::orderBy('id')->skip(1)->first();
+        $this->assertNull($second->reward_user_id);
+        $this->assertNull($second->reward_sent_at);
+        $this->assertSame($balanceAfterFirst, (int) $user->fresh()->prana_balance);
+        $this->assertSame(
+            1,
+            \DB::table('prana_transactions')->where('user_id', $user->id)->where('reason', 'survey_reward')->count(),
+        );
+    }
+
+    /** @test */
+    public function same_email_is_rewarded_independently_per_survey(): void
+    {
+        config(['surveys.definitions.test-reward-2' => [
+            'title' => 'Второй опрос',
+            'intro' => '',
+            'reward_enabled' => true,
+            'questions' => [
+                ['id' => 'note', 'type' => 'text', 'required' => false, 'label' => 'Заметка'],
+            ],
+        ]]);
+
+        $user = User::factory()->create(['email' => 'once@example.ru']);
+
+        $this->post('/anketa/exit-price', [
+            'what_happened' => 'Тогда была дороговато',
+            'reward_choice' => 'prana',
+            'contact' => 'once@example.ru',
+        ])->assertRedirect('/anketa/exit-price?done=1');
+
+        // Другой опрос — отдельная награда: дедуп только внутри одного slug.
+        $this->post('/anketa/test-reward-2', [
+            'note' => 'Второй опрос пройден',
+            'reward_choice' => 'prana',
+            'contact' => 'once@example.ru',
+        ])->assertRedirect();
+
+        $this->assertSame(
+            2,
+            SurveyResponse::whereNotNull('reward_sent_at')->where('reward_user_id', $user->id)->count(),
+        );
+    }
 }
