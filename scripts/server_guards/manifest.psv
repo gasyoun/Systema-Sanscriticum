@@ -29,3 +29,9 @@ logrotate/systema-app|/etc/logrotate.d/systema-app|644|warning
 systemd/tmp.mount.d/99-systema-size.conf|/etc/systemd/system/tmp.mount.d/99-systema-size.conf|644|critical
 tmpfiles/systema-tmp.conf|/etc/tmpfiles.d/systema-tmp.conf|644|warning
 systemd/nginx.service.d/99-systema-restart.conf|/etc/systemd/system/nginx.service.d/99-systema-restart.conf|644|critical
+sbin/systema-peer-probe.sh|/usr/local/sbin/systema-peer-probe.sh|755|warning
+sbin/systema-remediation-ladder.sh|/usr/local/sbin/systema-remediation-ladder.sh|755|warning
+systemd/systema-peer-probe.service|/etc/systemd/system/systema-peer-probe.service|644|warning
+systemd/systema-peer-probe.timer|/etc/systemd/system/systema-peer-probe.timer|644|warning
+systemd/systema-remediation-ladder.service|/etc/systemd/system/systema-remediation-ladder.service|644|warning
+systemd/systema-remediation-ladder.timer|/etc/systemd/system/systema-remediation-ladder.timer|644|warning

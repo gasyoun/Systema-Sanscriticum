@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the remediation ladder every 5 minutes
+[Timer]
+OnCalendar=*:00/5
+# Сдвиг относительно peer-probe: лестница должна смотреть на мир ПОСЛЕ того,
+# как перекрёстная проверка отработала, а не одновременно с ней.
+RandomizedDelaySec=60
+AccuracySec=10s
+Persistent=false
+[Install]
+WantedBy=timers.target
