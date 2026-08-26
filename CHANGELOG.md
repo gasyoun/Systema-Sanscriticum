@@ -1,3 +1,7 @@
+## [Unreleased]
+### Added
+- **H3546 (OxAlpha `x-preview-f-free`, 26-08-2026): 30-day risk-ranked code review отчёт + дизайн будущего OxAlpha status-гейта (НЕ включён).** [CODE_REVIEW_SYSTEMA_OXALPHA_30D_2026-08-26](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CODE_REVIEW_SYSTEMA_OXALPHA_30D_2026-08-26.md): десять слайсов окна 26-07..25-08 (#2088, #2009, #2059, #2080, #1986, #2011, #1984, #1980, #2103, #2102) с независимыми Standards/Spec вердиктами, SHAs, exclusion'ами vendor/generated булка; один P1 найден и починен регрессионными тестами ([PR #2123](https://github.com/gasyoun/Systema-Sanscriticum/pull/2123) — фарм призовой праны в анкетах), унаследованный красный PayrollForecastTest задокументирован как human-gated money-domain. [OXALPHA_STATUS_GATE_DESIGN_2026](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/OXALPHA_STATUS_GATE_DESIGN_2026.md): executable-code matching + независимый required status check + human approval на money/security/production пути — design-only, ни один workflow/protection не тронут.
+
 ## [1.90.20] - 2026-08-26
 
 ### Added
