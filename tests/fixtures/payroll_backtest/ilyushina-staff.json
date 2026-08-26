@@ -1,0 +1,27 @@
+{
+ "recipient": "ilyushina",
+ "display": "Ильюшина М. М. (Поликарпова)",
+ "channel": "self_ip",
+ "expectation_source": "maria_payment_rows",
+ "months": [
+  {
+   "month": "2026-04",
+   "anchor": "rows_3448+3485",
+   "on": "2026-04-10",
+   "inputs": {},
+   "expected": {
+    "payable_rub": 30000.0
+   }
+  },
+  {
+   "month": "2026-05",
+   "anchor": "rows_3535+3563",
+   "on": "2026-05-08",
+   "inputs": {},
+   "expected": {
+    "payable_rub": 30000.0
+   }
+  }
+ ],
+ "note": "Ритм 18 000 + 12 000 ≈ 30 000 ₽/мес; шлёт сама с ИП (Точка); alias Поликарпова обязателен."
+}

@@ -31,6 +31,7 @@ use App\Services\Lecture\LectureAiClient;
 use App\Services\Lecture\LectureBuilderClient;
 use App\Services\Payments\HttpPaypalWebhookSignatureVerifier;
 use App\Services\Payments\PaypalWebhookSignatureVerifier;
+use App\Services\Payroll\PayrollRateCalculator;
 use App\Services\Telegram\DaemonProcessProbe;
 use App\Services\Telegram\ProcDaemonProcessProbe;
 use App\Services\Webinar\WebinarProvider;
@@ -59,6 +60,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // H3532: калькулятор формул «на руки» читает сгенерированный
+        // config/teacher_rates.php на момент резолва (тесты подменяют config).
+        $this->app->bind(
+            PayrollRateCalculator::class,
+            fn () => new PayrollRateCalculator((array) config('teacher_rates')),
+        );
         $this->app->singleton(
             LectureBuilderClient::class,
             fn () => LectureBuilderClient::fromConfig(),
