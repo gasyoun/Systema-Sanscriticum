@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Lesson;
+use App\Models\RecordingGapAlert;
 use App\Models\Schedule;
 use App\Services\Recordings\N8nZoomExecutionProbe;
 use Carbon\CarbonImmutable;
@@ -14,7 +15,6 @@ use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule as ConsoleSchedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -66,6 +66,8 @@ class RecordingsGapWatchTest extends TestCase
         $this->assertStringContainsString('no-lesson', $out);
         $this->assertStringContainsString('--dry: Telegram не отправлен.', $out);
         $this->assertStringContainsString('Записи не в кабинете', $out);
+        // H3557: имя группы в строке — кликабельная ссылка на чат группы.
+        $this->assertStringContainsString('<a href="https://t.me/c/999">Группа А</a>', $out);
     }
 
     public function test_published_lesson_with_rutube_is_exit_zero(): void
@@ -120,15 +122,20 @@ class RecordingsGapWatchTest extends TestCase
 
         $this->seedLiveSlot(withChat: true);
 
-        $this->assertSame(1, Artisan::call('recordings:gap-watch'));
+        // H3557: успешная отправка = exit 0 (раньше всегда был FAILURE —
+        // 14 ложных ERROR в сутки в laravel.log).
+        $this->assertSame(0, Artisan::call('recordings:gap-watch'));
         Http::assertSent(fn ($request) => str_contains($request->url(), 'api.telegram.org')
             && str_contains((string) $request['text'], 'Курс тест'));
 
-        $this->assertSame(1, Artisan::call('recordings:gap-watch'));
+        // Дедуп теперь персистентный: строка recording_gap_alerts переживает
+        // cache:clear автодеплоя.
+        $this->assertSame(1, RecordingGapAlert::query()->count());
+
+        $this->assertSame(0, Artisan::call('recordings:gap-watch'));
         $this->assertSame(1, collect(Http::recorded())
             ->filter(fn ($pair) => str_contains($pair[0]->url(), 'api.telegram.org'))
             ->count());
-        $this->assertTrue((bool) Cache::get('recording_gap:'.$this->yesterday2000->toDateString()));
     }
 
     public function test_n8n_exec_1423_attaches_tos_forbidden(): void

@@ -75,6 +75,7 @@ final class PayoutForecastService
                 $balance = max(0.0, (float) ($due['balance'] ?? 0.0));
                 if ($receipts <= 0.0 && $balance <= 0.0) {
                     unset($week['due'][$i]);
+
                     continue;
                 }
 
@@ -85,6 +86,7 @@ final class PayoutForecastService
 
                         continue;
                     }
+                    $on = Carbon::parse((string) $due['due_on']);
                     $week['due'][$i] = $due + [
                         'recipient_kind' => 'teacher',
                         'channel' => 'tochka_maria',
@@ -96,6 +98,7 @@ final class PayoutForecastService
 
                     continue;
                 }
+                $on = Carbon::parse((string) $due['due_on']);
                 $res = $this->rates->netFor($slug, $on, [
                     'receipts_rub' => [$receipts],
                     'fx_rate' => $rcpt['lane'] === 'EUR' ? $fx['rate'] : null,
