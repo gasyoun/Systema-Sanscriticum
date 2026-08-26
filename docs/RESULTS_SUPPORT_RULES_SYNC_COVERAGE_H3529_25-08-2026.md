@@ -52,10 +52,44 @@ python3 tools/check_mic_vendor_drift.py --upstream <clone@pin> → matches pin c
 
 ## Честные остатки
 
-- Панель-скриншот из проды — после деплоя (нужен MG-approval Environment «production»).
-- Реальный `support:rules-sync` на проде — операторский шаг после деплоя
-  (`php artisan support:rules-sync --dry-run` ×2 по транскрипту выше).
+- ~~Панель-скриншот из проды — после деплоя (нужен MG-approval Environment «production»).~~ — см. остаток ниже.
+- ~~Реальный `support:rules-sync` на проде — операторский шаг после деплоя~~ — **выполнено 26-08-2026** (транскрипт ниже).
 - Секрет `MIC_UPSTREAM_TOKEN` (fine-grained PAT, contents:read на
   gasyoun/message-intent-classifier) — заводит человек.
+
+## Прод-исполнение 26-08-2026 (MG «go»)
+
+Код на проде уже был свежий (серверный auto-deploy cron успел раньше: HEAD
+`e4655a30`, миграция `[176] Ran`). CI-путь деплоя в этот раз заблокировал
+зомби-лок concurrency-группы `deploy-production` («waiting for another
+serialized run to finish» при нуле активных раннов — известный баг Actions);
+использован санкционированный workflow-заголовком ручной операторский путь
+(SSH → `artisan`), approval MG в чате.
+
+```
+=== PROD DRY-RUN #1 ===
+  create topic/materials_content 26951bee (2 patterns)
+  ...
+summary: created=37 updated=0 disabled=0 unchanged=0 legacy-skipped=7 [DRY RUN]
+
+=== PROD REAL RUN ===
+summary: created=37 updated=0 disabled=0 unchanged=0 legacy-skipped=7
+
+=== PROD DRY-RUN #3 (empty diff) ===
+summary: created=0 updated=0 disabled=0 unchanged=37 legacy-skipped=7 [DRY RUN]
+```
+
+DB-верификация (tinker, read-only): **37 synced rows (36 enabled; 1
+yaml-disabled `other_support`)** · **7 legacy rows — все 7 по-прежнему
+enabled** (гард сработал: sync легаси не тронул). Смоук: `samskrte.ru` →
+HTTP 200 за 0.38 c.
+
+Остатки после прода:
+
+1. Панель-скриншот — открыть /admin/telegram-support-analytics под админом,
+   приложить сюда.
+2. Секрет `MIC_UPSTREAM_TOKEN` — включит полную байт-в-байт сверку против pin.
+3. Зомби-лок группы `deploy-production`: если к следующему деплою не рассосётся —
+   cancel+re-dispatch или повторный SSH-путь; GTD-строка заведена.
 
 _Dr. Mārcis Gasūns_
