@@ -123,6 +123,14 @@ ledger() { # ledger <rung> <verdict> <note>
 
 escalate() { # escalate <LEVEL> <subject> <body>
   log "ESCALATE [$1] $2 — $3"
+  # Репетиция не будит людей. Без этой оговорки прогон --dry-run (в том числе
+  # штатная репетиция учений D13) слал бы в Telegram НАСТОЯЩУЮ тревогу об
+  # аварии, которой нет; несколько таких — и на сообщения лестницы перестанут
+  # смотреть. Тревога, которой не верят, хуже отсутствующей.
+  if [ "$DRY_RUN" = 1 ]; then
+    log "DRY-RUN would escalate to humans (сообщение НЕ отправлено)"
+    return 0
+  fi
   if [ -x "$ALERT_BIN" ]; then
     # Доставка — best-effort и НИКОГДА не роняет лестницу: durable-запись это
     # строка в логе выше, Telegram лишь удобство. Тот же контракт, что у
@@ -143,8 +151,12 @@ reset_attempts() { printf '0' > "$COUNTER"; TS > "$LAST_OK"; }
 
 smoke() { # 0 = здоров
   [ "$STUB_UNHEALTHY" = 1 ] && return 1
-  local code
-  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$SMOKE_URL" 2>/dev/null || printf '000')
+  local code out
+  # Та же ловушка, что в systema-peer-probe.sh: `curl … || printf '000'` при
+  # недоступном хосте склеивает вывод -w и запасное значение в «000000».
+  # Вердикт от этого не менялся, но строка в журнале врала.
+  out=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$SMOKE_URL" 2>/dev/null)
+  code="${out:-000}"
   case ",$SMOKE_EXPECT," in *",$code,"*) return 0 ;; esac
   log "smoke red: $SMOKE_URL -> $code"
   return 1

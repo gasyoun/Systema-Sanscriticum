@@ -58,9 +58,16 @@ log() { printf '%s %s\n' "$(TS)" "$*" >> "$LOG"; }
 
 # Один заход. Печатает код HTTP (000 = не доехали вовсе).
 probe_once() {
-  local args=(-s -o /dev/null -w '%{http_code}' --max-time "$PROBE_TIMEOUT")
+  local args=(-s -o /dev/null -w '%{http_code}' --max-time "$PROBE_TIMEOUT") out
   [ -n "$PROBE_RESOLVE" ] && args+=(--resolve "$PROBE_RESOLVE")
-  curl "${args[@]}" "$PROBE_URL" 2>/dev/null || printf '000'
+  # НЕ `curl … || printf '000'`. При недоступном хосте curl печатает 000 через
+  # -w И возвращает ненулевой код, то есть оба источника складывались и в
+  # журнал уходило «code=000000» (поймано живым прогоном 26-08-2026, а не
+  # чтением кода). Сравнение с PROBE_EXPECT при этом всё равно не совпадало и
+  # сосед честно считался мёртвым — но строка в журнале врала, а разбирают
+  # аварию именно по ней.
+  out=$(curl "${args[@]}" "$PROBE_URL" 2>/dev/null)
+  printf '%s' "${out:-000}"
 }
 
 # Одна неудачная попытка — это ещё не смерть соседа: перезапуск Caddy занимает

@@ -73,9 +73,16 @@ cat > "$BIN/curl" <<'EOF'
 #!/usr/bin/env bash
 TMPD="${LADDER_TEST_TMP:?}"
 printf '%s\n' "$*" >> "$TMPD/curl-calls.txt"
-# Смок отдаёт код из файла; всё остальное (в т.ч. Proxmox API) — молча 000.
-for a in "$@"; do case "$a" in http://smoke.invalid/) cat "$TMPD/smoke-code" 2>/dev/null || printf '000'; exit 0 ;; esac; done
-printf '000'
+# Заглушка ПОВТОРЯЕТ поведение настоящего curl, а не удобное: при недоступном
+# хосте он печатает 000 через -w И возвращает ненулевой код. Ранняя версия этой
+# заглушки всегда выходила с нулём, и из-за этого мимо теста проехал живой
+# дефект — «code=000000» в журнале (поймано на .92 26-08-2026). Заглушка,
+# которая добрее оригинала, проверяет не то, что поедет на прод.
+code=000
+for a in "$@"; do case "$a" in http://smoke.invalid/) code=$(cat "$TMPD/smoke-code" 2>/dev/null || printf '000') ;; esac; done
+printf '%s' "$code"
+[ "$code" = 000 ] && exit 7
+exit 0
 EOF
 
 cat > "$BIN/alertsink" <<'EOF'
@@ -153,6 +160,25 @@ rc=$(run_ladder)
 grep -q 'GAVE UP' "$LOGF" 2>/dev/null && ok "в журнале «GAVE UP»" || bad "сдались молча — это дефект"
 [ ! -s "$RESTART_TRACE" ] && ok "после потолка ни одного перезапуска" || bad "действовала после потолка: $(cat "$RESTART_TRACE")"
 grep -q 'ERROR' "$ALERT_TRACE" 2>/dev/null && ok "человеку сказали" || bad "человеку не сказали"
+
+echo "== 5b. недоступный смок пишет в журнал 000, а не 000000 =="
+# Регрессия на живой дефект 26-08-2026: `curl … || printf '000'` складывал
+# вывод -w и запасное значение. Вердикт был верный, врала строка журнала — а
+# разбирают аварию по ней.
+reset_world
+echo 000 > "$TMP/smoke-code"
+rc=$(run_ladder)
+grep -q 'smoke red: .* -> 000$' "$LOGF" 2>/dev/null && ok "код в журнале ровно 000" || bad "в журнале не 000: $(grep -o 'smoke red:.*' "$LOGF" | head -1)"
+
+echo "== 5c. --dry-run НЕ будит людей и НИЧЕГО не делает =="
+# Репетиция, поднимающая настоящую тревогу, приучает не верить тревогам.
+reset_world
+echo 503 > "$TMP/smoke-code"; echo dead > "$TMP/unit-fake-a.state"
+rc=$(run_ladder --dry-run --stub-unhealthy)
+[ ! -s "$ALERT_TRACE" ] && ok "ни одного сообщения человеку из репетиции" || bad "репетиция послала тревогу: $(cat "$ALERT_TRACE")"
+[ ! -s "$RESTART_TRACE" ] && ok "ни одного перезапуска из репетиции" || bad "репетиция перезапускала: $(cat "$RESTART_TRACE")"
+grep -q 'DRY-RUN would: R2 restart unit fake-a' "$LOGF" 2>/dev/null && ok "репетиция сказала, что СДЕЛАЛА БЫ" || bad "репетиция промолчала о намерении"
+[ "$(cat "$STATE/remediation-attempts" 2>/dev/null || echo 0)" = 0 ] && ok "счётчик репетицией не тронут" || bad "репетиция сожгла попытку"
 
 echo "== 6. R3 чистит /tmp, но НЕ стирает счётчик =="
 reset_world
