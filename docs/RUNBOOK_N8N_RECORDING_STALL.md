@@ -89,7 +89,9 @@ cd /var/www/html && php artisan recordings:gap-watch --retry-failed --date=<се
 
 ## 8. Мониторинг-фон (работает само)
 
-- 08:00 Europe/Moscow: `recordings:gap-watch` — гэпы → админский пульс + отдел заботы (`RECORDING_GAP_CARE_TELEGRAM_CHAT_ID=-1002079934542`).
+- 08:00 Europe/Moscow: `recordings:gap-watch` — гэпы → админский пульс + отдел заботы (`RECORDING_GAP_CARE_TELEGRAM_CHAT_ID=-1002079934542`, копия помечена «[Отдел заботы]»). Получатели пульса — `RECORDING_GAP_TELEGRAM_CHAT_ID`; НЕ оставляйте пустым: fallback на список `CABINET_PROBE_TELEGRAM_CHAT_ID` шлёт один алерт во все личные чаты списка (H3557).
+- Дедуп — строка в таблице `recording_gap_alerts` (отпечаток набора пробелов, окно 36 ч), переживает `cache:clear` автодеплоев. До H3557 ключ жил в Redis: ~20 деплоев 25-08-2026 сбрасывали его, и hourly `--stale` проходы отправляли тот же алерт заново. Имя группы в строке алерта — кликабельная t.me-ссылка (`App\Support\TelegramGroupLink`).
+- Успешная отправка = exit 0; FAILURE остался только для `--dry` и «пробелы есть, но в TG не ушло».
 - REST-плечо сторожа читает последние exec через `N8N_API_KEY` (skip-soft при недоступности — таблица всё равно печатается).
 - Fallback чтения на .91: `sqlite3 /opt/n8n/storage/database.sqlite "SELECT id,status,startedAt FROM execution_entity WHERE workflowId='1EIqqNzMl5NNIxST' ORDER BY startedAt DESC LIMIT 3;"`
 
