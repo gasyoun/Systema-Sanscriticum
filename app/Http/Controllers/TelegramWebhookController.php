@@ -218,6 +218,53 @@ class TelegramWebhookController extends Controller
             return;
         }
 
+        // 1.65. SELF-SERVICE: открытые эфиры ОРС — расписание + подписка/отписка
+        // (H3576 §2). Подписка = активная группа потока → classes:remind-upcoming
+        // напомнит за час; отдельного хранилища подписок нет. Отписка проверяется
+        // первой — фразы содержат «эфир(ы)» внутри себя.
+        $selfService = app(StudentSelfService::class);
+        if ($selfService->matchesStreamsUnsubscribeIntent($question)) {
+            $reply = $selfService->unsubscribeFromStreams($user);
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $reply,
+                'is_read' => true,
+                'source' => 'telegram_bot',
+            ]);
+            $this->sendMessage($chatId, $reply);
+
+            return;
+        }
+
+        if ($selfService->matchesStreamsSubscribeIntent($question)) {
+            $reply = $selfService->subscribeToStreams($user);
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $reply,
+                'is_read' => true,
+                'source' => 'telegram_bot',
+            ]);
+            $this->sendMessage($chatId, $reply);
+
+            return;
+        }
+
+        if ($selfService->matchesStreamsIntent($question)) {
+            $summary = $selfService->streamsSummary($user);
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $summary,
+                'is_read' => true,
+                'source' => 'telegram_bot',
+            ]);
+            $this->sendMessage($chatId, $summary);
+
+            return;
+        }
+
         // 1.7. SELF-SERVICE: /help — детерминированное меню, минуя ИИ (H1357).
         if (app(StudentSelfService::class)->matchesHelpIntent($question)) {
             $menu = app(StudentSelfService::class)->helpMenu();
