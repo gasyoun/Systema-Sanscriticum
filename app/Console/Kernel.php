@@ -10,6 +10,7 @@ use App\Support\ScheduleFailureSignal;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -571,11 +572,43 @@ class Kernel extends ConsoleKernel
         // H2635: two bounded evidence ingests, exactly 12 hours apart. The command and the support
         // reader share the same Madeline session lock; session_busy exits
         // non-zero so the scheduler records an honest missed run for retry.
+        //
+        // H3411: this Laravel version's Event builder has no ->timeout(...) —
+        // Event::run() calls Process::fromShellCommandline() with a hardcoded
+        // null timeout, so there is no framework-level ceiling to add here.
+        // The real ceiling is two-layered: (1) MadelineSyncWatchdog::arm() inside
+        // SyncTelegramHarvest::handle() (SIGALRM after sync_timeout_seconds,
+        // config('services.telegram_harvest.sync_timeout_seconds')), and
+        // (2) systema-schedule-run.sh's `timeout` wrapping schedule:run itself
+        // (see that script's header for why a detached MadelineProto daemon can
+        // still outlive both — H1973/H3121). Sibling audit for this same gap
+        // (H3411 Deliverable 1) covered every telegram-* scheduled entry above:
+        // telegram-support:sync, telegram-harvest:roster-groups and this command
+        // all arm a watchdog before touching the shared session. One gap found
+        // outside this list: telegram-support:healthcheck (everyFifteenMinutes,
+        // below) can call telegram-support:recover → MadelineSessionHealer::recover(),
+        // whose own kill/clear steps (killDaemons/killDaemonsHard/clearIpcArtifacts)
+        // run with no watchdog at all — only the nested Artisan::call('telegram-support:sync')
+        // inside it is protected (SyncTelegramSupport arms its own watchdog, which
+        // fires regardless of call depth). Left as a follow-up: it's a different
+        // command family (support-session recovery, not harvest sync) and fixing
+        // it here would expand this handoff's blast radius beyond its named target.
+        // H3411 Deliverable 3: every other scheduled command family above has an
+        // ->onFailure() pager (ScheduleFailureSignal, money-scoped); this one had
+        // none — a stuck run (MadelineSyncWatchdog::arm() exits non-zero on SIGALRM,
+        // see EXIT_TIMED_OUT) or any other non-zero exit vanished into laravel.log
+        // with nobody paged. Not routed through ScheduleFailureSignal itself: that
+        // reporter pages finance/accountant roles with "Сбой денежного cron" copy,
+        // which would misattribute a harvester stall as a money-command failure.
         $schedule->command('telegram-harvest:sync --json')
             ->cron((string) config('services.telegram_harvest.daily_cron', '15 5,17 * * *'))
             ->withoutOverlapping($this->madelineSessionLockMinutes(600))
             ->onOneServer()
             ->when(fn (): bool => (bool) config('services.telegram_harvest.daily_enabled', false))
+            ->onFailure(fn () => Log::critical('schedule.telegram_harvest_sync_failed', [
+                'command' => 'telegram-harvest:sync --json',
+                'hint' => 'Non-zero exit (stuck/timed-out run or genuine failure) — see docs/SERVER_SOFT_ALERT_PLAYBOOK.md and laravel.log around this timestamp.',
+            ]))
             ->name('telegram-harvest-twice-daily-sync');
 
         // Track C (H164): @zapisi_ORSbot напоминает о занятии в чат группы прямо
