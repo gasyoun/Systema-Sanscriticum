@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Bot;
 
+use App\Models\Group;
 use App\Models\HomeworkSubmission;
 use App\Models\Schedule;
 use App\Models\SupportAnswerSuggestion;
@@ -117,6 +118,7 @@ class StudentSelfService
         return "🤖 <b>Что я умею</b>\n\n"
             ."📚 <b>мои группы</b> — ваши группы, курсы и ближайшее занятие\n"
             ."📝 <b>мои задания</b> — статус домашних работ\n"
+            ."🗓 <b>ближайшие эфиры</b> — открытые стримы-анонсы · «подписаться на эфиры» / «отписаться от эфиров»\n"
             ."🔗 ссылка на занятие / запись / расписание — из ваших групп, без ИИ\n"
             .$noticeLine
             ."🙋 «позови куратора» — переключиться на живого человека\n\n"
@@ -254,6 +256,224 @@ class StudentSelfService
             HomeworkSubmission::STATUS_SUBMITTED => '🕓',
             default => '📄',
         };
+    }
+
+    /**
+     * Открытые стримы-анонсы ОРС (H3576 §2): курс бесплатных эфиров и группа
+     * подписки на них. Подписка = активное участие в группе потока: ростер
+     * classes:remind-upcoming берёт активных участников групп курса, поэтому
+     * отдельная таблица подписок не нужна.
+     */
+    public const STREAMS_COURSE_SLUG = 'otkrytye-zaniatiia-i-vebinary';
+
+    public const STREAMS_GROUP_SLUG = 'otkrytye-efiry-ors';
+
+    /**
+     * Точные фразы-команды «ближайшие эфиры». Проверяются ПОСЛЕ интентов
+     * подписки/отписки — те содержат слово «эфир(ы)» внутри себя.
+     *
+     * @var list<string>
+     */
+    private const STREAMS_PHRASES = [
+        '/efiry',
+        'эфиры',
+        'эфир',
+        'стрим',
+        'вебинар',
+        'анонс курсов',
+    ];
+
+    private const STREAMS_SUBSCRIBE_PHRASES = [
+        'подписаться на эфиры',
+        'подписка на эфиры',
+        'подпишись на эфиры',
+        'напоминайте об эфирах',
+        'напоминать об эфирах',
+        'хочу ходить на эфиры',
+        'хочу узнавать про стримы',
+    ];
+
+    private const STREAMS_UNSUBSCRIBE_PHRASES = [
+        'отписаться от эфиров',
+        'отписка от эфиров',
+        'не хочу получать анонсы',
+        'не напоминай об эфирах',
+        'не напоминать об эфирах',
+        'убрать эфиры',
+    ];
+
+    /** Похоже ли сообщение на команду подписки на открытые эфиры. */
+    public function matchesStreamsSubscribeIntent(string $text): bool
+    {
+        return self::containsAny($text, self::STREAMS_SUBSCRIBE_PHRASES);
+    }
+
+    /** Похоже ли сообщение на команду отписки от открытых эфиров. */
+    public function matchesStreamsUnsubscribeIntent(string $text): bool
+    {
+        return self::containsAny($text, self::STREAMS_UNSUBSCRIBE_PHRASES);
+    }
+
+    /** Похоже ли сообщение на запрос расписания открытых эфиров. */
+    public function matchesStreamsIntent(string $text): bool
+    {
+        return self::containsAny($text, self::STREAMS_PHRASES);
+    }
+
+    /**
+     * Расписание открытых эфиров + статус подписки пользователя. Только факты
+     * из БД (курс по слагу), Telegram-HTML.
+     */
+    public function streamsSummary(User $user, string $source = 'telegram'): string
+    {
+        $upcoming = Schedule::query()
+            ->whereHas('course', fn ($q) => $q->where('courses.slug', self::STREAMS_COURSE_SLUG))
+            ->where('start', '>=', now())
+            ->orderBy('start')
+            ->limit(5)
+            ->get();
+
+        $lines = ["🗓 <b>Открытые эфиры ОРС</b>\n"];
+
+        if ($upcoming->isEmpty()) {
+            $lines[] = 'Ближайшие даты ещё не объявлены — подпишитесь, и мы пришлём '
+                .'напоминание, как только эфир появится в расписании.';
+        } else {
+            foreach ($upcoming as $index => $schedule) {
+                $when = $schedule->start->format('d.m.Y').' в '.$schedule->start->format('H:i');
+                $title = $schedule->title ?: 'Стрим-анонс курсов ОРС';
+                $lines[] = ($index === 0 ? '▶️ ' : '• ').e($title).' — '.$when.' МСК';
+
+                // Для ближайшего эфира — трекинг-ссылка подключиться (подписана
+                // на студента) или страница курса для записи новичку.
+                if ($index === 0) {
+                    if ($this->isSubscribedToStreams($user)) {
+                        if ($link = $schedule->trackedJoinUrlFor($user, $source)) {
+                            $lines[] = "   <a href='{$link}'>Подключиться к эфиру</a>";
+                        }
+                    } else {
+                        $url = rtrim((string) config('app.url'), '/')
+                            .'/k/'.self::STREAMS_COURSE_SLUG;
+                        $lines[] = "   <a href='{$url}'>Записаться бесплатно</a>";
+                    }
+                }
+            }
+        }
+
+        $lines[] = '';
+
+        $lines[] = $this->isSubscribedToStreams($user)
+            ? "🔔 Вы подписаны: напомним за час до каждого эфира.\n<i>Отписаться — напишите «отписаться от эфиров».</i>"
+            : '<i>Напоминания о каждом эфире: напишите «подписаться на эфиры».</i>';
+
+        return rtrim(implode("\n", $lines));
+    }
+
+    /**
+     * Подписка на открытые эфиры: присоединить к группе потока (idempotent,
+     * повторная подписка после отписки гасит left_at). Возвращает текст ответа.
+     */
+    public function subscribeToStreams(User $user): string
+    {
+        $group = $this->streamsGroup();
+        $already = $this->isSubscribedToStreams($user);
+
+        if (! $already) {
+            $existing = $user->groups()->where('groups.id', $group->id)->first();
+            if ($existing) {
+                $user->groups()->updateExistingPivot($group->id, [
+                    'left_at' => null,
+                    'left_reason' => null,
+                ]);
+            } else {
+                $user->groups()->attach($group->id);
+            }
+        }
+
+        $next = Schedule::query()
+            ->whereHas('course', fn ($q) => $q->where('courses.slug', self::STREAMS_COURSE_SLUG))
+            ->where('start', '>=', now())
+            ->orderBy('start')
+            ->first();
+
+        $header = $already
+            ? 'Вы уже подписаны на открытые эфиры 🔔'
+            : 'Готово — вы подписаны на открытые эфиры 🔔';
+
+        $whenLine = $next
+            ? "\n\nБлижайший: <b>".e($next->title ?: 'Стрим-анонс курсов ОРС').'</b> — '
+                .$next->start->format('d.m.Y').' в '.$next->start->format('H:i').' МСК.'
+            : "\n\nКак только появится новый эфир — напомним.";
+
+        return $header.$whenLine."\n\n<i>Пришлём сообщение за час до начала. "
+            .'Отписаться — напишите «отписаться от эфиров».</i>';
+    }
+
+    /** Отписка от открытых эфиров (участие фиксируется через left_at). */
+    public function unsubscribeFromStreams(User $user): string
+    {
+        $group = $this->streamsGroup();
+
+        $attached = $user->groups()->where('groups.id', $group->id)->first();
+        if (! $attached) {
+            return 'Вы и не были подписаны на открытые эфиры. Хотите смотреть расписание — '
+                .'напишите «ближайшие эфиры».';
+        }
+
+        $active = $user->groups()
+            ->where('groups.id', $group->id)
+            ->wherePivotNull('left_at')
+            ->exists();
+
+        if ($active) {
+            $user->groups()->updateExistingPivot($group->id, [
+                'left_at' => now(),
+                'left_reason' => 'bot_streams_unsubscribe',
+            ]);
+        }
+
+        return 'Отписал — напоминания об открытых эфирах больше не придут 🙏 '
+            .'<i>Передумаете: напишите «подписаться на эфиры».</i>';
+    }
+
+    /** Активен ли пользователь в группе открытых эфиров. */
+    public function isSubscribedToStreams(User $user): bool
+    {
+        $group = Group::query()->where('slug', self::STREAMS_GROUP_SLUG)->first();
+        if (! $group) {
+            return false;
+        }
+
+        return $user->groups()
+            ->where('groups.id', $group->id)
+            ->wherePivotNull('left_at')
+            ->exists();
+    }
+
+    /** Группа потока открытых эфиров (создаётся при первом обращении). */
+    private function streamsGroup(): Group
+    {
+        return Group::query()->firstOrCreate(
+            ['slug' => self::STREAMS_GROUP_SLUG],
+            ['name' => 'Открытые эфиры ОРС (стрим-анонсы)', 'status' => 'forming'],
+        );
+    }
+
+    private static function containsAny(string $text, array $phrases): bool
+    {
+        $t = mb_strtolower(trim($text));
+
+        if ($t === '') {
+            return false;
+        }
+
+        foreach ($phrases as $phrase) {
+            if (str_contains($t, $phrase)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
