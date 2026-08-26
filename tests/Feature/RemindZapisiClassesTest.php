@@ -173,11 +173,36 @@ class RemindZapisiClassesTest extends TestCase
         $this->artisan('zapisi:remind-classes')->assertSuccessful();
         $this->assertNotNull($schedule->fresh()->zapisi_reminded_at);
 
-        // Перенос времени сбрасывает метку — напоминание перевзведётся к новому старту.
+        // Перенос времени занятия сбрасывает колонку - напоминание перевыстрелит к новому времени.
         $schedule->update(['start' => now()->addMinutes(20)]);
         $this->assertNull($schedule->fresh()->zapisi_reminded_at);
 
         $this->artisan('zapisi:remind-classes')->assertSuccessful();
         Queue::assertPushed(SendZapisiBotMessageJob::class, 2);
+    }
+
+    /**
+     * Зеркальная дубль-гвардия (диагноз 26-08-2026): автопостинг ссылки
+     * (classes:post-group-link) уже отправил «Скоро занятие» в этот чат —
+     * второй пост не нужен. Не шлём и не помечаем.
+     */
+    public function test_skips_schedule_already_posted_by_autopost(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'Группа 8', 'telegram_chat_id' => '-100888']);
+        $schedule = Schedule::create([
+            'title' => 'Занятие 8',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/8',
+            'group_link_posted_at' => now()->subMinutes(5),
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertNothingPushed();
+        $this->assertNull($schedule->fresh()->zapisi_reminded_at);
     }
 }

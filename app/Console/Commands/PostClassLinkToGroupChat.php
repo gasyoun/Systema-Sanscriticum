@@ -19,7 +19,9 @@ use Illuminate\Console\Command;
  *  - выключен env-рубильник CLASS_LINK_AUTOPOST (config('features.class_link_autopost'), деплой-уровень);
  *  - выключен флаг class_link_autopost_enabled (MarketingSetting, админка);
  *  - у группы не задан telegram_chat_id;
- *  - у занятия нет ни своей ссылки, ни zoom_join_url, ни course.zoom_link.
+ *  - у занятия нет ни своей ссылки, ни zoom_join_url, ни course.zoom_link;
+ *  - по занятию уже ушло напоминание @zapisi_ORSbot (zapisi_reminded_at) —
+ *    взаимная дубль-гвардия с zapisi:remind-classes: один «Скоро занятие» на чат.
  * Дедуп — schedules.group_link_posted_at (сбрасывается при переносе start).
  */
 class PostClassLinkToGroupChat extends Command
@@ -69,6 +71,15 @@ class PostClassLinkToGroupChat extends Command
             // Приоритет: своя ссылка занятия → авто-Zoom этой сессии → общая ссылка курса.
             $link = $schedule->zoom_join_url ?: ($schedule->link ?: $schedule->course?->zoom_link);
             if (empty($link)) {
+                continue;
+            }
+
+            // Дубль-гвардия (диагноз 26-08-2026): zapisi:remind-classes уже отправил
+            // «Скоро занятие» в ЭТОТ же чат группы (T-60 против наших T-15) — второй
+            // пост от другого бота студенты читают как повтор. Пропускаем без пометки:
+            // колонки обеих команд сбрасываются при переносе start, так что при
+            // переносе занятия автопостинг снова станет активен наравне с zapisi.
+            if ($schedule->zapisi_reminded_at !== null) {
                 continue;
             }
 
