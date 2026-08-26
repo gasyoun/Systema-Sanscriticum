@@ -70,6 +70,40 @@ class RecordingsGapWatchTest extends TestCase
         $this->assertStringContainsString('<a href="https://t.me/c/999">Группа А</a>', $out);
     }
 
+    public function test_aging_gap_gets_token_expiry_warning_and_fresh_does_not(): void
+    {
+        // Вчерашний 20:00 слот к текущему моменту всегда старше 20 ч.
+        $this->seedLiveSlot(withChat: true);
+
+        Artisan::call('recordings:gap-watch', ['--dry' => true]);
+        $out = Artisan::output();
+
+        $this->assertStringContainsString('токен записи истекает', $out);
+    }
+
+    public function test_fresh_same_day_gap_has_no_token_warning(): void
+    {
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-08-25 14:00', 'Europe/Moscow'));
+        try {
+            $course = Course::factory()->live()->create(['title' => 'Курс тест']);
+            $group = Group::create(['name' => 'Группа А', 'telegram_chat_id' => '-100999']);
+            Schedule::create([
+                'title' => 'Live',
+                'course_id' => $course->id,
+                'group_id' => $group->id,
+                'start' => CarbonImmutable::now('Europe/Moscow')->subHours(5),
+            ]);
+
+            Artisan::call('recordings:gap-watch', ['--stale' => true, '--dry' => true]);
+            $out = Artisan::output();
+
+            $this->assertStringContainsString('Курс тест', $out);
+            $this->assertStringNotContainsString('токен записи истекает', $out);
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
+    }
+
     public function test_published_lesson_with_rutube_is_exit_zero(): void
     {
         ['course' => $course] = $this->seedLiveSlot(withChat: true);

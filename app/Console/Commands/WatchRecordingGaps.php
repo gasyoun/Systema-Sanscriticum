@@ -243,10 +243,17 @@ class WatchRecordingGaps extends Command
             $group = TelegramGroupLink::anchor($gap['chat_id'], $gap['group'] !== '' ? $gap['group'] : 'группа');
             $course = e($gap['course']);
             $gid = $gap['group_id'] !== null ? (string) $gap['group_id'] : '—';
+            // H3557: чем старше занятие, тем ближе смерть download_token вебхука
+            // (эмпирика ~24ч). Громкий маркер заставляет дёргать трубу ДО смерти токена.
+            $aging = '';
+            $ageHours = CarbonImmutable::parse($gap['start'], (string) config('app.timezone', 'Europe/Moscow'))->diffInHours(now((string) config('app.timezone', 'Europe/Moscow')));
+            if ($ageHours >= 20) {
+                $aging = ' ⚠️ <b>токен записи истекает — срочно resume, иначе запись вернётся только вручную</b>';
+            }
             $lines[] = '• '.$gap['start']
                 .' · course '.$gap['course_id'].' '.$course
                 .' · group '.$gid.' '.$group
-                .' · '.$gap['reason'];
+                .' · '.$gap['reason'].$aging;
         }
         if ($retryItems !== []) {
             $lines[] = '';
