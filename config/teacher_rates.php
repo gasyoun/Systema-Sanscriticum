@@ -30,7 +30,7 @@ return [
             'rate_periods' => [
                 ['kind' => 'percent', 'value_pct' => 65.0, 'bank_slice_pct' => null, 'from' => '2024-12-23', 'to' => '2025-08-21'],
                 ['kind' => 'percent', 'value_pct' => 60.0, 'bank_slice_pct' => null, 'from' => '2025-10-19', 'to' => '2026-01-23'],
-                ['kind' => 'percent', 'value_pct' => 60.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-16', 'to' => '2026-07-23'],
+                ['kind' => 'percent', 'value_pct' => 60.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-16', 'to' => null],
             ],
             'direct_deductions' => [
                 ['who' => 'Новикову', 'amount_rub' => 1400.0, 'from' => '2024-12-23', 'to' => '2025-07-19'],
@@ -46,7 +46,7 @@ return [
             'lane' => 'RUB',
             'rate_periods' => [
                 ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => null, 'from' => '2025-07-14', 'to' => '2026-01-21'],
-                ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-12', 'to' => '2026-07-23'],
+                ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-12', 'to' => null],
             ],
             'direct_deductions' => [
             ],
@@ -59,7 +59,7 @@ return [
             'lane' => 'EUR',
             'rate_periods' => [
                 ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => null, 'from' => '2025-10-19', 'to' => '2026-01-11'],
-                ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-14', 'to' => '2026-07-24'],
+                ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-14', 'to' => null],
             ],
             'direct_deductions' => [
             ],
@@ -72,7 +72,7 @@ return [
             'lane' => 'RUB',
             'rate_periods' => [
                 ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => null, 'from' => '2025-07-14', 'to' => '2026-02-08'],
-                ['kind' => 'percent', 'value_pct' => 20.0, 'bank_slice_pct' => 92.0, 'from' => '2026-03-25', 'to' => '2026-07-24'],
+                ['kind' => 'percent', 'value_pct' => 20.0, 'bank_slice_pct' => 92.0, 'from' => '2026-03-25', 'to' => null],
             ],
             'direct_deductions' => [
             ],
@@ -84,7 +84,7 @@ return [
             'lane' => 'RUB',
             'rate_periods' => [
                 ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => null, 'from' => '2025-10-19', 'to' => '2026-01-25'],
-                ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-18', 'to' => '2026-07-23'],
+                ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-18', 'to' => null],
             ],
             'direct_deductions' => [
             ],
@@ -96,7 +96,7 @@ return [
             'lane' => 'RUB',
             'rate_periods' => [
                 ['kind' => 'percent', 'value_pct' => 75.0, 'bank_slice_pct' => null, 'from' => '2024-12-22', 'to' => '2025-12-24'],
-                ['kind' => 'percent', 'value_pct' => 75.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-26', 'to' => '2026-05-01'],
+                ['kind' => 'percent', 'value_pct' => 75.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-26', 'to' => null],
             ],
             'direct_deductions' => [
             ],
@@ -109,7 +109,7 @@ return [
             'lane' => 'RUB',
             'rate_periods' => [
                 ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => null, 'from' => '2025-07-16', 'to' => '2025-11-15'],
-                ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-15', 'to' => '2026-07-23'],
+                ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-15', 'to' => null],
             ],
             'direct_deductions' => [
             ],
@@ -147,7 +147,7 @@ return [
             'lane' => 'RUB',
             'rate_periods' => [
                 ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => null, 'from' => '2025-10-22', 'to' => '2026-02-03'],
-                ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-24', 'to' => '2026-05-01'],
+                ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-02-24', 'to' => null],
             ],
             'direct_deductions' => [
             ],
@@ -169,7 +169,7 @@ return [
             'channel' => 'tochka_maria', // дефолт без прямого доказательства канала в чате ⚠️
             'lane' => 'RUB',
             'rate_periods' => [
-                ['kind' => 'percent', 'value_pct' => 10.0, 'bank_slice_pct' => 92.0, 'from' => '2026-03-25', 'to' => '2026-07-24'],
+                ['kind' => 'percent', 'value_pct' => 10.0, 'bank_slice_pct' => 92.0, 'from' => '2026-03-25', 'to' => null],
                 ['kind' => 'fixed_monthly', 'value_rub' => 10000.0, 'from' => '2025-07-22', 'to' => '2025-08-22'],
             ],
             'direct_deductions' => [
