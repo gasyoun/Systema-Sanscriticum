@@ -75,6 +75,7 @@ final class PayoutForecastService
                 $balance = max(0.0, (float) ($due['balance'] ?? 0.0));
                 if ($receipts <= 0.0 && $balance <= 0.0) {
                     unset($week['due'][$i]);
+
                     continue;
                 }
 
