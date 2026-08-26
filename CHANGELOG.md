@@ -1,4 +1,4 @@
-## [Unreleased]
+## [1.90.20] - 2026-08-26
 
 ### Added
 - **H3557 (OxAlpha `x-preview-f-free`, 26-08-2026): кликабельные t.me-ссылки на группы в алертах записей + хелпер [TelegramGroupLink](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/TelegramGroupLink.php).** Имя группы в каждой строке «Записи не в кабинете / ТГ» стало анкором `https://t.me/c/<id>` из `groups.telegram_chat_id` (приватные супергруппы `-100…`; прочие форматы остаются текстом). Аудит остальных админских оповещений ([TelegramAdminNotifier](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Access/TelegramAdminNotifier.php) и прямые sendMessage): группы нигде больше не именуются без ссылки (homework-алерты уже несут ссылку на урок; дайджесты — про чаты поддержки, не учебные группы).
