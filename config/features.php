@@ -493,6 +493,15 @@ return [
     'teacher_weekly_payout_calendar' => (bool) env('TEACHER_WEEKLY_PAYOUT_CALENDAR', false),
 
     /*
+     | H3532: таб «Год» на календаре выплат (52 ISO-недели × все получатели,
+     | формулы ×92 %, балансы Точка/PayPal). Default OFF — при OFF страница
+     | рендерится байт-в-байт как прежде (H3280), новых запросов нет.
+     | Enable: TEACHER_PAYOUT_YEAR_VIEW=true + config:cache. Read-only
+     | по money-таблицам; пишет только finance_snapshots (ручной PayPal-баланс).
+     */
+    'teacher_payout_year_view' => (bool) env('TEACHER_PAYOUT_YEAR_VIEW', false),
+
+    /*
      | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
      | (fail closed на всех платных маршрутах: zero-price checkout, Filament,
      | PayPal, PayPal-claim, conditional, импорт), а не log-and-return «оплачено

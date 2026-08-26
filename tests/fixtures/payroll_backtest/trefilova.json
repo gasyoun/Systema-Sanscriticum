@@ -1,0 +1,66 @@
+{
+ "recipient": "trefilova",
+ "display": "Трефилова Елена",
+ "channel": "tochka_ip_gasuns",
+ "expectation_source": "marina_chat_anchor",
+ "months": [
+  {
+   "month": "2026-04",
+   "anchor": "msg_3438",
+   "on": "2026-04-05",
+   "inputs": {
+    "receipts_rub": [
+     42000.0,
+     30000.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 19872.0
+   }
+  },
+  {
+   "month": "2026-05",
+   "anchor": "msg_3539",
+   "on": "2026-05-11",
+   "inputs": {
+    "receipts_rub": [
+     42000.0,
+     30000.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 19872.0
+   }
+  },
+  {
+   "month": "2026-05",
+   "anchor": "msg_3565",
+   "on": "2026-05-25",
+   "inputs": {
+    "receipts_rub": [
+     30000.0,
+     30000.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 16560.0
+   }
+  },
+  {
+   "month": "2026-06",
+   "anchor": "A6",
+   "on": "2026-06-27",
+   "inputs": {
+    "receipts_rub": [
+     30000.0,
+     24000.0,
+     30000.0,
+     24000.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 29808.0
+   }
+  }
+ ]
+}

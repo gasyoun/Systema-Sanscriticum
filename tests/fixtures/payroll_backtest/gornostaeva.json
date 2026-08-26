@@ -1,0 +1,37 @@
+{
+ "recipient": "gornostaeva",
+ "display": "Горностаева Оксана",
+ "channel": "tochka_maria",
+ "expectation_source": "marina_chat_anchor",
+ "months": [
+  {
+   "month": "2026-05",
+   "anchor": "msg_3534",
+   "on": "2026-05-08",
+   "inputs": {
+    "receipts_rub": [
+     43200.0,
+     82800.0,
+     45120.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 15743.0
+   }
+  },
+  {
+   "month": "2026-07",
+   "anchor": "msg_3735",
+   "on": "2026-07-24",
+   "inputs": {
+    "receipts_rub": [
+     24000.0,
+     89920.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 10481.0
+   }
+  }
+ ]
+}
