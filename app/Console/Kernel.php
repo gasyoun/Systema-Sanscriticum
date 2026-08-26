@@ -193,7 +193,7 @@ class Kernel extends ConsoleKernel
             ->name('dozhim-notify-operator');
 
         // H3209: вчера был слот в schedules, а записи в кабинете/ТГ нет.
-        // Дедуп recording_gap:YYYY-MM-DD; n8n ZOOM 1.4 только читается, не ретраится.
+        // Дедуп персистентный — таблица recording_gap_alerts (H3557); n8n ZOOM 1.4 только читается, не ретраится.
         $schedule->command('recordings:gap-watch')
             ->dailyAt('08:00')
             ->withoutOverlapping(10)

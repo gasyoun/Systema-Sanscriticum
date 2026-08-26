@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\RecordingGapAlert;
 use App\Services\Recordings\N8nZoomExecutionProbe;
 use App\Services\Recordings\N8nZoomExecutionRetrier;
 use App\Services\Recordings\RecordingGapFinder;
+use App\Support\TelegramGroupLink;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -19,13 +20,20 @@ use Throwable;
  * Scheduled 08:00 Europe/Moscow. The scheduled run never touches n8n;
  * --retry-failed is an explicit opt-in lane for early-failed executions
  * (died pre-upload), see N8nZoomExecutionRetrier.
+ *
+ * H3557: дедуп переехал из Redis-кэша в таблицу recording_gap_alerts —
+ * автодеплой сбрасывает кэш (~20 деплоев за 25-08-2026), и hourly --stale
+ * проходы отправляли один и тот же алерт заново. Ключ — sha256 отпечатка
+ * набора пробелов (schedule_id+дата), одинаковый для утреннего и дневного
+ * окна одного инцидента. Успешная отправка = exit 0; FAILURE остался для
+ * --dry и для случая «пробелы есть, но в TG уйти не удалось».
  */
 class WatchRecordingGaps extends Command
 {
     protected $signature = 'recordings:gap-watch
         {--dry : Table only; do not send Telegram}
         {--all : Include groups without telegram_chat_id}
-        {--force : Send even if recording_gap:DATE already alerted}
+        {--force : Send even if this gap set was already alerted (recording_gap_alerts)}
         {--date= : Single day YYYY-MM-DD (default: yesterday, app tz)}
         {--from= : Inclusive start YYYY-MM-DD (overrides --date)}
         {--until= : Inclusive end YYYY-MM-DD}
@@ -100,23 +108,70 @@ class WatchRecordingGaps extends Command
             return self::FAILURE;
         }
 
-        $dedupeKey = 'recording_gap:'.$from->toDateString();
-        if ($from->toDateString() !== $until->toDateString()) {
-            $dedupeKey .= ':'.$until->toDateString();
-        }
+        $fingerprint = $this->fingerprint($gaps);
+        if (! $this->option('force')) {
+            $recent = RecordingGapAlert::query()
+                ->where('fingerprint', $fingerprint)
+                ->where('last_sent_at', '>=', now()->subHours(36))
+                ->first();
+            if ($recent !== null) {
+                $this->comment(sprintf(
+                    'Дедуп recording_gap_alerts #%d (%s) — тот же набор пробелов уже уехал, повторный алерт не шлём.',
+                    $recent->id,
+                    $recent->last_sent_at->timezone((string) config('app.timezone', 'Europe/Moscow'))->format('d-m-Y H:i'),
+                ));
 
-        if (! $this->option('force') && Cache::get($dedupeKey)) {
-            $this->comment('Дедуп '.$dedupeKey.' — повторный алерт не шлём.');
-
-            return self::FAILURE;
+                return self::SUCCESS;
+            }
         }
 
         $sent = $this->sendTelegram($payload);
         if ($sent) {
-            Cache::put($dedupeKey, true, now()->addHours(36));
+            $alert = RecordingGapAlert::query()->updateOrCreate(
+                ['fingerprint' => $fingerprint],
+                [
+                    'window_label' => $from->toDateString().'…'.$until->toDateString(),
+                    'first_sent_at' => now(),
+                    'last_sent_at' => now(),
+                ],
+            );
+            if ($alert->wasRecentlyCreated === false) {
+                $alert->fill([
+                    'send_count' => $alert->send_count + 1,
+                    'last_sent_at' => now(),
+                ])->save();
+            }
+
+            Log::info('recordings:gap-watch alert sent', [
+                'fingerprint' => $fingerprint,
+                'gaps' => count($gaps),
+                'window' => $from->toDateString().'…'.$until->toDateString(),
+                'alert_id' => $alert->id,
+                'send_count' => $alert->send_count,
+            ]);
+
+            return self::SUCCESS;
         }
 
         return self::FAILURE;
+    }
+
+    /**
+     * Отпечаток набора пробелов: не зависит от окна (утреннее «вчера» против
+     * дневного --stale «сегодня» дают один ключ на один инцидент) и меняется,
+     * когда к инциденту добавляется новый слот.
+     *
+     * @param  list<array{schedule_id: int, lesson_date: string, start: string, course_id: int, course: string, group_id: ?int, group: string, chat_id: string, reason: string}>  $gaps
+     */
+    private function fingerprint(array $gaps): string
+    {
+        $parts = array_map(
+            static fn (array $gap): string => $gap['schedule_id'].':'.$gap['lesson_date'],
+            $gaps,
+        );
+        sort($parts);
+
+        return hash('sha256', implode('|', $parts));
     }
 
     /**
@@ -185,7 +240,7 @@ class WatchRecordingGaps extends Command
             '',
         ];
         foreach ($gaps as $gap) {
-            $group = $gap['group'] !== '' ? e($gap['group']) : '—';
+            $group = TelegramGroupLink::anchor($gap['chat_id'], $gap['group'] !== '' ? $gap['group'] : 'группа');
             $course = e($gap['course']);
             $gid = $gap['group_id'] !== null ? (string) $gap['group_id'] : '—';
             $lines[] = '• '.$gap['start']
@@ -321,6 +376,11 @@ class WatchRecordingGaps extends Command
 
         $any = false;
         foreach ($chatIds as $chatId) {
+            // H3557: копия в отдел заботы помечена заголовком, чтобы два чата
+            // читались как адресаты, а не как дубль одного сообщения.
+            $text = $chatId === $careId && $careId !== ''
+                ? "<b>[Отдел заботы]</b>\n".$text
+                : $text;
             try {
                 $response = Http::timeout(15)
                     ->post('https://api.telegram.org/bot'.$token.'/sendMessage', [

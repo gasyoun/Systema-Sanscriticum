@@ -70,7 +70,8 @@ class RecordingsGapStaleTest extends TestCase
         $code = Artisan::call('recordings:gap-watch', ['--stale' => true]);
         $out = Artisan::output();
 
-        $this->assertSame(1, $code);
+        // H3557: успешная отправка алерта = exit 0, а не FAILURE.
+        $this->assertSame(0, $code);
         $this->assertStringContainsString('Курс тест', $out);
         Http::assertSent(fn ($request) => str_contains($request->url(), 'api.telegram.org'));
     }
