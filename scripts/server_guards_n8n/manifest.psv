@@ -30,3 +30,14 @@ systemd/n8n-guards-verify.timer|/etc/systemd/system/n8n-guards-verify.timer|644|
 systemd/journald.conf.d/99-persistent.conf|/etc/systemd/journald.conf.d/99-persistent.conf|644|warning
 systemd/sysstat-collect.timer.d/99-every-minute.conf|/etc/systemd/system/sysstat-collect.timer.d/99-every-minute.conf|644|warning
 tmpfiles/n8n-tmp.conf|/etc/tmpfiles.d/n8n-tmp.conf|644|warning
+# W3b/W3c — перекрёстная проверка и лестница восстановления. Источник ОДИН на
+# обе машины: ../server_guards/. Копия этих двух файлов в дереве n8n означала бы
+# две расходящиеся реализации одной дисциплины — ровно то, против чего написана
+# шапка этого манифеста. Разница между машинами вся сидит в server_guards_n8n.conf
+# (LADDER_TARGETS здесь — контейнеры, там — systemd-юниты).
+../server_guards/sbin/systema-peer-probe.sh|/usr/local/sbin/systema-peer-probe.sh|755|warning
+../server_guards/sbin/systema-remediation-ladder.sh|/usr/local/sbin/systema-remediation-ladder.sh|755|warning
+../server_guards/systemd/systema-peer-probe.service|/etc/systemd/system/systema-peer-probe.service|644|warning
+../server_guards/systemd/systema-peer-probe.timer|/etc/systemd/system/systema-peer-probe.timer|644|warning
+../server_guards/systemd/systema-remediation-ladder.service|/etc/systemd/system/systema-remediation-ladder.service|644|warning
+../server_guards/systemd/systema-remediation-ladder.timer|/etc/systemd/system/systema-remediation-ladder.timer|644|warning

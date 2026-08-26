@@ -1,0 +1,11 @@
+[Unit]
+Description=Probe the peer box every 5 minutes
+[Timer]
+OnCalendar=*:00/5
+# Разброс, чтобы обе машины не проверяли друг друга в одну и ту же секунду:
+# синхронный такт превращает короткий сетевой провал в двусторонний инцидент.
+RandomizedDelaySec=30
+AccuracySec=10s
+Persistent=false
+[Install]
+WantedBy=timers.target

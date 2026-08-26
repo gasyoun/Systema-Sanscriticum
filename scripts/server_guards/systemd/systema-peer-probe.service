@@ -1,0 +1,12 @@
+[Unit]
+Description=Systema cross-host peer probe (W3b — does the neighbour box still answer?)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md
+# Своя единица, а не строка в кроне: 18-08-2026 cron.service упёрся в общий
+# потолок памяти 2 ГиБ и задушил ВСЕ кроновые задачи разом (H3121). Сторож,
+# живущий в том же cgroup, разделил бы судьбу того, что сторожит.
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/systema-peer-probe.sh
+Nice=10
+# Заход измеряется секундами; потолок ловит зависший curl, а не работу.
+TimeoutStartSec=120
