@@ -234,6 +234,13 @@ return [
         // falls back to the default; env(key, default) keeps the '' and the writer
         // would then build paths from filesystem root (/corpus/… → mkdir denied).
         'store_path' => env('TELEGRAM_HARVEST_STORE_PATH') ?: storage_path('app/telegram-harvest/raw'),
+        // H3411: 19-24-08-2026 a manual root-invoked run left ors_faq_peers.json
+        // root:root 640 under store_path — both daily www-data cron runs then hit
+        // Permission-denied until a human ran `chown -R www-data storage/app/telegram-harvest`
+        // (docs/SERVER_SOFT_ALERT_PLAYBOOK.md incident log). SyncTelegramHarvest
+        // checks/reclaims ownership against this pair, never against the running uid.
+        'expected_owner' => env('TELEGRAM_HARVEST_EXPECTED_OWNER', 'www-data'),
+        'expected_group' => env('TELEGRAM_HARVEST_EXPECTED_GROUP', 'www-data'),
         // Через сколько часов снимок состава чата считается протухшим (0 —
         // не помечать). Снимок пишет часовой telegram-harvest:roster-groups, и
         // при любом его сбое СТАРЫЙ файл остаётся лежать как есть — дашборд
@@ -250,6 +257,14 @@ return [
         // поиском. Kernel::schedule() выводит TTL замка отсюда — зависший проход
         // обязан умереть раньше, чем замок протухнет и пустит второй экземпляр.
         'roster_timeout_seconds' => (int) env('TELEGRAM_HARVEST_ROSTER_TIMEOUT_SECONDS', 600),
+        // H3411: потолок времени одного прохода telegram-harvest:sync (секунды,
+        // 0 — без watchdog). Тот же shared-session watchdog/reaper паттерн, что
+        // у telegram_support.sync_timeout_seconds — если проход зависает
+        // (демон MadelineProto залипает в D-state и не реагирует на SIGTERM),
+        // watchdog убивает демон, снимает lock и артефакты IPC, и на cooldown
+        // секунд блокирует следующий запуск, чтобы не долбить зависшую сессию.
+        'sync_timeout_seconds' => (int) env('TELEGRAM_HARVEST_SYNC_TIMEOUT_SECONDS', 120),
+        'sync_timeout_cooldown_seconds' => (int) env('TELEGRAM_HARVEST_SYNC_TIMEOUT_COOLDOWN_SECONDS', 600),
         // Anti-ban: randomized inter-peer delay bounds in seconds (default 0/0 → no
         // sleep, so tests/CI never pause). Raise on a real host to look less bot-like.
         'peer_delay_min' => (int) env('TELEGRAM_HARVEST_PEER_DELAY_MIN', 0),
