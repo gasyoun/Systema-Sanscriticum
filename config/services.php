@@ -195,6 +195,19 @@ return [
             'TELEGRAM_SUPPORT_AUTO_GREETING_TEXT',
             "Намасте!\n\nРады вас видеть. Напишите, по какому курсу или расписанию вопрос — с радостью поможем.",
         ),
+        // H3542: приглашение связать Telegram с кабинетом (support_dm_link_invite).
+        // {url} заменяется на одноразовую capability-ссылку; текст — выверенный
+        // канреплай, править только осознанно (не свободная генерация).
+        'link_invite_text' => env(
+            'TELEGRAM_SUPPORT_LINK_INVITE_TEXT',
+            "Намасте!\n\nВаш вопрос дошёл до нас. Бот отвечает мгновенно тем, чей Telegram связан с личным кабинетом школы.\n\nСвяжите их за минуту: откройте ссылку и укажите вашу почту.\n{url}\n\nЕсли аккаунта ещё нет — он создастся автоматически, бесплатно и без пароля. После связывания бот начнёт отвечать сам, а куратор будет видеть ваш курс.",
+        ),
+        // Повторное приглашение тому же контакту не раньше этого окна (часы);
+        // по умолчанию неделя — «никогда не спрашиваем второй раз подряд».
+        'link_invite_cooldown_hours' => (int) env('TELEGRAM_SUPPORT_LINK_INVITE_COOLDOWN_HOURS', 168),
+        // Ссылка-приглашение живёт столько часов; после истечения следующий
+        // возможный запрос порождает новую ссылку (токен перегенерируется).
+        'link_token_ttl_hours' => (int) env('TELEGRAM_SUPPORT_LINK_TOKEN_TTL_HOURS', 336),
         // Auto-heal IPC hang (01.08.2026): healthcheck → recover (kill worker,
         // clear ipc/locks, unlock madeline-session, one sync). Default OFF —
         // flip TELEGRAM_SUPPORT_AUTO_HEAL=true on prod after smoke.

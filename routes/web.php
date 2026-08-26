@@ -69,6 +69,7 @@ use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SurveyPageController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
 use App\Http\Controllers\VisualDcsController;
@@ -879,6 +880,18 @@ Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('newsletter.magic');
+
+// --- СВЯЗЫВАНИЕ TELEGRAM С КАБИНЕТОМ (H3542) — по capability-ссылке из
+// приглашения саппорт-бота в DM. Самогейтится флагом support_dm_link_invite
+// (404 при OFF). Строго до catch-all /{slug}; публичные; троттлинг в контроллере.
+Route::get('/support/link/{token}', [TelegramSupportLinkController::class, 'show'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('support.telegram.link');
+Route::post('/support/link/{token}', [TelegramSupportLinkController::class, 'submit'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('support.telegram.link.submit');
 
 // --- ТРЕКИНГ РАССЫЛОК (H1449 B4) — оба самогейтятся по email_campaigns (404 при OFF).
 // Токен резолвит CampaignRecipient на сервере — PII в URL никогда не попадает.
