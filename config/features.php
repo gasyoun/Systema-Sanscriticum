@@ -173,6 +173,19 @@ return [
     'support_auto_ack' => (bool) env('SUPPORT_AUTO_ACK', false),
 
     /*
+     | H3542: мост «незалинкованный партнёр → linked user». Когда автоответ
+     | заблокирован ТОЛЬКО отсутствием связи (аудитория канала без кабинета),
+     | бот один раз за cooldown-окно отправляет приглашение с capability-
+     | ссылкой /support/link/{token}: email → find-or-create беспарольного
+     | User (паттерн H324) → linked_user_id на контакте и private-чате. После
+     | этого ack/шаблоны/факты отвечают сами. Пер-аккаунтный гейт тот же:
+     | telegram_support_accounts.auto_reply_enabled. Денominator бэкфилла —
+     | support:send-link-invites --dry. ОТКЛ по умолчанию; включать только на
+     | пробном аккаунте (rusamskrtam): SUPPORT_DM_LINK_INVITE=true + config:cache.
+     */
+    'support_dm_link_invite' => (bool) env('SUPPORT_DM_LINK_INVITE', false),
+
+    /*
      | H3242: утренняя сводка вчерашней поддержки в Telegram на ADMIN_TELEGRAM_ID
      | (gasyoun). ВКЛ по умолчанию — админский дайджест по явной просьбе, не
      | студенческий автоответ. Выкл: SUPPORT_DAILY_DIGEST=false + config:cache.

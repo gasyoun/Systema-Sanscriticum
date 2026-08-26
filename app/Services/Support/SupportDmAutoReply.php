@@ -65,6 +65,7 @@ final class SupportDmAutoReply
         private readonly SupportReplyService $replies,
         private readonly TelegramAdminNotifier $admins,
         private readonly Bm25FaqRetriever $faq,
+        private readonly SupportDmLinkInvite $linkInvite,
     ) {}
 
     public function isEnabled(): bool
@@ -198,6 +199,14 @@ final class SupportDmAutoReply
                 ),
                 'ack',
             );
+        }
+
+        // H3542: всё выше требовало linked-пользователя. Если сообщение свежее,
+        // распознанной категории и автоответ блокирован ТОЛЬКО отсутствием связи —
+        // один раз за cooldown-окно отправляем приглашение связать Telegram с
+        // кабинетом (флаг support_dm_link_invite, пер-аккаунтный гейт внутри).
+        if ($user === null && $category !== null && $this->linkInvite->offerForIncoming($incoming)) {
+            return ['status' => 'invite_sent', 'category' => $category];
         }
 
         return $this->hintComplex($incoming, $user, $category, $text);
