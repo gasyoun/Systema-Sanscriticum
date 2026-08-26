@@ -41,3 +41,22 @@ tmpfiles/n8n-tmp.conf|/etc/tmpfiles.d/n8n-tmp.conf|644|warning
 ../server_guards/systemd/systema-peer-probe.timer|/etc/systemd/system/systema-peer-probe.timer|644|warning
 ../server_guards/systemd/systema-remediation-ladder.service|/etc/systemd/system/systema-remediation-ladder.service|644|warning
 ../server_guards/systemd/systema-remediation-ladder.timer|/etc/systemd/system/systema-remediation-ladder.timer|644|warning
+
+# ── Волна 4 (H3184) — СТРОКИ НАМЕРЕННО ЗАКОММЕНТИРОВАНЫ ─────────────────────
+# Файлы волны 4 лежат в дереве, но в живой манифест НЕ включены до окна с
+# человеком у пульта. Причина механическая, а не осторожность ради осторожности:
+# n8n-guards-verify.timer читает этот манифест каждый такт, и строка про файл,
+# которого на машине ещё нет, поднимет critical на наблюдательной поверхности
+# Tier-0 — ложную тревогу длиной в недели ожидания окна.
+#
+# РАСКОММЕНТИРОВАТЬ В ОКНЕ, после того как systema-nft-armed-apply.sh disarm
+# отработал (то есть обе проверки — новая SSH-сессия и кросс-проба — прошли).
+#
+# nftables-правила ставятся в /etc/nftables.d/, а НЕ в /etc/nftables.conf:
+# nftables.service грузит именно nftables.conf на загрузке, и default-deny там
+# применился бы при следующей перезагрузке без человека. Продвижение в
+# nftables.conf — последний ручной шаг окна.
+# sbin/systema-nft-armed-apply.sh|/usr/local/sbin/systema-nft-armed-apply.sh|755|critical
+# nftables/systema-default-deny.nft|/etc/nftables.d/systema-default-deny.nft|644|critical
+# ssh/10-hardening.conf|/etc/ssh/sshd_config.d/10-hardening.conf|644|critical
+# fail2ban/jail.d/systema-sshd.conf|/etc/fail2ban/jail.d/systema-sshd.conf|644|critical

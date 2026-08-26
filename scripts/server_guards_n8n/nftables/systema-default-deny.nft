@@ -1,0 +1,83 @@
+#!/usr/sbin/nft -f
+# MANAGED FILE — scripts/server_guards_apply.sh --profile n8n.
+# Wave 4a (H3184): default-deny input policy for .91 (samskrtam50).
+#
+# УСТАНАВЛИВАЕТСЯ В /etc/nftables.d/, А НЕ В /etc/nftables.conf — НАМЕРЕННО.
+# nftables.service грузит /etc/nftables.conf при загрузке. Положить default-deny
+# туда значит применить его при следующей перезагрузке БЕЗ человека у пульта —
+# ровно тот сценарий, который H3184 запрещает. Продвижение в /etc/nftables.conf
+# делает человек в окне, ПОСЛЕ того как обе проверки (новая SSH-сессия и
+# кросс-проба с .92) прошли. См. sbin/systema-nft-armed-apply.sh.
+#
+# Аллоу-лист выведен из ЖИВОГО трафика .91 27-08-2026, не из шаблона:
+#   ss -tlnp · ss -ulnp · nft list ruleset · tailscale status · ip -brief addr
+#
+# ЧЕГО ЗДЕСЬ НЕТ И ПОЧЕМУ:
+#   • table ip nat / table ip filter не трогаем — их держит Docker через
+#     iptables-nft, и сам ruleset это говорит в своём комментарии. Мы правим
+#     ТОЛЬКО table inet filter.
+#   • policy forward остаётся accept. Опубликованные Docker'ом 80/443 приходят
+#     через DNAT в PREROUTING и идут по FORWARD, а не по INPUT. forward drop
+#     снял бы сайт с интернета при идеально выглядящем input-аллоулисте — это
+#     самая дорогая ошибка в этой волне.
+#   • fail2ban (banaction = nftables) заводит СВОЮ таблицу f2b-table. Она живёт
+#     рядом и здесь не описывается; flush ниже её не задевает.
+
+# Точечный flush: только наша таблица. `flush ruleset` снёс бы Docker.
+table inet filter
+delete table inet filter
+
+table inet filter {
+	chain input {
+		type filter hook input priority filter; policy drop;
+
+		# 1. Уже установленные соединения. Первым правилом — иначе применение
+		#    ruleset рвёт текущую сессию оператора до того, как он прочитает вывод.
+		ct state established,related accept
+		ct state invalid drop
+
+		# 2. Петля.
+		iif lo accept
+
+		# 3. ВТОРОЙ ПУТЬ ВОССТАНОВЛЕНИЯ. Tailscale (tailscale0, 100.80.27.28,
+		#    узел vps-n8n) — единственный доступ к .91 в обход публичного адреса.
+		#    БЕЗ ЭТОГО ПРАВИЛА default-deny убивает и запасной путь тоже:
+		#    туннель останется поднятым, а расшифрованный SSH-пакет, приходящий
+		#    на tailscale0, упрётся в policy drop. Проверено 27-08-2026:
+		#    ssh root@100.80.27.28 работает с рабочей машины win-njtorh3267v.
+		iifname "tailscale0" accept
+		udp dport 41641 accept
+
+		# 4. SSH. Волна не закрывает 22 — она делает вход только по ключу (W4c) и
+		#    вешает fail2ban. Закрытие порта здесь было бы вторым lockout-риском.
+		tcp dport 22 accept
+
+		# 5. Публичная поверхность: Caddy в Docker слушает 80/443 через
+		#    docker-proxy на 0.0.0.0.
+		tcp dport { 80, 443 } accept
+
+		# 6. Приватная сеть Proxmox 192.168.200.0/24: eth0 машины — .91,
+		#    кросс-проба и peer-probe приходят с .92 (192.168.200.92), шлюз .1.
+		ip saddr 192.168.200.0/24 accept
+
+		# 7. Docker-мосты: контейнерный трафик к хосту (DNS, n8n на 127.0.0.1:5678
+		#    через docker-proxy, privoxy на 172.17.0.1/172.18.0.1:8118).
+		iifname { "docker0", "br-d1cc9de94e89" } accept
+
+		# 8. ICMP — диагностика и внешние пробы. Без echo-request машина
+		#    «пропадает» для любого пингующего монитора.
+		ip protocol icmp icmp type { echo-request, echo-reply, destination-unreachable, time-exceeded } accept
+		ip6 nexthdr icmpv6 accept
+	}
+
+	chain forward {
+		# accept — НАМЕРЕННО. См. шапку: Docker публикует 80/443 через FORWARD.
+		type filter hook forward priority filter; policy accept;
+	}
+
+	chain output {
+		# accept — НАМЕРЕННО. Исходящие держат Tailscale (в т.ч. DERP-реле
+		# Helsinki 10.3 ms), restic-push на .92, Better Stack heartbeats.
+		type filter hook output priority filter; policy accept;
+	}
+}
