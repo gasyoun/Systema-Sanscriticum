@@ -67,12 +67,28 @@ final class PayoutForecastService
             foreach ($week['due'] as $i => $due) {
                 $tid = (int) ($due['teacher_id'] ?? 0);
                 $slug = $slugByTeacherId[$tid] ?? null;
-                $on = Carbon::parse((string) $due['due_on']);
+
+                // Фантом-фильтр (MG 26-08-2026): строка без предстоящей выплаты не нужна.
+                // Нулевой баланс регистра И нулевые поступления после отсечки = курса
+                // деятельности нет (поток закончился и выплачен) — строку не рисуем.
+                $receipts = (float) ($receipts[$tid] ?? 0.0);
+                $balance = max(0.0, (float) ($due['balance'] ?? 0.0));
+                if ($receipts <= 0.0 && $balance <= 0.0) {
+                    unset($week['due'][$i]);
+                    continue;
+                }
+
                 if ($slug === null || ($rcpt = $this->rates->find($slug)) === null) {
+                    $fallbackRub = round(max(0.0, (float) $due['balance']), 2);
+                    if ($fallbackRub <= 0.0) {
+                        unset($week['due'][$i]);
+
+                        continue;
+                    }
                     $week['due'][$i] = $due + [
                         'recipient_kind' => 'teacher',
                         'channel' => 'tochka_maria',
-                        'amount_rub_prelim' => round(max(0.0, (float) $due['balance']), 2),
+                        'amount_rub_prelim' => $fallbackRub,
                         'amount_eur_prelim' => null,
                         'npd_note' => null,
                         'formula_note' => '⚠️ таймлайна ставок нет — дефолт к балансу LMS',
@@ -81,9 +97,16 @@ final class PayoutForecastService
                     continue;
                 }
                 $res = $this->rates->netFor($slug, $on, [
-                    'receipts_rub' => [$receipts[$tid] ?? 0.0],
+                    'receipts_rub' => [$receipts],
                     'fx_rate' => $rcpt['lane'] === 'EUR' ? $fx['rate'] : null,
                 ]);
+                if ((float) $res['payable_rub'] <= 0.0) {
+                    // Нет активной ставки в эту дату (период закрыт/курс завершён)
+                    // или начисление нулевое — фантомную строку не показываем.
+                    unset($week['due'][$i]);
+
+                    continue;
+                }
                 $eur = null;
                 if ($rcpt['lane'] === 'EUR') {
                     $eur = $res['payable_rub'] > 0 ? round($res['payable_rub'] / $fx['rate'], 2) : 0.0;
