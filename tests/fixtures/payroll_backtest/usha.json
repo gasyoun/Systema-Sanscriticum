@@ -1,0 +1,70 @@
+{
+ "recipient": "usha",
+ "display": "Уша Санка",
+ "channel": "tochka_maria",
+ "expectation_source": "marina_chat_anchor",
+ "months": [
+  {
+   "month": "2026-02",
+   "anchor": "A8",
+   "on": "2026-02-08",
+   "inputs": {
+    "receipts_rub": [
+     107200.0,
+     29700.0,
+     78000.0,
+     248400.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 138990.0
+   }
+  },
+  {
+   "month": "2026-05",
+   "anchor": "msg_3533",
+   "on": "2026-05-08",
+   "inputs": {
+    "receipts_rub": [
+     43200.0,
+     82800.0,
+     45120.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 31486.0
+   }
+  },
+  {
+   "month": "2026-06",
+   "anchor": "msg_3707",
+   "on": "2026-06-28",
+   "inputs": {
+    "receipts_rub": [
+     14400.0,
+     195000.0,
+     28800.0,
+     125420.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 66906.0
+   }
+  },
+  {
+   "month": "2026-07",
+   "anchor": "msg_3734",
+   "on": "2026-07-24",
+   "inputs": {
+    "receipts_rub": [
+     24000.0,
+     89920.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 20961.0
+   }
+  }
+ ],
+ "note": "НПД −6%; февраль — до начала среза 92% (bank_slice_pct=null в периоде)."
+}

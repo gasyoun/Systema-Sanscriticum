@@ -18,7 +18,9 @@ use Illuminate\Console\Command;
  *
  * Ничего не шлёт, если:
  *  - выключен флаг features.telegram_zapisi_bot (деплой-рубильник бота);
- *  - у группы не задан telegram_chat_id (skip без пометки — уйдёт, когда заполнят).
+ *  - у группы не задан telegram_chat_id (skip без пометки — уйдёт, когда заполнят);
+ *  - по занятию уже ушёл автопостинг ссылки (group_link_posted_at) — зеркальная
+ *    дубль-гвардия с classes:post-group-link: один «Скоро занятие» на чат.
  * Дедуп — schedules.zapisi_reminded_at (сбрасывается при переносе start).
  */
 class RemindZapisiClasses extends Command
@@ -71,6 +73,13 @@ class RemindZapisiClasses extends Command
             // Нет чата группы — слать некуда; НЕ помечаем, чтобы после заполнения
             // telegram_chat_id напоминание всё же ушло (как в classes:post-group-link).
             if ($group === null || empty($group->telegram_chat_id)) {
+                continue;
+            }
+
+            // Зеркальная дубль-гвардия (диагноз 26-08-2026): если автопостинг ссылки
+            // (classes:post-group-link, T-15) успел раньше нас — при нестандартных
+            // lead-настройках — не отправляем второй «Скоро занятие» в тот же чат.
+            if ($schedule->group_link_posted_at !== null) {
                 continue;
             }
 

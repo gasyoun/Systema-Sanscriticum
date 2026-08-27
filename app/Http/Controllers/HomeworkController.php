@@ -91,6 +91,43 @@ class HomeworkController extends Controller
             return back()->with('error', 'Добавьте текст ответа или прикрепите файл перед отправкой.');
         }
 
+        // H3524: защита от повторной отправки при «зависшей» сдаче. Пока работа
+        // стоит submitted, точный дубль последнего набора файлов не создаёт
+        // ещё один комментарий-сдачу и не дёргает проверяющего второй раз —
+        // студент получает внятное «уже приняты». Смешанный набор (старые
+        // файлы + новый), текст без файлов и сдача после needs_revision
+        // проходят как обычное обновление.
+        if ($finalize && $existing?->status === HomeworkSubmission::STATUS_SUBMITTED && $uploaded !== []) {
+            $lastSubmissionComment = $existing->comments()
+                ->where('author_role', HomeworkComment::ROLE_STUDENT)
+                ->where('type', HomeworkComment::TYPE_SUBMISSION)
+                ->orderByDesc('id')
+                ->with('files')
+                ->first();
+
+            if ($lastSubmissionComment !== null && $lastSubmissionComment->files->isNotEmpty()) {
+                $incomingSignatures = collect($uploaded)
+                    ->map(fn ($file) => $this->fileDuplicateSignature($file))
+                    ->sort()
+                    ->values()
+                    ->all();
+
+                $storedSignatures = $lastSubmissionComment->files
+                    ->map(fn (HomeworkFile $file) => mb_strtolower($file->original_name).'|'.$file->size)
+                    ->sort()
+                    ->values()
+                    ->all();
+
+                if ($incomingSignatures === $storedSignatures) {
+                    $when = $existing->last_activity_at
+                        ? ' с '.$existing->last_activity_at->format('d.m в H:i')
+                        : '';
+
+                    return back()->with('error', 'Эти файлы уже приняты — работа на проверке'.$when.'. Повторная отправка не нужна.');
+                }
+            }
+        }
+
         $files = [];
         foreach ($uploaded as $file) {
             $safeName = $this->safeFilename($file->getClientOriginalName());
@@ -119,6 +156,17 @@ class HomeworkController extends Controller
         }
 
         return back()->with('success', $success);
+    }
+
+    /**
+     * Подпись файла для сверки дублей (H3524): имя + размер. Mime намеренно
+     * вне подписи — один и тот же снимок iPhone может прийти с разным
+     * клиентским mime (heic/heif), и ложный «не дубль» безопаснее ложного
+     * блока, а совпадение имени и байтового размера достаточно точно.
+     */
+    private function fileDuplicateSignature($file): string
+    {
+        return mb_strtolower((string) $file->getClientOriginalName()).'|'.$file->getSize();
     }
 
     /**

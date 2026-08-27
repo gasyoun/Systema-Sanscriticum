@@ -59,6 +59,17 @@ class LeadController extends Controller
             $data['email'] = $data['contact'];
         }
 
+        // H3576 §A — атрибуция: формы лендингов передают query-строку страницы в
+        // action (см. promo/blocks/*.blade.php), поэтому UTM из ссылки поста
+        // (utm_source/.../click_id) доезжает до POST. Здесь — авторитетный
+        // добор: пустое поле из тела дополняем из query; клиентскому телу
+        // приоритет не отдаём (значение может быть только ДОБАВЛЕНО, не подменено).
+        foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'click_id'] as $utmKey) {
+            if (empty($data[$utmKey]) && filled($request->query($utmKey))) {
+                $data[$utmKey] = (string) $request->query($utmKey);
+            }
+        }
+
         if (! empty($data['form_name'])) {
             $existingUtm = $data['utm_content'] ?? '';
             $data['utm_content'] = '['.$data['form_name'].'] '.$existingUtm;

@@ -1085,8 +1085,15 @@ class StudentController extends Controller
             $hindiDrillsUrl = route('student.lesson.drills', [$course->slug, $lesson->id]);
         }
 
+        // H3521: вкладка «Learn Your Way» — только при включённом LYW_ENABLED
+        // (default OFF: переменная остаётся null, разметки в шаблоне нет).
+        $lywUrl = null;
+        if (config('lyw.enabled')) {
+            $lywUrl = route('student.lesson.lessonpack', [$course->slug, $lesson->id]);
+        }
+
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl', 'recordingAccess'));
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl', 'recordingAccess', 'lywUrl'));
     }
 
     /**

@@ -31,6 +31,7 @@ use App\Services\Lecture\LectureAiClient;
 use App\Services\Lecture\LectureBuilderClient;
 use App\Services\Payments\HttpPaypalWebhookSignatureVerifier;
 use App\Services\Payments\PaypalWebhookSignatureVerifier;
+use App\Services\Payroll\PayrollRateCalculator;
 use App\Services\Telegram\DaemonProcessProbe;
 use App\Services\Telegram\ProcDaemonProcessProbe;
 use App\Services\Webinar\WebinarProvider;
@@ -59,6 +60,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // H3532: калькулятор формул «на руки» читает сгенерированный
+        // config/teacher_rates.php на момент резолва (тесты подменяют config).
+        $this->app->bind(
+            PayrollRateCalculator::class,
+            fn () => new PayrollRateCalculator((array) config('teacher_rates')),
+        );
         $this->app->singleton(
             LectureBuilderClient::class,
             fn () => LectureBuilderClient::fromConfig(),
@@ -241,6 +248,16 @@ class AppServiceProvider extends ServiceProvider
             $client->addCurlSetting(CURLOPT_LOW_SPEED_LIMIT, 1024);
             $client->addCurlSetting(CURLOPT_LOW_SPEED_TIME, 180);
             $client->addCurlSetting(CURLOPT_FOLLOWLOCATION, false);
+            // 3) Жёсткий потолок на ВЕСЬ запрос (H3410, прод 24-08-2026): strace
+            //    показал TLS sendto() EAGAIN-цикл на застрявшем сокете без
+            //    прогресса 30+ минут — дольше, чем должен был пережить
+            //    LOW_SPEED_TIME=180. Не отменяет п.1 (тот ловит МЕДЛЕННУЮ
+            //    передачу раньше), а подстраховывает на случай, если конкретно
+            //    эта EAGAIN-форма стагнации не считается «низкой скоростью» с
+            //    точки зрения curl. Часть ≤20 МиБ на здоровом канале укладывается
+            //    в секунды; 300 с оставляет щедрый запас и гарантированно рвёт
+            //    застрявший сокет раньше следующего docker/cron-тика.
+            $client->addCurlSetting(CURLOPT_TIMEOUT, 300);
 
             $adapter = new WebDAVAdapter($client, $config['prefix'] ?? '');
 

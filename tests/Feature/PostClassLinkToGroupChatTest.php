@@ -103,6 +103,31 @@ class PostClassLinkToGroupChatTest extends TestCase
         Queue::assertNothingPushed();
     }
 
+    /**
+     * Дубль-гвардия (диагноз 26-08-2026): zapisi:remind-classes уже отправил
+     * «Скоро занятие» в этот же чат (T-60 против наших T-15) — второй пост
+     * от другого бота студенты читают как повтор. Не шлём и не помечаем.
+     */
+    public function test_skips_schedule_already_reminded_by_zapisi_bot(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'Группа 7', 'telegram_chat_id' => '-100777']);
+        $schedule = Schedule::create([
+            'title' => 'Занятие 7',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/7',
+            'zapisi_reminded_at' => now()->subMinutes(45),
+        ]);
+
+        $this->artisan('classes:post-group-link')->assertSuccessful();
+
+        Queue::assertNothingPushed();
+        $this->assertNull($schedule->fresh()->group_link_posted_at);
+    }
+
     public function test_skips_group_without_chat_id_and_leaves_unmarked(): void
     {
         Queue::fake();

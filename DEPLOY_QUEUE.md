@@ -1,6 +1,6 @@
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 23-08-2026 (№81 H3314 — закат мобильных токенов 90 дней после деплоя, throttle ON; №80 H3247 `CRM_TRIAL_BOOKING` stay OFF; №79 H3233 `SUPPORT_DM_AUTO_REPLY` ON) (H2758 №77 `HINDI_YOUTUBE_NOVA3_DRILLS` stay OFF; H2762 Kochergina next-step/CTA A/B flags stay OFF; №73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 26-08-2026 (№83 H3579 — 4 объекта Better Stack для `.91` + строка пульса на обеих машинах; таймер лестницы восстановления НЕ включать до учений D13; №81 H3314 — закат мобильных токенов 90 дней после деплоя, throttle ON; №80 H3247 `CRM_TRIAL_BOOKING` stay OFF; №79 H3233 `SUPPORT_DM_AUTO_REPLY` ON) (H2758 №77 `HINDI_YOUTUBE_NOVA3_DRILLS` stay OFF; H2762 Kochergina next-step/CTA A/B flags stay OFF; №73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -99,6 +99,43 @@ _Создано: 08-07-2026 · Обновлено: 23-08-2026 (№81 H3314 — �
 
 **Статус (24-08-2026):** `CRM_TRIAL_BOOKING=true` + `CRM_TRIAL_WIDGET_PUBLIC=true` в прод `.env`, config:cache пересобран. Смок OxAlpha PASS: tinker-заявка через `TrialBookingService::bookFree` на реальном ближайшем пробнике создала Lead+Deal (`kind=trial`, `booked`), повтор идемпотентен, User/гранты/группы не создавались (Rank 4), тестовые строки удалены — ноль остатков. Публичная кнопка «Записаться» на `/widgets/schedule` жива по отдельному рулингу MG 24-08 («оставить ON»). Откат: оба ключа `false` + `config:cache`.
 
+### №83 — аптайм W3: 4 объекта Better Stack для `.91` + строка пульса на обеих машинах; таймер лестницы НЕ включать до учений (H3579, 26-08-2026)
+
+**Код и предохранители УЖЕ на проде** — выкладывать нечего: перекрёстные проверки
+`.91`↔`.92` живут своими systemd-таймерами на обеих машинах с 26-08 и проверены
+живым тактом. Здесь остались только шаги, которые агент сделать не может.
+
+1. **Создать 4 объекта Better Stack** (имена и периоды —
+   [UPTIME_BETTERSTACK_MONITORING §2.4](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)):
+   HTTP-монитор `https://context-ai.ru/`, пульс `.91`, два пульса перекрёстных проверок
+   (5 мин / грация 10 мин). Агент не может: **API-токена Better Stack нет ни на одной
+   машине** (замерено 26-08 — в проде только ping-URL'ы существующих пульсов).
+   **Сперва пересчитать свободный тариф:** не хватает мест — делать пульсы, HTTP-монитор
+   пропустить (молчание переживает смерть контейнера, HTTP-монитор нет).
+2. **Вписать URL пульса на КАЖДОЙ машине** — одна строка, ни перезапуска, ни деплоя,
+   проверка подхватит на следующем 5-минутном такте:
+   ```bash
+   install -m 600 /dev/null /etc/default/systema-peer-probe
+   printf 'PEER_PROBE_HEARTBEAT_URL=https://uptime.betterstack.com/api/v1/heartbeat/<TOKEN>\n' \
+     >> /etc/default/systema-peer-probe
+   ```
+   Пока файла нет, проверка работает и честно пишет `heartbeat SKIP` — зелёной лампочки
+   над неработающим предохранителем не будет.
+3. **Таймер лестницы восстановления НЕ включать** до четырёх учений D13 при человеке.
+   `systema-remediation-ladder.timer` выложен и намеренно `disabled`: вооружать
+   автоматический перезапуск боевых сервисов на Tier-0 машине до учений — ровно та
+   самоуверенность, против которой написана волна. После успешных учений:
+   `systemctl enable --now systema-remediation-ladder.timer` на обеих + добавить таймер
+   в `REQUIRED_ACTIVE_TIMERS` обоих `.conf`. Репетировать безопасно: `--dry-run` ничего
+   не делает и людей не будит.
+4. **Выверить `LADDER_CT_ID` у Артёма** в тот же день, когда появится `PROXMOX_API_TOKEN`
+   (P1). 150/50 **выведены из имени хоста, а не замерены** — изнутри гостя номер
+   контейнера не виден вообще; в первый же боевой заход R4 перезапустила бы по нему
+   чужой контейнер.
+
+Прогон и доказательства —
+[OPS_UPTIME_W3_CROSSPROBE_LADDER_H3579_26-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/OPS_UPTIME_W3_CROSSPROBE_LADDER_H3579_26-08-2026.md).
+
 ### №82 — H3462 — входящий email-канал поддержки: zabota@samskrte.ru → вебхук
 
 Код в main тёмным: эндпоинт `POST /api/webhooks/inbound-email/{secret}` (секрет пути, fail-closed), таблица `inbound_emails`, очередь нераспознанных отправителей `/admin/inbound-emails`, бейдж Email в Helpdesk. Флаг `SUPPORT_INBOUND_EMAIL` default **OFF** → маршрут 404. Человеческие шаги — почта/DNS/пересылка:
@@ -116,8 +153,8 @@ _Создано: 08-07-2026 · Обновлено: 23-08-2026 (№81 H3314 — �
 
 1. В `.env`: `MAXMIND_ACCOUNT_ID=<id>`, `MAXMIND_LICENSE_KEY=<ключ с maxmind.com>` (бесплатная регистрация).
 2. `php artisan support:geo-update-maxmind --dry-run` → затем без флага. База ляжет в `storage/app/geo/GeoLite2-City.mmdb`.
-3. Правка текста политики приватности: готовые формулировки — [docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md) (блоки §4.1 / §5.4 / примечание к §7.3; человек вставляет в мастер и переопубликует PDF) → подтверждение MG.
-4. Только тогда: `SUPPORT_GEO_DRIVER=maxmind`, `SUPPORT_VISITOR_GEO=true` (+ presence `SUPPORT_VISITOR_PRESENCE=true` отдельно).
+3. ✅ **Политика опубликована 25-08-2026 (OxAlpha, поручение MG «публикуй сам»):** rev. «24» августа 2026 — категория «Посетители сайта» (§4.1), гео-город с локальным резолвом GeoLite2 + данные активности с 15-мин автоудалением (§5.4), примечание к §7.3 «перечень третьих лиц не расширяется». Живой PDF: https://samskrte.ru/docs/privacy.pdf (md5 `86AEEF42B41E54F5B04FF0668547A226` = коммит 190614b2). Формулировки-исходник: [docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md). Q-law-1/Q-law-2 остаются юристу (форма согласия для presence).
+4. Только тогда: `SUPPORT_GEO_DRIVER=maxmind`, `SUPPORT_VISITOR_GEO=true` (+ presence `SUPPORT_VISITOR_PRESENCE=true` отдельно, после юриста).
 5. Стоп: `SUPPORT_GEO_DRIVER=null`, флаги `false`. База остаётся на диске безвредно.
 
 ### №81 — H3314 — закат мобильных Sanctum-токенов (90 дней) + per-credential login throttle

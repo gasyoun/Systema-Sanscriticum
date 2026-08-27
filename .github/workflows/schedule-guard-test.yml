@@ -1,25 +1,33 @@
 name: Schedule guard reproduction test
 
+# Harness for the shell guards under scripts/server_guards/sbin/. Each of these
+# tests runs entirely in a temp dir with stubbed binaries — no prod access, no
+# root, no secrets — so they are cheap to run on every touch.
+#
 # H1973 (30-07-2026): systema-schedule-run.sh's flock-based overlap guard once
 # stayed falsely held for ~2h after a deploy restart, silently skipping every
 # scheduled command. The fix added a TTL-based stale-lock reclaim, verified by
 # scripts/server_guards/sbin/test_systema_schedule_run.sh. The test now also
-# proves the wrapper never touches an unrelated Artisan-like process. Runs on
-# every push/PR touching the guarded scripts, plus weekly so regressions in the
-# reclaim and process-isolation logic surface even if the wrapper itself hasn't
-# changed in a while.
+# proves the wrapper never touches an unrelated Artisan-like process.
+#
+# H3579 (26-08-2026) added two more jobs. The remediation ladder's test was
+# written with the ladder and would otherwise never have run in CI — a test that
+# only ever runs on the author's machine protects the first week and nothing
+# after it. The auto-deploy wrapper's test already existed and had simply never
+# been wired here; it was green when wired, so the gap was luck, not design.
+#
+# Runs on every push/PR touching the guarded scripts, plus weekly so regressions
+# surface even if the wrappers themselves haven't changed in a while.
 
 on:
   push:
     branches: [master, main]
     paths:
-      - "scripts/server_guards/sbin/systema-schedule-run.sh"
-      - "scripts/server_guards/sbin/test_systema_schedule_run.sh"
+      - "scripts/server_guards/sbin/**"
   pull_request:
     branches: [master, main]
     paths:
-      - "scripts/server_guards/sbin/systema-schedule-run.sh"
-      - "scripts/server_guards/sbin/test_systema_schedule_run.sh"
+      - "scripts/server_guards/sbin/**"
   schedule:
     - cron: "17 3 * * 1" # weekly, Monday 03:17 UTC
   workflow_dispatch:
@@ -36,3 +44,23 @@ jobs:
 
       - name: Run test_systema_schedule_run.sh
         run: bash scripts/server_guards/sbin/test_systema_schedule_run.sh
+
+  auto-deploy-guard-test:
+    name: auto-deploy wrapper guards (fuse, retry cap, exit 75)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Run test_systema_auto_deploy_run.sh
+        run: bash scripts/server_guards/sbin/test_systema_auto_deploy_run.sh
+
+  remediation-ladder-test:
+    name: remediation ladder restraint (R4 inert, counter, gave-up)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Proves, among others, that R4 never reaches the Proxmox API without a
+      # token — by the ABSENCE of the call, not by trusting the script text.
+      - name: Run test_systema_remediation_ladder.sh
+        run: bash scripts/server_guards/sbin/test_systema_remediation_ladder.sh

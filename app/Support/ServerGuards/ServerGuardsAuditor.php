@@ -28,7 +28,7 @@ final class ServerGuardsAuditor
      */
     public function audit(): array
     {
-        return array_merge(
+        return $this->applyWaivers(array_merge(
             $this->auditManagedFiles(),
             $this->auditCrontab(),
             $this->auditAutoDeploy(),
@@ -43,7 +43,83 @@ final class ServerGuardsAuditor
             $this->auditTmpfsCap(),
             $this->auditFailedUnits(),
             $this->auditBackupFreshness(),
-        );
+        ));
+    }
+
+    /**
+     * Waiver: осознанно терпимые находки (2026-08-25).
+     *
+     * Зачем. tmpfs-cap на .92 критичен с 19-08-2026 и не может перестать им
+     * быть изнутри гостя: монтирование сделано на хосте Proxmox (чужой uid=),
+     * потолок ставит только человек со стороны хоста. Каждый деплой печатал
+     * красный блок «предохранители расходятся» (exit 75, #1143), probe каждые
+     * сутки напоминал в Telegram — сигнал, который нельзя выполнить, приучает
+     * его игнорировать («мальчик и волк»), а рядом с ним тонет настоящий drift.
+     *
+     * Как работает. Имена из GUARD_WAIVERS до даты GUARD_WAIVERS_EXPIRES
+     * понижаются до info: находка остаётся видимой (ℹ в verify, комментарий в
+     * probe), но не блокирует verify и не будит Telegram.
+     *
+     * Три правила против гниения:
+     *   • fail-closed — даты нет / не YYYY-MM-DD / истекла: waiver НЕ
+     *     действует, находка остаётся как была (сама и есть тревога);
+     *   • misconfig виден: GUARD_WAIVERS задан, а EXPIRES сломан — отдельный
+     *     warning поверх нетронутых находок;
+     *   • имя, которому нечего вайвить (предохранитель снова здоров или
+     *     опечатка), даёт info «убери из GUARD_WAIVERS» — конфиг не должен
+     *     молчать о том, что стал мёртвым текстом.
+     *
+     * @param  list<GuardFinding>  $findings
+     * @return list<GuardFinding>
+     */
+    private function applyWaivers(array $findings): array
+    {
+        if (! $this->spec->has('GUARD_WAIVERS')) {
+            return $findings;
+        }
+
+        $names = $this->spec->csv('GUARD_WAIVERS');
+        if ($names === []) {
+            return $findings;
+        }
+
+        $expiresRaw = $this->spec->has('GUARD_WAIVERS_EXPIRES')
+            ? trim($this->spec->get('GUARD_WAIVERS_EXPIRES'))
+            : '';
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $expiresRaw) !== 1) {
+            return [...$findings, GuardFinding::warning(
+                'waiver',
+                'GUARD_WAIVERS задан ('.implode(', ', $names).'), но GUARD_WAIVERS_EXPIRES '
+                .'отсутствует или не дата YYYY-MM-DD — waiver НЕ действует',
+            )];
+        }
+
+        $expires = strtotime($expiresRaw.' 23:59:59');
+        if ($expires === false || time() > $expires) {
+            return $findings; // истёк: находки остаются как были — это и есть тревога.
+        }
+
+        $waived = [];
+        foreach ($findings as $i => $finding) {
+            if (! in_array($finding->guard, $names, true) || $finding->severity === GuardFinding::INFO) {
+                continue;
+            }
+            $findings[$i] = new GuardFinding(
+                GuardFinding::INFO,
+                $finding->guard,
+                $finding->message.' [waiver до '.$expiresRaw.']',
+            );
+            $waived[] = $finding->guard;
+        }
+
+        foreach (array_values(array_diff($names, array_unique($waived))) as $stale) {
+            $findings[] = GuardFinding::info(
+                'waiver',
+                "waiver не понадобился: {$stale} нет среди находок — убрать из GUARD_WAIVERS (server_guards.conf)",
+            );
+        }
+
+        return $findings;
     }
 
     /**
@@ -503,6 +579,20 @@ final class ServerGuardsAuditor
      * (health_check, memwatch, earlyoom, cabinet:probe) смотрят на хост и
      * структурно не могли этого увидеть. Смотреть надо на бюджет группы.
      *
+     * Заполненность ≠ давление (25-08-2026, гейт PSI). Замер .92 того же дня:
+     * memory.stat группы = anon 63 МиБ + file cache 1.5 ГиБ — «память» почти
+     * целиком page cache от GB-scale IO кронских детей, который ядро и так
+     * вытесняет без чьего-либо ведома. Мгновенный порог «≥80 % от high» из-за
+     * этого флапал вокруг деплоев (1547→1855 МиБ за час): красный блок в каждом
+     * деплое (exit 75, #1143) и смены soft-fingerprint → повторные Telegram
+     * поверх sticky. Предупреждение теперь требует СВИДЕТЕЛЬСТВА реального
+     * троттлинга — memory.pressure группы (PSI some avg10 ≥
+     * CGROUP_PSI_SOME_PCT): ядро само призналось, что задачи стояли в очереди
+     * за памятью. Critical (current ≥ high) не гейтуется: там ядро уже на
+     * пределе по определению. PSI не читается (старое ядро, psi=off) — старое
+     * поведение без гейта: fail-open к прежней чувствительности, числа молча
+     * не подняты.
+     *
      * Fail-open: нет cgroup v2, не читается memory.current, у cron нет потолка
      * — молчим. Проверка обязана быть бесплатной на любой машине, включая CI.
      *
@@ -533,13 +623,49 @@ final class ServerGuardsAuditor
             )];
         }
         if ($cur * 5 >= $lim * 4) { // ≥80 %
+            [$psiSomePct, $psiReadable] = $this->cronCgroupPressureStallPct();
+            if ($psiReadable && $psiSomePct < $this->psiThresholdPct()) {
+                return []; // заполненность без давления: чистый page cache, ядро вытесняет сам.
+            }
+            $evidence = $psiReadable
+                ? sprintf('подтверждено давлением: PSI some avg10=%.2f %% ≥ %.1f %%', $psiSomePct, $this->psiThresholdPct())
+                : 'PSI недоступен — гейт не применён';
+
             return [GuardFinding::warning(
                 'cgroup',
-                "cron.service занял {$curMib} МиБ из {$limMib} МиБ (≥80 %) — до троттлинга близко",
+                "cron.service занял {$curMib} из {$limMib} МиБ (≥80 %), {$evidence} — до троттлинга близко",
             )];
         }
 
         return [];
+    }
+
+    /**
+     * [some avg10 в процентах, читается ли PSI] для cron.service.
+     *
+     * Формат memory.pressure: «some avg10=0.00 avg60=… total=…» / «full …».
+     *
+     * @return array{0: float, 1: bool}
+     */
+    private function cronCgroupPressureStallPct(): array
+    {
+        $raw = $this->sys->fileContents('/sys/fs/cgroup/system.slice/cron.service/memory.pressure');
+        if ($raw === null || preg_match('/^some\s+avg10=([\d.]+)/m', $raw, $m) !== 1) {
+            return [0.0, false];
+        }
+
+        return [(float) $m[1], true];
+    }
+
+    private function psiThresholdPct(): float
+    {
+        // Числа живут только в server_guards.conf; ключ появился позже файла —
+        // дефолт для dev/CI, где conf обновляется вместе с кодом, а не до него.
+        if (! $this->spec->has('CGROUP_PSI_SOME_PCT')) {
+            return 1.0;
+        }
+
+        return (float) str_replace(',', '.', trim($this->spec->get('CGROUP_PSI_SOME_PCT')));
     }
 
     /**

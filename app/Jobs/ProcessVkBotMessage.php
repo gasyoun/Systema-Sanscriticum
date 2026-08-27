@@ -141,6 +141,54 @@ final class ProcessVkBotMessage implements ShouldQueue
             return;
         }
 
+        // SELF-SERVICE: открытые эфиры ОРС — расписание + подписка/отписка
+        // (H3576 §2, зеркало Telegram-ветки 1.65). Отписка — первой.
+        $selfService = app(StudentSelfService::class);
+        if ($selfService->matchesStreamsUnsubscribeIntent($text)) {
+            $reply = $selfService->unsubscribeFromStreams($user);
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $reply,
+                'is_read' => true,
+                'source' => 'vk',
+            ]);
+
+            $this->sendVkMessage($vkId, $reply);
+
+            return;
+        }
+
+        if ($selfService->matchesStreamsSubscribeIntent($text)) {
+            $reply = $selfService->subscribeToStreams($user);
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $reply,
+                'is_read' => true,
+                'source' => 'vk',
+            ]);
+
+            $this->sendVkMessage($vkId, $reply);
+
+            return;
+        }
+
+        if ($selfService->matchesStreamsIntent($text)) {
+            $summary = $selfService->streamsSummary($user, 'vk');
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $summary,
+                'is_read' => true,
+                'source' => 'vk',
+            ]);
+
+            $this->sendVkMessage($vkId, $summary);
+
+            return;
+        }
+
         // SELF-SERVICE: /help — детерминированное меню, минуя ИИ (H1357).
         if (app(StudentSelfService::class)->matchesHelpIntent($text)) {
             $menu = app(StudentSelfService::class)->helpMenu();

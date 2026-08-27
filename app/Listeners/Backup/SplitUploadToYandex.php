@@ -79,6 +79,9 @@ class SplitUploadToYandex
     /** @var bool Гейт верификации (тесты выключают — subprocess не видит fake-диски). */
     private bool $verifyEnabled = true;
 
+    /** @var int|null Сколько групп после resumePendingGroups() остались неполными (H3410, для громкой строки исхода). */
+    private ?int $incompleteGroupsRemaining = null;
+
     public function handle(BackupWasSuccessful $event): void
     {
         // Источник — успешная копия на local; другие диски игнорируем.
@@ -129,6 +132,21 @@ class SplitUploadToYandex
             return;
         }
 
+        // H3410 (24-08-2026): резервный демаскер завершения — резервный, потому
+        // что try/finally ниже уже покрывает штатный путь. Нужен на случай, если
+        // PHP умрёт мимо finally (SIGKILL от timeout-обёртки/OOM): без этого
+        // «докатка тихо не запустилась вовсе» неотличима от «докатка идёт», и
+        // тревога о зависшей группе никогда не прозвучит. Флаг снимается САМ
+        // register_shutdown_function'ом, штатный finally его лишь помечает.
+        $completed = false;
+        register_shutdown_function(function () use (&$completed): void {
+            if (! $completed) {
+                Log::error('split-upload: докатка завершилась НЕ штатно (процесс убит/упал до finally) — следующий запуск обязан добить недостающее');
+            }
+        });
+
+        $this->incompleteGroupsRemaining = null;
+
         try {
             $source = BackupDestination::create('local', $name);
             if (! $source->isReachable()) {
@@ -155,6 +173,18 @@ class SplitUploadToYandex
                 'disk' => $targetDiskName,
                 'exception' => $e->getMessage(),
             ]);
+        } finally {
+            // Громкая строка ИСХОДА, а не только «начал»: тихий DONE неотличим
+            // от «упал до первой строки». remaining=0 — норма (молчание было бы
+            // нормой и раньше); remaining>0 — честно кричит, что группа осталась
+            // неполной ПОСЛЕ прогона, а не только что кто-то её докатывал.
+            $remaining = $this->incompleteGroupsRemaining ?? 0;
+            if ($remaining > 0) {
+                Log::error("split-upload: докатка завершена, но {$remaining} групп(а) остаются неполными — следующий запуск повторит попытку");
+            } else {
+                Log::info('split-upload: докатка завершена, неполных групп не осталось');
+            }
+            $completed = true;
         }
     }
 
@@ -314,7 +344,20 @@ class SplitUploadToYandex
                 rewind($chunk);
 
                 $target->delete($part['path']);
+                // H3410: длительность + байты/сек ИМЕННО PUT'а (не всего
+                // uploadPart — чтение local и удаление старой части сюда не
+                // входят). Раньше единственным симптомом стагнации было
+                // отсутствие следующей строки лога через N минут; теперь сама
+                // строка называет число.
+                $putStartedAt = microtime(true);
                 $target->writeStream($part['path'], $chunk);
+                $putSeconds = microtime(true) - $putStartedAt;
+                $bytesPerSec = $putSeconds > 0 ? (int) round($part['length'] / $putSeconds) : $part['length'];
+                Log::info("split-upload: PUT {$part['path']} завершён", [
+                    'bytes' => $part['length'],
+                    'seconds' => round($putSeconds, 1),
+                    'bytes_per_sec' => $bytesPerSec,
+                ]);
             } finally {
                 fclose($chunk);
             }
@@ -463,18 +506,29 @@ class SplitUploadToYandex
                 }
             }
 
+            $stillMissing = 0;
             foreach (array_reverse($missing) as $index) {
                 $part = $plan[$index - 1];
                 try {
                     $this->uploadPart($sourceDisk, $target, $localZipPath, $part);
                 } catch (Throwable $e) {
+                    $stillMissing++;
                     Log::error("split-upload: докатка части {$part['path']} не удалась", [
                         'exception' => $e->getMessage(),
                     ]);
                 }
             }
 
-            Log::info("split-upload: группа {$stem} долита до полной");
+            // H3410: строка исхода честная, а не оптимистичная — раньше здесь
+            // всегда стояло «долита до полной», даже если часть(и) выше упала
+            // в catch и осталась недостающей. Именно по этой строке
+            // resumeOffsite() считает remaining для громкой финальной сводки.
+            if ($stillMissing > 0) {
+                $this->incompleteGroupsRemaining = ($this->incompleteGroupsRemaining ?? 0) + 1;
+                Log::warning("split-upload: группа {$stem} осталась неполной — {$stillMissing} част(ей) не доехали, следующий прогон повторит попытку");
+            } else {
+                Log::info("split-upload: группа {$stem} долита до полной");
+            }
         }
     }
 

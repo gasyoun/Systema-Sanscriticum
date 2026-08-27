@@ -91,6 +91,68 @@
             </div>
         @endif
 
+        {{-- H3529: дневной coverage классификации по каналам. Источник —
+             support_topic_assignments выбранной даты; uncategorized rate
+             включает разговоры без назначений. Ссылка на отчёт харнесса
+             появляется, когда пакет заморозит reports/*.md (шаг 4 волны 1). --}}
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-4 py-3 dark:border-white/10">
+                <strong class="text-gray-950 dark:text-white">Coverage классификации</strong>
+                <span class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ $this->selectedDate }} · всего {{ $this->coverage['total'] }}
+                </span>
+            </div>
+            <div class="tg-table-wrap">
+                <table class="w-full text-sm" data-testid="support-coverage-panel">
+                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-white/5 dark:text-gray-400">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Канал</th>
+                            <th class="px-4 py-2 text-right">Разговоров</th>
+                            <th class="px-4 py-2 text-right">С темой</th>
+                            <th class="px-4 py-2 text-right">Coverage %</th>
+                            <th class="px-4 py-2 text-right">Uncategorized</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($this->coverage['rows'] as $row)
+                            <tr class="border-t border-gray-100 dark:border-white/5">
+                                <td class="px-4 py-2 text-gray-950 dark:text-white">{{ $row['label'] }}</td>
+                                <td class="px-4 py-2 text-right">{{ $row['total'] }}</td>
+                                <td class="px-4 py-2 text-right">{{ $row['categorized'] }}</td>
+                                <td class="px-4 py-2 text-right">{{ $row['coverage'] === null ? '—' : $row['coverage'].'%' }}</td>
+                                <td class="px-4 py-2 text-right">{{ $row['uncategorized'] }}</td>
+                            </tr>
+                        @empty
+                            <tr class="border-t border-gray-100 dark:border-white/5">
+                                <td colspan="5" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                                    Нет разговоров за выбранную дату
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                    @if($this->coverage['total'] > 0)
+                        <tfoot class="border-t border-gray-200 bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
+                            <tr>
+                                <td class="px-4 py-2">Итого</td>
+                                <td class="px-4 py-2 text-right">{{ $this->coverage['total'] }}</td>
+                                <td class="px-4 py-2 text-right">{{ $this->coverage['categorized'] }}</td>
+                                <td class="px-4 py-2 text-right">{{ $this->coverage['coverage'] }}%</td>
+                                <td class="px-4 py-2 text-right">{{ $this->coverage['uncategorized_rate'] }}% uncategorized</td>
+                            </tr>
+                        </tfoot>
+                    @endif
+                </table>
+            </div>
+            @if($this->harnessReportUrl)
+                <div class="border-t border-gray-200 px-4 py-2 text-xs dark:border-white/10">
+                    <a href="{{ $this->harnessReportUrl }}" target="_blank" rel="noopener"
+                       class="text-primary-600 underline dark:text-primary-400">
+                        Последний отчёт харнесса классификатора (pinned)
+                    </a>
+                </div>
+            @endif
+        </div>
+
         {{-- Filters --}}
         <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
             <div class="flex flex-wrap items-center gap-x-4 gap-y-3">

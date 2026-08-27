@@ -11,6 +11,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AttendanceNoticeController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BankClaimController;
 use App\Http\Controllers\CabinetMasteryController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CallbackRequestController;
@@ -47,6 +48,7 @@ use App\Http\Controllers\PaypalClaimController;
 use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\PublicCabinetGuideController;
 use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\PublicPresenceController;
 use App\Http\Controllers\PublicWidgetController;
@@ -62,10 +64,13 @@ use App\Http\Controllers\Student\HindiMySrsDeckController;
 use App\Http\Controllers\Student\HindiProgrammePlaylistController;
 use App\Http\Controllers\Student\HindiTgCuratedPracticeController;
 use App\Http\Controllers\Student\HindiTranscriptDrillsController;
+use App\Http\Controllers\Student\LessonPackController;
 use App\Http\Controllers\StudentAgentController;
 use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SurveyPageController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
 use App\Http\Controllers\VisualDcsController;
@@ -365,6 +370,12 @@ Route::view('/faq/dz', 'faq.dz')->name('faq.dz');
 // FAQ: способы оплаты, рассрочка, что делать, если платёж не проходит — публично
 // (H2060, linked from student.access recovery CTA behind payment_recovery_cta).
 Route::view('/faq/payment', 'faq.payment')->name('faq.payment');
+
+// Публичный гид личного кабинета (H3499) — БЕЗ auth, для ещё не вошедших:
+// рассылки students:send-login-invites, анонсы в Telegram, скрипты куратора.
+// Тот же источник, что кабинетный /dvaram/help. Строго до catch-all /{slug}.
+Route::get('/help/kabinet', [PublicCabinetGuideController::class, 'show'])
+    ->name('help.cabinet-guide');
 
 // Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
 // До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.
@@ -713,6 +724,12 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->middleware('course.canonical')
         ->name('student.lesson.srs.add');
 
+    // H3521: Learn Your Way — персонализированный пак занятия. Default-OFF
+    // (LYW_ENABLED): флаг выключен => 404 и вкладка на уроке не рендерится.
+    Route::get('/c/{slug}/u/{lessonId}/learn', [LessonPackController::class, 'show'])
+        ->middleware('course.canonical')
+        ->name('student.lesson.lessonpack');
+
     Route::post('/c/{slug}/u/{lessonId}/complete', [StudentController::class, 'completeLesson'])
         ->name('student.lesson.complete');
 
@@ -870,6 +887,18 @@ Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
     ->where('token', '[A-Za-z0-9]+')
     ->name('newsletter.magic');
 
+// --- СВЯЗЫВАНИЕ TELEGRAM С КАБИНЕТОМ (H3542) — по capability-ссылке из
+// приглашения саппорт-бота в DM. Самогейтится флагом support_dm_link_invite
+// (404 при OFF). Строго до catch-all /{slug}; публичные; троттлинг в контроллере.
+Route::get('/support/link/{token}', [TelegramSupportLinkController::class, 'show'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('support.telegram.link');
+Route::post('/support/link/{token}', [TelegramSupportLinkController::class, 'submit'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('support.telegram.link.submit');
+
 // --- ТРЕКИНГ РАССЫЛОК (H1449 B4) — оба самогейтятся по email_campaigns (404 при OFF).
 // Токен резолвит CampaignRecipient на сервере — PII в URL никогда не попадает.
 Route::get('/e/o/{token}.gif', [EmailTrackingController::class, 'openPixel'])
@@ -937,6 +966,15 @@ Route::get('/paypal/{tariff}', [PaypalClaimController::class, 'show'])
 Route::post('/paypal/{tariff}', [PaypalClaimController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('paypal.claim.store');
+
+// Оплата банковским переводом (SEPA/SWIFT на внешний счёт получателя школы,
+// H3497): зеркало PayPal-заявки. Флаг BANK_CLAIM_ENABLED default OFF (404).
+// Строго до catch-all /{slug}; throttle:5,1 — защита от спама pending-платежей.
+Route::get('/bank/{tariff}', [BankClaimController::class, 'show'])
+    ->name('bank.claim.show');
+Route::post('/bank/{tariff}', [BankClaimController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('bank.claim.store');
 
 // Счёт для компании / ИП (безнал). Flag COMPANY_INVOICE_ENABLED; pending until
 // admin confirms bank transfer. Print path BEFORE /invoice/{tariff} so "print"
@@ -1083,6 +1121,20 @@ Route::post('/gift/activate', [GiftCertificateController::class, 'activate'])
     ->name('gift.activate.attempt');
 Route::get('/gift/verify/{number}', [GiftCertificateController::class, 'verify'])
     ->name('gift.verify');
+
+// --- ПУБЛИЧНЫЕ АНКЕТЫ (движок опросов; рулинг MG 24-08-2026 — вариант Б) ---
+// ВАЖНО: до catch-all /{slug}. Самогейтится флагом SURVEYS_ENABLED (404 при OFF).
+// POST троттлится против спама + ханипот в форме (SurveyPageController@store).
+Route::get('/anketa/{slug}', [SurveyPageController::class, 'show'])
+    ->name('survey.show');
+Route::post('/anketa/{slug}', [SurveyPageController::class, 'store'])
+    ->middleware('throttle:20,60')
+    ->name('survey.store');
+
+// Выгрузка ответов CSV для куратора (админ/менеджер).
+Route::get('/admin/surveys/{slug}/export', [SurveyPageController::class, 'exportCsv'])
+    ->middleware('throttle:30,60')
+    ->name('survey.export');
 Route::get('/gift/{certificate}/download', [GiftCertificateController::class, 'download'])
     ->middleware(['auth', 'throttle:10,1'])
     ->name('gift.download');

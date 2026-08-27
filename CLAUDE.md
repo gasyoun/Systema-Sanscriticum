@@ -126,13 +126,17 @@ always-on invariants.
 
 - Tochka `/api/webhooks/tochka` · Telegram `/api/telegram/webhook` · VK `/api/vk-webhook` · DomPDF certificates.
 - Lead-magnet bots: `/api/webhooks/telegram-magnet`, `/vk-magnet`, `/max-magnet/{secret}` (secret **in the path** — rotate in `MarketingSetting` after any log leak, then `php artisan max:set-magnet-webhook`). Secrets use Eloquent `encrypted` cast.
+- **Новая точка отправки в Telegram** (`sendMessage`/`sendPhoto`/…) обязана идти через клейм [App\Support\TelegramSendGuard](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/TelegramSendGuard.php) ДО вызова API — иначе ретрай джоба после потерянного ответа Telegram даёт вторую идентичную копию (инцидент 24-08-2026, чат гр.61). Контракт: claim → подавлено = тихо вернуть успех; детерминированный отказ Telegram (4xx/5xx) = release + rethrow (ретрай уместен); транспортный сбой без ответа = клейм держится, ретрай подавлен (at-most-once); Redis недоступен = fail-open с громким warning. Входящие Telegram-апдейты перед обработкой дедупятся по `update_id`: `TelegramSendGuard::claimUpdate(scope, update_id)` (вебхук-ределивери и повторный приём поллером). Эталонные тесты: `SendZapisiBotMessageJobTest`, `TelegramDedupWave2Test`.
+
+- **n8n ZOOM 1.4 доставки записей** (workflows 1EIqqNzMl5NNIxST): DOWNLOAD качает только свежий signed URL из мета-ноды «Свежая ссылка записи» с Bearer (zoomOAuth2Api) — webhook-download_token живёт ≤24ч; чистящие узлы удаляют строго …/executions/{{ \.id }}*, глобальные xecutions/* rm запрещены (26-08 стёрли бинарник параллельного исполнения); теневая копия MP4 в Drive курса стоит до загрузок и не блокируется. Правя трубу через API PUT — бэкап JSON в /root/wf_backup_pre_patch_* перед каждым PUT.
 
 ## Environment / worktrees
 
 - Timezone `Europe/Moscow`. Flags in `config/features.php`. HTTPS forced in production.
+- **A new `env()` key in `config/*.php` ⇒ regenerate the inventory in the SAME pass:** `php scripts/generate_env_inventory.php` (standalone script, no Laravel bootstrap, writes [`docs/ENVIRONMENT_VARIABLES.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ENVIRONMENT_VARIABLES.md)). The `Environment inventory` CI gate runs the same script with `--check` and **reddens `main`** when the two disagree — nothing in the PR that adds the key warns you. On 25-08-2026 six `BANK_*` keys from [#2088](https://github.com/gasyoun/Systema-Sanscriticum/pull/2088) left `main` red for **2 h 50 min while four commits landed on top of it**; fix was one command ([#2093](https://github.com/gasyoun/Systema-Sanscriticum/pull/2093)).
 - Composer pins PHP 8.3 + Unix `pcntl`/`posix`; `platform-check=false` so Windows resolves the lock. Do not drop `composer check-platform-reqs` (CI + `deploy.sh --no-dev`).
 - **New worktree:** [`scripts/worktree_bootstrap.ps1`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/worktree_bootstrap.ps1) (robocopy `vendor/`, ~60s). Never junction/symlink `vendor/` — PHP `__DIR__` resolves to the physical target and the worktree silently runs another tree's `app/` ([#713](https://github.com/gasyoun/Systema-Sanscriticum/issues/713)).
-- This repo tracks [`CHANGELOG.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CHANGELOG.md) **lowercase**. `git add CHANGELOG.md` is a silent no-op on Windows (`core.ignorecase=true`). Take the case from `git ls-files`, then `git diff --cached --name-only` ([Uprava FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)).
+- This repo tracks [`CHANGELOG.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CHANGELOG.md) — **renamed from lowercase `changelog.md` to uppercase on 24-08-2026**. On Windows (`core.ignorecase=true`) `git add` with the wrong case is a silent no-op either way — take the case from `git ls-files`, then verify with `git diff --cached --name-only` ([Uprava FINDINGS §348](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)).
 - `preg_split('/\R/', ...)` without `/u` splits inside Cyrillic (`х` = `D1 85`). Use `preg_split('/\r\n|\n|\r/', ...)` (H1914).
 
 ## Operational hazards
@@ -141,5 +145,22 @@ Destructive-risk facts: [Uprava DANGER_FACTS.md](https://github.com/gasyoun/Upra
 (org-private). Public-safe subset is in the generated block of
 [AGENTS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/AGENTS.md).
 Check them before anything that writes.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues via the `gh` CLI; PRs are NOT a triage
+surface (intake OFF). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-role vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`,
+`ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout (root `CONTEXT.md` + `docs/adr/`, created lazily —
+proceed silently when absent). See `docs/agents/domain.md`.
 
 _Dr. Mārcis Gasūns_

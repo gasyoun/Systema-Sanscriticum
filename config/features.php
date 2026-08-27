@@ -173,12 +173,36 @@ return [
     'support_auto_ack' => (bool) env('SUPPORT_AUTO_ACK', false),
 
     /*
+     | H3542: мост «незалинкованный партнёр → linked user». Когда автоответ
+     | заблокирован ТОЛЬКО отсутствием связи (аудитория канала без кабинета),
+     | бот один раз за cooldown-окно отправляет приглашение с capability-
+     | ссылкой /support/link/{token}: email → find-or-create беспарольного
+     | User (паттерн H324) → linked_user_id на контакте и private-чате. После
+     | этого ack/шаблоны/факты отвечают сами. Пер-аккаунтный гейт тот же:
+     | telegram_support_accounts.auto_reply_enabled. Денominator бэкфилла —
+     | support:send-link-invites --dry. ОТКЛ по умолчанию; включать только на
+     | пробном аккаунте (rusamskrtam): SUPPORT_DM_LINK_INVITE=true + config:cache.
+     */
+    'support_dm_link_invite' => (bool) env('SUPPORT_DM_LINK_INVITE', false),
+
+    /*
      | H3242: утренняя сводка вчерашней поддержки в Telegram на ADMIN_TELEGRAM_ID
      | (gasyoun). ВКЛ по умолчанию — админский дайджест по явной просьбе, не
      | студенческий автоответ. Выкл: SUPPORT_DAILY_DIGEST=false + config:cache.
      | Команда support:daily-digest, слот 08:10 Europe/Moscow.
      */
     'support_daily_digest' => (bool) env('SUPPORT_DAILY_DIGEST', true),
+
+    /*
+     | H3392: недельный разбор пробы автоответов H3380 («разбираем что пошло
+     | не так») на ADMIN_TELEGRAM_ID: счётчики по event_type × kind × категории,
+     | подсказки без ответа, объём stale/backlog-пропусков, медиана латентности
+     | человеческого ответа после ack/шаблона. ВЫКЛ по умолчанию — новый
+     | исходящий контур админам: включение сознательный шаг после первого
+     | просмотра (php artisan support:auto-reply-weekly --dry работает и при
+     | OFF). Слот расписания — воскресенье 18:00 Europe/Moscow.
+     */
+    'support_auto_reply_weekly_report' => (bool) env('SUPPORT_AUTO_REPLY_WEEKLY_REPORT', false),
 
     /*
      | H3462 (рулинг MG 24-08-2026): входящий email как канал поддержки.
@@ -480,6 +504,15 @@ return [
      | Read-only. Never writes teacher_payouts / payments.
      */
     'teacher_weekly_payout_calendar' => (bool) env('TEACHER_WEEKLY_PAYOUT_CALENDAR', false),
+
+    /*
+     | H3532: таб «Год» на календаре выплат (52 ISO-недели × все получатели,
+     | формулы ×92 %, балансы Точка/PayPal). Default OFF — при OFF страница
+     | рендерится байт-в-байт как прежде (H3280), новых запросов нет.
+     | Enable: TEACHER_PAYOUT_YEAR_VIEW=true + config:cache. Read-only
+     | по money-таблицам; пишет только finance_snapshots (ручной PayPal-баланс).
+     */
+    'teacher_payout_year_view' => (bool) env('TEACHER_PAYOUT_YEAR_VIEW', false),
 
     /*
      | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
@@ -943,6 +976,15 @@ return [
     'visualdcs_verb' => (bool) env('VISUALDCS_VERB', false),
     'visualdcs_nominal' => (bool) env('VISUALDCS_NOMINAL', false),
     'visualdcs_passage' => (bool) env('VISUALDCS_PASSAGE', false),
+
+    /*
+      |--------------------------------------------------------------------------
+      | Мульти-персона ИИ-куратора (H3520). OFF: persona(любой ключ) возвращает
+      | дефолтный контракт FAQ-куратора байт-в-байт. Включать только вместе с
+      | содержаниями новых персон (config/bot_personas.php) — решение MG.
+      |--------------------------------------------------------------------------
+      */
+    'bot_multi_persona' => (bool) env('BOT_MULTI_PERSONA', false),
 
     /*
      |--------------------------------------------------------------------------

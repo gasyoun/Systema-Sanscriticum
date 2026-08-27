@@ -1,0 +1,14 @@
+[Unit]
+Description=Nightly n8n data backup timer — H3182
+
+[Timer]
+OnCalendar=@@N8N_BACKUP_SCHEDULE@@
+# 03:17, а не 03:00: круглый час на обеих машинах уже занят чужими заданиями,
+# а .91 и .92 делят одно железо Proxmox — совпавший старт двух архиваций
+# означал бы пик памяти на хосте на ровном месте.
+Persistent=true
+RandomizedDelaySec=300
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

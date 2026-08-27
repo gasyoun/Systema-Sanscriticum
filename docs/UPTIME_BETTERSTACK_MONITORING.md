@@ -1,6 +1,6 @@
 # Uptime monitoring — Better Stack (for agents)
 
-_Created: 30-07-2026 · Last updated: 01-08-2026_
+_Created: 30-07-2026 · Last updated: 26-08-2026_
 
 **Audience: agents** (Claude / Codex / ops automation). Env keys, cron paths,
 smoke commands, inventory table — operate without re-deriving from chat.
@@ -12,9 +12,11 @@ smoke commands, inventory table — operate without re-deriving from chat.
   [UPTIME_BETTERSTACK_MONITORING_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md)
   (§1 students, §2 Ivan/Marcis only; Artem only via ops).
 
-**Canonical inventory** of external uptime / silence monitoring for samskrte.ru,
-samskrtam.ru, and Cologne CDSL. Provider: **Better Stack Uptime** (not
-healthchecks.io — that path is abandoned after provider outage, 30-07-2026).
+**Canonical inventory** of external uptime / silence monitoring for samskrte.ru
+(`.92`), samskrtam.ru, Cologne CDSL, and — since 26-08-2026 — the n8n host
+`.91`/context-ai.ru plus the reciprocal cross-probes between the two boxes
+(§2.4–2.5). Provider: **Better Stack Uptime** (not healthchecks.io — that path is
+abandoned after provider outage, 30-07-2026).
 
 **How agents find this file (inbound pointers):** repo
 [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md)
@@ -142,6 +144,88 @@ When Cologne is down, also update
 so scrapers stop re-probing blindly.
 
 We **cannot** install cron on `uni-koeln.de`.
+
+### 2.4 `.91` samskrtam50 — n8n / Caddy (**we own the host**) — W3a, PARTLY PENDING
+
+Host: LXC guest `193.232.229.91`, private `192.168.200.91`. Public surface is
+**Caddy serving `context-ai.ru`** (public DNS → `193.232.229.91`, verified
+26-08-2026). n8n itself listens on `127.0.0.1:5678` only — it is **not**
+reachable from the private interface, so an external monitor can only ever prove
+*Caddy*, never *n8n*.
+
+Until 26-08-2026 `.91` appeared in **no** monitor inventory at all: if it had
+died, nothing would have said so. That is what W3a closes.
+
+| Name (UI) | Type | Target | Period / grace | Status |
+|---|---|---|---|---|
+| `.91 n8n public (Caddy)` | HTTP | `https://context-ai.ru/` | per UI | ⏳ **not created yet — human** |
+| `.91 heartbeat` | Heartbeat | silence from `.91` | **5 min** / **10 min** | ⏳ **not created yet — human** |
+| `.91 peer-probe → .92` | Heartbeat | silence / explicit `/fail` | **5 min** / **10 min** | ⏳ **not created yet — human** |
+| `.92 peer-probe → .91` | Heartbeat | silence / explicit `/fail` | **5 min** / **10 min** | ⏳ **not created yet — human** |
+
+**Why these four are still open.** Creating a Better Stack object needs the team
+UI or an API token, and there is **no** Better Stack API token on either box —
+measured 26-08-2026: prod env holds only heartbeat *ping* URLs
+(`HEARTBEAT_PING_URL`, `CABINET_PROBE_PING_URL`, `COLOGNE_HEARTBEAT_URL`,
+`SAMSKRTAM_HEARTBEAT_URL`), no admin credential. An agent cannot create them and
+must not invent a way to.
+
+**Free-tier check first (S4/R6).** Count existing monitors against the tier
+before creating four more. If short, **create the heartbeats and skip the HTTP
+monitor** — silence detection survives total container death, an HTTP monitor
+does not.
+
+**The one human action, per heartbeat created:** paste its ping URL into the
+box's env file and nothing else — the probe picks it up on its next 5-minute
+tick, no restart, no redeploy:
+
+```bash
+# on .91 (and the mirror line on .92, with that box's own heartbeat URL)
+install -m 600 /dev/null /etc/default/systema-peer-probe
+printf 'PEER_PROBE_HEARTBEAT_URL=https://uptime.betterstack.com/api/v1/heartbeat/<TOKEN>\n' \
+  >> /etc/default/systema-peer-probe
+```
+
+Until that file exists the probe still runs and still records the verdict
+locally — it says so out loud rather than pretending:
+`heartbeat SKIP: /etc/default/systema-peer-probe не задаёт PEER_PROBE_HEARTBEAT_URL`.
+
+### 2.5 Reciprocal cross-probes `.91` ↔ `.92` (W3b — **wired 26-08-2026**)
+
+Better Stack silence says *something* died; the cross-probe says *what*, because
+both boxes are guests of one Proxmox host and from outside a dead container, a
+dead host and a broken network look identical.
+
+| Path | Role |
+|---|---|
+| [`scripts/server_guards/sbin/systema-peer-probe.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards/sbin/systema-peer-probe.sh) | **ONE** script for both boxes — `.91` installs it through `../server_guards/` rows in its own manifest, so there is no second copy to drift |
+| `/usr/local/sbin/systema-peer-probe.sh` | installed copy (both boxes) |
+| `/etc/default/systema-peer-probe` | `PEER_PROBE_HEARTBEAT_URL` — **not in git**, see §2.4 |
+| `systema-peer-probe.timer` | every 5 min, `RandomizedDelaySec=30` |
+| `/var/log/systema-peer-probe.log` | durable verdict, one line per tick |
+
+**Measured 26-08-2026, not assumed.** The boxes talk over the private
+`192.168.200.0/24` (ping 0.05 ms); public port 22 between them is closed both
+ways. `.92 → https://context-ai.ru/` pinned with `--resolve` to
+`192.168.200.91` → **200**. `.91 → https://samskrte.ru/` pinned to
+`192.168.200.92` → **200** (the bare private IP gives nginx **404** without the
+right `Host`, so the probe must go by name).
+
+`--resolve` is not decoration: on `.92` `context-ai.ru` already resolves to the
+*private* address (split-horizon), and a DNS change would silently turn "the
+neighbour is alive" into "the public route is alive" — a different claim behind
+the same green light.
+
+**The pair is deliberately asymmetric in exactly one line.** `.91` unreachable is
+**warning** on `.92` (automation stops; sales do not) and never fails `.92`'s own
+heartbeat — one fault must not raise two incidents. `.92` unreachable is
+**critical** on `.91` and does fail its heartbeat: that is the product itself
+being down.
+
+Timers, not cron lines. On 18-08-2026 `cron.service` hit its shared 2 GiB cgroup
+budget and strangled every cron job at once (H3121 — ledger row №10, MTTD
+7 h 33 m, `guard = none`). A watchdog in that cgroup shares the fate of what it
+watches.
 
 ---
 

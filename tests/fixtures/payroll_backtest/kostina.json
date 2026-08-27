@@ -1,0 +1,86 @@
+{
+ "recipient": "kostina",
+ "display": "Костина Екатерина",
+ "channel": "paypal_mg",
+ "expectation_source": "marina_chat_anchor",
+ "months": [
+  {
+   "month": "2026-04",
+   "anchor": "msg_3437",
+   "on": "2026-04-05",
+   "inputs": {
+    "receipts_rub": [
+     48000.0,
+     48000.0,
+     30000.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 34776.0
+   }
+  },
+  {
+   "month": "2026-05",
+   "anchor": "A2",
+   "on": "2026-05-11",
+   "inputs": {
+    "receipts_rub": [
+     30000.0,
+     36000.0,
+     24000.0
+    ],
+    "fx_rate": 86.85
+   },
+   "expected": {
+    "payable_rub": 24840.0,
+    "payable_eur": 286.0
+   }
+  },
+  {
+   "month": "2026-06",
+   "anchor": "msg_3637",
+   "on": "2026-06-08",
+   "inputs": {
+    "receipts_rub": [
+     30000.0,
+     24000.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 14904.0
+   }
+  },
+  {
+   "month": "2026-06",
+   "anchor": "msg_3685",
+   "on": "2026-06-13",
+   "inputs": {
+    "receipts_rub": [
+     36000.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 9936.0
+   }
+  },
+  {
+   "month": "2026-06",
+   "anchor": "A7",
+   "on": "2026-06-29",
+   "inputs": {
+    "receipts_rub": [
+     49000.0,
+     66000.0,
+     78000.0,
+     36000.0
+    ],
+    "fx_rate": 86.85
+   },
+   "expected": {
+    "payable_rub": 63204.0,
+    "payable_eur": 728.0
+   }
+  }
+ ],
+ "note": "НПД −6% — отдельный шаг выплаты; гейт по брутто (публикуемым цифрам Марины)."
+}

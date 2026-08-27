@@ -536,6 +536,20 @@ class PaymentResource extends Resource
                     ->query(fn ($query) => $query->invoicePending())
                     ->toggle(),
 
+                // Банковские заявки студентов (SEPA/SWIFT, H3497) — ручная сверка
+                // поступления по выписке получателя.
+                Tables\Filters\Filter::make('bank_sepa_pending')
+                    ->label('SEPA-заявки на проверке')
+                    ->query(fn ($query) => $query->bankSepaPending())
+                    ->toggle(),
+
+                // Авто-доверенные банковские заявки своих (зеркало «PayPal: без
+                // сверки»): очередь выборочной сверки пост-фактум.
+                Tables\Filters\Filter::make('bank_unverified')
+                    ->label('SEPA: без сверки')
+                    ->query(fn ($query) => $query->bankUnverified())
+                    ->toggle(),
+
                 Tables\Filters\TernaryFilter::make('is_deposit')
                     ->label('Только брони (депозиты)')
                     ->placeholder('Все транзакции')
@@ -643,6 +657,59 @@ class PaymentResource extends Resource
                         .', '.number_format((float) $record->amount, 0, '.', ' ').' ₽. '
                         .'После подтверждения откроется доступ.')
                     ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                // H3497: SEPA-заявка после сверки поступления по выписке получателя.
+                Tables\Actions\Action::make('confirmBankSepa')
+                    ->label('Подтвердить перевод')
+                    ->icon('heroicon-o-building-library')
+                    ->color('success')
+                    ->visible(fn (Payment $record) => $record->isBankSepa() && $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Подтвердить банковский перевод')
+                    ->modalDescription(function (Payment $record): string {
+                        $ref = $record->claimMeta('reference');
+
+                        return 'Сверьте по выписке получателя: от '
+                            .($record->claimMeta('sender_name') ?: '—')
+                            .', дата '.($record->claimMeta('paid_on') ?: '—')
+                            .', сумма '.($record->foreignAmountLabel() ?: '—')
+                            .($ref ? ', референция '.$ref : '')
+                            .'. После подтверждения студенту откроется доступ и (для новых аккаунтов) уйдёт пароль на email.';
+                    })
+                    ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                // H3497: выборочная сверка авто-доверенной SEPA-заявки (зеркало PayPal).
+                Tables\Actions\Action::make('markBankVerified')
+                    ->label('Сверка пройдена')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (Payment $record) => $record->isAutoTrustedBankClaim() && $record->claimMeta('verified_at') === null)
+                    ->requiresConfirmation()
+                    ->modalHeading('Сверка пройдена')
+                    ->modalDescription(fn (Payment $record): string => 'Поступление найдено в выписке: от '
+                        .($record->claimMeta('sender_name') ?: '—')
+                        .', дата '.($record->claimMeta('paid_on') ?: '—')
+                        .', сумма '.($record->foreignAmountLabel() ?: '—')
+                        .'. Заявка уйдет из очереди «SEPA: без сверки».')
+                    ->action(function (Payment $record): void {
+                        $meta = is_array($record->claim_meta) ? $record->claim_meta : [];
+                        $meta['verified_at'] = now()->toIso8601String();
+                        $record->update(['claim_meta' => $meta]);
+                    }),
+
+                // H3497: поступление не нашлось — отзываем авто-доверие (штатный
+                // откат canceled на paid).
+                Tables\Actions\Action::make('rejectBankClaim')
+                    ->label('Нет платежа — отменить')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Payment $record) => $record->isAutoTrustedBankClaim()
+                        && in_array($record->status, Payment::PAID_STATUSES, true)
+                        && $record->claimMeta('verified_at') === null)
+                    ->requiresConfirmation()
+                    ->modalHeading('Отменить заявку без подтверждения')
+                    ->modalDescription('Поступление не найдено в выписке получателя. Доступ будет отозван, запись в финансах отменена. Студенту стоит написать, почему доступ закрылся.')
+                    ->action(fn (Payment $record) => $record->update(['status' => 'canceled'])),
 
                 Tables\Actions\Action::make('viewInvoice')
                     ->label('Счет')

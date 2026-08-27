@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install PyYAML pytest
+      - run: python -m pytest engine_py/tests -q
+
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+      - name: Composer install
+        working-directory: php
+        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: PHP parity over golden vectors (standalone runner)
+        run: php php/MessageClassifier/tests/parity_run.php
+      - name: PHPUnit parity test
+        run: php php/vendor/bin/phpunit --bootstrap php/vendor/autoload.php php/MessageClassifier/tests

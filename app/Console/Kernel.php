@@ -10,6 +10,7 @@ use App\Support\ScheduleFailureSignal;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -192,12 +193,31 @@ class Kernel extends ConsoleKernel
             ->name('dozhim-notify-operator');
 
         // H3209: вчера был слот в schedules, а записи в кабинете/ТГ нет.
-        // Дедуп recording_gap:YYYY-MM-DD; n8n ZOOM 1.4 только читается, не ретраится.
+        // Дедуп персистентный — таблица recording_gap_alerts (H3557); n8n ZOOM 1.4 только читается, не ретраится.
         $schedule->command('recordings:gap-watch')
             ->dailyAt('08:00')
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('recordings-gap-watch');
+
+        // MG 24-08-2026: дневной урок не должен ждать утреннего прохода —
+        // сегодня начатый слот старше RECORDING_GAP_STALE_HOURS без записи
+        // тревожит в тот же день. Kill-switch RECORDING_GAP_STALE_ENABLED (default ON).
+        $schedule->command('recordings:gap-watch', ['--stale' => true])
+            ->hourlyAt(41)
+            ->when(fn () => (bool) config('recording_gap.stale_enabled'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('recordings-gap-watch-stale');
+
+        // MG 24-08-2026: остаток OpenRouter + прогноз исчерпания по своим
+        // снапшотам; за 14 дней до нуля — просьба пополнить на год вперёд.
+        $schedule->command('openrouter:balance-check')
+            ->dailyAt('09:20')
+            ->when(fn () => (bool) config('openrouter.enabled'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('openrouter-balance-check');
 
         // H3242: вчерашняя сводка поддержки на ADMIN_TELEGRAM_ID (gasyoun).
         // 08:10, после gap-watch; гейт флага — внутри команды (default ON).
@@ -206,6 +226,19 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('support-daily-digest');
+
+        // H3392: недельный разбор пробы автоответов H3380 — «разбираем что
+        // пошло не так» само-сборкой. Воскресенье 18:00 MSK; гейт флага
+        // SUPPORT_AUTO_REPLY_WEEKLY_REPORT (default OFF): пока OFF, слот молчит;
+        // ручной просмотр — php artisan support:auto-reply-weekly --dry.
+        $schedule->command('support:auto-reply-weekly')
+            ->sundays()
+            ->at('18:00')
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.support_auto_reply_weekly_report'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('support-auto-reply-weekly');
 
         // Напоминание студенту: завтра срок оплаты по обещанию/рассрочке.
         // Время редактируется в админке (MarketingSetting); schedule() читается
@@ -539,11 +572,43 @@ class Kernel extends ConsoleKernel
         // H2635: two bounded evidence ingests, exactly 12 hours apart. The command and the support
         // reader share the same Madeline session lock; session_busy exits
         // non-zero so the scheduler records an honest missed run for retry.
+        //
+        // H3411: this Laravel version's Event builder has no ->timeout(...) —
+        // Event::run() calls Process::fromShellCommandline() with a hardcoded
+        // null timeout, so there is no framework-level ceiling to add here.
+        // The real ceiling is two-layered: (1) MadelineSyncWatchdog::arm() inside
+        // SyncTelegramHarvest::handle() (SIGALRM after sync_timeout_seconds,
+        // config('services.telegram_harvest.sync_timeout_seconds')), and
+        // (2) systema-schedule-run.sh's `timeout` wrapping schedule:run itself
+        // (see that script's header for why a detached MadelineProto daemon can
+        // still outlive both — H1973/H3121). Sibling audit for this same gap
+        // (H3411 Deliverable 1) covered every telegram-* scheduled entry above:
+        // telegram-support:sync, telegram-harvest:roster-groups and this command
+        // all arm a watchdog before touching the shared session. One gap found
+        // outside this list: telegram-support:healthcheck (everyFifteenMinutes,
+        // below) can call telegram-support:recover → MadelineSessionHealer::recover(),
+        // whose own kill/clear steps (killDaemons/killDaemonsHard/clearIpcArtifacts)
+        // run with no watchdog at all — only the nested Artisan::call('telegram-support:sync')
+        // inside it is protected (SyncTelegramSupport arms its own watchdog, which
+        // fires regardless of call depth). Left as a follow-up: it's a different
+        // command family (support-session recovery, not harvest sync) and fixing
+        // it here would expand this handoff's blast radius beyond its named target.
+        // H3411 Deliverable 3: every other scheduled command family above has an
+        // ->onFailure() pager (ScheduleFailureSignal, money-scoped); this one had
+        // none — a stuck run (MadelineSyncWatchdog::arm() exits non-zero on SIGALRM,
+        // see EXIT_TIMED_OUT) or any other non-zero exit vanished into laravel.log
+        // with nobody paged. Not routed through ScheduleFailureSignal itself: that
+        // reporter pages finance/accountant roles with "Сбой денежного cron" copy,
+        // which would misattribute a harvester stall as a money-command failure.
         $schedule->command('telegram-harvest:sync --json')
             ->cron((string) config('services.telegram_harvest.daily_cron', '15 5,17 * * *'))
             ->withoutOverlapping($this->madelineSessionLockMinutes(600))
             ->onOneServer()
             ->when(fn (): bool => (bool) config('services.telegram_harvest.daily_enabled', false))
+            ->onFailure(fn () => Log::critical('schedule.telegram_harvest_sync_failed', [
+                'command' => 'telegram-harvest:sync --json',
+                'hint' => 'Non-zero exit (stuck/timed-out run or genuine failure) — see docs/SERVER_SOFT_ALERT_PLAYBOOK.md and laravel.log around this timestamp.',
+            ]))
             ->name('telegram-harvest-twice-daily-sync');
 
         // Track C (H164): @zapisi_ORSbot напоминает о занятии в чат группы прямо
@@ -621,14 +686,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('weekly-backup-clean');
 
-        // H3371: докатка незавершённых групп split-upload (обрыв связи посреди
-        // группы, лаг консистентности Яндекс WebDAV). Ежедневно до
-        // backup:monitor — оборванная группа доплывает максимум за сутки.
-        $schedule->command('backup:resume-yandex-parts')
-            ->dailyAt('04:10')
-            ->withoutOverlapping(30)
-            ->onOneServer()
-            ->name('yandex-split-resume');
+        // H3371 → H3410: докатка незавершённых групп split-upload (обрыв связи
+        // посреди группы, лаг консистентности Яндекс WebDAV) БОЛЬШЕ НЕ живёт
+        // здесь. 24-08-2026 SOS-разбор нашёл PUT, застрявший в TLS sendto()
+        // EAGAIN без прогресса 30+ минут — под cron.service это повторило бы
+        // класс аварий §2/§9 docs/server-resource-guards.md (зависшая команда
+        // держит schedule:run в foreground, планировщик копится под чужим
+        // MemoryHigh). Теперь её поднимает systema-yandex-resume.service/.timer
+        // — свой бюджет, свой таймаут, часовой такт вместо суточного (докатка
+        // дешева, когда докатывать нечего). Разбор: docs/server-resource-guards.md §12.
 
         // Daily destination health check (H2303): alerts via configured notification
         // channels if any destination is Unreachable or Unhealthy. Runs independently
