@@ -1,6 +1,8 @@
 # ROADMAP — Noboring «дожим» adoption (Systema + samskrte)
 
-_Created: 01-08-2026 · Last updated: 24-08-2026_
+_Created: 01-08-2026 · Last updated: 27-08-2026_
+
+> **Truth-pass 27-08-2026** (Grok 4.6 `grok-4.6`). Dual-axis: closed references checked; the two optional A boxes stay open. Not archived.
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
