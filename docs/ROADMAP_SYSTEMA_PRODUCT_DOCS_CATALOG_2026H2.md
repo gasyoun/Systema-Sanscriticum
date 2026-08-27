@@ -1,6 +1,6 @@
 # Дорожная карта: каталог документации продукта (2026H2)
 
-_Created: 21-08-2026 · Last updated: 21-08-2026_
+_Created: 21-08-2026 · Last updated: 27-08-2026_
 
 Слой «волны и поставки» плана [PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md). Решения там, в разделе 3.
 
@@ -19,7 +19,7 @@ _Created: 21-08-2026 · Last updated: 21-08-2026_
 | 1.7 | `ProductDocsCatalogTest` + сидер идемпотентность + поиск «домашнее» | 1.4 |
 | 1.8 | CHANGELOG; одна строка в шапках четырёх GUIDE на `/admin/documentation` | 1.4 |
 
-Готовность: тесты зелёные, Pint, страница 200 админу и супер-админу, 403 manager/teacher/accountant/student. После мержа — деплой и смоук GET.
+**Волна 1 поставлена 27-08-2026 (H3243).** Готовность: `php artisan test --filter=ProductDocsCatalog` (11 tests / 41 assertions); Pint на новых PHP. После мержа — деплой и смоук GET `/admin/documentation`.
 
 ## Волна 2 — FAQ + квизы преподавателя и бухгалтера (Grok 4.6)
 
