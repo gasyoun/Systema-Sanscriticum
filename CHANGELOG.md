@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H3243 (Grok 4.6 `grok-4.6`, 27-08-2026): каталог документации продукта в `/admin/documentation`.** Указатель восьми живых книг (студент / преподаватель / куратор / бухгалтер + `/faq/dz` + прана + разметка выплат + строка на «Важные файлы»), поиск по заголовкам и FAQ, CRUD строк только супер-админу. Не слияние с H2570. План: [PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md).
+
 ## [1.90.22] - 2026-08-27
 - **H3557 follow-up ([PR #2134](https://github.com/gasyoun/Systema-Sanscriticum/pull/2134), OxAlpha `x-preview-f-free`, 26-08-2026): маркер старения в gap-watch.** Пробел «Записи не в кабинете / ТГ», чей урок стартовал ≥20 ч назад, получает громкий «⚠️ токен записи истекает — срочно resume»: `download_token` вебхука Zoom живёт ~24ч, после чего автоматическая доставка невозможна (passcode + мёртвый токен = только руками; кейс гр.125 25-08 → issue [#2132](https://github.com/gasyoun/Systema-Sanscriticum/issues/2132)). Тесты +2 (`RecordingsGapWatchTest` 15 PASS), Pint чист.
 ### Added
