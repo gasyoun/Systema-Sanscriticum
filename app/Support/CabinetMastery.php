@@ -17,6 +17,10 @@ final class CabinetMastery
 
     public const AUDIENCE_STUDENT = 'student';
 
+    public const AUDIENCE_TEACHER = 'teacher';
+
+    public const AUDIENCE_ACCOUNTANT = 'accountant';
+
     /**
      * @return array{title:string, intro:string, pass:int, questions:list<array<string, mixed>>}
      */

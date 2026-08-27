@@ -1,6 +1,6 @@
 # Приёмка: каталог документации продукта
 
-_Created: 21-08-2026 · Last updated: 21-08-2026_
+_Created: 21-08-2026 · Last updated: 27-08-2026_
 
 Доказательства готовности для [PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md). Сборка волны 1 — в [IMPLEMENTATION_SYSTEMA_PRODUCT_DOCS_CATALOG_W1.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_PRODUCT_DOCS_CATALOG_W1.md).
 
