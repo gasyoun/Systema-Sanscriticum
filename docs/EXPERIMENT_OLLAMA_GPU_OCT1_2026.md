@@ -1,6 +1,6 @@
 # Эксперимент: Ollama + hybrid RAG на GPU Ивана, цель 01-10-2026
 
-_Created: 21-08-2026 · Last updated: 21-08-2026_
+_Created: 21-08-2026 · Last updated: 27-08-2026_
 
 **Handoff:** [H3234 (Grok 4.6) — Deferred Ivan-GPU Ollama hybrid RAG experiment, target 01-10-2026, not Gasuns 1050](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3234-Grok_Systema-Sanscriticum_ollama-gpu-experiment-oct1_21.08.26.md)
 **Issue:** [gasyoun/Systema-Sanscriticum#1633](https://github.com/gasyoun/Systema-Sanscriticum/issues/1633) этапы 3–6
@@ -28,11 +28,14 @@ Issue требует ~2,5 ГБ (bge-m3) + ~9 ГБ (Qwen3-14B q4) = не влез
 | Когда | Кто | Что |
 |---|---|---|
 | 21-08-2026 | этот проход | пакет + H3234, код не писать |
+| 27-08-2026 | Grok 4.6 (`grok-4.6`) `/go H3234` | `.92` `/api/tags` down (curl exit 7, no listener, no autossh). Stop. No PHP. |
 | сентябрь, Иван на месте | Иван | GPU-узел, Ollama, модели, autossh на `.92` |
 | тот же день после ping | агент (Grok) | `/go H3234` — этапы 3→5 |
 | неделя shadow | оба | сравнение логов |
 | до 01-10-2026 | человек | флип этапа 6 или оставить OpenRouter |
 
 `/go H3234` до живого `/api/tags` — **стоп**. Это не «попробуй на 1050».
+
+**Last probe 27-08-2026** (Grok 4.6 / `grok-4.6`, `/go H3234`): from `root@193.232.229.92`, `curl -sS --max-time 3 http://127.0.0.1:11434/api/tags` → curl exit 7, `http=000` (connection refused). No `ss` listener on 11434. No `autossh -R 11434`. Gate still closed. Comment: [Systema #1633](https://github.com/gasyoun/Systema-Sanscriticum/issues/1633#issuecomment-5442823908).
 
 _Dr. Mārcis Gasūns_
