@@ -65,6 +65,7 @@ use App\Http\Controllers\Student\HindiProgrammePlaylistController;
 use App\Http\Controllers\Student\HindiTgCuratedPracticeController;
 use App\Http\Controllers\Student\HindiTranscriptDrillsController;
 use App\Http\Controllers\Student\LessonPackController;
+use App\Http\Controllers\StudentAgentController;
 use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SurveyPageController;
@@ -500,6 +501,11 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::get('/dvaram/help', [StudentCabinetGuideController::class, 'show'])
         ->name('student.help');
+
+    // Bounded student agent (H3231): homework hint / dictionary lookup /
+    // cabinet FAQ only, no free chat. 404 while features.student_agent OFF.
+    Route::post('/dvaram/agent', [StudentAgentController::class, 'run'])
+        ->name('student.agent.run');
 
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
 

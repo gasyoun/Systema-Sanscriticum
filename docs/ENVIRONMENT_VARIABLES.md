@@ -598,6 +598,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `STORAGE_WATCH_SCAN_FILE_CAP` | optional | `20000` | config/storage_watch.php:59 |
 | `STORAGE_WATCH_TOTAL_MB` | optional | `8000` | config/storage_watch.php:43 |
 | `STORAGE_WATCH_WARN_RATIO` | optional | `0.8` | config/storage_watch.php:47 |
+| `STUDENT_AGENT_ENABLED` | feature-flag | `false` | config/features.php:1171 |
 | `STUDENT_TELEGRAM_BOT_TOKEN` | secret | `—` | config/services.php:119 |
 | `STUDENT_TELEGRAM_BOT_USERNAME` | required | `—` | config/services.php:120 |
 | `SUBHASHITA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:40 |
