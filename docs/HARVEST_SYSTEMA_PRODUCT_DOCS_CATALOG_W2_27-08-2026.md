@@ -2,7 +2,7 @@
 
 _Created: 27-08-2026 · Last updated: 27-08-2026_
 
-Исполнение [H3244 (Grok 4.6, 🔴3 hard) — Wave 2: per-book FAQ harvest and teacher/accountant cabinet-mastery banks](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3244-Grok_Systema-Sanscriticum_product-docs-faq-mastery_21.08.26.md). Helpdesk в репозитории не держит accepted-корпус: фикстуры `SupportAnswerSuggestion` живут только внутри тестов и в прод не коммитятся. Живые ФИО и суммы из прод-очереди не копировались.
+Исполнение [H3244 (Grok 4.6, 🔴3 hard) — Wave 2: per-book FAQ harvest and teacher/accountant cabinet-mastery banks](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H3244-Grok_Systema-Sanscriticum_product-docs-faq-mastery_21.08.26.md). Helpdesk в репозитории не держит accepted-корпус: фикстуры `SupportAnswerSuggestion` живут только внутри тестов и в прод не коммитятся. Живые ФИО и суммы из прод-очереди не копировались.
 
 ## Счёт Части IV
 
@@ -31,5 +31,26 @@ Accepted `SupportAnswerSuggestion` в git: **0 новых FAQ**. Квизы вс
 1. Пустой harvest helpdesk → не стоп (решение 22).
 2. `cabinet_mastery_attempts.audience` уже есть в миграции H3215 — отдельная миграция не нужна.
 3. Квиз преподавателя не расширяет `TeacherGuide::canAccess()` (редактор лекций / `teacher_id`): handoff фиксирует `seesTeacherSurfaces()`. Чистый `role=teacher` получает 403 — это гейт H3219, не баг волны 2.
+
+## Приёмка (локально, Grok 4.6 `grok-4.6`, 27-08-2026)
+
+| Проверка | Результат |
+|---|---|
+| `php artisan test --filter=CabinetMastery` | 9 tests, 155 assertions |
+| `php artisan test --filter=ProductDocsFaqMasteryTest` | 7 tests, 98 assertions |
+| `php artisan test --filter=ProductDocsCatalog` | 11 tests, 41 assertions |
+| Pint (7 PHP files) | clean |
+
+## Выкладка
+
+| Шаг | Факт |
+|---|---|
+| Feature PR | [#2146](https://github.com/gasyoun/Systema-Sanscriticum/pull/2146) merge `14fcc456` |
+| Changelog cut | [v1.90.24](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.24) via [#2147](https://github.com/gasyoun/Systema-Sanscriticum/pull/2147) `c997ddf0` |
+| Prod `deploy.sh` | `5caaf621` → `14fcc456`; homepage 200; `cabinet:probe --fail-on-critical --no-alert` OK |
+| Smoke guest GET `/admin/teacher-mastery` | **302** → `/admin/login` |
+| Smoke guest GET `/admin/accountant-mastery` | **302** → `/admin/login` |
+
+Handoff closed on Uprava origin/main against [#2146](https://github.com/gasyoun/Systema-Sanscriticum/pull/2146).
 
 _Dr. Mārcis Gasūns_
