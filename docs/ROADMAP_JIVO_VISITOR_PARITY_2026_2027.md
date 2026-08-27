@@ -1,6 +1,8 @@
 # Roadmap: полный JIVO-паритет — visitor intelligence + Support Inbox 2026–2027
 
-_Created: 17-07-2026 · Last updated: 19-08-2026_
+_Created: 17-07-2026 · Last updated: 27-08-2026_
+
+> **Truth-pass 27-08-2026** (Grok 4.6 `grok-4.6`). Closed references checked against the combined registry. Kept in place ([FINDINGS §475](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md) clause 3). Not archived.
 
 > **Граница документа после решения MG 08-08-2026:** этот roadmap закрывает именно
 > school-operational parity и остаётся обязательным первым гейтом. Следующий план уже коммитит
