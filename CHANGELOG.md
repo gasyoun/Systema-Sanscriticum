@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.90.23] - 2026-08-27
 ### Added
 - **H3243 (Grok 4.6 `grok-4.6`, 27-08-2026): каталог документации продукта в `/admin/documentation`.** Указатель восьми живых книг (студент / преподаватель / куратор / бухгалтер + `/faq/dz` + прана + разметка выплат + строка на «Важные файлы»), поиск по заголовкам и FAQ, CRUD строк только супер-админу. Не слияние с H2570. План: [PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md).
 
