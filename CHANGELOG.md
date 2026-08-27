@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Added
+- **H3244 (Grok 4.6 `grok-4.6`, 27-08-2026): волна 2 каталога документации — FAQ harvest и квизы преподавателя/бухгалтера.** Часть IV четырёх книг не короче baseline 7/9/7/9 (студент 11, куратор 11, бухгалтер 10, преподаватель 9). Банки `teacher` (≥8) и `accountant` (≥6) в [config/cabinet_mastery.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/cabinet_mastery.php); страницы `/admin/teacher-mastery` (`RoleGate::seesTeacherSurfaces()`) и `/admin/accountant-mastery` (`RoleGate::finance()`). Каталог «Проверка» ведёт на все четыре квиза. Helpdesk accepted в git: 0 новых FAQ; квизы из Части IV. Журнал: [HARVEST_SYSTEMA_PRODUCT_DOCS_CATALOG_W2_27-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/HARVEST_SYSTEMA_PRODUCT_DOCS_CATALOG_W2_27-08-2026.md).
+
 ## [1.90.23] - 2026-08-27
 ### Added
 - **H3243 (Grok 4.6 `grok-4.6`, 27-08-2026): каталог документации продукта в `/admin/documentation`.** Указатель восьми живых книг (студент / преподаватель / куратор / бухгалтер + `/faq/dz` + прана + разметка выплат + строка на «Важные файлы»), поиск по заголовкам и FAQ, CRUD строк только супер-админу. Не слияние с H2570. План: [PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_PRODUCT_DOCS_CATALOG_2026H2.md).

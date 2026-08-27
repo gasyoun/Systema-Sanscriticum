@@ -25,6 +25,8 @@ _Created: 21-08-2026 · Last updated: 27-08-2026_
 
 После мержа волны 1 (каталог уже умеет прыгать в Часть IV).
 
+**Волна 2 поставлена 27-08-2026 (H3244).** Журнал harvest: [HARVEST_SYSTEMA_PRODUCT_DOCS_CATALOG_W2_27-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/HARVEST_SYSTEMA_PRODUCT_DOCS_CATALOG_W2_27-08-2026.md). Готовность: `php artisan test --filter=CabinetMastery` и `--filter=ProductDocsFaqMastery`; Pint на новых PHP.
+
 | № | Поставка | Разблокируется |
 |---|---|---|
 | 2.1 | Снять baseline счёт Части IV (записан в PLAN §1: 7 / 9 / 7 / 9) | мерж волны 1 |

@@ -126,6 +126,12 @@ class ProductDoc extends Model
             'curator' => Route::has('filament.admin.pages.cabinet-mastery')
                 ? route('filament.admin.pages.cabinet-mastery')
                 : '/admin/cabinet-mastery',
+            'teacher' => Route::has('filament.admin.pages.teacher-mastery')
+                ? route('filament.admin.pages.teacher-mastery')
+                : '/admin/teacher-mastery',
+            'accountant' => Route::has('filament.admin.pages.accountant-mastery')
+                ? route('filament.admin.pages.accountant-mastery')
+                : '/admin/accountant-mastery',
             default => null,
         };
     }
