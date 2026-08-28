@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.90.28] - 2026-08-28
 ### Changed
 - **H3281 (Grok 4.6 `grok-4.6`, 28-08-2026): guest HTTP + catalog ids on the student-manuals census.** Three `audience=student` rows on prod `product_docs` (ids 1 / 5 / 6). Guest GET 20:43 UTC: `/dvaram/help` 302 → `/login`, `/help/prana-balance` 302 → `/login`, `/faq/dz` 200, `/admin/documentation` 302 → `/admin/login`. Onboarding stays on `/dvaram` (no catalog row). No manuals edited, RoleGate untouched. [docs/CENSUS_STUDENT_LOGGED_IN_MANUALS_22-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CENSUS_STUDENT_LOGGED_IN_MANUALS_22-08-2026.md).
 
