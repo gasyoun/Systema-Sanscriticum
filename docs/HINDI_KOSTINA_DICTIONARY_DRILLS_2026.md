@@ -1,6 +1,6 @@
 # Hindi drills from Kostina module dictionaries (H3206)
 
-_Created: 20-08-2026 · Last updated: 20-08-2026_
+_Created: 20-08-2026 · Last updated: 28-08-2026_
 
 ## What ships
 
@@ -41,5 +41,9 @@ php artisan hindi:dict-probe --json
 
 `HINDI_DICTIONARY_DRILLS=true` + `php artisan config:cache`.
 Keep transcript/attachment flags **false**.
+
+## Kostina 28-08-2026 — do not continue as-is
+
+Kostina: the H3206 results are **rubbish**. Keep this feature set (routes, Filament review, `entries.json`, teacher preview). Do **not** extract more PDF pairs with this pipeline. Do **not** `/go` [H3206](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3206-Grok_Systema-Sanscriticum_hindi-kostina-dict-vocab_20.08.26.md). Student flag stays **OFF** until a method she accepts. A new Hindi vocab pass is a new handoff, not a rerun of this extraction.
 
 _Dr. Mārcis Gasūns_
