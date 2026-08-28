@@ -1,6 +1,6 @@
 # Роадмап: self-serve Systema 2026H2 — три волны
 
-_Created: 25-08-2026 · Last updated: 25-08-2026_
+_Created: 25-08-2026 · Last updated: 28-08-2026_
 
 Индекс и решения: [PLAN_SYSTEMA_SELF_SERVE_DETERMINISTIC_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SELF_SERVE_DETERMINISTIC_2026H2.md).
 Базлайн аудита 25-08-2026: детерминированная классификация уже живёт в проде
@@ -36,10 +36,10 @@ _Created: 25-08-2026 · Last updated: 25-08-2026_
 
 ## Волна В2 — поверхности самообслуживания (конверсия)
 
-1. **Гостевая регистрация `/register`** → авто-Free-tier клуба
-   ([FreeTierLessonGranter](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Membership/FreeTierLessonGranter.php))
-   + персистентная SRS-колода; флаг `GUEST_REGISTRATION_ENABLED` default OFF;
-   деньги-смежное → дисциплина money-pr-land. Блокер снятия флага: ручной пуск MG.
+1. **Гостевая регистрация `/register`** → авто-Free-tier клуба — **shipped**
+   28-08-2026 ([PR #2163](https://github.com/gasyoun/Systema-Sanscriticum/pull/2163),
+   H3643). Flag `GUEST_REGISTRATION_ENABLED` still default OFF; prod flip is a
+   human ops step. `FreeTierLessonGranter::grantSignupFor` + `ClubFreeTierSrsDeck`.
 2. **Пробный виджет ON**: переворот `CRM_TRIAL_BOOKING` + `CRM_TRIAL_WIDGET_PUBLIC`
    ([DEPLOY_QUEUE №80](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md)) — human-шаг.
 3. **Входящая почта ON**: ящик zabota@, n8n IMAP→POST-forwarder, `INBOUND_EMAIL_WEBHOOK_SECRET`,
