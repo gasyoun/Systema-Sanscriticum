@@ -72,13 +72,20 @@ class RecordingsGapWatchTest extends TestCase
 
     public function test_aging_gap_gets_token_expiry_warning_and_fresh_does_not(): void
     {
-        // Вчерашний 20:00 слот к текущему моменту всегда старше 20 ч.
-        $this->seedLiveSlot(withChat: true);
+        // «Вчера 20:00» старше 20 ч НЕ всегда: утренний прогон (до 16:00 МСК)
+        // давал <20 ч и тест флакал. Морозим «сейчас» на сегодня 17:00 —
+        // слоту гарантированно ≥21 ч, предупреждение детерминировано.
+        CarbonImmutable::setTestNow(CarbonImmutable::now('Europe/Moscow')->setTime(17, 0));
+        try {
+            $this->seedLiveSlot(withChat: true);
 
-        Artisan::call('recordings:gap-watch', ['--dry' => true]);
-        $out = Artisan::output();
+            Artisan::call('recordings:gap-watch', ['--dry' => true]);
+            $out = Artisan::output();
 
-        $this->assertStringContainsString('токен записи истекает', $out);
+            $this->assertStringContainsString('токен записи истекает', $out);
+        } finally {
+            CarbonImmutable::setTestNow();
+        }
     }
 
     public function test_fresh_same_day_gap_has_no_token_warning(): void
