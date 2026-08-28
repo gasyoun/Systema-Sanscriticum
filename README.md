@@ -1,6 +1,6 @@
 # Systema Sanscriticum — платформа онлайн-обучения санскриту
 
-_Created: 13-02-2026 · Last updated: 15-08-2026_
+_Created: 13-02-2026 · Last updated: 28-08-2026_
 
 Laravel-приложение для школы санскрита: учебный кабинет со словарем, домашними
 заданиями и интервальными повторениями (SRS), магазин курсов с гибкими тарифами,
@@ -28,6 +28,7 @@ Laravel-приложение для школы санскрита: учебны�
 - [Интеграции и вебхуки](#интеграции-и-вебхуки)
 - [Роадмап](#роадмап)
 - [Прод: uptime / мониторинг](#прод-uptime--мониторинг)
+- [Как этот репозиторий связан с остальными](#-как-этот-репозиторий-связан-с-остальными)
 
 ---
 
@@ -750,6 +751,50 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 | **Агенты** (inventory, env, smoke) | [docs/UPTIME_BETTERSTACK_MONITORING.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) |
 
 OS-предохранители (OOM/cron): [docs/server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
+
+---
+
+## 🕸️ Как этот репозиторий связан с остальными
+
+Systema — Tier-0 репозиторий и **не только приложение**: часть его кода и данных живёт в общем
+контуре из ~85 репозиториев. Полная карта рёбер — в приватном хабе:
+[Uprava/PROJECT_INTERLINKS.md](https://github.com/gasyoun/Uprava/blob/main/PROJECT_INTERLINKS.md)
+(проза) и [interlinks_edges.tsv](https://github.com/gasyoun/Uprava/blob/main/interlinks_edges.tsv)
+(канонический стор рёбер). Ниже — то, что касается Systema.
+
+| Направление | Что течёт | Куда / откуда | Статус |
+|---|---|---|---|
+| Systema **вендорит** | движок классификатора обращений + `rules/v1` / `taxonomy/v1` / golden-векторы, приколоченные к `PINNED_SHA` | [message-intent-classifier](https://github.com/gasyoun/message-intent-classifier) → [`tools/message-intent-classifier`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/tools/message-intent-classifier) | live |
+| Systema **потребляет** (косвенно) | замороженные **маскированные** снапшоты диалогов `corpora/eval/…` и `corpora/train/…` — точность вендоренных правил меряется по ним | производитель — [ORS-FAQ](https://github.com/gasyoun/ORS-FAQ); в Systema копии **нет** и не будет | queued |
+| Systema **отдаёт** | драйвер Telegram-харвеста Track B ([`app/Services/TelegramHarvest/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/app/Services/TelegramHarvest)) | `telegram-sanskrit-corpus` (приватный стор) | live |
+| Systema **отдаёт** | выгрузки прод-БД (платежи / посещаемость / рефералы) → custdev-CSV | [Uprava](https://github.com/gasyoun/Uprava) | queued |
+| Systema **потребляет** | замороженные пакеты чтений когорты `cohort_start_chteniya` | [kosha](https://github.com/gasyoun/kosha) → [`resources/data/cohort_start_chteniya`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/resources/data/cohort_start_chteniya) | live |
+| Systema **делит движки** | классификатор обращений · канон выплат «на руки» · движок квизов кабинета | [github-spine/SHARED_CODE.md](https://github.com/gasyoun/github-spine/blob/main/SHARED_CODE.md) строки 30–32 | live |
+
+**Границы по правам.** Сырые диалоги поддержки не коммитятся никуда и никогда; в репозитории
+попадают только **PII-маскированные** производные, и ни одна строка диалога, фамилия ученика или
+сумма выплаты не цитируется ни в рядах хаба, ни здесь. Политика маскировки —
+[docs/ARCHITECTURE_MESSAGE_INTENT_CLASSIFIER_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_MESSAGE_INTENT_CLASSIFIER_2026.md)
+§ PII-политика. Перед любой публикацией —
+[`/publish-safety-check`](https://github.com/gasyoun/claude-config/blob/main/commands/publish-safety-check.md).
+Указания сотруднику (бухгалтеру, куратору, преподавателю) живут **в кабинете** `/admin`, а не в
+публичном репозитории и не в issue.
+
+**Куда писать находку.**
+
+| Что нашли | Куда |
+|---|---|
+| Продуктовая / денежная / внутрикабинетная ловушка | локальный [FINDINGS.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/FINDINGS.md) (ruling F1) |
+| Санскритские данные, кодировки, транслитерация | [SanskritLexicography/FINDINGS.md](https://github.com/gasyoun/SanskritLexicography/blob/master/FINDINGS.md) |
+| Инфраструктура: хуки, worktree, CI, серверы | [Uprava/FINDINGS.md](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md) |
+| Переиспользуемый хелпер или движок | [github-spine/SHARED_CODE.md](https://github.com/gasyoun/github-spine/blob/main/SHARED_CODE.md) |
+
+**Куда посмотреть перед тем, как что-то строить.** Что уже существует в контуре —
+[SanskritLexicography/FEATURES_INDEX.md](https://github.com/gasyoun/SanskritLexicography/blob/master/FEATURES_INDEX.md);
+что делать дальше и кто решает —
+[Uprava/GTD_NEXT_ACTIONS.md](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md);
+план связывания этого репозитория —
+[docs/PLAN_SYSTEMA_SANSCRITICUM_INTERCONNECTION_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SANSCRITICUM_INTERCONNECTION_2026-08.md).
 
 ---
 
