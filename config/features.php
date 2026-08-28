@@ -1051,6 +1051,16 @@ return [
     'membership_funnel_analytics' => (bool) env('MEMBERSHIP_FUNNEL_ANALYTICS', false),
 
     /*
+     | Guest email+password /register → Free-tier of the club (H3643, self-serve
+     | wave B2). Default OFF: GET/POST /register 404. When ON, creates a user,
+     | grants MembershipTier::Free via FreeTierLessonGranter::grantSignupFor
+     | (ClubMembership, zero payments), seeds the persistent club-free SRS deck.
+     | Enable: GUEST_REGISTRATION_ENABLED=true + config:cache. Human ops only —
+     | this PR must not flip prod .env on .92.
+     */
+    'guest_registration' => (bool) env('GUEST_REGISTRATION_ENABLED', false),
+
+    /*
      | Grammar Lab explorer (H2493 / G2). Import and tables are additive;
      | this flag gates every public/cabinet route and payload. Default OFF:
      | /grammar-lab and /dvaram/grammar-lab 404 until a human flips

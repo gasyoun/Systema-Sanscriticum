@@ -29,6 +29,7 @@ use App\Http\Controllers\GatedAssetController;
 use App\Http\Controllers\GiftCertificateController;
 use App\Http\Controllers\GrammarLabController;
 use App\Http\Controllers\GrammarLabPilotController;
+use App\Http\Controllers\GuestRegisterController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\InstituteController;
@@ -339,6 +340,12 @@ Route::post('/shop/logout', [AuthController::class, 'shopLogout'])
 
 // --- ВОССТАНОВЛЕНИЕ ПАРОЛЯ (для незалогиненных) ---
 Route::middleware('guest')->group(function () {
+    // H3643 guest /register. Flag OFF returns 404 inside the controller.
+    Route::get('/register', [GuestRegisterController::class, 'show'])->name('register');
+    Route::post('/register', [GuestRegisterController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('register.post');
+
     Route::get('/forgot-password', [PasswordResetController::class, 'showRequestForm'])
         ->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
