@@ -45,6 +45,17 @@ class RemindUpcomingClasses extends Command
         $recipients = 0;
 
         foreach ($schedules as $schedule) {
+            // Дубль-гвардия каналов (диагноз 28-08-2026): группа с Telegram-чатом уже
+            // получает «Скоро занятие» от zapisi:remind-classes в тот же T-60 — персональный
+            // пинг каждому студенту с привязанным Telegram приходит через минуту и читается
+            // как повтор. Пропускаем БЕЗ пометки: выключение рубильника вернёт ЛС в том же
+            // окне, а перенос занятия (сброс reminded_at) тут ничего не ломает.
+            if ($settings?->dm_suppressed_when_group_chat
+                && $schedule->group !== null
+                && ! empty($schedule->group->telegram_chat_id)) {
+                continue;
+            }
+
             $audience = $this->audienceFor($schedule);
 
             // Без адресной аудитории (нет группы и курса) — глобальные пуши не шлём.
