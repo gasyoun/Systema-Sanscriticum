@@ -203,7 +203,10 @@ class Kernel extends ConsoleKernel
         // MG 24-08-2026: дневной урок не должен ждать утреннего прохода —
         // сегодня начатый слот старше RECORDING_GAP_STALE_HOURS без записи
         // тревожит в тот же день. Kill-switch RECORDING_GAP_STALE_ENABLED (default ON).
-        $schedule->command('recordings:gap-watch', ['--stale' => true])
+        // H3652: --stale — флаг без значения; форма ['--stale' => true]
+        // компилируется в --stale=1 и symfony/console валит тик
+        // («The --stale option does not accept a value»).
+        $schedule->command('recordings:gap-watch --stale')
             ->hourlyAt(41)
             ->when(fn () => (bool) config('recording_gap.stale_enabled'))
             ->withoutOverlapping(10)
