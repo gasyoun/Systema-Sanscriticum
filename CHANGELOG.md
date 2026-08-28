@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Changed
+- **H3281 (Grok 4.6 `grok-4.6`, 28-08-2026): guest HTTP + catalog ids on the student-manuals census.** Three `audience=student` rows on prod `product_docs` (ids 1 / 5 / 6). Guest GET 20:43 UTC: `/dvaram/help` 302 → `/login`, `/help/prana-balance` 302 → `/login`, `/faq/dz` 200, `/admin/documentation` 302 → `/admin/login`. Onboarding stays on `/dvaram` (no catalog row). No manuals edited, RoleGate untouched. [docs/CENSUS_STUDENT_LOGGED_IN_MANUALS_22-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CENSUS_STUDENT_LOGGED_IN_MANUALS_22-08-2026.md).
+
 ## [1.90.27] - 2026-08-28
 ### Added
 - **H3643 (Grok 4.6 `grok-4.6`, 28-08-2026): гостевая регистрация `GET/POST /register` → Free-tier клуба, флаг `GUEST_REGISTRATION_ENABLED` default OFF.** Email+пароль создаёт пользователя, выдаёт `MembershipTier::Free` через [`FreeTierLessonGranter::grantSignupFor`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Membership/FreeTierLessonGranter.php) (строка `club_memberships`, `payment_id` null, source `guest_register`) и сидирует персистентную SRS-колоду [`ClubFreeTierSrsDeck`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/ClubFreeTierSrsDeck.php). Флаг OFF → 404 на GET и POST (ноль поверхности). Прод-`.env` на `.92` не трогается — включение отдельный ops-шаг. Тесты: [`GuestRegisterTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/GuestRegisterTest.php). Money-contour: без Tochka/webhooks. [PR #2163](https://github.com/gasyoun/Systema-Sanscriticum/pull/2163).
