@@ -11,6 +11,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AttendanceNoticeController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GuestRegisterController;
 use App\Http\Controllers\BankClaimController;
 use App\Http\Controllers\CabinetMasteryController;
 use App\Http\Controllers\CalendarFeedController;
@@ -328,6 +329,14 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:5,1')
     ->name('login.post');
+
+// H3643 guest /register. Flag OFF → 404 inside the controller (zero surface).
+Route::middleware('guest')->group(function () {
+    Route::get('/register', [GuestRegisterController::class, 'show'])->name('register');
+    Route::post('/register', [GuestRegisterController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('register.post');
+});
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::post('/shop/login', [AuthController::class, 'shopLogin'])

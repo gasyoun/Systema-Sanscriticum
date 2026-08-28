@@ -98,6 +98,12 @@
                 Первый раз входите или не помните пароль?<br>
                 <a href="{{ route('password.request') }}" class="text-brand hover:underline font-bold transition-colors">Войдите по email заказа →</a>
             </p>
+            @if (config('features.guest_registration'))
+                <p class="text-sm text-gray-600">
+                    Нет кабинета?
+                    <a href="{{ route('register') }}" class="text-brand hover:underline font-bold">Зарегистрироваться бесплатно</a>
+                </p>
+            @endif
             <p class="text-xs text-gray-500 leading-relaxed">
                 Аккаунт создан при оплате — сначала
                 <a href="{{ route('password.request') }}" class="text-brand hover:underline font-semibold">проверьте email заказа</a>.
