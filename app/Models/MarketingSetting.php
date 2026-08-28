@@ -76,6 +76,8 @@ class MarketingSetting extends Model
         // Авто-постинг ссылки Zoom в чат группы за N минут до занятия (classes:post-group-link).
         'class_link_autopost_enabled',
         'class_link_autopost_lead_minutes',
+        // Глушить ЛС-волну «Скоро занятие» для групп, уже покрытых постом в TG-чат (28-08-2026).
+        'dm_suppressed_when_group_chat',
         'debt_reminders_enabled',
         'debt_reminder_lead_days',
         'debt_reminder_cadence_days',
@@ -143,6 +145,7 @@ class MarketingSetting extends Model
         'absent_notify_delay_minutes' => 'integer',
         'class_link_autopost_enabled' => 'boolean',
         'class_link_autopost_lead_minutes' => 'integer',
+        'dm_suppressed_when_group_chat' => 'boolean',
         'debt_reminders_enabled' => 'boolean',
         'debt_reminder_lead_days' => 'integer',
         'debt_reminder_cadence_days' => 'integer',

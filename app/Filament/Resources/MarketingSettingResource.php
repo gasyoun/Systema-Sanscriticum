@@ -129,6 +129,10 @@ class MarketingSettingResource extends Resource
                             ->suffix('мин')
                             ->default(60)
                             ->helperText('За сколько минут до начала занятия слать пуш (1–1440).'),
+                        Forms\Components\Toggle::make('dm_suppressed_when_group_chat')
+                            ->label('Не дублировать ЛС, если у группы есть TG-чат')
+                            ->default(false)
+                            ->helperText('Вкл: студентам групп, у которых задан Telegram-чат, персональные ЛС «Скоро занятие» не шлются — группу уже покрывает пост @zapisi_ORSbot в чат, и без этого студент получал два почти одинаковых пинга с разницей в минуту (диагноз 28-08-2026). Группы без чата продолжают получать ЛС. Выкл: ЛС шлются всем как раньше.'),
 
                         Forms\Components\Toggle::make('absent_notify_enabled')
                             ->label('Уведомлять пропустивших занятие')
