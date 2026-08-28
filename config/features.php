@@ -1194,4 +1194,18 @@ return [
      | STUDENT_AGENT_ENABLED=true + config:cache после ревью.
      */
     'student_agent' => (bool) env('STUDENT_AGENT_ENABLED', false),
+
+    /*
+     | H3xxx — near-duplicate email guard at checkout signup (resolveUser()).
+     | Exact-email dedup (User::normalizeEmail) already refuses a second
+     | account for the SAME email; this catches a near-miss (typo'd domain —
+     | .con/.com, gmial/gmail, extra/missing char) that slips through as a
+     | genuinely new account, splitting one student's payments/access across
+     | two logins. Default OFF: never blocks checkout, only pings curators
+     | (NearDuplicateEmailDetector + CuratorNotifier::possibleDuplicateAccount)
+     | so a human can merge before it turns into a "why can't I see my paid
+     | block" ticket. Incident: Долгополова Анастасия, 2026-08-18 (block_1
+     | paid twice under anastasiadolgopolova25@gmail.com vs ...gmail.con).
+     */
+    'checkout_near_duplicate_email_guard' => (bool) env('CHECKOUT_NEAR_DUPLICATE_EMAIL_GUARD', false),
 ];

@@ -494,6 +494,28 @@ class CuratorNotifier
         $this->dispatchToCurators($this->join($lines));
     }
 
+    /**
+     * Новый аккаунт на чекауте похож email-ом на уже существующий (опечатка в
+     * домене — .con/.com, gmial/gmail и т.п.), но НЕ совпадает точь-в-точь
+     * (иначе сработал бы обычный dedup и чекаут отказал бы сразу).
+     * Не блокирует оплату — только зовёт куратора свериться и слить аккаунты
+     * вручную, пока оплата не осела на «чужом» для студента логине.
+     */
+    public function possibleDuplicateAccount(User $newUser, User $existing): void
+    {
+        $lines = [
+            '👥 <b>Похожий email на чекауте — возможный дубль аккаунта</b>',
+            '',
+            'Новый: <b>'.e((string) $newUser->name).'</b> ('.e((string) $newUser->email).')',
+            'Похож на: <b>'.e((string) $existing->name).'</b> ('.e((string) $existing->email).')',
+            '',
+            'Оплата ушла на новый аккаунт — если это один человек, слейте вручную.',
+            $this->adminLink($newUser),
+        ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
     // ==========================================================
     // Внутреннее
     // ==========================================================
