@@ -99,6 +99,7 @@ class ProbeCabinetHealth extends Command
             }
 
             $failures = array_merge($failures, $this->probeServerGuards());
+            $failures = array_merge($failures, $this->probeOutboundPaymentTls());
         } catch (Throwable $e) {
             $failures[] = ['message' => 'probe crashed: '.$e->getMessage(), 'severity' => 'critical'];
             Log::error('cabinet:probe crashed', ['error' => $e->getMessage()]);
@@ -235,6 +236,51 @@ class ProbeCabinetHealth extends Command
         }
 
         return $failures;
+    }
+
+    /**
+     * Outbound TLS к платёжному эквайрингу «Точки» (инцидент 25–28-08-2026).
+     *
+     * Чего эта проверка стоит. «Точка» сменила отдаваемую цепочку на
+     * Russian Trusted Root CA (Минцифры), которого не было в серверном
+     * CA-бандле: каждый чекаут падал cURL error 60 четыре дня, пользователь
+     * видел «Сервис оплаты временно недоступен», а все проверки были зелёные —
+     * in-process surfaces ходят на localhost, guards смотрят в файлы и
+     * systemd, outbound-TLS не смотрел никто.
+     *
+     * ЛЮБОЙ HTTP-ответ = TLS жив (неавторизованный 401/403/404 от API банка
+     * нормален, тело не анализируется). Падает только СОЕДИНЕНИЕ — cURL 60
+     * (сертификат), 7 (con refused), 28 (timeout) — тогда critical: оплаты
+     * у пользователей недоступны, значит это HTTP-класс, а не host/ops:
+     * Telegram сразу, Better Stack /fail, deploy --fail-on-critical блокируется.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeOutboundPaymentTls(): array
+    {
+        if (! config('cabinet_probe.check_payment_tls', true)) {
+            return [];
+        }
+
+        $url = (string) config('cabinet_probe.payment_probe_url', '');
+        if ($url === '') {
+            return [];
+        }
+
+        $host = (string) (parse_url($url, PHP_URL_HOST) ?: $url);
+
+        try {
+            Http::timeout((int) config('cabinet_probe.timeout', 15))
+                ->acceptJson()
+                ->get($url);
+        } catch (Throwable $e) {
+            return [[
+                'message' => 'payments: нет связи с '.$host.' — '.$e->getMessage().' (оплата у пользователей недоступна)',
+                'severity' => 'critical',
+            ]];
+        }
+
+        return [];
     }
 
     /**

@@ -156,6 +156,59 @@ class CabinetProbeTest extends TestCase
     }
 
     /**
+     * 28-08-2026 Tochka TLS incident: ANY HTTP answer from the acquiring API
+     * (unauthorized 401/403/404 included) means the outbound TLS handshake
+     * and HTTP path are alive — only connection-level failures are critical.
+     */
+    public function test_payment_tls_ok_on_any_http_status(): void
+    {
+        $this->seedManager();
+        config([
+            'cabinet_probe.check_payment_tls' => true,
+            'cabinet_probe.payment_probe_url' => 'https://acquiring.example/api/payments',
+        ]);
+        Http::fake([
+            self::PING => Http::response('OK', 200),
+            self::PING.'/fail' => Http::response('OK', 200),
+            'https://acquiring.example/*' => Http::response(['errorMessage' => 'Unauthorized'], 401),
+        ]);
+
+        $code = Artisan::call('cabinet:probe');
+        $out = Artisan::output();
+
+        $this->assertSame(0, $code, $out);
+        $this->assertStringContainsString('Кабинет жив', $out);
+        $this->assertStringNotContainsString('payments:', $out);
+        Http::assertSent(fn ($request) => $request->url() === self::PING);
+    }
+
+    /**
+     * Connection-level failure to the acquiring API (the cURL error 60 class
+     * that killed checkout for four days) must be a critical HTTP-class
+     * finding: probe verdict sick, Better Stack /fail pinged.
+     */
+    public function test_payment_tls_connection_failure_is_critical(): void
+    {
+        $this->seedManager();
+        config([
+            'cabinet_probe.check_payment_tls' => true,
+            'cabinet_probe.payment_probe_url' => 'https://acquiring.example/api/payments',
+        ]);
+        Http::fake([
+            self::PING => Http::response('OK', 200),
+            self::PING.'/fail' => Http::response('OK', 200),
+            'https://acquiring.example/*' => fn () => throw new \RuntimeException('cURL error 60: SSL certificate problem'),
+        ]);
+
+        Artisan::call('cabinet:probe');
+        $out = Artisan::output();
+
+        $this->assertStringContainsString('Кабинет болен', $out);
+        $this->assertStringContainsString('[critical] payments: нет связи с acquiring.example', $out);
+        Http::assertSent(fn ($request) => $request->url() === self::PING.'/fail');
+    }
+
+    /**
      * H1931 item 3: SystemInspector is container-bound so a fake proves
      * cabinet:probe really wires guards:verify into the health verdict.
      * Before the bind, `new ShellSystemInspector` inside the command made this

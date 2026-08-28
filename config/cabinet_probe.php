@@ -63,6 +63,21 @@ return [
      */
     'check_server_guards' => (bool) env('CABINET_PROBE_CHECK_GUARDS', true),
 
+    /*
+     * 28-08-2026 Tochka TLS incident: платежи лежали четыре дня (25–28-08,
+     * cURL error 60 — «Точка» сменила цепочку на Russian Trusted Root CA,
+     * отсутствовавший в серверном CA-бандле), а ни одна проверка этого не
+     * видела: in-process surfaces ходят на localhost, guards смотрят в файлы
+     * и systemd, outbound-TLS не смотрел никто. Проба бьёт в API эквайринга
+     * снаружи: ЛЮБОЙ HTTP-ответ (неавторизованный 401/403/404 — нормален)
+     * значит, что TLS жив; critical только на падении соединения.
+     */
+    'check_payment_tls' => (bool) env('CABINET_PROBE_CHECK_PAYMENT_TLS', true),
+    'payment_probe_url' => (string) env(
+        'CABINET_PROBE_PAYMENT_URL',
+        'https://enter.tochka.com/uapi/acquiring/v1.0/payments_with_receipt',
+    ),
+
     'error_markers' => [
         'Whoops',
         'Server Error',
