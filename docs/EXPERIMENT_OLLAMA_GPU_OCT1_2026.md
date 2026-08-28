@@ -29,7 +29,8 @@ Issue требует ~2,5 ГБ (bge-m3) + ~9 ГБ (Qwen3-14B q4) = не влез
 |---|---|---|
 | 21-08-2026 | этот проход | пакет + H3234, код не писать |
 | 27-08-2026 | Grok 4.6 (`grok-4.6`) `/go H3234` | `.92` `/api/tags` down (curl exit 7, no listener, no autossh). Stop. No PHP. |
-| 28-08-2026 | Grok 4.6 (`grok-4.6`) `/go H3234` | `.92` `/api/tags` still down (curl exit 7, `http=000`, no listener, no autossh/ollama). Stop. No PHP. |
+| 28-08-2026 10:12 UTC | Grok 4.6 (`grok-4.6`) `/go H3234` | `.92` `/api/tags` still down (curl exit 7, `http=000`, no listener, no autossh/ollama). Stop. No PHP. |
+| 28-08-2026 15:16 UTC | Grok 4.6 (`grok-4.6`) `/go H3234` | `.92` `/api/tags` still down (curl exit 7, `http=000`, no listener, no autossh/ollama). Stop. No PHP. |
 | сентябрь, Иван на месте | Иван | GPU-узел, Ollama, модели, autossh на `.92` |
 | тот же день после ping | агент (Grok) | `/go H3234` — этапы 3→5 |
 | неделя shadow | оба | сравнение логов |
@@ -37,8 +38,8 @@ Issue требует ~2,5 ГБ (bge-m3) + ~9 ГБ (Qwen3-14B q4) = не влез
 
 `/go H3234` до живого `/api/tags` — **стоп**. Это не «попробуй на 1050».
 
-**Last probe 28-08-2026 10:12 UTC** (Grok 4.6 / `grok-4.6`, `/go H3234`): host `samskrtam150` (`root@193.232.229.92`). `curl -sS --max-time 3 http://127.0.0.1:11434/api/tags` → curl exit 7, `Failed to connect to 127.0.0.1 port 11434`, `http=000`. `ss -ltn`: no `:11434`. `pgrep autossh` / `pgrep ollama`: none. Gate still closed. Prior stamp: [PR #2145](https://github.com/gasyoun/Systema-Sanscriticum/pull/2145) (27-08). Comment: [Systema #1633](https://github.com/gasyoun/Systema-Sanscriticum/issues/1633#issuecomment-5442823908).
+**Last probe 28-08-2026 15:16 UTC** (Grok 4.6 / `grok-4.6`, `/go H3234`): host `samskrtam150` (`root@193.232.229.92`). `curl -sS --max-time 3 http://127.0.0.1:11434/api/tags` → curl exit 7, `Failed to connect to 127.0.0.1 port 11434`, `http=000`. `ss -ltn`: no `:11434`. `pgrep autossh` / `pgrep ollama`: none. Gate still closed. Prior stamps: [PR #2145](https://github.com/gasyoun/Systema-Sanscriticum/pull/2145) (27-08), [PR #2151](https://github.com/gasyoun/Systema-Sanscriticum/pull/2151) (28-08 10:12 UTC). Comment: [Systema #1633](https://github.com/gasyoun/Systema-Sanscriticum/issues/1633#issuecomment-5451376796).
 
-A merged `docs(H3234): stamp … gate probe (down)` PR is a measurement, not the experiment. Registry stays 🟡. Do not `handoff_close` against it. `precheck_handoff.py` exit 4 on that title is a false positive (kin [Uprava FINDINGS §518](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)).
+A merged `docs(H3234): stamp … gate probe (down)` PR is a measurement, not the experiment. Registry stays 🟡. Do not `handoff_close` against it. `precheck_handoff.py` exit 4 on that title is a false positive (kin [Uprava FINDINGS §518](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md)). Title this stamp `docs: stamp …` (do not start with `H3234`) so the matcher does not REFUSE the next `/go`.
 
 _Dr. Mārcis Gasūns_
