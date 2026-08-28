@@ -8,6 +8,7 @@ use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\AttendanceNoticeService;
+use App\Services\Bot\CabinetLoginBotCommand;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\DebtorsBotCommand;
 use App\Services\Bot\RosterBotCommand;
@@ -24,6 +25,9 @@ use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
 {
+    /** Прежняя подсказка непривязанному студенту (флаги «Telegram-входа» OFF). */
+    private const CABINET_LINK_HINT = "Намасте! 🙏\nЧтобы получать уведомления и задавать вопросы, вам нужно привязать свой аккаунт. Для этого зайдите в личный кабинет на сайте Академии и нажмите кнопку «Подключить Telegram».";
+
     public function handle(Request $request)
     {
         // Получаем все данные, которые прислал Telegram
@@ -97,9 +101,17 @@ class TelegramWebhookController extends Controller
                     $this->sendMessage($chatId, 'Ссылка устарела или недействительна. Пожалуйста, сгенерируйте новую кнопку в личном кабинете на сайте.');
                 }
             }
-            // Если просто написали /start без токена
+            // Если просто написали /start без токена — «Telegram-вход»
+            // (CABINET_ADOPTION_ROADMAP P2) или прежняя подсказка про сайт.
             elseif ($text === '/start') {
-                $this->sendMessage($chatId, "Намасте! 🙏\nЧтобы получать уведомления и задавать вопросы, вам нужно привязать свой аккаунт. Для этого зайдите в личный кабинет на сайте Академии и нажмите кнопку «Подключить Telegram».");
+                $this->handleCabinetLoginEntry($chatId, $fromUsername);
+            }
+            // «Telegram-вход»: /login // /вход — одноразовая ссылка входа в чат.
+            // Ветка сама мертва при флаге OFF — сообщение уходит дальше по
+            // обычным веткам (AI / «привяжите аккаунт»).
+            elseif (config('features.telegram_cabinet_login')
+                && app(CabinetLoginBotCommand::class)->isLoginCommand($text)) {
+                $this->handleCabinetLoginEntry($chatId, $fromUsername);
             }
             // Отписка от рекламной рассылки (152-ФЗ: право отзыва согласия обязательно,
             // т.к. существующие пользователи грандфазерятся в согласие). Гасит ТОЛЬКО
@@ -137,8 +149,17 @@ class TelegramWebhookController extends Controller
                     // Студент авторизован! Передаем вопрос ИИ-агенту
                     $this->processStudentQuestion($user, $text, $chatId);
                 } else {
-                    // Пишет кто-то левый или неавторизованный
-                    $this->sendMessage($chatId, 'Пожалуйста, сначала привяжите свой аккаунт на сайте Академии, чтобы я мог вам помогать.');
+                    // Пишет кто-то левый или неавторизованный. «Telegram-вход»,
+                    // сценарий email-привязки (отдельный флаг, @DECIDE владельца):
+                    // включён и похоже на email → матч по оплате; выключен →
+                    // прежнее сообщение про сайт.
+                    $cabinetLogin = app(CabinetLoginBotCommand::class);
+
+                    if ($cabinetLogin->isEmailLinkEnabled() && $cabinetLogin->looksLikeEmail($text)) {
+                        $this->sendMessage($chatId, $cabinetLogin->replyForEmail($chatId, $fromUsername, $text));
+                    } else {
+                        $this->sendMessage($chatId, 'Пожалуйста, сначала привяжите свой аккаунт на сайте Академии, чтобы я мог вам помогать.');
+                    }
                 }
             }
         }
@@ -470,6 +491,42 @@ class TelegramWebhookController extends Controller
         $user->forceFill(['wants_messenger_announcements' => false])->save();
 
         $this->sendMessage($chatId, '🔕 Готово — вы отписаны от рекламных рассылок. Важные уведомления по учёбе (расписание, доступы, ответы куратора) продолжат приходить.');
+    }
+
+    // ==========================================
+    // «TELEGRAM-ВХОД» В КАБИНЕТ (CABINET_ADOPTION_ROADMAP P2, 28-08-2026)
+    // /start или /вход: привязан → одноразовая ссылка входа; не привязан →
+    // (под-флаг) приглашение прислать email заказа; всё выключено → прежняя
+    // подсказка про «Подключить Telegram» на сайте. Решения — в
+    // CabinetLoginBotCommand, отправка — через единый sendMessage.
+    // ==========================================
+    private function handleCabinetLoginEntry($chatId, ?string $fromUsername): void
+    {
+        $cabinetLogin = app(CabinetLoginBotCommand::class);
+
+        if (! $cabinetLogin->isEnabled()) {
+            $this->sendMessage($chatId, self::CABINET_LINK_HINT);
+
+            return;
+        }
+
+        $user = User::where('telegram_id', $chatId)->first();
+
+        if ($user) {
+            // Бэкфилл @username — тот же приём, что в основной AI-ветке.
+            $user->rememberTelegramUsername($fromUsername);
+            $this->sendMessage($chatId, $cabinetLogin->replyForLinkedUser($user));
+
+            return;
+        }
+
+        if ($cabinetLogin->isEmailLinkEnabled()) {
+            $this->sendMessage($chatId, $cabinetLogin->askForEmailMessage());
+
+            return;
+        }
+
+        $this->sendMessage($chatId, self::CABINET_LINK_HINT);
     }
 
     // ==========================================
