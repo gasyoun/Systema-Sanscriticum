@@ -4,6 +4,19 @@ _Created: 30-07-2026 · Last updated: 23-08-2026_
 
 Durable substantive-result tables for this repo. Newest first.
 
+## H3281 student manuals vs catalog + guest HTTP (28-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ Full prose: [docs/CENSUS_STUDENT_LOGGED_IN_MANUALS_22-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CENSUS_STUDENT_LOGGED_IN_MANUALS_22-08-2026.md). Probe 20:43 UTC, GET, no cookies, max-redirs 0. Prod catalog ids via artisan on `.92`.
+
+| Book | URL | Guest HTTP | Intended login-required | Catalog row id |
+|---|---|---|---|---|
+| Как пользоваться кабинетом | https://samskrte.ru/dvaram/help | 302 → /login | yes | 1 student |
+| Как сдавать домашнее задание | https://samskrte.ru/faq/dz | 200 | no | 5 homework |
+| Почему баланс праны уменьшился | https://samskrte.ru/help/prana-balance | 302 → /login | yes | 6 prana |
+| Онбординг (checklist) | https://samskrte.ru/dvaram | 302 → /login | yes | none |
+| Каталог документации | https://samskrte.ru/admin/documentation | 302 → /admin/login | yes (admin) | n/a |
+
+
 ## H3380 trial live — rusamskrtam second session + auto-reply activation (23-08-2026)
 
 _Model: OxAlpha (`opencode/x-preview-f-free`)._ PRs: [#2011](https://github.com/gasyoun/Systema-Sanscriticum/pull/2011) (infra + v1) · [#2021](https://github.com/gasyoun/Systema-Sanscriticum/pull/2021) (small-talk v2). Handoff: [H3380](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3380-OxAlpha_Systema-Sanscriticum_rusamskrtam-second-session-autoreply-trial_23.08.26.md).
