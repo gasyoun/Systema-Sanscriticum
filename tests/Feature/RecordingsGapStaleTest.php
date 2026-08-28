@@ -10,9 +10,12 @@ use App\Models\Schedule;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule as ConsoleSchedule;
+use Illuminate\Foundation\Console\Kernel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
+use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Tests\TestCase;
 
 /**
@@ -114,6 +117,44 @@ class RecordingsGapStaleTest extends TestCase
         $this->assertTrue($event->filtersPass($this->app));
         config(['recording_gap.stale_enabled' => false]);
         $this->assertFalse($event->filtersPass($this->app));
+    }
+
+    /**
+     * H3652: --stale в сигнатуре — флаг без значения. Форма
+     * ['--stale' => true] компилируется планировщиком в "--stale=1" и
+     * symfony/console валит hourly-тик («The --stale option does not
+     * accept a value»). Компилированная строка тика обязана нести
+     * голый флаг и реально парситься против сигнатуры команды.
+     */
+    public function test_scheduled_stale_tick_passes_bare_flag_that_the_signature_accepts(): void
+    {
+        $schedule = $this->app->make(ConsoleSchedule::class);
+        /** @var ?Event $event */
+        $event = null;
+        foreach ($schedule->events() as $candidate) {
+            if (str_contains((string) $candidate->command, 'gap-watch') && str_contains((string) $candidate->command, '--stale')) {
+                $event = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($event, '--stale тик должен быть в расписании.');
+        $this->assertStringNotContainsString('--stale=', (string) $event->command);
+
+        // CLI-путь symfony (как у планировщика на проде): строка тика
+        // обязана парситься против сигнатуры — '--stale=1' упал бы здесь
+        // с тем же «does not accept a value», что в прод-логе H3652.
+        Http::fake(['https://api.telegram.org/*' => Http::response(['ok' => true], 200)]);
+
+        Artisan::call('list'); // ленивая инициализация artisan-приложения кернела
+        $artisan = (new \ReflectionProperty(Kernel::class, 'artisan'))
+            ->getValue($this->app->make(\Illuminate\Contracts\Console\Kernel::class));
+
+        // Снимаем платформенный префикс '"<php>" "artisan"' из built-команды.
+        $artisanArgs = (string) preg_replace('/^\s*(["\']).*?\1\s+\1artisan\1\s+/', '', (string) $event->command);
+        $exit = $artisan->run(new StringInput($artisanArgs), new BufferedOutput);
+
+        $this->assertSame(0, $exit);
+        Http::assertNothingSent();
     }
 
     /**
