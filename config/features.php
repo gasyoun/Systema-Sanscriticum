@@ -515,6 +515,31 @@ return [
     'teacher_payout_year_view' => (bool) env('TEACHER_PAYOUT_YEAR_VIEW', false),
 
     /*
+     | «Telegram-вход» в кабинет (CABINET_ADOPTION_ROADMAP P2, 28-08-2026):
+     | студент пишет студент-боту /start или /вход — если его Telegram уже
+     | привязан (users.telegram_id), бот выдаёт ОДНОРАЗОВУЮ magic-ссылку входа
+     | (purpose tg_login, TTL 15 мин, маршрут /tg-login/{token}). Владение
+     | Telegram здесь и есть фактор подлинности. ВЫКЛ по умолчанию — это вход
+     | в кабинет через чат; включение в проде — отдельный ops-шаг владельца
+     | (TELEGRAM_CABINET_LOGIN=true + config:cache).
+     */
+    'telegram_cabinet_login' => (bool) env('TELEGRAM_CABINET_LOGIN', false),
+
+    /*
+     | Под-режим «Telegram-входа» для тех, кто не может даже открыть сайт:
+     | непривязанный студент присылает боту email заказа → матч по нормализо-
+     | ванному email СРЕДИ ОПЛАЧИВАВШИХ (кабинетная аудитория), staff (admin/
+     | manager/super_admin) исключён; привязываем telegram_id и выдаём ссылку
+     | входа.
+     | Размен «знает email = получит доступ» — тот же, что у разрешённой
+     | владельцем «самопроверки входа», но сильнее (тут не перечисление, а
+     | доступ), поэтому отдельный флаг + @DECIDE владельца на включение.
+     | Работает только вместе с telegram_cabinet_login.
+     | Enable: TELEGRAM_CABINET_EMAIL_LINK=true + config:cache.
+     */
+    'telegram_cabinet_email_link' => (bool) env('TELEGRAM_CABINET_EMAIL_LINK', false),
+
+    /*
      | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
      | (fail closed на всех платных маршрутах: zero-price checkout, Filament,
      | PayPal, PayPal-claim, conditional, импорт), а не log-and-return «оплачено

@@ -71,6 +71,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SurveyPageController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TelegramSupportLinkController;
+use App\Http\Controllers\TgLoginLinkController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
 use App\Http\Controllers\VisualDcsController;
@@ -914,6 +915,15 @@ Route::get('/login-link/{token}', [AdminLoginLinkController::class, 'login'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('admin.login-link');
+
+// --- «TELEGRAM-ВХОД» (CABINET_ADOPTION_ROADMAP P2) — одноразовая ссылка,
+// выданная студент-ботом в чат (владение Telegram = фактор подлинности).
+// Самогейтится флагом telegram_cabinet_login (404 при OFF); принимает только
+// токены назначения tg_login (см. TelegramLoginService::MAGIC_PURPOSE).
+Route::get('/tg-login/{token}', [TgLoginLinkController::class, 'login'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('tg.login-link');
 
 // --- РЕЖИМ ПРОСМОТРА ЗА ПОЛЬЗОВАТЕЛЯ (H1947) ---
 // Старт — подписанная короткоживущая ссылка из UserResource (подпись закрывает
