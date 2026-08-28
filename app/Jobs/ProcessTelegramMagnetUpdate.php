@@ -11,6 +11,7 @@ use App\Services\Leads\LeadMagnetDispatcher;
 use App\Services\Leads\WaitlistWelcome;
 use App\Services\Marathon\MarathonDay1Sender;
 use App\Services\Messaging\DeliveryChannelManager;
+use App\Support\TelegramChannelEcho;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -39,6 +40,16 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             $bot = LandingBot::find($this->landingBotId);
             if ($bot && ! empty($bot->n8n_forward_url)) {
                 ForwardUpdateToN8n::dispatch($bot->n8n_forward_url, $this->update);
+            }
+        }
+
+        // H3617 — сенсор эха канала: каждый пост в канале приходит боту-админу
+        // как channel_post, включая посты НЕ от нас (запланированные в Telegram,
+        // ручные). Отпечаток нужен издателю канала для cross-sender дедупа —
+        // записываем до раннего return по отсутствию ['message'].
+        foreach (['channel_post', 'edited_channel_post'] as $channelKey) {
+            if (isset($this->update[$channelKey]) && is_array($this->update[$channelKey])) {
+                TelegramChannelEcho::recordFromUpdate($this->update[$channelKey]);
             }
         }
 
