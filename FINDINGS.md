@@ -60,33 +60,52 @@ and then vanishes without a conflict — fix the upstream timeline and regenerat
 
 ---
 
-## §2 — a green `mic-vendor-drift` does **not** mean the vendored tree matches its pin
+## §2 — a CI success line can assert a check the job never ran (`mic-vendor-drift`)
 
-**Back-filled 28-08-2026 from
+**Found 28-08-2026 from
 [`.github/workflows/ci.yml`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/ci.yml)
 job `mic-vendor-drift` +
-[`tools/check_mic_vendor_drift.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tools/check_mic_vendor_drift.py).**
+[`tools/check_mic_vendor_drift.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tools/check_mic_vendor_drift.py).
+Resolved the same day — kept because the failure shape outlives this instance.**
 
-The upstream [message-intent-classifier](https://github.com/gasyoun/message-intent-classifier) is
-a **private** repo, and the workflow's `GITHUB_TOKEN` cannot read it. The job is therefore built
-in two halves and only one of them runs today:
+The upstream [message-intent-classifier](https://github.com/gasyoun/message-intent-classifier)
+is a **private** repo and the workflow's own `GITHUB_TOKEN` cannot read it, so the job is built
+in two legs:
 
 | Leg | Runs when | Effect when it cannot run |
 |---|---|---|
-| Upstream tree byte-parity against `PINNED_SHA` | only if the `MIC_UPSTREAM_TOKEN` Actions secret is set | prints `::warning::upstream tree parity NOT verified` and continues |
+| Upstream tree byte-parity against `PINNED_SHA` | only with the `MIC_UPSTREAM_TOKEN` Actions secret | prints `::warning::upstream tree parity NOT verified` and **continues** |
 | Generated-JSON freshness + pin format sanity | always | — |
 
-The trap is the success line. When the parity leg is skipped the job still finishes with
+**The trap was the success line.** With the parity leg skipped the job still finished green with
 
 > `vendored snapshot matches pin <sha12>; generated JSON fresh (N rule files)`
 
-— a sentence that asserts exactly the thing that was never checked. As of 28-08-2026 the secret
-is not set, so **every green run of this job to date has verified JSON freshness only**. Treat
-"drift check passed" as "the JSON twins are fresh"; to actually verify the pin, check the tree
-out by hand and run the script with `--upstream`.
+— a sentence asserting exactly the thing it had not checked. A skipped leg that only *warns*,
+followed by an unconditional success message, is indistinguishable from a real pass on the
+summary page, and the job took 11 seconds while a real parity run takes ~30.
 
-Setting the fine-grained read-only PAT as `MIC_UPSTREAM_TOKEN` (contents:read on that one repo)
-turns the full gate on with no code change.
+**State as of 28-08-2026: the full gate is armed and passing.** The secret was set that day and
+the parity leg ran for the first time — `Checkout upstream at pin` succeeded, the
+`Drift + generated-JSON parity check` step executed with no `NOT verified` warning, and it
+reported `vendored snapshot matches pin e3320e671e03; generated JSON fresh (4 rule files)`.
+That sentence is now true: the vendored tree is byte-identical to its pin.
+
+**The token trap, if this ever has to be redone.** A fine-grained PAT defaults to *Repository
+access: Public repositories*, which silently excludes this private repo, and to *Contents: No
+access*. Either default makes `actions/checkout` fail with
+
+> `remote: Write access to repository not granted.` → HTTP 403
+
+on a **read**, which reads like a permissions bug in the workflow and is not. The token needs
+*Only select repositories* → `message-intent-classifier`, and *Contents: Read-only*. Nothing
+else, and no workflow change.
+
+**The generalisation worth keeping.** A gate whose expensive half is conditional must not print
+an unconditional success line. Either name the degraded mode in the success text
+(`… pin NOT verified (no upstream access)`) or exit non-zero. Until one of those is true, "the
+check is green" and "the check ran" are different claims, and only the log distinguishes them —
+which nobody reads while it is green.
 
 ---
 
