@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Services\Messaging\TelegramDeliveryChannel;
 use App\Support\MarathonLandingCopy;
+use App\Support\TelegramChannelEcho;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,14 @@ use Throwable;
  * has no other guard against a scheduler double-run or a redeploy re-triggering the
  * same minute. Post 3 (evergreen) uses the ISO year-week as its run_key so it still
  * re-fires every week; every other post uses the literal string 'once'.
+ *
+ * Cross-sender dedup (H3617): the TelegramChannelEcho sensor records every
+ * channel_post the admin bot receives — including posts NOT sent by us
+ * (Telegram-native scheduled messages, manual admin posts). A `--live` send
+ * is refused when an identical text was echoed from the channel within the
+ * last 24 h. Incident 28-08-2026: a Telegram-side scheduled message (10:00:05
+ * MSK) and this cron (10:00:09) posted the same start text twice in four
+ * seconds; no per-system guard can see the other system's send.
  */
 final class PublishMarathonChannelPosts extends Command
 {
@@ -85,6 +94,18 @@ final class PublishMarathonChannelPosts extends Command
             $runKey = $this->runKeyFor($n);
             if ($this->alreadySent($n, $runKey)) {
                 $this->warn("Skip post {$n}: already sent for run_key={$runKey}.");
+
+                continue;
+            }
+
+            // H3617 — cross-sender дедуп: этот же текст уже пришёл эхом из
+            // канала за последние 24 ч (запланированное в Telegram сообщение,
+            // ручной пост админа) — второй копии не будет. Сравниваем сырой
+            // разрешённый текст (Telegram возвращает channel_post.text без
+            // разметки). Без markSent: в канал пост не ушёл, строка-registry
+            // должна означать фактическую отправку.
+            if (TelegramChannelEcho::seenRecently($chatId, $text)) {
+                $this->warn("Skip post {$n}: identical text already in the channel within last 24 h (echo sensor, H3617 — cross-sender dedup).");
 
                 continue;
             }

@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Added
+- **H3617 (OxAlpha, 28-08-2026): cross-sender дедуп постов канала @samskrte — сенсор эха канала + отказ от повторной отправки.** Инцидент 28-08: запланированное в Telegram сообщение (10:00:05 MSK) и H1936-крон (10:00:09) опубликовали одинаковый стартовый текст дважды за 4 секунды — пер-системный guard дубликатов вне Laravel не видит. [`TelegramChannelEcho`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/TelegramChannelEcho.php): бот-админ получает каждый пост канала как `channel_post` — вебхук-джоба записывает отпечаток (chat_id, hash текста, message_id) в кэш на 7 дней; `marathon:publish-channel-posts` перед `--live` отказывается слать, если идентичный текст приходил эхом за последние 24 ч (без `markSent` — строка-registry означает фактическую отправку). Fail-open при недоступном кэше (громкий warning), сравнение по сырой разрешённой форме текста. Тесты: [MarathonLandingCopyPublishTest](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/MarathonLandingCopyPublishTest.php) 13/13 (4 новых: эхо блокирует, чужой текст не мешает, окно 24 ч, вебхук пишет эхо), Pint clean.
 
 ## [1.90.25] - 2026-08-28
 ### Added
