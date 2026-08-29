@@ -1,6 +1,8 @@
 # Free / Basic / Club membership and the recording gate
 
-_Created: 16-08-2026 · H2744_
+_Created: 16-08-2026 · Last updated: 29-08-2026_
+
+> **H3648 (29-08-2026):** when `MEMBERSHIP_CLUB_STREAMS_ONLY` is on, Club/Top grant **club-stream / club-efir** recordings only. The Club row «purchased recordings» below is the H2744 D10 contract and is superseded. Flag default OFF — merge/deploy is not an enable. Operator note: [MEMBERSHIP_CLUB_STREAMS_ONLY_H3648_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MEMBERSHIP_CLUB_STREAMS_ONLY_H3648_2026.md).
 
 This runbook extends H2644. It does not create a second payment path, change a historical
 payment, detach a course group, accrue debt, or introduce automatic renewal.
