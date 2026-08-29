@@ -25,6 +25,18 @@
 
 @push('head')
     <meta name="description" content="Клуб Общества ревнителей санскрита: вся библиотека записей курсов, полка в кабинете и тренажёры — за {{ number_format((float) $monthly->price, 0, '.', ' ') }} ₽ в месяц. Без живых потоков, без проверки домашних заданий, без сертификата — поэтому и цена такая.">
+    {{-- H3650: Club + Basic share stills. Primary og:image is Club (page title). Basic 1200×630 is a second OG image for clients that pick an alternate. Home preview stays og-main-preview.jpg. --}}
+    <meta property="og:title" content="Клуб — вся библиотека записей">
+    <meta property="og:image" content="{{ asset('images/og-membership-club.webp') }}?v=h3650">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Клуб — вся библиотека записей">
+    <meta property="og:image" content="{{ asset('images/og-membership-basic.webp') }}?v=h3650">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Базовый — улучшенный кабинет без архива видео">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ asset('images/og-membership-club.webp') }}?v=h3650">
 @endpush
 
 @section('content')
