@@ -2,7 +2,7 @@
 
 _Created: 29-08-2026 · Last updated: 29-08-2026_
 
-Enable readiness (same-day SSH probe): **not ready**. 0 tagged `club_stream`/`club_efir` of 1742 lessons; 0 D20 Club 1/3/12 rows; flag still false. Detail: [MEMBERSHIP_CLUB_STREAMS_ONLY_H3648_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MEMBERSHIP_CLUB_STREAMS_ONLY_H3648_2026.md).
+Enable readiness (same-day SSH probe): **flag not ready**. 0 tagged `club_stream`/`club_efir` of 1742 lessons. D20 `--apply` 29-08-2026 created inactive #5044/#5045/#5046 (₽2000/5700/20400); live #5038–#5040 (₽1500/4000/15000) untouched; flag still false. Rehearsal 1d PASS. Detail: [MEMBERSHIP_CLUB_STREAMS_ONLY_H3648_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MEMBERSHIP_CLUB_STREAMS_ONLY_H3648_2026.md).
 
 Executor: Grok 4.6 (`grok-4.6`). Handoff: [H3648 (Grok 4.6, 🟡2 medium) — Club streams-only entitlement plus 1/3/12 tariffs flag OFF](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H3648-Grok_Systema-Sanscriticum_club-streams-only-entitlement-tariffs_28.08.26.md). No Claude dual-run residual.
 
