@@ -1222,4 +1222,14 @@ return [
      | paid twice under anastasiadolgopolova25@gmail.com vs ...gmail.con).
      */
     'checkout_near_duplicate_email_guard' => (bool) env('CHECKOUT_NEAR_DUPLICATE_EMAIL_GUARD', false),
+
+    /*
+     | H3693 — referral CTA at three student-owned loyalty moments:
+     | homework accepted, student certificate list, dashboard course-complete.
+     | Reuses student/partials/referral.blade.php (H1294). Default OFF:
+     | merge is prod-inert; the existing cabinet include stays as it is.
+     | Do not put this invite on public /verify. partner.enabled stays OFF.
+     | Enable: REFERRAL_LOYALTY_CTA=true + php artisan config:cache.
+     */
+    'referral_loyalty_cta' => (bool) env('REFERRAL_LOYALTY_CTA', false),
 ];
