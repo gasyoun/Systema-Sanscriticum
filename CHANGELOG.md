@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 ### Fixed
+- **H3674 follow-up (Grok 4.6 `grok-4.6`, 29-08-2026): Filament admin password-reset on.** «Забыли пароль?» on `/admin/login` points at existing `PasswordResetController` (`/forgot-password`). Filament request/reset pages redirect there — no second mailer. Auth and `APP_LOCALE` unchanged.
 - **H3674 follow-up (Grok 4.6 `grok-4.6`, 29-08-2026): Filament `/admin/login` remaining English copy.** Failed attempt `Неверный email или пароль.`; «Забыли пароль?» if reset is on; throttle toast RU. Auth and `APP_LOCALE` unchanged.
 - **H3674 follow-up (Grok 4.6 `grok-4.6`, 29-08-2026): Filament `/admin/login` field labels RU.** `Электронная почта` / `Пароль` / `Запомнить меня` on `AdminLogin`; `APP_LOCALE` stays `en`. Auth unchanged.
 - **H3674 (Grok 4.6 `grok-4.6`, 29-08-2026): leftover H3651 / [#2176](https://github.com/gasyoun/Systema-Sanscriticum/issues/2176) pixels.** Home 390px hero H1 wraps (`text-3xl` + `break-words`, desktop `md:text-6xl` unchanged). Cookie bar `z-[10050]` above newsletter; popup waits for `cookie_consent_v1` so first-guest CTAs stay clickable. Filament `/admin/login` `brandName` + RU heading (auth unchanged). Tests: `LaunchSurfacePixelsH3674Test`. samskrtam.ru HTTP is a separate ops probe, not a CSS restyle.
