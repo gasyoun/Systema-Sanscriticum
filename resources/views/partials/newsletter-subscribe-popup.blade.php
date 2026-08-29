@@ -6,8 +6,9 @@
     полка подписчика. Самогейтится по features.newsletter_subscribe.
 
     Позиция: fixed bottom-right, выше пузыря чата (scw z=9998 / bottom 20),
-    z-index 9990 — не перекрывает cookie-баннер (z-200) по смыслу (cookie
-    full-width снизу; окно сидит над ним с bottom ~96px).
+    z-index 9990 — ниже cookie-баннера (z-10050). Пока cookie не приняты,
+    попап не открывается (H3674): иначе «Новости санскрита» + cookie
+    закрывают CTA/статы на первом гостевом заходе.
 
     Dismiss: localStorage `newsletter_popup_v1` = dismissed.
     Не показываем залогиненным подписчикам и после session success.
@@ -156,6 +157,10 @@
                         return;
                     }
                     if (localStorage.getItem('newsletter_popup_v1')) {
+                        this.open = false;
+                        return;
+                    }
+                    if (! localStorage.getItem('cookie_consent_v1')) {
                         this.open = false;
                         return;
                     }
