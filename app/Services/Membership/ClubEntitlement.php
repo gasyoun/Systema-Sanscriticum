@@ -7,6 +7,7 @@ namespace App\Services\Membership;
 use App\Enums\MembershipTier;
 use App\Models\ClubMembership;
 use App\Models\Course;
+use App\Models\Lesson;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -156,6 +157,26 @@ final class ClubEntitlement
     public function coversCourse(?User $user, ?Course $course): bool
     {
         return $this->courseIsIncluded($course) && $this->allows($user, 'recordings');
+    }
+
+    public function streamsOnlyEnabled(): bool
+    {
+        return (bool) config('features.membership_club_streams_only', false);
+    }
+
+    /**
+     * H3648: Club/Top cover a specific *recording*, not a purchased course-lesson.
+     * Flag OFF keeps the H2744 course-shelf predicate (coversCourse).
+     */
+    public function coversLesson(?User $user, ?Course $course, ?Lesson $lesson): bool
+    {
+        if (! $this->streamsOnlyEnabled()) {
+            return $this->coversCourse($user, $course);
+        }
+
+        return $lesson instanceof Lesson
+            && $lesson->isClubStreamRecording()
+            && $this->allows($user, 'recordings');
     }
 
     /**
