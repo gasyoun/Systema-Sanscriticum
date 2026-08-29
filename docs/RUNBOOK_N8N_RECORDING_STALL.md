@@ -1,6 +1,6 @@
 # RUNBOOK — n8n ZOOM 1.4: записи не появились / n8n упал
 
-_Created: 24-08-2026 · Last updated: 24-08-2026_
+_Created: 24-08-2026 · Last updated: 29-08-2026_
 
 **Audience:** дежурный агент / оператор. Один документ на два вопроса: «записи нет» и «n8n лежит».
 **Хосты:** n8n `root@193.232.229.91` (docker compose `/opt/n8n`, контейнер `n8n-n8n-1`, restart=unless-stopped); Laravel `root@193.232.229.92`.
@@ -30,7 +30,7 @@ cd /var/www/html && php artisan recordings:gap-watch --dry
 | Что видно | Играть |
 |---|---|
 | «Пробелов записей нет» | Ничего. Алерт был ложным/уже закрыт |
-| exec `success`, но записи нет | Play B (вебхук не пришёл / join не сошёлся) |
+| exec `success`, но записи нет | Сперва проверьте выход «Свежая ссылка записи»: `{code:3301}` = класс §3.1 (двухаккаунтный Zoom); иначе Play B (вебхук не пришёл / join не сошёлся) |
 | exec `error`, упал до скачивания (`ZOOM`, `Switch*`, `Code*`, `Respond*`, `Get row(s) in sheet*`) | **Play A-1 — безопасный ретрай** |
 | exec `error` с `402 credits` / `403 Terms Of Service` на `AI Agent1` | Play A-2 (модель OpenRouter) |
 | exec `error` после `DOWNLOAD`/`Upload a video`/`ЗАГРУЗКА НА РУТУБ*`/Telegram | Play A-3 — вручную, resume с `AI Agent1` |
@@ -56,6 +56,21 @@ cd /var/www/html && php artisan recordings:gap-watch --retry-failed --date=<се
 
 1. На .91 открыть воркфлоу `1EIqqNzMl5NNIxST`, нода **OpenRouter Chat Model1**: если модель снова `anthropic/*` — переключить на `deepseek/deepseek-v4-pro` (рецепт 20-08; standalone `таймкоды` уже на нём).
 2. Прогон возобновить из UI n8n: открыть упавший exec → **Resume from `AI Agent1`**. НЕ перезапускать с вебхука.
+
+## 3.1 Двухаккаунтный Zoom: 3301 на «Свежая ссылка записи» (класс 29-08-2026)
+
+Встречи приходят с ДВУХ Zoom-аккаунтов: Account_1 `K4GUTP_JTCqAflA6QsKq6A` (Кочергина 434/435) и Account_2 `ZEyCQs4nTWScjXNaTy6K5g` (Летний интенсив 438, Грамматика 402/351, Продленка 436…). Нода «Свежая ссылка записи» сидит на ОДНОМ OAuth-cred («Zoom Цыди», `47UA7kp1sAv9NCe3`) и для встреч чужого аккаунта получает `3301 «Aufzeichnung ist nicht vorhanden»`. У ноды `neverError:true`, поэтому 3301 течёт как обычный выход, гард «Есть запись?» уходит в false-ветку — **exec завершается success, урок не создан**. Снаружи неотличимо от «вебхук не пришёл».
+
+**Как различать:** exec `success`, все узлы до гарда success, у «Свежая ссылка записи» выход `{code:3301}` — этот класс, НЕ Play B. Запись при этом жива в облаке (3301 = «не видна с этого cred», не «удалена»).
+
+**Состояние после патча 29-08 15:27Z** (бэкап `/root/wf_backup_pre_account2_20260829_152757.json`): DOWNLOAD берёт подписанный `download_url` из Code-узла (`webhook_download` + `access_token`, живёт ≤24 ч, аккаунт-агностик), Bearer-auth с ноды снят; гард проверяет наличие этого URL. Оба аккаунта работают в штатном ≤24 ч окне. Ограничение: replay **позже 24 ч** после вебхука подписанным URL уже невозможен — нужен durable per-account fresh-link (параллельная нода на «Zoom ОРГ» `XJbFogXztImsSVaX` + OR-фолбэк гарда; припарковано в GTD) или Play B руками.
+
+**Ещё три грабли того же дня:**
+
+1. `POST /executions/{id}/retry` играет **СТАРЫЙ снапшот воркфлоу** (exec 1920=retryOf 1826 прошёл по до-фиксовому графу с обходным ребром в DOWNLOAD). После любой правки воркфлоу ретрай старых exec бесполезен — свежий прогон только через повтор вебхука: извлечь `body` из runData ZOOM-узла упавшего exec (без BOM!), затем с .91:
+   `curl -X POST http://127.0.0.1:5678/webhook/86446208-6c7a-432f-bcaa-f4d9536b3f55 -H 'Host: context-ai.ru' -H 'Content-Type: application/json' --data-binary @body.json` (HTTP 200 «OK»; дубли возможны ТОЛЬКО если exec успел залить YT/Rutube — сверить runData).
+2. Public API `GET /executions` **отстаёт от sqlite**: свежие running/waiting exec могут отсутствовать в выдаче (1926–1930 пропали), строка «last exec» в алерте gap-watch может быть устаревшей. Истина — sqlite-фолбэк из §8.
+3. PowerShell: `[System.IO.File]::WriteAllText(..., [System.Text.Encoding]::UTF8)` пишет **BOM** → n8n отвечает `422 Unexpected token '\ufeff'`. Писать через `UTF8Encoding($false)`.
 
 ## 4. Play A-3 — позднее падение (что-то уже залито)
 
