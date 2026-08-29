@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.90.29] - 2026-08-29
 ### Added
 - **H3661 / residual H3184 (Opus 5 `claude-opus-5`, 29-08-2026): волна 4a/4c ПРИМЕНЕНА на `.91` в окне с человеком у пульта.** `table inet filter` на `samskrtam50` переведена в `policy drop` с аллоу-листом, выведенным из живого трафика; `forward` оставлен `accept` намеренно (Docker публикует 80/443 через `FORWARD`, не `INPUT`). Хореография соблюдена: откат взведён ПЕРВЫМ (`at`-задание 1, 06:21:04Z → 06:31:00Z, тело прочитано), `apply` 06:21:40Z, новая SSH-сессия 06:22:37Z, `verify` 06:23:04Z (новая сессия + кросс-проба с `.92` + живой Tailscale), `disarm` 06:24:05Z. W4c: [`10-hardening.conf`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards_n8n/ssh/10-hardening.conf) (`passwordauthentication no`, `permitrootlogin prohibit-password`) + jail fail2ban — за первые минуты забанен реальный подборщик `45.225.135.20`. Пять строк волны 4 в [`manifest.psv`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/server_guards_n8n/manifest.psv) раскомментированы, `server_guards_n8n_verify.sh` → 45 ok. `.92` (W4b) НЕ трогали: требуются 7 чистых суток на `.91`. Протокол окна: [docs/WINDOW_H3184_W4A_W4C_APPLIED_29-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/WINDOW_H3184_W4A_W4C_APPLIED_29-08-2026.md).
 ### Fixed
