@@ -2,15 +2,21 @@
 
 namespace App\Filament\Pages\Auth;
 
+use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Component;
+use Filament\Notifications\Notification;
 use Filament\Pages\Auth\Login;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\HtmlString;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Guest-facing Filament login (H3674 / #2176). Stock panel used APP_LOCALE=en
  * chrome («Laravel» / «Sign in»). Auth itself is unchanged. Field labels
- * are RU too (H3674 follow-up): APP_LOCALE stays en.
+ * are RU too (H3674 follow-up). Failed-login copy and «Forgot password?»
+ * too: APP_LOCALE stays en.
  */
 class AdminLogin extends Login
 {
@@ -38,7 +44,29 @@ class AdminLogin extends Login
 
     protected function getPasswordFormComponent(): Component
     {
-        return parent::getPasswordFormComponent()->label('Пароль');
+        $field = parent::getPasswordFormComponent()->label('Пароль');
+        if (filament()->hasPasswordReset()) {
+            $field->hint(new HtmlString(Blade::render(
+                '<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="3">Забыли пароль?</x-filament::link>'
+            )));
+        }
+
+        return $field;
+    }
+
+    protected function throwFailureValidationException(): never
+    {
+        throw ValidationException::withMessages([
+            'data.email' => 'Неверный email или пароль.',
+        ]);
+    }
+
+    protected function getRateLimitedNotification(TooManyRequestsException $exception): ?Notification
+    {
+        return Notification::make()
+            ->title('Слишком много попыток входа')
+            ->body('Подождите '.$exception->secondsUntilAvailable.' сек. и попробуйте снова.')
+            ->danger();
     }
 
     protected function getRememberFormComponent(): Component

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\Auth\AdminLogin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -65,7 +67,19 @@ class LaunchSurfacePixelsH3674Test extends TestCase
         $this->assertStringContainsString('Пароль', $html);
         $this->assertStringContainsString('Запомнить меня', $html);
         $this->assertStringNotContainsString('Email address', $html);
+        $this->assertStringNotContainsString('Forgot password', $html);
         $this->assertStringNotContainsString('>Sign in<', $html);
         $this->assertStringNotContainsString('>Laravel<', $html);
+    }
+
+    public function test_filament_admin_login_failed_attempt_is_russian(): void
+    {
+        Livewire::test(AdminLogin::class)
+            ->fillForm([
+                'email' => 'nobody@example.com',
+                'password' => 'wrong-password',
+            ])
+            ->call('authenticate')
+            ->assertHasFormErrors(['email' => 'Неверный email или пароль.']);
     }
 }
