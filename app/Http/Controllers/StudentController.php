@@ -953,11 +953,13 @@ class StudentController extends Controller
 
         // H2644: клубное покрытие курса — такое же основание видеть урок, как
         // персональный грант: членство не привязано к потоку.
-        $clubCovers = app(ClubEntitlement::class)->coversCourse($user, $course);
+        $club = app(ClubEntitlement::class);
+        $clubCovers = $club->coversCourse($user, $course);
+        $clubLesson = $club->coversLesson($user, $course, $lesson);
 
         // Урок другой группы курса (курс разнесён на 2 потока) — не показываем,
         // если только нет персонального гранта именно на этот урок.
-        if (! $hasLessonGrant && ! $clubCovers && ! $lesson->isVisibleToGroupsOf($user)) {
+        if (! $hasLessonGrant && ! $clubCovers && ! $clubLesson && ! $lesson->isVisibleToGroupsOf($user)) {
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок относится к другой группе курса.');
         }
@@ -968,7 +970,7 @@ class StudentController extends Controller
         // Открытые уроки/вебинары доступны любому залогиненному без покупки
         $isFreeLesson = (bool) $lesson->is_free;
 
-        if (! $isFreeLesson && ! $hasLessonGrant && ! $lesson->isUnlockedBy($unlockedTariffs)) {
+        if (! $isFreeLesson && ! $hasLessonGrant && ! $clubLesson && ! $lesson->isUnlockedBy($unlockedTariffs)) {
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок доступен в Блоке '.$lesson->block_number.'. Для просмотра необходимо оплатить доступ.');
         }
