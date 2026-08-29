@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.90.32] - 2026-08-29
 ### Added
 - **H3648 (Grok 4.6 `grok-4.6`, 29-08-2026): Club video entitlement is club-stream / club-efir only; 1/3/12 D20 Club tariffs behind `MEMBERSHIP_CLUB_STREAMS_ONLY` default OFF.** 26-08 ruling supersedes H2744 D10 («Club unlocks purchased course recordings»). Typed `lessons.recording_kind` (`course_lesson` default · `club_stream` · `club_efir`). Flag OFF keeps the H2744 predicate (zero behaviour change). Flag ON: course buyer without Club sees course-lesson recordings; Club without that purchase does not; Club/Top see tagged club streams. [`ClubStreamTariffCatalog`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Membership/ClubStreamTariffCatalog.php) + `membership:ensure-club-stream-tariffs` write the three Club ₽2 000 / ₽5 700 / ₽20 400 rows without touching live ₽1 500 checkout; `is_active` follows the flag. No live Tochka charge. Tests: [`ClubStreamsOnlyEntitlementTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Membership/ClubStreamsOnlyEntitlementTest.php). Prod `.env` must stay `MEMBERSHIP_CLUB_STREAMS_ONLY=false` (or absent).
 
