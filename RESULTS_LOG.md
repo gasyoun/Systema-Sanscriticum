@@ -1,8 +1,24 @@
 # Results log
 
-_Created: 30-07-2026 · Last updated: 23-08-2026_
+_Created: 30-07-2026 · Last updated: 29-08-2026_
 
 Durable substantive-result tables for this repo. Newest first.
+
+## H3650 membership OG stills — live smoke (29-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ PR: [#2194](https://github.com/gasyoun/Systema-Sanscriticum/pull/2194) (`7689e17c`). Release: [v1.90.33](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.33). Handoff: [H3650 (Grok 4.6, 🟡2 medium) — OG stills for 01-09 membership surfaces via Grok Imagine](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H3650-Grok_Systema-Sanscriticum_autumn-membership-og-imagine_28.08.26.md). Deploy on `.92`: `sudo bash deploy.sh` `80fa6c09 → 7689e17c`. Tests: 22/22 (`MembershipOgImageTest` + Club landing + commerce feed + homepage meta). Duplicate PR [#2195](https://github.com/gasyoun/Systema-Sanscriticum/pull/2195) closed. Imagine backgrounds + exact overlay of house `logo.png` and existing page titles; autumn 1:1 Imagine pass invented letter-forms, so the square was cropped from the clean landscape.
+
+| Surface | URL | Result |
+|---|---|---|
+| Club OG (primary `/klub` `og:image`) | https://samskrte.ru/images/og-membership-club.webp | PASS `image/webp` 1200×630, 18308 B |
+| Basic OG (second `/klub` `og:image`) | https://samskrte.ru/images/og-membership-basic.webp | PASS `image/webp` 1200×630, 17902 B |
+| Autumn calendar OG | https://samskrte.ru/images/og-membership-autumn.webp | PASS `image/webp` 1200×630, 40052 B |
+| Club 1:1 | https://samskrte.ru/images/og-membership-club-1x1.webp | committed + deployed (1200×1200) |
+| Basic 1:1 | https://samskrte.ru/images/og-membership-basic-1x1.webp | committed + deployed (1200×1200) |
+| Autumn 1:1 | https://samskrte.ru/images/og-membership-autumn-1x1.webp | committed + deployed (1200×1200) |
+| Live `/klub` HTML | https://samskrte.ru/klub | 200; head names club + basic paths, width 1200, height 630 |
+| Live `/osen-2026` HTML | https://samskrte.ru/osen-2026 | 404 — `membership_public_feed` flag OFF; image URL itself is live |
+| Home preview | https://samskrte.ru/ | still `og-main-preview.jpg`; no membership OG path |
 
 ## H3281 student manuals vs catalog + guest HTTP (28-08-2026)
 
