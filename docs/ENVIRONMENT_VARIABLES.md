@@ -513,6 +513,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `REDIS_URL` | required | `—` | config/database.php:132<br>config/database.php:141<br>config/reverb.php:44 |
 | `REDIS_USERNAME` | required | `—` | config/database.php:134<br>config/database.php:143<br>config/reverb.php:47 |
 | `REFERRAL_CREDIT_AMOUNT` | optional | `500` | config/referral.php:19 |
+| `REFERRAL_LOYALTY_CTA` | optional | `false` | config/features.php:1234 |
 | `REFERRAL_REFERRED_CREDIT_AMOUNT` | optional | `0` | config/referral.php:22 |
 | `REMINDER_SUGGESTION_CONFIDENCE_THRESHOLD` | optional | `0.5` | config/reminders.php:17 |
 | `REMINDER_SUGGESTION_EXPIRY_DAYS` | optional | `14` | config/reminders.php:11 |

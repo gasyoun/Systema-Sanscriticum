@@ -308,6 +308,11 @@
                 <i class="fas fa-circle-check text-emerald-500 shrink-0"></i>
                 <p class="text-[13px] text-emerald-800"><span class="font-bold">Работа принята.</span> Поздравляем! 🎉</p>
             </div>
+            @if(config('features.referral_loyalty_cta'))
+                <div class="mt-4" data-testid="referral-loyalty-cta-homework">
+                    @include('student.partials.referral')
+                </div>
+            @endif
         @endif
 
     </div>

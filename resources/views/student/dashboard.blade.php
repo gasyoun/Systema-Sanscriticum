@@ -432,6 +432,7 @@
         {{-- Сетка 1-2-3-4 колонки со сдвигом на шаг вверх: фиксированный сайдбар (280px)
              съедает ширину, и при lg:3/xl:4 карточки ужимались до ~200px — кнопки переносились. --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mb-16">
+            @php $loyaltyCtaCourseComplete = false; @endphp
             @forelse($courses as $course)
                 <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_15px_35px_rgba(232,92,36,0.08)] hover:border-brand/30 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group overflow-hidden">
                     
@@ -508,6 +509,7 @@
                                     </span>
                                 </div>
                             @elseif($totalLessons > 0)
+                                @php $loyaltyCtaCourseComplete = true; @endphp
                                 <div class="flex items-center gap-1.5 mb-4 text-xs text-emerald-600 font-semibold">
                                     <i class="fas fa-check-circle shrink-0"></i>
                                     <span>Все уроки пройдены</span>
@@ -599,6 +601,12 @@
             @endforelse
         </div>
 
+        @if(config('features.referral_loyalty_cta') && $loyaltyCtaCourseComplete)
+            <div class="mb-12" data-testid="referral-loyalty-cta-course-complete">
+                @include('student.partials.referral')
+            </div>
+        @endif
+
         {{-- ПРОБНЫЕ ЗАНЯТИЯ (оплачено пробное / разовый доступ к уроку) --}}
         @if(!empty($trialLessons) && $trialLessons->isNotEmpty())
         <div class="mb-16">
@@ -670,6 +678,11 @@
                     </div>
                 @endforeach
             </div>
+            @if(config('features.referral_loyalty_cta'))
+                <div class="mt-6" data-testid="referral-loyalty-cta-certificate">
+                    @include('student.partials.referral')
+                </div>
+            @endif
         </div>
         @endif
         
