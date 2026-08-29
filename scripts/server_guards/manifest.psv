@@ -35,3 +35,7 @@ systemd/systema-peer-probe.service|/etc/systemd/system/systema-peer-probe.servic
 systemd/systema-peer-probe.timer|/etc/systemd/system/systema-peer-probe.timer|644|warning
 systemd/systema-remediation-ladder.service|/etc/systemd/system/systema-remediation-ladder.service|644|warning
 systemd/systema-remediation-ladder.timer|/etc/systemd/system/systema-remediation-ladder.timer|644|warning
+
+# H3664 (29-08-2026) — ignoreip для путей восстановления. До этого fail2ban на .92
+# был ВООБЩЕ неуправляем: один defaults-debian.conf и ни одного ignoreip.
+fail2ban/jail.d/systema-sshd.conf|/etc/fail2ban/jail.d/systema-sshd.conf|644|critical
