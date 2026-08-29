@@ -4,6 +4,28 @@ _Created: 30-07-2026 · Last updated: 29-08-2026_
 
 Durable substantive-result tables for this repo. Newest first.
 
+## H3693 referral loyalty CTA flag OFF (29-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ PR: [#2201](https://github.com/gasyoun/Systema-Sanscriticum/pull/2201) (`57b1bd71`). Release: [v1.90.34](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.34). Handoff: [H3693 (Grok 4.6, 🟡2 medium) — Referral CTA at homework/certificate/course-complete flag OFF](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H3693-Grok_Systema-Sanscriticum_referral-loyalty-cta-flag-off_29.08.26.md). Took over a live Sonnet 5 sidecar (human authorized). Deploy `.92`: `sudo bash deploy.sh` `4120a527 → 57b1bd71`. Tests: 10/47 `ReferralLoyaltyCtaTest` + `ReferralAskSurfacesTest` green. Partial reused verbatim (H1294). Public `/verify` not touched. `partner.enabled` stays OFF.
+
+| Gate | Result |
+|---|---|
+| Flag default | `features.referral_loyalty_cta` false (`REFERRAL_LOYALTY_CTA`) |
+| Homework accepted, flag OFF | no `referral-loyalty-cta-homework`; no «Порекомендовать школу» on lesson page |
+| Homework accepted, flag ON | existing partial visible; H1294 voice (no награда/бонус/заработок) |
+| Homework submitted, flag ON | inject hidden |
+| Dashboard course-complete, flag OFF | no `referral-loyalty-cta-course-complete`; cabinet H1294 include still shown |
+| Dashboard course-complete, flag ON | inject shown |
+| Incomplete course, flag ON | course-complete inject hidden |
+| Certificate list, flag OFF | no `referral-loyalty-cta-certificate` |
+| Certificate list, flag ON | inject shown |
+| Public `/verify`, flag ON | no invite; `partner.enabled` false |
+| Prod SHA | `57b1bd71` |
+| Prod env | `REFERRAL_LOYALTY_CTA=ABSENT` (OFF) |
+| Homepage smoke | `https://samskrte.ru/` 200 |
+
+Prod enable remains a separate `.env` + `config:cache` step.
+
 ## H3650 membership OG stills — live smoke (29-08-2026)
 
 _Model: Grok 4.6 (`grok-4.6`)._ PR: [#2194](https://github.com/gasyoun/Systema-Sanscriticum/pull/2194) (`7689e17c`). Release: [v1.90.33](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.33). Handoff: [H3650 (Grok 4.6, 🟡2 medium) — OG stills for 01-09 membership surfaces via Grok Imagine](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H3650-Grok_Systema-Sanscriticum_autumn-membership-og-imagine_28.08.26.md). Deploy on `.92`: `sudo bash deploy.sh` `80fa6c09 → 7689e17c`. Tests: 22/22 (`MembershipOgImageTest` + Club landing + commerce feed + homepage meta). Duplicate PR [#2195](https://github.com/gasyoun/Systema-Sanscriticum/pull/2195) closed. Imagine backgrounds + exact overlay of house `logo.png` and existing page titles; autumn 1:1 Imagine pass invented letter-forms, so the square was cropped from the clean landscape.
