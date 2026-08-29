@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="index, follow">
     <title>Каталог осени 2026 — samskrtam.ru</title>
+    {{-- H3650: autumn calendar share card (same still as samskrte editorial). --}}
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:title" content="Каталог осени 2026 — samskrtam.ru">
+    <meta property="og:image" content="{{ asset('images/og-autumn-calendar-h3650.webp') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Осень 2026 — календарь Общества ревнителей санскрита">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ asset('images/og-autumn-calendar-h3650.webp') }}">
     <style>
         :root{--night:#101727;--card:#182238;--cyan:#56d8e7;--text:#f4f7fb;--muted:#9aabc6}
         *{box-sizing:border-box}body{margin:0;background:var(--night);color:var(--text);font:16px/1.5 Inter,system-ui,sans-serif}
