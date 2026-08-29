@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+## [1.90.34] - 2026-08-29
 ### Added
 - **H3650 (Grok 4.6 `grok-4.6`, 29-08-2026): OG stills for 01-09 membership surfaces.** Dedicated 1200×630 WebP (+ 1:1 variants) for Club, Basic, and the autumn calendar share card under [`public/images/og-membership-*.webp`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/images/). `/klub` and `samskrte.ru/osen-2026` emit `og:image` + width/height; homepage keeps [`og-main-preview.jpg`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/images/og-main-preview.jpg). No new sales copy, no video. Tests: [`MembershipOgImageTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Membership/MembershipOgImageTest.php).
 
