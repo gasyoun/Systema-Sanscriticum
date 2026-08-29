@@ -44,14 +44,13 @@ class AdminLogin extends Login
 
     protected function getPasswordFormComponent(): Component
     {
-        $field = parent::getPasswordFormComponent()->label('Пароль');
-        if (filament()->hasPasswordReset()) {
-            $field->hint(new HtmlString(Blade::render(
-                '<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="3">Забыли пароль?</x-filament::link>'
-            )));
-        }
+        $href = route('password.request');
 
-        return $field;
+        return parent::getPasswordFormComponent()
+            ->label('Пароль')
+            ->hint(new HtmlString(Blade::render(
+                '<x-filament::link href="'.e($href).'" tabindex="3">Забыли пароль?</x-filament::link>'
+            )));
     }
 
     protected function throwFailureValidationException(): never
