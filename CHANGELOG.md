@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Fixed
+- **H3674 (Grok 4.6 `grok-4.6`, 29-08-2026): leftover H3651 / [#2176](https://github.com/gasyoun/Systema-Sanscriticum/issues/2176) pixels.** Home 390px hero H1 wraps (`text-3xl` + `break-words`, desktop `md:text-6xl` unchanged). Cookie bar `z-[10050]` above newsletter; popup waits for `cookie_consent_v1` so first-guest CTAs stay clickable. Filament `/admin/login` `brandName` + RU heading (auth unchanged). Tests: `LaunchSurfacePixelsH3674Test`. samskrtam.ru HTTP is a separate ops probe, not a CSS restyle.
+
 ## [1.90.31] - 2026-08-29
 ### Fixed
 - **H3671 (Grok 4.6 `grok-4.6`, 29-08-2026): shop intro banner printed `сентябрясентябрясентября`.** `NextIntroSession` used PHP `translatedFormat('d MMMM Y, H:i')` — `M` is the short month token, so `MMMM` repeats it. Same token in `TrajectoryPaths`. Now `locale('ru')->translatedFormat('d F Y, H:i')`. Tests: `FreeIntroBannerTest` (including `format_date_label_uses_one_russian_month`). Follow-up of H3651 / [issue #2176](https://github.com/gasyoun/Systema-Sanscriticum/issues/2176). No restyle.

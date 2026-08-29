@@ -13,7 +13,7 @@
      x-init="open = ! localStorage.getItem('cookie_consent_v1')"
      x-effect="$nextTick(() => document.body.style.paddingBottom = open ? $el.offsetHeight + 'px' : '')"
      x-show="open" x-cloak x-transition.opacity
-     class="fixed inset-x-0 bottom-0 z-[200] bg-[#0A0D14]/95 backdrop-blur-sm text-slate-200 border-t border-[#1F2636] px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+     class="fixed inset-x-0 bottom-0 z-[10050] bg-[#0A0D14]/95 backdrop-blur-sm text-slate-200 border-t border-[#1F2636] px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
     <div class="container mx-auto flex flex-col sm:flex-row items-center gap-3 text-sm">
         <p class="flex-1 text-center sm:text-left leading-relaxed">
             Наш сайт использует файлы cookie. Продолжая им пользоваться, вы соглашаетесь на
