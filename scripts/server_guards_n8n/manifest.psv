@@ -18,6 +18,14 @@ sbin/n8n-backup-run.sh|/usr/local/sbin/n8n-backup-run.sh|755|critical
 sbin/n8n-restore-drill.sh|/usr/local/sbin/n8n-restore-drill.sh|755|warning
 sbin/n8n-container-limits.sh|/usr/local/sbin/n8n-container-limits.sh|755|critical
 default/earlyoom|/etc/default/earlyoom|644|critical
+# ВНИМАНИЕ (H3661, 29-08-2026): в daemon.json НЕЛЬЗЯ класть ключ "_comment".
+# dockerd не игнорирует неизвестные директивы, а ОТКАЗЫВАЕТСЯ стартовать:
+#   unable to configure the Docker daemon with file /etc/docker/daemon.json:
+#   the following directives don't match any configuration option: _comment
+# Демон при этом продолжает работать со старым конфигом в памяти, поэтому
+# поломка НЕ видна до первого restart/перезагрузки — на .91 она пролежала
+# с 25-08-2026 и сработала в окне волны 4. Пояснения к файлу живут здесь,
+# в манифесте, а не внутри JSON.
 docker/daemon.json|/etc/docker/daemon.json|644|critical
 docker/docker-compose.override.yml.tpl|@@N8N_DIR@@/docker-compose.override.yml|644|critical
 systemd/memwatch.service|/etc/systemd/system/memwatch.service|644|warning
@@ -42,21 +50,22 @@ tmpfiles/n8n-tmp.conf|/etc/tmpfiles.d/n8n-tmp.conf|644|warning
 ../server_guards/systemd/systema-remediation-ladder.service|/etc/systemd/system/systema-remediation-ladder.service|644|warning
 ../server_guards/systemd/systema-remediation-ladder.timer|/etc/systemd/system/systema-remediation-ladder.timer|644|warning
 
-# ── Волна 4 (H3184) — СТРОКИ НАМЕРЕННО ЗАКОММЕНТИРОВАНЫ ─────────────────────
-# Файлы волны 4 лежат в дереве, но в живой манифест НЕ включены до окна с
-# человеком у пульта. Причина механическая, а не осторожность ради осторожности:
-# n8n-guards-verify.timer читает этот манифест каждый такт, и строка про файл,
-# которого на машине ещё нет, поднимет critical на наблюдательной поверхности
-# Tier-0 — ложную тревогу длиной в недели ожидания окна.
+# ── Волна 4 (H3184) — ПРИМЕНЕНА В ОКНЕ 29-08-2026, строки живые ─────────────
+# До 29-08-2026 эти строки стояли закомментированными: n8n-guards-verify.timer
+# читает манифест каждый такт, и строка про файл, которого на машине ещё нет,
+# подняла бы critical на наблюдательной поверхности Tier-0 — ложную тревогу
+# длиной в недели ожидания окна. Окно состоялось, файлы на .91 стоят, строки
+# включены, и теперь та же проверка ловит уже их ПРОПАЖУ.
 #
-# РАСКОММЕНТИРОВАТЬ В ОКНЕ, после того как systema-nft-armed-apply.sh disarm
-# отработал (то есть обе проверки — новая SSH-сессия и кросс-проба — прошли).
+# Раскомментированы 29-08-2026 (residual H3661), ПОСЛЕ того как
+# systema-nft-armed-apply.sh disarm отработал: обе проверки — новая
+# SSH-сессия и кросс-проба с .92 — прошли, окно с человеком у пульта закрыто.
 #
 # nftables-правила ставятся в /etc/nftables.d/, а НЕ в /etc/nftables.conf:
 # nftables.service грузит именно nftables.conf на загрузке, и default-deny там
 # применился бы при следующей перезагрузке без человека. Продвижение в
 # nftables.conf — последний ручной шаг окна.
-# sbin/systema-nft-armed-apply.sh|/usr/local/sbin/systema-nft-armed-apply.sh|755|critical
-# nftables/systema-default-deny.nft|/etc/nftables.d/systema-default-deny.nft|644|critical
-# ssh/10-hardening.conf|/etc/ssh/sshd_config.d/10-hardening.conf|644|critical
-# fail2ban/jail.d/systema-sshd.conf|/etc/fail2ban/jail.d/systema-sshd.conf|644|critical
+sbin/systema-nft-armed-apply.sh|/usr/local/sbin/systema-nft-armed-apply.sh|755|critical
+nftables/systema-default-deny.nft|/etc/nftables.d/systema-default-deny.nft|644|critical
+ssh/10-hardening.conf|/etc/ssh/sshd_config.d/10-hardening.conf|644|critical
+fail2ban/jail.d/systema-sshd.conf|/etc/fail2ban/jail.d/systema-sshd.conf|644|critical

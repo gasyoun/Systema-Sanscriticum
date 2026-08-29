@@ -1,5 +1,4 @@
 {
-  "_comment": "MANAGED FILE — scripts/server_guards_apply.sh --profile n8n. Значения из scripts/server_guards_n8n.conf. Файла на .91 не было вовсе (замер 25-08-2026), а драйвер json-file по умолчанию НЕ ротируется: лог контейнера растёт до заполнения диска. Сейчас логи скромные (3.1 МиБ и 1.6 МиБ) — потолок ставится ДО того, как он понадобится, а не после.",
   "log-driver": "json-file",
   "log-opts": {
     "max-size": "@@DOCKER_LOG_MAX_SIZE@@",
