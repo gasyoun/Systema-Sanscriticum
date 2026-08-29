@@ -13,6 +13,7 @@ use App\Models\Tariff;
 use App\Models\User;
 use App\Services\Membership\ClubEntitlement;
 use App\Services\Membership\ClubMembershipService;
+use App\Services\Membership\ClubStreamTariffCatalog;
 use App\Services\Membership\RecordingAccessPolicy;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -91,6 +92,20 @@ class RehearseClubMembership extends Command
             $this->record('1b. tiers + 1/3/12', 'WARN',
                 'MEMBERSHIP_TIERED=OFF (dark deploy); сначала membership:classify-tiers dry/apply, затем шесть тарифов Basic/Club');
         }
+
+        $streamCatalog = app(ClubStreamTariffCatalog::class);
+        $d20Club = $streamCatalog->existingOn($course);
+        $d20Months = $d20Club->pluck('membership_months')->map(fn ($m): int => (int) $m)->unique()->sort()->values()->all();
+        $streamFlag = $streamCatalog->enabled();
+        $this->record(
+            '1d. club streams-only + D20 Club 1/3/12',
+            $d20Months === [1, 3, 12] ? 'PASS' : ($streamFlag ? 'FAIL' : 'WARN'),
+            'MEMBERSHIP_CLUB_STREAMS_ONLY='.($streamFlag ? 'ON' : 'OFF')
+            .'; D20 Club months '.implode(',', $d20Months).' (need 1,3,12 @ 2000/5700/20400). '
+            .($d20Months === [1, 3, 12]
+                ? 'есть; is_active следует флагу'
+                : 'нет — membership:ensure-club-stream-tariffs --apply (не трогает живые ₽1 500)')
+        );
 
         $capabilityMatrix = [
             'free' => ! MembershipTier::Free->allows(MembershipTier::Basic),

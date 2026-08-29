@@ -29,24 +29,44 @@ final class RecordingAccessPolicy
         }
 
         $openLectureAccess = $this->hasOpenLectureRecordingAccess($user, $course, $lesson);
+        $purchased = $this->hasPurchasedLesson($user, $course, $lesson);
+        $clubStream = $lesson->isClubStreamRecording();
+        $streamsOnly = $this->membership->streamsOnlyEnabled();
 
-        $wouldAllow = $lesson->is_free
-            || $lesson->is_preview
-            || $hasLessonGrant
-            || ($this->hasPurchasedLesson($user, $course, $lesson)
-                && $this->membership->allows($user, 'recordings'))
-            || $this->membership->coversCourse($user, $course)
-            || $openLectureAccess;
+        if ($streamsOnly) {
+            $wouldAllow = $lesson->is_free
+                || $lesson->is_preview
+                || $hasLessonGrant
+                || $openLectureAccess
+                || ($clubStream && $this->membership->allows($user, 'recordings'))
+                || (! $clubStream && $purchased);
 
-        $reason = match (true) {
-            $lesson->is_free || $lesson->is_preview => 'free_or_preview',
-            $hasLessonGrant => 'lesson_grant',
-            $openLectureAccess => 'open_lecture',
-            ! $this->hasPurchasedLesson($user, $course, $lesson)
-                && ! $this->membership->coversCourse($user, $course) => 'course_not_purchased',
-            $wouldAllow => 'club_or_top',
-            default => 'tier_below_club',
-        };
+            $reason = match (true) {
+                $lesson->is_free || $lesson->is_preview => 'free_or_preview',
+                $hasLessonGrant => 'lesson_grant',
+                $openLectureAccess => 'open_lecture',
+                $clubStream && $this->membership->allows($user, 'recordings') => 'club_stream',
+                $clubStream => 'club_stream_requires_club',
+                $purchased => 'course_purchase',
+                default => 'course_not_purchased',
+            };
+        } else {
+            $wouldAllow = $lesson->is_free
+                || $lesson->is_preview
+                || $hasLessonGrant
+                || ($purchased && $this->membership->allows($user, 'recordings'))
+                || $this->membership->coversCourse($user, $course)
+                || $openLectureAccess;
+
+            $reason = match (true) {
+                $lesson->is_free || $lesson->is_preview => 'free_or_preview',
+                $hasLessonGrant => 'lesson_grant',
+                $openLectureAccess => 'open_lecture',
+                ! $purchased && ! $this->membership->coversCourse($user, $course) => 'course_not_purchased',
+                $wouldAllow => 'club_or_top',
+                default => 'tier_below_club',
+            };
+        }
 
         $mode = $this->modeFor($user);
         $shadow = in_array($mode, ['shadow', 'pilot-shadow'], true);

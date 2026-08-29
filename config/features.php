@@ -1049,6 +1049,10 @@ return [
     'membership_private_archives' => (bool) env('MEMBERSHIP_PRIVATE_ARCHIVES', false),
     // H2745: append-only funnel dimensions (tier/term/source/course/feature).
     'membership_funnel_analytics' => (bool) env('MEMBERSHIP_FUNNEL_ANALYTICS', false),
+    // H3648: Club/Top grant club-stream / club-efir recordings only; course-lesson
+    // recordings stay on the course-purchase path. Default OFF = H2744 D10 predicate
+    // unchanged. Enable: MEMBERSHIP_CLUB_STREAMS_ONLY=true + config:cache (human ops).
+    'membership_club_streams_only' => (bool) env('MEMBERSHIP_CLUB_STREAMS_ONLY', false),
 
     /*
      | Guest email+password /register → Free-tier of the club (H3643, self-serve

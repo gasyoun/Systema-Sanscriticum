@@ -247,6 +247,17 @@ class LessonResource extends Resource
                     ->label('Описание / Тема')
                     ->columnSpanFull(),
 
+                Forms\Components\Select::make('recording_kind')
+                    ->label('Класс записи')
+                    ->options([
+                        'course_lesson' => 'Урок курса (покупка курса)',
+                        'club_stream' => 'Эфир клуба (членство Club/Top)',
+                        'club_efir' => 'Эфир клуба (синоним)',
+                    ])
+                    ->default('course_lesson')
+                    ->helperText('H3648: клуб открывает только эфиры/стримы. Обычная запись урока остаётся на покупке курса.')
+                    ->columnSpanFull(),
+
                 Forms\Components\TextInput::make('youtube_url')
                     ->label('Ссылка на YouTube')
                     ->placeholder('https://www.youtube.com/watch?v=...')

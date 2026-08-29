@@ -40,15 +40,18 @@ final class LessonGate
         }
 
         $hasLessonGrant = LessonAccessGrant::userCanWatch($user, $lesson);
-        $clubCovers = app(ClubEntitlement::class)->coversCourse($user, $course);
+        $club = app(ClubEntitlement::class);
+        $clubCovers = $club->coversCourse($user, $course);
+        $clubLesson = $club->coversLesson($user, $course, $lesson);
 
-        $visible = $hasLessonGrant || $clubCovers || $lesson->isVisibleToGroupsOf($user);
+        $visible = $hasLessonGrant || $clubCovers || $clubLesson || $lesson->isVisibleToGroupsOf($user);
         if (! $visible) {
             return false;
         }
 
         return (bool) $lesson->is_free
             || $hasLessonGrant
+            || $clubLesson
             || $lesson->isUnlockedBy(StudentController::getUserUnlockedTariffs($user->id, $course->slug));
     }
 }

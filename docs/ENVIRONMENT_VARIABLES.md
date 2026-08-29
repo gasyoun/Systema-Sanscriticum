@@ -74,7 +74,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_TIMEOUT` | optional | `15` | config/cabinet_probe.php:51 |
 | `CACHE_DRIVER` | optional | `'file'` | config/cache.php:18 |
 | `CACHE_PREFIX` | optional | `Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'` | config/cache.php:109 |
-| `CATALOG_NEXT_STEP` | optional | `false` | config/features.php:1165 |
+| `CATALOG_NEXT_STEP` | optional | `false` | config/features.php:1169 |
 | `CERTIFICATE_MATERIAL_MIN_MENTIONS` | optional | `3` | config/certificates.php:9 |
 | `CHAT_REMOVAL_MIN_DAYS_OVERDUE` | optional | `30` | config/chat_removal.php:20 |
 | `CHAT_REMOVAL_MIN_UNANSWERED_CONTACTS` | optional | `2` | config/chat_removal.php:27 |
@@ -83,7 +83,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CHECKOUT_INACTIVE_TARIFF_GUARD` | optional | `true` | config/features.php:429 |
 | `CHECKOUT_INTEGRITY_SAFE_REPAIRS` | optional | `false` | config/features.php:421 |
 | `CHECKOUT_LEGACY_PENDING_DAYS` | optional | `30` | config/checkout.php:31 |
-| `CHECKOUT_NEAR_DUPLICATE_EMAIL_GUARD` | optional | `false` | config/features.php:1220 |
+| `CHECKOUT_NEAR_DUPLICATE_EMAIL_GUARD` | optional | `false` | config/features.php:1224 |
 | `CHECKOUT_PAYPAL_WEBHOOK_AMOUNT_TOLERANCE` | optional | `1.00` | config/checkout.php:52 |
 | `CHECKOUT_PROMO_RESERVATIONS` | optional | `true` | config/features.php:413 |
 | `CHECKOUT_PROMO_SURVIVES_SESSION` | optional | `true` | config/features.php:480 |
@@ -194,7 +194,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:67 |
 | `FAQ_RAG_SUGGESTER` | optional | `false` | config/features.php:147 |
 | `FILESYSTEM_DISK` | optional | `'local'` | config/filesystems.php:16 |
-| `FLAGSHIP_CTA_AB` | optional | `false` | config/features.php:1173 |
+| `FLAGSHIP_CTA_AB` | optional | `false` | config/features.php:1177 |
 | `FLAGSHIP_EXPERIMENT_STARTED_AT` | optional | `''` | config/flagship_experiments.php:28 |
 | `FREE_TIER_COHORT_FILE` | optional | `'membership/free_tier_cohort.txt'` | config/membership.php:186 |
 | `FREE_TIER_DAEMON_APPLY` | optional | `false` | config/membership.php:164 |
@@ -202,33 +202,33 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `FREE_TIER_GRANT_REASON` | optional | `'free_tier_monthly'` | config/membership.php:142 |
 | `FULL_COURSE_BLOCK_CREDIT` | optional | `false` | config/features.php:21 |
 | `GAMES_SKILL_DRILLS` | optional | `false` | config/features.php:870 |
-| `GIFT_CERTIFICATES` | optional | `false` | config/features.php:1190 |
+| `GIFT_CERTIFICATES` | optional | `false` | config/features.php:1194 |
 | `GOOGLE_CLIENT_ID` | required | `—` | config/services.php:439 |
 | `GOOGLE_CLIENT_SECRET` | secret | `—` | config/services.php:440 |
 | `GOOGLE_REDIRECT_URI` | optional | `'/auth/google/callback'` | config/services.php:441 |
-| `GRAMMAR_LAB` | optional | `false` | config/features.php:1070 |
+| `GRAMMAR_LAB` | optional | `false` | config/features.php:1074 |
 | `GRAMMAR_LAB_AUTO_PUBLISH` | optional | `true` | config/grammar_lab.php:67 |
 | `GRAMMAR_LAB_COURSE_SLUGS` | optional | `''` | config/grammar_lab.php:46 |
-| `GRAMMAR_LAB_PILOT` | feature-flag | `false` | config/features.php:1084 |
+| `GRAMMAR_LAB_PILOT` | feature-flag | `false` | config/features.php:1088 |
 | `GRAMMAR_LAB_PILOT_COURSE_SLUGS` | optional | `''` | config/grammar_lab.php:58 |
 | `GRAMMAR_LAB_SAMPLE_SEED` | optional | `'grammar-lab-g3-v1'` | config/grammar_lab.php:69 |
-| `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:1077 |
+| `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:1081 |
 | `GRAMMAR_LAB_SUBSCRIPTION_COURSE_SLUG` | optional | `''` | config/grammar_lab.php:53 |
 | `GRANT_ACCESS_FAIL_CLOSED` | optional | `false` | config/features.php:550 |
-| `GUEST_REGISTRATION_ENABLED` | feature-flag | `false` | config/features.php:1061 |
+| `GUEST_REGISTRATION_ENABLED` | feature-flag | `false` | config/features.php:1065 |
 | `HEARTBEAT_CHECK_HORIZON` | optional | `true` | config/heartbeat.php:60 |
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
 | `HEARTBEAT_PING_URL` | optional | `''` | config/heartbeat.php:43 |
 | `HEARTBEAT_TIMEOUT` | optional | `10` | config/heartbeat.php:54 |
-| `HINDI_ATTACHMENT_DRILLS` | optional | `false` | config/features.php:1119 |
-| `HINDI_DICTIONARY_DRILLS` | optional | `false` | config/features.php:1145 |
-| `HINDI_MY_SRS_DECK` | optional | `false` | config/features.php:1128 |
+| `HINDI_ATTACHMENT_DRILLS` | optional | `false` | config/features.php:1123 |
+| `HINDI_DICTIONARY_DRILLS` | optional | `false` | config/features.php:1149 |
+| `HINDI_MY_SRS_DECK` | optional | `false` | config/features.php:1132 |
 | `HINDI_PROGRAMME_CATEGORY_SLUG` | optional | `'hindi'` | config/programme.php:17 |
 | `HINDI_PROGRAMME_COURSE_IDS` | optional | `'416,356,366'` | config/programme.php:20 |
-| `HINDI_PROGRAMME_PLAYLIST` | optional | `false` | config/features.php:1093 |
-| `HINDI_TG_CURATED_PRACTICE` | optional | `false` | config/features.php:1137 |
-| `HINDI_TRANSCRIPT_DRILLS` | optional | `false` | config/features.php:1101 |
-| `HINDI_YOUTUBE_NOVA3_DRILLS` | optional | `false` | config/features.php:1110 |
+| `HINDI_PROGRAMME_PLAYLIST` | optional | `false` | config/features.php:1097 |
+| `HINDI_TG_CURATED_PRACTICE` | optional | `false` | config/features.php:1141 |
+| `HINDI_TRANSCRIPT_DRILLS` | optional | `false` | config/features.php:1105 |
+| `HINDI_YOUTUBE_NOVA3_DRILLS` | optional | `false` | config/features.php:1114 |
 | `HOMEWORK_AUTO_OPEN_ALIGN_HOUR` | optional | `9` | config/homework.php:261 |
 | `HOMEWORK_AUTO_OPEN_CHANNELS` | optional | `'telegram,vk'` | config/homework.php:267 |
 | `HOMEWORK_AUTO_OPEN_CLOSE_PREVIOUS` | optional | `false` | config/homework.php:272 |
@@ -362,6 +362,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MEDIA_WEBP_QUALITY` | optional | `82` | config/media.php:29 |
 | `MEMBERSHIP_ADVANCED_FEATURES` | optional | `false` | config/features.php:1038 |
 | `MEMBERSHIP_CANCELLATION` | optional | `false` | config/features.php:1045 |
+| `MEMBERSHIP_CLUB_STREAMS_ONLY` | optional | `false` | config/features.php:1055 |
 | `MEMBERSHIP_FREE_TIER` | optional | `false` | config/features.php:1044 |
 | `MEMBERSHIP_FUNNEL_ANALYTICS` | optional | `false` | config/features.php:1051 |
 | `MEMBERSHIP_LAUNCH_DATE` | optional | `'2026-09-01'` | config/membership.php:55 |
@@ -603,7 +604,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `STORAGE_WATCH_TELEGRAM_HARVEST_MB` | optional | `2000` | config/storage_watch.php:52 |
 | `STORAGE_WATCH_TOTAL_MB` | optional | `16000` | config/storage_watch.php:58 |
 | `STORAGE_WATCH_WARN_RATIO` | optional | `0.8` | config/storage_watch.php:62 |
-| `STUDENT_AGENT_ENABLED` | feature-flag | `false` | config/features.php:1206 |
+| `STUDENT_AGENT_ENABLED` | feature-flag | `false` | config/features.php:1210 |
 | `STUDENT_TELEGRAM_BOT_TOKEN` | secret | `—` | config/services.php:119 |
 | `STUDENT_TELEGRAM_BOT_USERNAME` | required | `—` | config/services.php:120 |
 | `SUBHASHITA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:40 |
@@ -616,9 +617,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_AUTO_ACK` | optional | `false` | config/features.php:173 |
 | `SUPPORT_AUTO_REPLY_TEMPLATES` | optional | `false` | config/features.php:166 |
 | `SUPPORT_AUTO_REPLY_WEEKLY_REPORT` | optional | `false` | config/features.php:205 |
-| `SUPPORT_CAPACITY_ROUTING` | optional | `false` | config/features.php:1157 |
+| `SUPPORT_CAPACITY_ROUTING` | optional | `false` | config/features.php:1161 |
 | `SUPPORT_DAILY_DIGEST` | optional | `true` | config/features.php:194 |
-| `SUPPORT_DEPARTMENTS` | optional | `false` | config/features.php:1156 |
+| `SUPPORT_DEPARTMENTS` | optional | `false` | config/features.php:1160 |
 | `SUPPORT_DM_AUTO_REPLY` | optional | `false` | config/features.php:156 |
 | `SUPPORT_DM_LINK_INVITE` | optional | `false` | config/features.php:186 |
 | `SUPPORT_FAQ_RAG_MIN_SCORE` | optional | `1.5` | config/support.php:74 |
@@ -712,9 +713,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_ZAPISI_POLL_MAX_LIFETIME_SECONDS` | optional | `3600` | config/services.php:332 |
 | `TELEGRAM_ZAPISI_POLL_RETRY_SECONDS` | optional | `10` | config/services.php:335 |
 | `TELEGRAM_ZAPISI_POLL_TIMEOUT_SECONDS` | optional | `50` | config/services.php:329 |
-| `TELEPHONY_CALLBACK_REQUEST` | optional | `false` | config/features.php:1153 |
-| `TELEPHONY_PSTN` | optional | `false` | config/features.php:1154 |
-| `TELEPHONY_RECORDING` | optional | `false` | config/features.php:1155 |
+| `TELEPHONY_CALLBACK_REQUEST` | optional | `false` | config/features.php:1157 |
+| `TELEPHONY_PSTN` | optional | `false` | config/features.php:1158 |
+| `TELEPHONY_RECORDING` | optional | `false` | config/features.php:1159 |
 | `TEST_MANAGER_EMAIL` | optional | `'smoke-manager@samskrte.ru'` | config/services.php:399 |
 | `TEST_MANAGER_NAME` | optional | `'Smoke Manager'` | config/services.php:401 |
 | `TEST_MANAGER_PASSWORD` | secret | `—` | config/services.php:400 |

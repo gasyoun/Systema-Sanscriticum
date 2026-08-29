@@ -67,6 +67,8 @@ class LaunchSurfacePixelsH3674Test extends TestCase
         $this->assertStringContainsString('Пароль', $html);
         $this->assertStringContainsString('Запомнить меня', $html);
         $this->assertStringNotContainsString('Email address', $html);
+        $this->assertStringContainsString('Забыли пароль?', $html);
+        $this->assertStringContainsString(route('password.request'), $html);
         $this->assertStringNotContainsString('Forgot password', $html);
         $this->assertStringNotContainsString('>Sign in<', $html);
         $this->assertStringNotContainsString('>Laravel<', $html);
@@ -81,5 +83,11 @@ class LaunchSurfacePixelsH3674Test extends TestCase
             ])
             ->call('authenticate')
             ->assertHasFormErrors(['email' => 'Неверный email или пароль.']);
+    }
+
+    public function test_filament_password_reset_request_goes_to_school_form(): void
+    {
+        $this->get(route('filament.admin.auth.password-reset.request'))
+            ->assertRedirect(route('password.request'));
     }
 }

@@ -90,10 +90,11 @@ class CabinetController extends Controller
         $completedIds = $user->completedLessons()->pluck('lessons.id')->all();
         $recordings = app(RecordingAccessPolicy::class);
 
-        $payload = $lessons->map(function ($lesson) use ($user, $course, $recordings, $unlockedTariffs, $grantedLessonIds, $completedIds): array {
+        $payload = $lessons->map(function ($lesson) use ($user, $course, $club, $recordings, $unlockedTariffs, $grantedLessonIds, $completedIds): array {
             $unlocked = $lesson->is_free
                 || in_array($lesson->id, $grantedLessonIds, true)
-                || $lesson->isUnlockedBy($unlockedTariffs);
+                || $lesson->isUnlockedBy($unlockedTariffs)
+                || $club->coversLesson($user, $course, $lesson);
 
             $recording = $recordings->decide(
                 $user,
