@@ -1,4 +1,6 @@
 ## [Unreleased]
+### Fixed
+- **H3671 (Grok 4.6 `grok-4.6`, 29-08-2026): shop intro banner printed `сентябрясентябрясентября`.** `NextIntroSession` used PHP `translatedFormat('d MMMM Y, H:i')` — `M` is the short month token, so `MMMM` repeats it. Same token in `TrajectoryPaths`. Now `locale('ru')->translatedFormat('d F Y, H:i')`. Tests: `FreeIntroBannerTest` (including `format_date_label_uses_one_russian_month`). Follow-up of H3651 / [issue #2176](https://github.com/gasyoun/Systema-Sanscriticum/issues/2176). No restyle.
 
 ## [1.90.30] - 2026-08-29
 ### Added

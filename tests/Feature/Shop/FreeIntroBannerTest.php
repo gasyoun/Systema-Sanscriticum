@@ -101,6 +101,20 @@ class FreeIntroBannerTest extends TestCase
         $this->assertStringContainsString('data-intro-source="landing_webinar"', $html);
         $this->assertStringContainsString($hit['date_label'], $html);
         $this->assertStringContainsString(route('promo.show', 'free-intro-webinar-h2365'), $html);
+        $this->assertSame(1, mb_substr_count($hit['date_label'], 'сентября'));
+        $this->assertStringNotContainsString('сентябрясентября', $hit['date_label']);
+    }
+
+    /** @test */
+    public function format_date_label_uses_one_russian_month_not_icu_mmmm(): void
+    {
+        $label = NextIntroSession::formatDateLabel(Carbon::parse('2026-09-01 15:00:00'));
+
+        $this->assertSame(1, mb_substr_count($label, 'сентября'));
+        $this->assertStringNotContainsString('сентябрясентября', $label);
+        $this->assertStringContainsString('01', $label);
+        $this->assertStringContainsString('2026', $label);
+        $this->assertStringContainsString('15:00', $label);
     }
 
     /** @test */
