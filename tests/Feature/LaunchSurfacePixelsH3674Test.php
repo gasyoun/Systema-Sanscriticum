@@ -61,6 +61,10 @@ class LaunchSurfacePixelsH3674Test extends TestCase
         $this->assertStringContainsString('Система Санскритикум', $html);
         $this->assertStringContainsString('Вход в панель школы', $html);
         $this->assertStringContainsString('Войти', $html);
+        $this->assertStringContainsString('Электронная почта', $html);
+        $this->assertStringContainsString('Пароль', $html);
+        $this->assertStringContainsString('Запомнить меня', $html);
+        $this->assertStringNotContainsString('Email address', $html);
         $this->assertStringNotContainsString('>Sign in<', $html);
         $this->assertStringNotContainsString('>Laravel<', $html);
     }
