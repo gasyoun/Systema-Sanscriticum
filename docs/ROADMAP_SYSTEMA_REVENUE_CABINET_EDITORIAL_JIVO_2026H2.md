@@ -1,6 +1,12 @@
 # ROADMAP — больше продаж, нативное обучение, CRM и полный JIVO · 2026H2
 
-_Created: 07-08-2026 · Last updated: 14-08-2026_
+_Created: 07-08-2026 · Last updated: 30-08-2026_
+
+> **Truth-pass 30-08-2026 (Fable 5 `claude-fable-5`, `/ask` H3760):** ставки 1, 2, 4, 5 исполнены — H2378,
+> H2379, H2381, H2382 в архиве реестра. Открытой остаётся ставка 3:
+> [H2380 (Grok, 🔴3 hard) — cabinet adoption/KPI experiment](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2380-Grok_Systema-Sanscriticum_cabinet-adoption-kpi-experiment_07.08.26.md)
+> — ⛔ human-gated (DEPLOY №52 / флаг H1582). Аналитический слой activation/completion заминчен отдельно:
+> [H3764 (Opus 5, 🟡2 medium) — O2+C4 activation/completion metrics page](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3764-Opus_Systema-Sanscriticum_activation-completion-metrics-o2-c4_30.08.26.md).
 
 **Рамка:** AARRR (Acquisition → Activation → Revenue → Retention → Referral).
 **Контур:** samskrtam.ru/FAQ → samskrte.ru → checkout → кабинет `/dvaram` → support/повторная покупка.

@@ -1,6 +1,12 @@
 # ROADMAP — аналитика потоков курса и сверка с преподавателем (2026)
 
-_Created: 18-08-2026 · Last updated: 18-08-2026_
+_Created: 18-08-2026 · Last updated: 30-08-2026_
+
+> **Truth-pass 30-08-2026 (Fable 5 `claude-fable-5`, `/ask` H3760):** Волны 1–2 отгружены —
+> на `origin/main` живут `CourseStreamComparison` (страница+сервис+экспорт), `TeacherPayoutAttributionSuggestion`,
+> `TeacherPayoutReconciliation`, команды `RepairRecordingCourseSalary` / `LinkTeacherUsers`. Волна 3 заминчена:
+> [H3761 (Opus 5, 🔴3 hard) — Stream analytics W3: диагностика webinar_attendances + Zoom-бэкфилл](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3761-Opus_Systema-Sanscriticum_stream-analytics-w3-attendance-repair_30.08.26.md).
+> Контракт автономии: [PLAN_UPRAVA_ASK_CLAUDE_SYSTEMA_ROADMAP_MINT_2026-08.md](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_UPRAVA_ASK_CLAUDE_SYSTEMA_ROADMAP_MINT_2026-08.md).
 
 Слой «волны» плана [PLAN_SYSTEMA_COURSE_STREAM_ANALYTICS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_COURSE_STREAM_ANALYTICS_2026.md). Решения и контракт автономии — там, здесь не повторяются.
 
@@ -15,7 +21,7 @@ _Created: 18-08-2026 · Last updated: 18-08-2026_
 
 ---
 
-## Волна 1 — экран сравнения потоков (самомержимая)
+## Волна 1 — экран сравнения потоков (самомержимая) · ✅ отгружена (сверка 30-08-2026)
 
 **Что получает Мария:** страница «Потоки курса» в админке; выбор курса → колонки по всем его потокам; пять блоков метрик; кнопка «Экспорт» в Excel; подсказки у каждой цифры.
 
@@ -31,7 +37,7 @@ _Created: 18-08-2026 · Last updated: 18-08-2026_
 
 **Чего в волне 1 сознательно нет.** Строка «остаток по преподавателю» показывается, но помечена «предварительно, атрибуция не подтверждена» — потому что четыре «Расхода» на 332 проведены на «Системные расходы» и до подтверждения человеком не являются доказанной ЗП. Колонки посещаемости отрисовываются с плашкой покрытия (~10 %).
 
-## Волна 2 — правда о деньгах (PR без мержа)
+## Волна 2 — правда о деньгах (PR без мержа) · ✅ код отгружен (сверка 30-08-2026)
 
 **Что закрывает:** превращает «≈ 3 445 ₽ предварительно» в подтверждённую цифру и не даёт дыре повториться с записями 2-го потока.
 
@@ -46,7 +52,7 @@ _Created: 18-08-2026 · Last updated: 18-08-2026_
 
 **Прямо запрещено внутри волны 2:** самому создавать строки в `teacher_payouts` и `payments`. Агент готовит предложения; перенос подтверждённых в выплатной реестр запускает человек из админки.
 
-## Волна 3 — починка сбора посещаемости (отдельно)
+## Волна 3 — починка сбора посещаемости (отдельно) · 🟡 заминчена [H3761](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3761-Opus_Systema-Sanscriticum_stream-analytics-w3-attendance-repair_30.08.26.md)
 
 Не нужна для ответа Марии, нужна для того, чтобы 3-й поток не был так же слеп.
 

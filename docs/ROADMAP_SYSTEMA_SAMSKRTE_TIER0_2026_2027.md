@@ -1,6 +1,15 @@
 # ROADMAP — samskrte.ru Tier-0 · 2026–2027
 
-_Created: 30-07-2026 · Last updated: 07-08-2026_
+_Created: 30-07-2026 · Last updated: 30-08-2026_
+
+> **Truth-pass 30-08-2026 (Fable 5 `claude-fable-5`, `/ask` H3760):** Wave 1's 28-08 window has passed and its
+> handoff [H1939 (Grok, 🔴3 hard) — Marathon 28-08 wave-1 live](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1939-Grok_Systema-Sanscriticum_marathon-28-08-wave1-live_30.07.26.md)
+> is archived-executed, as are the revenue-overlay bets H2378 (measurement), H2379 (Arzamas polish),
+> H2381 (JIVO operator workflow), H2382 (parity acceptance) — see
+> [ROADMAP_SYSTEMA_REVENUE_CABINET_EDITORIAL_JIVO_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SYSTEMA_REVENUE_CABINET_EDITORIAL_JIVO_2026H2.md).
+> Still open from Wave 2: [H2380 (Grok, 🔴3 hard) — cabinet adoption/KPI experiment](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2380-Grok_Systema-Sanscriticum_cabinet-adoption-kpi-experiment_07.08.26.md)
+> (⛔ human-gated on DEPLOY №52 / H1582 flag). Analytics residue now minted as Claude wave 1:
+> [PLAN_UPRAVA_ASK_CLAUDE_SYSTEMA_ROADMAP_MINT_2026-08.md](https://github.com/gasyoun/Uprava/blob/main/docs/PLAN_UPRAVA_ASK_CLAUDE_SYSTEMA_ROADMAP_MINT_2026-08.md).
 
 **Umbrella ID:** SAMSKRTE-TIER0 · **Wave-1 handoff:** [H1939](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1939-Grok_Systema-Sanscriticum_marathon-28-08-wave1-live_30.07.26.md) · **Pack:** /ask samskrte.ru 30-07-2026 · **Stem:** *_SYSTEMA_SAMSKRTE_TIER0_*
 
@@ -15,7 +24,7 @@ hybrid-cabinet adoption/KPI after H1582 (H2380) → JIVO workflow/production com
 
 ## Waves
 
-### Wave 1 — Marathon 28-08 fully live (hard gate · now → 28-08-2026)
+### Wave 1 — Marathon 28-08 fully live (hard gate · now → 28-08-2026) · ✅ window passed, H1939 archived (сверка 30-08-2026)
 
 **Done when:** smoke A–E green + runbook Evidence complete (DR legs green or explicitly PARKED with secret gap).
 
