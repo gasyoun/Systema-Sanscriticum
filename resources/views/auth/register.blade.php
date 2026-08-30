@@ -74,6 +74,24 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1" for="birth_year">
+                        Год рождения <span class="font-normal normal-case tracking-normal">(необязательно)</span>
+                    </label>
+                    <input type="number" name="birth_year" id="birth_year" min="1900" max="{{ now()->format('Y') }}"
+                        placeholder="Например, 1990"
+                        value="{{ old('birth_year') }}"
+                        class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-brand focus:ring-1 focus:ring-brand outline-none transition text-sm">
+                    @error('birth_year')<p class="mt-1.5 text-xs text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1" for="signup_source">
+                        Откуда вы о нас узнали? <span class="font-normal normal-case tracking-normal">(необязательно)</span>
+                    </label>
+                    @include('partials.signup-source-select')
+                </div>
+
                 <div class="pt-2">
                     <button type="submit"
                         class="w-full bg-brand hover:bg-brand-hover text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 text-sm uppercase tracking-wider">

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\MembershipTier;
+use App\Http\Middleware\CaptureAttribution;
 use App\Models\ClubMembership;
 use App\Models\Course;
 use App\Models\Payment;
@@ -18,6 +19,7 @@ use Tests\TestCase;
 
 /**
  * H3643 — guest /register: flag OFF → 404; ON → user + Free-tier + SRS, zero payments.
+ * H3692 — optional signup_source + birth_year persist; invalid year is non-blocking.
  */
 class GuestRegisterTest extends TestCase
 {
@@ -52,6 +54,8 @@ class GuestRegisterTest extends TestCase
             'email' => 'guest@example.com',
             'password' => 'password1',
             'password_confirmation' => 'password1',
+            'signup_source' => 'telegram',
+            'birth_year' => 1990,
         ])->assertNotFound();
 
         $this->assertSame(0, User::count());
@@ -66,7 +70,9 @@ class GuestRegisterTest extends TestCase
             ->assertOk()
             ->assertSee('Создать кабинет', false)
             ->assertSee('name="email"', false)
-            ->assertSee('name="password"', false);
+            ->assertSee('name="password"', false)
+            ->assertSee('name="signup_source"', false)
+            ->assertSee('name="birth_year"', false);
     }
 
     public function test_flag_on_creates_user_free_tier_srs_and_zero_payments(): void
@@ -100,6 +106,60 @@ class GuestRegisterTest extends TestCase
         $this->assertSame('private', $deck->visibility);
 
         $this->assertSame(0, Payment::count(), 'guest signup must not write a payment');
+    }
+
+    public function test_flag_on_persists_signup_source_and_birth_year(): void
+    {
+        $this->enableOn();
+
+        $this->post('/register', [
+            'email' => 'src@example.com',
+            'password' => 'password1',
+            'password_confirmation' => 'password1',
+            'signup_source' => 'telegram',
+            'birth_year' => 1990,
+        ])->assertRedirect(route('student.dashboard'));
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'src@example.com',
+            'signup_source' => 'telegram',
+            'birth_year' => 1990,
+        ]);
+    }
+
+    public function test_flag_on_invalid_birth_year_is_non_blocking(): void
+    {
+        $this->enableOn();
+
+        $this->post('/register', [
+            'email' => 'year@example.com',
+            'password' => 'password1',
+            'password_confirmation' => 'password1',
+            'signup_source' => 'friend',
+            'birth_year' => 1800,
+        ])->assertRedirect(route('student.dashboard'));
+
+        $user = User::where('email', 'year@example.com')->firstOrFail();
+        $this->assertSame('friend', $user->signup_source);
+        $this->assertNull($user->birth_year);
+    }
+
+    public function test_flag_on_copies_utm_from_session(): void
+    {
+        $this->enableOn();
+
+        $this->withSession([
+            CaptureAttribution::SESSION_KEY => ['utm_source' => 'newsletter'],
+        ])->post('/register', [
+            'email' => 'utm@example.com',
+            'password' => 'password1',
+            'password_confirmation' => 'password1',
+        ])->assertRedirect(route('student.dashboard'));
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'utm@example.com',
+            'utm_source' => 'newsletter',
+        ]);
     }
 
     public function test_flag_on_does_not_grant_club_recordings(): void
