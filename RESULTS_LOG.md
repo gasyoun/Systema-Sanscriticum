@@ -1,8 +1,25 @@
 # Results log
 
-_Created: 30-07-2026 · Last updated: 29-08-2026_
+_Created: 30-07-2026 · Last updated: 30-08-2026_
 
 Durable substantive-result tables for this repo. Newest first.
+
+## H3692 guest /register attribution fields (30-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ PR: [#2206](https://github.com/gasyoun/Systema-Sanscriticum/pull/2206) (`d8635007`). Release: [v1.90.35](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.35). Handoff: [H3692 (Grok 4.6, 🟡2 medium) — Guest `/register` collects signup_source and birth_year](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3692-Grok_Systema-Sanscriticum_guest-register-attribution-fields_29.08.26.md). Reclaimed stale Sonnet 5 sidecar (>6h). Deploy `.92`: `sudo bash deploy.sh` `4145f1bd → d8635007`. Tests: 10/10 `GuestRegisterTest` (46 assertions). No new flag, no new columns. Prod enable remains a separate `.env` + `config:cache` step.
+
+| Gate | Result |
+|---|---|
+| Flag default | `features.guest_registration` false (`GUEST_REGISTRATION_ENABLED`) |
+| ON GET form | shows `signup_source` + `birth_year` |
+| ON POST telegram + 1990 | both persist |
+| ON POST birth_year=1800 | user created, year null (non-blocking) |
+| ON POST UTM session | `utm_source` copied via `applyToNewUser` |
+| Flag OFF GET/POST (tests) | 404, zero users |
+| Prod SHA | `d8635007` |
+| Prod env | `GUEST_REGISTRATION_ENABLED=ABSENT` (OFF) |
+| Live GET `/register` | 404 |
+| Homepage smoke | `https://samskrte.ru/` 200 |
 
 ## H3693 referral loyalty CTA flag OFF (29-08-2026)
 

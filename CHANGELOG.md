@@ -1,6 +1,10 @@
 ## [Unreleased]
 <!-- entries land in changelog_queue/ -- appended via tools/changelog_queue_consume.py, consumed by cut_release.py at release-cut (H3355); direct bullets here are hook-blocked -->
 
+## [1.90.35] - 2026-08-30
+### Added
+- **H3692 (Grok 4.6 `grok-4.6`, 30-08-2026): guest `/register` collects optional `signup_source` + `birth_year`.** Reuses [`AttributionService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/AttributionService.php) and checkout partial [`signup-source-select`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/signup-source-select.blade.php). Columns already exist (H267). Invalid year is non-blocking (same as checkout service). Surface still 404 when `GUEST_REGISTRATION_ENABLED` is OFF — no new flag, no new columns, prod flag stays OFF. Tests: [`GuestRegisterTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/GuestRegisterTest.php).
+
 ## [1.90.34] - 2026-08-29
 ### Added
 - **H3693 (Grok 4.6 `grok-4.6`, 29-08-2026): referral CTA at homework-accepted, student certificate list, and dashboard course-complete, flag `REFERRAL_LOYALTY_CTA` default OFF.** Reuses [`student/partials/referral.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/student/partials/referral.blade.php) (H1294). Existing cabinet include is unchanged. Public `/verify` is not touched. `partner.enabled` stays OFF. Tests: [`ReferralLoyaltyCtaTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/ReferralLoyaltyCtaTest.php). Prod enable is a separate `.env` + `config:cache` step.
