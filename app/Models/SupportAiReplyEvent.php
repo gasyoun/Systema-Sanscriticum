@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SupportAiReplyEvent extends Model
 {
+    /** H3395: куратор отправил ответ, начатый с шаблона библиотеки (Helpdesk). */
+    public const EVENT_TEMPLATE_USED = 'template_used';
+
     protected $fillable = [
         'telegram_support_message_id',
         'event_type',

@@ -153,6 +153,44 @@
             @endif
         </div>
 
+        {{-- H3395: ручные использования шаблонов библиотеки куратором (Helpdesk-сенд,
+             начатый с шаблона) за 30 дней — топ-10. Denominator для ревью библиотеки
+             H2339 наравне с автосендами dm_auto_sent kind=template. --}}
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
+            <div class="border-b border-gray-200 px-4 py-3 dark:border-white/10">
+                <strong class="text-gray-950 dark:text-white">Шаблоны — ручные отправки</strong>
+                <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">топ-10 за 30 дней, helpdesk</span>
+            </div>
+            <div class="tg-table-wrap">
+                <table class="w-full text-sm" data-testid="support-manual-templates">
+                    <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500 dark:bg-white/5 dark:text-gray-400">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Шаблон</th>
+                            <th class="px-4 py-2 text-right">Ручных отправок</th>
+                            <th class="px-4 py-2 text-right">Последняя</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($this->manualTemplateUses as $row)
+                            <tr class="border-t border-gray-100 dark:border-white/5">
+                                <td class="px-4 py-2 text-gray-950 dark:text-white">
+                                    {{ $row['title'] }}@if($row['template_id'] !== null) <span class="text-xs text-gray-400">#{{ $row['template_id'] }}</span>@endif
+                                </td>
+                                <td class="px-4 py-2 text-right">{{ $row['uses'] }}</td>
+                                <td class="px-4 py-2 text-right text-gray-500 dark:text-gray-400">{{ $row['last_used_at'] ?? '—' }}</td>
+                            </tr>
+                        @empty
+                            <tr class="border-t border-gray-100 dark:border-white/5">
+                                <td colspan="3" class="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                                    За 30 дней ручных отправок с шаблоном не было
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         {{-- Filters --}}
         <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
             <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
