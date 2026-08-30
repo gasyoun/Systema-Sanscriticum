@@ -85,7 +85,9 @@ _Model: OxAlpha (`opencode/x-preview-f-free`)._ PRs: [#2011](https://github.com/
 | Live | schedule ticks every 5 min autonomously (15:06, no errors); support lane untouched (per-session lock/phase/cooldown keys) |
 | Flags ON | `SUPPORT_DM_AUTO_REPLY` · `SUPPORT_AUTO_REPLY_TEMPLATES` · `SUPPORT_AUTO_ACK`; gate `auto_reply_enabled=1` on rusamskrtam only; registry updated |
 | Smoke lesson | «Намо намах!» → ack boilerplate. v2 (#2021): pure greeting → warm reply once per window (`kind=greeting`), pure thanks → silent skip, greeting+question → normal pipeline |
-| Pending verification | v2 deploy evidence + first real `dm_auto_sent` events — blocked by fail2ban ban of the operator IP (178.236.251.98), left to expire naturally per MG |
+| First real `dm_auto_sent` (measured 30-08-2026, OxAlpha `opencode/z-ai/glm-5.3-flash`) | **Fired 27-08-2026** — events 1222 / 1229 / 1248 in `support_ai_reply_events`, all `kind=ack`, `via=support_dm_auto_reply`, account `support(2)` (the main lane, per the [#2045](https://github.com/gasyoun/Systema-Sanscriticum/pull/2045) pivot). Three **different** conversations (245/246/247), one ack each — the «more than one ack per series» fail condition is not triggered, and no LLM text reached an outgoing message. |
+| `kind=template` over the whole trial | **Never fired — and not a bug in the template branch.** All eight `dm_hinted` events since activation carry `category=null`: the intent classifier assigned no D/E/F category, so the canned replies had no eligible input. The W3 verdict therefore cannot be «do templates work» — the first question is why the classifier is silent. |
+| Prod drift re-check 30-08-2026 | None. `features.support_dm_auto_reply` / `support_auto_reply_templates` / `support_auto_ack` = true/true/true; rows `harvester(1) 0/0` · `support(2) 1/1` · `rusamskrtam(3) 0/0` (the 26-08 fix held, auto-heal did not resurrect the parked row); `telegram-support:healthcheck --dry` green. |
 
 ## S9 template drafts — activation on H2339 census texts + first measurement (23-08-2026)
 
