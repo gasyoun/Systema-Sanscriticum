@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Tests\Feature\Leads;
 
 use App\Filament\Resources\LeadResource\Pages\ListLeads;
+use App\Jobs\SendLeadMessenger;
 use App\Models\Lead;
 use App\Models\User;
 use App\Support\Roles;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -69,6 +71,49 @@ class LeadWorkflowUxTest extends TestCase
         $lead->refresh();
         $this->assertSame($manager->id, $lead->assigned_to);
         $this->assertTrue(today()->addDay()->isSameDay($lead->next_contact_at));
+    }
+
+    /** @test */
+    public function bulk_message_email_channel_queues_only_leads_with_address(): void
+    {
+        Queue::fake();
+        $this->manager();
+
+        $withEmail = Lead::create(['contact' => '+70000000000', 'name' => 'Анна', 'status' => 'new', 'email' => 'anna@example.com']);
+        $noContacts = Lead::create(['contact' => '+70000000001', 'name' => 'Без контактов', 'status' => 'new']);
+
+        $this->listAllLeads()
+            ->callTableBulkAction('bulk_message', [$withEmail, $noContacts], data: [
+                'text' => 'Привет, {name}',
+                'channels' => ['email'],
+                'subject' => 'Тема для {name}',
+            ])
+            ->assertHasNoTableBulkActionErrors();
+
+        Queue::assertPushed(SendLeadMessenger::class, 1);
+        Queue::assertPushed(SendLeadMessenger::class, fn (SendLeadMessenger $j) => $j->leadId === $withEmail->id
+            && $j->channels === ['email']
+            && $j->text === 'Привет, Анна'
+            && $j->subject === 'Тема для Анна');
+    }
+
+    /** @test */
+    public function bulk_message_requires_subject_when_email_channel_selected(): void
+    {
+        Queue::fake();
+        $this->manager();
+
+        $lead = Lead::create(['contact' => '+70000000000', 'name' => 'Анна', 'status' => 'new', 'email' => 'anna@example.com']);
+
+        $this->listAllLeads()
+            ->callTableBulkAction('bulk_message', [$lead], data: [
+                'text' => 'Привет',
+                'channels' => ['email'],
+                'subject' => '',
+            ])
+            ->assertHasTableBulkActionErrors(['subject']);
+
+        Queue::assertNothingPushed();
     }
 
     /** @test */

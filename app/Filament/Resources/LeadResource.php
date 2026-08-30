@@ -584,6 +584,14 @@ class LeadResource extends Resource
     }
 
     /**
+     * Есть ли у лида валидный email для массовой рассылки письмом.
+     */
+    protected static function emailAvailable(Lead $lead): bool
+    {
+        return filter_var((string) $lead->email, FILTER_VALIDATE_EMAIL) !== false;
+    }
+
+    /**
      * Row-action: написать лиду в мессенджер (TG/VK/Max).
      */
     protected static function messengerAction(): Tables\Actions\Action
@@ -718,7 +726,7 @@ class LeadResource extends Resource
             ->label('Сообщение в мессенджер')
             ->icon('heroicon-o-paper-airplane')
             ->color('warning')
-            ->modalDescription('Отправится тем лидам, у кого есть аккаунт в выбранных каналах. Плейсхолдер: {name}.')
+            ->modalDescription('Отправится тем лидам, у кого есть аккаунт в выбранных каналах (для Email — адрес). Плейсхолдер: {name}.')
             ->form([
                 Forms\Components\Textarea::make('text')
                     ->label('Текст')
@@ -730,18 +738,31 @@ class LeadResource extends Resource
                         'telegram' => 'Telegram',
                         'vk' => 'VK',
                         'max' => 'Max',
+                        'email' => 'Email',
                     ])
-                    ->default(['telegram', 'vk', 'max'])
+                    ->default(['telegram', 'vk', 'max', 'email'])
+                    ->live()
                     ->required(),
+                Forms\Components\TextInput::make('subject')
+                    ->label('Тема письма')
+                    ->maxLength(255)
+                    ->helperText('Плейсхолдер: {name}.')
+                    ->visible(fn (Forms\Get $get): bool => in_array('email', (array) $get('channels'), true))
+                    ->required(fn (Forms\Get $get): bool => in_array('email', (array) $get('channels'), true)),
             ])
             ->action(function (Collection $records, array $data): void {
-                $requested = (array) ($data['channels'] ?? []);
+                $requested = array_values(array_unique((array) ($data['channels'] ?? [])));
                 $sent = 0;
                 $noChannel = 0;
 
                 foreach ($records as $record) {
                     /** @var Lead $record */
-                    $channels = array_values(array_intersect($requested, self::availableChannels($record)));
+                    $available = self::availableChannels($record);
+                    if (self::emailAvailable($record)) {
+                        $available[] = 'email';
+                    }
+
+                    $channels = array_values(array_intersect($requested, $available));
                     if ($channels === []) {
                         $noChannel++;
 
@@ -753,6 +774,7 @@ class LeadResource extends Resource
                         self::renderTemplate((string) $data['text'], $record),
                         $channels,
                         auth()->id(),
+                        self::renderTemplate((string) ($data['subject'] ?? ''), $record),
                     );
                     $sent++;
                 }
