@@ -1,6 +1,11 @@
 # ROADMAP — SAMSKRTE-SEO-H2 · samskrte.ru SEO · H2 2026
 
-_Created: 16-08-2026 · Last updated: 16-08-2026_
+_Created: 16-08-2026 · Last updated: 30-08-2026_
+
+> **Truth-pass 30-08-2026 (Fable 5 `claude-fable-5`, `/ask` H3760):** Waves 2–3 executed — их handoff'ы
+> в архиве реестра ([H2918 (Grok 4.6, 🟡2 medium) — W2 contextual links](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2918-Grok_Systema-Sanscriticum_samskrte-seo-h2-w2_16.08.26.md),
+> [H2935 (Grok 4.6, 🟡2 medium) — W3 llms.txt + technical leftovers](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2935-Grok_Systema-Sanscriticum_samskrte-seo-h2-w3_16.08.26.md)).
+> Wave 4 остаётся prod-gated (`index_enabled` — человеческий шаг, DEPLOY_QUEUE); Wave 5 ждёт W4.
 
 **Umbrella ID:** `SAMSKRTE-SEO-H2` · **Pack:** `/ask` samskrte.ru SEO 16-08-2026 · **Stem:** `*_SYSTEMA_SAMSKRTE_SEO_H2_*`
 
@@ -29,7 +34,7 @@ Each wave names what it unblocks. Do not start a later wave's *product* work bef
 
 **Handoff:** wave-1 only (minted with this pack).
 
-### Wave 2 — Contextual links to samskrtam.ru
+### Wave 2 — Contextual links to samskrtam.ru · ✅ executed (H2918 archived, сверка 30-08-2026)
 
 **Handoff:** [H2918 (Grok 4.6) — samskrte.ru SEO H2 wave-2 contextual links to samskrtam.ru](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2918-Grok_Systema-Sanscriticum_samskrte-seo-h2-w2_16.08.26.md). Execute via `/go 2918` in a Grok chat. Do not start W3 here.
 
@@ -41,7 +46,7 @@ Each wave names what it unblocks. Do not start a later wave's *product* work bef
 
 **Depends on:** W1 merge (so money pages are the ones receiving links). Links themselves do not depend on the CSV apply.
 
-### Wave 3 — GEO + technical
+### Wave 3 — GEO + technical · ✅ executed (H2935 archived, сверка 30-08-2026)
 
 **Handoff:** [H2935 (Grok 4.6) — samskrte.ru SEO H2 wave-3 generated /llms.txt + cheap technical leftovers](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2935-Grok_Systema-Sanscriticum_samskrte-seo-h2-w3_16.08.26.md). Do not start W4/W5 here.
 

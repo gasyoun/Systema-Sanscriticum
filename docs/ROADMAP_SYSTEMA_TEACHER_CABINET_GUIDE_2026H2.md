@@ -1,10 +1,16 @@
 # Дорожная карта: руководство преподавателя по личному кабинету (2026H2)
 
-_Created: 09-08-2026 · Last updated: 09-08-2026_
+_Created: 09-08-2026 · Last updated: 30-08-2026_
+
+> **Truth-pass 30-08-2026 (Fable 5 `claude-fable-5`, `/ask` H3760):** обе волны отгружены и в архиве —
+> [H2501 (Opus 5, 🔴3 hard) — текст руководства](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2501-Opus_Systema-Sanscriticum_teacher-cabinet-guide-scenarios-reference-w1_09.08.26.md) выложена,
+> [H2502 (Opus 5, 🔴3 hard) — Dusk-скриншоты](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H2502-Opus_Systema-Sanscriticum_teacher-guide-dusk-screenshots-w2_09.08.26.md) закрыта
+> ([PR #1619](https://github.com/gasyoun/Systema-Sanscriticum/pull/1619), [v1.89.12](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.89.12)).
+> Волна 3 по-прежнему ждёт человеческого решения по issue 1.8 — не минтить.
 
 Слой «волны и поставки» плана [PLAN_SYSTEMA_TEACHER_CABINET_GUIDE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_TEACHER_CABINET_GUIDE_2026H2.md). Решения не повторяются — они там, в разделе 3.
 
-## Волна 1 — текст (H2501, **Opus 5**, руководство преподавателя ЛК: сценарии + справочник, страница в `/admin`, перепись навигации)
+## Волна 1 — текст (H2501, **Opus 5**, руководство преподавателя ЛК: сценарии + справочник, страница в `/admin`, перепись навигации) · ✅ отгружена (сверка 30-08-2026)
 
 Идет целиком в одном PR. Внутренний порядок задан слоем реализации; здесь только поставки и что их разблокирует.
 
@@ -21,7 +27,7 @@ _Created: 09-08-2026 · Last updated: 09-08-2026_
 
 Готовность волны 1: тест 1.5 зеленый, PDF собирается, страница в `/admin` открывается у пользователя с `teacher_id`, issue создан. Живой прогон преподавателем идет после мержа и мержа не задерживает.
 
-## Волна 2 — скриншоты (H2502, **Opus 5**, автогенерация скриншотов руководства преподавателя через Dusk)
+## Волна 2 — скриншоты (H2502, **Opus 5**, автогенерация скриншотов руководства преподавателя через Dusk) · ✅ закрыта (сверка 30-08-2026)
 
 Начинается после мержа волны 1. Разделена, потому что среда Dusk — день-два инженерной работы, а текст ее ждать не должен (решение 16).
 
