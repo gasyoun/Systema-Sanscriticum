@@ -100,8 +100,35 @@ return [
      * как Playwright выше по файлу.
      */
     'check_homework_upload' => (bool) env('CABINET_PROBE_CHECK_HOMEWORK_UPLOAD', true),
+
+    /*
+     | H3803: «прод перестал получать код» — отказ, который не видно.
+     |
+     | 31-08-2026 протух PAT, вшитый в URL `origin`; `git pull` начал отдавать
+     | 401 и уронил deploy.sh. Сайт остался 200, дерево чистым, предохранитель
+     | целым — сломалось только поступление нового кода, а на это никто не
+     | смотрел. Полчаса auto-deploy падал в лог, который никто не читает.
+     |
+     | Обе ноги ЛОКАЛЬНЫЕ: проба ходит раз в 15 минут, и `git fetch` из неё
+     | привязал бы health-чек к доступности GitHub.
+     |
+     | fetch_max_age: сколько минут допустимо без УСПЕШНОГО fetch. Auto-deploy
+     | ходит каждые 30 минут, поэтому 90 = три пропущенных подряд, а не рябь.
+     | Это главная нога: когда fetch падает, ref origin/main замерзает вместе
+     | с HEAD, отставание остаётся нулевым, и сравнение HEAD↔origin/main
+     | рапортует полное здоровье.
+     |
+     | behind_max_age: сколько минут коммит может лежать на origin/main
+     | недовыложенным. Ловит обратный отказ — fetch работает, деплой нет.
+     | Скидка нужна, чтобы только что смерженный PR и деплой в процессе
+     | не поднимали тревогу.
+     */
     'homework_probe_course_slug' => (string) env('CABINET_PROBE_HOMEWORK_COURSE', ''),
     'homework_probe_lesson_id' => (int) env('CABINET_PROBE_HOMEWORK_LESSON_ID', 0),
+
+    'check_deploy_drift' => (bool) env('CABINET_PROBE_CHECK_DEPLOY_DRIFT', true),
+    'deploy_drift_fetch_max_age_minutes' => (int) env('CABINET_PROBE_DEPLOY_DRIFT_FETCH_MAX_AGE', 90),
+    'deploy_drift_behind_max_age_minutes' => (int) env('CABINET_PROBE_DEPLOY_DRIFT_BEHIND_MAX_AGE', 60),
 
     'error_markers' => [
         'Whoops',
