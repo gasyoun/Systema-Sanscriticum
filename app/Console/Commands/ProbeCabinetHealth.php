@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\CabinetProbeRun;
+use App\Models\Course;
+use App\Models\HomeworkComment;
+use App\Models\HomeworkSubmission;
+use App\Models\Lesson;
 use App\Models\User;
+use App\Services\HomeworkService;
 use App\Support\Roles;
 use App\Support\ServerGuards\CabinetProbeAlertState;
 use App\Support\ServerGuards\GuardFinding;
@@ -21,6 +26,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -92,6 +99,7 @@ class ProbeCabinetHealth extends Command
                         config('cabinet_probe.student_surfaces', []),
                         authenticated: true,
                     ));
+                    $failures = array_merge($failures, $this->probeHomeworkUploadSynthetic());
                 }
                 Auth::logout();
             } else {
@@ -233,6 +241,127 @@ class ProbeCabinetHealth extends Command
 
         if ($failures === []) {
             $this->info('Предохранители ОС на месте.');
+        }
+
+        return $failures;
+    }
+
+    /**
+     * Синтетическая загрузка ДЗ (H37xx): «постоянно ломается подача ДЗ»
+     * повторялась трижды (молчаливый 64MB-порог, OOM сборки PDF, дубли при
+     * зависании), а ни одна проверка выше не трогала реальный upload-путь —
+     * все surfaces GET. Пишет ОДИН тестовый файл через тот же
+     * HomeworkService::recordSubmission(finalize: false), что и форма
+     * студента, на выделенный sandbox-урок, и всегда удаляет его в finally —
+     * идемпотентно на каждом прогоне. НЕ ловит php.ini/nginx
+     * client_max_body_size (in-process вызов, не настоящий HTTP через
+     * nginx/php-fpm) — см. config/cabinet_probe.php.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeHomeworkUploadSynthetic(): array
+    {
+        if (! config('cabinet_probe.check_homework_upload', true)) {
+            return [];
+        }
+
+        $slug = trim((string) config('cabinet_probe.homework_probe_course_slug', ''));
+        $lessonId = (int) config('cabinet_probe.homework_probe_lesson_id', 0);
+        if ($slug === '' || $lessonId <= 0) {
+            $this->comment('CABINET_PROBE_HOMEWORK_COURSE/_LESSON_ID пусты — синтетическая загрузка ДЗ пропущена.');
+
+            return [];
+        }
+
+        $student = Auth::user();
+        if (! $student instanceof User) {
+            return [['message' => 'homework-upload: нет auth-студента для пробы', 'severity' => 'critical']];
+        }
+
+        try {
+            $course = Course::resolveBySlugOrFail($slug);
+            $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
+        } catch (Throwable $e) {
+            return [['message' => 'homework-upload: probe-курс/урок не найден ('.$slug.'/'.$lessonId.') — проверь CABINET_PROBE_HOMEWORK_*', 'severity' => 'soft']];
+        }
+
+        if (! $lesson->homeworkOpenFor($student)) {
+            return [['message' => 'homework-upload: probe-урок закрыт для ДЗ — проверь homework_enabled/homework_closed_at на sandbox-уроке', 'severity' => 'soft']];
+        }
+
+        $disk = 'local';
+        $extensions = (array) config('homework.allowed_extensions', ['txt']);
+        $extension = in_array('txt', $extensions, true) ? 'txt' : (string) ($extensions[0] ?? 'txt');
+        $relativePath = "homework/{$student->id}/{$lesson->id}/probe_".Str::random(8).'.'.$extension;
+        $contents = 'cabinet:probe synthetic homework check '.now()->toIso8601String();
+
+        try {
+            Storage::disk($disk)->put($relativePath, $contents);
+        } catch (Throwable $e) {
+            return [['message' => 'homework-upload: диск '.$disk.' не пишется — '.$e->getMessage(), 'severity' => 'critical']];
+        }
+
+        if (! Storage::disk($disk)->exists($relativePath) || Storage::disk($disk)->size($relativePath) !== strlen($contents)) {
+            Storage::disk($disk)->delete($relativePath);
+
+            return [['message' => 'homework-upload: файл записан, но не читается обратно (диск '.$disk.')', 'severity' => 'critical']];
+        }
+
+        $failures = [];
+        $submission = null;
+        $comment = null;
+
+        try {
+            $submission = app(HomeworkService::class)->recordSubmission(
+                $student,
+                $lesson,
+                'cabinet:probe synthetic check',
+                [[
+                    'disk' => $disk,
+                    'path' => $relativePath,
+                    'original_name' => 'probe.'.$extension,
+                    'size' => strlen($contents),
+                    'mime' => 'text/plain',
+                ]],
+                false,
+            );
+
+            $comment = $submission->comments()
+                ->where('author_id', $student->id)
+                ->where('type', HomeworkComment::TYPE_SUBMISSION)
+                ->orderByDesc('id')
+                ->with('files')
+                ->first();
+
+            if ($submission->status !== HomeworkSubmission::STATUS_DRAFT) {
+                $failures[] = ['message' => 'homework-upload: сдача записалась не в draft (status='.$submission->status.')', 'severity' => 'critical'];
+            }
+
+            if (! $comment || $comment->files->isEmpty()) {
+                $failures[] = ['message' => 'homework-upload: файл не привязался к сдаче в БД', 'severity' => 'critical'];
+            }
+        } catch (Throwable $e) {
+            $failures[] = ['message' => 'homework-upload: запись сдачи упала — '.$e->getMessage(), 'severity' => 'critical'];
+        } finally {
+            // Sandbox-урок принадлежит только пробе — всегда откатываем до
+            // пустого состояния, чтобы прогоны были идемпотентны и ничего не
+            // накапливалось в БД/на диске.
+            if ($comment) {
+                foreach ($comment->files as $file) {
+                    Storage::disk($file->disk)->delete($file->path);
+                    $file->delete();
+                }
+                $comment->delete();
+            } else {
+                Storage::disk($disk)->delete($relativePath);
+            }
+            if ($submission && $submission->comments()->doesntExist()) {
+                $submission->delete();
+            }
+        }
+
+        if ($failures === []) {
+            $this->info('ДЗ-загрузка (synthetic): файл сохранён и привязан.');
         }
 
         return $failures;
