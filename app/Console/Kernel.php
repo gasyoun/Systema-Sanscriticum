@@ -165,6 +165,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('vacation-quorum-poll');
 
+        // Список ожидания (MG 31-08-2026, волна 3): ежедневный движок порогов
+        // голосов/оплат и лестницы переносов. Внутри — только статусы
+        // course_waitlist_items; живые Schedule-строки создаёт куратор.
+        $schedule->command('waitlist:process')
+            ->dailyAt('10:20')
+            ->timezone('Europe/Moscow')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('waitlist-process');
+
         // Напоминание менеджеру о заявках с наступившим next_contact_at.
         // Гейт (crm_reminders) и дедуп (reminded_at) — внутри команды; пока
         // флаг выключен, прогон — no-op.

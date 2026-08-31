@@ -34,6 +34,18 @@ class CourseWaitlistItem extends Model
         'closed' => 'Закрыто',
     ];
 
+    public const STATUS_COLLECTING = 'collecting';
+
+    public const STATUS_PAYMENT_OPEN = 'payment_open';
+
+    public const STATUS_PAYMENT_DEADLINE_PASSED = 'payment_deadline_passed';
+
+    public const STATUS_POSTPONED = 'postponed';
+
+    public const STATUS_SCHEDULED = 'scheduled';
+
+    public const STATUS_CLOSED = 'closed';
+
     public const KINDS = [
         'grammar' => 'Грамматика',
         'other' => 'Прочее',
