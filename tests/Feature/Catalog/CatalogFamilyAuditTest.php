@@ -292,6 +292,75 @@ class CatalogFamilyAuditTest extends TestCase
     }
 
     /** @test */
+    public function a_live_stream_and_its_own_recording_are_classed_as_a_recording_twin(): void
+    {
+        // Самый частый класс на боевой базе: запись потока продаётся отдельной
+        // строкой каталога под ТЕМ ЖЕ номером потока. Удалять там нечего — у
+        // записи свои блоки, тарифы и оплаты; расходится витрина, а не база.
+        $live = $this->liveCourse('Йога-сутры Патанджали (1 поток, 2025)', 'ys-1-potok-test');
+        $recording = $this->liveCourse('Йога-сутры Патанджали (1 поток, 2025) в записи', 'ys-1-potok-v-zapisi-test');
+        $this->paidPayment($live, '2025-07-03 10:00:00');
+        $this->paidPayment($recording, '2025-06-02 10:00:00');
+
+        $row = $this->familyContaining($live->id);
+
+        $this->assertNotNull($row);
+        $this->assertSame(CatalogFamilyAudit::VERDICT_DUPLICATE, $row['verdict']);
+        $this->assertContains(CatalogFamilyAudit::CLASS_RECORDING_TWIN, $row['classes']);
+        $this->assertNotContains(CatalogFamilyAudit::CLASS_EMPTY_SHELL, $row['classes']);
+        $this->assertNotContains(CatalogFamilyAudit::CLASS_STREAM_COLLISION, $row['classes']);
+    }
+
+    /** @test */
+    public function a_collision_without_a_recording_marker_is_a_plain_stream_collision(): void
+    {
+        $a = $this->liveCourse('Пранаяма (1 поток, 2025)', 'pranayama-c1-test');
+        $this->liveCourse('Пранаяма (1 поток, 2025)', 'pranayama-c2-test');
+
+        $row = $this->familyContaining($a->id);
+
+        $this->assertNotNull($row);
+        $this->assertContains(CatalogFamilyAudit::CLASS_STREAM_COLLISION, $row['classes']);
+        $this->assertNotContains(CatalogFamilyAudit::CLASS_RECORDING_TWIN, $row['classes']);
+    }
+
+    /** @test */
+    public function an_empty_shell_is_classed_apart_from_a_stream_collision(): void
+    {
+        // Боевая форма (курсы 335/421): у живого курса есть оплаты, поэтому
+        // ключ потока у него свой и столкновения нет — сработать должен ровно
+        // класс «оболочка», который чинится чисткой базы, а не витриной.
+        $live = $this->liveCourse('Караки по Панини', 'karaki-class-test');
+        $this->paidPayment($live, '2025-09-18 10:00:00');
+
+        Course::factory()->create([
+            'title' => 'Караки по Панини 2025-2026 в записи',
+            'slug' => 'karaki-class-shell-test',
+        ]);
+
+        $row = $this->familyContaining($live->id);
+
+        $this->assertNotNull($row);
+        $this->assertSame([CatalogFamilyAudit::CLASS_EMPTY_SHELL], $row['classes']);
+    }
+
+    /** @test */
+    public function the_markdown_report_names_the_duplicate_classes(): void
+    {
+        $live = $this->liveCourse('Йога-сутры Патанджали (1 поток, 2025)', 'ys-md-1-test');
+        $recording = $this->liveCourse('Йога-сутры Патанджали (1 поток, 2025) в записи', 'ys-md-1-zapis-test');
+        $this->paidPayment($live, '2025-07-03 10:00:00');
+        $this->paidPayment($recording, '2025-06-02 10:00:00');
+
+        $this->assertSame(0, Artisan::call('catalog:audit-families', ['--markdown' => true]));
+        $out = Artisan::output();
+
+        $this->assertStringContainsString('## Из-за чего сработал `duplicate`', $out);
+        $this->assertStringContainsString('живой поток и его же запись', $out);
+        $this->assertStringContainsString('1 семья', $out, 'счётчик согласован с числом семей класса');
+    }
+
+    /** @test */
     public function the_duplicate_verdict_sorts_before_streams_and_unique(): void
     {
         $this->liveCourse('Кашмирский шиваизм (1 поток, 2024)', 'sort-ks-1-test');
