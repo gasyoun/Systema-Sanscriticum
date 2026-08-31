@@ -49,6 +49,7 @@ class BackfillStreamAttendance extends Command
         {--since= : Не рассматривать запуски раньше этой даты (YYYY-MM-DD). Обязателен}
         {--until= : Не рассматривать запуски позже этой даты (YYYY-MM-DD), по умолчанию сегодня}
         {--min-participants=2 : Запуск с меньшим числом участников считается служебным, а не занятием}
+        {--meeting-id= : Zoom meeting_id вручную — для курса, у которого его нет ни в карточке, ни в занятиях. Только с одним --course}
         {--slot= : Окно занятия «Dow,HH:MM-HH:MM» по времени приложения, напр. "Wed,12:30-15:30". Обязателен вместе с --create-lessons}
         {--create-lessons : Завести занятие под запуск Zoom, которому в системе занятия нет. Только со --slot; решение об атрибуции принимает человек}
         {--apply : Выполнить вставки (без опции — сухой прогон)}';
@@ -89,6 +90,14 @@ class BackfillStreamAttendance extends Command
         // приняла бы за занятие любой запуск общей комнаты.
         if ($this->option('create-lessons') && $slot === null) {
             $this->error('--create-lessons требует --slot: общая комната Zoom используется и для других активностей, без окна занятия их не различить.');
+
+            return self::FAILURE;
+        }
+
+        // Ручной id относится к ОДНОМУ курсу: раздать его нескольким значило бы
+        // приписать одному потоку занятия другого.
+        if ($this->option('meeting-id') && count(array_filter((array) $this->option('course'))) !== 1) {
+            $this->error('--meeting-id задаётся только вместе с ровно одним --course.');
 
             return self::FAILURE;
         }
@@ -223,6 +232,13 @@ class BackfillStreamAttendance extends Command
      */
     private function resolveMeetingId(Course $course): array
     {
+        // Переданный вручную id перекрывает цепочку — это единственный способ
+        // добраться до потока, который шёл до появления раздела «Занятия»:
+        // у такого курса ссылки нет нигде, резолвить не из чего.
+        if ($this->option('meeting-id')) {
+            return [(string) $this->option('meeting-id'), 'передан через --meeting-id'];
+        }
+
         if (! empty($course->zoom_meeting_id)) {
             return [(string) $course->zoom_meeting_id, 'courses.zoom_meeting_id'];
         }

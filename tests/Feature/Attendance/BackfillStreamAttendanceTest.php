@@ -231,6 +231,62 @@ class BackfillStreamAttendanceTest extends TestCase
         $this->assertNull($course->fresh()->zoom_meeting_id, 'курс не переключается на живой sync автоматически');
     }
 
+    /**
+     * Курс, у которого meeting_id нет НИГДЕ (ни в карточке, ни в занятиях) —
+     * реальный случай первого потока, шедшего до появления раздела «Занятия».
+     * Такому курсу id передаётся вручную, и вместе со --slot команда заводит
+     * занятия под подтверждённые запуски Zoom.
+     *
+     * @test
+     */
+    public function create_lessons_materialises_a_lesson_for_a_stream_with_no_schedules(): void
+    {
+        $course = Course::factory()->create(['zoom_meeting_id' => null, 'zoom_link' => null]);
+
+        $this->fakeZoom(
+            [
+                // среда 14:00 локального времени — попадает в окно
+                ['uuid' => 'occ-lesson==', 'start_time' => '2025-10-08T11:00:00Z'],
+                // воскресенье вечером — чужая активность той же комнаты
+                ['uuid' => 'occ-alien==', 'start_time' => '2025-10-12T18:00:00Z'],
+            ],
+            [
+                ['participant_uuid' => 'p1', 'name' => 'A', 'join_time' => '2025-10-08T11:02:00Z', 'duration' => 3600],
+                ['participant_uuid' => 'p2', 'name' => 'B', 'join_time' => '2025-10-08T11:03:00Z', 'duration' => 3600],
+            ],
+        );
+
+        $this->artisan(
+            "attendance:backfill-streams --course={$course->id} --meeting-id=999888777"
+            .' --since=2025-09-01 --until=2025-12-31 --slot=Wed,12:30-15:30 --create-lessons --apply'
+        )->assertSuccessful();
+
+        $lessons = Schedule::where('course_id', $course->id)->get();
+        $this->assertCount(1, $lessons, 'заводится только запуск, попавший в окно занятия');
+        $this->assertSame('2025-10-08', $lessons->first()->start->toDateString());
+        $this->assertStringContainsString('бэкфил H3761', (string) $lessons->first()->title);
+        $this->assertSame(2, WebinarAttendance::where('schedule_id', $lessons->first()->id)->count());
+    }
+
+    /** @test */
+    public function create_lessons_refuses_without_a_slot(): void
+    {
+        $course = Course::factory()->create(['zoom_meeting_id' => '999888777']);
+
+        $this->artisan("attendance:backfill-streams --course={$course->id} --since=2025-09-01 --create-lessons")
+            ->assertFailed();
+    }
+
+    /** @test */
+    public function a_manual_meeting_id_is_refused_for_several_courses(): void
+    {
+        $a = Course::factory()->create(['zoom_meeting_id' => '111']);
+        $b = Course::factory()->create(['zoom_meeting_id' => '222']);
+
+        $this->artisan("attendance:backfill-streams --course={$a->id} --course={$b->id} --meeting-id=999 --since=2025-09-01")
+            ->assertFailed();
+    }
+
     /** @test */
     public function insert_only_guard_aborts_a_forbidden_write(): void
     {
