@@ -82,14 +82,15 @@ class StudentDebtsService
             ->get(['course_id', 'start_block', 'end_block'])
             ->groupBy('course_id');
 
-        // Явный «блок входа» из course_user (joined_at_block) по каждому курсу —
-        // приоритетная нижняя граница долга. Если не задан, debtFloor берёт
-        // первый оплаченный блок.
-        $joinedByCourse = DB::table('course_user')
+        // Строка course_user по каждому курсу: joined_at_block — приоритетная
+        // нижняя граница долга (если не задан, debtFloor берёт первый оплаченный
+        // блок), status — гейт «ушедшим долг не начисляем», left_after_block —
+        // потолок долга («Блок выхода» в админке).
+        $pivotByCourse = DB::table('course_user')
             ->where('user_id', $user->id)
             ->whereIn('course_id', $courses->keys())
-            ->whereNotNull('joined_at_block')
-            ->pluck('joined_at_block', 'course_id');
+            ->get(['course_id', 'status', 'joined_at_block', 'left_after_block'])
+            ->keyBy('course_id');
 
         // Полный график договорённостей: активные/просроченные/выполненные —
         // выполненные нужны, чтобы показать рассрочку целиком («2 из 4 внесено»).
@@ -113,6 +114,14 @@ class StudentDebtsService
         $result = collect();
         foreach ($courses as $courseId => $course) {
             $courseId = (int) $courseId;
+            $pivot = $pivotByCourse->get($courseId);
+
+            // Ушедшие/исключённые/льготники/выпускники должниками не считаются —
+            // зеркально админскому Debtors и debts:remind (та же константа).
+            if ($pivot !== null && in_array((string) $pivot->status, DebtorsReport::NON_DEBT_STATUSES, true)) {
+                continue;
+            }
+
             $blocks = $blocksByCourse->get($courseId, collect());
             $payments = $paymentsByCourse->get($courseId, collect());
             $promises = $promisesByCourse->get($courseId, collect());
@@ -133,6 +142,14 @@ class StudentDebtsService
 
             $refNumber = $refBlock instanceof CourseBlock ? (int) $refBlock->number : null;
 
+            // «Блок выхода» — потолок долга: блоки после него не начисляются
+            // (обещание хелпер-текста поля в админке). Если курс уже ушёл дальше
+            // блока выхода, «текущим» для долга считается блок выхода.
+            $leftAfter = $pivot?->left_after_block !== null ? (int) $pivot->left_after_block : null;
+            if ($refNumber !== null && $leftAfter !== null) {
+                $refNumber = min($refNumber, $leftAfter);
+            }
+
             // Текущий блок покрыт реальной (не conditional) оплатой?
             $refCovered = false;
             $debtNumbers = [];
@@ -143,8 +160,7 @@ class StudentDebtsService
                         break;
                     }
                 }
-                $explicitJoined = $joinedByCourse->get($courseId);
-                $explicitJoined = $explicitJoined !== null ? (int) $explicitJoined : null;
+                $explicitJoined = $pivot?->joined_at_block !== null ? (int) $pivot->joined_at_block : null;
                 $debtNumbers = $this->debtBlockNumbers($blocks, $refNumber, $payments, $explicitJoined);
             }
 
