@@ -78,6 +78,31 @@ return [
         'https://enter.tochka.com/uapi/acquiring/v1.0/payments_with_receipt',
     ),
 
+    /*
+     * H37xx: синтетическая проба загрузки ДЗ — «постоянно ломается подача ДЗ»
+     * повторялась 3 раза (молчаливый 64MB-порог, OOM сборки PDF, дубли при
+     * зависании), а ни одна проверка не трогала реальный upload-путь: все
+     * surfaces выше — GET. Пишет один тестовый файл через ту же
+     * HomeworkService::recordSubmission(..., finalize: false), что и форма
+     * студента, и удаляет его в finally — идемпотентно на каждом прогоне.
+     *
+     * ВАЖНО: наводить на ВЫДЕЛЕННЫЙ sandbox-урок (никогда на реальный урок
+     * настоящего курса) — is_free=true (без грантов/оплаты), homework_enabled=
+     * true, homework_closed_at=null. Пусто по умолчанию — проверка тихо
+     * пропускается, пока урок не заведён и не назван явно (как TEST_STUDENT_*).
+     *
+     * НЕ покрывает: php.ini/nginx client_max_body_size на самом проде (это
+     * in-process вызов внутри artisan-процесса пробы, не настоящий HTTP через
+     * nginx/php-fpm) и CSRF/HTTP-валидацию формы — тот класс инцидента
+     * (несовпадение upload_max_filesize/post_max_size с client_max_body_size)
+     * эта проба не ловит; она ловит регрессии в самом коде записи (роут/
+     * конфиг/диск/БД). Чёрный ящик через реальный HTTP — сознательно deferred,
+     * как Playwright выше по файлу.
+     */
+    'check_homework_upload' => (bool) env('CABINET_PROBE_CHECK_HOMEWORK_UPLOAD', true),
+    'homework_probe_course_slug' => (string) env('CABINET_PROBE_HOMEWORK_COURSE', ''),
+    'homework_probe_lesson_id' => (int) env('CABINET_PROBE_HOMEWORK_LESSON_ID', 0),
+
     'error_markers' => [
         'Whoops',
         'Server Error',
