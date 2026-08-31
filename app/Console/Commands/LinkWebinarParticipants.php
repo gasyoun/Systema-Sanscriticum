@@ -34,6 +34,7 @@ class LinkWebinarParticipants extends Command
     protected $signature = 'attendance:link-participants
         {--course=* : ID курса; можно повторять. Без опции — все курсы, где есть посещаемость}
         {--weak : Заводить и связки по одному совпавшему слову (по умолчанию только имя+фамилия)}
+        {--fuzzy : Заводить и нечёткие связки — складка транслита, уменьшительные, опечатка в допуске (H3772)}
         {--apply : Записать связки (без опции — сухой прогон)}';
 
     protected $description = 'Связать экранные имена участников Zoom с плательщиками курса — только вставки, webinar_attendances не меняется';
@@ -82,8 +83,12 @@ class LinkWebinarParticipants extends Command
                 }
 
                 $result = ZoomNameMatcher::match($zoomName, $candidates);
-                $accept = $result['user_id'] !== null
-                    && ($result['confidence'] === 'strong' || $this->option('weak'));
+                $accept = $result['user_id'] !== null && match ($result['confidence']) {
+                    'strong' => true,
+                    'weak' => (bool) $this->option('weak'),
+                    'fuzzy' => (bool) $this->option('fuzzy'),
+                    default => false,
+                };
 
                 if ($accept) {
                     $seenKeys[$key] = true;
@@ -93,6 +98,10 @@ class LinkWebinarParticipants extends Command
                         'zoom_name' => (string) $zoomName,
                         'zoom_name_key' => $key,
                         'confidence' => $result['confidence'],
+                        // Не пишется в БД — только для отчёта: нечёткую связку
+                        // человек должен иметь возможность проглядеть глазами.
+                        'reason' => $result['reason'],
+                        'candidate' => $candidates[$result['user_id']] ?? '—',
                     ];
 
                     continue;
@@ -109,11 +118,17 @@ class LinkWebinarParticipants extends Command
 
         $this->info('Связки к заведению:');
         $this->table(
-            ['Курс', 'Имя в Zoom', 'user_id', 'Уверенность'],
+            ['Курс', 'Имя в Zoom', 'Кандидат в кабинете', 'Уверенность', 'Почему'],
             array_map(
-                fn (array $p) => [$p['course_id'], $p['zoom_name'], $p['user_id'], $p['confidence']],
+                fn (array $p) => [
+                    $p['course_id'],
+                    $p['zoom_name'],
+                    mb_substr((string) $p['candidate'], 0, 42),
+                    $p['confidence'],
+                    $p['reason'],
+                ],
                 $planned
-            ) ?: [['—', '—', '—', '—']]
+            ) ?: [['—', '—', '—', '—', '—']]
         );
 
         $this->newLine();
@@ -141,7 +156,18 @@ class LinkWebinarParticipants extends Command
                         continue;
                     }
 
-                    WebinarParticipantLink::create($p + ['source' => 'auto_name']);
+                    // `reason`/`candidate` живут только в отчёте; в БД идут поля
+                    // модели. Источник различает точную и нечёткую связку, чтобы
+                    // нечёткие можно было отревизовать или снять одним запросом,
+                    // не трогая те, что совпали буква в букву.
+                    WebinarParticipantLink::create([
+                        'course_id' => $p['course_id'],
+                        'user_id' => $p['user_id'],
+                        'zoom_name' => $p['zoom_name'],
+                        'zoom_name_key' => $p['zoom_name_key'],
+                        'confidence' => $p['confidence'],
+                        'source' => $p['confidence'] === 'fuzzy' ? 'auto_fuzzy' : 'auto_name',
+                    ]);
                     $inserted++;
                 }
             });
