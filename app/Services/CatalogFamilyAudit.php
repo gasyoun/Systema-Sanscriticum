@@ -63,6 +63,12 @@ class CatalogFamilyAudit
     /** Общий ключ потока без признака «в записи» — два потока просто неразличимы. */
     public const CLASS_STREAM_COLLISION = 'stream_collision';
 
+    /** Столкновение видно покупателю: обе строки открыты на витрине. */
+    public const EXPOSURE_PUBLIC = 'public';
+
+    /** Лишние строки скрыты с витрины (404) — расходится только модель данных. */
+    public const EXPOSURE_INTERNAL = 'internal';
+
     public function __construct(private readonly CourseFamilyMatcher $families) {}
 
     /**
@@ -80,8 +86,19 @@ class CatalogFamilyAudit
 
         // Сначала duplicate, затем streams, затем unique; внутри — по слагу
         // семьи, чтобы отчёт не переставлялся от прогона к прогону.
+        // Сначала то, что ВИДИТ покупатель: `duplicate` на витрине — работа на
+        // сегодня, скрытый `duplicate` — запись в модели данных, и держать их в
+        // одной куче значит хоронить срочное под несрочным.
         $weight = [self::VERDICT_DUPLICATE => 0, self::VERDICT_STREAMS => 1, self::VERDICT_UNIQUE => 2];
-        usort($rows, fn (array $a, array $b) => [$weight[$a['verdict']], $a['family']] <=> [$weight[$b['verdict']], $b['family']]);
+        usort($rows, fn (array $a, array $b) => [
+            $weight[$a['verdict']],
+            $a['exposure'] === self::EXPOSURE_PUBLIC ? 0 : 1,
+            $a['family'],
+        ] <=> [
+            $weight[$b['verdict']],
+            $b['exposure'] === self::EXPOSURE_PUBLIC ? 0 : 1,
+            $b['family'],
+        ]);
 
         return $rows;
     }
@@ -212,6 +229,7 @@ class CatalogFamilyAudit
                 'verdict' => self::VERDICT_UNIQUE,
                 'reasons' => [],
                 'classes' => [],
+                'exposure' => self::EXPOSURE_INTERNAL,
                 'members' => $members,
                 'follow_up' => null,
             ];
@@ -219,6 +237,7 @@ class CatalogFamilyAudit
 
         $reasons = [];
         $classes = [];
+        $publicCollision = false;
 
         // 1. Член без единого собственного признака — осевшая копия.
         foreach ($members as $member) {
@@ -254,21 +273,69 @@ class CatalogFamilyAudit
                 $classes[] = $this->collisionIsRecordingTwin($members, $ids)
                     ? self::CLASS_RECORDING_TWIN
                     : self::CLASS_STREAM_COLLISION;
+
+                // Видит ли столкновение ПОКУПАТЕЛЬ. Скрытая с витрины строка
+                // отдаёт 404 (ShopController::show), в каталог не попадает и в
+                // sitemap не выходит — то есть «одна программа дважды» для неё
+                // просто не наступает.
+                if ($this->visibleCount($members, $ids) >= 2) {
+                    $publicCollision = true;
+                }
             }
         }
 
         $verdict = $reasons === [] ? self::VERDICT_STREAMS : self::VERDICT_DUPLICATE;
+        $exposure = $publicCollision ? self::EXPOSURE_PUBLIC : self::EXPOSURE_INTERNAL;
 
         return [
             'family' => $family,
             'verdict' => $verdict,
             'reasons' => $reasons,
             'classes' => array_values(array_unique($classes)),
+            'exposure' => $exposure,
             'members' => $members,
-            'follow_up' => $verdict === self::VERDICT_DUPLICATE
-                ? 'разобрать вручную: свести витрину и SEO на один курс семьи, записи переносить только после `catalog:audit-shells` (он проверяет, не отнимет ли удаление у человека единственную запись)'
-                : null,
+            'follow_up' => $this->followUp($verdict, $exposure),
         ];
+    }
+
+    /**
+     * Сколько из перечисленных курсов реально видны покупателю.
+     *
+     * @param  list<array<string, mixed>>  $members
+     * @param  list<int>  $ids
+     */
+    private function visibleCount(array $members, array $ids): int
+    {
+        $n = 0;
+
+        foreach ($members as $member) {
+            if (in_array($member['id'], $ids, true) && $member['visible']) {
+                $n++;
+            }
+        }
+
+        return $n;
+    }
+
+    /**
+     * Что делать с семьёй — и это РАЗНЫЕ работы, поэтому текст ветвится.
+     *
+     * 31-08-2026 первая версия аудита звала «свести витрину и SEO» для всех
+     * четырёх боевых `duplicate`, а на проде три из них были скрыты с витрины и
+     * отдавали 404: покупатель не видел ни одной пары дважды. Совет посылал
+     * человека чинить то, чего нет. Вердикт `duplicate` про МОДЕЛЬ данных, и
+     * сам по себе он ничего не говорит о витрине — экспозицию надо смотреть
+     * отдельно.
+     */
+    private function followUp(string $verdict, string $exposure): ?string
+    {
+        if ($verdict !== self::VERDICT_DUPLICATE) {
+            return null;
+        }
+
+        return $exposure === self::EXPOSURE_PUBLIC
+            ? 'ВИДНО ПОКУПАТЕЛЮ: две строки одной программы открыты на витрине одновременно — свести витрину и SEO на одну, вторую скрыть или увести алиасом слага; записи не трогать'
+            : 'покупателю НЕ видно (лишние строки скрыты с витрины и отдают 404): витрину чинить нечего, это дубль в модели данных. Прибираться по желанию через `catalog:retire-shell` / `catalog:audit-shells`, срочности нет';
     }
 
     /**
