@@ -155,6 +155,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('goals-record-checkins');
 
+        // Каникулы групп (H3790, фаза C): 25–31.08 вопрос «когда возобновляем?»
+        // в чаты групп; круглогодично — разрешение дедлайнов кворума. Окно
+        // спрашивания проверяется внутри команды, расписание — ежедневное.
+        $schedule->command('schedule:vacation-quorum')
+            ->dailyAt('10:00')
+            ->timezone('Europe/Moscow')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('vacation-quorum-poll');
+
         // Напоминание менеджеру о заявках с наступившим next_contact_at.
         // Гейт (crm_reminders) и дедуп (reminded_at) — внутри команды; пока
         // флаг выключен, прогон — no-op.
