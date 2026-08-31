@@ -11,6 +11,7 @@ use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\User;
 use App\Services\HomeworkService;
+use App\Support\Deploy\DeployDriftInspector;
 use App\Support\Roles;
 use App\Support\ServerGuards\CabinetProbeAlertState;
 use App\Support\ServerGuards\GuardFinding;
@@ -106,6 +107,7 @@ class ProbeCabinetHealth extends Command
                 $this->comment('TEST_STUDENT_* пусты — student-ветка пропущена.');
             }
 
+            $failures = array_merge($failures, $this->probeDeployDrift());
             $failures = array_merge($failures, $this->probeServerGuards());
             $failures = array_merge($failures, $this->probeOutboundPaymentTls());
         } catch (Throwable $e) {
@@ -208,6 +210,100 @@ class ProbeCabinetHealth extends Command
      *
      * @return list<array{message: string, severity: string}>
      */
+    /**
+     * H3803 — прод перестал получать новый код.
+     *
+     * Инцидент 31-08-2026: вшитый в URL `origin` PAT протух, `git pull` начал
+     * отдавать 401, и `deploy.sh` падал на втором шаге. Всё, на что смотрят
+     * мониторы, при этом оставалось зелёным — HTTP 200, чистое tracked-дерево,
+     * непорванный предохранитель, живые guards, — потому что сайт работал; он
+     * просто перестал обновляться. Симптом отрицательный: код НЕ приезжает, и
+     * заметить это можно было только когда деплой понадобился.
+     *
+     * Две НЕЗАВИСИМЫЕ ноги, и порядок здесь принципиален:
+     *
+     * 1. Возраст последнего успешного `git fetch`. Ровно этот случай: когда
+     *    fetch падает, ref `origin/main` замерзает ВМЕСТЕ с HEAD, отставание
+     *    остаётся нулевым, и наивная проверка «HEAD против origin/main» рапортует
+     *    здоровье. Устаревающий FETCH_HEAD — единственный локальный след.
+     * 2. Отставание HEAD от origin/main. Противоположный отказ: fetch работает,
+     *    а деплой нет (грязное дерево, сорванный предохранитель, красный
+     *    preflight). Со скидкой по возрасту, чтобы только что смерженный PR и
+     *    деплой в процессе не поднимали тревогу.
+     *
+     * Обе ноги локальные: проба ходит раз в 15 минут, и сетевой вызов на пути
+     * health-чека сделал бы её зависимой от доступности GitHub.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeDeployDrift(): array
+    {
+        if (! config('cabinet_probe.check_deploy_drift', true)) {
+            return [];
+        }
+
+        // Это проверка ПРОДАКШЕН-выкладки. На дев-машине отставание от
+        // origin/main — норма жизни, и проба там звенела бы постоянно, что
+        // быстро приучает не читать её вывод.
+        //
+        // Сравниваем config('app.env'), а не app()->isProduction(): последний
+        // читает env-биндинг контейнера, зафиксированный на бутстрапе, и
+        // config(['app.env' => ...]) в тесте его не меняет — шов был бы
+        // непроверяемым.
+        if (config('app.env') !== 'production') {
+            return [];
+        }
+
+        $inspector = app(DeployDriftInspector::class);
+        if (! $inspector->isUsable()) {
+            // Не git-чекаут или git не может разрешить origin/main.
+            return [];
+        }
+
+        $failures = [];
+
+        $fetchMaxAge = max(1, (int) config('cabinet_probe.deploy_drift_fetch_max_age_minutes', 90));
+        $lastFetch = $inspector->lastFetchAt();
+
+        if ($lastFetch === null) {
+            $failures[] = [
+                'message' => 'deploy-drift: не видно ни одного успешного git fetch (.git/FETCH_HEAD отсутствует) — прод мог никогда не связаться с GitHub',
+                'severity' => 'soft',
+            ];
+        } elseif ($lastFetch->lt(now()->subMinutes($fetchMaxAge))) {
+            $failures[] = [
+                'message' => sprintf(
+                    'deploy-drift: последний УСПЕШНЫЙ git fetch был %s назад (порог %d мин) — прод перестал получать код, а сайт при этом жив. Проверь креденшал: `git -C /var/www/html ls-remote origin` (docs/deploy.md шаг 2)',
+                    $lastFetch->diffForHumans(now(), true),
+                    $fetchMaxAge,
+                ),
+                'severity' => 'soft',
+            ];
+        }
+
+        $behind = $inspector->commitsBehind() ?? 0;
+        $behindMaxAge = max(1, (int) config('cabinet_probe.deploy_drift_behind_max_age_minutes', 60));
+        $originHead = $inspector->originHeadCommittedAt();
+
+        if ($behind > 0 && $originHead !== null && $originHead->lt(now()->subMinutes($behindMaxAge))) {
+            $failures[] = [
+                'message' => sprintf(
+                    'deploy-drift: прод отстал от origin/main на %d коммит(ов), самый свежий из них лежит уже %s (порог %d мин) — fetch работает, а деплой нет. Смотри storage/logs/auto_deploy.log и storage/auto_deploy.disabled',
+                    $behind,
+                    $originHead->diffForHumans(now(), true),
+                    $behindMaxAge,
+                ),
+                'severity' => 'soft',
+            ];
+        }
+
+        if ($failures === []) {
+            $this->info(sprintf('Деплой не отстал (behind=%d, fetch %s назад).', $behind, $lastFetch?->diffForHumans(now(), true) ?? '—'));
+        }
+
+        return $failures;
+    }
+
     private function probeServerGuards(): array
     {
         if (! config('cabinet_probe.check_server_guards', true) || ! config('server_guards.verify_enabled')) {

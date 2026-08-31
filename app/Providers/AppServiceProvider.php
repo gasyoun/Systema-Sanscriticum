@@ -37,6 +37,7 @@ use App\Services\Telegram\ProcDaemonProcessProbe;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
 use App\Support\Backup\BackupRunCommand;
+use App\Support\Deploy\DeployDriftInspector;
 use App\Support\NextIntroSession;
 use App\Support\ServerGuards\ShellSystemInspector;
 use App\Support\ServerGuards\SystemInspector;
@@ -95,6 +96,14 @@ class AppServiceProvider extends ServiceProvider
             HttpPaypalWebhookSignatureVerifier::class,
         );
         $this->app->bind(SystemInspector::class, ShellSystemInspector::class);
+
+        // H3803: путь к чекауту — base_path(), но через контейнер, чтобы тест
+        // подменял инспектора подклассом и не зависел от того, есть ли под
+        // рукой git-remote.
+        $this->app->singleton(
+            DeployDriftInspector::class,
+            fn () => new DeployDriftInspector(base_path()),
+        );
 
         // H3121: тот же шов для надзора за демоном MadelineProto. bind, а не
         // singleton, по той же причине — тест подменяет пробу на фейковую и
