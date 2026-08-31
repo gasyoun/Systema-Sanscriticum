@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Support;
 
+use App\Models\MessageTemplate;
 use App\Models\SupportAiReplyEvent;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
@@ -112,6 +113,54 @@ class SupportDmLiveFaqAutoSendTest extends TestCase
 
         $this->handleQuestion('не могу зайти в личный кабинет, забыла пароль', 9702);
         $this->assertSame(0, $this->sentCount(), 'E (доступы) не уходит студенту ни при каком конфиге');
+    }
+
+    /**
+     * Ключевая регрессия порядка: живой FAQ стоит ПЕРЕД шаблонами, но обгоняет
+     * их только выше порога. Ниже порога выверенный канреплай обязан отвечать
+     * как раньше — иначе перестановка была бы ухудшением, а не исправлением.
+     */
+    public function test_curated_template_still_wins_below_the_floor(): void
+    {
+        config([
+            'features.support_auto_reply_templates' => true,
+            'support.faq_rag.shadow_min_score_by_category' => ['F' => 1000.0],
+        ]);
+
+        MessageTemplate::query()->create([
+            'title' => 'Поддержка · F — как сдать ДЗ',
+            'body' => "Намасте, {name}!\n\nДомашнее задание сдаётся в личном кабинете.",
+            'category' => MessageTemplate::CATEGORY_SUPPORT,
+            'suggester_category' => 'F',
+        ]);
+
+        $this->handleQuestion(self::MATERIALS_QUESTION);
+
+        $sent = SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_SENT)->first();
+        $this->assertNotNull($sent);
+        $this->assertSame('template', $sent->meta['kind'], 'ниже порога отвечает шаблон, а не FAQ');
+    }
+
+    public function test_confident_faq_hit_outranks_the_category_template(): void
+    {
+        config(['features.support_auto_reply_templates' => true]);
+
+        MessageTemplate::query()->create([
+            'title' => 'Поддержка · F — как сдать ДЗ',
+            'body' => "Намасте, {name}!\n\nДомашнее задание сдаётся в личном кабинете.",
+            'category' => MessageTemplate::CATEGORY_SUPPORT,
+            'suggester_category' => 'F',
+        ]);
+
+        $this->handleQuestion(self::MATERIALS_QUESTION);
+
+        $sent = SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_SENT)->first();
+        $this->assertNotNull($sent);
+        $this->assertSame(
+            'faq_rag',
+            $sent->meta['kind'],
+            'выше порога отвечает найденный раздел: шаблон привязан к категории целиком и на части её тем промахивается',
+        );
     }
 
     public function test_score_below_the_floor_is_not_sent(): void

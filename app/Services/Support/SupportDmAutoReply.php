@@ -180,6 +180,44 @@ final class SupportDmAutoReply
             }
         }
 
+        // H3768 (рулинг MG 31-08-2026 «только F»): живой автоответ из FAQ.
+        //
+        // Стоит ПЕРЕД шаблонами, и это измеренное решение, а не вкусовое.
+        // Шаблон привязан к КАТЕГОРИИ целиком, а F — это и ДЗ, и материалы, и
+        // сертификаты; на проде у F ровно один шаблон, про сдачу ДЗ. Значит
+        // вопрос про сертификат сегодня получает автоответом инструкцию по
+        // домашним заданиям. Порог разводит эти случаи сам (замер 31-08-2026
+        // на живом faq.md): «куда загружать ДЗ» даёт 7.7–12.4 — НИЖЕ порога,
+        // и выверенный шаблон по-прежнему отвечает; «будет ли сертификат» даёт
+        // 19.3 и попадает в раздел «Сертификат» — выше порога, и отвечает FAQ.
+        // То есть шаблон не проигрывает там, где он прав, и перестаёт отвечать
+        // там, где он не про то.
+        //
+        // Категории берутся из конфига, но D (деньги) и E (доступы)
+        // вычёркиваются в КОДЕ: рулинг R3 запрещает их безусловно, и правка
+        // конфига не должна уметь это снять.
+        if ($mayReachStudent
+            && $user !== null
+            && $category !== null
+            && in_array($category, $this->liveFaqCategories(), true)
+            && $this->accountAllowsAutoReply($incoming)
+        ) {
+            $hits = $this->faq->retrieve($text, 3);
+            $score = (float) ($hits[0]['score'] ?? 0.0);
+
+            if ($hits !== [] && $score >= $this->scoreFloor($category)) {
+                $draft = $this->faqDraft($hits);
+
+                if ($draft !== null) {
+                    return $this->sendAuto($incoming, $user, $category, $draft, 'faq_rag', [
+                        'chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
+                        'score' => round($score, 4),
+                        'floor' => $this->scoreFloor($category),
+                    ]);
+                }
+            }
+        }
+
         // H3380: шаблонный автоответ D/E/F по привязке S9 — только на аккаунтах
         // с auto_reply_enabled, поведение основного support-аккаунта не меняется.
         if ($mayReachStudent
@@ -201,34 +239,6 @@ final class SupportDmAutoReply
                     return $this->sendAuto($incoming, $user, $category, $draft, 'template', [
                         'template_id' => $template->id,
                         'template_title' => $template->title,
-                    ]);
-                }
-            }
-        }
-
-        // H3768 (рулинг MG 31-08-2026 «только F»): живой автоответ из FAQ.
-        //
-        // Стоит ПОСЛЕ фактов и шаблонов — те точнее — и ДО ack: ответ по делу
-        // лучше, чем «приняли, ответим». Категории берутся из конфига, но D
-        // (деньги) и E (доступы) вычёркиваются в КОДЕ, а не в конфиге: рулинг R3
-        // запрещает их безусловно, и правка конфига не должна уметь это снять.
-        if ($mayReachStudent
-            && $user !== null
-            && $category !== null
-            && in_array($category, $this->liveFaqCategories(), true)
-            && $this->accountAllowsAutoReply($incoming)
-        ) {
-            $hits = $this->faq->retrieve($text, 3);
-            $score = (float) ($hits[0]['score'] ?? 0.0);
-
-            if ($hits !== [] && $score >= $this->scoreFloor($category)) {
-                $draft = $this->faqDraft($hits);
-
-                if ($draft !== null) {
-                    return $this->sendAuto($incoming, $user, $category, $draft, 'faq_rag', [
-                        'chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
-                        'score' => round($score, 4),
-                        'floor' => $this->scoreFloor($category),
                     ]);
                 }
             }
