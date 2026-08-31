@@ -624,9 +624,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_DM_AUTO_REPLY` | optional | `false` | config/features.php:156 |
 | `SUPPORT_DM_AUTO_REPLY_SHADOW` | optional | `false` | config/features.php:189 |
 | `SUPPORT_DM_LINK_INVITE` | optional | `false` | config/features.php:202 |
-| `SUPPORT_FAQ_RAG_MIN_SCORE` | optional | `1.5` | config/support.php:87 |
+| `SUPPORT_FAQ_RAG_HEADING_WEIGHT` | optional | `5` | config/support.php:89 |
+| `SUPPORT_FAQ_RAG_MIN_SCORE` | optional | `1.5` | config/support.php:91 |
 | `SUPPORT_FAQ_RAG_PATH` | required | `null` | config/support.php:84 |
-| `SUPPORT_FAQ_RAG_SHADOW_MIN_SCORE` | optional | `8.0` | config/support.php:100 |
+| `SUPPORT_FAQ_RAG_SHADOW_MIN_SCORE` | optional | `8.0` | config/support.php:104 |
 | `SUPPORT_FAQ_RAG_TOP_K` | optional | `3` | config/support.php:85 |
 | `SUPPORT_FOLLOW_UP_TASKS` | optional | `false` | config/features.php:418 |
 | `SUPPORT_GEO_DRIVER` | optional | `'null'` | config/support_geo.php:32 |

@@ -23,11 +23,11 @@ use Tests\TestCase;
 class FaqRagEvalTest extends TestCase
 {
     /** Ратчет H3766 — измеренный базлайн; каждая правка B3 поднимает его (замер 31-08-2026). */
-    private const GATE_TOP3 = 0.75;
+    private const GATE_TOP3 = 0.77;
 
-    private const GATE_RECALL5 = 0.81;
+    private const GATE_RECALL5 = 0.83;
 
-    private const GATE_MRR = 0.66;
+    private const GATE_MRR = 0.71;
 
     public function test_eval_metrics_meet_ratchet_gate(): void
     {

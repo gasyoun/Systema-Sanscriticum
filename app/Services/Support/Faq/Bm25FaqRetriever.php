@@ -46,8 +46,21 @@ final class Bm25FaqRetriever
         $df = [];
         $totalLen = 0;
 
+        // H3766 B3 (правка 3): заголовок раздела весит больше тела. Заголовки
+        // faq.md («Личный кабинет на сайте», «Техподдержка») почти дословно
+        // повторяют вопрос студента, а в теле те же слова тонут среди сотен
+        // других. Повтор токенов заголовка — самый дешёвый способ дать полю
+        // вес, не переписывая BM25 на многополевой BM25F.
+        $headingWeight = max(1, (int) config('support.faq_rag.heading_weight', 5));
+
         foreach ($chunks as $i => $chunk) {
-            $tokens = $this->tokenize($chunk->searchText());
+            $tokens = $this->tokenize($chunk->body);
+            $headingTokens = $this->tokenize(implode(' ', $chunk->headingPath));
+            for ($w = 0; $w < $headingWeight; $w++) {
+                foreach ($headingTokens as $ht) {
+                    $tokens[] = $ht;
+                }
+            }
             $tf = array_count_values($tokens);
             $len = max(1, count($tokens));
             $docs[$i] = ['chunk' => $chunk, 'tf' => $tf, 'len' => $len];

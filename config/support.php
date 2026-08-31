@@ -83,6 +83,10 @@ return [
         // null → resource_path('knowledge/faq.md')
         'path' => env('SUPPORT_FAQ_RAG_PATH', null),
         'top_k' => (int) env('SUPPORT_FAQ_RAG_TOP_K', 3),
+        // H3766 B3: во сколько раз токены заголовка раздела весомее токенов
+        // тела. Заголовки faq.md почти дословно повторяют вопрос студента.
+        // Подобрано на tests/fixtures/faq_rag_eval.json; 1 = выключено.
+        'heading_weight' => (int) env('SUPPORT_FAQ_RAG_HEADING_WEIGHT', 5),
         // Okapi BM25 floor for money/policy refuse gate (category D).
         'min_score' => (float) env('SUPPORT_FAQ_RAG_MIN_SCORE', 1.5),
         'money_policy_categories' => ['D'],
