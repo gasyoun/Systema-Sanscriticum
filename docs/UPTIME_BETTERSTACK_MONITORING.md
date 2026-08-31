@@ -1,6 +1,6 @@
 # Uptime monitoring — Better Stack (for agents)
 
-_Created: 30-07-2026 · Last updated: 26-08-2026_
+_Created: 30-07-2026 · Last updated: 31-08-2026_
 
 **Audience: agents** (Claude / Codex / ops automation). Env keys, cron paths,
 smoke commands, inventory table — operate without re-deriving from chat.
@@ -78,6 +78,18 @@ Host: LXC / Beget VPS `193.232.229.92`, app `/var/www/html`.
 In-app Telegram from `cabinet:probe` (critical/soft + runbook) is **orthogonal**:
 Better Stack = silence / external pulse; TG = detailed failure lines. Soft TG has
 fingerprint cooldown (`CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN`).
+
+**Homework upload synthetic check (H37xx):** `cabinet:probe`'s student branch also
+writes+reads+deletes one file through `HomeworkService::recordSubmission(finalize:
+false)` on a **dedicated sandbox lesson** (`CABINET_PROBE_HOMEWORK_COURSE` /
+`_LESSON_ID`, `config/cabinet_probe.php`) — set these only after creating a
+throwaway `is_free=true` lesson, never a real student-facing one. It catches
+route/config/storage/DB regressions in the store path, but is an **in-process**
+call inside the artisan process — it does **not** exercise real nginx/php-fpm, so
+it cannot catch a `client_max_body_size`/`upload_max_filesize`/`post_max_size`
+mismatch (the class of incident that caused the silent 64MB wall on 04-08-2026,
+see `config/homework.php`). A real black-box HTTP probe for that class is
+deferred, same as Playwright above.
 
 Smoke (on VPS):
 
