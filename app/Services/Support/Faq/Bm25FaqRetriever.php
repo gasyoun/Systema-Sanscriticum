@@ -29,6 +29,26 @@ final class Bm25FaqRetriever
      */
     public function retrieve(string $query, ?int $topK = null, ?string $path = null): array
     {
+        $out = [];
+        foreach ($this->retrieveChunks($query, $topK, $path) as $scored) {
+            $citation = $scored['chunk']->toCitation();
+            $citation['score'] = round($scored['score'], 4);
+            $out[] = $citation;
+        }
+
+        return $out;
+    }
+
+    /**
+     * То же ранжирование, но отдаёт ЦЕЛЫЕ чанки, а не 280-символьные сниппеты.
+     *
+     * H3766 B4: боту в системный промпт нужен полный текст раздела — сниппета
+     * ему мало, а читать корпус целиком (46 КБ) он больше не должен.
+     *
+     * @return list<array{chunk: FaqChunk, score: float}>
+     */
+    public function retrieveChunks(string $query, ?int $topK = null, ?string $path = null): array
+    {
         $topK ??= (int) config('support.faq_rag.top_k', 3);
         $topK = max(1, $topK);
 
@@ -98,9 +118,7 @@ final class Bm25FaqRetriever
         foreach ($scores as $i => $score) {
             /** @var FaqChunk $chunk */
             $chunk = $docs[$i]['chunk'];
-            $citation = $chunk->toCitation();
-            $citation['score'] = round((float) $score, 4);
-            $out[] = $citation;
+            $out[] = ['chunk' => $chunk, 'score' => (float) $score];
             $count++;
             if ($count >= $topK) {
                 break;
