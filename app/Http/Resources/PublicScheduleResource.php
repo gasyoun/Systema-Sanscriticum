@@ -67,6 +67,9 @@ class PublicScheduleResource extends JsonResource
                     ->values()
                     ->all(),
             'teacher' => $course?->teacher?->name,
+            // Новизна для анонсов «только новые курсы» (MG 31-08-2026):
+            // new / repeat / no_repeat / usual — виджет фильтрует по нему.
+            'novelty' => $course?->novelty ?? 'usual',
             'group' => $group === null ? null : [
                 'name' => $group->name,
                 'status' => $group->status,

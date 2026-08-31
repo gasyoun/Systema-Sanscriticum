@@ -41,6 +41,10 @@ class Course extends Model
         'is_completed',
         // Живой повтор не планируется (MG H1755): куратор говорит «повтора не будет».
         'never_repeat',
+        // Новизна для анонсов «только новые курсы» (MG 31-08-2026):
+        // new — впервые; repeat — возвращается после года-двух;
+        // no_repeat — повтора не будет; usual — обычный.
+        'novelty',
         // H3807 «одна карточка на программу»: этот курс — ЗАПИСЬ вон того
         // живого курса. Курс остаётся покупаем, но своей карточки в ленте
         // каталога не получает и отдаёт rel=canonical на живой курс.
@@ -154,6 +158,28 @@ class Course extends Model
     public function levelLabel(): ?string
     {
         return self::LEVELS[$this->level] ?? null;
+    }
+
+    /**
+     * Новизна курса для анонсов «только новые курсы» (MG 31-08-2026).
+     * Для фильтра «новых» годятся new + repeat; no_repeat исключён намеренно.
+     */
+    public const NOVELTIES = [
+        'new' => 'Впервые',
+        'repeat' => 'Возвращается после года-двух',
+        'no_repeat' => 'Повтора не будет',
+        'usual' => 'Обычный',
+    ];
+
+    public function noveltyLabel(): string
+    {
+        return self::NOVELTIES[$this->novelty] ?? 'Обычный';
+    }
+
+    /** «Новый» для анонсов — впервые или возвращается (no_repeat/usual — нет). */
+    public function isNewForAnnouncements(): bool
+    {
+        return in_array($this->novelty, ['new', 'repeat'], true);
     }
 
     /** Курсы заданного уровня (значение вне LEVELS игнорируется — фильтр не применяется). */

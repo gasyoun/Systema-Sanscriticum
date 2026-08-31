@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\PartnerBotController;
 use App\Http\Controllers\Api\PublicScheduleController;
 use App\Http\Controllers\Api\PublicTrialBookController;
+use App\Http\Controllers\Api\PublicWaitlistController;
 use App\Http\Controllers\Api\VkBotController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\WebhookController;
@@ -50,6 +51,18 @@ Route::get('/public/schedule', [PublicScheduleController::class, 'index'])
 Route::post('/public/schedule/book', PublicTrialBookController::class)
     ->middleware('throttle:5,1')
     ->name('api.public.schedule.book');
+
+// === ПУБЛИЧНЫЙ СПИСОК ОЖИДАНИЯ (MG 31-08-2026, волна 1) ===
+// Read-only фид кандидатов (голоса/цена/минимум/не-раньше). Голосование —
+// отдельный auth:sanctum эндпоинт, флаг waitlist_voting ON, иначе 404.
+// Allowlist в PublicWaitlistResource: только слаги, без id/PII/прогнозов.
+Route::get('/public/waitlist', [PublicWaitlistController::class, 'index'])
+    ->middleware('throttle:30,1')
+    ->name('api.public.waitlist');
+
+Route::post('/public/waitlist/vote', [PublicWaitlistController::class, 'vote'])
+    ->middleware('throttle:10,1')
+    ->name('api.public.waitlist.vote');
 
 // === МОБИЛЬНОЕ ПРИЛОЖЕНИЕ (Sanctum personal access tokens) ===
 Route::prefix('v1')->group(function () {

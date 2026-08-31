@@ -784,6 +784,13 @@ return [
     'crm_trial_widget_public' => (bool) env('CRM_TRIAL_WIDGET_PUBLIC', false),
 
     /*
+     | Список ожидания (MG 31-08-2026, волна 3): голосование из кабинета.
+     | Read-only фид /api/public/waitlist работает всегда; POST /vote 404,
+     | пока OFF. Не включать в этом PR — только ключ, default false.
+     */
+    'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
+
+    /*
      | Атрибуция возвратов по ссылке «Возврат за платёж №…» в зачёте докупки
      | (H1405 C2). Ветка целого блока в Tariff::upgradeRefundsForUser видит
      | только Расход-строки с покрывающим диапазоном блоков, а админ-форма

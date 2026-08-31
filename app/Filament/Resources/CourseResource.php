@@ -205,6 +205,20 @@ class CourseResource extends Resource
                                     ->inline(false),
                             ]),
 
+                        // Новизна для анонсов «только новые курсы» (MG 31-08-2026):
+                        // no_repeat дублирует never_repeat для витрины; при выборе
+                        // no_repeat флаг never_repeat проставляется автоматически.
+                        Forms\Components\Select::make('novelty')
+                            ->label('Новизна (для анонсов)')
+                            ->options(Course::NOVELTIES)
+                            ->default('usual')
+                            ->helperText('«Впервые» / «Возвращается» попадают в анонсы новых курсов; «Повтора не будет» — нет (проставляет «Живой повтор не планируется»).')
+                            ->afterStateUpdated(function (string $state, Forms\Set $set): void {
+                                if ($state === 'no_repeat') {
+                                    $set('never_repeat', true);
+                                }
+                            }),
+
                         // БЛОК: КАТЕГОРИИ И ФОРМАТ
                         Forms\Components\Grid::make(2)
                             ->schema([
