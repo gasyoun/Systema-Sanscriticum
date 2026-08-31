@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Models\MarketingSetting;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
+use App\Services\VacationQuorumService;
 use App\Support\TelegramSendGuard;
 use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
@@ -72,6 +73,23 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
         $message = $this->update['message'] ?? $this->update['channel_post'] ?? null;
         if (! $message || ! isset($message['chat']['id'], $message['message_id'], $message['date'])) {
             return;
+        }
+
+        // H3790 фаза C: reply на опрос кворума каникульной группы = голос платного
+        // участника. Голоса по reply_to_message_id, дедуп внутри сервиса.
+        if (isset($message['reply_to_message']['message_id'])
+            && is_numeric($message['reply_to_message']['message_id'])
+            && isset($message['from']['id'])
+            && ! empty($message['from']['id'])) {
+            try {
+                app(VacationQuorumService::class)->registerReply(
+                    (string) $message['chat']['id'],
+                    (int) $message['reply_to_message']['message_id'],
+                    (int) $message['from']['id'],
+                );
+            } catch (Throwable $e) {
+                Log::warning('VacationQuorum: reply registration failed', ['error' => $e->getMessage()]);
+            }
         }
 
         $chat = $message['chat'];
