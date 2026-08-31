@@ -631,7 +631,7 @@ final class SupportDmAutoReply
         }
 
         $score = (float) ($hits[0]['score'] ?? 0.0);
-        if ($score < (float) config('support.faq_rag.shadow_min_score', 8.0)) {
+        if ($score < $this->shadowFloor($category)) {
             return;
         }
 
@@ -661,6 +661,24 @@ final class SupportDmAutoReply
                 ],
             ],
         );
+    }
+
+    /**
+     * H3766 B5 — порог скора для теневой автоотправки, выведенный ПОКАТЕГОРИЙНО
+     * на 100-вопросном наборе (`php artisan faq:score-floor`). Категорийный
+     * порог всегда строже общего: берём максимум, чтобы правка одного числа не
+     * могла случайно ослабить другой.
+     */
+    private function shadowFloor(string $category): float
+    {
+        $global = (float) config('support.faq_rag.shadow_min_score', 8.0);
+
+        $perCategory = config('support.faq_rag.shadow_min_score_by_category', []);
+        if (! is_array($perCategory) || ! isset($perCategory[$category])) {
+            return $global;
+        }
+
+        return max($global, (float) $perCategory[$category]);
     }
 
     private function alreadyHandled(TelegramSupportMessage $incoming): bool

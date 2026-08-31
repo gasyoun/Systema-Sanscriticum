@@ -16,6 +16,7 @@ final class Bm25FaqRetriever
 
     public function __construct(
         private readonly FaqCorpusParser $parser,
+        private readonly RuTextNormalizer $ru = new RuTextNormalizer,
     ) {}
 
     public function isEnabled(): bool
@@ -28,10 +29,30 @@ final class Bm25FaqRetriever
      */
     public function retrieve(string $query, ?int $topK = null, ?string $path = null): array
     {
+        $out = [];
+        foreach ($this->retrieveChunks($query, $topK, $path) as $scored) {
+            $citation = $scored['chunk']->toCitation();
+            $citation['score'] = round($scored['score'], 4);
+            $out[] = $citation;
+        }
+
+        return $out;
+    }
+
+    /**
+     * То же ранжирование, но отдаёт ЦЕЛЫЕ чанки, а не 280-символьные сниппеты.
+     *
+     * H3766 B4: боту в системный промпт нужен полный текст раздела — сниппета
+     * ему мало, а читать корпус целиком (46 КБ) он больше не должен.
+     *
+     * @return list<array{chunk: FaqChunk, score: float}>
+     */
+    public function retrieveChunks(string $query, ?int $topK = null, ?string $path = null): array
+    {
         $topK ??= (int) config('support.faq_rag.top_k', 3);
         $topK = max(1, $topK);
 
-        $queryTokens = $this->tokenize($query);
+        $queryTokens = $this->ru->expandQuery($this->tokenize($query));
         if ($queryTokens === []) {
             return [];
         }
@@ -45,8 +66,21 @@ final class Bm25FaqRetriever
         $df = [];
         $totalLen = 0;
 
+        // H3766 B3 (правка 3): заголовок раздела весит больше тела. Заголовки
+        // faq.md («Личный кабинет на сайте», «Техподдержка») почти дословно
+        // повторяют вопрос студента, а в теле те же слова тонут среди сотен
+        // других. Повтор токенов заголовка — самый дешёвый способ дать полю
+        // вес, не переписывая BM25 на многополевой BM25F.
+        $headingWeight = max(1, (int) config('support.faq_rag.heading_weight', 5));
+
         foreach ($chunks as $i => $chunk) {
-            $tokens = $this->tokenize($chunk->searchText());
+            $tokens = $this->tokenize($chunk->body);
+            $headingTokens = $this->tokenize(implode(' ', $chunk->headingPath));
+            for ($w = 0; $w < $headingWeight; $w++) {
+                foreach ($headingTokens as $ht) {
+                    $tokens[] = $ht;
+                }
+            }
             $tf = array_count_values($tokens);
             $len = max(1, count($tokens));
             $docs[$i] = ['chunk' => $chunk, 'tf' => $tf, 'len' => $len];
@@ -84,9 +118,7 @@ final class Bm25FaqRetriever
         foreach ($scores as $i => $score) {
             /** @var FaqChunk $chunk */
             $chunk = $docs[$i]['chunk'];
-            $citation = $chunk->toCitation();
-            $citation['score'] = round((float) $score, 4);
-            $out[] = $citation;
+            $out[] = ['chunk' => $chunk, 'score' => (float) $score];
             $count++;
             if ($count >= $topK) {
                 break;
@@ -135,7 +167,11 @@ final class Bm25FaqRetriever
      */
     public function tokenize(string $text): array
     {
-        $text = mb_strtolower($text, 'UTF-8');
+        // H3766 B3 (правка 1): ё/е fold. Студенты пишут «е» там, где в faq.md
+        // стоит «ё» («зачет»/«зачёт», «еще»/«ещё», «объем»/«объём»), и BM25
+        // считал это разными термами. Свёртка идёт и по запросу, и по корпусу —
+        // tokenize() один на оба.
+        $text = $this->ru->fold($text);
         // Letters (incl. Cyrillic) and digits; drop punctuation.
         preg_match_all('/[\p{L}\p{N}]+/u', $text, $m);
         $tokens = $m[0] ?? [];
@@ -155,7 +191,9 @@ final class Bm25FaqRetriever
             if (in_array($t, $stop, true)) {
                 continue;
             }
-            $out[] = $t;
+            // H3766 B3 (правка 2): усечение окончаний — одинаково для корпуса и
+            // запроса, иначе «оплатить» перестанет находить «Оплата».
+            $out[] = $this->ru->stem($t);
         }
 
         return $out;
