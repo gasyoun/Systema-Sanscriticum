@@ -136,6 +136,11 @@ final class Bm25FaqRetriever
     public function tokenize(string $text): array
     {
         $text = mb_strtolower($text, 'UTF-8');
+        // H3766 B3 (правка 1): ё/е fold. Студенты пишут «е» там, где в faq.md
+        // стоит «ё» («зачет»/«зачёт», «еще»/«ещё», «объем»/«объём»), и BM25
+        // считал это разными термами. Свёртка идёт и по запросу, и по корпусу —
+        // tokenize() один на оба.
+        $text = str_replace(['ё', 'Ё'], 'е', $text);
         // Letters (incl. Cyrillic) and digits; drop punctuation.
         preg_match_all('/[\p{L}\p{N}]+/u', $text, $m);
         $tokens = $m[0] ?? [];

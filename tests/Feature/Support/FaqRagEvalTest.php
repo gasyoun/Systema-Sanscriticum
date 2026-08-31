@@ -22,8 +22,8 @@ use Tests\TestCase;
  */
 class FaqRagEvalTest extends TestCase
 {
-    /** Ратчет H3766 B2 — базлайн 100-вопросного набора, замер 31-08-2026 до тюнинга B3. */
-    private const GATE_TOP3 = 0.67;
+    /** Ратчет H3766 — измеренный базлайн; каждая правка B3 поднимает его (замер 31-08-2026). */
+    private const GATE_TOP3 = 0.68;
 
     private const GATE_RECALL5 = 0.69;
 
