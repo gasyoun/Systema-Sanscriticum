@@ -26,12 +26,15 @@ class Group extends Model
     protected $fillable = [
         'name', 'slug', 'intake_id', 'telegram_chat_id',
         'status', 'min_size', 'planned_start_date', 'start_date_override', 'recruitment_notified_at',
+        'is_on_vacation', 'vacation_resume_date',
     ];
 
     protected $casts = [
         'planned_start_date' => 'date',
         'start_date_override' => 'date',
         'recruitment_notified_at' => 'datetime',
+        'is_on_vacation' => 'boolean',
+        'vacation_resume_date' => 'date',
     ];
 
     protected $attributes = [

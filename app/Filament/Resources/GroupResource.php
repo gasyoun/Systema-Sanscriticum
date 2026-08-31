@@ -92,6 +92,20 @@ class GroupResource extends Resource
                             ->native(false)
                             ->helperText('Приоритет над плановой датой. Смена перезапускает отсчёт напоминания о недоборе и шлёт немедленное уведомление о переносе.'),
                     ])->columns(2),
+
+                // --- КАНИКУЛЫ (H3790) ---
+                Forms\Components\Section::make('Каникулы')
+                    ->schema([
+                        Forms\Components\Toggle::make('is_on_vacation')
+                            ->label('Группа на каникулах')
+                            ->helperText('Включённый флаг без даты = «дата уточняется»: в последнюю неделю августа бот спросит чат группы, когда возобновляются занятия, и при недоборе кворума за 2 недели предложит распустить группу.'),
+
+                        Forms\Components\DatePicker::make('vacation_resume_date')
+                            ->label('Дата выхода из каникул')
+                            ->native(false)
+                            ->visible(fn (Forms\Get $get): bool => (bool) $get('is_on_vacation'))
+                            ->helperText('Пока пусто — в публичном расписании группа помечается «дата выхода из каникул уточняется».'),
+                    ])->columns(2),
             ]);
     }
 
@@ -135,6 +149,13 @@ class GroupResource extends Resource
                         default => 'gray',
                     })
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('vacation_resume_date')
+                    ->label('Каникулы')
+                    ->date('d.m.Y')
+                    ->placeholder('—')
+                    ->badge()
+                    ->color(fn ($state): string => $state ? 'warning' : 'gray'),
 
                 Tables\Columns\TextColumn::make('min_size')
                     ->label('Порог набора')

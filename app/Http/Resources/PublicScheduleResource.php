@@ -72,6 +72,9 @@ class PublicScheduleResource extends JsonResource
                 'status' => $group->status,
                 'seats_min' => $group->min_size,
                 'is_recruited' => $group->isRecruited(),
+                // H3790: каникулы — флаг + дата выхода (nullable date, без PII)
+                'is_on_vacation' => (bool) $group->is_on_vacation,
+                'vacation_resume_date' => $group->vacation_resume_date?->toDateString(),
             ],
         ];
 
