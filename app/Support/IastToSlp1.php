@@ -39,7 +39,7 @@ final class IastToSlp1
         $out = '';
         $chars = preg_split('//u', $iast, -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $n = count($chars);
-        for ($i = 0; $i < $n; ) {
+        for ($i = 0; $i < $n;) {
             if ($i + 1 < $n) {
                 $two = $chars[$i].$chars[$i + 1];
                 if (isset(self::SLP1[$two])) {
