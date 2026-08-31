@@ -49,6 +49,8 @@ class BackfillStreamAttendance extends Command
         {--since= : Не рассматривать запуски раньше этой даты (YYYY-MM-DD). Обязателен}
         {--until= : Не рассматривать запуски позже этой даты (YYYY-MM-DD), по умолчанию сегодня}
         {--min-participants=2 : Запуск с меньшим числом участников считается служебным, а не занятием}
+        {--slot= : Окно занятия «Dow,HH:MM-HH:MM» по времени приложения, напр. "Wed,12:30-15:30". Обязателен вместе с --create-lessons}
+        {--create-lessons : Завести занятие под запуск Zoom, которому в системе занятия нет. Только со --slot; решение об атрибуции принимает человек}
         {--apply : Выполнить вставки (без опции — сухой прогон)}';
 
     protected $description = 'Досбор webinar_attendances потоков из Zoom Reports API — только вставки, без правки существующих строк';
@@ -71,6 +73,25 @@ class BackfillStreamAttendance extends Command
         $sinceDate = Carbon::parse($since)->startOfDay();
         $untilDate = $this->option('until') ? Carbon::parse($this->option('until'))->endOfDay() : now()->endOfDay();
         $minParticipants = max(1, (int) $this->option('min-participants'));
+
+        $slot = null;
+        if ($this->option('slot')) {
+            $slot = $this->parseSlot((string) $this->option('slot'));
+            if ($slot === null) {
+                $this->error('--slot должен иметь вид "Wed,12:30-15:30": день недели по-английски, затем окно локального времени.');
+
+                return self::FAILURE;
+            }
+        }
+
+        // Заведение занятия задним числом меняет помесячное признание зарплаты
+        // преподавателя, поэтому оно требует явного окна: без него команда
+        // приняла бы за занятие любой запуск общей комнаты.
+        if ($this->option('create-lessons') && $slot === null) {
+            $this->error('--create-lessons требует --slot: общая комната Zoom используется и для других активностей, без окна занятия их не различить.');
+
+            return self::FAILURE;
+        }
 
         $courses = $this->targetCourses();
         if ($courses->isEmpty()) {
@@ -95,6 +116,7 @@ class BackfillStreamAttendance extends Command
                 ->filter(function (array $i) use ($sinceDate, $untilDate) {
                     return Carbon::parse($i['start_time'])->betweenIncluded($sinceDate, $untilDate);
                 })
+                ->filter(fn (array $i) => $this->inSlot(Carbon::parse($i['start_time']), $slot))
                 ->values();
 
             // Дата занятия — локальная календарная дата запуска: Zoom отдаёт UTC,
@@ -124,19 +146,23 @@ class BackfillStreamAttendance extends Command
                     continue; // служебный запуск, не занятие
                 }
 
-                if ($schedule === null) {
+                if ($schedule === null && ! $this->option('create-lessons')) {
                     $blindZoomRuns[] = [$course->id, $date, count($dayInstances), count($participants)];
 
                     continue;
                 }
 
-                $missing = $this->countMissing($schedule->id, $participants, $recorder);
+                // Без занятия вставлять посещаемость некуда: строка ссылается на
+                // schedule_id. С --create-lessons занятие заводится в apply().
+                $missing = $schedule === null
+                    ? count($this->distinctKeys($participants, $recorder))
+                    : $this->countMissing($schedule->id, $participants, $recorder);
                 $totalInsertable += $missing;
 
                 $planRows[] = [
                     $course->id,
                     $date,
-                    $schedule->id,
+                    $schedule?->id,
                     count($dayInstances),
                     count($participants),
                     $missing,
@@ -163,9 +189,9 @@ class BackfillStreamAttendance extends Command
             return self::SUCCESS;
         }
 
-        $inserted = $this->apply($planRows, $zoom, $recorder, $sinceDate, $untilDate);
+        $result = $this->apply($planRows, $zoom, $recorder, $sinceDate, $untilDate, $slot);
 
-        $this->info("Вставлено строк посещаемости: {$inserted}.");
+        $this->info("Заведено занятий: {$result['created']}. Вставлено строк посещаемости: {$result['inserted']}.");
         $this->comment('Ни одна существующая строка не изменена и не удалена (InsertOnlyGuard).');
 
         return self::SUCCESS;
@@ -224,16 +250,69 @@ class BackfillStreamAttendance extends Command
             ->pluck('zoom_participant_uuid')
             ->flip();
 
+        $seen = $this->distinctKeys($participants, $recorder);
+
+        return count(array_diff_key($seen, $existing->all()));
+    }
+
+    /**
+     * Уникальные ключи участия среди запусков дня — несколько подключений
+     * одного человека за одно занятие дают одну строку.
+     *
+     * @return array<string, true>
+     */
+    private function distinctKeys(array $participants, AttendanceRecorder $recorder): array
+    {
         $seen = [];
         foreach ($participants as $p) {
             $key = $recorder->participantKeyFor($p);
-            if (trim($key, '|') === '' || $existing->has($key) || isset($seen[$key])) {
+            if (trim($key, '|') === '') {
                 continue;
             }
             $seen[$key] = true;
         }
 
-        return count($seen);
+        return $seen;
+    }
+
+    /**
+     * Разбор окна занятия «Wed,12:30-15:30».
+     *
+     * @return array{dow: int, from: int, to: int}|null минуты от полуночи
+     */
+    private function parseSlot(string $raw): ?array
+    {
+        if (! preg_match('~^\s*([A-Za-z]{3}),\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\s*$~', $raw, $m)) {
+            return null;
+        }
+
+        $days = ['mon' => 1, 'tue' => 2, 'wed' => 3, 'thu' => 4, 'fri' => 5, 'sat' => 6, 'sun' => 0];
+        $dow = $days[strtolower($m[1])] ?? null;
+        if ($dow === null) {
+            return null;
+        }
+
+        $from = ((int) $m[2]) * 60 + (int) $m[3];
+        $to = ((int) $m[4]) * 60 + (int) $m[5];
+
+        return $to > $from ? ['dow' => $dow, 'from' => $from, 'to' => $to] : null;
+    }
+
+    /** Попадает ли запуск Zoom в окно занятия (по локальному времени приложения). */
+    private function inSlot(Carbon $utc, ?array $slot): bool
+    {
+        if ($slot === null) {
+            return true;
+        }
+
+        $local = $utc->copy()->setTimezone(config('app.timezone'));
+        if ((int) $local->dayOfWeek !== $slot['dow']) {
+            return false;
+        }
+
+        $minutes = $local->hour * 60 + $local->minute;
+
+        return $minutes >= $slot['from'] && $minutes <= $slot['to'];
     }
 
     private function renderReport(array $planRows, array $blindLessons, array $blindZoomRuns, int $totalInsertable): void
@@ -241,7 +320,10 @@ class BackfillStreamAttendance extends Command
         $this->info('План досбора (только вставки):');
         $this->table(
             ['Курс', 'Дата', 'Schedule', 'Запусков Zoom', 'Участников', 'К вставке'],
-            $planRows ?: [['—', '—', '—', '—', '—', 0]]
+            array_map(
+                fn (array $r) => [$r[0], $r[1], $r[2] ?? 'завести занятие', $r[3], $r[4], $r[5]],
+                $planRows
+            ) ?: [['—', '—', '—', '—', '—', 0]]
         );
 
         $this->newLine();
@@ -262,17 +344,53 @@ class BackfillStreamAttendance extends Command
         $this->info("Итого к вставке: {$totalInsertable} строк.");
     }
 
+    /**
+     * Завести занятие под подтверждённый запуск Zoom. Только со --slot: время
+     * занятия берётся из середины окна, чтобы новая строка попадала в тот же
+     * слот, а не в момент, когда ведущий нажал «начать».
+     *
+     * Заголовок помечен бэкфилом: строка, заведённая задним числом, должна быть
+     * отличима от расписания, которое человек вёл сам.
+     */
+    private function createLesson(Course $course, string $date, string $meetingId): ?int
+    {
+        $slot = $this->parseSlot((string) $this->option('slot'));
+        if ($slot === null) {
+            return null;
+        }
+
+        $start = Carbon::parse($date)->startOfDay()->addMinutes($slot['from']);
+        $end = Carbon::parse($date)->startOfDay()->addMinutes($slot['to']);
+
+        $anchor = Schedule::where('course_id', $course->id)->whereNotNull('start')->first();
+
+        $schedule = Schedule::create([
+            'title' => $course->title.' — занятие '.Carbon::parse($date)->format('d.m.y').' (бэкфил H3761)',
+            'link' => $course->zoom_link ?: $anchor?->link,
+            'start' => $start->toDateTimeString(),
+            'end' => $end->toDateTimeString(),
+            'group_id' => $anchor?->group_id,
+            'course_id' => $course->id,
+            'zoom_meeting_id' => $meetingId,
+        ]);
+
+        return (int) $schedule->id;
+    }
+
+    /** @return array{inserted: int, created: int} */
     private function apply(
         array $planRows,
         ZoomService $zoom,
         AttendanceRecorder $recorder,
         Carbon $sinceDate,
-        Carbon $untilDate
-    ): int {
+        Carbon $untilDate,
+        ?array $slot
+    ): array {
         $inserted = 0;
+        $created = 0;
 
-        InsertOnlyGuard::around(function () use ($planRows, $zoom, $recorder, $sinceDate, $untilDate, &$inserted): void {
-            DB::transaction(function () use ($planRows, $zoom, $recorder, $sinceDate, $untilDate, &$inserted): void {
+        InsertOnlyGuard::around(function () use ($planRows, $zoom, $recorder, $sinceDate, $untilDate, $slot, &$inserted, &$created): void {
+            DB::transaction(function () use ($planRows, $zoom, $recorder, $sinceDate, $untilDate, $slot, &$inserted, &$created): void {
                 foreach ($planRows as [$courseId, $date, $scheduleId, , , $missing]) {
                     if ($missing === 0) {
                         continue;
@@ -285,6 +403,14 @@ class BackfillStreamAttendance extends Command
                         continue;
                     }
 
+                    if ($scheduleId === null) {
+                        $scheduleId = $this->createLesson($course, $date, $meetingId);
+                        if ($scheduleId === null) {
+                            continue;
+                        }
+                        $created++;
+                    }
+
                     foreach ($zoom->pastMeetingInstances($meetingId) as $instance) {
                         $uuid = (string) ($instance['uuid'] ?? '');
                         $startTime = (string) ($instance['start_time'] ?? '');
@@ -293,7 +419,7 @@ class BackfillStreamAttendance extends Command
                         }
 
                         $at = Carbon::parse($startTime);
-                        if (! $at->betweenIncluded($sinceDate, $untilDate)) {
+                        if (! $at->betweenIncluded($sinceDate, $untilDate) || ! $this->inSlot($at, $slot)) {
                             continue;
                         }
                         if ($at->setTimezone(config('app.timezone'))->toDateString() !== $date) {
@@ -310,6 +436,6 @@ class BackfillStreamAttendance extends Command
             });
         });
 
-        return $inserted;
+        return ['inserted' => $inserted, 'created' => $created];
     }
 }

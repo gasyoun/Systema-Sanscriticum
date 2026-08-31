@@ -68,11 +68,11 @@ _Created: 18-08-2026 · Last updated: 31-08-2026_
 | добэкфилить, где данные Zoom живы | Отгружена [`attendance:backfill-streams`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/BackfillStreamAttendance.php) — только вставки, рантайм-запрет UPDATE/DELETE ([`InsertOnlyGuard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/InsertOnlyGuard.php)), занятия задним числом не заводит |
 | честно признать период, где данных нет | Слепой список в диагнозе: 332 — весь первый поток (в Zoom данные есть, в системе некуда класть); 375 — занятие 24-06-2026 (в Zoom запуска не существует) |
 
-**Осталось человеку, агент это не решает:** (1) идентификация участников Zoom — починка это
-UPDATE существующих строк плюс решение «этот ник — этот студент»; профилактика на будущее —
-обязательная регистрация в Zoom или вход под почтой кабинета; (2) заведение занятий первого
-потока курса 332 — 22 подходящих запуска Zoom против 16 уроков, раскладка меняет помесячное
-признание зарплаты преподавателя; (3) подтвердить, что занятия 24-06-2026 не было.
+**Три развилки решены человеком 31-08-2026 и отгружены в том же проходе:**
+
+1. **Идентификация — «чини, и пропиши в руководствах».** Назад: [`attendance:link-participants`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/LinkWebinarParticipants.php) заводит связки «имя в Zoom → пользователь» в отдельной таблице (не трогая `webinar_attendances`), плашка покрытия считает и через них. Сопоставление по наборам токенов с транслитом ([`ZoomNameMatcher`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/ZoomNameMatcher.php)); неоднозначное не угадывается. На боевых данных курса 375: узнаны 10 плательщиков из 28, было 0. Вперёд: причина — подпись в Zoom, поэтому она записана в руководства [ученика](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_GUIDE_RU.md), [куратора](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CURATOR_ADMIN_GUIDE_RU.md) и [бухгалтера](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_ACCOUNTANT_COURSE_STREAMS_RU.md).
+2. **Занятия первого потока — «заводи, человек сейчас ничего не видит».** `attendance:backfill-streams --create-lessons` заводит занятие под подтверждённый запуск Zoom, только вставками; обязателен `--slot`, иначе за урок был бы принят любой запуск общей комнаты.
+3. **Занятие 24-06-2026 — «не было».** Подтверждено; в Zoom запуска на эту дату нет. Строка 643 остаётся следом, посещаемости у неё не будет.
 
 ## Не-цели
 
