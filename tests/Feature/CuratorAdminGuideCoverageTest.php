@@ -93,7 +93,8 @@ class CuratorAdminGuideCoverageTest extends TestCase
         return filter_var($raw, FILTER_VALIDATE_BOOLEAN);
     }
 
-    public function test_guide_file_exists_and_has_four_parts_and_seven_scenarios(): void
+    /** H3761: сценариев стало восемь — добавлен «Ученик ходил, а посещаемость пустая». */
+    public function test_guide_file_exists_and_has_four_parts_and_eight_scenarios(): void
     {
         $text = $this->guideText();
 
@@ -102,7 +103,8 @@ class CuratorAdminGuideCoverageTest extends TestCase
         }
 
         preg_match_all('/^### Шаги\s*$/mu', $this->partOne($text), $matches);
-        $this->assertCount(7, $matches[0], 'В части I должно быть семь сценариев (заголовок «### Шаги»).');
+        $this->assertCount(8, $matches[0], 'В части I должно быть восемь сценариев (заголовок «### Шаги»).');
+        $this->assertStringContainsString('Ученик ходил, а посещаемость пустая', $text);
 
         $this->assertStringContainsString('login-link', $text);
         $this->assertStringContainsString('Разблокировать (ссылка для входа)', $text);
