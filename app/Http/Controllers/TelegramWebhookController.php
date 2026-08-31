@@ -17,6 +17,8 @@ use App\Services\Bot\TelegramFormatter;
 use App\Services\Bot\UnblockBotCommand;
 use App\Services\HomeworkTelegramTagService; // Добавили для переключения на человека
 use App\Services\Support\HomeworkPauseNoteRecorder;
+use App\Services\Support\SupportDmAutoReply;
+use App\Services\Support\SupportHintSendButton;
 use App\Support\TelegramSendGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -563,6 +565,14 @@ class TelegramWebhookController extends Controller
         // Выбор урока для #ДЗ (волна 2, звено G).
         if (str_starts_with($data, HomeworkTelegramTagService::CALLBACK_PREFIX)) {
             app(HomeworkTelegramTagService::class)->handleCallback($callback);
+
+            return;
+        }
+
+        // H3765 A5: «Отправить как есть» под подсказкой куратору — черновик
+        // уходит студенту одним нажатием, минуя мёртвую админку.
+        if (str_starts_with($data, SupportDmAutoReply::SEND_CALLBACK_PREFIX)) {
+            app(SupportHintSendButton::class)->handle($callback);
 
             return;
         }
