@@ -93,11 +93,31 @@ class FixFrischHomoglyphsTest extends TestCase
             ->assertExitCode(1);
     }
 
-    public function test_fix_table_excludes_the_two_undecided_b_rows(): void
+    public function test_fix_table_covers_all_16_rows_including_the_ruled_b_rows(): void
     {
-        $this->assertArrayNotHasKey(112501, FixFrischHomoglyphs::FIXES);
-        $this->assertArrayNotHasKey(115974, FixFrischHomoglyphs::FIXES);
-        $this->assertCount(14, FixFrischHomoglyphs::FIXES);
+        // MG ruling 31-08-2026 (#2265): ⟨б⟩ = printed class digit 6; bare root kept.
+        $this->assertSame('/pac/ /pacati/ /pacate/', FixFrischHomoglyphs::FIXES[112501]['iast'][1]);
+        $this->assertSame('/sad/ /sīdati/ /sīdate/ /satta/ /sanna/', FixFrischHomoglyphs::FIXES[115974]['iast'][1]);
+        $this->assertCount(16, FixFrischHomoglyphs::FIXES);
+    }
+
+    public function test_apply_repairs_the_ruled_b_row(): void
+    {
+        $this->makeFrischWord(112501, [
+            'iast' => '/расб/ /pacati/ /pacate/',
+            'devanagari' => '/расб/ /पचति/ /पचते/',
+            'cyrillic' => '/расб/ /пачати/ /пачате/',
+            'translation' => 'варить, печь',
+        ]);
+
+        $this->artisan('slovar:fix-frisch-homoglyphs', ['--apply' => true, '--only' => '112501'])
+            ->assertExitCode(0);
+
+        $word = DictionaryWord::find(112501);
+        $this->assertSame('/pac/ /pacati/ /pacate/', $word->iast);
+        $this->assertSame('/पच्/ /पचति/ /पचते/', $word->devanagari);
+        $this->assertSame('/пач/ /пачати/ /пачате/', $word->cyrillic);
+        $this->assertSame('pac-pacati-pacate', $word->slug);
     }
 
     public function test_repaired_headword_gets_a_cdsl_block(): void
