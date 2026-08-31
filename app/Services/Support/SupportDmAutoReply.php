@@ -180,6 +180,44 @@ final class SupportDmAutoReply
             }
         }
 
+        // H3768 (рулинг MG 31-08-2026 «только F»): живой автоответ из FAQ.
+        //
+        // Стоит ПЕРЕД шаблонами, и это измеренное решение, а не вкусовое.
+        // Шаблон привязан к КАТЕГОРИИ целиком, а F — это и ДЗ, и материалы, и
+        // сертификаты; на проде у F ровно один шаблон, про сдачу ДЗ. Значит
+        // вопрос про сертификат сегодня получает автоответом инструкцию по
+        // домашним заданиям. Порог разводит эти случаи сам (замер 31-08-2026
+        // на живом faq.md): «куда загружать ДЗ» даёт 7.7–12.4 — НИЖЕ порога,
+        // и выверенный шаблон по-прежнему отвечает; «будет ли сертификат» даёт
+        // 19.3 и попадает в раздел «Сертификат» — выше порога, и отвечает FAQ.
+        // То есть шаблон не проигрывает там, где он прав, и перестаёт отвечать
+        // там, где он не про то.
+        //
+        // Категории берутся из конфига, но D (деньги) и E (доступы)
+        // вычёркиваются в КОДЕ: рулинг R3 запрещает их безусловно, и правка
+        // конфига не должна уметь это снять.
+        if ($mayReachStudent
+            && $user !== null
+            && $category !== null
+            && in_array($category, $this->liveFaqCategories(), true)
+            && $this->accountAllowsAutoReply($incoming)
+        ) {
+            $hits = $this->faq->retrieve($text, 3);
+            $score = (float) ($hits[0]['score'] ?? 0.0);
+
+            if ($hits !== [] && $score >= $this->scoreFloor($category)) {
+                $draft = $this->faqDraft($hits);
+
+                if ($draft !== null) {
+                    return $this->sendAuto($incoming, $user, $category, $draft, 'faq_rag', [
+                        'chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
+                        'score' => round($score, 4),
+                        'floor' => $this->scoreFloor($category),
+                    ]);
+                }
+            }
+        }
+
         // H3380: шаблонный автоответ D/E/F по привязке S9 — только на аккаунтах
         // с auto_reply_enabled, поведение основного support-аккаунта не меняется.
         if ($mayReachStudent
@@ -631,7 +669,7 @@ final class SupportDmAutoReply
         }
 
         $score = (float) ($hits[0]['score'] ?? 0.0);
-        if ($score < $this->shadowFloor($category)) {
+        if ($score < $this->scoreFloor($category)) {
             return;
         }
 
@@ -664,12 +702,51 @@ final class SupportDmAutoReply
     }
 
     /**
-     * H3766 B5 — порог скора для теневой автоотправки, выведенный ПОКАТЕГОРИЙНО
-     * на 100-вопросном наборе (`php artisan faq:score-floor`). Категорийный
-     * порог всегда строже общего: берём максимум, чтобы правка одного числа не
-     * могла случайно ослабить другой.
+     * H3766 B5 — порог скора, выведенный ПОКАТЕГОРИЙНО на 100-вопросном наборе
+     * (`php artisan faq:score-floor`). Категорийный порог всегда строже общего:
+     * берём максимум, чтобы правка одного числа не могла ослабить другое.
+     *
+     * ОДНО определение на тень и на живую отправку — в этом весь смысл теневой
+     * калибровки. Разойдись они, и «мы это неделю измеряли в тени» перестало бы
+     * что-либо значить про то, что уходит студенту.
      */
-    private function shadowFloor(string $category): float
+    /**
+     * H3768 — категории, в которых живой автоответ из FAQ вообще допускается.
+     *
+     * Рулинг MG 31-08-2026 «только F»: из четырёх теневых категорий живой
+     * становится одна — материалы/ДЗ/сертификаты. Это единственная категория,
+     * где выведенные B5 пороги дают обещанные R3 95 % точности при разумном
+     * покрытии (41 %); у A/B/C 95 % достигаются только на 2–3 вопросах.
+     *
+     * D (деньги) и E (доступы) вычёркиваются здесь же и безусловно: рулинг R3
+     * запрещает их независимо от скора, и запрет не должен зависеть от того,
+     * что кто-то однажды впишет в конфиг.
+     *
+     * @return list<string>
+     */
+    private function liveFaqCategories(): array
+    {
+        if (! (bool) config('features.support_dm_auto_reply_live_faq', false)) {
+            return [];
+        }
+
+        $configured = config('support.faq_rag.live_categories', []);
+        if (! is_array($configured)) {
+            return [];
+        }
+
+        $banned = [
+            SupportAnswerSuggestion::CATEGORY_PAYMENT,
+            SupportAnswerSuggestion::CATEGORY_ACCESS,
+        ];
+
+        return array_values(array_filter(
+            array_map('strval', $configured),
+            static fn (string $c): bool => ! in_array($c, $banned, true),
+        ));
+    }
+
+    private function scoreFloor(string $category): float
     {
         $global = (float) config('support.faq_rag.shadow_min_score', 8.0);
 
