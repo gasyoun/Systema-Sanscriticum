@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\Course;
 use App\Models\Group;
 use App\Services\CatalogShellAudit;
+use App\Services\CatalogShellRetirement;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -39,6 +40,8 @@ class DeleteCatalogShells extends Command
     protected $signature = 'catalog:delete-shells
         {--course=* : ID курса-оболочки к удалению}
         {--group=* : ID пустой группы к удалению}
+        {--alias-into=* : Кому достаётся слаг удаляемого курса, «оболочка:живой курс» (напр. 421:335)}
+        {--drop-slug=* : ID курса, чей слаг сознательно отпускаем в 404}
         {--apply : Выполнить удаление (без флага — только план)}';
 
     protected $description = 'Удалить курсы-оболочки и пустые группы, одобренные аудитом. Вердикт пересчитывается заново; без --apply ничего не делает.';
@@ -48,7 +51,7 @@ class DeleteCatalogShells extends Command
 
     private const GROUP_LINKS = ['group_user', 'course_group'];
 
-    public function handle(CatalogShellAudit $audit): int
+    public function handle(CatalogShellAudit $audit, CatalogShellRetirement $retirement): int
     {
         $courseIds = array_map('intval', (array) $this->option('course'));
         $groupIds = array_map('intval', (array) $this->option('group'));
@@ -87,7 +90,14 @@ class DeleteCatalogShells extends Command
             return self::FAILURE;
         }
 
+        // Кому достаётся слаг. Считается ДО плана: без адресата удаление не идёт.
+        $slugHomes = $this->slugHomes($courseIds, $retirement);
+        if ($slugHomes === null) {
+            return self::FAILURE;
+        }
+
         $this->plan($courseIds, $groupIds);
+        $this->planSlugs($courseIds, $slugHomes);
 
         if (! $this->option('apply')) {
             $this->newLine();
@@ -96,10 +106,22 @@ class DeleteCatalogShells extends Command
             return self::SUCCESS;
         }
 
-        $removed = DB::transaction(function () use ($courseIds, $groupIds): array {
+        $adopted = [];
+
+        $removed = DB::transaction(function () use ($courseIds, $groupIds, $slugHomes, $retirement, &$adopted): array {
             $counts = [];
 
             foreach ($courseIds as $id) {
+                // Слаг переселяется ДО снятия связок: иначе purge сотрёт и его,
+                // и прежние алиасы курса, а внешние ссылки станут 404.
+                $target = $slugHomes[$id] ?? null;
+                if ($target !== null) {
+                    $shell = Course::query()->find($id);
+                    if ($shell !== null) {
+                        $adopted[$id] = $retirement->adoptSlugsFrom($shell, $target);
+                    }
+                }
+
                 $counts["курс {$id}"] = $this->purge('course_id', $id, self::COURSE_LINKS)
                     + Course::query()->whereKey($id)->delete();
             }
@@ -117,6 +139,18 @@ class DeleteCatalogShells extends Command
             $this->line(sprintf('  удалено: %s (строк, включая связки: %d)', $what, $rows));
         }
 
+        foreach ($adopted as $courseId => $slugs) {
+            if ($slugs === []) {
+                continue;
+            }
+            $this->line(sprintf(
+                '  слаги курса %d переселены на курс %d (301 вместо 404): %s',
+                $courseId,
+                $slugHomes[$courseId]->id,
+                implode(', ', $slugs),
+            ));
+        }
+
         $this->newLine();
         $this->info(sprintf(
             'Готово: курсов %d, групп %d. Всего строк %d.',
@@ -126,6 +160,135 @@ class DeleteCatalogShells extends Command
         ));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Кому достаётся слаг каждого удаляемого курса.
+     *
+     * Удаление курса уносит с собой его слаг и все его строки в
+     * `course_slug_aliases` — внешние ссылки после этого дают 404. 31-08-2026
+     * так и вышло: `/k/karaki-po-panini-2025-2026-v-zapisi` и
+     * `/k/likbez-po-lingvistike-2023` умерли молча. Поэтому адресат обязателен.
+     *
+     * Порядок: явное `--alias-into=421:335` побеждает; иначе берётся
+     * ЕДИНСТВЕННЫЙ живой курс семьи; если их ноль или несколько — отказ, пока
+     * человек не назовёт адресата сам либо не отпустит слаг через
+     * `--drop-slug=421`.
+     *
+     * @param  list<int>  $courseIds
+     * @return array<int, Course>|null null = отказ, сообщение уже напечатано
+     */
+    private function slugHomes(array $courseIds, CatalogShellRetirement $retirement): ?array
+    {
+        $explicit = [];
+        foreach ((array) $this->option('alias-into') as $pair) {
+            if (! preg_match('/^\s*(\d+)\s*:\s*(\d+)\s*$/', (string) $pair, $m)) {
+                $this->error("Не разобрать --alias-into={$pair}: ожидается «оболочка:живой курс», напр. 421:335.");
+
+                return null;
+            }
+            $explicit[(int) $m[1]] = (int) $m[2];
+        }
+
+        $dropped = array_map('intval', (array) $this->option('drop-slug'));
+
+        $homes = [];
+        $problems = [];
+
+        foreach ($courseIds as $id) {
+            if (in_array($id, $dropped, true)) {
+                continue;
+            }
+
+            $shell = Course::query()->find($id);
+            if ($shell === null) {
+                continue;
+            }
+
+            if (isset($explicit[$id])) {
+                $target = Course::query()->find($explicit[$id]);
+                if ($target === null) {
+                    $problems[] = "курс {$explicit[$id]} из --alias-into={$id}:{$explicit[$id]} не найден";
+
+                    continue;
+                }
+                if ((int) $target->id === $id) {
+                    $problems[] = "--alias-into={$id}:{$id} указывает курс сам на себя";
+
+                    continue;
+                }
+                $homes[$id] = $target;
+
+                continue;
+            }
+
+            $twins = $retirement->liveTwinsFor($shell);
+
+            // Несколько кандидатов — молча выбирать нельзя: 301 увёл бы людей на
+            // чужой поток. Ноль кандидатов — семья из одной строки, переезжать
+            // слагу некуда, и 404 здесь единственный возможный исход.
+            if (count($twins) > 1) {
+                $problems[] = sprintf(
+                    'курс %d «%s» — в семье %d живых курсов, адресат слага неоднозначен; назовите его через --alias-into=%d:<id> либо отпустите слаг явно через --drop-slug=%d',
+                    $id,
+                    mb_substr((string) $shell->title, 0, 40),
+                    count($twins),
+                    $id,
+                    $id,
+                );
+
+                continue;
+            }
+
+            if ($twins === []) {
+                $this->warn(sprintf(
+                    'У курса %d нет живого курса семьи — /k/%s станет 404. Адресата можно назвать через --alias-into=%d:<id>.',
+                    $id,
+                    $shell->slug,
+                    $id,
+                ));
+
+                continue;
+            }
+
+            $homes[$id] = $twins[0];
+        }
+
+        if ($problems !== []) {
+            $this->error('ОТКАЗ — ни один объект не удалён (слагу некуда переехать, ссылки стали бы 404):');
+            foreach ($problems as $line) {
+                $this->line('  • '.$line);
+            }
+
+            return null;
+        }
+
+        return $homes;
+    }
+
+    /**
+     * @param  list<int>  $courseIds
+     * @param  array<int, Course>  $homes
+     */
+    private function planSlugs(array $courseIds, array $homes): void
+    {
+        if ($courseIds === []) {
+            return;
+        }
+
+        $this->newLine();
+        $this->line('<comment>Судьба слагов</comment>');
+
+        foreach ($courseIds as $id) {
+            $course = Course::query()->find($id);
+            if ($course === null) {
+                continue;
+            }
+
+            $this->line(isset($homes[$id])
+                ? sprintf('  /k/%s → курс %d (301)', $course->slug, $homes[$id]->id)
+                : sprintf('  /k/%s → 404, отпущен явно (--drop-slug=%d)', $course->slug, $id));
+        }
     }
 
     /**

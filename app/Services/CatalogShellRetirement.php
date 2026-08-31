@@ -114,6 +114,101 @@ final class CatalogShellRetirement
     }
 
     /**
+     * Единственный живой (не-оболочка) курс той же семьи — или null, если их
+     * ноль либо несколько. Молча выбирать «какой-нибудь из двух» нельзя: слаг
+     * уедет не туда, и 301 отправит человека на чужой поток.
+     */
+    public function liveTwinFor(Course $shell): ?Course
+    {
+        $twins = $this->liveTwinsFor($shell);
+
+        return count($twins) === 1 ? $twins[0] : null;
+    }
+
+    /**
+     * Все живые (не-оболочки) курсы семьи, кроме самого $shell. Пустой список —
+     * семья из одной строки: слагу переезжать некуда, и это не ошибка.
+     *
+     * @return list<Course>
+     */
+    public function liveTwinsFor(Course $shell): array
+    {
+        $family = $this->families->familyFor($shell);
+
+        return Course::query()
+            ->where('id', '!=', $shell->id)
+            ->get()
+            ->filter(fn (Course $other): bool => $this->families->familyFor($other) === $family)
+            ->reject(fn (Course $other): bool => $this->audit->isShellCourse($other))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Отдать слаги удаляемой оболочки живому курсу: её канонический слаг и все
+     * её прежние алиасы становятся алиасами цели, а не исчезают вместе с
+     * курсом. Без этого шага удаление оболочки превращает каждую внешнюю ссылку
+     * на неё в 404 — ровно то, что случилось 31-08-2026 со слагами
+     * `karaki-po-panini-2025-2026-v-zapisi` и `likbez-po-lingvistike-2023`.
+     *
+     * @return list<string> переселённые слаги
+     */
+    public function adoptSlugsFrom(Course $shell, Course $target): array
+    {
+        $adopted = [];
+
+        foreach (CourseSlugAlias::query()->where('course_id', $shell->id)->get() as $alias) {
+            $alias->forceFill(['course_id' => $target->id])->save();
+            $adopted[] = (string) $alias->slug;
+        }
+
+        $slug = (string) $shell->slug;
+        if ($slug !== '' && $this->adoptSlug($slug, $target, (int) $shell->id)) {
+            $adopted[] = $slug;
+        }
+
+        return $adopted;
+    }
+
+    /**
+     * Завести слаг алиасом цели. Не перевешивает чужое: слаг, который уже
+     * канон другого курса или алиас третьего, остаётся как есть.
+     *
+     * `$ignoreCourseId` — курс, чей канонический слаг мы и переселяем: он
+     * сейчас держит этот слаг и через мгновение перестанет существовать,
+     * поэтому в проверке «слаг занят» он не считается.
+     */
+    public function adoptSlug(string $slug, Course $target, ?int $ignoreCourseId = null): bool
+    {
+        if ($slug === '') {
+            return false;
+        }
+
+        $takenAsCanonical = Course::query()
+            ->where('slug', $slug)
+            ->where('id', '!=', $target->id)
+            ->when($ignoreCourseId !== null, fn ($q) => $q->where('id', '!=', $ignoreCourseId))
+            ->exists();
+
+        if ($takenAsCanonical) {
+            return false;
+        }
+
+        $existing = CourseSlugAlias::query()->where('slug', $slug)->first();
+        if ($existing !== null) {
+            return (int) $existing->course_id === (int) $target->id;
+        }
+
+        CourseSlugAlias::query()->create([
+            'slug' => $slug,
+            'course_id' => $target->id,
+            'created_at' => now(),
+        ]);
+
+        return true;
+    }
+
+    /**
      * Условия, без которых запись недопустима. Каждое — про потерю данных, а не
      * про аккуратность: сорваться должно ДО транзакции и громко.
      */
