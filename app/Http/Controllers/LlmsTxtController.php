@@ -62,6 +62,7 @@ class LlmsTxtController extends Controller
         $lines[] = '# Courses (is_visible)';
 
         $courses = Course::query()
+            ->withOwnCatalogCard()
             ->where('is_visible', true)
             ->orderBy('title')
             ->get(['title', 'slug', 'format']);

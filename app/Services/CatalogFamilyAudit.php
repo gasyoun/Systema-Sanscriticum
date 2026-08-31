@@ -150,6 +150,11 @@ class CatalogFamilyAudit
             'format' => $course->format,
             'visible' => (bool) $course->is_visible,
             'manual_family' => trim((string) ($course->course_family ?? '')) !== '',
+            // H3807: человек уже сказал, что этот курс — ЗАПИСЬ вон того.
+            // Столкновение потоков тогда разобрано, а не проглядено.
+            'recording_of' => $course->recording_of_course_id !== null
+                ? (int) $course->recording_of_course_id
+                : null,
             'blocks' => $blocks,
             'active_tariffs' => $activeTariffs,
             'paid_payments' => $paidPayments,
@@ -258,6 +263,16 @@ class CatalogFamilyAudit
         }
         foreach ($seen as $key => $ids) {
             if (count($ids) > 1) {
+                // H3807 (рулинг MG «одна карточка на программу», 31-08-2026):
+                // столкновение РАЗОБРАНО, если каждая лишняя строка названа
+                // записью другой строки того же столкновения. Тогда витрина
+                // показывает одну карточку, канон один, и звать это `duplicate`
+                // значит слать человека чинить уже починенное. Тот же принцип,
+                // что и у `course_family`: сказанное человеком побеждает вывод.
+                if ($this->collisionResolvedByRecordingLinks($members, $ids)) {
+                    continue;
+                }
+
                 $reasons[] = sprintf(
                     'курсы %s неотличимы как потоки (общий ключ потока «%s»): ни номер в названии, ни дата первого платежа их не разводят',
                     implode(', ', $ids),
@@ -350,6 +365,43 @@ class CatalogFamilyAudit
      * @param  list<array<string, mixed>>  $members
      * @param  list<int>  $ids
      */
+    /**
+     * Разобрано ли столкновение явными связями «запись ↔ живой курс» (H3807).
+     *
+     * Условие намеренно строгое: РОВНО ОДНА строка столкновения остаётся без
+     * `recording_of`, и каждая остальная указывает именно на неё. Кольцо
+     * (`A → B`, `B → A`), ссылка наружу столкновения и две несвязанные строки
+     * разобранными не считаются — иначе полузаполненная связь молча погасила бы
+     * настоящий дубль, а именно ради этого случая аудит и писался.
+     *
+     * @param  list<array<string, mixed>>  $members
+     * @param  list<int>  $ids
+     */
+    private function collisionResolvedByRecordingLinks(array $members, array $ids): bool
+    {
+        $links = [];
+        foreach ($members as $member) {
+            if (in_array($member['id'], $ids, true)) {
+                $links[(int) $member['id']] = $member['recording_of'] ?? null;
+            }
+        }
+
+        $canonical = array_keys(array_filter($links, static fn ($target) => $target === null));
+        if (count($canonical) !== 1) {
+            return false;
+        }
+
+        $card = $canonical[0];
+
+        foreach ($links as $id => $target) {
+            if ($id !== $card && $target !== $card) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private function collisionIsRecordingTwin(array $members, array $ids): bool
     {
         $recording = 0;

@@ -153,6 +153,7 @@ class ShopController extends Controller
         $recommended = [];
         foreach (config('onramp.recommendations', []) as $key => $pattern) {
             $recommended[$key] = PrivateArchiveEligibility::scopePublic(Course::query())
+                ->withOwnCatalogCard()
                 ->where('is_visible', true)
                 ->where('title', 'LIKE', '%'.str_replace(['%', '_'], ['\%', '\_'], $pattern).'%')
                 ->orderBy('id')
@@ -363,7 +364,21 @@ class ShopController extends Controller
         $flagship = FlagshipLanding::for($course);
         $ctaAb = FlagshipExperiments::ctaFor($course, request());
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb'));
+        // H3807 «одна карточка на программу» (рулинг MG 31-08-2026). Запись
+        // прошедшего потока остаётся живой покупаемой страницей — у неё свои
+        // оплаты и на неё ведёт реклама, — но канон у программы один: живой
+        // курс. Иначе поисковик считает две страницы одной программы двумя
+        // товарами и они конкурируют между собой в выдаче.
+        $canonicalUrl = route('shop.course.show', $course->catalogCardCourse()->slug);
+
+        // Обратная сторона: живой курс называет свои записи вариантом покупки,
+        // чтобы «запись» не пропала из виду вместе со второй карточкой.
+        $recordingOffers = $course->recordings()
+            ->where('is_visible', true)
+            ->orderBy('id')
+            ->get(['id', 'title', 'slug']);
+
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers'));
     }
 
     /**
