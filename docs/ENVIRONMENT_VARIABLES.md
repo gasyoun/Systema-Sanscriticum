@@ -627,7 +627,11 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_FAQ_RAG_HEADING_WEIGHT` | optional | `5` | config/support.php:89 |
 | `SUPPORT_FAQ_RAG_MIN_SCORE` | optional | `1.5` | config/support.php:91 |
 | `SUPPORT_FAQ_RAG_PATH` | required | `null` | config/support.php:84 |
-| `SUPPORT_FAQ_RAG_SHADOW_MIN_SCORE` | optional | `8.0` | config/support.php:104 |
+| `SUPPORT_FAQ_RAG_SHADOW_MIN_SCORE` | optional | `8.0` | config/support.php:105 |
+| `SUPPORT_FAQ_RAG_SHADOW_MIN_SCORE_A` | optional | `18.1` | config/support.php:120 |
+| `SUPPORT_FAQ_RAG_SHADOW_MIN_SCORE_B` | optional | `14.8` | config/support.php:121 |
+| `SUPPORT_FAQ_RAG_SHADOW_MIN_SCORE_C` | optional | `19.4` | config/support.php:122 |
+| `SUPPORT_FAQ_RAG_SHADOW_MIN_SCORE_F` | optional | `15.7` | config/support.php:123 |
 | `SUPPORT_FAQ_RAG_TOP_K` | optional | `3` | config/support.php:85 |
 | `SUPPORT_FOLLOW_UP_TASKS` | optional | `false` | config/features.php:418 |
 | `SUPPORT_GEO_DRIVER` | optional | `'null'` | config/support_geo.php:32 |
