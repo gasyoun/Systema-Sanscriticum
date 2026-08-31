@@ -21,8 +21,9 @@ use Illuminate\Support\Facades\DB;
  *  - slugs are re-derived through DictionaryWord::makeHeadwordSlug() (the
  *    model's own path), never hand-written; old → new is reported because a
  *    slug change retires the old /slovar URL (Wave-0 noindex, no aliases kept);
- *  - the two ⟨б⟩ rows (112501 /расб/, 115974 /sadб/) are deliberately ABSENT —
- *    their reading needs the printed Фриш page (a human decides in #2265).
+ *  - the two ⟨б⟩ rows (112501 /расб/, 115974 /sadб/) joined the map on the MG
+ *    ruling of 31-08-2026 (#2265): ⟨б⟩ is the printed class digit 6 mis-OCR'd,
+ *    and the repaired field keeps the bare root, digit dropped.
  *
  * Intended readings were verified against each row's own Russian gloss —
  * table in https://github.com/gasyoun/Systema-Sanscriticum/issues/2265;
@@ -32,7 +33,7 @@ class FixFrischHomoglyphs extends Command
 {
     protected $signature = 'slovar:fix-frisch-homoglyphs {--apply : Write the changes (default: print the plan)} {--only= : Comma-separated row ids to restrict the batch (tests)}';
 
-    protected $description = 'Repair the 14 certain Cyrillic-homoglyph rows of the Фриш dictionary (issue #2265)';
+    protected $description = 'Repair the 16 Cyrillic-homoglyph rows of the Фриш dictionary (issue #2265; already-repaired rows refuse — use --only for a partial batch)';
 
     /** @var array<int, array<string, array{0: string, 1: string}>> id => column => [expected, new] */
     public const FIXES = [
@@ -101,6 +102,19 @@ class FixFrischHomoglyphs extends Command
             'iast' => ['/yatra/ /kva/ /са/', '/yatra/ /kva/ /ca/'],
             'devanagari' => ['/यत्र/ /क्व/ /са/', '/यत्र/ /क्व/ /च/'],
             'cyrillic' => ['/ятра/ /ква/ /са/', '/ятра/ /ква/ /ча/'],
+        ],
+        // The two ⟨б⟩ rows — MG ruling 31-08-2026 in #2265: ⟨б⟩ is the printed
+        // class digit 6 mis-OCR'd; the field keeps the bare root (siblings like
+        // /paṇ/ carry no class digit either).
+        112501 => [
+            'iast' => ['/расб/ /pacati/ /pacate/', '/pac/ /pacati/ /pacate/'],
+            'devanagari' => ['/расб/ /पचति/ /पचते/', '/पच्/ /पचति/ /पचते/'],
+            'cyrillic' => ['/расб/ /пачати/ /пачате/', '/пач/ /пачати/ /пачате/'],
+        ],
+        115974 => [
+            'iast' => ['/sadб/ /sīdati/ /sīdate/ /satta/ /sanna/', '/sad/ /sīdati/ /sīdate/ /satta/ /sanna/'],
+            'devanagari' => ['/सद्ब/ /सीदति/ /सीदते/ /सत्त/ /सन्न/', '/सद्/ /सीदति/ /सीदते/ /सत्त/ /सन्न/'],
+            'cyrillic' => ['/садб/ /сидати/ /сидате/ /сатта/ /санна/', '/сад/ /сидати/ /сидате/ /сатта/ /санна/'],
         ],
     ];
 
