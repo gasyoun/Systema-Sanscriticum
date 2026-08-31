@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\VacationQuorumPoll;
 use App\Services\VacationQuorumService;
+use App\Support\RoleGate;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
@@ -34,6 +35,16 @@ class VacationQuorumApprovals extends Page implements HasForms, HasTable
     protected static ?string $title = 'Каникулы: опросы кворума';
 
     protected static string $view = 'filament.pages.vacation-quorum-approvals';
+
+    public static function canAccess(): bool
+    {
+        return RoleGate::adminOnly();
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return RoleGate::adminOnly();
+    }
 
     public function table(Table $table): Table
     {
