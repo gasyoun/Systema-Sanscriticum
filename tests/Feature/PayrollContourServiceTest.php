@@ -15,11 +15,20 @@ use App\Models\User;
 use App\Services\PayrollContourService;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class PayrollContourServiceTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // H2541: фикстуры на относительном now() взрываются 31-го числа —
+        // subMonths()->startOfMonth() смещает месячную арифметику сервиса.
+        Carbon::setTestNow(Carbon::now()->startOfMonth()->addDays(14)->setTime(12, 0));
+    }
 
     /** @return array{0: User, 1: array<int, Payment>} */
     private function makeStaffUser(string $name): array
