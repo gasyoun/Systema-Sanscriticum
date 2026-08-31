@@ -54,6 +54,15 @@ class CatalogFamilyAudit
 
     public const VERDICT_DUPLICATE = 'duplicate';
 
+    /** Член семьи без единой собственной строки данных — осевшая копия. */
+    public const CLASS_EMPTY_SHELL = 'empty_shell';
+
+    /** Живой поток и его же запись, проданная отдельной строкой под тем же номером. */
+    public const CLASS_RECORDING_TWIN = 'recording_twin';
+
+    /** Общий ключ потока без признака «в записи» — два потока просто неразличимы. */
+    public const CLASS_STREAM_COLLISION = 'stream_collision';
+
     public function __construct(private readonly CourseFamilyMatcher $families) {}
 
     /**
@@ -202,12 +211,14 @@ class CatalogFamilyAudit
                 'family' => $family,
                 'verdict' => self::VERDICT_UNIQUE,
                 'reasons' => [],
+                'classes' => [],
                 'members' => $members,
                 'follow_up' => null,
             ];
         }
 
         $reasons = [];
+        $classes = [];
 
         // 1. Член без единого собственного признака — осевшая копия.
         foreach ($members as $member) {
@@ -217,6 +228,7 @@ class CatalogFamilyAudit
                     $member['id'],
                     $member['title'],
                 );
+                $classes[] = self::CLASS_EMPTY_SHELL;
             }
         }
 
@@ -232,6 +244,16 @@ class CatalogFamilyAudit
                     implode(', ', $ids),
                     $key,
                 );
+
+                // Подкласс, ради которого различение и заведено: столкнувшиеся
+                // курсы — это ЖИВОЙ поток и его же ЗАПИСЬ, проданная отдельной
+                // строкой каталога под тем же номером потока. Удалять там
+                // нечего (у записи свои оплаты), а витрина и SEO всё равно
+                // показывают одну программу дважды — это правка карточек, а не
+                // чистка базы, и путать её с оболочкой нельзя.
+                $classes[] = $this->collisionIsRecordingTwin($members, $ids)
+                    ? self::CLASS_RECORDING_TWIN
+                    : self::CLASS_STREAM_COLLISION;
             }
         }
 
@@ -241,10 +263,44 @@ class CatalogFamilyAudit
             'family' => $family,
             'verdict' => $verdict,
             'reasons' => $reasons,
+            'classes' => array_values(array_unique($classes)),
             'members' => $members,
             'follow_up' => $verdict === self::VERDICT_DUPLICATE
                 ? 'разобрать вручную: свести витрину и SEO на один курс семьи, записи переносить только после `catalog:audit-shells` (он проверяет, не отнимет ли удаление у человека единственную запись)'
                 : null,
         ];
+    }
+
+    /**
+     * Столкнулись ли живой поток и его собственная запись: среди курсов с общим
+     * ключом потока есть и помеченный «в записи», и не помеченный.
+     *
+     * Признак читается из названия и слага, а не из роли: запись прошлого
+     * потока обычно вполне жива (свои блоки, тарифы и оплаты — курс 327 из
+     * «Йога-сутр» продан 129 раз), поэтому роль её от живого потока не
+     * отличает. Отличает ровно то, что человек написал в названии.
+     *
+     * @param  list<array<string, mixed>>  $members
+     * @param  list<int>  $ids
+     */
+    private function collisionIsRecordingTwin(array $members, array $ids): bool
+    {
+        $recording = 0;
+        $plain = 0;
+
+        foreach ($members as $member) {
+            if (! in_array($member['id'], $ids, true)) {
+                continue;
+            }
+
+            $haystack = mb_strtolower($member['title'].' '.$member['slug']);
+            if (str_contains($haystack, 'в записи') || str_contains($haystack, 'v-zapisi')) {
+                $recording++;
+            } else {
+                $plain++;
+            }
+        }
+
+        return $recording > 0 && $plain > 0;
     }
 }

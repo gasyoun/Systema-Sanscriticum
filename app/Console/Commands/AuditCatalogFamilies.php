@@ -101,6 +101,11 @@ class AuditCatalogFamilies extends Command
         $out[] = '';
         $out[] = $this->summaryLine($rows);
         $out[] = '';
+        foreach ($this->classBreakdown($rows) as $line) {
+            $out[] = $line;
+        }
+
+        $out[] = '';
         $out[] = '## Вердикты';
         $out[] = '';
         $out[] = '| Семья | Вердикт | Курсы семьи | Доказательства | Что делать |';
@@ -148,6 +153,75 @@ class AuditCatalogFamilies extends Command
         $out[] = '_Dr. Mārcis Gasūns_';
 
         return implode("\n", $out);
+    }
+
+    /**
+     * Раскладка `duplicate` по классам — она, а не общее число, говорит, ЧТО
+     * именно делать: оболочку разбирает `catalog:audit-shells` (чистка базы),
+     * а близнец-запись правится в карточках витрины, где удалять нечего.
+     *
+     * Считается из данных, а не приписывается прогону вручную: иначе при
+     * следующем прогоне вывод разошёлся бы с цифрами над ним.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<string>
+     */
+    private function classBreakdown(array $rows): array
+    {
+        $byClass = [];
+
+        foreach ($rows as $row) {
+            foreach ($row['classes'] ?? [] as $class) {
+                $byClass[$class][] = $row['family'];
+            }
+        }
+
+        if ($byClass === []) {
+            return [];
+        }
+
+        $labels = [
+            CatalogFamilyAudit::CLASS_EMPTY_SHELL => 'осевшая оболочка — член семьи без единой собственной строки данных. Чистка базы; разбирается `catalog:audit-shells`, который отдельно проверяет, не отнимет ли удаление у человека единственную запись на курс',
+            CatalogFamilyAudit::CLASS_RECORDING_TWIN => '**живой поток и его же запись, проданные отдельными строками каталога под одним номером потока.** Удалять нечего — у записи свои блоки, тарифы и оплаты; витрина и SEO при этом показывают одну программу дважды. Правка карточек, а не базы',
+            CatalogFamilyAudit::CLASS_STREAM_COLLISION => 'два потока неразличимы: ни номер в названии, ни дата первого платежа их не разводят, и признака «в записи» нет. Нужен человек — назвать поток в названии курса',
+        ];
+
+        $out = ['## Из-за чего сработал `duplicate`', ''];
+
+        foreach ($labels as $class => $label) {
+            if (! isset($byClass[$class])) {
+                continue;
+            }
+
+            $families = array_values(array_unique($byClass[$class]));
+            sort($families);
+
+            $out[] = sprintf(
+                '- **%d %s** — %s. Семьи: %s.',
+                count($families),
+                $this->pluralFamilies(count($families)),
+                $label,
+                implode(', ', array_map(fn (string $f) => "`{$f}`", $families)),
+            );
+        }
+
+        return $out;
+    }
+
+    private function pluralFamilies(int $n): string
+    {
+        $mod100 = $n % 100;
+        $mod10 = $n % 10;
+
+        if ($mod100 >= 11 && $mod100 <= 14) {
+            return 'семей';
+        }
+
+        return match ($mod10) {
+            1 => 'семья',
+            2, 3, 4 => 'семьи',
+            default => 'семей',
+        };
     }
 
     /** @param list<array<string, mixed>> $members */
