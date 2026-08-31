@@ -1,6 +1,6 @@
 # ROADMAP — аналитика потоков курса и сверка с преподавателем (2026)
 
-_Created: 18-08-2026 · Last updated: 30-08-2026_
+_Created: 18-08-2026 · Last updated: 31-08-2026_
 
 > **Truth-pass 30-08-2026 (Fable 5 `claude-fable-5`, `/ask` H3760):** Волны 1–2 отгружены —
 > на `origin/main` живут `CourseStreamComparison` (страница+сервис+экспорт), `TeacherPayoutAttributionSuggestion`,
@@ -52,13 +52,27 @@ _Created: 18-08-2026 · Last updated: 30-08-2026_
 
 **Прямо запрещено внутри волны 2:** самому создавать строки в `teacher_payouts` и `payments`. Агент готовит предложения; перенос подтверждённых в выплатной реестр запускает человек из админки.
 
-## Волна 3 — починка сбора посещаемости (отдельно) · 🟡 заминчена [H3761](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3761-Opus_Systema-Sanscriticum_stream-analytics-w3-attendance-repair_30.08.26.md)
+## Волна 3 — починка сбора посещаемости (отдельно) · ✅ диагностика отгружена (H3761, 31-08-2026)
 
 Не нужна для ответа Марии, нужна для того, чтобы 3-й поток не был так же слеп.
 
-- Разобраться, почему на 27 уроков курсов 332/375 заведено 2 расписания и `webinar_attendances` пуст;
-- проверить резолв `zoom_meeting_id` из общей ссылки курса;
-- добэкфилить посещаемость там, где исходные данные Zoom ещё доступны, и честно признать период, где их нет.
+Исходная постановка волны — «на 27 уроков курсов 332/375 заведено 2 расписания и
+`webinar_attendances` пуст» — **на боевой базе не подтвердилась ни в одной части**.
+Полный разбор с цифрами: [DIAGNOSIS_SYSTEMA_STREAM_ATTENDANCE_31-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DIAGNOSIS_SYSTEMA_STREAM_ATTENDANCE_31-08-2026.md).
+
+| Пункт волны | Результат |
+|---|---|
+| разобраться, почему `webinar_attendances` пуст | Он не пуст: 1218 строк, 67 занятий, 11 курсов. Пуста **идентификация**: 96 % строк приходят из Zoom без почты, и плашка покрытия по вебинарам даёт `webinar_users = 0` при 229 собранных строках на курсе 375 |
+| «2 расписания на 27 уроков» | У 375 — 14 занятий двух генераций с непересекающимися датами; у 332 — **ноль занятий**, вся таблица `schedules` начинается с 25-03-2026, а первый поток шёл с 09-2025 |
+| резолв `zoom_meeting_id` из общей ссылки курса | Проверен, работает. У 332 нет ни ссылки, ни id — резолвить не из чего. Новая команда закрывает цепочку курс → ссылка курса → ссылка занятия |
+| добэкфилить, где данные Zoom живы | Отгружена [`attendance:backfill-streams`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/BackfillStreamAttendance.php) — только вставки, рантайм-запрет UPDATE/DELETE ([`InsertOnlyGuard`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/InsertOnlyGuard.php)), занятия задним числом не заводит |
+| честно признать период, где данных нет | Слепой список в диагнозе: 332 — весь первый поток (в Zoom данные есть, в системе некуда класть); 375 — занятие 24-06-2026 (в Zoom запуска не существует) |
+
+**Три развилки решены человеком 31-08-2026 и отгружены в том же проходе:**
+
+1. **Идентификация — «чини, и пропиши в руководствах».** Назад: [`attendance:link-participants`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/LinkWebinarParticipants.php) заводит связки «имя в Zoom → пользователь» в отдельной таблице (не трогая `webinar_attendances`), плашка покрытия считает и через них. Сопоставление по наборам токенов с транслитом ([`ZoomNameMatcher`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/ZoomNameMatcher.php)); неоднозначное не угадывается. На боевых данных курса 375: узнаны 10 плательщиков из 28, было 0. Вперёд: причина — подпись в Zoom, поэтому она записана в руководства [ученика](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_GUIDE_RU.md), [куратора](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CURATOR_ADMIN_GUIDE_RU.md) и [бухгалтера](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_ACCOUNTANT_COURSE_STREAMS_RU.md).
+2. **Занятия первого потока — «заводи, человек сейчас ничего не видит».** `attendance:backfill-streams --create-lessons` заводит занятие под подтверждённый запуск Zoom, только вставками; обязателен `--slot`, иначе за урок был бы принят любой запуск общей комнаты.
+3. **Занятие 24-06-2026 — «не было».** Подтверждено; в Zoom запуска на эту дату нет. Строка 643 остаётся следом, посещаемости у неё не будет.
 
 ## Не-цели
 

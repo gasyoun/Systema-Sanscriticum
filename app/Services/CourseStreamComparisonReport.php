@@ -11,6 +11,7 @@ use App\Support\CourseFamilyMatcher;
 use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * H3083 — потоки одного курса бок о бок: ученики по блокам и удержание, деньги,
@@ -356,6 +357,35 @@ class CourseStreamComparisonReport
     }
 
     /**
+     * Плательщики, узнанные по связке «экранное имя Zoom → пользователь»
+     * (H3761). Учитываются только те, у кого есть хотя бы одна строка
+     * посещаемости с этим именем на занятии того же курса — связка сама по
+     * себе не означает, что человек приходил.
+     *
+     * @param  list<int>  $ids
+     * @return list<int>
+     */
+    private function attendeesByNameLink(array $ids): array
+    {
+        if ($ids === [] || ! Schema::hasTable('webinar_participant_links')) {
+            return [];
+        }
+
+        return DB::table('webinar_participant_links as l')
+            ->join('webinar_attendances as wa', function ($join): void {
+                $join->on('wa.name', '=', 'l.zoom_name');
+            })
+            ->join('schedules as s', function ($join): void {
+                $join->on('s.id', '=', 'wa.schedule_id')->on('s.course_id', '=', 'l.course_id');
+            })
+            ->whereIn('l.user_id', $ids)
+            ->distinct()
+            ->pluck('l.user_id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+    }
+
+    /**
      * Покрытие данными о посещаемости. Отдаётся ВСЕГДА, даже когда покрытие
      * нулевое: пустая колонка без этой плашки читается как «никто не ходил»,
      * а это была бы ложь в отчёте бухгалтера (§7 ARCHITECTURE).
@@ -378,8 +408,16 @@ class CourseStreamComparisonReport
 
         $viewers = DB::table('lesson_views')->whereIn('user_id', $ids)->distinct()->pluck('user_id')
             ->map(fn ($id): int => (int) $id)->all();
-        $attendees = DB::table('webinar_attendances')->whereIn('user_id', $ids)->distinct()->pluck('user_id')
-            ->map(fn ($id): int => (int) $id)->all();
+        $attendees = array_values(array_unique(array_merge(
+            DB::table('webinar_attendances')->whereIn('user_id', $ids)->distinct()->pluck('user_id')
+                ->map(fn ($id): int => (int) $id)->all(),
+            // H3761: у 96 % строк посещаемости `user_id` пуст — Zoom отдаёт почту
+            // только для залогиненных в тот же аккаунт. Кто это был, известно
+            // лишь по экранному имени, поэтому вторая половина ответа приходит
+            // из связок `webinar_participant_links`. Без неё плашка показывала
+            // ноль посещавших при сотнях собранных строк.
+            $this->attendeesByNameLink($ids),
+        )));
 
         $covered = array_unique(array_merge($viewers, $attendees));
 
