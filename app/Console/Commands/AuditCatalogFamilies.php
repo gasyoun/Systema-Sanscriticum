@@ -45,7 +45,7 @@ class AuditCatalogFamilies extends Command
             ['Семья', 'Вердикт', 'Курсы', 'Почему'],
             array_map(fn (array $row): array => [
                 mb_substr($row['family'], 0, 34),
-                $this->verdictLabel($row['verdict']),
+                $this->verdictLabel($row['verdict'], $row['exposure'] ?? null),
                 implode(', ', array_column($row['members'], 'id')),
                 $row['reasons'] === [] ? '—' : mb_substr(implode('; ', $row['reasons']), 0, 70),
             ], $rows),
@@ -62,20 +62,34 @@ class AuditCatalogFamilies extends Command
     {
         $count = fn (string $verdict): int => count(array_filter($rows, fn (array $r) => $r['verdict'] === $verdict));
 
+        $public = count(array_filter(
+            $rows,
+            fn (array $r): bool => $r['verdict'] === CatalogFamilyAudit::VERDICT_DUPLICATE
+                && ($r['exposure'] ?? null) === CatalogFamilyAudit::EXPOSURE_PUBLIC,
+        ));
+
         return sprintf(
-            'Семей %d: duplicate %d, streams %d, unique %d. Курсов %d. Ничего не изменено.',
+            'Семей %d: duplicate %d (из них видно покупателю %d), streams %d, unique %d. Курсов %d. Ничего не изменено.',
             count($rows),
             $count(CatalogFamilyAudit::VERDICT_DUPLICATE),
+            $public,
             $count(CatalogFamilyAudit::VERDICT_STREAMS),
             $count(CatalogFamilyAudit::VERDICT_UNIQUE),
             array_sum(array_map(fn (array $r) => count($r['members']), $rows)),
         );
     }
 
-    private function verdictLabel(string $verdict): string
+    /**
+     * Метка вердикта. У `duplicate` она несёт ЭКСПОЗИЦИЮ, потому что без неё
+     * одно слово покрывает две разные работы: правку витрины сегодня и запись
+     * в модели данных, которую никто не видит.
+     */
+    private function verdictLabel(string $verdict, ?string $exposure = null): string
     {
         return match ($verdict) {
-            CatalogFamilyAudit::VERDICT_DUPLICATE => '⛔ duplicate',
+            CatalogFamilyAudit::VERDICT_DUPLICATE => $exposure === CatalogFamilyAudit::EXPOSURE_PUBLIC
+                ? '⛔ duplicate (видно)'
+                : '⚪ duplicate (скрыто)',
             CatalogFamilyAudit::VERDICT_STREAMS => '✅ streams',
             default => '· unique',
         };
@@ -123,7 +137,7 @@ class AuditCatalogFamilies extends Command
             $out[] = sprintf(
                 '| `%s` | %s | %s | %s | %s |',
                 $row['family'],
-                $this->verdictLabel($row['verdict']),
+                $this->verdictLabel($row['verdict'], $row['exposure'] ?? null),
                 $this->membersCell($row['members']),
                 $this->evidenceCell($row['members'], $row['reasons']),
                 $row['follow_up'] ?? '—',
@@ -145,10 +159,16 @@ class AuditCatalogFamilies extends Command
         $out[] = '## Как читается вердикт';
         $out[] = '';
         $out[] = '- **streams** — несколько строк `courses`, и каждая отличима как самостоятельный поток: у неё есть собственные данные (роль `live`/`recording`) и собственный ключ потока — номер из названия либо дата первого платежа. Законно; складывать потоки между собой в отчётности нельзя (семантика `App\Support\CourseCadence`).';
-        $out[] = '- **duplicate** — хотя бы одна строка не отличима: либо у неё нет ни блоков, ни активных тарифов, ни оплат, либо две строки претендуют на один и тот же поток. Требует разбора человеком.';
+        $out[] = '- **duplicate** — хотя бы одна строка не отличима: либо у неё нет ни блоков, ни активных тарифов, ни оплат, либо две строки претендуют на один и тот же поток.';
         $out[] = '- **unique** — в семье одна строка.';
         $out[] = '';
-        $out[] = 'Порог намеренно строгий в пользу `duplicate`: ложный `duplicate` стоит одного взгляда админа, ложный `streams` прячет дубль от витрины насовсем.';
+        $out[] = '### Вердикт — про модель данных; про витрину говорит ЭКСПОЗИЦИЯ';
+        $out[] = '';
+        $out[] = 'Это разные вещи, и путать их дорого. `duplicate` **(видно)** значит, что обе строки открыты на витрине одновременно: покупатель и поиск видят одну программу дважды — работа на сегодня. `duplicate` **(скрыто)** значит, что лишние строки сняты с витрины и отдают 404 (`ShopController::show` рубит невидимый курс): снаружи ничего не двоится, расходится только модель данных, и срочности нет.';
+        $out[] = '';
+        $out[] = 'Разделение добавлено 31-08-2026 по боевому промаху: первая версия отчёта звала «свести витрину и SEO» для всех четырёх `duplicate`, а три из них были скрыты и уже отдавали 404 — совет посылал человека чинить то, чего не существует.';
+        $out[] = '';
+        $out[] = 'Порог намеренно строгий в пользу `duplicate`: ложный `duplicate` стоит одного взгляда админа, ложный `streams` прячет дубль насовсем.';
         $out[] = '';
         $out[] = '_Dr. Mārcis Gasūns_';
 

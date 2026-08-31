@@ -361,6 +361,77 @@ class CatalogFamilyAuditTest extends TestCase
     }
 
     /** @test */
+    public function a_hidden_twin_is_a_duplicate_but_not_a_shop_problem(): void
+    {
+        // Боевой промах 31-08-2026: отчёт звал «свести витрину и SEO» для трёх
+        // семей, у которых запись была СКРЫТА и уже отдавала 404. Вердикт
+        // остаётся duplicate (модель данных двоится), но экспозиция — internal.
+        $live = $this->liveCourse('Йога-сутры Патанджали (1 поток, 2025)', 'ys-exp-live-test');
+        $recording = $this->liveCourse('Йога-сутры Патанджали (1 поток, 2025) в записи', 'ys-exp-rec-test');
+        $recording->update(['is_visible' => false]);
+
+        $row = $this->familyContaining($live->id);
+
+        $this->assertNotNull($row);
+        $this->assertSame(CatalogFamilyAudit::VERDICT_DUPLICATE, $row['verdict']);
+        $this->assertSame(CatalogFamilyAudit::EXPOSURE_INTERNAL, $row['exposure']);
+        $this->assertStringContainsString('НЕ видно', $row['follow_up']);
+        $this->assertStringNotContainsString('свести витрину и SEO на одну', $row['follow_up']);
+    }
+
+    /** @test */
+    public function two_visible_twins_are_flagged_as_seen_by_the_shopper(): void
+    {
+        $live = $this->liveCourse('Пранаяма (1 поток, 2025)', 'pran-exp-a-test');
+        $twin = $this->liveCourse('Пранаяма (1 поток, 2025) в записи', 'pran-exp-b-test');
+
+        $this->assertTrue((bool) $live->is_visible);
+        $this->assertTrue((bool) $twin->is_visible);
+
+        $row = $this->familyContaining($live->id);
+
+        $this->assertNotNull($row);
+        $this->assertSame(CatalogFamilyAudit::EXPOSURE_PUBLIC, $row['exposure']);
+        $this->assertStringContainsString('ВИДНО ПОКУПАТЕЛЮ', $row['follow_up']);
+    }
+
+    /** @test */
+    public function a_publicly_visible_duplicate_sorts_above_a_hidden_one(): void
+    {
+        // Срочное не должно тонуть под несрочным.
+        $hiddenLive = $this->liveCourse('Йога-сутры Патанджали (1 поток, 2025)', 'sort-exp-hidden-live');
+        $hiddenTwin = $this->liveCourse('Йога-сутры Патанджали (1 поток, 2025) в записи', 'sort-exp-hidden-rec');
+        $hiddenTwin->update(['is_visible' => false]);
+
+        $this->liveCourse('Пранаяма (1 поток, 2025)', 'sort-exp-public-a');
+        $this->liveCourse('Пранаяма (1 поток, 2025) в записи', 'sort-exp-public-b');
+
+        $rows = array_values(array_filter(
+            $this->audit()->report(),
+            fn (array $r): bool => $r['verdict'] === CatalogFamilyAudit::VERDICT_DUPLICATE,
+        ));
+
+        $this->assertSame(CatalogFamilyAudit::EXPOSURE_PUBLIC, $rows[0]['exposure']);
+        $this->assertSame(CatalogFamilyAudit::EXPOSURE_INTERNAL, $rows[1]['exposure']);
+        $this->assertContains($hiddenLive->id, array_column($rows[1]['members'], 'id'));
+    }
+
+    /** @test */
+    public function the_markdown_summary_counts_the_publicly_visible_duplicates(): void
+    {
+        $live = $this->liveCourse('Йога-сутры Патанджали (1 поток, 2025)', 'md-exp-live');
+        $rec = $this->liveCourse('Йога-сутры Патанджали (1 поток, 2025) в записи', 'md-exp-rec');
+        $rec->update(['is_visible' => false]);
+
+        $this->assertSame(0, Artisan::call('catalog:audit-families', ['--markdown' => true]));
+        $out = Artisan::output();
+
+        $this->assertStringContainsString('из них видно покупателю 0', $out);
+        $this->assertStringContainsString('duplicate (скрыто)', $out);
+        $this->assertNotNull($this->familyContaining($live->id));
+    }
+
+    /** @test */
     public function the_duplicate_verdict_sorts_before_streams_and_unique(): void
     {
         $this->liveCourse('Кашмирский шиваизм (1 поток, 2024)', 'sort-ks-1-test');
