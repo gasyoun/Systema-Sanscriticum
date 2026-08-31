@@ -44,6 +44,15 @@ final class SupportDmAutoReply
 
     public const EVENT_STALE_SKIP = 'dm_stale_skip';
 
+    /** H3765 A3: «бот отправил бы это сам» — только запись, ни одного исходящего. */
+    public const EVENT_SHADOW_WOULD_SEND = 'dm_shadow_would_send';
+
+    /** H3765 A5: куратор нажал «Отправить как есть» под подсказкой. */
+    public const EVENT_HINT_SEND_TAPPED = 'dm_hint_send_tapped';
+
+    /** Префикс callback_data кнопки одного нажатия (см. TelegramWebhookController). */
+    public const SEND_CALLBACK_PREFIX = 'sdm:';
+
     /** @var list<string> */
     private const SIMPLE_CATEGORIES = [
         SupportAnswerSuggestion::CATEGORY_ZOOM,
@@ -98,9 +107,14 @@ final class SupportDmAutoReply
         // H3380 v2.2 (урок первого бэклог-реплея): первичный history-забор
         // приносит МЕСЯЦЫ старых входящих; автоответ/подсказка на них —
         // спам студентам и админам. Реагируем только на свежие сообщения.
-        if ($incoming->sent_at !== null
-            && $incoming->sent_at->lt(now()->subHours((int) config('services.telegram_support.auto_reply_max_age_hours', 6)))
-        ) {
+        //
+        // H3765 A2: один потолок стал двумя. Сообщение старше ПОДСКАЗОЧНОГО
+        // потолка (24 ч) отбрасывается целиком, как и раньше. Сообщение между
+        // двумя потолками (6–24 ч) студенту уже не отвечаем — просроченный
+        // автоответ хуже молчания, — но куратору показываем: он решит сам.
+        $ageDecision = $this->freshness($incoming);
+
+        if ($ageDecision === 'stale') {
             // H3392: пропуск остаётся тихим для студента и куратора, но
             // помечается ОДНИМ маркером на сообщение (firstOrCreate — повторные
             // проходы синка дублей не плодят), иначе недельный отчёт пробы
@@ -116,6 +130,8 @@ final class SupportDmAutoReply
             return ['status' => 'stale_skip', 'category' => null];
         }
 
+        $mayReachStudent = $ageDecision === 'fresh';
+
         $category = $this->suggester->categorize($text);
         $user = $linkedUserId ? User::query()->find($linkedUserId) : null;
 
@@ -130,8 +146,11 @@ final class SupportDmAutoReply
 
         if ($smallTalk === 'greeting') {
             // Один тёплый ответ на приветствие за cooldown-окно чата; повторные
-            // «намасте» и ответы студента на наш бот-ответ молчанием.
-            if ($user !== null
+            // «намасте» и ответы студента на наш бот-ответ молчанием. Устаревшее
+            // приветствие (H3765) не отвечаем и куратору не показываем: «Намасте»
+            // суточной давности не требует ни ответа, ни разбора.
+            if ($mayReachStudent
+                && $user !== null
                 && $this->accountAllowsAutoReply($incoming)
                 && ! $this->recentOutgoingInChat($incoming)
             ) {
@@ -150,7 +169,8 @@ final class SupportDmAutoReply
             return ['status' => 'skip', 'category' => null];
         }
 
-        if ($user !== null
+        if ($mayReachStudent
+            && $user !== null
             && $category !== null
             && in_array($category, self::SIMPLE_CATEGORIES, true)
         ) {
@@ -162,7 +182,8 @@ final class SupportDmAutoReply
 
         // H3380: шаблонный автоответ D/E/F по привязке S9 — только на аккаунтах
         // с auto_reply_enabled, поведение основного support-аккаунта не меняется.
-        if ($user !== null
+        if ($mayReachStudent
+            && $user !== null
             && $category !== null
             && in_array($category, self::TEMPLATE_CATEGORIES, true)
             && (bool) config('features.support_auto_reply_templates', false)
@@ -188,7 +209,7 @@ final class SupportDmAutoReply
         // H3380: ack «приняли, ответим», когда автоответить нечем. Раз в
         // cooldown-окно на чат: серия сообщений студента не плодит серию болванок.
         // Без linked-пользователя очередь не построить — только hint.
-        if ($user !== null && $this->ackEnabledFor($incoming)) {
+        if ($mayReachStudent && $user !== null && $this->ackEnabledFor($incoming)) {
             return $this->sendAuto(
                 $incoming,
                 $user,
@@ -205,11 +226,40 @@ final class SupportDmAutoReply
         // распознанной категории и автоответ блокирован ТОЛЬКО отсутствием связи —
         // один раз за cooldown-окно отправляем приглашение связать Telegram с
         // кабинетом (флаг support_dm_link_invite, пер-аккаунтный гейт внутри).
-        if ($user === null && $category !== null && $this->linkInvite->offerForIncoming($incoming)) {
+        if ($mayReachStudent && $user === null && $category !== null && $this->linkInvite->offerForIncoming($incoming)) {
             return ['status' => 'invite_sent', 'category' => $category];
         }
 
-        return $this->hintComplex($incoming, $user, $category, $text);
+        return $this->hintComplex($incoming, $user, $category, $text, ! $mayReachStudent);
+    }
+
+    /**
+     * H3765 A2: два потолка свежести вместо одного.
+     *
+     * 'fresh'     — моложе auto_reply_max_age_hours: разрешено всё, включая
+     *               исходящее студенту.
+     * 'hint_only' — между потолками: студенту молчим, куратору показываем.
+     * 'stale'     — старше hint_max_age_hours (или подсказочный потолок ниже
+     *               автоответного — тогда это прежнее одноступенчатое поведение):
+     *               тихий пропуск с маркером.
+     *
+     * Сообщение без sent_at (возраст неизвестен) считаем свежим — как и до
+     * H3765: домысливать возраст и молча гасить живой вопрос хуже.
+     */
+    private function freshness(TelegramSupportMessage $incoming): string
+    {
+        if ($incoming->sent_at === null) {
+            return 'fresh';
+        }
+
+        $sendHours = (int) config('services.telegram_support.auto_reply_max_age_hours', 6);
+        $hintHours = max($sendHours, (int) config('services.telegram_support.hint_max_age_hours', 24));
+
+        if ($incoming->sent_at->lt(now()->subHours($hintHours))) {
+            return 'stale';
+        }
+
+        return $incoming->sent_at->lt(now()->subHours($sendHours)) ? 'hint_only' : 'fresh';
     }
 
     /**
@@ -392,6 +442,7 @@ final class SupportDmAutoReply
         ?User $user,
         ?string $category,
         string $text,
+        bool $aged = false,
     ): array {
         $hits = $this->faq->retrieve($text, 3);
         $name = $user?->name ?? 'без привязки';
@@ -424,14 +475,40 @@ final class SupportDmAutoReply
         $lines[] = '';
         $lines[] = 'Студенту ничего не ушло. Ответьте в этом же Telegram.';
 
+        if ($aged) {
+            // H3765 A2: сообщение старше автоответного потолка. Куратор должен
+            // видеть, что вопрос уже полежал: ответ «как ни в чём не бывало»
+            // на позавчерашнее письмо читается хуже, чем ответ с оговоркой.
+            $lines[] = sprintf(
+                '⏳ Вопрос пролежал дольше %d ч — бот поэтому и промолчал.',
+                (int) config('services.telegram_support.auto_reply_max_age_hours', 6),
+            );
+        }
+
+        // H3765 A5: черновик под одну кнопку. Заводим его ДО отправки подсказки —
+        // клавиатура несёт его id, и без записи кнопке нечего было бы отправить.
+        $suggestion = $this->oneTapSuggestion($incoming, $user, $category, $text, $hits);
+
+        if ($suggestion !== null) {
+            $lines[] = '';
+            $lines[] = 'Кнопка ниже отправит студенту черновик из FAQ как есть.';
+        }
+
         // H3393: подсказка уходит тому, кто реально отвечает на этом аккаунте
         // (hint_recipients), иначе — админам, как раньше.
         $recipients = $this->accountHintRecipients($incoming);
+        $keyboard = $suggestion === null ? null : [[[
+            'text' => '📨 Отправить как есть',
+            'callback_data' => self::SEND_CALLBACK_PREFIX.$suggestion->id,
+        ]]];
+
         if ($recipients !== []) {
-            $this->admins->notifyRecipients($recipients, implode("\n", $lines));
+            $this->admins->notifyRecipients($recipients, implode("\n", $lines), $keyboard);
         } else {
-            $this->admins->notifyAdmins(implode("\n", $lines));
+            $this->admins->notifyAdmins(implode("\n", $lines), $keyboard);
         }
+
+        $this->recordShadowWouldSend($incoming, $user, $category, $text, $hits);
 
         SupportAiReplyEvent::create([
             'telegram_support_message_id' => $incoming->id,
@@ -440,6 +517,8 @@ final class SupportDmAutoReply
                 'via' => self::VIA,
                 'category' => $category,
                 'source_telegram_message_id' => (int) $incoming->telegram_message_id,
+                'aged' => $aged,
+                'suggestion_id' => $suggestion?->id,
                 'faq_chunk_ids' => array_values(array_map(
                     static fn (array $hit): string => (string) ($hit['chunk_id'] ?? ''),
                     $hits,
@@ -448,6 +527,140 @@ final class SupportDmAutoReply
         ]);
 
         return ['status' => 'hinted', 'category' => $category];
+    }
+
+    /**
+     * H3765 A5: запись-черновик, за которую цепляется inline-кнопка подсказки.
+     *
+     * Заводим её только когда кнопке будет что отправить: нужен привязанный
+     * студент (иначе очередь исходящего не построить), распознанная категория
+     * (колонка не nullable) и хотя бы одно попадание в FAQ. Уникальный ключ
+     * (source_type, source_id) держит инвариант «один черновик на сообщение»:
+     * повторный проход синка не плодит вторую кнопку.
+     *
+     * @param  list<array<string, mixed>>  $hits
+     */
+    private function oneTapSuggestion(
+        TelegramSupportMessage $incoming,
+        ?User $user,
+        ?string $category,
+        string $text,
+        array $hits,
+    ): ?SupportAnswerSuggestion {
+        if ($user === null || $category === null || $hits === []) {
+            return null;
+        }
+
+        $draft = $this->faqDraft($hits);
+        if ($draft === null) {
+            return null;
+        }
+
+        return SupportAnswerSuggestion::firstOrCreate(
+            [
+                'source_type' => SupportAnswerSuggestion::SOURCE_TELEGRAM_SUPPORT_MESSAGE,
+                'source_id' => $incoming->id,
+            ],
+            [
+                'user_id' => $user->id,
+                'category' => $category,
+                'detected_text' => mb_substr($text, 0, 2000),
+                'draft_text' => $draft,
+                'facts' => [
+                    'via' => self::VIA,
+                    'faq_chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
+                    'faq_title' => (string) ($hits[0]['title'] ?? ''),
+                    'source_telegram_message_id' => (int) $incoming->telegram_message_id,
+                ],
+                'confidence' => (float) ($hits[0]['score'] ?? 0.0),
+                'status' => SupportAnswerSuggestion::STATUS_PENDING,
+            ],
+        );
+    }
+
+    /**
+     * Черновик студенту из лучшего попадания FAQ. Цитата обязательна (рулинг
+     * R3): студент должен видеть, откуда взят ответ, а куратор — что именно
+     * уйдёт по кнопке.
+     *
+     * @param  list<array<string, mixed>>  $hits
+     */
+    private function faqDraft(array $hits): ?string
+    {
+        $best = $hits[0] ?? null;
+        $snippet = trim((string) ($best['snippet'] ?? ''));
+        if ($snippet === '') {
+            return null;
+        }
+
+        $title = trim((string) ($best['title'] ?? ''));
+        $citation = $title === '' ? 'наш FAQ' : "наш FAQ, раздел «{$title}»";
+
+        return "Намасте!\n\n{$snippet}\n\nИсточник — {$citation}. Если вопрос остался, напишите — ответит куратор.";
+    }
+
+    /**
+     * H3765 A3, теневой режим. Пишет «отправил бы» и НИЧЕГО не отправляет.
+     *
+     * Условия ровно те, при которых живая автоотправка была бы допущена
+     * (рулинг R3): включён флаг тени, студент привязан, категория безопасная
+     * (D-деньги и E-доступы исключены), лучший BM25-скор не ниже порога.
+     * Событие пишется firstOrCreate — повторные заходы синка одного и того же
+     * сообщения не раздувают недельную выборку.
+     *
+     * @param  list<array<string, mixed>>  $hits
+     */
+    private function recordShadowWouldSend(
+        TelegramSupportMessage $incoming,
+        ?User $user,
+        ?string $category,
+        string $text,
+        array $hits,
+    ): void {
+        if (! (bool) config('features.support_dm_auto_reply_shadow', false)) {
+            return;
+        }
+
+        if ($user === null || $category === null || $hits === []) {
+            return;
+        }
+
+        $allowed = config('support.faq_rag.shadow_categories', ['A', 'B', 'C', 'F']);
+        if (! is_array($allowed) || ! in_array($category, $allowed, true)) {
+            return;
+        }
+
+        $score = (float) ($hits[0]['score'] ?? 0.0);
+        if ($score < (float) config('support.faq_rag.shadow_min_score', 8.0)) {
+            return;
+        }
+
+        $draft = $this->faqDraft($hits);
+        if ($draft === null) {
+            return;
+        }
+
+        SupportAiReplyEvent::firstOrCreate(
+            [
+                'telegram_support_message_id' => $incoming->id,
+                'event_type' => self::EVENT_SHADOW_WOULD_SEND,
+            ],
+            [
+                'meta' => [
+                    'via' => self::VIA,
+                    'category' => $category,
+                    'score' => round($score, 4),
+                    'chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
+                    'draft' => $draft,
+                    // Сам вопрос в событие не кладём: недельный отчёт читает
+                    // человек, а тексты студентов уже лежат в своей таблице.
+                    // Хэш нужен только чтобы склеить повторы одного вопроса.
+                    'question_hash' => hash('sha256', mb_strtolower(trim($text))),
+                    'user_id' => $user->id,
+                    'telegram_chat_id' => (int) $incoming->telegram_chat_id,
+                ],
+            ],
+        );
     }
 
     private function alreadyHandled(TelegramSupportMessage $incoming): bool
