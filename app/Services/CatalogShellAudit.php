@@ -56,21 +56,41 @@ class CatalogShellAudit
                 continue;
             }
 
-            $blockers = $this->courseBlockers($course);
-
-            $rows[] = [
-                'id' => $course->id,
-                'title' => $course->title,
-                'slug' => $course->slug,
-                'format' => $course->format,
-                'visible' => (bool) $course->is_visible,
-                'enrolled' => $course->users()->count(),
-                'blockers' => $blockers,
-                'safe' => $blockers === [],
-            ];
+            $rows[] = $this->courseRow($course);
         }
 
         return $rows;
+    }
+
+    /**
+     * Вердикт по ОДНОМУ курсу — та же строка, что попадает в отчёт.
+     *
+     * Публичный, потому что `catalog:retire-shell` (H3807) обязан переспросить
+     * аудит непосредственно перед записью: между отчётом и правкой ростер
+     * успевает измениться, и «безопасно» вчерашнего прогона ничего не значит.
+     *
+     * @return array<string, mixed>
+     */
+    public function courseRow(Course $course): array
+    {
+        $blockers = $this->courseBlockers($course);
+
+        return [
+            'id' => $course->id,
+            'title' => $course->title,
+            'slug' => $course->slug,
+            'format' => $course->format,
+            'visible' => (bool) $course->is_visible,
+            'enrolled' => $course->users()->count(),
+            'blockers' => $blockers,
+            'safe' => $blockers === [],
+        ];
+    }
+
+    /** Курс — оболочка: ни одной собственной строки данных (см. isShell). */
+    public function isShellCourse(Course $course): bool
+    {
+        return $this->isShell((int) $course->id);
     }
 
     /** @return list<array<string, mixed>> */
