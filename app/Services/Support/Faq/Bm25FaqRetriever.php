@@ -16,6 +16,7 @@ final class Bm25FaqRetriever
 
     public function __construct(
         private readonly FaqCorpusParser $parser,
+        private readonly RuTextNormalizer $ru = new RuTextNormalizer,
     ) {}
 
     public function isEnabled(): bool
@@ -31,7 +32,7 @@ final class Bm25FaqRetriever
         $topK ??= (int) config('support.faq_rag.top_k', 3);
         $topK = max(1, $topK);
 
-        $queryTokens = $this->tokenize($query);
+        $queryTokens = $this->ru->expandQuery($this->tokenize($query));
         if ($queryTokens === []) {
             return [];
         }
@@ -135,12 +136,11 @@ final class Bm25FaqRetriever
      */
     public function tokenize(string $text): array
     {
-        $text = mb_strtolower($text, 'UTF-8');
         // H3766 B3 (правка 1): ё/е fold. Студенты пишут «е» там, где в faq.md
         // стоит «ё» («зачет»/«зачёт», «еще»/«ещё», «объем»/«объём»), и BM25
         // считал это разными термами. Свёртка идёт и по запросу, и по корпусу —
         // tokenize() один на оба.
-        $text = str_replace(['ё', 'Ё'], 'е', $text);
+        $text = $this->ru->fold($text);
         // Letters (incl. Cyrillic) and digits; drop punctuation.
         preg_match_all('/[\p{L}\p{N}]+/u', $text, $m);
         $tokens = $m[0] ?? [];
@@ -160,7 +160,9 @@ final class Bm25FaqRetriever
             if (in_array($t, $stop, true)) {
                 continue;
             }
-            $out[] = $t;
+            // H3766 B3 (правка 2): усечение окончаний — одинаково для корпуса и
+            // запроса, иначе «оплатить» перестанет находить «Оплата».
+            $out[] = $this->ru->stem($t);
         }
 
         return $out;
