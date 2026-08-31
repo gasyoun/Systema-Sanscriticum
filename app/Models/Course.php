@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\RichHtml;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -40,6 +41,10 @@ class Course extends Model
         'is_completed',
         // Живой повтор не планируется (MG H1755): куратор говорит «повтора не будет».
         'never_repeat',
+        // H3807 «одна карточка на программу»: этот курс — ЗАПИСЬ вон того
+        // живого курса. Курс остаётся покупаем, но своей карточки в ленте
+        // каталога не получает и отдаёт rel=canonical на живой курс.
+        'recording_of_course_id',
         'lessons_count',
         'hours_count',
         'teacher_id',
@@ -214,6 +219,50 @@ class Course extends Model
     public function slugAliases(): HasMany
     {
         return $this->hasMany(CourseSlugAlias::class);
+    }
+
+    /**
+     * Живой курс, ЗАПИСЬЮ которого является этот (H3807, рулинг MG «одна
+     * карточка на программу»). NULL = самостоятельный товар с собственной
+     * карточкой.
+     */
+    public function recordingOf(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'recording_of_course_id');
+    }
+
+    /** Записи этого курса, продаваемые внутри его карточки (обратная связь). */
+    public function recordings(): HasMany
+    {
+        return $this->hasMany(self::class, 'recording_of_course_id');
+    }
+
+    /** Этот курс — запись другого, а не самостоятельный товар витрины. */
+    public function isRecordingOfAnotherCourse(): bool
+    {
+        return $this->recording_of_course_id !== null;
+    }
+
+    /**
+     * Карточка, которая представляет этот курс в магазине и в поиске. Для
+     * записи — живой курс; для всех остальных — сам курс. Именно её адрес идёт
+     * в `rel=canonical`, чтобы поисковик не считал две страницы одной программы
+     * двумя товарами.
+     */
+    public function catalogCardCourse(): self
+    {
+        return $this->recordingOf ?? $this;
+    }
+
+    /**
+     * Курсы, у которых есть собственная карточка витрины: всё, кроме записей,
+     * приписанных к живому курсу. Тот же приём, что и
+     * `PrivateArchiveEligibility::scopePublic` — курс остаётся жив и покупаем,
+     * из ЛЕНТЫ уходит только вторая карточка одной программы.
+     */
+    public function scopeWithOwnCatalogCard(Builder $query): Builder
+    {
+        return $query->whereNull('recording_of_course_id');
     }
 
     /**
