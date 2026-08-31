@@ -34,7 +34,7 @@ class WaitlistSeedCommand extends Command
             ['meghaduta-kalidasy', 'Мегхадута Калидасы', 'Екатерина Костина', null, '2027-10-15', 8, 6000, 'other', null],
             ['indiiskoe-kino', 'Индийское кино', 'Екатерина Костина', null, '2027-10-15', 8, 6000, 'other', null],
             // Демченко
-            ['rudrashtakam-hindi', 'Рудраштакам (на хинди)', 'Максим Демченко', 'сб 17:00', '2026-04-13', 10, 10000, 'other', null],
+            ['rudrashtakam-hindi', 'Рудраштакам (на хинди)', 'Максим Демченко', 'сб 17:00', '2026-09-01', 10, 10000, 'other', null],
             // Трефилова
             ['nachalnyi-sanskrit-trefilova', 'Начальный санскрит', 'Елена Трефилова', null, '2026-10-01', 8, 6000, 'grammar', null],
             ['sanskritskaya-prodlenka-intensiv', 'Санскритская продленка (летний интенсив)', 'Елена Трефилова', null, '2027-07-01', 8, 6000, 'other', null],
