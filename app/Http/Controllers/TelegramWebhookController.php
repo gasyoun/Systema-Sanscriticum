@@ -6,6 +6,7 @@ use App\Jobs\SyncUserAvatarJob;
 use App\Models\ChatMessage;
 use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
+use App\Models\VacationQuorumPoll;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\AttendanceNoticeService;
 use App\Services\Bot\CabinetLoginBotCommand;
@@ -14,11 +15,12 @@ use App\Services\Bot\DebtorsBotCommand;
 use App\Services\Bot\RosterBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
-use App\Services\Bot\UnblockBotCommand;
-use App\Services\HomeworkTelegramTagService; // Добавили для переключения на человека
+use App\Services\Bot\UnblockBotCommand; // Добавили для переключения на человека
+use App\Services\HomeworkTelegramTagService;
 use App\Services\Support\HomeworkPauseNoteRecorder;
 use App\Services\Support\SupportDmAutoReply;
 use App\Services\Support\SupportHintSendButton;
+use App\Services\VacationQuorumService;
 use App\Support\TelegramSendGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -577,6 +579,14 @@ class TelegramWebhookController extends Controller
             return;
         }
 
+        // H3790 фаза C: одобрение распускания каникульной группы (кворум не соbrался).
+        if (str_starts_with($data, VacationQuorumService::CALLBACK_APPROVE)
+            || str_starts_with($data, VacationQuorumService::CALLBACK_DECLINE)) {
+            $this->handleVacationQuorumCallback($callback, $notifier);
+
+            return;
+        }
+
         if (! str_starts_with($data, 'ub:') || $fromId === null) {
             $notifier->answerCallback($callbackId);
 
@@ -598,6 +608,39 @@ class TelegramWebhookController extends Controller
         $token = (string) config('services.telegram.bot_token');
         if ($token !== '' && $chatId !== null) {
             $notifier->send($token, (string) $chatId, $reply);
+        }
+    }
+
+    private function handleVacationQuorumCallback(array $callback, TelegramAdminNotifier $notifier): void
+    {
+        $callbackId = (string) ($callback['id'] ?? '');
+        $data = (string) ($callback['data'] ?? '');
+        $fromId = $callback['from']['id'] ?? null;
+
+        $admin = $fromId !== null ? User::where('telegram_id', $fromId)->first() : null;
+        if (! $admin || ! UnblockBotCommand::isAuthorized($admin)) {
+            $notifier->answerCallback($callbackId, 'Недостаточно прав.');
+
+            return;
+        }
+
+        $service = app(VacationQuorumService::class);
+        $isApprove = str_starts_with($data, VacationQuorumService::CALLBACK_APPROVE);
+        $pollId = (int) substr($data, strrpos($data, ':') + 1);
+        $poll = VacationQuorumPoll::find($pollId);
+
+        if (! $poll) {
+            $notifier->answerCallback($callbackId, 'Опрос не найден.');
+
+            return;
+        }
+
+        if ($isApprove) {
+            $service->approveDissolution($poll, $admin);
+            $notifier->answerCallback($callbackId, 'Группа распущена.');
+        } else {
+            $service->declineDissolution($poll, $admin);
+            $notifier->answerCallback($callbackId, 'Оставили группу.');
         }
     }
 

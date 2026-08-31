@@ -41,6 +41,12 @@ class Group extends Model
         'status' => 'forming',
     ];
 
+    // Опрос кворума по каникулам — см. VacationQuorumPoll в этом же namespace.
+    public function isOnVacationWithUnknownResume(): bool
+    {
+        return (bool) $this->is_on_vacation && $this->vacation_resume_date === null;
+    }
+
     /** Набор, породивший эту группу (null для исторических групп до наборов). */
     public function intake(): BelongsTo
     {
@@ -192,6 +198,18 @@ class Group extends Model
     public function lessons(): HasMany
     {
         return $this->hasMany(Lesson::class);
+    }
+
+    /** Занятия расписания группы (H3790): soft-deletable при роспуске. */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    /** Опросы кворума «когда возобновляем?» (H3790). */
+    public function vacationQuorumPolls(): HasMany
+    {
+        return $this->hasMany(VacationQuorumPoll::class);
     }
 
     /**

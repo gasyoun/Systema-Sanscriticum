@@ -9,12 +9,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
 
 class Schedule extends Model
 {
     use HasFactory;
+
+    // H3790 (фаза C): распускание каникульной группы по одобрению Гасунса
+    // soft-deletes будущие занятия — обратимо (withTrashed), все выборки
+    // через Eloquent (фид/кабинет) отфильтровывают их автоматически.
+    use SoftDeletes;
 
     /**
      * Длительность занятия по умолчанию (часы), когда `end` не задан.
