@@ -1,10 +1,11 @@
 # Roadmap — AI-native педагогическое проектирование, 2026H2
 
-_Created: 12-08-2026 · Last updated: 30-08-2026_
+_Created: 12-08-2026 · Last updated: 31-08-2026_
 
 > **Truth-pass 30-08-2026 (Fable 5 `claude-fable-5`, `/ask` H3760):** статус W0–W1 сверен и верен;
-> единственный неотгруженный W1-артефакт — линтер — заминчен:
-> [H3763 (Sonnet 5, 🟡2 medium) — `tools/lint_pedagogy_model.py` L1–L6 по W1-спеке](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3763-Sonnet_Systema-Sanscriticum_pedagogy-model-linter-l1-l6_30.08.26.md).
+> единственный неотгруженный на тот момент W1-артефакт — линтер — заминчен как
+> [H3763 (Sonnet 5, 🟡2 medium)](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3763-Sonnet_Systema-Sanscriticum_pedagogy-model-linter-l1-l6_30.08.26.md)
+> и **выполнен 31-08-2026** — W1 полностью закрыт.
 > W2 Q3 (оценка ИИ-поверхностей по модели) — именованный кандидат следующей волны жатвы
 > ([ROADMAP слой](https://github.com/gasyoun/Uprava/blob/main/docs/ROADMAP_UPRAVA_ASK_CLAUDE_SYSTEMA_ROADMAP_MINT_2026-08.md)).
 
@@ -34,14 +35,14 @@ _Created: 12-08-2026 · Last updated: 30-08-2026_
 
 ---
 
-## W1 — Модель проверяема · частично сделано 12-08-2026 (H2600)
+## W1 — Модель проверяема · ✅ сделано 31-08-2026 (H3763)
 
 Полный план: [IMPLEMENTATION_AI_NATIVE_PEDAGOGICAL_DESIGN_W1.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_AI_NATIVE_PEDAGOGICAL_DESIGN_W1.md)
 
 - ✅ Пробы P0.1–P0.4 выполнены на проде, результаты — числами в таблице [VERIFICATION](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_AI_NATIVE_PEDAGOGICAL_DESIGN.md).
 - ✅ Слой следов приведён в соответствие с фактом: SRS понижен с «след результата по ступеням» до «след учебной активности», в схему добавлен измеренный блок `trace_reality`.
 - ✅ Обнаруженные дефициты данных выписаны отдельным списком (три штуки).
-- ⬜ Линтер `tools/lint_pedagogy_model.py` (L1–L6) — **не написан**; L1–L4 пока прогоняются скриптом-однодневкой, L5–L6 не прогоняются вовсе. 🟡 Заминчен 30-08-2026: [H3763 (Sonnet 5, 🟡2 medium)](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3763-Sonnet_Systema-Sanscriticum_pedagogy-model-linter-l1-l6_30.08.26.md).
+- ✅ Линтер [`tools/lint_pedagogy_model.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tools/lint_pedagogy_model.py) (L1–L6) — написан 31-08-2026 (H3763, Sonnet 5); первый полный прогон над committed-схемой: `L1-L6 clean, 0 findings` (L5/L6 прогнаны впервые); self-test 17/17 зелёный.
 
 **Выход достигнут частично:** известно, на какие вопросы данные Systema способны ответить.
 Ответ отрезвляющий — контур ДЗ отвечает, SRS и формальные результаты почти нет.
