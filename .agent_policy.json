@@ -16,18 +16,6 @@
       "action": "confirm",
       "reason": "Money-contour file (payment/tariff/billing/webhook pricing surface): route the change through /money-pr-land discipline - feature flag default OFF, PR with money-contour marker, watcher-safe commit. Confirm before touching.",
       "overrides": ["[money-pr-ok]"]
-    },
-    {
-      "id": "prod-ops-confirm",
-      "match": {
-        "command_regex": [
-          "\\b(ssh|scp)\\b[^\\n]*193\\.232\\.229\\.9[12]"
-        ],
-        "tools": ["Bash", "PowerShell"]
-      },
-      "action": "confirm",
-      "reason": "Command reaches a production host (samskrte 193.232.229.92 / n8n 193.232.229.91). Confirm intent; /sos emergencies are approved by the human at the prompt.",
-      "overrides": ["[sos-ok]"]
     }
   ]
 }
