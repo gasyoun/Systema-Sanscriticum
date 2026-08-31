@@ -126,6 +126,7 @@ class SitemapController extends Controller
                 });
 
             PrivateArchiveEligibility::scopePublic(Course::where('is_visible', true))
+                ->withOwnCatalogCard()
                 ->select(['slug', 'format', 'updated_at'])
                 ->orderBy('updated_at', 'desc')
                 ->chunk(500, function ($courses) use (&$urls) {

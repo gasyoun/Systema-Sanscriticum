@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', function () {
 @push('head')
     <meta name="description" content="{{ $course->meta_description ?: \Illuminate\Support\Str::limit(trim(strip_tags($course->description)), 160) }}">
 
+    {{-- H3807: канон программы — живой курс. Для записи прошедшего потока это
+         ЧУЖОЙ адрес: страница остаётся покупаемой, но в выдаче программу
+         представляет одна карточка, а не две конкурирующие. --}}
+    <link rel="canonical" href="{{ $canonicalUrl ?? route('shop.course.show', $course->slug) }}">
+
     {{-- ═══════════════ SEO: Course + Offer (schema.org / JSON-LD) ═══════════════
          Помогает Яндексу и Google показать курс с ценой в выдаче. Цены берём из
          публичных (list) цен активных тарифов — без учёта персональных скидок. --}}
@@ -584,6 +589,38 @@ document.addEventListener('DOMContentLoaded', function () {
                  x-init="if({{ $course->tariffs->where('type', '!=', 'block')->count() }} === 0) tab = 'blocks'">
 
             <h2 class="text-3xl font-bold text-white mb-8">Выберите вариант участия</h2>
+
+            {{-- ───── H3807: запись прошедшего потока как вариант покупки ─────
+                 У программы одна карточка (рулинг MG 31-08-2026), поэтому
+                 запись больше не стоит в каталоге отдельным товаром. Но она
+                 продаётся и покупается — молчать о ней значит спрятать товар,
+                 у которого есть своя выручка. Ссылка ведёт на её собственную
+                 страницу с её тарифами. --}}
+            @if(!empty($recordingOffers) && count($recordingOffers) > 0)
+                <div class="mb-8 max-w-3xl rounded-xl border border-[#38BDF8]/30 bg-[#38BDF8]/5 p-5"
+                     data-testid="recording-offers">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-play-circle text-[#38BDF8] mt-1"></i>
+                        <div class="min-w-0">
+                            <p class="text-white font-bold mb-1">Прошедший поток — в записи</p>
+                            <p class="text-slate-300 text-sm mb-3">
+                                Живого набора ждать не нужно: занятия прошлого потока продаются записью, со своими тарифами.
+                            </p>
+                            <ul class="space-y-2">
+                                @foreach($recordingOffers as $recording)
+                                    <li>
+                                        <a href="{{ route('shop.course.show', $recording->slug) }}"
+                                           class="inline-flex items-center gap-2 text-[#38BDF8] hover:text-white font-semibold text-sm transition-colors">
+                                            {{ $recording->title }}
+                                            <i class="fas fa-arrow-right text-[10px]"></i>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             {{-- Предупреждение для гостей --}}
             <div class="mb-6 max-w-3xl">
