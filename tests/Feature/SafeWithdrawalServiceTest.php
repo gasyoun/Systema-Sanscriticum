@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\SafeWithdrawalService;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -23,6 +24,14 @@ use Tests\TestCase;
 class SafeWithdrawalServiceTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // H2541: фикстуры на относительном now() взрываются 31-го числа —
+        // subMonths()->startOfMonth() смещает месячную арифметику сервиса.
+        Carbon::setTestNow(Carbon::now()->startOfMonth()->addDays(14)->setTime(12, 0));
+    }
 
     private function fakeBank(float $closing = 500000.0): void
     {
