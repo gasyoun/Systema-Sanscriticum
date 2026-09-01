@@ -148,7 +148,11 @@ function waitlistVote() {
                     },
                     body: JSON.stringify({ slug }),
                 });
-                if (resp.status === 401) { window.location.href = '/login'; return; }
+                if (resp.status === 401 || resp.redirected || ! (resp.headers.get('content-type') || '').includes('application/json')) {
+                    // Гость: web-мидлвари отвечает редиректом, ведём на вход.
+                    window.location.href = '/login';
+                    return;
+                }
                 const data = await resp.json();
                 if (data.ok) {
                     window.location.reload();
