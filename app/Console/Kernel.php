@@ -847,6 +847,19 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->onFailure(fn () => ScheduleFailureSignal::report('membership:grant-free-lesson'))
             ->name('membership-grant-free-lesson');
+
+        // --- PAYPAL: FIXED EUR/USD PRICE LIST (H3821) ---
+        // Ежемесячный пересчёт published fixed price за тариф — заменяет ад-хок
+        // ручную конвертацию, которую нашла сверка H3819 (0-18% разброс на
+        // идентичном тарифе). Гейт flag'ом: пока features.paypal_fixed_price_list
+        // выключен (дефолт), слот — no-op, ничего не пишет.
+        $schedule->command('paypal:refresh-foreign-prices')
+            ->monthlyOn(1, '05:40')
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.paypal_fixed_price_list'))
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('paypal-refresh-foreign-prices');
     }
 
     /**

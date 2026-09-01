@@ -6,6 +6,7 @@ use App\Enums\MembershipTier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 class Tariff extends Model
@@ -129,6 +130,12 @@ class Tariff extends Model
     public function block(): BelongsTo
     {
         return $this->belongsTo(CourseBlock::class, 'course_block_id');
+    }
+
+    /** H3821 — published fixed EUR/USD PayPal prices, refreshed monthly. */
+    public function foreignPrices(): HasMany
+    {
+        return $this->hasMany(TariffForeignPrice::class);
     }
 
     /**
