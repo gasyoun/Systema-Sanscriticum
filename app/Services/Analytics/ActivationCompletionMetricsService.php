@@ -247,9 +247,12 @@ final class ActivationCompletionMetricsService
         $courses = $this->courseCompletion($ratio);
         $groups = $this->groupCompletion($ratio);
 
+        $courseTotal = count($courses);
+        $groupTotal = count($groups);
+
         if ($limit > 0) {
-            $courses = array_slice($courses, 0, $limit);
-            $groups = array_slice($groups, 0, $limit);
+            $courses = $this->limitKeepingSignal($courses, $limit);
+            $groups = $this->limitKeepingSignal($groups, $limit);
         }
 
         return [
@@ -257,6 +260,12 @@ final class ActivationCompletionMetricsService
             'lesson_ratio' => $ratio,
             'courses' => $courses,
             'groups' => $groups,
+            'courses_total' => $courseTotal,
+            'groups_total' => $groupTotal,
+            'limit_hint' => 'список отсортирован по размеру знаменателя и обрезан, НО строка с ненулевым'
+                .' результатом (дошедшие до порога или выданные сертификаты) не отрезается никогда:'
+                .' иначе страница показывала бы стену нулей, спрятав ровно те курсы, где кто-то дошёл'
+                .' (прод 01-09-2026: сигнал был у 5 курсов из 116, и 4 из них не попадали в топ-20).',
             'completion_source_hint' => 'пройденные уроки берутся из пивота lesson_user.is_completed'
                 .' (туда пишет кнопка «урок пройден»), а НЕ из lesson_views.is_completed:'
                 .' второй столбец на проде пуст при 649 строках просмотров и дал бы ровный 0 % по всем курсам.',
@@ -268,6 +277,35 @@ final class ActivationCompletionMetricsService
             'certificate_hint' => 'сертификат выдаёт человек (CertificateService), а не порог:'
                 .' это более строгая метрика, чем доля пройденных уроков.',
         ];
+    }
+
+    /**
+     * Обрезать список до $limit, НИКОГДА не выбрасывая строку с ненулевым
+     * результатом. Сортировка по знаменателю разумна (крупные курсы важнее),
+     * но на боевых данных 01-09-2026 сигнал был ровно у 5 курсов из 116, и
+     * четыре из них не попадали в топ-20 по числу записанных — страница
+     * показывала двадцать строк сплошных 0 % и прятала всё, что произошло.
+     * Метрика, которая скрывает собственный сигнал, хуже отсутствующей.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function limitKeepingSignal(array $rows, int $limit): array
+    {
+        $hasSignal = static fn (array $r): bool => (int) ($r['completed'] ?? 0) > 0
+            || (int) ($r['certified'] ?? 0) > 0;
+
+        $kept = array_values(array_filter($rows, $hasSignal));
+        $rest = array_values(array_filter($rows, static fn (array $r): bool => ! $hasSignal($r)));
+
+        $room = max(0, $limit - count($kept));
+        $out = array_merge($kept, array_slice($rest, 0, $room));
+
+        // Порядок исходного списка (по убыванию знаменателя) сохраняем: строки
+        // с сигналом не всплывают наверх, они просто не выпадают.
+        usort($out, static fn (array $a, array $b) => $b['denominator'] <=> $a['denominator']);
+
+        return $out;
     }
 
     /**

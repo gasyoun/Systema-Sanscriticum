@@ -354,6 +354,48 @@ class ActivationCompletionMetricsServiceTest extends TestCase
     }
 
     /** @test */
+    public function a_course_with_signal_survives_the_row_limit(): void
+    {
+        // Прод-находка 01-09-2026: сигнал был у 5 курсов из 116, и 4 из них не
+        // попадали в топ-20 по числу записанных — страница показывала стену нулей
+        // и прятала ровно те курсы, где кто-то дошёл.
+        config(['activation_metrics.completion_rows' => 2]);
+
+        // Три крупных курса без единого пройденного урока.
+        foreach (range(1, 3) as $i) {
+            $big = Course::factory()->create(['title' => 'Большой '.$i]);
+            Lesson::factory()->create(['course_id' => $big->id]);
+            foreach ([$this->s1, $this->s2, $this->s3, $this->s4] as $u) {
+                DB::table('course_user')->insert([
+                    'user_id' => $u->id,
+                    'course_id' => $big->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // Маленький курс, где один ученик реально дошёл до конца.
+        $small = Course::factory()->create(['title' => 'Маленький, но дошли']);
+        $lesson = Lesson::factory()->create(['course_id' => $small->id]);
+        DB::table('course_user')->insert([
+            'user_id' => $this->s1->id,
+            'course_id' => $small->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $this->completeLesson($this->s1, $lesson);
+
+        $completion = $this->snapshot()['completion'];
+        $names = array_column($completion['courses'], 'name');
+
+        $this->assertContains('Маленький, но дошли', $names);
+        $this->assertSame(4, $completion['courses_total']);
+        // Лимит 2 соблюдён: строка с сигналом вытеснила пустую, а не добавилась сверх.
+        $this->assertCount(2, $completion['courses']);
+    }
+
+    /** @test */
     public function small_cohorts_are_flagged_unreliable(): void
     {
         config(['activation_metrics.min_denominator' => 5]);
