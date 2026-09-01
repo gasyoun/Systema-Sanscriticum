@@ -6,11 +6,13 @@ namespace Tests\Feature\Cabinet;
 
 use App\Models\ActivityEvent;
 use App\Models\Course;
+use App\Models\CourseBlock;
 use App\Models\Group;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\Payment;
 use App\Models\PaymentPromise;
+use App\Models\Tariff;
 use App\Models\User;
 use App\Services\Cabinet\RecoveryState;
 use App\Services\Cabinet\RecoveryStateResolver;
@@ -99,6 +101,61 @@ class HybridPhase1Test extends TestCase
             ->first();
         $this->assertNotNull($event);
         $this->assertSame('normal', $event->event_data['mode'] ?? null);
+    }
+
+    /** @test */
+    public function today_band_debt_cta_posts_to_pay_bundle_instead_of_get_link(): void
+    {
+        // Прод-405 01-09-2026: карточка «Продолжить» рендерила платёжный CTA
+        // голой ссылкой, а /debt/course/{id}/pay-bundle принимает только POST.
+        $this->enableHybrid();
+        $user = User::factory()->create();
+
+        // Bundle-долг: блоки 1–3 (№3 текущий), оплачен только №1, у №2 и №3
+        // есть поблочные тарифы → fallback pay-bundle (bundle-тарифа нет).
+        $course = Course::factory()->create(['is_active' => true, 'title' => 'Грамматика долг']);
+        CourseBlock::factory()->for($course)->create(['number' => 1]);
+        CourseBlock::factory()->for($course)->create(['number' => 2]);
+        CourseBlock::factory()->for($course)->current()->create(['number' => 3]);
+        foreach ([2, 3] as $n) {
+            Tariff::create([
+                'course_id' => $course->id, 'title' => 'Блок №'.$n, 'type' => 'block',
+                'block_number' => $n, 'price' => 4000, 'is_active' => true,
+            ]);
+        }
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 4000, 'tariff' => 'block_1', 'status' => 'paid',
+            'start_block' => 1, 'end_block' => 1,
+        ]);
+
+        $payBundleUrl = route('student.debt.course.pay-bundle', $course->id);
+
+        $this->actingAs($user)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('action="'.$payBundleUrl.'"', false)
+            ->assertDontSee('href="'.$payBundleUrl.'"', false);
+    }
+
+    /** @test */
+    public function today_band_lesson_cta_stays_a_plain_link(): void
+    {
+        // Регресс: обычный CTA «продолжить урок» — по-прежнему ссылка.
+        $this->enableHybrid();
+        ['user' => $user, 'lesson' => $lesson] = $this->studentWithCourse();
+
+        $response = $this->actingAs($user)->get(route('student.dashboard'))->assertOk();
+
+        $this->assertStringContainsString(
+            'data-today-continue',
+            $response->getContent(),
+        );
+        $this->assertMatchesRegularExpression(
+            '/data-today-continue.*?<a href="[^"]*"/s',
+            $response->getContent(),
+            'CTA урока в карточке «Продолжить» должен остаться ссылкой.',
+        );
     }
 
     /** @test */
