@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-_Created: 07-05-2026 · Last updated: 21-08-2026_
+_Created: 07-05-2026 · Last updated: 01-09-2026_
 
 **Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru)
 (cabinet, shop, homework, finance, Telegram/VK bots). Org spine still applies;
@@ -29,6 +29,19 @@ worktree off `origin/main`, feature flag **default OFF**, watcher-safe commit,
 money/access tests mandatory. The PR-body marker `money-contour: no-auto-merge`
 is a **flag/test reminder, not a merge ban** — `gasyoun/*` PRs merge without
 reasking. Prod flag flip stays a separate ops step.
+
+**`tariff.is_active` gates BUYING, not access.** `/checkout/{tariff}` binds the
+**Tariff** and never reads `Course.is_visible`, so a hidden course still sells by
+direct curator link — a **curator-gated limited-time sale** (курс 327 «Йога-сутры
+… в записи»: скрыт, `is_active`, 5 активных тарифов, 129 оплат). Hidden ⇏ unsellable:
+deactivating such tariffs **closes a live sale**. Never deactivate, hide, retire or
+delete a course/tariff on the inference that a hidden course cannot sell. Both catalog
+audits mark this state explicitly — `CatalogFamilyAudit::CLASS_CURATOR_GATED_SALE` and
+`CatalogShellAudit::isCuratorGatedSale()`; pin:
+[`CuratorGatedHiddenSaleTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Catalog/CuratorGatedHiddenSaleTest.php).
+Incident 31-08-2026 (H3812/H3820): a command with 8 green tests shipped because all
+eight checked the ACCESS half of the tariff contract and none the SALE half —
+[#2291](https://github.com/gasyoun/Systema-Sanscriticum/pull/2291) reverted it.
 
 There is **no manual group assignment**. `PaymentObserver` →
 `Payment::grantAccess()` adds the user to the course `Group`. Tariff keys:

@@ -63,6 +63,25 @@ class CatalogFamilyAudit
     /** Общий ключ потока без признака «в записи» — два потока просто неразличимы. */
     public const CLASS_STREAM_COLLISION = 'stream_collision';
 
+    /**
+     * Скрытый с витрины курс, который ПРОДАЁТСЯ по прямой ссылке куратора
+     * (H3812/H3820).
+     *
+     * Не аномалия и не мусор, а рабочий приём школы: куратор посылает
+     * доверенному студенту ссылку на запись, ограниченную по времени. Механика:
+     * `/checkout/{tariff}` связывает ТАРИФ и никогда не читает
+     * `Course.is_visible` — единственное, что открывает и закрывает продажу,
+     * это `tariffs.is_active`. Поэтому «курс скрыт, значит продаться не может»
+     * — ложный вывод; 31-08-2026 по нему погасили пять активных тарифов курса
+     * 327 («Йога-сутры … в записи», 129 оплат), и продажу пришлось
+     * восстанавливать на проде.
+     *
+     * Класс существует, чтобы отчёт НИКОГДА не звал такую строку прибрать:
+     * ни `catalog:retire-shell`, ни «скрыть вторую карточку», ни гашение
+     * тарифов к ней не применимы.
+     */
+    public const CLASS_CURATOR_GATED_SALE = 'curator_gated_sale';
+
     /** Столкновение видно покупателю: обе строки открыты на витрине. */
     public const EXPOSURE_PUBLIC = 'public';
 
@@ -157,6 +176,11 @@ class CatalogFamilyAudit
                 : null,
             'blocks' => $blocks,
             'active_tariffs' => $activeTariffs,
+            // Скрыт с витрины, но КУПИТЬ его можно: `/checkout/{tariff}` берёт
+            // тариф, а не курс. См. self::CLASS_CURATOR_GATED_SALE.
+            'curator_gated_sale' => ! (bool) $course->is_visible
+                && (bool) $course->is_active
+                && $activeTariffs >= 1,
             'paid_payments' => $paidPayments,
             'enrolled' => $course->users()->count(),
             'first_paid_at' => $firstPaidAt?->format('Y-m-d'),
@@ -228,20 +252,25 @@ class CatalogFamilyAudit
      */
     private function verdictFor(string $family, array $members): array
     {
+        // Курируемая продажа по прямой ссылке — свойство ОТДЕЛЬНОЙ строки, а не
+        // столкновения, поэтому считается до всякого разбора семьи и одинаково
+        // для семьи из одной строки и из пяти.
+        $curatorGated = $this->curatorGatedIds($members);
+
         if (count($members) === 1) {
             return [
                 'family' => $family,
                 'verdict' => self::VERDICT_UNIQUE,
                 'reasons' => [],
-                'classes' => [],
+                'classes' => $curatorGated !== [] ? [self::CLASS_CURATOR_GATED_SALE] : [],
                 'exposure' => self::EXPOSURE_INTERNAL,
                 'members' => $members,
-                'follow_up' => null,
+                'follow_up' => $this->curatorGatedNote($curatorGated),
             ];
         }
 
         $reasons = [];
-        $classes = [];
+        $classes = $curatorGated !== [] ? [self::CLASS_CURATOR_GATED_SALE] : [];
         $publicCollision = false;
 
         // 1. Член без единого собственного признака — осевшая копия.
@@ -309,8 +338,52 @@ class CatalogFamilyAudit
             'classes' => array_values(array_unique($classes)),
             'exposure' => $exposure,
             'members' => $members,
-            'follow_up' => $this->followUp($verdict, $exposure),
+            'follow_up' => $this->followUp($verdict, $exposure, $curatorGated),
         ];
+    }
+
+    /**
+     * ID членов семьи, которые продаются по прямой ссылке куратора при скрытой
+     * витрине.
+     *
+     * @param  list<array<string, mixed>>  $members
+     * @return list<int>
+     */
+    private function curatorGatedIds(array $members): array
+    {
+        $ids = [];
+
+        foreach ($members as $member) {
+            if ($member['curator_gated_sale'] === true) {
+                $ids[] = (int) $member['id'];
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Предупреждение, которое обязано пережить любой вердикт: эти строки
+     * ПРОДАЮТСЯ, и трогать их нельзя. Формулировка намеренно называет механику
+     * целиком — сессия, которая 31-08-2026 погасила тарифы курса 327, знала и
+     * про скрытость, и про тарифы, но не про то, что checkout смотрит на второе.
+     *
+     * @param  list<int>  $curatorGated
+     */
+    private function curatorGatedNote(array $curatorGated): ?string
+    {
+        if ($curatorGated === []) {
+            return null;
+        }
+
+        return sprintf(
+            'НЕ ТРОГАТЬ: курс%s %s скрыт%s с витрины, но продаётся — `/checkout/{tariff}` связывает ТАРИФ и не читает `Course.is_visible`, '
+            .'так что активные тарифы держат продажу по прямой ссылке куратора (ограниченная по времени продажа записи доверенному студенту). '
+            .'Ни `catalog:retire-shell`, ни скрытие, ни гашение тарифов сюда не применимы: `tariffs.is_active` — гейт ПОКУПКИ, а не доступа',
+            count($curatorGated) > 1 ? 'ы' : '',
+            implode(', ', $curatorGated),
+            count($curatorGated) > 1 ? 'ы' : '',
+        );
     }
 
     /**
@@ -341,16 +414,35 @@ class CatalogFamilyAudit
      * человека чинить то, чего нет. Вердикт `duplicate` про МОДЕЛЬ данных, и
      * сам по себе он ничего не говорит о витрине — экспозицию надо смотреть
      * отдельно.
+     *
+     * Второй слой (H3812/H3820): совет «прибраться» действителен, только пока
+     * скрытая строка ничего не продаёт. Скрытая строка с активными тарифами —
+     * курируемая продажа, и тот же самый текст «прибираться по желанию через
+     * `catalog:retire-shell`» и есть то приглашение, по которому 31-08-2026
+     * погасили продажу курса 327. Поэтому у курируемой продажи совет
+     * ЗАМЕЩАЕТСЯ запретом, а не дополняется им.
+     *
+     * @param  list<int>  $curatorGated
      */
-    private function followUp(string $verdict, string $exposure): ?string
+    private function followUp(string $verdict, string $exposure, array $curatorGated = []): ?string
     {
+        $note = $this->curatorGatedNote($curatorGated);
+
         if ($verdict !== self::VERDICT_DUPLICATE) {
-            return null;
+            return $note;
         }
 
-        return $exposure === self::EXPOSURE_PUBLIC
-            ? 'ВИДНО ПОКУПАТЕЛЮ: две строки одной программы открыты на витрине одновременно — свести витрину и SEO на одну, вторую скрыть или увести алиасом слага; записи не трогать'
-            : 'покупателю НЕ видно (лишние строки скрыты с витрины и отдают 404): витрину чинить нечего, это дубль в модели данных. Прибираться по желанию через `catalog:retire-shell` / `catalog:audit-shells`, срочности нет';
+        if ($exposure === self::EXPOSURE_PUBLIC) {
+            $public = 'ВИДНО ПОКУПАТЕЛЮ: две строки одной программы открыты на витрине одновременно — свести витрину и SEO на одну, вторую скрыть или увести алиасом слага; записи не трогать';
+
+            return $note !== null ? $public.'. '.$note : $public;
+        }
+
+        $internal = 'покупателю НЕ видно (лишние строки скрыты с витрины и отдают 404): витрину чинить нечего, это дубль в модели данных.';
+
+        return $note !== null
+            ? $internal.' '.$note
+            : $internal.' Прибираться по желанию через `catalog:retire-shell` / `catalog:audit-shells`, срочности нет';
     }
 
     /**
