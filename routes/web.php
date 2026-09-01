@@ -197,6 +197,13 @@ Route::get('/online/s-chego-nachat', [ShopController::class, 'start'])->name('sh
 // Слаг /online/put: столкновений с существующими /online/* нет.
 Route::get('/online/put', [ShopController::class, 'pathway'])->name('shop.pathway');
 
+// H3834 — рубрика «Список ожидания» на витрине: голосуй за будущую группу —
+// кворум голосов открывает оплату; оплаты к сроку — старт. Регистрируется ДО
+// facet-пути /online/{facets} (тот матчит только свои префиксы, но роут
+// конкретных слагов — надёжнее выше). Флаг waitlist_voting OFF → 404 в
+// контроллере.
+Route::get('/online/zhdun', [ShopController::class, 'waitlist'])->name('shop.waitlist');
+
 // «Материалы» — журнальный хаб бесплатного контента над магазином (H387,
 // паттерн Arzamas): статьи + бесплатные беседы + preview-уроки одной сеткой
 // типизированных карточек. Блог остаётся на /s — здесь только агрегатор.

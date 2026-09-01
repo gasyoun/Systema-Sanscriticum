@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Auth\GuestChatUser;
+use App\Models\CourseWaitlistItem;
+use App\Policies\CourseWaitlistItemPolicy;
 use App\Policies\MediaPolicy;
 // use Illuminate\Support\Facades\Gate;
 use App\Support\GuestChat;
@@ -20,6 +22,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Media::class => MediaPolicy::class,
+        CourseWaitlistItem::class => CourseWaitlistItemPolicy::class,
     ];
 
     /**

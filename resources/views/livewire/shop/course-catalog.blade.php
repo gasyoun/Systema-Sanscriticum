@@ -83,6 +83,19 @@
                 В записи
             </a>
 
+            {{-- H3834: рубрика «Список ожидания» — голосуй за будущую группу --}}
+            @can('view', new \App\Models\CourseWaitlistItem)
+            <a href="{{ route('shop.waitlist') }}"
+                    @class([
+                        'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold border transition whitespace-nowrap cursor-pointer',
+                        'bg-brand text-white border-brand' => false,
+                        'bg-[#141A28] text-slate-300 border-[#1F2636] hover:border-brand/50 hover:text-white' => true,
+                    ])>
+                <i class="fas fa-hand-raised text-[11px]"></i>
+                Список ожидания
+            </a>
+            @endcan
+
             {{-- Правый край: преподаватель + сброс всех --}}
             <div class="ml-auto flex items-center gap-2">
                 @if($this->teachers->isNotEmpty())

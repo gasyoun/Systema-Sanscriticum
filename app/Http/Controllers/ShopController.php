@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseWaitlistItem;
 use App\Models\LandingPage;
 use App\Models\LessonAccessGrant;
 use App\Models\MarketingSetting;
@@ -11,6 +12,7 @@ use App\Models\Payment;
 use App\Models\StorefrontAnalyticsEvent;
 use App\Models\Teacher;
 use App\Models\Testimonial;
+use App\Models\WaitlistVote;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
 use App\Services\Membership\PrivateArchiveEligibility;
@@ -257,6 +259,50 @@ class ShopController extends Controller
         ]);
 
         return view('shop.put', compact('page', 'tracks'));
+    }
+
+    /**
+     * H3834 — рубрика «Список ожидания» на витрине (/online/zhdun): голосуй за
+     * будущую группу — наберётся кворум голосов, откроется оплата; нужное
+     * число оплат к сроку — группа стартует. Данные — те же строки
+     * `course_waitlist_items` (is_listed), что в кабинете (H3815) и фиде
+     * /api/public/waitlist (H3811). Флаг waitlist_voting OFF — 404, страница
+     * не живёт раньше механизма голосования.
+     */
+    public function waitlist()
+    {
+        abort_unless((bool) config('features.waitlist_voting', false), 404);
+
+        $items = CourseWaitlistItem::query()
+            ->where('is_listed', true)
+            ->whereNotIn('status', [
+                CourseWaitlistItem::STATUS_CLOSED,
+                CourseWaitlistItem::STATUS_SCHEDULED,
+            ])
+            ->withCount('votes')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        // «Я уже голосовал» — для отметки на кнопках (как в кабинете H3815).
+        $votedSlugs = Auth::check()
+            ? WaitlistVote::query()
+                ->whereIn('course_waitlist_item_id', $items->modelKeys())
+                ->where('user_id', Auth::id())
+                ->pluck('course_waitlist_item_id')
+                ->all()
+            : [];
+
+        $page = new LandingPage([
+            'title' => 'Список ожидания — набор в новые группы',
+            'description' => 'Голосуйте за будущие курсы: наберётся минимум голосов — откроется оплата; нужное число оплат к сроку — группа стартует.',
+        ]);
+
+        return view('shop.zhdun', [
+            'page' => $page,
+            'items' => $items,
+            'votedItemIds' => $votedSlugs,
+        ]);
     }
 
     // МЕТОД 2: Страница одного конкретного курса
