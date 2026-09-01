@@ -32,7 +32,8 @@ class SendCabinetInvites extends Command
     protected $signature = 'students:send-login-invites
         {--send : Реально отправить (без флага — сухой прогон)}
         {--limit=200 : Максимум приглашений за один прогон (батч)}
-        {--resend : Включить тех, кому приглашение уже отправляли}';
+        {--resend : Включить тех, кому приглашение уже отправляли}
+        {--include-no-stamp : Включить также никогда не входивших без штампа «[Доступ отправлен» (доступ существовал, но не был выслан)}';
 
     protected $description = 'Пригласить в кабинет студентов с выданным доступом, которые никогда не логинились';
 
@@ -41,12 +42,18 @@ class SendCabinetInvites extends Command
         $send = (bool) $this->option('send');
         $limit = max(1, (int) $this->option('limit'));
         $resend = (bool) $this->option('resend');
+        $includeNoStamp = (bool) $this->option('include-no-stamp');
 
         // Та же популяция, что и в OnboardingWeeklyDigest: «доступ выслан» +
         // ни разу не заходил (login_count=0), а не только платившие.
         $query = User::query()
             ->where('is_admin', false)
-            ->where('note', 'like', '%[Доступ отправлен%')
+            ->where(function ($q) use ($includeNoStamp) {
+                $q->where('note', 'like', '%[Доступ отправлен%');
+                if ($includeNoStamp) {
+                    $q->orWhereNull('note')->orWhere('note', 'not like', '%[Доступ отправлен%');
+                }
+            })
             ->where('login_count', 0)
             ->whereNotNull('email')
             ->where('email', '<>', '')
@@ -136,7 +143,7 @@ class SendCabinetInvites extends Command
 
         return "🙏 Вам открыт доступ в личный кабинет Общества ревнителей санскрита, но вы ещё не заходили.\n\n"
             ."В кабинете — все ваши курсы, записи занятий и материалы. Войдите по ссылке (задайте пароль):\n{$url}\n\n"
-            .'Как пользоваться кабинетом — руководство: '.rtrim((string) config('app.url'), '/').'/docs/rukovodstvo-studenta.pdf'."\n\n"
+            .'Как пользоваться кабинетом — руководство: '.rtrim((string) config('app.url'), '/').'/help/kabinet'."\n\n"
             .'Ссылка одноразовая. Если возникнут вопросы — просто ответьте на это сообщение.';
     }
 

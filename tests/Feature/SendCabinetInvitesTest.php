@@ -122,8 +122,22 @@ class SendCabinetInvitesTest extends TestCase
             $body = json_encode($req->data(), JSON_UNESCAPED_UNICODE);
 
             return str_contains($body, 'руководство')
-                && str_contains($body, '/docs/rukovodstvo-studenta.pdf');
+                && str_contains($body, '/help/kabinet');
         });
+    }
+
+    /** @test */
+    public function include_no_stamp_adds_never_logged_users_without_access_stamp(): void
+    {
+        $noStamp = User::factory()->create(['email' => 'nostamp@example.com', 'note' => null, 'login_count' => 0]);
+        Mail::fake();
+
+        $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
+        Mail::assertNothingQueued();
+
+        $this->artisan('students:send-login-invites', ['--send' => true, '--include-no-stamp' => true])->assertSuccessful();
+        Mail::assertQueued(PasswordResetMail::class, fn (PasswordResetMail $m) => $m->user->is($noStamp));
+        $this->assertNotNull($noStamp->fresh()->cabinet_invite_sent_at);
     }
 
     /** @test */
