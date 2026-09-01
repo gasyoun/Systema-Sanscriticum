@@ -488,6 +488,12 @@ return [
         'foreign_block_prices' => [
             434 => ['eur' => 90, 'usd' => 105], // Грамматика по Кочергиной
         ],
+        // H3819/H3821: доля наценки над чистой конвертацией RUB→EUR/USD в
+        // published fixed price list (см. PaypalForeignPriceService), покрывающая
+        // комиссию PayPal (§4 PAYPAL_RECONCILIATION_MONEY_CONTOUR) и снос курса
+        // между расчётом и оплатой. Не применяется к student_discounts-активным
+        // местам — рулинг MG про carve-out.
+        'fixed_price_markup' => (float) env('PAYPAL_FIXED_PRICE_MARKUP', 0.08),
         // H2027 PayPal Subscriptions API (auto-bill diaspora) — separate from claim.
         // Master flag default OFF; secrets never committed. See
         // docs/ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md

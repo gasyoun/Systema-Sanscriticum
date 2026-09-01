@@ -12,6 +12,7 @@ use App\Models\Tariff;
 use App\Models\User;
 use App\Services\AttributionService;
 use App\Services\CuratorNotifier;
+use App\Services\Payments\PaypalForeignPriceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -33,22 +34,17 @@ use Illuminate\View\View;
  */
 final class PaypalClaimController extends Controller
 {
-    public function show(Tariff $tariff): View
+    public function show(Tariff $tariff, PaypalForeignPriceService $prices): View
     {
         $this->abortUnlessEnabled($tariff);
 
         $tariff->load('course');
 
         // MG 23-08-2026: рублевую цену на форме не показываем (в PayPal платят
-        // только EUR/USD и дороже рублевых). Валютная цена за блок берется из
-        // конфига по course_id и показывается только блочным тарифам.
-        $foreignPrice = null;
-        if ($tariff->type === 'block') {
-            $fp = config('services.paypal.foreign_block_prices')[$tariff->course_id] ?? null;
-            if (is_array($fp) && isset($fp['eur'], $fp['usd'])) {
-                $foreignPrice = $fp;
-            }
-        }
+        // только EUR/USD и дороже рублевых).
+        $foreignPrice = config('features.paypal_fixed_price_list')
+            ? $this->fixedForeignPrice($tariff, $prices)
+            : $this->legacyForeignPrice($tariff);
 
         return view('paypal.claim', [
             'tariff' => $tariff,
@@ -140,6 +136,40 @@ final class PaypalClaimController extends Controller
         return redirect()
             ->route('paypal.claim.show', $tariff)
             ->with('success', $success);
+    }
+
+    /** Pre-H3821 behavior: manual config array, block tariffs only. Unchanged while the flag is dark. */
+    private function legacyForeignPrice(Tariff $tariff): ?array
+    {
+        if ($tariff->type !== 'block') {
+            return null;
+        }
+
+        $fp = config('services.paypal.foreign_block_prices')[$tariff->course_id] ?? null;
+
+        return is_array($fp) && isset($fp['eur'], $fp['usd']) ? $fp : null;
+    }
+
+    /**
+     * H3821: published fixed price for ANY tariff type, with the
+     * student_discounts-active carve-out (no 8% markup for that payer).
+     */
+    private function fixedForeignPrice(Tariff $tariff, PaypalForeignPriceService $prices): ?array
+    {
+        $user = auth()->user();
+
+        $eur = $prices->priceFor($tariff, 'EUR', $user);
+        $usd = $prices->priceFor($tariff, 'USD', $user);
+
+        if (! $eur || ! $usd) {
+            return null;
+        }
+
+        return [
+            'eur' => $eur['price'],
+            'usd' => $usd['price'],
+            'markup_applied' => $eur['markup_applied'],
+        ];
     }
 
     private function abortUnlessEnabled(Tariff $tariff): void

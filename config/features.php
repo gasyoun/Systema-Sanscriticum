@@ -1307,4 +1307,17 @@ return [
      | config/activation_metrics.php.
      */
     'activation_completion_metrics' => (bool) env('ACTIVATION_COMPLETION_METRICS', false),
+
+    /*
+     | H3821 — published fixed EUR/USD PayPal price list (PaypalForeignPriceService),
+     | replacing the ad hoc per-transaction manual quoting that H3819's reconciliation
+     | found varying 0-18% for the identical RUB tariff. ВЫКЛ по умолчанию: пока флаг
+     | OFF, PaypalClaimController::show() продолжает читать
+     | services.paypal.foreign_block_prices как раньше, и месячный refresh-cron
+     | (paypal:refresh-foreign-prices в Kernel) не запускается. Включение —
+     | PAYPAL_FIXED_PRICE_LIST_ENABLED=true + php artisan config:cache, ПОСЛЕ
+     | ручного прогона `php artisan paypal:refresh-foreign-prices --dry-run` и
+     | сверки чисел человеком.
+     */
+    'paypal_fixed_price_list' => (bool) env('PAYPAL_FIXED_PRICE_LIST_ENABLED', false),
 ];

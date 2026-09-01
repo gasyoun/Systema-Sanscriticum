@@ -11,10 +11,13 @@ use App\Models\Course;
 use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
+use App\Models\StudentDiscount;
 use App\Models\Tariff;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -86,6 +89,73 @@ class PaypalClaimTest extends TestCase
             ->assertSee('105 $', false)
             ->assertDontSee('8 000 ₽')
             ->assertDontSee(number_format((float) $tariff->price, 0, '.', ' ').' ₽', false);
+    }
+
+    /** @test */
+    public function fixed_price_list_flag_off_keeps_legacy_config_behavior_for_full_tariff(): void
+    {
+        // H3821: full ('весь курс') tariffs never had a foreign price shown
+        // pre-fix — the legacy config path only covers 'block'. Flag OFF must
+        // reproduce that exactly (prod-inert merge).
+        $course = Course::factory()->create();
+        $tariff = Tariff::factory()->for($course)->create(['type' => 'full', 'price' => 12000]);
+
+        $this->get(route('paypal.claim.show', $tariff))
+            ->assertOk()
+            ->assertDontSee('Стоимость блока', false);
+    }
+
+    /** @test */
+    public function fixed_price_list_flag_on_shows_computed_markup_price(): void
+    {
+        config(['features.paypal_fixed_price_list' => true]);
+        Config::set('services.exchangerate.key', 'test-key');
+        Http::fake([
+            'api.exchangerate.host/*' => Http::response([
+                'success' => true,
+                'source' => 'USD',
+                'quotes' => ['USDRUB' => 100.0, 'USDEUR' => 1.0],
+            ]),
+        ]);
+
+        $course = Course::factory()->create();
+        $tariff = Tariff::factory()->for($course)->create(['type' => 'full', 'price' => 12000]);
+
+        // 12000 / 100 * 1.08 = 129.6
+        $this->get(route('paypal.claim.show', $tariff))
+            ->assertOk()
+            ->assertSee('129.6', false);
+    }
+
+    /** @test */
+    public function fixed_price_list_flag_on_excludes_markup_for_active_student_discount(): void
+    {
+        config(['features.paypal_fixed_price_list' => true]);
+        Config::set('services.exchangerate.key', 'test-key');
+        Http::fake([
+            'api.exchangerate.host/*' => Http::response([
+                'success' => true,
+                'source' => 'USD',
+                'quotes' => ['USDRUB' => 100.0, 'USDEUR' => 1.0],
+            ]),
+        ]);
+
+        $course = Course::factory()->create();
+        $tariff = Tariff::factory()->for($course)->create(['type' => 'full', 'price' => 12000]);
+        $user = User::factory()->create();
+        StudentDiscount::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'type' => StudentDiscount::TYPE_PERCENT,
+            'value' => 50,
+            'is_active' => true,
+        ]);
+
+        // Discounted RUB = 12000 * 0.5 = 6000; pure conversion, no 1.08 markup → 60.
+        $this->actingAs($user)->get(route('paypal.claim.show', $tariff))
+            ->assertOk()
+            ->assertSee('60 €', false)
+            ->assertDontSee('129.6', false);
     }
 
     /** @test */
