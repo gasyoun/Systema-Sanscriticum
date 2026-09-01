@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-_Created: 07-05-2026 · Last updated: 21-08-2026_
+_Created: 07-05-2026 · Last updated: 26-08-2026_
 
 **Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru)
 (cabinet, shop, homework, finance, Telegram/VK bots). Org spine still applies;
@@ -81,6 +81,29 @@ To sit in a named teacher's seat (Kostina, …) use impersonation `MODE_TEACHER`
 Student «ДЗ + больничный/застой/догоню» → **append** a dated line to
 `users.note`. Do not invent a `HomeworkSubmission` status. Product + agent rule:
 [docs/CRM_HOMEWORK_PAUSE_NOTE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CRM_HOMEWORK_PAUSE_NOTE_2026.md).
+Agent standing (A): needs student identity **and** a homework cue ∧ life cue; «догоню» alone (group
+transfer, schedule) is not a pause note; append only, one dated line with «не давить»; if identity is
+missing ask for one identifier, never for permission to write. (Moved here from the always-loaded
+claude-config `rules/crm-homework-pause-note.md`, 26-08-2026.)
+
+## Staff instructions (MG 18-08-2026)
+
+A working instruction for a named employee — accountant, curator, teacher, manager (checklist,
+«вот что тебе нужно сделать», rows to verify) — lives **inside the interface they work in**: a Filament
+page next to the working screen under the same `RoleGate`, lists built from live queries, a button from the
+working screen to it. Never in a public issue, a public repo or a README: (1) a surname next to a payout
+sum is personal + commercial data; (2) a copied list is stale after the first confirmation; (3) a person
+who opens `/admin` twice a year will not follow a GitHub link.
+
+- Task for a person → a GTD row in the private hub ([Uprava/GTD_NEXT_ACTIONS.md](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md)), not a public issue.
+- Engineering provenance (acceptance, measurement, decision) may go to the repo — **check visibility and
+  anonymise people**: `gh repo view gasyoun/Systema-Sanscriticum --json visibility --jq .visibility` → `PUBLIC`.
+- Admin screenshots with live data → private hub only; publicly at most from an anonymised fixture.
+- Fail: памятка бухгалтеру с ФИО преподавателя в публичном репо · «задача для Марии» публичной issue.
+  Pass: страница «Как размечать выплаты» в `/admin` под `RoleGate::finance()` · GTD-строка в Uprava.
+
+The rule looks **forward** only: pre-H3084 history stays as is (MG 19-08-2026) — decision record
+[Uprava/docs/DECISIONS_systema-public-history-staff-data.md](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_systema-public-history-staff-data.md); do not re-open it.
 
 ## Editorial style (RU copy)
 
