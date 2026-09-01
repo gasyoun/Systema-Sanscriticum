@@ -24,72 +24,101 @@
             </p>
         </header>
 
-        @if($items->isEmpty())
+        @if($sections->isEmpty())
             <div class="text-center rounded-2xl bg-[#111622] border border-[#1F2636] p-10">
-                <p class="text-slate-400 mb-4">Сейчас список пуст — заглядывайте позже.</p>
+                <p class="text-slate-400 mb-4">Пока список пуст — заглядывайте позже.</p>
                 <a href="{{ route('shop.index') }}"
                    class="inline-flex items-center gap-2 px-6 py-3 bg-brand hover:bg-brand/85 text-white text-sm font-bold rounded-xl transition-all">
                     Весь каталог курсов
                 </a>
             </div>
         @else
-            <div class="grid gap-4 md:grid-cols-2" data-analytics="waitlist-grid">
-                @foreach($items as $item)
-                    @php
-                        $already = in_array($item->getKey(), $votedItemIds, true);
-                        $met = (int) $item->votes_count >= $item->min_payers;
-                        $paymentOpen = $item->status === \App\Models\CourseWaitlistItem::STATUS_PAYMENT_OPEN;
-                    @endphp
-                    <div class="flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 p-5 transition-all"
-                         data-waitlist-row="{{ $item->slug }}">
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <h2 class="text-base font-bold text-white leading-snug">{{ $item->course_title }}</h2>
-                                <p class="text-xs text-slate-500 mt-1">
-                                    {{ $item->teacher_name }}
-                                    @if($item->slot) · {{ $item->slot }} @endif
-                                    @if($item->earliest_start_at)
-                                        · не раньше {{ $item->earliest_start_at->format('d.m.Y') }}
+            @foreach($sections as $section)
+                <section class="mb-12" data-waitlist-season="{{ $section['label'] }}">
+                    <h2 class="text-xl md:text-2xl font-extrabold text-white tracking-tight mb-6 flex items-center gap-3">
+                        {{ $section['label'] }}
+                        <span class="h-px flex-1 bg-[#1F2636]"></span>
+                    </h2>
+
+                    <div class="grid gap-4 md:grid-cols-2" data-analytics="waitlist-grid">
+                        @foreach($section['items'] as $item)
+                            @php
+                                $already = in_array($item->getKey(), $votedItemIds, true);
+                                $met = (int) $item->votes_count >= $item->min_payers;
+                                $remaining = max(0, $item->min_payers - (int) $item->votes_count);
+                                $showRemaining = ! $met && $remaining <= 4;
+                                $paymentOpen = $item->status === \App\Models\CourseWaitlistItem::STATUS_PAYMENT_OPEN;
+                                $teacherUrl = $item->teacher_name
+                                    ? '/online/prepodavatel/'.App\Support\ShopCatalogUrl::encodeWords($item->teacher_name)
+                                    : null;
+                            @endphp
+                            <div class="flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 p-5 transition-all"
+                                 data-waitlist-row="{{ $item->slug }}">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <h3 class="text-base font-bold text-white leading-snug">
+                                            @if($item->course && $item->course->is_visible)
+                                                <a href="{{ route('shop.course.show', $item->course->slug) }}"
+                                                   class="hover:text-[#38BDF8] transition-colors">{{ $item->course_title }}</a>
+                                            @else
+                                                {{ $item->course_title }}
+                                            @endif
+                                        </h3>
+                                        <p class="text-xs text-slate-500 mt-1">
+                                            @if($teacherUrl)
+                                                <a href="{{ $teacherUrl }}"
+                                                   class="hover:text-slate-300 transition-colors">{{ $item->teacher_name }}</a>
+                                            @else
+                                                {{ $item->teacher_name }}
+                                            @endif
+                                            @if($item->slot) · {{ $item->slot }} @endif
+                                            @if($item->earliest_start_at)
+                                                · не раньше {{ $item->earliest_start_at->format('d.m.Y') }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                    @if($item->block_price_rub)
+                                        <span class="text-xs font-bold text-slate-200 whitespace-nowrap bg-[#1F2636] rounded-lg px-2 py-1">
+                                            {{ number_format($item->block_price_rub, 0, ',', ' ') }} ₽
+                                        </span>
                                     @endif
-                                </p>
+                                </div>
+
+                                <div class="flex items-center justify-between mt-auto pt-4">
+                                    <span class="text-xs font-semibold {{ $met ? 'text-emerald-400' : 'text-slate-400' }}"
+                                          data-waitlist-progress="{{ $item->slug }}">
+                                        @if($met)
+                                            <i class="fas fa-check-circle mr-1"></i>Кворум набран
+                                        @elseif($showRemaining)
+                                            Осталось доголосовать: <span data-waitlist-count>{{ $remaining }}</span>
+                                        @endif
+                                    </span>
+
+                                    @if($already)
+                                        <span class="text-xs font-bold text-emerald-400"><i class="fas fa-check mr-1"></i>Голос учтён</span>
+                                    @elseif($paymentOpen)
+                                        @if($item->course)
+                                            <a href="{{ route('shop.course.show', $item->course->slug) }}"
+                                               class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition rounded-lg px-3 py-1.5">
+                                                Открыта оплата — к курсу
+                                            </a>
+                                        @else
+                                            <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Открыта оплата — свяжитесь с куратором</span>
+                                        @endif
+                                    @else
+                                        <button type="button"
+                                                data-waitlist-vote="{{ $item->slug }}"
+                                                class="text-xs font-bold text-white bg-brand hover:opacity-90 transition rounded-lg px-3 py-1.5"
+                                                x-on:click="vote('{{ $item->slug }}', $el)">
+                                            Голосовать
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
-                            @if($item->block_price_rub)
-                                <span class="text-xs font-bold text-slate-200 whitespace-nowrap bg-[#1F2636] rounded-lg px-2 py-1">
-                                    {{ number_format($item->block_price_rub, 0, ',', ' ') }} ₽
-                                </span>
-                            @endif
-                        </div>
-
-                        <div class="flex items-center justify-between mt-auto pt-4">
-                            <span class="text-xs font-semibold {{ $met ? 'text-emerald-400' : 'text-slate-400' }}"
-                                  data-waitlist-progress="{{ $item->slug }}">
-                                Голосов: <span data-waitlist-count>{{ $item->votes_count }}</span> из {{ $item->min_payers }}
-                                @if($met) <i class="fas fa-check-circle ml-1"></i> @endif
-                            </span>
-
-                            @if($already)
-                                <span class="text-xs font-bold text-emerald-400"><i class="fas fa-check mr-1"></i>Голос учтён</span>
-                            @elseif($paymentOpen)
-                                @if($item->course)
-                                    <a href="{{ route('shop.course.show', $item->course->slug) }}"
-                                       class="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition rounded-lg px-3 py-1.5">
-                                        Открыта оплата — к курсу
-                                    </a>
-                                @else
-                                    <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Оплата открыта — ждём администратора</span>
-                                @endif
-                            @else
-                                <button type="button"
-                                        data-waitlist-vote="{{ $item->slug }}"
-                                        class="text-xs font-bold text-white bg-brand hover:opacity-90 transition rounded-lg px-3 py-1.5"
-                                        x-on:click="vote('{{ $item->slug }}', $el)">
-                                    Голосовать
-                                </button>
-                            @endif
-                        </div>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
+                </section>
+            @endforeach
         @endif
 
         <section class="mt-12 mb-8 text-center">
@@ -108,9 +137,9 @@ function waitlistVote() {
     return {
         async vote(slug, el) {
             el.disabled = true;
-            el.textContent = '…';
+            el.textContent = '...';
             try {
-                const resp = await fetch('/api/public/waitlist/vote', {
+                const resp = await fetch('{{ route('shop.waitlist.vote') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -121,15 +150,14 @@ function waitlistVote() {
                 });
                 if (resp.status === 401) { window.location.href = '/login'; return; }
                 const data = await resp.json();
-                const row = el.closest('[data-waitlist-row]');
                 if (data.ok) {
-                    const count = row?.querySelector('[data-waitlist-count]');
-                    if (count) count.textContent = data.votes;
-                    el.outerHTML = '<span class="text-xs font-bold text-emerald-400"><i class="fas fa-check mr-1"></i>Голос учтён</span>';
+                    window.location.reload();
                 } else {
-                    el.textContent = 'Не вышло';
+                    el.disabled = false;
+                    el.textContent = 'Не получилось';
                 }
             } catch (e) {
+                el.disabled = false;
                 el.textContent = 'Ошибка сети';
             }
         },

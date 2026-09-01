@@ -11,9 +11,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * H3834: рубрика «Список ожидания» на витрине /online/zhdun — флаг ON рендерит
- * карточки из course_waitlist_items с кнопкой голосования (гость → /login);
- * флаг OFF — 404; чип-вход на /online только при флаге ON.
+ * H3834 + follow-up (01-09-2026): витрина /online/zhdun — сезонные секции
+ * (ОСЕНЬ 2026 / НАЧАЛО 2027 / …, строки без даты — «дата уточняется»),
+ * голоса скрыты кроме «осталось доголосовать ≤ 4», ссылка на преподавателя —
+ * фильтр каталога, курс — ссылка на карточку; голосование — POST
+ * /online/zhdun/vote в web-группе (сессия работает, гость → 401).
  */
 class VitrinaWaitlistPageTest extends TestCase
 {
@@ -26,13 +28,13 @@ class VitrinaWaitlistPageTest extends TestCase
         $this->get(route('shop.waitlist'))->assertNotFound();
     }
 
-    public function test_flag_on_renders_cards_and_vote_state(): void
+    public function test_flag_on_renders_season_sections_and_vote_state(): void
     {
         config(['features.waitlist_voting' => true]);
         $item = CourseWaitlistItem::create([
             'slug' => 'zhdun-bueler',
             'course_title' => 'Руководство по Бюлеру',
-            'teacher_name' => 'Марцис Гасунс',
+            'teacher_name' => 'Гасунс Марцис Юрьевич',
             'slot' => 'пн 18:00',
             'min_payers' => 10,
             'block_price_rub' => 8000,
@@ -46,27 +48,172 @@ class VitrinaWaitlistPageTest extends TestCase
         $resp->assertOk();
         $resp->assertSee('Список ожидания');
         $resp->assertSee('Руководство по Бюлеру');
-        $resp->assertSee('Марцис Гасунс');
+        $resp->assertSee('ОСЕНЬ 2027');
+        $resp->assertSee('Гасунс Марцис Юрьевич');
+        // Ссылка на преподавателя — фильтр каталога.
+        $resp->assertSee('/online/prepodavatel/Гасунс-Марцис-Юрьевич', false);
         $resp->assertSee('пн 18:00');
         $resp->assertSee('не раньше 01.10.2027');
         $resp->assertSee('8 000 ₽');
         $resp->assertSee('Голосовать');
-        $resp->assertSee('Голосов: <span data-waitlist-count>1</span> из 10', false);
 
-        // Проголосовавший видит «Голос учтён» и счётчик +1, без кнопки.
-        $user = User::factory()->create();
-        $item->votes()->create(['user_id' => $user->id]);
-        $resp2 = $this->actingAs($user)->get(route('shop.waitlist'));
-        $resp2->assertOk();
-        $resp2->assertSee('Голос учтён');
-        $resp2->assertDontSee('data-waitlist-vote="zhdun-bueler"');
-        $resp2->assertSee('Голосов: <span data-waitlist-count>2</span> из 10', false);
+        // Голоса скрыты: до кворума далеко (9 осталось), счётчика нет.
+        $resp->assertDontSee('Голосов:');
+        $resp->assertDontSee('Осталось доголосовать');
     }
 
-    public function test_guest_button_leads_to_login_on_vote(): void
+    public function test_remaining_shown_only_when_four_or_fewer_left(): void
     {
         config(['features.waitlist_voting' => true]);
         $item = CourseWaitlistItem::create([
+            'slug' => 'zhdun-nale',
+            'course_title' => 'Сказание о Нале',
+            'teacher_name' => 'Гасунс Марцис Юрьевич',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2027-10-01',
+        ]);
+        // 5 голосов: осталось 3 (≤ 4) — счётчик виден.
+        foreach (range(1, 5) as $i) {
+            $item->votes()->create(['user_id' => User::factory()->create()->id]);
+        }
+
+        $this->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee('Осталось доголосовать: <span data-waitlist-count>3</span>', false);
+
+        // 8 голосов: кворум — галочка, без чисел.
+        foreach (range(6, 8) as $i) {
+            $item->votes()->create(['user_id' => User::factory()->create()->id]);
+        }
+
+        $this->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee('Кворум набран')
+            ->assertDontSee('Осталось доголосовать');
+    }
+
+    public function test_voted_user_sees_confirmation_without_button(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        $item = CourseWaitlistItem::create([
+            'slug' => 'zhdun-voted',
+            'course_title' => 'Вишнусахасранама',
+            'teacher_name' => 'Гасунс Марцис Юрьевич',
+            'min_payers' => 10,
+            'kind' => 'other',
+            'earliest_start_at' => '2027-10-01',
+        ]);
+        $user = User::factory()->create();
+        $item->votes()->create(['user_id' => $user->id]);
+
+        $resp = $this->actingAs($user)->get(route('shop.waitlist'));
+        $resp->assertOk();
+        $resp->assertSee('Голос учтён');
+        $resp->assertDontSee('data-waitlist-vote="zhdun-voted"');
+        // 1 голос из 10 — счётчик скрыт.
+        $resp->assertDontSee('Осталось доголосовать');
+    }
+
+    public function test_undated_rows_land_in_dated_tbd_section_last(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-undated',
+            'course_title' => 'Йога и тантра',
+            'teacher_name' => 'Пахомов Сергей Владимирович',
+            'min_payers' => 8,
+            'kind' => 'other',
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-autumn26',
+            'course_title' => 'Цифровая грамотность',
+            'teacher_name' => 'Гасунс Марцис Юрьевич',
+            'min_payers' => 10,
+            'kind' => 'other',
+            'earliest_start_at' => '2026-10-01',
+        ]);
+
+        $html = $this->get(route('shop.waitlist'))->assertOk()->getContent();
+        $autumnPos = mb_strpos($html, 'ОСЕНЬ 2026');
+        $tbdPos = mb_strpos($html, 'дата уточняется');
+
+        $this->assertNotFalse($autumnPos);
+        $this->assertNotFalse($tbdPos);
+        $this->assertLessThan($tbdPos, $autumnPos);
+        $this->assertStringContainsString('Йога и тантра', $html);
+    }
+
+    public function test_january_rows_sort_between_autumn_and_spring(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-spring27',
+            'course_title' => 'Весенний курс',
+            'teacher_name' => 'Т',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'season' => '2027-spring',
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-jan27',
+            'course_title' => 'Январский курс',
+            'teacher_name' => 'Гасунс Марцис Юрьевич',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2027-01-10',
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-autumn26b',
+            'course_title' => 'Осенний курс 2026',
+            'teacher_name' => 'Гасунс Марцис Юрьевич',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2026-09-20',
+        ]);
+
+        $html = $this->get(route('shop.waitlist'))->assertOk()->getContent();
+        $autumn26 = mb_strpos($html, 'ОСЕНЬ 2026');
+        $jan27 = mb_strpos($html, 'НАЧАЛО 2027');
+        $spring27 = mb_strpos($html, 'ВЕСНА 2027');
+
+        $this->assertLessThan($jan27, $autumn26);
+        $this->assertLessThan($spring27, $jan27);
+    }
+
+    public function test_authenticated_user_can_vote_via_web_route(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        $item = CourseWaitlistItem::create([
+            'slug' => 'zhdun-vote-web',
+            'course_title' => 'Начальный санскрит',
+            'teacher_name' => 'Трефилова Елена Вячеславовна',
+            'min_payers' => 8,
+            'kind' => 'grammar',
+            'earliest_start_at' => '2026-10-01',
+        ]);
+        $user = User::factory()->create();
+
+        // Web-маршрут: сессия + CSRF, как на витрине.
+        $resp = $this->actingAs($user)
+            ->post(route('shop.waitlist.vote'), ['slug' => 'zhdun-vote-web']);
+        $resp->assertOk()->assertJson(['ok' => true, 'votes' => 1]);
+        $this->assertDatabaseHas('waitlist_votes', [
+            'course_waitlist_item_id' => $item->getKey(),
+            'user_id' => $user->id,
+        ]);
+
+        // Повторный голос не дублирует.
+        $this->actingAs($user)
+            ->post(route('shop.waitlist.vote'), ['slug' => 'zhdun-vote-web'])
+            ->assertJson(['ok' => true, 'votes' => 1]);
+        $this->assertDatabaseCount('waitlist_votes', 1);
+    }
+
+    public function test_guest_vote_via_web_route_is_401(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        CourseWaitlistItem::create([
             'slug' => 'zhdun-guest',
             'course_title' => 'Курс для гостя',
             'teacher_name' => 'Т',
@@ -74,11 +221,26 @@ class VitrinaWaitlistPageTest extends TestCase
             'kind' => 'other',
         ]);
 
-        $resp = $this->postJson('/api/public/waitlist/vote', ['slug' => 'zhdun-guest']);
-        $resp->assertStatus(401);
+        $this->post(route('shop.waitlist.vote'), ['slug' => 'zhdun-guest'])
+            ->assertStatus(401);
 
         // Страница рендерится гостю с кнопкой.
         $this->get(route('shop.waitlist'))->assertOk()->assertSee('Голосовать');
+    }
+
+    public function test_legacy_api_vote_route_still_works_for_guest_401(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-api-guest',
+            'course_title' => 'Курс для гостя API',
+            'teacher_name' => 'Т',
+            'min_payers' => 8,
+            'kind' => 'other',
+        ]);
+
+        $this->postJson('/api/public/waitlist/vote', ['slug' => 'zhdun-api-guest'])
+            ->assertStatus(401);
     }
 
     public function test_scheduled_and_closed_hidden(): void
@@ -107,7 +269,7 @@ class VitrinaWaitlistPageTest extends TestCase
             ->assertDontSee('Закрытый набор');
     }
 
-    public function test_payment_open_shows_course_link_when_bound(): void
+    public function test_course_link_on_title_when_bound_and_payment_open_link(): void
     {
         config(['features.waitlist_voting' => true]);
         $course = Course::factory()->create(['is_visible' => true]);

@@ -44,6 +44,8 @@ class PublicWaitlistController extends Controller
         }
 
         // Только зарегистрированные в кабинете (MG 31-08-2026). Гость — 401.
+        // Из web-группы (/online/zhdun/vote, 01-09-2026) сессия стартует в
+        // мидлвари, user('web') резолвится; из api — как раньше.
         $user = $request->user('web') ?? $request->user();
         if (! $user instanceof User) {
             return response()->json(['ok' => false, 'error' => 'auth_required'], 401);

@@ -67,6 +67,87 @@ class CourseWaitlistItem extends Model
     /** Прогноз голос→оплата (HYPOTHESIS, калибруется после первого цикла). */
     public const VOTE_TO_PAYMENT_K = 0.5;
 
+    /**
+     * Сезонные секции витрины (MG 01-09-2026): месяц earliest_start → сезон.
+     * сен-окт → осень; ноя-дек → начало следующего года; янв → начало;
+     * фев-мар → весна; апр-авг → лето. Твин Uprava render_waitlist_message.py.
+     */
+    public const SEASON_BY_MONTH = [
+        1 => 'january', 2 => 'spring', 3 => 'spring',
+        4 => 'summer', 5 => 'summer', 6 => 'summer',
+        7 => 'summer', 8 => 'summer',
+        9 => 'autumn', 10 => 'autumn',
+        11 => 'january', 12 => 'january',
+    ];
+
+    /** Хронологический ранг сезона внутри года (январь = начало года N). */
+    public const SEASON_RANK = [
+        'autumn' => 3,
+        'january' => 0,
+        'spring' => 1,
+        'summer' => 2,
+    ];
+
+    /**
+     * (year, slug) для секции: поле season приоритетно, иначе инференс из
+     * earliest_start. [null, null] — дата уточняется (секция в конце).
+     *
+     * @return array{0: int|null, 1: string|null}
+     */
+    public function seasonSection(): array
+    {
+        $season = $this->season;
+        if (is_string($season) && $season !== '' && str_contains($season, '-')) {
+            [$year, $slug] = explode('-', $season, 2);
+            if (ctype_digit($year) && isset(self::SEASON_RANK[$slug])) {
+                return [(int) $year, $slug];
+            }
+        }
+
+        $earliest = $this->earliest_start_at;
+        if ($earliest === null) {
+            return [null, null];
+        }
+
+        $month = (int) $earliest->format('n');
+        $year = (int) $earliest->format('Y');
+        $slug = self::SEASON_BY_MONTH[$month];
+
+        // ноя-дек → «НАЧАЛО» следующего календарного года.
+        if ($slug === 'january' && $month >= 11) {
+            $year++;
+        }
+
+        return [$year, $slug];
+    }
+
+    /** Ключ сортировки секций: осень N-1 → начало N → весна N → лето N → осень N. */
+    public function seasonSortKey(): array
+    {
+        [$year, $slug] = $this->seasonSection();
+
+        if ($year === null) {
+            return [PHP_INT_MAX, 9];
+        }
+
+        // autumn N хронологически позже summer N: rank + 1; january N — до весны.
+        $rank = $slug === 'january' ? 0 : self::SEASON_RANK[$slug] + 1;
+
+        return [$year, $rank];
+    }
+
+    /** Заголовок секции: «ОСЕНЬ 2027», «дата уточняется». */
+    public function seasonLabel(): string
+    {
+        [$year, $slug] = $this->seasonSection();
+
+        if ($year === null) {
+            return 'дата уточняется';
+        }
+
+        return self::SEASON_SLUGS[$slug].' '.$year;
+    }
+
     protected $fillable = [
         'slug',
         'course_title',

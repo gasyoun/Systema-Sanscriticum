@@ -298,8 +298,21 @@ class ShopController extends Controller
             'description' => 'Голосуйте за будущие курсы: наберётся минимум голосов — откроется оплата; нужное число оплат к сроку — группа стартует.',
         ]);
 
+        // Сезонные секции (MG 01-09-2026): ОСЕНЬ 2026 / НАЧАЛО 2027 / …;
+        // строки без даты — «дата уточняется» в конце. Пустые секции не рисуем.
+        $sections = $items
+            ->groupBy(fn (CourseWaitlistItem $item) => implode('|', $item->seasonSortKey()))
+            ->sortKeys()
+            ->map(fn ($group) => [
+                'label' => $group->first()->seasonLabel(),
+                'undated' => $group->first()->seasonSection()[0] === null,
+                'items' => $group->values(),
+            ])
+            ->values();
+
         return view('shop.zhdun', [
             'page' => $page,
+            'sections' => $sections,
             'items' => $items,
             'votedItemIds' => $votedSlugs,
         ]);

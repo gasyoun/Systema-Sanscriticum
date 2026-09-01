@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CabinetTelemetryController;
 use App\Http\Controllers\Api\GamesSrsOnboardingController;
 use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\HeartbeatController;
+use App\Http\Controllers\Api\PublicWaitlistController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AttendanceNoticeController;
 use App\Http\Controllers\Auth\SocialAuthController;
@@ -203,6 +204,15 @@ Route::get('/online/put', [ShopController::class, 'pathway'])->name('shop.pathwa
 // конкретных слагов — надёжнее выше). Флаг waitlist_voting OFF → 404 в
 // контроллере.
 Route::get('/online/zhdun', [ShopController::class, 'waitlist'])->name('shop.waitlist');
+
+// Голосование со витрины (H3834 follow-up, 01-09-2026): в api-группе нет
+// EnsureFrontendRequestsAreStateful, сессионная кука не подхватывалась и
+// контроллер всегда отвечал 401 auth_required даже залогиненному. В web-группе
+// сессия + CSRF работают из коробки (токен в разметке страницы); auth-гейт,
+// флаг waitlist_voting и троттлинг — в контроллере.
+Route::post('/online/zhdun/vote', [PublicWaitlistController::class, 'vote'])
+    ->middleware('throttle:10,1')
+    ->name('shop.waitlist.vote');
 
 // «Материалы» — журнальный хаб бесплатного контента над магазином (H387,
 // паттерн Arzamas): статьи + бесплатные беседы + preview-уроки одной сеткой
