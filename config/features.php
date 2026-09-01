@@ -1291,4 +1291,20 @@ return [
      | Enable: REFERRAL_LOYALTY_CTA=true + php artisan config:cache.
      */
     'referral_loyalty_cta' => (bool) env('REFERRAL_LOYALTY_CTA', false),
+
+    /*
+     | H3764 (O2 + C4) — страница «Активация и завершаемость»: воронка
+     | активации по месячным когортам (оплатил → вошёл → открыл урок → сдал
+     | домашнюю, плюс медиана TTFL) и завершаемость по курсу/потоку (порог
+     | пройденных уроков + выданные сертификаты). Только чтение: страница
+     | ничего не пишет и денег не трогает. Доступ — RoleGate::accounting().
+     |
+     | ВЫКЛ по умолчанию: пока флаг OFF, пункт меню не появляется, а /admin/
+     | activation-completion-metrics отдаёт 403 — влитие прод-инертно.
+     | Включение — осознанный шаг человека: ACTIVATION_COMPLETION_METRICS=true
+     | + php artisan config:cache, ПОСЛЕ сверки знаменателей на проде (числа
+     | считаются из живой БД, кэша снимков нет). Пороги — не здесь, а в
+     | config/activation_metrics.php.
+     */
+    'activation_completion_metrics' => (bool) env('ACTIVATION_COMPLETION_METRICS', false),
 ];

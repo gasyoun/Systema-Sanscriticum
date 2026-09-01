@@ -328,6 +328,19 @@ class StudentUnitEconomicsService
      *
      * @return Collection<int, Collection<int, Payment>>
      */
+    /**
+     * Публичный якорь привлечения (H3764): момент первой доступо-открывающей
+     * покупки на каждого ученика. Активация (O2) считается ОТ НЕГО же, чтобы
+     * «сколько у нас привлечённых учеников» не имело двух разных ответов на
+     * двух страницах админки.
+     *
+     * @return Collection<int, array{date:Carbon, course_id:?int}>
+     */
+    public function acquisitionAnchors(): Collection
+    {
+        return $this->firstAcquisitionByUser($this->revenuePaymentsByUser());
+    }
+
     private function revenuePaymentsByUser(): Collection
     {
         return Payment::query()
