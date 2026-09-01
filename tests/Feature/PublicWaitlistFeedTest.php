@@ -7,7 +7,6 @@ namespace Tests\Feature;
 use App\Models\Course;
 use App\Models\CourseWaitlistItem;
 use App\Models\User;
-use App\Models\WaitlistVote;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;

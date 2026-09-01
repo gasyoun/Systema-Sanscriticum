@@ -12,11 +12,27 @@ use App\Models\User;
 use App\Models\VacationQuorumPoll;
 use App\Services\VacationQuorumService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class VacationQuorumTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Окно опроса — 25–31 августа (VacationQuorumService::ASK_WINDOW_*), и без
+        // пина времени тест зеленел ровно семь дней в году, а с 1 сентября начинал
+        // ронять main всем подряд. H2541: абсолютные фикстуры против now() — бомба.
+        Carbon::setTestNow(Carbon::parse('2026-08-27 12:00:00'));
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
 
     private function makeVacationGroup(string $name = 'Гр.53', ?int $minSize = 2, ?string $chatId = '-100123'): Group
     {
