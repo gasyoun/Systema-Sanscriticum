@@ -32,8 +32,12 @@ reasking. Prod flag flip stays a separate ops step.
 
 **`tariff.is_active` gates BUYING, not access.** `/checkout/{tariff}` binds the
 **Tariff** and never reads `Course.is_visible`, so a hidden course still sells by
-direct curator link — a **curator-gated limited-time sale** (курс 327 «Йога-сутры
-… в записи»: скрыт, `is_active`, 5 активных тарифов, 129 оплат). Hidden ⇏ unsellable:
+direct curator link — a **curator-gated limited-time sale**. The class is defined by the STATE
+(`is_visible=false` + `is_active` + ≥1 active tariff), never by a course id: курс 327
+«Йога-сутры … в записи» was the 31-08-2026 incident case and had that shape then, but a
+prod read on 01-09-2026 shows it `visible=1` with 5 active tariffs, 129 payments and
+**0 lessons / 0 `course_materials`** — so it no longer matches the class, and a marker
+that does not fire on 327 today is correct, not broken. Hidden ⇏ unsellable:
 deactivating such tariffs **closes a live sale**. Never deactivate, hide, retire or
 delete a course/tariff on the inference that a hidden course cannot sell. Both catalog
 audits mark this state explicitly — `CatalogFamilyAudit::CLASS_CURATOR_GATED_SALE` and
