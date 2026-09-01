@@ -106,6 +106,8 @@
 
     @include('student.partials.continue-learning-card')
 
+    @include('student.partials.waitlist-card')
+
     @include('student.partials.subscriber-shelf')
 
     {{-- ========================================== --}}

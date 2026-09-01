@@ -7,6 +7,7 @@ use App\Models\ActivityEvent;
 use App\Models\Announcement;
 use App\Models\Course;
 use App\Models\CourseMaterial;
+use App\Models\CourseWaitlistItem;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
@@ -360,6 +361,18 @@ class StudentController extends Controller
         $viewData['hindiTeacherBrief'] = $hindiPlaylistService->teachesHindi($user)
             ? HindiProgrammePlaylist::TEACHER_BRIEF_URL
             : null;
+
+        // Список ожидания (MG 31-08-2026, H3815): строки для голосования в
+        // кабинете. Flag OFF → пустая коллекция, кабинет байт-стабилен.
+        $viewData['waitlistItems'] = config('features.waitlist_voting', false)
+            ? CourseWaitlistItem::query()
+                ->where('is_listed', true)
+                ->whereNotIn('status', [CourseWaitlistItem::STATUS_CLOSED, CourseWaitlistItem::STATUS_SCHEDULED])
+                ->orderBy('sort_order')->orderBy('id')
+                ->withCount(['votes as voted_by_me' => fn ($q) => $q->where('user_id', $user->id)])
+                ->withCount('votes')
+                ->get()
+            : collect();
 
         // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
         // Flag OFF → byte-stable legacy dashboard (recovery vars unused there).
