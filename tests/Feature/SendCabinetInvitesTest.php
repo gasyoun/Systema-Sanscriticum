@@ -119,7 +119,7 @@ class SendCabinetInvitesTest extends TestCase
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
         Http::assertSent(function ($req) {
-            $body = json_encode($req->data());
+            $body = json_encode($req->data(), JSON_UNESCAPED_UNICODE);
 
             return str_contains($body, 'руководство')
                 && str_contains($body, '/docs/rukovodstvo-studenta.pdf');
