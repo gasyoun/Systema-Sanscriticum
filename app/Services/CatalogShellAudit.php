@@ -52,7 +52,7 @@ class CatalogShellAudit
         $rows = [];
 
         foreach (Course::query()->orderBy('id')->get() as $course) {
-            if (! $this->isShell($course->id)) {
+            if (! $this->isShellCourse($course)) {
                 continue;
             }
 
@@ -82,15 +82,49 @@ class CatalogShellAudit
             'format' => $course->format,
             'visible' => (bool) $course->is_visible,
             'enrolled' => $course->users()->count(),
+            'curator_gated_sale' => $this->isCuratorGatedSale($course),
             'blockers' => $blockers,
             'safe' => $blockers === [],
         ];
     }
 
-    /** Курс — оболочка: ни одной собственной строки данных (см. isShell). */
+    /**
+     * Курс — оболочка: ни одной собственной строки данных (см. isShell).
+     *
+     * Курируемая продажа оболочкой не бывает НИКОГДА, и сказано это здесь
+     * ЯВНО (H3812/H3820). Формально проверка `isShell` такой курс и так не
+     * пропустит: активный тариф — строка в `tariffs` со столбцом `course_id`.
+     * Но это совпадение, а не правило: аудит считает СТРОКИ, а вопрос здесь
+     * про ПРОДАЖУ. 31-08-2026 сессия рассуждала ровно наоборот («курс скрыт —
+     * значит продаться не может») и погасила пять живых тарифов; правило,
+     * которое держится на побочном эффекте пересчёта таблиц, такую ошибку не
+     * ловит и никому её не объясняет.
+     */
     public function isShellCourse(Course $course): bool
     {
+        if ($this->isCuratorGatedSale($course)) {
+            return false;
+        }
+
         return $this->isShell((int) $course->id);
+    }
+
+    /**
+     * Курс скрыт с витрины, но ПРОДАЁТСЯ по прямой ссылке куратора.
+     *
+     * `/checkout/{tariff}` связывает ТАРИФ и никогда не читает
+     * `Course.is_visible`: покупку открывает и закрывает только
+     * `tariffs.is_active`. Так школа продаёт запись доверенному студенту на
+     * ограниченный срок — курс 327 («Йога-сутры … в записи»): скрыт,
+     * `is_active`, 5 активных тарифов, 129 оплат.
+     */
+    public function isCuratorGatedSale(Course $course): bool
+    {
+        if ((bool) $course->is_visible || ! (bool) $course->is_active) {
+            return false;
+        }
+
+        return $course->tariffs()->where('is_active', true)->exists();
     }
 
     /** @return list<array<string, mixed>> */
@@ -195,6 +229,18 @@ class CatalogShellAudit
 
         if ((bool) $course->is_visible) {
             $blockers[] = 'курс виден на витрине — сначала скрыть и убедиться, что он не нужен';
+        }
+
+        // Скрытость — НЕ доказательство ненужности. См. isCuratorGatedSale():
+        // продажу держат тарифы, а не витрина, и «скрыть» такой курс уже
+        // «скрыли» — он всё равно продаётся.
+        if ($this->isCuratorGatedSale($course)) {
+            $blockers[] = sprintf(
+                'курс скрыт с витрины, но ПРОДАЁТСЯ по прямой ссылке куратора: активных тарифов — %d. '
+                .'`/checkout/{tariff}` связывает тариф и не читает `Course.is_visible`, поэтому `tariffs.is_active` — гейт ПОКУПКИ, а не доступа. '
+                .'Ни удалять, ни сводить, ни гасить тарифы',
+                $course->tariffs()->where('is_active', true)->count(),
+            );
         }
 
         return $blockers;
