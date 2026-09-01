@@ -29,6 +29,8 @@ class PublicWaitlistResource extends JsonResource
             'kind' => $item->kind,
             // «не раньше» — дата строки; null = не ограничена.
             'earliest_start' => $item->earliest_start_at?->toDateString(),
+            // Сезон набора «YYYY-autumn|january|spring|summer»; null = рендерер выводит из даты.
+            'season' => $item->season,
             'price' => $item->block_price_rub,
             'votes' => (int) $item->votes_count,
             'min_payers' => $item->min_payers,

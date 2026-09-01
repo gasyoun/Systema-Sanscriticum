@@ -56,6 +56,14 @@ class CourseWaitlistItem extends Model
         'repeat' => 'Возвращается',
     ];
 
+    /** Сезон набора (волна 2, MG 01-09-2026): значения поля season (без года). */
+    public const SEASON_SLUGS = [
+        'autumn' => 'ОСЕНЬ',
+        'january' => 'НАЧАЛО',
+        'spring' => 'ВЕСНА',
+        'summer' => 'ЛЕТО',
+    ];
+
     /** Прогноз голос→оплата (HYPOTHESIS, калибруется после первого цикла). */
     public const VOTE_TO_PAYMENT_K = 0.5;
 
@@ -66,6 +74,7 @@ class CourseWaitlistItem extends Model
         'teacher_name',
         'slot',
         'earliest_start_at',
+        'season',
         'min_payers',
         'block_price_rub',
         'kind',
