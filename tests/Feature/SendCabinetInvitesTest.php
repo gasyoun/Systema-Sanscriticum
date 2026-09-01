@@ -110,6 +110,23 @@ class SendCabinetInvitesTest extends TestCase
     }
 
     /** @test */
+    public function telegram_invite_message_includes_student_guide_link(): void
+    {
+        $user = $this->sleepingStudentWithAccess(['email' => 'tg@example.com', 'telegram_id' => '123456']);
+        Mail::fake();
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+
+        $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
+
+        Http::assertSent(function ($req) {
+            $body = json_encode($req->data());
+
+            return str_contains($body, 'руководство')
+                && str_contains($body, '/docs/rukovodstvo-studenta.pdf');
+        });
+    }
+
+    /** @test */
     public function vk_linked_student_without_telegram_gets_invite_via_vk(): void
     {
         $user = $this->sleepingStudentWithAccess(['email' => 'vk@example.com', 'telegram_id' => null, 'vk_id' => '987654']);
