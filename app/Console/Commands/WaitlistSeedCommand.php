@@ -13,7 +13,7 @@ class WaitlistSeedCommand extends Command
 {
     protected $signature = 'waitlist:seed {--dry-run : показать, что будет вставлено}';
 
-    protected $description = 'Засеять 26 строк списка ожидания (MG 31-08-2026)';
+    protected $description = 'Засеять 25 строк списка ожидания (MG 31-08-2026; Бюлер ×1, хинди гр.6/7 — MG 01-09-2026)';
 
     public function handle(): int
     {
@@ -21,15 +21,17 @@ class WaitlistSeedCommand extends Command
 
         // [slug, курс, преподаватель, слот, earliest, min, блок₽, kind, paid_n(история)]
         $rows = [
-            // Гасунс — Бюлер — два отдельных потока
+            // Гасунс — Бюлер — один поток (MG 01-09-2026: недобор к осени 2027
+            // = перенос earliest_start на осень 2028, а не вторая строка)
             ['bueler-1-potok', 'Руководство по Бюлеру', 'Марцис Гасунс', null, '2027-10-01', 10, 8000, 'grammar', null],
-            ['bueler-2-potok', 'Руководство по Бюлеру', 'Марцис Гасунс', null, '2027-10-01', 10, 8000, 'grammar', null],
             ['tsifrovaya-gramotnost', 'Цифровая грамотность', 'Марцис Гасунс', null, '2026-10-01', 10, 10000, 'other', null],
             ['vishnushasasranama', 'Вишнусахасранама', 'Марцис Гасунс', null, '2027-10-01', 10, 8000, 'other', 41],
             ['skazanie-o-nale', 'Сказание о Нале', 'Марцис Гасунс', null, '2027-10-01', 8, 8000, 'other', 166],
-            // Костина
-            ['nachalnyi-hindi-1', 'Начальный хинди', 'Екатерина Костина', null, '2027-09-15', 8, 8000, 'other', null],
-            ['nachalnyi-hindi-2', 'Начальный хинди', 'Екатерина Костина', null, '2027-09-15', 8, 8000, 'other', null],
+            // Костина — хинди: сквозная нумерация групп (MG 01-09-2026:
+            // в базе уже есть гр. 1-5 серии «Грамматика хинди гр.»,
+            // новые строки набора продолжают серию как гр. 6 и гр. 7)
+            ['nachalnyi-hindi-1', 'Начальный хинди (гр. 6)', 'Екатерина Костина', null, '2027-09-15', 8, 8000, 'other', null],
+            ['nachalnyi-hindi-2', 'Начальный хинди (гр. 7)', 'Екатерина Костина', null, '2027-09-15', 8, 8000, 'other', null],
             ['nachalnyi-bengalskii', 'Начальный бенгальский', 'Екатерина Костина', null, '2027-09-15', 8, 8000, 'other', null],
             ['meghaduta-kalidasy', 'Мегхадута Калидасы', 'Екатерина Костина', null, '2027-10-15', 8, 6000, 'other', null],
             ['indiiskoe-kino', 'Индийское кино', 'Екатерина Костина', null, '2027-10-15', 8, 6000, 'other', null],
@@ -86,6 +88,13 @@ class WaitlistSeedCommand extends Command
                     CourseWaitlistItem::create(array_merge($payload, ['slug' => $slug]));
                 }
             }
+        }
+
+        // Бюлер: дубль-строка потока не нужна (MG 01-09-2026) — идемпотентный
+        // cleanup, чтобы повторные запуски сидра схлопнули её
+        $removed = CourseWaitlistItem::query()->where('slug', 'bueler-2-potok')->delete();
+        if ($removed > 0) {
+            $this->info("удалено: {$removed} (bueler-2-potok — дубль-поток, см. MG 01-09-2026)");
         }
 
         // Кашмирский: исторические ноты отдельно (спад −41 %)
