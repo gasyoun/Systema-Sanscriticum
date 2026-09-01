@@ -36,7 +36,14 @@ return new class extends Migration
             // Суммарно секунд, проведённых на странице урока (из heartbeat)
             $table->unsignedInteger('total_time_on_page')->default(0);
 
-            // Синхронизируется с pivot completed_lessons — для быстрой аналитики без JOIN
+            // НЕ ЗАПОЛНЯЕТСЯ. Задумывался как денормализация пивота ради аналитики
+            // без JOIN, но синхронизации так и не написали: пройденный урок пишет
+            // только App\Models\User::completedLessons() (пивот lesson_user), а сюда
+            // строка всегда создаётся с false и больше не трогается. Прод 01-09-2026:
+            // 649 строк, из них с true — 0, при 166 пройденных уроках в пивоте.
+            // ЗАВЕРШАЕМОСТЬ СЧИТАТЬ ПО lesson_user.is_completed. Метрика, севшая сюда,
+            // покажет ровный 0 % по каждому курсу — число, неотличимое от честного нуля
+            // (H3764, issue #2299; пин — ActivationCompletionMetricsServiceTest).
             $table->boolean('is_completed')->default(false);
 
             $table->timestamps();
