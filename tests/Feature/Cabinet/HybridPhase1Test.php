@@ -139,6 +139,44 @@ class HybridPhase1Test extends TestCase
     }
 
     /** @test */
+    public function hybrid_home_shows_flash_from_payment_redirects(): void
+    {
+        // Прод-кейс 01-09-2026: анти-дубль оплаты редиректил с session('error'),
+        // а hybrid-вид flash не рендерил — «кнопка ничего не делает».
+        $this->enableHybrid();
+        ['user' => $user] = $this->studentWithCourse();
+
+        $error = 'У вас уже есть незавершённый заказ по этому курсу.';
+        $response = $this->actingAs($user)
+            ->withSession(['error' => $error])
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee($error, false);
+
+        // Ровно один баннер — партиал не задвоен через layout+страницу.
+        $this->assertSame(1, substr_count($response->getContent(), $error));
+
+        $this->actingAs($user)
+            ->withSession(['success' => 'Дата оплаты перенесена.'])
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('Дата оплаты перенесена.', false);
+    }
+
+    /** @test */
+    public function hybrid_access_page_shows_flash_too(): void
+    {
+        $this->enableHybrid();
+        ['user' => $user] = $this->studentWithCourse();
+
+        $this->actingAs($user)
+            ->withSession(['error' => 'Сервис оплаты временно недоступен.'])
+            ->get(route('student.access'))
+            ->assertOk()
+            ->assertSee('Сервис оплаты временно недоступен.', false);
+    }
+
+    /** @test */
     public function today_band_lesson_cta_stays_a_plain_link(): void
     {
         // Регресс: обычный CTA «продолжить урок» — по-прежнему ссылка.

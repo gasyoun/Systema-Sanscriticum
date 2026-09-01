@@ -10,6 +10,7 @@
 @endphp
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-nunito">
+    @include('student.partials.flash-messages')
     <h2 class="text-3xl font-extrabold text-[#101010] mb-2">Оплата и доступ</h2>
     <p class="text-gray-500 mb-6">Что требует внимания и что уже открыто.</p>
 
