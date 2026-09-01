@@ -13,6 +13,7 @@
         <p class="mt-1 text-amber-900/80 dark:text-amber-100/80">{{ $c['course_denominator_hint'] }}</p>
         <p class="mt-1 text-amber-900/80 dark:text-amber-100/80">{{ $c['group_denominator_hint'] }}</p>
         <p class="mt-1 text-amber-900/80 dark:text-amber-100/80">{{ $c['completion_source_hint'] }}</p>
+        <p class="mt-1 text-amber-900/80 dark:text-amber-100/80" data-testid="limit-hint">{{ $c['limit_hint'] }}</p>
         <p class="mt-1 text-amber-900/80 dark:text-amber-100/80">{{ $c['certificate_hint'] }}</p>
         @if (! empty($a['telemetry_hint']))
             <p class="mt-1 text-amber-900/80 dark:text-amber-100/80" data-testid="telemetry-hint">{{ $a['telemetry_hint'] }}</p>
@@ -116,7 +117,8 @@
         <div class="px-4 pt-3 text-sm font-semibold">
             C4 · Завершаемость по курсам
             <span class="font-normal text-gray-500">
-                (порог: {{ number_format($c['lesson_ratio'] * 100, 0) }} % уроков курса)
+                (порог: {{ number_format($c['lesson_ratio'] * 100, 0) }} % уроков курса;
+                показано {{ count($c['courses']) }} из {{ $c['courses_total'] }})
             </span>
         </div>
 
@@ -168,7 +170,12 @@
     </div>
 
     <div class="overflow-x-auto rounded-xl ring-1 ring-gray-950/5 dark:ring-white/10">
-        <div class="px-4 pt-3 text-sm font-semibold">C4 · Завершаемость по потокам</div>
+        <div class="px-4 pt-3 text-sm font-semibold">
+            C4 · Завершаемость по потокам
+            <span class="font-normal text-gray-500">
+                (показано {{ count($c['groups']) }} из {{ $c['groups_total'] }})
+            </span>
+        </div>
 
         @if ($c['groups'] === [])
             <p class="px-4 py-4 text-sm text-gray-500" data-testid="completion-groups-empty">
