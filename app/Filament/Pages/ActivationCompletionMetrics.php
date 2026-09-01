@@ -17,8 +17,10 @@ use Filament\Pages\Page;
  *
  * Флаг `features.activation_completion_metrics` ВЫКЛ по умолчанию (домашний
  * образец — {@see SalesForecast}): пока OFF, пункта меню нет и страница
- * недоступна даже админу. Гейт — {@see RoleGate::accounting()} по рулингу
- * MG 30-08-2026.
+ * недоступна никому. Гейт — {@see RoleGate::learningAnalytics()}: admin,
+ * accountant и manager (куратор), плюс super_admin через any(). Изначально
+ * стоял accounting() (рулинг MG 30-08-2026), расширен рулингом MG 01-09-2026:
+ * доходимость учеников — рабочий инструмент куратора, а не бухгалтерия.
  *
  * Каждый процент на странице подписан своим знаменателем: цифра без
  * знаменателя не проверяема (урок H2378). Пороги — config/activation_metrics.php.
@@ -41,7 +43,7 @@ class ActivationCompletionMetrics extends Page
 
     public static function canAccess(): bool
     {
-        return (bool) config('features.activation_completion_metrics') && RoleGate::accounting();
+        return (bool) config('features.activation_completion_metrics') && RoleGate::learningAnalytics();
     }
 
     public static function shouldRegisterNavigation(): bool
