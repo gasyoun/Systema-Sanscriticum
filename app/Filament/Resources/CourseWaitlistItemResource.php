@@ -96,6 +96,22 @@ class CourseWaitlistItemResource extends Resource
                             ->label('Не раньше')
                             ->native(false),
 
+                        Forms\Components\Select::make('season')
+                            ->label('Сезон набора (для TG-поста)')
+                            ->options([
+                                '2026-autumn' => 'ОСЕНЬ 2026',
+                                '2027-january' => 'НАЧАЛО 2027 (середина января)',
+                                '2027-spring' => 'ВЕСНА 2027',
+                                '2027-summer' => 'ЛЕТО 2027',
+                                '2027-autumn' => 'ОСЕНЬ 2027',
+                                '2028-january' => 'НАЧАЛО 2028',
+                                '2028-spring' => 'ВЕСНА 2028',
+                                '2028-summer' => 'ЛЕТО 2028',
+                                '2028-autumn' => 'ОСЕНЬ 2028',
+                            ])
+                            ->native(false)
+                            ->helperText('Пусто = сезон выводится из даты «не раньше».'),
+
                         Forms\Components\TextInput::make('min_payers')
                             ->label('Минимум оплат')
                             ->numeric()
@@ -178,6 +194,18 @@ class CourseWaitlistItemResource extends Resource
                     ->date('d.m.Y')
                     ->placeholder('—'),
 
+                Tables\Columns\TextColumn::make('season')
+                    ->label('Сезон')
+                    ->formatStateUsing(function (?string $state): string {
+                        if ($state === null) {
+                            return '—';
+                        }
+                        [$year, $slug] = array_pad(explode('-', $state, 2), 2, '');
+
+                        return trim((CourseWaitlistItem::SEASON_SLUGS[$slug] ?? $slug).' '.$year);
+                    })
+                    ->placeholder('—'),
+
                 Tables\Columns\TextColumn::make('votes_count')
                     ->label('Голоса')
                     ->counts('votes')
@@ -221,6 +249,15 @@ class CourseWaitlistItemResource extends Resource
                 Tables\Filters\SelectFilter::make('kind')
                     ->label('Тип')
                     ->options(CourseWaitlistItem::KINDS),
+                Tables\Filters\SelectFilter::make('season')
+                    ->label('Сезон')
+                    ->options([
+                        '2026-autumn' => 'ОСЕНЬ 2026',
+                        '2027-january' => 'НАЧАЛО 2027',
+                        '2027-spring' => 'ВЕСНА 2027',
+                        '2027-summer' => 'ЛЕТО 2027',
+                        '2027-autumn' => 'ОСЕНЬ 2027',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

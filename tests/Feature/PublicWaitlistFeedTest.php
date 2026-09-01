@@ -98,6 +98,17 @@ class PublicWaitlistFeedTest extends TestCase
         $this->assertNull($row['course']);
     }
 
+    public function test_season_field_is_exposed_when_set_and_null_otherwise(): void
+    {
+        $this->makeItem(['slug' => 'with-season', 'season' => '2027-spring']);
+        $this->makeItem(['slug' => 'without-season']);
+
+        $data = $this->getJson(self::URL)->assertOk()->json('data');
+
+        $this->assertSame('2027-spring', collect($data)->firstWhere('slug', 'with-season')['season']);
+        $this->assertNull(collect($data)->firstWhere('slug', 'without-season')['season']);
+    }
+
     public function test_second_identical_request_is_cached(): void
     {
         $this->makeItem();
