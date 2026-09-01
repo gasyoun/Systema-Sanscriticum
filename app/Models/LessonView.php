@@ -8,6 +8,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Просмотр урока: когда открыл, сколько раз, сколько времени провёл.
+ *
+ * ⚠ Свойство `is_completed` на ЭТОЙ модели не заполняется — оно всегда false.
+ * Пройденный урок живёт в пивоте `lesson_user` ({@see User::completedLessons()}),
+ * куда пишет StudentController::completeLesson(). Завершаемость считать только
+ * оттуда: метрика, севшая на `lesson_views.is_completed`, вернёт ровный 0 %
+ * (прод 01-09-2026: 649 строк просмотров, 0 с признаком, 166 пройденных уроков
+ * в пивоте). H3764, issue #2299.
+ */
 class LessonView extends Model
 {
     use HasFactory;
