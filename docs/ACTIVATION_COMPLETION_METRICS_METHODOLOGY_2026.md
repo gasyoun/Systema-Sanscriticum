@@ -9,7 +9,15 @@ _Created: 01-09-2026 · Last updated: 01-09-2026_
 [`docs/ROADMAP_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md),
 исполнение — H3764.
 
-Доступ: `RoleGate::accounting()` (обычный админ НЕ проходит) плюс флаг
+Доступ: `RoleGate::learningAnalytics()` — админ, бухгалтер и **куратор**
+(`manager`), супер-админ проходит через `any()`; преподаватель и студент — нет.
+Изначально стоял `accounting()` (рулинг MG 30-08-2026), расширен рулингом
+MG 01-09-2026: доходимость учеников — рабочий инструмент того, кто ведёт
+учеников, а не бухгалтерская отчётность. Сужать куратору нечего: страница
+агрегатная, ни сумм, ни персональных данных на ней нет, поэтому все четыре
+роли видят одно и то же (пин — `curator_sees_the_same_numbers_as_the_accountant`).
+Преподаватель оставлен за гейтом сознательно: ему нужна доходимость своего
+курса, а не школы, и это отдельная задача с другим знаменателем. Плюс флаг
 `features.activation_completion_metrics`, **ВЫКЛ по умолчанию**. Пороги — только
 [`config/activation_metrics.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/activation_metrics.php),
 никогда не в вёрстке. Страница ничего не пишет и денег не трогает.

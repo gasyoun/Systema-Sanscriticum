@@ -93,20 +93,61 @@ class ActivationCompletionMetricsPageTest extends TestCase
             ->assertSee('Санскрит-1');
     }
 
-    /** @test */
-    public function ordinary_admin_does_not_pass_the_accounting_gate(): void
+    /**
+     * Рулинг MG 01-09-2026: доходимость учеников нужна и куратору, и админу,
+     * не только бухгалтеру. Пин по всем ролям сразу, чтобы сужение гейта
+     * обратно не прошло молча.
+     *
+     * @test
+     */
+    public function admin_accountant_manager_and_super_admin_all_pass_the_gate(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Roles::ADMIN]));
+        $this->seedOneCohort();
 
-        $this->assertFalse(ActivationCompletionMetrics::canAccess());
-        $this->assertFalse(ActivationCompletionMetrics::shouldRegisterNavigation());
-        $this->get('/admin/activation-completion-metrics')->assertForbidden();
+        foreach ([Roles::ADMIN, Roles::ACCOUNTANT, Roles::MANAGER, Roles::SUPER_ADMIN] as $role) {
+            $this->actingAs(User::factory()->create(['role' => $role]));
+
+            $this->assertTrue(
+                ActivationCompletionMetrics::canAccess(),
+                "роль {$role} должна проходить гейт"
+            );
+            $this->assertTrue(
+                ActivationCompletionMetrics::shouldRegisterNavigation(),
+                "роль {$role} должна видеть пункт меню"
+            );
+            $this->get('/admin/activation-completion-metrics')->assertSuccessful();
+        }
+    }
+
+    /** @test */
+    public function curator_sees_the_same_numbers_as_the_accountant(): void
+    {
+        // Страница агрегатная: ни денег, ни персональных данных — сужать
+        // куратору нечего, и он должен видеть ровно то же самое.
+        $this->seedOneCohort();
+
+        $this->actingAs(User::factory()->create(['role' => Roles::ACCOUNTANT]));
+        $asAccountant = $this->get('/admin/activation-completion-metrics')->getContent();
+
+        $this->actingAs(User::factory()->create(['role' => Roles::MANAGER]));
+        $asManager = $this->get('/admin/activation-completion-metrics')->getContent();
+
+        foreach (['Санскрит-1', '2026-01', 'O2 · Активация по когортам'] as $needle) {
+            $this->assertStringContainsString($needle, $asAccountant);
+            $this->assertStringContainsString($needle, $asManager);
+        }
     }
 
     /** @test */
     public function teacher_and_student_cannot_open_the_page(): void
     {
+        // Преподавателю нужна доходимость СВОЕГО курса, а не школы — это
+        // отдельная задача с другим знаменателем, а не расширение этого гейта.
         $this->actingAs(User::factory()->create(['role' => Roles::TEACHER]));
+        $this->assertFalse(ActivationCompletionMetrics::canAccess());
+        $this->get('/admin/activation-completion-metrics')->assertForbidden();
+
+        $this->actingAs(User::factory()->create(['role' => null]));
         $this->assertFalse(ActivationCompletionMetrics::canAccess());
         $this->get('/admin/activation-completion-metrics')->assertForbidden();
     }

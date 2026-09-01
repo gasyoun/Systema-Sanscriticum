@@ -23,12 +23,16 @@ class ActivationCompletionMetricsFlagDefaultTest extends TestCase
         $this->assertFalse((bool) config('features.activation_completion_metrics'));
     }
 
-    public function test_page_is_hidden_when_flag_is_off_even_for_accountant(): void
+    public function test_page_is_hidden_when_flag_is_off_for_every_allowed_role(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Roles::ACCOUNTANT]));
+        // Гейт расширен (MG 01-09-2026) до admin/accountant/manager/super_admin —
+        // флаг остаётся рубильником для ВСЕХ них, а не только для бухгалтера.
+        foreach ([Roles::ACCOUNTANT, Roles::ADMIN, Roles::MANAGER, Roles::SUPER_ADMIN] as $role) {
+            $this->actingAs(User::factory()->create(['role' => $role]));
 
-        $this->assertFalse(ActivationCompletionMetrics::canAccess());
-        $this->assertFalse(ActivationCompletionMetrics::shouldRegisterNavigation());
+            $this->assertFalse(ActivationCompletionMetrics::canAccess(), "роль {$role} при флаге OFF");
+            $this->assertFalse(ActivationCompletionMetrics::shouldRegisterNavigation(), "меню для {$role} при флаге OFF");
+        }
     }
 
     public function test_route_is_forbidden_when_flag_is_off(): void
