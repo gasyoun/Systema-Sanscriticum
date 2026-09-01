@@ -21,6 +21,83 @@ class VitrinaWaitlistPageTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_voted_user_sees_retract_button_and_can_unvote(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        $item = CourseWaitlistItem::create([
+            'slug' => 'zhdun-voted',
+            'course_title' => 'Вишнусахасранама',
+            'teacher_name' => 'Гасунс Марцис Юрьевич',
+            'min_payers' => 10,
+            'kind' => 'other',
+            'earliest_start_at' => '2027-10-01',
+        ]);
+        $user = User::factory()->create();
+        $item->votes()->create(['user_id' => $user->id]);
+
+        $resp = $this->actingAs($user)->get(route('shop.waitlist'));
+        $resp->assertOk();
+        // Кнопка-отзыв: «Голос учтён» теперь кликабельна.
+        $resp->assertSee('data-waitlist-unvote="zhdun-voted"', false);
+        $resp->assertSee('Отозвать голос');
+        $resp->assertDontSee('data-waitlist-vote="zhdun-voted"');
+        // 1 голос из 10 — счётчик скрыт.
+        $resp->assertDontSee('Осталось доголосовать');
+
+        // Отзыв голоса: голос удалён, идемпотентно.
+        $this->actingAs($user)
+            ->post(route('shop.waitlist.unvote'), ['slug' => 'zhdun-voted'])
+            ->assertOk()
+            ->assertJson(['ok' => true, 'votes' => 0]);
+        $this->assertDatabaseMissing('waitlist_votes', [
+            'course_waitlist_item_id' => $item->getKey(),
+            'user_id' => $user->id,
+        ]);
+        $this->actingAs($user)
+            ->post(route('shop.waitlist.unvote'), ['slug' => 'zhdun-voted'])
+            ->assertJson(['ok' => true, 'votes' => 0]);
+
+        // После отзыва кнопка «Голосовать» вернулась.
+        $this->actingAs($user)->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee('data-waitlist-vote="zhdun-voted"', false)
+            ->assertDontSee('data-waitlist-unvote="zhdun-voted"');
+    }
+
+    public function test_guest_unvote_is_401(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-unvote-guest',
+            'course_title' => 'Курс для гостя',
+            'teacher_name' => 'Т',
+            'min_payers' => 8,
+            'kind' => 'other',
+        ]);
+
+        $this->post(route('shop.waitlist.unvote'), ['slug' => 'zhdun-unvote-guest'])
+            ->assertStatus(401);
+    }
+
+    public function test_course_title_always_clickable_search_fallback(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-unbound-title',
+            'course_title' => 'Мегхадута Калидасы',
+            'teacher_name' => 'Костина Екатерина Александровна',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2027-10-15',
+        ]);
+
+        // Без привязанного курса заголовок ведёт в поиск каталога.
+        $this->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee('/online/poisk/Мегхадута-Калидасы', false)
+            ->assertSee('Мегхадута Калидасы</a>', false);
+    }
+
     public function test_flag_off_aborts_404(): void
     {
         config(['features.waitlist_voting' => false]);

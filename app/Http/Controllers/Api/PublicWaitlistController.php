@@ -81,6 +81,46 @@ class PublicWaitlistController extends Controller
         ]);
     }
 
+    /**
+     * Отзыв своего голоса (MG 01-09-2026, «передумал»): удаляет голос юзера.
+     * Идемпотентный — отмена без голоса не ошибка.
+     */
+    public function unvote(Request $request): JsonResponse
+    {
+        if (! config('features.waitlist_voting', false)) {
+            abort(404);
+        }
+
+        $user = $request->user('web') ?? $request->user();
+        if (! $user instanceof User) {
+            return response()->json(['ok' => false, 'error' => 'auth_required'], 401);
+        }
+
+        $data = $request->validate([
+            'slug' => ['required', 'string', 'max:180'],
+        ]);
+
+        $item = CourseWaitlistItem::query()
+            ->where('slug', $data['slug'])
+            ->where('is_listed', true)
+            ->first();
+
+        if ($item === null) {
+            return response()->json(['ok' => false, 'error' => 'not_found'], 404);
+        }
+
+        $item->votes()->where('user_id', $user->getKey())->delete();
+
+        Cache::forget('public_waitlist:v1');
+
+        return response()->json([
+            'ok' => true,
+            'votes' => $item->votesCount(),
+            'min_payers' => $item->min_payers,
+            'threshold_met' => $item->hasThreshold(),
+        ]);
+    }
+
     /** @return array<int, array<string, mixed>> */
     private function buildFeed(): array
     {

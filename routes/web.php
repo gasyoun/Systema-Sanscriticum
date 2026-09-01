@@ -214,6 +214,11 @@ Route::post('/online/zhdun/vote', [PublicWaitlistController::class, 'vote'])
     ->middleware('throttle:10,1')
     ->name('shop.waitlist.vote');
 
+// Отзыв голоса (MG 01-09-2026, «передумал») — та же web-группа: сессия + CSRF.
+Route::post('/online/zhdun/unvote', [PublicWaitlistController::class, 'unvote'])
+    ->middleware('throttle:10,1')
+    ->name('shop.waitlist.unvote');
+
 // «Материалы» — журнальный хаб бесплатного контента над магазином (H387,
 // паттерн Arzamas): статьи + бесплатные беседы + preview-уроки одной сеткой
 // типизированных карточек. Блог остаётся на /s — здесь только агрегатор.

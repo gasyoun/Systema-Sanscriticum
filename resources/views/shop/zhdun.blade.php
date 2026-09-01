@@ -51,14 +51,19 @@
                                 $teacherUrl = $item->teacher_name
                                     ? '/online/prepodavatel/'.App\Support\ShopCatalogUrl::encodeWords($item->teacher_name)
                                     : null;
+                                // Название курса кликабельно всегда: привязанный
+                                // курс → страница курса; без привязки → поиск каталога.
+                                $titleUrl = $item->course && $item->course->is_visible
+                                    ? route('shop.course.show', $item->course->slug)
+                                    : ($item->course_title ? '/online/poisk/'.App\Support\ShopCatalogUrl::encodeWords($item->course_title) : null);
                             @endphp
                             <div class="flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 p-5 transition-all"
                                  data-waitlist-row="{{ $item->slug }}">
                                 <div class="flex items-start justify-between gap-3">
                                     <div>
                                         <h3 class="text-base font-bold text-white leading-snug">
-                                            @if($item->course && $item->course->is_visible)
-                                                <a href="{{ route('shop.course.show', $item->course->slug) }}"
+                                            @if($titleUrl)
+                                                <a href="{{ $titleUrl }}"
                                                    class="hover:text-[#38BDF8] transition-colors">{{ $item->course_title }}</a>
                                             @else
                                                 {{ $item->course_title }}
@@ -95,7 +100,14 @@
                                     </span>
 
                                     @if($already)
-                                        <span class="text-xs font-bold text-emerald-400"><i class="fas fa-check mr-1"></i>Голос учтён</span>
+                                        <button type="button"
+                                                data-waitlist-unvote="{{ $item->slug }}"
+                                                title="Отозвать голос"
+                                                class="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition"
+                                                x-on:click="unvote('{{ $item->slug }}', $el)">
+                                            <i class="fas fa-check mr-1"></i>Голос учтён
+                                            <i class="fas fa-times ml-1 opacity-60"></i>
+                                        </button>
                                     @elseif($paymentOpen)
                                         @if($item->course)
                                             <a href="{{ route('shop.course.show', $item->course->slug) }}"
@@ -163,6 +175,32 @@ function waitlistVote() {
             } catch (e) {
                 el.disabled = false;
                 el.textContent = 'Ошибка сети';
+            }
+        },
+        async unvote(slug, el) {
+            el.disabled = true;
+            try {
+                const resp = await fetch('{{ route('shop.waitlist.unvote') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ slug }),
+                });
+                if (resp.status === 401 || resp.redirected || ! (resp.headers.get('content-type') || '').includes('application/json')) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const data = await resp.json();
+                if (data.ok) {
+                    window.location.reload();
+                } else {
+                    el.disabled = false;
+                }
+            } catch (e) {
+                el.disabled = false;
             }
         },
     };
