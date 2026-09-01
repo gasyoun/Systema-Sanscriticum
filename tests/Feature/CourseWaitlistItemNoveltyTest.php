@@ -6,6 +6,8 @@ namespace Tests\Feature;
 
 use App\Models\Course;
 use App\Models\CourseWaitlistItem;
+use App\Models\Group;
+use App\Models\Schedule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -43,9 +45,9 @@ class CourseWaitlistItemNoveltyTest extends TestCase
 
         // Курсы без групп не попадают в фид расписания (нужен upcoming schedule),
         // поэтому создаём строку расписания вручную, как в PublicScheduleFeedTest.
-        $group = \App\Models\Group::factory()->create(['status' => 'forming']);
+        $group = Group::factory()->create(['status' => 'forming']);
         $group->courses()->attach($course->id);
-        \App\Models\Schedule::create([
+        Schedule::create([
             'title' => $course->title.' — занятие',
             'group_id' => $group->id,
             'course_id' => $course->id,
