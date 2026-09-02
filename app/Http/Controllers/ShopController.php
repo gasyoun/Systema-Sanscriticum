@@ -295,14 +295,13 @@ class ShopController extends Controller
                 ->all()
             : [];
 
-        // Канонические ссылки на преподавателей (MG 02-09-2026): teacher_name в
-        // waitlist-строках — короткая форма («Екатерина Костина»), фильтр каталога
-        // ищет по teachers.name — резолвим в полное ФИО, иначе ссылка 404.
+        // Ссылки на преподавателей (MG 02-09-2026): естественный порядок имени —
+        // «Екатерина Костина», как в waitlist-строке. Фильтр каталога резолвит
+        // его толерантно (Teacher::resolveByName), полное ФИО тоже работает.
         $itemTeacherUrls = [];
         foreach ($items as $item) {
-            $teacher = Teacher::resolveByName($item->teacher_name ?? '');
-            $itemTeacherUrls[$item->getKey()] = $teacher !== null
-                ? '/online/prepodavatel/'.ShopCatalogUrl::encodeWords($teacher->name)
+            $itemTeacherUrls[$item->getKey()] = $item->teacher_name
+                ? '/online/prepodavatel/'.ShopCatalogUrl::encodeWords($item->teacher_name)
                 : null;
         }
 

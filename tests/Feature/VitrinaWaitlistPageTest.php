@@ -99,11 +99,11 @@ class VitrinaWaitlistPageTest extends TestCase
             ->assertSee('Мегхадута Калидасы</a>', false);
     }
 
-    public function test_teacher_links_use_canonical_full_name_and_short_facet_resolves(): void
+    public function test_teacher_links_use_natural_name_and_short_facet_resolves(): void
     {
         config(['features.waitlist_voting' => true]);
         // teacher_name в waitlist — короткая форма; в teachers — полное ФИО.
-        $teacher = Teacher::create(['name' => 'Костина Екатерина Александровна']);
+        Teacher::create(['name' => 'Костина Екатерина Александровна']);
         CourseWaitlistItem::create([
             'slug' => 'zhdun-hindi-teacher',
             'course_title' => 'Начальный хинди (гр. 6)',
@@ -113,21 +113,19 @@ class VitrinaWaitlistPageTest extends TestCase
             'earliest_start_at' => '2027-09-15',
         ]);
 
-        // Витрина: ссылка ведёт на каноническое ФИО, а не на короткую форму.
+        // Витрина: ссылка в естественном порядке имени, как пишет MG.
         $this->get(route('shop.waitlist'))
             ->assertOk()
-            ->assertSee('/online/prepodavatel/Костина-Екатерина-Александровна', false);
+            ->assertSee('/online/prepodavatel/Екатерина-Костина', false)
+            ->assertDontSee('Костина-Екатерина-Александровна');
 
-        // Фильтр каталога: короткая форма (как у MG в чате) → 200, не 404.
+        // Фильтр каталога: короткая форма → 200, не 404.
         $this->get('/online/prepodavatel/Екатерина-Костина')->assertOk();
-        // Полная форма тоже работает.
+        // Полное ФИО и перестановка слов тоже работают.
         $this->get('/online/prepodavatel/Костина-Екатерина-Александровна')->assertOk();
-        // Порядок слов неважен.
         $this->get('/online/prepodavatel/Костина-Екатерина')->assertOk();
         // Несуществующий преподаватель — 404 как раньше.
         $this->get('/online/prepodavatel/Никто-Незвонил')->assertNotFound();
-
-        unset($teacher);
     }
 
     public function test_flag_off_aborts_404(): void
@@ -160,7 +158,7 @@ class VitrinaWaitlistPageTest extends TestCase
         $resp->assertSee('Руководство по Бюлеру');
         $resp->assertSee('ОСЕНЬ 2027');
         $resp->assertSee('Гасунс Марцис Юрьевич');
-        // Ссылка на преподавателя — фильтр каталога.
+        // Ссылка на преподавателя — естественный порядок имени из waitlist-строки.
         $resp->assertSee('/online/prepodavatel/Гасунс-Марцис-Юрьевич', false);
         $resp->assertSee('пн 18:00');
         $resp->assertSee('не раньше 01.10.2027');
