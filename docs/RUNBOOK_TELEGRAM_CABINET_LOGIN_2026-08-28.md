@@ -1,6 +1,6 @@
-# RUNBOOK: «Telegram-вход» в личный кабинет
+# RUNBOOK: «Telegram-вход» и самообслуживание кабинета (/кабинет)
 
-_Created: 28-08-2026 · Last updated: 28-08-2026_
+_Created: 28-08-2026 · Last updated: 02-09-2026_
 
 Источник требования: ORS-FAQ
 [CABINET_ADOPTION_ROADMAP.md](https://github.com/gasyoun/ORS-FAQ/blob/main/CABINET_ADOPTION_ROADMAP.md)
@@ -79,6 +79,39 @@ SHA-256 (`magic_link_tokens`), короткий TTL, атомарное гаше
   привязанного аккаунта → кнопка-ссылка → кабинет. Живых привязанных
   сотрудников нет (29 привязанных — все студенты), исходный тест-месседж
   студентам не шлётся сознательно.
+
+## Самообслуживание: /кабинет (02-09-2026, OxAlpha `z-ai/glm-5.3-flash`)
+
+Непривязанный студент создаёт себе кабинет **одним шагом** в личке бот-а:
+`/кабинет ваш@email.com` → аккаунт (Free-tier плейлисты, как при
+self-register H3643) + привязка `telegram_id` + одноразовая magic-ссылка
+входа. Пароль никогда не пересылается. Мотивация: lena_mast →
+zimushka@list.ru в @rusamskrtam — кабинет без участия владельца.
+
+| Компонент | Файл |
+|---|---|
+| Флаг | [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) — `telegram_cabinet_provision` |
+| Бот-логика | [`app/Services/Bot/CabinetProvisionBotCommand.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Bot/CabinetProvisionBotCommand.php) |
+| Тесты | [`tests/Feature/Access/TelegramCabinetProvisionTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Access/TelegramCabinetProvisionTest.php) — 12 тестов |
+| Коммит | [30c93e09](https://github.com/gasyoun/Systema-Sanscriticum/commit/30c93e09) + указатель в группах [7953facc](https://github.com/gasyoun/Systema-Sanscriticum/commit/7953facc) |
+
+**Щиты:**
+
+- ≤1 создание на `telegram_id` навсегда (cache-флаг); уже привязанному
+  Telegram — только ссылка входа, второй аккаунт не создаётся.
+- Существующий email не перезаписывается и не привязывается по голому
+  знанию email (это был бы угон) — мягкий отказ.
+- Только личка; в группах `/кабинет` даёт короткий указатель в личку
+  (аккаунтов и ссылок в группе нет — magic-link увидели бы все).
+- Флаг OFF — команда молча проходит по прежним веткам (никаких ответов).
+
+**В проде:** `TELEGRAM_CABINET_PROVISION=true` + `config:cache` — ВКЛЮЧЕНО
+02-09-2026 (решение MG «включай»; smoke на проде PASS: user + magic-token
+созданы и удалены, probe зелёный). Команда теперь живая для всех.
+
+Ограничение Telegram: бот не пишет первым — студент должен сам нажать Start
+в личке бота, после этого команды работают. От лица @rusamskrtam в чате
+указывайте людей в личку бота.
 
 ## Ограничения (осознанные)
 
