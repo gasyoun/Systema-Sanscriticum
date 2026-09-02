@@ -32,6 +32,17 @@ class PaypalForeignPriceService
 {
     public const CURRENCIES = ['EUR', 'USD'];
 
+    /**
+     * MG ruling 02-09-2026: after the base formula the price is stepped UP to a
+     * round figure landing in a +3–6% corridor (8 000 ₽ → €85.88 becomes €90;
+     * $99.51 becomes $105 — never the bare round-up $100). Round grid: multiples
+     * of 5 at ≥50, integers below. When no round figure fits the +3–6% corridor,
+     * fall back to the smallest round figure ≥ the computed price (never below).
+     */
+    private const NICE_CORRIDOR_MIN = 1.03;
+
+    private const NICE_CORRIDOR_MAX = 1.06;
+
     public function __construct(private readonly CurrencyRateProvider $rates) {}
 
     /**
@@ -71,7 +82,7 @@ class PaypalForeignPriceService
                     continue;
                 }
 
-                $price = round($rubPrice / $fxRate * (1 + $markup), 2);
+                $price = self::roundUpToNice(round($rubPrice / $fxRate * (1 + $markup), 2));
 
                 $rows[] = [
                     'tariff_id' => $tariff->id,
@@ -152,10 +163,28 @@ class PaypalForeignPriceService
         $markup = (float) config('services.paypal.fixed_price_markup', 0.08);
 
         return [
-            'price' => round((float) $tariff->price / $fxRate * (1 + $markup), 2),
+            'price' => self::roundUpToNice(round((float) $tariff->price / $fxRate * (1 + $markup), 2)),
             'fx_rate' => $fxRate,
             'markup_applied' => true,
         ];
+    }
+
+    /**
+     * Round-grid step-up inside the +3–6% corridor (see class docblock). Grid:
+     * multiples of 5 for prices ≥ 50, integers below. Corridor miss → smallest
+     * round figure ≥ price, so the published price is always ≥ the formula.
+     */
+    public static function roundUpToNice(float $price): float
+    {
+        $step = $price >= 50.0 ? 5.0 : 1.0;
+        $ceilToStep = fn (float $value): float => ceil($value / $step) * $step;
+
+        $corridorCandidate = $ceilToStep($price * self::NICE_CORRIDOR_MIN);
+        if ($corridorCandidate <= $price * self::NICE_CORRIDOR_MAX) {
+            return $corridorCandidate;
+        }
+
+        return $ceilToStep($price);
     }
 
     /** Prefer the fx_rate already published for this tariff (eyeball consistency); else fetch live. */
