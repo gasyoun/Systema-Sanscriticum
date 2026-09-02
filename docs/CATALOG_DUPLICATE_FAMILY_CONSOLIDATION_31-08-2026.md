@@ -1,6 +1,6 @@
 # Разбор четырёх `duplicate`-семей каталога: что сведено и что ждёт человека
 
-_Created: 31-08-2026 · Last updated: 31-08-2026 (рулинг MG «одна карточка» исполнен)_
+_Created: 31-08-2026 · Last updated: 02-09-2026 (H3823 /document: остаток — у записи 327 всё ещё нет своих уроков)_
 
 H3807, остаток [H3773](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/AUDIT_CATALOG_DUPLICATE_SHELLS_31-08-2026.md).
 Аудит только читает и называет; здесь записано, что с четырьмя семьями сделано и почему две из
@@ -133,5 +133,24 @@ H3807, остаток [H3773](https://github.com/gasyoun/Systema-Sanscriticum/bl
 | `likbez-po-lingvistike` | 344 «2 поток, 2025-2026» | 394 «2 поток, 2025-2026 в записи» | 1 |
 
 После связывания `catalog:audit-families` не находит ни одной семьи с вердиктом `duplicate`.
+
+### Остаток H3823 — связь `recording_of` НЕ даёт уроков
+
+Связывание сняло вердикт аудита, но не выдало покупателям контент: доступ считается **по курсу**,
+поэтому у курса-записи должны быть **свои** строки в `lessons`. У 327 при 129 оплатах их
+по-прежнему ноль. Инструмент для этого —
+[`catalog:mirror-recording-lessons {source} {target}`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MirrorRecordingLessons.php)
+(сухой прогон без флага, `--apply` пишет в транзакции, идемпотентно по слоту
+`block_number|block_half|sort_order`, трогает только `lessons`); контракт и порядок прогона —
+[архив H3823](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H3823-Opus_Systema-Sanscriticum_bind-yoga-sutra-recordings-course-327_01.09.26.md).
+Команда слита ([#2313](https://github.com/gasyoun/Systema-Sanscriticum/pull/2313)), **на проде не
+запускалась** — 02-09-2026 это открытый `@DO` в
+[GTD](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md).
+
+**Приоритет:** там, где этот документ и разбор 31-08-2026 расходятся о том, «сведена» ли семья,
+выигрывает контентный критерий — у записи есть свои уроки; снятый вердикт аудита сам по себе
+не означает, что покупатель что-то видит. Запрет 31-08-2026 держится дословно: **«Категорически
+нельзя: трогать тарифы, видимость, оплаты и курс 396»** — `tariff.is_active` закрывает ПОКУПКУ,
+а не доступ.
 
 _Dr. Mārcis Gasūns_
