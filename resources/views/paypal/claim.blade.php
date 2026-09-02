@@ -1,5 +1,5 @@
 @extends('layouts.shop')
-@section('title', 'Уведомление об оплате через PayPal')
+@section('title', $isSupplement ? 'Доплата за блок через PayPal' : 'Уведомление об оплате через PayPal')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-10 md:py-16 font-sans antialiased">
@@ -11,13 +11,20 @@
             </a>
             <div class="flex items-start justify-between gap-6">
                 <div>
-                    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Уведомление об оплате через PayPal</h1>
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">{{ $isSupplement ? 'Доплата за блок через PayPal' : 'Уведомление об оплате через PayPal' }}</h1>
                     <p class="mt-2 text-base text-gray-500">
+                        @if($isSupplement)
+                            Это форма доплаты за блок — небольшая недостающая сумма по вашему
+                            предыдущему платежу. Переведите доплату и отправьте уведомление здесь,
+                            счёт закроется автоматически. Полная оплата блока оформляется обычной
+                            формой, не этой.
+                        @else
                         Этот путь — для оплаты из-за рубежа, где карта РФ не работает. PayPal не
                         поддерживает автосписание на нашей платформе, поэтому оплата идет в два шага:
                         вы переводите оплату и подаете уведомление здесь. Своим ученикам доступ
                         открывается сразу после отправки уведомления; новым — после ручной сверки,
                         обычно в течение одного рабочего дня.
+                        @endif
                     </p>
                 </div>
                 <figure class="shrink-0 mt-1">
@@ -38,9 +45,15 @@
             </div>
             @if($foreignPrice)
             <p class="text-sm text-gray-600 leading-relaxed">
+                @if($isSupplement)
+                    Доплата за блок — <span class="font-bold text-gray-900">{{ $foreignPrice['eur'] }} €</span>
+                    (предпочтительно) или <span class="font-bold text-gray-900">{{ $foreignPrice['usd'] }} $</span>.
+                    Комиссию PayPal оплачивает отправитель — переводите ровно эту сумму.
+                @else
                 Тариф: <span class="font-bold text-gray-900">{{ $course?->title ?? 'Курс' }} — {{ $tariff->title ?? $tariff->accessKey() }}</span>.
                 Стоимость блока — <span class="font-bold text-gray-900">{{ $foreignPrice['eur'] }} €</span> (предпочтительно)
                 или <span class="font-bold text-gray-900">{{ $foreignPrice['usd'] }} $</span>.
+                @endif
             </p>
             @else
             <p class="text-sm text-gray-600 leading-relaxed">
@@ -54,15 +67,15 @@
                 на получателе — сделаем пересчет и запросим доплату.
             </p>
             @if($meLink)
-                <a href="{{ $meLink }}" target="_blank" rel="noopener"
+                <a href="{{ $isSupplement ? $meLink.'/22' : $meLink }}" target="_blank" rel="noopener"
                    class="mt-4 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#0070BA] hover:bg-[#005ea6] text-white font-bold text-sm transition">
-                    <i class="fab fa-paypal"></i> Перейти к оплате на PayPal
+                    <i class="fab fa-paypal"></i> {{ $isSupplement ? 'Перевести 22 € на PayPal' : 'Перейти к оплате на PayPal' }}
                 </a>
             @endif
             <p class="mt-3 text-sm text-gray-600">
                 Прямая ссылка для перевода:
-                <a href="https://paypal.me/gasuns" target="_blank" rel="noopener"
-                   class="font-semibold text-[#0070BA] hover:text-[#005ea6] underline decoration-[#0070BA]/30 hover:decoration-[#0070BA]/60">paypal.me/gasuns</a>
+                <a href="{{ $isSupplement ? 'https://paypal.me/gasuns/22' : 'https://paypal.me/gasuns' }}" target="_blank" rel="noopener"
+                   class="font-semibold text-[#0070BA] hover:text-[#005ea6] underline decoration-[#0070BA]/30 hover:decoration-[#0070BA]/60">{{ $isSupplement ? 'paypal.me/gasuns/22' : 'paypal.me/gasuns' }}</a>
             </p>
             @if($recipient)
                 <p class="mt-3 text-xs text-gray-500">Получатель PayPal: <span class="font-semibold text-gray-700">{{ $recipient }}</span></p>
@@ -78,6 +91,9 @@
 
             <form id="paypal-claim-form" action="{{ route('paypal.claim.store', $tariff) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
                 @csrf
+                @if($isSupplement)
+                    <input type="hidden" name="supplement_mode" value="1">
+                @endif
 
                 @guest
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -190,6 +206,20 @@
                 <h4 class="text-base font-extrabold text-gray-900">Что будет дальше</h4>
             </div>
             <ol class="space-y-3 text-sm text-gray-600 leading-relaxed list-none">
+                @if($isSupplement)
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">1.</span>
+                    <span>Сразу после отправки пришлем на email подтверждение — счёт по доплате закроется автоматически.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">2.</span>
+                    <span>Доступ к курсу, если он был открыт, не меняется — доплата только закрывает разницу по платежу.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">3.</span>
+                    <span>Вопросы — <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="font-semibold text-indigo-700 hover:text-indigo-900">напишите нам в Telegram</a>.</span>
+                </li>
+                @else
                 @auth
                 {{-- Ruling 22-08-2026: своему ученику доступ открывается сразу,
                      сверка делается после и выборочно. --}}
@@ -230,6 +260,7 @@
                     обычно отвечаем в течение рабочего дня.</span>
                 </li>
                 @endauth
+                @endif
             </ol>
         </div>
     </div>

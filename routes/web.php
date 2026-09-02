@@ -1002,6 +1002,10 @@ Route::post('/trial/{course:slug}', [TrialController::class, 'create'])
 // throttle:5,1 — публичный приём email + создание pending-платежа (защита от ботов).
 Route::get('/paypal/{tariff}', [PaypalClaimController::class, 'show'])
     ->name('paypal.claim.show');
+// H3990: режим доплаты (разовая акция, без нового тарифа) — та же форма с
+// фиксированной €22/$26 и проводкой «закрыть открытый счёт-доплату 2 000 ₽».
+Route::get('/paypal/{tariff}/doplata', [PaypalClaimController::class, 'showSupplement'])
+    ->name('paypal.claim.supplement');
 Route::post('/paypal/{tariff}', [PaypalClaimController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('paypal.claim.store');
