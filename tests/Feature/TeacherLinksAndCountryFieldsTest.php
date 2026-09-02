@@ -45,7 +45,11 @@ class TeacherLinksAndCountryFieldsTest extends TestCase
     public function test_user_resource_form_has_city_and_country_fields(): void
     {
         $admin = User::factory()->create(['role' => Roles::ADMIN]);
-        $html = $this->actingAs($admin)->get('/admin/users/create')->assertSuccessful()->getContent();
+        $student = User::factory()->create();
+        $html = $this->actingAs($admin)
+            ->get('/admin/users/'.$student->id.'/edit')
+            ->assertSuccessful()
+            ->getContent();
         $this->assertStringContainsString('name="city"', $html);
         $this->assertStringContainsString('name="country"', $html);
         $this->assertStringContainsString('Страна', $html);
@@ -55,6 +59,11 @@ class TeacherLinksAndCountryFieldsTest extends TestCase
     {
         $this->assertSame('Швейцария', PhoneCountrySuggest::fromPhone('+41 79 123 45 67'));
         $this->assertSame('Латвия', PhoneCountrySuggest::fromPhone('003712345678'));
+        $this->assertSame('Украина', PhoneCountrySuggest::fromPhone('+380501234567'));
+        // Российский транк «8» + 9xx → Россия; сотни РФ-учеников против
+        // единиц швейцарцев, ложных срабатываний нет.
+        $this->assertSame('Россия', PhoneCountrySuggest::fromPhone('8 913 123 45 67'));
+        // +7 Россия/Казахстан неоднозначен — не подсказываем.
         $this->assertNull(PhoneCountrySuggest::fromPhone('+7 913 123 45 67'));
         $this->assertNull(PhoneCountrySuggest::fromPhone(null));
     }
