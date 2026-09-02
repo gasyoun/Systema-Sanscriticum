@@ -42,4 +42,13 @@ _Created: 02-09-2026 · Last updated: 02-09-2026_
 | I3 | Linked-user share | **Auto link-invite on the first unlinked DM** (`SupportDmLinkInvite`, flag `support_dm_link_invite` ON for both accounts) + weekly «unlinked contacts with ≥2 DMs» report for hand-linking; **no auto-match by phone/username** | A wrong match would answer one student with another's balance |
 | I4 | KPI home | **One report builder** (`SupportParityReportBuilder` pattern) feeding `support:shadow-report`, the weekly Telegram digest (`support_auto_reply_weekly_report`) and the Filament `telegram-support-analytics` page; every metric reported next to its mining funnel | FINDINGS §635; humans read the digest, agents read the command |
 
+## Round 4 — verification bar (02-09-2026)
+
+| # | Fork | Ruling | Rationale |
+|---|---|---|---|
+| V1 | Shadow → live gate per category | **≥7 days shadow, ≥20 would-send events, curator-reviewed precision ≥95 %, then a human flips the env flag** (agent produces the shadow report + proposed flag line; the flip is recorded in GTD). A/B/C facts, homework status, schedule changes and the clarifying question each pass separately | Same bar H3799 used for F; R9/R10 keep flips human |
+| V2 | Proof per deliverable | **Feature test per resolver/lane on SQLite with `Carbon::setTestNow` + an artisan smoke per new integration + full suite green before each PR.** Retrieval → `knowledge:eval`; local generation → smoke pinging `/api/tags` + one generation; SLA → time-travelled test; clarifier → two-turn test; balance/access resolvers → money/access tests per `/money-pr-land` | 31-08 incident: eight green tests on the wrong half of a contract |
+| V3 | Retrieval acceptance | **A fresh 100Q eval set mined from September traffic** via the existing `faq:eval-set-build` pipeline over `telegram_support_messages` (never the ORS-FAQ `ors_faq/dialogs/` store), PII-masked before commit, used **alongside** the 80Q set. Default metrics kept (default, not separately ruled): recall@5 ≥ 83 % and MRR ≥ 0.713 on 80Q, hybrid ≥ BM25 on the fresh set, floors re-derived by `FaqRagScoreFloor`, p95 latency ≤ 2 s via tunnel, `NullEmbeddingProvider` degrades to BM25 with a log line when the tunnel is down | Non-default ruling: guards against overfitting to the 31-08 set; the mining funnel is reported next to the metric |
+| V4 | Precision review cadence | **Weekly**: agent builds a 30-sample sheet per live category; a curator marks correct/incorrect in the Filament queue page (I1); per-category kill-switch (`live_categories` env list) when < 95 %; two consecutive misses remove the category until re-shadowed | No new UI; kill-switch already exists for F |
+
 _Dr. Mārcis Gasūns_
