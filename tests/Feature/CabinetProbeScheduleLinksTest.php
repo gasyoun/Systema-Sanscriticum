@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
@@ -61,8 +62,8 @@ class CabinetProbeScheduleLinksTest extends TestCase
         $this->artisan('cabinet:probe')->assertSuccessful();
 
         // Один звонок кураторам на курс (дедуп внутри нотификатора).
-        Queue::assertPushed(\App\Jobs\SendTelegramChatMessageJob::class, 1);
-        Queue::assertPushed(\App\Jobs\SendTelegramChatMessageJob::class, fn ($job) => $job->chatId === '-100curators'
+        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
+        Queue::assertPushed(SendTelegramChatMessageJob::class, fn ($job) => $job->chatId === '-100curators'
             && str_contains($job->text, 'Курс без ссылок')
             && str_contains($job->text, 'Ссылка Zoom'));
     }
@@ -133,6 +134,6 @@ class CabinetProbeScheduleLinksTest extends TestCase
         $this->artisan('cabinet:probe')->assertSuccessful();
         $this->artisan('cabinet:probe')->assertSuccessful();
 
-        Queue::assertPushed(\App\Jobs\SendTelegramChatMessageJob::class, 1);
+        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
     }
 }
