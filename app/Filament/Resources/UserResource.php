@@ -15,6 +15,7 @@ use App\Services\Prana\PranaService;
 use App\Services\StuckStudentsReport;
 use App\Support\CourseNoteBlockParser;
 use App\Support\Impersonation;
+use App\Support\PhoneCountrySuggest;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Carbon\Carbon;
@@ -136,7 +137,20 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('phone')
                             ->label('Телефон')
                             ->tel()
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            ->afterStateUpdated(function (?string $state, Forms\Set $set, Forms\Get $get): void {
+                                // H3909 (MG 02-09-2026): страна предлагается из
+                                // кода телефона, но только если поле пусто —
+                                // вписанное руками не перетирается.
+                                if (blank($state) || filled($get('country'))) {
+                                    return;
+                                }
+
+                                $country = PhoneCountrySuggest::fromPhone($state);
+                                if ($country !== null) {
+                                    $set('country', $country);
+                                }
+                            }),
 
                         // H3909 — спрашиваем у каждого ученика (MG 02-09-2026):
                         // по стране куратор понимает, что платить придётся

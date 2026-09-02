@@ -8,8 +8,8 @@ use App\Filament\Pages\PaypalLinksBoard;
 use App\Models\Course;
 use App\Models\Tariff;
 use App\Models\User;
+use App\Support\PhoneCountrySuggest;
 use App\Support\Roles;
-use Filament\Forms\Form;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -49,5 +49,13 @@ class TeacherLinksAndCountryFieldsTest extends TestCase
         $this->assertStringContainsString('name="city"', $html);
         $this->assertStringContainsString('name="country"', $html);
         $this->assertStringContainsString('Страна', $html);
+    }
+
+    public function test_country_is_proposed_from_phone_code(): void
+    {
+        $this->assertSame('Швейцария', PhoneCountrySuggest::fromPhone('+41 79 123 45 67'));
+        $this->assertSame('Латвия', PhoneCountrySuggest::fromPhone('003712345678'));
+        $this->assertNull(PhoneCountrySuggest::fromPhone('+7 913 123 45 67'));
+        $this->assertNull(PhoneCountrySuggest::fromPhone(null));
     }
 }
