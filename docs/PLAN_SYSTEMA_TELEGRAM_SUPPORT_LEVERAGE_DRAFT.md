@@ -33,4 +33,13 @@ _Created: 02-09-2026 · Last updated: 02-09-2026_
 | A5 | SLA / escalation | **15-min working-hours timer → curator ping; 60 min → second curator; quiet hours 22–09 MSK paused.** Scheduler job over open `SupportConversation` rows with no outbound; pings to curators' own Telegram via the digest bot under `TelegramSendGuard`; no student-facing SLA message | Reuses `SupportFollowUpService` + digest routing; meets S1's ≤15-min target |
 | A6 | Clarifying-question state (S5) | **Slot on `SupportConversation`** (`pending_slot`, `pending_slot_expires_at`, nullable), one question max, expires after 6 h; the next inbound fills the slot and re-runs the same fact resolver; second miss = hint to curator. Shadow first: logged as `dm_shadow_would_ask` before ever being sent | Two nullable columns, no new table; same ceiling as the student stale window |
 
+## Round 3 — implementation & tech (02-09-2026)
+
+| # | Fork | Ruling | Rationale |
+|---|---|---|---|
+| I1 | One-tap draft delivery | **Both**: the existing inline send button (`queueAiReply` via `SupportHintSendButton`) extended to every hint type (fact, template, LLM, D/E deterministic) **and** a Filament admin queue page (pending drafts with Send / Edit / Skip) | Non-default ruling: Telegram button is the fast path, the Filament queue gives editing; both send through `TelegramSendGuard`; daily cap `support_ai_daily_cap` applies to both |
+| I2 | Fact-resolver scope (wave 1, linked users) | **Eight resolvers**: next class time, class link, latest recording (existing A/B/C) + homework status (`HomeworkSubmission`), payment balance (`Payment` + `Tariff::calculateFinalPriceForUser`), access state (`Group` membership + `Lesson::isUnlockedBy`), certificate status (DomPDF certificate records), schedule changes (`Schedule` diffs for the student's group). Balance/access/certificate are draft-only (A1); the rest may auto-send after a shadow week | Non-default ruling: full intent coverage in one wave; certificate + schedule-change resolvers are ordered last in the build sequence |
+| I3 | Linked-user share | **Auto link-invite on the first unlinked DM** (`SupportDmLinkInvite`, flag `support_dm_link_invite` ON for both accounts) + weekly «unlinked contacts with ≥2 DMs» report for hand-linking; **no auto-match by phone/username** | A wrong match would answer one student with another's balance |
+| I4 | KPI home | **One report builder** (`SupportParityReportBuilder` pattern) feeding `support:shadow-report`, the weekly Telegram digest (`support_auto_reply_weekly_report`) and the Filament `telegram-support-analytics` page; every metric reported next to its mining funnel | FINDINGS §635; humans read the digest, agents read the command |
+
 _Dr. Mārcis Gasūns_
