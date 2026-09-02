@@ -51,4 +51,15 @@ _Created: 02-09-2026 · Last updated: 02-09-2026_
 | V3 | Retrieval acceptance | **A fresh 100Q eval set mined from September traffic** via the existing `faq:eval-set-build` pipeline over `telegram_support_messages` (never the ORS-FAQ `ors_faq/dialogs/` store), PII-masked before commit, used **alongside** the 80Q set. Default metrics kept (default, not separately ruled): recall@5 ≥ 83 % and MRR ≥ 0.713 on 80Q, hybrid ≥ BM25 on the fresh set, floors re-derived by `FaqRagScoreFloor`, p95 latency ≤ 2 s via tunnel, `NullEmbeddingProvider` degrades to BM25 with a log line when the tunnel is down | Non-default ruling: guards against overfitting to the 31-08 set; the mining funnel is reported next to the metric |
 | V4 | Precision review cadence | **Weekly**: agent builds a 30-sample sheet per live category; a curator marks correct/incorrect in the Filament queue page (I1); per-category kill-switch (`live_categories` env list) when < 95 %; two consecutive misses remove the category until re-shadowed | No new UI; kill-switch already exists for F |
 
+## Round 5 — autonomy contract (02-09-2026)
+
+| # | Fork | Ruling | Rationale |
+|---|---|---|---|
+| C1 | On ambiguity | **Pick the marked default, log it in the handoff's decisions log, continue.** Unlisted forks resolve toward «no student-visible change, flag default OFF, shadow first»; the log row names the alternative | Walk-away safety |
+| C2 | Stop conditions | **Predecessor five + three new**: (1) any send to a student outside the shadow / live-category list; (2) money-contour WRITE; (3) destructive DB op; (4) suite red after two fix attempts; (5) prod deploy smoke fail; (6) tunnel to `.92` down at build time for stage-3/5 work; (7) MadelineProto session error; (8) PII appearing in a committed file | The three additions are the risks this plan introduces |
+| C3 | Commit / PR / merge / deploy authority | **Commit → PR → merge → auto-deploy, no re-ask**; env flags default OFF; money-contour PRs carry the marker + money tests and still merge; live flag flips and stage 6 stay human | Handoff-scoped autonomy + deploy-without-reask |
+| C4 | The fence | **Predecessor fence verbatim + additions**: no tunnel/sshd config changes on `.92`/`.91`; no OpenRouter model swap; no schema change to `telegram_support_messages` beyond additive nullable columns; no writes to `Payment`/`Group`/`Tariff` from any support code | Covers the new surfaces (tunnel, second session, money reads) |
+
+**Interview complete: 24 rulings (S1–S6, A1–A6, I1–I4, V1–V4, C1–C4); 7 non-default (S4, S5, A1, I1, I2, V3 + none in C).** Next: Phase 3 authoring.
+
 _Dr. Mārcis Gasūns_
