@@ -135,7 +135,7 @@ class RemindZapisiClassesTest extends TestCase
         Queue::fake();
         $this->enable();
 
-        $course = \App\Models\Course::create(['title' => 'Хинди 2026', 'zoom_link' => 'https://zoom.us/j/course-link']);
+        $course = \App\Models\Course::create(['title' => 'Хинди 2026', 'slug' => 'hindi-2026', 'zoom_link' => 'https://zoom.us/j/course-link']);
         $group = Group::create(['name' => 'Группа 1', 'telegram_chat_id' => '-100']);
         Schedule::create([
             'title' => 'Грамматика',
@@ -195,6 +195,7 @@ class RemindZapisiClassesTest extends TestCase
         $group = Group::create(['name' => 'G', 'telegram_chat_id' => '-100']);
         $schedule = Schedule::create([
             'title' => 'X', 'start' => now()->addMinutes(10), 'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/reschedule',
         ]);
 
         $this->artisan('zapisi:remind-classes')->assertSuccessful();
