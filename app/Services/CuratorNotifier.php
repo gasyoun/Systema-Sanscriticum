@@ -18,6 +18,7 @@ use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Информативные уведомления кураторам в общий Telegram-чат по всем
@@ -511,6 +512,37 @@ class CuratorNotifier
             '',
             'Оплата ушла на новый аккаунт — если это один человек, слейте вручную.',
             $this->adminLink($newUser),
+        ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Проба cabinet:probe нашла будущие занятия курса с TG-чатом группы, у
+     * которых на всех трёх уровнях fallback-цепочки нет ссылки подключения
+     * (инцидент 02-09-2026: курсы 401/399 — серии без ссылок, напоминание
+     * ушло «по ссылке:» без самой ссылки). Ссылку заполняет тот, кто ведёт
+     * курс (Настя/Иван) — их зовём напрямую, а не через мягкий канал админа.
+     *
+     * Дедуп: проба ходит каждые 15 минут — куратору курс звонит максимум
+     * раз в сутки на курс, пока ссылка не заполнена (24h cache-клейм).
+     */
+    public function scheduleLinkMissing(Course $course, int $count, string $nearest): void
+    {
+        $key = 'curator:schedule-link-missing:'.$course->id;
+        if (! Cache::add($key, now()->toIso8601String(), now()->addDay())) {
+            return; // уже звонили за последние 24 часа
+        }
+
+        $lines = [
+            '🔗 <b>У занятий курса нет ссылки Zoom</b>',
+            '',
+            $this->courseLine($course),
+            'Занятий в ближайшие 2 недели: <b>'.$count.'</b>',
+            'Ближайшее: <b>'.$nearest.'</b> (МСК)',
+            '',
+            'Напоминание в TG-чат уйдёт без ссылки или не уйдёт вовсе.',
+            'Заполните ссылку: админка → курс → «Ссылка Zoom» (или у каждого занятия). После заполнения сообщите администратору, что ссылка на месте.',
         ];
 
         $this->dispatchToCurators($this->join($lines));

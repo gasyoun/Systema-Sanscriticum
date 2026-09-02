@@ -102,6 +102,19 @@ return [
     'check_homework_upload' => (bool) env('CABINET_PROBE_CHECK_HOMEWORK_UPLOAD', true),
 
     /*
+     * 02-09-2026 инцидент schedule 1620 (курсы 401/399): серии занятий нового
+     * учебного года сгенерированы без ссылок, и в TG-чат ушло напоминание
+     * «…по ссылке:» без самой ссылки. Кодовый guard (skip-unmarked в
+     * zapisi:remind-classes) теперь не отправляет сломанное напоминание, но
+     * молча: без этой проверки пустота всплывала бы только на живом занятии.
+     * Проба ищет БУДУЩИЕ занятия с группой в TG-чате, у которых на всех трёх
+     * уровнях fallback-цепочки (zoom_join_url → link → course.zoom_link) пусто.
+     * Soft (не outage): у админа есть время заполнить ссылку до занятия.
+     */
+    'check_schedule_links' => (bool) env('CABINET_PROBE_CHECK_SCHEDULE_LINKS', true),
+    'schedule_links_horizon_days' => (int) env('CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS', 14),
+
+    /*
      | H3803: «прод перестал получать код» — отказ, который не видно.
      |
      | 31-08-2026 протух PAT, вшитый в URL `origin`; `git pull` начал отдавать

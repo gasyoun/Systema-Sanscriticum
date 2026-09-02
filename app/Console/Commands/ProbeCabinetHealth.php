@@ -9,8 +9,10 @@ use App\Models\Course;
 use App\Models\HomeworkComment;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
+use App\Models\Schedule;
 use App\Models\User;
 use App\Services\HomeworkService;
+use App\Services\CuratorNotifier;
 use App\Support\Deploy\DeployDriftInspector;
 use App\Support\Roles;
 use App\Support\ServerGuards\CabinetProbeAlertState;
@@ -110,6 +112,7 @@ class ProbeCabinetHealth extends Command
             $failures = array_merge($failures, $this->probeDeployDrift());
             $failures = array_merge($failures, $this->probeServerGuards());
             $failures = array_merge($failures, $this->probeOutboundPaymentTls());
+            $failures = array_merge($failures, $this->probeScheduleLinks());
         } catch (Throwable $e) {
             $failures[] = ['message' => 'probe crashed: '.$e->getMessage(), 'severity' => 'critical'];
             Log::error('cabinet:probe crashed', ['error' => $e->getMessage()]);
@@ -506,6 +509,70 @@ class ProbeCabinetHealth extends Command
         }
 
         return [];
+    }
+
+    /**
+     * Будущие занятия без ссылки-подключения (инцидент 02-09-2026, schedule
+     * 1620: курс 401 + найденная тем же переписом мина курс 399 — серии
+     * нового учебного года сгенерированы без ссылок, и в TG-чат ушло
+     * напоминание «…по ссылке:» без самой ссылки). Кодовый guard теперь
+     * молча НЕ отправляет напоминание без ссылки — эта проверка делает
+     * пустоту громкой ДО занятия, пока у админа есть время её заполнить.
+     *
+     * Fallback-цепочка та же, что в zapisi:remind-classes / classes:post-group-link:
+     * zoom_join_url → link → course.zoom_link. Soft: не outage, data-gap.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeScheduleLinks(): array
+    {
+        if (! config('cabinet_probe.check_schedule_links', true)) {
+            return [];
+        }
+
+        $horizon = max(1, (int) config('cabinet_probe.schedule_links_horizon_days', 14));
+
+        $missing = Schedule::query()
+            ->with(['group', 'course'])
+            ->whereNull('zoom_join_url')
+            ->whereNull('link')
+            ->whereNotNull('group_id')
+            ->whereBetween('start', [now(), now()->addDays($horizon)])
+            ->orderBy('start')
+            ->get()
+            ->filter(fn (Schedule $s) => empty($s->group?->telegram_chat_id) === false
+                && empty($s->course?->zoom_link));
+
+        if ($missing->isEmpty()) {
+            return [];
+        }
+
+        $byCourse = $missing->groupBy(fn (Schedule $s) => $s->course_id === null ? 'group:'.$s->group_id : 'course:'.$s->course_id);
+        $lines = [];
+        foreach ($byCourse as $rows) {
+            /** @var Schedule $first */
+            $first = $rows->first();
+            $label = $first->course->title ?? ($first->group->name ?? '?');
+            $nearest = $first->start->format('d-m H:i');
+            $lines[] = sprintf('%s: %d занятие(й) без ссылки, ближайшее %s', $label, $rows->count(), $nearest);
+
+            // Ссылку заполняет куратор курса (Настя/Иван), а не админ — зовём
+            // их напрямую через общий curator-чат (дедуп 24h на курс внутри
+            // нотификатора). --dry/--no-alert и не-прод не звонят.
+            if ($first->course !== null && ! $this->option('dry') && ! $this->option('no-alert')
+                && config('app.env') === 'production') {
+                app(CuratorNotifier::class)->scheduleLinkMissing($first->course, $rows->count(), $nearest);
+            }
+        }
+
+        return [[
+            'message' => sprintf(
+                'schedule-links: %d буд. занятие(й) с TG-чатом без ссылки (zoom_join_url/link/course.zoom_link пусты) — напоминание уйдёт без ссылки или не уйдёт вовсе: %s',
+                $missing->count(),
+                implode('; ', array_slice($lines, 0, 5)),
+            ),
+            'severity' => 'soft',
+        ]];
     }
 
     /**
