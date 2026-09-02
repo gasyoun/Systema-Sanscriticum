@@ -5,9 +5,28 @@
         форма самообслуживания покажет фиксированную сумму и примет уведомление об оплате.
     </p>
 
+    @if (count($this->groups) > 1)
+        <nav class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 mb-4">
+            <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Оглавление</h2>
+            <ul class="space-y-1 text-sm">
+                @foreach ($this->groups as $group)
+                    <li>
+                        <a href="#{{ $group['anchor'] }}"
+                           class="font-semibold text-primary-600 dark:text-primary-400 hover:underline">
+                            {{ $group['course']->title }}
+                        </a>
+                        @if ($group['start_date'])
+                            <span class="text-xs text-gray-400 dark:text-gray-500">— старт {{ $group['start_date'] }}</span>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        </nav>
+    @endif
+
     <div class="space-y-4">
         @forelse ($this->groups as $group)
-            <div class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <div id="{{ $group['anchor'] }}" class="fi-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 scroll-mt-24">
                 <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
                     <h3 class="text-base font-bold text-gray-900 dark:text-white">
                         {{ $group['course']->title }}

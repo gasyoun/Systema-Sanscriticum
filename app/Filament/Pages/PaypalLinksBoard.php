@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Models\Course;
+use App\Models\Schedule;
 use App\Models\Tariff;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Pages\Page;
+use Illuminate\Support\Carbon;
 
 /**
  * Доска «Ссылки PayPal» (MG 02-09-2026): для каждой живой или предстоящей
@@ -16,9 +18,17 @@ use Filament\Pages\Page;
  * self-serve формы по каждому активному тарифу с фиксированной иностранной
  * ценой (EUR/USD из tariff_foreign_prices). Куратор копирует ссылку для
  * ученика одним кликом, не глядя в базу.
+ *
+ * MG 02-09-2026: курсы, стартовавшие до 01-07-2026 (дата = самая ранняя
+ * Schedule.start курса/его групп), на доску не попадают; курс без занятий
+ * в расписании остаётся, чтобы новые ещё-не-расписанные курсы не терялись.
+ * Сверху страницы — оглавление якорями на секции курсов.
  */
-class PaypalLinksBoard extends Page
+final class PaypalLinksBoard extends Page
 {
+    /** Курсы со стартом раньше этой даты на доске не показываются. */
+    public const SHOW_FROM = '2026-07-01';
+
     protected static ?string $navigationIcon = 'heroicon-o-link';
 
     protected static ?string $navigationLabel = 'Ссылки PayPal';
@@ -66,6 +76,11 @@ class PaypalLinksBoard extends Page
 
         $groups = [];
         foreach ($courses as $course) {
+            $startDate = $this->courseStartDate($course);
+            if ($startDate !== null && $startDate->lt(Carbon::parse(self::SHOW_FROM))) {
+                continue;
+            }
+
             $tariffRows = [];
             $totalEur = 0.0;
             $totalUsd = 0.0;
@@ -99,6 +114,8 @@ class PaypalLinksBoard extends Page
 
             $groups[] = [
                 'course' => $course,
+                'anchor' => 'course-'.($course->slug ?? $course->id),
+                'start_date' => $startDate?->isoFormat('DD MMMM YYYY'),
                 'url' => $appUrl.'/course/'.$course->slug,
                 'tariffs' => $tariffRows,
                 'total_eur' => $hasTotal && $totalEur > 0 ? number_format($totalEur, 0, '.', ' ') : null,
@@ -107,6 +124,22 @@ class PaypalLinksBoard extends Page
         }
 
         return $groups;
+    }
+
+    /** Дата старта курса = самая ранняя Schedule.start (напрямую или через группы); null — расписания нет. */
+    private function courseStartDate(Course $course): ?Carbon
+    {
+        $groupIds = $course->groups()->pluck('groups.id');
+
+        return Schedule::query()
+            ->where(function ($q) use ($course, $groupIds) {
+                $q->where('course_id', $course->id);
+                if ($groupIds->isNotEmpty()) {
+                    $q->orWhereIn('group_id', $groupIds);
+                }
+            })
+            ->orderBy('start')
+            ->value('start');
     }
 
     private function foreignPrice(Tariff $tariff, string $currency): ?string
