@@ -1,1 +1,0 @@
-- 02-09-2026: Telegram-самообслуживание кабинета документировано: RUNBOOK_TELEGRAM_CABINET_LOGIN_2026-08-28.md + раздел /кабинет (флаг ON в проде, щиты, group-pointer), cabinet-bot.md + команды бота, STUDENT_CABINET_GUIDE_RU.md + шаг самосоздания в «Войти» и FAQ (OxAlpha z-ai/glm-5.3-flash).

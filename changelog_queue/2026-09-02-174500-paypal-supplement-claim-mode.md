@@ -1,8 +1,0 @@
-# PayPal-доплата €22/$26: режим доплаты на claim-форме, без нового тарифа (OxAlpha z-ai/glm-5.3-flash, 02-09-2026)
-
-Режим доплаты (H3990, рулинг MG 02-09-2026: разовая акция, отдельный тариф НЕ заводим):
-
-- **Новый URL** [`/paypal/{tariff}/doplata`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php) (`paypal.claim.supplement`) — та же claim-форма с фиксированной доплатой €22/$26 (правило округления рулинга 02-09: 2 000 ₽ → €22/$26), кнопка `https://www.paypal.com/paypalme/gasuns/22` с предзаполненной суммой — студенту нечего считать.
-- **Проводка (money-contour):** сумма сверяется с €22/$26 (допуск 0.5, иначе ValidationException — «пол-блока по цене доплаты» закрыть нельзя); открытый счёт-доплата (pending, 2 000 ₽, этот user+course) помечается paid **без model-событий** (`Payment::withoutEvents` — fireOnPaid по строке с неканоническим tariff-ключом выдал бы доступ/энролл повторно); никакой новой строки полной цены блока не создаётся. Счёта нет → pending-строка доплаты 2 000 ₽, никогда не trusted-paid, доступ не открывается. Сверка выборочная пост-фактум — тот же уровень доверия, что и trusted-заявки рулинга 22-08.
-- **[PaypalClaimController](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PaypalClaimController.php)**: `showSupplement()` + ветка `storeSupplement()` в `store()` (гейт по `supplement_mode`); обычная форма без флага работает ровно как раньше (пин-тест).
-- Тесты: [`PaypalSupplementClaimTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/PaypalSupplementClaimTest.php) — форма/цена/ссылка, отказ чужой суммы, закрытие инвойса без дубля, pending-фолбэк, инвариант обычной формы. Регрессия PaypalClaimTest + BankClaimTest + PaypalLinksBoardTest: 36 passed.
