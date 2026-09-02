@@ -46,13 +46,13 @@ class TeacherLinksAndCountryFieldsTest extends TestCase
     {
         $admin = User::factory()->create(['role' => Roles::ADMIN]);
         $student = User::factory()->create();
-        $html = $this->actingAs($admin)
+        // Filament v3 рендерит поля без name-атрибута (wire:model + snapshot);
+        // присутствие полей проверяем по лейблам.
+        $this->actingAs($admin)
             ->get('/admin/users/'.$student->id.'/edit')
             ->assertSuccessful()
-            ->getContent();
-        $this->assertStringContainsString('name="city"', $html);
-        $this->assertStringContainsString('name="country"', $html);
-        $this->assertStringContainsString('Страна', $html);
+            ->assertSee('Город', false)
+            ->assertSee('Страна', false);
     }
 
     public function test_country_is_proposed_from_phone_code(): void
