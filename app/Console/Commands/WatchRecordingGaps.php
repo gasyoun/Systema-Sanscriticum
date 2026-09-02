@@ -226,7 +226,7 @@ class WatchRecordingGaps extends Command
 
     /**
      * @param  list<array{schedule_id: int, lesson_date: string, start: string, course_id: int, course: string, group_id: ?int, group: string, chat_id: string, reason: string}>  $gaps
-     * @param  array{reachable: bool, skipped: bool, id:?string, status:?string, started_at:?string, error_class:?string, note:?string}  $n8n
+     * @param  array{reachable: bool, skipped: bool, id:?string, status:?string, started_at:?string, error_class:?string, note:?string, webhook_token:?string}  $n8n
      * @param  list<array{id: string, started_at: ?string, last_node: ?string, safe: bool, superseded: bool, retried_before: bool, error_class: ?string, action: string}>  $retryItems
      */
     private function buildTelegram(array $gaps, array $n8n, CarbonImmutable $from, CarbonImmutable $until, array $retryItems = []): string
@@ -273,7 +273,7 @@ class WatchRecordingGaps extends Command
     }
 
     /**
-     * @param  array{reachable: bool, skipped: bool, id:?string, status:?string, started_at:?string, error_class:?string, note:?string}  $n8n
+     * @param  array{reachable: bool, skipped: bool, id:?string, status:?string, started_at:?string, error_class:?string, note:?string, webhook_token:?string}  $n8n
      */
     private function n8nLine(array $n8n): string
     {
@@ -295,7 +295,28 @@ class WatchRecordingGaps extends Command
             $parts[] = 'started '.$n8n['started_at'];
         }
 
-        return implode(' · ', $parts);
+        $line = implode(' · ', $parts);
+
+        // H3952: a fresh-link failure used to be indistinguishable from «вебхук не пришёл»
+        // — the run exited green and every diagnostic pointed at a missing webhook. The
+        // workflow now stamps its verdict into the thrown error and this line names it,
+        // with the webhook-token HEAD as the corroborating evidence.
+        $verdict = N8nZoomExecutionProbe::verdictFor($n8n['error_class'] ?? null);
+        if ($verdict !== null) {
+            $line .= "\n".'↳ вердикт: '.$verdict;
+        }
+
+        $token = $n8n['webhook_token'] ?? null;
+        if ($token !== null) {
+            $line .= "\n".'↳ вебхук-токен: '.match ($token) {
+                'alive' => 'ЖИВ (HEAD 2xx/3xx) — запись есть в облаке, значит это сбой credential/fetch, а не пропавший вебхук',
+                'dead' => 'мёртв — за пределами ~24 ч окна, свежую ссылку брать через per-account fresh-link',
+                'absent' => 'в прогоне нет подписанной ссылки',
+                default => $token,
+            };
+        }
+
+        return $line;
     }
 
     /**
