@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Filament\Pages\PaypalLinksBoard;
-use App\Filament\Resources\UserResource;
 use App\Models\Course;
 use App\Models\Tariff;
 use App\Models\User;
@@ -45,12 +44,10 @@ class TeacherLinksAndCountryFieldsTest extends TestCase
 
     public function test_user_resource_form_has_city_and_country_fields(): void
     {
-        $form = UserResource::form(
-            Form::make()->model(User::class)
-        );
-        $json = json_encode($form->getComponents(), JSON_UNESCAPED_UNICODE);
-        $this->assertStringContainsString('"city"', $json);
-        $this->assertStringContainsString('"country"', $json);
-        $this->assertStringContainsString('Страна', $json);
+        $admin = User::factory()->create(['role' => Roles::ADMIN]);
+        $html = $this->actingAs($admin)->get('/admin/users/create')->assertSuccessful()->getContent();
+        $this->assertStringContainsString('name="city"', $html);
+        $this->assertStringContainsString('name="country"', $html);
+        $this->assertStringContainsString('Страна', $html);
     }
 }
