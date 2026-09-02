@@ -48,9 +48,7 @@
                                 $remaining = max(0, $item->min_payers - (int) $item->votes_count);
                                 $showRemaining = ! $met && $remaining <= 4;
                                 $paymentOpen = $item->status === \App\Models\CourseWaitlistItem::STATUS_PAYMENT_OPEN;
-                                $teacherUrl = $item->teacher_name
-                                    ? '/online/prepodavatel/'.App\Support\ShopCatalogUrl::encodeWords($item->teacher_name)
-                                    : null;
+                                $teacherUrl = $itemTeacherUrls[$item->getKey()] ?? null;
                                 // Название курса кликабельно всегда: привязанный
                                 // курс → страница курса; без привязки → поиск каталога.
                                 $titleUrl = $item->course && $item->course->is_visible

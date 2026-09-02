@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Course;
 use App\Models\CourseWaitlistItem;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -98,6 +99,37 @@ class VitrinaWaitlistPageTest extends TestCase
             ->assertSee('Мегхадута Калидасы</a>', false);
     }
 
+    public function test_teacher_links_use_canonical_full_name_and_short_facet_resolves(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        // teacher_name в waitlist — короткая форма; в teachers — полное ФИО.
+        $teacher = Teacher::create(['name' => 'Костина Екатерина Александровна']);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-hindi-teacher',
+            'course_title' => 'Начальный хинди (гр. 6)',
+            'teacher_name' => 'Екатерина Костина',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2027-09-15',
+        ]);
+
+        // Витрина: ссылка ведёт на каноническое ФИО, а не на короткую форму.
+        $this->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee('/online/prepodavatel/Костина-Екатерина-Александровна', false);
+
+        // Фильтр каталога: короткая форма (как у MG в чате) → 200, не 404.
+        $this->get('/online/prepodavatel/Екатерина-Костина')->assertOk();
+        // Полная форма тоже работает.
+        $this->get('/online/prepodavatel/Костина-Екатерина-Александровна')->assertOk();
+        // Порядок слов неважен.
+        $this->get('/online/prepodavatel/Костина-Екатерина')->assertOk();
+        // Несуществующий преподаватель — 404 как раньше.
+        $this->get('/online/prepodavatel/Никто-Незвонил')->assertNotFound();
+
+        unset($teacher);
+    }
+
     public function test_flag_off_aborts_404(): void
     {
         config(['features.waitlist_voting' => false]);
@@ -108,6 +140,7 @@ class VitrinaWaitlistPageTest extends TestCase
     public function test_flag_on_renders_season_sections_and_vote_state(): void
     {
         config(['features.waitlist_voting' => true]);
+        Teacher::create(['name' => 'Гасунс Марцис Юрьевич']);
         $item = CourseWaitlistItem::create([
             'slug' => 'zhdun-bueler',
             'course_title' => 'Руководство по Бюлеру',

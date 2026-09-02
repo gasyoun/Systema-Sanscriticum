@@ -36,6 +36,40 @@ class Teacher extends Model
     }
 
     /**
+     * Имя преподавателя по неточной форме (MG 02-09-2026): «Екатерина Костина»
+     * → «Костина Екатерина Александровна». Точное совпадение приоритетно, иначе
+     * word-set матч: слова запроса должны покрыть ≥2 слова ФИО (фамилия+имя).
+     * null — не нашлось (вызывающий решает 404).
+     */
+    public static function resolveByName(string $query): ?self
+    {
+        $query = trim(preg_replace('/\s+/u', ' ', $query) ?? '');
+
+        if ($query === '') {
+            return null;
+        }
+
+        $exact = self::where('name', $query)->first();
+        if ($exact !== null) {
+            return $exact;
+        }
+
+        $words = collect(explode(' ', mb_strtolower($query)))
+            ->filter(fn ($w) => mb_strlen($w) >= 3)->values();
+
+        if ($words->isEmpty()) {
+            return null;
+        }
+
+        return self::query()->get()
+            ->first(function (self $t) use ($words) {
+                $nameWords = collect(explode(' ', mb_strtolower($t->name)));
+
+                return $words->filter(fn ($w) => $nameWords->contains(fn ($n) => str_starts_with($n, $w)))->count() >= 2;
+            });
+    }
+
+    /**
      * Все курсы преподавателя (основные + со-преподаваемые), без дублей. Для
      * расчёта ЗП: по каждому берутся эффективные условия Course::salaryTermsFor().
      *

@@ -71,7 +71,9 @@ class ShopController extends Controller
             }
 
             if (isset($parsed['prepodavatel'])) {
-                $teacher = Teacher::where('name', ShopCatalogUrl::decodeWords($parsed['prepodavatel']))->first();
+                // Толерантный резолв (MG 02-09-2026): «Екатерина-Костина» и
+                // «Костина-Екатерина-Александровна» ведут на одного преподавателя.
+                $teacher = Teacher::resolveByName(ShopCatalogUrl::decodeWords($parsed['prepodavatel']));
                 abort_if($teacher === null, 404);
                 $initial['initialTeacherId'] = (string) $teacher->id;
             }
@@ -293,6 +295,17 @@ class ShopController extends Controller
                 ->all()
             : [];
 
+        // Канонические ссылки на преподавателей (MG 02-09-2026): teacher_name в
+        // waitlist-строках — короткая форма («Екатерина Костина»), фильтр каталога
+        // ищет по teachers.name — резолвим в полное ФИО, иначе ссылка 404.
+        $itemTeacherUrls = [];
+        foreach ($items as $item) {
+            $teacher = Teacher::resolveByName($item->teacher_name ?? '');
+            $itemTeacherUrls[$item->getKey()] = $teacher !== null
+                ? '/online/prepodavatel/'.ShopCatalogUrl::encodeWords($teacher->name)
+                : null;
+        }
+
         $page = new LandingPage([
             'title' => 'Список ожидания — набор в новые группы',
             'description' => 'Голосуйте за будущие курсы: наберётся минимум голосов — откроется оплата; нужное число оплат к сроку — группа стартует.',
@@ -315,6 +328,7 @@ class ShopController extends Controller
             'sections' => $sections,
             'items' => $items,
             'votedItemIds' => $votedSlugs,
+            'itemTeacherUrls' => $itemTeacherUrls,
         ]);
     }
 
