@@ -71,6 +71,11 @@
                                     <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-1">
                                         Тариф: {{ $payment->tariff }}
                                     </div>
+                                    @if($payment->payer_note)
+                                        <div class="text-xs text-gray-500 leading-snug mt-1.5">
+                                            {{ $payment->payer_note }}
+                                        </div>
+                                    @endif
                                 </td>
 
                                 {{-- Сумма --}}
