@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Models\Tariff;
 use App\Models\User;
 use App\Support\Roles;
+use Filament\Forms\Form;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -45,7 +46,7 @@ class TeacherLinksAndCountryFieldsTest extends TestCase
     public function test_user_resource_form_has_city_and_country_fields(): void
     {
         $form = UserResource::form(
-            \Filament\Forms\Form::make()->model(User::class)
+            Form::make()->model(User::class)
         );
         $json = json_encode($form->getComponents(), JSON_UNESCAPED_UNICODE);
         $this->assertStringContainsString('"city"', $json);
