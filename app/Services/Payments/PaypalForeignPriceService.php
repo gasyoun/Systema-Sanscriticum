@@ -40,6 +40,7 @@ class PaypalForeignPriceService
      * fall back to the smallest round figure ≥ the computed price (never below).
      */
     private const NICE_CORRIDOR_MIN = 1.03;
+
     private const NICE_CORRIDOR_MAX = 1.06;
 
     public function __construct(private readonly CurrencyRateProvider $rates) {}
