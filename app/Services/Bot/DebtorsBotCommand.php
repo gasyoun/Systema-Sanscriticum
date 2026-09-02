@@ -24,6 +24,8 @@ class DebtorsBotCommand
 
     private const TOP_LIMIT = 5;
 
+    private const HINT_LIMIT = 3;
+
     /**
      * Роли, которым доступна команда — совпадает с гейтом «куратор» из
      * CRM-cockpit (WorkQueue): admin/manager, super_admin проходит всегда.
@@ -66,7 +68,7 @@ class DebtorsBotCommand
             if (! $group) {
                 $this->logUsage($curator, 'dolgi', $arg);
 
-                return "Группа «{$arg}» не найдена.";
+                return $this->unknownGroupReply($arg);
             }
         }
 
@@ -74,6 +76,44 @@ class DebtorsBotCommand
         $this->logUsage($curator, 'dolgi', $group?->name);
 
         return $reply;
+    }
+
+    /** Группа не найдена — подсказываем ближайшие названия (H3912). */
+    private function unknownGroupReply(string $arg): string
+    {
+        $reply = "Группа «{$arg}» не найдена.";
+
+        $hints = $this->nearestGroupNames($arg);
+        if ($hints !== []) {
+            $reply .= "\nПохожие группы: ".implode(', ', array_map(fn (string $name) => "«{$name}»", $hints));
+        }
+
+        return $reply;
+    }
+
+    /**
+     * До HINT_LIMIT самых похожих названий групп (similar_text, нижний порог
+     * отсекает случайный шум). Групп в школе десятки — полный проход дёшев.
+     *
+     * @return array<int, string>
+     */
+    private function nearestGroupNames(string $arg): array
+    {
+        $needle = mb_strtolower(trim($arg));
+        if ($needle === '') {
+            return [];
+        }
+
+        $scored = [];
+        foreach (Group::query()->orderBy('name')->pluck('name') as $name) {
+            similar_text($needle, mb_strtolower((string) $name), $percent);
+            if ($percent >= 40) {
+                $scored[(string) $name] = $percent;
+            }
+        }
+        arsort($scored);
+
+        return array_slice(array_keys($scored), 0, self::HINT_LIMIT);
     }
 
     private function summaryFor(?Group $group): string
@@ -121,15 +161,29 @@ class DebtorsBotCommand
             $amount = (float) ($info['amount'] ?? 0);
 
             if (! isset($byUser[$userId])) {
-                $byUser[$userId] = ['name' => $user->name ?: $user->email, 'amount' => 0.0];
+                $byUser[$userId] = ['name' => $user->name ?: $user->email, 'amount' => 0.0, 'overdue' => 0];
             }
             $byUser[$userId]['amount'] += $amount;
+
+            // Максимальная просрочка по парам студента (H3912): даты блока берём
+            // из referenceBlocks, daysOverdueFor возвращает 0 без даты/в будущем.
+            $overdue = $report->daysOverdueFor((int) $row->course_id, (int) $row->ref_block_number);
+            if ($overdue > $byUser[$userId]['overdue']) {
+                $byUser[$userId]['overdue'] = $overdue;
+            }
         }
 
         $totalAmount = array_sum(array_column($byUser, 'amount'));
         $debtorsCount = count($byUser);
 
-        usort($byUser, fn (array $a, array $b) => $b['amount'] <=> $a['amount']);
+        usort($byUser, function (array $a, array $b) {
+            $byAmount = $b['amount'] <=> $a['amount'];
+            if ($byAmount !== 0) {
+                return $byAmount;
+            }
+
+            return $b['overdue'] <=> $a['overdue'];
+        });
         $top = array_slice($byUser, 0, self::TOP_LIMIT);
 
         $lines = [];
@@ -141,7 +195,8 @@ class DebtorsBotCommand
         foreach ($top as $i => $entry) {
             $n = $i + 1;
             $amount = number_format($entry['amount'], 0, '.', ' ').' ₽';
-            $lines[] = "{$n}. {$entry['name']} — {$amount}";
+            $overdue = DebtorsReport::formatOverdue((int) $entry['overdue']);
+            $lines[] = "{$n}. {$entry['name']} — {$amount}".($overdue !== '' ? ", {$overdue}" : '');
         }
         $lines[] = '';
         $lines[] = 'Подробнее: '.config('app.url').'/admin/debtors';

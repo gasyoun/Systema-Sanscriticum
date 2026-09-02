@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Jobs\SendZapisiBotMessageJob;
+use App\Models\Course;
 use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
@@ -135,7 +136,7 @@ class RemindZapisiClassesTest extends TestCase
         Queue::fake();
         $this->enable();
 
-        $course = \App\Models\Course::create(['title' => 'Хинди 2026', 'slug' => 'hindi-2026', 'zoom_link' => 'https://zoom.us/j/course-link']);
+        $course = Course::create(['title' => 'Хинди 2026', 'slug' => 'hindi-2026', 'zoom_link' => 'https://zoom.us/j/course-link']);
         $group = Group::create(['name' => 'Группа 1', 'telegram_chat_id' => '-100']);
         Schedule::create([
             'title' => 'Грамматика',

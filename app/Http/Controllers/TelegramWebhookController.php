@@ -68,6 +68,13 @@ class TelegramWebhookController extends Controller
             // уходит в ветку «неавторизованный» и спамит «привяжите аккаунт».
             $chatType = (string) ($data['message']['chat']['type'] ?? '');
             if (in_array($chatType, ['group', 'supergroup'], true)) {
+                // H3912: куратор-команды (/долги, /группа, /кто) отвечают куратору
+                // прямо в чате «Отдел заботы» — только этот чат, только привязанный
+                // куратор; остальным и в обычных групповых чатах — тишина.
+                if ($this->handleCareChatCuratorCommand($data['message'], $text)) {
+                    return response()->json(['status' => 'ok']);
+                }
+
                 $tag = app(HomeworkTelegramTagService::class);
                 if ($tag->isTagMessage($text)) {
                     $tag->handleIncoming($data['message']);
@@ -454,6 +461,52 @@ class TelegramWebhookController extends Controller
             : app(DebtorsBotCommand::class)->reply($curator, $text);
 
         $this->sendMessage($chatId, $reply);
+    }
+
+    /**
+     * Куратор-команды в групповом чате (H3912): работают ТОЛЬКО в чате
+     * «Отдел заботы» (recording_gap.care_telegram_chat_id — тот же чат,
+     * куда копируются ops-алерты) и только от привязанного куратора
+     * (admin/manager/super_admin). Автор ищется по message.from.id —
+     * chat.id в группе принадлежит чату, а не отправителю. Возврат true
+     * = команда обработана, апдейт дальше не идёт; иначе ветка молча
+     * проваливается в обычную обработку групповых сообщений (теги #ДЗ,
+     * оповещения о посещаемости).
+     */
+    private function handleCareChatCuratorCommand(array $message, string $text): bool
+    {
+        $careChatId = trim((string) config('recording_gap.care_telegram_chat_id', ''));
+        if ($careChatId === '') {
+            return false;
+        }
+
+        $chatId = $message['chat']['id'] ?? null;
+        if ($chatId === null || (string) $chatId !== $careChatId) {
+            return false;
+        }
+
+        if (! app(DebtorsBotCommand::class)->isCommand($text)
+            && ! app(RosterBotCommand::class)->isCommand($text)) {
+            return false;
+        }
+
+        $fromId = $message['from']['id'] ?? null;
+        if ($fromId === null) {
+            return false;
+        }
+
+        $curator = User::query()->where('telegram_id', $fromId)->first();
+        if (! $curator || ! DebtorsBotCommand::isCurator($curator)) {
+            return false;
+        }
+
+        $reply = app(RosterBotCommand::class)->isCommand($text)
+            ? app(RosterBotCommand::class)->reply($curator, $text)
+            : app(DebtorsBotCommand::class)->reply($curator, $text);
+
+        $this->sendMessage($chatId, $reply);
+
+        return true;
     }
 
     // ==========================================
