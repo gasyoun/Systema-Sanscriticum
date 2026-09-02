@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-_Created: 07-05-2026 · Last updated: 01-09-2026_
+_Created: 07-05-2026 · Last updated: 02-09-2026_
 
 **Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru)
 (cabinet, shop, homework, finance, Telegram/VK bots). Org spine still applies;
@@ -46,6 +46,23 @@ audits mark this state explicitly — `CatalogFamilyAudit::CLASS_CURATOR_GATED_S
 Incident 31-08-2026 (H3812/H3820): a command with 8 green tests shipped because all
 eight checked the ACCESS half of the tariff contract and none the SALE half —
 [#2291](https://github.com/gasyoun/Systema-Sanscriticum/pull/2291) reverted it.
+
+**Курс-запись с нулём уроков чинится уроками, а не выдачей чужого доступа.** Тот же
+курс 327 продан 129 раз и не имеет ни одного урока: доступ считается ПО КУРСУ
+(`Lesson::unlockingKeys()` выводит `block_N` из `lessons.block_number`), поэтому пока у
+курса нет своих уроков, купивший не получает ничего. Санкционированное лекарство —
+[`catalog:mirror-recording-lessons {source} {target}`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MirrorRecordingLessons.php)
+(H3823): пишет ТОЛЬКО в `lessons`, по умолчанию сухой прогон, идемпотентна по слоту
+`(block_number, block_half, sort_order)`, отказывается работать, если у цели нет блока,
+который есть у источника. **Сухой прогон обязателен и его вывод обязан совпасть с
+ожиданием до `--apply`.** Запрещённая альтернатива: выдавать купившим курс A доступ к
+урокам курса B — это правка money/access-контура, она идёт только через
+[`/money-pr-land`](https://github.com/gasyoun/claude-config/blob/main/commands/money-pr-land.md),
+а не «заодно». Тарифы и видимость команда не трогает и трогать не должна (инцидент
+31-08-2026 выше). Пин:
+[`MirrorRecordingLessonsTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Catalog/MirrorRecordingLessonsTest.php).
+**Правило синхронности:** меняется список переносимых полей (`MirrorRecordingLessons::CARRIED`)
+⇒ в том же PR обновляются этот абзац и раздел README «Курс-запись».
 
 There is **no manual group assignment**. `PaymentObserver` →
 `Payment::grantAccess()` adds the user to the course `Group`. Tariff keys:

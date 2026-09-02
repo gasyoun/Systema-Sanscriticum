@@ -33,6 +33,11 @@ salary calculation (`seesOwnSalary()`), not the school payroll. Policy:
   referral credit, teacher salary/payouts, finance exports.
 - **Course access:** group grants, `Payment::PAID_STATUSES`, tariff keys
   `full`, `block_N`, `block_N_hH`.
+- **Recording courses with zero lessons:** access is computed per course, so a
+  paid recording course without its own lessons gives the buyer nothing. Fix it
+  with `catalog:mirror-recording-lessons <source> <target>` (dry run by default,
+  writes only to `lessons`; read the CLAUDE.md money-contour section first).
+  Never grant cross-course access instead, and never touch tariffs or visibility.
 - **Webhooks:** Tochka, Telegram, VK, MAX, Zoom. Check signature/fail-policy and
   secret rotation before changing behavior.
 - **Telegram support analytics:** MadelineProto session/login, flood limits,
