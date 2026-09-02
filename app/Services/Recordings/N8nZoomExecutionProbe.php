@@ -14,7 +14,7 @@ use Throwable;
 final class N8nZoomExecutionProbe
 {
     /**
-     * @return array{reachable: bool, skipped: bool, id:?string, status:?string, started_at:?string, error_class:?string, note:?string}
+     * @return array{reachable: bool, skipped: bool, id:?string, status:?string, started_at:?string, error_class:?string, note:?string, webhook_token:?string}
      */
     public function lastLiveZoomExecution(): array
     {
@@ -68,6 +68,7 @@ final class N8nZoomExecutionProbe
                 status: $status !== '' ? $status : null,
                 startedAt: isset($row['startedAt']) ? (string) $row['startedAt'] : null,
                 errorClass: $class,
+                webhookToken: $failed ? $this->webhookTokenState($blob, $timeout) : null,
             );
         } catch (Throwable $e) {
             Log::info('recordings:gap-watch n8n skip-soft', ['error' => $e->getMessage()]);
@@ -76,11 +77,51 @@ final class N8nZoomExecutionProbe
         }
     }
 
+    /**
+     * H3952: the ZOOM 1.4 assertion nodes stamp their verdict into the thrown error, so a
+     * failed execution already carries the credential-vs-webhook answer — read it before
+     * falling back to the generic OpenRouter classes. Marker constants are the contract
+     * with the workflow's «Стоп: …» Code nodes; changing one means changing both.
+     *
+     * @var array<string, string>
+     */
+    private const H3952_MARKERS = [
+        'h3952_credential_fetch_failure' => 'fresh_link_credential',
+        'h3952_webhook_missing' => 'fresh_link_webhook_missing',
+        'h3952_undecidable_3301' => 'fresh_link_undecidable',
+        'h3952_account_unregistered' => 'fresh_link_account_unregistered',
+        'h3952_replay_impossible' => 'fresh_link_replay_impossible',
+    ];
+
+    /**
+     * Human-facing one-liner per H3952 class — what the duty agent should DO, not a label.
+     *
+     * @var array<string, string>
+     */
+    private const H3952_VERDICTS = [
+        'fresh_link_credential' => 'сбой credential/fetch: запись жива, её не видит OAuth-cred аккаунта — чинить cred, запись достать вручную (Play B)',
+        'fresh_link_webhook_missing' => 'вебхук не принёс запись и токен мёртв — класс «записи нет», НЕ сбой credential',
+        'fresh_link_undecidable' => 'Zoom 3301 без живого токена: «чужой аккаунт» и «записи не было» неразличимы — смотреть облако Zoom глазами (Play B)',
+        'fresh_link_account_unregistered' => 'Zoom-аккаунт не в реестре fresh-link — завести cred + строку реестра + пару нод',
+        'fresh_link_replay_impossible' => 'подписанная ссылка истекла, аккаунт вне реестра — свежую ссылку взять неоткуда, доставлять вручную',
+    ];
+
+    public static function verdictFor(?string $class): ?string
+    {
+        return $class === null ? null : (self::H3952_VERDICTS[$class] ?? null);
+    }
+
     public static function classify(?string $blob): string
     {
         $text = mb_strtolower((string) $blob);
         if ($text === '') {
             return 'other';
+        }
+
+        foreach (self::H3952_MARKERS as $marker => $class) {
+            if (str_contains($text, $marker)) {
+                return $class;
+            }
         }
 
         if (str_contains($text, 'more credits')
@@ -100,7 +141,7 @@ final class N8nZoomExecutionProbe
     }
 
     /**
-     * @return array{reachable: bool, skipped: bool, id:?string, status:?string, started_at:?string, error_class:?string, note:?string}
+     * @return array{reachable: bool, skipped: bool, id:?string, status:?string, started_at:?string, error_class:?string, note:?string, webhook_token:?string}
      */
     private function pack(
         bool $reachable = false,
@@ -110,6 +151,7 @@ final class N8nZoomExecutionProbe
         ?string $startedAt = null,
         ?string $errorClass = null,
         ?string $note = null,
+        ?string $webhookToken = null,
     ): array {
         return [
             'reachable' => $reachable,
@@ -119,7 +161,37 @@ final class N8nZoomExecutionProbe
             'started_at' => $startedAt,
             'error_class' => $errorClass,
             'note' => $note,
+            'webhook_token' => $webhookToken,
         ];
+    }
+
+    /**
+     * H3952: the recorded incident's own discriminator — HEAD the signed webhook token URL
+     * carried by the failed execution. A live token proves the recording still exists in
+     * the Zoom cloud, so the failure is a credential/fetch problem rather than a missing
+     * or deleted recording. Never fetches the body; a dead token is the normal outcome
+     * past the ~24 h window, not an error worth surfacing.
+     *
+     * @return 'alive'|'dead'|'absent'|null
+     */
+    private function webhookTokenState(string $blob, int $timeout): ?string
+    {
+        // n8n hands the execution back as JSON, and PHP/JS both escape `/` as `\/` inside
+        // it, so the signed URL never matches a naive pattern — unescape before searching.
+        $flat = str_replace('\\/', '/', $blob);
+        if (! preg_match('~https://[^"\s\\\\]+\?access_token=[^"\s\\\\]+~', $flat, $m)) {
+            return 'absent';
+        }
+
+        try {
+            $res = Http::timeout(min($timeout, 5))->head($m[0]);
+
+            return $res->successful() || $res->redirect() ? 'alive' : 'dead';
+        } catch (Throwable $e) {
+            Log::info('recordings:gap-watch webhook-token HEAD failed', ['error' => $e->getMessage()]);
+
+            return null;
+        }
     }
 
     /**
