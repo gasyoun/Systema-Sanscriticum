@@ -15,6 +15,7 @@ use App\Services\Prana\PranaService;
 use App\Services\StuckStudentsReport;
 use App\Support\CourseNoteBlockParser;
 use App\Support\Impersonation;
+use App\Support\PhoneCountrySuggest;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Carbon\Carbon;
@@ -136,6 +137,31 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('phone')
                             ->label('Телефон')
                             ->tel()
+                            ->maxLength(255)
+                            ->afterStateUpdated(function (?string $state, Forms\Set $set, Forms\Get $get): void {
+                                // H3909 (MG 02-09-2026): страна предлагается из
+                                // кода телефона, но только если поле пусто —
+                                // вписанное руками не перетирается.
+                                if (blank($state) || filled($get('country'))) {
+                                    return;
+                                }
+
+                                $country = PhoneCountrySuggest::fromPhone($state);
+                                if ($country !== null) {
+                                    $set('country', $country);
+                                }
+                            }),
+
+                        // H3909 — спрашиваем у каждого ученика (MG 02-09-2026):
+                        // по стране куратор понимает, что платить придётся
+                        // через PayPal, и переименовывает карточку по правилу
+                        // «Имя, Город, Страна».
+                        Forms\Components\TextInput::make('city')
+                            ->label('Город')
+                            ->maxLength(255),
+
+                        Forms\Components\TextInput::make('country')
+                            ->label('Страна')
                             ->maxLength(255),
 
                         Forms\Components\TextInput::make('password')
@@ -336,6 +362,14 @@ class UserResource extends Resource
                             ->copyable()
                             ->copyMessage('Телефон скопирован')
                             ->placeholder('—'),
+
+                        TextEntry::make('city')
+                            ->label('Город')
+                            ->placeholder('— не спросили —'),
+
+                        TextEntry::make('country')
+                            ->label('Страна')
+                            ->placeholder('— не спросили —'),
 
                         TextEntry::make('global_status')
                             ->label('Статус')

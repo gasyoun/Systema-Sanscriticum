@@ -220,7 +220,9 @@ class TeacherGuideCoverageTest extends TestCase
             }
 
             $urlLower = mb_strtolower($url, 'UTF-8');
-            foreach (['salary', 'salaries', 'payout', 'settlement', 'payment'] as $money) {
+            // 'paypal' — доска «Ссылки PayPal» показывает прайс в EUR/USD: тот же
+            // фенс H2502, что у зарплатных экранов — денежные суммы не фоткаются.
+            foreach (['salary', 'salaries', 'payout', 'settlement', 'payment', 'paypal'] as $money) {
                 if (str_contains($urlLower, $money)) {
                     continue 2;
                 }

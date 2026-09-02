@@ -57,6 +57,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'facebook',
         // --- НОВЫЕ ПОЛЯ ИЗ EXCEL ---
         'phone',
+        'city',      // H3909 — спрашиваем у каждого ученика (MG 02-09-2026)
+        'country',   // H3909 — спрашиваем у каждого ученика (MG 02-09-2026)
         'global_status',
         'note',
         'last_login_at',
