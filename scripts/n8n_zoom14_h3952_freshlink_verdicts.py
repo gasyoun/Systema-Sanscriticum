@@ -80,12 +80,19 @@ def api_key() -> str:
 
 
 def req(method: str, path: str, key: str, body=None):
+    # `path` is always a literal from this file, but pin it anyway: urllib honours
+    # file:// and friends, so refuse anything that is not the local n8n REST base.
+    url = BASE + path
+    if not url.startswith('http://127.0.0.1:5678/api/v1/'):
+        raise ValueError(f'refusing non-n8n URL: {url!r}')
+
     data = json.dumps(body).encode('utf-8') if body is not None else None
-    r = urllib.request.Request(BASE + path, data=data, method=method,
+    r = urllib.request.Request(url, data=data, method=method,
                                headers={'X-N8N-API-KEY': key,
                                         'Content-Type': 'application/json',
                                         'Accept': 'application/json'})
-    with urllib.request.urlopen(r, timeout=60) as resp:
+    opener = urllib.request.build_opener(urllib.request.HTTPHandler)  # http only
+    with opener.open(r, timeout=60) as resp:
         return resp.status, json.loads(resp.read().decode('utf-8'))
 
 
