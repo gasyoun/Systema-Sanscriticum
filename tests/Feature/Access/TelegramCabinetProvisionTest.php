@@ -226,7 +226,37 @@ class TelegramCabinetProvisionTest extends TestCase
     }
 
     /** @test */
-    public function command_is_ignored_in_groups(): void
+    public function command_in_group_gets_dm_pointer_not_an_account(): void
+    {
+        config([
+            'features.telegram_cabinet_login' => true,
+            'features.telegram_cabinet_provision' => true,
+        ]);
+
+        $this->postUpdate($this->webhookMessage(-1001234567890, '/кабинет lena@example.com', 'supergroup'));
+
+        $this->assertSame(0, User::count());
+        $this->assertSame(0, MagicLinkToken::count());
+        $this->assertStringContainsString('в личку', $this->lastBotMessage());
+        $this->assertStringNotContainsString('/tg-login/', $this->lastBotMessage());
+    }
+
+    /** @test */
+    public function command_is_silent_in_groups_when_flag_off(): void
+    {
+        config([
+            'features.telegram_cabinet_login' => true,
+            'features.telegram_cabinet_provision' => false,
+        ]);
+
+        $this->postUpdate($this->webhookMessage(-1001234567890, '/кабинет lena@example.com', 'supergroup'));
+
+        $this->assertSame(0, User::count());
+        $this->assertSame('', $this->lastBotMessage());
+    }
+
+    /** @test */
+    public function command_with_flag_on_creates_account_via_dm_not_group(): void
     {
         config([
             'features.telegram_cabinet_login' => true,
@@ -234,10 +264,13 @@ class TelegramCabinetProvisionTest extends TestCase
             'features.membership_tiered' => false,
         ]);
 
+        // Групповое сообщение с email не должно создать аккаунт и не должно
+        // утечь в AI/личную ветку: группе бот отвечать НЕ обязан (тишина) —
+        // указатель даёт только чистая команда /кабинет.
         $this->postUpdate($this->webhookMessage(-1001234567890, '/кабинет lena@example.com', 'supergroup'));
 
         $this->assertSame(0, User::count());
         $this->assertSame(0, MagicLinkToken::count());
-        $this->assertSame('', $this->lastBotMessage());
+        $this->assertStringNotContainsString('/tg-login/', $this->lastBotMessage());
     }
 }

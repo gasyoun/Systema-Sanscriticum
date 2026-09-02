@@ -51,6 +51,16 @@ class CabinetProvisionBotCommand
     }
 
     /**
+     * Указатель в группе: короткая фраза в личку, БЕЗ email-эха и без ссылок
+     * входа (magic-link в группе увидели бы все участники).
+     */
+    public function groupPointerMessage(): string
+    {
+        return 'Личный кабинет создастся сам — напишите мне в личку командой '
+            .'/кабинет ваш@email.com: '.config('app.telegram_bot_username', 'samskrtamru_bot');
+    }
+
+    /**
      * @return string HTML-сообщение для чата
      */
     public function replyForCommand(int $chatId, ?string $fromUsername, string $text): string

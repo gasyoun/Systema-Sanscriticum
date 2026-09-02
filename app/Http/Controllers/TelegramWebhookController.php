@@ -76,6 +76,17 @@ class TelegramWebhookController extends Controller
                     return response()->json(['status' => 'ok']);
                 }
 
+                // 02-09-2026: /кабинет в группе = только УКАЗАТЕЛЬ в личку, без
+                // аккаунтов и без ссылок входа (magic-link в группе увидели бы
+                // все). Отвечаем короткой фразой и выходим; работает на том же
+                // флаге, что и личное создание, — при OFF группа молчит.
+                if (config('features.telegram_cabinet_provision')
+                    && app(CabinetProvisionBotCommand::class)->isCommand($text)) {
+                    $this->sendMessage($chatId, app(CabinetProvisionBotCommand::class)->groupPointerMessage());
+
+                    return response()->json(['status' => 'ok']);
+                }
+
                 $tag = app(HomeworkTelegramTagService::class);
                 if ($tag->isTagMessage($text)) {
                     $tag->handleIncoming($data['message']);
