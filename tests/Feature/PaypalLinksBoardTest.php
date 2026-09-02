@@ -69,8 +69,11 @@ class PaypalLinksBoardTest extends TestCase
             ->assertDontSee('Завершённый курс уникальный', false);
     }
 
-    public function test_student_cannot_access(): void
+    public function test_curator_can_access_and_student_cannot(): void
     {
+        $curator = User::factory()->create(['role' => Roles::MANAGER]);
+        $this->actingAs($curator)->get('/admin/paypal-links')->assertSuccessful();
+
         $student = User::factory()->create(['role' => null]);
         $this->actingAs($student)->get('/admin/paypal-links')->assertForbidden();
     }
