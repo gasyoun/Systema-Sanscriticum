@@ -28,7 +28,7 @@ class PaypalSupplementClaimTest extends TestCase
 
         config([
             'services.paypal.enabled' => true,
-            'services.paypal.me_link' => 'https://paypal.me/gasuns',
+            'services.paypal.me_link' => 'https://www.paypal.com/paypalme/gasuns',
             'services.admin.email' => 'admin@example.test',
         ]);
     }
@@ -63,7 +63,7 @@ class PaypalSupplementClaimTest extends TestCase
             ->assertSee('Доплата за блок через PayPal')
             ->assertSee('22 €', false)
             ->assertSee('26 $', false)
-            ->assertSee('paypal.me/gasuns/22', false)
+            ->assertSee('https://www.paypal.com/paypalme/gasuns/22', false)
             ->assertSee('supplement_mode', false);
     }
 

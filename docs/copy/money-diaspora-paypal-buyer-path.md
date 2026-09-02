@@ -21,7 +21,7 @@ _Parser residual (same day): DE P2P email sample retune after H2215 ship._
 | Item | Value |
 |---|---|
 | Flag | `PAYPAL_CLAIM_ENABLED=true` |
-| Student pays to | **gasyoun@gmail.com** (`PAYPAL_RECIPIENT`); канонический хэндл **paypal.me/gasuns** (MG 23-08-2026): кнопка `PAYPAL_ME_LINK` (prod `.env` переведен с устаревшего `paypalme/gasyoun`, бэкап `.env.bak.paypalme-gasuns.20260823`), постоянная строка в шаге 1 и QR из шапки claim-страницы — все ведут на gasuns |
+| Student pays to | **gasyoun@gmail.com** (`PAYPAL_RECIPIENT`); канонический хэндл **https://www.paypal.com/paypalme/gasuns** (MG 23-08-2026): кнопка `PAYPAL_ME_LINK` (prod `.env` переведен с устаревшего `paypalme/gasyoun`, бэкап `.env.bak.paypalme-gasuns.20260823`), постоянная строка в шаге 1 и QR из шапки claim-страницы — все ведут на gasuns |
 | Checkout CTA | Visible («Оплатить через PayPal») |
 | Claim form | /paypal/{tariff} — «Уведомление об оплате через PayPal»: triple from/date/amount, optional txn/proof (H2017); валюта по умолчанию EUR; payer = только email; комиссия на отправителе (+пересчет/доплата); валютный прайс блока из services.paypal.foreign_block_prices — рублевую цену не показываем (MG 23-08-2026) |
 | Trust (ruling 22-08-2026) | Заявка **существующего ученика** (вошел в кабинет) сразу `paid` — доступ/финансы немедленно; флаг `PAYPAL_TRUST_EXISTING_STUDENTS` (default ON). Гости с новым email — по-прежнему pending → ручная сверка |
@@ -146,7 +146,7 @@ QR ведет на managed-ссылку PayPal (`paypal.com/qrcodes/managed/d835
 **Прямая ссылка (шаг 1, #2014):** под кнопкой `PAYPAL_ME_LINK` — постоянная
 строка, не зависящая от env:
 
-> Прямая ссылка для перевода: **paypal.me/gasuns**
+> Прямая ссылка для перевода: **https://www.paypal.com/paypalme/gasuns**
 
 На checkout-CTA сырая ссылка сознательно не добавлена: оплата мимо страницы
 заявки выпадает из уведомления и ручной сверки.

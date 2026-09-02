@@ -74,8 +74,8 @@
             @endif
             <p class="mt-3 text-sm text-gray-600">
                 Прямая ссылка для перевода:
-                <a href="{{ $isSupplement ? 'https://paypal.me/gasuns/22' : 'https://paypal.me/gasuns' }}" target="_blank" rel="noopener"
-                   class="font-semibold text-[#0070BA] hover:text-[#005ea6] underline decoration-[#0070BA]/30 hover:decoration-[#0070BA]/60">{{ $isSupplement ? 'paypal.me/gasuns/22' : 'paypal.me/gasuns' }}</a>
+                <a href="{{ $isSupplement ? 'https://www.paypal.com/paypalme/gasuns/22' : 'https://www.paypal.com/paypalme/gasuns' }}" target="_blank" rel="noopener"
+                   class="font-semibold text-[#0070BA] hover:text-[#005ea6] underline decoration-[#0070BA]/30 hover:decoration-[#0070BA]/60">{{ $isSupplement ? 'https://www.paypal.com/paypalme/gasuns/22' : 'https://www.paypal.com/paypalme/gasuns' }}</a>
             </p>
             @if($recipient)
                 <p class="mt-3 text-xs text-gray-500">Получатель PayPal: <span class="font-semibold text-gray-700">{{ $recipient }}</span></p>
