@@ -82,12 +82,12 @@ class RevenueRecognitionService
      * (recognition:attribution-audit) — отчёт обязан уметь сказать по каждой
      * строке, чем она признана.
      *
-     * @return array{shares: array<string, float>, mechanism: string, degenerate: bool}
+     * @return array{shares: array<string, float>, mechanism: string, stamped: bool}
      */
-    public function attributionForPayment(Payment $payment, ?bool $degenerateGuard = null): array
+    public function attributionForPayment(Payment $payment, ?bool $stampedRunGuard = null): array
     {
         if (! $this->isRevenuePayment($payment)) {
-            return ['shares' => [], 'mechanism' => BlockMonthRecognition::BY_CREATED, 'degenerate' => false];
+            return ['shares' => [], 'mechanism' => BlockMonthRecognition::BY_CREATED, 'stamped' => false];
         }
 
         $amount = (float) $payment->amount;
@@ -104,7 +104,7 @@ class RevenueRecognitionService
             $courseId ? $this->blockMonthsFor($courseId) : [],
             $courseId ? $this->blockStartDatesFor($courseId) : [],
             $createdMonth,
-            $degenerateGuard ?? BlockMonthRecognition::degenerateGuardEnabled(),
+            $stampedRunGuard ?? BlockMonthRecognition::stampedRunGuardEnabled(),
         );
     }
 
@@ -127,9 +127,8 @@ class RevenueRecognitionService
 
     /**
      * Дата начала каждого датированного блока курса: [block_number => 'Y-m-d'].
-     * Нужна сторожу вырожденного расписания (H3951): вырождение видно по ДАТЕ,
-     * месяц слишком груб — настоящий курс из четырёх блоков в одном месяце
-     * вырожденным не является.
+     * Нужна сторожу штампованного прогона (H3951): штамп виден по ДАТЕ, месяц
+     * слишком груб — настоящие блоки, попавшие в один месяц, штампом не являются.
      *
      * @return array<int, string>
      */

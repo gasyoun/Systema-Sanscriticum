@@ -1245,21 +1245,21 @@ class TeacherSalaryService
 
     /**
      * Та же раскладка, но С НАЗВАННЫМ МЕХАНИЗМОМ атрибуции (H3951): column /
-     * blocks / created / blocks_degenerate. Публична ради аудита
+     * blocks / created / blocks_stamped_run. Публична ради аудита
      * (recognition:attribution-audit) — отчёт по ЗП обязан уметь сказать по
      * каждой строке, признана она колонкой salary_recognition_month или
      * эвристикой, и какой именно.
      *
      * @param  list<int>  $blockNumbers
      * @param  array<int, string>  $blockMonths
-     * @return array{shares: array<string, float>, mechanism: string, degenerate: bool}
+     * @return array{shares: array<string, float>, mechanism: string, stamped: bool}
      */
     public function recognizedAttribution(
         Payment $payment,
         float $amount,
         array $blockNumbers,
         array $blockMonths,
-        ?bool $degenerateGuard = null,
+        ?bool $stampedRunGuard = null,
     ): array {
         $createdMonth = $payment->created_at?->format('Y-m') ?? now()->format('Y-m');
         $courseId = $payment->course_id ? (int) $payment->course_id : null;
@@ -1271,7 +1271,7 @@ class TeacherSalaryService
             $blockMonths,
             $courseId ? $this->blockStartDatesFor($courseId) : [],
             $createdMonth,
-            $degenerateGuard ?? BlockMonthRecognition::degenerateGuardEnabled(),
+            $stampedRunGuard ?? BlockMonthRecognition::stampedRunGuardEnabled(),
         );
     }
 

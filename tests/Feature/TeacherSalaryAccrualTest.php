@@ -197,4 +197,120 @@ class TeacherSalaryAccrualTest extends TestCase
         $this->assertSame(-40.0, $totals['returns']);
         $this->assertSame(60.0, $totals['net']);
     }
+
+    // ---------------------------------------------------------------- H3951
+    // Форма курса 266 с прода: блоки 1..5 стоят одним штампом массового
+    // бэкофилла (FINDINGS §621), блоки 6..8 — настоящее расписание. Предоплата
+    // августа 2026 покрывает блоки 1..4, то есть целиком лежит внутри штампа.
+
+    private function stampedRunCourse(): array
+    {
+        [$teacher, $course] = $this->percentCourse(10);
+        $this->blocks($course, [
+            1 => '2025-03-14', 2 => '2025-03-14', 3 => '2025-03-14',
+            4 => '2025-03-14', 5 => '2025-03-14',
+            6 => '2026-09-08', 7 => '2026-10-06', 8 => '2026-11-03',
+        ]);
+
+        $u1 = User::factory()->create();
+        $this->pay($course, [
+            'user_id' => $u1->id,
+            'amount' => 144000,
+            'tariff' => 'full',
+            'start_block' => 1,
+            'end_block' => 4,
+            'created_at' => '2026-08-10 16:59:00',
+        ]);
+
+        return [$teacher, $course];
+    }
+
+    private function earnedInMonthFresh(Teacher $teacher, string $month): float
+    {
+        // Свежий сервис на каждый прогон: teacherCourseAccrualCache помнит
+        // раскладку, и переключение флага на прогретом объекте сравнило бы два
+        // одинаковых ответа из кэша.
+        $start = Carbon::parse($month.'-01')->startOfMonth();
+
+        return (new TeacherSalaryService)->totalForTeacher($teacher, $start, $start->copy()->endOfMonth());
+    }
+
+    /** @test */
+    public function stamped_block_run_guard_is_off_by_default_and_changes_nothing(): void
+    {
+        $this->assertFalse(
+            (bool) config('revenue.recognition_stamped_block_run_guard'),
+            'Флаг сторожа обязан быть выключен по умолчанию.',
+        );
+
+        [$teacher] = $this->stampedRunCourse();
+
+        // Поведение до H3951: вся предоплата признана в месяц штампа, на 17
+        // месяцев назад, а в месяц прихода денег преподаватель видит ноль.
+        $this->assertSame(14400.0, $this->earnedInMonthFresh($teacher, '2025-03'));
+        $this->assertSame(0.0, $this->earnedInMonthFresh($teacher, '2026-08'));
+    }
+
+    /** @test */
+    public function stamped_block_run_guard_moves_the_prepayment_to_the_payment_month(): void
+    {
+        [$teacher] = $this->stampedRunCourse();
+
+        config(['revenue.recognition_stamped_block_run_guard' => true]);
+
+        $this->assertSame(14400.0, $this->earnedInMonthFresh($teacher, '2026-08'));
+        $this->assertSame(0.0, $this->earnedInMonthFresh($teacher, '2025-03'));
+        // Сумма за всё время не меняется — сторож переносит признание, а не
+        // создаёт и не уничтожает деньги.
+        $this->assertSame(14400.0, (new TeacherSalaryService)->totalForTeacher($teacher));
+    }
+
+    /** @test */
+    public function stamped_block_run_guard_leaves_a_real_schedule_alone(): void
+    {
+        [$teacher, $course] = $this->percentCourse(10);
+        $this->blocks($course, [1 => '2026-01-10', 2 => '2026-02-10', 3 => '2026-03-10']);
+
+        $u1 = User::factory()->create();
+        $this->pay($course, [
+            'user_id' => $u1->id,
+            'amount' => 9000,
+            'tariff' => 'full',
+            'created_at' => '2025-12-15 10:00:00',
+        ]);
+
+        config(['revenue.recognition_stamped_block_run_guard' => true]);
+
+        // Настоящее расписание раскладывается по месяцам блоков как и раньше.
+        $this->assertSame(300.0, $this->earnedInMonthFresh($teacher, '2026-01'));
+        $this->assertSame(300.0, $this->earnedInMonthFresh($teacher, '2026-02'));
+        $this->assertSame(300.0, $this->earnedInMonthFresh($teacher, '2026-03'));
+        $this->assertSame(0.0, $this->earnedInMonthFresh($teacher, '2025-12'));
+    }
+
+    /** @test */
+    public function manual_override_still_wins_over_the_stamped_run_guard(): void
+    {
+        [$teacher, $course] = $this->percentCourse(10);
+        $this->blocks($course, [
+            1 => '2025-03-14', 2 => '2025-03-14', 3 => '2025-03-14', 4 => '2025-03-14',
+        ]);
+
+        $u1 = User::factory()->create();
+        $this->pay($course, [
+            'user_id' => $u1->id,
+            'amount' => 144000,
+            'tariff' => 'full',
+            'start_block' => 1,
+            'end_block' => 4,
+            'created_at' => '2026-08-10 16:59:00',
+            'salary_recognition_month' => '2026-10',
+        ]);
+
+        config(['revenue.recognition_stamped_block_run_guard' => true]);
+
+        $this->assertSame(14400.0, $this->earnedInMonthFresh($teacher, '2026-10'));
+        $this->assertSame(0.0, $this->earnedInMonthFresh($teacher, '2026-08'));
+        $this->assertSame(0.0, $this->earnedInMonthFresh($teacher, '2025-03'));
+    }
 }
