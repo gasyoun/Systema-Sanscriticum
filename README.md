@@ -1,6 +1,6 @@
 # Systema Sanscriticum — платформа онлайн-обучения санскриту
 
-_Created: 13-02-2026 · Last updated: 28-08-2026_
+_Created: 13-02-2026 · Last updated: 02-09-2026_
 
 Laravel-приложение для школы санскрита: учебный кабинет со словарем, домашними
 заданиями и интервальными повторениями (SRS), магазин курсов с гибкими тарифами,
@@ -354,6 +354,36 @@ php artisan test --filter=TestName
 - **апгрейд-кредит** (`Tariff::upgradeCreditForUser()`): покупка целого блока
   засчитывает уже оплаченные его половины, покупка `full` — все оплаченные
   блоки/половины (containment-модель).
+
+### Курс-запись: свои уроки, а не доступ к чужому курсу (H3823)
+
+Продажа «курса в записи» — это отдельный курс со своими блоками и тарифами, и доступ
+считается **по курсу**: у курса-записи без единого урока купившие не получают ничего.
+Курс 327 «Йога-сутры Патанджали (1 поток, 2025) в записи» продержался так до 01-09-2026 —
+129 оплат, пять активных тарифов, ноль уроков; все шестнадцать записей лежали на уроках
+живого курса 396.
+
+Штатное лечение — **завести курсу-записи собственные уроки-контейнеры** со ссылками на те
+же YouTube/RuTube записи, командой
+[`catalog:mirror-recording-lessons {source} {target}`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MirrorRecordingLessons.php):
+
+```sh
+php artisan catalog:mirror-recording-lessons 396 327            # сухой прогон, ничего не пишет
+php artisan catalog:mirror-recording-lessons 396 327 --apply    # запись
+```
+
+Команда переносит ровно то, что делает урок записью (заголовок, `block_number`,
+`block_half`, порядок, дату, признак публикации, `youtube_url`/`rutube_url`/`video_url`),
+пишет **только** в `lessons` и идемпотентна по слоту `(block_number, block_half,
+sort_order)`. Дословный перенос `block_number` — и есть механизм доступа: из него
+`Lesson::unlockingKeys()` выводит `block_N`, поэтому купленный `block_2` открывает ровно
+второй блок записи, без отдельной таблицы соответствий и без правки money/access-контура.
+
+Чего делать **нельзя**: выдавать купившим курс-запись доступ к урокам живого курса (это
+уже money/access-контур → [`/money-pr-land`](https://github.com/gasyoun/claude-config/blob/main/commands/money-pr-land.md))
+и трогать тарифы или видимость курса-записи — инцидент 31-08-2026 состоял ровно в этом
+(см. «`tariff.is_active` gates BUYING» в [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md)).
+Пин: [`MirrorRecordingLessonsTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Catalog/MirrorRecordingLessonsTest.php).
 
 ### Ключевые доменные связи
 
