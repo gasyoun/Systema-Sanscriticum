@@ -104,6 +104,7 @@ class RemindZapisiClasses extends Command
                     $schedule->title ?: 'Занятие',
                     $schedule->start->format('Y-m-d H:i'),
                 )));
+
                 continue;
             }
 

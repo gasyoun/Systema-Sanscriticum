@@ -66,18 +66,20 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `BOT_MULTI_PERSONA` | optional | `false` | config/features.php:1071 |
 | `BROADCAST_DRIVER` | optional | `'null'` | config/broadcasting.php:18 |
 | `CABINET_HYBRID` | optional | `false` | config/features.php:725 |
-| `CABINET_PROBE_CHECK_DEPLOY_DRIFT` | optional | `true` | config/cabinet_probe.php:129 |
+| `CABINET_PROBE_CHECK_DEPLOY_DRIFT` | optional | `true` | config/cabinet_probe.php:142 |
 | `CABINET_PROBE_CHECK_GUARDS` | optional | `true` | config/cabinet_probe.php:64 |
 | `CABINET_PROBE_CHECK_HOMEWORK_UPLOAD` | optional | `true` | config/cabinet_probe.php:102 |
 | `CABINET_PROBE_CHECK_PAYMENT_TLS` | optional | `true` | config/cabinet_probe.php:75 |
+| `CABINET_PROBE_CHECK_SCHEDULE_LINKS` | optional | `true` | config/cabinet_probe.php:114 |
 | `CABINET_PROBE_CRON` | optional | `'*/15 * * * *'` | config/cabinet_probe.php:49 |
-| `CABINET_PROBE_DEPLOY_DRIFT_BEHIND_MAX_AGE` | optional | `60` | config/cabinet_probe.php:131 |
-| `CABINET_PROBE_DEPLOY_DRIFT_FETCH_MAX_AGE` | optional | `90` | config/cabinet_probe.php:130 |
+| `CABINET_PROBE_DEPLOY_DRIFT_BEHIND_MAX_AGE` | optional | `60` | config/cabinet_probe.php:144 |
+| `CABINET_PROBE_DEPLOY_DRIFT_FETCH_MAX_AGE` | optional | `90` | config/cabinet_probe.php:143 |
 | `CABINET_PROBE_HISTORY_KEEP` | optional | `500` | config/cabinet_probe.php:54 |
-| `CABINET_PROBE_HOMEWORK_COURSE` | optional | `''` | config/cabinet_probe.php:126 |
-| `CABINET_PROBE_HOMEWORK_LESSON_ID` | optional | `0` | config/cabinet_probe.php:127 |
+| `CABINET_PROBE_HOMEWORK_COURSE` | optional | `''` | config/cabinet_probe.php:139 |
+| `CABINET_PROBE_HOMEWORK_LESSON_ID` | optional | `0` | config/cabinet_probe.php:140 |
 | `CABINET_PROBE_PAYMENT_URL` | optional | `'https://enter.tochka.com/uapi/acquiring/v1.0/payments_with_receipt',` | config/cabinet_probe.php:76 |
 | `CABINET_PROBE_PING_URL` | optional | `''` | config/cabinet_probe.php:20 |
+| `CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS` | optional | `14` | config/cabinet_probe.php:115 |
 | `CABINET_PROBE_TELEGRAM_CHAT_ID` | optional | `env('ADMIN_TELEGRAM_ID', '')` | config/cabinet_probe.php:23<br>config/openrouter.php:30<br>config/recording_gap.php:74 |
 | `CABINET_PROBE_TELEGRAM_COOLDOWN` | optional | `60` | config/cabinet_probe.php:29<br>config/cabinet_probe.php:38 |
 | `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` | optional | `''` | config/cabinet_probe.php:26 |
@@ -595,9 +597,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SOCIAL_TELEGRAM_URL` | required | `—` | config/social.php:12 |
 | `SOCIAL_VK_URL` | required | `—` | config/social.php:11 |
 | `SOCIAL_WEBSITE_URL` | required | `—` | config/social.php:14 |
-| `SOFT_ALERT_WEBHOOK_SECRET` | secret | `''` | config/cabinet_probe.php:187 |
-| `SOFT_ALERT_WEBHOOK_TIMEOUT` | optional | `8` | config/cabinet_probe.php:188 |
-| `SOFT_ALERT_WEBHOOK_URL` | optional | `''` | config/cabinet_probe.php:186 |
+| `SOFT_ALERT_WEBHOOK_SECRET` | secret | `''` | config/cabinet_probe.php:200 |
+| `SOFT_ALERT_WEBHOOK_TIMEOUT` | optional | `8` | config/cabinet_probe.php:201 |
+| `SOFT_ALERT_WEBHOOK_URL` | optional | `''` | config/cabinet_probe.php:199 |
 | `SQS_PREFIX` | optional | `'https://sqs.us-east-1.amazonaws.com/your-account-id'` | config/queue.php:58 |
 | `SQS_QUEUE` | optional | `'default'` | config/queue.php:59 |
 | `SQS_SUFFIX` | required | `—` | config/queue.php:60 |
