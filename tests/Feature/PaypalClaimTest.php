@@ -121,10 +121,10 @@ class PaypalClaimTest extends TestCase
         $course = Course::factory()->create();
         $tariff = Tariff::factory()->for($course)->create(['type' => 'full', 'price' => 12000]);
 
-        // 12000 / 100 * 1.08 = 129.6
+        // 12000 / 100 * 1.08 = 129.6 → nice-round step-up (+3–6%, MG 02-09-2026) → 135
         $this->get(route('paypal.claim.show', $tariff))
             ->assertOk()
-            ->assertSee('129.6', false);
+            ->assertSee('135', false);
     }
 
     /** @test */
