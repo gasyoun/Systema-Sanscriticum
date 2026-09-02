@@ -44,10 +44,12 @@ class TeacherLinksAndCountryFieldsTest extends TestCase
 
     public function test_user_resource_form_has_city_and_country_fields(): void
     {
-        $fields = UserResource::getFormSchema();
-        $json = json_encode($fields, JSON_UNESCAPED_UNICODE);
-        $this->assertStringContainsString('city', $json);
-        $this->assertStringContainsString('country', $json);
+        $form = UserResource::form(
+            \Filament\Forms\Form::make()->model(User::class)
+        );
+        $json = json_encode($form->getComponents(), JSON_UNESCAPED_UNICODE);
+        $this->assertStringContainsString('"city"', $json);
+        $this->assertStringContainsString('"country"', $json);
         $this->assertStringContainsString('Страна', $json);
     }
 }
