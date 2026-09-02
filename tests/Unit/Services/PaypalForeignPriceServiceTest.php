@@ -55,18 +55,40 @@ class PaypalForeignPriceServiceTest extends TestCase
     }
 
     /** @test */
-    public function non_discounted_price_is_pure_conversion_plus_markup(): void
+    public function non_discounted_price_is_pure_conversion_plus_markup_then_rounded_nice(): void
     {
         // Every live RUB block from the H3819 report — same fx_rate (100) for both currencies.
-        foreach ([6000, 3000, 4800, 8000, 12000, 16500, 35000] as $rub) {
+        // Expected = the H3821 formula (rub/100*1.08) run through the 02-09-2026
+        // nice-round step-up: corridor +3–6% onto a round grid (5s at ≥50, ints below),
+        // falling back to the smallest round figure ≥ the formula price.
+        $expected = [6000 => 65.0, 3000 => 34.0, 4800 => 55.0, 8000 => 90.0, 12000 => 135.0, 16500 => 185.0, 35000 => 390.0];
+        foreach ($expected as $rub => $price) {
             $tariff = $this->tariff((float) $rub);
 
             $result = app(PaypalForeignPriceService::class)->priceFor($tariff, 'EUR');
 
             $this->assertNotNull($result);
-            $this->assertEqualsWithDelta(round($rub / 100 * 1.08, 2), $result['price'], 0.01, "block {$rub}");
+            $this->assertEqualsWithDelta($price, $result['price'], 0.01, "block {$rub}");
             $this->assertTrue($result['markup_applied']);
         }
+    }
+
+    /** @test */
+    public function nice_round_step_up_matches_the_mg_anchors_on_live_fx_rates(): void
+    {
+        // MG ruling 02-09-2026 anchors, computed at the 01-09-2026 live fx
+        // (EUR 100.60, USD 86.82): 8 000 ₽ must land on €90 / $105 — never €85.88
+        // (bare formula) and never $100 (bare round-up).
+        $this->assertSame(90.0, PaypalForeignPriceService::roundUpToNice(round(8000 / 100.60 * 1.08, 2)));
+        $this->assertSame(105.0, PaypalForeignPriceService::roundUpToNice(round(8000 / 86.82 * 1.08, 2)));
+    }
+
+    /** @test */
+    public function nice_round_step_up_falls_back_when_no_round_figure_fits_the_corridor(): void
+    {
+        // €21.47 (2 000 ₽ at live fx): integers grid — 23 (+7.1%) overshoots the
+        // +6% ceiling, so fall back to the smallest round figure ≥ the price: 22.
+        $this->assertSame(22.0, PaypalForeignPriceService::roundUpToNice(21.47));
     }
 
     /** @test */
@@ -128,7 +150,7 @@ class PaypalForeignPriceServiceTest extends TestCase
         $result = app(PaypalForeignPriceService::class)->priceFor($tariff, 'EUR', $user);
 
         $this->assertTrue($result['markup_applied']);
-        $this->assertEqualsWithDelta(round(8000 / 100 * 1.08, 2), $result['price'], 0.01);
+        $this->assertEqualsWithDelta(90.0, $result['price'], 0.01);
     }
 
     /** @test */
