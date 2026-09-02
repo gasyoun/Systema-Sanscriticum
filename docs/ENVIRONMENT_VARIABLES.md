@@ -533,6 +533,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `REFERRAL_REFERRED_CREDIT_AMOUNT` | optional | `0` | config/referral.php:22 |
 | `REMINDER_SUGGESTION_CONFIDENCE_THRESHOLD` | optional | `0.5` | config/reminders.php:17 |
 | `REMINDER_SUGGESTION_EXPIRY_DAYS` | optional | `14` | config/reminders.php:11 |
+| `REVENUE_RECOGNITION_DEGENERATE_SCHEDULE_GUARD` | optional | `false` | config/revenue.php:43 |
 | `REVENUE_REVERSE_UNRECOGNIZED_ON_REFUND` | optional | `false` | config/revenue.php:26 |
 | `REVERB_APP_ACCEPT_CLIENT_EVENTS_FROM` | optional | `'members'` | config/reverb.php:90 |
 | `REVERB_APP_ACTIVITY_TIMEOUT` | optional | `30` | config/reverb.php:87 |

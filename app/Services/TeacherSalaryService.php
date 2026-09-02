@@ -1240,18 +1240,39 @@ class TeacherSalaryService
      */
     private function recognizedShares(Payment $payment, float $amount, array $blockNumbers, array $blockMonths): array
     {
+        return $this->recognizedAttribution($payment, $amount, $blockNumbers, $blockMonths)['shares'];
+    }
+
+    /**
+     * Та же раскладка, но С НАЗВАННЫМ МЕХАНИЗМОМ атрибуции (H3951): column /
+     * blocks / created / blocks_degenerate. Публична ради аудита
+     * (recognition:attribution-audit) — отчёт по ЗП обязан уметь сказать по
+     * каждой строке, признана она колонкой salary_recognition_month или
+     * эвристикой, и какой именно.
+     *
+     * @param  list<int>  $blockNumbers
+     * @param  array<int, string>  $blockMonths
+     * @return array{shares: array<string, float>, mechanism: string, degenerate: bool}
+     */
+    public function recognizedAttribution(
+        Payment $payment,
+        float $amount,
+        array $blockNumbers,
+        array $blockMonths,
+        ?bool $degenerateGuard = null,
+    ): array {
         $createdMonth = $payment->created_at?->format('Y-m') ?? now()->format('Y-m');
+        $courseId = $payment->course_id ? (int) $payment->course_id : null;
 
-        if ($payment->salary_recognition_month) {
-            return [$payment->salary_recognition_month => $amount];
-        }
-
-        $covered = $this->coveredBlockNumbers($payment, $blockNumbers);
-        if (empty($covered)) {
-            return [$createdMonth => $amount];
-        }
-
-        return BlockMonthRecognition::distribute($amount, $covered, $blockMonths, $createdMonth);
+        return BlockMonthRecognition::attribute(
+            $amount,
+            $payment->salary_recognition_month,
+            $this->coveredBlockNumbers($payment, $blockNumbers),
+            $blockMonths,
+            $courseId ? $this->blockStartDatesFor($courseId) : [],
+            $createdMonth,
+            $degenerateGuard ?? BlockMonthRecognition::degenerateGuardEnabled(),
+        );
     }
 
     /**
