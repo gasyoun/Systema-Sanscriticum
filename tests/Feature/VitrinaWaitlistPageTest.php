@@ -57,7 +57,7 @@ class VitrinaWaitlistPageTest extends TestCase
             ->post(route('shop.waitlist.unvote'), ['slug' => 'zhdun-voted'])
             ->assertJson(['ok' => true, 'votes' => 0]);
 
-        // После отзыва кнопка «Голосовать» вернулась.
+        // После отзыва кнопка «Намерен участвовать» вернулась.
         $this->actingAs($user)->get(route('shop.waitlist'))
             ->assertOk()
             ->assertSee('data-waitlist-vote="zhdun-voted"', false)
@@ -132,7 +132,7 @@ class VitrinaWaitlistPageTest extends TestCase
         $resp->assertSee('пн 18:00');
         $resp->assertSee('не раньше 01.10.2027');
         $resp->assertSee('8 000 ₽');
-        $resp->assertSee('Голосовать');
+        $resp->assertSee('Намерен участвовать');
 
         // Голоса скрыты: до кворума далеко (9 осталось), счётчика нет.
         $resp->assertDontSee('Голосов:');
@@ -302,7 +302,7 @@ class VitrinaWaitlistPageTest extends TestCase
             ->assertStatus(401);
 
         // Страница рендерится гостю с кнопкой.
-        $this->get(route('shop.waitlist'))->assertOk()->assertSee('Голосовать');
+        $this->get(route('shop.waitlist'))->assertOk()->assertSee('Намерен участвовать');
     }
 
     public function test_legacy_api_vote_route_still_works_for_guest_401(): void

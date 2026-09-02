@@ -122,7 +122,7 @@
                                                 data-waitlist-vote="{{ $item->slug }}"
                                                 class="text-xs font-bold text-white bg-brand hover:opacity-90 transition rounded-lg px-3 py-1.5"
                                                 x-on:click="vote('{{ $item->slug }}', $el)">
-                                            Голосовать
+                                            Намерен участвовать
                                         </button>
                                     @endif
                                 </div>
