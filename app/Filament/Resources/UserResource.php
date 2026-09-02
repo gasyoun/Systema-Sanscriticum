@@ -138,6 +138,18 @@ class UserResource extends Resource
                             ->tel()
                             ->maxLength(255),
 
+                        // H3909 — спрашиваем у каждого ученика (MG 02-09-2026):
+                        // по стране куратор понимает, что платить придётся
+                        // через PayPal, и переименовывает карточку по правилу
+                        // «Имя, Город, Страна».
+                        Forms\Components\TextInput::make('city')
+                            ->label('Город')
+                            ->maxLength(255),
+
+                        Forms\Components\TextInput::make('country')
+                            ->label('Страна')
+                            ->maxLength(255),
+
                         Forms\Components\TextInput::make('password')
                             ->label('Пароль')
                             ->password()
@@ -336,6 +348,14 @@ class UserResource extends Resource
                             ->copyable()
                             ->copyMessage('Телефон скопирован')
                             ->placeholder('—'),
+
+                        TextEntry::make('city')
+                            ->label('Город')
+                            ->placeholder('— не спросили —'),
+
+                        TextEntry::make('country')
+                            ->label('Страна')
+                            ->placeholder('— не спросили —'),
 
                         TextEntry::make('global_status')
                             ->label('Статус')

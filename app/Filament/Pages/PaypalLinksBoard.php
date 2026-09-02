@@ -36,8 +36,9 @@ class PaypalLinksBoard extends Page
     public static function canAccess(): bool
     {
         // MG 02-09-2026: куратор (manager) — основной адресат доски, он ведёт
-        // переписку с учениками об оплате; см. прецедент H3764 (learningAnalytics).
-        return RoleGate::any(Roles::ADMIN, Roles::ACCOUNTANT, Roles::MANAGER);
+        // переписку с учениками об оплате; преподаватели тоже отвечают ученикам
+        // «сколько и куда платить». Прецедент manager-доступа: H3764.
+        return RoleGate::any(Roles::ADMIN, Roles::ACCOUNTANT, Roles::MANAGER, Roles::TEACHER);
     }
 
     public static function shouldRegisterNavigation(): bool
