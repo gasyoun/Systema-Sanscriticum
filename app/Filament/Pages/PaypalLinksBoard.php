@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Models\Course;
 use App\Models\Tariff;
 use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Pages\Page;
 
 /**
@@ -34,12 +35,14 @@ class PaypalLinksBoard extends Page
 
     public static function canAccess(): bool
     {
-        return RoleGate::finance();
+        // MG 02-09-2026: куратор (manager) — основной адресат доски, он ведёт
+        // переписку с учениками об оплате; см. прецедент H3764 (learningAnalytics).
+        return RoleGate::any(Roles::ADMIN, Roles::ACCOUNTANT, Roles::MANAGER);
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return RoleGate::finance();
+        return self::canAccess();
     }
 
     /** @return array<int, array{course:Course,url:string,tariffs:array<int,array{id:int,title:string,rub:string,eur:?string,usd:?string,link:string}>,total_eur:?string,total_usd:?string}> */
