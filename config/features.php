@@ -725,6 +725,14 @@ return [
     'content_calendar_autopilot' => (bool) env('CONTENT_CALENDAR_AUTOPILOT', false),
 
     /*
+     | Автопилот канала @rusamskrtam (H3930, Phase 1): stories:publish-due
+     | шлёт approved+due текстовые story_posts в канал магнит-ботом
+     | (MarketingSetting.tg_bot_token). Default OFF — прод-инертен, ноль HTTP.
+     | Photo/video строки скипаются с журналом до Phase 2 (MTProto stories).
+     */
+    'telegram_story_publisher' => (bool) env('TELEGRAM_STORY_PUBLISHER', false),
+
+    /*
      | Гибридный кабинет R29 (H1481, Phase 1 chassis): job-named nav
      | (Сегодня / Календарь / Записи / Прогресс / Оплата и доступ / Помощь),
      | workspace-табы с hash-адресацией, лента «Сегодня» с homework-rework,

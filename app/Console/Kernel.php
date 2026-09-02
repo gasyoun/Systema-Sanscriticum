@@ -400,6 +400,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('publish-due-content-calendar');
 
+        // Канал @rusamskrtam: автопилот очереди story_posts (H3930, Phase 1).
+        // Ежечасный, как content:publish-due: точность слота «09:00/19:00»
+        // важнее редкости. Прод-инертен, пока features.telegram_story_publisher
+        // OFF (default); photo/video строки скипаются с журналом до Phase 2.
+        $schedule->command('stories:publish-due')
+            ->hourly()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('publish-due-story-posts');
+
         // Автооткрытие приёма ДЗ после проведённого урока (H1764, волна 1).
         // Ежечасный, а не ежедневный: момент открытия посчитан точно, проход
         // лишь доносит его с задержкой не больше часа. Прод-инертна, пока

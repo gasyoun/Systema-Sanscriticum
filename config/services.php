@@ -303,6 +303,18 @@ return [
         'media_download_peers' => array_values(array_filter(array_map('trim', explode(',', (string) env('TELEGRAM_HARVEST_MEDIA_DOWNLOAD_PEERS', ''))))),
     ],
 
+    // Канал-очередь @rusamskrtam (H3930, Phase 1): story_posts + издатель.
+    // Бот — магнит-бот из MarketingSetting.tg_bot_token (маратон-издатель),
+    // НЕ кабинетный @samskrtamru_bot и НЕ @zapisi_ORSbot (FINDINGS §651:
+    // один бот на одну поверхность, всегда getChat-проба перед первым постом).
+    // queue_path — каталог с файлами очереди Uprava content/queue (*.md) на
+    // этом хосте; пусто = stories:import-queue требует явный --path.
+    'telegram_story' => [
+        'channel_chat_id' => env('TELEGRAM_STORY_CHANNEL_CHAT_ID', ''),
+        'queue_path' => env('TELEGRAM_STORY_QUEUE_PATH', ''),
+        'default_publish_hour' => (int) env('TELEGRAM_STORY_DEFAULT_PUBLISH_HOUR', 9),
+    ],
+
     // ВХОДНОЙ УЗЕЛ вебхуков Telegram — общий для ВСЕХ ботов: кабинетного,
     // лид-магнитного, ботов лендингов и @zapisi_ORSbot.
     //
