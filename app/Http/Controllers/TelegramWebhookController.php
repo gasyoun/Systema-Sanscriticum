@@ -10,6 +10,7 @@ use App\Models\VacationQuorumPoll;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\AttendanceNoticeService;
 use App\Services\Bot\CabinetLoginBotCommand;
+use App\Services\Bot\CabinetProvisionBotCommand;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\DebtorsBotCommand;
 use App\Services\Bot\RosterBotCommand;
@@ -123,6 +124,16 @@ class TelegramWebhookController extends Controller
             elseif (config('features.telegram_cabinet_login')
                 && app(CabinetLoginBotCommand::class)->isLoginCommand($text)) {
                 $this->handleCabinetLoginEntry($chatId, $fromUsername);
+            }
+            // Самообслуживание «/кабинет <email>»: автосоздание кабинета одним
+            // шагом (Free-tier, 02-09-2026). Ветка мертва при флаге OFF —
+            // сообщение уходит дальше по обычным веткам.
+            elseif (config('features.telegram_cabinet_provision')
+                && app(CabinetProvisionBotCommand::class)->isCommand($text)) {
+                $this->sendMessage(
+                    $chatId,
+                    app(CabinetProvisionBotCommand::class)->replyForCommand($chatId, $fromUsername, $text),
+                );
             }
             // Отписка от рекламной рассылки (152-ФЗ: право отзыва согласия обязательно,
             // т.к. существующие пользователи грандфазерятся в согласие). Гасит ТОЛЬКО

@@ -592,6 +592,17 @@ return [
     'telegram_cabinet_email_link' => (bool) env('TELEGRAM_CABINET_EMAIL_LINK', false),
 
     /*
+     | Самообслуживание «/кабинет <email>» (02-09-2026): непривязанный студент
+     | одной командой в личке бота создаёт себе кабинет (Free-tier плейлисты,
+     | как при self-register H3643) и получает одноразовую magic-ссылку входа.
+     | Щиты: ≤1 создание на telegram_id навсегда; существующий email не
+     | перезаписывается и не привязывается по голому знанию email (угон-риск) —
+     | мягкий отказ; пароли random и наружу не уходят.
+     | Enable: TELEGRAM_CABINET_PROVISION=true + config:cache.
+     */
+    'telegram_cabinet_provision' => (bool) env('TELEGRAM_CABINET_PROVISION', false),
+
+    /*
      | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
      | (fail closed на всех платных маршрутах: zero-price checkout, Filament,
      | PayPal, PayPal-claim, conditional, импорт), а не log-and-return «оплачено
