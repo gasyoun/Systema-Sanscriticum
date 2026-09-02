@@ -209,6 +209,76 @@ class CabinetProbeTest extends TestCase
     }
 
     /**
+     * 02-09-2026 TLS flap false-positive: a single transient connection drop
+     * to the acquiring API must NOT page (Better Stack /fail) — the probe
+     * retries before declaring critical, and a retry success counts as alive.
+     */
+    public function test_payment_tls_transient_failure_retried_then_alive(): void
+    {
+        $this->seedManager();
+        config([
+            'cabinet_probe.check_payment_tls' => true,
+            'cabinet_probe.payment_probe_url' => 'https://acquiring.example/api/payments',
+            'cabinet_probe.payment_tls_pause_seconds' => 0,
+        ]);
+        $acquiringCalls = 0;
+        Http::fake([
+            self::PING => Http::response('OK', 200),
+            self::PING.'/fail' => Http::response('OK', 200),
+            'https://acquiring.example/*' => function () use (&$acquiringCalls) {
+                if (++$acquiringCalls === 1) {
+                    throw new \RuntimeException('cURL error 35: TLS connect error: unexpected eof while reading');
+                }
+
+                return Http::response(['errorMessage' => 'Unauthorized'], 401);
+            },
+        ]);
+
+        $code = Artisan::call('cabinet:probe');
+        $out = Artisan::output();
+
+        $this->assertSame(0, $code, $out);
+        $this->assertStringContainsString('Кабинет жив', $out);
+        $this->assertStringNotContainsString('payments:', $out);
+        $this->assertSame(2, $acquiringCalls);
+        Http::assertSent(fn ($request) => $request->url() === self::PING);
+        Http::assertNotSent(fn ($request) => $request->url() === self::PING.'/fail');
+    }
+
+    /**
+     * A persistent outage (the 4-day CA incident class) still alerts on the
+     * same run after all retry attempts are exhausted.
+     */
+    public function test_payment_tls_persistent_failure_alerts_after_all_attempts(): void
+    {
+        $this->seedManager();
+        config([
+            'cabinet_probe.check_payment_tls' => true,
+            'cabinet_probe.payment_probe_url' => 'https://acquiring.example/api/payments',
+            'cabinet_probe.payment_tls_pause_seconds' => 0,
+        ]);
+        $acquiringCalls = 0;
+        Http::fake([
+            self::PING => Http::response('OK', 200),
+            self::PING.'/fail' => Http::response('OK', 200),
+            'https://acquiring.example/*' => function () use (&$acquiringCalls) {
+                $acquiringCalls++;
+
+                throw new \RuntimeException('cURL error 60: SSL certificate problem');
+            },
+        ]);
+
+        Artisan::call('cabinet:probe');
+        $out = Artisan::output();
+
+        $this->assertStringContainsString('Кабинет болен', $out);
+        $this->assertStringContainsString('[critical] payments: нет связи с acquiring.example', $out);
+        $this->assertStringContainsString('(3 попыток)', $out);
+        $this->assertSame(3, $acquiringCalls);
+        Http::assertSent(fn ($request) => $request->url() === self::PING.'/fail');
+    }
+
+    /**
      * H1931 item 3: SystemInspector is container-bound so a fake proves
      * cabinet:probe really wires guards:verify into the health verdict.
      * Before the bind, `new ShellSystemInspector` inside the command made this

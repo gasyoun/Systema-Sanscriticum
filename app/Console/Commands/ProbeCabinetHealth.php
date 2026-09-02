@@ -482,6 +482,11 @@ class ProbeCabinetHealth extends Command
      * у пользователей недоступны, значит это HTTP-класс, а не host/ops:
      * Telegram сразу, Better Stack /fail, deploy --fail-on-critical блокируется.
      *
+     * False-positive guard (02-09-2026, TLS flap ~1/5 connect на ClientHello):
+     * одиночный обрыв НЕ критичен — перепроба до N попыток (по умолчанию 3,
+     * пауза 2 с). Флап 1/5 выживает 3 попытки с вероятностью ~0.8%, реальный
+     * аутейдж (4-дневный инцидент CA) алертится тем же прогоном.
+     *
      * @return list<array{message: string, severity: string}>
      */
     private function probeOutboundPaymentTls(): array
@@ -496,19 +501,31 @@ class ProbeCabinetHealth extends Command
         }
 
         $host = (string) (parse_url($url, PHP_URL_HOST) ?: $url);
+        $attempts = max(1, (int) config('cabinet_probe.payment_tls_attempts', 3));
+        $pauseSeconds = max(0, (int) config('cabinet_probe.payment_tls_pause_seconds', 2));
+        $lastError = null;
 
-        try {
-            Http::timeout((int) config('cabinet_probe.timeout', 15))
-                ->acceptJson()
-                ->get($url);
-        } catch (Throwable $e) {
-            return [[
-                'message' => 'payments: нет связи с '.$host.' — '.$e->getMessage().' (оплата у пользователей недоступна)',
-                'severity' => 'critical',
-            ]];
+        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+            try {
+                Http::timeout((int) config('cabinet_probe.timeout', 15))
+                    ->acceptJson()
+                    ->get($url);
+
+                return [];
+            } catch (Throwable $e) {
+                $lastError = $e;
+
+                if ($attempt < $attempts && $pauseSeconds > 0) {
+                    sleep($pauseSeconds);
+                }
+            }
         }
 
-        return [];
+        return [[
+            'message' => 'payments: нет связи с '.$host.' — '.$lastError->getMessage()
+                .' ('.$attempts.' попыток) (оплата у пользователей недоступна)',
+            'severity' => 'critical',
+        ]];
     }
 
     /**
