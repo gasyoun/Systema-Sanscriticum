@@ -63,8 +63,8 @@ class TeacherLinksAndCountryFieldsTest extends TestCase
         // Российский транк «8» + 9xx → Россия; сотни РФ-учеников против
         // единиц швейцарцев, ложных срабатываний нет.
         $this->assertSame('Россия', PhoneCountrySuggest::fromPhone('8 913 123 45 67'));
-        // +7 Россия/Казахстан неоднозначен — не подсказываем.
-        $this->assertNull(PhoneCountrySuggest::fromPhone('+7 913 123 45 67'));
+        // +7 → Россия по умолчанию (MG 02-09-2026; Казахстан правится руками).
+        $this->assertSame('Россия', PhoneCountrySuggest::fromPhone('+7 913 123 45 67'));
         $this->assertNull(PhoneCountrySuggest::fromPhone(null));
     }
 }
