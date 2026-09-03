@@ -317,6 +317,11 @@ return [
         // stories:publish-story выводится из него тем же madelineSessionLockMinutes(),
         // что и у support/harvest — сессия одна, граница одна.
         'stories_timeout_seconds' => (int) env('TELEGRAM_STORY_STORIES_TIMEOUT_SECONDS', 120),
+        // MTProto-вызовы сториз — отдельным standalone-процессом
+        // (scripts/stories_lane_worker.php): из-под artisan Amp-цикл MP v8
+        // падает DriverSuspension'ом, standalone работает (замер 03-09-2026).
+        // false — прямые вызовы в этом же процессе (тесты с фейк-клиентом).
+        'subprocess_lane' => (bool) env('TELEGRAM_STORY_SUBPROCESS_LANE', true),
     ],
 
     // ВХОДНОЙ УЗЕЛ вебхуков Telegram — общий для ВСЕХ ботов: кабинетного,
