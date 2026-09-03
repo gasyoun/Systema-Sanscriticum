@@ -548,6 +548,50 @@ class CuratorNotifier
         $this->dispatchToCurators($this->join($lines));
     }
 
+    /**
+     * H3915 — курс завершён: задача куратору на Exit-опрос по когорте этого
+     * курса «спросил цену → оплаты нет». НЕ рассылка: в чат уходят готовые
+     * черновики для ЛИЧНОЙ отправки каждому (ACQUISITION_SURVEY_INSTRUMENTS_
+     * 2026H2 — отправляет куратор лично). Блоки собирает
+     * {@see ExitSurveyAutoTrigger}; здесь только доставка — длинный список
+     * режется на несколько сообщений (лимит Telegram 4096 символов).
+     *
+     * @param  Collection<int, User>  $users
+     * @param  list<string>  $blocks
+     */
+    public function exitSurveyBatchReady(Course $course, Collection $users, array $blocks): void
+    {
+        $head = [
+            '🎓 <b>Курс завершён — задача на Exit-опрос</b>',
+            '',
+            $this->courseLine($course),
+            'Когорта «спросил цену — оплаты нет»: <b>'.$users->count().'</b>',
+            '',
+            'Черновики для личной отправки (не рассылкой; один контакт — потом тишина):',
+            '',
+        ];
+
+        $messages = [];
+        $current = implode("\n", $head);
+        foreach ($blocks as $block) {
+            $candidate = $current === '' ? $block : $current."\n\n".$block;
+            if (mb_strlen($candidate) > 3500 && $current !== '') {
+                $messages[] = $current;
+                $current = $block;
+
+                continue;
+            }
+            $current = $candidate;
+        }
+        if ($current !== '') {
+            $messages[] = $current;
+        }
+
+        foreach ($messages as $text) {
+            $this->dispatchToCurators($text);
+        }
+    }
+
     // ==========================================================
     // Внутреннее
     // ==========================================================
