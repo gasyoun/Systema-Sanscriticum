@@ -22,8 +22,14 @@ routinely differ from their tag ("1.90.32" without the v, "v1.90.22 — апта
 подготовлена..." with a title appended), and an audit keyed on the name reports a
 backlog twenty times larger than the real one.
 
-Releases are read via `gh`; where `gh` is missing or unauthenticated the script says
-so and checks tags only, rather than reporting a false all-clear.
+Releases are read via `gh`, excluding drafts — a draft is invisible to anyone
+without write access, so for a reader it is simply absent. Where `gh` is missing
+or unauthenticated the report says so and checks tags only, rather than claiming a
+false all-clear; under `--check` that same condition is a hard failure (exit 3),
+because a gate that could not read half its subject has not gated anything.
+
+Exit codes: 0 clean · 1 a version is missing a tag or a release · 2 no tags visible
+at all (a checkout problem) · 3 releases unreadable under --check.
 """
 from __future__ import annotations
 
@@ -62,13 +68,44 @@ def local_tags() -> set[str]:
     return set(out.split())
 
 
+def has_any_tags() -> bool:
+    """False in a checkout that fetched no tags at all.
+
+    `actions/checkout` defaults to `fetch-depth: 1`, which fetches no tags.
+    Without this guard the gate would read zero tags, report every version as
+    untagged, and fail with a 279-line list that says nothing about the real
+    cause. A repo with a CHANGELOG but not one single `v*` tag is a checkout
+    problem, never a coverage problem.
+    """
+    _, out = run(["git", "tag", "-l"])
+    return bool(out.strip())
+
+
 def published_releases() -> set[str] | None:
-    """Release tag names, or None when gh cannot answer."""
+    """Published release tag names, or None when gh cannot answer.
+
+    `--exclude-drafts` is not a nicety. A draft release is invisible to
+    everyone without write access, so for any reader following a link it is
+    simply absent — and whether `gh release list` shows it depends on the
+    caller's token, which made this check answer differently for a maintainer
+    and for CI. v1.90.20 was a draft for eight days: a local run with a write
+    token called it published, CI's `contents: read` could not see it and
+    called it missing. CI was right. Excluding drafts explicitly makes the
+    verdict a property of the repo rather than of whoever asked.
+    """
     if not shutil.which("gh"):
         return None
-    code, out = run(["gh", "release", "list", "--limit", "500"])
-    if code != 0:
-        return None
+    # gh exits non-zero on a transient TLS/DNS blip as readily as on a real
+    # auth failure, and both looked identical here: the releases half went
+    # UNKNOWN twice on a flaky network during the pass that wrote this.
+    # Retry before concluding gh cannot answer.
+    for attempt in range(3):
+        code, out = run(["gh", "release", "list", "--limit", "500",
+                         "--exclude-drafts"])
+        if code == 0:
+            break
+        if attempt == 2:
+            return None
     tags = set()
     for line in out.splitlines():
         cells = line.split("\t")
@@ -91,6 +128,13 @@ def main() -> int:
     if not versions:
         print(f"No CHANGELOG versions at or above {args.since}.")
         return 0
+
+    if not has_any_tags():
+        print("No git tags are visible in this checkout at all, so tag coverage")
+        print("cannot be judged. This is a checkout problem, not a coverage gap:")
+        print("`actions/checkout` fetches no tags at its default `fetch-depth: 1`.")
+        print("Set `fetch-depth: 0` on the checkout step, or fetch the tag refs.")
+        return 2
 
     tags = local_tags()
     releases = published_releases()
@@ -116,6 +160,14 @@ def main() -> int:
         print("  gh release create <tag> --verify-tag --notes-file <section> --latest=false")
         print("The --latest=false is not optional: a retro-published historic release")
         print("otherwise demotes the real newest one.")
+
+    if args.check and releases is None:
+        print()
+        print("Refusing to pass: --check could not read the releases at all, so")
+        print("half of this gate never ran. A green light that checked nothing is")
+        print("worse than a red one. Report mode (no --check) still degrades to a")
+        print("tags-only answer; a gate does not get to.")
+        return 3
 
     if args.check and (no_tag or no_release):
         return 1
