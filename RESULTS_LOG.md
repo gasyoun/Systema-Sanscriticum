@@ -1,8 +1,58 @@
 # Results log
 
-_Created: 30-07-2026 · Last updated: 30-08-2026_
+_Created: 30-07-2026 · Last updated: 03-09-2026_
 
 Durable substantive-result tables for this repo. Newest first.
+
+## Release coverage census — all 279 CHANGELOG versions tagged and released (03-09-2026)
+
+_Model: Opus 5 (`claude-opus-5`)._ H3692's close-out ([PR #2207](https://github.com/gasyoun/Systema-Sanscriticum/pull/2207), `84031c39`, 30-08-2026) landed the `[1.90.35]` CHANGELOG section, the RESULTS_LOG table below and the `.ai_state` stamp, but never cut the tag or the GitHub release — so both docs linked to a 404 for four days. Tag `v1.90.35` (annotated) now points at `84031c39`, the commit carrying its own CHANGELOG section, and the release is published with `--latest=false` so `v1.90.51` stays `Latest`: [v1.90.35](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.35).
+
+The same census over `v1.90.35`–`v1.90.51` shows this was not a one-off. Every version in the band has a `## [1.90.x]` CHANGELOG section; **3 have no git tag at all** and **14 have no GitHub release**. Only 1.90.35 (fixed here), 1.90.50 and 1.90.51 are complete.
+
+| Version | CHANGELOG section | git tag | GitHub release |
+|---|---|---|---|
+| 1.90.35 | ✅ | ✅ (retro-tagged 03-09-2026) | ✅ (published 03-09-2026) |
+| 1.90.36 | ✅ | ✅ | ✅ |
+| 1.90.37 | ✅ | ✅ | ✅ |
+| 1.90.38 | ✅ | ✅ | ✅ |
+| 1.90.39 | ✅ | ✅ | ✅ |
+| 1.90.40 | ✅ | ✅ | ✅ |
+| 1.90.41 | ✅ | ✅ | ✅ |
+| 1.90.42 | ✅ | ✅ | ✅ |
+| 1.90.43 | ✅ | ✅ | ✅ |
+| 1.90.44 | ✅ | ✅ | ✅ |
+| 1.90.45 | ✅ | ✅ | ✅ |
+| 1.90.46 | ✅ | ✅ | ✅ |
+| 1.90.47 | ✅ | ✅ | ✅ |
+| 1.90.48 | ✅ | ✅ | ✅ |
+| 1.90.49 | ✅ | ✅ | ✅ |
+| 1.90.50 | ✅ | ✅ | ✅ |
+| 1.90.51 | ✅ | ✅ | ✅ |
+
+**Why it stays invisible.** A CHANGELOG heading is written by the release commit, so a session that stops after the commit leaves a version that looks shipped in every document that matters and exists nowhere in `git tag` or the releases page. Nothing reads back the other direction: no gate compares `## [x.y.z]` headings against `git ls-remote --tags`, so the drift only surfaces when a human clicks a release link written by an earlier pass. Matching known trap: a `cut_release` tag is lightweight, so `git push --follow-tags` skips it and the tag never leaves the machine even when that step did run.
+
+**Repair recipe (per version).** Tag the commit that carries the version's own CHANGELOG section (`git log --oneline --grep="<version>"` finds it), annotate it, push `refs/tags/<tag>` explicitly — never via `--follow-tags` — confirm with `git ls-remote --tags origin`, then `gh release create <tag> --verify-tag --notes-file <section> --latest=false`. The `--latest=false` is not optional: a retro-published historic release otherwise demotes the real newest one.
+
+**Backfilled 03-09-2026, same session.** All 14 versions now carry a tag and a release. Tags `v1.90.39`, `v1.90.42` and `v1.90.44` were created at the `chore(release):` commit that introduced each version's own CHANGELOG section (ancestry checked against both neighbouring tags before pushing) and pushed as explicit `refs/tags/` refs; all 14 releases were published from their CHANGELOG section with `--latest=false`, and `v1.90.51` still holds `Latest`.
+
+**The band was not the whole of it, and the rest was closed the same day.** A full audit over all 279 CHANGELOG versions, run after the first backfill, found 4 more versions with no git tag (`v1.90.30`, `v1.90.29`, `v1.90.25`, `v1.90.19`) and 6 with no release (those four plus `v1.90.21` and `v1.0.0` — the repo's very first version). All ten were repaired in the same session by the same recipe.
+
+**Final state: every one of the 279 CHANGELOG versions has a tag and a published release**, verified by the shipped gate over the whole history with drafts excluded (`--since 1.0.0 --check`, exit 0, `missing git tag: 0 · missing release: 0`), with `v1.90.51` still holding `Latest`. The 280th release — the `v1.90.20` draft described below — was published in the same session after CI caught it. Twenty releases were published and eleven tags created across the session. Where a version's CHANGELOG section exceeded the release-notes size limit its bullets were condensed and the notes say so — the CHANGELOG remains the full record.
+
+**A parser warning worth more than the count.** A first pass at this audit reported *128* missing releases — wrong by a factor of twenty. It matched `gh release list`'s **name** column against `v<version>`, and this repo's release names routinely differ from their tags (`1.90.32` without the `v`, `v1.90.22 — аптайм волна 4 подготовлена…` with a title appended). Release identity is the **tag**, never the display name; an audit keyed on the name invents a backlog that does not exist. The shipped gate reads the tag column.
+
+**The gate that would have caught it** now ships as [`scripts/changelog_release_coverage.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/changelog_release_coverage.py): it reads CHANGELOG headings, `git tag -l` and `gh release list`, and reports or (`--check`) fails on any version missing either. Its floor is now `1.0.0` — with the backlog closed there is nothing left to except, so the default window is the entire file — and it says «UNKNOWN — gh unavailable» rather than a false all-clear when `gh` cannot answer (that degradation fired twice for real during this session's flaky network).
+
+**Wired into CI the same day** as the `Changelog — every version tagged and released` job in [`.github/workflows/ci.yml`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/ci.yml). Two things that were wrong in the earlier note, corrected here rather than left standing:
+
+1. **No token, no secret, no PAT.** The releases half needs only `contents: read`, which this workflow already grants at file level; `GH_TOKEN: ${{ github.token }}` is the whole of it. The earlier «the release job would need a `gh` token with release-read scope» was over-cautious and would have parked the wiring behind a human permissions step that does not exist.
+2. **`fetch-depth: 0` is load-bearing.** `actions/checkout` fetches **no tags** at its default depth of 1, so the gate would have read zero tags and failed with 279 phantom gaps — a red CI that accuses the repo of exactly the defect it was built to detect, on the one signal that was actually fine. The script now refuses that reading outright: no tags at all in a repo that has a CHANGELOG is a checkout problem, and it exits **2** with that diagnosis instead of a version list. Verified against a real tagless checkout before shipping.
+
+**The gate's first real run failed, and it was right.** On its first PR it reported `missing release: 1 — v1.90.20` against a local run of the same script minutes earlier that had said zero. The local run was the wrong one: **`v1.90.20` existed only as a *draft* release**, created 26-08-2026 and never published. A draft is invisible to anyone without write access, so for every reader following a link it is simply absent — and whether `gh release list` shows it depends on the caller's token. A maintainer's write token saw it and called it published; CI's `contents: read` could not and called it missing. That also means the previous entry's «all 279 versions have a release» was **wrong when written** — 278 did. The draft is now published, and the script passes `--exclude-drafts` so the verdict is a property of the repo rather than of whoever asked.
+
+**A gate that cannot see its subject now fails instead of passing.** `gh` exits non-zero on a transient TLS blip as readily as on a real auth failure — the releases half went `UNKNOWN` twice on this session's flaky network — and under the original design `--check` would then pass having verified only half of what it claims. It now retries three times, and if the releases still cannot be read, `--check` exits **3** rather than green. Report mode (no `--check`) keeps the honest tags-only degradation; a gate does not get that latitude. Exit codes: `0` clean · `1` a real gap · `2` no tags visible · `3` releases unreadable under `--check`. All four paths were exercised before merge.
+
 
 ## H3692 guest /register attribution fields (30-08-2026)
 
