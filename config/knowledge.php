@@ -33,6 +33,13 @@ return [
     // второго конфига не заводим.
     'generation_model' => env('KNOWLEDGE_GENERATION_MODEL', 'qwen3:14b'),
 
+    // H3234 (этапы 5–6): таймаут ГЕНЕРАЦИИ отличен от таймаута эмбеддингов —
+    // qwen3:14b пишет ответ секундами, а не миллисекундами; 5-секундный
+    // request-path таймаут выше на генерацию не рассчитан. Тень и локальный
+    // режим живут в Horizon-job / после ответа студенту, длинный таймаут там
+    // безопасен.
+    'generation_timeout' => (int) env('KNOWLEDGE_GENERATION_TIMEOUT', 120),
+
     // bge-m3 = 1024 float32 = 4096 байт на чанк.
     'dimensions' => (int) env('KNOWLEDGE_EMBEDDING_DIMENSIONS', 1024),
 
