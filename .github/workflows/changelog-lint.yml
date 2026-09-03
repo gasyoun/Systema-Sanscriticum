@@ -30,8 +30,8 @@ jobs:
     name: Changelog — no duplicated entries
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
       - run: python scripts/changelog_duplicate_bullets.py
@@ -43,10 +43,10 @@ jobs:
       # fetch-depth: 0 is load-bearing here, unlike the job above: a deletion is
       # invisible in a single file state and can only be found by comparing two
       # revisions, so the default depth-1 checkout would make this a no-op.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.11"
       # On a pull request the script reads GITHUB_BASE_REF and compares against
