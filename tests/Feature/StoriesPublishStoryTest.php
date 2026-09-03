@@ -35,6 +35,7 @@ class StoriesPublishStoryTest extends TestCase
 
         config([
             'features.telegram_story_stories' => false,
+            'services.telegram_story.subprocess_lane' => false,
             'services.telegram_support.api_id' => 12345,
             'services.telegram_support.api_hash' => 'test-hash',
             'services.telegram_support.client_class' => FakeStoriesMadelineProtoClient::class,

@@ -5,28 +5,37 @@ declare(strict_types=1);
 namespace App\Services\Stories;
 
 use App\Services\Telegram\MadelineClientFactory;
+use Illuminate\Support\Facades\Process;
 use RuntimeException;
 
 /**
  * Отправитель user-сториз персоны @rusamskrtam (H3964, Phase 2).
  *
- * Работает поверх ЕДИНОЙ MadelineProto-сессии (MadelineClientFactory —
- * легаси-сессия и есть аккаунт @rusamskrtam, getSelf id=5487293147, H3380).
- * Открывать клиента имеет право только вызывающий, уже держащий
- * madeline-session-лок (LocksMadelineSession) — здесь лок НЕ берётся.
+ * ЕДИНАЯ MadelineProto-сессия (легаси support-сессия и есть аккаунт
  *
- * Формы вызова — как у TelegramSupportSyncService::deliverMessage():
- * плоский массив параметров верхнего уровня MadelineProto
- * ($client->stories->sendStory([...])). Медиа строится по TL-схеме:
- * фото — inputMediaUploadedPhoto от $client->upload(), видео —
- * inputMediaUploadedDocument с documentAttributeVideo; peer «me»,
- * period 24 ч.
+ * @rusamskrtam, getSelf id=5487293147, H3380); открывать её вправе только
+ * тот, кто уже держит madeline-session-лок (LocksMadelineSession) — здесь
+ * лок НЕ берётся.
+ *
+ * Два исполнения одного и того же набора вызовов:
+ *  - ПОДПРОЦЕССНЫЙ (дефолт на реальном хосте, services.telegram_story.
+ *    subprocess_lane): каждый MTProto-вызов исполняет scripts/
+ *    stories_lane_worker.php в изолированном процессе. Почему: из-под
+ *    artisan второй заход в Amp-цикл MP v8 падает с Revolt DriverSuspension
+ *    (живой замер 03-09-2026), а standalone-процесс работает чисто.
+ *    Родитель держит лок и watchdog, воркеру хватает stories_timeout_seconds.
+ *  - ПРЯМОЙ (тесты): клиент открывается здесь — в тестах это фейк из
+ *    services.telegram_support.client_class, DriverSuspension там не грозит.
+ *
+ * Формы вызова (в воркере/прямо): плоский массив параметров верхнего уровня
+ * MadelineProto. Медиа по TL-схеме: фото — inputMediaUploadedPhoto от
+ * $client->upload(), видео — inputMediaUploadedDocument с
+ * documentAttributeVideo; peer «me», period 24 ч.
  *
  * ТЕКСТОВЫХ user-сториз в MTProto НЕТ: в TL-схеме layer 225 (и у вендорного
  * MadelineProto, и в актуальном tdlib) конструктора text-медиа не существует,
- * а inputMediaEmpty живой сервер отвечает MEDIA_FILE_INVALID (замер 03-09-2026,
- * H3964 unit 1, Uprava FINDINGS). Поэтому persona-строки kind=text издатель
- * скипает с журналом — «текстовая сториз» возможна только как пост канала
+ * а inputMediaEmpty живой сервер отвечает MEDIA_FILE_INVALID (замер
+ * 03-09-2026, H3964 unit 1). «Текстовый» контент персоны — пост канала
  * (stories:publish-due, Phase 1).
  */
 class StoryPublisher
@@ -35,6 +44,41 @@ class StoryPublisher
     private const PERIOD_24H = 86400;
 
     public function __construct(private readonly MadelineClientFactory $factory) {}
+
+    /** Подпроцессная полоса включена (реальный хост; в тестах выключена). */
+    public function viaSubprocess(): bool
+    {
+        return (bool) config('services.telegram_story.subprocess_lane', true);
+    }
+
+    public function sendPhotoStory(string $absolutePath, string $caption = ''): ?int
+    {
+        if ($this->viaSubprocess()) {
+            return $this->execWorker(['action' => 'send_photo', 'path' => $absolutePath, 'caption' => $caption]);
+        }
+
+        return $this->sendPhotoStoryDirect($absolutePath, $caption);
+    }
+
+    public function sendVideoStory(string $absolutePath, string $caption = ''): ?int
+    {
+        if ($this->viaSubprocess()) {
+            return $this->execWorker(['action' => 'send_video', 'path' => $absolutePath, 'caption' => $caption]);
+        }
+
+        return $this->sendVideoStoryDirect($absolutePath, $caption);
+    }
+
+    public function deleteStory(int $storyId): void
+    {
+        if ($this->viaSubprocess()) {
+            $this->execWorker(['action' => 'delete', 'story_id' => $storyId]);
+
+            return;
+        }
+
+        $this->deleteStoryDirect($storyId);
+    }
 
     /**
      * Текстовых user-сториз в MTProto-схеме не существует (см. докблок класса):
@@ -50,8 +94,10 @@ class StoryPublisher
         );
     }
 
-    /** Фотосториз из локального файла. */
-    public function sendPhotoStory(string $absolutePath, string $caption = ''): ?int
+    // --- Прямое исполнение (воркер и тесты) ---
+
+    /** Фотосториз из локального файла. Возвращает id сториз или null. */
+    public function sendPhotoStoryDirect(string $absolutePath, string $caption = ''): ?int
     {
         $client = $this->client();
 
@@ -62,7 +108,7 @@ class StoryPublisher
     }
 
     /** Видеосториз из локального файла (mp4/mov). */
-    public function sendVideoStory(string $absolutePath, string $caption = ''): ?int
+    public function sendVideoStoryDirect(string $absolutePath, string $caption = ''): ?int
     {
         $client = $this->client();
 
@@ -77,13 +123,10 @@ class StoryPublisher
     }
 
     /**
-     * Удалить свою сториз по id (уборка тестовых/смоковых артефактов).
-     * Имя метода — deleteStories (множественное): stories.deleteStory в
-     * схеме MP v8 НЕТ, а вызов несуществующего метода роняет фибер
-     * IPC-пайплайна с DriverSuspension вместо чистого исключения
-     * (живой замер 03-09-2026).
+     * Удалить свою сториз по id. Имя метода — deleteStories (множественное):
+     * stories.deleteStory в схеме MP v8 НЕТ.
      */
-    public function deleteStory(int $storyId): void
+    public function deleteStoryDirect(int $storyId): void
     {
         $this->client()->stories->deleteStories([
             'peer' => 'me',
@@ -173,5 +216,40 @@ class StoryPublisher
         return str_ends_with(strtolower($path), '.mov')
             ? 'video/quicktime'
             : 'video/mp4';
+    }
+
+    /**
+     * Исполнить одну задачу воркером. Родитель держит madeline-session-лок
+     * и watchdog — воркеру передаётся потолок тем же stories_timeout_seconds.
+     *
+     * @param  array<string, mixed>  $task
+     */
+    private function execWorker(array $task): ?int
+    {
+        $worker = base_path('scripts/stories_lane_worker.php');
+        if (! is_file($worker)) {
+            throw new RuntimeException("Stories lane worker not found: {$worker}");
+        }
+
+        $timeout = max(30, (int) config('services.telegram_story.stories_timeout_seconds', 120));
+
+        $result = Process::timeout($timeout)
+            ->run([PHP_BINARY, $worker, (string) json_encode($task, JSON_UNESCAPED_UNICODE)]);
+
+        $lines = array_values(array_filter(explode("\n", trim($result->output()))));
+        $payload = json_decode((string) end($lines), true);
+
+        if (! is_array($payload) || ! isset($payload['ok'])) {
+            throw new RuntimeException('Stories lane worker produced no JSON verdict: '
+                .mb_substr($result->errorOutput() !== '' ? $result->errorOutput() : $result->output(), 0, 300));
+        }
+
+        if ($payload['ok'] !== true) {
+            throw new RuntimeException('Stories lane worker failed: '.(string) $payload['error']);
+        }
+
+        return isset($payload['story_id']) && $payload['story_id'] !== null
+            ? (int) $payload['story_id']
+            : null;
     }
 }
