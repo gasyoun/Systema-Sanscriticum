@@ -11,7 +11,7 @@ use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
-use App\Services\Support\Faq\Bm25FaqRetriever;
+use App\Services\Support\Faq\HybridRetriever;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -73,7 +73,7 @@ final class SupportDmAutoReply
         private readonly SupportAnswerFactResolver $facts,
         private readonly SupportReplyService $replies,
         private readonly TelegramAdminNotifier $admins,
-        private readonly Bm25FaqRetriever $faq,
+        private readonly HybridRetriever $faq,
         private readonly SupportDmLinkInvite $linkInvite,
     ) {}
 

@@ -76,7 +76,8 @@ MD;
         $hybrid = app(HybridRetriever::class);
         $bm25 = app(Bm25FaqRetriever::class);
 
-        $this->assertFalse($hybrid->isEnabled());
+        // Дроп-ин: гейт lane'а зеркалит BM25 при любом состоянии hybrid-флага.
+        $this->assertSame($bm25->isEnabled(), $hybrid->isEnabled());
 
         $query = 'как оплатить курс поблочно';
         $this->assertSame(
@@ -118,6 +119,7 @@ MD;
 
         $hybrid = app(HybridRetriever::class);
         $bm25 = app(Bm25FaqRetriever::class);
+        $this->assertTrue($hybrid->isEnabled(), 'gate stays the lane flag, not the hybrid flag');
 
         $query = 'вход в кабинет не работает';
         $this->assertSame(
