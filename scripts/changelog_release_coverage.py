@@ -62,6 +62,19 @@ def local_tags() -> set[str]:
     return set(out.split())
 
 
+def has_any_tags() -> bool:
+    """False in a checkout that fetched no tags at all.
+
+    `actions/checkout` defaults to `fetch-depth: 1`, which fetches no tags.
+    Without this guard the gate would read zero tags, report every version as
+    untagged, and fail with a 279-line list that says nothing about the real
+    cause. A repo with a CHANGELOG but not one single `v*` tag is a checkout
+    problem, never a coverage problem.
+    """
+    _, out = run(["git", "tag", "-l"])
+    return bool(out.strip())
+
+
 def published_releases() -> set[str] | None:
     """Release tag names, or None when gh cannot answer."""
     if not shutil.which("gh"):
@@ -91,6 +104,13 @@ def main() -> int:
     if not versions:
         print(f"No CHANGELOG versions at or above {args.since}.")
         return 0
+
+    if not has_any_tags():
+        print("No git tags are visible in this checkout at all, so tag coverage")
+        print("cannot be judged. This is a checkout problem, not a coverage gap:")
+        print("`actions/checkout` fetches no tags at its default `fetch-depth: 1`.")
+        print("Set `fetch-depth: 0` on the checkout step, or fetch the tag refs.")
+        return 2
 
     tags = local_tags()
     releases = published_releases()
