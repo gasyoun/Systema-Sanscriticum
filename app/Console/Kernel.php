@@ -267,9 +267,11 @@ class Kernel extends ConsoleKernel
         // knowledge_chunks. Двойной гейт — флаг гибрида (OFF по умолчанию) И
         // настроенный драйвер эмбеддингов: пока dense-нога не включена
         // человеком, слот молчит. Ретраи живут внутри KnowledgeEmbedChunksJob
-        // (очередь imports).
+        // (очередь imports). 10:00 МСК, а не ночь: GPU-узел Ивана живёт
+        // только 9–21 МСК — ночной слот гарантированно упирался бы в
+        // спящий туннель и плодил failed jobs.
         $schedule->command('knowledge:index')
-            ->dailyAt('04:40')
+            ->dailyAt('10:00')
             ->timezone('Europe/Moscow')
             ->when(fn () => (bool) config('features.faq_hybrid_retrieval')
                 && (string) config('knowledge.driver') !== '')
