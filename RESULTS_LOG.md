@@ -4,7 +4,7 @@ _Created: 30-07-2026 · Last updated: 03-09-2026_
 
 Durable substantive-result tables for this repo. Newest first.
 
-## Release coverage census — v1.90.34–v1.90.51 fully tagged and released (03-09-2026)
+## Release coverage census — all 279 CHANGELOG versions tagged and released (03-09-2026)
 
 _Model: Opus 5 (`claude-opus-5`)._ H3692's close-out ([PR #2207](https://github.com/gasyoun/Systema-Sanscriticum/pull/2207), `84031c39`, 30-08-2026) landed the `[1.90.35]` CHANGELOG section, the RESULTS_LOG table below and the `.ai_state` stamp, but never cut the tag or the GitHub release — so both docs linked to a 404 for four days. Tag `v1.90.35` (annotated) now points at `84031c39`, the commit carrying its own CHANGELOG section, and the release is published with `--latest=false` so `v1.90.51` stays `Latest`: [v1.90.35](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.35).
 
@@ -36,11 +36,13 @@ The same census over `v1.90.35`–`v1.90.51` shows this was not a one-off. Every
 
 **Backfilled 03-09-2026, same session.** All 14 versions now carry a tag and a release. Tags `v1.90.39`, `v1.90.42` and `v1.90.44` were created at the `chore(release):` commit that introduced each version's own CHANGELOG section (ancestry checked against both neighbouring tags before pushing) and pushed as explicit `refs/tags/` refs; all 14 releases were published from their CHANGELOG section with `--latest=false`, and `v1.90.51` still holds `Latest`.
 
-**The band was not the whole of it, but nearly.** A full audit over all 279 CHANGELOG versions, run after the backfill, finds **4 more versions with no git tag** (`v1.90.30`, `v1.90.29`, `v1.90.25`, `v1.90.19` — all now tagged in this pass at their own `chore(release):` commit, ancestry checked) and **6 still with no GitHub release**: `v1.90.30`, `v1.90.29`, `v1.90.25`, `v1.90.21`, `v1.90.19`, `v1.0.0`. Coverage is unbroken from `v1.90.34` upward; those 6 are the entire remaining backlog.
+**The band was not the whole of it, and the rest was closed the same day.** A full audit over all 279 CHANGELOG versions, run after the first backfill, found 4 more versions with no git tag (`v1.90.30`, `v1.90.29`, `v1.90.25`, `v1.90.19`) and 6 with no release (those four plus `v1.90.21` and `v1.0.0` — the repo's very first version). All ten were repaired in the same session by the same recipe.
+
+**Final state: every one of the 279 CHANGELOG versions has a tag and a release**, verified by the shipped gate over the whole history (`--since 1.0.0 --check`, exit 0, `missing git tag: 0 · missing release: 0`), with `v1.90.51` still holding `Latest`. Twenty releases were published and eleven tags created across the session. Where a version's CHANGELOG section exceeded the release-notes size limit its bullets were condensed and the notes say so — the CHANGELOG remains the full record.
 
 **A parser warning worth more than the count.** A first pass at this audit reported *128* missing releases — wrong by a factor of twenty. It matched `gh release list`'s **name** column against `v<version>`, and this repo's release names routinely differ from their tags (`1.90.32` without the `v`, `v1.90.22 — аптайм волна 4 подготовлена…` with a title appended). Release identity is the **tag**, never the display name; an audit keyed on the name invents a backlog that does not exist. The shipped gate reads the tag column.
 
-**The gate that would have caught it** now ships as [`scripts/changelog_release_coverage.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/changelog_release_coverage.py): it reads CHANGELOG headings, `git tag -l` and `gh release list`, and reports or (`--check`) fails on any version missing either. It defaults to `--since 1.90.34` so it gates new releases without going permanently red on the historic backlog, and it says «UNKNOWN — gh unavailable» rather than a false all-clear when `gh` cannot answer. It is **not wired into CI** — that step is deliberately left, since the release job would need a `gh` token with release-read scope.
+**The gate that would have caught it** now ships as [`scripts/changelog_release_coverage.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/changelog_release_coverage.py): it reads CHANGELOG headings, `git tag -l` and `gh release list`, and reports or (`--check`) fails on any version missing either. Its floor is now `1.0.0` — with the backlog closed there is nothing left to except, so the default window is the entire file — and it says «UNKNOWN — gh unavailable» rather than a false all-clear when `gh` cannot answer (that degradation fired twice for real during this session's flaky network). It is **not wired into CI** — deliberately left, since the release job would need a `gh` token with release-read scope.
 
 
 ## H3692 guest /register attribution fields (30-08-2026)
