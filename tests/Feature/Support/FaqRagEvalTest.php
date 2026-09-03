@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Support;
 
+use App\Models\KnowledgeChunk;
 use App\Services\Support\Faq\Bm25FaqRetriever;
+use App\Services\Support\Faq\EmbeddingProvider;
 use App\Services\Support\Faq\FaqCorpusParser;
+use App\Services\Support\Faq\HybridRetriever;
+use App\Services\Support\Faq\NullEmbeddingProvider;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 /**
@@ -69,17 +74,121 @@ class FaqRagEvalTest extends TestCase
     }
 
     /**
+     * H4001 (пол плана): когда dense-нога недоступна, гибрид обязан давать
+     * БАЙТ-В-БАЙТ ранжирование BM25 на ОБОИХ наборах. CI-безопасный гейт.
+     */
+    public function test_hybrid_matches_bm25_when_dense_leg_unavailable(): void
+    {
+        config([
+            'features.faq_rag_suggester' => true,
+            'features.faq_hybrid_retrieval' => true,
+            'knowledge.driver' => 'ollama',
+        ]);
+        $this->app->instance(EmbeddingProvider::class, new NullEmbeddingProvider);
+
+        $bm25 = app(Bm25FaqRetriever::class);
+        $hybrid = app(HybridRetriever::class);
+        $this->assertTrue($hybrid->isEnabled());
+
+        foreach (['tests/fixtures/faq_rag_eval.json', 'tests/fixtures/faq_rag_eval_fresh.json'] as $fixtureRel) {
+            $fixturePath = base_path($fixtureRel);
+            $this->assertFileExists($fixturePath);
+            $items = json_decode((string) file_get_contents($fixturePath), true, 512, JSON_THROW_ON_ERROR)['items'];
+
+            foreach ($items as $item) {
+                $query = (string) $item['question'];
+                $floor = array_map(static fn (array $h): array => [
+                    'chunk_id' => $h['chunk_id'], 'score' => $h['score'],
+                ], $bm25->retrieve($query, 5));
+                $hybridRanking = array_map(static fn (array $h): array => [
+                    'chunk_id' => $h['chunk_id'], 'score' => $h['score'],
+                ], $hybrid->retrieve($query, 5));
+
+                $this->assertSame($floor, $hybridRanking, "dense leg unavailable: ranking must equal BM25 ({$fixtureRel})");
+            }
+        }
+    }
+
+    /**
+     * H4001 live-гейт: гибрид не ниже BM25 ни на одном наборе + p95 латентность
+     * ≤ 2 c через туннель. Требует живого туннеля и KNOWLEDGE_LIVE_EVAL=1
+     * (запускается вручную в рамках live-прогона, в CI пропускается).
+     */
+    public function test_live_hybrid_matches_or_beats_bm25_on_both_sets(): void
+    {
+        if (! filter_var(env('KNOWLEDGE_LIVE_EVAL', false), FILTER_VALIDATE_BOOLEAN)
+            || (string) config('knowledge.driver') !== 'ollama') {
+            $this->markTestSkipped('KNOWLEDGE_LIVE_EVAL=1 + live tunnel required (H4001 live pass)');
+        }
+
+        $this->artisan('migrate', ['--path' => 'database/migrations/2026_09_03_110000_create_knowledge_chunks_table.php']);
+
+        Http::allowStrayRequests();
+        $index = $this->artisan('knowledge:index', ['--force' => true, '--sync' => true]);
+        $index->assertSuccessful();
+        $this->assertGreaterThan(0, KnowledgeChunk::count(), 'live index must produce rows');
+
+        config(['features.faq_rag_suggester' => true, 'features.faq_hybrid_retrieval' => true]);
+
+        $parser = app(FaqCorpusParser::class);
+        $knownIds = array_flip(array_map(static fn ($c) => $c->chunkId, $parser->chunks()));
+        $bm25 = app(Bm25FaqRetriever::class);
+        $hybrid = app(HybridRetriever::class);
+
+        $report = [];
+        foreach (['80Q' => 'tests/fixtures/faq_rag_eval.json', 'fresh' => 'tests/fixtures/faq_rag_eval_fresh.json'] as $name => $fixtureRel) {
+            $items = json_decode((string) file_get_contents(base_path($fixtureRel)), true, 512, JSON_THROW_ON_ERROR)['items'];
+
+            $mBm25 = $this->measureRetriever($bm25, $items, $knownIds);
+            $mHybrid = $this->measureRetriever($hybrid, $items, $knownIds);
+
+            $this->assertGreaterThanOrEqual(
+                $mBm25['recall5'],
+                $mHybrid['recall5'],
+                "H4001 defect: hybrid recall@5 below BM25 floor on {$name}",
+            );
+            $this->assertGreaterThanOrEqual(
+                $mBm25['mrr'] - 0.001,
+                $mHybrid['mrr'],
+                "H4001 defect: hybrid MRR below BM25 floor on {$name}",
+            );
+            $this->assertLessThanOrEqual(2.0, $mHybrid['p95_ms'] / 1000.0, "p95 retrieval latency above 2 s on {$name}");
+
+            $report[] = ['name' => $name, 'bm25' => $mBm25, 'hybrid' => $mHybrid];
+        }
+
+        if (filter_var(env('FAQ_RAG_EVAL_WRITE', false), FILTER_VALIDATE_BOOLEAN)) {
+            $this->writeLiveReport($report);
+        }
+    }
+
+    /**
      * @param  list<array<string, mixed>>  $items
      * @param  array<string, int>  $knownIds
      * @return array{n: int, top3: float, recall5: float, mrr: float, rows: list<array<string, mixed>>, by_category: array<string, array{n: int, top3: int, recall5: int, mrr: float}>}
      */
     private function measure(array $items, Bm25FaqRetriever $retriever, array $knownIds): array
     {
+        return $this->measureRetriever($retriever, $items, $knownIds);
+    }
+
+    /**
+     * H4001: обобщённый замер — принимает и BM25, и HybridRetriever (дроп-ин
+     * шейпа), плюс p95 латентность retrieve() на вопрос.
+     *
+     * @param  Bm25FaqRetriever|HybridRetriever  $retriever
+     * @param  list<array<string, mixed>>  $items
+     * @param  array<string, int>  $knownIds
+     * @return array{n: int, top3: float, recall5: float, mrr: float, p95_ms: float, rows: list<array<string, mixed>>, by_category: array<string, array{n: int, top3: int, recall5: int, mrr: float}>}
+     */
+    private function measureRetriever(object $retriever, array $items, array $knownIds): array
+    {
         $top3Hits = 0;
         $recall5Hits = 0;
         $rrSum = 0.0;
         $rows = [];
         $byCategory = [];
+        $latencies = [];
 
         foreach ($items as $item) {
             /** @var list<string> $expected */
@@ -88,7 +197,10 @@ class FaqRagEvalTest extends TestCase
                 $this->assertArrayHasKey($eid, $knownIds, "expected chunk_id missing from corpus: {$eid}");
             }
 
+            $startedAt = microtime(true);
             $top = $retriever->retrieve((string) $item['question'], 5);
+            $latencies[] = (microtime(true) - $startedAt) * 1000.0;
+
             $topIds = array_map(static fn (array $h) => $h['chunk_id'], $top);
 
             $rank = 0;
@@ -128,12 +240,15 @@ class FaqRagEvalTest extends TestCase
 
         $n = max(1, count($items));
         ksort($byCategory);
+        sort($latencies);
+        $p95Index = (int) floor(0.95 * max(0, count($latencies) - 1));
 
         return [
             'n' => count($items),
             'top3' => $top3Hits / $n,
             'recall5' => $recall5Hits / $n,
             'mrr' => $rrSum / $n,
+            'p95_ms' => $latencies === [] ? 0.0 : (float) $latencies[$p95Index],
             'rows' => $rows,
             'by_category' => $byCategory,
         ];
@@ -185,6 +300,46 @@ class FaqRagEvalTest extends TestCase
                 implode('`, `', $r['top']),
                 implode('`, `', $r['expected']),
             );
+        }
+        $lines[] = '';
+        $lines[] = '_Dr. Mārcis Gasūns_';
+        $lines[] = '';
+
+        $path = base_path('docs/FAQ_RAG_EVAL_H2448.md');
+        file_put_contents($path, rtrim((string) file_get_contents($path))."\n".implode("\n", $lines));
+    }
+
+    /**
+     * H4001: dated live-раздел — BM25 против гибрида на обоих наборах,
+     * p95 латентность через туннель. Пишется только при FAQ_RAG_EVAL_WRITE=1.
+     *
+     * @param  list<array{name: string, bm25: array<string, mixed>, hybrid: array<string, mixed>}>  $report
+     */
+    private function writeLiveReport(array $report): void
+    {
+        $lines = [];
+        $lines[] = '';
+        $lines[] = '## Замер H4001 (Wave 3) — BM25 против HybridRetriever, live-туннель ('.date('d-m-Y').')';
+        $lines[] = '';
+        $lines[] = '**Model:** OxAlpha (opencode, GLM) — выполнение H4001';
+        $lines[] = '**Dense leg:** `bge-m3` через sshd-туннель на GPU-узле (`config/knowledge.php`), knowledge:index --force --sync перед замером';
+        $lines[] = '';
+        $lines[] = '| Набор | N | Ретривер | top-3 | recall@5 | MRR | p95, мс |';
+        $lines[] = '|---|---|---|---|---|---|---|';
+        foreach ($report as $r) {
+            foreach (['bm25' => 'BM25 (пол)', 'hybrid' => 'Hybrid (RRF)'] as $key => $label) {
+                $m = $r[$key];
+                $lines[] = sprintf(
+                    '| %s | %d | %s | %.1f%% | %.1f%% | %.3f | %.0f |',
+                    $r['name'],
+                    $m['n'],
+                    $label,
+                    $m['top3'] * 100,
+                    $m['recall5'] * 100,
+                    $m['mrr'],
+                    $m['p95_ms'],
+                );
+            }
         }
         $lines[] = '';
         $lines[] = '_Dr. Mārcis Gasūns_';

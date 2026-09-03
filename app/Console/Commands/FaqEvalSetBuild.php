@@ -34,6 +34,7 @@ class FaqEvalSetBuild extends Command
         {--per-category=25 : сколько кандидатов на категорию A–F}
         {--top-k=10 : сколько BM25-кандидатов показывать на вопрос}
         {--from-tsv= : офлайн-дамп id<TAB>date<TAB>text вместо запроса к БД}
+        {--exclude-fixture= : committed-фикстура (относительно base_path), чьи вопросы вычесть из майнинга — независимость свежего набора от старого}
         {--out=storage/app/faq_eval_candidates.json : куда писать кандидатов}';
 
     protected $description = 'H3766 B1: mine anonymised real support questions + BM25 candidates for the FAQ RAG eval set';
@@ -53,10 +54,18 @@ class FaqEvalSetBuild extends Command
 
         $perCategory = max(1, (int) $this->option('per-category'));
         $topK = max(1, (int) $this->option('top-k'));
+        $excluded = $this->loadExclusionKeys((string) $this->option('exclude-fixture'));
 
         $seen = [];
         $buckets = [];
-        $stats = ['read' => count($rows), 'not_question' => 0, 'duplicate' => 0, 'uncategorised' => 0, 'kept' => 0];
+        $stats = [
+            'read' => count($rows),
+            'not_question' => 0,
+            'duplicate' => 0,
+            'excluded_overlap' => 0,
+            'uncategorised' => 0,
+            'kept' => 0,
+        ];
 
         foreach ($rows as $row) {
             $text = $this->anonymise((string) $row['text']);
@@ -73,6 +82,14 @@ class FaqEvalSetBuild extends Command
                 continue;
             }
             $seen[$key] = true;
+
+            // H4001: свежий набор не должен пересекаться с уже committed
+            // (иначе «независимая» проверка тюнинга проверяет то же самое).
+            if (isset($excluded[$key])) {
+                $stats['excluded_overlap']++;
+
+                continue;
+            }
 
             $category = $suggester->categorize($text);
             if ($category === null) {
@@ -151,6 +168,42 @@ class FaqEvalSetBuild extends Command
                 'text' => (string) $r->text,
             ])
             ->all();
+    }
+
+    /**
+     * H4001: ключи уже committed-набора, которые свежий майнинг должен вычесть.
+     * Путь читается как base_path()-относительный; файла нет → пусто (не ошибка:
+     * опция необязательна).
+     *
+     * @return array<string, true>
+     */
+    private function loadExclusionKeys(string $fixture): array
+    {
+        if ($fixture === '') {
+            return [];
+        }
+
+        $path = (str_starts_with($fixture, '/') || preg_match('/^[A-Za-z]:/', $fixture) === 1)
+            ? $fixture
+            : base_path($fixture);
+        if (! is_file($path)) {
+            $this->warn("exclude-fixture: no such file, ignoring: {$path}");
+
+            return [];
+        }
+
+        /** @var array{items?: list<array{question?: string}>} $data */
+        $data = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+
+        $keys = [];
+        foreach ((array) ($data['items'] ?? []) as $item) {
+            $question = (string) ($item['question'] ?? '');
+            if ($question !== '') {
+                $keys[$this->dedupeKey($question)] = true;
+            }
+        }
+
+        return $keys;
     }
 
     /** @return list<array{id: int, date: string, text: string}> */

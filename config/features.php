@@ -147,6 +147,17 @@ return [
     'faq_rag_suggester' => (bool) env('FAQ_RAG_SUGGESTER', false),
 
     /*
+     | H4001 (Wave 3 leverage-плана): dense-нога ретривала — reciprocal rank
+     | fusion BM25 ∪ knowledge_chunks поверх bge-m3 с GPU-узла за туннелем.
+     | ВЫКЛ по умолчанию: при OFF HybridRetriever байт-в-байт отдаёт ranking
+     | BM25 (dense-нога даже не зовётся — туннель не в request-path), и ни
+     | один потребитель lane'а не переключён. Включение — решение человека
+     | после чтения eval-таблицы H4001 (гибрид ≥ BM25 на обоих наборах).
+     | Enable: FAQ_HYBRID_RETRIEVAL=true + config:cache.
+     */
+    'faq_hybrid_retrieval' => (bool) env('FAQ_HYBRID_RETRIEVAL', false),
+
+    /*
      | H3766 B4 (стадия 1 issue #1633, рулинг R5): вместо того чтобы класть в
      | системный промпт ИИ-куратора ВЕСЬ faq.md (~46 000 символов на каждый
      | вопрос), BotKnowledgeBase кладёт top-K разделов, найденных тем же
