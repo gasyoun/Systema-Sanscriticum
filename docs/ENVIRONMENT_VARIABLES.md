@@ -302,6 +302,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `KNOWLEDGE_EMBEDDING_DRIVER` | optional | `''` | config/knowledge.php:22 |
 | `KNOWLEDGE_EMBEDDING_MODEL` | optional | `'bge-m3:latest'` | config/knowledge.php:30 |
 | `KNOWLEDGE_FUSION_K` | optional | `60` | config/knowledge.php:49 |
+| `KNOWLEDGE_FUSION_WEIGHT_DENSE` | optional | `0.6` | config/knowledge.php:59 |
+| `KNOWLEDGE_FUSION_WEIGHT_SPARSE` | optional | `1.0` | config/knowledge.php:58 |
 | `KNOWLEDGE_GENERATION_MODEL` | optional | `'qwen3:14b'` | config/knowledge.php:34 |
 | `KNOWLEDGE_INDEX_BATCH_SIZE` | optional | `16` | config/knowledge.php:44 |
 | `KNOWLEDGE_OLLAMA_BASE_URL` | optional | `'http://127.0.0.1:11434'` | config/knowledge.php:26 |

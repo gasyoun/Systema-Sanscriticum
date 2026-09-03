@@ -355,3 +355,17 @@ _Dr. Mārcis Gasūns_
 ([`SupportAnswerFactResolver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportAnswerFactResolver.php)).
 
 _Dr. Mārcis Gasūns_
+
+## Замер H4001 (Wave 3) — BM25 против HybridRetriever, live-туннель (03-09-2026)
+
+**Model:** OxAlpha (opencode, GLM) — выполнение H4001
+**Dense leg:** `bge-m3` через sshd-туннель на GPU-узле (`config/knowledge.php`), knowledge:index --force --sync перед замером
+
+| Набор | N | Ретривер | top-3 | recall@5 | MRR | p95, мс |
+|---|---|---|---|---|---|---|
+| 80Q | 100 | BM25 (пол) | 77.0% | 83.0% | 0.713 | 22 |
+| 80Q | 100 | Hybrid (RRF) | 83.0% | 90.0% | 0.762 | 560 |
+| fresh | 20 | BM25 (пол) | 95.0% | 95.0% | 0.900 | 19 |
+| fresh | 20 | Hybrid (RRF) | 95.0% | 95.0% | 0.917 | 447 |
+
+_Dr. Mārcis Gasūns_

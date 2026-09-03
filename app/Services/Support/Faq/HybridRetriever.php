@@ -178,12 +178,16 @@ final class HybridRetriever
     private function fuse(array $sparse, array $dense): array
     {
         $k = max(1, (int) config('knowledge.fusion.k', 60));
+        // Weighted RRF: спарс-нога — пол по контракту, поэтому её вес ≥ dense;
+        // равные веса на свежем наборе роняли MRR ниже BM25 (live-замер H4001).
+        $wSparse = max(0.1, (float) config('knowledge.fusion.weight_sparse', 1.0));
+        $wDense = max(0.1, (float) config('knowledge.fusion.weight_dense', 0.6));
 
         $fused = [];
         $bm25Scores = [];
         foreach (array_values($sparse) as $rank => $hit) {
             $id = $hit['chunk']->chunkId;
-            $fused[$id] = ($fused[$id] ?? 0.0) + 1.0 / ($k + $rank + 1);
+            $fused[$id] = ($fused[$id] ?? 0.0) + $wSparse / ($k + $rank + 1);
             $bm25Scores[$id] = (float) $hit['score'];
         }
 
@@ -195,7 +199,7 @@ final class HybridRetriever
 
         $denseRank = 0;
         foreach (array_keys($denseRanking) as $id) {
-            $fused[$id] = ($fused[$id] ?? 0.0) + 1.0 / ($k + $denseRank + 1);
+            $fused[$id] = ($fused[$id] ?? 0.0) + $wDense / ($k + $denseRank + 1);
             $bm25Scores[$id] ??= 0.0;
             $denseRank++;
         }

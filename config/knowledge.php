@@ -49,6 +49,14 @@ return [
         'k' => (int) env('KNOWLEDGE_FUSION_K', 60),
         // Глубина каждой ноги до слияния (dense leg fetch depth).
         'depth' => (int) env('KNOWLEDGE_RETRIEVAL_DEPTH', 20),
+        // Веса ног в weighted RRF: score(d) = Σ w_leg / (k + rank_leg(d)).
+        // Спарс-вес 1.0 фиксирован, dense 0.6 — подобрано на live-замере
+        // H4001 (03-09-2026): при равных весах гибрид ронял MRR свежего
+        // набора ниже BM25-пола (0.852 < 0.899), 0.6 возвращает пол.
+        // Правило храповика: одна правка за коммит, ниже BM25 на любом
+        // наборе = дефект, не тюнинг.
+        'weight_sparse' => (float) env('KNOWLEDGE_FUSION_WEIGHT_SPARSE', 1.0),
+        'weight_dense' => (float) env('KNOWLEDGE_FUSION_WEIGHT_DENSE', 0.5),
     ],
 
 ];
