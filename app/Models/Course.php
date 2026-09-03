@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ExitSurveyAutoTrigger;
 use App\Support\RichHtml;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -39,6 +40,9 @@ class Course extends Model
         // Курс/поток завершён, записи опубликованы. Включает «режим записей» на
         // лендинге (см. sellsRecordings()). Аддитивно, по умолчанию false.
         'is_completed',
+        // H3915: момент разбора курса задачей «Exit-опрос» (дедуп авто-триггера
+        // завершения). Техническое — только через forceFill.
+        'exit_survey_triggered_at',
         // Живой повтор не планируется (MG H1755): куратор говорит «повтора не будет».
         'never_repeat',
         // Новизна для анонсов «только новые курсы» (MG 31-08-2026):
@@ -501,6 +505,14 @@ class Course extends Model
         });
 
         static::updated(function (self $course): void {
+            // H3915 — событие «курс завершён» (is_completed false→true): задача
+            // куратору на Exit-опрос с черновиками для личной отправки. Флаг
+            // features.exit_survey_auto_trigger (default OFF) решает внутри;
+            // дедуп по exit_survey_triggered_at.
+            if ($course->wasChanged('is_completed') && $course->is_completed) {
+                app(ExitSurveyAutoTrigger::class)->handleCompleted($course);
+            }
+
             $old = $course->pendingSlugAlias;
             $course->pendingSlugAlias = null;
             if ($old === null || $old === $course->slug) {
