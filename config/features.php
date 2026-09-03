@@ -158,6 +158,32 @@ return [
     'faq_hybrid_retrieval' => (bool) env('FAQ_HYBRID_RETRIEVAL', false),
 
     /*
+     | H3234 (issue #1633 этап 5): теневая генерация. OpenRouter по-прежнему
+     | отвечает студенту; рядом Horizon-job (OllamaShadowReplyJob) прогоняет
+     | ТОТ ЖЕ промпт через локальный qwen3:14b (туннель → 127.0.0.1:11434,
+     | knowledge.generation_model) и пишет ответ в SupportAiReplyEvent
+     | (event_type=ollama_shadow) рядом с онлайн-логом — неделя живого
+     | сравнения до флипа этапа 6. Узел умер → событие status=error, студенту
+     | ничего не уходит, наружу не откатываемся. Требует bot_faq_retrieval
+     | фактического ответа бота, но технически независим от других флагов.
+     | ВЫКЛ по умолчанию. Enable: BOT_OLLAMA_SHADOW=true + config:cache.
+     */
+    'bot_ollama_shadow' => (bool) env('BOT_OLLAMA_SHADOW', false),
+
+    /*
+     | H3234 (issue #1633 этап 6): переключение генерации на локальную модель.
+     | CuratorAi в этом режиме ходит ТОЛЬКО в 127.0.0.1:11434
+     | (knowledge.generation_model) и НИКОГДА не откатывается в OpenRouter/
+     | DeepSeek — иначе приватность превращается в «приватность, пока работает
+     | туннель» (текст issue). Узел недоступен → reply() = null → контроллеры
+     | отвечают детерминированно (StudentSelfService + предложение «позови
+     | куратора»), студенту отвечаем без внешнего API.
+     | ВЫКЛ по умолчанию; флип — решение человека после shadow-недели (до
+     | 01-10-2026). Enable: BOT_LOCAL_GENERATION=true + config:cache.
+     */
+    'bot_local_generation' => (bool) env('BOT_LOCAL_GENERATION', false),
+
+    /*
      | H3766 B4 (стадия 1 issue #1633, рулинг R5): вместо того чтобы класть в
      | системный промпт ИИ-куратора ВЕСЬ faq.md (~46 000 символов на каждый
      | вопрос), BotKnowledgeBase кладёт top-K разделов, найденных тем же

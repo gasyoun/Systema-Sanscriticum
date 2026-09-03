@@ -10,6 +10,9 @@ class SupportAiReplyEvent extends Model
     /** H3395: куратор отправил ответ, начатый с шаблона библиотеки (Helpdesk). */
     public const EVENT_TEMPLATE_USED = 'template_used';
 
+    /** H3234 (этап 5): теневой ответ локальной модели (qwen3:14b) рядом с онлайн-логом OpenRouter. */
+    public const EVENT_OLLAMA_SHADOW = 'ollama_shadow';
+
     protected $fillable = [
         'telegram_support_message_id',
         'event_type',
