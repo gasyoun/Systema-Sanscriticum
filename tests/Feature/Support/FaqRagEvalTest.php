@@ -10,6 +10,7 @@ use App\Services\Support\Faq\EmbeddingProvider;
 use App\Services\Support\Faq\FaqCorpusParser;
 use App\Services\Support\Faq\HybridRetriever;
 use App\Services\Support\Faq\NullEmbeddingProvider;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -116,17 +117,37 @@ class FaqRagEvalTest extends TestCase
      */
     public function test_live_hybrid_matches_or_beats_bm25_on_both_sets(): void
     {
-        if (! filter_var(env('KNOWLEDGE_LIVE_EVAL', false), FILTER_VALIDATE_BOOLEAN)
-            || (string) config('knowledge.driver') !== 'ollama') {
+        // Живые координаты читаем через getenv напрямую: внутри phpunit-процесса
+        // shell-env не всегда доезжает до env()-репозитория Laravel (проверено
+        // 03-09-2026: env()-путь давал локальный 11434 вместо туннеля), а живой
+        // прогон обязан идти в НАЗВАННЫЙ узел. Таймаут для live-прогона выше
+        // DM-дефолта: батч 16 × 1024 dims через два ssh-хопа.
+        if (! filter_var((string) getenv('KNOWLEDGE_LIVE_EVAL'), FILTER_VALIDATE_BOOLEAN)) {
             $this->markTestSkipped('KNOWLEDGE_LIVE_EVAL=1 + live tunnel required (H4001 live pass)');
         }
+        config([
+            'knowledge.driver' => getenv('KNOWLEDGE_EMBEDDING_DRIVER') ?: 'ollama',
+            'knowledge.base_url' => getenv('KNOWLEDGE_OLLAMA_BASE_URL') ?: 'http://127.0.0.1:11434',
+            'knowledge.timeout' => (int) (getenv('KNOWLEDGE_REQUEST_TIMEOUT') ?: 30),
+            'knowledge.dimensions' => (int) (getenv('KNOWLEDGE_EMBEDDING_DIMENSIONS') ?: 1024),
+            'knowledge.embedding_model' => getenv('KNOWLEDGE_EMBEDDING_MODEL') ?: 'bge-m3:latest',
+        ]);
 
-        $this->artisan('migrate', ['--path' => 'database/migrations/2026_09_03_110000_create_knowledge_chunks_table.php']);
+        $migrateExit = Artisan::call('migrate', [
+            '--path' => 'database/migrations/2026_09_03_110000_create_knowledge_chunks_table.php',
+            '--force' => true,
+        ]);
+        $this->assertSame(0, $migrateExit, 'migrate failed: '.Artisan::output());
 
         Http::allowStrayRequests();
-        $index = $this->artisan('knowledge:index', ['--force' => true, '--sync' => true]);
-        $index->assertSuccessful();
-        $this->assertGreaterThan(0, KnowledgeChunk::count(), 'live index must produce rows');
+        // Artisan::call, не $this->artisan(): PendingCommand молча проглатывает
+        // sync-dispatch джобы этого прохода (проверено 03-09-2026: exit 0,
+        // ноль строк при рабочем узле) — живой смоук обязан идти реальным
+        // CLI-путём, как его запустил бы человек.
+        $indexExit = Artisan::call('knowledge:index', ['--force' => true, '--sync' => true]);
+        $indexOutput = Artisan::output();
+        $this->assertSame(0, $indexExit, 'knowledge:index failed: '.$indexOutput);
+        $this->assertGreaterThan(0, KnowledgeChunk::count(), 'live index must produce rows: '.$indexOutput);
 
         config(['features.faq_rag_suggester' => true, 'features.faq_hybrid_retrieval' => true]);
 
