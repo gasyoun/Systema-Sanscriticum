@@ -30,13 +30,15 @@ final class HybridRetriever
     ) {}
 
     /**
-     * Гибрид — строгая надстройка над уже гейченным путём: требует и флаг
-     * lane'а (features.faq_rag_suggester), и свой (features.faq_hybrid_retrieval).
+     * Гейт lane'а — ТОЛЬКО флаг lane'а (features.faq_rag_suggester), ровно как
+     * у Bm25FaqRetriever: дроп-ин обязан вести себя идентично и здесь, иначе
+     * потребители при выключенном faq_hybrid_retrieval теряют RAG-путь.
+     * Флаг features.faq_hybrid_retrieval управляет только участием dense-ноги
+     * (см. retrieveChunks) — ON добавляет fusion, OFF = байт-в-байт BM25.
      */
     public function isEnabled(): bool
     {
-        return $this->bm25->isEnabled()
-            && (bool) config('features.faq_hybrid_retrieval', false);
+        return $this->bm25->isEnabled();
     }
 
     /**
@@ -65,7 +67,7 @@ final class HybridRetriever
 
         $sparse = $this->bm25->retrieveChunks($query, $this->fusionDepth(), $path);
 
-        if (! $this->isEnabled()) {
+        if (! $this->denseEnabled()) {
             return $this->asBm25Floor(array_slice($sparse, 0, $topK));
         }
 
@@ -76,6 +78,15 @@ final class HybridRetriever
         }
 
         return array_slice($this->fuse($sparse, $dense), 0, $topK);
+    }
+
+    /**
+     * Dense-нога зовётся только когда hybrid-флаг включён — OFF означает,
+     * что туннель вообще не попадает в request-path.
+     */
+    private function denseEnabled(): bool
+    {
+        return (bool) config('features.faq_hybrid_retrieval', false);
     }
 
     /**
