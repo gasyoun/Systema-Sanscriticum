@@ -1,8 +1,0 @@
-# H3964 live-итог: send/delete подтверждены, прод-флаг возвращён в OFF (OxAlpha z-ai/glm-5.3-flash, 03-09-2026)
-
-Живой прогон сториз-лейна на проде (персона @rusamskrtam):
-- **send/delete работают**: photostoriz `stories.sendStory` (inputMediaUploadedPhoto, peer «me», period 24 ч) ушла и удаляется `stories.deleteStories` (множественное!); repeat-движок подтверждён ЖИВО: копия id=3 перепланирована (approved, due +1 день) тем же кодом издателя. Все смоковые сториз (542–547) удалены из профиля, смоковые строки story_posts помечены skipped.
-- **Текстовых user-сториз в MTProto нет**: TL layer 225 не содержит text-медиа конструктора, `inputMediaEmpty` → MEDIA_FILE_INVALID; persona-строки kind=text скипаются издателем (см. фрагмент выше).
-- **MP v8 IPC-клиент вне support:sync-дисциплины флейкует**: DriverSuspension/SignalException на втором await, независимо от корректности метода/сторожа/загрузок; clean — standalone-процесс; RPC при этом иногда ДОХОДИТ до сервера («упавший» воркер удалил сториз). Разбор и дисциплина — [Uprava FINDINGS §689](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md); воркер-подход (`scripts/stories_lane_worker.php`, subprocess_lane) остаётся в коде как лучший кандидат до рут-ката.
-- **Дневной лимит**: 5 отправок за сутки — ни одного FLOOD (лимит ≥5; насыщать общий с поддержкой аккаунт до FLOOD отказались сознательно).
-- **`TELEGRAM_STORY_STORIES=false` на проде** (был временно true для смока): лейн прод-инертен до починки IPC-надёжности — @DO-строка в [GTD_NEXT_ACTIONS.md](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md). Флаг OFF = ноль HTTP (проверено на проде: «no-op»).
