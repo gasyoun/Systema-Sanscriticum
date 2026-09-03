@@ -11,11 +11,11 @@ CHANGELOG.md and RESULTS_LOG.md both linked to its 404 release page.
     python scripts/changelog_release_coverage.py --check      # exit 1 on any gap
     python scripts/changelog_release_coverage.py --since 1.0.0  # full history
 
-`--since` defaults to the oldest version whose coverage is known-clean (see
-CLEAN_SINCE). Everything older is documented historic backlog, not a regression: as
-of 03-09-2026 exactly six versions below the floor still have no release
-(v1.90.30, v1.90.29, v1.90.25, v1.90.21, v1.90.19, v1.0.0). Widening the window is a
-deliberate act, not the gate's default.
+`--since` defaults to CLEAN_SINCE, the oldest version whose coverage is known-clean.
+As of 03-09-2026 that is v1.0.0: the backfill closed the whole history, so the
+default window is every version in the file and there is no historic backlog to
+except. Should a gap ever be accepted rather than repaired, raise CLEAN_SINCE past
+it deliberately and say why here.
 
 Releases are matched on the **tag**, never on the display name. Release names here
 routinely differ from their tag ("1.90.32" without the v, "v1.90.22 — аптайм волна 4
@@ -37,7 +37,7 @@ from pathlib import Path
 sys.stdout.reconfigure(encoding="utf-8")
 
 REPO = Path(__file__).resolve().parent.parent
-CLEAN_SINCE = "1.90.34"
+CLEAN_SINCE = "1.0.0"
 
 
 def version_key(v: str) -> tuple[int, ...]:
