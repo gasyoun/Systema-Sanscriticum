@@ -263,6 +263,20 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('support-auto-reply-weekly');
 
+        // H4001 (Wave 3 leverage-плана): индексация FAQ-корпуса в
+        // knowledge_chunks. Двойной гейт — флаг гибрида (OFF по умолчанию) И
+        // настроенный драйвер эмбеддингов: пока dense-нога не включена
+        // человеком, слот молчит. Ретраи живут внутри KnowledgeEmbedChunksJob
+        // (очередь imports).
+        $schedule->command('knowledge:index')
+            ->dailyAt('04:40')
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.faq_hybrid_retrieval')
+                && (string) config('knowledge.driver') !== '')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('knowledge-index');
+
         // Напоминание студенту: завтра срок оплаты по обещанию/рассрочке.
         // Время редактируется в админке (MarketingSetting); schedule() читается
         // на каждый schedule:run, поэтому смена подхватывается без деплоя.

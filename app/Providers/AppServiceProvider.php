@@ -32,6 +32,9 @@ use App\Services\Lecture\LectureBuilderClient;
 use App\Services\Payments\HttpPaypalWebhookSignatureVerifier;
 use App\Services\Payments\PaypalWebhookSignatureVerifier;
 use App\Services\Payroll\PayrollRateCalculator;
+use App\Services\Support\Faq\EmbeddingProvider;
+use App\Services\Support\Faq\NullEmbeddingProvider;
+use App\Services\Support\Faq\OllamaEmbeddingProvider;
 use App\Services\Telegram\DaemonProcessProbe;
 use App\Services\Telegram\ProcDaemonProcessProbe;
 use App\Services\Webinar\WebinarProvider;
@@ -116,6 +119,17 @@ class AppServiceProvider extends ServiceProvider
         // fails backup:run with ER_DATA_LENGTH. Bind our command so the zip
         // path snapshots each member next to the archive before addFile.
         $this->app->bind(BackupCommand::class, BackupRunCommand::class);
+
+        // H4001 (Wave 3 leverage-плана): dense-нога FAQ-ретривала. bind, а не
+        // singleton: driver читается из config на момент резолва — тесты и
+        // config:cache на проде подменяют ногу без пересборки контейнера.
+        // null/неизвестный драйвер → NullEmbeddingProvider (BM25-пол).
+        $this->app->bind(EmbeddingProvider::class, function () {
+            return match ((string) config('knowledge.driver')) {
+                'ollama' => new OllamaEmbeddingProvider,
+                default => new NullEmbeddingProvider,
+            };
+        });
     }
 
     /**
