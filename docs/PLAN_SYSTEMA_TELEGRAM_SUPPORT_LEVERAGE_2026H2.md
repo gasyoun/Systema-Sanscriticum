@@ -76,4 +76,12 @@ None.
 - Money contour: `Tariff::calculateFinalPriceForUser`, `Lesson::isUnlockedBy`, `Payment`, `Group` — read only.
 - Self-service degradation: `App\Services\Bot\StudentSelfService`.
 
+## Autonomy gate — 03-09-2026
+
+| Check | Verdict |
+|---|---|
+| all mechanical checks | PASS |
+
+Mechanical verdict: **PASS** (exit 0). Human halves — no-rebuild-what-exists, contract coverage of plausible ambiguities — attested by the authoring session, not parsed here.
+
 _Dr. Mārcis Gasūns_
