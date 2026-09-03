@@ -4,7 +4,7 @@ _Created: 30-07-2026 · Last updated: 03-09-2026_
 
 Durable substantive-result tables for this repo. Newest first.
 
-## Release coverage census — v1.90.35 retro-tagged, 14 versions still unreleased (03-09-2026)
+## Release coverage census — v1.90.34–v1.90.51 fully tagged and released (03-09-2026)
 
 _Model: Opus 5 (`claude-opus-5`)._ H3692's close-out ([PR #2207](https://github.com/gasyoun/Systema-Sanscriticum/pull/2207), `84031c39`, 30-08-2026) landed the `[1.90.35]` CHANGELOG section, the RESULTS_LOG table below and the `.ai_state` stamp, but never cut the tag or the GitHub release — so both docs linked to a 404 for four days. Tag `v1.90.35` (annotated) now points at `84031c39`, the commit carrying its own CHANGELOG section, and the release is published with `--latest=false` so `v1.90.51` stays `Latest`: [v1.90.35](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.35).
 
@@ -13,26 +13,35 @@ The same census over `v1.90.35`–`v1.90.51` shows this was not a one-off. Every
 | Version | CHANGELOG section | git tag | GitHub release |
 |---|---|---|---|
 | 1.90.35 | ✅ | ✅ (retro-tagged 03-09-2026) | ✅ (published 03-09-2026) |
-| 1.90.36 | ✅ | ✅ | ❌ |
-| 1.90.37 | ✅ | ✅ | ❌ |
-| 1.90.38 | ✅ | ✅ | ❌ |
-| 1.90.39 | ✅ | ❌ | ❌ |
-| 1.90.40 | ✅ | ✅ | ❌ |
-| 1.90.41 | ✅ | ✅ | ❌ |
-| 1.90.42 | ✅ | ❌ | ❌ |
-| 1.90.43 | ✅ | ✅ | ❌ |
-| 1.90.44 | ✅ | ❌ | ❌ |
-| 1.90.45 | ✅ | ✅ | ❌ |
-| 1.90.46 | ✅ | ✅ | ❌ |
-| 1.90.47 | ✅ | ✅ | ❌ |
-| 1.90.48 | ✅ | ✅ | ❌ |
-| 1.90.49 | ✅ | ✅ | ❌ |
+| 1.90.36 | ✅ | ✅ | ✅ |
+| 1.90.37 | ✅ | ✅ | ✅ |
+| 1.90.38 | ✅ | ✅ | ✅ |
+| 1.90.39 | ✅ | ✅ | ✅ |
+| 1.90.40 | ✅ | ✅ | ✅ |
+| 1.90.41 | ✅ | ✅ | ✅ |
+| 1.90.42 | ✅ | ✅ | ✅ |
+| 1.90.43 | ✅ | ✅ | ✅ |
+| 1.90.44 | ✅ | ✅ | ✅ |
+| 1.90.45 | ✅ | ✅ | ✅ |
+| 1.90.46 | ✅ | ✅ | ✅ |
+| 1.90.47 | ✅ | ✅ | ✅ |
+| 1.90.48 | ✅ | ✅ | ✅ |
+| 1.90.49 | ✅ | ✅ | ✅ |
 | 1.90.50 | ✅ | ✅ | ✅ |
 | 1.90.51 | ✅ | ✅ | ✅ |
 
 **Why it stays invisible.** A CHANGELOG heading is written by the release commit, so a session that stops after the commit leaves a version that looks shipped in every document that matters and exists nowhere in `git tag` or the releases page. Nothing reads back the other direction: no gate compares `## [x.y.z]` headings against `git ls-remote --tags`, so the drift only surfaces when a human clicks a release link written by an earlier pass. Matching known trap: a `cut_release` tag is lightweight, so `git push --follow-tags` skips it and the tag never leaves the machine even when that step did run.
 
 **Repair recipe (per version).** Tag the commit that carries the version's own CHANGELOG section (`git log --oneline --grep="<version>"` finds it), annotate it, push `refs/tags/<tag>` explicitly — never via `--follow-tags` — confirm with `git ls-remote --tags origin`, then `gh release create <tag> --verify-tag --notes-file <section> --latest=false`. The `--latest=false` is not optional: a retro-published historic release otherwise demotes the real newest one.
+
+**Backfilled 03-09-2026, same session.** All 14 versions now carry a tag and a release. Tags `v1.90.39`, `v1.90.42` and `v1.90.44` were created at the `chore(release):` commit that introduced each version's own CHANGELOG section (ancestry checked against both neighbouring tags before pushing) and pushed as explicit `refs/tags/` refs; all 14 releases were published from their CHANGELOG section with `--latest=false`, and `v1.90.51` still holds `Latest`.
+
+**The band was not the whole of it, but nearly.** A full audit over all 279 CHANGELOG versions, run after the backfill, finds **4 more versions with no git tag** (`v1.90.30`, `v1.90.29`, `v1.90.25`, `v1.90.19` — all now tagged in this pass at their own `chore(release):` commit, ancestry checked) and **6 still with no GitHub release**: `v1.90.30`, `v1.90.29`, `v1.90.25`, `v1.90.21`, `v1.90.19`, `v1.0.0`. Coverage is unbroken from `v1.90.34` upward; those 6 are the entire remaining backlog.
+
+**A parser warning worth more than the count.** A first pass at this audit reported *128* missing releases — wrong by a factor of twenty. It matched `gh release list`'s **name** column against `v<version>`, and this repo's release names routinely differ from their tags (`1.90.32` without the `v`, `v1.90.22 — аптайм волна 4 подготовлена…` with a title appended). Release identity is the **tag**, never the display name; an audit keyed on the name invents a backlog that does not exist. The shipped gate reads the tag column.
+
+**The gate that would have caught it** now ships as [`scripts/changelog_release_coverage.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/changelog_release_coverage.py): it reads CHANGELOG headings, `git tag -l` and `gh release list`, and reports or (`--check`) fails on any version missing either. It defaults to `--since 1.90.34` so it gates new releases without going permanently red on the historic backlog, and it says «UNKNOWN — gh unavailable» rather than a false all-clear when `gh` cannot answer. It is **not wired into CI** — that step is deliberately left, since the release job would need a `gh` token with release-read scope.
+
 
 ## H3692 guest /register attribution fields (30-08-2026)
 
