@@ -410,6 +410,20 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('publish-due-story-posts');
 
+        // Персона @rusamskrtam: user-сториз через MadelineProto (H3964, Phase 2).
+        // Тик рядом со stories:publish-due. Прод-инертен, пока
+        // features.telegram_story_stories OFF (default). Открывает ЕДИНУЮ
+        // MadelineProto-сессию → TTL лока выводится тем же
+        // madelineSessionLockMinutes(), что у support/harvest; пропуск из-за
+        // занятой сессии — норма (session_busy), повтор через час.
+        $schedule->command('stories:publish-story')
+            ->hourly()
+            ->withoutOverlapping($this->madelineSessionLockMinutes(
+                (int) config('services.telegram_story.stories_timeout_seconds', 120),
+            ))
+            ->onOneServer()
+            ->name('publish-story-persona');
+
         // Автооткрытие приёма ДЗ после проведённого урока (H1764, волна 1).
         // Ежечасный, а не ежедневный: момент открытия посчитан точно, проход
         // лишь доносит его с задержкой не больше часа. Прод-инертна, пока

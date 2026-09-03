@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\MarketingSetting;
 use App\Models\StoryPost;
 use App\Services\Messaging\TelegramDeliveryChannel;
+use App\Services\Stories\StoryRepeatEngine;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Throwable;
@@ -14,14 +15,16 @@ use Throwable;
 /**
  * Издатель очереди story_posts в канал @rusamskrtam (H3930, Phase 1).
  *
- * Только текстовые строки (kind=text): Bot API sendMessage магнит-ботом
- * (MarketingSetting.tg_bot_token — марафон-издатель; НЕ кабинетный бот и НЕ
- * zapisi-бот, FINDINGS §651). Перед первой реальной отправкой прогона —
- * дешёвая getChat-проба пары «токен × chat_id»: «chat not found» на
- * предположенном креденшале — сигнал, а не повод для ретрая.
+ * Только текстовые строки (kind=text) КАНАЛЬНОЙ полосы (lane=channel,
+ * H3964: persona-полоса принадлежит stories:publish-story): Bot API
+ * sendMessage магнит-ботом (MarketingSetting.tg_bot_token —
+ * марафон-издатель; НЕ кабинетный бот и НЕ zapisi-бот, FINDINGS §651).
+ * Перед первой реальной отправкой прогона — дешёвая getChat-проба пары
+ * «токен × chat_id»: «chat not found» на предположенном креденшале —
+ * сигнал, а не повод для ретрая.
  *
- * Photo/video строки (Phase 2, MTProto stories) скипаются с журналом —
- * издаваться молча не должны.
+ * Photo/video строки (persona-полоса, MTProto stories) скипаются с
+ * журналом — издаваться молча не должны.
  *
  * Прод-инертен: features.telegram_story_publisher OFF (default) → ранний
  * возврат, ноль HTTP (та же форма флаг-гейта, что content:publish-due).
@@ -32,7 +35,7 @@ final class StoriesPublishDueCommand extends Command
 
     protected $description = 'Publish due approved story_posts (text) to the @rusamskrtam channel';
 
-    public function handle(TelegramDeliveryChannel $telegram): int
+    public function handle(TelegramDeliveryChannel $telegram, StoryRepeatEngine $repeat): int
     {
         if (! config('features.telegram_story_publisher')) {
             $this->warn('telegram_story_publisher flag is OFF — no-op.');
@@ -67,6 +70,7 @@ final class StoriesPublishDueCommand extends Command
         $due = StoryPost::query()
             ->approved()
             ->due()
+            ->lane(StoryPost::LANE_CHANNEL)
             ->orderBy('publish_at')
             ->get();
 
@@ -76,10 +80,10 @@ final class StoriesPublishDueCommand extends Command
             if ($post->kind !== StoryPost::KIND_TEXT) {
                 $post->forceFill([
                     'journal' => trim((string) $post->journal."\n".now()->toDateTimeString()
-                        .' skip: kind='.$post->kind.' ждёт Phase 2 (MTProto stories lane).'),
+                        .' skip: kind='.$post->kind.' — это полоса persona (MTProto stories lane).'),
                 ])->save();
                 $skipped++;
-                $this->warn("Skip #{$post->id}: kind={$post->kind} — Phase 2 (MTProto stories).");
+                $this->warn("Skip #{$post->id}: kind={$post->kind} — persona lane (MTProto stories).");
 
                 continue;
             }
@@ -92,12 +96,11 @@ final class StoriesPublishDueCommand extends Command
                 return self::FAILURE;
             }
 
-            $post->forceFill([
-                'status' => StoryPost::STATUS_PUBLISHED,
-                'posted_at' => now(),
-            ])->save();
+            $repeat->markPublished($post, null);
+            $copy = $repeat->afterPublication($post);
             $published++;
-            $this->info("Published #{$post->id} (source={$post->source}, key={$post->source_key}).");
+            $this->info("Published #{$post->id} (source={$post->source}, key={$post->source_key})."
+                .($copy !== null ? " + repeat copy #{$copy->id} due {$copy->publish_at?->format('d-m-Y H:i')}" : ''));
         }
 
         $this->info("publish-due: published={$published}, skipped_media={$skipped}.");

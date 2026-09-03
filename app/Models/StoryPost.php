@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Публикация в канале @rusamskrtam / сториз (H3930, Phase 1).
- * Текст — Bot API через магнит-бот (TelegramDeliveryChannel); медиа —
- * Phase 2 (MadelineProto stories). Издатель берёт только approved+due.
+ * Текст — Bot API через магнит-бот (TelegramDeliveryChannel); медиа и
+ * user-сториз персоны — Phase 2 (MadelineProto, H3964). Издатель берёт
+ * только approved+due в СВОЕЙ полосе (lane).
  */
 class StoryPost extends Model
 {
@@ -17,6 +18,12 @@ class StoryPost extends Model
     public const KIND_PHOTO = 'photo';
 
     public const KIND_VIDEO = 'video';
+
+    /** Канальная полоса: текстовые посты, Bot API (stories:publish-due, Phase 1). */
+    public const LANE_CHANNEL = 'channel';
+
+    /** Полоса персоны: user-сториз @rusamskrtam, MadelineProto (stories:publish-story, Phase 2). */
+    public const LANE_PERSONA = 'persona';
 
     public const SOURCE_QUEUE = 'queue';
 
@@ -38,6 +45,7 @@ class StoryPost extends Model
 
     protected $fillable = [
         'kind',
+        'lane',
         'payload',
         'media_path',
         'source',
@@ -57,6 +65,11 @@ class StoryPost extends Model
         'repeat_rule' => 'array',
         'repeat_count' => 'integer',
     ];
+
+    public function scopeLane(Builder $query, string $lane): Builder
+    {
+        return $query->where('lane', $lane);
+    }
 
     public function scopeApproved(Builder $query): Builder
     {

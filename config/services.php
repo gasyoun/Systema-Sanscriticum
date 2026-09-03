@@ -313,6 +313,10 @@ return [
         'channel_chat_id' => env('TELEGRAM_STORY_CHANNEL_CHAT_ID', ''),
         'queue_path' => env('TELEGRAM_STORY_QUEUE_PATH', ''),
         'default_publish_hour' => (int) env('TELEGRAM_STORY_DEFAULT_PUBLISH_HOUR', 9),
+        // Потолок захода сториз-лейна (H3964): TTL madeline-session-лока для
+        // stories:publish-story выводится из него тем же madelineSessionLockMinutes(),
+        // что и у support/harvest — сессия одна, граница одна.
+        'stories_timeout_seconds' => (int) env('TELEGRAM_STORY_STORIES_TIMEOUT_SECONDS', 120),
     ],
 
     // ВХОДНОЙ УЗЕЛ вебхуков Telegram — общий для ВСЕХ ботов: кабинетного,

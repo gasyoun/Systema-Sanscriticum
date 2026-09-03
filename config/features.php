@@ -733,6 +733,25 @@ return [
     'telegram_story_publisher' => (bool) env('TELEGRAM_STORY_PUBLISHER', false),
 
     /*
+     | Персона @rusamskrtam: user-сториз через MadelineProto (H3964, Phase 2).
+     | stories:publish-story шлёт approved+due строки lane=persona СВОИМ
+     | профилем (user stories, без админ-прав канала). Default OFF —
+     | прод-инертен: ноль HTTP и MadelineProto-сессия не открывается вовсе.
+     | Делит ЕДИНУЮ сессию с telegram-support:sync / telegram-harvest:sync
+     | через madeline-session-лок (никогда параллельно).
+     */
+    'telegram_story_stories' => (bool) env('TELEGRAM_STORY_STORIES', false),
+
+    /*
+     | Виза MG (ASK_BATCH_CONTENT_FACTORY_TELEGRAM_2026 §2.8): студенческие
+     | медиа (story_posts source=homework) издаются сториз-лейном только
+     | после утверждения правила анонимизации (blur/crop лиц и имён,
+     | подписи без имён и CRM-данных). Default OFF — такие строки скипаются
+     | с журналом, никогда не публикуются.
+     */
+    'telegram_story_student_media_visa' => (bool) env('TELEGRAM_STORY_STUDENT_MEDIA_VISA', false),
+
+    /*
      | Гибридный кабинет R29 (H1481, Phase 1 chassis): job-named nav
      | (Сегодня / Календарь / Записи / Прогресс / Оплата и доступ / Помощь),
      | workspace-табы с hash-адресацией, лента «Сегодня» с homework-rework,
