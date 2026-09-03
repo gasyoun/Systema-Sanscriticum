@@ -38,11 +38,16 @@ use Throwable;
  * Прод-инертен: features.telegram_story_stories OFF (default) → ранний
  * возврат, ноль HTTP, MadelineProto-сессия не открывается вовсе.
  *
+ * Текстовых user-сториз в MTProto НЕ СУЩЕСТВУЕТ (нет конструктора text-медиа
+ * в TL layer 225; inputMediaEmpty → MEDIA_FILE_INVALID, живой замер
+ * 03-09-2026): persona-строки kind=text скипаются с журналом. «Текстовый»
+ * контент персоны — это пост канала, stories:publish-due (Phase 1).
+ *
  * Режимы:
- *   --test-text="..."   одна тестовая текстовая сториз: отправлена и тут же
- *                       удалена тем же кодом (смок/проба сессии; --keep
+ *   --test-photo=ПУТЬ   одна тестовая фотосториз из файла: отправлена и тут
+ *                       же удалена тем же кодом (смок/проба сессии; --keep
  *                       оставляет её висеть до конца суток).
- *   --probe-attempts=N  (только вместе с --test-text) до N дополнительных
+ *   --probe-attempts=N  (только вместе с --test-photo) до N дополнительных
  *                       отправок send→delete — снять фактический дневной
  *                       лимит user-сториз по первому FLOOD-коду. Потолок 30
  *                       за прогон: аккаунт общий с поддержкой, штормить его
@@ -57,8 +62,8 @@ final class StoriesPublishStoryCommand extends Command
     private const PROBE_CAP = 30;
 
     protected $signature = 'stories:publish-story
-        {--test-text= : Отправить одну тестовую текстовую сториз и удалить её тем же кодом}
-        {--keep : Не удалять тестовую сториз (--test-text)}
+        {--test-photo= : Отправить одну тестовую фотосториз из файла и удалить её тем же кодом}
+        {--keep : Не удалять тестовую сториз (--test-photo)}
         {--probe-attempts=0 : Дослать ещё до N сториз (send→delete) до первого FLOOD — замер дневного лимита}
         {--delete-story= : Удалить свою сториз по id}';
 
@@ -83,11 +88,11 @@ final class StoriesPublishStoryCommand extends Command
             return self::FAILURE;
         }
 
-        // Режимы --test-text / --delete-story открывают сессию всегда; основной
+        // Режимы --test-photo / --delete-story открывают сессию всегда; основной
         // проход — ТОЛЬКО когда очередь реально непуста: сессия одна на
         // поддержку+харвест, гонять её демон ежечасно ради пустого запроса
         // нельзя (запуск клиента ~40 с жизни общего аккаунта).
-        $isQueueRun = $this->option('test-text') === null && $this->option('delete-story') === null;
+        $isQueueRun = $this->option('test-photo') === null && $this->option('delete-story') === null;
         if ($isQueueRun
             && StoryPost::query()->approved()->due()->lane(StoryPost::LANE_PERSONA)->count() === 0) {
             $this->info('publish-story: очередь persona пуста — MadelineProto не открывается.');
@@ -149,20 +154,20 @@ final class StoriesPublishStoryCommand extends Command
             return self::SUCCESS;
         }
 
-        if (($testText = $this->option('test-text')) !== null) {
-            return $this->runTestText($publisher, (string) $testText);
+        if (($testPhoto = $this->option('test-photo')) !== null) {
+            return $this->runTestPhoto($publisher, (string) $testPhoto);
         }
 
         return $this->publishDue($publisher, $repeat);
     }
 
-    /** Тестовая сториз: отправлена и удалена тем же кодом + ограниченная проба лимита. */
-    private function runTestText(StoryPublisher $publisher, string $text): int
+    /** Тестовая фотосториз: отправлена и удалена тем же кодом + ограниченная проба лимита. */
+    private function runTestPhoto(StoryPublisher $publisher, string $path): int
     {
         $attempts = min(max((int) $this->option('probe-attempts'), 0), self::PROBE_CAP);
 
-        $this->info('Sending test text story…');
-        $storyId = $publisher->sendTextStory($text);
+        $this->info('Sending test photo story…');
+        $storyId = $publisher->sendPhotoStory($path, 'H3964 smoke');
         $this->info($storyId !== null ? "Sent story id={$storyId}." : 'Sent, but story id was not extractable from the Updates.');
 
         if ($storyId !== null && ! $this->option('keep')) {
@@ -174,7 +179,7 @@ final class StoriesPublishStoryCommand extends Command
         $flood = null;
         for ($i = 0; $i < $attempts; $i++) {
             try {
-                $probeId = $publisher->sendTextStory($text.' (probe '.($i + 1).'/'.self::PROBE_CAP.')');
+                $probeId = $publisher->sendPhotoStory($path, 'H3964 probe '.($i + 1).'/'.self::PROBE_CAP);
             } catch (Throwable $e) {
                 if ($this->looksLikeFlood($e)) {
                     $flood = $e->getMessage();
@@ -230,6 +235,16 @@ final class StoriesPublishStoryCommand extends Command
                 continue;
             }
 
+            if ($post->kind === StoryPost::KIND_TEXT) {
+                $this->journalSkip($post, 'текстовых user-сториз в MTProto нет (нет конструктора text-медиа в '
+                    .'TL layer 225; inputMediaEmpty → MEDIA_FILE_INVALID, живой замер 03-09-2026). '
+                    .'Текстовый контент — пост канала (stories:publish-due).');
+                $skipped++;
+                $this->warn("Skip #{$post->id}: text user-stories do not exist in the MTProto schema.");
+
+                continue;
+            }
+
             if (in_array($post->kind, [StoryPost::KIND_PHOTO, StoryPost::KIND_VIDEO], true)) {
                 $path = (string) $post->media_path;
                 if ($path === '' || ! is_file($path) || ! is_readable($path)) {
@@ -274,7 +289,6 @@ final class StoriesPublishStoryCommand extends Command
         $caption = (string) $post->payload;
 
         return match ($post->kind) {
-            StoryPost::KIND_TEXT => $publisher->sendTextStory($caption),
             StoryPost::KIND_PHOTO => $publisher->sendPhotoStory((string) $post->media_path, $caption),
             StoryPost::KIND_VIDEO => $publisher->sendVideoStory((string) $post->media_path, $caption),
             default => throw new \InvalidArgumentException("Unsupported story kind {$post->kind}."),
