@@ -142,18 +142,6 @@ final class StoriesPublishStoryCommand extends Command
             return self::FAILURE;
         }
 
-        // MadelineProto v8: Amp-цикл с upload-пайплайнами не переживает
-        // грациозный shutdown artisan'а — DriverSuspension «Event loop
-        // terminated without resuming the current suspension» (живой замер
-        // 03-09-2026: сториз ушла, а процесс упал уже после). Домашний
-        // проверенный терминатор — exit() (так же завершает и watchdog).
-        // Логи Laravel пишутся синхронно, терять нечего. В тестах не
-        // срабатывает: phpunit-процесс обязан дожить до ассертов.
-        if (! app()->environment('testing')) {
-            Log::info('stories:publish-story done', ['exit' => $exit]);
-            exit($exit);
-        }
-
         return $exit;
     }
 

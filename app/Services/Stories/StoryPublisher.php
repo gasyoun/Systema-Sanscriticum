@@ -76,10 +76,16 @@ class StoryPublisher
         ], $caption);
     }
 
-    /** Удалить свою сториз по id (уборка тестовых/смоковых артефактов). */
+    /**
+     * Удалить свою сториз по id (уборка тестовых/смоковых артефактов).
+     * Имя метода — deleteStories (множественное): stories.deleteStory в
+     * схеме MP v8 НЕТ, а вызов несуществующего метода роняет фибер
+     * IPC-пайплайна с DriverSuspension вместо чистого исключения
+     * (живой замер 03-09-2026).
+     */
     public function deleteStory(int $storyId): void
     {
-        $this->client()->stories->deleteStory([
+        $this->client()->stories->deleteStories([
             'peer' => 'me',
             'id' => [$storyId],
         ]);

@@ -72,11 +72,11 @@ class FakeStoriesMadelineProtoClient
              * @param  array<string, mixed>  $params
              * @return array<string, mixed>
              */
-            public function deleteStory(array $params): array
+            public function deleteStories(array $params): array
             {
                 FakeStoriesMadelineProtoClient::$deletedStories[] = $params;
 
-                return ['_' => 'vector', 'count' => 1];
+                return ['_' => 'vector', 'count' => count($params['id'] ?? [])];
             }
         };
     }
