@@ -137,6 +137,56 @@ class StoriesPublishDueTest extends TestCase
 
         self::assertCount(1, self::$sent, 'probe only, no sendMessage');
         $this->assertSame(StoryPost::STATUS_APPROVED, $photo->fresh()->status);
-        $this->assertStringContainsString('Phase 2', (string) $photo->fresh()->journal);
+        $this->assertStringContainsString('полоса persona', (string) $photo->fresh()->journal);
+    }
+
+    /** @test */
+    public function persona_lane_text_rows_are_never_sent_to_the_channel(): void
+    {
+        config(['features.telegram_story_publisher' => true]);
+
+        $post = StoryPost::query()->create([
+            'kind' => StoryPost::KIND_TEXT,
+            'lane' => StoryPost::LANE_PERSONA,
+            'payload' => 'Текстовая сториз персоны, не пост канала',
+            'status' => StoryPost::STATUS_APPROVED,
+            'publish_at' => now()->subMinute(),
+        ]);
+
+        $this->artisan('stories:publish-due')->assertSuccessful();
+
+        self::assertCount(1, self::$sent, 'только getChat-проба, без sendMessage');
+        $this->assertSame(StoryPost::STATUS_APPROVED, $post->fresh()->status);
+    }
+
+    /** @test */
+    public function repeat_rule_reschedules_channel_copies_until_the_series_cap(): void
+    {
+        config(['features.telegram_story_publisher' => true]);
+
+        $post = StoryPost::query()->create([
+            'kind' => StoryPost::KIND_TEXT,
+            'payload' => 'Ежедневное напоминание о курсе',
+            'status' => StoryPost::STATUS_APPROVED,
+            'publish_at' => now()->subMinute(),
+            'repeat_rule' => ['every_days' => 3, 'times' => 2],
+        ]);
+
+        $this->artisan('stories:publish-due')->assertSuccessful();
+
+        $this->assertSame(StoryPost::STATUS_PUBLISHED, $post->fresh()->status);
+        $this->assertSame(1, (int) $post->fresh()->repeat_count);
+
+        $copy = StoryPost::query()->whereKeyNot($post->id)->sole();
+        $this->assertSame(StoryPost::STATUS_APPROVED, $copy->status);
+        $this->assertTrue($copy->publish_at->between(now()->addDays(3)->subMinute(), now()->addDays(3)->addMinute()));
+
+        // Три дня спустя копия выходит — серия гаснет, третьей копии нет.
+        $this->travel(3)->days();
+        $this->artisan('stories:publish-due')->assertSuccessful();
+
+        $this->assertSame(StoryPost::STATUS_PUBLISHED, $copy->fresh()->status);
+        $this->assertSame(2, (int) $copy->fresh()->repeat_count);
+        $this->assertSame(2, StoryPost::query()->count(), 'серия погасла: оригинал + одна копия, третьей нет');
     }
 }

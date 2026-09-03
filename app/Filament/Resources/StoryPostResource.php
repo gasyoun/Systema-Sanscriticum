@@ -14,11 +14,12 @@ use Filament\Tables;
 use Filament\Tables\Table;
 
 /**
- * Очередь публикаций канала @rusamskrtam / сториз (H3930, Phase 1).
- * Черновики импортируются stories:import-queue или создаются вручную;
- * публикация — только по approved+due из stories:publish-due, пока
- * features.telegram_story_publisher ON. Роль: только ADMIN — публичный
- * контент академии, не учительская поверхность.
+ * Очередь публикаций канала @rusamskrtam / сториз (H3930, Phase 1 + H3964
+ * Phase 2). Черновики импортируются stories:import-queue /
+ * stories:from-harvest или создаются вручную; публикация — только по
+ * approved+due в СВОЕЙ полосе: lane=channel → stories:publish-due (Bot API),
+ * lane=persona → stories:publish-story (MadelineProto user-сториз).
+ * Роль: только ADMIN — публичный контент академии, не учительская поверхность.
  */
 class StoryPostResource extends Resource
 {
@@ -63,21 +64,43 @@ class StoryPostResource extends Resource
                 Forms\Components\Select::make('kind')
                     ->label('Тип')
                     ->options([
-                        StoryPost::KIND_TEXT => 'Текст (пост)',
-                        StoryPost::KIND_PHOTO => 'Фото (сториз, Phase 2)',
-                        StoryPost::KIND_VIDEO => 'Видео (сториз, Phase 2)',
+                        StoryPost::KIND_TEXT => 'Текст',
+                        StoryPost::KIND_PHOTO => 'Фото (сториз)',
+                        StoryPost::KIND_VIDEO => 'Видео (сториз)',
                     ])
                     ->default(StoryPost::KIND_TEXT)
                     ->required()
                     ->live(),
+                Forms\Components\Select::make('lane')
+                    ->label('Полоса')
+                    ->options([
+                        StoryPost::LANE_CHANNEL => 'Канал (пост, магнит-бот)',
+                        StoryPost::LANE_PERSONA => 'Сториз персоны @rusamskrtam (MadelineProto)',
+                    ])
+                    ->default(StoryPost::LANE_CHANNEL)
+                    ->required()
+                    ->helperText('Текст в persona-полосе выходит текстовой сториз своего профиля, а не постом канала.'),
                 Forms\Components\Textarea::make('payload')
                     ->label('Текст поста / подпись')
                     ->rows(8)
                     ->required(fn (Forms\Get $get): bool => $get('kind') === StoryPost::KIND_TEXT)
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('media_path')
-                    ->label('Путь к медиа (Phase 2)')
+                    ->label('Путь к медиа-файлу (для сториз)')
                     ->visible(fn (Forms\Get $get): bool => in_array($get('kind'), [StoryPost::KIND_PHOTO, StoryPost::KIND_VIDEO], true)),
+                Forms\Components\Grid::make(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('repeat_rule.every_days')
+                            ->numeric()
+                            ->minValue(1)
+                            ->label('Повтор: каждые N дней')
+                            ->helperText('После публикации перепланировать копию. Пусто = без повтора.'),
+                        Forms\Components\TextInput::make('repeat_rule.times')
+                            ->numeric()
+                            ->minValue(0)
+                            ->label('Повтор: всего M публикаций')
+                            ->helperText('Общее число публикаций серии, включая первую.'),
+                    ]),
                 Forms\Components\Select::make('source')
                     ->label('Источник')
                     ->options([
@@ -124,6 +147,14 @@ class StoryPostResource extends Resource
                 Tables\Columns\TextColumn::make('kind')
                     ->label('Тип')
                     ->badge(),
+                Tables\Columns\TextColumn::make('lane')
+                    ->label('Полоса')
+                    ->badge()
+                    ->colors([
+                        'gray' => StoryPost::LANE_CHANNEL,
+                        'info' => StoryPost::LANE_PERSONA,
+                    ])
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('source')
                     ->label('Источник')
                     ->badge(),

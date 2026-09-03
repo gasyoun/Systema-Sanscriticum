@@ -4,8 +4,10 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\HomeworkSubmissionResource\Pages;
 use App\Models\HomeworkComment;
+use App\Models\HomeworkFile;
 use App\Models\HomeworkSubmission;
 use App\Services\HomeworkService;
+use App\Services\Stories\StoryPromotionService;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
@@ -17,6 +19,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Js;
+use Throwable;
 
 class HomeworkSubmissionResource extends Resource
 {
@@ -262,6 +265,19 @@ class HomeworkSubmissionResource extends Resource
             ->send();
     }
 
+    /**
+     * Медиа-файлы работы, пригодные для сториз: фото/видео из комментариев
+     * к сабмишну (H3964, юнит 5).
+     */
+    public static function storyPromotableFiles(HomeworkSubmission $record): Collection
+    {
+        return HomeworkFile::query()
+            ->whereHas('comment', fn (Builder $q) => $q->where('submission_id', $record->id))
+            ->get()
+            ->filter(fn (HomeworkFile $file): bool => $file->isImage() || str_starts_with((string) $file->mime, 'video/'))
+            ->values();
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
@@ -418,6 +434,64 @@ class HomeworkSubmissionResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make()
                     ->label('Проверить'),
+
+                // «В сториз» (H3964, юнит 5): кураторский минимум — заводит
+                // ЧЕРНОВИК story_posts из медиа принятой работы. Публикация
+                // студенческих медиа отдельно заперта визой MG на правило
+                // анонимизации (features.telegram_story_student_media_visa,
+                // default OFF): издатель скипает source=homework до визы.
+                Tables\Actions\Action::make('promoteStory')
+                    ->label('В сториз')
+                    ->icon('heroicon-o-camera')
+                    ->color('gray')
+                    ->visible(fn (HomeworkSubmission $record): bool => auth()->user()?->isAdminLike() === true
+                        && $record->status === HomeworkSubmission::STATUS_ACCEPTED
+                        && static::storyPromotableFiles($record)->isNotEmpty())
+                    ->requiresConfirmation()
+                    ->modalHeading('Вынести медиа работы в очередь сториз')
+                    ->modalDescription('Создаётся черновик в «Очереди сториз» (полоса персоны @rusamskrtam). '
+                        .'Публикация студенческих медиа запрещена до визы MG на правило анонимизации '
+                        .'(blur/crop лиц и имён, подписи без имён и CRM-данных).')
+                    ->form([
+                        Forms\Components\Select::make('file_id')
+                            ->label('Медиа работы')
+                            ->options(fn (HomeworkSubmission $record): array => static::storyPromotableFiles($record)
+                                ->mapWithKeys(fn (HomeworkFile $file): array => [$file->id => "{$file->original_name} ({$file->humanSize()})"])
+                                ->all())
+                            ->required(),
+                        Forms\Components\Textarea::make('caption')
+                            ->label('Подпись (без имён и персональных данных)')
+                            ->rows(3)
+                            ->maxLength(900),
+                        Forms\Components\DateTimePicker::make('publish_at')
+                            ->label('Когда публиковать')
+                            ->seconds(false),
+                    ])
+                    ->action(function (HomeworkSubmission $record, array $data): void {
+                        $file = static::storyPromotableFiles($record)->firstWhere('id', (int) $data['file_id']);
+                        if (! $file) {
+                            Notification::make()->danger()->title('Файл не найден')->send();
+
+                            return;
+                        }
+
+                        try {
+                            $post = app(StoryPromotionService::class)->fromHomeworkFile(
+                                $file,
+                                (string) ($data['caption'] ?? ''),
+                                $data['publish_at'] ?? null,
+                            );
+                        } catch (Throwable $e) {
+                            Notification::make()->danger()->title('Не заведено')->body($e->getMessage())->send();
+
+                            return;
+                        }
+
+                        Notification::make()->success()
+                            ->title("Черновик сториз #{$post->id} создан")
+                            ->body('Далее: approve + публикация издателем (студенческое медиа — только после визы).')
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkAction::make('accept')
