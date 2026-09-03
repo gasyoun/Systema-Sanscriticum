@@ -19,10 +19,15 @@ use RuntimeException;
  * плоский массив параметров верхнего уровня MadelineProto
  * ($client->stories->sendStory([...])). Медиа строится по TL-схеме:
  * фото — inputMediaUploadedPhoto от $client->upload(), видео —
- * inputMediaUploadedDocument с documentAttributeVideo; текстовая сториз —
- * inputMediaEmpty + caption (user stories без медиа). Живой прогон
- * (H3964 unit 1) подтверждает/корректирует формы — расхождение ловит
- * RPCErrorException, а не молчание.
+ * inputMediaUploadedDocument с documentAttributeVideo; peer «me»,
+ * period 24 ч.
+ *
+ * ТЕКСТОВЫХ user-сториз в MTProto НЕТ: в TL-схеме layer 225 (и у вендорного
+ * MadelineProto, и в актуальном tdlib) конструктора text-медиа не существует,
+ * а inputMediaEmpty живой сервер отвечает MEDIA_FILE_INVALID (замер 03-09-2026,
+ * H3964 unit 1, Uprava FINDINGS). Поэтому persona-строки kind=text издатель
+ * скипает с журналом — «текстовая сториз» возможна только как пост канала
+ * (stories:publish-due, Phase 1).
  */
 class StoryPublisher
 {
@@ -32,13 +37,17 @@ class StoryPublisher
     public function __construct(private readonly MadelineClientFactory $factory) {}
 
     /**
-     * Текстовая сториз на СВОЙ профиль. Возвращает id сториз
-     * (для последующего stories.deleteStory) или null, если id из
-     * ответа достать не удалось (публикация при этом состоялась).
+     * Текстовых user-сториз в MTProto-схеме не существует (см. докблок класса):
+     * метод оставлен как явная точка отказа, чтобы никто не «починил» его
+     * молчаливой публикацией поста вместо сториз.
      */
-    public function sendTextStory(string $text): ?int
+    public function sendTextStory(string $text): never
     {
-        return $this->send($this->client(), ['_' => 'inputMediaEmpty'], $text);
+        throw new RuntimeException(
+            'Text user-stories are not supported by the MTProto stories schema '
+            .'(no text InputMedia constructor; inputMediaEmpty → MEDIA_FILE_INVALID, live 03-09-2026). '
+            .'Use a channel post (stories:publish-due) for text.'
+        );
     }
 
     /** Фотосториз из локального файла. */

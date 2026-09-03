@@ -21,11 +21,17 @@ class StoriesPublishStoryTest extends TestCase
 {
     use RefreshDatabase;
 
+    private string $photo;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         FakeStoriesMadelineProtoClient::reset();
+
+        $this->photo = storage_path('app/testing/h3964/smoke.jpg');
+        @mkdir(dirname($this->photo), 0775, true);
+        file_put_contents($this->photo, 'jpeg-bytes');
 
         config([
             'features.telegram_story_stories' => false,
@@ -34,6 +40,13 @@ class StoriesPublishStoryTest extends TestCase
             'services.telegram_support.client_class' => FakeStoriesMadelineProtoClient::class,
             'services.telegram_support.session' => storage_path('app/testing/h3964/session.madeline'),
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        @unlink($this->photo);
+
+        parent::tearDown();
     }
 
     private function personaPost(array $overrides = []): StoryPost
@@ -45,6 +58,21 @@ class StoriesPublishStoryTest extends TestCase
             'source' => StoryPost::SOURCE_MANUAL,
             'status' => StoryPost::STATUS_APPROVED,
             'publish_at' => now()->subHour(),
+        ], $overrides));
+    }
+
+    /** Путь для аргумента командной строки: artisan-парсер съедает `\`. */
+    private function cliPhoto(): string
+    {
+        return str_replace('\\', '/', $this->photo);
+    }
+
+    private function personaPhotoPost(array $overrides = []): StoryPost
+    {
+        return $this->personaPost(array_merge([
+            'kind' => StoryPost::KIND_PHOTO,
+            'media_path' => $this->photo,
+            'payload' => 'Фото-сториз персоны',
         ], $overrides));
     }
 
@@ -92,7 +120,7 @@ class StoriesPublishStoryTest extends TestCase
     }
 
     /** @test */
-    public function publishes_persona_text_story_and_marks_the_row(): void
+    public function persona_text_rows_are_skipped_text_user_stories_do_not_exist_in_mtproto(): void
     {
         config(['features.telegram_story_stories' => true]);
 
@@ -100,11 +128,26 @@ class StoriesPublishStoryTest extends TestCase
 
         $this->artisan('stories:publish-story')->assertSuccessful();
 
+        self::assertSame([], FakeStoriesMadelineProtoClient::$sentStories, 'текстовых user-сториз в схеме нет');
+        $fresh = $post->fresh();
+        $this->assertSame(StoryPost::STATUS_APPROVED, $fresh->status, 'строка остаётся на кураторе');
+        $this->assertStringContainsString('MEDIA_FILE_INVALID', (string) $fresh->journal);
+    }
+
+    /** @test */
+    public function publishes_persona_photo_story_and_marks_the_row(): void
+    {
+        config(['features.telegram_story_stories' => true]);
+
+        $post = $this->personaPhotoPost();
+
+        $this->artisan('stories:publish-story')->assertSuccessful();
+
         self::assertCount(1, FakeStoriesMadelineProtoClient::$sentStories);
         $sent = FakeStoriesMadelineProtoClient::$sentStories[0];
         self::assertSame('me', $sent['peer'], 'сториз кладётся на СВОЙ профиль персоны');
-        self::assertSame('inputMediaEmpty', $sent['media']['_'], 'текстовая сториз — без медиа');
-        self::assertStringContainsString('Бхагавадгиты', (string) $sent['caption']);
+        self::assertSame('inputMediaUploadedPhoto', $sent['media']['_']);
+        self::assertSame($this->photo, FakeStoriesMadelineProtoClient::$uploads[0]);
 
         $fresh = $post->fresh();
         $this->assertSame(StoryPost::STATUS_PUBLISHED, $fresh->status);
@@ -130,7 +173,7 @@ class StoriesPublishStoryTest extends TestCase
     {
         config(['features.telegram_story_stories' => true]);
 
-        $post = $this->personaPost([
+        $post = $this->personaPhotoPost([
             'repeat_rule' => ['every_days' => 1, 'times' => 2],
         ]);
 
@@ -222,11 +265,11 @@ class StoriesPublishStoryTest extends TestCase
     }
 
     /** @test */
-    public function test_text_mode_sends_and_deletes_by_the_same_code(): void
+    public function test_photo_mode_sends_and_deletes_by_the_same_code(): void
     {
         config(['features.telegram_story_stories' => true]);
 
-        $this->artisan('stories:publish-story --test-text="Смок-сториз H3964"')
+        $this->artisan('stories:publish-story --test-photo='.$this->cliPhoto())
             ->expectsOutputToContain('Deleted story id=4210')
             ->assertSuccessful();
 
@@ -241,7 +284,7 @@ class StoriesPublishStoryTest extends TestCase
         config(['features.telegram_story_stories' => true]);
         FakeStoriesMadelineProtoClient::$floodAfter = 2;
 
-        $this->artisan('stories:publish-story --test-text=Проба --probe-attempts=10')
+        $this->artisan('stories:publish-story --test-photo='.$this->cliPhoto().' --probe-attempts=10')
             ->expectsOutputToContain('FLOOD')
             ->assertSuccessful();
 
