@@ -1395,4 +1395,17 @@ return [
      | сверки чисел человеком.
      */
     'paypal_fixed_price_list' => (bool) env('PAYPAL_FIXED_PRICE_LIST_ENABLED', false),
+
+    /*
+     | H3915 — Exit-опрос на авто-триггер «завершение курса». Когда курсу
+     | выставляют is_completed (.CourseResource → «Курс завершён»), кураторский
+     | чат получает задачу с ГОТОВЫМИ черновиками для ЛИЧНОЙ отправки каждому
+     | из когорты «спросил цену → оплаты нет» этого курса (правило
+     | ACQUISITION_SURVEY_INSTRUMENTS_2026H2: отправляет куратор лично каждому,
+     | НЕ рассылкой). Система сама студентам НЕ пишет — только уведомление
+     | куратору; включать осознанно: EXIT_SURVEY_AUTO_TRIGGER=true +
+     | php artisan config:cache. Дедуп — courses.exit_survey_triggered_at;
+     | ручной/догоняющий прогон — surveys:exit-survey-completed.
+     */
+    'exit_survey_auto_trigger' => (bool) env('EXIT_SURVEY_AUTO_TRIGGER', false),
 ];

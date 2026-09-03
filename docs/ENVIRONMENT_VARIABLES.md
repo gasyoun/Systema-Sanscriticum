@@ -208,6 +208,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ECON_USN_PCT` | optional | `6.0` | config/economics.php:16 |
 | `EMAIL_CAMPAIGNS` | optional | `false` | config/features.php:702 |
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:67 |
+| `EXIT_SURVEY_AUTO_TRIGGER` | optional | `false` | config/features.php:1384 |
 | `FAQ_HYBRID_RETRIEVAL` | optional | `false` | config/features.php:158 |
 | `FAQ_RAG_SUGGESTER` | optional | `false` | config/features.php:147 |
 | `FILESYSTEM_DISK` | optional | `'local'` | config/filesystems.php:16 |
