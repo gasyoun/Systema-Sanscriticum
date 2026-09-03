@@ -80,6 +80,18 @@ class StoriesPublishStoryTest extends TestCase
     }
 
     /** @test */
+    public function empty_queue_never_opens_the_shared_session(): void
+    {
+        config(['features.telegram_story_stories' => true]);
+
+        $this->artisan('stories:publish-story')
+            ->expectsOutputToContain('очередь persona пуста')
+            ->assertSuccessful();
+
+        self::assertSame(0, FakeStoriesMadelineProtoClient::$constructions, 'пустая очередь — ноль запусков общей сессии');
+    }
+
+    /** @test */
     public function publishes_persona_text_story_and_marks_the_row(): void
     {
         config(['features.telegram_story_stories' => true]);

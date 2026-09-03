@@ -83,6 +83,18 @@ final class StoriesPublishStoryCommand extends Command
             return self::FAILURE;
         }
 
+        // Режимы --test-text / --delete-story открывают сессию всегда; основной
+        // проход — ТОЛЬКО когда очередь реально непуста: сессия одна на
+        // поддержку+харвест, гонять её демон ежечасно ради пустого запроса
+        // нельзя (запуск клиента ~40 с жизни общего аккаунта).
+        $isQueueRun = $this->option('test-text') === null && $this->option('delete-story') === null;
+        if ($isQueueRun
+            && StoryPost::query()->approved()->due()->lane(StoryPost::LANE_PERSONA)->count() === 0) {
+            $this->info('publish-story: очередь persona пуста — MadelineProto не открывается.');
+
+            return self::SUCCESS;
+        }
+
         $timeout = (int) config('services.telegram_story.stories_timeout_seconds', 120);
         $cooldown = (int) config('services.telegram_harvest.sync_timeout_cooldown_seconds', 600);
 
