@@ -49,6 +49,9 @@
                     Доплата за блок — <span class="font-bold text-gray-900">{{ $foreignPrice['eur'] }} €</span>
                     (предпочтительно) или <span class="font-bold text-gray-900">{{ $foreignPrice['usd'] }} $</span>.
                     Комиссию PayPal оплачивает отправитель — переводите ровно эту сумму.
+                    Форма доплаты принимает только ровную сумму доплаты; если перевели
+                    одной суммой доплату и следующий блок — укажите в форме сумму доплаты
+                    и напишите нам, остаток зачтём.
                 @else
                 Тариф: <span class="font-bold text-gray-900">{{ $course?->title ?? 'Курс' }} — {{ $tariff->title ?? $tariff->accessKey() }}</span>.
                 Стоимость блока — <span class="font-bold text-gray-900">{{ $foreignPrice['eur'] }} €</span> (предпочтительно)
@@ -156,7 +159,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Сколько заплатили <span class="text-red-500">*</span></label>
                         <input type="number" name="foreign_amount" required min="1" step="0.01" value="{{ old('foreign_amount') }}"
-                               placeholder="Напр. 50"
+                               placeholder="{{ $isSupplement ? '22' : 'Напр. 50' }}"
                                class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
                     </div>
                     <div>

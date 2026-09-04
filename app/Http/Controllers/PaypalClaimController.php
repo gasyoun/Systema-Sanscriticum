@@ -181,8 +181,13 @@ final class PaypalClaimController extends Controller
             : self::SUPPLEMENT_EUR;
 
         if (abs((float) $request->validated('foreign_amount') - $expected) > 0.5) {
+            // H4077: живой кейс — студент перевёл одной суммой доплату и следующий
+            // блок (112 = 22+90) и получил отказ без объяснения, что делать дальше.
+            // Инвариант суммы не ослабляем — объясняем путь.
             throw ValidationException::withMessages([
-                'foreign_amount' => 'Доплата за блок — '.$expected.' '.($request->validated('foreign_currency') === 'USD' ? '$' : '€').'. Если платите полную стоимость блока, используйте обычную форму оплаты.',
+                'foreign_amount' => 'Доплата за блок — ровно '.$expected.' '
+                    .($request->validated('foreign_currency') === 'USD' ? '$' : '€')
+                    .'. Укажите в поле суммы именно это число. Если перевели одной суммой доплату и следующий блок — отправьте эту форму, указав сумму '.$expected.', и напишите нам в Telegram (t.me/rusamskrtam): остаток зачтём за следующий блок. Полную стоимость блока оформляйте обычной формой оплаты.',
             ]);
         }
 

@@ -256,15 +256,20 @@
             }
         }
 
+        // H4077: mobile copy collapses newlines, gluing labels to values
+        // ("Transaktionsdatum4. September 2026") — no \b before the digit.
+        // Scan a glue-split copy; values themselves stay intact.
+        var scan = String(text).replace(/([A-Za-zÄÖÜäöüß])(\d)/g, '$1 $2');
+
         // Free-form ISO / numeric / EN+DE month anywhere.
-        var freeIso = text.match(/\b(\d{4}-\d{2}-\d{2})\b/);
+        var freeIso = scan.match(/\b(\d{4}-\d{2}-\d{2})\b/);
         if (freeIso) {
             var iso2 = parseIsoDate(freeIso[1]);
             if (iso2) {
                 return iso2;
             }
         }
-        var freeNum = text.match(/\b(\d{1,2}[./\-]\d{1,2}[./\-]\d{2,4})\b/);
+        var freeNum = scan.match(/\b(\d{1,2}[./\-]\d{1,2}[./\-]\d{2,4})\b/);
         if (freeNum) {
             var iso3 = parseNumericDate(freeNum[1]);
             if (iso3) {
@@ -272,7 +277,7 @@
             }
         }
         // "4. August 2026" / "30 July 2026"
-        var freeMonth = text.match(
+        var freeMonth = scan.match(
             /\b(\d{1,2}\.?\s+(?:Jan(?:uar(?:y)?)?|Feb(?:ruar(?:y)?)?|Mär(?:z)?|Maerz|Mar(?:ch)?|Apr(?:il)?|May|Mai|Jun(?:i|e)?|Jul(?:i|y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Okt(?:ober)?|Oct(?:ober)?|Nov(?:ember)?|Dez(?:ember)?|Dec(?:ember)?)\s+\d{4})\b/i
         );
         if (freeMonth) {
@@ -281,7 +286,7 @@
                 return iso4;
             }
         }
-        var freeEn = text.match(
+        var freeEn = scan.match(
             /\b((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s+\d{4})\b/i
         );
         if (freeEn) {
