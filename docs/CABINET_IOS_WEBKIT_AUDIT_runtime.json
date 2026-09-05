@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-05T07:42:45.022Z",
+  "generated_at": "2026-09-05T09:18:37.261Z",
   "base": "http://127.0.0.1:8000",
   "engine": "playwright-webkit (iPhone UA, isMobile, touch)",
   "viewports": [
@@ -50,12 +50,12 @@
     {
       "viewport": "iPhone14_390x844",
       "path": "http://127.0.0.1:8000/dvaram",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhone14_390x844",
       "path": "http://127.0.0.1:8000/dvaram",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhone14_390x844",
@@ -65,22 +65,22 @@
     {
       "viewport": "iPhone14_390x844",
       "path": "http://127.0.0.1:8000/c/grammatika-sanskrita-demo/u/1",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhone14_390x844",
       "path": "http://127.0.0.1:8000/dvaram/koloda",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhone14_390x844",
       "path": "http://127.0.0.1:8000/dvaram/koloda/stats",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhone14_390x844",
       "path": "http://127.0.0.1:8000/calendar",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhone14_390x844",
@@ -95,12 +95,12 @@
     {
       "viewport": "Compact_360x740",
       "path": "http://127.0.0.1:8000/dvaram",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "Compact_360x740",
       "path": "http://127.0.0.1:8000/dvaram",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "Compact_360x740",
@@ -110,22 +110,22 @@
     {
       "viewport": "Compact_360x740",
       "path": "http://127.0.0.1:8000/c/grammatika-sanskrita-demo/u/1",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "Compact_360x740",
       "path": "http://127.0.0.1:8000/dvaram/koloda",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "Compact_360x740",
       "path": "http://127.0.0.1:8000/dvaram/koloda/stats",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "Compact_360x740",
       "path": "http://127.0.0.1:8000/calendar",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "Compact_360x740",
@@ -140,12 +140,12 @@
     {
       "viewport": "iPhoneSE_320x568",
       "path": "http://127.0.0.1:8000/dvaram",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhoneSE_320x568",
       "path": "http://127.0.0.1:8000/dvaram",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhoneSE_320x568",
@@ -155,22 +155,22 @@
     {
       "viewport": "iPhoneSE_320x568",
       "path": "http://127.0.0.1:8000/c/grammatika-sanskrita-demo/u/1",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhoneSE_320x568",
       "path": "http://127.0.0.1:8000/dvaram/koloda",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhoneSE_320x568",
       "path": "http://127.0.0.1:8000/dvaram/koloda/stats",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhoneSE_320x568",
       "path": "http://127.0.0.1:8000/calendar",
-      "text": "pageerror: SyntaxError: Unexpected token '<'"
+      "text": "Viewport argument key \"interactive-widget\" not recognized and ignored."
     },
     {
       "viewport": "iPhoneSE_320x568",
@@ -188,39 +188,34 @@
       "path": "/dvaram",
       "status": 200,
       "skipped": false,
-      "scrollW": 1036,
+      "scrollW": 390,
       "clientW": 390,
-      "overflowX": 646,
+      "overflowX": 0,
       "offenders": [
         {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 1036
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 1036
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 908
+          "tag": "button",
+          "cls": "pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outlin",
+          "right": 419
         },
         {
           "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
+          "cls": "pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outlin",
+          "right": 512
+        },
+        {
+          "tag": "img",
+          "cls": "inline-block w-[1.1em] h-[1.1em] align-[-0.15em] select-none mr-2",
+          "right": 465
+        },
+        {
+          "tag": "button",
+          "cls": "pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outlin",
+          "right": 656
+        },
+        {
+          "tag": "i",
+          "cls": "fas fa-headset mr-2",
+          "right": 556
         }
       ],
       "smallTargets": [
@@ -232,8 +227,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -265,39 +278,15 @@
           "label": "Перейти",
           "w": 87,
           "h": 28
-        },
-        {
-          "tag": "button",
-          "label": "",
-          "w": 32,
-          "h": 32
-        },
-        {
-          "tag": "button",
-          "label": "Мои курсы",
-          "w": 118,
-          "h": 36
-        },
-        {
-          "tag": "button",
-          "label": "Словари",
-          "w": 95,
-          "h": 36
         }
       ],
       "smallTargetsTotal": 81,
-      "smallInputs": [
-        {
-          "tag": "input",
-          "type": "text",
-          "fontSize": 14
-        }
-      ],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "smallInputs": [],
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_dashboard.png",
       "viewport": "iPhone14_390x844",
@@ -315,41 +304,10 @@
       "path": "/c/grammatika-sanskrita-demo/u/1",
       "status": 200,
       "skipped": false,
-      "scrollW": 1012,
+      "scrollW": 390,
       "clientW": 390,
-      "overflowX": 622,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 1012
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 1012
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 718
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -359,8 +317,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -383,18 +359,12 @@
         }
       ],
       "smallTargetsTotal": 19,
-      "smallInputs": [
-        {
-          "tag": "textarea",
-          "type": "",
-          "fontSize": 14
-        }
-      ],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "smallInputs": [],
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_lesson.png",
       "viewport": "iPhone14_390x844",
@@ -404,41 +374,10 @@
       "path": "/dvaram/koloda",
       "status": 200,
       "skipped": false,
-      "scrollW": 923,
+      "scrollW": 390,
       "clientW": 390,
-      "overflowX": 533,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 923
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 923
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 809
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -448,8 +387,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -479,11 +436,11 @@
       ],
       "smallTargetsTotal": 23,
       "smallInputs": [],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_srs-koloda.png",
       "viewport": "iPhone14_390x844",
@@ -493,41 +450,10 @@
       "path": "/dvaram/koloda/stats",
       "status": 200,
       "skipped": false,
-      "scrollW": 1036,
+      "scrollW": 390,
       "clientW": 390,
-      "overflowX": 646,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 1036
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 1036
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 922
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -537,8 +463,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -556,11 +500,11 @@
       ],
       "smallTargetsTotal": 16,
       "smallInputs": [],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_srs-stats.png",
       "viewport": "iPhone14_390x844",
@@ -570,41 +514,10 @@
       "path": "/calendar",
       "status": 200,
       "skipped": false,
-      "scrollW": 1036,
+      "scrollW": 390,
       "clientW": 390,
-      "overflowX": 646,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 1036
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 1036
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 922
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -614,8 +527,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -645,11 +576,11 @@
       ],
       "smallTargetsTotal": 18,
       "smallInputs": [],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_calendar.png",
       "viewport": "iPhone14_390x844",
@@ -675,42 +606,55 @@
       "path": "/dvaram",
       "status": 200,
       "skipped": false,
-      "scrollW": 1006,
+      "scrollW": 360,
       "clientW": 360,
-      "overflowX": 646,
+      "overflowX": 0,
       "offenders": [
         {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 1006
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 1006
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 892
+          "tag": "button",
+          "cls": "pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outlin",
+          "right": 410
         },
         {
           "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
+          "cls": "pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outlin",
+          "right": 502
+        },
+        {
+          "tag": "img",
+          "cls": "inline-block w-[1.1em] h-[1.1em] align-[-0.15em] select-none mr-2",
+          "right": 456
+        },
+        {
+          "tag": "button",
+          "cls": "pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outlin",
+          "right": 642
+        },
+        {
+          "tag": "i",
+          "cls": "fas fa-headset mr-2",
+          "right": 542
         }
       ],
       "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "ОРСLMS",
+          "w": 117,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
         {
           "tag": "button",
           "label": "",
@@ -750,41 +694,17 @@
         {
           "tag": "a",
           "label": "Перейти",
-          "w": 87,
+          "w": 86,
           "h": 28
-        },
-        {
-          "tag": "button",
-          "label": "",
-          "w": 32,
-          "h": 32
-        },
-        {
-          "tag": "button",
-          "label": "Мои курсы",
-          "w": 118,
-          "h": 36
-        },
-        {
-          "tag": "button",
-          "label": "Словари",
-          "w": 95,
-          "h": 36
         }
       ],
       "smallTargetsTotal": 81,
-      "smallInputs": [
-        {
-          "tag": "input",
-          "type": "text",
-          "fontSize": 14
-        }
-      ],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "smallInputs": [],
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_dashboard.png",
       "viewport": "Compact_360x740",
@@ -802,41 +722,10 @@
       "path": "/c/grammatika-sanskrita-demo/u/1",
       "status": 200,
       "skipped": false,
-      "scrollW": 1006,
+      "scrollW": 360,
       "clientW": 360,
-      "overflowX": 646,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 1006
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 1006
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 718
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -846,8 +735,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -870,18 +777,12 @@
         }
       ],
       "smallTargetsTotal": 19,
-      "smallInputs": [
-        {
-          "tag": "textarea",
-          "type": "",
-          "fontSize": 14
-        }
-      ],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "smallInputs": [],
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_lesson.png",
       "viewport": "Compact_360x740",
@@ -891,41 +792,10 @@
       "path": "/dvaram/koloda",
       "status": 200,
       "skipped": false,
-      "scrollW": 923,
+      "scrollW": 360,
       "clientW": 360,
-      "overflowX": 563,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 923
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 923
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 809
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -935,8 +805,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -966,11 +854,11 @@
       ],
       "smallTargetsTotal": 23,
       "smallInputs": [],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_srs-koloda.png",
       "viewport": "Compact_360x740",
@@ -980,41 +868,10 @@
       "path": "/dvaram/koloda/stats",
       "status": 200,
       "skipped": false,
-      "scrollW": 1006,
+      "scrollW": 360,
       "clientW": 360,
-      "overflowX": 646,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 1006
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 1006
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 892
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -1024,8 +881,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -1043,11 +918,11 @@
       ],
       "smallTargetsTotal": 16,
       "smallInputs": [],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_srs-stats.png",
       "viewport": "Compact_360x740",
@@ -1057,41 +932,10 @@
       "path": "/calendar",
       "status": 200,
       "skipped": false,
-      "scrollW": 1006,
+      "scrollW": 360,
       "clientW": 360,
-      "overflowX": 646,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 1006
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 1006
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 892
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -1101,8 +945,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -1132,11 +994,11 @@
       ],
       "smallTargetsTotal": 18,
       "smallInputs": [],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_calendar.png",
       "viewport": "Compact_360x740",
@@ -1162,39 +1024,34 @@
       "path": "/dvaram",
       "status": 200,
       "skipped": false,
-      "scrollW": 966,
+      "scrollW": 320,
       "clientW": 320,
-      "overflowX": 646,
+      "overflowX": 0,
       "offenders": [
         {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 966
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 966
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 852
+          "tag": "button",
+          "cls": "pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outlin",
+          "right": 419
         },
         {
           "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
+          "cls": "pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outlin",
+          "right": 512
+        },
+        {
+          "tag": "img",
+          "cls": "inline-block w-[1.1em] h-[1.1em] align-[-0.15em] select-none mr-2",
+          "right": 465
+        },
+        {
+          "tag": "button",
+          "cls": "pb-3 px-1 text-base md:text-lg whitespace-nowrap transition-all outlin",
+          "right": 656
+        },
+        {
+          "tag": "i",
+          "cls": "fas fa-headset mr-2",
+          "right": 556
         }
       ],
       "smallTargets": [
@@ -1206,8 +1063,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -1239,39 +1114,15 @@
           "label": "Перейти",
           "w": 87,
           "h": 28
-        },
-        {
-          "tag": "button",
-          "label": "",
-          "w": 32,
-          "h": 32
-        },
-        {
-          "tag": "button",
-          "label": "Мои курсы",
-          "w": 118,
-          "h": 36
-        },
-        {
-          "tag": "button",
-          "label": "Словари",
-          "w": 95,
-          "h": 36
         }
       ],
       "smallTargetsTotal": 81,
-      "smallInputs": [
-        {
-          "tag": "input",
-          "type": "text",
-          "fontSize": 14
-        }
-      ],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "smallInputs": [],
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_dashboard.png",
       "viewport": "iPhoneSE_320x568",
@@ -1289,41 +1140,10 @@
       "path": "/c/grammatika-sanskrita-demo/u/1",
       "status": 200,
       "skipped": false,
-      "scrollW": 966,
+      "scrollW": 320,
       "clientW": 320,
-      "overflowX": 646,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 966
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 966
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 718
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -1333,8 +1153,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -1357,18 +1195,12 @@
         }
       ],
       "smallTargetsTotal": 19,
-      "smallInputs": [
-        {
-          "tag": "textarea",
-          "type": "",
-          "fontSize": 14
-        }
-      ],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "smallInputs": [],
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_lesson.png",
       "viewport": "iPhoneSE_320x568",
@@ -1378,41 +1210,10 @@
       "path": "/dvaram/koloda",
       "status": 200,
       "skipped": false,
-      "scrollW": 923,
+      "scrollW": 320,
       "clientW": 320,
-      "overflowX": 603,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 923
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 923
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 809
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -1422,8 +1223,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -1453,11 +1272,11 @@
       ],
       "smallTargetsTotal": 23,
       "smallInputs": [],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_srs-koloda.png",
       "viewport": "iPhoneSE_320x568",
@@ -1467,41 +1286,10 @@
       "path": "/dvaram/koloda/stats",
       "status": 200,
       "skipped": false,
-      "scrollW": 966,
+      "scrollW": 320,
       "clientW": 320,
-      "overflowX": 646,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 966
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 966
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 852
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -1511,8 +1299,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -1530,11 +1336,11 @@
       ],
       "smallTargetsTotal": 16,
       "smallInputs": [],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_srs-stats.png",
       "viewport": "iPhoneSE_320x568",
@@ -1544,41 +1350,10 @@
       "path": "/calendar",
       "status": 200,
       "skipped": false,
-      "scrollW": 966,
+      "scrollW": 320,
       "clientW": 320,
-      "overflowX": 646,
-      "offenders": [
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 601
-        },
-        {
-          "tag": "b",
-          "cls": "",
-          "right": 646
-        },
-        {
-          "tag": "div",
-          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
-          "right": 966
-        },
-        {
-          "tag": "header",
-          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
-          "right": 966
-        },
-        {
-          "tag": "div",
-          "cls": "flex items-center min-w-0",
-          "right": 852
-        },
-        {
-          "tag": "button",
-          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
-          "right": 702
-        }
-      ],
+      "overflowX": 0,
+      "offenders": [],
       "smallTargets": [
         {
           "tag": "button",
@@ -1588,8 +1363,26 @@
         },
         {
           "tag": "a",
+          "label": "ОРСLMS",
+          "w": 116,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
           "label": "0",
-          "w": 54,
+          "w": 55,
           "h": 40
         },
         {
@@ -1619,11 +1412,11 @@
       ],
       "smallTargetsTotal": 18,
       "smallInputs": [],
-      "wireLoading": 0,
-      "wireOffline": 0,
-      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
-      "hasInteractiveWidget": false,
-      "hasColorScheme": false,
+      "wireLoading": 1,
+      "wireOffline": 1,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content",
+      "hasInteractiveWidget": true,
+      "hasColorScheme": true,
       "themeColor": true,
       "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_calendar.png",
       "viewport": "iPhoneSE_320x568",

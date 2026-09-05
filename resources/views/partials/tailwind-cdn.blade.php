@@ -1,36 +1,17 @@
 {{--
-  Tailwind Play CDN + дизайн-токены бренда.
+  Скомпилированный Tailwind (v4, self-hosted) для витрины, чекаута, кабинета
+  студента и страниц авторизации.
 
-  Витрина, чекаут, кабинет студента и страницы авторизации собирают Tailwind
-  не из `resources/css/app.css`, а этим CDN. Play CDN читает ТОЛЬКО глобальный
-  `tailwind.config` и ничего не знает про `@theme { --color-brand: … }`, поэтому
-  токены приходится продублировать здесь.
+  H4118 (05-09-2026): runtime Play CDN удалён — его хост (v3.4.17)
+  отдаёт сломанный in-browser JIT, который не генерирует `hidden` / `sm:*` /
+  `md:*` для кабинетной разметки → десктопная вёрстка на iPhone (ox=646 на всех
+  авторизованных роутах, карточка /login с width:0 и некликабельной кнопкой).
+  Теперь эти страницы получают тот же бандл `resources/css/app.css`, что и
+  витрина/промо: Tailwind v4 CSS-first, токены бренда — в @theme в app.css
+  (H2560), классы сканируются из resources/views через `@source "../views"`,
+  так что утилиты гарантированно есть в билде ещё до отдачи страницы.
 
-  Чем это кончилось однажды (H2560, коммит 68f80829): токены завели в app.css,
-  ~1100 классов `[#E85C24]` заменили на `brand`/`brand-hover` — и на всех
-  CDN-страницах эти утилиты просто перестали существовать. Кнопка оплаты
-  «К безопасной оплате» осталась без фона (`bg-gradient-to-r` без стопов даёт
-  невалидный `linear-gradient`), белый текст на белой карточке стал невидим,
-  а в кабинете пропало оранжевое подчёркивание активного пункта меню.
-
-  Значения ОБЯЗАНЫ совпадать с `--color-brand` / `--color-brand-hover` в
-  resources/css/app.css — расхождение ловит tests/Feature/Ui/BrandTokenParityTest.
-
-  Подключать CDN мимо этого партиала нельзя: тот же тест проверяет, что голого
-  тега `cdn.tailwindcss.com` в других шаблонах нет.
+  Подключать стили мимо этого партиала нельзя: BrandTokenParityTest проверяет,
+  что голого Play CDN-хоста больше нет нигде в resources/views.
 --}}
-{{-- preconnect: DNS+TLS до Play CDN стоил ~1.3 c в замере 18-08-2026 --}}
-<link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    'brand': '#e85c24',
-                    'brand-hover': '#d04a15',
-                },
-            },
-        },
-    };
-</script>
+@vite('resources/css/app.css')

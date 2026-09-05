@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
+use Pdo\Mysql;
 
 return [
 
@@ -59,7 +60,11 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                // H4118: PHP 8.5 deprecated PDO::MYSQL_ATTR_SSL_CA → Pdo\Mysql::ATTR_SSL_CA.
+                // Константа вычисляется даже когда array_filter потом выбрасывает значение,
+                // а deprecation-нотис утекал в вывод страницы ДО <!DOCTYPE (quirks mode →
+                // раздутый layout на iPhone). Старый PHP не знает новую константу — тернарник.
+                (defined('\Pdo\Mysql::ATTR_SSL_CA') ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 

@@ -8,15 +8,18 @@ use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 /**
- * Витрина, чекаут, кабинет и авторизация собирают Tailwind не из
- * resources/css/app.css, а с Play CDN, который читает только глобальный
- * `tailwind.config` и ничего не знает про `@theme`.
+ * H4118 (05-09-2026): runtime Play CDN удалён — витрина, чекаут, кабинет и
+ * авторизация получают тот же self-hosted бандл resources/css/app.css, что и
+ * остальные страницы (partials/tailwind-cdn.blade.php теперь @vite-подключение).
  *
- * H2560 (коммит 68f80829) завёл там токены --color-brand / --color-brand-hover
- * и заменил на них ~1100 классов [#E85C24] — на CDN-страницах эти утилиты
- * перестали существовать, и кнопка оплаты на чекауте осталась без фона.
+ * История: cdn.tailwindcss.com (v3.4.17) отдавал сломанный in-browser JIT без
+ * `hidden`/`sm:*`/`md:*` (десктоп на iPhone, ox=646, карточка /login с width:0),
+ * а раньше — H2560 (68f80829) — ещё и молчал про @theme-токены: кнопка оплаты
+ * осталась без фона. Эти три красные линии держат регресс:
  *
- * Тест держит две половины в паритете, пока CDN не уйдёт совсем.
+ *  1. cdn.tailwindcss.com запрещён ВЕЗДЕ в resources/views;
+ *  2. партиал отдаёт скомпилированный app.css через @vite;
+ *  3. @theme-токены бренда в app.css не вымирают (на них держится ~1100 классов).
  */
 class BrandTokenParityTest extends TestCase
 {
@@ -25,25 +28,7 @@ class BrandTokenParityTest extends TestCase
     private const CDN_HOST = 'cdn.tailwindcss.com';
 
     /** @test */
-    public function every_theme_token_from_app_css_is_mirrored_in_the_cdn_config(): void
-    {
-        $tokens = $this->themeColorTokens();
-        $partial = File::get(base_path(self::PARTIAL));
-
-        $this->assertNotEmpty($tokens, 'В @theme-блоке resources/css/app.css не нашлось ни одного --color-* токена.');
-
-        foreach ($tokens as $name => $hex) {
-            $this->assertMatchesRegularExpression(
-                '/[\'"]?'.preg_quote($name, '/').'[\'"]?\s*:\s*[\'"]'.preg_quote($hex, '/').'[\'"]/i',
-                $partial,
-                "Токен --color-{$name} ({$hex}) объявлен в resources/css/app.css, но не отдан Play CDN в ".self::PARTIAL
-                .'. На страницах витрины и кабинета утилиты этого цвета не сгенерируются вовсе.'
-            );
-        }
-    }
-
-    /** @test */
-    public function the_cdn_is_loaded_only_through_the_token_partial(): void
+    public function the_play_cdn_is_banned_from_every_blade_view(): void
     {
         $offenders = [];
 
@@ -52,43 +37,39 @@ class BrandTokenParityTest extends TestCase
                 continue;
             }
 
-            $relative = str_replace('\\', '/', $file->getRelativePathname());
-
-            if (! str_contains(File::get($file->getPathname()), self::CDN_HOST)) {
-                continue;
-            }
-
-            if ($relative !== 'partials/tailwind-cdn.blade.php') {
-                $offenders[] = 'resources/views/'.$relative;
+            if (str_contains(File::get($file->getPathname()), self::CDN_HOST)) {
+                $offenders[] = 'resources/views/'.str_replace('\\', '/', $file->getRelativePathname());
             }
         }
 
         $this->assertSame(
             [],
             $offenders,
-            'Play CDN подключён мимо '.self::PARTIAL." — эти страницы останутся без brand-токенов:\n"
-            .implode("\n", $offenders)."\nПодключайте через @include('partials.tailwind-cdn')."
+            "Play CDN снова подключён в представлениях — H4118 выпилил его как root-cause (сломанный JIT v3.4.17):\n"
+            .implode("\n", $offenders)."\nПодключайте compiled CSS через @include('partials.tailwind-cdn')."
         );
     }
 
     /** @test */
-    public function the_config_is_declared_after_the_cdn_script(): void
+    public function the_token_partial_serves_the_compiled_stylesheet_via_vite(): void
     {
-        // Сам партиал начинается с blade-комментария, где оба имени тоже упомянуты,
-        // поэтому сравниваем позиции уже в очищенной разметке.
         $partial = preg_replace('/\{\{--.*?--\}\}/s', '', File::get(base_path(self::PARTIAL)));
 
-        $cdnAt = strpos($partial, self::CDN_HOST);
-        preg_match('/tailwind\.config\s*=/', $partial, $m, PREG_OFFSET_CAPTURE);
-        $configAt = $m[0][1] ?? null;
-
-        $this->assertIsInt($cdnAt, 'В партиале нет тега Play CDN.');
-        $this->assertIsInt($configAt, 'В партиале нет присваивания tailwind.config.');
-        $this->assertGreaterThan(
-            $cdnAt,
-            $configAt,
-            'tailwind.config должен присваиваться ПОСЛЕ загрузки CDN: до неё глобала `tailwind` ещё нет.'
+        $this->assertMatchesRegularExpression(
+            '/@vite\s*\(\s*[\'"]resources\/css\/app\.css[\'"]\s*\)/',
+            $partial,
+            self::PARTIAL.' должен отдавать скомпилированный resources/css/app.css через @vite — '
+            .'иначе страницы витрины/кабинета останутся без Tailwind-утилит и бренд-токенов.'
         );
+    }
+
+    /** @test */
+    public function brand_theme_tokens_stay_declared_in_app_css(): void
+    {
+        $tokens = $this->themeColorTokens();
+
+        $this->assertArrayHasKey('brand', $tokens, 'В @theme-блоке app.css пропал --color-brand — на нём держится ~1100 классов brand/*.');
+        $this->assertArrayHasKey('brand-hover', $tokens, 'В @theme-блоке app.css пропал --color-brand-hover (H2560).');
     }
 
     /**

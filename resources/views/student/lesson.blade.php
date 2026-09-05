@@ -62,7 +62,9 @@
             align-self: start !important;
         }
         .lesson-side-col.has-tabs {
+            /* H4118: dvh с vh-фолбэком — 100vh на iPhone Safari включает панель браузера */
             max-height: calc(100vh - 3rem);
+            max-height: calc(100dvh - 3rem);
         }
     }
 </style>
@@ -764,7 +766,7 @@
 
                         @if($isVideo)
                             <div class="px-2 pb-2">
-                                <video controls class="w-full rounded-xl bg-black max-h-32 object-cover outline-none">
+                                <video controls playsinline webkit-playsinline class="w-full rounded-xl bg-black max-h-32 object-cover outline-none">
                                     <source src="{{ route('student.lesson.material', [$course->slug, $lesson->id, basename($file)]) }}" type="{{ $mimeType }}">
                                 </video>
                             </div>
