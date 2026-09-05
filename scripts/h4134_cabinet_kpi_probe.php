@@ -17,12 +17,13 @@ declare(strict_types=1);
  *   cd /var/www/html && php scripts/h4134_cabinet_kpi_probe.php
  */
 
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Facades\DB;
+
 require __DIR__.'/../vendor/autoload.php';
 
 $app = require_once __DIR__.'/../bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-
-use Illuminate\Support\Facades\DB;
+$app->make(Kernel::class)->bootstrap();
 
 $flip = '2026-08-21 07:51:25';
 $d7 = '2026-08-28 07:51:25';
