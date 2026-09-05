@@ -20,7 +20,7 @@ H4115 — Money-surface iOS WebKit audit (H1391 bug class). Executor: OxAlpha (z
 | Cookie-bar occlusion of CTA (H1391 class) | **none — the H1391 fix holds** |
 | WebKit console errors | **none** |
 | Dead form fields (focus lost) | **none** |
-| Pay-CTA tap target ≥ 44 pt | **FAIL — systematic, see below** |
+| Pay-CTA tap target ≥ 44 pt | **FAIL → FIXED** (see below; post-deploy re-audit `dirty=0/18`) |
 
 ### Finding: CTA tap targets below Apple's 44 pt minimum
 
@@ -31,7 +31,7 @@ H4115 — Money-surface iOS WebKit audit (H1391 bug class). Executor: OxAlpha (z
 
 `min-h-[44px]` added to the three money-surface CTAs: `free-intro-banner`, `paypal-cta`, `company-invoice-cta` (same defect class, same one-token fix). Verified: `npm run build` compiles and the built `app-*.css` bundle contains `min-h-\[44px\]`.
 
-**Deploy residual:** the class exists only after a Vite rebuild — a CSS build must ride the next deploy; then re-run the audit and expect `dirty=0`:
+**Deploy residual — CLOSED 05-09-2026:** the class exists only after a Vite rebuild — the rebuild rode the deploy (`/usr/local/sbin/systema-auto-deploy-run.sh`, `3cd10a48 → c17ea0ef`, health clean, smoke 200, MG order «deploy now»). Re-audit after deploy: **18/18 ok, `dirty=0`** — tap targets ≥44 pt on every money surface:
 
 ```
 BASE_URL=https://samskrte.ru node scripts/money_ios_webkit_audit.mjs
