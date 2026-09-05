@@ -154,7 +154,7 @@
 </div>
 
 <style>
-    .scw { position: fixed; right: 20px; bottom: 20px; z-index: 9998; font-family: inherit; }
+    .scw { position: fixed; right: calc(20px + env(safe-area-inset-right, 0px)); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 9998; font-family: inherit; }
     .scw-toggle {
         position: relative; width: 60px; height: 60px; border-radius: 50%; border: none;
         cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -171,7 +171,8 @@
     }
     .scw-panel {
         position: absolute; right: 0; bottom: 74px; width: 360px; max-width: calc(100vw - 32px);
-        height: 520px; max-height: calc(100vh - 120px); display: flex; flex-direction: column;
+        /* H4118: visualViewport-aware высота — --scw-vvh обновляется при клавиатуре/зуме (скрипт ниже) */
+        height: 520px; max-height: calc(var(--scw-vvh, 100vh) - 120px); display: flex; flex-direction: column;
         background: #111827; color: #e5e7eb; border: 1px solid #1f2937; border-radius: 16px;
         overflow: hidden; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
         animation: scw-in .18s ease-out;
@@ -208,6 +209,8 @@
         border: 1px solid #1f2937; background: #111827; color: #e5e7eb; font-size: 14px; font-family: inherit; line-height: 1.4;
     }
     .scw-name:focus, .scw-text:focus, .scw-email:focus, .scw-phone:focus { outline: none; border-color: #E85C24; }
+    /* H4118: пол 16px — iOS зумит страницу при фокусе в поле с computed < 16px */
+    .scw :is(input, textarea) { font-size: max(1rem, 1em); }
     @media (max-width: 340px) { .scw-contact-row { flex-direction: column; } }
     .scw-send {
         flex-shrink: 0; width: 42px; height: 42px; border-radius: 10px; border: none; cursor: pointer;
@@ -216,8 +219,8 @@
     .scw-send:hover { background: #c9491a; }
     .scw-send:disabled { opacity: .5; cursor: default; }
     @media (max-width: 480px) {
-        .scw { right: 14px; bottom: 14px; }
-        .scw-panel { width: calc(100vw - 28px); height: 70vh; bottom: 70px; }
+        .scw { right: calc(14px + env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+        .scw-panel { width: calc(100vw - 28px); height: calc(var(--scw-vvh, 100vh) * 0.7); bottom: 70px; }
     }
 </style>
 
@@ -225,6 +228,15 @@
 (function () {
     var root = document.getElementById('scw-root');
     if (!root) return;
+
+    // H4118: высота видимой области без клавиатуры/зума — питает .scw-panel (max-height/height).
+    // Задаём на <html>, чтобы переменная жила даже до инициализации остального скрипта.
+    var vv = window.visualViewport;
+    var syncVvh = function () {
+        if (vv) { document.documentElement.style.setProperty('--scw-vvh', Math.round(vv.height) + 'px'); }
+    };
+    syncVvh();
+    if (vv) { vv.addEventListener('resize', syncVvh); }
 
     var POST_URL = root.dataset.postUrl;
     var HISTORY_URL = root.dataset.historyUrl;
