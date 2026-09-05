@@ -5,7 +5,7 @@ _Created: 05-09-2026 · Last updated: 05-09-2026_
 **Handoff:** [H4134 (Opus 4.8) — Cabinet adoption + revenue KPI experiment pass 2](https://github.com/gasyoun/Uprava/blob/main/handoffs/H4134-Opus_Systema-Sanscriticum_cabinet-adoption-kpi-experiment-pass2_05.09.26.md)
 **Pass-1 record (pre-baseline, stays open):** [RESULTS_CABINET_ADOPTION_KPI_H2380_20260807.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RESULTS_CABINET_ADOPTION_KPI_H2380_20260807.md) · [H2380 (Grok 4.5)](https://github.com/gasyoun/Uprava/blob/main/handoffs/H2380-Grok_Systema-Sanscriticum_cabinet-adoption-kpi-experiment_07.08.26.md)
 
-**Executor:** Opus 4.8 (`claude-opus-4-8`) · prod **read-only** probes via SSH `root@193.232.229.92` · **no** `CABINET_HYBRID` flip in this run · **no** live invite `--send`
+**Executor:** H4134 Opus lane; executing model per session env block **Opus 5 (`claude-opus-5`)** · prod **read-only** probes via SSH `root@193.232.229.92` · **no** `CABINET_HYBRID` flip in this run · **no** live invite `--send`
 
 **Disposition:** **DELIVERED (measurement).** Both gates were already clear before this pass — DEPLOY №52 fired **21-08-2026 07:51Z**, so day-7 and day-14 post-flip windows are both complete. Verdict: **keep the flag ON**, and **one P0 instrumentation defect blocks the headline KPI**.
 
