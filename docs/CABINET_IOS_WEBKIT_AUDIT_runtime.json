@@ -1,0 +1,1649 @@
+{
+  "generated_at": "2026-09-05T07:42:45.022Z",
+  "base": "http://127.0.0.1:8000",
+  "engine": "playwright-webkit (iPhone UA, isMobile, touch)",
+  "viewports": [
+    "iPhone14_390x844",
+    "Compact_360x740",
+    "iPhoneSE_320x568"
+  ],
+  "routes": [
+    {
+      "name": "dashboard",
+      "path": "/dvaram"
+    },
+    {
+      "name": "course",
+      "path": "/c/grammatika-sanskrita-demo"
+    },
+    {
+      "name": "lesson",
+      "path": "/c/grammatika-sanskrita-demo/u/1"
+    },
+    {
+      "name": "srs-koloda",
+      "path": "/dvaram/koloda"
+    },
+    {
+      "name": "srs-stats",
+      "path": "/dvaram/koloda/stats"
+    },
+    {
+      "name": "calendar",
+      "path": "/calendar"
+    },
+    {
+      "name": "guide",
+      "path": "/guide"
+    },
+    {
+      "name": "trial-public",
+      "path": "/trial"
+    }
+  ],
+  "discovered": {
+    "course": null,
+    "lesson": null
+  },
+  "runner_failures": 0,
+  "console_errors": [
+    {
+      "viewport": "iPhone14_390x844",
+      "path": "http://127.0.0.1:8000/dvaram",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhone14_390x844",
+      "path": "http://127.0.0.1:8000/dvaram",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhone14_390x844",
+      "path": "http://127.0.0.1:8000/dvaram",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "viewport": "iPhone14_390x844",
+      "path": "http://127.0.0.1:8000/c/grammatika-sanskrita-demo/u/1",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhone14_390x844",
+      "path": "http://127.0.0.1:8000/dvaram/koloda",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhone14_390x844",
+      "path": "http://127.0.0.1:8000/dvaram/koloda/stats",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhone14_390x844",
+      "path": "http://127.0.0.1:8000/calendar",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhone14_390x844",
+      "path": "http://127.0.0.1:8000/calendar",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "viewport": "iPhone14_390x844",
+      "path": "http://127.0.0.1:8000/guide",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "viewport": "Compact_360x740",
+      "path": "http://127.0.0.1:8000/dvaram",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "Compact_360x740",
+      "path": "http://127.0.0.1:8000/dvaram",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "Compact_360x740",
+      "path": "http://127.0.0.1:8000/dvaram",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "viewport": "Compact_360x740",
+      "path": "http://127.0.0.1:8000/c/grammatika-sanskrita-demo/u/1",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "Compact_360x740",
+      "path": "http://127.0.0.1:8000/dvaram/koloda",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "Compact_360x740",
+      "path": "http://127.0.0.1:8000/dvaram/koloda/stats",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "Compact_360x740",
+      "path": "http://127.0.0.1:8000/calendar",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "Compact_360x740",
+      "path": "http://127.0.0.1:8000/calendar",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "viewport": "Compact_360x740",
+      "path": "http://127.0.0.1:8000/guide",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "viewport": "iPhoneSE_320x568",
+      "path": "http://127.0.0.1:8000/dvaram",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhoneSE_320x568",
+      "path": "http://127.0.0.1:8000/dvaram",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhoneSE_320x568",
+      "path": "http://127.0.0.1:8000/dvaram",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "viewport": "iPhoneSE_320x568",
+      "path": "http://127.0.0.1:8000/c/grammatika-sanskrita-demo/u/1",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhoneSE_320x568",
+      "path": "http://127.0.0.1:8000/dvaram/koloda",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhoneSE_320x568",
+      "path": "http://127.0.0.1:8000/dvaram/koloda/stats",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhoneSE_320x568",
+      "path": "http://127.0.0.1:8000/calendar",
+      "text": "pageerror: SyntaxError: Unexpected token '<'"
+    },
+    {
+      "viewport": "iPhoneSE_320x568",
+      "path": "http://127.0.0.1:8000/calendar",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "viewport": "iPhoneSE_320x568",
+      "path": "http://127.0.0.1:8000/guide",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    }
+  ],
+  "results": [
+    {
+      "path": "/dvaram",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 1036,
+      "clientW": 390,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 1036
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 1036
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 908
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Как пользоваться",
+          "w": 320,
+          "h": 42
+        },
+        {
+          "tag": "a",
+          "label": "Проверить кабинет",
+          "w": 320,
+          "h": 42
+        },
+        {
+          "tag": "button",
+          "label": "Сменить пароль",
+          "w": 320,
+          "h": 42
+        },
+        {
+          "tag": "a",
+          "label": "Перейти",
+          "w": 87,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "Мои курсы",
+          "w": 118,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "label": "Словари",
+          "w": 95,
+          "h": 36
+        }
+      ],
+      "smallTargetsTotal": 81,
+      "smallInputs": [
+        {
+          "tag": "input",
+          "type": "text",
+          "fontSize": 14
+        }
+      ],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_dashboard.png",
+      "viewport": "iPhone14_390x844",
+      "name": "dashboard"
+    },
+    {
+      "path": "/c/grammatika-sanskrita-demo",
+      "status": 404,
+      "skipped": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_course.png",
+      "viewport": "iPhone14_390x844",
+      "name": "course"
+    },
+    {
+      "path": "/c/grammatika-sanskrita-demo/u/1",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 1012,
+      "clientW": 390,
+      "overflowX": 622,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 1012
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 1012
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 718
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Куратору",
+          "w": 48,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "label": "Завершить",
+          "w": 113,
+          "h": 32
+        }
+      ],
+      "smallTargetsTotal": 19,
+      "smallInputs": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "fontSize": 14
+        }
+      ],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_lesson.png",
+      "viewport": "iPhone14_390x844",
+      "name": "lesson"
+    },
+    {
+      "path": "/dvaram/koloda",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 923,
+      "clientW": 390,
+      "overflowX": 533,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 923
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 923
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 809
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Санскрит",
+          "w": 96,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "label": "Хинди",
+          "w": 77,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "label": "Все",
+          "w": 58,
+          "h": 38
+        }
+      ],
+      "smallTargetsTotal": 23,
+      "smallInputs": [],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_srs-koloda.png",
+      "viewport": "iPhone14_390x844",
+      "name": "srs-koloda"
+    },
+    {
+      "path": "/dvaram/koloda/stats",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 1036,
+      "clientW": 390,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 1036
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 1036
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 922
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "← К карточкам",
+          "w": 326,
+          "h": 20
+        }
+      ],
+      "smallTargetsTotal": 16,
+      "smallInputs": [],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_srs-stats.png",
+      "viewport": "iPhone14_390x844",
+      "name": "srs-stats"
+    },
+    {
+      "path": "/calendar",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 1036,
+      "clientW": 390,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 1036
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 1036
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 922
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Добавить в календарь",
+          "w": 286,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "label": "Скопировать ссылку",
+          "w": 286,
+          "h": 38
+        },
+        {
+          "tag": "button",
+          "label": "Обновить ссылку",
+          "w": 286,
+          "h": 38
+        }
+      ],
+      "smallTargetsTotal": 18,
+      "smallInputs": [],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_calendar.png",
+      "viewport": "iPhone14_390x844",
+      "name": "calendar"
+    },
+    {
+      "path": "/guide",
+      "status": 404,
+      "skipped": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_guide.png",
+      "viewport": "iPhone14_390x844",
+      "name": "guide"
+    },
+    {
+      "path": "/trial",
+      "status": 404,
+      "skipped": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhone14_390x844_trial-public.png",
+      "viewport": "iPhone14_390x844",
+      "name": "trial-public"
+    },
+    {
+      "path": "/dvaram",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 1006,
+      "clientW": 360,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 1006
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 1006
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 892
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Как пользоваться",
+          "w": 290,
+          "h": 42
+        },
+        {
+          "tag": "a",
+          "label": "Проверить кабинет",
+          "w": 290,
+          "h": 42
+        },
+        {
+          "tag": "button",
+          "label": "Сменить пароль",
+          "w": 290,
+          "h": 42
+        },
+        {
+          "tag": "a",
+          "label": "Перейти",
+          "w": 87,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "Мои курсы",
+          "w": 118,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "label": "Словари",
+          "w": 95,
+          "h": 36
+        }
+      ],
+      "smallTargetsTotal": 81,
+      "smallInputs": [
+        {
+          "tag": "input",
+          "type": "text",
+          "fontSize": 14
+        }
+      ],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_dashboard.png",
+      "viewport": "Compact_360x740",
+      "name": "dashboard"
+    },
+    {
+      "path": "/c/grammatika-sanskrita-demo",
+      "status": 404,
+      "skipped": true,
+      "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_course.png",
+      "viewport": "Compact_360x740",
+      "name": "course"
+    },
+    {
+      "path": "/c/grammatika-sanskrita-demo/u/1",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 1006,
+      "clientW": 360,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 1006
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 1006
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 718
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Куратору",
+          "w": 48,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "label": "Завершить",
+          "w": 113,
+          "h": 32
+        }
+      ],
+      "smallTargetsTotal": 19,
+      "smallInputs": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "fontSize": 14
+        }
+      ],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_lesson.png",
+      "viewport": "Compact_360x740",
+      "name": "lesson"
+    },
+    {
+      "path": "/dvaram/koloda",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 923,
+      "clientW": 360,
+      "overflowX": 563,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 923
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 923
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 809
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Санскрит",
+          "w": 96,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "label": "Хинди",
+          "w": 77,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "label": "Все",
+          "w": 58,
+          "h": 38
+        }
+      ],
+      "smallTargetsTotal": 23,
+      "smallInputs": [],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_srs-koloda.png",
+      "viewport": "Compact_360x740",
+      "name": "srs-koloda"
+    },
+    {
+      "path": "/dvaram/koloda/stats",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 1006,
+      "clientW": 360,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 1006
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 1006
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 892
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "← К карточкам",
+          "w": 296,
+          "h": 20
+        }
+      ],
+      "smallTargetsTotal": 16,
+      "smallInputs": [],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_srs-stats.png",
+      "viewport": "Compact_360x740",
+      "name": "srs-stats"
+    },
+    {
+      "path": "/calendar",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 1006,
+      "clientW": 360,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 1006
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 1006
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 892
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Добавить в календарь",
+          "w": 256,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "label": "Скопировать ссылку",
+          "w": 256,
+          "h": 38
+        },
+        {
+          "tag": "button",
+          "label": "Обновить ссылку",
+          "w": 256,
+          "h": 38
+        }
+      ],
+      "smallTargetsTotal": 18,
+      "smallInputs": [],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_calendar.png",
+      "viewport": "Compact_360x740",
+      "name": "calendar"
+    },
+    {
+      "path": "/guide",
+      "status": 404,
+      "skipped": true,
+      "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_guide.png",
+      "viewport": "Compact_360x740",
+      "name": "guide"
+    },
+    {
+      "path": "/trial",
+      "status": 404,
+      "skipped": true,
+      "screenshot": "storage/app/cabinet-ios-audit/Compact_360x740_trial-public.png",
+      "viewport": "Compact_360x740",
+      "name": "trial-public"
+    },
+    {
+      "path": "/dvaram",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 966,
+      "clientW": 320,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 966
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 966
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 852
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Как пользоваться",
+          "w": 250,
+          "h": 42
+        },
+        {
+          "tag": "a",
+          "label": "Проверить кабинет",
+          "w": 250,
+          "h": 42
+        },
+        {
+          "tag": "button",
+          "label": "Сменить пароль",
+          "w": 250,
+          "h": 42
+        },
+        {
+          "tag": "a",
+          "label": "Перейти",
+          "w": 87,
+          "h": 28
+        },
+        {
+          "tag": "button",
+          "label": "",
+          "w": 32,
+          "h": 32
+        },
+        {
+          "tag": "button",
+          "label": "Мои курсы",
+          "w": 118,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "label": "Словари",
+          "w": 95,
+          "h": 36
+        }
+      ],
+      "smallTargetsTotal": 81,
+      "smallInputs": [
+        {
+          "tag": "input",
+          "type": "text",
+          "fontSize": 14
+        }
+      ],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_dashboard.png",
+      "viewport": "iPhoneSE_320x568",
+      "name": "dashboard"
+    },
+    {
+      "path": "/c/grammatika-sanskrita-demo",
+      "status": 404,
+      "skipped": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_course.png",
+      "viewport": "iPhoneSE_320x568",
+      "name": "course"
+    },
+    {
+      "path": "/c/grammatika-sanskrita-demo/u/1",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 966,
+      "clientW": 320,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 966
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 966
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 718
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Куратору",
+          "w": 48,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "label": "Завершить",
+          "w": 113,
+          "h": 32
+        }
+      ],
+      "smallTargetsTotal": 19,
+      "smallInputs": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "fontSize": 14
+        }
+      ],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_lesson.png",
+      "viewport": "iPhoneSE_320x568",
+      "name": "lesson"
+    },
+    {
+      "path": "/dvaram/koloda",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 923,
+      "clientW": 320,
+      "overflowX": 603,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 923
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 923
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 809
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Санскрит",
+          "w": 96,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "label": "Хинди",
+          "w": 77,
+          "h": 38
+        },
+        {
+          "tag": "a",
+          "label": "Все",
+          "w": 58,
+          "h": 38
+        }
+      ],
+      "smallTargetsTotal": 23,
+      "smallInputs": [],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_srs-koloda.png",
+      "viewport": "iPhoneSE_320x568",
+      "name": "srs-koloda"
+    },
+    {
+      "path": "/dvaram/koloda/stats",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 966,
+      "clientW": 320,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 966
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 966
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 852
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "← К карточкам",
+          "w": 256,
+          "h": 20
+        }
+      ],
+      "smallTargetsTotal": 16,
+      "smallInputs": [],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_srs-stats.png",
+      "viewport": "iPhoneSE_320x568",
+      "name": "srs-stats"
+    },
+    {
+      "path": "/calendar",
+      "status": 200,
+      "skipped": false,
+      "scrollW": 966,
+      "clientW": 320,
+      "overflowX": 646,
+      "offenders": [
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 601
+        },
+        {
+          "tag": "b",
+          "cls": "",
+          "right": 646
+        },
+        {
+          "tag": "div",
+          "cls": "flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-",
+          "right": 966
+        },
+        {
+          "tag": "header",
+          "cls": "sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shad",
+          "right": 966
+        },
+        {
+          "tag": "div",
+          "cls": "flex items-center min-w-0",
+          "right": 852
+        },
+        {
+          "tag": "button",
+          "cls": "w-10 h-10 mr-4 flex items-center justify-center rounded-xl bg-gray-50 ",
+          "right": 702
+        }
+      ],
+      "smallTargets": [
+        {
+          "tag": "button",
+          "label": "",
+          "w": 40,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "0",
+          "w": 54,
+          "h": 40
+        },
+        {
+          "tag": "a",
+          "label": "",
+          "w": 36,
+          "h": 36
+        },
+        {
+          "tag": "a",
+          "label": "Добавить в календарь",
+          "w": 216,
+          "h": 36
+        },
+        {
+          "tag": "button",
+          "label": "Скопировать ссылку",
+          "w": 216,
+          "h": 38
+        },
+        {
+          "tag": "button",
+          "label": "Обновить ссылку",
+          "w": 216,
+          "h": 38
+        }
+      ],
+      "smallTargetsTotal": 18,
+      "smallInputs": [],
+      "wireLoading": 0,
+      "wireOffline": 0,
+      "metaContent": "width=device-width, initial-scale=1.0, viewport-fit=cover",
+      "hasInteractiveWidget": false,
+      "hasColorScheme": false,
+      "themeColor": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_calendar.png",
+      "viewport": "iPhoneSE_320x568",
+      "name": "calendar"
+    },
+    {
+      "path": "/guide",
+      "status": 404,
+      "skipped": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_guide.png",
+      "viewport": "iPhoneSE_320x568",
+      "name": "guide"
+    },
+    {
+      "path": "/trial",
+      "status": 404,
+      "skipped": true,
+      "screenshot": "storage/app/cabinet-ios-audit/iPhoneSE_320x568_trial-public.png",
+      "viewport": "iPhoneSE_320x568",
+      "name": "trial-public"
+    }
+  ]
+}
