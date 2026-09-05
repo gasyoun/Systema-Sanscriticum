@@ -1,3 +1,5 @@
+_Created: 26-07-2026 · Last updated: 05-09-2026_
+
 # Run Report: kos-arz-skt
 
 ## Input
@@ -109,3 +111,5 @@ No revision artifact yet.
 ## Verification
 
 No verification artifact yet.
+
+_Dr. Mārcis Gasūns_

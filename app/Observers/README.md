@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # app/Observers
 
 Наблюдатели Eloquent — побочные эффекты при изменении моделей. Регистрируются в `AppServiceProvider::boot()`.
@@ -45,3 +47,5 @@ LandingPage::observe(LandingPageObserver::class);
 ```
 
 Для новых наблюдателей — добавить строку в `AppServiceProvider::boot()`.
+
+_Dr. Mārcis Gasūns_

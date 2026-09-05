@@ -1,3 +1,5 @@
+_Created: 06-07-2026 · Last updated: 05-09-2026_
+
 # Стратегия роста 2026–2027 — членство как годовой поток
 
 _Created: 06-07-2026 · Last updated: 22-08-2026 (superseded by MONETIZATION_PLAN_2026H2)_

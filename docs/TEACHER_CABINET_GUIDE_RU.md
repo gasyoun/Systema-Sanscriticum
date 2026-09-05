@@ -1,6 +1,6 @@
 # Руководство преподавателя: работа в учебной панели
 
-_Created: 12-08-2026 · Last updated: 31-08-2026_
+_Created: 12-08-2026 · Last updated: 05-09-2026_
 
 Все книги школы: `/admin/documentation`
 
@@ -311,7 +311,7 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Курсы
 
-![Раздел «Курсы» в панели преподавателя](screenshots/teacher-guide/courses.png)
+![Раздел «Курсы» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/courses.png)
 
 Курсы, закреплённые за вами. Открывается кнопкой **«Редактировать»**.
 
@@ -324,7 +324,7 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Уроки
 
-![Раздел «Уроки» в панели преподавателя](screenshots/teacher-guide/lessons.png)
+![Раздел «Уроки» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/lessons.png)
 
 Главный рабочий раздел: видео, материалы, домашние задания. Сценарий —
 [Создать урок](#создать-урок).
@@ -335,7 +335,7 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Домашние работы
 
-![Раздел «Домашние работы» в панели преподавателя](screenshots/teacher-guide/homework-submissions.png)
+![Раздел «Домашние работы» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/homework-submissions.png)
 
 Очередь работ, присланных по вашим урокам, со счётчиком непроверенного.
 Сценарий — [Проверить домашнюю работу](#проверить-домашнюю-работу).
@@ -345,7 +345,7 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Мои ученики
 
-![Раздел «Мои ученики» в панели преподавателя](screenshots/teacher-guide/student-groups.png)
+![Раздел «Мои ученики» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/student-groups.png)
 
 Состав учебных групп ваших курсов: имя, почта, время последней активности.
 Раздел **только для просмотра**.
@@ -355,7 +355,7 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Расписание
 
-![Раздел «Расписание» в панели преподавателя](screenshots/teacher-guide/schedules.png)
+![Раздел «Расписание» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/schedules.png)
 
 Занятия ваших курсов со ссылками на встречи. Сценарии —
 [Провести занятие](#провести-занятие-до-во-время-после) и
@@ -367,7 +367,7 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Календарь
 
-![Раздел «Календарь» в панели преподавателя](screenshots/teacher-guide/calendar-page.png)
+![Раздел «Календарь» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/calendar-page.png)
 
 Те же события, что и в расписании, но в виде календаря: месяц, неделя, день,
 список. Клик по дате создаёт событие, перетаскивание меняет время с
@@ -377,7 +377,7 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Библиотека курсов
 
-![Раздел «Библиотека курсов» в панели преподавателя](screenshots/teacher-guide/course-materials.png)
+![Раздел «Библиотека курсов» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/course-materials.png)
 
 Реестр литературы, привязанной к курсу целиком, а не к отдельному уроку. Кладите
 сюда то, что нужно на протяжении всего курса: программу, список источников,
@@ -385,7 +385,7 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Аналитика студентов
 
-![Раздел «Аналитика студентов» в панели преподавателя](screenshots/teacher-guide/teacher-analytics.png)
+![Раздел «Аналитика студентов» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/teacher-analytics.png)
 
 Сводка по вашим студентам: как они продвигаются по курсу. Раздел для просмотра —
 изменить отсюда ничего нельзя, и это правильно: цифры считаются по их
@@ -393,14 +393,14 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Нагрузка преподавателей
 
-![Раздел «Нагрузка преподавателей» в панели преподавателя](screenshots/teacher-guide/teacher-load.png)
+![Раздел «Нагрузка преподавателей» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/teacher-load.png)
 
 Сводка по занятости преподавателей. Служебный экран, только чтение — см.
 [Посмотреть свою нагрузку](#посмотреть-свою-нагрузку-и-расчёты).
 
 ### Старт чтения: застрявшие леммы
 
-![Раздел «Старт чтения: застрявшие леммы» в панели преподавателя](screenshots/teacher-guide/start-chteniya-stalled-lemmas.png)
+![Раздел «Старт чтения: застрявшие леммы» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/start-chteniya-stalled-lemmas.png)
 
 Узкий отчёт для когорты «Старт чтения»: слова, которые студенты раз за разом
 смотрят в читалке, но так и не забирают себе в колоду. Если вы эту когорту не
@@ -408,7 +408,7 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Руководство преподавателя
 
-![Раздел «Руководство преподавателя» в панели преподавателя](screenshots/teacher-guide/teacher-guide.png)
+![Раздел «Руководство преподавателя» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/teacher-guide.png)
 
 Этот самый текст, открытый прямо в панели. Он читается из репозитория школы, так
 что версия здесь и версия в файле совпадают всегда.
@@ -424,7 +424,7 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### Сертификаты
 
-![Раздел «Сертификаты» в панели преподавателя](screenshots/teacher-guide/certificates.png)
+![Раздел «Сертификаты» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/certificates.png)
 
 Выдача сертификатов выпускникам ваших курсов. Сценарий —
 [Выдать сертификат](#выдать-сертификат). Обратите внимание: раздел лежит в группе
@@ -442,21 +442,21 @@ _Created: 12-08-2026 · Last updated: 31-08-2026_
 
 ### SRS — колоды
 
-![Раздел «SRS — колоды» в панели преподавателя](screenshots/teacher-guide/srs-decks.png)
+![Раздел «SRS — колоды» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/srs-decks.png)
 
 Колоды карточек для повторения: название, язык, видимость, состав. Сценарий —
 [Добавить карточки в колоду](#добавить-карточки-в-колоду).
 
 ### SRS — карточки
 
-![Раздел «SRS — карточки» в панели преподавателя](screenshots/teacher-guide/srs-cards.png)
+![Раздел «SRS — карточки» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/srs-cards.png)
 
 Все карточки списком, независимо от колоды. Здесь удобно править переводы пачкой,
 а также импортировать и выгружать таблицу.
 
 ### Словарный запас
 
-![Раздел «Словарный запас» в панели преподавателя](screenshots/teacher-guide/dictionary-words.png)
+![Раздел «Словарный запас» в панели преподавателя](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/teacher-guide/dictionary-words.png)
 
 Каталог слов: написание, перевод, привязка к словарю. Слова можно связывать с
 карточками. Сами словари-контейнеры заводит администратор, слова внутри — ваши.

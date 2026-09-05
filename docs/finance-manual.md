@@ -1,6 +1,6 @@
 # Финансовый мануал — обзор для бухгалтера и администратора
 
-_Created: 06-07-2026 · Last updated: 21-08-2026_
+_Created: 06-07-2026 · Last updated: 05-09-2026_
 
 Этот документ — **точка входа** в финансовый функционал админ-панели ОРС (Общества
 ревнителей санскрита). Рассчитан на человека, который **никогда не открывал панель**:
@@ -9,8 +9,8 @@ _Created: 06-07-2026 · Last updated: 21-08-2026_
 Публичный [`accountant-guide.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/accountant-guide.md) — карта меню, не пошаговая
 памятка с суммами.
 
-> Общая (нефинансовая) часть админ-панели описана в [`admin-manual.md`](admin-manual.md).
-> Как студент видит долги/оплату со своей стороны (личный кабинет) — [`student-manual.md`](student-manual.md) §§4–5.
+> Общая (нефинансовая) часть админ-панели описана в [`admin-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/admin-manual.md).
+> Как студент видит долги/оплату со своей стороны (личный кабинет) — [`student-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/student-manual.md) §§4–5.
 
 ---
 

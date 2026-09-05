@@ -1,3 +1,5 @@
+_Created: 21-08-2026 · Last updated: 05-09-2026_
+
 # Self-serve: углубить и расширить — детерминированная классификация до LLM
 
 _Created: 21-08-2026 · Last updated: 21-08-2026 («сколько стоит» is classified D, not auto-replied)_

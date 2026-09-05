@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # database
 
 Схема БД, фабрики и сидеры.
@@ -62,3 +64,5 @@ php artisan make:migration add_field_to_table --table=table_name
 ```
 
 Имена миграций — snake_case с глаголом действия: `create_`, `add_`, `rename_`, `drop_`.
+
+_Dr. Mārcis Gasūns_

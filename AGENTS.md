@@ -1,3 +1,5 @@
+_Created: 01-07-2026 · Last updated: 05-09-2026_
+
 # AGENTS.md — Systema Sanscriticum
 
 Repo-local instructions for Codex/Claude agents working in this Laravel app.
@@ -87,7 +89,7 @@ npm run build
 ## Shared org context (generated — H1393 layer)
 
 - Encodings / key1/key2 / transcoder traps: [Sanskrit context primer](https://github.com/gasyoun/github-spine/blob/main/SANSKRIT_CONTEXT_PRIMER.md).
-- Task routing: [CLAUDE.md](CLAUDE.md) — matching section, not end-to-end.
+- Task routing: [CLAUDE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CLAUDE.md) — matching section, not end-to-end.
 - Danger facts (destroy-work-if-missed; full text + sources in [DANGER_FACTS.md](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md)):
   - A linked-worktree PATH can be silently reclaimed by another session for a DIFFERENT repository — verify toplevel + remote inside the same command (git -C) before any mutating git call in a worktree older than a day; foreign history/tags/staged files = abandon the directory (24-08-2026)
   - An external watcher process reverts uncommitted working-tree changes — author outside the tree and land+commit in ONE shell invocation; verify survival against HEAD
@@ -100,3 +102,5 @@ npm run build
 - Off-git assets: [shadow-assets registry](https://github.com/gasyoun/Uprava/blob/main/SHADOW_ASSETS_POINTERS.md).
 
 [/generated-block]
+
+_Dr. Mārcis Gasūns_

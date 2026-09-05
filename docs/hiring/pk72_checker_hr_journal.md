@@ -1,3 +1,5 @@
+_Created: 23-08-2026 · Last updated: 05-09-2026_
+
 # HR-журнал роли «Проверяющий упражнений ПК-72»
 
 _Created: 23-08-2026 · H3397 (OxAlpha `x-preview-f-free`)_

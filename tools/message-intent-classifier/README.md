@@ -1,3 +1,5 @@
+_Created: 25-08-2026 · Last updated: 05-09-2026_
+
 # message-intent-classifier
 
 Детерминированный классификатор входящих сообщений школы (Systema-Sanscriticum,

@@ -1,3 +1,5 @@
+_Created: 02-08-2026 · Last updated: 05-09-2026_
+
 # Soft server alerts — agent playbook + cause catalog
 
 _Created: 02-08-2026 · Last updated: 21-08-2026 (H3227 cgroup MiB fingerprint)_

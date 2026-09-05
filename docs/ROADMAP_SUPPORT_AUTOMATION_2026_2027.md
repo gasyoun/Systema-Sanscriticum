@@ -1,3 +1,5 @@
+_Created: 06-07-2026 · Last updated: 05-09-2026_
+
 # Roadmap: автоматизация поддержки 2026–2027 (Q3 2026 → Q2 2027)
 
 _Created: 06-07-2026 · Last updated: 21-08-2026 (year-start RAG overlay: #1633 vs двое в Telegram)_

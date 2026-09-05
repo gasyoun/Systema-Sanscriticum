@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # app/Listeners
 
 Слушатели событий Laravel Auth. Регистрируются в `EventServiceProvider`.
@@ -25,3 +27,5 @@
 ---
 
 Оба слушателя обернуты в `try/catch` внутри `ActivityTracker` — сбой трекинга не прерывает авторизацию.
+
+_Dr. Mārcis Gasūns_

@@ -1,3 +1,5 @@
+_Created: 25-06-2026 · Last updated: 05-09-2026_
+
 # ТЗ: каталог /online в стиле Arzamas
 
 **Цель.** Переподать существующий каталог курсов (`/online`) в стиле каталога
@@ -173,3 +175,5 @@ class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 [scrollbar-width:none]"
 ## Процесс
 Ветка от `develop`, PR в `develop` → `main` (PR-only, как принято в репозитории).
 Локального `composer`/сборки может не быть — проверять через CI.
+
+_Dr. Mārcis Gasūns_

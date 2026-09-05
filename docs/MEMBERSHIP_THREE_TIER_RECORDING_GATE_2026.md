@@ -83,3 +83,5 @@ Stop the affected lane on double-charge risk, a live/schedule/homework/text/comm
 closure, wrong recording access, PII exposure, or an irreversible migration.
 
 _Executor: Codex (GPT-5)._
+
+_Dr. Mārcis Gasūns_

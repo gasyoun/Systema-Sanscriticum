@@ -1,6 +1,6 @@
 # Мокап «Сегодня» (Today-first coach) — H956, направление A, мокап №3
 
-_Created: 15-07-2026 · Last updated: 15-07-2026_
+_Created: 15-07-2026 · Last updated: 05-09-2026_
 
 Третий мокап ремейка кабинета по рулингу M.G. 15-07-2026: «мокап №3 — направление A».
 Направление A из [STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md);
@@ -26,10 +26,10 @@ _Created: 15-07-2026 · Last updated: 15-07-2026_
 
 | Файл | Состояние | Что доказывает |
 |---|---|---|
-| [index.html](index.html) | Обычный вечер | План дня из 5 пунктов; continue — всегда пункт 1 (R5); чеклист — пункт-группа (R12); оффер — пункт плана ПОСЛЕ прогресс-события (R2, «чистейшее» прочтение); «Почему такой план?» — ответ на главный риск направления (непрозрачный алгоритм) |
-| [index-debt.html](index-debt.html) | Recovery: платёж отклонён | Баннер проблемы ведёт; офферы подавлены безусловно; доступное продолжает работать (бессрочные записи, живое занятие) — честность вместо блокировки всего |
-| [courses.html](courses.html) | Тонкие курсы | Слабое место направления показано честно: курс — только список уроков, без «дома»; истёкший доступ виден (R4) |
-| [lesson.html](lesson.html) | Урок в плане | «Пункт 1 из 5», футер «дальше по плану» — план следует за студентом; гибридный прогресс (R7) |
+| [index.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/today-first-coach/index.html) | Обычный вечер | План дня из 5 пунктов; continue — всегда пункт 1 (R5); чеклист — пункт-группа (R12); оффер — пункт плана ПОСЛЕ прогресс-события (R2, «чистейшее» прочтение); «Почему такой план?» — ответ на главный риск направления (непрозрачный алгоритм) |
+| [index-debt.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/today-first-coach/index-debt.html) | Recovery: платёж отклонён | Баннер проблемы ведёт; офферы подавлены безусловно; доступное продолжает работать (бессрочные записи, живое занятие) — честность вместо блокировки всего |
+| [courses.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/today-first-coach/courses.html) | Тонкие курсы | Слабое место направления показано честно: курс — только список уроков, без «дома»; истёкший доступ виден (R4) |
+| [lesson.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/today-first-coach/lesson.html) | Урок в плане | «Пункт 1 из 5», футер «дальше по плану» — план следует за студентом; гибридный прогресс (R7) |
 
 ## Ограничения
 

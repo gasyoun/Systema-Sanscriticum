@@ -1,3 +1,5 @@
+_Created: 01-05-2026 · Last updated: 05-09-2026_
+
 ---
 name: blade-styling
 description: Use when styling, restyling, or improving the visual layout of Blade templates in this Laravel project. Trigger phrases include «сверстай», «причеши», «сделай красиво», «поправь UI», «адаптив», «таблица/карточка/шапка криво», applied to files under resources/views/. Defines the visual-feedback loop using Playwright MCP — without this loop the assistant verstaет blindly and burns iterations.
@@ -65,3 +67,5 @@ additions — verify, don't guess.
 - Logic/data changes in controllers/models (use normal flow).
 - Filament resource form/table schema changes (those are PHP, not «верстка»).
 - Lecture HTML rendering (handled by `lecture-builder` Jinja templates, not Blade).
+
+_Dr. Mārcis Gasūns_

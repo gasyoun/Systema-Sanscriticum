@@ -67,3 +67,5 @@ _Dr. Mārcis Gasūns_
 | Волна 2 | ✅ выставлено MG 23-08: `MARATHON_WARM_TAIL_WAVE2_FROM=2026-09-05` (проверено на проде: старт 04-09 → flagship, 05-09 → membership) | [MARATHON_WARM_TAIL_WAVE_AB_2026](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MARATHON_WARM_TAIL_WAVE_AB_2026.md) |
 
 После 01-09 08:00: проверка `membership:rehearse` + витрина /klub показывает шесть тарифов; затем единственный живой чекаут MG как приёмка.
+
+_Dr. Mārcis Gasūns_

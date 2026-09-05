@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # app/Services
 
 Бизнес-логика, вынесенная из контроллеров и моделей. Регистрируются синглтонами в `AppServiceProvider` (если требуют конфига) или создаются через `new` прямо в контроллере.
@@ -73,7 +75,7 @@ LectureDraft (модель)
 | `ScheduleGenerator` | Создает события календаря из конфигурации. Уважает фильтры дней недели, пропуски, дополнительные даты, плейсхолдеры шаблона (`{N}`, `{DATE}`, `{BLOCK}`, `{BN}`). |
 | `GeneratorConfig` | DTO с параметрами генерации: группа, курс, диапазон дат, длительность, количество занятий, шаблон. |
 | `TemplateRenderer` | Рендерит шаблон события, заменяя плейсхолдеры. Разделитель `|` в шаблоне разбивает на `title`, `description`, `tag`. |
-| `ScheduleMover` | Перенос одного занятия (`reschedule`) и отмена с каскадом +1 неделя для this+subsequent той же группы (`cancelAndShiftWeek`). Staff-инструкция: [docs/CURATOR_ADMIN_GUIDE_RU.md, раздел «Расписание: перенос занятия и смена дня/времени»](../../docs/CURATOR_ADMIN_GUIDE_RU.md#расписание-перенос-занятия-и-смена-днявремени). |
+| `ScheduleMover` | Перенос одного занятия (`reschedule`) и отмена с каскадом +1 неделя для this+subsequent той же группы (`cancelAndShiftWeek`). Staff-инструкция: [docs/CURATOR_ADMIN_GUIDE_RU.md, раздел «Расписание: перенос занятия и смена дня/времени»](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CURATOR_ADMIN_GUIDE_RU.md#расписание-перенос-занятия-и-смена-днявремени). |
 
 ---
 
@@ -82,3 +84,5 @@ LectureDraft (модель)
 - Сервисы не должны обращаться к HTTP-запросу (`request()`). Все данные передаются параметрами.
 - Логирование через `Log::error()`, а не через `throw` — сбои вспомогательных сервисов (трекинг, уведомления) не должны ломать основной флоу.
 - `LectureBuilderClient` и `LectureAiClient` регистрируются синглтонами в `AppServiceProvider::register()`.
+
+_Dr. Mārcis Gasūns_

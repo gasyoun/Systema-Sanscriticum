@@ -1,3 +1,5 @@
+_Created: 26-07-2026 · Last updated: 05-09-2026_
+
 # Run Report: kos-arz-gen
 
 ## Input
@@ -145,3 +147,5 @@ Status: `completed`
 Схемы в тексте: iast
 
 Замечаний нет.
+
+_Dr. Mārcis Gasūns_

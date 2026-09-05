@@ -1,3 +1,5 @@
+_Created: 22-06-2026 · Last updated: 05-09-2026_
+
 # Кабинетный бот (ИИ-куратор)
 
 Документация по студенческому боту личного кабинета: привязка аккаунта, ИИ-куратор
@@ -91,18 +93,18 @@ php artisan telegram:webhooks --set    # перерегистрировать в
    - токен одноразовый (обнуляется).
 3. `/start` без токена → инструкция «привяжите аккаунт в кабинете».
 
-**Самообслуживание кабинета (02-09-2026)** — [`CabinetProvisionBotCommand`](../app/Services/Bot/CabinetProvisionBotCommand.php):
+**Самообслуживание кабинета (02-09-2026)** — [`CabinetProvisionBotCommand`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Bot/CabinetProvisionBotCommand.php):
 
 - `/кабинет <email>` в **личке** → если кабинета нет, создаёт его одним шагом
   (Free-tier плейлисты, `signup_source=telegram`), привязывает `telegram_id` и
   шлёт одноразовую magic-ссылку входа. Щиты: ≤1 создание на `telegram_id`,
   существующий email не привязывается, флаг `features.telegram_cabinet_provision`
   (в проде ON с 02-09-2026). Детали и сценарии —
-  [RUNBOOK_TELEGRAM_CABINET_LOGIN_2026-08-28.md](RUNBOOK_TELEGRAM_CABINET_LOGIN_2026-08-28.md).
+  [RUNBOOK_TELEGRAM_CABINET_LOGIN_2026-08-28.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_TELEGRAM_CABINET_LOGIN_2026-08-28.md).
 - `/кабинет` в **группе** → только короткий указатель в личку; аккаунтов и
   ссылок в группах нет (magic-link увидели бы все участники).
 - `/вход`, `/login`, `/start` — одноразовая ссылка входа для уже созданного
-  кабинета ([CabinetLoginBotCommand](../app/Services/Bot/CabinetLoginBotCommand.php)).
+  кабинета ([CabinetLoginBotCommand](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Bot/CabinetLoginBotCommand.php)).
 
 **VK** (`VkBotController`): привязка по `ref` из ссылки `vk.me` (id студента) →
 `vk_id = from_id`, либо студент уже привязан по `vk_id`.
@@ -403,3 +405,5 @@ APP_URL=https://samskrte.ru
 | Бот «выдумывает» реквизиты/ссылки | Проверь актуальность `persona()` и FAQ; ссылки — только из каталога. |
 | Неверное число блоков у курса | Каталог считает по блочным тарифам; проверь `tariffs` курса. |
 | Изменения FAQ не видны | Кэш `bot.kb.faq` 10 мин — `php artisan cache:clear`. |
+
+_Dr. Mārcis Gasūns_

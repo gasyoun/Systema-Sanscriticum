@@ -1,3 +1,5 @@
+_Created: 02-07-2026 · Last updated: 05-09-2026_
+
 # AUDIT_PLAN.md — полный аудит кодовой базы Systema-Sanscriticum
 
 Дата: 2026-07-02
@@ -288,3 +290,5 @@
 8. **throttle на payment.create/applyPromo, IDOR архива сертификатов** (п.1.6, п.1.5).
 9. **Social auth email verification** (п.1.3, ВЫСОКИЙ, M) — зависит от включенных провайдеров; проверить политику VK/Yandex.
 10. Остальное (`$fillable`→`$guarded`, XSS-санитайзер, `failed()` в джобах, кэш null, DRY-сервис доступа, `.env.example`, casts) — по мере, в рамках рефакторинга.
+
+_Dr. Mārcis Gasūns_

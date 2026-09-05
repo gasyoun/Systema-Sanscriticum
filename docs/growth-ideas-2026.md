@@ -1,6 +1,6 @@
 # Идеи роста 2026 — воронка, удержание, монетизация
 
-_Created: 02-07-2026 · Last updated: 03-07-2026_
+_Created: 02-07-2026 · Last updated: 05-09-2026_
 
 Продуктовый мемо по итогам второго интервью 02-07-2026 (Fable 5,
 `claude-fable-5`). Не план работ: план — в
@@ -85,7 +85,7 @@ VK, YouTube, CRM студентов, международные платежи; 
    _✅ ДОСТАВЛЕНО (07-07-2026, H324): email-only подписка на рассылку заводит
    кабинетного `User` через одноразовую magic-ссылку и пишет `Lead`-строку с UTM —
    лид→пользователь→оплата больше не рвется на входе. За флагом `newsletter_subscribe`
-   (ВЫКЛ). См. [docs/newsletter-subscribe.md](newsletter-subscribe.md)._
+   (ВЫКЛ). См. [docs/newsletter-subscribe.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/newsletter-subscribe.md)._
 15. **Telegram как канал удержания** (новое, CUSTDEV 03-07-2026). Telegram
    дает микрообъем переходов, но рекордную лояльность (посетители ходят на
    сайт многократно, вовлеченность выше всех каналов). Есть: lead-magnet бот

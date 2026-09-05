@@ -1,3 +1,5 @@
+_Created: 13-06-2026 · Last updated: 05-09-2026_
+
 ## [Unreleased]
 <!-- entries land in changelog_queue/ -- appended via tools/changelog_queue_consume.py, consumed by cut_release.py at release-cut (H3355); direct bullets here are hook-blocked -->
 
@@ -350,7 +352,7 @@ H3951. Дата старта блока — не всегда событие р�
 - **H3496 (OxAlpha `x-preview-f-free`, 25-08-2026): курс «Напевный санскрит - гимн сутр Патанджали…» переименован в «Йога-сутры Патанджали, {день} {время} (2026)» (рулинг MG — «гимн» неверно называет рецитацию сутр).** Прод-БД .92 уже обновлена напрямую (courses 381/433: title + meta_title + meta_description; slug'и и URL не тронуты, публичные страницы проверены curl'ом); здесь репо-след: [course_aliases.csv](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/data/course_aliases.csv) — таргет строки «…гимн сутр Патанджали 2026» переведён на новое семейство имён + добавлены rename-алиасы обоих СТАРЫХ полных тайтлов (исторические импорты/оплаты мастер-таблицы резолвятся в актуальные названия курсов), комментарий бейджа [checkout/show.blade.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/checkout/show.blade.php) синхронизирован. Лестница ORS-FAQ (usha vs Парибок) защищена отдельным PR там же. Одностраничник первого теста PayPal self-serve: [docs/copy/PAYPAL_FIRST_TEST_RUNBOOK_RU_25-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/PAYPAL_FIRST_TEST_RUNBOOK_RU_25-08-2026.md).
 
 ### Added
-- **H3499 (OxAlpha `x-preview-f-free`, 25-08-2026): публичный гид кабинета `GET /help/kabinet` + волна повторных приглашений (MG approved).** Новый публичный роут без auth ([PublicCabinetGuideController](app/Http/Controllers/PublicCabinetGuideController.php), `layouts.articles`, CTA «Войти», строго до catch-all) рендерит тот же [`docs/STUDENT_CABINET_GUIDE_RU.md`](docs/STUDENT_CABINET_GUIDE_RU.md), что кабинетный `/dvaram/help` — закрывает круговую ссылку, где анонсы вели не вошедших на страницу за логином; само-ссылки гида переведены на публичный адрес. Перепись прода: 198 never-logged-in с выданным доступом (все уже штампованы приглашением, TG/VK 0, SMS не настроен → email-only); плативших никогда не входили 722/933. Волна: `students:send-login-invites --send --resend` батчами ≤100/день (одобрено MG 25-08, правило прогрева P0). Прод `.env`: `MAIL_FROM_NAME` «ORS LMS» → «Институт исследования санскрита Общества ревнителей санскрита». Evidence: [`docs/RESULTS_CABINET_REINVITE_WAVE_H3499_25-08-2026.md`](docs/RESULTS_CABINET_REINVITE_WAVE_H3499_25-08-2026.md). Тесты: `php artisan test --filter=PublicCabinetGuideTest` (3).
+- **H3499 (OxAlpha `x-preview-f-free`, 25-08-2026): публичный гид кабинета `GET /help/kabinet` + волна повторных приглашений (MG approved).** Новый публичный роут без auth ([PublicCabinetGuideController](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/PublicCabinetGuideController.php), `layouts.articles`, CTA «Войти», строго до catch-all) рендерит тот же [`docs/STUDENT_CABINET_GUIDE_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_GUIDE_RU.md), что кабинетный `/dvaram/help` — закрывает круговую ссылку, где анонсы вели не вошедших на страницу за логином; само-ссылки гида переведены на публичный адрес. Перепись прода: 198 never-logged-in с выданным доступом (все уже штампованы приглашением, TG/VK 0, SMS не настроен → email-only); плативших никогда не входили 722/933. Волна: `students:send-login-invites --send --resend` батчами ≤100/день (одобрено MG 25-08, правило прогрева P0). Прод `.env`: `MAIL_FROM_NAME` «ORS LMS» → «Институт исследования санскрита Общества ревнителей санскрита». Evidence: [`docs/RESULTS_CABINET_REINVITE_WAVE_H3499_25-08-2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RESULTS_CABINET_REINVITE_WAVE_H3499_25-08-2026.md). Тесты: `php artisan test --filter=PublicCabinetGuideTest` (3).
 
 ## [1.90.16] - 2026-08-25
 ### Added
@@ -649,7 +651,7 @@ _Backfilled 26-08-2026 (H3523) from commit history - no section existed at cut t
 
 ## [1.89.60] - 2026-08-16
 ### Added
-- **H2744 (Codex `GPT-5`): explicit Free / Basic / Club membership and a recording-only October gate.** `MembershipTier` is stored on tariffs and periods; Basic ₽1,000 and Club ₽2,000 use exact 1/3/12-month totals with 0/5/15% discounts, keep three-day grace and never create skipped-month debt. Legacy H2644 rows are classified only by a guarded dry-run command with exact-count confirmation—never from amounts. `RecordingAccessPolicy` adds September shadow verdicts, an exactly-20-user/48-hour pilot, full enforcement and immediate restoration after Club payment while leaving schedule, live links, lesson text, homework and communication purchase-based. Top is capped behind an independent OFF flag. Rollout/rollback: [docs/MEMBERSHIP_THREE_TIER_RECORDING_GATE_2026.md](docs/MEMBERSHIP_THREE_TIER_RECORDING_GATE_2026.md). Tests: membership 89/259; focused H2744 38/149; Pint and reversible SQLite migration green. All new flags default OFF; merge/deploy is dark.
+- **H2744 (Codex `GPT-5`): explicit Free / Basic / Club membership and a recording-only October gate.** `MembershipTier` is stored on tariffs and periods; Basic ₽1,000 and Club ₽2,000 use exact 1/3/12-month totals with 0/5/15% discounts, keep three-day grace and never create skipped-month debt. Legacy H2644 rows are classified only by a guarded dry-run command with exact-count confirmation—never from amounts. `RecordingAccessPolicy` adds September shadow verdicts, an exactly-20-user/48-hour pilot, full enforcement and immediate restoration after Club payment while leaving schedule, live links, lesson text, homework and communication purchase-based. Top is capped behind an independent OFF flag. Rollout/rollback: [docs/MEMBERSHIP_THREE_TIER_RECORDING_GATE_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MEMBERSHIP_THREE_TIER_RECORDING_GATE_2026.md). Tests: membership 89/259; focused H2744 38/149; Pint and reversible SQLite migration green. All new flags default OFF; merge/deploy is dark.
 
 ## [1.89.59] - 2026-08-16
 ### Added
@@ -2312,13 +2314,13 @@ eatures.rq4_study. Smoke: schema_version=1.0.0, items=24, first_item=yat, flag O
   `archives:cleanup` и `backup:clean`, чтобы мерить освобождённое место, а не временный пик)
   измеряет вес каталогов загрузок и свободное место на диске, светофор 0.8/1.0 как у
   дебиторки, алерт админам через Filament-уведомление. Пороги —
-  [`config/storage_watch.php`](config/storage_watch.php) (env-backed), измерение —
-  [`StorageUsageService`](app/Services/StorageUsageService.php). Команда **ничего не удаляет**
+  [`config/storage_watch.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/storage_watch.php) (env-backed), измерение —
+  [`StorageUsageService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/StorageUsageService.php). Команда **ничего не удаляет**
   (автоматически стирать работы студентов недопустимо) и **громко сообщает о собственной
   слепоте**: если обход упёрся в предохранитель по числу файлов, это отдельная строка алерта,
   а не молча заниженная цифра. Годится и как ручной инструмент — `php artisan storage:check --dry`
   печатает таблицу «занято/потолок/доля».
-- **Roadmap хранения медиа** — [`docs/ROADMAP_MEDIA_STORAGE_2026_2028.md`](docs/ROADMAP_MEDIA_STORAGE_2026_2028.md)
+- **Roadmap хранения медиа** — [`docs/ROADMAP_MEDIA_STORAGE_2026_2028.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_MEDIA_STORAGE_2026_2028.md)
   (+ метадок). Этапы привязаны к **триггерам, а не к датам**: на 19-07-2026 всё `storage/app`
   занимает ~20 МБ, переносить нечего, и календарный план был бы выдумкой. Разобрано, почему
   VK как соцсеть не подходит для работ студентов (152-ФЗ; документ VK доступен по ссылке без
@@ -2356,7 +2358,7 @@ eatures.rq4_study. Smoke: schema_version=1.0.0, items=24, first_item=yat, flag O
   благодаря этому серверные лимиты (`upload_max_filesize`/`post_max_size` в php-fpm,
   `client_max_body_size` в nginx) менять не потребовалось — что важно, поскольку их реальные
   прод-значения нигде в репозитории не записаны.
-- **Новый [`config/homework.php`](config/homework.php)** (env-backed, по домовому правилу
+- **Новый [`config/homework.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/homework.php)** (env-backed, по домовому правилу
   «пороги не хардкодятся в контроллере/странице»): `max_files`, `max_file_kb`,
   `total_max_kb`, `allowed_extensions`. Подпись формы, фильтр выбора файлов и серверная
   валидация теперь читают ОДИН источник и не могут разъехаться — раньше три места правились
@@ -2369,7 +2371,7 @@ eatures.rq4_study. Smoke: schema_version=1.0.0, items=24, first_item=yat, flag O
   запроса, Laravel до валидации не доходит, набранный текст ответа теряется. Добавлены две
   защиты: проверка суммарного веса отправки (`total_max_kb`, по умолчанию 90 МБ — с запасом
   ниже `post_max_size`), дающая вежливую ошибку прямо в форме, и обработчик
-  `PostTooLargeException` в [`app/Exceptions/Handler.php`](app/Exceptions/Handler.php),
+  `PostTooLargeException` в [`app/Exceptions/Handler.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Exceptions/Handler.php),
   возвращающий студента в форму с объяснением вместо голого 413. С открытием видео эта
   дорожка стала бы горячей.
 
@@ -2383,7 +2385,7 @@ eatures.rq4_study. Smoke: schema_version=1.0.0, items=24, first_item=yat, flag O
   целиком, а форма отправляла его напрямую; ни в JS, ни в Alpine не было накопителя, так
   что на сервер уходила только последняя пачка (потеря была чисто клиентской —
   `HomeworkService::recordSubmission` уже корректно копит файлы между отправками).
-  [`resources/views/student/partials/homework.blade.php`](resources/views/student/partials/homework.blade.php)
+  [`resources/views/student/partials/homework.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/student/partials/homework.blade.php)
   теперь держит собственный массив `File`-объектов, при каждом выборе дополняет его,
   дедуплицирует по имени+размеру и переписывает `input.files` через `DataTransfer` —
   формат выбора значения не имеет. Плюс: крестик для удаления отдельного файла,
@@ -2399,7 +2401,7 @@ eatures.rq4_study. Smoke: schema_version=1.0.0, items=24, first_item=yat, flag O
   `app/Mail/**`, and Russian label values in `config/*.php` classified 297 occurrences
   (MUST_KEEP / REVIEW / SAFE) and applied 275 ё→е replacements across 77 files; full
   rationale, review list, and decisions-taken-unattended in
-  [`docs/copy/yo-orthography-normalisation-sweep.md`](docs/copy/yo-orthography-normalisation-sweep.md).
+  [`docs/copy/yo-orthography-normalisation-sweep.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/yo-orthography-normalisation-sweep.md).
   22 intentional exceptions remain (the «весь»/«он»/«что» pronoun-case minimal pairs, plus
   two individually-reviewed aspectual-verb risks left ё per the ambiguity default).
 
@@ -3373,3 +3375,5 @@ Foundational LMS build (May–July 2026). Reconstructed from git history on
 [1.1.0]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/gasyoun/Systema-Sanscriticum/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.0.0
+
+_Dr. Mārcis Gasūns_

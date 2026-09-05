@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # app/Mail
 
 Mailable-классы для отправки email. Все письма ставятся в очередь (не отправляются синхронно).
@@ -69,3 +71,5 @@ php artisan make:mail NewMailName --markdown=emails.new-mail
 ```
 
 Для постановки в очередь добавить `implements ShouldQueue` и указать `public $queue = 'mailing'`.
+
+_Dr. Mārcis Gasūns_

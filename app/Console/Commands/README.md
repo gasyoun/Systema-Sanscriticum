@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # app/Console/Commands
 
 Artisan-команды. Запускаются через `php artisan <имя>` или по расписанию в `Console/Kernel.php`.
@@ -63,3 +65,5 @@ php artisan payments:debug-skips
 CloseStaleSessionsJob   → каждые 5 минут
 CleanCourseArchives     → каждый час
 ```
+
+_Dr. Mārcis Gasūns_

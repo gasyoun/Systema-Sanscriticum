@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # lecture-ui
 
 Инструментарий для подготовки лекций: конвертация транскриптов, редактор, генерация HTML. Предшественник `lecture-builder` — содержит скрипты ручного пайплайна, которые `lecture-builder` вызывает автоматически.
@@ -69,3 +71,5 @@ pip install pymupdf          # pdf_to_jpg.py
 pip install jinja2           # build.py (рендер шаблонов)
 pip install websockets        # editor_server.py
 ```
+
+_Dr. Mārcis Gasūns_

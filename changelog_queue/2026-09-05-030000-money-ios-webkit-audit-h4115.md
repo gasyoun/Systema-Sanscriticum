@@ -1,3 +1,5 @@
+_Created: 05-09-2026 · Last updated: 05-09-2026_
+
 # H4115: Money-surface iOS WebKit audit — Playwright WebKit iPhone runner + фикс tap-target <44pt на трёх money-CTA (OxAlpha z-ai/glm-5.3-flash, 05-09-2026)
 
 Вопрос MG: «проверять ли money-systema на iPhone после серий проблем». Ответ — да, но без Xcode: собран раннер [scripts/money_ios_webkit_audit.mjs](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/money_ios_webkit_audit.mjs) (паттерн H1488) — Playwright **WebKit** 26.5 (тот же движок, что iOS Safari) с настоящими iPhone-дескрипторами (iPhone 14 390×844, iPhone SE 3rd gen 375×667). GET-only по умолчанию (продобезопасно, ноль риска списаний), интерактивные POST-проверки только за `--local`. Двух-шаговый дискавери: сиды `/`, `/online`, `/mecenaty` → страницы `/k/{slug}` → реальные `/checkout/{tariff_id}` (карточки магазина ссылаются на курс, чекаут живёт в его секции `#tariffs`).
@@ -7,3 +9,5 @@
 - **Фикс тем же проходом:** `min-h-[44px]` на три money-CTA одного дефект-класса — `free-intro-banner`, `paypal-cta`, `company-invoice-cta`. Проверено сборкой: `npm run build` компилируется, в бандле `app-*.css` есть `min-h-[44px]`. Деплой-остаток: класс оживает только после Vite-rebuild — CSS-сборка должна уехать со следующим деплоем, затем ре-прогон раннера ожидает `dirty=0` (GTD @DO). Тот же класс в `student/partials/referral.blade.php` и `partners/registered.blade.php` — вне money-объёма аудита, не тронуты.
 - **Отчёт с полными данными:** [docs/MONEY_IOS_WEBKIT_AUDIT_2026-09-05.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MONEY_IOS_WEBKIT_AUDIT_2026-09-05.md) + машинный [report.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MONEY_IOS_WEBKIT_AUDIT_2026-09-05.report.json); PNG-скриншоты — `storage/app/money-ios-audit/` (не git, по правилам evidence).
 - **Что раннер не может:** реальные 3-D Secure SMS, Apple Pay (нет Secure Element), логин-стены PayPal — остаются на ручном чек-листе плейбука [H3926 `/payment`](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H3926-OxAlpha_claude-config_payment-diagnosis-skill_02.09.26.md). Путь через `ios-simulator-skill` оценён и отклонён: Systema — Laravel web app, `xcodebuild`-половина скилла мёртвый груз, WebKit-эмуляция уже закрывает класс H1391.
+
+_Dr. Mārcis Gasūns_

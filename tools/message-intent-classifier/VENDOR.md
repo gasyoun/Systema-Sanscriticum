@@ -1,3 +1,5 @@
+_Created: 25-08-2026 · Last updated: 05-09-2026_
+
 # Vendored snapshot — gasyoun/message-intent-classifier
 
 - **Pinned SHA:** see `PINNED_SHA` (one line, full 40-char sha).
@@ -27,3 +29,5 @@ python3 tools/gen_mic_rules_json.py
 
 CI job `mic-vendor-drift` fails when this tree drifts from the pin or a
 generated JSON goes stale.
+
+_Dr. Mārcis Gasūns_

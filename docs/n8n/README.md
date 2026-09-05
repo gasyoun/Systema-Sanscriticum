@@ -1,3 +1,5 @@
+_Created: 24-05-2026 · Last updated: 05-09-2026_
+
 # n8n — index (Systema + live server)
 
 ## Live server catalog (context-ai.ru)
@@ -23,7 +25,7 @@ Host: `193.232.229.91` · `samskrtam50` · UI `https://context-ai.ru` · catalog
 
 **Создан 02-08-2026**: воркфлоу «Баллы Санки → samskrte.ru (exam-scores)»
 (id `ExamScoresSync1`) импортирован на `.91`, экспорт —
-[`exports/exam-scores-sync.live.json`](exports/exam-scores-sync.live.json).
+[`exports/exam-scores-sync.live.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/exports/exam-scores-sync.live.json).
 Header-Auth кред `hdrExamScores01` заведён (значение = `N8N_EXAM_SCORES_SECRET`
 из прод-`.env` на `.92`). **Воркфлоу неактивен**: перед активацией человек
 должен в ноде Google Sheets выбрать реальную таблицу баллов (сейчас
@@ -353,3 +355,4 @@ Laravel — команда `content:publish-due` (планировщик: **еж
 
 JSON воркфлоу: lecture-clip-extract.workflow.json (импорт → Active → секреты в Laravel N8N_CLIP_*).
 
+_Dr. Mārcis Gasūns_

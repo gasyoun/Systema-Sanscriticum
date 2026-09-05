@@ -1,3 +1,5 @@
+_Created: 22-04-2026 · Last updated: 05-09-2026_
+
 # Архитектура «Общества ревнителей санскрита» (Sanskrit Zealots' Society)
 
 Настоящий документ описывает структуру институционального хаба и образовательной экосистемы, предназначенной для глубокого освоения санскрита в пандитском стиле.
@@ -59,3 +61,5 @@
 
 with open("sanskrit_zealots_society_architecture.md", "w", encoding="utf-8") as f:
     f.write(md_content)
+
+_Dr. Mārcis Gasūns_

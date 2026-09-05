@@ -1,6 +1,6 @@
 # Roadmap — Bühler grammatical-tables Memrise course into the SRS clone
 
-_Created: 22-07-2026 · Last updated: 19-08-2026_
+_Created: 22-07-2026 · Last updated: 05-09-2026_
 
 > **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** импорт состоялся: команда [srs:import-buhler-paradigms](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ImportBuhlerParadigmsSrsDeck.php) завозит парадигменные ячейки курса Memrise 6517849 в колоду (H1990, 02-08-2026). Дальнейшая судьба контента живёт в [PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md).
 
@@ -11,7 +11,7 @@ Memrise course [6517849 «Грамматические таблицы Руков
 noun-declension paradigms one stem class per level: inflected form in
 `col_a`, case/number label in `col_b` (e.g. `bhānave` → "bhānuḥ D., sg.").
 Exported + validated 22-07-2026 (H1442):
-[`database/seeders/data/memrise_6517849/`](database/seeders/data/memrise_6517849/README.md),
+[`database/seeders/data/memrise_6517849/`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/seeders/data/memrise_6517849/README.md),
 5 levels / 78 rows — a-stem masc. (`bhānuḥ`), u-stem neut. (`madhu`), ī-stem
 fem. (`dhī`), the pronoun `aham`, and an r-stem (`gir`).
 
@@ -22,7 +22,7 @@ mode design rather than reusing the lesson-vocab deck shape as-is.
 
 ## 2. Why build this now
 
-[SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md](docs/SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md)
+[SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md)
 already names exactly this gap twice, unbuilt:
 
 - §3 row "Zaliznyak grammar index (E31) → Stem-class tagging → **Auto-
@@ -58,7 +58,7 @@ A paradigm-drill `SrsNoteType` is not the same shape as a vocab note:
   tag each card with `stem_class` + `lemma` metadata so Option B can be
   built later without re-importing — same data, better review UX layered on
   top. Mirrors the roadmap's own P1→P2 sequencing pattern in
-  [ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md](ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md).
+  [ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ROADMAP_MEMRISE_SRS_SANSKRIT_HINDI_2026.md).
 
 ### P2 — Import + wire
 - Extend (don't fork) `php artisan srs:import-memrise` / the H1431 importer

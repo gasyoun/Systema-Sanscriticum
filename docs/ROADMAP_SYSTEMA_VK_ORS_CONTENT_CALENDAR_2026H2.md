@@ -1,3 +1,5 @@
+_Created: 24-07-2026 · Last updated: 05-09-2026_
+
 # ROADMAP — VK/ORS content calendar (2026 H2)
 
 _Created: 24-07-2026 · Last updated: 19-08-2026 (H1754 voice contract; earlier: H1566 Wave 3, H1567 Wave 4)_

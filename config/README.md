@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # config
 
 Конфигурационные файлы Laravel. Значения берутся из `.env` через `env()`.
@@ -46,3 +48,5 @@
 | `social.php` | OAuth-провайдеры (подготовлен, не активирован). |
 | `logging.php` | Канал `daily` (ротация логов по дням). |
 | `cors.php` | CORS для API-маршрутов. |
+
+_Dr. Mārcis Gasūns_

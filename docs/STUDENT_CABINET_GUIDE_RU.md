@@ -1,6 +1,6 @@
 # Как пользоваться кабинетом
 
-_Created: 21-08-2026 · Last updated: 02-09-2026_
+_Created: 21-08-2026 · Last updated: 05-09-2026_
 
 Все книги школы: `/admin/documentation`
 
@@ -41,7 +41,7 @@ _Created: 21-08-2026 · Last updated: 02-09-2026_
 6. Не помните ни почту, ни пароль — не заводите новый кабинет. Напишите [куратору](https://t.me/rusamskrtam): пришлют **личную ссылку для входа** (действует сутки, пароль не нужен).
 7. Кабинета ещё нет, а курс — бесплатный или вы только знакомитесь со школой? Откройте в Telegram личку [@samskrtamru_bot](https://t.me/samskrtamru_bot) и напишите: `/кабинет ваша@почта.com` — кабинет создастся сам, и бот пришлёт ссылку для входа без пароля (действует 15 минут; потом просто напишите боту `/вход`). Бесплатные плейлисты уже будут открыты.
 
-![](screenshots/student-guide/voiti-1440.png)
+![](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/student-guide/voiti-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/voiti-390.png`.
 
@@ -95,7 +95,7 @@ _Created: 21-08-2026 · Last updated: 02-09-2026_
 4. **«Отправить на проверку»** — уходит куратору. Черновик куратор не видит.
 5. Комментарий куратора появится под заданием. Статусы: черновик, на проверке, принято, на доработку.
 
-![](screenshots/student-guide/sdat-dz-1440.png)
+![](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/student-guide/sdat-dz-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/sdat-dz-390.png`.
 
@@ -237,7 +237,7 @@ _Created: 21-08-2026 · Last updated: 02-09-2026_
 
 Бесплатные короткие упражнения: [https://samskrte.ru/lila/](https://samskrte.ru/lila/). Это не вкладка кабинета. Гость проходит одну законченную игру бесплатно; в кабинете — все тренажёры. Жест: карточки → **«Проверить»** → **«Заново»**.
 
-![](screenshots/student-guide/lila-1440.png)
+![](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/screenshots/student-guide/lila-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/lila-390.png`.
 

@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # app/Filament
 
 Две Filament v3 панели с разными ролями и наборами ресурсов.
@@ -83,3 +85,5 @@ php artisan make:filament-resource ModelName --generate
 
 Зарегистрировать панель, к которой должен принадлежать ресурс, через метод `panel()` в провайдере.  
 Если ресурс нужен только в редакторе — разместить в `app/Filament/Editor/Resources/`.
+
+_Dr. Mārcis Gasūns_

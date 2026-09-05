@@ -1,6 +1,6 @@
 # Systema Sanscriticum — платформа онлайн-обучения санскриту
 
-_Created: 13-02-2026 · Last updated: 28-08-2026_
+_Created: 13-02-2026 · Last updated: 05-09-2026_
 
 Laravel-приложение для школы санскрита: учебный кабинет со словарем, домашними
 заданиями и интервальными повторениями (SRS), магазин курсов с гибкими тарифами,
@@ -51,14 +51,14 @@ Laravel-приложение для школы санскрита: учебны�
 
 Несколько словарей (`Dictionary`, флаг `is_active`) можно фильтровать по
 выпадающему списку. Реализация — Livewire-компонент
-[StudentDictionary.php](app/Livewire/StudentDictionary.php) с пагинацией и
+[StudentDictionary.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Livewire/StudentDictionary.php) с пагинацией и
 жадной загрузкой (`with('dictionary')`), чтобы избежать N+1. Поиск на MySQL
 идет через составной `FULLTEXT`-индекс (`MATCH … AGAINST`, boolean-prefix) по
 всем четырем полям, а не через `LIKE '%…%'` со сканом таблицы; для запросов
 короче трех символов и на SQLite (тесты) действует подстрочный LIKE-фолбэк.
 
 Наполнение словаря — импортом CSV в админке через
-[DictionaryWordImporter.php](app/Filament/Imports/DictionaryWordImporter.php)
+[DictionaryWordImporter.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Imports/DictionaryWordImporter.php)
 (колонки: деванагари, IAST, кириллица, перевод, страница).
 
 ### Транслитерация (`/sanskritorium`)
@@ -83,9 +83,9 @@ Laravel-приложение для школы санскрита: учебны�
 
 Старые `/srs` и `/dvaram/srs` отдают **301** на `koloda`.
 
-Фича за флагом `SRS_ENABLED` ([config/srs.php](config/srs.php)) — по умолчанию
+Фича за флагом `SRS_ENABLED` ([config/srs.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/srs.php)) — по умолчанию
 **включена**; `SRS_ENABLED=false` гасит маршруты и пункт меню. Файлы:
-[SrsController.php](app/Http/Controllers/SrsController.php).
+[SrsController.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/SrsController.php).
 
 ### Домашние задания с проверкой куратором
 
@@ -99,8 +99,8 @@ draft → submitted → (needs_revision → submitted)* → accepted
 - куратор-рецензент (`reviewed_by`) меняет статус и оставляет `HomeworkComment`;
 - файлы — `HomeworkFile`, скачивание через защищенный маршрут.
 
-Файлы: [HomeworkSubmission.php](app/Models/HomeworkSubmission.php),
-[HomeworkController.php](app/Http/Controllers/HomeworkController.php).
+Файлы: [HomeworkSubmission.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/HomeworkSubmission.php),
+[HomeworkController.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/HomeworkController.php).
 
 ### Сертификаты
 
@@ -111,7 +111,7 @@ draft → submitted → (needs_revision → submitted)* → accepted
 
 ### Прана — лояльность и геймификация (два счетчика)
 
-Прана начисляется за учебную активность ([config/prana.php](config/prana.php)) и
+Прана начисляется за учебную активность ([config/prana.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/prana.php)) и
 хранится в **двух независимых счетчиках** на пользователе:
 
 | Счетчик | Назначение | Поведение |
@@ -135,7 +135,7 @@ draft → submitted → (needs_revision → submitted)* → accepted
 - учет — `PranaService` / `PranaTransaction`, настройки в админке.
 
 > **ℹ️ Историческое противоречие снято.** Раньше «скидочная прана» в проде
-> конфликтовала с геймификацией из [PRANA_ROADMAP.md](PRANA_ROADMAP.md) (ранги,
+> конфликтовала с геймификацией из [PRANA_ROADMAP.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/PRANA_ROADMAP.md) (ранги,
 > `lifetime_prana`, распад, P2P). Две концепции были несовместимы **только при
 > одном счетчике**. С разделением на `prana_balance` (деньги-скидка) и
 > `lifetime_prana` (статус-ранг) они сосуществуют: ранг — это статус, а не валюта.
@@ -162,9 +162,9 @@ draft → submitted → (needs_revision → submitted)* → accepted
 `?skin=`). На 31-07-2026 готовы B (light island, дефолт), A (dark-native, H1976),
 C (warm paper, H1977); D (stepped, H1978) — в очереди.
 
-Файлы: [MarathonController.php](app/Http/Controllers/MarathonController.php),
-[config/marathon.php](config/marathon.php),
-[DeliverDueMarathonContent.php](app/Console/Commands/DeliverDueMarathonContent.php).
+Файлы: [MarathonController.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/MarathonController.php),
+[config/marathon.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/marathon.php),
+[DeliverDueMarathonContent.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/DeliverDueMarathonContent.php).
 
 ### Бесплатные игры-упражнения (`/lila/`)
 
@@ -185,11 +185,11 @@ C (warm paper, H1977); D (stepped, H1978) — в очереди.
 предложение «зарегистрируйте бесплатный кабинет, чтобы продолжить»; **залогиненные
 студенты не гейтятся** и видят все тренажёры. Состояние — в `localStorage` (nudge, не DRM),
 авторизация читается пробой `/api/games/auth`. Гейт:
-[public/lila/gate.js](public/lila/gate.js). Порт с LearningApps:
+[public/lila/gate.js](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/lila/gate.js). Порт с LearningApps:
 [`/learningapps-port`](https://github.com/gasyoun/claude-config/blob/main/commands/learningapps-port.md),
-хелпер [`scripts/decode_learningapps.py`](scripts/decode_learningapps.py).
+хелпер [`scripts/decode_learningapps.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/decode_learningapps.py).
 Карта для куратора/студента:
-[`docs/student-manual.md`](docs/student-manual.md) §12.
+[`docs/student-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/student-manual.md) §12.
 
 ---
 
@@ -201,7 +201,7 @@ C (warm paper, H1977); D (stepped, H1978) — в очереди.
 ### Студент
 
 1. **Покупка курса → автодоступ.** Студент выбирает тариф в магазине
-   ([`/online`](app/Http/Controllers/ShopController.php)), `Tariff::calculateFinalPriceForUser()`
+   ([`/online`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/ShopController.php)), `Tariff::calculateFinalPriceForUser()`
    считает итоговую цену (лояльность/персональная скидка, зачет депозита,
    апгрейд-кредит, оплата праной). Оплата уходит в Точку Банк → вебхук
    `/api/webhooks/tochka` → `PaymentObserver::grantAccess()` добавляет студента в
@@ -210,7 +210,7 @@ C (warm paper, H1977); D (stepped, H1978) — в очереди.
    `block_N_h1`, затем `block_N_h2`. При докупке целого блока уже оплаченная
    половина зачитывается (`Tariff::upgradeCreditForUser()`), а две половины в сумме
    = полная цена блока.
-3. **Учеба в кабинете.** На [`/dvaram`](app/Http/Controllers/StudentController.php) —
+3. **Учеба в кабинете.** На [`/dvaram`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/StudentController.php) —
    онбординг-чеклист «С чего начать», карточки курсов с подсказкой «следующий урок»,
    плеер урока с heartbeat-трекингом времени, словарь (деванагари/IAST/кириллица),
    сдача ДЗ куратору, прана-таб (ранг, streak, лидерборд, бейджи, магазин праны).
@@ -270,7 +270,7 @@ C (warm paper, H1977); D (stepped, H1978) — в очереди.
 | Real-time | Laravel Reverb (WebSocket, живой чат поддержки, H536) |
 | БД | MySQL (прод), SQLite in-memory (тесты) |
 | Деплой | Laravel Sail (Docker) |
-| Часовой пояс | `Europe/Moscow` (зашит в [config/app.php](config/app.php)) |
+| Часовой пояс | `Europe/Moscow` (зашит в [config/app.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/app.php)) |
 
 ---
 
@@ -329,8 +329,8 @@ php artisan test --filter=TestName
    → уроки фильтруются по группам пользователя на этапе запроса
 ```
 
-Ключевые файлы: [PaymentObserver.php](app/Observers/PaymentObserver.php),
-[Payment.php](app/Models/Payment.php).
+Ключевые файлы: [PaymentObserver.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Observers/PaymentObserver.php),
+[Payment.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Payment.php).
 
 ### Блочная структура курсов и ключи доступа
 
@@ -372,10 +372,10 @@ LandingPage ──> JSON-блоки
 
 ### Две Filament-панели
 
-- [AdminPanelProvider.php](app/Providers/Filament/AdminPanelProvider.php) — полная
+- [AdminPanelProvider.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Providers/Filament/AdminPanelProvider.php) — полная
   админка `/admin`, доступ по `is_admin` (ресурсы автообнаружением из
   `app/Filament/Resources`, сейчас 37).
-- [LectureEditorPanelProvider.php](app/Providers/Filament/LectureEditorPanelProvider.php)
+- [LectureEditorPanelProvider.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Providers/Filament/LectureEditorPanelProvider.php)
   — редактор лекций `/editor`, доступ по `is_lecture_editor`.
 
 Полный администратор видит обе панели.
@@ -392,9 +392,9 @@ LandingPage ──> JSON-блоки
 сертификаты, онбординг-чеклист, подсказка «следующий урок», вкладка праны и
 веб-чат поддержки.
 
-Файлы: [StudentController.php](app/Http/Controllers/StudentController.php),
+Файлы: [StudentController.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/StudentController.php),
 [resources/views/student/](resources/views/student/),
-[LessonView.php](app/Models/LessonView.php).
+[LessonView.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/LessonView.php).
 
 ### 2. Магазин курсов (`/online`, `/checkout`)
 
@@ -405,14 +405,14 @@ LandingPage ──> JSON-блоки
 (`/checkout/{tariff}`). Оплата через Точку Банк, промокоды (процент или
 фиксированная сумма). Кабинет: `/c/{slug}`, урок `/c/{slug}/u/{id}`.
 
-Файлы: [ShopController.php](app/Http/Controllers/ShopController.php),
-[CheckoutController.php](app/Http/Controllers/CheckoutController.php),
-[Tariff.php](app/Models/Tariff.php), [PromoCode.php](app/Models/PromoCode.php).
+Файлы: [ShopController.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/ShopController.php),
+[CheckoutController.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/CheckoutController.php),
+[Tariff.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/Tariff.php), [PromoCode.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/PromoCode.php).
 
 ### 3. Конструктор лендингов (`/{slug}`)
 
 Лендинги из JSON-блоков (~20 типов: hero, форма заявки, цены, программа, FAQ,
-отзывы и др.). Последний маршрут в [routes/web.php](routes/web.php) перехватывает
+отзывы и др.). Последний маршрут в [routes/web.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/routes/web.php) перехватывает
 любой slug и ищет `LandingPage`.
 
 Добавление типа блока: создать Blade в [resources/views/promo/blocks/](resources/views/promo/blocks/),
@@ -437,8 +437,8 @@ Filament v3, 37 автообнаруживаемых CRUD-ресурсов: по
 ### 6. Блог (`/s/...`)
 
 Статьи с категориями, подсчетом просмотров (по хэшу посетителя), временем чтения
-и SEO-метаданными. Файлы: [ArticleController.php](app/Http/Controllers/ArticleController.php),
-[ArticleViewTracker.php](app/Services/ArticleViewTracker.php).
+и SEO-метаданными. Файлы: [ArticleController.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/ArticleController.php),
+[ArticleViewTracker.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/ArticleViewTracker.php).
 
 ### 7. Трекинг активности
 
@@ -504,10 +504,10 @@ php artisan telegram-support:sync --payload=storage/app/support-sample.json
 - ручную привязку Telegram support contact → `User`;
 - авто-привязку контактов по `telegram_id`, username и имени, когда это однозначно.
 
-Файлы: [TelegramSupportSyncService.php](app/Services/TelegramSupport/TelegramSupportSyncService.php),
-[SupportDailyRollupAggregator.php](app/Services/TelegramSupport/SupportDailyRollupAggregator.php),
-[TelegramSupportAnalytics.php](app/Filament/Pages/TelegramSupportAnalytics.php),
-[TelegramSupportContactResource.php](app/Filament/Resources/TelegramSupportContactResource.php).
+Файлы: [TelegramSupportSyncService.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TelegramSupport/TelegramSupportSyncService.php),
+[SupportDailyRollupAggregator.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TelegramSupport/SupportDailyRollupAggregator.php),
+[TelegramSupportAnalytics.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Pages/TelegramSupportAnalytics.php),
+[TelegramSupportContactResource.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/TelegramSupportContactResource.php).
 
 ---
 
@@ -624,16 +624,16 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 - [x] **Диагностический марафон** — 3-дневная воронка «Консультация по онлайн-курсам
   ОРС» end-to-end: лендинг + захват, входной level-quiz, доставка контента по дням
   и «теплого хвоста» в Telegram, бесплатный + платный tripwire-трек
-  ([MarathonController.php](app/Http/Controllers/MarathonController.php),
-  [config/marathon.php](config/marathon.php)).
+  ([MarathonController.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/MarathonController.php),
+  [config/marathon.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/marathon.php)).
 - [x] **Бесплатные игры-упражнения** — статические тренажёры sort / match / cloze / **table**
   (+ лигатуры и корни по частотности) под `public/lila/` с мягким гейтом
   «одна игра бесплатно → зарегистрируйся»; студенты в кабинете — без гейта
-  ([public/lila/gate.js](public/lila/gate.js); H1710 batch 26-07-2026).
+  ([public/lila/gate.js](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/public/lila/gate.js); H1710 batch 26-07-2026).
 - [x] **SRS-движок (Saraswati trainer)** — нативные интервальные повторения «Anki для
   санскрита» с планировщиком FSRS, страница повторений и статистики, за флагом
   `SRS_ENABLED` (по умолчанию ON, пилот август 2026;
-  [SrsController.php](app/Http/Controllers/SrsController.php), [config/srs.php](config/srs.php)).
+  [SrsController.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/SrsController.php), [config/srs.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/srs.php)).
 - [x] **Живой чат поддержки на Reverb** — WebSocket-транспорт + broadcast-событие
   (H536) для real-time доставки в веб-чате кабинета; включается `BROADCAST_DRIVER=reverb`.
 - [x] **Сводная посещаемость** — консолидированный дашборд посещаемости вебинаров (H553).
@@ -642,10 +642,10 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 
 - [x] **Апгрейд тарифов** — зачет уплаченного при докупке (`Tariff::upgradeCreditForUser()`).
 - [x] **Тесты денежного ядра** — вебхук Точки (подпись + идемпотентность,
-  [TochkaWebhookTest.php](tests/Feature/Webhooks/TochkaWebhookTest.php)), тиры
-  лояльности ([LoyaltyDiscountTest.php](tests/Feature/LoyaltyDiscountTest.php)),
-  сборка цены в чекауте ([CheckoutPriceTest.php](tests/Feature/CheckoutPriceTest.php)),
-  подписи bot-вебхуков ([BotWebhookSignatureTest.php](tests/Feature/Webhooks/BotWebhookSignatureTest.php)).
+  [TochkaWebhookTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Webhooks/TochkaWebhookTest.php)), тиры
+  лояльности ([LoyaltyDiscountTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/LoyaltyDiscountTest.php)),
+  сборка цены в чекауте ([CheckoutPriceTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/CheckoutPriceTest.php)),
+  подписи bot-вебхуков ([BotWebhookSignatureTest.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Webhooks/BotWebhookSignatureTest.php)).
 - [x] **Консолидация «оплачено»** — единый `Payment::scopePaid()` / `PAID_STATUSES`
   вместо инлайн-литералов `['paid','success']`.
 - [x] **Безопасность** — закрыт VK-IDOR (одноразовый `vk_auth_token` вместо сырого
@@ -655,9 +655,9 @@ Eloquent `encrypted`-cast (`MarketingSetting::$casts`). Так как у MAX с�
 
 - [x] **Очередь проверки ДЗ** — фильтр по статусу/курсу/уроку, сортировка
   «дольше всех ждет», bulk «принять» / «вернуть на доработку», шаблоны комментариев
-  ([HomeworkSubmissionResource.php](app/Filament/Resources/HomeworkSubmissionResource.php)).
+  ([HomeworkSubmissionResource.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/HomeworkSubmissionResource.php)).
 - [x] **Карточка прогресса студента** — секция «Прогресс обучения» в
-  [UserResource.php](app/Filament/Resources/UserResource.php): % пройденных уроков,
+  [UserResource.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Filament/Resources/UserResource.php): % пройденных уроков,
   сводка ДЗ, активность, прана — в одном месте.
 
 **P0 — кабинет студента**

@@ -1,3 +1,5 @@
+_Created: 26-07-2026 · Last updated: 05-09-2026_
+
 # Run Report: pwg-arz-ind-final2
 
 ## Input
@@ -131,3 +133,5 @@ Status: `completed`
 | p027 | missing_iast_on_first_mention | Первое упоминание термина «сутра» без IAST в скобках: ожидается «сутра (sūtra)». |
 | p061 | missing_iast_on_first_mention | Первое упоминание термина «самаса» без IAST в скобках: ожидается «самаса (samāsa)». |
 | p078 | missing_iast_on_first_mention | Первое упоминание термина «упанишада» без IAST в скобках: ожидается «упанишада (upaniṣad)». |
+
+_Dr. Mārcis Gasūns_

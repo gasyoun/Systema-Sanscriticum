@@ -1,3 +1,5 @@
+_Created: 02-08-2026 · Last updated: 05-09-2026_
+
 # Metadoc — SERVER_SOFT_ALERT_PLAYBOOK.md
 
 _Created: 02-08-2026 · Last updated: 21-08-2026 (H3227 cgroup MiB fingerprint)_

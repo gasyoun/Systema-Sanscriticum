@@ -1,11 +1,11 @@
 # Telegram-боты и TG-аккаунты в Systema Sanscriticum
 
-_Created: 30-07-2026 · Last updated: 14-08-2026_
+_Created: 30-07-2026 · Last updated: 05-09-2026_
 
 Инвентарь **Bot API-ботов**, **landing-ботов** и **userbot-аккаунта** (MadelineProto),
 которые использует LMS на `samskrte.ru`.  
 Соседний док только про MTProto-раннер:
-[`telegram-userbot-inventory.md`](telegram-userbot-inventory.md).
+[`telegram-userbot-inventory.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-userbot-inventory.md).
 
 > **Секреты.** Токены в git **не** хранятся. В `.env` / `MarketingSetting` (encrypted)
 > / `landing_bots`. Ниже — только usernames, env-ключи и назначение.
@@ -145,7 +145,7 @@ Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (с
 | **Команды** | `telegram-support:sync`, `telegram-support:healthcheck`, harvest/roster (`TELEGRAM_HARVEST_*`) |
 | **Сессия** | **одна** на support+harvest — **не** гонять параллельно два синка (риск `AUTH_RESTART`) |
 
-Подробности раннера: [`telegram-userbot-inventory.md`](telegram-userbot-inventory.md).
+Подробности раннера: [`telegram-userbot-inventory.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-userbot-inventory.md).
 
 Тот же username часто в UX как **живой саппорт**: кнопка «Написать в Telegram» →
 `https://t.me/rusamskrtam` (страница fail-оплаты и др.) — это **не** вызов Bot API.
@@ -185,7 +185,7 @@ Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (с
 | `POST /api/webhooks/telegram-magnet/{webhookKey}` | landing bot |
 | zapisi webhook path | через входной узел / MarketingSetting (см. deploy checklist) |
 
-Матрица секретов: [`webhook-security.md`](webhook-security.md).
+Матрица секретов: [`webhook-security.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md).
 
 ---
 
@@ -222,13 +222,15 @@ php artisan telegram:set-magnet-webhook   # магнит
 
 | Файл | Роль |
 |------|------|
-| [`config/services.php`](../config/services.php) | `telegram`, `telegram_support`, `telegram_harvest`, `telegram_zapisi`, `telegram_webhook` |
-| [`config/features.php`](../config/features.php) | `telegram_zapisi_bot` и др. |
+| [`config/services.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/services.php) | `telegram`, `telegram_support`, `telegram_harvest`, `telegram_zapisi`, `telegram_webhook` |
+| [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) | `telegram_zapisi_bot` и др. |
 | `app/Models/MarketingSetting.php` | `tg_*`, `zapisi_*`, student bot flags |
 | `app/Models/LandingBot.php` | per-landing bots |
-| [`DEPLOY_QUEUE.md`](../DEPLOY_QUEUE.md) | T1–T5, №41 zapisi, №13 marathon bot |
-| [`docs/webhook-security.md`](webhook-security.md) | fail-policy вебхуков |
+| [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) | T1–T5, №41 zapisi, №13 marathon bot |
+| [`docs/webhook-security.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md) | fail-policy вебхуков |
 
 ---
 
 _Dr. Mārcis Gasūns / ops inventory — сверка с продом 30-07-2026._
+
+_Dr. Mārcis Gasūns_
