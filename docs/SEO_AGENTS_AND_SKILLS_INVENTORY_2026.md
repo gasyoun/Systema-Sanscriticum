@@ -19,7 +19,7 @@ _Created: 02-08-2026 · Last updated: 02-08-2026_
 
 ## 1. SEO-агенты Grok (spawnable)
 
-Определения лежат в [`~/.grok/agents/seo-*.md`](https://github.com/gasyoun/claude-seo/tree/main/agents) (зеркало агентов из `claude-seo/agents/`). Их можно вызывать как subagent-типы `seo-*` в сессии Grok Build.
+Определения лежат в [`~/.grok/agents/seo-*.md`](https://github.com/AgriciDaniel/claude-seo/tree/main/agents) (зеркало агентов из `claude-seo/agents/`). Их можно вызывать как subagent-типы `seo-*` в сессии Grok Build.
 
 | Агент | Зачем |
 |---|---|

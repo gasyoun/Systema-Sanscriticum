@@ -8,9 +8,9 @@ _Создано: 30-07-2026 · Обновлено: 14-08-2026_
 
 | Кто | Что делать | Ссылка |
 |---|---|---|
-| **Ученик / преподаватель** | 3 проверки → написать в чат с `@rusamskrtam` | [ниже §1](#1-ученики-и-преподаватели--1-минута) · живая страница [samskrte.ru/uptime](https://samskrte.ru/uptime) |
+| **Ученик / преподаватель** | 3 проверки → написать в чат с `@rusamskrtam` | [ниже §1](#1-ученики-и-преподаватели-1-минута) · живая страница [samskrte.ru/uptime](https://samskrte.ru/uptime) |
 | **Куратор в «Отделе заботы»** | Реплай / `@grokusaurus_bot` / `@rusamskrtam` | [MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_CURATOR_GROK_ZABOTA_BOT_RU.md) |
-| **Иван / Марцис** | Смотреть, *что* красное; чинить или звать агента / Артёма | [§2](#2-иван-и-марцис--ops) |
+| **Иван / Марцис** | Смотреть, *что* красное; чинить или звать агента / Артёма | [§2](#2-иван-и-марцис-ops) |
 | **Агенты / SSH** | Env, cron, smoke | [EN inventory](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md) |
 
 **Артёму (@t3t3r1n) пишет только Иван или Марцис** — не ученики.

@@ -131,7 +131,7 @@ _Created: 26-07-2026 · Last updated: 30-07-2026_
 **Ольденбург** — «Этюды о людях науки» (тот же каталог; некролог Бётлингка, ЖМНП 1904);
 **A33** — [A33_sense_ordering_note.md](https://github.com/gasyoun/SanskritLexicography/blob/master/papers/A33_sense_ordering_note.md);
 **A40** — [A40_headword_inventory_note.md](https://github.com/gasyoun/SanskritLexicography/blob/master/papers/A40_headword_inventory_note.md);
-**A50** — [A50_ls_citation_frequency_graph.md](https://github.com/gasyoun/csl-atlas/blob/main/docs/articles/A50_ls_citation_frequency_graph.md);
+**A50** — [A50_ls_citation_frequency_graph.md](https://github.com/sanskrit-lexicon/csl-atlas/blob/main/docs/articles/A50_ls_citation_frequency_graph.md);
 **SW** — [Stache-Weiske_Bö-MW.notes.md](https://github.com/gasyoun/SanskritLexicography/blob/master/papers/Stache-Weiske_B%C3%B6-MW.notes.md).
 
 | claim_id | chapter | claim_text | source_type | source_ref | status |
