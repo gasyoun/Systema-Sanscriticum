@@ -1,0 +1,539 @@
+{
+  "base": "https://samskrte.ru",
+  "generated": "2026-09-05T02:46:41.954Z",
+  "local": false,
+  "results": [
+    {
+      "device": "iPhone 14",
+      "viewport": "webkit:390x664",
+      "path": "/mecenaty",
+      "status": 200,
+      "finalPath": "/mecenaty",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Записаться",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all hover:-t",
+        "visible": true,
+        "inViewport": true,
+        "width": 358,
+        "height": 40,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 3,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "mecenaty__iPhone_14.png",
+      "findings": [
+        "pay button tap target 358x40 <44px"
+      ],
+      "notes": [],
+      "clean": false
+    },
+    {
+      "device": "iPhone SE (3rd gen)",
+      "viewport": "webkit:375x667",
+      "path": "/mecenaty",
+      "status": 200,
+      "finalPath": "/mecenaty",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Записаться",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all hover:-t",
+        "visible": true,
+        "inViewport": true,
+        "width": 343,
+        "height": 40,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 3,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "mecenaty__iPhone_SE_3rd_gen_.png",
+      "findings": [
+        "pay button tap target 343x40 <44px"
+      ],
+      "notes": [],
+      "clean": false
+    },
+    {
+      "device": "iPhone 14",
+      "viewport": "webkit:390x664",
+      "path": "/checkout/4962",
+      "status": 200,
+      "finalPath": "/checkout/4962",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 324,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4962__iPhone_14.png",
+      "findings": [
+        "pay button tap target 324x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone SE (3rd gen)",
+      "viewport": "webkit:375x667",
+      "path": "/checkout/4962",
+      "status": 200,
+      "finalPath": "/checkout/4962",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 309,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4962__iPhone_SE_3rd_gen_.png",
+      "findings": [
+        "pay button tap target 309x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone 14",
+      "viewport": "webkit:390x664",
+      "path": "/checkout/4963",
+      "status": 200,
+      "finalPath": "/checkout/4963",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 324,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4963__iPhone_14.png",
+      "findings": [
+        "pay button tap target 324x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone SE (3rd gen)",
+      "viewport": "webkit:375x667",
+      "path": "/checkout/4963",
+      "status": 200,
+      "finalPath": "/checkout/4963",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 309,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4963__iPhone_SE_3rd_gen_.png",
+      "findings": [
+        "pay button tap target 309x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone 14",
+      "viewport": "webkit:390x664",
+      "path": "/checkout/4964",
+      "status": 200,
+      "finalPath": "/checkout/4964",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 324,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4964__iPhone_14.png",
+      "findings": [
+        "pay button tap target 324x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone SE (3rd gen)",
+      "viewport": "webkit:375x667",
+      "path": "/checkout/4964",
+      "status": 200,
+      "finalPath": "/checkout/4964",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 309,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4964__iPhone_SE_3rd_gen_.png",
+      "findings": [
+        "pay button tap target 309x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone 14",
+      "viewport": "webkit:390x664",
+      "path": "/checkout/4044",
+      "status": 200,
+      "finalPath": "/checkout/4044",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 324,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4044__iPhone_14.png",
+      "findings": [
+        "pay button tap target 324x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone SE (3rd gen)",
+      "viewport": "webkit:375x667",
+      "path": "/checkout/4044",
+      "status": 200,
+      "finalPath": "/checkout/4044",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 309,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4044__iPhone_SE_3rd_gen_.png",
+      "findings": [
+        "pay button tap target 309x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone 14",
+      "viewport": "webkit:390x664",
+      "path": "/checkout/4045",
+      "status": 200,
+      "finalPath": "/checkout/4045",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 324,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4045__iPhone_14.png",
+      "findings": [
+        "pay button tap target 324x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone SE (3rd gen)",
+      "viewport": "webkit:375x667",
+      "path": "/checkout/4045",
+      "status": 200,
+      "finalPath": "/checkout/4045",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 309,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4045__iPhone_SE_3rd_gen_.png",
+      "findings": [
+        "pay button tap target 309x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone 14",
+      "viewport": "webkit:390x664",
+      "path": "/checkout/4046",
+      "status": 200,
+      "finalPath": "/checkout/4046",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 324,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4046__iPhone_14.png",
+      "findings": [
+        "pay button tap target 324x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone SE (3rd gen)",
+      "viewport": "webkit:375x667",
+      "path": "/checkout/4046",
+      "status": 200,
+      "finalPath": "/checkout/4046",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 309,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4046__iPhone_SE_3rd_gen_.png",
+      "findings": [
+        "pay button tap target 309x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone 14",
+      "viewport": "webkit:390x664",
+      "path": "/checkout/4047",
+      "status": 200,
+      "finalPath": "/checkout/4047",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 324,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4047__iPhone_14.png",
+      "findings": [
+        "pay button tap target 324x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone SE (3rd gen)",
+      "viewport": "webkit:375x667",
+      "path": "/checkout/4047",
+      "status": 200,
+      "finalPath": "/checkout/4047",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Оплатить через PayPal",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 tran",
+        "visible": true,
+        "inViewport": false,
+        "width": 309,
+        "height": 42,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 5,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "checkout_4047__iPhone_SE_3rd_gen_.png",
+      "findings": [
+        "pay button tap target 309x42 <44px"
+      ],
+      "notes": [
+        "pay button below fold (long landing — informational)"
+      ],
+      "clean": false
+    },
+    {
+      "device": "iPhone 14",
+      "viewport": "webkit:390x664",
+      "path": "/online/konsultaciya",
+      "status": 200,
+      "finalPath": "/online/konsultaciya",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Записаться",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all hover:-t",
+        "visible": true,
+        "inViewport": true,
+        "width": 358,
+        "height": 40,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 3,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "online_konsultaciya__iPhone_14.png",
+      "findings": [
+        "pay button tap target 358x40 <44px"
+      ],
+      "notes": [],
+      "clean": false
+    },
+    {
+      "device": "iPhone SE (3rd gen)",
+      "viewport": "webkit:375x667",
+      "path": "/online/konsultaciya",
+      "status": 200,
+      "finalPath": "/online/konsultaciya",
+      "overflowX": 0,
+      "payButton": {
+        "text": "Записаться",
+        "className": "shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all hover:-t",
+        "visible": true,
+        "inViewport": true,
+        "width": 343,
+        "height": 40,
+        "tapTargetOk": false,
+        "occludedBy": null
+      },
+      "forms": 3,
+      "csrfMissing": false,
+      "deadFields": [],
+      "consoleErrors": [],
+      "screenshot": "online_konsultaciya__iPhone_SE_3rd_gen_.png",
+      "findings": [
+        "pay button tap target 343x40 <44px"
+      ],
+      "notes": [],
+      "clean": false
+    }
+  ]
+}

@@ -41,7 +41,7 @@
         </div>
         <a href="{{ $ctaUrl }}"
            data-analytics="free-intro-banner-cta"
-           class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all hover:-translate-y-0.5 shadow-[0_0_20px_rgba(232,92,36,0.25)]">
+           class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all hover:-translate-y-0.5 shadow-[0_0_20px_rgba(232,92,36,0.25)]">
             {{ $hasDate ? 'Записаться' : 'Смотреть курсы' }}
             <i class="fas fa-arrow-right text-xs opacity-90"></i>
         </a>

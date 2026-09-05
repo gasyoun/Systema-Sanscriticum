@@ -7,7 +7,7 @@
                 Выставим счет на юрлицо или ИП — оплатите по реквизитам, доступ откроем после сверки поступления, обычно в течение одного-двух рабочих дней.
             </div>
             <a href="{{ route('invoice.claim.show', $tariff) }}"
-               class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-200 text-emerald-800 font-bold text-sm hover:bg-emerald-50 transition">
+               class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-emerald-200 text-emerald-800 font-bold text-sm hover:bg-emerald-50 transition">
                 <i class="fas fa-file-invoice"></i> Счет для компании
             </a>
         </div>
