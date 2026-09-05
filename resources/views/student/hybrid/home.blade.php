@@ -64,8 +64,8 @@
                             @csrf
                             <button type="submit"
                                     class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold"
-                                    data-cabinet-event="cabinet.continue.click"
-                                    data-kind="{{ $c['kind'] ?? 'lesson' }}">
+                                    data-track-event="cabinet.continue.click"
+                                    data-track-kind="{{ $c['kind'] ?? 'lesson' }}" data-track-surface="today-band">
                                 {{ $c['cta']['label'] ?? 'Открыть' }}
                             </button>
                         </form>
@@ -74,8 +74,8 @@
                              ведём на страницу «Оплата и доступ». --}}
                         <a href="{{ ($c['cta']['method'] ?? 'GET') === 'TAB' ? route('student.access') : $c['cta']['url'] }}"
                            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold"
-                           data-cabinet-event="cabinet.continue.click"
-                           data-kind="{{ $c['kind'] ?? 'lesson' }}">
+                           data-track-event="cabinet.continue.click"
+                           data-track-kind="{{ $c['kind'] ?? 'lesson' }}" data-track-surface="today-band">
                             {{ $c['cta']['label'] ?? 'Открыть' }}
                         </a>
                     @endif
@@ -108,7 +108,8 @@
                 @endif
                 <a href="{{ $hw['cta']['url'] }}"
                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold"
-                   data-cabinet-event="cabinet.homework.rework.click">
+                   data-track-event="cabinet.homework.rework.click"
+                   data-track-surface="today-band">
                     {{ $hw['cta']['label'] }}
                 </a>
             </div>
@@ -168,5 +169,4 @@
     </nav>
 </div>
 
-@include('student.partials.telemetry')
 @endsection
