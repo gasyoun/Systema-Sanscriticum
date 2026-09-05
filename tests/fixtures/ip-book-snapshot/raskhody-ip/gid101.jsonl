@@ -1,0 +1,4 @@
+{"payee": "Поставщик Альфа", "note": "", "amount": 1000.0, "date": "2025-10-10", "source": "ИП", "raw_amount": "1000", "row": 2}
+{"payee": "Налог УСН аванс", "note": "", "amount": 5000.5, "date": "2025-10-15", "source": "ИП", "raw_amount": "5000,50", "row": 3}
+{"payee": "Эквайринг за прием карт", "note": "", "amount": 300.0, "date": "2025-10-20", "source": "ИП", "raw_amount": "300", "row": 4}
+{"payee": "Мемо-заметка", "note": "зп", "amount": null, "date": null, "source": "", "raw_amount": "", "row": 5}

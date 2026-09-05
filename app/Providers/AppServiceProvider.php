@@ -181,6 +181,9 @@ class AppServiceProvider extends ServiceProvider
         // Аудит финансовых операций (кто/что/когда правил платёж).
         Payment::observe(PaymentAuditObserver::class);
 
+        // Аудит контура «Расходы ИП» (H4188) — конвенции payment_audits.
+        \App\Models\IpExpense::observe(\App\Observers\IpExpenseAuditObserver::class);
+
         // Baseline-телеметрия ремейка кабинета (H962): access.renewal.complete.
         Payment::observe(PaymentTelemetryObserver::class);
 

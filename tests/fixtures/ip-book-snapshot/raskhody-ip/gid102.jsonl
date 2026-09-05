@@ -1,0 +1,6 @@
+{"payee": "Подрядчик Бобр", "note": "разработка лендинга", "amount": 12000.0, "date": "2025-11-05", "source": "200 евро PayPal", "raw_amount": "12000", "row": 2}
+{"payee": "Зарплата ассистента", "note": "зп", "amount": 30000.0, "date": "2025-11-10", "source": "ИП", "raw_amount": "30000", "row": 3}
+{"payee": "Поставщик Альфа", "note": "", "amount": 1000.0, "date": "2025-11-10", "source": "ИП", "raw_amount": "1000", "row": 4}
+{"payee": "Поставщик Альфа", "note": "", "amount": 1000.0, "date": "2025-11-10", "source": "ИП", "raw_amount": "1000", "row": 5}
+{"payee": "Фрахт контейнер", "note": "", "amount": 2000.0, "date": null, "source": "50 евро PayPal", "raw_amount": "2000", "row": 6}
+{"payee": "Итого:", "note": "", "amount": 46000.0, "date": null, "source": "", "raw_amount": "46000", "row": 7}
