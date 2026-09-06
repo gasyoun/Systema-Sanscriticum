@@ -9,8 +9,8 @@ use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
 use App\Models\Teacher;
-use Illuminate\Http\Request;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Tests\TestCase;
 
 /**
@@ -24,7 +24,7 @@ class PublicScheduleTeacherVacationTest extends TestCase
 
     private function render(Schedule $schedule): array
     {
-        return PublicScheduleResource::make($schedule)->toArray(new Request());
+        return PublicScheduleResource::make($schedule)->toArray(new Request);
     }
 
     public function test_teacher_window_marks_group_on_vacation_with_resume_date(): void

@@ -8,6 +8,7 @@ use App\Models\Group;
 use App\Models\Teacher;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * H4253: отпускное покрытие на уровне ПРЕПОДАВАТЕЛЯ (в отличие от
@@ -56,9 +57,9 @@ final class TeacherVacation
      * уже загружен вместе с основным; дубли в окнах не мешают, но в цикле
      * фида лишние итерации ни к чему.
      *
-     * @return \Illuminate\Support\Collection<int, Teacher>
+     * @return Collection<int, Teacher>
      */
-    public static function teachersOf(Group $group): \Illuminate\Support\Collection
+    public static function teachersOf(Group $group): Collection
     {
         return $group->courses
             ->flatMap(fn ($course) => $course->allTeachers())

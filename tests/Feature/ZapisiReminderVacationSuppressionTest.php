@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Jobs\SendZapisiBotMessageJob;
 use App\Console\Commands\RemindZapisiClasses;
+use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;

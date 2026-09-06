@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\TeacherSalaryService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -33,7 +34,7 @@ class Teacher extends Model
      * (занятие в день выхода из отпуска — ещё отпускное); до начала и после конца
      * окно не действует. from без until — бессрочный отпуск от даты начала.
      */
-    public function isOnVacationOn(\Carbon\CarbonInterface $date): bool
+    public function isOnVacationOn(CarbonInterface $date): bool
     {
         if ($this->on_vacation_from === null && $this->on_vacation_until === null) {
             return false;
