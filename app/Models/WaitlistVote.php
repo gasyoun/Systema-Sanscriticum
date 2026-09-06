@@ -11,9 +11,17 @@ class WaitlistVote extends Model
 {
     use HasFactory;
 
+    /** Пожелание времени слота (H4206): ключ → подпись наружу. */
+    public const SLOT_PREFERENCES = [
+        'morning' => 'Утром (до ~11:00)',
+        'day' => 'Днём',
+        'evening' => 'Вечером',
+    ];
+
     protected $fillable = [
         'course_waitlist_item_id',
         'user_id',
+        'slot_preference',
     ];
 
     public function item(): BelongsTo

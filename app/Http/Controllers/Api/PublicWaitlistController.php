@@ -53,6 +53,8 @@ class PublicWaitlistController extends Controller
 
         $data = $request->validate([
             'slug' => ['required', 'string', 'max:180'],
+            // H4206: пожелание времени слота; повторный голос обновляет его.
+            'slot_preference' => ['nullable', 'string', 'in:'.implode(',', array_keys(WaitlistVote::SLOT_PREFERENCES))],
         ]);
 
         $item = CourseWaitlistItem::query()
@@ -64,10 +66,13 @@ class PublicWaitlistController extends Controller
             return response()->json(['ok' => false, 'error' => 'not_found'], 404);
         }
 
-        // 1 голос с юзера на строку: firstOrCreate — повтор не дублирует.
-        WaitlistVote::firstOrCreate([
+        // 1 голос с юзера на строку: updateOrCreate — повтор не дублирует,
+        // но обновляет пожелание времени (H4206).
+        WaitlistVote::updateOrCreate([
             'course_waitlist_item_id' => $item->getKey(),
             'user_id' => $user->getKey(),
+        ], [
+            'slot_preference' => $data['slot_preference'] ?? null,
         ]);
 
         // Кэш фида сбрасываем — прогресс на карточках должен обновиться сразу.

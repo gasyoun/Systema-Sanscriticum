@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CourseWaitlistItemResource\Pages;
+use App\Filament\Resources\CourseWaitlistItemResource\RelationManagers\VotesRelationManager;
 use App\Models\CourseWaitlistItem;
 use App\Support\RoleGate;
 use App\Support\Roles;
@@ -268,6 +269,13 @@ class CourseWaitlistItemResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            VotesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

@@ -174,4 +174,57 @@ class PublicWaitlistFeedTest extends TestCase
         $this->actingAs($user)->postJson(self::URL.'/vote', ['slug' => 'no-such-slug'])
             ->assertStatus(404);
     }
+
+    /** H4206: голос несёт пожелание времени; повтор — обновляет, не дублирует. */
+    public function test_vote_stores_and_updates_slot_preference(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        $item = $this->makeItem();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(self::URL.'/vote', ['slug' => 'buer-grammatika-potok-2', 'slot_preference' => 'morning'])
+            ->assertOk()
+            ->assertJsonPath('ok', true);
+
+        $this->assertDatabaseHas('waitlist_votes', [
+            'course_waitlist_item_id' => $item->id,
+            'user_id' => $user->id,
+            'slot_preference' => 'morning',
+        ]);
+
+        // Повторный голос с другим пожеланием: обновляет, дубля нет.
+        $this->actingAs($user)
+            ->postJson(self::URL.'/vote', ['slug' => 'buer-grammatika-potok-2', 'slot_preference' => 'evening'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('waitlist_votes', [
+            'course_waitlist_item_id' => $item->id,
+            'user_id' => $user->id,
+            'slot_preference' => 'evening',
+        ]);
+        $this->assertSame(1, $item->votes()->count());
+    }
+
+    /** H4206: голос без пожелания валиден (nullable), неизвестное значение — 422. */
+    public function test_vote_slot_preference_validation(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        $item = $this->makeItem();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(self::URL.'/vote', ['slug' => 'buer-grammatika-potok-2'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('waitlist_votes', [
+            'course_waitlist_item_id' => $item->id,
+            'user_id' => $user->id,
+            'slot_preference' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(self::URL.'/vote', ['slug' => 'buer-grammatika-potok-2', 'slot_preference' => 'полночь'])
+            ->assertStatus(422);
+    }
 }

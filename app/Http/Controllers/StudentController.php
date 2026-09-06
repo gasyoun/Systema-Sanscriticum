@@ -19,6 +19,7 @@ use App\Models\Schedule;
 use App\Models\ScheduleAttendanceNotice;
 use App\Models\SubscriberMagnet;
 use App\Models\User;
+use App\Models\WaitlistVote;
 use App\Services\AccessDiagnosticsService;
 use App\Services\Activity\CabinetTelemetry;
 use App\Services\AttendanceNoticeService;
@@ -364,7 +365,7 @@ class StudentController extends Controller
 
         // Список ожидания (MG 31-08-2026, H3815): строки для голосования в
         // кабинете. Flag OFF → пустая коллекция, кабинет байт-стабилен.
-        $viewData['waitlistItems'] = config('features.waitlist_voting', false)
+        $waitlistItems = config('features.waitlist_voting', false)
             ? CourseWaitlistItem::query()
                 ->where('is_listed', true)
                 ->whereNotIn('status', [CourseWaitlistItem::STATUS_CLOSED, CourseWaitlistItem::STATUS_SCHEDULED])
@@ -372,6 +373,15 @@ class StudentController extends Controller
                 ->withCount(['votes as voted_by_me' => fn ($q) => $q->where('user_id', $user->id)])
                 ->withCount('votes')
                 ->get()
+            : collect();
+        $viewData['waitlistItems'] = $waitlistItems;
+
+        // H4206: моё пожелание времени по каждой строке («Голос учтён · утром»).
+        $viewData['waitlistMyPrefs'] = $waitlistItems->isNotEmpty()
+            ? WaitlistVote::query()
+                ->where('user_id', $user->id)
+                ->whereIn('course_waitlist_item_id', $waitlistItems->modelKeys())
+                ->pluck('slot_preference', 'course_waitlist_item_id')
             : collect();
 
         // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
