@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\TeacherSalaryService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -19,7 +20,26 @@ class Teacher extends Model
         'photo_path',
         // Валюта выплаты через PayPal (EUR/USD/INR); null = только ₽. Остаток в кабинете всегда в ₽.
         'payout_currency',
+        // H4253: окно отпуска/каникул преподавателя — teacher-level, отдельно
+        // от group-level Group::is_on_vacation (H3790).
+        'on_vacation_from', 'on_vacation_until',
     ];
+
+    protected $casts = [
+        'on_vacation_from' => 'date',
+        'on_vacation_until' => 'date',
+    ];
+
+    /** Преподаватель в отпуске на данную дату (обе границы включительно). */
+    public function isOnVacationOn(CarbonInterface $date): bool
+    {
+        if ($this->on_vacation_from === null || $this->on_vacation_until === null) {
+            return false;
+        }
+
+        return $date->toDateString() >= $this->on_vacation_from->toDateString()
+            && $date->toDateString() <= $this->on_vacation_until->toDateString();
+    }
 
     // Один преподаватель может вести много курсов (как ОСНОВНОЙ — teacher_id).
     public function courses(): HasMany
