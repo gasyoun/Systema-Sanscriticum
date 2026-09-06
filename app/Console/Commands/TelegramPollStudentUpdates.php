@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Support\TelegramWebhooks;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -116,7 +115,16 @@ class TelegramPollStudentUpdates extends Command
         // (TelegramWebhookRegistry: ['message', 'callback_query']).
         $updates = $client->getUpdates($offset, $pollTimeout, ['message', 'callback_query']);
 
-        $url = TelegramWebhooks::url('/api/telegram/webhook');
+        // Реинжекция — в ЗДОРОВОЕ приложение, НЕ через входной узел: и
+        // TelegramWebhooks::url(), и app.url на этом про́де указывают на
+        // TELEGRAM_WEBHOOK_BASE_URL (103.112.71.201, self-signed + мёртвый
+        // туннель) — это сама сломанная дорожка. Явный
+        // TELEGRAM_STUDENT_POLL_REINJECT_URL (prod: https://samskrte.ru,
+        // проверен 06-09: 405/65ms self, 200/0.35s external).
+        $url = (string) config('services.telegram_student.reinject_url', '');
+        if ($url === '') {
+            $url = rtrim((string) config('app.url'), '/').'/api/telegram/webhook';
+        }
 
         foreach ($updates as $update) {
             if (! is_array($update) || ! isset($update['update_id'])) {

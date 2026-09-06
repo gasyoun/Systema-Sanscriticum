@@ -381,6 +381,10 @@ return [
         'poll_timeout_seconds' => (int) env('TELEGRAM_STUDENT_POLL_TIMEOUT_SECONDS', 50),
         'poll_retry_seconds' => (int) env('TELEGRAM_STUDENT_POLL_RETRY_SECONDS', 10),
         'poll_max_lifetime_seconds' => (int) env('TELEGRAM_STUDENT_POLL_MAX_LIFETIME_SECONDS', 3600),
+        // Куда реинжектировать апдейты. Пусто → app.url. На текущем про́де app.url
+        // указывает на входной узел (мёртвый туннель), поэтому здесь задаётся
+        // явно: https://samskrte.ru (инцидент 06-09-2026).
+        'reinject_url' => env('TELEGRAM_STUDENT_POLL_REINJECT_URL', ''),
     ],
 
     'vk' => [
