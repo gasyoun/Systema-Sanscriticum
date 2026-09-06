@@ -6,6 +6,7 @@ namespace Tests\Feature\Membership;
 
 use App\Enums\MembershipTier;
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\Payment;
 use App\Models\Schedule;
 use App\Models\StudentDiscount;
@@ -108,21 +109,37 @@ final class SubscriptionRecordedTest extends MembershipTestCase
         $old = Course::factory()->create(['format' => 'recorded', 'is_visible' => true, 'club_included' => false]);
         Schedule::create(['course_id' => $old->id, 'title' => 's', 'start' => Carbon::now()->subMonths(7)]);
 
+        // Расписание через группу курса (старые курсы живут group_id, не course_id).
+        $oldViaGroup = Course::factory()->create(['format' => 'recorded', 'is_visible' => true, 'club_included' => false]);
+        $group = Group::create(['name' => 'старый поток']);
+        $oldViaGroup->groups()->attach($group->id);
+        Schedule::create(['group_id' => $group->id, 'title' => 's', 'start' => Carbon::now()->subMonths(8)]);
+
+        // Запись (H3807): своего расписания нет, якорь — исходный живой поток.
+        $live = Course::factory()->create(['format' => 'live', 'is_visible' => true]);
+        Schedule::create(['course_id' => $live->id, 'title' => 's', 'start' => Carbon::now()->subMonths(9)]);
+        $recording = Course::factory()->create([
+            'format' => 'recorded', 'is_visible' => true, 'club_included' => false,
+            'recording_of_course_id' => $live->id,
+        ]);
+
         $fresh = Course::factory()->create(['format' => 'recorded', 'is_visible' => true, 'club_included' => false]);
         Schedule::create(['course_id' => $fresh->id, 'title' => 's', 'start' => Carbon::now()->subMonths(5)]);
 
         $noSchedule = Course::factory()->create(['format' => 'recorded', 'is_visible' => true, 'club_included' => false]);
 
-        $live = Course::factory()->create(['format' => 'live', 'is_visible' => true, 'club_included' => false]);
-        Schedule::create(['course_id' => $live->id, 'title' => 's', 'start' => Carbon::now()->subMonths(9)]);
+        $liveFormat = Course::factory()->create(['format' => 'live', 'is_visible' => true, 'club_included' => false]);
+        Schedule::create(['course_id' => $liveFormat->id, 'title' => 's', 'start' => Carbon::now()->subMonths(9)]);
 
         $this->artisan('subscription:refresh-archive')->assertSuccessful();
 
         $this->assertTrue((bool) $old->refresh()->club_included, 'поток старше 6 мес вошёл в архив');
         $this->assertNotNull($old->subscription_archive_joined_at);
+        $this->assertTrue((bool) $oldViaGroup->refresh()->club_included, 'расписание через группу тоже доказательство');
+        $this->assertTrue((bool) $recording->refresh()->club_included, 'запись наследует окно исходного потока');
         $this->assertFalse((bool) $fresh->refresh()->club_included, 'свежий поток остаётся эксклюзивным');
         $this->assertFalse((bool) $noSchedule->refresh()->club_included, 'без расписания окно не открывается');
-        $this->assertFalse((bool) $live->refresh()->club_included, 'живой формат не входит в архив записей');
+        $this->assertFalse((bool) $liveFormat->refresh()->club_included, 'живой формат не входит в архив записей');
     }
 
     // --- Скидка лояльности 5% первого года ---
