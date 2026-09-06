@@ -92,7 +92,13 @@ $snapshot = static function (): array {
 };
 
 $lessonRow = DB::table('lessons')->where('course_id', $courseId)
-    ->where('group_id', $groupId)->orderBy('id')->first();
+    ->where('block_number', 1)
+    ->where('is_published', 1)
+    ->where(static function ($q) use ($groupId) {
+        // isVisibleToGroupsOf: group_id NULL = course-level lesson, visible to every member
+        $q->whereNull('group_id')->orWhere('group_id', $groupId);
+    })
+    ->orderBy('id')->first();
 if ($lessonRow === null) {
     $fail("no live lesson in group {$groupId} to rehearse the completion event on");
 }
