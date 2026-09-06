@@ -123,8 +123,9 @@ class TelegramPollStudentUpdates extends Command
         // проверен 06-09: 405/65ms self, 200/0.35s external).
         $url = (string) config('services.telegram_student.reinject_url', '');
         if ($url === '') {
-            $url = rtrim((string) config('app.url'), '/').'/api/telegram/webhook';
+            $url = rtrim((string) config('app.url'), '/');
         }
+        $url = rtrim($url, '/').'/api/telegram/webhook';
 
         foreach ($updates as $update) {
             if (! is_array($update) || ! isset($update['update_id'])) {
