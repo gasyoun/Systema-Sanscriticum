@@ -16,6 +16,7 @@ use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Support\SupportDmAutoReply;
+use App\Support\TelegramSendGuard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -243,7 +244,7 @@ class SupportHintSendButtonTest extends TestCase
     /**
      * H3999: черновик draft_only (деньги/доступ/сертификат) нажатием из
      * Telegram НЕ отправляется — даже если куратор тапнул старую кнопку из
-     * ленты. Отказ происходит ДО клейма {@see \App\Support\TelegramSendGuard}:
+     * ленты. Отказ происходит ДО клейма {@see TelegramSendGuard}:
      * иначе занятый клейм закрыл бы отправку того же текста из очереди.
      */
     public function test_a_draft_only_suggestion_refuses_the_telegram_tap(): void

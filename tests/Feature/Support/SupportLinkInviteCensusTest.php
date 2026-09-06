@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\Support\SupportDmLinkInvite;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -117,8 +118,8 @@ class SupportLinkInviteCensusTest extends TestCase
         $this->unlinkedContact(7106, 3);
         $this->unlinkedContact(7107, 1);
 
-        \Illuminate\Support\Facades\Artisan::call('support:link-invite-census', ['--dry' => true]);
-        $out = \Illuminate\Support\Facades\Artisan::output();
+        Artisan::call('support:link-invite-census', ['--dry' => true]);
+        $out = Artisan::output();
 
         // Числитель и знаменатель печатаются рядом (рулинг I4): «1 контакт»
         // без «из скольких» — это впечатление, а не метрика.
