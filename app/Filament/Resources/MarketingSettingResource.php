@@ -523,6 +523,14 @@ class MarketingSettingResource extends Resource
                                 .'Подставляемые значения экранируются автоматически, так что «&amp;» в названии курса ничего не сломает. '
                                 .'Пусто = шаблон по умолчанию.'
                             )),
+                        Forms\Components\TextInput::make('zapisi_cancel_admin_ids')
+                            ->label('Отмена занятия reply-командой: Telegram user_id')
+                            ->placeholder('123456789, 987654321')
+                            ->helperText(new HtmlString(
+                                'Кто может ответить <b>«Отмена занятия»</b> на пост-напоминание в чате группы, '
+                                .'чтобы занятие отменилось: цепочка сдвинется на +7 дней, бот опубликует анонс об отмене. '
+                                .'Свой user_id подскажет бот @userinfobot. Через запятую. Пусто = команда выключена.'
+                            )),
                         Forms\Components\TextInput::make('zapisi_n8n_forward_url')
                             ->label('Дублировать апдейты в n8n (URL webhook-ноды)')
                             ->url()
