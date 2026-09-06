@@ -37,7 +37,6 @@ class RefreshSubscriptionArchive extends Command
             ->where('format', 'recorded')
             ->where('is_visible', true)
             ->where('club_included', false)
-            ->withMax('schedules as last_session_at', 'start')
             ->get();
 
         $joined = 0;
@@ -45,14 +44,14 @@ class RefreshSubscriptionArchive extends Command
         $noSchedule = 0;
 
         foreach ($candidates as $course) {
-            if ($course->last_session_at === null) {
+            $last = $course->streamLastSessionAt();
+
+            if ($last === null) {
                 $noSchedule++;
                 $this->line("skip (no schedule evidence): {$course->id} {$course->title}");
 
                 continue;
             }
-
-            $last = Carbon::parse($course->last_session_at);
 
             if ($last->greaterThan($cutoff)) {
                 $notYet++;

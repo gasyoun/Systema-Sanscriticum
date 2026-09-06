@@ -373,8 +373,9 @@ class Course extends Model
     }
 
     /**
-     * Занятия потока (по course_id). Групповые занятия (group_id) сюда не
-     * входят — окно эксклюзивности считается по расписанию самого потока.
+     * Занятия потока: по course_id ЛИБО по любой из групп курса. Старые
+     * курсы живут расписанием через group_id — курс-центричная выборка
+     * видела бы пустоту там, где занятия есть (урок upcomingSchedules).
      */
     public function schedules(): HasMany
     {
@@ -383,14 +384,32 @@ class Course extends Model
 
     /**
      * H3916: дата последнего занятия потока — якорь 6-месячного окна
-     * эксклюзивности подписки «в записи». NULL = занятий в расписании нет,
-     * окно по такому курсу шедулер НЕ открывает (нужна ручная метка).
+     * эксклюзивности подписки «в записи». Источники по убыванию:
+     * своё расписание (course_id ИЛИ группы курса) → расписание исходного
+     * живого потока (recording_of_course_id, H3807-записи). NULL = нигде
+     * нет доказательства — окно шедулер не открывает (ручной остаток).
      */
     public function streamLastSessionAt(): ?Carbon
     {
-        $max = $this->schedules()->max('start');
+        $groupIds = $this->groups()->pluck('groups.id');
 
-        return $max === null ? null : Carbon::parse($max);
+        $own = Schedule::query()
+            ->where(function ($q) use ($groupIds) {
+                $q->where('course_id', $this->id);
+
+                if ($groupIds->isNotEmpty()) {
+                    $q->orWhereIn('group_id', $groupIds);
+                }
+            })
+            ->max('start');
+
+        if ($own !== null) {
+            return Carbon::parse($own);
+        }
+
+        $original = $this->recordingOf;
+
+        return $original?->streamLastSessionAt();
     }
 
     /**
