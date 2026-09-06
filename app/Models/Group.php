@@ -233,4 +233,27 @@ class Group extends Model
 
         return $query->whereHas('courses', fn ($q) => $q->forTeacher($teacherId));
     }
+
+    /**
+     * H4253: хотя бы один преподаватель (основной или со-препод) курсов этой
+     * группы в отпуске на дату $date — teacher-level окно (Teacher::isOnVacationOn),
+     * отдельно от group-level {@see is_on_vacation}. Используется, чтобы
+     * RemindZapisiClasses и фиды не считали занятие «скоро», пока ведущий в отпуске.
+     */
+    public function teachersOnVacationCovering(Carbon $date): bool
+    {
+        foreach ($this->courses as $course) {
+            if ($course->teacher !== null && $course->teacher->isOnVacationOn($date)) {
+                return true;
+            }
+
+            foreach ($course->teachers as $coTeacher) {
+                if ($coTeacher->isOnVacationOn($date)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
