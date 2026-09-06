@@ -90,6 +90,18 @@ class TeacherResource extends Resource
                     )
                     ->columns(1),
 
+                Section::make('Отпуск / каникулы')
+                    ->description('H4253: окно отпуска преподавателя — на это время напоминания zapisi-бота и фид расписания помечают его группы как «идущего отпуска», не дожидаясь ручного is_on_vacation на каждой группе. То же окно можно выставить TG-командой «Каникулы с ДД.ММ по ДД.ММ» в чате группы (роль admin/manager/сам преподаватель — своя группа).')
+                    ->schema([
+                        DatePicker::make('on_vacation_from')
+                            ->label('Отпуск с')
+                            ->native(false),
+                        DatePicker::make('on_vacation_until')
+                            ->label('Отпуск по')
+                            ->native(false)
+                            ->afterOrEqual('on_vacation_from'),
+                    ])->columns(2),
+
                 Section::make('Соцсети и Реквизиты')
                     ->schema([
                         TextInput::make('telegram')
