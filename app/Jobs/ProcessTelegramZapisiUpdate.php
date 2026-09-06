@@ -7,6 +7,8 @@ namespace App\Jobs;
 use App\Models\MarketingSetting;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\Telegram\CancelClassCommandService;
+use App\Services\Telegram\DateAwareCancelService;
+use App\Services\Telegram\VacationCommandService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
 use App\Services\VacationQuorumService;
 use App\Support\TelegramSendGuard;
@@ -99,6 +101,21 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             app(CancelClassCommandService::class)->handle($message);
         } catch (Throwable $e) {
             Log::warning('CancelClassCommand: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        // H4253: датированная отмена («Отмена 23.09 и 30.10») и каникулы/отпуск
+        // («Каникулы с 23.09 по 06.10») от преподавателя/менеджера/админа.
+        // Оба сервиса сами фильтруют текст и права; отказы — только в лог.
+        try {
+            app(DateAwareCancelService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('DateAwareCancel: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        try {
+            app(VacationCommandService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('VacationCommand: handler failed', ['error' => $e->getMessage()]);
         }
 
         $chat = $message['chat'];

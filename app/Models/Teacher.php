@@ -19,7 +19,40 @@ class Teacher extends Model
         'photo_path',
         // Валюта выплаты через PayPal (EUR/USD/INR); null = только ₽. Остаток в кабинете всегда в ₽.
         'payout_currency',
+        // H4253: окно каникул/отпуска. from без until — дата выхода неизвестна.
+        'on_vacation_from', 'on_vacation_until',
     ];
+
+    protected $casts = [
+        'on_vacation_from' => 'date',
+        'on_vacation_until' => 'date',
+    ];
+
+    /**
+     * H4253: попадает ли дата в отпускное окно преподавателя. Границы включительно
+     * (занятие в день выхода из отпуска — ещё отпускное); до начала и после конца
+     * окно не действует. from без until — бессрочный отпуск от даты начала.
+     */
+    public function isOnVacationOn(\Carbon\CarbonInterface $date): bool
+    {
+        if ($this->on_vacation_from === null && $this->on_vacation_until === null) {
+            return false;
+        }
+
+        // Строковое сравнение Y-m-d: startOfDay()/endOfDay() мутируют Carbon
+        // и трогали бы атрибут модели.
+        $day = $date->toDateString();
+
+        if ($this->on_vacation_from !== null && $day < $this->on_vacation_from->toDateString()) {
+            return false;
+        }
+
+        if ($this->on_vacation_until !== null && $day > $this->on_vacation_until->toDateString()) {
+            return false;
+        }
+
+        return true;
+    }
 
     // Один преподаватель может вести много курсов (как ОСНОВНОЙ — teacher_id).
     public function courses(): HasMany

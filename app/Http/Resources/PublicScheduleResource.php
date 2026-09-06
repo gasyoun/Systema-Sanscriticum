@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
+use App\Services\TeacherVacation;
 use App\Support\TrialBookToken;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -75,9 +76,12 @@ class PublicScheduleResource extends JsonResource
                 'status' => $group->status,
                 'seats_min' => $group->min_size,
                 'is_recruited' => $group->isRecruited(),
-                // H3790: каникулы — флаг + дата выхода (nullable date, без PII)
-                'is_on_vacation' => (bool) $group->is_on_vacation,
-                'vacation_resume_date' => $group->vacation_resume_date?->toDateString(),
+                // H3790: каникулы — флаг + дата выхода (nullable date, без PII).
+                // H4253: группа также отпускная, когда дату покрывает окно
+                // преподавателя любого её курса; наружу — те же поля, чтобы
+                // потребители фида (tg_schedule renderer) не менялись.
+                'is_on_vacation' => $this->groupIsOnVacation($group),
+                'vacation_resume_date' => $this->groupVacationResume($group),
             ],
         ];
 
@@ -89,5 +93,34 @@ class PublicScheduleResource extends JsonResource
         }
 
         return $row;
+    }
+
+    /**
+     * H4253: групповой флаг ИЛИ окно преподавателя покрывает дату строки.
+     */
+    private function groupIsOnVacation(Group $group): bool
+    {
+        if ((bool) $group->is_on_vacation) {
+            return true;
+        }
+
+        return $this->start !== null && TeacherVacation::covers($group, $this->start);
+    }
+
+    /**
+     * H4253: дата выхода — от группового флага, иначе от окна преподавателя
+     * (null = не отпуск или дата выхода уточняется).
+     */
+    private function groupVacationResume(Group $group): ?string
+    {
+        if ($group->vacation_resume_date !== null) {
+            return $group->vacation_resume_date->toDateString();
+        }
+
+        if ($this->start === null) {
+            return null;
+        }
+
+        return TeacherVacation::resumeDate($group, $this->start)?->toDateString();
     }
 }

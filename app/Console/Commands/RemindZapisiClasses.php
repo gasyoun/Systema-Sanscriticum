@@ -9,6 +9,7 @@ use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
 use App\Models\TelegramChatPost;
+use App\Services\TeacherVacation;
 use Illuminate\Console\Command;
 
 /**
@@ -94,6 +95,17 @@ class RemindZapisiClasses extends Command
             // (classes:post-group-link, T-15) успел раньше нас — при нестандартных
             // lead-настройках — не отправляем второй «Скоро занятие» в тот же чат.
             if ($schedule->group_link_posted_at !== null) {
+                continue;
+            }
+
+            // H4253: каникулы — групповой флаг (H3790) или окно преподавателя.
+            // Пробел до сих пор: напоминания игнорировали is_on_vacation группы.
+            // Пропуск БЕЗ пометки: после снятия флага/окна напоминание уйдёт.
+            if ($group->is_on_vacation) {
+                continue;
+            }
+
+            if (TeacherVacation::covers($group, $schedule->start)) {
                 continue;
             }
 

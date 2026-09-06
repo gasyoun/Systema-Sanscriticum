@@ -90,6 +90,17 @@ class TeacherResource extends Resource
                     )
                     ->columns(1),
 
+                Section::make('Каникулы / отпуск')
+                    ->description('H4253: окно покрывает все группы преподавателя — аннотация «выход из каникул» в публичном фиде, напоминания @zapisi_ORSbot в окне не уходят. Преподаватель может выставить то же сам командой в Telegram-чате группы.')
+                    ->schema([
+                        DatePicker::make('on_vacation_from')
+                            ->label('Начало каникул'),
+                        DatePicker::make('on_vacation_until')
+                            ->label('Конец каникул')
+                            ->helperText('Пусто = дата выхода неизвестна («уточняется») — окно бессрочно до снятия.'),
+                    ])
+                    ->columns(2),
+
                 Section::make('Соцсети и Реквизиты')
                     ->schema([
                         TextInput::make('telegram')
