@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
+use App\Models\Teacher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
