@@ -19,3 +19,9 @@ HOME=/tmp
 * * * * * /usr/local/sbin/systema-schedule-run.sh >> @@APP_DIR@@/storage/logs/schedule.log 2>&1
 @@WATCHDOG_CABINET_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "cabinet:probe" cabinet @@WATCHDOG_CABINET_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
 @@WATCHDOG_HEARTBEAT_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "heartbeat:ping" heartbeat @@WATCHDOG_HEARTBEAT_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
+
+# H4194 guard pack (docs/GUARD_PACK_INSTALL.md): RAM/swap/load, queue-lag,
+# admin-count + webroot .php inventory — none of it read by cabinet:probe.
+@@WATCHDOG_RESOURCES_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "guards:resources" guard-resources @@WATCHDOG_RESOURCES_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
+@@WATCHDOG_QUEUE_LAG_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "guards:queue-lag" guard-queue-lag @@WATCHDOG_QUEUE_LAG_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
+@@WATCHDOG_COMPROMISE_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "guards:compromise-integrity" guard-compromise @@WATCHDOG_COMPROMISE_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
