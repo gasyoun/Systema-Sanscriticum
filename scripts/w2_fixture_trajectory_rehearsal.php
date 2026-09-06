@@ -105,7 +105,7 @@ if ($lessonRow === null) {
 $lessonId = (int) $lessonRow->id;
 
 echo '== H4162 W2 fixture-trajectory rehearsal =='.PHP_EOL;
-echo ($apply ? 'MODE: APPLY (single transaction, always rolled back)'.PHP_EOL : 'MODE: DRY-RUN (no writes)'.PHP_EOL);
+echo $apply ? 'MODE: APPLY (single transaction, always rolled back)'.PHP_EOL : 'MODE: DRY-RUN (no writes)'.PHP_EOL;
 $pre = $snapshot();
 echo json_encode(['pre_state' => $pre, 'lesson_under_test' => $lessonId], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).PHP_EOL;
 
