@@ -172,6 +172,30 @@ class KocherginaCohortContractV1Test extends TestCase
     // ── 2. entitlement-token v1 ───────────────────────────────────────────
 
     /** @test */
+    public function cohort_config_carries_the_reference_entry_with_env_gated_switch(): void
+    {
+        $entry = config('cohort_courses.'.self::COHORT_KEY);
+
+        $this->assertIsArray(
+            $entry,
+            'W1 flip (MG 06-09-2026): the kochergina-gr61 entry must exist in config/cohort_courses.php.'
+        );
+        $this->assertSame('grammatika-po-kocerginoi-gr61', $entry['course_slug']);
+        $this->assertIsBool($entry['enabled'], 'The switch stays env-gated (KOCHERGINA_GR61_COHORT_ENABLED).');
+        $this->assertArrayNotHasKey(
+            'packs',
+            $entry,
+            'No packs key: the reader surface stays absent (404) — the flip adds no student-visible surface.'
+        );
+
+        $course = Course::factory()->create(['slug' => $entry['course_slug']]);
+        $this->assertTrue(
+            CourseCohortEntitlement::course(self::COHORT_KEY)->is($course),
+            'The entry must resolve through the real CourseCohortEntitlement course resolver.'
+        );
+    }
+
+    /** @test */
     public function entitlement_token_fixture_covers_every_payment_kind(): void
     {
         $fixture = $this->fixture('kochergina_entitlement_token_v1');

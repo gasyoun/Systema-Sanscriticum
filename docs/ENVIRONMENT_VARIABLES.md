@@ -313,6 +313,8 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `KNOWLEDGE_OLLAMA_BASE_URL` | optional | `'http://127.0.0.1:11434'` | config/knowledge.php:26 |
 | `KNOWLEDGE_REQUEST_TIMEOUT` | optional | `5` | config/knowledge.php:48 |
 | `KNOWLEDGE_RETRIEVAL_DEPTH` | optional | `20` | config/knowledge.php:58 |
+| `KOCHERGINA_GR61_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:58 |
+| `KOCHERGINA_GR61_COHORT_SLUG` | optional | `'grammatika-po-kocerginoi-gr61'` | config/cohort_courses.php:57 |
 | `KOCHERGINA_SOURCE_PATH` | optional | `base_path('../SanskritGrammar/KocherginaUchebnik_1998/Kochergina_un…` | config/homework.php:277 |
 | `KOSHA_READER` | optional | `false` | config/features.php:365 |
 | `KOSHA_SRS` | optional | `false` | config/features.php:354 |

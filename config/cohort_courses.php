@@ -41,4 +41,21 @@ return [
         'title' => 'Субхашита',
         'packs' => ['subhashita-beginner'],
     ],
+
+    /*
+     | H4162 W1 (06-09-2026): reference Kochergina cohort, flipped ON by
+     | MG's explicit ruling in chat. The W0 evidence packet
+     | (docs/EVIDENCE_KOCHERGINA_COHORT_W0_H4162_06-09-2026.md) selected
+     | gr.61 (course_id 434, group 131) and drafted this entry with
+     | enabled=false; this flip only adds the slug-keyed entitlement
+     | surface — the course's real access path (ordinary checkout →
+     | grantAccess() → groups) is untouched, and with no `packs` key the
+     | reader surface stays absent (404), so nothing student-visible
+     | changes. Rollback: env line off → config:cache.
+     */
+    'kochergina-gr61' => [
+        'course_slug' => env('KOCHERGINA_GR61_COHORT_SLUG', 'grammatika-po-kocerginoi-gr61'),
+        'enabled' => (bool) env('KOCHERGINA_GR61_COHORT_ENABLED', false),
+        'title' => 'Грамматика по Кочергиной гр.61',
+    ],
 ];
