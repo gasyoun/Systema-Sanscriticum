@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Support;
 
+use App\Models\FollowUpTask;
 use App\Models\MessageTemplate;
 use App\Models\SupportAiReplyEvent;
 use App\Models\SupportAnswerSuggestion;
@@ -47,6 +48,19 @@ final class SupportDmAutoReply
     /** H3765 A3: «бот отправил бы это сам» — только запись, ни одного исходящего. */
     public const EVENT_SHADOW_WOULD_SEND = 'dm_shadow_would_send';
 
+    /**
+     * H3999: то же самое, но для ФАКТОВ LMS, а не для попадания в FAQ.
+     *
+     * Отдельный тип события, а не флажок в meta: ключ firstOrCreate — это пара
+     * (сообщение, тип события), и общий тип означал бы «одно теневое событие на
+     * сообщение». Тогда неделя тени по статусу ДЗ молча съедала бы неделю тени
+     * по FAQ, и обе выборки перестали бы быть выборками.
+     */
+    public const EVENT_FACT_SHADOW_WOULD_SEND = 'dm_shadow_would_send_facts';
+
+    /** H3999: расхождение заявленной суммы с расчётной — задача финансисту. */
+    public const EVENT_BALANCE_DISPUTE = 'dm_balance_dispute';
+
     /** H3765 A5: куратор нажал «Отправить как есть» под подсказкой. */
     public const EVENT_HINT_SEND_TAPPED = 'dm_hint_send_tapped';
 
@@ -75,6 +89,8 @@ final class SupportDmAutoReply
         private readonly TelegramAdminNotifier $admins,
         private readonly HybridRetriever $faq,
         private readonly SupportDmLinkInvite $linkInvite,
+        private readonly SupportConversationManager $conversations,
+        private readonly SupportFollowUpService $followUps,
     ) {}
 
     public function isEnabled(): bool
@@ -169,14 +185,43 @@ final class SupportDmAutoReply
             return ['status' => 'skip', 'category' => null];
         }
 
-        if ($mayReachStudent
-            && $user !== null
-            && $category !== null
-            && in_array($category, self::SIMPLE_CATEGORIES, true)
-        ) {
-            $resolved = $this->facts->resolve($category, $user);
-            if ($resolved !== null && trim((string) $resolved['draft']) !== '') {
-                return $this->sendAuto($incoming, $user, $category, (string) $resolved['draft'], 'facts');
+        // H3999 (волна 1 leverage-плана): резолверов стало восемь, и решение
+        // «отправить» больше не выводится из одной категории. Категория говорит,
+        // ЧТО спросили; отправлять или нет — решают ДВЕ вещи: политика самого
+        // ответа (send_policy) и список ЖИВЫХ типов фактов.
+        //
+        // По умолчанию живыми остаются РОВНО те три типа, что уходили студенту
+        // до H3999 (zoom/schedule/recording) — поведение канала байт-в-байт
+        // прежнее. Пять новых резолверов копят теневые события, пока человек не
+        // откроет их после недели тени (рулинг V1). Деньги, доступ и сертификат
+        // не откроются никогда: они вычёркиваются в КОДЕ (рулинг A1).
+        $resolvedFacts = null;
+        $escalation = null;
+
+        if ($mayReachStudent && $user !== null && $category !== null) {
+            $resolvedFacts = $this->facts->resolve($category, $user, $text);
+
+            if ($resolvedFacts !== null && trim((string) $resolvedFacts['draft']) !== '') {
+                if ($this->factMayAutoSend($resolvedFacts)) {
+                    return $this->sendAuto(
+                        $incoming,
+                        $user,
+                        $category,
+                        (string) $resolvedFacts['draft'],
+                        'facts',
+                        ['fact_type' => (string) ($resolvedFacts['facts']['type'] ?? '')],
+                    );
+                }
+
+                $this->recordFactShadowWouldSend($incoming, $user, $category, $resolvedFacts);
+
+                // Рулинг A1: расчётная сумма разошлась с заявленной студентом —
+                // студенту не уходит ничего, куратор получает подсказку без
+                // кнопки, финансовому ведущему заводится задача.
+                if (($resolvedFacts['send_policy'] ?? null) === SupportAnswerFactResolver::POLICY_ESCALATE) {
+                    $escalation = $this->escalateBalanceDispute($incoming, $user, $resolvedFacts);
+                    $resolvedFacts = null;
+                }
             }
         }
 
@@ -268,7 +313,7 @@ final class SupportDmAutoReply
             return ['status' => 'invite_sent', 'category' => $category];
         }
 
-        return $this->hintComplex($incoming, $user, $category, $text, ! $mayReachStudent);
+        return $this->hintComplex($incoming, $user, $category, $text, ! $mayReachStudent, $resolvedFacts, $escalation);
     }
 
     /**
@@ -475,12 +520,17 @@ final class SupportDmAutoReply
     /**
      * @return array{status: string, category: ?string}
      */
+    /**
+     * @param  array{draft: string, facts: array<string, mixed>, confidence: float, send_policy: string}|null  $resolvedFacts
+     */
     private function hintComplex(
         TelegramSupportMessage $incoming,
         ?User $user,
         ?string $category,
         string $text,
         bool $aged = false,
+        ?array $resolvedFacts = null,
+        ?string $escalation = null,
     ): array {
         $hits = $this->faq->retrieve($text, 3);
         $name = $user?->name ?? 'без привязки';
@@ -525,17 +575,29 @@ final class SupportDmAutoReply
 
         // H3765 A5: черновик под одну кнопку. Заводим его ДО отправки подсказки —
         // клавиатура несёт его id, и без записи кнопке нечего было бы отправить.
-        $suggestion = $this->oneTapSuggestion($incoming, $user, $category, $text, $hits);
+        $suggestion = $this->oneTapSuggestion($incoming, $user, $category, $text, $hits, $resolvedFacts);
+        $sendable = $suggestion !== null && ! $suggestion->isDraftOnly();
 
-        if ($suggestion !== null) {
+        if ($sendable) {
             $lines[] = '';
-            $lines[] = 'Кнопка ниже отправит студенту черновик из FAQ как есть.';
+            $lines[] = 'Кнопка ниже отправит студенту черновик как есть.';
+        } elseif ($suggestion !== null) {
+            // H3999, рулинг A1: деньги, доступ и сертификат — только черновик.
+            // Кнопки под ними нет вовсе; отправить его можно лишь из очереди
+            // черновиков в админке, где куратор видит текст целиком.
+            $lines[] = '';
+            $lines[] = 'Черновик требует проверки — кнопки под ним нет. Он ждёт в очереди черновиков.';
+        }
+
+        if ($escalation !== null) {
+            $lines[] = '';
+            $lines[] = $escalation;
         }
 
         // H3393: подсказка уходит тому, кто реально отвечает на этом аккаунте
         // (hint_recipients), иначе — админам, как раньше.
         $recipients = $this->accountHintRecipients($incoming);
-        $keyboard = $suggestion === null ? null : [[[
+        $keyboard = ! $sendable ? null : [[[
             'text' => '📨 Отправить как есть',
             'callback_data' => self::SEND_CALLBACK_PREFIX.$suggestion->id,
         ]]];
@@ -570,13 +632,20 @@ final class SupportDmAutoReply
     /**
      * H3765 A5: запись-черновик, за которую цепляется inline-кнопка подсказки.
      *
-     * Заводим её только когда кнопке будет что отправить: нужен привязанный
-     * студент (иначе очередь исходящего не построить), распознанная категория
-     * (колонка не nullable) и хотя бы одно попадание в FAQ. Уникальный ключ
-     * (source_type, source_id) держит инвариант «один черновик на сообщение»:
-     * повторный проход синка не плодит вторую кнопку.
+     * H3999 (шаг I1a): раньше черновик заводился ТОЛЬКО из попадания в FAQ, и
+     * потому подсказки по фактам и по шаблонам приходили куратору без кнопки —
+     * то есть ровно те, которых в трафике большинство (FINDINGS §635). Теперь
+     * источников три, в порядке убывания точности: попадание FAQ → факт LMS →
+     * выверенный шаблон категории. Уникальный ключ (source_type, source_id)
+     * держит инвариант «один черновик на сообщение»: повторный проход синка не
+     * плодит вторую кнопку.
+     *
+     * Политика ответа переезжает в `facts.send_policy` черновика: отсюда её
+     * читают и клавиатура подсказки, и кнопка {@see SupportHintSendButton}, и
+     * очередь черновиков в админке. Резолвер только МЕТИТ, отправитель решает.
      *
      * @param  list<array<string, mixed>>  $hits
+     * @param  array{draft: string, facts: array<string, mixed>, confidence: float, send_policy: string}|null  $resolvedFacts
      */
     private function oneTapSuggestion(
         TelegramSupportMessage $incoming,
@@ -584,12 +653,43 @@ final class SupportDmAutoReply
         ?string $category,
         string $text,
         array $hits,
+        ?array $resolvedFacts = null,
     ): ?SupportAnswerSuggestion {
-        if ($user === null || $category === null || $hits === []) {
+        if ($user === null || $category === null) {
             return null;
         }
 
-        $draft = $this->faqDraft($hits);
+        $draft = $hits === [] ? null : $this->faqDraft($hits);
+        $kind = 'faq';
+        $confidence = (float) ($hits[0]['score'] ?? 0.0);
+        $policy = SupportAnswerFactResolver::POLICY_AUTO;
+        $extraFacts = $draft === null ? [] : [
+            'faq_chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
+            'faq_title' => (string) ($hits[0]['title'] ?? ''),
+        ];
+
+        if ($draft === null && $resolvedFacts !== null && trim((string) $resolvedFacts['draft']) !== '') {
+            $draft = (string) $resolvedFacts['draft'];
+            $kind = 'facts';
+            $confidence = (float) ($resolvedFacts['confidence'] ?? 0.0);
+            $policy = (string) ($resolvedFacts['send_policy'] ?? SupportAnswerFactResolver::POLICY_DRAFT_ONLY);
+            $extraFacts = ['fact_type' => (string) ($resolvedFacts['facts']['type'] ?? '')];
+        }
+
+        if ($draft === null) {
+            $template = $this->categoryTemplate($category, $user);
+
+            if ($template !== null) {
+                $draft = $template['draft'];
+                $kind = 'template';
+                $confidence = 0.0;
+                $extraFacts = [
+                    'template_id' => $template['template_id'],
+                    'template_title' => $template['template_title'],
+                ];
+            }
+        }
+
         if ($draft === null) {
             return null;
         }
@@ -606,14 +706,202 @@ final class SupportDmAutoReply
                 'draft_text' => $draft,
                 'facts' => [
                     'via' => self::VIA,
-                    'faq_chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
-                    'faq_title' => (string) ($hits[0]['title'] ?? ''),
+                    'kind' => $kind,
+                    'send_policy' => $policy,
                     'source_telegram_message_id' => (int) $incoming->telegram_message_id,
+                    ...$extraFacts,
                 ],
-                'confidence' => (float) ($hits[0]['score'] ?? 0.0),
+                'confidence' => $confidence,
                 'status' => SupportAnswerSuggestion::STATUS_PENDING,
             ],
         );
+    }
+
+    /**
+     * Выверенный канреплай категории (S9/H1838) как черновик под кнопку.
+     *
+     * Отличие от автоответа шаблоном выше: там нужен пер-аккаунтный гейт и флаг
+     * автоотправки, потому что текст уходит студенту сам. Здесь текст никуда не
+     * уходит — его читает куратор, — поэтому гейт не нужен, а связь категории с
+     * шаблоном одна и та же.
+     *
+     * @return array{draft: string, template_id: int, template_title: string}|null
+     */
+    private function categoryTemplate(string $category, User $user): ?array
+    {
+        $template = MessageTemplate::query()
+            ->boundToSuggesterCategory($category)
+            ->orderByDesc('updated_at')
+            ->first();
+
+        if ($template === null) {
+            return null;
+        }
+
+        $draft = $template->render($user);
+
+        if (trim($draft) === '') {
+            return null;
+        }
+
+        return [
+            'draft' => $draft,
+            'template_id' => (int) $template->id,
+            'template_title' => (string) $template->title,
+        ];
+    }
+
+    /**
+     * H3999, рулинг A1: может ли этот факт уйти студенту САМ.
+     *
+     * Два независимых условия, и оба обязательны. Политика ответа — что сказал
+     * резолвер; список живых типов — что открыл человек после недели тени.
+     *
+     * @param  array{draft: string, facts: array<string, mixed>, confidence: float, send_policy: string}  $resolved
+     */
+    private function factMayAutoSend(array $resolved): bool
+    {
+        if (($resolved['send_policy'] ?? null) !== SupportAnswerFactResolver::POLICY_AUTO) {
+            return false;
+        }
+
+        $type = (string) ($resolved['facts']['type'] ?? '');
+
+        return $type !== '' && in_array($type, $this->liveFactTypes(), true);
+    }
+
+    /**
+     * Типы фактов, которые бот отправляет студенту сам.
+     *
+     * Дефолт конфига — ровно те три, что уходили до H3999. Деньги, доступ и
+     * сертификат вычёркиваются ЗДЕСЬ, в коде: правка конфига не должна уметь
+     * снять запрет рулинга A1 — ровно так же, как D/E вычеркнуты из живых
+     * категорий FAQ в {@see self::liveFaqCategories()}.
+     *
+     * @return list<string>
+     */
+    private function liveFactTypes(): array
+    {
+        $configured = config('support.facts.live_types', []);
+
+        if (! is_array($configured)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_map('strval', $configured),
+            static fn (string $type): bool => ! in_array($type, SupportAnswerFactResolver::NEVER_AUTO_TYPES, true),
+        ));
+    }
+
+    /**
+     * H3999, теневой сбор по фактам: «отправил бы, но тип ещё не живой».
+     *
+     * Пишем только то, что действительно ушло бы при открытом типе: черновики
+     * навсегда (деньги/доступ/сертификат) в выборку недели не попадают —
+     * иначе точность считалась бы по строкам, которые никто не собирался
+     * отправлять.
+     *
+     * @param  array{draft: string, facts: array<string, mixed>, confidence: float, send_policy: string}  $resolved
+     */
+    private function recordFactShadowWouldSend(
+        TelegramSupportMessage $incoming,
+        User $user,
+        string $category,
+        array $resolved,
+    ): void {
+        if (! (bool) config('features.support_dm_auto_reply_shadow', false)) {
+            return;
+        }
+
+        if (($resolved['send_policy'] ?? null) !== SupportAnswerFactResolver::POLICY_AUTO) {
+            return;
+        }
+
+        SupportAiReplyEvent::firstOrCreate(
+            [
+                'telegram_support_message_id' => $incoming->id,
+                'event_type' => self::EVENT_FACT_SHADOW_WOULD_SEND,
+            ],
+            [
+                'meta' => [
+                    'via' => self::VIA,
+                    'category' => $category,
+                    'fact_type' => (string) ($resolved['facts']['type'] ?? ''),
+                    'confidence' => (float) ($resolved['confidence'] ?? 0.0),
+                    'draft' => (string) $resolved['draft'],
+                    'user_id' => $user->id,
+                    'telegram_chat_id' => (int) $incoming->telegram_chat_id,
+                ],
+            ],
+        );
+    }
+
+    /**
+     * H3999, рулинг A1: расчётный остаток разошёлся с суммой, названной
+     * студентом. Студенту не уходит ничего; куратор видит подсказку без кнопки;
+     * финансовому ведущему заводится follow-up.
+     *
+     * Проверенная оговорка: {@see SupportFollowUpService::create()} БРОСАЕТ при
+     * выключенном флаге `features.support_follow_up_tasks`, поэтому флаг
+     * проверяется здесь, а не ловится исключением. Флаг выключен — остаётся
+     * обычная подсказка куратору, и это не деградация: человек в контуре был и
+     * остаётся, задача лишь не заводится автоматически.
+     *
+     * @param  array{draft: string, facts: array<string, mixed>, confidence: float, send_policy: string}  $resolved
+     */
+    private function escalateBalanceDispute(
+        TelegramSupportMessage $incoming,
+        User $user,
+        array $resolved,
+    ): string {
+        $claimed = $resolved['facts']['claimed_amount'] ?? null;
+        $note = 'Расхождение по оплате: студент называет сумму '
+            .($claimed === null ? '—' : number_format((float) $claimed, 0, ',', ' ').' ₽')
+            .', расчёт по кабинету другой. Сверьте по кассе и ответьте студенту сами.';
+
+        SupportAiReplyEvent::firstOrCreate(
+            [
+                'telegram_support_message_id' => $incoming->id,
+                'event_type' => self::EVENT_BALANCE_DISPUTE,
+            ],
+            [
+                'meta' => [
+                    'via' => self::VIA,
+                    'user_id' => $user->id,
+                    'claimed_amount' => $claimed === null ? null : (float) $claimed,
+                    'courses' => $resolved['facts']['courses'] ?? [],
+                ],
+            ],
+        );
+
+        if (! (bool) config('features.support_follow_up_tasks', false)) {
+            return '💸 Расхождение по оплате — студенту ничего не ушло. Задача не заведена: features.support_follow_up_tasks выключен.';
+        }
+
+        $thread = $this->conversations->currentFor($user);
+
+        if ($thread === null) {
+            return '💸 Расхождение по оплате — студенту ничего не ушло. Тред поддержки не найден, задача не заведена.';
+        }
+
+        $this->followUps->create(
+            $thread,
+            now()->addDay(),
+            $this->financeLead(),
+            FollowUpTask::TYPE_MESSAGE,
+            $note,
+        );
+
+        return '💸 Расхождение по оплате — студенту ничего не ушло, задача финансовому ведущему заведена.';
+    }
+
+    /** Финансовый ведущий из конфига; null — задача остаётся неназначенной. */
+    private function financeLead(): ?User
+    {
+        $id = config('support.escalation.finance_lead_user_id');
+
+        return $id === null ? null : User::query()->find((int) $id);
     }
 
     /**
