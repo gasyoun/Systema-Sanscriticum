@@ -24,6 +24,9 @@ class IpExpenseAudit extends Model
 {
     public const ACTION_IMPORTED = 'imported';
 
+    /** Импорт из банковской выписки (Точка/Сбер/PayPal, H4200). */
+    public const ACTION_IMPORTED_STATEMENT = 'imported_statement';
+
     public const ACTION_CREATED = 'created';
 
     public const ACTION_UPDATED = 'updated';
@@ -77,6 +80,7 @@ class IpExpenseAudit extends Model
     {
         return match ($this->action) {
             self::ACTION_IMPORTED => 'Импорт из книги',
+            self::ACTION_IMPORTED_STATEMENT => 'Импорт из выписки',
             self::ACTION_CREATED => 'Создал',
             self::ACTION_UPDATED => 'Изменил',
             self::ACTION_DELETED => 'Удалил',

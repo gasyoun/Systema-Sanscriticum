@@ -1,0 +1,6 @@
+Date,Time,Time Zone,Name,Type,Status,Currency,Gross,Fee,Net,Transaction ID,Item Title
+21/08/2026,10:15:00,MSK,Хостинг Netlify,Recurring Payment,Completed,EUR,-12.99,0.00,-12.99,XYZ1,Hosting subscription
+28/08/2026,11:00:00,MSK,Дизайнер Ильдар,General Payment,Completed,EUR,-300.00,-7.50,-292.50,XYZ2,Landing design
+25/08/2026,12:00:00,MSK,Some Student,Web Accept,Completed,EUR,149.00,-4.52,144.48,XYZ3,Course payment
+24/08/2026,09:30:00,MSK,Точка Расчетный счет,Transfer to Bank,Completed,RUB,-50000.00,0.00,-50000.00,XYZ4,Transfer to own bank
+26/08/2026,16:20:00,MSK,Шрифты MyFonts,General Payment,Pending,USD,-45.00,0.00,-45.00,XYZ5,Font license
