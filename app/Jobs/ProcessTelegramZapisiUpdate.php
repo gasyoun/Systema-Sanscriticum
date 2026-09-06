@@ -103,6 +103,23 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             Log::warning('CancelClassCommand: handler failed', ['error' => $e->getMessage()]);
         }
 
+        // H4253: «Отмена ДД.ММ[ и ДД.ММ…]» — date-aware отмена БЕЗ каскадного
+        // сдвига +7 дней, не reply-команда. ACL — TelegramGroupAcl, отдельно от
+        // zapisi_cancel_admin_ids whitelist выше.
+        try {
+            app(DatedCancelCommandService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('DatedCancelCommand: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        // H4253: «Каникулы с ДД.ММ по ДД.ММ» / «отпуск …» / «занятия возобновляются» —
+        // teacher-level окно отпуска. ACL — TelegramGroupAcl.
+        try {
+            app(TeacherVacationCommandService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('TeacherVacationCommand: handler failed', ['error' => $e->getMessage()]);
+        }
+
         $chat = $message['chat'];
         $from = $message['from'] ?? null;
         $media = $this->mediaMeta($message);
