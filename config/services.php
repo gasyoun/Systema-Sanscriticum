@@ -123,18 +123,6 @@ return [
         // проверка отключена (см. App\Http\Middleware\VerifyTelegramBotWebhook).
         'bot_webhook_secret' => env('TELEGRAM_BOT_WEBHOOK_SECRET'),
 
-        // Аварийный long polling кабинетного бота (telegram:poll-student),
-        // зеркало telegram_zapisi: штатная дорожка — вебхук; поллинг включается
-        // только когда входной узел вебхуков недоступен (инцидент 06-09-2026,
-        // «Connection timed out» от подсетей Telegram). Дефолт false — случайный
-        // запуск не уводит бота с вебхука молча.
-        'telegram_student' => [
-            'poll_enabled' => env('TELEGRAM_STUDENT_POLL_ENABLED', false),
-            'poll_timeout_seconds' => env('TELEGRAM_STUDENT_POLL_TIMEOUT_SECONDS', 50),
-            'poll_retry_seconds' => env('TELEGRAM_STUDENT_POLL_RETRY_SECONDS', 10),
-            'poll_max_lifetime_seconds' => env('TELEGRAM_STUDENT_POLL_MAX_LIFETIME_SECONDS', 3600),
-        ],
-
         'admin_id' => env('ADMIN_TELEGRAM_ID'),
 
         // Оператор дожима (решение MG 24-08-2026): числовой chat_id получателя
@@ -381,6 +369,18 @@ return [
         // Пауза после ошибки getUpdates, чтобы не молотить впустую при
         // недоступности Telegram (туннель упал, сеть моргнула).
         'poll_retry_seconds' => (int) env('TELEGRAM_ZAPISI_POLL_RETRY_SECONDS', 10),
+    ],
+
+    // Аварийный long polling кабинетного (студенческого) бота (telegram:poll-student),
+    // зеркало telegram_zapisi: штатная дорожка — вебхук; поллинг включается только
+    // когда входной узел вебхуков недоступен (инцидент 06-09-2026, «Connection
+    // timed out» от подсетей Telegram с ~21-08). Дефолт false — случайный запуск
+    // не уводит бота с вебхука молча.
+    'telegram_student' => [
+        'poll_enabled' => (bool) env('TELEGRAM_STUDENT_POLL_ENABLED', false),
+        'poll_timeout_seconds' => (int) env('TELEGRAM_STUDENT_POLL_TIMEOUT_SECONDS', 50),
+        'poll_retry_seconds' => (int) env('TELEGRAM_STUDENT_POLL_RETRY_SECONDS', 10),
+        'poll_max_lifetime_seconds' => (int) env('TELEGRAM_STUDENT_POLL_MAX_LIFETIME_SECONDS', 3600),
     ],
 
     'vk' => [
