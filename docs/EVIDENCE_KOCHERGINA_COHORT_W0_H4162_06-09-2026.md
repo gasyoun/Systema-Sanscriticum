@@ -93,3 +93,12 @@ Caveats (do not downgrade to PARTIAL, recorded for W1): per-student activation s
 _Provenance: H4162, OxAlpha — GLM 5.3 Flash (`zai-coding-plan/glm-5.3-flash`), 06-09-2026._
 
 _Dr. Mārcis Gasūns_
+
+## 9. W1 addendum — the flip (06-09-2026, MG ruling «flip» in chat)
+
+The human-gated switch was ruled ON the same day. `config/cohort_courses.php` now carries the
+`kochergina-gr61` entry (`course_slug` `grammatika-po-kocerginoi-gr61`, `enabled` env-gated via
+`KOCHERGINA_GR61_COHORT_ENABLED`, **no `packs` key**): the slug-keyed entitlement surface goes
+live on prod via the env line, while the reader surface stays absent (404) and the course's real
+access path (ordinary checkout → `grantAccess()` → groups) is untouched — zero student-visible
+change. Env inventory regenerated (832→834 keys). Rollback: remove/flip the env line → `config:cache`.
