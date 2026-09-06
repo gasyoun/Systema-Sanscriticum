@@ -11,6 +11,7 @@ use App\Models\Lesson;
 use App\Models\Payment;
 use App\Models\SupportAnswerSuggestion;
 use App\Models\User;
+use App\Services\AccessDiagnosticsService;
 use App\Services\Support\SupportAnswerFactResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -20,7 +21,7 @@ use Tests\TestCase;
  * H3999 (рулинг A1): резолвер состояния доступа.
  *
  * Второй логики доступа не заводим: открытость урока считает
- * {@see \App\Services\AccessDiagnosticsService::isLessonAccessible()} — тот же
+ * {@see AccessDiagnosticsService::isLessonAccessible()} — тот же
  * код, что решает, пустить ли студента на урок в кабинете. Тест проверяет, что
  * черновик называет ЭТИ числа и что политика — только черновик.
  */

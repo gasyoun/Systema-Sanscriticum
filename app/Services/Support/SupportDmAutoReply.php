@@ -923,7 +923,10 @@ final class SupportDmAutoReply
     {
         $id = config('support.escalation.finance_lead_user_id');
 
-        return $id === null ? null : User::query()->find((int) $id);
+        // Пустая строка из .env — это «не задано», а не пользователь #0.
+        return $id === null || trim((string) $id) === ''
+            ? null
+            : User::query()->find((int) $id);
     }
 
     /**

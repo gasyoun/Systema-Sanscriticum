@@ -11,6 +11,7 @@ use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
+use App\Services\Support\SupportHintSendButton;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -23,7 +24,7 @@ use Tests\TestCase;
  * черновиков draft_only (деньги, доступ, сертификат), у которых кнопки в
  * Telegram нет вовсе.
  *
- * Отправка идёт тем же {@see \App\Services\Support\SupportHintSendButton::deliver()},
+ * Отправка идёт тем же {@see SupportHintSendButton::deliver()},
  * что и кнопка: тест это и проверяет — по одному исходящему на черновик,
  * повторное нажатие ничего не добавляет.
  */

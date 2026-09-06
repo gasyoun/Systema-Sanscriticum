@@ -108,9 +108,7 @@ return [
      | списке follow-up'ов), это осознанная деградация, а не потеря.
      */
     'escalation' => [
-        'finance_lead_user_id' => env('SUPPORT_FINANCE_LEAD_USER_ID') === null
-            ? null
-            : (int) env('SUPPORT_FINANCE_LEAD_USER_ID'),
+        'finance_lead_user_id' => env('SUPPORT_FINANCE_LEAD_USER_ID'),
     ],
 
     /*
