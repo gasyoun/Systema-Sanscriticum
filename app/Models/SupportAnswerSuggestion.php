@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use App\Services\Support\SupportAnswerFactResolver;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -80,5 +81,43 @@ class SupportAnswerSuggestion extends Model
     public function scopePending(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_PENDING);
+    }
+
+    /**
+     * H3999, рулинг A1: политика отправки, записанная в черновик резолвером.
+     *
+     * Живёт в `facts`, а не в отдельной колонке, потому что описывает ИМЕННО
+     * этот текст: категорию куратор в админке поменять может, а метка уезжает
+     * вместе с черновиком, который она описывает. Черновики, заведённые до
+     * H3999, метки не несут — они все из FAQ и потому «auto».
+     */
+    public function sendPolicy(): string
+    {
+        $facts = is_array($this->facts) ? $this->facts : [];
+
+        return (string) ($facts['send_policy'] ?? SupportAnswerFactResolver::POLICY_AUTO);
+    }
+
+    /**
+     * Черновик, который НИКОГДА не уходит студенту одним нажатием: деньги,
+     * доступ, сертификат (рулинг A1) и эскалации.
+     *
+     * Две защёлки, и вторая не лишняя: метку политики можно не проставить
+     * (черновик до H3999, ручная правка), а тип факта из денежного списка
+     * запрещает отправку сам по себе.
+     */
+    public function isDraftOnly(): bool
+    {
+        if ($this->sendPolicy() !== SupportAnswerFactResolver::POLICY_AUTO) {
+            return true;
+        }
+
+        $facts = is_array($this->facts) ? $this->facts : [];
+
+        return in_array(
+            (string) ($facts['fact_type'] ?? ''),
+            SupportAnswerFactResolver::NEVER_AUTO_TYPES,
+            true,
+        );
     }
 }
