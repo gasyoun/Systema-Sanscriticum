@@ -575,7 +575,14 @@ final class SupportDmAutoReply
 
         // H3765 A5: черновик под одну кнопку. Заводим его ДО отправки подсказки —
         // клавиатура несёт его id, и без записи кнопке нечего было бы отправить.
-        $suggestion = $this->oneTapSuggestion($incoming, $user, $category, $text, $hits, $resolvedFacts);
+        //
+        // H3999, рулинг A1: при расхождении по деньгам черновика нет ВООБЩЕ.
+        // Иначе куратор получил бы под кнопку общую статью из FAQ («Оплата
+        // из-за рубежа») ровно в тот момент, когда сумма спорная, — а «студенту
+        // не уходит ничего» означает ничего, включая канреплай в один тап.
+        $suggestion = $escalation !== null
+            ? null
+            : $this->oneTapSuggestion($incoming, $user, $category, $text, $hits, $resolvedFacts);
         $sendable = $suggestion !== null && ! $suggestion->isDraftOnly();
 
         if ($sendable) {
@@ -659,21 +666,37 @@ final class SupportDmAutoReply
             return null;
         }
 
-        $draft = $hits === [] ? null : $this->faqDraft($hits);
+        // Порядок источников: СНАЧАЛА факты студента, потом FAQ, потом шаблон.
+        //
+        // Факты выше FAQ намеренно (H3999, найдено тестом забора): на вопрос
+        // «сколько мне осталось доплатить» ретривер уверенно достаёт статью
+        // «Сколько длится обучение» — та же категория, другой вопрос. Пока FAQ
+        // шёл первым, куратор получал под кнопку общую статью ВМЕСТО расчёта
+        // по кабинету этого студента, а посчитанный остаток не доезжал никуда.
+        // Данные конкретного человека всегда точнее общей статьи.
+        $draft = null;
         $kind = 'faq';
-        $confidence = (float) ($hits[0]['score'] ?? 0.0);
+        $confidence = 0.0;
         $policy = SupportAnswerFactResolver::POLICY_AUTO;
-        $extraFacts = $draft === null ? [] : [
-            'faq_chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
-            'faq_title' => (string) ($hits[0]['title'] ?? ''),
-        ];
+        $extraFacts = [];
 
-        if ($draft === null && $resolvedFacts !== null && trim((string) $resolvedFacts['draft']) !== '') {
+        if ($resolvedFacts !== null && trim((string) $resolvedFacts['draft']) !== '') {
             $draft = (string) $resolvedFacts['draft'];
             $kind = 'facts';
             $confidence = (float) ($resolvedFacts['confidence'] ?? 0.0);
             $policy = (string) ($resolvedFacts['send_policy'] ?? SupportAnswerFactResolver::POLICY_DRAFT_ONLY);
             $extraFacts = ['fact_type' => (string) ($resolvedFacts['facts']['type'] ?? '')];
+        }
+
+        if ($draft === null && $hits !== []) {
+            $draft = $this->faqDraft($hits);
+            $kind = 'faq';
+            $confidence = (float) ($hits[0]['score'] ?? 0.0);
+            $policy = SupportAnswerFactResolver::POLICY_AUTO;
+            $extraFacts = $draft === null ? [] : [
+                'faq_chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
+                'faq_title' => (string) ($hits[0]['title'] ?? ''),
+            ];
         }
 
         if ($draft === null) {
@@ -879,11 +902,10 @@ final class SupportDmAutoReply
             return '💸 Расхождение по оплате — студенту ничего не ушло. Задача не заведена: features.support_follow_up_tasks выключен.';
         }
 
-        $thread = $this->conversations->currentFor($user);
-
-        if ($thread === null) {
-            return '💸 Расхождение по оплате — студенту ничего не ушло. Тред поддержки не найден, задача не заведена.';
-        }
+        // Тред открываем, если открытого нет: follow-up цепляется к треду, и
+        // «задачи нет, потому что треда не было» — худший исход расхождения по
+        // деньгам. Открытие треда здесь не отправляет студенту ничего.
+        $thread = $this->conversations->currentFor($user) ?? $this->conversations->openFor($user);
 
         $this->followUps->create(
             $thread,
