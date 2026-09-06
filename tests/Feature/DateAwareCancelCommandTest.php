@@ -36,7 +36,7 @@ class DateAwareCancelCommandTest extends TestCase
     private function seedTeacherWorld(): array
     {
         $teacher = Teacher::create(['name' => 'Препод Свой']);
-        $course = Course::create(['title' => 'Курс', 'teacher_id' => $teacher->id]);
+        $course = Course::create(['title' => 'Курс', 'slug' => 'crs-'.substr(md5(uniqid('', true)), 0, 10), 'teacher_id' => $teacher->id]);
         $group = Group::create(['name' => 'Своя группа', 'telegram_chat_id' => self::CHAT_ID]);
         $course->groups()->attach($group->id);
         User::create([
@@ -111,11 +111,14 @@ class DateAwareCancelCommandTest extends TestCase
         Redis::shouldReceive('set')->never();
         $this->seedTeacherWorld();
 
-        $foreign = Group::create(['name' => 'Чужая группа', 'telegram_chat_id' => self::CHAT_ID]);
+        // Чужой группе — свой chat id: матч чата ведёт в ЕЁ чат, а преподаватель
+        // ею не руководит. (Один chat_id на две группы сделал бы матч недетерминированным.)
+        $foreign = Group::create(['name' => 'Чужая группа', 'telegram_chat_id' => '-100888']);
         $row = $this->scheduleAt(now()->addDays(10)->format('Y-m-d'), 'Чужое занятие', $foreign->id);
 
         app(DateAwareCancelService::class)->handle($this->message(
-            'Отмена '.$row->start->format('d.m')
+            'Отмена '.$row->start->format('d.m'),
+            ['chat' => ['id' => '-100888', 'type' => 'supergroup']]
         ));
 
         $this->assertFalse($row->fresh()->trashed());

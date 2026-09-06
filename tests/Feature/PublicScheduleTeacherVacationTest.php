@@ -30,7 +30,7 @@ class PublicScheduleTeacherVacationTest extends TestCase
     public function test_teacher_window_marks_group_on_vacation_with_resume_date(): void
     {
         $teacher = Teacher::create(['name' => 'Препод']);
-        $course = Course::create(['title' => 'Курс', 'teacher_id' => $teacher->id]);
+        $course = Course::create(['title' => 'Курс', 'slug' => 'crs-'.substr(md5(uniqid('', true)), 0, 10), 'teacher_id' => $teacher->id]);
         $group = Group::create(['name' => 'Группа']);
         $course->groups()->attach($group->id);
         $teacher->forceFill([
@@ -52,7 +52,7 @@ class PublicScheduleTeacherVacationTest extends TestCase
     public function test_open_teacher_window_marks_vacation_without_resume_date(): void
     {
         $teacher = Teacher::create(['name' => 'Препод']);
-        $course = Course::create(['title' => 'Курс', 'teacher_id' => $teacher->id]);
+        $course = Course::create(['title' => 'Курс', 'slug' => 'crs-'.substr(md5(uniqid('', true)), 0, 10), 'teacher_id' => $teacher->id]);
         $group = Group::create(['name' => 'Группа']);
         $course->groups()->attach($group->id);
         $teacher->forceFill(['on_vacation_from' => '2026-09-23'])->save();
@@ -71,7 +71,7 @@ class PublicScheduleTeacherVacationTest extends TestCase
     public function test_outside_window_and_no_group_flag_means_regular(): void
     {
         $teacher = Teacher::create(['name' => 'Препод']);
-        $course = Course::create(['title' => 'Курс', 'teacher_id' => $teacher->id]);
+        $course = Course::create(['title' => 'Курс', 'slug' => 'crs-'.substr(md5(uniqid('', true)), 0, 10), 'teacher_id' => $teacher->id]);
         $group = Group::create(['name' => 'Группа']);
         $course->groups()->attach($group->id);
         $teacher->forceFill([
@@ -93,7 +93,7 @@ class PublicScheduleTeacherVacationTest extends TestCase
     public function test_group_flag_still_wins_as_before(): void
     {
         $teacher = Teacher::create(['name' => 'Препод']);
-        $course = Course::create(['title' => 'Курс', 'teacher_id' => $teacher->id]);
+        $course = Course::create(['title' => 'Курс', 'slug' => 'crs-'.substr(md5(uniqid('', true)), 0, 10), 'teacher_id' => $teacher->id]);
         $group = Group::create(['name' => 'Группа']);
         $course->groups()->attach($group->id);
         $group->forceFill(['is_on_vacation' => true, 'vacation_resume_date' => '2026-09-30'])->save();

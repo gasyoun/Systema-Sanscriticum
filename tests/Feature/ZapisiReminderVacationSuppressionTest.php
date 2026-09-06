@@ -30,6 +30,7 @@ class ZapisiReminderVacationSuppressionTest extends TestCase
     {
         parent::setUp();
         Queue::fake();
+        config(['features.telegram_zapisi_bot' => true]);
     }
 
     private function seedWorld(): array
@@ -37,6 +38,7 @@ class ZapisiReminderVacationSuppressionTest extends TestCase
         $teacher = Teacher::create(['name' => 'Препод Отпуск']);
         $course = Course::create([
             'title' => 'Курс',
+            'slug' => 'crs-'.substr(md5(uniqid('', true)), 0, 10),
             'teacher_id' => $teacher->id,
             'zoom_link' => 'https://zoom.us/j/course',
         ]);

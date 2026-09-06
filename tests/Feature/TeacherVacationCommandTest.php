@@ -28,7 +28,7 @@ class TeacherVacationCommandTest extends TestCase
     private function seedTeacherWorld(): array
     {
         $teacher = Teacher::create(['name' => 'Толчельников Иван Евгеньевич']);
-        $course = Course::create(['title' => 'Грамматика по Кочергиной', 'teacher_id' => $teacher->id]);
+        $course = Course::create(['title' => 'Грамматика по Кочергиной', 'slug' => 'crs-'.substr(md5(uniqid('', true)), 0, 10), 'teacher_id' => $teacher->id]);
         $group = Group::create(['name' => 'Гр.62', 'telegram_chat_id' => self::CHAT_ID]);
         $course->groups()->attach($group->id);
         $user = User::create([

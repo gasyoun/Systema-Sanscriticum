@@ -96,7 +96,7 @@ final class VacationCommandService
     /**
      * @param  array{from: Carbon, until: ?Carbon}  $window
      */
-    private function applyToTeacher(Teacher $teacher, bool $clear, array $window, string $chatId, string $role): void
+    private function applyToTeacher(Teacher $teacher, bool $clear, ?array $window, string $chatId, string $role): void
     {
         if ($clear) {
             $teacher->forceFill(['on_vacation_from' => null, 'on_vacation_until' => null])->save();
@@ -206,6 +206,11 @@ final class VacationCommandService
 
     private function resolveDate(int $day, int $month, ?string $year): ?Carbon
     {
+        // Неотматченная опциональная группа preg_match даёт '' , а не null.
+        if ($year === '') {
+            $year = null;
+        }
+
         if ($day < 1 || $day > 31 || $month < 1 || $month > 12) {
             return null;
         }
