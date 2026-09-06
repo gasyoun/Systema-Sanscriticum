@@ -140,6 +140,11 @@ final class SubscriptionRecordedTest extends MembershipTestCase
         $this->assertFalse((bool) $fresh->refresh()->club_included, 'свежий поток остаётся эксклюзивным');
         $this->assertFalse((bool) $noSchedule->refresh()->club_included, 'без расписания окно не открывается');
         $this->assertFalse((bool) $liveFormat->refresh()->club_included, 'живой формат не входит в архив записей');
+
+        // Backfill (одноразовый, только руками): спина-каталог без расписаний
+        // входит в архив; шедулер без флага по-прежнему строг.
+        $this->artisan('subscription:refresh-archive', ['--backfill' => true])->assertSuccessful();
+        $this->assertTrue((bool) $noSchedule->refresh()->club_included, 'backfill включает безрасписную спину-каталог');
     }
 
     // --- Скидка лояльности 5% первого года ---

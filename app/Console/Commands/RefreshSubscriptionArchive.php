@@ -24,13 +24,16 @@ use Illuminate\Support\Carbon;
  */
 class RefreshSubscriptionArchive extends Command
 {
-    protected $signature = 'subscription:refresh-archive {--dry-run : показать план без записи}';
+    protected $signature = 'subscription:refresh-archive
+        {--dry-run : показать план без записи}
+        {--backfill : одноразовый вход безрасписной спины-каталоги (format=recorded задолго старше окна); шедулер так НЕ делает}';
 
     protected $description = 'H3916: включить записные курсы в архив подписки спустя 6 месяцев после последнего занятия';
 
     public function handle(): int
     {
         $dryRun = (bool) $this->option('dry-run');
+        $backfill = (bool) $this->option('backfill');
         $cutoff = Carbon::now()->subMonths(6);
 
         $candidates = Course::query()
@@ -47,6 +50,24 @@ class RefreshSubscriptionArchive extends Command
             $last = $course->streamLastSessionAt();
 
             if ($last === null) {
+                // Расписание чистится ретенцией (на проде строки с 2025-09):
+                // спина-каталог 2024/25 доказательства даты не имеет вовсе.
+                // format=recorded сам является маркером «поток завершён, записи
+                // опубликованы» (H266), а такие курсы давным-давно старше
+                // 6 месяцев. Вход — ТОЛЬКО явным --backfill, шедулер строг.
+                if ($backfill) {
+                    $this->line("join archive (backfill, no schedule evidence): {$course->id} {$course->title}");
+                    if (! $dryRun) {
+                        $course->forceFill([
+                            'club_included' => true,
+                            'subscription_archive_joined_at' => Carbon::today(),
+                        ])->save();
+                    }
+                    $joined++;
+
+                    continue;
+                }
+
                 $noSchedule++;
                 $this->line("skip (no schedule evidence): {$course->id} {$course->title}");
 
