@@ -31,6 +31,23 @@
 
     @include('student.partials.onboarding-checklist')
 
+    {{-- Анкета «Знакомство»: один раз на пользователя, пока не заполнена (рулинг MG 25-08-2026) --}}
+    @if (config('surveys.enabled')
+        && ! \App\Models\SurveyResponse::where('user_id', auth()->id())->where('survey_slug', 'onboarding')->exists())
+        <div class="mb-6 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 to-white shadow-sm px-5 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+            <div class="min-w-0">
+                <p class="font-bold text-sm text-[#101010] flex items-center gap-2">
+                    <i class="fas fa-wand-magic-sparkles text-brand"></i> Помогите подобрать вам группу
+                </p>
+                <p class="text-gray-500 text-xs mt-0.5">Две минуты о вас — и куратор предложит курс и слот по силам.</p>
+            </div>
+            <a href="{{ route('survey.show', ['slug' => 'onboarding']) }}"
+               class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-bold hover:bg-orange-700 transition-colors shadow-sm">
+                Заполнить анкету <i class="fas fa-arrow-right text-xs"></i>
+            </a>
+        </div>
+    @endif
+
     @include('student.partials.homework-alerts')
 
     {{-- session('error'|'success') — self-service долг, CSRF 419, перенос даты.
