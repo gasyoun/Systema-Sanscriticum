@@ -63,7 +63,7 @@ class DatedCancelCommandTest extends TestCase
         ]);
 
         $this->assertSoftDeleted($target);
-        $this->assertNull($untouched->fresh());
+        $this->assertNull($untouched->fresh()->deleted_at);
         Queue::assertPushed(SendZapisiBotMessageJob::class, fn (SendZapisiBotMessageJob $job): bool => $job->chatId === self::CHAT_ID && str_contains($job->text, 'без переноса'));
     }
 
