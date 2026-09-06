@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\ArticleView;
 use App\Models\ContentCandidate;
 use App\Models\Course;
+use App\Models\IpExpense;
 use App\Models\LandingPage;
 use App\Models\Lead;
 use App\Models\LectureClip;
@@ -16,6 +17,7 @@ use App\Models\Schedule;
 use App\Observers\ArticleViewObserver;
 use App\Observers\ContentCandidateObserver;
 use App\Observers\CourseCoverWebpObserver;
+use App\Observers\IpExpenseAuditObserver;
 use App\Observers\LandingPageObserver;
 use App\Observers\LeadAuditObserver;
 use App\Observers\LectureClipObserver;
@@ -182,7 +184,7 @@ class AppServiceProvider extends ServiceProvider
         Payment::observe(PaymentAuditObserver::class);
 
         // Аудит контура «Расходы ИП» (H4188) — конвенции payment_audits.
-        \App\Models\IpExpense::observe(\App\Observers\IpExpenseAuditObserver::class);
+        IpExpense::observe(IpExpenseAuditObserver::class);
 
         // Baseline-телеметрия ремейка кабинета (H962): access.renewal.complete.
         Payment::observe(PaymentTelemetryObserver::class);
