@@ -14,6 +14,7 @@ use App\Models\SupportAnswerSuggestion;
 use App\Models\Tariff;
 use App\Models\User;
 use App\Services\AccessDiagnosticsService;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
 /**
@@ -502,14 +503,22 @@ class SupportAnswerFactResolver
         $activeGroupIds = $user->activeGroups->pluck('id')->all();
         $foreignGroup = $latest->group_id !== null && ! in_array((int) $latest->group_id, array_map('intval', $activeGroupIds), true);
 
-        $issuedAt = $latest->issued_at !== null ? $this->formatDate($latest->issued_at) : null;
+        // `certificates.issued_at` — колонка типа date, NOT NULL и БЕЗ каста в
+        // модели: приходит строкой, и «даты нет» не бывает вовсе (модель на
+        // creating подставляет now()). Поэтому Carbon::parse, а не formatDate от
+        // объекта, и ветка «ещё не выдан» опирается на дату В БУДУЩЕМ — это
+        // единственное «ещё не выдан», которое схема умеет выразить.
+        $issuedAt = CarbonImmutable::parse((string) $latest->issued_at);
+        $pending = $issuedAt->isAfter(CarbonImmutable::now());
+
         $label = $latest->documentLabel();
         $course = trim((string) $latest->displayCourseTitle());
 
-        if ($issuedAt === null) {
-            $draft = "{$label} по курсу «{$course}» оформлен, но ещё не выдан — дата выдачи в кабинете пока не проставлена.";
+        if ($pending) {
+            $draft = "{$label} по курсу «{$course}» оформлен, дата выдачи — {$this->formatDate($issuedAt)}."
+                .' До этой даты документ в кабинете не появится.';
         } else {
-            $draft = "{$label} по курсу «{$course}» выдан {$issuedAt}"
+            $draft = "{$label} по курсу «{$course}» выдан {$this->formatDate($issuedAt)}"
                 .($latest->number ? ", номер {$latest->number}" : '')
                 .'. Документ доступен в личном кабинете.';
         }
@@ -523,7 +532,8 @@ class SupportAnswerFactResolver
             'facts' => [
                 'type' => self::TYPE_CERTIFICATE,
                 'certificate_id' => $latest->id,
-                'issued_at' => optional($latest->issued_at)->toDateString(),
+                'issued_at' => $issuedAt->toDateString(),
+                'pending' => $pending,
                 'group_id' => $latest->group_id === null ? null : (int) $latest->group_id,
                 'foreign_group' => $foreignGroup,
                 'total' => $certificates->count(),
