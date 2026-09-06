@@ -32,6 +32,18 @@ use Illuminate\Support\Facades\Log;
  *  2) {@see TelegramSendGuard} claim по (чат, текст) — фенс репозитория требует
  *     клейм перед ЛЮБОЙ новой точкой отправки (инцидент 24-08-2026), и он же
  *     ловит случай, когда тот же текст уже уехал другой дорогой.
+ *
+ * H3999 (шаг I1a/I1b). Черновики теперь бывают не только из FAQ, и часть из них
+ * отправлять одним нажатием НЕЛЬЗЯ вообще: остаток по оплате, состояние доступа,
+ * сертификат (рулинг A1). Кнопки под такими подсказками не появляется, но это
+ * оформление, а не защита — защита здесь: {@see self::deliver()} отказывает
+ * draft-only черновику на дорожке из Telegram и пропускает его только из очереди
+ * черновиков админки, где куратор видит текст целиком и правит его перед
+ * отправкой. Резолвер МЕТИТ, отправитель РЕШАЕТ.
+ *
+ * Та же {@see self::deliver()} — единственная точка отправки черновика и для
+ * очереди в админке: два разных кода «отправить черновик» разошлись бы по
+ * клейму или по статусу в первый же месяц.
  */
 final class SupportHintSendButton
 {
@@ -78,6 +90,14 @@ final class SupportHintSendButton
             return;
         }
 
+        if ($suggestion->isDraftOnly()) {
+            // Рулинг A1: деньги, доступ и сертификат уходят студенту только
+            // через очередь черновиков, где куратор читает текст целиком.
+            $this->notifier->answerCallback($callbackId, 'Требует проверки — откройте очередь черновиков в админке.');
+
+            return;
+        }
+
         $maxAgeDays = max(1, (int) config('support.hint_send_button_max_age_days', 7));
         if ($suggestion->created_at !== null && $suggestion->created_at->lt(now()->subDays($maxAgeDays))) {
             // Пролистали старый чат и нажали — отвечать студенту нечего.
@@ -88,11 +108,50 @@ final class SupportHintSendButton
             return;
         }
 
-        $student = $suggestion->user_id === null ? null : User::query()->find($suggestion->user_id);
-        if ($student === null) {
-            $this->notifier->answerCallback($callbackId, 'Студент не привязан — ответьте вручную.');
+        $result = $this->deliver(
+            $suggestion,
+            $this->tapperUserId((string) $tapperId),
+            SupportDmAutoReply::EVENT_HINT_SEND_TAPPED,
+            ['tapped_by_telegram_id' => (string) $tapperId],
+        );
 
-            return;
+        $this->notifier->answerCallback($callbackId, $result['message']);
+    }
+
+    /**
+     * Отправить черновик студенту. ЕДИНСТВЕННАЯ точка отправки черновика —
+     * и для кнопки под подсказкой, и для очереди черновиков в админке.
+     *
+     * Инварианты (все три уже ломались в этом контуре):
+     *  1) клейм {@see TelegramSendGuard} строго ДО постановки исходящего —
+     *     фенс репозитория после инцидента 24-08-2026;
+     *  2) точно известный отказ отпускает клейм (повтор осмыслен), а
+     *     подавленный клейм закрывает черновик как отправленный;
+     *  3) статус черновика меняется ровно один раз.
+     *
+     * @param  array<string, mixed>  $metaExtra
+     * @return array{status: string, message: string}
+     */
+    public function deliver(
+        SupportAnswerSuggestion $suggestion,
+        ?int $resolvedBy,
+        string $eventType,
+        array $metaExtra = [],
+    ): array {
+        $incoming = TelegramSupportMessage::query()->find((int) $suggestion->source_id);
+
+        if ($incoming === null) {
+            return ['status' => 'no_source', 'message' => 'Исходное сообщение не найдено.'];
+        }
+
+        if ($suggestion->status !== SupportAnswerSuggestion::STATUS_PENDING) {
+            return ['status' => 'already', 'message' => 'Уже отправлено.'];
+        }
+
+        $student = $suggestion->user_id === null ? null : User::query()->find($suggestion->user_id);
+
+        if ($student === null) {
+            return ['status' => 'unlinked', 'message' => 'Студент не привязан — ответьте вручную.'];
         }
 
         $draft = (string) $suggestion->draft_text;
@@ -102,13 +161,11 @@ final class SupportHintSendButton
             // Тот же текст в тот же чат уже уходил внутри окна дедупа.
             $suggestion->forceFill([
                 'status' => SupportAnswerSuggestion::STATUS_ACCEPTED,
-                'resolved_by' => $this->tapperUserId((string) $tapperId),
+                'resolved_by' => $resolvedBy,
                 'resolved_at' => now(),
             ])->save();
 
-            $this->notifier->answerCallback($callbackId, 'Уже отправлено.');
-
-            return;
+            return ['status' => 'suppressed', 'message' => 'Уже отправлено.'];
         }
 
         $outgoing = $this->replies->queueAiReply($student, $draft, (int) $incoming->telegram_message_id);
@@ -123,30 +180,34 @@ final class SupportHintSendButton
                 'user_id' => $student->id,
             ]);
 
-            $this->notifier->answerCallback($callbackId, 'Не удалось поставить в очередь — ответьте вручную.');
-
-            return;
+            return ['status' => 'queue_failed', 'message' => 'Не удалось поставить в очередь — ответьте вручную.'];
         }
 
         $suggestion->forceFill([
-            'status' => SupportAnswerSuggestion::STATUS_ACCEPTED,
-            'resolved_by' => $this->tapperUserId((string) $tapperId),
+            // Правка в очереди черновиков НЕ меняет статус (иначе черновик
+            // перестал бы быть pending и отправить его стало бы нельзя) —
+            // она ставит метку в facts, и итоговый статус читает её здесь.
+            'status' => (is_array($suggestion->facts) && ($suggestion->facts['edited'] ?? false))
+                ? SupportAnswerSuggestion::STATUS_EDITED
+                : SupportAnswerSuggestion::STATUS_ACCEPTED,
+            'resolved_by' => $resolvedBy,
             'resolved_at' => now(),
         ])->save();
 
         SupportAiReplyEvent::create([
             'telegram_support_message_id' => $outgoing->id,
-            'event_type' => SupportDmAutoReply::EVENT_HINT_SEND_TAPPED,
+            'event_type' => $eventType,
             'meta' => [
                 'via' => SupportDmAutoReply::VIA,
                 'suggestion_id' => $suggestion->id,
                 'category' => $suggestion->category,
-                'tapped_by_telegram_id' => (string) $tapperId,
+                'send_policy' => $suggestion->sendPolicy(),
                 'source_telegram_message_id' => (int) $incoming->telegram_message_id,
+                ...$metaExtra,
             ],
         ]);
 
-        $this->notifier->answerCallback($callbackId, 'Отправлено ✅');
+        return ['status' => 'sent', 'message' => 'Отправлено ✅'];
     }
 
     /**
