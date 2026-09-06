@@ -31,7 +31,7 @@
         "laravel/socialite": "^5.11",
         "laravel/tinker": "^3.0",
         "league/flysystem-webdav": "^3.31",
-        "maxmind-db/reader": "1.12",
+        "maxmind-db/reader": "1.13.1",
         "mokhosh/filament-kanban": "dev-l13-compatibility as 2.11.0",
         "nelexa/zip": "^4.0",
         "pxlrbt/filament-excel": "^2.5",
