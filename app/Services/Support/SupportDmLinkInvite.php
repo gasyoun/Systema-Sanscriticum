@@ -188,6 +188,69 @@ final class SupportDmLinkInvite
         ];
     }
 
+    /**
+     * H3999 (шаг I3): поимённый список для РУЧНОЙ привязки — контакты без
+     * связи с кабинетом, написавшие в ЛС не меньше `$minMessages` раз.
+     *
+     * Два и более сообщения — это уже не «зашёл посмотреть», а человек, чьи
+     * вопросы бот не может решить в принципе: без связи с кабинетом ни один
+     * резолвер фактов не знает, о ком речь. Именно этот список и есть потолок
+     * волны 1 (риск 1 регистра рисков).
+     *
+     * Сопоставления по телефону или @username здесь нет и не будет: неверное
+     * сопоставление ответило бы одному студенту остатком другого.
+     *
+     * @return list<array{contact_id: int, chat_id: int, messages: int, first_seen: ?string, last_seen: ?string, invited_at: ?string}>
+     */
+    public function unlinkedWithMessages(int $days, int $minMessages = 2): array
+    {
+        $windowStart = now()->subDays(max(1, $days));
+
+        $contacts = TelegramSupportContact::query()
+            ->whereNull('linked_user_id')
+            ->whereHas('chat', fn ($q) => $q
+                ->where('type', 'private')
+                ->where('last_message_at', '>=', $windowStart))
+            ->with('chat')
+            ->get();
+
+        $rows = [];
+
+        foreach ($contacts as $contact) {
+            if ($contact->chat === null) {
+                continue;
+            }
+
+            $messages = $contact->chat->messages()
+                ->where('direction', 'incoming')
+                ->where('sent_at', '>=', $windowStart)
+                ->count();
+
+            if ($messages < max(1, $minMessages)) {
+                continue;
+            }
+
+            $bounds = $contact->chat->messages()
+                ->where('direction', 'incoming')
+                ->where('sent_at', '>=', $windowStart)
+                ->selectRaw('MIN(sent_at) as first_seen, MAX(sent_at) as last_seen')
+                ->first();
+
+            $rows[] = [
+                'contact_id' => (int) $contact->id,
+                'chat_id' => (int) $contact->chat->telegram_chat_id,
+                'messages' => $messages,
+                'first_seen' => $bounds?->first_seen === null ? null : (string) $bounds->first_seen,
+                'last_seen' => $bounds?->last_seen === null ? null : (string) $bounds->last_seen,
+                'invited_at' => optional($contact->link_invited_at)->toIso8601String(),
+            ];
+        }
+
+        usort($rows, static fn (array $a, array $b): int => $b['messages'] <=> $a['messages']);
+
+        return $rows;
+    }
+
     public function invitedWithinCooldown(TelegramSupportContact $contact): bool
     {
         if ($contact->link_invited_at === null) {

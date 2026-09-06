@@ -275,6 +275,20 @@ return [
     'support_dm_link_invite' => (bool) env('SUPPORT_DM_LINK_INVITE', false),
 
     /*
+     | H3999 (рулинг A5): SLA-развёртка по открытым тредам без ответа. Слот в
+     | планировщике молчит, пока флаг выключен; ручной прогон —
+     | php artisan support:sla-escalate --dry.
+     */
+    'support_sla_escalation' => (bool) env('SUPPORT_SLA_ESCALATION', false),
+
+    /*
+     | H3999 (рулинг I1b): очередь черновиков в админке рядом с «Аналитикой» —
+     | Отправить / Изменить / Пропустить. Пункт меню не показывается, пока
+     | флаг выключен.
+     */
+    'support_draft_queue' => (bool) env('SUPPORT_DRAFT_QUEUE', false),
+
+    /*
      | H3242: утренняя сводка вчерашней поддержки в Telegram на ADMIN_TELEGRAM_ID
      | (gasyoun). ВКЛ по умолчанию — админский дайджест по явной просьбе, не
      | студенческий автоответ. Выкл: SUPPORT_DAILY_DIGEST=false + config:cache.

@@ -274,6 +274,30 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('support-auto-reply-weekly');
 
+        // H3999 (шаг I3): недельный список незалинкованных контактов с 2+
+        // сообщениями — для РУЧНОЙ привязки. Ничего студентам не шлёт; гейт —
+        // тот же флаг приглашения, потому что без него список некуда девать.
+        // Ручной просмотр: php artisan support:link-invite-census --dry.
+        $schedule->command('support:link-invite-census')
+            ->sundays()
+            ->at('18:20')
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.support_dm_link_invite'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('support-link-invite-census');
+
+        // H3999 (рулинг A5): SLA-сеть по открытым тредам без ответа. Каждые
+        // пять минут — порог считается в РАБОЧИХ минутах, и более редкий слот
+        // размазал бы обещанные 15 минут до получаса. Тихие часы и пустой
+        // список кураторов команда отбивает сама; флаг default OFF.
+        $schedule->command('support:sla-escalate')
+            ->everyFiveMinutes()
+            ->when(fn () => (bool) config('features.support_sla_escalation'))
+            ->withoutOverlapping(5)
+            ->onOneServer()
+            ->name('support-sla-escalate');
+
         // H4001 (Wave 3 leverage-плана): индексация FAQ-корпуса в
         // knowledge_chunks. Двойной гейт — флаг гибрида (OFF по умолчанию) И
         // настроенный драйвер эмбеддингов: пока dense-нога не включена
