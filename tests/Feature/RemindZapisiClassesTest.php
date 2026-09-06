@@ -235,4 +235,55 @@ class RemindZapisiClassesTest extends TestCase
         Queue::assertNothingPushed();
         $this->assertNull($schedule->fresh()->zapisi_reminded_at);
     }
+
+    /** H4253: группа на каникулах (group-level, H3790) — напоминание не шлём, БЕЗ пометки. */
+    public function test_skips_schedule_of_group_on_vacation(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create([
+            'name' => 'Группа на каникулах',
+            'telegram_chat_id' => '-100777',
+            'is_on_vacation' => true,
+        ]);
+        $schedule = Schedule::create([
+            'title' => 'Занятие',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/777',
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertNothingPushed();
+        $this->assertNull($schedule->fresh()->zapisi_reminded_at);
+    }
+
+    /** H4253: teacher-level отпуск (Teacher.on_vacation_from/until), покрывающий дату занятия. */
+    public function test_skips_schedule_when_leading_teacher_on_vacation(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $teacher = Teacher::create(['name' => 'Иванов И.И.', 'email' => 'ivanov@example.com']);
+        $teacher->update([
+            'on_vacation_from' => now()->subDay()->toDateString(),
+            'on_vacation_until' => now()->addWeek()->toDateString(),
+        ]);
+        $course = Course::create(['title' => 'Курс', 'slug' => 'kurs-h4253', 'teacher_id' => $teacher->id]);
+        $group = Group::create(['name' => 'Группа с отпускным преподом', 'telegram_chat_id' => '-100778']);
+        $group->courses()->attach($course->id);
+        $schedule = Schedule::create([
+            'title' => 'Занятие',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/778',
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertNothingPushed();
+        $this->assertNull($schedule->fresh()->zapisi_reminded_at);
+    }
 }
