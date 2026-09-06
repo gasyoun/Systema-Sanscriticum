@@ -81,6 +81,28 @@ final class ScheduleMover
     }
 
     /**
+     * H4253: отмена ОДНОГО занятия БЕЗ сдвига цепочки (датированная команда
+     * «Отмена 23.09» в чате группы). Строка мягко удаляется; остальные
+     * занятия группы остаются на своих датах, слот просто исчезает.
+     */
+    public function cancelSingle(Schedule $schedule): bool
+    {
+        if ($schedule->group_id === null) {
+            throw new InvalidArgumentException(
+                'Отмена без сдвига доступна только для занятий с привязанной группой.'
+            );
+        }
+
+        if ($schedule->start === null) {
+            throw new InvalidArgumentException('У занятия не задана дата начала.');
+        }
+
+        return (bool) DB::transaction(function () use ($schedule): bool {
+            return $schedule->delete();
+        });
+    }
+
+    /**
      * Цепочка: та же группа, start >= выбранного (включая само занятие).
      *
      * @return Builder<Schedule>

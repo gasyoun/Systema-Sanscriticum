@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Services\Messaging\TelegramDeliveryChannel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -67,7 +68,7 @@ class TelegramPollStudentUpdates extends Command
             return self::FAILURE;
         }
 
-        $client = app(\App\Services\Messaging\TelegramDeliveryChannel::class)
+        $client = app(TelegramDeliveryChannel::class)
             ->usingCredentials($token, (string) config('services.telegram.student_bot_username'));
 
         // Пока вебхук зарегистрирован, getUpdates отвечает 409 Conflict: Telegram

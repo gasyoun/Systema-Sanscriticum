@@ -458,6 +458,23 @@ class Course extends Model
     }
 
     /**
+     * H4253: основной + со-преподы одним списком (без дублей) — для
+     * отпускного покрытия групп (TeacherVacation) и подобных обходов.
+     *
+     * @return Collection<int, Teacher>
+     */
+    public function allTeachers(): Collection
+    {
+        $teachers = $this->teachers;
+
+        if ($this->teacher !== null && ! $teachers->contains('id', $this->teacher->id)) {
+            $teachers->push($this->teacher);
+        }
+
+        return $teachers->values();
+    }
+
+    /**
      * Курсы, доступные преподавателю: он основной (teacher_id) ИЛИ со-препод
      * (pivot). При $teacherId === null — ничего (препод без привязки к Teacher
      * не видит курсов, как и раньше).
