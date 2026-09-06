@@ -70,6 +70,7 @@ use App\Http\Controllers\Student\LessonPackController;
 use App\Http\Controllers\StudentAgentController;
 use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SubscriptionLandingController;
 use App\Http\Controllers\SurveyPageController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TelegramSupportLinkController;
@@ -177,6 +178,12 @@ Route::get('/online/{facets}', [ShopController::class, 'index'])
 // страница не может жить раньше, чем контур H2644 реально выдаёт доступ
 // за оплату. Цены читаются из тарифов курса `club` (Filament), не из Blade.
 Route::get('/klub', [MembershipController::class, 'landing'])->name('membership.landing');
+
+// Подписка «в записи» (H3916): публичный лендинг годовой подписки на архив
+// факультативов. Флаг features.recorded_subscription проверяется в контроллере
+// (404 до включения) — по тому же правилу, что и /klub.
+Route::get('/podpiska-zapisi', SubscriptionLandingController::class)
+    ->name('subscription.landing');
 Route::get('/api/public/v1/autumn-membership', [MembershipCommerceController::class, 'feed'])
     ->name('membership.feed.v1');
 Route::domain((string) config('membership.public_feed.samskrte_host'))

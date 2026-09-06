@@ -19,6 +19,17 @@ return [
         'free' => ['monthly_price' => 0],
         'basic' => ['monthly_price' => 1000],
         'club' => ['monthly_price' => 2000],
+        // H3916 (ратифицировано MG 06-09-2026, сетка A): годовая подписка на
+        // архив «в записи». Точные цены за срок — в term_prices; quarterly
+        // 5 500 — пробный квартал тира Standard.
+        'standard' => [
+            'monthly_price' => 1667,
+            'term_prices' => [3 => 5500, 12 => 20000],
+        ],
+        'professional' => [
+            'monthly_price' => 2917,
+            'term_prices' => [12 => 35000],
+        ],
         // Top is deliberately unpriced for checkout until its separate go/no-go.
         'top' => ['monthly_price' => 5000],
     ],

@@ -1189,6 +1189,15 @@ return [
     'membership_club_streams_only' => (bool) env('MEMBERSHIP_CLUB_STREAMS_ONLY', false),
 
     /*
+     | H3916: подписка «в записи» (ратифицировано MG 06-09-2026, сетка A
+     | 20 000/35 000/5 500). OFF = лендинг /podpiska-zapisi отвечает 404 и
+     | тарифы сетки не показываются. Включение — deploy-рубильник
+     | RECORD_SUBSCRIPTION=true + config:cache (human ops, после установки
+     | тарифов командой membership:install-subscription-tariffs).
+     */
+    'recorded_subscription' => (bool) env('RECORD_SUBSCRIPTION', false),
+
+    /*
      | Guest email+password /register → Free-tier of the club (H3643, self-serve
      | wave B2). Default OFF: GET/POST /register 404. When ON, creates a user,
      | grants MembershipTier::Free via FreeTierLessonGranter::grantSignupFor
