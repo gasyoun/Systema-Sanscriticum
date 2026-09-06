@@ -35,7 +35,7 @@ class KocherginaCohortContractV1Test extends TestCase
 {
     use RefreshDatabase;
 
-    private const FIXTURE_DIR = __DIR__.'/../../Fixtures/cohort_contract_v1/';
+    private const FIXTURE_DIR = __DIR__.'/../../fixtures/cohort_contract_v1/';
 
     private const REFERENCE_SLUG = 'grammatika-po-kocerginoi-gr61';
 
@@ -69,7 +69,7 @@ class KocherginaCohortContractV1Test extends TestCase
     public static function entitlementScenarioProvider(): array
     {
         $raw = file_get_contents(
-            __DIR__.'/../../Fixtures/cohort_contract_v1/kochergina_entitlement_token_v1.json'
+            __DIR__.'/../../fixtures/cohort_contract_v1/kochergina_entitlement_token_v1.json'
         );
         $fixture = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
 

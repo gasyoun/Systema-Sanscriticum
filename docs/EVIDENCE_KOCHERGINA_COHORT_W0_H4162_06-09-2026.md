@@ -58,9 +58,9 @@ Per-student splits were not extracted (read-only sample kept to aggregates); the
 
 ## 5. v1 fixtures + targeted contract tests (committed on the default branch)
 
-- [tests/Fixtures/cohort_contract_v1/kochergina_cohort_catalogue_v1.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Fixtures/cohort_contract_v1/kochergina_cohort_catalogue_v1.json) — catalogue contract incl. the **drafted** `cohort_courses` entry with `enabled=false` and the stop fences.
-- [tests/Fixtures/cohort_contract_v1/kochergina_entitlement_token_v1.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Fixtures/cohort_contract_v1/kochergina_entitlement_token_v1.json) — token shape + 7 scenarios (paid block_1/full, deposit, trial, conditional promise, pending, cross-course leak).
-- [tests/Fixtures/cohort_contract_v1/kochergina_first_result_event_v1.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Fixtures/cohort_contract_v1/kochergina_first_result_event_v1.json) — event contract, idempotent replay, rollback, prod reference.
+- [tests/fixtures/cohort_contract_v1/kochergina_cohort_catalogue_v1.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/fixtures/cohort_contract_v1/kochergina_cohort_catalogue_v1.json) — catalogue contract incl. the **drafted** `cohort_courses` entry with `enabled=false` and the stop fences.
+- [tests/fixtures/cohort_contract_v1/kochergina_entitlement_token_v1.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/fixtures/cohort_contract_v1/kochergina_entitlement_token_v1.json) — token shape + 7 scenarios (paid block_1/full, deposit, trial, conditional promise, pending, cross-course leak).
+- [tests/fixtures/cohort_contract_v1/kochergina_first_result_event_v1.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/fixtures/cohort_contract_v1/kochergina_first_result_event_v1.json) — event contract, idempotent replay, rollback, prod reference.
 - [tests/Feature/CohortContract/KocherginaCohortContractV1Test.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/CohortContract/KocherginaCohortContractV1Test.php) — runs every fixture against the real machinery.
 
 Exact command and output:
