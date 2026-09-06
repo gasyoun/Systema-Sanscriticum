@@ -7,6 +7,8 @@ namespace App\Jobs;
 use App\Models\MarketingSetting;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\Telegram\CancelClassCommandService;
+use App\Services\Telegram\DatedCancelCommandService;
+use App\Services\Telegram\TeacherVacationCommandService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
 use App\Services\VacationQuorumService;
 use App\Support\TelegramSendGuard;
