@@ -78,6 +78,9 @@ class PublicScheduleResource extends JsonResource
                 // H3790: каникулы — флаг + дата выхода (nullable date, без PII)
                 'is_on_vacation' => (bool) $group->is_on_vacation,
                 'vacation_resume_date' => $group->vacation_resume_date?->toDateString(),
+                // H4253: ведущий преподаватель в личном отпуске на дату этого
+                // занятия — только bool, без имени/PII преподавателя.
+                'is_teacher_on_vacation' => $this->start !== null && $group->teachersOnVacationCovering($this->start),
             ],
         ];
 
