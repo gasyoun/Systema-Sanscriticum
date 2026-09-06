@@ -8,6 +8,7 @@ use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
+use App\Models\TelegramChatPost;
 use Illuminate\Console\Command;
 
 /**
@@ -111,6 +112,8 @@ class RemindZapisiClasses extends Command
             SendZapisiBotMessageJob::dispatch(
                 (string) $group->telegram_chat_id,
                 $this->renderText($schedule, $group, $template, $link),
+                $schedule->id,
+                TelegramChatPost::KIND_ZAPISI_REMINDER,
             );
 
             $schedule->update(['zapisi_reminded_at' => now()]);

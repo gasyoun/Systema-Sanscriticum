@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\MarketingSetting;
+use App\Services\Telegram\CancelClassCommandService;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
 use App\Services\VacationQuorumService;
@@ -90,6 +91,14 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             } catch (Throwable $e) {
                 Log::warning('VacationQuorum: reply registration failed', ['error' => $e->getMessage()]);
             }
+        }
+
+        // H4199: reply-команда админа «Отмена занятия» на пост-напоминание.
+        // Сервис сам фильтрует (текст / whitelist / маппинг); все отказы — только в лог.
+        try {
+            app(CancelClassCommandService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('CancelClassCommand: handler failed', ['error' => $e->getMessage()]);
         }
 
         $chat = $message['chat'];

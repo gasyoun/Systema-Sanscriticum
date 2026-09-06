@@ -56,6 +56,8 @@ class MarketingSetting extends Model
         'zapisi_reminder_lead_minutes',
         'zapisi_reminder_template',
         'zapisi_n8n_forward_url',
+        // Reply-команда «Отмена занятия»: telegram user_id админов через запятую (H4199).
+        'zapisi_cancel_admin_ids',
 
         // --- ТЕХОБСЛУЖИВАНИЕ КАБИНЕТА ---
         'student_maintenance_enabled',
