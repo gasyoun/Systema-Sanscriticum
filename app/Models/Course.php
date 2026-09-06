@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\ExitSurveyAutoTrigger;
 use App\Support\RichHtml;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -225,6 +226,8 @@ class Course extends Model
         'deposit_amount' => 'decimal:2',
         'trial_price' => 'decimal:2',
         'continues_from_lesson' => 'integer',
+        // H3916: момент авто-входа в архив подписки (шедулер 6-месячного окна).
+        'subscription_archive_joined_at' => 'date',
         // «Для кого» / «Чему научитесь» — массивы строк на продающей странице.
         'audience' => 'array',
         'outcomes' => 'array',
@@ -367,6 +370,41 @@ class Course extends Model
             ->where('is_active', true)
             ->where('is_recording', true)
             ->exists();
+    }
+
+    /**
+     * Занятия потока (по course_id). Групповые занятия (group_id) сюда не
+     * входят — окно эксклюзивности считается по расписанию самого потока.
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    /**
+     * H3916: дата последнего занятия потока — якорь 6-месячного окна
+     * эксклюзивности подписки «в записи». NULL = занятий в расписании нет,
+     * окно по такому курсу шедулер НЕ открывает (нужна ручная метка).
+     */
+    public function streamLastSessionAt(): ?Carbon
+    {
+        $max = $this->schedules()->max('start');
+
+        return $max === null ? null : Carbon::parse($max);
+    }
+
+    /**
+     * H3916: архив подписки — видимые курсы формата «в записи», вошедшие
+     * по правилу 6-месячного окна (club_included) — полка ClubEntitlement.
+     * Единый запрос для лендинга подписки и шедулера.
+     */
+    public function scopeSubscriptionArchive($query)
+    {
+        return $query->where('format', 'recorded')
+            ->where('is_visible', true)
+            ->where('club_included', true)
+            ->orderByDesc('subscription_archive_joined_at')
+            ->orderByDesc('id');
     }
 
     /**

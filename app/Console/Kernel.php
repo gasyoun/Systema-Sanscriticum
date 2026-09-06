@@ -184,6 +184,17 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('remind-leads-followup');
 
+        // Подписка «в записи» (H3916): 6-месячное окно эксклюзивности.
+        // Завершённый поток входит в архив подписки через 6 месяцев после
+        // последнего занятия. Ежедневно ночью; без записи вне контура —
+        // команда сама решает по датам расписания.
+        $schedule->command('subscription:refresh-archive')
+            ->dailyAt('03:40')
+            ->timezone('Europe/Moscow')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('subscription-archive-refresh');
+
         // NOBORING dozhim Wave 1b (H2059): задачи менеджеру + линейный дрип по
         // недожатым open Deal. Гейты (dozhim_queue / dozhim_drip) — внутри
         // команд; пока оба флага выключены, прогон — no-op. Задачи — перед
