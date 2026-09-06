@@ -1,0 +1,63 @@
+{
+    "contract": "kochergina_cohort_catalogue_v1",
+    "version": 1,
+    "handoff": "H4162",
+    "created": "2026-09-06",
+    "purpose": "W0 vertical slice: the v1 course-catalogue contract for ONE reference Kochergina cohort, drafted from committed + current operational evidence. Nothing here enables a live cohort, changes a price, or expands the catalogue.",
+    "observed_at_utc": "2026-09-06T14:15:12Z",
+    "reference_cohort": {
+        "course_id": 434,
+        "slug": "grammatika-po-kocerginoi-gr61",
+        "title": "Грамматика по Кочергиной гр.61",
+        "slug_prefix": "grammatika-po-kocerginoi-",
+        "course_family": "grammatika-po-kocerginoi-gr61",
+        "group": {
+            "id": 131,
+            "name": "Грамматика по Кочергиной гр.61"
+        },
+        "schedule": {
+            "weekday": "ПН",
+            "time_local": "08:00",
+            "source": "https://github.com/gasyoun/Uprava/blob/main/docs/SCHEDULE_WEEKLY_GRID_ALL_COURSES_04-09-2026.md"
+        },
+        "curator": {
+            "teacher_id": 2,
+            "name": "Гасунс Марцис Юрьевич",
+            "source": "prod teachers.id=2, observed 2026-09-06"
+        },
+        "chat_tg_id": "-1003998772257",
+        "chat_source": "https://github.com/gasyoun/Uprava/blob/main/docs/SCHEDULE_WEEKLY_GRID_ALL_COURSES_04-09-2026.md",
+        "lessons_planned": 80,
+        "materials": [
+            "Учебник В. А. Кочергиной «Учебник санскрита» (бумажный, у ученика)",
+            "Конспект и список лигатур (выдача курса)",
+            "Записи занятий и разборы в хабе материалов",
+            "Домашние задания по упражнениям учебника (занятия 1-5, потолок 5 ДЗ — MG 18-08-2026)"
+        ],
+        "offer_promise": "Базовая грамматика санскрита с нуля по учебнику Кочергиной: деванагари, чтение, формы, живая группа с куратором, разборы ДЗ, записи занятий."
+    },
+    "tariffs_observed": [
+        { "title": "Блок 1", "type": "block", "block_number": 1, "price": "8000.00", "is_active": true },
+        { "title": "Блок 2", "type": "block", "block_number": 2, "price": "8000.00", "is_active": true },
+        { "title": "Блок 3", "type": "block", "block_number": 3, "price": "8000.00", "is_active": true },
+        { "title": "Блок 4", "type": "block", "block_number": 4, "price": "8000.00", "is_active": true },
+        { "title": "Блок 5", "type": "block", "block_number": 5, "price": "8000.00", "is_active": true },
+        { "title": "Блок 6", "type": "block", "block_number": 6, "price": "8000.00", "is_active": true },
+        { "title": "Блок 7", "type": "block", "block_number": 7, "price": "8000.00", "is_active": true },
+        { "title": "Блок 8", "type": "block", "block_number": 8, "price": "8000.00", "is_active": true },
+        { "title": "Блок 9", "type": "block", "block_number": 9, "price": "8000.00", "is_active": true },
+        { "title": "Блок 10", "type": "block", "block_number": 10, "price": "8000.00", "is_active": true }
+    ],
+    "drafted_cohort_courses_entry": {
+        "key": "kochergina-gr61",
+        "course_slug": "grammatika-po-kocerginoi-gr61",
+        "enabled": false,
+        "title": "Грамматика по Кочергиной гр.61",
+        "note": "W0 drafts the entry shape only. Flipping enabled=true is a W1 ops step, human-gated, and must NOT ship from this handoff."
+    },
+    "stop_fences": {
+        "no_live_enable": "drafted entry carries enabled=false; nothing in this contract enables a live cohort",
+        "no_price_change": "tariffs_observed is a read-only snapshot; W0 does not write prices",
+        "no_catalogue_expansion": "exactly one reference cohort; no Karaoke/ORS waves, no new catalogue surfaces"
+    }
+}
