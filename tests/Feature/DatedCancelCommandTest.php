@@ -106,7 +106,7 @@ class DatedCancelCommandTest extends TestCase
         $this->assertNotNull($schedule->fresh());
     }
 
-    public function test_bare_reply_style_отмена_text_is_not_matched_by_this_service(): void
+    public function test_bare_reply_style_cancel_text_is_not_matched_by_this_service(): void
     {
         Queue::fake();
         Redis::shouldReceive('set')->never();
