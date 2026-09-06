@@ -97,6 +97,15 @@ class RemindZapisiClasses extends Command
                 continue;
             }
 
+            // H4253: группа на каникулах (group-level, H3790) ИЛИ её ведущий
+            // преподаватель в личном отпуске (teacher-level, H4253) — занятие
+            // на эту дату фактически не состоится, напоминание не шлём.
+            // БЕЗ пометки (как выше): если отпуск закончится до наступления
+            // start, напоминание должно всё же уйти.
+            if ((bool) $group->is_on_vacation || $group->teachersOnVacationCovering($schedule->start)) {
+                continue;
+            }
+
             $link = (string) ($schedule->zoom_join_url ?: ($schedule->link ?: $schedule->course?->zoom_link) ?: '');
             if ($link === '') {
                 report(new \RuntimeException(sprintf(
