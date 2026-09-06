@@ -198,9 +198,12 @@ try {
     // 7. ROLLBACK/REVOKE rehearsal — refund/cancel + detach (the documented ops revoke)
     $payment->update(['status' => 'canceled']);
     $user->groups()->detach($groupId);
-    $fresh = $user->fresh();
-    $check('revoke: lesson no longer visible (group gone)', ! $lesson->isVisibleToGroupsOf($fresh));
-    $check('revoke: no paid tariff keys left', StudentController::getUserUnlockedTariffs($user->id, $courseSlug) === []);
+    $keysAfterRevoke = StudentController::getUserUnlockedTariffs($user->id, $courseSlug);
+    // gr61's lessons are course-level (group_id NULL): isVisibleToGroupsOf stays true
+    // by design — the content lock after revoke lives at the tariff-unlock layer
+    // (ensureLessonAccessible aborts 403 when isUnlockedBy fails for a paid lesson)
+    $check('revoke: lesson no longer unlocked (content locked at the tariff layer)', ! $lesson->isUnlockedBy($keysAfterRevoke));
+    $check('revoke: no paid tariff keys left', $keysAfterRevoke === []);
     $check('revoke: progress history intact', DB::table('lesson_user')->where('user_id', $user->id)->where('lesson_id', $lessonId)->where('is_completed', 1)->count() === 1);
 } finally {
     DB::rollBack();
