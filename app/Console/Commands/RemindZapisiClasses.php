@@ -59,7 +59,7 @@ class RemindZapisiClasses extends Command
         $lead = max(1, $lead);
 
         $schedules = Schedule::query()
-            ->with(['group', 'course'])
+            ->with(['group.courses.teacher', 'group.courses.teachers', 'course'])
             ->whereNull('zapisi_reminded_at')
             ->whereNotNull('group_id')
             ->whereBetween('start', [now(), now()->addMinutes($lead)])
