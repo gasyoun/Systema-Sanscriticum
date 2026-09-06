@@ -259,4 +259,58 @@ class SurveyPageTest extends TestCase
             SurveyResponse::whereNotNull('reward_sent_at')->where('reward_user_id', $user->id)->count(),
         );
     }
+
+    /** @test */
+    public function student_purchase_wave_renders_open_motive_before_prompts_and_stores(): void
+    {
+        $response = $this->get('/anketa/student-purchase-2026-09')
+            ->assertOk()
+            ->assertSee('Действующие ученики: причины покупки и результат обучения')
+            ->assertDontSee('Благодарность за ответы');
+
+        // Открытый вопрос о мотиве — в разметке ДО подсказанных вариантов.
+        $html = (string) $response->getContent();
+        $this->assertNotFalse(strpos($html, 'name="first_motive_open"'));
+        $this->assertNotFalse(strpos($html, 'name="purchase_trigger"'));
+        $this->assertLessThan(
+            (int) strpos($html, 'name="purchase_trigger"'),
+            (int) strpos($html, 'name="first_motive_open"'),
+        );
+
+        $this->post('/anketa/student-purchase-2026-09', [
+            'first_course' => 'Грамматика с нуля',
+            'first_motive_open' => 'Хотел(а) читать Гиту в оригинале',
+            'purchase_trigger' => 'Пробное занятие или бот',
+            'main_goal' => 'Читать и понимать оригинальные тексты',
+            'continue_blocker' => 'Время или расписание',
+            'tried_before' => ['Бесплатный бот', 'Пробный урок'],
+            'tried_material' => 'телеграм-бот с алфавитом',
+        ])->assertRedirect('/anketa/student-purchase-2026-09?done=1')->assertSessionHasNoErrors();
+
+        $row = SurveyResponse::where('survey_slug', 'student-purchase-2026-09')->firstOrFail();
+        $this->assertSame('Грамматика с нуля', $row->answers['first_course']);
+        $this->assertSame('Пробное занятие или бот', $row->answers['purchase_trigger']);
+        $this->assertSame(['Бесплатный бот', 'Пробный урок'], $row->answers['tried_before']);
+        $this->assertNull($row->reward_choice);
+        $this->assertNull($row->contact);
+        $this->assertNull($row->reward_sent_at);
+    }
+
+    /** @test */
+    public function student_purchase_wave_requires_required_fields_and_rejects_off_list_radio(): void
+    {
+        $this->from('/anketa/student-purchase-2026-09')
+            ->post('/anketa/student-purchase-2026-09', ['website' => ''])
+            ->assertSessionHasErrors(['first_course', 'first_motive_open', 'purchase_trigger', 'main_goal', 'continue_blocker']);
+
+        $this->post('/anketa/student-purchase-2026-09', [
+            'first_course' => 'Хинди',
+            'first_motive_open' => 'Понять кино без субтитров',
+            'purchase_trigger' => 'Взломал список',
+            'main_goal' => 'Другое',
+            'continue_blocker' => 'Стоимость',
+        ])->assertSessionHasErrors('purchase_trigger');
+
+        $this->assertSame(0, SurveyResponse::where('survey_slug', 'student-purchase-2026-09')->count());
+    }
 }
