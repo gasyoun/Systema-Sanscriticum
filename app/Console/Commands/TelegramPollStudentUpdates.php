@@ -143,8 +143,9 @@ class TelegramPollStudentUpdates extends Command
                     'update_id' => $update['update_id'],
                     'status' => $response->status(),
                     'url' => $url,
+                    'body' => mb_substr($response->body(), 0, 200),
                 ]);
-                $this->error("Реинжекция update {$update['update_id']} — HTTP {$response->status()}, курсор не двигаю.");
+                $this->error("Реинжекция update {$update['update_id']} — HTTP {$response->status()} url={$url} body=".mb_substr($response->body(), 0, 160));
 
                 break;
             }
