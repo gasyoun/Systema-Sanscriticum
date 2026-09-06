@@ -64,6 +64,31 @@ class CabinetWaitlistCardTest extends TestCase
         $resp2->assertDontSee('data-waitlist-vote="card-course-1"');
     }
 
+    /** H4206: перед голосом — селект «Когда удобно?», после — подпись пожелания. */
+    public function test_slot_preference_select_and_voted_label(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        $item = CourseWaitlistItem::create([
+            'slug' => 'card-pref-1',
+            'course_title' => 'Начальный санскрит',
+            'teacher_name' => 'Елена Трефилова',
+            'min_payers' => 8,
+            'kind' => 'grammar',
+        ]);
+        $user = User::factory()->create();
+
+        $resp = $this->actingAs($user)->get(route('student.dashboard'));
+        $resp->assertOk();
+        $resp->assertSee('data-waitlist-pref="card-pref-1"', false);
+        $resp->assertSee('Когда удобно?');
+
+        $item->votes()->create(['user_id' => $user->id, 'slot_preference' => 'morning']);
+        $resp2 = $this->actingAs($user)->get(route('student.dashboard'));
+        $resp2->assertSee('Голос учтён');
+        $resp2->assertSee('Утром (до ~11:00)');
+        $resp2->assertDontSee('data-waitlist-pref="card-pref-1"', false);
+    }
+
     public function test_scheduled_and_closed_items_are_hidden_from_cabinet(): void
     {
         config(['features.waitlist_voting' => true]);

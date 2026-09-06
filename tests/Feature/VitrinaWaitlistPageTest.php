@@ -65,6 +65,33 @@ class VitrinaWaitlistPageTest extends TestCase
             ->assertDontSee('data-waitlist-unvote="zhdun-voted"');
     }
 
+    /** H4206: на витрине голос с пожеланием подписывается («Голос учтён · Вечером»). */
+    public function test_voted_user_sees_slot_preference_label(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        $item = CourseWaitlistItem::create([
+            'slug' => 'zhdun-pref',
+            'course_title' => 'Гитартхасанграха Абхинавагупты',
+            'teacher_name' => 'Эдгар Лейтан',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2026-09-15',
+        ]);
+        $user = User::factory()->create();
+
+        // До голоса — селект пожелания.
+        $this->actingAs($user)->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee('data-waitlist-pref="zhdun-pref"', false);
+
+        $item->votes()->create(['user_id' => $user->id, 'slot_preference' => 'evening']);
+
+        $this->actingAs($user)->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee('Вечером')
+            ->assertDontSee('data-waitlist-pref="zhdun-pref"', false);
+    }
+
     public function test_guest_unvote_is_401(): void
     {
         config(['features.waitlist_voting' => true]);

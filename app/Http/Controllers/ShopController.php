@@ -287,13 +287,19 @@ class ShopController extends Controller
             ->get();
 
         // «Я уже голосовал» — для отметки на кнопках (как в кабинете H3815).
-        $votedSlugs = Auth::check()
-            ? WaitlistVote::query()
+        // H4206: рядом — моё пожелание времени (id строки → morning|day|evening).
+        $votedSlugs = [];
+        $votedItemPrefs = [];
+        if (Auth::check() && $items->isNotEmpty()) {
+            $myVotes = WaitlistVote::query()
                 ->whereIn('course_waitlist_item_id', $items->modelKeys())
                 ->where('user_id', Auth::id())
-                ->pluck('course_waitlist_item_id')
-                ->all()
-            : [];
+                ->get(['course_waitlist_item_id', 'slot_preference']);
+            $votedSlugs = $myVotes->pluck('course_waitlist_item_id')->all();
+            $votedItemPrefs = $myVotes
+                ->pluck('slot_preference', 'course_waitlist_item_id')
+                ->all();
+        }
 
         // Ссылки на преподавателей (MG 02-09-2026): естественный порядок имени —
         // «Екатерина Костина», как в waitlist-строке. Фильтр каталога резолвит
@@ -327,6 +333,7 @@ class ShopController extends Controller
             'sections' => $sections,
             'items' => $items,
             'votedItemIds' => $votedSlugs,
+            'votedItemPrefs' => $votedItemPrefs,
             'itemTeacherUrls' => $itemTeacherUrls,
         ]);
     }

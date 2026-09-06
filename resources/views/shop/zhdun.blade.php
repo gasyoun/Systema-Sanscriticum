@@ -49,6 +49,7 @@
                                 $showRemaining = ! $met && $remaining <= 4;
                                 $paymentOpen = $item->status === \App\Models\CourseWaitlistItem::STATUS_PAYMENT_OPEN;
                                 $teacherUrl = $itemTeacherUrls[$item->getKey()] ?? null;
+                                $myPref = $votedItemPrefs[$item->getKey()] ?? null; // H4206
                                 // Название курса кликабельно всегда: привязанный
                                 // курс → страница курса; без привязки → поиск каталога.
                                 $titleUrl = $item->course && $item->course->is_visible
@@ -104,6 +105,9 @@
                                                 class="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition"
                                                 x-on:click="unvote('{{ $item->slug }}', $el)">
                                             <i class="fas fa-check mr-1"></i>Голос учтён
+                                            @if($myPref)
+                                                · {{ \App\Models\WaitlistVote::SLOT_PREFERENCES[$myPref] ?? $myPref }}
+                                            @endif
                                             <i class="fas fa-times ml-1 opacity-60"></i>
                                         </button>
                                     @elseif($paymentOpen)
@@ -116,12 +120,23 @@
                                             <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Открыта оплата — свяжитесь с куратором</span>
                                         @endif
                                     @else
-                                        <button type="button"
-                                                data-waitlist-vote="{{ $item->slug }}"
-                                                class="text-xs font-bold text-white bg-brand hover:opacity-90 transition rounded-lg px-3 py-1.5"
-                                                x-on:click="vote('{{ $item->slug }}', $el)">
-                                            Намерен участвовать
-                                        </button>
+                                        {{-- H4206: пожелание времени — куратор подберёт слот по голосам. --}}
+                                        <div class="flex items-center gap-2">
+                                            <select data-waitlist-pref="{{ $item->slug }}"
+                                                    title="Когда вам удобно?"
+                                                    class="text-xs font-semibold text-slate-300 bg-[#141A28] border border-[#1F2636] hover:border-brand/50 rounded-lg px-2 py-1.5">
+                                                <option value="">Когда удобно?</option>
+                                                @foreach(\App\Models\WaitlistVote::SLOT_PREFERENCES as $prefKey => $prefLabel)
+                                                    <option value="{{ $prefKey }}">{{ $prefLabel }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button type="button"
+                                                    data-waitlist-vote="{{ $item->slug }}"
+                                                    class="text-xs font-bold text-white bg-brand hover:opacity-90 transition rounded-lg px-3 py-1.5"
+                                                    x-on:click="vote('{{ $item->slug }}', $el)">
+                                                Намерен участвовать
+                                            </button>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -148,6 +163,8 @@ function waitlistVote() {
         async vote(slug, el) {
             el.disabled = true;
             el.textContent = '...';
+            const row = el.closest('[data-waitlist-row]');
+            const pref = row?.querySelector('[data-waitlist-pref]')?.value || '';
             try {
                 const resp = await fetch('{{ route('shop.waitlist.vote') }}', {
                     method: 'POST',
@@ -156,7 +173,7 @@ function waitlistVote() {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ slug }),
+                    body: JSON.stringify({ slug, slot_preference: pref || null }),
                 });
                 if (resp.status === 401 || resp.redirected || ! (resp.headers.get('content-type') || '').includes('application/json')) {
                     // Гость: web-мидлвари отвечает редиректом, ведём на вход.
