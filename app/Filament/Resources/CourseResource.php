@@ -25,7 +25,10 @@ class CourseResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+        // Рулинг MG 07-09-2026: куратору (manager) нужен просмотр карточек
+        // (датировка /online по подтверждениям преподавателей). Редактирование
+        // остаётся у админа/препода своей дисциплины — canEdit не расширен.
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER, Roles::MANAGER);
     }
 
     public static function canCreate(): bool
