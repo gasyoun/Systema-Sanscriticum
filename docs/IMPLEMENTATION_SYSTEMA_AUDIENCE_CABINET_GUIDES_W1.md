@@ -56,7 +56,7 @@ git -C <клон> worktree add -b h3212-student-guide ../Systema-Sanscriticum-h3
 
 Часть II: курсы, оплаты, долги, прана (ссылка `/help/prana-balance`), колода, лила, профиль. Часть III: shared-PC / remember-me (H1949). Часть IV: FAQ из onboarding.
 
-Каждый шаг части I — место под кадр: `![](screenshots/student-guide/<slug>-1440.png)` и строка «на телефоне — тот же кадр `-390`».
+Каждый шаг части I — место под кадр: `` и строка «на телефоне — тот же кадр `-390`».
 
 Зависимость: шаг 2.
 
