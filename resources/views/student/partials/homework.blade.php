@@ -225,30 +225,60 @@
                 }
             @endphp
             <form action="{{ route('student.homework.store', [$course->slug, $lesson->id]) }}" method="POST" enctype="multipart/form-data"
-                  x-data="{
-                      files: [],
-                      limit: {{ $hwMaxFiles }},
-                      overflow: false,
-                      // Браузер заменяет FileList целиком при каждом выборе, поэтому копим сами
-                      // и переписываем input.files через DataTransfer — иначе на сервер уходит
-                      // только последняя пачка (фото пропадают, когда следом выбирают аудио).
-                      add(input) {
-                          const merged = [...this.files, ...Array.from(input.files)]
-                              .filter((f, i, all) => all.findIndex(g => g.name === f.name && g.size === f.size) === i);
-                          this.overflow = merged.length > this.limit;
-                          this.sync(merged.slice(0, this.limit), input);
-                      },
-                      remove(index, input) {
-                          this.overflow = false;
-                          this.sync(this.files.filter((f, i) => i !== index), input);
-                      },
-                      sync(list, input) {
-                          const dt = new DataTransfer();
-                          list.forEach(f => dt.items.add(f));
-                          input.files = dt.files;
-                          this.files = Array.from(dt.files);
-                      },
-                  }">
+                x-data="{
+                    files: [],
+                    limit: {{ $hwMaxFiles }},
+                    maxFileBytes: {{ (int) config('homework.max_file_kb', 30720) }} * 1024,
+                    totalMaxBytes: {{ (int) config('homework.total_max_kb', 92160) }} * 1024,
+                    maxFileMb: {{ $hwMaxFileMb }},
+                    totalMaxMb: {{ $hwTotalMaxMb }},
+                    overflow: false,
+                    oversize: [],
+                    // Браузер заменяет FileList целиком при каждом выборе, поэтому копим сами
+                    // и переписываем input.files через DataTransfer — иначе на сервер уходит
+                    // только последняя пачка (фото пропадают, когда следом выбирают аудио).
+                    add(input) {
+                        const incoming = Array.from(input.files);
+                        // H4294: тяжёлый файл (длинное видео с телефона) не должен
+                        // стартовать в загрузку — nginx убьёт тело голой 413, телефон
+                        // сольёт трафик впустую, а ни серверная валидация, ни
+                        // PostTooLargeException-редирект до студента уже не дойдут.
+                        // Режем до отправки: каждый файл против max_file_kb, сумма
+                        // против total_max_kb (те же числа, что у серверной валидации).
+                        const heavy = incoming.filter(f => f.size > this.maxFileBytes);
+                        const merged = [...this.files, ...incoming.filter(f => f.size <= this.maxFileBytes)]
+                            .filter((f, i, all) => all.findIndex(g => g.name === f.name && g.size === f.size) === i);
+                        this.overflow = merged.length > this.limit;
+                        this.oversize = [...heavy];
+                        const kept = [];
+                        let total = 0;
+                        for (const f of merged.slice(0, this.limit)) {
+                            if (total + f.size <= this.totalMaxBytes) {
+                                kept.push(f);
+                                total += f.size;
+                            } else {
+                                this.oversize.push(f);
+                            }
+                        }
+                        this.sync(kept, input);
+                    },
+                    remove(index, input) {
+                        this.overflow = false;
+                        this.oversize = [];
+                        this.sync(this.files.filter((f, i) => i !== index), input);
+                    },
+                    sync(list, input) {
+                        const dt = new DataTransfer();
+                        list.forEach(f => dt.items.add(f));
+                        input.files = dt.files;
+                        this.files = Array.from(dt.files);
+                    },
+                    oversizeHint() {
+                        const mb = b => Math.round(b / 1048576);
+                        const names = this.oversize.map(f => `«${f.name}» — ${mb(f.size)} МБ`).join(', ');
+                        return `Не добавлены: ${names}. На один файл — до ${this.maxFileMb} МБ, на всю отправку — до ${this.totalMaxMb} МБ. Тяжёлое видео обрежьте до 2–3 минут или сожмите, рукописную работу можно прислать фото.`;
+                    },
+                }">
                 @csrf
                 @if($hwIsRework)
                     <p class="text-sm text-red-600 font-semibold mb-3"><i class="fas fa-rotate-left mr-1.5"></i>Преподаватель вернул работу — внесите правки и отправьте снова.</p>
@@ -272,6 +302,9 @@
                     </label>
                     <template x-if="overflow">
                         <p class="mt-2 text-xs text-amber-600"><i class="fas fa-triangle-exclamation mr-1"></i>Можно прикрепить не более {{ $hwMaxFiles }} файлов — лишние не добавлены.</p>
+                    </template>
+                    <template x-if="oversize.length">
+                        <p class="mt-2 text-xs text-red-600"><i class="fas fa-triangle-exclamation mr-1"></i><span x-text="oversizeHint()"></span></p>
                     </template>
                     <template x-if="files.length">
                         <ul class="mt-2 space-y-1">
