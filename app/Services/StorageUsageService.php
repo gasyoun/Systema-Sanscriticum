@@ -160,6 +160,75 @@ class StorageUsageService
     }
 
     /**
+     * Помесячная разбивка веса каталога по mtime файлов и свежий прирост (H4298).
+     *
+     * Нужна дашборд-виджету «рост и прогноз»: у загрузок ДЗ и материалов
+     * mtime ≈ моменту создания (файлы дописываются, но не переписываются),
+     * поэтому месяц файла — это месяц загрузки. Оговорка метода: каталог,
+     * где файлы ПЕРЕЗАПИСЫВАЮТСЯ (бэкапы, tmp), покажет «рост» на каждую
+     * перезапись — ETA для такого каталога завышен.
+     *
+     * @param  string  $relative  путь внутри storage/app, как в config/storage_watch.php
+     * @param  int  $recentDays  окно «свежего» прироста для прогноза
+     * @return array{months: array<string, int>, recent_bytes: int, recent_days: int, files: int, truncated: bool}
+     */
+    public function growth(string $relative, int $recentDays = 30): array
+    {
+        $fileCap = (int) config('storage_watch.scan_file_cap', 20000);
+        $absolutePath = storage_path('app/'.$relative);
+
+        $months = [];
+        $recentBytes = 0;
+        $files = 0;
+        $truncated = false;
+
+        if (is_dir($absolutePath) && is_readable($absolutePath)) {
+            $recentEdge = time() - max(1, $recentDays) * 86400;
+
+            try {
+                $iterator = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($absolutePath, FilesystemIterator::SKIP_DOTS),
+                    RecursiveIteratorIterator::LEAVES_ONLY,
+                    RecursiveIteratorIterator::CATCH_GET_CHILD
+                );
+
+                foreach ($iterator as $file) {
+                    if (! $file->isFile()) {
+                        continue;
+                    }
+
+                    $size = (int) $file->getSize();
+                    $mtime = $file->getMTime();
+                    $months[date('Y-m', $mtime)] = ($months[date('Y-m', $mtime)] ?? 0) + $size;
+                    $files++;
+
+                    if ($mtime >= $recentEdge) {
+                        $recentBytes += $size;
+                    }
+
+                    if ($fileCap > 0 && $files >= $fileCap) {
+                        $truncated = true;
+
+                        break;
+                    }
+                }
+            } catch (\UnexpectedValueException) {
+                $truncated = true;
+            }
+        }
+
+        ksort($months);
+
+        return [
+            'months' => $months,
+            'recent_bytes' => $recentBytes,
+            'recent_days' => max(1, $recentDays),
+            'files' => $files,
+            'truncated' => $truncated,
+        ];
+    }
+
+    /**
      * @return array{0: int|null, 1: string, 2: string|null} [байты, уровень, текст алерта]
      */
     private function freeDisk(): array
