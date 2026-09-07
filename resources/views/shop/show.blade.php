@@ -260,7 +260,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="w-full lg:w-1/2">
                     {{-- Cover: real photo OR typographic fallback matching catalogue card --}}
                     <div class="relative w-full aspect-video md:aspect-[4/3] rounded-3xl overflow-hidden bg-gradient-to-br from-[#111622] to-[#0A0D14] border border-[#1F2636] shadow-2xl shadow-indigo-900/20 flex items-center justify-center group">
-                        @if($course->image_path)
+                        @if($courseVideoEmbedUrl = $course->videoAnnounceEmbedUrl())
+                            <iframe src="{{ $courseVideoEmbedUrl }}" title="{{ $course->title }}" class="absolute inset-0 w-full h-full" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        @elseif($course->image_path)
                             <img src="{{ Storage::url($course->image_path) }}" alt="{{ $course->title }}" class="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-700">
                             <div class="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/80 via-transparent to-transparent"></div>
                         @else

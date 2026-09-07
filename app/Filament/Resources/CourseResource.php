@@ -122,6 +122,21 @@ class CourseResource extends Resource
                             ->profile('simple')
                             ->columnSpanFull(),
 
+                        Forms\Components\TextInput::make('video_announce_url')
+                            ->label('Видео-анонс курса')
+                            ->url()
+                            ->maxLength(1024)
+                            ->placeholder('https://www.youtube.com/watch?v=... или https://rutube.ru/video/... или https://vk.com/video...')
+                            ->helperText('Ссылка на YouTube, RuTube или VK video. Показывается в hero-блоке продающей страницы вместо обложки. Пусто — показывается обложка курса.')
+                            ->rule(
+                                fn () => function (string $attribute, $value, \Closure $fail): void {
+                                    if ($value && ! \App\Support\VideoEmbed::embed($value)) {
+                                        $fail('Ссылка не распознана как YouTube, RuTube или VK video.');
+                                    }
+                                }
+                            )
+                            ->columnSpanFull(),
+
                         Forms\Components\TextInput::make('chat_url')
                             ->label('Ссылка на чат курса')
                             ->url()
