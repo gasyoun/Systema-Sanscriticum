@@ -19,6 +19,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Throwable;
 
 /**
@@ -213,6 +214,13 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
      * на zapisi_welcome_n8n_url (приветственная карточка), message/channel_post —
      * на zapisi_n8n_forward_url («ловим названия») как раньше. Пустой адрес = тип
      * не форвардится.
+     *
+     * H4318 (MG, «железно»): приветственная карточка — НЕ ЧАЩЕ ОДНОГО РАЗА В 24 Ч
+     * НА ЧАТ, любыми средствами и при любых обстоятельствах. Клейм в Redis ДО
+     * форварда: переживает деплои/рестарты n8n (в отличие от n8n staticData,
+     * который import --force обнуляет — проверено 07-09-2026). Redis недоступен =
+     * FAIL-CLOSED (карточку не шлём): суточный лимит — требование MG, а не
+     * оптимизация; молчание лучше пятёрки дублей.
      */
     private function forwardToN8n(): void
     {
@@ -222,16 +230,56 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             return;
         }
 
+        if ($this->isWelcomeUpdate($this->update) && ! $this->claimWelcomeCard($this->update)) {
+            return;
+        }
+
         ForwardUpdateToN8n::dispatch($url, $this->update);
+    }
+
+    private function isWelcomeUpdate(array $update): bool
+    {
+        return isset($update['my_chat_member']) && is_array($update['my_chat_member']);
+    }
+
+    private function claimWelcomeCard(array $update): bool
+    {
+        $chatId = $update['my_chat_member']['chat']['id'] ?? null;
+
+        if ($chatId === null) {
+            return false;
+        }
+
+        $key = 'tg:welcome-card:'.((int) $chatId).':'.now()->format('Ymd');
+
+        try {
+            // 24h TTL c привязкой к календарному дню: ровно один клейм на чат в сутки.
+            $claimed = (bool) Redis::set($key, now()->toIso8601String(), 'EX', 86400, 'NX');
+
+            if (! $claimed) {
+                Log::info('H4318: welcome card rate-limited (1/24h), forward skipped', [
+                    'chat_id' => $chatId,
+                ]);
+            }
+
+            return $claimed;
+        } catch (Throwable $exception) {
+            // FAIL-CLOSED (H4318): Redis недоступен → карточку не шлём. Суточный
+            // лимит — требование MG («железно»), молчание лучше дублей.
+            Log::error('H4318: redis unavailable, welcome card FAIL-CLOSED skipped', [
+                'chat_id' => $chatId,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     private function forwardUrlFor(array $update): string
     {
         $settings = MarketingSetting::cached();
 
-        $isWelcome = isset($update['my_chat_member']) && is_array($update['my_chat_member']);
-
-        $raw = $isWelcome
+        $raw = $this->isWelcomeUpdate($update)
             ? (string) ($settings?->zapisi_welcome_n8n_url ?? '')
             : (string) ($settings?->zapisi_n8n_forward_url ?? '');
 
