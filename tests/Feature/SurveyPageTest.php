@@ -151,15 +151,17 @@ class SurveyPageTest extends TestCase
         $this->actingAs($user)
             ->post('/anketa/onboarding', [
                 'what_brought' => 'Йога, практика и мантры',
-                'level' => 'С нуля, ещё не начинал(а)',
-                'source' => 'По рекомендации знакомых',
-                'birth_year' => '1988',
+                'goal_year' => 'Читать простые тексты',
+                'level' => 'Начинаю с нуля',
+                'registration_trigger' => 'Начался курс',
+                'discovery_open' => 'Рассказал знакомый',
+                'format_pref' => 'Живые уроки по расписанию',
             ])->assertRedirect();
 
         $row = SurveyResponse::where('survey_slug', 'onboarding')->firstOrFail();
         $this->assertSame($user->id, $row->user_id);
         $this->assertSame('Йога, практика и мантры', $row->answers['what_brought']);
-        $this->assertSame(1988, $row->answers['birth_year']);
+        $this->assertSame('Читать простые тексты', $row->answers['goal_year']);
 
         $this->post('/anketa/churn-block', [
             'stopped_because' => 'Не хватило времени',
@@ -261,39 +263,44 @@ class SurveyPageTest extends TestCase
     }
 
     /** @test */
-    public function student_purchase_wave_renders_open_motive_before_prompts_and_stores(): void
+    public function student_purchase_wave_is_six_pages_and_stores_depth_answers(): void
     {
         $response = $this->get('/anketa/student-purchase-2026-09')
             ->assertOk()
-            ->assertSee('Действующие ученики: причины покупки и результат обучения')
+            ->assertSee('Ваш путь в ОРС: подробная анкета для постоянных учеников')
+            ->assertSee('data-survey-pages="6"', false)
+            ->assertSee('Страница 1 из 6')
+            ->assertSee('Как всё началось')
+            ->assertSee('Что должно быть дальше')
             ->assertDontSee('Благодарность за ответы');
 
-        // Открытый вопрос о мотиве — в разметке ДО подсказанных вариантов.
         $html = (string) $response->getContent();
-        $this->assertNotFalse(strpos($html, 'name="first_motive_open"'));
-        $this->assertNotFalse(strpos($html, 'name="purchase_trigger"'));
         $this->assertLessThan(
             (int) strpos($html, 'name="purchase_trigger"'),
             (int) strpos($html, 'name="first_motive_open"'),
         );
 
         $this->post('/anketa/student-purchase-2026-09', [
-            'first_course' => 'Грамматика с нуля',
+            'first_course' => 'Грамматика с нуля, 2023',
             'first_motive_open' => 'Хотел(а) читать Гиту в оригинале',
             'purchase_trigger' => 'Пробное занятие или бот',
+            'before_after' => 'Теперь разбираю простые строфы',
+            'stay_reason_open' => 'Понятная система и преподаватель',
+            'repeat_purchase' => 'Курс чтения',
+            'value_for_money_open' => 'За разбор моих ошибок',
+            'next_purchase_condition' => 'Разобрать конкретный текст',
+            'first_discovery_open' => 'Нашёл через поиск',
             'main_goal' => 'Читать и понимать оригинальные тексты',
-            'continue_blocker' => 'Время или расписание',
+            'next_skill' => 'Самостоятельно разобрать главу Гиты',
+            'followup_permission' => 'Да',
             'tried_before' => ['Бесплатный бот', 'Пробный урок'],
-            'tried_material' => 'телеграм-бот с алфавитом',
         ])->assertRedirect('/anketa/student-purchase-2026-09?done=1')->assertSessionHasNoErrors();
 
         $row = SurveyResponse::where('survey_slug', 'student-purchase-2026-09')->firstOrFail();
-        $this->assertSame('Грамматика с нуля', $row->answers['first_course']);
-        $this->assertSame('Пробное занятие или бот', $row->answers['purchase_trigger']);
+        $this->assertSame('Курс чтения', $row->answers['repeat_purchase']);
+        $this->assertSame('За разбор моих ошибок', $row->answers['value_for_money_open']);
         $this->assertSame(['Бесплатный бот', 'Пробный урок'], $row->answers['tried_before']);
         $this->assertNull($row->reward_choice);
-        $this->assertNull($row->contact);
-        $this->assertNull($row->reward_sent_at);
     }
 
     /** @test */
@@ -301,16 +308,36 @@ class SurveyPageTest extends TestCase
     {
         $this->from('/anketa/student-purchase-2026-09')
             ->post('/anketa/student-purchase-2026-09', ['website' => ''])
-            ->assertSessionHasErrors(['first_course', 'first_motive_open', 'purchase_trigger', 'main_goal', 'continue_blocker']);
+            ->assertSessionHasErrors(['first_course', 'first_motive_open', 'purchase_trigger', 'before_after', 'stay_reason_open', 'repeat_purchase', 'value_for_money_open', 'next_purchase_condition', 'first_discovery_open', 'main_goal', 'next_skill', 'followup_permission']);
 
         $this->post('/anketa/student-purchase-2026-09', [
             'first_course' => 'Хинди',
             'first_motive_open' => 'Понять кино без субтитров',
             'purchase_trigger' => 'Взломал список',
+            'before_after' => 'Стал понимать отдельные фразы',
+            'stay_reason_open' => 'Преподаватель',
+            'repeat_purchase' => 'Не было',
+            'value_for_money_open' => 'За практику',
+            'next_purchase_condition' => 'Разговорный курс',
+            'first_discovery_open' => 'Поиск',
             'main_goal' => 'Другое',
-            'continue_blocker' => 'Стоимость',
+            'next_skill' => 'Понимать диалоги',
+            'followup_permission' => 'Нет',
         ])->assertSessionHasErrors('purchase_trigger');
 
         $this->assertSame(0, SurveyResponse::where('survey_slug', 'student-purchase-2026-09')->count());
+    }
+
+    /** @test */
+    public function onboarding_is_a_short_eight_question_survey(): void
+    {
+        $definition = config('surveys.definitions.onboarding');
+
+        $this->assertCount(8, $definition['questions']);
+        $this->assertArrayNotHasKey('pages', $definition);
+        $this->get('/anketa/onboarding')
+            ->assertOk()
+            ->assertSee('Восемь коротких вопросов')
+            ->assertDontSee('<button type="button" data-page-next', false);
     }
 }
