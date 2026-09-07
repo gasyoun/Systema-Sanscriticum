@@ -77,6 +77,80 @@ return [
     ],
 
     /*
+     | H3999 (волна 1 leverage-плана) — фактические ответы из LMS.
+     */
+    'facts' => [
+        /*
+         | Типы фактов, которые бот отправляет студенту САМ.
+         |
+         | Дефолт — ровно те три, что уходили до H3999 (ссылка на занятие,
+         | ближайшие занятия, запись урока): пять новых резолверов копят
+         | теневые события (dm_shadow_would_send_facts) и студенту ничего не
+         | отправляют, пока человек не откроет тип после недели тени —
+         | рулинг V1, тот же гейт, что прошла категория F.
+         |
+         | Открыть можно только 'homework' и 'schedule_change'. Остаток по
+         | оплате ('balance'), состояние доступа ('access') и сертификат
+         | ('certificate') вычёркиваются в КОДЕ
+         | (SupportAnswerFactResolver::NEVER_AUTO_TYPES) и вписыванием сюда
+         | не открываются — рулинг A1 не должен зависеть от правки конфига.
+         */
+        'live_types' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('SUPPORT_FACT_LIVE_TYPES', 'zoom,schedule,recording')),
+        ))),
+    ],
+
+    /*
+     | H3999, рулинг A1: расхождение расчётного остатка с суммой, названной
+     | студентом, уходит follow-up-задачей финансовому ведущему, а не ответом
+     | студенту. Пусто — задача заводится неназначенной (её видно в общем
+     | списке follow-up'ов), это осознанная деградация, а не потеря.
+     */
+    'escalation' => [
+        'finance_lead_user_id' => env('SUPPORT_FINANCE_LEAD_USER_ID'),
+    ],
+
+    /*
+     | H3999 (рулинг A5) — SLA-сеть по открытым тредам без единого исходящего.
+     |
+     | ОТДЕЛЬНОЕ окно, а не config/support_hours.php, и это проверено, а не
+     | предположено: support_hours кодирует 10:00–20:00 по будням с null на
+     | выходных и питает виджет сайта (SupportAvailability::isOnline()).
+     | SLA-правило — семь дней в неделю 09:00–22:00. Переиспользование одного
+     | блока на два разных правила означало бы, что правка часов виджета молча
+     | двигает эскалацию поддержки.
+     */
+    'sla' => [
+        /*
+         | Telegram-id кураторов по порядку эскалации: первый получает пинг на
+         | первом пороге, следующий — на втором. Пусто → команда молчит (и
+         | говорит об этом в выводе), а не шлёт «в никуда».
+         */
+        'curators' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('SUPPORT_SLA_CURATORS', '')),
+        ))),
+
+        /* Минуты РАБОЧЕГО времени без ответа до первого и второго пинга. */
+        'first_ping_minutes' => (int) env('SUPPORT_SLA_FIRST_PING_MINUTES', 15),
+        'second_ping_minutes' => (int) env('SUPPORT_SLA_SECOND_PING_MINUTES', 60),
+
+        /* Тихие часы: [22:00, 09:00) — в них не пингуем и время не копим. */
+        'quiet_from' => env('SUPPORT_SLA_QUIET_FROM', '22:00'),
+        'quiet_to' => env('SUPPORT_SLA_QUIET_TO', '09:00'),
+
+        'timezone' => env('SUPPORT_SLA_TIMEZONE', 'Europe/Moscow'),
+
+        /*
+         | Насколько далеко назад команда вообще смотрит. Без потолка первый
+         | прогон на живой базе разослал бы кураторам пинги по всему бэклогу —
+         | тот же урок, что H3380 v2.2 выучил на history-заборе.
+         */
+        'lookback_hours' => (int) env('SUPPORT_SLA_LOOKBACK_HOURS', 48),
+    ],
+
+    /*
      | H2448 FAQ BM25 retrieval for SupportAnswerSuggester (flag features.faq_rag_suggester).
      */
     'faq_rag' => [
