@@ -9,7 +9,7 @@ use App\Services\Schedule\FullSchedulePost;
 use Illuminate\Contracts\View\View;
 
 /**
- * H4331: публичная страница «Расписание» — https://samskrte.ru/raspisanie.
+ * H4340: публичная страница «Расписание» — https://samskrte.ru/raspisanie.
  * Полные расписания всех активных видимых курсов с предстоящими занятиями
  * тем же билдером, что и Telegram-пост (H4328). Виджет /widgets/schedule
  * остаётся встраиваемой поверхностью для samskrtam.ru/raspisanie — эта
