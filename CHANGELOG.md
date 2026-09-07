@@ -1,7 +1,6 @@
 _Created: 13-06-2026 · Last updated: 05-09-2026_
 
 ## [Unreleased]
-- Анкета постоянных учеников расширена до шести страниц глубинного custdev; onboarding сокращён до восьми уместных для новичка вопросов.
 <!-- entries land in changelog_queue/ -- appended via tools/changelog_queue_consume.py, consumed by cut_release.py at release-cut (H3355); direct bullets here are hook-blocked -->
 
 ## [1.90.52] - 2026-09-03
