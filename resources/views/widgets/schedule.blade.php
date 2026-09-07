@@ -109,6 +109,10 @@
         .sw-book-msg { font-size: 13px; }
         .sw-book-msg.is-err { color: #b42318; }
         .sw-book-msg.is-ok { color: var(--recruiting-fg); }
+        /* H4328: полное расписание курса (светлая тема виджета). */
+        .fs-head { color: var(--fg); font-weight: 700; margin: 0 0 6px; }
+        .fs-body { color: #374151; line-height: 1.6; }
+        .fs-body strong { color: #111827; }
         @media (max-width: 480px) {
             .sw-row { grid-template-columns: 52px 1fr; }
             .sw-badge { grid-column: 2; justify-self: start; margin-top: 4px; }
@@ -134,6 +138,17 @@
     <div id="sw-schedule" aria-live="polite">
         <p class="sw-state">Загрузка расписания…</p>
     </div>
+
+    @if(!empty($fullSchedulePosts) && count($fullSchedulePosts) > 0)
+        <h2 style="font-size:15px; margin: 24px 0 8px; text-transform: uppercase; letter-spacing:.04em; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 4px;">Полные расписания курсов</h2>
+        @foreach($fullSchedulePosts as $row)
+            <div style="margin: 0 0 18px;">
+                @foreach($row['posts'] as $post)
+                    <div style="border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 0 0 10px;">{!! $post->html() !!}</div>
+                @endforeach
+            </div>
+        @endforeach
+    @endif
 
     <script src="{{ asset('widgets/schedule.js') }}" data-feed-url="{{ $feedUrl }}" data-book-url="{{ route('api.public.schedule.book') }}"></script>
 </body>

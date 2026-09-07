@@ -16,6 +16,7 @@ use App\Models\WaitlistVote;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
 use App\Services\Membership\PrivateArchiveEligibility;
+use App\Services\Schedule\FullSchedulePost;
 use App\Support\CourseCadence;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
@@ -384,6 +385,12 @@ class ShopController extends Controller
         $scheduleGroups = $course->upcomingSchedules()
             ->groupBy(fn ($s) => $s->start->translatedFormat('F Y'));
 
+        // H4328: полное расписание (обзорное + занятия 1–N) тем же билдером,
+        // что и Telegram-пост. За тем же флагом, что и отправка в чаты.
+        $fullSchedulePosts = config('features.schedule_full_post', false)
+            ? FullSchedulePost::forCourse($course)
+            : [];
+
         // Ритм курса из календаря: день/время, ближайшее занятие, сколько
         // осталось. Раньше шапка показывала только ручное «Идет сейчас», и
         // покупатель не видел ни дня, ни того, что поток на 14-м из 16.
@@ -457,7 +464,7 @@ class ShopController extends Controller
             ->orderBy('id')
             ->get(['id', 'title', 'slug']);
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers'));
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts'));
     }
 
     /**

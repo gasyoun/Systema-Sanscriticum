@@ -442,6 +442,18 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('post-monthly-schedule');
 
+        // Полный пост расписания курса в чаты обучения (H4328): ежедневный
+        // свип забирает группы с расписанием, менявшимся за сутки (перенос,
+        // ручная правка, перегенерация, удаление) и шлёт пост ТОЛЬКО при
+        // смене текста (hash в schedule_posts). Переносы одного дня
+        // схлопываются в один пост следующего дня — решение MG 07-09-2026.
+        // Без флага SCHEDULE_FULL_POST команда no-op.
+        $schedule->command('courses:post-schedule --due')
+            ->dailyAt('10:00') // 10:00 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('post-course-full-schedule-sweep');
+
         // VK/ORS content calendar auto-pilot (H1568, Wave 5): hourly tick
         // posts every due `scheduled` slot via n8n. No-op while
         // features.content_calendar_autopilot is OFF (default).
