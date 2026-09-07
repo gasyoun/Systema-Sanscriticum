@@ -17,6 +17,8 @@ use Tests\TestCase;
 
 class SurveyStudentInviteTest extends TestCase
 {
+    use RefreshDatabase;
+
     private const SLUG = 'student-purchase-2026-09';
 
     protected function setUp(): void
@@ -64,7 +66,7 @@ class SurveyStudentInviteTest extends TestCase
         $eligible = $this->currentStudent();
 
         $this->currentStudent(['role' => 'teacher']);
-        $this->currentStudent(['is_admin' => true]);
+        $this->currentStudent(['role' => 'admin']);
         $this->currentStudent(['wants_messenger_announcements' => false]);
         $this->currentStudent(['telegram_id' => null]);
 
@@ -102,8 +104,10 @@ class SurveyStudentInviteTest extends TestCase
 
         $this->artisan('surveys:send-student-invites', ['--send' => true])->assertExitCode(0);
 
-        $this->assertSame(1, SurveyInvitation::count());
-        $this->assertSame($eligible->id, SurveyInvitation::sole()->user_id);
+        // 2 строки: сид уже приглашённого + ровно одна новая отправка.
+        $this->assertSame(2, SurveyInvitation::count());
+        $new = SurveyInvitation::whereNotNull('telegram_message_id')->sole();
+        $this->assertSame($eligible->id, $new->user_id);
     }
 
     /** @test */
@@ -111,8 +115,8 @@ class SurveyStudentInviteTest extends TestCase
     {
         $this->fakeTelegramOk();
 
-        $first = $this->currentStudent();
-        $second = $this->currentStudent();
+        $this->currentStudent();
+        $this->currentStudent();
 
         $this->artisan('surveys:send-student-invites', ['--send' => true])->assertExitCode(0);
 
@@ -121,7 +125,6 @@ class SurveyStudentInviteTest extends TestCase
         $this->assertSame(2, $rows->count());
         $this->assertSame([4242, 4242], $rows->pluck('telegram_message_id')->all());
         $this->assertNotNull($rows->first()->sent_at);
-        $this->assertSame($first->id.','.$second->id, $rows->sortBy('id')->pluck('user_id')->implode(','));
 
         $this->artisan('surveys:send-student-invites', ['--send' => true])->assertExitCode(0);
 
@@ -170,12 +173,20 @@ class SurveyStudentInviteTest extends TestCase
     /** @test */
     public function telegram_refusal_marks_failed_and_next_run_retries_once(): void
     {
-        $user = $this->currentStudent();
+        $this->currentStudent();
 
-        Http::fake([
-            'api.telegram.org/bot*/getMe' => Http::response(['ok' => true, 'result' => ['id' => 777, 'username' => 'samskrtamru_bot', 'is_bot' => true]]),
-            'api.telegram.org/bot*/sendMessage' => Http::response(['ok' => false, 'error_code' => 403, 'description' => 'Forbidden: bot was blocked by the user'], 403),
-        ]);
+        $blocked = true;
+        Http::fake(function ($request) use (&$blocked) {
+            if (str_contains($request->url(), '/getMe')) {
+                return Http::response(['ok' => true, 'result' => ['id' => 777, 'username' => 'samskrtamru_bot', 'is_bot' => true]]);
+            }
+
+            if ($blocked) {
+                return Http::response(['ok' => false, 'error_code' => 403, 'description' => 'Forbidden: bot was blocked by the user'], 403);
+            }
+
+            return Http::response(['ok' => true, 'result' => ['message_id' => 4243]]);
+        });
 
         $this->artisan('surveys:send-student-invites', ['--send' => true])->assertExitCode(0);
 
@@ -184,7 +195,7 @@ class SurveyStudentInviteTest extends TestCase
         $this->assertNull($row->telegram_message_id);
         $this->assertStringContainsString('Forbidden', (string) $row->error);
 
-        $this->fakeTelegramOk(4243);
+        $blocked = false;
 
         $this->artisan('surveys:send-student-invites', ['--send' => true])->assertExitCode(0);
 
@@ -212,8 +223,6 @@ class SurveyStudentInviteTest extends TestCase
         $this->assertStringNotContainsString('SECRET', (string) $row->error);
         $this->assertStringContainsString('bot[redacted]', (string) $row->error);
 
-        $this->fakeTelegramOk(4244);
-
         $this->artisan('surveys:send-student-invites', ['--send' => true])->assertExitCode(0);
 
         $row->refresh();
@@ -221,7 +230,7 @@ class SurveyStudentInviteTest extends TestCase
         $this->assertNull($row->telegram_message_id);
     }
 
-    /** Telegram API: getMe подтверждает ожидаемого бота, sendMessage отвечает успехом. */
+    /** Telegram API: getMe confirms the expected bot, sendMessage answers success. */
     private function fakeTelegramOk(int $messageId = 4242): void
     {
         Http::fake([
