@@ -148,7 +148,7 @@ class SurveyStudentInviteTest extends TestCase
             $text = (string) ($request->data()['text'] ?? '');
 
             return str_contains($text, 'https://samskrte.ru/anketa/'.self::SLUG)
-                && str_contains($text, 'Заполнить опрос')
+                && str_contains($text, 'Заполнить опрос')`r`n                && str_contains($text, '15–20 минут')
                 && ! str_contains($text, 'наград')
                 && ! str_contains($text, 'приз');
         });
