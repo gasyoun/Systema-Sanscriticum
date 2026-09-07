@@ -1431,4 +1431,13 @@ return [
      | ручной/догоняющий прогон — surveys:exit-survey-completed.
      */
     'exit_survey_auto_trigger' => (bool) env('EXIT_SURVEY_AUTO_TRIGGER', false),
+
+    /*
+     | H4328 — полный пост расписания курса в чаты обучения (обзорное +
+     | занятия 1–N жирным, ритм-строка авто). Гейтит ВСЕ каналы отправки:
+     | свип courses:post-schedule --due, кнопку на курсе, авто-пост после
+     | «Сгенерировать поток». ВКЛЮЧАТЬ осознанно: SCHEDULE_FULL_POST_ENABLED=true
+     | + php artisan config:cache.
+     */
+    'schedule_full_post' => (bool) env('SCHEDULE_FULL_POST_ENABLED', false),
 ];

@@ -37,6 +37,7 @@ class Schedule extends Model
         'color',
         'group_id',
         'course_id',
+        'is_overview',
         'reminded_at',
         'group_link_posted_at',
         'zapisi_reminded_at',
