@@ -340,5 +340,4 @@ class SurveyPageTest extends TestCase
             ->assertSee('Восемь коротких вопросов')
             ->assertDontSee('<button type="button" data-page-next', false);
     }
-
 }
