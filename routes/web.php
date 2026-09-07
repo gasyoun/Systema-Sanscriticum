@@ -290,7 +290,7 @@ Route::get('/k/{course:slug}/preview', [ShopController::class, 'preview'])
 // frame-ancestors выставляется прямо на ответе (см. PublicWidgetController) — только этот роут.
 Route::get('/widgets/schedule', [PublicWidgetController::class, 'schedule'])->name('widgets.schedule');
 
-// === ПУБЛИЧНАЯ СТРАНИЦА «РАСПИСАНИЕ» (H4331) ===
+// === ПУБЛИЧНАЯ СТРАНИЦА «РАСПИСАНИЕ» (H4340) ===
 // Все расписания всех курсов тем же билдером, что и Telegram-пост (H4328).
 // Виджет выше остаётся встраиваемой поверхностью samskrtam.ru/raspisanie;
 // эта страница — человеческий эквивалент на samskrte.ru. Без auth.
