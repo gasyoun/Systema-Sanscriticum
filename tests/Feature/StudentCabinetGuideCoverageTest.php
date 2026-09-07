@@ -62,7 +62,8 @@ class StudentCabinetGuideCoverageTest extends TestCase
         return filter_var($raw, FILTER_VALIDATE_BOOLEAN);
     }
 
-    public function test_guide_file_exists_and_has_four_parts_and_seven_scenarios(): void
+    /** H4206: сценариев стало восемь — добавлен «Записаться на будущий курс (список ожидания)». */
+    public function test_guide_file_exists_and_has_four_parts_and_eight_scenarios(): void
     {
         $text = $this->guideText();
 
@@ -71,12 +72,18 @@ class StudentCabinetGuideCoverageTest extends TestCase
         }
 
         preg_match_all('/^### Шаги\s*$/mu', $this->partOne($text), $matches);
-        $this->assertCount(7, $matches[0], 'В части I должно быть семь сценариев (заголовок «### Шаги»).');
+        $this->assertCount(8, $matches[0], 'В части I должно быть восемь сценариев (заголовок «### Шаги»).');
+        $this->assertStringContainsString('Записаться на будущий курс', $text);
 
         $this->assertStringContainsString('https://samskrte.ru/faq/dz', $text);
         $this->assertStringContainsString('/help/prana-balance', $text);
     }
 
+    /**
+     * Кадров семь при восьми сценариях: «Записаться на будущий курс» (H4206)
+     * пришёл без снимка — витрину списка ожидания ещё не снимали. Число здесь
+     * держит именно этот известный пробел: снимут кадр — станет восемь.
+     */
     public function test_every_part_one_scenario_names_desktop_and_phone_shots(): void
     {
         $partOne = $this->partOne($this->guideText());
