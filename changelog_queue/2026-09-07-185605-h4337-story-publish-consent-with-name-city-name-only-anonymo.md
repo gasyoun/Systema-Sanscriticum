@@ -1,0 +1,1 @@
+- H4337: story_publish_consent (with name+city / name only / anonymously / no) + story_publish_note on page 6 of student-purchase-2026-09; a «Да» is a signal only, publication gated by the Uprava consent ledger (Claude Code Fable 5.1 (claude-fable-5-1))
