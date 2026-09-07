@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Vendored copy — DO NOT EDIT HERE (H4287, copied 07-09-2026).
+# Vendored copy — DO NOT EDIT HERE (H4287, copied 07-09-2026; re-vendored H4316,
+# 07-09-2026, after the upstream http/https-only urlopen guard).
 # Source of truth: private gasyoun/Uprava `tools/probe_journeys.py` (H4168;
 # H4287 added the /fail forced-incident pulse contract + injectable sender).
 # This public-repo copy exists only so the hourly GH Actions journey-probe
 # runner can execute it without checking out a private repo. Re-vendor by
 # copying the current Uprava source over this file after every upstream
-# change; verify with `selftest` (N2 + calendar design tests must stay green).
 """probe_journeys.py - critical-user-journey probes for platinum products (H4168).
 
 Journeys (AGENT_FLEET_SLO_2026.md SLI-4 family, Workbook Ch 2):
@@ -267,6 +267,23 @@ class MockServer:
         return False
 
 
+def _urlopen_http(target, timeout):
+    """urlopen restricted to http/https.
+
+    urllib also speaks file://, ftp:// and data://. Every URL this prober opens
+    comes from configuration (--base-url, JOURNEY_HEARTBEAT_URLS) rather than
+    from a literal, so a repointed value would otherwise turn the prober into a
+    local-file reader. The allowlist is checked before the socket is opened.
+    """
+    url = target.full_url if isinstance(target, urllib.request.Request) else target
+    scheme = urllib.parse.urlparse(str(url)).scheme.lower()
+    if scheme not in ("http", "https"):
+        raise ValueError(
+            "refusing to open %r: only http/https are allowed (got %r)" % (url, scheme)
+        )
+    return urllib.request.urlopen(target, timeout=timeout)  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected, dynamic-urllib-use-detected
+
+
 class Client:
     def __init__(self, base_url):
         self.base_url = base_url.rstrip("/")
@@ -274,7 +291,7 @@ class Client:
     def get(self, path):
         req = urllib.request.Request(self.base_url + path, method="GET")
         try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with _urlopen_http(req, timeout=15) as resp:
                 return resp.status, resp.read().decode("utf-8", "replace")
         except urllib.error.HTTPError as err:
             return err.code, err.read().decode("utf-8", "replace")
@@ -283,7 +300,7 @@ class Client:
         data = urllib.parse.urlencode(fields).encode("utf-8")
         req = urllib.request.Request(self.base_url + path, data=data, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with _urlopen_http(req, timeout=15) as resp:
                 return resp.status, resp.read().decode("utf-8", "replace")
         except urllib.error.HTTPError as err:
             return err.code, err.read().decode("utf-8", "replace")
@@ -543,7 +560,7 @@ def pulse_heartbeat(reason, ok, jsonl_path=None, urls=None, sender=None):
     record["misses"] = []
     if not targets:
         record["misses"].append({"error": "no %s configured (local journal only)" % HEARTBEAT_ENV_VAR})
-    _send = sender or (lambda u: urllib.request.urlopen(u, timeout=10).status)
+    _send = sender or (lambda u: _urlopen_http(u, timeout=10).status)
     for url in targets:
         hit = url if ok else url.rstrip("/") + "/fail"
         try:
