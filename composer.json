@@ -34,6 +34,7 @@
         "maxmind-db/reader": "1.12",
         "mokhosh/filament-kanban": "dev-l13-compatibility as 2.11.0",
         "nelexa/zip": "^4.0",
+        "predis/predis": "^2.3",
         "pxlrbt/filament-excel": "^2.5",
         "saade/filament-fullcalendar": "dev-l13-compatibility as 3.2.4",
         "socialiteproviders/vkontakte": "^5.1",
