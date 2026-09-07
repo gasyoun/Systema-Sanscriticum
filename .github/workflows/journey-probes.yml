@@ -1,0 +1,117 @@
+name: Journey probes — samskrte.ru (external, hourly)
+
+# H4287 — продуктовые джорни-пробы с инфраструктуры GitHub, НИКОГДА с самого
+# .92. L6: провайдер нуль-роутил ingress, пока локальные проверки .92 оставались
+# зелёными; L8 (uptime-samskrte.yml в этом репо): машина не может сообщить о
+# собственной смерти. Это ветка «else GH-Actions» миссии; ПРЕДПОЧТИТЕЛЬНЫЙ
+# раннер — нативный website monitor Better Stack (bought over built, GTD 0ac
+# в Uprava) — заведите его, этот workflow остаётся запасным external-каналом.
+#
+# Почему workflow живёт здесь, а не в Uprava: Uprava — приватный репозиторий,
+# hosted-минуты Actions там биллятся/заблокированы (regen.yml design note);
+# этот репозиторий публичный — минуты бесплатны (та же причина, по которой
+# здесь живёт uptime-samskrte.yml).
+#
+# ── Что пробуется (GET-only, никогда POST, никогда реальных заказов) ──────
+# tools/journey_probes/probe_journeys.py (vendored из Uprava, H4168):
+#   sale       — checkout-форма тест-SKU 5056 (цена 1₽, sandbox-курс 446,
+#                «[probe]»; rollback в Uprava GTD 0n: Tariff::find(5056)->delete())
+#   lead       — поверхность /register (прод-запись MG-gated → dash)
+#   suggester  — FAQ-страницы поддержки
+#   calendar   — карточки календаря (регрессия пустого/протухшего фида)
+#   tls        — срок сертификата
+#
+# ── Доставка тревоги (путь, доказанный H4245) ─────────────────────────────
+# Секрет BETTER_STACK_JOURNEY_HEARTBEAT_URL (pulse-URL Better Stack heartbeat):
+#   проба PASS → GET <url>        (пульс; молчание дольше периода = раннер мёртв)
+#   проба FAIL → GET <url>/fail   (форс-инцидент на телефоне MG немедленно)
+# Без секрета — честный MISS в summary и только штатное письмо GitHub о
+# падении планового workflow. Настроить один раз:
+#   gh secret set BETTER_STACK_JOURNEY_HEARTBEAT_URL -R gasyoun/Systema-Sanscriticum
+# MG: период heartbeat ставьте ≥ 6 ч, НЕ 1 ч — GitHub гасит плановые прогоны
+# под нагрузкой (замер на uptime-samskrte.yml: доехало 10 из 123, медианный
+# разрыв 122 мин); период 1 ч будет ложнопажить. Путь FAIL от расписания не
+# зависит вообще.
+#
+# ── Тест доставки (ре-ран H4245 на новой каденции) ────────────────────────
+# Actions → этот workflow → Run workflow → test_alert = true: форсирует
+# /fail-GET, не трогая сайт. Настоящий инцидент должен дойти до телефона;
+# зафиксируйте ack. Ненастроенное оповещение хуже отсутствующего.
+
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+    inputs:
+      test_alert:
+        description: 'Тест доставки: /fail без пробы сайта (проверка пейджера)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: journey-probes
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Джорни-пробы (GET-only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Форс-тест тревоги (сайт не трогается)
+        if: ${{ inputs.test_alert }}
+        env:
+          PROBE_JOURNEYS_HEARTBEAT_URLS: ${{ secrets.BETTER_STACK_JOURNEY_HEARTBEAT_URL }}
+        working-directory: tools/journey_probes
+        run: |
+          python3 - <<'PY'
+          import json
+          import probe_journeys
+          r = probe_journeys.pulse_heartbeat(
+              "forced-test-alert (H4245 re-run, H4287)", ok=False,
+              jsonl_path="/tmp/journey_hb.jsonl")
+          print(json.dumps(r, ensure_ascii=False, indent=2))
+          print("::notice::test_alert: delivered=%d misses=%d" % (len(r["delivered"]), len(r["misses"])))
+          if not r["delivered"]:
+              print("::warning::heartbeat URL не настроен (секрет BETTER_STACK_JOURNEY_HEARTBEAT_URL) — честный MISS, телефон не позвонит")
+          PY
+
+      - name: Джорни-пробы прода
+        if: ${{ inputs.test_alert != true }}
+        env:
+          PROBE_JOURNEYS_HEARTBEAT_URLS: ${{ secrets.BETTER_STACK_JOURNEY_HEARTBEAT_URL }}
+        working-directory: tools/journey_probes
+        run: |
+          set -o pipefail
+          python3 probe_journeys.py run \
+            --base-url https://samskrte.ru \
+            --sale-slug 5056 \
+            --jsonl /tmp/journey_results.jsonl \
+            --heartbeat-jsonl /tmp/journey_hb.jsonl | tee /tmp/journey_out.txt
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Джорни-пробы (внешний GH-раннер, H4287)"
+            if [ -f /tmp/journey_out.txt ]; then
+              echo '```'
+              cat /tmp/journey_out.txt
+              echo '```'
+            fi
+            if [ -f /tmp/journey_hb.jsonl ]; then
+              echo "**heartbeat:**"
+              echo '```'
+              cat /tmp/journey_hb.jsonl
+              echo '```'
+            fi
+            echo "Запасной канал; предпочтительный раннер — нативный монитор Better Stack (GTD 0ac, bought over built)."
+          } >> "$GITHUB_STEP_SUMMARY"
