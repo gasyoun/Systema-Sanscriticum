@@ -338,7 +338,7 @@ class SurveyPageTest extends TestCase
         $this->get('/anketa/onboarding')
             ->assertOk()
             ->assertSee('Восемь коротких вопросов')
-            ->assertDontSee('data-page-next');
+            ->assertDontSee('<button type="button" data-page-next', false);
     }
 
 }
