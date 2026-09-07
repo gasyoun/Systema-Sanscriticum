@@ -31,6 +31,19 @@ class SplitUploadToYandexTest extends TestCase
         ]);
         Storage::fake('local');
         Storage::fake('yandex_disk');
+
+        // Часы приколочены: фикстуры в этом файле — календарные штампы
+        // (2026-08-19…08-23), а ретеншн меряется от now(). Без заморозки
+        // группы уезжают за keep_parts_days вместе с реальной датой и
+        // тесты докатки краснеют сами по себе, без единой правки кода.
+        Carbon::setTestNow('2026-08-23 12:00:00');
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
     }
 
     private function seedLocalArchive(string $timestamp, int $bytes): string
