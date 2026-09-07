@@ -53,6 +53,7 @@ use App\Http\Controllers\PromoController;
 use App\Http\Controllers\PublicCabinetGuideController;
 use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\PublicPresenceController;
+use App\Http\Controllers\PublicSchedulePageController;
 use App\Http\Controllers\PublicWidgetController;
 use App\Http\Controllers\ReadingPackController;
 use App\Http\Controllers\Rq4StudyController;
@@ -288,6 +289,13 @@ Route::get('/k/{course:slug}/preview', [ShopController::class, 'preview'])
 // Голый HTML-документ без layout/auth; клиентский JS тянет /api/public/schedule.
 // frame-ancestors выставляется прямо на ответе (см. PublicWidgetController) — только этот роут.
 Route::get('/widgets/schedule', [PublicWidgetController::class, 'schedule'])->name('widgets.schedule');
+
+// === ПУБЛИЧНАЯ СТРАНИЦА «РАСПИСАНИЕ» (H4331) ===
+// Все расписания всех курсов тем же билдером, что и Telegram-пост (H4328).
+// Виджет выше остаётся встраиваемой поверхностью samskrtam.ru/raspisanie;
+// эта страница — человеческий эквивалент на samskrte.ru. Без auth.
+Route::get('/raspisanie', PublicSchedulePageController::class)
+    ->name('schedule.page');
 
 // Редиректы со старых URL витрины (SEO + старые ссылки/закладки/реклама).
 // Имена роутов сохранены, меняются только пути — поэтому route() ниже валиден.
