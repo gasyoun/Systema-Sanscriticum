@@ -8,6 +8,7 @@ use App\Filament\Exports\UnissuedCertificatesExporter;
 use App\Models\CertificateMilestone;
 use App\Services\UnissuedCertificatesReport;
 use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Pages\Page;
 use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Columns\TextColumn;
@@ -20,9 +21,11 @@ use Illuminate\Support\Carbon;
 /**
  * H3914: Filament-отчёт «Невыданные дипломы и справки» — read-only список
  * (студент × веха × итерация), где документ положен, но ещё не выдан, плюс
- * CSV-выгрузка для куратора. Доступ — как у «Должников» (RoleGate::adminOnly).
- * Выдача со страницы НЕ делается сознательно: выдача документов — действие
- * вех/карточки курса, отчёт только показывает дыру (категория F).
+ * CSV-выгрузка для куратора. Доступ — как у «Должников»
+ * (RoleGate::any(Roles::ADMIN, Roles::MANAGER) — рулинг MG 07-09-2026: куратор
+ * закрывает категорию F «кому какие дипломы не выданы»). Выдача со страницы
+ * НЕ делается сознательно: выдача документов — действие вех/карточки курса,
+ * отчёт только показывает дыру (категория F).
  */
 class UnissuedCertificates extends Page implements HasTable
 {
@@ -42,12 +45,12 @@ class UnissuedCertificates extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return RoleGate::adminOnly();
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return RoleGate::adminOnly();
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
     }
 
     public function table(Table $table): Table
