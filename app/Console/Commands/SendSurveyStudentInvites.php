@@ -120,6 +120,7 @@ class SendSurveyStudentInvites extends Command
             if (! $invitation instanceof SurveyInvitation) {
                 $skipped++;
                 $results[] = ['user_id' => $user->id, 'chat_id' => (string) $user->telegram_id, 'status' => 'skipped_reserved'];
+
                 continue;
             }
 
@@ -130,6 +131,7 @@ class SendSurveyStudentInvites extends Command
                 ])->save();
                 $unknown++;
                 $results[] = ['user_id' => $user->id, 'chat_id' => (string) $user->telegram_id, 'status' => SurveyInvitation::STATUS_UNKNOWN];
+
                 continue;
             }
 
