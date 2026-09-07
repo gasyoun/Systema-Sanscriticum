@@ -72,7 +72,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 > и фамилию как в кабинете. Если Zoom спрашивает почту — укажите ту же, что и в
 > кабинете: тогда вы опознаётесь точно.
 
-
+![](screenshots/student-guide/otkryt-urok-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/otkryt-urok-390.png`.
 
@@ -115,7 +115,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 2. Введите слово: деванагари, латиница, кириллица или перевод — поиск смотрит сразу все поля.
 3. Откройте нужную статью в списке.
 
-
+![](screenshots/student-guide/slovar-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/slovar-390.png`.
 
@@ -136,7 +136,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 4. На странице оплаты рассрочки можно списать прану ползунком и один раз перенести дату ближайшего платежа вперёд.
 5. Сообщение куратору в Telegram **само дату отсрочки не ставит**. Просите «зафиксируйте в кабинете» и проверяйте эту вкладку.
 
-
+![](screenshots/student-guide/oplati-dolg-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/oplati-dolg-390.png`.
 
@@ -175,7 +175,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 4. **«Сбросить пароль»** — если дело во входе.
 5. Платежа нет — вкладка **«Мои долги»** или [Позвать куратора](#позвать-куратора).
 
-
+![](screenshots/student-guide/pochemu-zakryt-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/pochemu-zakryt-390.png`.
 
@@ -195,7 +195,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 3. Нужен человек — напишите **«позови куратора»** (подойдут похожие слова).
 4. Чтобы не пропустить ответ: **«Подключить за 10 секунд»** (Telegram) или **«Подключить ВК-бота»** на главной.
 
-
+![](screenshots/student-guide/pozvat-kuratora-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/pozvat-kuratora-390.png`.
 
@@ -210,7 +210,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 
 Главная вкладка. Карточки оплаченных курсов, прогресс, ссылка на следующий урок. Неоплаченный блок — «под замком». Кнопка **«Проверить кабинет»** справа сверху — короткий тест «понимаю ли я кабинет», не экзамен по санскриту.
 
-
+![](screenshots/student-guide/tab-kursy-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/tab-kursy-390.png`.
 
@@ -222,7 +222,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 
 История: дата, сумма, курс или блок, статус. Отсюда видно, покрыт ли блок платежом.
 
-
+![](screenshots/student-guide/tab-oplaty-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/tab-oplaty-390.png`.
 
@@ -230,7 +230,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 
 Только если долг есть. См. [Оплатить долг или взнос по рассрочке](#оплатить-долг-или-взнос-по-рассрочке).
 
-
+![](screenshots/student-guide/tab-dolgi-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/tab-dolgi-390.png`.
 
@@ -240,7 +240,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 
 Куда делась прана без покупки — история на этой вкладке: сгорание за долгое отсутствие или перевод. Отдельного счётчика сгорания нет. Подробнее: [https://samskrte.ru/help/prana-balance](https://samskrte.ru/help/prana-balance).
 
-
+![](screenshots/student-guide/tab-prana-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/tab-prana-390.png`.
 
@@ -248,7 +248,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 
 Пункт **«Карточки»** в меню — интервальные повторения. Рядом **«Мои колоды»** и **«Статистика карточек»**, если колоды включены. Канонический адрес: `/dvaram/koloda`.
 
-
+![](screenshots/student-guide/koloda-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/koloda-390.png`.
 
@@ -268,7 +268,7 @@ _Created: 21-08-2026 · Last updated: 07-09-2026_
 - Имя и email сам ученик не меняет — это делает куратор.
 - Аватар подтягивается из Telegram или VK после привязки; иначе — инициал.
 
-
+![](screenshots/student-guide/profil-1440.png)
 
 На телефоне — тот же кадр `screenshots/student-guide/profil-390.png`.
 
