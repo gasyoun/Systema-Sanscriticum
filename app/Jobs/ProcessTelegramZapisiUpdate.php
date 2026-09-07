@@ -208,16 +208,34 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
     /**
      * Форвард в n8n — отдельным джобом (та же очередь `webhooks`), чтобы недоступный
      * n8n не мешал записи сообщения в корпус: у форварда свои ретраи и своя судьба.
+     *
+     * H4314: роутинг по типу апдейта. my_chat_member (бот добавлен в чат) идёт
+     * на zapisi_welcome_n8n_url (приветственная карточка), message/channel_post —
+     * на zapisi_n8n_forward_url («ловим названия») как раньше. Пустой адрес = тип
+     * не форвардится.
      */
     private function forwardToN8n(): void
     {
-        $url = trim((string) (MarketingSetting::cached()?->zapisi_n8n_forward_url ?? ''));
+        $url = $this->forwardUrlFor($this->update);
 
         if ($url === '') {
             return;
         }
 
         ForwardUpdateToN8n::dispatch($url, $this->update);
+    }
+
+    private function forwardUrlFor(array $update): string
+    {
+        $settings = MarketingSetting::cached();
+
+        $isWelcome = isset($update['my_chat_member']) && is_array($update['my_chat_member']);
+
+        $raw = $isWelcome
+            ? (string) ($settings?->zapisi_welcome_n8n_url ?? '')
+            : (string) ($settings?->zapisi_n8n_forward_url ?? '');
+
+        return trim($raw);
     }
 
     private function storeWriter(): HarvestStoreWriter
