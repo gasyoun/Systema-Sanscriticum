@@ -10,6 +10,7 @@ use App\Models\Schedule;
 use App\Models\ScheduleJoinClick;
 use App\Models\User;
 use App\Models\WebinarAttendance;
+use App\Services\ClassRoster;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -18,13 +19,19 @@ use Illuminate\Support\Collection;
  * «Институт». По каждой идущей группе — весь ростер с последним РЕАЛЬНО
  * посещённым занятием каждого студента и пропуски 2+ подряд.
  *
- * Решения MG 08-09-2026 (чат):
- *  - «на чём закончил» = факт присутствия (WebinarAttendance); клик по ссылке
- *    (ScheduleJoinClick) — факт weaker: помечается отдельно, посещением НЕ
- *    считается (ClassAttendanceService тоже различает present/clicked);
- *  - «пропустил» = занятие без attendance И без клика (полная неявка);
+ * Решения MG 08-09-2026 (чат) + поправка по живым данным (dry-run на проде):
+ *  - «на чём закончил» = последний факт студента на занятии. Иерархия фактов
+ *    перевернута ПРОБОЙ ДАННЫХ: из 1924 строк WebinarAttendance только 74
+ *    привязаны к user_id (гости пишутся по имени), а ScheduleJoinClick —
+ *    «надёжная привязка студентов к занятию» (кодбейс, H-серия) — 80/80 с
+ *    user_id. Основной сигнал = КЛИК; attendance-with-user_id — усиление
+ *    (строка без пометки), клик без attendance помечается «(по клику)»;
+ *  - «пропустил» = занятие без факта (ни attendance, ни клика); серия от
+ *    новейшего прошедшего назад; 2+ после хотя бы одного факта → «⚠️ пропустил
+ *    N подряд»; ноль фактов → «не был ни разу (за N занятий)»;
  *  - группы = идущие: ≥1 прошедшего И ≥1 будущего занятия;
- *  - ростер = все студенты группы (User::groups).
+ *  - ростер = канонический ClassRoster (activeGroups — вышедшие/выпускники
+ *    исключены, «единый источник правды» о том, кто должен быть на занятии).
  *
  * Нумерация занятий зеркалит FullSchedulePost::compose (обзорное не в счёт),
  * даты — тот же формат «1 сентября 2026 (вторник), 19:30».
@@ -98,7 +105,12 @@ final class WeeklyFinishReport
         $segments = ['<b>Кто на чём закончил — неделя '.$week.'</b>'];
 
         foreach ($report as $row) {
-            $segments[] = '<b>'.self::esc($row['course']->title).' — '.self::esc($row['group']->name).'</b>'
+            // «Курс — группа» дублируется, когда имя группы равно названию курса.
+            $head = $row['course']->title === $row['group']->name
+                ? self::esc($row['course']->title)
+                : self::esc($row['course']->title).' — '.self::esc($row['group']->name);
+
+            $segments[] = '<b>'.$head.'</b>'
                 .' (прошло '.$row['pastCount'].' · впереди '.$row['futureCount'].')';
             foreach ($row['students'] as $s) {
                 $segments[] = self::esc(self::studentLine($s));
@@ -127,9 +139,11 @@ final class WeeklyFinishReport
     private const MAX_TELEGRAM_LENGTH = 3500;
 
     /**
-     * Строка студента: «Иванов Анна — 9-е занятие, 1 сентября 2026 (вторник), 19:30
-     * ⚠️ пропустил 2 подряд». Последний факт — только WebinarAttendance; клик —
-     * пометка weaker-факта; ничего — «не был ни разу».
+     * Строка студента:
+     *  - с фактом: «Иванова — 9-е занятие, 1 сентября 2026 (вторник), 19:30»,
+     *    клик-only факт помечается «(по клику)»;
+     *  - серия неявок 2+ после факта: «⚠️ пропустил N подряд»;
+     *  - без фактов: «не был ни разу (за N занятий)» + «(кликал: …)» если клики были.
      */
     private static function studentLine(array $s): string
     {
@@ -143,19 +157,34 @@ final class WeeklyFinishReport
         $last = $s['last'];
         if ($last !== null) {
             $line .= ' — '.$last['label'].', '.$last['date'];
+            if ($last['kind'] === 'clicked') {
+                $line .= ' (по клику)';
+            }
         } else {
-            $line .= ' — не был ни разу';
+            $line .= ' — не был ни разу (за '.$s['pastSessions'].' '.self::pluralLessons($s['pastSessions']).')';
+            if (isset($s['clicked'])) {
+                $line .= ' (кликал: '.$s['clicked']['label'].', '.$s['clicked']['date'].')';
+            }
         }
 
-        if ($last === null && isset($s['clicked'])) {
-            $line .= ' (кликал: '.$s['clicked']['label'].', '.$s['clicked']['date'].')';
-        }
-
-        if ($s['missedStreak'] >= 2) {
+        if ($last !== null && $s['missedStreak'] >= 2) {
             $line .= ' ⚠️ пропустил '.$s['missedStreak'].' подряд';
         }
 
         return $line;
+    }
+
+    /** Русское множественное: занятие/занятия/занятий. */
+    private static function pluralLessons(int $n): string
+    {
+        if ($n % 10 === 1 && $n % 100 !== 11) {
+            return 'занятие';
+        }
+        if (in_array($n % 10, [2, 3, 4], true) && ! in_array($n % 100, [12, 13, 14], true)) {
+            return 'занятия';
+        }
+
+        return 'занятий';
     }
 
     private static function esc(string $s): string
@@ -184,11 +213,13 @@ final class WeeklyFinishReport
     }
 
     /**
-     * Строки студентов группы: последний факт присутствия + серия полных
-     * неявок (без attendance и без клика) от новейшего прошедшего назад.
+     * Строки студентов группы (канонический ростер ClassRoster — activeGroups,
+     * вышедшие/выпускники исключены): последний ФАКТ на занятии (attendance
+     * с user_id или клик по ссылке) + серия полных неявок от новейшего
+     * прошедшего занятия назад.
      *
      * @param  Collection<int, Schedule>  $past  прошедшие, по возрастанию start
-     * @return list<array{user: User, last: ?array{label: string, date: string}, clicked: ?array{label: string, date: string}, missedStreak: int}>
+     * @return list<array{user: User, last: ?array{label: string, date: string, kind: string}, clicked: ?array{label: string, date: string}, missedStreak: int, pastSessions: int}>
      */
     private static function studentRows(Group $group, $past): array
     {
@@ -209,24 +240,39 @@ final class WeeklyFinishReport
 
         $labels = self::scheduleLabels($past);
 
+        // Канонический ростер группы: активные участники (group_user.left_at IS NULL).
+        $students = User::query()
+            ->whereHas('activeGroups', fn ($q) => $q->where('groups.id', $group->id))
+            ->orderBy('name')
+            ->get();
+
         $rows = [];
-        foreach ($group->users()->orderBy('name')->get() as $user) {
-            // Последний факт присутствия: новейшее занятие с attendance.
-            $lastScheduleId = $past->reverse()
-                ->first(fn (Schedule $s): bool => $attended->get($user->id, collect())->contains($s->id))?->id;
-            $last = $lastScheduleId !== null ? $labels[$lastScheduleId] : null;
+        foreach ($students as $user) {
+            $userAttended = $attended->get($user->id, collect());
+            $userClicked = $clicked->get($user->id, collect());
 
-            // Weaker-факт: кликал, но ни разу не отметился.
-            $clickedScheduleId = $lastScheduleId === null
-                ? $past->reverse()->first(fn (Schedule $s): bool => $clicked->get($user->id, collect())->contains($s->id))?->id
+            // Последний факт: новейшее прошедшее занятие с attendance ИЛИ кликом;
+            // attendance сильнее — если на одном занятии есть и то, и другое,
+            // факт «attended» (без пометки «по клику»).
+            $lastSchedule = $past->reverse()->first(
+                fn (Schedule $s): bool => $userAttended->contains($s->id) || $userClicked->contains($s->id),
+            );
+            $last = null;
+            if ($lastSchedule !== null) {
+                $kind = $userAttended->contains($lastSchedule->id) ? 'attended' : 'clicked';
+                $last = $labels[$lastSchedule->id] + ['kind' => $kind];
+            }
+
+            // Weaker-сигнал для «не был ни разу»: были клики, но ни одного посещения.
+            $clickedOnlySchedule = $lastSchedule === null
+                ? $past->reverse()->first(fn (Schedule $s): bool => $userClicked->contains($s->id))
                 : null;
-            $clickedLast = $clickedScheduleId !== null ? $labels[$clickedScheduleId] : null;
+            $clickedLast = $clickedOnlySchedule !== null ? $labels[$clickedOnlySchedule->id] : null;
 
-            // Серия полных неявок от новейшего прошедшего занятия назад.
+            // Серия полных неявок (ни факта, ни клика) от новейшего назад.
             $missedStreak = 0;
             foreach ($past->reverse() as $schedule) {
-                $hadFact = $attended->get($user->id, collect())->contains($schedule->id)
-                    || $clicked->get($user->id, collect())->contains($schedule->id);
+                $hadFact = $userAttended->contains($schedule->id) || $userClicked->contains($schedule->id);
                 if ($hadFact) {
                     break;
                 }
@@ -236,8 +282,9 @@ final class WeeklyFinishReport
             $rows[] = [
                 'user' => $user,
                 'last' => $last,
-                'clicked' => $clickedLast,
+                'clicked' => $lastSchedule === null && $clickedLast !== null ? $clickedLast : null,
                 'missedStreak' => $missedStreak,
+                'pastSessions' => $past->count(),
             ];
         }
 

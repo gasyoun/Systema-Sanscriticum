@@ -95,26 +95,63 @@ class WeeklyFinishReportTest extends TestCase
     }
 
     /** @test */
-    public function click_counts_for_missed_streak_but_not_for_last_attended(): void
+    public function click_counts_as_last_fact_marked_by_click(): void
     {
         [, $group, $past] = $this->runningCourse();
 
+        // Клик на 3-м без attendance: последний факт = 3-е занятие (по клику),
+        // серия неявок снимается (факт-клик есть). Живые данные (dry-run на
+        // проде): 74/1924 attendance с user_id, клики 80/80 — основной сигнал.
         $clicker = User::factory()->create(['name' => 'Кириллов Вадим']);
         $group->users()->attach($clicker->id);
-
-        // Кликал на 3-м, attendance нет: неявки-серии нет (факт-клик есть),
-        // но «последнее посещение» = null (клик — weaker-факт).
         ScheduleJoinClick::create(['schedule_id' => $past[2]->id, 'user_id' => $clicker->id, 'first_clicked_at' => now()->subDays(2), 'click_count' => 1]);
 
         $report = WeeklyFinishReport::build();
         $student = $report[0]['students'][0];
 
-        $this->assertNull($student['last']);
-        $this->assertSame('3-е занятие', $student['clicked']['label']);
+        $this->assertSame('3-е занятие', $student['last']['label']);
+        $this->assertSame('clicked', $student['last']['kind']);
         $this->assertSame(0, $student['missedStreak']);
 
         $chunks = WeeklyFinishReport::telegramChunks($report);
-        $this->assertStringContainsString('не был ни разу (кликал: 3-е занятие', $chunks[0]);
+        $this->assertStringContainsString('Кириллов Вадим — 3-е занятие, ', $chunks[0]);
+        $this->assertStringContainsString('(по клику)', $chunks[0]);
+    }
+
+    /** @test */
+    public function never_attended_line_shows_session_count_without_warning(): void
+    {
+        [, $group] = $this->runningCourse();
+
+        $never = User::factory()->create(['name' => 'Петров Борис']);
+        $group->users()->attach($never->id);
+
+        $report = WeeklyFinishReport::build();
+        $student = $report[0]['students'][0];
+
+        $this->assertNull($student['last']);
+        $this->assertSame(3, $student['missedStreak']);
+
+        $chunks = WeeklyFinishReport::telegramChunks($report);
+        $this->assertStringContainsString('Петров Борис — не был ни разу (за 3 занятия)', $chunks[0]);
+        $this->assertStringNotContainsString('пропустил', $chunks[0]);
+    }
+
+    /** @test */
+    public function left_group_members_are_excluded_from_roster(): void
+    {
+        [, $group] = $this->runningCourse();
+
+        $active = User::factory()->create(['name' => 'Активная Анна']);
+        $group->users()->attach($active->id);
+
+        $left = User::factory()->create(['name' => 'Ушедший Ушелов']);
+        $group->users()->attach($left->id, ['left_at' => now()->subDays(1)]);
+
+        $report = WeeklyFinishReport::build();
+
+        $names = array_map(fn (array $s): string => $s['user']->name, $report[0]['students']);
+        $this->assertSame(['Активная Анна'], $names);
     }
 
     /** @test */
