@@ -45,7 +45,15 @@ final class InstituteDonateController extends Controller
     {
         abort_unless((bool) config('institute.donations_enabled'), 404);
 
-        $amount = (int) $request->validated('amount');
+        // Тарифный SKU меценатства (H4400): выбранный уровень подставляет
+        // ратифицированную сумму MG (500/5000/250) вместо ручного ввода.
+        // Новый маршрут не появляется — платёж остаётся tariff=donation
+        // в существующем контуре Точки с той же донорской рамкой ст. 582.
+        $sku = (string) $request->validated('sku', '');
+        $skus = config('institute.mecenaty_skus', []);
+        $amount = ($sku !== '' && isset($skus[$sku]))
+            ? (int) $skus[$sku]['amount']
+            : (int) $request->validated('amount');
 
         // Благодарность (N3): согласие фиксируем вместе с платежом — строка
         // реестра появится только после фактической оплаты (processDonationGratitude).
@@ -78,12 +86,13 @@ final class InstituteDonateController extends Controller
         // Purpose обязан содержать «Заказ №{id}» — иначе вебхук Точки
         // (WebhookController::handleTochkaWebhook, regex /Заказ №(\d+)/)
         // не найдёт платёж, и тот навсегда останется в pending.
-        $purpose = 'Заказ №'.$payment->id.' | Добровольное пожертвование';
+        $skuLabel = ($sku !== '' && isset($skus[$sku])) ? ' ('.$skus[$sku]['label'].')' : '';
+        $purpose = 'Заказ №'.$payment->id.' | Добровольное пожертвование'.$skuLabel;
 
         try {
-            // Признак предмета расчёта в чеке (service) зависит от итоговой
-            // юр-рамки взноса (пожертвование ст. 582 vs услуга по оферте —
-            // @DECIDE MG до включения флага); сейчас дефолт контура.
+            // Признак предмета расчёта в чеке (service) — пожертвование ст. 582
+            // ГК (ратифицировано MG 08-09-2026, census PAYWALL_CENSUS волна 2):
+            // невозвратное, без встречного пакета услуг.
             $response = $tochka->createPaymentWithReceipt(
                 user: $user,
                 amount: (float) $amount,

@@ -11,10 +11,25 @@
         издания, открытые разборы и бесплатные открытые занятия.
     </p>
     <p class="text-slate-300 mb-8">
-        Пожертвование — добровольное и свободной суммы. Взамен мы ничего не продаём:
+        Пожертвование — добровольное. Взамен мы ничего не продаём:
         все публикации Института остаются открытыми, а имена меценатов (по желанию)
         указываются в благодарностях изданий.
     </p>
+
+    {{-- H4400: состав меценатства — ратифицирован MG 08-09-2026 (план института §«Меценаты»). --}}
+    <div class="rounded-xl border border-slate-700 p-4 mb-8">
+        <h2 class="text-xl font-bold text-white mb-3">Что получает меценат</h2>
+        <ul class="space-y-1 text-slate-300 list-disc pl-5">
+            <li>ежемесячный научный разбор для меценатов;</li>
+            <li>ранний доступ к новым публикациям и изданиям;</li>
+            <li>благодарности меценатам в изданиях (по согласию);</li>
+            <li>приоритет на очных встречах Института (1–2 встречи в год, Москва/Санкт-Петербург).</li>
+        </ul>
+        <p class="text-sm text-slate-400 mt-3">
+            Это не подписка и не услуга: перечисленные возможности — благодарность
+            за добровольную поддержку, а не товар. Встречный пакет благ не продаётся.
+        </p>
+    </div>
 
     <h2 class="text-xl font-bold text-white mb-3">Как поддержать</h2>
 
@@ -24,6 +39,26 @@
             @csrf
             @if(session('error'))
                 <p class="text-sm text-red-400">{{ session('error') }}</p>
+            @endif
+
+            {{-- H4400: три ратифицированных уровня меценатства (MG 08-09-2026). --}}
+            @if(!empty(config('institute.mecenaty_skus')))
+                <div>
+                    <span class="block text-sm font-bold text-slate-200 mb-2">Уровень поддержки</span>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach(config('institute.mecenaty_skus') as $skuKey => $sku)
+                            <button type="submit" name="sku" value="{{ $skuKey }}"
+                                    class="rounded-lg border border-brand px-4 py-2 text-slate-100 hover:opacity-90">
+                                <span class="block font-bold">{{ $sku['label'] }}</span>
+                                <span class="block text-xs text-slate-300">{{ $sku['note'] }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                    <p class="text-sm text-slate-400 mt-2">
+                        Кнопка уровня сразу открывает оплату на эту сумму. Студенческая
+                        ступень — по честному слову, без справок.
+                    </p>
+                </div>
             @endif
 
             @if(!empty(config('institute.donate_presets')))
@@ -95,6 +130,19 @@
             <p class="text-sm text-slate-400">Назначение платежа: «Добровольное пожертвование».</p>
         </div>
     @endif
+
+    {{-- H4400: донорская юр-рамка — ратифицировано MG 08-09-2026 (ст. 582 ГК). --}}
+    <div class="rounded-xl border border-slate-700 p-4 mb-6 text-sm text-slate-400 space-y-1">
+        <p class="font-bold text-slate-300">Правовая основа взноса</p>
+        <p>
+            Взнос является добровольным пожертвованием на уставную деятельность
+            в соответствии со <span>ст. 582 Гражданского кодекса РФ</span>.
+            Пожертвование не возврату и не обмену не подлежит, встречным
+            обязательством не облагается; перечисленные выше возможности
+            предоставляются как благодарность, а не как товар или услуга —
+            НДС не начисляется. Получатель платежа — ИП Гасунс М. Ю.
+        </p>
+    </div>
 
     @if($gratitudes->isNotEmpty())
         <h2 class="text-xl font-bold text-white mb-3">Благодарности меценатам</h2>
