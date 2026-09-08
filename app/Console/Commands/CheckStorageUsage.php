@@ -9,6 +9,8 @@ use App\Services\StorageUsageService;
 use App\Support\Roles;
 use Filament\Notifications\Notification;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
+use Throwable;
 
 /**
  * Дежурный по файловому хранилищу (H1345): раз в сутки измеряет вес каталогов
@@ -63,6 +65,10 @@ class CheckStorageUsage extends Command
             default => $service->megabytes((int) $snapshot['free_disk_bytes']),
         });
 
+        if (! $this->option('dry')) {
+            $this->appendSeriesLine($service, $snapshot);
+        }
+
         if ($snapshot['ok']) {
             $this->info('Хранилище в норме.');
 
@@ -111,5 +117,49 @@ class CheckStorageUsage extends Command
             'yellow' => 'жёлтый',
             default => 'ок',
         };
+    }
+
+    /**
+     * H4403: суточная серия замеров (для калибровки H4291). До сих пор вердикт
+     *.daily нигде не сохранялся (H3655: schedule.log не хранит stdout, алерт —
+     * только при превышении), поэтому месячное окно наблюдения не оставляет
+     * после себя данных. Одна JSONL-строка за запуск; --dry не пишет (ручной
+     * прогон не должен загрязнять суточную серию); сбой записи репортится, но
+     * НЕ блокирует алерт — серию можно потерять, сторож нет.
+     */
+    private function appendSeriesLine(StorageUsageService $service, array $snapshot): void
+    {
+        try {
+            $row = [
+                'at' => now()->toIso8601String(),
+                'total_bytes' => (int) $snapshot['total_bytes'],
+                'total_limit_mb' => (int) $snapshot['total_limit_mb'],
+                'free_disk_bytes' => $snapshot['free_disk_bytes'] === null ? null : (int) $snapshot['free_disk_bytes'],
+                'free_disk_level' => $snapshot['free_disk_level'],
+                'ok' => (bool) $snapshot['ok'],
+                'directories' => array_map(static fn (array $dir): array => [
+                    'path' => $dir['path'],
+                    'bytes' => (int) $dir['bytes'],
+                    'limit_mb' => (int) $dir['limit_mb'],
+                    'ratio' => $dir['ratio'],
+                    'level' => $dir['level'],
+                    'truncated' => (bool) $dir['truncated'],
+                ], $snapshot['directories']),
+            ];
+
+            $encoded = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            if ($encoded === false) {
+                throw new \RuntimeException('json_encode вернул false для строки серии замеров.');
+            }
+
+            File::append(
+                storage_path('logs/storage_check_series.jsonl'),
+                $encoded.PHP_EOL
+            );
+        } catch (Throwable $e) {
+            report($e);
+            $this->warn('Серия замеров не записана: '.$e->getMessage());
+        }
     }
 }
