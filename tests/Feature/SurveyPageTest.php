@@ -293,11 +293,14 @@ class SurveyPageTest extends TestCase
             'main_goal' => 'Читать и понимать оригинальные тексты',
             'next_skill' => 'Самостоятельно разобрать главу Гиты',
             'followup_permission' => 'Да',
+            'story_publish_consent' => 'Да, только с именем',
             'tried_before' => ['Бесплатный бот', 'Пробный урок'],
         ])->assertRedirect('/anketa/student-purchase-2026-09?done=1')->assertSessionHasNoErrors();
 
         $row = SurveyResponse::where('survey_slug', 'student-purchase-2026-09')->firstOrFail();
         $this->assertSame('Курс чтения', $row->answers['repeat_purchase']);
+        // H4337: story-publish consent is a required page-6 radio, distinct from followup_permission.
+        $this->assertSame('Да, только с именем', $row->answers['story_publish_consent']);
         $this->assertSame('За разбор моих ошибок', $row->answers['value_for_money_open']);
         $this->assertSame(['Бесплатный бот', 'Пробный урок'], $row->answers['tried_before']);
         $this->assertNull($row->reward_choice);

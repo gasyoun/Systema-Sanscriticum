@@ -518,6 +518,15 @@ return [
                     'label' => 'Можно ли связаться с вами в кабинете, чтобы уточнить ответы?',
                     'options' => ['Да', 'Нет'],
                 ],
+                // H4337: consent to a published student story. Not a testimonial consent and
+                // not implied by followup_permission. «Да» here still goes through the
+                // Uprava consent ledger (custdev/consent_ledger/) before anything is published.
+                [
+                    'id' => 'story_publish_consent', 'page' => 6, 'type' => 'radio', 'required' => true,
+                    'label' => 'Мы готовим серию «Истории учеников». Можно ли рассказать о вашем пути к санскриту? Текст покажем вам до публикации, его можно править и отозвать в любой момент.',
+                    'options' => ['Да, с именем и городом', 'Да, только с именем', 'Да, анонимно', 'Нет'],
+                ],
+                ['id' => 'story_publish_note', 'page' => 6, 'type' => 'textarea', 'label' => 'Если «да»: что в вашей истории важно рассказать, а о чём лучше не писать?'],
                 ['id' => 'final_note', 'page' => 6, 'type' => 'textarea', 'label' => 'Что мы не спросили, но должны знать о вашем опыте?'],
             ],
         ],

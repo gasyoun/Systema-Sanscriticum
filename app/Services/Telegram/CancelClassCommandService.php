@@ -8,9 +8,9 @@ use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
 use App\Models\TelegramChatPost;
+use App\Services\Schedule\LessonSeriesInfo;
 use App\Services\Schedule\ScheduleMover;
 use App\Support\TelegramSendGuard;
-use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -30,14 +30,38 @@ use Illuminate\Support\Facades\Log;
  *    на сутки (иначе второй reply сдвинул бы цепочку ещё на неделю);
  *  - ВСЕ отказы (не в whitelist, нет маппинга, занятие прошло) — только в лог:
  *    бот не пишет в студенческий чат ничего, кроме подтверждения отмены.
+ *
+ * MG 08-09: подтверждение несёт причину (ровно одна главная — названная в
+ * команде после «:»/«—», иначе авто-определение отпуск/каникулы), дату и
+ * время следующего занятия с номером «13-е из 16» и строку о последнем
+ * занятии потока. Каскад +7д — семантика по умолчанию; одиночная отмена
+ * без сдвига — запасной путь через датированную команду (H4253).
  */
 final class CancelClassCommandService
 {
-    /** Нормализованные тексты команды (нижний регистр, схлопнутые пробелы). */
-    private const COMMAND_TEXTS = ['отмена занятия', 'отменяю занятие', 'отмена'];
+    /**
+     * Команда + опциональная причина: «Отмена занятия», «Отмена: нет кворума»,
+     * «Отменяю занятие — гос. каникулы». Без хвоста — причина авто-определяется.
+     * Хвост, начинающийся с даты («Отмена: 08.09»), — НЕ эта команда:
+     * датированная отмена — это DateAwareCancelService (H4253).
+     */
+    private const COMMAND_PATTERN = '/^(отмена занятия|отменяю занятие|отмена)(?:\s*[:—–-]\s*(?!\d{1,2}[.\/]\d{1,2})(.+))?$/u';
 
     /** Клейм «по этому посту уже отменили» — окно суточное, как у дедупа отправок. */
     private const CLAIM_TTL_SECONDS = 86400;
+
+    /**
+     * Распознаёт ли этот текст reply-команду (без проверки reply/whitelist) —
+     * для CancelUsageHint: отличить «команда адресована» от «попытка мимо».
+     *
+     * @param  array<string, mixed>  $message
+     */
+    public static function matches(array $message): bool
+    {
+        $text = mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', (string) ($message['text'] ?? ''))));
+
+        return $text !== '' && preg_match(self::COMMAND_PATTERN, $text) === 1;
+    }
 
     /**
      * @param  array<string, mixed>  $message
@@ -53,9 +77,10 @@ final class CancelClassCommandService
         }
 
         $text = mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', (string) ($message['text'] ?? ''))));
-        if (! in_array($text, self::COMMAND_TEXTS, true)) {
+        if (preg_match(self::COMMAND_PATTERN, $text, $command) !== 1) {
             return;
         }
+        $statedReason = trim((string) ($command[2] ?? ''));
 
         $chatId = (string) $chatId;
         $replyTo = (int) $replyTo;
@@ -119,12 +144,21 @@ final class CancelClassCommandService
         }
 
         $label = $this->lessonLabel($schedule);
+        $number = LessonSeriesInfo::number($schedule->title);
+        $reason = CancelReasonResolver::resolve($schedule, $statedReason !== '' ? $statedReason : null);
         // Дата «следующего» = текущий start этой строки + неделя (так его положит каскад).
         $nextStart = $schedule->start->copy()->addWeek();
 
         $shifted = app(ScheduleMover::class)->cancelAndShiftWeek($schedule);
 
-        SendZapisiBotMessageJob::dispatch($chatId, $this->renderNotice($label, $nextStart));
+        SendZapisiBotMessageJob::dispatch($chatId, CancelNoticeRenderer::build(
+            $label,
+            $nextStart,
+            $number,
+            LessonSeriesInfo::totalForGroup((int) $schedule->group_id),
+            LessonSeriesInfo::lastRowForGroup((int) $schedule->group_id)?->start,
+            $reason,
+        ));
 
         Log::info('CancelClassCommand: lesson cancelled by admin reply', [
             'chat_id' => $chatId,
@@ -163,12 +197,5 @@ final class CancelClassCommandService
         $stripped = trim((string) preg_replace('/\s*\([^)]*\)\s*$/u', '', $title));
 
         return $stripped !== '' ? $stripped : $title;
-    }
-
-    private function renderNotice(string $label, CarbonInterface $nextStart): string
-    {
-        return "❗ <b>Занятие отменено</b>\n\n"
-            .'«'.htmlspecialchars($label, ENT_QUOTES, 'UTF-8')."» не состоится.\n"
-            .'Следующее занятие: <b>'.$nextStart->format('d.m.Y').'</b> в <b>'.$nextStart->format('H:i').'</b> (МСК).';
     }
 }

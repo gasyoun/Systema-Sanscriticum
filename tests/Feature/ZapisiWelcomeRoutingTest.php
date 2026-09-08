@@ -10,6 +10,7 @@ use App\Models\MarketingSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
 /**
@@ -28,6 +29,19 @@ class ZapisiWelcomeRoutingTest extends TestCase
         parent::setUp();
         $this->store = storage_path('framework/testing/zapisi-welcome-'.uniqid());
         config(['services.telegram_harvest.store_path' => $this->store]);
+        // H4318: my_chat_member клеймится в Redis до форварда; CI runner без
+        // redis-сервера получал Connection refused → fail-closed → форварда нет.
+        // Эмулируем живой Redis с NX-семантикой на уровне фасада.
+        $claimed = [];
+        Redis::shouldReceive('set')
+            ->andReturnUsing(function (string $key, ...$rest) use (&$claimed) {
+                if (in_array($key, $claimed, true)) {
+                    return false;
+                }
+                $claimed[] = $key;
+
+                return true;
+            });
     }
 
     protected function tearDown(): void

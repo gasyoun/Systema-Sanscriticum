@@ -130,6 +130,13 @@ class ScheduleResource extends Resource
                             Forms\Components\DateTimePicker::make('end')
                                 ->label('Окончание (необязательно)'),
                         ]),
+
+                    // H4328: обзорное занятие — не участвует в нумерации 1–N
+                    // в полном посте расписания, идёт первым блоком.
+                    Forms\Components\Toggle::make('is_overview')
+                        ->label('Обзорное занятие (не в счёт остальных)')
+                        ->helperText('В посте расписания выводится отдельным блоком «Обзорное занятие (не в счет N)» и не нумеруется.')
+                        ->columnSpanFull(),
                 ]),
 
             Forms\Components\Section::make('Настройки')
