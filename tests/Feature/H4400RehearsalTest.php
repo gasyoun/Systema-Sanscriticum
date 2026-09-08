@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Payment;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -13,7 +14,7 @@ use Tests\TestCase;
 /** H4400 checkout pre-flight rehearsal on staff user — Tochka faked, zero real charges. */
 final class H4400RehearsalTest extends TestCase
 {
-    use \Illuminate\Foundation\Testing\RefreshDatabase;
+    use RefreshDatabase;
 
     public function test_staff_checkout_rehearsal_three_skus(): void
     {
