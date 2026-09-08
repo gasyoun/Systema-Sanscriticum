@@ -274,6 +274,30 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('support-auto-reply-weekly');
 
+        // H3999 (шаг I3): недельный список незалинкованных контактов с 2+
+        // сообщениями — для РУЧНОЙ привязки. Ничего студентам не шлёт; гейт —
+        // тот же флаг приглашения, потому что без него список некуда девать.
+        // Ручной просмотр: php artisan support:link-invite-census --dry.
+        $schedule->command('support:link-invite-census')
+            ->sundays()
+            ->at('18:20')
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.support_dm_link_invite'))
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('support-link-invite-census');
+
+        // H3999 (рулинг A5): SLA-сеть по открытым тредам без ответа. Каждые
+        // пять минут — порог считается в РАБОЧИХ минутах, и более редкий слот
+        // размазал бы обещанные 15 минут до получаса. Тихие часы и пустой
+        // список кураторов команда отбивает сама; флаг default OFF.
+        $schedule->command('support:sla-escalate')
+            ->everyFiveMinutes()
+            ->when(fn () => (bool) config('features.support_sla_escalation'))
+            ->withoutOverlapping(5)
+            ->onOneServer()
+            ->name('support-sla-escalate');
+
         // H4001 (Wave 3 leverage-плана): индексация FAQ-корпуса в
         // knowledge_chunks. Двойной гейт — флаг гибрида (OFF по умолчанию) И
         // настроенный драйвер эмбеддингов: пока dense-нога не включена
@@ -417,6 +441,18 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('post-monthly-schedule');
+
+        // Полный пост расписания курса в чаты обучения (H4328): ежедневный
+        // свип забирает группы с расписанием, менявшимся за сутки (перенос,
+        // ручная правка, перегенерация, удаление) и шлёт пост ТОЛЬКО при
+        // смене текста (hash в schedule_posts). Переносы одного дня
+        // схлопываются в один пост следующего дня — решение MG 07-09-2026.
+        // Без флага SCHEDULE_FULL_POST команда no-op.
+        $schedule->command('courses:post-schedule --due')
+            ->dailyAt('10:00') // 10:00 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('post-course-full-schedule-sweep');
 
         // VK/ORS content calendar auto-pilot (H1568, Wave 5): hourly tick
         // posts every due `scheduled` slot via n8n. No-op while
@@ -693,6 +729,15 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('zapisi-remind-classes');
+
+        // MG 08-09: слотовые уведомления — «сегодня занятия нет» в обычный слот
+        // (перенос/отмена) и напоминание об оплате после каждого 4-го занятия
+        // блока. No-op без features.telegram_zapisi_bot; дедуп клеймами внутри.
+        $schedule->command('zapisi:slot-notices')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('zapisi-slot-notices');
 
         // --- РАЗОВЫЕ НАПОМИНАНИЯ СТУДЕНТАМ (ScheduledReminder) ---
         // Куратор ставит текст + дату один раз в карточке студента (кнопка

@@ -106,6 +106,100 @@ class DateAwareCancelCommandTest extends TestCase
         });
     }
 
+    /** MG 08-09: датированное подтверждение несёт «N-е из M», последнее занятие и причину. */
+    public function test_dated_notice_reports_next_last_and_reason(): void
+    {
+        Redis::shouldReceive('set')->once()->andReturn(true);
+        [, , $group] = $this->seedTeacherWorld();
+
+        $d1 = now()->addDays(10)->format('Y-m-d');
+        $first = Schedule::create([
+            'title' => 'Занятие А (#5, 01.09.26)',
+            'start' => $d1.' 20:00:00',
+            'end' => $d1.' 21:00:00',
+            'group_id' => $group->id,
+            'link' => 'https://zoom.us/j/x',
+        ]);
+        $second = Schedule::create([
+            'title' => 'Занятие Б (#6, 08.09.26)',
+            'start' => now()->addDays(17)->format('Y-m-d').' 20:00:00',
+            'end' => now()->addDays(17)->format('Y-m-d').' 21:00:00',
+            'group_id' => $group->id,
+            'link' => 'https://zoom.us/j/x',
+        ]);
+        Schedule::create([
+            'title' => 'Занятие В (#7, 15.09.26)',
+            'start' => now()->addDays(24)->format('Y-m-d').' 20:00:00',
+            'end' => now()->addDays(24)->format('Y-m-d').' 21:00:00',
+            'group_id' => $group->id,
+            'link' => 'https://zoom.us/j/x',
+        ]);
+
+        app(DateAwareCancelService::class)->handle($this->message(
+            'Отмена '.$first->start->format('d.m').' — гос. каникулы'
+        ));
+
+        $this->assertTrue($first->fresh()->trashed());
+        $this->assertFalse($second->fresh()->trashed());
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, function (SendZapisiBotMessageJob $job): bool {
+            return str_contains($job->text, 'Занятия отменены (гос. каникулы)')
+                && str_contains($job->text, 'Следующее занятие')
+                && str_contains($job->text, '6-е из 7')
+                && str_contains($job->text, 'Последнее, 7-е занятие пройдет');
+        });
+    }
+
+    /** MG 08-09: «Отмена: 08.09» — двоеточие-префикс перед датами, причины нет. */
+    public function test_colon_prefix_before_dates_adds_no_reason(): void
+    {
+        Redis::shouldReceive('set')->once()->andReturn(true);
+        [, , $group] = $this->seedTeacherWorld();
+        $row = $this->scheduleAt(now()->addDays(10)->format('Y-m-d'), 'Занятие', $group->id);
+
+        app(DateAwareCancelService::class)->handle($this->message(
+            'Отмена: '.$row->start->format('d.m')
+        ));
+
+        $this->assertTrue($row->fresh()->trashed());
+        Queue::assertPushed(SendZapisiBotMessageJob::class, function (SendZapisiBotMessageJob $job): bool {
+            return str_contains($job->text, 'Занятия отменены')
+                && ! str_contains($job->text, '(');
+        });
+    }
+
+    /** MG 08-09: отменили последнее занятие потока — честная строка «больше нет». */
+    public function test_cancel_last_remaining_lesson_says_series_ended(): void
+    {
+        Redis::shouldReceive('set')->once()->andReturn(true);
+        [, , $group] = $this->seedTeacherWorld();
+
+        $last = Schedule::create([
+            'title' => 'Занятие (#5, 01.09.26)',
+            'start' => now()->addDays(10)->format('Y-m-d').' 20:00:00',
+            'end' => now()->addDays(10)->format('Y-m-d').' 21:00:00',
+            'group_id' => $group->id,
+            'link' => 'https://zoom.us/j/x',
+        ]);
+        // Прошедшая строка осталась в истории — будущего после отмены нет.
+        Schedule::create([
+            'title' => 'Занятие (#4, 25.08.26)',
+            'start' => now()->subDays(4)->format('Y-m-d').' 20:00:00',
+            'end' => now()->subDays(4)->format('Y-m-d').' 21:00:00',
+            'group_id' => $group->id,
+        ]);
+
+        app(DateAwareCancelService::class)->handle($this->message(
+            'Отмена '.$last->start->format('d.m')
+        ));
+
+        $this->assertTrue($last->fresh()->trashed());
+        Queue::assertPushed(SendZapisiBotMessageJob::class, function (SendZapisiBotMessageJob $job): bool {
+            return str_contains($job->text, 'Запланированных занятий в этом потоке больше нет');
+        });
+    }
+
     public function test_teacher_cannot_cancel_foreign_group(): void
     {
         Redis::shouldReceive('set')->never();

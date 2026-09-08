@@ -21,6 +21,9 @@ final class CabinetMastery
 
     public const AUDIENCE_ACCOUNTANT = 'accountant';
 
+    /** H4313-program: 20-дневная программа освоения кураторской панели (1 вопрос = 1 день). */
+    public const AUDIENCE_CURATOR_DEEP = 'curator_deep';
+
     /**
      * @return array{title:string, intro:string, pass:int, questions:list<array<string, mixed>>}
      */

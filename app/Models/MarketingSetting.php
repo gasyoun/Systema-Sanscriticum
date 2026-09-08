@@ -56,6 +56,8 @@ class MarketingSetting extends Model
         'zapisi_reminder_lead_minutes',
         'zapisi_reminder_template',
         'zapisi_n8n_forward_url',
+        // Приветственная карточка при добавлении бота в чат (H4314).
+        'zapisi_welcome_n8n_url',
         // Reply-команда «Отмена занятия»: telegram user_id админов через запятую (H4199).
         'zapisi_cancel_admin_ids',
 

@@ -113,7 +113,109 @@ class ZapisiCancelClassCommandTest extends TestCase
                 && str_contains($job->text, 'Занятие отменено')
                 // Хвостовая дата «(#13, 06.09.26)» из титула вырезана.
                 && str_contains($job->text, 'Рецитация сутр Патанджали, вс 10:00, 2026»')
-                && str_contains($job->text, 'Следующее занятие');
+                && str_contains($job->text, 'Следующее занятие')
+                // MG 08-09: номер «13-е из 14» и последнее занятие потока.
+                && str_contains($job->text, '13-е из 14')
+                && str_contains($job->text, 'Последнее, 14-е занятие пройдет');
+        });
+    }
+
+    /** MG 08-09: причина из команды («Отмена занятия: нет кворума») — в заголовке. */
+    public function test_stated_reason_goes_to_notice_header(): void
+    {
+        Queue::fake();
+        Redis::shouldReceive('set')->once()->andReturn(true);
+        $this->seedAdmin();
+        $schedule = $this->mappedSchedule();
+
+        app(CancelClassCommandService::class)->handle($this->message([
+            'text' => 'Отмена занятия: нет кворума',
+        ]));
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, function (SendZapisiBotMessageJob $job): bool {
+            return str_contains($job->text, 'Занятие отменено (нет кворума)');
+        });
+    }
+
+    /** MG 08-09: авто-причина — групповые каникулы (H3790), если не названа в команде. */
+    public function test_auto_reason_from_group_vacation(): void
+    {
+        Queue::fake();
+        Redis::shouldReceive('set')->once()->andReturn(true);
+        $this->seedAdmin();
+        $schedule = $this->mappedSchedule();
+        $schedule->group->update(['is_on_vacation' => true]);
+
+        app(CancelClassCommandService::class)->handle($this->message());
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, function (SendZapisiBotMessageJob $job): bool {
+            return str_contains($job->text, 'Занятие отменено (каникулы)');
+        });
+    }
+
+    /** MG 08-09: когда после отменённого есть ещё занятия — строка о последнем. */
+    public function test_notice_reports_last_lesson_when_more_remain(): void
+    {
+        Queue::fake();
+        Redis::shouldReceive('set')->once()->andReturn(true);
+        $this->seedAdmin();
+        $schedule = $this->mappedSchedule();
+        Schedule::create([
+            'title' => 'Рецитация сутр Патанджали, вс 10:00, 2026 (#15, 20.09.26)',
+            'start' => now()->addHour()->addWeeks(2),
+            'end' => now()->addHour()->addWeeks(2)->addMinutes(90),
+            'group_id' => $schedule->group_id,
+            'link' => 'https://zoom.us/j/x',
+        ]);
+
+        app(CancelClassCommandService::class)->handle($this->message());
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, function (SendZapisiBotMessageJob $job): bool {
+            return str_contains($job->text, '13-е из 15')
+                && str_contains($job->text, 'Последнее, 15-е занятие пройдет');
+        });
+    }
+
+    /** Без тега «(#N, …)» в титулах номер не выдумывается — строка без «N-е из». */
+    public function test_notice_without_series_tags_omits_ordinal(): void
+    {
+        Queue::fake();
+        Redis::shouldReceive('set')->once()->andReturn(true);
+        $this->seedAdmin();
+        $schedule = $this->mappedSchedule('Рецитация сутр Патанджали, вс 10:00, 2026');
+        Schedule::where('group_id', $schedule->group_id)
+            ->where('id', '!=', $schedule->id)
+            ->update(['title' => 'Рецитация сутр Патанджали, вс 10:00, 2026']);
+
+        app(CancelClassCommandService::class)->handle($this->message());
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, function (SendZapisiBotMessageJob $job): bool {
+            return str_contains($job->text, 'Следующее занятие')
+                && ! str_contains($job->text, '-е из')
+                && ! str_contains($job->text, 'Последнее,');
+        });
+    }
+
+    /** MG 08-09: artisan schedule:cancel каскадом шлёт в чат то же подтверждение. */
+    public function test_artisan_cancel_command_posts_confirmation_with_reason(): void
+    {
+        Queue::fake();
+        $this->seedAdmin();
+        $schedule = $this->mappedSchedule();
+
+        $this->artisan('schedule:cancel', [
+            'id' => $schedule->id,
+            '--reason' => 'отсутствие кворума',
+        ])->assertSuccessful();
+
+        $this->assertSame(
+            now()->addHour()->addWeek()->format('Y-m-d H:i'),
+            $schedule->fresh()->start->format('Y-m-d H:i'),
+        );
+        Queue::assertPushed(SendZapisiBotMessageJob::class, function (SendZapisiBotMessageJob $job): bool {
+            return $job->chatId === self::CHAT_ID
+                && str_contains($job->text, 'Занятие отменено (отсутствие кворума)')
+                && str_contains($job->text, '13-е из 14');
         });
     }
 

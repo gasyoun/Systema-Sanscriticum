@@ -25,6 +25,7 @@ use App\Services\InstallmentPlanCreator;
 use App\Services\PromiseFulfillment;
 use App\Services\Telegram\ZapisiChatMemberService;
 use App\Support\RoleGate;
+use App\Support\Roles;
 use Carbon\CarbonInterface;
 use Filament\Forms;
 use Filament\Infolists;
@@ -97,12 +98,16 @@ class Debtors extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return RoleGate::adminOnly();
+        // Рулинг MG 07-09-2026: куратор (manager) работает с должниками в сезон —
+        // просмотр, быстрые напоминания и подтверждение оплат. Деструктивные
+        // action'ы (кик из чатов, «неблагонадёжный», доступы/рассрочки/обещания)
+        // остаются за админом — см. visible-гейты ниже.
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return RoleGate::adminOnly();
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
     }
 
     /**
@@ -1003,6 +1008,7 @@ class Debtors extends Page implements HasTable
                         ->label('Отменить договорённость')
                         ->color('danger')
                         ->icon('heroicon-o-x-circle')
+                        ->visible(fn (): bool => RoleGate::adminOnly())
                         ->action(function () use ($existing): void {
                             $existing->update([
                                 'status' => PaymentPromise::STATUS_CANCELLED,
@@ -1015,7 +1021,7 @@ class Debtors extends Page implements HasTable
                         ->label('Открыть доступ')
                         ->color('info')
                         ->icon('heroicon-o-lock-open')
-                        ->visible(fn () => ! app(ConditionalAccessGranter::class)->hasActiveGrant($existing))
+                        ->visible(fn () => RoleGate::adminOnly() && ! app(ConditionalAccessGranter::class)->hasActiveGrant($existing))
                         ->modalHeading('Открыть доступ под обещание')
                         ->fillForm([
                             'access_mode' => ConditionalAccessGranter::MODE_BLOCKS,
@@ -1049,7 +1055,7 @@ class Debtors extends Page implements HasTable
                         ->label('Отозвать доступ')
                         ->color('danger')
                         ->icon('heroicon-o-lock-closed')
-                        ->visible(fn () => app(ConditionalAccessGranter::class)->hasActiveGrant($existing))
+                        ->visible(fn () => RoleGate::adminOnly() && app(ConditionalAccessGranter::class)->hasActiveGrant($existing))
                         ->requiresConfirmation()
                         ->modalDescription('Все conditional-платежи по этому обещанию будут удалены. Студент потеряет доступ к открытым под обещание блокам.')
                         ->action(function () use ($existing): void {
@@ -1100,7 +1106,7 @@ class Debtors extends Page implements HasTable
             ->label('Рассрочка')
             ->icon('heroicon-o-banknotes')
             ->color('info')
-            ->visible(fn (Model $r): bool => ! (bool) $r->is_unreliable)
+            ->visible(fn (Model $r): bool => RoleGate::adminOnly() && ! (bool) $r->is_unreliable)
             ->modalHeading(fn (Model $r): string => 'Рассрочка по оплате — '.($r->name ?: $r->email))
             ->modalDescription('Каждая строка — отдельное обещание оплаты. Все строки объединяются в один план рассрочки.')
             ->modalWidth('2xl')
@@ -1351,6 +1357,9 @@ class Debtors extends Page implements HasTable
             ->icon('heroicon-o-no-symbol')
             ->color('danger')
             ->visible(function (Model $r): bool {
+                if (! RoleGate::adminOnly()) {
+                    return false;
+                }
                 if (empty($r->telegram_id)) {
                     return false;
                 }
@@ -1423,6 +1432,7 @@ class Debtors extends Page implements HasTable
             ->label('Исключить из TG-чата')
             ->icon('heroicon-o-no-symbol')
             ->color('danger')
+            ->visible(fn (): bool => RoleGate::adminOnly())
             ->requiresConfirmation()
             ->modalHeading('Исключить выбранных из учебных TG-чатов')
             ->modalDescription(
@@ -1540,7 +1550,7 @@ class Debtors extends Page implements HasTable
             ->label('🚩 Отметить как неблагонадёжного')
             ->icon('heroicon-o-flag')
             ->color('danger')
-            ->visible(fn (Model $r): bool => ! (bool) $r->is_unreliable)
+            ->visible(fn (Model $r): bool => RoleGate::adminOnly() && ! (bool) $r->is_unreliable)
             ->modalHeading(fn (Model $r): string => 'Неблагонадёжный — '.($r->name ?: $r->email))
             ->modalDescription('Студенту перестанут действовать скидки лояльности, action’ы «Обещание» и «Рассрочка» исчезнут, conditional-доступ будет недоступен. Флаг автоматически не снимается.')
             ->form([

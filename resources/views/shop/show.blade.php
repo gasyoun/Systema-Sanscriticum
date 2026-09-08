@@ -561,6 +561,9 @@ document.addEventListener('DOMContentLoaded', function () {
         </section>
         @endif
 
+        {{-- ───── 1.6 ПОЛНОЕ РАСПИСАНИЕ (H4328: обзорное + занятия 1–N) ───── --}}
+        @include('shop.partials.full-schedule')
+
         {{-- ───── 2. ТАРИФЫ ───── --}}
         @php
             $hasCurrentBlock = !empty($currentBlockNumber);

@@ -117,8 +117,9 @@ class PollTelegramZapisiUpdates extends Command
         $offset = (int) Cache::get(self::OFFSET_KEY, 0);
 
         // allowed_updates те же, что регистрировал вебхук (ZapisiSetWebhook):
-        // группа шлёт message, канал — channel_post.
-        $updates = $client->getUpdates($offset, $pollTimeout, ['message', 'channel_post']);
+        // группа шлёт message, канал — channel_post, my_chat_member —
+        // приветственная карточка (H4314).
+        $updates = $client->getUpdates($offset, $pollTimeout, ['message', 'channel_post', 'my_chat_member']);
 
         foreach ($updates as $update) {
             if (! is_array($update) || ! isset($update['update_id'])) {

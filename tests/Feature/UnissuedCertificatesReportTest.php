@@ -296,20 +296,21 @@ class UnissuedCertificatesReportTest extends TestCase
             ->assertSee($student->name);
     }
 
-    /** @test */
-    public function non_admin_roles_are_denied(): void
+    /**
+     * @test
+     * Рулинг MG 07-09-2026 (запуск года): куратор (manager) закрывает категорию F —
+     * гейт any(ADMIN, MANAGER), как у «Должников». Учитель и бухгалтер по-прежнему вне.
+     */
+    public function manager_is_allowed_teacher_and_accountant_are_denied(): void
     {
-        foreach ([Roles::MANAGER, Roles::TEACHER, Roles::ACCOUNTANT, Roles::SUPER_ADMIN] as $role) {
+        $this->actingAs(User::factory()->create(['role' => Roles::MANAGER]));
+        $this->assertTrue(
+            UnissuedCertificates::canAccess(),
+            'роль manager обязана проходить гейт (рулинг MG 07-09-2026)',
+        );
+
+        foreach ([Roles::TEACHER, Roles::ACCOUNTANT] as $role) {
             $this->actingAs(User::factory()->create(['role' => $role]));
-
-            if ($role === Roles::SUPER_ADMIN) {
-                $this->assertTrue(
-                    UnissuedCertificates::canAccess(),
-                    "роль {$role} (super_admin) обязана проходить гейт",
-                );
-
-                continue;
-            }
 
             $this->assertFalse(
                 UnissuedCertificates::canAccess(),
@@ -317,5 +318,11 @@ class UnissuedCertificatesReportTest extends TestCase
             );
             $this->get('/admin/unissued-certificates')->assertForbidden();
         }
+
+        $this->actingAs(User::factory()->create(['role' => Roles::SUPER_ADMIN]));
+        $this->assertTrue(
+            UnissuedCertificates::canAccess(),
+            'роль super_admin обязана проходить гейт',
+        );
     }
 }

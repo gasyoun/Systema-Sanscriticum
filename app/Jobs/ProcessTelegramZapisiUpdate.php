@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Models\MarketingSetting;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\Telegram\CancelClassCommandService;
+use App\Services\Telegram\CancelUsageHint;
 use App\Services\Telegram\DateAwareCancelService;
 use App\Services\Telegram\VacationCommandService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
@@ -19,6 +20,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Throwable;
 
 /**
@@ -110,6 +112,15 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             app(DateAwareCancelService::class)->handle($message);
         } catch (Throwable $e) {
             Log::warning('DateAwareCancel: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        // MG 08-09: преподаватели не знают грамматику команд отмены — если текст
+        // начинается с «отмен…», но ни одна команда не адресована, распознанному
+        // sender'у (whitelist/ACL) один раз в сутки уходит подсказка формата.
+        try {
+            CancelUsageHint::maybeSendFor($message);
+        } catch (Throwable $e) {
+            Log::warning('CancelUsageHint: handler failed', ['error' => $e->getMessage()]);
         }
 
         try {
@@ -208,16 +219,81 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
     /**
      * Форвард в n8n — отдельным джобом (та же очередь `webhooks`), чтобы недоступный
      * n8n не мешал записи сообщения в корпус: у форварда свои ретраи и своя судьба.
+     *
+     * H4314: роутинг по типу апдейта. my_chat_member (бот добавлен в чат) идёт
+     * на zapisi_welcome_n8n_url (приветственная карточка), message/channel_post —
+     * на zapisi_n8n_forward_url («ловим названия») как раньше. Пустой адрес = тип
+     * не форвардится.
+     *
+     * H4318 (MG, «железно»): приветственная карточка — НЕ ЧАЩЕ ОДНОГО РАЗА В 24 Ч
+     * НА ЧАТ, любыми средствами и при любых обстоятельствах. Клейм в Redis ДО
+     * форварда: переживает деплои/рестарты n8n (в отличие от n8n staticData,
+     * который import --force обнуляет — проверено 07-09-2026). Redis недоступен =
+     * FAIL-CLOSED (карточку не шлём): суточный лимит — требование MG, а не
+     * оптимизация; молчание лучше пятёрки дублей.
      */
     private function forwardToN8n(): void
     {
-        $url = trim((string) (MarketingSetting::cached()?->zapisi_n8n_forward_url ?? ''));
+        $url = $this->forwardUrlFor($this->update);
 
         if ($url === '') {
             return;
         }
 
+        if ($this->isWelcomeUpdate($this->update) && ! $this->claimWelcomeCard($this->update)) {
+            return;
+        }
+
         ForwardUpdateToN8n::dispatch($url, $this->update);
+    }
+
+    private function isWelcomeUpdate(array $update): bool
+    {
+        return isset($update['my_chat_member']) && is_array($update['my_chat_member']);
+    }
+
+    private function claimWelcomeCard(array $update): bool
+    {
+        $chatId = $update['my_chat_member']['chat']['id'] ?? null;
+
+        if ($chatId === null) {
+            return false;
+        }
+
+        $key = 'tg:welcome-card:'.((int) $chatId).':'.now()->format('Ymd');
+
+        try {
+            // 24h TTL c привязкой к календарному дню: ровно один клейм на чат в сутки.
+            $claimed = (bool) Redis::set($key, now()->toIso8601String(), 'EX', 86400, 'NX');
+
+            if (! $claimed) {
+                Log::info('H4318: welcome card rate-limited (1/24h), forward skipped', [
+                    'chat_id' => $chatId,
+                ]);
+            }
+
+            return $claimed;
+        } catch (Throwable $exception) {
+            // FAIL-CLOSED (H4318): Redis недоступен → карточку не шлём. Суточный
+            // лимит — требование MG («железно»), молчание лучше дублей.
+            Log::error('H4318: redis unavailable, welcome card FAIL-CLOSED skipped', [
+                'chat_id' => $chatId,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    private function forwardUrlFor(array $update): string
+    {
+        $settings = MarketingSetting::cached();
+
+        $raw = $this->isWelcomeUpdate($update)
+            ? (string) ($settings?->zapisi_welcome_n8n_url ?? '')
+            : (string) ($settings?->zapisi_n8n_forward_url ?? '');
+
+        return trim($raw);
     }
 
     private function storeWriter(): HarvestStoreWriter

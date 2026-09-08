@@ -7,11 +7,14 @@ use App\Models\Course;
 use App\Models\Schedule;
 use App\Models\Teacher;
 use App\Services\ProgrammeShellGraph;
+use App\Services\Schedule\FullSchedulePost;
+use App\Services\Schedule\SchedulePostSender;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -25,7 +28,10 @@ class CourseResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+        // Рулинг MG 07-09-2026: куратору (manager) нужен просмотр карточек
+        // (датировка /online по подтверждениям преподавателей). Редактирование
+        // остаётся у админа/препода своей дисциплины — canEdit не расширен.
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER, Roles::MANAGER);
     }
 
     public static function canCreate(): bool
@@ -585,6 +591,45 @@ class CourseResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+
+                // H4328: полный пост расписания курса в чаты обучения групп
+                // (за флагом features.schedule_full_post).
+                Tables\Actions\Action::make('post_full_schedule')
+                    ->label('Пост расписания в чаты')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('gray')
+                    ->visible(function (Course $record): bool {
+                        if (! config('features.schedule_full_post', false) || ! RoleGate::adminOnly()) {
+                            return false;
+                        }
+
+                        return $record->groups()->whereNotNull('telegram_chat_id')->exists()
+                            || Schedule::where('course_id', $record->id)->exists();
+                    })
+                    ->form(fn (Course $record): array => [
+                        Forms\Components\Placeholder::make('preview')
+                            ->label('Предпросмотр (по группе потока)')
+                            ->content(function () use ($record): string {
+                                $posts = FullSchedulePost::forCourse($record);
+                                if ($posts === []) {
+                                    return 'У курса нет занятий — пост не строится.';
+                                }
+
+                                return $posts[0]->text();
+                            }),
+                    ])
+                    ->requiresConfirmation()
+                    ->modalHeading('Отправить расписание в чаты обучения')
+                    ->modalDescription('Пост (обзорное + занятия 1–N) уйдёт в telegram-чат каждой группы курса. Если текст не менялся с прошлой отправки — повторно не уйдёт.')
+                    ->action(function (Course $record): void {
+                        $result = app(SchedulePostSender::class)->sendForCourse($record);
+
+                        Notification::make()
+                            ->title($result['sent'] > 0 ? 'Отправлено' : 'Нечего отправлять')
+                            ->body("Постов отправлено: {$result['sent']} (пропущено: {$result['skipped']}).")
+                            ->{$result['sent'] > 0 ? 'success' : 'warning'}()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
