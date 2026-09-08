@@ -20,7 +20,11 @@ class PublicSchedulePageTest extends TestCase
     {
         config(['features.schedule_full_post' => true]);
 
-        $course = Course::factory()->create(['title' => 'Введение в индийскую философию', 'slug' => 'fiya', 'is_active' => true, 'is_visible' => true]);
+        $teacher = \App\Models\Teacher::create(['name' => 'Тестова Мария', 'email' => 't@example.test']);
+        $course = Course::factory()->create([
+            'title' => 'Введение в индийскую философию', 'slug' => 'fiya',
+            'is_active' => true, 'is_visible' => true, 'teacher_id' => $teacher->id,
+        ]);
         $hidden = Course::factory()->create(['title' => 'Скрытый курс', 'slug' => 'hidden', 'is_active' => true, 'is_visible' => false]);
         $group = Group::factory()->create();
         $course->groups()->attach($group->id);
@@ -36,6 +40,7 @@ class PublicSchedulePageTest extends TestCase
             ->assertSee('<strong>1-е занятие</strong>: 6 марта 2027 (суббота), 11:00', false)
             ->assertSee('Еженедельно по субботам в 11:00 (по МСК)')
             ->assertSee('/k/fiya')
+            ->assertSee('/online/prepodavatel/')
             ->assertDontSee('Скрытый курс');
     }
 

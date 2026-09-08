@@ -173,18 +173,24 @@ final class FullSchedulePost
         return implode("\n", $this->telegramLines());
     }
 
-    /** HTML для сайта (страница курса, виджет): та же структура, <strong>/<br>. */
+    /**
+     * HTML для сайта (страница курса, виджет). Жирным — только заголовок
+     * курса (fs-head) и метки занятий; ритм-строка — обычным (правка
+     * MG 08-09-2026), идёт первой строкой блока расписания.
+     */
     public function html(): string
     {
         $esc = fn (string $line): string => htmlspecialchars($line, ENT_QUOTES, 'UTF-8');
         $bold = fn (string $line): string => '<strong>'.$esc($line).'</strong>';
 
-        $head = $esc($this->title);
-        if ($this->cadence !== null) {
-            $head .= '<br>'.$esc($this->cadence);
-        }
+        $head = '<strong>'.$esc($this->title).'</strong>';
 
         $lines = [];
+
+        if ($this->cadence !== null) {
+            $lines[] = $esc($this->cadence);
+            $lines[] = '';
+        }
 
         if ($this->overview !== null) {
             $lines[] = $bold($this->overview['label']).':';
