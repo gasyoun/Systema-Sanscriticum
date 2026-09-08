@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\MarketingSetting;
 use App\Support\CareChatReplyLog;
+use App\Support\TelegramSendGuard;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
@@ -77,6 +78,20 @@ final class CarePostCommand extends Command
 
         $firstId = null;
         foreach ($chunks as $chunk) {
+            // Клейм ДО вызова API (правило CLAUDE.md «новая точка отправки в
+            // Telegram»): повторный запуск с тем же текстом за сутки — тихий
+            // успех без второй копии в чате; отказ Telegram — release + ошибка.
+            if (! TelegramSendGuard::claim($chatId, $chunk)) {
+                $this->line(json_encode([
+                    'ok' => true,
+                    'suppressed' => true,
+                    'chat_id' => $chatId,
+                    'message_id' => $firstId,
+                    'reason' => 'dedup: идентичный текст уже отправлялся в этот чат за окно TTL',
+                ], JSON_UNESCAPED_UNICODE));
+
+                return self::SUCCESS;
+            }
             $payload = [
                 'chat_id' => $chatId,
                 'text' => $chunk,
@@ -89,6 +104,7 @@ final class CarePostCommand extends Command
             $response = Http::timeout(15)->post('https://api.telegram.org/bot'.$token.'/sendMessage', $payload);
             $ok = $response->successful() && (bool) ($response->json('ok') ?? false);
             if (! $ok) {
+                TelegramSendGuard::release($chatId, $chunk);
                 $this->line(json_encode([
                     'ok' => false,
                     'chat_id' => $chatId,
