@@ -397,6 +397,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('send-login-invites');
 
+        // H4392 (MG 08-09-2026): «Кто на чём закончил» — еженедельный пост в чат
+        // «Институт» (TELEGRAM_INSTITUTE_CHAT_ID; флаг WEEKLY_FINISH_REPORT_ENABLED).
+        // Понедельник 10:30 МСК, после приглашений; команда сама гейтится флагом,
+        // без него — тихий выход.
+        $schedule->command('care:weekly-finish')
+            ->weeklyOn(1, '10:30') // понедельник 10:30 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('care-weekly-finish');
+
         // Сгорание (decay) тратимой праны у давно неактивных студентов — еженедельно,
         // в ночное окно. Команда сама пропускает прогон, если decay выключен
         // (config prana.decay.enabled=false, дефолт), так что повесить безопасно:

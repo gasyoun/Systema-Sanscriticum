@@ -407,8 +407,8 @@ final class FullSchedulePost
         return 'Еженедельно '.$dayPart.' '.$timePart.' (по МСК)';
     }
 
-    /** «7 марта 2026 (суббота), 11:00». */
-    private static function formatDate(Carbon $start): string
+    /** «7 марта 2026 (суббота), 11:00». Публично с H4392 — переиспользуется отчётом о посещениях. */
+    public static function formatDate(Carbon $start): string
     {
         $month = self::MONTHS_GENITIVE[(int) $start->format('n')];
         $weekday = self::WEEKDAY_NOMINATIVE[(int) $start->format('w')];
