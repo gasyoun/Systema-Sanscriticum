@@ -40,6 +40,7 @@ class StorageUsageWatchdogTest extends TestCase
     {
         $this->cleanup('storage-watch-test/big.bin');
         @rmdir(storage_path('app/storage-watch-test'));
+        @unlink(storage_path('logs/storage_check_series.jsonl'));
 
         parent::tearDown();
     }
@@ -208,6 +209,63 @@ class StorageUsageWatchdogTest extends TestCase
         $this->assertNotNull($event, 'storage:check должен быть в расписании.');
         // dailyAt('04:20') → «20 4 * * *».
         $this->assertSame('20 4 * * *', $event->expression);
+    }
+
+    /** @test */
+    public function daily_check_appends_one_jsonl_series_line(): void
+    {
+        // H4403: месячное окно калибровки H4291 должно оставлять данные,
+        // а не молчание — одна разборываемая JSONL-строка за запуск.
+        User::factory()->create(['role' => Roles::ADMIN]);
+        $this->seedFile('storage-watch-test/big.bin', 2 * 1048576);
+
+        config([
+            'storage_watch.watched' => ['storage-watch-test' => 1],
+            'storage_watch.total_mb' => 100000,
+            'storage_watch.min_free_disk_mb' => 0,
+        ]);
+
+        $this->artisan('storage:check')->assertSuccessful();
+
+        $file = storage_path('logs/storage_check_series.jsonl');
+        $this->assertFileExists($file);
+
+        $lines = array_values(array_filter(explode("\n", (string) file_get_contents($file))));
+        $this->assertCount(1, $lines, 'Один запуск — одна строка серии.');
+
+        $row = json_decode($lines[0], true);
+        $this->assertIsArray($row, 'Строка серии должна быть валидным JSON.');
+        $this->assertArrayHasKey('at', $row);
+        $this->assertSame(2 * 1048576, $row['directories'][0]['bytes']);
+        $this->assertSame(1, $row['directories'][0]['limit_mb']);
+        $this->assertSame('red', $row['directories'][0]['level']);
+        $this->assertSame(100000, $row['total_limit_mb']);
+        // total_bytes — весь storage/app, включая содержимое тестовой среды:
+        // фиксируем только «int и не меньше замера наблюдаемого каталога».
+        $this->assertIsInt($row['total_bytes']);
+        $this->assertGreaterThanOrEqual($row['directories'][0]['bytes'], $row['total_bytes']);
+        $this->assertFalse($row['ok']);
+        // free_disk_bytes может быть null (unknown/off) — ключ обязан быть.
+        $this->assertArrayHasKey('free_disk_bytes', $row);
+        $this->assertArrayHasKey('free_disk_level', $row);
+    }
+
+    /** @test */
+    public function dry_run_never_touches_the_series(): void
+    {
+        // Ручной --dry прогон — инструмент «посмотреть сейчас», а не
+        // показатель суточной серии: запись серии не должна загрязняться.
+        User::factory()->create(['role' => Roles::ADMIN]);
+
+        config([
+            'storage_watch.watched' => ['storage-watch-test' => 100],
+            'storage_watch.total_mb' => 100000,
+            'storage_watch.min_free_disk_mb' => 0,
+        ]);
+
+        $this->artisan('storage:check --dry')->assertSuccessful();
+
+        $this->assertFileDoesNotExist(storage_path('logs/storage_check_series.jsonl'));
     }
 
     private function eventFor(string $needle): ?Event
