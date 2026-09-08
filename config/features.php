@@ -1440,4 +1440,8 @@ return [
      | + php artisan config:cache.
      */
     'schedule_full_post' => (bool) env('SCHEDULE_FULL_POST_ENABLED', false),
+
+    // H4392 (MG 08-09-2026): еженедельный пост «Кто на чём закончил» в чат
+    // «Институт» (care:weekly-finish). Получатель — TELEGRAM_INSTITUTE_CHAT_ID.
+    'weekly_finish_report' => (bool) env('WEEKLY_FINISH_REPORT_ENABLED', false),
 ];
