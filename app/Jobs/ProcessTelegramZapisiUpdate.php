@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Models\MarketingSetting;
 use App\Services\HomeworkTelegramTagService;
 use App\Services\Telegram\CancelClassCommandService;
+use App\Services\Telegram\CancelUsageHint;
 use App\Services\Telegram\DateAwareCancelService;
 use App\Services\Telegram\VacationCommandService;
 use App\Services\TelegramHarvest\HarvestStoreWriter;
@@ -111,6 +112,15 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             app(DateAwareCancelService::class)->handle($message);
         } catch (Throwable $e) {
             Log::warning('DateAwareCancel: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        // MG 08-09: преподаватели не знают грамматику команд отмены — если текст
+        // начинается с «отмен…», но ни одна команда не адресована, распознанному
+        // sender'у (whitelist/ACL) один раз в сутки уходит подсказка формата.
+        try {
+            CancelUsageHint::maybeSendFor($message);
+        } catch (Throwable $e) {
+            Log::warning('CancelUsageHint: handler failed', ['error' => $e->getMessage()]);
         }
 
         try {

@@ -730,6 +730,15 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('zapisi-remind-classes');
 
+        // MG 08-09: слотовые уведомления — «сегодня занятия нет» в обычный слот
+        // (перенос/отмена) и напоминание об оплате после каждого 4-го занятия
+        // блока. No-op без features.telegram_zapisi_bot; дедуп клеймами внутри.
+        $schedule->command('zapisi:slot-notices')
+            ->everyFiveMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('zapisi-slot-notices');
+
         // --- РАЗОВЫЕ НАПОМИНАНИЯ СТУДЕНТАМ (ScheduledReminder) ---
         // Куратор ставит текст + дату один раз в карточке студента (кнопка
         // «Запланировать напоминание») — дальше это дело системы, не человека.
