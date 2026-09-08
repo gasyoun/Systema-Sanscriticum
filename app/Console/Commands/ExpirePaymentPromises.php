@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\Payment;
 use App\Models\PaymentPromise;
 use App\Models\PromiseEvent;
 use App\Services\CuratorNotifier;
@@ -46,6 +47,24 @@ class ExpirePaymentPromises extends Command
 
         // Утренний дайджест кураторам: сколько истекло и худшие по сумме.
         $curator->promisesExpiredDigest($promises);
+
+        // H4396 (census §C.1): сколько conditional-доступов «под обещание»
+        // держатся на только что истёкших обещаниях. Строки НЕ удаляются —
+        // ключи закрывает read-side предикат Payment::scopeWithAccessExpiry
+        // при флаге conditional_access_expiry=ON; при OFF строка — ops-сигнал
+        // «сколько доступов ждёт флипа» (деньги-смежное, флип остаётся за человеком).
+        $conditionalOpen = Payment::query()
+            ->whereIn('linked_promise_id', $promises->pluck('id'))
+            ->conditional()
+            ->count();
+
+        $this->info($conditionalOpen > 0
+            ? sprintf(
+                'Conditional grants on expired promises: %d (%s)',
+                $conditionalOpen,
+                config('features.conditional_access_expiry') ? 'access closes — conditional_access_expiry ON' : 'still open — conditional_access_expiry OFF',
+            )
+            : 'Conditional grants on expired promises: 0');
 
         $this->info('Помечено как expired: '.$promises->count());
 

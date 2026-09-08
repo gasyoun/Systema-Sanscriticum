@@ -693,6 +693,19 @@ return [
     'grant_access_fail_closed' => (bool) env('GRANT_ACCESS_FAIL_CLOSED', false),
 
     /*
+     | H4396 (census PAYWALL_CENSUS_2026-09-08 §C.1): expiry predicate on
+     | payment-keyed access. Conditional («под обещание») payments несут
+     | тариф-ключи только пока живо их обещание: status=active и promised_at
+     | ещё не прошёл. Реальные платежи фильтр не трогает (оплатил = владеет
+     | навсегда — продуктовое правило), условные с истёкшим/отменённым/
+     | исполненным/осиротевшим обещанием ключей больше не дают.
+     | Money-контур: дефолт OFF, включение в проде — отдельный ops-шаг
+     | (CONDITIONAL_ACCESS_EXPIRY=true + php artisan config:cache), та же
+     | постановка, что у grant_access_fail_closed (H2085 discipline).
+     */
+    'conditional_access_expiry' => (bool) env('CONDITIONAL_ACCESS_EXPIRY', false),
+
+    /*
      | Telegram Track C (H164, Uprava/docs/DECISIONS_telegram_harvester.md D7-D11):
      | second bot account @zapisi_ORSbot (class-booking chat) — go-forward webhook
      | capture + media download + class-reminder scheduler. ВЫКЛ по умолчанию —

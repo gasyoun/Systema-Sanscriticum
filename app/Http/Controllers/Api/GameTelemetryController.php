@@ -44,6 +44,8 @@ class GameTelemetryController extends Controller
         GameEvent::GATE_SHOWN => 0,
         GameEvent::GATE_CTA_CLICK => 0,
         GameEvent::ITEM_SEEN => 0,
+        // H4396 — бюджетный счётчик бесплатных раундов; в борд не пишется.
+        GameEvent::ROUND => 0,
     ];
 
     public function store(Request $request): JsonResponse

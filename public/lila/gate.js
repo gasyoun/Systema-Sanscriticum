@@ -6,15 +6,24 @@
    the 6th attempt in a family shows a soft "register a free
    cabinet to continue" wall. Logged-in students are never gated.
 
+   H4396 — the budget is now SERVER-SIDE: /api/games/budget reads
+   it, /api/games/round records one completed play. The counter key
+   is derived from the web SESSION (not from localStorage), so
+   clearing localStorage no longer resets the budget; only a new
+   session (new device/incognito) does — same per-device semantics
+   as before. localStorage stays as an instant cache and as the
+   FALLBACK for bare static hosts: if the server calls fail the
+   gate behaves exactly like pre-H4396 (local count only), so the
+   drills never break and no free play is withdrawn.
+
    Family = first path segment under /lila/ (e.g.
    /lila/sort/genders/ -> "sort"), so it needs no per-page
    configuration.
 
-   Soft gate: state lives in localStorage — a funnel NUDGE, not a
-   hard paywall (clearable, per-device). That is intentional: the
-   goal is conversion, not DRM. Auth is read from /api/games/auth
-   (web session); if that call fails the visitor is treated as
-   anonymous, so the gate still works on a bare static host.
+   Soft gate: still a funnel NUDGE, not a hard paywall. Auth is
+   read from /api/games/auth (web session); if that call fails the
+   visitor is treated as anonymous, so the gate still works on a
+   bare static host.
 
    Include from any drill page (served at the site root in prod):
      <script src="/lila/gate.js" defer></script>
@@ -23,10 +32,16 @@
   "use strict";
 
   var PLAYS_KEY = "sgx_plays_v2";
+  var ANON_KEY = "sgx_anon_v1"; // same funnel id the beacon script mints
   var FREE_PLAYS_PER_FAMILY = 5;
   var AUTH_URL = "/api/games/auth";
+  var BUDGET_URL = "/api/games/budget";
+  var ROUND_URL = "/api/games/round";
   var REGISTER_URL = "/online/konsultaciya"; // free 3-day diagnostic marathon = a free cabinet
   var LOGIN_URL = "/login";
+
+  // Server-side gate state (H4396). server=false = legacy local-only mode.
+  var state = { server: false, fam: null, used: 0, free: FREE_PLAYS_PER_FAMILY };
 
   function family() {
     var parts = location.pathname.split("/").filter(Boolean);
@@ -50,7 +65,15 @@
       localStorage.setItem(PLAYS_KEY, JSON.stringify(plays));
     } catch (e) {}
   }
-  function gated(fam) { return playCount(fam) >= FREE_PLAYS_PER_FAMILY; }
+
+  // Authoritative used-count: max(local, server) in server mode — clearing
+  // localStorage cannot undercut the server ledger, and the server can never
+  // be stricter than the local count was. Local-only mode = legacy behavior.
+  function usedCount(fam) {
+    var local = playCount(fam);
+    return state.server ? Math.max(local, state.used) : local;
+  }
+  function gated(fam) { return usedCount(fam) >= state.free; }
 
   function injectStyles() {
     if (document.getElementById("sgx-gate-style")) return;
@@ -114,13 +137,34 @@
     }, true);
   }
 
+  // One completed round -> local cache + (server mode) server ledger POST.
+  function onCompletion(fam) {
+    recordPlay(fam);
+    if (gated(fam)) { showWall(); }
+    if (state.server) {
+      fetch(ROUND_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ family: fam })
+      })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || d.authenticated) return;
+          state.used = Math.max(state.used, d.used || 0);
+          if (d.gated) showWall();
+        })
+        .catch(function () {}); // fallback stays local — never break a drill page
+    }
+  }
+
   // Count each completed round toward this family's budget (edge-triggered:
   // `.feedback.show` toggles off/on per round, see sort/match engine.js).
   function watchCompletions(fam) {
     var wasShown = false;
     var obs = new MutationObserver(function () {
       var shown = !!document.querySelector(".feedback.show");
-      if (shown && !wasShown) recordPlay(fam);
+      if (shown && !wasShown) onCompletion(fam);
       wasShown = shown;
     });
     obs.observe(document.body, {
@@ -129,12 +173,49 @@
     wasShown = !!document.querySelector(".feedback.show"); // don't double-count an already-solved state
   }
 
-  function start(authed) {
-    if (authed) return;              // logged-in students: never gated
-    var fam = family();
+  // H4396: ask the server for the family budget. Success = server mode
+  // (session-bound ledger, localStorage-clear proof); failure = legacy
+  // local-only mode (bare static hosts, ad-blocked endpoints).
+  function serverBudget(fam) {
+    return fetch(BUDGET_URL + "?family=" + encodeURIComponent(fam), {
+      headers: { "Accept": "application/json" },
+      credentials: "same-origin"
+    }).then(function (r) {
+      if (!r.ok) throw new Error("budget " + r.status);
+      return r.json();
+    }).then(function (d) {
+      if (d.authenticated) return { authed: true };
+      state.server = true;
+      state.fam = fam;
+      state.free = (typeof d.free === "number" && d.free > 0) ? d.free : FREE_PLAYS_PER_FAMILY;
+      state.used = d.used || 0;
+      // Align the funnel beacon with the session-derived id (R20: no PII either way).
+      if (d.anon_id) {
+        try { localStorage.setItem(ANON_KEY, d.anon_id); } catch (e) {}
+      }
+      return { authed: false, used: Math.max(state.used, playCount(fam)) };
+    });
+  }
+
+  function begin(fam) {
     if (gated(fam)) { showWall(); return; }
     watchCompletions(fam);
     armReplayGate(fam);
+  }
+
+  function start(authed) {
+    if (authed) return;              // logged-in students: never gated
+    var fam = family();
+    if (gated(fam)) { showWall(); return; } // fast local check (instant wall)
+
+    serverBudget(fam)
+      .then(function (d) {
+        if (d.authed) return;      // became authenticated server-side: never gated
+        begin(fam);
+      })
+      .catch(function () {
+        begin(fam);                // legacy fallback: localStorage only
+      });
   }
 
   fetch(AUTH_URL, { headers: { "Accept": "application/json" }, credentials: "same-origin" })

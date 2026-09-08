@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\StudentController;
 use App\Models\Course;
 use App\Models\LessonAccessGrant;
-use App\Models\Payment;
 use App\Services\Membership\ClubEntitlement;
 use App\Services\Membership\RecordingAccessPolicy;
 use Illuminate\Http\JsonResponse;
@@ -78,14 +78,11 @@ class CabinetController extends Controller
         }
         $lessons = $lessonsQuery->orderBy('sort_order')->orderBy('created_at')->get();
 
-        $unlockedTariffs = array_values(array_unique(array_merge(
-            Payment::where('user_id', $user->id)
-                ->where('course_id', $course->id)
-                ->paid()
-                ->pluck('tariff')
-                ->all(),
-            $club->extraTariffKeys($user, $course),
-        )));
+        // H4396: единый доступ-лист (StudentController::getUserUnlockedTariffs)
+        // вместо локальной копии запроса — expiry-предикат conditional-ключей
+        // применяется и здесь (audit 06-08 spec 5 / census §C.1; spec 14 dedupe —
+        // наименьший корректный срез).
+        $unlockedTariffs = StudentController::getUserUnlockedTariffs($user->id, $course->slug);
         $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
         $completedIds = $user->completedLessons()->pluck('lessons.id')->all();
         $recordings = app(RecordingAccessPolicy::class);

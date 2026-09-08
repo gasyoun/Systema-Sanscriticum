@@ -71,31 +71,21 @@
 
 @php
     $recordingAllowed = $recordingAccess->allowed ?? true;
-    // --- УМНЫЙ ПАРСЕР ССЫЛОК YOUTUBE ---
-    $cleanYoutubeId = null;
-    $rawYoutube = $recordingAllowed ? ($youtubeId ?? $lesson->youtube_url ?? null) : null;
-    if (!empty($rawYoutube)) {
-        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $rawYoutube, $match)) {
-            $cleanYoutubeId = $match[1];
-        } else {
-            $cleanYoutubeId = $rawYoutube;
-        }
-    }
-
-    // --- УМНЫЙ ПАРСЕР ССЫЛОК RUTUBE ---
-    $cleanRutubeId = null;
-    $rawRutube = $recordingAllowed ? ($rutubeId ?? $lesson->rutube_url ?? null) : null;
-    if (!empty($rawRutube)) {
-        if (preg_match('/rutube\.ru\/(?:video|play\/embed)\/([a-zA-Z0-9_-]+)/i', $rawRutube, $match)) {
-            $cleanRutubeId = $match[1];
-        } else {
-            $cleanRutubeId = $rawRutube;
-        }
-    }
-
-    // --- Kinescope pilot (H1451 W3): only when flag + pilot course + video_url ---
+    // --- H4396: сырые unlisted-ID больше не попадают в HTML («гейт на странице,
+    // не на видео», census PAYWALL_CENSUS_2026-09-08 §A3). Плеер грузит серверные
+    // ворота /c/{slug}/u/{id}/video/{player} (RecordingGateController): каждый
+    // проигрыш заново проходит грант/группу/оплату/H3916-членство, и только тогда
+    // страница получает 302 на embed. Здесь считается только ДОСТУПНОСТЬ плееров.
+    $hasYoutube = $recordingAllowed
+        && \App\Http\Controllers\StudentController::parseVideoId($lesson->youtube_url, 'youtube') !== null;
+    $hasRutube = $recordingAllowed
+        && \App\Http\Controllers\StudentController::parseVideoId($lesson->rutube_url, 'rutube') !== null;
+    $gateUrl = fn (string $player): string => route('student.recording.gate', [$course->slug, $lesson->id, $player]);
+    $gateYoutube = $hasYoutube ? $gateUrl('youtube') : null;
+    $gateRutube = $hasRutube ? $gateUrl('rutube') : null;
     $kinescopeEmbedUrl = $recordingAllowed ? ($kinescopeEmbedUrl ?? null) : null;
     $kinescopePilotActive = !empty($kinescopeEmbedUrl);
+    $gateKinescope = $kinescopePilotActive ? $gateUrl('kinescope') : null;
 
     // --- ПАРСЕР ТАЙМКОДОВ ---
     // function_exists-guard: вью включается дважды в одном PHP-процессе (например,
@@ -123,7 +113,7 @@
 {{-- ========================================== --}}
 <div class="lesson-layout relative"
      x-data="{
-         player: '{{ $kinescopePilotActive ? 'kinescope' : ($cleanRutubeId ? 'rutube' : ($cleanYoutubeId ? 'youtube' : 'none')) }}',
+         player: '{{ $kinescopePilotActive ? 'kinescope' : ($hasRutube ? 'rutube' : ($hasYoutube ? 'youtube' : 'none')) }}',
          currentTime: 0,
          videoDuration: {{ $resumeDuration ?? 'null' }},
          videoResumeEnabled: {{ $videoResumeEnabled ? 'true' : 'false' }},
@@ -240,22 +230,22 @@
         {{-- ВИДЕОПЛЕЕР --}}
         <div class="w-full bg-[#19191C] rounded-[24px] overflow-hidden shadow-2xl border border-gray-200/50 relative z-40">
             <div class="relative aspect-video w-full bg-black">
-                @if($cleanYoutubeId)
-                    <iframe x-show="player === 'youtube'" 
-                            id="youtube-player" 
-                            src="https://www.youtube.com/embed/{{ $cleanYoutubeId }}?enablejsapi=1&rel=0" 
-                            class="w-full h-full absolute inset-0" 
-                            allowfullscreen 
+                @if($hasYoutube)
+                    <iframe x-show="player === 'youtube'"
+                            id="youtube-player"
+                            src="{{ $gateYoutube }}"
+                            class="w-full h-full absolute inset-0"
+                            allowfullscreen
                             allow="autoplay; encrypted-media">
                     </iframe>
                 @endif
-                
-                @if($cleanRutubeId)
-                    <iframe x-show="player === 'rutube'" 
-                            id="rutube-player" 
-                            src="https://rutube.ru/play/embed/{{ $cleanRutubeId }}" 
-                            class="w-full h-full absolute inset-0" 
-                            allowfullscreen 
+
+                @if($hasRutube)
+                    <iframe x-show="player === 'rutube'"
+                            id="rutube-player"
+                            src="{{ $gateRutube }}"
+                            class="w-full h-full absolute inset-0"
+                            allowfullscreen
                             allow="autoplay; encrypted-media">
                     </iframe>
                 @endif
@@ -263,7 +253,7 @@
                 @if($kinescopePilotActive)
                     <iframe x-show="player === 'kinescope'"
                             id="kinescope-player"
-                            src="{{ $kinescopeEmbedUrl }}"
+                            src="{{ $gateKinescope }}"
                             class="w-full h-full absolute inset-0"
                             allowfullscreen
                             allow="autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerometer; clipboard-write;"
@@ -342,12 +332,12 @@
                             <i class="fas fa-film mr-2 text-sm"></i> Kinescope
                         </button>
                     @endif
-                    @if($cleanRutubeId && ($cleanYoutubeId || $kinescopePilotActive))
+                    @if($hasRutube && ($hasYoutube || $kinescopePilotActive))
                         <button type="button" @click="player = 'rutube'" :class="player === 'rutube' ? 'bg-[#0057b7] text-white shadow-[0_0_15px_rgba(0,87,183,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
                             <img src="https://rutube.ru/favicon.ico" :class="player === 'rutube' ? '' : 'opacity-50 grayscale'" class="w-3.5 h-3.5 mr-2 transition-all"> RuTube
                         </button>
                     @endif
-                    @if($cleanYoutubeId && ($cleanRutubeId || $kinescopePilotActive))
+                    @if($hasYoutube && ($hasRutube || $kinescopePilotActive))
                         <button type="button" @click="player = 'youtube'" :class="player === 'youtube' ? 'bg-[#ff0000] text-white shadow-[0_0_15px_rgba(255,0,0,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
                             <i class="fab fa-youtube mr-2 text-sm" :class="player === 'youtube' ? 'text-white' : 'text-gray-500'"></i> YouTube
                         </button>

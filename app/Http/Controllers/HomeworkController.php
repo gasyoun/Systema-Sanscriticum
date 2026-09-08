@@ -305,9 +305,14 @@ class HomeworkController extends Controller
             return;
         }
 
+        // Клубные ключи здесь НАМЕРЕННО не участвуют (клубный гейт ДЗ —
+        // ClubEntitlementAccessTest), поэтому локальный запрос, а не общий
+        // getUserUnlockedTariffs. H4396: только expiry-предикат условных
+        // ключей добавлен (ConditionalAccessGateExpiryTest).
         $unlocked = Payment::where('user_id', $user->id)
             ->where('course_id', $course->id)
             ->paid()
+            ->withAccessExpiry()
             ->pluck('tariff')
             ->toArray();
 
