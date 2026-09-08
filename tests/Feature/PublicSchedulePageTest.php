@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
+use App\Models\Teacher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -20,7 +21,7 @@ class PublicSchedulePageTest extends TestCase
     {
         config(['features.schedule_full_post' => true]);
 
-        $teacher = \App\Models\Teacher::create(['name' => 'Тестова Мария', 'email' => 't@example.test']);
+        $teacher = Teacher::create(['name' => 'Тестова Мария', 'email' => 't@example.test']);
         $course = Course::factory()->create([
             'title' => 'Введение в индийскую философию', 'slug' => 'fiya',
             'is_active' => true, 'is_visible' => true, 'teacher_id' => $teacher->id,
