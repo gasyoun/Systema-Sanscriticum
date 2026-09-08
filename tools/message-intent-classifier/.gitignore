@@ -4,3 +4,9 @@ __pycache__/
 php/vendor/
 reports/local-*
 results/local-*
+
+# Raw ORS dialog exports contain PII - NEVER commit (H3527). Masked JSONL
+# under corpora/ only, after validator PASS + signed 50-msg checklist.
+raw_corpus/
+corpora/raw/
+tools/pii_names*.txt

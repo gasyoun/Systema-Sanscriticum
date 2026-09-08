@@ -1,10 +1,15 @@
-_Created: 25-08-2026 · Last updated: 05-09-2026_
+_Created: 25-08-2026 · Last updated: 08-09-2026_
 
 # Vendored snapshot — gasyoun/message-intent-classifier
 
 - **Pinned SHA:** see `PINNED_SHA` (one line, full 40-char sha).
 - **Upstream:** https://github.com/gasyoun/message-intent-classifier
 - **Vendored by:** H3529 (25-08-2026), tree copied with `rsync -a --exclude .git`.
+- **Re-pinned:** H4419 (08-09-2026), upstream range `e3320e6..9352354` (+978/-9:
+  H3527 mask pipeline, H3528 run_corpus.py + baseline reports, rules/v1/topic.yaml
+  +7, vectors/golden.json 161→162 vectors) + H4092 wave-3 header/byline pass.
+  Full drift gate `--upstream` green; golden 162/162 Py parity; classifier
+  consumer suites green (ClassifierPrecisionTest, VendoredMessageClassifierParityTest).
 
 ## Deviations from the upstream tree (all generated, never hand-edited)
 

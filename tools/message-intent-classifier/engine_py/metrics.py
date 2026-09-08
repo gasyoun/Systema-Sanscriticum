@@ -9,7 +9,7 @@ from .loader import PLANES, RuleSet
 
 
 def _empty_stats() -> dict:
-    return {"tp": 0, "fp": 0, "fn": 0}
+    return {"tp": 0, "fp": 0, "fn": 0, "pred_total": 0}
 
 
 def evaluate(
@@ -21,7 +21,9 @@ def evaluate(
 
     Each record: {"id": ..., "text": ..., "gold": {plane: category|null, ...}}.
     Records without "gold" still count toward coverage denominators but never
-    toward precision/recall counts.
+    toward precision/recall counts. "n_pred" counts every prediction (labeled
+    or not) so per-category volume is publishable on unlabeled snapshots;
+    precision stays tp/(tp+fp) over the labeled subset only.
     """
     stats: dict[str, dict[str, dict]] = {plane: {} for plane in planes}
     total = 0
@@ -41,6 +43,7 @@ def evaluate(
                 hit_any = True
                 categorized[plane] += 1
                 entry = bucket.setdefault(predicted["category"], _empty_stats())
+                entry["pred_total"] += 1
                 entry["tp"] += 0  # keep key present even without gold
             label = gold.get(plane)
             if label is None:
@@ -72,8 +75,10 @@ def evaluate(
                 "tp": tp,
                 "fp": fp,
                 "fn": fn,
+                # every message predicted into the category (gold or not) — on
+                # unlabeled snapshots this is the publishable per-category volume
+                "n_pred": entry["pred_total"],
                 "n_gold": tp + fn,
-                "n_pred": tp + fp,
                 "precision": round(precision, 4) if precision is not None else None,
                 "recall": round(recall, 4) if recall is not None else None,
                 "f1": round(f1, 4) if f1 is not None else None,

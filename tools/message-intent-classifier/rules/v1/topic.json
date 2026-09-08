@@ -7,6 +7,7 @@
       "priority": 10,
       "patterns": [
         "видеозапис[а-я]*",
+        "в каком видео",
         "пересмотр[а-я]*",
         "переслуш[а-я]*",
         "тайм ?код[а-я]*",
@@ -21,7 +22,7 @@
         "записаться|запишусь"
       ],
       "enabled": true,
-      "source": "SupportAnswerSuggester CATEGORY_RECORDING hand; negation guards = golden negation pair H3525 («ссылка на запись не работает, техподдержка») and enrollment phrases («запишусь/как записаться» — это онбординг, не записи)."
+      "source": "SupportAnswerSuggester CATEGORY_RECORDING hand; negation guards = golden negation pair H3525 («ссылка на запись не работает, техподдержка») and enrollment phrases («запишусь/как записаться» — это онбординг, не записи). H3528: «в каком видео» — zabota-export phrasing inventory (telegram-zabota-export/question_phrasing_inventory.json, код B «Записи / видео / таймкоды»: «Скажите пожалуйста в каком видео можно найти?» ×2, единственная частотная формулировка B без покрытия). Дословная фраза, а не голое «видео»: обобщение переворачивает регресс-кейс t-tech-06 («Белый экран вместо видео урока») — отказ техники остаётся в tech_issue."
     },
     {
       "plane": "topic",

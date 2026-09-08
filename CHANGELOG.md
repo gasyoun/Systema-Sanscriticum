@@ -92,6 +92,17 @@ _Created: 08-09-2026 · Last updated: 08-09-2026_
 - Тесты: `StorageUsageWatchdogTest` +2 (здоровый/алертный прогон пишет ровно одну разборываемую строку с ключами и значениями; `--dry` не создаёт файл), 11/11 зелёные, Pint clean.
 _Dr. Mārcis Gasūns_
 _Created: 08-09-2026 · Last updated: 08-09-2026_
+# H4419: mic re-vendor to upstream HEAD 9352354 — H3527/H3528 snapshot + engine parity pass (OxAlpha z-ai/glm-5.3-flash, 08-09-2026)
+
+Дрейф-гейт поймал частичное вендорение: `CHANGELOG.md`/`README.md` были скопированы из пост-пин апстрима, а пин остался на `e3320e6` (откат 08-09-2026, `cb3ff0cd`). Апстрим с тех пор ушёл `e3320e6..9352354` (+978/-9): пайплайн маскирования PII `tools/mask_corpus.py` (H3527), batch-раннер `harness/run_corpus.py` + baseline-отчёты (H3528), `rules/v1/topic.yaml` +7, `vectors/golden.json` 161→162 (+ t-rec-06 «в каком видео» → recording_access), header/byline-проход H4092 wave-3. Полное перевендоривание снапшота на HEAD:
+
+- **Пин** [PINNED_SHA](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tools/message-intent-classifier/PINNED_SHA) = `9352354fb21714ab64823f4c283f5520f4bede27`; дерево скопировано `rsync -a --delete` по процедуре VENDOR.md (исключены `.git`, `PINNED_SHA`, `VENDOR.md`, `rules/v1/*.json`), JSON-двойники перегенерированы `tools/gen_mic_rules_json.py` (topic.json обновился вслед за topic.yaml +7).
+- **Гейт вживую:** `tools/check_mic_vendor_drift.py --upstream /tmp/mic-new` — `vendored snapshot matches pin 9352354fb217; generated JSON fresh (4 rule files)`, без warning-ноги «NOT verified».
+- **Паритет движка:** golden-векторы 162/162, ноль расхождений (Py-проверка по `engine_py` + PHP-нога `VendoredMessageClassifierParityTest` 2/2, 89 ассертов); маск-тесты апстрима `engine_py/tests/` 27/27.
+- **Потребители:** `ClassifierPrecisionTest` зелёный (порог 93% + 9 именованных регрессий route-идентичны); полный прогон `tests/Feature/Support/` 429/429, 1 skip — ранее известный env-гейт `FaqRagEvalTest` live-eval (H4001), к пере-пину отношения не имеет.
+- [VENDOR.md](https://github/gasyoun/Systema-Sanscriticum/blob/main/tools/message-intent-classifier/VENDOR.md) дополнен датой ре-пина и диапазоном апстрима; код приложения и поведение движка руками не тронуты — снапшот целиком апстримный.
+_Dr. Mārcis Gasūns_
+_Created: 08-09-2026 · Last updated: 08-09-2026_
 # H4404: Support DM LLM-drafts auto-reply — classifier-independent LLM lane behind default-OFF flag (OxAlpha z-ai/glm-5.3-flash, 08-09-2026)
 Рулинг MG 08-09-2026 «LLM-черновики» ([H4404](https://github.com/gasyoun/Uprava/blob/main/handoffs/H4404-OxAlpha_Systema-Sanscriticum_support-dm-llm-drafts-autoreply_08.09.26.md)): вместо продолжения template-only автоответов — LLM-ветка. Ключевое требование из пробы H3380: классификатор категорий вернул category=null на 8/8 живых dm_hinted, поэтому ветка, стоящая за категорией, в живом трафике не стреляла бы вовсе — новая ветка от классификатора НЕ зависит.
 - **Флаги** ([config/features.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php)): `SUPPORT_DM_LLM_DRAFTS` (ветка, default false) + `SUPPORT_DM_LLM_DRAFTS_LIVE` (живая отправка, default false). Пока live=false — тень: ответ формулируется и пишется событием `dm_llm_shadow_would_send`, студенту не уходит ничего (инвариант §5). Оба в [FEATURE_FLAGS_REGISTRY](https://github.com/gasyoun/Uprava/blob/main/FEATURE_FLAGS_REGISTRY.md) §1.3; живое включение — решение MG после недели тени.

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "frozen": "2026-08-25",
-  "note": "Golden vectors frozen from the reference Python engine at commit-time. Both engines (engine_py and php/MessageClassifier) must reproduce every 'expect' byte-for-byte; planes absent from 'expect' must be null. Rule changes require an intentional golden refresh in the same PR.",
+  "note": "Golden vectors frozen from the reference Python engine at commit-time. Both engines (engine_py and php/MessageClassifier) must reproduce every 'expect' byte-for-byte; planes absent from 'expect' must be null. Rule changes require an intentional golden refresh in the same PR. H3528: +t-rec-06 (zabota-export seed, голое видео).",
   "vectors": [
     {
       "id": "t-rec-01",
@@ -1764,6 +1764,16 @@
         "intent": {
           "category": "catalog_browse",
           "reason": "keyword:что идет|что сейчас"
+        }
+      }
+    },
+    {
+      "id": "t-rec-06",
+      "text": "Скажите пожалуйста в каком видео можно найти?",
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:в каком видео"
         }
       }
     }
