@@ -56,6 +56,13 @@ class GameEvent extends Model
     // H1680 — увиденные в раунде леммы (payload.items), сид для onboarding-from-games.
     public const ITEM_SEEN = 'item_seen';
 
+    // H4396 — серверный счётчик бюджета бесплатных игр: один round = один
+    // завершённый раунд (тот же edge `.feedback.show`, что считает gate.js
+    // локально). Отличается от COMPLETE (та телеметрия шлёт один раз на
+    // ЗАГРУЗКУ страницы и остаётся воронкой) — бюджет считается по round,
+    // поэтому перезагрузки страницы не сбрасывают и не дублируют счёт.
+    public const ROUND = 'round';
+
     /** Белый список: всё, что не отсюда, приёмник отклоняет 422. */
     public const EVENTS = [
         self::START,
@@ -63,6 +70,7 @@ class GameEvent extends Model
         self::GATE_SHOWN,
         self::GATE_CTA_CLICK,
         self::ITEM_SEEN,
+        self::ROUND,
     ];
 
     /**

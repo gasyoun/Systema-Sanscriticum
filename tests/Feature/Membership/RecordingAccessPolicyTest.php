@@ -52,10 +52,12 @@ final class RecordingAccessPolicyTest extends MembershipTestCase
 
     public function test_dark_deploy_preserves_the_entire_purchased_lesson(): void
     {
+        // H4396: плеер грузит серверные ворота записи — сырые unlisted-ID в
+        // HTML не ходят; «купленный урок целиком» = ворота отдаются плееру.
         $this->actingAs($this->buyer)
             ->get(route('student.lesson', [$this->paidCourse->slug, $this->paidLesson->id]))
             ->assertOk()
-            ->assertSee('youtube.com/embed', false)
+            ->assertSee('/video/youtube', false)
             ->assertDontSee('data-membership-recording-gate', false);
     }
 
@@ -66,7 +68,7 @@ final class RecordingAccessPolicyTest extends MembershipTestCase
         $this->actingAs($this->buyer)
             ->get(route('student.lesson', [$this->paidCourse->slug, $this->paidLesson->id]))
             ->assertOk()
-            ->assertSee('youtube.com/embed', false)
+            ->assertSee('/video/youtube', false)
             ->assertSee('data-membership-recording-notice', false);
 
         $verdict = MembershipAccessVerdict::firstOrFail();
@@ -82,7 +84,7 @@ final class RecordingAccessPolicyTest extends MembershipTestCase
         $this->actingAs($this->buyer)
             ->get(route('student.lesson', [$this->paidCourse->slug, $this->paidLesson->id]))
             ->assertOk()
-            ->assertDontSee('youtube.com/embed', false)
+            ->assertDontSee('/video/youtube', false)
             ->assertSee('data-membership-recording-gate', false)
             ->assertSee('домашние задания');
 
@@ -96,7 +98,7 @@ final class RecordingAccessPolicyTest extends MembershipTestCase
         $this->actingAs($this->buyer->fresh())
             ->get(route('student.lesson', [$this->paidCourse->slug, $this->paidLesson->id]))
             ->assertOk()
-            ->assertSee('youtube.com/embed', false)
+            ->assertSee('/video/youtube', false)
             ->assertDontSee('data-membership-recording-gate', false);
     }
 

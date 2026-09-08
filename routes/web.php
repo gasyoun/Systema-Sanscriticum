@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CabinetTelemetryController;
 use App\Http\Controllers\Api\GamesSrsOnboardingController;
 use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\HeartbeatController;
+use App\Http\Controllers\Api\LilaGateController;
 use App\Http\Controllers\Api\PublicWaitlistController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AttendanceNoticeController;
@@ -56,6 +57,7 @@ use App\Http\Controllers\PublicPresenceController;
 use App\Http\Controllers\PublicSchedulePageController;
 use App\Http\Controllers\PublicWidgetController;
 use App\Http\Controllers\ReadingPackController;
+use App\Http\Controllers\RecordingGateController;
 use App\Http\Controllers\Rq4StudyController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
@@ -327,6 +329,18 @@ Route::get('/shop', fn () => redirect()->route('shop.index', [], 301));
 Route::get('/api/games/auth', fn () => response()->json(['authenticated' => auth()->check()]))
     ->name('games.auth');
 
+// H4396 — серверная половина ворот /lila: бюджет бесплатных раундов живёт в
+// game_events (event=round), ключ — производный от web-сессии (не от
+// localStorage). GET читает бюджет, POST фиксирует один завершённый раунд;
+// оба публичные (как games/auth — web-guard, состояние браузерной сессии),
+// POST без CSRF (как games/event — маячок без токена), затроттлён.
+Route::get('/api/games/budget', [LilaGateController::class, 'budget'])
+    ->middleware('throttle:60,1')
+    ->name('games.budget');
+Route::post('/api/games/round', [LilaGateController::class, 'round'])
+    ->middleware('throttle:60,1')
+    ->name('games.round');
+
 // First-party funnel telemetry for the same free games (H1360). Public + web-guard
 // so the `authenticated` flag is read server-side from the browser session (the
 // client cannot spoof it); anonymous, no PII stored. CSRF-exempt (see
@@ -513,6 +527,17 @@ Route::get('/maintenance-bypass/{secret}', function (string $secret) {
     return redirect()->route('student.dashboard')
         ->cookie('student_maintenance_bypass', $secret, 60 * 24 * 7); // неделя
 })->middleware('auth')->name('maintenance.bypass');
+
+// H4396 — серверные ворота видеопейлоада: страница урока больше не несёт
+// сырых unlisted-ID, плеер грузит этот маршрут, контроллер на КАЖДУЮ загрузку
+// проверяет грант/группу/оплату/H3916-членство и только тогда отдаёт 302 на
+// embed. ВНЕ auth-группы: is_free/is_preview легитимно отдаются гостю
+// (публичный «пример урока» — единственная точка правды ShopController::preview),
+// всё платное контроллер закрывает 404 сам. До catch-all /{slug}.
+Route::get('/c/{slug}/u/{lessonId}/video/{player}', [RecordingGateController::class, 'show'])
+    ->middleware('course.canonical')
+    ->whereIn('player', ['youtube', 'rutube', 'kinescope', 'video'])
+    ->name('student.recording.gate');
 
 // --- ЛИЧНЫЙ КАБИНЕТ СТУДЕНТА (ЗАЩИЩЕНО) ---
 Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(function () {

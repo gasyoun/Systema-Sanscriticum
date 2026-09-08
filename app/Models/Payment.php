@@ -580,6 +580,38 @@ class Payment extends Model
     }
 
     /**
+     * H4396 — expiry-предикат на доступ, открываемый платежом (census
+     * PAYWALL_CENSUS_2026-09-08 §C.1, аудит 06-08 спека 5: «обещанный дедлайн
+     * не enforced»). Conditional-платёж («доступ под обещание», is_conditional=true)
+     * открывает уроки только пока его обещание живо: status=active и promised_at
+     * ещё не прошёл (окно до дневного прогона promises:expire закрывает сам
+     * предикат — дата и есть дедлайн, а не статус демона). Реальные платежи
+     * предикат не трогает: оплатил = владеет навсегда (продуктовое правило,
+     * случайных отзывов купленного нет). Флаг conditional_access_expiry —
+     * money-контур, дефолт OFF; прод-флип — отдельный ops-шаг (H2085).
+     *
+     * Один предикат на всех читателей ключей: getUserUnlockedTariffs (веб
+     * плеер/курс/ДЗ/ассеты через LessonGate) и API-кабинет.
+     */
+    public function scopeWithAccessExpiry(Builder $query): Builder
+    {
+        if (! config('features.conditional_access_expiry')) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $w) {
+            $w->where('is_conditional', false)
+                ->orWhere(function (Builder $c) {
+                    $c->where('is_conditional', true)
+                        ->whereHas('linkedPromise', function (Builder $p) {
+                            $p->where('status', PaymentPromise::STATUS_ACTIVE)
+                                ->whereDate('promised_at', '>=', now()->toDateString());
+                        });
+                });
+        });
+    }
+
+    /**
      * Платежи, пришедшие в кассу школы. Единственные, что образуют ВЫРУЧКУ курса
      * для начисления ЗП. Прямые платежи на личный счёт преподавателя исключены
      * (иначе двойной счёт — он уже держит всю сумму). NB: доступ и отчёт должников

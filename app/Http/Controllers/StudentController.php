@@ -76,9 +76,13 @@ class StudentController extends Controller
         // 2. Ищем оплаченные тарифы строго по ID КУРСА, а не лендинга.
         //    Учитываем оба статуса оплаты ('paid' и 'success') — иначе урок
         //    остаётся закрытым для success-платежей, хотя группа уже выдана.
+        //    H4396: withAccessExpiry — conditional («под обещание») ключи живут
+        //    только пока живо обещание (флаг conditional_access_expiry, дефолт
+        //    OFF; census §C.1 — expiry-предикат на payment-keyed доступ).
         $keys = Payment::where('user_id', $userId)
             ->where('course_id', $courseId)
             ->paid()
+            ->withAccessExpiry()
             ->pluck('tariff')
             ->toArray();
 
@@ -1039,8 +1043,10 @@ class StudentController extends Controller
             $currentNote = $progressRow->pivot->notes;
         }
 
-        $youtubeId = $this->parseVideoId($lesson->youtube_url, 'youtube');
-        $rutubeId = $this->parseVideoId($lesson->rutube_url, 'rutube');
+        // H4396: сырые ID в HTML не уходят (серверные ворота записи), но
+        // «запись ещё не залита» определяется так же — по распознанным ссылкам.
+        $hasRecognizedVideo = self::parseVideoId($lesson->youtube_url, 'youtube') !== null
+            || self::parseVideoId($lesson->rutube_url, 'rutube') !== null;
 
         // In-video resume (H1450, W2). Пока флаг video_resume выключен, JS ничего
         // не шлёт и баннер «продолжить» не показывается — эти переменные лежат
@@ -1069,7 +1075,7 @@ class StudentController extends Controller
         // Подтягиваем событие расписания на эту дату, чтобы показать «Состоится … +
         // Подключиться к Zoom» вместо пустого плеера. n8n позже дозальёт видео.
         $upcomingSession = null;
-        if (empty($youtubeId) && empty($rutubeId) && empty($kinescopeEmbedUrl) && empty($lesson->video_url) && $lesson->lesson_date) {
+        if (! $hasRecognizedVideo && empty($kinescopeEmbedUrl) && empty($lesson->video_url) && $lesson->lesson_date) {
             $upcomingSession = Schedule::query()
                 ->where('course_id', $course->id)
                 ->where('group_id', $lesson->group_id)
@@ -1118,7 +1124,9 @@ class StudentController extends Controller
         }
 
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl', 'recordingAccess', 'lywUrl'));
+        // H4396: youtubeId/rutubeId больше не передаются в вью — сырые ID не
+        // должны попадать в HTML, плеер грузит серверные ворота записи.
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl', 'recordingAccess', 'lywUrl'));
     }
 
     /**
@@ -1364,8 +1372,11 @@ class StudentController extends Controller
 
     /**
      * === ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Парсер ссылок видео ===
+     * H4396: public static — RecordingGateController (серверные ворота
+     * записи) резолвит тот же ID, не плодя вторую реализацию правила
+     * «какая ссылка чем открывается» (прецедент H3308).
      */
-    private function parseVideoId(?string $url, string $platform): ?string
+    public static function parseVideoId(?string $url, string $platform): ?string
     {
         if (! $url) {
             return null;
