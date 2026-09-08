@@ -654,6 +654,20 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('telegram-support-sync');
 
+        // H4416 (08-09-2026): суточный catch-up — полный обмет всех известных
+        // чатов с активностью за TELEGRAM_SUPPORT_CATCHUP_DAYS (по умолчанию 60).
+        // Страховка минутному горячему окну (known_chat_window_days): чат,
+        // оживший после долгой паузы, мог выпасть и из окна, и из MP-топа —
+        // ровно так умерли DM 31-08…08-09 (аутедж, кейс Елены Безрядиной).
+        // Cursor по peer делает повторный обмет дешёвым; withoutOverlapping
+        // тем же TTL замка — сессия одна. Слот 05:37 — после суточного харвеста
+        // (05:15/17:15 по daily_cron), чтобы не спорить за замок сессии.
+        $schedule->command('telegram-support:sync --catch-up-days='.(int) config('services.telegram_support.catchup_days', 60))
+            ->dailyAt('05:37')
+            ->withoutOverlapping($syncLockMinutes)
+            ->onOneServer()
+            ->name('telegram-support-sync-catchup');
+
         // H3380 (24-08): вторая сессия rusamskrtam ВЫКЛЮЧЕНА. Открытие дня:
         // давний support-сеанс и так был аккаунтом @rusamskrtam (getSelf
         // id=5487293147), второй логин создавал дубль того же аккаунта —
