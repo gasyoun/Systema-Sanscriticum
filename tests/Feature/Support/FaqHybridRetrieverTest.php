@@ -109,6 +109,41 @@ MD;
         Log::shouldHaveReceived('warning')->once();
     }
 
+    public function test_throwing_provider_degrades_to_bm25_instead_of_killing_the_caller(): void
+    {
+        // H4416: до фикса один 5-секундный таймаут /api/embed (Http::throw в
+        // OllamaEmbeddingProvider) всплывал через denseLeg и ронял ВЕСЬ заход
+        // telegram-support:sync на любом D-классе. Контракт класса — «dense
+        // недоступна → BM25-пол» — теперь держится и на throw.
+        Log::spy();
+
+        $this->app->instance(EmbeddingProvider::class, new class implements EmbeddingProvider
+        {
+            public function embed(string $text): array
+            {
+                throw new \RuntimeException('cURL error 28: Operation timed out after 5002 milliseconds');
+            }
+
+            public function embedBatch(array $texts): array
+            {
+                throw new \RuntimeException('cURL error 28: Operation timed out after 5002 milliseconds');
+            }
+        });
+
+        config(['features.faq_hybrid_retrieval' => true]);
+
+        $hybrid = app(HybridRetriever::class);
+        $bm25 = app(Bm25FaqRetriever::class);
+
+        $query = 'оплата курса блоками';
+        $this->assertSame(
+            $this->ranking($bm25->retrieve($query, 2)),
+            $this->ranking($hybrid->retrieve($query, 2)),
+            'throwing dense provider = dense leg unavailable: BM25 floor unchanged',
+        );
+        Log::shouldHaveReceived('warning')->once();
+    }
+
     public function test_no_indexed_rows_yields_bm25_ranking(): void
     {
         config(['features.faq_hybrid_retrieval' => true]);

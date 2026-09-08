@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Support\Faq;
 
 use App\Models\KnowledgeChunk;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * H4001 (Wave 3) — BM25 ∪ dense с reciprocal-rank fusion, дроп-ин уровня
@@ -152,7 +154,21 @@ final class HybridRetriever
      */
     private function denseLeg(string $query, ?string $path): array
     {
-        $queryVector = $this->embeddings->embed($query);
+        // H4416: недоступный dense-провайдер (таймаут/обрыв туннеля/холодная
+        // модель) — это «dense-нога недоступна» из контракта класса, а не
+        // авария синка: до фикса один 5-секундный таймаут /api/embed ронял
+        // ВЕСЬ заход telegram-support:sync (включая catch-up-обмет) на любом
+        // D-классе. Деградируем в BM25-пол и пишем warning.
+        try {
+            $queryVector = $this->embeddings->embed($query);
+        } catch (Throwable $e) {
+            Log::warning('HybridRetriever: dense-нога недоступна, деградация в BM25', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+
         if ($queryVector === []) {
             return [];
         }
