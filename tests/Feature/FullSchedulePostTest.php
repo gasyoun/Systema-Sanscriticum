@@ -117,9 +117,11 @@ class FullSchedulePostTest extends TestCase
         $this->assertStringNotContainsString('<b>Еженедельно', $html);
 
         // Обзорное и занятия — жирным, пустых <b></b> нет.
-        $this->assertStringContainsString('<b>Обзорное занятие (не в счет 1):</b>', $html);
-        $this->assertStringContainsString('<b>28 февраля 2026 (суббота), 11:00</b>', $html);
-        $this->assertStringContainsString('<b>1-е занятие: 7 марта 2026 (суббота), 11:00</b>', $html);
+        $this->assertStringContainsString('<b>Обзорное занятие (не в счет 1)</b>:', $html);
+        $this->assertStringContainsString('<b>1-е занятие</b>: 7 марта 2026 (суббота), 11:00', $html);
+        // Дата в строке — БЕЗ жирного (правка MG 08-09-2026).
+        $this->assertStringNotContainsString('<b>7 марта 2026', $html);
+        $this->assertStringNotContainsString('<b>28 февраля 2026', $html);
         $this->assertStringNotContainsString('<b></b>', $html);
     }
 
