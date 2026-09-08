@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\ExitSurveyAutoTrigger;
 use App\Support\RichHtml;
+use App\Support\VideoEmbed;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -143,7 +144,7 @@ class Course extends Model
      */
     public function videoAnnounceEmbedUrl(): ?string
     {
-        return \App\Support\VideoEmbed::embed($this->video_announce_url);
+        return VideoEmbed::embed($this->video_announce_url);
     }
 
     /**
