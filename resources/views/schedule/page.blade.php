@@ -20,6 +20,19 @@
             .fs-head { color: #fff; font-weight: 700; margin: 0 0 .75rem; }
             .fs-body { color: #cbd5e1; line-height: 1.7; }
             .fs-body strong { color: #fff; }
+
+            /* H4387: скрытие прошедших занятий + кнопка-таб (тёмная тема). */
+            .fs-status { color: #94a3b8; font-size: .925rem; margin: 0 0 .6rem; }
+            .fs-toggle {
+                font: inherit; font-size: .875rem; cursor: pointer;
+                background: #1F2636; color: #e2e8f0;
+                border: 1px solid #2b3550; border-radius: 8px;
+                padding: 5px 12px; margin: 0 0 .75rem;
+                transition: border-color .2s ease;
+            }
+            .fs-toggle:hover { border-color: #E85C24; }
+            .fs-past { color: #8b96ab; }
+            .fs-past strong { color: #b9c3d6; }
         </style>
 
         <div class="space-y-8">
@@ -52,5 +65,7 @@
             @endforeach
         </div>
     @endif
+
+    @include('partials.schedule-past-toggle')
 </div>
 @endsection

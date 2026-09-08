@@ -76,4 +76,31 @@ class PublicSchedulePageTest extends TestCase
             ->assertSee('Сейчас нет курсов с предстоящими занятиями')
             ->assertDontSee('Архивный курс');
     }
+
+    /**
+     * H4387: у идущего курса прошедшие скрыты, статус и кнопка раскрытия на
+     * месте (MG 08-09-2026 — режим «везде одинаково»).
+     *
+     * @test
+     */
+    public function running_course_hides_past_with_toggle_and_status(): void
+    {
+        config(['features.schedule_full_post' => true]);
+
+        $course = Course::factory()->create(['title' => 'Идущий курс', 'slug' => 'running', 'is_active' => true, 'is_visible' => true]);
+        $group = Group::factory()->create();
+        $course->groups()->attach($group->id);
+
+        Schedule::create(['title' => 'A', 'start' => now()->subDays(14)->format('Y-m-d H:i:s'), 'group_id' => $group->id, 'course_id' => $course->id]);
+        Schedule::create(['title' => 'B', 'start' => now()->addDays(7)->format('Y-m-d H:i:s'), 'group_id' => $group->id, 'course_id' => $course->id]);
+
+        $this->get('/raspisanie')
+            ->assertOk()
+            ->assertSee('Идущий курс')
+            ->assertSee('Прошло занятий: 1 · последнее: ', false)
+            ->assertSee('Показать прошедшие занятия')
+            ->assertSee('fs-line fs-past', false)
+            ->assertSee('fs-last', false)
+            ->assertSee('<strong>2-е занятие</strong>: ', false);
+    }
 }

@@ -180,4 +180,105 @@ class FullSchedulePostTest extends TestCase
         $group = Group::factory()->create();
         $this->assertNull(FullSchedulePost::forGroup($group));
     }
+
+    /**
+     * H4387: прошедшие скрыты по умолчанию, статус-строка и кнопка на месте,
+     * последнее прошедшее подсвечено жёлтым, будущее видно.
+     *
+     * @test
+     */
+    public function html_hides_past_by_default_and_highlights_last_past(): void
+    {
+        $group = Group::factory()->create();
+
+        Schedule::create(['title' => 'A', 'start' => now()->subDays(21)->format('Y-m-d H:i:s'), 'group_id' => $group->id]);
+        Schedule::create(['title' => 'B', 'start' => now()->subDays(14)->format('Y-m-d H:i:s'), 'group_id' => $group->id]);
+        Schedule::create(['title' => 'C', 'start' => now()->addDays(7)->format('Y-m-d H:i:s'), 'group_id' => $group->id]);
+
+        $post = FullSchedulePost::forGroup($group);
+        $this->assertNotNull($post);
+        $this->assertSame(2, $post->pastCount);
+
+        $html = $post->html();
+
+        // Статус + кнопка + контейнер в режиме скрытия.
+        $this->assertMatchesRegularExpression('/<p class="fs-status">Прошло занятий: 2 · последнее: [^<]+<\/p>/', $html);
+        $this->assertStringContainsString('<button type="button" class="fs-toggle" aria-expanded="false">Показать прошедшие занятия</button>', $html);
+        $this->assertStringContainsString('<div class="fs-body" data-fs-past="hidden">', $html);
+
+        // Прошедшие скрыты; последнее прошедшее (2-е) — жёлтое; перед 1-м
+        // занятием внутри скрытого span'а лежит перенесённый разрыв.
+        $this->assertMatchesRegularExpression('/<span class="fs-line fs-past" hidden>(<br>\s*)?<strong>1-е занятие<\/strong>/', $html);
+        $this->assertMatchesRegularExpression('/<span class="fs-line fs-past fs-last" style="background:#FDE047;color:#1F2430;padding:0 6px;border-radius:6px;" hidden><strong>2-е занятие<\/strong>/', $html);
+
+        // Будущее занятие видно (с групповым разрывом перед собой).
+        $this->assertMatchesRegularExpression('/<span class="fs-line">(<br>\s*)?<strong>3-е занятие<\/strong>: /', $html);
+    }
+
+    /** @test */
+    public function ongoing_lesson_is_not_past_yet(): void
+    {
+        $group = Group::factory()->create();
+
+        // Идёт сейчас (старт час назад, длительность 2ч) — ещё НЕ «прошедшее».
+        Schedule::create(['title' => 'A', 'start' => now()->subHour()->format('Y-m-d H:i:s'), 'group_id' => $group->id]);
+        Schedule::create(['title' => 'B', 'start' => now()->addDays(7)->format('Y-m-d H:i:s'), 'group_id' => $group->id]);
+
+        $post = FullSchedulePost::forGroup($group);
+        $this->assertNotNull($post);
+        $this->assertSame(0, $post->pastCount);
+        $this->assertNull($post->lastPast);
+
+        $html = $post->html();
+
+        // Ничего не прошло — классическая разметка без статуса, кнопки и скрытия.
+        $this->assertStringNotContainsString('fs-status', $html);
+        $this->assertStringNotContainsString('fs-toggle', $html);
+        $this->assertStringNotContainsString('fs-past', $html);
+        $this->assertStringNotContainsString('fs-last', $html);
+        $this->assertStringNotContainsString('hidden', $html);
+    }
+
+    /** @test */
+    public function past_overview_is_highlighted_when_no_lesson_passed_yet(): void
+    {
+        $group = Group::factory()->create();
+
+        Schedule::create(['title' => 'Обзорное', 'start' => now()->subDays(3)->format('Y-m-d H:i:s'), 'group_id' => $group->id, 'is_overview' => true]);
+        Schedule::create(['title' => '1', 'start' => now()->addDays(4)->format('Y-m-d H:i:s'), 'group_id' => $group->id]);
+
+        $post = FullSchedulePost::forGroup($group);
+        $this->assertNotNull($post);
+        $this->assertSame(0, $post->pastCount);
+        $this->assertNotNull($post->lastPast);
+
+        $html = $post->html();
+
+        $this->assertStringContainsString('<p class="fs-status">Последнее прошедшее: ', $html);
+        // Обзорное скрыто и подсвечено (строка даты).
+        $this->assertMatchesRegularExpression('/class="fs-line fs-past fs-last" style="background:#FDE047[^"]*" hidden>/', $html);
+        // 1-е занятие видно.
+        $this->assertMatchesRegularExpression('/<span class="fs-line"><strong>1-е занятие<\/strong>/', $html);
+    }
+
+    /** @test */
+    public function visible_option_keeps_classic_markup_with_highlight(): void
+    {
+        $group = Group::factory()->create();
+
+        Schedule::create(['title' => 'A', 'start' => now()->subDays(14)->format('Y-m-d H:i:s'), 'group_id' => $group->id]);
+        Schedule::create(['title' => 'B', 'start' => now()->addDays(7)->format('Y-m-d H:i:s'), 'group_id' => $group->id]);
+
+        $post = FullSchedulePost::forGroup($group);
+        $this->assertNotNull($post);
+
+        $html = $post->html(['past' => 'visible']);
+
+        // Ничего не скрыто, статус/кнопки нет, но прошедшее подсвечено.
+        $this->assertStringNotContainsString('hidden', $html);
+        $this->assertStringNotContainsString('fs-toggle', $html);
+        $this->assertStringNotContainsString('fs-status', $html);
+        $this->assertStringContainsString('<span class="fs-last" style="background:#FDE047;color:#1F2430;padding:0 6px;border-radius:6px;"><strong>1-е занятие</strong>: ', $html);
+        $this->assertStringContainsString('<strong>2-е занятие</strong>: ', $html);
+    }
 }
