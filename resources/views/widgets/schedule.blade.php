@@ -113,6 +113,18 @@
         .fs-head { color: var(--fg); font-weight: 700; margin: 0 0 6px; }
         .fs-body { color: #374151; line-height: 1.6; }
         .fs-body strong { color: #111827; }
+
+        /* H4387: скрытие прошедших занятий + кнопка-таб (светлая тема). */
+        .fs-status { color: var(--muted); font-size: 13px; margin: 0 0 6px; }
+        .fs-toggle {
+            font: inherit; font-size: 13px; cursor: pointer;
+            background: #fff; color: var(--fg);
+            border: 1px solid var(--line); border-radius: 8px;
+            padding: 5px 12px; margin: 0 0 8px;
+        }
+        .fs-toggle:hover { border-color: var(--accent); }
+        .fs-past { color: #8a94a3; }
+        .fs-past strong { color: #4b5563; }
         @media (max-width: 480px) {
             .sw-row { grid-template-columns: 52px 1fr; }
             .sw-badge { grid-column: 2; justify-self: start; margin-top: 4px; }
@@ -149,6 +161,8 @@
             </div>
         @endforeach
     @endif
+
+    @include('partials.schedule-past-toggle')
 
     <script src="{{ asset('widgets/schedule.js') }}" data-feed-url="{{ $feedUrl }}" data-book-url="{{ route('api.public.schedule.book') }}"></script>
 </body>

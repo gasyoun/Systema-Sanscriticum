@@ -49,6 +49,10 @@ final class FullSchedulePost
         public readonly ?string $cadence,
         public readonly ?array $overview,
         public readonly array $lessons,
+        /** Сколько нумерованных занятий уже прошло (обзорное «не в счет»). */
+        public readonly int $pastCount = 0,
+        /** ['date' => string, 'key' => int|'overview'] последнего прошедшего, null — ничего не прошло. */
+        public readonly ?array $lastPast = null,
     ) {}
 
     /**
@@ -124,16 +128,37 @@ final class FullSchedulePost
             ->filter(fn (Schedule $s): bool => $s->start !== null)
             ->values();
 
-        $lessonLines = $lessons->map(fn (Schedule $s, int $i): array => [
-            'label' => ($i + 1).'-е занятие',
-            'date' => self::formatDate($s->start),
-        ])->all();
+        // H4387: занятие «прошло», когда его эффективный конец уже позади
+        // (end ?? start + DEFAULT_DURATION_HOURS) — идущее сейчас занятие ещё
+        // не «последнее прошедшее», это та же семантика, что у upcomingSchedules.
+        $pastCount = 0;
+        $lastPast = null;
+
+        $lessonLines = $lessons->map(function (Schedule $s, int $i) use (&$pastCount, &$lastPast): array {
+            $isPast = self::isPast($s);
+            if ($isPast) {
+                $pastCount++;
+                $lastPast = ['date' => self::formatDate($s->start), 'key' => $i];
+            }
+
+            return [
+                'label' => ($i + 1).'-е занятие',
+                'date' => self::formatDate($s->start),
+                'is_past' => $isPast,
+            ];
+        })->all();
 
         $overviewData = null;
         if ($overview !== null && $overview->start !== null) {
+            $isPast = self::isPast($overview);
+            if ($isPast) {
+                $lastPast = ['date' => self::formatDate($overview->start), 'key' => 'overview'];
+            }
+
             $overviewData = [
                 'label' => 'Обзорное занятие (не в счет '.$lessons->count().')',
                 'date' => self::formatDate($overview->start),
+                'is_past' => $isPast,
             ];
         }
 
@@ -142,7 +167,29 @@ final class FullSchedulePost
             self::cadenceLine($lessons),
             $overviewData,
             $lessonLines,
+            $pastCount,
+            $lastPast,
         );
+    }
+
+    /** Эффективный конец занятия (end ?? start + 2ч) уже в прошлом. */
+    private static function isPast(Schedule $s): bool
+    {
+        return ($s->end ?? $s->start->copy()->addHours(Schedule::DEFAULT_DURATION_HOURS))->isPast();
+    }
+
+    /** Строка-статус над списком: сколько прошло и каким было последнее. */
+    private function statusLine(): ?string
+    {
+        if ($this->lastPast === null) {
+            return null;
+        }
+
+        if ($this->pastCount > 0) {
+            return 'Прошло занятий: '.$this->pastCount.' · последнее: '.$this->lastPast['date'];
+        }
+
+        return 'Последнее прошедшее: '.$this->lastPast['date'];
     }
 
     /** Текст поста без разметки (превью в админке, dry-run, тесты). */
@@ -174,39 +221,98 @@ final class FullSchedulePost
     }
 
     /**
-     * HTML для сайта (страница курса, виджет). Жирным — только заголовок
-     * курса (fs-head) и метки занятий; ритм-строка — обычным (правка
+     * HTML для сайта (страница курса, виджет, /raspisanie). Жирным — только
+     * заголовок курса (fs-head) и метки занятий; ритм-строка — обычным (правка
      * MG 08-09-2026), идёт первой строкой блока расписания.
+     *
+     * H4387 (MG 08-09-2026): по умолчанию прошедшие занятия скрыты — над
+     * списком строка «Прошло занятий: N · последнее: …» и кнопка раскрытия;
+     * последнее прошедшее занятие подсвечено жёлтым (fs-last, инлайн-стиль —
+     * читается и на тёмной, и на светлой поверхности). Нумерация занятий
+     * абсолютная. $options['past'] = 'visible' — прежняя разметка без скрытия.
+     *
+     * Каждая строка обёрнута в span и несёт СВОЙ <br>: скрытая строка уносит
+     * разрыв с собой, после раскрытия разметка совпадает с классической.
+     * Пустые строки-разделители приклеиваются к СЛЕДУЮЩЕЙ строке.
      */
-    public function html(): string
+    public function html(array $options = []): string
     {
         $esc = fn (string $line): string => htmlspecialchars($line, ENT_QUOTES, 'UTF-8');
         $bold = fn (string $line): string => '<strong>'.$esc($line).'</strong>';
 
-        $head = '<strong>'.$esc($this->title).'</strong>';
+        $head = '<p class="fs-head"><strong>'.$esc($this->title).'</strong></p>';
 
         $lines = [];
 
         if ($this->cadence !== null) {
-            $lines[] = $esc($this->cadence);
-            $lines[] = '';
+            $lines[] = ['h' => $esc($this->cadence), 'past' => false, 'last' => false];
+            $lines[] = ['h' => '', 'past' => false, 'last' => false];
         }
 
         if ($this->overview !== null) {
-            $lines[] = $bold($this->overview['label']).':';
-            $lines[] = $esc($this->overview['date']);
+            $overviewPast = (bool) $this->overview['is_past'];
+            $lines[] = ['h' => $bold($this->overview['label']).':', 'past' => $overviewPast, 'last' => false];
+            $lines[] = ['h' => $esc($this->overview['date']), 'past' => $overviewPast, 'last' => $overviewPast && $this->lastPast !== null && $this->lastPast['key'] === 'overview'];
         }
 
         foreach ($this->lessons as $i => $lesson) {
-            $lines[] = $bold($lesson['label']).': '.$esc($lesson['date']);
+            $lines[] = [
+                'h' => $bold($lesson['label']).': '.$esc($lesson['date']),
+                'past' => (bool) $lesson['is_past'],
+                'last' => (bool) $lesson['is_past'] && $this->lastPast !== null && $this->lastPast['key'] === $i,
+            ];
 
             if (($i + 1) % 4 === 0 && isset($this->lessons[$i + 1])) {
-                $lines[] = '';
+                $lines[] = ['h' => '', 'past' => false, 'last' => false];
             }
         }
 
-        return '<p class="fs-head">'.$head.'</p>'."\n"
-            .'<div class="fs-body">'.implode("<br>\n", $lines).'</div>';
+        $hidePast = ($options['past'] ?? 'hidden') !== 'visible' && $this->lastPast !== null;
+
+        if (! $hidePast) {
+            return $head."\n"
+                .'<div class="fs-body">'.implode("<br>\n", array_map(fn (array $l): string => self::wrapLine($l['h'], $l['last']), $lines)).'</div>';
+        }
+
+        // Режим скрытия: прошедшие строки — span.fs-past[hidden], статус и
+        // кнопка живут внутри .fs-body (delegated JS тогглит по нему).
+        $out = [];
+        $gap = '';
+        $total = count($lines);
+        foreach ($lines as $idx => $line) {
+            $br = $idx === $total - 1 ? '' : "<br>\n";
+            if ($line['h'] === '') {
+                $gap .= $br;
+
+                continue;
+            }
+            $attrs = $line['past'] ? ' hidden' : '';
+            $classes = 'fs-line'.($line['past'] ? ' fs-past' : '').($line['last'] ? ' fs-last' : '');
+            $style = $line['last'] ? self::LAST_STYLE : '';
+            $out[] = '<span class="'.$classes.'"'.$style.$attrs.'>'.$gap.$line['h'].$br.'</span>';
+            $gap = '';
+        }
+
+        $inner = '<p class="fs-status">'.$esc((string) $this->statusLine()).'</p>'
+            .'<button type="button" class="fs-toggle" aria-expanded="false">Показать прошедшие занятия</button>'
+            .implode('', $out);
+
+        return $head."\n"
+            .'<div class="fs-body" data-fs-past="hidden">'.$inner.'</div>';
+    }
+
+    private const LAST_STYLE = ' style="background:#FDE047;color:#1F2430;padding:0 6px;border-radius:6px;"';
+
+    /** Жёлтая подсветка последнего прошедшего; строка без подсветки — как есть. */
+    private static function wrapLine(string $h, bool $last): string
+    {
+        if ($h === '') {
+            return '';
+        }
+
+        return $last
+            ? '<span class="fs-last"'.self::LAST_STYLE.'>'.$h.'</span>'
+            : $h;
     }
 
     /**
