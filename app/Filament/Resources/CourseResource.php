@@ -11,6 +11,7 @@ use App\Services\Schedule\FullSchedulePost;
 use App\Services\Schedule\SchedulePostSender;
 use App\Support\RoleGate;
 use App\Support\Roles;
+use App\Support\VideoEmbed;
 use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -126,6 +127,21 @@ class CourseResource extends Resource
                         TiptapEditor::make('description')
                             ->label('Описание')
                             ->profile('simple')
+                            ->columnSpanFull(),
+
+                        Forms\Components\TextInput::make('video_announce_url')
+                            ->label('Видео-анонс курса')
+                            ->url()
+                            ->maxLength(1024)
+                            ->placeholder('https://www.youtube.com/watch?v=... или https://rutube.ru/video/... или https://vk.com/video...')
+                            ->helperText('Ссылка на YouTube, RuTube или VK video. Показывается в hero-блоке продающей страницы вместо обложки. Пусто — показывается обложка курса.')
+                            ->rule(
+                                fn () => function (string $attribute, $value, Closure $fail): void {
+                                    if ($value && ! VideoEmbed::embed($value)) {
+                                        $fail('Ссылка не распознана как YouTube, RuTube или VK video.');
+                                    }
+                                }
+                            )
                             ->columnSpanFull(),
 
                         Forms\Components\TextInput::make('chat_url')
