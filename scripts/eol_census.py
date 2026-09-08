@@ -41,36 +41,7 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-try:
-    import git_ops  # noqa: E402  (Uprava tools/git_ops.py, when ported beside us)
-except ImportError:  # H4362: #2429 ported this file without git_ops — pre-push crashed
-    import types as _types
-
-    class _LocalResult:
-        def __init__(self, cp: "subprocess.CompletedProcess") -> None:
-            self.exit_code = cp.returncode
-            self.ok = cp.returncode == 0
-            self.stdout = cp.stdout
-            self.stderr = cp.stderr if isinstance(cp.stderr, str) else (
-                cp.stderr.decode("utf-8", "replace") if cp.stderr else "")
-
-    class _LocalGitOps:
-        """Minimal stand-in for git_ops.GitOperations: same exec() contract."""
-
-        def exec(self, repo_path, args, *, timeout_s=60, text=True,
-                 input_bytes=None, **_ignored):
-            try:
-                cp = subprocess.run(
-                    ["git", "-C", str(repo_path), *args], input=input_bytes,
-                    capture_output=True, timeout=timeout_s,
-                    **({"encoding": "utf-8", "errors": "replace"} if text else {}),
-                )
-            except subprocess.TimeoutExpired as exc:
-                raise git_ops.GitTimeout(str(exc)) from exc
-            return _LocalResult(cp)
-
-    git_ops = _types.SimpleNamespace(GitOperations=_LocalGitOps,
-                                     GitTimeout=type("GitTimeout", (RuntimeError,), {}))
+import git_ops  # noqa: E402
 
 _GIT_OPS = git_ops.GitOperations()
 
