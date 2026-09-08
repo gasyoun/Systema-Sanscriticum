@@ -11,6 +11,7 @@ use App\Services\Leads\LeadMagnetDispatcher;
 use App\Services\Leads\WaitlistWelcome;
 use App\Services\Marathon\MarathonDay1Sender;
 use App\Services\Messaging\DeliveryChannelManager;
+use App\Support\CareChatReplyLog;
 use App\Support\TelegramChannelEcho;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -62,6 +63,13 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
         $chatId = $message['chat']['id'] ?? null;
 
         if (! $chatId) {
+            return;
+        }
+
+        // H4362 — ответы «готово / сломано» на пост «Вестника» в чате «Отдел
+        // заботы»: reply на сообщение бота в этом чате пишем в JSONL-журнал и
+        // выходим — это не лид и не /start, дальше по ветке ему делать нечего.
+        if (CareChatReplyLog::captureFromUpdate($this->update)) {
             return;
         }
 
