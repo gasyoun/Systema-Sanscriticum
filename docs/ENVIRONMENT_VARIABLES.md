@@ -294,7 +294,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `INBOUND_EMAIL_WEBHOOK_SECRET` | secret | `—` | config/services.php:108 |
 | `INSTITUTE_DONATE_REQUISITES` | optional | `''` | config/institute.php:6 |
 | `INSTITUTE_DONATIONS_LIVE` | optional | `false` | config/institute.php:12 |
-| `INSTITUTE_LECTURE_COURSE_IDS` | optional | `''` | config/institute.php:32 |
+| `INSTITUTE_LECTURE_COURSE_IDS` | optional | `''` | config/institute.php:43 |
 | `INVEST_ACCEPTABLE_PAYBACK_YEARS` | optional | `4` | config/investment.php:35 |
 | `INVEST_DISCOUNT_RATE_PCT` | optional | `20` | config/investment.php:27 |
 | `INVEST_HORIZON_YEARS` | optional | `5` | config/investment.php:30 |
