@@ -31,6 +31,11 @@ class TelegramSupportSyncService
     private static bool $loggedMissingTelegramIdColumn = false;
 
     /**
+     * Сколько пиров опрашивал последний заход (для finish()-лога, H4416).
+     */
+    private int $lastPeerPollCount = 0;
+
+    /**
      * Один MadelineProto-клиент на ВЕСЬ заход (чтение + досыл ответов).
      *
      * Каждый `new API()` создаёт новый глобальный Logger, а тот в режиме
@@ -66,7 +71,7 @@ class TelegramSupportSyncService
      *                               имя нужно здесь только для записи курсоров
      *                               в правильный рядок.
      */
-    public function sync(string $accountName = 'support'): array
+    public function sync(string $accountName = 'support', ?int $catchUpDays = null): array
     {
         if (! config('services.telegram_support.enabled')) {
             Log::info('Telegram support sync skipped', ['status' => 'disabled']);
@@ -86,7 +91,7 @@ class TelegramSupportSyncService
         }
 
         try {
-            $messages = $this->fetchIncrementalMadelineMessagesWithRetry($account, $clientClass);
+            $messages = $this->fetchIncrementalMadelineMessagesWithRetry($account, $clientClass, $catchUpDays);
             if ($messages === []) {
                 $linkResult = $this->autoLinker->linkUnlinkedContacts();
 
@@ -165,10 +170,10 @@ class TelegramSupportSyncService
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function fetchIncrementalMadelineMessagesWithRetry(TelegramSupportAccount $account, string $clientClass): array
+    private function fetchIncrementalMadelineMessagesWithRetry(TelegramSupportAccount $account, string $clientClass, ?int $catchUpDays = null): array
     {
         try {
-            return $this->fetchIncrementalMadelineMessages($account, $clientClass);
+            return $this->fetchIncrementalMadelineMessages($account, $clientClass, $catchUpDays);
         } catch (Throwable $e) {
             // Только AUTH_RESTART чиним повтором в этом же процессе (свежий new API()
             // переавторизуется). Мёртвый IPC сюда НЕ попадает — он обрабатывается на
@@ -186,7 +191,7 @@ class TelegramSupportSyncService
             // async-деструктор, await по нему — только на shutdown.
             $this->client = null;
 
-            return $this->fetchIncrementalMadelineMessages($account->refresh(), $clientClass);
+            return $this->fetchIncrementalMadelineMessages($account->refresh(), $clientClass, $catchUpDays);
         }
     }
 
@@ -504,7 +509,7 @@ class TelegramSupportSyncService
     /**
      * @return array<int, array<string, mixed>>
      */
-    private function fetchIncrementalMadelineMessages(TelegramSupportAccount $account, string $clientClass): array
+    private function fetchIncrementalMadelineMessages(TelegramSupportAccount $account, string $clientClass, ?int $catchUpDays = null): array
     {
         $client = $this->openClient($clientClass);
         $this->backfillContactProfiles($client);
@@ -512,7 +517,20 @@ class TelegramSupportSyncService
         $limit = (int) config('services.telegram_support.history_limit', 50);
         $self = $this->resolveSelfIdentity($client);
         MadelineSyncPhase::mark('dialogs');
-        $dialogs = $this->dialogsWithTechGroups($client, $this->limitedDialogs($client->getDialogIds()));
+
+        // Catch-up (--catch-up-days) — только явно: суточный обмет по
+        // расписанию (config services.telegram_support.catchup_days задаёт
+        // N для планировщика). Минутный заход всегда идёт по горячему окну.
+        if ($catchUpDays !== null && $catchUpDays > 0) {
+            $dialogs = $this->activeKnownChatPeers($catchUpDays, PHP_INT_MAX);
+        } else {
+            $dialogs = $this->pollPeers($account, $client);
+        }
+
+        // H4416: состав опроса в лог каждого захода — аутедж DM-окон больше
+        // не должен быть невидимкой на фоне status=ok.
+        $this->lastPeerPollCount = is_array($dialogs) ? count($dialogs) : 0;
+
         $messages = [];
         $peerState = $account->sync_state['peers'] ?? [];
 
@@ -866,43 +884,86 @@ class TelegramSupportSyncService
     }
 
     /**
-     * Top-N dialogs ∪ allowlist учебных групп (config tech_group_peers).
+     * Пиры для опроса в минутном заходе (H4416).
      *
-     * @param  array<int, mixed>  $dialogs
-     * @return array<int, mixed>
+     * Root cause 08-09-2026: getDialogIds() аккаунта-персоны возвращает 3199
+     * диалогов в порядке, далёком от свежести (живой замер: топ-30 — старые
+     * июльские DM-чаты, свежий DM не попадал в окно никогда), а прежний код
+     * брал `array_slice(ids, 0, dialog_limit)`. Итог — DM-аутедж 31-08…08-09
+     * при статусе «ok» каждую минуту: группы доплывали только через
+     * tech_group_peers, личные сообщения студентов не видел никто.
+     *
+     * Союз, дешевле-первым; дедуп по id (или строковой форме для @username):
+     *  1) активные известные чаты из БД (known_chat_window_days / _poll_limit);
+     *  2) tech_group_peers allowlist;
+     *  3) legacy MP-окно (топ dialog_limit из getDialogIds) — для бренд-новых
+     *     чатов, которых в БД ещё нет; 0 отключает этот источник.
+     *
+     * @return array<int, int|string|mixed>
      */
-    private function dialogsWithTechGroups(object $client, array $dialogs): array
+    private function pollPeers(TelegramSupportAccount $account, object $client): array
     {
-        $peers = config('services.telegram_support.tech_group_peers', []);
-        if (! is_array($peers) || $peers === []) {
-            return $dialogs;
-        }
-
+        $peers = [];
         $seen = [];
-        foreach ($dialogs as $dialog) {
-            $id = $this->extractTelegramId($dialog);
-            if ($id !== null) {
-                $seen[$id] = true;
-            }
-        }
 
-        foreach ($peers as $peer) {
-            $peer = is_string($peer) || is_int($peer) ? $peer : null;
-            if ($peer === null || $peer === '') {
-                continue;
-            }
+        $push = function ($peer) use (&$peers, &$seen): void {
             $id = $this->extractTelegramId($peer);
-            if ($id !== null && isset($seen[$id])) {
-                continue;
+            $key = $id !== null
+                ? (string) $id
+                : (is_scalar($peer) ? (string) $peer : '');
+            if ($key === '' || isset($seen[$key])) {
+                return;
             }
-            // @username — оставляем как peer-строку; Madeline getHistory примет.
-            $dialogs[] = is_numeric($peer) ? (int) $peer : $peer;
-            if ($id !== null) {
-                $seen[$id] = true;
+            $seen[$key] = true;
+            $peers[] = $peer;
+        };
+
+        foreach ($this->activeKnownChatPeers(
+            (int) config('services.telegram_support.known_chat_window_days', 14),
+            (int) config('services.telegram_support.known_chat_poll_limit', 120),
+        ) as $chatId) {
+            $push($chatId);
+        }
+
+        foreach ((array) config('services.telegram_support.tech_group_peers', []) as $peer) {
+            if (is_string($peer) || is_int($peer)) {
+                $push(is_numeric($peer) ? (int) $peer : (string) $peer);
             }
         }
 
-        return $dialogs;
+        $dialogLimit = (int) config('services.telegram_support.dialog_limit', 20);
+        if ($dialogLimit > 0) {
+            foreach ($this->limitedDialogs($client->getDialogIds()) as $dialog) {
+                $push($dialog);
+            }
+        }
+
+        return $peers;
+    }
+
+    /**
+     * Известные нам чаты (только личные, положительный id) с любым сообщением
+     * внутри окна, свежайшие первыми. Пустое окно или потолок 0 = выключено.
+     *
+     * @return array<int, int>
+     */
+    private function activeKnownChatPeers(int $windowDays, int $limit): array
+    {
+        if ($windowDays <= 0 || $limit <= 0) {
+            return [];
+        }
+
+        return TelegramSupportMessage::query()
+            ->select('telegram_chat_id')
+            ->selectRaw('MAX(sent_at) as last_activity')
+            ->where('telegram_chat_id', '>', 0)
+            ->where('sent_at', '>=', now()->subDays($windowDays))
+            ->groupBy('telegram_chat_id')
+            ->orderByDesc('last_activity')
+            ->limit($limit)
+            ->pluck('telegram_chat_id')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
     }
 
     /**
@@ -1075,6 +1136,7 @@ class TelegramSupportSyncService
             'synced' => $result['synced'] ?? 0,
             'dates' => $result['dates'] ?? [],
             'messages_seen' => count($messages),
+            'peers_polled' => $this->lastPeerPollCount,
         ]);
 
         return $result;

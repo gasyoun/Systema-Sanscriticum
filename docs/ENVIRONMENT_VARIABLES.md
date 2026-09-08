@@ -766,11 +766,14 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TELEGRAM_SUPPORT_AUTO_HEAL` | optional | `false` | config/services.php:233 |
 | `TELEGRAM_SUPPORT_AUTO_HEAL_COOLDOWN_MINUTES` | optional | `30` | config/services.php:234 |
 | `TELEGRAM_SUPPORT_AUTO_REPLY_MAX_AGE_HOURS` | optional | `6` | config/services.php:209 |
+| `TELEGRAM_SUPPORT_CATCHUP_DAYS` | optional | `60` | config/services.php:169 |
 | `TELEGRAM_SUPPORT_CLIENT_CLASS` | required | `—` | config/services.php:156 |
 | `TELEGRAM_SUPPORT_DIALOG_LIMIT` | optional | `20` | config/services.php:154 |
 | `TELEGRAM_SUPPORT_ENABLED` | feature-flag | `false` | config/services.php:149 |
 | `TELEGRAM_SUPPORT_HINT_MAX_AGE_HOURS` | optional | `24` | config/services.php:210 |
 | `TELEGRAM_SUPPORT_HISTORY_LIMIT` | optional | `50` | config/services.php:153 |
+| `TELEGRAM_SUPPORT_KNOWN_CHAT_POLL_LIMIT` | optional | `120` | config/services.php:165 |
+| `TELEGRAM_SUPPORT_KNOWN_CHAT_WINDOW_DAYS` | optional | `14` | config/services.php:163 |
 | `TELEGRAM_SUPPORT_LINK_INVITE_COOLDOWN_HOURS` | optional | `168` | config/services.php:226 |
 | `TELEGRAM_SUPPORT_LINK_INVITE_TEXT` | optional | `"Намасте!\n\nВаш вопрос дошёл до нас. Бот отвечает мгновенно тем, ч…` | config/services.php:220 |
 | `TELEGRAM_SUPPORT_LINK_TOKEN_TTL_HOURS` | secret | `336` | config/services.php:229 |

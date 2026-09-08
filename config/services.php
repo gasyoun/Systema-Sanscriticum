@@ -152,6 +152,21 @@ return [
         'session' => env('TELEGRAM_SUPPORT_SESSION', storage_path('app/telegram-support/session.madeline')),
         'history_limit' => (int) env('TELEGRAM_SUPPORT_HISTORY_LIMIT', 50),
         'dialog_limit' => (int) env('TELEGRAM_SUPPORT_DIALOG_LIMIT', 20),
+        // H4416 (root cause 08-09-2026): getDialogIds() аккаунта-персоны возвращает
+        // 3199 диалогов в порядке, далёком от свежести (топ-30 — старые июльские
+        // DM-чаты), а legacy-окно брало первые dialog_limit штук. Личные DM
+        // перестали попадать в опрос (аутедж 31-08…08-09, кейс Елены Безрядиной),
+        // группы выживали только через tech_group_peers. Теперь опрашиваемых
+        // пиров собирает союз: активные известные чаты из БД (это окно), потом
+        // allowlist, потом legacy MP-окно (для бренд-новых чатов, которых в БД
+        // ещё нет). 0 — выключить БД-союз (наследное поведение).
+        'known_chat_window_days' => (int) env('TELEGRAM_SUPPORT_KNOWN_CHAT_WINDOW_DAYS', 14),
+        // Потолок пиров из БД-союза за один минутный заход (RPC-бюджет).
+        'known_chat_poll_limit' => (int) env('TELEGRAM_SUPPORT_KNOWN_CHAT_POLL_LIMIT', 120),
+        // Суточный catch-up (--catch-up-days): полный обмет всех чатов с
+        // активностью за N дней — страховка для чата, ожило ли после долгой
+        // паузы и не попало ни в минутное окно, ни в MP-топ.
+        'catchup_days' => (int) env('TELEGRAM_SUPPORT_CATCHUP_DAYS', 60),
         'profile_backfill_limit' => (int) env('TELEGRAM_SUPPORT_PROFILE_BACKFILL_LIMIT', 20),
         'client_class' => env('TELEGRAM_SUPPORT_CLIENT_CLASS') ?: API::class,
         // Минут без успешного синка, после которых сессия считается протухшей
