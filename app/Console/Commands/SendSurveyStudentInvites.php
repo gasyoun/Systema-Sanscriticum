@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\Payment;
 use App\Models\SurveyInvitation;
 use App\Models\User;
 use App\Support\TelegramSendGuard;
@@ -21,7 +22,9 @@ use Illuminate\Support\Facades\Log;
  *
  * Кого берём (текущие ученики, а не «любые платившие когда-то»):
  *   активное членство в живой группе (left_at IS NULL, группа forming/active)
- *   ИЛИ активный доступ к курсу (course_user.status не терминальный).
+ *   ИЛИ активный доступ к курсу (course_user.status не терминальный)
+ *   ИЛИ оплата за последние 6 месяцев (Payment::PAID_STATUSES) — свежий платёж
+ *     как самостоятельный сигнал «сейчас учится», не «платил когда-то».
  *
  * Кого исключаем (окно охлаждения — три месяца, и ответы, и приглашения):
  *   - персонал (is_admin, админоподобные роли);
@@ -32,8 +35,8 @@ use Illuminate\Support\Facades\Log;
  *   - приглашённые в саппорт-боте за 3 месяца (link_invited_at) — консервативная
  *     прокси-замена отсутствующей машинной истории опросных приглашений;
  *   - курсы с авто-триггером exit-price за 3 месяца (exit_survey_triggered_at);
- *   - уже приглашённые в ЭТУ волну (survey_invitations: queued/sent/unknown;
- *     failed — разрешён повтор, отправка точно не случилась).
+ *   - уже приглашённые в ЛЮБУЮ волну опроса (survey_invitations: queued/sent/
+ *     unknown; failed — разрешён повтор, отправка точно не случилась).
  *
  * REPORT-ONLY по умолчанию; отправка — только с --send, батчами --limit.
  * Перед --send проверяется личность бота через getMe (ожидание — конфиг
@@ -41,7 +44,8 @@ use Illuminate\Support\Facades\Log;
  *
  * Отправка: строка queued (резерв) → TelegramSendGuard claim → sendMessage →
  * в строку пишется message_id и статус. Таймаут без ответа = unknown, повтор
- * вслепую не делается; детерминированный отказ 4xx = failed + release клейма.
+ * вслепую не делается; детерминированный отказ 4xx = failed + release клейма;
+ * 5xx Telegram = unknown (исход отправки не известен, вслепую не повторяем).
  *
  *   php artisan surveys:send-student-invites                    # сухой прогон
  *   php artisan surveys:send-student-invites --send --limit=100
@@ -51,6 +55,8 @@ class SendSurveyStudentInvites extends Command
     private const STAFF_ROLES = ['super_admin', 'admin', 'teacher', 'manager', 'accountant'];
 
     private const TERMINAL_COURSE_STATUSES = ['Выпускник', 'Покинул', 'Исключен'];
+
+    private const RECENT_PAYMENT_MONTHS = 6;
 
     protected $signature = 'surveys:send-student-invites
         {--slug=student-purchase-2026-09 : Ключ волны из config/surveys.php}
@@ -78,9 +84,10 @@ class SendSurveyStudentInvites extends Command
         }
 
         $text = $this->invitationText($slug);
-        $counts = $this->exclusionCounts($slug);
+        $counts = $this->exclusionCounts();
 
         $this->info('Кандидаты (текущие ученики): '.$counts['candidates'].'.');
+        $this->line('  + расширение свежими плательщиками: '.$counts['recent_payer_widening']);
         $this->line('  персонал: '.$counts['staff']);
         $this->line('  отписались от сообщений: '.$counts['opted_out']);
         $this->line('  без telegram_id: '.$counts['no_telegram']);
@@ -109,7 +116,7 @@ class SendSurveyStudentInvites extends Command
             return self::FAILURE;
         }
 
-        $eligible = $this->eligible($slug)->orderBy('id')->limit($limit)->get();
+        $eligible = $this->eligible()->orderBy('id')->limit($limit)->get();
         $text = $this->invitationText($slug);
 
         $results = [];
@@ -180,12 +187,15 @@ class SendSurveyStudentInvites extends Command
         return self::SUCCESS;
     }
 
-    /** Кандидаты — текущие ученики: живая группа ИЛИ активный доступ к курсу. */
+    /** Кандидаты — текущие ученики: живая группа, активный доступ или свежая оплата. */
     private function candidates(): Builder
     {
         return User::query()->where(function ($q) {
             $q->whereHas('activeGroups', fn ($g) => $g->whereIn('groups.status', ['forming', 'active']))
-                ->orWhereHas('courses', fn ($c) => $c->whereNotIn('course_user.status', self::TERMINAL_COURSE_STATUSES));
+                ->orWhereHas('courses', fn ($c) => $c->whereNotIn('course_user.status', self::TERMINAL_COURSE_STATUSES))
+                ->orWhereHas('payments', fn ($p) => $p
+                    ->whereIn('payments.status', Payment::PAID_STATUSES)
+                    ->where('payments.created_at', '>=', now()->subMonths(self::RECENT_PAYMENT_MONTHS)));
         });
     }
 
@@ -195,11 +205,17 @@ class SendSurveyStudentInvites extends Command
      *
      * @return array<string, int>
      */
-    private function exclusionCounts(string $slug): array
+    private function exclusionCounts(): array
     {
         $cutoff = now()->subMonths(3);
 
+        $base = User::query()->where(function ($q) {
+            $q->whereHas('activeGroups', fn ($g) => $g->whereIn('groups.status', ['forming', 'active']))
+                ->orWhereHas('courses', fn ($c) => $c->whereNotIn('course_user.status', self::TERMINAL_COURSE_STATUSES));
+        });
+
         $counts = ['candidates' => (clone $this->candidates())->count()];
+        $counts['recent_payer_widening'] = $counts['candidates'] - (clone $base)->count();
 
         $staffFree = (clone $this->candidates())
             ->where('is_admin', false)
@@ -240,7 +256,6 @@ class SendSurveyStudentInvites extends Command
         $previous = (clone $step)->count();
         $step->whereNotExists(fn ($q) => $q->from('survey_invitations as si')
             ->whereColumn('si.user_id', 'users.id')
-            ->where('si.survey_slug', $slug)
             ->whereIn('si.status', [SurveyInvitation::STATUS_QUEUED, SurveyInvitation::STATUS_SENT, SurveyInvitation::STATUS_UNKNOWN]));
         $counts['already_invited'] = $previous - (clone $step)->count();
 
@@ -250,7 +265,7 @@ class SendSurveyStudentInvites extends Command
     }
 
     /** Полный конвейер исключений — те же ступени, что в exclusionCounts. */
-    private function eligible(string $slug): Builder
+    private function eligible(): Builder
     {
         $cutoff = now()->subMonths(3);
 
@@ -275,27 +290,27 @@ class SendSurveyStudentInvites extends Command
                 ->where('c2.exit_survey_triggered_at', '>=', $cutoff))
             ->whereNotExists(fn ($q) => $q->from('survey_invitations as si')
                 ->whereColumn('si.user_id', 'users.id')
-                ->where('si.survey_slug', $slug)
                 ->whereIn('si.status', [SurveyInvitation::STATUS_QUEUED, SurveyInvitation::STATUS_SENT, SurveyInvitation::STATUS_UNKNOWN]));
     }
 
     /**
-     * Резерв строки ДО отправки; гонка перезапусков гасится уникальным индексом.
-     * Существующая failed-строка переиспользуется (повтор разрешён), остальные
-     * статусы сюда не доходят — они отсечены конвейером исключений.
+     * Эксклюзивный атомарный захват адресата ДО отправки; гонка перезапусков
+     * гасится уникальным индексом (slug, user_id) + firstOrCreate.
+     *
+     * Переиспользуется ТОЛЬКО failed-строка (отказ 4xx — отправка точно не
+     * случилась). Строки queued (живой резерв конкурирующего запуска), sent и
+     * unknown никогда не перезаписываются: updateOrCreate здесь запрещён —
+     * он затирал бы message_id/статус реально отправленных приглашений.
      */
     private function reserve(string $slug, User $user): ?SurveyInvitation
     {
         try {
-            return SurveyInvitation::updateOrCreate(
+            $invitation = SurveyInvitation::firstOrCreate(
                 ['survey_slug' => $slug, 'user_id' => $user->id],
                 [
                     'telegram_chat_id' => (int) $user->telegram_id,
                     'channel' => 'telegram',
                     'status' => SurveyInvitation::STATUS_QUEUED,
-                    'telegram_message_id' => null,
-                    'error' => null,
-                    'sent_at' => null,
                 ],
             );
         } catch (QueryException $e) {
@@ -303,6 +318,12 @@ class SendSurveyStudentInvites extends Command
 
             return null;
         }
+
+        if (! $invitation->wasRecentlyCreated && $invitation->status !== SurveyInvitation::STATUS_FAILED) {
+            return null;
+        }
+
+        return $invitation;
     }
 
     /**
@@ -329,6 +350,12 @@ class SendSurveyStudentInvites extends Command
 
         if (! $response->successful() || ! $response->json('ok')) {
             $description = (string) ($response->json('description') ?? 'http '.$response->status());
+
+            // 5xx: Telegram не подтвердил ни успех, ни отказ — исход неизвестен,
+            // повтор вслепую мог бы задвоить сообщение. Только 4xx детерминирован.
+            if ($response->serverError()) {
+                return [SurveyInvitation::STATUS_UNKNOWN, null, $this->sanitize('telegram 5xx: '.$description)];
+            }
 
             return [SurveyInvitation::STATUS_FAILED, null, $this->sanitize($description)];
         }

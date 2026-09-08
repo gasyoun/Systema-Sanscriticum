@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Console\Commands\SendSurveyStudentInvites;
 use App\Models\Course;
 use App\Models\Group;
+use App\Models\Payment;
 use App\Models\SurveyInvitation;
 use App\Models\SurveyResponse;
 use App\Models\User;
@@ -229,6 +231,111 @@ class SurveyStudentInviteTest extends TestCase
         $row->refresh();
         $this->assertSame(SurveyInvitation::STATUS_UNKNOWN, $row->status);
         $this->assertNull($row->telegram_message_id);
+    }
+
+    /** @test */
+    public function invitation_in_any_wave_blocks_recipient_not_only_current_slug(): void
+    {
+        $this->fakeTelegramOk();
+
+        $invitedElsewhere = $this->currentStudent();
+        SurveyInvitation::create([
+            'survey_slug' => 'post3m',
+            'user_id' => $invitedElsewhere->id,
+            'telegram_chat_id' => (int) $invitedElsewhere->telegram_id,
+            'status' => SurveyInvitation::STATUS_SENT,
+        ]);
+
+        $this->artisan('surveys:send-student-invites', ['--send' => true])->assertExitCode(0);
+
+        $this->assertSame(1, SurveyInvitation::count());
+        $this->assertSame(0, SurveyInvitation::where('survey_slug', self::SLUG)->count());
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), '/sendMessage'));
+    }
+
+    /** @test */
+    public function reserve_never_touches_existing_sent_row(): void
+    {
+        $this->fakeTelegramOk();
+
+        $user = $this->currentStudent();
+        $sent = SurveyInvitation::create([
+            'survey_slug' => self::SLUG,
+            'user_id' => $user->id,
+            'telegram_chat_id' => (int) $user->telegram_id,
+            'status' => SurveyInvitation::STATUS_SENT,
+            'telegram_message_id' => 111,
+        ]);
+
+        $method = new \ReflectionMethod(SendSurveyStudentInvites::class, 'reserve');
+
+        $this->assertNull($method->invoke(new SendSurveyStudentInvites, self::SLUG, $user));
+
+        $sent->refresh();
+        $this->assertSame(SurveyInvitation::STATUS_SENT, $sent->status);
+        $this->assertSame(111, $sent->telegram_message_id);
+    }
+
+    /** @test */
+    public function telegram_5xx_marks_unknown_and_blocks_blind_retry(): void
+    {
+        $this->currentStudent();
+
+        Http::fake([
+            'api.telegram.org/bot*/getMe' => Http::response(['ok' => true, 'result' => ['id' => 777, 'username' => 'samskrtamru_bot', 'is_bot' => true]]),
+            'api.telegram.org/bot*/sendMessage' => Http::response(['ok' => false, 'error_code' => 502, 'description' => 'Bad Gateway'], 502),
+        ]);
+
+        $this->artisan('surveys:send-student-invites', ['--send' => true])->assertExitCode(0);
+
+        $row = SurveyInvitation::sole();
+        $this->assertSame(SurveyInvitation::STATUS_UNKNOWN, $row->status);
+        $this->assertNull($row->telegram_message_id);
+        $this->assertStringContainsString('telegram 5xx', (string) $row->error);
+
+        $this->artisan('surveys:send-student-invites', ['--send' => true])->assertExitCode(0);
+
+        $row->refresh();
+        $this->assertSame(SurveyInvitation::STATUS_UNKNOWN, $row->status);
+
+        $sendCount = 0;
+        Http::assertSent(function ($request) use (&$sendCount): bool {
+            if (str_contains($request->url(), '/sendMessage')) {
+                $sendCount++;
+            }
+
+            return true;
+        });
+        $this->assertSame(1, $sendCount, '5xx не должен ретраиться вслепую');
+    }
+
+    /** @test */
+    public function recent_paid_payment_without_group_or_course_is_eligible(): void
+    {
+        $this->fakeTelegramOk();
+
+        $payer = User::factory()->create([
+            'wants_messenger_announcements' => true,
+            'role' => null,
+            'is_admin' => false,
+        ]);
+        $payer->forceFill(['telegram_id' => 519000001])->save();
+
+        Payment::create(['user_id' => $payer->id, 'amount' => 6000, 'status' => 'paid', 'created_at' => now()->subMonths(2)]);
+
+        // Контроль: старый платёж (7 месяцев) не делает пользователя «текущим».
+        $stale = User::factory()->create([
+            'wants_messenger_announcements' => true,
+            'role' => null,
+            'is_admin' => false,
+        ]);
+        $stale->forceFill(['telegram_id' => 519000002])->save();
+        Payment::create(['user_id' => $stale->id, 'amount' => 6000, 'status' => 'paid', 'created_at' => now()->subMonths(7)]);
+
+        $this->artisan('surveys:send-student-invites', ['--send' => true])->assertExitCode(0);
+
+        $sent = SurveyInvitation::where('status', SurveyInvitation::STATUS_SENT)->get();
+        $this->assertSame([$payer->id], $sent->pluck('user_id')->all());
     }
 
     /** Telegram API: getMe confirms the expected bot, sendMessage answers success. */
