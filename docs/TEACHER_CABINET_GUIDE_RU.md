@@ -1,6 +1,7 @@
 # Руководство преподавателя: работа в учебной панели
 
 _Created: 12-08-2026 · Last updated: 08-09-2026_
+<!-- manuals: enforcement=coverage-test -->  <!-- kept green by TeacherGuideCoverageTest -->
 
 Все книги школы: `/admin/documentation`
 
