@@ -1,0 +1,77 @@
+{
+ "agreement": "9/9",
+ "cases": [
+  {
+   "text": "сколько стоит курс и где ссылка",
+   "legacy": "D",
+   "want_topic": "payment_billing",
+   "got_topic": "payment_billing",
+   "reason": "keyword:(оплат|тариф|цен|стои)[а-я]*.{0,48}(?<![а-я])(ссылк|линк)[а-я]*",
+   "agree": true
+  },
+  {
+   "text": "ссылку на оплату не нашла",
+   "legacy": "D",
+   "want_topic": "payment_billing",
+   "got_topic": "payment_billing",
+   "reason": "keyword:(?<![а-я])(ссылк|линк)[а-я]*.{0,48}(оплат|плат|тариф|цен|стои)",
+   "agree": true
+  },
+  {
+   "text": "сколько будет стоить курс по календарям?",
+   "legacy": "D",
+   "want_topic": "payment_billing",
+   "got_topic": "payment_billing",
+   "reason": "keyword:сколько стоит|сколько.{0,24}стои",
+   "agree": true
+  },
+  {
+   "text": "есть ли функция рассрочки или по частям оплата?",
+   "legacy": "D",
+   "want_topic": "payment_billing",
+   "got_topic": "payment_billing",
+   "reason": "keyword:тариф[а-я]*|рассрочк[а-я]*|предоплат[а-я]*|доплат[а-я]*",
+   "agree": true
+  },
+  {
+   "text": "Добрый вечер! Не могу открыть занятия по паролю 102. Он изменился?",
+   "legacy": "E",
+   "want_topic": "access_login",
+   "got_topic": "access_login",
+   "reason": "keyword:не могу (попасть|войти|зайти|открыт[а-я]*)",
+   "agree": true
+  },
+  {
+   "text": "куда мы должны прикреплять домашнюю работу по занятию 3?",
+   "legacy": "F",
+   "want_topic": "homework_progress",
+   "got_topic": "homework_progress",
+   "reason": "keyword:домашн[а-я]*|домашк[а-я]*",
+   "agree": true
+  },
+  {
+   "text": "Жаль, тогда прошу сделать возврат",
+   "legacy": null,
+   "want_topic": null,
+   "got_topic": null,
+   "reason": null,
+   "agree": true
+  },
+  {
+   "text": "Возврат",
+   "legacy": null,
+   "want_topic": null,
+   "got_topic": null,
+   "reason": null,
+   "agree": true
+  },
+  {
+   "text": "Намо намах!",
+   "legacy": null,
+   "want_topic": null,
+   "got_topic": null,
+   "reason": null,
+   "agree": true
+  }
+ ]
+}
