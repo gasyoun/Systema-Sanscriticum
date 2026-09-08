@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\ExitSurveyAutoTrigger;
 use App\Support\RichHtml;
+use App\Support\VideoEmbed;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -34,6 +35,9 @@ class Course extends Model
         // H4281: ссылка на видео-анонс курса (YouTube/RuTube/VK video); провайдер
         // и embed-URL распознаются через App\Support\VideoEmbed.
         'video_announce_url',
+        // H4325: конспект лекций от препода — пишется ТОЛЬКО через
+        // CourseMaterialSubmissionService::publish(), не с формы препода напрямую.
+        'teacher_notes',
         'description',
         'chat_url',
         // Единая постоянная ссылка на Zoom-конференцию курса; meeting_id из неё
@@ -144,7 +148,7 @@ class Course extends Model
      */
     public function videoAnnounceEmbedUrl(): ?string
     {
-        return \App\Support\VideoEmbed::embed($this->video_announce_url);
+        return VideoEmbed::embed($this->video_announce_url);
     }
 
     /**
@@ -723,6 +727,21 @@ class Course extends Model
     public function designAssets(): HasMany
     {
         return $this->hasMany(CourseDesignAsset::class);
+    }
+
+    /**
+     * Заявки препода на материалы («Мои материалы», H4325) — черновики,
+     * не витрина. Публикует куратор через CourseMaterialSubmissionService.
+     */
+    public function materialSubmissions(): HasMany
+    {
+        return $this->hasMany(CourseMaterialSubmission::class);
+    }
+
+    /** Открытая (не опубликованная) заявка курса, если есть. */
+    public function openMaterialSubmission(): ?CourseMaterialSubmission
+    {
+        return $this->materialSubmissions()->open()->latest('id')->first();
     }
 
     /**
