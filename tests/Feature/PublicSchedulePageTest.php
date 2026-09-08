@@ -33,7 +33,7 @@ class PublicSchedulePageTest extends TestCase
             ->assertOk()
             ->assertSee('Расписание занятий')
             ->assertSee('Введение в индийскую философию')
-            ->assertSee('1-е занятие: 6 марта 2027 (суббота), 11:00')
+            ->assertSee('<strong>1-е занятие</strong>: 6 марта 2027 (суббота), 11:00', false)
             ->assertSee('Еженедельно по субботам в 11:00 (по МСК)')
             ->assertSee('/k/fiya')
             ->assertDontSee('Скрытый курс');

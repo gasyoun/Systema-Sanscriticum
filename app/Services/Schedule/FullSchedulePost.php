@@ -42,7 +42,7 @@ final class FullSchedulePost
     /**
      * @param  string|null  $cadence  «Еженедельно по субботам в 11:00 (по МСК)»
      * @param  array{label: string, date: string}|null  $overview
-     * @param  list<string>  $lessons  строки «1-е занятие: 7 марта 2026 (суббота), 11:00»
+     * @param  list<array{label: string, date: string}>  $lessons  метки БЕЗ двоеточия
      */
     private function __construct(
         public readonly string $title,
@@ -124,12 +124,15 @@ final class FullSchedulePost
             ->filter(fn (Schedule $s): bool => $s->start !== null)
             ->values();
 
-        $lessonLines = $lessons->map(fn (Schedule $s, int $i): string => ($i + 1).'-е занятие: '.self::formatDate($s->start))->all();
+        $lessonLines = $lessons->map(fn (Schedule $s, int $i): array => [
+            'label' => ($i + 1).'-е занятие',
+            'date' => self::formatDate($s->start),
+        ])->all();
 
         $overviewData = null;
         if ($overview !== null && $overview->start !== null) {
             $overviewData = [
-                'label' => 'Обзорное занятие (не в счет '.$lessons->count().'):',
+                'label' => 'Обзорное занятие (не в счет '.$lessons->count().')',
                 'date' => self::formatDate($overview->start),
             ];
         }
@@ -152,7 +155,7 @@ final class FullSchedulePost
         }
 
         if ($this->overview !== null) {
-            $parts[] = $this->overview['label']."\n".$this->overview['date'];
+            $parts[] = $this->overview['label'].":\n".$this->overview['date'];
         }
 
         $parts[] = $this->joinLessons("\n");
@@ -161,9 +164,9 @@ final class FullSchedulePost
     }
 
     /**
-     * Telegram HTML: заголовок и ритм без жирного, обзорное и строки занятий
-     * жирными (MG: «Обзорное занятие … выделить жирным. 1-е занятие — и все
-     * даты по аналогии, тоже жирным»). Пустая строка после каждого 4-го.
+     * Telegram HTML — правка MG (08-09-2026): жирным только МЕТКА («1-е
+     * занятие:», «Обзорное занятие (не в счет N):»), дата в строке — обычным.
+     * Заголовок и ритм без жирного. Пустая строка после каждого 4-го.
      */
     public function telegramHtml(): string
     {
@@ -184,12 +187,12 @@ final class FullSchedulePost
         $lines = [];
 
         if ($this->overview !== null) {
-            $lines[] = $bold($this->overview['label']);
-            $lines[] = $bold($this->overview['date']);
+            $lines[] = $bold($this->overview['label']).':';
+            $lines[] = $esc($this->overview['date']);
         }
 
-        foreach ($this->lessons as $i => $line) {
-            $lines[] = $bold($line);
+        foreach ($this->lessons as $i => $lesson) {
+            $lines[] = $bold($lesson['label']).': '.$esc($lesson['date']);
 
             if (($i + 1) % 4 === 0 && isset($this->lessons[$i + 1])) {
                 $lines[] = '';
@@ -202,7 +205,8 @@ final class FullSchedulePost
 
     /**
      * Строки поста: [заголовок, ритм?, '', обзорное x2?, занятия...] —
-     * жирными помечаются всё, кроме первых двух; '' = пустая строка-разделитель.
+     * жирным помечается только метка занятия/обзорного, дата обычным;
+     * '' = пустая строка-разделитель.
      *
      * @return list<string>
      */
@@ -221,12 +225,12 @@ final class FullSchedulePost
         $lines[] = '';
 
         if ($this->overview !== null) {
-            $lines[] = $bold($this->overview['label']);
-            $lines[] = $bold($this->overview['date']);
+            $lines[] = $bold($this->overview['label']).':';
+            $lines[] = $plain($this->overview['date']);
         }
 
-        foreach ($this->lessons as $i => $line) {
-            $lines[] = $bold($line);
+        foreach ($this->lessons as $i => $lesson) {
+            $lines[] = $bold($lesson['label']).': '.$plain($lesson['date']);
 
             if (($i + 1) % 4 === 0 && isset($this->lessons[$i + 1])) {
                 $lines[] = '';
@@ -236,13 +240,13 @@ final class FullSchedulePost
         return $lines;
     }
 
-    /** Занятия одним блоком: разделитель $glue + пустая строка после каждого 4-го. */
+    /** Занятия одним блоком: «{label}: {date}» + пустая строка после каждого 4-го. */
     private function joinLessons(string $glue): string
     {
         $lines = [];
 
-        foreach ($this->lessons as $i => $line) {
-            $lines[] = $line;
+        foreach ($this->lessons as $i => $lesson) {
+            $lines[] = $lesson['label'].': '.$lesson['date'];
 
             if (($i + 1) % 4 === 0 && isset($this->lessons[$i + 1])) {
                 $lines[] = '';
