@@ -1,6 +1,7 @@
 # Как пользоваться кабинетом
 
 _Created: 21-08-2026 · Last updated: 07-09-2026_
+<!-- manuals: enforcement=coverage-test -->  <!-- kept green by StudentCabinetGuideCoverageTest -->
 
 Все книги школы: `/admin/documentation`
 

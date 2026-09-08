@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\ExitSurveyAutoTrigger;
 use App\Support\RichHtml;
+use App\Support\VideoEmbed;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 class Course extends Model
 {
@@ -30,6 +32,12 @@ class Course extends Model
         // Заполненное значение всегда побеждает автоопределение по названию.
         'course_family',
         'image_path',
+        // H4281: ссылка на видео-анонс курса (YouTube/RuTube/VK video); провайдер
+        // и embed-URL распознаются через App\Support\VideoEmbed.
+        'video_announce_url',
+        // H4325: конспект лекций от препода — пишется ТОЛЬКО через
+        // CourseMaterialSubmissionService::publish(), не с формы препода напрямую.
+        'teacher_notes',
         'description',
         'chat_url',
         // Единая постоянная ссылка на Zoom-конференцию курса; meeting_id из неё
@@ -132,6 +140,15 @@ class Course extends Model
     public function isLive(): bool
     {
         return $this->format === 'live';
+    }
+
+    /**
+     * Embed-URL видео-анонса курса (YouTube/RuTube/VK video) для hero-блока
+     * продающей страницы, или null если ссылка не задана/не распознана.
+     */
+    public function videoAnnounceEmbedUrl(): ?string
+    {
+        return VideoEmbed::embed($this->video_announce_url);
     }
 
     /**
@@ -710,6 +727,38 @@ class Course extends Model
     public function designAssets(): HasMany
     {
         return $this->hasMany(CourseDesignAsset::class);
+    }
+
+    /**
+     * Заявки препода на материалы («Мои материалы», H4325) — черновики,
+     * не витрина. Публикует куратор через CourseMaterialSubmissionService.
+     */
+    public function materialSubmissions(): HasMany
+    {
+        return $this->hasMany(CourseMaterialSubmission::class);
+    }
+
+    /** Открытая (не опубликованная) заявка курса, если есть. */
+    public function openMaterialSubmission(): ?CourseMaterialSubmission
+    {
+        return $this->materialSubmissions()->open()->latest('id')->first();
+    }
+
+    /**
+     * Плашка курса для карточки каталога (аспект карточки — 4:3): приоритет —
+     * дизайнерский баннер формата 4:3 из course_design_assets, фолбэк —
+     * image_path (обложка витрины, которую владелец курса грузит сам). Не
+     * N+1: designAssets должна быть заранее подгружена через with() —
+     * CourseCatalog::render() ограничивает её условием format=4:3.
+     */
+    public function catalogBadgeUrl(): ?string
+    {
+        $badge = $this->designAssets->firstWhere('format', '4:3');
+        if ($badge && filled($badge->path)) {
+            return $badge->imageUrl();
+        }
+
+        return $this->image_path ? Storage::url($this->image_path) : null;
     }
 
     /**

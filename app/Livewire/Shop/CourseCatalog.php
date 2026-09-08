@@ -198,6 +198,9 @@ class CourseCatalog extends Component
                 'tariffs' => fn ($q) => $q->where('is_active', true)->orderBy('price'),
                 'teacher:id,name',
                 'categories:id,name,slug,color,icon',
+                // Только формат карточки (4:3) — designReadiness() в других
+                // местах грузит все три сам, тут лишние форматы не нужны.
+                'designAssets' => fn ($q) => $q->where('format', '4:3'),
             ])
             ->latest('id')
             ->get();

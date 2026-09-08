@@ -6,11 +6,13 @@ namespace App\Services;
 
 use App\Filament\Pages\Debtors;
 use App\Filament\Pages\MarathonMantraReviews;
+use App\Filament\Resources\CourseMaterialSubmissionResource;
 use App\Filament\Resources\CourseResource;
 use App\Filament\Resources\GroupResource;
 use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
+use App\Models\CourseMaterialSubmission;
 use App\Models\Group;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
@@ -590,6 +592,46 @@ class CuratorNotifier
         foreach ($messages as $text) {
             $this->dispatchToCurators($text);
         }
+    }
+
+    /**
+     * H4325 — препод прислал/обновил заявку «Мои материалы» (видео-анонс,
+     * бейдж 4:3, конспект) по своему курсу. Уходит на КАЖДУЮ отправку —
+     * и первую, и правку уже открытой заявки — так куратор не пропустит
+     * досылку недостающего поля.
+     */
+    public function materialsSubmitted(CourseMaterialSubmission $submission): void
+    {
+        $teacher = $submission->submittedBy;
+
+        $parts = [];
+        if (filled($submission->video_announce_url)) {
+            $parts[] = 'видео-анонс';
+        }
+        if ($submission->hasBadge()) {
+            $parts[] = 'бейдж 4:3';
+        }
+        if (filled($submission->notes)) {
+            $parts[] = 'конспект';
+        }
+
+        $lines = [
+            '📚 <b>Заявка «Мои материалы»</b>',
+            '',
+            $this->courseLine($submission->course),
+            'Препод: <b>'.e((string) ($teacher->name ?? ('#'.$submission->submitted_by_user_id))).'</b>',
+            'Прислано: <b>'.($parts !== [] ? implode(', ', $parts) : '—').'</b>',
+        ];
+
+        try {
+            $url = CourseMaterialSubmissionResource::getUrl('index');
+        } catch (\Throwable) {
+            $url = url('/admin');
+        }
+        $lines[] = '';
+        $lines[] = '👉 <a href="'.$url.'">Открыть очередь материалов</a>';
+
+        $this->dispatchToCurators($this->join($lines));
     }
 
     // ==========================================================

@@ -61,6 +61,24 @@ final class SupportDmAutoReply
     /** H3999: расхождение заявленной суммы с расчётной — задача финансисту. */
     public const EVENT_BALANCE_DISPUTE = 'dm_balance_dispute';
 
+    /**
+     * H4404: LLM-ветка отказалась отвечать (R3-тема, спам или неуверенный
+     * retrieval). Студенту не уходит ничего; audit-событие держит причину.
+     */
+    public const EVENT_LLM_REFUSED = 'dm_llm_refused';
+
+    /**
+     * H4404, тень: LLM-ответ СФОРМУЛИРОВАН и был бы отправлен при включённом
+     * живом флаге — но флаг ещё OFF. Ни одного исходящего (инвариант §5).
+     */
+    public const EVENT_LLM_SHADOW_WOULD_SEND = 'dm_llm_shadow_would_send';
+
+    /** H4404: kind dm_auto_sent для реально отправленных LLM-ответов. */
+    public const KIND_LLM_DRAFT = 'llm_draft';
+
+    /** H4404: версии промпта LLM-ветки — единая точка для аудита и отчётов. */
+    public const LLM_PROMPT_VERSION = SupportDmLlmReplyComposer::PROMPT_VERSION;
+
     /** H3765 A5: куратор нажал «Отправить как есть» под подсказкой. */
     public const EVENT_HINT_SEND_TAPPED = 'dm_hint_send_tapped';
 
@@ -91,6 +109,7 @@ final class SupportDmAutoReply
         private readonly SupportDmLinkInvite $linkInvite,
         private readonly SupportConversationManager $conversations,
         private readonly SupportFollowUpService $followUps,
+        private readonly SupportDmLlmReplyComposer $llm,
     ) {}
 
     public function isEnabled(): bool
@@ -260,6 +279,27 @@ final class SupportDmAutoReply
                         'floor' => $this->scoreFloor($category),
                     ]);
                 }
+            }
+        }
+
+        // H4404 (рулинг MG 08-09-2026 «LLM-черновики»): LLM-ветка.
+        //
+        // Стоит ПОСЛЕ живой FAQ-ветки (приоритет измеренного): если BM25
+        // уверенно достал раздел и порог F взят, студенту уходит выверенная
+        // цитата, а не формулировка модели. До шаблонов — потому что шаблон
+        // требует category != null, а классификатор в живом трафике не
+        // стреляет (8/8 category=null в пробе H3380); эта ветка от категории
+        // НЕ зависит вовсе.
+        //
+        // R3-гейты решают ДО вызова LLM: деньги/доступ/спам — refuse-and-
+        // escalate, один LLM-ответ на серию (cooldown), свежий привязанный
+        // студент. Живое включение — флаг features.support_dm_llm_drafts,
+        // пока OFF: формулировка пишется в тень и студенту не уходит.
+        if ($mayReachStudent && $user !== null && $this->llm->isEnabled()) {
+            $llmResult = $this->llmReply($incoming, $user, $text);
+
+            if ($llmResult !== null) {
+                return $llmResult;
             }
         }
 
@@ -1069,6 +1109,174 @@ final class SupportDmAutoReply
         }
 
         return max($global, (float) $perCategory[$category]);
+    }
+
+    /**
+     * H4404: LLM-ветка целиком — refuse-гейты, формулировка, тень или
+     * отправка. null — ветка не сработала (гейт не пустил или LLM не дал
+     * текста); вызывающий идёт дальше по конвейеру (шаблон, ack, hint).
+     *
+     * @return array{status: string, category: ?string}|null
+     */
+    private function llmReply(TelegramSupportMessage $incoming, User $user, string $text): ?array
+    {
+        $refusal = $this->llmRefusalReason($text);
+
+        if ($refusal !== null) {
+            $this->recordLlmRefused($incoming, $user, $refusal);
+
+            return null;
+        }
+
+        // Retrieval тот же, что у FAQ-ветки: LLM формулирует ТОЛЬКО по живым
+        // фрагментам справки. Ниже floor'а F формулировать не из чего —
+        // позволить LLM отвечать «по памяти» значило бы снять рулинг R3.
+        $hits = $this->faq->retrieve($text, 3);
+        $score = (float) ($hits[0]['score'] ?? 0.0);
+        if ($hits === [] || $score < $this->llmScoreFloor()) {
+            $this->recordLlmRefused($incoming, $user, 'below_score_floor', $score);
+
+            return null;
+        }
+
+        $composed = $this->llm->compose($text, $hits);
+
+        if ($composed === null) {
+            // Неудача формулировки (ключ/провайдер/пустой ответ) — НЕ отказ
+            // по политике, писать dm_llm_refused не нужно: конвейер сам уйдёт
+            // в ack/hint, и студент не увидит лишнего.
+            return null;
+        }
+
+        if (! (bool) config('features.support_dm_llm_drafts_live', false)) {
+            $this->recordLlmShadowWouldSend($incoming, $user, $text, $composed, $score);
+
+            return null;
+        }
+
+        // Рулинг W3: не чаще одного LLM-ответа на серию сообщений студента —
+        // тот же cooldown-инвариант, что у ack (recentOutgoingInChat), плюс
+        // пер-аккаунтный гейт: ветка шлёт сама, значит аккаунт должен был
+        // разрешить автоответы.
+        if (! $this->accountAllowsAutoReply($incoming) || $this->recentOutgoingInChat($incoming)) {
+            $this->recordLlmRefused($incoming, $user, 'cooldown_or_account', $score);
+
+            return null;
+        }
+
+        $result = $this->sendAuto($incoming, $user, null, $composed['draft'], self::KIND_LLM_DRAFT, [
+            'prompt_version' => self::LLM_PROMPT_VERSION,
+            'model' => $composed['model'],
+            'usage' => $composed['usage'],
+            'faq_chunk_ids' => $composed['chunk_ids'],
+            'score' => round($score, 4),
+        ]);
+
+        return $result['status'] === 'sent' ? $result : null;
+    }
+
+    /**
+     * R3-запреты LLM-ветки: причина отказа или null, если тема допустима.
+     *
+     * Проверка ДО вызова LLM, в коде, а не конфигом: правка .env не должна
+     * уметь отправить формулировку модели на деньгах (D), доступах (E) или
+     * спаме. Денежные вопросы дополнительно страхует fact-resolver выше по
+     * конвейеру, но эта ветка не должна зависеть от классификатора — потому
+     * свой, независимый список стоп-слов.
+     */
+    private function llmRefusalReason(string $text): ?string
+    {
+        $normalized = mb_strtolower($text);
+
+        $spamPatterns = ['/теле[гг]рам\s*канал/iu', '/подписа[тт]ь/iu', '/реклам/iu', '/спам/iu'];
+        foreach ($spamPatterns as $pattern) {
+            if (preg_match($pattern, $normalized) === 1) {
+                return 'spam';
+            }
+        }
+
+        $moneyPatterns = [
+            '/оплат|плат[еёжи]|денег|деньг|стоимост|сколько\s+стои|цен[аеуы]|\bтариф|рассрочк|доплат|предоплат|скидк|промокод|по\s+частям|сч[её]т|квитанц|возврат/iu',
+        ];
+        foreach ($moneyPatterns as $pattern) {
+            if (preg_match($pattern, $normalized) === 1) {
+                return 'money';
+            }
+        }
+
+        $accessPatterns = ['/нет\s+доступ|не\s+(?:могу\s+)?(?:войти|зайти|попасть)|парол|логин|\bкабинет/iu'];
+        foreach ($accessPatterns as $pattern) {
+            if (preg_match($pattern, $normalized) === 1) {
+                return 'access';
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Порог retrieval'а для LLM-ветки. Отдельный ключ конфига (не
+     * shadow_min_score): теневая калибровка B5 выводилась ПОКАТЕГОРИЙНО, а
+     * эта ветка по категории не ходит; дефолт равен глобальному floor'у.
+     */
+    private function llmScoreFloor(): float
+    {
+        return (float) config('support.llm_replies.min_score', 8.0);
+    }
+
+    private function recordLlmRefused(TelegramSupportMessage $incoming, User $user, string $reason, ?float $score = null): void
+    {
+        SupportAiReplyEvent::firstOrCreate(
+            [
+                'telegram_support_message_id' => $incoming->id,
+                'event_type' => self::EVENT_LLM_REFUSED,
+            ],
+            [
+                'meta' => [
+                    'via' => self::VIA,
+                    'reason' => $reason,
+                    'score' => $score === null ? null : round($score, 4),
+                    'user_id' => $user->id,
+                    'question_hash' => hash('sha256', mb_strtolower(trim($incoming->text ?? ''))),
+                ],
+            ],
+        );
+    }
+
+    /**
+     * @param  array{draft: string, model: ?string, usage: ?array{prompt_tokens: int, completion_tokens: int}, chunk_ids: list<string>}  $composed
+     */
+    private function recordLlmShadowWouldSend(
+        TelegramSupportMessage $incoming,
+        User $user,
+        string $text,
+        array $composed,
+        float $score,
+    ): void {
+        if (! (bool) config('features.support_dm_auto_reply_shadow', false)) {
+            return;
+        }
+
+        SupportAiReplyEvent::firstOrCreate(
+            [
+                'telegram_support_message_id' => $incoming->id,
+                'event_type' => self::EVENT_LLM_SHADOW_WOULD_SEND,
+            ],
+            [
+                'meta' => [
+                    'via' => self::VIA,
+                    'prompt_version' => self::LLM_PROMPT_VERSION,
+                    'model' => $composed['model'],
+                    'usage' => $composed['usage'],
+                    'faq_chunk_ids' => $composed['chunk_ids'],
+                    'score' => round($score, 4),
+                    'draft' => $composed['draft'],
+                    'user_id' => $user->id,
+                    'telegram_chat_id' => (int) $incoming->telegram_chat_id,
+                    'question_hash' => hash('sha256', mb_strtolower(trim($text))),
+                ],
+            ],
+        );
     }
 
     private function alreadyHandled(TelegramSupportMessage $incoming): bool
