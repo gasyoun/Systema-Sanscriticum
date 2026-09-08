@@ -261,6 +261,16 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('support-daily-digest');
 
+        // H4429 (рулинг MG 08-09-2026: «live после недели тени, без
+        // переспрашивания»): авто-рубильник живого режима LLM-ветки — 7
+        // продуктивных дней тени подряд, включение + аудит-событие. Гейты
+        // внутри команды; ручной просмотр — support:llm-live-enable --dry.
+        $schedule->command('support:llm-live-enable')
+            ->dailyAt('09:00')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('support-llm-live-enable');
+
         // H3392: недельный разбор пробы автоответов H3380 — «разбираем что
         // пошло не так» само-сборкой. Воскресенье 18:00 MSK; гейт флага
         // SUPPORT_AUTO_REPLY_WEEKLY_REPORT (default OFF): пока OFF, слот молчит;

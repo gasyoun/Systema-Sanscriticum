@@ -663,7 +663,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SUPPORT_DM_AUTO_REPLY_SHADOW` | optional | `false` | config/features.php:291 |
 | `SUPPORT_DM_LINK_INVITE` | optional | `false` | config/features.php:304 |
 | `SUPPORT_DM_LLM_DRAFTS` | optional | `false` | config/features.php:241 |
-| `SUPPORT_DM_LLM_DRAFTS_LIVE` | optional | `false` | config/features.php:249 |
+| `SUPPORT_DM_LLM_DRAFTS_LIVE` | optional | `false` | config/features.php:249 — H4429: live также включается авто-рубильником (штамп `marketing_settings.support_llm_live_enabled_at` после 7 дней тени подряд, команда `support:llm-live-enable` 09:00 MSK) |
 | `SUPPORT_DRAFT_QUEUE` | optional | `false` | config/features.php:318 |
 | `SUPPORT_FACT_LIVE_TYPES` | optional | `'zoom,schedule,recording'` | config/support.php:100 |
 | `SUPPORT_FAQ_RAG_BOT_TOP_K` | optional | `20` | config/support.php:175 |

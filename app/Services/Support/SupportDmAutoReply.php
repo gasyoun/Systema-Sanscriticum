@@ -1148,7 +1148,10 @@ final class SupportDmAutoReply
             return null;
         }
 
-        if (! (bool) config('features.support_dm_llm_drafts_live', false)) {
+        // H4429: живой режим = env-флаг ИЛИ штамп авто-рубильника в
+        // marketing_settings (MG 08-09-2026: live после недели тени, без
+        // переспрашивания). R3-гейты ниже остаются в коде при любом пути.
+        if (! SupportDailyDigest::llmLive()) {
             $this->recordLlmShadowWouldSend($incoming, $user, $text, $composed, $score);
 
             return null;
