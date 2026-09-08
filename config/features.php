@@ -220,6 +220,35 @@ return [
     'support_dm_auto_reply_live_faq' => (bool) env('SUPPORT_DM_AUTO_REPLY_LIVE_FAQ', false),
 
     /*
+     | H4404 (рулинг MG 08-09-2026 «LLM-черновики»): LLM-ветка автоответа в
+     | личке саппорта. В отличие от шаблонной (SUPPORT_AUTO_REPLY_TEMPLATES) и
+     | FAQ-ветки (SUPPORT_DM_AUTO_REPLY_LIVE_FAQ) НЕ зависит от классификатора
+     | категорий: в пробе H3380 он вернул category=null на 8 из 8 живых
+     | dm_hinted — ветка, привязанная к категории, в трафике не стреляла.
+     |
+     | Студент получает ответ, сформулированный внешним LLM по живому
+     | FAQ-контексту, не чаще одного раза в cooldown-окно на серию сообщений.
+     | Стоит ПОСЛЕ FAQ-ветки (15.7): если FAQ уверенно отвечает сам, LLM не
+     | нужен. R3-запреты из SupportDmAutoReply::llmRefusalReason() остаются в
+     | коде: деньги, доступы, спам-слова гонят в отказ-и-эскалацию при любом
+     | конфиге.
+     |
+     | Каждый вызов пишется в журнал (dm_auto_sent kind=llm_draft /
+     | dm_llm_refused / dm_llm_shadow_would_send) с версией промпта и моделью.
+     |
+     | ВЫКЛ по умолчанию; живое включение — решение MG после недели тени.
+     */
+    'support_dm_llm_drafts' => (bool) env('SUPPORT_DM_LLM_DRAFTS', false),
+
+    /*
+     | H4404: ЖИВАЯ отправка LLM-ответов. Пока false, сформулированный ответ
+     | пишется в тень (dm_llm_shadow_would_send) и студенту не уходит.
+     | Переключается ТОЛЬКО вместе с SUPPORT_DM_LLM_DRAFTS и только решением
+     | MG после недели теневого сбора. Откат: false + config:cache.
+     */
+    'support_dm_llm_drafts_live' => (bool) env('SUPPORT_DM_LLM_DRAFTS_LIVE', false),
+
+    /*
      | H3233 B: автоответ простых A/B/C в личке саппорт-аккаунта + подсказка
      | кураторам на сложные. ВЫКЛ по умолчанию = откат на A (кабинетный бот,
      | Helpdesk-черновики, люди печатают в Telegram). Деньги (D) не автоотвечает.
