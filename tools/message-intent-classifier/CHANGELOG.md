@@ -1,5 +1,3 @@
-_Created: 25-08-2026 · Last updated: 05-09-2026_
-
 # Changelog
 
 All notable changes to this project are documented in this file.
@@ -46,5 +44,3 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   «техподдержка» negation pair passing BOTH engines.
 - `harness/precision_report.py` — per-category precision/recall/n + coverage +
   uncategorized sample over a masked JSONL corpus.
-
-_Dr. Mārcis Gasūns_
