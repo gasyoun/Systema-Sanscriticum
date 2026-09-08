@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\ExitSurveyAutoTrigger;
 use App\Support\RichHtml;
+use App\Support\VideoEmbed;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -30,6 +31,9 @@ class Course extends Model
         // Заполненное значение всегда побеждает автоопределение по названию.
         'course_family',
         'image_path',
+        // H4281: ссылка на видео-анонс курса (YouTube/RuTube/VK video); провайдер
+        // и embed-URL распознаются через App\Support\VideoEmbed.
+        'video_announce_url',
         'description',
         'chat_url',
         // Единая постоянная ссылка на Zoom-конференцию курса; meeting_id из неё
@@ -132,6 +136,15 @@ class Course extends Model
     public function isLive(): bool
     {
         return $this->format === 'live';
+    }
+
+    /**
+     * Embed-URL видео-анонса курса (YouTube/RuTube/VK video) для hero-блока
+     * продающей страницы, или null если ссылка не задана/не распознана.
+     */
+    public function videoAnnounceEmbedUrl(): ?string
+    {
+        return VideoEmbed::embed($this->video_announce_url);
     }
 
     /**
