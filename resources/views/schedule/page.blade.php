@@ -32,7 +32,10 @@
                             {{ $course->title }}
                         </a>
                         @if($course->teacher)
-                            <span class="text-sm text-slate-500">{{ $course->teacher->name }}</span>
+                            <a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($course->teacher->name) }}"
+                               class="text-sm text-slate-500 hover:text-brand transition-colors">
+                                {{ $course->teacher->name }}
+                            </a>
                         @endif
                     </div>
 

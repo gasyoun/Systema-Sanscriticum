@@ -116,13 +116,35 @@ class FullSchedulePostTest extends TestCase
         $this->assertStringNotContainsString('<b>Расписание курса', $html);
         $this->assertStringNotContainsString('<b>Еженедельно', $html);
 
-        // Обзорное и занятия — жирным, пустых <b></b> нет.
+        // Обзорное и занятия — метка жирным, дата обычным.
         $this->assertStringContainsString('<b>Обзорное занятие (не в счет 1)</b>:', $html);
         $this->assertStringContainsString('<b>1-е занятие</b>: 7 марта 2026 (суббота), 11:00', $html);
         // Дата в строке — БЕЗ жирного (правка MG 08-09-2026).
         $this->assertStringNotContainsString('<b>7 марта 2026', $html);
         $this->assertStringNotContainsString('<b>28 февраля 2026', $html);
         $this->assertStringNotContainsString('<b></b>', $html);
+    }
+
+    /** @test */
+    public function site_html_bolds_only_title_and_labels(): void
+    {
+        $group = Group::factory()->create();
+
+        Schedule::create(['title' => 'Обзорное', 'start' => Carbon::parse('2026-02-28 11:00'), 'group_id' => $group->id, 'is_overview' => true]);
+        Schedule::create(['title' => '1', 'start' => Carbon::parse('2026-03-07 11:00'), 'group_id' => $group->id]);
+
+        $post = FullSchedulePost::forGroup($group);
+        $this->assertNotNull($post);
+
+        $html = $post->html();
+
+        // Жирным — только заголовок курса и метки; ритм-строка и даты обычным.
+        $this->assertStringContainsString('<strong>Расписание курса', $html);
+        $this->assertStringNotContainsString('<strong>Еженедельно', $html);
+        $this->assertStringContainsString('<strong>Обзорное занятие (не в счет 1)</strong>:', $html);
+        $this->assertStringContainsString('<strong>1-е занятие</strong>: 7 марта 2026 (суббота), 11:00', $html);
+        $this->assertStringNotContainsString('<strong>7 марта 2026', $html);
+        $this->assertStringNotContainsString('<strong>28 февраля 2026', $html);
     }
 
     /** @test */
