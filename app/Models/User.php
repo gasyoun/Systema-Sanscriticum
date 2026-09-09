@@ -889,6 +889,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(LessonAccessGrant::class)->orderByDesc('granted_at');
     }
 
+    /** H4468 — окна доступа (course_access_windows), свежие сверху. */
+    public function courseAccessWindows(): HasMany
+    {
+        return $this->hasMany(CourseAccessWindow::class)->orderByDesc('created_at');
+    }
+
     /**
      * Все сессии пользователя.
      */
