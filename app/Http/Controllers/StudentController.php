@@ -41,6 +41,7 @@ use App\Services\Membership\ClubMembershipService;
 use App\Services\Membership\RecordingAccessPolicy;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Services\Schedule\TextbookScale;
 use App\Services\StudentDebtsService;
 use App\Support\Badges;
 use App\Support\KinescopePilot;
@@ -329,8 +330,43 @@ class StudentController extends Controller
             ? app(AccessDiagnosticsService::class)->profileSummary($user, $courses->count())
             : null;
 
+        // H4435 (MG 08-09): канва по курсам-учебникам — позиция студента и
+        // курсор группы. Две шкалы раздельно: наши занятия vs уроки учебника.
+        $canvasByCourseId = [];
+        foreach ($courses as $course) {
+            $family = TextbookScale::courseFamilyPublic((string) $course->title);
+            if ($family === null) {
+                continue;
+            }
+            $total = TextbookScale::families()[$family]['total'];
+            $lessons = Lesson::where('course_id', $course->id)
+                ->whereNotNull('lesson_date')->orderBy('lesson_date')->get();
+            $groupCursor = TextbookScale::cursor($lessons, $family);
+
+            // Позиция студента: записи уроков до даты его последнего факта в этой группе.
+            $studentCursor = 0;
+            $fact = $user->attendances()
+                ->whereIn('schedule_id', App\Models\Schedule::where('group_id', $course->groups->pluck('id'))->pluck('id'))
+                ->latest('created_at')->first();
+            if ($fact) {
+                $factDay = $fact->created_at->copy()->startOfDay();
+                $studentCursor = TextbookScale::cursor(
+                    $lessons->filter(fn ($l) => $l->lesson_date !== null && $l->lesson_date->startOfDay()->lte($factDay)),
+                    $family,
+                );
+            }
+
+            $canvasByCourseId[$course->id] = [
+                'family' => $family,
+                'total' => $total,
+                'group' => $groupCursor,
+                'student' => $studentCursor,
+            ];
+        }
+
         $viewData = compact(
             'courses',
+            'canvasByCourseId',
             'nextLessonByCourseId',
             'certificates',
             'pranaTransactions',

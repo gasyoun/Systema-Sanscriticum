@@ -75,7 +75,7 @@ final class WeeklyFinishReport
                     'pastCount' => $past->reject(fn (Schedule $s): bool => (bool) $s->is_overview)->count(),
                     'futureCount' => $futureCount,
                     'students' => self::studentRows($group, $past),
-                ];
+                ] + self::canvasData($course, $group, $past);
             }
         }
 
@@ -83,6 +83,52 @@ final class WeeklyFinishReport
         usort($report, fn (array $a, array $b): int => [$a['course']->title, $a['group']->name] <=> [$b['course']->title, $b['group']->name]);
 
         return $report;
+    }
+
+    /**
+     * H4435: данные канвы группы — курсор по учебнику (макс. читка), итого
+     * учебника, канва-lag против медианы семейства, проекция «до конца».
+     * Наши занятия и уроки учебника — разные шкалы (модель v2, MG 09-09).
+     *
+     * @return array{canvasCursor: int, canvasTotal: int, canvasFamily: string, canvasLag: int, canvasProjection: int|null}
+     */
+    private static function canvasData(Course $course, Group $group, $past): array
+    {
+        $family = TextbookScale::courseFamilyPublic((string) $course->title);
+        if ($family === null) {
+            return ['canvasCursor' => 0, 'canvasTotal' => 0, 'canvasFamily' => '', 'canvasLag' => 0, 'canvasProjection' => null];
+        }
+
+        $total = TextbookScale::families()[$family]['total'];
+        $lessons = Lesson::where('course_id', $course->id)
+            ->whereNotNull('lesson_date')
+            ->orderBy('lesson_date')
+            ->get();
+
+        $cursor = TextbookScale::cursor($lessons, $family);
+
+        // Медиана курсоров идущих групп семейства — база канва-lag.
+        $needle = $family === 'kochergina' ? '%Кочергиной%' : '%Бюллер%';
+        $cursors = [];
+        $peers = Course::query()
+            ->where('is_active', true)->where('is_visible', true)
+            ->where('title', 'like', $needle)
+            ->pluck('id');
+        foreach ($peers as $pid) {
+            $peerLessons = Lesson::where('course_id', $pid)
+                ->whereNotNull('lesson_date')->orderBy('lesson_date')->get();
+            $cursors[$pid] = TextbookScale::cursor($peerLessons, $family);
+        }
+
+        $projection = TextbookScale::projection($lessons, $cursor, $total, $family);
+
+        return [
+            'canvasCursor' => $cursor,
+            'canvasTotal' => $total,
+            'canvasFamily' => $family,
+            'canvasLag' => TextbookScale::lag($cursor, $cursors),
+            'canvasProjection' => $projection['projection_sessions'] ?? null,
+        ];
     }
 
     /**
@@ -110,10 +156,23 @@ final class WeeklyFinishReport
                 ? self::esc($row['course']->title)
                 : self::esc($row['course']->title).' — '.self::esc($row['group']->name);
 
+            // H4435: канва-строка — курсор по учебнику ОТДЕЛЬНО от наших занятий
+            // (две шкалы не смешиваются, MG 09-09).
+            if (($row['canvasTotal'] ?? 0) > 0 && ($row['canvasCursor'] ?? 0) > 0) {
+                $head .= "\nКанва: урок ".$row['canvasCursor'].'/'.$row['canvasTotal'];
+                if (($row['canvasLag'] ?? 0) !== 0) {
+                    $head .= ' ('.($row['canvasLag'] > 0 ? '+' : '').$row['canvasLag'].' к медиане)';
+                }
+                if (($row['canvasProjection'] ?? null) !== null) {
+                    $head .= ' · до конца ≈ '.$row['canvasProjection'].' наших занятий';
+                }
+            }
+
             $segments[] = '<b>'.$head.'</b>'
                 .' (прошло '.$row['pastCount'].' · впереди '.$row['futureCount'].')';
             foreach ($row['students'] as $s) {
-                $segments[] = self::esc(self::studentLine($s));
+                // H4435: имя студента — ссылка на его страницу в админке.
+                $segments[] = '<a href="'.self::esc(self::userUrl($s['user'])).'">'.self::esc(self::studentLine($s)).'</a>';
             }
         }
 
@@ -160,6 +219,11 @@ final class WeeklyFinishReport
             if ($last['kind'] === 'clicked') {
                 $line .= ' (по клику)';
             }
+            // H4435: предмет канвы отдельной шкалой («Кочергина 4 (читка)»),
+            // никогда не смешивается с нумерацией наших занятий.
+            if (! empty($s['canvas'])) {
+                $line .= ' · '.$s['canvas'];
+            }
         } else {
             $line .= ' — не был ни разу (за '.$s['pastSessions'].' '.self::pluralLessons($s['pastSessions']).')';
             if (isset($s['clicked'])) {
@@ -190,6 +254,12 @@ final class WeeklyFinishReport
     private static function esc(string $s): string
     {
         return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
+    }
+
+    /** H4435: ссылка на студента в админке (Filament ViewUser, панель /admin). */
+    private static function userUrl(User $user): string
+    {
+        return rtrim(url('/admin'), '/').'/users/'.$user->id;
     }
 
     /**
@@ -282,6 +352,9 @@ final class WeeklyFinishReport
             $rows[] = [
                 'user' => $user,
                 'last' => $last,
+                'canvas' => $lastSchedule !== null && $lastSchedule->start !== null
+                    ? self::canvasLabelForDate($group, $lastSchedule->start->copy()->startOfDay())
+                    : null,
                 'clicked' => $lastSchedule === null && $clickedLast !== null ? $clickedLast : null,
                 'missedStreak' => $missedStreak,
                 'pastSessions' => $past->count(),
@@ -289,6 +362,50 @@ final class WeeklyFinishReport
         }
 
         return $rows;
+    }
+
+    /**
+     * H4435: подпись канвы для даты нашего занятия — запись урока с той же
+     * lesson_date → предмет канвы из заголовка («Кочергина 4 (читка)»).
+     * Две шкалы раздельны (MG 09-09).
+     */
+    private static function canvasLabelForDate(Group $group, Carbon $date): ?string
+    {
+        static $cache = [];
+        $key = $group->id.'|'.$date->format('Y-m-d');
+        if (array_key_exists($key, $cache)) {
+            return $cache[$key];
+        }
+
+        $course = $group->courses()->first();
+        $family = $course !== null ? TextbookScale::courseFamilyPublic((string) $course->title) : null;
+        if ($course === null || $family === null) {
+            return $cache[$key] = null;
+        }
+
+        $lesson = Lesson::where('course_id', $course->id)
+            ->whereDate('lesson_date', $date->format('Y-m-d'))
+            ->orderBy('id')
+            ->first();
+
+        if ($lesson === null) {
+            return $cache[$key] = null;
+        }
+
+        // Прямая колонка приоритетна, иначе парсер заголовка.
+        if (($lesson->textbook_lesson ?? null) !== null) {
+            return $cache[$key] = TextbookScale::label($family, (int) $lesson->textbook_lesson, 'chitka');
+        }
+
+        $items = TextbookScale::parseTitle((string) $lesson->title);
+        $chitki = array_values(array_filter($items, fn (array $i): bool => $i['family'] === $family && $i['kind'] === 'chitka'));
+        if ($chitki === []) {
+            return $cache[$key] = null;
+        }
+
+        $max = max(array_map(fn (array $i): int => $i['lesson'], $chitki));
+
+        return $cache[$key] = TextbookScale::label($family, $max, 'chitka');
     }
 
     /**

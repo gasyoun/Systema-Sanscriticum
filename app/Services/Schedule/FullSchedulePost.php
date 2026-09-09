@@ -261,12 +261,12 @@ final class FullSchedulePost
         if ($this->overview !== null) {
             $overviewPast = (bool) $this->overview['is_past'];
             $lines[] = ['h' => $bold($this->overview['label']).':', 'past' => $overviewPast, 'last' => false];
-            $lines[] = ['h' => $dateFn(\Illuminate\Support\Carbon::parse($this->overview['start'])), 'past' => $overviewPast, 'last' => $overviewPast && $this->lastPast !== null && $this->lastPast['key'] === 'overview'];
+            $lines[] = ['h' => $dateFn(Carbon::parse($this->overview['start'])), 'past' => $overviewPast, 'last' => $overviewPast && $this->lastPast !== null && $this->lastPast['key'] === 'overview'];
         }
 
         foreach ($this->lessons as $i => $lesson) {
             $lines[] = [
-                'h' => $bold($lesson['label']).': '.$dateFn(\Illuminate\Support\Carbon::parse($lesson['start'])),
+                'h' => $bold($lesson['label']).': '.$dateFn(Carbon::parse($lesson['start'])),
                 'past' => (bool) $lesson['is_past'],
                 'last' => (bool) $lesson['is_past'] && $this->lastPast !== null && $this->lastPast['key'] === $i,
             ];
@@ -428,8 +428,8 @@ final class FullSchedulePost
     /**
      * H4434 — клиентская конверсия для гостей и embed-виджета (MG 09-09-2026):
      * дата остаётся московской строкой, но несёт data-msk-timestamp (unix) —
- * vanilla-JS на публичных поверхностях перезаписывает время на зону
- * устройства без cookie и без записи в БД (работает в iframe).
+     * vanilla-JS на публичных поверхностях перезаписывает время на зону
+     * устройства без cookie и без записи в БД (работает в iframe).
      */
     public static function formatDateWithTimestamp(Carbon $start): string
     {
