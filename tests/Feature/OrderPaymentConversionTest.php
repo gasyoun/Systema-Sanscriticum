@@ -214,11 +214,34 @@ class OrderPaymentConversionTest extends TestCase
         $this->actingAs($admin)->get('/admin/order-payment-conversion')->assertSuccessful();
     }
 
-    /** @test */
-    public function manager_cannot_access_page(): void
+    /**
+     * H4433 (09-09-2026): куратор (manager) владеет списком недожатых заказов
+     * по должностной инструкции — расширено с finance()-only на
+     * salesOperator() (admin/accountant/manager). Страница не показывает
+     * зарплаты/выплаты, только воронку продаж.
+     *
+     * @test
+     */
+    public function manager_can_access_page(): void
     {
-        $manager = User::factory()->create(['role' => 'manager', 'is_admin' => true]);
+        $manager = User::factory()->create(['role' => Roles::MANAGER, 'is_admin' => true]);
 
-        $this->actingAs($manager)->get('/admin/order-payment-conversion')->assertForbidden();
+        $this->actingAs($manager)->get('/admin/order-payment-conversion')->assertSuccessful();
+    }
+
+    /** @test */
+    public function teacher_cannot_access_page(): void
+    {
+        $teacher = User::factory()->create(['role' => Roles::TEACHER, 'is_admin' => true]);
+
+        $this->actingAs($teacher)->get('/admin/order-payment-conversion')->assertForbidden();
+    }
+
+    /** @test */
+    public function student_cannot_access_page(): void
+    {
+        $student = User::factory()->create(['role' => null, 'is_admin' => false]);
+
+        $this->actingAs($student)->get('/admin/order-payment-conversion')->assertForbidden();
     }
 }

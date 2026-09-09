@@ -117,6 +117,20 @@ final class RoleGate
     }
 
     /**
+     * Доступ к «Конверсия заказ→оплата» (H4433, находка H4334 09-09-2026,
+     * прослеживается к рулингу MG 19-07-2026): admin, accountant И manager
+     * (куратор) — куратор владеет списком недожатых заказов по должностной
+     * инструкции, но роли accountant не получает: страница не показывает
+     * зарплаты/выплаты, только воронку продаж, так что расширение безопасно
+     * по данным. Тот же паттерн, что managerSalesReport()/learningAnalytics().
+     * teacher/student не проходят.
+     */
+    public static function salesOperator(): bool
+    {
+        return self::any(Roles::ADMIN, Roles::ACCOUNTANT, Roles::MANAGER);
+    }
+
+    /**
      * Учебная аналитика — активация и завершаемость (H3764, рулинг MG
      * 01-09-2026): admin, accountant И manager (куратор); super_admin проходит
      * через any(). Изначально страница стояла на accounting(), но это была
