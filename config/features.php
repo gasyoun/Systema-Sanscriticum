@@ -706,6 +706,16 @@ return [
     'conditional_access_expiry' => (bool) env('CONDITIONAL_ACCESS_EXPIRY', false),
 
     /*
+     | H4456 (рулинг MG 09-09-2026): окна доступа course_access_windows.
+     | Строка (user, course) с ends_at в прошлом закрывает доступ, открываемый
+     | РЕАЛЬНЫМИ платежами курса (ends_at = NULL — вечный доступ по именному
+     | исключению). Деньги (строки платежей) не трогаются. Дефолт OFF,
+     | прод-флип — отдельный ops-шаг (COURSE_ACCESS_WINDOWS=true), та же
+     | постановка, что у conditional_access_expiry выше.
+     */
+    'course_access_windows' => (bool) env('COURSE_ACCESS_WINDOWS', false),
+
+    /*
      | Telegram Track C (H164, Uprava/docs/DECISIONS_telegram_harvester.md D7-D11):
      | second bot account @zapisi_ORSbot (class-booking chat) — go-forward webhook
      | capture + media download + class-reminder scheduler. ВЫКЛ по умолчанию —

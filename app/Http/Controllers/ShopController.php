@@ -414,6 +414,8 @@ class ShopController extends Controller
                 ->where('user_id', Auth::id())
                 ->where('course_id', $course->id)
                 ->paid()
+                // H4456: курс с истёкшим окном доступа снова считается покупаемым.
+                ->withoutExpiredAccessWindow()
                 ->pluck('tariff')
                 ->filter()
                 ->unique()

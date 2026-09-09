@@ -211,10 +211,13 @@ class AccessDiagnosticsService
      */
     public function ownedKeys(User $user, int $courseId): array
     {
+        // H4456: диагностика показывает тот же доступ-лист, что и гейт
+        // (условные ключи с живым обещанием + вычет истёкших окон доступа).
         return Payment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $courseId)
             ->paid()
+            ->withAccessExpiry()
             ->pluck('tariff')
             ->all();
     }
