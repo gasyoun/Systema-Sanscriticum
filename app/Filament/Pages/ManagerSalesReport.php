@@ -22,8 +22,10 @@ use Filament\Pages\Page;
  * (b) visibility — super_admin/admin/accountant see ALL rows (including the
  * «Без менеджера» unassigned bucket); a plain manager sees ONLY their own
  * rows (`created_by_user_id = auth id`). This is a SEPARATE surface from
- * {@see OrderPaymentConversion} (which stays `RoleGate::finance()`,
- * ADMIN+ACCOUNTANT only, MANAGER excluded by test) — that page is not widened.
+ * {@see OrderPaymentConversion} — that page shows the aggregate funnel, not
+ * per-manager rows, and (H4433, 09-09-2026) was itself widened to
+ * `RoleGate::salesOperator()` (ADMIN+ACCOUNTANT+MANAGER) so the curator who
+ * owns the "недожатых" follow-up list can see it too.
  *
  * Deploy-inert while `features.manager_sales_report` is OFF (default):
  * canAccess() returns false even for an admin.
