@@ -86,6 +86,10 @@ class FlagshipExperimentsTest extends TestCase
 
         $this->assertSame(1, StorefrontAnalyticsEvent::query()->where('event_name', StorefrontAnalyticsEvent::CARD_IMPRESSION)->count());
         $this->assertSame('next_step', StorefrontAnalyticsEvent::query()->first()->experiment);
+        $this->assertContains(
+            StorefrontAnalyticsEvent::query()->first()->variant,
+            ['a', 'b']
+        );
     }
 
     public function test_next_step_click_logs_and_redirects(): void
@@ -166,6 +170,47 @@ class FlagshipExperimentsTest extends TestCase
     public function test_unknown_next_step_target_is_404(): void
     {
         $this->get('/online/next-step/price')->assertNotFound();
+    }
+
+    public function test_next_step_click_row_carries_the_variant_the_visitor_was_served(): void
+    {
+        config(['features.catalog_next_step' => true, 'features.flagship_cta_ab' => true]);
+
+        $from = $this->makeKocherginaWithPreview();
+        Course::factory()->create([
+            'slug' => FlagshipLanding::SMOKE_SLUGS['buhler'],
+            'title' => 'Грамматика по Бюллеру гр.27',
+            'is_visible' => true,
+        ]);
+
+        $this->withCookie(FlagshipExperiments::CTA_COOKIE, 'b')
+            ->get(route('shop.next-step', ['target' => 'buhler', 'from' => $from->id]))
+            ->assertRedirect()
+            ->assertCookieMissing(FlagshipExperiments::CTA_COOKIE);
+
+        $row = StorefrontAnalyticsEvent::query()->where('event_name', StorefrontAnalyticsEvent::NEXT_STEP_CLICK)->first();
+        $this->assertNotNull($row);
+        $this->assertSame('b', $row->variant);
+    }
+
+    public function test_next_step_click_assigns_variant_on_first_hit_and_persists_cookie(): void
+    {
+        config(['features.catalog_next_step' => true]);
+
+        $from = $this->makeKocherginaWithPreview();
+        Course::factory()->create([
+            'slug' => FlagshipLanding::SMOKE_SLUGS['buhler'],
+            'title' => 'Грамматика по Бюллеру гр.27',
+            'is_visible' => true,
+        ]);
+
+        $response = $this->get(route('shop.next-step', ['target' => 'texts', 'from' => $from->id]));
+        $response->assertRedirect();
+
+        $row = StorefrontAnalyticsEvent::query()->where('event_name', StorefrontAnalyticsEvent::NEXT_STEP_CLICK)->first();
+        $this->assertNotNull($row);
+        $this->assertContains($row->variant, ['a', 'b']);
+        $response->assertCookie(FlagshipExperiments::CTA_COOKIE, $row->variant);
     }
 
     public function test_cta_ab_changes_only_the_label_on_kochergina(): void
