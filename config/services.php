@@ -312,6 +312,14 @@ return [
         // секунд блокирует следующий запуск, чтобы не долбить зависшую сессию.
         'sync_timeout_seconds' => (int) env('TELEGRAM_HARVEST_SYNC_TIMEOUT_SECONDS', 120),
         'sync_timeout_cooldown_seconds' => (int) env('TELEGRAM_HARVEST_SYNC_TIMEOUT_COOLDOWN_SECONDS', 600),
+        // H4461: wall-clock budget for ONE sync pass, in seconds (0 = unbounded).
+        // The pass fetches peer-by-peer and checkpoints (store + cursor) after
+        // every completed peer, so a budget stop — or a watchdog kill — keeps
+        // everything fetched so far and the next run resumes from cursors.
+        // Keep below sync_timeout_seconds so the budget, not the SIGALRM kill,
+        // is what ends a long pass; the twice-daily cadence catches up the
+        // remaining peers across runs.
+        'sync_budget_seconds' => (int) env('TELEGRAM_HARVEST_SYNC_BUDGET_SECONDS', 0),
         // Anti-ban: randomized inter-peer delay bounds in seconds (default 0/0 → no
         // sleep, so tests/CI never pause). Raise on a real host to look less bot-like.
         'peer_delay_min' => (int) env('TELEGRAM_HARVEST_PEER_DELAY_MIN', 0),

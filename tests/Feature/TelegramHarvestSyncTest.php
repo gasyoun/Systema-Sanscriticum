@@ -312,6 +312,159 @@ class TelegramHarvestSyncTest extends TestCase
         $this->assertSame(0, $again['stored']);
     }
 
+    /**
+     * H4461: the twice-daily run died at the 120 s watchdog with the whole
+     * batch still in memory — nothing stored, cursors unmoved, next run
+     * refetched the same peers. The time budget must stop the fetch loop
+     * mid-pass without error, leaving fetched peers checkpointed (covered by
+     * the checkpoint test) and the run honest ('ok').
+     */
+    public function test_sync_budget_stops_mid_pass_without_error(): void
+    {
+        config([
+            'services.telegram_harvest.enabled' => true,
+            'services.telegram_support.enabled' => true,
+        ]);
+
+        // Three peers; the fake clock burns the whole budget on the FIRST peer,
+        // so peers 2..3 must never be fetched but peer 1 must be persisted.
+        $client = new class
+        {
+            public object $messages;
+
+            /** @var array<int, string> */
+            public array $fetched = [];
+
+            public function __construct()
+            {
+                $this->messages = new class($this)
+                {
+                    public function __construct(private object $client) {}
+
+                    /** @param array<string, mixed> $params @return array<string, mixed> */
+                    public function getHistory(array $params): array
+                    {
+                        return ['messages' => [], 'users' => []];
+                    }
+                };
+            }
+
+            public function getInfo(int|string $peer): array
+            {
+                $this->fetched[] = (string) $peer;
+
+                return ['_' => 'channel', 'id' => (int) filter_var($peer, FILTER_SANITIZE_NUMBER_INT), 'title' => 'T', 'username' => ltrim((string) $peer, '@')];
+            }
+        };
+
+        $factory = new class($client) extends MadelineClientFactory
+        {
+            public function __construct(private object $fake) {}
+
+            public function isConfigured(): bool
+            {
+                return true;
+            }
+
+            public function open(?string $clientClass = null): object
+            {
+                return $this->fake;
+            }
+        };
+        $this->app->instance(MadelineClientFactory::class, $factory);
+
+        // 1s budget; the inter-peer delay (2s) after peer A burns it, so the
+        // loop stops BEFORE fetching peer B (delay counts against the budget).
+        config(['services.telegram_harvest.sync_budget_seconds' => 1]);
+        config(['services.telegram_harvest.peer_delay_min' => 2]);
+        config(['services.telegram_harvest.peer_delay_max' => 2]);
+
+        $result = app(TelegramHarvestSyncService::class)->sync(['@peer_a', '@peer_b', '@peer_c']);
+
+        $this->assertSame('ok', $result['status']);
+        $this->assertSame(['@peer_a'], $client->fetched);
+        $this->assertSame(0, $result['harvested']);
+        $this->assertSame(0, $result['stored']);
+    }
+
+    public function test_sync_budget_checkpoint_persists_first_peer_before_stop(): void
+    {
+        config([
+            'services.telegram_harvest.enabled' => true,
+            'services.telegram_support.enabled' => true,
+        ]);
+
+        $client = new class
+        {
+            public object $messages;
+
+            /** @var array<int, string> */
+            public array $fetched = [];
+
+            public function __construct()
+            {
+                $this->messages = new class($this)
+                {
+                    public function __construct(private object $client) {}
+
+                    /** @param array<string, mixed> $params @return array<string, mixed> */
+                    public function getHistory(array $params): array
+                    {
+                        // Peer A: real messages; peer B would also produce them but
+                        // the budget must stop the loop BEFORE it runs.
+                        return [
+                            'messages' => [
+                                ['id' => 7, 'date' => 1751360400, 'message' => 'oṃ checkpoint'],
+                            ],
+                            'users' => [],
+                        ];
+                    }
+                };
+            }
+
+            public function getInfo(int|string $peer): array
+            {
+                $this->fetched[] = (string) $peer;
+
+                return ['_' => 'channel', 'id' => $peer === '@peer_a' ? 100 : 200, 'title' => 'T', 'username' => ltrim((string) $peer, '@')];
+            }
+        };
+
+        $factory = new class($client) extends MadelineClientFactory
+        {
+            public function __construct(private object $fake) {}
+
+            public function isConfigured(): bool
+            {
+                return true;
+            }
+
+            public function open(?string $clientClass = null): object
+            {
+                return $this->fake;
+            }
+        };
+        $this->app->instance(MadelineClientFactory::class, $factory);
+
+        // 1s budget; the mandatory inter-peer delay (2s) burns it after peer A.
+        config(['services.telegram_harvest.sync_budget_seconds' => 1]);
+        config(['services.telegram_harvest.peer_delay_min' => 2]);
+        config(['services.telegram_harvest.peer_delay_max' => 2]);
+
+        $result = app(TelegramHarvestSyncService::class)->sync(['@peer_a', '@peer_b']);
+
+        // Peer A's message IS stored and its cursor advanced BEFORE the stop;
+        // peer B was never fetched.
+        $this->assertSame('ok', $result['status']);
+        $this->assertSame(['@peer_a'], $client->fetched);
+        $this->assertSame(1, $result['harvested']);
+        $this->assertSame(1, $result['stored']);
+        $this->assertFileExists($this->store.'/corpus/100/'.date('Y-m-d', 1751360400).'.jsonl');
+
+        $harvester = TelegramSupportAccount::where('name', 'harvester')->firstOrFail();
+        $this->assertSame(7, $harvester->sync_state['peers']['100']['last_message_id']);
+    }
+
     public function test_d11_downloads_media_only_for_configured_peers(): void
     {
         config([

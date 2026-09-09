@@ -73,7 +73,10 @@ class TelegramHarvestSyncService
         $account = $this->harvesterAccount();
 
         try {
-            $messages = $this->fetchIncremental($account, $peers);
+            // H4461: fetchIncremental ingests PER PEER (checkpoint as it goes)
+            // and returns the aggregate for reporting; the old fetch-all →
+            // ingest-once shape lost everything to the watchdog kill.
+            [$messages, $result] = $this->fetchIncremental($account, $peers);
         } catch (Throwable $e) {
             $account->forceFill(['last_synced_at' => now(), 'last_sync_error' => $e->getMessage()])->save();
             Log::error('Telegram harvest failed', ['error' => $e->getMessage(), 'exception' => $e::class]);
@@ -81,7 +84,6 @@ class TelegramHarvestSyncService
             return ['status' => 'error', 'harvested' => 0, 'stored' => 0, 'skipped_dupe' => 0, 'error' => $e->getMessage()];
         }
 
-        $result = $this->ingestNormalized($messages, $account);
         $result['status'] = 'ok';
 
         return $result;
@@ -465,8 +467,11 @@ class TelegramHarvestSyncService
     }
 
     /**
+     * Fetch each peer's new messages and checkpoint (ingest + cursor advance)
+     * after every completed peer. Returns [aggregate messages, ingest totals].
+     *
      * @param  array<int, string>  $peers
-     * @return array<int, array<string, mixed>>
+     * @return array{0: array<int, array<string, mixed>>, 1: array<string, mixed>}
      */
     private function fetchIncremental(TelegramSupportAccount $account, array $peers): array
     {
@@ -474,11 +479,38 @@ class TelegramHarvestSyncService
         $limit = (int) config('services.telegram_harvest.history_limit', 200);
         $peerState = $account->sync_state['peers'] ?? [];
         $messages = [];
+        $totals = ['harvested' => 0, 'stored' => 0, 'skipped_dupe' => 0, 'failed' => 0];
+
+        // H4461: 09-09-2026 the twice-daily scheduled run died at the 120 s
+        // watchdog twice a day since 27-08 — the peer file grew to 3188 ids
+        // (19-08) while only 233 peers had cursor state, so one pass re-paged
+        // thousands of uncursored peers (history_limit 5000 each) and was
+        // killed BEFORE ingestNormalized() ever ran: the whole batch — and
+        // every cursor — was lost, and the next run refetched the same peers.
+        // Fix = budget + checkpoint: a wall-clock budget bounds the fetch loop
+        // and each COMPLETED peer is ingested (store + cursor advance)
+        // immediately, so a watchdog kill (or budget stop) keeps everything
+        // fetched so far and the next run resumes from cursors. 0 = unbounded
+        // (tests/CI keep the old behaviour).
+        $budget = (int) config('services.telegram_harvest.sync_budget_seconds', 0);
+        $deadline = $budget > 0 ? microtime(true) + $budget : 0.0;
 
         foreach ($peers as $index => $peer) {
             // Anti-ban: randomized inter-peer delay (default 0 → tests never sleep).
             if ($index > 0) {
                 $this->interPeerDelay();
+            }
+
+            // H4461: checked AFTER the delay so a peer's fetch never starts on
+            // an exhausted budget (delay time counts against the budget too).
+            if ($deadline > 0.0 && microtime(true) >= $deadline) {
+                Log::warning('Telegram harvest sync hit its time budget — resuming next run from cursors', [
+                    'budget_seconds' => $budget,
+                    'peers_total' => count($peers),
+                    'peers_done_before_stop' => $index,
+                ]);
+
+                break;
             }
 
             $info = $this->peerInfo($client, $peer);
@@ -494,18 +526,30 @@ class TelegramHarvestSyncService
 
             $downloadMedia = $this->shouldDownloadMedia($peer, $info);
 
+            $peerMessages = [];
             foreach ($history['messages'] as $raw) {
                 $normalized = $this->normalize($raw, $info, $usersById);
                 if ($normalized !== null && (int) $normalized['telegram_message_id'] > $minId) {
                     if ($downloadMedia && $normalized['has_media']) {
                         $normalized['media_local_path'] = $this->downloadMedia($client, $raw, $normalized);
                     }
-                    $messages[] = $normalized;
+                    $peerMessages[] = $normalized;
                 }
             }
+
+            // H4461 checkpoint: persist THIS peer's batch before moving on, so
+            // the cursor moves with the fetch and no kill can strand it.
+            if ($peerMessages !== []) {
+                $peerResult = $this->ingestNormalized($peerMessages, $account);
+                foreach ($totals as $key => $sum) {
+                    $totals[$key] = $sum + (int) ($peerResult[$key] ?? 0);
+                }
+                $peerState = $account->refresh()->sync_state['peers'] ?? $peerState;
+            }
+            $messages = array_merge($messages, $peerMessages);
         }
 
-        return $messages;
+        return [$messages, $totals];
     }
 
     /**
