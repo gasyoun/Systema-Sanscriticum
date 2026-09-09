@@ -32,6 +32,9 @@
                 @endif
             </p>
 
+            {{-- H4443: неоплаченные блоки — только админка, в пост нельзя. --}}
+            <p class="text-gray-700 dark:text-gray-300 font-medium">{{ $row['unpaid'] }}</p>
+
             <details class="text-gray-600 dark:text-gray-400">
                 <summary class="cursor-pointer">Последние занятия группы</summary>
                 <ul class="mt-1 space-y-1">

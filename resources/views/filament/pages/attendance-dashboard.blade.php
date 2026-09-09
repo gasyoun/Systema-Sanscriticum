@@ -7,7 +7,32 @@
         $weekly = $report['weekly'];
         $chronic = $report['chronic'];
         $maxWeekly = max(1, $weekly->max('rate') ?? 0);
+        $canvasMoney = $this->canvasMoney();
     @endphp
+
+    {{-- H4443: «ещё в деньгах» по грамматикам (неоплаченные блоки от курсора) --}}
+    <x-filament::section>
+        <x-slot name="heading">Канва: неоплаченные блоки грамматик</x-slot>
+        <x-slot name="description">Студенты × цена блоков, не покрытых их платежами, от курсора канвы группы. Базовые цены, без скидок и иностранной валюты. В Telegram-пост эти цифры не идут.</x-slot>
+        <x-slot name="content">
+            <div class="space-y-2 text-sm">
+                @forelse($canvasMoney['rows'] as $row)
+                    <div class="flex justify-between gap-4">
+                        <span>{{ $row['course'] }} @if($row['group'] !== $row['course'])({{ $row['group'] }})@endif · блок {{ $row['cursor_block'] }}/{{ $row['blocks_total'] }} · {{ $row['students'] }} студ.</span>
+                        <span class="font-semibold tabular-nums">{{ number_format($row['unpaid'], 0, '.', ' ') }} ₽</span>
+                    </div>
+                @empty
+                    <p class="text-gray-400">Идущих грамматик с канвой нет.</p>
+                @endforelse
+                @if($canvasMoney['total'] > 0)
+                    <div class="flex justify-between gap-4 border-t border-gray-200 dark:border-gray-700 pt-2 font-bold">
+                        <span>Суммарно</span>
+                        <span class="tabular-nums">{{ number_format($canvasMoney['total'], 0, '.', ' ') }} ₽</span>
+                    </div>
+                @endif
+            </div>
+        </x-slot>
+    </x-filament::section>
 
     {{-- Тренд по неделям --}}
     <x-filament::section>
