@@ -1,7 +1,6 @@
 <?php
 
 use App\Filament\Resources\UserResource;
-use App\Http\Controllers\TimezoneController;
 use App\Http\Controllers\AccountantGuideShotController;
 use App\Http\Controllers\AdminLoginLinkController;
 use App\Http\Controllers\Api\CabinetTelemetryController;
@@ -79,6 +78,7 @@ use App\Http\Controllers\SurveyPageController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TgLoginLinkController;
+use App\Http\Controllers\TimezoneController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
 use App\Http\Controllers\VisualDcsController;

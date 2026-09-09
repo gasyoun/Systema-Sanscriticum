@@ -29,7 +29,7 @@ class TimezoneDstEngineTest extends TestCase
 
     // --- Timezone::isValid / render ---
 
-    public function testIsValidAcceptsIanaAndRejectsGarbage(): void
+    public function test_is_valid_accepts_iana_and_rejects_garbage(): void
     {
         $this->assertTrue(Timezone::isValid('Europe/Madrid'));
         $this->assertTrue(Timezone::isValid('America/Los_Angeles'));
@@ -38,7 +38,7 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertFalse(Timezone::isValid(null));
     }
 
-    public function testRenderMskUserSeesBareTime(): void
+    public function test_render_msk_user_sees_bare_time(): void
     {
         $at = Carbon::parse('2026-03-14 11:00', 'Europe/Moscow');
 
@@ -46,7 +46,7 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertSame('11:00', Timezone::render($at, 'Europe/Moscow'));
     }
 
-    public function testRenderNonMskUserGetsDualDisplay(): void
+    public function test_render_non_msk_user_gets_dual_display(): void
     {
         // Мадрид: зимой UTC+1 → 11:00 МСК = 09:00 Мадрид.
         $at = Carbon::parse('2026-02-14 11:00', 'Europe/Moscow');
@@ -54,7 +54,7 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertSame('11:00 МСК · 09:00 ваше', Timezone::render($at, 'Europe/Madrid'));
     }
 
-    public function testRenderSkipsDualWhenClocksCoincide(): void
+    public function test_render_skips_dual_when_clocks_coincide(): void
     {
         // Зона с тем же оффсетом, что МСК (UTC+3): dual не появляется — время совпадает.
         $at = Carbon::parse('2026-02-14 11:00', 'Europe/Moscow');
@@ -64,7 +64,7 @@ class TimezoneDstEngineTest extends TestCase
 
     // --- User::effectiveTimezone / isNonMskTimezone ---
 
-    public function testEffectiveTimezonePrefersActiveOverride(): void
+    public function test_effective_timezone_prefers_active_override(): void
     {
         $user = new User([
             'timezone' => 'Europe/Madrid',
@@ -77,7 +77,7 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertTrue($user->isNonMskTimezone());
     }
 
-    public function testEffectiveTimezoneFallsBackAfterOverrideExpiry(): void
+    public function test_effective_timezone_falls_back_after_override_expiry(): void
     {
         $user = new User([
             'timezone' => 'Europe/Madrid',
@@ -90,7 +90,7 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertSame('Europe/Madrid', $user->effectiveTimezone());
     }
 
-    public function testMskUserIsNotNonMsk(): void
+    public function test_msk_user_is_not_non_msk(): void
     {
         $user = new User(['timezone' => 'Europe/Moscow', 'tz_source' => 'device']);
 
@@ -99,7 +99,7 @@ class TimezoneDstEngineTest extends TestCase
 
     // --- DstShiftAdvisor: границы зон ---
 
-    public function testMadridTransitionFoundInMarch(): void
+    public function test_madrid_transition_found_in_march(): void
     {
         // EU: последнее воскресенье марта (29-03-2026) — переход +1ч в 02:00 локальных.
         $from = Carbon::parse('2026-03-10 12:00', 'UTC');
@@ -110,7 +110,7 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertSame(3600, $tr['afterOffset'] - $tr['beforeOffset']);
     }
 
-    public function testLosAngelesTransitionFoundInMarch(): void
+    public function test_los_angeles_transition_found_in_march(): void
     {
         // US: второе воскресенье марта (08-03-2026) — переход в 02:00 локальных.
         $from = Carbon::parse('2026-03-01 12:00', 'UTC');
@@ -120,7 +120,7 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertSame('2026-03-08', $tr['date']->toDateString());
     }
 
-    public function testDelhiHasNoTransitions(): void
+    public function test_delhi_has_no_transitions(): void
     {
         // Индия DST не знает — алертов нет никогда (MG-кейс «временно в Индии»).
         $from = Carbon::parse('2026-03-01 12:00', 'UTC');
@@ -128,7 +128,7 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertNull(DstShiftAdvisor::nextTransition('Asia/Kolkata', $from));
     }
 
-    public function testMoscowHasNoTransitions(): void
+    public function test_moscow_has_no_transitions(): void
     {
         // РФ переводы часов отменили навсегда — МСК-юзеров не тревожим.
         $from = Carbon::parse('2026-03-01 12:00', 'UTC');
@@ -136,7 +136,7 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertNull(DstShiftAdvisor::nextTransition('Europe/Moscow', $from));
     }
 
-    public function testLocalShiftDetectsWallClockChange(): void
+    public function test_local_shift_detects_wall_clock_change(): void
     {
         $user = new User(['timezone' => 'Europe/Madrid', 'tz_source' => 'manual']);
 
@@ -151,7 +151,7 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertSame('09:00', $shift['after']);
     }
 
-    public function testLocalShiftNullForDelhiUserWithNoDst(): void
+    public function test_local_shift_null_for_delhi_user_with_no_dst(): void
     {
         $user = new User(['timezone' => 'Asia/Kolkata', 'tz_source' => 'manual']);
         $session = new Schedule(['start' => Carbon::parse('2026-04-04 11:00', 'Europe/Moscow')]);
@@ -159,9 +159,9 @@ class TimezoneDstEngineTest extends TestCase
         $this->assertNull(DstShiftAdvisor::localShiftFor($user, $session));
     }
 
-    public function testLocalShiftNullForMskUser(): void
+    public function test_local_shift_null_for_msk_user(): void
     {
-        $user = new User(); // без зоны = МСК-дефолт
+        $user = new User; // без зоны = МСК-дефолт
         $session = new Schedule(['start' => Carbon::parse('2026-04-04 11:00', 'Europe/Moscow')]);
 
         $this->assertNull(DstShiftAdvisor::localShiftFor($user, $session));
