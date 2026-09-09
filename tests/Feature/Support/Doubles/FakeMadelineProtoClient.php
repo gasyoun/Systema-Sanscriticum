@@ -22,6 +22,17 @@ class FakeMadelineProtoClient
     /** @var array<int, array<int, array<string, mixed>>> */
     public static array $histories = [];
 
+    /**
+     * H4439: фикстура messages.getDialogs — дата-desc список диалогов
+     * (['peer' => [...], ...]). Пусто → строится из ключей $histories
+     * (совместимость со старыми тестами окна).
+     *
+     * @var list<array<string, mixed>>|null
+     */
+    public static ?array $dialogs = null;
+
+    public static int $getDialogsCalls = 0;
+
     /** @var array<int, array<int, array<string, mixed>>> */
     public static array $users = [];
 
@@ -52,6 +63,33 @@ class FakeMadelineProtoClient
 
         $this->messages = new class
         {
+            /**
+             * H4439: окно свежести — сырой messages.getDialogs (ответ
+             * date-desc по спецификации MTProto).
+             *
+             * @param  array<string, mixed>  $params
+             * @return array<string, mixed>
+             */
+            public function getDialogs(array $params = []): array
+            {
+                FakeMadelineProtoClient::$getDialogsCalls++;
+
+                $limit = max(1, (int) ($params['limit'] ?? 20));
+                $list = FakeMadelineProtoClient::$dialogs ?? array_map(
+                    fn ($id): array => is_string($id) && str_starts_with($id, '-')
+                        ? ['peer' => ['_' => 'peerChannel', 'channel_id' => abs((int) $id)]]
+                        : ['peer' => ['_' => 'peerUser', 'user_id' => (int) $id]],
+                    array_keys(FakeMadelineProtoClient::$histories),
+                );
+
+                return [
+                    'dialogs' => array_slice($list, 0, $limit),
+                    'messages' => [],
+                    'users' => [],
+                    'chats' => [],
+                ];
+            }
+
             /**
              * @param  array<string, mixed>  $params
              * @return array<string, mixed>
@@ -100,6 +138,8 @@ class FakeMadelineProtoClient
     public static function reset(): void
     {
         self::$histories = [];
+        self::$dialogs = null;
+        self::$getDialogsCalls = 0;
         self::$users = [];
         self::$profiles = [];
         self::$lastHistoryRequests = [];
