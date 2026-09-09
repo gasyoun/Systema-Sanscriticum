@@ -535,6 +535,17 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     // ==========================================
     // СВЯЗИ ДЛЯ LMS (НЕ ТРОГАЕМ, ВСЁ БЕЗОПАСНО)
     // ==========================================
+
+    /**
+     * Факты посещения (webinar_attendances, user_id). Питает канву H4435
+     * (кабинет студента + ViewUser attendance-canvas): позиция студента на
+     * шкале = последняя запись урока до даты его последнего факта.
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(WebinarAttendance::class);
+    }
+
     public function groups(): BelongsToMany
     {
         // ВСЕ членства, включая «вышедших» (left_at != null). Это путь ДОСТУПА:
