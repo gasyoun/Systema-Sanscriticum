@@ -17,6 +17,13 @@
             Добро пожаловать, {{ auth()->user()->name }}!
         </h2>
         <p class="text-gray-500 text-base">{{ now()->timezone(config('app.timezone'))->translatedFormat('l, d F') }}</p>
+        {{-- H4463: повторный показ welcome-тура (тот же гейт, что у партиала) --}}
+        @if (config('features.cabinet_tour') && ! \App\Support\Impersonation::isActive())
+        <button type="button" x-on:click="$dispatch('open-cabinet-tour')"
+                class="mt-2 inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline">
+            <i class="fas fa-route text-xs"></i> Обзор кабинета
+        </button>
+        @endif
     </div>
 
     @include('student.partials.hindi-programme-playlist-card', ['hindiPlaylist' => $hindiPlaylist ?? null])
@@ -167,6 +174,9 @@
         <a href="{{ route('student.open-lessons') }}" class="hover:text-brand">Открытые уроки</a>
     </nav>
 </div>
+
+{{-- H4463: welcome-тур (автопоказ 1 раз + кнопка «Обзор кабинета» выше) --}}
+@include('student.partials.cabinet-tour')
 
 @include('student.partials.telemetry')
 @endsection
