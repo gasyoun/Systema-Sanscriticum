@@ -1,7 +1,8 @@
 # Как пользоваться кабинетом
 
-_Created: 21-08-2026 · Last updated: 07-09-2026_
+_Created: 21-08-2026 · Last updated: 09-09-2026_
 <!-- manuals: enforcement=coverage-test -->  <!-- kept green by StudentCabinetGuideCoverageTest -->
+<!-- md-hygiene: Last updated bump 09-09-2026 = Часть IV: 4 новых ответа (ваше время/пояс, временное пребывание, перевод часов в вашей стране, подписка на календарь) — H4434 (MG 09-09-2026) -->
 
 Все книги школы: `/admin/documentation`
 
