@@ -1,6 +1,6 @@
 # Google Calendar Integration — Roadmap
 
-_Created: 04-07-2026 · Last updated: 19-08-2026_
+_Created: 04-07-2026 · Last updated: 09-09-2026_
 
 > **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** документ честен и перепроверен. Фаза 1 (студенческая лента iCal/webcal, [CalendarFeedController](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/CalendarFeedController.php)) отгружена 04-07-2026 и в тексте уже отмечена; фазы 2–4 не начинались и по-прежнему заперты внешним гейтом — верификацией Google на чувствительный scope `calendar`. Это внешний шаг, не инженерный долг: пока его нет, документ не устаревает.
 
@@ -152,7 +152,10 @@ verification in §8 — kick that off separately, it is not part of this deliver
   read-write scope is **sensitive** — Google requires app verification / a security
   assessment before external users may grant it. This is an external-party lead time;
   **start it early** as it gates Phase 2. The existing Google-login integration uses
-  only `email`/`profile` and does not cover this.
+  only `email`/`profile` and does not cover this. **H4434 (09-09-2026) prepared the
+  submission package** — [GOOGLE_CALENDAR_VERIFICATION_PACK_H4434.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/GOOGLE_CALENDAR_VERIFICATION_PACK_H4434.md)
+  (ready answers, screencast plan, ~40 min console walkthrough); the actual
+  Console submission is MG's manual step and has not been filed yet.
 - **This repo has a watcher.** [`.claude/hooks/watcher_autosave.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.claude/hooks/watcher_autosave.py)
   reverts uncommitted working-tree edits — all implementation work must land via the
   `/watcher-safe-commit` discipline (author + commit in one shot, verify survival vs
