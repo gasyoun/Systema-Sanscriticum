@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Models\Course;
+use App\Models\KanvaTiming;
 use App\Models\Lesson;
 use App\Models\Schedule;
 use App\Services\ClassAttendanceService;
@@ -67,6 +68,44 @@ class AttendanceDashboard extends Page
             now(),
             (int) config('attendance.chronic_absence_threshold'),
         );
+    }
+
+    /**
+     * H4457 (MG 09-09): покрытие таймкодами — какие живые грамматики имеют
+     * канонические таймкоды (kanva_timings), какие ждут ингестии.
+     *
+     * @return array{rows: list<array{course: string, timings: int, status: string, last: ?string}>, without: int}
+     */
+    public function canvasTimings(): array
+    {
+        $rows = [];
+        $without = 0;
+        $grammar = Course::query()
+            ->where('is_active', true)->where('is_visible', true)
+            ->whereHas('groups')
+            ->orderBy('title')->get();
+
+        foreach ($grammar as $course) {
+            if (TextbookScale::courseFamilyPublic((string) $course->title) === null) {
+                continue;
+            }
+            $timings = KanvaTiming::where('course_id', $course->id)->get();
+            if ($timings->isEmpty()) {
+                $without++;
+
+                continue;
+            }
+            foreach ($timings as $timing) {
+                $rows[] = [
+                    'course' => (string) $course->title,
+                    'timings' => count((array) $timing->timings),
+                    'status' => (string) $timing->valid_status,
+                    'last' => $timing->last_ingested_at?->format('d.m.Y H:i'),
+                ];
+            }
+        }
+
+        return ['rows' => $rows, 'without' => $without];
     }
 
     /**

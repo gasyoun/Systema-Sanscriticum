@@ -9,6 +9,7 @@
         $maxWeekly = max(1, $weekly->max('rate') ?? 0);
         $canvasMoney = $this->canvasMoney();
         $canvasTransfer = $this->canvasTransfer();
+        $canvasTimings = $this->canvasTimings();
     @endphp
 
     {{-- H4443: «ещё в деньгах» по грамматикам (неоплаченные блоки от курсора) --}}
@@ -30,6 +31,27 @@
                         <span>Суммарно</span>
                         <span class="tabular-nums">{{ number_format($canvasMoney['total'], 0, '.', ' ') }} ₽</span>
                     </div>
+                @endif
+            </div>
+        </x-slot>
+    </x-filament::section>
+
+    {{-- H4457: покрытие таймкодами --}}
+    <x-filament::section>
+        <x-slot name="heading">Канва: таймкоды (ингестия из n8n)</x-slot>
+        <x-slot name="description">Канонические таймкоды занятий (kanva_timings) — приём из n8n execution-истории командой kanva:ingest-timings. Группы без таймкодов ждут своей нарезки.</x-slot>
+        <x-slot name="content">
+            <div class="space-y-1 text-sm">
+                @forelse($canvasTimings['rows'] as $row)
+                    <div class="flex justify-between gap-4">
+                        <span>{{ $row['course'] }} · {{ $row['timings'] }} меток · {{ $row['status'] }}</span>
+                        <span class="text-gray-500 tabular-nums">{{ $row['last'] ?? '—' }}</span>
+                    </div>
+                @empty
+                    <p class="text-gray-400">Таймкодов ещё нет.</p>
+                @endforelse
+                @if($canvasTimings['without'] > 0)
+                    <p class="text-gray-500">Без таймкодов: {{ $canvasTimings['without'] }} грамматик.</p>
                 @endif
             </div>
         </x-slot>
