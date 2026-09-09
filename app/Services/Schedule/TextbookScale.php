@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Schedule;
 
+use App\Models\Lesson;
+use App\Models\Tariff;
+use Illuminate\Support\Carbon;
+
 /**
  * H4435 (MG 08-09/09-09): «Канва» — шкала учебника для грамматических курсов.
  *
@@ -209,5 +213,129 @@ final class TextbookScale
         };
 
         return $familyTitle.' '.$lesson.' ('.$kindLabel.')';
+    }
+
+    // ─── H4443: блоки ───────────────────────────────────────────────────────
+
+    /**
+     * Маркер блока из заголовка записи (*X.Y*): «1-е занятие 3-го блока (*3.1*)» → 3.
+     * Эмпирическая истина; null — маркера нет.
+     */
+    public static function parseBlockMarker(string $title): ?int
+    {
+        if (preg_match('/\*(\d+)\.\d+\*/u', $title, $m)) {
+            return (int) $m[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Сколько блоков продаётся у курса (коммерческая истина — Tariff.block_number),
+     * fallback: max block_number записей уроков, fallback: ceil(total / lessons_per_block).
+     */
+    public static function blocksTotal(int $courseId, int $canvasTotal): int
+    {
+        $tariffBlocks = Tariff::query()
+            ->where('course_id', $courseId)
+            ->whereNotNull('block_number')
+            ->distinct()
+            ->count('block_number');
+        if ($tariffBlocks > 0) {
+            return $tariffBlocks;
+        }
+
+        $lessonBlocks = Lesson::where('course_id', $courseId)
+            ->whereNotNull('block_number')
+            ->distinct()
+            ->count('block_number');
+        if ($lessonBlocks > 0) {
+            return $lessonBlocks;
+        }
+
+        return (int) ceil($canvasTotal / max(1, (int) config('edutech.lessons_per_block', 4)));
+    }
+
+    /** Занятий-записей в блоке (конфиг). */
+    public static function lessonsPerBlock(): int
+    {
+        return max(1, (int) config('edutech.lessons_per_block', 4));
+    }
+
+    // ─── H4443: прогноз финала по календарю с каникулами ─────────────────────
+
+    /**
+     * Rolling-темп группы: занятий в активную неделю по последним N неделям Schedule.
+     */
+    public static function weeklyCadence(iterable $schedules, ?Carbon $now = null): float
+    {
+        $now = $now ?? Carbon::now();
+        $window = max(1, (int) config('edutech.cadence_window_weeks', 8));
+        $from = $now->copy()->subWeeks($window);
+        $count = 0;
+        foreach ($schedules as $s) {
+            if ($s->start !== null && $s->start->between($from, $now)) {
+                $count++;
+            }
+        }
+
+        return round($count / $window, 2);
+    }
+
+    /**
+     * Прогноз месяца-года завершения: remaining наших занятий по календарю
+     * вперёд с пропусками каникул. Конец тяжёлый — вес уже внутри remaining.
+     *
+     * @return array{realistic: string, late: string} подписи «апрель 2028»
+     */
+    public static function finishForecast(int $remainingSessions, ?Carbon $from = null, ?float $cadenceOverride = null): array
+    {
+        $from = $from ?? Carbon::now();
+        $holidays = config('edutech.holidays');
+        $base = max(0.2, $cadenceOverride ?? 1.0);
+
+        $realistic = self::walkCalendar($remainingSessions, $from, $base, $holidays['new_year'], $holidays['summer_normal']);
+        // Максимально поздно: темп -25% и лето до 15.10.
+        $late = self::walkCalendar($remainingSessions, $from, $base * 0.75, $holidays['new_year'], $holidays['summer_late']);
+
+        $fmt = fn (Carbon $d): string => self::MONTH_RU[$d->month].' '.$d->year;
+
+        return ['realistic' => $fmt($realistic), 'late' => $fmt($late)];
+    }
+
+    private const MONTH_RU = [
+        1 => 'январь', 2 => 'февраль', 3 => 'март', 4 => 'апрель', 5 => 'май', 6 => 'июнь',
+        7 => 'июль', 8 => 'август', 9 => 'сентябрь', 10 => 'октябрь', 11 => 'ноябрь', 12 => 'декабрь',
+    ];
+
+    /** Прогулка по неделям вперёд, каникулы пропускаются, занятия капают по cadence. */
+    private static function walkCalendar(int $remaining, Carbon $from, float $cadence, array $ny, array $summer): Carbon
+    {
+        if ($remaining <= 0) {
+            return $from;
+        }
+        $weeks = (int) ceil($remaining / $cadence);
+        $cursor = $from->copy();
+        $placed = 0;
+
+        while ($placed < $weeks) {
+            $cursor->addWeek();
+            if (self::inRange($cursor, $ny) || self::inRange($cursor, $summer)) {
+                continue; // каникула — неделя не считается
+            }
+            $placed++;
+        }
+
+        return $cursor;
+    }
+
+    /** Попадает ли дата в диапазон MM-DD..MM-DD (через Новый год — ок). */
+    private static function inRange(Carbon $date, array $range): bool
+    {
+        $md = $date->format('m-d');
+        $from = $range['from'];
+        $to = $range['to'];
+
+        return $from <= $to ? ($md >= $from && $md <= $to) : ($md >= $from || $md <= $to);
     }
 }

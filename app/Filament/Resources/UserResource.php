@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Access\LoginLinkNotifier;
 use App\Services\Access\StudentUnblockService;
 use App\Services\Prana\PranaService;
+use App\Services\Schedule\CanvasMoney;
 use App\Services\Schedule\TextbookScale;
 use App\Services\StuckStudentsReport;
 use App\Support\CourseNoteBlockParser;
@@ -697,6 +698,22 @@ class UserResource extends Resource
                     ];
                 }
 
+                // H4443: персональные деньги — неоплаченные блоки от курсора группы.
+                $groupBlock = 0;
+                foreach ($lessons as $l) {
+                    $chitki = array_filter(
+                        TextbookScale::parseTitle((string) $l->title),
+                        fn (array $i): bool => $i['family'] === $family && $i['kind'] === 'chitka',
+                    );
+                    if ($chitki !== [] && max(array_column($chitki, 'lesson')) === $groupCursor) {
+                        $groupBlock = TextbookScale::parseBlockMarker((string) $l->title)
+                            ?? (int) ceil($groupCursor / TextbookScale::lessonsPerBlock());
+                        break;
+                    }
+                }
+                $blocksTotal = TextbookScale::blocksTotal($course->id, $total);
+                $unpaid = CanvasMoney::unpaidFor($record, $course, $groupBlock, $blocksTotal);
+
                 $rows[] = [
                     'course_title' => (string) $course->title,
                     'family' => $family,
@@ -705,6 +722,7 @@ class UserResource extends Resource
                     'student_cursor' => $studentCursor,
                     'lag' => $groupCursor - $studentCursor,
                     'last_canvas' => $lastCanvas,
+                    'unpaid' => CanvasMoney::humanize($unpaid),
                     'sessions' => $sessions,
                 ];
             }

@@ -55,6 +55,7 @@ final class WeeklyFinishReport
             ->get();
 
         $report = [];
+        $familyCursors = []; // H4443: курсоры по семействам для лага
 
         foreach ($courses as $course) {
             foreach ($course->groups as $group) {
@@ -76,6 +77,7 @@ final class WeeklyFinishReport
                     'pastCount' => $past->reject(fn (Schedule $s): bool => (bool) $s->is_overview)->count(),
                     'futureCount' => $futureCount,
                     'students' => self::studentRows($group, $past),
+                    'pastSchedules' => $past,
                 ] + self::canvasData($course, $group, $past);
             }
         }
@@ -122,13 +124,40 @@ final class WeeklyFinishReport
         }
 
         $projection = TextbookScale::projection($lessons, $cursor, $total, $family);
+        $remainingSessions = $projection['projection_sessions'] ?? null;
+
+        // H4443: блоки — маркер *X.Y* записи-курсора, итого из тарифов курса.
+        $cursorBlock = 0;
+        foreach ($lessons as $l) {
+            $chitki = array_filter(
+                TextbookScale::parseTitle((string) $l->title),
+                fn (array $i): bool => $i['family'] === $family && $i['kind'] === 'chitka',
+            );
+            if ($chitki !== [] && max(array_column($chitki, 'lesson')) === $cursor) {
+                $cursorBlock = TextbookScale::parseBlockMarker((string) $l->title)
+                    ?? (int) ceil($cursor / TextbookScale::lessonsPerBlock());
+                break; // первая запись с курсором — ближайшая по времени
+            }
+        }
+        $blocksTotal = TextbookScale::blocksTotal($course->id, $total);
+        $remainingBlocks = $remainingSessions !== null ? (int) ceil($remainingSessions / TextbookScale::lessonsPerBlock()) : null;
+
+        // H4443: прогноз финала — свой темп группы, календарь с каникулами.
+        $cadence = TextbookScale::weeklyCadence($past);
+        $forecast = $remainingSessions !== null
+            ? TextbookScale::finishForecast($remainingSessions, null, $cadence)
+            : null;
 
         return [
             'canvasCursor' => $cursor,
             'canvasTotal' => $total,
             'canvasFamily' => $family,
             'canvasLag' => TextbookScale::lag($cursor, $cursors),
-            'canvasProjection' => $projection['projection_sessions'] ?? null,
+            'canvasProjection' => $remainingSessions,
+            'canvasBlock' => $cursorBlock,
+            'canvasBlocksTotal' => $blocksTotal,
+            'canvasRemainingBlocks' => $remainingBlocks,
+            'canvasForecast' => $forecast,
         ];
     }
 
@@ -157,15 +186,24 @@ final class WeeklyFinishReport
                 ? self::esc($row['course']->title)
                 : self::esc($row['course']->title).' — '.self::esc($row['group']->name);
 
-            // H4435: канва-строка — курсор по учебнику ОТДЕЛЬНО от наших занятий
-            // (две шкалы не смешиваются, MG 09-09).
+            // H4435/H4443: канва-строка — курсор и блоки по учебнику ОТДЕЛЬНО от
+            // наших занятий (две шкалы не смешиваются). Деньги в пост НЕЛЬЗЯ.
             if (($row['canvasTotal'] ?? 0) > 0 && ($row['canvasCursor'] ?? 0) > 0) {
                 $head .= "\nКанва: урок ".$row['canvasCursor'].'/'.$row['canvasTotal'];
+                if (($row['canvasBlock'] ?? 0) > 0) {
+                    $head .= ' · блок '.$row['canvasBlock'].'/'.$row['canvasBlocksTotal'];
+                    if (($row['canvasRemainingBlocks'] ?? null) !== null) {
+                        $head .= ' (осталось '.$row['canvasRemainingBlocks'].')';
+                    }
+                }
                 if (($row['canvasLag'] ?? 0) !== 0) {
                     $head .= ' ('.($row['canvasLag'] > 0 ? '+' : '').$row['canvasLag'].' к медиане)';
                 }
                 if (($row['canvasProjection'] ?? null) !== null) {
                     $head .= ' · до конца ≈ '.$row['canvasProjection'].' наших занятий';
+                    if (($row['canvasForecast'] ?? null) !== null) {
+                        $head .= ' · финал: '.$row['canvasForecast']['realistic'].' (макс. поздно — '.$row['canvasForecast']['late'].')';
+                    }
                 }
             }
 

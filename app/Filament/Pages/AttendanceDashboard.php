@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Pages;
 
+use App\Models\Course;
+use App\Models\Lesson;
 use App\Services\ClassAttendanceService;
+use App\Services\Schedule\CanvasMoney;
+use App\Services\Schedule\TextbookScale;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Actions;
@@ -62,6 +66,79 @@ class AttendanceDashboard extends Page
             now(),
             (int) config('attendance.chronic_absence_threshold'),
         );
+    }
+
+    /**
+     * H4443 (MG 09-09): «ещё в деньгах» по идущим грамматикам — неоплаченные
+     * блоки студентов от курсора канвы. Админ-only поверхность, в TG-пост
+     * деньги не попадают.
+     *
+     * @return array{rows: list<array{course: string, group: string, cursor_block: int, blocks_total: int, unpaid: float, students: int}>, total: float}
+     */
+    public function canvasMoney(): array
+    {
+        $courses = Course::query()
+            ->where('is_active', true)->where('is_visible', true)
+            ->whereHas('groups')
+            ->with('groups.users')
+            ->orderBy('title')->get();
+
+        $rows = [];
+        $grand = 0.0;
+
+        foreach ($courses as $course) {
+            $family = TextbookScale::courseFamilyPublic((string) $course->title);
+            if ($family === null) {
+                continue;
+            }
+            $total = TextbookScale::families()[$family]['total'];
+            $lessons = Lesson::where('course_id', $course->id)
+                ->whereNotNull('lesson_date')->orderBy('lesson_date')->get();
+            $cursor = TextbookScale::cursor($lessons, $family);
+            if ($cursor === 0) {
+                continue;
+            }
+
+            $cursorBlock = 0;
+            foreach ($lessons as $l) {
+                $chitki = array_filter(
+                    TextbookScale::parseTitle((string) $l->title),
+                    fn (array $i): bool => $i['family'] === $family && $i['kind'] === 'chitka',
+                );
+                if ($chitki !== [] && max(array_column($chitki, 'lesson')) === $cursor) {
+                    $cursorBlock = TextbookScale::parseBlockMarker((string) $l->title)
+                        ?? (int) ceil($cursor / TextbookScale::lessonsPerBlock());
+                    break;
+                }
+            }
+            $blocksTotal = TextbookScale::blocksTotal($course->id, $total);
+
+            $unpaid = 0.0;
+            $students = collect();
+            foreach ($course->groups as $group) {
+                foreach ($group->users as $user) {
+                    $students->push($user);
+                    $u = CanvasMoney::unpaidFor($user, $course, $cursorBlock, $blocksTotal);
+                    $unpaid += $u['amount'];
+                }
+            }
+
+            if ($students->isEmpty()) {
+                continue;
+            }
+
+            $grand += $unpaid;
+            $rows[] = [
+                'course' => (string) $course->title,
+                'group' => $course->groups->pluck('name')->implode(', '),
+                'cursor_block' => $cursorBlock,
+                'blocks_total' => $blocksTotal,
+                'unpaid' => round($unpaid, 2),
+                'students' => $students->unique('id')->count(),
+            ];
+        }
+
+        return ['rows' => $rows, 'total' => round($grand, 2)];
     }
 
     protected function getHeaderActions(): array
