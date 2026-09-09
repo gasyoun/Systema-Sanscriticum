@@ -72,9 +72,10 @@ final class WeeklyFinishReport
                 $report[] = [
                     'course' => $course,
                     'group' => $group,
-                    // «Прошло N» — нумерованные занятия (обзорное не в счёт,
-                    // зеркально FullSchedulePost «Прошло занятий»).
-                    'pastCount' => $past->reject(fn (Schedule $s): bool => (bool) $s->is_overview)->count(),
+                    // «Прошло N» — кураторская нумерация записей уроков (факт:
+                    // Бюллер-27 провёл 35, а календарь БД помнит только 10 —
+                    // MG 09-09 «прошли больше 20 занятий, проверь сам»).
+                    'pastCount' => self::heldCount($course, $group, $past),
                     'futureCount' => $futureCount,
                     'students' => self::studentRows($group, $past),
                     'pastSchedules' => $past,
@@ -86,6 +87,48 @@ final class WeeklyFinishReport
         usort($report, fn (array $a, array $b): int => [$a['course']->title, $a['group']->name] <=> [$b['course']->title, $b['group']->name]);
 
         return $report;
+    }
+
+    /**
+     * H4457-правда (MG 09-09): проведённых занятий считаем по ЗАПИСЯМ УРОКОВ —
+     * кураторская нумерация в заголовках («2-е занятие», «#35, 16.06.26») —
+     * факт ведения; календарь расписаний может помнить лишь недавний хвост
+     * (Бюллер-27: записей 35, прошлых сессий в расписании 10 — ранняя история
+     * в календарь не заведена). Обзорное не в счёт. Фолбэки: число записей →
+     * прошлые сессии расписания.
+     */
+    private static function heldCount(Course $course, Group $group, $pastSchedules): int
+    {
+        $lessons = Lesson::where('course_id', $course->id)
+            ->whereNotNull('lesson_date')->where('lesson_date', '<=', now())
+            ->orderBy('lesson_date')
+            ->get();
+
+        $maxOrdinal = 0;
+        $counted = 0;
+        foreach ($lessons as $lesson) {
+            $counted++;
+            foreach ([
+                '/\((\d+),\s*\d{2}\.\d{2}\.\d{2}\)/u',   // «(#35, 16.06.26)»
+                '/(\d+)-е занятие/u',                     // «2-е занятие»
+                '/#\s*(\d+)/u',                            // «#35»
+            ] as $pattern) {
+                if (preg_match($pattern, (string) $lesson->title, $m)) {
+                    $maxOrdinal = max($maxOrdinal, (int) $m[1]);
+                    break;
+                }
+            }
+        }
+
+        if ($maxOrdinal > 0) {
+            return $maxOrdinal;
+        }
+        if ($counted > 0) {
+            return $counted;
+        }
+
+        // Фолбэк: прошлые сессии расписания (обзорное не в счёт).
+        return (int) $pastSchedules->reject(fn (Schedule $s): bool => (bool) $s->is_overview)->count();
     }
 
     /**
@@ -111,7 +154,7 @@ final class WeeklyFinishReport
         $cursor = TextbookScale::cursor($lessons, $family);
 
         // Медиана курсоров идущих групп семейства — база канва-lag.
-        $needle = $family === 'kochergina' ? '%Кочергиной%' : '%Бюллер%';
+        $needle = $family === 'kochergina' ? '%Кочерг%' : '%Бю%';
         $cursors = [];
         $peers = Course::query()
             ->where('is_active', true)->where('is_visible', true)
