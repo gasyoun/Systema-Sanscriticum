@@ -623,17 +623,16 @@ final class SupportDmAutoReply
         $suggestion = $escalation !== null
             ? null
             : $this->oneTapSuggestion($incoming, $user, $category, $text, $hits, $resolvedFacts);
-        $sendable = $suggestion !== null && ! $suggestion->isDraftOnly();
+
+        // H4440 (MG 09-09-2026: «не надо каждый раз лазить в админку», вопрос-батарея
+        // «кнопка для всех трёх»): кнопка под КАЖДЫМ черновиком — деньги/доступ/
+        // сертификат больше не прячут её. Прежний draft_only-детур в админку
+        // (H3999 A1) снят явным рулингом; маркер draft_only остаётся в facts.
+        $sendable = $suggestion !== null;
 
         if ($sendable) {
             $lines[] = '';
             $lines[] = 'Кнопка ниже отправит студенту черновик как есть.';
-        } elseif ($suggestion !== null) {
-            // H3999, рулинг A1: деньги, доступ и сертификат — только черновик.
-            // Кнопки под ними нет вовсе; отправить его можно лишь из очереди
-            // черновиков в админке, где куратор видит текст целиком.
-            $lines[] = '';
-            $lines[] = 'Черновик требует проверки — кнопки под ним нет. Он ждёт в очереди черновиков.';
         }
 
         if ($escalation !== null) {
