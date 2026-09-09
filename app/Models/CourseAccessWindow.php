@@ -93,4 +93,44 @@ class CourseAccessWindow extends Model
             ->where('course_id', $courseId)
             ->delete();
     }
+
+    /**
+     * H4468 — выдать окно В СКОУПЕ: курс должен быть (а) в
+     * config('access_window.enabled_course_ids'), (б) куплен студентом
+     * (paid real). Иначе — отказ (не-купившему окно бессмысленно: нет
+     * ключей — нечего открывать). $endsAt = NULL — вечное именное
+     * исключение (только по слову MG).
+     *
+     * @return array{ok: bool, error?: string, window?: self}
+     */
+    public static function grantInScope(
+        User $student,
+        int $courseId,
+        ?CarbonInterface $endsAt,
+        ?string $reason = null,
+        ?int $by = null,
+    ): array {
+        $scope = array_map(intval(...), (array) config('access_window.enabled_course_ids', []));
+
+        if (! in_array($courseId, $scope, true)) {
+            return ['ok' => false, 'error' => 'course_out_of_scope'];
+        }
+
+        $owned = Payment::query()
+            ->where('user_id', $student->id)
+            ->where('course_id', $courseId)
+            ->paid()
+            ->real()
+            ->where('amount', '>', 0)
+            ->exists();
+
+        if (! $owned) {
+            return ['ok' => false, 'error' => 'course_not_purchased'];
+        }
+
+        return [
+            'ok' => true,
+            'window' => self::setUntil((int) $student->id, $courseId, $endsAt, $reason, $by),
+        ];
+    }
 }
