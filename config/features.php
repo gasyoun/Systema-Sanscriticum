@@ -866,6 +866,16 @@ return [
     'cabinet_hybrid' => (bool) env('CABINET_HYBRID', false),
 
     /*
+     | Welcome-тур кабинета студента (H4463): Teachbase-подобная модалка-обзор
+     | (7–9 слайдов по включённым флагам) на главной кабинета. Показ один раз
+     | на браузер (localStorage cabinet_tour_v1), повтор — кнопка «Обзор
+     | кабинета»; в режиме «войти как» (Impersonation) не рендерится вовсе.
+     | Default ON — тур безобиден и скипается в один клик; CABINET_TOUR=false
+     | гасит его без нового релиза (после правки .env — config:cache).
+     */
+    'cabinet_tour' => (bool) env('CABINET_TOUR', true),
+
+    /*
      | Content engine Wave 2 (H1548): пилот авто-публикации социальных постов
      | (ВК-стена с прикреплённым клипом + зеркало в ТГ-канал), n8n-вебхук —
      | тот же паттерн, что monthly_schedule_webhook/clip_extract. Когда ВЫКЛ:
