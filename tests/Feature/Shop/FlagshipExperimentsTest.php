@@ -11,6 +11,7 @@ use App\Services\Activity\StorefrontAnalytics;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -106,6 +107,60 @@ class FlagshipExperimentsTest extends TestCase
         $this->assertSame('buhler', $row->target);
         $this->assertSame($from->id, $row->course_id);
         $this->assertSame('kochergina', $row->flagship_key);
+    }
+
+    public function test_card_impression_carries_variant_from_first_hit_assignment(): void
+    {
+        config(['features.catalog_next_step' => true]);
+
+        $this->makeKocherginaWithPreview();
+
+        Livewire::test(CourseCatalog::class)
+            ->assertSee('data-analytics="next-step"', false);
+
+        $row = StorefrontAnalyticsEvent::query()
+            ->where('event_name', StorefrontAnalyticsEvent::CARD_IMPRESSION)
+            ->first();
+        $this->assertNotNull($row);
+        $this->assertContains($row->variant, ['a', 'b']);
+    }
+
+    public function test_impression_day_dedupe_survives_variant_threading(): void
+    {
+        config(['features.catalog_next_step' => true]);
+
+        $course = $this->makeKocherginaWithPreview();
+
+        $request = Request::create('/catalog', 'GET');
+        $request->cookies->set(FlagshipExperiments::CTA_COOKIE, 'a');
+        $request->cookies->set(FlagshipExperiments::VISITOR_COOKIE, str_repeat('ab', 16));
+
+        FlagshipExperiments::recordCardImpression($course, $request);
+        FlagshipExperiments::recordCardImpression($course, $request);
+
+        $row = StorefrontAnalyticsEvent::query()->where('event_name', StorefrontAnalyticsEvent::CARD_IMPRESSION)->first();
+        $this->assertSame(1, StorefrontAnalyticsEvent::query()->where('event_name', StorefrontAnalyticsEvent::CARD_IMPRESSION)->count());
+        $this->assertSame('a', $row->variant);
+    }
+
+    public function test_next_step_click_carries_the_cookie_served_variant(): void
+    {
+        config(['features.catalog_next_step' => true]);
+
+        $from = $this->makeKocherginaWithPreview();
+        Course::factory()->create([
+            'slug' => FlagshipLanding::SMOKE_SLUGS['buhler'],
+            'title' => 'Грамматика по Бюллеру гр.27',
+            'is_visible' => true,
+        ]);
+
+        $this->withCookie(FlagshipExperiments::CTA_COOKIE, 'b')
+            ->get(route('shop.next-step', ['target' => 'buhler', 'from' => $from->id]))
+            ->assertRedirect(route('shop.course.show', FlagshipLanding::SMOKE_SLUGS['buhler']));
+
+        $row = StorefrontAnalyticsEvent::query()->where('event_name', StorefrontAnalyticsEvent::NEXT_STEP_CLICK)->first();
+        $this->assertNotNull($row);
+        $this->assertSame('b', $row->variant);
     }
 
     public function test_unknown_next_step_target_is_404(): void
