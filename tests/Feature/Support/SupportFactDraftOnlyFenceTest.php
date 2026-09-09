@@ -31,8 +31,9 @@ use Tests\TestCase;
  * что угодно — деньги, доступ и сертификат всё равно не уходят студенту сами:
  *  1. {@see SupportAnswerFactResolver::NEVER_AUTO_TYPES} вырезается из списка
  *     живых типов в {@see SupportDmAutoReply};
- *  2. {@see SupportAnswerSuggestion::isDraftOnly()} перепроверяет тип и политику
- *     ещё раз — уже на самом черновике, поэтому кнопки под ним нет;
+ *  2. {@see SupportAnswerSuggestion::isDraftOnly()} остаётся маркером политики
+ *     на черновике (попадает в аудит-события); с H4440 (MG 09-09-2026) он
+ *     больше не прячет кнопку — отправляет человек нажатием;
  *  3. расхождение с названной студентом суммой не отвечает вообще ничем и
  *     заводит follow-up финансовому лиду.
  */
@@ -135,8 +136,11 @@ class SupportFactDraftOnlyFenceTest extends TestCase
         $this->assertTrue($draft->isDraftOnly());
     }
 
-    public function test_the_draft_only_hint_carries_no_send_button(): void
+    public function test_the_draft_only_hint_carries_the_send_button(): void
     {
+        // H4440 (MG 09-09-2026, «кнопка для всех трёх»): денежный draft_only
+        // черновик приходит куратору С кнопкой; админ-очередь — место правки,
+        // не обязательный маршрут.
         [$student] = $this->paidStudent();
         $incoming = $this->incoming($student, 'какой у меня остаток по оплате?');
 
@@ -148,11 +152,8 @@ class SupportFactDraftOnlyFenceTest extends TestCase
                 return false;
             }
 
-            // Ни клавиатуры, ни обещания «кнопка ниже отправит» — вместо них
-            // куратора отправляют в очередь черновиков.
-            return ! isset($request['reply_markup'])
-                && str_contains($text, 'кнопки под ним нет')
-                && ! str_contains($text, 'Кнопка ниже отправит');
+            return isset($request['reply_markup'])
+                && str_contains($text, 'Кнопка ниже отправит');
         });
     }
 

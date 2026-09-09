@@ -242,12 +242,13 @@ class SupportHintSendButtonTest extends TestCase
     }
 
     /**
-     * H3999: черновик draft_only (деньги/доступ/сертификат) нажатием из
-     * Telegram НЕ отправляется — даже если куратор тапнул старую кнопку из
-     * ленты. Отказ происходит ДО клейма {@see TelegramSendGuard}:
-     * иначе занятый клейм закрыл бы отправку того же текста из очереди.
+     * H4440 (MG 09-09-2026: «не надо каждый раз лазить в админку», кнопка для
+     * всех трёх классов): черновик draft_only (деньги/доступ/сертификат)
+     * отправляется нажатием из Telegram как любой другой. Прежний отказ
+     * (H3999 A1) снят явным рулингом; отказ ДО клейма больше не существует —
+     * клейм и дедуп остаются единственной защитой от двойной отправки.
      */
-    public function test_a_draft_only_suggestion_refuses_the_telegram_tap(): void
+    public function test_a_draft_only_suggestion_sends_on_the_telegram_tap(): void
     {
         $account = TelegramSupportAccount::firstOrCreate(
             ['name' => 'support'],
@@ -285,17 +286,15 @@ class SupportHintSendButtonTest extends TestCase
 
         $this->tap($suggestion, self::CURATOR_TG);
 
-        $this->assertSame(0, TelegramSupportMessage::query()->where('direction', 'outgoing')->count());
+        $outgoing = TelegramSupportMessage::query()->where('direction', 'outgoing')->get();
+        $this->assertCount(1, $outgoing, 'draft_only уходит студенту по кнопке — рулинг MG 09-09.');
+        $this->assertStringContainsString('12 000', (string) $outgoing->first()->text);
 
         $suggestion->refresh();
-        $this->assertSame(
-            SupportAnswerSuggestion::STATUS_PENDING,
-            $suggestion->status,
-            'Черновик остаётся в очереди — отказ кнопки его не закрывает.',
-        );
+        $this->assertSame(SupportAnswerSuggestion::STATUS_ACCEPTED, $suggestion->status);
 
         Http::assertSent(fn ($request) => str_contains($request->url(), 'answerCallbackQuery')
-            && str_contains((string) ($request['text'] ?? ''), 'очередь черновиков'));
+            && str_contains((string) ($request['text'] ?? ''), 'Отправлено'));
     }
 
     /**
