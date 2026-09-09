@@ -285,22 +285,19 @@ final class TextbookScale
     /**
      * Прогноз месяца-года завершения: remaining наших занятий по календарю
      * вперёд с пропусками каникул. Конец тяжёлый — вес уже внутри remaining.
+     * Пессимистичный вариант УДАЛЁН (MG 09-09: «разница в год слишком большая»).
      *
-     * @return array{realistic: string, late: string} подписи «апрель 2028»
+     * @return string подпись «апрель 2028»
      */
-    public static function finishForecast(int $remainingSessions, ?Carbon $from = null, ?float $cadenceOverride = null): array
+    public static function finishForecast(int $remainingSessions, ?Carbon $from = null, ?float $cadenceOverride = null): string
     {
         $from = $from ?? Carbon::now();
         $holidays = config('edutech.holidays');
         $base = max(0.2, $cadenceOverride ?? 1.0);
 
-        $realistic = self::walkCalendar($remainingSessions, $from, $base, $holidays['new_year'], $holidays['summer_normal']);
-        // Максимально поздно: темп -25% и лето до 15.10.
-        $late = self::walkCalendar($remainingSessions, $from, $base * 0.75, $holidays['new_year'], $holidays['summer_late']);
+        $done = self::walkCalendar($remainingSessions, $from, $base, $holidays['new_year'], $holidays['summer_normal']);
 
-        $fmt = fn (Carbon $d): string => self::MONTH_RU[$d->month].' '.$d->year;
-
-        return ['realistic' => $fmt($realistic), 'late' => $fmt($late)];
+        return self::MONTH_RU[$done->month].' '.$done->year;
     }
 
     private const MONTH_RU = [

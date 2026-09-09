@@ -202,7 +202,7 @@ final class WeeklyFinishReport
                 if (($row['canvasProjection'] ?? null) !== null) {
                     $head .= ' · до конца ≈ '.$row['canvasProjection'].' наших занятий';
                     if (($row['canvasForecast'] ?? null) !== null) {
-                        $head .= ' · финал: '.$row['canvasForecast']['realistic'].' (макс. поздно — '.$row['canvasForecast']['late'].')';
+                        $head .= ' · финал: '.$row['canvasForecast'];
                     }
                 }
             }

@@ -121,20 +121,12 @@ class KanvaBlocksMoneyForecastTest extends TestCase
         // 4 недели уходят до НГ (27.11-18.12), 29.12-11.01 каникула пропускается,
         // финал — вторая половина января 2027.
         $f = TextbookScale::finishForecast(6, Carbon::parse('2026-11-20'), 1.0);
-        $this->assertSame('январь 2027', $f['realistic']);
+        $this->assertSame('январь 2027', $f);
 
         // Старт 1 июня: лето (норма до 15.09) пропускается → финал в сентябре;
         // макс. поздно (лето до 15.10) → октябрь.
         $f = TextbookScale::finishForecast(2, Carbon::parse('2026-06-01'), 1.0);
-        $this->assertSame('сентябрь 2026', $f['realistic']);
-        $this->assertSame('октябрь 2026', $f['late']);
-    }
-
-    /** @test */
-    public function late_forecast_is_not_earlier_than_realistic(): void
-    {
-        $f = TextbookScale::finishForecast(30, Carbon::parse('2026-09-20'), 1.0);
-        $this->assertTrue(strtotime($f['late']) >= strtotime($f['realistic']));
+        $this->assertSame('сентябрь 2026', $f);
     }
 
     /** @test */
