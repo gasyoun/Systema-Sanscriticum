@@ -465,6 +465,89 @@ class TelegramHarvestSyncTest extends TestCase
         $this->assertSame(7, $harvester->sync_state['peers']['100']['last_message_id']);
     }
 
+    /**
+     * H4461 rotation: without it every budgeted pass restarted at index 0 —
+     * on prod the ~15-peer window never left the already-cursored head of a
+     * 3188-peer list, so the backlog was unreachable (cursor count frozen at
+     * 233 across four green runs). Each pass must resume at the persisted
+     * harvest_next_index and wrap around.
+     */
+    public function test_rotation_resumes_where_previous_budgeted_run_stopped(): void
+    {
+        config([
+            'services.telegram_harvest.enabled' => true,
+            'services.telegram_support.enabled' => true,
+            'services.telegram_harvest.peers' => ['@peer_a', '@peer_b', '@peer_c'],
+            'services.telegram_harvest.peers_file' => null,
+        ]);
+
+        $client = new class
+        {
+            public object $messages;
+
+            /** @var array<int, string> */
+            public array $fetched = [];
+
+            public function __construct()
+            {
+                $this->messages = new class($this)
+                {
+                    public function __construct(private object $client) {}
+
+                    /** @param array<string, mixed> $params @return array<string, mixed> */
+                    public function getHistory(array $params): array
+                    {
+                        return [
+                            'messages' => [
+                                ['id' => 7, 'date' => 1751360400, 'message' => 'oṃ rotate'],
+                            ],
+                            'users' => [],
+                        ];
+                    }
+                };
+            }
+
+            public function getInfo(int|string $peer): array
+            {
+                $this->fetched[] = (string) $peer;
+
+                return ['_' => 'channel', 'id' => 100 + strlen((string) $peer), 'title' => 'T', 'username' => ltrim((string) $peer, '@')];
+            }
+        };
+
+        $factory = new class($client) extends MadelineClientFactory
+        {
+            public function __construct(private object $fake) {}
+
+            public function isConfigured(): bool
+            {
+                return true;
+            }
+
+            public function open(?string $clientClass = null): object
+            {
+                return $this->fake;
+            }
+        };
+        $this->app->instance(MadelineClientFactory::class, $factory);
+
+        // 1s budget; the 2s inter-peer delay burns it after EVERY first peer.
+        config(['services.telegram_harvest.sync_budget_seconds' => 1]);
+        config(['services.telegram_harvest.peer_delay_min' => 2]);
+        config(['services.telegram_harvest.peer_delay_max' => 2]);
+
+        // Run 1 (no override → rotation active): starts at index 0, stops after A.
+        app(TelegramHarvestSyncService::class)->sync();
+        $this->assertSame(['@peer_a'], $client->fetched);
+
+        // Run 2: must resume at index 1 (peer B), NOT re-walk peer A.
+        app(TelegramHarvestSyncService::class)->sync();
+        $this->assertSame(['@peer_a', '@peer_b'], $client->fetched);
+
+        $harvester = TelegramSupportAccount::where('name', 'harvester')->firstOrFail();
+        $this->assertSame(2, $harvester->sync_state['harvest_next_index']);
+    }
+
     public function test_d11_downloads_media_only_for_configured_peers(): void
     {
         config([

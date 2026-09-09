@@ -75,8 +75,12 @@ class TelegramHarvestSyncService
         try {
             // H4461: fetchIncremental ingests PER PEER (checkpoint as it goes)
             // and returns the aggregate for reporting; the old fetch-all →
-            // ingest-once shape lost everything to the watchdog kill.
-            [$messages, $result] = $this->fetchIncremental($account, $peers);
+            // ingest-once shape lost everything to the watchdog kill. With a
+            // budget stop it resumes where THIS run stopped (rotate index
+            // persisted in sync_state), so the ~3000-peer backlog drains over
+            // consecutive runs instead of every run re-walking the same head
+            // of the list. Explicit --peer overrides keep operator order.
+            [$messages, $result] = $this->fetchIncremental($account, $peers, $peerOverride === []);
         } catch (Throwable $e) {
             $account->forceFill(['last_synced_at' => now(), 'last_sync_error' => $e->getMessage()])->save();
             Log::error('Telegram harvest failed', ['error' => $e->getMessage(), 'exception' => $e::class]);
@@ -473,13 +477,27 @@ class TelegramHarvestSyncService
      * @param  array<int, string>  $peers
      * @return array{0: array<int, array<string, mixed>>, 1: array<string, mixed>}
      */
-    private function fetchIncremental(TelegramSupportAccount $account, array $peers): array
+    private function fetchIncremental(TelegramSupportAccount $account, array $peers, bool $rotate = false): array
     {
         $client = $this->clientFactory->open();
         $limit = (int) config('services.telegram_harvest.history_limit', 200);
         $peerState = $account->sync_state['peers'] ?? [];
         $messages = [];
         $totals = ['harvested' => 0, 'stored' => 0, 'skipped_dupe' => 0, 'failed' => 0];
+
+        // H4461 rotation: each budgeted pass starts where the previous one
+        // stopped (sync_state['harvest_next_index'], wrapping). Without it the
+        // window never leaves the head of the list — on prod every run walked
+        // the same first ~15 (already-cursored) peers and the 2956-peer
+        // backlog was unreachable. Explicit --peer overrides keep the
+        // operator's order and never move the index.
+        $startIndex = 0;
+        if ($rotate && $peers !== []) {
+            $startIndex = (int) (($account->sync_state['harvest_next_index'] ?? 0) % count($peers));
+            if ($startIndex > 0) {
+                $peers = array_merge(array_slice($peers, $startIndex), array_slice($peers, 0, $startIndex));
+            }
+        }
 
         // H4461: 09-09-2026 the twice-daily scheduled run died at the 120 s
         // watchdog twice a day since 27-08 — the peer file grew to 3188 ids
@@ -494,6 +512,7 @@ class TelegramHarvestSyncService
         // (tests/CI keep the old behaviour).
         $budget = (int) config('services.telegram_harvest.sync_budget_seconds', 0);
         $deadline = $budget > 0 ? microtime(true) + $budget : 0.0;
+        $processed = 0;
 
         foreach ($peers as $index => $peer) {
             // Anti-ban: randomized inter-peer delay (default 0 → tests never sleep).
@@ -508,6 +527,8 @@ class TelegramHarvestSyncService
                     'budget_seconds' => $budget,
                     'peers_total' => count($peers),
                     'peers_done_before_stop' => $index,
+                    'start_index' => $startIndex,
+                    'next_run_starts_at' => ($startIndex + $processed) % max(count($peers), 1),
                 ]);
 
                 break;
@@ -516,6 +537,8 @@ class TelegramHarvestSyncService
             $info = $this->peerInfo($client, $peer);
             $peerId = $info['id'];
             if ($peerId === null) {
+                $this->persistRotationIndex($account, $startIndex, ++$processed, count($peers));
+
                 continue;
             }
 
@@ -547,9 +570,30 @@ class TelegramHarvestSyncService
                 $peerState = $account->refresh()->sync_state['peers'] ?? $peerState;
             }
             $messages = array_merge($messages, $peerMessages);
+
+            // Advance the rotation marker with the checkpoint: the next run
+            // picks up AFTER this peer even if this run dies mid-list.
+            $this->persistRotationIndex($account, $startIndex, ++$processed, count($peers));
         }
 
         return [$messages, $totals];
+    }
+
+    /**
+     * H4461: record where the next budgeted pass must start. Writes only the
+     * rotation key (read-modify-write of sync_state) and is safe to call after
+     * every peer — one tiny UPDATE, and a kill between peers still leaves the
+     * marker on the last COMPLETED peer.
+     */
+    private function persistRotationIndex(TelegramSupportAccount $account, int $startIndex, int $processed, int $total): void
+    {
+        if ($total === 0) {
+            return;
+        }
+
+        $state = $account->sync_state ?? [];
+        $state['harvest_next_index'] = ($startIndex + $processed) % $total;
+        $account->forceFill(['sync_state' => $state])->save();
     }
 
     /**
