@@ -127,4 +127,27 @@ class TextbookScaleTest extends TestCase
         // Пустое семейство → 0.
         $this->assertSame(0, TextbookScale::lag(5, []));
     }
+
+    /** @test */
+    public function buhler_single_l_spelling_parses(): void
+    {
+        // Реальные заголовки пишут «Бюлер» с одной «л» (Бюллер-27, H4457-правда).
+        $items = TextbookScale::parseTitle('Бюлер 24 (с русского) (#35, 16.06.26)');
+        $this->assertSame('buhler', $items[0]['family']);
+        $this->assertSame(24, $items[0]['lesson']);
+        $this->assertSame('Бюлер', TextbookScale::families()['buhler']['title']);
+        $this->assertSame(43, TextbookScale::families()['buhler']['total']);
+    }
+
+    /** @test */
+    public function blocks_total_never_trusts_autofilled_lesson_blocks(): void
+    {
+        // Lesson::saving авто-ставит block_number=1 — фолбэк на записи давал «блок X/1».
+        $course = Course::factory()->create();
+        Lesson::create(['title' => 'Бюлер 1 (читка)', 'course_id' => $course->id, 'lesson_date' => '2026-09-01 00:00:00']);
+        Lesson::create(['title' => 'Бюлер 2 (читка)', 'course_id' => $course->id, 'lesson_date' => '2026-09-08 00:00:00']);
+
+        // Без тарифов: арифметика ceil(43/4) = 11, а не «1».
+        $this->assertSame(11, TextbookScale::blocksTotal($course->id, 43));
+    }
 }

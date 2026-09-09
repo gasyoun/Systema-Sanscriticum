@@ -82,4 +82,29 @@ class KanvaReportTest extends TestCase
         $this->assertSame(0, $report[0]['canvasTotal']);
         $this->assertSame('', $report[0]['canvasFamily']);
     }
+
+    /** @test */
+    public function held_count_trusts_kurator_ordinal_over_calendar(): void
+    {
+        // MG 09-09: Бюллер-27 провёл 35 занятий (нумерация в заголовках записей),
+        // а календарь БД помнит только 10 — считаем факт записей.
+        $course = Course::factory()->create(['title' => 'Грамматика по Бюллеру гр.27', 'is_active' => true, 'is_visible' => true]);
+        $group = Group::factory()->create(['name' => 'гр.27']);
+        $course->groups()->attach($group->id);
+
+        $ordinals = array_merge(range(2, 19), range(20, 29), [34, 35]);
+        foreach ($ordinals as $i => $ordinal) {
+            Lesson::create([
+                'title' => 'Бюлер '.min($ordinal, 24).' (читка) (#'.$ordinal.', 01.03.26)',
+                'course_id' => $course->id,
+                'lesson_date' => now()->subDays(300 - $i)->format('Y-m-d H:i:s'),
+            ]);
+        }
+        // Календарь: 10 прошлых + будущее (лето-хвост).
+        Schedule::create(['title' => 'Past', 'start' => now()->subDays(3)->format('Y-m-d H:i:s'), 'group_id' => $group->id, 'course_id' => $course->id]);
+        Schedule::create(['title' => 'Future', 'start' => now()->addDays(3)->format('Y-m-d H:i:s'), 'group_id' => $group->id, 'course_id' => $course->id]);
+
+        $report = WeeklyFinishReport::build();
+        $this->assertSame(35, $report[0]['pastCount'], 'held = кураторский макс-ординал, не календарь');
+    }
 }

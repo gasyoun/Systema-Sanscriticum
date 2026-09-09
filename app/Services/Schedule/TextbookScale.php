@@ -43,7 +43,7 @@ final class TextbookScale
 
     private const DEFAULT_FAMILIES = [
         'kochergina' => ['pattern' => '/Кочергина\s+(\d+)\s*\(([^)]+)\)/u', 'total' => 40, 'title' => 'Кочергина'],
-        'buhler' => ['pattern' => '/Бюллер\s+(\d+)\s*\(([^)]+)\)/u', 'total' => 40, 'title' => 'Бюллер'],
+        'buhler' => ['pattern' => '/Бю[л]+ер\s+(\d+)\s*\(([^)]+)\)/u', 'total' => 43, 'title' => 'Бюлер'],
     ];
 
     private const DEFAULT_BUDGETS = [
@@ -191,7 +191,7 @@ final class TextbookScale
     public static function courseFamilyPublic(string $title): ?string
     {
         foreach (array_keys(self::families()) as $family) {
-            $needle = $family === 'kochergina' ? 'Кочерг' : ($family === 'buhler' ? 'Бюллер' : $family);
+            $needle = $family === 'kochergina' ? 'Кочерг' : ($family === 'buhler' ? 'Бю' : $family);
             if (mb_stripos($title, $needle) !== false) {
                 return $family;
             }
@@ -243,14 +243,6 @@ final class TextbookScale
             ->count('block_number');
         if ($tariffBlocks > 0) {
             return $tariffBlocks;
-        }
-
-        $lessonBlocks = Lesson::where('course_id', $courseId)
-            ->whereNotNull('block_number')
-            ->distinct()
-            ->count('block_number');
-        if ($lessonBlocks > 0) {
-            return $lessonBlocks;
         }
 
         return (int) ceil($canvasTotal / max(1, (int) config('edutech.lessons_per_block', 4)));

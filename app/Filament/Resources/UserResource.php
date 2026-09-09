@@ -1811,6 +1811,7 @@ class UserResource extends Resource
             UserResource\RelationManagers\PaymentsRelationManager::class,
             UserResource\RelationManagers\PaymentPromisesRelationManager::class,
             UserResource\RelationManagers\LessonAccessGrantsRelationManager::class,
+            UserResource\RelationManagers\CourseAccessWindowsRelationManager::class,
             UserResource\RelationManagers\IndividualDiscountsRelationManager::class,
         ];
     }
