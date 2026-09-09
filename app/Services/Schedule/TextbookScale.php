@@ -38,8 +38,8 @@ final class TextbookScale
     }
 
     private const DEFAULT_FAMILIES = [
-        'kochergina' => ['pattern' => '/Кочергина\s+(\d+)\s*\(([^)]+)\)/u', 'total' => 40],
-        'buhler' => ['pattern' => '/Бюллер\s+(\d+)\s*\(([^)]+)\)/u', 'total' => 40],
+        'kochergina' => ['pattern' => '/Кочергина\s+(\d+)\s*\(([^)]+)\)/u', 'total' => 40, 'title' => 'Кочергина'],
+        'buhler' => ['pattern' => '/Бюллер\s+(\d+)\s*\(([^)]+)\)/u', 'total' => 40, 'title' => 'Бюллер'],
     ];
 
     private const DEFAULT_BUDGETS = [
@@ -199,7 +199,8 @@ final class TextbookScale
     /** «Кочергина, 4-я читка» — человекочитаемая подпись последнего факта студента. */
     public static function label(string $family, int $lesson, string $kind = 'chitka'): string
     {
-        $familyTitle = mb_strtoupper(mb_substr($family, 0, 1)).mb_substr($family, 1);
+        $cfg = self::families()[$family] ?? [];
+        $familyTitle = $cfg['title'] ?? ucfirst($family);
         $kindLabel = match ($kind) {
             'chitka' => 'читка',
             'proverka' => 'проверка',

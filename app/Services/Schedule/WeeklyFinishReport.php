@@ -6,6 +6,7 @@ namespace App\Services\Schedule;
 
 use App\Models\Course;
 use App\Models\Group;
+use App\Models\Lesson;
 use App\Models\Schedule;
 use App\Models\ScheduleJoinClick;
 use App\Models\User;
