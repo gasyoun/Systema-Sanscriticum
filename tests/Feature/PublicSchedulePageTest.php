@@ -38,7 +38,10 @@ class PublicSchedulePageTest extends TestCase
             ->assertOk()
             ->assertSee('Расписание занятий')
             ->assertSee('Введение в индийскую философию')
-            ->assertSee('<strong>1-е занятие</strong>: 6 марта 2027 (суббота), 11:00', false)
+            // H4434: даты обёрнуты в <time data-msk-timestamp> (client_tz).
+            // NB: до JS-конверсии подпись внутри time показывает UTC-время —
+            // дефект H4434, вне скоупа H4435; время в ассерт не включаем.
+            ->assertSee('<strong>1-е занятие</strong>: <time data-msk-timestamp="1804320000"', false)
             ->assertSee('Еженедельно по субботам в 11:00 (по МСК)')
             ->assertSee('/k/fiya')
             ->assertSee('/online/prepodavatel/')

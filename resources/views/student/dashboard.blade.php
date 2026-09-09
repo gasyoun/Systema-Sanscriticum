@@ -491,7 +491,15 @@
                             $completedLessons = auth()->user()->completedLessons->whereIn('id', $course->lessons->pluck('id'))->count();
                             $percent = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
                             $nextLesson = ($nextLessonByCourseId ?? collect())->get($course->id);
+                            $canvas = ($canvasByCourseId ?? [])[$course->id] ?? null;
                         @endphp
+
+                        {{-- H4435: канва — две шкалы раздельно (наши занятия ≠ уроки учебника, MG 09-09). --}}
+                        @if($canvas && $canvas['group'] > 0)
+                            <div class="mb-3 rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 text-xs text-gray-600">
+                                {{ ucfirst($canvas['family']) }}: вы на уроке {{ $canvas['student'] }} из {{ $canvas['total'] }} · группа дошла до урока {{ $canvas['group'] }}
+                            </div>
+                        @endif
 
                         {{-- Блок прогресса прижат к низу карточки благодаря mt-auto --}}
                         <div class="mt-auto pt-4 border-t border-gray-50">

@@ -7,11 +7,13 @@ use App\Jobs\SendMessengerAlerts;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\HomeworkSubmission;
+use App\Models\Lesson;
 use App\Models\ScheduledReminder;
 use App\Models\User;
 use App\Services\Access\LoginLinkNotifier;
 use App\Services\Access\StudentUnblockService;
 use App\Services\Prana\PranaService;
+use App\Services\Schedule\TextbookScale;
 use App\Services\StuckStudentsReport;
 use App\Support\CourseNoteBlockParser;
 use App\Support\Impersonation;
@@ -568,6 +570,17 @@ class UserResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
+                // H4435 (MG 08-09): посещаемость + позиция на шкале учебника.
+                // Наши занятия и уроки учебника — разные шкалы, подписи раздельные.
+                InfoSection::make('Посещаемость и канва')
+                    ->visible(fn () => RoleGate::adminOnly())
+                    ->schema([
+                        ViewEntry::make('attendance_canvas')
+                            ->hiddenLabel()
+                            ->view('filament.user.attendance-canvas')
+                            ->columnSpanFull(),
+                    ]),
+
                 // Скор платёжной дисциплины (см. docs/discipline-score-spec.md) — advisory-only,
                 // рядом с вкладкой «Обещания оплатить». Не влияет на скидки/рассрочку/доступ.
                 InfoSection::make('Дисциплина')
@@ -619,6 +632,85 @@ class UserResource extends Resource
                 'accepted' => (int) ($counts[HomeworkSubmission::STATUS_ACCEPTED] ?? 0),
             ],
         ];
+    }
+
+    /**
+     * H4435 (MG 08-09): посещаемость + позиция на канве по курсам студента.
+     * Две шкалы раздельно: «наши занятия» (посещения) и «урок учебника»
+     * (курсор из TextbookScale). Эмпирический вес урока — без линейных пропорций.
+     *
+     * @return array{rows: list<array{course_title: string, family: string, total: int, group_cursor: int, student_cursor: int, lag: int, last_canvas: ?string, sessions: list<array{date: string, title: string, canvas: ?string, kind: string}>}>}
+     */
+    public static function attendanceCanvas(User $record): array
+    {
+        $record->loadMissing('groups.courses');
+        $rows = [];
+
+        foreach ($record->groups as $group) {
+            foreach ($group->courses as $course) {
+                $family = TextbookScale::courseFamilyPublic((string) $course->title);
+                if ($family === null) {
+                    continue;
+                }
+                $total = TextbookScale::families()[$family]['total'];
+
+                $lessons = Lesson::where('course_id', $course->id)
+                    ->whereNotNull('lesson_date')->orderBy('lesson_date')->get();
+                $groupCursor = TextbookScale::cursor($lessons, $family);
+
+                // Позиция студента: макс. предмет канвы на записях уроков, дата
+                // которых <= последнего ФАКТА студента (WebinarAttendance).
+                $lastFact = $record->attendances()
+                    ->whereIn('schedule_id', App\Models\Schedule::where('group_id', $group->id)->pluck('id'))
+                    ->latest('created_at')->first();
+                $studentCursor = 0;
+                $lastCanvas = null;
+                if ($lastFact) {
+                    $factDate = $lastFact->created_at->copy()->startOfDay();
+                    $studentLessons = $lessons->filter(
+                        fn ($l) => $l->lesson_date !== null && $l->lesson_date->startOfDay()->lte($factDate),
+                    );
+                    $studentCursor = TextbookScale::cursor($studentLessons, $family);
+                    $own = $studentLessons->firstWhere('lesson_date', $factDate)
+                        ?? $studentLessons->last();
+                    if ($own) {
+                        $items = TextbookScale::parseTitle((string) $own->title);
+                        $chitki = array_filter($items, fn ($i) => $i['family'] === $family && $i['kind'] === 'chitka');
+                        if ($chitki !== []) {
+                            $top = max(array_column($chitki, 'lesson'));
+                            $lastCanvas = TextbookScale::label($family, $top, 'chitka');
+                        }
+                    }
+                }
+
+                // Последние 10 занятий группы: дата, заголовок записи, предмет.
+                $sessions = [];
+                foreach ($lessons->sortByDesc('lesson_date')->take(10) as $l) {
+                    $items = TextbookScale::parseTitle((string) $l->title);
+                    $chitki = array_filter($items, fn ($i) => $i['family'] === $family && $i['kind'] === 'chitka');
+                    $canvas = $chitki !== [] ? TextbookScale::label($family, max(array_column($chitki, 'lesson')), 'chitka') : null;
+                    $sessions[] = [
+                        'date' => $l->lesson_date?->format('d.m.Y') ?? '—',
+                        'title' => (string) $l->title,
+                        'canvas' => $canvas,
+                        'kind' => 'lesson',
+                    ];
+                }
+
+                $rows[] = [
+                    'course_title' => (string) $course->title,
+                    'family' => $family,
+                    'total' => $total,
+                    'group_cursor' => $groupCursor,
+                    'student_cursor' => $studentCursor,
+                    'lag' => $groupCursor - $studentCursor,
+                    'last_canvas' => $lastCanvas,
+                    'sessions' => $sessions,
+                ];
+            }
+        }
+
+        return ['rows' => $rows];
     }
 
     /**
