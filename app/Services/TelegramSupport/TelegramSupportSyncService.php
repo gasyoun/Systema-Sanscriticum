@@ -571,21 +571,6 @@ class TelegramSupportSyncService
     }
 
     /**
-     * @param  array<int, mixed>  $dialogs
-     * @return array<int, mixed>
-     */
-    private function limitedDialogs(array $dialogs): array
-    {
-        $limit = (int) config('services.telegram_support.dialog_limit', 20);
-
-        if ($limit <= 0) {
-            return $dialogs;
-        }
-
-        return array_slice($dialogs, 0, $limit);
-    }
-
-    /**
      * Залогиненный MadelineProto-клиент — ОДИН на заход (см. докблок $client).
      *
      * Кеш присваивается только ПОСЛЕ успешного createClient(): если start()
@@ -884,20 +869,27 @@ class TelegramSupportSyncService
     }
 
     /**
-     * Пиры для опроса в минутном заходе (H4416).
+     * Пиры для опроса в минутном заходе (H4416, окно свежести — H4439).
      *
      * Root cause 08-09-2026: getDialogIds() аккаунта-персоны возвращает 3199
-     * диалогов в порядке, далёком от свежести (живой замер: топ-30 — старые
-     * июльские DM-чаты, свежий DM не попадал в окно никогда), а прежний код
-     * брал `array_slice(ids, 0, dialog_limit)`. Итог — DM-аутедж 31-08…08-09
+     * диалогов в порядке, далёком от свежести, а прежний код брал
+     * `array_slice(ids, 0, dialog_limit)`. Итог — DM-аутедж 31-08…08-09
      * при статусе «ok» каждую минуту: группы доплывали только через
      * tech_group_peers, личные сообщения студентов не видел никто.
+     *
+     * Механика беспорядка (H4439, сорс-левел): MP 8.7
+     * `DialogHandler::getFullDialogsInternal` вставляет каждую страницу
+     * `messages.getDialogs` в ОБРАТНОМ порядке, поэтому `getDialogIds()[0]` —
+     * это ~100-й по свежести диалог, а `slice(0,20)` опрашивал ранги 100..81.
+     * Свежий DM (ранг 1) сидел на позиции ~99 — вне окна навсегда, включая
+     * ПЕРВЫЙ вопрос бренд-нового студента (его нет и в БД — двойная слепота).
      *
      * Союз, дешевле-первым; дедуп по id (или строковой форме для @username):
      *  1) активные известные чаты из БД (known_chat_window_days / _poll_limit);
      *  2) tech_group_peers allowlist;
-     *  3) legacy MP-окно (топ dialog_limit из getDialogIds) — для бренд-новых
-     *     чатов, которых в БД ещё нет; 0 отключает этот источник.
+     *  3) окно свежести (H4439): один RPC `messages.getDialogs(limit:dialog_limit)`
+     *     — ответ по спецификации MTProto отсортирован по дате, бренд-новый чат
+     *     всегда ранг 1; 0 отключает этот источник.
      *
      * @return array<int, int|string|mixed>
      */
@@ -933,8 +925,63 @@ class TelegramSupportSyncService
 
         $dialogLimit = (int) config('services.telegram_support.dialog_limit', 20);
         if ($dialogLimit > 0) {
-            foreach ($this->limitedDialogs($client->getDialogIds()) as $dialog) {
+            foreach ($this->freshDialogPeers($client, $dialogLimit) as $dialog) {
                 $push($dialog);
+            }
+        }
+
+        return $peers;
+    }
+
+    /**
+     * Окно свежести (H4439): топ-$limit диалогов одним RPC
+     * `messages.getDialogs` — порядок ответа date-desc по спецификации MTProto
+     * (в отличие от getDialogIds(), чей порядок — артефакт обратной вставки
+     * страниц в getFullDialogsInternal). Бренд-новый чат всегда ранг 1.
+     *
+     * @return array<int, mixed>
+     */
+    private function freshDialogPeers(object $client, int $limit): array
+    {
+        try {
+            $response = $client->messages->getDialogs([
+                'limit' => $limit,
+                'offset_date' => 0,
+                'offset_id' => 0,
+                'offset_peer' => ['_' => 'inputPeerEmpty'],
+            ]);
+        } catch (Throwable $e) {
+            Log::warning('Telegram support sync: fresh-dialog window fetch failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+
+        $peers = [];
+        foreach (($response['dialogs'] ?? []) as $dialog) {
+            $peer = is_array($dialog) ? ($dialog['peer'] ?? null) : null;
+            if (! is_array($peer)) {
+                continue;
+            }
+
+            // Нормализация в chat-id-форму (как в БД): peerUser → +id,
+            // peerChannel → -100{channel_id}, peerChat → -{chat_id}. Иначе
+            // дедуп с allowlist-строками '-100…' расходится.
+            if (isset($peer['user_id'])) {
+                $peers[] = (int) $peer['user_id'];
+
+                continue;
+            }
+
+            if (isset($peer['channel_id'])) {
+                $peers[] = -1_000_000_000_000 - (int) $peer['channel_id'];
+
+                continue;
+            }
+
+            if (isset($peer['chat_id'])) {
+                $peers[] = -1 * (int) $peer['chat_id'];
             }
         }
 

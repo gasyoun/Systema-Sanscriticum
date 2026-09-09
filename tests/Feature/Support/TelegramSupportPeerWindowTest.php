@@ -27,6 +27,15 @@ class TelegramSupportPeerWindowTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function tearDown(): void
+    {
+        // H4439: фикстура окна свежести статична в двойнике — не тащим её в
+        // следующие классы, когда оба файла гонят в одном процессе.
+        FakeMadelineProtoClient::reset();
+
+        parent::tearDown();
+    }
+
     private function skipWithoutMadelineProto(): void
     {
         if (! class_exists(Settings::class)) {
@@ -87,8 +96,8 @@ class TelegramSupportPeerWindowTest extends TestCase
         $this->supportConfig();
         $this->seedAccount();
 
-        // MP-топ возвращает только старый чат 3001; свежий DM Елены (77701)
-        // в MP-окно не попадает — но активен в БД внутри окна.
+        // Окно свежести возвращает только старый чат 3001; свежий DM Елены
+        // (77701) в нём отсутствует — но активен в БД внутри окна.
         FakeMadelineProtoClient::$histories = [
             3001 => [],
             77701 => [
@@ -97,6 +106,9 @@ class TelegramSupportPeerWindowTest extends TestCase
         ];
 
         $this->seedIncoming(77701, 8900, 'старое сообщение', '2026-09-05 10:00:00');
+        FakeMadelineProtoClient::$dialogs = [
+            ['peer' => ['_' => 'peerUser', 'user_id' => 3001]],
+        ];
 
         $result = app(TelegramSupportSyncService::class)->sync();
 
@@ -233,5 +245,44 @@ class TelegramSupportPeerWindowTest extends TestCase
                 && isset($context['peers_polled'])
                 && $context['peers_polled'] >= 1;
         });
+    }
+
+    public function test_brand_new_chat_is_polled_as_rank_one_of_the_fresh_window(): void
+    {
+        // H4439: первый вопрос бренд-нового студента — его нет в БД, и раньше
+        // он не попадал в MP-окно (getDialogIds начинался с ранга ~100).
+        // Окно свежести = один RPC messages.getDialogs, ответ date-desc:
+        // новички всегда ранг 1 и опрашиваются первым же заходом.
+        $this->skipWithoutMadelineProto();
+        $this->supportConfig();
+        $this->seedAccount();
+
+        FakeMadelineProtoClient::$histories = [
+            88801 => [
+                ['id' => 9100, 'date' => strtotime('2026-09-09 09:00:00'), 'message' => 'Добрый день! Хочу записаться на курс', 'peer_id' => 88801, 'from_id' => ['user_id' => 88802]],
+            ],
+        ];
+        FakeMadelineProtoClient::$dialogs = [
+            ['peer' => ['_' => 'peerUser', 'user_id' => 88801]],
+            ['peer' => ['_' => 'peerUser', 'user_id' => 3001]],
+        ];
+
+        $result = app(TelegramSupportSyncService::class)->sync();
+
+        $this->assertSame('ok', $result['status']);
+        $this->assertSame(1, $result['synced']);
+        $this->assertGreaterThanOrEqual(1, FakeMadelineProtoClient::$getDialogsCalls, 'Окно свежести берётся из messages.getDialogs, не из getDialogIds.');
+
+        $polledPeers = array_map(
+            fn (array $request): int => (int) $request['peer'],
+            FakeMadelineProtoClient::$lastHistoryRequests,
+        );
+        $this->assertContains(88801, $polledPeers, 'Бренд-новый чат опрашивается первым заходом.');
+
+        $message = TelegramSupportMessage::query()
+            ->where('telegram_chat_id', 88801)
+            ->where('telegram_message_id', 9100)
+            ->first();
+        $this->assertNotNull($message, 'Первый вопрос нового студента не теряется.');
     }
 }
