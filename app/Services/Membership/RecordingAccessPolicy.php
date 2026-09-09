@@ -176,6 +176,8 @@ final class RecordingAccessPolicy
             ->where('course_id', $course->id)
             ->paid()
             ->real()
+            // H4456: истёкшее окно доступа закрывает и этот путь покупки записи.
+            ->withoutExpiredAccessWindow()
             ->where('amount', '>', 0)
             ->pluck('tariff')
             ->all();

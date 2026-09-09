@@ -219,6 +219,8 @@ class CourseCatalog extends Component
                 ->where('user_id', Auth::id())
                 ->whereIn('course_id', $courses->pluck('id'))
                 ->paid()
+                // H4456: курс с истёкшим окном доступа снова считается покупаемым.
+                ->withoutExpiredAccessWindow()
                 ->get(['course_id', 'tariff'])
                 ->groupBy('course_id')
                 ->map(fn ($rows) => $rows->pluck('tariff')->filter()->unique()->values()->all())

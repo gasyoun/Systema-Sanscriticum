@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -587,14 +588,20 @@ class Payment extends Model
      * ещё не прошёл (окно до дневного прогона promises:expire закрывает сам
      * предикат — дата и есть дедлайн, а не статус демона). Реальные платежи
      * предикат не трогает: оплатил = владеет навсегда (продуктовое правило,
-     * случайных отзывов купленного нет). Флаг conditional_access_expiry —
-     * money-контур, дефолт OFF; прод-флип — отдельный ops-шаг (H2085).
+     * случайных отзывов купленного нет) — ИЗМЕНЕНО H4456: реальный платёж
+     * закрывается истёкшим окном доступа (см. scopeWithoutExpiredAccessWindow).
+     * Флаг conditional_access_expiry — money-контур, дефолт OFF; прод-флип —
+     * отдельный ops-шаг (H2085).
      *
      * Один предикат на всех читателей ключей: getUserUnlockedTariffs (веб
      * плеер/курс/ДЗ/ассеты через LessonGate) и API-кабинет.
      */
     public function scopeWithAccessExpiry(Builder $query): Builder
     {
+        // H4456: окна доступа применяются к реальным платежам независимо от
+        // флага conditional_access_expiry (у окон свой рубильник).
+        $query->withoutExpiredAccessWindow();
+
         if (! config('features.conditional_access_expiry')) {
             return $query;
         }
@@ -608,6 +615,37 @@ class Payment extends Model
                                 ->whereDate('promised_at', '>=', now()->toDateString());
                         });
                 });
+        });
+    }
+
+    /**
+     * H4456 — окно доступа (course_access_windows), рулинг MG 09-09-2026
+     * (вербатим): «сказать 18 дней и отрезать на 19й день, не надо к курсам
+     * Парибка вечный доступ, если не оговорено конкретно у кого такой
+     * исключение и вечный доступ».
+     *
+     * Строка course_access_windows на (user_id, course_id) с ends_at в прошлом
+     * закрывает доступ, открываемый РЕАЛЬНЫМИ платежами этого курса; окно с
+     * ends_at = NULL — вечный доступ по именному исключению; нет строки —
+     * прежнее поведение. Строки платежей (деньги) не трогаются никогда.
+     * Флаг course_access_windows — money-смежный, дефолт OFF; прод-флип —
+     * отдельный ops-шаг (H2085 discipline).
+     */
+    public function scopeWithoutExpiredAccessWindow(Builder $query): Builder
+    {
+        if (! config('features.course_access_windows')) {
+            return $query;
+        }
+
+        $table = $query->getModel()->getTable();
+
+        return $query->whereNotExists(function (QueryBuilder $w) use ($table): void {
+            $w->selectRaw(1)
+                ->from('course_access_windows')
+                ->whereColumn('course_access_windows.user_id', $table.'.user_id')
+                ->whereColumn('course_access_windows.course_id', $table.'.course_id')
+                ->whereNotNull('course_access_windows.ends_at')
+                ->where('course_access_windows.ends_at', '<=', now());
         });
     }
 
