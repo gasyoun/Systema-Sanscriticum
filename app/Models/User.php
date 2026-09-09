@@ -18,9 +18,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
@@ -199,6 +201,89 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function setEmailAttribute(?string $value): void
     {
         $this->attributes['email'] = self::normalizeEmail($value);
+    }
+
+    /**
+     * H4462 — аудит-след тихой перезаписи пароля (инцидент 09-09-2026: smoke-студент
+     * id=6857 перезаписан локальным актором без единой строки в логах).
+     *
+     * Мутатор перехватывает ЛЮБУЮ запись `password` через Eloquent (fill/update/
+     * forceFill/свойство), потому что set-мутатор в Laravel 10 имеет приоритет над
+     * `hashed`-кастом (setAttribute() -> hasSetMutator() раньше castAttributeAsHashedString()).
+     * Логика хеширования повторяет castAttributeAsHashedString(): null -> null,
+     * уже-хеш -> как есть, иначе Hash::make.
+     *
+     * Логируем только ПЕРЕзапись у существующего пользователя: был валидный хеш,
+     * стал ДРУГОЙ валидный хеш. Это ровно класс инцидента, который надо видеть.
+     * Создание и пустое значение — не логируем (шум), повторная установка того же
+     * хеша — тоже (нет факта перезаписи). В контексте — id/email записи и writer
+     * (CLI-команда с argv / HTTP-запрос с ip+session+auth id). Ни пароля, ни хеша.
+     */
+    public function setPasswordAttribute(#[\SensitiveParameter] $value): void
+    {
+        $original = $this->getOriginal('password');
+
+        $wasHashed = is_string($original)
+            && $original !== ''
+            && Hash::isHashed($original);
+
+        $this->attributes['password'] = match (true) {
+            $value === null => null,
+            is_string($value) && $value !== '' && Hash::isHashed($value) => $value,
+            $value === '' => '',
+            default => Hash::make($value),
+        };
+
+        $newHash = $this->attributes['password'];
+
+        if (! $wasHashed || ! is_string($newHash) || $newHash === '') {
+            return;
+        }
+
+        if ($this->exists && $newHash !== $original) {
+            $this->logPasswordRewrite();
+        }
+    }
+
+    /** H4462 — одна строка security-лога на фактическую перезапись хеша существующего пользователя. */
+    private function logPasswordRewrite(): void
+    {
+        if (app()->runningInConsole()) {
+            // argv[1] под `artisan test` — флаг phpunit (--colors=always...); ищем
+            // первый не-флаговый токен: имя artisan-команды или «unknown».
+            $argv = $_SERVER['argv'] ?? [];
+            $command = 'unknown';
+
+            foreach (array_slice($argv, 1) as $token) {
+                if (is_string($token) && $token !== '' && ! str_starts_with($token, '-')) {
+                    $command = $token;
+
+                    break;
+                }
+            }
+
+            $writer = 'cli:'.$command;
+        } else {
+            $writer = 'http:'.(Request::ip() ?? 'unknown');
+        }
+
+        // Аудит не должен ломать бизнес-запись: под Log::spy() в тестах channel()
+        // может вернуть null, а любой Throw в логировании отменил бы save().
+        try {
+            $logger = Log::channel(config('services.password_audit.channel', 'stack'));
+
+            $logger?->info('password.rewritten', [
+                'user_id' => $this->id,
+                'email' => $this->email,
+                'writer' => $writer,
+                'auth_id' => auth()->id(),
+                'session_id' => app()->runningInConsole()
+                    ? null
+                    : (substr((string) session()->getId(), 0, 12) ?: null),
+            ]);
+        } catch (\Throwable) {
+            return;
+        }
     }
 
     /**
