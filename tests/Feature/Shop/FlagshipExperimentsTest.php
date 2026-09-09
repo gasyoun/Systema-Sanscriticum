@@ -168,6 +168,26 @@ class FlagshipExperimentsTest extends TestCase
         $this->get('/online/next-step/price')->assertNotFound();
     }
 
+    public function test_next_step_click_assigns_variant_on_first_hit_and_persists_cookie(): void
+    {
+        config(['features.catalog_next_step' => true]);
+
+        $from = $this->makeKocherginaWithPreview();
+        Course::factory()->create([
+            'slug' => FlagshipLanding::SMOKE_SLUGS['buhler'],
+            'title' => 'Грамматика по Бюллеру гр.27',
+            'is_visible' => true,
+        ]);
+
+        $response = $this->get(route('shop.next-step', ['target' => 'texts', 'from' => $from->id]));
+        $response->assertRedirect();
+
+        $row = StorefrontAnalyticsEvent::query()->where('event_name', StorefrontAnalyticsEvent::NEXT_STEP_CLICK)->first();
+        $this->assertNotNull($row);
+        $this->assertContains($row->variant, ['a', 'b']);
+        $response->assertCookie(FlagshipExperiments::CTA_COOKIE, $row->variant);
+    }
+
     public function test_cta_ab_changes_only_the_label_on_kochergina(): void
     {
         config(['features.flagship_cta_ab' => true]);
