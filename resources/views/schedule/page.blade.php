@@ -4,11 +4,17 @@
 @section('title', 'Расписание занятий')
 
 @section('content')
+@php
+    // H4434: client_tz — даты обёрнуты в <time data-msk-timestamp>, JS ниже
+    // конвертирует их в зону устройства гостя (MG 09-09-2026).
+    $clientTz = ['client_tz' => true];
+@endphp
 <div class="max-w-4xl mx-auto px-4 py-12">
     <h1 class="text-3xl font-bold text-white mb-3">Расписание занятий</h1>
     <p class="text-slate-400 mb-10">
         Полное расписание идущих и набираемых курсов Общества ревнителей санскрита.
-        Время — московское. Запись на курс — на странице курса.
+        Время — московское; если вы не в Москве, рядом появится ваше местное время.
+        Запись на курс — на странице курса.
     </p>
 
     @if(!$flagOn)
@@ -53,7 +59,7 @@
                     </div>
 
                     @foreach($row['posts'] as $post)
-                        <div class="mb-4 last:mb-0">{!! $post->html() !!}</div>
+                        <div class="mb-4 last:mb-0">{!! $post->html($clientTz) !!}</div>
                     @endforeach
 
                     <a href="{{ route('shop.course.show', $course) }}"
@@ -67,5 +73,6 @@
     @endif
 
     @include('partials.schedule-past-toggle')
+    @include('partials.client-tz-convert')
 </div>
 @endsection

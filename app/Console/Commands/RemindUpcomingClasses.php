@@ -105,6 +105,16 @@ class RemindUpcomingClasses extends Command
         $text = "🔔 <b>Скоро занятие</b>\n\n";
         $text .= "Намасте! Занятие <b>«{$title}»</b> начнётся сегодня в <b>{$time}</b> (МСК).";
 
+        // H4434 — допстрока для нон-МСК учеников: их локальное время занятия.
+        // MG 09-09-2026: T−1ч напоминание DST слито с этим пингом — отдельного нет.
+        if ($user->isNonMskTimezone()) {
+            $local = $schedule->start->copy()->timezone($user->effectiveTimezone())->format('H:i');
+
+            if ($local !== $time) {
+                $text .= "\n\n⏰ В вашем местном времени (".e($user->effectiveTimezone()).') это <b>'.$local.'</b>.';
+            }
+        }
+
         // Подписанная трекинг-ссылка на этого студента (учёт посещаемости).
         if ($link = $schedule->trackedJoinUrlFor($user, 'reminder')) {
             $text .= "\n\n<a href='{$link}'>Подключиться к занятию</a>";

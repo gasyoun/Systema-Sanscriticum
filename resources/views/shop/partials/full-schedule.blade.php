@@ -28,11 +28,13 @@
     <div class="space-y-6">
         @foreach($fullSchedulePosts as $post)
             <div class="full-schedule-block p-6 rounded-2xl bg-[#111622] border border-[#1F2636]">
-                {!! $post->html() !!}
+                {{-- H4434: client_tz — клиентская конверсия в зону устройства гостя --}}
+                {!! $post->html(['client_tz' => true]) !!}
             </div>
         @endforeach
     </div>
 
     @include('partials.schedule-past-toggle')
+    @include('partials.client-tz-convert')
 </section>
 @endif

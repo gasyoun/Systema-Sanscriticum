@@ -380,6 +380,14 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('remind-upcoming-classes');
 
+        // H4434 — DST-будильник нон-МСК ученикам (T−7д, T−1д вечером, T−1ч).
+        // Ежедневный скан: юзеров с явной зоной ~десятки, дедуп в tz_alerts_sent.
+        $schedule->command('tz:remind-dst-shifts')
+            ->dailyAt('10:00')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('remind-dst-shifts');
+
         // Авто-постинг ссылки на занятие в Telegram-чат группы (за ~15 мин до
         // старта, ОДНО сообщение на группу — в отличие от remind-upcoming, что
         // шлёт персональные ЛС). Гейт (class_link_autopost_enabled), окно и дедуп

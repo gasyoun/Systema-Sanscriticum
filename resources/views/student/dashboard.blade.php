@@ -244,6 +244,10 @@
         'enabled' => $accessSelfService ?? false,
     ])
 
+    {{-- H4434 — timezone settings card (MG 09-09-2026): device-TZ захват + --}}
+    {{-- селектор + временное пребывание. Показываем всем, МСК-резидентам плашка молчит. --}}
+    @include('components.timezone-settings')
+
     @php
         $marketingSettings = \App\Models\MarketingSetting::cached();
         $showTelegramBot = (bool) $marketingSettings?->student_telegram_bot_enabled;

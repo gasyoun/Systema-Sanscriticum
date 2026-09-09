@@ -156,13 +156,15 @@
         @foreach($fullSchedulePosts as $row)
             <div style="margin: 0 0 18px;">
                 @foreach($row['posts'] as $post)
-                    <div style="border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 0 0 10px;">{!! $post->html() !!}</div>
+                    <div style="border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin: 0 0 10px;">{!! $post->html($clientTz ?? []) !!}</div>
                 @endforeach
             </div>
         @endforeach
     @endif
 
     @include('partials.schedule-past-toggle')
+    {{-- H4434: клиентская конверсия в зону устройства гостя (iframe-safe, без cookie) --}}
+    @include('partials.client-tz-convert')
 
     <script src="{{ asset('widgets/schedule.js') }}" data-feed-url="{{ $feedUrl }}" data-book-url="{{ route('api.public.schedule.book') }}"></script>
 </body>

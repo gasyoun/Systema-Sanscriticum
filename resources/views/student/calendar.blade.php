@@ -3,6 +3,11 @@
 @section('header', 'Календарь занятий')
 
 @section('content')
+@php
+    // H4434 — эффективная зона ученика (null = МСК); dual-display для нон-МСК.
+    $tz = $userTz ?? null;
+    $isNonMsk = $tz !== null && $tz !== 'Europe/Moscow';
+@endphp
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-nunito">
 
     {{-- Заголовок раздела --}}
@@ -13,6 +18,12 @@
         <p class="text-gray-500 text-lg">
             Ваш личный календарь предстоящих вебинаров и онлайн-встреч.
         </p>
+        @if($isNonMsk)
+            <p class="text-gray-500 text-sm mt-2">
+                <i class="far fa-clock text-brand mr-1"></i>
+                Показано ваше время ({{ $tz }}) рядом с московским — занятия идут по МСК.
+            </p>
+        @endif
         <div class="w-16 h-1.5 bg-brand rounded-full mt-4"></div>
         @if(session('attendance_notice_status'))
             <p class="mt-3 text-sm font-semibold text-green-700 bg-green-50 border border-green-100 rounded-xl px-3 py-2">
@@ -104,9 +115,16 @@
                             <div class="flex justify-between items-start gap-2 mb-3 {{ $isLive ? 'pr-24' : '' }}">
                                 <div class="inline-flex items-center text-xs md:text-sm font-extrabold text-brand bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100/50 shrink-0">
                                     <i class="far fa-clock mr-1.5"></i>
-                                    {{ $start->format('H:i') }}
-                                    <span class="opacity-50 mx-1">–</span>
-                                    {{ $end->format('H:i') }}
+                                    @if($isNonMsk)
+                                        {{-- H4434: dual-display «11:00 МСК · 16:00 ваше» (MG 09-09-2026) --}}
+                                        {{ \App\Support\Timezone::render($start, $tz) }}
+                                        <span class="opacity-50 mx-1">–</span>
+                                        {{ \App\Support\Timezone::render($end, $tz) }}
+                                    @else
+                                        {{ $start->format('H:i') }}
+                                        <span class="opacity-50 mx-1">–</span>
+                                        {{ $end->format('H:i') }}
+                                    @endif
                                 </div>
 
                                 @if($event->course)

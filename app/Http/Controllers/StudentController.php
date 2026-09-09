@@ -107,6 +107,11 @@ class StudentController extends Controller
         $user = auth()->user();
         $groupIds = $user->groups->pluck('id');
 
+        // H4434 — эффективная таймзона ученика (MG 09-09-2026). null = МСК,
+        // рендер идёт как раньше; нон-МСК получают dual-display и заголовки
+        // дней в своей зоне («суббота» у калифорнийца = пятница по-московски).
+        $userTz = $user->effectiveTimezone();
+
         $upcomingEvents = Schedule::with(['course', 'group'])
             ->where(function ($query) use ($groupIds) {
                 $query->whereIn('group_id', $groupIds)
@@ -126,15 +131,19 @@ class StudentController extends Controller
             ->orderBy('start', 'asc')
             ->get();
 
-        $groupedEvents = $upcomingEvents->groupBy(function ($event) {
-            if ($event->start->isToday()) {
+        // H4434 — группировка по дням в зоне ученика (было: isToday/isTomorrow
+        // всегда считали по московской зоне приложения).
+        $groupedEvents = $upcomingEvents->groupBy(function ($event) use ($userTz) {
+            $local = $event->start->timezone($userTz ?: config('app.timezone'));
+
+            if ($local->isToday()) {
                 return 'Сегодня';
             }
-            if ($event->start->isTomorrow()) {
+            if ($local->isTomorrow()) {
                 return 'Завтра';
             }
 
-            return $event->start->translatedFormat('d F, l');
+            return $local->translatedFormat('d F, l');
         });
 
         $feedToken = $user->calendarFeedToken()->token;
@@ -161,7 +170,7 @@ class StudentController extends Controller
             'attendanceNoticesEnabled',
             'myNotices',
             'noticeOptions',
-        ));
+        ))->with('userTz', $userTz);
     }
 
     /**

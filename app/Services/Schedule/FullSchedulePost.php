@@ -144,6 +144,7 @@ final class FullSchedulePost
             return [
                 'label' => ($i + 1).'-е занятие',
                 'date' => self::formatDate($s->start),
+                'start' => $s->start->toIso8601String(),
                 'is_past' => $isPast,
             ];
         })->all();
@@ -158,6 +159,7 @@ final class FullSchedulePost
             $overviewData = [
                 'label' => 'Обзорное занятие (не в счет '.$lessons->count().')',
                 'date' => self::formatDate($overview->start),
+                'start' => $overview->start->toIso8601String(),
                 'is_past' => $isPast,
             ];
         }
@@ -240,6 +242,13 @@ final class FullSchedulePost
         $esc = fn (string $line): string => htmlspecialchars($line, ENT_QUOTES, 'UTF-8');
         $bold = fn (string $line): string => '<strong>'.$esc($line).'</strong>';
 
+        // H4434: на публичных поверхностях (страница /raspisanie, страница курса,
+        // виджет) даты обёрнуты в <time data-msk-timestamp> — клиентский JS
+        // конвертирует их в зону устройства гостя. TG и админка остаются чистым текстом.
+        $dateFn = ($options['client_tz'] ?? false)
+            ? fn (Carbon $s): string => self::formatDateWithTimestamp($s)
+            : fn (Carbon $s): string => self::formatDate($s);
+
         $head = '<p class="fs-head"><strong>'.$esc($this->title).'</strong></p>';
 
         $lines = [];
@@ -252,12 +261,12 @@ final class FullSchedulePost
         if ($this->overview !== null) {
             $overviewPast = (bool) $this->overview['is_past'];
             $lines[] = ['h' => $bold($this->overview['label']).':', 'past' => $overviewPast, 'last' => false];
-            $lines[] = ['h' => $esc($this->overview['date']), 'past' => $overviewPast, 'last' => $overviewPast && $this->lastPast !== null && $this->lastPast['key'] === 'overview'];
+            $lines[] = ['h' => $dateFn(\Illuminate\Support\Carbon::parse($this->overview['start'])), 'past' => $overviewPast, 'last' => $overviewPast && $this->lastPast !== null && $this->lastPast['key'] === 'overview'];
         }
 
         foreach ($this->lessons as $i => $lesson) {
             $lines[] = [
-                'h' => $bold($lesson['label']).': '.$esc($lesson['date']),
+                'h' => $bold($lesson['label']).': '.$dateFn(\Illuminate\Support\Carbon::parse($lesson['start'])),
                 'past' => (bool) $lesson['is_past'],
                 'last' => (bool) $lesson['is_past'] && $this->lastPast !== null && $this->lastPast['key'] === $i,
             ];
@@ -414,6 +423,19 @@ final class FullSchedulePost
         $weekday = self::WEEKDAY_NOMINATIVE[(int) $start->format('w')];
 
         return $start->format('j').' '.$month.' '.$start->format('Y').' ('.$weekday.'), '.$start->format('H:i');
+    }
+
+    /**
+     * H4434 — клиентская конверсия для гостей и embed-виджета (MG 09-09-2026):
+     * дата остаётся московской строкой, но несёт data-msk-timestamp (unix) —
+ * vanilla-JS на публичных поверхностях перезаписывает время на зону
+ * устройства без cookie и без записи в БД (работает в iframe).
+     */
+    public static function formatDateWithTimestamp(Carbon $start): string
+    {
+        return '<time data-msk-timestamp="'.$start->timestamp.'" datetime="'
+            .$start->timezone('UTC')->toIso8601String().'">'
+            .htmlspecialchars(self::formatDate($start), ENT_QUOTES, 'UTF-8').'</time>';
     }
 
     private const MONTHS_GENITIVE = [

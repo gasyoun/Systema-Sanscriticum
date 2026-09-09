@@ -59,6 +59,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'phone',
         'city',      // H3909 — спрашиваем у каждого ученика (MG 02-09-2026)
         'country',   // H3909 — спрашиваем у каждого ученика (MG 02-09-2026)
+        // H4434 — timezone localization (MG 09-09-2026): постоянная зона + временное
+        // пребывание (оверрайд с датой возврата) + источник постоянной зоны.
+        'timezone',
+        'tz_override',
+        'tz_override_until',
+        'tz_source',
         'global_status',
         'note',
         'last_login_at',
@@ -127,7 +133,43 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'unreliable_auto' => 'boolean',
         'unreliable_marked_at' => 'datetime',
         'discipline_improved_since' => 'date',
+        'tz_override_until' => 'date',
     ];
+
+    /**
+     * H4434 — эффективная IANA-таймзона ученика (MG 09-09-2026).
+     *
+     * Приоритет: активный оверрайд временного пребывания → постоянная зона →
+     * null (кабинет трактует null как Europe/Moscow, приложение живёт в МСК).
+     * Оверрайд «протухает» лениво по дате — без крона: после tz_override_until
+     * ученик автоматически возвращается на постоянную зону.
+     */
+    public function effectiveTimezone(): ?string
+    {
+        $override = $this->tz_override;
+
+        if ($override !== null && $override !== '') {
+            $expired = $this->tz_override_until !== null
+                && $this->tz_override_until->isPast();
+
+            if (! $expired) {
+                return $override;
+            }
+        }
+
+        return $this->timezone;
+    }
+
+    /**
+     * H4434 — живёт ли ученик не по московскому времени. Управляет dual-display:
+     * МСК-резидентам показываем как раньше, нон-МСК — «11:00 МСК · 16:00 ваше».
+     */
+    public function isNonMskTimezone(): bool
+    {
+        $tz = $this->effectiveTimezone();
+
+        return $tz !== null && $tz !== 'Europe/Moscow';
+    }
 
     /**
      * Нормализация email — единый источник правды для идентичности.

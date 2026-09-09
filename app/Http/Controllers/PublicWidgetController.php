@@ -33,6 +33,9 @@ class PublicWidgetController extends Controller
                 // H4328: полные расписания курсов (обзорное + занятия 1–N)
                 // тем же билдером, что и Telegram-пост. За тем же флагом.
                 'fullSchedulePosts' => $this->fullSchedulePosts(),
+                // H4434: клиентская конверсия в зону устройства гостя
+                // (MG 09-09-2026) — iframe-safe, без cookie.
+                'clientTz' => ['client_tz' => true],
             ])
             ->header('Content-Security-Policy', self::FRAME_ANCESTORS);
     }

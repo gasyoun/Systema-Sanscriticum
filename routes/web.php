@@ -1,6 +1,7 @@
 <?php
 
 use App\Filament\Resources\UserResource;
+use App\Http\Controllers\TimezoneController;
 use App\Http\Controllers\AccountantGuideShotController;
 use App\Http\Controllers\AdminLoginLinkController;
 use App\Http\Controllers\Api\CabinetTelemetryController;
@@ -911,6 +912,17 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     // Самостоятельная смена пароля студентом в кабинете
     Route::post('/profile/password', [AuthController::class, 'updatePassword'])
         ->name('student.password.update');
+
+    // H4434 — timezone localization (MG 09-09-2026): ручной селектор + временное
+    // пребывание + silent device-TZ захват (VPN-иммунный сигнал).
+    Route::post('/profile/timezone', [TimezoneController::class, 'update'])
+        ->name('student.timezone.update');
+    Route::post('/profile/timezone/override', [TimezoneController::class, 'override'])
+        ->name('student.timezone.override');
+    Route::post('/profile/timezone/override/clear', [TimezoneController::class, 'clearOverride'])
+        ->name('student.timezone.override.clear');
+    Route::post('/profile/timezone/device', [TimezoneController::class, 'deviceCapture'])
+        ->name('student.timezone.device');
 });
 
 // --- ТЕХНИЧЕСКИЕ И ДЕБАГ МАРШРУТЫ ---

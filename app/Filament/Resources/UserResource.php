@@ -164,6 +164,27 @@ class UserResource extends Resource
                             ->label('Страна')
                             ->maxLength(255),
 
+                        // H4434 (MG 09-09-2026): таймзона ученика. Источник виден
+                        // рядом (manual/device/admin) — чтобы куратор понимал,
+                        // чьё это решение. Пусто = МСК-дефолт (никаких догадок по IP:
+                        // большинство РФ-учеников ходит через NL/DE VPN).
+                        Forms\Components\Select::make('timezone')
+                            ->label('Часовой пояс (постоянный)')
+                            ->options(self::timezoneOptions())
+                            ->searchable()
+                            ->nullable()
+                            ->helperText('Пусто = Москва (МСК). Источник: '.($record?->tz_source ?? 'не задан')),
+
+                        Forms\Components\Select::make('tz_override')
+                            ->label('Временное пребывание')
+                            ->options(self::timezoneOptions())
+                            ->searchable()
+                            ->nullable()
+                            ->helperText('Напр. Индия на 1.5 мес. Дата возврата ниже; после неё ученик вернётся к постоянному поясу.'),
+
+                        Forms\Components\DatePicker::make('tz_override_until')
+                            ->label('Временное пребывание до (включительно)'),
+
                         Forms\Components\TextInput::make('password')
                             ->label('Пароль')
                             ->password()
@@ -278,6 +299,41 @@ class UserResource extends Resource
     }
 
     /**
+     * H4434 — общий список зон для селекторов (постоянная + оверрайд).
+     * Практичный набор: РФ + типовые нон-МСК страны учеников; searchable
+     * покрывает остальное — валидация IANA на записи в TimezoneController.
+     */
+    protected static function timezoneOptions(): array
+    {
+        return [
+            'Europe/Moscow' => 'Москва (МСК)',
+            'Europe/Kaliningrad' => 'Калининград',
+            'Asia/Yekaterinburg' => 'Екатеринбург',
+            'Asia/Novosibirsk' => 'Новосибирск',
+            'Asia/Vladivostok' => 'Владивосток',
+            'Europe/Madrid' => 'Мадрид / Испания',
+            'Europe/Berlin' => 'Берлин / Германия',
+            'Europe/Amsterdam' => 'Амстердам / Нидерланды',
+            'Europe/Paris' => 'Париж / Франция',
+            'Europe/Rome' => 'Рим / Италия',
+            'Europe/Riga' => 'Рига / Латвия',
+            'Europe/Vilnius' => 'Вильнюс / Литва',
+            'Europe/Tallinn' => 'Таллин / Эстония',
+            'Europe/Kyiv' => 'Киев',
+            'Europe/Sofia' => 'София',
+            'America/Los_Angeles' => 'Лос-Анджелес',
+            'America/New_York' => 'Нью-Йорк',
+            'Asia/Tbilisi' => 'Тбилиси',
+            'Asia/Yerevan' => 'Ереван',
+            'Asia/Almaty' => 'Алматы',
+            'Asia/Tashkent' => 'Ташкент',
+            'Asia/Kolkata' => 'Дели / Индия',
+            'Asia/Jerusalem' => 'Иерусалим',
+            'Asia/Bangkok' => 'Бангкок',
+        ];
+    }
+
+    /**
      * Рендерит примечание куратора с кликабельными ссылками.
      * XSS-безопасно: сначала экранируем весь текст, затем вставляем только наши <a>.
      */
@@ -370,6 +426,23 @@ class UserResource extends Resource
                         TextEntry::make('country')
                             ->label('Страна')
                             ->placeholder('— не спросили —'),
+
+                        // H4434: эффективная зона + источник (MG 09-09-2026).
+                        TextEntry::make('effectiveTimezone')
+                            ->label('Часовой пояс (эффективный)')
+                            ->state(fn (User $record): string => $record->effectiveTimezone() ?? 'Europe/Moscow (по умолчанию)')
+                            ->badge()
+                            ->color(fn (User $record): string => $record->isNonMskTimezone() ? 'warning' : 'gray'),
+
+                        TextEntry::make('tz_source')
+                            ->label('Источник пояса')
+                            ->formatStateUsing(fn (?string $state) => match ($state) {
+                                'manual' => 'указал сам',
+                                'device' => 'часы устройства',
+                                'admin' => 'куратор',
+                                default => 'не задан (МСК)',
+                            })
+                            ->placeholder('не задан (МСК)'),
 
                         TextEntry::make('global_status')
                             ->label('Статус')
@@ -1254,6 +1327,40 @@ class UserResource extends Resource
                             ['rows' => self::buildBlocksPreviewForUsers($records)],
                         ))
                         ->action(fn (Collection $records) => self::applyBlocksFromNotesForUsers($records)),
+
+                    // --- H4434: ПОГОЛОВНОЕ «ПРИСВОИТЬ ЕВРОПЕ/МОСКВУ» (MG 09-09-2026) ---
+                    // VPN-фактор: большинство РФ-учеников ходит через NL/DE VPN, их
+                    // IP-гео отравлено. Куратор выделяет таких (фильтр по телефону
+                    // +7/стране/созданию) и одним действием ставит Europe/Moscow,
+                    // чтобы device-TZ захват и DST-алерты не ошиблись.
+                    Tables\Actions\BulkAction::make('assignMskTimezone')
+                        ->label('Присвоить МСК (VPN-Россия)')
+                        ->icon('heroicon-o-clock')
+                        ->color('gray')
+                        ->visible(fn () => RoleGate::adminOnly())
+                        ->requiresConfirmation()
+                        ->modalHeading('Присвоить Europe/Moscow выделенным ученикам')
+                        ->modalDescription('Ставит постоянный пояс Москва (МСК) и сбрасывает временное пребывание. Для РФ-учеников за VPN: их IP-гео показывает Нидерланды/Германию, но живут они по МСК.')
+                        ->modalSubmitActionLabel('Присвоить МСК')
+                        ->deselectRecordsAfterCompletion()
+                        ->action(function (Collection $records) {
+                            $count = 0;
+
+                            foreach ($records as $user) {
+                                $user->timezone = 'Europe/Moscow';
+                                $user->tz_source = 'admin';
+                                $user->tz_override = null;
+                                $user->tz_override_until = null;
+                                $user->save();
+                                $count++;
+                            }
+
+                            Notification::make()
+                                ->title('Пояс присвоен')
+                                ->body("Europe/Moscow установлен для {$count} учеников (источник: admin).")
+                                ->success()
+                                ->send();
+                        }),
 
                     // --- ПЕРЕНОС В ГРУППУ КУРСА (сплит курса на 2 группы) ---
                     // Отвязывает выбранных от остальных групп ЭТОГО курса и привязывает
