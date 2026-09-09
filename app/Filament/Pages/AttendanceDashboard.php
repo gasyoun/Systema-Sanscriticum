@@ -6,6 +6,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Models\Schedule;
 use App\Services\ClassAttendanceService;
 use App\Services\Schedule\CanvasMoney;
 use App\Services\Schedule\TextbookScale;
@@ -66,6 +67,103 @@ class AttendanceDashboard extends Page
             now(),
             (int) config('attendance.chronic_absence_threshold'),
         );
+    }
+
+    /**
+     * H4452 (MG 09-09): transfer view — взаимозаменяемость живых грамматик.
+     * Группы по убыванию курсора канвы; совместимость = сосед семейства с
+     * |Δкурсор| ≤ 2 (переносимая группа вливается в ближайшую по канве).
+     *
+     * @return array{rows: list<array{course: string, group: string, family: string, cursor: int, total: int, block: int, blocks_total: int, deviations: int, forecast: ?string, compatible: list<string>}>}
+     */
+    public function canvasTransfer(): array
+    {
+        $courses = Course::query()
+            ->where('is_active', true)->where('is_visible', true)
+            ->whereHas('groups')
+            ->with('groups')
+            ->orderBy('title')->get();
+
+        $rows = [];
+        foreach ($courses as $course) {
+            $family = TextbookScale::courseFamilyPublic((string) $course->title);
+            if ($family === null) {
+                continue;
+            }
+            $total = TextbookScale::families()[$family]['total'];
+            $lessons = Lesson::where('course_id', $course->id)
+                ->whereNotNull('lesson_date')->orderBy('lesson_date')->get();
+            $cursor = TextbookScale::cursor($lessons, $family);
+            if ($cursor === 0) {
+                continue;
+            }
+
+            $cursorBlock = 0;
+            $deviations = 0;
+            foreach ($lessons as $l) {
+                $items = TextbookScale::parseTitle((string) $l->title);
+                $chitki = array_filter($items, fn (array $i): bool => $i['family'] === $family && $i['kind'] === 'chitka');
+                if ($chitki !== []) {
+                    if (max(array_column($chitki, 'lesson')) === $cursor) {
+                        $cursorBlock = TextbookScale::parseBlockMarker((string) $l->title)
+                            ?? (int) ceil($cursor / TextbookScale::lessonsPerBlock());
+                    }
+                } else {
+                    $proverki = array_filter($items, fn (array $i): bool => $i['family'] === $family && $i['kind'] === 'proverka');
+                    // H4452: ответвление = занятие, не двигающее и не подкрепляющее
+                    // канву (Эмено-only, «Зачитка субхашит», прочие источники).
+                    if ($proverki === []) {
+                        $deviations++;
+                    }
+                }
+            }
+            $blocksTotal = TextbookScale::blocksTotal($course->id, $total);
+
+            $pastSchedules = Schedule::query()
+                ->whereNotNull('start')->where('start', '<=', now())
+                ->where(function ($q) use ($course): void {
+                    $q->where('course_id', $course->id)
+                        ->orWhereIn('group_id', $course->groups->pluck('id'));
+                })->get();
+            $projection = TextbookScale::projection($lessons, $cursor, $total, $family);
+            $forecast = null;
+            if ($projection !== null) {
+                $cadence = TextbookScale::weeklyCadence($pastSchedules);
+                $forecast = TextbookScale::finishForecast($projection['projection_sessions'], null, $cadence);
+            }
+
+            $rows[] = [
+                'course' => (string) $course->title,
+                'group' => $course->groups->pluck('name')->implode(', '),
+                'family' => $family,
+                'cursor' => $cursor,
+                'total' => $total,
+                'block' => $cursorBlock,
+                'blocks_total' => $blocksTotal,
+                'deviations' => $deviations,
+                'forecast' => $forecast,
+                'compatible' => [],
+            ];
+        }
+
+        // Совместимость: соседи семейства в допуске ±2 урока (MG: перенос по курсору).
+        foreach ($rows as &$row) {
+            $compatible = [];
+            foreach ($rows as $other) {
+                if ($other['family'] !== $row['family'] || $other['course'] === $row['course']) {
+                    continue;
+                }
+                if (abs($other['cursor'] - $row['cursor']) <= 2) {
+                    $compatible[] = $other['course'].' (урок '.$other['cursor'].')';
+                }
+            }
+            $row['compatible'] = $compatible;
+        }
+        unset($row);
+
+        usort($rows, fn (array $a, array $b): int => $b['cursor'] <=> $a['cursor']);
+
+        return ['rows' => $rows];
     }
 
     /**

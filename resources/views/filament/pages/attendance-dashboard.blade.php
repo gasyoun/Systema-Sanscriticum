@@ -8,6 +8,7 @@
         $chronic = $report['chronic'];
         $maxWeekly = max(1, $weekly->max('rate') ?? 0);
         $canvasMoney = $this->canvasMoney();
+        $canvasTransfer = $this->canvasTransfer();
     @endphp
 
     {{-- H4443: «ещё в деньгах» по грамматикам (неоплаченные блоки от курсора) --}}
@@ -30,6 +31,36 @@
                         <span class="tabular-nums">{{ number_format($canvasMoney['total'], 0, '.', ' ') }} ₽</span>
                     </div>
                 @endif
+            </div>
+        </x-slot>
+    </x-filament::section>
+
+    {{-- H4452: transfer view — взаимозаменяемость грамматик по курсору канвы --}}
+    <x-filament::section>
+        <x-slot name="heading">Канва: взаимозаменяемость (transfer view)</x-slot>
+        <x-slot name="description">Группы по убыванию курсора учебника. «Вливается в» — соседи семейства в допуске ±2 урока: развалившаяся группа переходит в полном составе. Ответвления — занятия вне канвы, отслеживаются, но не блокируют перенос.</x-slot>
+        <x-slot name="content">
+            <div class="space-y-2 text-sm">
+                @forelse($canvasTransfer['rows'] as $row)
+                    <div class="flex flex-wrap justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-1">
+                        <span>
+                            <span class="font-medium">{{ $row['course'] }}</span>@if($row['group'] !== $row['course'])
+                                <span class="text-gray-400">({{ $row['group'] }})</span>@endif
+                            · урок {{ $row['cursor'] }}/{{ $row['total'] }} · блок {{ $row['block'] }}/{{ $row['blocks_total'] }}
+                            · ответвлений {{ $row['deviations'] }}
+                            @if($row['forecast']) · финал ≈ {{ $row['forecast'] }}@endif
+                        </span>
+                        <span class="text-gray-500">
+                            @if($row['compatible'])
+                                вливается в: {{ implode('; ', $row['compatible']) }}
+                            @else
+                                <span class="text-gray-400">близких по канве нет</span>
+                            @endif
+                        </span>
+                    </div>
+                @empty
+                    <p class="text-gray-400">Идущих грамматик с канвой нет.</p>
+                @endforelse
             </div>
         </x-slot>
     </x-filament::section>
