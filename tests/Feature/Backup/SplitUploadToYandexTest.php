@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Backup;
 
 use App\Listeners\Backup\SplitUploadToYandex;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -226,6 +227,118 @@ class SplitUploadToYandexTest extends TestCase
      * единственный способ увидеть стагнацию ДО того, как она станет
      * получасовым зависанием (24-08-2026 SOS-разбор).
      */
+    /**
+     * #2411: докатка не начинает часть, на которую заведомо не хватает
+     * бюджета прогона. Прод 07-09-2026: цикл начинал часть без запаса,
+     * systemd рвал процесс SIGTERM'ом посреди PUT ровно на
+     * TimeoutStartSec=1200, и юнит вставал в failed — тревога
+     * guards/failed-units на штатном «не успели за час».
+     */
+    public function test_resume_defers_parts_that_do_not_fit_the_run_budget(): void
+    {
+        // Бюджета меньше, чем худший случай одной части (PUT 300 + verify 120):
+        // значит не начинается ни одна.
+        config(['backup.backup.split_upload.resume_budget_seconds' => 60]);
+
+        $original = random_bytes(2 * 1024 * 1024 + 500);
+        $stem = '2026-08-22-17-09-58';
+        Storage::disk('local')->put(self::NAME."/{$stem}.zip", $original);
+        $target = Storage::disk('yandex_disk');
+        $target->put(self::NAME."/{$stem}.part-01-of-03.zip", substr($original, 0, 1024 * 1024));
+
+        Log::spy();
+
+        (new SplitUploadToYandex)->resumeOffsite();
+
+        $this->assertFalse(
+            $target->exists(self::NAME."/{$stem}.part-03-of-03.zip"),
+            'Часть, которой не хватает бюджета, не должна начинаться вовсе.'
+        );
+
+        Log::shouldHaveReceived('warning')
+            ->withArgs(fn (string $message): bool => str_contains($message, 'бюджет прогона исчерпан')
+                && str_contains($message, '2 част'))
+            ->once();
+
+        // Сводка прогона остаётся честной: группа неполна, и об этом кричат.
+        Log::shouldHaveReceived('error')
+            ->withArgs(fn (string $message): bool => str_contains($message, 'докатка остановлена бюджетом прогона'))
+            ->once();
+    }
+
+    /**
+     * #2411: бюджет режет ровно хвост, а не всю докатку — то, что успевает,
+     * должно доехать в этом же прогоне. Часы двигает сам PUT: 500 с на часть
+     * при бюджете 900 оставляют место ровно одной (вторая требовала бы
+     * 500 + 420 = 920 > 900).
+     */
+    public function test_resume_uploads_what_fits_and_defers_the_rest(): void
+    {
+        config(['backup.backup.split_upload.resume_budget_seconds' => 900]);
+
+        $original = random_bytes(3 * 1024 * 1024 + 500);
+        $stem = '2026-08-22-17-09-58';
+        Storage::disk('local')->put(self::NAME."/{$stem}.zip", $original);
+        $target = $this->clockAdvancingTargetDisk(500);
+        $target->put(self::NAME."/{$stem}.part-01-of-04.zip", substr($original, 0, 1024 * 1024));
+
+        (new SplitUploadToYandex)->resumeOffsite();
+
+        // Части льются с хвоста: успевает ровно одна — 04, следующей уже не
+        // хватает запаса (500 потрачено, 420 нужно, 900 всего).
+        $this->assertTrue($target->exists(self::NAME."/{$stem}.part-04-of-04.zip"), 'Первая часть обязана доехать: бюджета на неё хватало.');
+        $this->assertFalse($target->exists(self::NAME."/{$stem}.part-03-of-04.zip"), 'Вторая часть уже не влезает в бюджет и откладывается.');
+        $this->assertFalse($target->exists(self::NAME."/{$stem}.part-02-of-04.zip"));
+    }
+
+    /**
+     * #2411: `resume_budget_seconds=0` — это «как было до #2411». Фикс не
+     * должен стать тихим ограничителем там, где его не просили.
+     */
+    public function test_disabled_budget_keeps_the_old_unbounded_behaviour(): void
+    {
+        config(['backup.backup.split_upload.resume_budget_seconds' => 0]);
+
+        $original = random_bytes(3 * 1024 * 1024 + 500);
+        $stem = '2026-08-22-17-09-58';
+        Storage::disk('local')->put(self::NAME."/{$stem}.zip", $original);
+        $target = $this->clockAdvancingTargetDisk(3600);
+        $target->put(self::NAME."/{$stem}.part-01-of-04.zip", substr($original, 0, 1024 * 1024));
+
+        (new SplitUploadToYandex)->resumeOffsite();
+
+        $this->assertTrue($target->exists(self::NAME."/{$stem}.part-02-of-04.zip"));
+        $this->assertTrue($target->exists(self::NAME."/{$stem}.part-03-of-04.zip"));
+        $this->assertTrue($target->exists(self::NAME."/{$stem}.part-04-of-04.zip"));
+    }
+
+    /**
+     * Диск-обёртка над Storage::fake('yandex_disk'), двигающая приколоченные
+     * часы на каждый PUT: реальный сон в тесте — тот самый time bomb, ради
+     * которого часы и приколочены (H2541).
+     */
+    private function clockAdvancingTargetDisk(int $secondsPerPut): FilesystemAdapter
+    {
+        $fake = Storage::disk('yandex_disk');
+
+        $disk = new class($fake->getDriver(), $fake->getAdapter(), $fake->getConfig()) extends FilesystemAdapter
+        {
+            public int $secondsPerPut = 0;
+
+            public function writeStream($path, $resource, array $options = [])
+            {
+                Carbon::setTestNow(Carbon::now()->addSeconds($this->secondsPerPut));
+
+                return parent::writeStream($path, $resource, $options);
+            }
+        };
+        $disk->secondsPerPut = $secondsPerPut;
+
+        Storage::set('yandex_disk', $disk);
+
+        return $disk;
+    }
+
     public function test_uploading_a_part_logs_duration_and_throughput(): void
     {
         $this->seedLocalArchive('2026-08-22-17-09-58', 2 * 1024 * 1024 + 500);

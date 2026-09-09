@@ -81,6 +81,16 @@ class SplitUploadToYandex
     private const VERIFY_TIMEOUT_SECONDS = 120;
 
     /**
+     * Худший случай одной части: PUT под CURLOPT_TIMEOUT=300
+     * (AppServiceProvider::boot() — единственное место, где этот потолок задан)
+     * плюс свежепроцессный verify. Столько времени докатка обязана иметь В
+     * ЗАПАСЕ, прежде чем начинать следующую часть: начатая часть, которой не
+     * хватило бюджета, не докатывается, а убивается systemd'ом посреди PUT и
+     * красит юнит в failed (issue #2411).
+     */
+    private const PART_SLOT_SECONDS = 300 + self::VERIFY_TIMEOUT_SECONDS;
+
+    /**
      * Проба сразу после PUT: Яндекс WebDAV отвечает листингом с задержкой ДО
      * ЧАСОВ (H3371) — паузы в секундах/минутах статистически не успевают
      * догнать этот лаг и только сжигают бюджет TimeoutStartSec часового
@@ -97,6 +107,12 @@ class SplitUploadToYandex
 
     /** @var int|null Сколько групп после resumePendingGroups() остались неполными (H3410, для громкой строки исхода). */
     private ?int $incompleteGroupsRemaining = null;
+
+    /** @var Carbon|null Момент, после которого докатка не начинает новых частей (#2411). null — бюджет выключен. */
+    private ?Carbon $resumeDeadline = null;
+
+    /** @var bool Прогон остановлен исчерпанным бюджетом — значит осмотрены не все группы (#2411). */
+    private bool $resumeBudgetExhausted = false;
 
     public function handle(BackupWasSuccessful $event): void
     {
@@ -162,6 +178,14 @@ class SplitUploadToYandex
         });
 
         $this->incompleteGroupsRemaining = null;
+        $this->resumeBudgetExhausted = false;
+        // #2411: дедлайн ставится ОТ НАЧАЛА прогона, а не от первой части —
+        // bootstrap, листинг off-site и сверка раскладки тоже расходуют бюджет
+        // systemd-юнита, и не учесть их значило бы снова обещать больше, чем
+        // осталось. now() (а не microtime) — чтобы тест двигал часы
+        // Carbon::setTestNow вместо реального сна.
+        $budgetSeconds = (int) config('backup.backup.split_upload.resume_budget_seconds', 0);
+        $this->resumeDeadline = $budgetSeconds > 0 ? Carbon::now()->addSeconds($budgetSeconds) : null;
 
         try {
             $source = BackupDestination::create('local', $name);
@@ -195,11 +219,17 @@ class SplitUploadToYandex
             // нормой и раньше); remaining>0 — честно кричит, что группа осталась
             // неполной ПОСЛЕ прогона, а не только что кто-то её докатывал.
             $remaining = $this->incompleteGroupsRemaining ?? 0;
-            if ($remaining > 0) {
+            if ($this->resumeBudgetExhausted) {
+                // Сводка обязана остаться честной: по бюджету прогон вышел из
+                // цикла групп досрочно, поэтому «остаются неполными N» — это
+                // НИЖНЯЯ оценка, а не полный список.
+                Log::error("split-upload: докатка остановлена бюджетом прогона, не меньше {$remaining} групп(ы) остаются неполными — следующий часовой прогон продолжит с этого места");
+            } elseif ($remaining > 0) {
                 Log::error("split-upload: докатка завершена, но {$remaining} групп(а) остаются неполными — следующий запуск повторит попытку");
             } else {
                 Log::info('split-upload: докатка завершена, неполных групп не осталось');
             }
+            $this->resumeDeadline = null;
             $completed = true;
         }
     }
@@ -523,7 +553,21 @@ class SplitUploadToYandex
             }
 
             $stillMissing = 0;
-            foreach (array_reverse($missing) as $index) {
+            $queue = array_reverse($missing);
+            foreach ($queue as $position => $index) {
+                // #2411: бюджет проверяется ПЕРЕД частью, а не после. Часть,
+                // начатая без запаса на худший случай (PART_SLOT_SECONDS),
+                // доедет ровно до SIGTERM'а systemd — недокатанная часть плюс
+                // юнит в failed вместо честного «не успели, продолжим через час».
+                if (! $this->hasBudgetForPart()) {
+                    $deferred = count($queue) - $position;
+                    $stillMissing += $deferred;
+                    $this->resumeBudgetExhausted = true;
+                    Log::warning("split-upload: бюджет прогона исчерпан на группе {$stem} — {$deferred} част(ей) отложены до следующего часового прогона");
+
+                    break;
+                }
+
                 $part = $plan[$index - 1];
                 try {
                     $this->uploadPart($sourceDisk, $target, $localZipPath, $part);
@@ -545,7 +589,29 @@ class SplitUploadToYandex
             } else {
                 Log::info("split-upload: группа {$stem} долита до полной");
             }
+
+            // Бюджет кончился на этой группе — следующая тем более не
+            // поместится, а один только её осмотр стоит сетевых PROPFIND'ов
+            // (size() на каждую лежащую часть) уже за пределами бюджета.
+            // Выходим; остаток осмотрит следующий прогон.
+            if ($this->resumeBudgetExhausted) {
+                break;
+            }
         }
+    }
+
+    /**
+     * Есть ли у прогона запас на ЕЩЁ ОДНУ часть в худшем случае (#2411).
+     * Бюджет выключен (`resume_budget_seconds=0`) — поведение до #2411:
+     * докатка льёт, пока её не убьют.
+     */
+    private function hasBudgetForPart(): bool
+    {
+        if ($this->resumeDeadline === null) {
+            return true;
+        }
+
+        return Carbon::now()->addSeconds(self::PART_SLOT_SECONDS)->lessThanOrEqualTo($this->resumeDeadline);
     }
 
     /**
