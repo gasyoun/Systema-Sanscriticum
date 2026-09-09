@@ -469,6 +469,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:33 |
 | `PARTNER_PROGRAM_ENABLED` | feature-flag | `false` | config/partner.php:24 |
 | `PARTNER_REWARD_AMOUNT` | optional | `1000` | config/partner.php:29 |
+| `PASSWORD_AUDIT_LOG_CHANNEL` | secret | `'stack'` | config/services.php:597 |
 | `PAYMENT_RECOVERY_CTA` | optional | `false` | config/features.php:1049 |
 | `PAYPAL_API_BASE_URL` | required | `—` | config/services.php:573 |
 | `PAYPAL_API_MODE` | optional | `'sandbox'` | config/services.php:567 |
