@@ -589,4 +589,12 @@ return [
         'bank_name' => env('BANK_RECIPIENT_BANK_NAME', ''),
     ],
 
+    // H4462 — аудит-след перезаписи паролей (инцидент 09-09-2026: smoke-студент
+    // id=6857 перезаписан молча). Лог пишется в именованный канал из logging.php
+    // (по умолчанию 'stack'); логируется факт перезаписи, writer и ip/session —
+    // никогда сам пароль или его хеш.
+    'password_audit' => [
+        'channel' => env('PASSWORD_AUDIT_LOG_CHANNEL', 'stack'),
+    ],
+
 ];
