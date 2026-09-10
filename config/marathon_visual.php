@@ -12,4 +12,16 @@
 
 return [
     'variant' => env('MARATHON_LANDING_VISUAL_VARIANT', 'b'),
+
+    /*
+    |----------------------------------------------------------------------
+    | H4521 — «Как проходит консультация» scrollytelling block
+    |----------------------------------------------------------------------
+    | Structural block on skin b only (shared partial marathon.skins._scrolly),
+    | OFF by default: the copy A/B split runs until 2026-11-01 and the block
+    | must not move the copy axis. QA override: ?scrolly=1 (never persisted).
+    | Storyboard: marketing/marathon-2026-08/redesign/STORYBOARD_konsultaciya-
+    | scrolly_10.09.26.md. Prod flip is a separate human step after the read.
+    */
+    'scrollytelling' => (bool) env('MARATHON_VISUAL_SCROLLYTELLING', false),
 ];
