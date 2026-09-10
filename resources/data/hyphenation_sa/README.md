@@ -31,10 +31,20 @@ Validated counts (one word per line):
 | `SA-devanagari.udc` | UTF-8 | 202,538 |
 
 The `.dic`/`.udc` pair for each scheme is the **same ~202.5K-word list** in two encodings
-(UTF-16 vs UTF-8), not two different rule sets — a sorted diff of `SA-HK.dic` vs `SA-HK.udc`
-shows only 38 differing lines out of 202k (trailing-comma artifacts on a couple of entries,
-and a handful of words present in one file but not the other). The three schemes (HK, IAST,
-Devanagari) carry the same wordlist transliterated three ways.
+(UTF-16 vs UTF-8), not two different rule sets — a sorted, BOM/CR-normalised diff of
+`SA-HK.dic` vs `SA-HK.udc` shows only 17 differing lines out of 202k (a handful of words
+present in one file but not the other), not the 38 an unnormalised `diff | wc -l` first
+suggested (that count included hunk headers and `---` separators as if they were content
+lines). The three schemes (HK, "IAST", Devanagari) carry the same wordlist transliterated
+three ways.
+
+**Naming caveat (found at independent verification, 10-09-2026):** the file labelled
+`SA-IAST` is **not IAST** — its palatal sibilant is `ç` (U+00E7, Continental cedilla),
+with zero `ś` (U+015B) anywhere in the file, e.g. HK `za`/`aMza` ↔ this file's `ça`/`aṃça`
+↔ Devanagari `श`/`अंश`. Every other letter (ā ī ū ṛ ṝ ṭ ḍ ṇ ṃ ḥ ṅ ñ ṣ ḷ) is IAST-standard,
+so this is a **Whitney/PW-era Continental romanization** (ç for ś), not modern IAST — the
+filename is carried over as-is from the yadisk source and left uncorrected here to match
+the landed file, but any scheme-mapper consumer should treat it as Continental, not IAST.
 
 ## Verdict — where this plugs (or doesn't)
 
