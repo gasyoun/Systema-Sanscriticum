@@ -6,7 +6,7 @@ _Created: 10-09-2026 · Last updated: 10-09-2026_
 [MarathonController](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Http/Controllers/MarathonController.php) ·
 skin b [content.blade.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/marathon/skins/b/content.blade.php) ·
 **Template:** [SCROLLYTELLING_STORYBOARD_TEMPLATE.md](https://github.com/gasyoun/Uprava/blob/main/docs/SCROLLYTELLING_STORYBOARD_TEMPLATE.md)
-**Status:** awaiting MG read. Build proceeds behind flag OFF; prod flip after the copy A/B read (01-11-2026).
+**Status:** build SHIPPED behind flag OFF (10-09-2026, H4521 — executor OxAlpha); prod flip after the copy A/B read (01-11-2026).
 
 ## Goal
 
@@ -58,5 +58,26 @@ of classified dropoffs; 447/2632 dialogs — indicative, same audience,
 ## Out of scope
 
 Copy changes, skins a/c/d, quiz/checkout behaviour, new claims, new payment routes.
+
+## Implementation notes (executor, 10-09-2026)
+
+Built under H4521. Block lives in [resources/views/marathon/skins/_scrolly.blade.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/marathon/skins/_scrolly.blade.php),
+included by skin b right after the «Три дня» section; flag `marathon_visual.scrollytelling` (default **false**), QA override `?scrolly=1`.
+
+1. **Beat 1 visual is a static illustration, not a screenshot** — the storyboard asked for a screenshot of the
+   level quiz. No screenshot asset exists in the repo and the quiz route is token-gated (`marathon.level-quiz/{token}`,
+   404s for `zero`-cohort enrolments), so the beat renders the landing's own quiz options (`quizGoals` labels, one
+   highlighted) as a decorative, `aria-hidden` illustration. Same information, no binary asset, no PII.
+   **Flagged for the MG read** — swap to a real screenshot if the screenshot itself is the point.
+2. **No new Tailwind utility.** `deploy.sh::need_npm_build()` skips the npm build on blade-only diffs
+   (the H4463 trap), so every utility used here already exists in the deployed bundle; the two anchor
+   offsets and all motion CSS live in the partial's inline `<style>`. No new JS dependency.
+3. **Analytics**: `scrolly_step_1..3` fired once per beat on first intersection through `window.reachGoal`
+   (aliased to the shop helper `window.shopReachGoal`); beat 4 keeps the existing lead goal.
+4. **Verified** (local serve, Chrome via Playwright): 4 beats reveal, goals fire exactly once each, sticky
+   CTA + sticky day stack + sticky tile row active, `prefers-reduced-motion` → static stack with no transitions,
+   no horizontal overflow at 360/1280 (768 overflow is pre-existing in the shop header — reproduced with the
+   flag OFF — and is tracked as a separate GTD row). Screenshot set committed under
+   [marketing/marathon-2026-08/redesign/scrolly/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/marketing/marathon-2026-08/redesign/scrolly).
 
 _Dr. Mārcis Gasūns_
