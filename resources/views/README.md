@@ -1,4 +1,4 @@
-_Created: 07-05-2026 · Last updated: 05-09-2026_
+_Created: 07-05-2026 · Last updated: 10-09-2026_
 
 # resources/views
 
@@ -21,10 +21,10 @@ Blade-шаблоны. Организованы по контексту (каби
 | `lesson.blade.php` | `/cabinet/lesson/{id}` | Плеер урока с хартбитом, заметками, прогрессом |
 | `course.blade.php` | `/cabinet/course/{slug}` | Список уроков курса с прогрессом |
 | `calendar.blade.php` | `/calendar` | Расписание событий студента |
-| `certificate_pdf.blade.php` | (PDF) | Шаблон PDF-сертификата для dompdf |
-| `payments.blade.php` | `/cabinet/payments` | История платежей (Livewire) |
-| `dictionary.blade.php` | `/cabinet/dictionary` | Словарь (Livewire) |
-| `open_lessons.blade.php` | `/cabinet/open` | Бесплатные/открытые уроки |
+| `open-lessons.blade.php` | `/cabinet/open` | Бесплатные/открытые уроки |
+
+PDF-сертификаты рендерит `certificates.default` (CertificateService); история
+платежей и словарь — Livewire-компоненты (`livewire/student-*.blade.php`).
 
 ## Магазин (`shop/`)
 

@@ -62,18 +62,6 @@ final class PaymentImportService
     }
 
     /**
-     * Читает первые N строк данных (после заголовка) для превью.
-     *
-     * @return array<int, array<string, mixed>>
-     */
-    public function readPreview(string $absolutePath, int $limit = 3): array
-    {
-        $rows = Excel::toCollection(null, $absolutePath)->first() ?? collect();
-
-        return $rows->slice(1, $limit)->values()->map->toArray()->toArray();
-    }
-
-    /**
      * Главный метод импорта.
      *
      * @param  array<string, string>  $mapping  ['user'=>'B', 'amount'=>'F', ...] — какая буква колонки соответствует полю
