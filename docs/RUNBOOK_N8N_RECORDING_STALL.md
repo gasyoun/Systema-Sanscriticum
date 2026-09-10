@@ -1,6 +1,6 @@
 # RUNBOOK — n8n ZOOM 1.4: записи не появились / n8n упал
 
-_Created: 24-08-2026 · Last updated: 03-09-2026_
+_Created: 24-08-2026 · Last updated: 10-09-2026_
 
 **Audience:** дежурный агент / оператор. Один документ на два вопроса: «записи нет» и «n8n лежит».
 **Хосты:** n8n `root@193.232.229.91` (docker compose `/opt/n8n`, контейнер `n8n-n8n-1`, restart=unless-stopped); Laravel `root@193.232.229.92`.
@@ -105,6 +105,10 @@ cd /var/www/html && php artisan recordings:gap-watch --retry-failed --date=<се
 2. Public API `GET /executions` **отстаёт от sqlite**: свежие running/waiting exec могут отсутствовать в выдаче (1926–1930 пропали), строка «last exec» в алерте gap-watch может быть устаревшей. Истина — sqlite-фолбэк из §8.
 3. PowerShell: `[System.IO.File]::WriteAllText(..., [System.Text.Encoding]::UTF8)` пишет **BOM** → n8n отвечает `422 Unexpected token '\ufeff'`. Писать через `UTF8Encoding($false)`.
 
+## 3.2 Merge dead-end: обложка не найдена → exec зелёный, хвост пропущен (класс 10-09-2026)
+
+«Обложка найдена?» ищет `name = '<дата старта>.jpg'` в папке курса (drive_folder_id из листа). Пусто → «Обложки нет — пропуск» → Merge (mode=combine; вход 0 приходит только с ветки обложки: `Add a playlist item (Hindi)` → `ЗАГРУЗКА НА РУТУБ`) → Merge не срабатывает → n8n завершает exec SUCCESS, молча пропустив `ЗАГРУЗКА НА РУТУБ1`/плейлист/Rutube2/субтитры/DeepSeek/`СОЗДАЁМ УРОК В АДМИНКЕ1`/финальный TG. Симптом: exec `success` за минуты, в runData < ~30 нод, последний узел Merge; при этом YouTube уже залит — полный реплей вебхука = дубль (`Upload a video (Hindi)` без дедупа). Прецеденты полного пути: exec 2723 (64 ноды), 2356 (59 нод); мёртвый пример — 2754 (28 нод). Разбор: [INCIDENT_N8N_ENOSPC_HINDI_COVER_MERGE_DEADEND_10-09-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INCIDENT_N8N_ENOSPC_HINDI_COVER_MERGE_DEADEND_10-09-2026.md). Ремонт графа — H4513; до него — только ручная доставка (Play B).
+
 ## 4. Play A-3 — позднее падение (что-то уже залито)
 
 Любой exec, чей `runData` трогает `DOWNLOAD`, `Upload a video`, `ЗАГРУЗКА НА РУТУБ*`, Telegram-ноды: полный ретрай = риск дублей YouTube/Rutube. Только руками:
@@ -127,6 +131,16 @@ cd /var/www/html && php artisan recordings:gap-watch --retry-failed --date=<се
 2. SSH жив, контейнер упал: `cd /opt/n8n && docker compose up -d` (restart=unless-stopped обычно сам поднимает; проверить `docker ps` и что воркфлоу `active=true`).
 3. После восстановления n8n пропущенные вебхуки сами не доиграют → для каждого пропущенного урока Play B п.3 (Filament).
 4. Сеть наружу: egress идёт через privoxy(:8118) → `socks-nl.service` (ssh -D, Restart=always). Проверка: `systemctl status privoxy socks-nl`, тестовый curl к googleapis через прокси. Секундные ямы в этой цепочке — известный класс 23-08; лечится бэкоффом нод (уже стоит 5×60с) и Play A-1.
+
+### 6.1 Диск .91 полон (ENOSPC) — класс 10-09-2026
+
+Симптом: exec падает с `ENOSPC: no space left on device` на DOWNLOAD/HEAD-нодах; вердикт при этом может быть ложным `H3952_WEBHOOK_MISSING` (HEAD-ошибка = нет statusCode = «токен мёртв» в VERDICT_JS; честный `H3952_INFRASTRUCTURE_FAILURE` — H4513). Разбор: [INCIDENT_N8N_ENOSPC_HINDI_COVER_MERGE_DEADEND_10-09-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INCIDENT_N8N_ENOSPC_HINDI_COVER_MERGE_DEADEND_10-09-2026.md).
+
+1. `df -h /` на .91 — корень 49G; `du -xh -d1 / | sort -rh | head`. Заполнители: `/srv/restic/systema` (репо-хаб бэкап-эстейта, **НЕ чистить руками** — retention ведёт `restic-forget --prune` с .92 daily 05:00 UTC), `/srv/restore-tmp` (остатки restore-тестов — удалять если старше пары дней и есть `.done`), `/var/log/journal` (лимитировать `journalctl --vacuum-size=200M`).
+2. При 0 свободных n8n не пишет ни binary, ни sqlite — любой реплей повторит ENOSPC. Сначала место, потом реплей.
+3. Быстрое освобождение без решения MG (безопасный набор): `rm -rf /srv/restore-tmp`, `journalctl --vacuum-size=200M`. Рестик-репо, `/var/backups`, docker-слои — только через MG/@DECIDE.
+4. `docker system df` и `docker ps` — контейнеры не рестартовать (danger-fact .91), только смотреть.
+5. После чистки — реплей вебхука из упавшего exec по §3.1 п.1; помни: в Hindi-ветке при не найденной обложке см. §3.2 (Merge dead-end).
 
 ## 7. Никогда (дубли дороже задержки)
 

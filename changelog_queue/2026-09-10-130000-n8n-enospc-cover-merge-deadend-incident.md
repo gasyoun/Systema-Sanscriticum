@@ -1,0 +1,11 @@
+_Created: 10-09-2026 · Last updated: 10-09-2026_
+
+# Инцидент 10-09: ENOSPC на .91 → ложный вердикт webhook_missing → реплей вскрыл Merge dead-end на не найденной обложке (OxAlpha z-ai/glm-5.3-flash, 10-09-2026)
+
+Цепочка трёх отказов за один день на `ZOOM 1.4` ([1EIqqNzMl5NNIxST](https://context-ai.ru/workflow/1EIqqNzMl5NNIxST)), полный разбор в [docs/INCIDENT_N8N_ENOSPC_HINDI_COVER_MERGE_DEADEND_10-09-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INCIDENT_N8N_ENOSPC_HINDI_COVER_MERGE_DEADEND_10-09-2026.md).
+
+- **Диск .91 100%** → exec 2749 (Hindi урок №5, meeting 86359382106) упал: DOWNLOAD и HEAD-ноды умерли с `ENOSPC`; VERDICT_JS (else-ветка H3952) назвал это `webhook_missing` — ложно, запись в облаке была (MP4 completed, 251 МБ). Лечено на месте: удалён `/srv/restore-tmp` (7,7G мусор реставрации H3396 от 23-08) + `journalctl --vacuum-size=200M` → 83%. Ремедиация графа и вердикта — [H4513](https://github.com/gasyoun/Uprava/blob/main/handoffs/H4513-OxAlpha_Systema-Sanscriticum_n8n-zoom-cover-bypass-and-infra-verdict_10.09.26.md) (`H3952_INFRASTRUCTURE_FAILURE` + ребро «Обложки нет — пропуск» → «ЗАГРУЗКА НА РУТУБ»).
+- **Merge dead-end (новый класс тихого успеха):** реплей 2754 залыл YouTube ([youtu.be/6YCCPgeGwYc](https://youtu.be/6YCCPgeGwYc)), но поиск обложки (`2026-09-10.jpg` в папке курса) вернул пусто → «Обложки нет — пропуск» → Merge (mode=combine, вход 0 живёт только на ветке обложки) не собрался → exec `success` за 3м43с на 28 нодах, **молча пропустив** Rutube×3, плейлист, субтитры/DeepSeek, СОЗДАЁМ УРОК В АДМИНКЕ1, финальный TG. Прецеденты полного пути: 2723 (64 ноды), 2356 (59 нод). Полный реплей вебхука отныне явно запрещён для Hindi: `Upload a video (Hindi)` — plain upload без дедупа.
+- **Рунбук дополнен:** §6.1 «Диск .91 полон (ENOSPC)» (безопасный набор чистки: restore-tmp + journal vacuum; рестик-репо руками НЕ чистить — retention у `.92` forget --prune daily 05:00 UTC) и §3.2 «Merge dead-end» (симптом: exec `success` за минуты, runData < ~30 нод, последний узел Merge).
+- Остатки human: хвост урока №5 вручную (Filament урок с YT-ссылкой + Rutube руками + обложка `2026-09-10.jpg` в Drive-папку курса); free-disk алерт на .91 (GTD); exec 2763 (второй урок дня) под наблюдением после 13:46 UTC.
+_Dr. Mārcis Gasūns_
