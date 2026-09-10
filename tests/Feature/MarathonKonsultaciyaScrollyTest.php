@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\MarathonController;
 use App\Models\LandingPage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -113,7 +114,7 @@ class MarathonKonsultaciyaScrollyTest extends TestCase
         $response->assertSee((string) config('marathon.coupon_amount'));
 
         // Beat 1 — quiz illustration uses the approved quizGoal labels.
-        foreach (\App\Http\Controllers\MarathonController::QUIZ_GOALS as $label) {
+        foreach (MarathonController::QUIZ_GOALS as $label) {
             $response->assertSee($label);
         }
     }
