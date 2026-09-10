@@ -1,8 +1,8 @@
-_Created: 02-08-2026 · Last updated: 05-09-2026_
+_Created: 02-08-2026 · Last updated: 09-09-2026_
 
 # Soft server alerts — agent playbook + cause catalog
 
-_Created: 02-08-2026 · Last updated: 21-08-2026 (H3227 cgroup MiB fingerprint)_
+_Created: 02-08-2026 · Last updated: 09-09-2026 (incident row 09-09: fuse [timeout-alive] on healthy deploy + smoke-student hash overwrite)_
 
 **Audience:** agents (Grok / Claude / Codex) and ops.  
 **Scope:** Telegram soft path from `cabinet:probe` («Кабинет: soft-сбой …»),  
