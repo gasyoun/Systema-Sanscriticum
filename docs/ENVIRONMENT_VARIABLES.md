@@ -386,6 +386,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MARATHON_SCHEDULE_ID` | required | `—` | config/marathon.php:65 |
 | `MARATHON_TELEGRAM_CHANNEL_URL` | optional | `'https://t.me/samskrte'` | config/marathon.php:45 |
 | `MARATHON_TESTIMONIAL` | required | `—` | config/marathon.php:163 |
+| `MARATHON_VISUAL_SCROLLYTELLING` | optional | `false` | config/marathon_visual.php:26 |
 | `MARATHON_WARM_TAIL_DAYS` | optional | `13` | config/marathon.php:58 |
 | `MARATHON_WARM_TAIL_WAVE2_FROM` | required | `—` | config/marathon.php:224 |
 | `MARKETING_SEGMENTS` | optional | `false` | config/features.php:905 |
