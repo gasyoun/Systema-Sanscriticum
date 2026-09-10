@@ -61,11 +61,10 @@ class KanvaReportTest extends TestCase
 
         $chunks = WeeklyFinishReport::telegramChunks($report);
         $this->assertStringContainsString('Канва: урок 4/40', $chunks[0]);
-        // Строка студента: канва-предмет отдельной шкалой.
-        $this->assertStringContainsString('Иванова Анна — 4-е занятие', $chunks[0]);
-        $this->assertStringContainsString('· Кочергина 4 (читка)', $chunks[0]);
-        // Ссылка на ViewUser.
-        $this->assertStringContainsString('href="http://localhost/admin/users/'.$student->id.'"', $chunks[0]);
+        // H4495 (MG 09-09): студенты из публичного поста УБРАНЫ — только админка.
+        $this->assertStringNotContainsString('Иванова', $chunks[0]);
+        $this->assertStringNotContainsString('href=', $chunks[0]);
+        $this->assertSame(1, count($chunks));
     }
 
     /** @test */

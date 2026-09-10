@@ -145,11 +145,18 @@ class KanvaBlocksMoneyForecastTest extends TestCase
         Schedule::create(['title' => 'F', 'start' => now()->addDays(5)->format('Y-m-d H:i:s'), 'group_id' => $group->id, 'course_id' => $course->id]);
         Tariff::create(['course_id' => $course->id, 'title' => 'Блок 1', 'tariff' => 'block_1', 'block_number' => 1, 'price' => 5000]);
 
-        $chunks = WeeklyFinishReport::telegramChunks(WeeklyFinishReport::build());
+        $report = WeeklyFinishReport::build();
+        $chunks = WeeklyFinishReport::telegramChunks($report);
 
         $this->assertStringContainsString('блок', $chunks[0]);
         $this->assertStringContainsString('финал:', $chunks[0]);
-        // Деньги в публичный пост НЕЛЬЗЯ (MG 09-09).
+        // H4495 (MG 09-09): публичный пост — ТОЛЬКО группы. Никаких студентов,
+        // ссылок на админку и денег.
         $this->assertStringNotContainsString('₽', $chunks[0]);
+        $this->assertStringNotContainsString('<a href', $chunks[0]);
+        $this->assertStringNotContainsString('не был ни разу', $chunks[0]);
+        foreach ($report[0]['students'] as $s) {
+            $this->assertStringNotContainsString($s['user']->name, implode('', $chunks));
+        }
     }
 }
