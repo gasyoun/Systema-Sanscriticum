@@ -502,39 +502,6 @@ class DebtorsReport
         return $this->priceWithLoyaltyForUser($base['tariff'], $user) / $base['blocks'];
     }
 
-    /**
-     * Один активный/просроченный promise для пары — кэшируется.
-     * Заполняет кэш сразу для всей коллекции пар, чтобы избежать N+1.
-     *
-     * @param  iterable<array{user_id:int, course_id:int}>  $pairs
-     */
-    public function preloadPromises(iterable $pairs): void
-    {
-        $userIds = [];
-        $courseIds = [];
-        foreach ($pairs as $p) {
-            $userIds[] = $p['user_id'];
-            $courseIds[] = $p['course_id'];
-        }
-        if (empty($userIds)) {
-            return;
-        }
-
-        $rows = PaymentPromise::query()
-            ->whereIn('user_id', array_unique($userIds))
-            ->whereIn('course_id', array_unique($courseIds))
-            ->where('status', PaymentPromise::STATUS_ACTIVE)
-            ->orderByDesc('promised_at')
-            ->get();
-
-        foreach ($rows as $row) {
-            $key = $row->user_id.':'.$row->course_id;
-            if (! isset($this->promiseCache[$key])) {
-                $this->promiseCache[$key] = $row;
-            }
-        }
-    }
-
     public function promiseFor(int $userId, int $courseId): ?PaymentPromise
     {
         $key = $userId.':'.$courseId;

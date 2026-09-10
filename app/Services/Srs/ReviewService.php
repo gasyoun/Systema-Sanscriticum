@@ -65,12 +65,6 @@ class ReviewService
         return $due->concat($new)->values();
     }
 
-    /** Сколько карточек всего ждут показа прямо сейчас (для бейджа/итогов). */
-    public function dueCount(User $user, SrsDeck $deck, ?DateTimeImmutable $now = null): int
-    {
-        return $this->queueFor($user, $deck, $now)->count();
-    }
-
     /**
      * Memrise P2 «Difficult words»: cards in this deck where the user has
      * lapses &gt; 0, ordered by most lapses then earliest due. Bypasses the
