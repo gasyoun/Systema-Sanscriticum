@@ -170,6 +170,11 @@ final class AnnounceCancelService
                 $date->addDay();
             }
             $dates[] = $date;
+            // «В четверг», сказанное в четверг, двусмысленно: сегодня ИЛИ через
+            // неделю. Предлагаем обе даты кнопками — выбор за учителем.
+            if ($date->isToday()) {
+                $dates[] = $date->copy()->addWeek();
+            }
         }
 
         $query = Schedule::query()
