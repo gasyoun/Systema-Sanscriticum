@@ -10,8 +10,9 @@
 
   Motion discipline (SCROLLYTELLING_STORYBOARD_TEMPLATE.md hard rules):
   static first; IntersectionObserver + CSS `sticky` only, NO new dependency;
-  every beat is a normal document section, so no-JS readers get the same text;
-  prefers-reduced-motion drops stickiness and transitions (beats stack).
+  every beat is a normal document section, so a no-JS reader gets the same text
+  and order with no reveal animation (CSS sticky is layout, not JS — it still
+  applies); prefers-reduced-motion drops stickiness and transitions entirely.
 
   Copy discipline: no new marketing claims — every string below is existing
   approved copy from config/marathon_landing_copy.php ($days, $faq, $tracks,
@@ -148,8 +149,10 @@
 
 @push('head')
 <style>
-    /* H4521 — motion is opt-in: without JS the block is a plain stack of
-       sections (`.scrolly-js` is only added by the script below). */
+    /* H4521 — reveal animation is opt-in: without JS (`.scrolly-js` is only
+       added by the script below) the beats are plain sections, same text and
+       order, no reveal. CSS `sticky` is layout and still applies; only
+       `prefers-reduced-motion` turns stickiness off. */
     .scrolly-beat { transition: opacity .45s ease, transform .45s ease; }
     .scrolly-js .scrolly-beat:not(.is-in) { opacity: 0; transform: translateY(14px); }
     .scrolly-day { position: sticky; z-index: 1; }

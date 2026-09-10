@@ -40,6 +40,8 @@ of classified dropoffs; 447/2632 dialogs — indicative, same audience,
 3. Flag: `config('marathon_visual.scrollytelling')` default **false**; QA override `?scrolly=1&skin=b`.
 4. Analytics: `window.reachGoal('scrolly_step_N')` via [shop-metrika.blade.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/partials/shop-metrika.blade.php) helper.
 5. `prefers-reduced-motion` and no-JS: beats are ordinary stacked sections — identical text, no motion.
+   Precisely: no-JS drops the reveal animation but CSS `sticky` (layout) still applies; only
+   `prefers-reduced-motion` also turns stickiness off.
 
 ## QA
 
