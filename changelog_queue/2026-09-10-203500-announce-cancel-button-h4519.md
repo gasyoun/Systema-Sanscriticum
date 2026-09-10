@@ -1,0 +1,15 @@
+_Created: 10-09-2026 · Last updated: 10-09-2026_
+
+# H4519: анонс отмены обычными словами → кнопка [Снять занятие? Да/Нет] (OxAlpha z-ai/glm-5.3-flash, 10-09-2026)
+
+Замыкание цикла «учитель объявил отмену в чате — расписание не знает» (кейс Йога-васиштхи 17.09: анонс Лейтана висел в чате, занятие провисело бы в расписании до пустого Zoom; вручную снято утром 10-09, schedule 842). Теперь учитель пишет как привык — бот предлагает кнопку, снимает только по явному тапу «Да».
+
+- **Детект** ([AnnounceCancelService](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Telegram/AnnounceCancelService.php)): стемы «отмен / перенос / не будет занятия / не смог(у,ем)»; даты — DD.MM (`DateAwareCancelService::parseDates`, private→public), «сегодня/завтра», дни недели, причём «в четверг», сказанное в четверг, даёт ОБЕ даты (сегодня и +7) — неоднозначность решают подписанные кнопки, не угадывание; без дат и без однозначного «ровно одного будущего занятия» — молчание. Явные команды (DateAware/CancelClass `matches()`) приоритетны. Явное ложное срабатывание безобидно: всё решает тап, рядом «Не отменять».
+- **Тап** ([AnnounceCancelCallbackService](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Telegram/AnnounceCancelCallbackService.php)): `acx:<scheduleId>`/`acxn`; ACL — учитель только своей группы, staff любые (H4253-правило); прошедшее/уже снятое отказывает; клейм `tg:announce-cancel:<sid>` 7д против дублей; `ScheduleMover::cancelSingle` без сдвига + `CancelNoticeRenderer::buildDated` в чат; сообщение с кнопкой редактируется в результат — мёртвых клавиатур нет.
+- **Координация:** `CancelUsageHint` молчит, если будет кнопка (`planOffer()` — чистый предикат без сайд-эффектов).
+- **Флаг:** `services.telegram_zapisi.announce_cancel_detect` ← env `TELEGRAM_ZAPISI_ANNOUNCE_CANCEL_DETECT`, default false; на .92 включён 10-09 после live-smoke.
+- **Верификация:** 9/9 feature-тестов ([AnnounceCancelTest](https://github.com/Systema-Sanscriticum/blob/main/tests/Feature/AnnounceCancelTest.php): оффер, приоритет явных, флаг-off, чужак, отказ чужого тапа, да-отмена без сдвига, нет-сохранение, прошедшее, идемпотентность двойного тапа); регресс 81 passed (DateAware/Vacation/Cancel/hint/send-job); Pint passed. Live-smoke в Sandbox (-5420346365): анонс MG «в четверг не смогу, врач» → оффер (message 658) → тап → schedule soft-deleted + notice; лог `AnnounceCancel: offer sent / cancelled via button`.
+- **Не вошло (v2):** перенос «на пятницу» (cancel+create), детект в личке бота с выбором группы, авто-отмена без тапа.
+
+PR-цепочка: [#2488](https://github.com/gasyoun/Systema-Sanscriticum/pull/2488) фича · [#2489](https://github.com/gasyoun/Systema-Sanscriticum/pull/2489) лог offer_message_id · [#2492](https://github.com/gasyoun/Systema-Sanscriticum/pull/2492) weekday-ambiguity. Деплой 554dc287. Handoff: [Uprava H4519](https://github.com/gasyoun/Uprava/blob/main/handoffs/H4519-OxAlpha_Systema-Sanscriticum_zapisi-announce-cancel-button_10.09.26.md).
+_Dr. Mārcis Gasūns_
