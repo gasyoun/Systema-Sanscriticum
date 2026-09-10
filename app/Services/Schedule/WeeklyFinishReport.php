@@ -218,9 +218,10 @@ final class WeeklyFinishReport
 
         $week = ($weekStart ?? now())->format('d.m.Y');
 
-        // Плоский список сегментов: шапка, на группу — заголовок + строки
-        // студентов. Упаковка по сегментам: даже гигантская группа не ломает
-        // лимит (одиночный сегмент-студент лимита не достигает физически).
+        // Плоский список сегментов: шапка, на группу — заголовок + канва-линия.
+        // H4495 (MG 09-09): публичный пост = ТОЛЬКО какой урок у какой группы
+        // последний. Студенты, имена, посещаемость, ссылки, деньги — никогда
+        // наружу; ростер живёт в админке (AttendanceDashboard::canvasRoster).
         $segments = ['<b>Кто на чём закончил — неделя '.$week.'</b>'];
 
         foreach ($report as $row) {
@@ -252,10 +253,6 @@ final class WeeklyFinishReport
 
             $segments[] = '<b>'.$head.'</b>'
                 .' (прошло '.$row['pastCount'].' · впереди '.$row['futureCount'].')';
-            foreach ($row['students'] as $s) {
-                // H4435: имя студента — ссылка на его страницу в админке.
-                $segments[] = '<a href="'.self::esc(self::userUrl($s['user'])).'">'.self::esc(self::studentLine($s)).'</a>';
-            }
         }
 
         // Пакуем сегменты в сообщения с запасом под лимит 4096.
@@ -431,9 +428,23 @@ final class WeeklyFinishReport
                 $missedStreak++;
             }
 
+            $lastText = null;
+            if ($last !== null) {
+                $lastText = $last['label'].', '.$last['date'];
+                if ($last['kind'] === 'clicked') {
+                    $lastText .= ' (по клику)';
+                }
+            } else {
+                $lastText = 'не был ни разу (за '.$past->count().' '.self::pluralLessons($past->count()).')';
+                if ($clickedLast !== null) {
+                    $lastText .= ' (кликал: '.$clickedLast['label'].', '.$clickedLast['date'].')';
+                }
+            }
+
             $rows[] = [
                 'user' => $user,
                 'last' => $last,
+                'lastText' => $lastText,
                 'canvas' => $lastSchedule !== null && $lastSchedule->start !== null
                     ? self::canvasLabelForDate($group, $lastSchedule->start->copy()->startOfDay())
                     : null,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\AttendanceDashboard;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
@@ -113,9 +114,12 @@ class WeeklyFinishReportTest extends TestCase
         $this->assertSame('clicked', $student['last']['kind']);
         $this->assertSame(0, $student['missedStreak']);
 
-        $chunks = WeeklyFinishReport::telegramChunks($report);
-        $this->assertStringContainsString('Кириллов Вадим — 3-е занятие, ', $chunks[0]);
-        $this->assertStringContainsString('(по клику)', $chunks[0]);
+        // H4495: студенты в АДМИНКЕ (canvasRoster), публичный пост их не содержит.
+        $roster = (new AttendanceDashboard)->canvasRoster();
+        $line = $roster[0]['students'][0];
+        $this->assertSame('Кириллов Вадим', $line['name']);
+        $this->assertStringContainsString('3-е занятие', $line['last']);
+        $this->assertStringContainsString('(по клику)', $line['last']);
     }
 
     /** @test */
@@ -132,9 +136,11 @@ class WeeklyFinishReportTest extends TestCase
         $this->assertNull($student['last']);
         $this->assertSame(3, $student['missedStreak']);
 
-        $chunks = WeeklyFinishReport::telegramChunks($report);
-        $this->assertStringContainsString('Петров Борис — не был ни разу (за 3 занятия)', $chunks[0]);
-        $this->assertStringNotContainsString('пропустил', $chunks[0]);
+        $roster = (new AttendanceDashboard)->canvasRoster();
+        $line = $roster[0]['students'][0];
+        $this->assertSame('Петров Борис', $line['name']);
+        $this->assertStringContainsString('не был ни разу (за 3 занятия)', $line['last']);
+        $this->assertSame(0, $line['missed']);
     }
 
     /** @test */
@@ -171,9 +177,10 @@ class WeeklyFinishReportTest extends TestCase
         $this->assertSame('1-е занятие', $row['last']['label']);
         $this->assertSame(2, $row['missedStreak']);
 
-        $chunks = WeeklyFinishReport::telegramChunks($report);
-        $this->assertStringContainsString('Смирнова Вера — 1-е занятие, ', $chunks[0]);
-        $this->assertStringContainsString('⚠️ пропустил 2 подряд', $chunks[0]);
+        $roster = (new AttendanceDashboard)->canvasRoster();
+        $line = $roster[0]['students'][0];
+        $this->assertStringContainsString('1-е занятие', $line['last']);
+        $this->assertSame(2, $line['missed']);
     }
 
     /** @test */
@@ -230,10 +237,8 @@ class WeeklyFinishReportTest extends TestCase
         $report = WeeklyFinishReport::build();
         $chunks = WeeklyFinishReport::telegramChunks($report);
 
-        $this->assertGreaterThan(1, count($chunks));
-        foreach ($chunks as $chunk) {
-            $this->assertLessThanOrEqual(4096, mb_strlen($chunk));
-        }
+        // H4495: студенты в пост не идут — весь отчёт компактный (группы-линии).
+        $this->assertLessThanOrEqual(4096, mb_strlen(implode('', $chunks)));
     }
 
     /** @test */
@@ -287,8 +292,9 @@ class WeeklyFinishReportTest extends TestCase
         $this->attend($past[2], $student);
 
         $chunks = WeeklyFinishReport::telegramChunks(WeeklyFinishReport::build(), Carbon::parse('2026-09-07'));
+        $roster = (new AttendanceDashboard)->canvasRoster();
 
         $this->assertStringContainsString('неделя 07.09.2026', $chunks[0]);
-        $this->assertStringContainsString('3-е занятие, 6 сентября 2026 (воскресенье)', $chunks[0]);
+        $this->assertStringContainsString('3-е занятие, 6 сентября 2026 (воскресенье)', $roster[0]['students'][0]['last']);
     }
 }

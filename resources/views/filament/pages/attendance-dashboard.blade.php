@@ -10,6 +10,7 @@
         $canvasMoney = $this->canvasMoney();
         $canvasTransfer = $this->canvasTransfer();
         $canvasTimings = $this->canvasTimings();
+        $canvasRoster = $this->canvasRoster();
     @endphp
 
     {{-- H4443: «ещё в деньгах» по грамматикам (неоплаченные блоки от курсора) --}}
@@ -32,6 +33,28 @@
                         <span class="tabular-nums">{{ number_format($canvasMoney['total'], 0, '.', ' ') }} ₽</span>
                     </div>
                 @endif
+            </div>
+        </x-slot>
+    </x-filament::section>
+
+    {{-- H4495: ростер «кто на чём» — ТОЛЬКО админка (MG 09-09: из поста убраны) --}}
+    <x-filament::section>
+        <x-slot name="heading">Канва: кто на чём (ростер — админ)</x-slot>
+        <x-slot name="description">Персональные данные студентов живых грамматик: последнее занятие, позиция на шкале, ⚠️ пропуски. В публичный Telegram-пост эти данные больше не попадают.</x-slot>
+        <x-slot name="content">
+            <div class="space-y-3 text-sm">
+                @forelse($canvasRoster as $row)
+                    <details>
+                        <summary class="cursor-pointer font-medium">{{ $row['course'] }}@if($row['group'] !== $row['course']) <span class="text-gray-400">({{ $row['group'] }})</span>@endif · {{ count($row['students']) }} студ.</summary>
+                        <ul class="mt-2 space-y-1 text-gray-600 dark:text-gray-400">
+                            @foreach ($row['students'] as $s)
+                                <li>{{ $s['name'] }} — {{ $s['last'] }}@if($s['canvas']) · {{ $s['canvas'] }}@endif @if($s['missed'] >= 2)<span class="text-danger-600">⚠️ пропустил {{ $s['missed'] }} подряд</span>@endif</li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @empty
+                    <p class="text-gray-400">Идущих грамматик нет.</p>
+                @endforelse
             </div>
         </x-slot>
     </x-filament::section>

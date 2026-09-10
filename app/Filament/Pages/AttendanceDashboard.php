@@ -11,6 +11,7 @@ use App\Models\Schedule;
 use App\Services\ClassAttendanceService;
 use App\Services\Schedule\CanvasMoney;
 use App\Services\Schedule\TextbookScale;
+use App\Services\Schedule\WeeklyFinishReport;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Actions;
@@ -68,6 +69,42 @@ class AttendanceDashboard extends Page
             now(),
             (int) config('attendance.chronic_absence_threshold'),
         );
+    }
+
+    /**
+     * H4495 (MG 09-09): ростер «кто на чём» — ТОЛЬКО админка (из публичного
+     * поста студенты убраны). Реюз WeeklyFinishReport::build(): имя, последнее
+     * занятие, канва-метка, ⚠️ пропуски — по живым грамматикам.
+     *
+     * @return list<array{course: string, group: string, students: list<array{name: string, last: string, canvas: ?string, missed: int}>}>
+     */
+    public function canvasRoster(): array
+    {
+        $report = WeeklyFinishReport::build();
+
+        $rows = [];
+        foreach ($report as $row) {
+            $students = [];
+            foreach ($row['students'] as $s) {
+                $name = trim((string) $s['user']->name) ?: (string) $s['user']->email;
+
+                $students[] = [
+                    'name' => $name,
+                    // Готовый текст из билдера (общий формат с плюрализацией).
+                    'last' => (string) $s['lastText'],
+                    'canvas' => $s['canvas'] ?? null,
+                    'missed' => str_starts_with((string) $s['lastText'], 'не был ни разу') ? 0 : $s['missedStreak'],
+                ];
+            }
+
+            $rows[] = [
+                'course' => (string) $row['course']->title,
+                'group' => (string) $row['group']->name,
+                'students' => $students,
+            ];
+        }
+
+        return $rows;
     }
 
     /**
