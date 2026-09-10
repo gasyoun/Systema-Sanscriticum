@@ -19,6 +19,31 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Domain groups in original registration order - pure move (H4517).
+        $this->scheduleOvernightMaintenance($schedule);
+        $this->scheduleWeeklyDigests($schedule);
+        $this->scheduleCrmAndLifecycle($schedule);
+        $this->scheduleRecordingGaps($schedule);
+        $this->scheduleSupportAndKnowledge($schedule);
+        $this->schedulePaymentReminders($schedule);
+        $this->scheduleStudentReminders($schedule);
+        $this->scheduleSeasonOne($schedule);
+        $this->schedulePublishing($schedule);
+        $this->schedulePresenceAndSync($schedule);
+        $this->scheduleMarathon($schedule);
+        $this->scheduleAnnouncements($schedule);
+        $this->scheduleTelegramSupport($schedule);
+        $this->scheduleTelegramHarvest($schedule);
+        $this->scheduleZapisiAndReminders($schedule);
+        $this->scheduleBackups($schedule);
+        $this->scheduleFaqAndCheckout($schedule);
+        $this->scheduleWatchdogs($schedule);
+        $this->scheduleMembershipAndPaypal($schedule);
+    }
+
+    /** the 02:40-04:40 overnight block: media, archives, tokens, geo, money checks, storage, expenses bridge. */
+    private function scheduleOvernightMaintenance(Schedule $schedule): void
+    {
         // Второй рубеж автоперевода обложек в WebP (H3082). Наблюдатель
         // ловит загрузку через Eloquent; эта уборка подбирает всё, что
         // прошло мимо модели, чтобы формат не зависел от человека.
@@ -125,6 +150,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('expenses-bridge-raskhod');
 
+    }
+
+    /** weekly finance/homework/goals digests (Monday morning frame). */
+    private function scheduleWeeklyDigests(Schedule $schedule): void
+    {
         // Недельный KPI-дайджест делегирования (H259, фаза D): сводка всех фаз
         // финдиру по понедельникам утром — «ритм обзора» с зубами. Гейт «есть
         // получатели» — внутри команды.
@@ -155,6 +185,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('goals-record-checkins');
 
+    }
+
+    /** vacation quorum, waitlist, lead followups, subscription archive, dozhim. */
+    private function scheduleCrmAndLifecycle(Schedule $schedule): void
+    {
         // Каникулы групп (H3790, фаза C): 25–31.08 вопрос «когда возобновляем?»
         // в чаты групп; круглогодично — разрешение дедлайнов кворума. Окно
         // спрашивания проверяется внутри команды, расписание — ежедневное.
@@ -223,6 +258,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('dozhim-notify-operator');
 
+    }
+
+    /** recording gap watchdogs (nightly sweep + stale hourly). */
+    private function scheduleRecordingGaps(Schedule $schedule): void
+    {
         // H3209: вчера был слот в schedules, а записи в кабинете/ТГ нет.
         // Дедуп персистентный — таблица recording_gap_alerts (H3557); n8n ZOOM 1.4 только читается, не ретраится.
         $schedule->command('recordings:gap-watch')
@@ -244,6 +284,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('recordings-gap-watch-stale');
 
+    }
+
+    /** OpenRouter balance, support digests/SLA, FAQ knowledge indexing. */
+    private function scheduleSupportAndKnowledge(Schedule $schedule): void
+    {
         // MG 24-08-2026: остаток OpenRouter + прогноз исчерпания по своим
         // снапшотам; за 14 дней до нуля — просьба пополнить на год вперёд.
         $schedule->command('openrouter:balance-check')
@@ -324,6 +369,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('knowledge-index');
 
+    }
+
+    /** MarketingSetting-timed payment/debt/certificate reminders. */
+    private function schedulePaymentReminders(Schedule $schedule): void
+    {
         // Напоминание студенту: завтра срок оплаты по обещанию/рассрочке.
         // Время редактируется в админке (MarketingSetting); schedule() читается
         // на каждый schedule:run, поэтому смена подхватывается без деплоя.
@@ -372,6 +422,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('detect-missing-milestone-courses');
 
+    }
+
+    /** class reminders, DST alerts, group links, onboarding, care, prana. */
+    private function scheduleStudentReminders(Schedule $schedule): void
+    {
         // Напоминание студентам о скором занятии (за ~60 мин до старта, по Schedule).
         // Окно и дедуп — внутри команды (reminded_at).
         $schedule->command('classes:remind-upcoming')
@@ -435,6 +490,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('prana-decay');
 
+    }
+
+    /** Season 1 open/notify/close cron + leaderboard refresh. */
+    private function scheduleSeasonOne(Schedule $schedule): void
+    {
         // Сезон 1: старт 01.09.2026 00:00 MSK (UTC+3 → UTC 21:00 31.08)
         $schedule->command('season:open 1')
             ->cron('0 21 31 8 *')
@@ -463,6 +523,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('season-leaderboard-refresh');
 
+    }
+
+    /** schedule posts, content calendar, story queues, homework auto-open. */
+    private function schedulePublishing(Schedule $schedule): void
+    {
         // Ежемесячный пост «сейчас идут курсы» в ВК/ТГ (через n8n-вебхук).
         $schedule->command('schedule:post-monthly')
             ->monthlyOn(1, '10:00') // 1-е число месяца, 10:00 МСК
@@ -525,6 +590,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('auto-open-homework');
 
+    }
+
+    /** activity jobs, avatar sync, absent notices, Zoom sync, lead magnets. */
+    private function schedulePresenceAndSync(Schedule $schedule): void
+    {
         // --- ТРЕКИНГ АКТИВНОСТИ ---
         // Закрываем сессии, у которых нет heartbeat > 15 минут
         $schedule->job(new CloseStaleSessionsJob)
@@ -585,6 +655,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('deliver-due-lead-magnets');
 
+    }
+
+    /** marathon content/recording/warm-tail/channel posts + webinar recordings. */
+    private function scheduleMarathon(Schedule $schedule): void
+    {
         // --- МАРАФОН: DAY 1/2/3 КОНТЕНТ ПО ЛИЧНОМУ ДНЮ (H440/H464/H487) ---
         // currentDay() считается от day0_started_at энрола, НЕ от общего календаря.
         $schedule->command('marathon:deliver-due')
@@ -648,6 +723,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('deliver-webinar-recordings');
 
+    }
+
+    /** scheduled announcement dispatcher. */
+    private function scheduleAnnouncements(Schedule $schedule): void
+    {
         // Планировщик анонсов (H816 PR 2): рассылает запланированные анонсы,
         // у которых наступил scheduled_at. Дедуп по dispatched_at внутри
         // диспетчера — no-op, если запланированных «на сейчас» анонсов нет.
@@ -657,6 +737,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('dispatch-due-announcements');
 
+    }
+
+    /** telegram-support sync/catch-up/healthcheck (one MTProto session). */
+    private function scheduleTelegramSupport(Schedule $schedule): void
+    {
         // Telegram support-account analytics. The command is a no-op unless
         // TELEGRAM_SUPPORT_ENABLED=true and Telegram Client API credentials exist.
         //
@@ -704,6 +789,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('telegram-support-healthcheck');
 
+    }
+
+    /** roster harvest + twice-daily evidence sync (same session lock). */
+    private function scheduleTelegramHarvest(Schedule $schedule): void
+    {
         // D9 (Track C): раз в час юзербот снимает ростер каждой учебной группы с
         // telegram_chat_id → «Состав чата» на дашборде «Записи (бот)» заполняется
         // сам. Редкий слот: держит общий замок сессии на весь проход, ежеминутный
@@ -763,6 +853,11 @@ class Kernel extends ConsoleKernel
             ]))
             ->name('telegram-harvest-twice-daily-sync');
 
+    }
+
+    /** zapisi bot notices + scheduled/adaptive reminders + promise suggestions. */
+    private function scheduleZapisiAndReminders(Schedule $schedule): void
+    {
         // Track C (H164): @zapisi_ORSbot напоминает о занятии в чат группы прямо
         // из расписания (Schedule → group.telegram_chat_id). No-op, пока не включён
         // features.telegram_zapisi_bot; окно и дедуп (zapisi_reminded_at) — внутри команды.
@@ -829,6 +924,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('expire-stale-promise-suggestions');
 
+    }
+
+    /** weekly backup run/clean + daily destination health check. */
+    private function scheduleBackups(Schedule $schedule): void
+    {
         // --- WEEKLY DB + FILE STORAGE BACKUP (spatie/laravel-backup) ---
         // H364: source.files.include now covers storage/app (uploads, finance
         // templates, imports, lectures) alongside the DB dump, to local + yandex_disk
@@ -866,6 +966,11 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('backup-destination-health');
 
+    }
+
+    /** FAQ answer suggester/rollups + stale checkout reaper. */
+    private function scheduleFaqAndCheckout(Schedule $schedule): void
+    {
         // --- FAQ-СУГГЕСТЕР ОТВЕТОВ (H247, тикет S3) ---
         // Regex-префильтр поверх веб-чата и TG-support находит фактологические
         // вопросы (Zoom/записи/расписание) и собирает факт-черновик ответа из LMS —
@@ -917,6 +1022,11 @@ class Kernel extends ConsoleKernel
             ->onFailure(fn () => ScheduleFailureSignal::report('payments:expire-stale-checkouts'))
             ->name('expire-stale-checkouts');
 
+    }
+
+    /** heartbeat ping + CSRF mismatch digest (+ cabinet:probe note). */
+    private function scheduleWatchdogs(Schedule $schedule): void
+    {
         // --- ПУЛЬС ПЛАНИРОВЩИКА (H1713) ---
         // Дёргает уникальный URL на healthchecks.io; тревогу поднимает МОЛЧАНИЕ,
         // а не ошибка, поэтому сторож переживает смерть всего сервера — в
@@ -960,6 +1070,11 @@ class Kernel extends ConsoleKernel
         // scripts/server_guards/cron/app-user.crontab — со своим локом и
         // судьбой, не зависящей от schedule:run. Не возвращайте команду сюда.
 
+    }
+
+    /** club membership expiry/free lesson + PayPal fixed prices. */
+    private function scheduleMembershipAndPaypal(Schedule $schedule): void
+    {
         // --- ЧЛЕНСТВО (H2644, запуск клуба 01-09-2026) ---
         // Снятие клубного права по истечении оплаченного периода. Раньше выдачи
         // бесплатного уровня в то же утро намеренно: истёкший вчера клубный член
