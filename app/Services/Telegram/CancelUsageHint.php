@@ -52,6 +52,12 @@ final class CancelUsageHint
             return;
         }
 
+        // H4519: если на этот текст бот предложит кнопку отмены — подсказка
+        // формата избыточна (учителя не обязаны знать грамматику команд).
+        if (AnnounceCancelService::enabled() && app(AnnounceCancelService::class)->planOffer($message) !== null) {
+            return;
+        }
+
         self::maybeSend((string) $chatId);
     }
 

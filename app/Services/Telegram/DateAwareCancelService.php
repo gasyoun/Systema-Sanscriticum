@@ -218,7 +218,7 @@ final class DateAwareCancelService
     /**
      * @return array<int, Carbon>
      */
-    private static function parseDates(string $tail): array
+    public static function parseDates(string $tail): array
     {
         if (preg_match_all(self::DATE_PATTERN, $tail, $matches, PREG_SET_ORDER) === 0) {
             return [];
