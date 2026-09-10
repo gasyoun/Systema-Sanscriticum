@@ -12,6 +12,7 @@ use App\Models\SurveyInvitation;
 use App\Models\SurveyResponse;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mailer\Exception\TransportException;
@@ -237,22 +238,27 @@ class SurveyStudentEmailInviteTest extends TestCase
     public function invitation_carries_survey_link_and_promises_no_reward(): void
     {
         Mail::fake();
-        $user = $this->emailStudent();
+        // Имя без &<>'" : Blade экранирует их в HTML, и str_contains($html, $name)
+        // случайно падал на Faker-именах вида O'Kon / O'Keefe (флейк CI 09-09).
+        $user = $this->emailStudent(['name' => 'Анна Примерная']);
 
         $this->artisan('surveys:send-student-email-invites', ['--send' => true])->assertExitCode(0);
+        $console = trim(Artisan::output());
 
-        Mail::assertSent(function (SurveyStudentInviteMail $mail) use ($user): bool {
-            $subject = (string) $mail->envelope()->subject;
-            $html = $mail->render();
+        $sent = collect(Mail::sent(SurveyStudentInviteMail::class));
+        $this->assertCount(1, $sent, 'приглашение не ушло; вывод команды: '.$console);
 
-            return $mail->url === 'https://samskrte.ru/anketa/'.self::SLUG
-                && str_contains($subject, '15–20 минут')
-                && str_contains($html, $mail->url)
-                && str_contains($html, '15–20 минут')
-                && ! str_contains($html, 'наград')
-                && ! str_contains($html, 'приз')
-                && str_contains($html, $user->name);
-        });
+        $mail = $sent[0];
+        $subject = (string) $mail->envelope()->subject;
+        $html = $mail->render();
+
+        $this->assertSame('https://samskrte.ru/anketa/'.self::SLUG, $mail->url);
+        $this->assertStringContainsString('15–20 минут', $subject);
+        $this->assertStringContainsString($mail->url, $html);
+        $this->assertStringContainsString('15–20 минут', $html);
+        $this->assertStringContainsString($user->name, $html);
+        $this->assertStringNotContainsString('наград', $html);
+        $this->assertStringNotContainsString('приз', $html);
     }
 
     /** @test */
