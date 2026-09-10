@@ -33,7 +33,6 @@ lecture.html (готова к публикации)
 | `extract.py` | Извлечение отдельных секций/элементов из JSON. |
 | `make_text_from_json_dg.py` | Экспорт читаемого текста из JSON (флаг `--para` для нумерации абзацев). |
 | `pdf_to_jpg.py` | Конвертация слайдов PDF → JPG (требует `pymupdf`: `pip install pymupdf`). |
-| `editor_server.py` | WebSocket-сервер для живого редактирования лекции в браузере. |
 | `yt_to_mp3.bat` | Скачивание аудио с YouTube для транскрипции. |
 
 ## Типы блоков в lecture.json
@@ -69,7 +68,6 @@ lecture-ui/
 ```bash
 pip install pymupdf          # pdf_to_jpg.py
 pip install jinja2           # build.py (рендер шаблонов)
-pip install websockets        # editor_server.py
 ```
 
 _Dr. Mārcis Gasūns_
