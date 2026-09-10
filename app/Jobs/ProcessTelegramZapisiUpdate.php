@@ -6,6 +6,8 @@ namespace App\Jobs;
 
 use App\Models\MarketingSetting;
 use App\Services\HomeworkTelegramTagService;
+use App\Services\Telegram\AnnounceCancelCallbackService;
+use App\Services\Telegram\AnnounceCancelService;
 use App\Services\Telegram\CancelClassCommandService;
 use App\Services\Telegram\CancelUsageHint;
 use App\Services\Telegram\DateAwareCancelService;
@@ -70,6 +72,11 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
         // (в отличие от student-bot). Callback и входящий тег обрабатываем здесь.
         $homeworkTag = app(HomeworkTelegramTagService::class);
         if (isset($this->update['callback_query']) && is_array($this->update['callback_query'])) {
+            // H4519: кнопки предложения отмены — свои префиксы acx:/acxn.
+            if (app(AnnounceCancelCallbackService::class)->handle($this->update['callback_query'])) {
+                return;
+            }
+
             $homeworkTag->handleCallback($this->update['callback_query']);
 
             return;
@@ -127,6 +134,14 @@ class ProcessTelegramZapisiUpdate implements ShouldQueue
             app(VacationCommandService::class)->handle($message);
         } catch (Throwable $e) {
             Log::warning('VacationCommand: handler failed', ['error' => $e->getMessage()]);
+        }
+
+        // H4519: анонс отмены обычными словами → предложение-кнопка. Сам фильтрует
+        // (флаг / права / группа / кандидаты); никаких отмен без явного тапа «Да».
+        try {
+            app(AnnounceCancelService::class)->handle($message);
+        } catch (Throwable $e) {
+            Log::warning('AnnounceCancel: handler failed', ['error' => $e->getMessage()]);
         }
 
         $chat = $message['chat'];
