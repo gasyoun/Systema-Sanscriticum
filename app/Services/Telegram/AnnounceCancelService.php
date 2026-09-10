@@ -95,7 +95,7 @@ final class AnnounceCancelService
         $text = "Похоже, вы сообщили об отмене. Снять с расписания?\n".implode("\n", $lines)
             ."\n\nОтмена уберёт занятие без сдвига остальных дат.";
 
-        $this->sendOffer($chatId, $text, $keyboard);
+        $this->sendOffer($chatId, $text, $keyboard, $candidates->pluck('id')->all());
     }
 
     /**
@@ -241,8 +241,9 @@ final class AnnounceCancelService
      * отпускает (ретрай подавлен), отказ Telegram — отпускает и логируется.
      *
      * @param  list<list<array{text: string, callback_data: string}>>  $keyboard
+     * @param  list<int>  $candidateIds
      */
-    private function sendOffer(string $chatId, string $text, array $keyboard): void
+    private function sendOffer(string $chatId, string $text, array $keyboard, array $candidateIds = []): void
     {
         if (! TelegramSendGuard::claim($chatId, $text)) {
             Log::info('AnnounceCancel: identical offer already sent, duplicate suppressed', ['chat_id' => $chatId]);
@@ -281,6 +282,10 @@ final class AnnounceCancelService
             return;
         }
 
-        Log::info('AnnounceCancel: offer sent', ['chat_id' => $chatId]);
+        Log::info('AnnounceCancel: offer sent', [
+            'chat_id' => $chatId,
+            'offer_message_id' => $response->json('result.message_id'),
+            'candidates' => $candidateIds,
+        ]);
     }
 }
