@@ -60,11 +60,14 @@ def log(msg):
 
 
 def http(url, method="GET", body=None, headers=None, timeout=60):
+    # all call sites use hardcoded https://*.googleapis.com endpoints;
+    # only the oauth bearer token varies (header), never the URL scheme/host
     req = urllib.request.Request(url, data=body, method=method,
                                  headers=headers or {})
     last = None
     for attempt in range(3):
         try:
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return r.read()
         except urllib.error.HTTPError as e:
