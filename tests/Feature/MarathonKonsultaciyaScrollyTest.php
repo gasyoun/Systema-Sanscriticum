@@ -8,6 +8,7 @@ use App\Http\Controllers\MarathonController;
 use App\Models\LandingPage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /**
@@ -99,24 +100,53 @@ class MarathonKonsultaciyaScrollyTest extends TestCase
         $response = $this->get(route('marathon.show', ['scrolly' => '1']));
         $response->assertOk();
 
+        // Block-SCOPED: every string below also renders elsewhere on the page
+        // (days section, FAQ, form select, prices), so a page-wide assertSee
+        // would pass even if the block emitted none of this copy. Assert inside
+        // the block's own markup only.
+        $block = $this->scrollyBlockText($response);
+        $this->assertNotSame('', $block, 'scrolly block did not render');
+
         // Beat 2 — the three days, verbatim (shared A/B block).
         foreach ($copy['days'] as $day) {
-            $response->assertSee($day['title']);
-            $response->assertSee($day['body']);
+            $this->assertStringContainsString($day['title'], $block);
+            $this->assertStringContainsString($day['body'], $block);
         }
 
-        // Beat 3 — route + schedule answers are the shared FAQ rows verbatim.
-        $response->assertSee($copy['faq'][0]['a']);
-        $response->assertSee($copy['faq'][2]['a']);
+        // Beat 1 + beat 3 — the shared FAQ rows verbatim ([1] entry/level,
+        // [0] schedule, [2] route after the course).
+        foreach ([1, 0, 2] as $faqIndex) {
+            $this->assertStringContainsString($copy['faq'][$faqIndex]['a'], $block);
+        }
 
         // Beat 3 — numbers come from config, not literals.
-        $response->assertSee((string) config('marathon.paid_track_price'));
-        $response->assertSee((string) config('marathon.coupon_amount'));
+        $this->assertStringContainsString((string) config('marathon.paid_track_price'), $block);
+        $this->assertStringContainsString((string) config('marathon.coupon_amount'), $block);
 
         // Beat 1 — quiz illustration uses the approved quizGoal labels.
         foreach (MarathonController::QUIZ_GOALS as $label) {
-            $response->assertSee($label);
+            $this->assertStringContainsString($label, $block);
         }
+
+        // The copy A/B variant blocks themselves must not leak into the block:
+        // beat text is the shared A/B-independent rows only.
+        foreach (['hero_title', 'hero_subtitle'] as $variantKey) {
+            $this->assertStringNotContainsString($copy['variants']['a'][$variantKey], $block);
+            $this->assertStringNotContainsString($copy['variants']['b'][$variantKey], $block);
+        }
+    }
+
+    /** Decoded text of the scrolly block's own <section>, or '' when absent. */
+    private function scrollyBlockText(TestResponse $response): string
+    {
+        $dom = new \DOMDocument;
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="utf-8" ?>'.(string) $response->getContent());
+        libxml_clear_errors();
+
+        $section = (new \DOMXPath($dom))->query('//section[@id="scrolly-konsultaciya"]')->item(0);
+
+        return $section ? html_entity_decode($section->textContent, ENT_QUOTES | ENT_HTML5, 'UTF-8') : '';
     }
 
     public function test_block_renders_the_form_untouched_around_it(): void
