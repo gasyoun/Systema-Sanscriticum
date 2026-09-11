@@ -53,6 +53,18 @@ fi
 TS() { date -u '+%F %T'; }
 log() { printf '%s %s\n' "$(TS)" "$*" >> "$LOG"; }
 
+# Preflight: без инструмента проба не «прошла», а НЕ СОСТОЯЛАСЬ — exit 1
+# (контракт 0/2/1 из шапки; finding независимой верификации H4590, 11-09-2026).
+for tool in curl openssl df awk grep; do
+  command -v "$tool" >/dev/null 2>&1 || {
+    { echo "Tamper-watch $(TS)Z"; echo "FAIL — нет инструмента $tool (пробы невозможны)"; } \
+      > "$BRIEF_DIR/${NAME}_latest.md"
+    log "FAIL missing-tool $tool"
+    hb_mark "$NAME" 1
+    exit 1
+  }
+done
+
 FAIL=0
 # http_probe <url> <max-time> → на stdout «code ttfb», при таймауте «000 x».
 http_probe() {
@@ -124,7 +136,13 @@ fi
 
 if [ "$FAIL" = 1 ]; then
   log "FAIL ${#FAILS[@]} проб(ы)"
-  [ "$SELFTEST" = 1 ] || page_or_queue "P1" "tamper-watch .92: ${#FAILS[@]} FAIL по samskrte.ru (см. brief/tamper_watch_latest.md)"
+  # SELFTEST не трогает боевой пульс: синтетический exit=2 не должен подменять
+  # отметку настоящего суточного прогона (finding верификации H4590).
+  if [ "$SELFTEST" = 1 ]; then
+    log "selftest — пульс не тронут"
+    exit 2
+  fi
+  page_or_queue "P1" "tamper-watch .92: ${#FAILS[@]} FAIL по samskrte.ru (см. brief/tamper_watch_latest.md)"
   hb_mark "$NAME" 2
   exit 2
 fi

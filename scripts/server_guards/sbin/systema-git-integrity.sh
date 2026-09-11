@@ -93,6 +93,26 @@ is_expected() { # is_expected <untracked-path>
 # файлы `[^,]`, `value`, `nul`) не рвут разбор. У переименований porcelain -z
 # кладёт ИСХОДНЫЙ путь СЛЕДУЮЩИМ полем — его надо съесть, иначе оно станет
 # фантомной записью.
+#
+# Вывод пишется в файл, а не в процесс-подстановку: НЕпроверенный код возврата
+# `git status` при пустом выводе читался бы как «GREEN — 0 грязи», то есть
+# транзиентный сбой (лок индекса в момент */30 деплоя) давал бы слепую зелень
+# вопреки контракту (finding независимой верификации H4590, 11-09-2026).
+STATUS_TMP=$(mktemp) || {
+  brief "Git-целостность $(TS)Z" "FAIL — mktemp недоступен (проверка невозможна)"
+  log "FAIL mktemp-failed"
+  page_or_queue "P2" "git-integrity: mktemp недоступен на .92"
+  finish 1
+}
+trap 'rm -f "$STATUS_TMP"' EXIT
+
+if ! "${GIT[@]}" status --porcelain=v1 -z --untracked-files=all > "$STATUS_TMP" 2>/dev/null; then
+  brief "Git-целостность $(TS)Z" "FAIL — git status не отработал (слепая проверка — НЕ «чисто»)"
+  log "FAIL git-status-failed rc=$?"
+  page_or_queue "P2" "git-integrity: git status не отработал на .92 — проверка слепа"
+  finish 1
+fi
+
 TRACKED=(); UNTRACKED=()
 while IFS= read -r -d '' rec; do
   st="${rec:0:2}"; path="${rec:3}"
@@ -100,7 +120,7 @@ while IFS= read -r -d '' rec; do
     R*|C*) IFS= read -r -d '' _orig || true ;;
   esac
   if [ "$st" = "??" ]; then UNTRACKED+=("$path"); else TRACKED+=("$st $path"); fi
-done < <("${GIT[@]}" status --porcelain=v1 -z --untracked-files=all 2>/dev/null)
+done < "$STATUS_TMP"
 
 SUSPECTS=()
 for t in "${TRACKED[@]}"; do SUSPECTS+=("$t"); done
