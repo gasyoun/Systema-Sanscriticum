@@ -1584,6 +1584,20 @@ class LandingPageResource extends Resource
             ]);
     }
 
+    /**
+     * Свободный слаг для копии: {slug}-copy, при занятости — -copy-2, -copy-3…
+     */
+    private static function freeSlugFor(string $slug): string
+    {
+        $base = $slug.'-copy';
+        $candidate = $base;
+        for ($i = 2; LandingPage::where('slug', $candidate)->exists(); $i++) {
+            $candidate = $base.'-'.$i;
+        }
+
+        return $candidate;
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -1596,6 +1610,35 @@ class LandingPageResource extends Resource
             ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ReplicateAction::make()
+                    ->label('Дублировать')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->modalHeading(fn (LandingPage $record): string => 'Дублировать лендинг — '.$record->title)
+                    ->modalDescription('Копируются все настройки и блоки страницы. Копия создаётся выключенной («Опубликовано» и «В каталоге» сняты) — включите после правки.')
+                    ->form([
+                        TextInput::make('title')
+                            ->label('Заголовок копии')
+                            ->required(),
+                        TextInput::make('slug')
+                            ->label('URL адрес (slug) копии')
+                            ->prefix(config('app.url').'/promo/')
+                            ->required()
+                            ->unique('landing_pages', 'slug'),
+                    ])
+                    ->mutateRecordDataUsing(function (array $data): array {
+                        $data['title'] = ($data['title'] ?? '').' (копия)';
+                        $data['slug'] = self::freeSlugFor((string) ($data['slug'] ?? ''));
+
+                        return $data;
+                    })
+                    ->beforeReplicaSaved(function (LandingPage $replica): void {
+                        // Копия не должна мгновенно попасть в витрину и sitemap
+                        // (каталог фильтрует is_active && is_listed).
+                        $replica->is_active = false;
+                        $replica->is_listed = false;
+                    })
+                    ->successRedirectUrl(fn (LandingPage $replica): string => static::getUrl('edit', ['record' => $replica]))
+                    ->successNotificationTitle('Лендинг скопирован — не забудьте включить «Опубликовано»'),
                 Tables\Actions\Action::make('open')
                     ->label('Открыть')
                     ->icon('heroicon-m-arrow-top-right-on-square')
