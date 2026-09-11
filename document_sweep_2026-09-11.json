@@ -1,0 +1,215 @@
+{
+  "tool": "tools/document_check.py",
+  "skill": "/document",
+  "legacy_name": "/artifact-propagate",
+  "generated": "2026-09-11 09:35:49",
+  "artifacts": [
+    {
+      "artifact": "C:\\Users\\user\\Documents\\GitHub\\Systema-doc-sweep\\scripts\\server_guards\\cron\\root.crontab",
+      "repo": "C:\\Users\\user\\Documents\\GitHub\\Systema-doc-sweep",
+      "kind": "doc",
+      "surfaces": [
+        {
+          "id": "readme",
+          "phase": 1,
+          "label": "README.md",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "repo README carries no server-guards/cron section; the managed file header IS the contract"
+        },
+        {
+          "id": "claude_md",
+          "phase": 1,
+          "label": "CLAUDE.md",
+          "scope": "repo",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\Systema-doc-sweep\\CLAUDE.md:124: - n8n ZOOM 1.4 delivery (workflow 1EIqqNzMl5NNIxST): DOWNLOAD only via the fresh signed URL («Свежая ссылка записи», ≤24h); cleanup deletes only `…/executions/{"
+        },
+        {
+          "id": "cold_start",
+          "phase": 1,
+          "label": "Cold-start doc (GEMINI.md / equivalent)",
+          "scope": "repo",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\Systema-doc-sweep\\GEMINI.md:33: * **Методология Уитни:** Динамические упражнения по морфологии на основе 938 корней из Whitney’s Roots."
+        },
+        {
+          "id": "sibling_domain_docs",
+          "phase": 1,
+          "label": "Sibling domain docs (manual/roadmap/method docs)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "governing docs are this file's header + Uprava lane map (cron-source rule added there in the same sweep)"
+        },
+        {
+          "id": "metadoc",
+          "phase": 1,
+          "label": "Metadoc (<name>.meta.md)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "config file - the header comment is the contract; no metadoc by convention"
+        },
+        {
+          "id": "changelog",
+          "phase": 1,
+          "label": "CHANGELOG.md -> release (/cut-release)",
+          "scope": "repo",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\Systema-doc-sweep\\CHANGELOG.md:130: ## 3. Expiry-предикат на payment-keyed доступ (census §C.1 verify → root-cause fix)"
+        },
+        {
+          "id": "ai_state",
+          "phase": 1,
+          "label": ".ai_state.md",
+          "scope": "repo",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\Systema-doc-sweep\\.ai_state.md:28: - **27-08-2026 — аптайм волна 4: авторская половина ВЫЛОЖЕНА, применение ждёт окна с человеком (Opus 5 `claude-opus-5`, H3184, [PR #2138](https://github.com/gas"
+        },
+        {
+          "id": "issues",
+          "phase": 1,
+          "label": "Issues (per-person task issues)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "no per-person issue surface; Uprava GTD @DO rows carry the residuals"
+        },
+        {
+          "id": "gtd",
+          "phase": 2,
+          "label": "Uprava/GTD_NEXT_ACTIONS.md",
+          "scope": "org",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\Uprava\\GTD_NEXT_ACTIONS.md:141: | 0y | `@DO` **H4461 residual — проверить первый плановый запуск harvest-sync зелёным (10-09, ~2 мин)**: после 05:15 UTC `ssh root@193.232.229.92` → `grep \"time"
+        },
+        {
+          "id": "handoffs_registry",
+          "phase": 2,
+          "label": "Uprava/handoffs/README.md",
+          "scope": "org",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\Uprava\\handoffs\\README.md:181: | H4436 | — | [H4436-Fable_SanskritLexicography_pwg-ru-automation-config-dir-isolation_09.09.26](https://github.com/gasyoun/Uprava/blob/main/handoffs/H4436-Fabl"
+        },
+        {
+          "id": "features_index",
+          "phase": 2,
+          "label": "SanskritLexicography/FEATURES_INDEX.md",
+          "scope": "org",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\SanskritLexicography\\FEATURES_INDEX.md:42: **Heritage** oracle suite, the **roots / etymology** crosswalks. In the interactive artifact"
+        },
+        {
+          "id": "kosha_manifest",
+          "phase": 2,
+          "label": "kosha/data/manifest/datasets.json",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "not a derived dataset"
+        },
+        {
+          "id": "data_layers_census",
+          "phase": 2,
+          "label": "Uprava/DATA_LAYERS_CENSUS.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "not large/local-only data (risk) and no open statistics cell to close"
+        },
+        {
+          "id": "project_interlinks",
+          "phase": 2,
+          "label": "Uprava/PROJECT_INTERLINKS.md",
+          "scope": "org",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\Uprava\\PROJECT_INTERLINKS.md:7: **Purpose.** ~145 local git repos live under the GitHub root (measured 22-08-2026;"
+        },
+        {
+          "id": "skills_index",
+          "phase": 2,
+          "label": "root SKILLS_INDEX.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "artifact is not itself a skill/command"
+        },
+        {
+          "id": "articles",
+          "phase": 2,
+          "label": "Uprava/ARTICLES.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "artifact is not a paper (delegate to /articles-update when it is)"
+        },
+        {
+          "id": "danger_facts",
+          "phase": 2,
+          "label": "Uprava/DANGER_FACTS.md + context_facts.yaml",
+          "scope": "org",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\Uprava\\DANGER_FACTS.md:41: | **Never re-spell `~~h<N>` in a pwg_ru sub-card key — it is the IDENTITY of ~11k already-promoted store rows.** `~~h<N>` is `gen_root_split`'s 0-based `enumera"
+        },
+        {
+          "id": "questions_log",
+          "phase": 2,
+          "label": "Uprava/QUESTIONS_LOG.md",
+          "scope": "org",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\Uprava\\QUESTIONS_LOG.md:107: | Q2607-07 | 04-07-2026 | 04-07-2026 | PROCESS-META | Uprava | Does `/handoff-registry-audit` also reorder `NEXT_TASK_QUEUE.md`? | 1 | 🟢 first occurrence | — | "
+        },
+        {
+          "id": "megabook",
+          "phase": 2,
+          "label": "Uprava/MEGABOOK.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "operational config, no thesis refined"
+        },
+        {
+          "id": "skills_manual_ru",
+          "phase": 2,
+          "label": "Uprava/SKILLS_MANUAL_RU.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "no skill/tool contract changed"
+        },
+        {
+          "id": "hooks_index",
+          "phase": 2,
+          "label": "claude-config HOOKS_INDEX.md",
+          "scope": "org",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\claude-config\\HOOKS_INDEX.md:13: **Test coverage of the roster, and who runs it ([H1820](https://github.com/gasyoun/Uprava/blob/main/handoffs/H1820-Opus_claude-config_guard-test-coverage-and-in"
+        },
+        {
+          "id": "repo_status_rollup",
+          "phase": 2,
+          "label": "Uprava/REPO_STATUS_ROLLUP.md",
+          "scope": "org",
+          "status": "present",
+          "evidence": "C:\\Users\\user\\Documents\\GitHub\\Uprava\\REPO_STATUS_ROLLUP.md:38: - **H2915 (Opus 5 `claude-opus-5`, 16-08-2026) — демон бесплатного уровня доставляет когорту из файла.** `membership.free_tier.cohort_file` (по умолчанию `membe"
+        },
+        {
+          "id": "hub_manifest",
+          "phase": 2,
+          "label": "Uprava/tools/hub_manifest.json",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "not a long-lived hub"
+        },
+        {
+          "id": "auto_derived_views",
+          "phase": 2,
+          "label": "Auto-derived views (NEXT_UP/BOTTLENECKS/kanban/dashboards/HUB_STALENESS_REPORT)",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "auto -- never hand-edit; verify their SOURCES carry the change instead"
+        },
+        {
+          "id": "epistemic_registries",
+          "phase": 2,
+          "label": "FINDINGS x2 + 7 epistemic registries (ASSUMPTIONS/CONTRADICTIONS/GAPS/DEAD_ENDS/RECIPES/STALENESS/GLOSSARY, Uprava + SanskritLexicography)",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "epistemic residue routed to Uprava: DANGER_FACTS TCC row + RECIPES SS23 + incident report; no Systema registry row owed"
+        }
+      ]
+    }
+  ]
+}
