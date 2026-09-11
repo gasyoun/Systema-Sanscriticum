@@ -39,3 +39,11 @@ systemd/systema-remediation-ladder.timer|/etc/systemd/system/systema-remediation
 # H3664 (29-08-2026) — ignoreip для путей восстановления. До этого fail2ban на .92
 # был ВООБЩЕ неуправляем: один defaults-debian.conf и ни одного ignoreip.
 fail2ban/jail.d/systema-sshd.conf|/etc/fail2ban/jail.d/systema-sshd.conf|644|critical
+
+# H4590 (11-09-2026) — samskrtam-lessons guards: git-целостность дерева прода,
+# tamper-watch публичного облика samskrte.ru, дрейф привилегированного ростера.
+# Базис «законно грязного» — критичен: без него git-страж слеп.
+sbin/systema-git-integrity.sh|/usr/local/sbin/systema-git-integrity.sh|755|critical
+sbin/systema-tamper-watch.sh|/usr/local/sbin/systema-tamper-watch.sh|755|critical
+sbin/systema-admin-roster.sh|/usr/local/sbin/systema-admin-roster.sh|755|critical
+expected-dirty.conf|/usr/local/share/systema-guards/expected-dirty.conf|644|critical

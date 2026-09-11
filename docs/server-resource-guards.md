@@ -1144,4 +1144,29 @@ file cache 1.5 ГиБ**. «Память» почти целиком page cache �
 Число в conf не поднимать молча: это чувствительность тревоги, поймавшей
 инцидент 19-08. Порог меняется только с разбором здесь.
 
+## 14. Три стража samskrte.ru из уроков samskrtam95 (H4590, 11-09-2026)
+
+BACKUP+FAIL2BAN+AUTOUPDATE на .92 стояли и до этого; разбор samskrtam95
+([RESULTS](https://github.com/gasyoun/Uprava/blob/main/docs/RESULTS_SAMSKRTAM95_HIJACK_RESTORE_QUARANTINE_11-09-2026.md))
+показал три зоны, где мониторинга не было вовсе. Они закрыты тремя суточными
+отчёт-only стражами — все в управляемом контуре (`scripts/server_guards/sbin/`,
+манифест, `root.crontab`), ставятся `server_guards_apply.sh`, видны
+`guards:verify`, пишут по строке GREEN/FAIL в Hermes-дайджест
+(`brief/<name>_latest.md`); FAIL = `page_or_queue P1` + ненулевой exit.
+
+| Страж | Cron UTC | Что ловит | Урок-источник |
+|---|---|---|---|
+| `systema-git-integrity.sh` | 03:21 | tracked-изменения дерева `/var/www/html` — всегда; untracked вне базиса `expected-dirty.conf` | импланты `fast-home.php`/`.user.ini`/`wp-blog-header.php` жили в незакоммиченных файлах докорня |
+| `systema-tamper-watch.sh` | 03:33 | 200+маркер заголовка главной, `/login`, TTFB (≥3 с заметка, ≥10 с тревога), сертификат <14 дн, диск >85 % | 25-секундный TTFB жил неделями; смену облика никто не мерил |
+| `systema-admin-roster.sh` | 03:44 | суточный sha256 привилегированного среза `users` (AUTO-DETECT: `is_admin=1 OR role IN (…)`), дрейф = оба состояния в `admin_roster.prev/cur.txt` | руж-админ `ova_wp` жил в базе 4 дня |
+
+Коды возврата у всех трёх — по образцу `samskrtam_tamper_watch.py`:
+`0` чисто · `2` находка (P1) · `1` операционная ошибка (слепая проверка — тоже
+не «чисто»). Базис `expected-dirty.conf` критичен: нет базиса — git-страж слеп
+(exit 1). Числа/URL/список ролей живут только в `server_guards.conf`.
+
+Дрейф, вылеченный тем же проходом: живая строка `samskrtam_hijack_heal.py`
+(H4570) стояла только в crontab на сервере — первый же `apply` её бы стёр.
+Внесена в шаблон `cron/root.crontab` (управляемые строки живут в репозитории).
+
 _Dr. Mārcis Gasūns_
