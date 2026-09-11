@@ -8,6 +8,7 @@ use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
+use App\Services\Leads\TelegramCourseInquiryRegistrar;
 use App\Models\User;
 use App\Services\Support\HomeworkPauseNoteRecorder;
 use App\Services\Support\PendingSupportReplyDrainer;
@@ -408,6 +409,8 @@ class TelegramSupportSyncService
                 'sent_at' => $sentAt,
             ],
         );
+
+        app(TelegramCourseInquiryRegistrar::class)->register($message->loadMissing(['chat', 'contact']));
 
         if (in_array($message->ai_state, ['suggested', 'sent'], true)) {
             SupportAiReplyEvent::updateOrCreate(
