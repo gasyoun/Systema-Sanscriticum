@@ -19,6 +19,17 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 10 3 * * * /usr/bin/python3 /root/samskrtam_tamper_watch.py --env /root/.samskrtam_watch.env --log /var/log/samskrtam-watch.cron.log 2>&1
 */5 * * * * /usr/bin/python3 /root/samskrtam_home_repin.py >> /var/log/samskrtam-repin-cron.log 2>&1
 0 9 * * * /root/enable-ollama-shadow.sh >> /var/log/ollama-shadow-enable.log 2>&1
+# Hijack-heal (H4570, 11-09-2026) — жил ТОЛЬКО в живом crontab .92; первый же
+# apply стёр бы его. Управляемые строки живут здесь, не в crontab -e.
+3-58/5 * * * * /usr/bin/python3 /root/samskrtam_hijack_heal.py >> /var/log/samskrtam-hijack-heal-cron.log 2>&1
+
+# Samskrte.ru compromise-lesson guards (H4590, 11-09-2026) — git-целостность
+# дерева /var/www/html, tamper-watch публичного облика, дрейф привилегированного
+# ростера. Все три — отчёт-only, пишут в Hermes-дайджест (brief/*_latest.md).
+# Ходят ДО foreman (03:55), чтобы утренний дайджест нёс свежие строки.
+21 3 * * * /usr/local/sbin/systema-git-integrity.sh >> /var/log/systema-git-integrity-cron.log 2>&1
+33 3 * * * /usr/local/sbin/systema-tamper-watch.sh >> /var/log/systema-tamper-watch-cron.log 2>&1
+44 3 * * * /usr/local/sbin/systema-admin-roster.sh >> /var/log/systema-admin-roster-cron.log 2>&1
 
 # Hermes nervous-system lanes (H4155/H4247). Installed here (single source)
 # after the 07-09-2026 guards re-apply wiped the on-box copies — lane jobs MUST
