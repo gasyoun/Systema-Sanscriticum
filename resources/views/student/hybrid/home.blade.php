@@ -12,6 +12,11 @@
 @endphp
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
+    <div class="mt-6">
+        {{-- Flash от платёжных редиректов (анти-дубль, отбивки DebtPaymentController):
+             без баннера отказ выглядит как «кнопка ничего не делает». --}}
+        @include('student.partials.flash-messages')
+    </div>
     <div class="mb-6 mt-6">
         <h2 class="text-3xl md:text-4xl font-extrabold text-[#101010] tracking-tight mb-1">
             Добро пожаловать, {{ auth()->user()->name }}!
