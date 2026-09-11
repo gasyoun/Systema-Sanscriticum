@@ -74,7 +74,9 @@ foreach ($rows as $r) {
 
 OUT=$(cd "$APP_DIR" && ROSTER_ROLES="$PRIV_ROLES" php artisan tinker --execute="$PHP" 2>/dev/null)
 RC=$?
-if [ "$RC" -ne 0 ] || printf '%s' "$OUT" | grep -q "OPERATIONAL-ERROR"; then
+# here-string, НЕ пайп с grep -q: при `set -o pipefail` ранний выход grep шлёт
+# printf SIGPIPE (141) и ошибка разбора осталась бы незамеченной.
+if [ "$RC" -ne 0 ] || grep -q "OPERATIONAL-ERROR" <<< "$OUT"; then
   reason=$(printf '%s' "$OUT" | grep "OPERATIONAL-ERROR" | head -1)
   {
     echo "Admin-roster .92 $(TS)Z"
