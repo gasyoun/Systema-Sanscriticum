@@ -14,3 +14,15 @@
 # этот PATH у себя, строка здесь — второй ремень.
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 @@AUTO_DEPLOY_SCHEDULE@@ /usr/local/sbin/systema-auto-deploy-run.sh >> @@APP_DIR@@/storage/logs/auto_deploy.log 2>&1
+
+# Samskrtam guards (tamper-watch, home-repin) — HistoricalRepos.
+10 3 * * * /usr/bin/python3 /root/samskrtam_tamper_watch.py --env /root/.samskrtam_watch.env --log /var/log/samskrtam-watch.cron.log 2>&1
+*/5 * * * * /usr/bin/python3 /root/samskrtam_home_repin.py >> /var/log/samskrtam-repin-cron.log 2>&1
+0 9 * * * /root/enable-ollama-shadow.sh >> /var/log/ollama-shadow-enable.log 2>&1
+
+# Hermes nervous-system lanes (H4155/H4247). Installed here (single source)
+# after the 07-09-2026 guards re-apply wiped the on-box copies — lane jobs MUST
+# live in this file, never hand-added via crontab -e, or the next apply kills them.
+7 3 * * * /usr/local/sbin/backup_verify.sh
+*/10 * * * * /usr/local/sbin/gateway_watchdog.sh
+14 3 1 * * /usr/local/sbin/restore_drill.sh
