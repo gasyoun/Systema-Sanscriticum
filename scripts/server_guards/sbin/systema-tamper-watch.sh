@@ -69,7 +69,10 @@ fail()  { FAILS+=("FAIL — $1"); FAIL=1; }
 BODY=$(curl -s --max-time 30 "$HOME_URL" 2>/dev/null) || true
 read -r code ttfb <<< "$(http_probe "$HOME_URL" 30)"
 title_ok=0
-printf '%s' "$BODY" | grep -qF "$TITLE" && title_ok=1
+# here-string, НЕ `printf … | grep -q`: при `set -o pipefail` ранний выход grep
+# по первому совпадению шлёт printf SIGPIPE (141) — пайплайн «не совпал», хотя
+# маркер найден (поймано живым прогоном 11-09-2026).
+grep -qF "$TITLE" <<< "$BODY" && title_ok=1
 awk "BEGIN{exit !($ttfb >= $TTFB_ALERT)}" && slow=alert || slow=""
 if [ "$code" = "200" ] && [ "$title_ok" = 1 ] && [ -z "$slow" ]; then
   green "GET / $code, маркер «$TITLE» есть, TTFB ${ttfb}s"
@@ -88,7 +91,7 @@ awk "BEGIN{exit !($ttfb >= $TTFB_WARN && $ttfb < $TTFB_ALERT)}" \
 # ── 2. Глубокий маршрут: 200 + TTFB ─────────────────────────────────────────
 read -r code ttfb <<< "$(http_probe "$DEEP_URL" 30)"
 if [ "$code" = "200" ] && ! awk "BEGIN{exit !($ttfb >= $TTFB_ALERT)}"; then
-  green "GET ${DEEP_URL##$HOME_URL} $code, TTFB ${ttfb}s"
+  green "GET $DEEP_URL $code, TTFB ${ttfb}s"
 else
   fail "GET $DEEP_URL code=$code ttfb=${ttfb}s"
 fi
