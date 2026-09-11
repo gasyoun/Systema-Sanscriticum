@@ -34,6 +34,17 @@
             <a href="{{ url('/login') }}" style="background-color: #d35400; color: #ffffff; padding: 14px 35px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 15px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">В личный кабинет</a>
         </div>
 
+        @if(config('surveys.enabled'))
+            <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 20px; margin: 30px 0; border-radius: 0 4px 4px 0;">
+                <p style="margin: 0 0 12px; font-size: 16px;">
+                    Первый шаг — две минуты на пару вопросов о вас. Это поможет куратору подобрать вам группу и темп занятий.
+                </p>
+                <div style="text-align: center;">
+                    <a href="{{ url('/anketa/onboarding') }}" style="color: #8a3324; font-weight: bold; text-decoration: underline;">Пройти короткую анкету</a>
+                </div>
+            </div>
+        @endif
+
         <hr style="border: none; border-top: 1px solid #f0e6d2; margin: 40px 0;">
 
         <p style="margin-top: 0; font-size: 15px; color: #95a5a6; text-align: center;">
