@@ -64,6 +64,7 @@ class RemindZapisiClasses extends Command
             ->whereNull('zapisi_reminded_at')
             ->whereNotNull('group_id')
             ->whereBetween('start', [now(), now()->addMinutes($lead)])
+            ->orderBy('id')
             ->get();
 
         $template = trim((string) ($settings?->zapisi_reminder_template ?? '')) !== ''
@@ -72,7 +73,18 @@ class RemindZapisiClasses extends Command
 
         $sent = 0;
 
-        foreach ($schedules as $schedule) {
+        // Инцидент 11-09-2026 (курс 348 «Бхагавадгита 4 цикл»): в расписании
+        // оказались ДВЕ живые строки на один слот (перенос лёг на существующую
+        // строку серии), и каждая ушла отдельным напоминанием — два поста в один
+        // чат за секунду, различие только в номере титула (#76/#77), поэтому
+        // TelegramSendGuard по тексту их не склеил. Группируем по слоту
+        // (группа + старт): один пост на слот, помечаются ВСЕ строки слота.
+        // Коллизия строк больше не доходит до студентов, даже если её заведут руками.
+        $slots = $schedules->groupBy(fn (Schedule $s): string => ($s->group_id ?? 0).':'.($s->start?->format('Y-m-d H:i') ?? ''));
+
+        foreach ($slots as $slotRows) {
+            $rows = $slotRows->sortBy('id')->values();
+            $schedule = $rows->first();
             $group = $schedule->group;
 
             // Нет чата группы — слать некуда; НЕ помечаем, чтобы после заполнения
@@ -81,25 +93,14 @@ class RemindZapisiClasses extends Command
                 continue;
             }
 
-            // Инцидент 02-09-2026 (кейс 1620, курс 401): серия занятий нового учебного
-            // года сгенерирована без ссылок (link/zoom_join_url/course.zoom_link пусты),
-            // и в чат ушло напоминание с висящим «Подключится к занятию можно по
-            // ссылке:» без самой ссылки. Зеркалим classes:post-group-link: без ссылки
-            // напоминание бесполезно — пропускаем БЕЗ пометки, чтобы после появления
-            // ссылки (вручную или генератором) напоминание всё же ушло.
-            if ($group === null || empty($group->telegram_chat_id)) {
-                continue;
-            }
-
             // Зеркальная дубль-гвардия (диагноз 26-08-2026): если автопостинг ссылки
-            // (classes:post-group-link, T-15) успел раньше нас — при нестандартных
-            // lead-настройках — не отправляем второй «Скоро занятие» в тот же чат.
-            if ($schedule->group_link_posted_at !== null) {
+            // (classes:post-group-link, T-15) уже постит ЛЮБУЮ строку слота —
+            // не отправляем второй «Скоро занятие» в тот же чат.
+            if ($rows->contains(fn (Schedule $r): bool => $r->group_link_posted_at !== null)) {
                 continue;
             }
 
             // H4253: каникулы — групповой флаг (H3790) или окно преподавателя.
-            // Пробел до сих пор: напоминания игнорировали is_on_vacation группы.
             // Пропуск БЕЗ пометки: после снятия флага/окна напоминание уйдёт.
             if ($group->is_on_vacation) {
                 continue;
@@ -109,6 +110,11 @@ class RemindZapisiClasses extends Command
                 continue;
             }
 
+            // Инцидент 02-09-2026 (кейс 1620, курс 401): серия занятий нового учебного
+            // года сгенерирована без ссылок (link/zoom_join_url/course.zoom_link пусты),
+            // и в чат ушло напоминание с висящим «Подключится к занятию можно по
+            // ссылке:» без самой ссылки. Без ссылки напоминание бесполезно —
+            // пропускаем БЕЗ пометки, чтобы после появления ссылки оно всё же ушло.
             $link = (string) ($schedule->zoom_join_url ?: ($schedule->link ?: $schedule->course?->zoom_link) ?: '');
             if ($link === '') {
                 report(new \RuntimeException(sprintf(
@@ -128,7 +134,11 @@ class RemindZapisiClasses extends Command
                 TelegramChatPost::KIND_ZAPISI_REMINDER,
             );
 
-            $schedule->update(['zapisi_reminded_at' => now()]);
+            // Помечаем ВСЕ строки слота: дедуп по строке, отправка по слоту.
+            foreach ($rows as $row) {
+                $row->update(['zapisi_reminded_at' => now()]);
+            }
+
             $sent++;
         }
 
