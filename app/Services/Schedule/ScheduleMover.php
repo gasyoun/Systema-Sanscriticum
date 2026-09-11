@@ -26,6 +26,29 @@ final class ScheduleMover
      */
     public function reschedule(Schedule $schedule, Carbon $newStart, ?Carbon $newEnd = null): Schedule
     {
+        // Инцидент 11-09-2026 (курс 348, «Бхагавадгита 4 цикл»): занятие перенесли
+        // на слот, где уже жила другая строка серии, — обе строки вошли в T-60 окно
+        // и студенты получили два «Скоро занятие» с разницей в номер титула.
+        // Перенос на занятый слот своей группы — громкая ошибка, а не тихий дубль.
+        if ($schedule->group_id !== null) {
+            $occupied = Schedule::query()
+                ->where('group_id', $schedule->group_id)
+                ->where('id', '!=', $schedule->id)
+                ->where('start', $newStart)
+                ->first();
+
+            if ($occupied !== null) {
+                throw new InvalidArgumentException(sprintf(
+                    'Слот %s группы #%d уже занят занятием #%d («%s») — студенты получат два напоминания в один слот. Сначала перенесите или удалите строку #%d.',
+                    $newStart->format('d.m.Y H:i'),
+                    $schedule->group_id,
+                    $occupied->id,
+                    $occupied->title ?: 'Занятие',
+                    $occupied->id,
+                ));
+            }
+        }
+
         if ($newEnd === null && $schedule->end !== null && $schedule->start !== null) {
             $minutes = $schedule->start->diffInMinutes($schedule->end);
             $newEnd = $newStart->copy()->addMinutes(max(1, (int) $minutes));
@@ -59,6 +82,20 @@ final class ScheduleMover
 
         return (int) DB::transaction(function () use ($schedule): int {
             $chain = $this->chainQuery($schedule)->lockForUpdate()->get();
+
+            // Пред-существующая коллизия внутри цепочки (две живые строки в одном
+            // слоте) сдвигается +7 как есть и воспроизводится каждую неделю дальше.
+            // Отказываем громко — данные должен чинить человек, не каскад.
+            $clashes = $chain
+                ->groupBy(fn (Schedule $row): string => $row->start?->format('Y-m-d H:i') ?? '')
+                ->filter(fn ($rows): bool => $rows->count() > 1);
+
+            if ($clashes->isNotEmpty()) {
+                throw new InvalidArgumentException(sprintf(
+                    'В цепочке уже есть два занятия в одном слоте (%s) — сдвиг на неделю размножит коллизию. Разрешите дубль (удалите или перенесите одну строку) и повторите отмену.',
+                    $clashes->keys()->implode('; '),
+                ));
+            }
 
             foreach ($chain as $row) {
                 $this->shiftRowByWeek($row);

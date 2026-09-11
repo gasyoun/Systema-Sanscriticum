@@ -39,12 +39,21 @@ class RemindUpcomingClasses extends Command
             ->with(['group', 'course'])
             ->whereNull('reminded_at')
             ->whereBetween('start', [now(), now()->addMinutes($lead)])
+            ->orderBy('id')
             ->get();
 
         $events = 0;
         $recipients = 0;
 
-        foreach ($schedules as $schedule) {
+        // Слотовая группировка (инцидент 11-09-2026, курс 348): две живые строки
+        // расписания на один слот = один круг персональных напоминаний, не два.
+        // Ключ — группа (или курс для событий без группы) + старт.
+        $slots = $schedules->groupBy(fn (Schedule $s): string => ($s->group_id ?? 'c'.($s->course_id ?? 0)).':'.($s->start?->format('Y-m-d H:i') ?? ''));
+
+        foreach ($slots as $slotRows) {
+            $rows = $slotRows->sortBy('id')->values();
+            $schedule = $rows->first();
+
             // Дубль-гвардия каналов (диагноз 28-08-2026): группа с Telegram-чатом уже
             // получает «Скоро занятие» от zapisi:remind-classes в тот же T-60 — персональный
             // пинг каждому студенту с привязанным Telegram приходит через минуту и читается
@@ -73,9 +82,11 @@ class RemindUpcomingClasses extends Command
                 }
             });
 
-            // Отмечаем занятие как «напомнили» в любом случае, чтобы не зациклиться
-            // на событии без получателей (иначе оно висело бы в окне до старта).
-            $schedule->update(['reminded_at' => now()]);
+            // Отмечаем ВСЕ строки слота как «напомнили» в любом случае, чтобы не
+            // зациклиться на событии без получателей (иначе оно висело бы в окне до старта).
+            foreach ($rows as $row) {
+                $row->update(['reminded_at' => now()]);
+            }
 
             $events++;
             $recipients += $sent;

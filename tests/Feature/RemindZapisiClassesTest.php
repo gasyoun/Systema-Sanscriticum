@@ -234,4 +234,45 @@ class RemindZapisiClassesTest extends TestCase
         Queue::assertNothingPushed();
         $this->assertNull($schedule->fresh()->zapisi_reminded_at);
     }
+
+    /**
+     * Инцидент 11-09-2026 (курс 348): две живые строки расписания на один слот
+     * ушли двумя постами в один чат за секунду (тексты различались только
+     * номером титула — TelegramSendGuard по sha256(чат+текст) их не склеил).
+     * Теперь слот (группа+старт) получает РОВНО ОДИН пост, помечаются все
+     * строки слота.
+     */
+    public function test_two_rows_in_one_slot_send_one_reminder_and_both_marked(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'Гр. 86', 'telegram_chat_id' => '-1001907383186']);
+        $start = now()->addMinutes(30);
+
+        $a = Schedule::create([
+            'title' => 'Серия (#76, слот)',
+            'start' => $start,
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/slot',
+        ]);
+        $b = Schedule::create([
+            'title' => 'Серия (#77, слот)',
+            'start' => $start,
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/slot',
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, fn (SendZapisiBotMessageJob $job): bool => $job->chatId === '-1001907383186');
+
+        $this->assertNotNull($a->fresh()->zapisi_reminded_at, 'обе строки слота помечаются');
+        $this->assertNotNull($b->fresh()->zapisi_reminded_at, 'обе строки слота помечаются');
+
+        // Повторный прогон: обе строки помечены — тишина.
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+    }
 }
