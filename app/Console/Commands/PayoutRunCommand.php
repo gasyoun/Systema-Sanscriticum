@@ -262,7 +262,8 @@ class PayoutRunCommand extends Command
                     number_format((float) $row['net_after_npd_rub'], 2, ',', ' '));
             }
             foreach ($row['warnings'] as $warning) {
-                $out[] = '⚠ '.$warning;
+                // Сервисные предупреждения уже содержат «⚠ » — не дублируем.
+                $out[] = str_starts_with($warning, '⚠') ? $warning : '⚠ '.$warning;
             }
             $out[] = '';
         }
