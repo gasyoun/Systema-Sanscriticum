@@ -41,6 +41,12 @@ else
   page_or_queue() { echo "$(date -u '+%F %T') [$1] $2" >> "$BRIEF_DIR/pending_pages.txt" 2>/dev/null || true; }
 fi
 
+# H4620 (12-09-2026, MG: «never again»): sandbox/verifier-прогоны не имеют права
+# писать в живой бриф — ложный FAIL из песочницы 14:31Z ушёл пейджером MG.
+# Явный env-override старше lane_lib и дефолта.
+BRIEF_DIR="${GUARD_BRIEF_DIR:-${BRIEF_DIR:-/home/hermes/brief}}"
+mkdir -p "$BRIEF_DIR" 2>/dev/null || true
+
 TS() { date -u '+%F %T'; }
 log() { printf '%s %s\n' "$(TS)" "$*" >> "$LOG"; }
 

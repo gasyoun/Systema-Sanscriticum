@@ -41,7 +41,7 @@ FAIL=0
 run_case() {
   local mode="$1" expected="$2" marker="$3" rc
   : > "$TMP/run.log"
-  PATH="$TMP/bin:$PATH" FAKE_GIT_MODE="$mode" "$TMP/guard.sh" >/dev/null 2>&1
+  PATH="$TMP/bin:$PATH" FAKE_GIT_MODE="$mode" GUARD_BRIEF_DIR="$TMP/brief" "$TMP/guard.sh" >/dev/null 2>&1
   rc=$?
   if [ "$rc" -ne "$expected" ] || ! grep -qF "$marker" "$TMP/run.log"; then
     echo "FAIL $mode: rc=$rc expected=$expected marker=$marker" >&2
