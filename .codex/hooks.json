@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python '/Users/mac/Documents/GitHub/Systema-Sanscriticum-h4414-drain/.codex/hooks/watcher_autosave.py'",
+            "timeout": 30,
+            "statusMessage": "watcher-safe autosave commit"
+          }
+        ]
+      }
+    ]
+  }
+}
