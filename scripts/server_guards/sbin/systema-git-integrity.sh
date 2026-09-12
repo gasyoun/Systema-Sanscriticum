@@ -106,9 +106,11 @@ STATUS_TMP=$(mktemp) || {
 }
 trap 'rm -f "$STATUS_TMP"' EXIT
 
-if ! "${GIT[@]}" status --porcelain=v1 -z --untracked-files=all > "$STATUS_TMP" 2>/dev/null; then
+"${GIT[@]}" status --porcelain=v1 -z --untracked-files=all > "$STATUS_TMP" 2>/dev/null
+STATUS_RC=$?
+if [ "$STATUS_RC" -ne 0 ]; then
   brief "Git-целостность $(TS)Z" "FAIL — git status не отработал (слепая проверка — НЕ «чисто»)"
-  log "FAIL git-status-failed rc=$?"
+  log "FAIL git-status-failed rc=$STATUS_RC"
   page_or_queue "P2" "git-integrity: git status не отработал на .92 — проверка слепа"
   finish 1
 fi
@@ -131,6 +133,13 @@ done
 # git diff HEAD по tracked — второй свидетель первой проверки (porcelain ловит
 # и staged, diff показывает объём). Ошибка diff = операционная, не «чисто».
 DIFF_LINES=$("${GIT[@]}" diff HEAD --stat 2>/dev/null | tail -1)
+DIFF_RC=$?
+if [ "$DIFF_RC" -ne 0 ]; then
+  brief "Git-целостность $(TS)Z" "FAIL — git diff не отработал (проверка tracked-дельты слепа)"
+  log "FAIL git-diff-failed rc=$DIFF_RC"
+  page_or_queue "P2" "git-integrity: git diff не отработал на .92 — проверка tracked-дельты слепа"
+  finish 1
+fi
 [ -z "$DIFF_LINES" ] && DIFF_LINES="(пусто)"
 
 # ── Вердикт ──────────────────────────────────────────────────────────────────
