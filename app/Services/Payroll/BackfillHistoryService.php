@@ -70,11 +70,11 @@ final class BackfillHistoryService
                 throw new RuntimeException("преподаватель #{$teacherId} не найден (строка {$row['inventory_id']})");
             }
 
-            // Идемпотентность: уже есть такая backfill-строка?
+            // Идемпотентность по ID строки манифеста (комментарий несёт [inventory_id]):
+            // несколько строк на одну дату легитимны (wave + residual sweep).
             $existing = TeacherPayout::query()
                 ->where('teacher_id', $teacherId)
-                ->whereDate('paid_at', Carbon::parse((string) $row['paid_at'])->toDateString())
-                ->where('comment', 'like', self::COMMENT_MARKER.'%')
+                ->where('comment', 'like', '%['.$row['inventory_id'].']%')
                 ->get();
             $dup = $existing->first(fn (TeacherPayout $p): bool => abs((float) $p->amount - (float) $row['amount']) < 0.01);
             if ($dup !== null) {
@@ -84,7 +84,7 @@ final class BackfillHistoryService
             }
             if ($existing->isNotEmpty()) {
                 throw new RuntimeException(
-                    "строка {$row['inventory_id']}: на {$row['paid_at']} уже есть backfill-строка с другой суммой — ручной разбор");
+                    "строка {$row['inventory_id']}: уже есть backfill-строка [{$row['inventory_id']}] с другой суммой — ручной разбор");
             }
 
             // Перепроверка каждой доли против живой базы.
@@ -114,7 +114,7 @@ final class BackfillHistoryService
                     ? round((float) $row['amount'] / (float) $row['amount_foreign'], 4)
                     : null,
                 'rate_date' => Carbon::parse((string) $row['paid_at'])->toDateString(),
-                'comment' => self::COMMENT_MARKER.' '.(string) $row['comment'],
+                'comment' => self::COMMENT_MARKER.' ['.$row['inventory_id'].']: '.(string) $row['comment'],
                 'breakdown' => [
                     'prior_blocks_paid' => $priorBlocksPaid,
                     'source_quote' => (string) $row['source_quote'],
