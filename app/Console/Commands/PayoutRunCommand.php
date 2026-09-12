@@ -592,12 +592,17 @@ class PayoutRunCommand extends Command
                     $at = $p->first_paid_at ?? $p->created_at;
                     if ($at !== null) {
                         $e['date'] = $at->format('d.m.Y');
+                        $e['sort'] = $at->format('Y-m-d');
                     }
+                }
+                if (! isset($e['sort']) && $e['date'] !== null) {
+                    $parsed = Carbon::createFromFormat('d.m.Y', (string) $e['date']);
+                    $e['sort'] = $parsed !== false ? $parsed->format('Y-m-d') : (string) $e['date'];
                 }
             }
             unset($e);
 
-            usort($entries, fn (array $a, array $b): int => [$a['date'] ?? '', $a['payment_id'] ?? 0] <=> [$b['date'] ?? '', $b['payment_id'] ?? 0]);
+            usort($entries, fn (array $a, array $b): int => [$a['sort'] ?? '9999', $a['payment_id'] ?? 0] <=> [$b['sort'] ?? '9999', $b['payment_id'] ?? 0]);
 
             if ($entries === []) {
                 $out[] = '_В расчёте нет платежей._';

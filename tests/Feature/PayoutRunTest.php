@@ -592,5 +592,7 @@ class PayoutRunTest extends TestCase
         ] as $expected) {
             $this->assertStringContainsString($expected, $out);
         }
+        // Хронология: 30.07 строго раньше 01.08 (лексическая сортировка d.m.Y давала бы обратное).
+        $this->assertLessThan((int) strpos($out, '**01.08.2026**'), (int) strpos($out, '**30.07.2026**'));
     }
 }
