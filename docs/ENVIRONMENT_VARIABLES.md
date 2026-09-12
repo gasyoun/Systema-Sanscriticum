@@ -471,7 +471,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PARTNER_BOT_SECRET` | secret | `''` | config/partner.php:33 |
 | `PARTNER_PROGRAM_ENABLED` | feature-flag | `false` | config/partner.php:24 |
 | `PARTNER_REWARD_AMOUNT` | optional | `1000` | config/partner.php:29 |
-| `PASSWORD_AUDIT_LOG_CHANNEL` | secret | `'stack'` | config/services.php:600 |
+| `PASSWORD_AUDIT_LOG_CHANNEL` | secret | `'stack'` | config/services.php:608 |
 | `PAYMENT_RECOVERY_CTA` | optional | `false` | config/features.php:1059 |
 | `PAYPAL_API_BASE_URL` | required | `—` | config/services.php:576 |
 | `PAYPAL_API_MODE` | optional | `'sandbox'` | config/services.php:570 |
@@ -722,6 +722,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SURVEY_REWARD_PRANA_RUBLES` | optional | `500` | config/surveys.php:14 |
 | `SYSTEMA_SCHEDULE_MAX_SECONDS` | optional | `900` | config/schedule_guard.php:24 |
 | `TEACHER_PAYOUT_YEAR_VIEW` | optional | `false` | config/features.php:647 |
+| `TEACHER_PAY_ENABLED` | feature-flag | `false` | config/services.php:600 |
 | `TEACHER_WEEKLY_PAYOUT_CALENDAR` | optional | `false` | config/features.php:638 |
 | `TELEGRAM_BOT_TOKEN` | secret | `—` | config/services.php:112 |
 | `TELEGRAM_BOT_USERNAME` | required | `—` | config/services.php:113 |
