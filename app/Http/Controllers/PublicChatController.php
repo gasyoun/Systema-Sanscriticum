@@ -8,6 +8,7 @@ use App\Events\ChatMessageSent;
 use App\Jobs\ResolveVisitorGeoJob;
 use App\Models\ChatMessage;
 use App\Models\SupportConversation;
+use App\Services\Support\MicShadowClassifier;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\SupportLeadCaptureService;
 use App\Support\GuestChat;
@@ -65,6 +66,10 @@ class PublicChatController extends Controller
                 $message->created_at,
             );
         }
+
+        // H4608: MIC shadow classify входящего (log-only, flag default OFF,
+        // никогда не бросает; текст не пишется — только sha256 в телеметрии).
+        MicShadowClassifier::instance()?->record('web', (int) $thread->id, (int) $message->id, $text);
 
         // Контекст посетителя (город/страница входа) для куратора — H1196.
         $this->captureVisitorContext($thread, $request, $validated['page'] ?? null);

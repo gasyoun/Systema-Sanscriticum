@@ -11,6 +11,7 @@ use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Leads\TelegramCourseInquiryRegistrar;
 use App\Services\Support\HomeworkPauseNoteRecorder;
+use App\Services\Support\MicShadowClassifier;
 use App\Services\Support\PendingSupportReplyDrainer;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\SupportDmAutoReply;
@@ -427,6 +428,15 @@ class TelegramSupportSyncService
             ?: $linkedUser?->id;
 
         if ($direction === 'incoming') {
+            // H4608: MIC shadow classify (log-only, flag default OFF, никогда
+            // не бросает; текст не пишется — только sha256 в телеметрии).
+            MicShadowClassifier::instance()?->record(
+                'telegram',
+                (int) $message->telegram_support_chat_id,
+                (int) $message->id,
+                (string) ($payload['text'] ?? $message->text ?? ''),
+            );
+
             $this->techRouter->handleIncoming($message, $payload, $linkedUserId ? (int) $linkedUserId : null, $chatType ?: 'private');
 
             $this->dmAutoReply->handle($message, $linkedUserId ? (int) $linkedUserId : null, $chatType ?: 'private');
