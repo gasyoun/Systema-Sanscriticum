@@ -167,6 +167,7 @@ cd /var/www/html && php artisan recordings:gap-watch --retry-failed --date=<се
 - Лечение: `docker exec -e N8N_RUNNERS_BROKER_PORT=5699 n8n-n8n-1 n8n execute --id <id>` (переменная из `@n8n/config`, `runners.config.js`). JS-runner регистрируется, исполнение пишется в общий sqlite; Wait-ноды резюмит главный инстанс по `waitTill` — CLI может завершиться, докатит главный процесс.
 
 **Сборка repair-воркфлоу:**
+Скрипт-сборщик [`scripts/n8n_tail_repair_builder.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/n8n_tail_repair_builder.py) — `python3 scripts/n8n_tail_repair_builder.py --exec-id <id> --out /data/repair.json` делает шаги 1-4 автоматически (сам находит упавшую ноду, строит stub'ы+хвост, ставит retry на LLM-ноде, вписывает `"id"`). Ниже — ручной состав:
 1. Из runData упавшего exec (sqlite `execution_data`; zlib + флэттен-формат: строковые цифры = ссылки в контейнер массива, разыменование ОДНОКРАТНОЕ — повторное разыменование литералов-цифр даёт IndexError) берутся успешные выходы апстримных нод.
 2. Граф: `manualTrigger` → Code-stub-ноды (имена = имена апстримных нод, каждая отдаёт записанные items — выражения `$('X')` хвоста резолвятся по именам) → настоящие хвостовые ноды verbatim (креды резолвятся на том же инстансе).
 3. На упавшей LLM/AI-ноде выставить `retryOnFail: true, maxTries: 2-3, waitBetweenTries: 60000` — таймаут-класс (§3) лечится ретраем.
