@@ -543,6 +543,13 @@ class PaymentResource extends Resource
                     ->query(fn ($query) => $query->bankSepaPending())
                     ->toggle(),
 
+                // Заявки «заплатил преподавателю напрямую» (H4627) — сверка по
+                // выписке преподавателя; подтверждение вычтет номинал из гонорара.
+                Tables\Filters\Filter::make('teacher_transfer_pending')
+                    ->label('Оплаты преподавателю на проверке')
+                    ->query(fn ($query) => $query->teacherTransferPending())
+                    ->toggle(),
+
                 // Авто-доверенные банковские заявки своих (зеркало «PayPal: без
                 // сверки»): очередь выборочной сверки пост-фактум.
                 Tables\Filters\Filter::make('bank_unverified')
@@ -657,6 +664,42 @@ class PaymentResource extends Resource
                         .', '.number_format((float) $record->amount, 0, '.', ' ').' ₽. '
                         .'После подтверждения откроется доступ.')
                     ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                // H4627: заявка «заплатил преподавателю напрямую» после сверки
+                // по выписке преподавателя. paid запускает штатный конвейер
+                // (доступ) + вычет номинала из гонорара получателя (H4597).
+                Tables\Actions\Action::make('confirmTeacherTransfer')
+                    ->label('Подтвердить перевод преподавателю')
+                    ->icon('heroicon-o-academic-cap')
+                    ->color('success')
+                    ->visible(fn (Payment $record) => $record->isTeacherTransfer() && $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Подтвердить оплату напрямую преподавателю')
+                    ->modalDescription(function (Payment $record): string {
+                        $ref = $record->claimMeta('reference');
+
+                        return 'Сверьте по выписке преподавателя '
+                            .$record->receivedByTeacher?->name.': от '
+                            .($record->claimMeta('sender_name') ?: '—')
+                            .', дата '.($record->claimMeta('paid_on') ?: '—')
+                            .', сумма '.($record->foreignAmountLabel() ?: '—')
+                            .($ref ? ', референция '.$ref : '')
+                            .'. После подтверждения студенту откроется доступ, а номинал вычтется из гонорара преподавателя.';
+                    })
+                    ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                // H4627: поступление не нашлось в выписке преподавателя —
+                // отклоняем заявку (pending → canceled, доступ не открывался,
+                // гонорар не затронут).
+                Tables\Actions\Action::make('rejectTeacherTransfer')
+                    ->label('Нет платежа — отклонить')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Payment $record) => $record->isTeacherTransfer() && $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Отклонить заявку')
+                    ->modalDescription('Поступление не найдено в выписке преподавателя. Заявка будет отменена — доступ не открывался, гонорар не затронут. Студенту стоит написать, почему заявка отклонена.')
+                    ->action(fn (Payment $record) => $record->update(['status' => 'canceled'])),
 
                 // H3497: SEPA-заявка после сверки поступления по выписке получателя.
                 Tables\Actions\Action::make('confirmBankSepa')
