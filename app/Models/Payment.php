@@ -120,6 +120,16 @@ class Payment extends Model
     public const PROVIDER_BANK_SEPA = 'bank_sepa';
 
     /**
+     * Заявка студента об оплате НАПРЯМУЮ преподавателю на его личный счёт
+     * (H4627, зеркало PayPal-pending/BankClaim). Запись сразу несёт
+     * received_account='teacher_personal' + received_by_teacher_id, поэтому
+     * после подтверждения (pending → paid) движок зарплаты вычтет номинал
+     * из гонорара преподавателя сам (механизм H4597). Авто-доверия НЕТ —
+     * сверку по выписке преподавателя делает куратор всегда.
+     */
+    public const PROVIDER_TEACHER_TRANSFER = 'teacher_transfer';
+
+    /**
      * Providers that wait for human reconciliation and must never be reaped by
      * payments:expire-stale-checkouts (they are not abandoned bank links).
      *
@@ -129,6 +139,7 @@ class Payment extends Model
         self::PROVIDER_PAYPAL,
         self::PROVIDER_INVOICE,
         self::PROVIDER_BANK_SEPA,
+        self::PROVIDER_TEACHER_TRANSFER,
     ];
 
     protected $casts = [
@@ -316,6 +327,12 @@ class Payment extends Model
     public function isBankSepa(): bool
     {
         return $this->provider === self::PROVIDER_BANK_SEPA;
+    }
+
+    /** Заявка об оплате напрямую преподавателю (H4627), ожидает сверки куратора. */
+    public function isTeacherTransfer(): bool
+    {
+        return $this->provider === self::PROVIDER_TEACHER_TRANSFER;
     }
 
     /**
@@ -533,6 +550,12 @@ class Payment extends Model
     public function scopeBankSepaPending(Builder $query): Builder
     {
         return $query->where('provider', self::PROVIDER_BANK_SEPA)->where('status', 'pending');
+    }
+
+    /** Заявки «заплатил преподавателю напрямую» (H4627) — сверка куратора по выписке. */
+    public function scopeTeacherTransferPending(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_TEACHER_TRANSFER)->where('status', 'pending');
     }
 
     /**

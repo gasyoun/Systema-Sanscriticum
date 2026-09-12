@@ -76,6 +76,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubscriptionLandingController;
 use App\Http\Controllers\SurveyPageController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\TeacherPayController;
 use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TgLoginLinkController;
 use App\Http\Controllers\TimezoneController;
@@ -1070,6 +1071,17 @@ Route::get('/bank/{tariff}', [BankClaimController::class, 'show'])
 Route::post('/bank/{tariff}', [BankClaimController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('bank.claim.store');
+
+// «Я заплатил преподавателю напрямую» (H4627): анкета-зеркало PayPal-pending.
+// Платёж ложится pending с received_account=teacher + received_by_teacher_id;
+// куратор сверяет по выписке преподавателя и подтверждает в Filament —
+// номинал вычтется из гонорара сам (H4597). Флаг TEACHER_PAY_ENABLED default
+// OFF (404). Строго до catch-all /{slug}; throttle:5,1 — защита от спама.
+Route::get('/teacher-pay/{tariff}', [TeacherPayController::class, 'show'])
+    ->name('teacherpay.claim.show');
+Route::post('/teacher-pay/{tariff}', [TeacherPayController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('teacherpay.claim.store');
 
 // Счёт для компании / ИП (безнал). Flag COMPANY_INVOICE_ENABLED; pending until
 // admin confirms bank transfer. Print path BEFORE /invoice/{tariff} so "print"

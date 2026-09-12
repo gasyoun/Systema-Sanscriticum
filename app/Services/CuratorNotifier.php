@@ -132,6 +132,43 @@ class CuratorNotifier
     }
 
     /**
+     * Заявка студента «заплатил преподавателю напрямую» (H4627) — куратор
+     * сверяет по выписке преподавателя, затем «Подтвердить перевод
+     * преподавателю» в Filament: номинал вычтется из гонорара сам (H4597).
+     */
+    public function teacherPayReceived(Payment $payment): void
+    {
+        $lines = [
+            '🧑‍🏫 <b>Заявка: оплата напрямую преподавателю</b> — нужна сверка',
+            '',
+            $this->studentLine($payment->user),
+            $this->courseLine($payment->course),
+            $this->tariffLine($payment),
+            'Получатель: <b>'.e($payment->receivedByTeacher?->name ?? '—').'</b>',
+            'Заявлено: <b>'.($payment->foreignAmountLabel() ?: '—').'</b>',
+            'Номинал: <b>'.$this->money((float) $payment->amount).'</b>',
+        ];
+        if ($sender = $payment->claimMeta('sender_name')) {
+            $lines[] = 'Отправитель: <code>'.e((string) $sender).'</code>';
+        }
+        if ($paidOn = $payment->claimMeta('paid_on')) {
+            $lines[] = 'Дата оплаты: <b>'.e((string) $paidOn).'</b>';
+        }
+        if ($ref = $payment->claimMeta('reference')) {
+            $lines[] = 'Референция: <code>'.e((string) $ref).'</code>';
+        }
+        if (! empty($payment->payer_note)) {
+            $lines[] = 'Примечание: '.e($payment->payer_note);
+        }
+        if (! empty($payment->proof_path)) {
+            $lines[] = '📎 Приложен файл чека';
+        }
+        $lines[] = $this->adminLink($payment->user);
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
      * Новый счёт юрлицу — ждёт банковского поступления, затем «Подтвердить счёт».
      */
     public function companyInvoiceReceived(Payment $payment): void
