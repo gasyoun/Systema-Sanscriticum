@@ -7,6 +7,8 @@ _Created: 12-09-2026 · Last updated: 12-09-2026_
 **Exec:** [2880](https://context-ai.ru/workflow/1EIqqNzMl5NNIxST/executions/2880) — упал на `AI Agent1`, `NodeOperationError: Request timed out.`
 **Класс:** тот же конвейер, что [инцидент 10-09](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/INCIDENT_N8N_ENOSPC_HINDI_COVER_MERGE_DEADEND_10-09-2026.md), но новый механизм отказа.
 
+**СТАТУС 12-09 (вечер): хвост выполнен агент-лэйном в тот же день — пункт «Остатки» №1 закрыт.** Repair-воркфлоу `R3pAIr2880tAiL01` (stub-ноды + verbatim-хвост, retry ×3 на LLM-ноде), exec **2957** success 17:43:57Z: AI-оглавление 67 с, описания YouTube+Rutube обновлены, **урок 1951 создан в админке**, финальный TG доставлен, чистка + DELETE выполнены. Пункт №2 (Retry On Fail в основном воркфлоу) остаётся открытым — repair-копия уже с ретраем. Пункт №3 закрыт: рунбук дополнен §9 (n8n execute + repair-плейбук). Удаление repair-воркфлоу — 403 (нет scope `workflow:delete`), оставлен inactive.
+
 ## TL;DR
 
 1. Вебхук `recording.completed` пришёл 11:52:12 UTC; весь конвейер **до AI-шага прошёл успешно**: DOWNLOAD (10,2 с) → YouTube upload (176,8 с) → обложка/плейлист → Rutube ×2 → аудио → транскрипт (`HTTP Request2`, 10,4 с).

@@ -1,6 +1,6 @@
 # RUNBOOK — n8n ZOOM 1.4: записи не появились / n8n упал
 
-_Created: 24-08-2026 · Last updated: 10-09-2026_
+_Created: 24-08-2026 · Last updated: 12-09-2026_
 
 **Audience:** дежурный агент / оператор. Один документ на два вопроса: «записи нет» и «n8n лежит».
 **Хосты:** n8n `root@193.232.229.91` (docker compose `/opt/n8n`, контейнер `n8n-n8n-1`, restart=unless-stopped); Laravel `root@193.232.229.92`.
@@ -156,5 +156,24 @@ cd /var/www/html && php artisan recordings:gap-watch --retry-failed --date=<се
 - Успешная отправка = exit 0; FAILURE остался только для `--dry` и «пробелы есть, но в TG не ушло».
 - REST-плечо сторожа читает последние exec через `N8N_API_KEY` (skip-soft при недоступности — таблица всё равно печатается).
 - Fallback чтения на .91: `sqlite3 /opt/n8n/storage/database.sqlite "SELECT id,status,startedAt FROM execution_entity WHERE workflowId='1EIqqNzMl5NNIxST' ORDER BY startedAt DESC LIMIT 3;"`
+
+
+## 9. Хирургический реплей хвоста + `n8n execute` в контейнере (класс 12-09-2026)
+
+Когда полный ретрай запрещён (§7), а после упавшей ноды остался длинный хвост — соберите repair-воркфлоу и гоняйте через CLI. Проверено на exec 2880 (12-09): хвост выполнен целиком, урок 1951 создан, TG доставлен, ~46 мин общий прогон.
+
+**`n8n execute` в контейнере:**
+- Падает сразу: «n8n Task Broker's port 5679 is already in use» — CLI-инстанс поднимает свой task-broker на порту главного процесса.
+- Лечение: `docker exec -e N8N_RUNNERS_BROKER_PORT=5699 n8n-n8n-1 n8n execute --id <id>` (переменная из `@n8n/config`, `runners.config.js`). JS-runner регистрируется, исполнение пишется в общий sqlite; Wait-ноды резюмит главный инстанс по `waitTill` — CLI может завершиться, докатит главный процесс.
+
+**Сборка repair-воркфлоу:**
+1. Из runData упавшего exec (sqlite `execution_data`; zlib + флэттен-формат: строковые цифры = ссылки в контейнер массива, разыменование ОДНОКРАТНОЕ — повторное разыменование литералов-цифр даёт IndexError) берутся успешные выходы апстримных нод.
+2. Граф: `manualTrigger` → Code-stub-ноды (имена = имена апстримных нод, каждая отдаёт записанные items — выражения `$('X')` хвоста резолвятся по именам) → настоящие хвостовые ноды verbatim (креды резолвятся на том же инстансе).
+3. На упавшей LLM/AI-ноде выставить `retryOnFail: true, maxTries: 2-3, waitBetweenTries: 60000` — таймаут-класс (§3) лечится ретраем.
+4. Кормилец AI-ноды (нода, чей выход содержит промпт-поля, напр. `transcript`) — ПОСЛЕДНИЙ stub в цепочке.
+5. Импорт: `docker exec n8n-n8n-1 n8n import:workflow --input=/data/repair.json` — в JSON нужен явный `"id"`, иначе NOT NULL constraint failed.
+6. Финал: удалить repair-воркфлоу (`DELETE /api/v1/workflows/{id}`; ключу `oxalpha-ops` не хватает `workflow:delete` — 403, тогда оставить inactive, имя с префиксом `DONE-DELETE-ME …`).
+
+_Заметка 12-09: сабваркфлоу собирался и исполнялся агентом (OxAlpha) — playbook воспроизводим скриптом (builder в логах сессии, /root/repair2880/ на .91)._
 
 _Dr. Mārcis Gasūns_
