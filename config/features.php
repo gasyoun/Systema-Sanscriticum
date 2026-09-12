@@ -1506,4 +1506,17 @@ return [
     // H4392 (MG 08-09-2026): еженедельный пост «Кто на чём закончил» в чат
     // «Институт» (care:weekly-finish). Получатель — TELEGRAM_INSTITUTE_CHAT_ID.
     'weekly_finish_report' => (bool) env('WEEKLY_FINISH_REPORT_ENABLED', false),
+
+    /*
+     | H4608 — MIC shadow classify-all-inbound: каждое входящее сообщение
+     | поддержки (telegram + web) прогоняется через вендоренный MIC PHP-лоадер
+     | (tools/message-intent-classifier) и пишется ТОЛЬКО в телеметрию
+     | mic_shadow_classifications (per-plane {category, reason, null} +
+     | near-miss top-2). OFF = ровно ноль вызовов MIC, поведение ответов
+     | не меняется; текст сообщения нигде не пишется (только sha256-хеш).
+     | Это НЕ рантайм-флип: staging→runtime остаётся за H3529 (precision
+     | >=93% на корпусе). Включение телеметрии: MIC_SHADOW_CLASSIFY=true
+     | + php artisan config:cache (human ops).
+     */
+    'mic_shadow_classify' => (bool) env('MIC_SHADOW_CLASSIFY', false),
 ];
