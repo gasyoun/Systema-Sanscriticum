@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\PayoutRunService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -442,5 +443,154 @@ class PayoutRunTest extends TestCase
         $this->assertSame(7, $b['group_size']);
         $this->assertSame(5, $b['paid']);
         $this->assertEqualsCanonicalizing(['Соловьева Ольга', 'Магдалинский Тест'], $b['non_payers']);
+    }
+
+    /** H4629 (1): marina — формула 1-в-1 «(база × 92%) × ставка = …», перерасчёт отдельной строкой, «К оплате». */
+    public function test_marina_format_reproduces_chat_formula_style(): void
+    {
+        $kostina = Teacher::create(['name' => 'Костина Екатерина']);
+        $hindi = $this->percentCourse($kostina, 'Хинди', 30);
+        $this->block($hindi, 1, '2026-06-20', '2026-07-10');
+        $this->block($hindi, 2, '2026-07-25', '2026-08-22');
+        for ($i = 1; $i <= 8; $i++) {
+            $this->pay($hindi, ['user_id' => User::factory()->create()->id, 'amount' => 6000, 'tariff' => 'block_2', 'start_block' => 2, 'end_block' => 2], '2026-08-01');
+        }
+        // Поздняя оплата завершённого ДО отсечки блока 1 → перерасчёт.
+        $this->pay($hindi, ['user_id' => User::factory()->create()->id, 'amount' => 6000, 'tariff' => 'block_1', 'start_block' => 1, 'end_block' => 1], '2026-08-05');
+
+        // Костина — EUR-получатель по конфигу: «итого ... = N €» и «К оплате: X € / Y руб.».
+        $this->fx(98.5182, '2026-08-26');
+
+        // Artisan::call вместо $this->artisan(): PendingCommand-мок (expectsOutputToContain)
+        // каршится на >1 ожидании — Mockery-ожидание с atLeast()->times(0) не исчерпывается
+        // и перехватывает все doWrite, остальные substring-ожидания никогда не срабатывают.
+        $code = Artisan::call('payout:run', [
+            '--teacher' => (string) $kostina->id,
+            '--on' => '2026-08-26',
+            '--since' => '2026-07-24',
+            '--format' => 'marina',
+        ]);
+        $this->assertSame(0, $code);
+        $out = Artisan::output();
+        foreach ([
+            'Костина Екатерина 2-й блок Хинди по 26.08.2026:',
+            '🔹️ Хинди:',
+            '2-й блок: платных 8: (48000 × 92%) × 30% = 44160 × 30% = 13248 р.',
+            'перерасчёт за 1-й блок: платных 1: (6000 × 92%) × 30% = 5520 × 30% = 1656 р.',
+            'итого: 13248 + 1656 = 14904 р. = 151,28 €',
+            'Итого начислено: 14 904,00 руб. или 151,28 €',
+            'К оплате: 151,28 € / 14 904,00 руб.',
+        ] as $expected) {
+            $this->assertStringContainsString($expected, $out);
+        }
+    }
+
+    /** H4629 (1): marina для EUR-получателя — «= N €» на строке, «Всего», «К оплате: X € / Y руб.». */
+    public function test_marina_eur_lane_appends_euro_and_vsego(): void
+    {
+        $leytan = Teacher::create(['name' => 'Лейтан Эдгар', 'payout_currency' => 'EUR']);
+        $syntax = $this->percentCourse($leytan, 'Синтаксис', 60);
+        $vash = $this->percentCourse($leytan, 'Васиштха', 60);
+        $this->block($syntax, 64, '2026-07-16', '2026-07-28');
+        $this->block($vash, 10, '2026-07-25', '2026-08-13');
+        // 24000 × 92% × 60% = 13248; 10200 × 92% × 60% = 5630,40.
+        $this->pay($syntax, ['user_id' => User::factory()->create()->id, 'amount' => 24000, 'tariff' => 'block_64', 'start_block' => 64, 'end_block' => 64], '2026-07-28');
+        $this->pay($vash, ['user_id' => User::factory()->create()->id, 'amount' => 10200, 'tariff' => 'block_10', 'start_block' => 10, 'end_block' => 10], '2026-08-01');
+
+        $this->fx(98.5182, '2026-08-26');
+
+        $code = Artisan::call('payout:run', [
+            '--teacher' => (string) $leytan->id,
+            '--on' => '2026-08-26',
+            '--since' => '2026-07-24',
+            '--format' => 'marina',
+        ]);
+        $this->assertSame(0, $code);
+        $out = Artisan::output();
+        foreach ([
+            '64-й блок Синтаксис',
+            '(24000 × 92%) × 60% = 22080 × 60% = 13248 р. = 134,47 €',
+            '(10200 × 92%) × 60% = 9384 × 60% = 5630,40 р. = 57,15 €',
+            'Всего: 134,47 + 57,15 = 191,62 евро',
+            'К оплате: 191,62 € / 18 878,40 руб.',
+        ] as $expected) {
+            $this->assertStringContainsString($expected, $out);
+        }
+    }
+
+    /** H4629 (2): detailed — перерасчёты поимённо + должники, очищенные от вступивших позже блока. */
+    public function test_detailed_lists_named_recalcs_and_cleans_late_joined_debtors(): void
+    {
+        $leytan = Teacher::create(['name' => 'Лейтан Эдгар']);
+        $syntax = $this->percentCourse($leytan, 'Синтаксис', 60);
+        $this->block($syntax, 64, '2026-07-01', '2026-07-20');
+        $this->block($syntax, 65, '2026-07-21', '2026-08-25');
+
+        $group = Group::create(['name' => 'Синтаксис 65']);
+        $syntax->groups()->attach($group->id);
+        for ($i = 1; $i <= 5; $i++) {
+            $u = User::factory()->create();
+            $group->users()->attach($u->id);
+            $this->pay($syntax, ['user_id' => $u->id, 'amount' => 4800, 'tariff' => 'block_65', 'start_block' => 65, 'end_block' => 65], '2026-08-01');
+        }
+        // Член группы ДО блока, не оплатил — остаётся должником.
+        $solovieva = User::factory()->create(['name' => 'Соловьева Ольга']);
+        $group->users()->attach($solovieva->id, ['created_at' => '2026-08-01 10:00:00', 'updated_at' => '2026-08-01 10:00:00']);
+        // Вступил в группу ПОСЛЕ завершения блока — из должников чистится.
+        $late = User::factory()->create(['name' => 'Поздний Тест']);
+        $group->users()->attach($late->id, ['created_at' => '2026-09-01 10:00:00', 'updated_at' => '2026-09-01 10:00:00']);
+        // Поздняя оплата блока 64 (завершён до отсечки) → поимённый перерасчёт.
+        $latePayer = $this->pay($syntax, ['user_id' => User::factory()->create(['name' => 'Поздняя Оплата'])->id, 'amount' => 4800, 'tariff' => 'block_64', 'start_block' => 64, 'end_block' => 64], '2026-08-05');
+
+        $code = Artisan::call('payout:run', [
+            '--teacher' => (string) $leytan->id,
+            '--on' => '2026-08-26',
+            '--since' => '2026-07-24',
+            '--format' => 'detailed',
+        ]);
+        $this->assertSame(0, $code);
+        $out = Artisan::output();
+        foreach ([
+            '### Перерасчёты старых блоков (поимённо)',
+            sprintf('| Поздняя Оплата | Синтаксис | 64 | 4 800,00 | 05.08.2026 | %d |', $latePayer->id),
+            '### Должники по завершённым блокам',
+            '— не оплатили: Соловьева Ольга',
+            'не считаем должниками (вступили в группу после завершения блока): Поздний Тест',
+        ] as $expected) {
+            $this->assertStringContainsString($expected, $out);
+        }
+    }
+
+    /** H4629 (3): payments — лента по датам: дата, ученик, курс, блок, доля, метод. */
+    public function test_payments_feed_lists_shares_by_date_with_method(): void
+    {
+        $leytan = Teacher::create(['name' => 'Лейтан Эдгар']);
+        $syntax = $this->percentCourse($leytan, 'Синтаксис', 60);
+        $this->block($syntax, 65, '2026-07-21', '2026-08-25');
+
+        $payer = $this->pay($syntax, [
+            'user_id' => User::factory()->create(['name' => 'Плательщик СБП'])->id,
+            'amount' => 4800, 'tariff' => 'block_65', 'start_block' => 65, 'end_block' => 65,
+            'payment_method' => 'sbp',
+        ], '2026-08-01');
+        $cashPayer = $this->pay($syntax, ['user_id' => User::factory()->create(['name' => 'Плательщик Наличные'])->id, 'amount' => 19200, 'tariff' => 'block_65', 'start_block' => 65, 'end_block' => 65, 'payment_method' => 'cash'], '2026-07-30');
+
+        $code = Artisan::call('payout:run', [
+            '--teacher' => (string) $leytan->id,
+            '--on' => '2026-08-26',
+            '--since' => '2026-07-24',
+            '--format' => 'payments',
+        ]);
+        $this->assertSame(0, $code);
+        $out = Artisan::output();
+        foreach ([
+            '# Лента платежей расчёта',
+            '**30.07.2026**',
+            '- Плательщик Наличные — «Синтаксис», блок 65 — доля блока #'.$cashPayer->id.' — 19 200,00 р. — Наличные',
+            '- Плательщик СБП — «Синтаксис», блок 65 — доля блока #'.$payer->id.' — 4 800,00 р. — СБП',
+            'Доли расчёта: 24 000,00 р.',
+        ] as $expected) {
+            $this->assertStringContainsString($expected, $out);
+        }
     }
 }
