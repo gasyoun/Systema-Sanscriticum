@@ -76,6 +76,7 @@ for r in sample_targets:
     key = href
     sz = sizes.get(key)
     local = None
+calibration = []
 print('bitrate calibration (file, duration_s, size_bytes, computed_bps):')
 for i, r in enumerate(sample_targets):
     local = os.path.join(sample_dir, f"sample_{i}.mp3")
