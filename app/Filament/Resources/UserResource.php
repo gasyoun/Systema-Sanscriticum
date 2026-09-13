@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Group;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
+use App\Models\Schedule;
 use App\Models\ScheduledReminder;
 use App\Models\User;
 use App\Services\Access\LoginLinkNotifier;
@@ -662,7 +663,7 @@ class UserResource extends Resource
                 // Позиция студента: макс. предмет канвы на записях уроков, дата
                 // которых <= последнего ФАКТА студента (WebinarAttendance).
                 $lastFact = $record->attendances()
-                    ->whereIn('schedule_id', App\Models\Schedule::where('group_id', $group->id)->pluck('id'))
+                    ->whereIn('schedule_id', Schedule::where('group_id', $group->id)->pluck('id'))
                     ->latest('created_at')->first();
                 $studentCursor = 0;
                 $lastCanvas = null;
