@@ -12,7 +12,16 @@
 # Семантика: `use App\...;` импорт связывает только НЕквалифицированные
 # имена (`Schedule`), поэтому inline `App\...` в коде — всегда либо
 # ошибка, либо надо писать `\App\...` с ведущим backslash (настоящий
-# FQCN). Упоминания в комментариях/докблоках не флагаются.
+# FQCN).
+#
+# Реализация — AST-паттерны (не regex): позиции-выражения, где inline
+# FQCN реально встречается (static call / new / ::class / instanceof).
+# Regex-вариант отвергнут: semgrep применяет pattern-not-regex только
+# ВНУТРИ span'а pattern-regex, поэтому исключить строки `use`/комментарии
+# из token-паттерна нельзя (проверено: 4866 ложных находок на CI).
+# Покрытие: позиции типов (`function f(App\Models\X $x)`, `: App\Models\X`,
+# property-типы) правилом не покрываются — репо-свип 13-09-2026 таких
+# инстансов не нашёл; при появлении — расширять правило.
 #
 # Заглушить осознанно: `// nosemgrep: unqualified-inline-app-fqcn`.
 rules:
@@ -32,11 +41,15 @@ rules:
         - php
       references:
         - https://github.com/gasyoun/Systema-Sanscriticum/pull/2516
-    # `App\Seg\Name` (>= 2 segments) not preceded by a leading backslash.
-    pattern-regex: '(?<!\\)\bApp\\(?:[A-Za-z_][A-Za-z0-9_]*\\)+[A-Za-z_][A-Za-z0-9_]*'
-    # Exclude: (1) any occurrence on a line where a comment marker (`//`,
-    # docblock `*`) precedes it; (2) `use` / `namespace` statements.
-    pattern-not-regex: '(?://|\*)[^\n]*App\\|(?m)^\s*(?:use|namespace)\s+App\\'
+    patterns:
+      - pattern-either:
+          - pattern: $CLS::$METHOD(...)
+          - pattern: new $CLS(...)
+          - pattern: $CLS::class
+          - pattern: $X instanceof $CLS
+      - metavariable-regex:
+          metavariable: $CLS
+          regex: '^App\\(?:[A-Za-z_][A-Za-z0-9_]*\\)+[A-Za-z_][A-Za-z0-9_]*$'
     # The fatal class exists ONLY in namespaced files: there PHP resolves
     # `App\...` relative to the current namespace. Global-namespace files
     # (routes/, config/, blade views) resolve unqualified `App\...` correctly
