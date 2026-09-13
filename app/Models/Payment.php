@@ -559,6 +559,20 @@ class Payment extends Model
     }
 
     /**
+     * H4627: уже ЗАЧТЁННЫЕ прямые оплаты этого же ученика за последние $days
+     * дней (любой преподаватель) — кандидат в дубль при подтверждении новой
+     * заявки. Один и тот же платёж могли занести вручную и через анкету.
+     */
+    public function scopePriorDirectForUser(Builder $query, int $userId, int $excludeId, int $days = 60): Builder
+    {
+        return $query->where('received_account', self::RECEIVED_TEACHER)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->where('user_id', $userId)
+            ->where('id', '!=', $excludeId)
+            ->where('created_at', '>=', now()->subDays($days));
+    }
+
+    /**
      * Авто-доверенные банковские заявки своих учеников: сразу paid, сверка
      * выборочная и пост-фактум (зеркало scopePaypalUnverified).
      */

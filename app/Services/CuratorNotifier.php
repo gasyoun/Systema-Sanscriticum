@@ -144,7 +144,7 @@ class CuratorNotifier
             $this->studentLine($payment->user),
             $this->courseLine($payment->course),
             $this->tariffLine($payment),
-            'Получатель: <b>'.e($payment->receivedByTeacher?->name ?? '—').'</b>',
+            'Преподаватель курса (кому зачесть): <b>'.e($payment->receivedByTeacher?->name ?? '—').'</b>',
             'Заявлено: <b>'.($payment->foreignAmountLabel() ?: '—').'</b>',
             'Номинал: <b>'.$this->money((float) $payment->amount).'</b>',
         ];
