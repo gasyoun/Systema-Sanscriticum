@@ -47,7 +47,6 @@ class TrackedLinkTest extends TestCase
     {
         foreach ([
             'm26-mg-s' => ['telegram_marcisgasuns', 'owned_channel'],
-            'm26-personal-s' => ['marcisgasuns_personal', 'personal_page'],
             'm26-samskrte-s' => ['samskrte', 'crosslink'],
             'm26-samskrtam-s' => ['samskrtam', 'crosslink'],
             'm26-vk-s' => ['vk_senler', 'broadcast'],

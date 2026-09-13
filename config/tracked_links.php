@@ -15,7 +15,6 @@ $channels = [
     'vk' => ['source' => 'vk_senler', 'medium' => 'broadcast'],
     'samskrte' => ['source' => 'samskrte', 'medium' => 'crosslink'],
     'samskrtam' => ['source' => 'samskrtam', 'medium' => 'crosslink'],
-    'personal' => ['source' => 'marcisgasuns_personal', 'medium' => 'personal_page'],
 ];
 $links = [];
 
