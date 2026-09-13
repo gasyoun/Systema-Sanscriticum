@@ -13,7 +13,7 @@ PASS = os.environ['WD_PASS']
 FOLDER_HREF_PREFIX = {
     'Kochergina-Subhashitas': '/Kochergina-Subhashitas/',
     'Subhashitas-Systematic': '/Subhashitas-Systematic/',
-    'Subhashitas-Systematic (1)': '/Subhashitas-Systematic%20(1)/',
+    'Subhashitas-Systematic (1)': '/Subhashitas-Systematic (1)/',
 }
 
 def parse_sizes(xml_path):
