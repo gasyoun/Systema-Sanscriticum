@@ -80,6 +80,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_HISTORY_KEEP` | optional | `500` | config/cabinet_probe.php:54 |
 | `CABINET_PROBE_HOMEWORK_COURSE` | optional | `''` | config/cabinet_probe.php:139 |
 | `CABINET_PROBE_HOMEWORK_LESSON_ID` | optional | `0` | config/cabinet_probe.php:140 |
+| `CABINET_PROBE_KANVA_COURSE_ID` | optional | `0` | config/cabinet_probe.php:207 |
 | `CABINET_PROBE_PAYMENT_URL` | optional | `'https://enter.tochka.com/uapi/acquiring/v1.0/payments_with_receipt',` | config/cabinet_probe.php:76 |
 | `CABINET_PROBE_PING_URL` | optional | `''` | config/cabinet_probe.php:20 |
 | `CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS` | optional | `14` | config/cabinet_probe.php:115 |
@@ -624,9 +625,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SOCIAL_TELEGRAM_URL` | required | `—` | config/social.php:12 |
 | `SOCIAL_VK_URL` | required | `—` | config/social.php:11 |
 | `SOCIAL_WEBSITE_URL` | required | `—` | config/social.php:14 |
-| `SOFT_ALERT_WEBHOOK_SECRET` | secret | `''` | config/cabinet_probe.php:200 |
-| `SOFT_ALERT_WEBHOOK_TIMEOUT` | optional | `8` | config/cabinet_probe.php:201 |
-| `SOFT_ALERT_WEBHOOK_URL` | optional | `''` | config/cabinet_probe.php:199 |
+| `SOFT_ALERT_WEBHOOK_SECRET` | secret | `''` | config/cabinet_probe.php:225 |
+| `SOFT_ALERT_WEBHOOK_TIMEOUT` | optional | `8` | config/cabinet_probe.php:226 |
+| `SOFT_ALERT_WEBHOOK_URL` | optional | `''` | config/cabinet_probe.php:224 |
 | `SQS_PREFIX` | optional | `'https://sqs.us-east-1.amazonaws.com/your-account-id'` | config/queue.php:58 |
 | `SQS_QUEUE` | optional | `'default'` | config/queue.php:59 |
 | `SQS_SUFFIX` | required | `—` | config/queue.php:60 |

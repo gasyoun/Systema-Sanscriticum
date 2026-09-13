@@ -6,13 +6,16 @@ namespace App\Console\Commands;
 
 use App\Models\CabinetProbeRun;
 use App\Models\Course;
+use App\Models\Group;
 use App\Models\HomeworkComment;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\Schedule;
 use App\Models\User;
+use App\Models\WebinarAttendance;
 use App\Services\CuratorNotifier;
 use App\Services\HomeworkService;
+use App\Services\Schedule\TextbookScale;
 use App\Support\Deploy\DeployDriftInspector;
 use App\Support\Roles;
 use App\Support\ServerGuards\CabinetProbeAlertState;
@@ -98,6 +101,10 @@ class ProbeCabinetHealth extends Command
                     label: 'student',
                 ));
                 if (! $this->hasAuthFailure($failures, 'student')) {
+                    // H4641: канва-факстура ДО student_surfaces — иначе
+                    // student.dashboard не исполняет kanva-курсор H4435 и
+                    // фатал класса инцидента 10-13.09.2026 проба не видит.
+                    $failures = array_merge($failures, $this->ensureKanvaFixture());
                     $failures = array_merge($failures, $this->probeSurfacesList(
                         config('cabinet_probe.student_surfaces', []),
                         authenticated: true,
@@ -590,6 +597,91 @@ class ProbeCabinetHealth extends Command
             ),
             'severity' => 'soft',
         ]];
+    }
+
+    /**
+     * H4641: канва-факстура студенческой ветки (см. cabinet_probe.kanva_fixture_course_id).
+     *
+     * student.dashboard исполняет kanva-курсор H4435 только когда у студента
+     * есть курс, чей заголовок матчит семейство канвы
+     * (TextbookScale::courseFamilyPublic), и факт посещения; без этой факстуры
+     * фатал канвы (инцидент 10-13.09.2026: /dvaram 500 — unqualified inline
+     * FQCN, 43 ошибки / 9 студентов / ~3 дня) пробой не ловится.
+     *
+     * Безопасность прода: сам курс человек заводит один раз и пинает его ID в
+     * env (как homework-факстура H37xx); команда дозаводит ТОЛЬКО недостающие
+     * связи smoke-студента (членство в группе, один факт посещения) —
+     * идемпотентно, без дубликатов. Любой пропуск — soft-находка, не critical:
+     * факстура не должна ронять «кабинет жив» на здоровом проде.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function ensureKanvaFixture(): array
+    {
+        $courseId = (int) config('cabinet_probe.kanva_fixture_course_id', 0);
+        if ($courseId === 0) {
+            $this->comment('CABINET_PROBE_KANVA_COURSE_ID пуст — канва-факстура пропущена.');
+
+            return [];
+        }
+
+        $course = Course::find($courseId);
+        if ($course === null) {
+            return [['message' => "kanva fixture: курс #{$courseId} (CABINET_PROBE_KANVA_COURSE_ID) не найден", 'severity' => 'soft']];
+        }
+
+        $family = TextbookScale::courseFamilyPublic((string) $course->title);
+        if ($family === null) {
+            return [['message' => "kanva fixture: заголовок курса #{$courseId} «{$course->title}» не матчит семейство канвы — student.dashboard не войдёт в ветку H4435", 'severity' => 'soft']];
+        }
+
+        $student = Auth::user();
+        if (! $student instanceof User) {
+            return [['message' => 'kanva fixture: smoke-студент не залогинен', 'severity' => 'soft']];
+        }
+
+        $group = $course->groups->first();
+        if (! $group instanceof Group) {
+            return [['message' => "kanva fixture: у курса #{$courseId} нет группы — student.dashboard не покажет курс", 'severity' => 'soft']];
+        }
+
+        // Членство в группе — путь доступа к курсу в dashboard (whereHas('groups')).
+        $student->groups()->syncWithoutDetaching([$group->id]);
+
+        $hasFact = $student->attendances()
+            ->whereIn('schedule_id', Schedule::where('group_id', $group->id)->select('id'))
+            ->exists();
+        if (! $hasFact) {
+            $schedule = Schedule::where('group_id', $group->id)->orderByDesc('start')->first();
+            if ($schedule === null) {
+                // В группе ни одного занятия: заводим прошедшее занятие + урок
+                // канвы («читка»), чтобы двигались и student-, и groupCursor.
+                $day = now()->subDay();
+                $schedule = Schedule::create([
+                    'title' => 'Канва-факстура пробы (H4641)',
+                    'start' => $day->format('Y-m-d H:i:s'),
+                    'group_id' => $group->id,
+                    'course_id' => $course->id,
+                ]);
+                Lesson::create([
+                    'title' => 'Кочергина 1 (читка)',
+                    'course_id' => $course->id,
+                    'lesson_date' => $day->format('Y-m-d H:i:s'),
+                ]);
+            }
+            WebinarAttendance::create([
+                'schedule_id' => $schedule->id,
+                'user_id' => $student->id,
+                'zoom_participant_uuid' => 'cabinet-probe-kanva',
+                'name' => 'cabinet:probe',
+                'joined_at' => $schedule->start ?? now()->subDay(),
+                'duration_seconds' => 1800,
+            ]);
+        }
+
+        $this->info("Канва-факстура OK: курс #{$courseId} (семейство «{$family}»), группа #{$group->id}, студент #{$student->id} — ветка H4435 исполняется.");
+
+        return [];
     }
 
     /**
