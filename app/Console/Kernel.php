@@ -1070,6 +1070,14 @@ class Kernel extends ConsoleKernel
         // scripts/server_guards/cron/app-user.crontab — со своим локом и
         // судьбой, не зависящей от schedule:run. Не возвращайте команду сюда.
 
+        // --- ЛОГ-СТОРОЖ 500-КЛАССА (H4648) ---
+        // `logs:error-watch` — там же, рядом с cabinet:probe, и по той же
+        // причине НЕ здесь: третья строка `systema-watchdog-run.sh
+        // "logs:error-watch" logs-watch 120` в app-user.crontab (своя судьба,
+        // свой лок — урок H1917). Числа: scripts/server_guards.conf
+        // (WATCHDOG_LOGS_WATCH_*); сверка живой машины: guards:verify.
+        // Всплеск production.ERROR (≥3/ч, config/logs_watch.php) → TG soft.
+
     }
 
     /** club membership expiry/free lesson + PayPal fixed prices. */

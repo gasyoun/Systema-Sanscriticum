@@ -18,4 +18,5 @@
 HOME=/tmp
 * * * * * /usr/local/sbin/systema-schedule-run.sh >> @@APP_DIR@@/storage/logs/schedule.log 2>&1
 @@WATCHDOG_CABINET_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "cabinet:probe" cabinet @@WATCHDOG_CABINET_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
+@@WATCHDOG_LOGS_WATCH_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "logs:error-watch" logs-watch @@WATCHDOG_LOGS_WATCH_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
 @@WATCHDOG_HEARTBEAT_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "heartbeat:ping" heartbeat @@WATCHDOG_HEARTBEAT_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
