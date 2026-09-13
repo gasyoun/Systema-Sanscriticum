@@ -35,7 +35,7 @@ STRIP_RE = re.compile(r"[\s।॥|/,.;:'​‌‍\-]")
 # "Su41-Nabhisheko.mp3" / "Su7-Tatkarma.mp3"
 SU_RE = re.compile(r"^Su(\d+)-(.+)\.mp3$")
 # "01 Субхашита Удьямэна (Udyamena) उद्यमेन.mp3"
-NUMBERED_RE = re.compile(r"^(\d+)\s+Субхашита\s+(.+?)\s+\((.+?)\)\s+([ऀ-ॿ].*)\.mp3$")
+NUMBERED_RE = re.compile(r"^(\d+)\s+(?:\([^()]*\)\s+)?Субхашита\s+(.+?)\s+\(([^()]*)\)\s+([ऀ-ॿ].*)\.mp3$")
 # "Субхашита Видья нама (Vidya nama) विद्या नाम.mp3"
 KOCH_RE = re.compile(r"^Субхашита\s+(.+?)\s+\((.+?)\)\s+([ऀ-ॿ].*)\.mp3$")
 TOC_RE = re.compile(r"^(\d+)\.\s+([ऀ-ॿ][^\d]*?)\s+(\d+)\s*$")
@@ -193,7 +193,12 @@ def main():
             audio_set = "systematic"
             audio_id = f"sub-su{su_num:03d}-{slug.lower()}" if su_num else f"sub-{slug.lower()}"
         is_num, method = match_saying(verse, anth_pratika, deva, sprueche)
-        if not deva and anth_pratika:
+        # The pratīka we publish is the one actually spoken on the tape when the
+        # recordings list gives the verse; the anthology's own pratīka can be a
+        # different reading (Su45: the list has लुब्धो…, the anthology मूर्खो…).
+        if verse:
+            deva = " ".join(verse.split()[:3])
+        elif not deva and anth_pratika:
             deva = anth_pratika
         key = (audio_set, name)
         if key in seen:
