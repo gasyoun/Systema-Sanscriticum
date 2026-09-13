@@ -159,12 +159,11 @@ def main():
             deva_by_su[n] = m.group(4).strip()
             iast_by_su[n] = m.group(3).strip()
 
-    # Devanagari pratīka per Kochergina slug, from the Devanagari-named folder.
-    koch_deva = {}
-    for _size, rel in read_listing(st / "listing_kochergina.txt"):
-        m = KOCH_RE.match(Path(rel).name)
-        if m:
-            koch_deva[norm(m.group(3))] = (m.group(3).strip(), m.group(2).strip(), m.group(1).strip())
+    # Devanagari pratīka per Kochergina recording, keyed by byte size — the
+    # Devanagari-named folder and the Latin-named mirror hold the same 15 files.
+    koch_by_size = {}
+    for size, rel in read_listing(st / "listing_kochergina.txt"):
+        koch_by_size.setdefault(size, []).append((size, rel))
 
     rows, seen = [], set()
     for size, rel in read_listing(st / "listing_systematic.txt"):
