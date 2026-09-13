@@ -1,0 +1,49 @@
+# H4641: локальное правило SAST для Systema-Sanscriticum.
+#
+# Фон: инцидент 10-13.09.2026 (Sev-1) — неквалифицированный inline
+# `App\Models\Schedule::where(...)` внутри namespaced-файла; PHP резолвит
+# такой класс ОТНОСИТЕЛЬНО текущего namespace
+# (App\Http\Controllers\App\Models\Schedule) → fatal "Class not found" →
+# 500 у всех студентов курса-учебника (43 ошибки / 9 студентов / ~3 дня
+# до детекта). PR #2516 починил два известных места; SOS-проход чистил
+# только файлы, тронутые H4435. Это правило — постоянный барьер для
+# всего класса: CI падает на ЛЮБОМ новом instance.
+#
+# Семантика: `use App\...;` импорт связывает только НЕквалифицированные
+# имена (`Schedule`), поэтому inline `App\...` в коде — всегда либо
+# ошибка, либо надо писать `\App\...` с ведущим backslash (настоящий
+# FQCN). Упоминания в комментариях/докблоках не флагаются.
+#
+# Заглушить осознанно: `// nosemgrep: unqualified-inline-app-fqcn`.
+rules:
+  - id: unqualified-inline-app-fqcn
+    message: >-
+      Unqualified inline `App\...` class reference in a namespaced PHP file:
+      PHP resolves it RELATIVE to the current namespace (e.g.
+      App\Http\Controllers\App\Models\...), which is a fatal
+      "Class not found" at runtime (H4641 / incident 10-13.09.2026: student
+      /dvaram 500). Add a `use App\...;` import and reference the short
+      name, or prefix a real FQCN with a leading backslash (`\App\...`).
+    severity: ERROR
+    languages: [php]
+    metadata:
+      category: correctness
+      technology:
+        - php
+      references:
+        - https://github.com/gasyoun/Systema-Sanscriticum/pull/2516
+    # `App\Seg\Name` (>= 2 segments) not preceded by a leading backslash.
+    pattern-regex: '(?<!\\)\bApp\\(?:[A-Za-z_][A-Za-z0-9_]*\\)+[A-Za-z_][A-Za-z0-9_]*'
+    # Exclude: (1) any occurrence on a line where a comment marker (`//`,
+    # docblock `*`) precedes it; (2) `use` / `namespace` statements.
+    pattern-not-regex: '(?://|\*)[^\n]*App\\|(?m)^\s*(?:use|namespace)\s+App\\'
+    # The fatal class exists ONLY in namespaced files: there PHP resolves
+    # `App\...` relative to the current namespace. Global-namespace files
+    # (routes/, config/, blade views) resolve unqualified `App\...` correctly
+    # and use it legitimately everywhere — scoping the rule to the namespaced
+    # trees keeps it noise-free without weakening the guard.
+    paths:
+      include:
+        - app/**
+        - database/**
+        - tests/**
