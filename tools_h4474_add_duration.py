@@ -62,7 +62,7 @@ for r in sample_targets:
         probe = subprocess.run(
             ['ffprobe', '-v', 'error', '-show_entries', 'format=duration,bit_rate', '-of',
              'default=noprint_wrappers=1', local],
-            capture_output=True, text=True)
+            capture_output=True, text=True, encoding='utf-8')
         print(r['folder'], r['file'][:40], probe.stdout.strip().replace('\n', ' '))
         dm = re.search(r'duration=([\d.]+)', probe.stdout)
         bm = re.search(r'bit_rate=(\d+)', probe.stdout)
