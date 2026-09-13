@@ -80,6 +80,7 @@ use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TgLoginLinkController;
 use App\Http\Controllers\TimezoneController;
+use App\Http\Controllers\TrackedLinkController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
 use App\Http\Controllers\VisualDcsController;
@@ -169,6 +170,10 @@ Route::get('/', function () {
 
 // Витрина магазина курсов
 Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
+
+// Короткие ссылки кампаний: UTM сохраняются в сессии, а каталог открывается
+// без query string. Внешний текст и адресная строка не раскрывают разметку.
+Route::get('/ga/{link}', TrackedLinkController::class)->name('tracked-link');
 
 // Фильтры каталога словами в пути, без query string (H3xxx — /online?cat[0]=3
 // читался как плохой SEO-слаг). Строгий where() значит порядок регистрации
