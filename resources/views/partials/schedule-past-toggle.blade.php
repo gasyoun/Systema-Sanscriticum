@@ -1,6 +1,8 @@
 {{-- H4387: кнопка раскрытия прошедших занятий в блоке FullSchedulePost::html().
      Один делегированный слушатель на документ — работает для любого числа
-     блоков на странице. Кнопка и скрытые span'ы рендерятся билдером. --}}
+     блоков на странице. Кнопка и скрытые span'ы рендерятся билдером.
+     H4647: кнопка — иконка 34×34 (глаз/перечёркнутый глаз, глиф меняет CSS
+     по aria-expanded); JS обновляет только aria-label + title. --}}
 <script>
 (function () {
     'use strict';
@@ -25,7 +27,9 @@
         }
         scope.setAttribute('data-fs-past', shown ? 'hidden' : 'shown');
         btn.setAttribute('aria-expanded', shown ? 'false' : 'true');
-        btn.textContent = shown ? 'Показать прошедшие занятия' : 'Скрыть прошедшие занятия';
+        var label = shown ? 'Показать прошедшие занятия' : 'Скрыть прошедшие занятия';
+        btn.setAttribute('aria-label', label);
+        btn.setAttribute('title', label);
     });
 })();
 </script>

@@ -106,4 +106,47 @@ class PublicSchedulePageTest extends TestCase
             ->assertSee('fs-last', false)
             ->assertSee('<strong>2-е занятие</strong>: ', false);
     }
+
+    /**
+     * H4647 (MG 13-09-2026): единицы идут по дню недели ближайшего занятия
+     * (Пн раньше Сб — день недели старше алфавита), пронумерованы, свёрнуты
+     * в гармошку, над списком — сводка «Курсов: N · Ведут: …» с якорями.
+     *
+     * @test
+     */
+    public function units_are_numbered_ordered_by_weekday_and_collapsed(): void
+    {
+        config(['features.schedule_full_post' => true]);
+
+        // «Альфа» — по субботам (2027-03-06), «Бета» — по понедельникам
+        // (2027-03-08): при старом алфавитном порядке Альфа шла бы первой.
+        $alpha = Course::factory()->create(['title' => 'Альфа', 'slug' => 'alpha', 'is_active' => true, 'is_visible' => true]);
+        $betaTeacher = Teacher::create(['name' => 'Ведущая Бета', 'email' => 'beta@example.test']);
+        $beta = Course::factory()->create(['title' => 'Бета', 'slug' => 'beta', 'is_active' => true, 'is_visible' => true, 'teacher_id' => $betaTeacher->id]);
+
+        $groupA = Group::factory()->create();
+        $alpha->groups()->attach($groupA->id);
+        $groupB = Group::factory()->create();
+        $beta->groups()->attach($groupB->id);
+
+        Schedule::create(['title' => 'A1', 'start' => Carbon::parse('2027-03-06 11:00'), 'group_id' => $groupA->id, 'course_id' => $alpha->id]);
+        Schedule::create(['title' => 'B1', 'start' => Carbon::parse('2027-03-08 18:00'), 'group_id' => $groupB->id, 'course_id' => $beta->id]);
+
+        $this->get('/raspisanie')
+            ->assertOk()
+            ->assertSee('<details', false)
+            ->assertSee('<summary', false)
+            // Порядок: понедельник (Бета) — номер 1, суббота (Альфа) — номер 2.
+            ->assertSeeInOrder(['id="sch-1"', 'Бета', 'id="sch-2"', 'Альфа'], false)
+            // Сводка над списком: количество + якоря на места в списке.
+            ->assertSee('Курсов: 2', false)
+            ->assertSee('href="#sch-1"', false)
+            ->assertSee('href="#sch-2"', false)
+            // Кто ведёт (и в сводке, и в заголовке единицы).
+            ->assertSee('Ведут:', false)
+            ->assertSee('Ведущая Бета')
+            // День недели ближайшего занятия в свёрнутом заголовке.
+            ->assertSee('Понедельник')
+            ->assertSee('Суббота');
+    }
 }
