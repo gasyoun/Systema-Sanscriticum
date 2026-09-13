@@ -180,27 +180,22 @@ def main():
         iast_slug = iast_by_su.get(su_num, "") if su_num else ""
         anth_pratika, anth_page = toc.get(su_num, ("", "")) if su_num else ("", "")
         verse = texts.get(su_num, ("", ""))[1] if su_num else ""
-        if not deva and anth_pratika:
-            deva = anth_pratika
         if nested:  # Kochergina recordings mirrored inside Subhashitas-Systematic
             audio_set = "kochergina"
             audio_id = "sub-koch-" + slug.replace("Su-", "").lower()
-            hit = next((v for k, v in koch_deva.items() if k), None)
-            # Kochergina files carry no number; their Devanagari comes from the
-            # sibling folder, matched by identical byte size.
-            for _s2, rel2 in read_listing(st / "listing_kochergina.txt"):
-                if _s2 == size:
-                    m2 = KOCH_RE.match(Path(rel2).name)
-                    if m2:
-                        deva, iast_slug = m2.group(3).strip(), m2.group(2).strip()
-                    break
-            else:
-                hit = None
-            del hit
+            # These filenames carry no number; the Devanagari pratīka comes from
+            # the Devanagari-named sibling folder, joined on identical byte size.
+            for size2, rel2 in koch_by_size.get(size, []):
+                m2 = KOCH_RE.match(Path(rel2).name)
+                if m2:
+                    deva, iast_slug = m2.group(3).strip(), m2.group(2).strip()
+                break
         else:
             audio_set = "systematic"
             audio_id = f"sub-su{su_num:03d}-{slug.lower()}" if su_num else f"sub-{slug.lower()}"
-        is_num, method = match_saying(deva, verse, sprueche)
+        is_num, method = match_saying(verse, anth_pratika, deva, sprueche)
+        if not deva and anth_pratika:
+            deva = anth_pratika
         key = (audio_set, name)
         if key in seen:
             continue
