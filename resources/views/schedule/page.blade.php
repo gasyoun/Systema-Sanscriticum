@@ -3,6 +3,8 @@
 {{-- преподаватели, якоря на места в списке), единицы пронумерованы и идут --}}
 {{-- по дню недели ближайшего занятия с понедельника, списки занятий — --}}
 {{-- гармошка (details/summary), кнопка прошедших — иконка 34×34 справа сверху --}}
+{{-- H4649 (MG 13-09-2026): имя преподавателя — ссылка везде: «Ведут:», оглавление, --}}
+{{-- заголовок единицы (было: простой текст вне строки «Ведут:»). --}}
 @extends('layouts.shop')
 
 @section('title', 'Расписание занятий')
@@ -61,7 +63,8 @@
             .sch-toc li { margin: .2rem 0; }
             .sch-toc-link { color: #e2e8f0; }
             .sch-toc-link:hover { color: #E85C24; }
-            .sch-toc-teacher { color: #94a3b8; }
+            .sch-toc-teacher { color: #94a3b8; text-decoration: underline; text-underline-offset: 3px; }
+            .sch-toc-teacher:hover { color: #E85C24; }
             .sch-acc { scroll-margin-top: 1rem; }
             .sch-sum {
                 list-style: none; cursor: pointer;
@@ -79,7 +82,8 @@
             .sch-main { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
             .sch-title { color: #fff; font-weight: 700; font-size: 1.15rem; }
             .sch-sum:hover .sch-title { color: #E85C24; }
-            .sch-teacher { color: #94a3b8; font-size: .875rem; }
+            .sch-teacher { color: #94a3b8; font-size: .875rem; text-decoration: underline; text-underline-offset: 3px; }
+            .sch-teacher:hover { color: #E85C24; }
             .sch-meta { color: #64748b; font-size: .875rem; align-self: center; margin-left: auto; }
             .sch-chev { color: #64748b; font-size: .8rem; align-self: center; transition: transform .2s ease; }
             .sch-acc[open] .sch-chev { transform: rotate(180deg); }
@@ -97,7 +101,7 @@
             <ol class="sch-toc">
                 @foreach($courses as $row)
                     <li>
-                        <a href="#sch-{{ $row['no'] }}" class="sch-toc-link">{{ $row['no'] }}. {{ $row['course']->title }}</a>@if($row['course']->teacher) — <span class="sch-toc-teacher">{{ $row['course']->teacher->name }}</span>@endif
+                        <a href="#sch-{{ $row['no'] }}" class="sch-toc-link">{{ $row['no'] }}. {{ $row['course']->title }}</a>@if($row['course']->teacher) — <a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($row['course']->teacher->name) }}" class="sch-toc-teacher">{{ $row['course']->teacher->name }}</a>@endif
                     </li>
                 @endforeach
             </ol>
@@ -111,7 +115,7 @@
                         <span class="sch-no">{{ $row['no'] }}</span>
                         <span class="sch-main">
                             <span class="sch-title">{{ $course->title }}</span>
-                            @if($course->teacher)<span class="sch-teacher">{{ $course->teacher->name }}</span>@endif
+                            @if($course->teacher)<a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($course->teacher->name) }}" class="sch-teacher">{{ $course->teacher->name }}</a>@endif
                         </span>
                         <span class="sch-meta">@if($row['weekdayRu']){{ $row['weekdayRu'] }} · @endifзанятий: {{ $row['lessonsCount'] }}</span>
                         <i class="fas fa-chevron-down sch-chev" aria-hidden="true"></i>
