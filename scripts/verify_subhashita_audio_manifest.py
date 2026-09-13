@@ -63,10 +63,11 @@ def main():
             ok += 1
             if not args.quiet:
                 print(f"PASS    {row['audio_id']:<34} IS {num:<5} {rec['iast'][:52]}")
-        elif len(pratika) >= 12 and key.startswith(pratika[:12]):
+        elif len(first_word) >= 6 and key.startswith(first_word):
             # Same verse, different reading: the tape follows the teaching
             # anthology, Böhtlingk prints another recension (त्रीणि/त्रीणी,
-            # विभवो/वैभवं, द्वे फले/द्वे एव). A real match, flagged not hidden.
+            # विभवो/वैभवं, द्वे फले/द्वे एव, पुस्तकस्था तु/च). The first word
+            # still opens the saying — a real match, flagged rather than hidden.
             variants.append((row["audio_id"], num, row["deva_pratika"], rec["deva"][:30]))
         else:
             failures.append((row["audio_id"], num, f"pratīka {row['deva_pratika']!r} does not open IS {num}"))
