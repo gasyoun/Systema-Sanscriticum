@@ -285,6 +285,8 @@ final class FullSchedulePost
 
         // Режим скрытия: прошедшие строки — span.fs-past[hidden], статус и
         // кнопка живут внутри .fs-body (delegated JS тогглит по нему).
+        // H4647: статус и иконка-кнопка собраны в .fs-top (flex: статус
+        // слева, иконка 34×34 справа сверху).
         $out = [];
         $gap = '';
         $total = count($lines);
@@ -302,8 +304,15 @@ final class FullSchedulePost
             $gap = '';
         }
 
-        $inner = '<p class="fs-status">'.$esc((string) $this->statusLine()).'</p>'
-            .'<button type="button" class="fs-toggle" aria-expanded="false">Показать прошедшие занятия</button>'
+        $inner = '<div class="fs-top">'
+            .'<p class="fs-status">'.$esc((string) $this->statusLine()).'</p>'
+            // H4647 (MG 13-09-2026): кнопка — иконка 34×34 справа сверху
+            // (глаз / перечёркнутый глаз), текст в aria-label + title;
+            // инлайн-SVG — без шрифтовой зависимости, работает и в iframe.
+            .'<button type="button" class="fs-toggle" aria-expanded="false" aria-label="Показать прошедшие занятия" title="Показать прошедшие занятия">'
+            .self::TOGGLE_ICON
+            .'</button>'
+            .'</div>'
             .implode('', $out);
 
         return $head."\n"
@@ -311,6 +320,17 @@ final class FullSchedulePost
     }
 
     private const LAST_STYLE = ' style="background:#FDE047;color:#1F2430;padding:0 6px;border-radius:6px;"';
+
+    /**
+     * H4647: глаз (показать) / перечёркнутый глаз (скрыть) — какой глиф
+     * виден, решает CSS по aria-expanded кнопки; слово «hidden» внутри
+     * сознательно не используется (тесты ловят его как маркер скрытых строк).
+     */
+    private const TOGGLE_ICON =
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false">'
+        .'<g class="ic-show"><path d="M12 5.5c-4.9 0-8.6 3.1-10.3 5.5a1.7 1.7 0 0 0 0 1.9C3.4 15.4 7.1 18.5 12 18.5s8.6-3.1 10.3-5.6a1.7 1.7 0 0 0 0-1.9C20.6 8.6 16.9 5.5 12 5.5Zm0 10.6a4.1 4.1 0 1 1 4.1-4.1 4.1 4.1 0 0 1-4.1 4.1Zm0-6.3a2.2 2.2 0 1 0 2.2 2.2 2.2 2.2 0 0 0-2.2-2.2Z"/></g>'
+        .'<g class="ic-hide"><path d="M12 5.5c-4.9 0-8.6 3.1-10.3 5.5a1.7 1.7 0 0 0 0 1.9C3.4 15.4 7.1 18.5 12 18.5s8.6-3.1 10.3-5.6a1.7 1.7 0 0 0 0-1.9C20.6 8.6 16.9 5.5 12 5.5Zm0 10.6a4.1 4.1 0 1 1 4.1-4.1 4.1 4.1 0 0 1-4.1 4.1Zm0-6.3a2.2 2.2 0 1 0 2.2 2.2 2.2 2.2 0 0 0-2.2-2.2Z"/><path d="M4.2 3.4 20.6 19.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></g>'
+        .'</svg>';
 
     /** Жёлтая подсветка последнего прошедшего; строка без подсветки — как есть. */
     private static function wrapLine(string $h, bool $last): string
