@@ -63,6 +63,23 @@ class LeadUtmAttributionTest extends TestCase
     }
 
     /** @test */
+    public function utm_saved_by_a_clean_campaign_link_lands_on_the_lead(): void
+    {
+        $landing = $this->landing();
+
+        $this->get('/ga/m26-ors-h')->assertRedirect('/online');
+
+        $this->post(route('leads.store'), $this->payload($landing->id))->assertRedirect();
+
+        $lead = Lead::where('landing_page_id', $landing->id)->firstOrFail();
+        $this->assertSame('telegram_samskrte', $lead->utm_source);
+        $this->assertSame('owned_channel', $lead->utm_medium);
+        $this->assertSame('grammar_gasuns_autumn_2026', $lead->utm_campaign);
+        $this->assertSame('g26_h', $lead->utm_content);
+        $this->assertSame('beginner', $lead->utm_term);
+    }
+
+    /** @test */
     public function query_never_overrides_body_and_empty_query_leaves_nulls(): void
     {
         $landing = $this->landing();
