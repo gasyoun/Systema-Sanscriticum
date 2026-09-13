@@ -132,7 +132,9 @@ class PublicSchedulePageTest extends TestCase
         Schedule::create(['title' => 'A1', 'start' => Carbon::parse('2027-03-06 11:00'), 'group_id' => $groupA->id, 'course_id' => $alpha->id]);
         Schedule::create(['title' => 'B1', 'start' => Carbon::parse('2027-03-08 18:00'), 'group_id' => $groupB->id, 'course_id' => $beta->id]);
 
-        $this->get('/raspisanie')
+        $response = $this->get('/raspisanie');
+
+        $response
             ->assertOk()
             ->assertSee('<details', false)
             ->assertSee('<summary', false)
@@ -147,6 +149,16 @@ class PublicSchedulePageTest extends TestCase
             ->assertSee('Ведущая Бета')
             // День недели ближайшего занятия в свёрнутом заголовке.
             ->assertSee('Понедельник')
-            ->assertSee('Суббота');
+            ->assertSee('Суббота')
+            // H4649 (MG 13-09-2026): преподаватель кликабелен ВЕЗДЕ — «Ведут:», оглавление,
+            // заголовок единицы (три ссылки на страницу преподавателя).
+            ->assertSee('class="sch-toc-teacher"', false)
+            ->assertSee('class="sch-teacher"', false);
+
+        $this->assertGreaterThanOrEqual(
+            3,
+            substr_count($response->getContent(), '/online/prepodavatel/'),
+            'преподаватель должен быть ссылкой в сводке, оглавлении и заголовке единицы'
+        );
     }
 }
