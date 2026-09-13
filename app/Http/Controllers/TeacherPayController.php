@@ -106,7 +106,7 @@ final class TeacherPayController extends Controller
 
         return redirect()
             ->route('teacherpay.claim.show', $tariff)
-            ->with('success', 'Спасибо, заявка получена — подтверждение уже уходит на ваш email. Преподаватель или куратор сверит поступление по выписке, обычно в течение одного рабочего дня, и откроет доступ; для нового аккаунта пароль придёт на email.');
+            ->with('success', 'Спасибо, заявка получена — подтверждение уже уходит на ваш email. Куратор сверит поступление по выписке получателя перевода, обычно в течение одного рабочего дня, и откроет доступ; для нового аккаунта пароль придёт на email.');
     }
 
     private function abortUnlessEnabled(Tariff $tariff): void
