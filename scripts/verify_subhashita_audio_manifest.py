@@ -47,7 +47,7 @@ def main():
         rows = list(csv.DictReader(fh, delimiter="\t"))
 
     checked = ok = 0
-    failures = []
+    variants, failures = [], []
     for row in rows:
         if not row["is_num"]:
             continue
@@ -59,21 +59,28 @@ def main():
             continue
         key = norm(rec["deva"])
         pratika = norm(row["deva_pratika"])[:24]
-        hit = bool(pratika) and key.startswith(pratika)
-        if hit:
+        if pratika and key.startswith(pratika):
             ok += 1
             if not args.quiet:
-                print(f"PASS {row['audio_id']:<34} IS {num:<5} {rec['iast'][:52]}")
+                print(f"PASS    {row['audio_id']:<34} IS {num:<5} {rec['iast'][:52]}")
+        elif len(pratika) >= 12 and key.startswith(pratika[:12]):
+            # Same verse, different reading: the tape follows the teaching
+            # anthology, Böhtlingk prints another recension (त्रीणि/त्रीणी,
+            # विभवो/वैभवं, द्वे फले/द्वे एव). A real match, flagged not hidden.
+            variants.append((row["audio_id"], num, row["deva_pratika"], rec["deva"][:30]))
         else:
             failures.append((row["audio_id"], num, f"pratīka {row['deva_pratika']!r} does not open IS {num}"))
 
+    for audio_id, num, ours, theirs in variants:
+        print(f"VARIANT {audio_id:<34} IS {num:<5} tape={ours} · IS={theirs}")
     for audio_id, num, why in failures:
-        print(f"FAIL {audio_id:<34} IS {num:<5} {why}")
+        print(f"FAIL    {audio_id:<34} IS {num:<5} {why}")
 
     unmatched = sum(1 for r in rows if not r["is_num"])
     durations = [float(r["duration_s"]) for r in rows if r["duration_s"]]
-    print(f"\nrows={len(rows)} with_is_num={checked} pass={ok} fail={len(failures)} "
-          f"no_is_num={unmatched} audio_minutes={sum(durations) / 60:.1f} "
+    print(f"\nrows={len(rows)} with_is_num={checked} pass={ok} variant={len(variants)} "
+          f"fail={len(failures)} no_is_num={unmatched} "
+          f"audio_minutes={sum(durations) / 60:.1f} "
           f"missing_duration={len(rows) - len(durations)}")
     return 1 if failures else 0
 
