@@ -262,6 +262,7 @@ final class ServerGuardsAuditor
 
         $watchdogs = [
             ['cabinet:probe', 'WATCHDOG_CABINET_SCHEDULE', 'WATCHDOG_CABINET_MAX_SECONDS'],
+            ['logs:error-watch', 'WATCHDOG_LOGS_WATCH_SCHEDULE', 'WATCHDOG_LOGS_WATCH_MAX_SECONDS'],
             ['heartbeat:ping', 'WATCHDOG_HEARTBEAT_SCHEDULE', 'WATCHDOG_HEARTBEAT_MAX_SECONDS'],
         ];
         foreach ($watchdogs as [$command, $scheduleKey, $timeoutKey]) {

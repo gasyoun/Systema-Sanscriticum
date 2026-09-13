@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $ran_at
  * @property bool $healthy
  * @property bool $critical
+ * @property bool $coverage_partial
  * @property int $duration_ms
  * @property int $failure_count
  * @property array<int, string>|null $failures
@@ -25,8 +26,8 @@ class CabinetProbeRun extends Model
         'ran_at',
         'healthy',
         'critical',
+        'coverage_partial',
         'duration_ms',
-        'failure_count',
         'failures',
         'summary',
     ];
@@ -37,6 +38,7 @@ class CabinetProbeRun extends Model
             'ran_at' => 'datetime',
             'healthy' => 'boolean',
             'critical' => 'boolean',
+            'coverage_partial' => 'boolean',
             'failures' => 'array',
         ];
     }
