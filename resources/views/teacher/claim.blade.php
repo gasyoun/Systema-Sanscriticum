@@ -9,10 +9,12 @@
         <div class="mb-6">
             <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Оплата напрямую преподавателю</h1>
             <p class="mt-2 text-base text-gray-500">
-                Вы перевели оплату на личный счёт преподавателя — сообщите нам здесь, и мы
-                зачтём платёж. Без этой заявки оплата останется незачтённой: куратор сверяет
-                поступление по выписке преподавателя, обычно в течение одного рабочего дня,
-                и открывает доступ.
+                Вы перевели оплату за курс преподавателя — сообщите нам здесь, и мы
+                зачтём платёж. Перевод может уйти на счёт самого преподавателя или через
+                посредника (например, Эдгара Лейтана) — в анкете важно указать, за курс
+                какого преподавателя оплата. Без этой заявки оплата останется незачтённой:
+                куратор сверяет поступление по выписке получателя, обычно в течение одного
+                рабочего дня, и открывает доступ.
             </p>
         </div>
 
@@ -20,11 +22,12 @@
         <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100 mb-6">
             <div class="flex items-center gap-3 mb-4">
                 <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-extrabold">1</span>
-                <h4 class="text-base font-extrabold text-gray-900">Переведите оплату преподавателю</h4>
+                <h4 class="text-base font-extrabold text-gray-900">Переведите оплату за курс</h4>
             </div>
             <p class="text-sm text-gray-600 leading-relaxed">
                 Тариф: <span class="font-bold text-gray-900">{{ $course?->title ?? 'Курс' }} — {{ $tariff->title ?? $tariff->accessKey() }}</span>.
-                Реквизиты личного счёта преподавателя вы получили от него или от куратора.
+                Реквизиты вы получили от преподавателя или куратора; перевод может идти
+                на счёт преподавателя или через посредника (например, Лейтана).
                 Комиссию банка за перевод оплачивает отправитель.
             </p>
         </div>
@@ -58,10 +61,10 @@
                 @endguest
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Кому перевели оплату <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">За курс какого преподавателя вы перевели оплату <span class="text-red-500">*</span></label>
                     <select name="teacher_id" required
                             class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
-                        <option value="">— выберите преподавателя —</option>
+                        <option value="">— выберите преподавателя курса —</option>
                         @foreach($teachers as $teacher)
                         <option value="{{ $teacher->id }}" @selected(old('teacher_id') == $teacher->id)>{{ $teacher->name }}</option>
                         @endforeach

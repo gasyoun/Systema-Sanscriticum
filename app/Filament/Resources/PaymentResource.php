@@ -678,13 +678,33 @@ class PaymentResource extends Resource
                     ->modalDescription(function (Payment $record): string {
                         $ref = $record->claimMeta('reference');
 
-                        return 'Сверьте по выписке преподавателя '
+                        // H4627: двойное занесение — реальный риск (платёж могли
+                        // внести вручную до анкеты). Показываем уже зачтённые
+                        // прямые оплаты этого ученика за 60 дней.
+                        $prior = Payment::query()
+                            ->priorDirectForUser((int) $record->user_id, (int) $record->id)
+                            ->with('receivedByTeacher')
+                            ->orderByDesc('created_at')
+                            ->limit(5)
+                            ->get();
+
+                        $dupes = $prior->isEmpty()
+                            ? ''
+                            : "\n\n⚠️ Ученик уже имеет зачтённые прямые оплаты за 60 дней — проверьте, не дубль ли это:\n"
+                                .$prior->map(fn (Payment $p): string => '· '
+                                    .$p->created_at?->format('d.m.Y').' — '
+                                    .($p->receivedByTeacher?->name ?? '—').' — '
+                                    .($p->foreignAmountLabel() ?: number_format((float) $p->amount, 0, '.', ' ').' ₽')
+                                )->implode("\n");
+
+                        return 'Сверьте по выписке получателя перевода (счёт преподавателя или посредника, напр. Лейтан); оплата зачтётся за курс преподавателя '
                             .$record->receivedByTeacher?->name.': от '
                             .($record->claimMeta('sender_name') ?: '—')
                             .', дата '.($record->claimMeta('paid_on') ?: '—')
                             .', сумма '.($record->foreignAmountLabel() ?: '—')
                             .($ref ? ', референция '.$ref : '')
-                            .'. После подтверждения студенту откроется доступ, а номинал вычтется из гонорара преподавателя.';
+                            .'. После подтверждения студенту откроется доступ, а номинал вычтется из гонорара преподавателя.'
+                            .$dupes;
                     })
                     ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
 
