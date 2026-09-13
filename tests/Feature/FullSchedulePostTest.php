@@ -201,9 +201,10 @@ class FullSchedulePostTest extends TestCase
 
         $html = $post->html();
 
-        // Статус + кнопка + контейнер в режиме скрытия.
+        // Статус + иконка-кнопка (H4647: глаз 34×34, текст в aria-label) + контейнер режима скрытия.
         $this->assertMatchesRegularExpression('/<p class="fs-status">Прошло занятий: 2 · последнее: [^<]+<\/p>/', $html);
-        $this->assertStringContainsString('<button type="button" class="fs-toggle" aria-expanded="false">Показать прошедшие занятия</button>', $html);
+        $this->assertStringContainsString('<button type="button" class="fs-toggle" aria-expanded="false" aria-label="Показать прошедшие занятия" title="Показать прошедшие занятия">', $html);
+        $this->assertStringContainsString('<g class="ic-show">', $html);
         $this->assertStringContainsString('<div class="fs-body" data-fs-past="hidden">', $html);
 
         // Прошедшие скрыты; последнее прошедшее (2-е) — жёлтое; перед 1-м

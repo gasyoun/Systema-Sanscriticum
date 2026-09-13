@@ -114,15 +114,23 @@
         .fs-body { color: #374151; line-height: 1.6; }
         .fs-body strong { color: #111827; }
 
-        /* H4387: скрытие прошедших занятий + кнопка-таб (светлая тема). */
-        .fs-status { color: var(--muted); font-size: 13px; margin: 0 0 6px; }
+        /* H4387 + H4647: статус + иконка-кнопка 34×34 справа сверху (светлая тема). */
+        .fs-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 8px; }
+        .fs-status { color: var(--muted); font-size: 13px; margin: 0; }
         .fs-toggle {
-            font: inherit; font-size: 13px; cursor: pointer;
+            flex: 0 0 auto;
+            width: 34px; height: 34px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font: inherit; cursor: pointer;
             background: #fff; color: var(--fg);
             border: 1px solid var(--line); border-radius: 8px;
-            padding: 5px 12px; margin: 0 0 8px;
+            padding: 0;
         }
         .fs-toggle:hover { border-color: var(--accent); }
+        .fs-toggle svg { display: block; }
+        .fs-toggle .ic-hide { display: none; }
+        .fs-toggle[aria-expanded="true"] .ic-show { display: none; }
+        .fs-toggle[aria-expanded="true"] .ic-hide { display: inline; }
         .fs-past { color: #8a94a3; }
         .fs-past strong { color: #4b5563; }
         @media (max-width: 480px) {

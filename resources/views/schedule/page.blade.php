@@ -1,4 +1,8 @@
 {{-- H4340: публичная страница «Расписание» — все расписания всех курсов --}}
+{{-- H4647 (MG 13-09-2026): сводка-оглавление над списком (количество курсов, --}}
+{{-- преподаватели, якоря на места в списке), единицы пронумерованы и идут --}}
+{{-- по дню недели ближайшего занятия с понедельника, списки занятий — --}}
+{{-- гармошка (details/summary), кнопка прошедших — иконка 34×34 справа сверху --}}
 @extends('layouts.shop')
 
 @section('title', 'Расписание занятий')
@@ -27,47 +31,107 @@
             .fs-body { color: #cbd5e1; line-height: 1.7; }
             .fs-body strong { color: #fff; }
 
-            /* H4387: скрытие прошедших занятий + кнопка-таб (тёмная тема). */
-            .fs-status { color: #94a3b8; font-size: .925rem; margin: 0 0 .6rem; }
+            /* H4387 + H4647: статус + иконка-кнопка 34×34 справа сверху (тёмная тема). */
+            .fs-top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 0 0 .75rem; }
+            .fs-status { color: #94a3b8; font-size: .925rem; margin: 0; }
             .fs-toggle {
-                font: inherit; font-size: .875rem; cursor: pointer;
+                flex: 0 0 auto;
+                width: 34px; height: 34px;
+                display: inline-flex; align-items: center; justify-content: center;
+                font: inherit; cursor: pointer;
                 background: #1F2636; color: #e2e8f0;
                 border: 1px solid #2b3550; border-radius: 8px;
-                padding: 5px 12px; margin: 0 0 .75rem;
+                padding: 0;
                 transition: border-color .2s ease;
             }
             .fs-toggle:hover { border-color: #E85C24; }
+            .fs-toggle svg { display: block; }
+            .fs-toggle .ic-hide { display: none; }
+            .fs-toggle[aria-expanded="true"] .ic-show { display: none; }
+            .fs-toggle[aria-expanded="true"] .ic-hide { display: inline; }
             .fs-past { color: #8b96ab; }
             .fs-past strong { color: #b9c3d6; }
+
+            /* H4647: сводка-оглавление + гармошка курсов. */
+            html { scroll-behavior: smooth; }
+            .sch-index-line { color: #e2e8f0; margin: 0 0 .9rem; }
+            .sch-index-teacher { color: #cbd5e1; text-decoration: underline; text-underline-offset: 3px; }
+            .sch-index-teacher:hover { color: #E85C24; }
+            .sch-toc { margin: 0; padding-left: 1.25rem; color: #94a3b8; }
+            .sch-toc li { margin: .2rem 0; }
+            .sch-toc-link { color: #e2e8f0; }
+            .sch-toc-link:hover { color: #E85C24; }
+            .sch-toc-teacher { color: #94a3b8; }
+            .sch-acc { scroll-margin-top: 1rem; }
+            .sch-sum {
+                list-style: none; cursor: pointer;
+                display: flex; align-items: baseline; flex-wrap: wrap;
+                gap: .3rem .8rem; padding: 1.25rem 1.5rem; margin: 0;
+            }
+            .sch-sum::-webkit-details-marker { display: none; }
+            .sch-no {
+                flex: 0 0 auto; align-self: center;
+                min-width: 34px; height: 34px; padding: 0 6px;
+                display: inline-flex; align-items: center; justify-content: center;
+                font-weight: 700; color: #E85C24;
+                border: 1px solid #2b3550; border-radius: 8px;
+            }
+            .sch-main { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
+            .sch-title { color: #fff; font-weight: 700; font-size: 1.15rem; }
+            .sch-sum:hover .sch-title { color: #E85C24; }
+            .sch-teacher { color: #94a3b8; font-size: .875rem; }
+            .sch-meta { color: #64748b; font-size: .875rem; align-self: center; margin-left: auto; }
+            .sch-chev { color: #64748b; font-size: .8rem; align-self: center; transition: transform .2s ease; }
+            .sch-acc[open] .sch-chev { transform: rotate(180deg); }
+            .sch-body { color: #cbd5e1; border-top: 1px solid #1F2636; margin: 0 1.5rem; padding: 1.25rem 0 1.5rem; }
+            .sch-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.25rem; }
         </style>
 
-        <div class="space-y-8">
+        {{-- H4647: сводка — количество курсов, кто ведёт, якорное оглавление --}}
+        <nav class="p-5 mb-8 rounded-2xl bg-[#111622] border border-[#1F2636]" aria-label="Оглавление расписания">
+            <p class="sch-index-line">
+                Курсов: {{ $courses->count() }}@if($teachers->isNotEmpty()) · Ведут:
+                @foreach($teachers as $t)<a href="{{ $t['url'] }}" class="sch-index-teacher">{{ $t['name'] }}</a>@if(!$loop->last), @endif@endforeach
+                @endif
+            </p>
+            <ol class="sch-toc">
+                @foreach($courses as $row)
+                    <li>
+                        <a href="#sch-{{ $row['no'] }}" class="sch-toc-link">{{ $row['no'] }}. {{ $row['course']->title }}</a>@if($row['course']->teacher) — <span class="sch-toc-teacher">{{ $row['course']->teacher->name }}</span>@endif
+                    </li>
+                @endforeach
+            </ol>
+        </nav>
+
+        <div class="space-y-6" id="schedule-list">
             @foreach($courses as $row)
                 @php $course = $row['course']; @endphp
-                <section class="p-6 rounded-2xl bg-[#111622] border border-[#1F2636]">
-                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
-                        <a href="{{ route('shop.course.show', $course) }}"
-                           class="text-xl font-bold text-white hover:text-brand transition-colors">
-                            {{ $course->title }}
-                        </a>
-                        @if($course->teacher)
-                            <a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($course->teacher->name) }}"
-                               class="text-sm text-slate-500 hover:text-brand transition-colors">
-                                {{ $course->teacher->name }}
+                <details class="sch-acc rounded-2xl bg-[#111622] border border-[#1F2636]" id="sch-{{ $row['no'] }}">
+                    <summary class="sch-sum">
+                        <span class="sch-no">{{ $row['no'] }}</span>
+                        <span class="sch-main">
+                            <span class="sch-title">{{ $course->title }}</span>
+                            @if($course->teacher)<span class="sch-teacher">{{ $course->teacher->name }}</span>@endif
+                        </span>
+                        <span class="sch-meta">@if($row['weekdayRu']){{ $row['weekdayRu'] }} · @endifзанятий: {{ $row['lessonsCount'] }}</span>
+                        <i class="fas fa-chevron-down sch-chev" aria-hidden="true"></i>
+                    </summary>
+                    <div class="sch-body">
+                        @foreach($row['posts'] as $post)
+                            <div class="mb-4 last:mb-0">{!! $post->html($clientTz) !!}</div>
+                        @endforeach
+
+                        <div class="sch-cta">
+                            <a href="{{ route('shop.course.show', $course) }}"
+                               class="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-bold transition-all">
+                                Записаться на курс
+                                <i class="fas fa-arrow-right text-[10px]"></i>
                             </a>
-                        @endif
+                            <a href="{{ route('shop.course.show', $course) }}"
+                               class="text-sm text-slate-400 hover:text-brand transition-colors">Страница курса</a>
+                        </div>
                     </div>
-
-                    @foreach($row['posts'] as $post)
-                        <div class="mb-4 last:mb-0">{!! $post->html($clientTz) !!}</div>
-                    @endforeach
-
-                    <a href="{{ route('shop.course.show', $course) }}"
-                       class="inline-flex items-center gap-2 mt-5 py-2.5 px-4 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-bold transition-all">
-                        Записаться на курс
-                        <i class="fas fa-arrow-right text-[10px]"></i>
-                    </a>
-                </section>
+                </details>
             @endforeach
         </div>
     @endif
