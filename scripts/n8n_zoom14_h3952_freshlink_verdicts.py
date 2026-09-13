@@ -39,7 +39,9 @@ or 3301 while the webhook token still HEADs alive — the recording exists, this
 cannot see it) vs `webhook_missing` (no recording, no live token). Zoom's 3301 is genuinely
 ambiguous on its own, so when there is no live token to corroborate it the verdict is
 `undecidable_3301` — reported as a failure per the handoff's ambiguity policy, because a
-false alarm is cheaper than a silent success.
+false alarm is cheaper than a silent success. H4513 adds `infrastructure_failure`: when the
+HEAD itself never got an HTTP answer (transport error / node crash / 5xx), the honest
+verdict is «the box broke» (precedent: exec 2749, ENOSPC on .91) — NOT a missing webhook.
 """
 import json
 import subprocess
@@ -215,6 +217,20 @@ if (account === 'Unknown') {
         + (status || 'нет ответа') + '), поэтому «чужой аккаунт» и «записи не было» по логам '
         + 'НЕ различимы. Посмотреть облако Zoom этого аккаунта глазами (Play B). Помечено '
         + 'провалом намеренно: ложная тревога дешевле тихого успеха.';
+} else if (status === 0 || status >= 500) {
+  // H4513 — HEAD сам не получил HTTP-ответа: упала проверка, а не токен. status===0 значит
+  // «ни статуса, ни тела» — транспорт/краш ноды (продолжили через onError/alwaysOutputData),
+  // а не ответ Zoom; 5xx — сломался сам Zoom/сеть, токен при этом ни в чём не виноват.
+  // Прецедент: exec 2749 (10-09) — ENOSPC диск .91 (корень 100%), DOWNLOAD и HEAD умерли,
+  // else-ветка назвала это webhook_missing — ложь.
+  const headErr = typeof head.error === 'string' ? head.error
+    : (head.error && head.error.message) || head.message || '';
+  verdict = 'infrastructure_failure';
+  marker = 'H3952_INFRASTRUCTURE_FAILURE';
+  human = 'HEAD вебхук-токена не получил HTTP-ответа (status=' + (status || 'нет') + ''
+        + (headErr ? ', ошибка ноды: ' + headErr : '') + ') — упала сама проверка/инфраструктура '
+        + 'бокса n8n, а не токен и не cred. Прецедент: exec 2749, ENOSPC диск .91. Проверить '
+        + 'диск/сеть .91 и повторить прогон; это НЕ «записи нет» и НЕ сбой credential.';
 } else {
   verdict = 'webhook_missing';
   marker = 'H3952_WEBHOOK_MISSING';
@@ -402,6 +418,20 @@ def main():
             [{'node': N_HEAD, 'type': 'main', 'index': 0}],
         ]
 
+    # 6. H4513 — отсутствие обложки не должно душить Merge. Merge (combineByPosition)
+    #    стреляет по входу 0, а вход 0 «ЗАГРУЗКА НА РУТУБ» питается ТОЛЬКО цепочкой
+    #    обложки (Download file → IF Hindi YT thumb → Add a playlist item*) — без обложки
+    #    «Обложки нет — пропуск» кормил вход 1 Merge, вход 0 не приходил никогда, прогон
+    #    умирал зелёным на Merge (exec 2754: Rutube×3, плейлист, урок, финальный TG —
+    #    молча пропущены). Переносим ребро (MOVE, не второе параллельное): skip-нода
+    #    влетает прямо в «ЗАГРУЗКА НА РУТУБ», у которой выражения ссылаются только на
+    #    именованные ноды, так что item {cover_skipped:true} ей безвреден.
+    SKIP = 'Обложки нет — пропуск'
+    RUTUBE = 'ЗАГРУЗКА НА РУТУБ'
+    if SKIP not in by:
+        sys.exit(f'FATAL: expected node {SKIP!r} not found')
+    conns[SKIP] = {'main': [[{'node': RUTUBE, 'type': 'main', 'index': 0}]]}
+
     allowed = {'saveExecutionProgress', 'saveManualExecutions', 'saveDataErrorExecution',
                'saveDataSuccessExecution', 'executionTimeout', 'errorWorkflow',
                'timezone', 'executionOrder'}
@@ -421,6 +451,15 @@ def main():
     print(f'  {REPLAY_DEAD} ->', [t['node'] for t in rc[REPLAY_DEAD]['main'][0]])
     for dl in DOWNLOAD_FRESH:
         print(f'  {dl} error ->', [t['node'] for t in rc[dl]['main'][1]])
+    print(f'  {SKIP} ->', [t['node'] for t in rc[SKIP]['main'][0]])
+    stale = [(s, t.get('index')) for s, v in rc.items() for br in v.get('main', [])
+             for t in br if t.get('node') == 'Merge' and s == SKIP]
+    assert not stale, f'H4513: skip node still feeds Merge at {stale}'
+    print('  skip->Merge edges remaining: 0 (moved)')
+    verdict_src = next(n['parameters']['jsCode'] for n in res['nodes']
+                       if n['name'] == N_VERDICT)
+    assert 'H3952_INFRASTRUCTURE_FAILURE' in verdict_src, 'H4513: infra branch missing after PUT'
+    print('  VERDICT_JS infra branch: present in live node')
     print('active:', res.get('active'))
 
 
