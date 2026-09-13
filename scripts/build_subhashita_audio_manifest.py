@@ -102,18 +102,26 @@ def load_sprueche(path: Path):
     return rows
 
 
-def match_saying(pratika, verse, sprueche):
+def match_saying(verse, toc_pratika, file_pratika, sprueche):
     """Return (is_num, method) for the best Böhtlingk match, else (None, 'unmatched').
 
-    Two evidence tiers, strongest first:
-      verse_prefix  — the recorded verse's first 24 folded chars open a saying
-      pratika       — the anthology pratīka (3-4 words) opens a saying
+    Three evidence tiers, strongest first:
+      verse_prefix   — the recorded verse's first 24 folded chars open a saying
+      toc_pratika    — the anthology's pratīka (3-4 words) opens a saying
+      file_pratika   — the Devanagari in the mp3 filename (often 1-2 words) opens it
+    A pratīka shorter than 8 folded chars is too weak to identify one saying out of
+    7537 and is never used; several hits are reported as *_ambiguous(N), first kept.
     """
-    for probe, method, minlen in ((verse, "verse_prefix", 24), (pratika, "pratika", 8)):
+    probes = (
+        (verse, "verse_prefix", 24),
+        (toc_pratika, "toc_pratika", 8),
+        (file_pratika, "file_pratika", 8),
+    )
+    for probe, method, minlen in probes:
         key = norm(probe or "")
         if len(key) < minlen:
             continue
-        probe_key = key[:24] if method == "verse_prefix" else key
+        probe_key = key[:24]
         hits = [num for num, _d, _i, sk in sprueche if sk.startswith(probe_key)]
         if len(hits) == 1:
             return hits[0], method
