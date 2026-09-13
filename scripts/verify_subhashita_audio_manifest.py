@@ -59,6 +59,7 @@ def main():
             continue
         key = norm(rec["deva"])
         pratika = norm(row["deva_pratika"])[:24]
+        first_word = norm(row["deva_pratika"].split()[0]) if row["deva_pratika"].split() else ""
         if pratika and key.startswith(pratika):
             ok += 1
             if not args.quiet:

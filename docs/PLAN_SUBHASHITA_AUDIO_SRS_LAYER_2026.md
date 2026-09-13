@@ -40,9 +40,9 @@ Built by [scripts/build_subhashita_audio_manifest.py](https://github.com/gasyoun
 
 | Evidence tier | Rows | What it means |
 |---|--:|---|
-| `verse_prefix` | 23 | the recorded verse (from the recordings docx) opens exactly one saying |
+| `verse_prefix` | 22 | the recorded verse (from the recordings docx) opens exactly one saying |
 | `toc_pratika` | 24 | the anthology's pratīka opens exactly one saying |
-| `file_pratika` | 10 | the Devanagari in the filename opens exactly one saying |
+| `file_pratika` | 11 | the Devanagari in the filename opens exactly one saying |
 | `*_ambiguous(N)` | 2 | several sayings open the same way — first kept, needs a human eye |
 | `unmatched` | 52 | — |
 
@@ -66,7 +66,7 @@ Existing pattern to copy: [resources/data/kosha_srs_deck_b1_demo.json](https://g
 
 1. **Stage 1 — deck feed (no audio, ships today).** Generate `resources/data/subhashita_srs_deck.json` from the manifest joined to the reader-pack: card front = Devanagari verse, back = RU translation from the anthology docx, `is_num` as the stable card key, `audio_id` carried but unused. Import command `subhashita:import-deck` modelled line-for-line on `ImportKoshaSrsDeckB1Demo`. Nothing user-visible changes until the deck is published.
 2. **Stage 2 — audio hosting (needs a storage decision).** 35.1 min / ~33 MB is small enough for the prod disk under `storage/app/public/audio/subhashita/` served through the existing public-disk symlink; the alternative is the S3-compatible bucket already configured for lecture clips. The mp3 are pushed with `rclone copy yadisk:Subhashitas-Systematic <target> --include "*.mp3"`, filenames normalised to `audio_id`.
-3. **Stage 3 — play button in the SRS card (human-gated by §4).** The card renders an `<audio>` element for rows with an `audio_id`; 59 cards additionally show «Бётлингк IS <n>» as provenance. Ship only after MG confirms the recordings may be served to students.
+3. **Stage 3 — play button in the SRS card (human-gated by §4).** The card renders an HTML audio element for rows with an `audio_id`; 59 cards additionally show «Бётлингк IS <n>» as provenance. Ship only after MG confirms the recordings may be served to students.
 
 ## 6 · Reproduce
 
@@ -98,7 +98,7 @@ The `yadisk:` remote is self-served from prod credentials — procedure in [Upra
 
 1. **Speaker/licence of the recordings is undocumented** — §4; blocks stage 3 only.
 2. **Duplicate takes:** `Su27`/`Su27-Ayusha`, `Su32`/`Su32-Arthanam`, `Su41`/`Su41-Nabhisheko` are different byte sizes — alternative takes, both kept in the manifest; a human picks one per card at stage 1.
-3. **Gaps in the series:** no `Su12`, `Su37`, `Su96+` on disk although the anthology runs to 95; the corresponding sayings simply have no recording.
+3. **Gaps in the series:** no `Su12` and no `Su37` on disk (the series otherwise runs 1–95 unbroken) although the anthology runs to 95; the corresponding sayings simply have no recording.
 4. **Two `*_ambiguous(2)` rows** carry the first of two candidate saying numbers — worth a human eye before they reach a card.
 5. The 2018 anthology revision is unparsed; it may resolve some of the 52 unmatched rows if its TOC cites Böhtlingk numbers directly.
 
