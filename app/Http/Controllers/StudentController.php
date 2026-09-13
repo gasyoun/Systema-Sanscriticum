@@ -346,7 +346,7 @@ class StudentController extends Controller
             // Позиция студента: записи уроков до даты его последнего факта в этой группе.
             $studentCursor = 0;
             $fact = $user->attendances()
-                ->whereIn('schedule_id', App\Models\Schedule::where('group_id', $course->groups->pluck('id'))->pluck('id'))
+                ->whereIn('schedule_id', Schedule::where('group_id', $course->groups->pluck('id'))->pluck('id'))
                 ->latest('created_at')->first();
             if ($fact) {
                 $factDay = $fact->created_at->copy()->startOfDay();
