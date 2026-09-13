@@ -678,7 +678,7 @@ class PaymentResource extends Resource
                     ->modalDescription(function (Payment $record): string {
                         $ref = $record->claimMeta('reference');
 
-                        return 'Сверьте по выписке преподавателя '
+                        return 'Сверьте по выписке получателя перевода (счёт преподавателя или посредника, напр. Лейтан); оплата зачтётся за курс преподавателя '
                             .$record->receivedByTeacher?->name.': от '
                             .($record->claimMeta('sender_name') ?: '—')
                             .', дата '.($record->claimMeta('paid_on') ?: '—')
