@@ -80,8 +80,12 @@ chown -R deploy:www-data storage bootstrap/cache && chmod -R ug+rwX storage boot
 4. **Очереди**: systemd-unit `laravel-worker.service`
    (`php artisan queue:work --tries=3 --backoff=5`) — стандартный юнит Laravel-деплоя.
 5. **Cron root** (перенести со старого бокса; был виден в triage 23-08):
-   `*/30 systema-auto-deploy-run.sh`; таймеры restic (`restic-backup.timer`,
-   `restic-forget.timer`) + скрипты `ops/backup/*.sh` → `/usr/local/sbin/`.
+   `*/30 systema-auto-deploy-run.sh`; таймер `restic-backup.timer` +
+   скрипты `ops/backup/*.sh` → `/usr/local/sbin/`.
+   **Retention (`restic-forget.timer`) живёт на backup-боксе `.91`, не на
+   приложении** (13-09-2026): push-путь append-only, поэтому `forget --prune`
+   запускается на `.91` от имени `restic-push` — см.
+   [`RUN_LOG_APPEND_ONLY_SFTP_13-09-2026.md`](RUN_LOG_APPEND_ONLY_SFTP_13-09-2026.md).
 6. **TLS** (после фазы 6): `certbot --nginx -d samskrte.ru -d www.samskrte.ru`.
 
 ## Фаза 5 — проверка ДО переключения DNS (~20 мин)
@@ -101,6 +105,12 @@ certbot, затем полный smoke.
 - [ ] Better Stack: обновить адрес мониторинга/агент.
 - [ ] `.91` остаётся backup-target: обеспечить новому боксу путь к `192.168.200.91`
       или пробросить ключ `restic-push`.
+- [ ] **Append-only на `.91`** (13-09-2026): `sshd/60-restic-append-only.conf` из
+      `server_guards` в `/etc/ssh/sshd_config.d/`; проверка —
+      `sshd -T -C user=restic-push | grep forcecommand` (ожидается
+      `internal-sftp -P remove,rmdir`) и `sftp rm` канарейки → `Permission denied`.
+      Без этого append-only `--no-lock`-путь не обязателен, но защита от
+      компрометации pusher'а теряется.
 - [ ] Offsite S3 leg (фаза 0.5): первая проверка `systema-restic-s3-verify.sh`.
 - [ ] Старый .92: если Pudlink отпустит IP — cold standby неделю, потом гасить.
 

@@ -12,6 +12,17 @@ S3_ENV_FILE=/root/.restic-s3.env
 S3_ENDPOINT=https://storage.yandexcloud.net
 ts() { date -u +%Y-%m-%dT%H:%M:%SZ; }
 
+# H3177: failure alerts reach Telegram via the shared sink (host + lane + log tail).
+ALERT_SCRIPT=/usr/local/sbin/systema-backup/backup_alert.py
+alert_fail() { # alert_fail LANE SUBJECT
+    local lane="$1" subject="$2"
+    if [ -x "$ALERT_SCRIPT" ]; then
+        "$ALERT_SCRIPT" ERROR "run_fail:${lane}" \
+            "[RUN FAIL] ${subject} on $(hostname) — lane ${lane}" \
+            "$(tail -n 8 "$LOG" 2>/dev/null | cut -c1-400)"
+    fi
+}
+
 overall_rc=0
 
 # 1. dump the Systema (Laravel) DB
@@ -20,10 +31,11 @@ if "$DUMP_SCRIPT" >>"$LOG" 2>&1; then
 else
     dump_status=FAIL
     overall_rc=1
+    alert_fail systema-dump "DB dump step failed (systema-db-dump.sh)"
 fi
 
 # 2. systema lane: restic backup of the DB dump + storage/app + .env + nginx (SFTP leg)
-if restic "${RESTIC_ARGS[@]}" backup --tag systema \
+if restic "${RESTIC_ARGS[@]}" --no-lock backup --tag systema \
     /var/backups/systema/db \
     /var/www/html/storage/app \
     /var/www/html/.env \
@@ -36,11 +48,12 @@ if restic "${RESTIC_ARGS[@]}" backup --tag systema \
 else
     systema_status=FAIL
     overall_rc=1
+    alert_fail systema-sftp "restic backup (systema→sftp) failed"
 fi
 echo "$(ts) lane=systema dest=sftp dump=${dump_status} backup=${systema_status}" >>"$LOG"
 
 # 3. samudra lane: SamudraManthanam DB is SQLite (file-covered) per S0.6 DEFAULT — no separate dump. (SFTP leg)
-if restic "${RESTIC_ARGS[@]}" backup --tag samudra \
+if restic "${RESTIC_ARGS[@]}" --no-lock backup --tag samudra \
     "$SAMUDRA_DB_DIR" \
     /opt/samudra/corpus \
     --exclude '*.log' \
@@ -49,8 +62,29 @@ if restic "${RESTIC_ARGS[@]}" backup --tag samudra \
 else
     samudra_status=FAIL
     overall_rc=1
+    alert_fail samudra-sftp "restic backup (samudra→sftp) failed"
 fi
 echo "$(ts) lane=samudra dest=sftp backup=${samudra_status}" >>"$LOG"
+
+# 3b. size-sanity assertion (H3178 criterion 2.4) — inline in every run:
+# the newest snapshot of each tag must carry >= 80% of its predecessor's
+# payload, else THIS RUN FAILS (replays the 11 MB-stub-vs-1.4 GB incident).
+SANITY_SCRIPT=/usr/local/sbin/systema-backup/size_sanity_check.py
+SFTP_OPTS='"-o" "sftp.command=ssh restic-push@192.168.200.91 -i /root/.ssh/id_restic_push -s sftp"'
+if [ -x "$SANITY_SCRIPT" ]; then
+    for TAG in systema samudra; do
+        if RESTIC_CLI_OPTS="$SFTP_OPTS" python3 "$SANITY_SCRIPT" --repo "$RESTIC_REPOSITORY" \
+            --password-file "$RESTIC_PASSWORD_FILE" --tag "$TAG" --quiet-pass; then
+            echo "$(ts) lane=${TAG} dest=sftp size_sanity=OK" >>"$LOG"
+        else
+            rc=$?
+            echo "$(ts) lane=${TAG} dest=sftp size_sanity=FAIL rc=${rc}" >>"$LOG"
+            overall_rc=1
+        fi
+    done
+else
+    echo "$(ts) lane=size-sanity dest=sftp status=SKIP reason=no-${SANITY_SCRIPT}" >>"$LOG"
+fi
 
 # SFTP aggregate for the run summary (fast local copy must never wait on S3 — H3175 push order rule)
 if [ "$systema_status" = OK ] && [ "$samudra_status" = OK ]; then
@@ -123,4 +157,7 @@ else
 fi
 
 echo "$(ts) run_complete overall_rc=${overall_rc} systema=${systema_status} samudra=${samudra_status} sftp=${sftp_agg} s3=${s3_status}" >>"$LOG"
+if [ "$overall_rc" != 0 ]; then
+    alert_fail run-summary "hourly restic run FAILED (rc=1) — see tail"
+fi
 exit "$overall_rc"
