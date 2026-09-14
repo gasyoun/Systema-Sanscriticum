@@ -94,10 +94,10 @@ class ImportSubhashitaAudioDeck extends Command
             ['slug' => self::DECK_SLUG, 'user_id' => null],
             [
                 'note_type_id' => $noteType->id,
-                'name' => 'सुभाषित — аудио (H4474, 59 записей)',
+                'name' => 'सुभाषित — аудио (записи MG, Бётлингк IS)',
                 'language' => 'sa',
                 'visibility' => 'system',
-                'description' => 'H4474: 59 subhāṣita recordings (MG\'s own tapes, ruling 14-09-2026) joined to Böhtlingk Indische Sprüche numbers; audio served from the public disk after subhashita:push-audio.',
+                'description' => 'H4474: ALL 111 subhāṣita recordings (MG\'s own tapes, ruling 14-09-2026) — 59 joined to Böhtlingk Indische Sprüche numbers (is_num), 52 from other anthology sources (Mahābhārata, Pañcatantra, Hitopadeśa, Upaniṣads…) with is_num omitted, never dropped; audio served from the public disk.',
             ],
         );
 
@@ -107,23 +107,32 @@ class ImportSubhashitaAudioDeck extends Command
         // Feed is already sorted by (set, su_num) — insertion order keeps the
         // first run's card id order == feed order.
         foreach ($cards as $card) {
+            // One card per RECORDING: the word identity is the unique audio_id,
+            // so alternate takes of the same verse (Su27/Su32/Su41 pairs) each
+            // get their own card. is_num is nullable — recordings outside the
+            // Böhtlingk corpus keep their card, they are never dropped.
             $word = DictionaryWord::firstOrCreate(
-                ['dictionary_id' => $dictionary->id, 'iast' => $card['is_iast']],
+                ['dictionary_id' => $dictionary->id, 'iast' => $card['audio_id']],
                 [
-                    'devanagari' => $card['is_deva'],
+                    'devanagari' => $card['verse_deva'] ?? ($card['is_deva'] ?? ''),
                     'translation' => $card['ru'] ?? '',
-                    'slug' => 'subhashita-is-'.$card['is_num'],
+                    'slug' => 'subhashita-'.$card['audio_id'],
                 ],
             );
 
             $fields = [
                 'devanagari' => $card['verse_deva'] ?? $card['is_deva'],
-                'iast' => $card['is_iast'],
+                'iast' => $card['is_iast'] ?? $card['iast'],
                 'translation' => $card['ru'] ?? '',
                 'audio' => 'srs/subhashita/'.$card['audio_id'].'.mp3',
-                'is_num' => $card['is_num'],
                 'audio_id' => $card['audio_id'],
             ];
+            if (! empty($card['is_num'])) {
+                $fields['is_num'] = (int) $card['is_num'];
+            }
+            if (! empty($card['is_iast'])) {
+                $fields['is_iast'] = $card['is_iast'];
+            }
 
             $srsCard = SrsCard::firstOrCreate(
                 ['deck_id' => $deck->id, 'source_word_id' => $word->id],
