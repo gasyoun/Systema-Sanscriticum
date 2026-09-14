@@ -94,7 +94,7 @@ class ImportSubhashitaAudioDeck extends Command
             ['slug' => self::DECK_SLUG, 'user_id' => null],
             [
                 'note_type_id' => $noteType->id,
-                'name' => 'सुभाषित — аудио (H4474, 59 записей)',
+                'name' => 'सुभाषित — аудио (записи MG, Бётлингк IS)',
                 'language' => 'sa',
                 'visibility' => 'system',
                 'description' => 'H4474: 59 subhāṣita recordings (MG\'s own tapes, ruling 14-09-2026) joined to Böhtlingk Indische Sprüche numbers; audio served from the public disk after subhashita:push-audio.',
