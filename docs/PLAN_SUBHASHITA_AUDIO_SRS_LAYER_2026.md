@@ -17,6 +17,8 @@ The 126 subhāṣita mp3 on MG's Yandex.Disk ([YADISK_INVENTORY_07-09-2026 §3 r
 
 **111 distinct recordings** (96 + 15); the two Devanagari-named folders are byte-identical mirrors and exist only to carry the pratīka in the filename — that is what makes the Böhtlingk join possible. 126 = 111 + the 15 Kochergina files counted twice in the 07-09 inventory. Total audio **35.1 min**, all 128 kbps mono mp3, 15–21 s per saying.
 
+> Correction (14-09-2026 verifier re-measure): actual per-saying durations are **15.31–37.93 s** (max `sub-koch-vidyanama`; 6 rows exceed 21 s) — the "15–21 s" figure above was a pre-measurement estimate.
+
 Three docx in `Subhashitas-Systematic` are the text key:
 
 1. `Subhashita-Recordings-Text.docx` — 53 numbered verses in Devanagari, numbering identical to `Su<N>`.
@@ -31,6 +33,7 @@ Three docx in `Subhashitas-Systematic` are the text key:
 
 - `audio_id` — stable key for the SRS card link (`sub-su065-vidyadadati`, `sub-koch-vidya`).
 - `file` — path **relative to the Yandex.Disk folder**, not a repo path: no mp3 is vendored here.
+- `deva_pratika` — 3-word Devanagari **display excerpt, not the join probe**: for 7 rows it is non-unique against the corpus; the actual join probes are the full verse / TOC pratīka / filename Devanagari (§3). Do not test this column for uniqueness.
 - `is_num` — Böhtlingk *Indische Sprüche* number, the join key to the text layer.
 - `match_method` — how that number was established (see §3).
 
