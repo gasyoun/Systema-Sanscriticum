@@ -40,7 +40,7 @@ def main():
     args = ap.parse_args()
 
     with args.manifest.open(encoding="utf-8", newline="") as fh:
-        rows = [r for r in csv_rows(fh) if r["is_num"]]
+        rows = [r for r in csv_rows(fh) if r["file"].lower().endswith(".mp3")]
 
     target_dir = args.public_root / "srs" / "subhashita"
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -109,7 +109,7 @@ def main():
         pushed += 1
 
     total = len(rows)
-    print(f"\nmapped={len(rows)} pushed={pushed} skipped(already present)={skipped} failed={missing}")
+    print(f"\nrows={len(rows)} pushed={pushed} skipped(already present)={skipped} failed={missing}")
     if missing:
         return 1
     return 0
