@@ -20,7 +20,7 @@ from pathlib import Path
 
 import yaml
 
-PLANES = ("topic", "objection", "intent", "meta", "funnel_stage", "escalation", "resolution")
+PLANES = ("topic", "objection", "intent", "meta")
 
 _FORBIDDEN_SUBSTRINGS = ("/", "#", "\\w", "\\b", "\\d", "\\s", "\\u")
 
