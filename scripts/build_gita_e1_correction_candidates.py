@@ -42,7 +42,10 @@ CASE = {"nom": "nom", "acc": "acc", "ins": "instr", "instr": "instr", "dat": "da
 # Pausa restorations for a sandhied surface form (IAST final -> pausa final).
 PAUSA = [("ṁ", "m"), ("ṁ", "n"), ("ṃ", "m"), ("d", "t"), ("g", "k"), ("b", "p"),
          ("ḍ", "ṭ"), ("o", "aḥ"), ("r", "ḥ"), ("ś", "ḥ"), ("s", "ḥ"), ("ṣ", "ḥ"),
-         ("ñ", "n"), ("l", "t"), ("c", "t"), ("j", "t"), ("n", "t")]
+         ("ñ", "n"), ("l", "t"), ("c", "t"), ("j", "t")]
+# No ("n", "t"): `san` (nom.sg.m of sant) is itself the pausa form and `sat` would
+# false-hit on the neuter cell — measured on the first run, 14-09-2026.
+VOWELS = set("aāiīuūṛṝḷeo")
 
 ACTION = {
     "D1_kosha_null_cells": "kosha: existing row has NULL case/gender — fill the cell or flag disputed=1",
