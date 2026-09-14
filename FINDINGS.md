@@ -135,4 +135,29 @@ webhook code are outside its fence (H3529). Contract of record:
 [`docs/ARCHITECTURE_MESSAGE_INTENT_CLASSIFIER_2026.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_MESSAGE_INTENT_CLASSIFIER_2026.md)
 § Потоки данных.
 
+---
+
+## §4 — H4589 grounding work found two mission premises already stale/wrong
+
+**Added 14-09-2026 from H4589
+([PR #2566](https://github.com/gasyoun/Systema-Sanscriticum/pull/2566)).**
+
+1. **`send_policy`/`draft_only` code-level suppression is GONE from the tap-send path.** H4440
+   (MG ruling 09-09-2026, executed 14-09-2026) deliberately removed the `isDraftOnly()` refusal
+   from [`SupportHintSendButton`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportHintSendButton.php)
+   — the button now shows under every category including money/access/certificate, and a human
+   tap is the only gate. A mission or handoff written before that date that says "mismatch
+   suppresses the send button" is describing removed behaviour; re-adding suppression there is a
+   silent reversal of an explicit ruling, not a bug fix. New fact-checking work
+   ([`SupportFactCheckVerifier`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Support/SupportFactCheckVerifier.php))
+   is measurement-only (`facts['fact_check']`) for exactly this reason.
+2. **`copilot_events` / `note_slugs` name nothing in this codebase.** The real tables/classes are
+   `support_answer_suggestions` (`SupportAnswerSuggestion`) and `SupportAiReplyEvent`; grep for
+   the former two before trusting a handoff mission that assumes them.
+3. **Retrieval recall@5/MRR already exists and is green** —
+   [`tests/Feature/Support/FaqRagEvalTest.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Support/FaqRagEvalTest.php)
+   (H3766/H4663-reland), current ratchet recall@5=0.82, MRR=0.66. A mission asking to "build"
+   this metric is asking to re-derive something that shipped days earlier — grep the test file
+   before building an eval harness for FAQ retrieval in this repo.
+
 _Dr. Mārcis Gasūns_
