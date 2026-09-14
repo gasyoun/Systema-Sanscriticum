@@ -30,7 +30,9 @@ import json
 import re
 import sys
 import unicodedata
-import xml.etree.ElementTree as ET
+# stdlib XML parse of MG's OWN docx staging (trusted local teaching files, not
+# untrusted input); defusedxml is not a repo dependency — rule consciously muted:
+import xml.etree.ElementTree as ET  # nosemgrep: python.lang.security.use-defused-xml.use-defused-xml
 import zipfile
 from pathlib import Path
 
@@ -48,9 +50,6 @@ def norm(deva: str) -> str:
 
 
 def docx_paras(path: Path):
-    # nosemgrep: python.lang.security.audit.use-defusedxml-parse — input is the
-    # operator's own docx staging (MG's teaching files), never untrusted user
-    # input; defusedxml is not a dependency of this repo.
     with zipfile.ZipFile(path) as z:
         xml = z.read("word/document.xml")
     root = ET.fromstring(xml)
