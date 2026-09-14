@@ -10,6 +10,7 @@
         <p>Суббота, 19 сентября 2026 года, 12:00 МСК. Второе время — вторник, 08:00 МСК. Занятия идут раз в неделю, обычно полтора часа, иногда до двух.</p>
         <p>Начинаем с санскритского письма — деванагари, затем занимаемся по «Учебнику санскрита» В. А. Кочергиной. к. ф. н. М. Ю. Гасунс преподает санскрит в университете с 2007 г.</p>
         <p>8 000 руб. для РФ; для оплаты из-за границы напишите <a class="text-brand underline" href="https://t.me/rusamskrtam">@rusamskrtam</a>.</p>
+        <p>Условия оплаты, перевода между потоками и возврата едины для всех курсов и описаны в <a class="text-brand underline" href="/docs/oferta.pdf" target="_blank" rel="noopener">публичной оферте</a>.</p>
     </div>
     <section class="rounded-2xl bg-[#111622] border border-[#1F2636] p-6" aria-labelledby="lead-form">
         <h2 id="lead-form" class="text-xl font-bold text-white mb-2">Встать в список ожидания</h2>
