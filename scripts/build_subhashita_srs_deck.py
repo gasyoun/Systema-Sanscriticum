@@ -48,6 +48,9 @@ def norm(deva: str) -> str:
 
 
 def docx_paras(path: Path):
+    # nosemgrep: python.lang.security.audit.use-defusedxml-parse — input is the
+    # operator's own docx staging (MG's teaching files), never untrusted user
+    # input; defusedxml is not a dependency of this repo.
     with zipfile.ZipFile(path) as z:
         xml = z.read("word/document.xml")
     root = ET.fromstring(xml)
