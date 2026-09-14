@@ -46,6 +46,8 @@ class GameTelemetryController extends Controller
         GameEvent::ITEM_SEEN => 0,
         // H4396 — бюджетный счётчик бесплатных раундов; в борд не пишется.
         GameEvent::ROUND => 0,
+        // H4692 — трудность вопросов; в борд не пишется.
+        GameEvent::ITEM_RESULT => 0,
     ];
 
     public function store(Request $request): JsonResponse
@@ -144,6 +146,10 @@ class GameTelemetryController extends Controller
      */
     private function payload(Request $request, string $event): ?array
     {
+        if ($event === GameEvent::ITEM_RESULT) {
+            return $this->itemResultPayload($request);
+        }
+
         if ($event !== GameEvent::ITEM_SEEN) {
             return null;
         }
@@ -166,5 +172,54 @@ class GameTelemetryController extends Controller
         }
 
         return $clean === [] ? null : ['items' => $clean];
+    }
+
+    /**
+     * H4692 — `item_result` только: {hints, items:[{l, r, ms, wrong}]} — по
+     * одной записи на пару завершённого match-раунда. l/r режутся до 64/160
+     * символов через тот же {@see slug()}, ms/wrong/hints — целые >= 0 в
+     * разумных границах. Без валидного payload.items -> null (пустой json
+     * не пишем без нужды).
+     *
+     * @return array{hints: int, items: list<array{l: string, r: string, ms: int, wrong: int}>}|null
+     */
+    private function itemResultPayload(Request $request): ?array
+    {
+        $items = $request->input('payload.items');
+        if (! is_array($items)) {
+            return null;
+        }
+
+        $clean = [];
+        foreach (array_slice($items, 0, 50) as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $l = $this->slug($item['l'] ?? null, 64);
+            if ($l === null) {
+                continue;
+            }
+            $clean[] = [
+                'l' => $l,
+                'r' => $this->slug($item['r'] ?? null, 160) ?? '',
+                'ms' => $this->clampInt($item['ms'] ?? null, 3_600_000),
+                'wrong' => $this->clampInt($item['wrong'] ?? null, 1000),
+            ];
+        }
+
+        return $clean === [] ? null : [
+            'hints' => $this->clampInt($request->input('payload.hints'), 1000),
+            'items' => $clean,
+        ];
+    }
+
+    /** Целое >= 0, обрезанное сверху $max; не-число -> 0. */
+    private function clampInt(mixed $value, int $max): int
+    {
+        if (! is_numeric($value)) {
+            return 0;
+        }
+
+        return max(0, (int) min((int) floor((float) $value), $max));
     }
 }

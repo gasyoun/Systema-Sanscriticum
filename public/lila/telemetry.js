@@ -2,12 +2,15 @@
    Free-games funnel telemetry (H1360).
 
    Anonymous, first-party, no third-party trackers (privacy
-   contract R20). Sends four funnel signals to /api/games/event:
+   contract R20). Sends funnel signals to /api/games/event:
      start          — a drill page was opened (a "play")
      complete       — a round was solved (reuses gate.js's own
                       completion signal: `.feedback.show`)
      gate_shown     — the register wall appeared (`.sgx-gate`)
      gate_cta_click — the wall's «Начать бесплатно» was clicked
+     item_seen      — opt-in per-page item list (H1680)
+     item_result    — per-pair difficulty of a completed match
+                      round (H4692, engine emits sgx:item-result)
 
    This script is a passive OBSERVER of the DOM that gate.js
    produces — it never touches gate.js or its localStorage, so the
@@ -92,6 +95,29 @@
     }).filter(function (it) { return it.iast !== ""; });
     if (clean.length > 0) send("item_seen", { items: clean });
   })();
+
+  // H4692 — per-question difficulty: the match engine announces a completed
+  // round with per-pair {l, r, ms, wrong} on the document event
+  // "sgx:item-result". Sanitized client-side (length/number clamps), capped
+  // at 50 pairs; sanitized again server-side — client limits are politeness,
+  // not trust.
+  document.addEventListener("sgx:item-result", function (e) {
+    var d = e && e.detail;
+    if (!d || !Array.isArray(d.items) || d.items.length === 0) return;
+    var items = d.items.slice(0, 50).map(function (it) {
+      return {
+        l: String((it && it.l) || "").slice(0, 64),
+        r: String((it && it.r) || "").slice(0, 160),
+        ms: Math.max(0, Math.round(Number((it && it.ms) || 0))),
+        wrong: Math.max(0, Math.round(Number((it && it.wrong) || 0)))
+      };
+    }).filter(function (it) { return it.l !== ""; });
+    if (items.length === 0) return;
+    send("item_result", {
+      hints: Math.max(0, Math.round(Number(d.hints) || 0)),
+      items: items
+    });
+  });
 
   var sentComplete = false;
   var sentGate = false;
