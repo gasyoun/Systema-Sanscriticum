@@ -1,4 +1,4 @@
-_Created: 02-08-2026 · Last updated: 13-09-2026_
+_Created: 02-08-2026 · Last updated: 15-09-2026_
 
 # Soft server alerts — agent playbook + cause catalog
 
@@ -86,6 +86,7 @@ Severity is what `guards:verify` / TG already use (H2066 + H2104).
 | root cron missing `systema-auto-deploy-run.sh` | auto-deploy silently dead | 200 | none | invent cron from memory | `server_guards_apply.sh` + mirror |
 | earlyoom / MemAvailable / OOM | resource pressure | maybe down | none | random process kills | [server-resource-guards.md §7](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) |
 | hybrid soft surfaces | `/library` etc. optional | 200 elsewhere | none | “fix” by disabling hybrid blindly | feature flags / hybrid docs |
+| `ollama-tunnel:` (scope `ollama-туннель`, H4845) | reverse tunnel `127.0.0.1:11434` from the GPU node dead (cURL 7), hung (cURL 28) or no Ollama behind it (HTTP 5xx), inside `KNOWLEDGE_TUNNEL_HOURS`; FAQ search degrades to BM25, shadow generation errors | 200 | none | restart anything on `.92` except killing the one stale `sshd-session` holding `:11434`; install a model on `.92` | tunnel owner is Ivan (GPU node) — [OLLAMA_TUNNEL_RUNBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ops/OLLAMA_TUNNEL_RUNBOOK.md) |
 | `touch(): Utime failed` / root-owned `storage/framework/views` | Filament `/admin` HTTP 500; `cabinet:probe` critical; public `/` and `/login` 200 | /admin 500 | `chown -R www-data:www-data storage/framework/views` | disable probe; `nano` compiled views; restart healthy php-fpm | `deploy.sh` artisan-as-root compiles Blade; php-fpm cannot `touch()`. Chown after optimize **and** after probe, **before** `fail` (H3194: `fail` is `exit 1`) |
 | host-only `guards/tmpfs-cap` / `backup-fresh` as SOS | 🚨 «кабинет не работает» while HTTP 200; deploy `--fail-on-critical` trips fuse; TG storm after `optimize:clear` | 200 | do **not** `rm` fuse as the fix; H3197 splits HTTP vs host | treat host guards as cabinet-down; `cache:clear` as the TG store | SOS + Better Stack `/fail` + deploy fail = HTTP/cabinet only; host/ops sticky; TG state file not cache; `deploy.sh --no-alert` |
 
