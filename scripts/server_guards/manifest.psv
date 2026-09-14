@@ -46,6 +46,7 @@ fail2ban/jail.d/systema-sshd.conf|/etc/fail2ban/jail.d/systema-sshd.conf|644|cri
 sbin/systema-git-integrity.sh|/usr/local/sbin/systema-git-integrity.sh|755|critical
 sbin/systema-tamper-watch.sh|/usr/local/sbin/systema-tamper-watch.sh|755|critical
 sbin/systema-admin-roster.sh|/usr/local/sbin/systema-admin-roster.sh|755|critical
+sbin/systema-ib-balance-watch.sh|/usr/local/sbin/systema-ib-balance-watch.sh|755|warning
 expected-dirty.conf|/usr/local/share/systema-guards/expected-dirty.conf|644|critical
 
 # MG ruling 13-09-2026 — append-only restic push path: a root compromise of the

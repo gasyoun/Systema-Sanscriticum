@@ -31,6 +31,12 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 33 3 * * * /usr/local/sbin/systema-tamper-watch.sh >> /var/log/systema-tamper-watch-cron.log 2>&1
 44 3 * * * /usr/local/sbin/systema-admin-roster.sh >> /var/log/systema-admin-roster-cron.log 2>&1
 
+# Пульс ib-balance-вотчера (MG 14-09-2026): метку /tmp/ib_sweep_last_clear ставит
+# задача бокса «claude ib-balance sweep» (~1/мин, снимает ложный карантин
+# «Insufficient Balance» в opencode, H-ib-balance). Тишина метки > @@IB_BALANCE_WATCH_STALE_MINUTES@@ мин
+# → P1 в awake-окне (иначе — в утренний бриф), дедуп раз в час.
+@@IB_BALANCE_WATCH_SCHEDULE@@ /usr/local/sbin/systema-ib-balance-watch.sh >> /var/log/systema-ib-balance-watch-cron.log 2>&1
+
 # Hermes nervous-system lanes (H4155/H4247). Installed here (single source)
 # after the 07-09-2026 guards re-apply wiped the on-box copies — lane jobs MUST
 # live in this file, never hand-added via crontab -e, or the next apply kills them.

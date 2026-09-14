@@ -64,3 +64,16 @@ jobs:
       # token — by the ABSENCE of the call, not by trusting the script text.
       - name: Run test_systema_remediation_ladder.sh
         run: bash scripts/server_guards/sbin/test_systema_remediation_ladder.sh
+
+  ib-balance-watch-test:
+    name: ib-balance pulse guard (fresh/stale/dedup/missing/garbage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Six cases, all in a temp dir with a stubbed lane_lib: the hourly page
+      # dedup and the recovery reset are the two behaviours a silent regression
+      # would otherwise hide (MG 14-09-2026: the watcher must page when the
+      # box-side sweep dies, but never once per 15-min tick).
+      - name: Run test_systema_ib_balance_watch.sh
+        run: bash scripts/server_guards/sbin/test_systema_ib_balance_watch.sh
