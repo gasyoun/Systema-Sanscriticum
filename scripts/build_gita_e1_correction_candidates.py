@@ -56,7 +56,18 @@ ACTION = {
     "G2_compound_member_gap": "gap-fill candidate: compound's final member lacks the gold cell — review member paradigm",
     "G3_lemma_absent": "gap-fill candidate: lemma has no paradigm in kosha inflections — generate paradigm (e.g. vidyut-gap-fill)",
     "G4_cell_absent": "gap-fill candidate: lemma paradigm exists but this form/cell is missing — add variant",
+    "G5_gold_form_defect": "gold: fix the form field in the Gita gold master (duplicated word / variant reading / ASCII h for ḥ) — not an engine gap",
 }
+
+
+def gold_form_defect(form: str) -> str:
+    if " / " in form or "/" in form:
+        return "variant reading in form field"
+    if " " in form.strip():
+        return "multi-word form field"
+    if len(form) > 1 and form.endswith("h") and form[-2] in VOWELS:
+        return "ASCII h typed for visarga ḥ"
+    return ""
 
 
 def load_to_slp1(util: Path):
