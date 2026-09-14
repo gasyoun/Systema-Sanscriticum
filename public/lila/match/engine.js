@@ -79,6 +79,11 @@
     var checkBtn = el("button", "primary", "Проверить");
     var resetBtn = el("button", "ghost", "Заново");
     var spacer   = el("span", "spacer");
+    // H4840 — visible round stopwatch (MG 14-09-2026): runs from build(),
+    // freezes when the round is solved, restarts with «Заново».
+    var timerEl  = el("span", "timer", "0:00");
+    timerEl.setAttribute("role", "timer");
+    timerEl.setAttribute("aria-label", "Время раунда");
     var score    = el("span", "score");
     var hasHints = allPairs.some(function (p) {
       return (p.left && p.left.hint) || (p.right && p.right.hint);
@@ -87,6 +92,7 @@
     toolbar.appendChild(checkBtn);
     toolbar.appendChild(resetBtn);
     toolbar.appendChild(spacer);
+    toolbar.appendChild(timerEl);
     toolbar.appendChild(score);
     container.appendChild(toolbar);
 
@@ -126,6 +132,30 @@
     function now() {
       return (typeof performance !== "undefined" && performance.now)
         ? performance.now() : Date.now();
+    }
+
+    // H4840 — visible stopwatch state (separate from the ms telemetry above).
+    var timerStart = 0;
+    var timerFrozen = false;
+    var timerHandle = null;
+
+    function timerText(ms) {
+      var s = Math.max(0, Math.floor(ms / 1000));
+      return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+    }
+    function timerReset() {
+      timerFrozen = false;
+      timerStart = now();
+      timerEl.textContent = "0:00";
+      if (!timerHandle) {
+        timerHandle = setInterval(function () {
+          if (!timerFrozen) timerEl.textContent = timerText(now() - timerStart);
+        }, 500);
+      }
+    }
+    function timerStop() {
+      timerFrozen = true;
+      timerEl.textContent = timerText(now() - timerStart);
     }
 
     function nextHueSlot() {
@@ -273,7 +303,10 @@
       score.textContent = "Верно " + correct + " / " + totalPairs;
       var solved = allLinked && correct === totalPairs;
       feedback.classList.toggle("show", solved);
-      if (solved) exposeRoundResult(leftCards);
+      if (solved) {
+        timerStop();                    // H4840
+        exposeRoundResult(leftCards);
+      }
     }
 
     // H4692 — on a solved round, expose {hints, items:[{l, r, ms, wrong}]} at
@@ -307,6 +340,7 @@
       usedHues = {}; linkCtr = 0;
       roundStart = now();   // H4692 — fresh timer per round
       itemStats = {};
+      timerReset();         // H4840
       dropL.innerHTML = ""; dropR.innerHTML = "";
 
       var pairs = allPairs;

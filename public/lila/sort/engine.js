@@ -64,12 +64,17 @@
     var checkBtn = el("button", "primary", "Проверить");
     var resetBtn = el("button", "ghost", "Заново");
     var spacer   = el("span", "spacer");
+    // H4840 — visible round stopwatch (MG 14-09-2026).
+    var timerEl  = el("span", "timer", "0:00");
+    timerEl.setAttribute("role", "timer");
+    timerEl.setAttribute("aria-label", "Время раунда");
     var score    = el("span", "score");
     var hasHints = groups.some(function (g) { return g.items.some(function (it) { return it.hint; }); });
     if (hasHints) toolbar.appendChild(hintBtn);
     toolbar.appendChild(checkBtn);
     toolbar.appendChild(resetBtn);
     toolbar.appendChild(spacer);
+    toolbar.appendChild(timerEl);
     toolbar.appendChild(score);
     container.appendChild(toolbar);
 
@@ -109,6 +114,37 @@
     var selected = null;
     var totalItems = 0;
 
+    // H4840 — per-item difficulty stats (qid -> {label, ms, wrong}) + the
+    // visible stopwatch. ms = time from build() to the card's first placement.
+    var roundStart = 0;
+    var itemStats = {};
+    var timerStart = 0;
+    var timerFrozen = false;
+    var timerHandle = null;
+
+    function now() {
+      return (typeof performance !== "undefined" && performance.now)
+        ? performance.now() : Date.now();
+    }
+    function timerText(ms) {
+      var s = Math.max(0, Math.floor(ms / 1000));
+      return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+    }
+    function timerReset() {
+      timerFrozen = false;
+      timerStart = now();
+      timerEl.textContent = "0:00";
+      if (!timerHandle) {
+        timerHandle = setInterval(function () {
+          if (!timerFrozen) timerEl.textContent = timerText(now() - timerStart);
+        }, 500);
+      }
+    }
+    function timerStop() {
+      timerFrozen = true;
+      timerEl.textContent = timerText(now() - timerStart);
+    }
+
     function clearSelection() {
       if (selected) selected.classList.remove("selected");
       selected = null;
@@ -122,6 +158,11 @@
       c.querySelector(".mark").textContent = "";
     }
     function place(card, drop) {
+      // H4840 — first placement of this card is its "time to answer".
+      var st = itemStats[card.dataset.qid];
+      if (st && st.ms === null) {
+        st.ms = Math.max(0, Math.round(now() - roundStart));
+      }
       drop.appendChild(card);
       clearMark(card); clearSelection(); updateScore();
     }
@@ -136,12 +177,13 @@
       });
     }
 
-    function makeCard(item, correctGi) {
+    function makeCard(item, correctGi, qid) {
       var c = el("div", "card");
       c.setAttribute("draggable", "true");
       c.setAttribute("tabindex", "0");
       c.setAttribute("role", "button");
       c.dataset.gi = correctGi;
+      c.dataset.qid = qid;
       var label = (item.text || "") + (item.hint ? (" — " + item.hint) : "");
       c.setAttribute("aria-label", label);
       var html = '<span class="word">' + esc(item.text) + '</span>';
@@ -200,11 +242,40 @@
           } else {
             card.classList.add("wrong");
             card.querySelector(".mark").textContent = "✕";
+            // H4840 — a check that scored this card wrong is a difficulty signal.
+            var st = itemStats[card.dataset.qid];
+            if (st) st.wrong++;
           }
         });
       });
       score.textContent = "Верно " + correct + " / " + totalItems;
-      feedback.classList.toggle("show", allPlaced && correct === totalItems);
+      var solved = allPlaced && correct === totalItems;
+      feedback.classList.toggle("show", solved);
+      if (solved) {
+        timerStop();          // H4840
+        exposeRoundResult();
+      }
+    }
+
+    // H4840 — per-card results for telemetry.js (one item_result per round):
+    // l = card text, r = the correct group label, ms = time to first placement,
+    // wrong = checks that scored it misplaced.
+    function exposeRoundResult() {
+      var items = [];
+      Array.prototype.forEach.call(container.querySelectorAll(".card"), function (c) {
+        var st = itemStats[c.dataset.qid] || {};
+        var w = c.querySelector(".word");
+        items.push({
+          l: w ? w.textContent : "",
+          r: st.label || "",
+          ms: (typeof st.ms === "number") ? st.ms : 0,
+          wrong: st.wrong || 0
+        });
+      });
+      window.SGX_ROUND_RESULT = {
+        hints: container.classList.contains("show-hints") ? 1 : 0,
+        items: items
+      };
     }
 
     function build() {
@@ -220,8 +291,17 @@
         items.forEach(function (it) { deck.push({ item: it, gi: gi }); });
       });
       totalItems = deck.length;
-      (doShuffle ? shuffleArr(deck) : deck).forEach(function (d) {
-        tray.appendChild(makeCard(d.item, d.gi));
+      roundStart = now();     // H4840 — fresh per-round timing
+      itemStats = {};
+      timerReset();
+      (doShuffle ? shuffleArr(deck) : deck).forEach(function (d, i) {
+        var qid = "q" + i;
+        itemStats[qid] = {
+          label: (groups[d.gi] && groups[d.gi].label) || ("Группа " + (d.gi + 1)),
+          ms: null,
+          wrong: 0
+        };
+        tray.appendChild(makeCard(d.item, d.gi, qid));
       });
       updateScore();
     }
