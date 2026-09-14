@@ -49,8 +49,6 @@ use App\Support\ServerGuards\SystemInspector;
 use Closure;
 use Filament\Support\View\Components\Modal;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -154,24 +152,9 @@ class AppServiceProvider extends ServiceProvider
         }
         // ----------------------------------------------------
 
-        // H4663 (аудит периметра 14-09, п.7): CSP только в режиме Report-Only —
-        // наблюдение без блокировки. Заголовок собирается в terminate-фазе,
-        // поэтому видит и ответы Livewire/Filament. Включение всегда; прод
-        // собирает репорты, ничего не блокируя. Ужесточение до живого CSP —
-        // после разбора отчётов (GTD-строка H4663).
-        app('router')->pushMiddlewareToGroup('web', function (Request $request, Closure $next) {
-            $response = $next($request);
-
-            if ($response instanceof Response
-                && ! $response->headers->has('Content-Security-Policy-Report-Only')) {
-                $response->headers->set(
-                    'Content-Security-Policy-Report-Only',
-                    "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self' https://samskrtam.ru; report-uri /csp-report"
-                );
-            }
-
-            return $response;
-        });
+        // H4663 (аудит периметра 14-09, п.7): CSP-Report-Only живёт отдельным
+        // middleware AddCspReportOnly в web-группе (Kernel.php) — closure в
+        // middleware-группе не резолвится MiddlewareNameResolver'ом.
 
         // 2. Наблюдатель
         Schedule::observe(ScheduleObserver::class);
