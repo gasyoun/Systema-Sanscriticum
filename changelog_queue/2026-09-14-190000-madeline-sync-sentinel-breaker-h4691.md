@@ -6,5 +6,9 @@ _Created: 14-09-2026 · Last updated: 14-09-2026_
 - **Обёртка:** [MadelineSyncBreaker](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/Telegram/MadelineSyncBreaker.php) — здоровая сессия (нет `freeze.json`, пустой `actions.log`) не порождает ни одного подпроцесса; отсутствие библиотеки на хосте = fail-open (как до H4691: только короткий cooldown) + `Log::error`. Guardian пер-сессийный (`madeline_sync` + суффикс H3380).
 - **Конфиг:** `services.sentinel_breaker` (`SENTINEL_BREAKER_ENABLED`/`_BIN`/`_PYTHON`/`_STATE_DIR`), инвентарь env перегенерирован.
 - **Тесты:** [MadelineSyncBreakerTest](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/MadelineSyncBreakerTest.php) — 7 кейсов (запись kill, тишина здоровой сессии, заморозка пропускает sync, fail-open, доставка крика, opt-in прогон против настоящей библиотеки: 4-й старт после 3 kill в час отказан, `freeze.json` с `guardian_class=self_kill`).
+- **Добор по вердикту независимого верификатора (FAIL из-за двух пробелов в покрытии):**
+  - Добавлен кейс «разморозка снова открывает sync».
+  - Прогон против настоящей библиотеки теперь сам находит её (prod-путь или соседний чекаут Uprava) и доказывает авто-разморозку: за минуту до N=2ч страж ещё заморожен, ровно в N — открыт.
+  - Найден дефект самого теста: `putenv()` не доходит до дочернего процесса Symfony Process, потому что env строится из `getenv() ∩ $_SERVER`. Настоящий кейс шёл на реальных часах с выключенным TEST_MODE. Хелпер `childEnv()` выставляет переменную ещё и в `$_ENV`/`$_SERVER`; `frozen_at` в тесте закрепляет, что подменённые часы дошли до ребёнка.
 
 _Гасунс_
