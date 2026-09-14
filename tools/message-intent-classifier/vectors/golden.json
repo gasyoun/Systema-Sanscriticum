@@ -1,7 +1,7 @@
 {
   "version": 1,
   "frozen": "2026-08-25",
-  "note": "Golden vectors frozen from the reference Python engine at commit-time. Both engines (engine_py and php/MessageClassifier) must reproduce every 'expect' byte-for-byte; planes absent from 'expect' must be null. Rule changes require an intentional golden refresh in the same PR. H3528: +t-rec-06 (zabota-export seed, голое видео).",
+  "note": "Golden vectors frozen from the reference Python engine at commit-time. Both engines (engine_py and php/MessageClassifier) must reproduce every 'expect' byte-for-byte; planes absent from 'expect' must be null. Rule changes require an intentional golden refresh in the same PR. H3528: +t-rec-06 (zabota-export seed, голое видео). H4609: +плоскости funnel_stage/escalation/resolution, +дети topic (refund/pause/deposit/installment/access_window), +synthetic-блок syn-* (генератор tools/gen_synthetic_golden.py, seed 20260913). H4609: +плоскости funnel_stage/escalation/resolution, +дети topic (refund/pause/deposit/installment/access_window), +synthetic-блок syn-* (генератор tools/gen_synthetic_golden.py, seed 20260913).",
   "vectors": [
     {
       "id": "t-rec-01",
@@ -10,6 +10,18 @@
         "topic": {
           "category": "recording_access",
           "reason": "keyword:запис[а-я]*( занятия| урока| лекции)?"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:запис[а-я]*"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -20,6 +32,14 @@
         "topic": {
           "category": "recording_access",
           "reason": "keyword:видеозапис[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:видеозапис|пересмотр|переслуш|тайм ?код|в каком видео"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
         }
       }
     },
@@ -34,6 +54,14 @@
         "objection": {
           "category": "b1_time",
           "reason": "keyword:не успе[а-я]*|пропу[стщ][а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:видеозапис|пересмотр|переслуш|тайм ?код|в каком видео"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
         }
       }
     },
@@ -44,6 +72,14 @@
         "topic": {
           "category": "recording_access",
           "reason": "keyword:запис[а-я]*( занятия| урока| лекции)?"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:запис[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
         }
       }
     },
@@ -58,6 +94,14 @@
         "objection": {
           "category": "b1_time",
           "reason": "keyword:не успе[а-я]*|пропу[стщ][а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:запис[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
         }
       }
     },
@@ -68,6 +112,14 @@
         "topic": {
           "category": "recording_access",
           "reason": "keyword:запис[а-я]*( занятия| урока| лекции)?"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:запис[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -78,6 +130,14 @@
         "topic": {
           "category": "tech_issue",
           "reason": "keyword:техподдержк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -88,6 +148,14 @@
         "topic": {
           "category": "tech_issue",
           "reason": "keyword:техподдержк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -98,6 +166,18 @@
         "topic": {
           "category": "tech_issue",
           "reason": "keyword:техподдержк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "escalation": {
+          "category": "frustrated",
+          "reason": "keyword:сколько можно|когда уже|уже (час|два|три|неделю|месяц)"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
         }
       }
     },
@@ -108,6 +188,14 @@
         "intent": {
           "category": "learn_start",
           "reason": "keyword:с чего начать|записаться на курс|запишусь на курс"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:записаться|запишусь|запись на курс"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
         }
       }
     },
@@ -118,6 +206,14 @@
         "topic": {
           "category": "access_login",
           "reason": "keyword:(?<![а-я])кабинет|личн(ый|ым|ого) кабинет"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
         }
       }
     },
@@ -128,6 +224,10 @@
         "topic": {
           "category": "tech_issue",
           "reason": "keyword:техподдержк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
         }
       }
     },
@@ -138,6 +238,14 @@
         "topic": {
           "category": "tech_issue",
           "reason": "keyword:ошибк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
         }
       }
     },
@@ -148,6 +256,10 @@
         "topic": {
           "category": "tech_issue",
           "reason": "keyword:сбой|зависает|виснет|вылетает|лагает"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
         }
       }
     },
@@ -158,6 +270,10 @@
         "topic": {
           "category": "tech_issue",
           "reason": "keyword:сбой|зависает|виснет|вылетает|лагает"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
         }
       }
     },
@@ -186,6 +302,18 @@
         "intent": {
           "category": "schedule_query",
           "reason": "keyword:расписан[а-я]*|во ?сколько|в какое время|какой день"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -200,6 +328,14 @@
         "intent": {
           "category": "schedule_query",
           "reason": "keyword:расписан[а-я]*|во ?сколько|в какое время|какой день"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
         }
       }
     },
@@ -238,6 +374,14 @@
         "intent": {
           "category": "price_query",
           "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -248,6 +392,14 @@
         "topic": {
           "category": "payment_billing",
           "reason": "keyword:(?<![а-я])(ссылк|линк)[а-я]*.{0,48}(оплат|плат|тариф|цен|стои)"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -266,6 +418,14 @@
         "intent": {
           "category": "price_query",
           "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])|стоимост[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -280,6 +440,14 @@
         "objection": {
           "category": "b2_price",
           "reason": "keyword:(?<![а-я])дорог(о|а|ой|ие)(?![а-я])|скидк[а-я]*|рассрочк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -294,6 +462,14 @@
         "objection": {
           "category": "b7_logistics",
           "reason": "keyword:за рубеж|за границ|из другого города|из другого региона"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -312,6 +488,14 @@
         "intent": {
           "category": "price_query",
           "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -322,6 +506,14 @@
         "topic": {
           "category": "zoom_link",
           "reason": "keyword:зум|zoom|(?<![a-z])join(?![a-z])"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:зум|zoom|подключ"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -332,6 +524,14 @@
         "topic": {
           "category": "zoom_link",
           "reason": "keyword:зум|zoom|(?<![a-z])join(?![a-z])"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:зум|zoom|подключ"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -342,6 +542,10 @@
         "topic": {
           "category": "zoom_link",
           "reason": "keyword:(?<![а-я])(ссылк|линк)[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -352,6 +556,14 @@
         "topic": {
           "category": "zoom_link",
           "reason": "keyword:подключ[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:зум|zoom|подключ"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -372,6 +584,14 @@
         "topic": {
           "category": "access_login",
           "reason": "keyword:(?<![а-я])кабинет|личн(ый|ым|ого) кабинет"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -382,6 +602,14 @@
         "topic": {
           "category": "access_login",
           "reason": "keyword:не могу (попасть|войти|зайти|открыт[а-я]*)"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
         }
       }
     },
@@ -402,6 +630,14 @@
         "topic": {
           "category": "access_login",
           "reason": "keyword:нет доступа"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
         }
       }
     },
@@ -412,6 +648,14 @@
         "topic": {
           "category": "access_login",
           "reason": "keyword:логин|парол[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
         }
       }
     },
@@ -422,6 +666,14 @@
         "topic": {
           "category": "materials_content",
           "reason": "keyword:презентац[а-я]*|раздаточ[а-я]*|учебник[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник|раздаточ"
         }
       }
     },
@@ -432,6 +684,14 @@
         "topic": {
           "category": "materials_content",
           "reason": "keyword:материал[а-я]*|методичк[а-я]*|конспект[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник|раздаточ"
         }
       }
     },
@@ -442,6 +702,14 @@
         "topic": {
           "category": "materials_content",
           "reason": "keyword:презентац[а-я]*|раздаточ[а-я]*|учебник[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник|раздаточ"
         }
       }
     },
@@ -452,6 +720,14 @@
         "topic": {
           "category": "materials_content",
           "reason": "keyword:материал[а-я]*|методичк[а-я]*|конспект[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник|раздаточ"
         }
       }
     },
@@ -462,6 +738,14 @@
         "topic": {
           "category": "homework_progress",
           "reason": "keyword:домашн[а-я]*|домашк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:домашн|домашк|(?<![а-я])дз(?![а-я])|задани"
         }
       }
     },
@@ -472,6 +756,10 @@
         "topic": {
           "category": "homework_progress",
           "reason": "keyword:домашн[а-я]*|домашк[а-я]*"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:домашн|домашк|(?<![а-я])дз(?![а-я])|задани"
         }
       }
     },
@@ -482,6 +770,14 @@
         "topic": {
           "category": "homework_progress",
           "reason": "keyword:(?<![а-я])дз(?![а-я])"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:домашн|домашк|(?<![а-я])дз(?![а-я])|задани"
         }
       }
     },
@@ -492,6 +788,10 @@
         "topic": {
           "category": "homework_progress",
           "reason": "keyword:задани[а-я]*|прикрепл[а-я]*"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:домашн|домашк|(?<![а-я])дз(?![а-я])|задани"
         }
       }
     },
@@ -506,6 +806,14 @@
         "objection": {
           "category": "b11_what_next",
           "reason": "keyword:после курса|что дальше"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:сертификат|диплом|удостоверен"
         }
       }
     },
@@ -516,6 +824,14 @@
         "topic": {
           "category": "certificate",
           "reason": "keyword:сертификат[а-я]*|диплом[а-я]*|удостоверен[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:сертификат|диплом|удостоверен"
         }
       }
     },
@@ -526,6 +842,10 @@
         "topic": {
           "category": "certificate",
           "reason": "keyword:сертификат[а-я]*|диплом[а-я]*|удостоверен[а-я]*"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:сертификат|диплом|удостоверен"
         }
       }
     },
@@ -536,6 +856,14 @@
         "topic": {
           "category": "certificate",
           "reason": "keyword:сертификат[а-я]*|диплом[а-я]*|удостоверен[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:сертификат|диплом|удостоверен"
         }
       }
     },
@@ -546,6 +874,10 @@
         "topic": {
           "category": "membership_club",
           "reason": "keyword:клуб[а-я]*|членство|подписк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:клуб|подписк|членство"
         }
       }
     },
@@ -556,6 +888,10 @@
         "topic": {
           "category": "membership_club",
           "reason": "keyword:клуб[а-я]*|членство|подписк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:клуб|подписк|членство"
         }
       }
     },
@@ -566,6 +902,10 @@
         "topic": {
           "category": "membership_club",
           "reason": "keyword:клуб[а-я]*|членство|подписк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:клуб|подписк|членство"
         }
       }
     },
@@ -576,6 +916,10 @@
         "topic": {
           "category": "membership_club",
           "reason": "keyword:клуб[а-я]*|членство|подписк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:клуб|подписк|членство"
         }
       }
     },
@@ -640,6 +984,14 @@
         "objection": {
           "category": "b2_price",
           "reason": "keyword:(?<![а-я])дорог(о|а|ой|ие)(?![а-я])|скидк[а-я]*|рассрочк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -668,6 +1020,14 @@
         "intent": {
           "category": "price_query",
           "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -806,6 +1166,14 @@
         "intent": {
           "category": "schedule_query",
           "reason": "keyword:когда (занятие|урок|старт|начало|будет|следующ[а-я]*)"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
         }
       }
     },
@@ -820,6 +1188,14 @@
         "objection": {
           "category": "b6_start_date",
           "reason": "keyword:старт[а-я]*|поток[а-я]*|набор[а-я]*|наберет"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -874,6 +1250,14 @@
         "objection": {
           "category": "b7_logistics",
           "reason": "keyword:за рубеж|за границ|из другого города|из другого региона"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:зум|zoom|подключ"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -898,6 +1282,14 @@
         "objection": {
           "category": "b8_payment_mechanics",
           "reason": "keyword:как записаться|как оплатить|где оплат"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -932,6 +1324,14 @@
         "intent": {
           "category": "trial_request",
           "reason": "keyword:пробн(ое|ый|ые)( занятие| урок)?"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:записаться|запишусь|запись на курс"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
         }
       }
     },
@@ -952,6 +1352,14 @@
         "objection": {
           "category": "b9_risk_trial",
           "reason": "keyword:пробн[а-я]*|возврат[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:возврат|верните? деньги|вернуть деньги"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
         }
       }
     },
@@ -1070,6 +1478,18 @@
         "intent": {
           "category": "price_query",
           "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])|стоимост[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -1088,6 +1508,14 @@
         "intent": {
           "category": "price_query",
           "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])|стоимост[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -1200,6 +1628,14 @@
         "intent": {
           "category": "trial_request",
           "reason": "keyword:пробн(ое|ый|ые)( занятие| урок)?"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -1224,6 +1660,14 @@
         "intent": {
           "category": "buy_signal",
           "reason": "keyword:хочу оплатить|оплачу|выставите счет|готов(а)? оплатить"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -1258,6 +1702,18 @@
         "intent": {
           "category": "buy_signal",
           "reason": "keyword:хочу оплатить|оплачу|выставите счет|готов(а)? оплатить"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -1278,6 +1734,10 @@
         "intent": {
           "category": "complaint",
           "reason": "keyword:жалуюсь|жалоба|возмутительн|неприемлемо|безобрази"
+        },
+        "escalation": {
+          "category": "frustrated",
+          "reason": "keyword:возмут[а-я]*|безобрази[а-я]*|надоело|обман|мошенник"
         }
       }
     },
@@ -1288,6 +1748,10 @@
         "intent": {
           "category": "complaint",
           "reason": "keyword:верните деньги|обман|мошенник|игнорируете"
+        },
+        "escalation": {
+          "category": "frustrated",
+          "reason": "keyword:опять|снова не|никто не отвечает|игнорируете"
         }
       }
     },
@@ -1298,6 +1762,18 @@
         "intent": {
           "category": "complaint",
           "reason": "keyword:верните деньги|обман|мошенник|игнорируете"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:возврат|верните? деньги|вернуть деньги"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:верните? деньги|вернуть деньги|возврат (средств|денег|оплат)"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
         }
       }
     },
@@ -1308,6 +1784,10 @@
         "intent": {
           "category": "spam_noise",
           "reason": "keyword:отписаться|рассылк[а-я]*|реклам[а-я]*|(?<![а-я])спам"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -1348,6 +1828,10 @@
         "meta": {
           "category": "human_trigger",
           "reason": "keyword:куратор|живой|человек"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
         }
       }
     },
@@ -1372,6 +1856,18 @@
         "meta": {
           "category": "human_trigger",
           "reason": "keyword:напишите мне|позвоните"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:куратор|живой|напишите мне|позвоните"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -1396,6 +1892,14 @@
         "meta": {
           "category": "urgent",
           "reason": "keyword:срочн[а-я]*|как можно скорее|экстренн[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -1420,6 +1924,10 @@
         "meta": {
           "category": "urgent",
           "reason": "keyword:горит|сегодня же"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:домашн|домашк|(?<![а-я])дз(?![а-я])|задани"
         }
       }
     },
@@ -1470,6 +1978,10 @@
         "meta": {
           "category": "sanskrit_term",
           "reason": "keyword:[āīūṛṝḷḹṭḍṇṅñṃśḥṣ]"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
         }
       }
     },
@@ -1480,6 +1992,10 @@
         "meta": {
           "category": "new_contact",
           "reason": "keyword:впервые|первый раз"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:здравствуйте|добрый день|спасибо|благодарю"
         }
       }
     },
@@ -1524,6 +2040,14 @@
         "topic": {
           "category": "recording_access",
           "reason": "keyword:запис[а-я]*( занятия| урока| лекции)?"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:запис[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -1542,6 +2066,14 @@
         "intent": {
           "category": "price_query",
           "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -1556,6 +2088,18 @@
         "intent": {
           "category": "schedule_query",
           "reason": "keyword:расписан[а-я]*|во ?сколько|в какое время|какой день"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -1580,6 +2124,14 @@
         "meta": {
           "category": "urgent",
           "reason": "keyword:срочн[а-я]*|как можно скорее|экстренн[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:зум|zoom|подключ"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     },
@@ -1660,6 +2212,14 @@
         "topic": {
           "category": "access_login",
           "reason": "keyword:вход"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
         }
       }
     },
@@ -1734,6 +2294,14 @@
         "intent": {
           "category": "price_query",
           "reason": "keyword:тариф[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
         }
       }
     },
@@ -1744,6 +2312,10 @@
         "intent": {
           "category": "schedule_query",
           "reason": "keyword:день недели|дни занятий"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
         }
       }
     },
@@ -1774,8 +2346,1462 @@
         "topic": {
           "category": "recording_access",
           "reason": "keyword:в каком видео"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:видеозапис|пересмотр|переслуш|тайм ?код|в каком видео"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "syn-p-001",
+      "text": "Возможен ли возврат денег за оплаченный курс?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "refund",
+          "reason": "keyword:возврат (средств|денег|оплат[а-я]*)"
+        },
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:пробн[а-я]*|возврат[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:возврат|верните? деньги|вернуть деньги"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:верните? деньги|вернуть деньги|возврат (средств|денег|оплат)"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
+        }
+      }
+    },
+    {
+      "id": "syn-p-002",
+      "text": "Как оформить возврат средств за базовый курс?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "refund",
+          "reason": "keyword:возврат (средств|денег|оплат[а-я]*)"
+        },
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:пробн[а-я]*|возврат[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:возврат|верните? деньги|вернуть деньги"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:верните? деньги|вернуть деньги|возврат (средств|денег|оплат)"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
+        }
+      }
+    },
+    {
+      "id": "syn-p-003",
+      "text": "Скажите, будьте добры, подскажите, как запросить возврат оплаты за обучение?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "refund",
+          "reason": "keyword:возврат (средств|денег|оплат[а-я]*)"
+        },
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:пробн[а-я]*|возврат[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:верните? деньги|вернуть деньги|возврат (средств|денег|оплат)"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-004",
+      "text": "Хочу вернуть деньги за курс, с чего начать оформление?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "refund",
+          "reason": "keyword:(хочу|как) вернуть деньги"
+        },
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:вернете деньги|вернуть деньги"
+        },
+        "intent": {
+          "category": "learn_start",
+          "reason": "keyword:с чего начать|записаться на курс|запишусь на курс"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:возврат|верните? деньги|вернуть деньги"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:верните? деньги|вернуть деньги|возврат (средств|денег|оплат)"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
+        }
+      }
+    },
+    {
+      "id": "syn-p-005",
+      "text": "Возможна ли заморозка курса на время отпуска?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "pause",
+          "reason": "keyword:замороз[а-я]*|заморозить"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*|замороз"
+        }
+      }
+    },
+    {
+      "id": "syn-p-006",
+      "text": "Как поставить занятия на паузу, будьте добры, подскажите?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "pause",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*|замороз"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "syn-p-007",
+      "text": "Можно взять паузу в обучении на месяц?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "pause",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*|замороз"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "syn-p-008",
+      "text": "Хочу приостановить обучение из-за работы.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "pause",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*|замороз"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "syn-p-009",
+      "text": "Подскажите, куда внести депозит за курс?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "deposit",
+          "reason": "keyword:депозит[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:рассрочк|депозит|взнос|частями"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
+        }
+      }
+    },
+    {
+      "id": "syn-p-010",
+      "text": "Взнос за обучение оплачивается отдельно или входит в стоимость?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "deposit",
+          "reason": "keyword:(?<![а-я])взнос|взнос[ауы] "
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])|стоимост[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-011",
+      "text": "Какой размер вступительного взноса?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "deposit",
+          "reason": "keyword:(?<![а-я])взнос|взнос[ауы] "
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:рассрочк|депозит|взнос|частями"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
+        }
+      }
+    },
+    {
+      "id": "syn-p-012",
+      "text": "Нужно ли вносить депозит до старта курс по санскриту?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "deposit",
+          "reason": "keyword:депозит[а-я]*"
+        },
+        "objection": {
+          "category": "b6_start_date",
+          "reason": "keyword:старт[а-я]*|поток[а-я]*|набор[а-я]*|наберет"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:рассрочк|депозит|взнос|частями"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
+        }
+      }
+    },
+    {
+      "id": "syn-p-013",
+      "text": "Пожалуйста, можно ли оплачивать частями, без полной суммы сразу?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "installment",
+          "reason": "keyword:(оплат|оплачив)[а-я]* частями|частями (оплат|платит)"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:рассрочк|депозит|взнос|частями"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "syn-p-014",
+      "text": "Возможна ли оплата частями за курс по санскриту?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "installment",
+          "reason": "keyword:(оплат|оплачив)[а-я]* частями|частями (оплат|платит)"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-015",
+      "text": "Можно ли разбить платёж за базовый курс на части?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "installment",
+          "reason": "keyword:разбить (платеж|оплату|сумму)"
+        }
+      }
+    },
+    {
+      "id": "syn-p-016",
+      "text": "Можно оплатить курс в рассрочку?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "installment",
+          "reason": "keyword:в рассрочку"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:(?<![а-я])дорог(о|а|ой|ие)(?![а-я])|скидк[а-я]*|рассрочк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-017",
+      "text": "Будут ли записи доступны после окончания обучения?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "access_window",
+          "reason": "keyword:будут ли запис[а-я]* доступн|запис[а-я]* доступн[а-я]* (навсегда|вечно|в течение)"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:запис[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
+        }
+      }
+    },
+    {
+      "id": "syn-p-018",
+      "text": "Записи доступны навсегда или окно ограничено?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "access_window",
+          "reason": "keyword:будут ли запис[а-я]* доступн|запис[а-я]* доступн[а-я]* (навсегда|вечно|в течение)"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:запис[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
+        }
+      }
+    },
+    {
+      "id": "syn-p-019",
+      "text": "Какой срок доступа к записям курса?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "access_window",
+          "reason": "keyword:срок доступ[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:запис[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
+        }
+      }
+    },
+    {
+      "id": "syn-p-020",
+      "text": "Сколько времени будут доступны записи занятий?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "access_window",
+          "reason": "keyword:сколько (времени|месяцев).{0,24}запис"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:запис[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
+        }
+      }
+    },
+    {
+      "id": "syn-p-021",
+      "text": "Подскажите, как оплатить курс и есть ли скидки?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:скидк[а-я]*|промокод"
+        },
+        "objection": {
+          "category": "b8_payment_mechanics",
+          "reason": "keyword:как записаться|как оплатить|где оплат"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-022",
+      "text": "Какой тариф на обучение и нужна ли предоплата?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:тариф[а-я]*|рассрочк[а-я]*|предоплат[а-я]*|доплат[а-я]*"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:тариф[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-023",
+      "text": "Когда стартует ближайшая группа, хочу записаться.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:когда (занятие|урок|начн[а-я]*|следующ[а-я]*|будет|стартует|пара)"
+        },
+        "objection": {
+          "category": "b6_start_date",
+          "reason": "keyword:старт[а-я]*|поток[а-я]*|набор[а-я]*|наберет"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:когда (занятие|урок|старт|начало|будет|следующ[а-я]*)"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:записаться|запишусь|запись на курс"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        }
+      }
+    },
+    {
+      "id": "syn-p-024",
+      "text": "Сколько стоит курс по санскриту и как записаться?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "objection": {
+          "category": "b8_payment_mechanics",
+          "reason": "keyword:как записаться|как оплатить|где оплат"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-025",
+      "text": "В каком видео можно пересмотреть лекцию по Гите?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:в каком видео"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:видеозапис|пересмотр|переслуш|тайм ?код|в каком видео"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
+        }
+      }
+    },
+    {
+      "id": "syn-p-026",
+      "text": "Как оформить возврат средств за курс?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "refund",
+          "reason": "keyword:возврат (средств|денег|оплат[а-я]*)"
+        },
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:пробн[а-я]*|возврат[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:возврат|верните? деньги|вернуть деньги"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:верните? деньги|вернуть деньги|возврат (средств|денег|оплат)"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
+        }
+      }
+    },
+    {
+      "id": "syn-p-027",
+      "text": "Хочу взять паузу в обучении, с кем это обсудить?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "pause",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*|замороз"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "syn-p-028",
+      "text": "Я пропустила занятия, где посмотреть записи урока?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:запис[а-я]*( занятия| урока| лекции)?"
+        },
+        "objection": {
+          "category": "b1_time",
+          "reason": "keyword:не успе[а-я]*|пропу[стщ][а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:запис[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
+        }
+      }
+    },
+    {
+      "id": "syn-p-029",
+      "text": "Где найти методичку второго модуля?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "materials_content",
+          "reason": "keyword:материал[а-я]*|методичк[а-я]*|конспект[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник|раздаточ"
+        }
+      }
+    },
+    {
+      "id": "syn-p-030",
+      "text": "Кабинет не открывается после ввода пароля.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:(?<![а-я])кабинет|личн(ый|ым|ого) кабинет"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
+        }
+      }
+    },
+    {
+      "id": "syn-p-031",
+      "text": "Не могу найти ссылку на зум, будьте добры, подскажите.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "zoom_link",
+          "reason": "keyword:зум|zoom|(?<![a-z])join(?![a-z])"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:зум|zoom|подключ"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
+        }
+      }
+    },
+    {
+      "id": "syn-p-032",
+      "text": "Платформа виснет на середине урока.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:сбой|зависает|виснет|вылетает|лагает"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        }
+      }
+    },
+    {
+      "id": "syn-p-033",
+      "text": "Как отменить подписку и не платить дальше?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "membership_club",
+          "reason": "keyword:клуб[а-я]*|членство|подписк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:клуб|подписк|членство"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:отмен(ить|а) (заказ|платеж|подписк|курс)|отменить всё"
+        }
+      }
+    },
+    {
+      "id": "syn-p-034",
+      "text": "Как отписаться от курса полностью?",
+      "synthetic": true,
+      "expect": {
+        "intent": {
+          "category": "spam_noise",
+          "reason": "keyword:отписаться|рассылк[а-я]*|реклам[а-я]*|(?<![а-я])спам"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:отписаться от (курса|занятий|рассылки курса)|расторж[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "syn-p-035",
+      "text": "Не хочу продолжать курс, что с оплатой?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:не хочу (продолжать|учиться|заниматься)|бросить курс|уходу из"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-036",
+      "text": "Хочу вернуть деньги и не продолжать обучение.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "refund",
+          "reason": "keyword:(хочу|как) вернуть деньги"
+        },
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:вернете деньги|вернуть деньги"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:возврат|верните? деньги|вернуть деньги"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:верните? деньги|вернуть деньги|возврат (средств|денег|оплат)"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
+        }
+      }
+    },
+    {
+      "id": "syn-p-037",
+      "text": "Второй раз пишу про одну и ту же ошибку.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:ошибк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "escalation": {
+          "category": "frustrated",
+          "reason": "keyword:третий раз|второй раз пишу"
+        }
+      }
+    },
+    {
+      "id": "syn-p-038",
+      "text": "Когда уже починят кабинет, надоело!",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:(?<![а-я])кабинет|личн(ый|ым|ого) кабинет"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "escalation": {
+          "category": "frustrated",
+          "reason": "keyword:сколько можно|когда уже|уже (час|два|три|неделю|месяц)"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
+        }
+      }
+    },
+    {
+      "id": "syn-p-039",
+      "text": "Никто не отвечает уже неделю, это игнор?",
+      "synthetic": true,
+      "expect": {
+        "escalation": {
+          "category": "frustrated",
+          "reason": "keyword:опять|снова не|никто не отвечает|игнорируете"
+        }
+      }
+    },
+    {
+      "id": "syn-p-040",
+      "text": "Опять не работает ссылка, сколько можно!",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:не работает"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "escalation": {
+          "category": "frustrated",
+          "reason": "keyword:опять|снова не|никто не отвечает|игнорируете"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
+        }
+      }
+    },
+    {
+      "id": "syn-p-041",
+      "text": "Здравствуйте, подскажите, когда занятие?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:когда (занятие|урок|начн[а-я]*|следующ[а-я]*|будет|стартует|пара)"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:когда (занятие|урок|старт|начало|будет|следующ[а-я]*)"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        }
+      }
+    },
+    {
+      "id": "syn-p-042",
+      "text": "Добрый день, позовите, пожалуйста, куратора.",
+      "synthetic": true,
+      "expect": {
+        "meta": {
+          "category": "human_trigger",
+          "reason": "keyword:куратор|живой|человек"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        }
+      }
+    },
+    {
+      "id": "syn-p-043",
+      "text": "Здравствуйте, буду благодарна за помощь с расписанием.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:расписан[а-я]*"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:расписан[а-я]*|во ?сколько|в какое время|какой день"
+        },
+        "meta": {
+          "category": "human_trigger",
+          "reason": "keyword:помощь|менеджер"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        }
+      }
+    },
+    {
+      "id": "syn-p-044",
+      "text": "Спасибо! Осталось понять, как войти на занятие.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "zoom_link",
+          "reason": "keyword:как (мне )?(войти|зайти|попасть)"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:здравствуйте|добрый день|спасибо|благодарю"
+        }
+      }
+    },
+    {
+      "id": "syn-p-045",
+      "text": "Кабинет не открывается, пароль не подходит.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:(?<![а-я])кабинет|личн(ый|ым|ого) кабинет"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
+        }
+      }
+    },
+    {
+      "id": "syn-p-046",
+      "text": "Как оплатить курс и можно ли вернуть деньги?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "objection": {
+          "category": "b8_payment_mechanics",
+          "reason": "keyword:как записаться|как оплатить|где оплат"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:верните? деньги|вернуть деньги|возврат (средств|денег|оплат)"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-047",
+      "text": "Нет доступа к оплате, нужен человек.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+        },
+        "meta": {
+          "category": "human_trigger",
+          "reason": "keyword:куратор|живой|человек"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-048",
+      "text": "Хочу обсудить тариф и паузу в оплате.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "pause",
+          "reason": "keyword:пауз[а-я]*|приостанов[а-я]*"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:тариф[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-p-049",
+      "text": "Здравствуйте, как получить сертификат по окончании?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "certificate",
+          "reason": "keyword:сертификат[а-я]*|диплом[а-я]*|удостоверен[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:здравствуйте|добрый день|спасибо|благодарю"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:сертификат|диплом|удостоверен"
+        }
+      }
+    },
+    {
+      "id": "syn-p-050",
+      "text": "Где найти методичку и конспекты к урокам?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "materials_content",
+          "reason": "keyword:материал[а-я]*|методичк[а-я]*|конспект[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник|раздаточ"
+        }
+      }
+    },
+    {
+      "id": "syn-p-051",
+      "text": "Домашнее задание первого урока где смотреть?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "homework_progress",
+          "reason": "keyword:домашн[а-я]*|домашк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:кабинет|парол|логин|вход|домашн|дз|сертификат|диплом"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:домашн|домашк|(?<![а-я])дз(?![а-я])|задани"
+        }
+      }
+    },
+    {
+      "id": "syn-p-052",
+      "text": "Какие учебники нужны для курса?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "materials_content",
+          "reason": "keyword:презентац[а-я]*|раздаточ[а-я]*|учебник[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник"
+        },
+        "resolution": {
+          "category": "faq_hit",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник|раздаточ"
+        }
+      }
+    },
+    {
+      "id": "syn-p-053",
+      "text": "Во сколько начинается урок в субботу?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:во ?сколько"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:расписан[а-я]*|во ?сколько|в какое время|какой день"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        }
+      }
+    },
+    {
+      "id": "syn-p-054",
+      "text": "Где посмотреть видеозаписи прошлых уроков?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:видеозапис[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:видеозапис|пересмотр|переслуш|тайм ?код|в каком видео"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
+        }
+      }
+    },
+    {
+      "id": "syn-p-055",
+      "text": "Когда будет следующее занятие и по какому расписанию?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "schedule",
+          "reason": "keyword:расписан[а-я]*"
+        },
+        "intent": {
+          "category": "schedule_query",
+          "reason": "keyword:когда (занятие|урок|старт|начало|будет|следующ[а-я]*)"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:расписан|во ?сколько|когда (занятие|урок|старт|начн)"
+        }
+      }
+    },
+    {
+      "id": "syn-p-056",
+      "text": "Пришлите, будьте добры, подскажите, ссылку на зум.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "zoom_link",
+          "reason": "keyword:зум|zoom|(?<![a-z])join(?![a-z])"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:зум|zoom|подключ"
+        },
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:пожалуйста|подскажите|будьте добры|буду благодарн[а-я]*"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
+        }
+      }
+    },
+    {
+      "id": "syn-n-057",
+      "text": "А есть скидки или рассрочка платежа?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:тариф[а-я]*|рассрочк[а-я]*|предоплат[а-я]*|доплат[а-я]*"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:(?<![а-я])дорог(о|а|ой|ие)(?![а-я])|скидк[а-я]*|рассрочк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-n-058",
+      "text": "Верните деньги за оплаченный блок.",
+      "synthetic": true,
+      "expect": {
+        "intent": {
+          "category": "complaint",
+          "reason": "keyword:верните деньги|обман|мошенник|игнорируете"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:возврат|верните? деньги|вернуть деньги"
+        },
+        "escalation": {
+          "category": "churn_risk",
+          "reason": "keyword:верните? деньги|вернуть деньги|возврат (средств|денег|оплат)"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
+        }
+      }
+    },
+    {
+      "id": "syn-n-059",
+      "text": "Возможен возврат, если курс не подойдёт?",
+      "synthetic": true,
+      "expect": {
+        "objection": {
+          "category": "b9_risk_trial",
+          "reason": "keyword:пробн[а-я]*|возврат[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:возврат|верните? деньги|вернуть деньги"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:депозит|взнос|возврат|верните? деньги|вернуть деньги"
+        }
+      }
+    },
+    {
+      "id": "syn-n-060",
+      "text": "Где посмотреть видеозаписи уроков?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "recording_access",
+          "reason": "keyword:видеозапис[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "consultation",
+          "reason": "keyword:видеозапис|пересмотр|переслуш|тайм ?код|в каком видео"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:видеозапис|запис[а-я]*|пересмотр|тайм ?код"
+        }
+      }
+    },
+    {
+      "id": "syn-n-061",
+      "text": "Есть ли предоплата за второй блок?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:тариф[а-я]*|рассрочк[а-я]*|предоплат[а-я]*|доплат[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-n-062",
+      "text": "Записи не открываются в кабинете.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:(?<![а-я])кабинет|личн(ый|ым|ого) кабинет"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
+        }
+      }
+    },
+    {
+      "id": "syn-n-063",
+      "text": "Как отписаться от вашей рассылки?",
+      "synthetic": true,
+      "expect": {
+        "intent": {
+          "category": "spam_noise",
+          "reason": "keyword:отписаться|рассылк[а-я]*|реклам[а-я]*|(?<![а-я])спам"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
+        }
+      }
+    },
+    {
+      "id": "syn-n-064",
+      "text": "Какая цена курса и есть ли рассрочка?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:(?<![а-я])дорог(о|а|ой|ие)(?![а-я])|скидк[а-я]*|рассрочк[а-я]*"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:(?<![а-я])цен[ауыое](?![а-я])|стоимост[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-n-065",
+      "text": "Нет доступа к материалам второго модуля.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "access_login",
+          "reason": "keyword:нет доступа"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:материал|методичк|конспект|презентац|учебник"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:кабинет|парол|логин|нет доступа|вход|не могу (войти|попасть|зайти)"
+        }
+      }
+    },
+    {
+      "id": "syn-n-066",
+      "text": "Сколько стоит курс по санскриту?",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "payment_billing",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "objection": {
+          "category": "b2_price",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "intent": {
+          "category": "price_query",
+          "reason": "keyword:сколько стоит|сколько.{0,24}стои"
+        },
+        "funnel_stage": {
+          "category": "course",
+          "reason": "keyword:оплат|тариф|цен|стои|скидк|промокод"
+        },
+        "resolution": {
+          "category": "needs_human",
+          "reason": "keyword:оплат|тариф|цен|стои|рассрочк|скидк|промокод"
+        }
+      }
+    },
+    {
+      "id": "syn-n-067",
+      "text": "Спасибо, всё получилось!",
+      "synthetic": true,
+      "expect": {
+        "escalation": {
+          "category": "calm",
+          "reason": "keyword:здравствуйте|добрый день|спасибо|благодарю"
+        }
+      }
+    },
+    {
+      "id": "syn-n-068",
+      "text": "Ссылка на запись не работает, напишите в техподдержку.",
+      "synthetic": true,
+      "expect": {
+        "topic": {
+          "category": "tech_issue",
+          "reason": "keyword:техподдержк[а-я]*"
+        },
+        "funnel_stage": {
+          "category": "serve_only",
+          "reason": "keyword:техподдержк|не работает|не открыва|ошибк|сбой|виснет|вылетает"
+        },
+        "resolution": {
+          "category": "auto_answerable",
+          "reason": "keyword:зум|zoom|подключ|ссылк|линк"
         }
       }
     }
-  ]
+  ],
+  "synthetic_block": {
+    "generator": "tools/gen_synthetic_golden.py",
+    "seed": 20260913,
+    "count": 68,
+    "note": "synthetic-labeled smoke coverage; never counts toward the real-corpus precision gate"
+  }
 }
