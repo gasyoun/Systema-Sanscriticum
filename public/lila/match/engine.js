@@ -112,6 +112,38 @@
     var linkCtr = 0;
     var totalPairs = 0;
 
+    // H4692 — per-pair difficulty stats for the completed round:
+    // stats[pid] = { ms: ms from round build to the correct link (first time),
+    // wrong: number of failed checks involving this pair }. pairTexts keeps
+    // the unshuffled l/r texts (cards are shuffled across the board).
+    var roundStart = 0;
+    var hintClicks = 0;
+    var stats = {};
+    var pairTexts = [];
+
+    function emitItemResult() {
+      try {
+        var items = [];
+        for (var i = 0; i < totalPairs; i++) {
+          var s = stats[i];
+          var t = pairTexts[i];
+          if (!s || !t) continue;
+          items.push({
+            l: String(t.l == null ? "" : t.l),
+            r: String(t.r == null ? "" : t.r),
+            ms: Math.max(0, Math.round(s.ms == null ? Date.now() - roundStart : s.ms)),
+            wrong: Math.max(0, s.wrong | 0)
+          });
+        }
+        if (items.length === 0) return;
+        document.dispatchEvent(new CustomEvent("sgx:item-result", {
+          detail: { hints: Math.max(0, hintClicks | 0), items: items }
+        }));
+      } catch (e) {
+        // Telemetry must never break a drill page.
+      }
+    }
+
     function nextHueSlot() {
       var i;
       for (i = 0; i < HUES.length; i++) { if (!usedHues[i]) { usedHues[i] = true; return i; } }
@@ -149,6 +181,12 @@
         c.classList.add("linked");
         c.querySelector(".badge").textContent = String(slot + 1);
       });
+      // H4692 — a positional link (left pid == right pid) is the pair's
+      // correct link: stamp ms-to-link the first time it is ever made.
+      var pl = a.dataset.pid, pr = b.dataset.pid;
+      if (pl === pr && stats[pl] && stats[pl].ms == null) {
+        stats[pl].ms = Date.now() - roundStart;
+      }
       clearSelection();
       updateScore();
     }
@@ -232,6 +270,7 @@
 
     function check() {
       var leftCards = board.querySelectorAll('.side-l .card');
+      var nowMs = Date.now();
       var allLinked = true, correct = 0;
       Array.prototype.forEach.call(leftCards, function (lc) {
         clearMark(lc);
@@ -245,10 +284,23 @@
           c.classList.add(ok ? "correct" : "wrong");
           c.querySelector(".mark").textContent = ok ? "✓" : "✕";
         });
-        if (ok) correct++;
+        if (ok) {
+          // H4692 — correct at check time (link timestamp normally set at
+          // link()); fall back to now so ms is never null on completion.
+          if (stats[lc.dataset.pid] && stats[lc.dataset.pid].ms == null) {
+            stats[lc.dataset.pid].ms = nowMs - roundStart;
+          }
+          correct++;
+        } else if (partner) {
+          // H4692 — failed check: both involved pairs take a wrong hit.
+          if (stats[lc.dataset.pid]) stats[lc.dataset.pid].wrong++;
+          if (stats[partner.dataset.pid]) stats[partner.dataset.pid].wrong++;
+        }
       });
       score.textContent = "Верно " + correct + " / " + totalPairs;
-      feedback.classList.toggle("show", allLinked && correct === totalPairs);
+      var done = allLinked && correct === totalPairs;
+      feedback.classList.toggle("show", done);
+      if (done) emitItemResult();
     }
 
     function build() {
@@ -262,6 +314,16 @@
         pairs = shuffleArr(allPairs).slice(0, perRound);
       }
       totalPairs = pairs.length;
+
+      // H4692 — fresh round: reset timers and per-pair stats.
+      roundStart = Date.now();
+      hintClicks = 0;
+      stats = {};
+      pairTexts = [];
+      for (var i = 0; i < totalPairs; i++) {
+        stats[i] = { ms: null, wrong: 0 };
+        pairTexts[i] = { l: pairs[i].left.text, r: pairs[i].right.text };
+      }
 
       var lefts  = pairs.map(function (p, i) { return { item: p.left,  pid: i }; });
       var rights = pairs.map(function (p, i) { return { item: p.right, pid: i }; });
@@ -279,6 +341,7 @@
       var on = container.classList.toggle("show-hints");
       hintBtn.setAttribute("aria-pressed", String(on));
       hintBtn.textContent = on ? "Скрыть подсказки" : "Показать подсказки";
+      if (on) hintClicks++; // H4692 — how often the round leaned on hints
     });
     checkBtn.addEventListener("click", check);
     resetBtn.addEventListener("click", build);

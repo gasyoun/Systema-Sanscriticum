@@ -63,6 +63,11 @@ class GameEvent extends Model
     // поэтому перезагрузки страницы не сбрасывают и не дублируют счёт.
     public const ROUND = 'round';
 
+    // H4692 — завершённый match-раунд: payload {hints, items:[{l,r,ms,wrong}]}
+    // по одной записи на пару (время до верной связки и число неверных
+    // проверок). Сырьё для отчёта games:difficulty.
+    public const ITEM_RESULT = 'item_result';
+
     /** Белый список: всё, что не отсюда, приёмник отклоняет 422. */
     public const EVENTS = [
         self::START,
@@ -71,6 +76,7 @@ class GameEvent extends Model
         self::GATE_CTA_CLICK,
         self::ITEM_SEEN,
         self::ROUND,
+        self::ITEM_RESULT,
     ];
 
     /**
