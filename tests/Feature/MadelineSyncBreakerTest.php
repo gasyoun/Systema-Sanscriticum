@@ -68,6 +68,25 @@ class MadelineSyncBreakerTest extends TestCase
         return is_file($this->tmp.'/calls') ? file($this->tmp.'/calls', FILE_IGNORE_NEW_LINES) : [];
     }
 
+    /**
+     * Set (or, with null, unset) a variable the breaker CHILD process must see.
+     * putenv() alone is not enough: Symfony Process builds the child env from
+     * getenv() ∩ $_SERVER, plus $_ENV, so a putenv-only variable never reaches
+     * the child. Until this helper existed, the real-library case ran on the
+     * real clock with TEST_MODE off.
+     */
+    private function childEnv(string $key, ?string $value): void
+    {
+        if ($value === null) {
+            putenv($key);
+            unset($_ENV[$key], $_SERVER[$key]);
+
+            return;
+        }
+        putenv("{$key}={$value}");
+        $_ENV[$key] = $_SERVER[$key] = $value;
+    }
+
     private function plantKill(): void
     {
         File::ensureDirectoryExists($this->tmp.'/state/madeline_sync');
@@ -142,23 +161,47 @@ class MadelineSyncBreakerTest extends TestCase
         Http::assertSent(fn ($r) => str_contains((string) $r['text'], 'Предохранитель «MadelineSync .92»: заморожен'));
     }
 
+    public function test_thawed_breaker_reopens_the_live_sync(): void
+    {
+        $this->plantKill();
+        touch($this->tmp.'/refuse');
+        $this->assertTrue(MadelineSyncPhase::cooldownActive(), 'frozen: gate shut');
+
+        // The library thaws on its own (auto-unfreeze): check stops refusing.
+        unlink($this->tmp.'/refuse');
+        $this->assertFalse(MadelineSyncPhase::cooldownActive(), 'thawed: gate open again');
+        $this->artisan('telegram-support:sync')
+            ->doesntExpectOutput('Telegram support sync: post_timeout_cooldown (waiting after watchdog kill).');
+    }
+
     /**
-     * Real-library proof, opt-in: SENTINEL_BREAKER_REAL_BIN=<Uprava>/tools/sentinel_breaker.py.
-     * Three kills in an hour, then the 4th start is refused and freeze.json lands.
+     * The real library, when it is on this box. The source is, in order:
+     * SENTINEL_BREAKER_REAL_BIN, the prod install path, or a sibling Uprava
+     * checkout. CI has none of them (Uprava is private), so CI skips this case.
+     *
+     * It pins the full self_kill cycle: 3 kills in an hour, then the 4th start
+     * is refused and freeze.json lands. One minute before N=2h the gate is still
+     * shut; at exactly N it opens.
      */
     public function test_real_library_freezes_after_the_self_kill_budget(): void
     {
-        $real = (string) getenv('SENTINEL_BREAKER_REAL_BIN');
-        if ($real === '' || ! is_file($real)) {
-            $this->markTestSkipped('set SENTINEL_BREAKER_REAL_BIN to run against the real library');
+        $real = '';
+        foreach ([(string) getenv('SENTINEL_BREAKER_REAL_BIN'), '/usr/local/lib/sentinel-breaker/sentinel_breaker.py', dirname(base_path()).'/Uprava/tools/sentinel_breaker.py'] as $candidate) {
+            if ($candidate !== '' && is_file($candidate)) {
+                $real = $candidate;
+                break;
+            }
+        }
+        if ($real === '') {
+            $this->markTestSkipped('real sentinel_breaker library not on this box (set SENTINEL_BREAKER_REAL_BIN)');
         }
         config([
             'services.sentinel_breaker.python' => (string) (getenv('SENTINEL_BREAKER_REAL_PYTHON') ?: 'python3'),
             'services.sentinel_breaker.bin' => $real,
             'services.sentinel_breaker.alarm_cmd' => '/usr/bin/true',
         ]);
-        putenv('SENTINEL_BREAKER_TEST_MODE=1');
-        putenv('SENTINEL_BREAKER_NOW=1790000000');
+        $this->childEnv('SENTINEL_BREAKER_TEST_MODE', '1');
+        $this->childEnv('SENTINEL_BREAKER_NOW', '1790000000');
         try {
             for ($i = 0; $i < 3; $i++) {
                 $this->assertFalse(MadelineSyncBreaker::frozen(), "start #{$i} allowed");
@@ -168,9 +211,17 @@ class MadelineSyncBreakerTest extends TestCase
             $this->assertFileExists($this->tmp.'/state/madeline_sync/freeze.json');
             $freeze = json_decode((string) file_get_contents($this->tmp.'/state/madeline_sync/freeze.json'), true);
             $this->assertSame('self_kill', $freeze['guardian_class']);
+            $this->assertSame(1790000000, $freeze['frozen_at'], 'the injected clock reached the child process');
+
+            $this->childEnv('SENTINEL_BREAKER_NOW', (string) (1790000000 + 2 * 3600 - 60));
+            $this->assertTrue(MadelineSyncBreaker::frozen(), 'N-60s (self_kill N=2h): still frozen');
+            $this->childEnv('SENTINEL_BREAKER_NOW', (string) (1790000000 + 2 * 3600));
+            $this->assertFalse(MadelineSyncBreaker::frozen(), 'exactly N=2h: thawed, the next start is allowed');
+            $this->assertFileDoesNotExist($this->tmp.'/state/madeline_sync/freeze.json');
+            $this->assertFalse(MadelineSyncPhase::cooldownActive(), 'thawed breaker leaves the live-sync gate open');
         } finally {
-            putenv('SENTINEL_BREAKER_TEST_MODE');
-            putenv('SENTINEL_BREAKER_NOW');
+            $this->childEnv('SENTINEL_BREAKER_TEST_MODE', null);
+            $this->childEnv('SENTINEL_BREAKER_NOW', null);
         }
     }
 }
