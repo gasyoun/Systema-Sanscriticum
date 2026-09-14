@@ -7,6 +7,8 @@ namespace App\Filament\Widgets;
 use App\Models\PaymentPromise;
 use App\Models\User;
 use App\Services\DebtorsReport;
+use App\Support\RoleGate;
+use App\Support\Roles;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Cache;
@@ -23,6 +25,14 @@ use Livewire\Attributes\On;
 class DebtorsTotalWidget extends BaseWidget
 {
     protected static ?int $sort = 0;
+
+    // H4663 (аудит периметра 14-09, п.3): тот же гейт, что у страницы
+    // «Должники» — админ + куратор. Виджет показывает школьную сумму долгов
+    // и раньше был доступен без ролевой проверки (бухгалтер/учитель).
+    public static function canView(): bool
+    {
+        return RoleGate::any(Roles::ADMIN, Roles::MANAGER);
+    }
 
     protected int|string|array $columnSpan = 'full';
 

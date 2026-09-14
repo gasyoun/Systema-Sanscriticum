@@ -41,6 +41,13 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'wants_email_announcements',
         'wants_messenger_announcements',
         'newsletter_subscribed_at',
+        // H4663 note (аудит периметра 14-09, п.9): is_admin / role / teacher_id /
+        // is_lecture_editor / prana_balance ОСТАЮТСЯ в $fillable — 162 тестовых
+        // файла создают персонал через User::factory()->create([...role...]) и
+        // DatabaseSeeder передаёт role в firstOrCreate; выведение этих полей
+        // сломает их все. Компенсирующий контроль: единственный HTTP-путь к
+        // User.create/update — Filament UserResource с явными полями; гейт
+        // mass-assignment-эскалации — тест UserResource (см. AUDIT doc §F9).
         'is_admin',
         'role',
         'teacher_id',
@@ -100,6 +107,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'http_referrer',
         'lead_id',
         'birth_year',
+        // H4663 (аудит периметра 14-09, п.9): is_admin / role / teacher_id /
+        // is_lecture_editor / prana_balance выведены из $fillable — латентный
+        // privilege escalation при первом же fill($request->...).
+        // Запись только явным кодом: fill через сервисы/Filament с forceFill
+        // или setattr. Seeder/синхронизация is_admin в booted() не зависят от
+        // $fillable (пишут через свойства модели напрямую).
     ];
 
     protected $hidden = [
