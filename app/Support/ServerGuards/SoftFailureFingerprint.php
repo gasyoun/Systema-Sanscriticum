@@ -79,6 +79,12 @@ final class SoftFailureFingerprint
             return 'guards/auto-deploy:cron-missing';
         }
 
+        // H4845: one tunnel outage is one class — refused ↔ timeout or a
+        // changed dependents list must not re-open TG while it stays down.
+        if (str_starts_with($m, OllamaTunnelProbe::PREFIX.':')) {
+            return OllamaTunnelProbe::PREFIX;
+        }
+
         // Live host-guard metrics (cgroup RSS MiB, backup age/size) change
         // every */15 tick and must not re-open TG (H3227). Fuse/dirty above
         // keep a finer class; other guards/<name>: collapse to the name.

@@ -25,6 +25,13 @@ return [
     // владелец сокета — sshd-session, см. EXPERIMENT_OLLAMA_GPU_OCT1_2026.md).
     'base_url' => env('KNOWLEDGE_OLLAMA_BASE_URL', 'http://127.0.0.1:11434'),
 
+    // H4845: рабочее окно GPU-узла «HH:MM-HH:MM» (часовой пояс приложения,
+    // МСК). Узел живёт 9–21 МСК; по полчаса запаса с краёв, чтобы утренний
+    // подъём туннеля и вечерний отбой не будили cabinet:probe. Вне окна
+    // мёртвый туннель — штатный сон, не тревога. Пусто = круглосуточно.
+    // Владелец и перезапуск: docs/ops/OLLAMA_TUNNEL_RUNBOOK.md.
+    'tunnel_hours' => env('KNOWLEDGE_TUNNEL_HOURS', '09:30-20:30'),
+
     // На узле модель видна ровно как bge-m3:latest (проба 01-09-2026) —
     // короткое имя без тега даёт 404 "model not found".
     'embedding_model' => env('KNOWLEDGE_EMBEDDING_MODEL', 'bge-m3:latest'),
