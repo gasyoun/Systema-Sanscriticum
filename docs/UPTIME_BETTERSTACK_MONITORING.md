@@ -1,6 +1,6 @@
 # Uptime monitoring — Better Stack (for agents)
 
-_Created: 30-07-2026 · Last updated: 31-08-2026_
+_Created: 30-07-2026 · Last updated: 14-09-2026_
 
 **Audience: agents** (Claude / Codex / ops automation). Env keys, cron paths,
 smoke commands, inventory table — operate without re-deriving from chat.
@@ -74,6 +74,8 @@ Host: LXC / Beget VPS `193.232.229.92`, app `/var/www/html`.
 | Site HTTP (existing) | HTTP | `https://samskrte.ru/` | per UI | Monitor [4751026](https://uptime.betterstack.com/team/t576984/monitors/4751026/edit) — status ≠ 200; optional keyword on live home |
 | `samskrte heartbeat:ping` | Heartbeat | silence / fail from app | **5 min** / **10 min** | Env `HEARTBEAT_PING_URL` · cron www-data `*/5` → `systema-watchdog-run.sh "heartbeat:ping"` · artisan `heartbeat:ping` (Horizon check on fail → `/fail`) |
 | `samskrte cabinet:probe` | Heartbeat | silence / fail from app | **15 min** / **20 min** | Env `CABINET_PROBE_PING_URL` · cron www-data `*/15` → `cabinet:probe` · critical unhealthy → `/fail`; soft failures use TG only (see soft cooldown) |
+| `samskrte money:sli-synthetic-pay` (H4672) | Heartbeat | silence / fail from app | **~24 h** / **6 h** | Env `MONEY_SLI_DAILY_PING_URL` · cron app-user `7 3 * * *` → `systema-watchdog-run.sh "money:sli-synthetic-pay"` · flag `MONEY_SLI_SYNTHETIC_PAY` (default OFF) · mocked webhook only, no live bank charge — see `config/money_sli.php` |
+| `samskrte money:sli-hourly-reconcile` (H4672) | Heartbeat | silence / fail from app | **~1 h** / **2 h** | Env `MONEY_SLI_HOURLY_PING_URL` · cron app-user `17 * * * *` → `systema-watchdog-run.sh "money:sli-hourly-reconcile"` · flag `MONEY_SLI_HOURLY_RECONCILE` (default OFF) · read-only: webhook success-rate + H2085 silent-grant check |
 
 In-app Telegram from `cabinet:probe` (critical/soft + runbook) is **orthogonal**:
 Better Stack = silence / external pulse; TG = detailed failure lines. Soft TG has

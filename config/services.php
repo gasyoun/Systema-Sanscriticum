@@ -52,6 +52,13 @@ return [
         'vat_type' => env('TOCHKA_VAT_TYPE', 'none'),       // ставка НДС позиции; в чеке «не облагается» → none
         'open_banking_url' => env('TOCHKA_OPEN_BANKING_URL') ?: 'https://enter.tochka.com/uapi/open-banking/v1.0',
         'balance_cache_seconds' => (int) env('TOCHKA_BALANCE_CACHE_SECONDS', 60),
+
+        // H4672: SLI-only RSA public key (JWK), tried ONLY as a fallback when
+        // the real Tochka signature fails to verify — never replaces it. Signs
+        // the daily synthetic-pay probe's mocked webhook so it exercises the
+        // real signature-verification code path without a live bank key.
+        // Empty → fallback path is a no-op (real webhooks unaffected either way).
+        'sli_webhook_public_key' => env('TOCHKA_SLI_WEBHOOK_PUBLIC_KEY', ''),
     ],
 
     'lesson_sync' => [

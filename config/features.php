@@ -718,6 +718,26 @@ return [
     'conditional_access_expiry' => (bool) env('CONDITIONAL_ACCESS_EXPIRY', false),
 
     /*
+     | H4672: ежесуточный synthetic-pay SLI-пробник денежной оси. Гонит
+     | ИСКЛЮЧИТЕЛЬНО мок-вебхук (подписанный SLI-ключом, не боевым банковским)
+     | на dedicated test-пользователя/курс — реальных денег НЕ трогает (ruling
+     | MG 14-09-2026: живой банковский платёж остаётся ручным шагом человека,
+     | не автономного агента). Money-контур: дефолт OFF, включение в проде —
+     | отдельный ops-шаг (MONEY_SLI_SYNTHETIC_PAY=true + php artisan config:cache)
+     | ПОСЛЕ первого зелёного ручного прогона `money:sli-synthetic-pay --dry`.
+     */
+    'money_sli_synthetic_pay' => (bool) env('MONEY_SLI_SYNTHETIC_PAY', false),
+
+    /*
+     | H4672: почасовая read-only сверка денежной оси — webhook success-rate
+     | (payment_webhook_events), grant-покрытие (класс H2085: paid без доступа),
+     | объём paid-платежей за час. Ничего не пишет в payments/webhook events.
+     | Money-контур: дефолт OFF, включение — MONEY_SLI_HOURLY_RECONCILE=true +
+     | php artisan config:cache.
+     */
+    'money_sli_hourly_reconcile' => (bool) env('MONEY_SLI_HOURLY_RECONCILE', false),
+
+    /*
      | H4456 (рулинг MG 09-09-2026): окна доступа course_access_windows.
      | Строка (user, course) с ends_at в прошлом закрывает доступ, открываемый
      | РЕАЛЬНЫМИ платежами курса (ends_at = NULL — вечный доступ по именному
