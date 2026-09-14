@@ -46,7 +46,14 @@ class MicShadowClassifyTest extends TestCase
 
         $response->assertOk();
         $rows = MicShadowClassification::query()->get();
-        $this->assertSame(4, $rows->count(), 'one row per MIC plane');
+        // H4663-reland: v2-таксономия несёт 7 плоскостей (Loader::PLANES:
+        // topic, objection, intent, meta, funnel_stage, escalation, resolution)
+        // против 4 в v1 — перепин под v2.
+        $this->assertSame(7, $rows->count(), 'one row per MIC plane (v2: 7 planes)');
+        $this->assertSame(
+            ['escalation', 'funnel_stage', 'intent', 'meta', 'objection', 'resolution', 'topic'],
+            $rows->pluck('plane')->unique()->sort()->values()->all(),
+        );
 
         $topic = $rows->firstWhere('plane', 'topic');
         $this->assertNotNull($topic);
@@ -101,7 +108,7 @@ class MicShadowClassifyTest extends TestCase
         $classifier?->record('telegram', 5, 6, self::SAMPLE_MATCH);
         $classifier?->record('telegram', 5, 6, self::SAMPLE_MATCH);
 
-        $this->assertSame(4, MicShadowClassification::query()->count());
+        $this->assertSame(7, MicShadowClassification::query()->count(), 'v2: 7 planes, no duplicates');
     }
 
     public function test_service_is_harmless_when_flag_turns_off_mid_flight(): void
@@ -111,7 +118,7 @@ class MicShadowClassifyTest extends TestCase
         config(['features.mic_shadow_classify' => false]);
         MicShadowClassifier::instance()?->record('web', 1, 3, self::SAMPLE_MATCH);
 
-        $this->assertSame(4, MicShadowClassification::query()->where('message_id', 2)->count());
+        $this->assertSame(7, MicShadowClassification::query()->where('message_id', 2)->count(), 'v2: 7 planes');
         $this->assertSame(0, MicShadowClassification::query()->where('message_id', 3)->count());
     }
 

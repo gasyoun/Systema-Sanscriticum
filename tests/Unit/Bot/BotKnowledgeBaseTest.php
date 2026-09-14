@@ -86,8 +86,17 @@ class BotKnowledgeBaseTest extends TestCase
 
         $faq = app(BotKnowledgeBase::class)->faqFor('где мой личный кабинет');
 
-        $this->assertStringContainsString('Личный кабинет на сайте', $faq);
-        $this->assertStringContainsString('Размер группы', $faq, 'при выключенном флаге корпус не режется');
+        // H4663-reland: фолбэк «весь корпус» читает ресурс-файл
+        // (resource_path('knowledge/faq.md')), а не тестовый синтетический путь —
+        // поэтому проверяем против РЕАЛЬНОГО корпуса, а не его старых заголовков.
+        $real = trim((string) file_get_contents(resource_path('knowledge/faq.md')));
+
+        $this->assertStringContainsString('FAQ Академии Санскрита', $faq);
+        $this->assertGreaterThanOrEqual(
+            mb_strlen($real),
+            mb_strlen($faq),
+            'при выключенном флаге корпус не режется',
+        );
     }
 
     public function test_flag_on_narrows_the_prompt_to_the_relevant_sections(): void
@@ -111,7 +120,9 @@ class BotKnowledgeBaseTest extends TestCase
 
         $faq = app(BotKnowledgeBase::class)->faqFor(null);
 
-        $this->assertStringContainsString('Размер группы', $faq);
+        // Тот же контракт, что в flag-off: без вопроса отдаётся весь корпус.
+        $real = trim((string) file_get_contents(resource_path('knowledge/faq.md')));
+        $this->assertGreaterThanOrEqual(mb_strlen($real), mb_strlen($faq));
     }
 
     /**
@@ -124,7 +135,9 @@ class BotKnowledgeBaseTest extends TestCase
 
         $faq = app(BotKnowledgeBase::class)->faqFor('!!! ???');
 
-        $this->assertStringContainsString('Размер группы', $faq);
+        // Пустой ретривал = весь корпус (не пустой промпт).
+        $real = trim((string) file_get_contents(resource_path('knowledge/faq.md')));
+        $this->assertGreaterThanOrEqual(mb_strlen($real), mb_strlen($faq));
     }
 
     public function test_course_catalog_is_never_narrowed(): void
