@@ -63,8 +63,7 @@ def test_reason_carries_pattern():
     reason = out["topic"]["reason"]
     assert reason.startswith("keyword:")
     pattern = reason.split(":", 1)[1]
-    all_patterns = {p.pattern for rule in ruleset.rules_by_plane["topic"] for p in rule.patterns}
-    assert pattern in all_patterns
+    assert pattern in {p.pattern for p in ruleset.rules_by_plane["topic"][0].patterns}
 
 
 def test_empty_text_all_null():
