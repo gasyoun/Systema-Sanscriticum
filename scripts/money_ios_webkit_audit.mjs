@@ -3,11 +3,14 @@
  *
  * Playwright WEBKIT with real iPhone device descriptors (same engine as iOS
  * Safari) over the money surfaces: /checkout/{tariff}, /online/konsultaciya,
- * donations, /paypal/{tariff} claim, /trial.
+ * donations (/mecenaty), /paypal/{tariff} claim, /trial. /trial has no GET
+ * page — its form is a modal on /k/{slug} shop pages, so trial coverage rides
+ * on shop-page discovery (same form markup, same H1391 assertions).
  *
  * GET-only by default — prod-safe, read-only, zero charge risk.
  * --local  : additionally exercise interactive POST flows (promo apply).
- *            ONLY against a local dev instance, never prod.
+ *            ONLY against a local dev instance — the script hard-refuses
+ *            POST against any non-localhost host, even with --local passed.
  *
  * Usage:
  *   node scripts/money_ios_webkit_audit.mjs                        # local dev
@@ -49,10 +52,22 @@ const COURSE_PAGE_RE = /^\/k\/[^/]+$/;
 const MONEY_PATTERNS = [/^\/checkout\/[^/]+$/, /^\/paypal\/[^/]+$/, /^\/trial\/[^/]+$/, /^\/mecenaty.*$/];
 const MAX_COURSE_PAGES = 2;
 const MAX_SURFACES = 8;
+const MAX_PAYPAL_PROBES = 3;
 
 const PAY_BUTTON_RE = /оплат|перевести|\bpay\b|checkout|donate/i;
 const CTA_FALLBACK_RE = /записат|купить|оформить|поддерж/i;
 const COOKIE_BAR_RE = /cookie|кук|соглас|мы используем|privacy|персональн/i;
+
+const intersects = (a, b) =>
+  a && b && a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+function assertPostSafety(base) {
+  const host = new URL(base).hostname;
+  const safe = ['localhost', '127.0.0.1', '::1', '[::1]'];
+  if (!safe.includes(host)) {
+    throw new Error(`--local POST flows refused: BASE host "${host}" is not localhost (prod must stay GET-only)`);
+  }
+}
 
 const results = [];
 
@@ -70,6 +85,7 @@ function compact(r) {
     f.push(`pay button occluded by ${r.payButton.occludedBy}`);
   }
   if (r.csrfMissing) f.push('form(s) missing _token');
+  if (r.promoPost && r.promoPost !== 'ok (server responded, no 419/network error)') f.push(`promo POST: ${r.promoPost}`);
   if (r.deadFields.length) f.push(`dead fields: ${r.deadFields.join(', ')}`);
   for (const e of r.consoleErrors.slice(0, 5)) f.push(`console: ${e.slice(0, 140)}`);
   return { ...r, findings: f, notes, clean: f.length === 0 };
@@ -90,9 +106,11 @@ async function auditSurface(browser, deviceName, path) {
     finalPath: '',
     overflowX: 0,
     payButton: null,
+    cookieBar: null,
     forms: 0,
     csrfMissing: false,
     deadFields: [],
+    promoPost: null,
     consoleErrors,
     screenshot: '',
   };
@@ -120,6 +138,32 @@ async function auditSurface(browser, deviceName, path) {
         (f) => f.querySelector('input, button') && !f.querySelector('input[name=_token]'),
       ));
 
+    // Cookie bar + any fixed/sticky overlay boxes — for bounding-box
+    // intersection against the pay button (H1391 occlusion class).
+    const overlays = await page.evaluate(() =>
+      [...document.querySelectorAll('body *')]
+        .filter((el) => {
+          const p = getComputedStyle(el).position;
+          return (p === 'fixed' || p === 'sticky') && el.offsetParent !== null;
+        })
+        .map((el) => {
+          const b = el.getBoundingClientRect();
+          return {
+            position: getComputedStyle(el).position,
+            box: { x: b.x, y: b.y, width: b.width, height: b.height },
+            text: (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 120),
+            tag: el.tagName.toLowerCase(),
+            cls: (typeof el.className === 'string' ? el.className : '').slice(0, 80),
+          };
+        })
+        .filter((o) => o.box.width > 0 && o.box.height > 0),
+    );
+    const cookieBar = overlays.find((o) => COOKIE_BAR_RE.test(o.text) || COOKIE_BAR_RE.test(o.cls))
+      || null;
+    r.cookieBar = cookieBar
+      ? { position: cookieBar.position, text: cookieBar.text.slice(0, 80), box: cookieBar.box }
+      : null;
+
     // Pay button: strict payment verbs first; fall back to generic CTA
     // («Записаться»/«Купить») so free-registration pages still get audited.
     let btn = page.locator('button, input[type=submit], a[href]').filter({ hasText: PAY_BUTTON_RE }).first();
@@ -130,8 +174,10 @@ async function auditSurface(browser, deviceName, path) {
       const box = await btn.boundingBox();
       if (box) {
         const vp = devices[deviceName].viewport;
+        const btnBox = { x: box.x, y: box.y, width: box.width, height: box.height };
         const inViewport = box.y + box.height <= vp.height && box.y >= 0;
-        const occludedBy = await page.evaluate(({ x, y, w, h }) => {
+        const cookieHit = cookieBar && intersects(btnBox, cookieBar.box) ? cookieBar : null;
+        const overlayHit = await page.evaluate(({ x, y, w, h }) => {
           const cx = x + w / 2, cy = y + h / 2;
           const top = document.elementFromPoint(cx, cy);
           if (!top) return null;
@@ -148,7 +194,7 @@ async function auditSurface(browser, deviceName, path) {
           width: Math.round(box.width),
           height: Math.round(box.height),
           tapTargetOk: box.width >= 44 && box.height >= 44,
-          occludedBy,
+          occludedBy: cookieHit ? `cookie-bar (${cookieHit.position}) overlaps button box` : overlayHit,
         };
       }
     }
@@ -162,6 +208,26 @@ async function auditSurface(browser, deviceName, path) {
         const active = await page.evaluate(() => document.activeElement?.getAttribute('name'));
         if (active !== name) r.deadFields.push(name);
       } catch { r.deadFields.push(`${name}(unfocusable)`); }
+    }
+
+    // --local only: interactive POST promo apply (fetch + header CSRF, the
+    // exact H1391 419/session failure path). Never runs against prod —
+    // assertPostSafety() hard-refused non-localhost at startup.
+    if (LOCAL && /^\/checkout\/[^/]+$/.test(path)) {
+      const input = page.locator('input[placeholder*="ромокод" i]').first();
+      if (await input.count()) {
+        try {
+          await input.fill('AUDIT-LOCAL-TEST');
+          await page.locator('button[type=submit]', { hasText: /применить/i }).first().click();
+          await page.waitForTimeout(1500);
+          const err = await page.locator('p.text-xs.text-red-500').first().textContent().catch(() => '');
+          const netFail = /сетевая ошибка|419|csrf/i.test(err || '');
+          r.promoPost = netFail ? `POST failed: ${(err || '').trim().slice(0, 80)}` : 'ok (server responded, no 419/network error)';
+          if (netFail) r.consoleErrors.push(`promo POST: ${err}`);
+        } catch (e) {
+          r.promoPost = `POST flow error: ${e.message.slice(0, 100)}`;
+        }
+      }
     }
 
     const shot = `${path.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '')}__${deviceName.replace(/[^a-z0-9]+/gi, '_')}.png`;
@@ -207,10 +273,18 @@ async function discoverPaths(browser) {
   }
   await ctx.close();
   const money = [...found].filter((p) => MONEY_PATTERNS.some((re) => re.test(p))).slice(0, MAX_SURFACES);
-  return [...new Set([...money, ...FIXED_SURFACES])];
+  // /paypal/{tariff} claim pages are emailed, not linked — probe them directly
+  // from discovered checkout slugs (auditSurface skips on flag-404).
+  const checkoutSlugs = money
+    .map((p) => (p.match(/^\/checkout\/([^/]+)$/) || [])[1])
+    .filter(Boolean)
+    .slice(0, MAX_PAYPAL_PROBES)
+    .map((s) => `/paypal/${s}`);
+  return [...new Set([...money, ...checkoutSlugs, ...FIXED_SURFACES])];
 }
 
 const browser = await webkit.launch();
+if (LOCAL) assertPostSafety(BASE);
 mkdirSync(OUT_DIR, { recursive: true });
 const paths = await discoverPaths(browser);
 console.log(`money-ios-webkit-audit · BASE=${BASE} · webkit · surfaces=${paths.length}${LOCAL ? ' · LOCAL POST on' : ''}\n`);
@@ -237,8 +311,10 @@ for (const r of results.filter((x) => x.status < 400)) {
   md.push(`## ${r.device} — ${r.path}`, '',
     `- status ${r.status} · overflowX ${r.overflowX}px · forms ${r.forms}${r.csrfMissing ? ' · ⚠ CSRF _token missing' : ''}`,
     `- pay button: ${r.payButton ? `${r.payButton.visible ? 'visible' : 'NOT visible'}, ${r.payButton.inViewport ? 'in viewport' : 'below fold'}, ${r.payButton.width}x${r.payButton.height}px${r.payButton.occludedBy ? ` · OCCLUDED by ${r.payButton.occludedBy}` : ''}` : 'not found'}`,
+    r.cookieBar ? `- cookie bar: ${r.cookieBar.position} · "${r.cookieBar.text.slice(0, 60)}"` : '',
     r.deadFields.length ? `- ⚠ dead fields: ${r.deadFields.join(', ')}` : '',
     r.consoleErrors.length ? `- ⚠ console: ${r.consoleErrors.slice(0, 3).join(' | ').slice(0, 300)}` : '',
+    r.promoPost ? `- promo POST (--local): ${r.promoPost}` : '',
     r.screenshot ? `- screenshot: \`${r.screenshot}\`` : '', '');
 }
 writeFileSync(join(OUT_DIR, 'summary.md'), md.filter((l) => l !== undefined).join('\n'));
