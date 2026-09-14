@@ -21,7 +21,7 @@ _Created: 14-09-2026 · Last updated: 14-09-2026_
 ### F1 — [ИСПРАВЛЕНО] Прод пишет логи на уровне debug
 - Live `.env`: `LOG_LEVEL=debug`, `LOG_CHANNEL=daily`; дефолт репо `.env.example:11`.
 - Риск: PII (email, IP, платёжные метаданные) копится в логах, которые бэкапятся off-site. Аудит перезаписи пароля пишет email (`User::logPasswordRewrite`).
-- Исправление (код): `.env.example` дефолт `warning`. Исправление (прод): `LOG_LEVEL=warning` + `config:cache` — **@DO, см. GTD**.
+- Исправление (код): `.env.example` дефолт `warning`. Исправление (прод): **исполнено тем же проходом 14-09** — `LOG_LEVEL=warning`, бэкап `.env.bak-h4663-20260914-062528`, `config:cache`, reload php-fpm, smoke `/`+`/admin/login`+`/api/public/schedule` = 200×3.
 
 ### F2 — [@DECIDE] Второй публичный сайт на Tier-0 боксе (kosha + GitHub device-flow релей)
 - Серверный nginx: vhost `kosha.193.232.229.92.sslip.io` (`root /var/www/html`, proxy `127.0.0.1:8001`, сниппет `gh-device-relay.conf`). В репо конфига нет — прод-локальный.

@@ -7,9 +7,9 @@
 - **F8 logout-all:** `POST /api/v1/auth/logout-all` — отзыв ВСЕХ мобильных Sanctum-токенов (украденный токен больше не живёт до 90 дней после logout на одном устройстве).
 - **F11 /horizon:** гость → 404 (путь не раскрывается), залогиненный не-админ → 403 (email-канон H3312 сохранён).
 - **F7 CSP:** глобальный `Content-Security-Policy-Report-Only` в web-группе (AppServiceProvider) — наблюдение без блокировки; ужесточение после разбора репортов.
-- **F1 LOG_LEVEL:** `.env.example` дефолт `debug` → `warning` (прод-правка `.env` — @DO в Uprava GTD, отдельным окном с `config:cache`).
+- **F1 LOG_LEVEL:** `.env.example` дефолт `debug` → `warning`; прод-`.env` переключён тем же проходом (бэкап `.env.bak-h4663-20260914-062528`, `config:cache`, reload php-fpm, smoke 200×3).
 - **F6 nginx-фолбэк:** security-заголовки с прода перенесены в `ops/migrate/templates/nginx-samskrte.conf` (пересборка бокса без снапшота больше не теряет эшелон; HSTS не добавлен — в фолбэке нет 443).
 - **F9 User fillable:** осознанно НЕ изменён (162 тест-файла + seeder опираются на factory-create с role); компенсирующий контроль описан в audit doc §F9, маркер-комментарий в модели.
 - Верификация: `php -l` на всех изменённых файлах; Pint clean; целевые наборы MobileApiTest 5/5, TochkaWebhook+WebhookSecurityAudit+CourseSplitGroups 38/38, AccountantAccessTest 6/6, DashboardWidgetRoleGateTest 2/2.
-- Остатки (Uprava GTD, тот же проход): F2 kosha-vhost @DECIDE; F5 /force-download IDOR-редизайн @DO; прод `LOG_LEVEL=warning` @DO; CSP-репорт-разбор @DO.
+- Остатки (Uprava GTD, тот же проход): F2 kosha-vhost @DECIDE; F5 /force-download IDOR-редизайн @DO; CSP-репорт-разбор @DO.
 _Dr. Mārcis Gasūns_
