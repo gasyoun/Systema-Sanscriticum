@@ -397,6 +397,18 @@ return [
     'kosha_srs' => (bool) env('KOSHA_SRS', false),
 
     /*
+     | Subhāṣita audio SRS deck (H4474, stages 1–3). Когда ВКЛ,
+     | `php artisan subhashita:import-audio-deck` читает ВЕНДОРНЫЙ статический
+     | фид resources/data/subhashita_srs_deck.json (59 записей, сведённых
+     | с номерами Бётлингка манифестом H4474) и создаёт системную колоду SRS.
+     | Аудио-кнопка в карточке работает после `subhashita:push-audio` (файлы
+     | заливаются в public-диск из Яндекс.Диска; права подтверждены MG
+     | 14-09-2026 «все свои»). Тот же паттерн, что и kosha_srs. ВЫКЛ по
+     | умолчанию — команда при выключенном флаге ничего не пишет.
+     */
+    'subhashita_srs' => (bool) env('SUBHASHITA_SRS', false),
+
+    /*
      | Reader-as-a-service demo (H959, last-mile pipeline Hop A). Когда ВКЛ,
      | /reading/kosha-demo рендерит ВЕНДОРНЫЙ статический фид
      | resources/data/kosha_reading_pack_nala_1.json (kosha's dcs-reading-pack-nala-1,
