@@ -26,3 +26,9 @@ HOME=/tmp
 @@WATCHDOG_RESOURCES_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "guards:resources" guard-resources @@WATCHDOG_RESOURCES_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
 @@WATCHDOG_QUEUE_LAG_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "guards:queue-lag" guard-queue-lag @@WATCHDOG_QUEUE_LAG_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
 @@WATCHDOG_COMPROMISE_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "guards:compromise-integrity" guard-compromise @@WATCHDOG_COMPROMISE_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
+
+# H4672 money-axis SLI: mocked webhook only, never a live bank charge (see
+# config/money_sli.php + features.money_sli_synthetic_pay/_hourly_reconcile,
+# both default OFF — command is a no-op until the flag is flipped).
+@@WATCHDOG_MONEY_SLI_DAILY_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "money:sli-synthetic-pay" money-sli-daily @@WATCHDOG_MONEY_SLI_DAILY_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
+@@WATCHDOG_MONEY_SLI_HOURLY_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "money:sli-hourly-reconcile" money-sli-hourly @@WATCHDOG_MONEY_SLI_HOURLY_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1

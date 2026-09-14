@@ -35,12 +35,21 @@ class WebhookController extends Controller
             try {
                 $decoded = JWT::decode($jwt, $key);
             } catch (\UnexpectedValueException $e) {
-                Log::warning('Tochka webhook: невалидная подпись JWT', [
-                    'ip' => $request->ip(),
-                    'error' => $e->getMessage(),
-                ]);
+                // H4672: SLI-only fallback — ТОЛЬКО когда флаг ВКЛ и SLI-ключ
+                // задан; настоящий банковский ключ выше пробуется ПЕРВЫМ и
+                // никогда не заменяется. Реальные вебхуки Точки этот путь не
+                // видят: их подпись уже прошла (или не прошла бы) на первой
+                // попытке — вторая попытка чужим ключом на их результат не влияет.
+                $decoded = $this->tryDecodeWithSliKey($jwt) ?? null;
 
-                return response('Invalid signature', 401);
+                if ($decoded === null) {
+                    Log::warning('Tochka webhook: невалидная подпись JWT', [
+                        'ip' => $request->ip(),
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return response('Invalid signature', 401);
+                }
             }
 
             $payload = (array) $decoded;
@@ -210,6 +219,33 @@ class WebhookController extends Controller
             ]);
 
             return response('Server error', 500);
+        }
+    }
+
+    /**
+     * H4672: попытка расшифровать JWT ключом money-axis SLI-пробника
+     * (config('services.tochka.sli_webhook_public_key')), а не боевым ключом
+     * Точки. Возвращает decoded payload или null — никогда не бросает наружу,
+     * реальный webhook-путь этой веткой не затрагивается.
+     */
+    private function tryDecodeWithSliKey(string $jwt): ?object
+    {
+        if (! config('features.money_sli_synthetic_pay')) {
+            return null;
+        }
+
+        $sliKey = trim((string) config('services.tochka.sli_webhook_public_key', ''));
+        if ($sliKey === '') {
+            return null;
+        }
+
+        try {
+            $jwk = json_decode($sliKey, true, 512, JSON_THROW_ON_ERROR);
+            $key = JWK::parseKey($jwk, 'RS256');
+
+            return JWT::decode($jwt, $key);
+        } catch (\Throwable) {
+            return null;
         }
     }
 

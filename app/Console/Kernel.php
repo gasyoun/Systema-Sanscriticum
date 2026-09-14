@@ -1090,6 +1090,15 @@ class Kernel extends ConsoleKernel
         // (WATCHDOG_LOGS_WATCH_*); сверка живой машины: guards:verify.
         // Всплеск production.ERROR (≥3/ч, config/logs_watch.php) → TG soft.
 
+        // --- MONEY-AXIS SLI (H4672) ---
+        // `money:sli-synthetic-pay` (ежесуточно) и `money:sli-hourly-reconcile`
+        // (ежечасно) НЕ здесь, по той же причине H1917 что и выше: отдельные
+        // строки `systema-watchdog-run.sh "money:sli-synthetic-pay" money-sli-daily …`
+        // / `"money:sli-hourly-reconcile" money-sli-hourly …` в
+        // app-user.crontab. Числа: scripts/server_guards.conf
+        // (WATCHDOG_MONEY_SLI_DAILY_*/WATCHDOG_MONEY_SLI_HOURLY_*). Оба флага
+        // (features.money_sli_synthetic_pay/_hourly_reconcile) default OFF —
+        // включение в проде отдельный ops-шаг, см. DEPLOY_QUEUE.md.
     }
 
     /** club membership expiry/free lesson + PayPal fixed prices. */
