@@ -15,7 +15,7 @@ class TrackedLinkTest extends TestCase
     public function campaign_link_redirects_to_a_clean_url_and_keeps_utm_in_the_session(): void
     {
         $this->get('/ga/m26-ors-h')
-            ->assertRedirect('/online');
+            ->assertRedirect('/online/grammatika-gasuns');
 
         $this->assertSame([
             'utm_source' => 'telegram_samskrte',
@@ -31,7 +31,7 @@ class TrackedLinkTest extends TestCase
     {
         session([config('tracked_links.session_key') => ['utm_source' => 'earlier']]);
 
-        $this->get('/ga/m26-ors-h')->assertRedirect('/online');
+        $this->get('/ga/m26-ors-h')->assertRedirect('/online/grammatika-gasuns');
 
         $this->assertSame(['utm_source' => 'earlier'], session(config('tracked_links.session_key')));
     }
@@ -52,7 +52,7 @@ class TrackedLinkTest extends TestCase
             'm26-vk-s' => ['vk_senler', 'broadcast'],
         ] as $token => [$source, $medium]) {
             $this->flushSession();
-            $this->get('/ga/'.$token)->assertRedirect('/online');
+            $this->get('/ga/'.$token)->assertRedirect('/online/grammatika-gasuns');
             $this->assertSame($source, session(config('tracked_links.session_key').'.utm_source'));
             $this->assertSame($medium, session(config('tracked_links.session_key').'.utm_medium'));
         }

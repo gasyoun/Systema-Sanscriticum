@@ -23,6 +23,13 @@
         Запись на курс — на странице курса.
     </p>
 
+    <section class="mb-8 rounded-2xl border border-[#E85C24] bg-[#111622] p-6" aria-labelledby="grammar-intake">
+        <p class="text-[#E85C24] font-bold mb-2">Набор открыт</p>
+        <h2 id="grammar-intake" class="text-2xl font-bold text-white mb-2">Новые онлайн-группы грамматики санскрита</h2>
+        <p class="text-slate-300 mb-4">С М. Ю. Гасунсом: суббота в 12:00 или вторник в 08:00 МСК. Если оба времени не подходят, укажите это в заявке.</p>
+        <a href="/ga/m26-schedule-c" class="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all">Встать в список ожидания <i class="fas fa-arrow-right text-[10px]"></i></a>
+    </section>
+
     @if(!$flagOn)
         <p class="text-slate-500">Расписание курсов скоро появится на этой странице.</p>
     @elseif($courses->isEmpty())

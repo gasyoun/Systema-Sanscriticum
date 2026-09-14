@@ -211,6 +211,11 @@ Route::get('/dvaram/private-archive/{archive}', [MembershipCommerceController::c
 // курса + уровни (H323, beginner on-ramp).
 Route::get('/online/s-chego-nachat', [ShopController::class, 'start'])->name('shop.start');
 
+// Текущий набор в новые онлайн-группы грамматики. Это не каталог: страница
+// принимает заявку и сохраняет UTM-источник короткой ссылки в LeadController.
+Route::view('/online/grammatika-gasuns', 'shop.grammar-gasuns')
+    ->name('shop.grammar-gasuns');
+
 // H2764 / R18 — путь через каталог (письмо/чтение → грамматика → тексты).
 // Слаг /online/put: столкновений с существующими /online/* нет.
 Route::get('/online/put', [ShopController::class, 'pathway'])->name('shop.pathway');
