@@ -18,7 +18,7 @@ use Symfony\Component\Yaml\Yaml;
  */
 final class Loader
 {
-    public const PLANES = ['topic', 'objection', 'intent', 'meta'];
+    public const PLANES = ['topic', 'objection', 'intent', 'meta', 'funnel_stage', 'escalation', 'resolution'];
 
     private const FORBIDDEN_TOKENS = ['/', '#', '\\w', '\\b', '\\d', '\\s', '\\u'];
 

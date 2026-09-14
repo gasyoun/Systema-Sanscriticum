@@ -1,9 +1,20 @@
-_Created: 25-08-2026 · Last updated: 05-09-2026_
+_Created: 25-08-2026 · Last updated: 13-09-2026_
 
 # Changelog
 
 All notable changes to this project are documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [Unreleased]
+
+### Added
+
+- H4609 (OxAlpha): taxonomy v2 — planes `funnel_stage` {course, consultation, serve_only} (ключи 1:1 из ORS-FAQ регистра W0), `escalation` {calm, frustrated, churn_risk} (канал escalation.py), `resolution` {auto_answerable, faq_hit, needs_human} (выравнивание H4404: R3 refuse D/E, FAQ live-F); дети topic `refund/pause/deposit/installment` (payment_billing) и `access_window` (recording_access), ключи L2-scoped, родительство — в новом словаре соответствий [taxonomy/v1/mapping.md](https://github.com/gasyoun/message-intent-classifier/blob/main/taxonomy/v1/mapping.md) (MIC ↔ legacy SupportTopicRule A–F ↔ ORS topic ↔ funnel_stage). Оба лоадера расширены в паритете (7 плоскостей).
+- H4609 (OxAlpha): [tools/gen_synthetic_golden.py](https://github.com/gasyoun/message-intent-classifier/blob/main/tools/gen_synthetic_golden.py) — Chatito-style алиас-генератор детерминированных синтетических фраз (seed 20260913) с инвариантами positive/negative; +68 syn-* векторов в [vectors/golden.json](https://github.com/gasyoun/message-intent-classifier/blob/main/vectors/golden.json) (162 frozen не флипают: существующие плоскости байт-в-байт), синтетический корпус [reports/synthetic-golden-corpus.jsonl](https://github.com/gasyoun/message-intent-classifier/blob/main/reports/synthetic-golden-corpus.jsonl) (`"synthetic": true` — никогда не идёт в real-corpus precision gate) + self-run [reports/synthetic-precision-report.md](https://github.com/gasyoun/message-intent-classifier/blob/main/reports/synthetic-precision-report.md).
+
+### Changed
+
+- H4609 (OxAlpha): golden refresh в том же PR — 162 frozen-вектора получили аддитивные ожидания новых плоскостей (нулевые флипы topic/objection/intent/meta, проверено генератором и диффом базлайна); `test_reason_carries_pattern` ищет паттерн по всем topic-правилам (раньше предполагал index 0).
 
 ## [0.3.1] — 30-08-2026
 
