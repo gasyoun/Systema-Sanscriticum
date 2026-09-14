@@ -58,11 +58,11 @@ sub-su041-nabhishe	systematic	Su41-Nabhishe.mp3	41	Nabhishe	Nabhisheko	नाभ
 sub-su041-nabhisheko	systematic	Su41-Nabhisheko.mp3	41	Nabhisheko	Nabhisheko	नाभिषेको न संस्कारः	18.34	293858	128	41	65	3601	verse_prefix
 sub-su042-bhashasu	systematic	Su42-Bhashasu.mp3	42	Bhashasu	Bhashasu	भाषासु मुख्या मधुरा	18.16	290932	128	42	66		unmatched
 sub-su043-anna	systematic	Su43-Anna.mp3	43	Anna	Annadanam	अन्नदानं महादानं विद्यादानमतः	18.55	297202	128	43	67		unmatched
-sub-su044-vrtha	systematic	Su44-Vrtha.mp3	44	Vrtha	Vrtha	वृथा वृष्टिः समुद्रेषु	18.49	296366	128	44	68	6258	verse_prefix_ambiguous(2)
+sub-su044-vrtha	systematic	Su44-Vrtha.mp3	44	Vrtha	Vrtha	वृथा वृष्टिः समुद्रेषु	18.49	296366	128	44	68	6259	verse_prefix_lcp(2)
 sub-su045-lubdho	systematic	Su45-Lubdho.mp3	45	Lubdho	Lubdho	लुब्धो न विसृजत्यर्थं	17.79	285081	128	45	69	5864	verse_prefix
 sub-su046-sukhasya	systematic	Su46-Sukhasya.mp3	46	Sukhasya	Sukhasya	सुखस्य दुःखस्य न	20.58	329802	128	46	71	7082	toc_pratika
 sub-su047-bodharo	systematic	Su47-Bodharo.mp3	47	Bodharo	Boddharo	बोद्धारो मत्सरग्रस्ताः प्रभवः	18.26	292604	128	47	73	4488	verse_prefix
-sub-su048-svabhavo	systematic	Su48-Svabhavo.mp3	48	Svabhavo	Svabhavo	स्वभावो नोपदेशेन शक्यते	18.31	293440	128	48	75	7301	verse_prefix_ambiguous(2)
+sub-su048-svabhavo	systematic	Su48-Svabhavo.mp3	48	Svabhavo	Svabhavo	स्वभावो नोपदेशेन शक्यते	18.31	293440	128	48	75	7302	verse_prefix_lcp(2)
 sub-su049-yasmin	systematic	Su49-Yasmin.mp3	49	Yasmin	Yasminjivati	यस्मिञ्जीवति जीवन्ति बहवः	17.24	276304	128	49	76	5348	verse_prefix
 sub-su050-samsara	systematic	Su50-Samsara.mp3	50	Samsara	Samsaravishavrkshasya	संसारविषवृक्षस्य द्वे एव	17.37	278393	128	50	78	6636	toc_pratika
 sub-su051-yatha	systematic	Su51-Yatha.mp3	51	Yatha	Yatha	यथा चित्तं तथा	19.70	315592	128	51	80		unmatched

@@ -102,6 +102,19 @@ def load_sprueche(path: Path):
     return rows
 
 
+def longest_common_prefix(strings):
+    """Longest folded prefix shared by all strings ([] -> '')."""
+    if not strings:
+        return ""
+    prefix = strings[0]
+    for s in strings[1:]:
+        i = 0
+        while i < len(prefix) and i < len(s) and prefix[i] == s[i]:
+            i += 1
+        prefix = prefix[:i]
+    return prefix
+
+
 def match_saying(verse, toc_pratika, file_pratika, sprueche):
     """Return (is_num, method) for the best Böhtlingk match, else (None, 'unmatched').
 
@@ -110,7 +123,14 @@ def match_saying(verse, toc_pratika, file_pratika, sprueche):
       toc_pratika    — the anthology's pratīka (3-4 words) opens a saying
       file_pratika   — the Devanagari in the mp3 filename (often 1-2 words) opens it
     A pratīka shorter than 8 folded chars is too weak to identify one saying out of
-    7537 and is never used; several hits are reported as *_ambiguous(N), first kept.
+    7537 and is never used. Several hits are disambiguated by the LONGEST COMMON
+    PREFIX: the full recorded verse must contain the candidates' divergence point,
+    so the candidate whose text still agrees with the tape at that point wins
+    (Su44: tape तृप्तेषु…धनाढ्येषु -> IS 6259, not the पाठ. तृप्तस्य print 6258;
+    Su48: tape सुतप्तमपि पानीयं -> IS 7302, not the dog's-tail print 7301). A
+    candidate still agreeing past the divergence point wins as
+    `{method}_lcp(N)`; when none survives (or the verse is missing), the
+    historical first-hit row is kept, flagged `{method}_ambiguous(N)`.
     """
     probes = (
         (verse, "verse_prefix", 24),
@@ -126,6 +146,15 @@ def match_saying(verse, toc_pratika, file_pratika, sprueche):
         if len(hits) == 1:
             return hits[0], method
         if len(hits) > 1:
+            tape = norm(verse or "")
+            if tape:
+                # divergence point among the candidates + their joint LCP
+                div = len(longest_common_prefix([sk for num, _d, _i, sk in sprueche
+                                                 if num in hits]))
+                survivors = [num for num, _d, _i, sk in sprueche
+                             if num in hits and sk[:div + 1] == tape[:div + 1]]
+                if len(survivors) == 1:
+                    return survivors[0], f"{method}_lcp({len(hits)})"
             return hits[0], f"{method}_ambiguous({len(hits)})"
     return None, "unmatched"
 

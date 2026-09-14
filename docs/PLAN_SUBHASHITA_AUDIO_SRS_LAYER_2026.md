@@ -1,6 +1,6 @@
 # Subhāṣita audio → SRS layer — manifest, Böhtlingk mapping, wiring plan (H4474)
 
-_Created: 13-09-2026 · Last updated: 13-09-2026_
+_Created: 13-09-2026 · Last updated: 14-09-2026 (verifier amendment — see §7.4)_
 
 Executor: OxAlpha (opencode/z-ai/glm-5.3-flash) label, run by Opus 5 (claude-opus-5[1m]) · Handoff: [H4474](https://github.com/gasyoun/Uprava/blob/main/handoffs/H4474-OxAlpha_Systema-Sanscriticum_subhashita-audio-srs_09.09.26.md) — субхашит-аудио → SRS, class `data`, effort medium.
 
@@ -43,12 +43,12 @@ Built by [scripts/build_subhashita_audio_manifest.py](https://github.com/gasyoun
 | `verse_prefix` | 22 | the recorded verse (from the recordings docx) opens exactly one saying |
 | `toc_pratika` | 24 | the anthology's pratīka opens exactly one saying |
 | `file_pratika` | 11 | the Devanagari in the filename opens exactly one saying |
-| `*_ambiguous(N)` | 2 | several sayings open the same way — first kept, needs a human eye |
+| `*_lcp(2)` | 2 | two sayings open the same way — the full recorded verse settles which one (14-09-2026 verifier amendment: Su44→IS 6259, Su48→IS 7302, see §7.4) |
 | `unmatched` | 52 | — |
 
 Verifier output: **pass 54 · variant 5 · fail 0** (`exit 0`). "Variant" = the tape and Böhtlingk print the same verse in different recensions — छायामन्यस्य कुर्वन्ति *तिष्ठन्ति* / *स्वयं*, पृथिव्यां *त्रीणि* / *त्रीणी*, अनित्यानि शरीराणि *वैभवं* / *विभवो*, संसारविषवृक्षस्य द्वे *एव* / *फले*, पुस्तकस्था *तु* / *च* या. These are real matches and are flagged, never silently folded into `pass`.
 
-**The 52 unmatched are not a defect.** The anthology's own preface names Mahābhārata, Pañcatantra, Hitopadeśa, Vikramacarita, the Upaniṣads, Sutta-nipāta, Bhartṛhari and Manu beside Böhtlingk — probed live: गते शोकं न कुर्वीत and विदेशेषु धनं विद्या have **zero** occurrences in the 7537-saying corpus. The Kochergina set (15) is unmatched by construction: its filenames carry a one-word pratīka (विद्या, दिवा, त्यज) too weak to identify one saying out of 7537, and its verses are not in the recordings docx.
+**The 52 unmatched are not a defect.** The anthology's own preface names Mahābhārata, Pañcatantra, Hitopadeśa, Vikramacarita, the Upaniṣads, Sutta-nipāta, Bhartṛhari and Manu beside Böhtlingk — probed live: गते शोकं न कुर्वीत and विदेशेषु धनं विद्या have **zero** occurrences in the 7537-saying corpus. 9 of the 15 Kochergina recordings carry multi-word Devanagari pratīkas in their filenames and 6 of them are matched in the manifest (दरिद्रान् IS 2714, काव्यशास्त्रविनोदेन IS 1711, लोभात्क्रोधः IS 5883, त्रिविधं IS 2645, विद्या नाम IS 6089, यथा ह्येकेन IS 5161); the remaining Kochergina files carry one-word pratīkas (विद्या, दिवा, त्यज) too weak to identify one saying out of 7537, and their verses are not in the recordings docx.
 
 ## 4 · Rights — OPEN, and the reason nothing is blocked by it
 
@@ -94,12 +94,14 @@ python scripts/verify_subhashita_audio_manifest.py \
 
 The `yadisk:` remote is self-served from prod credentials — procedure in [Uprava FINDINGS §719](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md); it had to be recreated on the Windows box this pass (it existed only on the Mac), which is a one-time `rclone config create` from `/var/www/html/.env`.
 
+The 14-09-2026 verifier pass reproduced the whole pipeline on the Mac (pandoc 3.11): the regenerated manifest was **byte-identical** to the committed one, then the LCP amendment re-derives exactly 2 rows.
+
 ## 7 · Risks and open questions
 
 1. **Speaker/licence of the recordings is undocumented** — §4; blocks stage 3 only.
 2. **Duplicate takes:** `Su27`/`Su27-Ayusha`, `Su32`/`Su32-Arthanam`, `Su41`/`Su41-Nabhisheko` are different byte sizes — alternative takes, both kept in the manifest; a human picks one per card at stage 1.
 3. **Gaps in the series:** no `Su12` and no `Su37` on disk (the series otherwise runs 1–95 unbroken) although the anthology runs to 95; the corresponding sayings simply have no recording.
-4. **Two `*_ambiguous(2)` rows** carry the first of two candidate saying numbers — worth a human eye before they reach a card.
+4. **The two `*_ambiguous(2)` rows are RESOLVED (14-09-2026 verifier amendment).** The recordings docx gives the full verse each tape sings, and its text past the candidates' divergence point picks the right Böhtlingk number deterministically: Su44 sings वृथा वृष्टिः समुद्रेषु **तृप्तेषु**… दानं **धनाढ्येषु**… दीपो दिवापि च = **IS 6259** (the old row held IS 6258, the anthology's own `(पाठ. तृप्तस्य)` variant), and Su48 sings स्वभावो नोपदेशेन शक्यते कर्तुमन्यथा ।/**सुतप्तमपि पानीयं** पुनर्गच्छति शीतताम् = **IS 7302** (the old row held IS 7301, the वक्रमेव शुनः पुच्छं dog-tail print). `build_subhashita_audio_manifest.py` now disambiguates via longest-common-prefix and emits `verse_prefix_lcp(2)`; Su4 stays IS 6099 (the tape sings शक्तिः परेषां परिपीडनाय = IS 6099, not 6098) — confirmed, no change.
 5. The 2018 anthology revision is unparsed; it may resolve some of the 52 unmatched rows if its TOC cites Böhtlingk numbers directly.
 
 _Гасунс_
