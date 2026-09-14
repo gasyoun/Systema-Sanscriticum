@@ -51,11 +51,17 @@
         </section>
     @endif
 
-    {{-- R9 workspace tabs, hash-addressable --}}
+    {{-- R9 workspace tabs, hash-addressable.
+         data-track-*: baseline-телеметрия H962 (course.tab.view, спека §4).
+         Имена атрибутов — ровно те, что слушает student.partials.telemetry;
+         data-cabinet-event/data-kind ничего не шлют (инцидент H4134/H4185). --}}
     <nav class="ws-tabs flex flex-wrap gap-1 border-b border-gray-200 mb-6" data-tabs aria-label="Разделы курса">
         <template x-for="tab in tabs" :key="tab.id">
             <a :href="'#' + tab.id"
                :data-tab="tab.id"
+               data-track-event="course.tab.view"
+               data-track-surface="course"
+               :data-track-tab="tab.id"
                @click.prevent="show(tab.id, true)"
                :class="active === tab.id
                     ? 'border-b-2 border-brand text-brand'
@@ -97,7 +103,19 @@
                         || $lesson->isUnlockedBy($unlockedTariffs);
                     $done = in_array($lesson->id, $completedLessonIds, true);
                 @endphp
-                <li class="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 {{ $unlocked ? '' : 'opacity-70' }}">
+                {{-- Закрытый урок = next-block offer (спека §4): те же offer.impression /
+                     offer.click, что и в легаси-витрине student/course.blade.php.
+                     Политика подавления не меняется — при recovery ($suppressOffers)
+                     маячка нет, как и раньше. --}}
+                <li class="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 {{ $unlocked ? '' : 'opacity-70' }}"
+                    @if (! $unlocked && ! $suppressOffers)
+                        data-track-event="offer.click"
+                        data-track-impression="offer.impression"
+                        data-track-kind="next-block"
+                        data-track-block="{{ $lesson->block_number }}"
+                        data-track-course="{{ $course->id }}"
+                    @endif
+                >
                     <span class="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-xs font-extrabold
                         {{ $done ? 'bg-emerald-100 text-emerald-700' : ($unlocked ? 'bg-orange-50 text-brand' : 'bg-gray-100 text-gray-400') }}">
                         {{ $done ? '✓' : ($unlocked ? $loop->iteration : '🔒') }}

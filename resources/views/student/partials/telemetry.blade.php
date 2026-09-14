@@ -14,6 +14,12 @@
 <script>
     (function () {
         'use strict';
+        // Идемпотентность: layouts/student.blade.php подключает партиал всегда,
+        // а страница могла подключить его ещё раз — два набора слушателей дали бы
+        // ДВОЙНОЙ счёт кликов и импрешенов (H4185). Вешаемся ровно один раз.
+        if (window.__cabinetTelemetryBound) return;
+        window.__cabinetTelemetryBound = true;
+
         var URL = @json(route('student.telemetry'));
         var TOKEN = document.querySelector('meta[name="csrf-token"]');
 

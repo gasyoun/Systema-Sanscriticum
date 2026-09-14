@@ -134,5 +134,4 @@
     </div>
 </div>
 
-@include('student.partials.telemetry')
 @endsection
