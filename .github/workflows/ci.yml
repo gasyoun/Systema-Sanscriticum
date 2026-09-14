@@ -311,6 +311,22 @@ jobs:
           sys.exit(fail)
           "
 
+  vendored-corpus-compat:
+    # H4783: a corpus or taxonomy vendor refresh under resources/data/ must still fit
+    # its pinned manifest, the frozen Grammar Lab evaluation and the reader-page
+    # schema BEFORE merge. Stdlib only, no upstream clone, runs in seconds.
+    name: Vendored corpus/taxonomy compatibility gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Gate self-test (mismatched snapshots must fail)
+        run: python -m unittest scripts/test_check_vendored_corpus_compat.py -v
+      - name: Compatibility of the vendored snapshots
+        run: python scripts/check_vendored_corpus_compat.py
+
   mic-vendor-drift:
     name: Vendored message-intent-classifier drift check (pin)
     runs-on: ubuntu-latest
