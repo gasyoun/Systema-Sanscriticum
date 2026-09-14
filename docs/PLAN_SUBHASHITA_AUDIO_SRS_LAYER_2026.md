@@ -53,23 +53,25 @@ Verifier output: **pass 54 · variant 5 · fail 0** (`exit 0`). "Variant" = the 
 
 **The 52 unmatched are not a defect.** The anthology's own preface names Mahābhārata, Pañcatantra, Hitopadeśa, Vikramacarita, the Upaniṣads, Sutta-nipāta, Bhartṛhari and Manu beside Böhtlingk — probed live: गते शोकं न कुर्वीत and विदेशेषु धनं विद्या have **zero** occurrences in the 7537-saying corpus. 9 of the 15 Kochergina recordings carry multi-word Devanagari pratīkas in their filenames and 6 of them are matched in the manifest (दरिद्रान् IS 2714, काव्यशास्त्रविनोदेन IS 1711, लोभात्क्रोधः IS 5883, त्रिविधं IS 2645, विद्या नाम IS 6089, यथा ह्येकेन IS 5161); the remaining Kochergina files carry one-word pratīkas (विद्या, दिवा, त्यज) too weak to identify one saying out of 7537, and their verses are not in the recordings docx.
 
-## 4 · Rights — OPEN, and the reason nothing is blocked by it
+## 4 · Rights — CONFIRMED (MG 14-09-2026: «все свои»)
 
-The handoff asked for a rights confirmation from MG before work. This pass was run unattended, so **no confirmation was obtained and none was assumed**. What is known:
+The handoff asked for a rights confirmation from MG before work. This pass was run unattended, so **no confirmation was obtained and none was assumed** — until 14-09-2026, when MG ruled in chat: **«все свои»** — the recordings are MG's own tapes. Combined with the public-domain text layer (Böhtlingk *Indische Sprüche*, 2nd ed. 1870–73), serving the audio to students is **cleared**: stage 3's gate is lifted.
 
-1. The recordings sit in MG's own Yandex.Disk teaching tree, in the TEACHING/money layer of the 07-09 inventory — the reading is that they are own-produced classroom audio, but the speaker is not documented anywhere in the estate.
+1. ~~The recordings sit in MG's own Yandex.Disk teaching tree... speaker undocumented~~ — **resolved**: own recordings, MG's ruling 14-09-2026 (transcribed in Uprava GTD_NEXT_ACTIONS, the subhashita-audio @DECIDE row).
 2. The **text** layer is unambiguously clear: Böhtlingk's *Indische Sprüche* (2nd ed. 1870–73) is public domain, and the reader-pack already ships on that basis.
-3. **No audio is committed by this pass** — the manifest holds filenames, durations and saying numbers only, so nothing here republishes a recording.
+3. **No audio is committed to git by this pass** — the manifest holds filenames, durations and saying numbers only; the mp3 are pushed to the *public disk* (not the repo) by `scripts/subhashita_push_audio.py`.
 
 Per the org standing policy ([rights uncertainty is not a stop](https://github.com/gasyoun/Uprava/blob/main/docs/STANDING_POLICY_RIGHTS_UNCERTAINTY_IS_NOT_A_STOP_2026.md)) the metadata work proceeds; the one thing gated on a human is **serving the mp3 to students**, which is stage 3 below.
 
-## 5 · Wiring plan — three stages, after the pattern of the b1 demo deck
+## 5 · Wiring plan — three stages, after the pattern of the b1 demo deck (STAGES 1–3 SHIPPED 14-09-2026)
 
 Existing pattern to copy: [resources/data/kosha_srs_deck_b1_demo.json](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/data/kosha_srs_deck_b1_demo.json) (vendored static feed) + [app/Console/Commands/ImportKoshaSrsDeckB1Demo.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ImportKoshaSrsDeckB1Demo.php) (idempotent import into the SRS tables).
 
-1. **Stage 1 — deck feed (no audio, ships today).** Generate `resources/data/subhashita_srs_deck.json` from the manifest joined to the reader-pack: card front = Devanagari verse, back = RU translation from the anthology docx, `is_num` as the stable card key, `audio_id` carried but unused. Import command `subhashita:import-deck` modelled line-for-line on `ImportKoshaSrsDeckB1Demo`. Nothing user-visible changes until the deck is published.
-2. **Stage 2 — audio hosting (needs a storage decision).** 35.1 min / ~33 MB is small enough for the prod disk under `storage/app/public/audio/subhashita/` served through the existing public-disk symlink; the alternative is the S3-compatible bucket already configured for lecture clips. The mp3 are pushed with `rclone copy yadisk:Subhashitas-Systematic <target> --include "*.mp3"`, filenames normalised to `audio_id`.
-3. **Stage 3 — play button in the SRS card (human-gated by §4).** The card renders an HTML audio element for rows with an `audio_id`; 59 cards additionally show «Бётлингк IS <n>» as provenance. Ship only after MG confirms the recordings may be served to students.
+1. **Stage 1 — deck feed (SHIPPED).** `resources/data/subhashita_srs_deck.json` (59 cards: `verse_deva` from the recordings/anthology docx, `ru` tātparyam from the anthology, `is_num` stable key, `audio_id` carried) + build script `scripts/build_subhashita_srs_deck.py` (stdlib docx parsing, no pandoc) + import command `subhashita:import-audio-deck` (flag `features.subhashita_srs`, OFF by default) modelled line-for-line on `ImportKoshaSrsDeckB1Demo`.
+2. **Stage 2 — audio hosting (SHIPPED — prod-disk path taken).** `scripts/subhashita_push_audio.py` copies the 59 mapped mp3 from `yadisk:` (or `--local-source` staging mirror) into `storage/app/public/srs/subhashita/<audio_id>.mp3` — 17 MB, idempotent (size-checked, re-run skips). The card `audio` field points at these paths; `SrsMedia::url` serves them once present.
+3. **Stage 3 — play button in the SRS card (SHIPPED — no code needed).** The existing review blade already renders `<audio controls>` for `fields['audio']` via `SrsMedia::url` — the deck's `audio` field is all stage 3 required. MG's rights ruling (§4) lifted the human gate.
+
+**Prod activation (deploy-gated residual):** on prod run `subhashita:push-audio` → set `SUBHASHITA_SRS=true` → `php artisan subhashita:import-audio-deck`. Nothing user-visible changes until the flag flips.
 
 ## 6 · Reproduce
 
