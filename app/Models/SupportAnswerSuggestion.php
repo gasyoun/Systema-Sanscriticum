@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Services\Support\SupportAnswerFactResolver;
+use App\Services\Support\SupportFactCheckVerifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -100,7 +101,7 @@ class SupportAnswerSuggestion extends Model
 
     /**
      * H4589: статус детерминированной сверки draft_text с собственными
-     * facts ({@see \App\Services\Support\SupportFactCheckVerifier}) —
+     * facts ({@see SupportFactCheckVerifier}) —
      * `match`/`mismatch`/`unverifiable`, или `unchecked` для черновиков,
      * заведённых до H4589. Advisory only — не влияет на {@see isDraftOnly()}.
      */
