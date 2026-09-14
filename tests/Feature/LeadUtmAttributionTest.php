@@ -67,7 +67,7 @@ class LeadUtmAttributionTest extends TestCase
     {
         $landing = $this->landing();
 
-        $this->get('/ga/m26-ors-h')->assertRedirect('/online');
+        $this->get('/ga/m26-ors-h')->assertRedirect('/online/kursy/grammatika-gasuns-2026');
 
         $this->post(route('leads.store'), $this->payload($landing->id))->assertRedirect();
 
