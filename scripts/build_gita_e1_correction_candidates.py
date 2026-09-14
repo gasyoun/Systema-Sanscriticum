@@ -153,6 +153,9 @@ def main() -> int:
                 if clean(r["lemma"]) in lems:
                     note = ("suspect: gold — kosha's own paradigm of this lemma puts the form in "
                             "another cell")
+                elif "-" in r["lemma"]:
+                    # gold joins compound members without internal sandhi (ati-indriya vs atIndriya)
+                    note = f"suspect: undetermined — compound lemma keyed differently in kosha ({','.join(lems[:4])})"
                 else:
                     note = f"suspect: kosha — gold lemma's paradigm lacks the form (kosha lemmas: {','.join(lems[:4])})"
         elif con is None:
