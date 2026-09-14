@@ -1,6 +1,6 @@
 # FINDINGS.md — Systema-Sanscriticum
 
-_Created: 28-08-2026 · Last updated: 28-08-2026_
+_Created: 28-08-2026 · Last updated: 14-09-2026_
 
 Local registry for **product, money-contour and in-app-tooling gotchas** that belong to this
 repo and to no hub. Created under ruling **F1** of the spine-interconnection programme
