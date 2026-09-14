@@ -54,7 +54,7 @@ class ReferralAskSurfacesTest extends TestCase
         $response->assertOk();
         // Нулевые счетчики не рендерятся: ноль читается как упрек.
         $response->assertDontSee('Пришли по вашей рекомендации');
-        $response->assertDontSee('Кредит за рекомендации');
+        $response->assertDontSee('Начислено за рекомендации');
     }
 
     public function test_success_page_confirmed_state_carries_referral_ask(): void

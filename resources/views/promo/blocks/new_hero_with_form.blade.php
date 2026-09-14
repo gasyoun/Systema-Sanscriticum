@@ -290,7 +290,7 @@
                 <div class="p-3 mb-5 rounded-xl bg-green-50 border border-green-200 text-green-700 text-center font-bold text-sm">{{ session('success') }}</div>
             @endif
  
-            <form action="{{ route('leads.store') }}" method="POST" class="space-y-3">
+            <form action="{{ route('leads.store') }}{{ request()->getQueryString() ? '?'.request()->getQueryString() : '' }}" method="POST" class="space-y-3">
                 @csrf
                 @php
                     $landingId = '';

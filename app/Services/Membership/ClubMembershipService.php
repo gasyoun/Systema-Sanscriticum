@@ -68,7 +68,7 @@ final class ClubMembershipService
         $default = max(1, (int) config('membership.club.default_term_months', 1));
         $max = max($default, (int) config('membership.club.max_term_months', 12));
 
-        if (is_string($payment->tariff) && preg_match('/^(?:club|membership_(?:free|basic|club|top))_(\d+)m$/', $payment->tariff, $m) === 1) {
+        if (is_string($payment->tariff) && preg_match('/^(?:club|membership_(?:free|basic|club|top|standard|professional))_(\d+)m$/', $payment->tariff, $m) === 1) {
             return max(1, min($max, (int) $m[1]));
         }
 
@@ -82,7 +82,7 @@ final class ClubMembershipService
             return null;
         }
 
-        if (preg_match('/^membership_(free|basic|club|top)_\d+m$/', $payment->tariff, $m) === 1) {
+        if (preg_match('/^membership_(free|basic|club|top|standard|professional)_\d+m$/', $payment->tariff, $m) === 1) {
             return MembershipTier::tryFrom($m[1]);
         }
 

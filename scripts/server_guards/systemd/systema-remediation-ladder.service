@@ -1,0 +1,14 @@
+[Unit]
+Description=Systema remediation ladder (W3c — R1 log, R2 restart, R3 clear /tmp, R4 inert)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_SERVER_UPTIME_GUARDRAILS.md
+# ТА ЖЕ причина, что у peer-probe, но здесь она обязательна: лестница чинит в
+# том числе аварии памяти, и, живя в cgroup крона, была бы задушена ровно тем,
+# что обязана лечить.
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/systema-remediation-ladder.sh
+# R2 ждёт восстановления смока до 60 с; потолок с запасом на все четыре ступени.
+TimeoutStartSec=300
+# Лестница имеет право перезапускать сервисы — но не имеет права стать причиной
+# нехватки памяти сама. Свой скромный потолок, свой cgroup.
+MemoryMax=256M

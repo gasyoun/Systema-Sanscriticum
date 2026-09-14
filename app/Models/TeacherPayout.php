@@ -57,6 +57,7 @@ class TeacherPayout extends Model
         return match ($currency) {
             'EUR' => '€',
             'USD' => '$',
+            'INR' => '₹',
             default => (string) $currency,
         };
     }

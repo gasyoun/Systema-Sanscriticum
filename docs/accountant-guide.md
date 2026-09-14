@@ -1,8 +1,9 @@
 # Инструкция для бухгалтера
 
-_Created: 02-07-2026 · Last updated: 21-08-2026_
+_Created: 02-07-2026 · Last updated: 22-08-2026_
+<!-- manuals: enforcement=coverage-test -->  <!-- kept green by AccountantGuideFreshness -->
 
-Операционная книга живёт **в кабинете**, не в этом файле. Откройте панель и пункт **«Как работать бухгалтеру»**:
+Операционная книга и **карта денег школы** живут **в кабинете**, не в этом файле. Откройте панель и пункт **«Как работать бухгалтеру»**:
 
 [https://samskrte.ru/admin/accountant-guide](https://samskrte.ru/admin/accountant-guide)
 
@@ -33,6 +34,8 @@ _Created: 02-07-2026 · Last updated: 21-08-2026_
 | Планирование (шаблоны) | Финансы | Скачать excel-книги |
 | Потоки курса | Финансы | Сравнение потоков, только чтение |
 | Как размечать выплаты | Финансы | Живая очередь, не GitHub |
+| Календарь выплат | Финансы | Кто к какой ISO-неделе (только чтение) |
+| Взаимозачёт | Финансы | Преподаватель = ученик, акт не перевод |
 | Участники по блокам | Пользователи | Кто какой блок оплатил, только чтение |
 | Студенты | — | Только просмотр карточки |
 | Дашборд | — | Сводка |
@@ -47,6 +50,7 @@ _Created: 02-07-2026 · Last updated: 21-08-2026_
 
 - Сценарии расходов: [`MANUAL_EXPENSE_ENTRY_ACCOUNTANT_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_EXPENSE_ENTRY_ACCOUNTANT_RU.md) — канон ввода opex; в книге кабинета те же шаги без живых сумм.
 - Сценарий потоков: [`MANUAL_ACCOUNTANT_COURSE_STREAMS_RU.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_ACCOUNTANT_COURSE_STREAMS_RU.md).
+- Запуск новой группы (витрина, лист набора, плашка анонса, Telegram, касса): [`NEW_GROUP_LAUNCH_CHECKLIST.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/NEW_GROUP_LAUNCH_CHECKLIST.md).
 - Инженерный контур доступа: [`money-access-core-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/money-access-core-manual.md).
 
 _Dr. Mārcis Gasūns_

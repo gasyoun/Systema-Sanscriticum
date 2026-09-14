@@ -1,0 +1,20 @@
+[Unit]
+Description=Re-assert n8n/Caddy container memory and pids limits after Docker starts — H3182
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SERVER_UPTIME_GUARDRAILS_2026H2.md
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Зачем юнит, если `docker update` уже применил числа. Потому что `docker update`
+# живёт ровно до пересоздания контейнера: первый же `docker compose up -d`
+# (законный, человеком, при обновлении образа) поднимет контейнер заново — и
+# числа из compose перекроют или обнулят выставленные вручную. Этот юнит
+# переутверждает их после каждого старта Docker, так что «потолок снялся молча»
+# перестаёт быть возможным состоянием. Идемпотентен: если числа уже те, ничего
+# не делает.
+ExecStart=/usr/local/sbin/n8n-container-limits.sh
+
+[Install]
+WantedBy=multi-user.target

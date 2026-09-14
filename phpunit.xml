@@ -28,6 +28,7 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="REDIS_CLIENT" value="predis"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <!-- Userbot выключен в тестах (локальный .env может ставить =true); тесты,
@@ -38,5 +39,8 @@
         <!-- H1914 server guards: CI is Linux but not prod — never audit host systemd/cron. -->
         <env name="SERVER_GUARDS_VERIFY" value="false"/>
         <env name="CABINET_PROBE_CHECK_GUARDS" value="false"/>
+        <!-- Outbound payment-TLS probe: tests must never hit the real acquiring API
+             (each test enables it explicitly with Http::fake). -->
+        <env name="CABINET_PROBE_CHECK_PAYMENT_TLS" value="false"/>
     </php>
 </phpunit>

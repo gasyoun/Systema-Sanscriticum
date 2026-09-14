@@ -98,16 +98,18 @@ window.lessonHeartbeat = function (config) {
 
         /**
          * Обычная отправка через fetch.
+         *
+         * H4118: время больше не теряется молча — при сбое сети delta остаётся
+         * в accumulatedSeconds (минус только после подтверждённой отправки),
+         * одна немедленная повторная попытка, дальше секунды уйдут со
+         * следующим тиком. sendBeacon-путь без изменений.
          */
         async send() {
             const delta = Math.min(Math.round(this.accumulatedSeconds), MAX_SEND);
             if (delta < 1) return;
 
-            // Сбрасываем сразу — даже если запрос упадёт, не дублируем время
-            this.accumulatedSeconds = 0;
-
-            try {
-                await fetch('/api/heartbeat', {
+            const post = async () => {
+                const res = await fetch('/api/heartbeat', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
@@ -117,8 +119,22 @@ window.lessonHeartbeat = function (config) {
                     },
                     body: JSON.stringify(this.payload(delta, 'tick')),
                 });
+                if (!res.ok) { throw new Error('heartbeat HTTP ' + res.status); }
+            };
+            const commit = () => {
+                this.accumulatedSeconds = Math.max(0, this.accumulatedSeconds - delta);
+            };
+
+            try {
+                await post();
+                commit();
             } catch (e) {
-                // Молчим — не спамим консоль юзеру
+                try {
+                    await post();
+                    commit();
+                } catch (e2) {
+                    // Молчим — не спамим консоль юзера; секунды уйдут следующим тиком
+                }
             }
         },
 

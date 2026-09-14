@@ -72,7 +72,7 @@ Acceptance (decision 16):
 ## §5 — Definition of done for the whole plan
 
 Wave 1a **and** 1b's Laravel-side deliverables (report, API, widget route, all tests) merged to
-`main` via PR, full `php artisan test` suite green, `changelog.md` `[Unreleased]` entries added
+`main` via PR, full `php artisan test` suite green, `CHANGELOG.md` `[Unreleased]` entries added
 for both (per the changelog-cadence rule) and `/cut-release`d. The live WordPress embed
 (pasting the iframe into `samskrtam.ru/raspisanie/`) is tracked separately as a human `@DO` in
 `Uprava/GTD_NEXT_ACTIONS.md`, not part of this plan's own completion criterion — see decision 15.

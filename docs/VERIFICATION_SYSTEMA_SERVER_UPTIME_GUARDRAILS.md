@@ -1,6 +1,6 @@
 # VERIFICATION — Server uptime guardrails: acceptance, drills, and risks
 
-_Created: 19-08-2026 · Last updated: 19-08-2026_
+_Created: 19-08-2026 · Last updated: 25-08-2026_
 
 Acceptance criteria per deliverable, the exact command that proves each, and the risks-and-spikes
 register for
@@ -36,7 +36,7 @@ below runs in a human-present window.
 |---|---|---|
 | `earlyoom` on `.91` | Installed, enabled, thresholds match the conf | `systemctl is-enabled earlyoom; cat /etc/default/earlyoom` |
 | `earlyoom` drill | A deliberate memory hog is SIGTERMed before the kernel OOM-killer fires, and SSH stays responsive throughout | allocate in a loop under `systemd-run --scope`, watch `journalctl -u earlyoom -f` |
-| `/tmp` cap `.91` | `size=2G`, `hindi_audio` removed, swap recovers from 100 % | `findmnt -no OPTIONS /tmp; free -m` |
+| `/tmp` cap `.91` | ~~`size=2G`~~ **невыполнимо из гостя** (H3182, 25-08-2026) — `findmnt` показал `uid=100000`, то есть tmpfs смонтирован ХОСТОМ через idmap LXC, а `df` — 126 ГиБ, половину памяти хоста, а не гостя. Ни remount, ни drop-in, ни fstab не действуют: сторона Proxmox, P5, та же стена, что на `.92`. Выполнимая часть строки: `hindi_audio` удалён и своп сошёл со 100 % | `findmnt -no OPTIONS /tmp; free -m` |
 | Container limits | Both containers report a non-zero memory limit and a pids limit | `docker inspect --format '{{.Name}} {{.HostConfig.Memory}} {{.HostConfig.PidsLimit}}' $(docker ps -q)` |
 | Healthchecks | Both containers report `healthy`, not `none` | `docker inspect --format '{{.Name}} {{.State.Health.Status}}' $(docker ps -q)` |
 | Healthcheck drill | Stopping n8n's HTTP listener flips the container to `unhealthy` within one interval | pause the process inside the container, poll `docker inspect` |

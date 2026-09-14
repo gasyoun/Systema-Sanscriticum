@@ -1,3 +1,5 @@
+_Created: 17-08-2026 · Last updated: 05-09-2026_
+
 # Membership commerce feed and private archives
 
 _H2745 · 17-08-2026 · deploy-dark runbook and acceptance evidence_
@@ -127,3 +129,5 @@ without first archiving them under the applicable retention policy.
 - Screenshots: `docs/evidence/h2745/storefront-*.png`.
 - Public Samudra is untouched; no route, controller, config, or access policy for
   it changed.
+
+_Dr. Mārcis Gasūns_

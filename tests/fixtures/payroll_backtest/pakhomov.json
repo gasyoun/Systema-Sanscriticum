@@ -1,0 +1,18 @@
+{
+ "recipient": "pakhomov",
+ "display": "Пахомов Сергей",
+ "channel": "tochka_maria",
+ "expectation_source": "marina_chat_anchor",
+ "months": [
+  {
+   "month": "2026-05",
+   "anchor": "msg_3501",
+   "on": "2026-05-01",
+   "inputs": {},
+   "expected": {
+    "payable_rub": 34838.0
+   }
+  }
+ ],
+ "note": "Процентный период Пахомова (30% со срезом) без чистого якорного месяца — фикса из реестра."
+}

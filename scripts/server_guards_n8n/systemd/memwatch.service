@@ -1,0 +1,8 @@
+[Unit]
+Description=.91 memory ledger (per-minute avail/swap/tmp/container dump under pressure) — H3182
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/memwatch-n8n.sh
+Nice=19

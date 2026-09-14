@@ -1,6 +1,6 @@
 # Мокап «Курс как дом» (Course workspace) — H822, первое направление
 
-_Created: 12-07-2026 · Last updated: 14-07-2026_
+_Created: 12-07-2026 · Last updated: 05-09-2026_
 
 Первый (не победивший — первый исследуемый, рулинг R18) прототип ремейка студенческого кабинета.
 Направление B из [STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md);
@@ -19,10 +19,10 @@ _Created: 12-07-2026 · Last updated: 14-07-2026_
 
 | Файл | Слой | Что доказывает |
 |---|---|---|
-| [index.html](index.html) | Главная | R5 (продолжить + живое без скролла), R12 (компактный чеклист), R4 (истекший курс ВИДЕН с продлением), R10 (инструменты вторичны) |
-| [course.html](course.html) | Дом курса | R9 (workspace-табы с URL), R6 (бейджи живое/запись «в своем темпе»), F5 (continue на странице курса), единственный оффер в момент прогресса (R2/R17) с «почему закрыто?» на замках |
-| [lesson.html](lesson.html) | Урок | R7 (гибридный прогресс: авто-«просмотрено» + ручное «усвоено»), C-L1 (конспект НАД домашним на мобайле), автосохранение заметок (F8), честный статус доработки |
-| [access.html](access.html) | Доступ + Помощь | R4 (истекший = честное состояние, не долг), «Почему закрыто?» (D §4A), пикер тем с автоконтекстом (R19), web-FAQ (F15), подавление офферов при проблеме доступа (R2) |
+| [index.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace/index.html) | Главная | R5 (продолжить + живое без скролла), R12 (компактный чеклист), R4 (истекший курс ВИДЕН с продлением), R10 (инструменты вторичны) |
+| [course.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace/course.html) | Дом курса | R9 (workspace-табы с URL), R6 (бейджи живое/запись «в своем темпе»), F5 (continue на странице курса), единственный оффер в момент прогресса (R2/R17) с «почему закрыто?» на замках |
+| [lesson.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace/lesson.html) | Урок | R7 (гибридный прогресс: авто-«просмотрено» + ручное «усвоено»), C-L1 (конспект НАД домашним на мобайле), автосохранение заметок (F8), честный статус доработки |
+| [access.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace/access.html) | Доступ + Помощь | R4 (истекший = честное состояние, не долг), «Почему закрыто?» (D §4A), пикер тем с автоконтекстом (R19), web-FAQ (F15), подавление офферов при проблеме доступа (R2) |
 
 ## Маппинг на доказательства
 

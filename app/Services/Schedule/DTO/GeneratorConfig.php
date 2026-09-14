@@ -29,5 +29,6 @@ final class GeneratorConfig
         public readonly array $addDates,
         public readonly ?string $link,
         public readonly bool $preserve,
+        public readonly ?Carbon $overviewDate = null, // H4328: обзорное (не в счёт N), null = нет
     ) {}
 }

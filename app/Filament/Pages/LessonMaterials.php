@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Filament\Pages\LessonMaterials\LessonMaterialsStatsWidget;
+use App\Filament\Resources\LessonResource;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Support\RoleGate;
 use Filament\Pages\Page;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -62,7 +64,9 @@ class LessonMaterials extends Page implements HasTable
             ->defaultGroup('course.title')
             ->defaultSort('lesson_date')
             ->columns([
-                TextColumn::make('title')->label('Урок')->searchable()->wrap()->limit(70),
+                TextColumn::make('title')->label('Урок')->searchable()->wrap()->limit(70)
+                    ->url(fn (Lesson $record): string => LessonResource::getUrl('edit', ['record' => $record]))
+                    ->color('primary'),
 
                 TextColumn::make('block_number')->label('Блок')->alignCenter()->toggleable(),
 
@@ -78,6 +82,10 @@ class LessonMaterials extends Page implements HasTable
                     ->getStateUsing(fn (Lesson $record): string => $record->attachmentsCount() ? (string) $record->attachmentsCount() : '—')
                     ->color(fn (string $state): string => $state === '—' ? 'gray' : 'success')
                     ->tooltip(fn (Lesson $record): ?string => self::attachmentsTooltip($record)),
+
+                TextColumn::make('attachment_names')->label('Файлы')->wrap()->limit(80)
+                    ->getStateUsing(fn (Lesson $record): string => implode(', ', $record->attachmentBasenames()) ?: '—')
+                    ->tooltip(fn (Lesson $record): ?string => ($names = $record->attachmentBasenames()) === [] ? null : implode("\n", $names)),
 
                 IconColumn::make('has_transcript')->label('Транскрипт')->boolean()->alignCenter()
                     ->getStateUsing(fn (Lesson $record): bool => $record->hasTranscript()),
@@ -116,6 +124,13 @@ class LessonMaterials extends Page implements HasTable
 
                 TernaryFilter::make('is_published')->label('Публикация')
                     ->placeholder('Все')->trueLabel('Опубликованные')->falseLabel('Черновики'),
+            ])
+            ->recordUrl(fn (Lesson $record): string => LessonResource::getUrl('edit', ['record' => $record]))
+            ->actions([
+                Action::make('openLesson')
+                    ->label('Открыть урок')
+                    ->icon('heroicon-m-arrow-top-right-on-square')
+                    ->url(fn (Lesson $record): string => LessonResource::getUrl('edit', ['record' => $record])),
             ])
             ->defaultPaginationPageOption(50)
             ->paginated([25, 50, 100, 'all']);

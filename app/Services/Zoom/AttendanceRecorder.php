@@ -46,6 +46,45 @@ class AttendanceRecorder
         ]);
     }
 
+    /**
+     * H3761 — вставка строки Reports API БЕЗ обновления уже существующей.
+     * Отличие от recordReportRow(): при коллизии ключа (schedule_id +
+     * participant_uuid) строка не трогается вовсе. Нужно бэкфилу волны 3,
+     * которому запрещены UPDATE/DELETE в боевых данных: повторный прогон
+     * обязан быть no-op, а не «переписать то, что уже собрано вебхуком».
+     *
+     * @return bool true — строка вставлена; false — уже была или ключ пуст
+     */
+    public function insertReportRowIfMissing(int $scheduleId, array $p): bool
+    {
+        $uuid = $this->participantKey($p);
+        if (trim($uuid, '|') === '') {
+            return false;
+        }
+
+        if (WebinarAttendance::where('schedule_id', $scheduleId)
+            ->where('zoom_participant_uuid', $uuid)
+            ->exists()
+        ) {
+            return false;
+        }
+
+        $email = ! empty($p['user_email']) ? (string) $p['user_email'] : (! empty($p['email']) ? (string) $p['email'] : null);
+
+        WebinarAttendance::create(array_filter([
+            'schedule_id' => $scheduleId,
+            'zoom_participant_uuid' => $uuid,
+            'name' => $p['name'] ?? ($p['user_name'] ?? null),
+            'email' => $email,
+            'user_id' => $email ? User::where('email', User::normalizeEmail($email))->value('id') : null,
+            'joined_at' => $this->parseTime($p['join_time'] ?? null),
+            'left_at' => $this->parseTime($p['leave_time'] ?? null),
+            'duration_seconds' => isset($p['duration']) ? (int) $p['duration'] : null,
+        ], fn ($v) => $v !== null));
+
+        return true;
+    }
+
     private function record(int $scheduleId, string $uuid, array $values): void
     {
         if (trim($uuid, '|') === '') {
@@ -62,6 +101,16 @@ class AttendanceRecorder
             // null-значения не затирают уже записанное (join не сбрасывает left, и наоборот).
             array_filter($values, fn ($v) => $v !== null),
         );
+    }
+
+    /**
+     * Тот же ключ идемпотентности, что использует запись, — но снаружи.
+     * Нужен планировщику бэкфила (H3761), который считает «сколько строк
+     * добавится» ДО того, как что-то писать.
+     */
+    public function participantKeyFor(array $p): string
+    {
+        return $this->participantKey($p);
     }
 
     /** participant_uuid стабилен на подключение; фолбэк — user_id|join_time. */

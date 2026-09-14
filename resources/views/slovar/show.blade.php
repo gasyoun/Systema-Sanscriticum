@@ -75,6 +75,9 @@
         @endforeach
     </div>
 
+    {{-- ═════ Кёльнские словари (CDSL link-out, H3762 wave 1) ═════ --}}
+    @include('partials.slovar-cdsl-links', ['cdslLinks' => $cdslLinks ?? []])
+
     {{-- ═════ Внешние соответствия (sameAs, решение D4 — только при наличии) ═════ --}}
     @if($sameAs->isNotEmpty())
         <div class="max-w-3xl mx-auto mt-6 text-sm text-gray-400">
@@ -99,6 +102,18 @@
             </div>
         </section>
     @endif
+
+    {{-- ═════ Рост-идея #6: «разобрать это слово на курсе» — тихий CTA без дедлайнов ═════ --}}
+    <section class="max-w-3xl mx-auto mt-10">
+        <a href="{{ route('shop.index') }}"
+           class="block bg-[#161b28] border border-gray-700/60 rounded-2xl p-6 hover:border-brand transition-colors group">
+            <div class="font-bold text-white">Хотите читать такие слова сами?</div>
+            <div class="text-sm text-gray-400 mt-1">
+                На курсах Общества ревнителей санскрита санскрит разбирают с нуля — от алфавита до текстов.
+                <span class="text-brand group-hover:underline">Посмотреть курсы</span>
+            </div>
+        </a>
+    </section>
 
     <div class="max-w-3xl mx-auto mt-14 pt-8 border-t border-gray-800">
         <a href="{{ route('slovar.index') }}" class="text-sm font-bold text-gray-400 hover:text-brand transition-colors">

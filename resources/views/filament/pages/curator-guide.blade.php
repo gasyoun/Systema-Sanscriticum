@@ -3,6 +3,16 @@
 @endphp
 
 <x-filament-panels::page>
+    <div class="mb-6 rounded-xl border border-primary-200 dark:border-primary-500/30 bg-primary-50/60 dark:bg-primary-500/10 p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <div class="font-semibold text-gray-900 dark:text-gray-100">Проверка овладения кабинетом</div>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Десять рабочих ситуаций куратора. Порог зачёта — 8 из 10.</p>
+        </div>
+        <x-filament::button tag="a" href="{{ \App\Filament\Pages\CabinetMasteryQuiz::getUrl() }}">
+            Пройти проверку
+        </x-filament::button>
+    </div>
+
     @if ($html === null)
         <p class="text-sm text-gray-600 dark:text-gray-300">
             Руководство не найдено — сообщите администратору.

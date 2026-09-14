@@ -1,0 +1,35 @@
+{
+  "_readme": "ПРИМЕР, не запускать. Живой манифест появится как docs/hiring/pk72_exam_manifest.json в момент заморозки: сначала работы ПК-72 выгружаются (read-only) в gitignored hiring-quarantine/, по ключам проставляются expected_verdict + expected_rationale на все 10 работ, затем `python tools/hiring/pk72_checker_exam.py freeze` хэширует каждый файл и запечатывает манифест. После freeze правки запрещены и детектируются (sha256). Ключи (key_ref) кандидату никогда не передаются.",
+  "role": "pk72-exercise-checker",
+  "pass_k": 0.95,
+  "series_n": 10,
+  "frozen_at": null,
+  "manifest_sha256": "",
+  "works": [
+    {
+      "id": "submission-000101",
+      "lesson": "Занятие II",
+      "assignment_ref": "hiring-quarantine/assignments/submission-000101.md",
+      "work_files": [
+        "hiring-quarantine/works/submission-000101/page-1.jpg"
+      ],
+      "key_ref": "hiring-quarantine/keys/zanyatie-02.md",
+      "expected_verdict": "pass",
+      "expected_rationale": "ключ урока II: перевод совпадает с эталоном по всем пунктам упражнения",
+      "file_sha256": {}
+    },
+    {
+      "id": "submission-000102",
+      "lesson": "Занятие III",
+      "assignment_ref": "hiring-quarantine/assignments/submission-000102.md",
+      "work_files": [
+        "hiring-quarantine/works/submission-000102/page-1.jpg",
+        "hiring-quarantine/works/submission-000102/page-2.jpg"
+      ],
+      "key_ref": "hiring-quarantine/keys/zanyatie-03.md",
+      "expected_verdict": "fail",
+      "expected_rationale": "в работе пропуск двух обязательных предложений из упражнения 2 — по ключу это незачёт",
+      "file_sha256": {}
+    }
+  ]
+}

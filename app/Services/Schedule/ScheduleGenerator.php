@@ -125,6 +125,26 @@ final class ScheduleGenerator
                 }
             });
 
+            // H4328: обзорное занятие (не в счёт N) — отдельная строка с
+            // is_overview=true, в нумерацию занятий не попадает. Перегенерация
+            // (preserve) удаляет будущие строки группы вместе с прошлым
+            // обзорным и пересоздаёт его, если дата снова указана.
+            if ($config->overviewDate !== null) {
+                $overviewStart = $config->overviewDate->copy()->setTimeFromTimeString($config->startTime);
+
+                $created->push(Schedule::create([
+                    'title' => 'Обзорное занятие',
+                    'description' => null,
+                    'link' => $link,
+                    'start' => $overviewStart,
+                    'end' => $overviewStart->copy()->addMinutes($config->durationMinutes),
+                    'color' => '#3788d8',
+                    'group_id' => $config->groupId,
+                    'course_id' => $config->courseId,
+                    'is_overview' => true,
+                ]));
+            }
+
             return $created;
         });
     }

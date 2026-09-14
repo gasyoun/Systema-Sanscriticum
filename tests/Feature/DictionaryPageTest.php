@@ -110,4 +110,20 @@ class DictionaryPageTest extends TestCase
             ->assertOk()
             ->assertSee('/slovar/sat');
     }
+
+    public function test_word_page_carries_course_cta(): void
+    {
+        $this->makeWord();
+
+        $res = $this->get('/slovar/sat')->assertOk();
+        $res->assertSee('Хотите читать такие слова сами?');
+        $res->assertSee(route('shop.index'));
+    }
+
+    public function test_shop_navigation_links_to_dictionary_hub(): void
+    {
+        $this->get('/verify/no-such-certificate')
+            ->assertOk()
+            ->assertSee(route('slovar.index'));
+    }
 }

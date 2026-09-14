@@ -225,6 +225,18 @@ class PaymentResource extends Resource
                             ->default('paid')
                             ->required(),
 
+                        Forms\Components\Select::make('payment_method')
+                            ->label('Способ оплаты')
+                            ->options([
+                                'card' => 'Карта',
+                                'sbp' => 'СБП',
+                                'dolyame' => 'Долями',
+                                'cash' => 'Наличные',
+                            ])
+                            ->native(false)
+                            ->placeholder('Не задан (Точка проставит сама)')
+                            ->helperText('Для наличных и прочих ручных проводок ставьте явно. Карта/СБП/Долями приходят с вебхука Точки — не затирайте, если уже стоят.'),
+
                         Forms\Components\TextInput::make('transaction_id')
                             ->label('ID транзакции (Банк / Расход)')
                             ->maxLength(255),
@@ -412,12 +424,14 @@ class PaymentResource extends Resource
                         'card' => 'info',
                         'sbp' => 'success',
                         'dolyame' => 'warning',
+                        'cash' => 'gray',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?string $state): string => match ($state) {
                         'card' => 'Карта',
                         'sbp' => 'СБП',
                         'dolyame' => 'Долями',
+                        'cash' => 'Наличные',
                         default => (string) $state,
                     })
                     ->placeholder('—')
@@ -493,6 +507,7 @@ class PaymentResource extends Resource
                         'card' => 'Карта',
                         'sbp' => 'СБП',
                         'dolyame' => 'Долями (рассрочка)',
+                        'cash' => 'Наличные',
                         'unknown' => 'Не определён',
                     ])
                     ->query(fn ($query, array $data) => $query->when(
@@ -508,9 +523,38 @@ class PaymentResource extends Resource
                     ->query(fn ($query) => $query->paypalPending())
                     ->toggle(),
 
+                // Авто-доверенные PayPal-заявки своих учеников (ruling 22-08-2026):
+                // доступ выдан сразу, здесь — очередь ВЫБОРОЧНОЙ сверки пост-фактум.
+                // Просмотренные (verified_at) из очереди исчезают.
+                Tables\Filters\Filter::make('paypal_unverified')
+                    ->label('PayPal: без сверки')
+                    ->query(fn ($query) => $query->paypalUnverified())
+                    ->toggle(),
+
                 Tables\Filters\Filter::make('invoice_pending')
                     ->label('Счета юрлиц на проверке')
                     ->query(fn ($query) => $query->invoicePending())
+                    ->toggle(),
+
+                // Банковские заявки студентов (SEPA/SWIFT, H3497) — ручная сверка
+                // поступления по выписке получателя.
+                Tables\Filters\Filter::make('bank_sepa_pending')
+                    ->label('SEPA-заявки на проверке')
+                    ->query(fn ($query) => $query->bankSepaPending())
+                    ->toggle(),
+
+                // Заявки «заплатил преподавателю напрямую» (H4627) — сверка по
+                // выписке преподавателя; подтверждение вычтет номинал из гонорара.
+                Tables\Filters\Filter::make('teacher_transfer_pending')
+                    ->label('Оплаты преподавателю на проверке')
+                    ->query(fn ($query) => $query->teacherTransferPending())
+                    ->toggle(),
+
+                // Авто-доверенные банковские заявки своих (зеркало «PayPal: без
+                // сверки»): очередь выборочной сверки пост-фактум.
+                Tables\Filters\Filter::make('bank_unverified')
+                    ->label('SEPA: без сверки')
+                    ->query(fn ($query) => $query->bankUnverified())
                     ->toggle(),
 
                 Tables\Filters\TernaryFilter::make('is_deposit')
@@ -576,6 +620,36 @@ class PaymentResource extends Resource
                         .'. После подтверждения студенту откроется доступ и (для новых аккаунтов) уйдёт пароль на email.')
                     ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
 
+                // Выборочная сверка авто-доверенной заявки: платеж нашли в личном
+                // PayPal — снимаем с очереди «без сверки» (verified_at).
+                Tables\Actions\Action::make('markPaypalVerified')
+                    ->label('Сверка пройдена')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (Payment $record) => $record->isAutoTrustedPaypal() && $record->claimMeta('verified_at') === null)
+                    ->requiresConfirmation()
+                    ->modalHeading('Сверка пройдена')
+                    ->modalDescription(fn (Payment $record): string => 'Платеж найден в личном PayPal: с '
+                        .($record->claimMeta('paypal_payer') ?: '—')
+                        .', дата '.($record->claimMeta('paid_on') ?: '—')
+                        .', сумма '.($record->foreignAmountLabel() ?: '—')
+                        .'. Заявка уйдет из очереди «PayPal: без сверки».')
+                    ->action(fn (Payment $record) => $record->markPaypalVerified()),
+
+                // Платеж так и не нашелся: отзываем авто-доверие. canceled на paid
+                // запускает штатный откат — доступ закрывается, финансы пересчитываются.
+                Tables\Actions\Action::make('rejectPaypalClaim')
+                    ->label('Нет платежа — отменить')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Payment $record) => $record->isAutoTrustedPaypal()
+                        && in_array($record->status, Payment::PAID_STATUSES, true)
+                        && $record->claimMeta('verified_at') === null)
+                    ->requiresConfirmation()
+                    ->modalHeading('Отменить заявку без подтверждения')
+                    ->modalDescription('Платеж не найден в личном PayPal. Доступ будет отозван, запись в финансах отменена. Студенту стоит написать, почему доступ закрылся.')
+                    ->action(fn (Payment $record) => $record->update(['status' => 'canceled'])),
+
                 Tables\Actions\Action::make('confirmInvoice')
                     ->label('Подтвердить счет')
                     ->icon('heroicon-o-building-office-2')
@@ -590,6 +664,115 @@ class PaymentResource extends Resource
                         .', '.number_format((float) $record->amount, 0, '.', ' ').' ₽. '
                         .'После подтверждения откроется доступ.')
                     ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                // H4627: заявка «заплатил преподавателю напрямую» после сверки
+                // по выписке преподавателя. paid запускает штатный конвейер
+                // (доступ) + вычет номинала из гонорара получателя (H4597).
+                Tables\Actions\Action::make('confirmTeacherTransfer')
+                    ->label('Подтвердить перевод преподавателю')
+                    ->icon('heroicon-o-academic-cap')
+                    ->color('success')
+                    ->visible(fn (Payment $record) => $record->isTeacherTransfer() && $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Подтвердить оплату напрямую преподавателю')
+                    ->modalDescription(function (Payment $record): string {
+                        $ref = $record->claimMeta('reference');
+
+                        // H4627: двойное занесение — реальный риск (платёж могли
+                        // внести вручную до анкеты). Показываем уже зачтённые
+                        // прямые оплаты этого ученика за 60 дней.
+                        $prior = Payment::query()
+                            ->priorDirectForUser((int) $record->user_id, (int) $record->id)
+                            ->with('receivedByTeacher')
+                            ->orderByDesc('created_at')
+                            ->limit(5)
+                            ->get();
+
+                        $dupes = $prior->isEmpty()
+                            ? ''
+                            : "\n\n⚠️ Ученик уже имеет зачтённые прямые оплаты за 60 дней — проверьте, не дубль ли это:\n"
+                                .$prior->map(fn (Payment $p): string => '· '
+                                    .$p->created_at?->format('d.m.Y').' — '
+                                    .($p->receivedByTeacher?->name ?? '—').' — '
+                                    .($p->foreignAmountLabel() ?: number_format((float) $p->amount, 0, '.', ' ').' ₽')
+                                )->implode("\n");
+
+                        return 'Сверьте по выписке получателя перевода (счёт преподавателя или посредника, напр. Лейтан); оплата зачтётся за курс преподавателя '
+                            .$record->receivedByTeacher?->name.': от '
+                            .($record->claimMeta('sender_name') ?: '—')
+                            .', дата '.($record->claimMeta('paid_on') ?: '—')
+                            .', сумма '.($record->foreignAmountLabel() ?: '—')
+                            .($ref ? ', референция '.$ref : '')
+                            .'. После подтверждения студенту откроется доступ, а номинал вычтется из гонорара преподавателя.'
+                            .$dupes;
+                    })
+                    ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                // H4627: поступление не нашлось в выписке преподавателя —
+                // отклоняем заявку (pending → canceled, доступ не открывался,
+                // гонорар не затронут).
+                Tables\Actions\Action::make('rejectTeacherTransfer')
+                    ->label('Нет платежа — отклонить')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Payment $record) => $record->isTeacherTransfer() && $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Отклонить заявку')
+                    ->modalDescription('Поступление не найдено в выписке преподавателя. Заявка будет отменена — доступ не открывался, гонорар не затронут. Студенту стоит написать, почему заявка отклонена.')
+                    ->action(fn (Payment $record) => $record->update(['status' => 'canceled'])),
+
+                // H3497: SEPA-заявка после сверки поступления по выписке получателя.
+                Tables\Actions\Action::make('confirmBankSepa')
+                    ->label('Подтвердить перевод')
+                    ->icon('heroicon-o-building-library')
+                    ->color('success')
+                    ->visible(fn (Payment $record) => $record->isBankSepa() && $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->modalHeading('Подтвердить банковский перевод')
+                    ->modalDescription(function (Payment $record): string {
+                        $ref = $record->claimMeta('reference');
+
+                        return 'Сверьте по выписке получателя: от '
+                            .($record->claimMeta('sender_name') ?: '—')
+                            .', дата '.($record->claimMeta('paid_on') ?: '—')
+                            .', сумма '.($record->foreignAmountLabel() ?: '—')
+                            .($ref ? ', референция '.$ref : '')
+                            .'. После подтверждения студенту откроется доступ и (для новых аккаунтов) уйдёт пароль на email.';
+                    })
+                    ->action(fn (Payment $record) => $record->update(['status' => 'paid'])),
+
+                // H3497: выборочная сверка авто-доверенной SEPA-заявки (зеркало PayPal).
+                Tables\Actions\Action::make('markBankVerified')
+                    ->label('Сверка пройдена')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (Payment $record) => $record->isAutoTrustedBankClaim() && $record->claimMeta('verified_at') === null)
+                    ->requiresConfirmation()
+                    ->modalHeading('Сверка пройдена')
+                    ->modalDescription(fn (Payment $record): string => 'Поступление найдено в выписке: от '
+                        .($record->claimMeta('sender_name') ?: '—')
+                        .', дата '.($record->claimMeta('paid_on') ?: '—')
+                        .', сумма '.($record->foreignAmountLabel() ?: '—')
+                        .'. Заявка уйдет из очереди «SEPA: без сверки».')
+                    ->action(function (Payment $record): void {
+                        $meta = is_array($record->claim_meta) ? $record->claim_meta : [];
+                        $meta['verified_at'] = now()->toIso8601String();
+                        $record->update(['claim_meta' => $meta]);
+                    }),
+
+                // H3497: поступление не нашлось — отзываем авто-доверие (штатный
+                // откат canceled на paid).
+                Tables\Actions\Action::make('rejectBankClaim')
+                    ->label('Нет платежа — отменить')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Payment $record) => $record->isAutoTrustedBankClaim()
+                        && in_array($record->status, Payment::PAID_STATUSES, true)
+                        && $record->claimMeta('verified_at') === null)
+                    ->requiresConfirmation()
+                    ->modalHeading('Отменить заявку без подтверждения')
+                    ->modalDescription('Поступление не найдено в выписке получателя. Доступ будет отозван, запись в финансах отменена. Студенту стоит написать, почему доступ закрылся.')
+                    ->action(fn (Payment $record) => $record->update(['status' => 'canceled'])),
 
                 Tables\Actions\Action::make('viewInvoice')
                     ->label('Счет')

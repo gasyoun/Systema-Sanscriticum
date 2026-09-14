@@ -31,6 +31,7 @@ class StorefrontAnalyticsController extends Controller
                 experiment: StorefrontAnalyticsEvent::EXPERIMENT_NEXT_STEP,
                 request: $request,
                 course: $from,
+                variant: FlagshipExperiments::ctaVariant($request),
                 target: $target,
             );
         }

@@ -22,11 +22,18 @@ class CabinetMasteryTest extends TestCase
     {
         $this->assertBankSound(CabinetMastery::AUDIENCE_CURATOR);
         $this->assertBankSound(CabinetMastery::AUDIENCE_STUDENT);
+        $this->assertBankSound(CabinetMastery::AUDIENCE_TEACHER);
+        $this->assertBankSound(CabinetMastery::AUDIENCE_ACCOUNTANT);
     }
 
     public function test_all_correct_answers_pass(): void
     {
-        foreach ([CabinetMastery::AUDIENCE_CURATOR, CabinetMastery::AUDIENCE_STUDENT] as $audience) {
+        foreach ([
+            CabinetMastery::AUDIENCE_CURATOR,
+            CabinetMastery::AUDIENCE_STUDENT,
+            CabinetMastery::AUDIENCE_TEACHER,
+            CabinetMastery::AUDIENCE_ACCOUNTANT,
+        ] as $audience) {
             $bank = CabinetMastery::bank($audience);
             $answers = [];
             foreach ($bank['questions'] as $question) {
@@ -71,7 +78,7 @@ class CabinetMasteryTest extends TestCase
         $manager = User::factory()->create(['role' => Roles::MANAGER]);
         $this->actingAs($manager);
         $this->assertTrue(CabinetMasteryQuiz::canAccess());
-        $this->get(CabinetMasteryQuiz::getUrl())->assertOk()->assertSee('Проверка: кабинет глазами куратора', false);
+        $this->get(CabinetMasteryQuiz::getUrl())->assertOk()->assertSee('Проверка овладения кабинетом', false);
 
         $teacher = User::factory()->create(['role' => Roles::TEACHER]);
         $this->actingAs($teacher);

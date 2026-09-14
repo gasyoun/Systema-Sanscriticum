@@ -9,6 +9,7 @@ use App\Filament\Exports\TeacherSalariesExporter;
 use App\Filament\Resources\TeacherPayoutResource;
 use App\Filament\Resources\TeacherResource;
 use App\Filament\Widgets\TeacherSalariesTotalWidget;
+use App\Filament\Widgets\TochkaClosingAvailableWidget;
 use App\Mail\TeacherPayoutReportMail;
 use App\Models\Course;
 use App\Models\CourseBlock;
@@ -83,7 +84,7 @@ class TeacherSalaries extends Page implements HasTable
 
     protected function getHeaderWidgets(): array
     {
-        return [TeacherSalariesTotalWidget::class];
+        return [TochkaClosingAvailableWidget::class, TeacherSalariesTotalWidget::class];
     }
 
     /**

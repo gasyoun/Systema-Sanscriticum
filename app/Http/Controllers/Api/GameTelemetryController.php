@@ -29,6 +29,25 @@ use Illuminate\Support\Facades\Schema;
  */
 class GameTelemetryController extends Controller
 {
+    /**
+     * H3315 — серверная таблица очков /lila по типу события. Единственный
+     * источник очков лидерборда: payload.score клиента больше не читается
+     * вовсе (раньше им можно было накрутить ранг вплоть до cap 500/событие).
+     * COMPLETE сохраняет прежний базовый тариф 10 (= config
+     * leaderboards.lila_complete_points, нигде не переопределявшийся);
+     * остальные события в борд не пишутся (0) — место в таблице под них
+     * зарезервировано явно.
+     */
+    private const EVENT_POINTS = [
+        GameEvent::START => 0,
+        GameEvent::COMPLETE => 10,
+        GameEvent::GATE_SHOWN => 0,
+        GameEvent::GATE_CTA_CLICK => 0,
+        GameEvent::ITEM_SEEN => 0,
+        // H4396 — бюджетный счётчик бесплатных раундов; в борд не пишется.
+        GameEvent::ROUND => 0,
+    ];
+
     public function store(Request $request): JsonResponse
     {
         $event = (string) $request->input('event', '');
@@ -66,15 +85,15 @@ class GameTelemetryController extends Controller
 
         // H2052 — authenticated completes feed the /lila leaderboards (separate
         // table so game_events stay anonymous / 152-FZ clean).
+        //
+        // H3315 — очки СЕРВЕРНЫЕ: таблица EVENT_POINTS по типу события,
+        // клиентский payload.score игнорируется полностью. Cap 500 оставлен
+        // как страховка (belt-and-braces) на случай будущего роста тарифов.
         if ($user !== null
             && $event === GameEvent::COMPLETE
             && Schema::hasTable('lila_score_events')) {
             try {
-                $points = (int) config('leaderboards.lila_complete_points', 10);
-                $payloadScore = $request->input('payload.score');
-                if (is_numeric($payloadScore) && (int) $payloadScore > 0) {
-                    $points = min(500, (int) $payloadScore);
-                }
+                $points = min(500, self::EVENT_POINTS[$event] ?? 0);
                 LilaScoreEvent::create([
                     'user_id' => $user->id,
                     'drill' => $drill,
@@ -117,18 +136,31 @@ class GameTelemetryController extends Controller
 
     /**
      * H1680 — `item_seen` только: до 20 {iast, ru} пар, обе стороны отрезаны
-     * до безопасной длины через тот же {@see slug()}. Любое другое имя
-     * события или отсутствие валидного payload.items -> null (не пишем
+     * до безопасной длины через тот же {@see slug()}. H4692 добавил
+     * `item_result` ({@see itemResultPayload()}). Любое другое имя
+     * события или отсутствие валидного payload -> null (не пишем
      * пустой json без нужды).
-     *
-     * @return array{items: list<array{iast:string, ru:string}>}|null
      */
     private function payload(Request $request, string $event): ?array
     {
-        if ($event !== GameEvent::ITEM_SEEN) {
-            return null;
+        if ($event === GameEvent::ITEM_SEEN) {
+            return $this->itemSeenPayload($request);
         }
 
+        if ($event === GameEvent::ITEM_RESULT) {
+            return $this->itemResultPayload($request);
+        }
+
+        return null;
+    }
+
+    /**
+     * H1680 — до 20 {iast, ru} пар, iast обязателен.
+     *
+     * @return array{items: list<array{iast:string, ru:string}>}|null
+     */
+    private function itemSeenPayload(Request $request): ?array
+    {
         $items = $request->input('payload.items');
         if (! is_array($items)) {
             return null;
@@ -147,5 +179,48 @@ class GameTelemetryController extends Controller
         }
 
         return $clean === [] ? null : ['items' => $clean];
+    }
+
+    /**
+     * H4692 — до 40 {l, r, ms, wrong} строк на завершённый match-раунд.
+     * l/r — тексты пар (контент тренажёра, без PII), обрезаны тем же
+     * {@see slug()}; ms зажат 0..3 600 000 (час), wrong 0..50; hints —
+     * флаг подсказок, нормализуется до 0|1.
+     *
+     * @return array{hints: int, items: list<array{l: string, r: string, ms: int, wrong: int}>}|null
+     */
+    private function itemResultPayload(Request $request): ?array
+    {
+        $items = $request->input('payload.items');
+        if (! is_array($items)) {
+            return null;
+        }
+
+        $clean = [];
+        foreach (array_slice($items, 0, 40) as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+            $l = $this->slug($item['l'] ?? null, 160);
+            $r = $this->slug($item['r'] ?? null, 160);
+            if ($l === null || $r === null) {
+                continue;
+            }
+            $clean[] = [
+                'l' => $l,
+                'r' => $r,
+                'ms' => max(0, min(3_600_000, (int) ($item['ms'] ?? 0))),
+                'wrong' => max(0, min(50, (int) ($item['wrong'] ?? 0))),
+            ];
+        }
+
+        if ($clean === []) {
+            return null;
+        }
+
+        return [
+            'hints' => (int) $request->input('payload.hints') === 1 ? 1 : 0,
+            'items' => $clean,
+        ];
     }
 }

@@ -1,0 +1,49 @@
+{
+ "recipient": "kravchenko",
+ "display": "Кравченко Иван",
+ "channel": "tochka_ip_gasuns",
+ "expectation_source": "maria_payment_rows",
+ "months": [
+  {
+   "month": "2026-02",
+   "anchor": "rows_3142+3225",
+   "on": "2026-02-09",
+   "inputs": {
+    "premium_rub": [
+     10650.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 27680.0
+   }
+  },
+  {
+   "month": "2026-03",
+   "anchor": "rows_3324+3421",
+   "on": "2026-03-10",
+   "inputs": {
+    "premium_rub": [
+     10000.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 27030.0
+   }
+  },
+  {
+   "month": "2026-04",
+   "anchor": "rows_3449+3450",
+   "on": "2026-04-13",
+   "inputs": {
+    "premium_rub": [
+     5320.0,
+     17021.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 39371.0
+   }
+  }
+ ],
+ "note": "База 17 030 ₽/мес (якорь A4) + премии отдельными строками по записям Марии."
+}

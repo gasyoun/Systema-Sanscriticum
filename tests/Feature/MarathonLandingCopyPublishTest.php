@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\ProcessTelegramMagnetUpdate;
 use App\Models\LandingPage;
 use App\Models\MarketingSetting;
 use App\Support\MarathonLandingCopy;
+use App\Support\TelegramChannelEcho;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -174,5 +176,88 @@ class MarathonLandingCopyPublishTest extends TestCase
 
         Http::assertSentCount(2);
         Carbon::setTestNow();
+    }
+
+    /**
+     * H3617 — cross-sender dedup: identical text already echoed from the
+     * channel (Telegram-native scheduled post, manual admin post) → refuse
+     * the live send, no Telegram call, no markSent row.
+     */
+    public function test_live_send_refused_when_channel_echo_saw_identical_text(): void
+    {
+        Http::fake();
+
+        $text = MarathonLandingCopy::resolvePostText(1);
+        TelegramChannelEcho::record('@samskrte', $text, 602);
+
+        $this->artisan('marathon:publish-channel-posts', ['--post' => '1', '--live' => true])
+            ->assertSuccessful()
+            ->expectsOutputToContain('echo sensor');
+
+        Http::assertNothingSent();
+        $this->assertSame(
+            0,
+            DB::table('marathon_channel_posts_sent')->where('post_number', 1)->count()
+        );
+    }
+
+    /** H3617 — echo refusal is per-text: a different text still sends. */
+    public function test_echo_of_a_different_text_does_not_block_the_send(): void
+    {
+        Http::fake([
+            'api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        TelegramChannelEcho::record('@samskrte', 'Совершенно другой текст поста', 601);
+
+        $this->artisan('marathon:publish-channel-posts', ['--post' => '1', '--live' => true])
+            ->assertSuccessful();
+
+        Http::assertSentCount(1);
+    }
+
+    /** H3617 — refusal window is 24 h: an older echo no longer blocks. */
+    public function test_echo_older_than_24_hours_does_not_block_the_send(): void
+    {
+        Http::fake([
+            'api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+
+        Carbon::setTestNow(Carbon::parse('2026-08-28 10:00:05'));
+        $text = MarathonLandingCopy::resolvePostText(1);
+        TelegramChannelEcho::record('@samskrte', $text, 602);
+
+        Carbon::setTestNow(Carbon::parse('2026-08-29 10:00:06')); // 25h later
+        $this->artisan('marathon:publish-channel-posts', ['--post' => '1', '--live' => true])
+            ->assertSuccessful();
+
+        Http::assertSentCount(1);
+        Carbon::setTestNow();
+    }
+
+    /** H3617 — the magnet webhook job records a channel_post echo. */
+    public function test_magnet_webhook_job_records_channel_post_echo(): void
+    {
+        $update = [
+            'update_id' => 231995323,
+            'channel_post' => [
+                'message_id' => 602,
+                'sender_chat' => ['id' => -1001762848803, 'type' => 'channel'],
+                'chat' => ['id' => -1001762848803, 'title' => 'samskrte', 'type' => 'channel'],
+                'date' => 1787900405,
+                'text' => 'Консультация по онлайн-курсам открыта 👋',
+            ],
+        ];
+
+        (new ProcessTelegramMagnetUpdate($update))->handle();
+
+        $this->assertTrue(TelegramChannelEcho::seenRecently('-1001762848803', 'Консультация по онлайн-курсам открыта 👋'));
+        // Non-text channel posts (no text/caption) are silently skipped.
+        (new ProcessTelegramMagnetUpdate([
+            'update_id' => 231995324,
+            'channel_post' => ['message_id' => 603, 'chat' => ['id' => -1001762848803, 'type' => 'channel']],
+        ]))->handle();
+
+        $this->assertFalse(TelegramChannelEcho::seenRecently('-1001762848803', ''));
     }
 }

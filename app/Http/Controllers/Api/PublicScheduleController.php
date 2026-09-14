@@ -35,6 +35,9 @@ class PublicScheduleController extends Controller
         $cacheKey = 'public_schedule:'.md5(json_encode([
             'direction' => $direction,
             'teacher' => $teacher,
+            // Флаг виджета записи (H3248) в ключе: включение/выключение
+            // CRM_TRIAL_WIDGET_PUBLIC действует сразу, без окна устаревшего кэша.
+            'trial_widget' => (bool) config('features.crm_trial_widget_public'),
         ]));
 
         $data = Cache::remember(

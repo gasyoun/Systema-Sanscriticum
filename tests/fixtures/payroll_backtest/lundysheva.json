@@ -1,0 +1,17 @@
+{
+ "recipient": "lundysheva",
+ "display": "Лундышева Ольга",
+ "channel": "tochka_maria",
+ "expectation_source": "marina_chat_anchor",
+ "months": [
+  {
+   "month": "2026-04",
+   "anchor": "msg_3467",
+   "on": "2026-04-20",
+   "inputs": {},
+   "expected": {
+    "payable_rub": 20000.0
+   }
+  }
+ ]
+}

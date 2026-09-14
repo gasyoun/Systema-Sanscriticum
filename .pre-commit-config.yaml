@@ -13,7 +13,7 @@ repos:
   - repo: local
     hooks:
       - id: changelog-duplicate-bullets
-        name: changelog.md has no duplicated bullets
+        name: CHANGELOG.md has no duplicated bullets
         entry: python scripts/changelog_duplicate_bullets.py
         language: system
         files: ^changelog\.md$

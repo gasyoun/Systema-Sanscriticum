@@ -23,7 +23,13 @@ final class LeadMagnetDispatcher
     {
         $landing = $lead->landingPage;
 
-        if (! $landing || ! $landing->hasScheduledWebinar() || $landing->isMagnetWindowOpen()) {
+        // H3339: magnet_token бывает и у подписчиков статусов (без файла) —
+        // в файловый конвейер идут только лендинги с настоящим магнитом.
+        if (! $landing || ! $landing->hasLeadMagnet()) {
+            return;
+        }
+
+        if (! $landing->hasScheduledWebinar() || $landing->isMagnetWindowOpen()) {
             SendLeadMagnet::dispatch($lead->id, $channel);
         }
         // иначе: до окна — выдаст планировщик; после старта — не выдаём.

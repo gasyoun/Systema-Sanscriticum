@@ -62,38 +62,30 @@
             align-self: start !important;
         }
         .lesson-side-col.has-tabs {
+            /* H4118: dvh с vh-фолбэком — 100vh на iPhone Safari включает панель браузера */
             max-height: calc(100vh - 3rem);
+            max-height: calc(100dvh - 3rem);
         }
     }
 </style>
 
 @php
     $recordingAllowed = $recordingAccess->allowed ?? true;
-    // --- УМНЫЙ ПАРСЕР ССЫЛОК YOUTUBE ---
-    $cleanYoutubeId = null;
-    $rawYoutube = $recordingAllowed ? ($youtubeId ?? $lesson->youtube_url ?? null) : null;
-    if (!empty($rawYoutube)) {
-        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $rawYoutube, $match)) {
-            $cleanYoutubeId = $match[1];
-        } else {
-            $cleanYoutubeId = $rawYoutube;
-        }
-    }
-
-    // --- УМНЫЙ ПАРСЕР ССЫЛОК RUTUBE ---
-    $cleanRutubeId = null;
-    $rawRutube = $recordingAllowed ? ($rutubeId ?? $lesson->rutube_url ?? null) : null;
-    if (!empty($rawRutube)) {
-        if (preg_match('/rutube\.ru\/(?:video|play\/embed)\/([a-zA-Z0-9_-]+)/i', $rawRutube, $match)) {
-            $cleanRutubeId = $match[1];
-        } else {
-            $cleanRutubeId = $rawRutube;
-        }
-    }
-
-    // --- Kinescope pilot (H1451 W3): only when flag + pilot course + video_url ---
+    // --- H4396: сырые unlisted-ID больше не попадают в HTML («гейт на странице,
+    // не на видео», census PAYWALL_CENSUS_2026-09-08 §A3). Плеер грузит серверные
+    // ворота /c/{slug}/u/{id}/video/{player} (RecordingGateController): каждый
+    // проигрыш заново проходит грант/группу/оплату/H3916-членство, и только тогда
+    // страница получает 302 на embed. Здесь считается только ДОСТУПНОСТЬ плееров.
+    $hasYoutube = $recordingAllowed
+        && \App\Http\Controllers\StudentController::parseVideoId($lesson->youtube_url, 'youtube') !== null;
+    $hasRutube = $recordingAllowed
+        && \App\Http\Controllers\StudentController::parseVideoId($lesson->rutube_url, 'rutube') !== null;
+    $gateUrl = fn (string $player): string => route('student.recording.gate', [$course->slug, $lesson->id, $player]);
+    $gateYoutube = $hasYoutube ? $gateUrl('youtube') : null;
+    $gateRutube = $hasRutube ? $gateUrl('rutube') : null;
     $kinescopeEmbedUrl = $recordingAllowed ? ($kinescopeEmbedUrl ?? null) : null;
     $kinescopePilotActive = !empty($kinescopeEmbedUrl);
+    $gateKinescope = $kinescopePilotActive ? $gateUrl('kinescope') : null;
 
     // --- ПАРСЕР ТАЙМКОДОВ ---
     // function_exists-guard: вью включается дважды в одном PHP-процессе (например,
@@ -121,7 +113,7 @@
 {{-- ========================================== --}}
 <div class="lesson-layout relative"
      x-data="{
-         player: '{{ $kinescopePilotActive ? 'kinescope' : ($cleanRutubeId ? 'rutube' : ($cleanYoutubeId ? 'youtube' : 'none')) }}',
+         player: '{{ $kinescopePilotActive ? 'kinescope' : ($hasRutube ? 'rutube' : ($hasYoutube ? 'youtube' : 'none')) }}',
          currentTime: 0,
          videoDuration: {{ $resumeDuration ?? 'null' }},
          videoResumeEnabled: {{ $videoResumeEnabled ? 'true' : 'false' }},
@@ -238,22 +230,22 @@
         {{-- ВИДЕОПЛЕЕР --}}
         <div class="w-full bg-[#19191C] rounded-[24px] overflow-hidden shadow-2xl border border-gray-200/50 relative z-40">
             <div class="relative aspect-video w-full bg-black">
-                @if($cleanYoutubeId)
-                    <iframe x-show="player === 'youtube'" 
-                            id="youtube-player" 
-                            src="https://www.youtube.com/embed/{{ $cleanYoutubeId }}?enablejsapi=1&rel=0" 
-                            class="w-full h-full absolute inset-0" 
-                            allowfullscreen 
+                @if($hasYoutube)
+                    <iframe x-show="player === 'youtube'"
+                            id="youtube-player"
+                            src="{{ $gateYoutube }}"
+                            class="w-full h-full absolute inset-0"
+                            allowfullscreen
                             allow="autoplay; encrypted-media">
                     </iframe>
                 @endif
-                
-                @if($cleanRutubeId)
-                    <iframe x-show="player === 'rutube'" 
-                            id="rutube-player" 
-                            src="https://rutube.ru/play/embed/{{ $cleanRutubeId }}" 
-                            class="w-full h-full absolute inset-0" 
-                            allowfullscreen 
+
+                @if($hasRutube)
+                    <iframe x-show="player === 'rutube'"
+                            id="rutube-player"
+                            src="{{ $gateRutube }}"
+                            class="w-full h-full absolute inset-0"
+                            allowfullscreen
                             allow="autoplay; encrypted-media">
                     </iframe>
                 @endif
@@ -261,7 +253,7 @@
                 @if($kinescopePilotActive)
                     <iframe x-show="player === 'kinescope'"
                             id="kinescope-player"
-                            src="{{ $kinescopeEmbedUrl }}"
+                            src="{{ $gateKinescope }}"
                             class="w-full h-full absolute inset-0"
                             allowfullscreen
                             allow="autoplay; fullscreen; picture-in-picture; encrypted-media; gyroscope; accelerometer; clipboard-write;"
@@ -340,12 +332,12 @@
                             <i class="fas fa-film mr-2 text-sm"></i> Kinescope
                         </button>
                     @endif
-                    @if($cleanRutubeId && ($cleanYoutubeId || $kinescopePilotActive))
+                    @if($hasRutube && ($hasYoutube || $kinescopePilotActive))
                         <button type="button" @click="player = 'rutube'" :class="player === 'rutube' ? 'bg-[#0057b7] text-white shadow-[0_0_15px_rgba(0,87,183,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
                             <img src="https://rutube.ru/favicon.ico" :class="player === 'rutube' ? '' : 'opacity-50 grayscale'" class="w-3.5 h-3.5 mr-2 transition-all"> RuTube
                         </button>
                     @endif
-                    @if($cleanYoutubeId && ($cleanRutubeId || $kinescopePilotActive))
+                    @if($hasYoutube && ($hasRutube || $kinescopePilotActive))
                         <button type="button" @click="player = 'youtube'" :class="player === 'youtube' ? 'bg-[#ff0000] text-white shadow-[0_0_15px_rgba(255,0,0,0.4)]' : 'bg-[#252529] text-gray-400 hover:text-white'" class="flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300">
                             <i class="fab fa-youtube mr-2 text-sm" :class="player === 'youtube' ? 'text-white' : 'text-gray-500'"></i> YouTube
                         </button>
@@ -532,6 +524,23 @@
                 <span class="min-w-0 flex-1">
                     <span class="block text-sm font-extrabold text-gray-900">Упражнения</span>
                     <span class="block text-sm text-gray-500">Из расшифровки этого занятия — вставить слово или перевести</span>
+                </span>
+                <i class="fas fa-chevron-right text-gray-300"></i>
+            </a>
+        </section>
+        @endif
+
+        {{-- H3521: Learn Your Way — вкладка рендерится только при LYW_ENABLED (default OFF). --}}
+        @if(!empty($lywUrl))
+        <section class="font-nunito" data-testid="lyw-lesson-tab">
+            <a href="{{ $lywUrl }}"
+               class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6 flex items-center gap-4 hover:border-brand/30 hover:shadow-lg transition-all">
+                <span class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <i class="fas fa-route"></i>
+                </span>
+                <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-extrabold text-gray-900">Learn Your Way</span>
+                    <span class="block text-sm text-gray-500">Персональный разбор занятия: текст под ваш уровень и интерес, вопросы, мнемоники, mind map</span>
                 </span>
                 <i class="fas fa-chevron-right text-gray-300"></i>
             </a>
@@ -732,7 +741,7 @@
                                     </p>
                                 </div>
                             </div>
-                            <a href="{{ asset('storage/' . $file) }}" download target="_blank" class="ml-3 w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-400 hover:text-white hover:bg-blue-500 hover:border-blue-500 transition-colors shadow-sm shrink-0" title="Скачать">
+                            <a href="{{ route('student.lesson.material', [$course->slug, $lesson->id, basename($file)]) }}" download target="_blank" class="ml-3 w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-400 hover:text-white hover:bg-blue-500 hover:border-blue-500 transition-colors shadow-sm shrink-0" title="Скачать">
                                 <i class="fas fa-download text-xs"></i>
                             </a>
                         </div>
@@ -740,15 +749,15 @@
                         @if($isAudio)
                             <div class="px-4 pb-4 pt-1">
                                 <audio controls class="w-full h-8 custom-audio-player outline-none">
-                                    <source src="{{ asset('storage/' . $file) }}" type="{{ $mimeType }}">
+                                    <source src="{{ route('student.lesson.material', [$course->slug, $lesson->id, basename($file)]) }}" type="{{ $mimeType }}">
                                 </audio>
                             </div>
                         @endif
 
                         @if($isVideo)
                             <div class="px-2 pb-2">
-                                <video controls class="w-full rounded-xl bg-black max-h-32 object-cover outline-none">
-                                    <source src="{{ asset('storage/' . $file) }}" type="{{ $mimeType }}">
+                                <video controls playsinline webkit-playsinline class="w-full rounded-xl bg-black max-h-32 object-cover outline-none">
+                                    <source src="{{ route('student.lesson.material', [$course->slug, $lesson->id, basename($file)]) }}" type="{{ $mimeType }}">
                                 </video>
                             </div>
                         @endif

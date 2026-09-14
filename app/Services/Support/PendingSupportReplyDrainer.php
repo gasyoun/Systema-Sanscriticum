@@ -32,9 +32,13 @@ class PendingSupportReplyDrainer
      * Разослать ждущие ответы. Вызывается синком после успешного захода, когда
      * сессия заведомо жива.
      *
+     * H3380: $accountId скоупит дрен ответами своего аккаунта. Открыть чужой
+     * peer через чужую сессию нельзя (peer-резолв ляжет, attempts сгорят) —
+     * каждый аккаунт досылает только своё, своим telegram-support:sync.
+     *
      * @return array{attempted: int, delivered: int, failed: int}
      */
-    public function drain(TelegramSupportSyncService $sync): array
+    public function drain(TelegramSupportSyncService $sync, ?int $accountId = null): array
     {
         $batch = max(1, (int) config('services.telegram_support.pending_delivery_batch', 20));
         $maxAttempts = max(1, (int) config('services.telegram_support.pending_delivery_max_attempts', 3));
@@ -52,6 +56,7 @@ class PendingSupportReplyDrainer
             ->where('direction', 'outgoing')
             ->where('telegram_message_id', '<', 0)
             ->whereNotNull('raw_payload')
+            ->when($accountId !== null, fn ($q) => $q->where('telegram_support_account_id', $accountId))
             ->orderBy('id')
             ->get()
             ->filter(fn (TelegramSupportMessage $m): bool => $this->isPending($m))

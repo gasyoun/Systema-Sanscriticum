@@ -18,6 +18,8 @@ class Season extends Model
         'is_active',
         'enabled_packs',
         'rewards_config',
+        // H3297: DB-driven decay-оверрайд (season:open true / season:close false).
+        'decay_enabled',
     ];
 
     protected $casts = [
@@ -26,6 +28,7 @@ class Season extends Model
         'is_active' => 'boolean',
         'enabled_packs' => 'array',
         'rewards_config' => 'array',
+        'decay_enabled' => 'boolean',
     ];
 
     public function leaderboardCache(): HasMany

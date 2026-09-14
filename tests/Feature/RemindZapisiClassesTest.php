@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Jobs\SendZapisiBotMessageJob;
+use App\Models\Course;
 use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
@@ -37,6 +38,7 @@ class RemindZapisiClassesTest extends TestCase
             'title' => 'Грамматика',
             'start' => now()->addMinutes(10),
             'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/61',
         ]);
 
         $this->artisan('zapisi:remind-classes')->assertSuccessful();
@@ -68,6 +70,7 @@ class RemindZapisiClassesTest extends TestCase
             'title' => 'Грамматика <начальная> & чтение',
             'start' => now()->addMinutes(10),
             'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/esc',
         ]);
 
         $this->artisan('zapisi:remind-classes')->assertSuccessful();
@@ -107,19 +110,44 @@ class RemindZapisiClassesTest extends TestCase
         });
     }
 
-    /** Ссылки нет — {join} пустой, чтобы не висело «Подключиться» в никуда. */
-    public function test_join_placeholder_is_empty_without_a_link(): void
+    /**
+     * Инцидент 02-09-2026 (schedule 1620): серия без ссылок — в чат ушло
+     * «Подключится к занятию можно по ссылке:» без самой ссылки. Теперь без
+     * ссылки напоминание не шлётся вовсе (зеркально classes:post-group-link)
+     * и НЕ помечается — уйдёт, как только ссылка появится.
+     */
+    public function test_skips_schedule_without_any_link_and_leaves_unmarked(): void
     {
         Queue::fake();
         $this->enable();
 
-        $group = Group::create(['name' => 'Группа 61', 'telegram_chat_id' => '-100']);
-        Schedule::create(['title' => 'Грамматика', 'start' => now()->addMinutes(10), 'group_id' => $group->id]);
+        $group = Group::create(['name' => 'Группа 1', 'telegram_chat_id' => '-100']);
+        $schedule = Schedule::create(['title' => 'Грамматика', 'start' => now()->addMinutes(10), 'group_id' => $group->id]);
 
         $this->artisan('zapisi:remind-classes')->assertSuccessful();
 
-        Queue::assertPushed(SendZapisiBotMessageJob::class, fn (SendZapisiBotMessageJob $job): bool => ! str_contains($job->text, 'Подключиться к занятию')
-            && ! str_contains($job->text, '<a href'));
+        Queue::assertNothingPushed();
+        $this->assertNull($schedule->fresh()->zapisi_reminded_at);
+    }
+
+    /** Ссылка с курса — валидный fallback, напоминание уходит с ней. */
+    public function test_falls_back_to_course_zoom_link(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $course = Course::create(['title' => 'Хинди 2026', 'slug' => 'hindi-2026', 'zoom_link' => 'https://zoom.us/j/course-link']);
+        $group = Group::create(['name' => 'Группа 1', 'telegram_chat_id' => '-100']);
+        Schedule::create([
+            'title' => 'Грамматика',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'course_id' => $course->id,
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, fn (SendZapisiBotMessageJob $job): bool => str_contains($job->text, 'https://zoom.us/j/course-link'));
     }
 
     public function test_skips_when_flag_off(): void
@@ -168,16 +196,83 @@ class RemindZapisiClassesTest extends TestCase
         $group = Group::create(['name' => 'G', 'telegram_chat_id' => '-100']);
         $schedule = Schedule::create([
             'title' => 'X', 'start' => now()->addMinutes(10), 'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/reschedule',
         ]);
 
         $this->artisan('zapisi:remind-classes')->assertSuccessful();
         $this->assertNotNull($schedule->fresh()->zapisi_reminded_at);
 
-        // Перенос времени сбрасывает метку — напоминание перевзведётся к новому старту.
+        // Перенос времени занятия сбрасывает колонку - напоминание перевыстрелит к новому времени.
         $schedule->update(['start' => now()->addMinutes(20)]);
         $this->assertNull($schedule->fresh()->zapisi_reminded_at);
 
         $this->artisan('zapisi:remind-classes')->assertSuccessful();
         Queue::assertPushed(SendZapisiBotMessageJob::class, 2);
+    }
+
+    /**
+     * Зеркальная дубль-гвардия (диагноз 26-08-2026): автопостинг ссылки
+     * (classes:post-group-link) уже отправил «Скоро занятие» в этот чат —
+     * второй пост не нужен. Не шлём и не помечаем.
+     */
+    public function test_skips_schedule_already_posted_by_autopost(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'Группа 8', 'telegram_chat_id' => '-100888']);
+        $schedule = Schedule::create([
+            'title' => 'Занятие 8',
+            'start' => now()->addMinutes(10),
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/8',
+            'group_link_posted_at' => now()->subMinutes(5),
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertNothingPushed();
+        $this->assertNull($schedule->fresh()->zapisi_reminded_at);
+    }
+
+    /**
+     * Инцидент 11-09-2026 (курс 348): две живые строки расписания на один слот
+     * ушли двумя постами в один чат за секунду (тексты различались только
+     * номером титула — TelegramSendGuard по sha256(чат+текст) их не склеил).
+     * Теперь слот (группа+старт) получает РОВНО ОДИН пост, помечаются все
+     * строки слота.
+     */
+    public function test_two_rows_in_one_slot_send_one_reminder_and_both_marked(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'Гр. 86', 'telegram_chat_id' => '-1001907383186']);
+        $start = now()->addMinutes(30);
+
+        $a = Schedule::create([
+            'title' => 'Серия (#76, слот)',
+            'start' => $start,
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/slot',
+        ]);
+        $b = Schedule::create([
+            'title' => 'Серия (#77, слот)',
+            'start' => $start,
+            'group_id' => $group->id,
+            'zoom_join_url' => 'https://zoom.us/j/slot',
+        ]);
+
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, fn (SendZapisiBotMessageJob $job): bool => $job->chatId === '-1001907383186');
+
+        $this->assertNotNull($a->fresh()->zapisi_reminded_at, 'обе строки слота помечаются');
+        $this->assertNotNull($b->fresh()->zapisi_reminded_at, 'обе строки слота помечаются');
+
+        // Повторный прогон: обе строки помечены — тишина.
+        $this->artisan('zapisi:remind-classes')->assertSuccessful();
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
     }
 }

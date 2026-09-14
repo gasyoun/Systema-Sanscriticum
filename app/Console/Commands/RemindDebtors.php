@@ -240,6 +240,11 @@ class RemindDebtors extends Command
         if ($paidUntil->block->ends_at) {
             $label .= ' (до '.$paidUntil->block->ends_at->format('d.m.Y').')';
         }
+        // Пропущенный блок не отменяет более поздних оплат («пропустил 64 —
+        // оплатил 65») — не делаем вид, что их нет.
+        if (! empty($paidUntil->extra_paid_blocks)) {
+            $label .= ' Отдельно оплачены блоки '.$paidUntil->extra_paid_blocks_label.'.';
+        }
 
         return $label.'.';
     }

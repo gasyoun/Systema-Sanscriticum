@@ -2,7 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    {{-- H4118: user-scalable=no / maximum-scale убраны — доступность и iOS-зум не ломаем --}}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Личный кабинет | Школа Санскрита</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -70,9 +71,13 @@
             <div class="tg-desc" style="margin-bottom: 0; margin-top: 4px;">Теперь важные ссылки и расписание будут приходить вам в мессенджер.</div>
         @else
             <div class="tg-desc">Подключите бота, чтобы не пропустить важную информацию по обучению и доступы к урокам.</div>
-            <a href="{{ route('telegram.connect') }}" target="_blank" class="btn-tg">
-                Подключить бота
-            </a>
+            {{-- H3313: привязка через CSRF-защищённый POST --}}
+            <form method="POST" action="{{ route('telegram.connect.start') }}" target="_blank" class="inline-flex">
+                @csrf
+                <button type="submit" class="btn-tg">
+                    Подключить бота
+                </button>
+            </form>
         @endif
     </div>
     <div class="lessons-container">
@@ -84,19 +89,19 @@
 
                 <div class="btn-group">
                     @if($lesson->video_url)
-                        <button class="btn-yt" onclick="openVideo('{{ $lesson->video_url }}')">
+                        <button class="btn-yt" onclick="openVideo(@js($lesson->video_url))">
                             ▶ YouTube
                         </button>
                     @endif
 
                     @if($lesson->rutube_url)
-                        <button class="btn-rt" onclick="openVideo('{{ $lesson->rutube_url }}')">
+                        <button class="btn-rt" onclick="openVideo(@js($lesson->rutube_url))">
                             ▶ Rutube
                         </button>
                     @endif
 
                     @if($lesson->flash_cards)
-                        <button class="btn-flash" onclick='startFlash(@json($lesson->flash_cards))'>
+                        <button class="btn-flash" onclick="startFlash(@js($lesson->flash_cards))">
                             🎴 Карточки для запоминания
                         </button>
                     @endif

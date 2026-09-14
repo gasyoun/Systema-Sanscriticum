@@ -7,14 +7,19 @@ use App\Jobs\SendMessengerAlerts;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\HomeworkSubmission;
+use App\Models\Lesson;
+use App\Models\Schedule;
 use App\Models\ScheduledReminder;
 use App\Models\User;
 use App\Services\Access\LoginLinkNotifier;
 use App\Services\Access\StudentUnblockService;
 use App\Services\Prana\PranaService;
+use App\Services\Schedule\CanvasMoney;
+use App\Services\Schedule\TextbookScale;
 use App\Services\StuckStudentsReport;
 use App\Support\CourseNoteBlockParser;
 use App\Support\Impersonation;
+use App\Support\PhoneCountrySuggest;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Carbon\Carbon;
@@ -136,7 +141,53 @@ class UserResource extends Resource
                         Forms\Components\TextInput::make('phone')
                             ->label('Телефон')
                             ->tel()
+                            ->maxLength(255)
+                            ->afterStateUpdated(function (?string $state, Forms\Set $set, Forms\Get $get): void {
+                                // H3909 (MG 02-09-2026): страна предлагается из
+                                // кода телефона, но только если поле пусто —
+                                // вписанное руками не перетирается.
+                                if (blank($state) || filled($get('country'))) {
+                                    return;
+                                }
+
+                                $country = PhoneCountrySuggest::fromPhone($state);
+                                if ($country !== null) {
+                                    $set('country', $country);
+                                }
+                            }),
+
+                        // H3909 — спрашиваем у каждого ученика (MG 02-09-2026):
+                        // по стране куратор понимает, что платить придётся
+                        // через PayPal, и переименовывает карточку по правилу
+                        // «Имя, Город, Страна».
+                        Forms\Components\TextInput::make('city')
+                            ->label('Город')
                             ->maxLength(255),
+
+                        Forms\Components\TextInput::make('country')
+                            ->label('Страна')
+                            ->maxLength(255),
+
+                        // H4434 (MG 09-09-2026): таймзона ученика. Источник виден
+                        // рядом (manual/device/admin) — чтобы куратор понимал,
+                        // чьё это решение. Пусто = МСК-дефолт (никаких догадок по IP:
+                        // большинство РФ-учеников ходит через NL/DE VPN).
+                        Forms\Components\Select::make('timezone')
+                            ->label('Часовой пояс (постоянный)')
+                            ->options(self::timezoneOptions())
+                            ->searchable()
+                            ->nullable()
+                            ->helperText('Пусто = Москва (МСК). Источник: '.($record?->tz_source ?? 'не задан')),
+
+                        Forms\Components\Select::make('tz_override')
+                            ->label('Временное пребывание')
+                            ->options(self::timezoneOptions())
+                            ->searchable()
+                            ->nullable()
+                            ->helperText('Напр. Индия на 1.5 мес. Дата возврата ниже; после неё ученик вернётся к постоянному поясу.'),
+
+                        Forms\Components\DatePicker::make('tz_override_until')
+                            ->label('Временное пребывание до (включительно)'),
 
                         Forms\Components\TextInput::make('password')
                             ->label('Пароль')
@@ -252,6 +303,41 @@ class UserResource extends Resource
     }
 
     /**
+     * H4434 — общий список зон для селекторов (постоянная + оверрайд).
+     * Практичный набор: РФ + типовые нон-МСК страны учеников; searchable
+     * покрывает остальное — валидация IANA на записи в TimezoneController.
+     */
+    protected static function timezoneOptions(): array
+    {
+        return [
+            'Europe/Moscow' => 'Москва (МСК)',
+            'Europe/Kaliningrad' => 'Калининград',
+            'Asia/Yekaterinburg' => 'Екатеринбург',
+            'Asia/Novosibirsk' => 'Новосибирск',
+            'Asia/Vladivostok' => 'Владивосток',
+            'Europe/Madrid' => 'Мадрид / Испания',
+            'Europe/Berlin' => 'Берлин / Германия',
+            'Europe/Amsterdam' => 'Амстердам / Нидерланды',
+            'Europe/Paris' => 'Париж / Франция',
+            'Europe/Rome' => 'Рим / Италия',
+            'Europe/Riga' => 'Рига / Латвия',
+            'Europe/Vilnius' => 'Вильнюс / Литва',
+            'Europe/Tallinn' => 'Таллин / Эстония',
+            'Europe/Kyiv' => 'Киев',
+            'Europe/Sofia' => 'София',
+            'America/Los_Angeles' => 'Лос-Анджелес',
+            'America/New_York' => 'Нью-Йорк',
+            'Asia/Tbilisi' => 'Тбилиси',
+            'Asia/Yerevan' => 'Ереван',
+            'Asia/Almaty' => 'Алматы',
+            'Asia/Tashkent' => 'Ташкент',
+            'Asia/Kolkata' => 'Дели / Индия',
+            'Asia/Jerusalem' => 'Иерусалим',
+            'Asia/Bangkok' => 'Бангкок',
+        ];
+    }
+
+    /**
      * Рендерит примечание куратора с кликабельными ссылками.
      * XSS-безопасно: сначала экранируем весь текст, затем вставляем только наши <a>.
      */
@@ -336,6 +422,31 @@ class UserResource extends Resource
                             ->copyable()
                             ->copyMessage('Телефон скопирован')
                             ->placeholder('—'),
+
+                        TextEntry::make('city')
+                            ->label('Город')
+                            ->placeholder('— не спросили —'),
+
+                        TextEntry::make('country')
+                            ->label('Страна')
+                            ->placeholder('— не спросили —'),
+
+                        // H4434: эффективная зона + источник (MG 09-09-2026).
+                        TextEntry::make('effectiveTimezone')
+                            ->label('Часовой пояс (эффективный)')
+                            ->state(fn (User $record): string => $record->effectiveTimezone() ?? 'Europe/Moscow (по умолчанию)')
+                            ->badge()
+                            ->color(fn (User $record): string => $record->isNonMskTimezone() ? 'warning' : 'gray'),
+
+                        TextEntry::make('tz_source')
+                            ->label('Источник пояса')
+                            ->formatStateUsing(fn (?string $state) => match ($state) {
+                                'manual' => 'указал сам',
+                                'device' => 'часы устройства',
+                                'admin' => 'куратор',
+                                default => 'не задан (МСК)',
+                            })
+                            ->placeholder('не задан (МСК)'),
 
                         TextEntry::make('global_status')
                             ->label('Статус')
@@ -461,6 +572,17 @@ class UserResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
+                // H4435 (MG 08-09): посещаемость + позиция на шкале учебника.
+                // Наши занятия и уроки учебника — разные шкалы, подписи раздельные.
+                InfoSection::make('Посещаемость и канва')
+                    ->visible(fn () => RoleGate::adminOnly())
+                    ->schema([
+                        ViewEntry::make('attendance_canvas')
+                            ->hiddenLabel()
+                            ->view('filament.user.attendance-canvas')
+                            ->columnSpanFull(),
+                    ]),
+
                 // Скор платёжной дисциплины (см. docs/discipline-score-spec.md) — advisory-only,
                 // рядом с вкладкой «Обещания оплатить». Не влияет на скидки/рассрочку/доступ.
                 InfoSection::make('Дисциплина')
@@ -512,6 +634,102 @@ class UserResource extends Resource
                 'accepted' => (int) ($counts[HomeworkSubmission::STATUS_ACCEPTED] ?? 0),
             ],
         ];
+    }
+
+    /**
+     * H4435 (MG 08-09): посещаемость + позиция на канве по курсам студента.
+     * Две шкалы раздельно: «наши занятия» (посещения) и «урок учебника»
+     * (курсор из TextbookScale). Эмпирический вес урока — без линейных пропорций.
+     *
+     * @return array{rows: list<array{course_title: string, family: string, total: int, group_cursor: int, student_cursor: int, lag: int, last_canvas: ?string, sessions: list<array{date: string, title: string, canvas: ?string, kind: string}>}>}
+     */
+    public static function attendanceCanvas(User $record): array
+    {
+        $record->loadMissing('groups.courses');
+        $rows = [];
+
+        foreach ($record->groups as $group) {
+            foreach ($group->courses as $course) {
+                $family = TextbookScale::courseFamilyPublic((string) $course->title);
+                if ($family === null) {
+                    continue;
+                }
+                $total = TextbookScale::families()[$family]['total'];
+
+                $lessons = Lesson::where('course_id', $course->id)
+                    ->whereNotNull('lesson_date')->orderBy('lesson_date')->get();
+                $groupCursor = TextbookScale::cursor($lessons, $family);
+
+                // Позиция студента: макс. предмет канвы на записях уроков, дата
+                // которых <= последнего ФАКТА студента (WebinarAttendance).
+                $lastFact = $record->attendances()
+                    ->whereIn('schedule_id', Schedule::where('group_id', $group->id)->pluck('id'))
+                    ->latest('created_at')->first();
+                $studentCursor = 0;
+                $lastCanvas = null;
+                if ($lastFact) {
+                    $factDate = $lastFact->created_at->copy()->startOfDay();
+                    $studentLessons = $lessons->filter(
+                        fn ($l) => $l->lesson_date !== null && $l->lesson_date->startOfDay()->lte($factDate),
+                    );
+                    $studentCursor = TextbookScale::cursor($studentLessons, $family);
+                    $own = $studentLessons->firstWhere('lesson_date', $factDate)
+                        ?? $studentLessons->last();
+                    if ($own) {
+                        $items = TextbookScale::parseTitle((string) $own->title);
+                        $chitki = array_filter($items, fn ($i) => $i['family'] === $family && $i['kind'] === 'chitka');
+                        if ($chitki !== []) {
+                            $top = max(array_column($chitki, 'lesson'));
+                            $lastCanvas = TextbookScale::label($family, $top, 'chitka');
+                        }
+                    }
+                }
+
+                // Последние 10 занятий группы: дата, заголовок записи, предмет.
+                $sessions = [];
+                foreach ($lessons->sortByDesc('lesson_date')->take(10) as $l) {
+                    $items = TextbookScale::parseTitle((string) $l->title);
+                    $chitki = array_filter($items, fn ($i) => $i['family'] === $family && $i['kind'] === 'chitka');
+                    $canvas = $chitki !== [] ? TextbookScale::label($family, max(array_column($chitki, 'lesson')), 'chitka') : null;
+                    $sessions[] = [
+                        'date' => $l->lesson_date?->format('d.m.Y') ?? '—',
+                        'title' => (string) $l->title,
+                        'canvas' => $canvas,
+                        'kind' => 'lesson',
+                    ];
+                }
+
+                // H4443: персональные деньги — неоплаченные блоки от курсора группы.
+                $groupBlock = 0;
+                foreach ($lessons as $l) {
+                    $chitki = array_filter(
+                        TextbookScale::parseTitle((string) $l->title),
+                        fn (array $i): bool => $i['family'] === $family && $i['kind'] === 'chitka',
+                    );
+                    if ($chitki !== [] && max(array_column($chitki, 'lesson')) === $groupCursor) {
+                        $groupBlock = TextbookScale::parseBlockMarker((string) $l->title)
+                            ?? (int) ceil($groupCursor / TextbookScale::lessonsPerBlock());
+                        break;
+                    }
+                }
+                $blocksTotal = TextbookScale::blocksTotal($course->id, $total);
+                $unpaid = CanvasMoney::unpaidFor($record, $course, $groupBlock, $blocksTotal);
+
+                $rows[] = [
+                    'course_title' => (string) $course->title,
+                    'family' => $family,
+                    'total' => $total,
+                    'group_cursor' => $groupCursor,
+                    'student_cursor' => $studentCursor,
+                    'lag' => $groupCursor - $studentCursor,
+                    'last_canvas' => $lastCanvas,
+                    'unpaid' => CanvasMoney::humanize($unpaid),
+                    'sessions' => $sessions,
+                ];
+            }
+        }
+
+        return ['rows' => $rows];
     }
 
     /**
@@ -1221,6 +1439,40 @@ class UserResource extends Resource
                         ))
                         ->action(fn (Collection $records) => self::applyBlocksFromNotesForUsers($records)),
 
+                    // --- H4434: ПОГОЛОВНОЕ «ПРИСВОИТЬ ЕВРОПЕ/МОСКВУ» (MG 09-09-2026) ---
+                    // VPN-фактор: большинство РФ-учеников ходит через NL/DE VPN, их
+                    // IP-гео отравлено. Куратор выделяет таких (фильтр по телефону
+                    // +7/стране/созданию) и одним действием ставит Europe/Moscow,
+                    // чтобы device-TZ захват и DST-алерты не ошиблись.
+                    Tables\Actions\BulkAction::make('assignMskTimezone')
+                        ->label('Присвоить МСК (VPN-Россия)')
+                        ->icon('heroicon-o-clock')
+                        ->color('gray')
+                        ->visible(fn () => RoleGate::adminOnly())
+                        ->requiresConfirmation()
+                        ->modalHeading('Присвоить Europe/Moscow выделенным ученикам')
+                        ->modalDescription('Ставит постоянный пояс Москва (МСК) и сбрасывает временное пребывание. Для РФ-учеников за VPN: их IP-гео показывает Нидерланды/Германию, но живут они по МСК.')
+                        ->modalSubmitActionLabel('Присвоить МСК')
+                        ->deselectRecordsAfterCompletion()
+                        ->action(function (Collection $records) {
+                            $count = 0;
+
+                            foreach ($records as $user) {
+                                $user->timezone = 'Europe/Moscow';
+                                $user->tz_source = 'admin';
+                                $user->tz_override = null;
+                                $user->tz_override_until = null;
+                                $user->save();
+                                $count++;
+                            }
+
+                            Notification::make()
+                                ->title('Пояс присвоен')
+                                ->body("Europe/Moscow установлен для {$count} учеников (источник: admin).")
+                                ->success()
+                                ->send();
+                        }),
+
                     // --- ПЕРЕНОС В ГРУППУ КУРСА (сплит курса на 2 группы) ---
                     // Отвязывает выбранных от остальных групп ЭТОГО курса и привязывает
                     // к целевой. Оплаты не трогаются (дублей Payment не возникает).
@@ -1560,6 +1812,7 @@ class UserResource extends Resource
             UserResource\RelationManagers\PaymentsRelationManager::class,
             UserResource\RelationManagers\PaymentPromisesRelationManager::class,
             UserResource\RelationManagers\LessonAccessGrantsRelationManager::class,
+            UserResource\RelationManagers\CourseAccessWindowsRelationManager::class,
             UserResource\RelationManagers\IndividualDiscountsRelationManager::class,
         ];
     }

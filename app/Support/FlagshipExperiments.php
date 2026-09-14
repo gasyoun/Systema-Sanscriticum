@@ -210,6 +210,7 @@ final class FlagshipExperiments
             experiment: StorefrontAnalyticsEvent::EXPERIMENT_NEXT_STEP,
             request: $request,
             course: $course,
+            variant: self::ctaVariant($request),
             dedupeDay: true,
         );
     }

@@ -11,10 +11,14 @@ class SupportTopicRule extends Model
         'keywords',
         'priority',
         'is_enabled',
+        'plane',
+        'pattern_hash',
+        'negations',
     ];
 
     protected $casts = [
         'keywords' => 'array',
+        'negations' => 'array',
         'is_enabled' => 'boolean',
     ];
 }

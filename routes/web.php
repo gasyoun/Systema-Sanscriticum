@@ -7,10 +7,13 @@ use App\Http\Controllers\Api\CabinetTelemetryController;
 use App\Http\Controllers\Api\GamesSrsOnboardingController;
 use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\HeartbeatController;
+use App\Http\Controllers\Api\LilaGateController;
+use App\Http\Controllers\Api\PublicWaitlistController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AttendanceNoticeController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BankClaimController;
 use App\Http\Controllers\CabinetMasteryController;
 use App\Http\Controllers\CalendarFeedController;
 use App\Http\Controllers\CallbackRequestController;
@@ -24,10 +27,15 @@ use App\Http\Controllers\DictionaryPageController;
 use App\Http\Controllers\DocController;
 use App\Http\Controllers\Editor\LectureDraftController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
+use App\Http\Controllers\GatedAssetController;
+use App\Http\Controllers\GiftCertificateController;
 use App\Http\Controllers\GrammarLabController;
 use App\Http\Controllers\GrammarLabPilotController;
+use App\Http\Controllers\GuestRegisterController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\InstituteController;
+use App\Http\Controllers\InstituteDonateController;
 use App\Http\Controllers\JoinClassController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LlmsTxtController;
@@ -43,10 +51,13 @@ use App\Http\Controllers\PaypalClaimController;
 use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\PublicCabinetGuideController;
 use App\Http\Controllers\PublicChatController;
 use App\Http\Controllers\PublicPresenceController;
+use App\Http\Controllers\PublicSchedulePageController;
 use App\Http\Controllers\PublicWidgetController;
 use App\Http\Controllers\ReadingPackController;
+use App\Http\Controllers\RecordingGateController;
 use App\Http\Controllers\Rq4StudyController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SitemapController;
@@ -58,9 +69,18 @@ use App\Http\Controllers\Student\HindiMySrsDeckController;
 use App\Http\Controllers\Student\HindiProgrammePlaylistController;
 use App\Http\Controllers\Student\HindiTgCuratedPracticeController;
 use App\Http\Controllers\Student\HindiTranscriptDrillsController;
+use App\Http\Controllers\Student\LessonPackController;
+use App\Http\Controllers\StudentAgentController;
 use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SubscriptionLandingController;
+use App\Http\Controllers\SurveyPageController;
+use App\Http\Controllers\TeacherPayController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\TelegramSupportLinkController;
+use App\Http\Controllers\TgLoginLinkController;
+use App\Http\Controllers\TimezoneController;
+use App\Http\Controllers\TrackedLinkController;
 use App\Http\Controllers\TransliterateController;
 use App\Http\Controllers\TrialController;
 use App\Http\Controllers\VisualDcsController;
@@ -151,6 +171,10 @@ Route::get('/', function () {
 // Витрина магазина курсов
 Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
 
+// Короткие ссылки кампаний: UTM сохраняются в сессии, а каталог открывается
+// без query string. Внешний текст и адресная строка не раскрывают разметку.
+Route::get('/ga/{link}', TrackedLinkController::class)->name('tracked-link');
+
 // Фильтры каталога словами в пути, без query string (H3xxx — /online?cat[0]=3
 // читался как плохой SEO-слаг). Строгий where() значит порядок регистрации
 // относительно /online/kursy/{slug} и т.п. не важен — совпадёт только
@@ -164,6 +188,12 @@ Route::get('/online/{facets}', [ShopController::class, 'index'])
 // страница не может жить раньше, чем контур H2644 реально выдаёт доступ
 // за оплату. Цены читаются из тарифов курса `club` (Filament), не из Blade.
 Route::get('/klub', [MembershipController::class, 'landing'])->name('membership.landing');
+
+// Подписка «в записи» (H3916): публичный лендинг годовой подписки на архив
+// факультативов. Флаг features.recorded_subscription проверяется в контроллере
+// (404 до включения) — по тому же правилу, что и /klub.
+Route::get('/podpiska-zapisi', SubscriptionLandingController::class)
+    ->name('subscription.landing');
 Route::get('/api/public/v1/autumn-membership', [MembershipCommerceController::class, 'feed'])
     ->name('membership.feed.v1');
 Route::domain((string) config('membership.public_feed.samskrte_host'))
@@ -184,6 +214,27 @@ Route::get('/online/s-chego-nachat', [ShopController::class, 'start'])->name('sh
 // H2764 / R18 — путь через каталог (письмо/чтение → грамматика → тексты).
 // Слаг /online/put: столкновений с существующими /online/* нет.
 Route::get('/online/put', [ShopController::class, 'pathway'])->name('shop.pathway');
+
+// H3834 — рубрика «Список ожидания» на витрине: голосуй за будущую группу —
+// кворум голосов открывает оплату; оплаты к сроку — старт. Регистрируется ДО
+// facet-пути /online/{facets} (тот матчит только свои префиксы, но роут
+// конкретных слагов — надёжнее выше). Флаг waitlist_voting OFF → 404 в
+// контроллере.
+Route::get('/online/zhdun', [ShopController::class, 'waitlist'])->name('shop.waitlist');
+
+// Голосование со витрины (H3834 follow-up, 01-09-2026): в api-группе нет
+// EnsureFrontendRequestsAreStateful, сессионная кука не подхватывалась и
+// контроллер всегда отвечал 401 auth_required даже залогиненному. В web-группе
+// сессия + CSRF работают из коробки (токен в разметке страницы); auth-гейт,
+// флаг waitlist_voting и троттлинг — в контроллере.
+Route::post('/online/zhdun/vote', [PublicWaitlistController::class, 'vote'])
+    ->middleware('throttle:10,1')
+    ->name('shop.waitlist.vote');
+
+// Отзыв голоса (MG 01-09-2026, «передумал») — та же web-группа: сессия + CSRF.
+Route::post('/online/zhdun/unvote', [PublicWaitlistController::class, 'unvote'])
+    ->middleware('throttle:10,1')
+    ->name('shop.waitlist.unvote');
 
 // «Материалы» — журнальный хаб бесплатного контента над магазином (H387,
 // паттерн Arzamas): статьи + бесплатные беседы + preview-уроки одной сеткой
@@ -248,6 +299,13 @@ Route::get('/k/{course:slug}/preview', [ShopController::class, 'preview'])
 // frame-ancestors выставляется прямо на ответе (см. PublicWidgetController) — только этот роут.
 Route::get('/widgets/schedule', [PublicWidgetController::class, 'schedule'])->name('widgets.schedule');
 
+// === ПУБЛИЧНАЯ СТРАНИЦА «РАСПИСАНИЕ» (H4340) ===
+// Все расписания всех курсов тем же билдером, что и Telegram-пост (H4328).
+// Виджет выше остаётся встраиваемой поверхностью samskrtam.ru/raspisanie;
+// эта страница — человеческий эквивалент на samskrte.ru. Без auth.
+Route::get('/raspisanie', PublicSchedulePageController::class)
+    ->name('schedule.page');
+
 // Редиректы со старых URL витрины (SEO + старые ссылки/закладки/реклама).
 // Имена роутов сохранены, меняются только пути — поэтому route() ниже валиден.
 // Специфичный /shop/course/* — ДО общего /shop, иначе общий перехватит.
@@ -277,6 +335,18 @@ Route::get('/shop', fn () => redirect()->route('shop.index', [], 301));
 // state change). See public/lila/gate.js.
 Route::get('/api/games/auth', fn () => response()->json(['authenticated' => auth()->check()]))
     ->name('games.auth');
+
+// H4396 — серверная половина ворот /lila: бюджет бесплатных раундов живёт в
+// game_events (event=round), ключ — производный от web-сессии (не от
+// localStorage). GET читает бюджет, POST фиксирует один завершённый раунд;
+// оба публичные (как games/auth — web-guard, состояние браузерной сессии),
+// POST без CSRF (как games/event — маячок без токена), затроттлён.
+Route::get('/api/games/budget', [LilaGateController::class, 'budget'])
+    ->middleware('throttle:60,1')
+    ->name('games.budget');
+Route::post('/api/games/round', [LilaGateController::class, 'round'])
+    ->middleware('throttle:60,1')
+    ->name('games.round');
 
 // First-party funnel telemetry for the same free games (H1360). Public + web-guard
 // so the `authenticated` flag is read server-side from the browser session (the
@@ -328,6 +398,12 @@ Route::post('/shop/logout', [AuthController::class, 'shopLogout'])
 
 // --- ВОССТАНОВЛЕНИЕ ПАРОЛЯ (для незалогиненных) ---
 Route::middleware('guest')->group(function () {
+    // H3643 guest /register. Flag OFF returns 404 inside the controller.
+    Route::get('/register', [GuestRegisterController::class, 'show'])->name('register');
+    Route::post('/register', [GuestRegisterController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('register.post');
+
     Route::get('/forgot-password', [PasswordResetController::class, 'showRequestForm'])
         ->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
@@ -360,6 +436,12 @@ Route::view('/faq/dz', 'faq.dz')->name('faq.dz');
 // FAQ: способы оплаты, рассрочка, что делать, если платёж не проходит — публично
 // (H2060, linked from student.access recovery CTA behind payment_recovery_cta).
 Route::view('/faq/payment', 'faq.payment')->name('faq.payment');
+
+// Публичный гид личного кабинета (H3499) — БЕЗ auth, для ещё не вошедших:
+// рассылки students:send-login-invites, анонсы в Telegram, скрипты куратора.
+// Тот же источник, что кабинетный /dvaram/help. Строго до catch-all /{slug}.
+Route::get('/help/kabinet', [PublicCabinetGuideController::class, 'show'])
+    ->name('help.cabinet-guide');
 
 // Публичная «сайт жив?» для учеников (VPN vs наш сервер + @rusamskrtam).
 // До catch-all /{slug}. Зеркало на GitHub Pages: /uptime/ в корне репо.
@@ -423,6 +505,23 @@ Route::get('/visualdcs/{surface}/preview', [VisualDcsController::class, 'preview
 Route::get('/grammar-lab', [GrammarLabController::class, 'landing'])
     ->name('grammar-lab.landing');
 
+// Институт исследования санскрита — витрина ДПП ПК «Санскрит» 72 ч (заявочная форма).
+Route::get('/institut', [InstituteController::class, 'landing'])->name('institute.landing');
+Route::post('/institut/zayavka', [InstituteController::class, 'apply'])
+    ->middleware('throttle:6,1')
+    ->name('institute.apply');
+
+// Меценаты Института — страница добровольных пожертвований (ст. 582 ГК,
+// свободная сумма, без встречного пакета благ; реквизиты — config/institute.php)
+// + публичный реестр благодарностей меценатам (план института N3).
+Route::get('/mecenaty', [InstituteDonateController::class, 'page'])->name('institute.mecenaty');
+
+// Онлайн-приём пожертвований через Точку (план института N2). Контроллер сам
+// 404-ит при institute.donations_enabled=false — тёмный деплой безопасен.
+Route::post('/mecenaty/donate', [InstituteDonateController::class, 'donate'])
+    ->middleware('throttle:6,1')
+    ->name('institute.donate');
+
 // --- СЕКРЕТ-ССЫЛКА ОБХОДА ТЕХОБСЛУЖИВАНИЯ (вне maintenance-группы) ---
 Route::get('/maintenance-bypass/{secret}', function (string $secret) {
     $s = MarketingSetting::cached();
@@ -435,6 +534,17 @@ Route::get('/maintenance-bypass/{secret}', function (string $secret) {
     return redirect()->route('student.dashboard')
         ->cookie('student_maintenance_bypass', $secret, 60 * 24 * 7); // неделя
 })->middleware('auth')->name('maintenance.bypass');
+
+// H4396 — серверные ворота видеопейлоада: страница урока больше не несёт
+// сырых unlisted-ID, плеер грузит этот маршрут, контроллер на КАЖДУЮ загрузку
+// проверяет грант/группу/оплату/H3916-членство и только тогда отдаёт 302 на
+// embed. ВНЕ auth-группы: is_free/is_preview легитимно отдаются гостю
+// (публичный «пример урока» — единственная точка правды ShopController::preview),
+// всё платное контроллер закрывает 404 сам. До catch-all /{slug}.
+Route::get('/c/{slug}/u/{lessonId}/video/{player}', [RecordingGateController::class, 'show'])
+    ->middleware('course.canonical')
+    ->whereIn('player', ['youtube', 'rutube', 'kinescope', 'video'])
+    ->name('student.recording.gate');
 
 // --- ЛИЧНЫЙ КАБИНЕТ СТУДЕНТА (ЗАЩИЩЕНО) ---
 Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(function () {
@@ -468,6 +578,11 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
 
     Route::get('/dvaram/help', [StudentCabinetGuideController::class, 'show'])
         ->name('student.help');
+
+    // Bounded student agent (H3231): homework hint / dictionary lookup /
+    // cabinet FAQ only, no free chat. 404 while features.student_agent OFF.
+    Route::post('/dvaram/agent', [StudentAgentController::class, 'run'])
+        ->name('student.agent.run');
 
     Route::get('/open-lessons', [StudentController::class, 'openLessons'])->name('student.open-lessons');
 
@@ -686,8 +801,26 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->middleware('course.canonical')
         ->name('student.lesson.srs.add');
 
+    // H3521: Learn Your Way — персонализированный пак занятия. Default-OFF
+    // (LYW_ENABLED): флаг выключен => 404 и вкладка на уроке не рендерится.
+    Route::get('/c/{slug}/u/{lessonId}/learn', [LessonPackController::class, 'show'])
+        ->middleware('course.canonical')
+        ->name('student.lesson.lessonpack');
+
     Route::post('/c/{slug}/u/{lessonId}/complete', [StudentController::class, 'completeLesson'])
         ->name('student.lesson.complete');
+
+    // H3308: гейт-выдача контента урока, снятого с публичного диска —
+    // стенограмма, материалы, справочные файлы ДЗ. Гейт тот же, что у плеера.
+    Route::get('/c/{slug}/u/{lessonId}/transcript', [GatedAssetController::class, 'transcript'])
+        ->whereNumber('lessonId')
+        ->name('student.lesson.transcript');
+    Route::get('/c/{slug}/u/{lessonId}/materials/{file}', [GatedAssetController::class, 'material'])
+        ->whereNumber('lessonId')->where('file', '[A-Za-z0-9._-]+')
+        ->name('student.lesson.material');
+    Route::get('/c/{slug}/u/{lessonId}/homework-files/{file}', [GatedAssetController::class, 'homeworkRef'])
+        ->whereNumber('lessonId')->where('file', '[A-Za-z0-9._-]+')
+        ->name('student.lesson.homework-file');
 
     Route::get('/c/{slug}/materials/download', [StudentController::class, 'downloadCourseMaterials'])
         ->middleware('course.canonical')
@@ -769,10 +902,13 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
         ->middleware('admin')
         ->name('leads.export');
 
+    // H3313: GET — инструкция, выдача токена только CSRF-защищённым POST.
     Route::get('/telegram/connect', [TelegramController::class, 'connect'])->name('telegram.connect');
+    Route::post('/telegram/connect', [TelegramController::class, 'start'])->name('telegram.connect.start');
 
     // Привязка VK через одноразовый токен (вместо сырого ?ref={user_id}) — см. VkController.
     Route::get('/vk/connect', [VkController::class, 'connect'])->name('vk.connect');
+    Route::post('/vk/connect', [VkController::class, 'start'])->name('vk.connect.start');
 
     // Отвязка мессенджера (TG/VK) из кабинета — кнопка «Отвязать»
     Route::post('/profile/messenger/{channel}/disconnect', [StudentController::class, 'disconnectMessenger'])
@@ -782,6 +918,17 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     // Самостоятельная смена пароля студентом в кабинете
     Route::post('/profile/password', [AuthController::class, 'updatePassword'])
         ->name('student.password.update');
+
+    // H4434 — timezone localization (MG 09-09-2026): ручной селектор + временное
+    // пребывание + silent device-TZ захват (VPN-иммунный сигнал).
+    Route::post('/profile/timezone', [TimezoneController::class, 'update'])
+        ->name('student.timezone.update');
+    Route::post('/profile/timezone/override', [TimezoneController::class, 'override'])
+        ->name('student.timezone.override');
+    Route::post('/profile/timezone/override/clear', [TimezoneController::class, 'clearOverride'])
+        ->name('student.timezone.override.clear');
+    Route::post('/profile/timezone/device', [TimezoneController::class, 'deviceCapture'])
+        ->name('student.timezone.device');
 });
 
 // --- ТЕХНИЧЕСКИЕ И ДЕБАГ МАРШРУТЫ ---
@@ -795,20 +942,27 @@ Route::get('/force-download/{file}', function (string $file) {
     abort_unless($u && ($u->is_admin || $u->is_lecture_editor || $u->teacher_id), 403);
 
     $safeFileName = basename($file); // защита от path traversal
-    // Архивы сертификатов кладёт GenerateCertificatesArchive в подкаталог archives/.
+    // Архивы сертификатов кладёт GenerateCertificatesArchive в приватный
+    // каталог archives/ на disk('local') (H3310) — раньше это был публичный
+    // диск, и файл дублировался по прямому /storage/archives/... URL.
     $path = 'archives/'.$safeFileName;
 
-    if (! Storage::disk('public')->exists($path)) {
+    if (! Storage::disk('local')->exists($path)) {
         abort(404, 'Файл не найден.');
     }
 
-    return Storage::disk('public')->download($path);
+    return Storage::disk('local')->download($path);
 })->middleware('auth')->name('force-download');
 
 // Debug-маршрут удалён из production (см. BUGS_REPORT.md #1.1)
 
 // --- ОТПРАВКА ФОРМЫ ---
 Route::post('/leads/store', [LeadController::class, 'store'])->name('leads.store');
+
+// Один клик от вошедшего ученика: поля заполняются из кабинета, форма их не показывает.
+Route::post('/leads/one-click', [LeadController::class, 'oneClick'])
+    ->middleware('auth')
+    ->name('leads.one-click');
 
 // --- ПОДПИСКА НА РАССЫЛКУ (H324) — email-only → кабинет + magic-link + магниты.
 // Оба маршрута самогейтятся по фича-флагу newsletter_subscribe (404 при OFF).
@@ -820,6 +974,18 @@ Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('newsletter.magic');
+
+// --- СВЯЗЫВАНИЕ TELEGRAM С КАБИНЕТОМ (H3542) — по capability-ссылке из
+// приглашения саппорт-бота в DM. Самогейтится флагом support_dm_link_invite
+// (404 при OFF). Строго до catch-all /{slug}; публичные; троттлинг в контроллере.
+Route::get('/support/link/{token}', [TelegramSupportLinkController::class, 'show'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('support.telegram.link');
+Route::post('/support/link/{token}', [TelegramSupportLinkController::class, 'submit'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('support.telegram.link.submit');
 
 // --- ТРЕКИНГ РАССЫЛОК (H1449 B4) — оба самогейтятся по email_campaigns (404 при OFF).
 // Токен резолвит CampaignRecipient на сервере — PII в URL никогда не попадает.
@@ -836,6 +1002,15 @@ Route::get('/login-link/{token}', [AdminLoginLinkController::class, 'login'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('admin.login-link');
+
+// --- «TELEGRAM-ВХОД» (CABINET_ADOPTION_ROADMAP P2) — одноразовая ссылка,
+// выданная студент-ботом в чат (владение Telegram = фактор подлинности).
+// Самогейтится флагом telegram_cabinet_login (404 при OFF); принимает только
+// токены назначения tg_login (см. TelegramLoginService::MAGIC_PURPOSE).
+Route::get('/tg-login/{token}', [TgLoginLinkController::class, 'login'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('tg.login-link');
 
 // --- РЕЖИМ ПРОСМОТРА ЗА ПОЛЬЗОВАТЕЛЯ (H1947) ---
 // Старт — подписанная короткоживущая ссылка из UserResource (подпись закрывает
@@ -885,9 +1060,33 @@ Route::post('/trial/{course:slug}', [TrialController::class, 'create'])
 // throttle:5,1 — публичный приём email + создание pending-платежа (защита от ботов).
 Route::get('/paypal/{tariff}', [PaypalClaimController::class, 'show'])
     ->name('paypal.claim.show');
+// H3990: режим доплаты (разовая акция, без нового тарифа) — та же форма с
+// фиксированной €22/$26 и проводкой «закрыть открытый счёт-доплату 2 000 ₽».
+Route::get('/paypal/{tariff}/doplata', [PaypalClaimController::class, 'showSupplement'])
+    ->name('paypal.claim.supplement');
 Route::post('/paypal/{tariff}', [PaypalClaimController::class, 'store'])
     ->middleware('throttle:5,1')
     ->name('paypal.claim.store');
+
+// Оплата банковским переводом (SEPA/SWIFT на внешний счёт получателя школы,
+// H3497): зеркало PayPal-заявки. Флаг BANK_CLAIM_ENABLED default OFF (404).
+// Строго до catch-all /{slug}; throttle:5,1 — защита от спама pending-платежей.
+Route::get('/bank/{tariff}', [BankClaimController::class, 'show'])
+    ->name('bank.claim.show');
+Route::post('/bank/{tariff}', [BankClaimController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('bank.claim.store');
+
+// «Я заплатил преподавателю напрямую» (H4627): анкета-зеркало PayPal-pending.
+// Платёж ложится pending с received_account=teacher + received_by_teacher_id;
+// куратор сверяет по выписке преподавателя и подтверждает в Filament —
+// номинал вычтется из гонорара сам (H4597). Флаг TEACHER_PAY_ENABLED default
+// OFF (404). Строго до catch-all /{slug}; throttle:5,1 — защита от спама.
+Route::get('/teacher-pay/{tariff}', [TeacherPayController::class, 'show'])
+    ->name('teacherpay.claim.show');
+Route::post('/teacher-pay/{tariff}', [TeacherPayController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('teacherpay.claim.store');
 
 // Счёт для компании / ИП (безнал). Flag COMPANY_INVOICE_ENABLED; pending until
 // admin confirms bank transfer. Print path BEFORE /invoice/{tariff} so "print"
@@ -1021,6 +1220,36 @@ Route::get('/sertifikaty', function () {
 
     return redirect('/sertifikat'.($query ? '?'.$query : ''), 301);
 });
+
+// --- ПОДАРОЧНЫЕ СЕРТИФИКАТЫ (H3334) ---
+// ВАЖНО: до catch-all /{slug}. Каждая поверхность самогейтится флагом
+// features.gift_certificates (404 при OFF — см. GiftCertificateController).
+// Активация — только для залогиненных (доступ открывается конкретному юзеру);
+// POST троттлится против перебора кодов; верификация публична, как /verify/{number}.
+Route::get('/gift/activate', [GiftCertificateController::class, 'showActivate'])
+    ->name('gift.activate');
+Route::post('/gift/activate', [GiftCertificateController::class, 'activate'])
+    ->middleware('throttle:10,1')
+    ->name('gift.activate.attempt');
+Route::get('/gift/verify/{number}', [GiftCertificateController::class, 'verify'])
+    ->name('gift.verify');
+
+// --- ПУБЛИЧНЫЕ АНКЕТЫ (движок опросов; рулинг MG 24-08-2026 — вариант Б) ---
+// ВАЖНО: до catch-all /{slug}. Самогейтится флагом SURVEYS_ENABLED (404 при OFF).
+// POST троттлится против спама + ханипот в форме (SurveyPageController@store).
+Route::get('/anketa/{slug}', [SurveyPageController::class, 'show'])
+    ->name('survey.show');
+Route::post('/anketa/{slug}', [SurveyPageController::class, 'store'])
+    ->middleware('throttle:20,60')
+    ->name('survey.store');
+
+// Выгрузка ответов CSV для куратора (админ/менеджер).
+Route::get('/admin/surveys/{slug}/export', [SurveyPageController::class, 'exportCsv'])
+    ->middleware('throttle:30,60')
+    ->name('survey.export');
+Route::get('/gift/{certificate}/download', [GiftCertificateController::class, 'download'])
+    ->middleware(['auth', 'throttle:10,1'])
+    ->name('gift.download');
 
 // --- КОРОТКАЯ ССЫЛКА НА КАРТОЧКУ СТУДЕНТА (для заметок в Telegram-контактах) ---
 // ВАЖНО: до catch-all /{slug}. Префикс /u (а не /s — тот занят блогом, prefix('s')).

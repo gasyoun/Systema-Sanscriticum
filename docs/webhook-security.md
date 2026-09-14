@@ -33,6 +33,7 @@ _Created: 07-07-2026 · Last updated: 16-08-2026_
 | `POST /api/webhooks/max-magnet/{secret}` | `verify.max.magnet` (`VerifyMaxMagnetWebhook`) | секрет **в URL-пути** = `MarketingSetting.max_webhook_secret` (Max Bot API не поддерживает header/body-секрет) | **fail-closed** (пусто → 403) | лид-магнит | `MaxMagnetWebhookTest` |
 | `POST /api/webhooks/lead-step` | `verify.n8n.leadstep` (`VerifyLeadStepWebhook`) | заголовок `X-Webhook-Secret` = `services.n8n.lead_step_secret` | **fail-closed** (пусто → 403) | трекинг лида | `LeadStepWebhookTest` |
 | `POST /api/webhooks/telegram-zapisi` | `verify.tg.zapisi` (`VerifyTelegramZapisiWebhook`) | `X-Telegram-Bot-Api-Secret-Token` = `MarketingSetting.zapisi_webhook_secret` | **fail-closed** с рождения (пусто → 403) | Track C (H164) — приватный class-booking чат, PII | `TelegramZapisiWebhookTest` |
+| `POST /api/webhooks/inbound-email/{secret}` | `verify.inbound.email` (`VerifyInboundEmailWebhook`) + `throttle:30,1`; контроллер 404 при флаге OFF | секрет **в URL-пути** = `services.inbound_email.webhook_secret` (проводник пересылки не обязан уметь заголовки; ротация — новый secret в .env + правка проводника) | **fail-closed** с рождения (пусто → 403) | поддержка, не деньги: пишет chat_messages (H3462) | `InboundEmailWebhookTest` |
 
 💰 = выдает платный доступ · 🔒 = пишет данные доступа/контента.
 

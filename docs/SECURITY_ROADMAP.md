@@ -1,6 +1,8 @@
 # Security & Vulnerability-Avoidance Roadmap — Systema Sanscriticum
 
-_Created: 03-07-2026 · Last updated: 16-08-2026_
+_Created: 03-07-2026 · Last updated: 27-08-2026_
+
+> **Truth-pass 27-08-2026** (Grok 4.6 `grok-4.6`). Closed references checked against the combined registry. Ledger kept in place ([FINDINGS §475](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md) clause 3). Not archived.
 
 Security-focused companion to the general
 [docs/ROADMAP_2026_2027.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_2026_2027.md).

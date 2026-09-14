@@ -1,0 +1,280 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "plane": "topic",
+      "category": "access_window",
+      "priority": 5,
+      "patterns": [
+        "доступ к запис[а-я]*|доступ к видео",
+        "срок доступ[а-я]*",
+        "будут ли запис[а-я]* доступн|запис[а-я]* доступн[а-я]* (навсегда|вечно|в течение)",
+        "сколько (времени|месяцев).{0,24}запис",
+        "(навсегда|вечно|в течение).{0,24}запис"
+      ],
+      "negations": [
+        "техподдержк",
+        "не работает|не открыва[а-я]*",
+        "кабинет",
+        "материал[а-я]*"
+      ],
+      "enabled": true,
+      "source": "H4609 taxonomy v2: ребёнок recording_access (ключ L2-scoped, родитель в mapping.md). Окно/срок доступа к записям — узкая рука РАНЬШЕ широкой «запис» p10, иначе «сколько будут доступны записи» теряется. Кабинет- и материалы-negations держат «нет доступа к материалам» в access_login (тест p70) и отказ-фразы в tech_issue."
+    },
+    {
+      "plane": "topic",
+      "category": "recording_access",
+      "priority": 10,
+      "patterns": [
+        "видеозапис[а-я]*",
+        "в каком видео",
+        "пересмотр[а-я]*",
+        "переслуш[а-я]*",
+        "тайм ?код[а-я]*",
+        "rutube|youtube",
+        "запис[а-я]*( занятия| урока| лекции)?",
+        "пропуст[а-я]*.{0,40}(занят|урок|лекц)",
+        "(занят|урок|лекц)[а-я]*.{0,40}пропуст[а-я]*"
+      ],
+      "negations": [
+        "техподдержк",
+        "не работает|не открыва[а-я]*",
+        "записаться|запишусь"
+      ],
+      "enabled": true,
+      "source": "SupportAnswerSuggester CATEGORY_RECORDING hand; negation guards = golden negation pair H3525 («ссылка на запись не работает, техподдержка») and enrollment phrases («запишусь/как записаться» — это онбординг, не записи). H3528: «в каком видео» — zabota-export phrasing inventory (telegram-zabota-export/question_phrasing_inventory.json, код B «Записи / видео / таймкоды»: «Скажите пожалуйста в каком видео можно найти?» ×2, единственная частотная формулировка B без покрытия). Дословная фраза, а не голое «видео»: обобщение переворачивает регресс-кейс t-tech-06 («Белый экран вместо видео урока») — отказ техники остаётся в tech_issue."
+    },
+    {
+      "plane": "topic",
+      "category": "schedule",
+      "priority": 20,
+      "patterns": [
+        "(?<![а-я])(ссылк|линк)[а-я]*.{0,48}расписан[а-я]*",
+        "расписан[а-я]*.{0,48}(?<![а-я])(ссылк|линк)[а-я]*"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "SupportAnswerSuggester CATEGORY_SCHEDULE narrow link-hand (узкая C раньше A, иначе `ссылк` крадёт тему 06)"
+    },
+    {
+      "plane": "topic",
+      "category": "payment_billing",
+      "priority": 30,
+      "patterns": [
+        "(?<![а-я])(ссылк|линк)[а-я]*.{0,48}(оплат|плат|тариф|цен|стои)",
+        "(оплат|тариф|цен|стои)[а-я]*.{0,48}(?<![а-я])(ссылк|линк)[а-я]*"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "SupportAnswerSuggester CATEGORY_PAYMENT narrow hand (H3394: деньги рядом со «ссылкой» — D, а не Zoom)"
+    },
+    {
+      "plane": "topic",
+      "category": "tech_issue",
+      "priority": 35,
+      "patterns": [
+        "техподдержк[а-я]*",
+        "не работает",
+        "не открыва[а-я]*",
+        "не загружа[а-я]*",
+        "ошибк[а-я]*",
+        "сбой|зависает|виснет|вылетает|лагает",
+        "белый экран",
+        "не слышно",
+        "микрофон[а-я]*",
+        "(?:вебинар|kinescope)[^\\n]{0,48}(?:не работает|не открыв|не грузит|не воспроизводит|ошибк)|(?:не работает|не открыв|не грузит|не воспроизводит|ошибк)[^\\n]{0,48}(?:вебинар|kinescope)"
+      ],
+      "negations": [
+        "кабинет"
+      ],
+      "enabled": true,
+      "source": "FAQ техподдержка note (В7 recovery); кабинет-negation держит «Кабинет не открывается» в access_login (H3394). H3526: + ключевые слова config/support_tech.php (очередь «Техника» userbot) — белый экран, не слышно, микрофон дословно; вебинар/kinescope — только рядом с отказом (голое упоминание = вопрос о подключении, zoom_link p40; замороженный вектор t-zoom-04). Голые сайт/приложение/регистрац/доступ — скип-ноты в reports/rules-seed-census.md."
+    },
+    {
+      "plane": "topic",
+      "category": "zoom_link",
+      "priority": 40,
+      "patterns": [
+        "зум|zoom|(?<![a-z])join(?![a-z])",
+        "подключ[а-я]*",
+        "(?<![а-я])(ссылк|линк)[а-я]*",
+        "как (мне )?(войти|зайти|попасть)",
+        "войти в (занятие|урок|встреч[а-я]*)"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "SupportAnswerSuggester CATEGORY_ZOOM broad hand"
+    },
+    {
+      "plane": "topic",
+      "category": "schedule",
+      "priority": 50,
+      "patterns": [
+        "расписан[а-я]*",
+        "когда (занятие|урок|начн[а-я]*|следующ[а-я]*|будет|стартует|пара)",
+        "во ?сколько",
+        "время (занят|урок)",
+        "перенос|перенес",
+        "в какой день|график занят|в какое время"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "SupportAnswerSuggester CATEGORY_SCHEDULE broad hand"
+    },
+    {
+      "plane": "topic",
+      "category": "refund",
+      "priority": 55,
+      "patterns": [
+        "возврат (средств|денег|оплат[а-я]*)",
+        "(оформить|оформление|сделать|запросить|получить) возврат",
+        "верните деньги за (курс|обучени|модуль|блок 2|занятия)",
+        "(хочу|как) вернуть деньги",
+        "верните оплат[а-я]*"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "H4609 taxonomy v2: ребёнок payment_billing (родитель в mapping.md), ORS 08_возврат. Узкие однозначные формулировки, РАНЬШЕ широкой руки payment p60. Голое «возможен возврат?» НЕ захватывается — это предпокупочное возражение b9_risk_trial (golden o-b9-02), «Верните деньги за оплаченный блок.» остаётся intent/complaint (golden i-cp-04)."
+    },
+    {
+      "plane": "topic",
+      "category": "pause",
+      "priority": 56,
+      "patterns": [
+        "пауз[а-я]*|приостанов[а-я]*",
+        "замороз[а-я]*|заморозить",
+        "взять (паузу|перерыв)|поставить на паузу"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "H4609 taxonomy v2: ребёнок payment_billing, ORS 07_пауза (pre-churn сигнал — человеческий ретеншн-разговор). «Пауза/приостанов/ заморозка» не встречаются в frozen-векторах — новые ключи не флипают существующие ожидания."
+    },
+    {
+      "plane": "topic",
+      "category": "deposit",
+      "priority": 57,
+      "patterns": [
+        "депозит[а-я]*",
+        "(?<![а-я])взнос|взнос[ауы] ",
+        "внести (депозит|взнос)|вступительный взнос|благотворительный взнос"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "H4609 taxonomy v2: ребёнок payment_billing, ORS 09_депозит («деньги уже в движении» — course-routed). Предоплат/доплат остаются в широкой руке payment p60 (frozen o-b2-02: тариф-стем), депозит-лексика — новая, флипов нет."
+    },
+    {
+      "plane": "topic",
+      "category": "installment",
+      "priority": 58,
+      "patterns": [
+        "в рассрочку",
+        "(оплат|оплачив)[а-я]* частями|частями (оплат|платит)",
+        "разбить (платеж|оплату|сумму)"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "H4609 taxonomy v2: ребёнок payment_billing. Голое «рассрочка» НЕ захватывается — frozen t-pay-03 и o-b2-02 ждут payment_billing (тариф-стем p60); installment берёт только «в рассрочку/частями/разбить платёж»."
+    },
+    {
+      "plane": "topic",
+      "category": "payment_billing",
+      "priority": 60,
+      "patterns": [
+        "сколько стоит|сколько.{0,24}стои",
+        "стоимост[а-я]*",
+        "(?<![а-я])цен[ауыое](?![а-я])",
+        "тариф[а-я]*|рассрочк[а-я]*|предоплат[а-я]*|доплат[а-я]*",
+        "скидк[а-я]*|промокод",
+        "по частям|(?<![а-я])оплат|сколько (мне )?(платить|заплатить)|как оплат[а-я]*|можно ли оплат"
+      ],
+      "negations": [
+        "кабинет"
+      ],
+      "enabled": true,
+      "source": "SupportAnswerSuggester CATEGORY_PAYMENT broad hand (H3394); кабинет-negation держит «Кабинет не открывается» в access_login"
+    },
+    {
+      "plane": "topic",
+      "category": "access_login",
+      "priority": 70,
+      "patterns": [
+        "нет доступа",
+        "не могу (попасть|войти|зайти|открыт[а-я]*)",
+        "(?<![а-я])кабинет|личн(ый|ым|ого) кабинет",
+        "в какой (я )?группе|моя группа|какая у меня группа",
+        "логин|парол[а-я]*",
+        "мои группы",
+        "мои курсы",
+        "мой курс",
+        "в каких группах",
+        "какие у меня группы",
+        "какие у меня курсы",
+        "где я учусь",
+        "мои занятия",
+        "(?<![a-z])(my)?groups(?![a-z])",
+        "вход"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "SupportAnswerSuggester CATEGORY_ACCESS (H3394: голое «кабинет», «пароля»). H3526: + StudentSelfService GROUP_PHRASES («мои группы/курсы, где я учусь…» — self-service «в каких я группах»; «мое расписание/моё расписание» остаются в schedule p50, раньше access — как в легасе Suggester) и keywords support_tech.php «вход» (дословный сабстринг, как в легасе)."
+    },
+    {
+      "plane": "topic",
+      "category": "materials_content",
+      "priority": 80,
+      "patterns": [
+        "материал[а-я]*|методичк[а-я]*|конспект[а-я]*",
+        "презентац[а-я]*|раздаточ[а-я]*|учебник[а-я]*"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "SupportAnswerSuggester CATEGORY_MATERIALS (материальная половина; сертификат выделен отдельно по таксономии v1)"
+    },
+    {
+      "plane": "topic",
+      "category": "homework_progress",
+      "priority": 85,
+      "patterns": [
+        "домашн[а-я]*|домашк[а-я]*",
+        "(?<![а-я])дз(?![а-я])",
+        "задани[а-я]*|прикрепл[а-я]*",
+        "(?<![a-z])(my)?homework(?![a-z])",
+        "(?<![a-z])hw(?![a-z])"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "SupportAnswerSuggester CATEGORY_MATERIALS (H3394 домашняя половина) → отдельная категория v1. H3526: + StudentSelfService HOMEWORK_PHRASES слэш-команды /homework, /myhomework, /hw — слэш запрещён движком, поэтому без слэша с латинскими границами; текстовые фразы уже покрыты домашн/дз/задани-стемами."
+    },
+    {
+      "plane": "topic",
+      "category": "certificate",
+      "priority": 86,
+      "patterns": [
+        "сертификат[а-я]*|диплом[а-я]*|удостоверен[а-я]*"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "SupportAnswerSuggester CATEGORY_MATERIALS (сертификатная половина) → отдельная категория v1"
+    },
+    {
+      "plane": "topic",
+      "category": "membership_club",
+      "priority": 90,
+      "patterns": [
+        "клуб[а-я]*|членство|подписк[а-я]*"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "taxonomy v1 membership_club seed"
+    },
+    {
+      "plane": "topic",
+      "category": "other_support",
+      "priority": 99,
+      "patterns": [],
+      "negations": [],
+      "enabled": false,
+      "source": "резервная корзина — авто-срабатывание выключено (см. taxonomy/v1/topic.yaml)"
+    }
+  ]
+}

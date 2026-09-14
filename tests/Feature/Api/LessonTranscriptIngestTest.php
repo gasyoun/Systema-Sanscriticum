@@ -30,6 +30,7 @@ class LessonTranscriptIngestTest extends TestCase
         parent::setUp();
         config()->set('services.lesson_sync.secret', self::SECRET);
         Storage::fake('public');
+        Storage::fake('local');
     }
 
     private function lesson(): Lesson
@@ -90,7 +91,7 @@ class LessonTranscriptIngestTest extends TestCase
 
         $lesson->refresh();
         $this->assertSame("transcripts/lesson-{$lesson->id}.json", $lesson->transcript_file);
-        Storage::disk('public')->assertExists($lesson->transcript_file);
+        Storage::disk('local')->assertExists($lesson->transcript_file);
 
         // Ради этого всё и делается: спаны для нарезки перестают быть пустыми.
         $this->assertNotEmpty(ClipSpanPlanner::planSpans($lesson));
@@ -144,7 +145,7 @@ class LessonTranscriptIngestTest extends TestCase
             $second->json('transcript_file'),
         );
 
-        $stored = json_decode(Storage::disk('public')->get("transcripts/lesson-{$lesson->id}.json"), true);
+        $stored = json_decode(Storage::disk('local')->get("transcripts/lesson-{$lesson->id}.json"), true);
         $this->assertCount(360, $stored['results']['channels'][0]['alternatives'][0]['words']);
     }
 

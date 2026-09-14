@@ -1,6 +1,6 @@
 # Мокап «Библиотека» (Learning library) — H957, направление C, мокап №4
 
-_Created: 15-07-2026 · Last updated: 15-07-2026_
+_Created: 15-07-2026 · Last updated: 05-09-2026_
 
 Четвёртый мокап ремейка кабинета по рулингу M.G. 15-07-2026: «мокап №4 — направление C».
 Направление C из [STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/STUDENT_CABINET_REMAKE_DIRECTIONS_2026.md);
@@ -27,9 +27,9 @@ _Created: 15-07-2026 · Last updated: 15-07-2026_
 
 | Файл | Слой | Что доказывает |
 |---|---|---|
-| [index.html](index.html) | Библиотека (полки) | 5 полок владения; истёкшее — структурная полка с продлением (R4); членство — нативная карточка уровня полки (R8/R24); живое — одна полка из пяти (осознанная жертва против R6, показана честно) |
-| [item.html](item.html) | Предмет | Рельса прогресса вместо списка уроков (прогресс = навигация, Khan); оффер расширения владения после прогресса (R2/R17) со ссылкой на членство |
-| [schedule.html](schedule.html) | Расписание | Сервисная страница при библиотеке; «запись ложится на полку в течение суток» (M6); слабое место направления названо в подвале |
+| [index.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/learning-library/index.html) | Библиотека (полки) | 5 полок владения; истёкшее — структурная полка с продлением (R4); членство — нативная карточка уровня полки (R8/R24); живое — одна полка из пяти (осознанная жертва против R6, показана честно) |
+| [item.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/learning-library/item.html) | Предмет | Рельса прогресса вместо списка уроков (прогресс = навигация, Khan); оффер расширения владения после прогресса (R2/R17) со ссылкой на членство |
+| [schedule.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/learning-library/schedule.html) | Расписание | Сервисная страница при библиотеке; «запись ложится на полку в течение суток» (M6); слабое место направления названо в подвале |
 
 ## Ограничения
 

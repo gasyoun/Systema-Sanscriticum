@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\AddCspReportOnly;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\CaptureAttribution;
@@ -19,6 +20,7 @@ use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\ValidateSignature;
 use App\Http\Middleware\VerifyCsrfToken;
 use App\Http\Middleware\VerifyExamScoresWebhook;
+use App\Http\Middleware\VerifyInboundEmailWebhook;
 use App\Http\Middleware\VerifyLeadStepWebhook;
 use App\Http\Middleware\VerifyLectureClipCallbackWebhook;
 use App\Http\Middleware\VerifyMaxMagnetWebhook;
@@ -76,7 +78,7 @@ class Kernel extends HttpKernel
             StartSession::class,
             ShareErrorsFromSession::class,
             VerifyCsrfToken::class,
-            // Границы режима просмотра за пользователя (H1947): fail-closed при
+            // Границы режима просмотра за пользователем (H1947): fail-closed при
             // снятом флаге, запрет денежных записей, плашка режима в HTML.
             // Стоит ДО SubstituteBindings осознанно: запрет не должен зависеть от
             // того, нашлась ли модель в URL, иначе денежный POST по несуществующему
@@ -87,6 +89,9 @@ class Kernel extends HttpKernel
             CaptureReferral::class,
             CapturePartnerReferral::class,
             CaptureAttribution::class,
+            // H4663 (аудит периметра 14-09, п.7): CSP-Report-Only — наблюдение
+            // без блокировки; ужесточение после разбора репортов (GTD H4663).
+            AddCspReportOnly::class,
         ],
 
         'api' => [
@@ -134,6 +139,8 @@ class Kernel extends HttpKernel
         'verify.partner.bot' => VerifyPartnerBotWebhook::class,
         // --- TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ---
         'verify.tg.zapisi' => VerifyTelegramZapisiWebhook::class,
+        // --- ВХОДЯЩИЙ EMAIL (H3462): zabota@ → вебхук, секрет в пути ---
+        'verify.inbound.email' => VerifyInboundEmailWebhook::class,
         // Канонический slug курса: alias в URL → 301 на courses.slug
         'course.canonical' => RedirectToCanonicalCourseSlug::class,
     ];

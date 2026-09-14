@@ -7,6 +7,8 @@ namespace App\Jobs;
 use App\Models\LandingBot;
 use App\Models\Lead;
 use App\Services\Leads\LeadMagnetDispatcher;
+use App\Services\Leads\WaitlistWelcome;
+use App\Services\Messaging\DeliveryChannelManager;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -48,6 +50,9 @@ final class ProcessVkMagnetCallback implements ShouldQueue
             if ($refLead) {
                 if (! $refLead->vk_user_id) {
                     $refLead->update(['vk_user_id' => $userId]);
+
+                    // H3339: подписчик статусов получает словарь при первой привязке.
+                    WaitlistWelcome::sendIfFreshlyBound($refLead->fresh() ?? $refLead, 'vk', (string) $userId, app(DeliveryChannelManager::class));
                 }
                 LeadMagnetDispatcher::deliverOrDefer($refLead, 'vk');
             } else {

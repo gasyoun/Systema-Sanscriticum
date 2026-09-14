@@ -1,3 +1,5 @@
+_Created: 11-07-2026 · Last updated: 05-09-2026_
+
 # Telegram userbot / MTProto runner — inventory (Phase 0.1)
 
 _Created: 11-07-2026 · Last updated: 27-07-2026 (§4.1 — инцидент EMFILE; §4.2 — неправда на вкладке «Записи (бот)»)_

@@ -15,6 +15,7 @@ use App\Services\Srs\SrsMedia;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -36,6 +37,12 @@ class SrsReview extends Component
 {
     public const MODES = ['classic', 'mc', 'typing', 'pairs', 'speed', 'difficult'];
 
+    /**
+     * H3313: #[Locked] — клиент не может переписать deckId после mount
+     * (иначе тамперинг открывал чужую приватную колоду). Легитимная смена
+     * колоды — навигацией по URL (см. select в blade).
+     */
+    #[Locked]
     public ?int $deckId = null;
 
     public bool $revealed = false;
@@ -155,7 +162,11 @@ class SrsReview extends Component
 
     private function currentDeck(): ?SrsDeck
     {
-        return $this->deckId ? SrsDeck::find($this->deckId) : null;
+        // H3313 defense-in-depth: даже при подменённом deckId (hydrate-байпас)
+        // чужая приватная колода не отдаётся — рендер/грейд получают null.
+        $deck = $this->deckId ? SrsDeck::find($this->deckId) : null;
+
+        return ($deck !== null && $this->canAccess($deck)) ? $deck : null;
     }
 
     public function updatedDeckId(mixed $value): void
@@ -182,6 +193,10 @@ class SrsReview extends Component
 
     public function selectDeck(int $deckId): void
     {
+        // H3313: как в SrsDeckEditor::selectDeck — гейт до присваивания.
+        $deck = SrsDeck::find($deckId);
+        abort_unless($deck !== null && $this->canAccess($deck), 403);
+
         $this->deckId = $deckId;
         $this->updatedDeckId($deckId);
     }

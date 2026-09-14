@@ -11,6 +11,7 @@ use App\Mail\TrialZoomLinkMail;
 use App\Models\Concerns\TracksBlame;
 use App\Services\BlockAccessMaterializer;
 use App\Services\CuratorNotifier;
+use App\Services\GiftCertificateService;
 use App\Services\GrammarLab\GrammarLabEntitlementService;
 use App\Services\Membership\ClubMembershipService;
 use App\Services\Messaging\DeliveryChannelManager;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -110,6 +112,24 @@ class Payment extends Model
     public const PROVIDER_INVOICE = 'invoice';
 
     /**
+     * Заявка об оплате банковским переводом на внешний счёт получателя школы
+     * за рубежом (H3497, SEPA/SWIFT в Австрию). Автосверки нет — pending до
+     * ручного подтверждения в Filament; trusted-студентам paid сразу
+     * (зеркало рулинга 22-08-2026 из PayPal-канала).
+     */
+    public const PROVIDER_BANK_SEPA = 'bank_sepa';
+
+    /**
+     * Заявка студента об оплате НАПРЯМУЮ преподавателю на его личный счёт
+     * (H4627, зеркало PayPal-pending/BankClaim). Запись сразу несёт
+     * received_account='teacher_personal' + received_by_teacher_id, поэтому
+     * после подтверждения (pending → paid) движок зарплаты вычтет номинал
+     * из гонорара преподавателя сам (механизм H4597). Авто-доверия НЕТ —
+     * сверку по выписке преподавателя делает куратор всегда.
+     */
+    public const PROVIDER_TEACHER_TRANSFER = 'teacher_transfer';
+
+    /**
      * Providers that wait for human reconciliation and must never be reaped by
      * payments:expire-stale-checkouts (they are not abandoned bank links).
      *
@@ -118,6 +138,8 @@ class Payment extends Model
     public const MANUAL_CLAIM_PROVIDERS = [
         self::PROVIDER_PAYPAL,
         self::PROVIDER_INVOICE,
+        self::PROVIDER_BANK_SEPA,
+        self::PROVIDER_TEACHER_TRANSFER,
     ];
 
     protected $casts = [
@@ -268,16 +290,58 @@ class Payment extends Model
         return $this->tariff === 'marathon_paid';
     }
 
+    /**
+     * Добровольное пожертвование на деятельность Института (/mecenaty, план
+     * института N2). Донорская рамка без встречного пакета благ: доступа,
+     * групп, членства и лид-конверсии не несёт — только бухгалтерская строка.
+     */
+    public function isDonation(): bool
+    {
+        return $this->tariff === 'donation';
+    }
+
     /** Заявка об оплате из-за рубежа (PayPal), поданная студентом. */
     public function isPaypal(): bool
     {
         return $this->provider === self::PROVIDER_PAYPAL;
     }
 
+    /**
+     * Покупка подарочного сертификата (H3334): деньги записаны, но доступ
+     * покупателю НЕ открывается — вместо этого выпускается одноразовый код
+     * активации получателю. Отдельный процессор в fireOnPaid (как deposit/
+     * trial/marathon), чтобы штатный grantAccess покупателя в группы не добавлял.
+     */
+    public function isGiftCertificate(): bool
+    {
+        return $this->tariff === 'gift';
+    }
+
     /** Счёт на оплату юрлицу / ИП (безнал), ожидает ручной сверки. */
     public function isCompanyInvoice(): bool
     {
         return $this->provider === self::PROVIDER_INVOICE;
+    }
+
+    /** Заявка об оплате банковским переводом (SEPA/SWIFT, H3497). */
+    public function isBankSepa(): bool
+    {
+        return $this->provider === self::PROVIDER_BANK_SEPA;
+    }
+
+    /** Заявка об оплате напрямую преподавателю (H4627), ожидает сверки куратора. */
+    public function isTeacherTransfer(): bool
+    {
+        return $this->provider === self::PROVIDER_TEACHER_TRANSFER;
+    }
+
+    /**
+     * Банковская заявка существующего ученика с мгновенным доступом (зеркало
+     * рулинга 22-08-2026) — кандидат выборочной сверки до verified_at.
+     */
+    public function isAutoTrustedBankClaim(): bool
+    {
+        return $this->isBankSepa() && (bool) $this->claimMeta('auto_trusted');
     }
 
     /**
@@ -292,6 +356,23 @@ class Payment extends Model
         }
 
         return $meta[$key];
+    }
+
+    /**
+     * PayPal-заявка существующего ученика, получившая доступ сразу (ruling
+     * 22-08-2026), — кандидат выборочной сверки, пока verified_at не проставлен.
+     */
+    public function isAutoTrustedPaypal(): bool
+    {
+        return $this->isPaypal() && (bool) $this->claimMeta('auto_trusted');
+    }
+
+    /** Отметка «сверка пройдена» для авто-доверенной PayPal-заявки. */
+    public function markPaypalVerified(): void
+    {
+        $meta = is_array($this->claim_meta) ? $this->claim_meta : [];
+        $meta['verified_at'] = now()->toIso8601String();
+        $this->update(['claim_meta' => $meta]);
     }
 
     /** Human invoice number for printable счёт (stable per payment id). */
@@ -395,6 +476,7 @@ class Payment extends Model
             $this->isTrial() => '🎟 Пробное занятие',
             $this->isExpense() => '💸 Технический расход / возврат',
             $this->isSalaryPayout() => '👨‍🏫 Выплата преподавателю',
+            $this->isGiftCertificate() => '🎁 Подарочный сертификат',
             $this->tariff === 'full' => 'Весь курс',
             default => $this->blockLabel(),
         };
@@ -445,10 +527,61 @@ class Payment extends Model
         return $query->where('provider', self::PROVIDER_PAYPAL)->where('status', 'pending');
     }
 
+    /**
+     * Авто-доверенные PayPal-заявки существующих учеников (ruling 22-08-2026):
+     * сразу paid, сверка — выборочная и пост-фактум. Фильтр показывает только
+     * ещё НЕ просмотренные (verified_at не проставлен).
+     */
+    public function scopePaypalUnverified(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_PAYPAL)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->whereNotNull('claim_meta->auto_trusted')
+            ->whereNull('claim_meta->verified_at');
+    }
+
     /** Неподтверждённые счета юрлиц, ожидающие сверки банковского поступления. */
     public function scopeInvoicePending(Builder $query): Builder
     {
         return $query->where('provider', self::PROVIDER_INVOICE)->where('status', 'pending');
+    }
+
+    /** Неподтверждённые банковские (SEPA/SWIFT) заявки — ручная сверка в админке. */
+    public function scopeBankSepaPending(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_BANK_SEPA)->where('status', 'pending');
+    }
+
+    /** Заявки «заплатил преподавателю напрямую» (H4627) — сверка куратора по выписке. */
+    public function scopeTeacherTransferPending(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_TEACHER_TRANSFER)->where('status', 'pending');
+    }
+
+    /**
+     * H4627: уже ЗАЧТЁННЫЕ прямые оплаты этого же ученика за последние $days
+     * дней (любой преподаватель) — кандидат в дубль при подтверждении новой
+     * заявки. Один и тот же платёж могли занести вручную и через анкету.
+     */
+    public function scopePriorDirectForUser(Builder $query, int $userId, int $excludeId, int $days = 60): Builder
+    {
+        return $query->where('received_account', self::RECEIVED_TEACHER)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->where('user_id', $userId)
+            ->where('id', '!=', $excludeId)
+            ->where('created_at', '>=', now()->subDays($days));
+    }
+
+    /**
+     * Авто-доверенные банковские заявки своих учеников: сразу paid, сверка
+     * выборочная и пост-фактум (зеркало scopePaypalUnverified).
+     */
+    public function scopeBankUnverified(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_BANK_SEPA)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->whereNotNull('claim_meta->auto_trusted')
+            ->whereNull('claim_meta->verified_at');
     }
 
     /** Цвет Filament-бейджа статуса — единая точка вместо дублей match по вьюхам. */
@@ -482,6 +615,75 @@ class Payment extends Model
     public function scopeConditional(Builder $query): Builder
     {
         return $query->where('is_conditional', true);
+    }
+
+    /**
+     * H4396 — expiry-предикат на доступ, открываемый платежом (census
+     * PAYWALL_CENSUS_2026-09-08 §C.1, аудит 06-08 спека 5: «обещанный дедлайн
+     * не enforced»). Conditional-платёж («доступ под обещание», is_conditional=true)
+     * открывает уроки только пока его обещание живо: status=active и promised_at
+     * ещё не прошёл (окно до дневного прогона promises:expire закрывает сам
+     * предикат — дата и есть дедлайн, а не статус демона). Реальные платежи
+     * предикат не трогает: оплатил = владеет навсегда (продуктовое правило,
+     * случайных отзывов купленного нет) — ИЗМЕНЕНО H4456: реальный платёж
+     * закрывается истёкшим окном доступа (см. scopeWithoutExpiredAccessWindow).
+     * Флаг conditional_access_expiry — money-контур, дефолт OFF; прод-флип —
+     * отдельный ops-шаг (H2085).
+     *
+     * Один предикат на всех читателей ключей: getUserUnlockedTariffs (веб
+     * плеер/курс/ДЗ/ассеты через LessonGate) и API-кабинет.
+     */
+    public function scopeWithAccessExpiry(Builder $query): Builder
+    {
+        // H4456: окна доступа применяются к реальным платежам независимо от
+        // флага conditional_access_expiry (у окон свой рубильник).
+        $query->withoutExpiredAccessWindow();
+
+        if (! config('features.conditional_access_expiry')) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $w) {
+            $w->where('is_conditional', false)
+                ->orWhere(function (Builder $c) {
+                    $c->where('is_conditional', true)
+                        ->whereHas('linkedPromise', function (Builder $p) {
+                            $p->where('status', PaymentPromise::STATUS_ACTIVE)
+                                ->whereDate('promised_at', '>=', now()->toDateString());
+                        });
+                });
+        });
+    }
+
+    /**
+     * H4456 — окно доступа (course_access_windows), рулинг MG 09-09-2026
+     * (вербатим): «сказать 18 дней и отрезать на 19й день, не надо к курсам
+     * Парибка вечный доступ, если не оговорено конкретно у кого такой
+     * исключение и вечный доступ».
+     *
+     * Строка course_access_windows на (user_id, course_id) с ends_at в прошлом
+     * закрывает доступ, открываемый РЕАЛЬНЫМИ платежами этого курса; окно с
+     * ends_at = NULL — вечный доступ по именному исключению; нет строки —
+     * прежнее поведение. Строки платежей (деньги) не трогаются никогда.
+     * Флаг course_access_windows — money-смежный, дефолт OFF; прод-флип —
+     * отдельный ops-шаг (H2085 discipline).
+     */
+    public function scopeWithoutExpiredAccessWindow(Builder $query): Builder
+    {
+        if (! config('features.course_access_windows')) {
+            return $query;
+        }
+
+        $table = $query->getModel()->getTable();
+
+        return $query->whereNotExists(function (QueryBuilder $w) use ($table): void {
+            $w->selectRaw(1)
+                ->from('course_access_windows')
+                ->whereColumn('course_access_windows.user_id', $table.'.user_id')
+                ->whereColumn('course_access_windows.course_id', $table.'.course_id')
+                ->whereNotNull('course_access_windows.ends_at')
+                ->where('course_access_windows.ends_at', '<=', now());
+        });
     }
 
     /**
@@ -593,6 +795,12 @@ class Payment extends Model
                     // после отката основного платежа.
                     app(BlockAccessMaterializer::class)->removeSiblingsOf($payment);
                     $payment->reconcileAccessAfterReversal();
+
+                    // H3334: неактивированный подарочный сертификат отзывается,
+                    // если оплата за него вернулась. Уже активированный не трогаем.
+                    if ($payment->isGiftCertificate()) {
+                        app(GiftCertificateService::class)->revokeForPayment($payment);
+                    }
                 }
             }
         });
@@ -634,6 +842,15 @@ class Payment extends Model
             return;
         }
 
+        // Пожертвование — донорская рамка без встречных благ (решение MG 23-08,
+        // план института N2): доступ/группы/членство/лиды/депозиты не трогаем.
+        // Единственное побочное действие — благодарность при согласии донора (N3).
+        if ($payment->isDonation()) {
+            $payment->processDonationGratitude();
+
+            return;
+        }
+
         if ($payment->isDeposit()) {
             $payment->processDeposit();
 
@@ -651,6 +868,15 @@ class Payment extends Model
         // помечает энрол оплаченным (H471). course_id у такого платежа нет.
         if ($payment->isMarathonPaid()) {
             $payment->processMarathonPaid();
+
+            return;
+        }
+
+        // Подарочный сертификат (H3334): доступ покупателю не открываем —
+        // выпускаем одноразовый код; доступ получит активировавший по тарифной
+        // модели (см. GiftCertificateService::redeem).
+        if ($payment->isGiftCertificate()) {
+            $payment->processGiftCertificate();
 
             return;
         }
@@ -962,6 +1188,45 @@ class Payment extends Model
         }
 
         app(CuratorNotifier::class)->paymentPaid($this);
+    }
+
+    /**
+     * Подарочный сертификат (H3334) — отдельный путь: доступ покупателю НЕ
+     * открывается (никаких групп/писем-доступа/праны за «покупку курса»).
+     * Вместо этого выпускается GiftCertificate с одноразовым хэшированным
+     * кодом; сырой код уходит покупателю одним письмом с PDF.
+     * Идемпотентно: повторный paid-переход не перегенерирует код.
+     */
+    public function processGiftCertificate(): void
+    {
+        app(GiftCertificateService::class)->issueForPayment($this);
+    }
+
+    /**
+     * Пожертвование (план института N2/N3): при paid фиксируем благодарность,
+     * если донор дал явное согласие на /mecenaty. Идемпотентно по уникальному
+     * payment_id; без согласия — ничего. Никаких других побочных действий:
+     * доступ/членство/лиды не трогаются (см. fireOnPaid).
+     */
+    public function processDonationGratitude(): void
+    {
+        $gratitude = is_array($this->claim_meta) ? ($this->claim_meta['gratitude'] ?? null) : null;
+
+        if (! is_array($gratitude)
+            || empty($gratitude['consent'])
+            || blank($gratitude['name'] ?? null)) {
+            return;
+        }
+
+        DonationGratitude::firstOrCreate(
+            ['payment_id' => $this->getKey()],
+            [
+                'name_display' => trim((string) $gratitude['name']),
+                // Ратифицировано MG 23-08: сумма в реестре — только по отдельной
+                // просьбе конкретного человека (чекбокс «показать сумму»).
+                'show_amount' => (bool) ($gratitude['show_amount'] ?? false),
+            ]
+        );
     }
 
     /**

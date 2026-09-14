@@ -112,7 +112,9 @@ class KinescopePilotTest extends TestCase
             ->get(route('student.lesson', ['slug' => $pilot->slug, 'lessonId' => $pilotLesson->id]))
             ->assertOk()
             ->assertSee('id="kinescope-player"', false)
-            ->assertSee('kinescope.io/embed/pilotVideo99', false)
+            // H4396: iframe грузит серверные ворота записи, сырые ID в HTML
+            // не ходят; пилотный kinescope доступен через /video/kinescope.
+            ->assertSee('/video/kinescope', false)
             ->assertSee('player.kinescope.io/latest/iframe.player.js', false);
 
         $this->actingAs($user)
@@ -177,6 +179,7 @@ class KinescopePilotTest extends TestCase
             ->get(route('student.lesson', ['slug' => $course->slug, 'lessonId' => $lesson->id]))
             ->assertOk()
             ->assertSee('id="kinescope-player"', false)
-            ->assertSee('kinescope.io/embed/misfiledYoutube1', false);
+            // H4396: misfiled kinescope доступен через те же ворота.
+            ->assertSee('/video/kinescope', false);
     }
 }

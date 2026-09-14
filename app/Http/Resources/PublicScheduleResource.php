@@ -6,6 +6,8 @@ use App\Models\Category;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
+use App\Services\TeacherVacation;
+use App\Support\TrialBookToken;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,6 +27,10 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * детерминированно от курса, даже когда у самой строки расписания course_id пуст
  * (только group_id).
  *
+ * H3248: при включённом `crm_trial_widget_public` строка пробного занятия курса
+ * (`Course.trial_schedule_id`) дополнительно помечается `bookable: true` и несёт
+ * HMAC `book_token` ({@see TrialBookToken}) — по-прежнему БЕЗ числовых id.
+ *
  * @mixin Schedule
  */
 class PublicScheduleResource extends JsonResource
@@ -36,7 +42,11 @@ class PublicScheduleResource extends JsonResource
         /** @var Group|null $group */
         $group = $this->group;
 
-        return [
+        $bookable = (bool) config('features.crm_trial_widget_public')
+            && $course !== null
+            && (int) $course->trial_schedule_id === (int) $this->getKey();
+
+        $row = [
             'title' => $this->title,
             'start' => $this->start?->toIso8601String(),
             'end' => $this->end?->toIso8601String(),
@@ -58,12 +68,59 @@ class PublicScheduleResource extends JsonResource
                     ->values()
                     ->all(),
             'teacher' => $course?->teacher?->name,
+            // Новизна для анонсов «только новые курсы» (MG 31-08-2026):
+            // new / repeat / no_repeat / usual — виджет фильтрует по нему.
+            'novelty' => $course?->novelty ?? 'usual',
             'group' => $group === null ? null : [
                 'name' => $group->name,
                 'status' => $group->status,
                 'seats_min' => $group->min_size,
                 'is_recruited' => $group->isRecruited(),
+                // H3790: каникулы — флаг + дата выхода (nullable date, без PII).
+                // H4253: группа также отпускная, когда дату покрывает окно
+                // преподавателя любого её курса; наружу — те же поля, чтобы
+                // потребители фида (tg_schedule renderer) не менялись.
+                'is_on_vacation' => $this->groupIsOnVacation($group),
+                'vacation_resume_date' => $this->groupVacationResume($group),
             ],
         ];
+
+        // Ключ book_token появляется ТОЛЬКО у записываемой строки при
+        // включённом флаге: «нет book_token в JSON» при выключенном — тест.
+        $row['bookable'] = $bookable;
+        if ($bookable) {
+            $row['book_token'] = TrialBookToken::for((int) $this->getKey());
+        }
+
+        return $row;
+    }
+
+    /**
+     * H4253: групповой флаг ИЛИ окно преподавателя покрывает дату строки.
+     */
+    private function groupIsOnVacation(Group $group): bool
+    {
+        if ((bool) $group->is_on_vacation) {
+            return true;
+        }
+
+        return $this->start !== null && TeacherVacation::covers($group, $this->start);
+    }
+
+    /**
+     * H4253: дата выхода — от группового флага, иначе от окна преподавателя
+     * (null = не отпуск или дата выхода уточняется).
+     */
+    private function groupVacationResume(Group $group): ?string
+    {
+        if ($group->vacation_resume_date !== null) {
+            return $group->vacation_resume_date->toDateString();
+        }
+
+        if ($this->start === null) {
+            return null;
+        }
+
+        return TeacherVacation::resumeDate($group, $this->start)?->toDateString();
     }
 }

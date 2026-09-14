@@ -75,7 +75,7 @@ Point at the packet from the existing wave log. Do not flip config.
 ### Step 6 — Tests + changelog + PR
 
 1. `php artisan test --filter=Seo` (or the files above). Pint on touched PHP.
-2. [changelog.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/changelog.md) `[Unreleased]` Added/Changed bullets. Then `/cut-release` same pass after merge if that is the house rhythm for this repo.
+2. [CHANGELOG.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CHANGELOG.md) `[Unreleased]` Added/Changed bullets. Then `/cut-release` same pass after merge if that is the house rhythm for this repo.
 3. PR from the worktree branch. Merge when green (`gasyoun/*` always-merge).
 4. Remove the worktree after the push is confirmed.
 

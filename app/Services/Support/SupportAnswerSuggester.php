@@ -29,24 +29,40 @@ use App\Models\User;
  */
 class SupportAnswerSuggester
 {
-    // Дешёвые regex-правила категоризации входящего вопроса. Порядок важен:
-    // «запись» проверяем раньше «ссылки», чтобы «ссылка на запись» ушла в B, а не A.
+    /**
+     * Дешёвые regex-правила. Список пар, не assoc: одна категория может иметь
+     * несколько рук с разным приоритетом (типичные фразы ORS-FAQ 04/05/06).
+     *
+     * Порядок:
+     * 1. B (запись) раньше A, чтобы «ссылка на запись» не ушла в Zoom.
+     * 2. Узкий C «ссылка на расписание» раньше A, иначе `ссылк` крадёт тему 06.
+     * 3. A Zoom, затем широкий C.
+     * 4. D/E/F после A/B/C.
+     *
+     * @var list<array{0: string, 1: string}>
+     */
     private const RULES = [
-        SupportAnswerSuggestion::CATEGORY_RECORDING => '/запис|видеозап|пересмотр|переслуш|тайм.?код|rutube|youtube/iu',
-        SupportAnswerSuggestion::CATEGORY_ZOOM => '/зум|zoom|подключ|ссылк|линк|\bjoin\b|как\s+(?:мне\s+)?(?:войти|зайти|попасть)|войти\s+в\s+(?:занятие|урок|встреч)/iu',
-        SupportAnswerSuggestion::CATEGORY_SCHEDULE => '/расписан|когда\s+(?:занятие|урок|начн|следующ|будет|стартует|пара)|во\s?сколько|время\s+(?:занят|урок)|перенос|перенес|в\s+какой\s+день|график\s+занят/iu',
-        // v2 (S5): LLM-черновики. Порядок — ПОСЛЕ A/B/C, чтобы «ссылка на запись»
-        // осталась за B, а не ушла в D/E по слову «оплатить/доступ».
-        SupportAnswerSuggestion::CATEGORY_PAYMENT => '/сколько\s+стоит|стоимост|\bцен[аеуы]\b|тариф|рассрочк|предоплат|доплат|скидк|промокод|сколько\s+(?:мне\s+)?(?:платить|заплатить)|как\s+оплат|можно\s+ли\s+оплат/iu',
-        SupportAnswerSuggestion::CATEGORY_ACCESS => '/нет\s+доступа|не\s+могу\s+(?:попасть|войти|зайти)\s+в\s+(?:личный\s+)?кабинет|личн(?:ый|ом)\s+кабинет|в\s+какой\s+(?:я\s+)?группе|моя\s+группа|какая\s+у\s+меня\s+группа|логин|пароль/iu',
-        SupportAnswerSuggestion::CATEGORY_MATERIALS => '/материал|методичк|конспект|презентац|домашн|\bдз\b|задани|сертификат|диплом|удостоверен|раздаточ/iu',
+        [SupportAnswerSuggestion::CATEGORY_RECORDING, '/запис|видеозап|пересмотр|переслуш|тайм.?код|rutube|youtube|пропуст[а-яё]{0,8}.{0,40}(?:занят|урок|лекц)|(?:занят|урок|лекц).{0,40}пропуст/iu'],
+        [SupportAnswerSuggestion::CATEGORY_SCHEDULE, '/ссылк[^\n]{0,48}расписан|расписан[^\n]{0,48}ссылк/iu'],
+        // H3394: деньги рядом со «ссылкой» — это D («ссылку на оплату не
+        // нашла», «сколько стоит курс и где ссылка»), а не Zoom. Узкая рука
+        // СТРОГО до широкого A-«ссылк», иначе A крадёт платёжные темы.
+        [SupportAnswerSuggestion::CATEGORY_PAYMENT, '/(?:ссылк|линк)[^\n]{0,48}(?:оплат|плат|тариф|цен|стои)|(?:оплат|тариф|цен|стои)[^\n]{0,48}(?:ссылк|линк)/iu'],
+        [SupportAnswerSuggestion::CATEGORY_ZOOM, '/зум|zoom|подключ|ссылк|линк|\bjoin\b|как\s+(?:мне\s+)?(?:войти|зайти|попасть)|войти\s+в\s+(?:занятие|урок|встреч)/iu'],
+        [SupportAnswerSuggestion::CATEGORY_SCHEDULE, '/расписан|когда\s+(?:занятие|урок|начн|следующ|будет|стартует|пара)|во\s?сколько|время\s+(?:занят|урок)|перенос|перенес|в\s+какой\s+день|график\s+занят|в\s+какое\s+время/iu'],
+        // H3394: «сколько будет стоить», любое упоминание оплаты, «по частям».
+        [SupportAnswerSuggestion::CATEGORY_PAYMENT, '/сколько\s+стоит|сколько[^\n]{0,24}стои|стоимост|\bцен[аеуы]\b|тариф|рассрочк|предоплат|доплат|скидк|промокод|по\s+частям|\bоплат|сколько\s+(?:мне\s+)?(?:платить|заплатить)|как\s+оплат|можно\s+ли\s+оплат/iu'],
+        // H3394: «паролю/пароля», голое «кабинет» («Кабинет не открывается»).
+        [SupportAnswerSuggestion::CATEGORY_ACCESS, '/нет\s+доступа|не\s+могу\s+(?:попасть|войти|зайти|открыт)\s+[^\n]{0,24}(?:кабинет|занят|урок)|\bкабинет|личн(?:ый|ым|ого)\s+кабинет|в\s+какой\s+(?:я\s+)?группе|моя\s+группа|какая\s+у\s+меня\s+группа|логин|парол/iu'],
+        // H3394: «домашку/ДЗ», «куда прикреплять».
+        [SupportAnswerSuggestion::CATEGORY_MATERIALS, '/материал|методичк|конспект|презентац|домашн|домашк|\bдз\b|задани|сертификат|диплом|удостоверен|раздаточ|прикрепл/iu'],
     ];
 
     public function __construct(
         private readonly SupportAnswerFactResolver $facts,
         private readonly SupportLlmDraftComposer $llm,
         private readonly SupportTemplateDraftResolver $templates,
-        private readonly Faq\Bm25FaqRetriever $faqRag,
+        private readonly Faq\HybridRetriever $faqRag,
         private readonly Faq\FaqRagDraftBuilder $faqDrafts,
     ) {}
 
@@ -68,7 +84,7 @@ class SupportAnswerSuggester
             return null;
         }
 
-        foreach (self::RULES as $category => $regex) {
+        foreach (self::RULES as [$category, $regex]) {
             if (preg_match($regex, $text)) {
                 return $category;
             }

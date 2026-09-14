@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Support\ServerGuards\ShellSystemInspector;
 use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,12 +53,30 @@ class BackupScheduleTest extends TestCase
     }
 
     /** @test */
-    public function backup_destinations_include_local_and_yandex_disk(): void
+    public function local_is_the_only_direct_destination_and_yandex_goes_through_split_upload(): void
     {
+        // Yandex WebDAV режет PUT >1 ГБ по HTTP 413, поэтому spatie больше не
+        // пишет туда напрямую: off-site нога — SplitUploadToYandex (части).
         $disks = config('backup.backup.destination.disks');
 
-        $this->assertContains('local', $disks);
-        $this->assertContains('yandex_disk', $disks);
+        $this->assertSame(['local'], $disks);
+        $this->assertSame('yandex_disk', config('backup.backup.split_upload.disk'));
+
+        // Аудит свежести guards обязан видеть оба диска, несмотря на то что
+        // в destination.disks остался только local.
+        $inspector = new ShellSystemInspector;
+        $rows = $inspector->backupDestinations();
+        $this->assertNotNull($rows);
+        $audited = array_column($rows, 'disk');
+        $this->assertContains('local', $audited);
+        $this->assertContains('yandex_disk', $audited);
+
+        // Контракт размера: 20 МиБ — класс, переживающий Яндекс 22–24-08-2026
+        // (решение MG 24-08-2026: срез с 50 после TLS-stall на 50 МиБ частях;
+        // ≤~20 МиБ доезжали честно все дни наблюдений). Порог
+        // BACKUP_MIN_ARCHIVE_MB в scripts/server_guards.conf стоит НИЖЕ суммы
+        // полной группы — связка меняется только парой.
+        $this->assertSame(20, (int) config('backup.backup.split_upload.max_part_mb'));
     }
 
     /** @test */
@@ -81,5 +100,19 @@ class BackupScheduleTest extends TestCase
 
         $this->assertNotNull($event);
         $this->assertStringNotContainsString('--only-db', (string) $event->command);
+    }
+
+    /** @test */
+    public function resume_yandex_parts_is_no_longer_scheduled_inside_cron_service(): void
+    {
+        // H3410 (25-08-2026): a stalled PUT under cron.service would repeat the
+        // 28-07-2026 OOM class (§2 of docs/server-resource-guards.md). The
+        // command now runs under its own systemd unit/timer
+        // (scripts/server_guards/systemd/systema-yandex-resume.{service,timer}),
+        // never as a Kernel::schedule() entry.
+        $this->assertNull(
+            $this->eventFor('backup:resume-yandex-parts'),
+            'backup:resume-yandex-parts must not run inside cron.service — see systema-yandex-resume.timer'
+        );
     }
 }

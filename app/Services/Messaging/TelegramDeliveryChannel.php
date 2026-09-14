@@ -6,6 +6,7 @@ namespace App\Services\Messaging;
 
 use App\Models\MarketingSetting;
 use App\Services\Messaging\Contracts\DeliveryChannel;
+use App\Support\TelegramSendGuard;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -85,6 +86,20 @@ final class TelegramDeliveryChannel implements DeliveryChannel
     {
         if ($this->token === '' || $userIdInChannel === '') {
             throw new RuntimeException('Telegram sendMessage: token or chat_id is empty');
+        }
+
+        // Идемпотентность (TelegramSendGuard): ретрай джоба после потерянного
+        // ответа Telegram не должен дать вторую копию лиду/гостю. Подавленная
+        // отправка возвращает управление как успех — ретрай-цепочка спокойно
+        // завершается. Детерминированный отказ Telegram ниже бросает исключение
+        // как раньше (доставки не было, ретрай уместен).
+        if (! TelegramSendGuard::claim($userIdInChannel, $text)) {
+            Log::info('TelegramDeliveryChannel: identical message already sent, duplicate suppressed', [
+                'chat_id' => $userIdInChannel,
+                'dedup_key' => TelegramSendGuard::key($userIdInChannel, $text),
+            ]);
+
+            return;
         }
 
         $response = Http::post("https://api.telegram.org/bot{$this->token}/sendMessage", [

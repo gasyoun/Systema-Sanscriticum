@@ -1,6 +1,8 @@
+_Created: 08-07-2026 · Last updated: 08-09-2026_
+
 # Очередь деплоя — для Ивана
 
-_Создано: 08-07-2026 · Обновлено: 20-08-2026 (H2758 №77 `HINDI_YOUTUBE_NOVA3_DRILLS` stay OFF; H2762 Kochergina next-step/CTA A/B flags stay OFF; №73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
+_Создано: 08-07-2026 · Обновлено: 08-09-2026 (№87 H4325 — «Мои материалы»/очередь куратора, часть 3/3, миграция без флага, стек поверх PR #2412+#2417; №86 H4313 — сид программы «учителя+истории» 07-09, автопилот stay OFF; №85 H4162 W1 `KOCHERGINA_GR61_COHORT_ENABLED` ON 06-09 — реверанс-когорта Кочергиной гр.61 в реестре когорт, без студен-видимой поверхности; №84 H3648 `MEMBERSHIP_CLUB_STREAMS_ONLY` stay OFF; №83 H3579 — 4 объекта Better Stack для `.91` + строка пульса на обеих машинах; таймер лестницы восстановления НЕ включать до учений D13; №81 H3314 — закат мобильных токенов 90 дней после деплоя, throttle ON; №80 H3247 `CRM_TRIAL_BOOKING` stay OFF; №79 H3233 `SUPPORT_DM_AUTO_REPLY` ON) (H2758 №77 `HINDI_YOUTUBE_NOVA3_DRILLS` stay OFF; H2762 Kochergina next-step/CTA A/B flags stay OFF; №73 H2444 `HINDI_ATTACHMENT_DRILLS` ON; №76 H2731 sidecar 1723 applied; №75 H2446 `HINDI_TG_CURATED_PRACTICE` stay OFF; №74 H2445 `HINDI_MY_SRS_DECK` stay OFF; H2645+H2644 клуб: `CLUB_MEMBERSHIP` к 28-08, порядок трёх флагов; №72 H2485 `CRM_SALES_FORECAST` ON; №71 H2443 `HINDI_TRANSCRIPT_DRILLS` ON; №70 H2441 `HINDI_PROGRAMME_PLAYLIST` ON; H2493 Grammar Lab G2 flags stay OFF; H2484 lifecycle flag OFF as №69; H2483 CRM 360 flag OFF as №68; H2482 VisualDCS flags stay OFF; №65 H2110 «Старт чтения» — флаг `KOSHA_READER`; H1947 «войти как» — флаг; H2085 silent-grant flags; H2017 PayPal/invoice ON; H2014 session; авто-деплой жив)_
 
 ### ✅ Предохранитель 30-07 СНЯТ — авто-деплой снова работает (31-07-2026)
 
@@ -47,6 +49,139 @@ _Создано: 08-07-2026 · Обновлено: 20-08-2026 (H2758 №77 `HIND
 >
 > После любой правки `.env`, если конфиг закэширован, сбросить кэш:
 > `php artisan config:clear` (иначе флаги не подхватятся).
+
+### H3312 — superadmin email вычищен из кода: прод .env получает ADMIN_EMAIL (fail-closed)
+
+Личный email суперадмина больше не захардкожен в коде ([PR #1988](https://github.com/gasyoun/Systema-Sanscriticum/pull/1988)): Horizon gate, получатель backup-уведомлений и `services.admin.email` теперь читают единый `ADMIN_EMAIL`; пусто = все три функции отключены (Horizon deny + backup notify skip, с warning в логе, без крашей). До выката PR на прод:
+
+1. `.env` прода добавить: `ADMIN_EMAIL=<личный адрес суперадмина>` — **значение в git не пишем**; взять тот же адрес, что был в `app/Providers/HorizonServiceProvider.php` до H3312 (история git), т.к. Horizon-доступ у этого адреса должен сохраниться. Внимание: раньше backup-письма уходили на ДРУГОЙ личный адрес (`config/backup.php` до H3312) — после правки оба канола получают один и тот же адрес из `ADMIN_EMAIL`.
+2. После правки `.env`: `php artisan config:clear`, затем обычный деплой.
+3. Smoke: вход под суперадмином → `/horizon` открывается; под обычным студентом → по-прежнему нет. Если `ADMIN_EMAIL` пуст — `/horizon` 403 для всех + в логе warning `viewHorizon denied`, backup-уведомления skip (`ADMIN_EMAIL is not configured`) — это ожидаемое fail-closed поведение, не авария.
+4. Откат: убрать `ADMIN_EMAIL` из `.env` — безопасно, все ветки fail-closed.
+
+### H3311 — конфиг-закалка: прод .env перед деплоем (Secure-cookie / TRUSTED_PROXIES / CORS_ALLOWED_ORIGINS)
+
+Код инертен к same-origin фронту и локальной разработке, но прод обязан выставить три ключа в `.env` **до** следующего `deploy.sh` (новый шаг предсброса `php artisan deploy:config-preflight` проверяет первый жёстко):
+
+1. `.env` прода добавить/проверить:
+   - `SESSION_SECURE_COOKIE=true` (или оставить незаданной — код теперь дефолтит true; явное `false` = деплой заблокирован);
+   - `TRUSTED_PROXIES=127.0.0.1` — адрес nginx/LB, с которого реально приходит трафик (иначе warning + клиентские IP во всех ip()-зависимых местах станут адресом прокси);
+   - `CORS_ALLOWED_ORIGINS=https://samskrtam.ru,https://samskrte.ru` (+ staging-домен при необходимости; пусто = cross-origin запрещён).
+2. После правки: `php artisan config:cache`, затем `sudo bash deploy.sh` — предсброс должен ответить `deploy:config-preflight OK`.
+3. Smoke: логин студента и чекаут проходят (кука с Secure на https), `/api/public/schedule` отвечает same-origin без CORS-ошибок.
+4. Стоп: если smoke красный по кукам — `SESSION_SECURE_COOKIE=false` только как аварийный откат с пониманием риска (http-only трафик видит куку).
+
+### H3310 — гигиена публичного диска (архивы сертификатов + CSV импорта) — план миграции на прод
+
+После выката кода новые записи уже пишут в `local`; на сервере остаются legacy-файлы в `storage/app/public/archives` (групповые ZIP сертификатов, собранные до миграции). После деплоя:
+
+1. `php artisan archives:move-public-to-local --dry-run` — показать план: сколько ZIP уедет.
+2. `php artisan archives:move-public-to-local` — идемпотентный перенос в приватный `storage/app/archives`, опустевший каталог удаляется сам. Прямые ссылки `/storage/archives/...` начинают отдавать 404, скачивание остаётся только через staff-маршрут `/force-download/{file}` (кнопка «Скачать ZIP» в колокольчике Filament).
+3. Smoke: не-стаффу `GET /force-download/<файл>` → 403/редирект на логин; стаффу → скачивание; старый прямой URL `GET /storage/archives/<имя>.zip` → 404.
+4. Cron `archives:cleanup` правки не требует — чистит и новый каталог, и остатки legacy по одному порогу.
+
+### H3308 — приватизация контента уроков — прогон миграции на проде
+
+Код инертен для новых записей (они уже пишут в `local`), но существующие файлы лежат в `storage/app/public` и статически раздавались из `/storage`. После деплоя:
+
+1. `php artisan lessons:privatize-gated-assets` — dry-run: покажет, сколько файлов уйдёт (transcripts/, lesson-materials/, homework-prompts/; `lectures/` не трогает).
+2. `php artisan lessons:privatize-gated-assets --apply` — копия на private + удаление публичных оригиналов после сверки размера.
+3. Smoke: анонимный `GET /storage/transcripts/lesson-<N>.json` → 404; студент с оплаченным курсом открывает урок → стенограмма и материалы грузятся через `/c/{slug}/u/{id}/...`.
+
+### H3298 — SMTP 554 / E-channel — @DECIDE MG (вариант B/C), потом paste-kit
+
+Диагноз: [docs/DIAG_SYSTEMA_SMTP_554_H3298_22-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DIAG_SYSTEMA_SMTP_554_H3298_22-08-2026.md). Бесплатный ящик `rusamskrtam@yandex.ru` ловит `554 spam` на чеках покупок (11 в августе); samskrte.ru без SPF/DMARC/MX.
+
+1. MG выбирает B (Yandex 360 на samskrte.ru) или C (UniOne/SendPulse) → DNS-записи по паст-киту из диага.
+2. Сервер `.env`: новые MAIL_USERNAME/MAIL_FROM_ADDRESS/пароль → `php artisan config:cache`.
+3. Smoke E из диага §4 (`SENT_OK` + письмо получено) → retry 12 потерянных чеков (`queue:retry` по списку id).
+4. Стоп: при отказе от смены — ничего не трогать, вариант A осознанно принят.
+
+### H3247/H3248 — trial Deal CRM — ✅ ОБА ФЛАГА ВКЛЮЧЕНЫ 24-08-2026
+
+**Статус (24-08-2026):** `CRM_TRIAL_BOOKING=true` + `CRM_TRIAL_WIDGET_PUBLIC=true` в прод `.env`, config:cache пересобран. Смок OxAlpha PASS: tinker-заявка через `TrialBookingService::bookFree` на реальном ближайшем пробнике создала Lead+Deal (`kind=trial`, `booked`), повтор идемпотентен, User/гранты/группы не создавались (Rank 4), тестовые строки удалены — ноль остатков. Публичная кнопка «Записаться» на `/widgets/schedule` жива по отдельному рулингу MG 24-08 («оставить ON»). Откат: оба ключа `false` + `config:cache`.
+
+### №87 — H4325 — «Мои материалы» (препод) + очередь заявок (куратор), часть 3/3 из H4310/H4281 (08-09-2026)
+
+Новая миграция (`course_material_submissions` + `courses.teacher_notes`) — подхватится обычным `php artisan migrate` при выкате, отдельного шага нет. **Флага нет — код живой сразу после деплоя.** Стеканье: этот PR слит поверх ещё не смёрженных PR [#2412](https://github.com/gasyoun/Systema-Sanscriticum/pull/2412) (H4281, `video_announce_url`) и [#2417](https://github.com/gasyoun/Systema-Sanscriticum/pull/2417) (H4310, бейдж 4:3) — мержить эту тройку по порядку 2412 → 2417 → эту, не вразнобой. После деплоя: (1) препод видит в меню «Обучение» пункт «Мои материалы», отправка формы создаёт черновик со статусом «Принято»; (2) куратор/админ видит «Мои материалы (очередь)», может перевести «В работе» → «Опубликовано»; **публикует витрину курса только это последнее действие куратора** — сама отправка препода `courses.video_announce_url`/`teacher_notes`/обложку 4:3 не трогает (анти-цель миссии, закреплена тестом `test_submit_never_touches_live_course_fields`). Human smoke: одна тестовая заявка от препода → куратор публикует → карточка курса в каталоге обновилась. Откат: чисто аддитивная миграция, `php artisan migrate:rollback --step=2` безопасен (новая таблица + новая колонка, данных на проде ещё нет).
+
+### №86 — H4313 — программа «Наши учителя» + «Истории учеников»: сид 4 недель (07-09-2026)
+
+Миграций нет (`slot_type` — строка; типы `teacher_spotlight`/`student_story` добавлены в модель `ContentCalendarSlot` + фильтр Filament «Календарь контента»). **После выката код инертен**: `content:seed-teacher-story` ничего не сеет без флага (или `--force-flag` в CI). Активация (staging first): (1) №50 уже включён (`CONTENT_CALENDAR_ENABLED=true`); (2) `php artisan content:seed-teacher-story 2026-09-07` — сеет 8 `teacher_spotlight` (реальные teacher_id 1–8, проверенные живые страницы samskrtam.ru) + 4 `student_story` (HOLD, `meta.consent=hold`, body пуст — публикация только по consent-леджеру программы §4); каждая единица зеркалится в `story_posts` (lane=channel, draft, без `publish_at`); (3) **human Filament smoke**: Маркетинг → Календарь контента, типы видны в фильтре «Тип», спотлайты scheduled, истории в HOLD. `CONTENT_CALENDAR_AUTOPILOT` **остаётся false** — публикации в VK/TG нет; story_posts-зеркала остаются draft до редактуры. Источник ростера: [TEACHERS_AND_STORIES_CONTENT_PROGRAM_07-09-2026.md](https://github.com/gasyoun/Uprava/blob/main/custdev/TEACHERS_AND_STORIES_CONTENT_PROGRAM_07-09-2026.md) (каденс MG «2 учителя + 1 история в неделю» §0)
+
+**Выкатило 07-09-2026 (OxAlpha, по прямому «deploy» MG):** прод `7bf1d294 → 6d41e629` через `deploy.sh` (смок 200, кабинет OK, Horizon поднят). Сид: слоты уже стояли (created=0/skipped=12, идемпотентно) — 8 `teacher_spotlight` scheduled + 4 `student_story` HOLD + зеркала story_posts draft. **Найден и исправлен на проде дефект сида:** `meta.teacher_id` был проставлен позиционно 1–8 (реальные id: Гасунс=2, Парибок=8, Костина=16, Уша Санка=1, Толчельников=5, Трефилова=7, Ворошилов=14, Клебанов=15) — все 8 строк meta исправлены и верифицированы name↔id 07-09; латентный позиционный маппинг в самой команде `content:seed-teacher-story` остаётся в коде — @DO фикс (GTD Uprava). Filament smoke (Маркетинг → Календарь контента) — за MG.. | artisan-команда, флаг из №50 (без денег) | **по умолчанию OFF — командой без флага/force-flag ничего не сеется; consent-заглушки никогда не публикуются сами**
+
+### №84 — H3648 — Club streams-only + D20 1/3/12 тарифы: `MEMBERSHIP_CLUB_STREAMS_ONLY` stay OFF (29-08-2026)
+
+Код выкладывается тёмным. **Не ставить `MEMBERSHIP_CLUB_STREAMS_ONLY=true` на `.92` в этом деплое.** Пока флаг OFF, предикат записей H2744 не меняется, три тарифа ₽2 000 / ₽5 700 / ₽20 400 (если `--apply`) остаются `is_active=false` и не подменяют живой чекаут ₽1 500. Включение — отдельный шаг человека после разметки `recording_kind` на эфирах: `.env` + `config:cache` + `membership:rehearse`. Откат: ключ `false` или удалить. Разбор: [docs/MEMBERSHIP_CLUB_STREAMS_ONLY_H3648_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MEMBERSHIP_CLUB_STREAMS_ONLY_H3648_2026.md).
+
+### №83 — аптайм W3: 4 объекта Better Stack для `.91` + строка пульса на обеих машинах; таймер лестницы НЕ включать до учений (H3579, 26-08-2026)
+
+**Код и предохранители УЖЕ на проде** — выкладывать нечего: перекрёстные проверки
+`.91`↔`.92` живут своими systemd-таймерами на обеих машинах с 26-08 и проверены
+живым тактом. Здесь остались только шаги, которые агент сделать не может.
+
+1. **Создать 4 объекта Better Stack** (имена и периоды —
+   [UPTIME_BETTERSTACK_MONITORING §2.4](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md)):
+   HTTP-монитор `https://context-ai.ru/`, пульс `.91`, два пульса перекрёстных проверок
+   (5 мин / грация 10 мин). Агент не может: **API-токена Better Stack нет ни на одной
+   машине** (замерено 26-08 — в проде только ping-URL'ы существующих пульсов).
+   **Сперва пересчитать свободный тариф:** не хватает мест — делать пульсы, HTTP-монитор
+   пропустить (молчание переживает смерть контейнера, HTTP-монитор нет).
+2. **Вписать URL пульса на КАЖДОЙ машине** — одна строка, ни перезапуска, ни деплоя,
+   проверка подхватит на следующем 5-минутном такте:
+   ```bash
+   install -m 600 /dev/null /etc/default/systema-peer-probe
+   printf 'PEER_PROBE_HEARTBEAT_URL=https://uptime.betterstack.com/api/v1/heartbeat/<TOKEN>\n' \
+     >> /etc/default/systema-peer-probe
+   ```
+   Пока файла нет, проверка работает и честно пишет `heartbeat SKIP` — зелёной лампочки
+   над неработающим предохранителем не будет.
+3. **Таймер лестницы восстановления НЕ включать** до четырёх учений D13 при человеке.
+   `systema-remediation-ladder.timer` выложен и намеренно `disabled`: вооружать
+   автоматический перезапуск боевых сервисов на Tier-0 машине до учений — ровно та
+   самоуверенность, против которой написана волна. После успешных учений:
+   `systemctl enable --now systema-remediation-ladder.timer` на обеих + добавить таймер
+   в `REQUIRED_ACTIVE_TIMERS` обоих `.conf`. Репетировать безопасно: `--dry-run` ничего
+   не делает и людей не будит.
+4. **Выверить `LADDER_CT_ID` у Артёма** в тот же день, когда появится `PROXMOX_API_TOKEN`
+   (P1). 150/50 **выведены из имени хоста, а не замерены** — изнутри гостя номер
+   контейнера не виден вообще; в первый же боевой заход R4 перезапустила бы по нему
+   чужой контейнер.
+
+Прогон и доказательства —
+[OPS_UPTIME_W3_CROSSPROBE_LADDER_H3579_26-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/OPS_UPTIME_W3_CROSSPROBE_LADDER_H3579_26-08-2026.md).
+
+### №82 — H3462 — входящий email-канал поддержки: zabota@samskrte.ru → вебхук
+
+Код в main тёмным: эндпоинт `POST /api/webhooks/inbound-email/{secret}` (секрет пути, fail-closed), таблица `inbound_emails`, очередь нераспознанных отправителей `/admin/inbound-emails`, бейдж Email в Helpdesk. Флаг `SUPPORT_INBOUND_EMAIL` default **OFF** → маршрут 404. Человеческие шаги — почта/DNS/пересылка:
+
+1. Завести ящик `zabota@samskrte.ru` в панели хостинга (почта домена samskrte.ru).
+2. Пересылка БЕЗ нового платного вендора: n8n на .91 забирает ящик (IMAP-poll по расписанию) и POSTит на `https://samskrte.ru/api/webhooks/inbound-email/<секрет>` JSON `{message_id, from_email, from_name?, subject?, text, received_at?}`.
+3. `.env` прода: `INBOUND_EMAIL_WEBHOOK_SECRET=<openssl rand -hex 24>`, тот же секрет вписать в проводник, затем `php artisan config:cache`.
+4. Smoke (флаг ещё OFF): POST от проводника → 404 (флаг гейтит), секрет неверный → 403. Потом `SUPPORT_INBOUND_EMAIL=true` + config:cache.
+5. Живой smoke: письмо со студенческого адреса → «Принято» в `/admin/inbound-emails` + бейдж Email в Helpdesk; с незнакомого адреса → «В очереди» (привязать вручную там же).
+6. Стоп: `SUPPORT_INBOUND_EMAIL=false` + config:cache → снова 404; ящик/пересылку можно оставить.
+
+### H3445 — гео-город посетителя: драйвер MaxMind GeoLite2 (локальная база)
+
+Рулинг MG 24-08-2026: провайдер города = **MaxMind GeoLite2 локально** (Cloudflare отклонён как заграничный процессор; ip-api.com исключён лицензионно). Код драйвера `'maxmind'` в `VisitorGeoResolver` + команда `support:geo-update-maxmind` (еженедельно вс 04:40). Включение — ПОСЛЕ правки политики приватности (бриф H1234, C(i)):
+
+1. В `.env`: `MAXMIND_ACCOUNT_ID=<id>`, `MAXMIND_LICENSE_KEY=<ключ с maxmind.com>` (бесплатная регистрация).
+2. `php artisan support:geo-update-maxmind --dry-run` → затем без флага. База ляжет в `storage/app/geo/GeoLite2-City.mmdb`.
+3. ✅ **Политика опубликована 25-08-2026 (OxAlpha, поручение MG «публикуй сам»):** rev. «24» августа 2026 — категория «Посетители сайта» (§4.1), гео-город с локальным резолвом GeoLite2 + данные активности с 15-мин автоудалением (§5.4), примечание к §7.3 «перечень третьих лиц не расширяется». Живой PDF: https://samskrte.ru/docs/privacy.pdf (md5 `86AEEF42B41E54F5B04FF0668547A226` = коммит 190614b2). Формулировки-исходник: [docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/POLICY_PRIVACY_GEO_PRESENCE_PATCH_2026-08.md). Q-law-1/Q-law-2 остаются юристу (форма согласия для presence).
+4. Только тогда: `SUPPORT_GEO_DRIVER=maxmind`, `SUPPORT_VISITOR_GEO=true` (+ presence `SUPPORT_VISITOR_PRESENCE=true` отдельно, после юриста).
+5. Стоп: `SUPPORT_GEO_DRIVER=null`, флаги `false`. База остаётся на диске безвредно.
+
+### №81 — H3314 — закат мобильных Sanctum-токенов (90 дней) + per-credential login throttle
+
+Деплой активирует 90-дневное окно `sanctum.expiration` (`SANCTUM_TOKEN_EXPIRATION=129600`) и per-credential login throttle (`LOGIN_THROTTLE_*`, порог 5/60 сек, аварийный выключатель `LOGIN_THROTTLE_ENABLED=true` — дефолт ON). **Коммуникация мобильным пользователям:** после деплоя каждый существующий мобильный токен умрёт не позднее чем через 90 дней от его создания (токены старше 90 дней — сразу при деплое); приложение само повторно логинится по email+паролю, действий от студента не требуется, но поддержка должна знать про возможные «меня выкинуло из приложения». Новые токены получают явный `expires_at`; ежедневная команда `tokens:prune-expired` (03:20 MSK) подчищает мёртвые строки.
+
+1. После деплоя проверить: `php artisan tokens:prune-expired --hours=1` (сухой прогон счётчиком), логин в мобильном API `/api/v1/auth/login` → 200 с `expires_at` ≈ +90 дней.
+2. Мониторинг: рост 429 на `/login`, `/shop/login`, `/api/v1/auth/login` первые сутки (легитимные студенты при NAT/опечатках) — при массовых ложных блокировках: `LOGIN_THROTTLE_ENABLED=false` + `config:cache`.
+3. Откат окна токенов (только по решению MG): `SANCTUM_TOKEN_EXPIRATION=` пусто в `.env` не отключает окно — ставить большое значение или править дефолт; throttle выключается флагом из п.2.
+
+Док: [docs/PLAN_SYSTEMA_MOYKLASS_TRIAL_BOOKING_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_MOYKLASS_TRIAL_BOOKING_2026H2.md).
 
 ### H2762 — next-step + CTA A/B on Kochergina — флаги ОСТАЮТСЯ OFF
 
@@ -318,6 +453,9 @@ course without groups → 500 until groups attached.
 | 75 | **H2446 отобранная практика из чата хинди** | После авто-деплоя код инертен (`HINDI_TG_CURATED_PRACTICE=false`). Включение (human): `HINDI_TG_CURATED_PRACTICE=true` + `config:cache`. Страница `/dvaram/programme/hindi/chat-practice` + ссылка в «Мой хинди». Не вызывает Telegram. Смоук: `php artisan hindi:tg-practice-probe --json` (10 accepted, answers `***`); entitled GET → 200 / 10 items; guest → 302. Откат: флаг `false` + `config:cache`. | ⚙️ флаг (без денег) |
 | 76 | **H2731 sidecar PDF хинди (занятие 1723)** | ✅ **применено 14-08-2026.** `hindi:pdf-sidecar 1723 --apply` написал sibling `.txt` (8 страниц, `gs-txtwrite`, 19 444 байт). Флаг H2444 включён отдельно (№73). Откат sidecar: удалить `storage/app/public/homework-prompts/Практическая_грамматика_хинди_Уровень_a1.txt`. | разовый artisan | H2444 видит текст раздатки 1723 |
 | 78 | **H3206 словарь Костиной → упражнения** | После авто-деплоя включить: `HINDI_DICTIONARY_DRILLS=true` + `config:cache`. Студент: GET `/dvaram/programme/hindi/vocab` (оплаченный хинди) → 200, M1 показывает आदाब. Гость → 302. Преподаватель: `/admin/hindi-agent-drills`. Откат: `false` + `config:cache`. Не включает H2443/H2444. | ⚙️ флаг (без денег) |
+| 81 | **H3280 календарь выплат по неделям** | ✅ **включено 21-08-2026.** `TEACHER_WEEKLY_PAYOUT_CALENDAR=true` + `config:cache`. `config:show features.teacher_weekly_payout_calendar` → true. Guest GET `/admin/teacher-weekly-payout-calendar` → 302 login. `php artisan teacher-payouts:week-calendar` → `money_tables_moved=no`. PayPal cover всегда «откройте PayPal». Откат: `false` + `config:cache`. | ⚙️ флаг (чтение, не проводка) |
+| 80 | **H3280 Точка ClosingAvailable на Зарплатах** | После деплоя инертен (`TOCHKA_BALANCE_ON_SALARIES=false`). Включение: `true` + `config:cache`. Смоук: `/admin/teacher-salaries` у бухгалтера показывает «Точка, к трате»; `php artisan tochka:balance --json` → `money_tables_moved:false`. Откат: `false` + `config:cache`. Недельный календарь H3280 — отдельно. | ⚙️ флаг (чтение банка, не проводка) |
+| 79 | **H3233 B: автоответ простых в личке саппорта** | ✅ **включено 21-08-2026.** HEAD `506f8c2a`. `php artisan config:show features.support_dm_auto_reply` → true. A/B/C с фактами LMS уходит студенту pending→синк; D/без фактов — подсказка на `ADMIN_TELEGRAM_ID`. Откат A: `SUPPORT_DM_AUTO_REPLY=false` + `config:cache`. Счётчик 🍎/gasuns на исходящих синка работает и при OFF. | ⚙️ флаг (без денег) |
 | 77 | **H2758 YouTube re-ASR drills for students** | После авто-деплоя код инертен (`HINDI_YOUTUBE_NOVA3_DRILLS=false`). **Не включать**, пока преподаватель хинди не скажет, что черновик на `/dvaram/programme/hindi` можно показывать студентам. Включение: `HINDI_YOUTUBE_NOVA3_DRILLS=true` + `php artisan config:cache`. Откат: `false` + `config:cache`. Zoom/n8n расшифровки (без `metadata.source`) не затрагивает. | ⚙️ флаг (без денег) | студенты видят упражнения из YouTube-расшифровки |
 | 2 | **Признание выручки по начислению** ([PR #370](https://github.com/gasyoun/Systema-Sanscriticum/pull/370)) | ✅ **выполнено 31-07-2026.** `php artisan revenue:backfill-schedule` прогнан (было 7944 строк → стало 7962; всего платежей 9117, образуют выручку 7914). Сверка на реальном платеже (id 13612, курс «Грамматика по Кочергиной гр.60»): 7 строк признания, сумма 10.00 ₽ = сумме платежа — сходится. | backfill | 🚀 реальный ОПиУ по начислению + сверка отложенной выручки |
 | 3 | **Реверс остатка при возврате** ([PR #376](https://github.com/gasyoun/Systema-Sanscriticum/pull/376)) | ✅ **флаг уже `true` на проде, backfill прогнан 31-07-2026** (тот же прогон, что и №2 — `revenue:backfill-schedule` применяет обе логики разом). Сверка на реальном возврате: **привязанных возвратов (`refund_of_payment_id`) в проде пока 0** — честно нулевая проверка, не дефект (см. changelog H2003); механизм готов подхватить первый реальный возврат. | ⚙️ флаг + backfill | обработка возвратов в выручке |

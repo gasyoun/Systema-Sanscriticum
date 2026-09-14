@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # app/Providers
 
 Сервис-провайдеры Laravel. Точки инициализации приложения.
@@ -36,3 +38,5 @@
 | `EventServiceProvider` | Маппинг событий на слушателей: `Login → UserLoginListener`, `Logout → UserLogoutListener`. |
 | `HorizonServiceProvider` | Настройка доступа к дашборду Horizon (`/horizon`). |
 | `RouteServiceProvider` | Привязка `HOME` константы (`/cabinet`), rate limiting для API. |
+
+_Dr. Mārcis Gasūns_

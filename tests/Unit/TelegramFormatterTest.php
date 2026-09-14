@@ -36,6 +36,10 @@ class TelegramFormatterTest extends TestCase
             '<a href="https://samskrte.ru/x">ссылка</a>',
             TelegramFormatter::toHtml('[ссылка](https://samskrte.ru/x)')
         );
+        $this->assertSame(
+            '<a href="https://samskrte.ru/ga/m26-ors-h">Записаться</a>',
+            TelegramFormatter::toHtml('[Записаться](https://samskrte.ru/ga/m26-ors-h)')
+        );
     }
 
     public function test_preserves_existing_valid_html_tags(): void

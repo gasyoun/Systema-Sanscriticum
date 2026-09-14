@@ -140,7 +140,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('leads.store') }}" method="POST" class="space-y-[15px]">
+                <form action="{{ route('leads.store') }}{{ request()->getQueryString() ? '?'.request()->getQueryString() : '' }}" method="POST" class="space-y-[15px]">
                     @csrf
                     @php
                         $landingId = isset($page) && $page->id ? $page->id : (\App\Models\LandingPage::where('slug', request()->route('slug'))->value('id') ?? '');

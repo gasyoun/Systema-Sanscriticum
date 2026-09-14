@@ -55,17 +55,4 @@ final class PaypalSubscriptionsService
             ? 'https://api-m.paypal.com'
             : 'https://api-m.sandbox.paypal.com';
     }
-
-    /**
-     * Phase 1 placeholder — must not hit the network while Phase 0 is the ship bar.
-     *
-     * @throws \RuntimeException always until P1 implements the call
-     */
-    public function createSandboxPlanPlaceholder(): void
-    {
-        throw new \RuntimeException(
-            'PayPal Subscriptions Product/Plan create is Phase 1 (sandbox). '.
-            'Enable only after H2026 webhook→Payment reuse review; flag stays OFF in prod by default.'
-        );
-    }
 }

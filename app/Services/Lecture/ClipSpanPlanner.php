@@ -21,7 +21,7 @@ final class ClipSpanPlanner
      */
     public static function planSpans(Lesson $lesson, int $targetSeconds = 90, int $maxSpans = 12): array
     {
-        $sentences = TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
+        $sentences = TranscriptParser::sentencesFromStoredFile($lesson->transcript_file);
         if (empty($sentences)) {
             return [];
         }

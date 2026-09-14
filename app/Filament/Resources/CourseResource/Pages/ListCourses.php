@@ -6,6 +6,7 @@ namespace App\Filament\Resources\CourseResource\Pages;
 
 use App\Filament\Exports\CourseExporter;
 use App\Filament\Resources\CourseResource;
+use App\Support\CourseListHeading;
 use Filament\Actions;
 use Filament\Actions\Exports\Enums\ExportFormat;
 use Filament\Resources\Pages\ListRecords;
@@ -13,6 +14,16 @@ use Filament\Resources\Pages\ListRecords;
 class ListCourses extends ListRecords
 {
     protected static string $resource = CourseResource::class;
+
+    public function getTitle(): string
+    {
+        return CourseListHeading::forQuery(CourseResource::getEloquentQuery());
+    }
+
+    public function getHeading(): string
+    {
+        return $this->getTitle();
+    }
 
     protected function getHeaderActions(): array
     {

@@ -1,0 +1,60 @@
+{
+    "contract": "kochergina_entitlement_token_v1",
+    "version": 1,
+    "handoff": "H4162",
+    "created": "2026-09-06",
+    "purpose": "The v1 entitlement-token contract for the reference Kochergina cohort: the stable identifier chain (user_id, course_id, source payment) and what each payment kind yields. Encodes the estate's own two-layer truth, not a new system.",
+    "token_shape": {
+        "user_id": "users.id",
+        "course_id": "courses.id",
+        "group_ids": "group_user rows granted by Payment::grantAccess() (course_group pivot)",
+        "unlocked_tariff_keys": "StudentController::getUserUnlockedTariffs() - tariff keys of paid payments on THIS course_id",
+        "entitled_cohort": "canonical H2164 filter: Payment paid + real (not is_conditional) + tariff not in [deposit, trial] on THIS course_id",
+        "lesson_unlocked": "Lesson::isVisibleToGroupsOf($user) AND Lesson::isUnlockedBy($unlocked_tariff_keys)"
+    },
+    "identifier_chain": "promise (offer/deposit/conditional payment) -> payment_id (paid, real) -> grantAccess() -> group_user -> lesson unlock -> first-result event",
+    "scenarios": [
+        {
+            "name": "paid_block_1_entitles_and_unlocks",
+            "payment": { "tariff": "block_1", "status": "paid", "amount": 8000, "is_conditional": false },
+            "expected": { "entitled_cohort": true, "in_group": true, "lesson_unlocked": true }
+        },
+        {
+            "name": "paid_full_entitles_and_unlocks",
+            "payment": { "tariff": "full", "status": "paid", "amount": 64000, "is_conditional": false },
+            "expected": { "entitled_cohort": true, "in_group": true, "lesson_unlocked": true }
+        },
+        {
+            "name": "deposit_does_not_entitle",
+            "payment": { "tariff": "deposit", "status": "paid", "amount": 6000, "is_conditional": false },
+            "expected": { "entitled_cohort": false, "in_group": false, "lesson_unlocked": false },
+            "note": "Deposit is a booking hold (gr61 carries one, 6000 RUB, 24-06-2026): fireOnPaid routes it to processDeposit(), which grants no groups and no course access."
+        },
+        {
+            "name": "trial_does_not_entitle",
+            "payment": { "tariff": "trial", "status": "paid", "amount": 500, "is_conditional": false },
+            "expected": { "entitled_cohort": false, "in_group": false, "lesson_unlocked": false }
+        },
+        {
+            "name": "conditional_promise_grants_access_but_not_cohort_entitlement",
+            "payment": { "tariff": "block_1", "status": "paid", "amount": 8000, "is_conditional": true },
+            "expected": { "entitled_cohort": false, "in_group": true, "lesson_unlocked": true },
+            "note": "Promise -> access by design: grantAccess() runs for conditional payments (only emails/prana are skipped), so the learner CAN study under promise. But scopeReal() excludes the row from the cohort-entitlement filter, so cohort denominators never count promises as revenue students."
+        },
+        {
+            "name": "pending_grants_nothing",
+            "payment": { "tariff": "block_1", "status": "pending", "amount": 8000, "is_conditional": false },
+            "expected": { "entitled_cohort": false, "in_group": false, "lesson_unlocked": false }
+        },
+        {
+            "name": "cross_course_payment_leaks_nothing",
+            "payment": { "tariff": "block_1", "status": "paid", "amount": 8000, "is_conditional": false, "on_other_cohort_course": true },
+            "expected": { "entitled_cohort": false, "in_group": false, "lesson_unlocked": false },
+            "note": "The H2164 fail condition: paying for cohort A must never move the token on cohort B."
+        }
+    ],
+    "revocation": {
+        "action": "ops revoke = refund/cancel the payment (status failed/canceled) AND detach the student from the course group (Filament); both are production actions on existing rows",
+        "expected": "paid content becomes unavailable (403), lesson_user progress history stays intact, no content is deleted"
+    }
+}

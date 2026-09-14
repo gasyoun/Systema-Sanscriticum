@@ -13,13 +13,13 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Подтверждение студенту: PayPal-заявка получена и ушла на ручную сверку (H1292).
- * Зеркало админского PaypalClaimReceivedMail для самого студента — до этого
- * письма подавший заявку не получал ничего и не знал, дошла ли она. Обещания
- * письма (сверка «обычно в течение одного рабочего дня», пароль для нового
- * аккаунта) синхронизированы с флешем PaypalClaimController::store и
- * docs/copy/money-diaspora-paypal-buyer-path.md. Очередь mailing — как у
- * PurchaseConfirmationMail; прием заявки не блокируется на SMTP.
+ * Подтверждение студенту: PayPal-заявка получена (H1292). Два варианта копии:
+ * гость — заявка ушла на ручную сверку; свой (ruling 22-08-2026) — доступ уже
+ * открыт, сверка будет выборочной. Зеркало админского PaypalClaimReceivedMail
+ * для самого студента. Обещания письма синхронизированы с флешем
+ * PaypalClaimController::store и docs/copy/money-diaspora-paypal-buyer-path.md.
+ * Очередь mailing — как у PurchaseConfirmationMail; прием заявки не блокируется
+ * на SMTP.
  */
 class PaypalClaimStudentAckMail extends Mailable implements ShouldQueue
 {
@@ -33,7 +33,9 @@ class PaypalClaimStudentAckMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Заявка получена — сверяем ваш платеж PayPal',
+            subject: $this->payment->isAutoTrustedPaypal()
+                ? 'Заявка получена — доступ открыт'
+                : 'Заявка получена — сверяем ваш платеж PayPal',
         );
     }
 
@@ -46,6 +48,8 @@ class PaypalClaimStudentAckMail extends Mailable implements ShouldQueue
                 'course' => $this->payment->course,
                 'tariffScope' => $this->tariffScope(),
                 'claimedAmount' => $this->payment->foreignAmountLabel() ?: null,
+                // Ruling 22-08-2026: своим — доступ сразу, гостям — ручная сверка.
+                'trusted' => $this->payment->isAutoTrustedPaypal(),
             ],
         );
     }

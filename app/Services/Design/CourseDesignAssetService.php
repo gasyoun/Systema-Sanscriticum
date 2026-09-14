@@ -23,6 +23,25 @@ use InvalidArgumentException;
 class CourseDesignAssetService
 {
     /**
+     * Что вообще разрешено класть в слот картинки.
+     *
+     * Проверка двусторонняя и ОБЯЗАТЕЛЬНА перед любой записью: расширение
+     * из имени клиента должно быть в списке, И содержимое должно опознаться
+     * как одна из разрешённых MIME. Одного фильтра Filament ->image()
+     * недостаточно — он пропускает SVG (а тот исполняем в браузере) и
+     * обходится подделкой multipart. Без этого джейла JPEG с именем
+     * shell.php уезжал бы на публичный диск как /storage/.../cover-x.php.
+     */
+    private const IMAGE_EXT_BY_MIME = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/gif' => 'gif',
+    ];
+
+    private const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+    /**
      * Создать или заместить слот (курс × формат).
      *
      * Контракт аргументов сознательно асимметричен, и вот почему:
@@ -68,7 +87,8 @@ class CourseDesignAssetService
 
         try {
             if ($image) {
-                $path = $this->put($image, $imageDisk, (string) config('design_assets.image_dir', 'course-design'), $course, $format);
+                $extension = $this->assertAllowedImage($image);
+                $path = $this->put($image, $imageDisk, (string) config('design_assets.image_dir', 'course-design'), $course, $format, $extension);
                 $written[] = [$imageDisk, $path];
 
                 [$width, $height] = $this->dimensions($image);
@@ -245,17 +265,61 @@ class CourseDesignAssetService
      * Имя файла содержит курс, формат и случайный суффикс. Случайность нужна не
      * ради секретности (картинки публичны), а чтобы замещение слота меняло URL —
      * иначе браузер и CDN отдавали бы старый баннер по прежнему адресу.
+     *
+     * Для картинок $forcedExtension — каноничное расширение, определённое ПО
+     * СОДЕРЖИМОМУ (assertAllowedImage), никогда не имя клиента. PSD-исходники
+     * живут на приватном диске за гейтованным маршрутом, там расширение из
+     * имени клиента безопасно и сохранено для совместимости.
      */
-    private function put(UploadedFile $file, string $disk, string $dir, Course $course, string $format): string
+    private function put(UploadedFile $file, string $disk, string $dir, Course $course, string $format, ?string $forcedExtension = null): string
     {
+        $extension = $forcedExtension
+            ?? strtolower($file->getClientOriginalExtension() ?: 'bin');
+
         $name = sprintf(
             '%s-%s.%s',
             CourseDesignAsset::slugForFormat($format),
             Str::random(8),
-            $file->getClientOriginalExtension() ?: 'bin',
+            $extension,
         );
 
         return $file->storeAs($dir.'/'.$course->id, $name, ['disk' => $disk]);
+    }
+
+    /**
+     * Джейл расширений для картинок слота: расширение из имени клиента должно
+     * быть в белом списке, И содержимое должно опознаться как разрешённый
+     * растровый MIME. Одного фильтра Filament ->image() недостаточно — он
+     * пропускает SVG (исполняем в браузере) и обходится подделкой multipart.
+     * Без этого джейла JPEG с именем shell.php уезжал бы на публичный диск
+     * как /storage/.../cover-x.php.
+     *
+     * @return string каноничное расширение по содержимому (для put())
+     *
+     * @throws InvalidArgumentException с человекочитаемым текстом: страница
+     *                                  показывает его как есть в уведомлении
+     */
+    private function assertAllowedImage(UploadedFile $file): string
+    {
+        $clientExtension = strtolower($file->getClientOriginalExtension());
+
+        if (! in_array($clientExtension, self::ALLOWED_IMAGE_EXTENSIONS, true)) {
+            throw new InvalidArgumentException(sprintf(
+                'Файл «%s» отклонён: разрешены только картинки JPG, JPEG, PNG, WebP или GIF.',
+                $file->getClientOriginalName() ?: 'без имени',
+            ));
+        }
+
+        $mime = (string) $file->getMimeType();
+
+        if (! isset(self::IMAGE_EXT_BY_MIME[$mime])) {
+            throw new InvalidArgumentException(sprintf(
+                'Содержимое файла «%s» не похоже на JPG, PNG, WebP или GIF.',
+                $file->getClientOriginalName() ?: 'без имени',
+            ));
+        }
+
+        return self::IMAGE_EXT_BY_MIME[$mime];
     }
 
     /** @return array{0: ?int, 1: ?int} */

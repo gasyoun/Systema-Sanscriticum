@@ -9,6 +9,8 @@ use App\Models\Lesson;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
+use Filament\Forms\Components\BaseFileUpload;
+use Filament\Forms\Components\TemporaryUploadedFile;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -16,6 +18,7 @@ use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 class LessonResource extends Resource
 {
@@ -244,6 +247,17 @@ class LessonResource extends Resource
                     ->label('Описание / Тема')
                     ->columnSpanFull(),
 
+                Forms\Components\Select::make('recording_kind')
+                    ->label('Класс записи')
+                    ->options([
+                        'course_lesson' => 'Урок курса (покупка курса)',
+                        'club_stream' => 'Эфир клуба (членство Club/Top)',
+                        'club_efir' => 'Эфир клуба (синоним)',
+                    ])
+                    ->default('course_lesson')
+                    ->helperText('H3648: клуб открывает только эфиры/стримы. Обычная запись урока остаётся на покупке курса.')
+                    ->columnSpanFull(),
+
                 Forms\Components\TextInput::make('youtube_url')
                     ->label('Ссылка на YouTube')
                     ->placeholder('https://www.youtube.com/watch?v=...')
@@ -261,7 +275,9 @@ class LessonResource extends Resource
                 Forms\Components\FileUpload::make('transcript_file')
                     ->label('Транскрипция (JSON файл)')
                     ->acceptedFileTypes(['application/json'])
-                    ->directory('transcripts') // Файлы будут лежать в storage/app/public/transcripts
+                    // H3308: приватный диск — текст платной лекции не для /storage.
+                    ->disk('local')
+                    ->directory('transcripts')
                     ->maxSize(20480) // 20 MB, чтобы точно влезли большие лекции
                     ->preserveFilenames()
                     ->columnSpanFull()
@@ -271,8 +287,11 @@ class LessonResource extends Resource
                 Forms\Components\FileUpload::make('attachments')
                     ->label('Материалы к уроку (PDF, Аудио, Видео)')
                     ->multiple()
+                    // H3308: приватный диск + сгенерированное читаемое имя вместо
+                    // клиентского (путь/имя от клиента больше не попадают в /storage).
+                    ->disk('local')
                     ->directory('lesson-materials')
-                    ->preserveFilenames()
+                    ->getUploadedFileNameForStorageUsing(fn (BaseFileUpload $component, TemporaryUploadedFile $file) => self::safeStoredName($file))
                     ->reorderable() // Позволяет менять порядок файлов перетаскиванием
                     ->appendFiles() // Позволяет добавлять новые файлы к уже загруженным
                     ->downloadable() // Можно скачать из админки
@@ -317,8 +336,10 @@ class LessonResource extends Resource
                         Forms\Components\FileUpload::make('homework_attachments')
                             ->label('Справочные файлы к заданию (необязательно)')
                             ->multiple()
+                            // H3308: приватный диск + сгенерированное имя — как у материалов.
+                            ->disk('local')
                             ->directory('homework-prompts')
-                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(fn (BaseFileUpload $component, TemporaryUploadedFile $file) => self::safeStoredName($file))
                             ->downloadable()
                             ->openable()
                             ->maxSize(51200)
@@ -543,5 +564,20 @@ class LessonResource extends Resource
             'create' => Pages\CreateLesson::route('/create'),
             'edit' => Pages\EditLesson::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * H3308: имя файла на диске строит сервер, а не клиент. От оригинала
+     * остаётся читаемый слаг (студенты видят basename в плеере), расширение
+     * сохраняется, уникальность обеспечивает uniqid; путь-компоненты из имени
+     * клиента исключены по построению (только [A-Za-z0-9._-], см. роут).
+     */
+    public static function safeStoredName($file): string
+    {
+        $original = $file->getClientOriginalName();
+        $ext = strtolower($file->getClientOriginalExtension() ?: pathinfo($original, PATHINFO_EXTENSION));
+        $base = Str::slug(pathinfo($original, PATHINFO_FILENAME)) ?: 'file';
+
+        return $base.'-'.uniqid().($ext !== '' ? '.'.$ext : '');
     }
 }

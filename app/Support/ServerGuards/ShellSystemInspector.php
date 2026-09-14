@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\ServerGuards;
 
+use App\Support\Backup\SplitGroupMath;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Process;
 use Spatie\Backup\BackupDestination\BackupDestination;
@@ -193,6 +194,13 @@ final class ShellSystemInspector implements SystemInspector
 
         /** @var list<string> $disks */
         $disks = (array) config('backup.backup.destination.disks', []);
+        // Off-site нога переехала из destination.disks в split_upload (Yandex
+        // WebDAV режет PUT >1 ГБ — spatie туда больше не пишет напрямую), но
+        // свежесть частей на этом диске аудитить по-прежнему обязательно.
+        $splitDisk = (string) config('backup.backup.split_upload.disk', '');
+        if ($splitDisk !== '' && ! in_array($splitDisk, $disks, true)) {
+            $disks[] = $splitDisk;
+        }
         $name = (string) config('backup.backup.name', '');
         if ($disks === [] || $name === '') {
             return null;
@@ -204,12 +212,39 @@ final class ShellSystemInspector implements SystemInspector
             try {
                 $destination = BackupDestination::create($disk, $name);
                 $reachable = $destination->isReachable();
-                $newest = $reachable ? $destination->backups()->newest() : null;
+                $backups = $reachable ? $destination->backups() : null;
+                $newest = $backups?->newest();
+
+                // H3371: свежесть off-site диска сплита меряется только ПОЛНОЙ
+                // группой частей. Одинокая часть ровно max_part_mb байт
+                // проходит порог BACKUP_MIN_ARCHIVE_MB и читалась как живой
+                // off-site, хотя архив из неё не собирается. Нет полной
+                // группы — нет и свежести: «на диске нет ни одного архива».
+                $complete = null;
+                if ($backups !== null && $newest !== null && $disk === $splitDisk) {
+                    $entries = [];
+                    foreach ($backups as $backupFile) {
+                        $entries[] = [
+                            'name' => basename($backupFile->path()),
+                            'timestamp' => $backupFile->date()->getTimestamp(),
+                            'bytes' => (int) $backupFile->sizeInBytes(),
+                        ];
+                    }
+                    $complete = SplitGroupMath::newestCompleteEntry($entries);
+                    if ($complete === null) {
+                        $newest = null;
+                    }
+                }
+
                 $rows[] = [
                     'disk' => $disk,
                     'reachable' => $reachable,
-                    'newestAt' => $newest?->date()->getTimestamp(),
-                    'newestBytes' => $newest === null ? null : (int) $newest->sizeInBytes(),
+                    'newestAt' => $complete !== null
+                        ? $complete['timestamp']
+                        : $newest?->date()?->getTimestamp(),
+                    'newestBytes' => $complete !== null
+                        ? $complete['bytes']
+                        : ($newest === null ? null : (int) $newest->sizeInBytes()),
                 ];
             } catch (Throwable) {
                 // Отдельное назначение не ответило — это и есть «недостижимо»,

@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # app/Livewire
 
 Livewire-компоненты для интерактивных UI-блоков без перезагрузки страницы.
@@ -37,3 +39,5 @@ php artisan make:livewire Shop/ComponentName
 <livewire:student-dictionary />
 <livewire:shop.course-catalog />
 ```
+
+_Dr. Mārcis Gasūns_

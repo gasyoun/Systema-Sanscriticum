@@ -1,6 +1,6 @@
 # Признание выручки по методу начисления (accrual)
 
-_Created: 08-07-2026 · Last updated: 12-07-2026_
+_Created: 08-07-2026 · Last updated: 02-09-2026_
 
 Ground-truth по фазе B плана noboring [`/cases/education`](https://noboring-finance.ru/cases/onlayn-schkola-viveli-sobstvennika-iz-operacionki/) ([H258](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H258-Opus_Systema-Sanscriticum_revenue_recognition_accrual_06.07.26.md)). Решение MG 06-07-2026: LMS ведет выручку **и кассово, и по начислению**, а не только кассой.
 
@@ -14,7 +14,9 @@ Ground-truth по фазе B плана noboring [`/cases/education`](https://no
 |---|---|---|
 | Таблица-субледжер | [`revenue_schedules`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/migrations/2026_07_08_130000_create_revenue_schedules_table.php) | строка = доля суммы платежа, признаваемая в месяце `period_month` (`YYYY-MM`) |
 | Модель | [`RevenueSchedule`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Models/RevenueSchedule.php) | read-only взгляд на строку графика |
-| Алгоритм раскладки | [`RevenueRecognitionService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/RevenueRecognitionService.php) | `sharesForPayment()` — платеж → `['YYYY-MM' => сумма]` |
+| Общий алгоритм атрибуции | [`BlockMonthRecognition`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/BlockMonthRecognition.php) | единственный источник раскладки для ОБОИХ потребителей: `coveredBlockNumbers()`, `distribute()`, `attribute()` |
+| Алгоритм раскладки | [`RevenueRecognitionService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/RevenueRecognitionService.php) | `sharesForPayment()` — платеж → `['YYYY-MM' => сумма]`; `attributionForPayment()` — то же плюс ИМЯ механизма |
+| Перепись атрибуции | [`recognition:attribution-audit`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/AuditRecognitionAttribution.php) | только чтение: чем признана каждая строка и что изменит сторож штампованного прогона |
 | Персистентность + своды | [`RevenueScheduleService`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/RevenueScheduleService.php) | `regenerateFor()`, `backfillAll()`, `recognizedForMonth()`, `deferredRevenueAsOf()` |
 | Генерация | [`PaymentObserver`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Observers/PaymentObserver.php) | `created`/`updated` → `regenerateFor()` |
 | Бэкофилл истории | [`revenue:backfill-schedule`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/BackfillRevenueSchedule.php) | `--dry-run` — план без записи |
@@ -27,8 +29,20 @@ Ground-truth по фазе B плана noboring [`/cases/education`](https://no
 1. **Override** — если у платежа задан `salary_recognition_month` (`YYYY-MM`), вся сумма признается в этом месяце.
 2. **Иначе** — платеж раскладывается на покрытые блоки (`start_block`/`end_block`; `full`/депозит/legacy → все блоки курса), доля за блок признается в месяце `CourseBlock.starts_at`.
 3. **Fallback** — блок без даты или платеж без курса/блоков (разовый, короткий продукт) → месяц `created_at`.
+4. **Сторож штампованного прогона** (H3951, флаг, дефолт OFF) — см. раздел ниже.
 
-Держится **отдельным сервисом** (а не общим методом с ЗП), чтобы денежно-критичный `TeacherSalaryService` не трогать; при будущей унификации — свести оба потребителя в один источник алгоритма.
+Раскладка живёт в общем [`BlockMonthRecognition`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/BlockMonthRecognition.php); `RevenueRecognitionService` и `TeacherSalaryService` — два потребителя ОДНОГО алгоритма, а не две его копии.
+
+**Каждая строка называет свой механизм.** `attributionForPayment()` (выручка) и `recognizedAttribution()` (ЗП) возвращают `['shares' => …, 'mechanism' => …, 'stamped' => bool]`, где механизм — одна из констант `BlockMonthRecognition`:
+
+| Константа | Значение | Что означает |
+|---|---|---|
+| `BY_COLUMN` | `column` | ручной `salary_recognition_month` — вся сумма в один месяц |
+| `BY_BLOCKS` | `blocks` | раскладка по месяцам покрытых блоков |
+| `BY_CREATED` | `created` | платёж без курса/блоков → месяц оплаты |
+| `BY_STAMPED_RUN` | `blocks_stamped_run` | покрытые блоки — штамп бэкофилла → месяц оплаты (только при флаге ON) |
+
+Смешивать механизмы молча нельзя: строка обязана сказать, чем именно она признана.
 
 ## Инварианты
 
@@ -95,5 +109,70 @@ Ground-truth по фазе B плана noboring [`/cases/education`](https://no
 5. **Не путать с отменой платежа.** Смена статуса исходного платежа на `canceled`
    удаляет весь график (услуга не оказана) независимо от флага — реверс касается
    только частичных возвратов отдельным `Расход`-платежом.
+
+## Сторож ШТАМПОВАННОГО ПРОГОНА блоков (H3951, флаг дефолт OFF)
+
+`REVENUE_RECOGNITION_STAMPED_BLOCK_RUN_GUARD` / [`config/revenue.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/revenue.php).
+**Дефолт `false` = поведение до H3951 байт-в-байт.**
+
+### Дефект
+
+Дата старта блока — не всегда событие расписания. Массовый импорт проставляет
+десяткам блоков ОДИН И ТОТ ЖЕ день (класс ловушек [Uprava FINDINGS §621](https://github.com/gasyoun/Uprava/blob/main/FINDINGS.md):
+«одинаковая дата у десятков строк — отметка миграции, а не событие жизненного
+цикла»). На проде 02-09-2026: у курса 266 блоки 1–50 стоят штампом `2025-03-14`
+(тот же штамп — на курсах 334/356/357/366), а блоки 51–70 идут настоящим
+28-дневным циклом. Предоплата августа 2026 на 36 блоков вперёд покрывает блоки
+1–36, целиком внутри штампа, — и вся сумма признаётся на **17 месяцев назад**, в
+закрытый период. ЗП преподавателя за месяц прихода денег показывает по этой
+строке ноль.
+
+Запись такой даты уже запрещена: [`BackfillCourseBlockDates`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/BackfillCourseBlockDates.php)
+отказывается проставлять дату, когда все блоки курса свелись к одному дню.
+Сторож H3951 — **читающая** половина того же правила: данные, записанные до
+запрета, всё ещё лежат в базе.
+
+### Предикат — ПОБЛОЧНЫЙ, не покурсовой
+
+`BlockMonthRecognition::coveredRunIsStamped($covered, $blockDates)` истинен, когда
+покрытых блоков ≥ 2, каждый датирован и все даты совпадают. Покурсовой предикат
+(«весь курс на одной дате») проверен на проде и отвергнут: курс 266 покурсово НЕ
+вырожден (70 датированных блоков на 21 дате), то есть промахнулся бы мимо самого
+дефекта, зато срабатывал бы на курсах, к дефекту отношения не имеющих.
+Одноблочные платежи (основная масса популяции) предикат не трогает по построению.
+
+### Что делает флаг
+
+- **OFF (дефолт):** доли считаются ровно как раньше, механизм по-прежнему
+  `BY_BLOCKS`, но поле `stamped` уже `true` — **аудит видит затронутые строки ДО
+  того, как поведение поменяется**.
+- **ON:** такой платёж признаётся механизмом `BY_STAMPED_RUN` — вся сумма в месяц
+  оплаты. Месяц оплаты для штампованного прогона — **тоже не истина, а НАЗВАННЫЙ
+  запасной вариант**: он лишь перестаёт уносить деньги в закрытый период на
+  полтора года назад. Ручной `salary_recognition_month` бьёт сторож в обоих
+  состояниях.
+
+Месяц не выдумывается никогда: отсутствующая атрибуция остаётся `NULL` и падает в
+именованный запасной вариант, а не в подогнанный под баланс месяц.
+
+### Как посмотреть дельту
+
+```bash
+php artisan recognition:attribution-audit          # таблицы
+php artisan recognition:attribution-audit --json   # машинный вывод
+```
+
+Команда строго читающая: она не пишет ни в `payments`, ни в `teacher_payouts`, ни
+в `salary_recognition_month`. Три секции — перепись механизмов по всей популяции,
+поимённо строки со сменой месяцев, и ЗП по преподавателям «до / после» за
+затронутые месяцы. Секция 3 берёт СВЕЖИЙ экземпляр `TeacherSalaryService` на
+каждое состояние флага: сервис мемоизирует сводку, и переключение конфига на
+прогретом объекте сравнило бы два одинаковых ответа из кэша.
+
+Пины: [`BlockMonthRecognitionTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Unit/BlockMonthRecognitionTest.php)
+(предикат + `attribute()` в обоих состояниях флага, включая форму курса 266),
+[`TeacherSalaryAccrualTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/TeacherSalaryAccrualTest.php)
+(дефолт OFF ничего не меняет; ON переносит предоплату в месяц оплаты; настоящее
+расписание не трогается; override выигрывает).
 
 _Dr. Mārcis Gasūns_

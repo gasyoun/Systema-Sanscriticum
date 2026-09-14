@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Bot;
 
+use App\Services\Support\Faq\Bm25FaqRetriever;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -28,17 +29,23 @@ class BotKnowledgeBase
      */
     private const FAQ_CHAR_CAP = 60000;
 
-    public function __construct(private CourseCatalogProvider $catalog) {}
+    public function __construct(
+        private CourseCatalogProvider $catalog,
+        private Bm25FaqRetriever $retriever,
+    ) {}
 
     /**
-     * Полный системный промпт. $userQuestion зарезервирован под будущий
-     * ретривал по разделам (сейчас FAQ инжектится целиком — контекста хватает).
+     * Полный системный промпт.
+     *
+     * H3766 B4: при features.bot_faq_retrieval=true и известном вопросе в
+     * промпт идут top-K разделов FAQ вместо всего файла. Каталог курсов —
+     * всегда целиком (цены только оттуда, рулинг R5).
      */
     public function systemPrompt(?string $userQuestion = null): string
     {
         $sections = [
             $this->persona(),
-            "# База знаний (FAQ Академии)\n\n".$this->faq(),
+            "# База знаний (FAQ Академии)\n\n".$this->faqFor($userQuestion),
             $this->catalog->markdown(),
         ];
 
@@ -46,10 +53,69 @@ class BotKnowledgeBase
     }
 
     /**
+     * FAQ-половина промпта: top-K разделов под вопрос или весь корпус.
+     *
+     * Фолбэк на весь корпус — не «на всякий случай», а требование: пустой
+     * ретривал означает, что бот остался бы вообще без базы знаний и начал бы
+     * выдумывать, а это ровно то, что персона запрещает.
+     */
+    public function faqFor(?string $userQuestion = null): string
+    {
+        if (! config('features.bot_faq_retrieval', false)) {
+            return $this->faq();
+        }
+
+        $question = trim((string) $userQuestion);
+        if ($question === '') {
+            return $this->faq();
+        }
+
+        $topK = max(1, (int) config('support.faq_rag.bot_top_k', 6));
+        $chunks = $this->retriever->retrieveChunks($question, $topK);
+        if ($chunks === []) {
+            return $this->faq();
+        }
+
+        $parts = [];
+        foreach ($chunks as $scored) {
+            $chunk = $scored['chunk'];
+            $parts[] = '## '.implode(' → ', $chunk->headingPath)."\n\n".trim($chunk->body);
+        }
+
+        return implode("\n\n", $parts);
+    }
+
+    /**
      * Персона и правила поведения ИИ-куратора. Сведено из прежних промптов
      * VK/TG в единый текст.
+     *
+     * H3520 — каркас мульти-персоны: $key выбирает голос из
+     * config/bot_personas.php, но ТОЛЬКО при features.bot_multi_persona=true.
+     * Пока флаг OFF (прод по умолчанию), любой ключ возвращает дефолтный
+     * контракт FAQ-куратора байт-в-байт; неизвестный/выключенный ключ при ON
+     * тоже падает в default.
      */
-    public function persona(): string
+    public function persona(string $key = 'default'): string
+    {
+        if (! config('features.bot_multi_persona', false)) {
+            return $this->defaultPersona();
+        }
+
+        $personas = (array) config('bot_personas.personas', []);
+        $entry = $personas[$key] ?? null;
+
+        if (! is_array($entry) || empty($entry['enabled'])) {
+            return $this->defaultPersona();
+        }
+
+        $text = $entry['text'] ?? null;
+
+        return is_string($text) && trim($text) !== ''
+            ? $text
+            : $this->defaultPersona();
+    }
+
+    private function defaultPersona(): string
     {
         return <<<'TXT'
         Ты — ИИ-куратор Академии Санскрита (ОРС). Помогаешь студентам по вопросам обучения,

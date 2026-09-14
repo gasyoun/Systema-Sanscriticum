@@ -1,3 +1,5 @@
+_Created: 30-04-2026 · Last updated: 05-09-2026_
+
 # lecture-builder
 
 HTTP-микросервис для сборки лекций. Используется из Laravel-админки
@@ -101,3 +103,5 @@ LECTURE_BUILDER_TOKEN=<тот же токен>
 изоляция — оборачивайте в systemd / supervisor / docker-compose. Контракт
 обмена через filesystem означает, что сервис должен видеть тот же диск,
 что и Laravel (один хост или общий volume).
+
+_Dr. Mārcis Gasūns_

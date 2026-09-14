@@ -1,6 +1,6 @@
 <?php
 
-use Spatie\Backup\Notifications\Notifiable;
+use App\Notifications\BackupNotifiable;
 use Spatie\Backup\Notifications\Notifications\BackupHasFailedNotification;
 use Spatie\Backup\Notifications\Notifications\BackupWasSuccessfulNotification;
 use Spatie\Backup\Notifications\Notifications\CleanupHasFailedNotification;
@@ -39,6 +39,13 @@ return [
                     base_path('node_modules'),
                     storage_path('app/livewire-tmp'),
                     storage_path('app/telegram-harvest/pilot'),
+                    // Сам каталог назначения бэкапов и временный каталог Zip:
+                    // без исключения каждый архив заворачивал внутрь себя все
+                    // предыдущие (рекурсивный рост: 22-08-2026 архив 1.87 ГБ,
+                    // внутри — прошлонедельные 1.4 ГБ) и раздувался каждую
+                    // неделю. См. также split_upload ниже.
+                    storage_path('app/Laravel'),
+                    storage_path('app/backup-temp'),
                 ],
 
                 'follow_links' => false,
@@ -63,14 +70,55 @@ return [
             'compression_method' => ZipArchive::CM_DEFAULT,
             'compression_level' => 9,
             'filename_prefix' => '',
-            // local — на сервере; yandex_disk — off-site, синхронизируется дальше
-            // на ПК десктоп-клиентом Яндекс.Диска. Отсутствие YANDEX_DISK_LOGIN
-            // в .env просто даёт неудачную запись на этот диск (лог + уведомление
-            // BackupHasFailedNotification), local-копия при этом не страдает.
+            // Только local: spatie льёт архив одним WebDAV-PUT, а Yandex режет
+            // PUT >1 ГБ по HTTP 413 (история: обрезки по 11 МиБ, потом отказ).
+            // Off-site нога переехала в SplitUploadToYandex (событие
+            // BackupWasSuccessful): архив делится на части <1 ГБ и льётся
+            // по частям. Аудит свежести yandex_disk живёт в
+            // ShellSystemInspector::readBackupDestinations — он добавляет диск
+            // из split_upload.disk к этому списку, поэтому guards продолжают
+            // мерить off-site, хотя spatie туда больше не пишет напрямую.
             'disks' => [
                 'local',
-                'yandex_disk',
             ],
+        ],
+
+        // Off-site через части: Яндекс не переваривает большие тела — 413 на
+        // >1 ГБ, а крупные тела ведут себя непредсказуемо: 22–23-08-2026 сотни
+        // МБ «сохранялись» 2xx без записи (чёрная дыра, три «успеха» на ~2 ГБ,
+        // части 404), 24-08-2026 strace показал TLS-stall (sendto EAGAIN, байты
+        // не уходят минутами) на 50 МиБ частях. Класс ≤~20 МиБ доезжает честно:
+        // 11.7 / 18.6 МиБ зипы легли целиком во все дни наблюдений. Восстановление:
+        // скачать все части одной группы, склеить `cat *.part-*-of-*.zip >
+        // backup.zip`, распаковать.
+        'split_upload' => [
+            // Куда льём части (должен совпадать с диском из destination.disks,
+            // который НЕ local).
+            'disk' => 'yandex_disk',
+            // Размер части. 20 МиБ = класс, переживающий Яндекс 22–24-08-2026
+            // (решение MG 24-08-2026: срез с 50). Порог guards
+            // BACKUP_MIN_ARCHIVE_MB в scripts/server_guards.conf стоит ниже
+            // суммы полной группы; одинокая часть полным архивом не считается
+            // (SplitGroupMath).
+            'max_part_mb' => (int) env('BACKUP_SPLIT_PART_MB', 20),
+            // Ретеншн частей на off-site: зеркалит keep_daily_backups_for_days.
+            'keep_parts_days' => (int) env('BACKUP_KEEP_PARTS_DAYS', 16),
+            // Свежепроцессная верификация каждой части (backup:verify-yandex-part):
+            // Яндекс изредка отвечал 2xx ничего не сохранив — верим только
+            // отдельному процессу со свежим curl-хендлом.
+            'verify' => (bool) env('BACKUP_VERIFY_PARTS', true),
+            // Мягкий потолок ОДНОГО прогона докатки (backup:resume-yandex-parts).
+            // Обязан быть строго меньше TimeoutStartSec=1200 у
+            // systema-yandex-resume.service (YANDEX_RESUME_TIMEOUT_SECONDS в
+            // scripts/server_guards.conf): цикл докатки не знал о бюджете и
+            // начинал часть, которая заведомо в него не влезала, а systemd рвал
+            // процесс SIGTERM'ом посреди PUT и красил юнит в failed (issue #2411,
+            // прод 07-09-2026: смерть ровно в :30:01 при такте :10, 4 с CPU на
+            // 20 минут стены). «Не успели за час» — штатный исход докатки, а не
+            // авария: остаток добирает следующий часовой прогон.
+            // 900 = 1200 минус запас на bootstrap, листинг off-site и чистку.
+            // 0 — без ограничения (поведение до #2411).
+            'resume_budget_seconds' => (int) env('BACKUP_RESUME_BUDGET_SECONDS', 900),
         ],
 
         'temporary_directory' => storage_path('app/backup-temp'),
@@ -90,10 +138,17 @@ return [
             CleanupWasSuccessfulNotification::class => ['mail'],
         ],
 
-        'notifiable' => Notifiable::class,
+        'notifiable' => BackupNotifiable::class,
 
         'mail' => [
-            'to' => 'pe4kin.85@mail.ru',
+            // H3312: реального получателя решает App\Notifications\BackupNotifiable
+            // через config('services.admin.email') (env ADMIN_EMAIL), fail-closed:
+            // пусто -> отправка skip с warning, без краша. Само поле 'to' spatie
+            // валидирует filter_var и бросает InvalidConfig на пустой/битой
+            // строке (краш парсинга конфига = crash loop бэкапов), поэтому здесь
+            // стоит синтаксически валидный плейсхолдер, который НЕ используется
+            // как адресат. Не менять на пустую строку!
+            'to' => 'backup-notifications-unset@example.com',
 
             'from' => [
                 'address' => env('MAIL_FROM_ADDRESS', 'robot@tvoy-sayt.ru'),

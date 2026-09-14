@@ -1,11 +1,11 @@
 # Telegram-боты и TG-аккаунты в Systema Sanscriticum
 
-_Created: 30-07-2026 · Last updated: 14-08-2026_
+_Created: 30-07-2026 · Last updated: 07-09-2026_
 
 Инвентарь **Bot API-ботов**, **landing-ботов** и **userbot-аккаунта** (MadelineProto),
 которые использует LMS на `samskrte.ru`.  
 Соседний док только про MTProto-раннер:
-[`telegram-userbot-inventory.md`](telegram-userbot-inventory.md).
+[`telegram-userbot-inventory.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-userbot-inventory.md).
 
 > **Секреты.** Токены в git **не** хранятся. В `.env` / `MarketingSetting` (encrypted)
 > / `landing_bots`. Ниже — только usernames, env-ключи и назначение.
@@ -92,11 +92,39 @@ Grok в «Отделе заботы»      →  @grokusaurus_bot     (ПК Ма�
 | **Хранение** | `MarketingSetting.zapisi_bot_username`, `zapisi_bot_token`, `zapisi_webhook_secret`, `zapisi_chat_id`, шаблон напоминания |
 | **Флаг** | `TELEGRAM_ZAPISI_BOT_ENABLED` / `features.telegram_zapisi_bot` (прод: **true**) |
 | **Прод username** | `@zapisi_ORSbot` |
-| **Приём апдейтов** | штатно webhook через входной узел; аварийно long-poll `zapisi:poll` (`TELEGRAM_ZAPISI_POLL_ENABLED`, default false) |
+| **Приём апдейтов** | штатно webhook через входной узел (`allowed_updates: message, channel_post, my_chat_member` — H4314); аварийно long-poll `zapisi:poll` (`TELEGRAM_ZAPISI_POLL_ENABLED`, default false) |
 | **Config** | `config('services.telegram_zapisi')` |
+| **Приветственная карточка** | при добавлении бота в чат: 1 раз в сутки на чат (см. ниже, H4314–H4318) |
 
 **Назначение:** чат бронирования занятий, напоминания, дашборд Filament «Записи (бот)»,
-roster/harvest peer (совместно с Track B).
+roster/harvest peer (совместно с Track B), приветственная карточка чата.
+
+#### Приветственная карточка чата (H4314–H4318, 07-09-2026)
+
+1. **Триггер:** бот добавлен в группу/супергруппу (`my_chat_member`, переход
+   left/kicked → member/administrator). Laravel клеймит
+   `tg:welcome-card:<chatId>:<Ymd>` в Redis (NX, TTL 24 ч) **до** форварда —
+   не чаще **1 карточки на чат в сутки**, независимо от числа re-add'ов
+   (правило MG: «железно… сейчас и всегда»). Redis недоступен = **fail-closed**
+   (карточка молча не шлётся). Повторные добавления в течение суток дропаются в
+   `ProcessTelegramZapisiUpdate` и до n8n не доходят.
+2. **Роутинг:** `message`/`channel_post` → `zapisi_n8n_forward_url` («ловим
+   названия»), `my_chat_member` → `zapisi_welcome_n8n_url` — отдельная колонка
+   `marketing_settings`, пусто = приветствие выключено.
+3. **n8n** (workflow `h4314welcome0000000` на .91, «Приветствие zapisi»):
+   фильтр перехода → fetch карточки из приватного Uprava
+   `tools/welcome_post/cards/<chat_id>.md` через существующий
+   `SOFT_ALERT_GITHUB_TOKEN` → 404 → `cards/default.md` (без строки лектора) →
+   отправка от бота → `pinChatMessage` best-effort (без прав админа у бота пин
+   не удастся, отправка всё равно происходит). Полный провал fetch = ничего не
+   отправляется. Правка карточки = обычный коммит в Uprava (n8n тянет свежую
+   версию при каждом событии).
+4. **Карточки:** [Uprava tools/welcome_post/cards/](https://github.com/gasyoun/Uprava/blob/main/tools/welcome_post/cards/) —
+   по файлу на чат (19 чатов засеяно по названиям из прода) + `default.md`.
+   Правило MG: все роли настраиваются по чатам («все роли по чатам»); нет
+   лектора — строки нет.
+5. **Лимит:** двойной — Laravel Redis claim (основной) + n8n staticData
+   (второй эшелон; обнуляется при деплое воркфлоу — потому основной в Redis).
 
 Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (см. DEPLOY_QUEUE №41).
 
@@ -145,7 +173,7 @@ Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (с
 | **Команды** | `telegram-support:sync`, `telegram-support:healthcheck`, harvest/roster (`TELEGRAM_HARVEST_*`) |
 | **Сессия** | **одна** на support+harvest — **не** гонять параллельно два синка (риск `AUTH_RESTART`) |
 
-Подробности раннера: [`telegram-userbot-inventory.md`](telegram-userbot-inventory.md).
+Подробности раннера: [`telegram-userbot-inventory.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/telegram-userbot-inventory.md).
 
 Тот же username часто в UX как **живой саппорт**: кнопка «Написать в Telegram» →
 `https://t.me/rusamskrtam` (страница fail-оплаты и др.) — это **не** вызов Bot API.
@@ -185,7 +213,7 @@ Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (с
 | `POST /api/webhooks/telegram-magnet/{webhookKey}` | landing bot |
 | zapisi webhook path | через входной узел / MarketingSetting (см. deploy checklist) |
 
-Матрица секретов: [`webhook-security.md`](webhook-security.md).
+Матрица секретов: [`webhook-security.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md).
 
 ---
 
@@ -222,13 +250,15 @@ php artisan telegram:set-magnet-webhook   # магнит
 
 | Файл | Роль |
 |------|------|
-| [`config/services.php`](../config/services.php) | `telegram`, `telegram_support`, `telegram_harvest`, `telegram_zapisi`, `telegram_webhook` |
-| [`config/features.php`](../config/features.php) | `telegram_zapisi_bot` и др. |
+| [`config/services.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/services.php) | `telegram`, `telegram_support`, `telegram_harvest`, `telegram_zapisi`, `telegram_webhook` |
+| [`config/features.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php) | `telegram_zapisi_bot` и др. |
 | `app/Models/MarketingSetting.php` | `tg_*`, `zapisi_*`, student bot flags |
 | `app/Models/LandingBot.php` | per-landing bots |
-| [`DEPLOY_QUEUE.md`](../DEPLOY_QUEUE.md) | T1–T5, №41 zapisi, №13 marathon bot |
-| [`docs/webhook-security.md`](webhook-security.md) | fail-policy вебхуков |
+| [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) | T1–T5, №41 zapisi, №13 marathon bot |
+| [`docs/webhook-security.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/webhook-security.md) | fail-policy вебхуков |
 
 ---
 
 _Dr. Mārcis Gasūns / ops inventory — сверка с продом 30-07-2026._
+
+_Dr. Mārcis Gasūns_

@@ -71,6 +71,11 @@
                           {{ request()->routeIs('shop.materials') ? 'text-white bg-[#1F2636]' : '' }}">
                     Материалы
                 </a>
+                <a href="{{ route('slovar.index') }}"
+                   class="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-[#1F2636] rounded-lg transition-all
+                          {{ request()->routeIs('slovar.*') ? 'text-white bg-[#1F2636]' : '' }}">
+                    Словарь
+                </a>
                 <a href="{{ route('articles.index') }}"
                    class="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white hover:bg-[#1F2636] rounded-lg transition-all">
                     Блог

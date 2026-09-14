@@ -7,27 +7,135 @@
         $weekly = $report['weekly'];
         $chronic = $report['chronic'];
         $maxWeekly = max(1, $weekly->max('rate') ?? 0);
+        $canvasMoney = $this->canvasMoney();
+        $canvasTransfer = $this->canvasTransfer();
+        $canvasTimings = $this->canvasTimings();
+        $canvasRoster = $this->canvasRoster();
     @endphp
+
+    {{-- H4443: «ещё в деньгах» по грамматикам (неоплаченные блоки от курсора) --}}
+    <x-filament::section>
+        <x-slot name="heading">Канва: неоплаченные блоки грамматик</x-slot>
+        <x-slot name="description">Студенты × цена блоков, не покрытых их платежами, от курсора канвы группы. Базовые цены, без скидок и иностранной валюты. В Telegram-пост эти цифры не идут.</x-slot>
+        <x-slot name="content">
+            <div class="space-y-2 text-sm">
+                @forelse($canvasMoney['rows'] as $row)
+                    <div class="flex justify-between gap-4">
+                        <span>{{ $row['course'] }} @if($row['group'] !== $row['course'])({{ $row['group'] }})@endif · блок {{ $row['cursor_block'] }}/{{ $row['blocks_total'] }} · {{ $row['students'] }} студ.</span>
+                        <span class="font-semibold tabular-nums">{{ number_format($row['unpaid'], 0, '.', ' ') }} ₽</span>
+                    </div>
+                @empty
+                    <p class="text-gray-400">Идущих грамматик с канвой нет.</p>
+                @endforelse
+                @if($canvasMoney['total'] > 0)
+                    <div class="flex justify-between gap-4 border-t border-gray-200 dark:border-gray-700 pt-2 font-bold">
+                        <span>Суммарно</span>
+                        <span class="tabular-nums">{{ number_format($canvasMoney['total'], 0, '.', ' ') }} ₽</span>
+                    </div>
+                @endif
+            </div>
+        </x-slot>
+    </x-filament::section>
+
+    {{-- H4495: ростер «кто на чём» — ТОЛЬКО админка (MG 09-09: из поста убраны) --}}
+    <x-filament::section>
+        <x-slot name="heading">Канва: кто на чём (ростер — админ)</x-slot>
+        <x-slot name="description">Персональные данные студентов живых грамматик: последнее занятие, позиция на шкале, ⚠️ пропуски. В публичный Telegram-пост эти данные больше не попадают.</x-slot>
+        <x-slot name="content">
+            <div class="space-y-3 text-sm">
+                @forelse($canvasRoster as $row)
+                    <details>
+                        <summary class="cursor-pointer font-medium">{{ $row['course'] }}@if($row['group'] !== $row['course']) <span class="text-gray-400">({{ $row['group'] }})</span>@endif · {{ count($row['students']) }} студ.</summary>
+                        <ul class="mt-2 space-y-1 text-gray-600 dark:text-gray-400">
+                            @foreach ($row['students'] as $s)
+                                <li>{{ $s['name'] }} — {{ $s['last'] }}@if($s['canvas']) · {{ $s['canvas'] }}@endif @if($s['missed'] >= 2)<span class="text-danger-600">⚠️ пропустил {{ $s['missed'] }} подряд</span>@endif</li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @empty
+                    <p class="text-gray-400">Идущих грамматик нет.</p>
+                @endforelse
+            </div>
+        </x-slot>
+    </x-filament::section>
+
+    {{-- H4457: покрытие таймкодами --}}
+    <x-filament::section>
+        <x-slot name="heading">Канва: таймкоды (ингестия из n8n)</x-slot>
+        <x-slot name="description">Канонические таймкоды занятий (kanva_timings) — приём из n8n execution-истории командой kanva:ingest-timings. Группы без таймкодов ждут своей нарезки.</x-slot>
+        <x-slot name="content">
+            <div class="space-y-1 text-sm">
+                @forelse($canvasTimings['rows'] as $row)
+                    <div class="flex justify-between gap-4">
+                        <span>{{ $row['course'] }} · {{ $row['timings'] }} меток · {{ $row['status'] }}</span>
+                        <span class="text-gray-500 tabular-nums">{{ $row['last'] ?? '—' }}</span>
+                    </div>
+                @empty
+                    <p class="text-gray-400">Таймкодов ещё нет.</p>
+                @endforelse
+                @if($canvasTimings['without'] > 0)
+                    <p class="text-gray-500">Без таймкодов: {{ $canvasTimings['without'] }} грамматик.</p>
+                @endif
+            </div>
+        </x-slot>
+    </x-filament::section>
+
+    {{-- H4452: transfer view — взаимозаменяемость грамматик по курсору канвы --}}
+    <x-filament::section>
+        <x-slot name="heading">Канва: взаимозаменяемость (transfer view)</x-slot>
+        <x-slot name="description">Группы по убыванию курсора учебника. «Вливается в» — соседи семейства в допуске ±2 урока: развалившаяся группа переходит в полном составе. Ответвления — занятия вне канвы, отслеживаются, но не блокируют перенос.</x-slot>
+        <x-slot name="content">
+            <div class="space-y-2 text-sm">
+                @forelse($canvasTransfer['rows'] as $row)
+                    <div class="flex flex-wrap justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-1">
+                        <span>
+                            <span class="font-medium">{{ $row['course'] }}</span>@if($row['group'] !== $row['course'])
+                                <span class="text-gray-400">({{ $row['group'] }})</span>@endif
+                            · урок {{ $row['cursor'] }}/{{ $row['total'] }} · блок {{ $row['block'] }}/{{ $row['blocks_total'] }}
+                            · ответвлений {{ $row['deviations'] }}
+                            @if($row['forecast']) · финал ≈ {{ $row['forecast'] }}@endif
+                        </span>
+                        <span class="text-gray-500">
+                            @if($row['compatible'])
+                                вливается в: {{ implode('; ', $row['compatible']) }}
+                            @else
+                                <span class="text-gray-400">близких по канве нет</span>
+                            @endif
+                        </span>
+                    </div>
+                @empty
+                    <p class="text-gray-400">Идущих грамматик с канвой нет.</p>
+                @endforelse
+            </div>
+        </x-slot>
+    </x-filament::section>
 
     {{-- Тренд по неделям --}}
     <x-filament::section>
         <x-slot name="heading">Тренд посещаемости по неделям</x-slot>
-        <x-slot name="description">Доля пришедших/перешедших по ссылке от ожидавшихся, по неделям начала занятия.</x-slot>
+        <x-slot name="description">Последние {{ (int) config('attendance.default_window_days') }} дней. Столбик — доля пришедших или перешедших по ссылке от ожидавшихся. Нулевой столбик значит: занятие в календаре было, отметок Zoom/клика нет.</x-slot>
 
         @if ($weekly->isEmpty())
-            <p class="text-gray-400 text-sm">Нет занятий за выбранный период.</p>
+            <p class="text-gray-400 text-sm">В календаре занятий (Zoom-расписание) за последние {{ (int) config('attendance.default_window_days') }} дней нет строк. Уроки с датой в карточке курса сюда не попадают.</p>
         @else
             <div class="flex items-end gap-1 h-40" style="min-height: 10rem;">
                 @foreach ($weekly as $week => $row)
-                    <div class="flex-1 flex flex-col items-center justify-end h-full" title="{{ $week }}: {{ $row['rate'] }}%">
-                        <div class="w-full rounded-t bg-primary-500/80"
-                             style="height: {{ $row['rate'] > 0 ? max(4, round($row['rate'] / $maxWeekly * 100)) : 0 }}%"></div>
+                    @php
+                        $bar = $row['rate'] > 0
+                            ? max(8, (int) round($row['rate'] / $maxWeekly * 100))
+                            : 6;
+                    @endphp
+                    <div class="flex-1 flex flex-col items-center justify-end h-full min-w-0"
+                         title="Неделя с {{ $week }}: {{ $row['rate'] }}% ({{ $row['attended'] }} из {{ $row['expected'] }})">
+                        <div class="text-[10px] tabular-nums text-gray-500 mb-1">{{ $row['rate'] }}%</div>
+                        <div class="w-full rounded-t {{ $row['rate'] > 0 ? 'bg-primary-500/80' : 'bg-gray-300 dark:bg-gray-600' }}"
+                             style="height: {{ $bar }}%"></div>
                     </div>
                 @endforeach
             </div>
             <div class="flex justify-between text-xs text-gray-400 mt-2">
-                <span>{{ $weekly->keys()->first() }}</span>
-                <span>{{ $weekly->keys()->last() }}</span>
+                <span>{{ \Illuminate\Support\Carbon::parse($weekly->keys()->first())->format('d.m') }}</span>
+                <span>{{ \Illuminate\Support\Carbon::parse($weekly->keys()->last())->format('d.m') }}</span>
             </div>
         @endif
     </x-filament::section>

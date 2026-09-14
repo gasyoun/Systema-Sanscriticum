@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', function () {
 @push('head')
     <meta name="description" content="{{ $course->meta_description ?: \Illuminate\Support\Str::limit(trim(strip_tags($course->description)), 160) }}">
 
+    {{-- H3807: канон программы — живой курс. Для записи прошедшего потока это
+         ЧУЖОЙ адрес: страница остаётся покупаемой, но в выдаче программу
+         представляет одна карточка, а не две конкурирующие. --}}
+    <link rel="canonical" href="{{ $canonicalUrl ?? route('shop.course.show', $course->slug) }}">
+
     {{-- ═══════════════ SEO: Course + Offer (schema.org / JSON-LD) ═══════════════
          Помогает Яндексу и Google показать курс с ценой в выдаче. Цены берём из
          публичных (list) цен активных тарифов — без учёта персональных скидок. --}}
@@ -255,7 +260,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="w-full lg:w-1/2">
                     {{-- Cover: real photo OR typographic fallback matching catalogue card --}}
                     <div class="relative w-full aspect-video md:aspect-[4/3] rounded-3xl overflow-hidden bg-gradient-to-br from-[#111622] to-[#0A0D14] border border-[#1F2636] shadow-2xl shadow-indigo-900/20 flex items-center justify-center group">
-                        @if($course->image_path)
+                        @if($courseVideoEmbedUrl = $course->videoAnnounceEmbedUrl())
+                            <iframe src="{{ $courseVideoEmbedUrl }}" title="{{ $course->title }}" class="absolute inset-0 w-full h-full" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        @elseif($course->image_path)
                             <img src="{{ Storage::url($course->image_path) }}" alt="{{ $course->title }}" class="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-700">
                             <div class="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/80 via-transparent to-transparent"></div>
                         @else
@@ -554,6 +561,9 @@ document.addEventListener('DOMContentLoaded', function () {
         </section>
         @endif
 
+        {{-- ───── 1.6 ПОЛНОЕ РАСПИСАНИЕ (H4328: обзорное + занятия 1–N) ───── --}}
+        @include('shop.partials.full-schedule')
+
         {{-- ───── 2. ТАРИФЫ ───── --}}
         @php
             $hasCurrentBlock = !empty($currentBlockNumber);
@@ -584,6 +594,38 @@ document.addEventListener('DOMContentLoaded', function () {
                  x-init="if({{ $course->tariffs->where('type', '!=', 'block')->count() }} === 0) tab = 'blocks'">
 
             <h2 class="text-3xl font-bold text-white mb-8">Выберите вариант участия</h2>
+
+            {{-- ───── H3807: запись прошедшего потока как вариант покупки ─────
+                 У программы одна карточка (рулинг MG 31-08-2026), поэтому
+                 запись больше не стоит в каталоге отдельным товаром. Но она
+                 продаётся и покупается — молчать о ней значит спрятать товар,
+                 у которого есть своя выручка. Ссылка ведёт на её собственную
+                 страницу с её тарифами. --}}
+            @if(!empty($recordingOffers) && count($recordingOffers) > 0)
+                <div class="mb-8 max-w-3xl rounded-xl border border-[#38BDF8]/30 bg-[#38BDF8]/5 p-5"
+                     data-testid="recording-offers">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-play-circle text-[#38BDF8] mt-1"></i>
+                        <div class="min-w-0">
+                            <p class="text-white font-bold mb-1">Прошедший поток — в записи</p>
+                            <p class="text-slate-300 text-sm mb-3">
+                                Живого набора ждать не нужно: занятия прошлого потока продаются записью, со своими тарифами.
+                            </p>
+                            <ul class="space-y-2">
+                                @foreach($recordingOffers as $recording)
+                                    <li>
+                                        <a href="{{ route('shop.course.show', $recording->slug) }}"
+                                           class="inline-flex items-center gap-2 text-[#38BDF8] hover:text-white font-semibold text-sm transition-colors">
+                                            {{ $recording->title }}
+                                            <i class="fas fa-arrow-right text-[10px]"></i>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             {{-- Предупреждение для гостей --}}
             <div class="mb-6 max-w-3xl">

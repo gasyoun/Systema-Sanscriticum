@@ -1,0 +1,11 @@
+[Unit]
+Description=H4514 lesson covers generator — daily 07:00 MSK (04:00 UTC)
+
+[Timer]
+# Host clock is UTC; 04:00 UTC = 07:00 MSK, before daytime lessons.
+OnCalendar=*-*-* 04:00:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

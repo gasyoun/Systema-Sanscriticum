@@ -1,5 +1,5 @@
 @extends('layouts.shop')
-@section('title', 'Оплата через PayPal')
+@section('title', $isSupplement ? 'Доплата за блок через PayPal' : 'Уведомление об оплате через PayPal')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-10 md:py-16 font-sans antialiased">
@@ -9,60 +9,77 @@
             <a href="{{ route('checkout.show', $tariff) }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 transition mb-4">
                 <i class="fas fa-arrow-left mr-2 text-xs"></i> Назад к оформлению
             </a>
-            <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">Оплата через PayPal</h1>
-            <p class="mt-2 text-base text-gray-500">
-                Этот путь — для оплаты из-за рубежа, где карта РФ не работает. PayPal не
-                поддерживает автосписание на нашей платформе, поэтому оплата идет в два шага:
-                вы переводите оплату и сообщаете нам, а мы сверяем платеж вручную — обычно
-                в течение одного рабочего дня — и открываем доступ.
-            </p>
-        </div>
-
-        {{-- Снятие страха двойного списания — общая строка 2 волны revenue-copy,
-             дословно из docs/copy/_shared_strings.md. Наверху страницы, не в подвале
-             (правило money-fear контракта голоса). --}}
-        <div class="mb-8 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-4 text-sm leading-relaxed">
-            Если деньги списались — не платите повторно: напишите нам, мы проверим платеж и
-            либо откроем доступ, либо вернем деньги.
-        </div>
-
-        @if(session('success'))
-            <div class="mb-6 bg-green-50 border border-green-200 text-green-800 rounded-2xl p-4 text-sm font-medium flex items-start gap-2">
-                <i class="fas fa-check-circle mt-0.5"></i>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-
-        @if($errors->any())
-            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm font-medium">
-                <div class="flex items-start gap-2">
-                    <i class="fas fa-exclamation-circle mt-0.5"></i>
-                    <ul class="list-disc pl-5 space-y-1">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+            <div class="flex items-start justify-between gap-6">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-950 tracking-tight">{{ $isSupplement ? 'Доплата за блок через PayPal' : 'Уведомление об оплате через PayPal' }}</h1>
+                    <p class="mt-2 text-base text-gray-500">
+                        @if($isSupplement)
+                            Это форма доплаты за блок — небольшая недостающая сумма по вашему
+                            предыдущему платежу. Переведите доплату и отправьте уведомление здесь,
+                            счёт закроется автоматически. Полная оплата блока оформляется обычной
+                            формой, не этой.
+                        @else
+                        Этот путь — для оплаты из-за рубежа, где карта РФ не работает. PayPal не
+                        поддерживает автосписание на нашей платформе, поэтому оплата идет в два шага:
+                        вы переводите оплату и подаете уведомление здесь. Своим ученикам доступ
+                        открывается сразу после отправки уведомления; новым — после ручной сверки,
+                        обычно в течение одного рабочего дня.
+                        @endif
+                    </p>
                 </div>
+                <figure class="shrink-0 mt-1">
+                    <img src="{{ asset('images/paypal-qr.png') }}" alt="QR-код для оплаты через PayPal"
+                         class="w-24 sm:w-28 rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm">
+                    <figcaption class="mt-2 max-w-[7rem] text-xs text-gray-500 text-center leading-snug">
+                        Или отсканируйте QR в приложении PayPal
+                    </figcaption>
+                </figure>
             </div>
-        @endif
+        </div>
 
-        {{-- Шаг 1: куда платить --}}
+{{-- Шаг 1: куда платить --}}
         <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100 mb-6">
             <div class="flex items-center gap-3 mb-4">
                 <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-extrabold">1</span>
                 <h4 class="text-base font-extrabold text-gray-900">Оплатите через PayPal</h4>
             </div>
+            @if($foreignPrice)
+            <p class="text-sm text-gray-600 leading-relaxed">
+                @if($isSupplement)
+                    Доплата за блок — <span class="font-bold text-gray-900">{{ $foreignPrice['eur'] }} €</span>
+                    (предпочтительно) или <span class="font-bold text-gray-900">{{ $foreignPrice['usd'] }} $</span>.
+                    Комиссию PayPal оплачивает отправитель — переводите ровно эту сумму.
+                    Форма доплаты принимает только ровную сумму доплаты; если перевели
+                    одной суммой доплату и следующий блок — укажите в форме сумму доплаты
+                    и напишите нам, остаток зачтём.
+                @else
+                Тариф: <span class="font-bold text-gray-900">{{ $course?->title ?? 'Курс' }} — {{ $tariff->title ?? $tariff->accessKey() }}</span>.
+                Стоимость блока — <span class="font-bold text-gray-900">{{ $foreignPrice['eur'] }} €</span> (предпочтительно)
+                или <span class="font-bold text-gray-900">{{ $foreignPrice['usd'] }} $</span>.
+                @endif
+            </p>
+            @else
             <p class="text-sm text-gray-600 leading-relaxed">
                 Тариф: <span class="font-bold text-gray-900">{{ $course?->title ?? 'Курс' }} — {{ $tariff->title ?? $tariff->accessKey() }}</span>.
-                Ориентировочная стоимость — <span class="font-bold text-gray-900">{{ number_format($price, 0, '.', ' ') }} ₽</span>
-                (уточните текущий курс валют перед переводом).
+            </p>
+            @endif
+            {{-- MG 23-08-2026: комиссию за перевод платит отправитель — иначе сумма
+                 приходит неполной и ручная сверка расходится с заявкой. --}}
+            <p class="mt-2 text-sm font-semibold text-amber-800">
+                Комиссию PayPal за перевод оплачивает отправитель. Если комиссия осталась
+                на получателе — сделаем пересчет и запросим доплату.
             </p>
             @if($meLink)
-                <a href="{{ $meLink }}" target="_blank" rel="noopener"
+                <a href="{{ $isSupplement ? $meLink.'/22' : $meLink }}" target="_blank" rel="noopener"
                    class="mt-4 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#0070BA] hover:bg-[#005ea6] text-white font-bold text-sm transition">
-                    <i class="fab fa-paypal"></i> Перейти к оплате на PayPal
+                    <i class="fab fa-paypal"></i> {{ $isSupplement ? 'Перевести 22 € на PayPal' : 'Перейти к оплате на PayPal' }}
                 </a>
             @endif
+            <p class="mt-3 text-sm text-gray-600">
+                Прямая ссылка для перевода:
+                <a href="{{ $isSupplement ? 'https://www.paypal.com/paypalme/gasuns/22' : 'https://www.paypal.com/paypalme/gasuns' }}" target="_blank" rel="noopener"
+                   class="font-semibold text-[#0070BA] hover:text-[#005ea6] underline decoration-[#0070BA]/30 hover:decoration-[#0070BA]/60">{{ $isSupplement ? 'https://www.paypal.com/paypalme/gasuns/22' : 'https://www.paypal.com/paypalme/gasuns' }}</a>
+            </p>
             @if($recipient)
                 <p class="mt-3 text-xs text-gray-500">Получатель PayPal: <span class="font-semibold text-gray-700">{{ $recipient }}</span></p>
             @endif
@@ -77,6 +94,9 @@
 
             <form id="paypal-claim-form" action="{{ route('paypal.claim.store', $tariff) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
                 @csrf
+                @if($isSupplement)
+                    <input type="hidden" name="supplement_mode" value="1">
+                @endif
 
                 @guest
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -125,9 +145,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">С какого PayPal платили <span class="text-red-500">*</span></label>
                     <input type="text" name="paypal_payer" required maxlength="255" value="{{ old('paypal_payer') }}"
-                           placeholder="email@example.com или @username"
+                           placeholder="ваш PayPal-адрес (email)"
                            class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
-                    <p class="mt-1 text-xs text-gray-500">Аккаунт отправителя — так мы найдем перевод в личном PayPal (не business-аккаунт).</p>
+                    <p class="mt-1 text-xs text-gray-500">Email вашего PayPal-аккаунта — так мы найдем перевод в личном PayPal (не бизнес-аккаунт).</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -139,16 +159,18 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Сколько заплатили <span class="text-red-500">*</span></label>
                         <input type="number" name="foreign_amount" required min="1" step="0.01" value="{{ old('foreign_amount') }}"
-                               placeholder="Напр. 50"
+                               placeholder="{{ $isSupplement ? '22' : 'Напр. 50' }}"
                                class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Валюта <span class="text-red-500">*</span></label>
-                        <select name="foreign_currency" required
-                                class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
-                            <option value="USD" @selected(old('foreign_currency', 'USD') === 'USD')>Доллары (USD, $)</option>
-                            <option value="EUR" @selected(old('foreign_currency') === 'EUR')>Евро (EUR, €)</option>
-                        </select>
+                    <select name="foreign_currency" required
+                            class="block w-full rounded-xl border-gray-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-3 px-4 transition">
+                        {{-- MG 23-08-2026: евро по умолчанию — предпочитаемая валюта,
+                             чтобы не терять на конвертации долларов в евро. --}}
+                        <option value="EUR" @selected(old('foreign_currency', 'EUR') === 'EUR')>Евро (EUR, €)</option>
+                        <option value="USD" @selected(old('foreign_currency', 'EUR') === 'USD')>Доллары (USD, $)</option>
+                    </select>
                     </div>
                 </div>
 
@@ -187,6 +209,41 @@
                 <h4 class="text-base font-extrabold text-gray-900">Что будет дальше</h4>
             </div>
             <ol class="space-y-3 text-sm text-gray-600 leading-relaxed list-none">
+                @if($isSupplement)
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">1.</span>
+                    <span>Сразу после отправки пришлем на email подтверждение — счёт по доплате закроется автоматически.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">2.</span>
+                    <span>Доступ к курсу, если он был открыт, не меняется — доплата только закрывает разницу по платежу.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">3.</span>
+                    <span>Вопросы — <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="font-semibold text-indigo-700 hover:text-indigo-900">напишите нам в Telegram</a>.</span>
+                </li>
+                @else
+                @auth
+                {{-- Ruling 22-08-2026: своему ученику доступ открывается сразу,
+                     сверка делается после и выборочно. --}}
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">1.</span>
+                    <span>Сразу после отправки пришлем на email подтверждение с деталями заявки.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">2.</span>
+                    <span>Вы наш ученик — доступ к курсу откроется сразу после отправки
+                    заявки. Уроки и материалы ждут в личном кабинете; сверку платежа
+                    мы сделаем после и выборочно.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="shrink-0 font-bold text-gray-400">3.</span>
+                    <span>Если деньги списались — не платите повторно:
+                    <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="font-semibold text-indigo-700 hover:text-indigo-900">напишите нам в Telegram</a>,
+                    мы проверим платеж и либо откроем доступ, либо вернем деньги.
+                    Обычно отвечаем в течение рабочего дня.</span>
+                </li>
+                @else
                 <li class="flex gap-3">
                     <span class="shrink-0 font-bold text-gray-400">1.</span>
                     <span>Сразу после отправки пришлем на email подтверждение, что заявка получена.</span>
@@ -194,14 +251,19 @@
                 <li class="flex gap-3">
                     <span class="shrink-0 font-bold text-gray-400">2.</span>
                     <span>Обычно в течение одного рабочего дня сверим платеж в PayPal и откроем доступ.
-                    Для нового аккаунта на email придет пароль от личного кабинета.</span>
+                    Для нового аккаунта на email придет пароль от личного кабинета. Уже учитесь у нас?
+                    Войдите в кабинет перед отправкой — тогда доступ откроется сразу.</span>
                 </li>
                 <li class="flex gap-3">
                     <span class="shrink-0 font-bold text-gray-400">3.</span>
-                    <span>Если рабочий день прошел, а доступа нет —
+                    <span>Если деньги списались — не платите повторно: напишите нам,
+                    мы проверим платеж и либо откроем доступ, либо вернем деньги.
+                    Если рабочий день прошел, а доступа нет —
                     <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="font-semibold text-indigo-700 hover:text-indigo-900">напишите нам в Telegram</a>,
                     обычно отвечаем в течение рабочего дня.</span>
                 </li>
+                @endauth
+                @endif
             </ol>
         </div>
     </div>

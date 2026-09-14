@@ -331,4 +331,24 @@ class MarathonEnrollmentTest extends TestCase
         $this->assertNull($enrollment->day1_quiz_seconds);
         $this->assertNull($enrollment->day2_quiz_seconds);
     }
+
+    public function test_warm_tail_wave_defaults_to_flagship_without_a_cutoff(): void
+    {
+        config(['marathon.warm_tail_wave2_from' => null]);
+
+        $enrollment = MarathonEnrollment::factory()->create();
+
+        $this->assertSame(MarathonEnrollment::WAVE_FLAGSHIP, $enrollment->warmTailWave());
+    }
+
+    public function test_warm_tail_wave_follows_the_enrolment_moment_against_the_cutoff(): void
+    {
+        config(['marathon.warm_tail_wave2_from' => '2026-09-10']);
+
+        $before = MarathonEnrollment::factory()->create(['day0_started_at' => '2026-09-09 23:00']);
+        $onCutoff = MarathonEnrollment::factory()->create(['day0_started_at' => '2026-09-10 00:30']);
+
+        $this->assertSame(MarathonEnrollment::WAVE_FLAGSHIP, $before->warmTailWave());
+        $this->assertSame(MarathonEnrollment::WAVE_MEMBERSHIP, $onCutoff->warmTailWave());
+    }
 }

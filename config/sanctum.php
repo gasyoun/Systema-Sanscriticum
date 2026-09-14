@@ -47,9 +47,15 @@ return [
     | considered expired. This will override any values set in the token's
     | "expires_at" attribute, but first-party sessions are not affected.
     |
+    | H3314: default 90 days (60*24*90) so a leaked mobile device token is
+    | not immortal. The window counts from the token's created_at, so legacy
+    | tokens older than 90 days stop authenticating at deploy time — mobile
+    | re-logins transparently (documented in DEPLOY_QUEUE.md). New tokens
+    | also carry an explicit expires_at set by Api\AuthController::login.
+    |
     */
 
-    'expiration' => null,
+    'expiration' => (int) env('SANCTUM_TOKEN_EXPIRATION', 60 * 24 * 90),
 
     /*
     |--------------------------------------------------------------------------

@@ -10,6 +10,7 @@ use App\Models\Group;
 use App\Models\Schedule;
 use App\Services\Schedule\DTO\GeneratorConfig;
 use App\Services\Schedule\ScheduleGenerator;
+use App\Services\Schedule\SchedulePostSender;
 use App\Support\RoleGate;
 use Carbon\Carbon;
 use Filament\Actions;
@@ -192,6 +193,17 @@ class ListSchedules extends ListRecords
                                 ->helperText('Эти даты будут добавлены, даже если не попадают на день недели.'),
                         ]),
 
+                    // H4328: обзорное занятие (не в счёт остальных). Опционально —
+                    // его может не быть вовсе; тогда пост расписания начинается
+                    // сразу с «1-е занятие».
+                    Section::make('Обзорное занятие (не в счёт)')
+                        ->schema([
+                            DatePicker::make('overview_date')
+                                ->label('Дата обзорного занятия')
+                                ->displayFormat('d.m.Y')
+                                ->helperText('Опционально. Создаётся отдельной строкой «Обзорное занятие» — в нумерацию занятий не входит, в посте расписания идёт первым блоком. Оставьте пустым, если обзорного нет.'),
+                        ]),
+
                     Section::make('Zoom')
                         ->schema([
                             TextInput::make('link')
@@ -352,6 +364,7 @@ class ListSchedules extends ListRecords
             addDates: collect($data['add_dates'] ?? [])->pluck('date')->filter()->values()->all(),
             link: ! empty($data['link']) ? (string) $data['link'] : null,
             preserve: (bool) ($data['preserve'] ?? true),
+            overviewDate: ! empty($data['overview_date']) ? Carbon::parse($data['overview_date']) : null,
         );
 
         try {
@@ -385,9 +398,23 @@ class ListSchedules extends ListRecords
 
         $this->sendBulkWebhook($created);
 
+        // H4328: немедленный пост полного расписания в чат обучения группы
+        // (за флагом schedule_full_post). Текст уже уходит в Telegram, свип
+        // на следующий день его не повторит (hash в schedule_posts).
+        $postNotice = '';
+        if (config('features.schedule_full_post', false)) {
+            $group = Group::find($config->groupId);
+            if ($group !== null) {
+                $sent = app(SchedulePostSender::class)->sendForGroup($group);
+                $postNotice = $sent !== null
+                    ? ' Пост расписания отправлен в чат обучения.'
+                    : ($group->telegram_chat_id ? '' : ' Пост расписания не отправлен: у группы нет telegram_chat_id.');
+            }
+        }
+
         Notification::make()
             ->title('Готово')
-            ->body("Создано занятий: {$created->count()}")
+            ->body("Создано занятий: {$created->count()}.".$postNotice)
             ->success()
             ->send();
     }

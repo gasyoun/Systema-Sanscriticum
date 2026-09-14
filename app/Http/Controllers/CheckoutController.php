@@ -83,11 +83,16 @@ class CheckoutController extends Controller
         $tariff->load('course');
         $page = $tariff->course ? LandingPage::where('slug', $tariff->course->slug)->first() : new LandingPage(['title' => 'Оформление заказа']);
 
+        // H3334 — режим «подарить»: нейтральная плашка и скрытое поле gift=1.
+        // Флаг OFF → isGift всегда false, страница байт-в-байт прежняя.
+        $isGift = (bool) config('features.gift_certificates') && $request->boolean('gift');
+
         $state = $this->computeState($tariff, $prana);
 
         return view('checkout.show', array_merge([
             'tariff' => $tariff,
             'page' => $page,
+            'isGift' => $isGift,
         ], $state));
     }
 

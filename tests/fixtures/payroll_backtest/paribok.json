@@ -1,0 +1,18 @@
+{
+ "recipient": "paribok",
+ "display": "Парибок",
+ "channel": "tochka_maria",
+ "expectation_source": "registry_anchor",
+ "months": [
+  {
+   "month": "2025-11",
+   "anchor": "A5",
+   "on": "2025-11-14",
+   "inputs": {},
+   "expected": {
+    "payable_rub": 200000.0
+   }
+  }
+ ],
+ "note": "Якорь A5 вне окна фев–июль 2026 — проверяется прогоном --from=2025-11; в дефолтном окне получатель без месяцев."
+}

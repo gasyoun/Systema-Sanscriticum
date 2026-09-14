@@ -45,6 +45,9 @@ class RevenueRecognitionService
     /** @var array<int, array<int, string>>  course_id => [block_number => 'Y-m'] (только с датой) */
     private array $blockMonthsCache = [];
 
+    /** @var array<int, array<int, string>>  course_id => [block_number => 'Y-m-d'] (только с датой) */
+    private array $blockStartDatesCache = [];
+
     /**
      * Образует ли платёж выручку курса для признания. Тот же набор, что кассовая
      * выручка FinanceCockpitReport::revenueForWindow (paid + real + schoolReceived
@@ -69,31 +72,40 @@ class RevenueRecognitionService
      */
     public function sharesForPayment(Payment $payment): array
     {
+        return $this->attributionForPayment($payment)['shares'];
+    }
+
+    /**
+     * Та же раскладка, но С НАЗВАННЫМ МЕХАНИЗМОМ атрибуции (H3951): по колонке
+     * salary_recognition_month, по месяцам блоков, по дате платежа или по
+     * названному fallback вырожденного расписания. Публична ради аудита
+     * (recognition:attribution-audit) — отчёт обязан уметь сказать по каждой
+     * строке, чем она признана.
+     *
+     * @return array{shares: array<string, float>, mechanism: string, stamped: bool}
+     */
+    public function attributionForPayment(Payment $payment, ?bool $stampedRunGuard = null): array
+    {
         if (! $this->isRevenuePayment($payment)) {
-            return [];
+            return ['shares' => [], 'mechanism' => BlockMonthRecognition::BY_CREATED, 'stamped' => false];
         }
 
         $amount = (float) $payment->amount;
-
-        // Ручной override месяца признания — вся сумма в один месяц.
-        if ($payment->salary_recognition_month) {
-            return [$payment->salary_recognition_month => $amount];
-        }
-
         $createdMonth = $payment->created_at?->format('Y-m') ?? now()->format('Y-m');
 
         $courseId = $payment->course_id ? (int) $payment->course_id : null;
         $blockNumbers = $courseId ? $this->blockNumbersFor($courseId) : [];
         $covered = BlockMonthRecognition::coveredBlockNumbers($payment->start_block, $payment->end_block, $blockNumbers);
 
-        // Платёж без курса/блоков (разовый, короткий продукт) — признаём в месяц оплаты.
-        if (empty($covered)) {
-            return [$createdMonth => $amount];
-        }
-
-        $blockMonths = $this->blockMonthsFor($courseId);
-
-        return BlockMonthRecognition::distribute($amount, $covered, $blockMonths, $createdMonth);
+        return BlockMonthRecognition::attribute(
+            $amount,
+            $payment->salary_recognition_month,
+            $covered,
+            $courseId ? $this->blockMonthsFor($courseId) : [],
+            $courseId ? $this->blockStartDatesFor($courseId) : [],
+            $createdMonth,
+            $stampedRunGuard ?? BlockMonthRecognition::stampedRunGuardEnabled(),
+        );
     }
 
     /**
@@ -110,6 +122,23 @@ class RevenueRecognitionService
             ->orderBy('number')
             ->pluck('number')
             ->map(fn ($n) => (int) $n)
+            ->all();
+    }
+
+    /**
+     * Дата начала каждого датированного блока курса: [block_number => 'Y-m-d'].
+     * Нужна сторожу штампованного прогона (H3951): штамп виден по ДАТЕ, месяц
+     * слишком груб — настоящие блоки, попавшие в один месяц, штампом не являются.
+     *
+     * @return array<int, string>
+     */
+    private function blockStartDatesFor(int $courseId): array
+    {
+        return $this->blockStartDatesCache[$courseId] ??= CourseBlock::query()
+            ->where('course_id', $courseId)
+            ->whereNotNull('starts_at')
+            ->get(['number', 'starts_at'])
+            ->mapWithKeys(fn (CourseBlock $b) => [(int) $b->number => Carbon::parse($b->starts_at)->toDateString()])
             ->all();
     }
 

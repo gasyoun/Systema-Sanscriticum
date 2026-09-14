@@ -33,6 +33,11 @@ class TeacherLoad extends Page implements HasTable
 
     protected static ?string $title = 'Нагрузка преподавателей';
 
+    public function getSubheading(): ?string
+    {
+        return 'Сейчас: все группы, привязанные к курсам преподавателя. Без отсечки по месяцу и без учебного года — это не «нагрузка за август».';
+    }
+
     protected static ?string $slug = 'teacher-load';
 
     protected static string $view = 'filament.pages.teacher-load';

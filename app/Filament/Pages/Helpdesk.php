@@ -7,6 +7,7 @@ use App\Models\ChatMessage;
 use App\Models\FollowUpTask;
 use App\Models\MessageTemplate;
 use App\Models\ReminderSuggestion;
+use App\Models\SupportAiReplyEvent;
 use App\Models\SupportAnswerSuggestion;
 use App\Models\SupportConversation;
 use App\Models\TelegramSupportMessage;
@@ -70,6 +71,13 @@ class Helpdesk extends Page
     public $guestThreads = [];
 
     public $newMessage = '';
+
+    /**
+     * H3395: шаблон, вставленный в компоузер через «быстрые ответы» и ещё не
+     * отправленный. Обнуляется первой успешной отправкой — ретрай/повторный
+     * сенд без новой вставки шаблона usage-событие не создаёт (идемпотентность).
+     */
+    public $pendingTemplateId = null;
 
     /** Активная вкладка списка диалогов: inbox | mine | tech | resolved. */
     public $activeTab = 'inbox';
@@ -763,6 +771,7 @@ class Helpdesk extends Page
         }
 
         $this->newMessage = $template->render($user);
+        $this->pendingTemplateId = $template->id;
     }
 
     public function sendMessageToStudent()
@@ -787,6 +796,7 @@ class Helpdesk extends Page
             $router = app(SupportReplyService::class);
             if ($router->activeChannel($user) === SupportReplyService::CHANNEL_TELEGRAM_SUPPORT
                 && $router->replyViaSupportChannel($user, $this->newMessage, $curator)) {
+                $this->recordManualTemplateUse($user, $curator);
                 $this->newMessage = '';
                 $this->loadUsersList();
 
@@ -804,6 +814,8 @@ class Helpdesk extends Page
             'text' => $this->newMessage,
             'is_read' => true,
         ]);
+
+        $this->recordManualTemplateUse($user, $curator);
 
         app(SupportConversationManager::class)
             ->recordMessage($user, $curatorMessage, $curatorMessage->created_at);
@@ -849,6 +861,39 @@ class Helpdesk extends Page
             ->title($sentToMessenger ? 'Ответ отправлен в мессенджер' : 'Ответ отправлен в кабинет')
             ->success()
             ->send();
+    }
+
+    /**
+     * H3395: ручная отправка куратором, начатая с шаблона библиотеки, пишет
+     * usage-событие `template_used` (denominator для H3392-ревью и будущей
+     * обрезки библиотеки H2339). Один сенд = одно событие: маркер обнуляется
+     * сразу, поэтому повторная отправка того же текста (ретрай) событий не
+     * плодит. Автоответы сюда не попадают — у них свой `dm_auto_sent kind=template`.
+     */
+    private function recordManualTemplateUse(User $student, ?User $curator): void
+    {
+        if (! $this->pendingTemplateId) {
+            return;
+        }
+
+        $template = MessageTemplate::find($this->pendingTemplateId);
+        $this->pendingTemplateId = null;
+
+        if (! $template) {
+            return;
+        }
+
+        SupportAiReplyEvent::create([
+            'event_type' => SupportAiReplyEvent::EVENT_TEMPLATE_USED,
+            'meta' => [
+                'template_id' => $template->id,
+                'title' => $template->title,
+                'category' => $template->category,
+                'student_user_id' => $student->id,
+                'curator_id' => $curator?->id,
+                'channel' => 'helpdesk',
+            ],
+        ]);
     }
 
     public function returnToBot()

@@ -17,6 +17,8 @@ systemd/cron.service.d/nofile.conf|/etc/systemd/system/cron.service.d/nofile.con
 systemd/supervisor.service.d/memory-cap.conf|/etc/systemd/system/supervisor.service.d/memory-cap.conf|644|critical
 systemd/supervisor.service.d/nofile.conf|/etc/systemd/system/supervisor.service.d/nofile.conf|644|warning
 systemd/systema-madeline-daemon.service|/etc/systemd/system/systema-madeline-daemon.service|644|critical
+systemd/systema-yandex-resume.service|/etc/systemd/system/systema-yandex-resume.service|644|warning
+systemd/systema-yandex-resume.timer|/etc/systemd/system/systema-yandex-resume.timer|644|warning
 systemd/memwatch.service|/etc/systemd/system/memwatch.service|644|warning
 systemd/memwatch.timer|/etc/systemd/system/memwatch.timer|644|warning
 systemd/journald.conf.d/99-persistent.conf|/etc/systemd/journald.conf.d/99-persistent.conf|644|warning
@@ -27,3 +29,28 @@ logrotate/systema-app|/etc/logrotate.d/systema-app|644|warning
 systemd/tmp.mount.d/99-systema-size.conf|/etc/systemd/system/tmp.mount.d/99-systema-size.conf|644|critical
 tmpfiles/systema-tmp.conf|/etc/tmpfiles.d/systema-tmp.conf|644|warning
 systemd/nginx.service.d/99-systema-restart.conf|/etc/systemd/system/nginx.service.d/99-systema-restart.conf|644|critical
+sbin/systema-peer-probe.sh|/usr/local/sbin/systema-peer-probe.sh|755|warning
+sbin/systema-remediation-ladder.sh|/usr/local/sbin/systema-remediation-ladder.sh|755|warning
+systemd/systema-peer-probe.service|/etc/systemd/system/systema-peer-probe.service|644|warning
+systemd/systema-peer-probe.timer|/etc/systemd/system/systema-peer-probe.timer|644|warning
+systemd/systema-remediation-ladder.service|/etc/systemd/system/systema-remediation-ladder.service|644|warning
+systemd/systema-remediation-ladder.timer|/etc/systemd/system/systema-remediation-ladder.timer|644|warning
+
+# H3664 (29-08-2026) — ignoreip для путей восстановления. До этого fail2ban на .92
+# был ВООБЩЕ неуправляем: один defaults-debian.conf и ни одного ignoreip.
+fail2ban/jail.d/systema-sshd.conf|/etc/fail2ban/jail.d/systema-sshd.conf|644|critical
+
+# H4590 (11-09-2026) — samskrtam-lessons guards: git-целостность дерева прода,
+# tamper-watch публичного облика samskrte.ru, дрейф привилегированного ростера.
+# Базис «законно грязного» — критичен: без него git-страж слеп.
+sbin/systema-git-integrity.sh|/usr/local/sbin/systema-git-integrity.sh|755|critical
+sbin/systema-tamper-watch.sh|/usr/local/sbin/systema-tamper-watch.sh|755|critical
+sbin/systema-admin-roster.sh|/usr/local/sbin/systema-admin-roster.sh|755|critical
+sbin/systema-ib-balance-watch.sh|/usr/local/sbin/systema-ib-balance-watch.sh|755|warning
+expected-dirty.conf|/usr/local/share/systema-guards/expected-dirty.conf|644|critical
+
+# MG ruling 13-09-2026 — append-only restic push path: a root compromise of the
+# .92 pusher (which holds the repo password + push key) must not be able to wipe
+# snapshot history on .91. `-P remove,rmdir` denies delete while keeping the
+# create/rename a backup needs; retention runs .91-side as restic-push.
+sshd/60-restic-append-only.conf|/etc/ssh/sshd_config.d/60-restic-append-only.conf|644|critical

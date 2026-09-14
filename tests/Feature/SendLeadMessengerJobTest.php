@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Jobs\SendLeadMessenger;
+use App\Mail\LeadAdHocMail;
 use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\MarketingSetting;
 use App\Services\Messaging\DeliveryChannelManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class SendLeadMessengerJobTest extends TestCase
@@ -64,6 +66,46 @@ class SendLeadMessengerJobTest extends TestCase
             ->handle(app(DeliveryChannelManager::class));
 
         Http::assertNothingSent();
+        $this->assertDatabaseCount('lead_notes', 0);
+    }
+
+    /** @test */
+    public function sends_email_with_subject_and_logs_note(): void
+    {
+        Mail::fake();
+        Http::fake();
+
+        $lead = $this->makeLead(['email' => 'lead@example.com']);
+
+        (new SendLeadMessenger($lead->id, "Намасте, Лид!\nВторая строка", ['email'], null, 'Тема письма'))
+            ->handle(app(DeliveryChannelManager::class));
+
+        Mail::assertQueued(LeadAdHocMail::class, fn (LeadAdHocMail $m) => $m->hasTo('lead@example.com')
+            && $m->subjectLine === 'Тема письма'
+            && str_contains($m->bodyText, '<br />'));
+        Http::assertNothingSent();
+        $this->assertDatabaseHas('lead_notes', [
+            'lead_id' => $lead->id,
+            'type' => LeadNote::TYPE_EMAIL,
+            'channel' => 'email',
+            'subject' => 'Тема письма',
+        ]);
+    }
+
+    /** @test */
+    public function skips_email_without_subject_or_with_invalid_address(): void
+    {
+        Mail::fake();
+
+        $noSubject = $this->makeLead(['email' => 'lead@example.com']);
+        (new SendLeadMessenger($noSubject->id, 'Привет', ['email']))
+            ->handle(app(DeliveryChannelManager::class));
+
+        $badEmail = $this->makeLead(['email' => 'не-адрес']);
+        (new SendLeadMessenger($badEmail->id, 'Привет', ['email'], null, 'Тема'))
+            ->handle(app(DeliveryChannelManager::class));
+
+        Mail::assertNothingSent();
         $this->assertDatabaseCount('lead_notes', 0);
     }
 

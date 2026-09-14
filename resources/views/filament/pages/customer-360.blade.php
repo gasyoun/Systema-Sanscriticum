@@ -121,6 +121,21 @@
                     <button type="button" class="c360-btn" wire:click="moveStage">Перевести</button>
                 </div>
             </div>
+            @if(config('features.crm_trial_booking') && $snap->primaryDeal()?->isTrial())
+                <div class="c360-card" style="margin-bottom:16px" data-testid="c360-trial-outcome">
+                    <div class="c360-k">Пробник — исход (staff override)</div>
+                    <div class="c360-form">
+                        <select wire:model="trialOutcome">
+                            <option value="">исход…</option>
+                            <option value="booked">записан</option>
+                            <option value="attended">был</option>
+                            <option value="no_show">не пришёл</option>
+                            <option value="converted">конвертирован</option>
+                        </select>
+                        <button type="button" class="c360-btn" wire:click="applyTrialOutcome">Сохранить исход</button>
+                    </div>
+                </div>
+            @endif
         @endif
 
         <div class="c360-card" style="margin-bottom:16px">

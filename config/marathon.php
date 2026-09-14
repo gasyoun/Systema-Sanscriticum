@@ -212,6 +212,74 @@ return [
             .'и оформим со скидкой.',
     ],
 
+    // H3330 — sequential warm-tail waves (MG ruling 22-08-2026,
+    // MONETIZATION_PLAN_2026H2 §3). Enrolments starting before this date keep
+    // the flagship-coupon series above (wave 1, UNTOUCHED); enrolments
+    // starting on/after it get `warm_tail_messages_wave2` below (membership
+    // offer). Empty/unset (default) = everyone stays on wave 1 — flipping
+    // this env key (MARATHON_WARM_TAIL_WAVE2_FROM, then `config:cache`) is
+    // the whole switch. Assignment anchors on the personal day0_started_at
+    // clock (MarathonEnrollment::warmTailWave()), so a mid-flight flip never
+    // re-brands an already-started tail.
+    'warm_tail_wave2_from' => env('MARATHON_WARM_TAIL_WAVE2_FROM'),
+
+    // H3330 — membership offer facts for the wave-2 series (three-tier
+    // contract: docs/MEMBERSHIP_THREE_TIER_RECORDING_GATE_2026.md). Display
+    // values only — the checkout itself reads real Tariff rows, never these.
+    'membership_basic_month_price' => (int) env('MARATHON_MEMBERSHIP_BASIC_MONTH_PRICE', 1000),
+    'membership_club_month_price' => (int) env('MARATHON_MEMBERSHIP_CLUB_MONTH_PRICE', 2000),
+    'membership_klub_url' => env('MARATHON_MEMBERSHIP_KLUB_URL', 'https://samskrte.ru/klub'),
+
+    // H3330 — wave-2 warm-tail variant (same 1..13 keys as wave 1, same
+    // personal clock, same idempotency counter). Offer pivot: membership
+    // (Basic ₽1 000 / Club ₽2 000, весь архив записей, свой темп) instead of
+    // the flagship coupon. Same anti-urgency frame as wave 1 — no deadlines,
+    // no countdowns, no "успейте"; cycles the same custdev levers (own pace,
+    // recordings archive, period payments, host, ONE testimonial). Placeholders:
+    // {host}/{testimonial} shared with wave 1; {basic_price}/{club_price}/
+    // {klub_url} interpolated by marathon:deliver-warm-tail.
+    'warm_tail_messages_wave2' => [
+        1 => 'Ритм ваш — темп ваш 👋'."\n\n"
+            .'Кто занимается по записям, знают: санскрит идёт легко, когда это '
+            .'~15 минут в день в удобное время. Без расписания и дедлайнов.',
+        2 => '«А если пропущу день?» ⏳'."\n\n"
+            .'Ничего не сломается: записи ждут вас в любое время. Двигаетесь '
+            .'столько, сколько нужно именно вам, — отставать неоткуда.',
+        3 => '{host} о занятиях по записям 🎙'."\n\n"
+            .'Записи можно переслушивать столько раз, сколько нужно, — это '
+            .'обычный способ учить санскрит во взрослом возрасте, а не компромисс.',
+        4 => 'Самый простой вход — архив записей 📚'."\n\n"
+            .'Не все начинают с полного курса. Кому-то ближе свой темп: весь '
+            .'архив записей курсов открывается членством школы — от ₽{basic_price} в месяц.',
+        5 => '{testimonial}',
+        6 => 'Что внутри архива? 🗂'."\n\n"
+            .'Полные курсы в записи — грамматика, чтение, мантры: часы занятий '
+            .'с {host}. Можно смотреть подряд, можно выбирать темы под свой вопрос.',
+        7 => 'Знакомая история? 🤔'."\n\n"
+            .'Многие наши слушатели начинали ровно так: включили запись вечером, '
+            .'послушали разбор слова — и осталось желание идти глубже.',
+        8 => 'Оплата по периодам — как вам удобно 💳'."\n\n"
+            .'Членство бывает месячным (₽{basic_price}), а можно взять сразу '
+            .'три месяца или год — период подлиннее выходит дешевле.',
+        9 => 'Вопросы по записям — задавайте 💬'."\n\n"
+            .'{host} читает вопросы участников и разбирает их на живых занятиях. '
+            .'Напишите свой сюда — попадёт в очередь.',
+        10 => 'Нет времени сейчас — это нормально ☁️'."\n\n"
+            .'Архив никуда не денется: вернётесь, когда появится окно. Начать '
+            .'можно с любой недели любого курса — порядок не обязателен.',
+        11 => 'Что выбрать первым? 🧭'."\n\n"
+            .'Если хочется структуры — полный курс в записи. Если настроения — '
+            .'тематические разборы. Напишите сюда, подскажем под вашу цель.',
+        12 => 'Членство школы 🏛'."\n\n"
+            .'Весь архив записей курсов плюс новый материал каждый месяц. '
+            .'Базовое — ₽{basic_price}/мес, Клубное — ₽{club_price}/мес '
+            .'(побольше практики и инструментов). Посмотреть: {klub_url}',
+        13 => 'Если пока не откликнулось 🌿'."\n\n"
+            .'Бесплатные письма и открытые занятия выходят регулярно — '
+            .'оставайтесь с ними. А разбор санскритского слова из марафона '
+            .'уже остался с вами.',
+    ],
+
     // H445 Phase 1 — sparse per-cohort content overlay. Only `zero` (the
     // August all-zero cohort) has real content, and it lives at the
     // top-level keys above (unchanged, as-built by H440) — `zero` needs no

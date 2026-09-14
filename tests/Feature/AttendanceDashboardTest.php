@@ -62,6 +62,8 @@ class AttendanceDashboardTest extends TestCase
 
         Livewire::test(AttendanceDashboard::class)
             ->assertOk()
-            ->assertSee('Индира');
+            ->assertSee('Индира')
+            ->assertSee('Последние 90 дней')
+            ->assertDontSee('Нет занятий за выбранный период');
     }
 }

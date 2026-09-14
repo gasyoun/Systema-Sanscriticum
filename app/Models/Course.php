@@ -2,7 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\ExitSurveyAutoTrigger;
 use App\Support\RichHtml;
+use App\Support\VideoEmbed;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 class Course extends Model
 {
@@ -27,6 +32,12 @@ class Course extends Model
         // Заполненное значение всегда побеждает автоопределение по названию.
         'course_family',
         'image_path',
+        // H4281: ссылка на видео-анонс курса (YouTube/RuTube/VK video); провайдер
+        // и embed-URL распознаются через App\Support\VideoEmbed.
+        'video_announce_url',
+        // H4325: конспект лекций от препода — пишется ТОЛЬКО через
+        // CourseMaterialSubmissionService::publish(), не с формы препода напрямую.
+        'teacher_notes',
         'description',
         'chat_url',
         // Единая постоянная ссылка на Zoom-конференцию курса; meeting_id из неё
@@ -38,8 +49,19 @@ class Course extends Model
         // Курс/поток завершён, записи опубликованы. Включает «режим записей» на
         // лендинге (см. sellsRecordings()). Аддитивно, по умолчанию false.
         'is_completed',
+        // H3915: момент разбора курса задачей «Exit-опрос» (дедуп авто-триггера
+        // завершения). Техническое — только через forceFill.
+        'exit_survey_triggered_at',
         // Живой повтор не планируется (MG H1755): куратор говорит «повтора не будет».
         'never_repeat',
+        // Новизна для анонсов «только новые курсы» (MG 31-08-2026):
+        // new — впервые; repeat — возвращается после года-двух;
+        // no_repeat — повтора не будет; usual — обычный.
+        'novelty',
+        // H3807 «одна карточка на программу»: этот курс — ЗАПИСЬ вон того
+        // живого курса. Курс остаётся покупаем, но своей карточки в ленте
+        // каталога не получает и отдаёт rel=canonical на живой курс.
+        'recording_of_course_id',
         'lessons_count',
         'hours_count',
         'teacher_id',
@@ -121,6 +143,15 @@ class Course extends Model
     }
 
     /**
+     * Embed-URL видео-анонса курса (YouTube/RuTube/VK video) для hero-блока
+     * продающей страницы, или null если ссылка не задана/не распознана.
+     */
+    public function videoAnnounceEmbedUrl(): ?string
+    {
+        return VideoEmbed::embed($this->video_announce_url);
+    }
+
+    /**
      * Человекочитаемый лейбл формата для панели «Коротко о курсе».
      * Значения совпадают с CourseResource (Radio 'format'): live | recorded.
      */
@@ -149,6 +180,28 @@ class Course extends Model
     public function levelLabel(): ?string
     {
         return self::LEVELS[$this->level] ?? null;
+    }
+
+    /**
+     * Новизна курса для анонсов «только новые курсы» (MG 31-08-2026).
+     * Для фильтра «новых» годятся new + repeat; no_repeat исключён намеренно.
+     */
+    public const NOVELTIES = [
+        'new' => 'Впервые',
+        'repeat' => 'Возвращается после года-двух',
+        'no_repeat' => 'Повтора не будет',
+        'usual' => 'Обычный',
+    ];
+
+    public function noveltyLabel(): string
+    {
+        return self::NOVELTIES[$this->novelty] ?? 'Обычный';
+    }
+
+    /** «Новый» для анонсов — впервые или возвращается (no_repeat/usual — нет). */
+    public function isNewForAnnouncements(): bool
+    {
+        return in_array($this->novelty, ['new', 'repeat'], true);
     }
 
     /** Курсы заданного уровня (значение вне LEVELS игнорируется — фильтр не применяется). */
@@ -190,6 +243,8 @@ class Course extends Model
         'deposit_amount' => 'decimal:2',
         'trial_price' => 'decimal:2',
         'continues_from_lesson' => 'integer',
+        // H3916: момент авто-входа в архив подписки (шедулер 6-месячного окна).
+        'subscription_archive_joined_at' => 'date',
         // «Для кого» / «Чему научитесь» — массивы строк на продающей странице.
         'audience' => 'array',
         'outcomes' => 'array',
@@ -214,6 +269,50 @@ class Course extends Model
     public function slugAliases(): HasMany
     {
         return $this->hasMany(CourseSlugAlias::class);
+    }
+
+    /**
+     * Живой курс, ЗАПИСЬЮ которого является этот (H3807, рулинг MG «одна
+     * карточка на программу»). NULL = самостоятельный товар с собственной
+     * карточкой.
+     */
+    public function recordingOf(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'recording_of_course_id');
+    }
+
+    /** Записи этого курса, продаваемые внутри его карточки (обратная связь). */
+    public function recordings(): HasMany
+    {
+        return $this->hasMany(self::class, 'recording_of_course_id');
+    }
+
+    /** Этот курс — запись другого, а не самостоятельный товар витрины. */
+    public function isRecordingOfAnotherCourse(): bool
+    {
+        return $this->recording_of_course_id !== null;
+    }
+
+    /**
+     * Карточка, которая представляет этот курс в магазине и в поиске. Для
+     * записи — живой курс; для всех остальных — сам курс. Именно её адрес идёт
+     * в `rel=canonical`, чтобы поисковик не считал две страницы одной программы
+     * двумя товарами.
+     */
+    public function catalogCardCourse(): self
+    {
+        return $this->recordingOf ?? $this;
+    }
+
+    /**
+     * Курсы, у которых есть собственная карточка витрины: всё, кроме записей,
+     * приписанных к живому курсу. Тот же приём, что и
+     * `PrivateArchiveEligibility::scopePublic` — курс остаётся жив и покупаем,
+     * из ЛЕНТЫ уходит только вторая карточка одной программы.
+     */
+    public function scopeWithOwnCatalogCard(Builder $query): Builder
+    {
+        return $query->whereNull('recording_of_course_id');
     }
 
     /**
@@ -291,6 +390,60 @@ class Course extends Model
     }
 
     /**
+     * Занятия потока: по course_id ЛИБО по любой из групп курса. Старые
+     * курсы живут расписанием через group_id — курс-центричная выборка
+     * видела бы пустоту там, где занятия есть (урок upcomingSchedules).
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class);
+    }
+
+    /**
+     * H3916: дата последнего занятия потока — якорь 6-месячного окна
+     * эксклюзивности подписки «в записи». Источники по убыванию:
+     * своё расписание (course_id ИЛИ группы курса) → расписание исходного
+     * живого потока (recording_of_course_id, H3807-записи). NULL = нигде
+     * нет доказательства — окно шедулер не открывает (ручной остаток).
+     */
+    public function streamLastSessionAt(): ?Carbon
+    {
+        $groupIds = $this->groups()->pluck('groups.id');
+
+        $own = Schedule::query()
+            ->where(function ($q) use ($groupIds) {
+                $q->where('course_id', $this->id);
+
+                if ($groupIds->isNotEmpty()) {
+                    $q->orWhereIn('group_id', $groupIds);
+                }
+            })
+            ->max('start');
+
+        if ($own !== null) {
+            return Carbon::parse($own);
+        }
+
+        $original = $this->recordingOf;
+
+        return $original?->streamLastSessionAt();
+    }
+
+    /**
+     * H3916: архив подписки — видимые курсы формата «в записи», вошедшие
+     * по правилу 6-месячного окна (club_included) — полка ClubEntitlement.
+     * Единый запрос для лендинга подписки и шедулера.
+     */
+    public function scopeSubscriptionArchive($query)
+    {
+        return $query->where('format', 'recorded')
+            ->where('is_visible', true)
+            ->where('club_included', true)
+            ->orderByDesc('subscription_archive_joined_at')
+            ->orderByDesc('id');
+    }
+
+    /**
      * Техтребования курса: per-course override или общий дефолт. Пусто на курсе →
      * общий текст (сейчас статичный дефолт; при появлении поля в MarketingSetting
      * читать оттуда). Единый источник для блока «Техтребования» на лендинге.
@@ -319,6 +472,23 @@ class Course extends Model
         return $this->belongsToMany(Teacher::class, 'course_teacher')
             ->withPivot(['salary_type', 'salary_value'])
             ->withTimestamps();
+    }
+
+    /**
+     * H4253: основной + со-преподы одним списком (без дублей) — для
+     * отпускного покрытия групп (TeacherVacation) и подобных обходов.
+     *
+     * @return Collection<int, Teacher>
+     */
+    public function allTeachers(): Collection
+    {
+        $teachers = $this->teachers;
+
+        if ($this->teacher !== null && ! $teachers->contains('id', $this->teacher->id)) {
+            $teachers->push($this->teacher);
+        }
+
+        return $teachers->values();
     }
 
     /**
@@ -426,6 +596,14 @@ class Course extends Model
         });
 
         static::updated(function (self $course): void {
+            // H3915 — событие «курс завершён» (is_completed false→true): задача
+            // куратору на Exit-опрос с черновиками для личной отправки. Флаг
+            // features.exit_survey_auto_trigger (default OFF) решает внутри;
+            // дедуп по exit_survey_triggered_at.
+            if ($course->wasChanged('is_completed') && $course->is_completed) {
+                app(ExitSurveyAutoTrigger::class)->handleCompleted($course);
+            }
+
             $old = $course->pendingSlugAlias;
             $course->pendingSlugAlias = null;
             if ($old === null || $old === $course->slug) {
@@ -549,6 +727,38 @@ class Course extends Model
     public function designAssets(): HasMany
     {
         return $this->hasMany(CourseDesignAsset::class);
+    }
+
+    /**
+     * Заявки препода на материалы («Мои материалы», H4325) — черновики,
+     * не витрина. Публикует куратор через CourseMaterialSubmissionService.
+     */
+    public function materialSubmissions(): HasMany
+    {
+        return $this->hasMany(CourseMaterialSubmission::class);
+    }
+
+    /** Открытая (не опубликованная) заявка курса, если есть. */
+    public function openMaterialSubmission(): ?CourseMaterialSubmission
+    {
+        return $this->materialSubmissions()->open()->latest('id')->first();
+    }
+
+    /**
+     * Плашка курса для карточки каталога (аспект карточки — 4:3): приоритет —
+     * дизайнерский баннер формата 4:3 из course_design_assets, фолбэк —
+     * image_path (обложка витрины, которую владелец курса грузит сам). Не
+     * N+1: designAssets должна быть заранее подгружена через with() —
+     * CourseCatalog::render() ограничивает её условием format=4:3.
+     */
+    public function catalogBadgeUrl(): ?string
+    {
+        $badge = $this->designAssets->firstWhere('format', '4:3');
+        if ($badge && filled($badge->path)) {
+            return $badge->imageUrl();
+        }
+
+        return $this->image_path ? Storage::url($this->image_path) : null;
     }
 
     /**

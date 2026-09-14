@@ -1,0 +1,37 @@
+{
+ "recipient": "leytan",
+ "display": "Лейтан Эдгар",
+ "channel": "paypal_mg",
+ "expectation_source": "registry_anchor+formula_canon",
+ "months": [
+  {
+   "month": "2025-07",
+   "anchor": "A1",
+   "on": "2025-07-20",
+   "inputs": {
+    "receipts_rub": [
+     81100.0
+    ],
+    "recalc_rub": 3120.0
+   },
+   "expected": {
+    "payable_rub": 54155.0
+   }
+  },
+  {
+   "month": "2026-04",
+   "anchor": "timeline_2026-02-16",
+   "on": "2026-04-19",
+   "inputs": {
+    "receipts_rub": [
+     81600.0,
+     67200.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 80217.6
+   }
+  }
+ ],
+ "note": "A1 — точный якорь реестра; 2026-04 — механика текущей эры (вычет Новикова 1920 активен), ожидание из канона таймлайна: чат содержит нераскладываемые перерасчёты."
+}

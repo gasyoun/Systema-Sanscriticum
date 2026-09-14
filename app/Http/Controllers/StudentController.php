@@ -7,6 +7,7 @@ use App\Models\ActivityEvent;
 use App\Models\Announcement;
 use App\Models\Course;
 use App\Models\CourseMaterial;
+use App\Models\CourseWaitlistItem;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
@@ -18,6 +19,7 @@ use App\Models\Schedule;
 use App\Models\ScheduleAttendanceNotice;
 use App\Models\SubscriberMagnet;
 use App\Models\User;
+use App\Models\WaitlistVote;
 use App\Services\AccessDiagnosticsService;
 use App\Services\Activity\CabinetTelemetry;
 use App\Services\AttendanceNoticeService;
@@ -39,6 +41,7 @@ use App\Services\Membership\ClubMembershipService;
 use App\Services\Membership\RecordingAccessPolicy;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Services\Schedule\TextbookScale;
 use App\Services\StudentDebtsService;
 use App\Support\Badges;
 use App\Support\KinescopePilot;
@@ -55,8 +58,12 @@ class StudentController extends Controller
     /**
      * === ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Получение купленных тарифов ===
      * Железобетонный метод проверки доступов строго по ID КУРСА
+     *
+     * H3308: public static — тот же доступ-список переиспользует гейт
+     * GatedAssetController (стенограмма/материалы/файлы ДЗ), чтобы не плодить
+     * вторую реализацию правила «что куплено».
      */
-    private function getUserUnlockedTariffs($userId, $courseSlug): array
+    public static function getUserUnlockedTariffs($userId, $courseSlug): array
     {
         // 1. Находим ID курса по каноническому slug или alias
         $course = Course::resolveBySlug($courseSlug);
@@ -70,9 +77,13 @@ class StudentController extends Controller
         // 2. Ищем оплаченные тарифы строго по ID КУРСА, а не лендинга.
         //    Учитываем оба статуса оплаты ('paid' и 'success') — иначе урок
         //    остаётся закрытым для success-платежей, хотя группа уже выдана.
+        //    H4396: withAccessExpiry — conditional («под обещание») ключи живут
+        //    только пока живо обещание (флаг conditional_access_expiry, дефолт
+        //    OFF; census §C.1 — expiry-предикат на payment-keyed доступ).
         $keys = Payment::where('user_id', $userId)
             ->where('course_id', $courseId)
             ->paid()
+            ->withAccessExpiry()
             ->pluck('tariff')
             ->toArray();
 
@@ -97,6 +108,11 @@ class StudentController extends Controller
         $user = auth()->user();
         $groupIds = $user->groups->pluck('id');
 
+        // H4434 — эффективная таймзона ученика (MG 09-09-2026). null = МСК,
+        // рендер идёт как раньше; нон-МСК получают dual-display и заголовки
+        // дней в своей зоне («суббота» у калифорнийца = пятница по-московски).
+        $userTz = $user->effectiveTimezone();
+
         $upcomingEvents = Schedule::with(['course', 'group'])
             ->where(function ($query) use ($groupIds) {
                 $query->whereIn('group_id', $groupIds)
@@ -116,15 +132,19 @@ class StudentController extends Controller
             ->orderBy('start', 'asc')
             ->get();
 
-        $groupedEvents = $upcomingEvents->groupBy(function ($event) {
-            if ($event->start->isToday()) {
+        // H4434 — группировка по дням в зоне ученика (было: isToday/isTomorrow
+        // всегда считали по московской зоне приложения).
+        $groupedEvents = $upcomingEvents->groupBy(function ($event) use ($userTz) {
+            $local = $event->start->timezone($userTz ?: config('app.timezone'));
+
+            if ($local->isToday()) {
                 return 'Сегодня';
             }
-            if ($event->start->isTomorrow()) {
+            if ($local->isTomorrow()) {
                 return 'Завтра';
             }
 
-            return $event->start->translatedFormat('d F, l');
+            return $local->translatedFormat('d F, l');
         });
 
         $feedToken = $user->calendarFeedToken()->token;
@@ -151,7 +171,7 @@ class StudentController extends Controller
             'attendanceNoticesEnabled',
             'myNotices',
             'noticeOptions',
-        ));
+        ))->with('userTz', $userTz);
     }
 
     /**
@@ -310,8 +330,43 @@ class StudentController extends Controller
             ? app(AccessDiagnosticsService::class)->profileSummary($user, $courses->count())
             : null;
 
+        // H4435 (MG 08-09): канва по курсам-учебникам — позиция студента и
+        // курсор группы. Две шкалы раздельно: наши занятия vs уроки учебника.
+        $canvasByCourseId = [];
+        foreach ($courses as $course) {
+            $family = TextbookScale::courseFamilyPublic((string) $course->title);
+            if ($family === null) {
+                continue;
+            }
+            $total = TextbookScale::families()[$family]['total'];
+            $lessons = Lesson::where('course_id', $course->id)
+                ->whereNotNull('lesson_date')->orderBy('lesson_date')->get();
+            $groupCursor = TextbookScale::cursor($lessons, $family);
+
+            // Позиция студента: записи уроков до даты его последнего факта в этой группе.
+            $studentCursor = 0;
+            $fact = $user->attendances()
+                ->whereIn('schedule_id', Schedule::where('group_id', $course->groups->pluck('id'))->pluck('id'))
+                ->latest('created_at')->first();
+            if ($fact) {
+                $factDay = $fact->created_at->copy()->startOfDay();
+                $studentCursor = TextbookScale::cursor(
+                    $lessons->filter(fn ($l) => $l->lesson_date !== null && $l->lesson_date->startOfDay()->lte($factDay)),
+                    $family,
+                );
+            }
+
+            $canvasByCourseId[$course->id] = [
+                'family' => $family,
+                'total' => $total,
+                'group' => $groupCursor,
+                'student' => $studentCursor,
+            ];
+        }
+
         $viewData = compact(
             'courses',
+            'canvasByCourseId',
             'nextLessonByCourseId',
             'certificates',
             'pranaTransactions',
@@ -356,6 +411,27 @@ class StudentController extends Controller
         $viewData['hindiTeacherBrief'] = $hindiPlaylistService->teachesHindi($user)
             ? HindiProgrammePlaylist::TEACHER_BRIEF_URL
             : null;
+
+        // Список ожидания (MG 31-08-2026, H3815): строки для голосования в
+        // кабинете. Flag OFF → пустая коллекция, кабинет байт-стабилен.
+        $waitlistItems = config('features.waitlist_voting', false)
+            ? CourseWaitlistItem::query()
+                ->where('is_listed', true)
+                ->whereNotIn('status', [CourseWaitlistItem::STATUS_CLOSED, CourseWaitlistItem::STATUS_SCHEDULED])
+                ->orderBy('sort_order')->orderBy('id')
+                ->withCount(['votes as voted_by_me' => fn ($q) => $q->where('user_id', $user->id)])
+                ->withCount('votes')
+                ->get()
+            : collect();
+        $viewData['waitlistItems'] = $waitlistItems;
+
+        // H4206: моё пожелание времени по каждой строке («Голос учтён · утром»).
+        $viewData['waitlistMyPrefs'] = $waitlistItems->isNotEmpty()
+            ? WaitlistVote::query()
+                ->where('user_id', $user->id)
+                ->whereIn('course_waitlist_item_id', $waitlistItems->modelKeys())
+                ->pluck('slot_preference', 'course_waitlist_item_id')
+            : collect();
 
         // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
         // Flag OFF → byte-stable legacy dashboard (recovery vars unused there).
@@ -949,11 +1025,13 @@ class StudentController extends Controller
 
         // H2644: клубное покрытие курса — такое же основание видеть урок, как
         // персональный грант: членство не привязано к потоку.
-        $clubCovers = app(ClubEntitlement::class)->coversCourse($user, $course);
+        $club = app(ClubEntitlement::class);
+        $clubCovers = $club->coversCourse($user, $course);
+        $clubLesson = $club->coversLesson($user, $course, $lesson);
 
         // Урок другой группы курса (курс разнесён на 2 потока) — не показываем,
         // если только нет персонального гранта именно на этот урок.
-        if (! $hasLessonGrant && ! $clubCovers && ! $lesson->isVisibleToGroupsOf($user)) {
+        if (! $hasLessonGrant && ! $clubCovers && ! $clubLesson && ! $lesson->isVisibleToGroupsOf($user)) {
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок относится к другой группе курса.');
         }
@@ -964,7 +1042,7 @@ class StudentController extends Controller
         // Открытые уроки/вебинары доступны любому залогиненному без покупки
         $isFreeLesson = (bool) $lesson->is_free;
 
-        if (! $isFreeLesson && ! $hasLessonGrant && ! $lesson->isUnlockedBy($unlockedTariffs)) {
+        if (! $isFreeLesson && ! $hasLessonGrant && ! $clubLesson && ! $lesson->isUnlockedBy($unlockedTariffs)) {
             return redirect()->route('student.course', $course->slug)
                 ->with('error', 'Этот урок доступен в Блоке '.$lesson->block_number.'. Для просмотра необходимо оплатить доступ.');
         }
@@ -1010,8 +1088,10 @@ class StudentController extends Controller
             $currentNote = $progressRow->pivot->notes;
         }
 
-        $youtubeId = $this->parseVideoId($lesson->youtube_url, 'youtube');
-        $rutubeId = $this->parseVideoId($lesson->rutube_url, 'rutube');
+        // H4396: сырые ID в HTML не уходят (серверные ворота записи), но
+        // «запись ещё не залита» определяется так же — по распознанным ссылкам.
+        $hasRecognizedVideo = self::parseVideoId($lesson->youtube_url, 'youtube') !== null
+            || self::parseVideoId($lesson->rutube_url, 'rutube') !== null;
 
         // In-video resume (H1450, W2). Пока флаг video_resume выключен, JS ничего
         // не шлёт и баннер «продолжить» не показывается — эти переменные лежат
@@ -1040,7 +1120,7 @@ class StudentController extends Controller
         // Подтягиваем событие расписания на эту дату, чтобы показать «Состоится … +
         // Подключиться к Zoom» вместо пустого плеера. n8n позже дозальёт видео.
         $upcomingSession = null;
-        if (empty($youtubeId) && empty($rutubeId) && empty($kinescopeEmbedUrl) && empty($lesson->video_url) && $lesson->lesson_date) {
+        if (! $hasRecognizedVideo && empty($kinescopeEmbedUrl) && empty($lesson->video_url) && $lesson->lesson_date) {
             $upcomingSession = Schedule::query()
                 ->where('course_id', $course->id)
                 ->where('group_id', $lesson->group_id)
@@ -1054,7 +1134,7 @@ class StudentController extends Controller
         // ==========================================
         // Разбор JSON-расшифровки в предложения с таймкодами вынесен в TranscriptParser
         // (переиспользуется блоком лендинга «Стенограмма вебинара»). Кэш — внутри сервиса.
-        $transcriptSentences = TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
+        $transcriptSentences = TranscriptParser::sentencesFromStoredFile($lesson->transcript_file);
 
         // Открыт ли приём работ ИМЕННО ДЛЯ ЭТОГО студента (H1764). Считается
         // один раз здесь и передаётся в шаблон: витрина и серверный гейт
@@ -1081,8 +1161,17 @@ class StudentController extends Controller
             $hindiDrillsUrl = route('student.lesson.drills', [$course->slug, $lesson->id]);
         }
 
+        // H3521: вкладка «Learn Your Way» — только при включённом LYW_ENABLED
+        // (default OFF: переменная остаётся null, разметки в шаблоне нет).
+        $lywUrl = null;
+        if (config('lyw.enabled')) {
+            $lywUrl = route('student.lesson.lessonpack', [$course->slug, $lesson->id]);
+        }
+
         // Передаем переменную $transcriptSentences в шаблон
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'youtubeId', 'rutubeId', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl', 'recordingAccess'));
+        // H4396: youtubeId/rutubeId больше не передаются в вью — сырые ID не
+        // должны попадать в HTML, плеер грузит серверные ворота записи.
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl', 'recordingAccess', 'lywUrl'));
     }
 
     /**
@@ -1328,8 +1417,11 @@ class StudentController extends Controller
 
     /**
      * === ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Парсер ссылок видео ===
+     * H4396: public static — RecordingGateController (серверные ворота
+     * записи) резолвит тот же ID, не плодя вторую реализацию правила
+     * «какая ссылка чем открывается» (прецедент H3308).
      */
-    private function parseVideoId(?string $url, string $platform): ?string
+    public static function parseVideoId(?string $url, string $platform): ?string
     {
         if (! $url) {
             return null;

@@ -1,3 +1,5 @@
+_Created: 01-07-2026 · Last updated: 05-09-2026_
+
 # Jivo архитектура и стратегия EdTech Support Inbox для Systema-Sanscriticum
 
 > **Стратегическое обновление 08-08-2026.** Исследовательский вывод ниже («не копировать Jivo
@@ -155,3 +157,5 @@ Support analytics для онлайн-школы тоже должна быть 
 - **Какие доменные сущности почти наверняка понадобятся.** Без финальной схемы БД уже можно предположить, что вам потребуется слой `conversation`, `conversation_participant`, `conversation_message`, `channel`, `external_identity`, `assignment`, `status_history`, `topic`, `tag`, `follow_up_task`, `ai_summary/ai_suggestion`, а также механизм сборки `student context snapshot` для боковой панели. Это еще не технический дизайн, но уже правильный product boundary. citeturn29view5turn17view1turn19view0turn20view3turn14view2turn14view3
 
 Главная развилка, которую стоит принять уже сейчас, звучит так: **вы строите не “мини-Jivo” и не “вторую CRM”, а support-operating-system для онлайн-школы**. Jivo здесь является очень полезным образцом по inbox-механике, но конкурентное преимущество `Systema-Sanscriticum` лежит не в копировании omnichannel-комбината, а в том, что ваша поддержка может видеть студента глубже, чем любой коробочный helpdesk. Именно это и должно стать центром следующей архитектурной фазы. citeturn17view3turn24view2turn29view0turn14view2turn14view3
+
+_Dr. Mārcis Gasūns_

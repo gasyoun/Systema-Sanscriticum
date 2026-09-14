@@ -91,6 +91,11 @@ class PartnerResource extends Resource
                         ->label('Индивидуальная ставка, ₽')
                         ->numeric()
                         ->helperText('Пусто — используется глобальная ставка из config/partner.php ('.(int) config('partner.reward_amount', 1000).' ₽).'),
+                    Forms\Components\TextInput::make('reward_percent')
+                        ->label('Процент первого платежа, %')
+                        ->numeric()
+                        ->minValue(0)->maxValue(100)->step(0.1)
+                        ->helperText('Ратифицировано MG 23-08 (схема А: 10 %). Заполненный процент приоритетнее фикс-ставки.'),
                     Forms\Components\TextInput::make('payout_method')->label('Способ выплаты')->placeholder('карта / СБП'),
                     Forms\Components\Textarea::make('payout_details')->label('Реквизиты')->rows(2)->columnSpanFull(),
                     Forms\Components\Textarea::make('notes')->label('Заметки')->rows(2)->columnSpanFull(),

@@ -47,6 +47,21 @@ class ServerGuardsAuditorTest extends TestCase
     }
 
     /**
+     * Аудитор на спеке БЕЗ waivers: severity самой проверки (tmpfs-cap и др.)
+     * тестируется до понижения — иначе активный в conf waiver делал бы эти
+     * ассерты нечитаемыми.
+     */
+    private function waiverlessAuditor(FakeSystemInspector $sys): ServerGuardsAuditor
+    {
+        $lines = array_values(array_filter(
+            explode("\n", (string) file_get_contents(base_path('scripts/server_guards.conf'))),
+            static fn (string $line): bool => preg_match('/^GUARD_WAIVERS/', $line) !== 1,
+        ));
+
+        return new ServerGuardsAuditor(GuardSpec::fromString(implode("\n", $lines)), $sys, $this->templateRoot);
+    }
+
+    /**
      * @param  list<GuardFinding>  $findings
      */
     private function lines(array $findings): string
@@ -56,7 +71,7 @@ class ServerGuardsAuditorTest extends TestCase
 
     public function test_a_fully_guarded_host_produces_no_findings(): void
     {
-        $findings = $this->auditor($this->healthy())->audit();
+        $findings = $this->waiverlessAuditor($this->healthy())->audit();
 
         $this->assertSame('', $this->lines($findings), 'здоровый прод не должен давать находок');
         $this->assertFalse(ServerGuardsAuditor::hasBlocking($findings));
@@ -341,7 +356,7 @@ class ServerGuardsAuditorTest extends TestCase
         $sys = $this->healthy();
         $sys->swapTotalBytes = 0;
 
-        $findings = $this->auditor($sys)->audit();
+        $findings = $this->waiverlessAuditor($sys)->audit();
 
         $this->assertCount(1, $findings);
         $this->assertSame(GuardFinding::INFO, $findings[0]->severity);
@@ -432,6 +447,71 @@ class ServerGuardsAuditorTest extends TestCase
         $this->assertStringNotContainsString('cgroup:', $this->lines($this->auditor($sys)->audit()));
     }
 
+    // ── PSI-гейт предупреждения cgroup (25-08-2026) ─────────────────────────
+
+    private function pressureFile(string $someAvg10): string
+    {
+        return "some avg10={$someAvg10} avg60=0.00 avg300=0.00 total=0\n"
+            ."full avg10=0.00 avg60=0.00 avg300=0.00 total=0\n";
+    }
+
+    public function test_cgroup_warning_without_psi_stall_is_suppressed_as_cache(): void
+    {
+        // Флап 25-08: 85 % заполнения почти целиком из page cache, PSI нулевой —
+        // ядро вытесняет кеш сам, никто не стоит в очереди. Это НЕ тревога.
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) (int) ($this->spec->bytes('CRON_MEMORY_HIGH') * 0.85);
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.pressure'] =
+            $this->pressureFile('0.00');
+
+        $this->assertStringNotContainsString('cgroup:', $this->lines($this->auditor($sys)->audit()));
+    }
+
+    public function test_cgroup_warning_with_real_psi_stall_fires_and_names_the_evidence(): void
+    {
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) (int) ($this->spec->bytes('CRON_MEMORY_HIGH') * 0.85);
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.pressure'] =
+            $this->pressureFile('2.50');
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString('[warning] cgroup:', $lines);
+        $this->assertStringContainsString('PSI some avg10=2.50', $lines);
+    }
+
+    public function test_cgroup_warning_keeps_old_sensitivity_when_psi_is_unreadable(): void
+    {
+        // Fail-open к прежнему поведению: PSI не читается (psi=off, старое
+        // ядро) — гейт не имеет права заглушить проверку молча.
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) (int) ($this->spec->bytes('CRON_MEMORY_HIGH') * 0.85);
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString('[warning] cgroup:', $lines);
+        $this->assertStringContainsString('PSI недоступен', $lines);
+    }
+
+    public function test_cgroup_critical_is_not_gated_by_psi(): void
+    {
+        // current ≥ high — ядро уже на пределе по определению; PSI тут ничего
+        // добавлять не должен, и убирать критичность тоже.
+        $sys = $this->healthy();
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.current'] =
+            (string) ($this->spec->bytes('CRON_MEMORY_HIGH') + 1);
+        $sys->files['/sys/fs/cgroup/system.slice/cron.service/memory.pressure'] =
+            $this->pressureFile('0.00');
+
+        $findings = $this->auditor($sys)->audit();
+
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+        $this->assertStringContainsString('[critical] cgroup:', $this->lines($findings));
+    }
+
     public function test_stale_scheduler_stamp_is_critical(): void
     {
         $sys = $this->healthy();
@@ -501,7 +581,7 @@ class ServerGuardsAuditorTest extends TestCase
         // потолок в половину памяти ХОСТА.
         $sys->files['/proc/mounts'] = "tmpfs /tmp tmpfs rw,nosuid,nodev,nr_inodes=1048576 0 0\n";
 
-        $findings = $this->auditor($sys)->audit();
+        $findings = $this->waiverlessAuditor($sys)->audit();
 
         $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
         $this->assertStringContainsString('[critical] tmpfs-cap: /tmp смонтирован tmpfs БЕЗ явного size=', $this->lines($findings));
@@ -519,7 +599,7 @@ class ServerGuardsAuditorTest extends TestCase
         $sys->files['/proc/mounts'] =
             "tmpfs /tmp tmpfs rw,nosuid,nodev,nr_inodes=1048576,uid=100000,gid=100000,inode64 0 0\n";
 
-        $lines = $this->lines($this->auditor($sys)->audit());
+        $lines = $this->lines($this->waiverlessAuditor($sys)->audit());
 
         $this->assertStringContainsString('[critical] tmpfs-cap:', $lines);
         $this->assertStringContainsString('на стороне хоста Proxmox', $lines);
@@ -531,7 +611,7 @@ class ServerGuardsAuditorTest extends TestCase
         $sys = $this->healthy();
         $sys->files['/proc/mounts'] = "tmpfs /tmp tmpfs rw,nosuid,nodev,nr_inodes=1048576 0 0\n";
 
-        $lines = $this->lines($this->auditor($sys)->audit());
+        $lines = $this->lines($this->waiverlessAuditor($sys)->audit());
 
         $this->assertStringContainsString('Вернуть: scripts/server_guards_apply.sh', $lines);
         $this->assertStringNotContainsString('Proxmox', $lines);
@@ -543,7 +623,7 @@ class ServerGuardsAuditorTest extends TestCase
         $sys->files['/proc/mounts'] = 'tmpfs /tmp tmpfs rw,size='
             .intdiv($this->spec->bytes('TMP_TMPFS_SIZE') * 4, 1024)."k 0 0\n";
 
-        $findings = $this->auditor($sys)->audit();
+        $findings = $this->waiverlessAuditor($sys)->audit();
 
         $this->assertStringContainsString('[warning] tmpfs-cap: /tmp: size=', $this->lines($findings));
     }
@@ -553,7 +633,76 @@ class ServerGuardsAuditorTest extends TestCase
         $sys = $this->healthy();
         $sys->files['/proc/mounts'] = "/dev/sda2 /tmp ext4 rw,relatime 0 0\n";
 
-        $this->assertStringNotContainsString('tmpfs-cap', $this->lines($this->auditor($sys)->audit()));
+        $this->assertStringNotContainsString('tmpfs-cap', $this->lines($this->waiverlessAuditor($sys)->audit()));
+    }
+
+    // ── Waiver (2026-08-25): осознанно терпимые находки ─────────────────────
+
+    public function test_waiver_downgrades_a_matching_critical_to_info(): void
+    {
+        // Прод с 19-08-2026: host-side /tmp без size= критичен и не чинится
+        // изнутри гостя. Waiver гасит тревогу (и деплойный exit 75, и суточный
+        // Telegram), но находка остаётся видимой и помечена датой.
+        $sys = $this->healthy();
+        $sys->files['/proc/mounts'] =
+            "tmpfs /tmp tmpfs rw,nosuid,nodev,nr_inodes=1048576,uid=100000,gid=100000,inode64 0 0\n";
+
+        $findings = $this->auditor($sys)->audit();
+
+        $lines = $this->lines($findings);
+        $this->assertStringContainsString('[info] tmpfs-cap:', $lines);
+        $this->assertStringContainsString(' [waiver до '.$this->spec->get('GUARD_WAIVERS_EXPIRES').']', $lines);
+        $this->assertFalse(ServerGuardsAuditor::hasBlocking($findings));
+    }
+
+    public function test_an_expired_waiver_stops_working_silently_and_loudly(): void
+    {
+        // Fail-closed: дата прошла — понижения нет, критичная находка сама и
+        // есть тревога; никаких «waiver»-строк сверху.
+        $sys = $this->healthy();
+        $sys->files['/proc/mounts'] =
+            "tmpfs /tmp tmpfs rw,nosuid,nodev,nr_inodes=1048576,uid=100000,gid=100000,inode64 0 0\n";
+        $spec = GuardSpec::fromString(
+            (string) file_get_contents(base_path('scripts/server_guards.conf'))
+            ."\nGUARD_WAIVERS_EXPIRES=\"2026-01-01\"\n"
+        );
+
+        $lines = $this->lines((new ServerGuardsAuditor($spec, $sys, $this->templateRoot))->audit());
+
+        $this->assertStringContainsString('[critical] tmpfs-cap:', $lines);
+        $this->assertStringNotContainsString('waiver до', $lines);
+        $this->assertStringNotContainsString('[info] tmpfs-cap:', $lines);
+    }
+
+    public function test_a_waiver_without_a_valid_expiry_fails_closed_and_says_so(): void
+    {
+        $sys = $this->healthy();
+        $sys->files['/proc/mounts'] =
+            "tmpfs /tmp tmpfs rw,nosuid,nodev,nr_inodes=1048576,uid=100000,gid=100000,inode64 0 0\n";
+        $spec = GuardSpec::fromString(
+            (string) file_get_contents(base_path('scripts/server_guards.conf'))
+            ."\nGUARD_WAIVERS_EXPIRES=\"скоро\"\n"
+        );
+
+        $findings = (new ServerGuardsAuditor($spec, $sys, $this->templateRoot))->audit();
+
+        $lines = $this->lines($findings);
+        $this->assertStringContainsString('[critical] tmpfs-cap:', $lines);
+        $this->assertStringContainsString('[warning] waiver: GUARD_WAIVERS задан', $lines);
+        $this->assertTrue(ServerGuardsAuditor::hasBlocking($findings));
+    }
+
+    public function test_a_waiver_that_matches_nothing_asks_to_be_removed(): void
+    {
+        // Здоровый хост + активный waiver в conf: конфиг обязан сам сказать,
+        // что стал мёртвым текстом, — info, не тревога.
+        $findings = $this->auditor($this->healthy())->audit();
+
+        $this->assertStringContainsString(
+            '[info] waiver: waiver не понадобился: tmpfs-cap',
+            $this->lines($findings),
+        );
+        $this->assertFalse(ServerGuardsAuditor::hasBlocking($findings));
     }
 
     public function test_a_failed_unit_is_named(): void

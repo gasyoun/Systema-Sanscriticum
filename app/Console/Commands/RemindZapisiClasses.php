@@ -8,6 +8,8 @@ use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\Group;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
+use App\Models\TelegramChatPost;
+use App\Services\TeacherVacation;
 use Illuminate\Console\Command;
 
 /**
@@ -18,7 +20,12 @@ use Illuminate\Console\Command;
  *
  * Ничего не шлёт, если:
  *  - выключен флаг features.telegram_zapisi_bot (деплой-рубильник бота);
- *  - у группы не задан telegram_chat_id (skip без пометки — уйдёт, когда заполнят).
+ *  - у группы не задан telegram_chat_id (skip без пометки — уйдёт, когда заполнят);
+ *  - по занятию уже ушёл автопостинг ссылки (group_link_posted_at) — зеркальная
+ *    дубль-гвардия с classes:post-group-link: один «Скоро занятие» на чат;
+ *  - у занятия нет ссылки (zoom_join_url/link/course.zoom_link пусты) — инцидент
+ *    02-09-2026: напоминание с висящим «по ссылке:» без самой ссылки; пропускаем
+ *    без пометки, чтобы после появления ссылки напоминание всё же ушло.
  * Дедуп — schedules.zapisi_reminded_at (сбрасывается при переносе start).
  */
 class RemindZapisiClasses extends Command
@@ -57,6 +64,7 @@ class RemindZapisiClasses extends Command
             ->whereNull('zapisi_reminded_at')
             ->whereNotNull('group_id')
             ->whereBetween('start', [now(), now()->addMinutes($lead)])
+            ->orderBy('id')
             ->get();
 
         $template = trim((string) ($settings?->zapisi_reminder_template ?? '')) !== ''
@@ -65,7 +73,18 @@ class RemindZapisiClasses extends Command
 
         $sent = 0;
 
-        foreach ($schedules as $schedule) {
+        // Инцидент 11-09-2026 (курс 348 «Бхагавадгита 4 цикл»): в расписании
+        // оказались ДВЕ живые строки на один слот (перенос лёг на существующую
+        // строку серии), и каждая ушла отдельным напоминанием — два поста в один
+        // чат за секунду, различие только в номере титула (#76/#77), поэтому
+        // TelegramSendGuard по тексту их не склеил. Группируем по слоту
+        // (группа + старт): один пост на слот, помечаются ВСЕ строки слота.
+        // Коллизия строк больше не доходит до студентов, даже если её заведут руками.
+        $slots = $schedules->groupBy(fn (Schedule $s): string => ($s->group_id ?? 0).':'.($s->start?->format('Y-m-d H:i') ?? ''));
+
+        foreach ($slots as $slotRows) {
+            $rows = $slotRows->sortBy('id')->values();
+            $schedule = $rows->first();
             $group = $schedule->group;
 
             // Нет чата группы — слать некуда; НЕ помечаем, чтобы после заполнения
@@ -74,12 +93,52 @@ class RemindZapisiClasses extends Command
                 continue;
             }
 
+            // Зеркальная дубль-гвардия (диагноз 26-08-2026): если автопостинг ссылки
+            // (classes:post-group-link, T-15) уже постит ЛЮБУЮ строку слота —
+            // не отправляем второй «Скоро занятие» в тот же чат.
+            if ($rows->contains(fn (Schedule $r): bool => $r->group_link_posted_at !== null)) {
+                continue;
+            }
+
+            // H4253: каникулы — групповой флаг (H3790) или окно преподавателя.
+            // Пропуск БЕЗ пометки: после снятия флага/окна напоминание уйдёт.
+            if ($group->is_on_vacation) {
+                continue;
+            }
+
+            if (TeacherVacation::covers($group, $schedule->start)) {
+                continue;
+            }
+
+            // Инцидент 02-09-2026 (кейс 1620, курс 401): серия занятий нового учебного
+            // года сгенерирована без ссылок (link/zoom_join_url/course.zoom_link пусты),
+            // и в чат ушло напоминание с висящим «Подключится к занятию можно по
+            // ссылке:» без самой ссылки. Без ссылки напоминание бесполезно —
+            // пропускаем БЕЗ пометки, чтобы после появления ссылки оно всё же ушло.
+            $link = (string) ($schedule->zoom_join_url ?: ($schedule->link ?: $schedule->course?->zoom_link) ?: '');
+            if ($link === '') {
+                report(new \RuntimeException(sprintf(
+                    'zapisi:remind-classes: schedule #%d («%s», start %s) has no join link (zoom_join_url/link/course.zoom_link all empty) — reminder skipped without marking, will send once a link appears.',
+                    $schedule->id,
+                    $schedule->title ?: 'Занятие',
+                    $schedule->start->format('Y-m-d H:i'),
+                )));
+
+                continue;
+            }
+
             SendZapisiBotMessageJob::dispatch(
                 (string) $group->telegram_chat_id,
-                $this->renderText($schedule, $group, $template),
+                $this->renderText($schedule, $group, $template, $link),
+                $schedule->id,
+                TelegramChatPost::KIND_ZAPISI_REMINDER,
             );
 
-            $schedule->update(['zapisi_reminded_at' => now()]);
+            // Помечаем ВСЕ строки слота: дедуп по строке, отправка по слоту.
+            foreach ($rows as $row) {
+                $row->update(['zapisi_reminded_at' => now()]);
+            }
+
             $sent++;
         }
 
@@ -98,10 +157,8 @@ class RemindZapisiClasses extends Command
      * {join} — готовая ссылка-кнопка: пустая строка, когда подключаться некуда,
      * чтобы в сообщении не оставалось висящего «Подключиться» в никуда.
      */
-    private function renderText(Schedule $schedule, Group $group, string $template): string
+    private function renderText(Schedule $schedule, Group $group, string $template, string $link): string
     {
-        $link = (string) ($schedule->zoom_join_url ?: ($schedule->link ?: $schedule->course?->zoom_link) ?: '');
-
         return strtr($template, [
             '{title}' => $this->escape($schedule->title ?: 'Занятие'),
             '{time}' => $schedule->start->format('H:i'),

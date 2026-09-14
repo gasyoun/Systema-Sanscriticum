@@ -8,8 +8,11 @@ use App\Models\LandingBot;
 use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Services\Leads\LeadMagnetDispatcher;
+use App\Services\Leads\WaitlistWelcome;
 use App\Services\Marathon\MarathonDay1Sender;
 use App\Services\Messaging\DeliveryChannelManager;
+use App\Support\CareChatReplyLog;
+use App\Support\TelegramChannelEcho;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -41,6 +44,16 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
             }
         }
 
+        // H3617 — сенсор эха канала: каждый пост в канале приходит боту-админу
+        // как channel_post, включая посты НЕ от нас (запланированные в Telegram,
+        // ручные). Отпечаток нужен издателю канала для cross-sender дедупа —
+        // записываем до раннего return по отсутствию ['message'].
+        foreach (['channel_post', 'edited_channel_post'] as $channelKey) {
+            if (isset($this->update[$channelKey]) && is_array($this->update[$channelKey])) {
+                TelegramChannelEcho::recordFromUpdate($this->update[$channelKey]);
+            }
+        }
+
         $message = $this->update['message'] ?? null;
         if (! $message) {
             return;
@@ -50,6 +63,13 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
         $chatId = $message['chat']['id'] ?? null;
 
         if (! $chatId) {
+            return;
+        }
+
+        // H4362 — ответы «готово / сломано» на пост «Вестника» в чате «Отдел
+        // заботы»: reply на сообщение бота в этом чате пишем в JSONL-журнал и
+        // выходим — это не лид и не /start, дальше по ветке ему делать нечего.
+        if (CareChatReplyLog::captureFromUpdate($this->update)) {
             return;
         }
 
@@ -87,6 +107,10 @@ final class ProcessTelegramMagnetUpdate implements ShouldQueue
 
         if (! $lead->telegram_chat_id) {
             $lead->update(['telegram_chat_id' => $chatId]);
+
+            // H3339: подписчик статусов (status_block без магнита) первым
+            // сообщением получает полный словарь статусов курса.
+            WaitlistWelcome::sendIfFreshlyBound($lead->fresh() ?? $lead, 'telegram', (string) $chatId, app(DeliveryChannelManager::class));
         }
 
         // H1939 residual / product ruling: Day 1 marathon drip immediately after

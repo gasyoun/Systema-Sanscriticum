@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\Backup\SplitUploadToYandex;
 use App\Listeners\Email\EnforceMailSendingGuards;
 use App\Listeners\LogFailedAuthentication;
 use App\Listeners\UserLoginListener;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Event;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 use SocialiteProviders\VKontakte\VKontakteExtendSocialite;
 use SocialiteProviders\Yandex\YandexExtendSocialite;
+use Spatie\Backup\Events\BackupWasSuccessful;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -56,6 +58,11 @@ class EventServiceProvider extends ServiceProvider
         // --- ПОЧТА: суппрессия + троттлинг для КАЖДОГО исходящего письма (H1449 A2) ---
         MessageSending::class => [
             EnforceMailSendingGuards::class,
+        ],
+
+        // --- OFF-SITE БЭКАП ЧАСТЯМИ: Yandex WebDAV режет PUT >1 ГБ (HTTP 413) ---
+        BackupWasSuccessful::class => [
+            SplitUploadToYandex::class,
         ],
     ];
 

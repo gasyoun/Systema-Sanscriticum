@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Карта денег школы — для бухгалтера</title>
+<style>
+  :root {
+    --paper: #f3eee4;
+    --ink: #1c1814;
+    --muted: #5c564c;
+    --line: #c9c0b0;
+    --teal: #0f5c5c;
+    --teal-bg: #e4f0ee;
+    --slate: #3d4a5c;
+    --slate-bg: #e8edf2;
+    --dust: #6b5a4a;
+    --dust-bg: #efe6d8;
+    --warn: #8b1e1e;
+    --warn-bg: #f6e4de;
+    --gold: #b8860b;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: #d9d1c3;
+    color: var(--ink);
+    font-family: "Segoe UI", "PT Sans", "Noto Sans", system-ui, sans-serif;
+  }
+  .sheet {
+    width: 1600px;
+    min-height: 1130px;
+    margin: 24px auto;
+    background: var(--paper);
+    padding: 28px 32px 24px;
+    box-shadow: 0 12px 40px rgba(28,24,20,.18);
+  }
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+  }
+  h1 {
+    margin: 0 0 4px;
+    font-size: 34px;
+    letter-spacing: -.03em;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .lede {
+    margin: 0;
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 920px;
+  }
+  .meta {
+    text-align: right;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .kicker {
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--teal);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .flow .step {
+    background: #fff;
+    border: 1px solid var(--line);
+    padding: 10px 12px 12px;
+    min-height: 92px;
+    position: relative;
+  }
+  .flow .n {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--teal);
+    letter-spacing: .08em;
+  }
+  .flow h3 {
+    margin: 2px 0 4px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .flow p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.35; }
+  .layers {
+    display: grid;
+    grid-template-columns: 1.15fr .95fr .9fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .col {
+    border: 1px solid var(--line);
+    background: #fff;
+    padding: 14px 14px 12px;
+  }
+  .col h2 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge {
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    font-weight: 700;
+  }
+  .b-do { background: var(--teal-bg); color: var(--teal); }
+  .b-read { background: var(--slate-bg); color: var(--slate); }
+  .b-no { background: var(--dust-bg); color: var(--dust); }
+  .item {
+    border-top: 1px solid var(--line);
+    padding: 7px 0;
+  }
+  .item:first-of-type { border-top: 0; }
+  .item strong { display: block; font-size: 13.5px; }
+  .item span { display: block; font-size: 12px; color: var(--muted); line-height: 1.35; margin-top: 1px; }
+  .path { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 11px; color: var(--teal); }
+  .bottom {
+    display: grid;
+    grid-template-columns: 1.2fr .9fr .9fr;
+    gap: 12px;
+  }
+  .box {
+    border: 1px solid var(--line);
+    padding: 12px 14px;
+    background: #fff;
+  }
+  .box.warn { background: var(--warn-bg); border-color: #e0b8b0; }
+  .box h2 { margin: 0 0 8px; font-size: 15px; }
+  ul { margin: 0; padding-left: 16px; }
+  li { font-size: 12.5px; line-height: 1.4; margin: 0 0 5px; }
+  .foot {
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 8px;
+  }
+  .roles { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+  .roles span {
+    border: 1px solid var(--line);
+    padding: 2px 7px;
+    font-size: 11px;
+    background: #fff;
+  }
+</style>
+</head>
+<body>
+  <article class="sheet">
+    <header>
+      <div>
+        <div class="kicker">Общество ревнителей санскрита · кабинет /admin</div>
+        <h1>Карта денег школы — всё, что бухгалтеру нужно держать в голове</h1>
+        <p class="lede">Три слоя: что вы делаете каждую неделю · что читаете, но не решаете · чего в этой роли нет, и это нормально. Живые фамилии и суммы на карту не пишем — они живут в очереди кабинета, не в документе.</p>
+      </div>
+      <div class="meta">
+        Для роли «бухгалтер»<br>
+        Книга: Финансы → Как работать бухгалтеру<br>
+        Очередь: Как размечать выплаты<br>
+        Учебные суммы только. Не GitHub.
+        <div class="roles">
+          <span>только бухгалтер</span>
+          <span>бухгалтер + админ</span>
+          <span>не эта роль</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="flow" aria-label="Как деньги движутся">
+      <div class="step">
+        <div class="n">01</div>
+        <h3>Банк или карта</h3>
+        <p>Деньги уже ушли. Выписка — истина. Кабинет ещё может быть пуст.</p>
+      </div>
+      <div class="step">
+        <div class="n">02</div>
+        <h3>Проводка</h3>
+        <p>«Финансы» → создать. Тариф = что купили. Ученик сразу видит уроки.</p>
+      </div>
+      <div class="step">
+        <div class="n">03</div>
+        <h3>Блок закрылся</h3>
+        <p>«Зарплаты» → рассчитать по блоку → записать. Это учёт денег.</p>
+      </div>
+      <div class="step">
+        <div class="n">04</div>
+        <h3>Расход школы</h3>
+        <p>«Расходы (opex)», не зарплата. Иначе прибыль в штурвале врёт.</p>
+      </div>
+      <div class="step">
+        <div class="n">05</div>
+        <h3>Старый «Расход»</h3>
+        <p>На системного пользователя — в очередь разметки. Отметка, не перевод.</p>
+      </div>
+      <div class="step">
+        <div class="n">06</div>
+        <h3>Штурвал и потоки</h3>
+        <p>ОПиУ / ДДС / остаток преподавателю. Слово «предварительно» — ещё не факт.</p>
+      </div>
+    </section>
+
+    <section class="layers">
+      <div class="col">
+        <h2><span class="badge b-do">Слой 1 · делаете</span> Еженедельная работа</h2>
+        <div class="item"><strong>Финансы</strong><span class="path">/admin/payments</span><span>Проводка, импорт пачки, возврат со знаком минус. Доступ сам не отзывается.</span></div>
+        <div class="item"><strong>Зарплаты</strong><span class="path">/admin/teacher-salaries</span><span>Калькулятор блока, аванс, закрыть месяц, «дней без выплаты». Только эта роль.</span></div>
+        <div class="item"><strong>История выплат</strong><span class="path">журнал + экспорт</span><span>Смотреть и выгружать. Обычный путь записи — калькулятор, не ручная строка.</span></div>
+        <div class="item"><strong>Расходы (opex)</strong><span class="path">/admin/expenses</span><span>Четыре статьи: эквайринг · хостинг/SaaS · подрядчики · налоги/банк/прочее. Назначение — всегда.</span></div>
+        <div class="item"><strong>Взаимозачёт</strong><span class="path">/admin/mutual-settlements</span><span>Человек сразу ученик и преподаватель: что заплатил школе и что ему начислено. Акт, не перевод.</span></div>
+        <div class="item"><strong>Как размечать выплаты</strong><span class="path">/admin/payout-attribution-guide</span><span>Один вопрос: эти деньги ушли преподавателю или это расход школы? Список живой. Не копировать.</span></div>
+        <div class="item"><strong>Потоки курса</strong><span class="path">/admin/course-stream-comparison</span><span>Только чтение: плательщики, удержание, выручка, остаток. Экран ничего не платит.</span></div>
+        <div class="item"><strong>Участники по блокам · Студенты</strong><span>Кто какой блок оплатил. Карточка студента — только просмотр, чтобы сверить почту перед проводкой.</span></div>
+      </div>
+      <div class="col">
+        <h2><span class="badge b-read">Слой 2 · читаете</span> Цифры без кнопки «решить»</h2>
+        <div class="item"><strong>Финансовый штурвал</strong><span class="path">/admin/finance-cockpit</span><span>ОПиУ (прибыль) → ДДС (касса) → Баланс → платёжный календарь. Управленческий снимок, не декларация.</span></div>
+        <div class="item"><strong>Планирование (шаблоны)</strong><span>Скачать excel-книги. Страница сама их не заполняет.</span></div>
+        <div class="item"><strong>KPI делегирования</strong><span class="path">/admin/delegation-kpi</span><span>Красные флаги недели: дебиторка, окупаемость. Решение по флагу — у владельца цифр.</span></div>
+        <div class="item"><strong>Фонды прибыли</strong><span class="path">/admin/profit-funds</span><span>Куда ушла прибыль. Порог резерва — не ваша кнопка выплаты.</span></div>
+        <div class="item"><strong>Инвестмодель</strong><span>Сценарии «если». Не операционка месяца.</span></div>
+        <div class="item"><strong>Юнит-экономика · стоимость лида</strong><span>CAC / LTV / реклама. Видны в широком финансовом гейте. Считать привлечение и крутить пороги — владелец, не еженедельная проводка.</span></div>
+        <div class="item"><strong>Как работать бухгалтеру</strong><span class="path">/admin/accountant-guide</span><span>Эта карта и сценарии. Кнопка с рабочих экранов справа вверху.</span></div>
+      </div>
+      <div class="col">
+        <h2><span class="badge b-no">Слой 3 · нет в роли</span> Не ищите в меню</h2>
+        <div class="item"><strong>Должники и реактивация</strong><span>Администратор / куратор. Если ученик пишет «я же платил» — сначала «Почему закрыто?» на уроке, не новый счёт и не этот раздел.</span></div>
+        <div class="item"><strong>Журнал финансов</strong><span>Только супер-админ. Расхождение суммы без причины — напишите ему, не ищите скрытый пункт.</span></div>
+        <div class="item"><strong>Лиды, курсы, уроки, расписание</strong><span>Другие роли. Бухгалтер не заводит человека «на пустое»: сначала карточка ученика.</span></div>
+        <div class="item"><strong>Домашние работы, группы, сертификаты</strong><span>Не финансы. Их нет — это не поломка доступа.</span></div>
+        <div class="item"><strong>Прямой перевод преподавателю</strong><span>Это не выручка курса. Калькулятор зарплаты его зачитывает. Второй раз процент не считайте.</span></div>
+        <div class="item"><strong>Курс в записи без схемы ЗП</strong><span>Начисление ноль — нет преподавателя и процента на курсе. Это не ошибка арифметики; схему ставит администратор.</span></div>
+      </div>
+    </section>
+
+    <section class="bottom">
+      <div class="box warn">
+        <h2>Чего никогда не делать</h2>
+        <ul>
+          <li>Не публиковать очередь разметки: ни в GitHub, ни в общий чат, ни скриншотом. Там живые суммы.</li>
+          <li>Не называть остаток со словом «предварительно» преподавателю как факт.</li>
+          <li>Не проводить зарплату второй раз, если деньги уже ушли прямым платежом на карту.</li>
+          <li>Не класть аренду, хостинг, комиссию банка в «Зарплаты» или в тариф «Расход» ученика.</li>
+          <li>Не считать разметку выплатой: она не создаёт строк и не двигает деньги.</li>
+          <li>Не открывать новый счёт первым шагом, если ученик говорит, что уже платил.</li>
+          <li>«Записать выплату» и «Провести в Финансах» — учёт денег. Откат — корректирующая строка, не «стереть».</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h2>Вне кабинета, но вы это знаете</h2>
+        <ul>
+          <li>Банковская выписка — ответ на вопрос разметки: кому ушла сумма в этот день.</li>
+          <li>Чек НПД преподавателя — отдельное подтверждение, не кнопка в «Зарплатах».</li>
+          <li>ИП, налоги, банк — статья opex «Налоги, банк, прочее», не зарплата.</li>
+          <li>Два кабинета на одного человека — не проводите оплату во второй. Слияние делает администратор.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h2>Как отличить три похожих кнопки</h2>
+        <ul>
+          <li><strong>Зарплаты</strong> — начислить и провести то, что школа должна преподавателю сейчас.</li>
+          <li><strong>Как размечать</strong> — сказать, чем уже прошедший платёж был. Денег не двигает.</li>
+          <li><strong>Расходы (opex)</strong> — аренда, хостинг, комиссия, подрядчик. Не человек у доски.</li>
+          <li><strong>Возврат в «Финансах»</strong> — деньги ученику назад. Уроки сами не закроются.</li>
+          <li><strong>Взаимозачёт</strong> — сверка двух ролей одного человека. Фиксирует акт.</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <div>Источник экранов: панель samskrte.ru/admin, гейты accounting() и finance(). Карта без живых ФИО и сумм.</div>
+      <div>Рабочая книга: /admin/accountant-guide · очередь: /admin/payout-attribution-guide</div>
+    </footer>
+  </article>
+</body>
+</html>

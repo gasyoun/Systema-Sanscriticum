@@ -19,7 +19,9 @@ use Illuminate\Console\Command;
  *  - выключен env-рубильник CLASS_LINK_AUTOPOST (config('features.class_link_autopost'), деплой-уровень);
  *  - выключен флаг class_link_autopost_enabled (MarketingSetting, админка);
  *  - у группы не задан telegram_chat_id;
- *  - у занятия нет ни своей ссылки, ни zoom_join_url, ни course.zoom_link.
+ *  - у занятия нет ни своей ссылки, ни zoom_join_url, ни course.zoom_link;
+ *  - по занятию уже ушло напоминание @zapisi_ORSbot (zapisi_reminded_at) —
+ *    взаимная дубль-гвардия с zapisi:remind-classes: один «Скоро занятие» на чат.
  * Дедуп — schedules.group_link_posted_at (сбрасывается при переносе start).
  */
 class PostClassLinkToGroupChat extends Command
@@ -53,11 +55,19 @@ class PostClassLinkToGroupChat extends Command
             ->whereNull('group_link_posted_at')
             ->whereNotNull('group_id')
             ->whereBetween('start', [now(), now()->addMinutes($lead)])
+            ->orderBy('id')
             ->get();
 
         $posted = 0;
 
-        foreach ($schedules as $schedule) {
+        // Инцидент 11-09-2026 (курс 348): две живые строки на один слот не должны
+        // дать два поста — группируем по (группа, старт): один пост на слот,
+        // помечаются все строки слота. Зеркало той же группировки в zapisi:remind-classes.
+        $slots = $schedules->groupBy(fn (Schedule $s): string => ($s->group_id ?? 0).':'.($s->start?->format('Y-m-d H:i') ?? ''));
+
+        foreach ($slots as $slotRows) {
+            $rows = $slotRows->sortBy('id')->values();
+            $schedule = $rows->first();
             $group = $schedule->group;
 
             // Нет чата группы — постить некуда; НЕ помечаем как отправленное,
@@ -72,12 +82,24 @@ class PostClassLinkToGroupChat extends Command
                 continue;
             }
 
+            // Дубль-гвардия (диагноз 26-08-2026): zapisi:remind-classes уже отправил
+            // «Скоро занятие» в ЭТОТ же чат группы (T-60 против наших T-15) — второй
+            // пост от другого бота студенты читают как повтор. Пропускаем без пометки:
+            // колонки обеих команд сбрасываются при переносе start, так что при
+            // переносе занятия автопостинг снова станет активен наравне с zapisi.
+            if ($rows->contains(fn (Schedule $r): bool => $r->zapisi_reminded_at !== null)) {
+                continue;
+            }
+
             SendTelegramChatMessageJob::dispatch(
                 (string) $group->telegram_chat_id,
                 $this->buildText($schedule, $link),
             );
 
-            $schedule->update(['group_link_posted_at' => now()]);
+            foreach ($rows as $row) {
+                $row->update(['group_link_posted_at' => now()]);
+            }
+
             $posted++;
         }
 

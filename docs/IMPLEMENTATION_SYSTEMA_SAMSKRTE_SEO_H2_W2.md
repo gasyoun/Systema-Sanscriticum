@@ -79,7 +79,7 @@ A tiny helper (`App\Support\SamskrtamRelated` or similar) that loads JSON once i
    - an unmapped course (or donate) does **not** render the block
    - a URL missing from the lockfile does **not** render even if listed in the allowlist
 2. Pint on touched PHP.
-3. [changelog.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/changelog.md) `[Unreleased]` Added bullet. `/cut-release` after merge.
+3. [CHANGELOG.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/CHANGELOG.md) `[Unreleased]` Added bullet. `/cut-release` after merge.
 4. PR, merge (`gasyoun/*` always-merge). Remove the worktree after the push is confirmed.
 
 ### Step 6 — Deploy + live curl

@@ -18,9 +18,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
@@ -39,6 +41,13 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'wants_email_announcements',
         'wants_messenger_announcements',
         'newsletter_subscribed_at',
+        // H4663 note (аудит периметра 14-09, п.9): is_admin / role / teacher_id /
+        // is_lecture_editor / prana_balance ОСТАЮТСЯ в $fillable — 162 тестовых
+        // файла создают персонал через User::factory()->create([...role...]) и
+        // DatabaseSeeder передаёт role в firstOrCreate; выведение этих полей
+        // сломает их все. Компенсирующий контроль: единственный HTTP-путь к
+        // User.create/update — Filament UserResource с явными полями; гейт
+        // mass-assignment-эскалации — тест UserResource (см. AUDIT doc §F9).
         'is_admin',
         'role',
         'teacher_id',
@@ -57,6 +66,14 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'facebook',
         // --- НОВЫЕ ПОЛЯ ИЗ EXCEL ---
         'phone',
+        'city',      // H3909 — спрашиваем у каждого ученика (MG 02-09-2026)
+        'country',   // H3909 — спрашиваем у каждого ученика (MG 02-09-2026)
+        // H4434 — timezone localization (MG 09-09-2026): постоянная зона + временное
+        // пребывание (оверрайд с датой возврата) + источник постоянной зоны.
+        'timezone',
+        'tz_override',
+        'tz_override_until',
+        'tz_source',
         'global_status',
         'note',
         'last_login_at',
@@ -90,6 +107,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'http_referrer',
         'lead_id',
         'birth_year',
+        // H4663 (аудит периметра 14-09, п.9): is_admin / role / teacher_id /
+        // is_lecture_editor / prana_balance выведены из $fillable — латентный
+        // privilege escalation при первом же fill($request->...).
+        // Запись только явным кодом: fill через сервисы/Filament с forceFill
+        // или setattr. Seeder/синхронизация is_admin в booted() не зависят от
+        // $fillable (пишут через свойства модели напрямую).
     ];
 
     protected $hidden = [
@@ -125,7 +148,43 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'unreliable_auto' => 'boolean',
         'unreliable_marked_at' => 'datetime',
         'discipline_improved_since' => 'date',
+        'tz_override_until' => 'date',
     ];
+
+    /**
+     * H4434 — эффективная IANA-таймзона ученика (MG 09-09-2026).
+     *
+     * Приоритет: активный оверрайд временного пребывания → постоянная зона →
+     * null (кабинет трактует null как Europe/Moscow, приложение живёт в МСК).
+     * Оверрайд «протухает» лениво по дате — без крона: после tz_override_until
+     * ученик автоматически возвращается на постоянную зону.
+     */
+    public function effectiveTimezone(): ?string
+    {
+        $override = $this->tz_override;
+
+        if ($override !== null && $override !== '') {
+            $expired = $this->tz_override_until !== null
+                && $this->tz_override_until->isPast();
+
+            if (! $expired) {
+                return $override;
+            }
+        }
+
+        return $this->timezone;
+    }
+
+    /**
+     * H4434 — живёт ли ученик не по московскому времени. Управляет dual-display:
+     * МСК-резидентам показываем как раньше, нон-МСК — «11:00 МСК · 16:00 ваше».
+     */
+    public function isNonMskTimezone(): bool
+    {
+        $tz = $this->effectiveTimezone();
+
+        return $tz !== null && $tz !== 'Europe/Moscow';
+    }
 
     /**
      * Нормализация email — единый источник правды для идентичности.
@@ -155,6 +214,89 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function setEmailAttribute(?string $value): void
     {
         $this->attributes['email'] = self::normalizeEmail($value);
+    }
+
+    /**
+     * H4462 — аудит-след тихой перезаписи пароля (инцидент 09-09-2026: smoke-студент
+     * id=6857 перезаписан локальным актором без единой строки в логах).
+     *
+     * Мутатор перехватывает ЛЮБУЮ запись `password` через Eloquent (fill/update/
+     * forceFill/свойство), потому что set-мутатор в Laravel 10 имеет приоритет над
+     * `hashed`-кастом (setAttribute() -> hasSetMutator() раньше castAttributeAsHashedString()).
+     * Логика хеширования повторяет castAttributeAsHashedString(): null -> null,
+     * уже-хеш -> как есть, иначе Hash::make.
+     *
+     * Логируем только ПЕРЕзапись у существующего пользователя: был валидный хеш,
+     * стал ДРУГОЙ валидный хеш. Это ровно класс инцидента, который надо видеть.
+     * Создание и пустое значение — не логируем (шум), повторная установка того же
+     * хеша — тоже (нет факта перезаписи). В контексте — id/email записи и writer
+     * (CLI-команда с argv / HTTP-запрос с ip+session+auth id). Ни пароля, ни хеша.
+     */
+    public function setPasswordAttribute(#[\SensitiveParameter] $value): void
+    {
+        $original = $this->getOriginal('password');
+
+        $wasHashed = is_string($original)
+            && $original !== ''
+            && Hash::isHashed($original);
+
+        $this->attributes['password'] = match (true) {
+            $value === null => null,
+            is_string($value) && $value !== '' && Hash::isHashed($value) => $value,
+            $value === '' => '',
+            default => Hash::make($value),
+        };
+
+        $newHash = $this->attributes['password'];
+
+        if (! $wasHashed || ! is_string($newHash) || $newHash === '') {
+            return;
+        }
+
+        if ($this->exists && $newHash !== $original) {
+            $this->logPasswordRewrite();
+        }
+    }
+
+    /** H4462 — одна строка security-лога на фактическую перезапись хеша существующего пользователя. */
+    private function logPasswordRewrite(): void
+    {
+        if (app()->runningInConsole()) {
+            // argv[1] под `artisan test` — флаг phpunit (--colors=always...); ищем
+            // первый не-флаговый токен: имя artisan-команды или «unknown».
+            $argv = $_SERVER['argv'] ?? [];
+            $command = 'unknown';
+
+            foreach (array_slice($argv, 1) as $token) {
+                if (is_string($token) && $token !== '' && ! str_starts_with($token, '-')) {
+                    $command = $token;
+
+                    break;
+                }
+            }
+
+            $writer = 'cli:'.$command;
+        } else {
+            $writer = 'http:'.(Request::ip() ?? 'unknown');
+        }
+
+        // Аудит не должен ломать бизнес-запись: под Log::spy() в тестах channel()
+        // может вернуть null, а любой Throw в логировании отменил бы save().
+        try {
+            $logger = Log::channel(config('services.password_audit.channel', 'stack'));
+
+            $logger?->info('password.rewritten', [
+                'user_id' => $this->id,
+                'email' => $this->email,
+                'writer' => $writer,
+                'auth_id' => auth()->id(),
+                'session_id' => app()->runningInConsole()
+                    ? null
+                    : (substr((string) session()->getId(), 0, 12) ?: null),
+            ]);
+        } catch (\Throwable) {
+            return;
+        }
     }
 
     /**
@@ -406,6 +548,17 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     // ==========================================
     // СВЯЗИ ДЛЯ LMS (НЕ ТРОГАЕМ, ВСЁ БЕЗОПАСНО)
     // ==========================================
+
+    /**
+     * Факты посещения (webinar_attendances, user_id). Питает канву H4435
+     * (кабинет студента + ViewUser attendance-canvas): позиция студента на
+     * шкале = последняя запись урока до даты его последнего факта.
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(WebinarAttendance::class);
+    }
+
     public function groups(): BelongsToMany
     {
         // ВСЕ членства, включая «вышедших» (left_at != null). Это путь ДОСТУПА:
@@ -747,6 +900,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function lessonAccessGrants(): HasMany
     {
         return $this->hasMany(LessonAccessGrant::class)->orderByDesc('granted_at');
+    }
+
+    /** H4468 — окна доступа (course_access_windows), свежие сверху. */
+    public function courseAccessWindows(): HasMany
+    {
+        return $this->hasMany(CourseAccessWindow::class)->orderByDesc('created_at');
     }
 
     /**

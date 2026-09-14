@@ -57,4 +57,4 @@ jobs:
           set -euo pipefail
           ssh -i ~/.ssh/deploy_key -o BatchMode=yes \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            'sudo /var/www/html/deploy.sh'
+            'sudo /bin/bash /var/www/html/deploy.sh'

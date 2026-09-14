@@ -1,0 +1,16 @@
+[Unit]
+Description=Nightly n8n data backup on .91 (database, credentials blob, compose) — H3182
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SERVER_UPTIME_GUARDRAILS_2026H2.md
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/n8n-backup-run.sh
+# Своя cgroup со своим потолком — тот же урок, что H3121 на .92: задача, живущая
+# в чужом бюджете, тормозит всех соседей, когда разрастается. tar+gzip 166 МиБ
+# базы укладывается в десятки МиБ; 512M — щедрый запас, а не тесная посадка.
+MemoryHigh=384M
+MemoryMax=512M
+TasksMax=64
+Nice=19
+IOSchedulingClass=idle

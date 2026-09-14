@@ -6,7 +6,26 @@ use Illuminate\Support\Str;
 
 class TelegramController extends Controller
 {
+    /**
+     * GET /telegram/connect — инструкция без мутаций.
+     *
+     * H3313: раньше каждый заход по GET крутил telegram_auth_token — любой
+     * сторонней странице достаточно было навигации, чтобы браузер студента
+     * перегенерил токен (CSRF-by-navigation; SameSite=lax пропускает топ-левел
+     * переходы). Выдача токена переехала в CSRF-защищённый POST ниже.
+     */
     public function connect()
+    {
+        return view('student.messenger-connect', [
+            'channel' => 'telegram',
+            'connected' => filled(auth()->user()?->telegram_id),
+        ]);
+    }
+
+    /**
+     * POST /telegram/connect — CSRF-защищённая выдача токена и переход в бота.
+     */
+    public function start()
     {
         $user = auth()->user();
 

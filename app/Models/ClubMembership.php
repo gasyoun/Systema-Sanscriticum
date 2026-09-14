@@ -33,6 +33,9 @@ class ClubMembership extends Model
 
     public const SOURCE_REHEARSAL = 'rehearsal';
 
+    /** H3643 guest /register — Free-tier, no payment row. */
+    public const SOURCE_GUEST_REGISTER = 'guest_register';
+
     public const REVOKE_LAPSED = 'lapsed';
 
     public const REVOKE_SUPERSEDED = 'superseded';

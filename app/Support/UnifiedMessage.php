@@ -31,6 +31,12 @@ final class UnifiedMessage
      */
     public const CHANNEL_TELEGRAM_BOT = 'telegram_bot';
 
+    /**
+     * Входящий email (H3462, Jivo-паритет S5 остаток) — chat_messages.source =
+     * 'email'; приём через вебхук zabota@samskrte.ru (InboundEmailIngester).
+     */
+    public const CHANNEL_EMAIL = 'email';
+
     public const DIRECTION_INCOMING = 'incoming';
 
     public const DIRECTION_OUTGOING = 'outgoing';
@@ -117,6 +123,7 @@ final class UnifiedMessage
             self::CHANNEL_TELEGRAM => 'Telegram',
             self::CHANNEL_VK => 'ВКонтакте',
             self::CHANNEL_TELEGRAM_BOT => 'Telegram-бот',
+            self::CHANNEL_EMAIL => 'Email',
             default => 'Кабинет',
         };
     }
@@ -147,6 +154,7 @@ final class UnifiedMessage
         $channel = match ($message->source) {
             'vk' => self::CHANNEL_VK,
             'telegram_bot' => self::CHANNEL_TELEGRAM_BOT,
+            'email' => self::CHANNEL_EMAIL,
             default => self::CHANNEL_WEB,
         };
 

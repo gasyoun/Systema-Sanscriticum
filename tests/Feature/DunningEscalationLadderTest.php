@@ -77,7 +77,7 @@ class DunningEscalationLadderTest extends TestCase
         $this->artisan('debts:remind')->assertSuccessful();
 
         $text = $this->pushedText();
-        $this->assertStringContainsString('Чтобы не потерять доступ к материалам', $text);
+        $this->assertStringContainsString('а оплата пока не поступила', $text);
         $this->assertStringContainsString('Оплатить нужно до', $text);
         $this->assertStringContainsString('просто проигнорируйте', $text);
     }
@@ -169,7 +169,7 @@ class DunningEscalationLadderTest extends TestCase
         $this->artisan('debts:remind')->assertSuccessful();
 
         $text = $this->pushedText();
-        $this->assertStringContainsString('Чтобы не потерять доступ к материалам', $text);
+        $this->assertStringContainsString('а оплата пока не поступила', $text);
     }
 
     /** @test */

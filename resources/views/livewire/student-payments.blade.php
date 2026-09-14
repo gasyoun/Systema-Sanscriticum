@@ -23,6 +23,9 @@
                             @if($paidUntil->block->ends_at)
                                 (до {{ $paidUntil->block->ends_at->format('d.m.Y') }})
                             @endif
+                            @if(! empty($paidUntil->extra_paid_blocks))
+                                , плюс блоки {{ $paidUntil->extra_paid_blocks_label }}
+                            @endif
                         </div>
                         @if($paidUntil->next_payment_deadline)
                             <div class="text-brand font-semibold mt-0.5">
@@ -68,6 +71,11 @@
                                     <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-1">
                                         Тариф: {{ $payment->tariff }}
                                     </div>
+                                    @if($payment->payer_note)
+                                        <div class="text-xs text-gray-500 leading-snug mt-1.5">
+                                            {{ $payment->payer_note }}
+                                        </div>
+                                    @endif
                                 </td>
 
                                 {{-- Сумма --}}

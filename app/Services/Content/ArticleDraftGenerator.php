@@ -47,7 +47,7 @@ final class ArticleDraftGenerator
             return null;
         }
 
-        $sentences = TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
+        $sentences = TranscriptParser::sentencesFromStoredFile($lesson->transcript_file);
         if ($sentences === []) {
             return null;
         }
@@ -112,7 +112,7 @@ final class ArticleDraftGenerator
         $lessonIds = [];
 
         foreach ($lessons as $lesson) {
-            $sentences = TranscriptParser::sentencesFromPublicFile($lesson->transcript_file);
+            $sentences = TranscriptParser::sentencesFromStoredFile($lesson->transcript_file);
             if ($sentences === []) {
                 continue;
             }

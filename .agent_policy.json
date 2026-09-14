@@ -1,0 +1,21 @@
+{
+  "rules": [
+    {
+      "id": "money-contour-write-confirm",
+      "match": {
+        "paths": [
+          "**/payment*",
+          "**/debtpayment*",
+          "**/*tariff*",
+          "**/*billing*",
+          "**/*yookassa*",
+          "**/paypalsubscriptionswebhookcontroller.php"
+        ],
+        "tools": ["Write", "Edit", "Bash", "PowerShell"]
+      },
+      "action": "confirm",
+      "reason": "Money-contour file (payment/tariff/billing/webhook pricing surface): route the change through /money-pr-land discipline - feature flag default OFF, PR with money-contour marker, watcher-safe commit. Confirm before touching.",
+      "overrides": ["[money-pr-ok]"]
+    }
+  ]
+}

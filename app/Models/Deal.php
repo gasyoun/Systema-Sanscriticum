@@ -29,10 +29,35 @@ class Deal extends Model
 
     public const REASON_LOST = 'lost';
 
+    public const KIND_COURSE = 'course';
+
+    public const KIND_TRIAL = 'trial';
+
+    public const TRIAL_SOURCE_FREE = 'free';
+
+    public const TRIAL_SOURCE_PAID = 'paid';
+
+    public const TRIAL_OUTCOME_BOOKED = 'booked';
+
+    public const TRIAL_OUTCOME_ATTENDED = 'attended';
+
+    public const TRIAL_OUTCOME_NO_SHOW = 'no_show';
+
+    public const TRIAL_OUTCOME_CONVERTED = 'converted';
+
+    /** @var list<string> */
+    public const TRIAL_OUTCOMES = [
+        self::TRIAL_OUTCOME_BOOKED,
+        self::TRIAL_OUTCOME_ATTENDED,
+        self::TRIAL_OUTCOME_NO_SHOW,
+        self::TRIAL_OUTCOME_CONVERTED,
+    ];
+
     protected $fillable = [
         'lead_id',
         'user_id',
         'course_id',
+        'schedule_id',
         'amount',
         'currency',
         'stage_id',
@@ -41,6 +66,9 @@ class Deal extends Model
         'closed_reason',
         'source_payment_id',
         'installment_group_id',
+        'kind',
+        'trial_source',
+        'trial_outcome',
     ];
 
     protected $casts = [
@@ -61,6 +89,11 @@ class Deal extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(Schedule::class);
     }
 
     public function stage(): BelongsTo
@@ -94,14 +127,29 @@ class Deal extends Model
         return $query->whereNull('closed_at');
     }
 
+    public function scopeTrial(Builder $query): Builder
+    {
+        return $query->where('kind', self::KIND_TRIAL);
+    }
+
+    public function isTrial(): bool
+    {
+        return $this->kind === self::KIND_TRIAL;
+    }
+
     /** Заголовок карточки на канбан-доске (зеркало Lead::kanban_title). */
     public function getKanbanTitleAttribute(): string
     {
         $who = $this->user?->name
             ?: ($this->lead?->name ?: ($this->lead?->contact ?: null));
         $what = $this->course?->title;
+        $title = trim(($who ?: 'Сделка #'.$this->id).($what ? ' — '.$what : ''));
 
-        return trim(($who ?: 'Сделка #'.$this->id).($what ? ' — '.$what : ''));
+        if (config('features.crm_trial_booking') && $this->isTrial()) {
+            return 'Пробник · '.$title;
+        }
+
+        return $title;
     }
 
     /**

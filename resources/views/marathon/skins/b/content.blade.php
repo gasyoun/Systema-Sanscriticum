@@ -126,6 +126,11 @@
             </section>
         @endif
 
+        {{-- H4521 — «Как проходит консультация» scrollytelling block. Structural
+             only, flag OFF by default (config('marathon_visual.scrollytelling')),
+             QA override ?scrolly=1; copy A/B config untouched. --}}
+        @include('marathon.skins._scrolly')
+
         @if (!empty($benefits))
             <section class="mb-10">
                 @if ($benefitsHeading !== '')
@@ -149,6 +154,7 @@
         @endif
 
         <form method="POST" action="{{ route($registerRoute ?? 'marathon.register') }}"
+              id="marathon-form"
               x-data="{ track: '{{ old('track', 'free') }}' }"
               class="bg-white rounded-[20px] shadow-sm border border-stone-200 p-6 md:p-8 space-y-6">
             @csrf

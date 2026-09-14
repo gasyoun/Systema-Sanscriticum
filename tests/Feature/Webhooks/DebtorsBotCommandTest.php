@@ -19,7 +19,8 @@ use Tests\TestCase;
  * Куратор-команда `/долги [группа]` поверх DebtorsReport (S4, H250):
  * авторизация по роли, тишина для посторонних/студентов, сводка +
  * фильтр по группе, лог использования. (Ростер `/группа`/`/кто` — S6,
- * см. RosterBotCommandTest.)
+ * см. RosterBotCommandTest.) H3912: подсказка ближайших групп,
+ * просрочка в списке, работа в чате «Отдел заботы».
  */
 class DebtorsBotCommandTest extends TestCase
 {
@@ -112,6 +113,20 @@ class DebtorsBotCommandTest extends TestCase
     }
 
     /** @test */
+    public function unknown_group_name_suggests_nearest_groups(): void
+    {
+        $this->debtor('Пётр Подсказка');
+        User::factory()->create(['telegram_id' => 225, 'role' => Roles::ADMIN]);
+
+        $this->send(225, '/долги Альфаа');
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'api.telegram.org')
+            && str_contains($request->data()['text'], 'Группа «Альфаа» не найдена')
+            && str_contains($request->data()['text'], 'Похожие группы')
+            && str_contains($request->data()['text'], 'Группа Альфа'));
+    }
+
+    /** @test */
     public function group_command_routes_to_roster(): void
     {
         // /группа больше не заглушка — теперь настоящий ростер (S6, RosterBotCommand).
@@ -152,5 +167,85 @@ class DebtorsBotCommandTest extends TestCase
 
         Http::assertSent(fn ($request) => str_contains($request->url(), 'api.telegram.org')
             && str_contains($request->data()['text'], 'нет'));
+    }
+
+    /** @test */
+    public function debtors_list_shows_overdue_days(): void
+    {
+        $this->debtor('Анна Просрочка');
+        User::factory()->create(['telegram_id' => 226, 'role' => Roles::ADMIN]);
+
+        CourseBlock::query()
+            ->where('course_id', $this->course->id)
+            ->where('is_current', true)
+            ->update(['starts_at' => now()->subDays(20)]);
+
+        $this->send(226, '/долги Альфа');
+
+        // 20 дней → floor(20/7) = 2 нед (DebtorsReport::formatOverdue).
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'api.telegram.org')
+            && str_contains($request->data()['text'], 'Анна Просрочка')
+            && str_contains($request->data()['text'], 'просрочено 2 нед'));
+    }
+
+    /** @test */
+    public function curator_command_in_care_chat_replies_to_chat(): void
+    {
+        config()->set('recording_gap.care_telegram_chat_id', '-100999');
+
+        $this->debtor('Игорь Забота');
+        User::factory()->create(['telegram_id' => 227, 'role' => Roles::ADMIN]);
+
+        $this->postJson('/api/telegram/webhook', [
+            'message' => [
+                'chat' => ['id' => -100999, 'type' => 'supergroup'],
+                'from' => ['id' => 227],
+                'text' => '/долги Альфа',
+            ],
+        ])->assertOk();
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'api.telegram.org')
+            && ($request->data()['chat_id'] ?? null) === -100999
+            && str_contains($request->data()['text'], 'Игорь Забота'));
+    }
+
+    /** @test */
+    public function care_chat_command_from_non_curator_gets_silence(): void
+    {
+        config()->set('recording_gap.care_telegram_chat_id', '-100999');
+
+        $this->debtor('Сергей Сторонний');
+        User::factory()->create(['telegram_id' => 228, 'role' => null]);
+
+        $this->postJson('/api/telegram/webhook', [
+            'message' => [
+                'chat' => ['id' => -100999, 'type' => 'supergroup'],
+                'from' => ['id' => 228],
+                'text' => '/долги Альфа',
+            ],
+        ])->assertOk();
+
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'api.telegram.org'));
+    }
+
+    /** @test */
+    public function curator_command_in_regular_group_chat_gets_silence(): void
+    {
+        config()->set('recording_gap.care_telegram_chat_id', '-100999');
+
+        $this->debtor('Тамара Обычная');
+        User::factory()->create(['telegram_id' => 229, 'role' => Roles::ADMIN]);
+
+        $this->postJson('/api/telegram/webhook', [
+            'message' => [
+                'chat' => ['id' => -100888, 'type' => 'supergroup'],
+                'from' => ['id' => 229],
+                'text' => '/долги Альфа',
+            ],
+        ])->assertOk();
+
+        // Вне «Отдела заботы» куратор-команды в группах по-прежнему молчат —
+        // долговой список не должен светиться в студенческих чатах.
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'api.telegram.org'));
     }
 }

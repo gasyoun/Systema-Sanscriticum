@@ -28,6 +28,7 @@ class LessonMaterialTaggerTest extends TestCase
     {
         parent::setUp();
         Storage::fake('public');
+        Storage::fake('local');
 
         $this->course = Course::factory()->create();
         $this->group = Group::create(['name' => 'Поток', 'status' => 'active']);
@@ -60,7 +61,7 @@ class LessonMaterialTaggerTest extends TestCase
         )]]]]]];
 
         $path = 'transcripts/lesson-'.$lesson->id.'.json';
-        Storage::disk('public')->put($path, json_encode($payload, JSON_UNESCAPED_UNICODE));
+        Storage::disk('local')->put($path, json_encode($payload, JSON_UNESCAPED_UNICODE));
         $lesson->forceFill(['transcript_file' => $path])->save();
 
         return $lesson->fresh();

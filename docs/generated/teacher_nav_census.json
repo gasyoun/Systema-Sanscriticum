@@ -1,16 +1,17 @@
 {
-    "generated_at": "2026-08-12T22:28:17+03:00",
+    "generated_at": "2026-09-08T16:41:54+03:00",
     "panel": "admin",
     "teacher": {
         "source": "fixture",
         "role": "teacher",
         "has_teacher_id": true
     },
-    "total": 15,
+    "total": 18,
     "by_group": {
         "Допматериалы": 3,
-        "Обучение": 11,
-        "Пользователи": 1
+        "Обучение": 12,
+        "Пользователи": 2,
+        "Продажи": 1
     },
     "items": [
         {
@@ -70,6 +71,13 @@
             "url": "http://localhost/admin/courses"
         },
         {
+            "kind": "page",
+            "group": "Обучение",
+            "label": "Мои материалы",
+            "class": "App\\Filament\\Pages\\MyMaterials",
+            "url": "http://localhost/admin/my-materials"
+        },
+        {
             "kind": "resource",
             "group": "Обучение",
             "label": "Мои ученики",
@@ -117,6 +125,20 @@
             "label": "Сертификаты",
             "class": "App\\Filament\\Resources\\CertificateResource",
             "url": "http://localhost/admin/certificates"
+        },
+        {
+            "kind": "page",
+            "group": "Пользователи",
+            "label": "Ссылки PayPal",
+            "class": "App\\Filament\\Pages\\PaypalLinksBoard",
+            "url": "http://localhost/admin/paypal-links"
+        },
+        {
+            "kind": "page",
+            "group": "Продажи",
+            "label": "Моя зарплата",
+            "class": "App\\Filament\\Pages\\TeacherSalaries",
+            "url": "http://localhost/admin/teacher-salaries"
         }
     ],
     "widgets": {

@@ -50,6 +50,8 @@ return [
         // подтвердить у бухгалтера/в кабинете Точки до боевой проверки.
         'tax_system_code' => env('TOCHKA_TAX_SYSTEM_CODE'), // СНО: usn_income | usn_income_outcome | osn | patent | ...
         'vat_type' => env('TOCHKA_VAT_TYPE', 'none'),       // ставка НДС позиции; в чеке «не облагается» → none
+        'open_banking_url' => env('TOCHKA_OPEN_BANKING_URL') ?: 'https://enter.tochka.com/uapi/open-banking/v1.0',
+        'balance_cache_seconds' => (int) env('TOCHKA_BALANCE_CACHE_SECONDS', 60),
     ],
 
     'lesson_sync' => [
@@ -99,9 +101,20 @@ return [
         'calendar_post_secret' => env('N8N_CALENDAR_POST_SECRET'),
     ],
 
+    // Входящий email-канал поддержки (H3462): секрет пути вебхука
+    // POST /api/webhooks/inbound-email/{secret}. Пусто → эндпоинт всегда 403
+    // (выключен, fail-closed — как verify.max.magnet).
+    'inbound_email' => [
+        'webhook_secret' => env('INBOUND_EMAIL_WEBHOOK_SECRET'),
+    ],
+
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
         'bot_username' => env('TELEGRAM_BOT_USERNAME'),
+
+        // H4392: чат «Институт» — еженедельный пост «Кто на чём закончил»
+        // (care:weekly-finish). Пусто → команда отказывает явно, не молчит.
+        'institute_chat_id' => env('TELEGRAM_INSTITUTE_CHAT_ID', ''),
 
         // Отдельный бот ДЛЯ СТУДЕНЧЕСКОГО КАБИНЕТА: привязка аккаунта, ИИ-куратор
         // и личные уведомления студенту. Заведён отдельно, потому что основной
@@ -113,7 +126,14 @@ return [
         // Секрет подписи легаси бот-вебхука (/api/telegram/webhook). Пусто →
         // проверка отключена (см. App\Http\Middleware\VerifyTelegramBotWebhook).
         'bot_webhook_secret' => env('TELEGRAM_BOT_WEBHOOK_SECRET'),
+
         'admin_id' => env('ADMIN_TELEGRAM_ID'),
+
+        // Оператор дожима (решение MG 24-08-2026): числовой chat_id получателя
+        // будничной 10:00 сводки dozhim:notify-operator. Пусто → фолбэк на
+        // первого User роли manager с привязанным telegram_id (см.
+        // DozhimNotifyOperatorCommand::recipient()).
+        'dozhim_operator_tg_chat_id' => env('DOZHIM_OPERATOR_TG_CHAT_ID'),
         // Чат кураторов: общий group chat, куда добавлен основной бот.
         // Пусто → curator-уведомления отключены (см. App\Services\CuratorNotifier).
         'curators_chat_id' => env('TELEGRAM_CURATORS_CHAT_ID'),
@@ -132,6 +152,21 @@ return [
         'session' => env('TELEGRAM_SUPPORT_SESSION', storage_path('app/telegram-support/session.madeline')),
         'history_limit' => (int) env('TELEGRAM_SUPPORT_HISTORY_LIMIT', 50),
         'dialog_limit' => (int) env('TELEGRAM_SUPPORT_DIALOG_LIMIT', 20),
+        // H4416 (root cause 08-09-2026): getDialogIds() аккаунта-персоны возвращает
+        // 3199 диалогов в порядке, далёком от свежести (топ-30 — старые июльские
+        // DM-чаты), а legacy-окно брало первые dialog_limit штук. Личные DM
+        // перестали попадать в опрос (аутедж 31-08…08-09, кейс Елены Безрядиной),
+        // группы выживали только через tech_group_peers. Теперь опрашиваемых
+        // пиров собирает союз: активные известные чаты из БД (это окно), потом
+        // allowlist, потом legacy MP-окно (для бренд-новых чатов, которых в БД
+        // ещё нет). 0 — выключить БД-союз (наследное поведение).
+        'known_chat_window_days' => (int) env('TELEGRAM_SUPPORT_KNOWN_CHAT_WINDOW_DAYS', 14),
+        // Потолок пиров из БД-союза за один минутный заход (RPC-бюджет).
+        'known_chat_poll_limit' => (int) env('TELEGRAM_SUPPORT_KNOWN_CHAT_POLL_LIMIT', 120),
+        // Суточный catch-up (--catch-up-days): полный обмет всех чатов с
+        // активностью за N дней — страховка для чата, ожило ли после долгой
+        // паузы и не попало ни в минутное окно, ни в MP-топ.
+        'catchup_days' => (int) env('TELEGRAM_SUPPORT_CATCHUP_DAYS', 60),
         'profile_backfill_limit' => (int) env('TELEGRAM_SUPPORT_PROFILE_BACKFILL_LIMIT', 20),
         'client_class' => env('TELEGRAM_SUPPORT_CLIENT_CLASS') ?: API::class,
         // Минут без успешного синка, после которых сессия считается протухшей
@@ -163,6 +198,50 @@ return [
         // the same DC and, on a transient stall, dies at 120 s again (H2988:
         // 18 kills / ~100 min). 0 disables the skip. Does not raise the ceiling.
         'sync_timeout_cooldown_seconds' => (int) env('TELEGRAM_SUPPORT_SYNC_TIMEOUT_COOLDOWN_SECONDS', 600),
+        // H3380: текст ack'а автоответчика («приняли, ответим») и cooldown-окно
+        // в часах: пока в чате есть исходящее моложе окна, ack не шлётся.
+        'auto_ack_text' => env(
+            'TELEGRAM_SUPPORT_AUTO_ACK_TEXT',
+            "Намасте!\n\nПолучили ваше сообщение и уже разбираемся. Ответим в течение рабочего дня.",
+        ),
+        'auto_ack_cooldown_hours' => (int) env('TELEGRAM_SUPPORT_AUTO_ACK_COOLDOWN_HOURS', 6),
+        // H3380 v2.2: входящие старше этого возраста (часов) не порождают ни
+        // автоответа, ни подсказки — первичный history-забор новой сессии
+        // приносит месяцы старых сообщений, реагировать на них нельзя.
+        //
+        // H3765 A2: потолок расщеплён надвое, потому что цена ошибки у половин
+        // разная. Автоответ уходит СТУДЕНТУ — просроченный ответ на вопрос
+        // двухдневной давности хуже молчания, поэтому строгие 6 ч остаются.
+        // Подсказка уходит КУРАТОРУ и студенту не видна — здесь худший исход
+        // это лишняя строка в чате куратора, поэтому окно шире (24 ч) и
+        // переживает перебой приёма (перезапуск сессии, watchdog-убийство),
+        // после которого сутки вопросов иначе уходили бы в тишину.
+        //
+        // Перепись A1 (support:ingest-latency-report, 31-08-2026) показала, что
+        // расширение вернёт немного: из 1072 stale-пропусков за 30 дней в полосе
+        // 6–24 ч лежат 30, остальное — дозабор истории возрастом от суток до
+        // трёх лет. Ставка здесь на устойчивость к перебоям, а не на объём.
+        'auto_reply_max_age_hours' => (int) env('TELEGRAM_SUPPORT_AUTO_REPLY_MAX_AGE_HOURS', 6),
+        'hint_max_age_hours' => (int) env('TELEGRAM_SUPPORT_HINT_MAX_AGE_HOURS', 24),
+        // H3380 v2: тёплый ответ на чистое приветствие («Намасте!») — один раз
+        // за то же cooldown-окно чата. Благодарности молча не отвечаются.
+        'auto_greeting_text' => env(
+            'TELEGRAM_SUPPORT_AUTO_GREETING_TEXT',
+            "Намасте!\n\nРады вас видеть. Напишите, по какому курсу или расписанию вопрос — с радостью поможем.",
+        ),
+        // H3542: приглашение связать Telegram с кабинетом (support_dm_link_invite).
+        // {url} заменяется на одноразовую capability-ссылку; текст — выверенный
+        // канреплай, править только осознанно (не свободная генерация).
+        'link_invite_text' => env(
+            'TELEGRAM_SUPPORT_LINK_INVITE_TEXT',
+            "Намасте!\n\nВаш вопрос дошёл до нас. Бот отвечает мгновенно тем, чей Telegram связан с личным кабинетом школы.\n\nСвяжите их за минуту: откройте ссылку и укажите вашу почту.\n{url}\n\nЕсли аккаунта ещё нет — он создастся автоматически, бесплатно и без пароля. После связывания бот начнёт отвечать сам, а куратор будет видеть ваш курс.",
+        ),
+        // Повторное приглашение тому же контакту не раньше этого окна (часы);
+        // по умолчанию неделя — «никогда не спрашиваем второй раз подряд».
+        'link_invite_cooldown_hours' => (int) env('TELEGRAM_SUPPORT_LINK_INVITE_COOLDOWN_HOURS', 168),
+        // Ссылка-приглашение живёт столько часов; после истечения следующий
+        // возможный запрос порождает новую ссылку (токен перегенерируется).
+        'link_token_ttl_hours' => (int) env('TELEGRAM_SUPPORT_LINK_TOKEN_TTL_HOURS', 336),
         // Auto-heal IPC hang (01.08.2026): healthcheck → recover (kill worker,
         // clear ipc/locks, unlock madeline-session, one sync). Default OFF —
         // flip TELEGRAM_SUPPORT_AUTO_HEAL=true on prod after smoke.
@@ -178,6 +257,16 @@ return [
             explode(',', (string) env('TELEGRAM_SUPPORT_TECH_GROUP_PEERS', '')),
         ))),
         'username' => ltrim((string) env('TELEGRAM_SUPPORT_USERNAME', ''), '@') ?: null,
+    ],
+
+    // H4691: shared sentinel breaker over the MTProto watchdog-kill loop
+    // (App\Services\Telegram\MadelineSyncBreaker). The budget/freeze logic is the
+    // Uprava library deployed on .92; a missing library = fail-open (cooldown only).
+    'sentinel_breaker' => [
+        'enabled' => (bool) env('SENTINEL_BREAKER_ENABLED', true),
+        'bin' => env('SENTINEL_BREAKER_BIN', '/usr/local/lib/sentinel-breaker/sentinel_breaker.py'),
+        'python' => env('SENTINEL_BREAKER_PYTHON', 'python3'),
+        'state_dir' => env('SENTINEL_BREAKER_STATE_DIR', storage_path('app/sentinel-breaker')),
     ],
 
     // Track B harvester (Uprava/docs/DECISIONS_telegram_harvester.md, D1-D3).
@@ -202,6 +291,13 @@ return [
         // falls back to the default; env(key, default) keeps the '' and the writer
         // would then build paths from filesystem root (/corpus/… → mkdir denied).
         'store_path' => env('TELEGRAM_HARVEST_STORE_PATH') ?: storage_path('app/telegram-harvest/raw'),
+        // H3411: 19-24-08-2026 a manual root-invoked run left ors_faq_peers.json
+        // root:root 640 under store_path — both daily www-data cron runs then hit
+        // Permission-denied until a human ran `chown -R www-data storage/app/telegram-harvest`
+        // (docs/SERVER_SOFT_ALERT_PLAYBOOK.md incident log). SyncTelegramHarvest
+        // checks/reclaims ownership against this pair, never against the running uid.
+        'expected_owner' => env('TELEGRAM_HARVEST_EXPECTED_OWNER', 'www-data'),
+        'expected_group' => env('TELEGRAM_HARVEST_EXPECTED_GROUP', 'www-data'),
         // Через сколько часов снимок состава чата считается протухшим (0 —
         // не помечать). Снимок пишет часовой telegram-harvest:roster-groups, и
         // при любом его сбое СТАРЫЙ файл остаётся лежать как есть — дашборд
@@ -218,6 +314,22 @@ return [
         // поиском. Kernel::schedule() выводит TTL замка отсюда — зависший проход
         // обязан умереть раньше, чем замок протухнет и пустит второй экземпляр.
         'roster_timeout_seconds' => (int) env('TELEGRAM_HARVEST_ROSTER_TIMEOUT_SECONDS', 600),
+        // H3411: потолок времени одного прохода telegram-harvest:sync (секунды,
+        // 0 — без watchdog). Тот же shared-session watchdog/reaper паттерн, что
+        // у telegram_support.sync_timeout_seconds — если проход зависает
+        // (демон MadelineProto залипает в D-state и не реагирует на SIGTERM),
+        // watchdog убивает демон, снимает lock и артефакты IPC, и на cooldown
+        // секунд блокирует следующий запуск, чтобы не долбить зависшую сессию.
+        'sync_timeout_seconds' => (int) env('TELEGRAM_HARVEST_SYNC_TIMEOUT_SECONDS', 120),
+        'sync_timeout_cooldown_seconds' => (int) env('TELEGRAM_HARVEST_SYNC_TIMEOUT_COOLDOWN_SECONDS', 600),
+        // H4461: wall-clock budget for ONE sync pass, in seconds (0 = unbounded).
+        // The pass fetches peer-by-peer and checkpoints (store + cursor) after
+        // every completed peer, so a budget stop — or a watchdog kill — keeps
+        // everything fetched so far and the next run resumes from cursors.
+        // Keep below sync_timeout_seconds so the budget, not the SIGALRM kill,
+        // is what ends a long pass; the twice-daily cadence catches up the
+        // remaining peers across runs.
+        'sync_budget_seconds' => (int) env('TELEGRAM_HARVEST_SYNC_BUDGET_SECONDS', 0),
         // Anti-ban: randomized inter-peer delay bounds in seconds (default 0/0 → no
         // sleep, so tests/CI never pause). Raise on a real host to look less bot-like.
         'peer_delay_min' => (int) env('TELEGRAM_HARVEST_PEER_DELAY_MIN', 0),
@@ -227,6 +339,27 @@ return [
         // ALSO downloads the actual media file (D4's metadata-only default stands
         // unchanged for every other Track B peer).
         'media_download_peers' => array_values(array_filter(array_map('trim', explode(',', (string) env('TELEGRAM_HARVEST_MEDIA_DOWNLOAD_PEERS', ''))))),
+    ],
+
+    // Канал-очередь @rusamskrtam (H3930, Phase 1): story_posts + издатель.
+    // Бот — магнит-бот из MarketingSetting.tg_bot_token (маратон-издатель),
+    // НЕ кабинетный @samskrtamru_bot и НЕ @zapisi_ORSbot (FINDINGS §651:
+    // один бот на одну поверхность, всегда getChat-проба перед первым постом).
+    // queue_path — каталог с файлами очереди Uprava content/queue (*.md) на
+    // этом хосте; пусто = stories:import-queue требует явный --path.
+    'telegram_story' => [
+        'channel_chat_id' => env('TELEGRAM_STORY_CHANNEL_CHAT_ID', ''),
+        'queue_path' => env('TELEGRAM_STORY_QUEUE_PATH', ''),
+        'default_publish_hour' => (int) env('TELEGRAM_STORY_DEFAULT_PUBLISH_HOUR', 9),
+        // Потолок захода сториз-лейна (H3964): TTL madeline-session-лока для
+        // stories:publish-story выводится из него тем же madelineSessionLockMinutes(),
+        // что и у support/harvest — сессия одна, граница одна.
+        'stories_timeout_seconds' => (int) env('TELEGRAM_STORY_STORIES_TIMEOUT_SECONDS', 120),
+        // MTProto-вызовы сториз — отдельным standalone-процессом
+        // (scripts/stories_lane_worker.php): из-под artisan Amp-цикл MP v8
+        // падает DriverSuspension'ом, standalone работает (замер 03-09-2026).
+        // false — прямые вызовы в этом же процессе (тесты с фейк-клиентом).
+        'subprocess_lane' => (bool) env('TELEGRAM_STORY_SUBPROCESS_LANE', true),
     ],
 
     // ВХОДНОЙ УЗЕЛ вебхуков Telegram — общий для ВСЕХ ботов: кабинетного,
@@ -259,6 +392,9 @@ return [
     // docs/telegram-userbot-inventory.md §4.3). Исходящий канал до Telegram уже
     // обеспечен sshuttle-туннелем, поллинг ходит по нему.
     'telegram_zapisi' => [
+        // H4519: детект анонсов отмены обычными словами → кнопка-подтверждение.
+        // Default false: включается на проде после live-smoke (Sandbox-чат).
+        'announce_cancel_detect' => (bool) env('TELEGRAM_ZAPISI_ANNOUNCE_CANCEL_DETECT', false),
         // Рубильник АВАРИЙНОГО поллинга. Штатно апдейты приходят вебхуком через
         // входной узел; поллинг нужен, только когда узел недоступен. Дефолт
         // false осознанно: команда снимает вебхук, и случайный запуск иначе
@@ -275,6 +411,22 @@ return [
         'poll_retry_seconds' => (int) env('TELEGRAM_ZAPISI_POLL_RETRY_SECONDS', 10),
     ],
 
+    // Аварийный long polling кабинетного (студенческого) бота (telegram:poll-student),
+    // зеркало telegram_zapisi: штатная дорожка — вебхук; поллинг включается только
+    // когда входной узел вебхуков недоступен (инцидент 06-09-2026, «Connection
+    // timed out» от подсетей Telegram с ~21-08). Дефолт false — случайный запуск
+    // не уводит бота с вебхука молча.
+    'telegram_student' => [
+        'poll_enabled' => (bool) env('TELEGRAM_STUDENT_POLL_ENABLED', false),
+        'poll_timeout_seconds' => (int) env('TELEGRAM_STUDENT_POLL_TIMEOUT_SECONDS', 50),
+        'poll_retry_seconds' => (int) env('TELEGRAM_STUDENT_POLL_RETRY_SECONDS', 10),
+        'poll_max_lifetime_seconds' => (int) env('TELEGRAM_STUDENT_POLL_MAX_LIFETIME_SECONDS', 3600),
+        // Куда реинжектировать апдейты. Пусто → app.url. На текущем про́де app.url
+        // указывает на входной узел (мёртвый туннель), поэтому здесь задаётся
+        // явно: https://samskrte.ru (инцидент 06-09-2026).
+        'reinject_url' => env('TELEGRAM_STUDENT_POLL_REINJECT_URL', ''),
+    ],
+
     'vk' => [
         'bot_token' => env('VK_BOT_TOKEN'),
         'group_id' => env('VK_GROUP_ID'),
@@ -284,7 +436,10 @@ return [
         'callback_secret' => env('VK_CALLBACK_SECRET'),
     ],
 
-    'yandex' => [
+    // H3311: раньше этот блок и Socialite-блок ниже оба назывались 'yandex';
+    // PHP last-wins молча выбрасывал api_key/folder_id/agent_id. Читатели
+    // речи/агента теперь обязаны ходить в services.yandex_speech.
+    'yandex_speech' => [
         'api_key' => env('YANDEX_API_KEY'),
         'folder_id' => env('YANDEX_FOLDER_ID'),
         'agent_id' => env('YANDEX_AGENT_ID'),
@@ -318,8 +473,15 @@ return [
         ],
     ],
 
+    // H3312: единый канонический адрес суперадмина - только из env, без
+    // литерального фолбэка (литерал в публичном репо = раскрытие логина
+    // super_admin). Fail-closed: пустой ADMIN_EMAIL отключает админ-функции
+    // (Horizon deny, backup-уведомления skip, админ-письма по платежам skip),
+    // а не уводит их на «угаданный» адрес. Прод получает значение через
+    // DEPLOY_QUEUE (Uprava); DatabaseSeeder дополнительно требует
+    // непустой ADMIN_PASSWORD перед сидированием.
     'admin' => [
-        'email' => env('ADMIN_EMAIL', 'pe4kin.85@mail.ru'),
+        'email' => env('ADMIN_EMAIL', ''),
         'password' => env('ADMIN_PASSWORD'),
     ],
 
@@ -390,6 +552,26 @@ return [
         'enabled' => (bool) env('PAYPAL_CLAIM_ENABLED', false),
         'me_link' => env('PAYPAL_ME_LINK'),      // напр. https://www.paypal.com/paypalme/xxx
         'recipient' => env('PAYPAL_RECIPIENT'),  // email/имя получателя для инструкции студенту
+        // Ruling 22-08-2026: заявка СУЩЕСТВУЮЩЕГО ученика (вошедшего в кабинет)
+        // сразу становится paid — доступ/финансы открываются немедленно, сверка
+        // выборочная и пост-фактум (фильтр «PayPal: без сверки»). Гости с новым
+        // email идут по-старому через pending → ручную сверку.
+        // false → откат к ручной сверке для всех, без деплоя логики.
+        'trust_existing_students' => (bool) env('PAYPAL_TRUST_EXISTING_STUDENTS', true),
+        // MG 23-08-2026: в PayPal платят только EUR (предпочтительно) и USD,
+        // и дороже рублевых — рублевую цену тарифа на форме НЕ показываем.
+        // Валютная цена за БЛОК по course_id; показывается только блочным
+        // тарифам. Источник прайса: Google-таблица цен (гр.53 Кочергиной =
+        // тот же блок 8000 ₽ = 105 $/90 €).
+        'foreign_block_prices' => [
+            434 => ['eur' => 90, 'usd' => 105], // Грамматика по Кочергиной
+        ],
+        // H3819/H3821: доля наценки над чистой конвертацией RUB→EUR/USD в
+        // published fixed price list (см. PaypalForeignPriceService), покрывающая
+        // комиссию PayPal (§4 PAYPAL_RECONCILIATION_MONEY_CONTOUR) и снос курса
+        // между расчётом и оплатой. Не применяется к student_discounts-активным
+        // местам — рулинг MG про carve-out.
+        'fixed_price_markup' => (float) env('PAYPAL_FIXED_PRICE_MARKUP', 0.08),
         // H2027 PayPal Subscriptions API (auto-bill diaspora) — separate from claim.
         // Master flag default OFF; secrets never committed. See
         // docs/ARCHITECTURE_PAYPAL_SUBSCRIPTIONS_2026.md
@@ -403,6 +585,37 @@ return [
             'skip_signature_verify' => (bool) env('PAYPAL_SKIP_WEBHOOK_SIGNATURE', false),
             'base_url' => env('PAYPAL_API_BASE_URL'), // optional override
         ],
+    ],
+
+    // H3497 — заявка об оплате банковским переводом (SEPA/SWIFT на внешний счёт
+    // получателя школы за рубежом). Флаг default OFF: маршрут отвечает 404, пока
+    // MG не скажет включать. Реквизиты получателя — только из env, не хардкод.
+    'bank_claim' => [
+        'enabled' => (bool) env('BANK_CLAIM_ENABLED', false),
+        // Заявка вошедшего существующего ученика сразу paid (зеркало рулинга
+        // 22-08-2026 из PayPal-канала); гость с новым email → ручная сверка.
+        'trust_existing_students' => (bool) env('BANK_TRUST_EXISTING_STUDENTS', true),
+        // Реквизиты для шага 1 формы (показываются ученику).
+        'recipient_name' => env('BANK_RECIPIENT_NAME', ''),
+        'iban' => env('BANK_RECIPIENT_IBAN', ''),
+        'bic' => env('BANK_RECIPIENT_BIC', ''),
+        'bank_name' => env('BANK_RECIPIENT_BANK_NAME', ''),
+    ],
+
+    // H4627 — заявка «я заплатил преподавателю напрямую» (как PayPal-pending).
+    // Флаг default OFF (деньги на личный счёт — деньги-контур): включается
+    // TEACHER_PAY_ENABLED=1 на проде. Авто-доверия нет — каждую заявку сверяет
+    // куратор по выписке преподавателя.
+    'teacher_pay' => [
+        'enabled' => (bool) env('TEACHER_PAY_ENABLED', false),
+    ],
+
+    // H4462 — аудит-след перезаписи паролей (инцидент 09-09-2026: smoke-студент
+    // id=6857 перезаписан молча). Лог пишется в именованный канал из logging.php
+    // (по умолчанию 'stack'); логируется факт перезаписи, writer и ip/session —
+    // никогда сам пароль или его хеш.
+    'password_audit' => [
+        'channel' => env('PASSWORD_AUDIT_LOG_CHANNEL', 'stack'),
     ],
 
 ];

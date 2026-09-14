@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "plane": "meta",
+      "category": "human_trigger",
+      "priority": 10,
+      "patterns": [
+        "куратор|живой|человек",
+        "напишите мне|позвоните",
+        "(?<![а-я])(реальный|админ|оператор)(?![а-я])",
+        "поддержк[а-я]*",
+        "помощь|менеджер"
+      ],
+      "negations": [
+        "техподдержк"
+      ],
+      "enabled": true,
+      "source": "escalation.py _ESCALATION_PATTERNS + StudentChatService HUMAN_TRIGGERS; «поддержка» без «тех-» = живой человек, «техподдержка» — FAQ-тема"
+    },
+    {
+      "plane": "meta",
+      "category": "urgent",
+      "priority": 15,
+      "patterns": [
+        "срочн[а-я]*|как можно скорее|экстренн[а-я]*",
+        "горит|сегодня же"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "маршрутизация дежурного куратора v1 seed"
+    },
+    {
+      "plane": "meta",
+      "category": "sanskrit_term",
+      "priority": 20,
+      "patterns": [
+        "[ऀ-ॿ]",
+        "[āīūṛṝḷḹṭḍṇṅñṃśḥṣ]"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "деванагари/IAST-диакритика; кириллическая пракрит-детекция НЕ строится в v1 (риски архитектуры)"
+    },
+    {
+      "plane": "meta",
+      "category": "new_contact",
+      "priority": 25,
+      "patterns": [
+        "впервые|первый раз",
+        "только зарегистрировал|только что купил|только что купила",
+        "я новый|здравствуйте, я тут впервые"
+      ],
+      "negations": [],
+      "enabled": true,
+      "source": "онбординг-приветствие v1 seed"
+    }
+  ]
+}

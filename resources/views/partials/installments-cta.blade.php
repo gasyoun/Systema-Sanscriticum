@@ -11,7 +11,7 @@
         <div class="bg-green-50 border border-green-200 rounded-2xl p-5 text-sm text-green-900">
             <p class="font-bold mb-1.5"><i class="fas fa-check-circle mr-1.5"></i>Запрос отправлен</p>
             <p class="leading-relaxed">
-                Куратор свяжется с вами — обычно отвечаем в течение рабочего дня.
+                Запрос у куратора — обычно отвечаем в течение рабочего дня.
                 Платить сейчас ничего не нужно: сначала согласуете график.
             </p>
             <p class="mt-2 leading-relaxed">

@@ -1,6 +1,6 @@
 # Мокап «Курс как дом» v2 — H822, итерация направления B
 
-_Created: 14-07-2026 · Last updated: 14-07-2026_
+_Created: 14-07-2026 · Last updated: 05-09-2026_
 
 Вторая итерация направления B (Course workspace) по рулингу M.G. 14-07-2026: «мокап №2 остаётся
 направлением B». Первая итерация: [course-workspace/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/mockups/student-cabinet-remake/course-workspace);
@@ -33,14 +33,14 @@ _Created: 14-07-2026 · Last updated: 14-07-2026_
 
 | Файл | Слой | Что доказывает |
 |---|---|---|
-| [index.html](index.html) | Сегодня (главная) | R5 в одной ленте; R12 чеклист одной строкой; R4 истёкший курс виден строкой с продлением; R10 инструменты вторичны |
-| [course.html](course.html) | Дом курса | R9 workspace-табы (JS + hash); единственный оффер в момент прогресса (R2/R17); «почему закрыто?» на замках |
-| [lesson.html](lesson.html) | Урок | R7 гибридный прогресс; C-L1 конспект над домашним на мобайле; автосохранение заметок (F8) |
-| [library.html](library.html) | Библиотека записей | R8/R24 слот членства с ценой и честным «скоро»; R4 истёкшая покупка видна; M6 «в своём темпе» |
-| [calendar.html](calendar.html) | Календарь | M8 три часовых пояса; iCal; «догонять не нужно» (M6); прошедшее → запись в библиотеке |
-| [progress.html](progress.html) | Прогресс + сертификат | R7 честный счёт; без серий/шкал срочности (guardrail M5); сертификат с проверкой подлинности |
-| [access.html](access.html) | Оплата и доступ | R4 «требует внимания» первым; «Почему закрыто?» (D §4A); подавление промо при проблеме доступа (R2) |
-| [messages.html](messages.html) | Помощь | R19 пикер тем с автоконтекстом; web-FAQ (F15); тред куратора без «магических фраз» |
+| [index.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace-v2/index.html) | Сегодня (главная) | R5 в одной ленте; R12 чеклист одной строкой; R4 истёкший курс виден строкой с продлением; R10 инструменты вторичны |
+| [course.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace-v2/course.html) | Дом курса | R9 workspace-табы (JS + hash); единственный оффер в момент прогресса (R2/R17); «почему закрыто?» на замках |
+| [lesson.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace-v2/lesson.html) | Урок | R7 гибридный прогресс; C-L1 конспект над домашним на мобайле; автосохранение заметок (F8) |
+| [library.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace-v2/library.html) | Библиотека записей | R8/R24 слот членства с ценой и честным «скоро»; R4 истёкшая покупка видна; M6 «в своём темпе» |
+| [calendar.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace-v2/calendar.html) | Календарь | M8 три часовых пояса; iCal; «догонять не нужно» (M6); прошедшее → запись в библиотеке |
+| [progress.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace-v2/progress.html) | Прогресс + сертификат | R7 честный счёт; без серий/шкал срочности (guardrail M5); сертификат с проверкой подлинности |
+| [access.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace-v2/access.html) | Оплата и доступ | R4 «требует внимания» первым; «Почему закрыто?» (D §4A); подавление промо при проблеме доступа (R2) |
+| [messages.html](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/mockups/student-cabinet-remake/course-workspace-v2/messages.html) | Помощь | R19 пикер тем с автоконтекстом; web-FAQ (F15); тред куратора без «магических фраз» |
 
 ## Ограничения
 

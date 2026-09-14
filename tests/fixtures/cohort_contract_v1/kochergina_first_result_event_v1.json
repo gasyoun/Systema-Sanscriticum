@@ -1,0 +1,36 @@
+{
+    "contract": "kochergina_first_result_event_v1",
+    "version": 1,
+    "handoff": "H4162",
+    "created": "2026-09-06",
+    "purpose": "The v1 idempotent learning-event contract: what counts as the learner's first result on the reference Kochergina cohort, what the canonical effect of the event is, and why replaying it can never produce a second effect.",
+    "event": {
+        "name": "lesson_completed",
+        "route": "POST /c/{slug}/u/{lessonId}/complete (student.lesson.complete)",
+        "actor": "an entitled student (group membership + paid tariff key)",
+        "guard": "StudentController::ensureLessonAccessible(): group visibility + tariff unlock, abort(403) otherwise",
+        "canonical_effect": "exactly one lesson_user row per (user_id, lesson_id) with is_completed=1; replay updates the same row instead of inserting a second one (the pivot has no unique index, so the code guards: completedLessons()->exists() check, then updateExistingPivot vs attach)",
+        "telemetry": "ActivityEvent LESSON_MARK_MASTERED is emitted only on the FIRST completion of a lesson; a replay click emits no second event",
+        "prana": "lesson_complete award is idempotent per lesson_id (PranaService::award)"
+    },
+    "first_result_definition": "the earliest lesson_user row with is_completed=1 for the user on the cohort's lessons; homework_submissions (statuses submitted/needs_revision/accepted) is the second, independent first-result signal",
+    "denominator_definitions_source": "App\\Services\\Analytics\\ActivationCompletionMetricsService (H3764) - activation anchor = StudentUnitEconomicsService::acquisitionAnchors() (first access-opening purchase); course denominator = course_user rows; group denominator = group_user rows; completion reads lesson_user.is_completed, never lesson_views.is_completed (dead on prod)",
+    "idempotent_replay": {
+        "first_post": "302, one lesson_user row (is_completed=1), one LESSON_MARK_MASTERED event",
+        "second_post": "302 again, still exactly one lesson_user row, still exactly one LESSON_MARK_MASTERED event"
+    },
+    "rollback": {
+        "action": "revoke entitlement (cancel payment + detach group), then replay the event",
+        "expected": "event is now rejected (403, content locked) while already-written progress history remains intact; no content or progress rows are deleted"
+    },
+    "prod_reference_cohort_434_gr61": {
+        "observed_at_utc": "2026-09-06T14:15:12Z",
+        "lessons_live": 6,
+        "lessons_planned": 80,
+        "lesson_completed_rows": 3,
+        "first_lesson_completed_at": "2026-08-16 22:01:51 (as stored)",
+        "homework_submissions": 9,
+        "first_homework_submitted_at": "2026-08-03 08:17:06 (as stored)",
+        "note": "timestamps verbatim from prod SELECT; the chain promise -> access -> first result is therefore observable end-to-end on this cohort"
+    }
+}

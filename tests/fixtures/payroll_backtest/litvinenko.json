@@ -1,0 +1,40 @@
+{
+ "recipient": "litvinenko",
+ "display": "Литвиненко Ольга",
+ "channel": "tochka_maria",
+ "expectation_source": "marina_chat_anchor",
+ "months": [
+  {
+   "month": "2026-02",
+   "anchor": "msg_3232",
+   "on": "2026-02-15",
+   "inputs": {
+    "receipts_rub": [
+     54000.0,
+     24000.0,
+     24000.0
+    ],
+    "direct_receipts_rub": [
+     12000.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 31752.0
+   }
+  },
+  {
+   "month": "2026-06",
+   "anchor": "msg_3705",
+   "on": "2026-06-27",
+   "inputs": {
+    "receipts_rub": [
+     36000.0,
+     24000.0
+    ]
+   },
+   "expected": {
+    "payable_rub": 16560.0
+   }
+  }
+ ]
+}

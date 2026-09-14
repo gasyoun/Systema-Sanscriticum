@@ -82,14 +82,15 @@ class StudentDebtsService
             ->get(['course_id', 'start_block', 'end_block'])
             ->groupBy('course_id');
 
-        // Явный «блок входа» из course_user (joined_at_block) по каждому курсу —
-        // приоритетная нижняя граница долга. Если не задан, debtFloor берёт
-        // первый оплаченный блок.
-        $joinedByCourse = DB::table('course_user')
+        // Строка course_user по каждому курсу: joined_at_block — приоритетная
+        // нижняя граница долга (если не задан, debtFloor берёт первый оплаченный
+        // блок), status — гейт «ушедшим долг не начисляем», left_after_block —
+        // потолок долга («Блок выхода» в админке).
+        $pivotByCourse = DB::table('course_user')
             ->where('user_id', $user->id)
             ->whereIn('course_id', $courses->keys())
-            ->whereNotNull('joined_at_block')
-            ->pluck('joined_at_block', 'course_id');
+            ->get(['course_id', 'status', 'joined_at_block', 'left_after_block'])
+            ->keyBy('course_id');
 
         // Полный график договорённостей: активные/просроченные/выполненные —
         // выполненные нужны, чтобы показать рассрочку целиком («2 из 4 внесено»).
@@ -113,6 +114,14 @@ class StudentDebtsService
         $result = collect();
         foreach ($courses as $courseId => $course) {
             $courseId = (int) $courseId;
+            $pivot = $pivotByCourse->get($courseId);
+
+            // Ушедшие/исключённые/льготники/выпускники должниками не считаются —
+            // зеркально админскому Debtors и debts:remind (та же константа).
+            if ($pivot !== null && in_array((string) $pivot->status, DebtorsReport::NON_DEBT_STATUSES, true)) {
+                continue;
+            }
+
             $blocks = $blocksByCourse->get($courseId, collect());
             $payments = $paymentsByCourse->get($courseId, collect());
             $promises = $promisesByCourse->get($courseId, collect());
@@ -133,6 +142,14 @@ class StudentDebtsService
 
             $refNumber = $refBlock instanceof CourseBlock ? (int) $refBlock->number : null;
 
+            // «Блок выхода» — потолок долга: блоки после него не начисляются
+            // (обещание хелпер-текста поля в админке). Если курс уже ушёл дальше
+            // блока выхода, «текущим» для долга считается блок выхода.
+            $leftAfter = $pivot?->left_after_block !== null ? (int) $pivot->left_after_block : null;
+            if ($refNumber !== null && $leftAfter !== null) {
+                $refNumber = min($refNumber, $leftAfter);
+            }
+
             // Текущий блок покрыт реальной (не conditional) оплатой?
             $refCovered = false;
             $debtNumbers = [];
@@ -143,8 +160,7 @@ class StudentDebtsService
                         break;
                     }
                 }
-                $explicitJoined = $joinedByCourse->get($courseId);
-                $explicitJoined = $explicitJoined !== null ? (int) $explicitJoined : null;
+                $explicitJoined = $pivot?->joined_at_block !== null ? (int) $pivot->joined_at_block : null;
                 $debtNumbers = $this->debtBlockNumbers($blocks, $refNumber, $payments, $explicitJoined);
             }
 
@@ -218,8 +234,15 @@ class StudentDebtsService
      * блоков) — next_block/next_payment_deadline будут null, платить пока
      * нечего.
      *
+     * Разрыв цепочки не обрывает подсчёт: если студент пропустил блок и
+     * вернулся дальше («пропустил 64 — оплатил 65»), непрерывная цепочка
+     * честно останавливается на 63, а отдельно оплаченные блоки после
+     * разрыва собираются в extra_paid_blocks (+ готовый extra_paid_blocks_label),
+     * чтобы сводки не делали вид, что этих оплат нет.
+     *
      * Возвращает коллекцию объектов {course_id, block (CourseBlock),
-     * amount_paid, next_block (?CourseBlock), next_payment_deadline (?Carbon)},
+     * amount_paid, next_block (?CourseBlock), next_payment_deadline (?Carbon),
+     * extra_paid_blocks (list<int>), extra_paid_blocks_label (?string)},
      * ключ — course_id.
      *
      * @param  iterable<int>  $courseIds
@@ -267,6 +290,8 @@ class StudentDebtsService
 
             $lastCovered = null;
             $nextBlock = null;
+            // Отдельно оплаченные блоки ПОСЛЕ первого разрыва цепочки.
+            $extraPaidBlocks = [];
             foreach ($blocks as $block) {
                 $n = (int) $block->number;
                 if ($floor !== null && $n < $floor) {
@@ -280,12 +305,20 @@ class StudentDebtsService
                     }
                 }
                 if (! $covered) {
-                    // Первый разрыв — дальше цепочка не непрерывна, стоп. Этот
-                    // блок и есть «следующий», за который нужно платить.
-                    $nextBlock = $block;
-                    break;
+                    // Первый разрыв — дальше цепочка не непрерывна. Этот блок
+                    // и есть «следующий», за который нужно платить; но идём
+                    // дальше — оплаты после разрыва собираем в extra_paid_blocks.
+                    if ($nextBlock === null) {
+                        $nextBlock = $block;
+                    }
+
+                    continue;
                 }
-                $lastCovered = $block;
+                if ($nextBlock === null) {
+                    $lastCovered = $block;
+                } else {
+                    $extraPaidBlocks[] = $n;
+                }
             }
 
             if ($lastCovered === null) {
@@ -298,6 +331,10 @@ class StudentDebtsService
                 'amount_paid' => (float) $payments->sum('amount'),
                 'next_block' => $nextBlock,
                 'next_payment_deadline' => $nextBlock?->starts_at?->copy()->startOfDay(),
+                'extra_paid_blocks' => $extraPaidBlocks,
+                'extra_paid_blocks_label' => $extraPaidBlocks === []
+                    ? null
+                    : DebtorsReport::formatBlockRanges($extraPaidBlocks),
             ]);
         }
 

@@ -1,0 +1,14 @@
+[Unit]
+Description=Систематически докатывать незавершённые Yandex-части off-site бэкапа (H3410 — было ежедневно 04:10 MSK внутри Kernel.php, теперь часовым тактом вне cron.service)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md
+[Timer]
+# Ежечасно, а не раз в сутки (H3410, deliverable «cadence»): resumeOffsite()
+# дешёв, когда докатывать нечего — один листинг off-site диска и выход;
+# работа не масштабируется с частотой, а окно «группа неполная и никто не
+# знает» сжимается с суток до часа. Хост в UTC (systemd OnCalendar тоже);
+# :10, а не :00 — не толпиться с сысstat/memwatch, которые сидят на минуте.
+OnCalendar=*-*-* *:10:00
+AccuracySec=1min
+Persistent=true
+[Install]
+WantedBy=timers.target

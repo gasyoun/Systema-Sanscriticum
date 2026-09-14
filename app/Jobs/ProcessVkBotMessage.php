@@ -108,10 +108,74 @@ final class ProcessVkBotMessage implements ShouldQueue
             return;
         }
 
+        // SELF-SERVICE: Zoom / запись / расписание из LMS (ORS-FAQ 04/05/06).
+        $lmsFact = app(StudentSelfService::class)->lmsFactReply($user, $text);
+        if ($lmsFact !== null) {
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $lmsFact,
+                'is_read' => true,
+                'source' => 'vk',
+            ]);
+
+            $this->sendVkMessage($vkId, $lmsFact);
+
+            return;
+        }
+
         // SELF-SERVICE: «мои задания» — статус ДЗ из БД, минуя ИИ (H1357).
         if (app(StudentSelfService::class)->matchesHomeworkIntent($text)) {
             $summary = app(StudentSelfService::class)->homeworkSummary($user);
 
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $summary,
+                'is_read' => true,
+                'source' => 'vk',
+            ]);
+
+            $this->sendVkMessage($vkId, $summary);
+
+            return;
+        }
+
+        // SELF-SERVICE: открытые эфиры ОРС — расписание + подписка/отписка
+        // (H3576 §2, зеркало Telegram-ветки 1.65). Отписка — первой.
+        $selfService = app(StudentSelfService::class);
+        if ($selfService->matchesStreamsUnsubscribeIntent($text)) {
+            $reply = $selfService->unsubscribeFromStreams($user);
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $reply,
+                'is_read' => true,
+                'source' => 'vk',
+            ]);
+
+            $this->sendVkMessage($vkId, $reply);
+
+            return;
+        }
+
+        if ($selfService->matchesStreamsSubscribeIntent($text)) {
+            $reply = $selfService->subscribeToStreams($user);
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $reply,
+                'is_read' => true,
+                'source' => 'vk',
+            ]);
+
+            $this->sendVkMessage($vkId, $reply);
+
+            return;
+        }
+
+        if ($selfService->matchesStreamsIntent($text)) {
+            $summary = $selfService->streamsSummary($user, 'vk');
             ChatMessage::create([
                 'user_id' => $user->id,
                 'role' => 'bot',

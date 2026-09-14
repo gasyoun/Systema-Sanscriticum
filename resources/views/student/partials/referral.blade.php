@@ -16,7 +16,7 @@
     <h3 class="text-lg font-extrabold text-[#101010] mb-2">Порекомендовать школу</h3>
     <p class="text-gray-500 text-sm leading-relaxed mb-4">
         Если среди ваших знакомых есть человек, которому санскрит был бы в радость, —
-        поделитесь личной ссылкой. Для нас рекомендация студента значит больше любой
+        поделитесь личной ссылкой. Для нас рекомендация ученика значит больше любой
         рекламы.
     </p>
 
@@ -54,7 +54,7 @@
 
     @if($credit > 0)
         <div class="mt-4 flex items-center justify-between gap-3 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3">
-            <span class="text-sm text-gray-600">Кредит за рекомендации</span>
+            <span class="text-sm text-gray-600">Начислено за рекомендации</span>
             <span class="text-base font-extrabold text-gray-900 tabular-nums">{{ number_format($credit, 0, '.', ' ') }} ₽</span>
         </div>
     @endif

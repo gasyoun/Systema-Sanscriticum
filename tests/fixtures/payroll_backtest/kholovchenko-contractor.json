@@ -1,0 +1,21 @@
+{
+ "recipient": "kholovchenko",
+ "display": "Холовченко",
+ "channel": "paypal_mg",
+ "expectation_source": "handoff_brief",
+ "months": [
+  {
+   "month": "2026-05",
+   "anchor": "brief_h3532",
+   "on": "2026-05-15",
+   "inputs": {},
+   "expected": {
+    "range_eur": [
+     200.0,
+     300.0
+    ]
+   }
+  }
+ ],
+ "note": "€200–300/мес — диапазон брифа; гейт по попаданию середины в диапазон."
+}

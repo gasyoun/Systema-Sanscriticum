@@ -48,12 +48,16 @@ class AccountantCabinetGuideCoverageTest extends TestCase
     {
         $text = $this->guideText();
 
-        foreach (['Часть I', 'Часть II', 'Часть III', 'Часть IV'] as $part) {
+        foreach (['Часть 0', 'Часть I', 'Часть II', 'Часть III', 'Часть IV'] as $part) {
             $this->assertStringContainsString($part, $text, "В книге нет раздела «{$part}».");
         }
 
         preg_match_all('/^### Шаги\s*$/mu', $this->partOne($text), $matches);
-        $this->assertCount(6, $matches[0], 'В части I должно быть шесть сценариев (заголовок «### Шаги»).');
+        $this->assertCount(10, $matches[0], 'В части I должно быть десять сценариев (заголовок «### Шаги»).');
+
+        $this->assertStringContainsString('screenshots/accountant/money-map-1600.png', $text);
+        $this->assertFileExists(base_path('docs/screenshots/accountant-map/money-map-1600.png'));
+        $this->assertStringContainsString('/admin/mutual-settlements', $text);
 
         $this->assertStringContainsString('/admin/payout-attribution-guide', $text);
         $this->assertStringContainsString('/admin/accountant-guide', $text);
@@ -174,9 +178,11 @@ class AccountantCabinetGuideCoverageTest extends TestCase
         $this->assertIsString($html);
         $this->assertStringContainsString(AccountantGuide::SHOT_ROUTE_PREFIX, $html);
         $this->assertStringContainsString('provodka-1440.png', $html);
+        $this->assertStringContainsString('money-map-1600.png', $html);
         $this->assertStringNotContainsString('src="screenshots/', $html);
         $this->assertStringNotContainsString('raw.githubusercontent.com', $html);
         $this->assertStringContainsString('Провести оплату студента вручную', $html);
+        $this->assertStringContainsString('Карта денег', $html);
     }
 
     public function test_guide_page_is_open_to_accountant_and_admin(): void
@@ -229,5 +235,19 @@ class AccountantCabinetGuideCoverageTest extends TestCase
         $this->get($url)->assertForbidden();
 
         $this->get(AccountantGuide::SHOT_ROUTE_PREFIX.'../.env')->assertNotFound();
+    }
+
+    public function test_shot_route_serves_committed_money_map_when_storage_is_empty(): void
+    {
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $url = AccountantGuide::SHOT_ROUTE_PREFIX.'money-map-1600.png';
+
+        $accountant = User::factory()->create(['role' => Roles::ACCOUNTANT]);
+        $this->actingAs($accountant);
+        $this->get($url)->assertOk()->assertHeader('Content-Type', 'image/png');
+
+        $teacher = User::factory()->create(['role' => Roles::TEACHER]);
+        $this->actingAs($teacher);
+        $this->get($url)->assertForbidden();
     }
 }

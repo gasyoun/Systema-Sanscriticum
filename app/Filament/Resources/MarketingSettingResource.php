@@ -129,6 +129,10 @@ class MarketingSettingResource extends Resource
                             ->suffix('мин')
                             ->default(60)
                             ->helperText('За сколько минут до начала занятия слать пуш (1–1440).'),
+                        Forms\Components\Toggle::make('dm_suppressed_when_group_chat')
+                            ->label('Не дублировать ЛС, если у группы есть TG-чат')
+                            ->default(false)
+                            ->helperText('Вкл: студентам групп, у которых задан Telegram-чат, персональные ЛС «Скоро занятие» не шлются — группу уже покрывает пост @zapisi_ORSbot в чат, и без этого студент получал два почти одинаковых пинга с разницей в минуту (диагноз 28-08-2026). Группы без чата продолжают получать ЛС. Выкл: ЛС шлются всем как раньше.'),
 
                         Forms\Components\Toggle::make('absent_notify_enabled')
                             ->label('Уведомлять пропустивших занятие')
@@ -518,6 +522,14 @@ class MarketingSettingResource extends Resource
                                 .'перенос строки — обычным Enter. Другие теги Telegram не поймёт и отвергнет сообщение целиком.<br>'
                                 .'Подставляемые значения экранируются автоматически, так что «&amp;» в названии курса ничего не сломает. '
                                 .'Пусто = шаблон по умолчанию.'
+                            )),
+                        Forms\Components\TextInput::make('zapisi_cancel_admin_ids')
+                            ->label('Отмена занятия reply-командой: Telegram user_id')
+                            ->placeholder('123456789, 987654321')
+                            ->helperText(new HtmlString(
+                                'Кто может ответить <b>«Отмена занятия»</b> на пост-напоминание в чате группы, '
+                                .'чтобы занятие отменилось: цепочка сдвинется на +7 дней, бот опубликует анонс об отмене. '
+                                .'Свой user_id подскажет бот @userinfobot. Через запятую. Пусто = команда выключена.'
                             )),
                         Forms\Components\TextInput::make('zapisi_n8n_forward_url')
                             ->label('Дублировать апдейты в n8n (URL webhook-ноды)')

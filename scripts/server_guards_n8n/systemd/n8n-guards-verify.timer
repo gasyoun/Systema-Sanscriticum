@@ -1,0 +1,13 @@
+[Unit]
+Description=Hourly .91 guard verification + status publish — H3182 (W2d)
+
+[Timer]
+OnCalendar=hourly
+# Свежесть самого статуса — часть проверки на стороне .92: файл старше пары
+# часов означает, что проверка перестала ходить, и это тревога, а не тишина.
+Persistent=true
+RandomizedDelaySec=180
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

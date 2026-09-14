@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Dictionary;
 use App\Models\DictionaryWord;
 use App\Services\SanskritGlossary;
+use App\Support\CdslLinks;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -88,6 +89,9 @@ class DictionaryPageController extends Controller
         // слово не засвидетельствовано в корпусе.
         $enrichment = $glossary->enrich($primary);
 
+        // H3762 — Cologne CDSL link-out (server-side URLs; empty when no SLP1 key resolves).
+        $cdslLinks = CdslLinks::forIast($primary->iast);
+
         return view('slovar.show', [
             'slug' => $slug,
             'entries' => $entries,
@@ -96,6 +100,7 @@ class DictionaryPageController extends Controller
             'related' => $related,
             'indexable' => $entries->contains(fn ($w) => $w->isIndexable()),
             'enrichment' => $enrichment,
+            'cdslLinks' => $cdslLinks,
         ]);
     }
 }

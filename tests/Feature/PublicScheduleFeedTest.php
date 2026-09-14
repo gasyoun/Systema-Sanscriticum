@@ -10,7 +10,9 @@ use App\Models\Group;
 use App\Models\Schedule;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Support\TrialBookToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -133,6 +135,32 @@ class PublicScheduleFeedTest extends TestCase
         $this->assertStringContainsString('/k/'.$made['course']->slug, $response->json('data.0.course.url'));
     }
 
+    /** H3790: фид отдаёт каникулы группы (флаг + дата выхода), без PII. */
+    public function test_feed_exposes_group_vacation_fields(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Мария Иванова']);
+        $category = Category::factory()->create();
+        $made = $this->makeSession('Курс каникул', $teacher, $category);
+
+        $made['group']->update(['is_on_vacation' => true, 'vacation_resume_date' => '2026-09-14']);
+
+        $response = $this->getJson(self::URL)->assertOk();
+
+        $response->assertJsonPath('data.0.group.is_on_vacation', true);
+        $response->assertJsonPath('data.0.group.vacation_resume_date', '2026-09-14');
+
+        $made2 = $this->makeSession('Курс каникул без даты', $teacher, $category);
+        $made2['group']->update(['is_on_vacation' => true]);
+
+        Cache::flush(); // фид кэшируется на 5 минут — второй запрос должен видеть обе группы
+        $response2 = $this->getJson(self::URL)->assertOk();
+        $rows = collect($response2->json('data'));
+        $row2 = $rows->first(fn ($r) => ($r['course']['title'] ?? '') === 'Курс каникул без даты');
+        $this->assertNotNull($row2);
+        $this->assertTrue($row2['group']['is_on_vacation']);
+        $this->assertNull($row2['group']['vacation_resume_date']);
+    }
+
     public function test_direction_filter_returns_only_matching_subset(): void
     {
         $teacherA = Teacher::factory()->create(['name' => 'Препод А']);
@@ -196,5 +224,72 @@ class PublicScheduleFeedTest extends TestCase
         }
 
         $this->getJson(self::URL)->assertStatus(429);
+    }
+
+    /**
+     * H3248 (VERIFICATION C2): при дефолтных флагах booking-поверхности в фиде нет.
+     */
+    public function test_default_flags_expose_no_booking_surface(): void
+    {
+        $teacher = Teacher::factory()->create();
+        $category = Category::factory()->create();
+        $made = $this->makeSession('Обычный курс', $teacher, $category);
+        $made['course']->update(['trial_schedule_id' => $made['schedule']->id]);
+
+        $response = $this->getJson(self::URL)->assertOk();
+
+        foreach ($response->json('data') as $row) {
+            $this->assertFalse($row['bookable']);
+            $this->assertArrayNotHasKey('book_token', $row);
+        }
+
+        $keys = [];
+        $this->collectKeys($response->json(), $keys);
+        $this->assertNotContains('book_token', $keys);
+    }
+
+    /**
+     * H3248 (VERIFICATION C2): флаг виджета ON — токен только у пробной строки,
+     * обычные строки остаются bookable=false и без токена.
+     */
+    public function test_widget_flag_exposes_token_only_on_trial_row(): void
+    {
+        config(['features.crm_trial_widget_public' => true]);
+
+        $teacher = Teacher::factory()->create();
+        $category = Category::factory()->create();
+
+        // Обычная группа 18:00 + отдельная пробная строка того же курса 20:00.
+        $made = $this->makeSession('Курс с пробником', $teacher, $category);
+        $trial = Schedule::create([
+            'title' => 'Пробное — вводное',
+            'course_id' => $made['course']->id,
+            'start' => now()->addDays(2)->setTime(20, 0),
+            'end' => now()->addDays(2)->setTime(21, 30),
+        ]);
+        $made['course']->update(['trial_schedule_id' => $trial->id]);
+
+        $rows = $this->getJson(self::URL)->assertOk()->json('data');
+        $this->assertCount(2, $rows);
+
+        $regular = collect($rows)->firstWhere('time', '18:00');
+        $bookableRow = collect($rows)->firstWhere('time', '20:00');
+
+        $this->assertFalse($regular['bookable']);
+        $this->assertArrayNotHasKey('book_token', $regular);
+
+        $this->assertTrue($bookableRow['bookable']);
+        $this->assertMatchesRegularExpression('/^\d+\.[A-Za-z0-9_-]+$/', $bookableRow['book_token']);
+
+        // Токен разворачивается ровно в пробную строку (числового id в фиде нет).
+        $resolved = TrialBookToken::resolve($bookableRow['book_token']);
+        $this->assertSame($trial->getKey(), $resolved);
+
+        // При включённом флаге allowlist-граница не ослабла: запрещённых ключей по-прежнему нет.
+        $keys = [];
+        $this->collectKeys($rows, $keys);
+        foreach (['link', 'zoom_join_url', 'zoom_start_url', 'zoom_meeting_id', 'schedule_id', 'group_id', 'course_id', 'teacher_id', 'user_id', 'id'] as $forbidden) {
+            $this->assertNotContains($forbidden, $keys, "Фид с флагом виджета не должен отдавать ключ `{$forbidden}`.");
+        }
     }
 }

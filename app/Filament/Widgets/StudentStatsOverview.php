@@ -4,12 +4,20 @@ namespace App\Filament\Widgets;
 
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\RoleGate;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class StudentStatsOverview extends BaseWidget
 {
     protected static ?int $sort = 1;
+
+    // H4663 (аудит периметра 14-09, п.3): статистика + общая выручка/LTV —
+    // управленческие цифры; были единственными из дашборд-набора без canView.
+    public static function canView(): bool
+    {
+        return RoleGate::finance();
+    }
 
     protected function getStats(): array
     {

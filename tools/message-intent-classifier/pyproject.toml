@@ -1,0 +1,10 @@
+[project]
+name = "message-intent-classifier"
+version = "0.1.0"
+description = "Deterministic message intent classifier: YAML rules + reference Python engine + thin PHP loader"
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["engine_py/tests"]
+addopts = "-q"

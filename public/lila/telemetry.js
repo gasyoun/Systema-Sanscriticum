@@ -9,6 +9,13 @@
      gate_shown     — the register wall appeared (`.sgx-gate`)
      gate_cta_click — the wall's «Начать бесплатно» was clicked
 
+   H4692/H4791 adds one optional detail event:
+     item_result    — per-pair {l, r, ms, wrong} rows from the match
+                      engine's window.SGX_ROUND_RESULT, sent once per
+                      SOLVED ROUND (a «Заново» replay sends again, H4791);
+                      absent -> no request, no behavior change (same
+                      opt-in pattern as SGX_SEEN_ITEMS).
+
    This script is a passive OBSERVER of the DOM that gate.js
    produces — it never touches gate.js or its localStorage, so the
    gate's own behaviour stays byte-for-byte unchanged. Load order
@@ -95,13 +102,47 @@
 
   var sentComplete = false;
   var sentGate = false;
+  var lastResultSent = null; // H4791 — identity of the last item_result sent
+
+  function clampInt(v, lo, hi) {
+    v = Math.round(Number(v));
+    if (!isFinite(v)) v = 0;
+    return Math.max(lo, Math.min(hi, v));
+  }
+
+  // H4692/H4791 — forward the match engine's per-pair round results as one
+  // `item_result` event PER SOLVED ROUND (the engine builds a fresh
+  // SGX_ROUND_RESULT object each time, so a «Заново» replay sends again).
+  // Client-side caps mirror the server's: 40 items, ms 0..3 600 000,
+  // wrong 0..50; rows missing either side are dropped.
+  function sendItemResult(res) {
+    if (!res || !Array.isArray(res.items) || res.items.length === 0) return;
+    var items = res.items.slice(0, 40).map(function (it) {
+      return {
+        l: String((it && it.l) || ""),
+        r: String((it && it.r) || ""),
+        ms: clampInt(it && it.ms, 0, 3600000),
+        wrong: clampInt(it && it.wrong, 0, 50)
+      };
+    }).filter(function (it) { return it.l !== "" && it.r !== ""; });
+    if (items.length > 0) {
+      send("item_result", { hints: res.hints ? 1 : 0, items: items });
+    }
+  }
 
   // Reuse the exact completion signal gate.js watches (`.feedback.show`),
   // and catch the register wall gate.js injects (`.sgx-gate`).
   function scan() {
     if (!sentComplete && document.querySelector(".feedback.show")) {
       sentComplete = true;
-      send("complete");
+      send("complete"); // funnel stays one per page load (H1360)
+    }
+    // H4791 — per round, not per page load: a new SGX_ROUND_RESULT object
+    // means another solved round (replays after «Заново» included).
+    var res = window.SGX_ROUND_RESULT;
+    if (document.querySelector(".feedback.show") && res && res !== lastResultSent) {
+      lastResultSent = res;
+      sendItemResult(res);
     }
     if (!sentGate && document.querySelector(".sgx-gate")) {
       sentGate = true;

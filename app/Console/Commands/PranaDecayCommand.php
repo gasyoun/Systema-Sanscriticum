@@ -19,8 +19,10 @@ class PranaDecayCommand extends Command
 
     public function handle(PranaService $prana): int
     {
-        if (! config('prana.decay.enabled')) {
-            $this->info('Decay выключен (config prana.decay.enabled=false). Пропуск.');
+        // H3297: единый гейт с decayInactive() — env-флаг ИЛИ активный сезон
+        // со seasons.decay_enabled=true.
+        if (! PranaService::isDecayEnabled()) {
+            $this->info('Decay выключен (нет ни env-флага PRANA_DECAY_ENABLED, ни активного сезона с decay_enabled). Пропуск.');
 
             return self::SUCCESS;
         }

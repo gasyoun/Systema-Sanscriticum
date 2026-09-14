@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\TeacherSalaryService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -17,9 +18,42 @@ class Teacher extends Model
         'name', 'email', 'phone', 'telegram', 'vk', 'requisites', 'bio',
         // Фото для блока «Преподаватель» на продающей странице курса.
         'photo_path',
-        // Валюта выплаты через PayPal (EUR/USD); null = только ₽.
+        // Валюта выплаты через PayPal (EUR/USD/INR); null = только ₽. Остаток в кабинете всегда в ₽.
         'payout_currency',
+        // H4253: окно каникул/отпуска. from без until — дата выхода неизвестна.
+        'on_vacation_from', 'on_vacation_until',
     ];
+
+    protected $casts = [
+        'on_vacation_from' => 'date',
+        'on_vacation_until' => 'date',
+    ];
+
+    /**
+     * H4253: попадает ли дата в отпускное окно преподавателя. Границы включительно
+     * (занятие в день выхода из отпуска — ещё отпускное); до начала и после конца
+     * окно не действует. from без until — бессрочный отпуск от даты начала.
+     */
+    public function isOnVacationOn(CarbonInterface $date): bool
+    {
+        if ($this->on_vacation_from === null && $this->on_vacation_until === null) {
+            return false;
+        }
+
+        // Строковое сравнение Y-m-d: startOfDay()/endOfDay() мутируют Carbon
+        // и трогали бы атрибут модели.
+        $day = $date->toDateString();
+
+        if ($this->on_vacation_from !== null && $day < $this->on_vacation_from->toDateString()) {
+            return false;
+        }
+
+        if ($this->on_vacation_until !== null && $day > $this->on_vacation_until->toDateString()) {
+            return false;
+        }
+
+        return true;
+    }
 
     // Один преподаватель может вести много курсов (как ОСНОВНОЙ — teacher_id).
     public function courses(): HasMany
@@ -33,6 +67,40 @@ class Teacher extends Model
         return $this->belongsToMany(Course::class, 'course_teacher')
             ->withPivot(['salary_type', 'salary_value'])
             ->withTimestamps();
+    }
+
+    /**
+     * Имя преподавателя по неточной форме (MG 02-09-2026): «Екатерина Костина»
+     * → «Костина Екатерина Александровна». Точное совпадение приоритетно, иначе
+     * word-set матч: слова запроса должны покрыть ≥2 слова ФИО (фамилия+имя).
+     * null — не нашлось (вызывающий решает 404).
+     */
+    public static function resolveByName(string $query): ?self
+    {
+        $query = trim(preg_replace('/\s+/u', ' ', $query) ?? '');
+
+        if ($query === '') {
+            return null;
+        }
+
+        $exact = self::where('name', $query)->first();
+        if ($exact !== null) {
+            return $exact;
+        }
+
+        $words = collect(explode(' ', mb_strtolower($query)))
+            ->filter(fn ($w) => mb_strlen($w) >= 3)->values();
+
+        if ($words->isEmpty()) {
+            return null;
+        }
+
+        return self::query()->get()
+            ->first(function (self $t) use ($words) {
+                $nameWords = collect(explode(' ', mb_strtolower($t->name)));
+
+                return $words->filter(fn ($w) => $nameWords->contains(fn ($n) => str_starts_with($n, $w)))->count() >= 2;
+            });
     }
 
     /**

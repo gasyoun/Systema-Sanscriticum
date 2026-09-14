@@ -92,6 +92,14 @@ class StudentChatService
             return;
         }
 
+        // 1.55. Self-service Zoom / запись / расписание из LMS (ORS-FAQ 04/05/06).
+        $lmsFact = $this->selfService->lmsFactReply($user, $text);
+        if ($lmsFact !== null) {
+            $this->botSay($user, $lmsFact);
+
+            return;
+        }
+
         // 1.6. Self-service «мои задания» — статус ДЗ из БД, минуя ИИ (H1357).
         if ($this->selfService->matchesHomeworkIntent($text)) {
             $this->botSay($user, $this->selfService->homeworkSummary($user));

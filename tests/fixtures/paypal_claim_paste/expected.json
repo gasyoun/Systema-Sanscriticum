@@ -30,5 +30,12 @@
     "foreign_currency": "EUR",
     "paypal_txn": "3D635703TJ2339610",
     "must_be_null": ["paypal_payer"]
+  },
+  "de_p2p_email_oneline_mg.txt": {
+    "paid_on": "2026-09-04",
+    "foreign_amount": "112",
+    "foreign_currency": "EUR",
+    "paypal_txn": "5HE06501S2923382H",
+    "must_be_null": ["paypal_payer"]
   }
 }

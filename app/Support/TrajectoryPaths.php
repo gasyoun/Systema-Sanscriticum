@@ -40,7 +40,7 @@ class TrajectoryPaths
 
                 $nextSchedule = $course->upcomingSchedules(1)->first();
                 if ($nextSchedule?->start) {
-                    $nextDateLabel = 'Ближайший поток: '.$nextSchedule->start->translatedFormat('d MMMM Y');
+                    $nextDateLabel = 'Ближайший поток: '.$nextSchedule->start->locale('ru')->translatedFormat('d F Y');
                 }
             }
 

@@ -1,0 +1,16 @@
+# Таксономия плоскости meta — служебные флаги маршрутизации.
+# human_trigger: список StudentChatService (HUMAN_TRIGGERS) + escalation.py.
+plane: meta
+categories:
+  - key: human_trigger
+    title: "Требуется живой человек"
+    description: "Куратор, живой человек, позвоните, поддержка (не тех-)."
+  - key: urgent
+    title: "Срочное"
+    description: "Срочно, как можно скорее, горит."
+  - key: sanskrit_term
+    title: "Есть санскритский термин"
+    description: "Деванагари или IAST-диакритика в тексте."
+  - key: new_contact
+    title: "Новый контакт"
+    description: "Впервые здесь, только зарегистрировался/купил."

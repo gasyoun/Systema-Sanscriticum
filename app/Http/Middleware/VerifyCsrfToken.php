@@ -22,5 +22,9 @@ class VerifyCsrfToken extends Middleware
         // routes/web.php (нужна web-сессия для флага authenticated), но
         // sendBeacon не несёт CSRF-токена — поэтому исключение.
         '/api/games/event',
+        // H4396: серверный счётчик бесплатных раундов /lila — та же постановка,
+        // что games/event: web-сессия нужна (ключ бюджета = сессия), токена у
+        // gate.js нет; POST идемпотентно-добавляющий, затроттлён.
+        '/api/games/round',
     ];
 }

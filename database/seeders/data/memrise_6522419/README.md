@@ -1,13 +1,13 @@
 # Memrise course 6522419 export
 
-_Created: 22-07-2026 · Last updated: 22-07-2026_
+_Created: 22-07-2026 · Last updated: 05-09-2026_
 
 Raw export of Memrise community course
 [6522419 «Учебник санскрита» В.А. Кочергиной, на деванагари](https://community-courses.memrise.com/community/course/6522419/uchebnik-sanskrita-va-kocherginoi-na-devanagari/)
 (own course, author samskrtamru = Mārcis Gasūns), pulled 22-07-2026 via
 `scripts/memrise_export.py` (H1431) — 9 levels, 356 rows total, same 2-column
 shape (`col_a`/`col_b`) as the IAST sibling course
-[6502608](../memrise_6502608/README.md).
+[6502608](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/database/seeders/data/memrise_6502608/README.md).
 
 ## Comparison against 6502608 (IAST) — NOT a 1:1 script mirror
 

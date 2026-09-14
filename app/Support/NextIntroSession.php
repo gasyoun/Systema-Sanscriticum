@@ -200,7 +200,7 @@ class NextIntroSession
         return [
             'source' => 'landing_webinar',
             'starts_at' => $startsAt,
-            'date_label' => $startsAt->timezone(config('app.timezone'))->translatedFormat('d MMMM Y, H:i'),
+            'date_label' => self::formatDateLabel($startsAt),
             'cta_url' => route('promo.show', $landing->slug),
             'cta_label' => $label,
             'is_free' => true,
@@ -234,7 +234,7 @@ class NextIntroSession
         return [
             'source' => 'trial_schedule',
             'starts_at' => $startsAt,
-            'date_label' => $startsAt->timezone(config('app.timezone'))->translatedFormat('d MMMM Y, H:i'),
+            'date_label' => self::formatDateLabel($startsAt),
             'cta_url' => route('shop.course.show', $course->slug),
             'cta_label' => $isFree
                 ? 'Бесплатное вводное занятие'
@@ -245,6 +245,18 @@ class NextIntroSession
             'schedule_id' => $schedule->id,
             'landing_slug' => null,
         ];
+    }
+
+    /**
+     * Shop banner date. PHP `translatedFormat` tokens, not ICU: `MMMM` is four
+     * copies of `M` and printed `сентябрясентябрясентября` (H3651 / Systema #2176).
+     */
+    public static function formatDateLabel(Carbon $startsAt): string
+    {
+        return $startsAt
+            ->timezone(config('app.timezone'))
+            ->locale('ru')
+            ->translatedFormat('d F Y, H:i');
     }
 
     /**

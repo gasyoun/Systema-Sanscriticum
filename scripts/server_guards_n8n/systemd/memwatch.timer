@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the .91 memory ledger every minute — H3182
+
+[Timer]
+OnCalendar=*:00/1
+AccuracySec=5s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

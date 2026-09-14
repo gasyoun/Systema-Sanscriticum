@@ -74,7 +74,7 @@ Write/update:
 
 ## Step 5 — Changelog + PR
 
-1. `[Unreleased]` bullet in `changelog.md` (durable artifact threshold).  
+1. `[Unreleased]` bullet in `CHANGELOG.md` (durable artifact threshold).  
 2. Commit on branch `docs/n8n-server-catalog-…`.  
 3. PR → merge when secrets scrub OK.
 

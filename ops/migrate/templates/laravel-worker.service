@@ -1,0 +1,18 @@
+[Unit]
+Description=Laravel queue worker (Systema)
+After=network.target mariadb.service redis-server.service
+
+[Service]
+User=__DEPLOY_USER__
+Group=www-data
+Restart=always
+RestartSec=3
+WorkingDirectory=__APP_DIR__
+ExecStart=/usr/bin/php __APP_DIR__/artisan queue:work --sleep=3 --tries=3 --backoff=5 --max-time=3600
+ExecReload=/bin/kill -USR2 $MAINPID
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=laravel-worker
+
+[Install]
+WantedBy=multi-user.target

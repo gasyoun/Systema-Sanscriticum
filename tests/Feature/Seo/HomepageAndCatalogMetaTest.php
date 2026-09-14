@@ -24,6 +24,8 @@ class HomepageAndCatalogMetaTest extends TestCase
         $this->assertStringContainsString('@samskrtamru', $html);
         $this->assertStringContainsString('og:image:width', $html);
         $this->assertStringContainsString('content="1200"', $html);
+        $this->assertStringContainsString('og-main-preview.jpg', $html);
+        $this->assertStringNotContainsString('og-membership-club.webp', $html);
         $this->assertMatchesRegularExpression('/<h1[^>]*>.*курсы санскрита с нуля/su', mb_strtolower($html));
     }
 
