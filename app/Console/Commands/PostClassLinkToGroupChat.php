@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Jobs\SendTelegramChatMessageJob;
+use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
 use Illuminate\Console\Command;
@@ -91,7 +91,9 @@ class PostClassLinkToGroupChat extends Command
                 continue;
             }
 
-            SendTelegramChatMessageJob::dispatch(
+            // H4846: чат группы — зона @zapisi_ORSbot; основной бот в чатах
+            // обучения не состоит (прод-проба 15-09-2026: 0/33), его пост = 400.
+            SendZapisiBotMessageJob::dispatch(
                 (string) $group->telegram_chat_id,
                 $this->buildText($schedule, $link),
             );
