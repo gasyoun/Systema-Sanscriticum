@@ -967,6 +967,16 @@ return [
     'crm_trial_widget_public' => (bool) env('CRM_TRIAL_WIDGET_PUBLIC', false),
 
     /*
+     | H4818 (R2609-01): рунг-placement квиз (A0-C2) в trial-флоу — расширение
+     | onramp-квиза (ShopController::start). GET/POST /rung-placement 404 пока
+     | OFF. Пишет ТОЛЬКО deals.placement_rung через TrialBookingService — не
+     | трогает payments/Tochka. ВЫКЛ по умолчанию. Включение —
+     | FEATURE_F2_PLACEMENT_QUIZ=true + config:cache — @DECIDE MG (R2609-01
+     | набор 20 пробных начинается только после явного решения человека).
+     */
+    'f2_placement_quiz' => (bool) env('FEATURE_F2_PLACEMENT_QUIZ', false),
+
+    /*
      | Список ожидания (MG 31-08-2026, волна 3): голосование из кабинета.
      | Read-only фид /api/public/waitlist работает всегда; POST /vote 404,
      | пока OFF. Не включать в этом PR — только ключ, default false.

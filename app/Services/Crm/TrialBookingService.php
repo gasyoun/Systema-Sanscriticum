@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Models\WebinarAttendance;
+use App\Support\PedagogyRung;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -64,6 +65,10 @@ class TrialBookingService
                 ->first();
 
             if ($existing !== null) {
+                if (isset($attrs['placement_rung'])) {
+                    $this->recordPlacementRung($existing, $attrs['placement_rung']);
+                }
+
                 return $existing;
             }
 
@@ -78,6 +83,7 @@ class TrialBookingService
                 'kind' => Deal::KIND_TRIAL,
                 'trial_source' => Deal::TRIAL_SOURCE_FREE,
                 'trial_outcome' => Deal::TRIAL_OUTCOME_BOOKED,
+                'placement_rung' => $this->validRung($attrs['placement_rung'] ?? null),
             ]);
 
             DealTransition::create([
@@ -90,6 +96,32 @@ class TrialBookingService
 
             return $deal;
         });
+    }
+
+    /**
+     * H4818 (R2609-01): persist the F2 placement-quiz result on a trial Deal.
+     * Deal-only write — never touches Payment/Tochka. Silently ignores an
+     * unrecognised rung (defensive against a stale/tampered session value).
+     */
+    public function recordPlacementRung(Deal $deal, ?string $rung): Deal
+    {
+        $rung = $this->validRung($rung);
+        if ($rung === null) {
+            return $deal;
+        }
+
+        $deal->update(['placement_rung' => $rung]);
+
+        return $deal->refresh();
+    }
+
+    private function validRung(?string $rung): ?string
+    {
+        if ($rung === null) {
+            return null;
+        }
+
+        return in_array($rung, PedagogyRung::values(), true) ? $rung : null;
     }
 
     /**
