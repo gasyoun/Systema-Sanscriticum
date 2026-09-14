@@ -1,0 +1,112 @@
+audio_id	set	file	su_num	slug	iast	deva_pratika	duration_s	size_bytes	bitrate_kbps	anthology_num	anthology_page	is_num	match_method
+sub-koch-daridran_101	kochergina	Kochergina-Subhashitas/Su-Daridran_101.mp3		Su-Daridran_101	Daridran	दरिद्रान्	19.28	308904	128			2714	file_pratika
+sub-koch-diva	kochergina	Kochergina-Subhashitas/Su-Diva.mp3		Su-Diva	Diva	दिवा	17.66	282991	128				unmatched
+sub-koch-hastasya	kochergina	Kochergina-Subhashitas/Su-Hastasya.mp3		Su-Hastasya	Hastasya	हस्तस्य	20.87	334400	128				unmatched
+sub-koch-kavih_128	kochergina	Kochergina-Subhashitas/Su-Kavih_128.mp3		Su-Kavih_128	Kaviḥ	कविः	16.27	260839	128				unmatched
+sub-koch-kavya	kochergina	Kochergina-Subhashitas/Su-Kavya.mp3		Su-Kavya	Kavya shastra vinodena	काव्यशास्त्रविनोदेन	18.02	288842	128			1711	file_pratika
+sub-koch-lobhat	kochergina	Kochergina-Subhashitas/Su-Lobhat.mp3		Su-Lobhat	Lobhat krodhah	लोभात्क्रोधः	20.66	331056	128			5883	file_pratika
+sub-koch-nakashcit	kochergina	Kochergina-Subhashitas/Su-NaKashcit.mp3		Su-NaKashcit	Vidvattvam	विद्वत्तवं	18.34	293858	128				unmatched
+sub-koch-sarvatra	kochergina	Kochergina-Subhashitas/Su-Sarvatra.mp3		Su-Sarvatra	Sarvatra	सर्वत्र	17.42	279229	128				unmatched
+sub-koch-sarvepi_128	kochergina	Kochergina-Subhashitas/Su-Sarvepi_128.mp3		Su-Sarvepi_128	Sarve 'pi	सर्वे ऽपि	18.94	303471	128				unmatched
+sub-koch-trividham	kochergina	Kochergina-Subhashitas/Su-Trividham.mp3		Su-Trividham	Trividham	त्रिविधं	18.86	302217	128			2645	file_pratika
+sub-koch-tyaja_100	kochergina	Kochergina-Subhashitas/Su-Tyaja_100.mp3		Su-Tyaja_100	Tyaja	त्यज	18.47	295948	128				unmatched
+sub-koch-vidvattvam	kochergina	Kochergina-Subhashitas/Su-Vidvattvam.mp3		Su-Vidvattvam	Vidvattvam	विद्वत्तवं	18.34	293858	128				unmatched
+sub-koch-vidya	kochergina	Kochergina-Subhashitas/Su-Vidya.mp3		Su-Vidya	Vidya	विद्या	19.23	308068	128				unmatched
+sub-koch-vidyanama	kochergina	Kochergina-Subhashitas/Su-VidyaNama.mp3		Su-VidyaNama	Vidya nama	विद्या नाम	37.93	607327	128			6089	file_pratika
+sub-koch-yathahye	kochergina	Kochergina-Subhashitas/Su-Yathahye.mp3		Su-Yathahye	Yatha hye kena	यथा ह्येकेन	16.80	269198	128			5161	file_pratika
+sub-su001-udyama	systematic	Su1-Udyama.mp3	1	Udyama	Udyamena	उद्यमेन हि सिध्यन्ति	18.65	298873	128	1	5	1249	verse_prefix
+sub-su002-gate	systematic	Su2-Gate.mp3	2	Gate	Gate	गते शोकं न	19.54	313084	128	2	6		unmatched
+sub-su003-varam	systematic	Su3-Varam.mp3	3	Varam	Varam	वरं पर्वतदुर्गेषु भ्रान्तं	17.97	288006	128	3	7	5975	verse_prefix
+sub-su004-vidya	systematic	Su4-Vidya.mp3	4	Vidya	Vidya	विद्या विवादाय धनं	23.85	382047	128	4	8	6099	verse_prefix
+sub-su005-chaya	systematic	Su5-Chaya.mp3	5	Chaya	Chayamanyasya	छायामन्यस्य कुर्वन्ति तिष्ठन्ति	17.50	280483	128	5	10	2307	toc_pratika
+sub-su006-gacchan	systematic	Su6-Gacchan.mp3	6	Gacchan	Gacchan	गच्छन् पिपीलको याति	15.31	245375	128	6	11		unmatched
+sub-su007-tatkarma	systematic	Su7-Tatkarma.mp3	7	Tatkarma	Tatkarma	तत्कर्म यन्न बन्धाय	18.21	291768	128	7	12		unmatched
+sub-su008-sruyatam	systematic	Su8-Sruyatam.mp3	8	Sruyatam	Shruyatam	श्रूयतां धर्मसर्वस्वं श्रुत्वा	17.71	283827	128	8	13	6579	verse_prefix
+sub-su009-videshe	systematic	Su9-Videshe.mp3	9	Videshe	Videsheshu	विदेशेषु धनं विद्या	18.10	290096	128	9	15		unmatched
+sub-su010-mata	systematic	Su10-Mata.mp3	10	Mata	Mata	माता शत्रुः पिता	18.39	294694	128	10	16	4800	verse_prefix
+sub-su011-rupa	systematic	Su11-Rupa.mp3	11	Rupa	Rupayauvanasampannaḥ	रूपयौवनसंपन्नाः विशालकुलसंभवाः ।	18.78	300963	128	11	17		unmatched
+sub-su013-shakata	systematic	Su13-Shakata.mp3	13	Shakata	Shakatam	शकटं पञ्चहस्तेषु दशहस्तेषु	16.30	261257	128	13	21	6341	verse_prefix
+sub-su014-upakaro	systematic	Su14-Upakaro.mp3	14	Upakaro	Upakaro'pi	उपकारोऽपि नीचानामपकाराय वर्तते	16.88	270452	128	14	25		unmatched
+sub-su015-vrshchika	systematic	Su15-Vrshchika.mp3	15	Vrshchika	Vrshcikasya	वृश्चिकस्य विषं पुच्छं	18.29	293022	128	15	26		unmatched
+sub-su016-acharyat	systematic	Su16-Acharyat.mp3	16	Acharyat	Acaryat	आचार्यात् पादमादत्ते पादं	18.10	290096	128	16	28		unmatched
+sub-su017-avashya	systematic	Su17-Avashya.mp3	17	Avashya	Avashyamanubhoktavyam	अवश्यमनुभोक्तव्यं कृतं कर्म	17.06	273378	128	17	29		unmatched
+sub-su018-satya	systematic	Su18-Satya.mp3	18	Satya	Satyam	सत्यं माता पिता	18.42	295112	128	18	30	6734	verse_prefix
+sub-su019-dharmo	systematic	Su19-Dharmo.mp3	19	Dharmo	Dharmo	धर्मो जयति नाधर्मः	15.78	252898	128	19	32		unmatched
+sub-su020-matrvat	systematic	Su20-Matrvat.mp3	20	Matrvat	Matrvat	मातृवत् परदारेषु परद्रव्येषु	17.35	277975	128	20	33		unmatched
+sub-su021-makshi	systematic	Su21-Makshi.mp3	21	Makshi	Makshika	मक्षिका व्रणमिच्छन्ति धनमिच्छन्ति	18.55	297202	128	21	35	4651	verse_prefix
+sub-su022-pustaka	systematic	Su22-Pustaka.mp3	22	Pustaka	Pustakastha	पुस्तकस्था तु या	18.65	298873	128	22	36	4156	file_pratika
+sub-su023-adata	systematic	Su23-Adata.mp3	23	Adata	Adata	अदाता पुरुषस्तयागी धनं	18.68	299291	128	23	38		unmatched
+sub-su024-kokila	systematic	Su24-Kokila.mp3	24	Kokila	Kokilanam	कोकिलानां स्वरो रूपं	18.55	297202	128	24	39	1919	toc_pratika
+sub-su025-yasya	systematic	Su25-Yasya.mp3	25	Yasya	Yasya	यस्य नास्ति स्वयं	17.76	284663	128	25	40	5380	verse_prefix
+sub-su026-adau	systematic	Su26-Adau.mp3	26	Adau	Adau	आदौ चित्ते ततः	18.18	291350	128	26	41	939	toc_pratika
+sub-su027-ayush	systematic	Su27-Ayush.mp3	27	Ayush	Ayushаḥ	आयुषः खण्डमादाय रविरस्तमयं	18.70	299709	128	27	44		unmatched
+sub-su027-ayusha	systematic	Su27-Ayusha.mp3	27	Ayusha	Ayushаḥ	आयुषः खण्डमादाय रविरस्तमयं	16.59	265855	128	27	44		unmatched
+sub-su028-kah	systematic	Su28-Kah.mp3	28	Kah	Kaḥ	कः कालः कानि	18.34	293858	128	28	45	1502	verse_prefix
+sub-su029-prana	systematic	Su29-Prana.mp3	29	Prana	Pranamekam	प्राणमेकं परित्यज्य मानमेवाभिरक्षतु	19.10	305979	128	29	46		unmatched
+sub-su030-anitya	systematic	Su30-Anitya.mp3	30	Anitya	Anityani	अनित्यानि शरीराणि वैभवं	18.18	291350	128	30	48	292	toc_pratika
+sub-su031-utpala	systematic	Su31-Utpala.mp3	31	Utpala	Utpalasyaravindasya	उत्पलस्यारविन्दस्य मत्स्यस्य कुमुदस्य	19.20	307651	128	31	49		unmatched
+sub-su032-artha	systematic	Su32-Artha.mp3	32	Artha	Arthanamarjane	अर्थानामर्जने दुःखमर्जितानां च	20.01	320607	128	32	50	605	verse_prefix
+sub-su032-arthanam	systematic	Su32-Arthanam.mp3	32	Arthanam	Arthanamarjane	अर्थानामर्जने दुःखमर्जितानां च	19.33	309740	128	32	50	605	verse_prefix
+sub-su033-utsave	systematic	Su33-Utsave.mp3	33	Utsave	Utsave	उत्सवे व्यसने चैव	18.83	301799	128	33	52	1221	verse_prefix
+sub-su034-prthiv	systematic	Su34-Prthiv.mp3	34	Prthiv	Prthivyam	पृथिव्यां त्रीणि रत्नानि	18.94	303471	128	34	53	4186	file_pratika
+sub-su035-vidvatt	systematic	Su35-Vidvatt.mp3	35	Vidvatt	Vidvattvam	विद्वत्त्वं च नृपत्वं	18.23	292186	128	35	55		unmatched
+sub-su036-nachora	systematic	Su36-NaChora.mp3	36	NaChora	Na сoraharyam	न चोरहार्यं न	20.30	325205	128	36	56		unmatched
+sub-su038-ayam	systematic	Su38-Ayam.mp3	38	Ayam	Ayam	अयं निजः परो	16.20	259585	128	38	60	550	verse_prefix
+sub-su039-chinta	systematic	Su39-Chinta.mp3	39	Chinta	Cintayashca	चिन्तायाश्च चितायाश्च बिन्दुमात्रं	18.65	298873	128	39	61		unmatched
+sub-su040-manasye	systematic	Su40-Manasye.mp3	40	Manasye	Manasyekam	मनस्येकं वचस्येकं कर्मण्येकं	19.93	319353	128	40	64	4693	verse_prefix
+sub-su041-nabhishe	systematic	Su41-Nabhishe.mp3	41	Nabhishe	Nabhisheko	नाभिषेको न संस्कारः	18.83	301799	128	41	65	3601	verse_prefix
+sub-su041-nabhisheko	systematic	Su41-Nabhisheko.mp3	41	Nabhisheko	Nabhisheko	नाभिषेको न संस्कारः	18.34	293858	128	41	65	3601	verse_prefix
+sub-su042-bhashasu	systematic	Su42-Bhashasu.mp3	42	Bhashasu	Bhashasu	भाषासु मुख्या मधुरा	18.16	290932	128	42	66		unmatched
+sub-su043-anna	systematic	Su43-Anna.mp3	43	Anna	Annadanam	अन्नदानं महादानं विद्यादानमतः	18.55	297202	128	43	67		unmatched
+sub-su044-vrtha	systematic	Su44-Vrtha.mp3	44	Vrtha	Vrtha	वृथा वृष्टिः समुद्रेषु	18.49	296366	128	44	68	6259	verse_prefix_lcp(2)
+sub-su045-lubdho	systematic	Su45-Lubdho.mp3	45	Lubdho	Lubdho	लुब्धो न विसृजत्यर्थं	17.79	285081	128	45	69	5864	verse_prefix
+sub-su046-sukhasya	systematic	Su46-Sukhasya.mp3	46	Sukhasya	Sukhasya	सुखस्य दुःखस्य न	20.58	329802	128	46	71	7082	toc_pratika
+sub-su047-bodharo	systematic	Su47-Bodharo.mp3	47	Bodharo	Boddharo	बोद्धारो मत्सरग्रस्ताः प्रभवः	18.26	292604	128	47	73	4488	verse_prefix
+sub-su048-svabhavo	systematic	Su48-Svabhavo.mp3	48	Svabhavo	Svabhavo	स्वभावो नोपदेशेन शक्यते	18.31	293440	128	48	75	7302	verse_prefix_lcp(2)
+sub-su049-yasmin	systematic	Su49-Yasmin.mp3	49	Yasmin	Yasminjivati	यस्मिञ्जीवति जीवन्ति बहवः	17.24	276304	128	49	76	5348	verse_prefix
+sub-su050-samsara	systematic	Su50-Samsara.mp3	50	Samsara	Samsaravishavrkshasya	संसारविषवृक्षस्य द्वे एव	17.37	278393	128	50	78	6636	toc_pratika
+sub-su051-yatha	systematic	Su51-Yatha.mp3	51	Yatha	Yatha	यथा चित्तं तथा	19.70	315592	128	51	80		unmatched
+sub-su052-vajra	systematic	Su52-Vajra.mp3	52	Vajra	Vajradapi	वज्रादपि कठोराणि मृदूनि	17.95	287588	128	52	81	5909	verse_prefix
+sub-su053-vishad	systematic	Su53-Vishad.mp3	53	Vishad	Vishadapyamrtam	विषादप्यमृतं ग्राह्यं बालादपि	18.26	292604	128	53	82	6228	verse_prefix
+sub-su054-aliranu	systematic	Su54-Aliranu.mp3	54	Aliranu	Aliranusarati	अलिरनुसरति	15.67	251226	128	54	84	7691	toc_pratika
+sub-su055-upadesho	systematic	Su55-Upadesho.mp3	55	Upadesho	Upadesho	उपदेशो	20.92	335236	128	55	85	1287	toc_pratika
+sub-su056-yecha	systematic	Su56-YeCha.mp3	56	YeCha	Ye ca	ये च	18.86	302217	128	56	86	5523	toc_pratika
+sub-su057-kondho	systematic	Su57-Kondho.mp3	57	Kondho	Ko'ndho	कोऽन्धो	18.42	295112	128	57	88	1932	toc_pratika
+sub-su058-purvajanma	systematic	Su58-PurvaJanma.mp3	58	PurvaJanma	Purvajanmakrtam	पूर्वजन्मकृतं	18.73	300127	128	58	89	4172	toc_pratika
+sub-su059-danenatulyo	systematic	Su59-DanenaTulyo.mp3	59	DanenaTulyo	Danena tulyo	दानेन तुल्यो	22.39	358642	128	59	90	2762	file_pratika
+sub-su060-samroha	systematic	Su60-Samroha.mp3	60	Samroha	Samrohatyagnina	संरोहत्यग्निना	20.22	323951	128	60	93		unmatched
+sub-su061-ahodurjana	systematic	Su61-AhoDurjana.mp3	61	AhoDurjana	Aho durjanasamsargat	अहो दुर्जनसंसर्गात्	19.49	312248	128	61	95		unmatched
+sub-su062-matamitr	systematic	Su62-MataMitr.mp3	62	MataMitr	Mata mitram	माता मित्रं	18.96	303889	128	62	96	4797	toc_pratika
+sub-su063-vivekah	systematic	Su63-Vivekah.mp3	63	Vivekah	Vivekaḥ	विवेकः	19.33	309740	128	63	97		unmatched
+sub-su064-shaddosha	systematic	Su64-ShadDosha.mp3	64	ShadDosha	Shaddoshaḥ	षड्दोषाः	20.90	334818	128	64	98		unmatched
+sub-su065-vidyadadati	systematic	Su65-VidyaDadati.mp3	65	VidyaDadati	Vidya dadati	विद्या ददाति	20.06	321443	128	65	99	6087	toc_pratika
+sub-su066-navishva	systematic	Su66-NaVishva.mp3	66	NaVishva	Na vishvaset	न विश्वसेत्	18.91	303053	128	66	101	3428	file_pratika
+sub-su067-shathyena	systematic	Su67-Shathyena.mp3	67	Shathyena	Shathyena	शाठ्येन	23.30	373270	128	67	103		unmatched
+sub-su068-santoshah	systematic	Su68-Santoshah.mp3	68	Santoshah	Santoshaḥ	सन्तोषः	19.75	316428	128	68	104		unmatched
+sub-su069-kulam	systematic	Su69-Kulam.mp3	69	Kulam	Kulam	कुलं	19.67	315174	128	69	105		unmatched
+sub-su070-abhyasat	systematic	Su70-Abhyasat.mp3	70	Abhyasat	Abhyasaddharyate	अभ्यासाद्धार्यते	20.14	322697	128	70	107	513	toc_pratika
+sub-su071-lobha	systematic	Su71-Lobha.mp3	71	Lobha	Lobhamulani	लोभमूलानि	17.74	284245	128	71	108		unmatched
+sub-su072-ekavarna	systematic	Su72-EkaVarna.mp3	72	EkaVarna	Ekavarnam	एकवर्णं	19.12	306397	128	72	109	1375	toc_pratika
+sub-su073-teputra	systematic	Su73-TePutra.mp3	73	TePutra	Te putra	ते पुत्रा	19.25	308486	128	73	111	2611	toc_pratika
+sub-su074-manasa	systematic	Su74-Manasa.mp3	74	Manasa	Manasa	मनसा	19.77	316846	128	74	112	4687	toc_pratika
+sub-su075-alpa	systematic	Su75-Alpa.mp3	75	Alpa	Alpakaryakaraḥ	अल्पकार्यकराः	19.25	308486	128	75	114		unmatched
+sub-su076-yahpathati	systematic	Su76-YahPathati.mp3	76	YahPathati	Yaḥ pathati	यः पठति	16.82	269616	128	76	115		unmatched
+sub-su077-chitteprasanne	systematic	Su77-ChittePrasanne.mp3	77	ChittePrasanne	Citte prasanne	चित्ते प्रसन्ने	19.72	316010	128	77	116		unmatched
+sub-su078-krodho	systematic	Su78-Krodho.mp3	78	Krodho	Krodho	क्रोधो	19.93	319353	128	78	117	1974	toc_pratika
+sub-su079-visrjya	systematic	Su79-Visrjya.mp3	79	Visrjya	Visrjya	विसृज्य	20.48	328131	128	79	119		unmatched
+sub-su080-durjano	systematic	Su80-Durjano.mp3	80	Durjano	Durjano	दुर्जनो	19.20	307651	128	80	120		unmatched
+sub-su081-paropa	systematic	Su81-Paropa.mp3	81	Paropa	Paropadeshe	परोपदेशे	18.86	302217	128	81	121	3987	toc_pratika
+sub-su082-jnatibhi	systematic	Su82-Jnatibhi.mp3	82	Jnatibhi	Jnatibhirvantyate	ज्ञातिभिर्वण्ट्यते	21.00	336490	128	82	123		unmatched
+sub-su083-dhana	systematic	Su83-Dhana.mp3	83	Dhana	Dhanadhanyaprayogeshu	धनधान्यप्रयोगेषु	19.12	306397	128	83	125	3042	toc_pratika
+sub-su084-anabhyase	systematic	Su84-Anabhyase.mp3	84	Anabhyase	Anabhyase	अनभ्यासे	19.75	316428	128	84	126	248	file_pratika
+sub-su085-vidvaneva	systematic	Su85-Vidvaneva.mp3	85	Vidvaneva	Vidvaneva	विद्वानेव	19.96	319771	128	85	127	6114	toc_pratika
+sub-su086-paraih	systematic	Su86-Paraih.mp3	86	Paraih	Paraiḥ	परैः	20.14	322697	128	86	129		unmatched
+sub-su087-avidya	systematic	Su87-Avidya.mp3	87	Avidya	Avidyanashini	अविद्यानाशिनी	19.49	312248	128	87	130		unmatched
+sub-su088-apurvah	systematic	Su88-Apurvah.mp3	88	Apurvah	Apurvaḥ	अपूर्वः	18.99	304307	128	88	131		unmatched
+sub-su089-guneshu	systematic	Su89-Guneshu.mp3	89	Guneshu	Guneshu	गुणेषु	18.39	294694	128	89	132		unmatched
+sub-su090-chala	systematic	Su90-Chala.mp3	90	Chala	Chala	चला	18.91	303053	128	90	134		unmatched
+sub-su091-ahoprakrti	systematic	Su91-AhoPrakrti.mp3	91	AhoPrakrti	Aho prakrtisadrshyam	अहो प्रकृतिसादृश्यं	16.85	270034	128	91	136	7467	toc_pratika
+sub-su092-mrgamrgai	systematic	Su92-MrgaMrgai.mp3	92	MrgaMrgai	Mrga mrgaiḥ	मृगा मृगैः	22.78	364911	128	92	137	4934	toc_pratika
+sub-su093-shastra	systematic	Su93-Shastra.mp3	93	Shastra	Shastranyadhityapi	शास्त्राण्यधीत्यापि	22.44	359477	128	93	139		unmatched
+sub-su094-yatha	systematic	Su94-Yatha.mp3	94	Yatha	Yatha	यथा	18.76	300545	128	94	141		unmatched
+sub-su095-vishasya	systematic	Su95-Vishasya.mp3	95	Vishasya	Vishasya	विषस्य	17.55	281319	128	95	142	6225	toc_pratika
