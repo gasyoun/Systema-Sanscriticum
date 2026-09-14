@@ -76,6 +76,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SubscriptionLandingController;
 use App\Http\Controllers\SurveyPageController;
 use App\Http\Controllers\TeacherPayController;
+use App\Http\Controllers\TeachingGlossaryController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TgLoginLinkController;
@@ -206,6 +207,14 @@ Route::get('/dvaram/private-archive/{archive}', [MembershipCommerceController::c
     ->middleware('auth')
     ->where('archive', 'yoga_sutras|soboleva_ayurveda|druzhinin_ayurveda')
     ->name('membership.private-archive');
+
+// H4832 — поверхность тира Top (5 000 ₽/мес): преподавательский глоссарий.
+// Двухключевой гейт в контроллере: features.teaching_glossary (OFF → 404)
+// и ClubEntitlement::allows(user, 'teaching_glossary') (тип `top` в
+// config/membership.php). Данные кладёт teaching-glossary:import.
+Route::get('/dvaram/teaching-glossary', [TeachingGlossaryController::class, 'index'])
+    ->middleware('auth')
+    ->name('cabinet.teaching-glossary');
 
 // «С чего начать» — вводная страница новичка: лесенка продуктов + квиз подбора
 // курса + уровни (H323, beginner on-ramp).
