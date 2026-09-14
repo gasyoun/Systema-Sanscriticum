@@ -128,4 +128,30 @@ class CourseWelcomeMailTest extends TestCase
 
         Mail::assertNotQueued(CourseWelcomeMail::class);
     }
+
+    /** @test */
+    public function rendered_mail_carries_the_onboarding_survey_link_when_surveys_enabled(): void
+    {
+        config(['surveys.enabled' => true]);
+
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+
+        $html = (new CourseWelcomeMail($user, $course))->render();
+
+        $this->assertStringContainsString(url('/anketa/onboarding'), $html);
+    }
+
+    /** @test */
+    public function rendered_mail_omits_the_survey_link_when_surveys_disabled(): void
+    {
+        config(['surveys.enabled' => false]);
+
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+
+        $html = (new CourseWelcomeMail($user, $course))->render();
+
+        $this->assertStringNotContainsString(url('/anketa/onboarding'), $html);
+    }
 }
