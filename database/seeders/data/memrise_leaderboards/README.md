@@ -1,3 +1,5 @@
+_Created: 01-08-2026 · Last updated: 05-09-2026_
+
 # Memrise leaderboard CSV import (H2054)
 
 Перенос очков с лидербордов community-курсов Memrise в Systema.
@@ -38,3 +40,5 @@ $user->update(['memrise_username' => 'TheirMemriseNick']);
 ```
 
 Boards live in [`config/leaderboards.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/leaderboards.php) — flip `enabled => false` to hide a top.
+
+_Dr. Mārcis Gasūns_

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Models\MarketingSetting;
+use App\Models\TelegramChatPost;
 use App\Support\TelegramSendGuard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -30,6 +31,8 @@ class SendZapisiBotMessageJob implements ShouldQueue
     public function __construct(
         public readonly string $chatId,
         public readonly string $text,
+        public readonly ?int $scheduleId = null,
+        public readonly string $kind = 'generic',
     ) {}
 
     /** @return array<int, int> */
@@ -95,6 +98,16 @@ class SendZapisiBotMessageJob implements ShouldQueue
             'length' => mb_strlen($this->text),
             'dedup_key' => TelegramSendGuard::key($this->chatId, $this->text),
         ]);
+
+        // H4199: привязываем пост к строке расписания — по нему reply-команда
+        // админа («Отмена занятия») матчится обратно в Schedule.
+        $sentMessageId = $response->json('result.message_id');
+        if ($this->scheduleId !== null && is_numeric($sentMessageId)) {
+            TelegramChatPost::updateOrCreate(
+                ['chat_id' => $this->chatId, 'message_id' => (int) $sentMessageId],
+                ['schedule_id' => $this->scheduleId, 'kind' => $this->kind, 'posted_at' => now()],
+            );
+        }
     }
 
     public function failed(\Throwable $exception): void

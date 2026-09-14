@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\PartnerBotController;
 use App\Http\Controllers\Api\PublicScheduleController;
 use App\Http\Controllers\Api\PublicTrialBookController;
+use App\Http\Controllers\Api\PublicWaitlistController;
 use App\Http\Controllers\Api\VkBotController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\WebhookController;
@@ -51,6 +52,18 @@ Route::post('/public/schedule/book', PublicTrialBookController::class)
     ->middleware('throttle:5,1')
     ->name('api.public.schedule.book');
 
+// === ПУБЛИЧНЫЙ СПИСОК ОЖИДАНИЯ (MG 31-08-2026, волна 1) ===
+// Read-only фид кандидатов (голоса/цена/минимум/не-раньше). Голосование —
+// отдельный auth:sanctum эндпоинт, флаг waitlist_voting ON, иначе 404.
+// Allowlist в PublicWaitlistResource: только слаги, без id/PII/прогнозов.
+Route::get('/public/waitlist', [PublicWaitlistController::class, 'index'])
+    ->middleware('throttle:30,1')
+    ->name('api.public.waitlist');
+
+Route::post('/public/waitlist/vote', [PublicWaitlistController::class, 'vote'])
+    ->middleware('throttle:10,1')
+    ->name('api.public.waitlist.vote');
+
 // === МОБИЛЬНОЕ ПРИЛОЖЕНИЕ (Sanctum personal access tokens) ===
 Route::prefix('v1')->group(function () {
     // Публичный логин (выдаёт токен). Троттлим — публичный приём пароля.
@@ -61,16 +74,25 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
+        // H4663: отзыв всех мобильных токенов (п.8 аудита периметра 14-09).
+        Route::post('/auth/logout-all', [AuthController::class, 'logoutAll'])->name('api.auth.logoutAll');
 
         Route::get('/courses', [CabinetController::class, 'courses'])->name('api.courses');
         Route::get('/courses/{slug}/lessons', [CabinetController::class, 'lessons'])->name('api.courses.lessons');
     });
 });
 
-Route::post('/sync-lessons', [LessonController::class, 'sync']);
-Route::post('/lessons/from-zoom', [LessonController::class, 'storeFromZoom']);
+// Секретные n8n-эндпоинты (X-Secret-Key, fail-closed в LessonController::guard).
+// H4663 (аудит периметра 14-09, п.4): раньше были единственными публичными
+// POST-ручками без throttle — перебор общего секрета шел на скорости сети,
+// а вебхуки Точки/Zoom/PayPal жгли CPU на проверке подписи без ограничений.
+Route::post('/sync-lessons', [LessonController::class, 'sync'])
+    ->middleware('throttle:30,1');
+Route::post('/lessons/from-zoom', [LessonController::class, 'storeFromZoom'])
+    ->middleware('throttle:30,1');
 // Расшифровка Deepgram из того же сценария: без неё нарезка клипов пуста.
 Route::post('/lessons/{lesson}/transcript', [LessonController::class, 'storeTranscript'])
+    ->middleware('throttle:30,1')
     ->name('api.lessons.transcript');
 
 Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
@@ -79,15 +101,18 @@ Route::post('/telegram/webhook', [TelegramWebhookController::class, 'handle'])
 Route::post('/vk-webhook', [VkBotController::class, 'handle'])
     ->middleware('verify.vk.bot');
 
-Route::post('/webhooks/tochka', [WebhookController::class, 'handleTochkaWebhook']);
+Route::post('/webhooks/tochka', [WebhookController::class, 'handleTochkaWebhook'])
+    ->middleware('throttle:60,1');
 
 // H2027 PayPal Subscriptions — dark flag (404 when PAYPAL_SUBSCRIPTIONS_ENABLED=false).
 Route::post('/webhooks/paypal-subscriptions', PaypalSubscriptionsWebhookController::class)
+    ->middleware('throttle:60,1')
     ->name('webhook.paypal.subscriptions');
 
 // Zoom Event Subscription: запись вебинара готова (recording.completed) +
 // проверка URL. Подпись (x-zm-signature) проверяется внутри контроллера.
 Route::post('/webhooks/zoom', [ZoomWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1')
     ->name('webhook.zoom');
 
 // === LEAD MAGNET WEBHOOKS ===

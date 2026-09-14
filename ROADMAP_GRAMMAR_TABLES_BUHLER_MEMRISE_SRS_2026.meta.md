@@ -1,12 +1,12 @@
 # Metadoc — ROADMAP_GRAMMAR_TABLES_BUHLER_MEMRISE_SRS_2026.md
 
-_Created: 22-07-2026 · Last updated: 22-07-2026_
+_Created: 22-07-2026 · Last updated: 05-09-2026_
 
 **Purpose:** development plan for turning the exported Bühler
 grammatical-tables Memrise course (6517849, 5 stem-class paradigm levels)
 into an SRS deck feature, and for connecting it to the already-planned but
 unbuilt "auto-declension drills" line in
-[SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md](docs/SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md) §3.
+[SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md) §3.
 
 **Audience:** whoever picks up [H1442](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H1442-Sonnet_Systema_memrise-grammar-tables-buhler-roadmap_22.07.26.md)
 or a future declension-drill feature session.

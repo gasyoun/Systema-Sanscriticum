@@ -7,11 +7,15 @@ use App\Models\Course;
 use App\Models\Schedule;
 use App\Models\Teacher;
 use App\Services\ProgrammeShellGraph;
+use App\Services\Schedule\FullSchedulePost;
+use App\Services\Schedule\SchedulePostSender;
 use App\Support\RoleGate;
 use App\Support\Roles;
+use App\Support\VideoEmbed;
 use Closure;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -25,7 +29,10 @@ class CourseResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::TEACHER);
+        // Рулинг MG 07-09-2026: куратору (manager) нужен просмотр карточек
+        // (датировка /online по подтверждениям преподавателей). Редактирование
+        // остаётся у админа/препода своей дисциплины — canEdit не расширен.
+        return RoleGate::any(Roles::ADMIN, Roles::TEACHER, Roles::MANAGER);
     }
 
     public static function canCreate(): bool
@@ -122,6 +129,21 @@ class CourseResource extends Resource
                             ->profile('simple')
                             ->columnSpanFull(),
 
+                        Forms\Components\TextInput::make('video_announce_url')
+                            ->label('Видео-анонс курса')
+                            ->url()
+                            ->maxLength(1024)
+                            ->placeholder('https://www.youtube.com/watch?v=... или https://rutube.ru/video/... или https://vk.com/video...')
+                            ->helperText('Ссылка на YouTube, RuTube или VK video. Показывается в hero-блоке продающей страницы вместо обложки. Пусто — показывается обложка курса.')
+                            ->rule(
+                                fn () => function (string $attribute, $value, Closure $fail): void {
+                                    if ($value && ! VideoEmbed::embed($value)) {
+                                        $fail('Ссылка не распознана как YouTube, RuTube или VK video.');
+                                    }
+                                }
+                            )
+                            ->columnSpanFull(),
+
                         Forms\Components\TextInput::make('chat_url')
                             ->label('Ссылка на чат курса')
                             ->url()
@@ -204,6 +226,20 @@ class CourseResource extends Resource
                                     ->onColor('danger')
                                     ->inline(false),
                             ]),
+
+                        // Новизна для анонсов «только новые курсы» (MG 31-08-2026):
+                        // no_repeat дублирует never_repeat для витрины; при выборе
+                        // no_repeat флаг never_repeat проставляется автоматически.
+                        Forms\Components\Select::make('novelty')
+                            ->label('Новизна (для анонсов)')
+                            ->options(Course::NOVELTIES)
+                            ->default('usual')
+                            ->helperText('«Впервые» / «Возвращается» попадают в анонсы новых курсов; «Повтора не будет» — нет (проставляет «Живой повтор не планируется»).')
+                            ->afterStateUpdated(function (string $state, Forms\Set $set): void {
+                                if ($state === 'no_repeat') {
+                                    $set('never_repeat', true);
+                                }
+                            }),
 
                         // БЛОК: КАТЕГОРИИ И ФОРМАТ
                         Forms\Components\Grid::make(2)
@@ -556,6 +592,45 @@ class CourseResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+
+                // H4328: полный пост расписания курса в чаты обучения групп
+                // (за флагом features.schedule_full_post).
+                Tables\Actions\Action::make('post_full_schedule')
+                    ->label('Пост расписания в чаты')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('gray')
+                    ->visible(function (Course $record): bool {
+                        if (! config('features.schedule_full_post', false) || ! RoleGate::adminOnly()) {
+                            return false;
+                        }
+
+                        return $record->groups()->whereNotNull('telegram_chat_id')->exists()
+                            || Schedule::where('course_id', $record->id)->exists();
+                    })
+                    ->form(fn (Course $record): array => [
+                        Forms\Components\Placeholder::make('preview')
+                            ->label('Предпросмотр (по группе потока)')
+                            ->content(function () use ($record): string {
+                                $posts = FullSchedulePost::forCourse($record);
+                                if ($posts === []) {
+                                    return 'У курса нет занятий — пост не строится.';
+                                }
+
+                                return $posts[0]->text();
+                            }),
+                    ])
+                    ->requiresConfirmation()
+                    ->modalHeading('Отправить расписание в чаты обучения')
+                    ->modalDescription('Пост (обзорное + занятия 1–N) уйдёт в telegram-чат каждой группы курса. Если текст не менялся с прошлой отправки — повторно не уйдёт.')
+                    ->action(function (Course $record): void {
+                        $result = app(SchedulePostSender::class)->sendForCourse($record);
+
+                        Notification::make()
+                            ->title($result['sent'] > 0 ? 'Отправлено' : 'Нечего отправлять')
+                            ->body("Постов отправлено: {$result['sent']} (пропущено: {$result['skipped']}).")
+                            ->{$result['sent'] > 0 ? 'success' : 'warning'}()
+                            ->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

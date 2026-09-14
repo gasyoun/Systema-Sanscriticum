@@ -1,3 +1,5 @@
+_Created: 21-08-2026 · Last updated: 05-09-2026_
+
 # Gap: RAG из #1633 vs учебный год (двое в Telegram)
 
 _Created: 21-08-2026 · Last updated: 21-08-2026 (ruling: B now, A rollback, C Ivan GPU by 01-10)_

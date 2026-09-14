@@ -59,6 +59,22 @@ class LeadController extends Controller
             $data['email'] = $data['contact'];
         }
 
+        // Формы лендингов передают query-строку страницы в action. Короткие
+        // campaign-ссылки сохраняют те же метки в сессии и переводят на чистый
+        // URL. Тело формы сильнее query, query сильнее сессии.
+        foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'click_id'] as $utmKey) {
+            if (empty($data[$utmKey]) && filled($request->query($utmKey))) {
+                $data[$utmKey] = (string) $request->query($utmKey);
+            }
+        }
+
+        $sessionAttribution = $request->session()->get((string) config('tracked_links.session_key'), []);
+        foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'click_id'] as $utmKey) {
+            if (empty($data[$utmKey]) && filled($sessionAttribution[$utmKey] ?? null)) {
+                $data[$utmKey] = (string) $sessionAttribution[$utmKey];
+            }
+        }
+
         if (! empty($data['form_name'])) {
             $existingUtm = $data['utm_content'] ?? '';
             $data['utm_content'] = '['.$data['form_name'].'] '.$existingUtm;

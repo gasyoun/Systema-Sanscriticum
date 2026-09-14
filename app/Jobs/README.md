@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # app/Jobs
 
 Фоновые задачи для очереди. Запускаются через `dispatch()`. Мониторинг — `/horizon`.
@@ -59,3 +61,5 @@ CLI-ini (768M против 128M у php-fpm).
 | `imports` | `BuildHomeworkImagesPdfJob` | Средний |
 
 Настройки воркеров для каждой очереди — в `config/horizon.php`.
+
+_Dr. Mārcis Gasūns_

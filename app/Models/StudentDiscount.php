@@ -26,12 +26,14 @@ class StudentDiscount extends Model
         'type',
         'value',
         'is_active',
+        'expires_at',
         'note',
     ];
 
     protected $casts = [
         'value' => 'decimal:2',
         'is_active' => 'boolean',
+        'expires_at' => 'date',
         'block_number' => 'integer',
     ];
 
@@ -61,7 +63,9 @@ class StudentDiscount extends Model
         $base = self::query()
             ->where('user_id', $userId)
             ->where('course_id', $courseId)
-            ->where('is_active', true);
+            ->where('is_active', true)
+            // H3916: срочная скидка (expires_at) мертва после даты; NULL — вечная.
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>=', today()));
 
         // Блок-специфичная скидка перебивает общую для этого блока.
         if ($blockNumber !== null) {

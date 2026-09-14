@@ -8,6 +8,8 @@ use App\Models\PromoCode;
 use App\Models\Tariff;
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\CuratorNotifier;
+use App\Services\NearDuplicateEmailDetector;
 use App\Services\Payments\TochkaPaymentService;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
@@ -609,6 +611,17 @@ class PaymentController extends Controller
         }
         if ($request->filled('signup_source')) {
             $attribution->applySignupSource($user, $request->input('signup_source'));
+        }
+
+        // Default OFF (config/features.php checkout_near_duplicate_email_guard).
+        // Advisory only — never blocks this checkout, just pings curators to
+        // merge manually if it really is the same student under a typo'd
+        // email (H incident: Долгополова Анастасия, 2026-08-18).
+        if (config('features.checkout_near_duplicate_email_guard')) {
+            $nearDuplicates = app(NearDuplicateEmailDetector::class)->findFor($user);
+            foreach ($nearDuplicates as $existing) {
+                app(CuratorNotifier::class)->possibleDuplicateAccount($user, $existing);
+            }
         }
 
         auth()->login($user);

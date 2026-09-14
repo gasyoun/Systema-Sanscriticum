@@ -39,12 +39,32 @@ class RemindUpcomingClasses extends Command
             ->with(['group', 'course'])
             ->whereNull('reminded_at')
             ->whereBetween('start', [now(), now()->addMinutes($lead)])
+            ->orderBy('id')
             ->get();
 
         $events = 0;
         $recipients = 0;
 
-        foreach ($schedules as $schedule) {
+        // Слотовая группировка (инцидент 11-09-2026, курс 348): две живые строки
+        // расписания на один слот = один круг персональных напоминаний, не два.
+        // Ключ — группа (или курс для событий без группы) + старт.
+        $slots = $schedules->groupBy(fn (Schedule $s): string => ($s->group_id ?? 'c'.($s->course_id ?? 0)).':'.($s->start?->format('Y-m-d H:i') ?? ''));
+
+        foreach ($slots as $slotRows) {
+            $rows = $slotRows->sortBy('id')->values();
+            $schedule = $rows->first();
+
+            // Дубль-гвардия каналов (диагноз 28-08-2026): группа с Telegram-чатом уже
+            // получает «Скоро занятие» от zapisi:remind-classes в тот же T-60 — персональный
+            // пинг каждому студенту с привязанным Telegram приходит через минуту и читается
+            // как повтор. Пропускаем БЕЗ пометки: выключение рубильника вернёт ЛС в том же
+            // окне, а перенос занятия (сброс reminded_at) тут ничего не ломает.
+            if ($settings?->dm_suppressed_when_group_chat
+                && $schedule->group !== null
+                && ! empty($schedule->group->telegram_chat_id)) {
+                continue;
+            }
+
             $audience = $this->audienceFor($schedule);
 
             // Без адресной аудитории (нет группы и курса) — глобальные пуши не шлём.
@@ -62,9 +82,11 @@ class RemindUpcomingClasses extends Command
                 }
             });
 
-            // Отмечаем занятие как «напомнили» в любом случае, чтобы не зациклиться
-            // на событии без получателей (иначе оно висело бы в окне до старта).
-            $schedule->update(['reminded_at' => now()]);
+            // Отмечаем ВСЕ строки слота как «напомнили» в любом случае, чтобы не
+            // зациклиться на событии без получателей (иначе оно висело бы в окне до старта).
+            foreach ($rows as $row) {
+                $row->update(['reminded_at' => now()]);
+            }
 
             $events++;
             $recipients += $sent;
@@ -93,6 +115,16 @@ class RemindUpcomingClasses extends Command
 
         $text = "🔔 <b>Скоро занятие</b>\n\n";
         $text .= "Намасте! Занятие <b>«{$title}»</b> начнётся сегодня в <b>{$time}</b> (МСК).";
+
+        // H4434 — допстрока для нон-МСК учеников: их локальное время занятия.
+        // MG 09-09-2026: T−1ч напоминание DST слито с этим пингом — отдельного нет.
+        if ($user->isNonMskTimezone()) {
+            $local = $schedule->start->copy()->timezone($user->effectiveTimezone())->format('H:i');
+
+            if ($local !== $time) {
+                $text .= "\n\n⏰ В вашем местном времени (".e($user->effectiveTimezone()).') это <b>'.$local.'</b>.';
+            }
+        }
 
         // Подписанная трекинг-ссылка на этого студента (учёт посещаемости).
         if ($link = $schedule->trackedJoinUrlFor($user, 'reminder')) {

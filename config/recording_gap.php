@@ -12,6 +12,10 @@ return [
     | Daily 08:00 Europe/Moscow: yesterday had a schedules row, but no matching
     | published lesson with video/rutube/youtube/recording_attached_at.
     | Alerts reuse cabinet:probe chat ids. Does not re-run n8n ZOOM 1.4.
+    | H3557: задайте RECORDING_GAP_TELEGRAM_CHAT_ID явно — fallback на список
+    | CABINET_PROBE (несколько личных чатов) дублирует один алерт во все из них;
+    | дедуп хранится в БД (recording_gap_alerts), а не в кэше, который сбрасывает
+    | каждый автодеплой.
     |
     | Live workflow is ZOOM 1.4 (Final) + АДМИНКА ТЕСТ (1EIqqNzMl5NNIxST).
     | Inactive twin MtN1h7FdF3JTmrse is not live — do not query it.

@@ -92,6 +92,7 @@ class CourseCatalog extends Component
     private function baseQuery()
     {
         return PrivateArchiveEligibility::scopePublic(Course::query())
+            ->withOwnCatalogCard()
             ->where('is_visible', true)
             ->when($this->search !== '', function ($q) {
                 $escaped = str_replace(['%', '_'], ['\%', '\_'], $this->search);
@@ -117,7 +118,7 @@ class CourseCatalog extends Component
         return Category::query()
             ->where('is_visible', true)
             ->orderBy('sort_order')
-            ->withCount(['courses' => fn ($q) => PrivateArchiveEligibility::scopePublic($q->where('is_visible', true))])
+            ->withCount(['courses' => fn ($q) => PrivateArchiveEligibility::scopePublic($q->withOwnCatalogCard()->where('is_visible', true))])
             ->get();
     }
 
@@ -125,7 +126,7 @@ class CourseCatalog extends Component
     public function teachers()
     {
         return Teacher::query()
-            ->whereHas('courses', fn ($q) => PrivateArchiveEligibility::scopePublic($q->where('is_visible', true)))
+            ->whereHas('courses', fn ($q) => PrivateArchiveEligibility::scopePublic($q->withOwnCatalogCard()->where('is_visible', true)))
             ->orderBy('name')
             ->get(['id', 'name']);
     }
@@ -139,6 +140,7 @@ class CourseCatalog extends Component
     public function levelCounts(): array
     {
         return PrivateArchiveEligibility::scopePublic(Course::query())
+            ->withOwnCatalogCard()
             ->where('is_visible', true)
             ->whereNotNull('level')
             ->selectRaw('level, count(*) as cnt')
@@ -196,6 +198,9 @@ class CourseCatalog extends Component
                 'tariffs' => fn ($q) => $q->where('is_active', true)->orderBy('price'),
                 'teacher:id,name',
                 'categories:id,name,slug,color,icon',
+                // Только формат карточки (4:3) — designReadiness() в других
+                // местах грузит все три сам, тут лишние форматы не нужны.
+                'designAssets' => fn ($q) => $q->where('format', '4:3'),
             ])
             ->latest('id')
             ->get();
@@ -214,6 +219,8 @@ class CourseCatalog extends Component
                 ->where('user_id', Auth::id())
                 ->whereIn('course_id', $courses->pluck('id'))
                 ->paid()
+                // H4456: курс с истёкшим окном доступа снова считается покупаемым.
+                ->withoutExpiredAccessWindow()
                 ->get(['course_id', 'tariff'])
                 ->groupBy('course_id')
                 ->map(fn ($rows) => $rows->pluck('tariff')->filter()->unique()->values()->all())

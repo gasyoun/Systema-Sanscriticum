@@ -147,6 +147,108 @@ return [
     'faq_rag_suggester' => (bool) env('FAQ_RAG_SUGGESTER', false),
 
     /*
+     | H4001 (Wave 3 leverage-плана): dense-нога ретривала — reciprocal rank
+     | fusion BM25 ∪ knowledge_chunks поверх bge-m3 с GPU-узла за туннелем.
+     | ВЫКЛ по умолчанию: при OFF HybridRetriever байт-в-байт отдаёт ranking
+     | BM25 (dense-нога даже не зовётся — туннель не в request-path), и ни
+     | один потребитель lane'а не переключён. Включение — решение человека
+     | после чтения eval-таблицы H4001 (гибрид ≥ BM25 на обоих наборах).
+     | Enable: FAQ_HYBRID_RETRIEVAL=true + config:cache.
+     */
+    'faq_hybrid_retrieval' => (bool) env('FAQ_HYBRID_RETRIEVAL', false),
+
+    /*
+     | H3234 (issue #1633 этап 5): теневая генерация. OpenRouter по-прежнему
+     | отвечает студенту; рядом Horizon-job (OllamaShadowReplyJob) прогоняет
+     | ТОТ ЖЕ промпт через локальный qwen3:14b (туннель → 127.0.0.1:11434,
+     | knowledge.generation_model) и пишет ответ в SupportAiReplyEvent
+     | (event_type=ollama_shadow) рядом с онлайн-логом — неделя живого
+     | сравнения до флипа этапа 6. Узел умер → событие status=error, студенту
+     | ничего не уходит, наружу не откатываемся. Требует bot_faq_retrieval
+     | фактического ответа бота, но технически независим от других флагов.
+     | ВЫКЛ по умолчанию. Enable: BOT_OLLAMA_SHADOW=true + config:cache.
+     */
+    'bot_ollama_shadow' => (bool) env('BOT_OLLAMA_SHADOW', false),
+
+    /*
+     | H3234 (issue #1633 этап 6): переключение генерации на локальную модель.
+     | CuratorAi в этом режиме ходит ТОЛЬКО в 127.0.0.1:11434
+     | (knowledge.generation_model) и НИКОГДА не откатывается в OpenRouter/
+     | DeepSeek — иначе приватность превращается в «приватность, пока работает
+     | туннель» (текст issue). Узел недоступен → reply() = null → контроллеры
+     | отвечают детерминированно (StudentSelfService + предложение «позови
+     | куратора»), студенту отвечаем без внешнего API.
+     | ВЫКЛ по умолчанию; флип — решение человека после shadow-недели (до
+     | 01-10-2026). Enable: BOT_LOCAL_GENERATION=true + config:cache.
+     */
+    'bot_local_generation' => (bool) env('BOT_LOCAL_GENERATION', false),
+
+    /*
+     | H3766 B4 (стадия 1 issue #1633, рулинг R5): вместо того чтобы класть в
+     | системный промпт ИИ-куратора ВЕСЬ faq.md (~46 000 символов на каждый
+     | вопрос), BotKnowledgeBase кладёт top-K разделов, найденных тем же
+     | BM25-ретривером H2448, что уже работает в подсказках куратору. Каталог
+     | курсов (CourseCatalogProvider::markdown) по-прежнему идёт ЦЕЛИКОМ —
+     | цены берутся только оттуда, и ретривал не имеет права их отфильтровать.
+     |
+     | Когда вопрос неизвестен (systemPrompt() без $userQuestion) или ретривер
+     | ничего не нашёл, поведение байт-в-байт прежнее: весь FAQ.
+     |
+     | ВЫКЛ по умолчанию. Включение — осознанный шаг: BOT_FAQ_RETRIEVAL=true +
+     | config:cache после зелёного смоука на реальных вопросах кабинета
+     | (docs/RESULTS_BOT_FAQ_RETRIEVAL_SMOKE_*.md).
+     */
+    'bot_faq_retrieval' => (bool) env('BOT_FAQ_RETRIEVAL', false),
+
+    /*
+     | H3768 (рулинг MG 31-08-2026 «только F»): ЖИВОЙ автоответ студенту из FAQ.
+     |
+     | До сих пор BM25-ответ доходил только до куратора (подсказка) или до
+     | теневого журнала. Здесь он впервые уходит студенту сам — в категориях
+     | support.faq_rag.live_categories (сейчас одна: F, материалы/ДЗ/сертификаты)
+     | и только выше покатегорийного порога, выведенного H3766 B5.
+     |
+     | D (деньги) и E (доступы) исключены В КОДЕ, а не конфигом — рулинг R3.
+     |
+     | Оговорка, которую нельзя терять: порог F (15.7) выведен на 100-вопросном
+     | наборе, где выше него оказались 7 вопросов. Это провизорная калибровка;
+     | первая же неделя живого трафика может её опрокинуть, и тогда флаг
+     | выключается — BOT/SUPPORT_DM_AUTO_REPLY_LIVE_FAQ=false + config:cache.
+     |
+     | ВЫКЛ по умолчанию. Ответ всегда несёт ссылку на раздел FAQ (faqDraft).
+     */
+    'support_dm_auto_reply_live_faq' => (bool) env('SUPPORT_DM_AUTO_REPLY_LIVE_FAQ', false),
+
+    /*
+     | H4404 (рулинг MG 08-09-2026 «LLM-черновики»): LLM-ветка автоответа в
+     | личке саппорта. В отличие от шаблонной (SUPPORT_AUTO_REPLY_TEMPLATES) и
+     | FAQ-ветки (SUPPORT_DM_AUTO_REPLY_LIVE_FAQ) НЕ зависит от классификатора
+     | категорий: в пробе H3380 он вернул category=null на 8 из 8 живых
+     | dm_hinted — ветка, привязанная к категории, в трафике не стреляла.
+     |
+     | Студент получает ответ, сформулированный внешним LLM по живому
+     | FAQ-контексту, не чаще одного раза в cooldown-окно на серию сообщений.
+     | Стоит ПОСЛЕ FAQ-ветки (15.7): если FAQ уверенно отвечает сам, LLM не
+     | нужен. R3-запреты из SupportDmAutoReply::llmRefusalReason() остаются в
+     | коде: деньги, доступы, спам-слова гонят в отказ-и-эскалацию при любом
+     | конфиге.
+     |
+     | Каждый вызов пишется в журнал (dm_auto_sent kind=llm_draft /
+     | dm_llm_refused / dm_llm_shadow_would_send) с версией промпта и моделью.
+     |
+     | ВЫКЛ по умолчанию; живое включение — решение MG после недели тени.
+     */
+    'support_dm_llm_drafts' => (bool) env('SUPPORT_DM_LLM_DRAFTS', false),
+
+    /*
+     | H4404: ЖИВАЯ отправка LLM-ответов. Пока false, сформулированный ответ
+     | пишется в тень (dm_llm_shadow_would_send) и студенту не уходит.
+     | Переключается ТОЛЬКО вместе с SUPPORT_DM_LLM_DRAFTS и только решением
+     | MG после недели теневого сбора. Откат: false + config:cache.
+     */
+    'support_dm_llm_drafts_live' => (bool) env('SUPPORT_DM_LLM_DRAFTS_LIVE', false),
+
+    /*
      | H3233 B: автоответ простых A/B/C в личке саппорт-аккаунта + подсказка
      | кураторам на сложные. ВЫКЛ по умолчанию = откат на A (кабинетный бот,
      | Helpdesk-черновики, люди печатают в Telegram). Деньги (D) не автоотвечает.
@@ -171,6 +273,49 @@ return [
      | linked-пользователя не шлём (некуда ставить очередь). Откат: false.
      */
     'support_auto_ack' => (bool) env('SUPPORT_AUTO_ACK', false),
+
+    /*
+     | H3765 A3 (рулинг R9 плана PLAN_SYSTEMA_TELEGRAM_RAG_SUPPORT_2026H2):
+     | ТЕНЕВОЙ режим расширенного автоответа. Пока флаг ВКЛ, на каждой
+     | подсказке куратору, которую бот МОГ БЫ отправить студенту сам
+     | (BM25-скор выше порога, безопасная категория, привязанный студент),
+     | пишется событие dm_shadow_would_send с черновиком и скором — и НИЧЕГО
+     | больше. Ни одного лишнего исходящего: инвариант §5 контракта плана —
+     | поведение, видимое студенту, байт в байт прежнее.
+     |
+     | Смысл: через неделю support:shadow-report сверит эти «отправил бы» с
+     | тем, что куратор ответил на самом деле, и живое включение автоотправки
+     | человек решит по числам, а не по надежде. Сам живой флип — решение
+     | человека (R9/R10), эта тень его не заменяет.
+     */
+    'support_dm_auto_reply_shadow' => (bool) env('SUPPORT_DM_AUTO_REPLY_SHADOW', false),
+
+    /*
+     | H3542: мост «незалинкованный партнёр → linked user». Когда автоответ
+     | заблокирован ТОЛЬКО отсутствием связи (аудитория канала без кабинета),
+     | бот один раз за cooldown-окно отправляет приглашение с capability-
+     | ссылкой /support/link/{token}: email → find-or-create беспарольного
+     | User (паттерн H324) → linked_user_id на контакте и private-чате. После
+     | этого ack/шаблоны/факты отвечают сами. Пер-аккаунтный гейт тот же:
+     | telegram_support_accounts.auto_reply_enabled. Денominator бэкфилла —
+     | support:send-link-invites --dry. ОТКЛ по умолчанию; включать только на
+     | пробном аккаунте (rusamskrtam): SUPPORT_DM_LINK_INVITE=true + config:cache.
+     */
+    'support_dm_link_invite' => (bool) env('SUPPORT_DM_LINK_INVITE', false),
+
+    /*
+     | H3999 (рулинг A5): SLA-развёртка по открытым тредам без ответа. Слот в
+     | планировщике молчит, пока флаг выключен; ручной прогон —
+     | php artisan support:sla-escalate --dry.
+     */
+    'support_sla_escalation' => (bool) env('SUPPORT_SLA_ESCALATION', false),
+
+    /*
+     | H3999 (рулинг I1b): очередь черновиков в админке рядом с «Аналитикой» —
+     | Отправить / Изменить / Пропустить. Пункт меню не показывается, пока
+     | флаг выключен.
+     */
+    'support_draft_queue' => (bool) env('SUPPORT_DRAFT_QUEUE', false),
 
     /*
      | H3242: утренняя сводка вчерашней поддержки в Telegram на ADMIN_TELEGRAM_ID
@@ -250,6 +395,18 @@ return [
      | при выключенном флаге ничего не пишет и завершается с предупреждением.
      */
     'kosha_srs' => (bool) env('KOSHA_SRS', false),
+
+    /*
+     | Subhāṣita audio SRS deck (H4474, stages 1–3). Когда ВКЛ,
+     | `php artisan subhashita:import-audio-deck` читает ВЕНДОРНЫЙ статический
+     | фид resources/data/subhashita_srs_deck.json (59 записей, сведённых
+     | с номерами Бётлингка манифестом H4474) и создаёт системную колоду SRS.
+     | Аудио-кнопка в карточке работает после `subhashita:push-audio` (файлы
+     | заливаются в public-диск из Яндекс.Диска; права подтверждены MG
+     | 14-09-2026 «все свои»). Тот же паттерн, что и kosha_srs. ВЫКЛ по
+     | умолчанию — команда при выключенном флаге ничего не пишет.
+     */
+    'subhashita_srs' => (bool) env('SUBHASHITA_SRS', false),
 
     /*
      | Reader-as-a-service demo (H959, last-mile pipeline Hop A). Когда ВКЛ,
@@ -502,6 +659,42 @@ return [
     'teacher_payout_year_view' => (bool) env('TEACHER_PAYOUT_YEAR_VIEW', false),
 
     /*
+     | «Telegram-вход» в кабинет (CABINET_ADOPTION_ROADMAP P2, 28-08-2026):
+     | студент пишет студент-боту /start или /вход — если его Telegram уже
+     | привязан (users.telegram_id), бот выдаёт ОДНОРАЗОВУЮ magic-ссылку входа
+     | (purpose tg_login, TTL 15 мин, маршрут /tg-login/{token}). Владение
+     | Telegram здесь и есть фактор подлинности. ВЫКЛ по умолчанию — это вход
+     | в кабинет через чат; включение в проде — отдельный ops-шаг владельца
+     | (TELEGRAM_CABINET_LOGIN=true + config:cache).
+     */
+    'telegram_cabinet_login' => (bool) env('TELEGRAM_CABINET_LOGIN', false),
+
+    /*
+     | Под-режим «Telegram-входа» для тех, кто не может даже открыть сайт:
+     | непривязанный студент присылает боту email заказа → матч по нормализо-
+     | ванному email СРЕДИ ОПЛАЧИВАВШИХ (кабинетная аудитория), staff (admin/
+     | manager/super_admin) исключён; привязываем telegram_id и выдаём ссылку
+     | входа.
+     | Размен «знает email = получит доступ» — тот же, что у разрешённой
+     | владельцем «самопроверки входа», но сильнее (тут не перечисление, а
+     | доступ), поэтому отдельный флаг + @DECIDE владельца на включение.
+     | Работает только вместе с telegram_cabinet_login.
+     | Enable: TELEGRAM_CABINET_EMAIL_LINK=true + config:cache.
+     */
+    'telegram_cabinet_email_link' => (bool) env('TELEGRAM_CABINET_EMAIL_LINK', false),
+
+    /*
+     | Самообслуживание «/кабинет <email>» (02-09-2026): непривязанный студент
+     | одной командой в личке бота создаёт себе кабинет (Free-tier плейлисты,
+     | как при self-register H3643) и получает одноразовую magic-ссылку входа.
+     | Щиты: ≤1 создание на telegram_id навсегда; существующий email не
+     | перезаписывается и не привязывается по голому знанию email (угон-риск) —
+     | мягкий отказ; пароли random и наружу не уходят.
+     | Enable: TELEGRAM_CABINET_PROVISION=true + config:cache.
+     */
+    'telegram_cabinet_provision' => (bool) env('TELEGRAM_CABINET_PROVISION', false),
+
+    /*
      | H2304 spec 2: «у курса нет групп доступа» = throw в Payment::grantAccess()
      | (fail closed на всех платных маршрутах: zero-price checkout, Filament,
      | PayPal, PayPal-claim, conditional, импорт), а не log-and-return «оплачено
@@ -510,6 +703,29 @@ return [
      | отдельный ops-шаг (GRANT_ACCESS_FAIL_CLOSED=true + php artisan config:cache).
      */
     'grant_access_fail_closed' => (bool) env('GRANT_ACCESS_FAIL_CLOSED', false),
+
+    /*
+     | H4396 (census PAYWALL_CENSUS_2026-09-08 §C.1): expiry predicate on
+     | payment-keyed access. Conditional («под обещание») payments несут
+     | тариф-ключи только пока живо их обещание: status=active и promised_at
+     | ещё не прошёл. Реальные платежи фильтр не трогает (оплатил = владеет
+     | навсегда — продуктовое правило), условные с истёкшим/отменённым/
+     | исполненным/осиротевшим обещанием ключей больше не дают.
+     | Money-контур: дефолт OFF, включение в проде — отдельный ops-шаг
+     | (CONDITIONAL_ACCESS_EXPIRY=true + php artisan config:cache), та же
+     | постановка, что у grant_access_fail_closed (H2085 discipline).
+     */
+    'conditional_access_expiry' => (bool) env('CONDITIONAL_ACCESS_EXPIRY', false),
+
+    /*
+     | H4456 (рулинг MG 09-09-2026): окна доступа course_access_windows.
+     | Строка (user, course) с ends_at в прошлом закрывает доступ, открываемый
+     | РЕАЛЬНЫМИ платежами курса (ends_at = NULL — вечный доступ по именному
+     | исключению). Деньги (строки платежей) не трогаются. Дефолт OFF,
+     | прод-флип — отдельный ops-шаг (COURSE_ACCESS_WINDOWS=true), та же
+     | постановка, что у conditional_access_expiry выше.
+     */
+    'course_access_windows' => (bool) env('COURSE_ACCESS_WINDOWS', false),
 
     /*
      | Telegram Track C (H164, Uprava/docs/DECISIONS_telegram_harvester.md D7-D11):
@@ -624,6 +840,33 @@ return [
     'content_calendar_autopilot' => (bool) env('CONTENT_CALENDAR_AUTOPILOT', false),
 
     /*
+     | Автопилот канала @rusamskrtam (H3930, Phase 1): stories:publish-due
+     | шлёт approved+due текстовые story_posts в канал магнит-ботом
+     | (MarketingSetting.tg_bot_token). Default OFF — прод-инертен, ноль HTTP.
+     | Photo/video строки скипаются с журналом до Phase 2 (MTProto stories).
+     */
+    'telegram_story_publisher' => (bool) env('TELEGRAM_STORY_PUBLISHER', false),
+
+    /*
+     | Персона @rusamskrtam: user-сториз через MadelineProto (H3964, Phase 2).
+     | stories:publish-story шлёт approved+due строки lane=persona СВОИМ
+     | профилем (user stories, без админ-прав канала). Default OFF —
+     | прод-инертен: ноль HTTP и MadelineProto-сессия не открывается вовсе.
+     | Делит ЕДИНУЮ сессию с telegram-support:sync / telegram-harvest:sync
+     | через madeline-session-лок (никогда параллельно).
+     */
+    'telegram_story_stories' => (bool) env('TELEGRAM_STORY_STORIES', false),
+
+    /*
+     | Виза MG (ASK_BATCH_CONTENT_FACTORY_TELEGRAM_2026 §2.8): студенческие
+     | медиа (story_posts source=homework) издаются сториз-лейном только
+     | после утверждения правила анонимизации (blur/crop лиц и имён,
+     | подписи без имён и CRM-данных). Default OFF — такие строки скипаются
+     | с журналом, никогда не публикуются.
+     */
+    'telegram_story_student_media_visa' => (bool) env('TELEGRAM_STORY_STUDENT_MEDIA_VISA', false),
+
+    /*
      | Гибридный кабинет R29 (H1481, Phase 1 chassis): job-named nav
      | (Сегодня / Календарь / Записи / Прогресс / Оплата и доступ / Помощь),
      | workspace-табы с hash-адресацией, лента «Сегодня» с homework-rework,
@@ -633,6 +876,16 @@ return [
      | student.dashboard без hybrid-маршрутов (library/progress/access → 404).
      */
     'cabinet_hybrid' => (bool) env('CABINET_HYBRID', false),
+
+    /*
+     | Welcome-тур кабинета студента (H4463): Teachbase-подобная модалка-обзор
+     | (7–9 слайдов по включённым флагам) на главной кабинета. Показ один раз
+     | на браузер (localStorage cabinet_tour_v1), повтор — кнопка «Обзор
+     | кабинета»; в режиме «войти как» (Impersonation) не рендерится вовсе.
+     | Default ON — тур безобиден и скипается в один клик; CABINET_TOUR=false
+     | гасит его без нового релиза (после правки .env — config:cache).
+     */
+    'cabinet_tour' => (bool) env('CABINET_TOUR', true),
 
     /*
      | Content engine Wave 2 (H1548): пилот авто-публикации социальных постов
@@ -692,6 +945,13 @@ return [
      | этом PR — только заготовка ключа, default false.
      */
     'crm_trial_widget_public' => (bool) env('CRM_TRIAL_WIDGET_PUBLIC', false),
+
+    /*
+     | Список ожидания (MG 31-08-2026, волна 3): голосование из кабинета.
+     | Read-only фид /api/public/waitlist работает всегда; POST /vote 404,
+     | пока OFF. Не включать в этом PR — только ключ, default false.
+     */
+    'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
 
     /*
      | Атрибуция возвратов по ссылке «Возврат за платёж №…» в зачёте докупки
@@ -1011,6 +1271,29 @@ return [
     'membership_private_archives' => (bool) env('MEMBERSHIP_PRIVATE_ARCHIVES', false),
     // H2745: append-only funnel dimensions (tier/term/source/course/feature).
     'membership_funnel_analytics' => (bool) env('MEMBERSHIP_FUNNEL_ANALYTICS', false),
+    // H3648: Club/Top grant club-stream / club-efir recordings only; course-lesson
+    // recordings stay on the course-purchase path. Default OFF = H2744 D10 predicate
+    // unchanged. Enable: MEMBERSHIP_CLUB_STREAMS_ONLY=true + config:cache (human ops).
+    'membership_club_streams_only' => (bool) env('MEMBERSHIP_CLUB_STREAMS_ONLY', false),
+
+    /*
+     | H3916: подписка «в записи» (ратифицировано MG 06-09-2026, сетка A
+     | 20 000/35 000/5 500). OFF = лендинг /podpiska-zapisi отвечает 404 и
+     | тарифы сетки не показываются. Включение — deploy-рубильник
+     | RECORD_SUBSCRIPTION=true + config:cache (human ops, после установки
+     | тарифов командой membership:install-subscription-tariffs).
+     */
+    'recorded_subscription' => (bool) env('RECORD_SUBSCRIPTION', false),
+
+    /*
+     | Guest email+password /register → Free-tier of the club (H3643, self-serve
+     | wave B2). Default OFF: GET/POST /register 404. When ON, creates a user,
+     | grants MembershipTier::Free via FreeTierLessonGranter::grantSignupFor
+     | (ClubMembership, zero payments), seeds the persistent club-free SRS deck.
+     | Enable: GUEST_REGISTRATION_ENABLED=true + config:cache. Human ops only —
+     | this PR must not flip prod .env on .92.
+     */
+    'guest_registration' => (bool) env('GUEST_REGISTRATION_ENABLED', false),
 
     /*
      | Grammar Lab explorer (H2493 / G2). Import and tables are additive;
@@ -1140,4 +1423,112 @@ return [
      | только через решение MG). Анти-срочность: никаких дедлайн-механик.
      */
     'gift_certificates' => (bool) env('GIFT_CERTIFICATES', false),
+
+    /*
+     | H3231 (Wave 3, agent-ops overlay): bounded student agent — ровно три
+     | job'а (homework hint / dictionary lookup / cabinet FAQ), жёсткий
+     | allow-list инструментов в StudentAgentService, НЕ свободный чат с
+     | куратором. Шаблон/БД-поиск/H2448-ретривер побеждают LLM (тот же
+     | порядок, что у support_answer_suggester); LLM-фолбэк только для
+     | homework_hint и только по названию урока — тело работы, файлы и
+     | Telegram DM никогда не уходят в LLM. cabinet_faq требует ВКЛЮЧЁННОГО
+     | faq_rag_suggester — второго нерегулируемого пути в него это не
+     | открывает. ВЫКЛ по умолчанию — deploy-рубильник: пока OFF,
+     | POST /dvaram/agent отдаёт 404 байт-в-байт как раньше (маршрута не
+     | существовало). Включение — осознанный шаг человека:
+     | STUDENT_AGENT_ENABLED=true + config:cache после ревью.
+     */
+    'student_agent' => (bool) env('STUDENT_AGENT_ENABLED', false),
+
+    /*
+     | H3xxx — near-duplicate email guard at checkout signup (resolveUser()).
+     | Exact-email dedup (User::normalizeEmail) already refuses a second
+     | account for the SAME email; this catches a near-miss (typo'd domain —
+     | .con/.com, gmial/gmail, extra/missing char) that slips through as a
+     | genuinely new account, splitting one student's payments/access across
+     | two logins. Default OFF: never blocks checkout, only pings curators
+     | (NearDuplicateEmailDetector + CuratorNotifier::possibleDuplicateAccount)
+     | so a human can merge before it turns into a "why can't I see my paid
+     | block" ticket. Incident: Долгополова Анастасия, 2026-08-18 (block_1
+     | paid twice under anastasiadolgopolova25@gmail.com vs ...gmail.con).
+     */
+    'checkout_near_duplicate_email_guard' => (bool) env('CHECKOUT_NEAR_DUPLICATE_EMAIL_GUARD', false),
+
+    /*
+     | H3693 — referral CTA at three student-owned loyalty moments:
+     | homework accepted, student certificate list, dashboard course-complete.
+     | Reuses student/partials/referral.blade.php (H1294). Default OFF:
+     | merge is prod-inert; the existing cabinet include stays as it is.
+     | Do not put this invite on public /verify. partner.enabled stays OFF.
+     | Enable: REFERRAL_LOYALTY_CTA=true + php artisan config:cache.
+     */
+    'referral_loyalty_cta' => (bool) env('REFERRAL_LOYALTY_CTA', false),
+
+    /*
+     | H3764 (O2 + C4) — страница «Активация и завершаемость»: воронка
+     | активации по месячным когортам (оплатил → вошёл → открыл урок → сдал
+     | домашнюю, плюс медиана TTFL) и завершаемость по курсу/потоку (порог
+     | пройденных уроков + выданные сертификаты). Только чтение: страница
+     | ничего не пишет и денег не трогает. Доступ — RoleGate::accounting().
+     |
+     | ВЫКЛ по умолчанию: пока флаг OFF, пункт меню не появляется, а /admin/
+     | activation-completion-metrics отдаёт 403 — влитие прод-инертно.
+     | Включение — осознанный шаг человека: ACTIVATION_COMPLETION_METRICS=true
+     | + php artisan config:cache, ПОСЛЕ сверки знаменателей на проде (числа
+     | считаются из живой БД, кэша снимков нет). Пороги — не здесь, а в
+     | config/activation_metrics.php.
+     */
+    'activation_completion_metrics' => (bool) env('ACTIVATION_COMPLETION_METRICS', false),
+
+    /*
+     | H3821 — published fixed EUR/USD PayPal price list (PaypalForeignPriceService),
+     | replacing the ad hoc per-transaction manual quoting that H3819's reconciliation
+     | found varying 0-18% for the identical RUB tariff. ВЫКЛ по умолчанию: пока флаг
+     | OFF, PaypalClaimController::show() продолжает читать
+     | services.paypal.foreign_block_prices как раньше, и месячный refresh-cron
+     | (paypal:refresh-foreign-prices в Kernel) не запускается. Включение —
+     | PAYPAL_FIXED_PRICE_LIST_ENABLED=true + php artisan config:cache, ПОСЛЕ
+     | ручного прогона `php artisan paypal:refresh-foreign-prices --dry-run` и
+     | сверки чисел человеком.
+     */
+    'paypal_fixed_price_list' => (bool) env('PAYPAL_FIXED_PRICE_LIST_ENABLED', false),
+
+    /*
+     | H3915 — Exit-опрос на авто-триггер «завершение курса». Когда курсу
+     | выставляют is_completed (.CourseResource → «Курс завершён»), кураторский
+     | чат получает задачу с ГОТОВЫМИ черновиками для ЛИЧНОЙ отправки каждому
+     | из когорты «спросил цену → оплаты нет» этого курса (правило
+     | ACQUISITION_SURVEY_INSTRUMENTS_2026H2: отправляет куратор лично каждому,
+     | НЕ рассылкой). Система сама студентам НЕ пишет — только уведомление
+     | куратору; включать осознанно: EXIT_SURVEY_AUTO_TRIGGER=true +
+     | php artisan config:cache. Дедуп — courses.exit_survey_triggered_at;
+     | ручной/догоняющий прогон — surveys:exit-survey-completed.
+     */
+    'exit_survey_auto_trigger' => (bool) env('EXIT_SURVEY_AUTO_TRIGGER', false),
+
+    /*
+     | H4328 — полный пост расписания курса в чаты обучения (обзорное +
+     | занятия 1–N жирным, ритм-строка авто). Гейтит ВСЕ каналы отправки:
+     | свип courses:post-schedule --due, кнопку на курсе, авто-пост после
+     | «Сгенерировать поток». ВКЛЮЧАТЬ осознанно: SCHEDULE_FULL_POST_ENABLED=true
+     | + php artisan config:cache.
+     */
+    'schedule_full_post' => (bool) env('SCHEDULE_FULL_POST_ENABLED', false),
+
+    // H4392 (MG 08-09-2026): еженедельный пост «Кто на чём закончил» в чат
+    // «Институт» (care:weekly-finish). Получатель — TELEGRAM_INSTITUTE_CHAT_ID.
+    'weekly_finish_report' => (bool) env('WEEKLY_FINISH_REPORT_ENABLED', false),
+
+    /*
+     | H4608 — MIC shadow classify-all-inbound: каждое входящее сообщение
+     | поддержки (telegram + web) прогоняется через вендоренный MIC PHP-лоадер
+     | (tools/message-intent-classifier) и пишется ТОЛЬКО в телеметрию
+     | mic_shadow_classifications (per-plane {category, reason, null} +
+     | near-miss top-2). OFF = ровно ноль вызовов MIC, поведение ответов
+     | не меняется; текст сообщения нигде не пишется (только sha256-хеш).
+     | Это НЕ рантайм-флип: staging→runtime остаётся за H3529 (precision
+     | >=93% на корпусе). Включение телеметрии: MIC_SHADOW_CLASSIFY=true
+     | + php artisan config:cache (human ops).
+     */
+    'mic_shadow_classify' => (bool) env('MIC_SHADOW_CLASSIFY', false),
 ];

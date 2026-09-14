@@ -122,7 +122,7 @@ return [
             'rate_periods' => [
                 ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => null, 'from' => '2025-11-04', 'to' => '2026-01-29'],
                 ['kind' => 'percent', 'value_pct' => 30.0, 'bank_slice_pct' => 92.0, 'from' => '2026-03-22', 'to' => null],
-                ['kind' => 'fixed_monthly', 'value_rub' => 25000.0, 'from' => '2026-03-23', 'to' => null],
+                ['kind' => 'fixed_monthly', 'value_rub' => 25000.0, 'from' => '2026-03-23', 'to' => '2026-05-31'], // КШ-2 завершён и выплачен полностью (50 000 налом 29-05); период открывается заново при старте нового потока (MG 26-08)
             ],
             'direct_deductions' => [
             ],

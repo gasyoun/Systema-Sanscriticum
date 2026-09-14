@@ -173,4 +173,59 @@ class InstituteDonationTest extends TestCase
         $this->assertDatabaseCount('partner_conversions', 0);
         $this->assertNull($payment->fresh()->deposit_consumed_at);
     }
+
+    /** H4400 — SKU меценатства подставляет ратифицированную сумму MG 08-09. */
+    public function test_sku_substitutes_ratified_amount(): void
+    {
+        config(['institute.donations_enabled' => true]);
+
+        Http::fake([
+            'enter.tochka.com/*' => Http::response([
+                'Data' => ['paymentLink' => 'https://pay.tochka.com/redirect/sku', 'paymentLinkId' => 'tochka_sku_001'],
+            ], 200),
+        ]);
+
+        foreach (['monthly' => 500, 'yearly' => 5000, 'student' => 250] as $sku => $expected) {
+            $user = User::factory()->create();
+
+            $this->actingAs($user)
+                ->post(route('institute.donate'), ['sku' => $sku])
+                ->assertRedirect('https://pay.tochka.com/redirect/sku');
+
+            $this->assertDatabaseHas('payments', [
+                'user_id' => $user->id,
+                'tariff' => 'donation',
+                'status' => 'pending',
+                'amount' => $expected,
+            ]);
+        }
+    }
+
+    /** H4400 — неизвестный SKU отклоняется, платёж не создаётся. */
+    public function test_unknown_sku_is_rejected(): void
+    {
+        config(['institute.donations_enabled' => true]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('institute.donate'), ['sku' => 'vip'])
+            ->assertSessionHasErrors('sku');
+
+        $this->assertDatabaseMissing('payments', ['tariff' => 'donation']);
+    }
+
+    /** H4400 — без SKU прежний свободный ввод обязателен. */
+    public function test_missing_amount_without_sku_fails_validation(): void
+    {
+        config(['institute.donations_enabled' => true]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('institute.donate'), [])
+            ->assertSessionHasErrors('amount');
+
+        $this->assertDatabaseMissing('payments', ['tariff' => 'donation']);
+    }
 }

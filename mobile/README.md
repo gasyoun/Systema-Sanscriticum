@@ -1,6 +1,6 @@
 # Кабинет самскрте — mobile app (Capacitor wrapper)
 
-_Created: 12-07-2026 · Last updated: 12-07-2026_
+_Created: 12-07-2026 · Last updated: 05-09-2026_
 
 Wave 1 of the [mobile-app roadmap](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_MOBILE_APP_STUDENT_CABINET_2026_2027.md)
 (H824). This is a **Capacitor hybrid wrapper**: a native shell (Android + iOS) around
@@ -112,7 +112,7 @@ Guideline 4.8) are Wave 5 — do not build them here.
 ## App icon & splash
 
 Wave 1 uses Capacitor's default generated icons. To drop in real branding, see
-[`resources/README.md`](resources/README.md) (`npm run icons`).
+[`resources/README.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/mobile/resources/README.md) (`npm run icons`).
 
 ## Why `android/` and `ios/` are gitignored
 
@@ -136,7 +136,7 @@ config, the web shell (`www/`), env template, and docs. `node_modules/` and the 
   across app restarts by default (not cleared on exit), so a logged-in session
   survives.
 - **Splash / status bar** — `@capacitor/splash-screen` + `@capacitor/status-bar`,
-  configured in [`capacitor.config.ts`](capacitor.config.ts) (dark ground `#0b1020`,
+  configured in [`capacitor.config.ts`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/mobile/capacitor.config.ts) (dark ground `#0b1020`,
   gold accent `#c9a24b`).
 - **Offline / error** — `server.errorPath: 'error.html'` shows a local "Нет
   соединения" screen with a **Повторить** button when the cabinet is unreachable.
@@ -153,3 +153,5 @@ config, the web shell (`www/`), env template, and docs. `node_modules/` and the 
   handoff's build steps. Revisit if it becomes a requirement.
 - **Push notifications, `POST /api/v1/devices`, store submission, iOS build** — later
   waves (2/3/5), out of scope here.
+
+_Dr. Mārcis Gasūns_

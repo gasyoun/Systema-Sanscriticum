@@ -169,7 +169,7 @@ $canvas->page_text(
     $font, 8, [0.6, 0.6, 0.6]
 );
 
-$out = __DIR__.'/Руководство преподавателя.pdf';
+$out = __DIR__.'/rukovodstvo-prepodavatelya.pdf';
 file_put_contents($out, $dompdf->output());
 
 echo 'Источник: '.$source.PHP_EOL;

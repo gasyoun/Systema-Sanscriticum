@@ -26,31 +26,39 @@
                     class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
                 <i class="fas fa-key"></i> Сменить пароль
             </button>
+            {{-- H4463: повторный показ welcome-тура (тот же гейт, что у партиала) --}}
+            @if (config('features.cabinet_tour') && ! \App\Support\Impersonation::isActive())
+            <button type="button" x-on:click="$dispatch('open-cabinet-tour')"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
+                <i class="fas fa-route"></i> Обзор кабинета
+            </button>
+            @endif
         </div>
     </div>
 
     @include('student.partials.onboarding-checklist')
 
+    {{-- Анкета «Знакомство»: один раз на пользователя, пока не заполнена (рулинг MG 25-08-2026) --}}
+    @if (config('surveys.enabled')
+        && ! \App\Models\SurveyResponse::where('user_id', auth()->id())->where('survey_slug', 'onboarding')->exists())
+        <div class="mb-6 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 to-white shadow-sm px-5 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+            <div class="min-w-0">
+                <p class="font-bold text-sm text-[#101010] flex items-center gap-2">
+                    <i class="fas fa-wand-magic-sparkles text-brand"></i> Помогите подобрать вам группу
+                </p>
+                <p class="text-gray-500 text-xs mt-0.5">Две минуты о вас — и куратор предложит курс и слот по силам.</p>
+            </div>
+            <a href="{{ route('survey.show', ['slug' => 'onboarding']) }}"
+               class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-bold hover:bg-orange-700 transition-colors shadow-sm">
+                Заполнить анкету <i class="fas fa-arrow-right text-xs"></i>
+            </a>
+        </div>
+    @endif
+
     @include('student.partials.homework-alerts')
 
-    {{-- session('error'|'success') — self-service долг, CSRF 419, перенос даты.
-         До фикса flash терялся: DebtPaymentController писал error, а кабинет
-         показывал только password_status / bot_status → «кнопка ничего не делает». --}}
-    @if (session('error'))
-        <div x-data="{ show: true }" x-show="show" role="alert"
-             class="mb-6 flex items-center justify-between gap-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
-            <span><i class="fas fa-triangle-exclamation mr-1.5"></i>{{ session('error') }}</span>
-            <button type="button" x-on:click="show = false" class="text-red-500 hover:text-red-700" aria-label="Закрыть"><i class="fas fa-times"></i></button>
-        </div>
-    @endif
-
-    @if (session('success'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 8000)" role="status"
-             class="mb-6 flex items-center justify-between gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">
-            <span><i class="fas fa-check-circle mr-1.5"></i>{{ session('success') }}</span>
-            <button type="button" x-on:click="show = false" class="text-green-500 hover:text-green-700" aria-label="Закрыть"><i class="fas fa-times"></i></button>
-        </div>
-    @endif
+    {{-- session('error'|'success') — общий партиал с hybrid-страницами. --}}
+    @include('student.partials.flash-messages')
 
     @if (session('password_status'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)"
@@ -105,6 +113,8 @@
     @endif
 
     @include('student.partials.continue-learning-card')
+
+    @include('student.partials.waitlist-card')
 
     @include('student.partials.subscriber-shelf')
 
@@ -241,6 +251,10 @@
         'summary' => $accessProfileSummary ?? null,
         'enabled' => $accessSelfService ?? false,
     ])
+
+    {{-- H4434 — timezone settings card (MG 09-09-2026): device-TZ захват + --}}
+    {{-- селектор + временное пребывание. Показываем всем, МСК-резидентам плашка молчит. --}}
+    @include('components.timezone-settings')
 
     @php
         $marketingSettings = \App\Models\MarketingSetting::cached();
@@ -432,6 +446,7 @@
         {{-- Сетка 1-2-3-4 колонки со сдвигом на шаг вверх: фиксированный сайдбар (280px)
              съедает ширину, и при lg:3/xl:4 карточки ужимались до ~200px — кнопки переносились. --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mb-16">
+            @php $loyaltyCtaCourseComplete = false; @endphp
             @forelse($courses as $course)
                 <div class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100 hover:shadow-[0_15px_35px_rgba(232,92,36,0.08)] hover:border-brand/30 hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group overflow-hidden">
                     
@@ -484,7 +499,15 @@
                             $completedLessons = auth()->user()->completedLessons->whereIn('id', $course->lessons->pluck('id'))->count();
                             $percent = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
                             $nextLesson = ($nextLessonByCourseId ?? collect())->get($course->id);
+                            $canvas = ($canvasByCourseId ?? [])[$course->id] ?? null;
                         @endphp
+
+                        {{-- H4435: канва — две шкалы раздельно (наши занятия ≠ уроки учебника, MG 09-09). --}}
+                        @if($canvas && $canvas['group'] > 0)
+                            <div class="mb-3 rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 text-xs text-gray-600">
+                                {{ ucfirst($canvas['family']) }}: вы на уроке {{ $canvas['student'] }} из {{ $canvas['total'] }} · группа дошла до урока {{ $canvas['group'] }}
+                            </div>
+                        @endif
 
                         {{-- Блок прогресса прижат к низу карточки благодаря mt-auto --}}
                         <div class="mt-auto pt-4 border-t border-gray-50">
@@ -508,6 +531,7 @@
                                     </span>
                                 </div>
                             @elseif($totalLessons > 0)
+                                @php $loyaltyCtaCourseComplete = true; @endphp
                                 <div class="flex items-center gap-1.5 mb-4 text-xs text-emerald-600 font-semibold">
                                     <i class="fas fa-check-circle shrink-0"></i>
                                     <span>Все уроки пройдены</span>
@@ -599,6 +623,12 @@
             @endforelse
         </div>
 
+        @if(config('features.referral_loyalty_cta') && $loyaltyCtaCourseComplete)
+            <div class="mb-12" data-testid="referral-loyalty-cta-course-complete">
+                @include('student.partials.referral')
+            </div>
+        @endif
+
         {{-- ПРОБНЫЕ ЗАНЯТИЯ (оплачено пробное / разовый доступ к уроку) --}}
         @if(!empty($trialLessons) && $trialLessons->isNotEmpty())
         <div class="mb-16">
@@ -670,6 +700,11 @@
                     </div>
                 @endforeach
             </div>
+            @if(config('features.referral_loyalty_cta'))
+                <div class="mt-6" data-testid="referral-loyalty-cta-certificate">
+                    @include('student.partials.referral')
+                </div>
+            @endif
         </div>
         @endif
         
@@ -1083,5 +1118,8 @@
     @endif
 
 </div> {{-- Конец главного x-data контейнера --}}
+
+{{-- H4463: welcome-тур (автопоказ 1 раз + кнопка «Обзор кабинета» выше) --}}
+@include('student.partials.cabinet-tour')
 
 @endsection

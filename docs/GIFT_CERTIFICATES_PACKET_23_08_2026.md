@@ -1,3 +1,5 @@
+_Created: 23-08-2026 · Last updated: 05-09-2026_
+
 # H3334 — Gift certificates: тариф «в подарок» + код активации — датированный отчёт
 
 _Created: 23-08-2026 · Executor: OxAlpha (`x-preview-f-free`) · Handoff: [H3334](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3334-OxAlpha_Systema-Sanscriticum_gift-certificates-gift-tariff-activation-code_22.08.26.md)_
@@ -52,3 +54,5 @@ DomPDF рендерит A4 landscape бланк с QR на `/gift/verify/{number
 - Никакого нового рекуррентного пути: подарок — разовый платёж; членство-подарок идёт через существующий `ClubMembershipService::syncFromPayment`.
 - Сырой код нигде не логируется и не коммитится; Telegram-сообщение покупателю — указатель без кода.
 - Filament-ресурса сертификатов нет (минимальная подача); поиск поддержки — по payment_id/code_hint/публичному номеру.
+
+_Dr. Mārcis Gasūns_

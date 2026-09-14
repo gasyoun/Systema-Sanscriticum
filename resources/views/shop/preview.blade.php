@@ -4,25 +4,11 @@
 @section('content')
 @php
     // Тот же парсер ссылок, что и в плеере кабинета (student/lesson.blade.php).
-    $cleanYoutubeId = null;
-    $rawYoutube = $lesson->youtube_url ?? null;
-    if (! empty($rawYoutube)) {
-        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $rawYoutube, $m)) {
-            $cleanYoutubeId = $m[1];
-        } else {
-            $cleanYoutubeId = $rawYoutube;
-        }
-    }
-
-    $cleanRutubeId = null;
-    $rawRutube = $lesson->rutube_url ?? null;
-    if (! empty($rawRutube)) {
-        if (preg_match('/rutube\.ru\/(?:video|play\/embed)\/([a-zA-Z0-9_-]+)/i', $rawRutube, $m)) {
-            $cleanRutubeId = $m[1];
-        } else {
-            $cleanRutubeId = $rawRutube;
-        }
-    }
+    // H4396: сырые unlisted-ID в HTML не уходят — iframe грузит серверные ворота
+    // записи (RecordingGateController); preview-урок они пускают гостю.
+    $hasYoutube = \App\Http\Controllers\StudentController::parseVideoId($lesson->youtube_url, 'youtube') !== null;
+    $hasRutube = \App\Http\Controllers\StudentController::parseVideoId($lesson->rutube_url, 'rutube') !== null;
+    $gateUrl = fn (string $player): string => route('student.recording.gate', [$course->slug, $lesson->id, $player]);
 @endphp
 
 <div class="min-h-screen bg-[#0A0D14] text-white font-sans relative overflow-hidden">
@@ -50,12 +36,12 @@
         {{-- Видеоплеер (тот же embed, что в кабинете) --}}
         <div class="w-full bg-[#111622] rounded-3xl overflow-hidden shadow-2xl border border-[#1F2636] relative">
             <div class="relative aspect-video w-full bg-black">
-                @if($cleanYoutubeId)
-                    <iframe src="https://www.youtube.com/embed/{{ $cleanYoutubeId }}?rel=0"
+                @if($hasYoutube)
+                    <iframe src="{{ $gateUrl('youtube') }}"
                             class="w-full h-full absolute inset-0" allowfullscreen
                             allow="autoplay; encrypted-media"></iframe>
-                @elseif($cleanRutubeId)
-                    <iframe src="https://rutube.ru/play/embed/{{ $cleanRutubeId }}"
+                @elseif($hasRutube)
+                    <iframe src="{{ $gateUrl('rutube') }}"
                             class="w-full h-full absolute inset-0" allowfullscreen
                             allow="autoplay; encrypted-media"></iframe>
                 @elseif($lesson->video_url)

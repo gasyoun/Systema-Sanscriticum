@@ -128,7 +128,7 @@
         @include('partials.referral-welcome')
         
         <div class="text-center mb-12">
-    <h1 class="text-5xl md:text-6xl font-extrabold mb-4 tracking-tight">
+    <h1 class="text-3xl sm:text-5xl md:text-6xl font-extrabold mb-4 tracking-tight leading-tight break-words max-w-full">
         Курсы санскрита с нуля — шаг за шагом, с преподавателем
     </h1>
 

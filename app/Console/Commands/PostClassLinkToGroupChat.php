@@ -55,11 +55,19 @@ class PostClassLinkToGroupChat extends Command
             ->whereNull('group_link_posted_at')
             ->whereNotNull('group_id')
             ->whereBetween('start', [now(), now()->addMinutes($lead)])
+            ->orderBy('id')
             ->get();
 
         $posted = 0;
 
-        foreach ($schedules as $schedule) {
+        // Инцидент 11-09-2026 (курс 348): две живые строки на один слот не должны
+        // дать два поста — группируем по (группа, старт): один пост на слот,
+        // помечаются все строки слота. Зеркало той же группировки в zapisi:remind-classes.
+        $slots = $schedules->groupBy(fn (Schedule $s): string => ($s->group_id ?? 0).':'.($s->start?->format('Y-m-d H:i') ?? ''));
+
+        foreach ($slots as $slotRows) {
+            $rows = $slotRows->sortBy('id')->values();
+            $schedule = $rows->first();
             $group = $schedule->group;
 
             // Нет чата группы — постить некуда; НЕ помечаем как отправленное,
@@ -79,7 +87,7 @@ class PostClassLinkToGroupChat extends Command
             // пост от другого бота студенты читают как повтор. Пропускаем без пометки:
             // колонки обеих команд сбрасываются при переносе start, так что при
             // переносе занятия автопостинг снова станет активен наравне с zapisi.
-            if ($schedule->zapisi_reminded_at !== null) {
+            if ($rows->contains(fn (Schedule $r): bool => $r->zapisi_reminded_at !== null)) {
                 continue;
             }
 
@@ -88,7 +96,10 @@ class PostClassLinkToGroupChat extends Command
                 $this->buildText($schedule, $link),
             );
 
-            $schedule->update(['group_link_posted_at' => now()]);
+            foreach ($rows as $row) {
+                $row->update(['group_link_posted_at' => now()]);
+            }
+
             $posted++;
         }
 

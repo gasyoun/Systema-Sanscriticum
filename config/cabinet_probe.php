@@ -63,6 +63,86 @@ return [
      */
     'check_server_guards' => (bool) env('CABINET_PROBE_CHECK_GUARDS', true),
 
+    /*
+     * 28-08-2026 Tochka TLS incident: платежи лежали четыре дня (25–28-08,
+     * cURL error 60 — «Точка» сменила цепочку на Russian Trusted Root CA,
+     * отсутствовавший в серверном CA-бандле), а ни одна проверка этого не
+     * видела: in-process surfaces ходят на localhost, guards смотрят в файлы
+     * и systemd, outbound-TLS не смотрел никто. Проба бьёт в API эквайринга
+     * снаружи: ЛЮБОЙ HTTP-ответ (неавторизованный 401/403/404 — нормален)
+     * значит, что TLS жив; critical только на падении соединения.
+     */
+    'check_payment_tls' => (bool) env('CABINET_PROBE_CHECK_PAYMENT_TLS', true),
+    'payment_probe_url' => (string) env(
+        'CABINET_PROBE_PAYMENT_URL',
+        'https://enter.tochka.com/uapi/acquiring/v1.0/payments_with_receipt',
+    ),
+
+    /*
+     * H37xx: синтетическая проба загрузки ДЗ — «постоянно ломается подача ДЗ»
+     * повторялась 3 раза (молчаливый 64MB-порог, OOM сборки PDF, дубли при
+     * зависании), а ни одна проверка не трогала реальный upload-путь: все
+     * surfaces выше — GET. Пишет один тестовый файл через ту же
+     * HomeworkService::recordSubmission(..., finalize: false), что и форма
+     * студента, и удаляет его в finally — идемпотентно на каждом прогоне.
+     *
+     * ВАЖНО: наводить на ВЫДЕЛЕННЫЙ sandbox-урок (никогда на реальный урок
+     * настоящего курса) — is_free=true (без грантов/оплаты), homework_enabled=
+     * true, homework_closed_at=null. Пусто по умолчанию — проверка тихо
+     * пропускается, пока урок не заведён и не назван явно (как TEST_STUDENT_*).
+     *
+     * НЕ покрывает: php.ini/nginx client_max_body_size на самом проде (это
+     * in-process вызов внутри artisan-процесса пробы, не настоящий HTTP через
+     * nginx/php-fpm) и CSRF/HTTP-валидацию формы — тот класс инцидента
+     * (несовпадение upload_max_filesize/post_max_size с client_max_body_size)
+     * эта проба не ловит; она ловит регрессии в самом коде записи (роут/
+     * конфиг/диск/БД). Чёрный ящик через реальный HTTP — сознательно deferred,
+     * как Playwright выше по файлу.
+     */
+    'check_homework_upload' => (bool) env('CABINET_PROBE_CHECK_HOMEWORK_UPLOAD', true),
+
+    /*
+     * 02-09-2026 инцидент schedule 1620 (курсы 401/399): серии занятий нового
+     * учебного года сгенерированы без ссылок, и в TG-чат ушло напоминание
+     * «…по ссылке:» без самой ссылки. Кодовый guard (skip-unmarked в
+     * zapisi:remind-classes) теперь не отправляет сломанное напоминание, но
+     * молча: без этой проверки пустота всплывала бы только на живом занятии.
+     * Проба ищет БУДУЩИЕ занятия с группой в TG-чате, у которых на всех трёх
+     * уровнях fallback-цепочки (zoom_join_url → link → course.zoom_link) пусто.
+     * Soft (не outage): у админа есть время заполнить ссылку до занятия.
+     */
+    'check_schedule_links' => (bool) env('CABINET_PROBE_CHECK_SCHEDULE_LINKS', true),
+    'schedule_links_horizon_days' => (int) env('CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS', 14),
+
+    /*
+     | H3803: «прод перестал получать код» — отказ, который не видно.
+     |
+     | 31-08-2026 протух PAT, вшитый в URL `origin`; `git pull` начал отдавать
+     | 401 и уронил deploy.sh. Сайт остался 200, дерево чистым, предохранитель
+     | целым — сломалось только поступление нового кода, а на это никто не
+     | смотрел. Полчаса auto-deploy падал в лог, который никто не читает.
+     |
+     | Обе ноги ЛОКАЛЬНЫЕ: проба ходит раз в 15 минут, и `git fetch` из неё
+     | привязал бы health-чек к доступности GitHub.
+     |
+     | fetch_max_age: сколько минут допустимо без УСПЕШНОГО fetch. Auto-deploy
+     | ходит каждые 30 минут, поэтому 90 = три пропущенных подряд, а не рябь.
+     | Это главная нога: когда fetch падает, ref origin/main замерзает вместе
+     | с HEAD, отставание остаётся нулевым, и сравнение HEAD↔origin/main
+     | рапортует полное здоровье.
+     |
+     | behind_max_age: сколько минут коммит может лежать на origin/main
+     | недовыложенным. Ловит обратный отказ — fetch работает, деплой нет.
+     | Скидка нужна, чтобы только что смерженный PR и деплой в процессе
+     | не поднимали тревогу.
+     */
+    'homework_probe_course_slug' => (string) env('CABINET_PROBE_HOMEWORK_COURSE', ''),
+    'homework_probe_lesson_id' => (int) env('CABINET_PROBE_HOMEWORK_LESSON_ID', 0),
+
+    'check_deploy_drift' => (bool) env('CABINET_PROBE_CHECK_DEPLOY_DRIFT', true),
+    'deploy_drift_fetch_max_age_minutes' => (int) env('CABINET_PROBE_DEPLOY_DRIFT_FETCH_MAX_AGE', 90),
+    'deploy_drift_behind_max_age_minutes' => (int) env('CABINET_PROBE_DEPLOY_DRIFT_BEHIND_MAX_AGE', 60),
+
     'error_markers' => [
         'Whoops',
         'Server Error',
@@ -100,6 +180,31 @@ return [
         ['name' => 'student.messages', 'label' => 'student /messages', 'severity' => 'critical'],
         ['name' => 'student.open-lessons', 'label' => 'student /open-lessons', 'severity' => 'critical'],
     ],
+
+    /*
+     | H4641: канва-факстура студенческой ветки.
+     |
+     | student.dashboard исполняет kanva-курсор H4435 только когда у
+     | smoke-студента есть курс с заголовком семейства канвы
+     | (TextbookScale::courseFamilyPublic — «Кочерг…»/«Бю…») + факт
+     | посещения. Без этого фатал класса инцидента 10-13.09.2026
+     | (unqualified inline FQCN → /dvaram 500, 43 ошибки / 9 студентов /
+     | ~3 дня) пробой не ловится: студент без курса-учебника молча
+     | проходит мимо ветки.
+     |
+     | Паттерн homework-факстуры: человек заводит курс (заголовок с
+     | «Кочергина», is_active=true) и одну группу ОДИН раз, ID пинается
+     | в env. Команда ДОзаводит только недостающие связи smoke-студента
+     | (членство в группе, один факт посещения) — идемпотентно.
+     | 0 = канва-факстура тихо пропускается.
+     |
+     | НЕ покрывает: студента с курсом-учебником, у которого НЕТ факта
+     | посещения до строки Schedule::where (самая ранняя точка фатала) —
+     | эта проба сознательно уходит ДО student_surfaces и заводит факт,
+     | чтобы поверх факстуры исполнился весь канва-блок, включая запрос
+     | факта и курсоры.
+     */
+    'kanva_fixture_course_id' => (int) env('CABINET_PROBE_KANVA_COURSE_ID', 0),
 
     // Ops runbook appended to TG alerts.
     'runbook' => [

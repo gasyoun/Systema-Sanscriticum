@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Clusters\TelegramSupport;
 use App\Models\ChatMessage;
+use App\Models\SupportAiReplyEvent;
 use App\Models\SupportDailyRollup;
 use App\Models\TelegramSupportMessage;
 use App\Services\TelegramSupport\SupportDashboardPacketBuilder;
@@ -301,6 +302,32 @@ class TelegramSupportAnalytics extends Page
             UnifiedMessage::RESPONDER_AI => ['bot'],
             default => ['user'],
         };
+    }
+
+    /**
+     * H3395: ручные использования шаблонов библиотеки куратором (Helpdesk-сенд,
+     * начатый с шаблона) за 30 дней — топ-10 для таблицы на странице. Denominator
+     * для ревью библиотеки H2339: без него видны только автосенды (dm_auto_sent),
+     * ручные канреплаи были невидимы (S9 gap #3).
+     *
+     * @return Collection<int, array{template_id:int|null,title:string,uses:int,last_used_at:string|null}>
+     */
+    public function getManualTemplateUsesProperty(): Collection
+    {
+        return SupportAiReplyEvent::query()
+            ->where('event_type', SupportAiReplyEvent::EVENT_TEMPLATE_USED)
+            ->where('created_at', '>=', now()->subDays(30))
+            ->get(['meta', 'created_at'])
+            ->groupBy(fn (SupportAiReplyEvent $event): string => (string) ($event->meta['template_id'] ?? 'unknown'))
+            ->map(fn (Collection $group, string $templateId): array => [
+                'template_id' => is_numeric($templateId) ? (int) $templateId : null,
+                'title' => (string) ($group->first()->meta['title'] ?? '—'),
+                'uses' => $group->count(),
+                'last_used_at' => $group->max('created_at')?->timezone(config('app.timezone'))->format('d.m.Y H:i'),
+            ])
+            ->sortByDesc('uses')
+            ->take(10)
+            ->values();
     }
 
     public function getTopicOptionsProperty(): array

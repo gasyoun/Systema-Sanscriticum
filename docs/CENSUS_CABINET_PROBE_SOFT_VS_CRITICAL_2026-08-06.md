@@ -1,3 +1,5 @@
+_Created: 06-08-2026 · Last updated: 05-09-2026_
+
 # Census: cabinet:probe soft vs critical (prod)
 
 _Created: 06-08-2026 · Last updated: 07-08-2026 (H2335 soft sticky shipped)_

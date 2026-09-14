@@ -122,8 +122,10 @@ class PayrollForecastTest extends TestCase
     /** @test */
     public function rate_gap_falls_back_with_warning_note(): void
     {
-        // Периоды Лейтана заканчиваются 2026-07-23 — сентябрь вне таймлайна.
-        $res = $this->calc()->netFor('leytan', '2026-09-29', ['receipts_rub' => [5000.0]]);
+        // С 26-08-2026 (PR #2110) последний период ставки Лейтана открытый (to => null) —
+        // ставка действует до объявления Марины, и «разрыва» в будущем больше нет.
+        // Настоящий разрыв в таймлайне есть между периодами: 2025-08-22 … 2025-10-18.
+        $res = $this->calc()->netFor('leytan', '2025-09-15', ['receipts_rub' => [5000.0]]);
 
         $this->assertSame('lms_fallback', $res['kind']);
         $this->assertTrue(collect($res['notes'])->contains(fn ($n) => str_contains($n, '⚠️')));
@@ -156,11 +158,12 @@ class PayrollForecastTest extends TestCase
 
         $week = collect($grid['weeks'])->firstWhere('iso_week', Carbon::parse('2026-09-29')->isoWeek);
         $this->assertNotNull($week);
+
+        // Фантом-фильтр (#2116/#2117, MG 26-08): фиксированный период Ворошилова закрыт
+        // 2026-05-31 (поток Kashmir закончен и выплачен), поступлений и баланса нет —
+        // будущий блок сентября больше НЕ прогнозирует выплату 25 000.
         $due = collect($week['due'])->first(fn ($d) => $d['name'] === 'Максим Ворошилов');
-        $this->assertNotNull($due);
-        $this->assertSame(25000.0, $due['amount_rub_prelim']);
-        $this->assertTrue($due['preliminary']);
-        $this->assertSame('tochka_maria', $due['channel']);
+        $this->assertNull($due, 'finished stream must not forecast a phantom payout row');
 
         // Штат присутствует одной сеткой с преподавателями (рулинг #10)
         $allNames = collect($grid['weeks'])->flatMap(fn ($w) => collect($w['due'])->pluck('name'))->unique();

@@ -12,6 +12,7 @@ use App\Models\Tariff;
 use App\Models\User;
 use App\Services\AttributionService;
 use App\Services\CuratorNotifier;
+use App\Services\Payments\PaypalForeignPriceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -33,28 +34,44 @@ use Illuminate\View\View;
  */
 final class PaypalClaimController extends Controller
 {
-    public function show(Tariff $tariff): View
+    /**
+     * H3990: режим доплаты (разовая акция, MG 02-09-2026 — отдельный тариф
+     * НЕ заводим). Та же форма, но с фиксированной доплатой €22/$26 (правило
+     * округления рулинга 02-09: 2 000 ₽ → €22/$26) и специальной проводкой:
+     * закрывает уже существующий ОТКРЫТЫЙ счёт-доплату 2 000 ₽ этого ученика
+     * по курсу тарифа, а НЕ создаёт строку полной цены блока.
+     */
+    public const SUPPLEMENT_EUR = 22.0;
+
+    public const SUPPLEMENT_USD = 26.0;
+
+    public const SUPPLEMENT_RUB = 2000.0;
+
+    public function showSupplement(Tariff $tariff, PaypalForeignPriceService $prices): View
+    {
+        return $this->show($tariff, $prices, true);
+    }
+
+    public function show(Tariff $tariff, PaypalForeignPriceService $prices, bool $supplement = false): View
     {
         $this->abortUnlessEnabled($tariff);
 
         $tariff->load('course');
 
         // MG 23-08-2026: рублевую цену на форме не показываем (в PayPal платят
-        // только EUR/USD и дороже рублевых). Валютная цена за блок берется из
-        // конфига по course_id и показывается только блочным тарифам.
-        $foreignPrice = null;
-        if ($tariff->type === 'block') {
-            $fp = config('services.paypal.foreign_block_prices')[$tariff->course_id] ?? null;
-            if (is_array($fp) && isset($fp['eur'], $fp['usd'])) {
-                $foreignPrice = $fp;
-            }
-        }
+        // только EUR/USD и дороже рублевых).
+        $foreignPrice = $supplement
+            ? ['eur' => self::SUPPLEMENT_EUR, 'usd' => self::SUPPLEMENT_USD, 'markup_applied' => false]
+            : (config('features.paypal_fixed_price_list')
+            ? $this->fixedForeignPrice($tariff, $prices)
+            : $this->legacyForeignPrice($tariff));
 
         return view('paypal.claim', [
             'tariff' => $tariff,
             'course' => $tariff->course,
             'price' => (float) $tariff->price,
             'foreignPrice' => $foreignPrice,
+            'isSupplement' => $supplement,
             'meLink' => (string) config('services.paypal.me_link'),
             'recipient' => (string) config('services.paypal.recipient'),
         ]);
@@ -63,6 +80,10 @@ final class PaypalClaimController extends Controller
     public function store(StorePaypalClaimRequest $request, Tariff $tariff, CuratorNotifier $curators): RedirectResponse
     {
         $this->abortUnlessEnabled($tariff);
+
+        if ($request->boolean('supplement_mode')) {
+            return $this->storeSupplement($request, $tariff, $curators);
+        }
 
         // Ruling 22-08-2026: заявка СУЩЕСТВУЮЩЕГО ученика (вошедшего в кабинет)
         // сразу paid — доступ/финансы открываются немедленно штатным
@@ -140,6 +161,145 @@ final class PaypalClaimController extends Controller
         return redirect()
             ->route('paypal.claim.show', $tariff)
             ->with('success', $success);
+    }
+
+    /**
+     * H3990: проводка доплаты. ВАЖНО (money-contour):
+     *  1. Сумма обязана совпасть с объявленной доплатой (€22/$26, допуск 0.5 —
+     *     дроби в paste-парсере); иначе валидационный отказ, «пол-блока по цене
+     *     доплаты» закрыть нельзя.
+     *  2. Открытый счёт-доплата (pending, 2 000 ₽, этот user+course) помечается
+     *     paid БЕЗ model-событий (fireOnPaid granting access по чужому tariff-
+     *     ключу недопустим); сверка выборочная пост-фактум — как у trusted-заявок.
+     *  3. Если счёта нет — создаётся pending-строка доплаты 2 000 ₽ (никогда
+     *     не 8 000 и никогда не trusted-paid), доступ не открывается.
+     */
+    private function storeSupplement(StorePaypalClaimRequest $request, Tariff $tariff, CuratorNotifier $curators): RedirectResponse
+    {
+        $expected = $request->validated('foreign_currency') === 'USD'
+            ? self::SUPPLEMENT_USD
+            : self::SUPPLEMENT_EUR;
+
+        if (abs((float) $request->validated('foreign_amount') - $expected) > 0.5) {
+            // H4077: живой кейс — студент перевёл одной суммой доплату и следующий
+            // блок (112 = 22+90) и получил отказ без объяснения, что делать дальше.
+            // Инвариант суммы не ослабляем — объясняем путь.
+            throw ValidationException::withMessages([
+                'foreign_amount' => 'Доплата за блок — ровно '.$expected.' '
+                    .($request->validated('foreign_currency') === 'USD' ? '$' : '€')
+                    .'. Укажите в поле суммы именно это число. Если перевели одной суммой доплату и следующий блок — отправьте эту форму, указав сумму '.$expected.', и напишите нам в Telegram (t.me/rusamskrtam): остаток зачтём за следующий блок. Полную стоимость блока оформляйте обычной формой оплаты.',
+            ]);
+        }
+
+        $user = $this->resolveUser($request);
+
+        $proofPath = $request->file('proof')?->store('paypal-proofs', 'local') ?: null;
+
+        $invoice = Payment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $tariff->course_id)
+            ->where('amount', self::SUPPLEMENT_RUB)
+            ->where('status', 'pending')
+            ->orderBy('id')
+            ->first();
+
+        if ($invoice !== null) {
+            $claimMeta = array_filter([
+                'paypal_payer' => (string) $request->validated('paypal_payer'),
+                'paid_on' => (string) $request->validated('paid_on'),
+                'txn' => $request->validated('paypal_txn'),
+                'supplement' => true,
+                'supplement_tariff_id' => $tariff->id,
+                'proof_path' => $proofPath,
+            ], fn ($v) => $v !== null && $v !== '');
+
+            // withoutEvents: инвойс — проводка долга, не покупка. fireOnPaid по
+            // строке с неканоническим tariff-ключом выдал бы доступ/энролл
+            // повторно; закрытие долга этого не требует.
+            Payment::withoutEvents(function () use ($invoice, $request, $claimMeta): void {
+                $invoice->forceFill([
+                    'status' => 'paid',
+                    'foreign_amount' => (float) $request->validated('foreign_amount'),
+                    'foreign_currency' => $request->validated('foreign_currency'),
+                    'claim_meta' => $claimMeta,
+                    'provider' => Payment::PROVIDER_PAYPAL,
+                    'payer_note' => Str::limit(trim(($invoice->payer_note ?? '').' · PayPal-доплата from: '
+                        .$request->validated('paypal_payer').' · paid_on: '.$request->validated('paid_on')
+                        .($request->validated('paypal_txn') ? ' · txn: '.$request->validated('paypal_txn') : '')), 250, ''),
+                ])->save();
+                $invoice->refresh();
+            });
+
+            $curators->paypalClaimReceived($invoice);
+            Mail::to($user)->send(new PaypalClaimStudentAckMail($invoice));
+
+            return redirect()
+                ->route('paypal.claim.show', $tariff)
+                ->with('success', 'Спасибо, доплата получена — счёт закрыт. Подтверждение уходит на ваш email.');
+        }
+
+        // Счёта нет: pending-строка доплаты (не trusted), доступ не открывается.
+        $payment = DB::transaction(function () use ($user, $tariff, $request, $proofPath): Payment {
+            return Payment::create([
+                'user_id' => $user->id,
+                'course_id' => $tariff->course_id,
+                'amount' => self::SUPPLEMENT_RUB,
+                'foreign_amount' => (float) $request->validated('foreign_amount'),
+                'foreign_currency' => $request->validated('foreign_currency'),
+                'tariff' => $tariff->accessKey(),
+                'start_block' => null,
+                'end_block' => null,
+                'status' => 'pending',
+                'provider' => Payment::PROVIDER_PAYPAL,
+                'proof_path' => $proofPath,
+                'claim_meta' => ['supplement' => true, 'supplement_tariff_id' => $tariff->id,
+                    'paypal_payer' => (string) $request->validated('paypal_payer'),
+                    'paid_on' => (string) $request->validated('paid_on')],
+                'payer_note' => 'PayPal-доплата (счёт не найден) · from: '.$request->validated('paypal_payer')
+                    .' · paid_on: '.$request->validated('paid_on'),
+            ]);
+        });
+
+        $curators->paypalClaimReceived($payment);
+        Mail::to($user)->send(new PaypalClaimStudentAckMail($payment));
+
+        return redirect()
+            ->route('paypal.claim.show', $tariff)
+            ->with('success', 'Спасибо, заявка о доплате получена — мы сверим платеж и закроем счёт.');
+    }
+
+    /** Pre-H3821 behavior: manual config array, block tariffs only. Unchanged while the flag is dark. */
+    private function legacyForeignPrice(Tariff $tariff): ?array
+    {
+        if ($tariff->type !== 'block') {
+            return null;
+        }
+
+        $fp = config('services.paypal.foreign_block_prices')[$tariff->course_id] ?? null;
+
+        return is_array($fp) && isset($fp['eur'], $fp['usd']) ? $fp : null;
+    }
+
+    /**
+     * H3821: published fixed price for ANY tariff type, with the
+     * student_discounts-active carve-out (no 8% markup for that payer).
+     */
+    private function fixedForeignPrice(Tariff $tariff, PaypalForeignPriceService $prices): ?array
+    {
+        $user = auth()->user();
+
+        $eur = $prices->priceFor($tariff, 'EUR', $user);
+        $usd = $prices->priceFor($tariff, 'USD', $user);
+
+        if (! $eur || ! $usd) {
+            return null;
+        }
+
+        return [
+            'eur' => $eur['price'],
+            'usd' => $usd['price'],
+            'markup_applied' => $eur['markup_applied'],
+        ];
     }
 
     private function abortUnlessEnabled(Tariff $tariff): void

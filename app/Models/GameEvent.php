@@ -56,6 +56,19 @@ class GameEvent extends Model
     // H1680 — увиденные в раунде леммы (payload.items), сид для onboarding-from-games.
     public const ITEM_SEEN = 'item_seen';
 
+    // H4396 — серверный счётчик бюджета бесплатных игр: один round = один
+    // завершённый раунд (тот же edge `.feedback.show`, что считает gate.js
+    // локально). Отличается от COMPLETE (та телеметрия шлёт один раз на
+    // ЗАГРУЗКУ страницы и остаётся воронкой) — бюджет считается по round,
+    // поэтому перезагрузки страницы не сбрасывают и не дублируют счёт.
+    public const ROUND = 'round';
+
+    // H4692 — трудность по вопросам: один event на завершённый match-раунд,
+    // payload = {hints: 0|1, items: [{l, r, ms, wrong}]}. ms — время от начала
+    // раунда до первой связки пары, wrong — сколько «Проверить» оценили пару
+    // неверно. Тексты l/r — контент тренажёра (без PII), как в item_seen.
+    public const ITEM_RESULT = 'item_result';
+
     /** Белый список: всё, что не отсюда, приёмник отклоняет 422. */
     public const EVENTS = [
         self::START,
@@ -63,6 +76,8 @@ class GameEvent extends Model
         self::GATE_SHOWN,
         self::GATE_CTA_CLICK,
         self::ITEM_SEEN,
+        self::ROUND,
+        self::ITEM_RESULT,
     ];
 
     /**
@@ -146,5 +161,76 @@ class GameEvent extends Model
             'rate' => round($registered / $clickers * 100, 1),
             'baseline_only' => $clickers < 50,
         ];
+    }
+
+    /**
+     * H4692 — агрегат трудности по вопросам за окно: одна строка на
+     * (drill, band, текст правой пары), с числом раундов, медианой и средним
+     * ms до первой связки пары и долей раундов, где пару хоть раз проверили
+     * с ошибкой. Сортировка — самые трудные сверху (wrong_rate, затем медиана).
+     * Агрегация в PHP: payload — JSON, объём — строка на раунд, портируемый
+     * JSON-SQL ради внутреннего отчёта не нужен (тот же стиль, что funnel()).
+     *
+     * @return list<array{drill: string, band: ?string, item: string, rounds: int, median_ms: int, avg_ms: int, wrong_rate: float}>
+     */
+    public static function difficulty(\DateTimeInterface $since): array
+    {
+        $events = static::query()
+            ->where('event', self::ITEM_RESULT)
+            ->where('created_at', '>=', $since)
+            ->get(['drill', 'band', 'payload']);
+
+        $acc = [];
+        foreach ($events as $ev) {
+            $items = is_array($ev->payload) ? ($ev->payload['items'] ?? null) : null;
+            if (! is_array($items)) {
+                continue;
+            }
+            foreach ($items as $item) {
+                if (! is_array($item)
+                    || ! isset($item['r'])
+                    || ! is_string($item['r'])
+                    || $item['r'] === '') {
+                    continue;
+                }
+                $key = $ev->drill.'|'.($ev->band ?? '').'|'.$item['r'];
+                $acc[$key] ??= [
+                    'drill' => (string) $ev->drill,
+                    'band' => $ev->band !== null ? (string) $ev->band : null,
+                    'item' => $item['r'],
+                    'ms' => [],
+                    'wrongRounds' => 0,
+                    'rounds' => 0,
+                ];
+                $acc[$key]['rounds']++;
+                $acc[$key]['ms'][] = is_numeric($item['ms'] ?? null) ? (int) $item['ms'] : 0;
+                if (is_numeric($item['wrong'] ?? null) && (int) $item['wrong'] > 0) {
+                    $acc[$key]['wrongRounds']++;
+                }
+            }
+        }
+
+        $rows = array_map(static function (array $a): array {
+            $msList = $a['ms'];
+            sort($msList);
+            $n = count($msList);
+            $median = $n % 2 === 1
+                ? $msList[intdiv($n, 2)]
+                : intdiv($msList[intdiv($n, 2) - 1] + $msList[intdiv($n, 2)], 2);
+
+            return [
+                'drill' => $a['drill'],
+                'band' => $a['band'],
+                'item' => $a['item'],
+                'rounds' => $a['rounds'],
+                'median_ms' => $median,
+                'avg_ms' => (int) round(array_sum($msList) / max(1, $n)),
+                'wrong_rate' => round($a['wrongRounds'] / max(1, $a['rounds']) * 100, 1),
+            ];
+        }, array_values($acc));
+
+        usort($rows, fn (array $x, array $y): int => [$y['wrong_rate'], $y['median_ms']] <=> [$x['wrong_rate'], $x['median_ms']]);
+
+        return $rows;
     }
 }

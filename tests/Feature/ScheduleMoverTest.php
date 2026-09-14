@@ -78,6 +78,71 @@ class ScheduleMoverTest extends TestCase
     }
 
     // ------------------------------------------------------------------
+    // Гвардии коллизий слотов (инцидент 11-09-2026: курс 348 «Бхагавадгита
+    // 4 цикл» — перенос лёг на существующую строку серии, две строки в одном
+    // слоте дали студентам два «Скоро занятие» в одну секунду)
+    // ------------------------------------------------------------------
+
+    /** @test */
+    public function reschedule_onto_occupied_slot_throws_and_changes_nothing(): void
+    {
+        $group = Group::create(['name' => 'Гр. Коллизия']);
+        $t0 = now()->addDays(2)->setTime(20, 0)->seconds(0);
+
+        $a = Schedule::create(['title' => 'A', 'start' => $t0, 'group_id' => $group->id]);
+        $b = Schedule::create(['title' => 'B', 'start' => $t0->copy()->addDay(), 'group_id' => $group->id]);
+
+        try {
+            $this->mover()->reschedule($a, $b->start->copy());
+            $this->fail('Ожидался InvalidArgumentException: слот занят');
+        } catch (InvalidArgumentException $e) {
+            $this->assertStringContainsString((string) $b->id, $e->getMessage());
+        }
+
+        $a->refresh();
+        $b->refresh();
+        $this->assertTrue($a->start->equalTo($t0), 'занятие A не должно было переехать');
+        $this->assertTrue($b->start->equalTo($t0->copy()->addDay()));
+    }
+
+    /** @test */
+    public function reschedule_to_free_slot_of_other_group_is_not_blocked(): void
+    {
+        $g1 = Group::create(['name' => 'Гр. 1']);
+        $g2 = Group::create(['name' => 'Гр. 2']);
+        $t0 = now()->addDays(2)->setTime(20, 0)->seconds(0);
+
+        // Слот занят в ДРУГОЙ группе — не помеха: гвардия групповая.
+        Schedule::create(['title' => 'Чужой', 'start' => $t0->copy()->addDay(), 'group_id' => $g2->id]);
+        $a = Schedule::create(['title' => 'A', 'start' => $t0, 'group_id' => $g1->id]);
+
+        $this->mover()->reschedule($a, $t0->copy()->addDay());
+        $this->assertTrue($a->fresh()->start->equalTo($t0->copy()->addDay()));
+    }
+
+    /** @test */
+    public function cancel_refuses_when_chain_already_has_same_slot_pair(): void
+    {
+        $group = Group::create(['name' => 'Гр. Пред-коллизия']);
+        $t0 = now()->addDays(2)->setTime(20, 0)->seconds(0);
+
+        // Дубль в одном слоте (как 1489/1490) + обычный хвост.
+        Schedule::create(['title' => 'A', 'start' => $t0, 'group_id' => $group->id]);
+        Schedule::create(['title' => 'B', 'start' => $t0->copy(), 'group_id' => $group->id]);
+        $c = Schedule::create(['title' => 'C', 'start' => $t0->copy()->addWeek(), 'group_id' => $group->id]);
+
+        try {
+            $this->mover()->cancelAndShiftWeek(Schedule::query()->where('group_id', $group->id)->orderBy('id')->firstOrFail());
+            $this->fail('Ожидался InvalidArgumentException: пред-коллизия в цепочке');
+        } catch (InvalidArgumentException $e) {
+            $this->assertStringContainsString('слоте', $e->getMessage());
+        }
+
+        // Ничего не сдвинулось.
+        $this->assertTrue($c->fresh()->start->equalTo($t0->copy()->addWeek()));
+    }
+
+    // ------------------------------------------------------------------
     // cancelAndShiftWeek — каскад
     // ------------------------------------------------------------------
 

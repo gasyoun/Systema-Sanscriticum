@@ -47,13 +47,22 @@ class RecordingsGapCareNotifyTest extends TestCase
         ]);
         $this->seedLiveSlot();
 
-        $this->assertSame(1, Artisan::call('recordings:gap-watch'));
+        $this->assertSame(0, Artisan::call('recordings:gap-watch'));
 
-        $targets = collect(Http::recorded())
+        $sent = collect(Http::recorded())
             ->filter(fn ($pair) => str_contains($pair[0]->url(), 'api.telegram.org'))
-            ->map(fn ($pair) => (string) $pair[0]['chat_id'])
             ->values();
-        $this->assertSame(['11111', '-1002079934542'], $targets->all());
+        $this->assertSame(
+            ['11111', '-1002079934542'],
+            $sent->map(fn ($pair) => (string) $pair[0]['chat_id'])->all(),
+        );
+
+        // H3557: копия заботы помечена заголовком — два чата читаются как
+        // адресаты, а не как дубль; админская копия без метки.
+        $byChat = $sent->mapWithKeys(fn ($pair) => [(string) $pair[0]['chat_id'] => (string) $pair[0]['text']]);
+        $this->assertStringStartsWith('<b>[Отдел заботы]</b>', (string) $byChat->get('-1002079934542'));
+        $this->assertStringContainsString('Записи не в кабинете', (string) $byChat->get('-1002079934542'));
+        $this->assertStringStartsWith('<b>Записи не в кабинете / ТГ</b>', (string) $byChat->get('11111'));
     }
 
     public function test_without_care_chat_only_admin_is_sent(): void
@@ -63,7 +72,7 @@ class RecordingsGapCareNotifyTest extends TestCase
         ]);
         $this->seedLiveSlot();
 
-        $this->assertSame(1, Artisan::call('recordings:gap-watch'));
+        $this->assertSame(0, Artisan::call('recordings:gap-watch'));
 
         $sent = collect(Http::recorded())
             ->filter(fn ($pair) => str_contains($pair[0]->url(), 'api.telegram.org'));

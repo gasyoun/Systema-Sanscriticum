@@ -56,6 +56,10 @@ class MarketingSetting extends Model
         'zapisi_reminder_lead_minutes',
         'zapisi_reminder_template',
         'zapisi_n8n_forward_url',
+        // Приветственная карточка при добавлении бота в чат (H4314).
+        'zapisi_welcome_n8n_url',
+        // Reply-команда «Отмена занятия»: telegram user_id админов через запятую (H4199).
+        'zapisi_cancel_admin_ids',
 
         // --- ТЕХОБСЛУЖИВАНИЕ КАБИНЕТА ---
         'student_maintenance_enabled',
@@ -76,6 +80,8 @@ class MarketingSetting extends Model
         // Авто-постинг ссылки Zoom в чат группы за N минут до занятия (classes:post-group-link).
         'class_link_autopost_enabled',
         'class_link_autopost_lead_minutes',
+        // Глушить ЛС-волну «Скоро занятие» для групп, уже покрытых постом в TG-чат (28-08-2026).
+        'dm_suppressed_when_group_chat',
         'debt_reminders_enabled',
         'debt_reminder_lead_days',
         'debt_reminder_cadence_days',
@@ -111,6 +117,9 @@ class MarketingSetting extends Model
         // --- LLM-ЧЕРНОВИКИ D/E/F: ДНЕВНОЙ ПРЕДЕЛ ВЫЗОВОВ (S5) ---
         'support_ai_daily_cap',
 
+        // --- LLM-ВЕТКА САППОРТА: ШТАМП ЖИВОГО ВКЛЮЧЕНИЯ (H4429) ---
+        'support_llm_live_enabled_at',
+
         // --- НАБОР КУРСОВ: РАССЫЛКА О НЕДОБОРЕ (H162) ---
         'recruitment_notify_enabled',
         'recruitment_notify_lead_days',
@@ -143,6 +152,7 @@ class MarketingSetting extends Model
         'absent_notify_delay_minutes' => 'integer',
         'class_link_autopost_enabled' => 'boolean',
         'class_link_autopost_lead_minutes' => 'integer',
+        'dm_suppressed_when_group_chat' => 'boolean',
         'debt_reminders_enabled' => 'boolean',
         'debt_reminder_lead_days' => 'integer',
         'debt_reminder_cadence_days' => 'integer',
@@ -161,6 +171,7 @@ class MarketingSetting extends Model
         'promise_suggestion_detection_enabled' => 'boolean',
         'support_answer_suggester_enabled' => 'boolean',
         'support_ai_daily_cap' => 'integer',
+        'support_llm_live_enabled_at' => 'datetime',
         'prana_rate' => 'integer',
         'prana_max_share_percent' => 'integer',
         'prana_reward_lesson_complete' => 'integer',

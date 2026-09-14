@@ -82,6 +82,18 @@ class AuthController extends Controller
         return response()->json(['message' => 'Токен отозван.']);
     }
 
+    /**
+     * H4663 (аудит периметра 14-09, п.8): «выйти на всех устройствах» —
+     * отзывает ВСЕ personal access tokens пользователя. Украденный токен
+     * раньше жил до 90 дней даже после logout на одном устройстве.
+     */
+    public function logoutAll(Request $request): JsonResponse
+    {
+        $request->user()->tokens()->delete();
+
+        return response()->json(['message' => 'Все токены отозваны.']);
+    }
+
     /** @return array<string, mixed> */
     private function userPayload(User $user): array
     {

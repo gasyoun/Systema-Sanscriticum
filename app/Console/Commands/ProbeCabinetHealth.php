@@ -5,7 +5,18 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Models\CabinetProbeRun;
+use App\Models\Course;
+use App\Models\Group;
+use App\Models\HomeworkComment;
+use App\Models\HomeworkSubmission;
+use App\Models\Lesson;
+use App\Models\Schedule;
 use App\Models\User;
+use App\Models\WebinarAttendance;
+use App\Services\CuratorNotifier;
+use App\Services\HomeworkService;
+use App\Services\Schedule\TextbookScale;
+use App\Support\Deploy\DeployDriftInspector;
 use App\Support\Roles;
 use App\Support\ServerGuards\CabinetProbeAlertState;
 use App\Support\ServerGuards\GuardFinding;
@@ -21,6 +32,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -39,6 +52,14 @@ class ProbeCabinetHealth extends Command
         {--fail-on-critical : Exit 1 if an HTTP/cabinet surface failed (deploy.sh)}';
 
     protected $description = 'Пульс кабинета: public + manager (+ student) surfaces, history, TG';
+
+    /**
+     * H4648: прогон неполного покрытия. Канва-факстура не вооружена
+     * (CABINET_PROBE_KANVA_COURSE_ID пуст) или student-ветка пропущена —
+     * фатал класса инцидента 10-13.09 этой пробой НЕ ловится. Soft-флаг
+     * в cabinet_probe_runs.coverage_partial (не critical — канал не жжём).
+     */
+    private bool $coveragePartial = false;
 
     public function handle(): int
     {
@@ -88,17 +109,28 @@ class ProbeCabinetHealth extends Command
                     label: 'student',
                 ));
                 if (! $this->hasAuthFailure($failures, 'student')) {
+                    // H4641: канва-факстура ДО student_surfaces — иначе
+                    // student.dashboard не исполняет kanva-курсор H4435 и
+                    // фатал класса инцидента 10-13.09.2026 проба не видит.
+                    $failures = array_merge($failures, $this->ensureKanvaFixture());
                     $failures = array_merge($failures, $this->probeSurfacesList(
                         config('cabinet_probe.student_surfaces', []),
                         authenticated: true,
                     ));
+                    $failures = array_merge($failures, $this->probeHomeworkUploadSynthetic());
                 }
                 Auth::logout();
             } else {
-                $this->comment('TEST_STUDENT_* пусты — student-ветка пропущена.');
+                // H4648: student-ветка пропущена — канва-факстура не исполнялась,
+                // прогон неполный (флаг в history), но не тихо.
+                $this->coveragePartial = true;
+                $this->warn('⚠️ TEST_STUDENT_* пусты — student-ветка пропущена, канва-факстура (H4641) НЕ покрыта этим прогоном.');
             }
 
+            $failures = array_merge($failures, $this->probeDeployDrift());
             $failures = array_merge($failures, $this->probeServerGuards());
+            $failures = array_merge($failures, $this->probeOutboundPaymentTls());
+            $failures = array_merge($failures, $this->probeScheduleLinks());
         } catch (Throwable $e) {
             $failures[] = ['message' => 'probe crashed: '.$e->getMessage(), 'severity' => 'critical'];
             Log::error('cabinet:probe crashed', ['error' => $e->getMessage()]);
@@ -123,7 +155,7 @@ class ProbeCabinetHealth extends Command
         }
 
         if (! $this->option('dry')) {
-            $this->recordHistory($criticalHealthy && $softFails === [], $criticalHealthy, $durationMs, $failures);
+            $this->recordHistory($criticalHealthy && $softFails === [], $criticalHealthy, $durationMs, $failures, $this->coveragePartial);
         }
 
         // HTTP/cabinet 5xx vs host guards (tmpfs, backup, earlyoom, …).
@@ -199,6 +231,100 @@ class ProbeCabinetHealth extends Command
      *
      * @return list<array{message: string, severity: string}>
      */
+    /**
+     * H3803 — прод перестал получать новый код.
+     *
+     * Инцидент 31-08-2026: вшитый в URL `origin` PAT протух, `git pull` начал
+     * отдавать 401, и `deploy.sh` падал на втором шаге. Всё, на что смотрят
+     * мониторы, при этом оставалось зелёным — HTTP 200, чистое tracked-дерево,
+     * непорванный предохранитель, живые guards, — потому что сайт работал; он
+     * просто перестал обновляться. Симптом отрицательный: код НЕ приезжает, и
+     * заметить это можно было только когда деплой понадобился.
+     *
+     * Две НЕЗАВИСИМЫЕ ноги, и порядок здесь принципиален:
+     *
+     * 1. Возраст последнего успешного `git fetch`. Ровно этот случай: когда
+     *    fetch падает, ref `origin/main` замерзает ВМЕСТЕ с HEAD, отставание
+     *    остаётся нулевым, и наивная проверка «HEAD против origin/main» рапортует
+     *    здоровье. Устаревающий FETCH_HEAD — единственный локальный след.
+     * 2. Отставание HEAD от origin/main. Противоположный отказ: fetch работает,
+     *    а деплой нет (грязное дерево, сорванный предохранитель, красный
+     *    preflight). Со скидкой по возрасту, чтобы только что смерженный PR и
+     *    деплой в процессе не поднимали тревогу.
+     *
+     * Обе ноги локальные: проба ходит раз в 15 минут, и сетевой вызов на пути
+     * health-чека сделал бы её зависимой от доступности GitHub.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeDeployDrift(): array
+    {
+        if (! config('cabinet_probe.check_deploy_drift', true)) {
+            return [];
+        }
+
+        // Это проверка ПРОДАКШЕН-выкладки. На дев-машине отставание от
+        // origin/main — норма жизни, и проба там звенела бы постоянно, что
+        // быстро приучает не читать её вывод.
+        //
+        // Сравниваем config('app.env'), а не app()->isProduction(): последний
+        // читает env-биндинг контейнера, зафиксированный на бутстрапе, и
+        // config(['app.env' => ...]) в тесте его не меняет — шов был бы
+        // непроверяемым.
+        if (config('app.env') !== 'production') {
+            return [];
+        }
+
+        $inspector = app(DeployDriftInspector::class);
+        if (! $inspector->isUsable()) {
+            // Не git-чекаут или git не может разрешить origin/main.
+            return [];
+        }
+
+        $failures = [];
+
+        $fetchMaxAge = max(1, (int) config('cabinet_probe.deploy_drift_fetch_max_age_minutes', 90));
+        $lastFetch = $inspector->lastFetchAt();
+
+        if ($lastFetch === null) {
+            $failures[] = [
+                'message' => 'deploy-drift: не видно ни одного успешного git fetch (.git/FETCH_HEAD отсутствует) — прод мог никогда не связаться с GitHub',
+                'severity' => 'soft',
+            ];
+        } elseif ($lastFetch->lt(now()->subMinutes($fetchMaxAge))) {
+            $failures[] = [
+                'message' => sprintf(
+                    'deploy-drift: последний УСПЕШНЫЙ git fetch был %s назад (порог %d мин) — прод перестал получать код, а сайт при этом жив. Проверь креденшал: `git -C /var/www/html ls-remote origin` (docs/deploy.md шаг 2)',
+                    $lastFetch->diffForHumans(now(), true),
+                    $fetchMaxAge,
+                ),
+                'severity' => 'soft',
+            ];
+        }
+
+        $behind = $inspector->commitsBehind() ?? 0;
+        $behindMaxAge = max(1, (int) config('cabinet_probe.deploy_drift_behind_max_age_minutes', 60));
+        $originHead = $inspector->originHeadCommittedAt();
+
+        if ($behind > 0 && $originHead !== null && $originHead->lt(now()->subMinutes($behindMaxAge))) {
+            $failures[] = [
+                'message' => sprintf(
+                    'deploy-drift: прод отстал от origin/main на %d коммит(ов), самый свежий из них лежит уже %s (порог %d мин) — fetch работает, а деплой нет. Смотри storage/logs/auto_deploy.log и storage/auto_deploy.disabled',
+                    $behind,
+                    $originHead->diffForHumans(now(), true),
+                    $behindMaxAge,
+                ),
+                'severity' => 'soft',
+            ];
+        }
+
+        if ($failures === []) {
+            $this->info(sprintf('Деплой не отстал (behind=%d, fetch %s назад).', $behind, $lastFetch?->diffForHumans(now(), true) ?? '—'));
+        }
+
+        return $failures;
+    }
+
     private function probeServerGuards(): array
     {
         if (! config('cabinet_probe.check_server_guards', true) || ! config('server_guards.verify_enabled')) {
@@ -235,6 +361,346 @@ class ProbeCabinetHealth extends Command
         }
 
         return $failures;
+    }
+
+    /**
+     * Синтетическая загрузка ДЗ (H37xx): «постоянно ломается подача ДЗ»
+     * повторялась трижды (молчаливый 64MB-порог, OOM сборки PDF, дубли при
+     * зависании), а ни одна проверка выше не трогала реальный upload-путь —
+     * все surfaces GET. Пишет ОДИН тестовый файл через тот же
+     * HomeworkService::recordSubmission(finalize: false), что и форма
+     * студента, на выделенный sandbox-урок, и всегда удаляет его в finally —
+     * идемпотентно на каждом прогоне. НЕ ловит php.ini/nginx
+     * client_max_body_size (in-process вызов, не настоящий HTTP через
+     * nginx/php-fpm) — см. config/cabinet_probe.php.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeHomeworkUploadSynthetic(): array
+    {
+        if (! config('cabinet_probe.check_homework_upload', true)) {
+            return [];
+        }
+
+        $slug = trim((string) config('cabinet_probe.homework_probe_course_slug', ''));
+        $lessonId = (int) config('cabinet_probe.homework_probe_lesson_id', 0);
+        if ($slug === '' || $lessonId <= 0) {
+            $this->comment('CABINET_PROBE_HOMEWORK_COURSE/_LESSON_ID пусты — синтетическая загрузка ДЗ пропущена.');
+
+            return [];
+        }
+
+        $student = Auth::user();
+        if (! $student instanceof User) {
+            return [['message' => 'homework-upload: нет auth-студента для пробы', 'severity' => 'critical']];
+        }
+
+        try {
+            $course = Course::resolveBySlugOrFail($slug);
+            $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
+        } catch (Throwable $e) {
+            return [['message' => 'homework-upload: probe-курс/урок не найден ('.$slug.'/'.$lessonId.') — проверь CABINET_PROBE_HOMEWORK_*', 'severity' => 'soft']];
+        }
+
+        if (! $lesson->homeworkOpenFor($student)) {
+            return [['message' => 'homework-upload: probe-урок закрыт для ДЗ — проверь homework_enabled/homework_closed_at на sandbox-уроке', 'severity' => 'soft']];
+        }
+
+        $disk = 'local';
+        $extensions = (array) config('homework.allowed_extensions', ['txt']);
+        $extension = in_array('txt', $extensions, true) ? 'txt' : (string) ($extensions[0] ?? 'txt');
+        $relativePath = "homework/{$student->id}/{$lesson->id}/probe_".Str::random(8).'.'.$extension;
+        $contents = 'cabinet:probe synthetic homework check '.now()->toIso8601String();
+
+        try {
+            Storage::disk($disk)->put($relativePath, $contents);
+        } catch (Throwable $e) {
+            return [['message' => 'homework-upload: диск '.$disk.' не пишется — '.$e->getMessage(), 'severity' => 'critical']];
+        }
+
+        if (! Storage::disk($disk)->exists($relativePath) || Storage::disk($disk)->size($relativePath) !== strlen($contents)) {
+            Storage::disk($disk)->delete($relativePath);
+
+            return [['message' => 'homework-upload: файл записан, но не читается обратно (диск '.$disk.')', 'severity' => 'critical']];
+        }
+
+        $failures = [];
+        $submission = null;
+        $comment = null;
+
+        try {
+            $submission = app(HomeworkService::class)->recordSubmission(
+                $student,
+                $lesson,
+                'cabinet:probe synthetic check',
+                [[
+                    'disk' => $disk,
+                    'path' => $relativePath,
+                    'original_name' => 'probe.'.$extension,
+                    'size' => strlen($contents),
+                    'mime' => 'text/plain',
+                ]],
+                false,
+            );
+
+            $comment = $submission->comments()
+                ->where('author_id', $student->id)
+                ->where('type', HomeworkComment::TYPE_SUBMISSION)
+                ->orderByDesc('id')
+                ->with('files')
+                ->first();
+
+            if ($submission->status !== HomeworkSubmission::STATUS_DRAFT) {
+                $failures[] = ['message' => 'homework-upload: сдача записалась не в draft (status='.$submission->status.')', 'severity' => 'critical'];
+            }
+
+            if (! $comment || $comment->files->isEmpty()) {
+                $failures[] = ['message' => 'homework-upload: файл не привязался к сдаче в БД', 'severity' => 'critical'];
+            }
+        } catch (Throwable $e) {
+            $failures[] = ['message' => 'homework-upload: запись сдачи упала — '.$e->getMessage(), 'severity' => 'critical'];
+        } finally {
+            // Sandbox-урок принадлежит только пробе — всегда откатываем до
+            // пустого состояния, чтобы прогоны были идемпотентны и ничего не
+            // накапливалось в БД/на диске.
+            if ($comment) {
+                foreach ($comment->files as $file) {
+                    Storage::disk($file->disk)->delete($file->path);
+                    $file->delete();
+                }
+                $comment->delete();
+            } else {
+                Storage::disk($disk)->delete($relativePath);
+            }
+            if ($submission && $submission->comments()->doesntExist()) {
+                $submission->delete();
+            }
+        }
+
+        if ($failures === []) {
+            $this->info('ДЗ-загрузка (synthetic): файл сохранён и привязан.');
+        }
+
+        return $failures;
+    }
+
+    /**
+     * Outbound TLS к платёжному эквайрингу «Точки» (инцидент 25–28-08-2026).
+     *
+     * Чего эта проверка стоит. «Точка» сменила отдаваемую цепочку на
+     * Russian Trusted Root CA (Минцифры), которого не было в серверном
+     * CA-бандле: каждый чекаут падал cURL error 60 четыре дня, пользователь
+     * видел «Сервис оплаты временно недоступен», а все проверки были зелёные —
+     * in-process surfaces ходят на localhost, guards смотрят в файлы и
+     * systemd, outbound-TLS не смотрел никто.
+     *
+     * ЛЮБОЙ HTTP-ответ = TLS жив (неавторизованный 401/403/404 от API банка
+     * нормален, тело не анализируется). Падает только СОЕДИНЕНИЕ — cURL 60
+     * (сертификат), 7 (con refused), 28 (timeout) — тогда critical: оплаты
+     * у пользователей недоступны, значит это HTTP-класс, а не host/ops:
+     * Telegram сразу, Better Stack /fail, deploy --fail-on-critical блокируется.
+     *
+     * False-positive guard (02-09-2026, TLS flap ~1/5 connect на ClientHello):
+     * одиночный обрыв НЕ критичен — перепроба до N попыток (по умолчанию 3,
+     * пауза 2 с). Флап 1/5 выживает 3 попытки с вероятностью ~0.8%, реальный
+     * аутейдж (4-дневный инцидент CA) алертится тем же прогоном.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeOutboundPaymentTls(): array
+    {
+        if (! config('cabinet_probe.check_payment_tls', true)) {
+            return [];
+        }
+
+        $url = (string) config('cabinet_probe.payment_probe_url', '');
+        if ($url === '') {
+            return [];
+        }
+
+        $host = (string) (parse_url($url, PHP_URL_HOST) ?: $url);
+        $attempts = max(1, (int) config('cabinet_probe.payment_tls_attempts', 3));
+        $pauseSeconds = max(0, (int) config('cabinet_probe.payment_tls_pause_seconds', 2));
+        $lastError = null;
+
+        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+            try {
+                Http::timeout((int) config('cabinet_probe.timeout', 15))
+                    ->acceptJson()
+                    ->get($url);
+
+                return [];
+            } catch (Throwable $e) {
+                $lastError = $e;
+
+                if ($attempt < $attempts && $pauseSeconds > 0) {
+                    sleep($pauseSeconds);
+                }
+            }
+        }
+
+        return [[
+            'message' => 'payments: нет связи с '.$host.' — '.$lastError->getMessage()
+                .' ('.$attempts.' попыток) (оплата у пользователей недоступна)',
+            'severity' => 'critical',
+        ]];
+    }
+
+    /**
+     * Будущие занятия без ссылки-подключения (инцидент 02-09-2026, schedule
+     * 1620: курс 401 + найденная тем же переписом мина курс 399 — серии
+     * нового учебного года сгенерированы без ссылок, и в TG-чат ушло
+     * напоминание «…по ссылке:» без самой ссылки). Кодовый guard теперь
+     * молча НЕ отправляет напоминание без ссылки — эта проверка делает
+     * пустоту громкой ДО занятия, пока у админа есть время её заполнить.
+     *
+     * Fallback-цепочка та же, что в zapisi:remind-classes / classes:post-group-link:
+     * zoom_join_url → link → course.zoom_link. Soft: не outage, data-gap.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeScheduleLinks(): array
+    {
+        if (! config('cabinet_probe.check_schedule_links', true)) {
+            return [];
+        }
+
+        $horizon = max(1, (int) config('cabinet_probe.schedule_links_horizon_days', 14));
+
+        $missing = Schedule::query()
+            ->with(['group', 'course'])
+            ->whereNull('zoom_join_url')
+            ->whereNull('link')
+            ->whereNotNull('group_id')
+            ->whereBetween('start', [now(), now()->addDays($horizon)])
+            ->orderBy('start')
+            ->get()
+            ->filter(fn (Schedule $s) => empty($s->group?->telegram_chat_id) === false
+                && empty($s->course?->zoom_link));
+
+        if ($missing->isEmpty()) {
+            return [];
+        }
+
+        $byCourse = $missing->groupBy(fn (Schedule $s) => $s->course_id === null ? 'group:'.$s->group_id : 'course:'.$s->course_id);
+        $lines = [];
+        foreach ($byCourse as $rows) {
+            /** @var Schedule $first */
+            $first = $rows->first();
+            $label = $first->course->title ?? ($first->group->name ?? '?');
+            $nearest = $first->start->format('d-m H:i');
+            $lines[] = sprintf('%s: %d занятие(й) без ссылки, ближайшее %s', $label, $rows->count(), $nearest);
+
+            // Ссылку заполняет куратор курса (Настя/Иван), а не админ — зовём
+            // их напрямую через общий curator-чат (дедуп 24h на курс внутри
+            // нотификатора). --dry/--no-alert и не-прод не звонят.
+            if ($first->course !== null && ! $this->option('dry') && ! $this->option('no-alert')
+                && config('app.env') === 'production') {
+                app(CuratorNotifier::class)->scheduleLinkMissing($first->course, $rows->count(), $nearest);
+            }
+        }
+
+        return [[
+            'message' => sprintf(
+                'schedule-links: %d буд. занятие(й) с TG-чатом без ссылки (zoom_join_url/link/course.zoom_link пусты) — напоминание уйдёт без ссылки или не уйдёт вовсе: %s',
+                $missing->count(),
+                implode('; ', array_slice($lines, 0, 5)),
+            ),
+            'severity' => 'soft',
+        ]];
+    }
+
+    /**
+     * H4641: канва-факстура студенческой ветки (см. cabinet_probe.kanva_fixture_course_id).
+     *
+     * student.dashboard исполняет kanva-курсор H4435 только когда у студента
+     * есть курс, чей заголовок матчит семейство канвы
+     * (TextbookScale::courseFamilyPublic), и факт посещения; без этой факстуры
+     * фатал канвы (инцидент 10-13.09.2026: /dvaram 500 — unqualified inline
+     * FQCN, 43 ошибки / 9 студентов / ~3 дня) пробой не ловится.
+     *
+     * Безопасность прода: сам курс человек заводит один раз и пинает его ID в
+     * env (как homework-факстура H37xx); команда дозаводит ТОЛЬКО недостающие
+     * связи smoke-студента (членство в группе, один факт посещения) —
+     * идемпотентно, без дубликатов. Любой пропуск — soft-находка, не critical:
+     * факстура не должна ронять «кабинет жив» на здоровом проде.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function ensureKanvaFixture(): array
+    {
+        $courseId = (int) config('cabinet_probe.kanva_fixture_course_id', 0);
+        if ($courseId === 0) {
+            // H4648 (класс слепого пятна H3797 «пусто = пропуск»): пустая
+            // конфигурация факстуры — НЕ тихий skip. Прогон помечается
+            // coverage_partial (soft, не critical — канал не выгорает), а
+            // человек видит заметный warn-блок и прямую руку останова.
+            $this->coveragePartial = true;
+            $this->warn('⚠️⚠️⚠️ CABINET_PROBE_KANVA_COURSE_ID ПУСТ — канва-факстура НЕ вооружена ⚠️⚠️⚠️');
+            $this->warn('   Канва-ветка student.dashboard (H4435) этим прогоном НЕ покрыта:');
+            $this->warn('   фатал класса инцидента 10-13.09 (/dvaram 500) пробой НЕ ловится.');
+            $this->warn('   Рука останова (~10 мин, человек): docs/RUNBOOK_ARM_KANVA_FIXTURE_2026-09-13.md');
+
+            return [];
+        }
+
+        $course = Course::find($courseId);
+        if ($course === null) {
+            return [['message' => "kanva fixture: курс #{$courseId} (CABINET_PROBE_KANVA_COURSE_ID) не найден", 'severity' => 'soft']];
+        }
+
+        $family = TextbookScale::courseFamilyPublic((string) $course->title);
+        if ($family === null) {
+            return [['message' => "kanva fixture: заголовок курса #{$courseId} «{$course->title}» не матчит семейство канвы — student.dashboard не войдёт в ветку H4435", 'severity' => 'soft']];
+        }
+
+        $student = Auth::user();
+        if (! $student instanceof User) {
+            return [['message' => 'kanva fixture: smoke-студент не залогинен', 'severity' => 'soft']];
+        }
+
+        $group = $course->groups->first();
+        if (! $group instanceof Group) {
+            return [['message' => "kanva fixture: у курса #{$courseId} нет группы — student.dashboard не покажет курс", 'severity' => 'soft']];
+        }
+
+        // Членство в группе — путь доступа к курсу в dashboard (whereHas('groups')).
+        $student->groups()->syncWithoutDetaching([$group->id]);
+
+        $hasFact = $student->attendances()
+            ->whereIn('schedule_id', Schedule::where('group_id', $group->id)->select('id'))
+            ->exists();
+        if (! $hasFact) {
+            $schedule = Schedule::where('group_id', $group->id)->orderByDesc('start')->first();
+            if ($schedule === null) {
+                // В группе ни одного занятия: заводим прошедшее занятие + урок
+                // канвы («читка»), чтобы двигались и student-, и groupCursor.
+                $day = now()->subDay();
+                $schedule = Schedule::create([
+                    'title' => 'Канва-факстура пробы (H4641)',
+                    'start' => $day->format('Y-m-d H:i:s'),
+                    'group_id' => $group->id,
+                    'course_id' => $course->id,
+                ]);
+                Lesson::create([
+                    'title' => 'Кочергина 1 (читка)',
+                    'course_id' => $course->id,
+                    'lesson_date' => $day->format('Y-m-d H:i:s'),
+                ]);
+            }
+            WebinarAttendance::create([
+                'schedule_id' => $schedule->id,
+                'user_id' => $student->id,
+                'zoom_participant_uuid' => 'cabinet-probe-kanva',
+                'name' => 'cabinet:probe',
+                'joined_at' => $schedule->start ?? now()->subDay(),
+                'duration_seconds' => 1800,
+            ]);
+        }
+
+        $this->info("Канва-факстура OK: курс #{$courseId} (семейство «{$family}»), группа #{$group->id}, студент #{$student->id} — ветка H4435 исполняется.");
+
+        return [];
     }
 
     /**
@@ -373,7 +839,7 @@ class ProbeCabinetHealth extends Command
     /**
      * @param  list<array{message: string, severity: string}>  $failures
      */
-    private function recordHistory(bool $healthy, bool $criticalHealthy, int $durationMs, array $failures): void
+    private function recordHistory(bool $healthy, bool $criticalHealthy, int $durationMs, array $failures, bool $coveragePartial = false): void
     {
         try {
             $messages = array_map(fn ($f) => '['.($f['severity'] ?? '?').'] '.$f['message'], $failures);
@@ -381,11 +847,15 @@ class ProbeCabinetHealth extends Command
                 'ran_at' => now(),
                 'healthy' => $healthy,
                 'critical' => ! $criticalHealthy,
+                // H4648: soft-флаг «прогон неполный» (канва-факстура не
+                // вооружена / student-ветка пропущена). Не критично — не
+                // будит канал; видно в истории тем, кто смотрит.
+                'coverage_partial' => $coveragePartial,
                 'duration_ms' => $durationMs,
                 'failure_count' => count($failures),
                 'failures' => $messages === [] ? null : $messages,
                 'summary' => $healthy
-                    ? 'ok'
+                    ? ($coveragePartial ? 'ok (coverage partial)' : 'ok')
                     : mb_substr(implode('; ', $messages), 0, 500),
             ]);
 

@@ -159,4 +159,56 @@ class PostClassLinkToGroupChatTest extends TestCase
         $this->artisan('classes:post-group-link')->assertSuccessful();
         Queue::assertNothingPushed();
     }
+
+    /**
+     * Инцидент 11-09-2026 (курс 348): слот с двумя живыми строками не должен
+     * дать два поста — один autopost на слот, помечаются все строки слота.
+     */
+    public function test_two_rows_in_one_slot_post_once_and_both_marked(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'Гр. 86', 'telegram_chat_id' => '-1001907383186']);
+        $start = now()->addMinutes(10);
+
+        $a = Schedule::create([
+            'title' => 'Серия (#76, слот)', 'start' => $start,
+            'group_id' => $group->id, 'zoom_join_url' => 'https://zoom.us/j/slot',
+        ]);
+        $b = Schedule::create([
+            'title' => 'Серия (#77, слот)', 'start' => $start,
+            'group_id' => $group->id, 'zoom_join_url' => 'https://zoom.us/j/slot',
+        ]);
+
+        $this->artisan('classes:post-group-link')->assertSuccessful();
+
+        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
+        $this->assertNotNull($a->fresh()->group_link_posted_at);
+        $this->assertNotNull($b->fresh()->group_link_posted_at);
+    }
+
+    /** Зеркальная гвардия по слоту: zapisi напомнил ЛЮБУЮ строку слота — слот покрыт. */
+    public function test_skips_slot_when_any_row_already_reminded_by_zapisi(): void
+    {
+        Queue::fake();
+        $this->enable();
+
+        $group = Group::create(['name' => 'Гр. 87', 'telegram_chat_id' => '-1001907383187']);
+        $start = now()->addMinutes(10);
+
+        Schedule::create([
+            'title' => 'A', 'start' => $start,
+            'group_id' => $group->id, 'zoom_join_url' => 'https://zoom.us/j/a',
+            'zapisi_reminded_at' => now()->subMinutes(5),
+        ]);
+        $b = Schedule::create([
+            'title' => 'B', 'start' => $start,
+            'group_id' => $group->id, 'zoom_join_url' => 'https://zoom.us/j/b',
+        ]);
+
+        $this->artisan('classes:post-group-link')->assertSuccessful();
+        Queue::assertNothingPushed();
+        $this->assertNull($b->fresh()->group_link_posted_at);
+    }
 }

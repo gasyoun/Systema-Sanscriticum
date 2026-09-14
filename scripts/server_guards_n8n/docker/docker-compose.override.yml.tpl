@@ -18,6 +18,14 @@
 # показывает health=none как warning, а не как «здоров».
 services:
   n8n:
+    # Ротация логов контейнера (H4540, 11-09-2026): json-file шёл без max-size,
+    # docker.log рос неограниченно — остаточный риск после ENOSPC 10-09 (H4513).
+    # Значения — как у caddy в его compose-файле (max-size=50m, max-file=5).
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
     mem_limit: @@N8N_MEMORY_LIMIT@@
     # Равен mem_limit: контейнеру своп не положен. Разогнавшийся процесс умрёт
     # внутри своей cgroup, а не утащит машину в свопинг — именно свопинг дал

@@ -1,3 +1,5 @@
+_Created: 22-08-2026 · Last updated: 05-09-2026_
+
 # DIAG — SMTP 554 / E-channel deliverability (H3298, 22-08-2026)
 
 _Created: 22-08-2026 · Executor: Ox Alpha (`x-preview-f-free`) · Handoff: [H3298](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3298-OxAlpha_Systema-Sanscriticum_marathon-notify-rescue-prep_22.08.26.md)_

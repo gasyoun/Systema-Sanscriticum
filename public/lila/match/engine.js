@@ -18,8 +18,14 @@
        ...   // 2+ pairs
      ]
    }
-   Correct pairing is positional: pairs[i].left ↔ pairs[i].right.
-   ============================================================ */
+    Correct pairing is positional: pairs[i].left ↔ pairs[i].right.
+
+    H4692 — difficulty telemetry: the engine times the round and, when it
+    completes, exposes window.SGX_ROUND_RESULT = {hints, items:[{l, r, ms,
+    wrong}]} — ms from round build to each pair's first link, wrong = how many
+    «Проверить» presses scored that pair wrong. telemetry.js forwards it as
+    one `item_result` event (same opt-in pattern as SGX_SEEN_ITEMS).
+    ============================================================ */
 (function (global) {
   "use strict";
 
@@ -112,6 +118,16 @@
     var linkCtr = 0;
     var totalPairs = 0;
 
+    // H4692 — per-pair difficulty stats, reset by build(): pid -> {ms, wrong},
+    // where ms is time from round build to the pair's first link.
+    var roundStart = 0;
+    var itemStats = {};
+
+    function now() {
+      return (typeof performance !== "undefined" && performance.now)
+        ? performance.now() : Date.now();
+    }
+
     function nextHueSlot() {
       var i;
       for (i = 0; i < HUES.length; i++) { if (!usedHues[i]) { usedHues[i] = true; return i; } }
@@ -140,6 +156,11 @@
     function link(a, b) {
       // a and b are unlinked cards on opposite columns
       var id = ++linkCtr;
+      // H4692 — first time this pair gets connected: stamp the elapsed ms.
+      var pid = a.dataset.pid;
+      if (!itemStats[pid]) {
+        itemStats[pid] = { ms: Math.max(0, Math.round(now() - roundStart)), wrong: 0 };
+      }
       var slot = nextHueSlot();
       var h = hueVal(slot);
       [a, b].forEach(function (c) {
@@ -245,16 +266,47 @@
           c.classList.add(ok ? "correct" : "wrong");
           c.querySelector(".mark").textContent = ok ? "✓" : "✕";
         });
+        // H4692 — a check press that scored this pair wrong is a difficulty signal.
+        if (!ok && itemStats[lc.dataset.pid]) itemStats[lc.dataset.pid].wrong++;
         if (ok) correct++;
       });
       score.textContent = "Верно " + correct + " / " + totalPairs;
-      feedback.classList.toggle("show", allLinked && correct === totalPairs);
+      var solved = allLinked && correct === totalPairs;
+      feedback.classList.toggle("show", solved);
+      if (solved) exposeRoundResult(leftCards);
+    }
+
+    // H4692 — on a solved round, expose {hints, items:[{l, r, ms, wrong}]} at
+    // window.SGX_ROUND_RESULT for telemetry.js (sent with the `complete`
+    // signal it already watches). Texts are curriculum content, no PII.
+    function exposeRoundResult(leftCards) {
+      var items = [];
+      Array.prototype.forEach.call(leftCards, function (lc) {
+        var partner = board.querySelector(
+          '.side-r .card[data-link-id="' + lc.dataset.linkId + '"]');
+        if (!partner) return;
+        var st = itemStats[lc.dataset.pid] || {};
+        var lw = lc.querySelector(".word");
+        var rw = partner.querySelector(".word");
+        items.push({
+          l: lw ? lw.textContent : "",
+          r: rw ? rw.textContent : "",
+          ms: (typeof st.ms === "number") ? st.ms : 0,
+          wrong: st.wrong || 0
+        });
+      });
+      window.SGX_ROUND_RESULT = {
+        hints: container.classList.contains("show-hints") ? 1 : 0,
+        items: items
+      };
     }
 
     function build() {
       clearSelection();
       feedback.classList.remove("show");
       usedHues = {}; linkCtr = 0;
+      roundStart = now();   // H4692 — fresh timer per round
+      itemStats = {};
       dropL.innerHTML = ""; dropR.innerHTML = "";
 
       var pairs = allPairs;

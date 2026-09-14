@@ -5,8 +5,9 @@
 Usage:
   python harness/precision_report.py --root . --corpus corpora/eval.jsonl --out reports/baseline.md
 
-Corpus line format (mask_corpus.py output):
-  {"id": ..., "text": ..., "gold": {"topic": "...", ...} | null, ...}
+Corpus line formats: {"id", "text", "gold": {...} | null, ...} or mask_corpus.py
+output {dialog_id, msg_id, direction, date, text_masked} (text_masked is read
+as text; id falls back to "dialog_id:msg_id").
 Records without "gold" count toward coverage only. The report includes the
 top-50 uncategorized sample for the next rules iteration.
 """
@@ -60,14 +61,37 @@ def render(report: dict) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="precision_report")
-    parser.add_argument("--root", default=".", help="package root (rules/v1 + taxonomy/v1)")
+    parser.add_argument("--root", default=None, help="package root (rules/v1 + taxonomy/v1)")
+    parser.add_argument("--rules", help="path to rules dir, e.g. rules/v1 (root derived from it)")
     parser.add_argument("--corpus", required=True, help="masked JSONL corpus path")
     parser.add_argument("--out", help="write Markdown report here (default: stdout)")
     args = parser.parse_args(argv)
 
-    ruleset = load_package(Path(args.root))
+    if args.root:
+        root = Path(args.root)
+    elif args.rules:
+        rules_dir = Path(args.rules).resolve()
+        root = rules_dir.parent.parent  # .../rules/v1 -> package root
+    else:
+        root = Path(".")
+    ruleset = load_package(root)
     with open(args.corpus, encoding="utf-8") as fh:
-        records = [json.loads(line) for line in fh if line.strip()]
+        raw_records = [json.loads(line) for line in fh if line.strip()]
+    # Accept both {"id","text","gold"} and mask_corpus.py output
+    # {dialog_id, msg_id, ..., text_masked}.
+    records = []
+    for index, record in enumerate(raw_records):
+        text = record.get("text") or record.get("text_masked") or ""
+        rid = record.get("id")
+        if rid is None:
+            if record.get("dialog_id") is not None and record.get("msg_id") is not None:
+                rid = f"{record['dialog_id']}:{record['msg_id']}"
+            else:
+                rid = f"row-{index}"
+        shaped = {"id": rid, "text": text}
+        if record.get("gold"):
+            shaped["gold"] = record["gold"]
+        records.append(shaped)
     report = evaluate(ruleset, records)
 
     rendered = render(report)

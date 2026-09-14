@@ -2,7 +2,10 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\Dashboard; // <--- 1. ДОБАВИЛИ ИМПОРТ ПЛАГИНА
+use App\Filament\Pages\Auth\AdminLogin;
+use App\Filament\Pages\Auth\AdminRequestPasswordReset;
+use App\Filament\Pages\Auth\AdminResetPassword;
+use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\CourseEarningsChart;
 use App\Filament\Widgets\RetentionChart;
 use App\Filament\Widgets\SalesFunnelChart;
@@ -211,7 +214,13 @@ class AdminPanelProvider extends PanelProvider
                 ')
             )
             // --- КОНЕЦ ---
-            ->login()
+            ->brandName('Система Санскритикум')
+            ->login(AdminLogin::class)
+            // Reuses PasswordResetController (/forgot-password), not a second mailer.
+            ->passwordReset(
+                AdminRequestPasswordReset::class,
+                AdminResetPassword::class,
+            )
             ->colors([
                 'primary' => Color::Amber,
             ])

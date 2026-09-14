@@ -64,5 +64,8 @@ class DatabaseSeeder extends Seeder
         // Библиотека важных файлов админки (H2570) — идемпотентно; названия
         // строк MG правит через AdminDocumentResource, сидер их не затирает.
         $this->call(AdminDocumentSeeder::class);
+
+        // Каталог живых книг кабинета (H3243) — идемпотентно по slug.
+        $this->call(ProductDocSeeder::class);
     }
 }

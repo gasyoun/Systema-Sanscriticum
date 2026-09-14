@@ -420,4 +420,19 @@ Limitations, stated plainly:
 - **The audit was read-only.** No file in the scanned tree was edited, moved or deleted;
   helper scripts were written outside the repo under the OS temp dir and removed.
 
+## 10. Correction log — 10-09-2026 re-scan (H4515)
+
+- **`DebtorsReport::preloadPromises()` — verdict flipped: wire-in → delete.** §3.1
+  recommended wiring it beside the two preloaders to kill a per-row N+1 in Debtors.
+  The N+1 has since been fixed by a different mechanism: `Debtors::preloadPairCaches()`
+  (static on `app/Filament/Pages/Debtors.php:678`) is called from
+  `DebtorsReport::totalDebtForQuery` (step 4, «двумя whereIn вместо 2×N+1») and from
+  `DebtorsBotCommand`. `preloadPromises()` remains zero-reference and is now a plain
+  delete. Layering note for T3/T5 (program plan 2026H2): the live preloader is a
+  static on a Filament page consumed by a service and a bot command — move it into
+  `DebtorsReport` or a support class.
+- Re-scan of seven sampled rows (`app:migrate-builder`, `app:migrate-media`,
+  `certificate_pdf`, `partials.pagination`, `nav-links`, `readPreview`, `TrustHosts`)
+  against the 10-09 tree: all still zero-reference. Batches 1/3/4/5 executed same day.
+
 _Dr. Mārcis Gasūns_

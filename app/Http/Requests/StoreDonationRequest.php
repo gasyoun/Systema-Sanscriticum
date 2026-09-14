@@ -24,9 +24,16 @@ final class StoreDonationRequest extends FormRequest
     {
         // Сумма — целые рубли в механических границах конфига (не ценник:
         // пресеты и «рекомендованные суммы» ратифицирует отдельно MG).
+        // H4400: sku вместо amount — выбранный уровень меценатства
+        // (monthly/yearly/student) подставляет ратифицированную сумму;
+        // без sku работает прежний свободный ввод.
+        $skus = array_keys((array) config('institute.mecenaty_skus', []));
+
         $rules = [
+            'sku' => ['nullable', 'string', 'in:'.implode(',', $skus)],
             'amount' => [
-                'required',
+                'nullable',
+                'required_without:sku',
                 'integer',
                 'min:'.(int) config('institute.donate_min', 100),
                 'max:'.(int) config('institute.donate_max', 300000),
@@ -46,5 +53,12 @@ final class StoreDonationRequest extends FormRequest
         $rules['gratitude_name'] = ['nullable', 'string', 'max:120'];
 
         return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'amount.required_without' => 'Укажите сумму или выберите уровень поддержки.',
+        ];
     }
 }

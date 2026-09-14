@@ -28,7 +28,7 @@ dig @8.8.8.8 +noall +answer NS samskrte.ru
   No flip is currently in effect or needed.
 - **TTL**: still the pre-incident default (21600–86400s depending on
   resolver cache), **not yet lowered to 300**. Lowering it is the actual
-  open item in H3391 — see [Target 0](#target-0--lower-ttl-to-300-prerequisite-for-fast-future-flips) below. A low TTL is what makes a future
+  open item in H3391 — see [Target 0](#target-0-lower-ttl-to-300-prerequisite-for-fast-future-flips) below. A low TTL is what makes a future
   emergency flip (Target 2) propagate in minutes instead of hours.
 
 ## Pitfall: don't trust your local resolver
@@ -58,7 +58,7 @@ cached.
 ## Target 0 — lower TTL to 300 (prerequisite for fast future flips)
 
 **Via reg.ru API** (preferred; requires `~/.secrets/regru.env` filled per
-the [ask-via-prepared-env house rule](https://github.com/gasyoun/claude-config/blob/main/rules/ask-via-prepared-env.md) —
+the ask-via-prepared-env house rule —
 file-first, never chat, never echoed):
 
 ```

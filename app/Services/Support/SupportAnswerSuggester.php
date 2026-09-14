@@ -62,7 +62,7 @@ class SupportAnswerSuggester
         private readonly SupportAnswerFactResolver $facts,
         private readonly SupportLlmDraftComposer $llm,
         private readonly SupportTemplateDraftResolver $templates,
-        private readonly Faq\Bm25FaqRetriever $faqRag,
+        private readonly Faq\HybridRetriever $faqRag,
         private readonly Faq\FaqRagDraftBuilder $faqDrafts,
     ) {}
 

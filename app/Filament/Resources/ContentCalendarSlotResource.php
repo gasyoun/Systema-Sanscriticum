@@ -91,6 +91,8 @@ class ContentCalendarSlotResource extends Resource
                     ContentCalendarSlot::TYPE_CLIP_TEASE => 'clip_tease',
                     ContentCalendarSlot::TYPE_FORWARD => 'forward',
                     ContentCalendarSlot::TYPE_EVENT => 'event',
+                    ContentCalendarSlot::TYPE_TEACHER_SPOTLIGHT => 'teacher_spotlight',
+                    ContentCalendarSlot::TYPE_STUDENT_STORY => 'student_story',
                     ContentCalendarSlot::TYPE_EMPTY => 'empty',
                 ]),
             ])

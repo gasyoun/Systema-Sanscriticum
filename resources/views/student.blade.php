@@ -2,7 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    {{-- H4118: user-scalable=no / maximum-scale убраны — доступность и iOS-зум не ломаем --}}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Личный кабинет | Школа Санскрита</title>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=2">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>

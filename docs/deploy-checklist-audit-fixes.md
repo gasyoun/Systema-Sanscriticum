@@ -1,3 +1,5 @@
+_Created: 06-07-2026 · Last updated: 05-09-2026_
+
 # Деплой аудит-фиксов (merge develop → main, коммит `8a90b7b`, 2026-07-02)
 
 Главный риск: вебхуки TG/VK теперь **fail-closed** — без двух новых секретов
@@ -62,3 +64,5 @@ Zoom-посещаемость, мягкий выход из группы (`left_
   (`SocialEmailNotVerifiedException`), иначе stub-адрес.
 - Magnet-джобы TG/VK/MAX: `failed()`-хук с логированием недоставки.
 - Tochka-вебхук больше не пишет полный payload в логи (перс. данные).
+
+_Dr. Mārcis Gasūns_

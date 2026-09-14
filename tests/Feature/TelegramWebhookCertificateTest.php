@@ -63,6 +63,11 @@ class TelegramWebhookCertificateTest extends TestCase
      * В multipart Laravel разворачивает массив в части `allowed_updates[]`, а
      * Bot API их не разбирает — нужна JSON-строка. Без этого вебхук встанет, но
      * с пустым набором типов апдейтов.
+     *
+     * Пин — на форму (одна часть `allowed_updates` с JSON-массивом строк), а не
+     * на точный список типов: H4314 добавил `my_chat_member` в команду и уронил
+     * этот тест, потому что список был вшит литералом. Обязательный минимум
+     * (`message`, `channel_post`) проверяется явно.
      */
     public function test_allowed_updates_are_json_encoded_in_multipart(): void
     {
@@ -75,9 +80,16 @@ class TelegramWebhookCertificateTest extends TestCase
 
         Http::assertSent(function (Request $request): bool {
             foreach ($request->data() as $part) {
-                if (($part['name'] ?? '') === 'allowed_updates') {
-                    return $part['contents'] === '["message","channel_post"]';
+                if (($part['name'] ?? '') !== 'allowed_updates') {
+                    continue;
                 }
+
+                $decoded = json_decode((string) $part['contents'], true);
+
+                return is_array($decoded)
+                    && $decoded === array_values(array_filter($decoded, 'is_string'))
+                    && in_array('message', $decoded, true)
+                    && in_array('channel_post', $decoded, true);
             }
 
             return false;

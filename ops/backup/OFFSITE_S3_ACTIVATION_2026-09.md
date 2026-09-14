@@ -1,6 +1,6 @@
 # Off-site нога №3: Yandex Object Storage (immutable) — подготовка и активация
 
-_Created: 24-08-2026 · Last updated: 24-08-2026_
+_Created: 24-08-2026 · Last updated: 05-09-2026_
 
 Решение MG 24-08-2026: вторую off-site ногу (S3) — **одобрить, всё приготовить,
 запуск ≈24-09-2026** (месяц после одобрения). Этот документ — состояние
@@ -9,7 +9,7 @@ _Created: 24-08-2026 · Last updated: 24-08-2026_
 
 ## Что уже отшито (ничего доделывать не нужно)
 
-Всё репо-side легло в [H3175 Wave 1](RUN_LOG_H3175_WAVE1_23-08-2026.md):
+Всё репо-side легло в [H3175 Wave 1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/ops/backup/RUN_LOG_H3175_WAVE1_23-08-2026.md):
 
 | Кусок | Где | Состояние |
 |---|---|---|

@@ -1,3 +1,5 @@
+_Created: 25-08-2026 · Last updated: 05-09-2026_
+
 # message-intent-classifier
 
 Детерминированный классификатор входящих сообщений школы (Systema-Sanscriticum,
@@ -44,11 +46,31 @@ ORS-FAQ): YAML-правила + референсный Python-движок + т�
 ```
 taxonomy/v1/*.yaml          # категории, описания — словарь допустимых ярлыков
 rules/v1/{topic,objection,intent,meta}.yaml   # правила: plane/category/priority/patterns/negations/source
+corpora/                    # ТОЛЬКО маскированные замороженные снапшоты (см. corpora/README.md)
 engine_py/                  # референсный движок (loader, classifier, metrics) + cli
 php/MessageClassifier/      # тонкий PHP-лоадер + та же семантика (symfony/yaml)
 vectors/golden.json         # общие golden-векторы Py↔PHP parity (>=60)
 harness/precision_report.py # per-category precision/recall/n + coverage по корпусу
+tools/mask_corpus.py        # PII-маскировка + валидатор + 50-msg spot-check (H3527)
 ```
+
+## Корпуса: маскировка и заморозка (tools/mask_corpus.py)
+
+Сырые `dialog_*.txt` ORS — gitignored, в репо не попадают никогда. Контракт:
+
+```bash
+python tools/mask_corpus.py census  --src <dir>            # сверка с цензусом
+python tools/mask_corpus.py mask    --src <dir> --out <file>.jsonl [--names FILE]
+python tools/mask_corpus.py validate --in <file>.jsonl     # гейт: 0 попаданий, иначе exit 1
+python tools/mask_corpus.py sample  --in <file>.jsonl --out checklist.md
+```
+
+Плейсхолдеры: `[URL] [EMAIL] [PHONE] [TG_HANDLE] [NUMBER] [NAME]`. Имена —
+только из переданного `--names FILE` (сам файл gitignored: это тоже персональные
+данные). Порядок обязательный: census → mask → **validate PASS** → ручная
+подписанная проба 50 сообщений (checklist, verdict CLEAN) → только потом
+коммит/заморозка. Любое подозрение на утечку = STOP. Цензусы и протокол —
+[corpora/README.md](https://github.com/gasyoun/message-intent-classifier/blob/main/corpora/README.md).
 
 ## Быстрый старт
 

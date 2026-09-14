@@ -19,7 +19,8 @@ class SyncTelegramSupport extends Command
 
     protected $signature = 'telegram-support:sync
         {--payload= : JSON file with normalized Telegram messages for local import}
-        {--account=support : Named telegram_support_accounts row whose session this run opens}';
+        {--account=support : Named telegram_support_accounts row whose session this run opens}
+        {--catch-up-days= : Full sweep — poll every known chat with activity in the last N days instead of the hot window}';
 
     protected $description = 'Sync Telegram support-account messages and rebuild daily support analytics.';
 
@@ -30,6 +31,8 @@ class SyncTelegramSupport extends Command
     ): int {
         $payloadPath = $this->option('payload');
         $accountName = (string) ($this->option('account') ?: 'support');
+        $catchUpRaw = $this->option('catch-up-days');
+        $catchUpDays = is_numeric($catchUpRaw) ? max(0, (int) $catchUpRaw) : null;
 
         if ($payloadPath) {
             if (! File::exists($payloadPath)) {
@@ -101,7 +104,7 @@ class SyncTelegramSupport extends Command
             try {
                 // Live path opens the shared MadelineProto session — serialise it
                 // against telegram-harvest:sync / :peers (see LocksMadelineSession).
-                $result = $this->withMadelineSessionLock(fn () => $sync->sync($accountName));
+                $result = $this->withMadelineSessionLock(fn () => $sync->sync($accountName, $catchUpDays));
             } finally {
                 $watchdog->disarm();
             }
@@ -115,6 +118,9 @@ class SyncTelegramSupport extends Command
         }
 
         $line = 'Telegram support sync: '.$result['status'].'; synced='.$result['synced'];
+        if ($catchUpDays !== null && $catchUpDays > 0) {
+            $line .= '; catch_up_days='.$catchUpDays;
+        }
         if (! empty($result['dates'])) {
             $line .= '; dates='.implode(',', $result['dates']);
         }

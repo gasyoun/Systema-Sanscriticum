@@ -1,0 +1,208 @@
+folder	file	raw_num	translit_key	match_method	boehtlingk_num	saying_id	iast_head	confidence	size_bytes	duration_sec_approx
+Kochergina-Subhashitas	Субхашита Видваттвам (Vidvattvam) विद्वत्तवं.mp3		vidvattvam	none				unmatched	293858	18.3
+Kochergina-Subhashitas	Субхашита Видья (Vidya) विद्या.mp3		vidya	exact-first-word-ambiguous(11)				low	308068	19.2
+Kochergina-Subhashitas	Субхашита Видья нама (Vidya nama) विद्या नाम.mp3		vidyanama	prefix-first-word	7878	Saying 7878	kvacitpāṇiprāptam ghaṭitamapi kāryaṃ vighaṭaya-	medium	607327	37.9
+Kochergina-Subhashitas	Субхашита Даридран (Daridran) दरिद्रान्.mp3		daridran	prefix-first-word	7878	Saying 7878	kvacitpāṇiprāptam ghaṭitamapi kāryaṃ vighaṭaya-	medium	308904	19.3
+Kochergina-Subhashitas	Субхашита Дива (Diva) दिवा.mp3		diva	exact-first-word	2805	Saying 2805	divā paśyati nolūkaḥ kāko naktaṃ na paśyati	high	282991	17.7
+Kochergina-Subhashitas	Субхашита Кавих (Kaviḥ) कविः.mp3		kavih	exact-first-word	1584	Saying 1584	kaviḥ karoti kāvyāni svādu jānāti paṇḍitaḥ	high	260839	16.3
+Kochergina-Subhashitas	Субхашита Кавья шастра винодэна (Kavya shastra vinodena) काव्यशास्त्रविनोदेन.mp3		kavyashastravinodena	prefix-first-word	1584	Saying 1584	kaviḥ karoti kāvyāni svādu jānāti paṇḍitaḥ	medium	288842	18.0
+Kochergina-Subhashitas	Субхашита Лобхат кродхах (Lobhat krodhah) लोभात्क्रोधः.mp3		lobhatkrodhah	exact-first-word	5883	Saying 5883	lobhātkrodhaḥ prabhavati lobhātkāmaḥ pravartate	high	331056	20.7
+Kochergina-Subhashitas	Субхашита На кашьчид апи (Na kashcid api) न कश्चिदपि.mp3		nakashcidapi	prefix-first-word	5883	Saying 5883	lobhātkrodhaḥ prabhavati lobhātkāmaḥ pravartate	medium	293858	18.3
+Kochergina-Subhashitas	Субхашита Сарватра (Sarvatra) सर्वत्र.mp3		sarvatra	exact-first-word-ambiguous(3)				low	279229	17.4
+Kochergina-Subhashitas	Субхашита Сарвэ пи (Sarve 'pi) सर्वे ऽपि.mp3		sarvepi	prefix-first-word-ambiguous(2)				low	303471	18.9
+Kochergina-Subhashitas	Субхашита Тривидхам (Trividham) त्रिविधं.mp3		trividham	exact-first-word	2645	Saying 2645	trividhaṃ narakasyedaṃ dvāraṃ nāśanamātmanaḥ	high	302217	18.9
+Kochergina-Subhashitas	Субхашита Тьяджа (Tyaja) त्यज.mp3		tyaja	exact-first-word-ambiguous(3)				low	295948	18.5
+Kochergina-Subhashitas	Субхашита Хастасья (Hastasya) हस्तस्य.mp3		hastasya	exact-first-word	7377	Saying 7377	hastasya bhūṣaṇaṃ dānaṃ satyaṃ kaṇṭhasya bhūṣaṇam	high	334400	20.9
+Kochergina-Subhashitas	Субхашита Ятха хье кэна (Yatha hye kena) यथा ह्येकेन.mp3		yathahyekena	prefix-first-word-ambiguous(2)				low	269198	16.8
+Subhashitas-Systematic	Su1-Udyama.mp3	1	udyama	prefix-first-word	7377	Saying 7377	hastasya bhūṣaṇaṃ dānaṃ satyaṃ kaṇṭhasya bhūṣaṇam	medium	298873	18.7
+Subhashitas-Systematic	Su10-Mata.mp3	10	mata	exact-first-word-ambiguous(8)				low	294694	18.4
+Subhashitas-Systematic	Su11-Rupa.mp3	11	rupa	prefix-first-word-ambiguous(3)				low	300963	18.8
+Subhashitas-Systematic	Su13-Shakata.mp3	13	shakata	none				unmatched	261257	16.3
+Subhashitas-Systematic	Su14-Upakaro.mp3	14	upakaro	none				unmatched	270452	16.9
+Subhashitas-Systematic	Su15-Vrshchika.mp3	15	vrshchika	none				unmatched	293022	18.3
+Subhashitas-Systematic	Su16-Acharyat.mp3	16	acharyat	prefix-first-word	7377	Saying 7377	hastasya bhūṣaṇaṃ dānaṃ satyaṃ kaṇṭhasya bhūṣaṇam	medium	290096	18.1
+Subhashitas-Systematic	Su17-Avashya.mp3	17	avashya	prefix-first-word	7377	Saying 7377	hastasya bhūṣaṇaṃ dānaṃ satyaṃ kaṇṭhasya bhūṣaṇam	medium	273378	17.1
+Subhashitas-Systematic	Su18-Satya.mp3	18	satya	prefix-first-word-ambiguous(10)				low	295112	18.4
+Subhashitas-Systematic	Su19-Dharmo.mp3	19	dharmo	exact-first-word-ambiguous(3)				low	252898	15.8
+Subhashitas-Systematic	Su2-Gate.mp3	2	gate	exact-first-word-ambiguous(5)				low	313084	19.5
+Subhashitas-Systematic	Su20-Matrvat.mp3	20	matrvat	prefix-first-word-ambiguous(2)				low	277975	17.3
+Subhashitas-Systematic	Su21-Makshi.mp3	21	makshi	prefix-first-word	7377	Saying 7377	hastasya bhūṣaṇaṃ dānaṃ satyaṃ kaṇṭhasya bhūṣaṇam	medium	297202	18.5
+Subhashitas-Systematic	Su22-Pustaka.mp3	22	pustaka	prefix-first-word-ambiguous(3)				low	298873	18.7
+Subhashitas-Systematic	Su23-Adata.mp3	23	adata	exact-first-word	192	Saying 192	adātā vaṃśadoṣeṇa karmadoṣāddaridratā	high	299291	18.7
+Subhashitas-Systematic	Su24-Kokila.mp3	24	kokila	exact-first-word	7877	Saying 7877	kokila kalapralāpairalamalamālokase rasālaṃ kim	high	297202	18.5
+Subhashitas-Systematic	Su25-Yasya.mp3	25	yasya	exact-first-word-ambiguous(42)				low	284663	17.8
+Subhashitas-Systematic	Su26-Adau.mp3	26	adau	exact-first-word-ambiguous(7)				low	291350	18.2
+Subhashitas-Systematic	Su27-Ayush.mp3	27	ayush	prefix-first-word	7877	Saying 7877	kokila kalapralāpairalamalamālokase rasālaṃ kim	medium	299709	18.7
+Subhashitas-Systematic	Su27-Ayusha.mp3	27	ayusha	prefix-first-word	7877	Saying 7877	kokila kalapralāpairalamalamālokase rasālaṃ kim	medium	265855	16.6
+Subhashitas-Systematic	Su28-Kah.mp3	28	kah	exact-first-word-ambiguous(6)				low	293858	18.3
+Subhashitas-Systematic	Su29-Prana.mp3	29	prana	exact-first-word	4313	Saying 4313	prāṇā yathātmano 'bhīṣṭā bhūtānāmapi te tathā	high	305979	19.1
+Subhashitas-Systematic	Su3-Varam.mp3	3	varam	exact-first-word-ambiguous(29)				low	288006	18.0
+Subhashitas-Systematic	Su30-Anitya.mp3	30	anitya	prefix-first-word-ambiguous(4)				low	291350	18.2
+Subhashitas-Systematic	Su31-Utpala.mp3	31	utpala	none				unmatched	307651	19.2
+Subhashitas-Systematic	Su32-Artha.mp3	32	artha	exact-first-word-ambiguous(4)				low	320607	20.0
+Subhashitas-Systematic	Su32-Arthanam.mp3	32	arthanam	prefix-first-word-ambiguous(5)				low	309740	19.3
+Subhashitas-Systematic	Su33-Utsave.mp3	33	utsave	exact-first-word	1221	Saying 1221	utsave vyasane caiva durbhikṣe śatrusaṅkaṭe	high	301799	18.8
+Subhashitas-Systematic	Su34-Prthiv.mp3	34	prthiv	prefix-first-word-ambiguous(4)				low	303471	18.9
+Subhashitas-Systematic	Su35-Vidvatt.mp3	35	vidvatt	none				unmatched	292186	18.2
+Subhashitas-Systematic	Su36-NaChora.mp3	36	nachora	prefix-first-word	1221	Saying 1221	utsave vyasane caiva durbhikṣe śatrusaṅkaṭe	medium	325205	20.3
+Subhashitas-Systematic	Su38-Ayam.mp3	38	ayam	exact-first-word-ambiguous(6)				low	259585	16.2
+Subhashitas-Systematic	Su39-Chinta.mp3	39	chinta	none				unmatched	298873	18.7
+Subhashitas-Systematic	Su4-Vidya.mp3	4	vidya	exact-first-word-ambiguous(11)				low	382047	23.8
+Subhashitas-Systematic	Su40-Manasye.mp3	40	manasye	prefix-first-word-ambiguous(3)				low	319353	19.9
+Subhashitas-Systematic	Su41-Nabhishe.mp3	41	nabhishe	prefix-first-word	1221	Saying 1221	utsave vyasane caiva durbhikṣe śatrusaṅkaṭe	medium	301799	18.8
+Subhashitas-Systematic	Su41-Nabhisheko.mp3	41	nabhisheko	prefix-first-word	1221	Saying 1221	utsave vyasane caiva durbhikṣe śatrusaṅkaṭe	medium	293858	18.3
+Subhashitas-Systematic	Su42-Bhashasu.mp3	42	bhashasu	none				unmatched	290932	18.2
+Subhashitas-Systematic	Su43-Anna.mp3	43	anna	prefix-first-word-ambiguous(6)				low	297202	18.5
+Subhashitas-Systematic	Su44-Vrtha.mp3	44	vrtha	exact-first-word-ambiguous(4)				low	296366	18.5
+Subhashitas-Systematic	Su45-Lubdho.mp3	45	lubdho	exact-first-word	5864	Saying 5864	lubdho na visṛjatyarthaṃ naro dāridryaśaṅkayā	high	285081	17.8
+Subhashitas-Systematic	Su46-Sukhasya.mp3	46	sukhasya	exact-first-word	7082	Saying 7082	sukhasya duḥkhasya na me 'sti dātṛtā	high	329802	20.6
+Subhashitas-Systematic	Su47-Bodharo.mp3	47	bodharo	none				unmatched	292604	18.3
+Subhashitas-Systematic	Su48-Svabhavo.mp3	48	svabhavo	exact-first-word-ambiguous(3)				low	293440	18.3
+Subhashitas-Systematic	Su49-Yasmin.mp3	49	yasmin	prefix-first-word-ambiguous(10)				low	276304	17.2
+Subhashitas-Systematic	Su5-Chaya.mp3	5	chaya	exact-first-word	2308	Saying 2308	chāyā saṃśrayate talaṃ viṭapināṃ śrānteva pānthaiḥ samaṃ	high	280483	17.5
+Subhashitas-Systematic	Su50-Samsara.mp3	50	samsara	prefix-first-word-ambiguous(6)				low	278393	17.4
+Subhashitas-Systematic	Su51-Yatha.mp3	51	yatha	exact-first-word-ambiguous(58)				low	315592	19.7
+Subhashitas-Systematic	Su52-Vajra.mp3	52	vajra	prefix-first-word-ambiguous(5)				low	287588	17.9
+Subhashitas-Systematic	Su53-Vishad.mp3	53	vishad	none				unmatched	292604	18.3
+Subhashitas-Systematic	Su54-Aliranu.mp3	54	aliranu	prefix-first-word-ambiguous(2)				low	251226	15.7
+Subhashitas-Systematic	Su55-Upadesho.mp3	55	upadesho	none				unmatched	335236	20.9
+Subhashitas-Systematic	Su56-YeCha.mp3	56	yecha	prefix-first-word	2308	Saying 2308	chāyā saṃśrayate talaṃ viṭapināṃ śrānteva pānthaiḥ samaṃ	medium	302217	18.9
+Subhashitas-Systematic	Su57-Kondho.mp3	57	kondho	prefix-first-word	2308	Saying 2308	chāyā saṃśrayate talaṃ viṭapināṃ śrānteva pānthaiḥ samaṃ	medium	295112	18.4
+Subhashitas-Systematic	Su58-PurvaJanma.mp3	58	purvajanma	prefix-first-word-ambiguous(2)				low	300127	18.7
+Subhashitas-Systematic	Su59-DanenaTulyo.mp3	59	danenatulyo	prefix-first-word-ambiguous(2)				low	358642	22.4
+Subhashitas-Systematic	Su6-Gacchan.mp3	6	gacchan	prefix-first-word	2308	Saying 2308	chāyā saṃśrayate talaṃ viṭapināṃ śrānteva pānthaiḥ samaṃ	medium	245375	15.3
+Subhashitas-Systematic	Su60-Samroha.mp3	60	samroha	prefix-first-word	2308	Saying 2308	chāyā saṃśrayate talaṃ viṭapināṃ śrānteva pānthaiḥ samaṃ	medium	323951	20.2
+Subhashitas-Systematic	Su61-AhoDurjana.mp3	61	ahodurjana	prefix-first-word-ambiguous(2)				low	312248	19.5
+Subhashitas-Systematic	Su62-MataMitr.mp3	62	matamitr	prefix-first-word-ambiguous(2)				low	303889	19.0
+Subhashitas-Systematic	Su63-Vivekah.mp3	63	vivekah	exact-first-word	6190	Saying 6190	vivekaḥ kiṃ so 'pi svarasajanitā yatra na kṛpā	high	309740	19.3
+Subhashitas-Systematic	Su64-ShadDosha.mp3	64	shaddosha	none				unmatched	334818	20.9
+Subhashitas-Systematic	Su65-VidyaDadati.mp3	65	vidyadadati	prefix-first-word	6190	Saying 6190	vivekaḥ kiṃ so 'pi svarasajanitā yatra na kṛpā	medium	321443	20.1
+Subhashitas-Systematic	Su66-NaVishva.mp3	66	navishva	prefix-first-word	6190	Saying 6190	vivekaḥ kiṃ so 'pi svarasajanitā yatra na kṛpā	medium	303053	18.9
+Subhashitas-Systematic	Su67-Shathyena.mp3	67	shathyena	none				unmatched	373270	23.3
+Subhashitas-Systematic	Su68-Santoshah.mp3	68	santoshah	prefix-first-word-ambiguous(2)				low	316428	19.7
+Subhashitas-Systematic	Su69-Kulam.mp3	69	kulam	exact-first-word-ambiguous(4)				low	315174	19.7
+Subhashitas-Systematic	Su7-Tatkarma.mp3	7	tatkarma	none				unmatched	291768	18.2
+Subhashitas-Systematic	Su70-Abhyasat.mp3	70	abhyasat	prefix-first-word	6190	Saying 6190	vivekaḥ kiṃ so 'pi svarasajanitā yatra na kṛpā	medium	322697	20.1
+Subhashitas-Systematic	Su71-Lobha.mp3	71	lobha	prefix-first-word-ambiguous(7)				low	284245	17.7
+Subhashitas-Systematic	Su72-EkaVarna.mp3	72	ekavarna	prefix-first-word-ambiguous(2)				low	306397	19.1
+Subhashitas-Systematic	Su73-TePutra.mp3	73	teputra	prefix-first-word	6190	Saying 6190	vivekaḥ kiṃ so 'pi svarasajanitā yatra na kṛpā	medium	308486	19.3
+Subhashitas-Systematic	Su74-Manasa.mp3	74	manasa	exact-first-word-ambiguous(3)				low	316846	19.8
+Subhashitas-Systematic	Su75-Alpa.mp3	75	alpa	prefix-first-word-ambiguous(4)				low	308486	19.3
+Subhashitas-Systematic	Su76-YahPathati.mp3	76	yahpathati	prefix-first-word-ambiguous(2)				low	269616	16.8
+Subhashitas-Systematic	Su77-ChittePrasanne.mp3	77	chitteprasanne	none				unmatched	316010	19.7
+Subhashitas-Systematic	Su78-Krodho.mp3	78	krodho	exact-first-word-ambiguous(5)				low	319353	19.9
+Subhashitas-Systematic	Su79-Visrjya.mp3	79	visrjya	exact-first-word	6235	Saying 6235	visṛjya śūryavaddoṣānguṇāngṛhṇanti sādhavaḥ	high	328131	20.5
+Subhashitas-Systematic	Su8-Sruyatam.mp3	8	sruyatam	exact-first-word-ambiguous(2)				low	283827	17.7
+Subhashitas-Systematic	Su80-Durjano.mp3	80	durjano	exact-first-word-ambiguous(2)				low	307651	19.2
+Subhashitas-Systematic	Su81-Paropa.mp3	81	paropa	prefix-first-word-ambiguous(10)				low	302217	18.9
+Subhashitas-Systematic	Su82-Jnatibhi.mp3	82	jnatibhi	prefix-first-word-ambiguous(2)				low	336490	21.0
+Subhashitas-Systematic	Su83-Dhana.mp3	83	dhana	prefix-first-word-ambiguous(23)				low	306397	19.1
+Subhashitas-Systematic	Su84-Anabhyase.mp3	84	anabhyase	prefix-first-word-ambiguous(2)				low	316428	19.7
+Subhashitas-Systematic	Su85-Vidvaneva.mp3	85	vidvaneva	exact-first-word	6114	Saying 6114	vidvāneva vijānāti vidvajjanapariśramam	high	319771	20.0
+Subhashitas-Systematic	Su86-Paraih.mp3	86	paraih	exact-first-word	3977	Saying 3977	paraiḥ saṃbhujyate rājyaṃ svayaṃ pāpasya bhājanam	high	322697	20.1
+Subhashitas-Systematic	Su87-Avidya.mp3	87	avidya	prefix-first-word-ambiguous(3)				low	312248	19.5
+Subhashitas-Systematic	Su88-Apurvah.mp3	88	apurvah	exact-first-word	448	Saying 448	apūrvaḥ ko 'pi kopāgniḥ sajjanasya khalasya ca	high	304307	19.0
+Subhashitas-Systematic	Su89-Guneshu.mp3	89	guneshu	none				unmatched	294694	18.4
+Subhashitas-Systematic	Su9-Videshe.mp3	9	videshe	none				unmatched	290096	18.1
+Subhashitas-Systematic	Su90-Chala.mp3	90	chala	none				unmatched	303053	18.9
+Subhashitas-Systematic	Su91-AhoPrakrti.mp3	91	ahoprakrti	prefix-first-word-ambiguous(2)				low	270034	16.9
+Subhashitas-Systematic	Su92-MrgaMrgai.mp3	92	mrgamrgai	prefix-first-word	448	Saying 448	apūrvaḥ ko 'pi kopāgniḥ sajjanasya khalasya ca	medium	364911	22.8
+Subhashitas-Systematic	Su93-Shastra.mp3	93	shastra	none				unmatched	359477	22.4
+Subhashitas-Systematic	Su94-Yatha.mp3	94	yatha	exact-first-word-ambiguous(58)				low	300545	18.8
+Subhashitas-Systematic	Su95-Vishasya.mp3	95	vishasya	none				unmatched	281319	17.6
+Subhashitas-Systematic (1)	01 Субхашита Удьямэна (Udyamena) उद्यमेन.mp3	1	udyamena	exact-first-word-ambiguous(2)				low	298873	18.7
+Subhashitas-Systematic (1)	02 Субхашита Гатэ (Gate) गते.mp3	2	gate	exact-first-word-ambiguous(5)				low	313084	19.5
+Subhashitas-Systematic (1)	03 Субхашита Варам (Varam) वरं.mp3	3	varam	exact-first-word-ambiguous(29)				low	288006	18.0
+Subhashitas-Systematic (1)	04 Субхашита Видья (Vidya) विद्या.mp3	4	vidya	exact-first-word-ambiguous(11)				low	382047	23.8
+Subhashitas-Systematic (1)	05 Субхашита Чхаяманьясья (Chayamanyasya) छायामन्यस्य.mp3	5	chayamanyasya	exact-first-word	2307	Saying 2307	chāyāmanyasya kurvanti svayaṃ tiṣṭhanti cātape	high	280483	17.5
+Subhashitas-Systematic (1)	06 Субхашита Гаччхан (Gacchan) गच्छन्.mp3	6	gacchan	prefix-first-word	2307	Saying 2307	chāyāmanyasya kurvanti svayaṃ tiṣṭhanti cātape	medium	245375	15.3
+Subhashitas-Systematic (1)	07 Субхашита Таткарма (Tatkarma) तत्कर्म.mp3	7	tatkarma	none				unmatched	291768	18.2
+Subhashitas-Systematic (1)	08 Субхашита Шруятам (Shruyatam) श्रूयतां.mp3	8	shruyatam	none				unmatched	283827	17.7
+Subhashitas-Systematic (1)	09 Субхашита Видэшэшу (Videsheshu) विदेशेषु.mp3	9	videsheshu	none				unmatched	290096	18.1
+Subhashitas-Systematic (1)	10 Субхашита Мата (Mata) माता.mp3	10	mata	exact-first-word-ambiguous(8)				low	294694	18.4
+Subhashitas-Systematic (1)	11 Субхашита Рупаяуванасампаннах (Rupayauvanasampannaḥ) रूपयौवनसंपन्नाः.mp3	11	rupayauvanasampannah	prefix-first-word	2307	Saying 2307	chāyāmanyasya kurvanti svayaṃ tiṣṭhanti cātape	medium	300963	18.8
+Subhashitas-Systematic (1)	13 Субхашита Шакатам (Shakatam) शकटं.mp3	13	shakatam	none				unmatched	261257	16.3
+Subhashitas-Systematic (1)	14 Субхашита Упакаропи (Upakaro'pi) उपकारोऽपि.mp3	14	upakaropi	none				unmatched	270452	16.9
+Subhashitas-Systematic (1)	15 Субхашита Вршьчикасья (Vrshcikasya) वृश्चिकस्य.mp3	15	vrshcikasya	none				unmatched	293022	18.3
+Subhashitas-Systematic (1)	16 Субхашита Ачарьят (Acaryat) आचार्यात्.mp3	16	acaryat	prefix-first-word	2307	Saying 2307	chāyāmanyasya kurvanti svayaṃ tiṣṭhanti cātape	medium	290096	18.1
+Subhashitas-Systematic (1)	17 Субхашита Авашьяманубхоктавьям (Avashyamanubhoktavyam) अवश्यमनुभोक्तव्यं.mp3	17	avashyamanubhoktavyam	prefix-first-word	2307	Saying 2307	chāyāmanyasya kurvanti svayaṃ tiṣṭhanti cātape	medium	273378	17.1
+Subhashitas-Systematic (1)	18 Субхашита Сатьям (Satyam) सत्यं.mp3	18	satyam	exact-first-word-ambiguous(18)				low	295112	18.4
+Subhashitas-Systematic (1)	19 Субхашита Дхармо (Dharmo) धर्मो.mp3	19	dharmo	exact-first-word-ambiguous(3)				low	252898	15.8
+Subhashitas-Systematic (1)	20 Субхашита Матрват (Matrvat) मातृवत्.mp3	20	matrvat	prefix-first-word-ambiguous(2)				low	277975	17.3
+Subhashitas-Systematic (1)	21 Субхашита Макшика (Makshika) मक्षिका.mp3	21	makshika	prefix-first-word	2307	Saying 2307	chāyāmanyasya kurvanti svayaṃ tiṣṭhanti cātape	medium	297202	18.5
+Subhashitas-Systematic (1)	22 (25) Субхашита Пустакастха (Pustakastha) पुस्तकस्था.mp3	22	pustakastha	exact-first-word	4156	Saying 4156	pustakasthā ca yā vidyā parahaste ca yaddhanam	high	298873	18.7
+Subhashitas-Systematic (1)	23 (22) Субхашита Адата (Adata) अदाता.mp3	23	adata	exact-first-word	192	Saying 192	adātā vaṃśadoṣeṇa karmadoṣāddaridratā	high	299291	18.7
+Subhashitas-Systematic (1)	24 Субхашита Кокиланам (Kokilanam) कोकिलानां.mp3	24	kokilanam	exact-first-word	1919	Saying 1919	kokilānāṃ svaro rūpaṃ nārīrūpaṃ pativratam	high	297202	18.5
+Subhashitas-Systematic (1)	25 (23) Субхашита Ясья (Yasya) यस्य.mp3	25	yasya	exact-first-word-ambiguous(42)				low	284663	17.8
+Subhashitas-Systematic (1)	26 Субхашита Адау (Adau) आदौ.mp3	26	adau	exact-first-word-ambiguous(7)				low	291350	18.2
+Subhashitas-Systematic (1)	27 Субхашита Аюшах (Ayushаḥ) आयुषः.mp3	27	ayushh	prefix-first-word	1919	Saying 1919	kokilānāṃ svaro rūpaṃ nārīrūpaṃ pativratam	medium	299709	18.7
+Subhashitas-Systematic (1)	27_2 Субхашита Аюшах (Ayushaḥ) आयुषः.mp3		ayushah	prefix-first-word	1919	Saying 1919	kokilānāṃ svaro rūpaṃ nārīrūpaṃ pativratam	medium	265855	16.6
+Subhashitas-Systematic (1)	28 Субхашита Ках (Kaḥ) कः.mp3	28	kah	exact-first-word-ambiguous(6)				low	293858	18.3
+Subhashitas-Systematic (1)	29 Субхашита Пранамэкам (Pranamekam) प्राणमेकं.mp3	29	pranamekam	prefix-first-word	1919	Saying 1919	kokilānāṃ svaro rūpaṃ nārīrūpaṃ pativratam	medium	305979	19.1
+Subhashitas-Systematic (1)	30 Субхашита Анитьяни (Anityani) अनित्यानि.mp3	30	anityani	exact-first-word	292	Saying 292	anityāni śarīrāṇi vibhavo naiva śāśvataḥ	high	291350	18.2
+Subhashitas-Systematic (1)	31 Субхашита Утпаласьяравиндасья (Utpalasyaravindasya) उत्पलस्यारविन्दस्य.mp3	31	utpalasyaravindasya	none				unmatched	307651	19.2
+Subhashitas-Systematic (1)	32 Субхашита Артханамарджанэ (Arthanamarjane) अर्थानामर्जने.mp3	32	arthanamarjane	exact-first-word	605	Saying 605	arthānāmarjane duḥkhamarjitānāṃ ca rakṣaṇe	high	320607	20.0
+Subhashitas-Systematic (1)	32_2 Субхашита Артханамарджанэ (Arthanamarjane) अर्थानामर्जने.mp3		arthanamarjane	exact-first-word	605	Saying 605	arthānāmarjane duḥkhamarjitānāṃ ca rakṣaṇe	high	309740	19.3
+Subhashitas-Systematic (1)	33 Субхашита Утсавэ (Utsave) उत्सवे.mp3	33	utsave	exact-first-word	1221	Saying 1221	utsave vyasane caiva durbhikṣe śatrusaṅkaṭe	high	301799	18.8
+Subhashitas-Systematic (1)	34 Субхашита Пртхивьям (Prthivyam) पृथिव्यां.mp3	34	prthivyam	exact-first-word	4186	Saying 4186	pṛthivyāṃ trīṇī ratnāni jalamannaṃ subhāṣitam	high	303471	18.9
+Subhashitas-Systematic (1)	35 Субхашита Видваттвам (Vidvattvam) विद्वत्त्वं.mp3	35	vidvattvam	none				unmatched	292186	18.2
+Subhashitas-Systematic (1)	36 Субхашита На чорахарьям (Na сoraharyam) न चोरहार्यं.mp3	36	naoraharyam	prefix-first-word	4186	Saying 4186	pṛthivyāṃ trīṇī ratnāni jalamannaṃ subhāṣitam	medium	325205	20.3
+Subhashitas-Systematic (1)	38 Субхашита Аям (Ayam) अयं.mp3	38	ayam	exact-first-word-ambiguous(6)				low	259585	16.2
+Subhashitas-Systematic (1)	39 Субхашита Чинтаяшьча (Cintayashca) चिन्तायाश्च.mp3	39	cintayashca	prefix-first-word	4186	Saying 4186	pṛthivyāṃ trīṇī ratnāni jalamannaṃ subhāṣitam	medium	298873	18.7
+Subhashitas-Systematic (1)	40 (43) Субхашита Манасьекам (Manasyekam) मनस्येकं.mp3	40	manasyekam	exact-first-word	4693	Saying 4693	manasyekaṃ vacasyekaṃ karmaṇyekaṃ mahātmanām	high	319353	19.9
+Subhashitas-Systematic (1)	41 (42) Субхашита Набхишэко (Nabhisheko) नाभिषेको.mp3	41	nabhisheko	prefix-first-word	4693	Saying 4693	manasyekaṃ vacasyekaṃ karmaṇyekaṃ mahātmanām	medium	301799	18.8
+Subhashitas-Systematic (1)	41 (42)_2 Субхашита Набхишэко (Nabhisheko) नाभिषेको.mp3	41	nabhisheko	prefix-first-word	4693	Saying 4693	manasyekaṃ vacasyekaṃ karmaṇyekaṃ mahātmanām	medium	293858	18.3
+Subhashitas-Systematic (1)	42 (41) Субхашита Бхашасу (Bhashasu) भाषासु.mp3	42	bhashasu	none				unmatched	290932	18.2
+Subhashitas-Systematic (1)	43 (40) Субхашита Аннаданам (Annadanam) अन्नदानं.mp3	43	annadanam	prefix-first-word	4693	Saying 4693	manasyekaṃ vacasyekaṃ karmaṇyekaṃ mahātmanām	medium	297202	18.5
+Subhashitas-Systematic (1)	44 Субхашита Вртха (Vrtha) वृथा.mp3	44	vrtha	exact-first-word-ambiguous(4)				low	296366	18.5
+Subhashitas-Systematic (1)	45 (-) Субхашита Лубдхо (Lubdho) लुब्धो.mp3	45		no-key				unmatched	285081	17.8
+Subhashitas-Systematic (1)	46 (48) Субхашита Сукхасья (Sukhasya) सुखस्य.mp3	46	sukhasya	exact-first-word	7082	Saying 7082	sukhasya duḥkhasya na me 'sti dātṛtā	high	329802	20.6
+Subhashitas-Systematic (1)	47 (49) Субхашита Боддхаро (Boddharo) बोद्धारो.mp3	47	boddharo	exact-first-word	4488	Saying 4488	boddhāro matsaragrastāḥ prabhavaḥ smayadūṣitāḥ	high	292604	18.3
+Subhashitas-Systematic (1)	48 (51) Субхашита Свабхаво (Svabhavo) स्वभावो.mp3	48	svabhavo	exact-first-word-ambiguous(3)				low	293440	18.3
+Subhashitas-Systematic (1)	49 (52) Субхашита Ясминдживати (Yasminjivati) यस्मिञ्जीवति.mp3	49	yasminjivati	exact-first-word	5348	Saying 5348	yasmiñjīvati jīvanti bahavaḥ so 'tra jīvati	high	276304	17.2
+Subhashitas-Systematic (1)	50 Субхашита Самсаравишавркшасья (Samsaravishavrkshasya) संसारविषवृक्षस्य.mp3	50	samsaravishavrkshasya	prefix-first-word	5348	Saying 5348	yasmiñjīvati jīvanti bahavaḥ so 'tra jīvati	medium	278393	17.4
+Subhashitas-Systematic (1)	51 (53) Субхашита Ятха (Yatha) यथा.mp3	51	yatha	exact-first-word-ambiguous(58)				low	315592	19.7
+Subhashitas-Systematic (1)	52 (47) Субхашита Ваджрадапи (Vajradapi) वज्रादपि.mp3	52	vajradapi	exact-first-word	5909	Saying 5909	vajrādapi kaṭhorāṇi mṛdū ni kusumādapi	high	287588	17.9
+Subhashitas-Systematic (1)	53 (54) Субхашита Вишадапьямртам (Vishadapyamrtam) विषादप्यमृतं.mp3	53	vishadapyamrtam	none				unmatched	292604	18.3
+Subhashitas-Systematic (1)	54 (55) Субхашита Алиранусарати (Aliranusarati) अलिरनुसरति.mp3	54	aliranusarati	exact-first-word	7691	Saying 7691	aliranusarati parimalaṃ lakṣmīranusarati nayaguṇasamṛddhim	high	251226	15.7
+Subhashitas-Systematic (1)	55 (56) Субхашита Упадэшо (Upadesho) उपदेशो.mp3	55	upadesho	none				unmatched	335236	20.9
+Subhashitas-Systematic (1)	56 (45) Субхашита Йе ча (Ye ca) ये च.mp3	56	yeca	prefix-first-word	7691	Saying 7691	aliranusarati parimalaṃ lakṣmīranusarati nayaguṇasamṛddhim	medium	302217	18.9
+Subhashitas-Systematic (1)	57 Субхашита Кондхо (Ko'ndho) कोऽन्धो.mp3	57	kondho	prefix-first-word	7691	Saying 7691	aliranusarati parimalaṃ lakṣmīranusarati nayaguṇasamṛddhim	medium	295112	18.4
+Subhashitas-Systematic (1)	58 Субхашита Пурваджанмакртам (Purvajanmakrtam) पूर्वजन्मकृतं.mp3	58	purvajanmakrtam	exact-first-word	4172	Saying 4172	pūrvajanmakṛtaṃ karma taddaivamiti kathyate	high	300127	18.7
+Subhashitas-Systematic (1)	59 Субхашита Данэна тульо (Danena tulyo) दानेन तुल्यो.mp3	59	danenatulyo	prefix-first-word-ambiguous(2)				low	358642	22.4
+Subhashitas-Systematic (1)	60 Субхашита Самрохатьягнина (Samrohatyagnina) संरोहत्यग्निना.mp3	60	samrohatyagnina	prefix-first-word	4172	Saying 4172	pūrvajanmakṛtaṃ karma taddaivamiti kathyate	medium	323951	20.2
+Subhashitas-Systematic (1)	61 Субхашита Ахо дурджанасамсаргат (Aho durjanasamsargat) अहो दुर्जनसंसर्गात्.mp3	61	ahodurjanasamsargat	prefix-first-word-ambiguous(2)				low	312248	19.5
+Subhashitas-Systematic (1)	62 Субхашита Мата митрам (Mata mitram) माता मित्रं.mp3	62	matamitram	prefix-first-word-ambiguous(2)				low	303889	19.0
+Subhashitas-Systematic (1)	63 Субхашита Вивэках (Vivekaḥ) विवेकः.mp3	63	vivekah	exact-first-word	6190	Saying 6190	vivekaḥ kiṃ so 'pi svarasajanitā yatra na kṛpā	high	309740	19.3
+Subhashitas-Systematic (1)	64 Субхашита Шаддошах (Shaddoshaḥ) षड्दोषाः.mp3	64	shaddoshah	none				unmatched	334818	20.9
+Subhashitas-Systematic (1)	65 Субхашита Видья дадати (Vidya dadati) विद्या ददाति.mp3	65	vidyadadati	prefix-first-word	6190	Saying 6190	vivekaḥ kiṃ so 'pi svarasajanitā yatra na kṛpā	medium	321443	20.1
+Subhashitas-Systematic (1)	66 Субхашита На вишьвасэт (Na vishvaset) न विश्वसेत्.mp3	66	navishvaset	prefix-first-word	6190	Saying 6190	vivekaḥ kiṃ so 'pi svarasajanitā yatra na kṛpā	medium	303053	18.9
+Subhashitas-Systematic (1)	67 Субхашита Шатхьена (Shathyena) शाठ्येन.mp3	67	shathyena	none				unmatched	373270	23.3
+Subhashitas-Systematic (1)	68 Субхашита Сантошах (Santoshaḥ) सन्तोषः.mp3	68	santoshah	prefix-first-word-ambiguous(2)				low	316428	19.7
+Subhashitas-Systematic (1)	69 Субхашита Кулам (Kulam) कुलं.mp3	69	kulam	exact-first-word-ambiguous(4)				low	315174	19.7
+Subhashitas-Systematic (1)	70 Субхашита Абхьясаддхарьятэ (Abhyasaddharyate) अभ्यासाद्धार्यते.mp3	70	abhyasaddharyate	exact-first-word	513	Saying 513	abhyāsāddhāryate vidyā kulaṃ śīlena dhāryate	high	322697	20.1
+Subhashitas-Systematic (1)	71 Субхашита Лобхамулани (Lobhamulani) लोभमूलानि.mp3	71	lobhamulani	none				unmatched	284245	17.7
+Subhashitas-Systematic (1)	72 Субхашита Экаварнам (Ekavarnam) एकवर्णं.mp3	72	ekavarnam	exact-first-word	1375	Saying 1375	ekavarṇaṃ yathā dugdhaṃ bahuvarṇāsu dhenuṣu	high	306397	19.1
+Subhashitas-Systematic (1)	73 Субхашита Те путра (Te putra) ते पुत्रा.mp3	73	teputra	prefix-first-word	1375	Saying 1375	ekavarṇaṃ yathā dugdhaṃ bahuvarṇāsu dhenuṣu	medium	308486	19.3
+Subhashitas-Systematic (1)	74 Субхашита Манаса (Manasa) मनसा.mp3	74	manasa	exact-first-word-ambiguous(3)				low	316846	19.8
+Subhashitas-Systematic (1)	75 Субхашита Альпакарьякарах (Alpakaryakaraḥ) अल्पकार्यकराः.mp3	75	alpakaryakarah	prefix-first-word	1375	Saying 1375	ekavarṇaṃ yathā dugdhaṃ bahuvarṇāsu dhenuṣu	medium	308486	19.3
+Subhashitas-Systematic (1)	76 Субхашита Ях патхати (Yaḥ pathati) यः पठति.mp3	76	yahpathati	prefix-first-word-ambiguous(2)				low	269616	16.8
+Subhashitas-Systematic (1)	77 Субхашита Читтэ прасаннэ (Citte prasanne) चित्ते प्रसन्ने.mp3	77	citteprasanne	none				unmatched	316010	19.7
+Subhashitas-Systematic (1)	78 Субхашита Кродхо (Krodho) क्रोधो.mp3	78	krodho	exact-first-word-ambiguous(5)				low	319353	19.9
+Subhashitas-Systematic (1)	79 Субхашита Висрджья (Visrjya) विसृज्य.mp3	79	visrjya	exact-first-word	6235	Saying 6235	visṛjya śūryavaddoṣānguṇāngṛhṇanti sādhavaḥ	high	328131	20.5
+Subhashitas-Systematic (1)	80 Субхашита Дурджано (Durjano) दुर्जनो.mp3	80	durjano	exact-first-word-ambiguous(2)				low	307651	19.2
+Subhashitas-Systematic (1)	81 Субхашита Паропадэшэ (Paropadeshe) परोपदेशे.mp3	81	paropadeshe	prefix-first-word	6235	Saying 6235	visṛjya śūryavaddoṣānguṇāngṛhṇanti sādhavaḥ	medium	302217	18.9
+Subhashitas-Systematic (1)	82 Субхашита Джнятибхирвантьятэ (Jnatibhirvantyate) ज्ञातिभिर्वण्ट्यते.mp3	82	jnatibhirvantyate	none				unmatched	336490	21.0
+Subhashitas-Systematic (1)	83 Субхашита Дханадханьяпрайогэшу (Dhanadhanyaprayogeshu) धनधान्यप्रयोगेषु.mp3	83	dhanadhanyaprayogeshu	none				unmatched	306397	19.1
+Subhashitas-Systematic (1)	84 Субхашита Анабхьясэ (Anabhyase) अनभ्यासे.mp3	84	anabhyase	prefix-first-word-ambiguous(2)				low	316428	19.7
+Subhashitas-Systematic (1)	85 Субхашита Видванэва (Vidvaneva) विद्वानेव.mp3	85	vidvaneva	exact-first-word	6114	Saying 6114	vidvāneva vijānāti vidvajjanapariśramam	high	319771	20.0
+Subhashitas-Systematic (1)	86 Субхашита Парайх (Paraiḥ) परैः.mp3	86	paraih	exact-first-word	3977	Saying 3977	paraiḥ saṃbhujyate rājyaṃ svayaṃ pāpasya bhājanam	high	322697	20.1
+Subhashitas-Systematic (1)	87 Субхашита Авидьянашини (Avidyanashini) अविद्यानाशिनी.mp3	87	avidyanashini	prefix-first-word	3977	Saying 3977	paraiḥ saṃbhujyate rājyaṃ svayaṃ pāpasya bhājanam	medium	312248	19.5
+Subhashitas-Systematic (1)	88 Субхашита Апурвах (Apurvaḥ) अपूर्वः.mp3	88	apurvah	exact-first-word	448	Saying 448	apūrvaḥ ko 'pi kopāgniḥ sajjanasya khalasya ca	high	304307	19.0
+Subhashitas-Systematic (1)	89 (91) Субхашита Гунэшу (Guneshu) गुणेषु.mp3	89	guneshu	none				unmatched	294694	18.4
+Subhashitas-Systematic (1)	90 Субхашита Чала (Chala) चला.mp3	90	chala	none				unmatched	303053	18.9
+Subhashitas-Systematic (1)	91 (89) Субхашита Ахо пракртисадршьям (Aho prakrtisadrshyam) अहो प्रकृतिसादृश्यं.mp3	91	ahoprakrtisadrshyam	prefix-first-word-ambiguous(2)				low	270034	16.9
+Subhashitas-Systematic (1)	92 Субхашита Мрга мргайх (Mrga mrgaiḥ) मृगा मृगैः.mp3	92	mrgamrgaih	prefix-first-word	448	Saying 448	apūrvaḥ ko 'pi kopāgniḥ sajjanasya khalasya ca	medium	364911	22.8
+Subhashitas-Systematic (1)	93 Субхашита Шастраньядхитьяпи (Shastranyadhityapi) शास्त्राण्यधीत्यापि.mp3	93	shastranyadhityapi	none				unmatched	359477	22.4
+Subhashitas-Systematic (1)	94 (95) Субхашита Ятха (Yatha) यथा.mp3	94	yatha	exact-first-word-ambiguous(58)				low	300545	18.8
+Subhashitas-Systematic (1)	95 (94) Субхашита Вишасья (Vishasya) विषस्य.mp3	95	vishasya	none				unmatched	281319	17.6

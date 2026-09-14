@@ -9,6 +9,7 @@ use App\Models\ContentCandidate;
 use App\Services\Content\ContentMonthSeeder;
 use App\Services\Content\VkOrsImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class ContentCalendarSeedTest extends TestCase
@@ -58,6 +59,13 @@ class ContentCalendarSeedTest extends TestCase
 
     public function test_keep_sets_scheduled_and_publish_at(): void
     {
+        // H4663 follow-up: часы заморожены намеренно — тот же календарный
+        // класс, что EvergreenFillTest (#2239). Тест пиняет slot_date
+        // 2026-09-15 и требует canCancel(), который верен лишь дольше чем за
+        // 24 часа до publish_at (15-09 12:00 МСК): с 14-09 13:00 МСК тест
+        // краснел безотносительно к коду. Дата фиксирует детерминизм.
+        $this->travelTo(Carbon::create(2026, 8, 15, 9, 0, 0, 'Europe/Moscow'));
+
         $slot = ContentCalendarSlot::create([
             'slot_date' => '2026-09-15',
             'slot_type' => ContentCalendarSlot::TYPE_EVERGREEN,

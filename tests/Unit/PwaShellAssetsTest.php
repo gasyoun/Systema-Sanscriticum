@@ -73,5 +73,19 @@ class PwaShellAssetsTest extends TestCase
         $this->assertStringContainsString('sw.js', $html);
         $this->assertStringContainsString('viewport-fit=cover', $html);
         $this->assertStringContainsString('overflow-x-hidden', $html);
+
+        // H4118 — iPhone-friendly P0 wave.
+        $this->assertStringContainsString(
+            'env(safe-area-inset',
+            $html,
+            'viewport-fit=cover без safe-area-отступов: шапка/контент залезают под «чёлку» и домой-полоску.'
+        );
+        $this->assertStringContainsString('interactive-widget=resizes-content', $html);
+        $this->assertStringContainsString('color-scheme', $html);
+        $this->assertStringContainsString('wire:loading', $html);
+        $this->assertStringContainsString('wire:offline', $html);
+        $this->assertStringContainsString('100dvh', $html);
+        // Play CDN запрещён (H4118 root-cause): сломанный JIT v3.4.17 без hidden/md:*.
+        $this->assertStringNotContainsString('cdn.tailwindcss.com', $html);
     }
 }

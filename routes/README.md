@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # routes
 
 Определения маршрутов.
@@ -71,3 +73,5 @@ Route::get('/{slug}', [PromoController::class, 'show'])
 ## `console.php`
 
 Регистрация closure-команд для `php artisan`. В текущем проекте используется минимально — основные команды в `app/Console/Commands/`.
+
+_Dr. Mārcis Gasūns_

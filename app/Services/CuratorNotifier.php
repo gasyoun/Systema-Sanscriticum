@@ -6,11 +6,13 @@ namespace App\Services;
 
 use App\Filament\Pages\Debtors;
 use App\Filament\Pages\MarathonMantraReviews;
+use App\Filament\Resources\CourseMaterialSubmissionResource;
 use App\Filament\Resources\CourseResource;
 use App\Filament\Resources\GroupResource;
 use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
+use App\Models\CourseMaterialSubmission;
 use App\Models\Group;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
@@ -18,6 +20,7 @@ use App\Models\PaymentPromise;
 use App\Models\Tariff;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Информативные уведомления кураторам в общий Telegram-чат по всем
@@ -122,6 +125,43 @@ class CuratorNotifier
         }
         if (! empty($payment->proof_path)) {
             $lines[] = '📎 Приложен файл подтверждения';
+        }
+        $lines[] = $this->adminLink($payment->user);
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Заявка студента «заплатил преподавателю напрямую» (H4627) — куратор
+     * сверяет по выписке преподавателя, затем «Подтвердить перевод
+     * преподавателю» в Filament: номинал вычтется из гонорара сам (H4597).
+     */
+    public function teacherPayReceived(Payment $payment): void
+    {
+        $lines = [
+            '🧑‍🏫 <b>Заявка: оплата напрямую преподавателю</b> — нужна сверка',
+            '',
+            $this->studentLine($payment->user),
+            $this->courseLine($payment->course),
+            $this->tariffLine($payment),
+            'Преподаватель курса (кому зачесть): <b>'.e($payment->receivedByTeacher?->name ?? '—').'</b>',
+            'Заявлено: <b>'.($payment->foreignAmountLabel() ?: '—').'</b>',
+            'Номинал: <b>'.$this->money((float) $payment->amount).'</b>',
+        ];
+        if ($sender = $payment->claimMeta('sender_name')) {
+            $lines[] = 'Отправитель: <code>'.e((string) $sender).'</code>';
+        }
+        if ($paidOn = $payment->claimMeta('paid_on')) {
+            $lines[] = 'Дата оплаты: <b>'.e((string) $paidOn).'</b>';
+        }
+        if ($ref = $payment->claimMeta('reference')) {
+            $lines[] = 'Референция: <code>'.e((string) $ref).'</code>';
+        }
+        if (! empty($payment->payer_note)) {
+            $lines[] = 'Примечание: '.e($payment->payer_note);
+        }
+        if (! empty($payment->proof_path)) {
+            $lines[] = '📎 Приложен файл чека';
         }
         $lines[] = $this->adminLink($payment->user);
 
@@ -490,6 +530,143 @@ class CuratorNotifier
         if ($user) {
             $lines[] = $this->adminLink($user);
         }
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Новый аккаунт на чекауте похож email-ом на уже существующий (опечатка в
+     * домене — .con/.com, gmial/gmail и т.п.), но НЕ совпадает точь-в-точь
+     * (иначе сработал бы обычный dedup и чекаут отказал бы сразу).
+     * Не блокирует оплату — только зовёт куратора свериться и слить аккаунты
+     * вручную, пока оплата не осела на «чужом» для студента логине.
+     */
+    public function possibleDuplicateAccount(User $newUser, User $existing): void
+    {
+        $lines = [
+            '👥 <b>Похожий email на чекауте — возможный дубль аккаунта</b>',
+            '',
+            'Новый: <b>'.e((string) $newUser->name).'</b> ('.e((string) $newUser->email).')',
+            'Похож на: <b>'.e((string) $existing->name).'</b> ('.e((string) $existing->email).')',
+            '',
+            'Оплата ушла на новый аккаунт — если это один человек, слейте вручную.',
+            $this->adminLink($newUser),
+        ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Проба cabinet:probe нашла будущие занятия курса с TG-чатом группы, у
+     * которых на всех трёх уровнях fallback-цепочки нет ссылки подключения
+     * (инцидент 02-09-2026: курсы 401/399 — серии без ссылок, напоминание
+     * ушло «по ссылке:» без самой ссылки). Ссылку заполняет тот, кто ведёт
+     * курс (Настя/Иван) — их зовём напрямую, а не через мягкий канал админа.
+     *
+     * Дедуп: проба ходит каждые 15 минут — куратору курс звонит максимум
+     * раз в сутки на курс, пока ссылка не заполнена (24h cache-клейм).
+     */
+    public function scheduleLinkMissing(Course $course, int $count, string $nearest): void
+    {
+        $key = 'curator:schedule-link-missing:'.$course->id;
+        if (! Cache::add($key, now()->toIso8601String(), now()->addDay())) {
+            return; // уже звонили за последние 24 часа
+        }
+
+        $lines = [
+            '🔗 <b>У занятий курса нет ссылки Zoom</b>',
+            '',
+            $this->courseLine($course),
+            'Занятий в ближайшие 2 недели: <b>'.$count.'</b>',
+            'Ближайшее: <b>'.$nearest.'</b> (МСК)',
+            '',
+            'Напоминание в TG-чат уйдёт без ссылки или не уйдёт вовсе.',
+            'Заполните ссылку: админка → курс → «Ссылка Zoom» (или у каждого занятия). После заполнения сообщите администратору, что ссылка на месте.',
+        ];
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * H3915 — курс завершён: задача куратору на Exit-опрос по когорте этого
+     * курса «спросил цену → оплаты нет». НЕ рассылка: в чат уходят готовые
+     * черновики для ЛИЧНОЙ отправки каждому (ACQUISITION_SURVEY_INSTRUMENTS_
+     * 2026H2 — отправляет куратор лично). Блоки собирает
+     * {@see ExitSurveyAutoTrigger}; здесь только доставка — длинный список
+     * режется на несколько сообщений (лимит Telegram 4096 символов).
+     *
+     * @param  Collection<int, User>  $users
+     * @param  list<string>  $blocks
+     */
+    public function exitSurveyBatchReady(Course $course, Collection $users, array $blocks): void
+    {
+        $head = [
+            '🎓 <b>Курс завершён — задача на Exit-опрос</b>',
+            '',
+            $this->courseLine($course),
+            'Когорта «спросил цену — оплаты нет»: <b>'.$users->count().'</b>',
+            '',
+            'Черновики для личной отправки (не рассылкой; один контакт — потом тишина):',
+            '',
+        ];
+
+        $messages = [];
+        $current = implode("\n", $head);
+        foreach ($blocks as $block) {
+            $candidate = $current === '' ? $block : $current."\n\n".$block;
+            if (mb_strlen($candidate) > 3500 && $current !== '') {
+                $messages[] = $current;
+                $current = $block;
+
+                continue;
+            }
+            $current = $candidate;
+        }
+        if ($current !== '') {
+            $messages[] = $current;
+        }
+
+        foreach ($messages as $text) {
+            $this->dispatchToCurators($text);
+        }
+    }
+
+    /**
+     * H4325 — препод прислал/обновил заявку «Мои материалы» (видео-анонс,
+     * бейдж 4:3, конспект) по своему курсу. Уходит на КАЖДУЮ отправку —
+     * и первую, и правку уже открытой заявки — так куратор не пропустит
+     * досылку недостающего поля.
+     */
+    public function materialsSubmitted(CourseMaterialSubmission $submission): void
+    {
+        $teacher = $submission->submittedBy;
+
+        $parts = [];
+        if (filled($submission->video_announce_url)) {
+            $parts[] = 'видео-анонс';
+        }
+        if ($submission->hasBadge()) {
+            $parts[] = 'бейдж 4:3';
+        }
+        if (filled($submission->notes)) {
+            $parts[] = 'конспект';
+        }
+
+        $lines = [
+            '📚 <b>Заявка «Мои материалы»</b>',
+            '',
+            $this->courseLine($submission->course),
+            'Препод: <b>'.e((string) ($teacher->name ?? ('#'.$submission->submitted_by_user_id))).'</b>',
+            'Прислано: <b>'.($parts !== [] ? implode(', ', $parts) : '—').'</b>',
+        ];
+
+        try {
+            $url = CourseMaterialSubmissionResource::getUrl('index');
+        } catch (\Throwable) {
+            $url = url('/admin');
+        }
+        $lines[] = '';
+        $lines[] = '👉 <a href="'.$url.'">Открыть очередь материалов</a>';
 
         $this->dispatchToCurators($this->join($lines));
     }

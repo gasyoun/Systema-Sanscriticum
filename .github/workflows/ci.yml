@@ -189,6 +189,35 @@ jobs:
           python-version: "3.11"
       - run: python scripts/changelog_duplicate_bullets.py
 
+  changelog-release-coverage:
+    name: Changelog — every version tagged and released
+    runs-on: ubuntu-latest
+    # A CHANGELOG heading is written by the release commit, so a session that
+    # stops after the commit leaves a version that reads as shipped in every
+    # document that matters and exists nowhere in `git tag` or the releases
+    # page. H3692's own v1.90.35 sat untagged for four days while CHANGELOG.md
+    # and RESULTS_LOG.md both linked to its 404 release page; the 03-09-2026
+    # backfill found ten more in the same state. Nothing read back the other
+    # direction until this job.
+    steps:
+      # fetch-depth: 0 is load-bearing — the default (1) fetches NO tags, and
+      # the gate would then see zero tags. The script exits 2 with that
+      # diagnosis rather than reporting 279 phantom gaps, but the job still
+      # needs the real tags to say anything useful.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      # The releases half needs only `contents: read`, already granted at the
+      # top of this file — no PAT, no repo secret. Without GH_TOKEN the script
+      # degrades to a tags-only check and says «UNKNOWN» rather than passing a
+      # false all-clear.
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/changelog_release_coverage.py --check
+
   teacher-guide-freshness:
     name: Teacher guide — freshness warning
     runs-on: ubuntu-latest

@@ -1,6 +1,6 @@
 # Деплой — один скрипт, один ритуал
 
-_Created: 02-07-2026 · Last updated: 19-08-2026_
+_Created: 02-07-2026 · Last updated: 31-08-2026_
 
 Единственный санкционированный способ выкладки —
 [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
@@ -45,6 +45,29 @@ _Created: 02-07-2026 · Last updated: 19-08-2026_
    Полный разбор: [SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md) ·
    [server-resource-guards.md §8.1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md).
 2. `git pull --ff-only origin main` — только fast-forward, никаких мержей на проде.
+
+   **Чем прод аутентифицируется в GitHub (H3799, 31-08-2026, рулинг «б»).**
+   `origin` = `git@github.com:gasyoun/Systema-Sanscriticum.git`, ключ
+   `/root/.ssh/id_ed25519_github_systema` (ed25519, без пароля, **read-only**
+   deploy key репозитория), прибит к хосту блоком `Host github.com` с
+   `IdentitiesOnly yes` в `/root/.ssh/config` — у root лежат и другие ключи
+   (restic, hermese), и без этой опции SSH успевает получить «Too many
+   authentication failures» раньше, чем дойдёт до нужного. Ключи хоста
+   github.com взяты из `https://api.github.com/meta` (проверенный TLS-канал),
+   а не голым `ssh-keyscan`, чтобы первое подключение не было слепым TOFU.
+
+   Так сделано после инцидента: раньше в URL `origin` был **вшит PAT**, он
+   протух и начал отдавать `HTTP 401`, что уронило деплой ровно здесь, на
+   `git pull` — прод при этом остался жив и здоров, просто перестал получать
+   новый код, и заметно это стало только когда деплой понадобился. Диагностика,
+   которая различает «токен умер» и «GitHub лежит»: репозиторий публичный,
+   поэтому `git ls-remote https://github.com/gasyoun/Systema-Sanscriticum.git`
+   с той же машины работает **без** всякой авторизации — если анонимный запрос
+   проходит, а `origin` отдаёт 401, дело в креденшале, а не в GitHub.
+
+   Deploy key **read-only** намеренно: прод только тянет, толкать ему нечего.
+   Ротация ключа не нужна (deploy key не истекает), но если он скомпрометирован
+   — удалить его в Settings → Deploy keys и повторить процедуру выше.
 3. `composer install --no-dev -o` + **`npm ci && npm run build` только если
    изменились asset-пути** (package*/vite/postcss/tailwind/`resources/{js,css}`)
    относительно предыдущего HEAD, или нет `public/build/manifest.json`, или

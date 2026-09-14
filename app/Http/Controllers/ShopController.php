@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseWaitlistItem;
 use App\Models\LandingPage;
 use App\Models\LessonAccessGrant;
 use App\Models\MarketingSetting;
@@ -11,9 +12,11 @@ use App\Models\Payment;
 use App\Models\StorefrontAnalyticsEvent;
 use App\Models\Teacher;
 use App\Models\Testimonial;
+use App\Models\WaitlistVote;
 use App\Services\Activity\FunnelTelemetry;
 use App\Services\Activity\StorefrontAnalytics;
 use App\Services\Membership\PrivateArchiveEligibility;
+use App\Services\Schedule\FullSchedulePost;
 use App\Support\CourseCadence;
 use App\Support\FlagshipExperiments;
 use App\Support\FlagshipLanding;
@@ -69,7 +72,9 @@ class ShopController extends Controller
             }
 
             if (isset($parsed['prepodavatel'])) {
-                $teacher = Teacher::where('name', ShopCatalogUrl::decodeWords($parsed['prepodavatel']))->first();
+                // Толерантный резолв (MG 02-09-2026): «Екатерина-Костина» и
+                // «Костина-Екатерина-Александровна» ведут на одного преподавателя.
+                $teacher = Teacher::resolveByName(ShopCatalogUrl::decodeWords($parsed['prepodavatel']));
                 abort_if($teacher === null, 404);
                 $initial['initialTeacherId'] = (string) $teacher->id;
             }
@@ -153,6 +158,7 @@ class ShopController extends Controller
         $recommended = [];
         foreach (config('onramp.recommendations', []) as $key => $pattern) {
             $recommended[$key] = PrivateArchiveEligibility::scopePublic(Course::query())
+                ->withOwnCatalogCard()
                 ->where('is_visible', true)
                 ->where('title', 'LIKE', '%'.str_replace(['%', '_'], ['\%', '\_'], $pattern).'%')
                 ->orderBy('id')
@@ -258,6 +264,81 @@ class ShopController extends Controller
         return view('shop.put', compact('page', 'tracks'));
     }
 
+    /**
+     * H3834 — рубрика «Список ожидания» на витрине (/online/zhdun): голосуй за
+     * будущую группу — наберётся кворум голосов, откроется оплата; нужное
+     * число оплат к сроку — группа стартует. Данные — те же строки
+     * `course_waitlist_items` (is_listed), что в кабинете (H3815) и фиде
+     * /api/public/waitlist (H3811). Флаг waitlist_voting OFF — 404, страница
+     * не живёт раньше механизма голосования.
+     */
+    public function waitlist()
+    {
+        abort_unless((bool) config('features.waitlist_voting', false), 404);
+
+        $items = CourseWaitlistItem::query()
+            ->where('is_listed', true)
+            ->whereNotIn('status', [
+                CourseWaitlistItem::STATUS_CLOSED,
+                CourseWaitlistItem::STATUS_SCHEDULED,
+            ])
+            ->withCount('votes')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        // «Я уже голосовал» — для отметки на кнопках (как в кабинете H3815).
+        // H4206: рядом — моё пожелание времени (id строки → morning|day|evening).
+        $votedSlugs = [];
+        $votedItemPrefs = [];
+        if (Auth::check() && $items->isNotEmpty()) {
+            $myVotes = WaitlistVote::query()
+                ->whereIn('course_waitlist_item_id', $items->modelKeys())
+                ->where('user_id', Auth::id())
+                ->get(['course_waitlist_item_id', 'slot_preference']);
+            $votedSlugs = $myVotes->pluck('course_waitlist_item_id')->all();
+            $votedItemPrefs = $myVotes
+                ->pluck('slot_preference', 'course_waitlist_item_id')
+                ->all();
+        }
+
+        // Ссылки на преподавателей (MG 02-09-2026): естественный порядок имени —
+        // «Екатерина Костина», как в waitlist-строке. Фильтр каталога резолвит
+        // его толерантно (Teacher::resolveByName), полное ФИО тоже работает.
+        $itemTeacherUrls = [];
+        foreach ($items as $item) {
+            $itemTeacherUrls[$item->getKey()] = $item->teacher_name
+                ? '/online/prepodavatel/'.ShopCatalogUrl::encodeWords($item->teacher_name)
+                : null;
+        }
+
+        $page = new LandingPage([
+            'title' => 'Список ожидания — набор в новые группы',
+            'description' => 'Голосуйте за будущие курсы: наберётся минимум голосов — откроется оплата; нужное число оплат к сроку — группа стартует.',
+        ]);
+
+        // Сезонные секции (MG 01-09-2026): ОСЕНЬ 2026 / НАЧАЛО 2027 / …;
+        // строки без даты — «дата уточняется» в конце. Пустые секции не рисуем.
+        $sections = $items
+            ->groupBy(fn (CourseWaitlistItem $item) => implode('|', $item->seasonSortKey()))
+            ->sortKeys()
+            ->map(fn ($group) => [
+                'label' => $group->first()->seasonLabel(),
+                'undated' => $group->first()->seasonSection()[0] === null,
+                'items' => $group->values(),
+            ])
+            ->values();
+
+        return view('shop.zhdun', [
+            'page' => $page,
+            'sections' => $sections,
+            'items' => $items,
+            'votedItemIds' => $votedSlugs,
+            'votedItemPrefs' => $votedItemPrefs,
+            'itemTeacherUrls' => $itemTeacherUrls,
+        ]);
+    }
+
     // МЕТОД 2: Страница одного конкретного курса
     public function show(Course $course, Request $request, FunnelTelemetry $funnel)
     {
@@ -304,6 +385,12 @@ class ShopController extends Controller
         $scheduleGroups = $course->upcomingSchedules()
             ->groupBy(fn ($s) => $s->start->translatedFormat('F Y'));
 
+        // H4328: полное расписание (обзорное + занятия 1–N) тем же билдером,
+        // что и Telegram-пост. За тем же флагом, что и отправка в чаты.
+        $fullSchedulePosts = config('features.schedule_full_post', false)
+            ? FullSchedulePost::forCourse($course)
+            : [];
+
         // Ритм курса из календаря: день/время, ближайшее занятие, сколько
         // осталось. Раньше шапка показывала только ручное «Идет сейчас», и
         // покупатель не видел ни дня, ни того, что поток на 14-м из 16.
@@ -327,6 +414,8 @@ class ShopController extends Controller
                 ->where('user_id', Auth::id())
                 ->where('course_id', $course->id)
                 ->paid()
+                // H4456: курс с истёкшим окном доступа снова считается покупаемым.
+                ->withoutExpiredAccessWindow()
                 ->pluck('tariff')
                 ->filter()
                 ->unique()
@@ -363,7 +452,21 @@ class ShopController extends Controller
         $flagship = FlagshipLanding::for($course);
         $ctaAb = FlagshipExperiments::ctaFor($course, request());
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb'));
+        // H3807 «одна карточка на программу» (рулинг MG 31-08-2026). Запись
+        // прошедшего потока остаётся живой покупаемой страницей — у неё свои
+        // оплаты и на неё ведёт реклама, — но канон у программы один: живой
+        // курс. Иначе поисковик считает две страницы одной программы двумя
+        // товарами и они конкурируют между собой в выдаче.
+        $canonicalUrl = route('shop.course.show', $course->catalogCardCourse()->slug);
+
+        // Обратная сторона: живой курс называет свои записи вариантом покупки,
+        // чтобы «запись» не пропала из виду вместе со второй карточкой.
+        $recordingOffers = $course->recordings()
+            ->where('is_visible', true)
+            ->orderBy('id')
+            ->get(['id', 'title', 'slug']);
+
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts'));
     }
 
     /**

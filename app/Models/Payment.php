@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -119,6 +120,16 @@ class Payment extends Model
     public const PROVIDER_BANK_SEPA = 'bank_sepa';
 
     /**
+     * Заявка студента об оплате НАПРЯМУЮ преподавателю на его личный счёт
+     * (H4627, зеркало PayPal-pending/BankClaim). Запись сразу несёт
+     * received_account='teacher_personal' + received_by_teacher_id, поэтому
+     * после подтверждения (pending → paid) движок зарплаты вычтет номинал
+     * из гонорара преподавателя сам (механизм H4597). Авто-доверия НЕТ —
+     * сверку по выписке преподавателя делает куратор всегда.
+     */
+    public const PROVIDER_TEACHER_TRANSFER = 'teacher_transfer';
+
+    /**
      * Providers that wait for human reconciliation and must never be reaped by
      * payments:expire-stale-checkouts (they are not abandoned bank links).
      *
@@ -128,6 +139,7 @@ class Payment extends Model
         self::PROVIDER_PAYPAL,
         self::PROVIDER_INVOICE,
         self::PROVIDER_BANK_SEPA,
+        self::PROVIDER_TEACHER_TRANSFER,
     ];
 
     protected $casts = [
@@ -315,6 +327,12 @@ class Payment extends Model
     public function isBankSepa(): bool
     {
         return $this->provider === self::PROVIDER_BANK_SEPA;
+    }
+
+    /** Заявка об оплате напрямую преподавателю (H4627), ожидает сверки куратора. */
+    public function isTeacherTransfer(): bool
+    {
+        return $this->provider === self::PROVIDER_TEACHER_TRANSFER;
     }
 
     /**
@@ -534,6 +552,26 @@ class Payment extends Model
         return $query->where('provider', self::PROVIDER_BANK_SEPA)->where('status', 'pending');
     }
 
+    /** Заявки «заплатил преподавателю напрямую» (H4627) — сверка куратора по выписке. */
+    public function scopeTeacherTransferPending(Builder $query): Builder
+    {
+        return $query->where('provider', self::PROVIDER_TEACHER_TRANSFER)->where('status', 'pending');
+    }
+
+    /**
+     * H4627: уже ЗАЧТЁННЫЕ прямые оплаты этого же ученика за последние $days
+     * дней (любой преподаватель) — кандидат в дубль при подтверждении новой
+     * заявки. Один и тот же платёж могли занести вручную и через анкету.
+     */
+    public function scopePriorDirectForUser(Builder $query, int $userId, int $excludeId, int $days = 60): Builder
+    {
+        return $query->where('received_account', self::RECEIVED_TEACHER)
+            ->whereIn('status', self::PAID_STATUSES)
+            ->where('user_id', $userId)
+            ->where('id', '!=', $excludeId)
+            ->where('created_at', '>=', now()->subDays($days));
+    }
+
     /**
      * Авто-доверенные банковские заявки своих учеников: сразу paid, сверка
      * выборочная и пост-фактум (зеркало scopePaypalUnverified).
@@ -577,6 +615,75 @@ class Payment extends Model
     public function scopeConditional(Builder $query): Builder
     {
         return $query->where('is_conditional', true);
+    }
+
+    /**
+     * H4396 — expiry-предикат на доступ, открываемый платежом (census
+     * PAYWALL_CENSUS_2026-09-08 §C.1, аудит 06-08 спека 5: «обещанный дедлайн
+     * не enforced»). Conditional-платёж («доступ под обещание», is_conditional=true)
+     * открывает уроки только пока его обещание живо: status=active и promised_at
+     * ещё не прошёл (окно до дневного прогона promises:expire закрывает сам
+     * предикат — дата и есть дедлайн, а не статус демона). Реальные платежи
+     * предикат не трогает: оплатил = владеет навсегда (продуктовое правило,
+     * случайных отзывов купленного нет) — ИЗМЕНЕНО H4456: реальный платёж
+     * закрывается истёкшим окном доступа (см. scopeWithoutExpiredAccessWindow).
+     * Флаг conditional_access_expiry — money-контур, дефолт OFF; прод-флип —
+     * отдельный ops-шаг (H2085).
+     *
+     * Один предикат на всех читателей ключей: getUserUnlockedTariffs (веб
+     * плеер/курс/ДЗ/ассеты через LessonGate) и API-кабинет.
+     */
+    public function scopeWithAccessExpiry(Builder $query): Builder
+    {
+        // H4456: окна доступа применяются к реальным платежам независимо от
+        // флага conditional_access_expiry (у окон свой рубильник).
+        $query->withoutExpiredAccessWindow();
+
+        if (! config('features.conditional_access_expiry')) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $w) {
+            $w->where('is_conditional', false)
+                ->orWhere(function (Builder $c) {
+                    $c->where('is_conditional', true)
+                        ->whereHas('linkedPromise', function (Builder $p) {
+                            $p->where('status', PaymentPromise::STATUS_ACTIVE)
+                                ->whereDate('promised_at', '>=', now()->toDateString());
+                        });
+                });
+        });
+    }
+
+    /**
+     * H4456 — окно доступа (course_access_windows), рулинг MG 09-09-2026
+     * (вербатим): «сказать 18 дней и отрезать на 19й день, не надо к курсам
+     * Парибка вечный доступ, если не оговорено конкретно у кого такой
+     * исключение и вечный доступ».
+     *
+     * Строка course_access_windows на (user_id, course_id) с ends_at в прошлом
+     * закрывает доступ, открываемый РЕАЛЬНЫМИ платежами этого курса; окно с
+     * ends_at = NULL — вечный доступ по именному исключению; нет строки —
+     * прежнее поведение. Строки платежей (деньги) не трогаются никогда.
+     * Флаг course_access_windows — money-смежный, дефолт OFF; прод-флип —
+     * отдельный ops-шаг (H2085 discipline).
+     */
+    public function scopeWithoutExpiredAccessWindow(Builder $query): Builder
+    {
+        if (! config('features.course_access_windows')) {
+            return $query;
+        }
+
+        $table = $query->getModel()->getTable();
+
+        return $query->whereNotExists(function (QueryBuilder $w) use ($table): void {
+            $w->selectRaw(1)
+                ->from('course_access_windows')
+                ->whereColumn('course_access_windows.user_id', $table.'.user_id')
+                ->whereColumn('course_access_windows.course_id', $table.'.course_id')
+                ->whereNotNull('course_access_windows.ends_at')
+                ->where('course_access_windows.ends_at', '<=', now());
+        });
     }
 
     /**

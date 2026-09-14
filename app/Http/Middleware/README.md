@@ -1,3 +1,5 @@
+_Created: 07-05-2026 · Last updated: 05-09-2026_
+
 # app/Http/Middleware
 
 ## Кастомные middleware
@@ -34,3 +36,5 @@
 - `track.activity` → `TrackUserActivity`
 
 Группа `web` включает все стандартные middleware автоматически.
+
+_Dr. Mārcis Gasūns_

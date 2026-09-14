@@ -1,6 +1,12 @@
 # SEO Roadmap — samskrte.ru (Общество ревнителей санскрита)
 
-_Created: 05-07-2026 · Last updated: 16-08-2026_
+_Created: 05-07-2026 · Last updated: 30-08-2026_
+
+> **Truth-pass 30-08-2026 (Fable 5 `claude-fable-5`, `/ask` H3760):** сверка против origin/main —
+> P2-код по-прежнему готов и по-прежнему ждёт prod-включения `index_enabled` (человеческий шаг,
+> DEPLOY_QUEUE); статусный хребет ниже не изменился. H2-исполнение живёт в
+> [PLAN_SYSTEMA_SAMSKRTE_SEO_H2_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_SEO_H2_2026.md)
+> (W2–W3 executed, W4 prod-gated — см. truth-pass в [ROADMAP_SYSTEMA_SAMSKRTE_SEO_H2_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SYSTEMA_SAMSKRTE_SEO_H2_2026.md)).
 
 **H2 execution pack (16-08-2026):** next work is [PLAN_SYSTEMA_SAMSKRTE_SEO_H2_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SAMSKRTE_SEO_H2_2026.md) (waves W1–W5, 25 interview rulings). This file stays the **P0/P1/P2 status ledger** — do not rebuild the spine below.
 

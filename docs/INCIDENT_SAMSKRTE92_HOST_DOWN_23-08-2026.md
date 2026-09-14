@@ -108,3 +108,5 @@ swap-sizing ноды (P3).
 - H3385 применена сразу после восстановления связи: мёртвый чат `197649919` убран из `ADMIN_TELEGRAM_ID` и `CABINET_PROBE_TELEGRAM_CHAT_ID`, тест нотифайера доставлен в оба живых чата, новых 403 нет (счётчик дня заморожен на 747). Бэкап `.env`: `/var/www/html/.env.bak-h3385`.
 
 _OxAlpha (`opencode/x-preview-f-free`) · SOS-ход 23-08-2026_
+
+_Dr. Mārcis Gasūns_

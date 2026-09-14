@@ -75,3 +75,4 @@ tinker-*.txt
 
 # H3397 hiring exam staging: student works/keys/artifacts never enter git
 /hiring-quarantine/
+review/

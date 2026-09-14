@@ -218,6 +218,112 @@ class StudentDebtsTest extends TestCase
         $this->assertSame([2, 4], $debt->debt_block_numbers, 'Граница №2: №1 исключён, №2 и №4 — долг, №3 оплачен.');
     }
 
+    /**
+     * Курс из 3 блоков (№3 текущий), оплачен только №1 → без гейта был бы долг №2–3.
+     */
+    private function courseWithDebtOnBlocks2and3(User $user): Course
+    {
+        $course = Course::factory()->create(['is_active' => true]);
+        CourseBlock::factory()->for($course)->create(['number' => 1]);
+        CourseBlock::factory()->for($course)->create(['number' => 2]);
+        CourseBlock::factory()->for($course)->current()->create(['number' => 3]);
+
+        Payment::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'amount' => 4000, 'tariff' => 'block_1', 'status' => 'paid',
+            'start_block' => 1, 'end_block' => 1,
+        ]);
+
+        return $course;
+    }
+
+    /** @test */
+    public function left_student_is_not_a_debtor(): void
+    {
+        // «Покинул» в course_user — долг в кабинете не начисляется, зеркально
+        // админскому Debtors (DebtorsReport::NON_DEBT_STATUSES) и debts:remind.
+        $user = User::factory()->create();
+        $course = $this->courseWithDebtOnBlocks2and3($user);
+
+        $user->courses()->syncWithoutDetaching([$course->id => ['status' => 'Покинул', 'left_after_block' => 1]]);
+
+        $this->assertTrue(app(StudentDebtsService::class)->forUser($user)->isEmpty());
+    }
+
+    /** @test */
+    public function graduate_status_is_not_a_debtor_either(): void
+    {
+        $user = User::factory()->create();
+        $course = $this->courseWithDebtOnBlocks2and3($user);
+
+        $user->courses()->syncWithoutDetaching([$course->id => ['status' => 'Выпускник']]);
+
+        $this->assertTrue(app(StudentDebtsService::class)->forUser($user)->isEmpty());
+    }
+
+    /** @test */
+    public function left_student_with_unmet_promise_is_not_a_debtor(): void
+    {
+        // Даже непогашенное обещание не делает ушедшего должником — админский
+        // контур (Debtors, debts:remind) таких тоже не считает.
+        $user = User::factory()->create();
+        $course = $this->courseWithDebtOnBlocks2and3($user);
+
+        $user->courses()->syncWithoutDetaching([$course->id => ['status' => 'Покинул']]);
+        PaymentPromise::create([
+            'user_id' => $user->id, 'course_id' => $course->id,
+            'promised_at' => now()->subDays(3)->toDateString(), 'amount' => 2000,
+            'status' => PaymentPromise::STATUS_ACTIVE,
+        ]);
+
+        $this->assertTrue(app(StudentDebtsService::class)->forUser($user)->isEmpty());
+    }
+
+    /** @test */
+    public function left_after_block_caps_debt_even_with_active_status(): void
+    {
+        // «Блок выхода» — потолок долга и при неснятом активном статусе:
+        // хелпер-текст админки обещает «долги по более поздним блокам не
+        // начисляются». Оплачено ровно до блока выхода → долга нет.
+        $user = User::factory()->create();
+        $course = $this->courseWithDebtOnBlocks2and3($user);
+
+        $user->courses()->syncWithoutDetaching([$course->id => ['status' => 'Записался', 'left_after_block' => 1]]);
+
+        $this->assertTrue(app(StudentDebtsService::class)->forUser($user)->isEmpty());
+    }
+
+    /** @test */
+    public function left_after_block_keeps_debt_below_the_cap(): void
+    {
+        // Вышел после №2, но №2 не оплачен → долг ровно [2], без №3.
+        $user = User::factory()->create();
+        $course = $this->courseWithDebtOnBlocks2and3($user);
+
+        $user->courses()->syncWithoutDetaching([$course->id => ['status' => 'Записался', 'left_after_block' => 2]]);
+
+        $debt = app(StudentDebtsService::class)->forUser($user)->first();
+
+        $this->assertNotNull($debt);
+        $this->assertSame([2], $debt->debt_block_numbers);
+    }
+
+    /** @test */
+    public function active_status_without_exit_block_still_owes(): void
+    {
+        // Регресс: обычный активный студент с непокрытым текущим блоком —
+        // долг как раньше.
+        $user = User::factory()->create();
+        $course = $this->courseWithDebtOnBlocks2and3($user);
+
+        $user->courses()->syncWithoutDetaching([$course->id => ['status' => 'Записался']]);
+
+        $debt = app(StudentDebtsService::class)->forUser($user)->first();
+
+        $this->assertNotNull($debt);
+        $this->assertSame([2, 3], $debt->debt_block_numbers);
+    }
+
     /** @test */
     public function fully_paid_course_without_arrangement_is_not_a_debt(): void
     {

@@ -160,6 +160,36 @@ class SupportReplyService
     }
 
     /**
+     * Pending исходящее в личку БЕЗ привязанного юзера (H3542): приглашение
+     * связать Telegram с кабинетом. От queueAiReply отличается тем, что юзера
+     * нет — некуда ставить users-запись треда, чат известен напрямую.
+     * Увозит ближайший заход синка, как любой bot-message.
+     */
+    public function queueUnlinkedDmMessage(
+        TelegramSupportChat $chat,
+        string $text,
+        ?int $replyToMsgId = null,
+        string $via = 'helpdesk_unified_reply',
+    ): ?TelegramSupportMessage {
+        $accountId = $chat->messages()->max('telegram_support_account_id')
+            ?? TelegramSupportAccount::query()->min('id');
+
+        if (! $accountId) {
+            return null;
+        }
+
+        return $this->createPendingOutgoing(
+            (int) $accountId,
+            $chat,
+            $text,
+            null,
+            $replyToMsgId,
+            $via,
+            'ai',
+        );
+    }
+
+    /**
      * Ответ в тред БЕЗ users-записи — техвопрос из Telegram-чата от непривязанного
      * автора. Отличие от {@see replyViaSupportChannel} только в том, откуда берётся
      * чат: там от пользователя, здесь от самого треда. Дальше всё то же — pending

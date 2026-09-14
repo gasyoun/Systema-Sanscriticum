@@ -1,8 +1,126 @@
 # Results log
 
-_Created: 30-07-2026 · Last updated: 23-08-2026_
+_Created: 30-07-2026 · Last updated: 03-09-2026_
 
 Durable substantive-result tables for this repo. Newest first.
+
+## Release coverage census — all 279 CHANGELOG versions tagged and released (03-09-2026)
+
+_Model: Opus 5 (`claude-opus-5`)._ H3692's close-out ([PR #2207](https://github.com/gasyoun/Systema-Sanscriticum/pull/2207), `84031c39`, 30-08-2026) landed the `[1.90.35]` CHANGELOG section, the RESULTS_LOG table below and the `.ai_state` stamp, but never cut the tag or the GitHub release — so both docs linked to a 404 for four days. Tag `v1.90.35` (annotated) now points at `84031c39`, the commit carrying its own CHANGELOG section, and the release is published with `--latest=false` so `v1.90.51` stays `Latest`: [v1.90.35](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.35).
+
+The same census over `v1.90.35`–`v1.90.51` shows this was not a one-off. Every version in the band has a `## [1.90.x]` CHANGELOG section; **3 have no git tag at all** and **14 have no GitHub release**. Only 1.90.35 (fixed here), 1.90.50 and 1.90.51 are complete.
+
+| Version | CHANGELOG section | git tag | GitHub release |
+|---|---|---|---|
+| 1.90.35 | ✅ | ✅ (retro-tagged 03-09-2026) | ✅ (published 03-09-2026) |
+| 1.90.36 | ✅ | ✅ | ✅ |
+| 1.90.37 | ✅ | ✅ | ✅ |
+| 1.90.38 | ✅ | ✅ | ✅ |
+| 1.90.39 | ✅ | ✅ | ✅ |
+| 1.90.40 | ✅ | ✅ | ✅ |
+| 1.90.41 | ✅ | ✅ | ✅ |
+| 1.90.42 | ✅ | ✅ | ✅ |
+| 1.90.43 | ✅ | ✅ | ✅ |
+| 1.90.44 | ✅ | ✅ | ✅ |
+| 1.90.45 | ✅ | ✅ | ✅ |
+| 1.90.46 | ✅ | ✅ | ✅ |
+| 1.90.47 | ✅ | ✅ | ✅ |
+| 1.90.48 | ✅ | ✅ | ✅ |
+| 1.90.49 | ✅ | ✅ | ✅ |
+| 1.90.50 | ✅ | ✅ | ✅ |
+| 1.90.51 | ✅ | ✅ | ✅ |
+
+**Why it stays invisible.** A CHANGELOG heading is written by the release commit, so a session that stops after the commit leaves a version that looks shipped in every document that matters and exists nowhere in `git tag` or the releases page. Nothing reads back the other direction: no gate compares `## [x.y.z]` headings against `git ls-remote --tags`, so the drift only surfaces when a human clicks a release link written by an earlier pass. Matching known trap: a `cut_release` tag is lightweight, so `git push --follow-tags` skips it and the tag never leaves the machine even when that step did run.
+
+**Repair recipe (per version).** Tag the commit that carries the version's own CHANGELOG section (`git log --oneline --grep="<version>"` finds it), annotate it, push `refs/tags/<tag>` explicitly — never via `--follow-tags` — confirm with `git ls-remote --tags origin`, then `gh release create <tag> --verify-tag --notes-file <section> --latest=false`. The `--latest=false` is not optional: a retro-published historic release otherwise demotes the real newest one.
+
+**Backfilled 03-09-2026, same session.** All 14 versions now carry a tag and a release. Tags `v1.90.39`, `v1.90.42` and `v1.90.44` were created at the `chore(release):` commit that introduced each version's own CHANGELOG section (ancestry checked against both neighbouring tags before pushing) and pushed as explicit `refs/tags/` refs; all 14 releases were published from their CHANGELOG section with `--latest=false`, and `v1.90.51` still holds `Latest`.
+
+**The band was not the whole of it, and the rest was closed the same day.** A full audit over all 279 CHANGELOG versions, run after the first backfill, found 4 more versions with no git tag (`v1.90.30`, `v1.90.29`, `v1.90.25`, `v1.90.19`) and 6 with no release (those four plus `v1.90.21` and `v1.0.0` — the repo's very first version). All ten were repaired in the same session by the same recipe.
+
+**Final state: every one of the 279 CHANGELOG versions has a tag and a published release**, verified by the shipped gate over the whole history with drafts excluded (`--since 1.0.0 --check`, exit 0, `missing git tag: 0 · missing release: 0`), with `v1.90.51` still holding `Latest`. The 280th release — the `v1.90.20` draft described below — was published in the same session after CI caught it. Twenty releases were published and eleven tags created across the session. Where a version's CHANGELOG section exceeded the release-notes size limit its bullets were condensed and the notes say so — the CHANGELOG remains the full record.
+
+**A parser warning worth more than the count.** A first pass at this audit reported *128* missing releases — wrong by a factor of twenty. It matched `gh release list`'s **name** column against `v<version>`, and this repo's release names routinely differ from their tags (`1.90.32` without the `v`, `v1.90.22 — аптайм волна 4 подготовлена…` with a title appended). Release identity is the **tag**, never the display name; an audit keyed on the name invents a backlog that does not exist. The shipped gate reads the tag column.
+
+**The gate that would have caught it** now ships as [`scripts/changelog_release_coverage.py`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/scripts/changelog_release_coverage.py): it reads CHANGELOG headings, `git tag -l` and `gh release list`, and reports or (`--check`) fails on any version missing either. Its floor is now `1.0.0` — with the backlog closed there is nothing left to except, so the default window is the entire file — and it says «UNKNOWN — gh unavailable» rather than a false all-clear when `gh` cannot answer (that degradation fired twice for real during this session's flaky network).
+
+**Wired into CI the same day** as the `Changelog — every version tagged and released` job in [`.github/workflows/ci.yml`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/.github/workflows/ci.yml). Two things that were wrong in the earlier note, corrected here rather than left standing:
+
+1. **No token, no secret, no PAT.** The releases half needs only `contents: read`, which this workflow already grants at file level; `GH_TOKEN: ${{ github.token }}` is the whole of it. The earlier «the release job would need a `gh` token with release-read scope» was over-cautious and would have parked the wiring behind a human permissions step that does not exist.
+2. **`fetch-depth: 0` is load-bearing.** `actions/checkout` fetches **no tags** at its default depth of 1, so the gate would have read zero tags and failed with 279 phantom gaps — a red CI that accuses the repo of exactly the defect it was built to detect, on the one signal that was actually fine. The script now refuses that reading outright: no tags at all in a repo that has a CHANGELOG is a checkout problem, and it exits **2** with that diagnosis instead of a version list. Verified against a real tagless checkout before shipping.
+
+**The gate's first real run failed, and it was right.** On its first PR it reported `missing release: 1 — v1.90.20` against a local run of the same script minutes earlier that had said zero. The local run was the wrong one: **`v1.90.20` existed only as a *draft* release**, created 26-08-2026 and never published. A draft is invisible to anyone without write access, so for every reader following a link it is simply absent — and whether `gh release list` shows it depends on the caller's token. A maintainer's write token saw it and called it published; CI's `contents: read` could not and called it missing. That also means the previous entry's «all 279 versions have a release» was **wrong when written** — 278 did. The draft is now published, and the script passes `--exclude-drafts` so the verdict is a property of the repo rather than of whoever asked.
+
+**A gate that cannot see its subject now fails instead of passing.** `gh` exits non-zero on a transient TLS blip as readily as on a real auth failure — the releases half went `UNKNOWN` twice on this session's flaky network — and under the original design `--check` would then pass having verified only half of what it claims. It now retries three times, and if the releases still cannot be read, `--check` exits **3** rather than green. Report mode (no `--check`) keeps the honest tags-only degradation; a gate does not get that latitude. Exit codes: `0` clean · `1` a real gap · `2` no tags visible · `3` releases unreadable under `--check`. All four paths were exercised before merge.
+
+
+## H3692 guest /register attribution fields (30-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ PR: [#2206](https://github.com/gasyoun/Systema-Sanscriticum/pull/2206) (`d8635007`). Release: [v1.90.35](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.35). Handoff: [H3692 (Grok 4.6, 🟡2 medium) — Guest `/register` collects signup_source and birth_year](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3692-Grok_Systema-Sanscriticum_guest-register-attribution-fields_29.08.26.md). Reclaimed stale Sonnet 5 sidecar (>6h). Deploy `.92`: `sudo bash deploy.sh` `4145f1bd → d8635007`. Tests: 10/10 `GuestRegisterTest` (46 assertions). No new flag, no new columns. Prod enable remains a separate `.env` + `config:cache` step.
+
+| Gate | Result |
+|---|---|
+| Flag default | `features.guest_registration` false (`GUEST_REGISTRATION_ENABLED`) |
+| ON GET form | shows `signup_source` + `birth_year` |
+| ON POST telegram + 1990 | both persist |
+| ON POST birth_year=1800 | user created, year null (non-blocking) |
+| ON POST UTM session | `utm_source` copied via `applyToNewUser` |
+| Flag OFF GET/POST (tests) | 404, zero users |
+| Prod SHA | `d8635007` |
+| Prod env | `GUEST_REGISTRATION_ENABLED=ABSENT` (OFF) |
+| Live GET `/register` | 404 |
+| Homepage smoke | `https://samskrte.ru/` 200 |
+
+## H3693 referral loyalty CTA flag OFF (29-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ PR: [#2201](https://github.com/gasyoun/Systema-Sanscriticum/pull/2201) (`57b1bd71`). Release: [v1.90.34](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.34). Handoff: [H3693 (Grok 4.6, 🟡2 medium) — Referral CTA at homework/certificate/course-complete flag OFF](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H3693-Grok_Systema-Sanscriticum_referral-loyalty-cta-flag-off_29.08.26.md). Took over a live Sonnet 5 sidecar (human authorized). Deploy `.92`: `sudo bash deploy.sh` `4120a527 → 57b1bd71`. Tests: 10/47 `ReferralLoyaltyCtaTest` + `ReferralAskSurfacesTest` green. Partial reused verbatim (H1294). Public `/verify` not touched. `partner.enabled` stays OFF.
+
+| Gate | Result |
+|---|---|
+| Flag default | `features.referral_loyalty_cta` false (`REFERRAL_LOYALTY_CTA`) |
+| Homework accepted, flag OFF | no `referral-loyalty-cta-homework`; no «Порекомендовать школу» on lesson page |
+| Homework accepted, flag ON | existing partial visible; H1294 voice (no награда/бонус/заработок) |
+| Homework submitted, flag ON | inject hidden |
+| Dashboard course-complete, flag OFF | no `referral-loyalty-cta-course-complete`; cabinet H1294 include still shown |
+| Dashboard course-complete, flag ON | inject shown |
+| Incomplete course, flag ON | course-complete inject hidden |
+| Certificate list, flag OFF | no `referral-loyalty-cta-certificate` |
+| Certificate list, flag ON | inject shown |
+| Public `/verify`, flag ON | no invite; `partner.enabled` false |
+| Prod SHA | `57b1bd71` |
+| Prod env | `REFERRAL_LOYALTY_CTA=ABSENT` (OFF) |
+| Homepage smoke | `https://samskrte.ru/` 200 |
+
+Prod enable remains a separate `.env` + `config:cache` step.
+
+## H3650 membership OG stills — live smoke (29-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ PR: [#2194](https://github.com/gasyoun/Systema-Sanscriticum/pull/2194) (`7689e17c`). Release: [v1.90.33](https://github.com/gasyoun/Systema-Sanscriticum/releases/tag/v1.90.33). Handoff: [H3650 (Grok 4.6, 🟡2 medium) — OG stills for 01-09 membership surfaces via Grok Imagine](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H3650-Grok_Systema-Sanscriticum_autumn-membership-og-imagine_28.08.26.md). Deploy on `.92`: `sudo bash deploy.sh` `80fa6c09 → 7689e17c`. Tests: 22/22 (`MembershipOgImageTest` + Club landing + commerce feed + homepage meta). Duplicate PR [#2195](https://github.com/gasyoun/Systema-Sanscriticum/pull/2195) closed. Imagine backgrounds + exact overlay of house `logo.png` and existing page titles; autumn 1:1 Imagine pass invented letter-forms, so the square was cropped from the clean landscape.
+
+| Surface | URL | Result |
+|---|---|---|
+| Club OG (primary `/klub` `og:image`) | https://samskrte.ru/images/og-membership-club.webp | PASS `image/webp` 1200×630, 18308 B |
+| Basic OG (second `/klub` `og:image`) | https://samskrte.ru/images/og-membership-basic.webp | PASS `image/webp` 1200×630, 17902 B |
+| Autumn calendar OG | https://samskrte.ru/images/og-membership-autumn.webp | PASS `image/webp` 1200×630, 40052 B |
+| Club 1:1 | https://samskrte.ru/images/og-membership-club-1x1.webp | committed + deployed (1200×1200) |
+| Basic 1:1 | https://samskrte.ru/images/og-membership-basic-1x1.webp | committed + deployed (1200×1200) |
+| Autumn 1:1 | https://samskrte.ru/images/og-membership-autumn-1x1.webp | committed + deployed (1200×1200) |
+| Live `/klub` HTML | https://samskrte.ru/klub | 200; head names club + basic paths, width 1200, height 630 |
+| Live `/osen-2026` HTML | https://samskrte.ru/osen-2026 | 404 — `membership_public_feed` flag OFF; image URL itself is live |
+| Home preview | https://samskrte.ru/ | still `og-main-preview.jpg`; no membership OG path |
+
+## H3281 student manuals vs catalog + guest HTTP (28-08-2026)
+
+_Model: Grok 4.6 (`grok-4.6`)._ Full prose: [docs/CENSUS_STUDENT_LOGGED_IN_MANUALS_22-08-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CENSUS_STUDENT_LOGGED_IN_MANUALS_22-08-2026.md). Probe 20:43 UTC, GET, no cookies, max-redirs 0. Prod catalog ids via artisan on `.92`.
+
+| Book | URL | Guest HTTP | Intended login-required | Catalog row id |
+|---|---|---|---|---|
+| Как пользоваться кабинетом | https://samskrte.ru/dvaram/help | 302 → /login | yes | 1 student |
+| Как сдавать домашнее задание | https://samskrte.ru/faq/dz | 200 | no | 5 homework |
+| Почему баланс праны уменьшился | https://samskrte.ru/help/prana-balance | 302 → /login | yes | 6 prana |
+| Онбординг (checklist) | https://samskrte.ru/dvaram | 302 → /login | yes | none |
+| Каталог документации | https://samskrte.ru/admin/documentation | 302 → /admin/login | yes (admin) | n/a |
+
 
 ## H3380 trial live — rusamskrtam second session + auto-reply activation (23-08-2026)
 
@@ -17,7 +135,9 @@ _Model: OxAlpha (`opencode/x-preview-f-free`)._ PRs: [#2011](https://github.com/
 | Live | schedule ticks every 5 min autonomously (15:06, no errors); support lane untouched (per-session lock/phase/cooldown keys) |
 | Flags ON | `SUPPORT_DM_AUTO_REPLY` · `SUPPORT_AUTO_REPLY_TEMPLATES` · `SUPPORT_AUTO_ACK`; gate `auto_reply_enabled=1` on rusamskrtam only; registry updated |
 | Smoke lesson | «Намо намах!» → ack boilerplate. v2 (#2021): pure greeting → warm reply once per window (`kind=greeting`), pure thanks → silent skip, greeting+question → normal pipeline |
-| Pending verification | v2 deploy evidence + first real `dm_auto_sent` events — blocked by fail2ban ban of the operator IP (178.236.251.98), left to expire naturally per MG |
+| First real `dm_auto_sent` (measured 30-08-2026, OxAlpha `opencode/z-ai/glm-5.3-flash`) | **Fired 27-08-2026** — events 1222 / 1229 / 1248 in `support_ai_reply_events`, all `kind=ack`, `via=support_dm_auto_reply`, account `support(2)` (the main lane, per the [#2045](https://github.com/gasyoun/Systema-Sanscriticum/pull/2045) pivot). Three **different** conversations (245/246/247), one ack each — the «more than one ack per series» fail condition is not triggered, and no LLM text reached an outgoing message. |
+| `kind=template` over the whole trial | **Never fired — and not a bug in the template branch.** All eight `dm_hinted` events since activation carry `category=null`: the intent classifier assigned no D/E/F category, so the canned replies had no eligible input. The W3 verdict therefore cannot be «do templates work» — the first question is why the classifier is silent. |
+| Prod drift re-check 30-08-2026 | None. `features.support_dm_auto_reply` / `support_auto_reply_templates` / `support_auto_ack` = true/true/true; rows `harvester(1) 0/0` · `support(2) 1/1` · `rusamskrtam(3) 0/0` (the 26-08 fix held, auto-heal did not resurrect the parked row); `telegram-support:healthcheck --dry` green. |
 
 ## S9 template drafts — activation on H2339 census texts + first measurement (23-08-2026)
 

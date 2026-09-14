@@ -2,7 +2,10 @@
 <html lang="ru" class="h-full bg-[#F4F1EA]">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    {{-- H4118: interactive-widget=resizes-content — клавиатура сжимает viewport вместо прокрутки под неё --}}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+    {{-- H4118: светлые нативные контролы (селекты/даты/скроллбары) — НЕ тёмная тема --}}
+    <meta name="color-scheme" content="light">
     <meta name="theme-color" content="#E85C24">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,6 +27,53 @@
     <style>
         [x-cloak] { display: none !important; }
         body { font-family: 'Nunito Sans', sans-serif; }
+
+        /* H4118: светлый color-scheme для нативных контролов (дубль мета-тега в CSS) */
+        :root { color-scheme: light; }
+
+        /* H4118: dvh-стратегия — 100vh на iPhone Safari включает адресную/нижнюю панель */
+        .h-cabinet-shell { height: 100vh; }
+        @supports (height: 100dvh) { .h-cabinet-shell { height: 100dvh; } }
+
+        /* H4118: safe-area (viewport-fit=cover) — шапка и скролл-контейнер не залезают под «чёлку» и домой-полоску */
+        .sa-header {
+            padding-top: env(safe-area-inset-top);
+            padding-left: max(1rem, env(safe-area-inset-left));
+            padding-right: max(1rem, env(safe-area-inset-right));
+        }
+        @media (min-width: 640px) {
+            .sa-header {
+                padding-left: max(2rem, env(safe-area-inset-left));
+                padding-right: max(2rem, env(safe-area-inset-right));
+            }
+        }
+        .sa-main { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+        @media (min-width: 640px) {
+            .sa-main { padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
+        }
+
+        /* H4118: пол 16px для форм-контролов — iOS зумит страницу при фокусе в поле с computed < 16px.
+           :is() даёт специфичность (0,1,1) — перекрывает Tailwind-классы вида .text-sm (0,1,0) на самом инпуте. */
+        main :is(input, select, textarea) { font-size: max(1rem, 1em); }
+
+        /* H4118: глобальные Livewire-индикаторы (прячутся livewire-стилями из head;
+           ВНИМАНИЕ: в css-комментариях внутри style нельзя писать blade-директивы —
+           @-синтаксис компилируется и в комментариях и ломает <style>) */
+        @keyframes h4118-lw-bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
+        .lw-loading {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            height: 3px; overflow: hidden; pointer-events: none;
+        }
+        .lw-loading::before {
+            content: ''; display: block; height: 100%; width: 25%;
+            background: #e85c24; animation: h4118-lw-bar 1.1s ease-in-out infinite;
+        }
+        .lw-offline {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 101;
+            background: #dc2626; color: #fff; font-size: 14px; font-weight: 700;
+            text-align: center; padding: 8px 12px;
+        }
+
         /* Красивый скролл для темного меню */
         .sidebar-scroll::-webkit-scrollbar { width: 4px; }
         .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -47,7 +97,11 @@
 
 {{-- x-data определяет, открыто ли меню при загрузке (на ПК открыто, на мобилке закрыто) --}}
 <body class="h-full flex overflow-hidden bg-[#F4F1EA]" x-data="{ sidebarOpen: window.innerWidth >= 1024 }">
-    
+
+    {{-- H4118: глобальные Livewire-индикаторы загрузки/оффлайна (кабинет, не Filament) --}}
+    <div class="lw-loading" wire:loading></div>
+    <div class="lw-offline" wire:offline>Нет подключения к интернету — изменения могут не сохраниться</div>
+
     @php
     $menuCourses = collect();
     if (auth()->check()) {
@@ -281,11 +335,12 @@
         При открытом меню добавляется левый отступ (lg:pl-[280px]).
         При закрытом - отступ убирается (pl-0), и контент плавно расширяется на 100% экрана!
     --}}
-    <div class="flex flex-col flex-1 h-screen w-full transition-all duration-300 ease-in-out" 
+    {{-- H4118: min-w-0 — иначе min-content контента растягивает flex-элемент шире вьюпорта (ox=138) --}}
+    <div class="min-w-0 flex flex-col flex-1 h-cabinet-shell w-full transition-all duration-300 ease-in-out"
          :class="sidebarOpen ? 'lg:pl-[280px]' : 'pl-0'">
-        
+
         {{-- Верхняя шапка --}}
-<header class="sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-4 sm:px-8">
+<header class="sa-header sticky top-0 z-10 shrink-0 h-20 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-4 sm:px-8">
     
     <div class="flex items-center min-w-0">
         {{-- Кнопка "Гамбургер" (видна и на ПК) --}}
@@ -353,7 +408,7 @@
 </header>
 
         {{-- Основная рабочая область --}}
-        <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#F4F1EA] p-4 sm:p-8 relative custom-scrollbar">
+        <main class="sa-main flex-1 overflow-y-auto overflow-x-hidden bg-[#F4F1EA] p-4 sm:p-8 relative custom-scrollbar">
             <div class="max-w-7xl mx-auto">
                 @yield('content')
             </div>

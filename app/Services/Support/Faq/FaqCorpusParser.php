@@ -27,11 +27,68 @@ final class FaqCorpusParser
     }
 
     /**
+     * H3766 B3 (правка 4): дополнительные корпуса рядом с ORS-экспортом.
+     *
+     * `faq_from_lectures.md` наполняет KnowledgeFaqPublisher при Accept
+     * faq_draft (H1549 Wave 3). BotKnowledgeBase читал оба файла с самого
+     * начала, а BM25-ретривер — только faq.md, поэтому лекционные ответы были
+     * невидимы для подсказок куратору. Игнорируется явный `$path` — там вызов
+     * просит конкретный файл (тесты, кастомный корпус).
+     *
+     * @return list<string>
+     */
+    public function extraPaths(): array
+    {
+        $configured = config('support.faq_rag.extra_paths');
+        if (is_array($configured)) {
+            return array_values(array_filter(array_map('strval', $configured), static fn (string $p): bool => $p !== ''));
+        }
+
+        $lecture = config('content.lecture_faq_path', resource_path('knowledge/faq_from_lectures.md'));
+
+        return is_string($lecture) && $lecture !== '' ? [$lecture] : [];
+    }
+
+    /**
      * @return list<FaqChunk>
      */
     public function chunks(?string $path = null): array
     {
+        $explicit = $path !== null;
         $path ??= $this->path();
+
+        $chunks = $this->chunksOfFile($path);
+        if ($explicit) {
+            return $chunks;
+        }
+
+        foreach ($this->extraPaths() as $extra) {
+            if ($extra === $path) {
+                continue;
+            }
+            $stem = pathinfo($extra, PATHINFO_FILENAME);
+            foreach ($this->chunksOfFile($extra) as $chunk) {
+                // Префикс именем файла: заголовки соседнего корпуса могут
+                // совпасть с faq.md, а chunk_id обязан оставаться уникальным —
+                // на него ссылается фикстура eval-набора и цитата в ответе.
+                $chunks[] = new FaqChunk(
+                    $stem.'/'.$chunk->chunkId,
+                    $chunk->headingPath,
+                    $chunk->title,
+                    $chunk->body,
+                    basename($extra),
+                );
+            }
+        }
+
+        return $chunks;
+    }
+
+    /**
+     * @return list<FaqChunk>
+     */
+    private function chunksOfFile(string $path): array
+    {
         if (! is_file($path)) {
             return [];
         }

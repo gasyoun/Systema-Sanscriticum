@@ -21,8 +21,10 @@ use Illuminate\Support\Facades\Cache;
  * Считается из живой БД через {@see OrderPaymentConversionService}; пороги/окна
  * берутся из config/conversion.php, а не зашиты в вёрстку.
  *
- * Доступ — админ ИЛИ бухгалтер (RoleGate::finance): управленческий контур
- * продаж, который делегированный финдир/оператор читает сам.
+ * Доступ — admin, accountant ИЛИ manager (RoleGate::salesOperator, H4433,
+ * находка H4334 09-09-2026): куратор владеет списком недожатых заказов по
+ * должностной инструкции; страница не показывает зарплаты/выплаты, только
+ * воронку продаж, поэтому расширение безопасно по данным.
  */
 class OrderPaymentConversion extends Page
 {
@@ -42,12 +44,12 @@ class OrderPaymentConversion extends Page
 
     public static function canAccess(): bool
     {
-        return RoleGate::finance();
+        return RoleGate::salesOperator();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return RoleGate::finance();
+        return RoleGate::salesOperator();
     }
 
     /**

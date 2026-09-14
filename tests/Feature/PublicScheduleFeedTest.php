@@ -12,6 +12,7 @@ use App\Models\Teacher;
 use App\Models\User;
 use App\Support\TrialBookToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -132,6 +133,32 @@ class PublicScheduleFeedTest extends TestCase
         $response->assertJsonPath('data.0.group.seats_min', 5);
         // Ссылка на лендинг курса построена по слагу, без числовых id.
         $this->assertStringContainsString('/k/'.$made['course']->slug, $response->json('data.0.course.url'));
+    }
+
+    /** H3790: фид отдаёт каникулы группы (флаг + дата выхода), без PII. */
+    public function test_feed_exposes_group_vacation_fields(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Мария Иванова']);
+        $category = Category::factory()->create();
+        $made = $this->makeSession('Курс каникул', $teacher, $category);
+
+        $made['group']->update(['is_on_vacation' => true, 'vacation_resume_date' => '2026-09-14']);
+
+        $response = $this->getJson(self::URL)->assertOk();
+
+        $response->assertJsonPath('data.0.group.is_on_vacation', true);
+        $response->assertJsonPath('data.0.group.vacation_resume_date', '2026-09-14');
+
+        $made2 = $this->makeSession('Курс каникул без даты', $teacher, $category);
+        $made2['group']->update(['is_on_vacation' => true]);
+
+        Cache::flush(); // фид кэшируется на 5 минут — второй запрос должен видеть обе группы
+        $response2 = $this->getJson(self::URL)->assertOk();
+        $rows = collect($response2->json('data'));
+        $row2 = $rows->first(fn ($r) => ($r['course']['title'] ?? '') === 'Курс каникул без даты');
+        $this->assertNotNull($row2);
+        $this->assertTrue($row2['group']['is_on_vacation']);
+        $this->assertNull($row2['group']['vacation_resume_date']);
     }
 
     public function test_direction_filter_returns_only_matching_subset(): void

@@ -1,3 +1,5 @@
+_Created: 26-06-2026 · Last updated: 05-09-2026_
+
 # Референсы каталогов курсов: Нитка, Синхронизация, Arzamas — выводы для samskrte.ru
 
 Документ сводит три внешних референса — [Нитка](https://nitkatea.com/school/), [Синхронизация](https://online.synchronize.ru/catalogue), [Arzamas](https://arzamas.academy/courses?kind=courses) — и кладет рядом нашу текущую модель. Цель: понять, где мы на спектре «билет на событие → подписка на всё» и куда логично двигаться.
@@ -104,3 +106,5 @@
 - Синхронизация — [online.synchronize.ru/catalogue](https://online.synchronize.ru/catalogue)
 - Arzamas — [arzamas.academy/courses?kind=courses](https://arzamas.academy/courses?kind=courses)
 - Наш разбор лендингов + issue [gasyoun/Systema-Sanscriticum#190](https://github.com/gasyoun/Systema-Sanscriticum/issues/190)
+
+_Dr. Mārcis Gasūns_

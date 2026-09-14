@@ -42,6 +42,7 @@ jobs:
             --config p/php \
             --config p/security-audit \
             --config p/owasp-top-ten \
+            --config .semgrep.yml \
             --exclude vendor \
             --exclude node_modules \
             --exclude public \

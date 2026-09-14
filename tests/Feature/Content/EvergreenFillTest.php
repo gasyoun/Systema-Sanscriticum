@@ -11,6 +11,7 @@ use App\Services\Content\EvergreenScorer;
 use App\Services\Content\VkOrsImporter;
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class EvergreenFillTest extends TestCase
@@ -68,6 +69,14 @@ class EvergreenFillTest extends TestCase
 
     public function test_fill_evergreen_schedules_slots_and_candidates(): void
     {
+        // Часы заморожены намеренно. Тест засевает сентябрь, а ниже требует
+        // `canCancel()` — отменить слот можно лишь дольше чем за 24 часа до
+        // публикации. На реальных часах это значит, что тест краснел ровно в
+        // последние сутки августа и снова зеленел 1 сентября, безотносительно
+        // к коду. Соседние тесты этого файла дату уже пиняют (`2026-07-25`);
+        // здесь её просто забыли.
+        $this->travelTo(Carbon::create(2026, 8, 1, 9, 0, 0, 'Europe/Moscow'));
+
         $seeder = new ContentMonthSeeder;
         $seeder->seed(2026, 9, $this->fixtures());
 

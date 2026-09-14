@@ -1,6 +1,6 @@
 # n8n ZOOM 1.4 — записи не ушли в Telegram-группы (18–20-08-2026)
 
-_Created: 20-08-2026 · Last updated: 24-08-2026_
+_Created: 20-08-2026 · Last updated: 26-08-2026_
 
 **Audience:** ops / agents. Diagnosis from the 20-08-2026 SOS (Grok 4.6 `grok-4.6`).  
 **Runbook (что запускать при падении/задержке):** [RUNBOOK_N8N_RECORDING_STALL.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_N8N_RECORDING_STALL.md).  
@@ -89,5 +89,14 @@ The DeepSeek switch held; this 18–20 jam class (OpenRouter credits/TOS on `AI 
 2. **Opt-in retry lane** ([PR #2050](https://github.com/gasyoun/Systema-Sanscriticum/pull/2050)): `php artisan recordings:gap-watch --retry-failed` POSTs `executions/{id}/retry` only for error-executions whose runData stayed inside the pre-upload allow-list (no YouTube/Rutube duplication possible), with no-successful-retryOf and cache guards. Late failures stay human-only: resume from `AI Agent1`, never re-run from the webhook.
 3. **Care department duplicate recipient** ([PR #2054](https://github.com/gasyoun/Systema-Sanscriticum/pull/2054)): same morning alert also goes to `RECORDING_GAP_CARE_TELEGRAM_CHAT_ID` («Отдел заботы | Рабочая группа» `-1002079934542`, MG 24-08); bot must be a chat member.
 4. **Activated on prod per MG ruling 24-08**: `RECORDING_GAP_RETRY_FAILED_ENABLED=true`, `N8N_API_KEY` set in `.env` (REST leg no longer skip-soft), care chat wired and test-delivered. Backups: `.env.bak.n8n-api-key-20260824`.
+
+## Alert doubling resolved (26-08-2026, H3557)
+
+MG: «снова задвоилось» — the 25-08 gap alert arrived repeatedly. Prod forensics (schedule.log, laravel.log, Redis, deploys.log):
+
+1. **Dedupe died with every deploy.** The day-key `recording_gap:YYYY-MM-DD` lived in the Redis app cache; ~20 auto-deploys on 25-08 flushed it between hourly `--stale` ticks, so each tick re-sent the same payload (14 exit-code-1 ERROR rows that day — every successful send returned FAILURE by design).
+2. **Recipient fallback multiplied copies.** `RECORDING_GAP_TELEGRAM_CHAT_ID` was unset → fell back to the 3-id `CABINET_PROBE_TELEGRAM_CHAT_ID` list + care chat = four identical deliveries per send (MG saw his two personal accounts twice).
+
+Fix ([H3557](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3557-OxAlpha_Systema-Sanscriticum_gap-alert-dedup-db-plus-group-links_26.08.26.md)): persistent dedupe in the new `recording_gap_alerts` table keyed by a sha256 fingerprint of the gap set (same incident = same key across the morning and stale windows, 36 h window, `--force` override); care copy prefixed «[Отдел заботы]»; successful send now exits SUCCESS; group names in alert lines are clickable t.me links (`App\Support\TelegramGroupLink`); `.92` `.env` got explicit `RECORDING_GAP_TELEGRAM_CHAT_ID=7961639774` (backup `.env.bak.recording-gap-chat-20260826`). Residual human op: course 399 / группа 125 recording for 25-08 still undelivered — resume from `AI Agent1` (courses 369/381 were delivered by exec 1753 on 26-08 morning).
 
 _Dr. Mārcis Gasūns_

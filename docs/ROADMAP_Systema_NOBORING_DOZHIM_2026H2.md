@@ -1,6 +1,8 @@
 # ROADMAP — Noboring «дожим» adoption (Systema + samskrte)
 
-_Created: 01-08-2026 · Last updated: 24-08-2026_
+_Created: 01-08-2026 · Last updated: 27-08-2026_
+
+> **Truth-pass 27-08-2026** (Grok 4.6 `grok-4.6`). Dual-axis: closed references checked; the two optional A boxes stay open. Not archived.
 
 Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_Systema_NOBORING_DOZHIM_2026H2.md)
 
@@ -17,7 +19,7 @@ Index: [PLAN_Systema_NOBORING_DOZHIM_2026H2.md](https://github.com/gasyoun/Syste
 
 ### Wave 0 — Measure (unblocks everything)
 
-- [x] Commit `tools/order_pay_conversion_baseline.php` (or Artisan command): last 30/90d — **done H2094** (`php artisan dozhim:baseline`; service `OrderPaymentConversionService::dozhimBaseline`)
+- [x] Baseline command: last 30/90d — **done H2094** (`php artisan dozhim:baseline`; service `OrderPaymentConversionService::dozhimBaseline`; PHP-обёртка `tools/order_pay_conversion_baseline.php` удалена 10-09-2026, H4515 — используйте artisan-форму)
   - rate A: paid Orders / (paid + unpaid eligible Orders)
   - rate B: Leads with first Payment / Leads in period (`converted_at`)
 - [x] Write numbers into this roadmap + ORS `roadmap_samskrte_sales` — **done H2096** (01-08-2026; see snapshot below; mirrored under ORS Noboring section)
@@ -34,7 +36,7 @@ Prod was still on pre-H2094 deploy at probe time — numbers from the same filte
 | 30 d | 125 | 82 | 40 | 3 | **65.6%** | 50 | 0 | **0.0%** |
 | 90 d | 574 | 492 | 40 | 42 | **85.7%** | 217 | 5 | **2.3%** |
 
-**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay; product fix shipped flag-OFF in H2186, **enabled in prod 02-08-2026** — see the § Rate B residual below and the [24-08 check-in](#post-enable-check-in-2026-08-24-prod-19323222992)).
+**vs NF case** (47% → 63% → 67% after own sales desk): Rate A **30 d is already in the post-dozhim band** (~66%); 90 d is higher (mix/seasonality). Primary KPI for H-B targets remains **Rate A**. Rate B is **not** a usable funnel rate today — `converted_at` is almost never set (instrumentation gap, not a true 0% lead→pay; product fix shipped flag-OFF in H2186, **enabled in prod 02-08-2026** — see the § Rate B residual below and the 24-08 check-in).
 
 #### H2188 re-verify — live `dozhim:baseline --json` (prod, as_of `2026-08-02 19:26:05`)
 

@@ -114,7 +114,7 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('leads.store') }}" method="POST" class="space-y-5">
+                    <form action="{{ route('leads.store') }}{{ request()->getQueryString() ? '?'.request()->getQueryString() : '' }}" method="POST" class="space-y-5">
                         @csrf
 
                         <input type="hidden" name="landing_page_id" value="{{ $landingId }}">

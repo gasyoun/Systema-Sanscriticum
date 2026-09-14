@@ -220,7 +220,9 @@ class TeacherGuideCoverageTest extends TestCase
             }
 
             $urlLower = mb_strtolower($url, 'UTF-8');
-            foreach (['salary', 'salaries', 'payout', 'settlement', 'payment'] as $money) {
+            // 'paypal' — доска «Ссылки PayPal» показывает прайс в EUR/USD: тот же
+            // фенс H2502, что у зарплатных экранов — денежные суммы не фоткаются.
+            foreach (['salary', 'salaries', 'payout', 'settlement', 'payment', 'paypal'] as $money) {
                 if (str_contains($urlLower, $money)) {
                     continue 2;
                 }
@@ -271,6 +273,35 @@ class TeacherGuideCoverageTest extends TestCase
         }
 
         $this->assertSame([], $found, 'Денежные кадры в руководстве: '.implode(', ', $found));
+    }
+
+    /**
+     * Источники кадров обязаны остаться ОТНОСИТЕЛЬНЫМИ.
+     *
+     * Механическая правка ссылок 05-09-2026 (5ad0bad1) развернула все
+     * пятнадцать `![](screenshots/…)` в `github.com/…/blob/…` — правило
+     * «относительная ссылка в закоммиченном .md становится полной blob-ссылкой»
+     * не различает ссылку и картинку. Для картинки blob-адрес отдаёт HTML-страницу,
+     * а не PNG: кадр ломается и на GitHub, и в сборке PDF, а страница панели
+     * теряет то, что переписывает на raw-адрес. Пин ловит возврат правки раньше,
+     * чем читатель увидит пятнадцать битых картинок.
+     *
+     * @test
+     */
+    public function screenshot_sources_stay_relative(): void
+    {
+        preg_match_all(
+            '#!\[[^\]]*\]\((https?://[^)]*screenshots/[^)]+)\)#u',
+            $this->guideText(),
+            $matches
+        );
+
+        $this->assertSame(
+            [],
+            $matches[1],
+            "Кадры руководства записаны абсолютным адресом (нужен относительный `screenshots/…`):\n  "
+                .implode("\n  ", $matches[1])
+        );
     }
 
     /**

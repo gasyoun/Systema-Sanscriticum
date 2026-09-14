@@ -6,16 +6,22 @@ use App\Jobs\SyncUserAvatarJob;
 use App\Models\ChatMessage;
 use App\Models\ScheduleAttendanceNotice;
 use App\Models\User;
+use App\Models\VacationQuorumPoll;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\AttendanceNoticeService;
+use App\Services\Bot\CabinetLoginBotCommand;
+use App\Services\Bot\CabinetProvisionBotCommand;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\DebtorsBotCommand;
 use App\Services\Bot\RosterBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
-use App\Services\Bot\UnblockBotCommand;
-use App\Services\HomeworkTelegramTagService; // Добавили для переключения на человека
+use App\Services\Bot\UnblockBotCommand; // Добавили для переключения на человека
+use App\Services\HomeworkTelegramTagService;
 use App\Services\Support\HomeworkPauseNoteRecorder;
+use App\Services\Support\SupportDmAutoReply;
+use App\Services\Support\SupportHintSendButton;
+use App\Services\VacationQuorumService;
 use App\Support\TelegramSendGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -24,6 +30,9 @@ use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
 {
+    /** Прежняя подсказка непривязанному студенту (флаги «Telegram-входа» OFF). */
+    private const CABINET_LINK_HINT = "Намасте! 🙏\nЧтобы получать уведомления и задавать вопросы, вам нужно привязать свой аккаунт. Для этого зайдите в личный кабинет на сайте Академии и нажмите кнопку «Подключить Telegram».";
+
     public function handle(Request $request)
     {
         // Получаем все данные, которые прислал Telegram
@@ -60,6 +69,24 @@ class TelegramWebhookController extends Controller
             // уходит в ветку «неавторизованный» и спамит «привяжите аккаунт».
             $chatType = (string) ($data['message']['chat']['type'] ?? '');
             if (in_array($chatType, ['group', 'supergroup'], true)) {
+                // H3912: куратор-команды (/долги, /группа, /кто) отвечают куратору
+                // прямо в чате «Отдел заботы» — только этот чат, только привязанный
+                // куратор; остальным и в обычных групповых чатах — тишина.
+                if ($this->handleCareChatCuratorCommand($data['message'], $text)) {
+                    return response()->json(['status' => 'ok']);
+                }
+
+                // 02-09-2026: /кабинет в группе = только УКАЗАТЕЛЬ в личку, без
+                // аккаунтов и без ссылок входа (magic-link в группе увидели бы
+                // все). Отвечаем короткой фразой и выходим; работает на том же
+                // флаге, что и личное создание, — при OFF группа молчит.
+                if (config('features.telegram_cabinet_provision')
+                    && app(CabinetProvisionBotCommand::class)->isCommand($text)) {
+                    $this->sendMessage($chatId, app(CabinetProvisionBotCommand::class)->groupPointerMessage());
+
+                    return response()->json(['status' => 'ok']);
+                }
+
                 $tag = app(HomeworkTelegramTagService::class);
                 if ($tag->isTagMessage($text)) {
                     $tag->handleIncoming($data['message']);
@@ -97,9 +124,27 @@ class TelegramWebhookController extends Controller
                     $this->sendMessage($chatId, 'Ссылка устарела или недействительна. Пожалуйста, сгенерируйте новую кнопку в личном кабинете на сайте.');
                 }
             }
-            // Если просто написали /start без токена
+            // Если просто написали /start без токена — «Telegram-вход»
+            // (CABINET_ADOPTION_ROADMAP P2) или прежняя подсказка про сайт.
             elseif ($text === '/start') {
-                $this->sendMessage($chatId, "Намасте! 🙏\nЧтобы получать уведомления и задавать вопросы, вам нужно привязать свой аккаунт. Для этого зайдите в личный кабинет на сайте Академии и нажмите кнопку «Подключить Telegram».");
+                $this->handleCabinetLoginEntry($chatId, $fromUsername);
+            }
+            // «Telegram-вход»: /login // /вход — одноразовая ссылка входа в чат.
+            // Ветка сама мертва при флаге OFF — сообщение уходит дальше по
+            // обычным веткам (AI / «привяжите аккаунт»).
+            elseif (config('features.telegram_cabinet_login')
+                && app(CabinetLoginBotCommand::class)->isLoginCommand($text)) {
+                $this->handleCabinetLoginEntry($chatId, $fromUsername);
+            }
+            // Самообслуживание «/кабинет <email>»: автосоздание кабинета одним
+            // шагом (Free-tier, 02-09-2026). Ветка мертва при флаге OFF —
+            // сообщение уходит дальше по обычным веткам.
+            elseif (config('features.telegram_cabinet_provision')
+                && app(CabinetProvisionBotCommand::class)->isCommand($text)) {
+                $this->sendMessage(
+                    $chatId,
+                    app(CabinetProvisionBotCommand::class)->replyForCommand($chatId, $fromUsername, $text),
+                );
             }
             // Отписка от рекламной рассылки (152-ФЗ: право отзыва согласия обязательно,
             // т.к. существующие пользователи грандфазерятся в согласие). Гасит ТОЛЬКО
@@ -137,8 +182,17 @@ class TelegramWebhookController extends Controller
                     // Студент авторизован! Передаем вопрос ИИ-агенту
                     $this->processStudentQuestion($user, $text, $chatId);
                 } else {
-                    // Пишет кто-то левый или неавторизованный
-                    $this->sendMessage($chatId, 'Пожалуйста, сначала привяжите свой аккаунт на сайте Академии, чтобы я мог вам помогать.');
+                    // Пишет кто-то левый или неавторизованный. «Telegram-вход»,
+                    // сценарий email-привязки (отдельный флаг, @DECIDE владельца):
+                    // включён и похоже на email → матч по оплате; выключен →
+                    // прежнее сообщение про сайт.
+                    $cabinetLogin = app(CabinetLoginBotCommand::class);
+
+                    if ($cabinetLogin->isEmailLinkEnabled() && $cabinetLogin->looksLikeEmail($text)) {
+                        $this->sendMessage($chatId, $cabinetLogin->replyForEmail($chatId, $fromUsername, $text));
+                    } else {
+                        $this->sendMessage($chatId, 'Пожалуйста, сначала привяжите свой аккаунт на сайте Академии, чтобы я мог вам помогать.');
+                    }
                 }
             }
         }
@@ -213,6 +267,53 @@ class TelegramWebhookController extends Controller
                 'source' => 'telegram_bot',
             ]);
 
+            $this->sendMessage($chatId, $summary);
+
+            return;
+        }
+
+        // 1.65. SELF-SERVICE: открытые эфиры ОРС — расписание + подписка/отписка
+        // (H3576 §2). Подписка = активная группа потока → classes:remind-upcoming
+        // напомнит за час; отдельного хранилища подписок нет. Отписка проверяется
+        // первой — фразы содержат «эфир(ы)» внутри себя.
+        $selfService = app(StudentSelfService::class);
+        if ($selfService->matchesStreamsUnsubscribeIntent($question)) {
+            $reply = $selfService->unsubscribeFromStreams($user);
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $reply,
+                'is_read' => true,
+                'source' => 'telegram_bot',
+            ]);
+            $this->sendMessage($chatId, $reply);
+
+            return;
+        }
+
+        if ($selfService->matchesStreamsSubscribeIntent($question)) {
+            $reply = $selfService->subscribeToStreams($user);
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $reply,
+                'is_read' => true,
+                'source' => 'telegram_bot',
+            ]);
+            $this->sendMessage($chatId, $reply);
+
+            return;
+        }
+
+        if ($selfService->matchesStreamsIntent($question)) {
+            $summary = $selfService->streamsSummary($user);
+            ChatMessage::create([
+                'user_id' => $user->id,
+                'role' => 'bot',
+                'text' => $summary,
+                'is_read' => true,
+                'source' => 'telegram_bot',
+            ]);
             $this->sendMessage($chatId, $summary);
 
             return;
@@ -384,6 +485,52 @@ class TelegramWebhookController extends Controller
         $this->sendMessage($chatId, $reply);
     }
 
+    /**
+     * Куратор-команды в групповом чате (H3912): работают ТОЛЬКО в чате
+     * «Отдел заботы» (recording_gap.care_telegram_chat_id — тот же чат,
+     * куда копируются ops-алерты) и только от привязанного куратора
+     * (admin/manager/super_admin). Автор ищется по message.from.id —
+     * chat.id в группе принадлежит чату, а не отправителю. Возврат true
+     * = команда обработана, апдейт дальше не идёт; иначе ветка молча
+     * проваливается в обычную обработку групповых сообщений (теги #ДЗ,
+     * оповещения о посещаемости).
+     */
+    private function handleCareChatCuratorCommand(array $message, string $text): bool
+    {
+        $careChatId = trim((string) config('recording_gap.care_telegram_chat_id', ''));
+        if ($careChatId === '') {
+            return false;
+        }
+
+        $chatId = $message['chat']['id'] ?? null;
+        if ($chatId === null || (string) $chatId !== $careChatId) {
+            return false;
+        }
+
+        if (! app(DebtorsBotCommand::class)->isCommand($text)
+            && ! app(RosterBotCommand::class)->isCommand($text)) {
+            return false;
+        }
+
+        $fromId = $message['from']['id'] ?? null;
+        if ($fromId === null) {
+            return false;
+        }
+
+        $curator = User::query()->where('telegram_id', $fromId)->first();
+        if (! $curator || ! DebtorsBotCommand::isCurator($curator)) {
+            return false;
+        }
+
+        $reply = app(RosterBotCommand::class)->isCommand($text)
+            ? app(RosterBotCommand::class)->reply($curator, $text)
+            : app(DebtorsBotCommand::class)->reply($curator, $text);
+
+        $this->sendMessage($chatId, $reply);
+
+        return true;
+    }
+
     // ==========================================
     // Отписка от рекламной рассылки (152-ФЗ). Триггеры — только явные формы, чтобы
     // не спутать с обычным вопросом студенту ИИ-агенту (голое «стоп» намеренно НЕ ловим).
@@ -426,6 +573,42 @@ class TelegramWebhookController extends Controller
     }
 
     // ==========================================
+    // «TELEGRAM-ВХОД» В КАБИНЕТ (CABINET_ADOPTION_ROADMAP P2, 28-08-2026)
+    // /start или /вход: привязан → одноразовая ссылка входа; не привязан →
+    // (под-флаг) приглашение прислать email заказа; всё выключено → прежняя
+    // подсказка про «Подключить Telegram» на сайте. Решения — в
+    // CabinetLoginBotCommand, отправка — через единый sendMessage.
+    // ==========================================
+    private function handleCabinetLoginEntry($chatId, ?string $fromUsername): void
+    {
+        $cabinetLogin = app(CabinetLoginBotCommand::class);
+
+        if (! $cabinetLogin->isEnabled()) {
+            $this->sendMessage($chatId, self::CABINET_LINK_HINT);
+
+            return;
+        }
+
+        $user = User::where('telegram_id', $chatId)->first();
+
+        if ($user) {
+            // Бэкфилл @username — тот же приём, что в основной AI-ветке.
+            $user->rememberTelegramUsername($fromUsername);
+            $this->sendMessage($chatId, $cabinetLogin->replyForLinkedUser($user));
+
+            return;
+        }
+
+        if ($cabinetLogin->isEmailLinkEnabled()) {
+            $this->sendMessage($chatId, $cabinetLogin->askForEmailMessage());
+
+            return;
+        }
+
+        $this->sendMessage($chatId, self::CABINET_LINK_HINT);
+    }
+
+    // ==========================================
     // Разблокировка студента из Telegram (H849): текстовая команда /unblock <email>.
     // Авторизация строже куратор-команд — только super_admin/admin (выдача ссылки =
     // потенциальный вход в чужой кабинет). Неавторизованным — тишина.
@@ -463,6 +646,22 @@ class TelegramWebhookController extends Controller
             return;
         }
 
+        // H3765 A5: «Отправить как есть» под подсказкой куратору — черновик
+        // уходит студенту одним нажатием, минуя мёртвую админку.
+        if (str_starts_with($data, SupportDmAutoReply::SEND_CALLBACK_PREFIX)) {
+            app(SupportHintSendButton::class)->handle($callback);
+
+            return;
+        }
+
+        // H3790 фаза C: одобрение распускания каникульной группы (кворум не соbrался).
+        if (str_starts_with($data, VacationQuorumService::CALLBACK_APPROVE)
+            || str_starts_with($data, VacationQuorumService::CALLBACK_DECLINE)) {
+            $this->handleVacationQuorumCallback($callback, $notifier);
+
+            return;
+        }
+
         if (! str_starts_with($data, 'ub:') || $fromId === null) {
             $notifier->answerCallback($callbackId);
 
@@ -484,6 +683,39 @@ class TelegramWebhookController extends Controller
         $token = (string) config('services.telegram.bot_token');
         if ($token !== '' && $chatId !== null) {
             $notifier->send($token, (string) $chatId, $reply);
+        }
+    }
+
+    private function handleVacationQuorumCallback(array $callback, TelegramAdminNotifier $notifier): void
+    {
+        $callbackId = (string) ($callback['id'] ?? '');
+        $data = (string) ($callback['data'] ?? '');
+        $fromId = $callback['from']['id'] ?? null;
+
+        $admin = $fromId !== null ? User::where('telegram_id', $fromId)->first() : null;
+        if (! $admin || ! UnblockBotCommand::isAuthorized($admin)) {
+            $notifier->answerCallback($callbackId, 'Недостаточно прав.');
+
+            return;
+        }
+
+        $service = app(VacationQuorumService::class);
+        $isApprove = str_starts_with($data, VacationQuorumService::CALLBACK_APPROVE);
+        $pollId = (int) substr($data, strrpos($data, ':') + 1);
+        $poll = VacationQuorumPoll::find($pollId);
+
+        if (! $poll) {
+            $notifier->answerCallback($callbackId, 'Опрос не найден.');
+
+            return;
+        }
+
+        if ($isApprove) {
+            $service->approveDissolution($poll, $admin);
+            $notifier->answerCallback($callbackId, 'Группа распущена.');
+        } else {
+            $service->declineDissolution($poll, $admin);
+            $notifier->answerCallback($callbackId, 'Оставили группу.');
         }
     }
 

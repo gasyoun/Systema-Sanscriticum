@@ -12,7 +12,7 @@
                 в течение одного рабочего дня.
             </div>
             <a href="{{ route('paypal.claim.show', $tariff) }}"
-               class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 transition">
+               class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-indigo-200 text-indigo-700 font-bold text-sm hover:bg-indigo-50 transition">
                 <i class="fab fa-paypal"></i> Оплатить через PayPal
             </a>
         </div>

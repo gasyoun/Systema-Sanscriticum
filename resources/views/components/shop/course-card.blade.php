@@ -20,6 +20,9 @@
     $cadenceStreamCount = $cadence?->hasMultipleStreams() ? $cadence->streams()->count() : 0;
     // Ручные часы приоритетны (владелец мог задать академические), календарные — фолбэк.
     $cardHours = $course->hours_count ?: $cadence?->hours();
+    // Плашка курса: дизайнерский баннер 4:3 из course_design_assets, если сдан
+    // куратору, иначе обложка витрины (image_path) — прежнее поведение.
+    $catalogBadgeUrl = $course->catalogBadgeUrl();
 @endphp
 
 <div class="relative flex flex-col bg-[#111622] rounded-2xl border border-[#1F2636] hover:border-brand/50 hover:shadow-[0_0_30px_rgba(232,92,36,0.05)] transition-all duration-300 group">
@@ -30,11 +33,11 @@
     <a href="{{ route('shop.course.show', $course->slug) }}"
        class="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] flex items-center justify-center border-b border-[#1F2636] overflow-hidden group/img block rounded-t-2xl">
 
-        @if($course->image_path)
+        @if($catalogBadgeUrl)
             {{-- H-perf: каталог отдаётся целиком (~90 карточек). Без lazy это ~28 МБ
                  обложек в первом же запросе. Первый ряд (до 4 карточек в сетке)
                  грузим eager — это LCP; остальное по мере прокрутки. --}}
-            <img src="{{ Storage::url($course->image_path) }}"
+            <img src="{{ $catalogBadgeUrl }}"
                  alt="{{ $course->title }}"
                  width="533" height="400"
                  loading="{{ $eager ? 'eager' : 'lazy' }}"

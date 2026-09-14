@@ -1,3 +1,5 @@
+_Created: 24-08-2026 · Last updated: 05-09-2026_
+
 # Cold restore drill — samskrtam150 archive 2026-08-22 — H3390 (PASS, with documented adaptations)
 
 _Created: 24-08-2026 · Executor: OxAlpha (`opencode/x-preview-f-free`) · Handoff: [H3390](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3390-OxAlpha_Systema-Sanscriticum_cold-restore-drill-scratch91_23.08.26.md)_

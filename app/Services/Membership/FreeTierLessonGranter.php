@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services\Membership;
 
+use App\Enums\MembershipTier;
+use App\Models\ClubMembership;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\ClubFreeTierSrsDeck;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -276,6 +279,67 @@ final class FreeTierLessonGranter
             'reason' => $reason ?: $this->defaultReason(),
             'expires_at' => $expiresAt->toDateTimeString(),
         ]);
+
+        return $row;
+    }
+
+    /**
+     * H3643 guest /register: Free-tier of the club with zero payments.
+     *
+     * grantFor() skips never-paid users (skipReason = never_paid) — that path
+     * is a monthly lesson from a course they already bought. A guest has no
+     * payments, so signup writes MembershipTier::Free via ClubMembership
+     * (source guest_register, payment_id null) and seeds the persistent SRS
+     * deck used for this Free-tier.
+     *
+     * Fail-closed without membership_tiered: ClubEntitlement treats any live
+     * ClubMembership as Club when the tier column is not consulted, which
+     * would grant recordings. The user and SRS deck are still created.
+     *
+     * @return array{status:string, membership_id:?int, srs_deck_id:int}
+     */
+    public function grantSignupFor(User $user): array
+    {
+        $deck = ClubFreeTierSrsDeck::deckFor($user);
+        $row = [
+            'status' => 'skipped',
+            'membership_id' => null,
+            'srs_deck_id' => (int) $deck->id,
+        ];
+
+        $memberships = app(ClubMembershipService::class);
+        $existing = $memberships->activeFor($user);
+        if ($existing instanceof ClubMembership) {
+            $row['status'] = 'already_member';
+            $row['membership_id'] = (int) $existing->id;
+
+            return $row;
+        }
+
+        if (! (bool) config('features.membership_tiered', false)) {
+            Log::info('guest-register: skipped Free-tier period — membership_tiered off', [
+                'user_id' => $user->id,
+            ]);
+            $row['status'] = 'tiered_off';
+
+            return $row;
+        }
+
+        $membership = $memberships->grantManualPeriod(
+            $user,
+            1,
+            ClubMembership::SOURCE_GUEST_REGISTER,
+            MembershipTier::Free,
+        );
+
+        Log::info('guest-register: Free-tier period granted', [
+            'user_id' => $user->id,
+            'membership_id' => $membership->id,
+            'srs_deck_id' => $deck->id,
+        ]);
+
+        $row['status'] = 'granted';
+        $row['membership_id'] = (int) $membership->id;
 
         return $row;
     }

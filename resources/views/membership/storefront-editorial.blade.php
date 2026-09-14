@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="index, follow">
     <title>Осень 2026 — календарь ОРС</title>
+    <meta property="og:title" content="Осень 2026 — календарь ОРС">
+    <meta property="og:image" content="{{ asset('images/og-membership-autumn.webp') }}?v=h3650">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Осень 2026 — календарь ОРС">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ asset('images/og-membership-autumn.webp') }}?v=h3650">
     <style>
         :root{color-scheme:light;--ink:#18231d;--paper:#f7f1e4;--accent:#a3412f;--line:#d8c7a8}
         *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.55 Georgia,serif}

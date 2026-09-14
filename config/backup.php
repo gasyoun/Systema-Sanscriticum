@@ -107,6 +107,18 @@ return [
             // Яндекс изредка отвечал 2xx ничего не сохранив — верим только
             // отдельному процессу со свежим curl-хендлом.
             'verify' => (bool) env('BACKUP_VERIFY_PARTS', true),
+            // Мягкий потолок ОДНОГО прогона докатки (backup:resume-yandex-parts).
+            // Обязан быть строго меньше TimeoutStartSec=1200 у
+            // systema-yandex-resume.service (YANDEX_RESUME_TIMEOUT_SECONDS в
+            // scripts/server_guards.conf): цикл докатки не знал о бюджете и
+            // начинал часть, которая заведомо в него не влезала, а systemd рвал
+            // процесс SIGTERM'ом посреди PUT и красил юнит в failed (issue #2411,
+            // прод 07-09-2026: смерть ровно в :30:01 при такте :10, 4 с CPU на
+            // 20 минут стены). «Не успели за час» — штатный исход докатки, а не
+            // авария: остаток добирает следующий часовой прогон.
+            // 900 = 1200 минус запас на bootstrap, листинг off-site и чистку.
+            // 0 — без ограничения (поведение до #2411).
+            'resume_budget_seconds' => (int) env('BACKUP_RESUME_BUDGET_SECONDS', 900),
         ],
 
         'temporary_directory' => storage_path('app/backup-temp'),

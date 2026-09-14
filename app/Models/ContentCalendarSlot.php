@@ -32,6 +32,10 @@ class ContentCalendarSlot extends Model
 
     public const TYPE_FORWARD = 'forward';
 
+    public const TYPE_TEACHER_SPOTLIGHT = 'teacher_spotlight';
+
+    public const TYPE_STUDENT_STORY = 'student_story';
+
     public const STATUS_EMPTY = 'empty';
 
     public const STATUS_DRAFT = 'draft';

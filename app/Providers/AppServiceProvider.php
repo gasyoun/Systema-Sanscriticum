@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Models\ArticleView;
 use App\Models\ContentCandidate;
 use App\Models\Course;
+use App\Models\IpExpense;
 use App\Models\LandingPage;
 use App\Models\Lead;
 use App\Models\LectureClip;
@@ -16,6 +17,7 @@ use App\Models\Schedule;
 use App\Observers\ArticleViewObserver;
 use App\Observers\ContentCandidateObserver;
 use App\Observers\CourseCoverWebpObserver;
+use App\Observers\IpExpenseAuditObserver;
 use App\Observers\LandingPageObserver;
 use App\Observers\LeadAuditObserver;
 use App\Observers\LectureClipObserver;
@@ -32,14 +34,19 @@ use App\Services\Lecture\LectureBuilderClient;
 use App\Services\Payments\HttpPaypalWebhookSignatureVerifier;
 use App\Services\Payments\PaypalWebhookSignatureVerifier;
 use App\Services\Payroll\PayrollRateCalculator;
+use App\Services\Support\Faq\EmbeddingProvider;
+use App\Services\Support\Faq\NullEmbeddingProvider;
+use App\Services\Support\Faq\OllamaEmbeddingProvider;
 use App\Services\Telegram\DaemonProcessProbe;
 use App\Services\Telegram\ProcDaemonProcessProbe;
 use App\Services\Webinar\WebinarProvider;
 use App\Services\Zoom\ZoomService;
 use App\Support\Backup\BackupRunCommand;
+use App\Support\Deploy\DeployDriftInspector;
 use App\Support\NextIntroSession;
 use App\Support\ServerGuards\ShellSystemInspector;
 use App\Support\ServerGuards\SystemInspector;
+use Closure;
 use Filament\Support\View\Components\Modal;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Support\Carbon;
@@ -96,6 +103,14 @@ class AppServiceProvider extends ServiceProvider
         );
         $this->app->bind(SystemInspector::class, ShellSystemInspector::class);
 
+        // H3803: путь к чекауту — base_path(), но через контейнер, чтобы тест
+        // подменял инспектора подклассом и не зависел от того, есть ли под
+        // рукой git-remote.
+        $this->app->singleton(
+            DeployDriftInspector::class,
+            fn () => new DeployDriftInspector(base_path()),
+        );
+
         // H3121: тот же шов для надзора за демоном MadelineProto. bind, а не
         // singleton, по той же причине — тест подменяет пробу на фейковую и
         // доказывает, что демон в ЧУЖОЙ cgroup будет погашен, не имея под
@@ -107,6 +122,17 @@ class AppServiceProvider extends ServiceProvider
         // fails backup:run with ER_DATA_LENGTH. Bind our command so the zip
         // path snapshots each member next to the archive before addFile.
         $this->app->bind(BackupCommand::class, BackupRunCommand::class);
+
+        // H4001 (Wave 3 leverage-плана): dense-нога FAQ-ретривала. bind, а не
+        // singleton: driver читается из config на момент резолва — тесты и
+        // config:cache на проде подменяют ногу без пересборки контейнера.
+        // null/неизвестный драйвер → NullEmbeddingProvider (BM25-пол).
+        $this->app->bind(EmbeddingProvider::class, function () {
+            return match ((string) config('knowledge.driver')) {
+                'ollama' => new OllamaEmbeddingProvider,
+                default => new NullEmbeddingProvider,
+            };
+        });
     }
 
     /**
@@ -125,6 +151,10 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
         // ----------------------------------------------------
+
+        // H4663 (аудит периметра 14-09, п.7): CSP-Report-Only живёт отдельным
+        // middleware AddCspReportOnly в web-группе (Kernel.php) — closure в
+        // middleware-группе не резолвится MiddlewareNameResolver'ом.
 
         // 2. Наблюдатель
         Schedule::observe(ScheduleObserver::class);
@@ -157,6 +187,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Аудит финансовых операций (кто/что/когда правил платёж).
         Payment::observe(PaymentAuditObserver::class);
+
+        // Аудит контура «Расходы ИП» (H4188) — конвенции payment_audits.
+        IpExpense::observe(IpExpenseAuditObserver::class);
 
         // Baseline-телеметрия ремейка кабинета (H962): access.renewal.complete.
         Payment::observe(PaymentTelemetryObserver::class);

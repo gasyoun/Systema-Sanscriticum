@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\RecordingKind;
 use App\Services\HomeworkAutoOpener;
 use App\Services\Srs\LessonFlashCardsSync;
 use App\Support\HomeworkAutoOpenScope;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class Lesson extends Model
 {
@@ -32,6 +34,7 @@ class Lesson extends Model
         'is_published',
         'is_free',
         'is_preview',
+        'recording_kind',
         'show_on_main',
         'block_number',
         'block_half',
@@ -500,6 +503,24 @@ class Lesson extends Model
         }
 
         return (bool) array_intersect($this->unlockingKeys(), $ownedKeys);
+    }
+
+    /**
+     * H3648 recording class. Missing column (dark deploy before migrate) = course-lesson.
+     */
+    public function recordingKind(): RecordingKind
+    {
+        if (! Schema::hasColumn($this->getTable(), 'recording_kind')) {
+            return RecordingKind::CourseLesson;
+        }
+
+        return RecordingKind::tryFrom((string) ($this->recording_kind ?? ''))
+            ?? RecordingKind::CourseLesson;
+    }
+
+    public function isClubStreamRecording(): bool
+    {
+        return $this->recordingKind()->isClubStream();
     }
 
     /** Публичные preview-уроки («Пример урока» на лендинге). */
