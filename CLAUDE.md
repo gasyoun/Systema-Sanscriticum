@@ -48,6 +48,31 @@ single source of truth. Thresholds in
 `config/{receivables,profit_funds,conversion,investment}.php` — **never
 hardcode**. Installment policy is a finance-lead decision. Rhythm:
 [FINANCE_REVIEW_RHYTHM.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md).
+**Курс-запись с нулём уроков чинится уроками, а не выдачей чужого доступа.** Тот же
+курс 327 продан 129 раз и не имеет ни одного урока: доступ считается ПО КУРСУ
+(`Lesson::unlockingKeys()` выводит `block_N` из `lessons.block_number`), поэтому пока у
+курса нет своих уроков, купивший не получает ничего. Санкционированное лекарство —
+[`catalog:mirror-recording-lessons {source} {target}`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MirrorRecordingLessons.php)
+(H3823): пишет ТОЛЬКО в `lessons`, по умолчанию сухой прогон, идемпотентна по слоту
+`(block_number, block_half, sort_order)`, отказывается работать, если у цели нет блока,
+который есть у источника. **Сухой прогон обязателен и его вывод обязан совпасть с
+ожиданием до `--apply`.** Запрещённая альтернатива: выдавать купившим курс A доступ к
+урокам курса B — это правка money/access-контура, она идёт только через
+[`/money-pr-land`](https://github.com/gasyoun/claude-config/blob/main/commands/money-pr-land.md),
+а не «заодно». Тарифы и видимость команда не трогает и трогать не должна (инцидент
+31-08-2026 выше). Пин:
+[`MirrorRecordingLessonsTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Catalog/MirrorRecordingLessonsTest.php).
+**Правило синхронности:** меняется список переносимых полей (`MirrorRecordingLessons::CARRIED`)
+⇒ в том же PR обновляются этот абзац и раздел README «Курс-запись».
+
+There is **no manual group assignment**. `PaymentObserver` →
+`Payment::grantAccess()` adds the user to the course `Group`. Tariff keys:
+`full`, `block_N`, `block_N_hH` (half). `Tariff::accessKey()` /
+`Lesson::unlockingKeys()` / `Lesson::isUnlockedBy()` are the single source of
+truth. Thresholds live in `config/receivables.php`, `config/profit_funds.php`,
+`config/conversion.php`, `config/investment.php` — **never hardcode**.
+Installment policy is a finance-lead decision (Алохомора anti-case). Rhythm:
+[docs/FINANCE_REVIEW_RHYTHM.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/FINANCE_REVIEW_RHYTHM.md).
 
 **Never grant homework review via `course_teacher`** — feeds
 `TeacherSalaryService`, pays the reviewer. Use `group_reviewer` (`users.id`).
