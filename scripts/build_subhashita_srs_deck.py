@@ -166,6 +166,48 @@ def verse_from_entry(paras, i0):
     return re.sub(r"\s+", " ", " ".join(lines)).strip()
 
 
+def probe_blocks(blocks, probe, minlen):
+    """Best anthology mūlam block for a Devanagari probe, or None."""
+    if len(probe) < minlen:
+        return None
+    best = (0, None)
+    for bi, bn in blocks:
+        cp = 0
+        while cp < min(len(probe), len(bn)) and probe[cp] == bn[cp]:
+            cp += 1
+        if cp > best[0]:
+            best = (cp, bi)
+    return best[1] if best[0] >= minlen else None
+
+
+def probe_blocks_progressive(blocks, probe):
+    """Longest-prefix mūlam-block probe: try full pratīka, then progressively
+    shorter prefixes (TOC pratīkas may print a recension that diverges from the
+    body print mid-word); a first-word fallback (>=6 folded chars) matches when
+    unique or when several blocks share the opening but the first is the entry.
+    """
+    if len(probe) < 6:
+        return None
+    for cut in range(len(probe), 5, -1):
+        sub = probe[:cut]
+        cands = [bi for bi, bn in blocks if bn.startswith(sub)]
+        if len(cands) == 1:
+            return cands[0]
+        if len(cands) > 1 and cut <= 8:
+            return cands[0]
+    return None
+
+
+def parse_anthology_toc(paras):
+    """`<pratīka><page>` lines (anthology TOC) -> {page: pratīka}."""
+    toc = {}
+    for p in paras[6:106]:
+        m = re.match(r"^([ऀ-ॿ][ऀ-ॿ\s]*?)\s*(\d{1,3})$", p.strip())
+        if m:
+            toc[int(m.group(2))] = m.group(1).strip()
+    return toc
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--staging", required=True, type=Path)
@@ -188,38 +230,59 @@ def main():
     entries = parse_recordings_verses(rec_paras)
     bo_paras = docx_paras(args.staging / "boethlingk95.docx")
     blocks = mulam_blocks(bo_paras)
+    toc_pratika = parse_anthology_toc(bo_paras)
 
     cards = []
     for r in rows:
-        if not r["is_num"]:
-            continue
-        is_num = int(r["is_num"])
+        is_num = int(r["is_num"]) if r["is_num"] else None
         su = r["su_num"]
-        rec = say.get(is_num)
-        if rec is None:
+        rec = say.get(is_num) if is_num else None
+        if is_num and rec is None:
             raise SystemExit(f"manifest is_num {is_num} not in the corpus — verifier should have caught this")
 
         verse = clean_recorded_verse(entries[int(su)]) if su and int(su) in entries else None
         ru = None
-        if su and su in getattr(main, "_ru_cache", {}):
-            ru = main._ru_cache[su]
-        if ru is None and su:
+        if is_num:
             # probe the anthology body by the IS saying's opening (first-line prefix)
             probe = norm(rec["deva"])[:20]
-            best = (0, None)
-            for bi, bn in blocks:
-                cp = 0
-                while cp < min(len(probe), len(bn)) and probe[cp] == bn[cp]:
-                    cp += 1
-                if cp > best[0]:
-                    best = (cp, bi)
-            if best[0] >= 14:
-                ru = ru_for_entry(bo_paras, best[1])
+            best = probe_blocks(blocks, probe, 14)
+            if best:
+                ru = ru_for_entry(bo_paras, best)
                 if verse is None:
-                    verse = verse_from_entry(bo_paras, best[1]) or None
-        if not ru and su:
-            # recordings-docx probe path (verse from docx, RU from the anthology body)
-            pass
+                    verse = verse_from_entry(bo_paras, best) or None
+        if is_num and ru is None and verse:
+            # the anthology may print a different recension than Böhtlingk's IS
+            # (Su22: tape/anthology तु vs IS च) — probe by the recorded verse itself
+            probe = norm(verse)[:22]
+            best = probe_blocks(blocks, probe, 14)
+            if best:
+                ru = ru_for_entry(bo_paras, best)
+        if verse is None and r["deva_pratika"]:
+            # unmatched / Su>53 rows: probe by the anthology TOC pratika (page-keyed)
+            # first (it IS the anthology's own pratīka), then by the filename pratika
+            prat = norm(r["deva_pratika"])
+            if len(prat) >= 10:
+                best = probe_blocks(blocks, prat, 10)
+                if best:
+                    ru = ru_for_entry(bo_paras, best)
+                    if verse is None:
+                        verse = verse_from_entry(bo_paras, best) or None
+        if verse is None and r["anthology_page"]:
+            # filename pratīka too weak (one word) — the anthology TOC pratīka
+            # (page-keyed) is fuller; probe with it. The TOC may print another
+            # recension than the body (Su63: सम्पत्त्या vs body संयत्त्या), so
+            # probe by the longest progressively-shorter prefix that still hits.
+            prat = norm(toc_pratika.get(int(r["anthology_page"]), ""))
+            best = probe_blocks_progressive(blocks, prat)
+            if best:
+                ru = ru_for_entry(bo_paras, best)
+                if verse is None:
+                    verse = verse_from_entry(bo_paras, best) or None
+        if verse is None and r["anthology_page"]:
+            verse = toc_pratika.get(int(r["anthology_page"]), "") or None
+        if verse is None and r["deva_pratika"]:
+            # nothing matched: the pratīka from the filename/manifest IS the card front
+            verse = r["deva_pratika"]
         cards.append(
             {
                 "is_num": is_num,
@@ -231,18 +294,14 @@ def main():
                 "su_num": int(su) if su else None,
                 "slug": r["slug"],
                 "iast": r["iast"],
-                "is_iast": rec["iast"],
-                "is_deva": rec["deva"],
+                "is_iast": rec["iast"] if rec else None,
+                "is_deva": rec["deva"] if rec else None,
                 "verse_deva": verse,
                 "ru": ru,
                 "match_method": r["match_method"],
             }
         )
-
-    # RU cache layer (recordings-docx verse probe), precomputed by tools that ran
-    # the join; kept in main() attrs only for this build — the vendored feed is
-    # the artifact, this script documents its provenance.
-    cards_by_su = {c["su_num"]: c for c in cards if c["su_num"]}
+    cards.sort(key=lambda c: (c["set"], c["su_num"] or 999, c["audio_id"]))
 
     feed = {
         "id": "subhashita-audio-srs-deck",
@@ -251,6 +310,8 @@ def main():
         "rights": "recordings are MG's own (MG ruling 14-09-2026: «все свои»); Böhtlingk text 1870–73 public domain",
         "stats": {
             "cards": len(cards),
+            "with_is_num": sum(1 for c in cards if c["is_num"]),
+            "without_is_num": sum(1 for c in cards if not c["is_num"]),
             "with_ru": sum(1 for c in cards if c["ru"]),
             "with_verse": sum(1 for c in cards if c["verse_deva"]),
         },
@@ -259,8 +320,41 @@ def main():
     args.out.parent.mkdir(parents=True, exist_ok=True)
     with args.out.open("w", encoding="utf-8") as fh:
         json.dump(feed, fh, ensure_ascii=False, indent=1)
-    print(f"cards={len(cards)} with_ru={feed['stats']['with_ru']} with_verse={feed['stats']['with_verse']}")
+    # human-readable register: ALL recordings, Böhtlingk-marked (MG 14-09-2026:
+    # «выведи мне все… не надо убивать кого-то, потому что не нашёл его в Бётлингке»)
+    reg = args.out.parent / "subhashita_audio_register.md"
+    write_register(reg, cards)
+    print(f"cards={len(cards)} with_is_num={feed['stats']['with_is_num']} "
+          f"without_is_num={feed['stats']['without_is_num']} "
+          f"with_ru={feed['stats']['with_ru']} with_verse={feed['stats']['with_verse']}")
     print(f"wrote {args.out}")
+    print(f"wrote {reg}")
+
+
+def write_register(reg: Path, cards) -> None:
+    """Markdown listing of every recording, Böhtlingk-flagged."""
+    lines = [
+        "# Subhāṣita audio register — all recordings, Böhtlingk-flagged (H4474)",
+        "",
+        "_Created: 14-09-2026 · Generated by `scripts/build_subhashita_srs_deck.py` — do not hand-edit._",
+        "",
+        "`is_num` = Böhtlingk *Indische Sprüche* number, the exact `num` field of "
+        "[indische_sprueche.jsonl](https://github.com/gasyoun/SanskritLexicography/blob/master/IndischeSprueche/data/indische_sprueche.jsonl) "
+        "(7537 sayings) — verified by `scripts/verify_subhashita_audio_manifest.py`. "
+        "Recordings WITHOUT a Böhtlingk number are anthology sayings from other sources "
+        "(Mahābhārata, Pañcatantra, Hitopadeśa, Upaniṣads, Bhartṛhari, Manu…) or one-word-pratīka "
+        "Kochergina takes — they are kept, never dropped.",
+        "",
+        "| # | audio_id | set | Su | pratīka / verse opening | Бётлингк | RU |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for i, c in enumerate(cards, 1):
+        boet = f"IS {c['is_num']}" if c["is_num"] else "—"
+        open_txt = (c["verse_deva"] or c["is_deva"] or "—")[:38]
+        ru_flag = "✓" if c["ru"] else "—"
+        su = c["su_num"] or "—"
+        lines.append(f"| {i} | `{c['audio_id']}` | {c['set']} | {su} | {open_txt}… | {boet} | {ru_flag} |")
+    reg.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

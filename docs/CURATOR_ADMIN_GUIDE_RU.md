@@ -601,11 +601,11 @@ _Появилось 25-08-2026. Вопросы живут в `config/surveys.php
 
 ### Как получить списки рассылки
 
-На сервере в папке сайта выполнить:
+На сервере в папке сайта выполнить через artisan:
 
 ```
-php artisan survey:audience churn-block
-php artisan survey:audience post3m
+survey:audience churn-block
+survey:audience post3m
 ```
 
 Команда положит готовый CSV (Excel-совместимый) в `storage/app/survey-audience/` и напечатает путь. Колонки: имя, email, telegram, курс/блоки, последний платёж. Агент может выполнить это по просьбе и передать файл.
