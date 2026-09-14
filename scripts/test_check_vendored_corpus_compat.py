@@ -165,6 +165,20 @@ class GateTest(unittest.TestCase):
         self.rehash('nala_subhashita', 'subhashita_beginner_pack.json')
         self.assertFailsWith('lacks lines[].chunks[]')
 
+    def test_malformed_topic_row_is_a_fail_line_not_a_crash(self):
+        # Found by the independent verifier: a topic without `id` used to raise KeyError
+        # and drop the FAIL lines already gathered (here: the corpus pin mismatch below).
+        with open(self.path('nala_subhashita', 'nala-1.json'), 'ab') as fh:
+            fh.write(b' ')
+        bundle_path = self.path('grammar_lab', 'grammar_lab.json')
+        bundle = read_json(bundle_path)
+        del bundle['topics'][0]['id']
+        write_json(bundle_path, bundle)
+        self.rehash('grammar_lab', 'grammar_lab.json')
+        report = self.run_gate()
+        self.assertTrue(any('malformed snapshot' in line for line in report.failures))
+        self.assertTrue(any('nala-1.json: manifest says sha256' in line for line in report.failures))
+
     # -- pin-integrity mismatches (manifest NOT updated) ----------------------
 
     def test_hand_edited_corpus_bytes_fail(self):
