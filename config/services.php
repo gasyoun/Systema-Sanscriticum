@@ -259,6 +259,16 @@ return [
         'username' => ltrim((string) env('TELEGRAM_SUPPORT_USERNAME', ''), '@') ?: null,
     ],
 
+    // H4691: shared sentinel breaker over the MTProto watchdog-kill loop
+    // (App\Services\Telegram\MadelineSyncBreaker). The budget/freeze logic is the
+    // Uprava library deployed on .92; a missing library = fail-open (cooldown only).
+    'sentinel_breaker' => [
+        'enabled' => (bool) env('SENTINEL_BREAKER_ENABLED', true),
+        'bin' => env('SENTINEL_BREAKER_BIN', '/usr/local/lib/sentinel-breaker/sentinel_breaker.py'),
+        'python' => env('SENTINEL_BREAKER_PYTHON', 'python3'),
+        'state_dir' => env('SENTINEL_BREAKER_STATE_DIR', storage_path('app/sentinel-breaker')),
+    ],
+
     // Track B harvester (Uprava/docs/DECISIONS_telegram_harvester.md, D1-D3).
     // Reuses the SAME MadelineProto session/credentials as telegram_support
     // (one account, one session) — this block only carries harvester-specific

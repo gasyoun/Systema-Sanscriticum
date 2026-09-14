@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Telegram;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Breadcrumbs + post-timeout cooldown for telegram-support:sync.
@@ -52,11 +53,32 @@ final class MadelineSyncPhase
             'seconds' => $seconds,
             'phase' => self::current(),
         ], $seconds);
+
+        // H4691: every post-timeout cooldown IS a watchdog kill — count it in
+        // the shared breaker, whose budget decides when the loop must stop.
+        MadelineSyncBreaker::recordKill();
     }
 
+    /**
+     * true = do not start a live MTProto run now. Two gates, one answer
+     * (H4691 cooldown/breaker alignment): the short post-kill cooldown, and the
+     * sentinel breaker frozen after too many kills (freeze + Telegram scream +
+     * auto-unfreeze live in the shared library, see MadelineSyncBreaker).
+     */
     public static function cooldownActive(): bool
     {
-        return Cache::has(self::COOLDOWN_KEY.self::keySuffix());
+        if (Cache::has(self::COOLDOWN_KEY.self::keySuffix())) {
+            return true;
+        }
+        if (MadelineSyncBreaker::frozen()) {
+            Log::warning('MadelineSync live run skipped: sentinel breaker frozen (too many watchdog kills).', [
+                'guardian' => MadelineSyncBreaker::guardian(),
+            ]);
+
+            return true;
+        }
+
+        return false;
     }
 
     private static function keySuffix(): string
