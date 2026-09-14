@@ -74,7 +74,8 @@ For the 64 D2/D3 rows the `evidence` column names the **suspect side**, computed
 ## The one-line reading
 
 Of 661 ledger rows, **328 need no engine change** (304 compound-covered + 13 sandhi surface + 11 gold-form
-defects), **37 point back at the gold**, and **~278 are genuine E1 hybrid-layer gap-fill candidates** —
+defects), **37 point back at the gold**, and **296 are E1 hybrid-layer candidates** (G2 135 + G3 111 +
+G4 14 + D1 9 + suspect-kosha 18 + undetermined 9) —
 dominated by one family: **present participles (*-ant*, *-māna*) are missing from `inflections` or sit
 there with NULL case**. That single family (79 G3 + 9 D1 + several G2 members) is the highest-yield
 correction for whoever acts on this list.
