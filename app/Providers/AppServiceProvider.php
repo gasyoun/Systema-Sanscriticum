@@ -46,6 +46,7 @@ use App\Support\Deploy\DeployDriftInspector;
 use App\Support\NextIntroSession;
 use App\Support\ServerGuards\ShellSystemInspector;
 use App\Support\ServerGuards\SystemInspector;
+use Closure;
 use Filament\Support\View\Components\Modal;
 use Illuminate\Filesystem\FilesystemAdapter as LaravelFilesystemAdapter;
 use Illuminate\Support\Carbon;
@@ -150,6 +151,10 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
         // ----------------------------------------------------
+
+        // H4663 (аудит периметра 14-09, п.7): CSP-Report-Only живёт отдельным
+        // middleware AddCspReportOnly в web-группе (Kernel.php) — closure в
+        // middleware-группе не резолвится MiddlewareNameResolver'ом.
 
         // 2. Наблюдатель
         Schedule::observe(ScheduleObserver::class);

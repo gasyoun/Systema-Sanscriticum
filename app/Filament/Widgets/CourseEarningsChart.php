@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Payment;
+use App\Support\RoleGate;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
 
@@ -11,6 +12,16 @@ class CourseEarningsChart extends ChartWidget
     protected static ?string $heading = 'Выручка по курсам';
 
     protected static ?int $sort = 2;
+
+    // H4663 (аудит периметра 14-09, п.3): выручка по ВСЕМ курсам —
+    // управленческая цифра, а не витрина куратора. Виджет был единственным
+    // из дашборд-набора без canView(): менеджер видел школьную выручку,
+    // тогда как его собственная страница продаж сужена до своих сделок
+    // (RoleGate::managerSalesReport). Выравниваю на finance()-гейт.
+    public static function canView(): bool
+    {
+        return RoleGate::finance();
+    }
 
     protected static ?string $maxHeight = '300px';
 
