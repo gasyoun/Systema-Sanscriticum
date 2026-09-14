@@ -1,0 +1,215 @@
+{
+  "tool": "tools/document_check.py",
+  "skill": "/document",
+  "legacy_name": "/artifact-propagate",
+  "generated": "2026-09-02 20:47:14",
+  "artifacts": [
+    {
+      "artifact": "/Users/mac/Documents/GitHub/Systema-Sanscriticum-h3823doc-34976/app/Console/Commands/MirrorRecordingLessons.php",
+      "repo": "/Users/mac/Documents/GitHub/Systema-Sanscriticum-h3823doc-34976",
+      "kind": "doc",
+      "surfaces": [
+        {
+          "id": "readme",
+          "phase": 1,
+          "label": "README.md",
+          "scope": "repo",
+          "status": "present",
+          "evidence": "/Users/mac/Documents/GitHub/Systema-Sanscriticum-h3823doc-34976/README.md:368: [`catalog:mirror-recording-lessons {source} {target}`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MirrorRecordingLessons.php"
+        },
+        {
+          "id": "claude_md",
+          "phase": 1,
+          "label": "CLAUDE.md",
+          "scope": "repo",
+          "status": "present",
+          "evidence": "/Users/mac/Documents/GitHub/Systema-Sanscriticum-h3823doc-34976/CLAUDE.md:54: [`catalog:mirror-recording-lessons {source} {target}`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/MirrorRecordingLessons.php"
+        },
+        {
+          "id": "cold_start",
+          "phase": 1,
+          "label": "Cold-start doc (GEMINI.md / equivalent)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "GEMINI.md is the institutional/pedagogical architecture doc (61 lines, RU), not an agent orientation table; the orientation line for this command already sits in AGENTS.md:38, which grep_first_existing never reaches once GEMINI.md exists"
+        },
+        {
+          "id": "sibling_domain_docs",
+          "phase": 1,
+          "label": "Sibling domain docs (manual/roadmap/method docs)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "closed by a real edit: docs/CATALOG_DUPLICATE_FAMILY_CONSOLIDATION_31-08-2026.md gained the section 'Остаток H3823 — связь recording_of НЕ даёт уроков' plus a precedence note; no other domain doc governs this workstream"
+        },
+        {
+          "id": "metadoc",
+          "phase": 1,
+          "label": "Metadoc (<name>.meta.md)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "a PHP artisan command is not a genre-named long-lived doc (plan/roadmap/spec/manual); the governing doc that does carry a metadoc obligation is the consolidation doc, not this class"
+        },
+        {
+          "id": "changelog",
+          "phase": 1,
+          "label": "CHANGELOG.md -> release (/cut-release)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "closed by a real edit in the repo's mandated form: a hook blocks direct bullets under [Unreleased], so the entry is the fragment changelog_queue/2026-09-02-*-mirror-recording-lessons.md, consumed by cut_release.py"
+        },
+        {
+          "id": "ai_state",
+          "phase": 1,
+          "label": ".ai_state.md",
+          "scope": "repo",
+          "status": "present",
+          "evidence": "/Users/mac/Documents/GitHub/Systema-Sanscriticum-h3823doc-34976/.ai_state.md:6: - **⏸ 02-09-2026 — H3823 курс 327 «Йога-сутры в записи»: команда влита, прод-шаг НЕ выполнен (Opus 5 `claude-opus-5`).** Курс 327 продан 129 раз (`block_1` 40, "
+        },
+        {
+          "id": "issues",
+          "phase": 1,
+          "label": "Issues (per-person task issues)",
+          "scope": "repo",
+          "status": "n/a",
+          "evidence": "no per-person issue tracks this work; the lane is the Uprava GTD @DO row (prod --apply still owed), and posting to an issue is external-facing without standing authorization"
+        },
+        {
+          "id": "gtd",
+          "phase": 2,
+          "label": "Uprava/GTD_NEXT_ACTIONS.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "closed by a real edit: the H3823 @DO row was rewritten 02-09-2026 (gate OPEN, port 22 reachable again). It names the artisan signature catalog:mirror-recording-lessons and links the H3823 archive; it cannot also spell the PHP class name because the row is at 595 of the 600-char H2697 cap"
+        },
+        {
+          "id": "handoffs_registry",
+          "phase": 2,
+          "label": "Uprava/handoffs/README.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "H3823 is terminal (closed 02-09-2026 against merged PR #2313) and its row therefore lives in REGISTRY_ARCHIVE.md, not the live handoffs/README.md backlog"
+        },
+        {
+          "id": "features_index",
+          "phase": 2,
+          "label": "SanskritLexicography/FEATURES_INDEX.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "repo-internal artisan maintenance command for one Laravel app, not an estate-level reusable capability/dataset/interface"
+        },
+        {
+          "id": "kosha_manifest",
+          "phase": 2,
+          "label": "kosha/data/manifest/datasets.json",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "not a derived dataset"
+        },
+        {
+          "id": "data_layers_census",
+          "phase": 2,
+          "label": "Uprava/DATA_LAYERS_CENSUS.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "not large/local-only data (risk) and no open statistics cell to close"
+        },
+        {
+          "id": "project_interlinks",
+          "phase": 2,
+          "label": "Uprava/PROJECT_INTERLINKS.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "creates no cross-repo data edge: the command reads and writes only the Systema lessons table inside one database"
+        },
+        {
+          "id": "skills_index",
+          "phase": 2,
+          "label": "root SKILLS_INDEX.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "artifact is not itself a skill/command"
+        },
+        {
+          "id": "articles",
+          "phase": 2,
+          "label": "Uprava/ARTICLES.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "artifact is not a paper (delegate to /articles-update when it is)"
+        },
+        {
+          "id": "danger_facts",
+          "phase": 2,
+          "label": "Uprava/DANGER_FACTS.md + context_facts.yaml",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "closed by a real edit in BOTH files: DANGER_FACTS.md gained a prod-mutation-risk row under ## Systema-Sanscriticum and context_facts.yaml its machine twin (validated). They key the risk on the artisan signature catalog:mirror-recording-lessons <source> <target> --apply, which is what an operator types, not the class filename"
+        },
+        {
+          "id": "questions_log",
+          "phase": 2,
+          "label": "Uprava/QUESTIONS_LOG.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "contract-initiated sweep (Phase 4 of /go + the Stop-hook trigger), not an answer to a logged question, and no «а в X?» was asked this session"
+        },
+        {
+          "id": "megabook",
+          "phase": 2,
+          "label": "Uprava/MEGABOOK.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "operational status of one course-catalog fix; MEGABOOK takes thesis refinements only, never operational status"
+        },
+        {
+          "id": "skills_manual_ru",
+          "phase": 2,
+          "label": "Uprava/SKILLS_MANUAL_RU.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "no skill/tool contract changed"
+        },
+        {
+          "id": "hooks_index",
+          "phase": 2,
+          "label": "claude-config HOOKS_INDEX.md",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "no enforcement changed: no hook was added, removed or altered by this artifact"
+        },
+        {
+          "id": "repo_status_rollup",
+          "phase": 2,
+          "label": "Uprava/REPO_STATUS_ROLLUP.md",
+          "scope": "org",
+          "status": "present",
+          "evidence": "/private/tmp/claude-502/-Users-mac-Documents-GitHub/07152b52-78be-481b-9f20-7077c65391c2/scratchpad/ghroot/Uprava/REPO_STATUS_ROLLUP.md:24: - **H3823 (Claude Code Opus 5 `claude-opus-5`, 01/02-09-2026) — курс-запись получает СВОИ уроки; код в проде, команда на проде не запускалась.** Артизан-команда"
+        },
+        {
+          "id": "hub_manifest",
+          "phase": 2,
+          "label": "Uprava/tools/hub_manifest.json",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "the artifact is an artisan command, not a new long-lived hub/registry needing a staleness-tracking row"
+        },
+        {
+          "id": "auto_derived_views",
+          "phase": 2,
+          "label": "Auto-derived views (NEXT_UP/BOTTLENECKS/kanban/dashboards/HUB_STALENESS_REPORT)",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "auto -- never hand-edit; verify their SOURCES carry the change instead"
+        },
+        {
+          "id": "epistemic_registries",
+          "phase": 2,
+          "label": "FINDINGS x2 + 7 epistemic registries (ASSUMPTIONS/CONTRADICTIONS/GAPS/DEAD_ENDS/RECIPES/STALENESS/GLOSSARY, Uprava + SanskritLexicography)",
+          "scope": "org",
+          "status": "n/a",
+          "evidence": "closed by a real edit: Uprava FINDINGS §680 (a /go exit-4 REFUSE closes a handoff on merged-PR evidence and strands a no-artifact prod step) and §681 (an SSH timeout that clears within a day is an expiring per-IP fail2ban ban, not a host outage); marker bumped to §682. SanskritLexicography FINDINGS is the data-findings half and takes none of this"
+        }
+      ]
+    }
+  ]
+}
