@@ -85,7 +85,11 @@ class CabinetProbeKanvaFixtureTest extends TestCase
         return $course;
     }
 
-    public function test_skips_silently_when_course_id_unset(): void
+    /**
+     * H4648: пустая конфигурация факстуры — НЕ тихий skip. Прогон громко
+     * предупреждает и помечается coverage_partial (soft-флаг, не critical).
+     */
+    public function test_unarmed_course_id_warns_loudly_and_marks_partial_coverage(): void
     {
         $this->seedSmokeStudent();
 
@@ -93,9 +97,45 @@ class CabinetProbeKanvaFixtureTest extends TestCase
         $out = Artisan::output();
 
         $this->assertSame(0, $code, $out);
-        $this->assertStringContainsString('канва-факстура пропущена', $out);
+        // Громкий warn-блок, не тихая серая строка.
+        $this->assertStringContainsString('⚠️ CABINET_PROBE_KANVA_COURSE_ID ПУСТ', $out);
+        $this->assertStringContainsString('НЕ покрыта', $out);
+        $this->assertStringContainsString('RUNBOOK_ARM_KANVA_FIXTURE', $out);
+        // Soft-флаг в истории прогона.
+        $run = CabinetProbeRun::query()->latest('id')->firstOrFail();
+        $this->assertFalse((bool) $run->critical, 'coverage-флаг не должен быть critical | '.$out);
+        $this->assertTrue((bool) $run->coverage_partial, 'прогон без канвы — coverage_partial | '.$out);
         $student = User::query()->where('email', 'stu@example.com')->firstOrFail();
         $this->assertSame(0, $student->groups()->count(), 'no fixture course — nothing must be attached');
+    }
+
+    public function test_armed_fixture_runs_full_coverage(): void
+    {
+        $this->seedSmokeStudent();
+        $this->seedFixtureCourse();
+
+        $code = Artisan::call('cabinet:probe');
+        $out = Artisan::output();
+
+        $this->assertSame(0, $code, $out);
+        $this->assertStringNotContainsString('⚠️', $out, 'вооружённый прогон не предупреждает | '.$out);
+        $run = CabinetProbeRun::query()->latest('id')->firstOrFail();
+        $this->assertFalse((bool) $run->coverage_partial, 'полный прогон — coverage_partial=false | '.$out);
+    }
+
+    public function test_missing_student_branch_marks_partial_coverage(): void
+    {
+        // student-ветка не настроена: канва-факстура не исполнялась вообще.
+        config()->set('services.test_student.email', '');
+        config()->set('services.test_student.password', '');
+
+        $code = Artisan::call('cabinet:probe');
+        $out = Artisan::output();
+
+        $this->assertSame(0, $code, $out);
+        $this->assertStringContainsString('student-ветка пропущена', $out);
+        $run = CabinetProbeRun::query()->latest('id')->firstOrFail();
+        $this->assertTrue((bool) $run->coverage_partial, 'без student-ветки канва не покрыта | '.$out);
     }
 
     public function test_seeds_enrollment_and_attendance_fact_for_smoke_student(): void

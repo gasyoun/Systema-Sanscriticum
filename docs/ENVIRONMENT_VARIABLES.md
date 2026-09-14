@@ -17,7 +17,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ACTIVATION_MIN_DENOMINATOR` | optional | `5` | config/activation_metrics.php:40 |
 | `ADMIN_EMAIL` | optional | `''` | config/services.php:474 |
 | `ADMIN_PASSWORD` | secret | `—` | config/services.php:475 |
-| `ADMIN_TELEGRAM_ID` | optional | `''` | config/cabinet_probe.php:23<br>config/openrouter.php:30<br>config/recording_gap.php:74<br>config/services.php:130 |
+| `ADMIN_TELEGRAM_ID` | optional | `''` | config/cabinet_probe.php:23<br>config/logs_watch.php:51<br>config/openrouter.php:30<br>config/recording_gap.php:74<br>config/services.php:130 |
 | `APP_DEBUG` | optional | `false` | config/app.php:55 |
 | `APP_ENV` | optional | `'production'` | config/app.php:42<br>config/server_guards.php:35 |
 | `APP_KEY` | required | `—` | config/app.php:135 |
@@ -84,9 +84,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_PAYMENT_URL` | optional | `'https://enter.tochka.com/uapi/acquiring/v1.0/payments_with_receipt',` | config/cabinet_probe.php:76 |
 | `CABINET_PROBE_PING_URL` | optional | `''` | config/cabinet_probe.php:20 |
 | `CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS` | optional | `14` | config/cabinet_probe.php:115 |
-| `CABINET_PROBE_TELEGRAM_CHAT_ID` | optional | `env('ADMIN_TELEGRAM_ID', '')` | config/cabinet_probe.php:23<br>config/openrouter.php:30<br>config/recording_gap.php:74 |
+| `CABINET_PROBE_TELEGRAM_CHAT_ID` | optional | `env('ADMIN_TELEGRAM_ID', '')` | config/cabinet_probe.php:23<br>config/logs_watch.php:51<br>config/openrouter.php:30<br>config/recording_gap.php:74 |
 | `CABINET_PROBE_TELEGRAM_COOLDOWN` | optional | `60` | config/cabinet_probe.php:29<br>config/cabinet_probe.php:38 |
-| `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` | optional | `''` | config/cabinet_probe.php:26 |
+| `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` | optional | `''` | config/cabinet_probe.php:26<br>config/logs_watch.php:51 |
 | `CABINET_PROBE_TELEGRAM_SOFT_COOLDOWN` | optional | `env('CABINET_PROBE_TELEGRAM_COOLDOWN', 60),` | config/cabinet_probe.php:36 |
 | `CABINET_PROBE_TELEGRAM_SOFT_REMINDER_HOURS` | optional | `24` | config/cabinet_probe.php:43 |
 | `CABINET_PROBE_TIMEOUT` | optional | `15` | config/cabinet_probe.php:51 |
@@ -337,6 +337,15 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `LOGIN_THROTTLE_DECAY_SECONDS` | optional | `60` | config/login_throttle.php:24 |
 | `LOGIN_THROTTLE_ENABLED` | feature-flag | `true` | config/login_throttle.php:20 |
 | `LOGIN_THROTTLE_MAX_ATTEMPTS` | optional | `5` | config/login_throttle.php:22 |
+| `LOGS_WATCH_DIR` | optional | `''` | config/logs_watch.php:29 |
+| `LOGS_WATCH_ENABLED` | feature-flag | `true` | config/logs_watch.php:26 |
+| `LOGS_WATCH_MAX_ALERT_LINES` | optional | `8` | config/logs_watch.php:63 |
+| `LOGS_WATCH_REMINDER_HOURS` | optional | `24` | config/logs_watch.php:56 |
+| `LOGS_WATCH_STATE_PATH` | optional | `''` | config/logs_watch.php:60 |
+| `LOGS_WATCH_TELEGRAM_CHAT_ID` | optional | `env('CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID', env('CABINET_PROBE_TELEG…` | config/logs_watch.php:49 |
+| `LOGS_WATCH_THRESHOLD` | optional | `3` | config/logs_watch.php:38 |
+| `LOGS_WATCH_TIMEOUT` | optional | `15` | config/logs_watch.php:65 |
+| `LOGS_WATCH_YESTERDAY_UNTIL_UTC` | optional | `'06:00'` | config/logs_watch.php:44 |
 | `LOG_CHANNEL` | optional | `'stack'` | config/logging.php:22 |
 | `LOG_DEPRECATIONS_CHANNEL` | optional | `'null'` | config/logging.php:36 |
 | `LOG_LEVEL` | optional | `'debug'` | config/logging.php:65<br>config/logging.php:72<br>config/logging.php:82<br>config/logging.php:88<br>config/logging.php:100<br>config/logging.php:111<br>config/logging.php:118 |

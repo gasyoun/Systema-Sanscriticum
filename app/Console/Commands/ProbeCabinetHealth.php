@@ -53,6 +53,14 @@ class ProbeCabinetHealth extends Command
 
     protected $description = 'Пульс кабинета: public + manager (+ student) surfaces, history, TG';
 
+    /**
+     * H4648: прогон неполного покрытия. Канва-факстура не вооружена
+     * (CABINET_PROBE_KANVA_COURSE_ID пуст) или student-ветка пропущена —
+     * фатал класса инцидента 10-13.09 этой пробой НЕ ловится. Soft-флаг
+     * в cabinet_probe_runs.coverage_partial (не critical — канал не жжём).
+     */
+    private bool $coveragePartial = false;
+
     public function handle(): int
     {
         if (\PHP_OS_FAMILY === 'Windows' && \function_exists('sapi_windows_cp_set')) {
@@ -113,7 +121,10 @@ class ProbeCabinetHealth extends Command
                 }
                 Auth::logout();
             } else {
-                $this->comment('TEST_STUDENT_* пусты — student-ветка пропущена.');
+                // H4648: student-ветка пропущена — канва-факстура не исполнялась,
+                // прогон неполный (флаг в history), но не тихо.
+                $this->coveragePartial = true;
+                $this->warn('⚠️ TEST_STUDENT_* пусты — student-ветка пропущена, канва-факстура (H4641) НЕ покрыта этим прогоном.');
             }
 
             $failures = array_merge($failures, $this->probeDeployDrift());
@@ -144,7 +155,7 @@ class ProbeCabinetHealth extends Command
         }
 
         if (! $this->option('dry')) {
-            $this->recordHistory($criticalHealthy && $softFails === [], $criticalHealthy, $durationMs, $failures);
+            $this->recordHistory($criticalHealthy && $softFails === [], $criticalHealthy, $durationMs, $failures, $this->coveragePartial);
         }
 
         // HTTP/cabinet 5xx vs host guards (tmpfs, backup, earlyoom, …).
@@ -620,7 +631,15 @@ class ProbeCabinetHealth extends Command
     {
         $courseId = (int) config('cabinet_probe.kanva_fixture_course_id', 0);
         if ($courseId === 0) {
-            $this->comment('CABINET_PROBE_KANVA_COURSE_ID пуст — канва-факстура пропущена.');
+            // H4648 (класс слепого пятна H3797 «пусто = пропуск»): пустая
+            // конфигурация факстуры — НЕ тихий skip. Прогон помечается
+            // coverage_partial (soft, не critical — канал не выгорает), а
+            // человек видит заметный warn-блок и прямую руку останова.
+            $this->coveragePartial = true;
+            $this->warn('⚠️⚠️⚠️ CABINET_PROBE_KANVA_COURSE_ID ПУСТ — канва-факстура НЕ вооружена ⚠️⚠️⚠️');
+            $this->warn('   Канва-ветка student.dashboard (H4435) этим прогоном НЕ покрыта:');
+            $this->warn('   фатал класса инцидента 10-13.09 (/dvaram 500) пробой НЕ ловится.');
+            $this->warn('   Рука останова (~10 мин, человек): docs/RUNBOOK_ARM_KANVA_FIXTURE_2026-09-13.md');
 
             return [];
         }
@@ -820,7 +839,7 @@ class ProbeCabinetHealth extends Command
     /**
      * @param  list<array{message: string, severity: string}>  $failures
      */
-    private function recordHistory(bool $healthy, bool $criticalHealthy, int $durationMs, array $failures): void
+    private function recordHistory(bool $healthy, bool $criticalHealthy, int $durationMs, array $failures, bool $coveragePartial = false): void
     {
         try {
             $messages = array_map(fn ($f) => '['.($f['severity'] ?? '?').'] '.$f['message'], $failures);
@@ -828,11 +847,15 @@ class ProbeCabinetHealth extends Command
                 'ran_at' => now(),
                 'healthy' => $healthy,
                 'critical' => ! $criticalHealthy,
+                // H4648: soft-флаг «прогон неполный» (канва-факстура не
+                // вооружена / student-ветка пропущена). Не критично — не
+                // будит канал; видно в истории тем, кто смотрит.
+                'coverage_partial' => $coveragePartial,
                 'duration_ms' => $durationMs,
                 'failure_count' => count($failures),
                 'failures' => $messages === [] ? null : $messages,
                 'summary' => $healthy
-                    ? 'ok'
+                    ? ($coveragePartial ? 'ok (coverage partial)' : 'ok')
                     : mb_substr(implode('; ', $messages), 0, 500),
             ]);
 
