@@ -146,6 +146,15 @@ def main() -> int:
                 cls = "D2_number_mismatch"
             else:
                 cls = "D3_case_mismatch"
+            if con is not None and cls != "D1_kosha_null_cells":
+                # Which side is suspect: does kosha hold this form under the GOLD lemma at all?
+                lems = sorted({x[0] for x in con.execute(
+                    "SELECT lemma_slp1 FROM inflections WHERE form_slp1=?", (clean(r["form"]),))})
+                if clean(r["lemma"]) in lems:
+                    note = ("suspect: gold — kosha's own paradigm of this lemma puts the form in "
+                            "another cell")
+                else:
+                    note = f"suspect: kosha — gold lemma's paradigm lacks the form (kosha lemmas: {','.join(lems[:4])})"
         elif con is None:
             cls = "G?_unenriched"
         else:
