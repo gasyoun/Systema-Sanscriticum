@@ -99,6 +99,20 @@ class SupportAnswerSuggestion extends Model
     }
 
     /**
+     * H4589: статус детерминированной сверки draft_text с собственными
+     * facts ({@see \App\Services\Support\SupportFactCheckVerifier}) —
+     * `match`/`mismatch`/`unverifiable`, или `unchecked` для черновиков,
+     * заведённых до H4589. Advisory only — не влияет на {@see isDraftOnly()}.
+     */
+    public function factCheckStatus(): string
+    {
+        $facts = is_array($this->facts) ? $this->facts : [];
+        $factCheck = is_array($facts['fact_check'] ?? null) ? $facts['fact_check'] : [];
+
+        return (string) ($factCheck['status'] ?? 'unchecked');
+    }
+
+    /**
      * Черновик, который НИКОГДА не уходит студенту одним нажатием: деньги,
      * доступ, сертификат (рулинг A1) и эскалации.
      *
