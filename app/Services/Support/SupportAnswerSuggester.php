@@ -64,6 +64,7 @@ class SupportAnswerSuggester
         private readonly SupportTemplateDraftResolver $templates,
         private readonly Faq\HybridRetriever $faqRag,
         private readonly Faq\FaqRagDraftBuilder $faqDrafts,
+        private readonly SupportFactCheckVerifier $factCheck = new SupportFactCheckVerifier,
     ) {}
 
     public function isEnabled(): bool
