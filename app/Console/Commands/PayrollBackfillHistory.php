@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Models\TeacherPayout;
 use App\Services\Payroll\BackfillHistoryService;
 use Illuminate\Console\Command;
 use RuntimeException;

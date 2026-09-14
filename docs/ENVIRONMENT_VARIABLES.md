@@ -238,6 +238,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `GRAMMAR_LAB_SEMANTIC` | optional | `false` | config/features.php:1312 |
 | `GRAMMAR_LAB_SUBSCRIPTION_COURSE_SLUG` | optional | `''` | config/grammar_lab.php:53 |
 | `GRANT_ACCESS_FAIL_CLOSED` | optional | `false` | config/features.php:705 |
+| `GUARD_PACK_LOAD1_PER_CORE_CRITICAL` | optional | `2.0` | config/guard_pack.php:26 |
+| `GUARD_PACK_MEM_AVAILABLE_RATIO_CRITICAL` | optional | `0.15` | config/guard_pack.php:28 |
+| `GUARD_PACK_QUEUE_OLDEST_MAX_MINUTES` | optional | `30` | config/guard_pack.php:33 |
+| `GUARD_PACK_SWAP_RATIO_CRITICAL` | optional | `0.25` | config/guard_pack.php:24 |
 | `GUEST_REGISTRATION_ENABLED` | feature-flag | `false` | config/features.php:1296 |
 | `HEARTBEAT_CHECK_HORIZON` | optional | `true` | config/heartbeat.php:60 |
 | `HEARTBEAT_CRON` | optional | `'*/5 * * * *'` | config/heartbeat.php:50 |
@@ -432,6 +436,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MEMCACHED_PERSISTENT_ID` | required | `—` | config/cache.php:60 |
 | `MEMCACHED_PORT` | optional | `11211` | config/cache.php:71 |
 | `MEMCACHED_USERNAME` | required | `—` | config/cache.php:62 |
+| `MIC_SHADOW_CLASSIFY` | optional | `false` | config/features.php:1533 |
 | `MYSQL_ATTR_SSL_CA` | required | `—` | config/database.php:67 |
 | `N8N_API_BASE_URL` | optional | `'https://context-ai.ru'` | config/recording_gap.php:83 |
 | `N8N_API_KEY` | secret | `''` | config/recording_gap.php:86 |

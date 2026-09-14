@@ -9,6 +9,7 @@ use App\Models\CourseBlock;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
+use App\Models\User;
 use App\Services\Payroll\BackfillHistoryService;
 use App\Services\TeacherSalaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -39,7 +40,7 @@ class PayrollBackfillHistoryTest extends TestCase
         parent::setUp();
         $this->service = app(BackfillHistoryService::class);
 
-        $this->studentId = \App\Models\User::factory()->create()->id;
+        $this->studentId = User::factory()->create()->id;
         $this->teacher = Teacher::factory()->create(['name' => 'Тест Преподаватель']);
         $this->courseA = Course::factory()->create([
             'teacher_id' => $this->teacher->id, 'title' => 'Курс А',
