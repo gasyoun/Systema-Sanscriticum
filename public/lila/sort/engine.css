@@ -102,6 +102,11 @@
 .sortx button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 .sortx button.ghost { background: transparent; box-shadow: none; }
 .sortx .spacer { flex: 1 1 auto; }
+/* H4840 — visible round stopwatch (MG 14-09-2026) */
+.sortx .timer {
+  font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14px;
+  color: var(--ink-soft); white-space: nowrap; min-width: 3.4em; text-align: right;
+}
 .sortx .score {
   font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14px;
   color: var(--ink-soft); white-space: nowrap;

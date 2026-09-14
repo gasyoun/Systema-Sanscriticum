@@ -57,10 +57,15 @@
     var checkBtn = el("button", "primary", "Проверить");
     var resetBtn = el("button", "ghost", "Заново");
     var spacer = el("span", "spacer");
+    // H4840 — visible round stopwatch (MG 14-09-2026).
+    var timerEl = el("span", "timer", "0:00");
+    timerEl.setAttribute("role", "timer");
+    timerEl.setAttribute("aria-label", "Время раунда");
     var score = el("span", "score");
     toolbar.appendChild(checkBtn);
     toolbar.appendChild(resetBtn);
     toolbar.appendChild(spacer);
+    toolbar.appendChild(timerEl);
     toolbar.appendChild(score);
     container.appendChild(toolbar);
 
@@ -82,6 +87,35 @@
     // fillable slots: list of {r,c,answer,td,placed}
     var slots = [];
     var selectedCard = null;
+
+    // H4840 — per-slot difficulty timing + the visible stopwatch.
+    var roundStart = 0;
+    var timerStart = 0;
+    var timerFrozen = false;
+    var timerHandle = null;
+
+    function now() {
+      return (typeof performance !== "undefined" && performance.now)
+        ? performance.now() : Date.now();
+    }
+    function timerText(ms) {
+      var s = Math.max(0, Math.floor(ms / 1000));
+      return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+    }
+    function timerReset() {
+      timerFrozen = false;
+      timerStart = now();
+      timerEl.textContent = "0:00";
+      if (!timerHandle) {
+        timerHandle = setInterval(function () {
+          if (!timerFrozen) timerEl.textContent = timerText(now() - timerStart);
+        }, 500);
+      }
+    }
+    function timerStop() {
+      timerFrozen = true;
+      timerEl.textContent = timerText(now() - timerStart);
+    }
 
     function isFixed(r, c) {
       return r < fixedRows || c < fixedCols;
@@ -109,6 +143,10 @@
 
     function placeInto(slot, cardEl) {
       if (!cardEl || !slot) return;
+      // H4840 — first placement into this cell is its "time to answer".
+      if (slot.ms === null) {
+        slot.ms = Math.max(0, Math.round(now() - roundStart));
+      }
       // if slot occupied, return old card to pool
       if (slot.placed) {
         var old = slot.td.querySelector(".card");
@@ -193,6 +231,8 @@
       pool.innerHTML = "";
       table.innerHTML = "";
       feedback.classList.remove("show");
+      roundStart = now();   // H4840
+      timerReset();
 
       var answers = [];
       for (var r = 0; r < nR; r++) {
@@ -206,7 +246,7 @@
           } else {
             td.className = "empty fillable";
             td.setAttribute("aria-label", "Ячейка " + (r + 1) + "," + (c + 1));
-            var slot = { r: r, c: c, answer: val, td: td, placed: null };
+            var slot = { r: r, c: c, answer: val, td: td, placed: null, ms: null, wrong: 0 };
             slots.push(slot);
             wireSlot(slot);
             if (val) answers.push(val);
@@ -240,10 +280,38 @@
           correct++;
         } else {
           s.td.classList.add("wrong");
+          s.wrong++;   // H4840 — difficulty signal
         }
       });
       score.textContent = "Верно " + correct + " / " + slots.length;
-      feedback.classList.toggle("show", allFilled && correct === slots.length);
+      var solved = allFilled && correct === slots.length;
+      feedback.classList.toggle("show", solved);
+      if (solved) {
+        timerStop();          // H4840
+        exposeRoundResult();
+      }
+    }
+
+    // H4840 — per-cell results for telemetry.js: l = row · column headers
+    // (the grammatical context), r = the correct answer, ms = time to the
+    // first placement into that cell, wrong = checks that scored it wrong.
+    function exposeRoundResult() {
+      var items = slots.map(function (s) {
+        var rowHead = (fixedCols > 0 && cells[s.r] && cells[s.r][0] != null)
+          ? String(cells[s.r][0]).trim() : "";
+        var colHead = (fixedRows > 0 && cells[0] && cells[0][s.c] != null)
+          ? String(cells[0][s.c]).trim() : "";
+        return {
+          l: (rowHead + (rowHead && colHead ? " · " : "") + colHead) || s.answer,
+          r: s.answer,
+          ms: (typeof s.ms === "number") ? s.ms : 0,
+          wrong: s.wrong || 0
+        };
+      });
+      window.SGX_ROUND_RESULT = {
+        hints: container.classList.contains("show-hints") ? 1 : 0,
+        items: items
+      };
     }
 
     checkBtn.addEventListener("click", check);

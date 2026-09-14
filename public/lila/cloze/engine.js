@@ -80,11 +80,16 @@
     var checkBtn = el("button", "primary", "Проверить");
     var resetBtn = el("button", "ghost", "Заново");
     var spacer   = el("span", "spacer");
+    // H4840 — visible round stopwatch (MG 14-09-2026).
+    var timerEl  = el("span", "timer", "0:00");
+    timerEl.setAttribute("role", "timer");
+    timerEl.setAttribute("aria-label", "Время раунда");
     var score    = el("span", "score");
     if (hasGloss) toolbar.appendChild(hintBtn);
     toolbar.appendChild(checkBtn);
     toolbar.appendChild(resetBtn);
     toolbar.appendChild(spacer);
+    toolbar.appendChild(timerEl);
     toolbar.appendChild(score);
     container.appendChild(toolbar);
 
@@ -100,6 +105,35 @@
 
     // one control record per blank
     var controls = [];
+
+    // H4840 — per-blank difficulty timing + the visible stopwatch.
+    var roundStart = 0;
+    var timerStart = 0;
+    var timerFrozen = false;
+    var timerHandle = null;
+
+    function now() {
+      return (typeof performance !== "undefined" && performance.now)
+        ? performance.now() : Date.now();
+    }
+    function timerText(ms) {
+      var s = Math.max(0, Math.floor(ms / 1000));
+      return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+    }
+    function timerReset() {
+      timerFrozen = false;
+      timerStart = now();
+      timerEl.textContent = "0:00";
+      if (!timerHandle) {
+        timerHandle = setInterval(function () {
+          if (!timerFrozen) timerEl.textContent = timerText(now() - timerStart);
+        }, 500);
+      }
+    }
+    function timerStop() {
+      timerFrozen = true;
+      timerEl.textContent = timerText(now() - timerStart);
+    }
 
     function clearMarks() {
       controls.forEach(function (ct) {
@@ -145,15 +179,26 @@
         wrap.appendChild(g);
       }
 
+      var correct = correctValue(blank);
+      // H4840 — per-blank record: ms = time from build() to the first choice
+      // made in this blank; wrong = checks that scored it incorrectly.
+      var ct = {
+        wrap: wrap, select: select, mark: mark,
+        correct: correct,
+        label: blank.gloss || correct,
+        ms: null,
+        wrong: 0
+      };
+
       select.addEventListener("change", function () {
+        if (ct.ms === null) {
+          ct.ms = Math.max(0, Math.round(now() - roundStart));
+        }
         clearMarks();
         updateScore();
       });
 
-      controls.push({
-        wrap: wrap, select: select, mark: mark,
-        correct: correctValue(blank)
-      });
+      controls.push(ct);
       return wrap;
     }
 
@@ -161,6 +206,8 @@
       controls = [];
       passage.innerHTML = "";
       feedback.classList.remove("show");
+      roundStart = now();   // H4840
+      timerReset();
       var blankNum = 0;
       segments.forEach(function (seg) {
         if (seg && typeof seg === "object" && seg.options && seg.options.length) {
@@ -193,10 +240,34 @@
         } else {
           ct.wrap.classList.add("wrong");
           ct.mark.textContent = "✕";
+          ct.wrong++;   // H4840 — difficulty signal
         }
       });
       score.textContent = "Верно " + correct + " / " + controls.length;
-      feedback.classList.toggle("show", allFilled && correct === controls.length);
+      var solved = allFilled && correct === controls.length;
+      feedback.classList.toggle("show", solved);
+      if (solved) {
+        timerStop();          // H4840
+        exposeRoundResult();
+      }
+    }
+
+    // H4840 — per-blank results for telemetry.js: l = gloss (or the answer
+    // itself when the blank has no gloss), r = the correct word, ms = time to
+    // the first choice in that blank, wrong = checks that scored it wrong.
+    function exposeRoundResult() {
+      var items = controls.map(function (ct) {
+        return {
+          l: ct.label,
+          r: ct.correct,
+          ms: (typeof ct.ms === "number") ? ct.ms : 0,
+          wrong: ct.wrong || 0
+        };
+      });
+      window.SGX_ROUND_RESULT = {
+        hints: container.classList.contains("show-hints") ? 1 : 0,
+        items: items
+      };
     }
 
     hintBtn.addEventListener("click", function () {
