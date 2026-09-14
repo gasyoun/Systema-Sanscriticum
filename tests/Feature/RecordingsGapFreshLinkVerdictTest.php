@@ -40,7 +40,7 @@ class RecordingsGapFreshLinkVerdictTest extends TestCase
     }
 
     /**
-     * The five markers the workflow's «Стоп: …» Code nodes can throw. This test IS the
+     * The six markers the workflow's «Стоп: …» Code nodes can throw. This test IS the
      * contract: if a marker is renamed on one side only, it lands here.
      */
     public function test_each_workflow_marker_maps_to_its_own_class_and_verdict(): void
@@ -51,6 +51,7 @@ class RecordingsGapFreshLinkVerdictTest extends TestCase
             'H3952_UNDECIDABLE_3301 | verdict=undecidable_3301' => 'fresh_link_undecidable',
             'H3952_ACCOUNT_UNREGISTERED | verdict=account_unregistered' => 'fresh_link_account_unregistered',
             'H3952_REPLAY_IMPOSSIBLE | verdict=replay_impossible' => 'fresh_link_replay_impossible',
+            'H3952_INFRASTRUCTURE_FAILURE | verdict=infrastructure_failure' => 'fresh_link_infrastructure',
         ];
 
         $verdicts = [];

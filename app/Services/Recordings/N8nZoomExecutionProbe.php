@@ -91,6 +91,7 @@ final class N8nZoomExecutionProbe
         'h3952_undecidable_3301' => 'fresh_link_undecidable',
         'h3952_account_unregistered' => 'fresh_link_account_unregistered',
         'h3952_replay_impossible' => 'fresh_link_replay_impossible',
+        'h3952_infrastructure_failure' => 'fresh_link_infrastructure',
     ];
 
     /**
@@ -104,6 +105,7 @@ final class N8nZoomExecutionProbe
         'fresh_link_undecidable' => 'Zoom 3301 без живого токена: «чужой аккаунт» и «записи не было» неразличимы — смотреть облако Zoom глазами (Play B)',
         'fresh_link_account_unregistered' => 'Zoom-аккаунт не в реестре fresh-link — завести cred + строку реестра + пару нод',
         'fresh_link_replay_impossible' => 'подписанная ссылка истекла, аккаунт вне реестра — свежую ссылку взять неоткуда, доставлять вручную',
+        'fresh_link_infrastructure' => 'инфраструктурный сбой бокса n8n: проверка HEAD не получила HTTP-ответа (диск/сеть .91; прецедент exec 2749 — ENOSPC, корень 100%) — освободить диск/проверить сеть и повторить прогон; это НЕ «записи нет» и НЕ сбой credential',
     ];
 
     public static function verdictFor(?string $class): ?string
