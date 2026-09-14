@@ -291,13 +291,24 @@ def check_grammar_lab(data_dir, report):
                     % (name, len(bad_dim), dim, bad_dim[0]))
 
 
+def guarded(name, check, report):
+    """A malformed snapshot row (a topic without `id`, a pack without `pin_path`) is a
+    compatibility failure, not a traceback that hides the FAIL lines gathered so far."""
+    try:
+        return check()
+    except (KeyError, TypeError, AttributeError, OSError) as exc:
+        report.fail('%s: malformed snapshot, check aborted on %s: %s'
+                    % (name, type(exc).__name__, exc))
+        return 0
+
+
 def run(root):
     data_dir = os.path.join(root, 'resources', 'data')
     report = Report()
     for name in FREEZE_DIRS:
-        count = check_freeze_dir(data_dir, name, report)
+        count = guarded(name, lambda n=name: check_freeze_dir(data_dir, n, report), report)
         print('checked %-22s %d pinned file(s)' % (name, count))
-    check_grammar_lab(data_dir, report)
+    guarded(GRAMMAR_LAB_DIR, lambda: check_grammar_lab(data_dir, report), report)
     print('checked %-22s taxonomy vs frozen queries, exercises, vectors' % GRAMMAR_LAB_DIR)
     return report
 
