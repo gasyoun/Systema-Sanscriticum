@@ -353,6 +353,18 @@ class Kernel extends ConsoleKernel
             ->onOneServer()
             ->name('support-sla-escalate');
 
+        // H4608: недельный дайджест MIC shadow-телеметрии — uncategorized
+        // top-50 + near-miss пары (G2 «телеметрия нулей»: пустой отчёт сам
+        // по себе сигнал «классификатор молчит»). Пишет только файл в
+        // storage, никому ничего не шлёт; гейт флага НЕ нужен — команда
+        // read-only и без телеметрии честно печатает «no rows».
+        $schedule->command('support:mic-null-digest')
+            ->weeklyOn(1, '6:55')
+            ->timezone('Europe/Moscow')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('mic-null-digest');
+
         // H4001 (Wave 3 leverage-плана): индексация FAQ-корпуса в
         // knowledge_chunks. Двойной гейт — флаг гибрида (OFF по умолчанию) И
         // настроенный драйвер эмбеддингов: пока dense-нога не включена
