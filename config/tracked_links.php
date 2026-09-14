@@ -21,7 +21,7 @@ $links = [];
 foreach ($channels as $channel => $attribution) {
     foreach (['s', 'v', 'c', 't', 'h'] as $creative) {
         $links["m26-{$channel}-{$creative}"] = [
-            'destination' => '/online/grammatika-gasuns',
+            'destination' => '/online/kursy/grammatika-gasuns-2026',
             'utm' => [
                 'utm_source' => $attribution['source'],
                 'utm_medium' => $attribution['medium'],
@@ -34,7 +34,7 @@ foreach ($channels as $channel => $attribution) {
 }
 
 $links['m26-schedule-c'] = [
-    'destination' => '/online/grammatika-gasuns',
+    'destination' => '/online/kursy/grammatika-gasuns-2026',
     'utm' => [
         'utm_source' => 'samskrte_schedule',
         'utm_medium' => 'onsite_cta',
