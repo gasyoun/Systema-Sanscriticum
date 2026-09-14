@@ -152,7 +152,10 @@ def main() -> int:
             compound = "-" in r["lemma"]
             member = r["form"].split("-")[-1] if "-" in r["form"] else r["form"]
             hit = pausa_hit(r["form"], gc) or (compound and "-" in r["form"] and pausa_hit(member, gc))
-            if hit:
+            defect = gold_form_defect(r["form"])
+            if defect:
+                cls, note = "G5_gold_form_defect", defect
+            elif hit:
                 cls, note = "G0_sandhi_surface", f"pausa form: {hit}"
             elif compound:
                 if "-" in r["form"] and has_cell(member, gc):
