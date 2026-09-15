@@ -32,6 +32,13 @@
             font-size: 10px;
             word-break: break-all;
         }
+        .skipped {
+            margin: 40mm 10mm;
+            padding: 12mm;
+            border: 1px dashed #999;
+            color: #666;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -52,7 +59,12 @@
                 <div>Страниц: {{ count($pages) }}</div>
             </div>
         @endif
-        <img src="{{ $page['data_uri'] }}" alt="{{ $page['name'] ?? '' }}">
+        @if(!empty($page['skipped']))
+            <div class="skipped">Страница пропущена: файл слишком большой для сборки PDF.
+                Откройте оригинал в кабинете.</div>
+        @else
+            <img src="{{ $page['data_uri'] }}" alt="{{ $page['name'] ?? '' }}">
+        @endif
         @if(!empty($page['name']))
             <div class="caption">{{ $page['name'] }} ({{ $i + 1 }}/{{ count($pages) }})</div>
         @endif
