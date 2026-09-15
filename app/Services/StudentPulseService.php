@@ -6,7 +6,6 @@ namespace App\Services;
 
 use App\Models\Payment;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -36,20 +35,15 @@ class StudentPulseService
 
     /**
      * Канонический фильтр плативших (согласован с FinanceCockpitReport /
-     * DebtorsReport): статус paid, НЕ conditional (обещание — не оплата), и
-     * tariff НЕ из не-выручечных ('Расход' — легаси-расходы школы,
-     * 'salary_payout' — выплаты ЗП; оба — не ученицкие деньги). Без этого
-     * фильтра знаменатель завышен: аддендум H4908 измерил +27 «неплательщиков»
-     * в всегda-числе (931 vs 904) и +10 в окне ≤120д (201 vs 191).
+     * DebtorsReport): статус из Payment::PAID_STATUSES, НЕ conditional
+     * (обещание — не оплата), tariff НЕ из не-выручечных ('Расход' —
+     * легаси-расходы школы, 'salary_payout' — выплаты ЗП; оба — не ученицкие
+     * деньги), amount > 0. Без этого фильтра знаменатель завышен: аддендум
+     * H4908 измерил +27 «неплательщиков» во «всего» (931 vs 904) и +10 в окне
+     * ≤120д (201 vs 191). Условия включены inline в каждый запрос сервиса —
+     * единая константа в PAYMENT_CANON_FILTER держит их синхронными.
      */
-    private function canonicalPayload(Builder $q): Builder
-    {
-        return $q->whereIn('status', Payment::PAID_STATUSES)
-            ->where('is_conditional', false)
-            ->where(fn ($x) => $x->whereNull('tariff')
-                ->orWhereNotIn('tariff', ['Расход', 'salary_payout']))
-            ->where('amount', '>', 0);
-    }
+    private const NON_REVENUE_TARIFFS = ['Расход', 'salary_payout'];
 
     /**
      * Ось «покрывает опорный блок» — единственная, отвечающая на «сколько
@@ -82,7 +76,7 @@ class StudentPulseService
             ->whereIn('payments.status', Payment::PAID_STATUSES)
             ->where('payments.is_conditional', false)
             ->where(fn ($x) => $x->whereNull('payments.tariff')
-                ->orWhereNotIn('payments.tariff', ['Расход', 'salary_payout']))
+                ->orWhereNotIn('payments.tariff', self::NON_REVENUE_TARIFFS))
             ->where('payments.amount', '>', 0)
             ->whereRaw('(
                     (payments.start_block IS NULL AND payments.end_block IS NULL)
@@ -202,7 +196,7 @@ class StudentPulseService
                 ->orWhereNotIn('users.role', self::STAFF_ROLES))
             ->where('payments.is_conditional', false)
             ->where(fn ($x) => $x->whereNull('payments.tariff')
-                ->orWhereNotIn('payments.tariff', ['Расход', 'salary_payout']))
+                ->orWhereNotIn('payments.tariff', self::NON_REVENUE_TARIFFS))
             ->where('payments.amount', '>', 0)
             ->distinct()
             ->count('payments.user_id');
@@ -224,7 +218,7 @@ class StudentPulseService
                         ->orWhereNotIn('users.role', self::STAFF_ROLES))
                     ->where('payments.is_conditional', false)
                     ->where(fn ($x) => $x->whereNull('payments.tariff')
-                        ->orWhereNotIn('payments.tariff', ['Расход', 'salary_payout']))
+                        ->orWhereNotIn('payments.tariff', self::NON_REVENUE_TARIFFS))
                     ->where('payments.amount', '>', 0)
                     ->select('payments.user_id')
                     ->groupBy('payments.user_id')
@@ -249,7 +243,7 @@ class StudentPulseService
                 ->whereNotNull('payments.user_id')
                 ->where('payments.is_conditional', false)
                 ->where(fn ($x) => $x->whereNull('payments.tariff')
-                    ->orWhereNotIn('payments.tariff', ['Расход', 'salary_payout']))
+                    ->orWhereNotIn('payments.tariff', self::NON_REVENUE_TARIFFS))
                 ->where('payments.amount', '>', 0))
             ->where(fn ($q) => $q->whereNull('users.role')
                 ->orWhereNotIn('users.role', self::STAFF_ROLES))
