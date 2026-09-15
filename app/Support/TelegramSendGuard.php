@@ -106,6 +106,19 @@ final class TelegramSendGuard
         }
     }
 
+    /** Отпустить клейм по произвольному ключу — Telegram ОТВЕТИЛ отказом, доставки не было. */
+    public static function releaseKey(string $key): void
+    {
+        try {
+            Redis::del($key);
+        } catch (\Throwable $exception) {
+            Log::warning('TelegramSendGuard: release failed (redis unavailable)', [
+                'key' => $key,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
     /**
      * Уходил ли этот (chat_id, текст) за окно TTL — чтобы ручная отправка
      * могла предупредить куратора, а не молча утонуть в claim() джоба.
