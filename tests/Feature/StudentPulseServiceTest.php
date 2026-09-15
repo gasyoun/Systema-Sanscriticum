@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\Group;
 use App\Models\Payment;
+use App\Models\Schedule;
 use App\Models\User;
 use App\Services\DelegationKpiService;
 use App\Services\StudentPulseService;
@@ -120,15 +122,43 @@ class StudentPulseServiceTest extends TestCase
 
         $lines = $this->svc->pulseLines($this->asOf);
 
-        $this->assertCount(8, $lines);
+        $this->assertCount(9, $lines);
         $this->assertStringContainsString('опорный блок', $lines[0]);
-        $this->assertStringContainsString('платил ≤90 дн — 1', $lines[3]);
-        $this->assertStringContainsString('≥2 оплат за ≤120 дн — 1', $lines[5]);
-        $this->assertStringContainsString('всего плативших когда-либо — 1', $lines[7]);
+        $this->assertStringContainsString('платил ≤90 дн — 1', $lines[4]);
+        $this->assertStringContainsString('≥2 оплат за ≤120 дн — 1', $lines[6]);
+        $this->assertStringContainsString('всего плативших когда-либо — 1', $lines[8]);
 
         $headline = $this->svc->headlineFromSnapshot($this->svc->snapshot($this->asOf));
         $this->assertStringContainsString('≤90 дн: 1', $headline);
         $this->assertStringContainsString('опорный блок: 0', $headline); // без курсов/блоков в фикстуре
+        $this->assertStringContainsString('учится+платит: 0', $headline); // без групп/расписаний
+    }
+
+    /** @test */
+    public function learning_and_paying_requires_live_group_with_schedule(): void
+    {
+        $group = Group::create(['name' => 'Живая группа']);
+        $dead = Group::create(['name' => 'Мёртвая группа']);
+
+        $live = User::factory()->create();
+        $this->paid($live, '10');
+        $group->users()->attach($live->id);
+
+        $stale = User::factory()->create(); // в мёртвой группе (занятий нет) — не считается
+        $this->paid($stale, '10');
+        $dead->users()->attach($stale->id);
+
+        $payingOnly = User::factory()->create(); // живая группа есть, но оплаты нет
+        $group->users()->attach($payingOnly->id);
+
+        Schedule::create([
+            'title' => 'Урок', 'group_id' => $group->id,
+            'start' => $this->asOf->copy()->subDay(),
+        ]);
+
+        $snap = $this->svc->snapshot($this->asOf);
+
+        $this->assertSame(1, $snap['learning_and_paying']); // только live
     }
 
     /** @test */
@@ -144,7 +174,7 @@ class StudentPulseServiceTest extends TestCase
         $this->assertNotNull($pulseCard);
         $this->assertSame('gray', $pulseCard['level']);
         $this->assertStringContainsString('≤90 дн: 1', $pulseCard['value']);
-        $this->assertCount(8, $snap['pulse_lines']);
-        $this->assertStringContainsString('платил ≤120 дн — 1', $snap['pulse_lines'][4]);
+        $this->assertCount(9, $snap['pulse_lines']);
+        $this->assertStringContainsString('платил ≤120 дн — 1', $snap['pulse_lines'][5]);
     }
 }

@@ -118,6 +118,7 @@ class StudentPulseService
             'paid_120d' => $this->distinctPayers($asOf, 120),
             'paid_365d' => $this->distinctPayers($asOf, 365),
             'repeat_120d' => $this->repeatPayersWindow($asOf, 120),
+            'learning_and_paying' => $this->learningAndPaying($asOf),
             'cabinet_active_30d' => $this->cabinetActiveAmongPayers($asOf, 30),
             'covering_ref_block' => $this->coveringReferenceBlock(),
         ];
@@ -146,6 +147,7 @@ class StudentPulseService
     {
         return [
             sprintf('СЕЙЧАС на оплаченном блоке курса (опорный блок) — %d', $snap['covering_ref_block']),
+            sprintf('учится в живой группе (занятие ±14 дн) И платил ≤90 дн — %d', $snap['learning_and_paying']),
             sprintf('платил ≤30 дн — %d', $snap['paid_30d']),
             sprintf('платил ≤60 дн — %d', $snap['paid_60d']),
             sprintf('платил ≤90 дн — %d', $snap['paid_90d']),
@@ -173,7 +175,8 @@ class StudentPulseService
     public function headlineFromSnapshot(array $snap): string
     {
         return sprintf(
-            'опорный блок: %d · ≤90 дн: %d · всего: %d',
+            'учится+платит: %d · опорный блок: %d · ≤90 дн: %d · всего: %d',
+            $snap['learning_and_paying'],
             $snap['covering_ref_block'],
             $snap['paid_90d'],
             $snap['paid_ever'],
@@ -228,6 +231,45 @@ class StudentPulseService
             )
             ->selectRaw('COUNT(*) AS n')
             ->value('n');
+    }
+
+    /**
+     * Ось «учится сейчас И оплатил» (аддендум 15-09, PR #2816): ученик в живой
+     * группе (есть занятие в `schedules` за ±14 дней) И имеет канон-оплату ≤90
+     * дн. Число 103 на 15-09, устойчиво 98–106 при любом разумном окне «жива».
+     * Это самое близкое к бытовому «активные платные ученики» — но канон всё
+     * ещё выбирает MG словом; строка идёт рядом с остальными.
+     */
+    private function learningAndPaying(Carbon $asOf, int $payDays = 90, int $scheduleDays = 14): int
+    {
+        $since = $asOf->copy()->subDays($scheduleDays);
+
+        return (int) User::query()
+            ->whereIn('users.id', function ($q) use ($payDays, $asOf) {
+                $q->select('payments.user_id')
+                    ->from('payments')
+                    ->whereIn('payments.status', Payment::PAID_STATUSES)
+                    ->where('payments.is_conditional', false)
+                    ->where('payments.amount', '>', 0)
+                    ->where(fn ($x) => $x->whereNull('payments.tariff')
+                        ->orWhereNotIn('payments.tariff', self::NON_REVENUE_TARIFFS))
+                    ->where('payments.created_at', '>=', $asOf->copy()->subDays($payDays));
+            })
+            ->whereIn('users.id', function ($q) use ($since) {
+                $q->select('gu.user_id')
+                    ->from('group_user as gu')
+                    ->whereNull('gu.left_at')
+                    ->whereExists(function ($x) use ($since) {
+                        $x->select(DB::raw(1))
+                            ->from('schedules as s')
+                            ->whereColumn('s.group_id', 'gu.group_id')
+                            ->whereNull('s.deleted_at')
+                            ->where('s.start', '>=', $since);
+                    });
+            })
+            ->where(fn ($q) => $q->whereNull('users.role')
+                ->orWhereNotIn('users.role', self::STAFF_ROLES))
+            ->count();
     }
 
     /**
