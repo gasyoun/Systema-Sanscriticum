@@ -1,6 +1,6 @@
 # Telegram-боты и TG-аккаунты в Systema Sanscriticum
 
-_Created: 30-07-2026 · Last updated: 07-09-2026_
+_Created: 30-07-2026 · Last updated: 15-09-2026_
 
 Инвентарь **Bot API-ботов**, **landing-ботов** и **userbot-аккаунта** (MadelineProto),
 которые использует LMS на `samskrte.ru`.  
@@ -92,11 +92,12 @@ Grok в «Отделе заботы»      →  @grokusaurus_bot     (ПК Ма�
 | **Хранение** | `MarketingSetting.zapisi_bot_username`, `zapisi_bot_token`, `zapisi_webhook_secret`, `zapisi_chat_id`, шаблон напоминания |
 | **Флаг** | `TELEGRAM_ZAPISI_BOT_ENABLED` / `features.telegram_zapisi_bot` (прод: **true**) |
 | **Прод username** | `@zapisi_ORSbot` |
-| **Приём апдейтов** | штатно webhook через входной узел (`allowed_updates: message, channel_post, my_chat_member` — H4314); аварийно long-poll `zapisi:poll` (`TELEGRAM_ZAPISI_POLL_ENABLED`, default false) |
+| **Приём апдейтов** | штатно webhook через входной узел; аварийно long-poll `zapisi:poll` (`TELEGRAM_ZAPISI_POLL_ENABLED`, default false). `allowed_updates` — одна константа `TelegramWebhooks::ZAPISI_ALLOWED_UPDATES`: `message, channel_post, my_chat_member` (H4314), `callback_query` (кнопки отмены H4519 / выбора урока #ДЗ — до 15-09-2026 не запрашивались, кнопки молчали), `poll_answer` (голоса в опросах). **Сменился список ⇒ после деплоя `php artisan zapisi:set-webhook` на проде.** |
 | **Config** | `config('services.telegram_zapisi')` |
 | **Приветственная карточка** | при добавлении бота в чат: 1 раз в сутки на чат (см. ниже, H4314–H4318) |
+| **Опросы** | «Записи (бот)» → «Опросы» / «Опрос в чат» на строке учебной группы: `sendPoll` (не анонимный), голоса `poll_answer` → `telegram_poll_answers` поимённо (студент по `users.telegram_id` / `social_accounts`), «Закрыть опрос» = `stopPoll` (15-09-2026) |
 
-**Назначение:** чат бронирования занятий, напоминания, дашборд Filament «Записи (бот)»,
+**Назначение:** чат бронирования занятий, напоминания, опросы, дашборд Filament «Записи (бот)»,
 roster/harvest peer (совместно с Track B), приветственная карточка чата.
 
 #### Приветственная карточка чата (H4314–H4318, 07-09-2026)

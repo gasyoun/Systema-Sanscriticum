@@ -89,8 +89,8 @@ class TelegramWebhookRegistry
             token: $token,
             secret: $secret,
             url: TelegramWebhooks::url('/api/webhooks/telegram-zapisi'),
-            // Группа шлёт message, канал — channel_post (как в zapisi:set-webhook).
-            allowedUpdates: ['message', 'channel_post'],
+            // Тот же список, что у zapisi:set-webhook и zapisi:poll.
+            allowedUpdates: TelegramWebhooks::ZAPISI_ALLOWED_UPDATES,
             problem: $this->problemFor($token, $secret, 'MarketingSetting.zapisi_bot_token', 'MarketingSetting.zapisi_webhook_secret'),
         );
     }
