@@ -229,17 +229,13 @@ class HomeworkImagesPdfTest extends TestCase
         $bytes = (string) ob_get_clean();
         imagedestroy($big);
 
-        $method = new \ReflectionMethod(HomeworkImagePdfService::class, 'normalizeToDompdfImage');
-        $method->setAccessible(true);
+        $converted = app(HomeworkImagePdfService::class)->convertToPdfJpeg($bytes, 'image/jpeg');
 
-        $converted = $method->invoke(app(HomeworkImagePdfService::class), $bytes, 'image/jpeg');
+        $this->assertIsString($converted);
 
-        $this->assertIsArray($converted);
-        $this->assertSame('image/jpeg', $converted['mime']);
-
-        [$width, $height] = getimagesizefromstring($converted['bytes']);
+        [$width, $height] = getimagesizefromstring($converted);
         $this->assertLessThanOrEqual(800, max($width, $height));
-        $this->assertLessThan(strlen($bytes), strlen($converted['bytes']));
+        $this->assertLessThan(strlen($bytes), strlen($converted));
     }
 
     /**
@@ -250,15 +246,12 @@ class HomeworkImagesPdfTest extends TestCase
      */
     public function unreadable_oversized_frame_is_skipped_not_embedded_raw(): void
     {
-        config(['homework.image_pdf.raw_passthrough_max_kb' => 1]);
-
-        $method = new \ReflectionMethod(HomeworkImagePdfService::class, 'normalizeToDompdfImage');
-        $method->setAccessible(true);
-
         $garbage = str_repeat('x', 200 * 1024);
 
+        // Проход сырых байт убран целиком (H4858): нечитаемый кадр
+        // возвращает null — «пропустить», а не «вклеить как есть».
         $this->assertNull(
-            $method->invoke(app(HomeworkImagePdfService::class), $garbage, 'image/heic'),
+            app(HomeworkImagePdfService::class)->convertToPdfJpeg($garbage, 'image/heic'),
         );
     }
 

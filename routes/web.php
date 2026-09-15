@@ -48,6 +48,7 @@ use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaypalClaimController;
+use App\Http\Controllers\PlacementQuizController;
 use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\PromoController;
@@ -1059,6 +1060,15 @@ Route::post('/deposit/{course:slug}', [DepositController::class, 'create'])
 Route::post('/trial/{course:slug}', [TrialController::class, 'create'])
     ->middleware('throttle:5,1')
     ->name('trial.create');
+
+// H4818 (R2609-01): F2 rung-placement квиз — отдельный шаг ДО формы пробного.
+// Оба маршрута 404, пока features.f2_placement_quiz выключен (default).
+// Пишет только в сессию — Deal/Payment не трогает. Строго до catch-all /{slug}.
+Route::get('/rung-placement', [PlacementQuizController::class, 'show'])
+    ->name('placement.quiz.show');
+Route::post('/rung-placement', [PlacementQuizController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('placement.quiz.store');
 
 // Оплата из-за рубежа (PayPal): форма-заявка студента + приём. Автосписания нет —
 // платёж ложится pending и сверяется вручную в админке. Строго до catch-all /{slug}.
