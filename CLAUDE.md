@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-_Created: 07-05-2026 · Last updated: 14-09-2026_
+_Created: 07-05-2026 · Last updated: 16-09-2026_
 
 **Systema-Sanscriticum** is the Laravel LMS for [samskrte.ru](https://samskrte.ru)
 (cabinet, shop, homework, finance, Telegram/VK bots). Org spine applies; this
@@ -191,5 +191,9 @@ generated block. Check before writing anything.
 - **Issue tracker:** GitHub Issues via `gh`; PRs NOT triage. `docs/agents/issue-tracker.md`.
 - **Triage labels:** `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. `docs/agents/triage-labels.md`.
 - **Domain docs:** root `CONTEXT.md`+`docs/adr/`, lazy. `docs/agents/domain.md`.
+
+## Memory store
+
+This repo keeps a committed memory store at [`.claude/projects/Systema-Sanscriticum/memory/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/.claude/projects/Systema-Sanscriticum/memory) per the org Memory-routing rule ([`/danger-memory`](https://github.com/gasyoun/claude-config/blob/main/commands/danger-memory.md)) — write dangerous/durable facts there and index each in its `MEMORY.md` (H4547).
 
 _Dr. Mārcis Gasūns_
