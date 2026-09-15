@@ -206,11 +206,24 @@ final class ShellSystemInspector implements SystemInspector
             return null;
         }
 
+        // 0bn (15-09-2026): аудит читает только ЛИСТИНГ, поэтому WebDAV-диски
+        // читаются через *_readonly_probe близнеца (curl-потолок 45 с, клиент в
+        // AppServiceProvider), а не через боевой диск с PUT-потолком 300 с —
+        // stash cache-miss здесь не может держать probe >120 с (WATCHDOG TIMEOUT
+        // 14-09 ×5 + 15-09 repro). local и прочие не-WebDAV диски идут как есть.
+        $readDiskOf = [];
+        foreach ($disks as $disk) {
+            $probeDisk = $disk.'_readonly_probe';
+            $readDiskOf[$disk] = (string) config("filesystems.disks.$probeDisk.driver", '') !== ''
+                ? $probeDisk
+                : $disk;
+        }
+
         $rows = [];
         foreach ($disks as $disk) {
             $disk = (string) $disk;
             try {
-                $destination = BackupDestination::create($disk, $name);
+                $destination = BackupDestination::create($readDiskOf[$disk], $name);
                 $reachable = $destination->isReachable();
                 $backups = $reachable ? $destination->backups() : null;
                 $newest = $backups?->newest();

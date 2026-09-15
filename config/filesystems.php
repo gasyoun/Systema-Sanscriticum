@@ -84,6 +84,21 @@ return [
             'prefix' => env('YANDEX_DISK_BACKUP_PATH', '/Backups/systema-sanscriticum'),
         ],
 
+        // Читающий близнец yandex_disk ТОЛЬКО для probe/guards-ноги (0bn,
+        // 15-09-2026): sabre-клиент этого диска рвёт чтение за 45 с — stash
+        // backup-fresh (cache-miss раз в час из cabinet:probe) больше не может
+        // висеть >120 с и быть убитым watchdog-обёрткой сторожа (14-09 ×5:
+        // WATCHDOG TIMEOUT, каждый тик = нет результата пробы и нет heartbeat).
+        // PUT-каналу выгрузки остаётся боевой диск yandex_disk с TIMEOUT=300.
+        // Не использовать для записи: клиент существует ради read-листинга.
+        'yandex_disk_readonly_probe' => [
+            'driver' => 'webdav_probe',
+            'baseUri' => env('YANDEX_DISK_WEBDAV_URL', 'https://webdav.yandex.ru'),
+            'username' => env('YANDEX_DISK_LOGIN'),
+            'password' => env('YANDEX_DISK_APP_PASSWORD'),
+            'prefix' => env('YANDEX_DISK_BACKUP_PATH', '/Backups/systema-sanscriticum'),
+        ],
+
     ],
 
     /*
