@@ -151,7 +151,7 @@ def main() -> int:
                     help="max lines in the single permitted moved block")
     args = ap.parse_args()
     ok_text = text_check(args.base_ref, args.allow_moved)
-    ok_json = json_check(args.before, args.after)
+    ok_json = json_check(args.base_ref, args.before, args.after)
     print("OVERALL:", "PASS" if ok_text and ok_json else "FAIL")
     return 0 if ok_text and ok_json else 1
 
