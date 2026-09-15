@@ -10,7 +10,9 @@ Two independent checks, both must pass:
            present verbatim; the only permitted difference is the declared
            parked block moving position (--allow-moved).
 2. json  — `php artisan route:list --json` captured on --base-ref (before)
-           and on the branch (after) must be byte-identical.
+           and on the branch (after) must be byte-identical once the `path`
+           field (file:line of a closure, which the split moves by design)
+           is dropped; every moved closure must point at the same source line.
 
 Usage:
     python docs/evidence/h4860/route_parity.py --base-ref origin/main \
