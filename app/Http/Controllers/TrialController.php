@@ -10,6 +10,7 @@ use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\AttributionService;
+use App\Services\Crm\TrialBookingService;
 use App\Services\Payments\TochkaPaymentService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
@@ -59,6 +60,18 @@ final class TrialController extends Controller
                 'end_block' => null,
             ]);
         });
+
+        // H4818 (R2609-01): F2 placement-quiz результат из сессии (квиз пройден
+        // на отдельном шаге ДО этой формы) -> Deal.placement_rung. Deal-only,
+        // после коммита платёжной транзакции, платёж/Точку не трогает. Флаг OFF
+        // (по умолчанию) или пустая сессия -> блок no-op, поведение не меняется.
+        if (config('features.f2_placement_quiz') && session()->has('placement_rung')) {
+            $trialBooking = app(TrialBookingService::class);
+            $deal = $trialBooking->tagPaidPayment($payment);
+            if ($deal !== null) {
+                $trialBooking->recordPlacementRung($deal, session('placement_rung'));
+            }
+        }
 
         // Purpose должен включать «Заказ №{id}» — иначе вебхук Tochka не найдёт платёж.
         $purpose = 'Заказ №'.$payment->id.' | Пробное занятие курса «'.$course->title.'»';
