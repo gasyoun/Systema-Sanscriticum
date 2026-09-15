@@ -102,21 +102,44 @@ def text_check(ref: str, allow_moved: int) -> bool:
     return ok
 
 
-def json_check(before_path: Path, after_path: Path) -> bool:
-    b, a = before_path.read_bytes(), after_path.read_bytes()
-    hb, ha = hashlib.sha256(b).hexdigest(), hashlib.sha256(a).hexdigest()
-    n = len(json.loads(b))
-    print(f"[json] before sha256 {hb} ({len(b)} bytes, {n} routes)")
-    print(f"[json] after  sha256 {ha} ({len(a)} bytes, {len(json.loads(a))} routes)")
-    if b == a:
-        print("[json] PASS — route:list --json byte-identical (name, method, uri, middleware, action)")
-        return True
-    print("[json] FAIL — diff:")
-    sys.stdout.writelines(difflib.unified_diff(
-        json.dumps(json.loads(b), indent=1, ensure_ascii=False).splitlines(True),
-        json.dumps(json.loads(a), indent=1, ensure_ascii=False).splitlines(True),
-        "before", "after"))
-    return False
+def source_line(ref: str | None, path: str) -> str:
+    """Text of `file:line` — from git `ref` (before) or the working tree (after)."""
+    file, line = path.rsplit(":", 1)
+    if ref:
+        text = subprocess.run(["git", "-C", str(ROOT), "show", f"{ref}:{file}"],
+                              capture_output=True, text=True, encoding="utf-8",
+                              check=True).stdout
+    else:
+        text = (ROOT / file).read_text(encoding="utf-8")
+    return text.splitlines()[int(line) - 1].strip()
+
+
+def json_check(ref: str, before_path: Path, after_path: Path) -> bool:
+    """`path` (file:line of a closure) necessarily moves with the split, so the
+    byte comparison runs on route:list with `path` dropped; each moved closure
+    is then proven to point at the identical source line."""
+    before, after = json.loads(before_path.read_bytes()), json.loads(after_path.read_bytes())
+    strip = lambda rows: json.dumps([{k: v for k, v in r.items() if k != "path"} for r in rows],
+                                    ensure_ascii=False).encode("utf-8")
+    b, a = strip(before), strip(after)
+    for label, blob, rows in (("before", b, before), ("after ", a, after)):
+        print(f"[json] {label} sha256 {hashlib.sha256(blob).hexdigest()} "
+              f"({len(rows)} routes, `path` dropped)")
+    if b != a:
+        print("[json] FAIL — diff:")
+        sys.stdout.writelines(difflib.unified_diff(
+            json.dumps(json.loads(b), indent=1, ensure_ascii=False).splitlines(True),
+            json.dumps(json.loads(a), indent=1, ensure_ascii=False).splitlines(True),
+            "before", "after"))
+        return False
+    print("[json] PASS — route:list --json byte-identical on domain, method, uri, name, action, middleware")
+    moved = [(r0["path"], r1["path"]) for r0, r1 in zip(before, after)
+             if r0.get("path") != r1.get("path")]
+    bad = [(p0, p1) for p0, p1 in moved if source_line(ref, p0) != source_line(None, p1)]
+    print(f"[json] closure `path` relocated: {len(moved)}; source line differs: {len(bad)}")
+    for p0, p1 in bad:
+        print(f"         {p0} -> {p1}")
+    return not bad
 
 
 def main() -> int:
