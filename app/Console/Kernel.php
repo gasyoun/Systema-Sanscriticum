@@ -152,14 +152,15 @@ class Kernel extends ConsoleKernel
 
     }
 
-    /** weekly finance/homework/goals digests (Monday morning frame). */
+    /** finance/homework/goals digests (daily finance frame; homework/goals weekly). */
     private function scheduleWeeklyDigests(Schedule $schedule): void
     {
-        // Недельный KPI-дайджест делегирования (H259, фаза D): сводка всех фаз
-        // финдиру по понедельникам утром — «ритм обзора» с зубами. Гейт «есть
-        // получатели» — внутри команды.
+        // Ежедневный KPI-дайджест делегирования (H259 фаза D; с H4908 —
+        // ежедневно по рулингу MG 15-09-2026): сводка всех фаз финдиру каждое
+        // утро, включая пульс «активные платные ученики» строками — «ритм
+        // обзора» с зубами. Гейт «есть получатели» — внутри команды.
         $schedule->command('finance:kpi-digest')
-            ->weeklyOn(1, '09:00')
+            ->dailyAt('08:40')
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('finance-kpi-digest');
