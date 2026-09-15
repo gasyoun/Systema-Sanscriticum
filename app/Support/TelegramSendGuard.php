@@ -88,6 +88,43 @@ final class TelegramSendGuard
     }
 
     /**
+     * Продлить уже взятый клейм. Схема «клейм на время полёта»: сначала
+     * короткий claimKey() (переживёт только сам диспатч), после успешного
+     * диспатча — продление до полного окна. Умер процесс между клеймом и
+     * диспатчем (деплой, OOM) — короткий ключ истечёт и следующий прогон
+     * повторит, а не «помнит» неотправленное целую неделю (инцидент 14-09-2026).
+     */
+    public static function extendKey(string $key, int $ttlSeconds): void
+    {
+        try {
+            Redis::expire($key, max(1, $ttlSeconds));
+        } catch (\Throwable $exception) {
+            Log::warning('TelegramSendGuard: extend failed (redis unavailable)', [
+                'key' => $key,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Уходил ли этот (chat_id, текст) за окно TTL — чтобы ручная отправка
+     * могла предупредить куратора, а не молча утонуть в claim() джоба.
+     * Redis недоступен — false (как и claim, не блокируем отправку).
+     */
+    public static function isClaimed(string $chatId, string $text): bool
+    {
+        try {
+            return (bool) Redis::exists(self::key($chatId, $text));
+        } catch (\Throwable $exception) {
+            Log::warning('TelegramSendGuard: exists check failed (redis unavailable)', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
      * Дедуп входящего Telegram-апдейта по update_id: ределивери вебхука после
      * медленного/упавшего обработчика и повторный приём поллером не должны
      * приводить к повторной обработке (двойной ответ бота, двойной форвард).

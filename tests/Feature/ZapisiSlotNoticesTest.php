@@ -7,6 +7,8 @@ namespace Tests\Feature;
 use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\Group;
 use App\Models\Schedule;
+use App\Services\Telegram\SlotNoticeService;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Queue;
@@ -55,7 +57,10 @@ class ZapisiSlotNoticesTest extends TestCase
     public function test_no_lesson_today_notice_in_usual_slot(): void
     {
         Carbon::setTestNow('2026-09-08 14:02:00');
-        Redis::shouldReceive('set')->once()->andReturn(true);
+        Redis::shouldReceive('set')->once()
+            ->with('tg:nolesson:'.self::CHAT_ID.':2026-09-08', \Mockery::any(), 'EX', 900, 'NX')
+            ->andReturn(true);
+        Redis::shouldReceive('expire')->once()->with('tg:nolesson:'.self::CHAT_ID.':2026-09-08', 86400);
         $group = $this->groupWithChat();
         $this->seedWeeklyChain($group->id);
 
@@ -86,9 +91,12 @@ class ZapisiSlotNoticesTest extends TestCase
     public function test_payment_reminder_after_fourth_lesson_of_block(): void
     {
         Carbon::setTestNow('2026-09-08 15:05:00');
-        Redis::shouldReceive('set')->once()->andReturn(true);
         $group = $this->groupWithChat();
-        Schedule::create(['title' => 'Рецитация (#4, 08.09.26)', 'start' => '2026-09-08 14:00:00', 'end' => '2026-09-08 15:00:00', 'group_id' => $group->id]);
+        $block = Schedule::create(['title' => 'Рецитация (#4, 08.09.26)', 'start' => '2026-09-08 14:00:00', 'end' => '2026-09-08 15:00:00', 'group_id' => $group->id]);
+        Redis::shouldReceive('set')->once()
+            ->with('tg:blockpay:'.$block->id, \Mockery::any(), 'EX', 900, 'NX')
+            ->andReturn(true);
+        Redis::shouldReceive('expire')->once()->with('tg:blockpay:'.$block->id, 604800);
         Schedule::create(['title' => 'Рецитация (#5, 15.09.26)', 'start' => '2026-09-15 15:00:00', 'end' => '2026-09-15 16:30:00', 'group_id' => $group->id]);
         Schedule::create(['title' => 'Рецитация (#7, 29.09.26)', 'start' => '2026-09-29 15:00:00', 'end' => '2026-09-29 16:30:00', 'group_id' => $group->id]);
 
@@ -120,6 +128,7 @@ class ZapisiSlotNoticesTest extends TestCase
     {
         Carbon::setTestNow('2026-09-08 15:05:00');
         Redis::shouldReceive('set')->twice()->andReturn(true, false);
+        Redis::shouldReceive('expire')->once();
         $group = $this->groupWithChat();
         Schedule::create(['title' => 'Рецитация (#4, 08.09.26)', 'start' => '2026-09-08 14:00:00', 'end' => '2026-09-08 15:00:00', 'group_id' => $group->id]);
         Schedule::create(['title' => 'Рецитация (#5, 15.09.26)', 'start' => '2026-09-15 15:00:00', 'end' => '2026-09-15 16:30:00', 'group_id' => $group->id]);
@@ -128,5 +137,32 @@ class ZapisiSlotNoticesTest extends TestCase
         $this->artisan('zapisi:slot-notices')->assertSuccessful();
 
         Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+    }
+
+    /**
+     * 14-09-2026: процесс умер между клеймом и диспатчем (автодеплой) —
+     * напоминание не ушло, а недельный клейм запрещал повтор. Теперь клейм
+     * продлевается только ПОСЛЕ диспатча: упал диспатч — остаётся короткий
+     * 15-минутный ключ, и следующий прогон повторит.
+     */
+    public function test_claim_stays_short_when_dispatch_dies(): void
+    {
+        Carbon::setTestNow('2026-09-08 15:05:00');
+        Redis::shouldReceive('set')->once()
+            ->with(\Mockery::pattern('/^tg:blockpay:\d+$/'), \Mockery::any(), 'EX', 900, 'NX')
+            ->andReturn(true);
+        Redis::shouldReceive('expire')->never();
+        $this->mock(Dispatcher::class, fn ($mock) => $mock->shouldReceive('dispatch')
+            ->andThrow(new \RuntimeException('process killed mid-deploy')));
+        $group = $this->groupWithChat();
+        Schedule::create(['title' => 'Рецитация (#4, 08.09.26)', 'start' => '2026-09-08 14:00:00', 'end' => '2026-09-08 15:00:00', 'group_id' => $group->id]);
+        Schedule::create(['title' => 'Рецитация (#5, 15.09.26)', 'start' => '2026-09-15 15:00:00', 'end' => '2026-09-15 16:30:00', 'group_id' => $group->id]);
+
+        try {
+            app(SlotNoticeService::class)->blockPaymentReminders();
+            $this->fail('dispatch должен был упасть');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('process killed mid-deploy', $e->getMessage());
+        }
     }
 }
