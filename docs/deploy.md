@@ -78,15 +78,20 @@ _Created: 02-07-2026 · Last updated: 31-08-2026_
    Filament-компонентов `optimize:clear` не трогает — без явного сброса новый
    виджет/страница падает `ComponentNotFoundException` на update-запросе)
    → `php artisan migrate --force`.
-6. Прогрев: `php artisan optimize` (config/route/view) + `filament:optimize`.
-   Then, if deploy is running as root, `chown -R www-data:www-data storage/framework/views`.
-   `optimize` writes compiled Blade as root; php-fpm is www-data. Without the
-   chown, the next Blade recompile does `touch()` and 500s Filament `/admin`
-   (`Utime failed: Operation not permitted`, 17-08-2026). Homepage stays 200.
-   The same chown must run **before** `fail` when `cabinet:probe --fail-on-critical`
-   exits 1: `fail` is `exit 1`, so a post-probe chown after `|| fail` never
-   runs. 19-08-2026 21:01Z left 8 `root:root` compiled views that way; 20-08
-   SOS Filament `/admin` 500 until a manual chown (H3194).
+6. Прогрев: **от FPM-пользователя** (`runuser -u www-data`) — `artisan optimize`
+   (config/route/view) + `filament:optimize`. Root-овый прогрев и был классом
+   «/admin 500»: `optimize` писал compiled Blade как `root:755`, php-fpm
+   (www-data) не мог `touch()`-нуть вьюху (`Utime failed: Operation not
+   permitted`, `BladeCompiler.php:215`), и Filament `/admin` отдавал 500 в окне
+   до chown (17-08, 20-08, 09-09, **14-09-2026** — тот авто-деплой шёл 18:00:01–
+   18:02:47 UTC, и всё это время `/admin` был сломан). С H4848 прогрев идёт от
+   www-data, поэтому root вьюху вообще не создаёт: окна нет по построению, а не
+   «уже». `chown_compiled_views` остаётся страховкой для root-овых шагов
+   (`guards:verify`) и **обязан** стоять перед `fail`, когда
+   `cabinet:probe --fail-on-critical` выходит 1: `fail` — это `exit 1`, и chown
+   после `|| fail` не выполнится (H3194; 19-08-2026 21:01Z оставил 8 root-овых
+   вьюх именно так). Финальный гард `assert_no_root_views` роняет деплой, если
+   хоть один файл под `storage/framework/views` остался не нашим.
 7. **`systemctl reload php{ver}-fpm`** — сброс OPcache (версия PHP определяется
    автоматически, переживет апгрейд 8.1 → 8.3).
 8. `supervisorctl restart horizon` — `horizon:terminate` на этом проде воркеры
@@ -99,6 +104,20 @@ _Created: 02-07-2026 · Last updated: 31-08-2026_
    уводит бота с рабочей дорожки. Не `fail`: без демона сайт работает.
 9. Смоук: `curl` главной страницы, ожидается 200; иначе скрипт падает.
 10. Строка в `storage/logs/deploys.log`: дата, диапазон коммитов, версия PHP, кто.
+
+## Правка `deploy.sh` вступает в силу только со СЛЕДУЮЩЕГО прогона
+
+Проверено канарейкой H4848 (15-09-2026), и это неочевидно: деплой, который
+*привозит* правку `deploy.sh`, исполняет ещё **старую** версию. Обёртка запускает
+`bash deploy.sh`, bash читает файл по мере исполнения, а `git pull` внутри
+скрипта подменяет файл на диске — уже открытый дескриптор продолжает указывать
+на прежний inode, поэтому до конца прогона работает старый код. Наблюдение в
+цифрах: прогон, привёзший фикс H4848, ещё показывал окно root-овых вьюх
+(05:21:31–05:24:04 UTC, до 716 файлов `root:root`), а следующий прогон с уже
+лежащим на диске фиксом — **ноль** root-овых файлов во всех 191 замерах при
+пересобранном кэше (1 → 717 → 725 файлов). Практический вывод: после правки
+`deploy.sh` обязательно нужен второй прогон, и «фикс не сработал» на первом —
+ожидаемое поведение, а не регресс.
 
 ## Nginx: статика `/lila/` (index.html) + redirect с `/exercises/`
 
