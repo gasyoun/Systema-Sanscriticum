@@ -6,7 +6,9 @@ namespace App\Services;
 
 use App\Models\Payment;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Ежедневный пульс «активные платные ученики» (H4908).
@@ -31,6 +33,68 @@ class StudentPulseService
 {
     /** Роли staff — исключаются из всех знаменателей пульса. */
     public const STAFF_ROLES = ['super_admin', 'manager', 'accountant', 'teacher'];
+
+    /**
+     * Канонический фильтр плативших (согласован с FinanceCockpitReport /
+     * DebtorsReport): статус paid, НЕ conditional (обещание — не оплата), и
+     * tariff НЕ из не-выручечных ('Расход' — легаси-расходы школы,
+     * 'salary_payout' — выплаты ЗП; оба — не ученицкие деньги). Без этого
+     * фильтра знаменатель завышен: аддендум H4908 измерил +27 «неплательщиков»
+     * в всегda-числе (931 vs 904) и +10 в окне ≤120д (201 vs 191).
+     */
+    private function canonicalPayload(Builder $q): Builder
+    {
+        return $q->whereIn('status', Payment::PAID_STATUSES)
+            ->where('is_conditional', false)
+            ->where(fn ($x) => $x->whereNull('tariff')
+                ->orWhereNotIn('tariff', ['Расход', 'salary_payout']))
+            ->where('amount', '>', 0);
+    }
+
+    /**
+     * Ось «покрывает опорный блок» — единственная, отвечающая на «сколько
+     * учеников СЕЙЧАС на оплаченном курсе» в блок-оплатной школе (аддендум
+     * H4908). Опорный блок курса берётся у DebtorsReport::referenceBlocks()
+     * (не переизобретать датировку блоков в SQL). Живой замер 15-09: ≈215.
+     */
+    private function coveringReferenceBlock(): int
+    {
+        $refs = app(DebtorsReport::class)->referenceBlocks();
+
+        if ($refs->isEmpty()) {
+            return 0;
+        }
+
+        // Int-литералы встроены прямо в SQL: пара (course_id, ref_number) —
+        // целые из доверенной коллекции models, инъекции неоткуда взяться,
+        // а bindings в join(DB::raw()) не доезжают.
+        $parts = [];
+        foreach ($refs as $courseId => $block) {
+            $parts[] = sprintf('SELECT %d AS course_id, %d AS ref_number', (int) $courseId, (int) $block->number);
+        }
+        $refSql = implode(' UNION ALL ', $parts);
+
+        $row = Payment::query()
+            ->join(DB::raw('('.$refSql.') AS ref'), 'ref.course_id', '=', 'payments.course_id')
+            ->join('users', 'users.id', '=', 'payments.user_id')
+            ->where(fn ($q) => $q->whereNull('users.role')
+                ->orWhereNotIn('users.role', self::STAFF_ROLES))
+            ->whereIn('payments.status', Payment::PAID_STATUSES)
+            ->where('payments.is_conditional', false)
+            ->where(fn ($x) => $x->whereNull('payments.tariff')
+                ->orWhereNotIn('payments.tariff', ['Расход', 'salary_payout']))
+            ->where('payments.amount', '>', 0)
+            ->whereRaw('(
+                    (payments.start_block IS NULL AND payments.end_block IS NULL)
+                    OR (payments.start_block <= ref.ref_number AND payments.end_block >= ref.ref_number)
+                    OR (payments.start_block <= ref.ref_number AND payments.end_block IS NULL)
+                    OR (payments.start_block IS NULL AND payments.end_block >= ref.ref_number)
+                )')
+            ->distinct()
+            ->count('payments.user_id');
+
+        return (int) $row;
+    }
 
     /**
      * Полный снимок пульса: кандидат-определения «активный платный ученик».
@@ -61,6 +125,7 @@ class StudentPulseService
             'paid_365d' => $this->distinctPayers($asOf, 365),
             'repeat_120d' => $this->repeatPayersWindow($asOf, 120),
             'cabinet_active_30d' => $this->cabinetActiveAmongPayers($asOf, 30),
+            'covering_ref_block' => $this->coveringReferenceBlock(),
         ];
     }
 
@@ -86,6 +151,7 @@ class StudentPulseService
     public function linesFromSnapshot(array $snap): array
     {
         return [
+            sprintf('СЕЙЧАС на оплаченном блоке курса (опорный блок) — %d', $snap['covering_ref_block']),
             sprintf('платил ≤30 дн — %d', $snap['paid_30d']),
             sprintf('платил ≤60 дн — %d', $snap['paid_60d']),
             sprintf('платил ≤90 дн — %d', $snap['paid_90d']),
@@ -113,9 +179,9 @@ class StudentPulseService
     public function headlineFromSnapshot(array $snap): string
     {
         return sprintf(
-            '≤90 дн: %d · ≤120 дн: %d · всего: %d',
+            'опорный блок: %d · ≤90 дн: %d · всего: %d',
+            $snap['covering_ref_block'],
             $snap['paid_90d'],
-            $snap['paid_120d'],
             $snap['paid_ever'],
         );
     }
@@ -128,30 +194,38 @@ class StudentPulseService
     private function distinctPayers(Carbon $asOf, ?int $days): int
     {
         return (int) Payment::query()
-            ->where('payments.status', 'paid')
+            ->whereIn('payments.status', Payment::PAID_STATUSES)
             ->whereNotNull('payments.user_id')
             ->when($days !== null, fn ($q) => $q->where('payments.created_at', '>=', $asOf->copy()->subDays($days)))
             ->join('users', 'users.id', '=', 'payments.user_id')
             ->where(fn ($q) => $q->whereNull('users.role')
                 ->orWhereNotIn('users.role', self::STAFF_ROLES))
+            ->where('payments.is_conditional', false)
+            ->where(fn ($x) => $x->whereNull('payments.tariff')
+                ->orWhereNotIn('payments.tariff', ['Расход', 'salary_payout']))
+            ->where('payments.amount', '>', 0)
             ->distinct()
             ->count('payments.user_id');
     }
 
     /**
-     * DISTINCT платившие ≥2 оплатами за окно (ценз H4563 «активные платящие»).
+     * DISTINCT платившие ≥2 каноническими оплатами за окно (ценз H4563).
      */
     private function repeatPayersWindow(Carbon $asOf, int $days): int
     {
         return (int) User::query()
             ->fromSub(
                 Payment::query()
-                    ->where('payments.status', 'paid')
+                    ->whereIn('payments.status', Payment::PAID_STATUSES)
                     ->whereNotNull('payments.user_id')
                     ->where('payments.created_at', '>=', $asOf->copy()->subDays($days))
                     ->join('users', 'users.id', '=', 'payments.user_id')
                     ->where(fn ($q) => $q->whereNull('users.role')
                         ->orWhereNotIn('users.role', self::STAFF_ROLES))
+                    ->where('payments.is_conditional', false)
+                    ->where(fn ($x) => $x->whereNull('payments.tariff')
+                        ->orWhereNotIn('payments.tariff', ['Расход', 'salary_payout']))
+                    ->where('payments.amount', '>', 0)
                     ->select('payments.user_id')
                     ->groupBy('payments.user_id')
                     ->havingRaw('COUNT(*) >= 2')
@@ -163,16 +237,20 @@ class StudentPulseService
     }
 
     /**
-     * Платившие (когда-либо), заходившие в кабинет за окно — H4004-семейство
-     * paid_active_30d, но со staff-исключением и явным asOf.
+     * Платившие (когда-либо, канонически), заходившие в кабинет за окно —
+     * H4004-семейство paid_active_30d, но со staff-исключением и явным asOf.
      */
     private function cabinetActiveAmongPayers(Carbon $asOf, int $days): int
     {
         return (int) User::query()
             ->whereIn('users.id', Payment::query()
-                ->select('user_id')
-                ->where('status', 'paid')
-                ->whereNotNull('user_id'))
+                ->select('payments.user_id')
+                ->whereIn('payments.status', Payment::PAID_STATUSES)
+                ->whereNotNull('payments.user_id')
+                ->where('payments.is_conditional', false)
+                ->where(fn ($x) => $x->whereNull('payments.tariff')
+                    ->orWhereNotIn('payments.tariff', ['Расход', 'salary_payout']))
+                ->where('payments.amount', '>', 0))
             ->where(fn ($q) => $q->whereNull('users.role')
                 ->orWhereNotIn('users.role', self::STAFF_ROLES))
             ->where('users.last_login_at', '>=', $asOf->copy()->subDays($days))

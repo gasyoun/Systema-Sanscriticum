@@ -120,13 +120,15 @@ class StudentPulseServiceTest extends TestCase
 
         $lines = $this->svc->pulseLines($this->asOf);
 
-        $this->assertCount(7, $lines);
-        $this->assertStringContainsString('платил ≤90 дн — 1', $lines[2]);
-        $this->assertStringContainsString('≥2 оплат за ≤120 дн — 1', $lines[4]);
-        $this->assertStringContainsString('всего плативших когда-либо — 1', $lines[6]);
+        $this->assertCount(8, $lines);
+        $this->assertStringContainsString('опорный блок', $lines[0]);
+        $this->assertStringContainsString('платил ≤90 дн — 1', $lines[3]);
+        $this->assertStringContainsString('≥2 оплат за ≤120 дн — 1', $lines[5]);
+        $this->assertStringContainsString('всего плативших когда-либо — 1', $lines[7]);
 
         $headline = $this->svc->headlineFromSnapshot($this->svc->snapshot($this->asOf));
         $this->assertStringContainsString('≤90 дн: 1', $headline);
+        $this->assertStringContainsString('опорный блок: 0', $headline); // без курсов/блоков в фикстуре
     }
 
     /** @test */
@@ -142,7 +144,7 @@ class StudentPulseServiceTest extends TestCase
         $this->assertNotNull($pulseCard);
         $this->assertSame('gray', $pulseCard['level']);
         $this->assertStringContainsString('≤90 дн: 1', $pulseCard['value']);
-        $this->assertCount(7, $snap['pulse_lines']);
-        $this->assertStringContainsString('платил ≤120 дн — 1', $snap['pulse_lines'][3]);
+        $this->assertCount(8, $snap['pulse_lines']);
+        $this->assertStringContainsString('платил ≤120 дн — 1', $snap['pulse_lines'][4]);
     }
 }
