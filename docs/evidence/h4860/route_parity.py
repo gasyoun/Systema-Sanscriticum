@@ -66,6 +66,10 @@ def inline_split() -> list[str]:
     return lines
 
 
+def is_comment(line: str) -> bool:
+    return line.strip().startswith(("//", "/*", "*", "|"))
+
+
 def normalise(lines: list[str]) -> list[str]:
     return [
         l for l in lines
@@ -77,12 +81,21 @@ def normalise(lines: list[str]) -> list[str]:
 
 
 def text_check(ref: str, allow_moved: int) -> bool:
-    before, after = normalise(base_monolith(ref)), normalise(inline_split())
-    print(f"[text] {ref} monolith: {len(before)} lines · split inlined: {len(after)} lines")
+    """Strict on PHP code lines; comment-only lines are reported, not gated
+    (PR #2509 dropped a mid-file docblock and added orientation comments)."""
+    full_b, full_a = normalise(base_monolith(ref)), normalise(inline_split())
+    cb, ca = [l for l in full_b if is_comment(l)], [l for l in full_a if is_comment(l)]
+    for sign, block in (("-", sorted(set(cb) - set(ca))), ("+", sorted(set(ca) - set(cb)))):
+        for l in block:
+            print(f"[text] comment {sign} {l.strip()}")
+    before = [l for l in full_b if not is_comment(l)]
+    after = [l for l in full_a if not is_comment(l)]
+    print(f"[text] {ref} monolith: {len(before)} code lines · split inlined: {len(after)} code lines")
     if sorted(before) != sorted(after):
-        print("[text] FAIL — line multisets differ (a route line was lost, added or edited):")
+        print("[text] FAIL — code-line multisets differ (a route line was lost, added or edited):")
         sys.stdout.writelines(difflib.unified_diff(
-            sorted(before), sorted(after), "before(sorted)", "after(sorted)", lineterm="\n"))
+            [l + "\n" for l in sorted(before)], [l + "\n" for l in sorted(after)],
+            "before(sorted)", "after(sorted)"))
         return False
     ops = [op for op in difflib.SequenceMatcher(a=before, b=after, autojunk=False).get_opcodes()
            if op[0] != "equal"]
