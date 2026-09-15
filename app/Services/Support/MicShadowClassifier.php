@@ -7,6 +7,7 @@ namespace App\Services\Support;
 use App\Models\MicShadowClassification;
 use Illuminate\Support\Facades\Log;
 use MessageClassifier\Loader as MicLoader;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -25,6 +26,14 @@ use Throwable;
  * ноль вызовов MIC. Рантайм-флип классификатора остаётся за H3529
  * (precision >=93% на корпусе) — этот флаг его не включает.
  *
+ * H4847: правила читаются из прекомпилированных близнецов rules/v1/*.json
+ * (tools/message-intent-classifier/VENDOR.md, отклонение 1), а НЕ из YAML —
+ * symfony/yaml в проде нет (dev-only dep через laravel/sail), и YAML-лоадер
+ * падал на каждом входящем с «Class Symfony\Component\Yaml\Yaml not found».
+ * Порядок правил тот же, что у вендоренного Loader: priority asc, затем
+ * порядок загрузки (файлы по алфавиту, правила по порядку в файле); паритет
+ * с YAML-лоадером пинится тестом.
+ *
  * Near-miss (G8, семантика comparative-doc §3.8): скан правил плоскости в
  * порядке приоритета; кандидат near-miss — правило, у которого сматчился
  * pattern, но (а) negation заблокировал → reason 'negation:<negation>' или
@@ -39,11 +48,18 @@ final class MicShadowClassifier
 
     private static ?self $instance = null;
 
-    private function __construct(private readonly MicLoader $loader) {}
+    /** Сбой загрузки запоминается на процесс: один WARNING, а не на каждое входящее. */
+    private static bool $loadFailed = false;
 
     /**
-     * Ленивая загрузка вендоренного лоадера. null = пакет отсутствует
-     * (например, обрезанный деплой) — shadow-режим тогда просто молчит.
+     * @param  array<string, list<array<string, mixed>>>  $rulesByPlane  plane => rules в порядке приоритета
+     */
+    private function __construct(private readonly array $rulesByPlane) {}
+
+    /**
+     * Ленивая загрузка правил. null = флаг OFF (ноль работы, ноль логов) или
+     * пакет отсутствует/битый (например, обрезанный деплой) — shadow-режим
+     * тогда просто молчит.
      */
     public static function instance(): ?self
     {
@@ -51,23 +67,79 @@ final class MicShadowClassifier
             return self::$instance;
         }
 
-        $root = base_path('tools/message-intent-classifier');
-        if (! is_file($root.'/rules/v1/topic.yaml') || ! is_file($root.'/php/MessageClassifier/Loader.php')) {
+        if (! (bool) config('features.mic_shadow_classify') || self::$loadFailed) {
             return null;
         }
 
-        if (! class_exists(MicLoader::class, false)) {
-            require_once $root.'/php/MessageClassifier/Loader.php';
-            require_once $root.'/php/MessageClassifier/Classifier.php';
+        $root = base_path('tools/message-intent-classifier');
+        if (! is_file($root.'/rules/v1/topic.json') || ! is_file($root.'/php/MessageClassifier/Loader.php')) {
+            return null;
         }
 
         try {
-            return self::$instance = new self(new MicLoader($root));
+            return self::$instance = self::fromPackageRoot($root);
         } catch (Throwable $e) {
+            self::$loadFailed = true;
             Log::warning('mic_shadow_classify_loader_failed', ['error' => $e->getMessage()]);
 
             return null;
         }
+    }
+
+    /**
+     * Собрать классификатор из JSON-близнецов rules/v1/*.json пакета. Не
+     * требует symfony/yaml. Бросает RuntimeException на битом документе.
+     */
+    public static function fromPackageRoot(string $root): self
+    {
+        if (! class_exists(MicLoader::class, false)) {
+            require_once $root.'/php/MessageClassifier/Loader.php';
+        }
+
+        $files = glob($root.'/rules/v1/*.json') ?: [];
+        if ($files === []) {
+            throw new RuntimeException("no rules/v1/*.json twins under {$root}");
+        }
+        sort($files);
+
+        $rulesByPlane = array_fill_keys(MicLoader::PLANES, []);
+        $order = 0;
+
+        foreach ($files as $path) {
+            $doc = json_decode((string) file_get_contents($path), true);
+            if (! is_array($doc) || ! isset($doc['rules']) || ! is_array($doc['rules'])) {
+                throw new RuntimeException(basename($path).': expected {version, rules[]} document');
+            }
+
+            foreach ($doc['rules'] as $index => $entry) {
+                $plane = is_array($entry) ? ($entry['plane'] ?? null) : null;
+                if (! is_string($plane) || ! array_key_exists($plane, $rulesByPlane)) {
+                    throw new RuntimeException(basename($path)."#rules[{$index}]: unknown plane");
+                }
+
+                $rulesByPlane[$plane][] = [
+                    'category' => (string) ($entry['category'] ?? ''),
+                    'priority' => (int) ($entry['priority'] ?? 0),
+                    'patterns' => array_values((array) ($entry['patterns'] ?? [])),
+                    'negations' => array_values((array) ($entry['negations'] ?? [])),
+                    'enabled' => (bool) ($entry['enabled'] ?? true),
+                    'order' => $order++,
+                ];
+            }
+        }
+
+        foreach ($rulesByPlane as $plane => $rules) {
+            usort($rules, static fn (array $a, array $b): int => [$a['priority'], $a['order']] <=> [$b['priority'], $b['order']]);
+            $rulesByPlane[$plane] = $rules;
+        }
+
+        return new self($rulesByPlane);
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function rulesFor(string $plane): array
+    {
+        return $this->rulesByPlane[$plane] ?? [];
     }
 
     /**
@@ -131,7 +203,7 @@ final class MicShadowClassifier
         $winner = null;
         $nearMiss = [];
 
-        foreach ($this->loader->rulesFor($plane) as $rule) {
+        foreach ($this->rulesFor($plane) as $rule) {
             if (! $rule['enabled']) {
                 continue;
             }
