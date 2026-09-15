@@ -13,6 +13,7 @@ use App\Http\Controllers\PublicWidgetController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StorefrontAnalyticsController;
 use App\Http\Controllers\SubscriptionLandingController;
+use App\Http\Controllers\TrackedLinkController;
 use App\Models\Course;
 use App\Models\LandingPage;
 use App\Models\Lesson;
