@@ -69,6 +69,7 @@ class Deal extends Model
         'kind',
         'trial_source',
         'trial_outcome',
+        'placement_rung',
     ];
 
     protected $casts = [
