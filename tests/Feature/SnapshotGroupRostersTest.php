@@ -10,6 +10,8 @@ use App\Services\TelegramHarvest\TelegramHarvestSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Psr\Log\LoggerInterface;
 use Tests\TestCase;
 
 /**
@@ -192,6 +194,46 @@ class SnapshotGroupRostersTest extends TestCase
         $this->fakeFactory($client);
 
         $this->assertSame([], app(TelegramHarvestSyncService::class)->fetchRoster('-100111'));
+    }
+
+    public function test_dead_peers_collapse_to_one_summary_line_not_per_peer_warning(): void
+    {
+        // H4879 (15-09-2026): дохлые/покинутые peer'ы раньше грузили основной
+        // лог WARNING-строкой НА КАЖДЫЙ peer (46 -> 535 строк/день). Теперь
+        // pwrRoster молчит на основном канале для этого known-benign исхода,
+        // деталь идёт в отдельный канал 'telegram_harvest', а батч-метод
+        // пишет ОДНУ сводную Log::info строку на проход.
+        $this->enable();
+        $client = new class
+        {
+            public function getDialogIds(): array
+            {
+                return [];
+            }
+
+            public function getPwrChat(int|string $peer, bool $fullFetch = true, bool $send = true): array
+            {
+                throw new \RuntimeException('This peer is not present in the internal peer database');
+            }
+        };
+        $this->fakeFactory($client);
+
+        Group::create(['name' => 'A', 'telegram_chat_id' => '-100111', 'status' => 'active']);
+        Group::create(['name' => 'B', 'telegram_chat_id' => '-100222', 'status' => 'active']);
+        Group::create(['name' => 'C', 'telegram_chat_id' => '-100333', 'status' => 'active']);
+
+        $harvestChannel = \Mockery::spy(LoggerInterface::class);
+        Log::spy();
+        Log::shouldReceive('channel')->with('telegram_harvest')->andReturn($harvestChannel);
+
+        $this->artisan('telegram-harvest:roster-groups')->assertExitCode(0);
+
+        Log::shouldNotHaveReceived('warning');
+        Log::shouldHaveReceived('info')->once()->with(
+            'Telegram harvest roster-groups: run summary',
+            \Mockery::on(fn ($ctx) => $ctx['peers_tried'] === 3 && $ctx['peers_missing'] === 3 && $ctx['rosters_written'] === 0),
+        );
+        $harvestChannel->shouldHaveReceived('debug')->times(3);
     }
 
     public function test_fetch_roster_requests_full_participant_fetch(): void
