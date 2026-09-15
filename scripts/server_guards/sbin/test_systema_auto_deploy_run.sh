@@ -18,6 +18,11 @@
 #   4. SOFT trip + UNHEALTHY box -> NOT cleared (never resume into a sick host).
 #   5. Retries are capped: after MAX_AUTO_RETRIES the fuse stays and says so.
 #   6. A successful deploy resets the retry counter.
+#   7. deploy.sh exit 75 (guards drift only) does not rollback / trip fuse.
+#   8. 0A63: a deploy range touching deploy.sh re-runs it in the SAME cycle.
+#   9. 0A63: re-run failed but health clean -> loud WARN, no fuse, no rollback.
+#  10. 0A63: no re-run when the range did not touch deploy.sh.
+#  11. 0A63: bash -n form test blocks executing a broken new deploy.sh.
 #
 # Usage: bash scripts/server_guards/sbin/test_systema_auto_deploy_run.sh
 #
@@ -44,6 +49,8 @@ BREAKER="$APP_DIR/storage/auto_deploy.disabled"
 RETRIES="$APP_DIR/storage/framework/auto-deploy-retries"
 HISTORY="$APP_DIR/storage/logs/auto_deploy_breaker_history.log"
 DEPLOY_MARKER="$TMP/deployed"
+# 0A63: how many times the fake deploy.sh ran (re-run assertions).
+DEPLOY_COUNT="$TMP/deploy.count"
 
 # ── Fakes on PATH ───────────────────────────────────────────────────────────
 BIN="$TMP/bin"
@@ -57,7 +64,11 @@ case "$*" in
   "rev-parse HEAD") echo 1111111111111111111111111111111111111111 ;;
   "rev-parse origin/main") echo 2222222222222222222222222222222222222222 ;;
   "rev-parse --short "*) echo 1111111 ;;
-  "diff --name-only "*) exit 0 ;;
+  "diff --name-only "*)
+    # DIFF_TOUCHES_DEPLOY_SH=1 steers the 0A63 re-run condition (the deploy
+    # range touched deploy.sh); default empty = untouched, legacy behavior.
+    if [ "${DIFF_TOUCHES_DEPLOY_SH:-0}" = "1" ]; then echo deploy.sh; fi
+    exit 0 ;;
   *) exit 0 ;;
 esac
 EOF
@@ -95,12 +106,22 @@ fi
 
 chmod +x "$BIN"/*
 
-# deploy.sh: DEPLOY_RC steers success/failure; records that it ran.
+# deploy.sh: DEPLOY_RC steers run 1, DEPLOY_RC2 run 2 (the 0A63 re-run);
+# SELF_MANGLE=1 appends a syntax error to itself during run 1 (after its own
+# exit line, so run 1 never parses it) so the wrapper's bash -n form test sees
+# a broken "new" script. Counts invocations for the re-run assertions.
 DEPLOY_SH="$TMP/deploy.sh"
 cat > "$DEPLOY_SH" <<EOF
 #!/usr/bin/env bash
 echo "fake deploy invoked" >> "$DEPLOY_MARKER"
-exit \${DEPLOY_RC:-0}
+n=\$(cat "$DEPLOY_COUNT" 2>/dev/null || echo 0)
+n=\$((n + 1))
+echo "\$n" > "$DEPLOY_COUNT"
+if [ "\$n" -eq 1 ]; then
+  if [ "\${SELF_MANGLE:-0}" = "1" ]; then printf 'if unclosed\n' >> "$DEPLOY_SH"; fi
+  exit \${DEPLOY_RC:-0}
+fi
+exit \${DEPLOY_RC2:-\${DEPLOY_RC:-0}}
 EOF
 chmod +x "$DEPLOY_SH"
 
@@ -162,7 +183,7 @@ check() {
   else fail=$((fail+1)); echo "FAIL: $1"; echo "---- wrapper output ----"; cat "$TMP/out"; echo "------------------------"; fi
 }
 
-reset_state() { rm -f "$BREAKER" "$RETRIES" "$DEPLOY_MARKER"; }
+reset_state() { rm -f "$BREAKER" "$RETRIES" "$DEPLOY_MARKER" "$DEPLOY_COUNT"; }
 
 # ── 1. Hard trip is never auto-cleared ──────────────────────────────────────
 reset_state
@@ -231,6 +252,51 @@ check "exit 75 still ran deploy.sh once" "$([ -f "$DEPLOY_MARKER" ] && echo 1 ||
 check "exit 75 logs OK-WITH-GUARDS-DRIFT (no ROLLBACK)" \
   "$(grep -q 'OK-WITH-GUARDS-DRIFT' "$TMP/out" && ! grep -q 'ROLLBACK' "$TMP/out" && echo 1 || echo 0)"
 check "exit 75 resets retry counter like success" "$([ ! -f "$RETRIES" ] && echo 1 || echo 0)"
+
+# ── 8. 0A63: deploy range touching deploy.sh → same-cycle re-run ────────────
+# The H4848 canary defect: the deploy that BROUGHT a deploy.sh fix still
+# executed the OLD script (bash holds the pre-pull inode), so every deploy.sh
+# fix landed one deploy late. The wrapper must re-run deploy.sh once — new
+# file, same cycle — right after the primary deploy proved healthy.
+reset_state
+run_wrapper DIFF_TOUCHES_DEPLOY_SH=1
+check "re-run fires when the deploy range touched deploy.sh" \
+  "$([ "$(cat "$DEPLOY_COUNT" 2>/dev/null || echo 0)" = "2" ] && echo 1 || echo 0)"
+check "re-run announces itself (RE-RUN line)" \
+  "$(grep -q 'RE-RUN' "$TMP/out" && echo 1 || echo 0)"
+check "re-run success keeps no fuse and resets retries" \
+  "$([ ! -f "$BREAKER" ] && [ ! -f "$RETRIES" ] && echo 1 || echo 0)"
+
+# ── 9. 0A63: re-run failed but health clean → loud WARN, no fuse, no rollback
+# Run 1 just proved this code healthy; a failing re-run implicates the new
+# SCRIPT, not the code — rollback would drive the same suspect script with
+# --rollback. So: no fuse while health is clean, but a loud WARN stays.
+reset_state
+run_wrapper DIFF_TOUCHES_DEPLOY_SH=1 DEPLOY_RC2=1
+check "both runs executed on re-run failure" \
+  "$([ "$(cat "$DEPLOY_COUNT" 2>/dev/null || echo 0)" = "2" ] && echo 1 || echo 0)"
+check "re-run failure with clean health leaves no fuse" \
+  "$([ ! -f "$BREAKER" ] && echo 1 || echo 0)"
+check "re-run failure with clean health logs WARN" \
+  "$(grep -q 'WARN: re-run' "$TMP/out" && echo 1 || echo 0)"
+check "re-run failure with clean health does NOT roll back" \
+  "$(grep -q 'ROLLBACK' "$TMP/out" && echo 0 || echo 1)"
+
+# ── 10. 0A63: no re-run when the range did not touch deploy.sh ──────────────
+reset_state
+run_wrapper
+check "no re-run when deploy.sh untouched" \
+  "$([ "$(cat "$DEPLOY_COUNT" 2>/dev/null || echo 0)" = "1" ] && echo 1 || echo 0)"
+
+# ── 11. 0A63: bash -n form test blocks executing a broken new deploy.sh ─────
+reset_state
+run_wrapper DIFF_TOUCHES_DEPLOY_SH=1 SELF_MANGLE=1
+check "form test blocks executing a syntactically broken new deploy.sh" \
+  "$([ "$(cat "$DEPLOY_COUNT" 2>/dev/null || echo 0)" = "1" ] && echo 1 || echo 0)"
+check "form-test failure is logged loudly" \
+  "$(grep -q 'bash -n' "$TMP/out" && echo 1 || echo 0)"
+check "form-test failure leaves no fuse" \
+  "$([ ! -f "$BREAKER" ] && echo 1 || echo 0)"
 
 echo
 echo "passed=$pass failed=$fail"
