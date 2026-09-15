@@ -1,0 +1,62 @@
+# H4860 route parity — 2026-09-15T03:39:01+03:00 — base origin/main 477d7cc3
+# python docs/evidence/h4860/route_parity.py --base-ref origin/main --before docs/evidence/h4860/route_list_before_origin-main_477d7cc3.json --after docs/evidence/h4860/route_list_after_split.json
+[text] comment - */
+[text] comment - /*
+[text] comment - | Web Routes
+[text] comment - |--------------------------------------------------------------------------
+[text] comment + // Public SRS surfaces — kept separate from the auth'd student.php
+[text] comment + // The promo catch-all /{slug} at the bottom MUST stay the LAST
+[text] comment + // block: both live in the student domain but different guard context.
+[text] comment + // registered web route — every file above relies on it.
+[text] origin/main monolith: 674 code lines · split inlined: 674 code lines
+[text] delete (5 lines, before@543 after@543):
+         Route::get('/teacher-pay/{tariff}', [TeacherPayController::class, 'show'])
+             ->name('teacherpay.claim.show');
+         Route::post('/teacher-pay/{tariff}', [TeacherPayController::class, 'store'])
+             ->middleware('throttle:5,1')
+             ->name('teacherpay.claim.store');
+[text] insert (5 lines, before@565 after@560):
+         Route::get('/teacher-pay/{tariff}', [TeacherPayController::class, 'show'])
+             ->name('teacherpay.claim.show');
+         Route::post('/teacher-pay/{tariff}', [TeacherPayController::class, 'store'])
+             ->middleware('throttle:5,1')
+             ->name('teacherpay.claim.store');
+[text] PASS — one declared block moved, nothing lost or edited
+[json] before sha256 cef88617078df134a3c2407d7a9b30469f78d6dead6cf7b96034e3bb288bfc5e (560 routes, `path` dropped)
+[json] after  sha256 cef88617078df134a3c2407d7a9b30469f78d6dead6cf7b96034e3bb288bfc5e (560 routes, `path` dropped)
+[json] PASS — route:list --json byte-identical on domain, method, uri, name, action, middleware
+[json] closure `path` relocated: 26; source line differs: 0
+OVERALL: PASS
+exit=0
+
+# php -l routes/web.php routes/web/*.php (PHP 8.3)
+No syntax errors detected in routes/web.php
+No syntax errors detected in routes/web/admin.php
+No syntax errors detected in routes/web/api-surface.php
+No syntax errors detected in routes/web/auth.php
+No syntax errors detected in routes/web/content.php
+No syntax errors detected in routes/web/institute.php
+No syntax errors detected in routes/web/payments.php
+No syntax errors detected in routes/web/public.php
+No syntax errors detected in routes/web/shop.php
+No syntax errors detected in routes/web/staff.php
+No syntax errors detected in routes/web/student-public.php
+No syntax errors detected in routes/web/student.php
+No syntax errors detected in routes/web/support.php
+
+# pint --test routes/web.php routes/web
+{"tool":"pint","result":"passed"}
+
+# php artisan test PaidRouteFailClosedTest TeacherPayTest TrackedLinkTest LeadUtmAttributionTest tests/Feature/Shop
+## branch h4860-drain:
+   FAILED  Tests\Feature\TrackedLinkTest > campaign link redirects to a clean url and keeps utm in the session          
+   FAILED  Tests\Feature\TrackedLinkTest > campaign link does not overwrite an earlier first touch                      
+   FAILED  Tests\Feature\TrackedLinkTest > source tokens keep personal crosslink and senler attribution separate        
+   FAILED  Tests\Feature\LeadUtmAttributionTest > utm saved by a clean campaign link lands on the lead                  
+  Tests:    4 failed, 168 passed (665 assertions)
+## baseline origin/main (untouched worktree) — same 4 failures, pre-existing:
+   FAILED  Tests\Feature\TrackedLinkTest > campaign link redirects to a clean url and keeps utm in the session          
+   FAILED  Tests\Feature\TrackedLinkTest > campaign link does not overwrite an earlier first touch                      
+   FAILED  Tests\Feature\TrackedLinkTest > source tokens keep personal crosslink and senler attribution separate        
+   FAILED  Tests\Feature\LeadUtmAttributionTest > utm saved by a clean campaign link lands on the lead                  
+  Tests:    4 failed, 168 passed (665 assertions)
