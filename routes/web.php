@@ -32,6 +32,7 @@ require __DIR__.'/web/payments.php';
 // here because web/payments.php is a money-contour file whose edits need a
 // human confirm; a human moves them verbatim. No URI in web/payments.php
 // overlaps /teacher-pay/{tariff}, so matching is unchanged either way.
+
 // «Я заплатил преподавателю напрямую» (H4627): анкета-зеркало PayPal-pending.
 // Платёж ложится pending с received_account=teacher + received_by_teacher_id;
 // куратор сверяет по выписке преподавателя и подтверждает в Filament —
