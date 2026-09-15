@@ -28,6 +28,13 @@ DEPLOY_LOG="storage/logs/deploys.log"
 USE_DOWN=0
 ROLLBACK_TO=""
 DEPLOY_SOFT_FAIL=0
+# H4848 (GTD 0A63, 15-09-2026): правки ЭТОГО скрипта действуют в том же цикле,
+# когда деплой идёт через auto-deploy обёртку: systema-auto-deploy-run.sh после
+# здорового деплоя, чей диапазон трогал deploy.sh, перезапускает его вторым
+# прогоном — bash держит прежний inode, сам скрипт через git pull не обновится
+# (см. docs/deploy.md, «Правка deploy.sh и следующий прогон»). При ручном
+# запуске напрямую (bash deploy.sh) свойство прежнее: правка видна со
+# СЛЕДУЮЩЕГО запуска.
 while [ $# -gt 0 ]; do
   case "$1" in
     --down) USE_DOWN=1 ;;
