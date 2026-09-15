@@ -44,8 +44,7 @@
         "symfony/dom-crawler": "^7.0",
         "symfony/http-client": "^7.4",
         "symfony/mailgun-mailer": "^7.4",
-        "symfony/postmark-mailer": "^7.4",
-        "symfony/yaml": "^7.0"
+        "symfony/postmark-mailer": "^7.4"
     },
     "require-dev": {
         "brianium/paratest": "^7",
