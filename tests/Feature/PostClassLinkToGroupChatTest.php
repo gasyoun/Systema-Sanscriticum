@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Jobs\SendTelegramChatMessageJob;
+use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\MarketingSetting;
@@ -41,8 +41,8 @@ class PostClassLinkToGroupChatTest extends TestCase
 
         $this->artisan('classes:post-group-link')->assertSuccessful();
 
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
-        Queue::assertPushed(SendTelegramChatMessageJob::class, fn (SendTelegramChatMessageJob $job): bool => $job->chatId === '-1001234567890'
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, fn (SendZapisiBotMessageJob $job): bool => $job->chatId === '-1001234567890'
             && str_contains($job->text, 'us02web.zoom.us/j/8807')
             && str_contains($job->text, 'Йога-сутры'));
 
@@ -50,7 +50,7 @@ class PostClassLinkToGroupChatTest extends TestCase
 
         // Повторный прогон не постит второй раз (дедуп).
         $this->artisan('classes:post-group-link')->assertSuccessful();
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
     }
 
     public function test_falls_back_to_course_zoom_link(): void
@@ -68,7 +68,7 @@ class PostClassLinkToGroupChatTest extends TestCase
         ]);
 
         $this->artisan('classes:post-group-link')->assertSuccessful();
-        Queue::assertPushed(SendTelegramChatMessageJob::class, fn (SendTelegramChatMessageJob $job): bool => str_contains($job->text, 'us02web.zoom.us/j/999'));
+        Queue::assertPushed(SendZapisiBotMessageJob::class, fn (SendZapisiBotMessageJob $job): bool => str_contains($job->text, 'us02web.zoom.us/j/999'));
     }
 
     public function test_skips_when_disabled(): void
@@ -183,7 +183,7 @@ class PostClassLinkToGroupChatTest extends TestCase
 
         $this->artisan('classes:post-group-link')->assertSuccessful();
 
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
         $this->assertNotNull($a->fresh()->group_link_posted_at);
         $this->assertNotNull($b->fresh()->group_link_posted_at);
     }
