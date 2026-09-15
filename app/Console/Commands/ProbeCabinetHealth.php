@@ -19,6 +19,7 @@ use App\Services\Schedule\TextbookScale;
 use App\Support\Deploy\DeployDriftInspector;
 use App\Support\Roles;
 use App\Support\ServerGuards\CabinetProbeAlertState;
+use App\Support\ServerGuards\CompiledViewsOwnershipInspector;
 use App\Support\ServerGuards\GuardFinding;
 use App\Support\ServerGuards\GuardSpec;
 use App\Support\ServerGuards\ServerGuardsAuditor;
@@ -129,6 +130,7 @@ class ProbeCabinetHealth extends Command
 
             $failures = array_merge($failures, $this->probeDeployDrift());
             $failures = array_merge($failures, $this->probeServerGuards());
+            $failures = array_merge($failures, $this->probeCompiledViewsOwnership());
             $failures = array_merge($failures, $this->probeOutboundPaymentTls());
             $failures = array_merge($failures, $this->probeScheduleLinks());
         } catch (Throwable $e) {
@@ -323,6 +325,53 @@ class ProbeCabinetHealth extends Command
         }
 
         return $failures;
+    }
+
+    /**
+     * H4848 — скомпилированные Blade обязаны быть writable для того, кто
+     * обслуживает запросы.
+     *
+     * Проверка стоит здесь, а не только в deploy.sh, ровно потому, что дефект
+     * не привязан к выкладке: любой root-овый artisan (деплой, ручной прогрев,
+     * чужая правка) оставляет файл, который php-fpm потом не может
+     * `touch()`-нуть, и `/admin` отдаёт 500 до ручного chown — ровно то, что
+     * повторялось 17-08, 20-08, 09-09 и 14-09-2026. Deploy-гард ловит регресс
+     * в момент выкладки, эта проверка — в любой момент между выкладками, и
+     * сторож (раз в 15 минут) бежит от www-data, то есть тем же пользователем,
+     * что php-fpm.
+     *
+     * Severity critical, а не soft: следствие — HTTP 500 на Filament /admin,
+     * то есть класс HTTP-поверхностей. Сообщение намеренно НЕ начинается с
+     * `guards/` — иначе `isHostGuardFailure()` отнёс бы его к host-guard'ам,
+     * которые не будят Telegram и не роняют деплой (H3197), а этот дефект
+     * обязан и будить, и ронять.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeCompiledViewsOwnership(): array
+    {
+        $inspector = new CompiledViewsOwnershipInspector(storage_path('framework/views'));
+        $blocked = $inspector->unwritableFiles();
+
+        if ($blocked === []) {
+            return [];
+        }
+
+        $owners = [];
+        foreach (array_slice($blocked, 0, 3) as $path) {
+            $owners[$inspector->ownerOf($path)] = true;
+        }
+
+        return [[
+            'message' => sprintf(
+                'views-ownership: %d скомпилированных Blade не writable для %s (владелец: %s) — php-fpm не сможет touch() при перекомпиляции, Filament /admin отдаст 500. Примеры: %s. Фикс: chown -R www-data:www-data storage/framework/views (deploy.sh с H4848 греет кэши от www-data)',
+                count($blocked),
+                $inspector->currentUser(),
+                implode(', ', array_keys($owners)),
+                implode(', ', array_slice($blocked, 0, 3)),
+            ),
+            'severity' => 'critical',
+        ]];
     }
 
     private function probeServerGuards(): array
