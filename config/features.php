@@ -1661,4 +1661,20 @@ return [
      | команда no-op, API 404. Enable: LESSON_BANNERS=true + config:cache.
      */
     'lesson_banners' => (bool) env('LESSON_BANNERS', false),
+
+    /*
+     | H5007 — payment logic fix wave 1 (audit AUDIT_PAYMENT_LOGIC_CORRECTNESS
+     | 16-09-2026, HIGH rows H2/H3/H4/H7). ON: (H2) повторная PayPal-заявка того же
+     | ученика по тому же тарифу с тем же txn/в тот же день отклоняется, а не
+     | создаёт второй paid-платёж; (H3) PAYMENT.SALE.REFUNDED/REVERSED/DENIED
+     | переводят платёж подписки в canceled (штатный откат доступа/праны) и
+     | commitment в cancelled/failed; (H4) BILLING.SUBSCRIPTION.UPDATED берёт
+     | статус из resource.status, отменённая/завершённая подписка не воскресает
+     | (rejected_resurrection), устаревшее по update_time событие не применяется;
+     | (H7) «Зачесть аванс» на ручной выплате гасит авансы FIFO не больше суммы
+     | выплаты. OFF = прежнее поведение. H5 (unique-guard fulfilled_payment_id)
+     | и H6 (окно payout-run) — чистые дефекты без флага. Включение:
+     | PAYMENT_FIX_WAVE1=true + php artisan config:cache (human ops).
+     */
+    'payment_fix_wave1' => (bool) env('PAYMENT_FIX_WAVE1', false),
 ];
