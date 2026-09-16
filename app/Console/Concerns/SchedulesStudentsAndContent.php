@@ -93,6 +93,14 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('prana-decay');
 
+        // H4966: ежедневный монитор протухшего пина пробного занятия
+        // (Course.trial_schedule_id в прошлом) — алерт админам в Telegram.
+        $schedule->command('trial:check-freshness')
+            ->dailyAt('09:00') // 09:00 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('trial-check-freshness');
+
     }
 
     /** Season 1 open/notify/close cron + leaderboard refresh. */
