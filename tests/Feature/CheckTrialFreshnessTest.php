@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Models\Course;
 use App\Models\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
