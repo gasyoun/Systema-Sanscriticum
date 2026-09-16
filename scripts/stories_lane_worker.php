@@ -47,6 +47,7 @@ try {
         'send_photo' => ['ok' => true, 'story_id' => $publisher->sendPhotoStoryDirect(
             (string) ($task['path'] ?? ''),
             (string) ($task['caption'] ?? ''),
+            isset($task['account']) ? (string) $task['account'] : null,
         )],
         'send_video' => ['ok' => true, 'story_id' => $publisher->sendVideoStoryDirect(
             (string) ($task['path'] ?? ''),

@@ -63,6 +63,7 @@ final class StoriesPublishStoryCommand extends Command
 
     protected $signature = 'stories:publish-story
         {--test-photo= : Отправить одну тестовую фотосториз из файла и удалить её тем же кодом}
+        {--account=rusamskrtam : Аккаунт-персона для ручной фотопроверки}
         {--keep : Не удалять тестовую сториз (--test-photo)}
         {--probe-attempts=0 : Дослать ещё до N сториз (send→delete) до первого FLOOD — замер дневного лимита}
         {--delete-story= : Удалить свою сториз по id}';
@@ -167,7 +168,7 @@ final class StoriesPublishStoryCommand extends Command
         $attempts = min(max((int) $this->option('probe-attempts'), 0), self::PROBE_CAP);
 
         $this->info('Sending test photo story…');
-        $storyId = $publisher->sendPhotoStory($path, 'H3964 smoke');
+        $storyId = $publisher->sendPhotoStory($path, 'H3964 smoke', (string) $this->option('account'));
         $this->info($storyId !== null ? "Sent story id={$storyId}." : 'Sent, but story id was not extractable from the Updates.');
 
         if ($storyId !== null && ! $this->option('keep')) {
@@ -289,7 +290,7 @@ final class StoriesPublishStoryCommand extends Command
         $caption = (string) $post->payload;
 
         return match ($post->kind) {
-            StoryPost::KIND_PHOTO => $publisher->sendPhotoStory((string) $post->media_path, $caption),
+            StoryPost::KIND_PHOTO => $publisher->sendPhotoStory((string) $post->media_path, $caption, data_get($post->payload, 'account', 'rusamskrtam')),
             StoryPost::KIND_VIDEO => $publisher->sendVideoStory((string) $post->media_path, $caption),
             default => throw new \InvalidArgumentException("Unsupported story kind {$post->kind}."),
         };

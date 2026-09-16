@@ -641,6 +641,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SENTINEL_BREAKER_ENABLED` | feature-flag | `true` | config/services.php:273 |
 | `SENTINEL_BREAKER_PYTHON` | optional | `'python3'` | config/services.php:275 |
 | `SENTINEL_BREAKER_STATE_DIR` | optional | `storage_path('app/sentinel-breaker')` | config/services.php:276 |
+| `SERVER_GUARDS_BACKUP_PROBE_BUDGET_SECONDS` | optional | `45` | config/server_guards.php:49 |
 | `SERVER_GUARDS_SPEC` | optional | `base_path('scripts/server_guards.conf')` | config/server_guards.php:18 |
 | `SERVER_GUARDS_TEMPLATES` | optional | `base_path('scripts/server_guards')` | config/server_guards.php:20 |
 | `SERVER_GUARDS_VERIFY` | optional | `PHP_OS_FAMILY === 'Linux' && env('APP_ENV') === 'production'` | config/server_guards.php:33 |
