@@ -119,7 +119,7 @@ class SendCabinetInvites extends Command
                     'telegram' => $this->sendViaTelegram($user),
                     'vk' => $user->sendVkMessage($this->messageText($user)),
                     'sms' => $user->sendSmsMessage($this->smsText($user)),
-                    default => Password::sendResetLink(['email' => $user->email]) === Password::RESET_LINK_SENT,
+                    default => $this->sendViaEmail($user),
                 };
 
                 if (! $ok) {
