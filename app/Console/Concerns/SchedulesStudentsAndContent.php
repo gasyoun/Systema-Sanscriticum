@@ -43,6 +43,15 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('onboarding-weekly-digest');
 
+        // H5024 (MG Q12, 16-09-2026): еженедельный снимок графа рефералов
+        // (users.referred_by) в тот же понедельничный дайджест-чат, сразу после
+        // онбординг-сводки. Датированный ноль тоже уходит; без чата — no-op.
+        $schedule->command('referral:weekly-graph')
+            ->weeklyOn(1, '09:35') // понедельник 09:35 МСК, после онбординг-сводки
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('referral-weekly-graph');
+
         // Еженедельный автонапоминание тем же не заходившим: Telegram → VK → SMS
         // → email (см. SendCabinetInvites). Батч 50/неделю — не спам-флаги, не
         // блокировать очередь; --resend не передаём, каждый получает ровно один

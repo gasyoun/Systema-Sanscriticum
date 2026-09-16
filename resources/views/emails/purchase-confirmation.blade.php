@@ -53,6 +53,16 @@
             <p style="margin: 0; font-size: 15px;">Весь гид: <a href="https://samskrte.ru/dvaram/help" style="color: #d35400; font-weight: bold;">samskrte.ru/dvaram/help</a></p>
         </div>
 
+        {{-- H5024 (MG Q12, 16-09-2026): личная ссылка-приглашение в письме об оплате.
+             $referralLink = null при выключенном partner.enabled — блок не рендерится. --}}
+        @if ($referralLink)
+        <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 20px; margin: 25px 0; border-radius: 0 4px 4px 0;">
+            <p style="margin: 0 0 10px; font-size: 16px;"><strong>Если есть, кого позвать с собой</strong></p>
+            <p style="margin: 0 0 10px; font-size: 15px;">Ваша личная ссылка-приглашение в школу: <a href="{{ $referralLink }}" style="color: #d35400; font-weight: bold;">{{ $referralLink }}</a></p>
+            <p style="margin: 0; font-size: 15px;">Когда приглашенный вами человек впервые оплатит курс, мы зачислим вам {{ $referralCredit }} ₽ в знак благодарности — сумма зачтется при вашей следующей покупке, делать ничего не нужно.</p>
+        </div>
+        @endif
+
         <p style="font-size: 14px; color: #95a5a6;">Кассовый чек придет отдельным письмом от платежной системы — сохраните его, пересылать никуда не нужно.</p>
 
         <hr style="border: none; border-top: 1px solid #f0e6d2; margin: 35px 0 25px;">

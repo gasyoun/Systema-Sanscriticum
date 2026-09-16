@@ -1489,7 +1489,9 @@ return [
      | homework accepted, student certificate list, dashboard course-complete.
      | Reuses student/partials/referral.blade.php (H1294). Default OFF:
      | merge is prod-inert; the existing cabinet include stays as it is.
-     | Do not put this invite on public /verify. partner.enabled stays OFF.
+     | This flag never puts the H1294 partial on public /verify. Since H5024
+     | (MG Q12, 16-09-2026) /verify and the purchase-confirmation email carry
+     | a separate referral-invite block gated by partner.enabled instead.
      | Enable: REFERRAL_LOYALTY_CTA=true + php artisan config:cache.
      */
     'referral_loyalty_cta' => (bool) env('REFERRAL_LOYALTY_CTA', false),

@@ -51,6 +51,8 @@ class PurchaseConfirmationMail extends Mailable implements ShouldQueue
                 'course' => $this->payment->course,
                 'tariffScope' => $this->tariffScope(),
                 'formattedAmount' => $this->formattedAmount(),
+                'referralLink' => $this->referralLink(),
+                'referralCredit' => number_format((float) config('referral.credit_amount', 500), 0, '.', ' '),
             ],
         );
     }
@@ -77,6 +79,21 @@ class PurchaseConfirmationMail extends Mailable implements ShouldQueue
             ?: preg_replace('/[^\d]+/', '', (string) $payment->tariff);
 
         return $blockNo !== '' && $blockNo !== null ? 'блок '.$blockNo : null;
+    }
+
+    /**
+     * H5024: личная ссылка-приглашение покупателя — только при включённой
+     * партнёрской программе (config partner.enabled); иначе null и блок в письме
+     * не рендерится. referralLink() лениво генерирует код — письмо идёт из очереди,
+     * так что запись не попадает на request path.
+     */
+    private function referralLink(): ?string
+    {
+        if (! (bool) config('partner.enabled', false)) {
+            return null;
+        }
+
+        return $this->payment->user?->referralLink();
     }
 
     /**
