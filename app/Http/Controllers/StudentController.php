@@ -64,12 +64,4 @@ class StudentController extends Controller
             ),
         )));
     }
-
-
-    use \App\Http\Controllers\Concerns\StudentScheduleConcerns;
-    use \App\Http\Controllers\Concerns\StudentDashboardConcerns;
-    use \App\Http\Controllers\Concerns\StudentCourseContentConcerns;
-    use \App\Http\Controllers\Concerns\StudentCertificateConcerns;
-    use \App\Http\Controllers\Concerns\StudentMiscConcerns;
-
 }
