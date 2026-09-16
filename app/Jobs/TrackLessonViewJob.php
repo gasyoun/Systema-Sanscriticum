@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\UserSession;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
@@ -71,6 +72,33 @@ final class TrackLessonViewJob implements ShouldQueue
                 $this->incrementSessionLessons();
                 $this->logEvent($user, $lesson);
             });
+        } catch (QueryException $e) {
+            if ($this->isCheckreadError($e)) {
+                // ER_CHECKREAD 1020 "Record has changed since last read" — наблюдалось
+                // после "Aborted connection" в MariaDB, когда соединение из пула ещё
+                // считается живым на стороне PHP, но сервер уже сбросил его состояние.
+                // DB::transaction() уже откатил всю транзакцию целиком (см. вызов выше),
+                // так что частичной записи быть не может — retry просто повторяет
+                // те же 4 upsert/insert с нуля. Явно сбрасываем соединение, чтобы
+                // следующая попытка Horizon (backoff [10,30,60]) не наткнулась на то
+                // же самое протухшее соединение.
+                Log::info('TrackLessonViewJob transient 1020 (ER_CHECKREAD), reconnecting for retry', [
+                    'user_id' => $this->userId,
+                    'lesson_id' => $this->lessonId,
+                    'attempt' => $this->attempts(),
+                ]);
+                DB::reconnect();
+
+                throw $e;
+            }
+
+            Log::warning('TrackLessonViewJob failed', [
+                'user_id' => $this->userId,
+                'lesson_id' => $this->lessonId,
+                'error' => $e->getMessage(),
+            ]);
+            // Пробрасываем — Horizon заретраит по backoff
+            throw $e;
         } catch (\Throwable $e) {
             Log::warning('TrackLessonViewJob failed', [
                 'user_id' => $this->userId,
@@ -83,15 +111,29 @@ final class TrackLessonViewJob implements ShouldQueue
     }
 
     /**
+     * ER_CHECKREAD = MySQL/MariaDB error code 1020.
+     */
+    private function isCheckreadError(QueryException $e): bool
+    {
+        return (int) ($e->errorInfo[1] ?? 0) === 1020;
+    }
+
+    /**
      * Upsert записи в lesson_views.
      *
      * @return bool true — если это был первый просмотр урока (новая строка)
      */
     private function upsertLessonView(int $userId, int $lessonId): bool
     {
-        // Смотрим, есть ли уже запись (чтобы вернуть флаг "первый просмотр")
+        // lockForUpdate() внутри транзакции — блокируем строку на чтение, чтобы
+        // конкурентный (не ретрай, а параллельный) запуск джобы для того же
+        // user_id+lesson_id не мог прочитать то же "нет строки" и оба пойти в
+        // create(), упёршись в unique(user_id, lesson_id). На retry после отката
+        // всей транзакции блокировка снимается вместе с откатом — двойного счёта
+        // не даёт open_count = open_count + 1 внутри update ниже.
         $existing = LessonView::where('user_id', $userId)
             ->where('lesson_id', $lessonId)
+            ->lockForUpdate()
             ->first();
 
         if ($existing === null) {
