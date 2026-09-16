@@ -640,6 +640,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SENTINEL_BREAKER_ENABLED` | feature-flag | `true` | config/services.php:273 |
 | `SENTINEL_BREAKER_PYTHON` | optional | `'python3'` | config/services.php:275 |
 | `SENTINEL_BREAKER_STATE_DIR` | optional | `storage_path('app/sentinel-breaker')` | config/services.php:276 |
+| `SERVER_GUARDS_BACKUP_PROBE_BUDGET_SECONDS` | optional | `45` | config/server_guards.php:49 |
 | `SERVER_GUARDS_SPEC` | optional | `base_path('scripts/server_guards.conf')` | config/server_guards.php:18 |
 | `SERVER_GUARDS_TEMPLATES` | optional | `base_path('scripts/server_guards')` | config/server_guards.php:20 |
 | `SERVER_GUARDS_VERIFY` | optional | `PHP_OS_FAMILY === 'Linux' && env('APP_ENV') === 'production'` | config/server_guards.php:33 |
@@ -894,10 +895,10 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `YANDEX_API_KEY` | secret | `—` | config/services.php:450 |
 | `YANDEX_CLIENT_ID` | required | `—` | config/services.php:548 |
 | `YANDEX_CLIENT_SECRET` | secret | `—` | config/services.php:549 |
-| `YANDEX_DISK_APP_PASSWORD` | secret | `—` | config/filesystems.php:83 |
-| `YANDEX_DISK_BACKUP_PATH` | optional | `'/Backups/systema-sanscriticum'` | config/filesystems.php:84 |
-| `YANDEX_DISK_LOGIN` | required | `—` | config/filesystems.php:82 |
-| `YANDEX_DISK_WEBDAV_URL` | optional | `'https://webdav.yandex.ru'` | config/filesystems.php:81 |
+| `YANDEX_DISK_APP_PASSWORD` | secret | `—` | config/filesystems.php:83<br>config/filesystems.php:98 |
+| `YANDEX_DISK_BACKUP_PATH` | optional | `'/Backups/systema-sanscriticum'` | config/filesystems.php:84<br>config/filesystems.php:99 |
+| `YANDEX_DISK_LOGIN` | required | `—` | config/filesystems.php:82<br>config/filesystems.php:97 |
+| `YANDEX_DISK_WEBDAV_URL` | optional | `'https://webdav.yandex.ru'` | config/filesystems.php:81<br>config/filesystems.php:96 |
 | `YANDEX_FOLDER_ID` | required | `—` | config/services.php:451 |
 | `YANDEX_METRIKA_SHOP_ENABLED` | feature-flag | `true` | config/analytics.php:17 |
 | `YANDEX_METRIKA_SHOP_ID` | optional | `'106964341'` | config/analytics.php:16 |
