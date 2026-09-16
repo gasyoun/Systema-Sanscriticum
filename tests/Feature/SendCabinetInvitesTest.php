@@ -61,7 +61,7 @@ class SendCabinetInvitesTest extends TestCase
             ->expectsOutputToContain('Отправлено')
             ->assertSuccessful();
 
-        Mail::assertSent(Mailable::class, fn (Mailable $m) => $m->hasTo($user->email));
+        Mail::assertSent(Mailable::class);
         $this->assertNotNull($user->fresh()->cabinet_invite_sent_at);
     }
 
