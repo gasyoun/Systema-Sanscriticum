@@ -166,7 +166,7 @@ class WebhookController extends Controller
                         && config('features.money_mutation_breaker')
                         && SentinelBreakerGate::frozen('tochka_grant', SentinelBreakerGate::CLASS_MONEY_MUTATION, 'Tochka webhook grant (заказ №'.$payment->id.')')
                     ) {
-                        $decision = 'breaker_refused';
+                        $decision = PaymentWebhookEvent::DECISION_BREAKER_REFUSED;
                         $apply = false;
                         Log::critical("⛔ Вебхук: sentinel_breaker заморожен — грант заказа №{$payment->id} отказан (H4930).", [
                             'payment_id' => $payment->id,
