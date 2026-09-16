@@ -100,10 +100,16 @@ final class PayoutRunService
         }
 
         // 1. Блоки, завершённые В ОКНЕ (since, on].
+        //    H5007 (audit H6): граница окна — КОНЕЦ дня отсечки, ровно как у
+        //    предиката перерасчёта ниже (at <= since.endOfDay()). Раньше окно
+        //    начиналось с startOfDay, и блок, завершённый В день отсечки,
+        //    попадал в оба предиката — его доли суммировались дважды
+        //    (base_rub + prior_rub). defaultSince() = дата последней выплаты,
+        //    так что типичный прогон бил ровно в эту границу.
         $windowBlocks = [];
         $baseRub = 0.0;
         foreach ($completions as $info) {
-            if (! $info['at']->gt($since->copy()->startOfDay()) || $info['at']->gt($on->copy()->endOfDay())) {
+            if (! $info['at']->gt($since->copy()->endOfDay()) || $info['at']->gt($on->copy()->endOfDay())) {
                 continue;
             }
             $detail = $this->salaries->blockGroupRevenueDetail(

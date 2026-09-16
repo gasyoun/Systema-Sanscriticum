@@ -595,4 +595,26 @@ class PayoutRunTest extends TestCase
         // Хронология: 30.07 строго раньше 01.08 (лексическая сортировка d.m.Y давала бы обратное).
         $this->assertLessThan((int) strpos($out, '**01.08.2026**'), (int) strpos($out, '**30.07.2026**'));
     }
+
+    /** H5007 (audit H6): блок, завершённый В ДЕНЬ отсечки, входит ровно один раз — в перерасчёт, не в окно. */
+    public function test_h5007_block_completed_on_since_day_is_counted_once(): void
+    {
+        $teacher = Teacher::create(['name' => 'Тест Граница']);
+        $course = $this->percentCourse($teacher, 'Граница', 50);
+        // Completed exactly on the since day (2026-07-24) with an unpaid share.
+        $this->block($course, 7, '2026-07-01', '2026-07-24');
+        $this->pay($course, ['user_id' => User::factory()->create()->id, 'amount' => 4800, 'tariff' => 'block_7', 'start_block' => 7, 'end_block' => 7], '2026-08-01');
+
+        $row = $this->runner->runForTeacher($teacher, Carbon::parse('2026-08-26'), Carbon::parse('2026-07-24'));
+
+        $inWindow = collect($row['blocks'] ?? [])->where('block_number', 7)->count();
+        $inPrior = collect($row['prior_blocks'] ?? [])->where('block_number', 7)->count();
+        $this->assertSame(1, $inWindow + $inPrior, 'the since-day block must appear in exactly one bucket');
+        $this->assertSame(0, $inWindow);
+        $this->assertSame(1, $inPrior);
+        // Pre-fix: 4800 landed in BOTH base_total_rub and prior_rub (9600 total).
+        $this->assertSame(0.0, (float) $row['base_rub']);
+        $this->assertSame(4800.0, (float) $row['prior_rub']);
+        $this->assertSame(4800.0, (float) $row['base_total_rub']);
+    }
 }

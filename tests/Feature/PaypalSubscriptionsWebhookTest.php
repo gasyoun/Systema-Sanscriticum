@@ -402,4 +402,169 @@ class PaypalSubscriptionsWebhookTest extends TestCase
             'event_type' => 'BILLING.SUBSCRIPTION.ACTIVATED',
         ])->assertNotFound();
     }
+
+    private function paidSale(User $user, Course $course, string $saleId = 'SALE-REV-1'): array
+    {
+        $sub = $this->makePaypalSub($user, $course);
+        $commitment = $this->makeCommitment($sub);
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-SALE-'.$saleId,
+            'event_type' => 'PAYMENT.SALE.COMPLETED',
+            'resource' => [
+                'id' => $saleId,
+                'billing_agreement_id' => $sub->provider_subscription_id,
+                'amount' => ['total' => '49.00', 'currency' => 'USD'],
+            ],
+        ])->assertOk();
+
+        $payment = Payment::where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)->firstOrFail();
+
+        return [$sub->fresh(), $commitment->fresh(), $payment];
+    }
+
+    /** @test */
+    public function h5007_sale_refunded_cancels_payment_and_revokes_access_when_wave1_on(): void
+    {
+        // Audit H3 (16-09-2026): REFUNDED/REVERSED/DENIED used to fall into the
+        // unmatched branch — payment stayed paid, group access stayed.
+        $this->enableConfigured();
+        config(['features.payment_fix_wave1' => true]);
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        [$sub, $commitment, $payment] = $this->paidSale($user, $course);
+        $groupId = $course->groups()->value('groups.id');
+        $this->assertTrue($user->fresh()->groups()->whereKey($groupId)->exists());
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-REFUND-1',
+            'event_type' => 'PAYMENT.SALE.REFUNDED',
+            'resource' => [
+                'id' => 'REFUND-1',
+                'sale_id' => 'SALE-REV-1',
+                'amount' => ['total' => '-49.00', 'currency' => 'USD'],
+            ],
+        ])->assertOk();
+
+        $this->assertSame('canceled', $payment->fresh()->status);
+        $this->assertSame(BillingCommitmentStatus::Cancelled, $commitment->fresh()->status);
+        $this->assertFalse($user->fresh()->groups()->whereKey($groupId)->exists(), 'refund must revoke group access');
+        $this->assertSame(
+            PaymentWebhookEvent::DECISION_APPLIED,
+            PaymentWebhookEvent::where('bank_status', 'PAYMENT.SALE.REFUNDED')->value('decision')
+        );
+    }
+
+    /** @test */
+    public function h5007_sale_denied_marks_commitment_failed_and_subscription_past_due(): void
+    {
+        $this->enableConfigured();
+        config(['features.payment_fix_wave1' => true]);
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        [$sub, $commitment, $payment] = $this->paidSale($user, $course, 'SALE-DENY-1');
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-DENY-1',
+            'event_type' => 'PAYMENT.SALE.DENIED',
+            'resource' => ['id' => 'SALE-DENY-1', 'state' => 'denied'],
+        ])->assertOk();
+
+        $this->assertSame('canceled', $payment->fresh()->status);
+        $this->assertSame(BillingCommitmentStatus::Failed, $commitment->fresh()->status);
+        $this->assertSame(BillingSubscriptionStatus::PastDue, $sub->fresh()->status);
+    }
+
+    /** @test */
+    public function h5007_refund_flag_off_stays_unmatched_and_keeps_payment_paid(): void
+    {
+        $this->enableConfigured();
+        config(['features.payment_fix_wave1' => false]);
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        [, , $payment] = $this->paidSale($user, $course);
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-REFUND-OFF',
+            'event_type' => 'PAYMENT.SALE.REFUNDED',
+            'resource' => ['id' => 'REFUND-OFF', 'sale_id' => 'SALE-REV-1'],
+        ])->assertOk();
+
+        $this->assertSame('paid', $payment->fresh()->status);
+        $this->assertSame(
+            PaymentWebhookEvent::DECISION_UNMATCHED,
+            PaymentWebhookEvent::where('bank_status', 'PAYMENT.SALE.REFUNDED')->value('decision')
+        );
+    }
+
+    /** @test */
+    public function h5007_updated_event_never_resurrects_cancelled_subscription_when_wave1_on(): void
+    {
+        // Audit H4 (16-09-2026): UPDATED mapped unconditionally to Active.
+        $this->enableConfigured();
+        config(['features.payment_fix_wave1' => true]);
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $sub = $this->makePaypalSub($user, $course);
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-CANCEL-1',
+            'event_type' => 'BILLING.SUBSCRIPTION.CANCELLED',
+            'resource' => ['id' => $sub->provider_subscription_id, 'status' => 'CANCELLED', 'update_time' => '2026-09-16T10:00:00Z'],
+        ])->assertOk();
+        $this->assertSame(BillingSubscriptionStatus::Cancelled, $sub->fresh()->status);
+
+        // Late UPDATED carrying ACTIVE (older update_time) — rejected, status stays.
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-UPD-LATE',
+            'event_type' => 'BILLING.SUBSCRIPTION.UPDATED',
+            'resource' => ['id' => $sub->provider_subscription_id, 'status' => 'ACTIVE', 'update_time' => '2026-09-16T09:00:00Z'],
+        ])->assertOk();
+        $this->assertSame(BillingSubscriptionStatus::Cancelled, $sub->fresh()->status);
+        $this->assertSame(
+            PaymentWebhookEvent::DECISION_REJECTED_RESURRECTION,
+            PaymentWebhookEvent::where('bank_status', 'BILLING.SUBSCRIPTION.UPDATED')->value('decision')
+        );
+
+        // Even a NEWER ACTIVATED cannot revive a terminal subscription.
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-ACT-LATE',
+            'event_type' => 'BILLING.SUBSCRIPTION.ACTIVATED',
+            'resource' => ['id' => $sub->provider_subscription_id, 'status' => 'ACTIVE', 'update_time' => '2026-09-16T11:00:00Z'],
+        ])->assertOk();
+        $this->assertSame(BillingSubscriptionStatus::Cancelled, $sub->fresh()->status);
+    }
+
+    /** @test */
+    public function h5007_updated_event_maps_suspended_status_and_stale_event_is_ignored(): void
+    {
+        $this->enableConfigured();
+        config(['features.payment_fix_wave1' => true]);
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $sub = $this->makePaypalSub($user, $course);
+
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-ACT-2',
+            'event_type' => 'BILLING.SUBSCRIPTION.ACTIVATED',
+            'resource' => ['id' => $sub->provider_subscription_id, 'status' => 'ACTIVE', 'update_time' => '2026-09-16T10:00:00Z'],
+        ])->assertOk();
+        $this->assertSame(BillingSubscriptionStatus::Active, $sub->fresh()->status);
+
+        // UPDATED with SUSPENDED and a newer time → past_due (status from resource, not "Active").
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-UPD-SUSP',
+            'event_type' => 'BILLING.SUBSCRIPTION.UPDATED',
+            'resource' => ['id' => $sub->provider_subscription_id, 'status' => 'SUSPENDED', 'update_time' => '2026-09-16T12:00:00Z'],
+        ])->assertOk();
+        $this->assertSame(BillingSubscriptionStatus::PastDue, $sub->fresh()->status);
+
+        // Stale ACTIVE UPDATED (older than the applied SUSPENDED) is not applied.
+        $this->postJson('/api/webhooks/paypal-subscriptions', [
+            'id' => 'WH-EVT-UPD-STALE',
+            'event_type' => 'BILLING.SUBSCRIPTION.UPDATED',
+            'resource' => ['id' => $sub->provider_subscription_id, 'status' => 'ACTIVE', 'update_time' => '2026-09-16T11:00:00Z'],
+        ])->assertOk();
+        $this->assertSame(BillingSubscriptionStatus::PastDue, $sub->fresh()->status);
+    }
 }
