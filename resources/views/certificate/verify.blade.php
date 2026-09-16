@@ -85,6 +85,11 @@
                 </div>
             </div>
 
+            {{-- H5024: ссылка-приглашение владельца — ПЕРЕД share (его скрипт вешает копирование на все [data-copy-url]). --}}
+            @if (config('partner.enabled'))
+                @include('certificate.partials.referral-invite', ['user' => $certificate->user])
+            @endif
+
             @include('certificate.partials.share', [
                 'url' => url('/verify/'.$certificate->number),
                 'text' => ($certificate->isSpravka() ? 'Моя справка' : 'Мой сертификат')
