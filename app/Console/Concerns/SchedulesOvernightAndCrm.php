@@ -153,6 +153,14 @@ trait SchedulesOvernightAndCrm
             ->onOneServer()
             ->name('goals-record-checkins');
 
+        // Каналы лидов → выручка (H5021): read-only report:channel-roi за 90 дней,
+        // по источникам, сводка — в базу уведомлений получателям KPI-дайджеста.
+        // Та же понедельничная рамка; данные ему даёт ночная leads:infer-source.
+        $schedule->command('report:channel-roi --days=90 --by-source --digest')
+            ->weeklyOn(1, '09:20')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('report-channel-roi-digest');
     }
 
     /** vacation quorum, waitlist, lead followups, subscription archive, dozhim. */
@@ -186,6 +194,15 @@ trait SchedulesOvernightAndCrm
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('remind-leads-followup');
+
+        // Источник у каждого лида (H5021): ночью выводим inferred_source из
+        // UTM/статьи/referrer/лид-магнита для строк без источника. Ручной
+        // leads.source не трогает; идемпотентно (пишет только пустые).
+        $schedule->command('leads:infer-source')
+            ->dailyAt('03:35')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('leads-infer-source');
 
         // Подписка «в записи» (H3916): 6-месячное окно эксклюзивности.
         // Завершённый поток входит в архив подписки через 6 месяцев после

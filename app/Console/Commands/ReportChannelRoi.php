@@ -7,7 +7,10 @@ namespace App\Console\Commands;
 use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\Roles;
+use Filament\Notifications\Notification;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * H3332 — unit-economics layer, lead→revenue leg: per-channel ROI over
@@ -20,6 +23,12 @@ use Illuminate\Console\Command;
  *
  * Feeds: VK-test stop rules (H3333 §4), pricing checkpoint calibration,
  * discount-stack/installment caps (@DECIDE after this layer).
+ *
+ * H5021: channel = Lead::effectiveSource() (source руками > inferred_source
+ * ночной разметки > utm_source), поэтому лиды без UTM, но с выведенным
+ * источником, тоже попадают в срез. --by-source схлопывает кампании,
+ * --digest шлёт сводку получателям KPI-дайджеста (database notification) —
+ * так отчёт приезжает в понедельничный дайджест MG. По-прежнему read-only.
  */
 final class ReportChannelRoi extends Command
 {
@@ -29,7 +38,9 @@ final class ReportChannelRoi extends Command
 
     protected $signature = 'report:channel-roi
         {--days= : Restrict leads created within the last N days (default: all time)}
-        {--source= : Filter by utm_source (e.g. vk)}';
+        {--source= : Filter by source key (utm_source / source / inferred_source, e.g. vk)}
+        {--by-source : Group by source only (collapse campaigns)}
+        {--digest : Send the per-channel summary to KPI-digest recipients (database notification)}';
 
     protected $description = 'Юнит-слой: лиды (UTM) → пользователи → выручка по каналам, ROI витрина';
 
@@ -38,11 +49,17 @@ final class ReportChannelRoi extends Command
         $days = (int) $this->option('days');
         $source = trim((string) $this->option('source'));
 
+        $bySource = (bool) $this->option('by-source');
+
         $leads = Lead::query()
-            ->whereNotNull('utm_source')
-            ->when($source !== '', fn ($q) => $q->where('utm_source', $source))
+            ->where(fn (Builder $q) => $q
+                ->whereNotNull('utm_source')->orWhereNotNull('source')->orWhereNotNull('inferred_source'))
+            ->when($source !== '', fn ($q) => $q->where(fn (Builder $w) => $w
+                ->where('utm_source', $source)->orWhere('source', $source)->orWhere('inferred_source', $source)))
             ->when($days > 0, fn ($q) => $q->where('created_at', '>=', now()->subDays($days)->startOfDay()))
-            ->get(['id', 'utm_source', 'utm_campaign', 'created_at']);
+            ->get(['id', 'utm_source', 'utm_campaign', 'source', 'inferred_source', 'created_at'])
+            ->filter(fn (Lead $l) => $l->effectiveSource() !== null)
+            ->values();
 
         $usersByLead = User::query()
             ->whereNotNull('lead_id')
@@ -58,7 +75,11 @@ final class ReportChannelRoi extends Command
             ->map(fn ($g) => (float) $g->sum('amount'));
 
         $groups = $leads
-            ->mapToGroups(fn ($l) => [$l->utm_source.' / '.($l->utm_campaign ?? '—') => $l]);
+            ->mapToGroups(fn ($l) => [
+                $bySource
+                    ? $l->effectiveSource()
+                    : $l->effectiveSource().' / '.($l->utm_campaign ?? '—') => $l,
+            ]);
 
         $rows = [];
         foreach ($groups as $channel => $channelLeads) {
@@ -95,6 +116,10 @@ final class ReportChannelRoi extends Command
             $rows,
         );
 
+        if ($this->option('digest')) {
+            $this->sendDigest($rows, $days);
+        }
+
         $knownEmailShare = $leads->count() > 0
             ? round(100 * $usersByLead->count() / max(1, $leads->count()), 1)
             : null;
@@ -106,5 +131,44 @@ final class ReportChannelRoi extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Понедельничный дайджест (H5021): те же получатели, что у finance:kpi-digest.
+     *
+     * @param  list<array<string,int|string>>  $rows
+     */
+    private function sendDigest(array $rows, int $days): void
+    {
+        $recipients = User::query()
+            ->whereIn('role', [Roles::SUPER_ADMIN, Roles::ADMIN, Roles::ACCOUNTANT])
+            ->get();
+
+        if ($recipients->isEmpty()) {
+            $this->error('Нет получателей (super_admin/admin/accountant) — дайджест каналов не отправлен.');
+
+            return;
+        }
+
+        $lines = array_map(
+            fn (array $r) => sprintf(
+                '%s: лидов %d · юзеров %d · платили %d · %s ₽',
+                $r['channel'], $r['leads'], $r['users'], $r['payers'], $r['revenue, ₽'],
+            ),
+            array_slice($rows, 0, 12),
+        );
+        $body = $lines === []
+            ? 'За период нет лидов с источником — разметке нечего атрибутировать.'
+            : implode("\n", $lines);
+
+        foreach ($recipients as $recipient) {
+            Notification::make()
+                ->title('Каналы: лиды → выручка'.($days > 0 ? " (последние {$days} дн.)" : ' (всё время)'))
+                ->body($body)
+                ->info()
+                ->sendToDatabase($recipient);
+        }
+
+        $this->info('Дайджест каналов отправлен получателям: '.$recipients->count());
     }
 }
