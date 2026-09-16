@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Stories;
 
+use App\Models\TelegramSupportAccount;
 use App\Services\Telegram\MadelineClientFactory;
 use Illuminate\Support\Facades\Process;
 use RuntimeException;
@@ -51,13 +52,13 @@ class StoryPublisher
         return (bool) config('services.telegram_story.subprocess_lane', true);
     }
 
-    public function sendPhotoStory(string $absolutePath, string $caption = ''): ?int
+    public function sendPhotoStory(string $absolutePath, string $caption = '', ?string $account = null): ?int
     {
         if ($this->viaSubprocess()) {
-            return $this->execWorker(['action' => 'send_photo', 'path' => $absolutePath, 'caption' => $caption]);
+            return $this->execWorker(['action' => 'send_photo', 'path' => $absolutePath, 'caption' => $caption, 'account' => $account]);
         }
 
-        return $this->sendPhotoStoryDirect($absolutePath, $caption);
+        return $this->sendPhotoStoryDirect($absolutePath, $caption, $account);
     }
 
     public function sendVideoStory(string $absolutePath, string $caption = ''): ?int
@@ -97,9 +98,9 @@ class StoryPublisher
     // --- Прямое исполнение (воркер и тесты) ---
 
     /** Фотосториз из локального файла. Возвращает id сториз или null. */
-    public function sendPhotoStoryDirect(string $absolutePath, string $caption = ''): ?int
+    public function sendPhotoStoryDirect(string $absolutePath, string $caption = '', ?string $account = null): ?int
     {
-        $client = $this->client();
+        $client = $this->client($account);
 
         return $this->send($client, [
             '_' => 'inputMediaUploadedPhoto',
@@ -180,7 +181,7 @@ class StoryPublisher
         return isset($result['id']) ? (int) $result['id'] : null;
     }
 
-    private function client(): object
+    private function client(?string $account = null): object
     {
         if (! $this->factory->isConfigured()) {
             throw new RuntimeException(
@@ -188,7 +189,11 @@ class StoryPublisher
             );
         }
 
-        return $this->factory->open();
+        if ($account === null || $account === 'rusamskrtam') { return $this->factory->open(); }
+
+        $row = TelegramSupportAccount::query()->where('name', $account)->where('is_enabled', true)->firstOrFail();
+
+        return $this->factory->open(null, $row->session_path);
     }
 
     /**
