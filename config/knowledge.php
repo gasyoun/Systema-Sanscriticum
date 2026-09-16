@@ -66,4 +66,32 @@ return [
         'weight_dense' => (float) env('KNOWLEDGE_FUSION_WEIGHT_DENSE', 0.5),
     ],
 
+    /*
+     * Этап 4 — полоса уроков. Живёт в той же таблице и на той же модели, но
+     * веса слияния свои: у FAQ лексическая нога опирается на вылизанный
+     * RuTextNormalizer и служит полом, а у дословной устной речи она шумит
+     * (замер 16-09-2026 на расшифровке урока 1961: BM25 без стемминга топил
+     * сигнал, вектор без BM25 промахивался мимо лексически очевидных мест).
+     * Поэтому здесь ведёт плотная нога, а лексическая поднимает.
+     */
+    'lesson' => [
+        // Сколько фрагментов уходит в контекст модели.
+        'top_k' => (int) env('KNOWLEDGE_LESSON_TOP_K', 6),
+
+        // Порог косинуса лучшего фрагмента, ниже которого вопрос считается
+        // «не про уроки» и падает в обычного ИИ-куратора.
+        'min_score' => (float) env('KNOWLEDGE_LESSON_MIN_SCORE', 0.45),
+
+        // Целевая длина окна нарезки и перекрытие в одно предложение.
+        'chunk_chars' => (int) env('KNOWLEDGE_LESSON_CHUNK_CHARS', 700),
+
+        // Дословная выдержка в ответе: длина одной цитаты и их количество.
+        // H3308: бот не выгружает платную лекцию целиком.
+        'quote_chars' => (int) env('KNOWLEDGE_LESSON_QUOTE_CHARS', 280),
+        'max_quotes' => (int) env('KNOWLEDGE_LESSON_MAX_QUOTES', 3),
+
+        'weight_sparse' => (float) env('KNOWLEDGE_LESSON_WEIGHT_SPARSE', 0.6),
+        'weight_dense' => (float) env('KNOWLEDGE_LESSON_WEIGHT_DENSE', 1.0),
+    ],
+
 ];
