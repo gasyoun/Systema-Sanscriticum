@@ -57,6 +57,10 @@ class PublicScheduleResource extends JsonResource
                 'title' => $course->title,
                 'slug' => $course->slug,
                 'url' => route('shop.course.show', $course->slug),
+                // H4966: честность фида — протухший пин пробного (trial_schedule_id
+                // в прошлом) отличается от «пробное отключено», чтобы виджет не
+                // молчал одинаково в обоих случаях. Не числовой id — просто флаг.
+                'trial_pin_stale' => $course->hasStaleTrialPin(),
             ],
             'directions' => $course === null
                 ? []
