@@ -195,24 +195,6 @@ class WebhookController extends Controller
 
                 if (in_array($normalizedBankStatus, $successStatuses, true)) {
                     if ($payment->status !== 'paid') {
-                        // H4930 (E002 layer 1): sentinel_breaker over the ONLY
-                        // automatic paid->access mutation in prod (TochkaWebhookTest's
-                        // own description). Default OFF (features.money_mutation_breaker) —
-                        // fail-open with no flag/library is byte-identical to pre-H4930
-                        // behaviour. Frozen => the grant is SKIPPED and screamed via the
-                        // money channel (guards:money-breaker-alarm); the row above still
-                        // records the delivery for the audit trail, decision overridden below.
-                        if (config('features.money_mutation_breaker')
-                            && SentinelBreakerGate::frozen('tochka_grant', SentinelBreakerGate::CLASS_MONEY_MUTATION, 'Tochka webhook grant (заказ №'.$payment->id.')')
-                        ) {
-                            $decision = 'breaker_refused';
-                            Log::critical("⛔ Вебхук: sentinel_breaker заморожен — грант заказа №{$payment->id} отказан (H4930).", [
-                                'payment_id' => $payment->id,
-                            ]);
-
-                            return;
-                        }
-
                         $requiresCourseGroups = $payment->course_id !== null
                             && ! $payment->isDeposit()
                             && ! $payment->isTrial()
