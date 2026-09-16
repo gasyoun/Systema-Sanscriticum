@@ -208,10 +208,6 @@ class WebhookController extends Controller
                             );
                         }
 
-                        if (config('features.money_mutation_breaker')) {
-                            SentinelBreakerGate::record('tochka_grant', SentinelBreakerGate::CLASS_MONEY_MUTATION);
-                        }
-
                         $update = ['status' => 'paid'];
                         // Способ оплаты пишем только когда распознан — не затираем
                         // уже сохранённый NULL'ом на возможных повторных вебхуках.
@@ -219,6 +215,16 @@ class WebhookController extends Controller
                             $update['payment_method'] = $paymentMethod;
                         }
                         $payment->update($update);
+
+                        // Record AFTER the mutation actually landed (not before) —
+                        // an update() throw rolls the transaction back with nothing
+                        // granted, and a pre-recorded mutation would inflate the
+                        // breaker's counter for a grant that never happened (found
+                        // by the H4930 independent logic-critic pass).
+                        if (config('features.money_mutation_breaker')) {
+                            SentinelBreakerGate::record('tochka_grant', SentinelBreakerGate::CLASS_MONEY_MUTATION);
+                        }
+
                         Log::info("✅ УСПЕХ: Доступ выдан! Заказ №{$payment->id} оплачен.");
                     } elseif ($paymentMethod !== null && $payment->payment_method === null) {
                         // Платёж уже был отмечен оплаченным, но без способа — дозаполняем.
