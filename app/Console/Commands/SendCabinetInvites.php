@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\CabinetInviteMail;
 use App\Models\MagicLinkToken;
 use App\Models\User;
 use App\Services\Messaging\SmsRuChannel;
@@ -183,7 +184,7 @@ class SendCabinetInvites extends Command
         $url = $this->resetUrl($user);
 
         return "🙏 Вам открыт доступ в личный кабинет Общества ревнителей санскрита, но вы ещё не заходили.\n\n"
-            ."В кабинете — все ваши курсы, записи занятий и материалы. Войдите по ссылке (задайте пароль):\n{$url}\n\n"
+            ."В кабинете — все ваши курсы, записи занятий и материалы. Войдите по ссылке:\n{$url}\n\n"
             .'Как пользоваться кабинетом — руководство: '.rtrim((string) config('app.url'), '/').'/help/kabinet'."\n\n"
             .'Ссылка одноразовая. Если возникнут вопросы — просто ответьте на это сообщение.';
     }
@@ -193,7 +194,7 @@ class SendCabinetInvites extends Command
     {
         $url = $this->resetUrl($user);
 
-        return "Общество ревнителей санскрита: вам открыт доступ в личный кабинет. Войдите по ссылке (задайте пароль): {$url}";
+        return "Общество ревнителей санскрита: вам открыт доступ в личный кабинет. Войдите по ссылке: {$url}";
     }
 
     private function resetUrl(User $user): string
