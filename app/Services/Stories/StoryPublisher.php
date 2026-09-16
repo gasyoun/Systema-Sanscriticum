@@ -189,7 +189,9 @@ class StoryPublisher
             );
         }
 
-        if ($account === null || $account === 'rusamskrtam') { return $this->factory->open(); }
+        if ($account === null || $account === 'rusamskrtam') {
+            return $this->factory->open();
+        }
 
         $row = TelegramSupportAccount::query()->where('name', $account)->where('is_enabled', true)->firstOrFail();
 
