@@ -52,8 +52,35 @@ class CalendarPublishService
         return ['published' => $published, 'failed' => $failed, 'skipped_no_webhook' => false];
     }
 
+    public function __construct(private readonly ContentProhibitionsChecklist $checklist = new ContentProhibitionsChecklist) {}
+
     private function publishOne(ContentCalendarSlot $slot, string $webhook): bool
     {
+        // H5020 pre-send checklist (§2.8 ratified 16-09-2026): a blocked slot
+        // is held back as `draft` for a human edit — never posted, never
+        // silently retried every hour, reason kept in meta.prohibition_hold.
+        $verdict = $this->checklist->check((string) $slot->title."\n".(string) $slot->body);
+        if (! $verdict['ok']) {
+            $slot->forceFill([
+                'status' => ContentCalendarSlot::STATUS_DRAFT,
+                'meta' => array_merge($slot->meta ?? [], [
+                    'prohibition_hold' => $this->checklist->journalLine($verdict),
+                    'prohibition_hold_at' => now()->toDateTimeString(),
+                ]),
+            ])->save();
+            Log::warning('CalendarPublishService: слот удержан чек-листом §2.8', [
+                'calendar_slot_id' => $slot->id,
+                'hold' => $this->checklist->journalLine($verdict),
+            ]);
+
+            return false;
+        }
+        if ($verdict['warns'] !== []) {
+            $slot->forceFill(['meta' => array_merge($slot->meta ?? [], [
+                'prohibition_warn' => array_map(static fn (array $w): string => $w['rule'].' («'.$w['match'].'»)', $verdict['warns']),
+            ])])->save();
+        }
+
         $response = Http::withHeaders([
             'X-Webhook-Secret' => (string) config('services.n8n.calendar_post_secret'),
         ])->timeout(15)->post($webhook, [
@@ -75,7 +102,11 @@ class CalendarPublishService
             return false;
         }
 
-        $slot->forceFill(['status' => ContentCalendarSlot::STATUS_PUBLISHED])->save();
+        $slot->forceFill([
+            'status' => ContentCalendarSlot::STATUS_PUBLISHED,
+            // Digest source (H5020): when the autopilot actually posted it.
+            'meta' => array_merge($slot->meta ?? [], ['autopilot_published_at' => now()->toDateTimeString()]),
+        ])->save();
 
         $slot->candidates()
             ->whereIn('status', [

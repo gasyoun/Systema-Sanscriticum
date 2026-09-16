@@ -160,6 +160,16 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('publish-due-story-posts');
 
+        // Понедельничный дайджест автопилотов (H5020, MG Q10/Q19): один
+        // Markdown-файл в неделю в storage/app/marketing/ — что опубликовали
+        // оба автопилота, что удержал чек-лист §2.8, состояние флагов. Читается
+        // в понедельничном окне MG; только чтение таблиц + запись одного файла.
+        $schedule->command('content:autopilot-digest')
+            ->weeklyOn(1, '07:00') // понедельник 07:00 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('content-autopilot-monday-digest');
+
         // Персона @rusamskrtam: user-сториз через MadelineProto (H3964, Phase 2).
         // Тик рядом со stories:publish-due. Прод-инертен, пока
         // features.telegram_story_stories OFF (default). Открывает ЕДИНУЮ
