@@ -198,8 +198,8 @@ class SendCabinetInvites extends Command
 
     private function resetUrl(User $user): string
     {
-        $token = Password::broker()->createToken($user);
+        $token = MagicLinkToken::issueFor($user, self::INVITE_PURPOSE, self::INVITE_TTL_MINUTES);
 
-        return route('password.reset', $token).'?email='.urlencode($user->email);
+        return route('cabinet.invite', $token);
     }
 }
