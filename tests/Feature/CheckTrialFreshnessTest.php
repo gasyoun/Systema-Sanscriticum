@@ -22,7 +22,7 @@ class CheckTrialFreshnessTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function courseWithTrialSchedule(\Carbon\Carbon $start, float $price = 500): Course
+    private function courseWithTrialSchedule(Carbon $start, float $price = 500): Course
     {
         $course = Course::factory()->create(['is_visible' => true]);
         $schedule = Schedule::create([
