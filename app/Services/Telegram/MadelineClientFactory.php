@@ -51,10 +51,10 @@ class MadelineClientFactory
     /**
      * Start (or resume) the shared MadelineProto client on the support session.
      */
-    public function open(?string $clientClass = null): object
+    public function open(?string $clientClass = null, ?string $sessionPath = null): object
     {
         $clientClass ??= (string) config('services.telegram_support.client_class');
-        $session = self::sessionPath();
+        $session = $sessionPath ?? self::sessionPath();
 
         File::ensureDirectoryExists(dirname($session));
 
