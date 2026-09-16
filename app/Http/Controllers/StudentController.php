@@ -1232,5 +1232,4 @@ class StudentController extends Controller
 
         return null;
     }
-
 }
