@@ -63,4 +63,19 @@ return [
     'max_alert_lines' => (int) env('LOGS_WATCH_MAX_ALERT_LINES', 8),
 
     'timeout' => (int) env('LOGS_WATCH_TIMEOUT', 15),
+
+    // Известный хронический шум (H4879, 15-09-2026,
+    // docs/SERVER_SOFT_ALERT_PLAYBOOK.md, строка 2026-09-15 00:10-00:20 UTC):
+    // подстроки сообщения, которые НИКОГДА не считаются во всплеск, даже если
+    // 'levels' выше когда-нибудь включит их уровень. Флуд мёртвых peer'ов —
+    // data-quality, не инцидент; полный текст остаётся в самой строке лога,
+    // просто не участвует в подсчёте порога. '|' — разделитель нескольких
+    // подстрок в env.
+    'allowlist_patterns' => array_values(array_filter(array_map(
+        'trim',
+        explode('|', (string) env(
+            'LOGS_WATCH_ALLOWLIST_PATTERNS',
+            'This peer is not present in the internal peer database'
+        ))
+    ))),
 ];

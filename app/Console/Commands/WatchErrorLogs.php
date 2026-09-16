@@ -162,6 +162,7 @@ class WatchErrorLogs extends Command
     {
         $environments = (array) config('logs_watch.environments', ['production']);
         $levels = (array) config('logs_watch.levels', ['ERROR']);
+        $allowlist = array_filter((array) config('logs_watch.allowlist_patterns', []));
 
         $header = '/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s+([A-Za-z0-9._-]+)\.([A-Z]+):\s(.*)$/';
         $object = '/\[object\]\s*\(([A-Za-z0-9_\\\\]+)\(code:\d+\).*? at (.+?\.php):(\d+)/';
@@ -179,6 +180,9 @@ class WatchErrorLogs extends Command
                         continue;
                     }
                     if (! in_array($m[2], $environments, true) || ! in_array($m[3], $levels, true)) {
+                        continue;
+                    }
+                    if ($this->isAllowlisted($m[4], $allowlist)) {
                         continue;
                     }
                     $ts = Carbon::createFromFormat('Y-m-d H:i:s', $m[1], $now->getTimezone());
@@ -207,6 +211,25 @@ class WatchErrorLogs extends Command
         }
 
         return $hits;
+    }
+
+    /**
+     * H4879 (15-09-2026, docs/SERVER_SOFT_ALERT_PLAYBOOK.md): известный
+     * хронический шум (напр. мёртвые peer'ы harvest-ростера) не должен
+     * попадать во всплеск, даже если его уровень когда-нибудь войдёт в
+     * 'levels' — подстрока ищется по сырому сообщению до парсинга класса.
+     *
+     * @param  list<string>  $allowlist
+     */
+    private function isAllowlisted(string $message, array $allowlist): bool
+    {
+        foreach ($allowlist as $pattern) {
+            if ($pattern !== '' && str_contains($message, $pattern)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

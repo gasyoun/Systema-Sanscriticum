@@ -10,6 +10,7 @@ use App\Services\TelegramHarvest\TelegramHarvestSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
@@ -192,6 +193,50 @@ class SnapshotGroupRostersTest extends TestCase
         $this->fakeFactory($client);
 
         $this->assertSame([], app(TelegramHarvestSyncService::class)->fetchRoster('-100111'));
+    }
+
+    public function test_dead_peers_collapse_to_one_summary_line_not_per_peer_warning(): void
+    {
+        // H4879: мёртвые/отсутствующие peer'ы больше не пишут WARNING на каждый —
+        // одна INFO-строка на весь проход с count tried/dead/other/written.
+        $this->enable();
+        Group::create(['name' => 'Жив', 'telegram_chat_id' => '-100111', 'status' => 'active']);
+        Group::create(['name' => 'Мёртв 1', 'telegram_chat_id' => '-100222', 'status' => 'active']);
+        Group::create(['name' => 'Мёртв 2', 'telegram_chat_id' => '-100333', 'status' => 'active']);
+
+        $client = new class
+        {
+            public function getDialogIds(): array
+            {
+                return [];
+            }
+
+            public function getPwrChat(int|string $peer, bool $fullFetch = true, bool $send = true): array
+            {
+                if ($peer === '-100111') {
+                    return ['participants' => [['user' => ['id' => 1, 'first_name' => 'U']]]];
+                }
+
+                throw new \RuntimeException('This peer is not present in the internal peer database');
+            }
+        };
+        $this->fakeFactory($client);
+
+        Log::spy();
+
+        $this->artisan('telegram-harvest:roster-groups')->assertExitCode(0);
+
+        Log::shouldNotHaveReceived('warning');
+
+        Log::shouldHaveReceived('info')
+            ->withArgs(function (string $message, array $context) {
+                return $message === 'Telegram harvest roster: getPwrChat summary'
+                    && $context['peers_tried'] === 3
+                    && $context['peers_dead'] === 2
+                    && $context['peers_other_failure'] === 0
+                    && $context['rosters_written'] === 1;
+            })
+            ->once();
     }
 
     public function test_fetch_roster_requests_full_participant_fetch(): void

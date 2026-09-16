@@ -156,7 +156,10 @@ class TelegramHarvestSyncService
         $client = $this->clientFactory->open();
         $this->primePeerDatabase($client);
 
-        return $this->pwrRoster($client, $peer);
+        $deadPeers = 0;
+        $otherFailures = 0;
+
+        return $this->pwrRoster($client, $peer, $deadPeers, $otherFailures);
     }
 
     /**
@@ -183,13 +186,15 @@ class TelegramHarvestSyncService
         $this->primePeerDatabase($client);
 
         $out = [];
+        $deadPeers = 0;
+        $otherFailures = 0;
         foreach ($peers as $peer) {
             $peer = (string) $peer;
             if ($peer === '') {
                 continue;
             }
 
-            $roster = $this->pwrRoster($client, $peer);
+            $roster = $this->pwrRoster($client, $peer, $deadPeers, $otherFailures);
             if ($roster !== []) {
                 $out[$peer] = $roster;
 
@@ -197,6 +202,19 @@ class TelegramHarvestSyncService
                     $onRoster($peer, $roster);
                 }
             }
+        }
+
+        // H4879 (15-09-2026, docs/SERVER_SOFT_ALERT_PLAYBOOK.md): dead/absent
+        // peers re-fail every run (46 -> 535 rows/day, 10-14.09) and used to
+        // log one WARNING each — one INFO summary per run instead, full detail
+        // stays out of the per-peer log line.
+        if (count($peers) > 0) {
+            Log::info('Telegram harvest roster: getPwrChat summary', [
+                'peers_tried' => count($peers),
+                'peers_dead' => $deadPeers,
+                'peers_other_failure' => $otherFailures,
+                'rosters_written' => count($out),
+            ]);
         }
 
         return $out;
@@ -226,9 +244,14 @@ class TelegramHarvestSyncService
      * один недоступный/чужой чат (peer-not-present, приватность) не должен ронять
      * весь батч. Пустой массив = «не сняли» (аккаунт не в чате / пустой чат).
      *
+     * Мёртвый/отсутствующий peer — известный хронический исход (H4879), не
+     * WARNING-строка: считаем в $deadPeers, полный текст ошибки уходит только
+     * в итоговую summary-строку run'а. Прочие сбои остаются WARNING как раньше
+     * (это НЕ хронический шум, их надо видеть сразу).
+     *
      * @return array<int, array<string, mixed>>
      */
-    private function pwrRoster(object $client, string $peer): array
+    private function pwrRoster(object $client, string $peer, int &$deadPeers, int &$otherFailures): array
     {
         if (! method_exists($client, 'getPwrChat')) {
             return [];
@@ -247,7 +270,12 @@ class TelegramHarvestSyncService
             // команды (см. SnapshotGroupRosters).
             $chat = $client->getPwrChat($peer, true);
         } catch (Throwable $e) {
-            Log::warning('Telegram harvest roster: getPwrChat failed', ['peer' => $peer, 'error' => $e->getMessage()]);
+            if (str_contains($e->getMessage(), 'not present in the internal peer database')) {
+                $deadPeers++;
+            } else {
+                $otherFailures++;
+                Log::warning('Telegram harvest roster: getPwrChat failed', ['peer' => $peer, 'error' => $e->getMessage()]);
+            }
 
             return [];
         }

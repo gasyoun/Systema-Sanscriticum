@@ -127,6 +127,34 @@ class LogsErrorWatchTest extends TestCase
         $this->assertFileDoesNotExist($this->statePath, 'зелёный прогон гасит sticky-состояние');
     }
 
+    public function test_allowlisted_chronic_message_never_bursts(): void
+    {
+        // H4879: известный хронический шум (мёртвые peer'ы harvest-ростера)
+        // не считается во всплеск, даже если бы уровень оказался в 'levels' —
+        // defense-in-depth рядом с основным фиксом (одна summary-строка вместо
+        // множества WARNING на источнике).
+        config()->set('logs_watch.levels', ['ERROR', 'WARNING']);
+        config()->set('logs_watch.allowlist_patterns', ['This peer is not present in the internal peer database']);
+
+        $line = fn (string $ts) => sprintf(
+            "[%s] production.WARNING: Telegram harvest roster: getPwrChat failed {\"error\":\"This peer is not present in the internal peer database\"}\n",
+            $ts,
+        );
+
+        file_put_contents($this->todayPath(), implode('', [
+            $line('2026-09-13 14:05:33'),
+            $line('2026-09-13 14:06:10'),
+            $line('2026-09-13 14:07:00'),
+        ]));
+
+        $code = Artisan::call('logs:error-watch');
+        $out = Artisan::output();
+
+        $this->assertSame(0, $code);
+        Http::assertNothingSent();
+        $this->assertStringContainsString('Логи чисты', $out);
+    }
+
     public function test_different_classes_do_not_sum_into_a_burst(): void
     {
         file_put_contents($this->todayPath(), implode('', [
