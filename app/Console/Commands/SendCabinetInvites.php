@@ -161,8 +161,22 @@ class SendCabinetInvites extends Command
     }
 
     /**
-     * Ссылка для входа: генерим токен сброса и шлём дружелюбное сообщение со
-     * ссылкой — надёжнее письма (которое уходит в спам).
+     * H4966: было Password::sendResetLink() — тот же 60-минутный брокер, что
+     * убивал ссылку раньше, чем адрес доходил до почты. Теперь тот же
+     * многодневный invite-линк, что у остальных каналов, plain-text письмом.
+     */
+    private function sendViaEmail(User $user): bool
+    {
+        Mail::raw($this->messageText($user), function ($message) use ($user) {
+            $message->to($user->email)->subject('Доступ в личный кабинет — Общество ревнителей санскрита');
+        });
+
+        return true;
+    }
+
+    /**
+     * Ссылка для входа: одноразовый multi-day invite-токен, шлём дружелюбное
+     * сообщение со ссылкой — надёжнее письма (которое уходит в спам).
      */
     private function messageText(User $user): string
     {
