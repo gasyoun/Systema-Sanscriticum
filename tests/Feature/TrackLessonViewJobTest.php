@@ -12,7 +12,7 @@ use App\Models\LessonView;
 use App\Models\User;
 use Illuminate\Database\DeadlockException;
 use Illuminate\Database\QueryException;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
@@ -28,17 +28,17 @@ use Tests\TestCase;
  * один раз. Дополнительно: duplicate-key гонка не задваивает
  * total_lessons_opened.
  *
- * Почему DatabaseMigrations, а не RefreshDatabase: тот держит внешнюю
- * транзакцию на весь тест — на concurrency-ошибке Laravel НЕ откатывает
- * вложенный savepoint (считает, что MySQL сам всё откатил), соединение
- * остаётся в протекшем savepoint'е и счётчик уровней рассинхронизируется.
- * Без внешней транзакции дуга идёт ровно по прод-пути: уровень транзакций
- * = 1, job получает исходный QueryException, rollback честный. Обёртку
- * DeadlockException (вложенный случай) покрывает юнит-тест детектора.
+ * Тонкость транзакций: RefreshDatabase держит внешнюю транзакцию, а Laravel
+ * на concurrency-ошибке во вложенной транзакции НЕ откатывает savepoint
+ * (в MySQL 1020 откатывает всю транзакцию сам — там это верно, в sqlite нет),
+ * оставляя соединение в протекшем savepoint'е. Поэтому 1020-тест явно
+ * коммитит внешнюю транзакцию и проверяет прод-путь (уровень транзакций = 1);
+ * RefreshDatabase это переживает — на teardown он видит соединение вне
+ * транзакции и пере-мигрирует БД перед следующим тестом.
  */
 class TrackLessonViewJobTest extends TestCase
 {
-    use DatabaseMigrations;
+    use RefreshDatabase;
 
     /** Одноразовый 1020 на первом insert в activity_events — последнем
      * стейтменте транзакции: к моменту сбоя lesson_views + счётчики уже
@@ -148,6 +148,11 @@ class TrackLessonViewJobTest extends TestCase
     {
         [$user, $lesson, $course] = $this->fixture();
         Log::spy();
+
+        // Прод-путь: у воркера уровень транзакций = 1, job делает собственный
+        // BEGIN/ROLLBACK. Внешнюю транзакцию RefreshDatabase коммитим явно —
+        // под ней Laravel на 1020 не откатил бы savepoint (см. докблок класса).
+        DB::connection()->commit();
 
         $this->armCheckRead1020();
 
