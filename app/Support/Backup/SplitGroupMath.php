@@ -17,6 +17,23 @@ final class SplitGroupMath
     public const PART_PATTERN = '/^(?<stem>\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})\.part-(?<index>\d+)-of-(?<total>\d+)\.zip$/';
 
     /**
+     * Дата архива из имени файла — `YYYY-MM-DD-HH-MM-SS.zip` или
+     * `YYYY-MM-DD-HH-MM-SS.part-N-of-M.zip`. Именно из ИМЕНИ, а не из mtime:
+     * mtime на WebDAV — время загрузки в облако, и свежесть поехала бы
+     * (spatie `Backup::date()` парсил имя же — 0bn, 16-09-2026).
+     */
+    public static function timestampFromBasename(string $basename): ?int
+    {
+        if (preg_match('/^(\d{4}-\d{2}-\d{2})-(\d{2})-(\d{2})-(\d{2})/', basename($basename), $m) !== 1) {
+            return null;
+        }
+
+        $parsed = strtotime(sprintf('%s %s:%s:%s', $m[1], $m[2], $m[3], $m[4]));
+
+        return $parsed === false ? null : $parsed;
+    }
+
+    /**
      * Сгруппировать имена файлов-частей по стволу.
      *
      * @param  list<string>  $basenames
