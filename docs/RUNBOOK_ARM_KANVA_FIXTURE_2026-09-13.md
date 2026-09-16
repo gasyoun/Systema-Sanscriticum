@@ -1,6 +1,10 @@
 # Runbook: вооружить канва-факстуру пробы (~10 мин, MG на проде .92)
 
-_Created: 13-09-2026 · Last updated: 13-09-2026_
+_Created: 13-09-2026 · Last updated: 16-09-2026_
+
+16-09-2026: исполнено на проде (OxAlpha, `zai-coding-plan/glm-5.3-flash`, по слову MG
+в чате; GTD 0b2 закрыт) — курс #453, группа #151. Попутный фикс: `courses.slug`
+теперь обязателен (SQLSTATE 1364 без него), шаг 2 дополнен slug'ом.
 
 Исполнитель: **человек (MG)** — сам флип prod `.env` и сидинг курса не агенту
 (прецедент H3797: sandbox-урок заводит человек). Связан с GTD 0b2 и
@@ -24,6 +28,7 @@ _Created: 13-09-2026 · Last updated: 13-09-2026_
    php artisan tinker --execute='
    $c = App\Models\Course::create([
        "title" => "Кочергина (канва-факстура пробы H4648)",
+       "slug" => "kochergina-kanva-fakstura-proby-h4648",
        "is_active" => true,
    ]);
    $g = App\Models\Group::create(["name" => "Канва-факстура пробы"]);
