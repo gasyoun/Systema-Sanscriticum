@@ -5,7 +5,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
 orig = subprocess.run(
-    ["git", "show", "HEAD:app/Http/Controllers/StudentController.php"],
+    ["git", "show", "18a1b677:app/Http/Controllers/StudentController.php"],
     capture_output=True, encoding="utf-8", check=True,
 ).stdout.splitlines(keepends=True)
 
