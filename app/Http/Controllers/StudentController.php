@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ManagesCourseResources;
+use App\Http\Controllers\Concerns\ManagesStudentMiscPages;
 use App\Jobs\TrackLessonViewJob;
 use App\Models\ActivityEvent;
-use App\Models\Announcement;
 use App\Models\Course;
-use App\Models\CourseMaterial;
 use App\Models\CourseWaitlistItem;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
@@ -16,20 +16,16 @@ use App\Models\Payment;
 use App\Models\PranaPerk;
 use App\Models\PranaRedemption;
 use App\Models\Schedule;
-use App\Models\ScheduleAttendanceNotice;
 use App\Models\SubscriberMagnet;
 use App\Models\User;
 use App\Models\WaitlistVote;
 use App\Services\AccessDiagnosticsService;
 use App\Services\Activity\CabinetTelemetry;
-use App\Services\AttendanceNoticeService;
 use App\Services\Cabinet\GrammarLadder;
 use App\Services\Cabinet\RecordingsCatalog;
 use App\Services\Cabinet\RecoveryState;
 use App\Services\Cabinet\RecoveryStateResolver;
-use App\Services\CertificateService;
 use App\Services\CourseContinuationBanner;
-use App\Services\CourseMaterialsArchiver;
 use App\Services\DebtPaymentResolver;
 use App\Services\HindiAttachmentDrills;
 use App\Services\HindiProgrammePlaylist;
@@ -55,6 +51,9 @@ use Illuminate\Support\Collection;
 
 class StudentController extends Controller
 {
+    use ManagesCourseResources;
+    use ManagesStudentMiscPages;
+
     /**
      * === ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Получение купленных тарифов ===
      * Железобетонный метод проверки доступов строго по ID КУРСА
@@ -98,100 +97,6 @@ class StudentController extends Controller
                 $course,
             ),
         )));
-    }
-
-    /**
-     * Страница расписания (Timeline)
-     */
-    public function calendar()
-    {
-        $user = auth()->user();
-        $groupIds = $user->groups->pluck('id');
-
-        // H4434 — эффективная таймзона ученика (MG 09-09-2026). null = МСК,
-        // рендер идёт как раньше; нон-МСК получают dual-display и заголовки
-        // дней в своей зоне («суббота» у калифорнийца = пятница по-московски).
-        $userTz = $user->effectiveTimezone();
-
-        $upcomingEvents = Schedule::with(['course', 'group'])
-            ->where(function ($query) use ($groupIds) {
-                $query->whereIn('group_id', $groupIds)
-                    ->orWhereNull('group_id');
-            })
-            ->where(function ($query) {
-                // Карточка живёт, пока занятие не закончилось: по end, а для
-                // записей без end — DEFAULT_DURATION_HOURS от старта (как в
-                // Schedule::isLive() и в самой карточке). Иначе карточка со
-                // ссылкой исчезала ровно в момент начала идущего занятия.
-                $query->where('end', '>=', now())
-                    ->orWhere(function ($q) {
-                        $q->whereNull('end')
-                            ->where('start', '>=', now()->subHours(Schedule::DEFAULT_DURATION_HOURS));
-                    });
-            })
-            ->orderBy('start', 'asc')
-            ->get();
-
-        // H4434 — группировка по дням в зоне ученика (было: isToday/isTomorrow
-        // всегда считали по московской зоне приложения).
-        $groupedEvents = $upcomingEvents->groupBy(function ($event) use ($userTz) {
-            $local = $event->start->timezone($userTz ?: config('app.timezone'));
-
-            if ($local->isToday()) {
-                return 'Сегодня';
-            }
-            if ($local->isTomorrow()) {
-                return 'Завтра';
-            }
-
-            return $local->translatedFormat('d F, l');
-        });
-
-        $feedToken = $user->calendarFeedToken()->token;
-        $feedUrl = route('student.calendar.feed', ['user' => $user->id, 'token' => $feedToken]);
-        $webcalUrl = preg_replace('~^https?://~', 'webcal://', $feedUrl);
-
-        // H2317 — предварительные предупреждения (не приду / опоздаю / …).
-        $attendanceNoticesEnabled = (bool) config('features.attendance_notices', false);
-        $myNotices = collect();
-        $noticeOptions = [];
-        if ($attendanceNoticesEnabled && $upcomingEvents->isNotEmpty()) {
-            $myNotices = ScheduleAttendanceNotice::query()
-                ->where('user_id', $user->id)
-                ->whereIn('schedule_id', $upcomingEvents->pluck('id'))
-                ->get()
-                ->keyBy('schedule_id');
-            $noticeOptions = app(AttendanceNoticeService::class)->statusOptions();
-        }
-
-        return view('student.calendar', compact(
-            'groupedEvents',
-            'feedUrl',
-            'webcalUrl',
-            'attendanceNoticesEnabled',
-            'myNotices',
-            'noticeOptions',
-        ))->with('userTz', $userTz);
-    }
-
-    /**
-     * Отвязка мессенджера от аккаунта (кнопка «Отвязать» в кабинете).
-     *
-     * Обнуляем id — кабинет снова покажет «Подключить», а исходящие уведомления
-     * (User::sendTelegramMessage / sendVkMessage) перестанут уходить (некуда).
-     * Сам чат с ботом в мессенджере при этом не закрывается — это нативный Stop.
-     */
-    public function disconnectMessenger(Request $request, string $channel)
-    {
-        $user = $request->user();
-
-        if ($channel === 'telegram') {
-            $user->update(['telegram_id' => null, 'telegram_auth_token' => null]);
-        } else { // 'vk' — единственный другой вариант (ограничено в роуте whereIn)
-            $user->update(['vk_id' => null, 'vk_auth_token' => null]);
-        }
-
-        return back()->with('bot_status', 'Бот отвязан — уведомления по учёбе больше не приходят. Подключить заново можно в любой момент.');
     }
 
     /**
@@ -1293,129 +1198,6 @@ class StudentController extends Controller
     }
 
     /**
-     * Скачать архив со всеми материалами курса.
-     * Учитывает права доступа студента (оплаченные блоки).
-     */
-    public function downloadCourseMaterials(string $slug, CourseMaterialsArchiver $archiver)
-    {
-        $user = auth()->user();
-        $userGroupIds = $user->groups->pluck('id');
-
-        // Проверяем, что курс доступен этому студенту (он в нужной группе).
-        // Используем is_active (а не is_visible) — это видимость в ЛК, согласованно с dashboard/showCourse.
-        $course = Course::resolveBySlugOrFail($slug);
-        abort_unless($course->is_active, 404);
-        abort_unless(
-            $course->groups()->whereIn('groups.id', $userGroupIds)->exists(),
-            404
-        );
-
-        $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $course->slug);
-
-        if (empty($unlockedTariffs)) {
-            return back()->with('error', 'У вас нет оплаченных блоков для этого курса.');
-        }
-
-        try {
-            return $archiver->buildForUser($course, $user, $unlockedTariffs);
-        } catch (\RuntimeException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-    }
-
-    /**
-     * Библиотека курса — реестр ссылок на литературу (фаза 1).
-     *
-     * Доступ: курс активен + студент в группе курса. Тарифы НЕ гейтят страницу
-     * целиком — иначе общая библиография курса исчезала бы в промежутках между
-     * оплатами блоков. Материал, привязанный к уроку, наследует замок этого
-     * урока по той же формуле, что и showCourse().
-     */
-    public function courseLibrary(string $slug)
-    {
-        abort_unless((bool) config('features.course_library', false), 404);
-
-        $user = auth()->user();
-        $userGroupIds = $user->groups->pluck('id');
-
-        $course = Course::resolveBySlugOrFail($slug);
-        abort_unless($course->is_active, 404);
-        abort_unless(
-            $course->groups()->whereIn('groups.id', $userGroupIds)->exists(),
-            404
-        );
-
-        $unlockedTariffs = $this->getUserUnlockedTariffs($user->id, $course->slug);
-        $grantedLessonIds = LessonAccessGrant::userGrantedLessonIds($user, (int) $course->id);
-
-        $materials = CourseMaterial::query()
-            ->with('lesson')
-            ->where('course_id', $course->id)
-            ->visible()
-            ->shelfOrder()
-            ->get()
-            ->filter(function (CourseMaterial $material) use ($unlockedTariffs, $grantedLessonIds): bool {
-                // Материал курса (без урока) виден всем, у кого есть курс.
-                if ($material->lesson_id === null) {
-                    return true;
-                }
-                $lesson = $material->lesson;
-                // Урок удалён/недоступен — материал не показываем.
-                if ($lesson === null) {
-                    return false;
-                }
-
-                return $lesson->is_free
-                    || $lesson->is_preview
-                    || in_array($lesson->id, $grantedLessonIds, true)
-                    || $lesson->isUnlockedBy($unlockedTariffs);
-            })
-            ->values();
-
-        // Полка курса отдельно от полок уроков — так студент видит общую
-        // библиографию, не пролистывая её сквозь уроки.
-        $courseWide = $materials->whereNull('lesson_id')->values();
-        $byLesson = $materials->whereNotNull('lesson_id')->groupBy('lesson_id');
-
-        return view('student.course-library', [
-            'course' => $course,
-            'courseWide' => $courseWide,
-            'byLesson' => $byLesson,
-        ]);
-    }
-
-    /**
-     * Скачивание сертификата
-     */
-    public function downloadCertificate($id, CertificateService $service)
-    {
-        $certificate = auth()->user()->certificates()->with('course')->findOrFail($id);
-        $pdf = $service->generatePdf($certificate);
-
-        return $pdf->download('Certificate_'.$certificate->course->id.'.pdf');
-    }
-
-    /**
-     * Скачивание сертификата картинкой (JPEG).
-     */
-    public function downloadCertificateImage($id, CertificateService $service)
-    {
-        $certificate = auth()->user()->certificates()->with('course')->findOrFail($id);
-
-        try {
-            $jpeg = $service->generateJpegBytes($certificate);
-        } catch (\RuntimeException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return response()->streamDownload(
-            fn () => print $jpeg,
-            'Certificate_'.$certificate->course->id.'.jpg',
-            ['Content-Type' => 'image/jpeg'],
-        );
-    }
-
-    /**
      * === ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Парсер ссылок видео ===
      * H4396: public static — RecordingGateController (серверные ворота
      * записи) резолвит тот же ID, не плодя вторую реализацию правила
@@ -1451,61 +1233,4 @@ class StudentController extends Controller
         return null;
     }
 
-    /**
-     * Раздел «Открытые уроки / вебинары» — доступен любому залогиненному студенту.
-     * Показывает все уроки с is_free=true (независимо от покупок и групп).
-     */
-    public function openLessons()
-    {
-        $lessons = Lesson::free()
-            ->where('is_published', true)
-            ->with('course:id,title,slug')
-            ->orderByDesc('lesson_date')
-            ->orderByDesc('id')
-            ->get();
-
-        return view('student.open-lessons', compact('lessons'));
-    }
-
-    /**
-     * H1680 — Wave 2: cabinet skill-drill strip. Links out to the existing
-     * free /lila drills, DISTINCT from the FSRS review loop at /dvaram/koloda —
-     * short single-item practice, no spaced-repetition scheduling here.
-     * Static curated list (the drills themselves live in public/lila/, not
-     * in the DB) — matches the "not FSRS" scope of this handoff.
-     */
-    public function skillDrills()
-    {
-        $drills = [
-            ['family' => 'sort', 'label' => 'Гласные: долгие и краткие', 'url' => '/lila/sort/vowel-length/'],
-            ['family' => 'match', 'label' => 'IAST ↔ кириллица', 'url' => '/lila/match/iast-cyrillic/'],
-            ['family' => 'match', 'label' => 'Кочергина, урок 1', 'url' => '/lila/match/kochergina-l1/'],
-            ['family' => 'roots', 'label' => 'Корни: топ-25', 'url' => '/lila/roots/top-25/'],
-            ['family' => 'ligatures', 'label' => 'Лигатуры: топ-10', 'url' => '/lila/ligatures/top-10/'],
-            ['family' => 'cloze', 'label' => 'Ранг корня: клоуз', 'url' => '/lila/cloze/root-rank/'],
-        ];
-
-        return view('student.skill-drills', compact('drills'));
-    }
-
-    public function messages()
-    {
-        $user = auth()->user();
-
-        // Добавили круглые скобки () и явно указали таблицу, чтобы избежать конфликтов!
-        $userGroupIds = $user->groups()->pluck('groups.id')->toArray();
-
-        $messages = Announcement::where('is_published', true)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->filter(function ($announcement) use ($userGroupIds) {
-                if (empty($announcement->target_groups)) {
-                    return true;
-                }
-
-                return count(array_intersect($announcement->target_groups, $userGroupIds)) > 0;
-            });
-
-        return view('student.messages', compact('messages'));
-    }
 }
