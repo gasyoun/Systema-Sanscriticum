@@ -1,4 +1,8 @@
 import re
+import sys
+
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
 
 SRC = "app/Http/Controllers/StudentController.php"
 with open(SRC, encoding="utf-8") as f:
