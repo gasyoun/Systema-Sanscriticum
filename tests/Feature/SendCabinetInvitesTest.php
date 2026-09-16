@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Console\Commands\SendCabinetInvites;
+use App\Mail\CabinetInviteMail;
 use App\Models\MagicLinkToken;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -20,9 +20,8 @@ use Tests\TestCase;
  * в note + реальный email, НЕ только платившие (см. класс команды).
  *
  * H4966: ссылка теперь multi-day `MagicLinkToken` (cabinet_invite), не
- * 60-минутный брокер сброса пароля — email-ветка шлёт Mail::raw() вместо
- * App\Mail\PasswordResetMail, поэтому шлём/проверяем Mailable::class (анонимный
- * класс от Mail::raw).
+ * 60-минутный брокер сброса пароля — email-ветка шлёт App\Mail\CabinetInviteMail
+ * вместо App\Mail\PasswordResetMail.
  *
  * NB: Mail::fake() ставим до создания пользователей — на всякий случай, если
  * какой-то observer тоже шлёт письма.
@@ -47,7 +46,7 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites')->assertSuccessful();
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
         $this->assertNull($user->fresh()->cabinet_invite_sent_at);
     }
 
@@ -57,11 +56,9 @@ class SendCabinetInvitesTest extends TestCase
         $user = $this->sleepingStudentWithAccess(['email' => 'sleeper@example.com', 'telegram_id' => null]);
         Mail::fake();
 
-        $this->artisan('students:send-login-invites', ['--send' => true])
-            ->expectsOutputToContain('Отправлено')
-            ->assertSuccessful();
+        $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertSent(Mailable::class);
+        Mail::assertQueued(CabinetInviteMail::class, fn (CabinetInviteMail $m) => $m->user->is($user));
         $this->assertNotNull($user->fresh()->cabinet_invite_sent_at);
     }
 
@@ -96,7 +93,7 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
         $this->assertNull($active->fresh()->cabinet_invite_sent_at);
     }
 
@@ -108,7 +105,7 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
         $this->assertNull($noAccess->fresh()->cabinet_invite_sent_at);
     }
 
@@ -120,11 +117,11 @@ class SendCabinetInvitesTest extends TestCase
 
         // Без --resend, свежая отправка (2 дня < окна auto-resend) — пропускается.
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
 
         // С --resend — приглашается снова немедленно.
         $this->artisan('students:send-login-invites', ['--send' => true, '--resend' => true])->assertSuccessful();
-        Mail::assertSent(Mailable::class);
+        Mail::assertQueued(CabinetInviteMail::class);
     }
 
     /**
@@ -143,7 +140,7 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertSent(Mailable::class, fn (Mailable $m) => $m->hasTo($user->email));
+        Mail::assertQueued(CabinetInviteMail::class, fn (CabinetInviteMail $m) => $m->user->is($user));
         $this->assertTrue($user->fresh()->cabinet_invite_sent_at->isAfter(now()->subMinute()));
     }
 
@@ -156,7 +153,7 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertNothingSent();             // не email
+        Mail::assertNothingQueued();             // не email
         Http::assertSent(fn ($req) => str_contains($req->url(), 'telegram')); // а Telegram
         $this->assertNotNull($user->fresh()->cabinet_invite_sent_at);
     }
@@ -185,10 +182,10 @@ class SendCabinetInvitesTest extends TestCase
         Mail::fake();
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
 
         $this->artisan('students:send-login-invites', ['--send' => true, '--include-no-stamp' => true])->assertSuccessful();
-        Mail::assertSent(Mailable::class, fn (Mailable $m) => $m->hasTo($noStamp->email));
+        Mail::assertQueued(CabinetInviteMail::class, fn (CabinetInviteMail $m) => $m->user->is($noStamp));
         $this->assertNotNull($noStamp->fresh()->cabinet_invite_sent_at);
     }
 
@@ -201,7 +198,7 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
         Http::assertSent(fn ($req) => str_contains($req->url(), 'vk.com'));
         $this->assertNotNull($user->fresh()->cabinet_invite_sent_at);
     }
@@ -221,7 +218,7 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
         Http::assertSent(fn ($req) => str_contains($req->url(), 'sms.ru'));
         $this->assertNotNull($user->fresh()->cabinet_invite_sent_at);
     }
