@@ -1,0 +1,48 @@
+# H5022 — автоматическое повторное приглашение через 48 ч после оплаты без входа: первый сухой прогон когорты
+
+_Created: 17-09-2026 · Last updated: 17-09-2026_
+
+**Handoff:** [H5022](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5022-Fable_Systema-Sanscriticum_paid-never-login-48h-reinvite_16.09.26.md) (Fable 5.1 `claude-fable-5-1`, 17-09-2026) · **Решение MG:** Q14 digital-marketing grill 16-09-2026 — закрыть утечку «оплатил — ни разу не вошёл» (75,2 %, [PROCESS_MINING_STUDENT_FUNNELS_08-09-2026.md](https://github.com/gasyoun/Uprava/blob/main/reports/PROCESS_MINING_STUDENT_FUNNELS_08-09-2026.md)), флаг по умолчанию ON.
+
+## Что построено
+
+1. Команда [`students:reinvite-48h`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SendPaidNeverLoginReinvite.php): через ≥48 ч после успешной оплаты (`payments.status` paid/success, не conditional, `first_paid_at` в окне 30 дней) студенту без единого входа (`login_count = 0`, `last_login_at` пуст) уходит **ровно одно** приглашение. Telegram, если привязан chat id (бот кабинета), иначе email. Вход — одноразовая magic-ссылка `/login-link/{token}` (тот же маршрут, что у кнопки «Разблокировать»), TTL 72 ч.
+2. Идемпотентность: событие `activity_events.event_type = reinvite_48h_sent` (канал, `payment_id`) — второй прогон того же студента не трогает. Плюс штамп `cabinet_invite_sent_at`, чтобы еженедельная капля [`students:send-login-invites`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/SendCabinetInvites.php) не продублировала; свежее (≤14 дн.) ручное приглашение — тоже исключение.
+3. Расписание: ежедневно 11:00 МСК, `--send --limit=50` ([`SchedulesStudentsAndContent`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Concerns/SchedulesStudentsAndContent.php)).
+4. Kill switch: `features.reinvite_48h` ← `REINVITE_48H` ([config/features.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/features.php)), **по умолчанию `true`** по решению MG. Выключить: `REINVITE_48H=false` в `.env` + `php artisan config:cache`.
+5. Пара шаблонов: Telegram-текст в команде + письмо [`Reinvite48hMail`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Mail/Reinvite48hMail.php) / [`emails/onboarding/reinvite-48h.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/emails/onboarding/reinvite-48h.blade.php). Копия ведёт с записей и своего темпа (objection playbook, верхний лифт «время × запись/свой темп»), без срочности.
+6. Отчёт: `php artisan students:reinvite-48h --report [--report-days=30]` — среди «созревших» приглашений (≥7 дней назад) доля вошедших в течение 7 дней против baseline **10,4 %** (вход после повторного приглашения, перепись H3499 25-08-2026).
+7. Тесты: [`SendPaidNeverLoginReinviteTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/SendPaidNeverLoginReinviteTest.php) — 8 кейсов (сухой прогон, email + идемпотентность, Telegram приоритетнее, моложе 48 ч не берём, старше окна — еженедельной капле, вошедшие/недавно приглашённые исключены, kill switch, `--report`).
+
+## Первый сухой прогон когорты (прод, read-only SELECT, HEAD `e27fe02d`, 17-09-2026 ~12:00 МСК)
+
+Команда на проде появится после деплоя; ту же выборку, что строит `eligibleQuery()`, сняли одним агрегатным SELECT через `php artisan tinker` (только счётчики, ни одной персональной строки).
+
+| Срез | n |
+|---|---|
+| Оплатили за последние 30 дней, оплате ≥48 ч (paid/success, не conditional) | **56** |
+| Из них ни разу не входили и **подходят под 48-ч приглашение** | **2** (Telegram 0 · email 2 · без канала 0) |
+| Из них исключены как недавно (≤14 дн.) приглашённые | 0 |
+| Оплатившие без единого входа — за всё время | **699** (707 на 08-09; −8 за 9 дней) |
+
+## Что это значит
+
+1. **Свежая утечка мала:** 54 из 56 недавних покупателей уже входили в кабинет — checkout-поток сейчас сажает покупателя в кабинет сам. Ежедневная 48-ч задача закрывает хвост (2 человека на сегодня, дальше ~по одному-два в неделю), а не 75 %.
+2. **75,2 % — это исторический пул (699).** Его добирает еженедельная капля `students:send-login-invites` (50/пн) — она требует штампа «[Доступ отправлен» в note; 48-ч задача его не требует. Если MG захочет одной волной пройтись по старому пулу этой же механикой (magic-ссылка + копия про записи вместо reset-письма), это один запуск с широким окном: `php artisan students:reinvite-48h --lookback-days=3650 --limit=100` (сначала без `--send` — покажет счётчик по каналам), а не новая разработка. Не запускалось — решение человека (правило прогрева P0 ≤100–200 писем/день).
+3. **Telegram у когорты нет** (0/2, как и 0/198 в переписи H3499) — email остаётся единственным реальным каналом, пока привязка Telegram не станет частью checkout.
+
+## Через неделю (acceptance, вторая половина)
+
+```bash
+php artisan students:reinvite-48h --report --report-days=14
+```
+
+Печатает: приглашений / созревших / вошедших в 7 дней / % / по каналам / вердикт против 10,4 %. При n созревших < 10 вердикт читать как INCONCLUSIVE (measure-twice), не как провал. Первая честная точка — ~24-09-2026 (первые приглашения уйдут в первый прогон после деплоя, созреют через 7 дней).
+
+## Не сделано / риски
+
+1. **Деплой и первый реальный прогон — авто-деплой после merge в `main`**; флаг ON, поэтому первый `--send` уйдёт в ближайшие 11:00 МСК после деплоя (по сегодняшним данным — 2 письма).
+2. Magic-ссылка выдаётся с назначением `admin_unblock` (переиспользован маршрут кнопки «Разблокировать» — без новой auth-поверхности). Отдельное назначение имеет смысл только если понадобится различать источники в аудите.
+3. `login_count`/`last_login_at` — те же признаки, что у еженедельной капли и переписи; если checkout когда-нибудь перестанет логинить покупателя, когорта резко вырастет — лимит 50/день это сдержит, `--report` покажет.
+
+_Гасунс_

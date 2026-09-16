@@ -215,7 +215,7 @@ final class SpawningFactoryStub extends MadelineClientFactory
         return true;
     }
 
-    public function open(?string $clientClass = null): object
+    public function open(?string $clientClass = null, ?string $sessionPath = null): object
     {
         $this->opened++;
         $this->probe->add(9_000_000 + $this->opened);
@@ -231,7 +231,7 @@ final class FailingFactoryStub extends MadelineClientFactory
         return true;
     }
 
-    public function open(?string $clientClass = null): object
+    public function open(?string $clientClass = null, ?string $sessionPath = null): object
     {
         throw new RuntimeException('AUTH_RESTART: сессия требует повторного входа');
     }
