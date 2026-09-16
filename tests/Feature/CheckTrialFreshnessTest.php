@@ -64,7 +64,7 @@ class CheckTrialFreshnessTest extends TestCase
         $this->assertFalse($fresh->hasStaleTrialPin());
 
         $this->artisan('trial:check-freshness')
-            ->expectsOutputToContain('Протухших пинов: нет')
+            ->expectsOutputToContain('Протухших пинов пробного занятия нет')
             ->assertSuccessful();
 
         Http::assertNothingSent();
