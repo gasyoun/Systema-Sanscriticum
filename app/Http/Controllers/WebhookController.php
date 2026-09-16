@@ -156,6 +156,22 @@ class WebhookController extends Controller
                         $apply = false;
                         Log::warning("⛔ Вебхук: сумма банка {$reportedAmount} расходится с заказом №{$payment->id} ({$payment->amount}).");
                     }
+                    // (d) H4930 (E002 layer 1): sentinel_breaker над ЕДИНСТВЕННОЙ
+                    // автоматической мутацией paid->доступ в проде. Default OFF
+                    // (features.money_mutation_breaker) — без флага/библиотеки
+                    // поведение байт-в-байт как до H4930 (fail-open). Заморожен =>
+                    // грант отказан и прокричан денежным каналом (guards:money-breaker-alarm);
+                    // человек разбирается, банк ретраит, доставка не теряется.
+                    elseif ($payment->status !== 'paid'
+                        && config('features.money_mutation_breaker')
+                        && SentinelBreakerGate::frozen('tochka_grant', SentinelBreakerGate::CLASS_MONEY_MUTATION, 'Tochka webhook grant (заказ №'.$payment->id.')')
+                    ) {
+                        $decision = 'breaker_refused';
+                        $apply = false;
+                        Log::critical("⛔ Вебхук: sentinel_breaker заморожен — грант заказа №{$payment->id} отказан (H4930).", [
+                            'payment_id' => $payment->id,
+                        ]);
+                    }
                 }
 
                 // Журнал: одна строка на КАЖДУЮ подписанную доставку (аддитивно, не
