@@ -8,11 +8,18 @@ use App\Http\Controllers\Concerns\StudentDashboardConcerns;
 use App\Http\Controllers\Concerns\StudentMiscConcerns;
 use App\Http\Controllers\Concerns\StudentScheduleConcerns;
 use App\Models\Course;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\Membership\ClubEntitlement;
 
 class StudentController extends Controller
 {
+    use StudentCertificateConcerns;
+    use StudentCourseContentConcerns;
+    use StudentDashboardConcerns;
+    use StudentMiscConcerns;
+    use StudentScheduleConcerns;
+
     /**
      * === ВСПОМОГАТЕЛЬНЫЙ МЕТОД: Получение купленных тарифов ===
      * Железобетонный метод проверки доступов строго по ID КУРСА
