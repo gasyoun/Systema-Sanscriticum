@@ -1569,33 +1569,32 @@ class TeacherSalaries extends Page implements HasTable
                 // со-препод — из pivot), а не всегда основного.
                 $terms = $course?->salaryTermsFor((int) $r->id);
 
-                $payout = Teacher::find($r->id)?->payouts()->create([
-                    'amount' => $data['amount'],
-                    'type' => TeacherPayout::TYPE_REGULAR,
-                    'paid_at' => $data['paid_at'],
-                    'period_month' => $data['period_month'] ?? null,
-                    'course_id' => $course?->id,
-                    'salary_type' => $terms['type'] ?? null,
-                    'salary_value' => $terms['value'] ?? null,
-                    'comment' => $data['comment'] ?? null,
-                ]);
-
-                if ($payout && ($data['post_to_finance'] ?? true)) {
-                    app(TeacherPayoutPoster::class)->post($payout);
+                $teacher = Teacher::find($r->id);
+                if ($teacher === null) {
+                    return;
                 }
 
-                // Зачёт авансов: помечаем непогашенные авансы преподавателя зачтёнными.
-                if (! empty($data['settle_advances'])) {
-                    TeacherPayout::query()
-                        ->where('teacher_id', $r->id)
-                        ->unsettledAdvances()
-                        ->get()
-                        ->each(fn (TeacherPayout $advance) => $advance->update([
-                            'settled_amount' => $advance->amount,
-                            'settled_at' => now(),
-                            'settled_by' => auth()->id(),
-                        ]));
-                }
+                // H5007 (audit H7): создание выплаты + проводка в «Финансах» +
+                // зачёт авансов — ОДНА транзакция, и зачёт FIFO НЕ БОЛЬШЕ суммы
+                // выплаты (тот же settleAdvancesForBlockPayout, что у поблочной
+                // выплаты). Раньше «Зачесть аванс» гасил ВСЕ авансы целиком
+                // независимо от суммы, и падение проводки оставляло выплату
+                // без транзакции-оттока.
+                app(TeacherSalaryService::class)->recordManualPayout(
+                    $teacher,
+                    [
+                        'amount' => (float) $data['amount'],
+                        'paid_at' => $data['paid_at'],
+                        'period_month' => $data['period_month'] ?? null,
+                        'course_id' => $course?->id,
+                        'salary_type' => $terms['type'] ?? null,
+                        'salary_value' => $terms['value'] ?? null,
+                        'comment' => $data['comment'] ?? null,
+                    ],
+                    (bool) ($data['post_to_finance'] ?? true),
+                    ! empty($data['settle_advances']),
+                    auth()->id(),
+                );
 
                 Notification::make()
                     ->title('Выплата записана')

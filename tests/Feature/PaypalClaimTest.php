@@ -551,4 +551,76 @@ class PaypalClaimTest extends TestCase
         // Контракт голоса: без ё в новой копии (правило D13).
         $this->assertStringNotContainsString('ё', $html);
     }
+
+    /** @test */
+    public function h5007_duplicate_trusted_claim_same_txn_is_rejected_when_wave1_on(): void
+    {
+        // Audit H2 (16-09-2026): N submits = N paid payments. With the wave-1 flag
+        // the second claim with the same PayPal txn is a validation refusal and
+        // creates nothing — one payment, one course enrolment.
+        config(['features.payment_fix_wave1' => true]);
+        $tariff = $this->blockTariff();
+        $user = User::factory()->create(['email' => 'dup@example.test']);
+        $payload = [
+            'foreign_amount' => 40,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-09-16',
+            'foreign_currency' => 'EUR',
+            'paypal_txn' => 'TX-DUP-1',
+        ];
+
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), $payload)
+            ->assertRedirect(route('paypal.claim.show', $tariff))
+            ->assertSessionHas('success');
+
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), $payload)
+            ->assertSessionHasErrors('paypal_txn');
+
+        $this->assertSame(1, Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->count());
+
+        // A genuinely different transaction is still accepted.
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), ['paypal_txn' => 'TX-DUP-2'] + $payload)
+            ->assertSessionHasNoErrors();
+        $this->assertSame(2, Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->count());
+    }
+
+    /** @test */
+    public function h5007_duplicate_claim_without_txn_same_day_is_rejected_when_wave1_on(): void
+    {
+        config(['features.payment_fix_wave1' => true]);
+        $tariff = $this->blockTariff();
+        $user = User::factory()->create();
+        $payload = [
+            'foreign_amount' => 40,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-09-16',
+            'foreign_currency' => 'EUR',
+        ];
+
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), $payload)->assertSessionHasNoErrors();
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), $payload)->assertSessionHasErrors('paypal_txn');
+
+        $this->assertSame(1, Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->count());
+    }
+
+    /** @test */
+    public function h5007_flag_off_keeps_pre_fix_duplicate_behaviour(): void
+    {
+        // Prod-inert as merged: flag OFF reproduces the audited behaviour exactly.
+        config(['features.payment_fix_wave1' => false]);
+        $tariff = $this->blockTariff();
+        $user = User::factory()->create();
+        $payload = [
+            'foreign_amount' => 40,
+            'paypal_payer' => 'payer@example.com',
+            'paid_on' => '2026-09-16',
+            'foreign_currency' => 'EUR',
+            'paypal_txn' => 'TX-SAME',
+        ];
+
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), $payload)->assertSessionHasNoErrors();
+        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), $payload)->assertSessionHasNoErrors();
+
+        $this->assertSame(2, Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->count());
+    }
 }

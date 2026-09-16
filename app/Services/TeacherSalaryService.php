@@ -391,6 +391,60 @@ class TeacherSalaryService
     }
 
     /**
+     * H5007 (audit H7): ручная выплата со страницы «Зарплаты» — создание
+     * TeacherPayout, проводка в «Финансах» и FIFO-зачёт авансов НЕ БОЛЬШЕ суммы
+     * выплаты, всё в одной транзакции. Раньше страница гасила все авансы целиком
+     * (без cap по amount) и делала три шага вне транзакции.
+     *
+     * @param  array{amount: float, paid_at: mixed, period_month?: ?string, course_id?: ?int, salary_type?: ?string, salary_value?: mixed, comment?: ?string}  $attributes
+     * @return array{payout: TeacherPayout, settled: array{total: float, lines: list<array{payout_id:int, applied:float, remaining_after:float}>}}
+     */
+    public function recordManualPayout(
+        Teacher $teacher,
+        array $attributes,
+        bool $postToFinance = true,
+        bool $settleAdvances = false,
+        ?int $settledBy = null,
+    ): array {
+        return DB::transaction(function () use ($teacher, $attributes, $postToFinance, $settleAdvances, $settledBy): array {
+            $payout = $teacher->payouts()->create([
+                'amount' => Money::round((float) $attributes['amount']),
+                'type' => TeacherPayout::TYPE_REGULAR,
+                'paid_at' => $attributes['paid_at'],
+                'period_month' => $attributes['period_month'] ?? null,
+                'course_id' => $attributes['course_id'] ?? null,
+                'salary_type' => $attributes['salary_type'] ?? null,
+                'salary_value' => $attributes['salary_value'] ?? null,
+                'comment' => $attributes['comment'] ?? null,
+            ]);
+
+            if ($postToFinance) {
+                app(TeacherPayoutPoster::class)->post($payout);
+            }
+
+            $settled = ['total' => 0.0, 'lines' => []];
+            if ($settleAdvances && config('features.payment_fix_wave1')) {
+                $settled = $this->settleAdvancesForBlockPayout($teacher, (float) $payout->amount, $settledBy);
+            } elseif ($settleAdvances) {
+                // Флаг OFF: прежнее поведение страницы — все непогашенные авансы
+                // гасятся целиком (без cap по сумме), но уже внутри транзакции.
+                foreach ($teacher->payouts()->unsettledAdvances()->lockForUpdate()->get() as $advance) {
+                    $applied = Money::round((float) $advance->amount - (float) $advance->settled_amount);
+                    $advance->update([
+                        'settled_amount' => $advance->amount,
+                        'settled_at' => now(),
+                        'settled_by' => $settledBy,
+                    ]);
+                    $settled['total'] = Money::round($settled['total'] + $applied);
+                    $settled['lines'][] = ['payout_id' => (int) $advance->id, 'applied' => $applied, 'remaining_after' => 0.0];
+                }
+            }
+
+            return ['payout' => $payout, 'settled' => $settled];
+        });
+    }
+
+    /**
      * Зачесть авансы FIFO на сумму не больше $limit и вернуть audit-снимок.
      *
      * @return array{total: float, lines: list<array{payout_id:int, applied:float, remaining_after:float}>}
