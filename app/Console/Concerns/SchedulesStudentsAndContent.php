@@ -53,6 +53,17 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('send-login-invites');
 
+        // H5022 (MG 16-09-2026): через 48 ч после успешной оплаты без входа в
+        // кабинет — ОДНО повторное приглашение (Telegram → email) с magic-ссылкой.
+        // Гейт features.reinvite_48h (REINVITE_48H, по умолчанию ON) и дедуп
+        // (ActivityEvent reinvite_48h_sent) — внутри команды; окно свежих оплат
+        // 30 дней, батч 50/день — старых never-login добирает еженедельная капля выше.
+        $schedule->command('students:reinvite-48h --send --limit=50')
+            ->dailyAt('11:00') // 11:00 МСК, после понедельничной волны приглашений
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('reinvite-48h-paid-never-login');
+
         // H4392 (MG 08-09-2026): «Кто на чём закончил» — еженедельный пост в чат
         // «Институт» (TELEGRAM_INSTITUTE_CHAT_ID; флаг WEEKLY_FINISH_REPORT_ENABLED).
         // Понедельник 10:30 МСК, после приглашений; команда сама гейтится флагом,
