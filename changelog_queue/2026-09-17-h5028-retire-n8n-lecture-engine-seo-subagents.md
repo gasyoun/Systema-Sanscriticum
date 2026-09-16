@@ -1,0 +1,6 @@
+# H5028: план n8n lecture content engine и пакет SEO-субагентов списаны (Fable 5.1 `claude-fable-5-1`, 17-09-2026)
+
+Решение MG (Q3, digital-marketing grill 16-09-2026: «Kill n8n + SEO subagents, restart factory + wiki»): два маркетинговых агента, не давших продукта, сняты с довольствия. Запись решения: [Uprava docs/DECISIONS_DIGITAL_MARKETING_GRILL_16-09-2026.md](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_DIGITAL_MARKETING_GRILL_16-09-2026.md).
+
+- **План n8n lecture content engine (23-07-2026, пять продуктов) помечен RETIRED и перенесён в архив:** шесть документов (PLAN + meta, ROADMAP, ARCHITECTURE, IMPLEMENTATION, VERIFICATION) лежат в [docs/archive/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/archive), PLAN и ROADMAP несут баннер с цитатой решения; все внутренние ссылки (`.ai_state.md`, `DEPLOY_QUEUE.md` №49, мануал оператора клипов, каталог n8n, truth-pass, CHANGELOG) переведены на архивный путь. Код Wave 1 (H1547, `CONTENT_FROM_LECTURES=false`) не трогали — он инертен.
+- **Пакет из 18 SEO-субагентов снят:** одна строка-примечание в [docs/SEO_AGENTS_AND_SKILLS_INVENTORY_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SEO_AGENTS_AND_SKILLS_INVENTORY_2026.md); скиллы `/seo-*` остаются, снята только рамка «пакет субагентов».

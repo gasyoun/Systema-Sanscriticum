@@ -2,8 +2,8 @@
 
 _Created: 23-07-2026 · Last updated: 23-07-2026_
 
-Index: [`docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
-Architecture: [`docs/ARCHITECTURE_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md).
+Index: [`docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
+Architecture: [`docs/archive/ARCHITECTURE_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/ARCHITECTURE_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md).
 
 **Scope of this file:** Wave 1 only (first of five sequential PRs). Waves 2–5
 get their own short implementation sections at the bottom as agent checklists

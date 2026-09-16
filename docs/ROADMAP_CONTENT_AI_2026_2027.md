@@ -19,7 +19,7 @@ _Created: 07-07-2026 · Last updated: 19-08-2026_
 >
 > **Lecture-sourced content engine (23-07-2026):** weekly video/transcript/timecode products
 > (clips → social → FAQ → long-form → study) are planned under the umbrella
-> [`docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
+> [`docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
 > That plan reuses CAI4–7 shapes but **does not take CAI3 support-gaps as wave-1 input**
 > (lecture-only data ruling). Keep this file for public-comment inbox + support-gap signal.
 

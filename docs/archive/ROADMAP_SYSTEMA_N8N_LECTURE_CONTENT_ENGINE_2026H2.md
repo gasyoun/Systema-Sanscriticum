@@ -1,10 +1,12 @@
 # ROADMAP — n8n lecture content engine (2026 H2)
 
-_Created: 23-07-2026 · Last updated: 19-08-2026_
+_Created: 23-07-2026 · Last updated: 17-09-2026_
 
-> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** у программы есть текущий план — [PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
+> **RETIRED 16-09-2026 (MG ruling Q3, digital-marketing grill 16-09-2026: «Kill n8n + SEO subagents, restart factory + wiki»).** Plan of 23-07-2026, five products, no shipped product status found after 8 weeks — only the inert Wave-1 schema (H1547, `CONTENT_FROM_LECTURES=false`). Archived unchanged as a record; no wave is to be executed from it. Decision record: [Uprava docs/DECISIONS_DIGITAL_MARKETING_GRILL_16-09-2026.md](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_DIGITAL_MARKETING_GRILL_16-09-2026.md) · retirement handoff [H5028](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5028-Fable_Uprava_retire-n8n-lecture-engine-seo-subagents_16.09.26.md).
 
-Index: [`docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
+> **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** у программы есть текущий план — [PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
+
+Index: [`docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
 
 Five waves = five sequential PRs = five handoffs. Each wave unblocks the next by
 filling `ContentCandidate` rows that later waves can reference (e.g. social posts

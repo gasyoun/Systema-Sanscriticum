@@ -1,6 +1,8 @@
 # Инвентарь SEO-агентов и SEO-скиллов (Grok / claude-seo)
 
-_Created: 02-08-2026 · Last updated: 02-08-2026_
+_Created: 02-08-2026 · Last updated: 17-09-2026_
+
+> **RETIRED 16-09-2026 — пакет из 18 SEO-субагентов (слой 1) снят с довольствия** (MG, digital-marketing grill 16-09-2026, Q3: «Kill n8n + SEO subagents, restart factory + wiki»): субагенты упирались в лимит ходов, а факты для samskrte.ru пришли из прямого `curl` ([RESULTS_SAMSKRTE_SEO_H2_ASK_16.08.26.md](https://github.com/gasyoun/Uprava/blob/main/docs/RESULTS_SAMSKRTE_SEO_H2_ASK_16.08.26.md)). Скиллы `/seo-*` (слой 2) остаются в работе; снята только рамка «пакет субагентов». Решение: [Uprava docs/DECISIONS_DIGITAL_MARKETING_GRILL_16-09-2026.md](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_DIGITAL_MARKETING_GRILL_16-09-2026.md) · [H5028](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5028-Fable_Uprava_retire-n8n-lecture-engine-seo-subagents_16.09.26.md).
 
 **Назначение.** Краткая справка «что у нас есть по SEO-инструментарию агентов», чтобы не искать по `~/.grok` и `claude-seo` заново. Охватывает только слои **1** (spawnable-агенты) и **2** (пакет скиллов + состояние установки).
 
