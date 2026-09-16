@@ -588,6 +588,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `REFERRAL_CREDIT_AMOUNT` | optional | `500` | config/referral.php:19 |
 | `REFERRAL_LOYALTY_CTA` | optional | `false` | config/features.php:1497 |
 | `REFERRAL_REFERRED_CREDIT_AMOUNT` | optional | `0` | config/referral.php:22 |
+| `REINVITE_48H` | optional | `true` | config/features.php:1575 |
 | `REMINDER_SUGGESTION_CONFIDENCE_THRESHOLD` | optional | `0.5` | config/reminders.php:17 |
 | `REMINDER_SUGGESTION_EXPIRY_DAYS` | optional | `14` | config/reminders.php:11 |
 | `REVENUE_RECOGNITION_STAMPED_BLOCK_RUN_GUARD` | optional | `false` | config/revenue.php:48 |

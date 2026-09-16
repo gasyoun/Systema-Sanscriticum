@@ -1563,4 +1563,16 @@ return [
      | + php artisan config:cache (human ops).
      */
     'mic_shadow_classify' => (bool) env('MIC_SHADOW_CLASSIFY', false),
+
+    /*
+     | H5022 (MG ruling Q14, digital-marketing grill 16-09-2026): автоматическое
+     | повторное приглашение в кабинет через 48 ч после успешной оплаты, если
+     | студент ни разу не входил (утечка «оплатил — не вошёл» 75,2 %).
+     | Команда students:reinvite-48h (ежедневно по расписанию, --send).
+     | ОДНО сообщение на пользователя (ActivityEvent reinvite_48h_sent —
+     | маркер идемпотентности), Telegram при привязанном chat id, иначе email;
+     | magic-ссылка входа без пароля. Kill switch: REINVITE_48H=false
+     | + php artisan config:cache. По умолчанию ВКЛЮЧЕНО — решение MG 16-09-2026.
+     */
+    'reinvite_48h' => (bool) env('REINVITE_48H', true),
 ];
