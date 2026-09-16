@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
+use App\Support\SentinelBreakerGate;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
@@ -155,6 +156,22 @@ class WebhookController extends Controller
                         $apply = false;
                         Log::warning("⛔ Вебхук: сумма банка {$reportedAmount} расходится с заказом №{$payment->id} ({$payment->amount}).");
                     }
+                    // (d) H4930 (E002 layer 1): sentinel_breaker над ЕДИНСТВЕННОЙ
+                    // автоматической мутацией paid->доступ в проде. Default OFF
+                    // (features.money_mutation_breaker) — без флага/библиотеки
+                    // поведение байт-в-байт как до H4930 (fail-open). Заморожен =>
+                    // грант отказан и прокричан денежным каналом (guards:money-breaker-alarm);
+                    // человек разбирается, банк ретраит, доставка не теряется.
+                    elseif ($payment->status !== 'paid'
+                        && config('features.money_mutation_breaker')
+                        && SentinelBreakerGate::frozen('tochka_grant', SentinelBreakerGate::CLASS_MONEY_MUTATION, 'Tochka webhook grant (заказ №'.$payment->id.')')
+                    ) {
+                        $decision = PaymentWebhookEvent::DECISION_BREAKER_REFUSED;
+                        $apply = false;
+                        Log::critical("⛔ Вебхук: sentinel_breaker заморожен — грант заказа №{$payment->id} отказан (H4930).", [
+                            'payment_id' => $payment->id,
+                        ]);
+                    }
                 }
 
                 // Журнал: одна строка на КАЖДУЮ подписанную доставку (аддитивно, не
@@ -198,6 +215,16 @@ class WebhookController extends Controller
                             $update['payment_method'] = $paymentMethod;
                         }
                         $payment->update($update);
+
+                        // Record AFTER the mutation actually landed (not before) —
+                        // an update() throw rolls the transaction back with nothing
+                        // granted, and a pre-recorded mutation would inflate the
+                        // breaker's counter for a grant that never happened (found
+                        // by the H4930 independent logic-critic pass).
+                        if (config('features.money_mutation_breaker')) {
+                            SentinelBreakerGate::record('tochka_grant', SentinelBreakerGate::CLASS_MONEY_MUTATION);
+                        }
+
                         Log::info("✅ УСПЕХ: Доступ выдан! Заказ №{$payment->id} оплачен.");
                     } elseif ($paymentMethod !== null && $payment->payment_method === null) {
                         // Платёж уже был отмечен оплаченным, но без способа — дозаполняем.
