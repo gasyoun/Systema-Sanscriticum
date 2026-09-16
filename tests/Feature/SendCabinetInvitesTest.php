@@ -57,7 +57,9 @@ class SendCabinetInvitesTest extends TestCase
         $user = $this->sleepingStudentWithAccess(['email' => 'sleeper@example.com', 'telegram_id' => null]);
         Mail::fake();
 
-        $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
+        $this->artisan('students:send-login-invites', ['--send' => true])
+            ->expectsOutputToContain('Отправлено')
+            ->assertSuccessful();
 
         Mail::assertSent(Mailable::class, fn (Mailable $m) => $m->hasTo($user->email));
         $this->assertNotNull($user->fresh()->cabinet_invite_sent_at);
