@@ -13,6 +13,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Database\QueryException;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -71,6 +72,37 @@ final class TrackLessonViewJob implements ShouldQueue
                 $this->incrementSessionLessons();
                 $this->logEvent($user, $lesson);
             });
+        } catch (QueryException $e) {
+            // ER_CHECKREAD 1020 — MariaDB возвращает его на InnoDB, когда транзакция
+            // read-then-INSERT/UPDATE едет по соединению с протухшим row-handler
+            // после "Aborted connection" (инцидент 15-09-2026: 2 aborted connections
+            // → 12 ошибок 1020 на lesson_views/user_sessions, self-recovered).
+            // Транзакция откатилась атомарно — ничего не закоммичено, повторный
+            // запуск пересчитает всё с чистого листа. Бросаем дальше: Horizon
+            // ретраит по backoff [10, 30, 60], failed_jobs пишется ТОЛЬКО когда
+            // все tries=3 исчерпаны — успешный ретрай строки в failed_jobs не даёт.
+            if ($this->isCheckReadError($e)) {
+                [$sqlstate, $driverCode] = $this->driverErrorInfo($e);
+
+                Log::warning('TrackLessonViewJob retryable ER_CHECKREAD 1020', [
+                    'user_id' => $this->userId,
+                    'lesson_id' => $this->lessonId,
+                    'sqlstate' => $sqlstate,
+                    'driver_code' => $driverCode,
+                    'attempt' => $this->attempts(),
+                    'hint' => 'transaction rolled back atomically; Horizon backoff absorbs, no failed_jobs row unless tries exhausted',
+                ]);
+
+                throw $e;
+            }
+
+            Log::warning('TrackLessonViewJob failed', [
+                'user_id' => $this->userId,
+                'lesson_id' => $this->lessonId,
+                'error' => $e->getMessage(),
+            ]);
+            // Пробрасываем — Horizon заретраит по backoff
+            throw $e;
         } catch (\Throwable $e) {
             Log::warning('TrackLessonViewJob failed', [
                 'user_id' => $this->userId,
@@ -83,30 +115,103 @@ final class TrackLessonViewJob implements ShouldQueue
     }
 
     /**
+     * ER_CHECKREAD (1020): "Record has changed since last read in table ...".
+     * SQLSTATE = HY000, код драйвера = 1020.
+     *
+     * Проверяем и driver-код из errorInfo, и текст драйвера: обёртка
+     * QueryException не во всех путях доносит errorInfo, а сообщение всегда
+     * содержит сигнатуру целиком ("SQLSTATE[HY000]: General error: 1020
+     * Record has changed since last read in table ...").
+     */
+    private function isCheckReadError(QueryException $e): bool
+    {
+        $info = $e->errorInfo ?? null;
+
+        if (is_array($info) && (int) ($info[1] ?? 0) === 1020) {
+            return true;
+        }
+
+        $message = $e->getMessage();
+
+        return str_contains($message, 'Record has changed since last read')
+            && preg_match('/\b1020\b/', $message) === 1;
+    }
+
+    /**
+     * Разобранная пара [SQLSTATE, driver-code] для логов: errorInfo, если
+     * дошёл, иначе парсинг из сообщения ("SQLSTATE[HY000]: General error:
+     * 1020 ..." → ['HY000', 1020]).
+     *
+     * @return array{0: string|null, 1: int|null}
+     */
+    private function driverErrorInfo(QueryException $e): array
+    {
+        $info = $e->errorInfo ?? null;
+
+        if (is_array($info) && isset($info[0], $info[1])) {
+            return [(string) $info[0], (int) $info[1]];
+        }
+
+        if (preg_match('/SQLSTATE\[(\w+)\].*?\b(\d{4})\b/', $e->getMessage(), $m) === 1) {
+            return [$m[1], (int) $m[2]];
+        }
+
+        return [null, null];
+    }
+
+    /**
      * Upsert записи в lesson_views.
+     *
+     * Идемпотентность под ретрай (H4914): транзакция атомарна — если она
+     * упала (1020 после aborted connection), откатились и счётчики
+     * total_lessons_opened / lessons_viewed вместе с ней; повторный запуск
+     * перечитывает коммитнутое состояние. Единственная оставшаяся гонка —
+     * два конкурентных handle() одновременно видят "строки нет": оба делают
+     * create(), второй ловит duplicate-key (unique user_id+lesson_id) —
+     * перечитываем строку и считаем её существующей, счётчик юзера не
+     * инкрементится второй раз.
      *
      * @return bool true — если это был первый просмотр урока (новая строка)
      */
     private function upsertLessonView(int $userId, int $lessonId): bool
     {
-        // Смотрим, есть ли уже запись (чтобы вернуть флаг "первый просмотр")
-        $existing = LessonView::where('user_id', $userId)
-            ->where('lesson_id', $lessonId)
-            ->first();
+        try {
+            // Смотрим, есть ли уже запись (чтобы вернуть флаг "первый просмотр")
+            $existing = LessonView::where('user_id', $userId)
+                ->where('lesson_id', $lessonId)
+                ->first();
 
-        if ($existing === null) {
-            LessonView::create([
-                'user_id' => $userId,
-                'lesson_id' => $lessonId,
-                'course_id' => $this->courseId,
-                'first_opened_at' => now(),
-                'last_opened_at' => now(),
-                'open_count' => 1,
-                'total_time_on_page' => 0,
-                'is_completed' => false,
-            ]);
+            if ($existing === null) {
+                LessonView::create([
+                    'user_id' => $userId,
+                    'lesson_id' => $lessonId,
+                    'course_id' => $this->courseId,
+                    'first_opened_at' => now(),
+                    'last_opened_at' => now(),
+                    'open_count' => 1,
+                    'total_time_on_page' => 0,
+                    'is_completed' => false,
+                ]);
 
-            return true; // новый просмотр
+                return true; // новый просмотр
+            }
+        } catch (QueryException $e) {
+            // 23000/1062 duplicate key: конкурентный запуск уже создал строку
+            // (или мы сами на ретрае после lost-ack). Перечитываем и считаем
+            // существующим просмотром — double-count невозможен.
+            if ($this->isDuplicateKeyError($e)) {
+                $existing = LessonView::where('user_id', $userId)
+                    ->where('lesson_id', $lessonId)
+                    ->first();
+
+                if ($existing === null) {
+                    // Строка не видна (гонка с ещё не закоммиченной вставкой) —
+                    // дублирующее исключение честно уходит в общий ретрай.
+                    throw $e;
+                }
+            } else {
+                throw $e;
+            }
         }
 
         // Повторный просмотр — апдейтим счётчик и дату
@@ -116,6 +221,25 @@ final class TrackLessonViewJob implements ShouldQueue
         ]);
 
         return false;
+    }
+
+    /**
+     * Duplicate key по unique (user_id, lesson_id): SQLSTATE 23000, код 1062.
+     * Формы сообщений: MariaDB "Duplicate entry '...' for key ...",
+     * sqlite "UNIQUE constraint failed: ..." (тесты).
+     */
+    private function isDuplicateKeyError(QueryException $e): bool
+    {
+        $info = $e->errorInfo ?? null;
+
+        if (is_array($info) && ($info[0] ?? null) === '23000' && (int) ($info[1] ?? 0) === 1062) {
+            return true;
+        }
+
+        $message = $e->getMessage();
+
+        return str_contains($message, '23000')
+            && (str_contains($message, 'Duplicate entry') || str_contains($message, 'UNIQUE constraint failed'));
     }
 
     /**
