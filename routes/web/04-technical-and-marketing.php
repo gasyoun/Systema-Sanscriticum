@@ -93,6 +93,14 @@ Route::get('/tg-login/{token}', [TgLoginLinkController::class, 'login'])
     ->where('token', '[A-Za-z0-9]+')
     ->name('tg.login-link');
 
+// --- ПРИГЛАШЕНИЕ В КАБИНЕТ (H4966) — многодневная ссылка от
+// SendCabinetInvites, заменяет 60-минутную ссылку сброса пароля. Принимает
+// только токены назначения cabinet_invite.
+Route::get('/cabinet-invite/{token}', [CabinetInviteLinkController::class, 'login'])
+    ->middleware('throttle:10,1')
+    ->where('token', '[A-Za-z0-9]+')
+    ->name('cabinet.invite');
+
 // --- РЕЖИМ ПРОСМОТРА ЗА ПОЛЬЗОВАТЕЛЯ (H1947) ---
 // Старт — подписанная короткоживущая ссылка из UserResource (подпись закрывает
 // CSRF на GET; права всё равно перепроверяет контроллер). Выход — POST из
