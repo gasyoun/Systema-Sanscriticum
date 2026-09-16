@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\MarketingSetting;
 use App\Models\StoryPost;
+use App\Services\Content\ContentProhibitionsChecklist;
 use App\Services\Messaging\TelegramDeliveryChannel;
 use App\Services\Stories\StoryRepeatEngine;
 use Illuminate\Console\Command;
@@ -35,7 +36,7 @@ final class StoriesPublishDueCommand extends Command
 
     protected $description = 'Publish due approved story_posts (text) to the @rusamskrtam channel';
 
-    public function handle(TelegramDeliveryChannel $telegram, StoryRepeatEngine $repeat): int
+    public function handle(TelegramDeliveryChannel $telegram, StoryRepeatEngine $repeat, ContentProhibitionsChecklist $checklist): int
     {
         if (! config('features.telegram_story_publisher')) {
             $this->warn('telegram_story_publisher flag is OFF — no-op.');
@@ -76,6 +77,7 @@ final class StoriesPublishDueCommand extends Command
 
         $published = 0;
         $skipped = 0;
+        $held = 0;
         foreach ($due as $post) {
             if ($post->kind !== StoryPost::KIND_TEXT) {
                 $post->forceFill([
@@ -86,6 +88,26 @@ final class StoriesPublishDueCommand extends Command
                 $this->warn("Skip #{$post->id}: kind={$post->kind} — persona lane (MTProto stories).");
 
                 continue;
+            }
+
+            // H5020 pre-send checklist (§2.8 ratified 16-09-2026): a blocked
+            // post goes back to draft with the reason journaled — never sent.
+            $verdict = $checklist->check((string) $post->payload);
+            if (! $verdict['ok']) {
+                $post->forceFill([
+                    'status' => StoryPost::STATUS_DRAFT,
+                    'journal' => trim((string) $post->journal."\n".now()->toDateTimeString().' '.$checklist->journalLine($verdict)),
+                ])->save();
+                $held++;
+                $this->warn("Hold #{$post->id}: ".$checklist->journalLine($verdict));
+
+                continue;
+            }
+            if ($verdict['warns'] !== []) {
+                $post->forceFill([
+                    'journal' => trim((string) $post->journal."\n".now()->toDateTimeString().' prohibition-warn: '
+                        .implode('; ', array_map(static fn (array $w): string => $w['rule'].' («'.$w['match'].'»)', $verdict['warns']))),
+                ])->save();
             }
 
             try {
@@ -103,7 +125,7 @@ final class StoriesPublishDueCommand extends Command
                 .($copy !== null ? " + repeat copy #{$copy->id} due {$copy->publish_at?->format('d-m-Y H:i')}" : ''));
         }
 
-        $this->info("publish-due: published={$published}, skipped_media={$skipped}.");
+        $this->info("publish-due: published={$published}, skipped_media={$skipped}, held_prohibition={$held}.");
 
         return self::SUCCESS;
     }
