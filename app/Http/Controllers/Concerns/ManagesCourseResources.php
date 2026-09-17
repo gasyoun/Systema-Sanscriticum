@@ -122,7 +122,7 @@ trait ManagesCourseResources
 
         try {
             $jpeg = $service->generateJpegBytes($certificate);
-        } catch (\RuntimeException $e) {
+        } catch (\RuntimeException|\ImagickException $e) {
             return back()->with('error', $e->getMessage());
         }
 
