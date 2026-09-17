@@ -61,6 +61,7 @@ class CourseInterestTest extends TestCase
         config(['features.course_interest_form' => false]);
 
         $this->get('/interest/nale')->assertNotFound();
+        $this->get('/interest/nale/embed')->assertNotFound();
         $this->post('/interest/nale', $this->humanPayload())->assertNotFound();
 
         $this->assertSame(0, CourseInterestRequest::query()->count());
@@ -156,6 +157,12 @@ class CourseInterestTest extends TestCase
         // Мгновенный сабмит (метка «0 секунд назад»).
         $this->post('/interest/nale', $this->humanPayload(['ff_ts' => $this->timeTrap(0)]))
             ->assertRedirect();
+        RateLimiter::clear('course-interest:127.0.0.1');
+
+        // Протухшая форма: метка старше max_form_age_seconds (12 ч по умолчанию).
+        $this->post('/interest/nale', $this->humanPayload([
+            'ff_ts' => $this->timeTrap((int) config('newsletter.antibot.max_form_age_seconds') + 600),
+        ]))->assertRedirect();
 
         $this->assertSame(0, CourseInterestRequest::query()->count());
     }
@@ -216,10 +223,16 @@ class CourseInterestTest extends TestCase
     {
         Course::factory()->create(['title' => 'Бюлер, учебник', 'slug' => 'buhler']);
 
-        $this->get('/interest/buhler/embed')
+        $response = $this->get('/interest/buhler/embed')
             ->assertOk()
             ->assertSee('Бюлер, учебник')
             ->assertSee('name="website"', false) // honeypot в разметке
-            ->assertDontSee('layouts.promo');
+            ->assertSee('<!DOCTYPE html>', false); // standalone-документ, не лэйаут сайта
+
+        // frame-ancestors для samskrtam.ru — только на этом ответе (как у виджета расписания).
+        $this->assertStringContainsString(
+            'frame-ancestors',
+            (string) $response->headers->get('Content-Security-Policy')
+        );
     }
 }

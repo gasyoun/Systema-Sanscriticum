@@ -13,6 +13,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Кураторская витрина заявок интереса на курс (H5066): кто хочет в следующий
@@ -73,6 +74,15 @@ class CourseInterestRequestResource extends Resource
         $count = static::getModel()::query()->where('status', CourseInterestRequest::STATUS_NEW)->count();
 
         return $count > 0 ? (string) $count : null;
+    }
+
+    /**
+     * Курс подгружается жадным способом: колонка «Курс» зовёт courseLabel(),
+     * который без этого давал по запросу на строку (N+1).
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with('course');
     }
 
     public static function getNavigationBadgeColor(): ?string
