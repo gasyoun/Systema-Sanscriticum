@@ -32,6 +32,8 @@ class AnonsPublishingServiceTest extends TestCase
 
     private string $asset;
 
+    private string $assetDir;
+
     private RecordingFakeAdapter $story;
 
     private AdapterRegistry $registry;
@@ -46,8 +48,10 @@ class AnonsPublishingServiceTest extends TestCase
         // StoryPublisher и SessionHealthProbe не открывают реальный MP-клиент.
         config(['services.telegram_story.subprocess_lane' => false]);
 
-        $this->asset = storage_path('app/testing/h5049/story-base.jpg');
-        @mkdir(dirname($this->asset), 0775, true);
+        $dir = storage_path('app/testing/h5049/'.bin2hex(random_bytes(4)));
+        @mkdir($dir, 0775, true);
+        $this->assetDir = $dir;
+        $this->asset = $dir.'/story-base.jpg';
         $img = imagecreatetruecolor(1080, 1920);
         imagefilledrectangle($img, 0, 0, 1079, 1919, imagecolorallocate($img, 220, 210, 200));
         imagejpeg($img, $this->asset, 90);
@@ -68,7 +72,10 @@ class AnonsPublishingServiceTest extends TestCase
 
     protected function tearDown(): void
     {
-        @unlink($this->asset);
+        foreach (glob($this->assetDir.'/*') ?: [] as $f) {
+            @unlink($f);
+        }
+        @rmdir($this->assetDir);
         parent::tearDown();
     }
 

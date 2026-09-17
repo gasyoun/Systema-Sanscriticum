@@ -21,12 +21,16 @@ class ManifestAndCompositorTest extends TestCase
 
     private string $asset;
 
+    private string $assetDir;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->asset = storage_path('app/testing/h5049/story-base.jpg');
-        @mkdir(dirname($this->asset), 0775, true);
+        $dir = storage_path('app/testing/h5049/'.bin2hex(random_bytes(4)));
+        @mkdir($dir, 0775, true);
+        $this->assetDir = $dir;
+        $this->asset = $dir.'/story-base.jpg';
         // Реальная фотография-заглушка: 1080x1920, светлое фото (не тёмное).
         $img = imagecreatetruecolor(1080, 1920);
         imagefilledrectangle($img, 0, 0, 1079, 1919, imagecolorallocate($img, 220, 210, 200));
@@ -36,7 +40,10 @@ class ManifestAndCompositorTest extends TestCase
 
     protected function tearDown(): void
     {
-        @unlink($this->asset);
+        foreach (glob($this->assetDir.'/*') ?: [] as $f) {
+            @unlink($f);
+        }
+        @rmdir($this->assetDir);
         parent::tearDown();
     }
 
@@ -134,7 +141,7 @@ class ManifestAndCompositorTest extends TestCase
     public function compositor_burns_plaque_into_pixels_and_inspector_accepts(): void
     {
         $compositor = new CtaPlaqueCompositor;
-        $out = storage_path('app/testing/h5049/plaqued.jpg');
+        $out = $this->assetDir.'/plaqued.jpg';
 
         $compositor->renderPlaque($this->asset, ['cta_text' => 'страница записи'], $out);
 
