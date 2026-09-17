@@ -369,6 +369,16 @@ return [
         'subprocess_lane' => (bool) env('TELEGRAM_STORY_SUBPROCESS_LANE', true),
     ],
 
+    // Anons publishing v2 (H5049): declarative manifests, idempotent
+    // publications, visible CTA plaques burned into pixels.
+    'anons' => [
+        // TTF для CTA-плашки (кириллица). null → env ANONS_CTA_FONT →
+        // известные системные пути (DejaVu на Linux) → ASCII-fallback GD.
+        'cta_font' => env('ANONS_CTA_FONT'),
+        // Потолок попыток на один destination-run до blocked (fail-closed).
+        'max_attempts' => (int) env('ANONS_MAX_ATTEMPTS', 3),
+    ],
+
     // ВХОДНОЙ УЗЕЛ вебхуков Telegram — общий для ВСЕХ ботов: кабинетного,
     // лид-магнитного, ботов лендингов и @zapisi_ORSbot.
     //

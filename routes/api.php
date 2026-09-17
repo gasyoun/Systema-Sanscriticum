@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AnonsApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CabinetController;
 use App\Http\Controllers\Api\LessonController;
@@ -179,4 +180,17 @@ Route::post('/webhooks/inbound-email/{secret}', [InboundEmailWebhookController::
 Route::prefix('partner-bot')->middleware(['verify.partner.bot', 'throttle:30,1'])->group(function () {
     Route::post('/register', [PartnerBotController::class, 'register'])->name('api.partner-bot.register');
     Route::post('/stats', [PartnerBotController::class, 'stats'])->name('api.partner-bot.stats');
+});
+
+// === ANONS PUBLISHING API (H5049 R10) ===
+// Аутентифицированный интерфейс подсистемы публикаций: draft/preview/
+// publish/schedule/status/metrics/rollback. CLI anons:* зовёт тот же
+// AnonsPublishingService. Токены — Sanctum personal access tokens.
+Route::prefix('anons')->middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
+    Route::post('/', [AnonsApiController::class, 'draft'])->name('api.anons.draft');
+    Route::post('/preview', [AnonsApiController::class, 'preview'])->name('api.anons.preview');
+    Route::post('/publish', [AnonsApiController::class, 'publish'])->name('api.anons.publish');
+    Route::get('/{key}', [AnonsApiController::class, 'status'])->name('api.anons.status');
+    Route::post('/{key}/metrics', [AnonsApiController::class, 'metrics'])->name('api.anons.metrics');
+    Route::post('/{key}/rollback', [AnonsApiController::class, 'rollback'])->name('api.anons.rollback');
 });
