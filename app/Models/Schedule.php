@@ -107,6 +107,11 @@ class Schedule extends Model
      * Трекинг-ссылка «Подключиться» для конкретного студента (для бота/напоминаний,
      * где нет сессии): подписанный URL с user id, по которому JoinClassController
      * запишет клик и редиректнет на настоящий Zoom-URL. null, если ссылки занятия нет.
+     *
+     * H5081 (remediation H5046 class-join-signed-url-no-expiry): ссылка ВРЕМЕННАЯ —
+     * живёт только до конца занятия (+ grace из joinLinkExpiry()), а не вечно.
+     * Отзывают студента из группы — его сохранённая ссылка перестаёт работать
+     * (контроллер перепроверяет canAccess) и, после конца занятия, истекает сама.
      */
     public function trackedJoinUrlFor(User $user, string $source = 'reminder'): ?string
     {
@@ -114,11 +119,25 @@ class Schedule extends Model
             return null;
         }
 
-        return URL::signedRoute('class.join', [
+        return URL::temporarySignedRoute('class.join', $this->joinLinkExpiry(), [
             'schedule' => $this->id,
             'u' => $user->id,
             'source' => $source,
         ]);
+    }
+
+    /**
+     * Окно действия join-ссылки: конец занятия + 30 минут (на опоздавших;
+     * напоминания шлются к будущим занятиям, так что окно всегда открыто
+     * в момент выдачи). Занятие без даты (legacy) — относительные сутки:
+     * вечных ссылок не выдаём.
+     */
+    public function joinLinkExpiry(): Carbon
+    {
+        $end = $this->end
+            ?? $this->start?->copy()->addHours(self::DEFAULT_DURATION_HOURS);
+
+        return ($end ?? now()->addDay())->copy()->addMinutes(30);
     }
 
     /**
