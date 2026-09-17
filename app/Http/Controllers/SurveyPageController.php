@@ -8,6 +8,7 @@ use App\Models\SurveyResponse;
 use App\Models\User;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Support\CsvFormulaGuard;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Illuminate\Http\RedirectResponse;
@@ -134,7 +135,7 @@ class SurveyPageController extends Controller
                     };
                     $line[] = $value;
                 }
-                fputcsv($out, $line, ';');
+                fputcsv($out, CsvFormulaGuard::row($line), ';');
             }
 
             fclose($out);

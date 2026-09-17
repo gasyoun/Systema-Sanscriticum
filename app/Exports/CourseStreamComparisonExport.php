@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Exports;
 
 use App\Support\CourseFamilyMatcher;
+use App\Support\CsvFormulaGuard;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -96,7 +97,13 @@ class CourseStreamComparisonExport implements FromArray, WithTitle
             $rows[] = $row;
         }
 
-        return $rows;
+        // H5086: имена студентов/потоков — пользовательский ввод; в xlsx
+        // строковые ячейки с ведущим =+-@ нейтрализуются, числа остаются
+        // числами (тип ячейки не меняется).
+        return array_map(
+            static fn (array $row): array => array_map(CsvFormulaGuard::cell(...), $row),
+            $rows,
+        );
     }
 
     /**
