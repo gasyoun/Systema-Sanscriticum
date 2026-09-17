@@ -242,7 +242,14 @@ class StoryPublisher
             ->run([PHP_BINARY, $worker, (string) json_encode($task, JSON_UNESCAPED_UNICODE)]);
 
         $lines = array_values(array_filter(explode("\n", trim($result->output()))));
-        $payload = json_decode((string) end($lines), true);
+        $payload = null;
+        foreach ($lines as $line) {
+            $candidate = json_decode($line, true);
+            if (is_array($candidate) && isset($candidate['ok'])) {
+                $payload = $candidate;
+                break;
+            }
+        }
 
         if (! is_array($payload) || ! isset($payload['ok'])) {
             throw new RuntimeException('Stories lane worker produced no JSON verdict: '
