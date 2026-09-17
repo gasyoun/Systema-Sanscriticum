@@ -70,15 +70,15 @@ class StoryPublisher
         return $this->sendVideoStoryDirect($absolutePath, $caption, $link);
     }
 
-    public function deleteStory(int $storyId): void
+    public function deleteStory(int $storyId, ?string $account = null): void
     {
         if ($this->viaSubprocess()) {
-            $this->execWorker(['action' => 'delete', 'story_id' => $storyId]);
+            $this->execWorker(['action' => 'delete', 'story_id' => $storyId, 'account' => $account]);
 
             return;
         }
 
-        $this->deleteStoryDirect($storyId);
+        $this->deleteStoryDirect($storyId, $account);
     }
 
     /**
@@ -127,9 +127,9 @@ class StoryPublisher
      * Удалить свою сториз по id. Имя метода — deleteStories (множественное):
      * stories.deleteStory в схеме MP v8 НЕТ.
      */
-    public function deleteStoryDirect(int $storyId): void
+    public function deleteStoryDirect(int $storyId, ?string $account = null): void
     {
-        $this->client()->stories->deleteStories([
+        $this->client($account)->stories->deleteStories([
             'peer' => 'me',
             'id' => [$storyId],
         ]);

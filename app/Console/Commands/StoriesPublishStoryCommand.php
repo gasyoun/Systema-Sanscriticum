@@ -151,7 +151,7 @@ final class StoriesPublishStoryCommand extends Command
     private function runLane(StoryPublisher $publisher, StoryRepeatEngine $repeat): int
     {
         if ($deleteId = $this->option('delete-story')) {
-            $publisher->deleteStory((int) $deleteId);
+            $publisher->deleteStory((int) $deleteId, (string) $this->option('account'));
             $this->info("Deleted story #{$deleteId}.");
 
             return self::SUCCESS;
@@ -179,7 +179,7 @@ final class StoriesPublishStoryCommand extends Command
         $this->info($storyId !== null ? "Sent story id={$storyId}." : 'Sent, but story id was not extractable from the Updates.');
 
         if ($storyId !== null && ! $this->option('keep')) {
-            $publisher->deleteStory($storyId);
+            $publisher->deleteStory($storyId, (string) $this->option('account'));
             $this->info("Deleted story id={$storyId} (same code path).");
         }
 

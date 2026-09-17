@@ -56,7 +56,10 @@ try {
             isset($task['link']) ? (string) $task['link'] : null,
         )],
         'delete' => tap(['ok' => true, 'story_id' => null], function () use ($publisher, $task): void {
-            $publisher->deleteStoryDirect((int) ($task['story_id'] ?? 0));
+            $publisher->deleteStoryDirect(
+                (int) ($task['story_id'] ?? 0),
+                isset($task['account']) ? (string) $task['account'] : null,
+            );
         }),
         default => fail("unknown action {$task['action']}"),
     };
