@@ -28,7 +28,16 @@ return new class extends Migration
     {
         Schema::create('telegram_business_connections', function (Blueprint $table) {
             $table->id();
-            $table->string('business_connection_id')->unique();
+            // Имена индексов заданы ЯВНО. Автоимя Laravel для пары
+            // (owner_telegram_user_id, is_enabled) — 69 символов
+            // (`telegram_business_connections_owner_telegram_user_id_is_enabled_index`),
+            // а MySQL режет идентификатор на 64 (ошибка 1059). SQLite и Postgres
+            // такого предела не знают, поэтому локальный прогон на sqlite был
+            // зелёным, а `MySQL 8.4 — finance/webhook transactions` упал на
+            // первом же запуске миграции. Уникальный ключ назван явно тоже,
+            // хотя его автоимя (59) в предел влезает: два коротких имени рядом
+            // читаются в `SHOW INDEX` лучше, чем одно длинное и одно короткое.
+            $table->string('business_connection_id')->unique('tg_business_conn_connection_id_unique');
             $table->bigInteger('owner_telegram_user_id');
             $table->bigInteger('owner_chat_id')->nullable();
             $table->boolean('can_reply')->default(false);
@@ -38,7 +47,7 @@ return new class extends Migration
             $table->timestamp('disabled_at')->nullable();
             $table->timestamps();
 
-            $table->index(['owner_telegram_user_id', 'is_enabled']);
+            $table->index(['owner_telegram_user_id', 'is_enabled'], 'tg_business_conn_owner_enabled_idx');
         });
     }
 

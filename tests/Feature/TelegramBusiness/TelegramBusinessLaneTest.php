@@ -16,6 +16,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -149,6 +150,33 @@ class TelegramBusinessLaneTest extends TestCase
         ]);
 
         $this->assertNotNull(TelegramBusinessConnection::usable(self::CONNECTION_ID));
+    }
+
+    public function test_index_names_fit_the_mysql_identifier_limit(): void
+    {
+        // Приёмка из CI: на `MySQL 8.4 — finance/webhook transactions` миграция
+        // упала с «Identifier name ... is too long (1059)»: автоимя Laravel для
+        // пары (owner_telegram_user_id, is_enabled) — 69 символов
+        // (`telegram_business_connections_owner_telegram_user_id_is_enabled_index`).
+        // SQLite такого предела не знает, поэтому локальный прогон был зелёным.
+        //
+        // Замечание, ради которого тест вообще существует: имя индекса Laravel
+        // строит в Blueprint, а не в диалекте, — то есть слишком длинное имя
+        // видно и на SQLite. Проверка длины ловит дефект раньше CI, хотя
+        // «падает» он только на MySQL.
+        $names = array_column(Schema::getIndexes('telegram_business_connections'), 'name');
+
+        $this->assertNotEmpty($names, 'у таблицы полосы обязаны быть объявленные индексы');
+        $this->assertContains('tg_business_conn_connection_id_unique', $names);
+        $this->assertContains('tg_business_conn_owner_enabled_idx', $names);
+
+        foreach ($names as $name) {
+            $this->assertLessThanOrEqual(
+                64,
+                strlen((string) $name),
+                'MySQL режет идентификаторы на 64 символах (ошибка 1059), а тут '.strlen((string) $name).': '.$name,
+            );
+        }
     }
 
     public function test_student_message_is_ingested_and_answered_from_the_account(): void
