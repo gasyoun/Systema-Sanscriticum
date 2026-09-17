@@ -444,6 +444,32 @@ return [
         'reinject_url' => env('TELEGRAM_STUDENT_POLL_REINJECT_URL', ''),
     ],
 
+    /*
+     | H5065 — полоса Telegram Business: бот, подключённый к аккаунту владельца,
+     | отвечает студенту ОТ ИМЕНИ этого аккаунта (sendMessage с
+     | business_connection_id). Токен — СВОЙ, не token поддержки: подключить к
+     | Business можно любой бот, и смешивать его с userbot-сессией нельзя.
+     |
+     | Пустой токен/секрет = полоса выключена (fail-closed 403 на вебхуке), а не
+     | «проверку пропускаем» — тот же контракт, что у zapisi/magnet вебхуков.
+     */
+    'telegram_business' => [
+        'token' => env('TELEGRAM_BUSINESS_BOT_TOKEN', ''),
+        'secret' => env('TELEGRAM_BUSINESS_WEBHOOK_SECRET', ''),
+        // Имя аккаунта поддержки, под которым живёт полоса в support-таблицах.
+        // Отдельное имя — чтобы ответы Business никогда не смешались с личкой
+        // userbot-аккаунта rusamskrtam в аналитике и в дренаже ответов.
+        'account_name' => env('TELEGRAM_BUSINESS_ACCOUNT_NAME', 'telegram-business'),
+        // Имя бота для логов/диагностики (не секрет).
+        'username' => env('TELEGRAM_BUSINESS_BOT_USERNAME', ''),
+        // Сколько ждущих ответов досылать за один прогон дренажа.
+        'pending_delivery_batch' => (int) env('TELEGRAM_BUSINESS_PENDING_BATCH', 20),
+        // Попыток досыла, после которых сообщение помечается «не доставлено» и
+        // ждёт человека (тот же контракт, что у MadelineProto-дренажа).
+        'pending_delivery_max_attempts' => (int) env('TELEGRAM_BUSINESS_PENDING_MAX_ATTEMPTS', 3),
+        'timeout_seconds' => (int) env('TELEGRAM_BUSINESS_TIMEOUT_SECONDS', 15),
+    ],
+
     'vk' => [
         'bot_token' => env('VK_BOT_TOKEN'),
         'group_id' => env('VK_GROUP_ID'),

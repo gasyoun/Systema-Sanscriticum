@@ -67,7 +67,7 @@ class SupportDmLlmReplyComposer
             return null;
         }
 
-        $result = $this->ai->chatWithUsage([
+        $result = $this->formulate([
             ['role' => 'system', 'content' => $this->systemPrompt()],
             ['role' => 'user', 'content' => $this->userPrompt($questionText, $contextBlock)],
         ]);
@@ -83,6 +83,33 @@ class SupportDmLlmReplyComposer
             'usage' => $result['usage'],
             'chunk_ids' => $context->chunkIds(),
         ];
+    }
+
+    /**
+     * H5065: чья модель формулирует.
+     *
+     * `features.support_dm_llm_drafts_local=true` → локальный узел
+     * (`CuratorAi::localChatWithUsage`, Ollama /v1/chat/completions): вопрос
+     * студента и текст справки не покидают школу, стоимость ответа — ноль, а
+     * рейт-лимиты внешнего провайдера перестают быть потолком для полосы
+     * ответов. Ровно то, ради чего в H3234 заводился локальный режим.
+     *
+     * Контракт деградации тот же, что у H3234: узел недоступен → `content=null`
+     * → compose() возвращает null → полоса уходит в шаблон/ack/подсказку
+     * куратору. Внешний провайдер в локальном режиме НЕ вызывается никогда —
+     * иначе «локальный» режим был бы просто вторым шансом для того же
+     * внешнего вызова, а приватность не была бы свойством, а обещанием.
+     *
+     * @param  list<array{role: string, content: string}>  $messages
+     * @return array{content: ?string, usage: ?array{prompt_tokens: int, completion_tokens: int}, model: ?string}
+     */
+    private function formulate(array $messages): array
+    {
+        if ((bool) config('features.support_dm_llm_drafts_local', false)) {
+            return $this->ai->localChatWithUsage($messages);
+        }
+
+        return $this->ai->chatWithUsage($messages);
     }
 
     /**

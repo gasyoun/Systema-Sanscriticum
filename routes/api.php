@@ -17,6 +17,7 @@ use App\Http\Controllers\Webhooks\LeadStepWebhookController;
 use App\Http\Controllers\Webhooks\LectureClipCallbackWebhookController;
 use App\Http\Controllers\Webhooks\MaxMagnetWebhookController;
 use App\Http\Controllers\Webhooks\PaypalSubscriptionsWebhookController;
+use App\Http\Controllers\Webhooks\TelegramBusinessWebhookController;
 use App\Http\Controllers\Webhooks\TelegramMagnetWebhookController;
 use App\Http\Controllers\Webhooks\TelegramZapisiWebhookController;
 use App\Http\Controllers\Webhooks\VkMagnetCallbackController;
@@ -163,6 +164,14 @@ Route::post('/webhooks/lecture-clip-callback', [LectureClipCallbackWebhookContro
 Route::post('/webhooks/telegram-zapisi', [TelegramZapisiWebhookController::class, 'handle'])
     ->middleware('verify.tg.zapisi')
     ->name('webhook.zapisi.telegram');
+
+// === TELEGRAM BUSINESS (H5065): бот управляет чатом и отвечает ОТ ИМЕНИ аккаунта ===
+// Флаг features.telegram_business_bot OFF → 404 (middleware, fail-closed), пустой
+// секрет → 403. Принимаем бизнес-апдейты (business_connection / business_message),
+// кладём в support-инбокс и прогоняем ту же полосу автоответа, что у лички.
+Route::post('/webhooks/telegram-business', [TelegramBusinessWebhookController::class, 'handle'])
+    ->middleware('verify.tg.business')
+    ->name('webhook.telegram-business');
 
 // === ВХОДЯЩИЙ EMAIL (H3462): zabota@samskrte.ru → проводник (n8n на .91) → сюда ===
 // Письмо раскладывается в chat_messages (source='email') через InboundEmailIngester:

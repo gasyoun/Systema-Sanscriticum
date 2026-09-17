@@ -119,6 +119,11 @@ class SharedKnowledgeBaseTest extends TestCase
         $this->assertTrue($context->isEmpty());
         $this->assertSame('', $context->promptBlock());
         $this->assertSame(0.0, $context->bestBm25Score());
+        // Потолок контекста на пустом наборе — тоже пустая строка, а не
+        // «Undefined array key 0»: пустой вопрос приходит из реального трафика
+        // (стикер, одна эмодзи), и падать на нём нельзя.
+        $this->assertSame('', $context->promptBlockCapped(100));
+        $this->assertSame('', app(SharedKnowledgeBase::class)->promptBlock('   '));
     }
 
     public function test_top_k_is_respected_and_citations_keep_the_heading_path(): void

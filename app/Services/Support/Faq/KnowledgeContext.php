@@ -127,7 +127,7 @@ final class KnowledgeContext
      */
     public function promptBlockCapped(int $maxChars): string
     {
-        if ($maxChars <= 0) {
+        if ($maxChars <= 0 || $this->hits === []) {
             return $this->promptBlock();
         }
 
@@ -145,7 +145,7 @@ final class KnowledgeContext
 
         // Первый раздел не влез в потолок — отдаём его целиком, а не пустоту:
         // пустой контекст отвечающая сторона читает как «данных нет».
-        return $parts === [] ? $this->renderChunk($this->hits[0]['chunk']) : implode("\n\n", $parts);
+        return implode("\n\n", $parts);
     }
 
     private function renderChunk(FaqChunk $chunk): string
