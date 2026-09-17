@@ -7,7 +7,6 @@ use App\Models\Lead;
 use App\Models\User;
 use App\Services\LeadNotifier;
 use App\Services\Leads\LeadFlashBuilder;
-use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\SocialChannelParser;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -104,8 +103,14 @@ class LeadController extends Controller
         }
 
         if ($existing) {
+            // H5046: ротация binding-токена при повторной заявке. Старый токен
+            // мог быть раскрыт дубликат-флэшем (до фикса он уезжал в ссылках)
+            // или переслан — перевыпуск делает все такие диплинки мёртвыми.
+            $this->rotateMagnetToken($existing);
+
             // Подписка на статусы (H3339): заявившийся раньше выдачи токена
-            // всё равно должен получить кнопки — досыпаем binding сейчас.
+            // всё равно получает binding — свежий токен нужен вебхукам и
+            // повторной выдаче; в дубликат-флэш он отныне не попадает.
             if ($landing && $landing->hasStatusBlock() && ! $existing->magnet_token) {
                 $this->attachBinding($existing, $landing, $this->channelFromSocial($validated['social'] ?? null, $landing));
             }
@@ -181,15 +186,19 @@ class LeadController extends Controller
             ->first();
 
         if ($existing) {
+            // H5046: та же ротация binding-токена, что у полной формы —
+            // дубликат-флэш здесь тоже не должен нести никаких ссылок,
+            // построенных на токене существующего лида.
+            $this->rotateMagnetToken($existing);
+
             // H3339: досыпаем binding заявке, сделанной до появления подписки.
             if ($subscriptionLanding && ! $existing->magnet_token) {
                 $this->attachBinding($existing, $landing, $this->channelFromProfile($user, $landing));
             }
 
-            return back()->with(array_merge(
-                ['success' => 'Вы уже в листе ожидания — напишем вам при открытии набора.'],
-                $this->statusFlash($existing, $landing)
-            ));
+            return back()->with([
+                'success' => 'Вы уже в листе ожидания — напишем вам при открытии набора.',
+            ]);
         }
 
         $lead = Lead::create([
@@ -291,39 +300,52 @@ class LeadController extends Controller
     }
 
     /**
-     * Flash для дубликата заявки. Если у оригинального Lead есть magnet_channel/token —
-     * строим deep-link исходного канала, чтобы юзер вернулся туда же, где получил магнит.
-     * Иначе — отдаём только базовые поля, шаблон сам деградирует на хардкод-кнопку Telegram.
+     * Flash для дубликата заявки. H5046 (remediation lead-duplicate-flash-
+     * magnet-token-disclosure): намеренно generic. Раньше здесь строились
+     * status_connect_links и duplicate_deep_link из magnet_token СУЩЕСТВУЮЩЕГО
+     * лида — повторная заявка с чужим email выдавала рабочие диплинки с
+     * токеном жертвы. Теперь флэш не несёт токена вовсе, а сам токен при
+     * повторной заявке ротируется (см. rotateMagnetToken). Шаблон thank-you
+     * сам деградирует на хардкод-кнопку Telegram без токена.
      */
     private function buildDuplicateFlash(Lead $existing): array
     {
-        $flash = [
+        return [
             'is_duplicate' => true,
             'duplicate_email' => $existing->email,
         ];
+    }
 
-        // Подписка на статусы (H3339): дубликат видит тот же полный блок каналов,
-        // что и новая заявка — кнопки не зависят от того, каким путём он пришёл.
-        if ($existing->magnet_token && ($landing = $existing->landingPage) !== null && $landing->hasStatusBlock()) {
-            $flash['status_connect_links'] = app(LeadFlashBuilder::class)->statusConnectLinks($existing, $landing);
-
-            return $flash;
+    /**
+     * H5046: перевыпускает magnet_token при повторной заявке. Старый токен мог
+     * быть раскрыт дубликат-флэшем (до фикса) или переслан дальше — ротация
+     * делает недействительными все диплинки, на нём построенные. magnet_channel
+     * и привязанные чаты переживают ротацию: вебхуки матчатся прежде всего по
+     * chat_id, а все новые выдачи строят ссылки от свежего токена.
+     */
+    private function rotateMagnetToken(Lead $lead): void
+    {
+        if (! $lead->magnet_token) {
+            return;
         }
 
-        if (! $existing->magnet_channel || ! $existing->magnet_token) {
-            return $flash;
+        // Тот же retry-цикл на коллизии UNIQUE index magnet_token, что и в
+        // attachBinding(): do/while с exists() не атомарен, коллизии при
+        // 62^12 практически невозможны, но 3 попытки страхуют любой край.
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            try {
+                $lead->update(['magnet_token' => Str::random(12)]);
+
+                return;
+            } catch (QueryException $e) {
+                // 1062 (MySQL) / 23000 (SQLite) — duplicate key. Любая другая ошибка пробрасывается.
+                if ($e->getCode() !== '23000') {
+                    throw $e;
+                }
+            }
         }
 
-        $manager = app(DeliveryChannelManager::class);
-        if (! $manager->has($existing->magnet_channel)) {
-            return $flash;
-        }
-
-        $flash['duplicate_channel'] = $existing->magnet_channel;
-        $flash['duplicate_deep_link'] = $manager->get($existing->magnet_channel)
-            ->buildDeepLink($existing->magnet_token);
-
-        return $flash;
+        throw new \RuntimeException("Не удалось ротировать magnet_token для Lead #{$lead->id}");
     }
 
     /**
