@@ -55,14 +55,7 @@ def decide(matched: dict, verdict_path: str | None, pr_body: str,
                            "(repository kill switch). Unrelated protections untouched; "
                            "full rollback = delete the workflow file."}
 
-    if not matched.get("has_executable"):
-        excluded = ", ".join(matched.get("excluded", [])[:20]) or "-"
-        other = ", ".join(matched.get("other", [])[:20]) or "-"
-        return {"conclusion": "skip", "mode": "skip-note",
-                "summary": "Diff matches no executable-code pattern (design §1) - not "
-                           f"reviewed as executable code. Exclusion note: excluded=[{excluded}] "
-                           f"other-non-executable=[{other}]"}
-
+    approval_note = ""
     if matched.get("has_sensitive"):
         sensitive = ", ".join(matched["sensitive"])
         ok, login = human_approved(pr_body, pr_author)
@@ -71,6 +64,15 @@ def decide(matched: dict, verdict_path: str | None, pr_body: str,
                            "`Gate human approval: @login` line in the PR body by a human other "
                            "than the PR author before merge")
             return {"conclusion": "fail", "mode": "human-approval-required", "summary": "; ".join(reasons)}
+        approval_note = f" Human approval recorded from @{login}."
+
+    if not matched.get("has_executable"):
+        excluded = ", ".join(matched.get("excluded", [])[:20]) or "-"
+        other = ", ".join(matched.get("other", [])[:20]) or "-"
+        return {"conclusion": "skip", "mode": "skip-note",
+                "summary": "Diff matches no executable-code pattern (design §1) - not "
+                           f"reviewed as executable code. Exclusion note: excluded=[{excluded}] "
+                           f"other-non-executable=[{other}].{approval_note}"}
 
     if not verdict_path or not Path(verdict_path).exists():
         return {"conclusion": "fail", "mode": "timeout",
@@ -111,7 +113,10 @@ def main() -> int:
     ap.add_argument("--head", required=True)
     ap.add_argument("--kill-switch", default=None,
                     help="Value of OXALPHA_REVIEW_GATE_DISABLED; true/1 disables")
-    ap.add_argument("--out", default="verdict.json")
+    ap.add_argument("--out", default="gate-verdict.json",
+                    help="Gate conclusion file (default gate-verdict.json; kept DISTINCT "
+                         "from the fetched reviewer verdict.json so the artifact is "
+                         "never clobbered by the gate's own result)")
     args = ap.parse_args()
 
     matched = json.loads(Path(args.matched_json).read_text())

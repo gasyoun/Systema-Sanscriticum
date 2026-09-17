@@ -28,12 +28,13 @@ INCLUDE_PATTERNS = [
 ]
 
 # Blade paths count only when the changed lines touch logic (design: "@if/@php/auth").
+# Control-flow/data-logic directives only: display directives (@class/@style/
+# @checked/@selected/@props/@section/@extends) are NOT logic and take the skip path.
 BLADE_LOGIC_MARKERS = (
     "@if", "@endif", "@else", "@elseif", "@php", "@endphp", "@auth", "@endauth",
     "@guest", "@can", "@cannot", "@foreach", "@endforeach", "@forelse", "@endforelse",
-    "@while", "@endwhile", "@isset", "@empty", "@include", "@includeIf", "@includeWhen",
-    "@each", "@component", "@props", "@class", "@style", "@checked", "@selected",
-    "@error", "@env", "@production", "@section", "@overwrite", "@extends",
+    "@while", "@endwhile", "@isset", "@empty", "@include", "@includeif", "@includewhen",
+    "@each", "@component", "@error", "@env", "@production",
 )
 
 # --- Design section 1, decision 5: default exclusions -----------------------
@@ -152,13 +153,16 @@ def classify(repo: str, base: str, head: str, paths: list[str] | None = None) ->
         if matches(path, EXCLUDE_PATTERNS):
             excluded.append(path)
             continue
+        # §3 sensitive detection is INDEPENDENT of executable classification:
+        # deploy.sh is not executable code per §1, but §3 still demands human
+        # approval for it (P1: the old exec-gated check silently skipped it).
+        if is_sensitive(path):
+            sensitive.append(path)
         is_exec = matches(path, INCLUDE_PATTERNS)
         if is_exec and path.endswith(".blade.php") and path.startswith("resources/views/"):
             is_exec = blade_has_logic_change(repo, base, head, path)
         if is_exec:
             executable.append(path)
-            if is_sensitive(path):
-                sensitive.append(path)
         else:
             other.append(path)
 

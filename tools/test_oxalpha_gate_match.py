@@ -120,6 +120,7 @@ def integration_tests() -> None:
         # ordinary slice: display-only blade + docs only -> skip path, no sensitive
         g("checkout", "-q", "main")
         w("resources/views/plain.blade.php", "<p>text edit only</p>\n")
+        w("resources/views/classed.blade.php", "<div @class(['x' => true])>y</div>\n")
         w("docs/again.md", "x\n")
         g("add", "-A")
         g("commit", "-qm", "ordinary")
@@ -127,6 +128,19 @@ def integration_tests() -> None:
         res2 = classify(str(tmp), base, head2)
         check("ordinary: no executable (skip path)", not res2["has_executable"], json.dumps(res2))
         check("ordinary: no sensitive", not res2["has_sensitive"])
+        check("display @class blade NOT logic (design-widening fixed)",
+              "resources/views/classed.blade.php" not in res2["executable"], json.dumps(res2))
+
+        # deploy.sh-only slice: NOT executable per §1, but §3-sensitive regardless
+        g("checkout", "-q", "main")
+        w("deploy.sh", "#!/bin/bash\necho deploy\n")
+        g("add", "-A")
+        g("commit", "-qm", "deploy change")
+        head3 = g("rev-parse", "HEAD").strip()
+        res3 = classify(str(tmp), base, head3)
+        check("deploy.sh: not executable (§1)", not res3["has_executable"], json.dumps(res3))
+        check("deploy.sh: STILL sensitive (§3, P1 fix)",
+              res3["has_sensitive"] and "deploy.sh" in res3["sensitive"], json.dumps(res3))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

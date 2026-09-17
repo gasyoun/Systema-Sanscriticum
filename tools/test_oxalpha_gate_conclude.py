@@ -28,14 +28,15 @@ def check(name: str, cond: bool, detail: str = "") -> None:
         print(f"FAIL  {name}  {detail}")
 
 
-def match_json(executable: bool, sensitive: bool = False) -> dict:
-    exe = ["app/Models/User.php"] if executable else []
-    sen = ["app/Models/Payment.php"] if sensitive else []
+def match_json(executable: bool, sensitive: bool = False, exe_paths: list[str] | None = None,
+               sen_paths: list[str] | None = None) -> dict:
+    exe = exe_paths if exe_paths is not None else (["app/Models/User.php"] if executable else [])
+    sen = sen_paths if sen_paths is not None else (["app/Models/Payment.php"] if sensitive else [])
     return {"schema": "oxalpha-gate-match/1", "base": "0" * 40, "head": HEAD,
             "executable": exe, "sensitive": sen,
             "excluded": ["docs/x.md"] if not executable else [],
             "other": ["README.md"] if not executable else [],
-            "has_executable": executable, "has_sensitive": sensitive}
+            "has_executable": bool(exe), "has_sensitive": bool(sen)}
 
 
 def verdict_file(tmp: str, data: dict | None, name: str = "v.json") -> str:
@@ -63,6 +64,16 @@ def main() -> None:
     r = decide(match_json(False), None, "", None, kill_switch=False, tested_head=HEAD)
     check("doc-only -> skip with exclusion note",
           r["conclusion"] == "skip" and "Exclusion note" in r["summary"], str(r))
+
+    r = decide(match_json(False, sensitive=True, sen_paths=["deploy.sh"]), None, "", "authoruser",
+               kill_switch=False, tested_head=HEAD)
+    check("deploy.sh-only diff -> approval-required BEFORE skip (never silent skip)",
+          r["conclusion"] == "fail" and r["mode"] == "human-approval-required", str(r))
+
+    r = decide(match_json(False, sensitive=True, sen_paths=["deploy.sh"]), None,
+               "Gate human approval: @mg-reviewer", "authoruser", False, HEAD)
+    check("deploy.sh-only + approval -> skip-note records approver",
+          r["conclusion"] == "skip" and "@mg-reviewer" in r["summary"], str(r))
 
     r = decide(match_json(True), None, "", None, kill_switch=False, tested_head=HEAD)
     check("absent verdict -> fail (timeout, never pass)",

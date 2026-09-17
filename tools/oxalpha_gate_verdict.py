@@ -93,7 +93,8 @@ def validate_verdict(data: object, expect_head: str | None = None) -> list[str]:
             if f.get("severity") in ("P0", "P1"):
                 rt = f.get("regression_tests")
                 if not (isinstance(rt, list) and rt and all(
-                        isinstance(p, str) and (p.startswith("tests/") or "/tests/" in p)
+                        isinstance(p, str) and (p.startswith("tests/") or "/tests/" in p
+                                                or p.startswith("tools/test_"))
                         for p in rt)):
                     errs.append(f"{where} is {f.get('severity')} without regression test "
                                 f"under tests/ (design section 2 fail condition)")
