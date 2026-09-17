@@ -84,4 +84,17 @@ class TrackedLinkTest extends TestCase
         $this->get('/ga/m26-mg-st-gita-20260917-1')->assertNotFound();
         $this->get('/ga/m26-unknown-st-gita-20260917-01')->assertNotFound();
     }
+
+    /** @test */
+    public function evergreen_story_series_frames_keep_separate_destinations_and_content(): void
+    {
+        $this->get('/ga/lingq-rs-st-puzzle-20260917-01')
+            ->assertRedirect('https://t.me/samskrtamru/4166');
+        $this->assertSame('puzzle_story_20260917_01', session(config('tracked_links.session_key').'.utm_content'));
+
+        $this->flushSession();
+        $this->get('/ga/linga-rs-st-answer-20260917-01')
+            ->assertRedirect('https://t.me/samskrtamru/4169');
+        $this->assertSame('answer_story_20260917_01', session(config('tracked_links.session_key').'.utm_content'));
+    }
 }
