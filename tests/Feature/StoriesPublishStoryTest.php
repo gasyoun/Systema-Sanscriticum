@@ -184,8 +184,9 @@ class StoriesPublishStoryTest extends TestCase
             ->assertSuccessful();
 
         self::assertSame($url, FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['url']);
-        self::assertStringStartsWith($url, FakeStoriesMadelineProtoClient::$sentStories[0]['caption']);
-        self::assertSame(0, FakeStoriesMadelineProtoClient::$sentStories[0]['entities'][0]['offset']);
+        self::assertStringEndsWith($url, FakeStoriesMadelineProtoClient::$sentStories[0]['caption']);
+        self::assertGreaterThan(0, FakeStoriesMadelineProtoClient::$sentStories[0]['entities'][0]['offset']);
+        self::assertSame(55.0, FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['coordinates']['y']);
     }
 
     /** @test */
