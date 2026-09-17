@@ -352,6 +352,20 @@ if command -v supervisorctl >/dev/null 2>&1 && supervisorctl status zapisi-poll 
   supervisorctl restart zapisi-poll || echo "ВНИМАНИЕ: zapisi-poll не перезапустился — апдейты бота могут не приходить."
 fi
 
+# ── 6c. Track C: рестарт поллера студенческого бота telegram-student-poll, если он запущен ──
+# Тот же случай, что и с Horizon/zapisi-poll (H5051, 17-09-2026): долгоживущий
+# CLI-процесс держит код, загруженный при старте, и после деплоя продолжает
+# крутить СТАРЫЙ код в памяти, пока его не перезапустить.
+#
+# Условие «сейчас RUNNING» — по той же причине, что и у zapisi-poll:
+# `supervisorctl restart` на ОСТАНОВЛЕННОЙ программе её ЗАПУСКАЕТ, а
+# telegram-student-poll в рабочем режиме запускаться не должен — он снимает
+# вебхук и уводит бота студента с штатной дорожки. Программа стоит — не трогаем.
+if command -v supervisorctl >/dev/null 2>&1 && supervisorctl status telegram-student-poll 2>/dev/null | grep -q RUNNING; then
+  say "Рестарт telegram-student-poll (поллер студента запущен)"
+  supervisorctl restart telegram-student-poll || echo "ВНИМАНИЕ: telegram-student-poll не перезапустился — бот студента держит пред-деплойный код."
+fi
+
 if [ "$USE_DOWN" = 1 ]; then
   say "php artisan up"
   php artisan up
