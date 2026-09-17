@@ -12,6 +12,7 @@ use App\Services\ClassAttendanceService;
 use App\Services\Schedule\CanvasMoney;
 use App\Services\Schedule\TextbookScale;
 use App\Services\Schedule\WeeklyFinishReport;
+use App\Support\FormulaGuard;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Actions;
@@ -337,12 +338,14 @@ class AttendanceDashboard extends Page
             fputcsv($file, ['Студент', 'Ожидалось занятий', 'Посетил', 'Rate %'], ';');
 
             foreach ($report['students'] as $row) {
-                fputcsv($file, [
+                // H5086: имя студента — гостевая строка (самовыбранный local part
+                // email), нейтрализуем от spreadsheet-формул.
+                fputcsv($file, FormulaGuard::row([
                     $row['user']->name,
                     $row['expected'],
                     $row['attended'],
                     $row['rate'],
-                ], ';');
+                ]), ';');
             }
             fclose($file);
         }, $fileName);
