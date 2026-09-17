@@ -110,6 +110,33 @@ final class HybridRetriever
     }
 
     /**
+     * Скор хита в ДОМЕНЕ ПОРОГОВ — то есть BM25.
+     *
+     * H5065: зачем это отдельным методом. У гибрида две шкалы: `score` — RRF
+     * (порядка 1/(60+rank) ≈ 0.02), `bm25_score` — лексическая нога (0…20).
+     * Все настроенные пороги (support.faq_rag.shadow_min_score*,
+     * support.faq_rag.shadow_min_score_by_category, support.llm_replies.min_score)
+     * выведены на 100-вопросном наборе В ДОМЕНЕ BM25.
+     *
+     * Потребитель, читающий `score` напрямую, при включённой плотной ноге
+     * сравнивает 0.0246 с порогом 15.7 и молча отказывает на КАЖДОМ вопросе:
+     * полоса не падает и не пишет это как дефект — она просто перестаёт
+     * отвечать в тот день, когда включают `FAQ_HYBRID_RETRIEVAL`. Замер
+     * 17-09-2026: лучший хит «будет ли сертификат» — score 0.0246,
+     * bm25_score 16.6749 при пороге F 15.7, то есть вопрос ОБЯЗАН был пройти.
+     *
+     * Поэтому домен порога читается отсюда, а не из `['score']` на месте. Для
+     * BM25-пола значения совпадают, и метод возвращает ровно то же число, что
+     * читали раньше, — фикс не двигает выключенное поведение.
+     *
+     * @param  array<string, mixed>  $hit
+     */
+    public static function bm25Score(array $hit): float
+    {
+        return (float) ($hit['bm25_score'] ?? $hit['score'] ?? 0.0);
+    }
+
+    /**
      * Деньги/политика (категория D) — порог в домене BM25: RRF-скор на другой
      * шкале и молча занизил бы проход через support.faq_rag.min_score.
      *
@@ -122,9 +149,8 @@ final class HybridRetriever
         }
 
         $min = (float) config('support.faq_rag.min_score', 1.5);
-        $best = (float) ($hits[0]['bm25_score'] ?? $hits[0]['score'] ?? 0.0);
 
-        return $best >= $min;
+        return self::bm25Score($hits[0]) >= $min;
     }
 
     /**

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Support;
 
 use App\Services\Bot\CuratorAi;
-use App\Services\Support\Faq\HybridRetriever;
+use App\Services\Support\Faq\KnowledgeContext;
 
 /**
  * H4404 (рулинг MG 08-09-2026 «LLM-черновики»): формулировка ответа студенту
@@ -23,15 +23,26 @@ use App\Services\Support\Faq\HybridRetriever;
  * получает ни суммы, ни доступа, ни каких-либо данных LMS — потому R3-запреты
  * денег/доступов здесь держит КОД, а не конфиг: вопрос про деньги гонится в
  * отказ до всякого вызова LLM.
+ *
+ * H5065 (что изменилось): на вход идёт {@see KnowledgeContext} — ПОЛНЫЕ
+ * разделы общей базы знаний, а не массив 280-символьных сниппетов, как было.
+ * На золотом наборе нужный раздел в среднем длиннее сниппета в 3–5 раз, то
+ * есть прежний промпт физически не мог содержать ответ целиком: модель
+ * договаривала пропущенное, а это ровно тот класс ошибки, ради которого
+ * написан весь R3. Прямая выгода второго изменения — заголовочный путь
+ * («Политика и поддержка → Сертификат») остаётся в контексте, а сниппет его
+ * срезал.
  */
 class SupportDmLlmReplyComposer
 {
-    /** Версия промпта. Меняется при правке формулировок — пишется в аудит. */
-    public const PROMPT_VERSION = 'h4404-v1';
+    /**
+     * Версия промпта. Меняется при правке формулировок — пишется в аудит.
+     * h5065-v1: контекст перешёл со сниппетов на полные разделы.
+     */
+    public const PROMPT_VERSION = 'h5065-v1';
 
     public function __construct(
         private readonly CuratorAi $ai,
-        private readonly HybridRetriever $faq,
     ) {}
 
     public function isEnabled(): bool
@@ -43,23 +54,22 @@ class SupportDmLlmReplyComposer
      * Сформулировать ответ студенту. null — LLM недоступен/отказался/не дал
      * текста; вызывающий обязан уйти в fallback (ack), ничего не отправляя.
      *
-     * @param  list<array<string, mixed>>  $hits
      * @return array{draft: string, model: ?string, usage: ?array{prompt_tokens: int, completion_tokens: int}, chunk_ids: list<string>}|null
      */
-    public function compose(string $questionText, array $hits): ?array
+    public function compose(string $questionText, KnowledgeContext $context): ?array
     {
         if (! $this->isEnabled()) {
             return null;
         }
 
-        $context = $this->faqContext($hits);
-        if ($context === null) {
+        $contextBlock = $this->contextBlock($context);
+        if ($contextBlock === null) {
             return null;
         }
 
         $result = $this->ai->chatWithUsage([
             ['role' => 'system', 'content' => $this->systemPrompt()],
-            ['role' => 'user', 'content' => $this->userPrompt($questionText, $context)],
+            ['role' => 'user', 'content' => $this->userPrompt($questionText, $contextBlock)],
         ]);
 
         $draft = $result['content'];
@@ -71,40 +81,24 @@ class SupportDmLlmReplyComposer
             'draft' => $draft,
             'model' => $result['model'],
             'usage' => $result['usage'],
-            'chunk_ids' => array_map(
-                static fn (array $hit): string => (string) ($hit['chunk_id'] ?? ''),
-                $hits,
-            ),
+            'chunk_ids' => $context->chunkIds(),
         ];
     }
 
     /**
-     * @param  list<array<string, mixed>>  $hits
-     * @return array{context: string, titles: list<string>}|null
+     * Блок справки для промпта: ПОЛНЫЕ разделы, обрезанные по границе раздела
+     * (support.faq_rag.answer_max_chars). null — контекст пуст, формулировать
+     * не из чего.
      */
-    private function faqContext(array $hits): ?array
+    private function contextBlock(KnowledgeContext $context): ?string
     {
-        $parts = [];
-        $titles = [];
-
-        foreach ($hits as $hit) {
-            $snippet = trim((string) ($hit['snippet'] ?? ''));
-            if ($snippet === '') {
-                continue;
-            }
-
-            $title = trim((string) ($hit['title'] ?? ''));
-            $parts[] = ($title === '' ? '' : $title."\n").$snippet;
-            if ($title !== '') {
-                $titles[] = $title;
-            }
-        }
-
-        if ($parts === []) {
+        if ($context->isEmpty()) {
             return null;
         }
 
-        return ['context' => implode("\n\n---\n\n", $parts), 'titles' => $titles];
+        $block = trim($context->promptBlockCapped((int) config('support.faq_rag.answer_max_chars', 12000)));
+
+        return $block === '' ? null : $block;
     }
 
     private function systemPrompt(): string
@@ -124,11 +118,13 @@ class SupportDmLlmReplyComposer
     }
 
     /**
-     * @param  list<array<string, mixed>>  $hits
+     * Промпт строится из ПОЛНЫХ разделов справки (см. contextBlock). Заголовок
+     * «Разделы справки», а не «Фрагменты»: это разделы целиком, и модель не
+     * должна достраивать обрезанный текст.
      */
-    private function userPrompt(string $questionText, array $context): string
+    private function userPrompt(string $questionText, string $contextBlock): string
     {
-        return "Фрагменты справки:\n".$context['context']
+        return "Разделы справки:\n".$contextBlock
             ."\n\nВопрос студента:\n".$questionText
             ."\n\nСоставь ответ.";
     }

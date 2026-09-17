@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace App\Services\Bot;
 
-use App\Services\Support\Faq\Bm25FaqRetriever;
+use App\Services\Support\Faq\SharedKnowledgeBase;
 use Illuminate\Support\Facades\Cache;
 
 /**
  * Собирает системный промпт для ИИ-куратора (TG/VK): персона + правила +
  * статический FAQ (resources/knowledge/faq.md) + живой каталог курсов из БД
  * (CourseCatalogProvider). Единый источник правды для обоих ботов.
+ *
+ * H5065: FAQ-половина берётся из общей базы знаний ({@see SharedKnowledgeBase}),
+ * а не из лексического ретривала напрямую. Разница видна только при включённой
+ * плотной ноге (`features.faq_hybrid_retrieval` + живой `knowledge_chunks`):
+ * тогда бот находит раздел и по перефразированному вопросу («не приходит
+ * запись» → «Записи уроков и пропуски»), а не только по совпадению слов.
+ * При выключенной плотной ноге выдача байт-в-байт прежняя — BM25-пол.
  */
 class BotKnowledgeBase
 {
@@ -31,7 +38,7 @@ class BotKnowledgeBase
 
     public function __construct(
         private CourseCatalogProvider $catalog,
-        private Bm25FaqRetriever $retriever,
+        private SharedKnowledgeBase $knowledge,
     ) {}
 
     /**
@@ -71,18 +78,14 @@ class BotKnowledgeBase
         }
 
         $topK = max(1, (int) config('support.faq_rag.bot_top_k', 6));
-        $chunks = $this->retriever->retrieveChunks($question, $topK);
-        if ($chunks === []) {
+        // H5065: контекст собирает общая база знаний — полные разделы плюс
+        // заголовочный путь, в одном виде со всеми остальными полосами.
+        $context = $this->knowledge->context($question, $topK);
+        if ($context->isEmpty()) {
             return $this->faq();
         }
 
-        $parts = [];
-        foreach ($chunks as $scored) {
-            $chunk = $scored['chunk'];
-            $parts[] = '## '.implode(' → ', $chunk->headingPath)."\n\n".trim($chunk->body);
-        }
-
-        return implode("\n\n", $parts);
+        return $context->promptBlock();
     }
 
     /**

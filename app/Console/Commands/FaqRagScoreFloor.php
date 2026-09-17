@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Services\Support\Faq\Bm25FaqRetriever;
+use App\Services\Support\Faq\HybridRetriever;
 use Illuminate\Console\Command;
 
 /**
@@ -51,7 +52,11 @@ class FaqRagScoreFloor extends Command
             }
             $category = (string) ($item['category'] ?? '-');
             $byCategory[$category][] = [
-                'score' => (float) ($hits[0]['score'] ?? 0.0),
+                // H5065: калибровка обязана остаться в домене BM25. С прямым
+                // ['score'] на гибридном ретривере пороги выводились бы по
+                // RRF-шкале (~0.02) — то есть набор чисел, несовместимый с
+                // порогами, которые эти же ключи читают в бою.
+                'score' => HybridRetriever::bm25Score($hits[0]),
                 'correct' => in_array($hits[0]['chunk_id'], (array) $item['expected_chunk_ids'], true),
             ];
         }
