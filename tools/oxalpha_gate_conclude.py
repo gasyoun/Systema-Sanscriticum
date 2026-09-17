@@ -55,6 +55,11 @@ def decide(matched: dict, verdict_path: str | None, pr_body: str,
                            "(repository kill switch). Unrelated protections untouched; "
                            "full rollback = delete the workflow file."}
 
+    if matched.get("infra_failure"):
+        return {"conclusion": "fail", "mode": "infrastructure",
+                "summary": "match.json was never produced (matcher/gate infra failure) - "
+                           "concluded fail, never a benign skip (INCONCLUSIVE is never PASS)."}
+
     approval_note = ""
     if matched.get("has_sensitive"):
         sensitive = ", ".join(matched["sensitive"])
@@ -89,6 +94,15 @@ def decide(matched: dict, verdict_path: str | None, pr_body: str,
 
     assert isinstance(data, dict)
     axes_ok = (data["standards"]["verdict"] == "pass" and data["spec"]["verdict"] == "pass")
+    if axes_ok and matched.get("has_sensitive"):
+        # design §3(a): sensitive slices require regression tests proving
+        # fail-before/pass-after - enforced as at least one tests/ path among
+        # the changed executable paths (§3(b) approval is checked above).
+        if not any(p.startswith("tests/") or "/tests/" in p for p in matched["executable"]):
+            return {"conclusion": "fail", "mode": "human-approval-required",
+                    "summary": "Sensitive paths touched (" + ", ".join(matched["sensitive"]) +
+                               "): design §3(a) requires regression tests (fail-before/pass-after) "
+                               "in the diff - none found under tests/."}
     finding_summary = []
     for axis in ("standards", "spec"):
         for f in data[axis].get("findings", []):
