@@ -33,7 +33,7 @@ Key invariants:
       "caption": "Набор осенней группы с нуля.",  // URL никогда не первым
       "alt_text": "Анонс осенней группы",          // обязателен
       "cta_text": "страница записи",               // текст вжариваемой плашки
-      "cta_url": "https://samskrte.ru/ga/m26-rusamskrtam-st-sep-20260918-01"  // чистая /ga/, без UTM
+      "cta_url": "https://samskrte.ru/ga/m26-rs-st-sep-20260918-01"  // чистая /ga/, без UTM
     }
   ],
   "destinations": [
