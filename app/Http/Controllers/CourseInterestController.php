@@ -9,6 +9,7 @@ use App\Models\CourseInterestRequest;
 use App\Services\CuratorNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -29,6 +30,12 @@ use Illuminate\View\View;
  */
 class CourseInterestController extends Controller
 {
+    /**
+     * Origin'ы, которым разрешено встраивать embed-форму в iframe — та же
+     * локальная область, что у виджета расписания (PublicWidgetController).
+     */
+    private const FRAME_ANCESTORS = "frame-ancestors 'self' https://samskrtam.ru https://www.samskrtam.ru";
+
     public function show(string $course = ''): View
     {
         $this->abortIfDisabled();
@@ -46,22 +53,29 @@ class CourseInterestController extends Controller
         ]);
     }
 
-    /** Минимальный iframe-вариант для встраивания на samskrtam.ru. */
-    public function embed(string $course = ''): View
+    /**
+     * Минимальный iframe-вариант для встраивания на samskrtam.ru. Как у виджета
+     * расписания (PublicWidgetController), `frame-ancestors` выставляется ТОЛЬКО
+     * на этом ответе — глобального CSP/X-Frame-Options в проекте нет, поэтому
+     * ничего site-wide не ослабляется.
+     */
+    public function embed(string $course = ''): Response
     {
         $this->abortIfDisabled();
 
         [$courseModel, $courseTitle] = $this->resolveCourse($course);
 
-        return view('course-interest.embed', [
-            'course' => $courseModel,
-            'courseTitle' => $courseTitle,
-            'courseSlug' => $course,
-            'counts' => $courseModel !== null
-                ? CourseInterestRequest::countsForCourse($courseModel->id)
-                : [],
-            'intentLabels' => CourseInterestRequest::intentLabels(),
-        ]);
+        return response()
+            ->view('course-interest.embed', [
+                'course' => $courseModel,
+                'courseTitle' => $courseTitle,
+                'courseSlug' => $course,
+                'counts' => $courseModel !== null
+                    ? CourseInterestRequest::countsForCourse($courseModel->id)
+                    : [],
+                'intentLabels' => CourseInterestRequest::intentLabels(),
+            ])
+            ->header('Content-Security-Policy', self::FRAME_ANCESTORS);
     }
 
     public function store(Request $request, string $course = ''): RedirectResponse
