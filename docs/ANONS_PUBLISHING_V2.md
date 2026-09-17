@@ -6,7 +6,7 @@ H5049 delivery: declarative announcement/Story publishing with visible CTA plaqu
 
 ## Mental model
 
-A **manifest** (one YAML/JSON file) declares ONE campaign application: frames (ordered series), destinations (account/platform pairs), copy, assets, CTA. The **service** (`App\Services\Anons\AnonsPublishingService`) turns it into publications through platform **adapters**. CLI and HTTP API are thin shells over the same service.
+A **manifest** (one JSON file on prod; YAML also accepted in dev/tests, where symfony/yaml is installed — dev-only per the H4880 revert contract) declares ONE campaign application: frames (ordered series), destinations (account/platform pairs), copy, assets, CTA. The **service** (`App\Services\Anons\AnonsPublishingService`) turns it into publications through platform **adapters**. CLI and HTTP API are thin shells over the same service.
 
 Key invariants:
 
@@ -18,23 +18,29 @@ Key invariants:
 
 ## Manifest format
 
-```yaml
-version: 1
-campaign: m26            # короткий слаг
-creative: sep-start      # что именно публикуем
-slot: "2026-09-18T08:00" # bucket идемпотентности (дата+время запуска)
-test_mode: false
-# test_mode: true         → обязательный private-контур:
-# test_destination: {platform: telegram_story, account: marcis_test}
-frames:                  # упорядоченная серия (R12)
-  - asset: /abs/path/story.jpg    # только абсолютные пути
-    caption: "Набор осенней группы с нуля."   # URL никогда не первым
-    alt_text: "Анонс осенней группы"          # обязателен
-    cta_text: "страница записи"               # текст вжариваемой плашки
-    cta_url: "https://samskrte.ru/ga/m26-rusamskrtam-st-sep-20260918-01"  # чистая /ga/, без UTM
-destinations:
-  - {platform: telegram_story, account: rusamskrtam}
-deletion_policy: retain  # | rollback_target — разрешает bounded rollback
+```json
+{
+  "version": 1,
+  "campaign": "m26",             // короткий слаг
+  "creative": "sep-start",       // что именно публикуем
+  "slot": "2026-09-18T08:00",    // bucket идемпотентности (дата+время запуска)
+  "test_mode": false,
+  // "test_mode": true          → обязательный private-контур:
+  // "test_destination": {"platform": "telegram_story", "account": "marcis_test"}
+  "frames": [                    // упорядоченная серия (R12)
+    {
+      "asset": "/abs/path/story.jpg",   // только абсолютные пути
+      "caption": "Набор осенней группы с нуля.",  // URL никогда не первым
+      "alt_text": "Анонс осенней группы",          // обязателен
+      "cta_text": "страница записи",               // текст вжариваемой плашки
+      "cta_url": "https://samskrte.ru/ga/m26-rusamskrtam-st-sep-20260918-01"  // чистая /ga/, без UTM
+    }
+  ],
+  "destinations": [
+    {"platform": "telegram_story", "account": "rusamskrtam"}
+  ],
+  "deletion_policy": "retain"    // | rollback_target — разрешает bounded rollback
+}
 ```
 
 Validation is fail-closed: relative asset paths, UTM inside `cta_url`, a caption starting with a URL, duplicate destinations and missing alt/CTA are all rejections BEFORE any publication.
@@ -43,9 +49,9 @@ Validation is fail-closed: relative asset paths, UTM inside `cta_url`, a caption
 
 | Command | What it does |
 |---|---|
-| `php artisan anons:validate manifest.yaml` | Schema+adapter check, prints key/hash |
-| `php artisan anons:preview manifest.yaml` | Renders all frames to `storage/app/anons/preview/<hash>/`, prints plaque rects + media areas + UTM; publishes nothing |
-| `php artisan anons:publish manifest.yaml` | Idempotent publication; rerun reports/resumes; `--promote` moves an accepted test publication to prod (manifest must already be test_mode=false) |
+| `php artisan anons:validate manifest.json` | Schema+adapter check, prints key/hash |
+| `php artisan anons:preview manifest.json` | Renders all frames to `storage/app/anons/preview/<hash>/`, prints plaque rects + media areas + UTM; publishes nothing |
+| `php artisan anons:publish manifest.json` | Idempotent publication; rerun reports/resumes; `--promote` moves an accepted test publication to prod (manifest must already be test_mode=false) |
 | `php artisan anons:publish --report-key=<key>` | Status JSON by publication key |
 | `php artisan anons:ops metrics --manifest=…` | Live readout: story metrics + /ga/ clicks by key, explicit missingness states |
 | `php artisan anons:ops history --key=…` | All persisted observations |

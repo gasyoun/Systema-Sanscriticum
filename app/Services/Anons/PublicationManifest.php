@@ -46,9 +46,20 @@ final class PublicationManifest
         }
 
         $raw = (string) file_get_contents($path);
-        $decoded = str_ends_with(strtolower($path), '.json')
-            ? json_decode($raw, true)
-            : Yaml::parse($raw);
+        $isJson = str_ends_with(strtolower($path), '.json');
+
+        // H4880-revert контракт (15-09-2026): symfony/yaml — DEV-ONLY,
+        // рантайм читает JSON. На проде манифест — .json; YAML остаётся
+        // доступным в dev/тестах, где пакет стоит.
+        if (! $isJson && ! class_exists(Yaml::class)) {
+            throw new InvalidArgumentException(
+                'YAML manifest given, but symfony/yaml is not installed in this environment '
+                .'(dev-only per the H4880 revert contract; prod reads JSON twins). '
+                ."Convert the manifest to .json: {$path}"
+            );
+        }
+
+        $decoded = $isJson ? json_decode($raw, true) : Yaml::parse($raw);
 
         if (! is_array($decoded)) {
             throw new InvalidArgumentException('Manifest is neither valid YAML nor JSON.');
