@@ -13,6 +13,7 @@ use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 
 /**
  * W3.1 healthcheck (H595): раз в N минут проверяет каждую включённую
@@ -39,7 +40,15 @@ class CheckTelegramSupportSessionHealth extends Command
             ->get();
 
         if ($accounts->isEmpty()) {
-            $this->info('Нет включённых Telegram-support аккаунтов — проверять нечего.');
+            // H5061: ноль включённых аккаунтов — это not_supported/unavailable,
+            // а не здоровье: выключенные мониторимые поверхности НЕ превращаются
+            // в зелёный. Exit остаётся SUCCESS (прогон планировщика не роняем),
+            // но состояние обязано быть громким и машинночитаемым —
+            // тот же класс, что H4648 «канва не вооружена».
+            $this->warn('Нет включённых Telegram-support аккаунтов — проверять нечего (шов не вооружён, статус not_supported).');
+            Log::warning('telegram-support:healthcheck — включённых аккаунтов 0, проверка не вооружена (not_supported)', [
+                'state' => 'not_supported',
+            ]);
 
             return self::SUCCESS;
         }
