@@ -57,4 +57,31 @@ class TrackedLinkTest extends TestCase
             $this->assertSame($medium, session(config('tracked_links.session_key').'.utm_medium'));
         }
     }
+
+    /** @test */
+    public function every_story_publication_gets_account_and_instance_specific_attribution(): void
+    {
+        $this->get('/ga/m26-mg-st-gita-20260917-01')
+            ->assertRedirect('/online/kursy/grammatika-gasuns-2026');
+
+        $this->assertSame([
+            'utm_source' => 'telegram_marcisgasuns',
+            'utm_medium' => 'story',
+            'utm_campaign' => 'grammar_gasuns_autumn_2026',
+            'utm_content' => 'gita_story_20260917_01',
+            'utm_term' => 'beginner',
+        ], session(config('tracked_links.session_key')));
+
+        $this->flushSession();
+        $this->get('/ga/m26-rs-st-gita-20260917-02')->assertRedirect();
+        $this->assertSame('telegram_rusamskrtam', session(config('tracked_links.session_key').'.utm_source'));
+        $this->assertSame('gita_story_20260917_02', session(config('tracked_links.session_key').'.utm_content'));
+    }
+
+    /** @test */
+    public function malformed_or_unknown_story_tokens_are_rejected(): void
+    {
+        $this->get('/ga/m26-mg-st-gita-20260917-1')->assertNotFound();
+        $this->get('/ga/m26-unknown-st-gita-20260917-01')->assertNotFound();
+    }
 }
