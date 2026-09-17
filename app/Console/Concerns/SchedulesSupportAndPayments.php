@@ -129,6 +129,19 @@ trait SchedulesSupportAndPayments
             ->onOneServer()
             ->name('knowledge-index');
 
+        // Этап 4: свежие расшифровки уроков в ту же таблицу, полоса `lesson`.
+        // Двойной гейт тот же: флаг вопросов по урокам (OFF по умолчанию) И
+        // настроенный драйвер. Слот на полчаса позже FAQ-индексации — обе
+        // ходят в один туннель, и незачем будить узел двумя пачками разом.
+        $schedule->command('knowledge:index-lessons')
+            ->dailyAt('10:30')
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.lesson_qa')
+                && (string) config('knowledge.driver') !== '')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('knowledge-index-lessons');
+
     }
 
     /** MarketingSetting-timed payment/debt/certificate reminders. */
