@@ -48,10 +48,12 @@ try {
             (string) ($task['path'] ?? ''),
             (string) ($task['caption'] ?? ''),
             isset($task['account']) ? (string) $task['account'] : null,
+            isset($task['link']) ? (string) $task['link'] : null,
         )],
         'send_video' => ['ok' => true, 'story_id' => $publisher->sendVideoStoryDirect(
             (string) ($task['path'] ?? ''),
             (string) ($task['caption'] ?? ''),
+            isset($task['link']) ? (string) $task['link'] : null,
         )],
         'delete' => tap(['ok' => true, 'story_id' => null], function () use ($publisher, $task): void {
             $publisher->deleteStoryDirect((int) ($task['story_id'] ?? 0));
