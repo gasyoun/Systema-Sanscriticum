@@ -55,7 +55,13 @@ final class BankClaimController extends Controller
         // Ruling 22-08-2026 (зеркало из PayPal-канала): заявка СУЩЕСТВУЮЩЕГО
         // ученика сразу paid; гость с новым email — pending → ручная сверка.
         // Флаг читаем ДО resolveUser: он логинит только что созданного гостя.
+        //
+        // H5083 (remediation confirmed H5046): как и в PayPal-канале,
+        // «существующий» = isEstablishedClaimStudent() (возраст аккаунта
+        // ≥ 7 дней ИЛИ проведённый платёж), а не голый auth()->check() —
+        // сессию минтит сама публичная форма (Nv06 two-POST bootstrap).
         $trusted = auth()->check()
+            && auth()->user()->isEstablishedClaimStudent()
             && (bool) config('services.bank_claim.trust_existing_students', true);
 
         $user = $this->resolveUser($request);

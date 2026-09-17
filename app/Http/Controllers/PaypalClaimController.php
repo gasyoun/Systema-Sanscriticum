@@ -91,7 +91,15 @@ final class PaypalClaimController extends Controller
         // email идет по-старому: pending → ручная сверка в Filament.
         // Флаг читаем ДО resolveUser: он логинит только что созданного гостя,
         // и после него auth()->check() уже не отличит своего от нового.
+        //
+        // H5083 (remediation confirmed H5046): «существующий» — это ФАКТ
+        // ученика, а не presence-сессия: isEstablishedClaimStudent() требует
+        // возраст аккаунта ≥ 7 дней ИЛИ проведённый (paid) платёж. Голый
+        // auth()->check() доверял сессии, которую сама эта публичная форма
+        // наминтила минуту назад — второй POST того же гостя уходил сразу
+        // в paid без денег (Nv06 two-POST bootstrap).
         $trusted = auth()->check()
+            && auth()->user()->isEstablishedClaimStudent()
             && (bool) config('services.paypal.trust_existing_students', true);
 
         // Резолв пользователя — вне транзакции, может бросить ValidationException
