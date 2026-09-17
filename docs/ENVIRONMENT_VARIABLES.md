@@ -141,6 +141,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CONVERSION_WARN_PCT` | optional | `50` | config/conversion.php:33 |
 | `CORS_ALLOWED_ORIGINS` | optional | `''` | config/cors.php:28 |
 | `COURSE_ACCESS_WINDOWS` | optional | `false` | config/features.php:767 |
+| `COURSE_INTEREST_FORM` | optional | `false` | config/features.php:1604 |
 | `COURSE_LIBRARY` | optional | `false` | config/features.php:1263 |
 | `COURSE_RECORDINGS_SALES` | optional | `false` | config/features.php:392 |
 | `CRM_COCKPIT` | optional | `false` | config/features.php:78 |

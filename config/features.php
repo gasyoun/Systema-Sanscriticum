@@ -1592,4 +1592,14 @@ return [
      | + php artisan config:cache. По умолчанию ВКЛЮЧЕНО — решение MG 16-09-2026.
      */
     'reinvite_48h' => (bool) env('REINVITE_48H', true),
+
+    /*
+     | H5066 — публичная форма интереса на курс (/interest/{course}): три
+     | интента (в следующий набор / купить запись / возобновить занятия),
+     | записи в course_interest_requests, TG-уведомление кураторам и
+     | Filament-витрина со счётчиком по курсам. Default OFF — маршруты 404.
+     | Enable: COURSE_INTEREST_FORM=true + php artisan config:cache (на проде
+     | включается ОТДЕЛЬНО, не этой поставкой). Никаких платежей внутри.
+     */
+    'course_interest_form' => (bool) env('COURSE_INTEREST_FORM', false),
 ];
