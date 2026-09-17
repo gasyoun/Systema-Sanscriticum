@@ -9,6 +9,7 @@ use App\Models\Course;
 use App\Models\Group;
 use App\Models\Lesson;
 use App\Models\User;
+use App\Services\Bot\LessonQaService;
 use App\Services\Support\Faq\EmbeddingProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -168,6 +169,52 @@ class LessonQaBotTest extends TestCase
 
             return str_contains($text, (string) $lesson->title)
                 && ! str_contains($text, 'Чужое занятие');
+        });
+    }
+
+    public function test_a_pin_survives_a_cache_that_returns_scalars_as_strings(): void
+    {
+        // Прод-кэш — Redis без сериализатора: Cache::get() отдаёт '1661', а не
+        // 1661. До правки is_int() превращал это в «закрепления нет».
+        $student = User::factory()->create(['telegram_id' => self::CHAT_ID]);
+
+        Cache::put('lesson_qa.pin.'.$student->id, '1661', 60);
+
+        $this->assertSame(1661, app(LessonQaService::class)->pinned($student));
+    }
+
+    public function test_a_string_pin_narrows_the_search_to_one_lesson(): void
+    {
+        [$student, $lesson] = $this->studentWithOpenLesson();
+
+        // Соседний урок того же курса, лексически громче закреплённого: без
+        // закрепления он гарантированно попадает в цитаты ответа.
+        $other = Lesson::factory()->for($lesson->course)->create([
+            'title' => 'Второе занятие курса',
+            'is_published' => true,
+            'is_free' => true,
+            'group_id' => null,
+        ]);
+        $this->putTranscript($other, 'Шестой класс глаголов шестой класс глаголов шестой класс глаголов.');
+        $this->artisan('knowledge:index-lessons', ['--sync' => true])->assertSuccessful();
+
+        // Закрепление кладём строкой — ровно так его вернёт прод-кэш.
+        Cache::put('lesson_qa.pin.'.$student->id, (string) $lesson->id, 60);
+
+        $this->fakeTelegramAndLocalNode('Ответ по закреплённому занятию.');
+
+        $this->postJson('/api/telegram/webhook', [
+            'message' => ['chat' => ['id' => self::CHAT_ID], 'text' => 'что говорили про шестой класс глаголов'],
+        ])->assertOk();
+
+        Http::assertSent(function ($request) use ($lesson, $other) {
+            if (! str_contains($request->url(), 'api.telegram.org')) {
+                return false;
+            }
+            $text = (string) ($request->data()['text'] ?? '');
+
+            return str_contains($text, (string) $lesson->title)
+                && ! str_contains($text, (string) $other->title);
         });
     }
 
