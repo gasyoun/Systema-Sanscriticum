@@ -16,8 +16,12 @@ use Illuminate\Http\Request;
  * настоящий Zoom-URL.
  *
  * Личность и ДОСТУП берём так:
- *  - подписанная ссылка из бота/напоминаний (есть параметр `u`) — доверяем подписи
- *    (подпись сама доказывает право на редирект);
+ *  - подписанная ссылка из бота/напоминаний (есть параметр `u`) — подпись
+ *    доказывает, что ссылку выдал наш бот/кабинет, но НЕ отменяет гейт доступа:
+ *    перепроверяем canAccess держателя ссылки (H5081, remediation H5046
+ *    class-join-signed-url-no-expiry — отозванный из группы студент с
+ *    сохранённой ссылкой больше не попадает на Zoom по вечной подписи; сама
+ *    ссылка ещё и временная, до конца занятия, см. Schedule::joinLinkExpiry);
  *  - иначе авторизованный студент С ДОСТУПОМ к занятию (его группа или общее
  *    занятие без группы) / сотрудник — редиректим и пишем клик;
  *  - аноним по неподписанной ссылке — на вход, БЕЗ редиректа на Zoom.
@@ -33,16 +37,20 @@ class JoinClassController extends Controller
 
     public function join(Request $request, Schedule $schedule): RedirectResponse
     {
-        // 1) Подписанная ссылка из бота/напоминаний — подпись доказывает право.
+        // 1) Подписанная ссылка из бота/напоминаний — подпись подтверждает
+        //    происхождение ссылки, доступ держателя перепроверяем.
         if ($request->hasValidSignature() && $request->filled('u')) {
-            $userId = (int) $request->query('u');
-            if (User::whereKey($userId)->exists()) {
-                ScheduleJoinClick::record(
-                    $schedule->id,
-                    $userId,
-                    $this->normalizeSource((string) $request->query('source', 'reminder'))
-                );
+            $signedUser = User::find((int) $request->query('u'));
+
+            if (! $signedUser || ! $this->canAccess($signedUser, $schedule)) {
+                abort(403, 'Нет доступа к этому занятию.');
             }
+
+            ScheduleJoinClick::record(
+                $schedule->id,
+                $signedUser->id,
+                $this->normalizeSource((string) $request->query('source', 'reminder'))
+            );
 
             return $this->redirectToClass($schedule);
         }

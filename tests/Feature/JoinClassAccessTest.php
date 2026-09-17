@@ -10,6 +10,7 @@ use App\Models\ScheduleJoinClick;
 use App\Models\User;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 /**
@@ -18,6 +19,11 @@ use Tests\TestCase;
  * перебором посещал платные живые занятия без оплаты. Теперь редирект на Zoom
  * получают только: валидная подпись (бот/напоминание), студент-участник группы
  * занятия, общее занятие без группы, либо сотрудник.
+ *
+ * H5081 (remediation H5046 class-join-signed-url-no-expiry): подписанная ссылка
+ * стала ВРЕМЕННОЙ (до конца занятия + 30 мин, Schedule::joinLinkExpiry), а
+ * контроллер на подписанной ветке перепроверяет canAccess — отозванный из
+ * группы студент с сохранённой ссылкой больше не попадает на Zoom.
  */
 class JoinClassAccessTest extends TestCase
 {
@@ -123,5 +129,86 @@ class JoinClassAccessTest extends TestCase
         $this->actingAs($teacher)
             ->get(route('class.join', $schedule))
             ->assertRedirect(self::ZOOM);
+    }
+
+    /** @test */
+    public function tracked_join_url_is_temporary_and_expires_after_the_class_window(): void
+    {
+        $schedule = $this->schedule();
+        $student = User::factory()->create();
+
+        $url = $schedule->trackedJoinUrlFor($student, 'telegram');
+
+        // Временная подпись несёт expires, а окно = конец занятия + 30 мин
+        // (start + DEFAULT_DURATION_HOURS + grace), а не вечная подпись.
+        $this->assertStringContainsString('expires=', (string) $url);
+        $expiry = $schedule->joinLinkExpiry();
+        $this->assertSame(
+            $schedule->start->copy()->addHours(Schedule::DEFAULT_DURATION_HOURS)->addMinutes(30)->timestamp,
+            $expiry->timestamp
+        );
+    }
+
+    /** @test */
+    public function revoked_students_stored_signed_link_no_longer_redirects_to_zoom(): void
+    {
+        $group = Group::create(['name' => 'Поток']);
+        $student = User::factory()->create();
+        $student->groups()->attach($group->id);
+        $schedule = $this->schedule($group);
+
+        // Ссылка выдана, пока студент был в группе; хранится у него (бот/почта).
+        $url = $schedule->trackedJoinUrlFor($student, 'telegram');
+
+        // Отзыв: студент убран из группы — подпись ещё валидна, но доступа нет.
+        $student->groups()->detach($group->id);
+
+        $response = $this->get($url);
+
+        $response->assertForbidden();
+        $this->assertStringNotContainsString('zoom.us', (string) $response->headers->get('Location', ''));
+        $this->assertSame(0, ScheduleJoinClick::count());
+    }
+
+    /** @test */
+    public function signed_link_expired_after_class_window_is_denied_and_not_redirected_to_zoom(): void
+    {
+        $group = Group::create(['name' => 'Поток']);
+        $student = User::factory()->create();
+        $student->groups()->attach($group->id);
+        // Занятие уже прошло: start −3ч, конец −1ч, +30 мин grace → ссылка истекла.
+        $schedule = Schedule::create([
+            'title' => 'Прошедшее занятие',
+            'group_id' => $group->id,
+            'start' => now()->subHours(3),
+            'link' => self::ZOOM,
+        ]);
+
+        $url = $schedule->trackedJoinUrlFor($student, 'telegram');
+        $this->assertTrue($schedule->joinLinkExpiry()->isPast());
+
+        $response = $this->get($url);
+
+        // Истекшая подпись → ветка анонима: на вход, БЕЗ редиректа на Zoom.
+        $response->assertRedirect(route('login'));
+        $this->assertStringNotContainsString('zoom.us', (string) $response->headers->get('Location'));
+        $this->assertSame(0, ScheduleJoinClick::count());
+    }
+
+    /** @test */
+    public function signed_link_with_unknown_user_id_is_denied(): void
+    {
+        $schedule = $this->schedule(Group::create(['name' => 'Поток']));
+
+        // Валидно подписанная ссылка на несуществующего пользователя: подпись
+        // признаётся, но гейт canAccess держателя не проходит — Zoom не отдаём.
+        $url = URL::temporarySignedRoute('class.join', $schedule->joinLinkExpiry(), [
+            'schedule' => $schedule->id,
+            'u' => 99999999,
+            'source' => 'telegram',
+        ]);
+
+        $this->get($url)->assertForbidden();
+        $this->assertSame(0, ScheduleJoinClick::count());
     }
 }
