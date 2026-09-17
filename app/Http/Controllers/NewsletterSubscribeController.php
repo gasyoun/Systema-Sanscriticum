@@ -73,7 +73,10 @@ class NewsletterSubscribeController extends Controller
     {
         $this->abortIfDisabled();
 
-        $link = MagicLinkToken::findActive($token);
+        // H5087: purpose-fence восстановлен — /magic поглощает ТОЛЬКО newsletter-
+        // токены. Без purpose здесь проходили и admin_unblock, и tg_login токены
+        // (в обход флаг-гейта их собственных маршрутов).
+        $link = MagicLinkToken::findActive($token, 'newsletter');
 
         abort_if($link === null, 404);
 

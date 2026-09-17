@@ -56,6 +56,26 @@ class AttendanceDashboard extends Page
         return static::canAccess();
     }
 
+    /**
+     * H5087: teacher_id для скоупа — зеркало TeacherAnalytics::scopeTeacherId.
+     * У преподавателя — свой; у админ-подобных — null (вся школа).
+     */
+    private function scopeTeacherId(): ?int
+    {
+        $user = auth()->user();
+        if ($user && $user->isTeacher() && ! $user->isAdminLike()) {
+            return $user->teacher_id;
+        }
+
+        return null;
+    }
+
+    /** Админ-подобный видит всю школу; преподаватель — только свои курсы. */
+    private function isSchoolWide(): bool
+    {
+        return $this->scopeTeacherId() === null;
+    }
+
     private function from(): Carbon
     {
         return now()->subDays((int) config('attendance.default_window_days'));
@@ -68,6 +88,7 @@ class AttendanceDashboard extends Page
             $this->from(),
             now(),
             (int) config('attendance.chronic_absence_threshold'),
+            $this->scopeTeacherId(),
         );
     }
 
@@ -75,11 +96,16 @@ class AttendanceDashboard extends Page
      * H4495 (MG 09-09): ростер «кто на чём» — ТОЛЬКО админка (из публичного
      * поста студенты убраны). Реюз WeeklyFinishReport::build(): имя, последнее
      * занятие, канва-метка, ⚠️ пропуски — по живым грамматикам.
+     * H5087: для преподавателя — пусто (админ-only по собственному контракту).
      *
      * @return list<array{course: string, group: string, students: list<array{name: string, last: string, canvas: ?string, missed: int}>}>
      */
     public function canvasRoster(): array
     {
+        if (! $this->isSchoolWide()) {
+            return [];
+        }
+
         $report = WeeklyFinishReport::build();
 
         $rows = [];
@@ -120,6 +146,7 @@ class AttendanceDashboard extends Page
         $grammar = Course::query()
             ->where('is_active', true)->where('is_visible', true)
             ->whereHas('groups')
+            ->when(! $this->isSchoolWide(), fn ($q) => $q->forTeacher($this->scopeTeacherId()))
             ->orderBy('title')->get();
 
         foreach ($grammar as $course) {
@@ -157,6 +184,7 @@ class AttendanceDashboard extends Page
         $courses = Course::query()
             ->where('is_active', true)->where('is_visible', true)
             ->whereHas('groups')
+            ->when(! $this->isSchoolWide(), fn ($q) => $q->forTeacher($this->scopeTeacherId()))
             ->with('groups')
             ->orderBy('title')->get();
 
@@ -251,6 +279,13 @@ class AttendanceDashboard extends Page
      */
     public function canvasMoney(): array
     {
+        // H5087: деньги — admin-only поверхность по собственному докблоку
+        // (и по философии money-fence RoleGate::accounting): преподавателю
+        // неоплаченные блоки чужих студентов не показываются вовсе.
+        if (! $this->isSchoolWide()) {
+            return ['rows' => [], 'total' => 0.0];
+        }
+
         $courses = Course::query()
             ->where('is_active', true)->where('is_visible', true)
             ->whereHas('groups')

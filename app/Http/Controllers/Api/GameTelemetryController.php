@@ -56,8 +56,8 @@ class GameTelemetryController extends Controller
             return response()->json(['error' => 'unknown event'], 422);
         }
 
-        $drill = $this->slug($request->input('drill'), 40) ?? 'unknown';
-        $band = $this->slug($request->input('band'), 40);
+        $drill = $this->ident($request->input('drill'), 40) ?? 'unknown';
+        $band = $this->ident($request->input('band'), 40);
         $user = $request->user();
 
         try {
@@ -123,13 +123,34 @@ class GameTelemetryController extends Controller
         return $clean === '' ? null : mb_substr($clean, 0, 32);
     }
 
-    /** Короткий слаг (drill/band): строка, обрезанная до $max; пустое/не-скаляр -> null. */
+    /** Идентификатор (drill/band): только [A-Za-z0-9-_] — как LilaGateController::family(). */
+    private function ident(mixed $value, int $max): ?string
+    {
+        if (! is_string($value) && ! is_int($value)) {
+            return null;
+        }
+        $clean = preg_replace('/[^A-Za-z0-9\-_]/', '', trim((string) $value)) ?? '';
+
+        return ($clean !== '' && mb_strlen($clean) <= $max) ? $clean : null;
+    }
+
+    /**
+     * Короткий слаг контента (iast/ru/l/r): строка, обрезанная до $max;
+     * пустое/не-скаляр -> null. H5087: charset-фенс — формульные/разметочные
+     * символы (=, <, >, backtick, скобки-кавычки-фигурные) и ведущие Excel-
+     * лидеры (+, @, -) не выживают; буквы любых письменностей (кириллица,
+     * IAST с диакритикой, деванагари), цифры, пробел и мягкая пунктуация
+     * сохраняются — легитимный контент тренажёров не ломается.
+     */
     private function slug(mixed $value, int $max): ?string
     {
         if (! is_string($value) && ! is_int($value)) {
             return null;
         }
         $clean = trim((string) $value);
+        $clean = preg_replace('/[=<>`|{}\[\]"\'\\\\]/u', '', $clean) ?? '';
+        $clean = preg_replace('/^[+@\-]+/u', '', $clean) ?? '';
+        $clean = trim($clean);
 
         return $clean === '' ? null : mb_substr($clean, 0, $max);
     }

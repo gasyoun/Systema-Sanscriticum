@@ -28,6 +28,14 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        // H5087: POST /livewire/update регистрируется самим Livewire только с
+        // группой web (vendor HandleRequests::boot) — на уровне маршрута его
+        // не затроттлить. Именованный лимитер + ThrottleLivewireUpdates
+        // (в группе web) закрывают анонимный SQL-фанаут CourseCatalog.
+        RateLimiter::for('livewire', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')

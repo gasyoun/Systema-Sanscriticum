@@ -109,14 +109,31 @@ class SrsOnboardingFromGames
             ->get(['payload'])
             ->each(function (GameEvent $event) use (&$seen): void {
                 foreach ((array) ($event->payload['items'] ?? []) as $item) {
-                    $iast = (string) ($item['iast'] ?? '');
+                    $iast = self::sanitizeShared((string) ($item['iast'] ?? ''));
                     if ($iast === '' || isset($seen[$iast])) {
                         continue;
                     }
-                    $seen[$iast] = ['iast' => $iast, 'ru' => (string) ($item['ru'] ?? '')];
+                    $seen[$iast] = [
+                        'iast' => $iast,
+                        'ru' => self::sanitizeShared((string) ($item['ru'] ?? '')),
+                    ];
                 }
             });
 
         return array_slice(array_values($seen), 0, self::CAP);
+    }
+
+    /**
+     * H5087: повторная чистка на ГРАНИЦЕ записи в общие поверхности
+     * (системная колода + публичный словарь): формульные/разметочные
+     * символы и ведущие Excel-лидеры вырезаются даже из legacy-payload,
+     * записанного до charset-фенса GameTelemetryController::slug().
+     */
+    private static function sanitizeShared(string $value): string
+    {
+        $clean = preg_replace('/[=<>`|{}\[\]"\'\\\\]/u', '', $value) ?? '';
+        $clean = preg_replace('/^[+@\-]+/u', '', $clean) ?? '';
+
+        return trim($clean);
     }
 }

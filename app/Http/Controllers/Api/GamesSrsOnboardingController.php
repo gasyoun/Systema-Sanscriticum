@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Srs\SrsOnboardingFromGames;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 /**
  * H1680 — POST /api/games/srs-onboarding-import. Auth-only: the cabinet
@@ -16,11 +17,23 @@ use Illuminate\Http\Request;
  * onboarding-from-games SRS deck from that guest's own free-play history.
  * No-op (`imported: 0`) while srs.enabled is OFF or the guest never played
  * — see {@see SrsOnboardingFromGames}.
+ *
+ * H5087: endpoint per-user throttled (3/min) — caller-supplied anon_id is
+ * not cryptographically bound to the caller (the anonymous telemetry write
+ * is fire-and-forget by privacy design, no server-issued id), so the
+ * throttle bounds cross-anon probing, and SrsOnboardingFromGames
+ * re-sanitizes content at the shared-surface boundary.
  */
 class GamesSrsOnboardingController extends Controller
 {
     public function store(Request $request, SrsOnboardingFromGames $service): JsonResponse
     {
+        $rlKey = 'games-srs-import:'.$request->user()->id;
+        if (RateLimiter::tooManyAttempts($rlKey, 3)) {
+            return response()->json(['error' => 'too many requests'], 429);
+        }
+        RateLimiter::hit($rlKey, 60);
+
         $imported = $service->importForUser($request->user(), $this->anonId($request));
 
         return response()->json(['imported' => $imported]);

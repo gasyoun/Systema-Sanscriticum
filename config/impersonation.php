@@ -33,6 +33,10 @@ return [
      | checkout./payment./deposit./paypal. — покупка и возврат;
      | student.debt. — оплата и перенос обещаний;
      | partner./referral. — партнёрские выплаты и реферальный кошелёк.
+     | H5087: student.prana. — перевод/покупка за прану (прана = защищённые
+     | деньги по архитектуре); student.access. — материализация доступа
+     | (выдающий доступ write); student.membership. — отмена/возобновление
+     | клубного продления.
      */
     'blocked_route_prefixes' => [
         'checkout.',
@@ -42,6 +46,9 @@ return [
         'student.debt.',
         'partner.',
         'referral.',
+        'student.prana.',
+        'student.access.',
+        'student.membership.',
     ],
 
     /*
@@ -55,6 +62,8 @@ return [
         'deposit',
         'paypal',
         'debt',
+        'prana',
+        'membership',
     ],
 
     /*

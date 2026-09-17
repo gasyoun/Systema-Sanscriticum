@@ -43,7 +43,9 @@ Route::get('/checkout/{tariff}', [CheckoutController::class, 'show'])->name('che
 Route::post('/checkout/{tariff}/promo', [CheckoutController::class, 'applyPromo'])
     ->middleware('throttle:10,1')
     ->name('checkout.promo');
-Route::post('/checkout/{tariff}/promo/remove', [CheckoutController::class, 'removePromo'])->name('checkout.promo.remove');
+Route::post('/checkout/{tariff}/promo/remove', [CheckoutController::class, 'removePromo'])
+    ->middleware('throttle:10,1') // H5087: паритет с applyPromo — анонимный POST с SQL-фанаутом не был затроттлен
+    ->name('checkout.promo.remove');
 
 // Запрос «разбить оплату на части» (H1290) — уведомляет кураторов, план НЕ создаёт.
 // throttle: каждый сабмит — сообщение в кураторский чат; 3 запросов за 10 минут

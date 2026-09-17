@@ -153,6 +153,17 @@ class ReviewService
 
         $scheduledDays = intdiv($updated->due->getTimestamp() - $reviewedAt->getTimestamp(), 86400);
 
+        // H5087: дневной потолок начислений (config prana.srs_review_daily_cap)
+        // — анти-фарм от батч-оценок/реплеев. Считаем ДО создания текущего
+        // лога (потолок = сколько начислений уже было сегодня). Сама оценка
+        // (state+log) пишется всегда — режется только начисление.
+        $cap = (int) config('prana.srs_review_daily_cap', 0);
+        $awardedToday = $cap > 0
+            ? SrsReviewLog::where('user_id', $user->id)
+                ->where('created_at', '>=', now()->startOfDay())
+                ->count()
+            : 0;
+
         $log = SrsReviewLog::create([
             'user_id' => $user->id,
             'card_id' => $card->id,
@@ -170,7 +181,9 @@ class ReviewService
         // (deliberate, see config/prana.php 'srs_review'). Idempotent by
         // (user, 'srs_review', SrsReviewLog::class, $log->id) — a replay of
         // this exact log row (e.g. a retried request) never double-awards.
-        app(PranaService::class)->award($user, 'srs_review', $log);
+        if ($cap === 0 || $awardedToday < $cap) {
+            app(PranaService::class)->award($user, 'srs_review', $log);
+        }
 
         return $state;
     }

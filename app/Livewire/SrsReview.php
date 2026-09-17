@@ -352,7 +352,11 @@ class SrsReview extends Component
 
         $service = app(ReviewService::class);
         foreach ($this->pairLeft as $item) {
-            $card = SrsCard::find($item['id'] ?? null);
+            // H5087: lookup скоуплен к проверенному колоде (currentDeck() уже
+            // прошёл access-гейт) — клиентский snapshot не может протащить
+            // карточку чужой приватной колоды в оценку/прану.
+            $card = SrsCard::where('deck_id', $deck->id)
+                ->find($item['id'] ?? null);
             if ($card !== null) {
                 $service->grade(auth()->user(), $card, $rating);
             }

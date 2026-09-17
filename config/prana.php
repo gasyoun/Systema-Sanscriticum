@@ -41,6 +41,12 @@ return [
         // PranaService's (user_id, reason, source_type, source_id) unique key,
         // keyed off the srs_review_logs row.
         'srs_review' => 3,
+
+        // H5087: дневной потолок srs_review-начислений на пользователя
+        // (анти-фарм: незатроттленный /livewire/update + батч-оценки больше
+        // не накручивают прану бесконечно). 0 = без потолка. Сама оценка
+        // карточки не режется — только начисление.
+        'srs_review_daily_cap' => 60,
     ],
 
     // Ранги по накопленной пране (lifetime_prana, тратами не уменьшается).

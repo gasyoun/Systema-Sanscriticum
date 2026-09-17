@@ -155,6 +155,8 @@ class ClassAttendanceService
      * Консолидированный отчёт посещаемости за период (GC-B2, H553): rate по
      * студенту/группе/курсу, тренд по неделям, хронические неявки. Реюз
      * forSchedule() построчно — никакой новой логики подсчёта, только агрегация.
+     * H5087: $teacherId (не null) сужает выборку расписаний до курсов этого
+     * преподавателя (основной или со-препод) — зеркало TeacherAnalytics.
      *
      * @return array{
      *     students: Collection,
@@ -164,11 +166,15 @@ class ClassAttendanceService
      *     chronic: Collection,
      * }
      */
-    public function dashboard(CarbonInterface $from, CarbonInterface $to, int $chronicThreshold): array
+    public function dashboard(CarbonInterface $from, CarbonInterface $to, int $chronicThreshold, ?int $teacherId = null): array
     {
         $schedules = Schedule::query()
             ->whereNotNull('start')
             ->whereBetween('start', [$from, $to])
+            ->when($teacherId !== null, fn ($q) => $q->whereHas(
+                'course',
+                fn ($cq) => $cq->forTeacher($teacherId),
+            ))
             ->with(['group', 'course'])
             ->orderBy('start')
             ->get();

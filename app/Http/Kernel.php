@@ -86,6 +86,9 @@ class Kernel extends HttpKernel
             // отдельно — группу `web` она не берёт.
             ImpersonationGuard::class,
             SubstituteBindings::class,
+            // H5087: throttle только для POST /livewire/update (Livewire
+            // регистрирует маршрут сам, без throttle на любом слое).
+            \App\Http\Middleware\ThrottleLivewireUpdates::class,
             CaptureReferral::class,
             CapturePartnerReferral::class,
             CaptureAttribution::class,
