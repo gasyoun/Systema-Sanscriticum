@@ -145,7 +145,7 @@ jobs:
             AUTHOR=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json author --jq '.author.login' || echo "")
           fi
           set +e
-          python3 gate-runner/tools/oxalpha_gate_conclude.py \
+          python3 "$GATE_DIR/oxalpha_gate_conclude.py" \
             --matched-json match.json \
             --verdict-file "$( [ -f verdict.json ] && echo verdict.json || echo /nonexistent )" \
             --pr-body "$BODY" --pr-author "$AUTHOR" --head "$HEAD" --kill-switch "$KILL"

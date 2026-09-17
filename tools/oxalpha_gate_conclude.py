@@ -99,7 +99,7 @@ def decide(matched: dict, verdict_path: str | None, pr_body: str,
         # fail-before/pass-after - enforced as at least one tests/ path among
         # the changed executable paths (§3(b) approval is checked above).
         if not any(p.startswith("tests/") or "/tests/" in p for p in matched["executable"]):
-            return {"conclusion": "fail", "mode": "human-approval-required",
+            return {"conclusion": "fail", "mode": "regression-test-required",
                     "summary": "Sensitive paths touched (" + ", ".join(matched["sensitive"]) +
                                "): design §3(a) requires regression tests (fail-before/pass-after) "
                                "in the diff - none found under tests/."}
