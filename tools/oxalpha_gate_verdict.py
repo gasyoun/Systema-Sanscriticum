@@ -146,7 +146,22 @@ def post_check_run(repo: str, head: str, file: str, name: str = CHECK_NAME) -> s
          f"repos/{repo}/commits/{head}/check-runs", "--input", "-"],
         input=json.dumps(payload), capture_output=True, text=True)
     if out.returncode != 0:
-        raise SystemExit(f"gh api failed: {out.stderr.strip()}")
+        # The Checks API create endpoint is GitHub-App-only; a user token with
+        # repo scope gets 404 here. Design §2 allows "commit status / check
+        # run" - fall back to a commit status (140-char description limit;
+        # the full verdict travels in the PR comment).
+        desc = (f"standards={data['standards']['verdict']} spec={data['spec']['verdict']} "
+                f"by {data['reviewer']['name']}")[:140]
+        st = subprocess.run(
+            ["gh", "api", "--method", "POST", f"repos/{repo}/statuses/{head}",
+             "-f", "state", verdict_conclusion(data),
+             "-f", "context", name, "-f", "description", desc],
+            capture_output=True, text=True)
+        if st.returncode != 0:
+            raise SystemExit(f"check-runs failed ({out.stderr.strip()}) and commit-status "
+                             f"fallback failed: {st.stderr.strip()}")
+        resp = json.loads(st.stdout)
+        return resp.get("target_url", "") + " (commit-status fallback; check-runs need App authority)"
     resp = json.loads(out.stdout)
     return resp.get("html_url", "")
 
