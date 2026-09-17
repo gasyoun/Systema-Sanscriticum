@@ -44,6 +44,15 @@ class StoryPublisher
     /** Сутки — дефолтный срок жизни сториз (period, секунды). */
     private const PERIOD_24H = 86400;
 
+    /**
+     * Легаси mediaAreaUrl-прямоугольник (#2643, ИЗМЕНЕНИЮ НЕ ПОДЛЕЖИТ —
+     * прод-поведение старой очереди): x=50, y=55, w=78, h=14, radius=7.
+     * H5049: anons-публикации вместо него передают ИЗМЕРЕННЫЙ прямоугольник
+     * отрисованной плашки ($mediaArea) — клик-зона ложится ровно на видимую
+     * область; старая полоса (stories:publish-story) ведёт себя как раньше.
+     */
+    private const LEGACY_MEDIA_AREA = ['x' => 50.0, 'y' => 55.0, 'w' => 78.0, 'h' => 14.0, 'rotation' => 0.0, 'radius' => 7.0];
+
     public function __construct(private readonly MadelineClientFactory $factory) {}
 
     /** Подпроцессная полоса включена (реальный хост; в тестах выключена). */
@@ -52,22 +61,22 @@ class StoryPublisher
         return (bool) config('services.telegram_story.subprocess_lane', true);
     }
 
-    public function sendPhotoStory(string $absolutePath, string $caption = '', ?string $account = null, ?string $link = null): ?int
+    public function sendPhotoStory(string $absolutePath, string $caption = '', ?string $account = null, ?string $link = null, ?array $mediaArea = null): ?int
     {
         if ($this->viaSubprocess()) {
-            return $this->execWorker(['action' => 'send_photo', 'path' => $absolutePath, 'caption' => $caption, 'account' => $account, 'link' => $link]);
+            return $this->execWorker(['action' => 'send_photo', 'path' => $absolutePath, 'caption' => $caption, 'account' => $account, 'link' => $link, 'media_area' => $mediaArea]);
         }
 
-        return $this->sendPhotoStoryDirect($absolutePath, $caption, $account, $link);
+        return $this->sendPhotoStoryDirect($absolutePath, $caption, $account, $link, $mediaArea);
     }
 
-    public function sendVideoStory(string $absolutePath, string $caption = '', ?string $link = null): ?int
+    public function sendVideoStory(string $absolutePath, string $caption = '', ?string $link = null, ?array $mediaArea = null): ?int
     {
         if ($this->viaSubprocess()) {
-            return $this->execWorker(['action' => 'send_video', 'path' => $absolutePath, 'caption' => $caption, 'link' => $link]);
+            return $this->execWorker(['action' => 'send_video', 'path' => $absolutePath, 'caption' => $caption, 'link' => $link, 'media_area' => $mediaArea]);
         }
 
-        return $this->sendVideoStoryDirect($absolutePath, $caption, $link);
+        return $this->sendVideoStoryDirect($absolutePath, $caption, $link, $mediaArea);
     }
 
     public function deleteStory(int $storyId, ?string $account = null): void
@@ -98,18 +107,18 @@ class StoryPublisher
     // --- Прямое исполнение (воркер и тесты) ---
 
     /** Фотосториз из локального файла. Возвращает id сториз или null. */
-    public function sendPhotoStoryDirect(string $absolutePath, string $caption = '', ?string $account = null, ?string $link = null): ?int
+    public function sendPhotoStoryDirect(string $absolutePath, string $caption = '', ?string $account = null, ?string $link = null, ?array $mediaArea = null): ?int
     {
         $client = $this->client($account);
 
         return $this->send($client, [
             '_' => 'inputMediaUploadedPhoto',
             'file' => $this->upload($client, $absolutePath),
-        ], $caption, $link);
+        ], $caption, $link, $mediaArea);
     }
 
     /** Видеосториз из локального файла (mp4/mov). */
-    public function sendVideoStoryDirect(string $absolutePath, string $caption = '', ?string $link = null): ?int
+    public function sendVideoStoryDirect(string $absolutePath, string $caption = '', ?string $link = null, ?array $mediaArea = null): ?int
     {
         $client = $this->client();
 
@@ -120,7 +129,7 @@ class StoryPublisher
             'attributes' => [
                 ['_' => 'documentAttributeVideo'],
             ],
-        ], $caption, $link);
+        ], $caption, $link, $mediaArea);
     }
 
     /**
@@ -140,9 +149,13 @@ class StoryPublisher
      * рулинг MG «персона + канал»: сториз кладёт persona-аккаунт без
      * админ-прав канала), срок 24 ч.
      *
+     * $mediaArea (H5049): ИЗМЕРЕННЫЙ прямоугольник отрисованной плашки
+     * (проценты холста) — клик-зона ложится ровно на видимую область.
+     * null → легаси-прямоугольник из лейаут-константы (совместимость #2643).
+     *
      * @param  array<string, mixed>  $media
      */
-    private function send(object $client, array $media, string $caption, ?string $link = null): ?int
+    private function send(object $client, array $media, string $caption, ?string $link = null, ?array $mediaArea = null): ?int
     {
         $entities = null;
         if ($link !== null && filter_var($link, FILTER_VALIDATE_URL) !== false) {
@@ -171,16 +184,17 @@ class StoryPublisher
         ];
 
         if ($link !== null && filter_var($link, FILTER_VALIDATE_URL) !== false) {
+            $area = $mediaArea ?? self::LEGACY_MEDIA_AREA;
             $params['media_areas'] = [[
                 '_' => 'mediaAreaUrl',
                 'coordinates' => [
                     '_' => 'mediaAreaCoordinates',
-                    'x' => 50.0,
-                    'y' => 55.0,
-                    'w' => 78.0,
-                    'h' => 14.0,
-                    'rotation' => 0.0,
-                    'radius' => 7.0,
+                    'x' => (float) $area['x'],
+                    'y' => (float) $area['y'],
+                    'w' => (float) $area['w'],
+                    'h' => (float) $area['h'],
+                    'rotation' => (float) ($area['rotation'] ?? 0.0),
+                    'radius' => (float) ($area['radius'] ?? 7.0),
                 ],
                 'url' => $link,
             ]];

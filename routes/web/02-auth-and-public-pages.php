@@ -183,4 +183,3 @@ Route::get('/c/{slug}/u/{lessonId}/video/{player}', [RecordingGateController::cl
 
 Route::get('/otzyvy', [ShopController::class, 'testimonialsLibrary'])
     ->name('shop.testimonials.library');
-
