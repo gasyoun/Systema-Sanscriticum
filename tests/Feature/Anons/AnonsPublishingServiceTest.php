@@ -192,7 +192,7 @@ class AnonsPublishingServiceTest extends TestCase
             'utm' => null, 'clicked_at' => now(),
         ]);
 
-        $readout = new AnonsMetricsService($this->registry)->collect($publication->publication_key);
+        $readout = (new AnonsMetricsService($this->registry))->collect($publication->publication_key);
 
         $dest = $readout['destinations'][0];
         $this->assertSame('value', $dest['metrics']['views']['state']);
