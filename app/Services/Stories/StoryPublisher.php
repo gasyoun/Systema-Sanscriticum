@@ -148,8 +148,9 @@ class StoryPublisher
         if ($link !== null && filter_var($link, FILTER_VALIDATE_URL) !== false) {
             $byteOffset = strpos($caption, $link);
             if ($byteOffset === false) {
-                $caption = $link.($caption !== '' ? "\n".$caption : '');
-                $byteOffset = 0;
+                $prefix = $caption !== '' ? $caption."\n" : '';
+                $byteOffset = strlen($prefix);
+                $caption = $prefix.$link;
             }
 
             $utf16Prefix = mb_convert_encoding(substr($caption, 0, $byteOffset), 'UTF-16LE', 'UTF-8');
@@ -175,11 +176,11 @@ class StoryPublisher
                 'coordinates' => [
                     '_' => 'mediaAreaCoordinates',
                     'x' => 50.0,
-                    'y' => 88.0,
-                    'w' => 70.0,
-                    'h' => 12.0,
+                    'y' => 55.0,
+                    'w' => 78.0,
+                    'h' => 14.0,
                     'rotation' => 0.0,
-                    'radius' => 6.0,
+                    'radius' => 7.0,
                 ],
                 'url' => $link,
             ]];
