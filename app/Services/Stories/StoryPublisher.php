@@ -52,33 +52,33 @@ class StoryPublisher
         return (bool) config('services.telegram_story.subprocess_lane', true);
     }
 
-    public function sendPhotoStory(string $absolutePath, string $caption = '', ?string $account = null): ?int
+    public function sendPhotoStory(string $absolutePath, string $caption = '', ?string $account = null, ?string $link = null): ?int
     {
         if ($this->viaSubprocess()) {
-            return $this->execWorker(['action' => 'send_photo', 'path' => $absolutePath, 'caption' => $caption, 'account' => $account]);
+            return $this->execWorker(['action' => 'send_photo', 'path' => $absolutePath, 'caption' => $caption, 'account' => $account, 'link' => $link]);
         }
 
-        return $this->sendPhotoStoryDirect($absolutePath, $caption, $account);
+        return $this->sendPhotoStoryDirect($absolutePath, $caption, $account, $link);
     }
 
-    public function sendVideoStory(string $absolutePath, string $caption = ''): ?int
+    public function sendVideoStory(string $absolutePath, string $caption = '', ?string $link = null): ?int
     {
         if ($this->viaSubprocess()) {
-            return $this->execWorker(['action' => 'send_video', 'path' => $absolutePath, 'caption' => $caption]);
+            return $this->execWorker(['action' => 'send_video', 'path' => $absolutePath, 'caption' => $caption, 'link' => $link]);
         }
 
-        return $this->sendVideoStoryDirect($absolutePath, $caption);
+        return $this->sendVideoStoryDirect($absolutePath, $caption, $link);
     }
 
-    public function deleteStory(int $storyId): void
+    public function deleteStory(int $storyId, ?string $account = null): void
     {
         if ($this->viaSubprocess()) {
-            $this->execWorker(['action' => 'delete', 'story_id' => $storyId]);
+            $this->execWorker(['action' => 'delete', 'story_id' => $storyId, 'account' => $account]);
 
             return;
         }
 
-        $this->deleteStoryDirect($storyId);
+        $this->deleteStoryDirect($storyId, $account);
     }
 
     /**
@@ -98,18 +98,18 @@ class StoryPublisher
     // --- Прямое исполнение (воркер и тесты) ---
 
     /** Фотосториз из локального файла. Возвращает id сториз или null. */
-    public function sendPhotoStoryDirect(string $absolutePath, string $caption = '', ?string $account = null): ?int
+    public function sendPhotoStoryDirect(string $absolutePath, string $caption = '', ?string $account = null, ?string $link = null): ?int
     {
         $client = $this->client($account);
 
         return $this->send($client, [
             '_' => 'inputMediaUploadedPhoto',
             'file' => $this->upload($client, $absolutePath),
-        ], $caption);
+        ], $caption, $link);
     }
 
     /** Видеосториз из локального файла (mp4/mov). */
-    public function sendVideoStoryDirect(string $absolutePath, string $caption = ''): ?int
+    public function sendVideoStoryDirect(string $absolutePath, string $caption = '', ?string $link = null): ?int
     {
         $client = $this->client();
 
@@ -120,16 +120,16 @@ class StoryPublisher
             'attributes' => [
                 ['_' => 'documentAttributeVideo'],
             ],
-        ], $caption);
+        ], $caption, $link);
     }
 
     /**
      * Удалить свою сториз по id. Имя метода — deleteStories (множественное):
      * stories.deleteStory в схеме MP v8 НЕТ.
      */
-    public function deleteStoryDirect(int $storyId): void
+    public function deleteStoryDirect(int $storyId, ?string $account = null): void
     {
-        $this->client()->stories->deleteStories([
+        $this->client($account)->stories->deleteStories([
             'peer' => 'me',
             'id' => [$storyId],
         ]);
@@ -142,15 +142,33 @@ class StoryPublisher
      *
      * @param  array<string, mixed>  $media
      */
-    private function send(object $client, array $media, string $caption): ?int
+    private function send(object $client, array $media, string $caption, ?string $link = null): ?int
     {
-        $result = $client->stories->sendStory([
+        $params = [
             'peer' => 'me',
             'media' => $media,
             'caption' => $caption !== '' ? $caption : null,
             'random_id' => random_int(0, PHP_INT_MAX),
             'period' => self::PERIOD_24H,
-        ]);
+        ];
+
+        if ($link !== null && filter_var($link, FILTER_VALIDATE_URL) !== false) {
+            $params['media_areas'] = [[
+                '_' => 'mediaAreaUrl',
+                'coordinates' => [
+                    '_' => 'mediaAreaCoordinates',
+                    'x' => 50.0,
+                    'y' => 88.0,
+                    'w' => 70.0,
+                    'h' => 12.0,
+                    'rotation' => 0.0,
+                    'radius' => 6.0,
+                ],
+                'url' => $link,
+            ]];
+        }
+
+        $result = $client->stories->sendStory($params);
 
         return $this->extractStoryId($result);
     }
@@ -244,7 +262,14 @@ class StoryPublisher
             ->run([PHP_BINARY, $worker, (string) json_encode($task, JSON_UNESCAPED_UNICODE)]);
 
         $lines = array_values(array_filter(explode("\n", trim($result->output()))));
-        $payload = json_decode((string) end($lines), true);
+        $payload = null;
+        foreach ($lines as $line) {
+            $candidate = json_decode($line, true);
+            if (is_array($candidate) && isset($candidate['ok'])) {
+                $payload = $candidate;
+                break;
+            }
+        }
 
         if (! is_array($payload) || ! isset($payload['ok'])) {
             throw new RuntimeException('Stories lane worker produced no JSON verdict: '
