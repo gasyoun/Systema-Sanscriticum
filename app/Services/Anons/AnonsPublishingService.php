@@ -133,7 +133,10 @@ final class AnonsPublishingService
                 $health = $this->probe->probe($dest['account']);
                 if (! $health['healthy']) {
                     if ($health['needs_reauth']) {
-                        $this->markAll($publication, 'session needs reauthorization: '.$health['reason']);
+                        $publication->forceFill(['status' => AnonsPublication::STATUS_FAILED,
+                            'journal' => trim((string) $publication->journal.'
+'.now()->toDateTimeString()
+                                ." R13: session {$dest['account']} needs reauthorization: {$health['reason']}")])->save();
                         throw new RuntimeException("Session for {$dest['account']} needs human reauthorization: {$health['reason']}");
                     }
                     Log::warning('Anons publish: session unhealthy, retry later', $health);

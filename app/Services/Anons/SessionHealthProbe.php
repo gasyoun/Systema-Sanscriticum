@@ -19,7 +19,7 @@ use RuntimeException;
  * AUTH_KEY_UNREGISTERED/SESSION_REVOKED/UNAUTHORIZED → переавторизация
  * нужна человеку; всё остальное — транзиент c дефолтным backoff.
  */
-final class SessionHealthProbe
+class SessionHealthProbe
 {
     public const DEFAULT_BACKOFF = 300;
 
@@ -68,7 +68,7 @@ final class SessionHealthProbe
     /** @return array{retry_after: ?int, needs_reauth: bool} */
     public function classify(string $error): array
     {
-        if (preg_match('/FLOOD(?:_WAIT)?[_ ]?(\d+)/i', $error, $m) === 1) {
+        if (preg_match('/FLOOD(?:_WAIT)?[^0-9]{0,30}(\d+)/i', $error, $m) === 1) {
             return ['retry_after' => min((int) $m[1], 3600), 'needs_reauth' => false];
         }
         if (preg_match('/AUTH_KEY_UNREGISTERED|SESSION_REVOKED|UNAUTHORIZED|USER_DEACTIVATED/i', $error) === 1) {
