@@ -114,11 +114,22 @@ class WaitlistGuestSubscriptionTest extends TestCase
         $this->assertNotNull($lead->magnet_token);
         $this->assertSame('telegram', $lead->magnet_channel);
 
-        // Дубликат тоже видит блок: токен досыпается существующей заявке.
+        // Дубликат (повторный клик): generic-флэш БЕЗ токен-содержащих ссылок
+        // (H5046), токен ротируется — все ранее выданные диплинки мертвы.
         RateLimiter::clear('lead-submit:127.0.0.1');
+        $tokenBefore = $lead->fresh()->magnet_token;
+
         $this->actingAs($user)->post('/leads/one-click', ['landing_page_id' => $landing->id])
             ->assertSessionHas('success')
-            ->assertSessionHas('status_connect_links', fn ($links) => isset($links['telegram']));
+            ->assertSessionMissing('status_connect_links');
+
+        $lead->refresh();
+        $this->assertNotNull($lead->magnet_token);
+        $this->assertNotSame(
+            $tokenBefore,
+            $lead->magnet_token,
+            'Повторная заявка должна ротировать magnet_token (H5046)'
+        );
     }
 
     // ================= 2-3-5. Вебхук: биндинг без файла + словарь + дедуп =================
