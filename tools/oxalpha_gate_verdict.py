@@ -161,7 +161,7 @@ def post_check_run(repo: str, head: str, file: str, name: str = CHECK_NAME) -> s
             raise SystemExit(f"check-runs failed ({out.stderr.strip()}) and commit-status "
                              f"fallback failed: {st.stderr.strip()}")
         resp = json.loads(st.stdout)
-        return resp.get("target_url", "") + " (commit-status fallback; check-runs need App authority)"
+        return (resp.get("target_url") or "") + " (commit-status fallback; check-runs need App authority)"
     resp = json.loads(out.stdout)
     return resp.get("html_url", "")
 
