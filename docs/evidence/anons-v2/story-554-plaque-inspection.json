@@ -1,0 +1,10 @@
+{
+    "inspected": "docs/evidence/anons-v2/story-554-media.jpg (the PUBLISHED story media downloaded back from Telegram)",
+    "sha256": "f4bbf848aa4a100e471adc6a1927de9adcf92e3dc87e36373a2ff632422b7088",
+    "rect_px": { "x": 119, "y": 1056, "w": 842, "h": 269 },
+    "rect_pct": { "x": 11.0, "y": 55.0, "w": 78.0, "h": 14.0 },
+    "problems": [],
+    "verdict": "PLAQUE_PRESENT_PASS — dark-background coverage inside the measured rect exceeds 0.35 on the LIVE published story",
+    "tool": "App\\Services\\Anons\\PlaqueInspector (H5049 R5)",
+    "captured_at": "2026-09-17T18:30+03:00"
+}
