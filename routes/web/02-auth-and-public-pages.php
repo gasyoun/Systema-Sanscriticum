@@ -180,3 +180,7 @@ Route::get('/c/{slug}/u/{lessonId}/video/{player}', [RecordingGateController::cl
     ->middleware('course.canonical')
     ->whereIn('player', ['youtube', 'rutube', 'kinescope', 'video'])
     ->name('student.recording.gate');
+
+Route::get('/otzyvy', [ShopController::class, 'testimonialsLibrary'])
+    ->name('shop.testimonials.library');
+
