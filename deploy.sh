@@ -353,14 +353,16 @@ if command -v supervisorctl >/dev/null 2>&1 && supervisorctl status zapisi-poll 
 fi
 
 # ── 6c. Track C: рестарт поллера студенческого бота telegram-student-poll, если он запущен ──
-# Тот же случай, что и с Horizon/zapisi-poll (H5051, 17-09-2026): долгоживущий
-# CLI-процесс держит код, загруженный при старте, и после деплоя продолжает
-# крутить СТАРЫЙ код в памяти, пока его не перезапустить.
+# Тот же случай, что и с Horizon (H5051, 17-09-2026): долгоживущий CLI-процесс
+# держит код, загруженный при старте, и после деплоя продолжает крутить СТАРЫЙ
+# код в памяти. Поллер сам обновляется раз в час (max-lifetime 3600 с), но до
+# этого часа пред-деплойный класс успевает писать ошибки в лог.
 #
-# Условие «сейчас RUNNING» — по той же причине, что и у zapisi-poll:
-# `supervisorctl restart` на ОСТАНОВЛЕННОЙ программе её ЗАПУСКАЕТ, а
-# telegram-student-poll в рабочем режиме запускаться не должен — он снимает
-# вебхук и уводит бота студента с штатной дорожки. Программа стоит — не трогаем.
+# Условие именно «сейчас RUNNING», а не «программа известна supervisor'у»:
+# сам поллер штатно работает (autostart=true), но его могут осознанно
+# остановить — возврат на вебхук: `php artisan telegram:webhooks --set` +
+# `supervisorctl stop telegram-student-poll`. `supervisorctl restart` на
+# ОСТАНОВЛЕННОЙ программе её ПОДНИМАЕТ, то есть молча отменил бы это решение.
 if command -v supervisorctl >/dev/null 2>&1 && supervisorctl status telegram-student-poll 2>/dev/null | grep -q RUNNING; then
   say "Рестарт telegram-student-poll (поллер студента запущен)"
   supervisorctl restart telegram-student-poll || echo "ВНИМАНИЕ: telegram-student-poll не перезапустился — бот студента держит пред-деплойный код."
