@@ -1,6 +1,8 @@
 # PLAN — n8n lecture content engine (Systema-Sanscriticum, 2026 H2)
 
-_Created: 23-07-2026 · Last updated: 23-07-2026_
+_Created: 23-07-2026 · Last updated: 17-09-2026_
+
+> **RETIRED 16-09-2026 (H5028).** MG ruling Q3, digital-marketing grill 16-09-2026 — «Kill n8n + SEO subagents, restart factory + wiki» ([decisions doc](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_DIGITAL_MARKETING_GRILL_16-09-2026.md)). This plan is closed and archived: no further waves, no activation work. What the five waves merged (H1547–H1551, 24-07-2026) stays in the codebase inert behind its flags (`content_from_lectures` and the per-wave flags, all OFF) — nothing was ever activated on prod and no product shipped to a reader. The H1452 clip pipeline (`clip_marketing`) is a separate, older unit and is not covered by this retirement.
 
 Cover index for a layered `/ask` plan. Goal: turn **weekly lecture video +
 transcript + AI timecodes** (the data already flowing through n8n / Deepgram /
@@ -106,11 +108,11 @@ code-complete but OFF until human arming.
 
 ## 6. Layer docs
 
-- **Roadmap:** [`docs/ROADMAP_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md)
-- **Architecture:** [`docs/ARCHITECTURE_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md)
-- **Implementation (W1 Clips extension):** [`docs/IMPLEMENTATION_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/IMPLEMENTATION_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md)
-- **Verification + risks:** [`docs/VERIFICATION_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/VERIFICATION_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md)
-- **Metadoc:** [`docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.meta.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.meta.md)
+- **Roadmap:** [`docs/archive/ROADMAP_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/ROADMAP_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md)
+- **Architecture:** [`docs/archive/ARCHITECTURE_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/ARCHITECTURE_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md)
+- **Implementation (W1 Clips extension):** [`docs/archive/IMPLEMENTATION_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/IMPLEMENTATION_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md)
+- **Verification + risks:** [`docs/archive/VERIFICATION_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/VERIFICATION_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE.md)
+- **Metadoc:** [`docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.meta.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.meta.md)
 
 Siblings (not replaced): [`docs/PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_ANTON_OPS_GAPS_2026H2.md),
 [`docs/ROADMAP_CONTENT_AI_2026_2027.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ROADMAP_CONTENT_AI_2026_2027.md).

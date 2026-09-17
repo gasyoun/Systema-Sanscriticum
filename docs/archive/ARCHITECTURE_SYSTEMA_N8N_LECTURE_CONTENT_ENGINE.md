@@ -1,8 +1,10 @@
 # ARCHITECTURE — n8n lecture content engine
 
-_Created: 23-07-2026 · Last updated: 23-07-2026_
+_Created: 23-07-2026 · Last updated: 17-09-2026_
 
-Index: [`docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
+> **RETIRED 16-09-2026 (H5028).** MG ruling Q3, digital-marketing grill 16-09-2026 — «Kill n8n + SEO subagents, restart factory + wiki» ([decisions doc](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_DIGITAL_MARKETING_GRILL_16-09-2026.md)). This plan is closed and archived: no further waves, no activation work. What the five waves merged (H1547–H1551, 24-07-2026) stays in the codebase inert behind its flags (`content_from_lectures` and the per-wave flags, all OFF) — nothing was ever activated on prod and no product shipped to a reader. The H1452 clip pipeline (`clip_marketing`) is a separate, older unit and is not covered by this retirement.
+
+Index: [`docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md).
 
 ---
 
