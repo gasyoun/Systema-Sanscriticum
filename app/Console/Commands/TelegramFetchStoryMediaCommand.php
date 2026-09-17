@@ -28,11 +28,14 @@ final class TelegramFetchStoryMediaCommand extends Command
         $messageId = $this->option('message');
         $history = $client->messages->getHistory(['peer' => $peer, 'limit' => $messageId ? 1 : 100, 'offset_id' => $messageId ? ((int) $messageId + 1) : 0]);
         $message = collect($history['messages'] ?? [])->first(fn ($m) => is_array($m) && ($messageId ? (int) ($m['id'] ?? 0) === (int) $messageId : ! empty($m['media'])));
-        if (! is_array($message) || empty($message['media'])) throw new RuntimeException('No media message found.');
+        if (! is_array($message) || empty($message['media'])) {
+            throw new RuntimeException('No media message found.');
+        }
         $dir = (string) ($this->option('output') ?: storage_path('app/telegram-stories/source'));
         File::ensureDirectoryExists($dir);
         $path = $client->downloadToDir($message['media'], $dir);
         $this->line((string) $path);
+
         return self::SUCCESS;
     }
 }
