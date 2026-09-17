@@ -53,7 +53,7 @@ final class PublicationManifest
         // доступным в dev/тестах, где пакет стоит.
         if (! $isJson && ! class_exists(Yaml::class)) {
             throw new InvalidArgumentException(
-                "YAML manifest given, but symfony/yaml is not installed in this environment "
+                'YAML manifest given, but symfony/yaml is not installed in this environment '
                 .'(dev-only per the H4880 revert contract; prod reads JSON twins). '
                 ."Convert the manifest to .json: {$path}"
             );
