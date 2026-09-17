@@ -82,6 +82,12 @@ def main() -> None:
     v = base_verdict(); v["schema"] = "something/else"
     check("wrong schema tag rejected", any("schema" in e for e in validate_verdict(v)))
 
+    v = base_verdict()
+    v["standards"]["findings"][0]["location"] = "tools/oxalpha_gate_match.py:21-28,152-167"
+    check("comma/range compound location accepted", not any("location" in e for e in validate_verdict(v)))
+    v["standards"]["findings"][0]["location"] = "a.yml:1-3 ; b.py:9"
+    check("space-joined compound location rejected", any("location" in e for e in validate_verdict(v)))
+
     with tempfile.TemporaryDirectory() as td:
         bad = Path(td) / "broken.json"
         bad.write_text('{"schema": ')

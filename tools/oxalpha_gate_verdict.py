@@ -32,14 +32,16 @@ SEVERITIES = ("P0", "P1", "P2", "P3")
 
 
 def is_valid_location(loc: str) -> bool:
+    """`path` or `path:line`, where line may be a digit, a range `31-35`, or
+    comma-separated such parts (multi-path citations like
+    `a.py:31-35,b.py:7` are one finding's location). Spaces are invalid -
+    normalize ` ; ` joins to commas before posting."""
+    import re
+
     if not loc or not isinstance(loc, str):
         return False
-    head, _, line = loc.partition(":")
-    if not head or any(ch in head for ch in " \t\n"):
-        return False
-    if line and not line.isdigit():
-        return False
-    return True
+    part_re = re.compile(r"^[\w./@-]+(:\d+(-\d+)?(,\d+(-\d+)?)*)?$")
+    return all(part_re.match(part) for part in loc.split(","))
 
 
 def validate_verdict(data: object, expect_head: str | None = None) -> list[str]:
