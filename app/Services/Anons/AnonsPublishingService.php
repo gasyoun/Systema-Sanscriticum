@@ -325,7 +325,10 @@ final class AnonsPublishingService
             : CtaPlaqueCompositor::RECT;
 
         return [
+            'frame' => $frameIndex,
+            'destination' => strtolower($dest['platform'].'@'.$dest['account']),
             'artifact' => $artifact,
+            'plaque_rect_px' => $this->compositor->bounds->rectPx,
             'caption' => $caption,
             'alt_text' => (string) $frame['alt_text'],
             'short_link' => $link,
