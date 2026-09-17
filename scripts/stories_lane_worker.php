@@ -1,7 +1,9 @@
 <?php
 
 declare(strict_types=1);
+use App\Models\TelegramSupportAccount;
 use App\Services\Stories\StoryPublisher;
+use App\Services\Telegram\MadelineClientFactory;
 use Illuminate\Contracts\Console\Kernel;
 
 /**
@@ -49,11 +51,13 @@ try {
             (string) ($task['caption'] ?? ''),
             isset($task['account']) ? (string) $task['account'] : null,
             isset($task['link']) ? (string) $task['link'] : null,
+            is_array($task['media_area'] ?? null) ? $task['media_area'] : null,
         )],
         'send_video' => ['ok' => true, 'story_id' => $publisher->sendVideoStoryDirect(
             (string) ($task['path'] ?? ''),
             (string) ($task['caption'] ?? ''),
             isset($task['link']) ? (string) $task['link'] : null,
+            is_array($task['media_area'] ?? null) ? $task['media_area'] : null,
         )],
         'delete' => tap(['ok' => true, 'story_id' => null], function () use ($publisher, $task): void {
             $publisher->deleteStoryDirect(
@@ -61,6 +65,21 @@ try {
                 isset($task['account']) ? (string) $task['account'] : null,
             );
         }),
+        // H5049 R13: живой проб сессии — реальный MTProto-вызов, не файл на диске.
+        'get_self' => (function () use ($task) {
+            $factory = app(MadelineClientFactory::class);
+            if (! $factory->isConfigured()) {
+                fail('MadelineProto is not configured');
+            }
+            $account = (string) ($task['account'] ?? 'rusamskrtam');
+            $row = $account !== 'rusamskrtam'
+                ? TelegramSupportAccount::query()->where('name', $account)->where('is_enabled', true)->firstOrFail()
+                : null;
+            $client = $row !== null ? $factory->open(null, $row->session_path) : $factory->open();
+            $self = $client->getSelf();
+
+            return ['ok' => true, 'self_id' => (string) ($self['id'] ?? ''), 'username' => (string) ($self['username'] ?? '')];
+        })(),
         default => fail("unknown action {$task['action']}"),
     };
 } catch (Throwable $e) {
