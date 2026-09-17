@@ -54,6 +54,9 @@ class Course extends Model
         'exit_survey_triggered_at',
         // Живой повтор не планируется (MG H1755): куратор говорит «повтора не будет».
         'never_repeat',
+        // H5066: порог заявок «возобновить занятия» (revive), при котором группа
+        // собирается. NULL = порог не задан, решает куратор.
+        'revive_threshold',
         // Новизна для анонсов «только новые курсы» (MG 31-08-2026):
         // new — впервые; repeat — возвращается после года-двух;
         // no_repeat — повтора не будет; usual — обычный.
@@ -239,6 +242,8 @@ class Course extends Model
         'is_active' => 'boolean',
         'is_completed' => 'boolean',
         'never_repeat' => 'boolean',
+        // H5066: порог заявок на возобновление (int, nullable).
+        'revive_threshold' => 'integer',
         'milestones_nudge_sent_at' => 'datetime',
         'deposit_amount' => 'decimal:2',
         'trial_price' => 'decimal:2',
@@ -269,6 +274,12 @@ class Course extends Model
     public function slugAliases(): HasMany
     {
         return $this->hasMany(CourseSlugAlias::class);
+    }
+
+    /** H5066: заявки интереса на курс с публичной формы /interest/{course}. */
+    public function courseInterestRequests(): HasMany
+    {
+        return $this->hasMany(CourseInterestRequest::class);
     }
 
     /**

@@ -2,6 +2,7 @@
 
 use App\Filament\Resources\UserResource;
 use App\Http\Controllers\AdminLoginLinkController;
+use App\Http\Controllers\CourseInterestController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\LeadController;
@@ -54,6 +55,17 @@ Route::get('/magic/{token}', [NewsletterSubscribeController::class, 'magic'])
     ->middleware('throttle:10,1')
     ->where('token', '[A-Za-z0-9]+')
     ->name('newsletter.magic');
+
+// --- ЗАЯВКА ИНТЕРЕСА НА КУРС (H5066) — join / recording / revive.
+// Самогейтится флагом course_interest_form (404 при OFF). Строго до catch-all
+// /{slug}; публичные; анти-спам (honeypot + time-trap + rate-limit) в контроллере.
+// /interest/{slug}/embed — минимальный iframe-вариант для samskrtam.ru.
+Route::get('/interest/{course?}', [CourseInterestController::class, 'show'])
+    ->name('course-interest.show');
+Route::get('/interest/{course?}/embed', [CourseInterestController::class, 'embed'])
+    ->name('course-interest.embed');
+Route::post('/interest/{course?}', [CourseInterestController::class, 'store'])
+    ->name('course-interest.store');
 
 // --- СВЯЗЫВАНИЕ TELEGRAM С КАБИНЕТОМ (H3542) — по capability-ссылке из
 // приглашения саппорт-бота в DM. Самогейтится флагом support_dm_link_invite
