@@ -170,6 +170,8 @@ class StoriesPublishStoryTest extends TestCase
         self::assertSame('mediaAreaUrl', $area['_']);
         self::assertSame($url, $area['url']);
         self::assertSame('mediaAreaCoordinates', $area['coordinates']['_']);
+        self::assertStringContainsString($url, FakeStoriesMadelineProtoClient::$sentStories[0]['caption']);
+        self::assertSame('messageEntityUrl', FakeStoriesMadelineProtoClient::$sentStories[0]['entities'][0]['_']);
     }
 
     /** @test */
@@ -182,6 +184,8 @@ class StoriesPublishStoryTest extends TestCase
             ->assertSuccessful();
 
         self::assertSame($url, FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['url']);
+        self::assertStringStartsWith($url, FakeStoriesMadelineProtoClient::$sentStories[0]['caption']);
+        self::assertSame(0, FakeStoriesMadelineProtoClient::$sentStories[0]['entities'][0]['offset']);
     }
 
     /** @test */

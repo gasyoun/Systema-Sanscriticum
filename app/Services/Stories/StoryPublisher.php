@@ -144,10 +144,27 @@ class StoryPublisher
      */
     private function send(object $client, array $media, string $caption, ?string $link = null): ?int
     {
+        $entities = null;
+        if ($link !== null && filter_var($link, FILTER_VALIDATE_URL) !== false) {
+            $byteOffset = strpos($caption, $link);
+            if ($byteOffset === false) {
+                $caption = $link.($caption !== '' ? "\n".$caption : '');
+                $byteOffset = 0;
+            }
+
+            $utf16Prefix = mb_convert_encoding(substr($caption, 0, $byteOffset), 'UTF-16LE', 'UTF-8');
+            $entities = [[
+                '_' => 'messageEntityUrl',
+                'offset' => intdiv(strlen($utf16Prefix), 2),
+                'length' => strlen($link),
+            ]];
+        }
+
         $params = [
             'peer' => 'me',
             'media' => $media,
             'caption' => $caption !== '' ? $caption : null,
+            'entities' => $entities,
             'random_id' => random_int(0, PHP_INT_MAX),
             'period' => self::PERIOD_24H,
         ];
