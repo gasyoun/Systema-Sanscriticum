@@ -154,8 +154,8 @@ def post_check_run(repo: str, head: str, file: str, name: str = CHECK_NAME) -> s
                 f"by {data['reviewer']['name']}")[:140]
         st = subprocess.run(
             ["gh", "api", "--method", "POST", f"repos/{repo}/statuses/{head}",
-             "-f", "state", verdict_conclusion(data),
-             "-f", "context", name, "-f", "description", desc],
+             "-f", f"state={verdict_conclusion(data)}",
+             "-f", f"context={name}", "-f", f"description={desc}"],
             capture_output=True, text=True)
         if st.returncode != 0:
             raise SystemExit(f"check-runs failed ({out.stderr.strip()}) and commit-status "
