@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AnonsApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CabinetController;
 use App\Http\Controllers\Api\LessonController;
@@ -186,10 +187,10 @@ Route::prefix('partner-bot')->middleware(['verify.partner.bot', 'throttle:30,1']
 // publish/schedule/status/metrics/rollback. CLI anons:* зовёт тот же
 // AnonsPublishingService. Токены — Sanctum personal access tokens.
 Route::prefix('anons')->middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
-    Route::post('/', [\App\Http\Controllers\Api\AnonsApiController::class, 'draft'])->name('api.anons.draft');
-    Route::post('/preview', [\App\Http\Controllers\Api\AnonsApiController::class, 'preview'])->name('api.anons.preview');
-    Route::post('/publish', [\App\Http\Controllers\Api\AnonsApiController::class, 'publish'])->name('api.anons.publish');
-    Route::get('/{key}', [\App\Http\Controllers\Api\AnonsApiController::class, 'status'])->name('api.anons.status');
-    Route::post('/{key}/metrics', [\App\Http\Controllers\Api\AnonsApiController::class, 'metrics'])->name('api.anons.metrics');
-    Route::post('/{key}/rollback', [\App\Http\Controllers\Api\AnonsApiController::class, 'rollback'])->name('api.anons.rollback');
+    Route::post('/', [AnonsApiController::class, 'draft'])->name('api.anons.draft');
+    Route::post('/preview', [AnonsApiController::class, 'preview'])->name('api.anons.preview');
+    Route::post('/publish', [AnonsApiController::class, 'publish'])->name('api.anons.publish');
+    Route::get('/{key}', [AnonsApiController::class, 'status'])->name('api.anons.status');
+    Route::post('/{key}/metrics', [AnonsApiController::class, 'metrics'])->name('api.anons.metrics');
+    Route::post('/{key}/rollback', [AnonsApiController::class, 'rollback'])->name('api.anons.rollback');
 });

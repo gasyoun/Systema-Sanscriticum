@@ -55,7 +55,8 @@ return new class extends Migration
             $table->string('short_link', 255)->nullable(); // /ga/ slug
             $table->json('utm')->nullable(); // full UTM tuple
             $table->timestamps();
-            $table->unique(['anons_publication_id', 'destination', 'frame_index']);
+            // Имя короче 64 символов — лимит идентификаторов MySQL.
+            $table->unique(['anons_publication_id', 'destination', 'frame_index'], 'anons_runs_pub_dest_frame_unique');
         });
 
         // Explicit missingness: an absent API field is NEVER numeric zero.

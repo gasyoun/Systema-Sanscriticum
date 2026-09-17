@@ -516,5 +516,4 @@ class ShopController extends Controller
 
         return view('shop.testimonials-library', ['testimonials' => $testimonials]);
     }
-
 }
