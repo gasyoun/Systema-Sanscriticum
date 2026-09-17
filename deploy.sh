@@ -13,6 +13,12 @@
 
 set -euo pipefail
 
+# H4848: деплой идёт от root, а php-fpm обслуживает от www-data. umask 002
+# (вместе с setgid на storage/framework/views — см. ensure_views_dir_shared)
+# оставляет всё, что root всё-таки записал, группово-записываемым для www-data:
+# utime()/touch() разрешён при наличии ПРАВА ЗАПИСИ, не только владения.
+umask 002
+
 # ── Настройки ────────────────────────────────────────────────────────────────
 APP_DIR="${APP_DIR:-/var/www/html}"          # каталог приложения (см. docs/php-8.3-upgrade.md, шаг 3)
 BRANCH="${BRANCH:-main}"
@@ -22,6 +28,13 @@ DEPLOY_LOG="storage/logs/deploys.log"
 USE_DOWN=0
 ROLLBACK_TO=""
 DEPLOY_SOFT_FAIL=0
+# H4848 (GTD 0A63, 15-09-2026): правки ЭТОГО скрипта действуют в том же цикле,
+# когда деплой идёт через auto-deploy обёртку: systema-auto-deploy-run.sh после
+# здорового деплоя, чей диапазон трогал deploy.sh, перезапускает его вторым
+# прогоном — bash держит прежний inode, сам скрипт через git pull не обновится
+# (см. docs/deploy.md, «Правка deploy.sh и следующий прогон»). При ручном
+# запуске напрямую (bash deploy.sh) свойство прежнее: правка видна со
+# СЛЕДУЮЩЕГО запуска.
 while [ $# -gt 0 ]; do
   case "$1" in
     --down) USE_DOWN=1 ;;
@@ -44,14 +57,66 @@ say()  { printf '\n\033[1;36m▶ %s\033[0m\n' "$*"; }
 fail() { printf '\n\033[1;31m✖ %s\033[0m\n' "$*"; exit 1; }
 warn() { printf '\n\033[1;33m⚠ %s\033[0m\n' "$*"; }
 
-# artisan optimize / cabinet:probe run as root and write compiled Blade as
-# root:755. php-fpm is www-data; BladeCompiler::touch() then 500s /admin
-# (17-08-2026). Call after every root artisan that may compile views.
+# H4848: страховка второго уровня. Скомпилированные Blade, созданные root,
+# нельзя `touch()`-нуть от www-data (BladeCompiler.php:215 требует владение
+# или право записи) — отсюда /admin 500 (17-08, 20-08, 09-09, 14-09-2026).
+# Починка постфактум окно только сужает, но не закрывает: файл «сломан» в тот
+# же миг, когда его записал root, а запрос мог быть уже в полёте. Поэтому
+# нижепрогревающие шаги идут от FPM-пользователя (run_as_app_user) — root их
+# вообще не создаёт. Chown остаётся для шагов, которым root действительно нужен
+# (guards:verify), и как страховка на будущее.
 chown_compiled_views() {
   say "chown compiled views → ${APP_USER:-www-data}"
   chown -R "${APP_USER:-www-data}:${APP_USER:-www-data}" \
     "$APP_DIR/storage/framework/views" \
     || warn "chown compiled views failed — /admin may 500 on next Blade recompile"
+}
+
+# H4848: прогрев кэшей ОТ ИМЯ FPM-пользователя. Приоритетное искусство:
+# ops/migrate/debian13/04-app-deploy.sh делает `sudo -u $DEPLOY_USER php artisan
+# view:cache` — та же идея, здесь обобщена. Возврат к root (или не-root запуск
+# локально/dev) деградирует до обычного вызова: helper идемпотентен.
+run_as_app_user() {
+  local u="${APP_USER:-www-data}"
+  if [ "$(id -u)" = 0 ] && [ "$u" != "root" ] && command -v runuser >/dev/null 2>&1; then
+    runuser -u "$u" -- "$@"
+  else
+    "$@"
+  fi
+}
+
+# H4848: setgid + владелец на каталог вьюх и снятие root-владения с
+# bootstrap/cache. Без этого `run_as_app_user php artisan optimize` упадёт:
+# старые config.php/routes-v7.php — root:644, www-data их не перезапишет
+# (optimize:clear выше их удаляет, но blade-icons.php и filament/panels/*
+# остаются). chown --from=root меняет ТОЛЬКО root-овые записи и не трогает
+# группу webteam, на которой держатся соседние каталоги.
+ensure_views_dir_shared() {
+  local dir="$APP_DIR/storage/framework/views" cache="$APP_DIR/bootstrap/cache"
+  if [ -d "$dir" ]; then
+    chown "${APP_USER:-www-data}:${APP_USER:-www-data}" "$dir" 2>/dev/null || true
+    chmod 2770 "$dir" 2>/dev/null || warn "не удалось выставить setgid на $dir"
+  fi
+  if [ -d "$cache" ]; then
+    chown -R --from=root "${APP_USER:-www-data}" "$cache" 2>/dev/null \
+      || warn "не удалось снять root-владение с $cache — прогрев кэшей от www-data может упасть"
+  fi
+}
+
+# H4848: гард, которого требовала миссия — деплой, оставивший root-овый
+# скомпилированный view, это ПРОВАЛЬНЫЙ деплой, а не предупреждение. Зовётся
+# ПОСЛЕ последнего chown_compiled_views (H3194: `fail` — это exit 1, поэтому
+# никогда до починки). Тот же инвариант непрерывно проверяет cabinet:probe
+# (сторож */15) от www-data — deploy-гард ловит регресс в момент выкладки.
+assert_no_root_views() {
+  local dir="$APP_DIR/storage/framework/views" stray
+  [ -d "$dir" ] || return 0
+  stray=$(find "$dir" -type f ! -user "${APP_USER:-www-data}" 2>/dev/null | head -5 || true)
+  if [ -n "$stray" ]; then
+    fail "compiled views не принадлежат ${APP_USER:-www-data} — Filament /admin отдаст 500 на следующем recompile:
+$stray
+  Вернуть: chown -R ${APP_USER:-www-data}:${APP_USER:-www-data} $dir"
+  fi
 }
 
 # ── 0. Предполётные проверки ─────────────────────────────────────────────────
@@ -230,11 +295,18 @@ else
 fi
 
 # ── 4. Прогрев кэшей под прод ────────────────────────────────────────────────
-say "Прогрев кэшей (config/route/view + filament)"
-php artisan optimize
-php artisan filament:optimize 2>/dev/null || { warn "filament:optimize failed — Filament caches not warmed"; DEPLOY_SOFT_FAIL=1; }
+say "Прогрев кэшей (config/route/view + filament) от ${APP_USER:-www-data}"
+# H4848: прогрев идёт ОТ FPM-ПОЛЬЗОВАТЕЛЯ, не от root. Раньше здесь стоял
+# root-овый `artisan optimize` — именно он компилировал Blade как root:755, и
+# php-fpm не мог `touch()`-нуть вьюху (BladeCompiler.php:215), отсюда /admin 500
+# в окне до chown (17-08, 20-08, 09-09, 14-09-2026). От www-data вьюхи сразу
+# создаются правильным владельцем — окна больше нет, а не «уже».
+ensure_views_dir_shared
+run_as_app_user php artisan optimize
+run_as_app_user php artisan filament:optimize 2>/dev/null || { warn "filament:optimize failed — Filament caches not warmed"; DEPLOY_SOFT_FAIL=1; }
 
-# After view:cache. Probe below also compiles as root — chown again there.
+# Страховка: шаги ниже (cabinet:probe от www-data, guards:verify от root) могут
+# дособрать вьюхи. Chown идемпотентен и дёшев.
 chown_compiled_views
 
 # ── 5. OPcache: reload php-fpm (КРИТИЧНО — validate_timestamps=0) ───────────
@@ -294,15 +366,19 @@ echo "OK: $SMOKE_URL → 200"
 # Public smoke can stay 200 while /dvaram 500s (16-08-2026 23:30 UTC:
 # homepage fine, cabinet:probe critical on missing club_memberships.tier_code).
 # Soft-only findings still exit 0 — do not revive the #1143 rollback loop.
-say "Смоук кабинета: php artisan cabinet:probe --fail-on-critical --no-alert"
-# Probe is artisan-as-root and compiles Blade after the post-optimize chown
-# (H2994: 660 files root). `fail` is `exit 1` — if it runs first, the chown
-# below never happens. 19-08-2026 21:01Z and 20-08 SOS: probe --fail-on-critical
-# died on tmpfs-cap/backup-fresh, left 8 compiled views root:root, php-fpm
-# `touch()` 500'd Filament /admin until a manual chown (H3194).
+say "Смоук кабинета: cabinet:probe --fail-on-critical --no-alert (от ${APP_USER:-www-data})"
+# H4848: проба идёт ОТ WWW-DATA — тем же пользователем, что обслуживает
+# запросы. Это не косметика: 14-09-2026 проба от root была зелёной, пока
+# /admin отдавал 500, — root-овый `touch()` проба от root не видит
+# структурно, и класс «root-овые вьюхи» ею не ловился. От www-data она и
+# компилирует вьюхи правильным владельцем, и видит реальное состояние
+# (+ собственный views-ownership check, H4848).
+# `fail` is `exit 1` — if it runs first, the chown below never happens
+# (19-08-2026 21:01Z и 20-08 SOS: probe --fail-on-critical умер на
+# tmpfs-cap/backup-fresh, оставив 8 root-овых вьюх — H3194).
 # --no-alert: deploy retries must not SOS; watchdog */15 is the mouth (H3197).
 # --fail-on-critical is HTTP/cabinet only (host guards no longer fail deploy).
-php artisan cabinet:probe --fail-on-critical --no-alert
+run_as_app_user php artisan cabinet:probe --fail-on-critical --no-alert
 probe_rc=$?
 chown_compiled_views
 [ "$probe_rc" = 0 ] || fail "cabinet:probe: critical после деплоя — кабинет нездоров"
@@ -329,9 +405,13 @@ fi
 say "Предохранители ОС: php artisan guards:verify"
 GUARDS_DRIFT=0
 php artisan guards:verify || GUARDS_DRIFT=1
-# Last artisan-as-root in this script. 17-08 07:38Z left 8 compiled files
-# root after probe+guards even with the post-probe chown.
+# Последний root-овый artisan в этом скрипте: 17-08 07:38Z оставил 8 root-овых
+# вьюх после probe+guards даже с пост-probe chown.
 chown_compiled_views
+# H4848: гард, которого требовала миссия. Деплой, оставивший root-овый
+# скомпилированный view, — ПРОВАЛЬНЫЙ деплой, а не предупреждение в логе,
+# которое никто не читает. Стоит ПОСЛЕ последнего chown (H3194: `fail` = exit 1).
+assert_no_root_views
 if [ "$GUARDS_DRIFT" = 1 ]; then
   printf '\n\033[1;31m%s\033[0m\n' "✖ ПРЕДОХРАНИТЕЛИ ПРОДА РАСХОДЯТСЯ С РЕПОЗИТОРИЕМ (см. список выше)"
   printf '\033[1;31m%s\033[0m\n' "  Вернуть: sudo bash scripts/server_guards_apply.sh"

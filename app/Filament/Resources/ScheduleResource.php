@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\RemindPaymentInChatAction;
 use App\Filament\Resources\ScheduleResource\Pages;
 use App\Models\Course;
 use App\Models\Schedule;
@@ -364,6 +365,12 @@ class ScheduleResource extends Resource
                                 ->success()
                                 ->send();
                         }),
+
+                    // Оплата блока — ручное напоминание в чат группы («до» = следующее занятие).
+                    RemindPaymentInChatAction::make(
+                        fn (Schedule $r) => $r->group,
+                        fn (Schedule $r) => $r->end ?? $r->start ?? now(),
+                    ),
 
                     Tables\Actions\DeleteAction::make(),
                 ]),

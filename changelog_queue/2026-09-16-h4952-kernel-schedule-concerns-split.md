@@ -1,0 +1,9 @@
+# H4952: `app/Console/Kernel.php` split into 6 `App\Console\Concerns` traits, no behavior change (Sonnet 5 `claude-sonnet-5`, 16-09-2026)
+
+`Kernel.php` was 1195 lines: H4517 (10-09-2026) had already grouped `schedule()`'s body into 19 private domain methods within the single file, but the file itself stayed monolithic. This follow-up moves those 19 methods out into 6 `App\Console\Concerns` traits (grouped by domain, mirroring the `routes/web.php` split, H4941), leaving `Kernel.php` as a thin dispatcher — `schedule()`, `commands()`, and the shared `madelineSessionLockMinutes()` TTL helper.
+
+- **New traits** (`app/Console/Concerns/`): `SchedulesOvernightAndCrm`, `SchedulesSupportAndPayments`, `SchedulesStudentsAndContent`, `SchedulesPresenceAndMarathon`, `SchedulesTelegram`, `SchedulesOpsAndMembership` — 3–4 methods each, in original registration order.
+- **Pure move, byte-identical:** every moved method's docblock+signature+body was verified byte-identical to its pre-move slice via a scripted extraction/diff pass; `schedule:list` fingerprint (normalized for wall-clock `Next Due:` text and its cascading dot-padding) is identical before/after — 96/96 entries match.
+- **Imports:** each trait carries only the `use` statements its own methods need (per-file PHP imports); `Kernel.php` itself now needs only `Schedule` + `ConsoleKernel`.
+- **Verification:** `php -l` clean on all 7 touched/new files; Pint clean (alphabetized `use`/trait-`use` statements, no behavioral effect — the 6 traits' method name-sets are disjoint); full `phpunit` suite: 5704 tests, 3 pre-existing unrelated failures (404s on catalog/waitlist teacher-facet routes, same baseline as the H4941 routes-split — Kernel.php only touches console scheduling, not HTTP routing).
+- **Fence:** no behavior change — a pure file-split, same as the routes/web.php precedent.

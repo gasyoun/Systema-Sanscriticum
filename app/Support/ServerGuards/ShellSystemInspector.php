@@ -7,7 +7,7 @@ namespace App\Support\ServerGuards;
 use App\Support\Backup\SplitGroupMath;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Process;
-use Spatie\Backup\BackupDestination\BackupDestination;
+use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
@@ -188,10 +188,6 @@ final class ShellSystemInspector implements SystemInspector
      */
     private function readBackupDestinations(): ?array
     {
-        if (! class_exists(BackupDestination::class)) {
-            return null;
-        }
-
         /** @var list<string> $disks */
         $disks = (array) config('backup.backup.destination.disks', []);
         // Off-site нога переехала из destination.disks в split_upload (Yandex
@@ -206,45 +202,83 @@ final class ShellSystemInspector implements SystemInspector
             return null;
         }
 
+        // 0bn (15-09-2026): аудит читает только ЛИСТИНГ, поэтому WebDAV-диски
+        // читаются через *_readonly_probe близнеца (curl-потолок 45 с, клиент в
+        // AppServiceProvider), а не через боевой диск с PUT-потолком 300 с —
+        // stash cache-miss здесь не может держать probe >120 с (WATCHDOG TIMEOUT
+        // 14-09 ×5 + 15-09 repro). local и прочие не-WebDAV диски идут как есть.
+        $readDiskOf = [];
+        foreach ($disks as $disk) {
+            $probeDisk = $disk.'_readonly_probe';
+            $readDiskOf[$disk] = (string) config("filesystems.disks.$probeDisk.driver", '') !== ''
+                ? $probeDisk
+                : $disk;
+        }
+
         $rows = [];
+        // 0bn (16-09-2026): потолок на ШАГ, а не только на запрос. Замер на
+        // проде: spatie-обход (BackupDestination::backups + sizeInBytes по
+        // каждому из 476 файлов) = 144 с, а ОДИН shallow-листинг адаптера того
+        // же каталога = 2.8 с с теми же path/size/lastModified. Поэтому читаем
+        // сразу метаданные листинга, а бюджет добивает патологию: если листинг
+        // всё же не уложился — уходим из метода без строк (проба остаётся
+        // быстрой, следующий такт повторит; ложной находки не пишем).
+        $budgetSeconds = max(5, (int) config('server_guards.backup_probe_budget_seconds', 45));
+        $deadline = microtime(true) + $budgetSeconds;
+
         foreach ($disks as $disk) {
             $disk = (string) $disk;
             try {
-                $destination = BackupDestination::create($disk, $name);
-                $reachable = $destination->isReachable();
-                $backups = $reachable ? $destination->backups() : null;
-                $newest = $backups?->newest();
+                $storage = Storage::disk($readDiskOf[$disk]);
+                $entries = [];
+                foreach ($storage->getAdapter()->listContents($name, false) as $item) {
+                    if (! $item->isFile()) {
+                        continue;
+                    }
+
+                    $base = basename($item->path());
+                    $entries[] = [
+                        'name' => $base,
+                        'timestamp' => SplitGroupMath::timestampFromBasename($base) ?? (int) ($item->lastModified() ?? 0),
+                        'bytes' => (int) ($item->fileSize() ?? 0),
+                    ];
+
+                    if (microtime(true) > $deadline) {
+                        // Шаг не уложился в бюджет — прогон неполный, молчим до
+                        // следующего такта вместо ложного «нет архива».
+                        return null;
+                    }
+                }
 
                 // H3371: свежесть off-site диска сплита меряется только ПОЛНОЙ
                 // группой частей. Одинокая часть ровно max_part_mb байт
                 // проходит порог BACKUP_MIN_ARCHIVE_MB и читалась как живой
                 // off-site, хотя архив из неё не собирается. Нет полной
                 // группы — нет и свежести: «на диске нет ни одного архива».
-                $complete = null;
-                if ($backups !== null && $newest !== null && $disk === $splitDisk) {
-                    $entries = [];
-                    foreach ($backups as $backupFile) {
-                        $entries[] = [
-                            'name' => basename($backupFile->path()),
-                            'timestamp' => $backupFile->date()->getTimestamp(),
-                            'bytes' => (int) $backupFile->sizeInBytes(),
-                        ];
-                    }
-                    $complete = SplitGroupMath::newestCompleteEntry($entries);
-                    if ($complete === null) {
-                        $newest = null;
+                $newestAt = null;
+                $newestBytes = null;
+                if ($entries !== []) {
+                    if ($disk === $splitDisk) {
+                        $complete = SplitGroupMath::newestCompleteEntry($entries);
+                        if ($complete !== null) {
+                            $newestAt = $complete['timestamp'];
+                            $newestBytes = $complete['bytes'];
+                        }
+                    } else {
+                        foreach ($entries as $entry) {
+                            if ($newestAt === null || $entry['timestamp'] > $newestAt) {
+                                $newestAt = $entry['timestamp'];
+                                $newestBytes = $entry['bytes'];
+                            }
+                        }
                     }
                 }
 
                 $rows[] = [
                     'disk' => $disk,
-                    'reachable' => $reachable,
-                    'newestAt' => $complete !== null
-                        ? $complete['timestamp']
-                        : $newest?->date()?->getTimestamp(),
-                    'newestBytes' => $complete !== null
-                        ? $complete['bytes']
-                        : ($newest === null ? null : (int) $newest->sizeInBytes()),
+                    'reachable' => true,
+                    'newestAt' => $newestAt,
+                    'newestBytes' => $newestBytes,
                 ];
             } catch (Throwable) {
                 // Отдельное назначение не ответило — это и есть «недостижимо»,

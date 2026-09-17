@@ -37,4 +37,15 @@ return [
         FILTER_VALIDATE_BOOL
     ),
 
+    /*
+     * 0bn (16-09-2026): бюджет на чтение off-site назначений пробой, секунд.
+     * Замер прода: один shallow-листинг адаптера = 2.8 с, а старый spatie-обход
+     * 476 файлов с поштучными sizeInBytes() = 144 с, из-за чего cache-miss
+     * backup-fresh держал cabinet:probe >120 с и сторож (каждые 15 минут)
+     * убивал прогон (WATCHDOG TIMEOUT 14-09 ×5 + 15-09 repro, 16-09 10:32/13:17/13:32 UTC).
+     * Не уложились — уходим без строк и повторяем следующим тактом, вместо
+     * ложной находки «нет архива».
+     */
+    'backup_probe_budget_seconds' => (int) env('SERVER_GUARDS_BACKUP_PROBE_BUDGET_SECONDS', 45),
+
 ];

@@ -7,9 +7,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Schedule;
 use App\Services\Crm\TrialBookingService;
+use App\Support\PedagogyRung;
 use App\Support\TrialBookToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -33,6 +35,12 @@ class PublicTrialBookController extends Controller
             'book_token' => ['required', 'string'],
             'email' => ['required', 'email'],
             'name' => ['nullable', 'string', 'max:120'],
+            // H4818 (R2609-01): optional F2 placement-quiz result, only ever
+            // read here when the flag is on — off => same request shape as before.
+            'placement_rung' => [
+                'nullable', 'string',
+                Rule::in(config('features.f2_placement_quiz') ? PedagogyRung::values() : []),
+            ],
         ]);
 
         $scheduleId = TrialBookToken::resolve($data['book_token']);
@@ -52,6 +60,7 @@ class PublicTrialBookController extends Controller
 
         $deal = $booking->bookFree($data['email'], $schedule, [
             'name' => $data['name'] ?? null,
+            'placement_rung' => $data['placement_rung'] ?? null,
         ]);
 
         if ($deal === null) {

@@ -201,6 +201,25 @@ return [
     'bot_faq_retrieval' => (bool) env('BOT_FAQ_RETRIEVAL', false),
 
     /*
+     | Этап 4 (#1633 / EXPERIMENT_OLLAMA_GPU_OCT1_2026.md) — вопросы студента по
+     | расшифровкам ЕГО занятий в кабинетном боте.
+     |
+     | Контур доступа: выдача ограничена LessonGate::canWatch — тем же гейтом,
+     | что и скачивание стенограммы. Генерация ТОЛЬКО локальная (qwen3 на узле
+     | через туннель), внешнего фолбэка нет: текст платного занятия не уходит
+     | стороннему провайдеру. Цитаты короткие (knowledge.lesson.quote_chars),
+     | лекция целиком через бота не выдаётся — H3308.
+     |
+     | Когда ВЫКЛ: ветка в TelegramWebhookController не срабатывает вовсе,
+     | вопросы идут обычному ИИ-куратору, команды /уроки и /урок молчат,
+     | knowledge:index-lessons ничего не индексирует. Прод-инертно.
+     |
+     | Включение — осознанный шаг: LESSON_QA_ENABLED=true + config:cache после
+     | прогона knowledge:index-lessons и проверки на своём аккаунте.
+     */
+    'lesson_qa' => (bool) env('LESSON_QA_ENABLED', false),
+
+    /*
      | H3768 (рулинг MG 31-08-2026 «только F»): ЖИВОЙ автоответ студенту из FAQ.
      |
      | До сих пор BM25-ответ доходил только до куратора (подсказка) или до
@@ -967,6 +986,16 @@ return [
     'crm_trial_widget_public' => (bool) env('CRM_TRIAL_WIDGET_PUBLIC', false),
 
     /*
+     | H4818 (R2609-01): рунг-placement квиз (A0-C2) в trial-флоу — расширение
+     | onramp-квиза (ShopController::start). GET/POST /rung-placement 404 пока
+     | OFF. Пишет ТОЛЬКО deals.placement_rung через TrialBookingService — не
+     | трогает payments/Tochka. ВЫКЛ по умолчанию. Включение —
+     | FEATURE_F2_PLACEMENT_QUIZ=true + config:cache — @DECIDE MG (R2609-01
+     | набор 20 пробных начинается только после явного решения человека).
+     */
+    'f2_placement_quiz' => (bool) env('FEATURE_F2_PLACEMENT_QUIZ', false),
+
+    /*
      | Список ожидания (MG 31-08-2026, волна 3): голосование из кабинета.
      | Read-only фид /api/public/waitlist работает всегда; POST /vote 404,
      | пока OFF. Не включать в этом PR — только ключ, default false.
@@ -1551,4 +1580,16 @@ return [
      | + php artisan config:cache (human ops).
      */
     'mic_shadow_classify' => (bool) env('MIC_SHADOW_CLASSIFY', false),
+
+    /*
+     | H5022 (MG ruling Q14, digital-marketing grill 16-09-2026): автоматическое
+     | повторное приглашение в кабинет через 48 ч после успешной оплаты, если
+     | студент ни разу не входил (утечка «оплатил — не вошёл» 75,2 %).
+     | Команда students:reinvite-48h (ежедневно по расписанию, --send).
+     | ОДНО сообщение на пользователя (ActivityEvent reinvite_48h_sent —
+     | маркер идемпотентности), Telegram при привязанном chat id, иначе email;
+     | magic-ссылка входа без пароля. Kill switch: REINVITE_48H=false
+     | + php artisan config:cache. По умолчанию ВКЛЮЧЕНО — решение MG 16-09-2026.
+     */
+    'reinvite_48h' => (bool) env('REINVITE_48H', true),
 ];

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\LessonQaAnswerJob;
 use App\Jobs\SyncUserAvatarJob;
 use App\Models\ChatMessage;
 use App\Models\ScheduleAttendanceNotice;
@@ -13,6 +14,8 @@ use App\Services\Bot\CabinetLoginBotCommand;
 use App\Services\Bot\CabinetProvisionBotCommand;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\DebtorsBotCommand;
+use App\Services\Bot\LessonQaBotCommands;
+use App\Services\Bot\LessonQaService;
 use App\Services\Bot\RosterBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
@@ -359,6 +362,25 @@ class TelegramWebhookController extends Controller
             }
         }
 
+        // 1.9. SELF-SERVICE: список доступных занятий и закрепление одного из
+        // них (Этап 4). Детерминированно, без LLM: что открыто студенту —
+        // это факт из БД, а не догадка модели.
+        if ((bool) config('features.lesson_qa', false)) {
+            $lessonCommands = app(LessonQaBotCommands::class);
+
+            if ($lessonCommands->matchesListIntent($question)) {
+                $this->replyAndStore($user, $chatId, $lessonCommands->listSummary($user));
+
+                return;
+            }
+
+            if ($lessonCommands->matchesPinIntent($question)) {
+                $this->replyAndStore($user, $chatId, $lessonCommands->handlePin($user, $question));
+
+                return;
+            }
+        }
+
         // 2. ПРОВЕРЯЕМ РЕЖИМ ЧЕЛОВЕКА
         if (Cache::has("chat_human_{$chatId}")) {
             if ($adminId) {
@@ -393,6 +415,14 @@ class TelegramWebhookController extends Controller
             }
         }
 
+        // 4. ВОПРОС ПО РАСШИФРОВКЕ СВОЕГО ЗАНЯТИЯ (Этап 4, флаг lesson_qa).
+        // Стоит ПОСЛЕ режима человека и слов-триггеров: «позови куратора»
+        // обязано выигрывать у любой автоматики. Ничего не нашлось или совпало
+        // слабо — молча падаем в обычного ИИ-куратора ниже.
+        if ($this->answerFromLessonTranscripts($user, $question, $chatId)) {
+            return;
+        }
+
         $this->sendMessage($chatId, '⏳ <i>Изучаю манускрипты...</i>');
 
         // Вопрос студента уже сохранён в ChatMessage выше — он попадёт в историю
@@ -414,6 +444,62 @@ class TelegramWebhookController extends Controller
         ]);
 
         $this->sendMessage($chatId, $answer);
+    }
+
+    /**
+     * Этап 4 — попытка ответить по расшифровкам занятий, открытых студенту.
+     *
+     * Возвращает true, если вопрос обработан здесь (ответ отправлен или принят
+     * в очередь). false означает «это не про уроки» — вызывающий код идёт
+     * дальше к обычному ИИ-куратору, поведение при выключенном флаге
+     * остаётся прежним байт-в-байт.
+     */
+    private function answerFromLessonTranscripts(User $user, string $question, string $chatId): bool
+    {
+        $qa = app(LessonQaService::class);
+        if (! $qa->isEnabled()) {
+            return false;
+        }
+
+        $result = $qa->answer($user, $question);
+
+        if ($result['status'] === LessonQaService::STATUS_NOTHING) {
+            return false;
+        }
+
+        if ($result['status'] === LessonQaService::STATUS_QUEUED) {
+            // Узел с моделью недоступен. Внешнего фолбэка нет по рулингу
+            // #1633, поэтому вопрос не теряем: доигрывает джоба.
+            LessonQaAnswerJob::dispatch($user->id, $question, $chatId);
+            $this->sendMessage(
+                $chatId,
+                '⏳ Узел с моделью сейчас занят. Вопрос принял — отвечу по этому занятию, как только он освободится.',
+            );
+
+            return true;
+        }
+
+        if ($result['text'] === null) {
+            return false;
+        }
+
+        $this->replyAndStore($user, $chatId, $result['text']);
+
+        return true;
+    }
+
+    /** Сохранить ответ бота в историю диалога и отправить его студенту. */
+    private function replyAndStore(User $user, string $chatId, string $text): void
+    {
+        ChatMessage::create([
+            'user_id' => $user->id,
+            'role' => 'bot',
+            'text' => $text,
+            'is_read' => true,
+            'source' => 'telegram_bot',
+        ]);
+
+        $this->sendMessage($chatId, $text);
     }
 
     /**

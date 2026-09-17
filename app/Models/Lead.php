@@ -80,6 +80,7 @@ class Lead extends Model
         'utm_content',
         'utm_term',
         'click_id',
+        'source',           // источник, введённый человеком (H5021) — машина не трогает
 
         // Технические данные - теперь они будут сохраняться
         'ip_address',
@@ -102,7 +103,24 @@ class Lead extends Model
         'converted_at' => 'datetime',
         'next_contact_at' => 'date',
         'reminded_at' => 'datetime',
+        'source_inferred_at' => 'datetime',
     ];
+
+    /**
+     * Источник лида для отчётов (H5021): ручной source > машинный inferred_source
+     * > сырой utm_source. Машина никогда не пишет в source.
+     */
+    public function effectiveSource(): ?string
+    {
+        foreach ([$this->source, $this->inferred_source, $this->utm_source] as $candidate) {
+            $candidate = trim((string) $candidate);
+            if ($candidate !== '') {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
 
     // Стадия воронки (LeadStage.key ↔ leads.status) — источник канбан-доски.
     public function stage(): BelongsTo

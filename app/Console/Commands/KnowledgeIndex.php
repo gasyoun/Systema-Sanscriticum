@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Jobs\KnowledgeEmbedChunksJob;
+use App\Models\KnowledgeChunk;
 use App\Services\Support\Faq\FaqCorpusParser;
 use App\Services\Support\Faq\KnowledgeVectors;
 use Illuminate\Console\Command;
@@ -49,7 +50,11 @@ class KnowledgeIndex extends Command
         $dims = (int) config('knowledge.dimensions', 1024);
         $force = (bool) $this->option('force');
 
+        // Этап 4: дельта считается только по FAQ-полосе. Чанки уроков живут в
+        // той же таблице, но их ведёт knowledge:index-lessons; без фильтра они
+        // попали бы в $known, никогда не обновились бы и молча состарились.
         $known = DB::table('knowledge_chunks')
+            ->where('source_type', KnowledgeChunk::SOURCE_FAQ)
             ->where('model', $model)
             ->where('dims', $dims)
             ->pluck('content_hash', 'faq_chunk_id');

@@ -20,13 +20,14 @@ use Illuminate\Support\Carbon;
  * Урок-предупреждение из антикейса «Лингвистик»: идеальный финплан не спас школу,
  * потому что его никто не внедрил — не было владельца цифр и ритма обзора.
  * Поэтому панель дополнена ритмом обзора (docs/FINANCE_REVIEW_RHYTHM.md) и
- * недельным дайджестом (finance:kpi-digest).
+ * ежедневным дайджестом (finance:kpi-digest, с H4908).
  *
  * Ничего не считает сама — переиспользует сервисы фаз:
  *  A — StudentUnitEconomicsService (LTV/CAC, окупаемость привлечения);
  *  B — FinanceCockpitReport (прибыль по начислению, отложенная выручка);
  *  C — ReceivablesGovernanceService (дебиторка против порога);
- *  D — ProfitFundsService (резервный фонд, обеспеченность кассой).
+ *  D — ProfitFundsService (резервный фонд, обеспеченность кассой);
+ *  пульс — StudentPulseService (ежедневный счёт активных платных, H4908).
  */
 class DelegationKpiService
 {
@@ -35,6 +36,7 @@ class DelegationKpiService
         private readonly FinanceCockpitReport $report,
         private readonly ReceivablesGovernanceService $receivables,
         private readonly ProfitFundsService $funds,
+        private readonly StudentPulseService $pulse,
     ) {}
 
     /**
@@ -48,6 +50,10 @@ class DelegationKpiService
         $asOf = ($asOf ?? now())->copy();
         $period = $asOf->format('Y-m');
 
+        // Пульс считается ОДИН раз на снимок: и карточка, и строки дайджеста
+        // питаются от него же (H4908, без двойного прогона запросов).
+        $pulseSnap = $this->pulse->snapshot($asOf);
+
         $cards = [
             $this->unitEconomicsCard($asOf),
             $this->accrualProfitCard($period),
@@ -55,6 +61,7 @@ class DelegationKpiService
             $this->receivablesCard(),
             $this->reserveFundCard($asOf),
             $this->bdrCard(),
+            $this->pulseCard($pulseSnap),
         ];
 
         // Общий цвет панели = худший светофор среди «живых» карточек (не gray/
@@ -71,6 +78,7 @@ class DelegationKpiService
             'as_of' => $asOf->toDateTimeString(),
             'period' => $period,
             'cards' => $cards,
+            'pulse_lines' => $this->pulse->linesFromSnapshot($pulseSnap),
             'level' => $worst,
             'ok' => $worst !== 'danger',
             'alerts' => array_values(array_filter(array_map(
@@ -192,6 +200,26 @@ class DelegationKpiService
             'gray',
             'finance-planning',
             'План-факт по бюджету включится, когда MG выберет канонический шаблон бюджета.',
+        );
+    }
+
+    /**
+     * Пульс «активные платные ученики» (H4908). Информационная карточка без
+     * красных флагов: канон определения ещё не выбран (рулинг MG 15-09-2026 —
+     * «все варианты строками»), поэтому значением идёт компактная головная
+     * строка, а все кандидат-определения раскрываются в ежедневном дайджесте.
+     *
+     * @param  array<string, int|string>  $pulseSnap
+     */
+    private function pulseCard(array $pulseSnap): array
+    {
+        return $this->card(
+            'student_pulse',
+            'Пульс · активные платные',
+            $this->pulse->headlineFromSnapshot($pulseSnap),
+            'gray',
+            'finance-cockpit',
+            'Порогов нет: канон определения «активный платный» MG выберет словом, тогда появится светофор.',
         );
     }
 

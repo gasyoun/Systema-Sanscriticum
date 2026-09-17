@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Jobs\SendTelegramChatMessageJob;
+use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
@@ -62,11 +62,11 @@ class PostCourseScheduleCommandTest extends TestCase
 
         // Первый свип: отправка.
         $this->artisan('courses:post-schedule', ['--due' => true])->assertSuccessful();
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
 
         // Второй свип в тот же день: текст не изменился — тишина.
         $this->artisan('courses:post-schedule', ['--due' => true])->assertSuccessful();
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
     }
 
     /** @test */

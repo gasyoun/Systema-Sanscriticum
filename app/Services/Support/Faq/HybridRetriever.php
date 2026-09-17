@@ -176,7 +176,12 @@ final class HybridRetriever
         $model = (string) config('knowledge.embedding_model', 'bge-m3');
         $dims = (int) config('knowledge.dimensions', 1024);
 
+        // Этап 4: в таблице появилась вторая полоса — фрагменты расшифровок
+        // уроков. Они выдаются только через LessonRetriever и только тем, кому
+        // урок открыт, поэтому FAQ-нога обязана их даже не читать: иначе это
+        // лишние мегабайты BLOB'ов на каждый запрос support-полосы.
         $rows = KnowledgeChunk::query()
+            ->where('source_type', KnowledgeChunk::SOURCE_FAQ)
             ->where('model', $model)
             ->where('dims', $dims)
             ->pluck('embedding', 'faq_chunk_id');

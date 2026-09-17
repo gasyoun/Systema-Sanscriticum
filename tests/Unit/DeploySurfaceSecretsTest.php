@@ -34,9 +34,9 @@ final class DeploySurfaceSecretsTest extends TestCase
         $script = $this->readRepoFile('deploy.sh');
 
         $this->assertMatchesRegularExpression(
-            '/^php artisan optimize$/m',
+            '/^run_as_app_user php artisan optimize$/m',
             $script,
-            'deploy.sh must still warm caches via artisan optimize',
+            'deploy.sh must still warm caches via artisan optimize — as the FPM user (H4848)',
         );
         $this->assertMatchesRegularExpression(
             '/chown\s+-R\s+"\$\{APP_USER:-www-data\}:\$\{APP_USER:-www-data\}"\s+\\\s*\n\s+"\$APP_DIR\/storage\/framework\/views"/',
@@ -49,9 +49,9 @@ final class DeploySurfaceSecretsTest extends TestCase
         $this->assertNotFalse($optimizePos);
         $this->assertNotFalse($probePos);
         $this->assertSame(
-            4,
-            substr_count($script, 'chown_compiled_views'),
-            'helper plus chown after optimize, cabinet:probe, and guards:verify',
+            3,
+            preg_match_all('/^chown_compiled_views$/m', $script),
+            'helper call after optimize, cabinet:probe, and guards:verify',
         );
         $afterOptimize = strpos($script, 'chown_compiled_views', $optimizePos);
         $afterProbe = strpos($script, 'chown_compiled_views', $probePos);
@@ -66,6 +66,68 @@ final class DeploySurfaceSecretsTest extends TestCase
             $failPos,
             'chown_compiled_views must run before fail() when probe is critical (H3194: fail is exit 1)',
         );
+    }
+
+    /**
+     * H4848 — the 14-09-2026 window class, closed by construction.
+     *
+     * deploy.sh warmed caches as root, so Blade landed `root:755`; php-fpm
+     * (www-data) then could not `touch($compiledPath, $lastModified + 1)` in
+     * BladeCompiler.php:215, and Filament `/admin` 500'd for the whole window
+     * between the root compile and `chown_compiled_views` (17-08, 20-08, 09-09,
+     * 14-09-2026 — the 14-09 run took 2 m 46 s). Warming as the FPM user means
+     * root never creates the file at all, so there is no window to narrow.
+     */
+    public function test_deploy_sh_compiles_views_as_fpm_user_not_root(): void
+    {
+        $script = $this->readRepoFile('deploy.sh');
+
+        $this->assertMatchesRegularExpression(
+            '/^run_as_app_user php artisan optimize$/m',
+            $script,
+            'H4848: caches must be warmed as the FPM user',
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/^php artisan optimize$/m',
+            $script,
+            'H4848: a bare root `artisan optimize` re-opens the /admin 500 window',
+        );
+        $this->assertMatchesRegularExpression(
+            '/^run_as_app_user php artisan cabinet:probe --fail-on-critical --no-alert$/m',
+            $script,
+            'H4848: the probe must run as www-data — as root it stayed green while /admin 500d (14-09)',
+        );
+        $this->assertMatchesRegularExpression(
+            '/^run_as_app_user php artisan filament:optimize/m',
+            $script,
+            'H4848: filament:optimize may compile Blade — run it as the FPM user too',
+        );
+
+        // The guard the mission asked for: a root-owned compiled view fails the deploy.
+        $this->assertMatchesRegularExpression(
+            '/^assert_no_root_views\(\) \{$/m',
+            $script,
+            'H4848: deploy.sh must define the root-owned-compiled-views guard',
+        );
+        $this->assertSame(
+            1,
+            preg_match_all('/^assert_no_root_views$/m', $script),
+            'H4848: the guard must be called exactly once',
+        );
+
+        $lastChown = strrpos($script, "\nchown_compiled_views\n");
+        $guardCall = strpos($script, "\nassert_no_root_views\n");
+        $this->assertNotFalse($lastChown);
+        $this->assertNotFalse($guardCall);
+        $this->assertGreaterThan(
+            $lastChown,
+            $guardCall,
+            'H4848: the guard runs after the last fix-up (H3194: fail is exit 1)',
+        );
+
+        // Belt-and-braces: even a stray root write stays group-writable for www-data.
+        $this->assertMatchesRegularExpression('/^umask 002$/m', $script);
+        $this->assertStringContainsString('chmod 2770', $script);
     }
 
     public function test_deploy_sh_does_not_dump_env_or_secret_variables(): void

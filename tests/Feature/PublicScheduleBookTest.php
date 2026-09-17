@@ -141,6 +141,46 @@ class PublicScheduleBookTest extends TestCase
         $this->assertDatabaseCount('leads', 1);
     }
 
+    /**
+     * H4818 (R2609-01): placement_rung is opt-in and additive — omitting it
+     * (every test above) must keep behaving exactly as before.
+     */
+    public function test_placement_rung_is_persisted_on_the_deal_when_f2_flag_on(): void
+    {
+        config([
+            'features.crm_trial_widget_public' => true,
+            'features.crm_trial_booking' => true,
+            'features.f2_placement_quiz' => true,
+        ]);
+        $made = $this->makeTrialSession();
+
+        $this->postJson(self::URL, [
+            'book_token' => $this->tokenFor($made['schedule']),
+            'email' => 'guest@example.test',
+            'placement_rung' => 'B2',
+        ])->assertOk()->assertExactJson(['ok' => true]);
+
+        $this->assertSame('B2', Deal::query()->sole()->placement_rung);
+    }
+
+    public function test_placement_rung_is_rejected_when_f2_flag_off(): void
+    {
+        config([
+            'features.crm_trial_widget_public' => true,
+            'features.crm_trial_booking' => true,
+            'features.f2_placement_quiz' => false,
+        ]);
+        $made = $this->makeTrialSession();
+
+        $this->postJson(self::URL, [
+            'book_token' => $this->tokenFor($made['schedule']),
+            'email' => 'guest@example.test',
+            'placement_rung' => 'B2',
+        ])->assertStatus(422)->assertJsonValidationErrors('placement_rung');
+
+        $this->assertSame(0, Deal::query()->count());
+    }
+
     public function test_throttle_engages_after_five_requests(): void
     {
         config([

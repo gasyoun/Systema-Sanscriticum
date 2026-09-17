@@ -505,4 +505,16 @@ class ShopController extends Controller
 
         return view('shop.preview', compact('course', 'lesson'));
     }
+
+    public function testimonialsLibrary()
+    {
+        // Библиотека всех видимых отзывов — страница /otzyvy.
+        $testimonials = Testimonial::query()
+            ->where('is_visible', true)
+            ->orderBy('id')
+            ->get();
+
+        return view('shop.testimonials-library', ['testimonials' => $testimonials]);
+    }
+
 }

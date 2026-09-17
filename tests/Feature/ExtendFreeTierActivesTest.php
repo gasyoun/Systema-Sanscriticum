@@ -27,7 +27,7 @@ class ExtendFreeTierActivesTest extends TestCase
         ]);
     }
 
-    private function holder(?string $viewAt = null): int
+    private function holder(?string $viewAt = null, ?string $lapseAt = null): int
     {
         $userId = User::factory()->create()->id;
 
@@ -40,7 +40,7 @@ class ExtendFreeTierActivesTest extends TestCase
             'course_id' => $course->id,
             'reason' => 'free_tier_h2566',
             'granted_at' => now()->subDays(6),
-            'expires_at' => '2026-09-15 16:50:00',
+            'expires_at' => $lapseAt ?? now()->addDays(2)->format('Y-m-d 16:50:00'),
         ]);
 
         if ($viewAt !== null) {
@@ -69,7 +69,7 @@ class ExtendFreeTierActivesTest extends TestCase
         ])->assertSuccessful();
 
         $this->assertSame(
-            '2026-09-15 16:50:00',
+            now()->addDays(2)->format('Y-m-d 16:50:00'),
             (string) DB::table('lesson_access_grants')->value('expires_at'),
             'dry-run must not touch grants',
         );
@@ -83,7 +83,7 @@ class ExtendFreeTierActivesTest extends TestCase
             '--until' => '2026-10-15',
         ])->assertSuccessful();
 
-        $this->assertSame('2026-09-15 16:50:00', (string) DB::table('lesson_access_grants')->value('expires_at'));
+        $this->assertSame(now()->addDays(2)->format('Y-m-d 16:50:00'), (string) DB::table('lesson_access_grants')->value('expires_at'));
     }
 
     public function test_apply_requires_until_date(): void
@@ -95,7 +95,8 @@ class ExtendFreeTierActivesTest extends TestCase
 
     public function test_apply_extends_only_actives_to_until_date_and_rewrites_cohort_file(): void
     {
-        $passive = $this->holder();
+        $passiveLapseAt = now()->addDays(2)->format('Y-m-d 16:50:00');
+        $passive = $this->holder(lapseAt: $passiveLapseAt);
         $active = $this->holder(now()->subDays(3)->toDateTimeString());
 
         config(['membership.free_tier.cohort_file' => 'membership/test_cohort.txt']);
@@ -110,7 +111,7 @@ class ExtendFreeTierActivesTest extends TestCase
             (string) DB::table('lesson_access_grants')->where('user_id', $active)->value('expires_at'),
         );
         $this->assertSame(
-            '2026-09-15 16:50:00',
+            $passiveLapseAt,
             (string) DB::table('lesson_access_grants')->where('user_id', $passive)->value('expires_at'),
             'passive holder must lapse on schedule',
         );

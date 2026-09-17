@@ -40,7 +40,7 @@ class TelegramZapisiRosterTest extends TestCase
                 return true;
             }
 
-            public function open(?string $clientClass = null): object
+            public function open(?string $clientClass = null, ?string $sessionPath = null): object
             {
                 return $this->fake;
             }
