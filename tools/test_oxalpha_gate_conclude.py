@@ -105,17 +105,18 @@ def main() -> None:
                    "Gate human approval: @AuthorUser", "authoruser", False, HEAD)
         check("author self-approval line rejected -> fail", r["conclusion"] == "fail", str(r))
 
-    r = decide(match_json(True), verdict_file(td, passing_verdict()), "", None, False, HEAD)
-    check("ordinary executable + valid verdict -> pass", r["conclusion"] == "pass", str(r))
+        r = decide(match_json(True), verdict_file(td, passing_verdict()), "", None, False, HEAD)
+        check("ordinary executable + valid verdict -> pass", r["conclusion"] == "pass", str(r))
 
-    bad = match_json(True); bad["infra_failure"] = True
-    r = decide(bad, None, "", None, False, HEAD)
-    check("match infra failure -> fail (never benign skip)",
-          r["conclusion"] == "fail" and r["mode"] == "infrastructure", str(r))
+        bad = match_json(True); bad["infra_failure"] = True
+        r = decide(bad, None, "", None, False, HEAD)
+        check("match infra failure -> fail (never benign skip)",
+              r["conclusion"] == "fail" and r["mode"] == "infrastructure", str(r))
 
-    r = decide(match_json(True, sensitive=True), verdict_file(td, passing_verdict()), "", None, False, HEAD)
-    check("sensitive pass WITHOUT regression tests in diff -> fail (§3a)",
-          r["conclusion"] == "fail" and "§3(a)" in r["summary"], str(r))
+        r = decide(match_json(True, sensitive=True), verdict_file(td, passing_verdict()),
+                   "Gate human approval: @mg-reviewer", "authoruser", False, HEAD)
+        check("sensitive pass WITHOUT regression tests in diff -> fail (§3a)",
+              r["conclusion"] == "fail" and "§3(a)" in r["summary"], str(r))
 
         v = passing_verdict(); v["spec"]["verdict"] = "fail"
         v["spec"]["findings"] = [{"severity": "P1", "location": "app/Models/Payment.php:40",
