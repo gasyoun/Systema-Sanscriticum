@@ -99,6 +99,30 @@ class StoriesPublishDueTest extends TestCase
     }
 
     /** @test */
+    public function prohibited_post_is_held_as_draft_and_never_sent(): void
+    {
+        config(['features.telegram_story_publisher' => true]);
+
+        $post = StoryPost::query()->create([
+            'kind' => StoryPost::KIND_TEXT,
+            'payload' => 'Напишите мне на ivan@example.com — расскажу про гуру',
+            'source' => StoryPost::SOURCE_QUEUE,
+            'source_key' => '2026-09-16-BAD.md',
+            'status' => StoryPost::STATUS_APPROVED,
+            'publish_at' => now()->subHour(),
+        ]);
+
+        $this->artisan('stories:publish-due')->assertSuccessful();
+
+        self::assertCount(1, self::$sent, 'getChat probe only — no sendMessage for a held post');
+
+        $fresh = $post->fresh();
+        $this->assertSame(StoryPost::STATUS_DRAFT, $fresh->status);
+        $this->assertNull($fresh->posted_at);
+        $this->assertStringContainsString('prohibition-hold §2.8: crm_personal_data', (string) $fresh->journal);
+    }
+
+    /** @test */
     public function probe_failure_refuses_any_send(): void
     {
         config(['features.telegram_story_publisher' => true]);

@@ -53,6 +53,17 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('send-login-invites');
 
+        // H5022 (MG 16-09-2026): через 48 ч после успешной оплаты без входа в
+        // кабинет — ОДНО повторное приглашение (Telegram → email) с magic-ссылкой.
+        // Гейт features.reinvite_48h (REINVITE_48H, по умолчанию ON) и дедуп
+        // (ActivityEvent reinvite_48h_sent) — внутри команды; окно свежих оплат
+        // 30 дней, батч 50/день — старых never-login добирает еженедельная капля выше.
+        $schedule->command('students:reinvite-48h --send --limit=50')
+            ->dailyAt('11:00') // 11:00 МСК, после понедельничной волны приглашений
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('reinvite-48h-paid-never-login');
+
         // H4392 (MG 08-09-2026): «Кто на чём закончил» — еженедельный пост в чат
         // «Институт» (TELEGRAM_INSTITUTE_CHAT_ID; флаг WEEKLY_FINISH_REPORT_ENABLED).
         // Понедельник 10:30 МСК, после приглашений; команда сама гейтится флагом,
@@ -148,6 +159,16 @@ trait SchedulesStudentsAndContent
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('publish-due-story-posts');
+
+        // Понедельничный дайджест автопилотов (H5020, MG Q10/Q19): один
+        // Markdown-файл в неделю в storage/app/marketing/ — что опубликовали
+        // оба автопилота, что удержал чек-лист §2.8, состояние флагов. Читается
+        // в понедельничном окне MG; только чтение таблиц + запись одного файла.
+        $schedule->command('content:autopilot-digest')
+            ->weeklyOn(1, '07:00') // понедельник 07:00 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('content-autopilot-monday-digest');
 
         // Персона @rusamskrtam: user-сториз через MadelineProto (H3964, Phase 2).
         // Тик рядом со stories:publish-due. Прод-инертен, пока
