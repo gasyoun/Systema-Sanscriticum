@@ -56,7 +56,7 @@
                                     ? route('shop.course.show', $item->course->slug)
                                     : ($item->course_title ? '/online/poisk/'.App\Support\ShopCatalogUrl::encodeWords($item->course_title) : null);
                             @endphp
-                            <div class="flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 p-5 transition-all"
+                            <div id="wl-{{ $item->slug }}" class="flex flex-col rounded-2xl bg-[#111622] border border-[#1F2636] hover:border-brand/50 p-5 transition-all scroll-mt-24"
                                  data-waitlist-row="{{ $item->slug }}">
                                 <div class="flex items-start justify-between gap-3">
                                     <div>
