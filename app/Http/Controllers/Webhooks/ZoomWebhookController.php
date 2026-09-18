@@ -28,6 +28,15 @@ use Illuminate\Support\Facades\Log;
  * Подпись Zoom: `x-zm-signature: v0=<hmac_sha256("v0:{ts}:{body}", secret)>`.
  * Секрет обязателен: без него любое событие, включая URL-validation,
  * отвечает 503. HMAC с пустым ключом не вычисляется.
+ *
+ * H5082 (remediation confirmed H5046, zoom-url-validation-hmac-signing-oracle):
+ * подпись проверяется ДО любого ответа, включая `endpoint.url_validation`.
+ * Челлендж валидации Zoom подписывает тем же секретом и той же схемой v0 —
+ * санкционированный паттерн официального zoom/webhook-sample: verify →
+ * url_validation → echo plainToken/encryptedToken. Прежний порядок (челлендж
+ * отвечался без проверки подписи) превращал эндпоинт в неподлинный оракул
+ * подписей: plainToken выбирал атакующий, и строка вида `v0:{ts}:{body}`
+ * получала готовую корректную подпись для сфабрикованного события.
  */
 class ZoomWebhookController extends Controller
 {
@@ -42,16 +51,17 @@ class ZoomWebhookController extends Controller
             return response()->json(['message' => 'Webhook secret is not configured'], 503);
         }
 
-        // URL-валидация подписывается тем же секретом, но проверка подписи на ней
-        // не делается (Zoom шлёт её до того, как мы «доверены») — отвечаем челленджем.
-        if ($event === 'endpoint.url_validation') {
-            return $this->urlValidationResponse($request, $secret);
-        }
-
         if (! $this->signatureValid($request, $secret)) {
             Log::warning('Zoom webhook: неверная подпись', ['ip' => $request->ip(), 'event' => $event]);
 
             return response()->json(['message' => 'Invalid signature'], 403);
+        }
+
+        // URL-валидация приходит ТОЛЬКО подписанной Zoom'ом (тот же секрет,
+        // та же схема v0) — поэтому безопасно отвечать челленджем: HMAC
+        // отдаётся лишь на запрос, подпись над которым уже проверена.
+        if ($event === 'endpoint.url_validation') {
+            return $this->urlValidationResponse($request, $secret);
         }
 
         if ($event === 'meeting.participant_joined' || $event === 'meeting.participant_left') {
