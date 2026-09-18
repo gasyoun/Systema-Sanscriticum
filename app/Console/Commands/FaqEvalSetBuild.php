@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\SupportAnswerSuggestion;
 use App\Services\Support\Faq\Bm25FaqRetriever;
+use App\Services\Support\Faq\HybridRetriever;
 use App\Services\Support\SupportAnswerSuggester;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -109,10 +110,13 @@ class FaqEvalSetBuild extends Command
                 'date' => (string) $row['date'],
                 'category' => $category,
                 'question' => $text,
+                // Ключ называется bm25_candidates — значит и скор в нём BM25
+                // (H5065): на гибридном ретривере ['score'] дал бы RRF-числа
+                // под именем, которое обещает BM25.
                 'bm25_candidates' => array_map(static fn (array $h): array => [
                     'chunk_id' => $h['chunk_id'],
                     'title' => $h['title'],
-                    'score' => $h['score'],
+                    'score' => HybridRetriever::bm25Score($h),
                 ], $hits),
                 'expected_chunk_ids' => [],
             ];

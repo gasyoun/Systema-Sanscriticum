@@ -23,6 +23,7 @@ Lead-магнит / марафон drip  →  @samskrte_bot        (MarketingSet
 Запись на занятие           →  @zapisi_ORSbot       (MarketingSetting.zapisi_*)
 Служебные алерты LMS        →  TELEGRAM_BOT_*       (на проде: @testpodpiska12_bot)
 Саппорт / harvest чатов     →  userbot @rusamskrtam (TELEGRAM_SUPPORT_*, MTProto)
+Ответ ОТ ИМЕНИ аккаунта     →  TELEGRAM_BUSINESS_*  (Business-бот, Bot API, §2.5)
 «Написать в Telegram» (UX)  →  t.me/rusamskrtam     (человек/аккаунт, не LMS-бот)
 Grok в «Отделе заботы»      →  @grokusaurus_bot     (ПК Марциса, не VPS)
 Лендинги (отдельные)        →  landing_bots.*       (напр. @webinar_17june_bot)
@@ -128,7 +129,30 @@ roster/harvest peer (совместно с Track B), приветственна�
 
 Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (см. DEPLOY_QUEUE №41).
 
-### 2.5. Grok в «Отделе заботы» (`@grokusaurus_bot`) — не LMS
+### 2.5. Telegram Business — бот, отвечающий ОТ ИМЕНИ аккаунта (H5065)
+
+| | |
+|--|--|
+| **Env** | `TELEGRAM_BUSINESS_BOT_TOKEN`, `TELEGRAM_BUSINESS_WEBHOOK_SECRET`, `TELEGRAM_BUSINESS_BOT_ENABLED` |
+| **Config** | `services.telegram_business`, флаг `features.telegram_business_bot` |
+| **Маршрут** | `POST /api/webhooks/telegram-business` (middleware `verify.tg.business`) |
+| **Аккаунт в support-таблицах** | `TELEGRAM_BUSINESS_ACCOUNT_NAME` (по умолчанию `telegram-business`) |
+
+**Назначение:** бот подключён к аккаунту школы в **Настройки → Business →
+Чат-боты**, поэтому его `sendMessage` с `business_connection_id` уходит студенту
+**от имени аккаунта**, а не от бота — в шапке диалога студент видит «… управляет
+этим чатом». Принимает `business_connection` / `business_message` /
+`edited_business_message` / `deleted_business_messages`.
+
+Это **не** userbot (MTProto, §4) и **не** `@zapisi_ORSbot`: своя полоса, свой
+токен, свой аккаунт в support-таблицах, чтобы ответы Business не смешивались с
+личкой userbot-аккаунта в аналитике.
+
+Слой: [ARCHITECTURE_SYSTEMA_TELEGRAM_BUSINESS_LANE.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/ARCHITECTURE_SYSTEMA_TELEGRAM_BUSINESS_LANE.md) ·
+включение: [RUNBOOK_TELEGRAM_BUSINESS_ENABLE_2026-09-17.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/RUNBOOK_TELEGRAM_BUSINESS_ENABLE_2026-09-17.md).
+Диагностика: `php artisan telegram-business:status`.
+
+### 2.6. Grok в «Отделе заботы» (`@grokusaurus_bot`) — не LMS
 
 | | |
 |--|--|

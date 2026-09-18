@@ -27,6 +27,7 @@ use App\Http\Middleware\VerifyLectureClipCallbackWebhook;
 use App\Http\Middleware\VerifyMaxMagnetWebhook;
 use App\Http\Middleware\VerifyPartnerBotWebhook;
 use App\Http\Middleware\VerifyTelegramBotWebhook;
+use App\Http\Middleware\VerifyTelegramBusinessWebhook;
 use App\Http\Middleware\VerifyTelegramMagnetWebhook;
 use App\Http\Middleware\VerifyTelegramZapisiWebhook;
 use App\Http\Middleware\VerifyVkBotWebhook;
@@ -144,6 +145,8 @@ class Kernel extends HttpKernel
         'verify.partner.bot' => VerifyPartnerBotWebhook::class,
         // --- TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ---
         'verify.tg.zapisi' => VerifyTelegramZapisiWebhook::class,
+        // --- TELEGRAM BUSINESS (H5065): бот, управляющий чатом от имени аккаунта ---
+        'verify.tg.business' => VerifyTelegramBusinessWebhook::class,
         // --- ВХОДЯЩИЙ EMAIL (H3462): zabota@ → вебхук, секрет в пути ---
         'verify.inbound.email' => VerifyInboundEmailWebhook::class,
         // Канонический slug курса: alias в URL → 301 на courses.slug
