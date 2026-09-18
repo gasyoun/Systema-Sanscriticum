@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Actions\RemindPaymentInChatAction;
+use App\Filament\Actions\SendPollToChatAction;
 use App\Filament\Concerns\AdminOnly;
 use App\Filament\Resources\GroupResource\Pages;
 use App\Models\Group;
@@ -290,6 +291,9 @@ class GroupResource extends Resource
 
                 // Оплата блока — ручное напоминание в чат группы («до» = ближайшее занятие от сегодня).
                 RemindPaymentInChatAction::make(fn (Group $g) => $g, fn () => now()),
+
+                // Произвольный опрос @zapisi_ORSbot в чат группы; результаты — «Записи (бот)» → «Опросы».
+                SendPollToChatAction::tableAction(),
 
                 // Грант «проверяющий ↔ группа» (H1729): кто, кроме преподавателя
                 // курса, видит и проверяет домашки этой группы. Раздаёт только

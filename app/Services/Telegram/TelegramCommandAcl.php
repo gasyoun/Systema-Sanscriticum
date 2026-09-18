@@ -31,15 +31,7 @@ final class TelegramCommandAcl
      */
     public function resolve(int $telegramUserId): ?array
     {
-        $user = User::query()
-            ->where('telegram_id', $telegramUserId)
-            ->first()
-            ?? User::query()
-                ->whereHas('socialAccounts', function ($query) use ($telegramUserId) {
-                    $query->where('provider', SocialAccount::PROVIDER_TELEGRAM)
-                        ->where('provider_id', (string) $telegramUserId);
-                })
-                ->first();
+        $user = self::findUser($telegramUserId);
 
         if ($user === null) {
             Log::info('TelegramCommandAcl: sender is not a panel user, ignored', [
@@ -54,6 +46,24 @@ final class TelegramCommandAcl
             'role' => (string) $user->role,
             'teacher' => $user->teacher_id !== null ? Teacher::find($user->teacher_id) : null,
         ];
+    }
+
+    /**
+     * Пользователь кабинета по Telegram user id (любая роль, без логов):
+     * users.telegram_id, затем social_accounts (provider=telegram). Нужен и
+     * там, где автор — студент (голоса в опросах бота), а не панельный staff.
+     */
+    public static function findUser(int $telegramUserId): ?User
+    {
+        return User::query()
+            ->where('telegram_id', $telegramUserId)
+            ->first()
+            ?? User::query()
+                ->whereHas('socialAccounts', function ($query) use ($telegramUserId) {
+                    $query->where('provider', SocialAccount::PROVIDER_TELEGRAM)
+                        ->where('provider_id', (string) $telegramUserId);
+                })
+                ->first();
     }
 
     /**
