@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Filament\Resources\CourseInterestRequestResource\Pages;
 
 use App\Filament\Resources\CourseInterestRequestResource;
-use Filament\Resources\Pages\EditRecord;
 use Filament\Actions\DeleteAction;
+use Filament\Resources\Pages\EditRecord;
 
 class EditCourseInterestRequest extends EditRecord
 {
