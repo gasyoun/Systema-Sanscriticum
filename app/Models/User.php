@@ -780,7 +780,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function sendVkMessage($text, $attachment = null)
     {
         if (empty($this->vk_id)) {
-            Log::info("Пропуск ВК: У пользователя {$this->email} не заполнен vk_id в базе.");
+            Log::info("Пропуск ВК: У пользователя id={$this->id} не заполнен vk_id в базе.");
 
             return false;
         }
@@ -827,7 +827,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function sendSmsMessage(string $text): bool
     {
         if (empty($this->phone)) {
-            Log::info("Пропуск SMS: У пользователя {$this->email} не заполнен phone в базе.");
+            Log::info("Пропуск SMS: У пользователя id={$this->id} не заполнен phone в базе.");
 
             return false;
         }
