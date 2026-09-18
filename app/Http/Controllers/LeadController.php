@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\LeadNotifier;
 use App\Services\Leads\LeadFlashBuilder;
 use App\Services\Messaging\SocialChannelParser;
+use App\Support\FormulaGuard;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -281,7 +282,9 @@ class LeadController extends Controller
                     $lead->referrer ?? '',
                     $lead->user_agent ?? '',
                 ];
-                fputcsv($file, $row, ';');
+                // H5086: гостевые строки (utm_*/name/contact/…) нейтрализуем от
+                // spreadsheet-формул (=,+,-,@) — файл открывают в Excel.
+                fputcsv($file, FormulaGuard::row($row), ';');
             }
             fclose($file);
         };
