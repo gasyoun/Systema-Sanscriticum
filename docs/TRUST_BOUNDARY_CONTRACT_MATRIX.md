@@ -21,7 +21,7 @@ New surfaces: run the [Maintainer checklist](#maintainer-checklist-for-a-new-sur
 
 ## Boundary A — guest-controlled strings → spreadsheet export cells
 
-Invariant (shared): **no export cell may serialize as a formula-shaped value** (`=`, `+`, `@`, tab, CR first char; `-` followed by a non-digit). Enforced by `App\Support\FormulaGuard::row()`/`::cell()` at every writer.
+Invariant (shared): **no export cell may serialize as a formula-shaped value** (`=`, `+`, `@`, tab, CR first char; `-` unless the remainder after it is fully numeric). Enforced by `App\Support\FormulaGuard::row()`/`::cell()` at every writer.
 
 | Surface (writer) | Source | Sink | Authority | Negative regression | Status |
 |---|---|---|---|---|---|

@@ -50,8 +50,9 @@ trait AssertsTrustBoundaries
      * Excel/LibreOffice. Only FULLY NUMERIC negatives ("-12.5", "-42",
      * "-1.2e3") are safe — Excel parses those as numbers; anything else
      * starting with "-" ("-cmd|...", "-1+HYPERLINK(...)") is unary-minus
-     * formula injection. Matches FormulaGuard, which prefixes every
-     * string cell with a leading "-" and passes only real numbers through.
+     * formula injection. Matches FormulaGuard, which neutralizes every
+     * dangerous-shaped string cell with a leading apostrophe (any leading
+     * "-" string counts as dangerous) and passes real numbers through.
      */
     public function trustBoundaryFormulaShapedCell(?string $cell): bool
     {
