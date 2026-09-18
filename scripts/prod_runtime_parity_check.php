@@ -2,9 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Jobs\TrackLessonViewJob;
 use App\Services\Anons\PublicationManifest;
 use App\Services\Support\MicShadowClassifier;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use MessageClassifier\Loader as MicLoader;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
@@ -34,6 +40,31 @@ use Symfony\Component\Yaml\Yaml;
  * Run locally: php scripts/prod_runtime_parity_check.php
  * (with a dev vendor/ tree the script prints profile=dev and skips the
  * YAML-absence assertions; CI sets PARITY_REQUIRE_NODEV=1 to fail on that).
+ *
+ * H5095 — expanded runtime-entry matrix. The gate now also exercises one
+ * representative seam per runtime entry surface that can load classes AFTER
+ * the initial boot, selected from production code (all no-credentials,
+ * no-network, deterministic):
+ *
+ *   Surface           | Selected seam                                | Rationale
+ *   ------------------+----------------------------------------------+----------------------------------------------------
+ *   HTTP route        | GET /sanskritorium                           | Public, flag-free page through routing → middleware →
+ *                     | (TransliterateController)                    | controller → Blade; exercises the @vite manifest
+ *                     |                                              | contract via a stub-manifest fixture (no node build).
+ *   Queue worker      | TrackLessonViewJob on a temp-SQLite          | Real dispatch → payload serialization → worker pop →
+ *                     | database queue + one queue:work pass         | container resolution → attempted handle(). handle()
+ *                     |                                              | fails on the fixture DB BY DESIGN; the gate asserts
+ *                     |                                              | the failure class is SQLSTATE (fixture), never
+ *                     |                                              | "Class ... not found" (dev-only drift).
+ *   Console/scheduler | artisan anons:validate + schedule:list       | Container-injected fail-closed validator runs over
+ *                     |                                              | the section-4 JSON manifest; schedule:list resolves
+ *                     |                                              | every scheduled command off the console kernel.
+ *
+ * Explicit exclusions (cannot boot deterministically without production
+ * credentials/network, or belong to other gates): telegram/zoom/madelineproto
+ * and openrouter commands and jobs, geo/ollama/n8n HTTP jobs, money/checkout
+ * HTTP routes and DB-backed promo/article pages (migrated-DB feature tests),
+ * backfill/audit commands shaped for a migrated production-like DB.
  */
 
 require __DIR__.'/../vendor/autoload.php';
@@ -255,7 +286,192 @@ try {
 }
 
 // ---------------------------------------------------------------------------
-// 6. Leave the tree clean: drop the cached config (CI container is ephemeral,
+// 5. Fixture DB — production boots against a MIGRATED database, and the
+//    console/queue seams below genuinely read it (DB-backed settings load on
+//    console boot; the queue job runs real queries inside handle()).
+//    Recreate a fresh, disposable sqlite fixture at the cached-config path —
+//    no credentials, no network (H5095).
+// ---------------------------------------------------------------------------
+try {
+    $dbConfig = config('database.connections.'.config('database.default')) ?? [];
+    if (($dbConfig['driver'] ?? null) !== 'sqlite') {
+        $fail('fixture-db', 'the parity fixture expects the sqlite driver (the CI job seds DB_CONNECTION=sqlite), got '.($dbConfig['driver'] ?? 'null').'.');
+    } else {
+        $fixturePath = (string) $dbConfig['database'];
+        if (is_file($fixturePath)) {
+            @unlink($fixturePath);
+        }
+        if (! @touch($fixturePath)) {
+            $fail('fixture-db', "cannot create the disposable sqlite fixture at [{$fixturePath}].");
+        } else {
+            $migrateExit = Artisan::call('migrate', ['--force' => true]);
+            $migrateOut = trim(Artisan::output());
+            if ($migrateExit !== 0) {
+                $fail('fixture-db', 'php artisan migrate failed on the disposable sqlite fixture (exit '.$migrateExit.'): '.implode(' | ', array_slice(explode("\n", $migrateOut), -3)));
+            } else {
+                $pass('fixture-db', 'fresh migrated sqlite fixture ready at '.$fixturePath.' (console + queue seams run against real schema)');
+            }
+        }
+    }
+} catch (Throwable $fixtureError) {
+    $msg = $fixtureError->getMessage();
+    if (preg_match('/Class\s+"?([\w\\\\]+)"?\s+not found/i', $msg, $fm)) {
+        $fail('fixture-db', "fixture migration hit missing runtime class [{$fm[1]}] — a migration or its dependency is require-dev-only (locate: composer why-not <package>).");
+    } else {
+        $fail('fixture-db', 'fixture DB preparation failed under no-dev: '.$msg);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 6. Console seam — run REAL artisan commands through the console kernel
+//    (H5095): anons:validate re-runs the container-injected fail-closed
+//    validator over the section-4 JSON manifest, and schedule:list resolves
+//    every scheduled command off the console kernel.
+// ---------------------------------------------------------------------------
+try {
+    $consoleExit = Artisan::call('anons:validate', ['manifest' => $manifestJson]);
+    $consoleOut = Artisan::output();
+    if ($consoleExit === 0 && str_contains($consoleOut, 'Manifest OK')) {
+        $pass('console-anons-validate', 'artisan anons:validate ran the container-injected fail-closed validator over the JSON manifest (exit 0)');
+    } else {
+        $fail('console-anons-validate', "artisan anons:validate did not pass under no-dev (exit {$consoleExit}): ".implode(' | ', array_slice(explode("\n", trim($consoleOut)), -3)));
+    }
+} catch (Throwable $consoleError) {
+    $msg = $consoleError->getMessage();
+    if (preg_match('/Class\s+"?([\w\\\\]+)"?\s+not found/i', $msg, $m)) {
+        $fail('console-anons-validate', "artisan command hit missing runtime class [{$m[1]}] at runtime — the class is require-dev-only (locate: composer why-not <package>) or the runtime usage must go. The no-dev production closure must run this console seam.");
+    } else {
+        $fail('console-anons-validate', "console seam failed under no-dev: {$msg}");
+    }
+}
+
+try {
+    $scheduleExit = Artisan::call('schedule:list');
+    $scheduleOut = trim(Artisan::output());
+    if ($scheduleExit === 0) {
+        $scheduleEntries = count(array_filter(explode("\n", $scheduleOut)));
+        $pass('console-schedule-list', "schedule:list resolved the console kernel schedule under no-dev ({$scheduleEntries} scheduled entries)");
+    } else {
+        $fail('console-schedule-list', "artisan schedule:list failed (exit {$scheduleExit}): ".implode(' | ', array_slice(explode("\n", $scheduleOut), -3)));
+    }
+} catch (Throwable $scheduleError) {
+    $fail('console-schedule-list', 'scheduler seam failed under no-dev: '.$scheduleError->getMessage());
+}
+
+// ---------------------------------------------------------------------------
+// 7. HTTP seam — route a real public GET (/sanskritorium) through the HTTP
+//    kernel: routing → middleware → controller → Blade view chain, on the
+//    cached config (H5095). Fixture: a stub Vite manifest (the parity job
+//    never runs a node build, but the blade chain renders @vite entries);
+//    an existing manifest is preserved byte-for-byte and restored after.
+// ---------------------------------------------------------------------------
+$viteManifest = public_path('build/manifest.json');
+$viteBackup = is_file($viteManifest) ? (string) file_get_contents($viteManifest) : null;
+if ($viteBackup === null) {
+    @mkdir(dirname($viteManifest), 0777, true);
+    file_put_contents($viteManifest, (string) json_encode([
+        'resources/css/app.css' => ['file' => 'assets/app.css', 'src' => 'resources/css/app.css', 'isEntry' => true],
+        'resources/js/app.js' => ['file' => 'assets/app.js', 'src' => 'resources/js/app.js', 'isEntry' => true],
+        'resources/js/transliterate.js' => ['file' => 'assets/transliterate.js', 'src' => 'resources/js/transliterate.js', 'isEntry' => true],
+    ]));
+}
+try {
+    $httpKernel = $app->make(HttpKernel::class);
+    $response = $httpKernel->handle(Request::create('/sanskritorium', 'GET'));
+    $status = $response->getStatusCode();
+    if ($status !== 200) {
+        $fail('http-sanskritorium', "GET /sanskritorium returned HTTP {$status} under the no-dev profile — the public page seam must render (200) without dev packages.");
+    } else {
+        $pass('http-sanskritorium', 'GET /sanskritorium rendered through routing → middleware → controller → Blade (HTTP 200) under no-dev');
+    }
+} catch (Throwable $httpError) {
+    $msg = $httpError->getMessage();
+    if (preg_match('/Class\s+"?([\w\\\\]+)"?\s+not found/i', $msg, $m)) {
+        $fail('http-sanskritorium', "HTTP seam hit missing runtime class [{$m[1]}] at runtime — the class is require-dev-only (locate: composer why-not <package>) or the runtime usage must go. The no-dev production closure must serve this public route.");
+    } elseif (str_contains($msg, 'ManifestNotFoundException') || str_contains($msg, 'manifest')) {
+        $fail('http-sanskritorium', "Vite manifest fixture problem at runtime: {$msg}");
+    } else {
+        $fail('http-sanskritorium', "HTTP seam failed under no-dev: {$msg}");
+    }
+} finally {
+    if ($viteBackup === null) {
+        @unlink($viteManifest);
+    } else {
+        file_put_contents($viteManifest, $viteBackup);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 8. Queue seam — dispatch a real queued job onto the migrated sqlite fixture
+//    queue and run the REAL queue worker once: pop → payload decode →
+//    container resolution → executed handle() (H5095). TrackLessonViewJob
+//    pins itself to the "tracking" queue in its constructor; on the empty
+//    fixture its handle() runs real user/lesson lookups that return no rows
+//    and completes silently — a deterministic full worker pass. If anything
+//    throws, the gate classifies it: fixture SQLSTATE is tolerated, a
+//    "Class ... not found" (dev-only drift) is a hard fail.
+// ---------------------------------------------------------------------------
+try {
+    config(['queue.default' => 'database']);
+
+    $queueStarted = [];
+    $queueCompleted = [];
+    $queueExceptions = [];
+    // getName() returns the wrapper ("...CallQueuedHandler@call"); the real
+    // job class lives in the payload's data.commandName / displayName.
+    $queueJobTag = static function ($event): string {
+        $payload = $event->job->payload();
+
+        return (string) ($payload['data']['commandName'] ?? $payload['displayName'] ?? $payload['job'] ?? '');
+    };
+    Queue::before(static function ($event) use (&$queueStarted, $queueJobTag): void {
+        $queueStarted[] = $queueJobTag($event);
+    });
+    Queue::after(static function ($event) use (&$queueCompleted, $queueJobTag): void {
+        $queueCompleted[] = $queueJobTag($event);
+    });
+    Queue::exceptionOccurred(static function ($event) use (&$queueExceptions): void {
+        $queueExceptions[] = $event->exception->getMessage();
+    });
+
+    dispatch(new TrackLessonViewJob(999999, 999999, 999999));
+    $pendingRow = DB::table('jobs')->first();
+    if ($pendingRow === null) {
+        $fail('queue-dispatch', 'dispatching TrackLessonViewJob left no pending row in the jobs table — the bus/queue payload serialization seam is broken.');
+    } else {
+        $pass('queue-dispatch', 'TrackLessonViewJob serialized and pushed onto the database queue "'.$pendingRow->queue.'" (payload '.strlen((string) $pendingRow->payload).' bytes)');
+    }
+
+    Artisan::call('queue:work', [
+        '--once' => true,
+        '--stop-when-empty' => true,
+        '--queue' => (string) ($pendingRow->queue ?? 'tracking'),
+        '--no-interaction' => true,
+    ]);
+
+    $remaining = DB::table('jobs')->count();
+    if (! str_contains(implode('|', $queueStarted), 'TrackLessonViewJob')) {
+        $fail('queue-worker', "the queue worker never started TrackLessonViewJob — the pop/payload-decode/resolution path did not run (remaining rows={$remaining}).");
+    } elseif ($queueExceptions !== []) {
+        $joined = implode(' | ', $queueExceptions);
+        if (preg_match('/Class\s+"?([\w\\\\]+)"?\s+not found/i', $joined, $qm)) {
+            $fail('queue-fixture', "queue seam hit missing runtime class [{$qm[1]}] at job runtime — the class is require-dev-only (locate: composer why-not <package>) or the runtime usage must go.");
+        } elseif (! preg_match('/SQLSTATE|no such table|no such column/i', $joined)) {
+            $fail('queue-fixture', 'queue seam failed with an unexpected error class (expected a clean pass or a fixture SQLSTATE error): '.$joined);
+        } else {
+            $pass('queue-fixture', 'worker attempted handle() on the fixture DB and failed with a fixture SQLSTATE error — failure class is fixture, never dev-only drift');
+        }
+    } elseif (! str_contains(implode('|', $queueCompleted), 'TrackLessonViewJob')) {
+        $fail('queue-worker', 'worker started TrackLessonViewJob but it never completed and never threw — the probe is not meaningful.');
+    } else {
+        $pass('queue-worker', "queue worker popped → decoded → container-resolved → executed handle() to completion on the migrated fixture (real user/lesson lookups returned no rows; remaining rows={$remaining})");
+    }
+} catch (Throwable $queueError) {
+    $fail('queue-worker', 'queue seam failed under no-dev: '.$queueError->getMessage());
+}
+
+// ---------------------------------------------------------------------------
+// 9. Leave the tree clean: drop the cached config (CI container is ephemeral,
 //    local dev suites must keep reading real env).
 // ---------------------------------------------------------------------------
 exec(sprintf('%s %s config:clear 2>&1', escapeshellarg($php), escapeshellarg($artisan)), $clearOut, $clearCode);

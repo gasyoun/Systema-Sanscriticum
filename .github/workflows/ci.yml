@@ -132,7 +132,10 @@ jobs:
           sed -i 's/DB_DATABASE=laravel/DB_DATABASE=\/tmp\/parity.sqlite/' .env
           php artisan key:generate
 
-      - name: No-dev runtime parity check (boot + config cache + MIC/anons JSON loaders)
+      - name: No-dev runtime parity check (boot + config cache + MIC/anons loaders + HTTP/queue/console seams)
+        # H5095 — the gate additionally routes a real HTTP GET through the
+        # kernel, pushes a real job through the queue worker, and runs console
+        # + scheduler commands, all against a fresh migrated sqlite fixture.
         run: php scripts/prod_runtime_parity_check.php
 
   frontend-build:
