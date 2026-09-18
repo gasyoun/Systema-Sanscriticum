@@ -16,7 +16,7 @@ class OxalphaGateFixtureSchemaTest extends TestCase
 {
     private function specimen(): array
     {
-        $path = base_path('tests/Fixtures/OxalphaReviewGate/verdict-example.json');
+        $path = base_path('tests/fixtures/OxalphaReviewGate/verdict-example.json');
         $this->assertFileExists($path);
 
         return json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
@@ -30,7 +30,7 @@ class OxalphaGateFixtureSchemaTest extends TestCase
     public function test_specimen_reviewer_marks_independence(): void
     {
         $reviewer = $this->specimen()['reviewer'];
-        $this->assertArrayHasKey('name', $reviewer);
+        $this->assertNotEmpty($reviewer['name']);
         $this->assertTrue($reviewer['independent']);
     }
 
