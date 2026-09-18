@@ -38,12 +38,20 @@ final class ProbeMissingnessContractTest extends TestCase
     {
         $seeded = SeededViolationProbes::silentSkip(configPresent: false);
 
+        // Red-receipt pinning (gate review round 1): a flag, never a sentinel
+        // self::fail() inside the try — an AssertionFailedError thrown there
+        // would be swallowed by this same catch and the receipt would pass
+        // green even if the contract assertion regressed to vacuous.
+        $rejected = false;
         try {
             $this->assertMissingConfigIsLoud($seeded);
-            self::fail('seeded silent-skip must be REJECTED by the contract (red receipt)');
         } catch (AssertionFailedError) {
-            self::assertTrue(true); // red receipt: contract detected the violation
+            $rejected = true; // red receipt: contract detected the violation
         }
+        self::assertTrue(
+            $rejected,
+            'contract assertion became vacuous: seeded silent-skip was NOT rejected (red receipt unattainable)',
+        );
 
         // Compliant counterpart passes the same assertion (green receipt).
         $this->assertMissingConfigIsLoud(SeededViolationProbes::silentSkipCompliant(configPresent: false));
@@ -53,12 +61,16 @@ final class ProbeMissingnessContractTest extends TestCase
     {
         $seeded = SeededViolationProbes::zeroCoercion(observed: null);
 
+        $rejected = false;
         try {
             $this->assertNoAbsentToZeroCoercion($seeded);
-            self::fail('seeded absent-to-zero coercion must be REJECTED by the contract (red receipt)');
         } catch (AssertionFailedError) {
-            self::assertTrue(true); // red receipt
+            $rejected = true; // red receipt
         }
+        self::assertTrue(
+            $rejected,
+            'contract assertion became vacuous: seeded absent-to-zero coercion was NOT rejected (red receipt unattainable)',
+        );
 
         $this->assertNoAbsentToZeroCoercion(SeededViolationProbes::zeroCoercionCompliant(observed: null));
     }
@@ -67,6 +79,7 @@ final class ProbeMissingnessContractTest extends TestCase
     {
         $seededState = [];
 
+        $rejected = false;
         try {
             $this->assertStickyStateClearsOnGreen(
                 failRun: function () use (&$seededState): void {
@@ -79,10 +92,13 @@ final class ProbeMissingnessContractTest extends TestCase
                     return $seededState['failed'] ?? false;
                 },
             );
-            self::fail('seeded sticky-never-clears must be REJECTED by the contract (red receipt)');
         } catch (AssertionFailedError) {
-            self::assertTrue(true); // red receipt
+            $rejected = true; // red receipt
         }
+        self::assertTrue(
+            $rejected,
+            'contract assertion became vacuous: seeded sticky-never-clears was NOT rejected (red receipt unattainable)',
+        );
 
         // Compliant counterpart: green run clears the sticky state.
         $compliantState = [];
