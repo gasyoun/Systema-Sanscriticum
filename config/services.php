@@ -575,6 +575,12 @@ return [
         // email идут по-старому через pending → ручную сверку.
         // false → откат к ручной сверке для всех, без деплоя логики.
         'trust_existing_students' => (bool) env('PAYPAL_TRUST_EXISTING_STUDENTS', true),
+        // H5083 (ремедиация H5046): auto-trust требует не только сессии, но и
+        // «дозагрузочного» аккаунта — возраст ≥ N часов ИЛИ хотя бы один
+        // PAID-платеж (см. App\Services\Payments\ClaimTrustPolicy). Иначе
+        // сессия, сама mintившая аккаунт первым POST'ом, доверяла бы себе на
+        // втором POST'е (auto-paid без сверки).
+        'trust_min_account_age_hours' => (int) env('PAYPAL_TRUST_MIN_ACCOUNT_AGE_HOURS', 24),
         // MG 23-08-2026: в PayPal платят только EUR (предпочтительно) и USD,
         // и дороже рублевых — рублевую цену тарифа на форме НЕ показываем.
         // Валютная цена за БЛОК по course_id; показывается только блочным
@@ -612,6 +618,9 @@ return [
         // Заявка вошедшего существующего ученика сразу paid (зеркало рулинга
         // 22-08-2026 из PayPal-канала); гость с новым email → ручная сверка.
         'trust_existing_students' => (bool) env('BANK_TRUST_EXISTING_STUDENTS', true),
+        // H5083: зеркало PayPal-канала — auto-trust требует дозагрузочный
+        // аккаунт (возраст ≥ N часов ИЛИ один PAID-платеж). ClaimTrustPolicy.
+        'trust_min_account_age_hours' => (int) env('BANK_TRUST_MIN_ACCOUNT_AGE_HOURS', 24),
         // Реквизиты для шага 1 формы (показываются ученику).
         'recipient_name' => env('BANK_RECIPIENT_NAME', ''),
         'iban' => env('BANK_RECIPIENT_IBAN', ''),
