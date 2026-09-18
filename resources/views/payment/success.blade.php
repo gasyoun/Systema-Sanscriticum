@@ -174,6 +174,15 @@
                 ym({{ config('analytics.metrika.shop_counter_id') }}, 'reachGoal', 'payment_success');
             }
         @endif
+        {{-- Метрика access_renewal_complete (MG 18-09-2026): self-service
+             платёж подтверждён = продление завершено (повторная оплата = LTV).
+             Truth — access.renewal.complete в activity_events
+             (PaymentTelemetryObserver); здесь только браузерный дубль. --}}
+        @if($confirmed && ($payment?->is_self_service ?? false))
+            if (typeof window.shopReachGoal === 'function') {
+                window.shopReachGoal('access_renewal_complete');
+            }
+        @endif
         @if(session('vk_id'))
             var _tmr = window._tmr || (window._tmr = []);
             _tmr.push({ type: 'reachGoal', id: "{{ session('vk_id') }}", goal: 'payment_success' });
