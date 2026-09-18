@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Sandbox;
 
-use App\Models\Lead;
 use App\Models\LandingPage;
+use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Models\MarketingSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -78,6 +78,21 @@ class H5085LeadDuplicateNoTokenTest extends TestCase
         $this->assertNull(session('duplicate_deep_link'), 'duplicate flash must not carry a deep link');
         $this->assertNull(session('duplicate_channel'), 'duplicate flash must not carry a channel');
         $this->assertNull(session('status_connect_links'), 'duplicate flash must not carry status connect links');
+
+        // H5094: дубль-ветка не должна переиспользовать флеш НОВОЙ заявки —
+        // magnet_deep_links это именно токеноносный канал выдачи (вероятный
+        // вектор регрессии при «объединении» двух веток флеша).
+        $this->assertNull(session('magnet_deep_links'), 'duplicate path must not reuse the new-lead magnet flash');
+
+        // Хранимое состояние: дубль-сабмит не создаёт вторую строку лида и
+        // не ротирует bearer-токен жертвы (ротация отняла бы у владельца
+        // доступ к магниту/статусам без его ведома).
+        $this->assertSame(1, Lead::query()->count(), 'duplicate submission must not create a second lead row');
+        $this->assertSame(
+            self::TOKEN,
+            $victim->fresh()->magnet_token,
+            'victim bearer token must not be rotated by a duplicate submission'
+        );
 
         // And the rendered thankyou page never hands the token over.
         $page = $this->get(route('thank.you'));
