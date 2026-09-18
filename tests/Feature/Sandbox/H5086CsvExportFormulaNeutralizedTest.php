@@ -56,7 +56,7 @@ class H5086CsvExportFormulaNeutralizedTest extends TestCase
         $cells = str_getcsv($dataLine, ';');
 
         // Neutralized values: leading apostrophe, payload preserved verbatim after it.
-        $this->assertContains("'".self::PAYLOAD, $cells, "equals-cell is apostrophe-prefixed");
+        $this->assertContains("'".self::PAYLOAD, $cells, 'equals-cell is apostrophe-prefixed');
         $this->assertContains("'+SUM(1+1)*cmd|/C calc!A0", $cells, "'+'-cell is apostrophe-prefixed");
         $this->assertContains("'-2+3+cmd|/C calc!A0", $cells, "'-'-cell is apostrophe-prefixed");
         $this->assertContains("'@SUM(A1:A9)", $cells, "'@'-cell is apostrophe-prefixed");
