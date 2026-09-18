@@ -12,6 +12,7 @@ use App\Models\Tariff;
 use App\Models\User;
 use App\Services\AttributionService;
 use App\Services\CuratorNotifier;
+use App\Services\Payments\ClaimTrustPolicy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -54,9 +55,16 @@ final class BankClaimController extends Controller
 
         // Ruling 22-08-2026 (зеркало из PayPal-канала): заявка СУЩЕСТВУЮЩЕГО
         // ученика сразу paid; гость с новым email — pending → ручная сверка.
+        // H5083 (ремедиация H5046 claim-trusted-autopaid-session-bootstrap):
+        // сессия сама по себе — не доказательство (resolveUser() ниже mintит
+        // и логинит свежий аккаунт в той же сессии; второй POST становился
+        // auto-trusted). Требуем дозагрузочный аккаунт ИЛИ PAID-платеж —
+        // ClaimTrustPolicy (зеркало PayPal-канала).
         // Флаг читаем ДО resolveUser: он логинит только что созданного гостя.
-        $trusted = auth()->check()
-            && (bool) config('services.bank_claim.trust_existing_students', true);
+        $actor = auth()->user();
+        $trusted = $actor !== null
+            && (bool) config('services.bank_claim.trust_existing_students', true)
+            && app(ClaimTrustPolicy::class)->isPreexistingVerified($actor, 'bank_claim');
 
         $user = $this->resolveUser($request);
 

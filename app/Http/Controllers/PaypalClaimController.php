@@ -12,6 +12,7 @@ use App\Models\Tariff;
 use App\Models\User;
 use App\Services\AttributionService;
 use App\Services\CuratorNotifier;
+use App\Services\Payments\ClaimTrustPolicy;
 use App\Services\Payments\PaypalForeignPriceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -89,10 +90,18 @@ final class PaypalClaimController extends Controller
         // сразу paid — доступ/финансы открываются немедленно штатным
         // Payment::booted(), сверка выборочная и пост-фактум. Гость с новым
         // email идет по-старому: pending → ручная сверка в Filament.
+        // H5083 (ремедиация H5046 claim-trusted-autopaid-session-bootstrap):
+        // сам факт сессии (auth()->check()) — НЕ доказательство «существующего»:
+        // resolveUser() ниже mintит и логинит свежий аккаунт в ТОЙ ЖЕ сессии,
+        // и второй POST тем же аккаунтом становился auto-trusted без сверки.
+        // Доверие требует дозагрузочного аккаунта (возраст ≥ окна) ИЛИ хотя бы
+        // одного PAID-платежа (проверенный денежный контур) — ClaimTrustPolicy.
         // Флаг читаем ДО resolveUser: он логинит только что созданного гостя,
         // и после него auth()->check() уже не отличит своего от нового.
-        $trusted = auth()->check()
-            && (bool) config('services.paypal.trust_existing_students', true);
+        $actor = auth()->user();
+        $trusted = $actor !== null
+            && (bool) config('services.paypal.trust_existing_students', true)
+            && app(ClaimTrustPolicy::class)->isPreexistingVerified($actor, 'paypal');
 
         // Резолв пользователя — вне транзакции, может бросить ValidationException
         // (гость указал email уже существующего аккаунта → отказ).

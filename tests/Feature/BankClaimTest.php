@@ -41,6 +41,18 @@ class BankClaimTest extends TestCase
         return Tariff::factory()->for($course)->block(2)->create(['price' => 4800]);
     }
 
+    /**
+     * H5083: auto-trust требует «дозагрузочный» аккаунт — заводим с created_at
+     * в прошлом (окно bootstrap по умолчанию 24ч, см. ClaimTrustPolicy).
+     */
+    private function agedStudent(array $attributes = [], int $days = 30): User
+    {
+        $user = User::factory()->create($attributes);
+        $user->forceFill(['created_at' => now()->subDays($days)])->saveQuietly();
+
+        return $user;
+    }
+
     /** @test */
     public function disabled_feature_returns_404(): void
     {
@@ -100,7 +112,8 @@ class BankClaimTest extends TestCase
     {
         config(['services.bank_claim.trust_existing_students' => true]);
         $tariff = $this->blockTariff();
-        $student = User::factory()->create(['email' => 'student@example.test']);
+        // H5083: «существующий» = дозагрузочный аккаунт (не mint этой сессии).
+        $student = $this->agedStudent(['email' => 'student@example.test']);
 
         $response = $this->actingAs($student)->post(route('bank.claim.store', $tariff), [
             'foreign_amount' => '90',
@@ -126,6 +139,88 @@ class BankClaimTest extends TestCase
 
         Mail::assertQueued(BankClaimStudentAckMail::class, fn ($mail) => $mail->hasTo('student@example.test'));
         Mail::assertQueued(BankClaimReceivedMail::class);
+    }
+
+    /** @test */
+    public function self_minted_session_second_post_stays_pending(): void
+    {
+        // H5083 — зеркало PayPal-регрессии H5046: resolveUser() mintит аккаунт
+        // и логинит его в той же сессии; ВТОРОЙ POST той же сессии раньше
+        // проходил по auth()->check() как auto-trusted paid. Оба — pending.
+        config(['services.bank_claim.trust_existing_students' => true]);
+        $tariff = $this->blockTariff();
+
+        // POST #1 — гость с новым email: аккаунт создан и залогинен в сессии.
+        $this->post(route('bank.claim.store', $tariff), [
+            'name' => 'Self Minted',
+            'email' => 'self-minted-bank@example.test',
+            'foreign_amount' => '90',
+            'foreign_currency' => 'EUR',
+            'sender_name' => 'SELF MINTED IBAN LT00',
+            'paid_on' => now()->toDateString(),
+        ])->assertRedirect(route('bank.claim.show', $tariff));
+
+        // POST #2 — та же сессия, пользователь уже залогинен после #1.
+        $second = $this->post(route('bank.claim.store', $tariff), [
+            'foreign_amount' => '70',
+            'foreign_currency' => 'EUR',
+            'sender_name' => 'SELF MINTED IBAN LT00',
+            'paid_on' => now()->toDateString(),
+        ]);
+
+        $second->assertRedirect(route('bank.claim.show', $tariff));
+        $second->assertSessionHas('success', fn ($v) => str_contains((string) $v, 'Мы сверим'));
+
+        $this->assertSame(
+            2,
+            Payment::query()->where('provider', Payment::PROVIDER_BANK_SEPA)->count(),
+        );
+
+        Payment::query()->where('provider', Payment::PROVIDER_BANK_SEPA)
+            ->each(fn (Payment $payment) => $this->assertSame('pending', $payment->status));
+
+        $minted = User::query()->where('email', 'self-minted-bank@example.test')->firstOrFail();
+        $this->assertSame(
+            0,
+            $minted->courses()->count(),
+            'Self-minted сессия не открывает доступ ни на каком POST.',
+        );
+        $this->assertSame(
+            0,
+            Payment::query()->where('user_id', $minted->id)->whereNotNull('claim_meta->trusted_at')->count(),
+        );
+    }
+
+    /** @test */
+    public function fresh_account_with_prior_paid_payment_is_trusted(): void
+    {
+        // H5083: второй путь доверия — проверенный денежный контур: свежий
+        // аккаунт с PAID-платежом (не bank-claim, чтобы выборка ниже была
+        // однозначной) trusted.
+        config(['services.bank_claim.trust_existing_students' => true]);
+        $tariff = $this->blockTariff();
+        $student = User::factory()->create();
+        Payment::create([
+            'user_id' => $student->id,
+            'course_id' => $tariff->course_id,
+            'amount' => 4800,
+            'tariff' => 'block_1',
+            'status' => 'paid',
+            'provider' => Payment::PROVIDER_INVOICE,
+        ]);
+
+        $this->actingAs($student)->post(route('bank.claim.store', $tariff), [
+            'foreign_amount' => '90',
+            'foreign_currency' => 'EUR',
+            'sender_name' => 'STUDENT IBAN LT00',
+            'paid_on' => now()->toDateString(),
+        ]);
+
+        $payment = Payment::query()->where('provider', Payment::PROVIDER_BANK_SEPA)->latest()->firstOrFail();
+
+        $this->assertSame('paid', $payment->status);
+        $this->assertTrue($payment->isAutoTrustedBankClaim());
+        $this->assertNotNull($payment->claimMeta('trusted_at'));
     }
 
     /** @test */
