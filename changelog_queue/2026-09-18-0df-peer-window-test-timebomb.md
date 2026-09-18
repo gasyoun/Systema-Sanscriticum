@@ -1,0 +1,7 @@
+# 0DF: тесты peer-window Telegram-поддержки перестали быть тайм-бомбами (OxAlpha `opencode/glm-5.3-flash`, 18-09-2026)
+
+Red `PHP 8.3 — tests` на main с 06:55Z 18-09 (`TelegramSupportPeerWindowTest::test_chat_outside_window_and_mp_dialogs_is_polled_only_by_catch_up` — «Failed asserting that an array contains 55501», 5877/29365/1 на f71a4eaf/2bba4e14/c743cafc/e922ce46): оба мержа дня легли поверх красного и потребовали `--admin`. Root cause — тайм-бомба класса «фиксированная календарная дата против скользящего окна»: seed-дата `2026-08-19 10:00:00` ровно на границе `activeKnownChatPeers()` catch-up (`where('sent_at', '>=', now()->subDays(30))`) — когда реальный час 18-09 пересёк 10:00, чат 55501 выпал из 30-дневного окна, и catch-up перестал его опрашивать. Тот же класс сидел ещё в трёх тестах файла (`2026-09-05`/`2026-09-08`/`2026-09-09` внутри 14-дневного окна — краснели бы 19-09/22-09).
+
+Фикс: все seed-даты [TelegramSupportPeerWindowTest](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Support/TelegramSupportPeerWindowTest.php) теперь относительные (`now()->subDays(N)` через helper `seedAt()`), подоконные значения с запасом ≥5 дней (20 дней — вне окна 14, внутри catch-up 30; 3/1/70 дней — по смыслу каждого теста). Детерминированно в любой день года, без `setTestNow` и tz-интеракции. Локально: класс 6/6, каталог `tests/Feature/Support/` 463/463.
+
+_Гасунс_
