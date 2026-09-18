@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Srs;
 
+use App\Models\PranaTransaction;
 use App\Models\SrsCard;
 use App\Models\SrsDeck;
 use App\Models\SrsReviewLog;
@@ -170,9 +171,34 @@ class ReviewService
         // (deliberate, see config/prana.php 'srs_review'). Idempotent by
         // (user, 'srs_review', SrsReviewLog::class, $log->id) — a replay of
         // this exact log row (e.g. a retried request) never double-awards.
-        app(PranaService::class)->award($user, 'srs_review', $log);
+        // H5087 (remediation of H5046): дневной потолок КОЛИЧЕСТВА начислений
+        // srs_review — каждый новый лог-ряд платит, но батчи/реплеи не фермят
+        // прану бесконечно; состояние и журнал пишутся без ограничений.
+        if ($this->srsReviewAwardLeftToday($user) > 0) {
+            app(PranaService::class)->award($user, 'srs_review', $log);
+        }
 
         return $state;
+    }
+
+    /**
+     * H5087: сколько начислений srs_review пользователю ещё доступно сегодня
+     * (prana.srs_review_daily_cap, 0/отрицательное = потолок снят).
+     */
+    private function srsReviewAwardLeftToday(User $user): int
+    {
+        $cap = (int) config('prana.srs_review_daily_cap', 120);
+        if ($cap <= 0) {
+            return PHP_INT_MAX;
+        }
+
+        $awardedToday = PranaTransaction::query()
+            ->where('user_id', $user->id)
+            ->where('reason', 'srs_review')
+            ->where('created_at', '>=', now()->startOfDay())
+            ->count();
+
+        return max(0, $cap - $awardedToday);
     }
 
     private function toFsrsCard(SrsReviewState $state, DateTimeImmutable $now): FsrsCard

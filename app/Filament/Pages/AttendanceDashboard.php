@@ -62,6 +62,22 @@ class AttendanceDashboard extends Page
         return now()->subDays((int) config('attendance.default_window_days'));
     }
 
+    /**
+     * H5087 (remediation of H5046): teacher_id для скоупа — паттерн
+     * TeacherAnalytics::scopeTeacherId. Преподаватель видит только свои
+     * курсы/группы (посещаемость + ростер); админ-подобные — null (вся школа).
+     */
+    private function scopeTeacherId(): ?int
+    {
+        $user = auth()->user();
+        if ($user !== null && $user->isTeacher() && ! $user->isAdminLike()) {
+            // teacher_id NULL (нет строки Teacher) -> 0: пустой скоуп, НЕ вся школа.
+            return (int) ($user->teacher_id ?? 0);
+        }
+
+        return null;
+    }
+
     /** @return array{students: Collection, groups: Collection, courses: Collection, weekly: Collection, chronic: Collection} */
     public function report(): array
     {
@@ -69,6 +85,7 @@ class AttendanceDashboard extends Page
             $this->from(),
             now(),
             (int) config('attendance.chronic_absence_threshold'),
+            $this->scopeTeacherId(),
         );
     }
 
@@ -81,7 +98,9 @@ class AttendanceDashboard extends Page
      */
     public function canvasRoster(): array
     {
-        $report = WeeklyFinishReport::build();
+        // H5087: ростер «кто на чём» — персональные данные студентов;
+        // преподавателю — только свои курсы (scopeTeacherId-паттерн).
+        $report = WeeklyFinishReport::build($this->scopeTeacherId());
 
         $rows = [];
         foreach ($report as $row) {
@@ -252,6 +271,13 @@ class AttendanceDashboard extends Page
      */
     public function canvasMoney(): array
     {
+        // H5087 (remediation of H5046): блок денег — ТОЛЬКО админ-подобные
+        // (докблок H4443 «Админ-only поверхность» теперь enforcement, а не
+        // надежда); преподавателю возвращается пустая поверхность.
+        if (! auth()->user()?->isAdminLike()) {
+            return ['rows' => [], 'total' => 0.0];
+        }
+
         $courses = Course::query()
             ->where('is_active', true)->where('is_visible', true)
             ->whereHas('groups')

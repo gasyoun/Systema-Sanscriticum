@@ -28,6 +28,18 @@ class RouteServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
+        // H5087 (remediation of H5046): POST /livewire/update регистрируется
+        // вендором Livewire только с группой web — на уровне маршрута его не
+        // затроттлить. Анонимам — жёсткий IP-лимит (реплей публичных
+        // компонентов гонит SQL-веер на каждый хит); залогиненным — запас под
+        // Filament-UI (дебаунс поиска, таблицы). Применяет
+        // ThrottleLivewireUpdates (в web-группе, только путь livewire/update).
+        RateLimiter::for('livewire-update', function (Request $request) {
+            return $request->user()
+                ? Limit::perMinute(240)->by('lw-u:'.$request->user()->id)
+                : Limit::perMinute(30)->by('lw-ip:'.$request->ip());
+        });
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')
