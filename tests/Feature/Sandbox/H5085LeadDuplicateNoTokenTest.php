@@ -6,8 +6,8 @@ namespace Tests\Feature\Sandbox;
 
 use App\Models\LandingPage;
 use App\Models\Lead;
-use App\Models\MarathonEnrollment;
 use App\Models\MarketingSetting;
+use App\Models\MarathonEnrollment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
