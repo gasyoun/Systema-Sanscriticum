@@ -96,4 +96,25 @@ _Created: 18-09-2026 · Last updated: 18-09-2026_
 - Лист адъюдикации: <https://gasyoun.github.io/vote/sheets/systema_bots_map_h5135.html> (10 карт, ~5–7 мин).
 - Хендоф: [H5135](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5135-OxAlpha_Systema-Sanscriticum_bots-architecture-research-benchmark_18.09.26.md).
 
+## 9. Итог адъюдикации (MG, 18-09-2026 — decisions.json 10/10, 106 с)
+
+| Карта | Вердикт MG | Исполнение |
+|---|---|---|
+| V1 @samskrtamru_bot KEEP | ✅ approve | без изменений |
+| V2 @samskrte_bot KEEP+dedupe | ✅ approve | **исполнено 18-09**: `landing_bots` строка 7 деактивирована |
+| V3 @zapisi_ORSbot KEEP | ✅ approve | без изменений |
+| V4 @testpodpiska12_bot SPLIT+RENAME | ✅ approve | **ожидает BotFather-шага MG** (шаги ниже), затем ротация `TELEGRAM_BOT_*` на .92 |
+| V5 @rusamskrtam KEEP | ✅ approve | без изменений |
+| V6 @grokusaurus_bot KEEP | ✅ approve | без изменений |
+| V7 landing_bots AUDIT+KILL | ✅ approve | **исполнено 18-09**: пробы 18-09 — токены строк 1–6 отклонены Telegram (dead), row 7 живой, но задвоен → все 7 строк `is_active=0`; бэкап без токенов `/root/landing_bots_backup_pre_h5135_18-09.txt` (.92, chmod 600); живой лид-поток @samskrte_bot идёт через `MarketingSetting` + глобальный вебхук — не задет |
+| V8 Business lane | ❌ reject | **осознанный park** (по формулировке карты); lane остаётся документированной, не включённой |
+| V9 n8n webinar-drafts PRUNE | ✅ approve | **верифицировано 18-09**: всё webinar-семейство (9 воркфлоу) уже `active=0` — изменений не требовалось |
+| V10 gaps (тренажёр/NPS/СR) | ❌ reject | **без направления** — открытый продуктовый вопрос (не «park»); решение за MG в отдельном проходе |
+
+### V4 — шаг МГ (~10 мин, обратимо)
+
+1. В Telegram: [@BotFather](https://t.me/BotFather) → `/newbot` → имя «ОРС — опсы и алерты» → username `samskrte_ops_bot` → BotFather выдаст токен.
+2. Сохраните токен одной строкой (`TELEGRAM_BOT_TOKEN=123:ABC…`) в файл `Systema-Sanscriticum\.env.ops_bot` на этой машине и ответьте «готово». Токен в чат не вставляйте.
+3. Если сделаете: агент ротирует `TELEGRAM_BOT_TOKEN/USERNAME` на .92 (сейчас `testpodpiska12_bot` + комментарий «замени на реальный»), перерегистрирует вебхук (`telegram:webhooks --set`), кураторам нужно один раз нажать Start у нового бота — тест-имя уходит из прода. Если не сделаете: всё работает как сейчас, ничего не ломается.
+
 _Гасунс_
