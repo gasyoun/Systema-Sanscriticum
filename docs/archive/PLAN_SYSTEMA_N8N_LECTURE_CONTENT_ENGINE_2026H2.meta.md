@@ -1,6 +1,8 @@
 # Metadoc — PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2
 
-_Created: 23-07-2026 · Last updated: 24-07-2026_
+_Created: 23-07-2026 · Last updated: 17-09-2026_
+
+> **RETIRED 16-09-2026 (H5028)** — the plan this metadoc describes was retired by MG ruling Q3 ([decisions doc](https://github.com/gasyoun/Uprava/blob/main/docs/DECISIONS_DIGITAL_MARKETING_GRILL_16-09-2026.md)) and moved to `docs/archive/`.
 
 ## Purpose
 
