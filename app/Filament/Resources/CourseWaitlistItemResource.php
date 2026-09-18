@@ -213,6 +213,13 @@ class CourseWaitlistItemResource extends Resource
                     ->badge()
                     ->color('info'),
 
+                // H5134 — сердечки «Избранное» на карточке ждуна (по slug).
+                Tables\Columns\TextColumn::make('hearts')
+                    ->label('♥ Сердца')
+                    ->getStateUsing(fn (CourseWaitlistItem $record): int => $record->heartsCount())
+                    ->badge()
+                    ->color('danger'),
+
                 Tables\Columns\TextColumn::make('min_payers')
                     ->label('Мин.'),
 

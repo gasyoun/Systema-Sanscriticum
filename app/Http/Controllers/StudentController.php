@@ -7,6 +7,7 @@ use App\Http\Controllers\Concerns\ManagesStudentMiscPages;
 use App\Jobs\TrackLessonViewJob;
 use App\Models\ActivityEvent;
 use App\Models\Course;
+use App\Models\CourseFavorite;
 use App\Models\CourseWaitlistItem;
 use App\Models\HomeworkSubmission;
 use App\Models\Lesson;
@@ -337,6 +338,32 @@ class StudentController extends Controller
                 ->whereIn('course_waitlist_item_id', $waitlistItems->modelKeys())
                 ->pluck('slot_preference', 'course_waitlist_item_id')
             : collect();
+
+        // H5134 — секция «Избранное» в кабинете (сердечки). Flag OFF → пустая
+        // коллекция, кабинет байт-стабилен; заголовок рисует partial по флагу.
+        $favorites = collect();
+        if (config('features.course_favorites', false)) {
+            $favoriteRows = CourseFavorite::query()
+                ->where('user_id', $user->id)
+                ->with(['course:id,slug,title,is_visible'])
+                ->orderByDesc('id')
+                ->get();
+            $favoriteWaitlistTitles = CourseWaitlistItem::query()
+                ->whereIn('slug', $favoriteRows->pluck('waitlist_slug')->filter()->all())
+                ->pluck('course_title', 'slug');
+            $favorites = $favoriteRows->map(fn (CourseFavorite $favorite): object => (object) [
+                'id' => $favorite->id,
+                'heartKey' => $favorite->heartKey(),
+                'title' => $favorite->course?->title
+                    ?? $favoriteWaitlistTitles[$favorite->waitlist_slug]
+                    ?? (string) $favorite->waitlist_slug,
+                'url' => $favorite->course && $favorite->course->is_visible
+                    ? route('shop.course.show', $favorite->course->slug)
+                    : null,
+                'createdAt' => $favorite->created_at,
+            ]);
+        }
+        $viewData['favorites'] = $favorites;
 
         // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
         // Flag OFF → byte-stable legacy dashboard (recovery vars unused there).

@@ -1,4 +1,4 @@
-@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => [], 'nextStep' => [], 'cadence' => null, 'eager' => false])
+@props(['course', 'purchasedByCourse' => [], 'deposit' => null, 'categoryIds' => [], 'nextStep' => [], 'cadence' => null, 'favoriteKeys' => [], 'eager' => false])
 
 @php
     $courseKeys = $purchasedByCourse[$course->id] ?? [];
@@ -155,9 +155,16 @@
 
             <div class="text-[#38BDF8] text-[10px] font-black uppercase tracking-widest mb-2 flex justify-between items-center">
                 <span>{{ $course->teacher?->name ?? 'Онлайн-программа' }}</span>
-                @if($cardHours)
-                    <span class="text-slate-500"><i class="far fa-clock mr-1"></i>{{ $cardHours }}ч</span>
-                @endif
+                <span class="flex items-center gap-3">
+                    @if($cardHours)
+                        <span class="text-slate-500"><i class="far fa-clock mr-1"></i>{{ $cardHours }}ч</span>
+                    @endif
+                    {{-- H5134 — сердечко «Избранное» на карточке каталога --}}
+                    @include('shop.partials.favorite-heart', [
+                        'favoriteKey' => 'c:'.$course->id,
+                        'favorited' => in_array('c:'.$course->id, $favoriteKeys, true),
+                    ])
+                </span>
             </div>
 
             <a href="{{ route('shop.course.show', $course->slug) }}" class="block">
