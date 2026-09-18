@@ -157,9 +157,12 @@ class MarathonController extends Controller
             if ($enrollment) {
                 $this->attachTelegramMagnet($existingLead);
 
+                // H5085: дубликат по знанию контакта — НЕ доказательство
+                // владения им: deep-link с bearer magnet_token существующего
+                // лида анонимному сабмиттеру не выдаём (skin сам деградирует
+                // без marathon_telegram_link).
                 return redirect()->route('marathon.show')
                     ->with('marathon_result', $enrollment->quiz_goal)
-                    ->with('marathon_telegram_link', $this->deepLink($existingLead))
                     ->with('marathon_track', $enrollment->track)
                     ->with('marathon_paid', $enrollment->isPaidConfirmed())
                     ->with('marathon_contact', $existingLead->contact);
@@ -387,9 +390,10 @@ class MarathonController extends Controller
             if ($enrollment) {
                 $this->attachTelegramMagnet($existingLead);
 
+                // H5085: тот же запрет, что и в register() — токен чужого лида
+                // по знанию контакта не выдаём.
                 return redirect()->route('marathon.january.show')
                     ->with('marathon_result', $enrollment->quiz_goal)
-                    ->with('marathon_telegram_link', $this->deepLink($existingLead))
                     ->with('marathon_track', $enrollment->track)
                     ->with('marathon_paid', $enrollment->isPaidConfirmed())
                     ->with('marathon_contact', $existingLead->contact);
