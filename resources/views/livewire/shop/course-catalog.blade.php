@@ -360,6 +360,7 @@
                                 :categoryIds="$categoryIds"
                                 :nextStep="$nextStepByCourse[$course->id] ?? []"
                                 :cadence="$cadenceByCourse[$course->id] ?? null"
+                                :favoriteKeys="$favoriteKeys"
                                 :eager="$loop->index < 4"
                                 wire:key="course-{{ $course->id }}" />
                         @endforeach

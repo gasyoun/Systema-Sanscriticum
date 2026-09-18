@@ -116,6 +116,9 @@
 
     @include('student.partials.waitlist-card')
 
+    {{-- H5134 — «Избранное» (сердечки): flag OFF / пусто — не рендерится --}}
+    @include('student.partials.favorites-card')
+
     @include('student.partials.subscriber-shelf')
 
     {{-- ========================================== --}}

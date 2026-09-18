@@ -70,6 +70,9 @@
             'initialSearch' => $initialSearch,
         ])
 
+        {{-- H5134 — JS сердечка «Избранное» (флаг OFF — пусто) --}}
+        @include('shop.partials.favorites-script')
+
         {{-- Лесенка цен с позиционированием (H1293) --}}
         @include('shop.partials.price-ladder-narrative', ['ladder' => $ladder])
 
