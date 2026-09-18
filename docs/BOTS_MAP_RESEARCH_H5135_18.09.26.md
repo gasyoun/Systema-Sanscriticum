@@ -100,10 +100,10 @@ _Created: 18-09-2026 · Last updated: 18-09-2026_
 
 | Карта | Вердикт MG | Исполнение |
 |---|---|---|
-| V1 @samskrtamru_bot KEEP | ✅ approve | без изменений |
+| V1 @samskrtamru_bot KEEP | ✅ approve | без изменений; 18-09: вебхук-труба зажила, кабинет вернулся на вебхук, аварийный long-poll остановлен + `autostart=false` (остаток H5063 закрыт) |
 | V2 @samskrte_bot KEEP+dedupe | ✅ approve | **исполнено 18-09**: `landing_bots` строка 7 деактивирована |
 | V3 @zapisi_ORSbot KEEP | ✅ approve | без изменений |
-| V4 @testpodpiska12_bot SPLIT+RENAME | ✅ approve | **ожидает BotFather-шага MG** (шаги ниже), затем ротация `TELEGRAM_BOT_*` на .92 |
+| V4 @testpodpiska12_bot SPLIT+RENAME | ✅ approve | **исполнено 18-09**: ops-бот `@samskrte_ops_bot` создан МГ в BotFather, `TELEGRAM_BOT_TOKEN/USERNAME` ротированы на .92 (бэкап `/root/.env.pre_opsbot_18-09.bak`), вебхуки перерегистрированы |
 | V5 @rusamskrtam KEEP | ✅ approve | без изменений |
 | V6 @grokusaurus_bot KEEP | ✅ approve | без изменений |
 | V7 landing_bots AUDIT+KILL | ✅ approve | **исполнено 18-09**: пробы 18-09 — токены строк 1–6 отклонены Telegram (dead), row 7 живой, но задвоен → все 7 строк `is_active=0`; бэкап без токенов `/root/landing_bots_backup_pre_h5135_18-09.txt` (.92, chmod 600); живой лид-поток @samskrte_bot идёт через `MarketingSetting` + глобальный вебхук — не задет |
@@ -112,6 +112,8 @@ _Created: 18-09-2026 · Last updated: 18-09-2026_
 | V10 gaps (тренажёр/NPS/СR) | ❌ reject | **без направления** — открытый продуктовый вопрос (не «park»); решение за MG в отдельном проходе |
 
 ### V4 — шаг МГ (~10 мин, обратимо)
+
+**Статус: исполнено 18-09-2026.** Токен передан через локальный gitignored-файл (удалён после ротации), не через чат. Остался человеческий шаг: кураторам и админу один раз нажать Start у [@samskrte_ops_bot](https://t.me/samskrte_ops_bot) — иначе алерты им не доставляются (Telegram блокирует ботов для не стартовавших).
 
 1. В Telegram: [@BotFather](https://t.me/BotFather) → `/newbot` → имя «ОРС — опсы и алерты» → username `samskrte_ops_bot` → BotFather выдаст токен.
 2. Сохраните токен одной строкой (`TELEGRAM_BOT_TOKEN=123:ABC…`) в файл `Systema-Sanscriticum\.env.ops_bot` на этой машине и ответьте «готово». Токен в чат не вставляйте.
