@@ -77,10 +77,20 @@ Route::post('/anketa/{slug}', [SurveyPageController::class, 'store'])
     ->middleware('throttle:20,60')
     ->name('survey.store');
 
+// Телеметрия воронки (H5098): started/page с фронта. Без ПДн, только счётчики.
+// ВАЖНО: длиннее /anketa/{slug} — конфликтов маршрутов нет.
+Route::post('/anketa/{slug}/event', [SurveyPageController::class, 'event'])
+    ->middleware('throttle:60,1')
+    ->name('survey.event');
+
 // Выгрузка ответов CSV для куратора (админ/менеджер).
 Route::get('/admin/surveys/{slug}/export', [SurveyPageController::class, 'exportCsv'])
     ->middleware('throttle:30,60')
     ->name('survey.export');
+
+// Агрегат воронки для куратора (H5098; админ/менеджер, только количества).
+Route::get('/admin/surveys/{slug}', [SurveyPageController::class, 'funnel'])
+    ->name('survey.funnel');
 Route::get('/gift/{certificate}/download', [GiftCertificateController::class, 'download'])
     ->middleware(['auth', 'throttle:10,1'])
     ->name('gift.download');
