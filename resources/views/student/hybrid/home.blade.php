@@ -4,6 +4,11 @@
 @section('header', 'Сегодня')
 
 @section('content')
+{{-- Метрика кабинета (MG 18-09-2026): cabinet_home_view — каждая загрузка;
+     first_cabinet_action — только если ЭТА загрузка первое действие студента
+     (сервер считает флаг до эмита, см. StudentController::dashboard). --}}
+<span data-metrika-goal="cabinet_home_view" hidden></span>
+@if(! empty($metrikaFirstCabinetAction))<span data-metrika-goal="first_cabinet_action" hidden></span>@endif
 @php
     /** @var \App\Services\Cabinet\RecoveryState $recovery */
     $recovery = $recovery ?? \App\Services\Cabinet\RecoveryState::normal();
