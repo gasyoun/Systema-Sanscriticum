@@ -1,0 +1,23 @@
+{
+  "_comment": "H5062: schema SPECIMEN for the independent review verdict consumed by .github/workflows/oxalpha-review-gate.yml. Real verdicts are NOT committed - an independent reviewer session posts them via tools/oxalpha_gate_verdict.py post, bound to the reviewed head SHA. This fixture documents the evidence shape the gate requires (docs/OXALPHA_STATUS_GATE_DESIGN_2026.md section 2) and gives PRs touching tests/ a harmless path to exercise the live match logic.",
+  "schema": "oxalpha-review-gate-verdict/1",
+  "head_sha": "0000000000000000000000000000000000000000",
+  "reviewer": {
+    "name": "oxalpha-independent-session",
+    "independent": true
+  },
+  "standards": {
+    "verdict": "pass",
+    "findings": [],
+    "evidence": [
+      "https://github.com/gasyoun/Systema-Sanscriticum/pull/NNN/files - diff hunks reviewed without access to the author session"
+    ]
+  },
+  "spec": {
+    "verdict": "pass",
+    "findings": [],
+    "evidence": [
+      "docs/OXALPHA_STATUS_GATE_DESIGN_2026.md section 2 - implementation matches the spec quotes"
+    ]
+  }
+}
