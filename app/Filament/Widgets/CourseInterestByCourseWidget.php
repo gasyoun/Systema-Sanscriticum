@@ -23,7 +23,7 @@ class CourseInterestByCourseWidget extends TableWidget
 {
     protected static ?string $heading = 'Спрос по курсам';
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public static function canView(): bool
     {
