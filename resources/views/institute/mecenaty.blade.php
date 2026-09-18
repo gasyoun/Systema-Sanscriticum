@@ -16,6 +16,11 @@
         указываются в благодарностях изданий.
     </p>
 
+    {{-- H4522: donor impact scroll — flag OFF по умолчанию; QA ?impact=1.
+         Сторибоард (MG-read gate): marketing/marathon-2026-08/redesign/
+         STORYBOARD_mecenaty-impact_10.09.26.md. Деньги/ст. 582 не тронуты. --}}
+    @include('institute._scrolly', ['gratitudes' => $gratitudes])
+
     {{-- H4400: состав меценатства — ратифицирован MG 08-09-2026 (план института §«Меценаты»). --}}
     <div class="rounded-xl border border-slate-700 p-4 mb-8">
         <h2 class="text-xl font-bold text-white mb-3">Что получает меценат</h2>
@@ -31,7 +36,7 @@
         </p>
     </div>
 
-    <h2 class="text-xl font-bold text-white mb-3">Как поддержать</h2>
+    <h2 id="mecenaty-form" class="text-xl font-bold text-white mb-3">Как поддержать</h2>
 
     @if(config('institute.donations_enabled'))
         {{-- Онлайн-приём (план института N2): свободная сумма; пресеты — только ратифицированные MG значения из конфига. --}}
