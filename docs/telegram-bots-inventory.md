@@ -1,6 +1,6 @@
 # Telegram-боты и TG-аккаунты в Systema Sanscriticum
 
-_Created: 30-07-2026 · Last updated: 07-09-2026_
+_Created: 30-07-2026 · Last updated: 17-09-2026 (проверено live-пробой: usernames и режим @samskrtamru_bot)
 
 Инвентарь **Bot API-ботов**, **landing-ботов** и **userbot-аккаунта** (MadelineProto),
 которые использует LMS на `samskrte.ru`.  
@@ -10,8 +10,8 @@ _Created: 30-07-2026 · Last updated: 07-09-2026_
 > **Секреты.** Токены в git **не** хранятся. В `.env` / `MarketingSetting` (encrypted)
 > / `landing_bots`. Ниже — только usernames, env-ключи и назначение.
 >
-> **Снимок прод-значений** (usernames) — 30-07-2026, `root@193.232.229.92`,
-> `/var/www/html`. После ротации/смены бота обновить этот файл.
+> **Снимок прод-значений** (usernames) — 30-07-2026, повторно сверён 17-09-2026
+> (`root@193.232.229.92`, `/var/www/html`). После ротации/смены бота обновить этот файл.
 
 ---
 
@@ -62,10 +62,22 @@ Grok в «Отделе заботы»      →  @grokusaurus_bot     (ПК Ма�
 | **Config** | `services.telegram.student_bot_*` |
 | **Прод username** | `@samskrtamru_bot` |
 | **Тумблер UI** | `MarketingSetting.student_telegram_bot_enabled` |
+| **Приём апдейтов** | штатно webhook через входной узел; аварийно long-poll `telegram:poll-student` (`TELEGRAM_STUDENT_POLL_ENABLED`, `TELEGRAM_STUDENT_POLL_REINJECT_URL`), supervisor program **`telegram-student-poll`** (`max-lifetime 3600 с`) — см. ниже |
 
 **Назначение:** привязка Telegram в кабинете, ИИ-куратор, личные уведомления
 студенту. Заведён **отдельно**, чтобы основной бот не смешивался со служебными
 чатами. Пустой student-token → fallback на основной бот (обратная совместимость).
+
+**Аварийный long-polling (с 06-09-2026, вебхук-труба мертва).** Доставки с прода
+не доходят (входной узел, «Connection timed out»), поэтому `@samskrtamru_bot`
+переведён на long-poll `telegram:poll-student`: supervisor program
+`telegram-student-poll`, оффсет-курсор в кэше, HTTP-реинжект апдейтов в ШТАТНЫЙ
+`/api/telegram/webhook` pipeline с secret-header — вся остальная логика не
+знает о подмене транспорта. Ротация демона — раз в час (`max-lifetime 3600 с`).
+Деплой перезапускает программу (§6c `deploy.sh`, H5063: guard «сейчас RUNNING»),
+иначе демон держит пред-деплойный код (H5051: `mic_shadow_classify_loader_failed`
+уже после деплоя). Возврат на вебхук, когда труба оживёт:
+`php artisan telegram:webhooks --set` + `supervisorctl stop telegram-student-poll`.
 
 **Не путать с человеком.** Личные диалоги с преподавателями ведёт
 **Марцис Гасунс** со своего аккаунта. В Telegram он **всегда Гасунс**.
@@ -185,6 +197,8 @@ Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (с
 
 - `@webinar_17june_bot` (active, с n8n forward)
 - остальные: username `null`, токен в БД есть (legacy / без username в карточке)
+
+**Снимок прода (17-09-2026):** 7 строк в `landing_bots` (сверено live-пробой); username-ы по-прежнему только у части карточек.
 
 ---
 
