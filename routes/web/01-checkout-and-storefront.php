@@ -43,7 +43,12 @@ Route::get('/checkout/{tariff}', [CheckoutController::class, 'show'])->name('che
 Route::post('/checkout/{tariff}/promo', [CheckoutController::class, 'applyPromo'])
     ->middleware('throttle:10,1')
     ->name('checkout.promo');
-Route::post('/checkout/{tariff}/promo/remove', [CheckoutController::class, 'removePromo'])->name('checkout.promo.remove');
+// H5087 (remediation of H5046): throttle-паритет с applyPromo — анонимный POST
+// без троттла минтит file-session на каждый безкукисный хит и гонит computeState
+// SQL-фанаут на JSON-ветке (см. /csrf-token-комментарий выше).
+Route::post('/checkout/{tariff}/promo/remove', [CheckoutController::class, 'removePromo'])
+    ->middleware('throttle:10,1')
+    ->name('checkout.promo.remove');
 
 // Запрос «разбить оплату на части» (H1290) — уведомляет кураторов, план НЕ создаёт.
 // throttle: каждый сабмит — сообщение в кураторский чат; 3 запросов за 10 минут

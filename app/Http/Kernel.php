@@ -14,6 +14,7 @@ use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\RedirectToCanonicalCourseSlug;
 use App\Http\Middleware\StudentMaintenance;
+use App\Http\Middleware\ThrottleLivewireUpdates;
 use App\Http\Middleware\TrackUserActivity;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
@@ -86,6 +87,10 @@ class Kernel extends HttpKernel
             // отдельно — группу `web` она не берёт.
             ImpersonationGuard::class,
             SubstituteBindings::class,
+            // H5087 (remediation of H5046): throttle для POST /livewire/update
+            // (Livewire регистрирует маршрут сам, без throttle на любом слое;
+            // обёртка применяет лимитер только к пути livewire/update).
+            ThrottleLivewireUpdates::class,
             CaptureReferral::class,
             CapturePartnerReferral::class,
             CaptureAttribution::class,
