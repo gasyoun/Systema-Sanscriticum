@@ -581,6 +581,14 @@ class CourseResource extends Resource
                     ->label('Активен в ЛК')
                     ->boolean()
                     ->sortable(),
+
+                // H5134 — сердечки «Избранное» на курсе (сигнал направлений).
+                Tables\Columns\TextColumn::make('favorites_count')
+                    ->label('♥ Сердца')
+                    ->counts('favorites')
+                    ->badge()
+                    ->color('danger')
+                    ->sortable(),
             ])
             ->filters([
                 // --- НОВЫЙ ФИЛЬТР ПО ФАКУЛЬТАТИВАМ ---
