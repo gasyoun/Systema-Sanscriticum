@@ -537,6 +537,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PRANA_DECAY_FLOOR_MODE` | optional | `'rank_based'` | config/prana.php:21 |
 | `PRANA_DECAY_INACTIVE_DAYS` | optional | `30` | config/prana.php:19 |
 | `PRANA_DECAY_PERCENT` | optional | `10` | config/prana.php:20 |
+| `PRANA_SRS_REVIEW_DAILY_CAP` | optional | `120` | config/prana.php:51 |
 | `PRIVATE_ARCHIVE_DRUZHININ_AYURVEDA` | optional | `false` | config/membership.php:101 |
 | `PRIVATE_ARCHIVE_DRUZHININ_ELIGIBILITY_SLUGS` | optional | `'povtornaia-aiurveda'` | config/membership.php:103 |
 | `PRIVATE_ARCHIVE_DRUZHININ_OFFER_SLUG` | optional | `'povtornaia-aiurveda-v-zapisi'` | config/membership.php:102 |

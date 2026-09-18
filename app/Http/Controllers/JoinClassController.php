@@ -16,8 +16,10 @@ use Illuminate\Http\Request;
  * настоящий Zoom-URL.
  *
  * Личность и ДОСТУП берём так:
- *  - подписанная ссылка из бота/напоминаний (есть параметр `u`) — доверяем подписи
- *    (подпись сама доказывает право на редирект);
+ *  - подписанная ссылка из бота/напоминаний (есть параметр `u`) — подпись
+ *    доказывает, что ссылка ВЫДАНА этому студенту, и что она не истекла
+ *    (temporarySignedRoute, H5081), но доступ перепроверяем в момент клика:
+ *    отзыв группы/возврат должен рвать и уже выданные ссылки;
  *  - иначе авторизованный студент С ДОСТУПОМ к занятию (его группа или общее
  *    занятие без группы) / сотрудник — редиректим и пишем клик;
  *  - аноним по неподписанной ссылке — на вход, БЕЗ редиректа на Zoom.
@@ -33,18 +35,24 @@ class JoinClassController extends Controller
 
     public function join(Request $request, Schedule $schedule): RedirectResponse
     {
-        // 1) Подписанная ссылка из бота/напоминаний — подпись доказывает право.
+        // 1) Подписанная ссылка из бота/напоминаний: подпись доказывает выдачу
+        //    этому студенту и срок (истекшие подписи здесь уже невалидны),
+        //    но доступ перепроверяем на момент клика — как и неподписанной
+        //    ветке ниже (H5081: подпись ≠ вечное право на занятие).
         if ($request->hasValidSignature() && $request->filled('u')) {
-            $userId = (int) $request->query('u');
-            if (User::whereKey($userId)->exists()) {
+            $signedUser = User::find((int) $request->query('u'));
+
+            if ($signedUser && $this->canAccess($signedUser, $schedule)) {
                 ScheduleJoinClick::record(
                     $schedule->id,
-                    $userId,
+                    $signedUser->id,
                     $this->normalizeSource((string) $request->query('source', 'reminder'))
                 );
+
+                return $this->redirectToClass($schedule);
             }
 
-            return $this->redirectToClass($schedule);
+            abort(403, 'Нет доступа к этому занятию.');
         }
 
         // 2) Иначе — только авторизованный пользователь.

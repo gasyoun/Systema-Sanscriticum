@@ -14,6 +14,8 @@
     @endphp
 
     {{-- H4443: «ещё в деньгах» по грамматикам (неоплаченные блоки от курсора) --}}
+    {{-- H5087: блок денег — админ-only (см. AttendanceDashboard::canvasMoney) --}}
+    @if(auth()->user()?->isAdminLike())
     <x-filament::section>
         <x-slot name="heading">Канва: неоплаченные блоки грамматик</x-slot>
         <x-slot name="description">Студенты × цена блоков, не покрытых их платежами, от курсора канвы группы. Базовые цены, без скидок и иностранной валюты. В Telegram-пост эти цифры не идут.</x-slot>
@@ -36,6 +38,7 @@
             </div>
         </x-slot>
     </x-filament::section>
+    @endif
 
     {{-- H4495: ростер «кто на чём» — ТОЛЬКО админка (MG 09-09: из поста убраны) --}}
     <x-filament::section>

@@ -100,7 +100,8 @@ class BankClaimTest extends TestCase
     {
         config(['services.bank_claim.trust_existing_students' => true]);
         $tariff = $this->blockTariff();
-        $student = User::factory()->create(['email' => 'student@example.test']);
+        // H5083: «существующий» = аккаунт старше 7 дней (isEstablishedClaimStudent).
+        $student = User::factory()->create(['email' => 'student@example.test', 'created_at' => now()->subDays(30)]);
 
         $response = $this->actingAs($student)->post(route('bank.claim.store', $tariff), [
             'foreign_amount' => '90',

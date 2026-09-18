@@ -32,6 +32,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    /**
+     * H5083: порог «существования» аккаунта для auto-trust полуинтегрированных
+     * каналов (PayPal/bank claim) — см. isEstablishedClaimStudent().
+     */
+    public const CLAIM_TRUST_MIN_AGE_DAYS = 7;
+
     protected $fillable = [
         'name',
         'curator_display_name',
@@ -625,6 +631,27 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * H5083 (remediation confirmed H5046, claim-trusted-autopaid-session-bootstrap):
+     * «существующий ученик» для auto-trust полуинтегрированных каналов
+     * (PayPal/bank claim). Рулинг 22-08-2026 оставляем, но доверие привязываем
+     * к ФАКТУ существования ученика, а не к presence-сессии: аккаунт старше
+     * CLAIM_TRUST_MIN_AGE_DAYS дней ИЛИ уже есть проведённый (paid) платёж.
+     *
+     * Сама публичная форма минтит аккаунт+сессию любому гостю с новым email
+     * (resolveUser), поэтому голый auth()->check() доверял сессии, которую
+     * форма же и выдала минуту назад — второй POST того же гостя уходил сразу
+     * в paid без денег (Nv06 bootstrap).
+     */
+    public function isEstablishedClaimStudent(): bool
+    {
+        if ($this->created_at !== null && $this->created_at->lt(now()->subDays(self::CLAIM_TRUST_MIN_AGE_DAYS))) {
+            return true;
+        }
+
+        return $this->payments()->paid()->exists();
     }
 
     public function homeworkSubmissions(): HasMany

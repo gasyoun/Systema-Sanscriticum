@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Exports;
 
 use App\Support\CourseFamilyMatcher;
+use App\Support\FormulaGuard;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -148,7 +149,9 @@ class CourseStreamComparisonExport implements FromArray, WithTitle
 
             $row[] = $streamsBought;
             $row[] = isset($neverWatched[$id]) ? 'нет' : 'да';
-            $rows[] = $row;
+            // H5086: имя студента — гостевая строка; PhpSpreadsheet DefaultValueBinder
+            // исполняет ведущий '=' как формулу — нейтрализуем (=,+,-,@).
+            $rows[] = FormulaGuard::row($row);
         }
 
         return $rows;

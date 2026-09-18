@@ -52,6 +52,9 @@ class ZoomWebhookTest extends TestCase
     /** @test */
     public function url_validation_returns_encrypted_token(): void
     {
+        // H5082: челлендж валидации подписан Zoom'ом той же схемой v0 —
+        // контракт echo (plainToken/encryptedToken) работает только на
+        // подписанный запрос (санкционированный паттерн zoom/webhook-sample).
         $resp = $this->postZoom([
             'event' => 'endpoint.url_validation',
             'payload' => ['plainToken' => 'plain-abc'],

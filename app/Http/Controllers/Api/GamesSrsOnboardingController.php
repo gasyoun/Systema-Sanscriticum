@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Srs\SrsOnboardingFromGames;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 /**
  * H1680 — POST /api/games/srs-onboarding-import. Auth-only: the cabinet
@@ -16,12 +17,37 @@ use Illuminate\Http\Request;
  * onboarding-from-games SRS deck from that guest's own free-play history.
  * No-op (`imported: 0`) while srs.enabled is OFF or the guest never played
  * — see {@see SrsOnboardingFromGames}.
+ *
+ * H5087 (remediation of H5046): anon_id больше не голая клиентская заявка —
+ * импорт принимает только anon_id, которые ЭТА браузерная сессия реально
+ * присылала в /api/games/event (GameTelemetryController::rememberAnonId).
+ * Анонимная телеметрия по дизайну приватности fire-and-forget (без
+ * серверных идентификаторов), поэтому криптографической подписи у anon_id
+ * нет — сессионная память и есть проверяемая привязка к вызывающему;
+ * плюс per-user throttle против программного прогона. Кросс-браузерный
+ * импорт (поиграл на одном устройстве, зарегистрировался на другом)
+ * честно отвечает imported: 0 — симметрично очищенному localStorage.
  */
 class GamesSrsOnboardingController extends Controller
 {
     public function store(Request $request, SrsOnboardingFromGames $service): JsonResponse
     {
-        $imported = $service->importForUser($request->user(), $this->anonId($request));
+        // Throttle: 3 импорта в минуту на пользователя.
+        $rlKey = 'games-srs-import:'.$request->user()->id;
+        if (RateLimiter::tooManyAttempts($rlKey, 3)) {
+            return response()->json(['error' => 'too many requests'], 429);
+        }
+        RateLimiter::hit($rlKey, 60);
+
+        $anonId = $this->anonId($request);
+
+        // Привязка к вызывающему: только те anon_id, что присылала эта сессия.
+        $sessionAnonIds = (array) $request->session()->get('games_anon_ids', []);
+        if ($anonId === null || ! in_array($anonId, $sessionAnonIds, true)) {
+            return response()->json(['imported' => 0]);
+        }
+
+        $imported = $service->importForUser($request->user(), $anonId);
 
         return response()->json(['imported' => $imported]);
     }

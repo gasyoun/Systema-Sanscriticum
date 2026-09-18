@@ -7,8 +7,8 @@ use App\Models\Lead;
 use App\Models\User;
 use App\Services\LeadNotifier;
 use App\Services\Leads\LeadFlashBuilder;
-use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\SocialChannelParser;
+use App\Support\FormulaGuard;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -282,7 +282,9 @@ class LeadController extends Controller
                     $lead->referrer ?? '',
                     $lead->user_agent ?? '',
                 ];
-                fputcsv($file, $row, ';');
+                // H5086: гостевые строки (utm_*/name/contact/…) нейтрализуем от
+                // spreadsheet-формул (=,+,-,@) — файл открывают в Excel.
+                fputcsv($file, FormulaGuard::row($row), ';');
             }
             fclose($file);
         };
@@ -297,33 +299,16 @@ class LeadController extends Controller
      */
     private function buildDuplicateFlash(Lead $existing): array
     {
-        $flash = [
+        // H5085: знание email/контакта — НЕ доказательство владения ими.
+        // Дубликатная ветка раньше выдавала deep-link с bearer magnet_token
+        // СУЩЕСТВУЮЩЕГО лида любому, кто назвал его контакт (захват бота и
+        // токен-страниц марафона). Теперь — только generic-копия, без ссылок
+        // и токенов исходного лида; настоящий владелец получает свой канал
+        // по магните/статусам через первичную выдачу или почту.
+        return [
             'is_duplicate' => true,
             'duplicate_email' => $existing->email,
         ];
-
-        // Подписка на статусы (H3339): дубликат видит тот же полный блок каналов,
-        // что и новая заявка — кнопки не зависят от того, каким путём он пришёл.
-        if ($existing->magnet_token && ($landing = $existing->landingPage) !== null && $landing->hasStatusBlock()) {
-            $flash['status_connect_links'] = app(LeadFlashBuilder::class)->statusConnectLinks($existing, $landing);
-
-            return $flash;
-        }
-
-        if (! $existing->magnet_channel || ! $existing->magnet_token) {
-            return $flash;
-        }
-
-        $manager = app(DeliveryChannelManager::class);
-        if (! $manager->has($existing->magnet_channel)) {
-            return $flash;
-        }
-
-        $flash['duplicate_channel'] = $existing->magnet_channel;
-        $flash['duplicate_deep_link'] = $manager->get($existing->magnet_channel)
-            ->buildDeepLink($existing->magnet_token);
-
-        return $flash;
     }
 
     /**
