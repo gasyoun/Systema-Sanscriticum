@@ -87,7 +87,7 @@ _Created: 18-09-2026 · Last updated: 18-09-2026_
 3. `config/analytics.php`: cabinet-цели в `funnel_events`; flip `first_cabinet_action.metrika_goal`.
 4. Мост: клиентский telemetry-JS дублирует whitelist-событие в `reachGoal`; серверные события — `data-metrika-goal` маркеры на blade + лоадер 5 строк.
 5. Главная `/`: найти отдающий vhost (на `.92` в `sites-enabled`/`conf.d` не найден — проверить второй хост/статический корень), повесить тег.
-6. **Цели в Метрике:** проверить 6 старых целей, завести внешние 2 + кабинетные Tier 1 (~10 шт., тип «JavaScript-событие»). Канал: management API (`POST /management/v1/counter/106964341/goals`) после обновления `METRIKA_OAUTH_TOKEN` — тогда это agent-doable; без токена — UI Метрики (логины только MG).
+6. ~~Цели в Метрике~~ **✅ сделано 18-09 ~17:20:** 6 канонических + 10 кабинетных Tier 1 созданы management API (ids 639422183–639422234), верифицировано повторным чтением (38 целей, пропусков ноль).
 
 ## Verification
 
