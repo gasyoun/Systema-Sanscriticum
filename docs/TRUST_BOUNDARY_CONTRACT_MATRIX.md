@@ -15,6 +15,8 @@ Every surface that moves (a) guest/user-controlled strings into spreadsheet cell
 4. **Invariant** — the property that must hold even when Authority is abused.
 5. **Negative regression** — the executable test that turns red when the invariant is violated (mutation-proven once at introduction).
 
+> **Authority-floor note (dual column):** the Boundary A staff floor is enforced on the legacy `is_admin` column (`AdminMiddleware`), the Boundary C floor on the `role` column (`RoleGate`); the two are kept in sync by the `User::booted` hook. Writes that bypass Eloquent (direct DB writes) can desync them — any such surface must be inventoried here.
+
 New surfaces: run the [Maintainer checklist](#maintainer-checklist-for-a-new-surface) and add a row here in the same PR.
 
 ## Boundary A — guest-controlled strings → spreadsheet export cells
@@ -38,11 +40,13 @@ Invariant (shared): **knowing a dedupe key (email/contact/phone) never returns t
 | Surface | Source | Sink | Authority | Negative regression | Status |
 |---|---|---|---|---|---|
 | `LeadController::store()` duplicate branch (`buildDuplicateFlash()` → `thankyou.blade.php`) | anonymous submitter (dedupe key only) | session flash + rendered thank-you page | anonymous | `H5093TrustBoundaryContractMatrixTest::boundary_b_duplicate_submission_discloses_no_victim_capability_tokens` + `H5085LeadDuplicateNoTokenTest` | GUARDED |
-| `LeadController::oneClick()` duplicate branch | anonymous submitter (dedupe key only) | session flash | anonymous | `H5085LeadDuplicateNoTokenTest` family + `WaitlistGuestSubscriptionTest` | GUARDED |
+| `LeadController::oneClick()` waitlist duplicate branch | **authenticated user whose profile contact dedupes** | `status_connect_links` built from the EXISTING lead's `magnet_token` (`statusFlash()` → `LeadFlashBuilder::statusConnectLinks()`) | authenticated profile owner | **none on main** — `H5085LeadDuplicateNoTokenTest` covers `store()` + marathon only; `WaitlistGuestSubscriptionTest` asserts the pre-fix behavior for this branch | **OPEN — `status_connect_links` still carry the victim token on the oneClick duplicate branch; remediated on PR #2672 (rotate + plain success), residual @DO filed 18-09-2026 to verify/merge** |
 | Marathon register resume (`/online/konsultaciya`) | anonymous submitter (dedupe key only) | `marathon_telegram_link` flash | anonymous | `H5085LeadDuplicateNoTokenTest::marathon_duplicate_does_not_re_disclose_victim_telegram_link` | GUARDED |
 | `magnet_token` lifecycle on re-submission | anonymous duplicate submission | token rotation (`rotateMagnetToken()`) invalidating minted links | anonymous | owned by PR #2672 branch tests | **OPEN — PR #2672 pending merge** |
 | Magnet landing / status pages | token holder (bearer) | lead-specific content | bearer token only | bearer semantics covered by #2672 rotation above | GUARDED (bearer) |
 | `LeadStepWebhookController` | Telegram webhook (signed by bot secret) | lead binding | system webhook secret | webhook signature suites | GUARDED (server-to-server) |
+| Magnet callback webhook jobs `ProcessVkMagnetCallback` / `ProcessTelegramMagnetUpdate` / `ProcessMaxMagnetUpdate` | VK/Telegram/MAX webhook payloads | bearer-token lead lookup + binding | system webhook secret | webhook signature/queue suites | GUARDED (server-to-server) |
+| `Filament\Pages\MarathonQuizProgress` quiz table | lead `magnet_token` rendered as a copyable staff column | Filament staff table cell | staff panel (Filament auth) | staff-only bearer display, no anonymous surface — row kept so the next audit does not re-derive it | BY DESIGN (staff-only display) |
 
 ## Boundary C — destructive money/access lifecycle transitions
 
@@ -52,7 +56,7 @@ Invariant (shared): **deleting a paid payment is impossible below the admin trus
 |---|---|---|---|---|---|
 | `PaymentResource::canDelete()` / `canDeleteAny()` (Filament delete + bulk delete) | authenticated staff action | hard removal of a `payments` row (incl. paid) | `RoleGate::adminOnly()` (admin + super_admin) | `H5093TrustBoundaryContractMatrixTest::boundary_c_paid_payment_deletion_is_authority_gated` + `H5084PaymentDeleteAdminOnlyTest` | GUARDED |
 | Paid-payment hard-delete revocation chain (revoke-before-remove: group access, prana, referral, deposit, promo, gift cert) | admin delete action | status-transition reversal chain then row removal | admin | `PaymentHardDeleteRevocationTest` (PR #2675 branch) | **OPEN — PR #2675 pending merge** |
-| Silent deletes by design (`TeacherPayout` mirror via `withoutEvents`, `Payment.php` conditional cleanup via query-builder) | system cleanup | row removal without model events | system-only (no user-reachable path) | documented in code comments; no user-reachable entrypoint | BY DESIGN (documented) |
+| Silent deletes by design (`TeacherPayout` mirror `TeacherPayout.php:104` + `TeacherPayoutPoster.php:72`, `RehearseClubMembership.php:292`, `MoneySliFixture.php:88` — `withoutEvents`; conditional cleanup `Payment.php:1396` — query-builder) | system cleanup | row removal without model events | system-only (no user-reachable path) | documented in code comments; no user-reachable entrypoint | BY DESIGN (documented) |
 
 ## Maintainer checklist for a new surface
 

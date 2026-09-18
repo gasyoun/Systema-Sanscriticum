@@ -58,13 +58,15 @@ class H5093TrustBoundaryContractMatrixTest extends TestCase
     /** @test */
     public function contract_helper_flags_exactly_the_formula_shaped_cells(): void
     {
-        // Dangerous shapes (the classes FormulaGuard neutralizes).
-        foreach (['=SUM(A1)', '+cmd|/C calc', '@SUM(1)', "\tCMD", "\rCMD", '-cmd|/C calc', '-'] as $payload) {
+        // Dangerous shapes (the classes FormulaGuard neutralizes), including
+        // the unary-minus injection class ("-1+HYPERLINK(...)") that a bare
+        // second-char heuristic would miss.
+        foreach (['=SUM(A1)', '+cmd|/C calc', '@SUM(1)', "\tCMD", "\rCMD", '-cmd|/C calc', '-1+HYPERLINK("http://x","p")', '-2+3+cmd|/C calc', '-'] as $payload) {
             $this->assertTrue($this->trustBoundaryFormulaShapedCell($payload), "must flag «{$payload}»");
         }
 
-        // Legitimate data (numbers, plain strings, empties) must pass.
-        foreach (['-12.5', '-42', '2026-09-17 12:00', 'обычная строка', '', null, '0'] as $payload) {
+        // Legitimate data (fully numeric negatives, plain strings, empties) must pass.
+        foreach (['-12.5', '-42', '-1.2e3', '2026-09-17 12:00', 'обычная строка', '', null, '0'] as $payload) {
             $this->assertFalse($this->trustBoundaryFormulaShapedCell($payload), 'must not flag «'.var_export($payload, true).'»');
         }
     }

@@ -47,9 +47,11 @@ trait AssertsTrustBoundaries
 
     /**
      * TRUE when a serialized cell value would be evaluated as a formula by
-     * Excel/LibreOffice. Negative numbers ("-12.5") are numeric, not
-     * formula-shaped; "-cmd|..." is. Mirrors FormulaGuard semantics so the
-     * assertion cannot false-positive on legitimate negative numeric cells.
+     * Excel/LibreOffice. Only FULLY NUMERIC negatives ("-12.5", "-42",
+     * "-1.2e3") are safe — Excel parses those as numbers; anything else
+     * starting with "-" ("-cmd|...", "-1+HYPERLINK(...)") is unary-minus
+     * formula injection. Matches FormulaGuard, which prefixes every
+     * string cell with a leading "-" and passes only real numbers through.
      */
     public function trustBoundaryFormulaShapedCell(?string $cell): bool
     {
@@ -64,9 +66,9 @@ trait AssertsTrustBoundaries
         }
 
         if ($first === '-') {
-            $second = $cell[1] ?? '';
+            $rest = substr($cell, 1);
 
-            return ! ($second !== '' && (ctype_digit($second) || $second === '.'));
+            return preg_match('/^\d+(\.\d+)?([eE][+-]?\d+)?$/', $rest) !== 1;
         }
 
         return false;
@@ -75,21 +77,39 @@ trait AssertsTrustBoundaries
     /**
      * Boundary A invariant: no cell of a staff-facing spreadsheet export may
      * start with a formula-significant character. Decodes the real CSV stream
-     * row by row — not a single crafted line — so every column is covered.
+     * row by row via fgetcsv (RFC4180-correct: quoted embedded newlines stay
+     * inside their cell instead of producing phantom fragments), so every
+     * column of every row is covered.
      */
     public function assertCsvCellsFormulaNeutral(string $csv, string $delimiter = ';', string $message = 'trust-boundary A: export cells must be formula-neutral'): void
     {
-        $lines = array_values(array_filter(explode("\n", $csv), fn (string $line): bool => trim($line) !== ''));
-        self::assertNotEmpty($lines, $message.' — export produced no rows');
+        $handle = fopen('php://temp', 'r+');
+        self::assertNotFalse($handle, $message.' — could not open decode stream');
 
-        foreach ($lines as $lineIndex => $line) {
-            foreach (str_getcsv($line, $delimiter) as $colIndex => $cell) {
-                self::assertFalse(
-                    $this->trustBoundaryFormulaShapedCell($cell),
-                    $message." — row {$lineIndex} col {$colIndex} carries a formula-shaped cell"
-                );
+        fwrite($handle, $csv);
+        rewind($handle);
+
+        $rowIndex = 0;
+        $rowsSeen = 0;
+
+        try {
+            while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+                $rowsSeen++;
+
+                foreach ($row as $colIndex => $cell) {
+                    self::assertFalse(
+                        $this->trustBoundaryFormulaShapedCell(is_string($cell) ? $cell : (string) $cell),
+                        $message." — row {$rowIndex} col {$colIndex} carries a formula-shaped cell"
+                    );
+                }
+
+                $rowIndex++;
             }
+        } finally {
+            fclose($handle);
         }
+
+        self::assertGreaterThan(0, $rowsSeen, $message.' — export produced no rows');
     }
 
     /**
@@ -125,6 +145,14 @@ trait AssertsTrustBoundaries
      * authority. Runs the probe acting as every role in $forbiddenRoles
      * (use 'guest' for unauthenticated) and asserts FALSE, then as every
      * role in $allowedRoles and asserts TRUE.
+     *
+     * Scope note: this proves the GATE truth table (the authority floor as
+     * coded in the gate callable). The wiring that actually routes user
+     * actions through that gate (Filament DeleteAction/DeleteBulkAction,
+     * route middleware) must be covered by a component/feature test of the
+     * surface itself — see H5084PaymentDeleteAdminOnlyTest for the payment
+     * delete wiring; this helper alone cannot catch a bypass that never
+     * calls the gate.
      *
      * @param  callable(): bool  $allowed
      * @param  list<string>  $forbiddenRoles
