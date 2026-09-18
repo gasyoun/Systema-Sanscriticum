@@ -68,6 +68,41 @@ class ZoomWebhookTest extends TestCase
     }
 
     /** @test */
+    public function unsigned_url_validation_is_rejected_without_hmac(): void
+    {
+        // H5082: без подписи челлендж не отвечает HMAC — иначе эндпоинт
+        // подписывает секретом v0-подписи любой plainToken от анонима (oracle).
+        $this->postZoom([
+            'event' => 'endpoint.url_validation',
+            'payload' => ['plainToken' => 'plain-abc'],
+        ], sign: false)->assertStatus(403)
+            ->assertJsonMissing(['plainToken' => 'plain-abc'])
+            ->assertJsonMissing(['encryptedToken' => hash_hmac('sha256', 'plain-abc', self::SECRET)]);
+    }
+
+    /** @test */
+    public function forged_signature_url_validation_is_rejected_without_hmac(): void
+    {
+        // Регресс оракула (H5046→H5082): forged-событие с самодельной подписью
+        // не может получить byte-match HMAC ни для какого plainToken — в том
+        // числе выбранного как "v0:{ts}:{body}" для подделки participant-события.
+        config(['services.zoom.webhook_secret' => self::SECRET]);
+
+        $body = json_encode([
+            'event' => 'endpoint.url_validation',
+            'payload' => ['plainToken' => 'v0:'.self::TS.':{"event":"meeting.participant_joined"}'],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        $this->call('POST', '/api/webhooks/zoom', [], [], [], $this->transformHeadersToServerVars([
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'x-zm-request-timestamp' => self::TS,
+            'x-zm-signature' => 'v0='.hash_hmac('sha256', 'v0:'.self::TS.':'.$body, 'attacker-guess'),
+        ]), $body)->assertStatus(403)
+            ->assertJsonMissing(['encryptedToken']);
+    }
+
+    /** @test */
     public function unknown_meeting_is_acknowledged(): void
     {
         $this->postZoom($this->participantPayload('does-not-exist'))
