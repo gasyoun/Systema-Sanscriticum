@@ -106,7 +106,7 @@ function selftest() {
     // Positive control: valid page must PASS.
     const good = checkHtmlSource(
       '<html><body><script>\nconst CFG = [{ id: "a", pairs: [["क", "ka"]] }, { id: "b", pairs: [["ग", "ga"]] }];\n</script></body></html>',
-      workDir, 'good', // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag — synthetic fixture parsed by this tool, never rendered
+      workDir, 'good', // nosemgrep — scanner false positive: synthetic fixture is parsed by this tool, never rendered
     );
     results.push({ name: 'positive: valid page passes', ok: good.failures.length === 0 && good.blocks === 1 });
 
@@ -114,8 +114,7 @@ function selftest() {
     // array elements) must FAIL — the gate has to refuse bad input.
     const bad = checkHtmlSource(
       '<html><body><script>\nconst CFG = [{ id: "a" } { id: "b" }];\n</script></body></html>',
-      workDir,
-      'bad',
+      workDir, 'bad', // nosemgrep — scanner false positive: synthetic fixture is parsed by this tool, never rendered
     );
     results.push({ name: 'negative: missing comma refuses', ok: bad.failures.length === 1 });
 
