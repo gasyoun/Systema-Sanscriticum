@@ -419,8 +419,9 @@ class PaypalClaimTest extends TestCase
     {
         // Ruling 22-08-2026: свой ученик (вошел в кабинет) получает доступ
         // сразу — заявка создается paid, сверка делается после и выборочно.
+        // H5083: «существующий» = аккаунт старше 7 дней (isEstablishedClaimStudent).
         $tariff = $this->blockTariff();
-        $user = User::factory()->create(['email' => 'student@example.test']);
+        $user = User::factory()->create(['email' => 'student@example.test', 'created_at' => now()->subDays(30)]);
 
         $response = $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
             'foreign_amount' => 40,
@@ -455,7 +456,7 @@ class PaypalClaimTest extends TestCase
     public function trusted_claim_sits_in_unverified_queue_until_spot_check(): void
     {
         $tariff = $this->blockTariff();
-        $user = User::factory()->create();
+        $user = User::factory()->create(['created_at' => now()->subDays(30)]);
 
         $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
             'foreign_amount' => 40,
@@ -483,7 +484,7 @@ class PaypalClaimTest extends TestCase
         $group = Group::factory()->create();
         $group->courses()->attach($course);
         $tariff = Tariff::factory()->for($course)->block(2)->create(['price' => 4800]);
-        $user = User::factory()->create();
+        $user = User::factory()->create(['created_at' => now()->subDays(30)]);
 
         $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
             'foreign_amount' => 40,
@@ -527,7 +528,7 @@ class PaypalClaimTest extends TestCase
     public function student_ack_mail_renders_trusted_variant(): void
     {
         $tariff = $this->blockTariff();
-        $user = User::factory()->create();
+        $user = User::factory()->create(['created_at' => now()->subDays(30)]);
 
         $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
             'foreign_amount' => 40,
