@@ -1,0 +1,9 @@
+[Unit]
+Description=Send the weekly green digest Mondays 06:00 UTC (H3177)
+
+[Timer]
+OnCalendar=Mon *-*-* 06:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

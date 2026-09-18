@@ -1,0 +1,9 @@
+[Unit]
+Description=daily restic retention at 06:40 UTC
+
+[Timer]
+OnCalendar=*-*-* 06:40:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

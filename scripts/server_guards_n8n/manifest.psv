@@ -69,3 +69,42 @@ sbin/systema-nft-armed-apply.sh|/usr/local/sbin/systema-nft-armed-apply.sh|755|c
 nftables/systema-default-deny.nft|/etc/nftables.d/systema-default-deny.nft|644|critical
 ssh/10-hardening.conf|/etc/ssh/sshd_config.d/10-hardening.conf|644|critical
 fail2ban/jail.d/systema-sshd.conf|/etc/fail2ban/jail.d/systema-sshd.conf|644|critical
+
+# ── Волна регулярности (H5080, 18-09-2026) — systemd-таймеры .91 под манифестом ──
+# Живая проба ssh .91 18-09: 18 unit-файлов таймеров в /etc/systemd/system, из них
+# манифестом были покрыты только memwatch/n8n-backup/n8n-container-limits/
+# n8n-guards-verify (systemd/) и systema-peer-probe/systema-remediation-ladder
+# (кросс-строки ../server_guards/systemd/ выше). Остальные 13 пар стояли на машине
+# без строки манифеста — apply их не ставил и verify их пропажу не видел.
+# Шаблоны сняты с машины as-is 18-09-2026; значения таймеров не менялись.
+# НЕ включено и почему: privoxy-cleanup.{timer,service} — юнит живёт в
+# /lib/systemd/system (пакетный, не под our apply); n8n-container-limits.timer —
+# строка в манифесте ЕСТЬ (строка 35-область), а шаблона в дереве НИКОГДА не было
+# и файла на машине НЕТ (systemctl is-enabled = not-found, проба 18-09) — дефект
+# двойной, чинится отдельной задачей, не этой волной.
+systemd/disk-watch.timer|/etc/systemd/system/disk-watch.timer|644|warning
+systemd/disk-watch.service|/etc/systemd/system/disk-watch.service|644|warning
+systemd/restic-n8n-estate.timer|/etc/systemd/system/restic-n8n-estate.timer|644|critical
+systemd/restic-n8n-estate.service|/etc/systemd/system/restic-n8n-estate.service|644|critical
+systemd/restic-fanout.timer|/etc/systemd/system/restic-fanout.timer|644|critical
+systemd/restic-fanout.service|/etc/systemd/system/restic-fanout.service|644|critical
+systemd/restic-forget.timer|/etc/systemd/system/restic-forget.timer|644|critical
+systemd/restic-forget.service|/etc/systemd/system/restic-forget.service|644|critical
+systemd/restic-stale-locks-clean.timer|/etc/systemd/system/restic-stale-locks-clean.timer|644|critical
+systemd/restic-stale-locks-clean.service|/etc/systemd/system/restic-stale-locks-clean.service|644|critical
+systemd/restic-repo-ownership-sweep.timer|/etc/systemd/system/restic-repo-ownership-sweep.timer|644|critical
+systemd/restic-repo-ownership-sweep.service|/etc/systemd/system/restic-repo-ownership-sweep.service|644|critical
+systemd/uprava-covers.timer|/etc/systemd/system/uprava-covers.timer|644|warning
+systemd/uprava-covers.service|/etc/systemd/system/uprava-covers.service|644|warning
+systemd/systema-deadman.timer|/etc/systemd/system/systema-deadman.timer|644|critical
+systemd/systema-deadman.service|/etc/systemd/system/systema-deadman.service|644|critical
+systemd/systema-canary.timer|/etc/systemd/system/systema-canary.timer|644|warning
+systemd/systema-canary.service|/etc/systemd/system/systema-canary.service|644|warning
+systemd/systema-digest.timer|/etc/systemd/system/systema-digest.timer|644|warning
+systemd/systema-digest.service|/etc/systemd/system/systema-digest.service|644|warning
+systemd/systema-drill.timer|/etc/systemd/system/systema-drill.timer|644|warning
+systemd/systema-drill.service|/etc/systemd/system/systema-drill.service|644|warning
+systemd/systema-drill-watchdog.timer|/etc/systemd/system/systema-drill-watchdog.timer|644|warning
+systemd/systema-drill-watchdog.service|/etc/systemd/system/systema-drill-watchdog.service|644|warning
+systemd/systema-size-sanity.timer|/etc/systemd/system/systema-size-sanity.timer|644|warning
+systemd/systema-size-sanity.service|/etc/systemd/system/systema-size-sanity.service|644|warning

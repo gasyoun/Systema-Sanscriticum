@@ -1,0 +1,7 @@
+[Unit]
+Description=Hourly size-sanity assertion on the restic repo (H3178 c2.4)
+OnFailure=systema-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/systema-backup/size_sanity_check.py --repo /srv/restic/systema --password-file /root/.restic-pass --tag systema

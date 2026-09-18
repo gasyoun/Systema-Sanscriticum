@@ -1,0 +1,10 @@
+[Unit]
+Description=daily restic fan-out to Google Drive (H3176 S1.6)
+
+[Timer]
+OnCalendar=*-*-* 06:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

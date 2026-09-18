@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily n8n->estate push (after n8n-backup 03:17, before 06:00 fanout)
+
+[Timer]
+OnCalendar=*-*-* 04:30:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

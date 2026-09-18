@@ -1,0 +1,6 @@
+[Unit]
+Description=restic daily retention (forget+prune) - local repo, .91 side
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/systema-restic-forget.sh

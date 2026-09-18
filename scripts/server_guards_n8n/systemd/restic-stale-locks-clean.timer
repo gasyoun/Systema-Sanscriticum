@@ -1,0 +1,9 @@
+[Unit]
+Description=daily stale restic locks cleanup 06:55 UTC (after fanout window, before nothing critical)
+
+[Timer]
+OnCalendar=*-*-* 06:55:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
