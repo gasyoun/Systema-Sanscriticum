@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const LILA = join(ROOT, 'public', 'lila');
 
-const SCRIPT_RX = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+const SCRIPT_RX = /<script\b([^>]*)>([\s\S]*?)<\/script\b[^>]*>/gi;
 // JS-valued type attributes: absent, empty, classic JS, module. Everything else
 // (application/json, importmap, text/template, ...) is data, not JavaScript.
 const JS_TYPES_RX = /^(|text\/javascript|application\/javascript|module)$/i;
@@ -83,7 +83,8 @@ function sweep() {
   try {
     for (const page of pages) {
       const rel = page.slice(ROOT.length + 1);
-      const { blocks, failures } = checkHtmlSource(readFileSync(page, 'utf8'), workDir, rel.replaceAll('/', '__'));
+      // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag — this tool READS
+      const { blocks, failures } = checkHtmlSource(readFileSync(page, 'utf8'), workDir, rel.replaceAll('/', '__')); // HTML files to PARSE them; it never renders or emits markup.
       scriptsTotal += blocks;
       for (const f of failures) broken.push(`${rel} — ${f}`);
     }
@@ -105,8 +106,7 @@ function selftest() {
     // Positive control: valid page must PASS.
     const good = checkHtmlSource(
       '<html><body><script>\nconst CFG = [{ id: "a", pairs: [["क", "ka"]] }, { id: "b", pairs: [["ग", "ga"]] }];\n</script></body></html>',
-      workDir,
-      'good',
+      workDir, 'good', // nosemgrep: javascript.lang.security.audit.unknown-value-with-script-tag — synthetic fixture parsed by this tool, never rendered
     );
     results.push({ name: 'positive: valid page passes', ok: good.failures.length === 0 && good.blocks === 1 });
 
