@@ -11,7 +11,7 @@ _Created: 30-07-2026 · Last updated: 01-08-2026_
 |---|---|
 | PLAN index | [PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_SERVER_OPS_2026H2.md) |
 | Credential audit | [CREDENTIAL_AUDIT_N8N_CONTEXT_AI_2026-07-30.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/CREDENTIAL_AUDIT_N8N_CONTEXT_AI_2026-07-30.md) |
-| Lecture content engine (product) | [PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md) |
+| Lecture content engine (product) | [PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md) |
 | Operator clips manual | [MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md) |
 
 **Не содержит** значений секретов. При повторной выгрузке — scrub перед git.

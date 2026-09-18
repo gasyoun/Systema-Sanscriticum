@@ -1,0 +1,181 @@
+name: OxAlpha review gate
+
+# H5062 (17-09-2026): the H3546 gate design (docs/OXALPHA_STATUS_GATE_DESIGN_2026.md)
+# implemented for executable-code PRs - bounded, risk-scoped, independent.
+#
+# RUNG 1 - SHADOW / REPORTING ONLY (design §4 rollout step 2). NOT a required
+# check; branch protection is NOT touched by this file. The human flip to
+# required is design §4 step 4, an audited human action. Doc-only PRs follow
+# the documented skip path and stay green - they are never blocked.
+#
+# Conclusions (design §2, exactly one):
+#   pass  - every retained slice has separate Standards and Spec verdicts with
+#           evidence links (verdict posted as the `oxalpha-independent-verdict`
+#           check run bound to the tested head SHA by an independent session)
+#   fail  - verdict absent after the bounded wait (timeout), malformed /
+#           schema-invalid / stale verdict, P0/P1 without regression test, or
+#           sensitive paths without human approval in the PR body (design §3)
+#   skip  - diff matches no executable-code pattern (exclusion note posted)
+# GH constraint: a job check run carries success/failure only; pass-vs-skip is
+# distinguished in the step summary, artifacts and PR comment (design §2's
+# third conclusion is observable there, not in the check state).
+#
+# Independence rule: verdicts cite hunks/spec quotes produced WITHOUT access
+# to the author session's reasoning; the reviewer.independent=false flag is
+# rejected at validation (self-review can never satisfy the gate). Known
+# boundary (H5062 review round 1): the verdict check run is trusted by name +
+# head SHA binding; cryptographically binding it to an external reviewer app
+# needs authority this rung deliberately does not use - recorded as a risk,
+# mitigated by the shadow rung and the audited human required-flip.
+#
+# Tamper resistance: the gate scripts themselves run from the BASE ref
+# checkout (gate-runner/), not the PR tree - a PR cannot rewrite the gate
+# logic that judges it. (tools/**/.github/** are outside the §1 review
+# taxonomy by design; executing the judge from base closes the bypass that
+# would otherwise create.)
+#
+# KILL SWITCH / ROLLBACK (design "Rollback" section): set repository variable
+# OXALPHA_REVIEW_GATE_DISABLED=true for a neutral skip without touching any
+# other protection; deleting this file fully disables the gate.
+# The design's "job added to ci.yml" is landed as this standalone file with
+# the same job id AND the same check name (oxalpha-review-gate - GitHub uses
+# the job `name:` as the check-run name) so the branch-protection mapping is
+# identical (house precedent: SanskritGrammar H4074) - rollback = delete this
+# one file.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: read
+
+concurrency:
+  group: oxalpha-review-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERDICT_WAIT_SECONDS: "900"   # bounded wait for the independent verdict
+
+jobs:
+  oxalpha-review-gate:
+    name: oxalpha-review-gate   # check-run name == job id (required-check mapping)
+    runs-on: ubuntu-latest
+    steps:
+      # PR tree (diffed + reviewed)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      # Gate runner from the BASE ref: the judge is never the PR's own code.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          path: gate-runner
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      # Bootstrap fallback (review round 2): the base ref predates the gate on
+      # the introducing PR and any stale-base branch - fall back to the head's
+      # scripts and say so loudly. After the gate merges, base always has the
+      # scripts and the fallback can never fire again.
+      - name: Resolve gate runner source (base ref, or head on bootstrap)
+        run: |
+          if [ -f gate-runner/tools/oxalpha_gate_match.py ]; then
+            echo "GATE_DIR=gate-runner/tools" >> "$GITHUB_ENV"
+          else
+            echo "GATE_DIR=tools" >> "$GITHUB_ENV"
+            echo "::warning::gate scripts absent at base ref - BOOTSTRAP fallback to head scripts (tamper protection starts once the gate is merged)"
+          fi
+
+      - name: Hermetic fixture battery (match / verdict / conclude)
+        run: |
+          python3 "$GATE_DIR/test_oxalpha_gate_match.py"
+          python3 "$GATE_DIR/test_oxalpha_gate_verdict.py"
+          python3 "$GATE_DIR/test_oxalpha_gate_conclude.py"
+
+      - name: Match executable-code paths (design §1)
+        id: match
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 "$GATE_DIR/oxalpha_gate_match.py" --repo . --base "$BASE" --head "$HEAD" \
+            --out match.json --gha | tee -a "$GITHUB_OUTPUT"
+
+      - name: Fetch independent verdict for this head SHA (bounded wait)
+        if: steps.match.outputs.executable == 'true' && vars.OXALPHA_REVIEW_GATE_DISABLED != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -u
+          deadline=$(( $(date +%s) + VERDICT_WAIT_SECONDS ))
+          while [ "$(date +%s)" -lt "$deadline" ]; do
+            S=$(gh api "repos/$REPO/commits/$HEAD/check-runs" \
+              --jq '.check_runs[] | select(.name == "oxalpha-independent-verdict" and (.conclusion == "success" or .conclusion == "failure")) | .output.summary' 2>/dev/null || true)
+            if [ -n "$S" ]; then printf '%s' "$S" > verdict.json; echo "verdict found"; break; fi
+            sleep 15
+          done
+          [ -f verdict.json ] || echo "::notice::no oxalpha-independent-verdict within ${VERDICT_WAIT_SECONDS}s - will conclude fail (timeout; INCONCLUSIVE is never PASS)"
+
+      - name: Conclusion (exactly one of pass/fail/skip, never silent)
+        if: always()
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+          KILL: ${{ vars.OXALPHA_REVIEW_GATE_DISABLED }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -u
+          # A missing match.json is an INFRASTRUCTURE failure, never a benign
+          # skip (review round 2): mark it so conclude fails loudly.
+          if [ ! -f match.json ]; then
+            echo '{"schema":"oxalpha-gate-match/1","base":"","head":"","executable":[],"sensitive":[],"excluded":[],"other":[],"has_executable":false,"has_sensitive":false,"infra_failure":true}' > match.json
+          fi
+          BODY="" ; AUTHOR=""
+          if [ -n "${PR_NUMBER:-}" ]; then
+            BODY=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json body --jq '.body' || echo "")
+            AUTHOR=$(gh pr view "$PR_NUMBER" --repo "${{ github.repository }}" --json author --jq '.author.login' || echo "")
+          fi
+          set +e
+          python3 "$GATE_DIR/oxalpha_gate_conclude.py" \
+            --matched-json match.json \
+            --verdict-file "$( [ -f verdict.json ] && echo verdict.json || echo /nonexistent )" \
+            --pr-body "$BODY" --pr-author "$AUTHOR" --head "$HEAD" --kill-switch "$KILL"
+          GATE_RC=$?
+          set -e
+          cat gate-summary.md >> "$GITHUB_STEP_SUMMARY"
+          exit $GATE_RC
+
+      - name: Upload verdict artifacts (never silent)
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: oxalpha-gate-verdict-${{ github.run_id }}
+          path: |
+            verdict.json
+            gate-verdict.json
+            match.json
+            gate-summary.md
+          if-no-files-found: warn
+
+      - name: PR comment (never silent)
+        if: always() && github.event_name == 'pull_request' && hashFiles('gate-summary.md') != ''
+        continue-on-error: true   # fork PRs cannot comment with GITHUB_TOKEN
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "<!-- oxalpha-review-gate -->"
+            cat gate-summary.md
+            echo ""
+            echo "_Risk-scoped independent review gate (H3546 design, H5062 activation) — shadow rung, not a required check. Rollback: repo variable \`OXALPHA_REVIEW_GATE_DISABLED=true\` or delete the workflow._"
+          } > comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" --body-file comment.md

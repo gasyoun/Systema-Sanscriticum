@@ -36,7 +36,7 @@ weekly rhythm, troubleshooting.
 - [MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/MANUAL_N8N_LECTURE_CLIPS_OPERATOR_RU.md)
 - [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666)
 - [docs/n8n/README.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/README.md)
-- [PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md)
+- [PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md)
 
 ## Revision history
 

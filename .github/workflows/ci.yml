@@ -88,6 +88,53 @@ jobs:
           GUIDE_SHOTS_OPTIONAL: "1"
         run: php artisan test --parallel
 
+  production-profile:
+    # H5060 — production no-dev runtime parity gate. PRs #2577/#2646/#2648
+    # kept dying on dev-only dependency drift (symfony/yaml via laravel/sail
+    # was read at runtime → "Class Symfony\Component\Yaml\Yaml not found";
+    # anons manifests reverted to JSON-only). The main CI installs WITH dev
+    # packages, so that failure class never reproduces here. This job
+    # installs the locked Composer closure with --no-dev, caches config,
+    # boots Laravel and exercises the real JSON-backed MIC/anons loader
+    # seams with their flags OFF and ON — failing with an actionable
+    # dependency/format diagnosis. No DB, no secrets, no network.
+    name: Production profile — no-dev runtime parity
+    runs-on: ubuntu-latest
+    env:
+      PARITY_REQUIRE_NODEV: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, xml, pdo, sqlite, pdo_sqlite, redis, curl, zip, pcntl, posix
+          coverage: none
+
+      - name: Cache Composer packages (no-dev profile)
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: vendor
+          key: php-8.3-nodev-${{ hashFiles('composer.lock') }}
+          restore-keys: php-8.3-nodev-
+
+      - name: Production Composer profile (locked, --no-dev)
+        run: composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader --no-dev
+
+      - name: Platform requirements (no-dev closure)
+        run: composer check-platform-reqs
+
+      - name: Set up environment
+        run: |
+          cp .env.example .env
+          # SQLite for CI parity runs — no production DB, credentials or network.
+          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=sqlite/' .env
+          sed -i 's/DB_DATABASE=laravel/DB_DATABASE=\/tmp\/parity.sqlite/' .env
+          php artisan key:generate
+
+      - name: No-dev runtime parity check (boot + config cache + MIC/anons JSON loaders)
+        run: php scripts/prod_runtime_parity_check.php
+
   frontend-build:
     name: Frontend build (Vite + Tailwind)
     runs-on: ubuntu-latest

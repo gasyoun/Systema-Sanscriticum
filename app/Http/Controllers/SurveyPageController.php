@@ -8,6 +8,7 @@ use App\Models\SurveyResponse;
 use App\Models\User;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Support\FormulaGuard;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Illuminate\Http\RedirectResponse;
@@ -134,7 +135,8 @@ class SurveyPageController extends Controller
                     };
                     $line[] = $value;
                 }
-                fputcsv($out, $line, ';');
+                // H5086: ответы анкеты — гостевые строки, нейтрализуем формулы.
+                fputcsv($out, FormulaGuard::row($line), ';');
             }
 
             fclose($out);

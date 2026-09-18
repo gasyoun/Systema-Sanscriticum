@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
 use App\Models\ScheduleAttendanceNotice;
@@ -156,6 +157,10 @@ class ClassAttendanceService
      * студенту/группе/курсу, тренд по неделям, хронические неявки. Реюз
      * forSchedule() построчно — никакой новой логики подсчёта, только агрегация.
      *
+     * H5087 (remediation of H5046): $teacherId сужает отчёт до занятий курсов,
+     * которые ведёт преподаватель (основной или со-препод, Course::forTeacher)
+     * и групп этих курсов. null — вся школа (админ-подобные).
+     *
      * @return array{
      *     students: Collection,
      *     groups: Collection,
@@ -164,11 +169,21 @@ class ClassAttendanceService
      *     chronic: Collection,
      * }
      */
-    public function dashboard(CarbonInterface $from, CarbonInterface $to, int $chronicThreshold): array
+    public function dashboard(CarbonInterface $from, CarbonInterface $to, int $chronicThreshold, ?int $teacherId = null): array
     {
         $schedules = Schedule::query()
             ->whereNotNull('start')
             ->whereBetween('start', [$from, $to])
+            ->when($teacherId !== null, function ($query) use ($teacherId): void {
+                // H5087: преподаватель — только свои курсы/группы (основной или
+                // со-препод); teacher_id NULL у User -> пустой скоуп, не вся школа.
+                $courseIds = Course::query()->forTeacher(max(0, $teacherId))->pluck('id');
+                $groupIds = Group::query()->ledBy(max(0, $teacherId))->pluck('id');
+                $query->where(function ($q) use ($courseIds, $groupIds): void {
+                    $q->whereIn('course_id', $courseIds)
+                        ->orWhereIn('group_id', $groupIds);
+                });
+            })
             ->with(['group', 'course'])
             ->orderBy('start')
             ->get();

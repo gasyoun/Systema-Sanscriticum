@@ -28,6 +28,15 @@ class Schedule extends Model
      */
     public const DEFAULT_DURATION_HOURS = 2;
 
+    /**
+     * Запас жизни трекинг-ссылки «Подключиться» после конца занятия и её
+     * минимальный срок годности с момента выдачи (H5081: подпись без
+     * истечения в чатах живёт вечно и переживает отзыв доступа).
+     */
+    public const JOIN_LINK_GRACE_MINUTES = 30;
+
+    public const JOIN_LINK_MIN_TTL_MINUTES = 90;
+
     protected $fillable = [
         'title',
         'description',
@@ -107,6 +116,11 @@ class Schedule extends Model
      * Трекинг-ссылка «Подключиться» для конкретного студента (для бота/напоминаний,
      * где нет сессии): подписанный URL с user id, по которому JoinClassController
      * запишет клик и редиректнет на настоящий Zoom-URL. null, если ссылки занятия нет.
+     *
+     * Ссылка живёт не вечно (H5081): истечение — по окну занятия (конец + запас),
+     * но не меньше JOIN_LINK_MIN_TTL_MINUTES с момента выдачи, чтобы ссылка,
+     * выданная прямо перед занятием, не умерла раньше класса. Подпись без
+     * срока в чате Telegram живёт бесконечно и переживает отзыв доступа.
      */
     public function trackedJoinUrlFor(User $user, string $source = 'reminder'): ?string
     {
@@ -114,7 +128,12 @@ class Schedule extends Model
             return null;
         }
 
-        return URL::signedRoute('class.join', [
+        $classEnd = $this->end ?? $this->start?->copy()->addHours(self::DEFAULT_DURATION_HOURS);
+        $expiresAt = ($classEnd !== null ? $classEnd->copy() : now()->copy())
+            ->addMinutes(self::JOIN_LINK_GRACE_MINUTES)
+            ->max(now()->copy()->addMinutes(self::JOIN_LINK_MIN_TTL_MINUTES));
+
+        return URL::temporarySignedRoute('class.join', $expiresAt, [
             'schedule' => $this->id,
             'u' => $user->id,
             'source' => $source,

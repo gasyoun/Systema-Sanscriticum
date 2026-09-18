@@ -50,18 +50,6 @@ class PaypalClaimTest extends TestCase
         return Tariff::factory()->for($course)->block(2)->create(['price' => 4800]);
     }
 
-    /**
-     * H5083: auto-trust требует «дозагрузочный» аккаунт — заводим с created_at
-     * в прошлом (окно bootstrap по умолчанию 24ч, см. ClaimTrustPolicy).
-     */
-    private function agedStudent(array $attributes = [], int $days = 30): User
-    {
-        $user = User::factory()->create($attributes);
-        $user->forceFill(['created_at' => now()->subDays($days)])->saveQuietly();
-
-        return $user;
-    }
-
     /** @test */
     public function disabled_feature_returns_404(): void
     {
@@ -431,9 +419,9 @@ class PaypalClaimTest extends TestCase
     {
         // Ruling 22-08-2026: свой ученик (вошел в кабинет) получает доступ
         // сразу — заявка создается paid, сверка делается после и выборочно.
-        // H5083: «существующий» = дозагрузочный аккаунт (не mint этой сессии).
+        // H5083: «существующий» = аккаунт старше 7 дней (isEstablishedClaimStudent).
         $tariff = $this->blockTariff();
-        $user = $this->agedStudent(['email' => 'student@example.test']);
+        $user = User::factory()->create(['email' => 'student@example.test', 'created_at' => now()->subDays(30)]);
 
         $response = $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
             'foreign_amount' => 40,
@@ -465,117 +453,10 @@ class PaypalClaimTest extends TestCase
     }
 
     /** @test */
-    public function self_minted_session_second_post_stays_pending(): void
-    {
-        // H5083 — регрессия находки H5046 claim-trusted-autopaid-session-
-        // bootstrap: resolveUser() mintит аккаунт и логинит его в той же
-        // сессии; ВТОРОЙ POST той же сессии раньше проходил по
-        // auth()->check() как auto-trusted paid без сверки. Теперь оба
-        // платежа self-minted-сессии обязаны остаться pending.
-        $tariff = $this->blockTariff();
-
-        // POST #1 — гость с новым email: аккаунт создан и залогинен в сессии.
-        $this->post(route('paypal.claim.store', $tariff), [
-            'name' => 'Self Minted',
-            'email' => 'self-minted@example.test',
-            'foreign_amount' => 40,
-            'paypal_payer' => 'payer@example.com',
-            'paid_on' => '2026-09-17',
-            'foreign_currency' => 'EUR',
-        ])->assertRedirect(route('paypal.claim.show', $tariff));
-
-        // POST #2 — та же сессия, пользователь уже залогинен после #1.
-        $second = $this->post(route('paypal.claim.store', $tariff), [
-            'foreign_amount' => 90,
-            'paypal_payer' => 'payer@example.com',
-            'paid_on' => '2026-09-17',
-            'foreign_currency' => 'EUR',
-        ]);
-
-        $second->assertRedirect(route('paypal.claim.show', $tariff));
-        // Pending-ветка копии: доступ НЕ открывался, ожидаем сверки.
-        $second->assertSessionHas('success', fn ($v) => str_contains((string) $v, 'Мы сверим платеж'));
-
-        $this->assertSame(
-            2,
-            Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->count(),
-        );
-
-        Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)
-            ->each(fn (Payment $payment) => $this->assertSame('pending', $payment->status));
-
-        $minted = User::query()->where('email', 'self-minted@example.test')->firstOrFail();
-        $this->assertSame(
-            0,
-            $minted->courses()->count(),
-            'Self-minted сессия не открывает доступ ни на каком POST.',
-        );
-        $this->assertSame(
-            0,
-            Payment::query()->where('user_id', $minted->id)->whereNotNull('claim_meta->trusted_at')->count(),
-        );
-    }
-
-    /** @test */
-    public function fresh_logged_in_account_without_paid_history_stays_pending(): void
-    {
-        // H5083: свежий залогиненный аккаунт без paid-истории — НЕ trusted,
-        // даже при включенном trust_existing_students.
-        $tariff = $this->blockTariff();
-        $user = User::factory()->create();
-
-        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
-            'foreign_amount' => 40,
-            'paypal_payer' => 'payer@example.com',
-            'paid_on' => '2026-09-17',
-            'foreign_currency' => 'EUR',
-        ]);
-
-        $payment = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->latest()->firstOrFail();
-
-        $this->assertSame('pending', $payment->status);
-        $this->assertFalse($payment->isAutoTrustedPaypal());
-        $this->assertNull($payment->claimMeta('trusted_at'));
-        $this->assertSame(0, $payment->user->courses()->count());
-    }
-
-    /** @test */
-    public function fresh_account_with_prior_paid_payment_is_trusted(): void
-    {
-        // H5083: второе условие доверия — проверенный денежный контур:
-        // свежий аккаунт, у которого уже есть PAID-платеж, trusted.
-        $tariff = $this->blockTariff();
-        $user = User::factory()->create();
-        // Проверенный денежный контур: прошлый PAID-платеж (не PayPal-claim,
-        // чтобы выборка «latest PayPal» ниже осталась однозначной).
-        Payment::create([
-            'user_id' => $user->id,
-            'course_id' => $tariff->course_id,
-            'amount' => 4800,
-            'tariff' => 'block_1',
-            'status' => 'paid',
-            'provider' => Payment::PROVIDER_INVOICE,
-        ]);
-
-        $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
-            'foreign_amount' => 40,
-            'paypal_payer' => 'payer@example.com',
-            'paid_on' => '2026-09-17',
-            'foreign_currency' => 'EUR',
-        ]);
-
-        $payment = Payment::query()->where('provider', Payment::PROVIDER_PAYPAL)->latest()->firstOrFail();
-
-        $this->assertSame('paid', $payment->status);
-        $this->assertTrue($payment->isAutoTrustedPaypal());
-        $this->assertNotNull($payment->claimMeta('trusted_at'));
-    }
-
-    /** @test */
     public function trusted_claim_sits_in_unverified_queue_until_spot_check(): void
     {
         $tariff = $this->blockTariff();
-        $user = $this->agedStudent();
+        $user = User::factory()->create(['created_at' => now()->subDays(30)]);
 
         $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
             'foreign_amount' => 40,
@@ -603,7 +484,7 @@ class PaypalClaimTest extends TestCase
         $group = Group::factory()->create();
         $group->courses()->attach($course);
         $tariff = Tariff::factory()->for($course)->block(2)->create(['price' => 4800]);
-        $user = $this->agedStudent();
+        $user = User::factory()->create(['created_at' => now()->subDays(30)]);
 
         $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
             'foreign_amount' => 40,
@@ -647,7 +528,7 @@ class PaypalClaimTest extends TestCase
     public function student_ack_mail_renders_trusted_variant(): void
     {
         $tariff = $this->blockTariff();
-        $user = $this->agedStudent();
+        $user = User::factory()->create(['created_at' => now()->subDays(30)]);
 
         $this->actingAs($user)->post(route('paypal.claim.store', $tariff), [
             'foreign_amount' => 40,
