@@ -51,9 +51,21 @@ class PaymentResource extends Resource
         return RoleGate::any(Roles::ADMIN, Roles::MANAGER, Roles::ACCOUNTANT);
     }
 
+    // Удаление транзакции — только админам (H5084): жёсткое удаление оплаченного
+    // платежа не проходит через цепочку отзыва (статусы failed/canceled в
+    // Payment::booted), доступ к группе/прана/депозит остались бы висеть при
+    // уничтоженной строке денег. Отзыв доступа — переводом статуса, не удалением.
     public static function canDelete($record): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::MANAGER, Roles::ACCOUNTANT);
+        return RoleGate::adminOnly();
+    }
+
+    // Без этого override Filament отдаёт canDeleteAny()=true (нет PaymentPolicy),
+    // и DeleteBulkAction всплывал бы у менеджера/бухгалтера — прецедент
+    // UserResource::canDeleteAny() ровно про этот класс дыры.
+    public static function canDeleteAny(): bool
+    {
+        return RoleGate::adminOnly();
     }
 
     /**
