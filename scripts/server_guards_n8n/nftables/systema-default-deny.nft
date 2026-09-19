@@ -77,6 +77,16 @@ table inet filter {
 		#    «пропадает» для любого пингующего монитора.
 		ip protocol icmp icmp type { echo-request, echo-reply, destination-unreachable, time-exceeded } accept
 		ip6 nexthdr icmpv6 accept
+
+		# 9. Kosha-API на .91: uvicorn на host:8001, вход публично — только
+		#    через caddy-релей (H2991: preflight 204 + ACAO, evil 403). Рулинг
+		#    MG 18-09-2026 (GTD 0CG2): «nft 8001 docker-only» — порт открыт
+		#    docker-подсети (br-d1cc9de94e89 = 172.18.0.1/16) и больше никому;
+		#    публичный доступ сюда не открывать.
+		#    ВАЖНО: голый `accept` в конце этой цепочки НЕДОПУСТИМ — он гасит
+		#    default-deny целиком (живой случай 18-09-2026: правка файла на .91
+		#    добавила его вслед за правилом 8001; снят 19-09-2026, H5080-F1).
+		ip saddr 172.18.0.0/16 tcp dport 8001 accept
 	}
 
 	chain forward {
