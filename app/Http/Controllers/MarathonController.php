@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\LandingPage;
+use App\Support\AcquisitionAttribution;
 use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
@@ -133,6 +134,8 @@ class MarathonController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ];
+
+        $leadData = array_merge($leadData, AcquisitionAttribution::forLead($request));
 
         if (empty($leadData['email']) && filter_var($leadData['contact'], FILTER_VALIDATE_EMAIL)) {
             $leadData['email'] = $leadData['contact'];
@@ -367,6 +370,8 @@ class MarathonController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ];
+
+        $leadData = array_merge($leadData, AcquisitionAttribution::forLead($request));
 
         if (empty($leadData['email']) && filter_var($leadData['contact'], FILTER_VALIDATE_EMAIL)) {
             $leadData['email'] = $leadData['contact'];
