@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Support\AcquisitionAttribution;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,14 +29,14 @@ class CaptureAttribution
             $data = [];
 
             foreach (self::UTM_FIELDS as $field) {
-                $value = trim((string) $request->query($field));
-                if ($value !== '') {
+                $value = AcquisitionAttribution::scalar($request->query($field));
+                if ($value !== null) {
                     $data[$field] = $value;
                 }
             }
 
-            $referrer = trim((string) $request->headers->get('referer'));
-            if ($referrer !== '') {
+            $referrer = AcquisitionAttribution::externalReferrer($request);
+            if ($referrer !== null) {
                 $data['referrer'] = $referrer;
             }
 
