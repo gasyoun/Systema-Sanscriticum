@@ -33,6 +33,8 @@ systemd/memwatch.timer|/etc/systemd/system/memwatch.timer|644|warning
 systemd/n8n-backup.service|/etc/systemd/system/n8n-backup.service|644|critical
 systemd/n8n-backup.timer|/etc/systemd/system/n8n-backup.timer|644|critical
 systemd/n8n-container-limits.service|/etc/systemd/system/n8n-container-limits.service|644|critical
+systemd/n8n-container-limits.timer|/etc/systemd/system/n8n-container-limits.timer|644|critical
+systemd/n8n-container-limits-periodic.service|/etc/systemd/system/n8n-container-limits-periodic.service|644|critical
 systemd/n8n-guards-verify.service|/etc/systemd/system/n8n-guards-verify.service|644|warning
 systemd/n8n-guards-verify.timer|/etc/systemd/system/n8n-guards-verify.timer|644|warning
 systemd/journald.conf.d/99-persistent.conf|/etc/systemd/journald.conf.d/99-persistent.conf|644|warning
@@ -78,10 +80,10 @@ fail2ban/jail.d/systema-sshd.conf|/etc/fail2ban/jail.d/systema-sshd.conf|644|cri
 # без строки манифеста — apply их не ставил и verify их пропажу не видел.
 # Шаблоны сняты с машины as-is 18-09-2026; значения таймеров не менялись.
 # НЕ включено и почему: privoxy-cleanup.{timer,service} — юнит живёт в
-# /lib/systemd/system (пакетный, не под our apply); n8n-container-limits.timer —
-# строка в манифесте ЕСТЬ (строка 35-область), а шаблона в дереве НИКОГДА не было
-# и файла на машине НЕТ (systemctl is-enabled = not-found, проба 18-09) — дефект
-# двойной, чинится отдельной задачей, не этой волной.
+# /lib/systemd/system (пакетный, не под our apply).
+# n8n-container-limits.timer (F1) — закрыто 19-09-2026 (H5080): шаблон авторизован
+# (timer + отдельный periodic-сервис, т.к. boot-юнит H3182 держит RemainAfterExit=yes
+# и таймером не перезапускается), строки манифеста и REQUIRED_ACTIVE_TIMERS добавлены.
 systemd/disk-watch.timer|/etc/systemd/system/disk-watch.timer|644|warning
 systemd/disk-watch.service|/etc/systemd/system/disk-watch.service|644|warning
 systemd/restic-n8n-estate.timer|/etc/systemd/system/restic-n8n-estate.timer|644|critical

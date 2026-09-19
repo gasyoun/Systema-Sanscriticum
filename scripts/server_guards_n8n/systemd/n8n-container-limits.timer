@@ -1,0 +1,28 @@
+# n8n-container-limits.timer — периодическое переутверждение потолков памяти и
+# pids контейнеров n8n/Caddy на .91 (H3182 волна 2; дефект F1 закрыт H5080 19-09-2026).
+#
+# Почему Unit= указывает на ОТДЕЛЬНЫЙ сервис, а не на boot-юнит H3182:
+# n8n-container-limits.service объявлен RemainAfterExit=yes — после прогона он
+# остаётся «active (exited)», и systemd НЕ запускает активный oneshot повторно по
+# сигналу таймера. Таймер поверх него молча ничего бы не делал (та же ловушка,
+# что у всех oneshot+RemainAfterExit под таймером). Поэтому периодический прогон
+# идёт через n8n-container-limits-periodic.service — тот же ExecStart, без
+# RemainAfterExit.
+#
+# Зачем период вообще: `docker update` живёт ровно до пересоздания контейнера, а
+# его делает законный `docker compose up -d` человека БЕЗ перезапуска
+# docker.service — boot-юнит на это не срабатывает. Период — максимальное окно,
+# в котором потолок может стоять снятым молча.
+[Unit]
+Description=periodically re-assert n8n/Caddy container memory and pids limits — H3182
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SERVER_UPTIME_GUARDRAILS_2026H2.md
+After=docker.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=@@N8N_CONTAINER_LIMITS_PERIOD@@
+AccuracySec=30s
+Unit=n8n-container-limits-periodic.service
+
+[Install]
+WantedBy=timers.target
