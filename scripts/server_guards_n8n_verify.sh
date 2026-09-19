@@ -171,9 +171,17 @@ if [ -n "${G[N8N_BACKUP_OFFSITE_REPO]:-}" ]; then
   if [ ! -s "$pass" ]; then
     crit "backup-offsite" "нет файла пароля ${pass:-<пусто>} — до репозитория не достучаться"
   else
+    # Ловушка (H5080-F1, 19-09-2026): `--latest 1` группирует снимки по
+    # (host, paths), а путь у каждого ночного архива свой
+    # (/var/backups/n8n/n8n-<ts>.tar.gz) — каждый снимок образует СВОЮ группу, и
+    # JSON содержит их все. Старый `head -1` брал первый элемент = самый СТАРЫЙ
+    # снимок (25-08) и рисовал ложный critical «новейший снимок 595 ч назад»
+    # при живых ежедневных копиях. Берём максимум: ISO-времена сортируются
+    # лексикографически = хронологически. Регрессия:
+    # scripts/server_guards_n8n/sbin/test_n8n_verify_offsite_parser.sh
     last=$(restic -r "${G[N8N_BACKUP_OFFSITE_REPO]}" --password-file "$pass" \
-             snapshots --tag n8n --latest 1 --json 2>/dev/null \
-           | grep -o '"time":"[^"]*"' | head -1 | cut -d'"' -f4)
+             snapshots --tag n8n --json 2>/dev/null \
+           | grep -o '"time":"[^"]*"' | cut -d'"' -f4 | sort | tail -1)
     if [ -z "$last" ]; then
       crit "backup-offsite" "репозиторий ${G[N8N_BACKUP_OFFSITE_REPO]} не отвечает или в нём нет ни одного снимка n8n"
     else
