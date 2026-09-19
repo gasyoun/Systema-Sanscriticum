@@ -16,29 +16,12 @@ final class AcquisitionAttribution
         return is_string($value) && trim($value) !== '' ? mb_substr(trim($value), 0, 255) : null;
     }
 
-    public static function capture(Request $request): void
-    {
-        if (! $request->isMethod('GET')) {
-            return;
-        }
-
-        $key = (string) config('tracked_links.session_key');
-        $campaign = self::fields($request->query());
-        if ($campaign !== [] && ! $request->session()->has($key)) {
-            $request->session()->put($key, $campaign);
-        }
-
-        $referrer = self::externalReferrer($request);
-        if ($referrer !== null && ! $request->session()->has('acquisition_referrer')) {
-            $request->session()->put('acquisition_referrer', $referrer);
-        }
-    }
-
     public static function forLead(Request $request): array
     {
-        $stored = $request->session()->get((string) config('tracked_links.session_key'), []);
+        $stored = $request->session()->get((string) config('tracked_links.session_key'),
+            $request->session()->get('attribution', []));
         $result = self::fields(is_array($stored) ? $stored : []);
-        $referrer = self::scalar($request->session()->get('acquisition_referrer'));
+        $referrer = self::scalar($request->session()->get('attribution.referrer'));
         if ($referrer !== null) {
             $result['referrer'] = $referrer;
         }
@@ -58,7 +41,7 @@ final class AcquisitionAttribution
         return $result;
     }
 
-    private static function externalReferrer(Request $request): ?string
+    public static function externalReferrer(Request $request): ?string
     {
         $value = $request->headers->get('referer');
         if (! is_string($value) || filter_var($value, FILTER_VALIDATE_URL) === false) {

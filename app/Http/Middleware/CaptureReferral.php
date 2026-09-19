@@ -18,8 +18,6 @@ class CaptureReferral
 {
     public function handle(Request $request, Closure $next): Response
     {
-        AcquisitionAttribution::capture($request);
-
         $ref = AcquisitionAttribution::scalar($request->query('ref')) ?? '';
 
         if ($ref !== '' && ! $request->session()->has('ref')) {
