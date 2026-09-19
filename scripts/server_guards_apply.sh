@@ -422,6 +422,9 @@ else
     if touched 'memwatch'; then
       systemctl enable --now memwatch.timer >/dev/null 2>&1 && ok "memwatch.timer включён"
     fi
+    if touched 'n8n-container-limits.timer'; then
+      systemctl enable --now n8n-container-limits.timer >/dev/null 2>&1 && ok "n8n-container-limits.timer включён (H5080-F1)"
+    fi
     if touched 'sysstat'; then
       systemctl enable --now sysstat.service >/dev/null 2>&1 || true
       systemctl restart sysstat-collect.timer >/dev/null 2>&1 && ok "sysstat-collect.timer перезапущен"
