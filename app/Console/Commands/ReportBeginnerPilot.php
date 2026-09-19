@@ -21,6 +21,7 @@ final class ReportBeginnerPilot extends Command
         $days = (string) $this->option('days');
         if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw) || ! ctype_digit($days) || (int) $days < 1 || (int) $days > 366) {
             $this->error('Supply --from=YYYY-MM-DD and --days=1..366. This command does not launch the pilot.');
+
             return self::FAILURE;
         }
         try {
@@ -30,12 +31,14 @@ final class ReportBeginnerPilot extends Command
         }
         if (! $from || $from->format('Y-m-d') !== $raw || $from->isFuture()) {
             $this->error('The start must be a valid date no later than today.');
+
             return self::FAILURE;
         }
         $ids = $this->option('main-course');
         foreach ($ids as $id) {
             if (! ctype_digit((string) $id) || (int) $id < 1 || ! Course::query()->whereKey((int) $id)->exists()) {
                 $this->error('Every --main-course must identify an existing, verified main course.');
+
                 return self::FAILURE;
             }
         }
@@ -44,6 +47,7 @@ final class ReportBeginnerPilot extends Command
             $this->info('Beginner pilot — aggregate read-only report. Null means unavailable, not zero.');
         }
         $this->line(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+
         return self::SUCCESS;
     }
 }
