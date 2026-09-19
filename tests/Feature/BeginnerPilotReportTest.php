@@ -31,6 +31,7 @@ class BeginnerPilotReportTest extends TestCase
     private function report(array $ids = []): array
     {
         $this->travelTo(CarbonImmutable::parse('2026-10-10'));
+
         return app(BeginnerPilotReport::class)->build(CarbonImmutable::parse('2026-09-01'), 30, $ids);
     }
 
