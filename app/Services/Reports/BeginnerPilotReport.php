@@ -37,8 +37,10 @@ final class BeginnerPilotReport
                 if (in_array($p->status, Payment::PAID_STATUSES, true)) {
                     return true;
                 }
+
                 return $p->audits->contains(function ($audit) {
                     $status = $audit->getAttribute('changes')['status'] ?? null;
+
                     return count(array_intersect((array) $status, Payment::PAID_STATUSES)) > 0;
                 });
             });
@@ -57,8 +59,7 @@ final class BeginnerPilotReport
                 continue;
             }
             $marathon[] = $userId;
-            if ($mainCourseIds !== [] && $orders->contains(fn (Payment $p) =>
-                in_array((int) $p->course_id, $mainCourseIds, true)
+            if ($mainCourseIds !== [] && $orders->contains(fn (Payment $p) => in_array((int) $p->course_id, $mainCourseIds, true)
                 && $p->tariff !== 'marathon_paid' && $p->first_paid_at > $intro->first_paid_at)) {
                 $continued[] = $userId;
             }
@@ -71,6 +72,7 @@ final class BeginnerPilotReport
         }
         $refunds = Payment::query()->whereNotNull('refund_of_payment_id')
             ->where('created_at', '>=', $from)->where('created_at', '<', $until)->get(['amount', 'refund_of_payment_id']);
+
         return [
             'window' => ['from_inclusive' => $from->toIso8601String(), 'end_exclusive' => $end->toIso8601String(), 'observed_until_exclusive' => $until->toIso8601String(), 'timezone' => $from->timezoneName, 'complete' => $end <= CarbonImmutable::now()],
             'buyers' => array_map('count', $cohorts),
