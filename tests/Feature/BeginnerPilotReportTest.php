@@ -73,7 +73,7 @@ class BeginnerPilotReportTest extends TestCase
         $buyer = User::factory()->create(['lead_id' => $lead->id]);
         $this->payment($buyer, ['lead_id' => $lead->id]);
         $this->payment($buyer, ['course_id' => $other->id, 'tariff' => 'full', 'first_paid_at' => '2026-09-04']);
-        MarathonEnrollment::create(['lead_id' => $lead->id, 'track' => 'paid', 'day1_completed_at' => '2026-09-04']);
+        MarathonEnrollment::create(['lead_id' => $lead->id, 'track' => 'paid', 'day0_started_at' => '2026-09-03', 'day1_completed_at' => '2026-09-04']);
         $inferredLead = Lead::factory()->create(['utm_source' => null, 'source' => null]);
         $inferredLead->forceFill(['inferred_source' => 'youtube'])->saveQuietly();
         $inferred = User::factory()->create(['lead_id' => $inferredLead->id]);
@@ -101,6 +101,6 @@ class BeginnerPilotReportTest extends TestCase
         $this->assertSame(0, Artisan::call('report:beginner-pilot', ['--from' => '2026-09-01', '--json' => true]));
         $result = json_decode(Artisan::output(), true, flags: JSON_THROW_ON_ERROR);
         $this->assertSame(0, $result['buyers']['first_time']);
-        $this->assertSame('2026-10-01T00:00:00+00:00', $result['window']['end_exclusive']);
+        $this->assertSame(CarbonImmutable::parse('2026-10-01', config('app.timezone'))->toIso8601String(), $result['window']['end_exclusive']);
     }
 }
