@@ -86,6 +86,13 @@ final class SupportDmAutoReply
     /** Префикс callback_data кнопки одного нажатия (см. TelegramWebhookController). */
     public const SEND_CALLBACK_PREFIX = 'sdm:';
 
+    /**
+     * Денежное намерение в тексте студента. Один список на две ветки —
+     * LLM-отказ (H4404) и забор факт-автоответа (инцидент 19-09-2026): правка
+     * списка не должна расходиться по копиям.
+     */
+    private const MONEY_INTENT_PATTERN = '/оплат|плат[еёжи]|денег|деньг|стоимост|сколько\s+стои|цен[аеуы]|\bтариф|рассрочк|доплат|предоплат|скидк|промокод|по\s+частям|сч[её]т|квитанц|возврат/iu';
+
     /** @var list<string> */
     private const SIMPLE_CATEGORIES = [
         SupportAnswerSuggestion::CATEGORY_ZOOM,
@@ -226,7 +233,15 @@ final class SupportDmAutoReply
             $resolvedFacts = $this->facts->resolve($category, $user, $text);
 
             if ($resolvedFacts !== null && trim((string) $resolvedFacts['draft']) !== '') {
-                if ($this->factMayAutoSend($resolvedFacts)) {
+                // Инцидент 19-09-2026: студентка просила «ссылку для оплаты», а
+                // вежливая оговорка «иногда буду… смотреть в записи» отдала
+                // сообщение категории B — и бот ответил ссылкой на запись
+                // урока. Классификатор чинится отдельно (узкая платёжная рука
+                // поднята наверх), но забор стоит ЗДЕСЬ, в коде, а не в
+                // классификаторе: денежное намерение в тексте означает, что
+                // автоответить фактом LMS нельзя при ЛЮБОЙ категории — деньги
+                // решает человек (R3), ровно как в llmRefusalReason() ниже.
+                if ($this->factMayAutoSend($resolvedFacts) && ! $this->moneyIntent($text)) {
                     return $this->sendAuto(
                         $incoming,
                         $user,
@@ -1211,13 +1226,8 @@ final class SupportDmAutoReply
             }
         }
 
-        $moneyPatterns = [
-            '/оплат|плат[еёжи]|денег|деньг|стоимост|сколько\s+стои|цен[аеуы]|\bтариф|рассрочк|доплат|предоплат|скидк|промокод|по\s+частям|сч[её]т|квитанц|возврат/iu',
-        ];
-        foreach ($moneyPatterns as $pattern) {
-            if (preg_match($pattern, $normalized) === 1) {
-                return 'money';
-            }
+        if ($this->moneyIntent($normalized)) {
+            return 'money';
         }
 
         $accessPatterns = ['/нет\s+доступ|не\s+(?:могу\s+)?(?:войти|зайти|попасть)|парол|логин|\bкабинет/iu'];
@@ -1228,6 +1238,16 @@ final class SupportDmAutoReply
         }
 
         return null;
+    }
+
+    /**
+     * Есть ли в тексте денежное намерение. Тот же список слов, что был в
+     * llmRefusalReason() со дня H4404; вынесен сюда, чтобы им же пользовался
+     * забор факт-автоответа (см. константу и инцидент 19-09-2026).
+     */
+    private function moneyIntent(string $text): bool
+    {
+        return preg_match(self::MONEY_INTENT_PATTERN, $text) === 1;
     }
 
     /**
