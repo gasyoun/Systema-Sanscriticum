@@ -1,0 +1,6 @@
+[Unit]
+Description=Sweep root-owned files out of the restic estate repo (H3396 belt-and-braces)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/restic-repo-ownership-sweep.sh

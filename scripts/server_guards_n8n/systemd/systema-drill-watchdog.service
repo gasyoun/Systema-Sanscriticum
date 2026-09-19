@@ -1,0 +1,7 @@
+[Unit]
+Description=Daily watchdog: skipped drill/canary/sanity must alert (H3178 c2.8)
+OnFailure=systema-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/systema-backup/drill_watchdog.py

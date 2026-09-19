@@ -1,0 +1,5 @@
+[Unit]
+Description=disk-watch: TG alert when / usage crosses threshold (H4513 incident follow-up)
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/sbin/disk_watch.py
