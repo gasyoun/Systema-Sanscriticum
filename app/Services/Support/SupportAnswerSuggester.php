@@ -64,6 +64,7 @@ class SupportAnswerSuggester
         private readonly SupportTemplateDraftResolver $templates,
         private readonly Faq\HybridRetriever $faqRag,
         private readonly Faq\FaqRagDraftBuilder $faqDrafts,
+        private readonly SupportFactCheckVerifier $factCheck = new SupportFactCheckVerifier,
     ) {}
 
     public function isEnabled(): bool
@@ -191,6 +192,13 @@ class SupportAnswerSuggester
             return false;
         }
 
+        // H4589: детерминированная сверка «что LLM написала» vs «что резолвер
+        // насчитал» — измерение, пишется рядом с фактами. НЕ гасит кнопку
+        // отправки (H4440 явно снял код-уровневый draft_only с tap-дорожки;
+        // см. docblock SupportFactCheckVerifier) — только маркер для /admin и
+        // для будущего явного рулинга MG.
+        $factCheck = $this->factCheck->verify((string) $resolved['draft'], $resolved['facts']);
+
         $suggestion = SupportAnswerSuggestion::create([
             'user_id' => $userId,
             'source_type' => $sourceType,
@@ -198,7 +206,7 @@ class SupportAnswerSuggester
             'category' => $category,
             'detected_text' => $text,
             'draft_text' => $resolved['draft'],
-            'facts' => $resolved['facts'],
+            'facts' => [...$resolved['facts'], 'fact_check' => $factCheck],
             'confidence' => $resolved['confidence'],
             'status' => SupportAnswerSuggestion::STATUS_PENDING,
         ]);
