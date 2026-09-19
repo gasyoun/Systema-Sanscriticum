@@ -804,6 +804,23 @@ class Payment extends Model
                 }
             }
         });
+
+        // H5084 (находка H5046 payment-hard-delete-skips-access-revocation):
+        // хард-делит оплаченного платежа шёл мимо цепочки отзыва — при DELETE
+        // модельные события не срабатывают, и групповой доступ / прана /
+        // реферальный кредит оставались висеть над удалённой строкой денег.
+        // Роутим удаление через канонический переход в 'canceled': save()
+        // внутри deleting запускает стандартную цепочку отката (static::updated
+        // выше + PaymentObserver::updated), и только потом строка удаляется.
+        // Тихие программные удаления это не задевают: они идут через
+        // withoutEvents (TeacherPayout, RehearseClubMembership) или query-builder
+        // (события не стреляют вовсе).
+        static::deleting(function (Payment $payment): void {
+            if (in_array($payment->getOriginal('status') ?? $payment->status, self::PAID_STATUSES, true)) {
+                $payment->status = 'canceled';
+                $payment->save();
+            }
+        });
     }
 
     /**
