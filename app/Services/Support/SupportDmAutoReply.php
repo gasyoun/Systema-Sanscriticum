@@ -13,6 +13,7 @@ use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Support\Faq\HybridRetriever;
+use App\Services\Support\Faq\SharedKnowledgeBase;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -85,6 +86,13 @@ final class SupportDmAutoReply
     /** Префикс callback_data кнопки одного нажатия (см. TelegramWebhookController). */
     public const SEND_CALLBACK_PREFIX = 'sdm:';
 
+    /**
+     * Денежное намерение в тексте студента. Один список на две ветки —
+     * LLM-отказ (H4404) и забор факт-автоответа (инцидент 19-09-2026): правка
+     * списка не должна расходиться по копиям.
+     */
+    private const MONEY_INTENT_PATTERN = '/оплат|плат[еёжи]|денег|деньг|стоимост|сколько\s+стои|цен[аеуы]|\bтариф|рассрочк|доплат|предоплат|скидк|промокод|по\s+частям|сч[её]т|квитанц|возврат/iu';
+
     /** @var list<string> */
     private const SIMPLE_CATEGORIES = [
         SupportAnswerSuggestion::CATEGORY_ZOOM,
@@ -110,6 +118,10 @@ final class SupportDmAutoReply
         private readonly SupportConversationManager $conversations,
         private readonly SupportFollowUpService $followUps,
         private readonly SupportDmLlmReplyComposer $llm,
+        // H5065: общая база знаний — отвечающая полоса формулирует по ПОЛНЫМ
+        // разделам, а не по 280-символьным сниппетам. `faq` (HybridRetriever)
+        // остаётся: на нём подсказка куратору и цитата в ответе студенту.
+        private readonly SharedKnowledgeBase $knowledge,
     ) {}
 
     public function isEnabled(): bool
@@ -221,7 +233,15 @@ final class SupportDmAutoReply
             $resolvedFacts = $this->facts->resolve($category, $user, $text);
 
             if ($resolvedFacts !== null && trim((string) $resolvedFacts['draft']) !== '') {
-                if ($this->factMayAutoSend($resolvedFacts)) {
+                // Инцидент 19-09-2026: студентка просила «ссылку для оплаты», а
+                // вежливая оговорка «иногда буду… смотреть в записи» отдала
+                // сообщение категории B — и бот ответил ссылкой на запись
+                // урока. Классификатор чинится отдельно (узкая платёжная рука
+                // поднята наверх), но забор стоит ЗДЕСЬ, в коде, а не в
+                // классификаторе: денежное намерение в тексте означает, что
+                // автоответить фактом LMS нельзя при ЛЮБОЙ категории — деньги
+                // решает человек (R3), ровно как в llmRefusalReason() ниже.
+                if ($this->factMayAutoSend($resolvedFacts) && ! $this->moneyIntent($text)) {
                     return $this->sendAuto(
                         $incoming,
                         $user,
@@ -267,7 +287,11 @@ final class SupportDmAutoReply
             && $this->accountAllowsAutoReply($incoming)
         ) {
             $hits = $this->faq->retrieve($text, 3);
-            $score = (float) ($hits[0]['score'] ?? 0.0);
+            // H5065: порог читается в домене BM25 (HybridRetriever::bm25Score).
+            // Прямое чтение ['score'] сравнивало RRF-скор 0.0246 с порогом
+            // категории 15.7 и глушило живую FAQ-ветку целиком при включённой
+            // плотной ноге.
+            $score = HybridRetriever::bm25Score($hits[0] ?? []);
 
             if ($hits !== [] && $score >= $this->scoreFloor($category)) {
                 $draft = $this->faqDraft($hits);
@@ -730,7 +754,7 @@ final class SupportDmAutoReply
         if ($draft === null && $hits !== []) {
             $draft = $this->faqDraft($hits);
             $kind = 'faq';
-            $confidence = (float) ($hits[0]['score'] ?? 0.0);
+            $confidence = HybridRetriever::bm25Score($hits[0] ?? []);
             $policy = SupportAnswerFactResolver::POLICY_AUTO;
             $extraFacts = $draft === null ? [] : [
                 'faq_chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
@@ -1020,7 +1044,10 @@ final class SupportDmAutoReply
             return;
         }
 
-        $score = (float) ($hits[0]['score'] ?? 0.0);
+        // H5065: теневая калибровка B5 выводилась в домене BM25 — и порог, и
+        // записываемый в событие score обязаны быть в нём же, иначе недельный
+        // отчёт support:shadow-report группирует RRF-скор по полосам BM25.
+        $score = HybridRetriever::bm25Score($hits[0] ?? []);
         if ($score < $this->scoreFloor($category)) {
             return;
         }
@@ -1127,18 +1154,20 @@ final class SupportDmAutoReply
             return null;
         }
 
-        // Retrieval тот же, что у FAQ-ветки: LLM формулирует ТОЛЬКО по живым
-        // фрагментам справки. Ниже floor'а F формулировать не из чего —
-        // позволить LLM отвечать «по памяти» значило бы снять рулинг R3.
-        $hits = $this->faq->retrieve($text, 3);
-        $score = (float) ($hits[0]['score'] ?? 0.0);
-        if ($hits === [] || $score < $this->llmScoreFloor()) {
+        // Retrieval тот же, что у FAQ-ветки, но контекст — ОБЩАЯ база знаний:
+        // LLM формулирует ТОЛЬКО по живым разделам справки. Ниже floor'а
+        // формулировать не из чего — позволить LLM отвечать «по памяти»
+        // значило бы снять рулинг R3.
+        $context = $this->knowledge->context($text);
+        // H5065: домен порога — BM25, см. scoreFloor()/llmScoreFloor().
+        $score = $context->bestBm25Score();
+        if ($context->isEmpty() || $score < $this->llmScoreFloor()) {
             $this->recordLlmRefused($incoming, $user, 'below_score_floor', $score);
 
             return null;
         }
 
-        $composed = $this->llm->compose($text, $hits);
+        $composed = $this->llm->compose($text, $context);
 
         if ($composed === null) {
             // Неудача формулировки (ключ/провайдер/пустой ответ) — НЕ отказ
@@ -1197,13 +1226,8 @@ final class SupportDmAutoReply
             }
         }
 
-        $moneyPatterns = [
-            '/оплат|плат[еёжи]|денег|деньг|стоимост|сколько\s+стои|цен[аеуы]|\bтариф|рассрочк|доплат|предоплат|скидк|промокод|по\s+частям|сч[её]т|квитанц|возврат/iu',
-        ];
-        foreach ($moneyPatterns as $pattern) {
-            if (preg_match($pattern, $normalized) === 1) {
-                return 'money';
-            }
+        if ($this->moneyIntent($normalized)) {
+            return 'money';
         }
 
         $accessPatterns = ['/нет\s+доступ|не\s+(?:могу\s+)?(?:войти|зайти|попасть)|парол|логин|\bкабинет/iu'];
@@ -1214,6 +1238,16 @@ final class SupportDmAutoReply
         }
 
         return null;
+    }
+
+    /**
+     * Есть ли в тексте денежное намерение. Тот же список слов, что был в
+     * llmRefusalReason() со дня H4404; вынесен сюда, чтобы им же пользовался
+     * забор факт-автоответа (см. константу и инцидент 19-09-2026).
+     */
+    private function moneyIntent(string $text): bool
+    {
+        return preg_match(self::MONEY_INTENT_PATTERN, $text) === 1;
     }
 
     /**

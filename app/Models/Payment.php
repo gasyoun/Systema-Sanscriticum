@@ -1648,11 +1648,11 @@ class Payment extends Model
         $paymentsCount = $student->payments()->paid()->count();
 
         // Пишем в лог, сколько оплат нашла система
-        Log::info("Попытка отправки письма. Студент: {$student->email}. Найдено успешных оплат: {$paymentsCount}");
+        Log::info("Попытка отправки письма. Студент: user_id={$student->id}. Найдено успешных оплат: {$paymentsCount}");
 
         // Если это первая оплата
         if ($paymentsCount === 1) {
-            Log::info("Генерируем пароль и отправляем письмо студенту: {$student->email}");
+            Log::info("Генерируем пароль и отправляем письмо студенту: user_id={$student->id}");
 
             $newPassword = Str::random(8);
             $student->password = Hash::make($newPassword);

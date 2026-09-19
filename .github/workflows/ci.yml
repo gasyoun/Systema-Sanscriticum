@@ -155,6 +155,24 @@ jobs:
       - name: Vite build
         run: npm run build
 
+  lila-inline-js:
+    name: Lila inline JS gate (node --check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: "20.19"
+
+      # 0DH (18-09-2026): #2692 class — missing comma in an inline lila config
+      # array = dead drill in production until cache TTL. Gate must refuse.
+      - name: Gate selftest (positive + negative controls)
+        run: node scripts/check_lila_inline_js.mjs --selftest
+
+      - name: Sweep public/lila/**/index.html inline scripts
+        run: node scripts/check_lila_inline_js.mjs
+
   mobile-npm-audit:
     name: Mobile npm security audit
     runs-on: ubuntu-latest

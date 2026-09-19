@@ -142,6 +142,18 @@ trait SchedulesSupportAndPayments
             ->onOneServer()
             ->name('knowledge-index-lessons');
 
+        // H5065: досыл ответов полосы Telegram Business. Основной путь — сразу
+        // после приёма апдейта (джоба дёргает дренаж, Bot API не боится
+        // воркера), слот здесь — страховка на потерянный/упавший джоб. Гейт
+        // флага: пока полоса выключена, команда выходит сразу, ничего не читая.
+        $schedule->command('support:business-drain')
+            ->everyMinute()
+            ->timezone('Europe/Moscow')
+            ->when(fn () => (bool) config('features.telegram_business_bot'))
+            ->withoutOverlapping(5)
+            ->onOneServer()
+            ->name('support-business-drain');
+
     }
 
     /** MarketingSetting-timed payment/debt/certificate reminders. */

@@ -16,8 +16,9 @@ use Illuminate\Support\Facades\Log;
  * Zoom Event Subscription webhook (посещаемость, #78).
  *
  * Обрабатывает:
- *  - `endpoint.url_validation` — челлендж при настройке эндпоинта (отдаём
- *    plainToken + его HMAC);
+ *  - `endpoint.url_validation` — челлендж при настройке эндпоинта: после
+ *    проверки подписи отдаём plainToken + его HMAC (Zoom подписывает челлендж
+ *    тем же v0-заголовком);
  *  - `meeting.participant_joined` / `meeting.participant_left` — посещаемость:
  *    резолвим занятие по occurrence uuid + времени (единый meeting_id курса),
  *    пишем строку в `webinar_attendances`.
@@ -28,15 +29,9 @@ use Illuminate\Support\Facades\Log;
  * Подпись Zoom: `x-zm-signature: v0=<hmac_sha256("v0:{ts}:{body}", secret)>`.
  * Секрет обязателен: без него любое событие, включая URL-validation,
  * отвечает 503. HMAC с пустым ключом не вычисляется.
- *
- * H5082 (remediation confirmed H5046, zoom-url-validation-hmac-signing-oracle):
- * подпись проверяется ДО любого ответа, включая `endpoint.url_validation`.
- * Челлендж валидации Zoom подписывает тем же секретом и той же схемой v0 —
- * санкционированный паттерн официального zoom/webhook-sample: verify →
- * url_validation → echo plainToken/encryptedToken. Прежний порядок (челлендж
- * отвечался без проверки подписи) превращал эндпоинт в неподлинный оракул
- * подписей: plainToken выбирал атакующий, и строка вида `v0:{ts}:{body}`
- * получала готовую корректную подпись для сфабрикованного события.
+ * Подпись обязательна для всех событий, включая URL-validation: без неё
+ * эндпоинт отвечал бы HMAC над секретом v0-подписи на тело от любого
+ * анонима — signing oracle (H5046, закрыто в H5082).
  */
 class ZoomWebhookController extends Controller
 {
@@ -57,9 +52,10 @@ class ZoomWebhookController extends Controller
             return response()->json(['message' => 'Invalid signature'], 403);
         }
 
-        // URL-валидация приходит ТОЛЬКО подписанной Zoom'ом (тот же секрет,
-        // та же схема v0) — поэтому безопасно отвечать челленджем: HMAC
-        // отдаётся лишь на запрос, подпись над которым уже проверена.
+        // URL-валидация подписана тем же v0-секретом (Zoom шлёт x-zm-signature и
+        // на челлендж) — HMAC-ответ отдаём только после проверки подписи:
+        // иначе эндпоинт — неаутентифицированная HMAC signing oracle над секретом
+        // v0-подписи (любое тело можно подписать, выбрав plainToken = "v0:{ts}:{body}").
         if ($event === 'endpoint.url_validation') {
             return $this->urlValidationResponse($request, $secret);
         }

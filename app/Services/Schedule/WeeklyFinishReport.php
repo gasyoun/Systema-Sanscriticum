@@ -42,14 +42,19 @@ final class WeeklyFinishReport
     /**
      * Отчёт по всем идущим группам активных видимых курсов.
      *
-     * @return list<array{course: Course, group: Group, pastCount: int, futureCount: int, students: list<array{user: User, last: ?array{label: string, date: string}, clicked: ?array{label: string, date: string}, missedStreak: int}>}
+     * H5087 (remediation of H5046): $teacherId сужает до курсов преподавателя
+     * (основной или со-препод); null — вся школа. Преподавателю без привязки
+     * к Teacher (teacher_id NULL) передаётся 0 -> пустой скоуп, не вся школа.
+     *
+     * @return list<array{course: Course, group: Group, pastCount: int, futureCount: int, students: list<array{user: User, last: ?array{label: string, date: string}, clicked: ?array{label: string, date: string}, missedStreak: int}>}>
      */
-    public static function build(): array
+    public static function build(?int $teacherId = null): array
     {
         $courses = Course::query()
             ->where('is_active', true)
             ->where('is_visible', true)
             ->whereHas('groups')
+            ->when($teacherId !== null, fn ($q) => $q->forTeacher(max(0, $teacherId)))
             ->with('groups:id,name')
             ->orderBy('title')
             ->get();

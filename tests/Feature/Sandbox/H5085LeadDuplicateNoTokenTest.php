@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Sandbox;
 
-use App\Models\Lead;
 use App\Models\LandingPage;
+use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Models\MarketingSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;

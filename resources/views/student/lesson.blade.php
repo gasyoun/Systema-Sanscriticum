@@ -5,6 +5,10 @@
 
 @section('content')
 
+{{-- Метрика lesson_open (MG 18-09-2026): каждая загрузка урока = просмотр
+     (truth — lesson_open в activity_events через TrackLessonViewJob). --}}
+<span data-metrika-goal="lesson_open" hidden></span>
+
 <div x-data="lessonHeartbeat({ lessonId: {{ $lesson->id }} })" x-init="init()" class="hidden"></div>
 
 @if(($recordingAccess->allowed ?? true) && !empty($kinescopeEmbedUrl))
@@ -304,6 +308,7 @@
                             @if($upcomingSession->link)
                                 {{-- Трекинг-редирект (учёт посещаемости) → настоящий Zoom-URL. --}}
                                 <a href="{{ route('class.join', $upcomingSession) }}" target="_blank" rel="noopener noreferrer"
+                                   data-track-event="zoom.join.click"
                                    class="inline-flex items-center gap-2 px-6 py-3 bg-[#38BDF8] hover:bg-[#2da4dd] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#38BDF8]/20">
                                     <i class="fas fa-video"></i> Подключиться к Zoom
                                 </a>

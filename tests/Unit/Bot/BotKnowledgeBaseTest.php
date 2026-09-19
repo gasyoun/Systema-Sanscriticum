@@ -6,6 +6,7 @@ namespace Tests\Unit\Bot;
 
 use App\Services\Bot\BotKnowledgeBase;
 use App\Services\Bot\CourseCatalogProvider;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
@@ -16,9 +17,18 @@ use Tests\TestCase;
  * 1. в промпт попадает нужный раздел, а не весь корпус;
  * 2. каталог курсов не режется никогда — цены только оттуда;
  * 3. при выключенном флаге промпт байт-в-байт прежний.
+ *
+ * H5065: тест перестал быть чисто файловым. С общей базой знаний FAQ-половина
+ * идёт через HybridRetriever, а тот при включённой плотной ноге читает
+ * knowledge_chunks. Без RefreshDatabase набор падал «no such table» у всякого,
+ * у кого FAQ_HYBRID_RETRIEVAL=true в локальном .env, — то есть тест зависел от
+ * окружения машины. Пустая таблица даёт ровно BM25-пол, и утверждения ниже
+ * проверяют то же поведение, что и раньше.
  */
 class BotKnowledgeBaseTest extends TestCase
 {
+    use RefreshDatabase;
+
     private string $corpus;
 
     protected function setUp(): void

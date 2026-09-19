@@ -21,6 +21,7 @@ use App\Models\User;
 use App\Models\WaitlistVote;
 use App\Services\AccessDiagnosticsService;
 use App\Services\Activity\CabinetTelemetry;
+use App\Services\Activity\FunnelTelemetry;
 use App\Services\Cabinet\GrammarLadder;
 use App\Services\Cabinet\RecordingsCatalog;
 use App\Services\Cabinet\RecoveryState;
@@ -219,6 +220,14 @@ class StudentController extends Controller
         $suppressOffers = $recovery->suppressOffers();
 
         // Baseline-телеметрия ремейка (H962, спека §4). mode: normal|recovery.
+        // Метрика first_cabinet_action (MG 18-09): флаг считается ЗДЕСЬ, до
+        // эмита — emitFirstCabinetAction срабатывает внутри
+        // CabinetTelemetry::emit, поэтому «события ещё нет» в этой точке
+        // означает, что ЭТА загрузка — первое действие студента в кабинете
+        // (маркер в view стреляет goal ровно один раз; truth по-прежнему
+        // в activity_events). Присвоение в $viewData — ниже, после compact().
+        $metrikaFirstCabinetAction = ! app(FunnelTelemetry::class)->hasFirstCabinetAction($user);
+
         app(CabinetTelemetry::class)->emit(
             user: $user,
             event: ActivityEvent::CABINET_HOME_VIEW,
@@ -273,6 +282,7 @@ class StudentController extends Controller
             'courses',
             'canvasByCourseId',
             'nextLessonByCourseId',
+            'metrikaFirstCabinetAction',
             'certificates',
             'pranaTransactions',
             'pranaRewards',
@@ -1120,6 +1130,11 @@ class StudentController extends Controller
                 data: ['course_id' => $course->id, 'lesson_id' => $lesson->id],
                 request: request(),
             );
+
+            // Метрика lesson_mark_mastered (MG 18-09): flash внутри той же
+            // ветки «новое завершение» — маркер на redirect-целе стреляет
+            // reachGoal ровно один раз (reader: partials/cabinet-metrika).
+            session()->flash('metrika_goal', 'lesson_mark_mastered');
 
             // Если этот урок закрыл весь курс — начисляем бонус за курс
             // (тоже идемпотентно по course_id). Гейтим по членству в группах

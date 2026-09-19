@@ -24,6 +24,10 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap" rel="stylesheet">
+    {{-- Кабинетная Метрика (MG 18-09-2026): тот же счётчик 106964341, но
+         webvisor:false + clickmap:false — никаких записей сессий залогиненных
+         (152-ФЗ). План: docs/METRIKA_GOALS_SHOP_CABINET_2026-09-18.md. --}}
+    @include('partials.cabinet-metrika')
     <style>
         [x-cloak] { display: none !important; }
         body { font-family: 'Nunito Sans', sans-serif; }

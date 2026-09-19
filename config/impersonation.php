@@ -32,7 +32,10 @@ return [
      | Префиксы ИМЁН маршрутов, запись по которым запрещена в режиме.
      | checkout./payment./deposit./paypal. — покупка и возврат;
      | student.debt. — оплата и перенос обещаний;
-     | partner./referral. — партнёрские выплаты и реферальный кошелёк.
+     | partner./referral. — партнёрские выплаты и реферальный кошелёк;
+     | student.prana. — переводы и траты праны (защищённые деньги, H5087);
+     | student.access. — самовыдача ключей доступа к блокам (H5087);
+     | student.membership. — отмена/возобновление подписки (H5087).
      */
     'blocked_route_prefixes' => [
         'checkout.',
@@ -42,12 +45,17 @@ return [
         'student.debt.',
         'partner.',
         'referral.',
+        'student.prana.',
+        'student.access.',
+        'student.membership.',
     ],
 
     /*
      | Префиксы URI (без ведущего слэша), запись по которым запрещена в режиме —
      | страховка для маршрутов без имени. Сопоставление — как в Request::is(),
      | то есть 'checkout' закрывает и '/checkout/{tariff}/promo'.
+     | prana/membership (H5087) — URI-близнецы student.prana./student.membership.;
+     | access/materialize сидит под /c/{slug}/..., его ловит только имя маршрута.
      */
     'blocked_uri_prefixes' => [
         'checkout',
@@ -55,6 +63,8 @@ return [
         'deposit',
         'paypal',
         'debt',
+        'prana',
+        'membership',
     ],
 
     /*
