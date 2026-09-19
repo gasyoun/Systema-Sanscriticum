@@ -122,6 +122,7 @@ need() { [ -n "${G[$1]:-}" ] || die "$CONF_FILE: не задан $1"; printf '%s
 # первом же APP_DIR, которого там нет и быть не должно.
 if [ "$PROFILE" = app ]; then
   REQUIRED_KEYS="APP_DIR APP_USER PHP_VERSION PHP_BIN SCHEDULE_MAX_SECONDS
+         HERMES_USER HERMES_REQUIRED_LANES
          CRON_MEMORY_HIGH CRON_MEMORY_MAX CRON_TASKS_MAX
          SUPERVISOR_MEMORY_HIGH SUPERVISOR_MEMORY_MAX LIMIT_NOFILE
          PHP_CLI_MEMORY_LIMIT FPM_MAX_CHILDREN FPM_MAX_REQUESTS
@@ -163,6 +164,7 @@ fi
 
 APP_DIR=${G[APP_DIR]:-}
 APP_USER=${G[APP_USER]:-}
+HERMES_USER=${G[HERMES_USER]:-}
 PHP_VERSION=${G[PHP_VERSION]:-}
 
 render() { # render <template-path> → stdout
@@ -346,6 +348,50 @@ if [ "$DRY_RUN" = 0 ]; then
       install -m 644 "$MIRROR.tmp" "$MIRROR"
       chown "root:$APP_USER" "$MIRROR" 2>/dev/null || true
       chg "mirror $MIRROR"; CHANGED+=("mirror:crontab-root")
+    else
+      ok "mirror $MIRROR"
+    fi
+  fi
+  rm -f "$MIRROR.tmp"
+fi
+rm -f "$CRON_TMP" "$CUR_CRON"
+
+# ── 3c. crontab hermes — нервная система (H5080-F2, 19-09-2026) ─────────────
+# Пять линий Hermes жили ТОЛЬКО в живом crontab: первый же guards re-apply или
+# опечатка в `crontab -e -u hermes` стирали их молча (класс H4155). Теперь
+# управляются этим файлом; вербатим-снимок живого crontab снят 19-09.
+say "crontab $HERMES_USER (пять линий нервной системы Hermes)"
+CRON_TMP=$(mktemp)
+render "$TPL_ROOT/cron/hermes.crontab" > "$CRON_TMP"
+CUR_CRON=$(mktemp)
+crontab -u "$HERMES_USER" -l > "$CUR_CRON" 2>/dev/null || : > "$CUR_CRON"
+if cmp -s "$CRON_TMP" "$CUR_CRON"; then
+  ok "crontab $HERMES_USER"
+else
+  [ "$SHOW_DIFF" = 1 ] && diff -u "$CUR_CRON" "$CRON_TMP" | sed 's/^/      /' || true
+  if [ "$DRY_RUN" = 1 ]; then
+    chg "crontab $HERMES_USER (dry-run)"; CHANGED+=("crontab:$HERMES_USER")
+  else
+    mkdir -p "$BACKUP_DIR"
+    cp -a "$CUR_CRON" "$BACKUP_DIR/crontab-$HERMES_USER.txt"
+    crontab -u "$HERMES_USER" "$CRON_TMP"
+    chg "crontab $HERMES_USER"; CHANGED+=("crontab:$HERMES_USER")
+  fi
+fi
+# Зеркало 644 (H1941/H3410): guards:verify от www-data не читает спул hermes
+# (600 root:crontab), поэтому кладём копию туда же, где лежит зеркало root-крона —
+# ShellSystemInspector::crontabFor() падает на него четвёртым шагом.
+if [ "$DRY_RUN" = 0 ]; then
+  MIRROR_DIR="$APP_DIR/storage/app/server_guards"
+  MIRROR="$MIRROR_DIR/crontab-$HERMES_USER.installed"
+  mkdir -p "$MIRROR_DIR"
+  chgrp "$APP_USER" "$MIRROR_DIR" 2>/dev/null || true
+  chmod 750 "$MIRROR_DIR" 2>/dev/null || true
+  if crontab -u "$HERMES_USER" -l > "$MIRROR.tmp" 2>/dev/null; then
+    if [ ! -f "$MIRROR" ] || ! cmp -s "$MIRROR.tmp" "$MIRROR"; then
+      install -m 644 "$MIRROR.tmp" "$MIRROR"
+      chown "root:$APP_USER" "$MIRROR" 2>/dev/null || true
+      chg "mirror $MIRROR"; CHANGED+=("mirror:crontab-$HERMES_USER")
     else
       ok "mirror $MIRROR"
     fi
