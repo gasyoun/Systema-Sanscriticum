@@ -114,13 +114,50 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -u
           deadline=$(( $(date +%s) + VERDICT_WAIT_SECONDS ))
           while [ "$(date +%s)" -lt "$deadline" ]; do
             S=$(gh api "repos/$REPO/commits/$HEAD/check-runs" \
               --jq '.check_runs[] | select(.name == "oxalpha-independent-verdict" and (.conclusion == "success" or .conclusion == "failure")) | .output.summary' 2>/dev/null || true)
-            if [ -n "$S" ]; then printf '%s' "$S" > verdict.json; echo "verdict found"; break; fi
+            if [ -n "$S" ]; then printf '%s' "$S" > verdict.json; echo "verdict found (check run)"; break; fi
+            # Commit-status fallback (design sec.2 sanctions "commit status /
+            # check run"; check-run CREATION is GitHub-App-only authority -
+            # user tokens get 404, proven live 18-09-2026). The independent
+            # reviewer posts the same verdict as a commit status bound to this
+            # head SHA, plus the full JSON in a marked PR comment. The sha
+            # match here only SELECTS the comment block; the conclude step
+            # re-validates schema and head binding, so stale or malformed
+            # evidence still fails, never passes.
+            ST=$(gh api "repos/$REPO/commits/$HEAD/status" \
+              --jq '[.statuses[] | select(.context == "oxalpha-independent-verdict")][0].state' 2>/dev/null || true)
+            if [ "$ST" = "success" ] || [ "$ST" = "failure" ]; then
+              if [ -n "${PR_NUMBER:-}" ]; then
+                gh pr view "$PR_NUMBER" --repo "$REPO" --json comments \
+                  --jq '[.comments[]?.body] | join("\n")' 2>/dev/null > pr-comments.txt || true
+                # Select the marked verdict block bound to THIS head SHA.
+                # Malformed blocks are skipped, never promoted to evidence;
+                # the conclude step re-validates schema + binding anyway.
+                {
+                  echo 'import json, re, sys'
+                  echo 'head = sys.argv[1]'
+                  echo 'text = open("pr-comments.txt", encoding="utf-8", errors="replace").read()'
+                  echo 'for block in re.findall(r"<!--oxalpha-independent-verdict:begin-->(.*?)<!--oxalpha-independent-verdict:end-->", text, re.S):'
+                  echo '    try:'
+                  echo '        data = json.loads(block.strip())'
+                  echo '    except Exception:'
+                  echo '        continue'
+                  echo '    if isinstance(data, dict) and data.get("head_sha") == head:'
+                  echo '        open("verdict.json", "w").write(json.dumps(data))'
+                  echo '        print("verdict found (commit status + marked comment), head", head)'
+                  echo '        break'
+                } > select_verdict.py
+                python3 select_verdict.py "$HEAD" || true
+                [ -s verdict.json ] && break
+              fi
+            fi
+            rm -f verdict.json
             sleep 15
           done
           [ -f verdict.json ] || echo "::notice::no oxalpha-independent-verdict within ${VERDICT_WAIT_SECONDS}s - will conclude fail (timeout; INCONCLUSIVE is never PASS)"

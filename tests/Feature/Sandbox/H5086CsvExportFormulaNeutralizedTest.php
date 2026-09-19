@@ -52,14 +52,14 @@ class H5086CsvExportFormulaNeutralizedTest extends TestCase
         // Decisive: decode the actual CSV and compare CELL VALUES.
         $lines = array_values(array_filter(explode("\n", $csv)));
         $dataLine = collect($lines)->first(fn ($l) => str_contains($l, 'HYPERLINK'));
-        $this->assertNotNull($dataLine, "'='-cell present in export");
+        $this->assertNotNull($dataLine, '\'=\'-cell present in export');
         $cells = str_getcsv($dataLine, ';');
 
         // Neutralized values: leading apostrophe, payload preserved verbatim after it.
-        $this->assertContains("'".self::PAYLOAD, $cells, 'equals-cell is apostrophe-prefixed');
-        $this->assertContains("'+SUM(1+1)*cmd|/C calc!A0", $cells, "'+'-cell is apostrophe-prefixed");
-        $this->assertContains("'-2+3+cmd|/C calc!A0", $cells, "'-'-cell is apostrophe-prefixed");
-        $this->assertContains("'@SUM(A1:A9)", $cells, "'@'-cell is apostrophe-prefixed");
+        $this->assertContains('\''.self::PAYLOAD, $cells, 'equals-cell is apostrophe-prefixed');
+        $this->assertContains('\'+SUM(1+1)*cmd|/C calc!A0', $cells, '\'+\'-cell is apostrophe-prefixed');
+        $this->assertContains('\'-2+3+cmd|/C calc!A0', $cells, '\'-\'-cell is apostrophe-prefixed');
+        $this->assertContains('\'@SUM(A1:A9)', $cells, '\'@\'-cell is apostrophe-prefixed');
 
         // And NO cell starts with a formula-significant character anymore.
         foreach ($cells as $cell) {
@@ -78,10 +78,10 @@ class H5086CsvExportFormulaNeutralizedTest extends TestCase
     /** @test */
     public function formula_guard_covers_every_dangerous_prefix_and_passes_data_through(): void
     {
-        $this->assertSame("'=1+1", FormulaGuard::cell('=1+1'));
-        $this->assertSame("'+CMD", FormulaGuard::cell('+CMD'));
-        $this->assertSame("'-CMD", FormulaGuard::cell('-CMD'));
-        $this->assertSame("'@CMD", FormulaGuard::cell('@CMD'));
+        $this->assertSame('\'=1+1', FormulaGuard::cell('=1+1'));
+        $this->assertSame('\'+CMD', FormulaGuard::cell('+CMD'));
+        $this->assertSame('\'-CMD', FormulaGuard::cell('-CMD'));
+        $this->assertSame('\'@CMD', FormulaGuard::cell('@CMD'));
         $this->assertSame("'\tCMD", FormulaGuard::cell("\tCMD"));
         $this->assertSame("'\rCMD", FormulaGuard::cell("\rCMD"));
 
