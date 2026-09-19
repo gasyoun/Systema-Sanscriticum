@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Anons;
 
+use App\Models\AnonsDestinationRun;
 use App\Models\AnonsPublication;
 use App\Services\Anons\Adapters\AdapterRegistry;
 use App\Services\Anons\Adapters\PlatformAdapter;
@@ -142,8 +143,27 @@ class SessionHealthProbeTest extends TestCase
         }
 
         $this->assertSame(0, count($story->published), 'NO send may happen with a dead session (R13 fail-closed).');
+
+        // H5094: автомат отправки даже не стартовал — ни одного run-а
+        // (перенос гейта ниже цикла отправки поймала бы только эта проверка:
+        // стаб-адаптер публикует успешно, и «после отправки» он бы отработал).
+        $this->assertSame(
+            0,
+            AnonsDestinationRun::query()->count(),
+            'send state machine must never start when the session needs reauthorization'
+        );
+
+        // Хранимое состояние: отказ обязан быть наблюдаемым в журнале
+        // публикации — человеку нужно ВИДЕТЬ, почему история не вышла,
+        // а не только ловить исключение в логах процесса.
         $publication = AnonsPublication::query()->first();
         $this->assertSame(AnonsPublication::STATUS_FAILED, $publication->status);
+        $this->assertStringContainsString(
+            'needs reauthorization',
+            (string) $publication->journal,
+            'R13 refusal must journal the reason on the publication row'
+        );
+        $this->assertStringContainsString('AUTH_KEY_UNREGISTERED', (string) $publication->journal);
     }
 
     private function makeAsset(): string
