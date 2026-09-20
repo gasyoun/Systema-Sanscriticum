@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\LandingPage;
-use App\Support\AcquisitionAttribution;
 use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
@@ -14,6 +13,7 @@ use App\Services\AttributionService;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\TelegramDeliveryChannel;
 use App\Services\Payments\TochkaPaymentService;
+use App\Support\AcquisitionAttribution;
 use App\Support\MarathonLandingCopy;
 use App\Support\MarathonLandingCopySplit;
 use App\Support\MarathonVisual;
