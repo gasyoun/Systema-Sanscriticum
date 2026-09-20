@@ -80,6 +80,11 @@
         </ul>
     @endif
 
+    {{-- H5184 N06 — разбор ошибок: CTA под галереей колод --}}
+    <div class="mt-8">
+        @include('srs.partials.error-analysis-cta')
+    </div>
+
     <p class="mt-8 text-center text-sm text-slate-500">
         Уже учитесь?
         <a href="{{ url('/login') }}" class="text-brand font-bold hover:underline">Войти в кабинет</a>
