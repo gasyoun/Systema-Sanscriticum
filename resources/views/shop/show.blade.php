@@ -381,6 +381,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         @include('partials.samskrtam-related', ['samskrtamKey' => $course->slug])
 
+        {{-- ───── 1.1 ТЕМАТИЧЕСКИЙ СИЛЛАБУС ФЛАГМАНА (H5184 N04) —
+             до «Программы курса»/«Ближайших занятий», только под flagship-курсами ───── --}}
+        @include('shop.partials.flagship-syllabus')
+
         {{-- ───── 1.2 ПРОГРАММА КУРСА (аккордеон по блокам) ───── --}}
         @php
             // Русская плюрализация «занятий».

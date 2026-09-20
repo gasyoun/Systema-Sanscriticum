@@ -54,6 +54,19 @@
                     Как устроены цены
                 </a>
             </div>
+
+            {{-- H5184 N08: slim-строка к определителю уровня. Гейт — тот же
+                 флаг, что и на самих маршрутах /rung-placement (404 при OFF),
+                 чтобы ссылка не вела в тупик. --}}
+            @if(config('features.f2_placement_quiz'))
+            <p class="mt-5 text-sm text-slate-400">
+                Не знаете, с чего начать?
+                <a href="{{ route('placement.quiz.show') }}"
+                   class="text-[#38BDF8] font-bold underline-offset-2 hover:underline">
+                    Пройдите определитель уровня →
+                </a>
+            </p>
+            @endif
         </div>
 
         {{-- Полоса доверия (H323, social proof) --}}

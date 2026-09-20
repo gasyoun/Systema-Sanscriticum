@@ -53,6 +53,15 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('send-login-invites');
 
+        // H5184 N07 — churn-сигнал «stalled_7d» (30д активность есть, 7д нет):
+        // JSON в n8n-вебхук, A/B 50/50 по хешу id, дедуп/состояние внутри
+        // команды. Понедельник 09:00 МСК, до дайджеста онбординга (09:30).
+        $schedule->command('edtech:churn-signals')
+            ->weeklyOn(1, '09:00') // понедельник 09:00 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('edtech-churn-signals');
+
         // H5022 (MG 16-09-2026): через 48 ч после успешной оплаты без входа в
         // кабинет — ОДНО повторное приглашение (Telegram → email) с magic-ссылкой.
         // Гейт features.reinvite_48h (REINVITE_48H, по умолчанию ON) и дедуп

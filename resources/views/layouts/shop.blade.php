@@ -178,6 +178,8 @@
                     <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium">
                         @include('partials.footer-docs', ['linkClass' => 'text-slate-400 hover:text-brand transition-colors'])
                         <a href="{{ route('hub.sanskritorium') }}" class="text-slate-400 hover:text-brand transition-colors">Транслитерация</a>
+                        {{-- H5184 N10: trust-moat — «проверка человек, а не автопроверка» --}}
+                        <a href="{{ route('trust-moat') }}" class="text-slate-400 hover:text-brand transition-colors">Почему проверяет человек</a>
                     </div>
                     <p class="text-xs text-slate-600 mt-2">
                         &copy; {{ date('Y') }} Все права защищены

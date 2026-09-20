@@ -136,6 +136,8 @@ window.sendGoal = function(goalName) {
 
                         <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium mb-4">
                             @include('partials.footer-docs', ['linkClass' => 'text-gray-500 hover:text-brand transition-colors duration-300'])
+                            {{-- H5184 N10: trust-moat — «проверка человек, а не автопроверка» --}}
+                            <a href="{{ route('trust-moat') }}" class="text-gray-500 hover:text-brand transition-colors duration-300">Почему проверяет человек</a>
                         </div>
 
                         <p class="text-gray-400 text-[13px] md:text-sm">

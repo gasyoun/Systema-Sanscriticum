@@ -90,6 +90,11 @@
                                class="inline-flex items-center px-5 py-3 rounded-xl text-xs font-bold bg-brand hover:bg-brand/85 text-white shadow-[0_0_15px_rgba(232,92,36,0.3)] transition-all">
                                 К пробному занятию →
                             </a>
+                            {{-- H5184 N08: второй выход из результата — каталог курсов --}}
+                            <a href="{{ route('shop.index') }}"
+                               class="inline-flex items-center px-5 py-3 rounded-xl text-xs font-bold bg-[#141A28] border border-[#1F2636] hover:border-brand/60 text-slate-200 transition-all">
+                                Подобрать курс по уровню →
+                            </a>
                             <span class="text-[11px] text-slate-500" x-show="saving">Сохраняем…</span>
                             <span class="text-[11px] text-emerald-400" x-show="saved && !saving">Уровень сохранён</span>
                         </div>

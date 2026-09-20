@@ -1,0 +1,12 @@
+# H5184: edtech-гэпы N01–N12 — волна A/B в репо: силлабусы флагманов, разбор ошибок, placement v2 CTA, trust-moat, SEO колод (OxAlpha `zai-coding-plan/glm-5.3-flash`, 20-09-2026)
+
+Применение голосования [N01–N12](https://github.com/gasyoun/Uprava/blob/main/review/uprava-edtech-gaps_n01-n12_20-09-26_decisions.json) (12/12 approve) — репо-дельты; флаги и n8n-часть садятся на прод отдельно ([отчёт H5184](https://github.com/gasyoun/Uprava/blob/main/reports/H5184_EDTECH_GAPS_APPLY_20-09-2026.md)).
+
+- **N04** — тематический силлабус на трёх флагманах: ключ `syllabus` в [`config/flagship_landing.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/config/flagship_landing.php) (Кочергина 8 модулей, Старт чтения 6, Бюлер 8) + партиал [`shop/partials/flagship-syllabus.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/shop/partials/flagship-syllabus.blade.php) в `shop.show` перед «Программой курса» (нумерация повторяет бейджи блоков).
+- **N06** — «Разбор твоих ошибок»: партиал [`srs/partials/error-analysis-cta.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/srs/partials/error-analysis-cta.blade.php) на публичных `/koloda` и странице колоды; гостю — регистрация, вошедшему — кабинетный разбор `/dvaram/koloda/stats`.
+- **N08** — placement v2 CTA: второй выход из результата квиза «Подобрать курс по уровню →» → каталог + slim-строка «Пройдите определитель уровня →» на каталоге (под флагом `f2_placement_quiz`, чтобы не плодить мёртвых ссылок при OFF).
+- **N10** — trust-moat: страница [`/pochemu-my`](https://samskrte.ru/pochemu-my) (Route::view `trust-moat`, view [`pages/trust-moat.blade.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/resources/views/pages/trust-moat.blade.php)) «Проверка — человек, а не автопроверка» + футер-ссылка в обоих лейаутах.
+- **N14** — SEO: слагованные публичные колоды `/koloda/{slug}` в sitemap (id-N сегменты не тащим; noindex/canonical не тронуты), title+description галереи колод.
+- **N07 (репо-часть)** — команда `edtech:churn-signals {--dry-run} {--d7}` ([ChurnSignalsCommand.php](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Commands/ChurnSignalsCommand.php)): сигнал «сталлен 7д» (srs_review_logs + lesson_views, не pageview), детерминированный A/B-раскол crc32(id), дедуп 14 дней, состояние в `storage/app/churn-signals-state.json`, POST в n8n с `X-Webhook-Secret` (переменные `N8N_CHURN_WEBHOOK_URL`/`N8N_CHURN_WEBHOOK_SECRET` задокументированы), расписание пн 09:00 МСК.
+
+_Dr. Mārcis Gasūns_
