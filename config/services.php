@@ -90,6 +90,10 @@ return [
         // payload в этот n8n-вебхук, n8n постит. Секрет уходит в X-Webhook-Secret.
         'monthly_schedule_webhook' => env('N8N_MONTHLY_SCHEDULE_WEBHOOK'),
         'monthly_schedule_secret' => env('N8N_MONTHLY_SCHEDULE_SECRET'),
+        // H5184 N07 — churn-сигналы «студент застыл» (edtech:churn-signals):
+        // POST JSON в этот n8n-вебхук, секрет уходит в X-Webhook-Secret.
+        'churn_webhook' => env('N8N_CHURN_WEBHOOK_URL'),
+        'churn_webhook_secret' => env('N8N_CHURN_WEBHOOK_SECRET'),
         // «Нарежь лекцию на клипы» (H1452): Laravel шлёт лекцию + AI-таймкод-спаны
         // в этот n8n-вебхук (сам ffmpeg/VK-аплоад — вне Laravel), секрет — в
         // X-Webhook-Secret. Callback обратно защищён отдельным секретом.
