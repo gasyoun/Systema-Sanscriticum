@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Schedule;
 use App\Models\Testimonial;
@@ -21,7 +22,7 @@ class BeginnerPilotOfferTest extends TestCase
 
     public function test_only_published_free_video_is_promoted_and_price_comes_from_config(): void
     {
-        $lesson = Lesson::factory()->free()->create(['rutube_url' => 'https://rutube.ru/play/embed/example/']);
+        $lesson = Lesson::factory()->free()->create(['course_id' => Course::factory()->create()->id, 'rutube_url' => 'https://rutube.ru/play/embed/example/']);
         config(['beginner_pilot.preview_lesson_id' => $lesson->id, 'marathon.paid_track_price' => 750]);
         $this->get(route('beginner-pilot.show'))->assertOk()->assertSee($lesson->rutube_url, false)
             ->assertSee('750 ₽')->assertSee('Полная запись')->assertSee('пока не подтверждена');
