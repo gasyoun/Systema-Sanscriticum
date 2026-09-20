@@ -6,7 +6,7 @@
     @php
         $siteName    = 'Общество ревнителей санскрита';
         $pageTitle   = 'Курсы санскрита с нуля — Общество ревнителей санскрита';
-        $description = 'Курсы санскрита с нуля: деванагари, грамматика и чтение текстов. 21+ лет сообществу, 5 000+ учеников, группы 5–9 человек.';
+        $description = 'Курсы санскрита с нуля для взрослых: открытое занятие, первые задания и выбор маршрута обучения. Бесплатные материалы и участие с проверкой.';
         $keywords    = 'санскрит, курсы санскрита, изучение санскрита онлайн, индийская философия, веды, упанишады, бхагавадгита, индология, деванагари';
         $ogImage     = asset('images/og-main-preview.jpg');
         $canonical   = url('/');
@@ -127,26 +127,10 @@
 
         @include('partials.referral-welcome')
         
-        <div class="text-center mb-12">
-    <h1 class="text-3xl sm:text-5xl md:text-6xl font-extrabold mb-4 tracking-tight leading-tight break-words max-w-full">
-        Курсы санскрита с нуля — шаг за шагом, с преподавателем
-    </h1>
+        @include('partials.beginner-entry')
 
-    <div class="w-24 h-1 bg-brand mx-auto mb-6 rounded-full"></div>
-
-    <p class="text-xl text-gray-300 max-w-2xl mx-auto mb-2">
-        От первой буквы деванагари до самостоятельного чтения текстов —
-        в маленьких группах, с домашними заданиями и записями всех занятий.
-    </p>
-</div>
-
-        @include('partials.trajectory-block', ['steps' => $trajectorySteps ?? []])
-
-        @include('partials.why-us-block')
-
-        @include('partials.samskrtam-related', ['samskrtamKey' => '_home'])
-
-        @include('partials.proof-block', ['testimonials' => $featuredTestimonials ?? null])
+        <details class="mb-10" id="all-courses">
+        <summary class="cursor-pointer text-lg font-bold mb-6">Все направления и курсы в записи</summary>
 
         <div class="text-center mb-16">
     <h2 class="text-3xl md:text-4xl font-bold">
@@ -229,6 +213,8 @@
         <div class="-mx-4 mt-16">
             <x-courses-recorded-mini variant="dark" :courses="$recordedCoursesMini ?? null" />
         </div>
+
+        </details>
 
         <div class="mt-24 bg-gray-800/40 border border-gray-700/60 rounded-3xl p-8 md:p-12 relative overflow-hidden backdrop-blur-sm shadow-xl">
             <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-[#2AABEE] rounded-full mix-blend-screen filter blur-3xl opacity-10"></div>
