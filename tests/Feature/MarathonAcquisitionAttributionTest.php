@@ -66,4 +66,14 @@ class MarathonAcquisitionAttributionTest extends TestCase
         $this->assertSame('tracked', Lead::sole()->utm_source);
         $this->assertSame('first', Lead::sole()->utm_campaign);
     }
+
+    public function test_tracked_link_metadata_has_existing_policy_priority_over_earlier_raw_campaign(): void
+    {
+        $this->withSession([
+            'attribution' => ['utm_source' => 'earlier_raw'],
+            config('tracked_links.session_key') => ['utm_source' => 'later_tracked'],
+        ]);
+        $this->register();
+        $this->assertSame('later_tracked', Lead::sole()->utm_source);
+    }
 }

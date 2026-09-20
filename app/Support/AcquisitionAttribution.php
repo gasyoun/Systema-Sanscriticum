@@ -18,6 +18,8 @@ final class AcquisitionAttribution
 
     public static function forLead(Request $request): array
     {
+        // Match existing LeadController policy: tracked-link metadata takes priority
+        // over raw first-visit metadata; this is not a global first-touch model.
         $stored = $request->session()->get((string) config('tracked_links.session_key'),
             $request->session()->get('attribution', []));
         $result = self::fields(is_array($stored) ? $stored : []);
