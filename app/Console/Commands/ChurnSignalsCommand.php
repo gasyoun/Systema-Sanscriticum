@@ -119,8 +119,25 @@ class ChurnSignalsCommand extends Command
         $this->writeState($state);
 
         $this->printJson($signals);
-        $this->postToWebhook($signals);
-        $this->info('Сигналов: '.count($signals).'.');
+
+        // H5184 N07: n8n-сторона — три линейных пайпа (webhook→Telegram,
+        // без условных нод), по одному POST на действие:
+        //   intervention         → .../churn-curator (флаг куратору)
+        //   intervention + tg_id → .../churn-nudge   (TG-подтягивание)
+        //   d7-отчёт             → .../churn-d7      (сводка intervention/control)
+        // control — измерение без интервенции, POST не шлём.
+        $sent = 0;
+        foreach ($signals as $s) {
+            if ($s['bucket'] !== 'intervention') {
+                continue;
+            }
+            $this->postTo('churn-curator', $s);
+            if (! empty($s['tg_id'])) {
+                $this->postTo('churn-nudge', $s);
+            }
+            $sent++;
+        }
+        $this->info('Сигналов: '.count($signals).', интервенций отправлено: '.$sent.'.');
 
         return self::SUCCESS;
     }
@@ -158,7 +175,12 @@ class ChurnSignalsCommand extends Command
         }
 
         $this->printJson($summary);
-        $this->postToWebhook($summary);
+        $this->postTo('churn-d7', [
+            'intervention_n' => $summary['intervention']['n'],
+            'intervention_reengaged' => $summary['intervention']['reengaged'],
+            'control_n' => $summary['control']['n'],
+            'control_reengaged' => $summary['control']['reengaged'],
+        ]);
 
         return self::SUCCESS;
     }
@@ -247,16 +269,23 @@ class ChurnSignalsCommand extends Command
 
     /**
      * Тот же n8n-паттерн, что у schedule→sheet (X-Webhook-Secret, H1960):
-     * секрет уходит заголовком; пустой URL — no-op с warning.
+     * секрет уходит заголовком. Базовый URL — N8N_CHURN_WEBHOOK_URL
+     * (.../webhook/churn-signals); путь конкретного пайпа получается заменой
+     * сегмента «churn-signals» на $path. Пустой URL — no-op с warning.
      */
-    private function postToWebhook(array $payload): void
+    private function postTo(string $path, array $payload): void
     {
-        $url = (string) config('services.n8n.churn_webhook');
-        if ($url === '') {
+        $base = (string) config('services.n8n.churn_webhook');
+        if ($base === '') {
             Log::warning('ChurnSignals: N8N_CHURN_WEBHOOK_URL не задан — пропуск.');
             $this->warn('Вебхук n8n не настроен (N8N_CHURN_WEBHOOK_URL) — отправка пропущена.');
 
             return;
+        }
+
+        $url = str_replace('churn-signals', $path, $base);
+        if ($url === $base) {
+            $url = rtrim($base, '/').'-'.$path;
         }
 
         $headers = [];
@@ -268,12 +297,12 @@ class ChurnSignalsCommand extends Command
         try {
             $response = Http::withHeaders($headers)->timeout(15)->post($url, $payload);
             if (! $response->successful()) {
-                Log::error('ChurnSignals: n8n вернул '.$response->status(), ['body' => $response->body()]);
-                $this->error('n8n вернул статус '.$response->status());
+                Log::error('ChurnSignals: n8n ('.$path.') вернул '.$response->status(), ['body' => $response->body()]);
+                $this->error('n8n ('.$path.') вернул статус '.$response->status());
             }
         } catch (\Throwable $e) {
-            Log::error('ChurnSignals: сбой отправки в n8n: '.$e->getMessage());
-            $this->error('Сбой отправки: '.$e->getMessage());
+            Log::error('ChurnSignals: сбой отправки в n8n ('.$path.'): '.$e->getMessage());
+            $this->error('Сбой отправки ('.$path.'): '.$e->getMessage());
         }
     }
 }
