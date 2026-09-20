@@ -1,10 +1,12 @@
 @extends('layouts.shop')
 
-@section('title', 'Карточки — интервальные повторения')
+@section('title', 'Колоды для запоминания санскрита — открытая галерея')
 
 @push('head')
     <link rel="canonical" href="{{ url($langWord ? '/koloda/yazyk/'.$langWord : '/koloda') }}">
     <meta name="robots" content="index, follow">
+    {{-- H5184 N14: ключевые слова в description («колоды», «санскрит», «хинди»). --}}
+    <meta name="description" content="Открытая галерея колод для интервального запоминания санскрита и хинди. Попробуйте бесплатно без регистрации — прогресс сохранится после входа.">
 @endpush
 
 @section('content')
