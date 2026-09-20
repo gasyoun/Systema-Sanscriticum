@@ -60,7 +60,7 @@ class BeginnerPilotReportTest extends TestCase
         $this->assertSame(4, $result['reconciliation']['purchase_rows_with_paid_timestamp']);
         $this->assertSame(300.0, $result['reconciliation']['linked_refund_amount_rub']);
         $this->assertSame($before, Payment::count());
-        $this->assertNull($result['first_task_starts']);
+        $this->assertSame(0, $result['first_task_starts']);
         $this->assertNull($result['support_minutes']);
         $this->assertNull($result['first_time_marathon_main_course_buyers']);
     }
@@ -86,10 +86,11 @@ class BeginnerPilotReportTest extends TestCase
         $this->assertSame(0, $result['first_time_marathon_main_course_buyers']);
         $this->assertSame(0, $result['first_time_marathon_day1_quiz_completed']);
         $this->payment($buyer, ['course_id' => $main->id, 'tariff' => 'full', 'first_paid_at' => '2026-09-06']);
-        MarathonEnrollment::where('lead_id', $lead->id)->update(['day1_engaged_at' => '2026-09-05']);
+        MarathonEnrollment::where('lead_id', $lead->id)->update(['day1_engaged_at' => '2026-09-05', 'day1_started_at' => '2026-09-04']);
         $result = $this->report([$main->id]);
         $this->assertSame(1, $result['first_time_marathon_main_course_buyers']);
         $this->assertSame(1, $result['first_time_marathon_day1_quiz_completed']);
+        $this->assertSame(1, $result['first_task_starts']);
     }
 
     public function test_donations_are_neither_purchases_nor_prior_buyer_history(): void
@@ -114,6 +115,14 @@ class BeginnerPilotReportTest extends TestCase
         $this->assertSame(0, Artisan::call('report:beginner-pilot', ['--from' => '2026-09-01', '--json' => true]));
         $result = json_decode(Artisan::output(), true, flags: JSON_THROW_ON_ERROR);
         $this->assertSame(0, $result['buyers']['first_time']);
+        $this->assertSame('unavailable', $result['support_minutes_provenance']);
+        foreach (['-1', 'NaN', '1e999', 'bad'] as $value) {
+            $this->assertSame(1, Artisan::call('report:beginner-pilot', ['--from' => '2026-09-01', '--support-minutes' => $value]));
+        }
+        $this->assertSame(0, Artisan::call('report:beginner-pilot', ['--from' => '2026-09-01', '--json' => true, '--support-minutes' => '12.5']));
+        $measured = json_decode(Artisan::output(), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertSame(12.5, $measured['support_minutes']);
+        $this->assertSame('manual', $measured['support_minutes_provenance']);
         $this->assertSame(CarbonImmutable::parse('2026-10-01', config('app.timezone'))->toIso8601String(), $result['window']['end_exclusive']);
     }
 }
