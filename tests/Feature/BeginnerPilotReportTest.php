@@ -92,6 +92,18 @@ class BeginnerPilotReportTest extends TestCase
         $this->assertSame(1, $result['first_time_marathon_day1_quiz_completed']);
     }
 
+    public function test_donations_are_neither_purchases_nor_prior_buyer_history(): void
+    {
+        $donor = User::factory()->create();
+        $this->payment($donor, ['tariff' => 'donation']);
+        $buyer = User::factory()->create();
+        $this->payment($buyer, ['tariff' => 'donation', 'first_paid_at' => '2026-08-01']);
+        $this->payment($buyer);
+        $result = $this->report();
+        $this->assertSame(['first_time' => 1, 'returning' => 0, 'history_unknown' => 0], $result['buyers']);
+        $this->assertSame(1, $result['reconciliation']['purchase_rows_with_paid_timestamp']);
+    }
+
     public function test_command_requires_valid_explicit_start_and_outputs_aggregate_json(): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-10-10'));
