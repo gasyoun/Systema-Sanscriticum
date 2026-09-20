@@ -11,7 +11,7 @@ use Carbon\CarbonImmutable;
 /** Read-only acquisition cohort; never substitutes order creation for payment time. */
 final class BeginnerPilotReport
 {
-    public function build(CarbonImmutable $from, int $days, array $mainCourseIds = []): array
+    public function build(CarbonImmutable $from, int $days, array $mainCourseIds = [], ?float $supportMinutes = null): array
     {
         $end = $from->addDays($days);
         $until = $end->min(CarbonImmutable::now());
@@ -28,6 +28,7 @@ final class BeginnerPilotReport
         $marathon = [];
         $continued = [];
         $engaged = [];
+        $started = [];
         foreach ($window->whereNotNull('user_id')->groupBy('user_id') as $userId => $orders) {
             $history = $groups[$userId];
             $undated = $history->contains(function (Payment $p) {
@@ -65,6 +66,11 @@ final class BeginnerPilotReport
             }
             $leadIds = $orders->pluck('lead_id')->push($earliest->user?->lead_id)->filter()->unique();
             if (MarathonEnrollment::query()->whereIn('lead_id', $leadIds)
+                ->where('day1_started_at', '>=', $intro->first_paid_at)
+                ->where('day1_started_at', '<', $until)->exists()) {
+                $started[] = $userId;
+            }
+            if (MarathonEnrollment::query()->whereIn('lead_id', $leadIds)
                 ->where('day1_engaged_at', '>=', $intro->first_paid_at)
                 ->where('day1_engaged_at', '<', $until)->exists()) {
                 $engaged[] = $userId;
@@ -80,8 +86,9 @@ final class BeginnerPilotReport
             'first_time_source_coverage' => count($cohorts['first_time']) ? round(($sources['observed'] + $sources['inferred']) / count($cohorts['first_time']), 4) : null,
             'marathon_buyers' => ['all' => $window->where('tariff', 'marathon_paid')->whereNotNull('user_id')->pluck('user_id')->unique()->count(), 'first_time' => count($marathon)],
             'first_time_marathon_day1_quiz_completed' => count($engaged),
-            'first_task_starts' => null,
-            'support_minutes' => null,
+            'first_task_starts' => count($started),
+            'support_minutes' => $supportMinutes,
+            'support_minutes_provenance' => $supportMinutes === null ? 'unavailable' : 'manual',
             'main_course_ids' => $mainCourseIds,
             'first_time_marathon_main_course_buyers' => $mainCourseIds === [] ? null : count($continued),
             'reconciliation' => [
@@ -99,7 +106,7 @@ final class BeginnerPilotReport
                 'Buyers deduplicate by user ID; duplicate accounts cannot be merged. Row and amount totals retain duplicate payment records for reconciliation, not bank-confirmed net revenue.',
                 'Observed source means recorded UTM or manual source; inferred remains separate. Current lead attribution may have been edited after purchase.',
                 'Linked refunds use ledger creation time, sum absolute row amounts, and include refunds for purchases outside the window. Unlinked refunds are not identifiable.',
-                'Day-1 engagement is quiz completion, not task start. Delivery timestamps do not prove learning. Support time is not recorded.',
+                'Day-1 starts count first server-rendered task pages after paid introduction, not delivery or quiz completion; historical starts before instrumentation are unavailable and not backfilled. Support minutes are manually supplied for this window, not automatically tracked.',
                 'Continuation counts only explicit main-course IDs after introduction within this window. Omitted IDs yield null; later conversions need a later follow-up.',
             ],
         ];

@@ -523,7 +523,7 @@ class MarathonController extends Controller
      * existing magnet_token (H446/H464), no new token needed. 404 for an
      * unknown token or a day that doesn't match an enrolled lead.
      */
-    public function day(int $day, string $token): View
+    public function day(int $day, string $token): \Illuminate\Http\Response
     {
         $lead = Lead::where('magnet_token', $token)->firstOrFail();
         $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
@@ -542,13 +542,21 @@ class MarathonController extends Controller
 
         abort_if($quiz === null && $mantra === null, 404);
 
-        return view("marathon.day{$day}", [
+        $response = response(view("marathon.day{$day}", [
             'quiz' => $quiz,
             'mantra' => $mantra,
             'day' => $day,
             'token' => $token,
             'enrollment' => $enrollment,
-        ]);
+        ]));
+
+        // A server-rendered Day 1 page is a start, never merely a delivery.
+        if ($day === 1) {
+            MarathonEnrollment::whereKey($enrollment->id)->whereNull('day1_started_at')
+                ->update(['day1_started_at' => now()]);
+        }
+
+        return $response;
     }
 
     /**
