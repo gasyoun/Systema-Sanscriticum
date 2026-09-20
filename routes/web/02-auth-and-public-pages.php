@@ -72,6 +72,10 @@ Route::view('/faq/dz', 'faq.dz')->name('faq.dz');
 // (H2060, linked from student.access recovery CTA behind payment_recovery_cta).
 Route::view('/faq/payment', 'faq.payment')->name('faq.payment');
 
+// H5184 N10 — trust-moat: позиционирование «проверка — человек, а не
+// автопроверка». До catch-all /{slug}.
+Route::view('/pochemu-my', 'pages.trust-moat')->name('trust-moat');
+
 // Публичный гид личного кабинета (H3499) — БЕЗ auth, для ещё не вошедших:
 // рассылки students:send-login-invites, анонсы в Telegram, скрипты куратора.
 // Тот же источник, что кабинетный /dvaram/help. Строго до catch-all /{slug}.
