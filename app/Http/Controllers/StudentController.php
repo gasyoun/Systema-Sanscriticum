@@ -107,6 +107,104 @@ class StudentController extends Controller
         $user = auth()->user();
         $userGroupIds = $user->groups->pluck('id');
 
+        ['courses' => $courses, 'nextLessonByCourseId' => $nextLessonByCourseId, 'completedLessonIds' => $completedLessonIds]
+            = $this->loadDashboardCourseData($user, $userGroupIds);
+
+        ['certificates' => $certificates, 'pranaTransactions' => $pranaTransactions, 'pranaRewards' => $pranaRewards,
+            'pranaReasons' => $pranaReasons, 'pranaLeaderboards' => $pranaLeaderboards, 'pranaLeaderboard' => $pranaLeaderboard,
+            'gamificationBoards' => $gamificationBoards, 'badges' => $badges, 'pranaPerks' => $pranaPerks,
+            'pranaRedemptions' => $pranaRedemptions] = $this->loadDashboardGamificationData($user);
+
+        ['debts' => $debts, 'debtsByCourseId' => $debtsByCourseId, 'paidUntilByCourseId' => $paidUntilByCourseId,
+            'debtPayOptions' => $debtPayOptions] = $this->loadDashboardDebtsData($user, $courses);
+
+        $trialLessons = $this->loadDashboardTrialLessons($user, $courses);
+
+        ['onboarding' => $onboarding, 'homeworkAlerts' => $homeworkAlerts]
+            = $this->loadDashboardOnboardingAndHomeworkAlerts($user);
+
+        $continueLearningAction = $this->buildContinueLearningAction(
+            $courses,
+            $nextLessonByCourseId,
+            $completedLessonIds,
+            $debts,
+            $debtPayOptions,
+            $trialLessons,
+            $homeworkAlerts,
+        );
+
+        // «Полка подписчика» (H324): бесплатные магниты для подписчиков рассылки.
+        // Пустая коллекция, когда флаг OFF или пользователь не подписчик — partial
+        // сам ничего не рендерит. Платного доступа не касается.
+        $subscriberMagnets = (config('features.newsletter_subscribe') && $user->isNewsletterSubscriber())
+            ? SubscriberMagnet::active()->get()
+            : collect();
+
+        // R29.2 / H1481: recovery-state predicate (declined payment / expired
+        // promise). When cabinet_hybrid is OFF the resolver still runs so
+        // telemetry mode is truthful once the flag flips without a second deploy.
+        $recovery = app(RecoveryStateResolver::class)->resolve($user);
+        $suppressOffers = $recovery->suppressOffers();
+
+        $this->emitDashboardTelemetry($user, $recovery, $debts->count());
+
+        ['accessSelfService' => $accessSelfService, 'accessProfileSummary' => $accessProfileSummary]
+            = $this->buildDashboardAccessProfileData($user, $courses->count());
+
+        $canvasByCourseId = $this->buildDashboardTextbookCanvas($courses, $user);
+
+        $viewData = compact(
+            'courses',
+            'canvasByCourseId',
+            'nextLessonByCourseId',
+            'certificates',
+            'pranaTransactions',
+            'pranaRewards',
+            'pranaLeaderboard',
+            'pranaLeaderboards',
+            'gamificationBoards',
+            'badges',
+            'pranaPerks',
+            'pranaRedemptions',
+            'pranaReasons',
+            'debts',
+            'debtsByCourseId',
+            'paidUntilByCourseId',
+            'debtPayOptions',
+            'trialLessons',
+            'onboarding',
+            'homeworkAlerts',
+            'subscriberMagnets',
+            'continueLearningAction',
+            'recovery',
+            'suppressOffers',
+            'accessSelfService',
+            'accessProfileSummary',
+        );
+
+        $viewData = array_merge($viewData, $this->buildDashboardClubAndProgrammeData($user));
+        $viewData = array_merge($viewData, $this->buildDashboardWaitlistData($user));
+
+        // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
+        // Flag OFF → byte-stable legacy dashboard (recovery vars unused there).
+        if (config('features.cabinet_hybrid')) {
+            $nearestLive = $this->nearestLiveForUser($user);
+            $viewData['nearestLive'] = $nearestLive;
+            $viewData['todayBand'] = $this->buildTodayBand(
+                $continueLearningAction,
+                $nearestLive,
+                $homeworkAlerts,
+                $recovery,
+            );
+
+            return view('student.hybrid.home', $viewData);
+        }
+
+        return view('student.dashboard', $viewData);
+    }
+
+    private function loadDashboardCourseData($user, $userGroupIds): array
+    {
         // БЫЛО: where('is_visible', true) — ломало доступ при скрытии с витрины
         // СТАЛО: фильтруем по is_active (видимость в ЛК)
         // Уроки тянем упорядоченными (sort_order→created_at) с group_id/title —
@@ -132,6 +230,11 @@ class StudentController extends Controller
             ),
         ]);
 
+        return compact('courses', 'nextLessonByCourseId', 'completedLessonIds');
+    }
+
+    private function loadDashboardGamificationData($user): array
+    {
         $certificates = $user->certificates()
             ->with('course')
             ->orderBy('created_at', 'desc')
@@ -158,6 +261,22 @@ class StudentController extends Controller
         $pranaRedemptions = PranaRedemption::where('user_id', $user->id)
             ->latest()->limit(5)->get();
 
+        return compact(
+            'certificates',
+            'pranaTransactions',
+            'pranaRewards',
+            'pranaReasons',
+            'pranaLeaderboards',
+            'pranaLeaderboard',
+            'gamificationBoards',
+            'badges',
+            'pranaPerks',
+            'pranaRedemptions',
+        );
+    }
+
+    private function loadDashboardDebtsData($user, $courses): array
+    {
         $debtsService = app(StudentDebtsService::class);
         $debts = $debtsService->forUser($user);
         $debtsByCourseId = $debts->keyBy('course_id');
@@ -171,9 +290,14 @@ class StudentController extends Controller
         $debtPayResolver = app(DebtPaymentResolver::class);
         $debtPayOptions = $debts->mapWithKeys(fn ($d) => [$d->course_id => $debtPayResolver->optionsFor($d, $user)]);
 
+        return compact('debts', 'debtsByCourseId', 'paidUntilByCourseId', 'debtPayOptions');
+    }
+
+    private function loadDashboardTrialLessons($user, $courses)
+    {
         // Отдельно открытые уроки (например, оплаченное пробное занятие): курсы, к
         // которым нет полного доступа по группам, но есть персональный grant на урок.
-        $trialLessons = LessonAccessGrant::query()
+        return LessonAccessGrant::query()
             ->where('user_id', $user->id)
             ->active()
             ->whereNotIn('course_id', $courses->pluck('id')->all())
@@ -181,7 +305,10 @@ class StudentController extends Controller
             ->get()
             ->filter(fn (LessonAccessGrant $g) => $g->lesson && $g->course)
             ->values();
+    }
 
+    private function loadDashboardOnboardingAndHomeworkAlerts($user): array
+    {
         // Чеклист первых шагов (P0-онбординг). Карточку показываем, пока не все
         // шаги выполнены — см. partial onboarding-checklist.
         $onboarding = OnboardingChecklist::for($user);
@@ -195,46 +322,37 @@ class StudentController extends Controller
             ->get()
             ->filter(fn ($s) => $s->lesson && $s->course)
             ->values();
-        $continueLearningAction = $this->buildContinueLearningAction(
-            $courses,
-            $nextLessonByCourseId,
-            $completedLessonIds,
-            $debts,
-            $debtPayOptions,
-            $trialLessons,
-            $homeworkAlerts,
-        );
 
-        // «Полка подписчика» (H324): бесплатные магниты для подписчиков рассылки.
-        // Пустая коллекция, когда флаг OFF или пользователь не подписчик — partial
-        // сам ничего не рендерит. Платного доступа не касается.
-        $subscriberMagnets = (config('features.newsletter_subscribe') && $user->isNewsletterSubscriber())
-            ? SubscriberMagnet::active()->get()
-            : collect();
+        return compact('onboarding', 'homeworkAlerts');
+    }
 
-        // R29.2 / H1481: recovery-state predicate (declined payment / expired
-        // promise). When cabinet_hybrid is OFF the resolver still runs so
-        // telemetry mode is truthful once the flag flips without a second deploy.
-        $recovery = app(RecoveryStateResolver::class)->resolve($user);
-        $suppressOffers = $recovery->suppressOffers();
-
+    private function emitDashboardTelemetry($user, $recovery, int $debtsCount): void
+    {
         // Baseline-телеметрия ремейка (H962, спека §4). mode: normal|recovery.
         app(CabinetTelemetry::class)->emit(
             user: $user,
             event: ActivityEvent::CABINET_HOME_VIEW,
             data: [
                 'mode' => $recovery->mode(),
-                'debts' => $debts->count(),
+                'debts' => $debtsCount,
                 'reason' => $recovery->reason,
             ],
             request: request(),
         );
+    }
 
+    private function buildDashboardAccessProfileData($user, int $courseCount): array
+    {
         $accessSelfService = (bool) config('features.access_self_service', false);
         $accessProfileSummary = $accessSelfService
-            ? app(AccessDiagnosticsService::class)->profileSummary($user, $courses->count())
+            ? app(AccessDiagnosticsService::class)->profileSummary($user, $courseCount)
             : null;
 
+        return compact('accessSelfService', 'accessProfileSummary');
+    }
+
+    private function buildDashboardTextbookCanvas($courses, $user): array
+    {
         // H4435 (MG 08-09): канва по курсам-учебникам — позиция студента и
         // курсор группы. Две шкалы раздельно: наши занятия vs уроки учебника.
         $canvasByCourseId = [];
@@ -269,54 +387,35 @@ class StudentController extends Controller
             ];
         }
 
-        $viewData = compact(
-            'courses',
-            'canvasByCourseId',
-            'nextLessonByCourseId',
-            'certificates',
-            'pranaTransactions',
-            'pranaRewards',
-            'pranaLeaderboard',
-            'pranaLeaderboards',
-            'gamificationBoards',
-            'badges',
-            'pranaPerks',
-            'pranaRedemptions',
-            'pranaReasons',
-            'debts',
-            'debtsByCourseId',
-            'paidUntilByCourseId',
-            'debtPayOptions',
-            'trialLessons',
-            'onboarding',
-            'homeworkAlerts',
-            'subscriberMagnets',
-            'continueLearningAction',
-            'recovery',
-            'suppressOffers',
-            'accessSelfService',
-            'accessProfileSummary',
-        );
+        return $canvasByCourseId;
+    }
 
+    private function buildDashboardClubAndProgrammeData($user): array
+    {
         // H2644: клубная полка и карточка членства. Оба ключа ВСЕГДА определены —
         // партиалы решают по ним, рисовать ли себя; при выключенном флаге это
         // null + пустая коллекция, и кабинет остаётся байт-стабильным.
         $clubEntitlement = app(ClubEntitlement::class);
-        $viewData['clubMembership'] = $clubEntitlement->enabled()
+        $clubMembership = $clubEntitlement->enabled()
             ? app(ClubMembershipService::class)->activeFor($user)
             : null;
-        $viewData['clubShelf'] = $clubEntitlement->shelfFor($user);
+        $clubShelf = $clubEntitlement->shelfFor($user);
 
         // H2441: Hindi programme playlist card. Null when flag OFF so classic
         // cabinet stays inert; the page itself never requires cabinet_hybrid.
         $hindiPlaylistService = app(HindiProgrammePlaylist::class);
-        $viewData['hindiPlaylist'] = $hindiPlaylistService->enabled()
+        $hindiPlaylist = $hindiPlaylistService->enabled()
             ? $hindiPlaylistService->summaryFor($user)
             : null;
-        $viewData['hindiTeacherBrief'] = $hindiPlaylistService->teachesHindi($user)
+        $hindiTeacherBrief = $hindiPlaylistService->teachesHindi($user)
             ? HindiProgrammePlaylist::TEACHER_BRIEF_URL
             : null;
 
+        return compact('clubMembership', 'clubShelf', 'hindiPlaylist', 'hindiTeacherBrief');
+    }
+
+    private function buildDashboardWaitlistData($user): array
+    {
         // Список ожидания (MG 31-08-2026, H3815): строки для голосования в
         // кабинете. Flag OFF → пустая коллекция, кабинет байт-стабилен.
         $waitlistItems = config('features.waitlist_voting', false)
@@ -328,32 +427,16 @@ class StudentController extends Controller
                 ->withCount('votes')
                 ->get()
             : collect();
-        $viewData['waitlistItems'] = $waitlistItems;
 
         // H4206: моё пожелание времени по каждой строке («Голос учтён · утром»).
-        $viewData['waitlistMyPrefs'] = $waitlistItems->isNotEmpty()
+        $waitlistMyPrefs = $waitlistItems->isNotEmpty()
             ? WaitlistVote::query()
                 ->where('user_id', $user->id)
                 ->whereIn('course_waitlist_item_id', $waitlistItems->modelKeys())
                 ->pluck('slot_preference', 'course_waitlist_item_id')
             : collect();
 
-        // Phase 1 hybrid chassis (H1481): job-named shell + today band + recovery.
-        // Flag OFF → byte-stable legacy dashboard (recovery vars unused there).
-        if (config('features.cabinet_hybrid')) {
-            $nearestLive = $this->nearestLiveForUser($user);
-            $viewData['nearestLive'] = $nearestLive;
-            $viewData['todayBand'] = $this->buildTodayBand(
-                $continueLearningAction,
-                $nearestLive,
-                $homeworkAlerts,
-                $recovery,
-            );
-
-            return view('student.hybrid.home', $viewData);
-        }
-
-        return view('student.dashboard', $viewData);
+        return compact('waitlistItems', 'waitlistMyPrefs');
     }
 
     /**
@@ -924,6 +1007,46 @@ class StudentController extends Controller
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
         $courseSlug = $course->slug;
 
+        $access = $this->resolveLessonAccessGate($user, $course, $lesson, $courseSlug);
+        if ($access['redirect'] !== null) {
+            return $access['redirect'];
+        }
+        $hasLessonGrant = $access['hasLessonGrant'];
+        $clubLesson = $access['clubLesson'];
+        $unlockedTariffs = $access['unlockedTariffs'];
+        $recordingAccess = $access['recordingAccess'];
+
+        $this->trackLessonView($user, $course, $lesson, $prana);
+
+        ['lessons' => $lessons, 'currentNote' => $currentNote]
+            = $this->buildLessonNavigationAndNote($user, $course, $lesson);
+
+        ['hasRecognizedVideo' => $hasRecognizedVideo, 'videoResumeEnabled' => $videoResumeEnabled,
+            'kinescopeEmbedUrl' => $kinescopeEmbedUrl, 'resumePosition' => $resumePosition,
+            'resumeDuration' => $resumeDuration, 'upcomingSession' => $upcomingSession]
+            = $this->buildLessonVideoData($user, $course, $lesson);
+
+        // ==========================================
+        // --- БЛОК ОБРАБОТКИ JSON ТРАНСКРИПЦИИ ---
+        // ==========================================
+        // Разбор JSON-расшифровки в предложения с таймкодами вынесен в TranscriptParser
+        // (переиспользуется блоком лендинга «Стенограмма вебинара»). Кэш — внутри сервиса.
+        $transcriptSentences = TranscriptParser::sentencesFromStoredFile($lesson->transcript_file);
+
+        ['homeworkOpen' => $homeworkOpen, 'homeworkSubmission' => $homeworkSubmission]
+            = $this->buildLessonHomeworkData($user, $lesson);
+
+        ['hindiDrillsUrl' => $hindiDrillsUrl, 'lywUrl' => $lywUrl]
+            = $this->buildLessonHindiAndLywUrls($user, $course, $lesson);
+
+        // Передаем переменную $transcriptSentences в шаблон
+        // H4396: youtubeId/rutubeId больше не передаются в вью — сырые ID не
+        // должны попадать в HTML, плеер грузит серверные ворота записи.
+        return view('student.lesson', compact('course', 'lesson', 'lessons', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl', 'recordingAccess', 'lywUrl'));
+    }
+
+    private function resolveLessonAccessGate($user, Course $course, Lesson $lesson, string $courseSlug): array
+    {
         // Разовый доступ к конкретному уроку (например, оплаченное пробное занятие) —
         // обход и блок/full гейта, и группового: явный grant на этот урок главнее.
         $hasLessonGrant = LessonAccessGrant::userCanWatch($user, $lesson);
@@ -937,8 +1060,10 @@ class StudentController extends Controller
         // Урок другой группы курса (курс разнесён на 2 потока) — не показываем,
         // если только нет персонального гранта именно на этот урок.
         if (! $hasLessonGrant && ! $clubCovers && ! $clubLesson && ! $lesson->isVisibleToGroupsOf($user)) {
-            return redirect()->route('student.course', $course->slug)
-                ->with('error', 'Этот урок относится к другой группе курса.');
+            return [
+                'redirect' => redirect()->route('student.course', $course->slug)
+                    ->with('error', 'Этот урок относится к другой группе курса.'),
+            ];
         }
 
         // --- БЛОК ЗАЩИТЫ ДОСТУПА С УЧЕТОМ КОНКРЕТНОГО КУРСА ---
@@ -948,8 +1073,10 @@ class StudentController extends Controller
         $isFreeLesson = (bool) $lesson->is_free;
 
         if (! $isFreeLesson && ! $hasLessonGrant && ! $clubLesson && ! $lesson->isUnlockedBy($unlockedTariffs)) {
-            return redirect()->route('student.course', $course->slug)
-                ->with('error', 'Этот урок доступен в Блоке '.$lesson->block_number.'. Для просмотра необходимо оплатить доступ.');
+            return [
+                'redirect' => redirect()->route('student.course', $course->slug)
+                    ->with('error', 'Этот урок доступен в Блоке '.$lesson->block_number.'. Для просмотра необходимо оплатить доступ.'),
+            ];
         }
 
         // H2744: this decision gates only the recording payload. The lesson
@@ -961,6 +1088,18 @@ class StudentController extends Controller
             $hasLessonGrant,
             'web_recording',
         );
+
+        return [
+            'redirect' => null,
+            'hasLessonGrant' => $hasLessonGrant,
+            'clubLesson' => $clubLesson,
+            'unlockedTariffs' => $unlockedTariffs,
+            'recordingAccess' => $recordingAccess,
+        ];
+    }
+
+    private function trackLessonView($user, Course $course, Lesson $lesson, PranaService $prana): void
+    {
         // ==========================================
         // --- ТРЕКИНГ ПРОСМОТРА УРОКА (async) ---
         // ==========================================
@@ -982,7 +1121,10 @@ class StudentController extends Controller
             }
         }
         // ==========================================
+    }
 
+    private function buildLessonNavigationAndNote($user, Course $course, Lesson $lesson): array
+    {
         $lessons = $course->lessons()->forUserGroups($user)->orderBy('sort_order')->orderBy('created_at')->get();
 
         $currentNote = null;
@@ -993,6 +1135,11 @@ class StudentController extends Controller
             $currentNote = $progressRow->pivot->notes;
         }
 
+        return compact('lessons', 'currentNote');
+    }
+
+    private function buildLessonVideoData($user, Course $course, Lesson $lesson): array
+    {
         // H4396: сырые ID в HTML не уходят (серверные ворота записи), но
         // «запись ещё не залита» определяется так же — по распознанным ссылкам.
         $hasRecognizedVideo = self::parseVideoId($lesson->youtube_url, 'youtube') !== null
@@ -1034,13 +1181,11 @@ class StudentController extends Controller
                 ->first();
         }
 
-        // ==========================================
-        // --- БЛОК ОБРАБОТКИ JSON ТРАНСКРИПЦИИ ---
-        // ==========================================
-        // Разбор JSON-расшифровки в предложения с таймкодами вынесен в TranscriptParser
-        // (переиспользуется блоком лендинга «Стенограмма вебинара»). Кэш — внутри сервиса.
-        $transcriptSentences = TranscriptParser::sentencesFromStoredFile($lesson->transcript_file);
+        return compact('hasRecognizedVideo', 'videoResumeEnabled', 'kinescopeEmbedUrl', 'resumePosition', 'resumeDuration', 'upcomingSession');
+    }
 
+    private function buildLessonHomeworkData($user, Lesson $lesson): array
+    {
         // Открыт ли приём работ ИМЕННО ДЛЯ ЭТОГО студента (H1764). Считается
         // один раз здесь и передаётся в шаблон: витрина и серверный гейт
         // обязаны отвечать на этот вопрос одинаково.
@@ -1055,6 +1200,11 @@ class StudentController extends Controller
                 ->first();
         }
 
+        return compact('homeworkOpen', 'homeworkSubmission');
+    }
+
+    private function buildLessonHindiAndLywUrls($user, Course $course, Lesson $lesson): array
+    {
         $hindiDrillsUrl = null;
         $hindiDrills = app(HindiTranscriptDrills::class);
         $hindiAttachments = app(HindiAttachmentDrills::class);
@@ -1073,10 +1223,7 @@ class StudentController extends Controller
             $lywUrl = route('student.lesson.lessonpack', [$course->slug, $lesson->id]);
         }
 
-        // Передаем переменную $transcriptSentences в шаблон
-        // H4396: youtubeId/rutubeId больше не передаются в вью — сырые ID не
-        // должны попадать в HTML, плеер грузит серверные ворота записи.
-        return view('student.lesson', compact('course', 'lesson', 'lessons', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl', 'recordingAccess', 'lywUrl'));
+        return compact('hindiDrillsUrl', 'lywUrl');
     }
 
     /**
