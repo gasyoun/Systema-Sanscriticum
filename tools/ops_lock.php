@@ -45,19 +45,21 @@ function lock_dir(): string
     if ($dir === false || $dir === '') {
         $dir = '/var/www/html/storage/ops-locks';
     }
-    if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+    if (! is_dir($dir) && ! @mkdir($dir, 0775, true) && ! is_dir($dir)) {
         fail(EXIT_CONFLICT, "cannot create lock dir {$dir}");
     }
+
     return $dir;
 }
 
 /** Validates the slug (exit 2 on bad input) and returns the full lock path. */
 function lock_path(string $slug): string
 {
-    if (!preg_match('/^[A-Za-z0-9._-]+$/', $slug)) {
+    if (! preg_match('/^[A-Za-z0-9._-]+$/', $slug)) {
         fail(EXIT_USAGE, "invalid slug '{$slug}' (allowed: [A-Za-z0-9._-]+)");
     }
-    return lock_dir() . '/' . $slug . '.lock';
+
+    return lock_dir().'/'.$slug.'.lock';
 }
 
 function read_lock(string $path): ?array
@@ -67,6 +69,7 @@ function read_lock(string $path): ?array
         return null;
     }
     $data = json_decode($raw, true);
+
     return is_array($data) ? $data : null;
 }
 
@@ -74,18 +77,20 @@ function read_lock(string $path): ?array
 function is_expired(array $lock): bool
 {
     $exp = $lock['expires_at_utc'] ?? null;
-    if (!is_string($exp) || strtotime($exp) === false) {
+    if (! is_string($exp) || strtotime($exp) === false) {
         return true;
     }
+
     return strtotime($exp) <= time();
 }
 
 function remaining_seconds(array $lock): int
 {
     $exp = $lock['expires_at_utc'] ?? null;
-    if (!is_string($exp) || strtotime($exp) === false) {
+    if (! is_string($exp) || strtotime($exp) === false) {
         return -1;
     }
+
     return strtotime($exp) - time();
 }
 
@@ -94,7 +99,7 @@ function cmd_acquire(string $slug, int $ttlMinutes): void
     $path = lock_path($slug);
     $now = time();
     $lock = [
-        'claimed_by' => get_current_user() . '@' . gethostname(),
+        'claimed_by' => get_current_user().'@'.gethostname(),
         'pid' => getmypid(),
         'acquired_at_utc' => gmdate('c', $now),
         'expires_at_utc' => gmdate('c', $now + $ttlMinutes * 60),
@@ -102,8 +107,8 @@ function cmd_acquire(string $slug, int $ttlMinutes): void
     $fh = @fopen($path, 'x'); // O_EXCL
     if ($fh === false) {
         $existing = read_lock($path);
-        if ($existing !== null && !is_expired($existing)) {
-            fwrite(STDERR, json_encode($existing, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+        if ($existing !== null && ! is_expired($existing)) {
+            fwrite(STDERR, json_encode($existing, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
             exit(EXIT_CONFLICT); // FAIL CLOSED
         }
         $holder = $existing['claimed_by'] ?? 'unknown';
@@ -114,10 +119,10 @@ function cmd_acquire(string $slug, int $ttlMinutes): void
         }
         echo "replaced expired lock held by {$holder}\n";
     }
-    fwrite($fh, json_encode($lock, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
+    fwrite($fh, json_encode($lock, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n");
     fclose($fh);
     @chmod($path, 0664);
-    echo $path . "\n";
+    echo $path."\n";
 }
 
 function cmd_release(string $slug, string $claimedBy): void
@@ -131,7 +136,7 @@ function cmd_release(string $slug, string $claimedBy): void
         $holder = $lock['claimed_by'] ?? 'unknown';
         fail(EXIT_CONFLICT, "refused: claimed_by mismatch for '{$slug}' (holder: {$holder})");
     }
-    if (!@unlink($path)) {
+    if (! @unlink($path)) {
         fail(EXIT_CONFLICT, "failed to unlink {$path}");
     }
     echo "released {$path}\n";
@@ -142,14 +147,14 @@ function cmd_status(?string $slug): void
     $dir = lock_dir();
     if ($slug !== null) {
         $path = lock_path($slug); // also validates
-        $files = is_file($path) ? [$slug . '.lock'] : [];
+        $files = is_file($path) ? [$slug.'.lock'] : [];
     } else {
-        $files = array_map('basename', glob($dir . '/*.lock') ?: []);
+        $files = array_map('basename', glob($dir.'/*.lock') ?: []);
     }
     sort($files);
     $out = [];
     foreach ($files as $file) {
-        $lock = read_lock($dir . '/' . $file);
+        $lock = read_lock($dir.'/'.$file);
         if ($lock === null) {
             continue;
         }
@@ -157,20 +162,20 @@ function cmd_status(?string $slug): void
         $lock['remaining_seconds'] = remaining_seconds($lock);
         $out[] = $lock;
     }
-    echo json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+    echo json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n";
 }
 
 function cmd_sweep(): void
 {
     $dir = lock_dir();
     $removed = 0;
-    foreach (glob($dir . '/*.lock') ?: [] as $path) {
+    foreach (glob($dir.'/*.lock') ?: [] as $path) {
         $lock = read_lock($path);
         if ($lock !== null && is_expired($lock) && @unlink($path)) {
             $removed++;
         }
     }
-    echo $removed . "\n";
+    echo $removed."\n";
 }
 
 function main(array $argv): void
@@ -178,7 +183,7 @@ function main(array $argv): void
     $cmd = $argv[1] ?? null;
     switch ($cmd) {
         case 'acquire':
-            if (!isset($argv[2])) {
+            if (! isset($argv[2])) {
                 fail(EXIT_USAGE, 'usage: ops_lock.php acquire <slug> [ttl_minutes=120]');
             }
             $ttl = isset($argv[3]) ? filter_var($argv[3], FILTER_VALIDATE_INT) : 120;
@@ -188,7 +193,7 @@ function main(array $argv): void
             cmd_acquire($argv[2], $ttl);
             break;
         case 'release':
-            if (!isset($argv[3])) {
+            if (! isset($argv[3])) {
                 fail(EXIT_USAGE, 'usage: ops_lock.php release <slug> <claimed_by>');
             }
             cmd_release($argv[2], $argv[3]);
