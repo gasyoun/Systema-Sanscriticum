@@ -14,5 +14,11 @@
         $skinView = 'marathon.skins.b.content';
     }
 @endphp
+@php($beginnerOffer = \App\Support\BeginnerPilotOffer::forView())
+@if (! $beginnerOffer['supportAvailable'])
+    <aside class="max-w-3xl mx-auto mt-6 px-5 py-4 rounded-xl border border-amber-300 bg-amber-50 text-stone-900" role="status">
+        <strong>Перед выбором участия с проверкой:</strong> новая дата живой групповой консультации пока не подтверждена. Уточните дату и возможность проверки у куратора до оплаты. Бесплатные материалы доступны без личной проверки.
+    </aside>
+@endif
 @include($skinView)
 @endsection
