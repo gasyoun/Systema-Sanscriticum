@@ -11,7 +11,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ABLY_KEY` | required | `—` | config/broadcasting.php:69 |
 | `ACCESS_SELF_SERVICE` | optional | `false` | config/features.php:1156 |
 | `ACTIVATION_COHORT_MONTHS` | optional | `12` | config/activation_metrics.php:21 |
-| `ACTIVATION_COMPLETION_METRICS` | optional | `false` | config/features.php:1555 |
+| `ACTIVATION_COMPLETION_METRICS` | optional | `false` | config/features.php:1558 |
 | `ACTIVATION_COMPLETION_RATIO` | optional | `0.8` | config/activation_metrics.php:28 |
 | `ACTIVATION_COMPLETION_ROWS` | optional | `20` | config/activation_metrics.php:34 |
 | `ACTIVATION_MIN_DENOMINATOR` | optional | `5` | config/activation_metrics.php:40 |
@@ -105,7 +105,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CHECKOUT_INACTIVE_TARIFF_GUARD` | optional | `true` | config/features.php:617 |
 | `CHECKOUT_INTEGRITY_SAFE_REPAIRS` | optional | `false` | config/features.php:609 |
 | `CHECKOUT_LEGACY_PENDING_DAYS` | optional | `30` | config/checkout.php:31 |
-| `CHECKOUT_NEAR_DUPLICATE_EMAIL_GUARD` | optional | `false` | config/features.php:1529 |
+| `CHECKOUT_NEAR_DUPLICATE_EMAIL_GUARD` | optional | `false` | config/features.php:1532 |
 | `CHECKOUT_PAYPAL_WEBHOOK_AMOUNT_TOLERANCE` | optional | `1.00` | config/checkout.php:52 |
 | `CHECKOUT_PROMO_RESERVATIONS` | optional | `true` | config/features.php:601 |
 | `CHECKOUT_PROMO_SURVIVES_SESSION` | optional | `true` | config/features.php:668 |
@@ -142,7 +142,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CONVERSION_WARN_PCT` | optional | `50` | config/conversion.php:33 |
 | `CORS_ALLOWED_ORIGINS` | optional | `''` | config/cors.php:28 |
 | `COURSE_ACCESS_WINDOWS` | optional | `false` | config/features.php:792 |
-| `COURSE_INTEREST_FORM` | optional | `false` | config/features.php:1629 |
+| `COURSE_INTEREST_FORM` | optional | `false` | config/features.php:1632 |
 | `COURSE_LIBRARY` | optional | `false` | config/features.php:1288 |
 | `COURSE_RECORDINGS_SALES` | optional | `false` | config/features.php:417 |
 | `CRM_COCKPIT` | optional | `false` | config/features.php:78 |
@@ -217,7 +217,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `ECON_USN_PCT` | optional | `6.0` | config/economics.php:16 |
 | `EMAIL_CAMPAIGNS` | optional | `false` | config/features.php:844 |
 | `EXCHANGERATE_HOST_KEY` | required | `—` | config/services.php:74 |
-| `EXIT_SURVEY_AUTO_TRIGGER` | optional | `false` | config/features.php:1581 |
+| `EXIT_SURVEY_AUTO_TRIGGER` | optional | `false` | config/features.php:1584 |
 | `FAQ_HYBRID_RETRIEVAL` | optional | `false` | config/features.php:158 |
 | `FAQ_RAG_SUGGESTER` | optional | `false` | config/features.php:147 |
 | `FEATURE_F2_PLACEMENT_QUIZ` | optional | `false` | config/features.php:1021 |
@@ -449,7 +449,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MEMCACHED_PERSISTENT_ID` | required | `—` | config/cache.php:60 |
 | `MEMCACHED_PORT` | optional | `11211` | config/cache.php:71 |
 | `MEMCACHED_USERNAME` | required | `—` | config/cache.php:62 |
-| `MIC_SHADOW_CLASSIFY` | optional | `false` | config/features.php:1607 |
+| `MIC_SHADOW_CLASSIFY` | optional | `false` | config/features.php:1610 |
 | `MONEY_SLI_ATTEMPTS` | optional | `3` | config/money_sli.php:35 |
 | `MONEY_SLI_ATTEMPT_PAUSE_SECONDS` | optional | `2` | config/money_sli.php:36 |
 | `MONEY_SLI_DAILY_PING_URL` | optional | `''` | config/money_sli.php:54 |
@@ -524,7 +524,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PAYPAL_CLAIM_ENABLED` | feature-flag | `false` | config/services.php:599 |
 | `PAYPAL_CLIENT_ID` | required | `—` | config/services.php:634 |
 | `PAYPAL_CLIENT_SECRET` | secret | `—` | config/services.php:635 |
-| `PAYPAL_FIXED_PRICE_LIST_ENABLED` | feature-flag | `false` | config/features.php:1568 |
+| `PAYPAL_FIXED_PRICE_LIST_ENABLED` | feature-flag | `false` | config/features.php:1571 |
 | `PAYPAL_FIXED_PRICE_MARKUP` | optional | `0.08` | config/services.php:627 |
 | `PAYPAL_ME_LINK` | required | `—` | config/services.php:600 |
 | `PAYPAL_RECIPIENT` | required | `—` | config/services.php:601 |
@@ -602,9 +602,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `REDIS_URL` | required | `—` | config/database.php:137<br>config/database.php:146<br>config/reverb.php:44 |
 | `REDIS_USERNAME` | required | `—` | config/database.php:139<br>config/database.php:148<br>config/reverb.php:47 |
 | `REFERRAL_CREDIT_AMOUNT` | optional | `500` | config/referral.php:19 |
-| `REFERRAL_LOYALTY_CTA` | optional | `false` | config/features.php:1539 |
+| `REFERRAL_LOYALTY_CTA` | optional | `false` | config/features.php:1542 |
 | `REFERRAL_REFERRED_CREDIT_AMOUNT` | optional | `0` | config/referral.php:22 |
-| `REINVITE_48H` | optional | `true` | config/features.php:1619 |
+| `REINVITE_48H` | optional | `true` | config/features.php:1622 |
 | `REMINDER_SUGGESTION_CONFIDENCE_THRESHOLD` | optional | `0.5` | config/reminders.php:17 |
 | `REMINDER_SUGGESTION_EXPIRY_DAYS` | optional | `14` | config/reminders.php:11 |
 | `REVENUE_RECOGNITION_STAMPED_BLOCK_RUN_GUARD` | optional | `false` | config/revenue.php:48 |
@@ -652,7 +652,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SANCTUM_STATEFUL_DOMAINS` | optional | `sprintf( '%s%s', 'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000…` | config/sanctum.php:21 |
 | `SANCTUM_TOKEN_EXPIRATION` | secret | `60 * 24 * 90` | config/sanctum.php:58 |
 | `SANCTUM_TOKEN_PREFIX` | secret | `''` | config/sanctum.php:73 |
-| `SCHEDULE_FULL_POST_ENABLED` | feature-flag | `false` | config/features.php:1590 |
+| `SCHEDULE_FULL_POST_ENABLED` | feature-flag | `false` | config/features.php:1593 |
 | `SEASON1_NOTIFY_ENABLED` | feature-flag | `false` | config/season.php:11 |
 | `SENTINEL_BREAKER_BIN` | optional | `'/usr/local/lib/sentinel-breaker/sentinel_breaker.py'` | config/services.php:278 |
 | `SENTINEL_BREAKER_ENABLED` | feature-flag | `true` | config/services.php:277 |
@@ -702,7 +702,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `STORAGE_WATCH_TELEGRAM_HARVEST_MB` | optional | `2000` | config/storage_watch.php:52 |
 | `STORAGE_WATCH_TOTAL_MB` | optional | `16000` | config/storage_watch.php:58 |
 | `STORAGE_WATCH_WARN_RATIO` | optional | `0.8` | config/storage_watch.php:62 |
-| `STUDENT_AGENT_ENABLED` | feature-flag | `false` | config/features.php:1515 |
+| `STUDENT_AGENT_ENABLED` | feature-flag | `false` | config/features.php:1518 |
 | `STUDENT_TELEGRAM_BOT_TOKEN` | secret | `—` | config/services.php:134 |
 | `STUDENT_TELEGRAM_BOT_USERNAME` | required | `—` | config/services.php:135 |
 | `SUBHASHITA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:40 |
@@ -919,7 +919,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `VK_ORS_DATA_PATH` | optional | `storage_path('app/vk_ors')` | config/content.php:14 |
 | `VK_REDIRECT_URI` | optional | `'/auth/vkontakte/callback'` | config/services.php:585 |
 | `WAITLIST_VOTING` | optional | `false` | config/features.php:1028 |
-| `WEEKLY_FINISH_REPORT_ENABLED` | feature-flag | `false` | config/features.php:1594 |
+| `WEEKLY_FINISH_REPORT_ENABLED` | feature-flag | `false` | config/features.php:1597 |
 | `YANDEX_AGENT_ID` | required | `—` | config/services.php:492 |
 | `YANDEX_API_KEY` | secret | `—` | config/services.php:490 |
 | `YANDEX_CLIENT_ID` | required | `—` | config/services.php:588 |
