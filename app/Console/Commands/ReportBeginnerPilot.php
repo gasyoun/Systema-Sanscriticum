@@ -11,7 +11,7 @@ use Illuminate\Console\Command;
 
 final class ReportBeginnerPilot extends Command
 {
-    protected $signature = 'report:beginner-pilot {--from= : Verified pilot start, YYYY-MM-DD} {--days=30 : Observation window, 1-366 days} {--main-course=* : Verified main-course ID; repeat for each course} {--json : Emit aggregate JSON}';
+    protected $signature = 'report:beginner-pilot {--from= : Verified pilot start, YYYY-MM-DD} {--days=30 : Observation window, 1-366 days} {--main-course=* : Verified main-course ID; repeat for each course} {--support-minutes= : Human-measured total support minutes for this window} {--json : Emit aggregate JSON}';
 
     protected $description = 'Read-only first-purchase pilot report; no personal data and no automatic pilot launch';
 
@@ -42,7 +42,13 @@ final class ReportBeginnerPilot extends Command
                 return self::FAILURE;
             }
         }
-        $result = $report->build($from, (int) $days, array_values(array_unique(array_map('intval', $ids))));
+        $support = $this->option('support-minutes');
+        if ($support !== null && (! is_numeric($support) || ! is_finite((float) $support) || (float) $support < 0)) {
+            $this->error('--support-minutes must be a nonnegative measured number.');
+
+            return self::FAILURE;
+        }
+        $result = $report->build($from, (int) $days, array_values(array_unique(array_map('intval', $ids))), $support === null ? null : (float) $support);
         if (! $this->option('json')) {
             $this->info('Beginner pilot — aggregate read-only report. Null means unavailable, not zero.');
         }
