@@ -9,4 +9,6 @@ return [
     // automatically when MARATHON_SCHEDULE_ID changes.
     'staffed_schedule_id' => null,
     'staffing_confirmed_at' => null,
+    'staffed_schedule_start' => null,
+    'staffed_schedule_end' => null,
 ];

@@ -27,7 +27,9 @@ class BeginnerPilotOffer
         $available = $schedule && $schedule->start?->isFuture()
             && $schedule->end && $schedule->end->gt($schedule->start)
             && (int) config('beginner_pilot.staffed_schedule_id') === $schedule->id
-            && filled(config('beginner_pilot.staffing_confirmed_at'));
+            && filled(config('beginner_pilot.staffing_confirmed_at'))
+            && config('beginner_pilot.staffed_schedule_start') === $schedule->start->toIso8601String()
+            && config('beginner_pilot.staffed_schedule_end') === $schedule->end->toIso8601String();
 
         return [
             'previewUrl' => $previewUrl,
