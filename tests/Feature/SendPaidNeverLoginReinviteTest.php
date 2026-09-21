@@ -21,7 +21,7 @@ use Tests\TestCase;
 /**
  * H5022 — повторное приглашение через 48 ч после оплаты без входа в кабинет.
  * Пины: окно 48 ч, идемпотентность (ровно одно сообщение), Telegram → email,
- * kill switch, штамп cabinet_invite_sent_at, magic-ссылка, отчёт --report.
+ * kill switch, штамп cabinet_invite_sent_at, magic-ссылка, отчет --report.
  */
 class SendPaidNeverLoginReinviteTest extends TestCase
 {
@@ -75,7 +75,7 @@ class SendPaidNeverLoginReinviteTest extends TestCase
         $user = $this->paidNeverLogin(['email' => 'fresh@example.com', 'telegram_id' => null]);
 
         $this->artisan('students:reinvite-48h')
-            ->expectsOutputToContain('ещё не приглашались: 1')
+            ->expectsOutputToContain('еще не приглашались: 1')
             ->assertSuccessful();
 
         Mail::assertNothingQueued();

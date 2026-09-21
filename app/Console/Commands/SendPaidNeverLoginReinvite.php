@@ -26,18 +26,18 @@ use Illuminate\Support\Facades\Mail;
  * поднимает вход с 1,8 % до 10,4 %.
  *
  * Когорта: не админ · login_count = 0 и last_login_at пуст · есть оплаченный
- * (status paid/success, не conditional) платёж с first_paid_at в окне
+ * (status paid/success, не conditional) платеж с first_paid_at в окне
  * [now − lookback-days; now − 48 ч] · нет события reinvite_48h_sent (идемпотентность
  * — ровно ОДНО сообщение на пользователя) · не приглашался вручную/еженедельной
  * каплей за последние 14 дней (cabinet_invite_sent_at).
  *
  * Канал: Telegram, если привязан chat id (тот же бот кабинета, что и остальные
  * личные уведомления); иначе email (транзакционное письмо, очередь mailing).
- * Ни того ни другого — пропуск без штампа (попадает в счётчик «нет канала»).
+ * Ни того ни другого — пропуск без штампа (попадает в счетчик «нет канала»).
  *
  * Вход — по одноразовой magic-ссылке /login-link/{token} (назначение admin_unblock,
  * тот же маршрут, что у кнопки «Разблокировать»; TTL здесь 72 ч, а не 24 —
- * письмо читают не в день отправки). Текст ведёт с записей и своего темпа
+ * письмо читают не в день отправки). Текст ведет с записей и своего темпа
  * (objection-playbook: «время × запись/свой темп» — верхний лифт), без срочности.
  *
  * После отправки: ActivityEvent reinvite_48h_sent (канал, payment_id) + штамп
@@ -56,7 +56,7 @@ class SendPaidNeverLoginReinvite extends Command
     /** Минимальный возраст оплаты до повторного приглашения. */
     public const DELAY_HOURS = 48;
 
-    /** Окно измерения для отчёта: вошёл ли в течение N дней после приглашения. */
+    /** Окно измерения для отчета: вошел ли в течение N дней после приглашения. */
     public const LOGIN_WINDOW_DAYS = 7;
 
     /** Baseline из process mining 08-09-2026 (Uprava): вход после повторного приглашения. */
@@ -72,7 +72,7 @@ class SendPaidNeverLoginReinvite extends Command
         {--send : Реально отправить (без флага — сухой прогон)}
         {--limit=50 : Максимум приглашений за один прогон (батч)}
         {--lookback-days=30 : Учитывать оплаты не старше N дней (старых never-login добирает students:send-login-invites)}
-        {--report : Отчёт: доля вошедших в течение 7 дней после приглашения против baseline}
+        {--report : Отчет: доля вошедших в течение 7 дней после приглашения против baseline}
         {--report-days=30 : Для --report: приглашения за последние N дней}';
 
     protected $description = 'H5022: повторное приглашение в кабинет через 48 ч после оплаты без входа (Telegram → email, magic-ссылка, один раз)';
@@ -104,7 +104,7 @@ class SendPaidNeverLoginReinvite extends Command
         }
 
         $this->info(sprintf(
-            'Оплатили ≥%d ч назад (окно %d дн.), ни разу не входили, ещё не приглашались: %d. В этом батче: %d (TG: %d, email: %d, без канала: %d).',
+            'Оплатили ≥%d ч назад (окно %d дн.), ни разу не входили, еще не приглашались: %d. В этом батче: %d (TG: %d, email: %d, без канала: %d).',
             self::DELAY_HOURS, $lookbackDays, $total, $batch->count(), $counts['telegram'], $counts['email'], $counts['none'],
         ));
 
@@ -230,21 +230,21 @@ class SendPaidNeverLoginReinvite extends Command
         $user->forceFill(['cabinet_invite_sent_at' => now()])->save();
     }
 
-    /** Ведём с записей и своего темпа, без срочности (objection playbook, верхний лифт). */
+    /** Ведем с записей и своего темпа, без срочности (objection playbook, верхний лифт). */
     public function telegramText(User $user, string $link): string
     {
         $help = rtrim((string) config('app.url'), '/').'/help/kabinet';
 
         return "🙏 <b>Намасте! Ваш кабинет уже открыт</b>\n\n"
             .'Недавно вы оплатили курс — спасибо, что вы с нами. В личном кабинете вас ждут записи занятий и материалы: '
-            ."смотреть можно в любое время и в своём темпе, ничего не пропадает, догнать группу можно с любого места.\n\n"
+            ."смотреть можно в любое время и в своем темпе, ничего не пропадает, догнать группу можно с любого места.\n\n"
             ."<a href='{$link}'>Войти в кабинет без пароля</a>\n\n"
             .'<i>Ссылка одноразовая и действует '.self::LINK_TTL_HOURS.' часа. Если она перестанет работать — просто ответьте на это сообщение, вышлем новую.</i>'."\n\n"
             .'Как пользоваться кабинетом: '.$help;
     }
 
     /**
-     * Отчёт: среди приглашённых за N дней, у кого приглашение «созрело» (≥7 дней
+     * Отчет: среди приглашенных за N дней, у кого приглашение «созрело» (≥7 дней
      * назад), сколько вошли в течение 7 дней — против baseline 10,4 %.
      * Вход = событие login в окне ИЛИ last_login_at в окне (на случай, если
      * трекер события не записал).
@@ -296,7 +296,7 @@ class SendPaidNeverLoginReinvite extends Command
 
         $rate = $matured > 0 ? round($loggedIn / $matured * 100, 1) : 0.0;
 
-        $this->info(sprintf('Приглашений за %d дн.: %d. Созревших (≥%d дн.): %d, вошли в течение %d дн.: %d (%s%%). Ещё не созрели: %d.',
+        $this->info(sprintf('Приглашений за %d дн.: %d. Созревших (≥%d дн.): %d, вошли в течение %d дн.: %d (%s%%). Еще не созрели: %d.',
             $reportDays, $events->count(), self::LOGIN_WINDOW_DAYS, $matured, self::LOGIN_WINDOW_DAYS, $loggedIn, number_format($rate, 1), $immature));
         foreach ($byChannel as $ch => [$n, $k]) {
             if ($n > 0) {
