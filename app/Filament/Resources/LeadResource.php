@@ -8,6 +8,7 @@ use App\Mail\LeadAdHocMail;
 use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\User;
+use App\Support\GreetingName;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
@@ -513,7 +514,7 @@ class LeadResource extends Resource
      */
     protected static function renderTemplate(string $template, Lead $lead): string
     {
-        return strtr($template, ['{name}' => $lead->name ?: 'Друг']);
+        return strtr($template, ['{name}' => GreetingName::of($lead->name)]);
     }
 
     /**

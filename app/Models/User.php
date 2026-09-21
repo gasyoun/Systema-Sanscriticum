@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Mail\PasswordResetMail;
 use App\Services\Messaging\SmsRuChannel;
 use App\Services\Prana\PranaSettings;
+use App\Support\GreetingName;
 use App\Support\Roles;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 // --- ДОБАВЛЯЕМ КЛАССЫ ДЛЯ ЗАЩИТЫ FILAMENT ---
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -73,6 +74,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         // --- НОВЫЕ ПОЛЯ ИЗ EXCEL ---
         'phone',
         'city',      // H3909 — спрашиваем у каждого ученика (MG 02-09-2026)
+        'greeting_name', // имя для обращения в уведомлениях; пусто = из name
         'country',   // H3909 — спрашиваем у каждого ученика (MG 02-09-2026)
         // H4434 — timezone localization (MG 09-09-2026): постоянная зона + временное
         // пребывание (оверрайд с датой возврата) + источник постоянной зоны.
@@ -392,6 +394,18 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         $alias = trim((string) $this->curator_display_name);
 
         return $alias !== '' ? $alias : (string) $this->name;
+    }
+
+    /**
+     * Как обращаться к студенту в уведомлениях: только имя, без фамилии,
+     * отчества и города. Ручное `greeting_name` (карточка, чекаут) важнее
+     * автоматического разбора `name`.
+     */
+    public function greetingName(string $fallback = 'Друг'): string
+    {
+        $manual = trim((string) $this->greeting_name);
+
+        return $manual !== '' ? $manual : GreetingName::of($this->name, $fallback);
     }
 
     public function scopeUnreliable($query)

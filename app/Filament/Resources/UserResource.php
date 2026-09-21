@@ -18,6 +18,7 @@ use App\Services\Schedule\CanvasMoney;
 use App\Services\Schedule\TextbookScale;
 use App\Services\StuckStudentsReport;
 use App\Support\CourseNoteBlockParser;
+use App\Support\GreetingName;
 use App\Support\Impersonation;
 use App\Support\PhoneCountrySuggest;
 use App\Support\RoleGate;
@@ -124,6 +125,13 @@ class UserResource extends Resource
                             ->label('Имя')
                             ->required()
                             ->maxLength(255),
+
+                        // Приветствие в уведомлениях («Намасте, {name}!») — только имя.
+                        Forms\Components\TextInput::make('greeting_name')
+                            ->label('Имя для обращения')
+                            ->maxLength(60)
+                            ->placeholder(fn (Forms\Get $get): string => GreetingName::of($get('name')))
+                            ->helperText('Пусто — имя берётся из поля «Имя» автоматически (подсказка в поле). Заполните, если автомат ошибся.'),
 
                         Forms\Components\TextInput::make('curator_display_name')
                             ->label('Псевдоним куратора (виден студентам)')
@@ -1252,7 +1260,7 @@ class UserResource extends Resource
                         }
 
                         $newPassword = Str::random(8);
-                        $emailText = "Намасте, {$record->name}!\n\n"
+                        $emailText = "Намасте, {$record->greetingName()}!\n\n"
                             ."Ваш пароль для доступа к личному кабинету Академии был сброшен администратором.\n\n"
                             ."Ваш новый пароль: {$newPassword}\n\n"
                             ."С уважением,\nОбщество ревнителей санскрита.";
@@ -1633,7 +1641,7 @@ class UserResource extends Resource
                                 // 3. Генерируем пароль заранее, но НЕ сохраняем до успешной отправки
                                 $newPassword = Str::random(8);
 
-                                $emailText = "Намасте, {$record->name}!\n\n"
+                                $emailText = "Намасте, {$record->greetingName()}!\n\n"
                                     ."Ваш доступ к личному кабинету обучающей платформы открыт.\n\n"
                                     .'Ссылка для входа: '.url('/login')."\n"
                                     ."Ваш логин (email): {$email}\n"

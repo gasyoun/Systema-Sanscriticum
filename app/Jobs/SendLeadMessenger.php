@@ -8,6 +8,7 @@ use App\Mail\LeadAdHocMail;
 use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Services\Messaging\DeliveryChannelManager;
+use App\Support\GreetingName;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -101,7 +102,7 @@ final class SendLeadMessenger implements ShouldQueue
         }
 
         // Шаблон ad-hoc выводит тело как HTML, а из textarea приходит plain text.
-        Mail::to($lead->email)->send(new LeadAdHocMail($subject, nl2br(e($this->text)), $lead->name ?: null));
+        Mail::to($lead->email)->send(new LeadAdHocMail($subject, nl2br(e($this->text)), filled($lead->name) ? GreetingName::of($lead->name) : null));
 
         LeadNote::create([
             'lead_id' => $lead->id,

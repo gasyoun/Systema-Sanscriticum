@@ -12,7 +12,7 @@
             <span style="font-size: 64px; color: #d35400; line-height: 1;">ॐ</span>
         </div>
 
-        <h2 style="color: #8a3324; text-align: center; font-size: 26px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'друг' }}!</h2>
+        <h2 style="color: #8a3324; text-align: center; font-size: 26px; margin-top: 0; font-weight: normal;">Намасте, {{ $user?->greetingName('друг') ?? 'друг' }}!</h2>
 
         <p style="font-size: 17px;">
             Вы уже учитесь у нас — помогите понять, что действительно повлияло на ваш выбор и что стоит улучшить.
