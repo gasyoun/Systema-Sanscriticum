@@ -6,12 +6,16 @@ use App\Filament\Exports\LessonExporter;
 use App\Filament\Resources\LessonResource\Pages;
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Services\Catalog\LessonCopier;
+use App\Services\Catalog\LessonCopyRefused;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
 use Filament\Forms\Components\BaseFileUpload;
 use Filament\Forms\Components\TemporaryUploadedFile;
 use Filament\Forms\Form;
+use Filament\Notifications\Actions\Action as NotificationAction;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\ExportBulkAction;
@@ -508,10 +512,28 @@ class LessonResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('copyToCourse')
+                    ->label('Копировать в курс…')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->modalHeading('Копировать урок в другой курс')
+                    ->modalSubmitActionLabel('Копировать')
+                    ->visible(fn (): bool => RoleGate::any(Roles::ADMIN))
+                    ->form(self::copyToCourseForm())
+                    ->action(fn (Lesson $record, array $data) => self::copyToCourse([$record], $data)),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    // Копия выделенных уроков в другой курс; оригиналы не меняются.
+                    Tables\Actions\BulkAction::make('copyToCourse')
+                        ->label('Копировать в курс…')
+                        ->icon('heroicon-o-document-duplicate')
+                        ->modalHeading('Копировать уроки в другой курс')
+                        ->modalSubmitActionLabel('Копировать')
+                        ->visible(fn (): bool => RoleGate::any(Roles::ADMIN))
+                        ->form(self::copyToCourseForm())
+                        ->action(fn (Collection $records, array $data) => self::copyToCourse($records, $data))
+                        ->deselectRecordsAfterCompletion(),
                     // Массовая разметка половины блока: выделил уроки → задал 1 / 2 / весь блок.
                     Tables\Actions\BulkAction::make('setBlockHalf')
                         ->label('Проставить половину блока')
@@ -550,6 +572,92 @@ class LessonResource extends Resource
                 ->orderBy('course_id')
                 ->orderBy('group_id')
                 ->orderBy('sort_order'));
+    }
+
+    /**
+     * Форма «Копировать в курс…» — общая для кнопки в строке и массового
+     * действия. Группа и блок берутся из курса-ПРИЁМНИКА, поэтому зависят от
+     * выбранного курса и сбрасываются при его смене.
+     */
+    public static function copyToCourseForm(): array
+    {
+        return [
+            Forms\Components\Select::make('target_course_id')
+                ->label('Курс-приёмник')
+                ->options(fn (): array => Course::query()->orderBy('title')->get()
+                    ->mapWithKeys(fn (Course $c) => [$c->id => $c->title.' · #'.$c->id])
+                    ->all())
+                ->searchable()
+                ->required()
+                ->live()
+                ->afterStateUpdated(function (Forms\Set $set): void {
+                    $set('group_id', null);
+                    $set('block_number', null);
+                }),
+
+            Forms\Components\Select::make('group_id')
+                ->label('Группа в курсе-приёмнике')
+                ->options(fn (Forms\Get $get): array => Course::find($get('target_course_id'))
+                    ?->groups()->pluck('name', 'groups.id')->all() ?? [])
+                ->placeholder('Все группы курса'),
+
+            Forms\Components\Select::make('block_number')
+                ->label('Блок в курсе-приёмнике')
+                ->options(fn (Forms\Get $get): array => Course::find($get('target_course_id'))
+                    ?->blocks()->pluck('number')
+                    ->mapWithKeys(fn ($n) => [(int) $n => 'Блок '.$n])
+                    ->all() ?? [])
+                ->placeholder('Как у оригинала'),
+
+            Forms\Components\Select::make('recording_kind')
+                ->label('Класс записи у копии')
+                ->options([
+                    LessonCopier::KEEP => 'Как у оригинала',
+                    'course_lesson' => 'Урок курса (покупка курса)',
+                    'club_stream' => 'Эфир клуба (членство Club/Top)',
+                    'club_efir' => 'Эфир клуба (синоним)',
+                ])
+                ->default(LessonCopier::KEEP)
+                ->required()
+                ->helperText('Эфир клуба ставьте только копии в курсе «Клуб»: на уроке покупного курса метка отнимает запись у купивших без клуба.'),
+        ];
+    }
+
+    /** @param  iterable<Lesson>  $records */
+    public static function copyToCourse(iterable $records, array $data): void
+    {
+        abort_unless(RoleGate::any(Roles::ADMIN), 403);
+
+        $target = Course::findOrFail((int) $data['target_course_id']);
+
+        try {
+            $copies = app(LessonCopier::class)->copy(
+                $records,
+                $target,
+                groupId: filled($data['group_id'] ?? null) ? (int) $data['group_id'] : null,
+                recordingKind: (string) ($data['recording_kind'] ?? LessonCopier::KEEP),
+                blockNumber: filled($data['block_number'] ?? null) ? (int) $data['block_number'] : null,
+            );
+        } catch (LessonCopyRefused $e) {
+            Notification::make()
+                ->danger()
+                ->title('Копирование не выполнено')
+                ->body($e->getMessage())
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        Notification::make()
+            ->success()
+            ->title(sprintf('Скопировано уроков: %d → «%s» · #%d', $copies->count(), $target->title, $target->id))
+            ->actions([
+                NotificationAction::make('open')
+                    ->label('Открыть уроки курса')
+                    ->url(self::getUrl('index', ['tableFilters' => ['course_id' => ['value' => $target->id]]])),
+            ])
+            ->send();
     }
 
     public static function getRelations(): array
