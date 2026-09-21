@@ -40,6 +40,13 @@ class PublicSchedulePageController extends Controller
         7 => 'Воскресенье',
     ];
 
+    /**
+     * H5233 follow-up: группа без слотов расписания считается живой, пока её
+     * последнее занятие (Lesson.lesson_date, кураторская шкала) не старше
+     * этого порога в днях. Не в config — единственный потребитель здесь.
+     */
+    private const RECENT_ACTIVITY_DAYS = 14;
+
     public function __invoke(): View
     {
         $courses = collect();
@@ -81,9 +88,11 @@ class PublicSchedulePageController extends Controller
     /**
      * H5233: /raspisanie/kochergina — карточка на каждую живую группу
      * семейства Кочергиной с канва-курсором «Урок N из total» и кликом на
-     * заявку (/interest с префиллом интента). Живая группа — та же семантика,
-     * что в WeeklyFinishReport::build: есть прошедшее занятие И есть
-     * предстоящее. Курсор — TextbookScale::cursor по записям уроков курса
+     * заявку (/interest с префиллом интента). Живая группа: (а) та же
+     * семантика, что в WeeklyFinishReport::build — прошедшее занятие И
+     * предстоящее; ИЛИ (б) последнее прошедшее занятие не старше
+     * RECENT_ACTIVITY_DAYS дней (группы без слотов расписания, H5233
+     * follow-up). Курсор — TextbookScale::cursor по записям уроков курса
      * (read-only сервис, та же семантика, что у канвы в TG-посте).
      */
     public function groups(): View
@@ -149,8 +158,18 @@ class PublicSchedulePageController extends Controller
                     fn (Schedule $s): bool => $s->start !== null && $s->start->isFuture(),
                 );
 
-                if (! $hasPast || ! $hasFuture) {
-                    continue; // не живая: ещё не стартовала или закончилась
+                // H5233 follow-up (живая верификация 21-09, гр.54): у части
+                // живых групп расписание и слоты пусты — правда о недавней
+                // работе живёт в записях уроков (кураторская нумерация, та же
+                // шкала, что у канвы). Живая, если (а) старый критерий целиком
+                // (прошлое + будущее занятие/слот расписания), ИЛИ (б) последнее
+                // прошедшее занятие (Lesson.lesson_date) не старше двух недель.
+                $lastLessonDate = $lessons->max('lesson_date');
+                $recentlyActive = $lastLessonDate !== null
+                    && $lastLessonDate->isAfter(now()->subDays(self::RECENT_ACTIVITY_DAYS));
+
+                if (! (($hasPast && $hasFuture) || $recentlyActive)) {
+                    continue; // не живая: ещё не стартовала или отцвела давно
                 }
 
                 $rows->push([

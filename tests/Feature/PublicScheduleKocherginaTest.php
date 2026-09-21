@@ -51,7 +51,7 @@ class PublicScheduleKocherginaTest extends TestCase
      *
      * @param  list<string>  $lessonTitles  заголовки записей уроков (канва)
      */
-    private function kocherginaCourse(string $title, string $slug, string $groupSuffix, array $lessonTitles = [], ?Teacher $teacher = null, bool $visible = true, bool $active = true, bool $past = true, bool $future = true): array
+    private function kocherginaCourse(string $title, string $slug, string $groupSuffix, array $lessonTitles = [], ?Teacher $teacher = null, bool $visible = true, bool $active = true, bool $past = true, bool $future = true, ?int $lastLessonDaysAgo = null): array
     {
         $course = Course::factory()->create([
             'title' => $title,
@@ -82,6 +82,19 @@ class PublicScheduleKocherginaTest extends TestCase
                 'group_id' => $group->id,
                 'title' => $lessonTitle,
                 'lesson_date' => now()->subDays(count($lessonTitles) - $i),
+                'is_published' => true,
+                'is_free' => false,
+            ]);
+        }
+
+        // Недавнее занятие поверх дефолтных дат записей (кейс «группы без
+        // расписания» H5233 follow-up): последняя запись = $lastLessonDaysAgo.
+        if ($lastLessonDaysAgo !== null) {
+            Lesson::create([
+                'course_id' => $course->id,
+                'group_id' => $group->id,
+                'title' => 'N-е занятие: Кочергина 15 (читка)',
+                'lesson_date' => now()->subDays($lastLessonDaysAgo),
                 'is_published' => true,
                 'is_free' => false,
             ]);
@@ -140,6 +153,47 @@ class PublicScheduleKocherginaTest extends TestCase
         $this->get('/raspisanie')
             ->assertOk()
             ->assertSee('/raspisanie/kochergina', false);
+    }
+
+    /**
+     * H5233 follow-up: группа без расписания/слотов (как гр.54 на проде)
+     * жива, пока последнее занятие не старше 14 дней, — показывается с канвой.
+     */
+    public function test_recently_active_group_without_schedules_is_shown(): void
+    {
+        $this->kocherginaCourse(
+            title: 'Грамматика по Кочергиной 54',
+            slug: 'koch54',
+            groupSuffix: '54',
+            lessonTitles: ['1-е занятие: Кочергина 3 (читка)'],
+            past: false,
+            future: false,
+            lastLessonDaysAgo: 5,
+        );
+
+        $this->get('/raspisanie/kochergina')
+            ->assertOk()
+            // Канва: курсор по «читка» = 15 (запись «Кочергина 15 (читка)»).
+            ->assertSee('Кочергина гр. 54', false)
+            ->assertSee('Урок 15 из 40', false);
+    }
+
+    /** ...а отцвевшая (20+ дней тишины) — скрыта. */
+    public function test_stale_group_without_schedules_stays_hidden(): void
+    {
+        $this->kocherginaCourse(
+            title: 'Грамматика по Кочергиной 42',
+            slug: 'koch42',
+            groupSuffix: '42',
+            lessonTitles: ['1-е занятие: Кочергина 11 (читка)'],
+            past: false,
+            future: false,
+            lastLessonDaysAgo: 25,
+        );
+
+        $this->get('/raspisanie/kochergina')
+            ->assertOk()
+            ->assertDontSee('Кочергина гр. 42', false);
     }
 
     /** Тест 2: клик-URL и префилл интента по состоянию юзера. */
