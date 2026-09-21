@@ -1,12 +1,13 @@
 <?php
 
+use App\Support\GreetingName;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
  * Имя для обращения в уведомлениях («Намасте, {name}!»). Пусто — имя
- * выводится из `name` автоматически ({@see \App\Support\GreetingName}).
+ * выводится из `name` автоматически ({@see GreetingName}).
  */
 return new class extends Migration
 {
