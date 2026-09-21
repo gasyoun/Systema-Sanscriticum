@@ -136,6 +136,39 @@ class TrialGrantHardeningTest extends TestCase
     }
 
     /** @test */
+    public function upcoming_class_with_empty_trial_lesson_id_grants_nothing_and_alerts(): void
+    {
+        config(['features.trial_grant_hardening' => true]);
+        $course = $this->courseWithTrial(Carbon::parse('2026-07-14 07:00'));
+        $course->updateQuietly(['trial_lesson_id' => null]);
+
+        $user = $this->payTrial($course);
+
+        $this->assertSame(0, LessonAccessGrant::where('user_id', $user->id)->count());
+        $this->assertNoRecordingOpenMessages($user);
+        $this->assertAdminAlerted();
+    }
+
+    /** @test */
+    public function past_class_with_empty_pin_still_grants_the_recorded_lesson(): void
+    {
+        // Прод-форма курса 402 (21-09-2026): пин пуст, а урок с записью той даты есть.
+        $course = $this->courseWithTrial(Carbon::parse('2026-07-07 07:00'), $this->group());
+        $course->updateQuietly(['trial_lesson_id' => null]);
+        $real = Lesson::create([
+            'course_id' => $course->id, 'group_id' => null, 'lesson_date' => '2026-07-07',
+            'title' => 'Занятие 07.07', 'block_number' => 1, 'is_published' => true,
+            'youtube_url' => 'https://youtu.be/abc',
+        ]);
+
+        config(['features.trial_grant_hardening' => true]);
+        $user = $this->payTrial($course->fresh());
+
+        $this->assertSame([$real->id], LessonAccessGrant::where('user_id', $user->id)->pluck('lesson_id')->all());
+        Http::assertNothingSent();
+    }
+
+    /** @test */
     public function past_class_without_any_recorded_lesson_grants_nothing_and_alerts(): void
     {
         $course = $this->courseWithTrial(Carbon::parse('2026-07-07 07:00'), $this->group());

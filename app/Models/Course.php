@@ -708,8 +708,8 @@ class Course extends Model
      *  - предстоящее занятие → закреплённая заготовка (студент идёт на эфир,
      *    запись дольётся в неё позже);
      *  - прошедшее → урок этой даты С ЗАПИСЬЮ (сначала закреплённый, затем любой
-     *    урок курса той же даты); записи нет → null: продавать нечего.
-     * null также, когда trial_lesson_id пуст. Решение «что делать с null» —
+     *    урок курса той же даты, даже при пустом пине); записи нет → null.
+     * Для предстоящего null — когда trial_lesson_id пуст. Решение «что делать с null» —
      * у вызывающего (Payment::processTrial, trial:target-watch).
      */
     public function trialGrantTarget(): ?Lesson
@@ -717,18 +717,16 @@ class Course extends Model
         $pinned = $this->trial_lesson_id ? Lesson::find($this->trial_lesson_id) : null;
         $schedule = $this->trial_schedule_id ? Schedule::find($this->trial_schedule_id) : null;
 
-        if (! $pinned) {
-            return null;
-        }
-
+        // Предстоящее занятие (или события нет) — только закреплённая заготовка.
         if (! $schedule?->start || ! $schedule->start->isPast()) {
             return $pinned;
         }
 
-        if ($pinned->hasVideo()) {
+        if ($pinned?->hasVideo()) {
             return $pinned;
         }
 
+        // Прошедшее: запись этой даты, даже если пин пуст или ведёт на заготовку.
         return $this->recordedLessonOn($schedule);
     }
 

@@ -36,8 +36,8 @@ class WatchTrialTargets extends Command
                 $schedule = Schedule::find($course->trial_schedule_id);
                 $reason = match (true) {
                     ! $schedule || ! $schedule->start => 'событие расписания не найдено или без даты',
-                    ! $course->trial_lesson_id => 'trial_lesson_id пуст',
-                    default => 'занятие '.$schedule->start->format('d.m.Y').' прошло, урока с записью нет',
+                    $schedule->start->isPast() => 'занятие '.$schedule->start->format('d.m.Y').' прошло, урока с записью нет',
+                    default => 'trial_lesson_id пуст',
                 };
 
                 $problems[] = [$course->id, $course->title, $course->trial_lesson_id, $reason];
