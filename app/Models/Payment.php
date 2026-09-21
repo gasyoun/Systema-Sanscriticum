@@ -9,6 +9,7 @@ use App\Mail\PurchaseConfirmationMail;
 use App\Mail\StudentWelcomeMail;
 use App\Mail\TrialZoomLinkMail;
 use App\Models\Concerns\TracksBlame;
+use App\Services\Access\TelegramAdminNotifier;
 use App\Services\BlockAccessMaterializer;
 use App\Services\CuratorNotifier;
 use App\Services\GiftCertificateService;
@@ -1065,7 +1066,13 @@ class Payment extends Model
     // ==========================================
     public function processTrial(): void
     {
-        $lessonId = $this->course?->trial_lesson_id;
+        // H5001 (флаг features.trial_grant_hardening, default OFF): цель гранта —
+        // урок, где доступ реально есть (для прошедшего занятия — урок с записью).
+        // Цели нет → ни гранта, ни письма «запись открыта», а громкий алерт админам.
+        $hardened = (bool) config('features.trial_grant_hardening');
+        $lessonId = $hardened
+            ? $this->course?->trialGrantTarget()?->id
+            : $this->course?->trial_lesson_id;
 
         DB::transaction(function () use ($lessonId) {
             // Доступ к курсу/группам НЕ открываем — только разовый grant на пробный урок.
@@ -1102,6 +1109,14 @@ class Payment extends Model
         });
 
         app(CuratorNotifier::class)->depositReceived($this);
+
+        // Продавать доступ, которого нет, хуже, чем не продать: без гранта
+        // покупателю не пишем «открыто», а поднимаем тревогу операторам.
+        if ($hardened && ! $lessonId) {
+            $this->alertTrialWithoutGrant();
+
+            return;
+        }
 
         if (! $this->user_id) {
             return;
@@ -1142,6 +1157,36 @@ class Payment extends Model
         $text .= "\n\n<a href='{$url}'>Личный кабинет</a>";
 
         SendTelegramMessageJob::dispatch($this->user_id, $text);
+    }
+
+    /**
+     * H5001: оплаченное пробное, по которому нечего открыть (trial_lesson_id пуст
+     * или у прошедшего занятия нет урока с записью). Платёж остаётся paid —
+     * решение «выдать доступ вручную или вернуть деньги» за человеком.
+     */
+    private function alertTrialWithoutGrant(): void
+    {
+        $context = [
+            'payment_id' => $this->id,
+            'course_id' => $this->course_id,
+            'user_id' => $this->user_id,
+            'trial_lesson_id' => $this->course?->trial_lesson_id,
+            'trial_schedule_id' => $this->course?->trial_schedule_id,
+        ];
+        Log::error('Payment::processTrial — оплачено пробное, доступ НЕ выдан (нет урока-цели)', $context);
+
+        $courseName = e($this->course->title ?? 'курс #'.$this->course_id);
+        $text = "🚨 <b>Пробное оплачено, доступ НЕ выдан</b>\n\n";
+        $text .= "Платёж #{$this->id}, курс «{$courseName}» (#{$this->course_id}), ученик #{$this->user_id}.\n";
+        $text .= 'У пробного нет урока с доступом: '
+            .($this->course?->trial_lesson_id ? 'у прошедшего занятия нет урока с записью' : 'trial_lesson_id пуст')
+            .".\nПисьмо «запись открыта» покупателю НЕ отправлено. Решение за человеком: выдать доступ вручную или вернуть оплату.";
+
+        try {
+            app(TelegramAdminNotifier::class)->notifyAdmins($text);
+        } catch (\Throwable $e) {
+            Log::error('Payment::processTrial — алерт админам не ушёл', $context + ['error' => $e->getMessage()]);
+        }
     }
 
     // ==========================================

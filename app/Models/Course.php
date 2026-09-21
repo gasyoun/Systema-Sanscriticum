@@ -677,6 +677,15 @@ class Course extends Model
             ->whereDate('lesson_date', $schedule->start->toDateString())
             ->first();
 
+        // H5001: прошедшее занятие продаётся как ЗАПИСЬ — если запись прикреплена
+        // к другому уроку этой даты (группа не совпала с событием), пин ведёт туда,
+        // а не на вечно пустую заготовку. Флаг OFF — поведение как прежде.
+        if (config('features.trial_grant_hardening')
+            && $schedule->start->isPast()
+            && ! $lesson?->hasVideo()) {
+            $lesson = $this->recordedLessonOn($schedule) ?? $lesson;
+        }
+
         if (! $lesson) {
             $lesson = Lesson::create([
                 'course_id' => $this->id,
@@ -692,6 +701,52 @@ class Course extends Model
             // Quietly — иначе saved() зациклится.
             $this->updateQuietly(['trial_lesson_id' => $lesson->id]);
         }
+    }
+
+    /**
+     * H5001: урок, на который реально выдаётся платное пробное.
+     *  - предстоящее занятие → закреплённая заготовка (студент идёт на эфир,
+     *    запись дольётся в неё позже);
+     *  - прошедшее → урок этой даты С ЗАПИСЬЮ (сначала закреплённый, затем любой
+     *    урок курса той же даты); записи нет → null: продавать нечего.
+     * null также, когда trial_lesson_id пуст. Решение «что делать с null» —
+     * у вызывающего (Payment::processTrial, trial:target-watch).
+     */
+    public function trialGrantTarget(): ?Lesson
+    {
+        $pinned = $this->trial_lesson_id ? Lesson::find($this->trial_lesson_id) : null;
+        $schedule = $this->trial_schedule_id ? Schedule::find($this->trial_schedule_id) : null;
+
+        if (! $pinned) {
+            return null;
+        }
+
+        if (! $schedule?->start || ! $schedule->start->isPast()) {
+            return $pinned;
+        }
+
+        if ($pinned->hasVideo()) {
+            return $pinned;
+        }
+
+        return $this->recordedLessonOn($schedule);
+    }
+
+    /** Урок курса на дату события расписания, у которого есть запись. */
+    private function recordedLessonOn(Schedule $schedule): ?Lesson
+    {
+        return Lesson::where('course_id', $this->id)
+            ->whereDate('lesson_date', $schedule->start->toDateString())
+            ->withRecording()
+            ->orderBy('id')
+            ->get()
+            // Сначала урок той же группы, что и событие; затем — с отметкой прикрепления.
+            ->sortBy(fn (Lesson $l) => [
+                (string) $l->group_id === (string) $schedule->group_id ? 0 : 1,
+                $l->recording_attached_at ? 0 : 1,
+                $l->id,
+            ])
+            ->first();
     }
 
     // Связь: Один курс имеет много уроков
