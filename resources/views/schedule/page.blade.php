@@ -27,7 +27,11 @@
         <p class="text-[#E85C24] font-bold mb-2">Набор открыт</p>
         <h2 id="grammar-intake" class="text-2xl font-bold text-white mb-2">Новые онлайн-группы грамматики санскрита</h2>
         <p class="text-slate-300 mb-4">С М. Ю. Гасунсом: суббота в 12:00 или вторник в 08:00 МСК. Если оба времени не подходят, укажите это в заявке.</p>
-        <a href="/ga/m26-schedule-c" class="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all">Встать в список ожидания <i class="fas fa-arrow-right text-[10px]"></i></a>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="/ga/m26-schedule-c" class="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all">Встать в список ожидания <i class="fas fa-arrow-right text-[10px]"></i></a>
+            {{-- H5233: заметная ссылка на живые группы семейства Кочергиной --}}
+            <a href="/raspisanie/kochergina" class="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl border border-[#E85C24] text-[#E85C24] hover:bg-[#E85C24] hover:text-white text-sm font-bold transition-all">Группы по Кочергиной — канва и заявка <i class="fas fa-arrow-right text-[10px]"></i></a>
+        </div>
     </section>
 
     @if(!$flagOn)
