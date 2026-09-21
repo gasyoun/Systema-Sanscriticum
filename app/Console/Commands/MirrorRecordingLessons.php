@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Services\Catalog\LessonCopier;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -49,8 +50,11 @@ class MirrorRecordingLessons extends Command
 
     protected $description = 'Завести курсу-записи собственные уроки со ссылками на записи живого потока. Тарифы и видимость не трогает.';
 
-    /** Поля, которые делают урок записью. Всё остальное намеренно не переносится. */
-    private const CARRIED = [
+    /**
+     * Поля, которые делают урок записью. Всё остальное намеренно не переносится.
+     * Их же переносит «Копировать в курс…» ({@see LessonCopier}).
+     */
+    public const CARRIED = [
         'title', 'block_number', 'block_half', 'sort_order', 'lesson_date',
         'duration_seconds', 'duration_minutes', 'is_published', 'is_free', 'is_preview',
         'video_url', 'rutube_url', 'youtube_url', 'topic', 'recording_kind',
@@ -157,7 +161,7 @@ class MirrorRecordingLessons extends Command
                 $attributes['group_id'] = null;
                 // У курса-записи нет проверяющего домашних работ.
                 $attributes['homework_enabled'] = false;
-                $attributes['slug'] = $this->slugFor($lesson, $target);
+                $attributes['slug'] = self::slugFor($lesson, $target);
 
                 Lesson::query()->create($attributes);
                 $created++;
@@ -196,7 +200,7 @@ class MirrorRecordingLessons extends Command
      * уроков разных курсов делает ссылку неоднозначной, поэтому исходный слаг
      * получает суффикс курса-цели.
      */
-    private function slugFor(Lesson $lesson, Course $target): string
+    public static function slugFor(Lesson $lesson, Course $target): string
     {
         $base = trim((string) $lesson->slug);
 
