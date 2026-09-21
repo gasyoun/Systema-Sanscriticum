@@ -6,7 +6,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\CourseInterestRequest;
+use App\Models\Group;
+use App\Models\User;
 use App\Services\CuratorNotifier;
+use App\Services\Schedule\TextbookScale;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -36,7 +39,7 @@ class CourseInterestController extends Controller
      */
     private const FRAME_ANCESTORS = "frame-ancestors 'self' https://samskrtam.ru https://www.samskrtam.ru";
 
-    public function show(string $course = ''): View
+    public function show(Request $request, string $course = ''): View
     {
         $this->abortIfDisabled();
 
@@ -50,6 +53,10 @@ class CourseInterestController extends Controller
                 ? CourseInterestRequest::countsForCourse($courseModel->id)
                 : [],
             'intentLabels' => CourseInterestRequest::intentLabels(),
+            // H5233: префилл интента из query (?intent=join|transfer) — клик
+            // по группе на /raspisanie/kochergina открывает форму с готовым
+            // выбором; неизвестное значение молча падает в дефолт (join).
+            'intentPrefill' => $this->queryIntent($request),
         ]);
     }
 
@@ -59,7 +66,7 @@ class CourseInterestController extends Controller
      * на этом ответе — глобального CSP/X-Frame-Options в проекте нет, поэтому
      * ничего site-wide не ослабляется.
      */
-    public function embed(string $course = ''): Response
+    public function embed(Request $request, string $course = ''): Response
     {
         $this->abortIfDisabled();
 
@@ -74,6 +81,7 @@ class CourseInterestController extends Controller
                     ? CourseInterestRequest::countsForCourse($courseModel->id)
                     : [],
                 'intentLabels' => CourseInterestRequest::intentLabels(),
+                'intentPrefill' => $this->queryIntent($request),
             ])
             ->header('Content-Security-Policy', self::FRAME_ANCESTORS);
     }
@@ -107,6 +115,18 @@ class CourseInterestController extends Controller
 
         [$courseModel, $courseTitle] = $this->resolveCourse($course);
 
+        // H5233: intent=transfer — дописываем исходную группу в комментарий,
+        // чтобы куратор видел её и в TG-уведомлении, и в админском списке
+        // (схема не трогается; резолвим по активному членству в группе курса
+        // того же семейства канвы, не равного курсу заявки).
+        $comment = $validated['comment'] ?? null;
+        if ($validated['intent'] === CourseInterestRequest::INTENT_TRANSFER) {
+            $fromGroup = $this->studentKocherginaGroupName($request->user(), $courseModel);
+            if ($fromGroup !== null) {
+                $comment = trim('Переезд из группы «'.$fromGroup.'».'.($comment !== null && $comment !== '' ? ' '.$comment : ''));
+            }
+        }
+
         $interest = CourseInterestRequest::create([
             'course_id' => $courseModel?->id,
             'course_title' => $courseModel !== null ? '' : $courseTitle,
@@ -114,7 +134,7 @@ class CourseInterestController extends Controller
             'name' => $validated['name'] ?? null,
             'email' => $validated['email'] ?? null,
             'telegram' => $validated['telegram'] ?? null,
-            'comment' => $validated['comment'] ?? null,
+            'comment' => $comment,
             'status' => CourseInterestRequest::STATUS_NEW,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
@@ -129,6 +149,51 @@ class CourseInterestController extends Controller
     private function abortIfDisabled(): void
     {
         abort_unless((bool) config('features.course_interest_form'), 404);
+    }
+
+    /**
+     * H5233: валидный интент из query string (?intent=...) или null.
+     * Неизвестное значение — null (форма упадёт в дефолт join), не 4xx:
+     * публичный GET, гадать вводу нечего валидировать.
+     */
+    private function queryIntent(Request $request): ?string
+    {
+        $intent = (string) $request->query('intent', '');
+
+        return in_array($intent, CourseInterestRequest::INTENTS, true) ? $intent : null;
+    }
+
+    /**
+     * H5233: группа курса семейства Кочергиной, где заявитель активен
+     * (left_at IS NULL), не равная курсу заявки. null — гость или не сидит
+     * ни в одной другой группе семейства. Пишется префиксом в comment.
+     */
+    private function studentKocherginaGroupName(?User $user, ?Course $targetCourse): ?string
+    {
+        if ($user === null || $targetCourse === null) {
+            return null;
+        }
+
+        $group = Group::query()
+            ->whereHas('users', fn ($q) => $q->where('users.id', $user->id)->whereNull('group_user.left_at'))
+            ->whereHas('courses', fn ($q) => $q
+                ->where('courses.id', '!=', $targetCourse->id)
+                ->where('is_active', true)
+                ->where('title', 'like', '%Кочерг%'))
+            ->with('courses:id,title')
+            ->first();
+        if ($group === null) {
+            return null;
+        }
+
+        // Группа может быть привязана к нескольким курсам; берём первый курс
+        // семейства Кочергиной — его тайтл читаемее номера группы.
+        $course = $group->courses->firstWhere(
+            fn (Course $c): bool => $c->id !== $targetCourse->id
+                && TextbookScale::courseFamilyPublic((string) $c->title) === 'kochergina',
+        );
+
+        return $course !== null ? (string) $group->name : null;
     }
 
     private function successRedirect(string $course): RedirectResponse
