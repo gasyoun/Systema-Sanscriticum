@@ -238,7 +238,7 @@ final class WeeklyFinishReport
             // H4435/H4443: канва-строка — курсор и блоки по учебнику ОТДЕЛЬНО от
             // наших занятий (две шкалы не смешиваются). Деньги в пост НЕЛЬЗЯ.
             if (($row['canvasTotal'] ?? 0) > 0 && ($row['canvasCursor'] ?? 0) > 0) {
-                $head .= "\nКанва: урок ".$row['canvasCursor'].'/'.$row['canvasTotal'];
+                $head .= "\nКанва: Урок ".$row['canvasCursor'].'/'.$row['canvasTotal'];
                 if (($row['canvasBlock'] ?? 0) > 0) {
                     $head .= ' · блок '.$row['canvasBlock'].'/'.$row['canvasBlocksTotal'];
                     if (($row['canvasRemainingBlocks'] ?? null) !== null) {
