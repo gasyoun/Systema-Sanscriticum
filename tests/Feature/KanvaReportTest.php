@@ -60,7 +60,7 @@ class KanvaReportTest extends TestCase
         $this->assertSame(40, $row['canvasTotal']);
 
         $chunks = WeeklyFinishReport::telegramChunks($report);
-        $this->assertStringContainsString('Канва: урок 4/40', $chunks[0]);
+        $this->assertStringContainsString('Канва: Урок 4/40', $chunks[0]);
         // H4495 (MG 09-09): студенты из публичного поста УБРАНЫ — только админка.
         $this->assertStringNotContainsString('Иванова', $chunks[0]);
         $this->assertStringNotContainsString('href=', $chunks[0]);

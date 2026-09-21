@@ -511,7 +511,7 @@
                         {{-- H4435: канва — две шкалы раздельно (наши занятия ≠ уроки учебника, MG 09-09). --}}
                         @if($canvas && $canvas['group'] > 0)
                             <div class="mb-3 rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 text-xs text-gray-600">
-                                {{ ucfirst($canvas['family']) }}: вы на уроке {{ $canvas['student'] }} из {{ $canvas['total'] }} · группа дошла до урока {{ $canvas['group'] }}
+                                {{ ucfirst($canvas['family']) }}: вы на Уроке {{ $canvas['student'] }} из {{ $canvas['total'] }} · группа дошла до Урока {{ $canvas['group'] }}
                             </div>
                         @endif
 

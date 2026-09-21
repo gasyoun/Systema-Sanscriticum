@@ -94,7 +94,7 @@
                         <span>
                             <span class="font-medium">{{ $row['course'] }}</span>@if($row['group'] !== $row['course'])
                                 <span class="text-gray-400">({{ $row['group'] }})</span>@endif
-                            · урок {{ $row['cursor'] }}/{{ $row['total'] }} · блок {{ $row['block'] }}/{{ $row['blocks_total'] }}
+                            · Урок {{ $row['cursor'] }}/{{ $row['total'] }} · блок {{ $row['block'] }}/{{ $row['blocks_total'] }}
                             · ответвлений {{ $row['deviations'] }}
                             @if($row['forecast']) · финал ≈ {{ $row['forecast'] }}@endif
                         </span>
