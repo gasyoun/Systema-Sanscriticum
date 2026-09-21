@@ -76,25 +76,17 @@ class PublicScheduleKocherginaTest extends TestCase
             ]);
         }
 
+        // Даты записей: по умолчанию свежие (now − N дней по порядку);
+        // с $lastLessonDaysAgo — последняя запись ровно столько дней назад
+        // (кейс «группа без расписания» H5233 follow-up), шаг 1 день.
         foreach ($lessonTitles as $i => $lessonTitle) {
             Lesson::create([
                 'course_id' => $course->id,
                 'group_id' => $group->id,
                 'title' => $lessonTitle,
-                'lesson_date' => now()->subDays(count($lessonTitles) - $i),
-                'is_published' => true,
-                'is_free' => false,
-            ]);
-        }
-
-        // Недавнее занятие поверх дефолтных дат записей (кейс «группы без
-        // расписания» H5233 follow-up): последняя запись = $lastLessonDaysAgo.
-        if ($lastLessonDaysAgo !== null) {
-            Lesson::create([
-                'course_id' => $course->id,
-                'group_id' => $group->id,
-                'title' => 'N-е занятие: Кочергина 15 (читка)',
-                'lesson_date' => now()->subDays($lastLessonDaysAgo),
+                'lesson_date' => $lastLessonDaysAgo !== null
+                    ? now()->subDays($lastLessonDaysAgo + (count($lessonTitles) - 1 - $i))
+                    : now()->subDays(count($lessonTitles) - $i),
                 'is_published' => true,
                 'is_free' => false,
             ]);
@@ -165,7 +157,7 @@ class PublicScheduleKocherginaTest extends TestCase
             title: 'Грамматика по Кочергиной 54',
             slug: 'koch54',
             groupSuffix: '54',
-            lessonTitles: ['1-е занятие: Кочергина 3 (читка)'],
+            lessonTitles: ['1-е занятие: Кочергина 3 (читка)', '2-е занятие: Кочергина 15 (читка)'],
             past: false,
             future: false,
             lastLessonDaysAgo: 5,
