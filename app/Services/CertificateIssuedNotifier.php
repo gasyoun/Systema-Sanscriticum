@@ -45,7 +45,7 @@ class CertificateIssuedNotifier
             $issued = $certificate->isSpravka()
                 ? 'вам выдана справка об образовании'
                 : 'вам выдан сертификат';
-            $text = "🎓 Намасте, {$user->name}!\n\n"
+            $text = "🎓 Намасте, {$user->greetingName()}!\n\n"
                 ."Поздравляем — {$issued} «{$title}» (№ {$certificate->number}).\n\n"
                 .'Скачать документ можно в кабинете: '.route('student.dashboard');
             SendMessengerAlerts::dispatch($user, $text, $hasTg, $hasVk);

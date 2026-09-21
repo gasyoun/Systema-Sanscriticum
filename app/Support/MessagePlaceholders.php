@@ -52,7 +52,7 @@ final class MessagePlaceholders
         }
 
         return [
-            '{name}' => $user->name ?: 'Друг',
+            '{name}' => $user->greetingName(),
             '{course}' => $course?->title ?? '',
             '{block}' => (string) ($blockNumber ?? ''),
             '{pay_link}' => $slug ? route('student.course', $slug) : url('/login'),

@@ -108,7 +108,7 @@ class CabinetLoginBotCommand
             'telegram_connected_at' => now(),
         ]);
 
-        return "Намасте, {$candidate->name}! 🙏 Ваш аккаунт привязан к Telegram.\n\n"
+        return "Намасте, {$candidate->greetingName()}! 🙏 Ваш аккаунт привязан к Telegram.\n\n"
             .$this->loginLinkMessage($this->logins->issueLoginLink($candidate));
     }
 

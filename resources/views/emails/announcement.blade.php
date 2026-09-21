@@ -28,7 +28,7 @@
                         <td style="padding: 40px;">
                             <h1 style="color: #1A1A1A; font-size: 24px; margin-top: 0; margin-bottom: 20px;">{{ $announcement->title }}</h1>
                             
-                            <p style="color: #555555; font-size: 16px; line-height: 1.6;">Намасте, {{ $user->name }}!</p>
+                            <p style="color: #555555; font-size: 16px; line-height: 1.6;">Намасте, {{ $user->greetingName('друг') }}!</p>
 
                             <div style="color: #333333; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
                                 {!! \App\Support\SanitizedHtml::render($announcement->content) !!}

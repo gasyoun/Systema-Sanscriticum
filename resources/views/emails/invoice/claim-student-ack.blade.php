@@ -1,6 +1,6 @@
 @component('mail::message')
 @if(!empty($payment->user?->name))
-Намасте, {{ $payment->user->name }}!
+Намасте, {{ $payment->user->greetingName('друг') }}!
 @else
 Здравствуйте!
 @endif

@@ -1718,7 +1718,7 @@ class Debtors extends Page implements HasTable
 
                     $slug = $courseSlugs[$record->course_id] ?? null;
                     $replacements = [
-                        '{name}' => $record->name ?: 'Друг',
+                        '{name}' => $record->greetingName(),
                         '{course}' => $courseTitles[$record->course_id] ?? '',
                         '{block}' => (string) $record->ref_block_number,
                         '{pay_link}' => $slug ? route('shop.course.show', $slug) : url('/login'),
