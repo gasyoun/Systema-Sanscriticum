@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Schedule;
 use App\Services\Access\TelegramAdminNotifier;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 /**
  * H5001 — курс продаёт пробное (trial_schedule_id задан), а открыть покупателю
@@ -57,7 +58,12 @@ class WatchTrialTargets extends Command
                 $text .= '• #'.$id.' «'.e((string) $title).'» — '.e($reason)."\n";
             }
             $text .= "\nПокупатель такого пробного получит оплату без доступа. Поправьте пробное занятие курса или снимите его с продажи.";
-            $notifier->notifyAdmins($text);
+            try {
+                $notifier->notifyAdmins($text);
+            } catch (\Throwable $e) {
+                // Сеть до api.telegram.org не должна ронять плановую команду.
+                Log::error('trial:target-watch — алерт админам не ушёл', ['error' => $e->getMessage()]);
+            }
         }
 
         return self::FAILURE;
