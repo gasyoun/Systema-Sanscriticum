@@ -51,10 +51,14 @@
 
         <fieldset>
             <legend>Что вы хотите?</legend>
+            @php
+                // H5233: префилл из query — как в полной форме.
+                $ciIntent = old('intent', $intentPrefill ?? \App\Models\CourseInterestRequest::INTENT_JOIN);
+            @endphp
             @foreach ($intentLabels as $intentValue => $intentLabel)
                 <label class="opt">
                     <input type="radio" name="intent" value="{{ $intentValue }}" required
-                           @checked(old('intent', \App\Models\CourseInterestRequest::INTENT_JOIN) === $intentValue)>
+                           @checked($ciIntent === $intentValue)>
                     <span>{{ $intentLabel }}</span>
                 </label>
             @endforeach

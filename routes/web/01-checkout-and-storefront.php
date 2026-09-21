@@ -233,6 +233,11 @@ Route::get('/widgets/schedule', [PublicWidgetController::class, 'schedule'])->na
 Route::get('/raspisanie', PublicSchedulePageController::class)
     ->name('schedule.page');
 
+// H5233: живые группы семейства Кочергиной с канвой и кликом на заявку.
+// Объявлен рядом с /raspisanie; точный путь, паттерн /raspisanie его не съедает.
+Route::get('/raspisanie/kochergina', [PublicSchedulePageController::class, 'groups'])
+    ->name('schedule.groups');
+
 // Редиректы со старых URL витрины (SEO + старые ссылки/закладки/реклама).
 // Имена роутов сохранены, меняются только пути — поэтому route() ниже валиден.
 // Специфичный /shop/course/* — ДО общего /shop, иначе общий перехватит.

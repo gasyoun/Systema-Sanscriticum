@@ -61,11 +61,16 @@
         <fieldset>
             <legend class="block text-sm font-bold text-gray-700 mb-3">Что вы хотите?</legend>
             <div class="flex flex-col gap-3">
+                @php
+                    // H5233: префилл из query (?intent=...) — приоритет old() после
+                    // редиректа, затем URL-префилл, затем дефолт join.
+                    $ciIntent = old('intent', $intentPrefill ?? \App\Models\CourseInterestRequest::INTENT_JOIN);
+                @endphp
                 @foreach ($intentLabels as $intentValue => $intentLabel)
                     <label class="flex items-start gap-3 rounded-xl border border-gray-200 px-4 py-3 cursor-pointer hover:border-gray-300
-                                  {{ old('intent', \App\Models\CourseInterestRequest::INTENT_JOIN) === $intentValue ? 'border-[color:var(--brand,#6366f1)] ring-1 ring-[color:var(--brand,#6366f1)]' : '' }}">
+                                  {{ $ciIntent === $intentValue ? 'border-[color:var(--brand,#6366f1)] ring-1 ring-[color:var(--brand,#6366f1)]' : '' }}">
                         <input type="radio" name="intent" value="{{ $intentValue }}" required
-                               class="mt-1" @checked(old('intent', \App\Models\CourseInterestRequest::INTENT_JOIN) === $intentValue)>
+                               class="mt-1" @checked($ciIntent === $intentValue)>
                         <span class="text-sm font-medium text-gray-700">{{ $intentLabel }}</span>
                     </label>
                 @endforeach
