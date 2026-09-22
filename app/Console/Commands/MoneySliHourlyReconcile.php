@@ -7,9 +7,11 @@ namespace App\Console\Commands;
 use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
 use App\Support\MoneySli\MoneySliAlerter;
+use App\Support\Observability\ProbeOutcome;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * H4672 — hourly, read-only money-axis reconciliation. Writes nothing to
@@ -39,7 +41,13 @@ class MoneySliHourlyReconcile extends Command
     public function handle(MoneySliAlerter $alerter): int
     {
         if (! config('features.money_sli_hourly_reconcile')) {
+            // H5061: шов не вооружён — громкий машинночитаемый маркер.
+            // TSV при этом НЕ пишем: часовой каденс превратил бы метрику в спам.
             $this->comment('features.money_sli_hourly_reconcile OFF — команда no-op до MONEY_SLI_HOURLY_RECONCILE=true.');
+            Log::warning('money_sli: hourly-reconcile не вооружён (features.money_sli_hourly_reconcile=false) — статус not_supported', [
+                'check' => 'hourly_reconcile',
+                'state' => ProbeOutcome::NOT_SUPPORTED,
+            ]);
 
             return self::SUCCESS;
         }
