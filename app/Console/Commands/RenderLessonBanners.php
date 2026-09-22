@@ -12,7 +12,7 @@ use Illuminate\Console\Command;
  * Плашки занятий: отрисовать JPEG «дата + номер» на ближайшие дни.
  *
  * Идемпотентна: неизменившиеся плашки (тот же render_hash, файл на месте)
- * не трогает. --force перерисовывает всё окно (после правки шрифта или
+ * не трогает. --force перерисовывает все окно (после правки шрифта или
  * выравнивания в spec без смены версии шаблона). --schedule=ID — одно занятие
  * вне окна (ручная проверка).
  *
@@ -21,7 +21,7 @@ use Illuminate\Console\Command;
 class RenderLessonBanners extends Command
 {
     protected $signature = 'lesson-banners:render
-        {--days= : Окно вперёд в днях (по умолчанию lesson_banners.lead_days)}
+        {--days= : Окно вперед в днях (по умолчанию lesson_banners.lead_days)}
         {--force : Перерисовать даже неизменившиеся}
         {--schedule= : Отрисовать одно занятие по id (вне окна)}';
 
