@@ -12,7 +12,7 @@
     # 2. Собрать шаблон:
     python scripts/banner_template_from_psd.py plashka.psd \
         --date-layer "Дата" --number-layer "Номер" \
-        --fonts-dir C:/Windows/Fonts --out out/grammar
+        --out out/grammar
 
 Что делает:
   * фон = композит PSD со СКРЫТЫМИ слоями даты и номера;
@@ -29,7 +29,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -76,28 +78,43 @@ def font_postscript_name(layer, style: dict) -> str:
     return str(font_set[index]["Name"]).strip("'\"\x00")
 
 
-def font_file_map(fonts_dir: Path | None) -> dict[str, str]:
-    """PostScript-имя -> имя файла шрифта из каталога (нужен fonttools)."""
-    if fonts_dir is None or not fonts_dir.is_dir():
-        return {}
+def default_font_dirs() -> list[Path]:
+    """Системные шрифты Windows + установленные «только для меня» (там живут Fedra и пр.)."""
+    dirs = [Path("C:/Windows/Fonts")]
+    local = os.environ.get("LOCALAPPDATA")
+    if local:
+        dirs.append(Path(local) / "Microsoft" / "Windows" / "Fonts")
+    return dirs
+
+
+def font_file_map(fonts_dirs: list[Path]) -> dict[str, Path]:
+    """PostScript-имя -> файл шрифта из каталогов (нужен fonttools). Первый найденный выигрывает."""
     try:
         from fontTools.ttLib import TTFont
     except ImportError:
         print("! fonttools не установлен — шрифты сопоставлю только по имени файла.", file=sys.stderr)
         return {}
 
-    mapping: dict[str, str] = {}
-    for path in sorted(fonts_dir.iterdir()):
-        if path.suffix.lower() not in {".ttf", ".otf"}:
+    mapping: dict[str, Path] = {}
+    for fonts_dir in fonts_dirs:
+        if not fonts_dir.is_dir():
             continue
-        try:
-            font = TTFont(str(path), fontNumber=0, lazy=True)
-            name = font["name"].getDebugName(6)
-        except Exception:  # битый файл шрифта не должен ронять разбор
-            continue
-        if name:
-            mapping[name] = path.name
+        for path in sorted(fonts_dir.iterdir()):
+            if path.suffix.lower() not in {".ttf", ".otf"}:
+                continue
+            try:
+                font = TTFont(str(path), fontNumber=0, lazy=True)
+                name = font["name"].getDebugName(6)
+            except Exception:  # битый файл шрифта не должен ронять разбор
+                continue
+            if name and name not in mapping:
+                mapping[name] = path
     return mapping
+
+
+def clean_font_name(ps_name: str, suffix: str) -> str:
+    stem = re.sub(r"[^A-Za-z0-9._-]+", "-", ps_name).strip("-") or "font"
+    return stem + suffix.lower()
 
 
 def color_of(style: dict) -> str:
@@ -123,7 +140,7 @@ def is_upper(text: str) -> bool:
     return bool(letters) and all(c == c.upper() for c in letters)
 
 
-def field_spec(layer, canvas_w: int, canvas_h: int, grow: float, fonts: dict[str, str], obstacles: list[tuple[int, int, int, int]]) -> dict:
+def field_spec(layer, canvas_w: int, canvas_h: int, grow: float, fonts: dict[str, Path], obstacles: list[tuple[int, int, int, int]]) -> dict:
     style = style_of(layer)
     left, top, right, bottom = layer.bbox
     width, height = right - left, bottom - top
@@ -163,7 +180,9 @@ def field_spec(layer, canvas_w: int, canvas_h: int, grow: float, fonts: dict[str
     h = min(canvas_h - y, height + 2 * pad_y)
 
     ps_name = font_postscript_name(layer, style)
-    font_file = fonts.get(ps_name, f"{ps_name}.ttf")
+    # Имя файла — из PostScript-имени, а не исходного файла: «CHARTERITC-BOLD (2).OTF»
+    # сервер не примет (только латиница, цифры, «._ -»), а PostScript-имя всегда ASCII.
+    font_file = clean_font_name(ps_name, fonts[ps_name].suffix if ps_name in fonts else ".ttf")
     if ps_name not in fonts:
         print(f"! Шрифт {ps_name!r}: файла в --fonts-dir не нашёл, в spec пишу {font_file!r} — загрузите файл шрифта вместе с шаблоном (имя файла = это имя).", file=sys.stderr)
 
@@ -205,7 +224,7 @@ def main() -> int:
     parser.add_argument("--date-format", default="D MMMM", help="isoFormat Carbon (ru), напр. «D MMMM», «DD.MM», «D MMMM, dddd»")
     parser.add_argument("--number-format", help="с {N}; по умолчанию выводится из текста слоя")
     parser.add_argument("--overview-text", default="Обзорное занятие")
-    parser.add_argument("--fonts-dir", type=Path, default=Path("C:/Windows/Fonts"), help="где искать файлы шрифтов PSD (по умолчанию шрифты Windows)")
+    parser.add_argument("--fonts-dir", type=Path, action="append", help="где искать файлы шрифтов PSD; можно несколько раз (по умолчанию системные шрифты Windows + установленные для пользователя)")
     parser.add_argument("--grow", type=float, default=1.6, help="во сколько раз расширить рамку поля (по умолчанию 1.6)")
     parser.add_argument("--out", type=Path, default=Path("banner-template"))
     args = parser.parse_args()
@@ -224,7 +243,7 @@ def main() -> int:
 
     date_layer = find_layer(psd, args.date_layer)
     number_layer = find_layer(psd, args.number_layer)
-    fonts = font_file_map(args.fonts_dir)
+    fonts = font_file_map(args.fonts_dir or default_font_dirs())
 
     def obstacles_for(target):
         return [
@@ -263,8 +282,18 @@ def main() -> int:
     spec_path = args.out / "template.json"
     spec_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    # Файлы шрифтов — рядом, в fonts/: их грузят в тот же «Новый шаблон».
+    fonts_out = args.out / "fonts"
+    for field in (date, number):
+        source = fonts.get(field["_postscript"])
+        if source is not None:
+            fonts_out.mkdir(exist_ok=True)
+            shutil.copy2(source, fonts_out / field["font"])
+
     print(f"фон:   {bg_path}  ({psd.width}×{psd.height})")
     print(f"поля:  {spec_path}")
+    if fonts_out.is_dir():
+        print(f"шрифты: {fonts_out}  ({', '.join(sorted(p.name for p in fonts_out.iterdir()))})")
     for name, field in (("дата", date), ("номер", number)):
         print(f"  {name:6} {field['_sample']!r:24} -> {field['format']!r:18} шрифт {field['font']} {field['size_px']}px {field['color']} {field['align']}")
     print("Дальше: /admin/lesson-banners → «Новый шаблон» → фон + template.json + файлы шрифтов → «Превью».")
