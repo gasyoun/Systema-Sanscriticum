@@ -1459,6 +1459,17 @@ class Payment extends Model
 
         // Закрываем обещание, если у него не осталось открытых conditional-доступов
         // (full-обещание могло открыть несколько блоков — частичная оплата его не гасит).
+        //
+        // H5007 (audit H5): fulfilled_payment_id — UNIQUE audit-ссылка (миграция
+        // 2026_08_04). Один реальный full-платёж может закрыть НЕСКОЛЬКО обещаний
+        // одного user+course; писать один id во все — QueryException внутри
+        // fireOnPaid → откат честно оплаченного платежа после выдачи доступа.
+        // Ссылку получает ровно одно обещание (явно связанное linked_promise_id,
+        // иначе первое закрытое), остальные закрываются с null — как в
+        // PromiseAutoFulfiller.
+        $linkOwnerId = $this->linked_promise_id ? (int) $this->linked_promise_id : null;
+        $linkTaken = PaymentPromise::query()->where('fulfilled_payment_id', $this->id)->exists();
+
         foreach ($promiseIds as $promiseId) {
             $promise = PaymentPromise::find($promiseId);
 
@@ -1475,12 +1486,19 @@ class Payment extends Model
                 continue;
             }
 
+            $ownsLink = ! $linkTaken
+                && ($linkOwnerId === null || ! $promiseIds->contains($linkOwnerId) || (int) $promise->id === $linkOwnerId);
+
             $promise->update([
                 'status' => PaymentPromise::STATUS_FULFILLED,
                 'fulfilled_at' => now(),
-                'fulfilled_payment_id' => $this->id,
+                'fulfilled_payment_id' => $ownsLink ? $this->id : null,
                 'actual_paid_at' => now(),
             ]);
+
+            if ($ownsLink) {
+                $linkTaken = true;
+            }
         }
     }
 

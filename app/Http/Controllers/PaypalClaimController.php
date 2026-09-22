@@ -16,6 +16,7 @@ use App\Services\Payments\PaypalForeignPriceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -105,6 +106,15 @@ final class PaypalClaimController extends Controller
         // Резолв пользователя — вне транзакции, может бросить ValidationException
         // (гость указал email уже существующего аккаунта → отказ).
         $user = $this->resolveUser($request);
+
+        // H5007 (audit H2): идемпотентность заявки. До этого N отправок формы =
+        // N paid-платежей (trusted) с N строками выручки/праны/реферала — между
+        // ними стоял только throttle:5,1. Дубль = тот же ученик, тот же тариф,
+        // уже pending/paid PayPal-платёж с тем же txn (или без txn — поданный
+        // сегодня же). Отказ валидацией, ничего не создаём.
+        if (config('features.payment_fix_wave1')) {
+            $this->rejectDuplicateClaim($user, $tariff, (string) ($request->validated('paypal_txn') ?? ''));
+        }
 
         // Приватное хранение чека (disk 'local', НЕ public: скрин может содержать
         // личные/платёжные данные). Имя файла рандомизирует Laravel.
@@ -308,6 +318,47 @@ final class PaypalClaimController extends Controller
             'usd' => $usd['price'],
             'markup_applied' => $eur['markup_applied'],
         ];
+    }
+
+    /**
+     * H5007 (audit H2): вторая заявка того же ученика по тому же тарифу — с тем же
+     * PayPal txn, либо без txn, но поданная в тот же день, пока первая ещё
+     * pending/paid — отклоняется. Ничего не пишем: доступ/выручка/прана по
+     * первой заявке уже проведены штатно.
+     */
+    private function rejectDuplicateClaim(User $user, Tariff $tariff, string $txn): void
+    {
+        $query = Payment::query()
+            ->where('provider', Payment::PROVIDER_PAYPAL)
+            ->where('user_id', $user->id)
+            ->where('course_id', $tariff->course_id)
+            ->where('tariff', $tariff->accessKey())
+            ->whereIn('status', ['pending', 'paid']);
+
+        $txn = trim($txn);
+        if ($txn !== '') {
+            $query->where('claim_meta->txn', $txn);
+        } else {
+            $query->where('created_at', '>=', now()->startOfDay());
+        }
+
+        $duplicate = $query->orderBy('id')->first();
+        if ($duplicate === null) {
+            return;
+        }
+
+        Log::info('paypal_claim.duplicate_rejected', [
+            'user_id' => $user->id,
+            'tariff_id' => $tariff->id,
+            'existing_payment_id' => $duplicate->id,
+            'txn' => $txn !== '' ? $txn : null,
+        ]);
+
+        throw ValidationException::withMessages([
+            'paypal_txn' => 'Эта заявка уже получена'
+                .($txn !== '' ? ' (транзакция '.$txn.')' : ' сегодня')
+                .' — повторно отправлять не нужно. Если это другой платёж, укажите его номер транзакции PayPal.',
+        ]);
     }
 
     private function abortUnlessEnabled(Tariff $tariff): void
