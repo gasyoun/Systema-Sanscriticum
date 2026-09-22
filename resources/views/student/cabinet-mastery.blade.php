@@ -14,13 +14,13 @@
     <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
         <h1 class="text-2xl font-extrabold text-gray-900 leading-tight">{{ $bank['title'] }}</h1>
         <p class="text-gray-600 mt-2 leading-relaxed">{{ $bank['intro'] }}</p>
-        <p class="text-sm text-gray-500 mt-1">Зачёт — {{ $bank['pass'] }} из {{ count($questions) }}.</p>
+        <p class="text-sm text-gray-500 mt-1">Зачет — {{ $bank['pass'] }} из {{ count($questions) }}.</p>
 
         @if ($result)
             <div class="mt-4 rounded-2xl px-4 py-3 text-sm font-bold {{ $result['passed'] ? 'bg-green-50 text-green-800' : 'bg-amber-50 text-amber-900' }}">
                 {{ $result['score'] }} из {{ $result['total'] }}
                 @if ($result['passed'])
-                    — зачёт.
+                    — зачет.
                 @else
                     — порог {{ $result['pass'] }}. Ниже — почему.
                 @endif

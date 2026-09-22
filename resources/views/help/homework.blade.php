@@ -23,7 +23,7 @@
         </div>
 
         <p class="text-gray-600 leading-relaxed mb-8">
-            <span class="font-bold text-gray-900">Каждое ДЗ сдаётся на странице своего урока</span>
+            <span class="font-bold text-gray-900">Каждое ДЗ сдается на странице своего урока</span>
             (урок 1 → ДЗ-1, урок 2 → ДЗ-2). Проверяет живой куратор; статусы видны здесь же.
         </p>
 
@@ -38,15 +38,15 @@
         <ul class="space-y-3 mb-8">
             <li class="flex gap-3 text-sm text-gray-700 leading-relaxed">
                 <span class="font-bold text-emerald-600 shrink-0">Форма</span>
-                <span>Приём открыт — пишите ответ и/или прикрепляйте файлы, затем «Отправить на проверку».</span>
+                <span>Прием открыт — пишите ответ и/или прикрепляйте файлы, затем «Отправить на проверку».</span>
             </li>
             <li class="flex gap-3 text-sm text-gray-700 leading-relaxed">
-                <span class="font-bold text-amber-600 shrink-0">«Ещё не задано»</span>
+                <span class="font-bold text-amber-600 shrink-0">«Еще не задано»</span>
                 <span>Условие скоро появится — загляните позже.</span>
             </li>
             <li class="flex gap-3 text-sm text-gray-700 leading-relaxed">
                 <span class="font-bold text-gray-500 shrink-0">«ДЗ нет»</span>
-                <span>Приём к этому уроку ещё не открыт — не ошибка с вашей стороны.</span>
+                <span>Прием к этому уроку еще не открыт — не ошибка с вашей стороны.</span>
             </li>
         </ul>
 
@@ -65,7 +65,7 @@
                 <tbody class="divide-y divide-gray-100">
                     <tr class="bg-gray-50/50">
                         <td class="px-4 py-3 font-bold text-gray-800 whitespace-nowrap">Черновик</td>
-                        <td class="px-4 py-3 text-gray-600">Сохранили, но ещё не отправили</td>
+                        <td class="px-4 py-3 text-gray-600">Сохранили, но еще не отправили</td>
                     </tr>
                     <tr>
                         <td class="px-4 py-3 font-bold text-blue-700 whitespace-nowrap">На проверке</td>
@@ -85,9 +85,9 @@
 
         <h2 class="text-sm font-extrabold uppercase tracking-wider text-gray-400 mb-3">Ошиблись файлом</h2>
         <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700 leading-relaxed mb-4">
-            <li>Откройте <strong>тот урок</strong>, куда ушёл неверный файл</li>
+            <li>Откройте <strong>тот урок</strong>, куда ушел неверный файл</li>
             <li>Корзина рядом с файлом → удалить</li>
-            <li>В переписке останется отметка «Удалён файл …» (с датой)</li>
+            <li>В переписке останется отметка «Удален файл …» (с датой)</li>
             <li>Прикрепите правильный → снова «Отправить на проверку»</li>
         </ol>
         <p class="text-sm text-gray-500 leading-relaxed mb-8">

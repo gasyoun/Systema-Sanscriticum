@@ -5,7 +5,7 @@
 
     Использование:  <x-newsletter-subscribe />
     Необязательно:  <x-newsletter-subscribe title="..." blurb="..." variant="dark" />
-    variant="dark" — для тёмных секций (главная витрина); по умолчанию светлая карточка.
+    variant="dark" — для темных секций (главная витрина); по умолчанию светлая карточка.
 --}}
 @if (config('features.newsletter_subscribe'))
     @props([

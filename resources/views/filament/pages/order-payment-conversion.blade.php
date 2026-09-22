@@ -80,7 +80,7 @@
         @endforeach
     </div>
 
-    {{-- ── Разрезы: где течёт (по курсу / по каналу) ── --}}
+    {{-- ── Разрезы: где течет (по курсу / по каналу) ── --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         @foreach ([['По курсу', 'course', 'Курс', $s['by_course']], ['По каналу привлечения', 'channel', 'Канал', $s['by_channel']]] as [$heading, $keyField, $colLabel, $rows])
             <div class="overflow-x-auto rounded-xl ring-1 ring-gray-950/5 dark:ring-white/10">
@@ -148,7 +148,7 @@
                         <td class="px-4 py-2 text-right text-gray-500 dark:text-gray-400">{{ $row['created_at'] }}</td>
                     </tr>
                 @empty
-                    <tr><td colspan="5" class="px-4 py-3 text-center text-success-600 dark:text-success-400">Недожатых заказов нет — всё дожато 👍</td></tr>
+                    <tr><td colspan="5" class="px-4 py-3 text-center text-success-600 dark:text-success-400">Недожатых заказов нет — все дожато 👍</td></tr>
                 @endforelse
             </tbody>
         </table>

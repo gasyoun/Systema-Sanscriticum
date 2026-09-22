@@ -1,4 +1,4 @@
-{{-- CTA «Счёт для компании» на чекауте. Flag: billing.company_invoice.enabled. --}}
+{{-- CTA «Счет для компании» на чекауте. Flag: billing.company_invoice.enabled. --}}
 @if(config('billing.company_invoice.enabled'))
     <div class="mb-6 bg-white border border-gray-200 rounded-2xl p-4 sm:p-5">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

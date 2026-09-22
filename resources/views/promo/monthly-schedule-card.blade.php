@@ -18,7 +18,7 @@
         /* Фирменный «якорь» — оранжевая полоса по верхней кромке */
         .topbar { position: absolute; top: 0; left: 0; right: 0; height: 9px; background: #E85C24; }
 
-        /* Шапка: лого слева, заголовок справа — таблицей (надёжно в DomPDF) */
+        /* Шапка: лого слева, заголовок справа — таблицей (надежно в DomPDF) */
         .head { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
         .head td { vertical-align: middle; }
         .logo { height: 80px; }

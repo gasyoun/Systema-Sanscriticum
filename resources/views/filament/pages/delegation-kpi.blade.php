@@ -22,7 +22,7 @@
     {{-- ── Общий статус панели ── --}}
     @if ($s['ok'])
         <div class="rounded-xl bg-success-50 p-4 ring-1 ring-success-600/20 dark:bg-success-500/10 dark:ring-success-400/30 text-sm text-success-700 dark:text-success-300">
-            <span class="font-semibold">Всё под контролем.</span>
+            <span class="font-semibold">Все под контролем.</span>
             Красных флагов нет — можно вести без собственника. Разбор по ритму обзора (см. docs/FINANCE_REVIEW_RHYTHM.md).
         </div>
     @else
@@ -56,7 +56,7 @@
         @endforeach
     </div>
 
-    {{-- ── Ритм обзора (закреплён, иначе повторим провал «Лингвистик») ── --}}
+    {{-- ── Ритм обзора (закреплен, иначе повторим провал «Лингвистик») ── --}}
     <div class="rounded-xl ring-1 ring-gray-950/5 dark:ring-white/10 p-4 text-sm text-gray-600 dark:text-gray-300">
         <div class="font-semibold text-gray-700 dark:text-gray-200 mb-1">Ритм обзора</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">

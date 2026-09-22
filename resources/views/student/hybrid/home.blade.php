@@ -18,7 +18,7 @@
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
     <div class="mt-6">
-        {{-- Flash от платёжных редиректов (анти-дубль, отбивки DebtPaymentController):
+        {{-- Flash от платежных редиректов (анти-дубль, отбивки DebtPaymentController):
              без баннера отказ выглядит как «кнопка ничего не делает». --}}
         @include('student.partials.flash-messages')
     </div>
@@ -74,8 +74,8 @@
                     <p class="text-xs text-gray-400 mb-3">{{ $c['meta'] }}</p>
                 @endif
                 @if (! empty($c['cta']['url']))
-                    {{-- CTA обязан уважать method: платёжные действия (bundle-долг,
-                         взнос рассрочки) — POST-роуты, голая ссылка даёт 405. --}}
+                    {{-- CTA обязан уважать method: платежные действия (bundle-долг,
+                         взнос рассрочки) — POST-роуты, голая ссылка дает 405. --}}
                     @if (($c['cta']['method'] ?? 'GET') === 'POST')
                         <form method="POST" action="{{ $c['cta']['url'] }}">
                             @csrf
@@ -88,7 +88,7 @@
                         </form>
                     @else
                         {{-- TAB («Открыть долги», #debts) — в hybrid-шелле вкладок нет,
-                             ведём на страницу «Оплата и доступ». --}}
+                             ведем на страницу «Оплата и доступ». --}}
                         <a href="{{ ($c['cta']['method'] ?? 'GET') === 'TAB' ? route('student.access') : $c['cta']['url'] }}"
                            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold"
                            data-track-event="cabinet.continue.click"

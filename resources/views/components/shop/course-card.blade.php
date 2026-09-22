@@ -10,7 +10,7 @@
     $showDeposit = $deposit?->deposit_enabled && $courseDepositAmount > 0 && ! $hasAnyPurchased;
 
     // «Идет сейчас» — ручной enum `courses.format`; сам по себе он не говорит НИ
-    // когда идёт, НИ сколько осталось. Дальше — только выведенное из расписания;
+    // когда идет, НИ сколько осталось. Дальше — только выведенное из расписания;
     // нет расписания → строки просто нет (никаких выдуманных дат).
     $cadenceSlot = $cadence?->slotLabel();
     $cadenceNext = $cadence?->nextLabel();
@@ -34,7 +34,7 @@
        class="relative w-full aspect-[4/3] bg-gradient-to-br from-slate-800 to-[#0A0D14] flex items-center justify-center border-b border-[#1F2636] overflow-hidden group/img block rounded-t-2xl">
 
         @if($catalogBadgeUrl)
-            {{-- H-perf: каталог отдаётся целиком (~90 карточек). Без lazy это ~28 МБ
+            {{-- H-perf: каталог отдается целиком (~90 карточек). Без lazy это ~28 МБ
                  обложек в первом же запросе. Первый ряд (до 4 карточек в сетке)
                  грузим eager — это LCP; остальное по мере прокрутки. --}}
             <img src="{{ $catalogBadgeUrl }}"
@@ -50,7 +50,7 @@
             @php $coverColor = $course->categories->first()?->color ?: '#E85C24'; @endphp
             <div class="absolute inset-0 p-5 flex flex-col group-hover/img:scale-[1.03] transition-transform duration-500"
                  @style(['background-image: linear-gradient(135deg, ' . $coverColor . 'E6 0%, #0A0D14 92%)'])>
-                {{-- лёгкий ॐ-водяной знак --}}
+                {{-- легкий ॐ-водяной знак --}}
                 <i class="fas fa-om absolute -right-4 -bottom-5 text-[7rem] text-white/5 pointer-events-none"></i>
                 {{-- преподаватель сверху (отступ справа под бейдж формата, слева — под «Новинку») --}}
                 <span @class([
@@ -104,7 +104,7 @@
                 @if($course->lessons_count)
                     <span class="inline-flex items-center gap-1.5 bg-brand text-white text-[10px] font-black uppercase px-2.5 py-1.5 rounded-md shadow-[0_4px_12px_rgba(232,92,36,0.5)] tracking-wider">
                         <i class="fas fa-play-circle text-[9px]"></i>
-                        {{-- НЕ trans_choice: при app.locale='en' он даёт «5 лекции» — русские формы через Plural::ru.
+                        {{-- НЕ trans_choice: при app.locale='en' он дает «5 лекции» — русские формы через Plural::ru.
                              «Занятие», не «лекция» — большинство курсов ОРС не читает лекции. --}}
                         {{ $course->lessons_count }} {{ \App\Support\Plural::ru($course->lessons_count, 'онлайн-занятие', 'онлайн-занятия', 'онлайн-занятий') }}
                     </span>
@@ -166,9 +166,9 @@
                 </h2>
             </a>
 
-            {{-- Ритм живого потока: день/время и сколько занятий осталось. Всё —
+            {{-- Ритм живого потока: день/время и сколько занятий осталось. Все —
                  из `schedules`; бейдж «Идет сейчас» сам по себе не отвечал ни
-                 «когда», ни «успею ли я ещё». Нет календаря — строки нет. --}}
+                 «когда», ни «успею ли я еще». Нет календаря — строки нет. --}}
             @if($cadenceSlot || $cadenceNext || $cadenceProgress || $cadenceStreamCount > 1)
                 <p class="text-[11px] text-slate-400 leading-snug mb-3 flex flex-wrap items-center gap-x-2 gap-y-1"
                    data-testid="course-card-cadence">

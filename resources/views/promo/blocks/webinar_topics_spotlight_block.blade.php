@@ -3,8 +3,8 @@
      ширину: залитый номер-бейдж (как в program_block), заголовок темы,
      описание и стрелка → цепляет и тянет читать. Контент-поля те же,
      что у светлого блока 5.1 (взаимозаменяемы).
-     Обёрнут в <section> с .container → работает глобальный сдвиг под
-     плавающую боковую форму. CTA открывает её ($dispatch open-order-form).
+     Обернут в <section> с .container → работает глобальный сдвиг под
+     плавающую боковую форму. CTA открывает ее ($dispatch open-order-form).
 ============================================================== --}}
 <section class="py-12 lg:py-20 bg-[#F9FAFB]">
     <div class="container mx-auto px-4">
@@ -20,7 +20,7 @@
             @endif
 
             <h2 class="text-2xl md:text-4xl font-extrabold text-[#101010] leading-tight mt-5">
-                {{ $data['title'] ?? 'О чём будем говорить' }}
+                {{ $data['title'] ?? 'О чем будем говорить' }}
             </h2>
 
             @if(!empty($data['subtitle']))

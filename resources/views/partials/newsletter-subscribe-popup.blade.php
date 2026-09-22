@@ -164,7 +164,7 @@
                         this.open = false;
                         return;
                     }
-                    // Появление с небольшой задержкой — не бьёт по LCP.
+                    // Появление с небольшой задержкой — не бьет по LCP.
                     setTimeout(() => { this.open = true }, 1800);
                 },
                 dismiss() {

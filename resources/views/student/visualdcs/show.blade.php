@@ -6,8 +6,8 @@
 @section('content')
 <div class="max-w-3xl mx-auto px-4 sm:px-6 pb-12 overflow-x-hidden">
     <p class="text-sm text-gray-500 mb-4">
-        {{-- H2869: оранжевый текст на кремовом фоне — 3.3:1 < AA; тёмный текст
-             с фирменным подчёркиванием сохраняет акцент и проходит аудит. --}}
+        {{-- H2869: оранжевый текст на кремовом фоне — 3.3:1 < AA; темный текст
+             с фирменным подчеркиванием сохраняет акцент и проходит аудит. --}}
         <a href="{{ route('student.visualdcs.index', $surface) }}" class="font-bold text-gray-900 underline decoration-brand decoration-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">← к списку</a>
     </p>
 

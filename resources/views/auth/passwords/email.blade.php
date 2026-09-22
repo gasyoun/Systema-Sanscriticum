@@ -32,7 +32,7 @@
                         письмо может попасть туда.</p>
                     <p class="mt-2 text-green-700/80 text-xs">Не пришло за 5 минут? Отправьте запрос еще раз ниже
                         или <a href="https://t.me/rusamskrtam" class="underline font-semibold">напишите куратору</a> —
-                        пришлём <span class="font-semibold">личную ссылку для входа в Telegram</span> (без пароля).</p>
+                        пришлем <span class="font-semibold">личную ссылку для входа в Telegram</span> (без пароля).</p>
                 </div>
             @endif
 
@@ -47,8 +47,8 @@
                     </ul>
                     <p class="mt-2 text-amber-800 text-sm">Не помните email или пароль — это нормально.
                         <a href="https://t.me/rusamskrtam" class="underline font-semibold">Напишите куратору в Telegram</a>
-                        (ФИО, курс, когда примерно платили) — найдём кабинет и пришлём
-                        <span class="font-semibold">личную одноразовую ссылку</span>. Откроете — войдёте
+                        (ФИО, курс, когда примерно платили) — найдем кабинет и пришлем
+                        <span class="font-semibold">личную одноразовую ссылку</span>. Откроете — войдете
                         <span class="font-semibold">без пароля</span>. Новый кабинет заводить не нужно.</p>
                 </div>
             @endif
@@ -86,7 +86,7 @@
             <p class="text-xs text-gray-600 leading-relaxed">
                 Не помните ни email, ни пароль?
                 <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="text-brand hover:underline font-semibold">Куратор</a>
-                пришлёт личную ссылку для входа в Telegram — без пароля.
+                пришлет личную ссылку для входа в Telegram — без пароля.
             </p>
             <p class="text-xs text-gray-500">
                 Вспомнили пароль? <a href="{{ route('login') }}" class="text-brand hover:underline font-semibold transition-colors">Войти</a>

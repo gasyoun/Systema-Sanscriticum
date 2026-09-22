@@ -21,7 +21,7 @@
 
     <h2 class="text-lg font-bold mb-3">Недавние темы</h2>
     @if($views->isEmpty())
-        <p class="text-sm text-gray-500">Истории ещё нет.</p>
+        <p class="text-sm text-gray-500">Истории еще нет.</p>
     @else
         <ol class="space-y-2">
             @foreach($views as $view)

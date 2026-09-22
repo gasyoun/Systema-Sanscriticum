@@ -105,7 +105,7 @@ document.addEventListener('alpine:init', () => {
 // ── Анти-419: держим CSRF-токен свежим ──────────────────────────────────
 // Сессия-файл могла истечь/собраться GC, пока студент думал над оплатой;
 // на сабмите его пере-аутентифицирует remember-me кука в НОВУЮ сессию с НОВЫМ
-// токеном, а форма всё ещё несёт старый _token → 419. Поэтому перед реальной
+// токеном, а форма все еще несет старый _token → 419. Поэтому перед реальной
 // отправкой подтягиваем токен текущей живой сессии. Плюс обновляем токен при
 // возврате страницы из bfcache («Назад»).
 (function () {
@@ -120,7 +120,7 @@ document.addEventListener('alpine:init', () => {
 
     // Таймаут обязателен: на мобильной сети fetch без AbortController может
     // висеть десятками секунд. Кнопка к этому моменту уже заблокирована, и
-    // студент видит «мёртвую» кнопку оплаты — оформление встаёт намертво.
+    // студент видит «мертвую» кнопку оплаты — оформление встает намертво.
     const TOKEN_TIMEOUT_MS = 4000;
 
     async function fetchToken() {
@@ -167,7 +167,7 @@ document.addEventListener('alpine:init', () => {
             try {
                 applyToken(await fetchToken());
             } catch (_) {
-                // сеть недоступна/таймаут — токен мог и не протухнуть, всё равно пробуем отправить
+                // сеть недоступна/таймаут — токен мог и не протухнуть, все равно пробуем отправить
             }
             refreshed = true;
             form.submit();
@@ -185,7 +185,7 @@ document.addEventListener('alpine:init', () => {
     /* Полоса рисуется в 8px, но САМ input раньше был 8px высотой — то есть зона
        касания в 5 раз меньше рекомендованных 44px (iOS HIG) / 48px (Material).
        Промах в пару пикселей уходил в прокрутку страницы, и слайдер «не работал»
-       на телефоне. Растим элемент до 44px, а видимую полосу задаём фоном с
+       на телефоне. Растим элемент до 44px, а видимую полосу задаем фоном с
        background-clip: content-box через вертикальный padding.
        touch-action: none — чтобы горизонтальное перетаскивание не перехватывалось
        вертикальным скроллом страницы. */
@@ -218,7 +218,7 @@ document.addEventListener('alpine:init', () => {
         cursor: grab; transition: transform .15s;
     }
     /* Только для мыши: на тач-экране :hover «залипает» после перетаскивания,
-       и бегунок остаётся увеличенным, пока не тапнешь в другое место. */
+       и бегунок остается увеличенным, пока не тапнешь в другое место. */
     @media (hover: hover) {
         .checkout-slider::-webkit-slider-thumb:hover { transform: scale(1.12); }
     }
@@ -262,7 +262,7 @@ document.addEventListener('alpine:init', () => {
             <div class="mb-8 flex items-center gap-2 text-sm bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm w-fit">
                 <i class="fas fa-gift text-indigo-500"></i>
                 @if(!empty($isGift))
-                    <span class="text-gray-600">Подарочный режим включён.</span>
+                    <span class="text-gray-600">Подарочный режим включен.</span>
                     <a href="{{ route('checkout.show', $tariff) }}" class="font-medium text-indigo-600 hover:text-indigo-700">Купить для себя</a>
                 @else
                     <span class="text-gray-600">Хотите оформить как подарок?</span>
@@ -512,7 +512,7 @@ document.addEventListener('alpine:init', () => {
                                 <label class="flex items-center gap-3 cursor-not-allowed opacity-60">
                                     <input type="radio" name="nala_billing_mode" value="auto_monthly" disabled
                                            class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                    <span class="text-sm text-gray-500">Автоплатёж ежемесячно (скоро)</span>
+                                    <span class="text-sm text-gray-500">Автоплатеж ежемесячно (скоро)</span>
                                 </label>
                             </div>
                         </div>
@@ -565,12 +565,12 @@ document.addEventListener('alpine:init', () => {
 
                     {{-- ─── Кнопка оплаты ─── --}}
                     <div class="bg-white p-6 sm:p-7 rounded-3xl shadow-sm shadow-gray-100/60 border border-gray-100">
-                        {{-- Мобильная вёрстка кнопки: flex-wrap + whitespace-nowrap.
+                        {{-- Мобильная верстка кнопки: flex-wrap + whitespace-nowrap.
                              Раньше строка была flex-nowrap, поэтому на узком экране
                              (360–375px) ужимался сам ТЕКСТ: «К безопасной оплате»
                              разрывался на 3 строки, кнопка вырастала до 116px вместо ~60.
-                             Теперь перенос идёт МЕЖДУ блоками (подпись / сумма), а не
-                             внутри слов; на sm+ всё по-прежнему в одну строку. --}}
+                             Теперь перенос идет МЕЖДУ блоками (подпись / сумма), а не
+                             внутри слов; на sm+ все по-прежнему в одну строку. --}}
                         <button type="submit" form="checkout-form"
                                 class="w-full flex flex-wrap justify-center items-center gap-x-2.5 py-4 px-4 sm:px-6 rounded-2xl shadow-lg shadow-orange-200/70 text-lg sm:text-xl font-extrabold text-white bg-gradient-to-r from-brand to-brand-hover hover:shadow-xl hover:shadow-orange-300/60 hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-brand/30">
                             <span class="inline-flex items-center whitespace-nowrap">
@@ -593,7 +593,7 @@ document.addEventListener('alpine:init', () => {
                     @include('partials.installments-cta', ['tariff' => $tariff])
 
                     {{-- Раньше блок был `hidden sm:flex`, то есть на ЛЮБОМ телефоне
-                         (<640px) скрывались и приём карт МИР, и единственная на всей
+                         (<640px) скрывались и прием карт МИР, и единственная на всей
                          странице ссылка на условия возврата. Именно на мобильных
                          доверие к оплате нужнее всего — показываем с переносом. --}}
                     <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:gap-6 text-xs text-gray-400 font-medium pt-2">

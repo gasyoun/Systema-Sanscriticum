@@ -152,7 +152,7 @@
                  let iframe = id ? document.getElementById(id) : null;
                  let adapter = window.VideoResumeAdapters[this.player];
                  if (!iframe || !adapter || !adapter.poll) return;
-                 // pull-модель (RuTube/VK/Kinescope/Vimeo) шлёт время через onTick;
+                 // pull-модель (RuTube/VK/Kinescope/Vimeo) шлет время через onTick;
                  // push-модель (YouTube) просто подтверждает подписку — реальное
                  // время прилетит через 'message' и onVideoTick() выше.
                  adapter.poll(iframe, (tick) => this.onVideoTick(tick));
@@ -177,7 +177,7 @@
              if (duration) { this.videoDuration = duration; }
 
              // Мост к heartbeat (public/js/lesson-heartbeat.js слушает это же
-             // событие) — только когда флаг включён, чтобы при video_resume=false
+             // событие) — только когда флаг включен, чтобы при video_resume=false
              // heartbeat вообще не знал о позиции (D10: прод-инертность).
              if (this.videoResumeEnabled) {
                  window.dispatchEvent(new CustomEvent('lesson-video-tick', {
@@ -266,7 +266,7 @@
                 @endif
 
                 {{-- «Продолжить с HH:MM» (H1450, video_resume). Показывается только пока
-                     resumeOffered не сброшен (первый seekTo — свой или чужой — прячет её). --}}
+                     resumeOffered не сброшен (первый seekTo — свой или чужой — прячет ее). --}}
                 @if($videoResumeEnabled && $resumePosition)
                     @php
                         $resumeLabel = sprintf('%02d:%02d', intdiv($resumePosition, 60), $resumePosition % 60);
@@ -295,8 +295,8 @@
                             <a href="{{ route('membership.landing') }}" class="inline-flex mt-5 px-5 py-2.5 bg-brand hover:bg-brand-hover text-white font-bold rounded-xl">Выбрать уровень</a>
                         </div>
                     @elseif(!empty($upcomingSession))
-                        {{-- Живое занятие ещё не прошло (например, оплаченное пробное): зовём в Zoom.
-                             После занятия n8n зальёт запись, и здесь появится видео. --}}
+                        {{-- Живое занятие еще не прошло (например, оплаченное пробное): зовем в Zoom.
+                             После занятия n8n зальет запись, и здесь появится видео. --}}
                         <div class="text-center text-white max-w-md">
                             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#38BDF8]/15 border border-[#38BDF8]/30 text-[#38BDF8] text-[11px] font-bold uppercase tracking-widest mb-4">
                                 <i class="fas fa-broadcast-tower"></i> Живое занятие
@@ -306,7 +306,7 @@
                                 <p class="text-gray-300 mb-5">{{ $upcomingSession->start->translatedFormat('d F Y, H:i') }} (МСК)</p>
                             @endif
                             @if($upcomingSession->link)
-                                {{-- Трекинг-редирект (учёт посещаемости) → настоящий Zoom-URL. --}}
+                                {{-- Трекинг-редирект (учет посещаемости) → настоящий Zoom-URL. --}}
                                 <a href="{{ route('class.join', $upcomingSession) }}" target="_blank" rel="noopener noreferrer"
                                    data-track-event="zoom.join.click"
                                    class="inline-flex items-center gap-2 px-6 py-3 bg-[#38BDF8] hover:bg-[#2da4dd] text-white font-bold rounded-xl transition-all shadow-lg shadow-[#38BDF8]/20">
@@ -556,7 +556,7 @@
         @if($homeworkOpen ?? $lesson->homework_enabled)
             @include('student.partials.homework')
         @else
-            {{-- Явное состояние «ДЗ нет», чтобы студент не гадал, задано оно или ещё нет. --}}
+            {{-- Явное состояние «ДЗ нет», чтобы студент не гадал, задано оно или еще нет. --}}
             <section class="font-nunito">
                 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-6 flex items-center gap-3 text-gray-500">
                     <i class="fas fa-mug-hot text-gray-300 text-lg shrink-0"></i>
@@ -676,7 +676,7 @@
         </button>
     </form>
 
-    {{-- Декоративная подпись внизу, заполняет место и делает блок «завершённым» --}}
+    {{-- Декоративная подпись внизу, заполняет место и делает блок «завершенным» --}}
     @unless($showTabs)
         <div class="mt-4 pt-4 border-t border-yellow-200/60 flex items-start gap-3 shrink-0">
             <div class="w-8 h-8 rounded-lg bg-yellow-200/50 text-yellow-700 flex items-center justify-center shrink-0">

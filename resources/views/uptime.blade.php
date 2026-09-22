@@ -130,7 +130,7 @@ VPN: вкл / выкл
 время: сейчас</pre>
         <button type="button" class="btn" id="copy-btn" style="border:0;width:100%;cursor:pointer">Скопировать текст</button>
         <p class="muted" style="margin-top:0.75rem">
-            <strong>Не пишите Артёму.</strong> Артёму пишут только Иван или Марцис, если мёртв сервер.
+            <strong>Не пишите Артёму.</strong> Артёму пишут только Иван или Марцис, если мертв сервер.
         </p>
     </div>
 

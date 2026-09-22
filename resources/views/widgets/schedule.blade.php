@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex">
     <title>Расписание занятий</title>
     {{-- H1427, wave 1b: голый встраиваемый виджет. Никакого @vite/layout сайта — --}}
-    {{-- страница остаётся zero-dependency, стили инлайн, скрипт — обычный vanilla JS. --}}
+    {{-- страница остается zero-dependency, стили инлайн, скрипт — обычный vanilla JS. --}}
     <style>
         :root {
             --fg: #1f2430;

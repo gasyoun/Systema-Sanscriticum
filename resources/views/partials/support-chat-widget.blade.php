@@ -15,13 +15,13 @@
                      resources/js/bootstrap.js) — до деплоя Reverb виджет
                      работает на light-poll фолбэке, ничего не ломается.
       • presence   → POST {{ route('support.presence') }} с первого захода, если
-                     включён флаг support_visitor_presence (H1197, Jivo-паритет
+                     включен флаг support_visitor_presence (H1197, Jivo-паритет
                      Pillar 2). Куратор видит посетителя в «Посетители онлайн» и
-                     может написать первым; ответ beacon'а несёт conversation_id —
+                     может написать первым; ответ beacon'а несет conversation_id —
                      проактив куратора долетает до молчащего посетителя, и виджет
-                     раскрывается. При выключенном флаге beacon не шлётся.
+                     раскрывается. При выключенном флаге beacon не шлется.
 
-    Безопасность: сервер отдаёт уже экранированный `html` (ChatMessage::htmlForWeb,
+    Безопасность: сервер отдает уже экранированный `html` (ChatMessage::htmlForWeb,
     whitelist без атрибутов) — рендерим его, но НИКОГДА не сырой ввод посетителя.
 
     Контекстное приветствие по странице входа (H1198, Jivo-паритет S3): за флагом
@@ -230,7 +230,7 @@
     if (!root) return;
 
     // H4118: высота видимой области без клавиатуры/зума — питает .scw-panel (max-height/height).
-    // Задаём на <html>, чтобы переменная жила даже до инициализации остального скрипта.
+    // Задаем на <html>, чтобы переменная жила даже до инициализации остального скрипта.
     var vv = window.visualViewport;
     var syncVvh = function () {
         if (vv) { document.documentElement.style.setProperty('--scw-vvh', Math.round(vv.height) + 'px'); }
@@ -276,7 +276,7 @@
 
     // Контекстное приветствие по странице входа (H1198): URL известен сразу,
     // без обращения к серверу — за флагом support_answer_suggester. Дефолтный
-    // текст (уже в разметке) остаётся, если флаг выключен или страница не
+    // текст (уже в разметке) остается, если флаг выключен или страница не
     // распознана ни одним паттерном. Не подменяет оффлайн-копирайт (H1199) —
     // «оставьте почту» важнее контекстного приветствия, когда операторы офлайн.
     function applyContextualGreeting() {
@@ -339,7 +339,7 @@
                 });
             subscribed = true;
             stopPolling(); // живой push вместо опроса
-        } catch (err) { /* Echo не поднят — остаёмся на фолбэке */ }
+        } catch (err) { /* Echo не поднят — остаемся на фолбэке */ }
     }
 
     function startPolling() {
@@ -350,7 +350,7 @@
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     }
 
-    // Presence-beacon: сообщаем серверу «посетитель на этой странице». Ответ несёт
+    // Presence-beacon: сообщаем серверу «посетитель на этой странице». Ответ несет
     // conversation_id — если куратор написал первым молчащему посетителю, тред уже
     // создан: подтягиваем его и раскрываем виджет (Jivo «оператор пишет первым»).
     function beacon() {
@@ -373,7 +373,7 @@
             if (!data || data.enabled === false) { stopBeacon(); return; }   // флаг выключен — не шумим
             var firstBeacon = !beaconStarted;
             beaconStarted = true;
-            // Тред появился, а у виджета его ещё нет → куратор открыл диалог.
+            // Тред появился, а у виджета его еще нет → куратор открыл диалог.
             if (data.conversation_id && !conversationId) {
                 var proactive = !firstBeacon; // появился ПОСЛЕ загрузки = проактив куратора
                 loadHistory().then(function () {

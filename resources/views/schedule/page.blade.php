@@ -11,7 +11,7 @@
 
 @section('content')
 @php
-    // H4434: client_tz — даты обёрнуты в <time data-msk-timestamp>, JS ниже
+    // H4434: client_tz — даты обернуты в <time data-msk-timestamp>, JS ниже
     // конвертирует их в зону устройства гостя (MG 09-09-2026).
     $clientTz = ['client_tz' => true];
 @endphp
@@ -44,7 +44,7 @@
             .fs-body { color: #cbd5e1; line-height: 1.7; }
             .fs-body strong { color: #fff; }
 
-            /* H4387 + H4647: статус + иконка-кнопка 34×34 справа сверху (тёмная тема). */
+            /* H4387 + H4647: статус + иконка-кнопка 34×34 справа сверху (темная тема). */
             .fs-top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 0 0 .75rem; }
             .fs-status { color: #94a3b8; font-size: .925rem; margin: 0; }
             .fs-toggle {
@@ -102,7 +102,7 @@
             .sch-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.25rem; }
         </style>
 
-        {{-- H4647: сводка — количество курсов, кто ведёт, якорное оглавление --}}
+        {{-- H4647: сводка — количество курсов, кто ведет, якорное оглавление --}}
         <nav class="p-5 mb-8 rounded-2xl bg-[#111622] border border-[#1F2636]" aria-label="Оглавление расписания">
             <p class="sch-index-line">
                 Курсов: {{ $courses->count() }}@if($teachers->isNotEmpty()) · Ведут:

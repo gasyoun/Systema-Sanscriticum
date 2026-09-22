@@ -31,7 +31,7 @@
 </head>
 <body>
     <h1>{{ $courseTitle !== '' ? '«'.$courseTitle.'»' : 'Интерес к курсу' }}</h1>
-    <p class="lead">Оставьте заявку — куратор напишет вам, когда соберётся группа или откроется набор.</p>
+    <p class="lead">Оставьте заявку — куратор напишет вам, когда соберется группа или откроется набор.</p>
 
     @if (session('course_interest_status'))
         <div class="flash-ok">{{ session('course_interest_status') }}</div>

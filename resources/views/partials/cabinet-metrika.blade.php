@@ -2,16 +2,16 @@
   Кабинетная Яндекс.Метрика (рулинг MG 18-09-2026, план
   docs/METRIKA_GOALS_SHOP_CABINET_2026-09-18.md §Implementation 1).
 
-  ТОТ ЖЕ счётчик, что и в магазине (106964341): воронка course_page_view →
-  begin_checkout → payment_success → кабинетные цели живёт в одном отчёте.
+  ТОТ ЖЕ счетчик, что и в магазине (106964341): воронка course_page_view →
+  begin_checkout → payment_success → кабинетные цели живет в одном отчете.
 
   Железное условие рулинга: внутри залогиненного кабинета НЕТ ни webvisor,
   ни clickmap — ни одной записи сессий залогиненных (152-ФЗ). First-party
-  truth остаётся в activity_events (H2378), Метрика — браузерный прокси
+  truth остается в activity_events (H2378), Метрика — браузерный прокси
   для воронки Директа. Никакого PII: только имена целей, без userParams
   и setUserID.
 
-  Мост серверных событий: страница несёт элементы data-metrika-goal
+  Мост серверных событий: страница несет элементы data-metrika-goal
   (условные маркеры рендерит сам сервер), лоадер ниже стреляет reachGoal
   по каждому. Клиентские события кабинета дублирует в reachGoal
   student/partials/telemetry.blade.php (карта METRIKA_BRIDGE).

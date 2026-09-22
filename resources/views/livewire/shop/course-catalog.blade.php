@@ -265,7 +265,7 @@
                         <i class="fas fa-play-circle text-indigo-400"></i>
                     </div>
                     <span class="text-base font-bold text-white group-hover:text-indigo-300 transition-colors mb-1">Библиотека записей</span>
-                    <span class="text-sm text-slate-400 leading-snug">Смотрите в своём темпе — доступ к материалам бессрочный.</span>
+                    <span class="text-sm text-slate-400 leading-snug">Смотрите в своем темпе — доступ к материалам бессрочный.</span>
                 </a>
 
                 {{-- Топ-категория (если есть) или fallback «Все курсы» --}}
@@ -307,7 +307,7 @@
     {{-- РЕЗУЛЬТАТЫ (сгруппированы по секциям)          --}}
     {{-- ============================================ --}}
     <div>
-        {{-- Индикатор перерасчёта фильтров --}}
+        {{-- Индикатор перерасчета фильтров --}}
         <div wire:loading wire:target="search,toggleCategory,resetCategories,teacherId,format,level,resetFilters"
              class="flex items-center gap-2 text-xs text-slate-400 mb-6">
             <i class="fas fa-spinner fa-spin text-brand"></i>
@@ -326,7 +326,7 @@
                 ];
                 $sectionHints = [
                     'live' => 'Живые потоки — можно присоединиться к идущему курсу.',
-                    'recorded' => 'Открытая библиотека: смотрите в своём темпе, доступ бессрочный.',
+                    'recorded' => 'Открытая библиотека: смотрите в своем темпе, доступ бессрочный.',
                     'other' => null,
                 ];
                 // Группируем всю выдачу; порядок секций фиксирован

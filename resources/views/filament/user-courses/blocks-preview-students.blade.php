@@ -9,13 +9,13 @@
         <p class="text-gray-500 dark:text-gray-400">У выделенных студентов нет курсов с примечаниями — разбирать нечего.</p>
     @else
         <p class="text-gray-500 dark:text-gray-400">
-            Распознаём блоки входа/выхода из примечаний по всем курсам выделенных студентов. Проставим
+            Распознаем блоки входа/выхода из примечаний по всем курсам выделенных студентов. Проставим
             <span class="font-semibold text-gray-700 dark:text-gray-200">только в пустые</span>
             колонки — заполненные вручную не трогаем.
             @if ($willSet)
                 Будет изменено записей: <span class="font-semibold text-success-600 dark:text-success-400">{{ $willSet }}</span>.
             @else
-                <span class="text-warning-600 dark:text-warning-400">Проставлять нечего</span> — ничего не распознано или всё уже заполнено.
+                <span class="text-warning-600 dark:text-warning-400">Проставлять нечего</span> — ничего не распознано или все уже заполнено.
             @endif
         </p>
 

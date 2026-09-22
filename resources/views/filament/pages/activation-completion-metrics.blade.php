@@ -19,8 +19,8 @@
             <p class="mt-1 text-amber-900/80 dark:text-amber-100/80" data-testid="telemetry-hint">{{ $a['telemetry_hint'] }}</p>
         @endif
         <p class="mt-2 text-xs text-amber-900/70 dark:text-amber-100/70">
-            Пороги живут в <code>{{ $s['config_source'] }}</code>, не в этой вёрстке.
-            Знаменатель меньше {{ $s['min_denominator'] }} помечен как ненадёжный: «1 из 2» — это не 50 %, это шум.
+            Пороги живут в <code>{{ $s['config_source'] }}</code>, не в этой верстке.
+            Знаменатель меньше {{ $s['min_denominator'] }} помечен как ненадежный: «1 из 2» — это не 50 %, это шум.
             Снимок на {{ $s['as_of'] }}; страница считает из живой БД и ничего не пишет.
         </p>
     </div>

@@ -10,7 +10,7 @@
 @section('meta_description', $headword.' ('.($primary->cyrillic ?: $primary->iast).'): '.$metaDesc)
 @section('og_title', $headword.' — санскритско-русский словарь')
 @section('canonical', $canonical)
-{{-- Wave 0: всё noindex,follow. Как только index_enabled и слово проходит curated-гейт — index. --}}
+{{-- Wave 0: все noindex,follow. Как только index_enabled и слово проходит curated-гейт — index. --}}
 @section('robots', $indexable ? 'index, follow' : 'noindex, follow')
 
 @push('head')

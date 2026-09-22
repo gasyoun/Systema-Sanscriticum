@@ -32,8 +32,8 @@
                         Вы уже проходили Кочергину / Зализняка?
                     </label>
                     <select name="prior_exposure" required class="w-full rounded-lg border-gray-300">
-                        <option value="none">Ещё на Кочергиной или раньше</option>
-                        <option value="kochergina">Кочергина пройдена, Зализняка ещё нет</option>
+                        <option value="none">Еще на Кочергиной или раньше</option>
+                        <option value="kochergina">Кочергина пройдена, Зализняка еще нет</option>
                         <option value="beyond">Уже знаком(а) с Зализняком</option>
                     </select>
                 </div>

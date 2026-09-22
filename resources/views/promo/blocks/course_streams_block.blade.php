@@ -1,5 +1,5 @@
 @php
-    // Берём только корректно настроенные потоки (с привязанным тарифом),
+    // Берем только корректно настроенные потоки (с привязанным тарифом),
     // чтобы битая конфигурация не уронила route().
     $streams = collect($data['streams'] ?? [])->filter(fn ($s) => ! empty($s['tariff_id']))->values();
 @endphp
@@ -7,7 +7,7 @@
 @if($streams->isNotEmpty())
 <section class="py-16 lg:py-24 bg-[#F9FAFB] relative font-nunito overflow-hidden" id="streams">
 
-    {{-- Лёгкий фоновый декор --}}
+    {{-- Легкий фоновый декор --}}
     <div class="absolute top-1/4 right-0 w-96 h-96 bg-orange-100/50 rounded-full blur-[100px] translate-x-1/2 pointer-events-none z-0"></div>
 
     <div class="container mx-auto px-4 relative z-10">

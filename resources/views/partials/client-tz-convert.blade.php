@@ -1,7 +1,7 @@
 {{-- H4434: клиентская конверсия московского времени в зону устройства гостя.
      Работает на /raspisanie, странице курса и embed-виджете (iframe-safe, без cookie).
      Источник: <time data-msk-timestamp="unix">…</time> из FullSchedulePost::formatDateWithTimestamp().
-     Guest cookie-фолбэк не нужен: Intl сам даёт зону устройства (MG ruling 09-09-2026). --}}
+     Guest cookie-фолбэк не нужен: Intl сам дает зону устройства (MG ruling 09-09-2026). --}}
 <script>
 (function () {
     'use strict';

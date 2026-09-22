@@ -1,6 +1,6 @@
 @if(empty($items))
     {{-- H2869: сообщение стоит прямо на кремовом фоне кабинета — gray-600. --}}
-    <p class="text-sm text-gray-600">Каталог пуст — релиз ещё не импортирован.</p>
+    <p class="text-sm text-gray-600">Каталог пуст — релиз еще не импортирован.</p>
 @else
     <ul class="space-y-3 overflow-x-hidden">
         @foreach($items as $item)

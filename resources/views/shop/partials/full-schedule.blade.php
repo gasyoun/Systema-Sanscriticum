@@ -11,7 +11,7 @@
         .full-schedule-block .fs-body { color: #cbd5e1; line-height: 1.7; }
         .full-schedule-block .fs-body strong { color: #fff; }
 
-        /* H4387 + H4647: статус + иконка-кнопка 34×34 справа сверху (тёмная тема). */
+        /* H4387 + H4647: статус + иконка-кнопка 34×34 справа сверху (темная тема). */
         .full-schedule-block .fs-top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 0 0 .75rem; }
         .full-schedule-block .fs-status { color: #94a3b8; font-size: .925rem; margin: 0; }
         .full-schedule-block .fs-toggle {

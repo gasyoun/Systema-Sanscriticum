@@ -6,7 +6,7 @@
             <h2 class="text-sm font-extrabold text-gray-900 uppercase tracking-wider">
                 <i class="fas fa-hand-raised mr-2 text-brand"></i>Список ожидания
             </h2>
-            <p class="text-xs text-gray-400">Голосов наберётся минимум — откроется оплата; оплаты к сроку — группа стартует</p>
+            <p class="text-xs text-gray-400">Голосов наберется минимум — откроется оплата; оплаты к сроку — группа стартует</p>
         </div>
 
         <div class="grid gap-3 md:grid-cols-2">
@@ -46,15 +46,15 @@
 
                         @if ($already)
                             <span class="text-xs font-bold text-green-600">
-                                <i class="fas fa-check mr-1"></i>Голос учтён
+                                <i class="fas fa-check mr-1"></i>Голос учтен
                                 @if ($myPref)
                                     · {{ \App\Models\WaitlistVote::SLOT_PREFERENCES[$myPref] ?? $myPref }}
                                 @endif
                             </span>
                         @elseif ($item->status === \App\Models\CourseWaitlistItem::STATUS_PAYMENT_OPEN)
-                            <span class="text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded-lg">Оплата открыта — ждём администратора</span>
+                            <span class="text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded-lg">Оплата открыта — ждем администратора</span>
                         @else
-                            {{-- H4206: пожелание времени — куратор подберёт слот по голосам. --}}
+                            {{-- H4206: пожелание времени — куратор подберет слот по голосам. --}}
                             <div class="flex items-center gap-2">
                                 <select data-waitlist-pref="{{ $item->slug }}"
                                         title="Когда вам удобно?"
@@ -100,7 +100,7 @@
                         if (data.ok) {
                             const count = row?.querySelector('[data-waitlist-count]');
                             if (count) count.textContent = data.votes;
-                            el.outerHTML = '<span class="text-xs font-bold text-green-600"><i class="fas fa-check mr-1"></i>Голос учтён</span>';
+                            el.outerHTML = '<span class="text-xs font-bold text-green-600"><i class="fas fa-check mr-1"></i>Голос учтен</span>';
                         } else {
                             el.textContent = 'Не вышло';
                         }
