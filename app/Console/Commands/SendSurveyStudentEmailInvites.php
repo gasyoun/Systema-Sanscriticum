@@ -8,6 +8,7 @@ use App\Mail\SurveyStudentInviteMail;
 use App\Models\Payment;
 use App\Models\SurveyInvitation;
 use App\Models\User;
+use App\Services\Survey\SurveyFunnelRecorder;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
@@ -144,6 +145,11 @@ class SendSurveyStudentEmailInvites extends Command
                 'error' => $error,
                 'sent_at' => $status === SurveyInvitation::STATUS_SENT ? now() : null,
             ])->save();
+
+            // H5098: событие воронки «sent» — приглашение реально ушло.
+            if ($status === SurveyInvitation::STATUS_SENT) {
+                app(SurveyFunnelRecorder::class)->invitationSent($invitation);
+            }
 
             match ($status) {
                 SurveyInvitation::STATUS_SENT => $sent++,

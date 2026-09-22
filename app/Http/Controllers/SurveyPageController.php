@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\SurveyEvent;
+use App\Models\SurveyInvitation;
 use App\Models\SurveyResponse;
 use App\Models\User;
 use App\Services\Prana\PranaService;
 use App\Services\Prana\PranaSettings;
+use App\Services\Survey\SurveyFunnelRecorder;
 use App\Support\FormulaGuard;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\View\View;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -23,19 +27,55 @@ use Symfony\Component\HttpFoundation\Response;
  * страницы самогейтятся флагом SURVEYS_ENABLED. POST троттлится и защищён
  * ханипотом; награда «прана 500 ₽» начисляется сразу при совпадении контакта
  * с учёткой, иначе строка ждёт куратора.
+ *
+ * H5098: воронка пишется в survey_events (opened/started/page/completed),
+ * session_key — анонимная куки survey_funnel (UUID, без ПДн); куратор
+ * смотрит только агрегаты (funnel()), строки — сырьё для диагностики.
  */
 class SurveyPageController extends Controller
 {
-    public function show(Request $request, string $slug): View
+    public const SESSION_COOKIE = 'survey_funnel';
+
+    public function show(Request $request, string $slug): Response
     {
         $definition = $this->definition($slug);
 
-        return view('survey.form', [
+        $sessionKey = $this->sessionKey($request);
+        if ($sessionKey === null) {
+            $sessionKey = (string) Str::uuid();
+        }
+        app(SurveyFunnelRecorder::class)->opened($slug, $sessionKey, auth()->id());
+
+        return response()->view('survey.form', [
             'slug' => $slug,
             'definition' => $definition,
             'done' => $request->boolean('done'),
             'auth_email' => auth()->user()?->email,
-        ]);
+        ])->withCookie(Cookie::create(self::SESSION_COOKIE, $sessionKey, 60 * 24 * 365, '/', null, null, true, false, 'lax'));
+    }
+
+    /** Лёгкий приёмник телеметрии формы: started / page. Без ПДн, 204. */
+    public function event(Request $request, string $slug): Response
+    {
+        $this->definition($slug);
+
+        $validated = Validator::make($request->all(), [
+            'event' => ['required', 'in:'.SurveyEvent::STARTED.','.SurveyEvent::PAGE],
+            'page' => ['nullable', 'integer', 'min:1', 'max:30'],
+        ])->validate();
+
+        $sessionKey = $this->sessionKey($request) ?? (string) Str::uuid();
+        $recorder = app(SurveyFunnelRecorder::class);
+
+        $userId = auth()->id();
+        if ($validated['event'] === SurveyEvent::STARTED) {
+            $recorder->started($slug, $sessionKey, $userId);
+        } else {
+            $recorder->page($slug, $sessionKey, (int) ($validated['page'] ?? 1));
+        }
+
+        return response()->noContent()
+            ->withCookie(Cookie::create(self::SESSION_COOKIE, $sessionKey, 60 * 24 * 365, '/', null, null, true, false, 'lax'));
     }
 
     public function store(Request $request, string $slug): RedirectResponse
@@ -86,7 +126,81 @@ class SurveyPageController extends Controller
 
         $this->tryAutoReward($response);
 
+        app(SurveyFunnelRecorder::class)->completed(
+            $slug,
+            $response,
+            $this->sessionKey($request),
+        );
+
         return redirect()->route('survey.show', ['slug' => $slug, 'done' => 1]);
+    }
+
+    /**
+     * Агрегат воронки для куратора (админ/менеджер). Только количества —
+     * ни контактов, ни текстов ответов, ни user_id в выдаче (H5098).
+     */
+    public function funnel(string $slug): Response
+    {
+        abort_unless(RoleGate::any(Roles::ADMIN, Roles::MANAGER), 403);
+
+        $definition = config("surveys.definitions.$slug");
+        abort_if(! is_array($definition), 404);
+
+        $events = SurveyEvent::query()->where('survey_slug', $slug);
+
+        $invitationCounts = SurveyInvitation::query()
+            ->where('survey_slug', $slug)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        // Уникальные сессии на шаг воронки (sent — на приглашение, completed — на ответ).
+        $uniqueByEvent = (clone $events)
+            ->whereIn('event', [SurveyEvent::OPENED, SurveyEvent::STARTED])
+            ->selectRaw('event, count(distinct session_key) as total')
+            ->groupBy('event')
+            ->pluck('total', 'event');
+        $counts = [
+            'sent' => (clone $events)->where('event', SurveyEvent::SENT)->count(),
+            'opened' => (int) ($uniqueByEvent[SurveyEvent::OPENED] ?? 0),
+            'started' => (int) ($uniqueByEvent[SurveyEvent::STARTED] ?? 0),
+            'completed' => (clone $events)->where('event', SurveyEvent::COMPLETED)->count(),
+        ];
+
+        // Доходили ли до страниц многостраничной анкеты: уникальные сессии на страницу.
+        $pageCounts = (clone $events)
+            ->where('event', SurveyEvent::PAGE)
+            ->selectRaw('page_index, count(distinct session_key) as total')
+            ->groupBy('page_index')
+            ->orderBy('page_index')
+            ->pluck('total', 'page_index');
+
+        // Дневная динамика за 14 дней: сколько событий каждого типа.
+        $daily = (clone $events)
+            ->where('created_at', '>=', now()->subDays(14)->startOfDay())
+            ->selectRaw('date(created_at) as day, event, count(distinct coalesce(session_key, cast(survey_response_id as text), cast(survey_invitation_id as text), id)) as total')
+            ->groupBy('day', 'event')
+            ->orderBy('day')
+            ->get()
+            ->groupBy('day')
+            ->map(fn ($group) => $group->pluck('total', 'event'));
+
+        return response()->view('survey.funnel', [
+            'slug' => $slug,
+            'definition' => $definition,
+            'invitationCounts' => $invitationCounts,
+            'counts' => $counts,
+            'pageCounts' => $pageCounts,
+            'daily' => $daily,
+        ]);
+    }
+
+    /** Анонимный ключ сессии воронки из куки (без ПДн) или null. */
+    private function sessionKey(Request $request): ?string
+    {
+        $key = (string) $request->cookie(self::SESSION_COOKIE, '');
+
+        return preg_match('/^[a-f0-9\-]{16,64}$/', $key) ? $key : null;
     }
 
     /** CSV-выгрузка для куратора: колонки — вопросы из конфига, BOM для Excel. */
