@@ -2,10 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\CabinetInviteMail;
+use App\Models\MagicLinkToken;
 use App\Models\User;
 use App\Services\Messaging\SmsRuChannel;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Повторное приглашение в личный кабинет для студентов с выданным доступом,
@@ -20,19 +22,40 @@ use Illuminate\Support\Facades\Password;
  * → email (сброс пароля). Telegram/VK/SMS надежнее email, который чаще уходит
  * в спам — поэтому email на последнем месте.
  *
+ * H4966: ссылка — отдельный `MagicLinkToken` назначения {@see self::INVITE_PURPOSE}
+ * с TTL {@see self::INVITE_TTL_MINUTES} (7 дней), а НЕ сброс пароля (брокер живёт
+ * 60 минут — 84.4% из 269 приглашённых email-веткой так и не вошли, письмо
+ * прочли позже). Один и тот же одноразовый линк для всех каналов.
+ *
  * REPORT-ONLY по умолчанию. Рассылка — только с --send, батчами (--limit),
  * чтобы не словить спам-флаги и не блокировать очередь.
  *
+ * H4966: `cabinet_invite_sent_at` больше не постоянное исключение — без
+ * --resend всё равно попадают те, кому слали больше {@see self::AUTO_RESEND_AFTER_DAYS}
+ * дней назад и кто так и не зашёл (см. §4 SHIP в H4966).
+ *
  *   php artisan students:send-login-invites                 # сухой прогон (кого затронет)
  *   php artisan students:send-login-invites --send --limit=100
- *   php artisan students:send-login-invites --send --resend # повторно тем, кому уже слали
+ *   php artisan students:send-login-invites --send --resend # немедленно повторно всем, кому уже слали
  */
 class SendCabinetInvites extends Command
 {
+    /** Назначение magic-токена ссылки-приглашения — отделяет от newsletter/admin_unblock/tg_login. */
+    public const INVITE_PURPOSE = 'cabinet_invite';
+
+    /** TTL ссылки-приглашения: дни, не 60-минутный брокер сброса пароля. */
+    public const INVITE_TTL_MINUTES = 60 * 24 * 7; // 7 дней
+
+    /**
+     * H4966 SHIP §4: без --resend старая отправка перестаёт быть постоянным
+     * исключением — после этого окна не зашедший снова попадает в батч.
+     */
+    public const AUTO_RESEND_AFTER_DAYS = 7;
+
     protected $signature = 'students:send-login-invites
         {--send : Реально отправить (без флага — сухой прогон)}
         {--limit=200 : Максимум приглашений за один прогон (батч)}
-        {--resend : Включить тех, кому приглашение уже отправляли}
+        {--resend : Включить немедленно тех, кому приглашение уже отправляли (игнорирует окно auto-resend)}
         {--include-no-stamp : Включить также никогда не входивших без штампа «[Доступ отправлен» (доступ существовал, но не был выслан)}';
 
     protected $description = 'Пригласить в кабинет студентов с выданным доступом, которые никогда не логинились';
@@ -60,7 +83,12 @@ class SendCabinetInvites extends Command
             ->where('email', 'not like', '%@no-email.com');      // реальный адрес
 
         if (! $resend) {
-            $query->whereNull('cabinet_invite_sent_at');        // еще не приглашали
+            // H4966: НЕ постоянное исключение — переприглашаем после окна
+            // AUTO_RESEND_AFTER_DAYS тому, кто так и не зашёл.
+            $query->where(function ($q) {
+                $q->whereNull('cabinet_invite_sent_at')
+                    ->orWhere('cabinet_invite_sent_at', '<=', now()->subDays(self::AUTO_RESEND_AFTER_DAYS));
+            });
         }
 
         $total = (clone $query)->count();
@@ -92,7 +120,7 @@ class SendCabinetInvites extends Command
                     'telegram' => $this->sendViaTelegram($user),
                     'vk' => $user->sendVkMessage($this->messageText($user)),
                     'sms' => $user->sendSmsMessage($this->smsText($user)),
-                    default => Password::sendResetLink(['email' => $user->email]) === Password::RESET_LINK_SENT,
+                    default => $this->sendViaEmail($user),
                 };
 
                 if (! $ok) {
@@ -134,15 +162,27 @@ class SendCabinetInvites extends Command
     }
 
     /**
-     * Ссылка для входа: генерим токен сброса и шлем дружелюбное сообщение со
-     * ссылкой — надежнее письма (которое уходит в спам).
+     * H4966: было Password::sendResetLink() — тот же 60-минутный брокер, что
+     * убивал ссылку раньше, чем адрес доходил до почты. Теперь тот же
+     * многодневный invite-линк, что у остальных каналов, через CabinetInviteMail.
+     */
+    private function sendViaEmail(User $user): bool
+    {
+        Mail::to($user->email)->queue(new CabinetInviteMail($user, $this->messageText($user)));
+
+        return true;
+    }
+
+    /**
+     * Ссылка для входа: одноразовый multi-day invite-токен, шлём дружелюбное
+     * сообщение со ссылкой — надёжнее письма (которое уходит в спам).
      */
     private function messageText(User $user): string
     {
         $url = $this->resetUrl($user);
 
-        return "🙏 Вам открыт доступ в личный кабинет Общества ревнителей санскрита, но вы еще не заходили.\n\n"
-            ."В кабинете — все ваши курсы, записи занятий и материалы. Войдите по ссылке (задайте пароль):\n{$url}\n\n"
+        return "🙏 Вам открыт доступ в личный кабинет Общества ревнителей санскрита, но вы ещё не заходили.\n\n"
+            ."В кабинете — все ваши курсы, записи занятий и материалы. Войдите по ссылке:\n{$url}\n\n"
             .'Как пользоваться кабинетом — руководство: '.rtrim((string) config('app.url'), '/').'/help/kabinet'."\n\n"
             .'Ссылка одноразовая. Если возникнут вопросы — просто ответьте на это сообщение.';
     }
@@ -152,13 +192,13 @@ class SendCabinetInvites extends Command
     {
         $url = $this->resetUrl($user);
 
-        return "Общество ревнителей санскрита: вам открыт доступ в личный кабинет. Войдите по ссылке (задайте пароль): {$url}";
+        return "Общество ревнителей санскрита: вам открыт доступ в личный кабинет. Войдите по ссылке: {$url}";
     }
 
     private function resetUrl(User $user): string
     {
-        $token = Password::broker()->createToken($user);
+        $token = MagicLinkToken::issueFor($user, self::INVITE_PURPOSE, self::INVITE_TTL_MINUTES);
 
-        return route('password.reset', $token).'?email='.urlencode($user->email);
+        return route('cabinet.invite', $token);
     }
 }

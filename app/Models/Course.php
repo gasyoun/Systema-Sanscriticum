@@ -600,6 +600,25 @@ class Course extends Model
         return $this->belongsTo(Schedule::class, 'trial_schedule_id');
     }
 
+    /**
+     * H4966: видимый курс с платным пробным, чей закреплённый trial_schedule_id
+     * уже в прошлом (или указывает на удалённую строку) — виджет и NextIntroSession
+     * молча деградируют в тишину, пока Filament-поле «Пробное занятие» не
+     * переуказано вручную (out of scope для агента — только человек в админке).
+     * Используется монитором свежести и публичным фидом, чтобы отличить
+     * «протухший пин» от «пробное отключено».
+     */
+    public function hasStaleTrialPin(): bool
+    {
+        if (! $this->is_visible || (float) ($this->trial_price ?? 0) <= 0.0 || ! $this->trial_schedule_id) {
+            return false;
+        }
+
+        $schedule = $this->relationLoaded('trialSchedule') ? $this->trialSchedule : $this->trialSchedule()->first();
+
+        return $schedule === null || $schedule->start === null || $schedule->start->isPast();
+    }
+
     protected static function booted(): void
     {
         // После сохранения курса синхронизируем урок-заготовку под пробное занятие.

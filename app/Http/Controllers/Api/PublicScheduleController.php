@@ -65,7 +65,7 @@ class PublicScheduleController extends Controller
                         ->orWhereHas('teachers', fn ($t) => $t->where('name', $teacher));
                 });
             })
-            ->with(['categories', 'teacher'])
+            ->with(['categories', 'teacher', 'trialSchedule'])
             ->get();
 
         $schedules = collect();
