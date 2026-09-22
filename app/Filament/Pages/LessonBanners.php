@@ -141,6 +141,12 @@ class LessonBanners extends Page implements HasTable
                         ->storeFiles(false)
                         ->maxSize(256)
                         ->required(),
+                    Forms\Components\FileUpload::make('fonts')
+                        ->label('Файлы шрифтов (TTF/OTF)')
+                        ->multiple()
+                        ->storeFiles(false)
+                        ->maxSize((int) config('lesson_banners.max_font_kb'))
+                        ->helperText('Имена файлов — как в template.json (скрипт их печатает). Шрифты хранятся на сервере вне репозитория; уже загруженные повторно не нужны.'),
                     Forms\Components\FileUpload::make('psd')
                         ->label('PSD-исходник (необязательно, для учёта)')
                         ->storeFiles(false)
@@ -156,6 +162,9 @@ class LessonBanners extends Page implements HasTable
                     }
 
                     try {
+                        $store->storeFonts(array_values(array_filter(
+                            array_map(fn ($f) => self::file($f), (array) ($data['fonts'] ?? [])),
+                        )));
                         $template = $store->store(
                             (int) $data['course_id'],
                             filled($data['group_id'] ?? null) ? (int) $data['group_id'] : null,
@@ -169,7 +178,12 @@ class LessonBanners extends Page implements HasTable
                         return;
                     }
 
-                    Notification::make()->title('Шаблон v'.$template->version.' сохранён')->success()->send();
+                    $missing = LessonBannerTemplateStore::missingFonts($template);
+                    $note = Notification::make()->title('Шаблон v'.$template->version.' сохранён')->success();
+                    if ($missing !== []) {
+                        $note->warning()->body('Нет шрифтов: '.implode(', ', $missing).' — поля нарисуются запасным шрифтом, пока их не загрузят.');
+                    }
+                    $note->send();
                     $this->preview($template->id);
                 }),
 

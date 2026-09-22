@@ -83,6 +83,33 @@ class LessonBannerPageTest extends TestCase
         app(LessonBannerTemplateStore::class)->store($this->course()->id, null, $this->png(), (string) json_encode($spec));
     }
 
+    public function test_fonts_are_stored_outside_git_and_close_the_missing_list(): void
+    {
+        $dir = storage_path('framework/testing/banner-fonts-'.uniqid());
+        config(['lesson_banners.fonts_dir' => $dir]);
+        $store = app(LessonBannerTemplateStore::class);
+        $template = $store->store($this->course()->id, null, $this->png(), $this->spec());
+
+        $this->assertSame(['Missing.ttf'], LessonBannerTemplateStore::missingFonts($template));
+
+        $ttf = new UploadedFile(base_path('vendor/dompdf/dompdf/lib/fonts/DejaVuSans.ttf'), 'Missing.ttf', 'font/ttf', null, true);
+        $this->assertSame(['Missing.ttf'], $store->storeFonts([$ttf]));
+
+        $this->assertFileExists($dir.DIRECTORY_SEPARATOR.'Missing.ttf');
+        $this->assertSame([], LessonBannerTemplateStore::missingFonts($template));
+
+        \Illuminate\Support\Facades\File::deleteDirectory($dir);
+    }
+
+    public function test_non_font_file_with_ttf_name_is_rejected(): void
+    {
+        config(['lesson_banners.fonts_dir' => storage_path('framework/testing/banner-fonts-'.uniqid())]);
+        $fake = UploadedFile::fake()->createWithContent('Evil.ttf', '<?php echo 1;');
+
+        $this->expectException(InvalidArgumentException::class);
+        app(LessonBannerTemplateStore::class)->storeFonts([$fake]);
+    }
+
     public function test_page_lists_template_and_renders_preview(): void
     {
         $course = $this->course();

@@ -4,7 +4,7 @@
 Разбор делается ОДИН раз на курс, на машине сотрудника; сервер PSD не читает.
 Результат загружается в /admin/lesson-banners → «Новый шаблон».
 
-    pip install psd-tools fonttools
+    pip install "psd-tools[composite]" fonttools
 
     # 1. Посмотреть текстовые слои и их тексты:
     python scripts/banner_template_from_psd.py plashka.psd --list
@@ -12,7 +12,7 @@
     # 2. Собрать шаблон:
     python scripts/banner_template_from_psd.py plashka.psd \
         --date-layer "Дата" --number-layer "Номер" \
-        --fonts-dir resources/fonts/banners --out out/grammar
+        --fonts-dir C:/Windows/Fonts --out out/grammar
 
 Что делает:
   * фон = композит PSD со СКРЫТЫМИ слоями даты и номера;
@@ -36,7 +36,7 @@ from pathlib import Path
 try:
     from psd_tools import PSDImage
 except ImportError:  # pragma: no cover - подсказка оператору
-    sys.exit("Нужен psd-tools: pip install psd-tools fonttools")
+    sys.exit('Нужен psd-tools: pip install "psd-tools[composite]" fonttools')
 
 JUSTIFICATION = {0: "left", 1: "right", 2: "center"}
 
@@ -149,7 +149,7 @@ def field_spec(layer, canvas_w: int, canvas_h: int, grow: float, fonts: dict[str
     ps_name = font_postscript_name(layer, style)
     font_file = fonts.get(ps_name, f"{ps_name}.ttf")
     if ps_name not in fonts:
-        print(f"! Шрифт {ps_name!r}: файла в --fonts-dir не нашёл, в spec пишу {font_file!r} — положите файл с этим именем.", file=sys.stderr)
+        print(f"! Шрифт {ps_name!r}: файла в --fonts-dir не нашёл, в spec пишу {font_file!r} — загрузите файл шрифта вместе с шаблоном (имя файла = это имя).", file=sys.stderr)
 
     tracking_em = float(style.get("Tracking", 0)) / 1000.0  # PS: тысячные доли em
     size_px = float(style.get("FontSize", 32)) * font_scale(layer)
@@ -189,7 +189,7 @@ def main() -> int:
     parser.add_argument("--date-format", default="D MMMM", help="isoFormat Carbon (ru), напр. «D MMMM», «DD.MM», «D MMMM, dddd»")
     parser.add_argument("--number-format", help="с {N}; по умолчанию выводится из текста слоя")
     parser.add_argument("--overview-text", default="Обзорное занятие")
-    parser.add_argument("--fonts-dir", type=Path, default=Path("resources/fonts/banners"))
+    parser.add_argument("--fonts-dir", type=Path, default=Path("C:/Windows/Fonts"), help="где искать файлы шрифтов PSD (по умолчанию шрифты Windows)")
     parser.add_argument("--grow", type=float, default=1.6, help="во сколько раз расширить рамку поля (по умолчанию 1.6)")
     parser.add_argument("--out", type=Path, default=Path("banner-template"))
     args = parser.parse_args()
@@ -241,7 +241,7 @@ def main() -> int:
     print(f"поля:  {spec_path}")
     for name, field in (("дата", date), ("номер", number)):
         print(f"  {name:6} {field['_sample']!r:24} -> {field['format']!r:18} шрифт {field['font']} {field['size_px']}px {field['color']} {field['align']}")
-    print("Дальше: /admin/lesson-banners → «Новый шаблон» → фон + template.json → «Превью».")
+    print("Дальше: /admin/lesson-banners → «Новый шаблон» → фон + template.json + файлы шрифтов → «Превью».")
     return 0
 
 

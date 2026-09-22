@@ -31,8 +31,12 @@
                                 <td class="py-2 pe-4">{{ $template->group?->name ?? 'весь курс' }}</td>
                                 <td class="py-2 pe-4">v{{ $template->version }}</td>
                                 <td class="py-2 pe-4">{{ $template->width }}×{{ $template->height }}</td>
+                                @php($missingFonts = \App\Services\Banners\LessonBannerTemplateStore::missingFonts($template))
                                 <td class="py-2 pe-4">
                                     {{ collect(\App\Models\LessonBannerTemplate::FIELDS)->map(fn ($f) => $template->field($f)['font'] ?? '—')->unique()->implode(', ') }}
+                                    @if ($missingFonts)
+                                        <div class="text-xs text-danger-600 dark:text-danger-400">не загружены: {{ implode(', ', $missingFonts) }} — рисуется запасным</div>
+                                    @endif
                                 </td>
                                 <td class="py-2 text-end">
                                     <x-filament::button size="sm" color="gray" wire:click="preview({{ $template->id }})">

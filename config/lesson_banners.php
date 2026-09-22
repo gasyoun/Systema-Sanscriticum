@@ -37,10 +37,14 @@ return [
     // Качество JPEG (0–100).
     'jpeg_quality' => (int) env('LESSON_BANNERS_JPEG_QUALITY', 90),
 
-    // Каталог TTF-шрифтов, на которые spec шаблона ссылается по имени файла.
+    // Каталог шрифтов (TTF/OTF), на которые spec шаблона ссылается по имени
+    // файла. ВНЕ git: шрифты плашек коммерческие (Charter ITC, Fedra Sans), а
+    // репозиторий публичный. Загружаются через «Плашки занятий» → «Новый
+    // шаблон» и живут в storage/app, который деплой не трогает.
     // Шрифта нет → рисуем запасным (DejaVu Sans из dompdf, кириллица есть) и
     // пишем предупреждение: плашка без даты хуже плашки не тем шрифтом.
-    'fonts_dir' => resource_path('fonts/banners'),
+    'fonts_dir' => env('LESSON_BANNERS_FONTS_DIR', storage_path('app/lesson-banner-fonts')),
+    'max_font_kb' => (int) env('LESSON_BANNERS_MAX_FONT_KB', 10240),
     'fallback_font' => base_path('vendor/dompdf/dompdf/lib/fonts/DejaVuSans.ttf'),
 
     // Часовой пояс ТЕКСТА даты на плашке. Имя файла считается в UTC — так его

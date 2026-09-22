@@ -7,6 +7,7 @@ namespace App\Services\Banners;
 use App\Models\LessonBannerTemplate;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -76,6 +77,59 @@ final class LessonBannerTemplateStore
                 'is_active' => true,
             ]);
         });
+    }
+
+    /**
+     * Положить файлы шрифтов в lesson_banners.fonts_dir (вне git — шрифты
+     * коммерческие, репозиторий публичный). Имя файла сохраняется: на него
+     * ссылается spec. Принимаются только TTF/OTF по сигнатуре, не по
+     * расширению: FreeType на проде откроет что угодно с именем .ttf.
+     *
+     * @param  list<UploadedFile>  $files
+     * @return list<string> сохранённые имена
+     */
+    public function storeFonts(array $files): array
+    {
+        $dir = rtrim((string) config('lesson_banners.fonts_dir'), '/\\');
+        File::ensureDirectoryExists($dir);
+
+        $stored = [];
+        foreach ($files as $file) {
+            $name = basename((string) $file->getClientOriginalName());
+            if (! preg_match('/^[A-Za-z0-9._ -]+\.(ttf|otf)$/i', $name)) {
+                throw new InvalidArgumentException("Шрифт «{$name}»: нужно латинское имя файла .ttf/.otf — на него ссылается template.json.");
+            }
+
+            $magic = (string) file_get_contents($file->getRealPath(), false, null, 0, 4);
+            if (! in_array($magic, ["\x00\x01\x00\x00", 'OTTO', 'true'], true)) {
+                throw new InvalidArgumentException("Файл «{$name}» — не TTF/OTF.");
+            }
+
+            File::copy($file->getRealPath(), $dir.DIRECTORY_SEPARATOR.$name);
+            $stored[] = $name;
+        }
+
+        return $stored;
+    }
+
+    /**
+     * Шрифты spec, которых нет ни по абсолютному пути, ни в fonts_dir —
+     * такие поля нарисуются запасным шрифтом.
+     *
+     * @return list<string>
+     */
+    public static function missingFonts(LessonBannerTemplate $template): array
+    {
+        $dir = rtrim((string) config('lesson_banners.fonts_dir'), '/\\');
+        $missing = [];
+        foreach (LessonBannerTemplate::FIELDS as $name) {
+            $font = (string) ($template->field($name)['font'] ?? '');
+            if ($font !== '' && ! is_file($font) && ! is_file($dir.DIRECTORY_SEPARATOR.$font)) {
+                $missing[] = $font;
+            }
+        }
+
+        return array_values(array_unique($missing));
     }
 
     /**
