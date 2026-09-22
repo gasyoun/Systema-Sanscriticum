@@ -244,7 +244,7 @@ class VitrinaWaitlistPageTest extends TestCase
 
         $resp = $this->actingAs($user)->get(route('shop.waitlist'));
         $resp->assertOk();
-        $resp->assertSee('Голос учтён');
+        $resp->assertSee('Голос учтен');
         $resp->assertDontSee('data-waitlist-vote="zhdun-voted"');
         // 1 голос из 10 — счётчик скрыт.
         $resp->assertDontSee('Осталось доголосовать');

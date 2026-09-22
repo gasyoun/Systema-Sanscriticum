@@ -45,7 +45,7 @@
     @endif
 
     @if($topics->isEmpty())
-        <p class="text-sm text-gray-500">Темы ещё не импортированы. Куратор запускает <code>php artisan grammar-lab:sync</code>.</p>
+        <p class="text-sm text-gray-500">Темы еще не импортированы. Куратор запускает <code>php artisan grammar-lab:sync</code>.</p>
     @else
         <ul class="space-y-3">
             @foreach($topics as $topic)

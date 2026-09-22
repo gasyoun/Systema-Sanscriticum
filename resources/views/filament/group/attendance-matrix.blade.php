@@ -13,8 +13,8 @@
     };
 @endphp
 
-{{-- Тёмная тема: аддитивные правила, светлую тему не трогают (цвета по [style*=…]).
-     Липкая первая колонка на background:#fff иначе осталась бы белой в тёмной теме. --}}
+{{-- Темная тема: аддитивные правила, светлую тему не трогают (цвета по [style*=…]).
+     Липкая первая колонка на background:#fff иначе осталась бы белой в темной теме. --}}
 <style>
     .dark .att-matrix [style*="background: #fff"] { background: #16181d !important; }
     .dark .att-matrix [style*="border-bottom: 2px solid #e5e7eb"] { border-bottom-color: rgba(255,255,255,.15) !important; }

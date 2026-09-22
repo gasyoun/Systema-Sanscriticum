@@ -12,7 +12,7 @@
 @php
     $__dict = $primary->dictionary;
 
-    // H344 — при включённом обогащении корпусные Sa→Ru значения дополняют
+    // H344 — при включенном обогащении корпусные Sa→Ru значения дополняют
     // description; при выключенном ($enrichment === null) поведение как в Wave 0.
     $__enrichment = $enrichment ?? null;
     $__desc = trim(strip_tags((string) $primary->translation));

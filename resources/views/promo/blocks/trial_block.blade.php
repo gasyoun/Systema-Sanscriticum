@@ -122,7 +122,7 @@
                                 </label>
 
                                 {{-- Необязательная: согласие на рекламную рассылку (152-ФЗ). name=is_promo_agreed
-                                     читает LeadController::store; без неё лид сохраняется с is_promo_agreed=false. --}}
+                                     читает LeadController::store; без нее лид сохраняется с is_promo_agreed=false. --}}
                                 <label class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
                                     <div class="flex items-center h-5 mt-px shrink-0">
                                         <input type="checkbox" name="is_promo_agreed" x-model="agreedPromo" class="w-4 h-4 rounded border-gray-300 text-brand focus:ring-brand cursor-pointer">

@@ -31,7 +31,7 @@
     </div>
 
     <p class="text-gray-600 leading-relaxed mb-8">
-        <span class="font-bold text-gray-900">Каждое ДЗ сдаётся на странице своего урока</span>
+        <span class="font-bold text-gray-900">Каждое ДЗ сдается на странице своего урока</span>
         (урок 1 → ДЗ-1, урок 2 → ДЗ-2). Проверяет живой куратор; статусы видны в кабинете.
     </p>
 
@@ -45,9 +45,9 @@
 
     <h2 class="text-xl font-bold text-gray-900 mb-3">Когда есть форма</h2>
     <ul class="space-y-3 mb-8 text-gray-700 leading-relaxed">
-        <li><span class="font-bold text-emerald-700">Форма</span> — приём открыт: текст и/или файлы, затем «Отправить на проверку».</li>
-        <li><span class="font-bold text-amber-700">«Ещё не задано»</span> — условие скоро появится.</li>
-        <li><span class="font-bold text-gray-500">«ДЗ нет»</span> — приём к уроку ещё не открыт (не ошибка с вашей стороны).</li>
+        <li><span class="font-bold text-emerald-700">Форма</span> — прием открыт: текст и/или файлы, затем «Отправить на проверку».</li>
+        <li><span class="font-bold text-amber-700">«Еще не задано»</span> — условие скоро появится.</li>
+        <li><span class="font-bold text-gray-500">«ДЗ нет»</span> — прием к уроку еще не открыт (не ошибка с вашей стороны).</li>
     </ul>
 
     <h2 class="text-xl font-bold text-gray-900 mb-3">Файлы</h2>
@@ -65,7 +65,7 @@
             <tbody class="divide-y divide-gray-100">
                 <tr class="bg-gray-50/80">
                     <td class="px-4 py-3 font-bold text-gray-800 whitespace-nowrap">Черновик</td>
-                    <td class="px-4 py-3 text-gray-600">Сохранили, но ещё не отправили</td>
+                    <td class="px-4 py-3 text-gray-600">Сохранили, но еще не отправили</td>
                 </tr>
                 <tr>
                     <td class="px-4 py-3 font-bold text-blue-700 whitespace-nowrap">На проверке</td>
@@ -85,9 +85,9 @@
 
     <h2 class="text-xl font-bold text-gray-900 mb-3">Ошиблись файлом</h2>
     <ol class="list-decimal list-inside space-y-2 text-gray-700 leading-relaxed mb-4">
-        <li>Откройте <strong>тот урок</strong>, куда ушёл неверный файл</li>
+        <li>Откройте <strong>тот урок</strong>, куда ушел неверный файл</li>
         <li>Корзина рядом с файлом → удалить</li>
-        <li>В переписке останется отметка «Удалён файл …» (с датой)</li>
+        <li>В переписке останется отметка «Удален файл …» (с датой)</li>
         <li>Прикрепите правильный → снова «Отправить на проверку»</li>
     </ol>
     <p class="text-gray-500 text-sm leading-relaxed mb-8">

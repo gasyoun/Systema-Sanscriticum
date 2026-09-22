@@ -67,7 +67,7 @@ class PaymentReturnPagesTest extends TestCase
         $response->assertOk();
         $response->assertSee('Платеж принят');
         $response->assertSee('пару минут');
-        $response->assertSee('Если через 10 минут доступа всё еще нет');
+        $response->assertSee('Если через 10 минут доступа все еще нет');
     }
 
     public function test_success_renders_login_variant_for_guest(): void
@@ -76,7 +76,7 @@ class PaymentReturnPagesTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Войти в аккаунт');
-        $response->assertSee('Если через 10 минут доступа всё еще нет');
+        $response->assertSee('Если через 10 минут доступа все еще нет');
     }
 
     public function test_fail_renders_double_charge_reassurance_and_course_retry(): void

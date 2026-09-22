@@ -336,7 +336,7 @@ class DebtSelfServiceTest extends TestCase
             ->get(route('student.dashboard'))
             ->assertOk()
             ->assertSee('Оплатить')
-            ->assertSee('Погасить всё');
+            ->assertSee('Погасить все');
     }
 
     // ---- Phase 2: multi-block access via sibling rows ------------------

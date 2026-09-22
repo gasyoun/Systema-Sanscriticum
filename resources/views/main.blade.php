@@ -260,7 +260,7 @@
             <x-open-lessons-carousel :lessons="$openLessons ?? null" />
         </div>
 
-        {{-- Подписка на рассылку — GitHub changelog-стиль, тёмная тема витрины --}}
+        {{-- Подписка на рассылку — GitHub changelog-стиль, темная тема витрины --}}
         <div class="mt-16 flex justify-center">
             <x-newsletter-subscribe variant="dark" />
         </div>

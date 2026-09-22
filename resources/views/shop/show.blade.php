@@ -3,7 +3,7 @@
 
 @php
     // Ритм курса, выведенный из `schedules` (App\Support\CourseCadence).
-    // Ручной бейдж формата отвечает «идёт / в записи», но не «когда» и не
+    // Ручной бейдж формата отвечает «идет / в записи», но не «когда» и не
     // «сколько осталось» — эти три строки закрывают именно это.
     $cadenceSlot = $cadence?->slotLabel();
     $cadenceNext = $cadence?->nextLabel();
@@ -30,13 +30,13 @@ document.addEventListener('DOMContentLoaded', function () {
     <meta name="description" content="{{ $course->meta_description ?: \Illuminate\Support\Str::limit(trim(strip_tags($course->description)), 160) }}">
 
     {{-- H3807: канон программы — живой курс. Для записи прошедшего потока это
-         ЧУЖОЙ адрес: страница остаётся покупаемой, но в выдаче программу
+         ЧУЖОЙ адрес: страница остается покупаемой, но в выдаче программу
          представляет одна карточка, а не две конкурирующие. --}}
     <link rel="canonical" href="{{ $canonicalUrl ?? route('shop.course.show', $course->slug) }}">
 
     {{-- ═══════════════ SEO: Course + Offer (schema.org / JSON-LD) ═══════════════
-         Помогает Яндексу и Google показать курс с ценой в выдаче. Цены берём из
-         публичных (list) цен активных тарифов — без учёта персональных скидок. --}}
+         Помогает Яндексу и Google показать курс с ценой в выдаче. Цены берем из
+         публичных (list) цен активных тарифов — без учета персональных скидок. --}}
     @php
         $courseUrl = route('shop.course.show', $course->slug);
         $courseDescription = $course->meta_description
@@ -63,8 +63,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // hasCourseInstance → включает курс в «Course Info» Google (карусель с ценой + режимом).
         // Обязательные для CourseInstance: courseMode + (courseWorkload ИЛИ courseSchedule).
-        // courseWorkload берём из hours_count (ISO-8601 «PTnH»); если часов нет — instance
-        // не добавляем (базовый Course + offers остаётся валидным сам по себе).
+        // courseWorkload берем из hours_count (ISO-8601 «PTnH»); если часов нет — instance
+        // не добавляем (базовый Course + offers остается валидным сам по себе).
         $courseWorkload = $heroHours ? 'PT'.((int) $heroHours).'H' : null;
         $ciStart = $course->blocks->filter(fn ($b) => $b->starts_at)->min('starts_at');
         $ciEnd = $course->blocks->filter(fn ($b) => $b->ends_at)->max('ends_at');
@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </h1>
 
                     {{-- Когда именно «идет сейчас»: день, время, ближайшее занятие,
-                         сколько осталось. Всё выведено из `schedules` — бейдж
+                         сколько осталось. Все выведено из `schedules` — бейдж
                          формата ручной и об этом ничего не знает. --}}
                     @if($cadenceSlot || $cadenceNext || $cadenceProgress || $cadenceStreams)
                         <p class="-mt-4 mb-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-300"
@@ -573,14 +573,14 @@ document.addEventListener('DOMContentLoaded', function () {
             $hasCurrentBlock = !empty($currentBlockNumber);
             $defaultTab = $hasCurrentBlock ? 'blocks' : 'full';
 
-            // H266 (M1): «режим записи» — завершённый курс с активным тарифом-записью
-            // при включённом флаге. Меняет ТОЛЬКО текст CTA (доступ/цена/чекаут те же).
+            // H266 (M1): «режим записи» — завершенный курс с активным тарифом-записью
+            // при включенном флаге. Меняет ТОЛЬКО текст CTA (доступ/цена/чекаут те же).
             $sellsRecordings = $course->sellsRecordings();
 
             // H3100: покупателю, пришедшему в середине потока, надо сказать, что он
             // получит за уже прошедшие блоки. Раньше «Полный курс 22 000 ₽» и «БЛОК 1»
             // стояли рядом с «СЕЙЧАС ИДЕТ БЛОК 4» без единого слова про записи.
-            // Всё считаем по факту: `full` открывает уроки ЛЮБОГО блока
+            // Все считаем по факту: `full` открывает уроки ЛЮБОГО блока
             // (Lesson::unlockingKeys), а запись у урока есть, когда есть ссылка.
             $courseUnderway = $cadence?->isUnderway() ?? false;
             $recordedLessons = (int) ($course->recorded_lessons_count ?? 0);
@@ -602,9 +602,9 @@ document.addEventListener('DOMContentLoaded', function () {
             {{-- ───── H3807: запись прошедшего потока как вариант покупки ─────
                  У программы одна карточка (рулинг MG 31-08-2026), поэтому
                  запись больше не стоит в каталоге отдельным товаром. Но она
-                 продаётся и покупается — молчать о ней значит спрятать товар,
-                 у которого есть своя выручка. Ссылка ведёт на её собственную
-                 страницу с её тарифами. --}}
+                 продается и покупается — молчать о ней значит спрятать товар,
+                 у которого есть своя выручка. Ссылка ведет на ее собственную
+                 страницу с ее тарифами. --}}
             @if(!empty($recordingOffers) && count($recordingOffers) > 0)
                 <div class="mb-8 max-w-3xl rounded-xl border border-[#38BDF8]/30 bg-[#38BDF8]/5 p-5"
                      data-testid="recording-offers">
@@ -636,7 +636,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 @include('partials.guest-purchase-warning', ['variant' => 'dark'])
             </div>
 
-            {{-- ───── CTA: Забронировать курс (предоплата зачтётся в тариф) ───── --}}
+            {{-- ───── CTA: Забронировать курс (предоплата зачтется в тариф) ───── --}}
             @php
                 $courseDepositAmount = (float) ($course->deposit_amount ?? 0);
                 $showDepositCta = ($deposit ?? null)?->deposit_enabled
@@ -670,7 +670,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             @endif
 
-            {{-- ───── CTA: Купить пробное занятие (сумма зачтётся в тариф) ───── --}}
+            {{-- ───── CTA: Купить пробное занятие (сумма зачтется в тариф) ───── --}}
             @if(! empty($showTrialCta))
                 @php
                     $trialAmount = (float) $course->trial_price;
@@ -762,18 +762,18 @@ document.addEventListener('DOMContentLoaded', function () {
                      class="grid grid-cols-1 gap-6 {{ $fullTariffs->count() > 1 ? 'md:grid-cols-2' : 'md:max-w-2xl md:mx-auto' }}" x-cloak>
 
                     {{-- H3100: что получает опоздавший. Показываем только когда поток
-                         реально начат и не закончен — на ещё не стартовавшем курсе
+                         реально начат и не закончен — на еще не стартовавшем курсе
                          эта врезка была бы шумом. --}}
                     @if($courseUnderway)
                         <div class="{{ $fullTariffs->count() > 1 ? 'md:col-span-2' : '' }} rounded-2xl border border-[#38BDF8]/25 bg-[#38BDF8]/5 p-5"
                              data-testid="tariffs-underway-notice">
                             <div class="text-[10px] font-black uppercase tracking-widest text-[#38BDF8] mb-1.5">
-                                <i class="fas fa-circle-info mr-1"></i> Курс уже идёт — что вы получите
+                                <i class="fas fa-circle-info mr-1"></i> Курс уже идет — что вы получите
                             </div>
                             <p class="text-sm text-slate-300 leading-relaxed">
                                 {{-- H3115: при нескольких потоках общего остатка нет — называем каждый поток отдельно. --}}
                                 @if($cadenceStreams)
-                                    Курс идёт в {{ count($cadenceStreams) }} {{ \App\Support\Plural::ru(count($cadenceStreams), 'потоке', 'потоках', 'потоках') }}:
+                                    Курс идет в {{ count($cadenceStreams) }} {{ \App\Support\Plural::ru(count($cadenceStreams), 'потоке', 'потоках', 'потоках') }}:
                                     {{ implode('; ', $cadenceStreams) }}. Вы занимаетесь в одном из них.
                                 @else
                                     {{ $cadence->progressLabel() }}@if($cadence->slotLabel()), они пройдут {{ $cadence->slotLabel() }}@endif.
@@ -881,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             $defaultBlockTitle = 'Блок ' . $number;
                             $hasCustomTitle = $whole && $whole->title && trim($whole->title) !== $defaultBlockTitle;
                             $isCurrent = !$wholePurchased && $number === ($currentBlockNumber ?? null);
-                            // H3100: блок уже прошёл — покупка остаётся, но это доступ
+                            // H3100: блок уже прошел — покупка остается, но это доступ
                             // к записям, а не к живым занятиям. Молчать об этом значит
                             // продавать «БЛОК 1» так же, как идущий «БЛОК 4».
                             $isFinishedBlock = !$wholePurchased && !$isCurrent
@@ -910,7 +910,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 <div class="absolute -top-2.5 left-4 inline-flex items-center gap-1.5 bg-[#1F2636] border border-[#38BDF8]/30 text-[#38BDF8] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider"
                                      data-testid="tariffs-finished-block">
                                     <i class="fas fa-play-circle text-[9px]"></i>
-                                    УЖЕ ПРОШЁЛ — В ЗАПИСИ
+                                    УЖЕ ПРОШЕЛ — В ЗАПИСИ
                                 </div>
                             @endif
 

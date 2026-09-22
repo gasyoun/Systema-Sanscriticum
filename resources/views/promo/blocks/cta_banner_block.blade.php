@@ -15,7 +15,7 @@
     $buttonTextColor = $data['button_text_color'] ?? '#1E4633';
 
     // Якорная ссылка (#price, #streams и т.п.) — кнопка работает как обычный переход
-    // (скролл к блоку), без видео-попапа. scroll-smooth уже включён на <html>.
+    // (скролл к блоку), без видео-попапа. scroll-smooth уже включен на <html>.
     $isAnchor = !empty($buttonUrl) && \Illuminate\Support\Str::startsWith($buttonUrl, '#');
 
     // УМНЫЙ ПАРСЕР ССЫЛОК ДЛЯ ПЛЕЕРА
@@ -87,7 +87,7 @@
     <template x-teleport="body">
         <div x-show="videoOpen" 
              style="display: none;"
-             {{-- Заменили z-[100] на z-[9999], чтобы точно перекрыть вообще всё на сайте --}}
+             {{-- Заменили z-[100] на z-[9999], чтобы точно перекрыть вообще все на сайте --}}
              class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#101010]/90 backdrop-blur-md p-4 sm:p-6"
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0"

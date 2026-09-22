@@ -109,7 +109,7 @@
                 <a href="{{ route('password.request') }}" class="text-brand hover:underline font-semibold">проверьте email заказа</a>.
                 Не помните email или пароль?
                 <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener" class="text-brand hover:underline font-semibold">Куратор</a>
-                найдёт кабинет и пришлёт <span class="font-semibold text-gray-600">личную ссылку для входа</span>
+                найдет кабинет и пришлет <span class="font-semibold text-gray-600">личную ссылку для входа</span>
                 в Telegram (без пароля). Новый кабинет заводить не нужно.
             </p>
         </div>

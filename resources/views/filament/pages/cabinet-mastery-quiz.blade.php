@@ -3,7 +3,7 @@
     @php($questions = $this->questions())
 
     <p class="text-sm text-gray-600 dark:text-gray-300">{{ $bank['intro'] }}</p>
-    <p class="mt-1 text-sm text-gray-500">Зачёт — {{ $bank['pass'] }} из {{ count($questions) }}.</p>
+    <p class="mt-1 text-sm text-gray-500">Зачет — {{ $bank['pass'] }} из {{ count($questions) }}.</p>
 
     @if ($result)
         <div @class([
@@ -14,7 +14,7 @@
             <p class="font-semibold">
                 {{ $result['score'] }} из {{ $result['total'] }}
                 @if ($result['passed'])
-                    — зачёт.
+                    — зачет.
                 @else
                     — порог {{ $result['pass'] }}. Ниже разбор ошибок.
                 @endif
@@ -67,7 +67,7 @@
             </x-filament::button>
             @if ($result)
                 <x-filament::button color="gray" type="button" wire:click="resetQuiz">
-                    Пройти ещё раз
+                    Пройти еще раз
                 </x-filament::button>
             @endif
         </div>

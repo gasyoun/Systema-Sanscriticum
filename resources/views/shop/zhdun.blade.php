@@ -18,7 +18,7 @@
             </h1>
             <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
                 За какой курс голосовать? Голосуйте за будущие группы при
-                «Обществе ревнителей санскрита»: наберётся необходимый минимум
+                «Обществе ревнителей санскрита»: наберется необходимый минимум
                 голосов — откроется оплата; нужное число оплат к сроку — группа
                 стартует.
             </p>
@@ -104,7 +104,7 @@
                                                 title="Отозвать голос"
                                                 class="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition"
                                                 x-on:click="unvote('{{ $item->slug }}', $el)">
-                                            <i class="fas fa-check mr-1"></i>Голос учтён
+                                            <i class="fas fa-check mr-1"></i>Голос учтен
                                             @if($myPref)
                                                 · {{ \App\Models\WaitlistVote::SLOT_PREFERENCES[$myPref] ?? $myPref }}
                                             @endif
@@ -120,7 +120,7 @@
                                             <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Открыта оплата — свяжитесь с куратором</span>
                                         @endif
                                     @else
-                                        {{-- H4206: пожелание времени — куратор подберёт слот по голосам. --}}
+                                        {{-- H4206: пожелание времени — куратор подберет слот по голосам. --}}
                                         <div class="flex items-center gap-2">
                                             <select data-waitlist-pref="{{ $item->slug }}"
                                                     title="Когда вам удобно?"
@@ -147,7 +147,7 @@
         @endif
 
         <section class="mt-12 mb-8 text-center">
-            <p class="text-slate-400 mb-4">Ищете курс, который уже идёт?</p>
+            <p class="text-slate-400 mb-4">Ищете курс, который уже идет?</p>
             <a href="{{ route('shop.index') }}"
                class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-brand/60 hover:bg-brand/5 text-white text-sm font-bold rounded-xl transition-all">
                 Весь каталог курсов
@@ -176,7 +176,7 @@ function waitlistVote() {
                     body: JSON.stringify({ slug, slot_preference: pref || null }),
                 });
                 if (resp.status === 401 || resp.redirected || ! (resp.headers.get('content-type') || '').includes('application/json')) {
-                    // Гость: web-мидлвари отвечает редиректом, ведём на вход.
+                    // Гость: web-мидлвари отвечает редиректом, ведем на вход.
                     window.location.href = '/login';
                     return;
                 }

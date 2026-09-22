@@ -71,7 +71,7 @@
                                         </form>
                                     </span>
                                 @else
-                                    {{-- H3313: привязка через CSRF-защищённый POST --}}
+                                    {{-- H3313: привязка через CSRF-защищенный POST --}}
                                     <form method="POST" action="{{ route('telegram.connect.start') }}" target="_blank" class="inline-flex">
                                         @csrf
                                         <button type="submit"
@@ -96,7 +96,7 @@
                                         </form>
                                     </span>
                                 @else
-                                    {{-- H3313: привязка через CSRF-защищённый POST --}}
+                                    {{-- H3313: привязка через CSRF-защищенный POST --}}
                                     <form method="POST" action="{{ route('vk.connect.start') }}" target="_blank" class="inline-flex">
                                         @csrf
                                         <button type="submit"

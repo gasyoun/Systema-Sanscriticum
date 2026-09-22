@@ -7,7 +7,7 @@
 
     @if ($err)
         <div class="rounded-xl bg-danger-50 p-4 ring-1 ring-danger-600/20 dark:bg-danger-500/10 dark:ring-danger-400/30">
-            <div class="text-sm font-semibold text-danger-700 dark:text-danger-400">Взаимозачёт невозможен</div>
+            <div class="text-sm font-semibold text-danger-700 dark:text-danger-400">Взаимозачет невозможен</div>
             <div class="mt-1 text-sm text-danger-700 dark:text-danger-400">{{ $err }}</div>
         </div>
     @endif
@@ -24,7 +24,7 @@
                 <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $money($p['salary_amount']) }}</div>
             </div>
             <div class="rounded-xl bg-primary-50 p-4 ring-1 ring-primary-600/20 dark:bg-primary-500/10 dark:ring-primary-400/30">
-                <div class="text-xs text-primary-700 dark:text-primary-400">К зачёту (минимум из двух)</div>
+                <div class="text-xs text-primary-700 dark:text-primary-400">К зачету (минимум из двух)</div>
                 <div class="text-2xl font-bold text-primary-700 dark:text-primary-400">{{ $money($p['offset_amount']) }}</div>
                 <div class="mt-1 text-xs text-primary-700 dark:text-primary-400">
                     Остаток {{ $money($p['net_amount']) }} — {{ \App\Models\MutualSettlement::directionLabels()[$p['net_direction']] ?? $p['net_direction'] }}
@@ -34,7 +34,7 @@
 
         <div class="text-xs text-gray-500 dark:text-gray-400">
             Период: {{ $p['period_from'] ?? '—' }} — {{ $p['period_to'] ?? '—' }}.
-            Выручка школы не трогается: платежи остаются доходом в полном объёме, зачёт живёт только на выплатной стороне.
+            Выручка школы не трогается: платежи остаются доходом в полном объеме, зачет живет только на выплатной стороне.
         </div>
 
         {{-- ── Расшифровка: оплаты ── --}}
@@ -72,7 +72,7 @@
         <div class="rounded-xl bg-white p-4 ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
             <div class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">Из чего сложилось начисление</div>
             <div class="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                Accrual по блокам, из того же источника, что печатает страница «Зарплаты» — второго расчёта ЗП здесь нет.
+                Accrual по блокам, из того же источника, что печатает страница «Зарплаты» — второго расчета ЗП здесь нет.
             </div>
             @if (empty($p['salary']['lines']))
                 <div class="text-sm text-gray-500 dark:text-gray-400">Начислений за период нет.</div>
@@ -118,7 +118,7 @@
                             <th class="py-1 text-left">Курс / блок</th>
                             <th class="py-1 text-right">Оплачено</th>
                             <th class="py-1 text-right">Начислено</th>
-                            <th class="py-1 text-right">Зачёт</th>
+                            <th class="py-1 text-right">Зачет</th>
                             <th class="py-1 text-left">Статус</th>
                             <th class="py-1 text-left">Израсходован</th>
                         </tr>

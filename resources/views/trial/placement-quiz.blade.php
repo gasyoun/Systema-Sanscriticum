@@ -6,7 +6,7 @@
     H4818 (R2609-01) — F2 rung-placement квиз. Механика — копия онлайн-квиза
     подбора курса (resources/views/shop/start.blade.php): те же
     answer(next)/restart(), тот же quiz.results[next] терминал. Разница —
-    терминал несёт rung-контент вместо CTA на курс, и по достижении
+    терминал несет rung-контент вместо CTA на курс, и по достижении
     терминала тихо POST'ится в /rung-placement (сохраняет в сессию, откуда
     его читает TrialController при оформлении пробного).
 --}}
@@ -23,7 +23,7 @@
                 Определим ваш уровень санскрита
             </h1>
             <p class="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                Несколько вопросов — и мы точнее подберём, с чего начать пробное занятие.
+                Несколько вопросов — и мы точнее подберем, с чего начать пробное занятие.
             </p>
         </div>
 
@@ -96,7 +96,7 @@
                                 Подобрать курс по уровню →
                             </a>
                             <span class="text-[11px] text-slate-500" x-show="saving">Сохраняем…</span>
-                            <span class="text-[11px] text-emerald-400" x-show="saved && !saving">Уровень сохранён</span>
+                            <span class="text-[11px] text-emerald-400" x-show="saved && !saving">Уровень сохранен</span>
                         </div>
                         <button type="button" @click="restart()"
                                 class="text-xs font-bold text-slate-500 hover:text-brand transition-colors cursor-pointer">

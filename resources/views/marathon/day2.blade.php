@@ -32,7 +32,7 @@
                     </p>
                 @endif
                 @if ($enrollment->day2_question)
-                    <p class="text-sm text-gray-500 text-center mb-4">Ваш вопрос к консультации уже сохранён.</p>
+                    <p class="text-sm text-gray-500 text-center mb-4">Ваш вопрос к консультации уже сохранен.</p>
                     <div class="rounded-xl bg-gray-50 p-4 text-sm text-gray-700 mb-2">{{ $enrollment->day2_question }}</div>
                 @else
                     <p class="text-sm text-gray-500 text-center mb-4">Опрос засчитан. День 3 — живая консультация.</p>

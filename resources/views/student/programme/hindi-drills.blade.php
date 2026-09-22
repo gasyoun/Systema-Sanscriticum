@@ -21,7 +21,7 @@ function hindiTranscriptDrills() {
                 body,
             });
             if (!res.ok) {
-                this.results[itemId] = { status: 'err', message: 'Не удалось проверить. Попробуйте ещё раз.' };
+                this.results[itemId] = { status: 'err', message: 'Не удалось проверить. Попробуйте еще раз.' };
                 return;
             }
             const data = await res.json();
@@ -106,7 +106,7 @@ function hindiTranscriptDrills() {
             </ul>
             @if(collect($handouts)->contains(fn ($h) => ($h['reason'] ?? '') === 'pdf_no_extract'))
                 <p class="mt-3 text-xs text-gray-500" data-testid="hindi-attachment-pdf-skip">
-                    PDF без текстового слоя здесь не разбирается. Откройте раздатку и повторите слова из неё.
+                    PDF без текстового слоя здесь не разбирается. Откройте раздатку и повторите слова из нее.
                 </p>
             @endif
         </section>

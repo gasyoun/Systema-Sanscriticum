@@ -1,4 +1,4 @@
-{{-- «Пример урока» — id="sample". Ведёт на публичный preview-роут (гейт-плеер
+{{-- «Пример урока» — id="sample". Ведет на публичный preview-роут (гейт-плеер
      Lesson с is_preview). Скрыт, если у курса нет опубликованного preview-урока. --}}
 @if($course->previewLesson)
 <section id="sample" class="mb-16 lg:mb-20" data-analytics="sample-lesson">

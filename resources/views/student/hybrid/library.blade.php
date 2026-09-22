@@ -17,8 +17,8 @@
     $shelfLabels = [
         RecordingsCatalog::SHELF_WATCHING => 'Идут сейчас',
         RecordingsCatalog::SHELF_OWNED => 'Мои записи',
-        RecordingsCatalog::SHELF_LAPSED => 'Истёкшие · с продлением',
-        RecordingsCatalog::SHELF_COMPLETED => 'Завершённые',
+        RecordingsCatalog::SHELF_LAPSED => 'Истекшие · с продлением',
+        RecordingsCatalog::SHELF_COMPLETED => 'Завершенные',
     ];
     $ownershipOffer = $ownershipOffer ?? null;
 @endphp
@@ -26,8 +26,8 @@
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-nunito">
     <h2 class="text-3xl font-extrabold text-[#101010] mb-2">Мои записи</h2>
     <p class="text-gray-500 mb-6">
-        Всё, что вы купили в записи, и материалы доступных курсов — в одном месте.
-        Купленное остаётся вашим.
+        Все, что вы купили в записи, и материалы доступных курсов — в одном месте.
+        Купленное остается вашим.
     </p>
 
     @if ($recovery->active)
@@ -57,7 +57,7 @@
                                 </h3>
                                 <p class="text-xs text-gray-500 mt-1">
                                     @if ($card->is_recording_shape)
-                                        <span class="inline-flex px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold">записи · в своём темпе</span>
+                                        <span class="inline-flex px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold">записи · в своем темпе</span>
                                     @else
                                         <span class="inline-flex px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold">живой поток</span>
                                     @endif

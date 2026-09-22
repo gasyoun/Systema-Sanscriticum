@@ -148,7 +148,7 @@ class CourseCadenceMultiStreamTest extends TestCase
         $html = $this->get('/k/'.$course->slug)->assertOk()->getContent();
 
         $this->assertStringContainsString('data-testid="tariffs-underway-notice"', $html);
-        $this->assertStringContainsString('Курс идёт в 2 потоках', $html);
+        $this->assertStringContainsString('Курс идет в 2 потоках', $html);
         $this->assertStringContainsString('Вы занимаетесь в одном из них', $html);
     }
 

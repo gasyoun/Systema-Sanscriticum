@@ -15,7 +15,7 @@
 
     <div class="grid gap-4 sm:grid-cols-2 mb-8">
         <div class="rounded-xl border border-slate-700 p-4">
-            <p class="text-slate-400 text-sm">Объём</p>
+            <p class="text-slate-400 text-sm">Объем</p>
             <p class="text-white font-bold">72 академических часа</p>
         </div>
         <div class="rounded-xl border border-slate-700 p-4">
