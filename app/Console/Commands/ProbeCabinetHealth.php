@@ -1210,8 +1210,8 @@ class ProbeCabinetHealth extends Command
     }
 
     /**
-     * H2104: не пугать «только Артём» на app-level fuse (auto-deploy timeout
-     * при живом HTTP). Артём — host/LXC down (SSH нет).
+     * H2104: не пугать «только Артем» на app-level fuse (auto-deploy timeout
+     * при живом HTTP). Артем — host/LXC down (SSH нет).
      *
      * @param  list<array{message?: string, severity?: string}>  $criticalFails
      */
@@ -1228,17 +1228,17 @@ class ProbeCabinetHealth extends Command
 
         if ($criticalFails === []) {
             // recovery: short neutral note
-            return 'Если снова упадет: smoke /login → SSH runbook. Host down (нет SSH) — Иван/Марцис → Артём (@t3t3r1n).';
+            return 'Если снова упадет: smoke /login → SSH runbook. Host down (нет SSH) — Иван/Марцис → Артем (@t3t3r1n).';
         }
 
         if ($onlyAutoDeploy) {
             return "Это guards/auto-deploy (fuse), не «сервер мертв».\n"
                 .'Сайт часто 200: <code>cat storage/auto_deploy.disabled</code> → smoke → '
                 ."после разбора <code>rm storage/auto_deploy.disabled</code>.\n"
-                .'Артёма (@t3t3r1n) звать только если SSH не отвечает / хост мертв.';
+                .'Артема (@t3t3r1n) звать только если SSH не отвечает / хост мертв.';
         }
 
-        return 'Сначала SSH + runbook. Поднять VPS/контейнер может только Артём (@t3t3r1n) — '
+        return 'Сначала SSH + runbook. Поднять VPS/контейнер может только Артем (@t3t3r1n) — '
             .'отвечает нечасто; звать только при отсутствии SSH / host-down.';
     }
 

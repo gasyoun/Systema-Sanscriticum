@@ -53,11 +53,11 @@ class PingSchedulerHeartbeat extends Command
         }
 
         if ($url === '') {
-            // H5061: сторож не вооружён — это not_supported, и остаться он
+            // H5061: сторож не вооружен — это not_supported, и остаться он
             // обязан громким: console-комментарий увидит только человек,
             // machine-readable след (лог) — обязательная часть контракта.
             $this->comment('HEARTBEAT_PING_URL не задан — пульс выключен, пинг не отправлен.');
-            Log::warning('heartbeat: HEARTBEAT_PING_URL не задан — мёртвый сторож планировщика НЕ вооружён (not_supported)', [
+            Log::warning('heartbeat: HEARTBEAT_PING_URL не задан — мертвый сторож планировщика НЕ вооружен (not_supported)', [
                 'state' => 'not_supported',
             ]);
 

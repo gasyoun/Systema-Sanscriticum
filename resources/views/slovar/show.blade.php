@@ -75,7 +75,7 @@
         @endforeach
     </div>
 
-    {{-- ═════ Кёльнские словари (CDSL link-out, H3762 wave 1) ═════ --}}
+    {{-- ═════ Кельнские словари (CDSL link-out, H3762 wave 1) ═════ --}}
     @include('partials.slovar-cdsl-links', ['cdslLinks' => $cdslLinks ?? []])
 
     {{-- ═════ Внешние соответствия (sameAs, решение D4 — только при наличии) ═════ --}}

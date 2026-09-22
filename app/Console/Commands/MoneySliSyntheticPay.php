@@ -38,12 +38,12 @@ class MoneySliSyntheticPay extends Command
     public function handle(MoneySliFixture $fixture, MoneySliAlerter $alerter): int
     {
         if (! config('features.money_sli_synthetic_pay')) {
-            // H5061: шов не вооружён — это not_supported, и метрическая запись
-            // обязана это различать (иначе TSV/дедман не отличат «не вооружён»
-            // от «зелёный»). Раз в сутки — строка состояния, не спам.
+            // H5061: шов не вооружен — это not_supported, и метрическая запись
+            // обязана это различать (иначе TSV/дедман не отличат «не вооружен»
+            // от «зеленый»). Раз в сутки — строка состояния, не спам.
             // Heartbeat при этом НЕ пингуем: тишина и есть громкий дедман-сигнал.
             $this->comment('features.money_sli_synthetic_pay OFF — команда no-op до MONEY_SLI_SYNTHETIC_PAY=true (см. DEPLOY_QUEUE H4672).');
-            Log::warning('money_sli: synthetic-pay не вооружён (features.money_sli_synthetic_pay=false) — статус not_supported', [
+            Log::warning('money_sli: synthetic-pay не вооружен (features.money_sli_synthetic_pay=false) — статус not_supported', [
                 'check' => 'synthetic_pay',
                 'state' => ProbeOutcome::NOT_SUPPORTED,
             ]);
@@ -56,7 +56,7 @@ class MoneySliSyntheticPay extends Command
                 'latency_ms' => 0,
                 'http_status' => '',
                 'payment_id' => 0,
-                'notes' => 'features.money_sli_synthetic_pay OFF — шов не вооружён',
+                'notes' => 'features.money_sli_synthetic_pay OFF — шов не вооружен',
             ]);
 
             return self::SUCCESS;
