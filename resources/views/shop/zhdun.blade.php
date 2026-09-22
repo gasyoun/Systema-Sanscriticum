@@ -98,7 +98,19 @@
                                         @endif
                                     </span>
 
-                                    @if($already)
+                                    {{-- H5134 — сердечко «Избранное» рядом с кнопкой
+                                         голоса: курс есть → «c:{id}`, без карточки
+                                         курса → «w:{slug}`. Голос ждуна не трогает. --}}
+                                    @php
+                                        $heartKey = $item->course ? 'c:'.$item->course->id : 'w:'.$item->slug;
+                                    @endphp
+                                    <div class="flex items-center gap-3">
+                                        @include('shop.partials.favorite-heart', [
+                                            'favoriteKey' => $heartKey,
+                                            'favorited' => in_array($heartKey, $favoriteKeys, true),
+                                        ])
+
+                                        @if($already)
                                         <button type="button"
                                                 data-waitlist-unvote="{{ $item->slug }}"
                                                 title="Отозвать голос"
@@ -138,6 +150,7 @@
                                             </button>
                                         </div>
                                     @endif
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -156,6 +169,8 @@
 
     </div>
 </div>
+
+@include('shop.partials.favorites-script')
 
 <script>
 function waitlistVote() {

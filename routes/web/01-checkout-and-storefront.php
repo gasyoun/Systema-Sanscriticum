@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CourseFavoriteController;
 use App\Http\Controllers\Api\GamesSrsOnboardingController;
 use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\LilaGateController;
@@ -162,6 +163,18 @@ Route::post('/online/zhdun/vote', [PublicWaitlistController::class, 'vote'])
 Route::post('/online/zhdun/unvote', [PublicWaitlistController::class, 'unvote'])
     ->middleware('throttle:10,1')
     ->name('shop.waitlist.unvote');
+
+// H5134 — «Избранное» (сердечки, MG 17-09-2026): тот же контур, что голос
+// ждуна — web-группа (сессия + CSRF), auth-гейт и флаг course_favorites в
+// контроллере (OFF → 404, гость → 401). Отдельно от голоса: WaitlistVote не
+// трогаем. Анти-шум: throttle 10,1; писем нет; PII не логируется.
+Route::post('/favorites/toggle', [CourseFavoriteController::class, 'toggle'])
+    ->middleware('throttle:10,1')
+    ->name('shop.favorites.toggle');
+
+Route::get('/favorites', [CourseFavoriteController::class, 'index'])
+    ->middleware('throttle:10,1')
+    ->name('shop.favorites.index');
 
 // «Материалы» — журнальный хаб бесплатного контента над магазином (H387,
 // паттерн Arzamas): статьи + бесплатные беседы + preview-уроки одной сеткой

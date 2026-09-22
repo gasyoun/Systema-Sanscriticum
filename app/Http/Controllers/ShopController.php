@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseFavorite;
 use App\Models\CourseWaitlistItem;
 use App\Models\LandingPage;
 use App\Models\LessonAccessGrant;
@@ -107,7 +108,10 @@ class ShopController extends Controller
 
         return view('shop.index', array_merge($initial, compact(
             'deposit', 'featuredTestimonials', 'ladder', 'canonicalPath', 'indexable'
-        )));
+        )) + [
+            // H5134 — мои сердечки в каталоге (Livewire-проп, flag OFF / гость — []).
+            'favoriteCourseIds' => CourseFavorite::favoritedCourseIdsForCurrentViewer(),
+        ]);
     }
 
     /** Старые query-параметры каталога -> эквивалентный словесный путь (301). */
@@ -336,6 +340,9 @@ class ShopController extends Controller
             'votedItemIds' => $votedSlugs,
             'votedItemPrefs' => $votedItemPrefs,
             'itemTeacherUrls' => $itemTeacherUrls,
+            // H5134 — отметки моих сердечек: карточка с курсом → «c:{id}`,
+            // без карточки курса → «w:{slug}`. Флаг OFF / гость — пусто.
+            'favoriteKeys' => CourseFavorite::heartKeysForCurrentViewer(),
         ]);
     }
 
@@ -466,7 +473,10 @@ class ShopController extends Controller
             ->orderBy('id')
             ->get(['id', 'title', 'slug']);
 
-        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts'));
+        return view('shop.show', compact('course', 'page', 'purchasedKeys', 'currentBlock', 'currentBlockNumber', 'deposit', 'showTrialCta', 'trialIsRecording', 'scheduleGroups', 'cadence', 'lessonsByBlock', 'flagship', 'ctaAb', 'canonicalUrl', 'recordingOffers', 'fullSchedulePosts') + [
+            // H5134 — сердечко на /k/{slug}: отмечен ли этот курс зрителем.
+            'favoriteKeys' => CourseFavorite::heartKeysForCurrentViewer(),
+        ]);
     }
 
     /**

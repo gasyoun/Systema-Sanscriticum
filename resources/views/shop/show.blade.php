@@ -167,9 +167,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
 
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-8 leading-tight">
-                        {{ $course->title }}
-                    </h1>
+                    {{-- H5134 — сердечко «Избранное» на странице курса --}}
+                    <div class="flex items-start justify-between gap-4">
+                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight mb-8 leading-tight">
+                            {{ $course->title }}
+                        </h1>
+                        @include('shop.partials.favorite-heart', [
+                            'favoriteKey' => 'c:'.$course->id,
+                            'favorited' => in_array('c:'.$course->id, $favoriteKeys ?? [], true),
+                            'size' => 'md',
+                        ])
+                    </div>
 
                     {{-- Когда именно «идет сейчас»: день, время, ближайшее занятие,
                          сколько осталось. Все выведено из `schedules` — бейдж
@@ -1081,4 +1089,7 @@ document.addEventListener('DOMContentLoaded', function () {
 @if(! empty($showTrialCta))
     @include('partials.trial-modal')
 @endif
+
+{{-- H5134 — JS сердечка «Избранное» (флаг OFF — пусто) --}}
+@include('shop.partials.favorites-script')
 @endsection

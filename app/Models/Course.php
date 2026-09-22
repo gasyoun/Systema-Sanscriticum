@@ -102,6 +102,15 @@ class Course extends Model
     }
 
     /**
+     * H5134 — сердечки «Избранное» на этом курсе (auth-only сигнал,
+     * отдельно от голоса ждуна).
+     */
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(CourseFavorite::class);
+    }
+
+    /**
      * Tiptap `simple` HTML for `{!! !!}` sinks. Sanitized on read so rows
      * written before H2896 #8 cannot still carry script / event handlers.
      */

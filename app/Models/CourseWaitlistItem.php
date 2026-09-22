@@ -209,6 +209,15 @@ class CourseWaitlistItem extends Model
         return $this->votes()->count();
     }
 
+    /**
+     * H5134 — сердечко «Избранное» на карточке ждуна: карточки без карточки
+     * курса хранятся по slug (course_id-null сердечки). Отдельно от голосов.
+     */
+    public function heartsCount(): int
+    {
+        return CourseFavorite::query()->where('waitlist_slug', $this->slug)->count();
+    }
+
     /** Порог достигнут — можно открывать оплату (после проверки куратором/прогноза). */
     public function hasThreshold(): bool
     {
