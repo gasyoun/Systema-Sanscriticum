@@ -154,6 +154,37 @@ class LessonBannerLayersTest extends TestCase
         Storage::disk('public')->assertExists($template->overlay_path);
     }
 
+    public function test_small_tracking_does_not_squeeze_the_line(): void
+    {
+        // Регрессия 22-09-2026: при трекинге шаг пера брался по ширине чернил глифа,
+        // и дата Кочергиной выходила на 16 % уже макета. Трекинг −1 % кегля почти
+        // не меняет длину строки.
+        $width = function (float $tracking): int {
+            $template = $this->template(['date' => [
+                'x' => 10, 'y' => 100, 'w' => 380, 'h' => 80, 'size_px' => 48,
+                'font' => 'Missing.ttf', 'color' => '#000000', 'tracking' => $tracking, 'format' => 'DD.MM.YYYY',
+            ]]);
+            $image = $this->render($template, ['date' => '26.01.2026', 'number' => '']);
+            $xs = [];
+            for ($x = 0; $x < 400; $x++) {
+                for ($y = 100; $y < 180; $y += 2) {
+                    [$r] = $this->rgbAt($image, $x, $y);
+                    if ($r < 100) {
+                        $xs[] = $x;
+                        break;
+                    }
+                }
+            }
+
+            return max($xs) - min($xs);
+        };
+
+        $plain = $width(0.0);
+        $tracked = $width(-0.5);
+        $this->assertGreaterThan(150, $plain);
+        $this->assertEqualsWithDelta($plain, $tracked, $plain * 0.03);
+    }
+
     public function test_spec_rejects_unknown_blend_and_source(): void
     {
         $store = app(LessonBannerTemplateStore::class);
