@@ -21,6 +21,18 @@ return [
     'full_course_block_credit' => (bool) env('FULL_COURSE_BLOCK_CREDIT', false),
 
     /*
+     | H5001 — пробное занятие: доступ только к уроку, где он реально есть.
+     | ВЫКЛЮЧЕН по умолчанию (поведение как прежде). Когда включён:
+     |  - цель гранта для ПРОШЕДШЕГО занятия — урок этой даты с записью
+     |    (video/rutube/youtube), а не пустая заготовка (дефект B);
+     |  - если цели нет (trial_lesson_id пуст или записи ещё нет), грант не
+     |    создаётся, письмо/телеграм «запись открыта» НЕ уходят покупателю,
+     |    админам уходит громкий алерт в Telegram (дефект A).
+     | Включить: TRIAL_GRANT_HARDENING=true в .env + php artisan config:cache.
+     */
+    'trial_grant_hardening' => (bool) env('TRIAL_GRANT_HARDENING', false),
+
+    /*
      | Единый ответ из Helpdesk с маршрутизацией в канал разговора. ВЫКЛЮЧЕН по
      | умолчанию: когда включён, ответ куратора на диалог, живущий в
      | импортированном TG-support (userbot), пишется в TelegramSupportMessage

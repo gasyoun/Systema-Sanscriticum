@@ -32,6 +32,14 @@ trait SchedulesSupportAndPayments
             ->onOneServer()
             ->name('recordings-gap-watch-stale');
 
+        // H5001: курс продаёт пробное, а открыть нечего (пин пуст / прошедшее
+        // занятие без урока с записью) — алерт админам, только чтение.
+        $schedule->command('trial:target-watch --notify')
+            ->dailyAt('08:10')
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('trial-target-watch');
+
     }
 
     /** OpenRouter balance, support digests/SLA, FAQ knowledge indexing. */
