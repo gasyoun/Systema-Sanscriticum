@@ -785,6 +785,16 @@ return [
     'money_sli_synthetic_pay' => (bool) env('MONEY_SLI_SYNTHETIC_PAY', false),
 
     /*
+     | H4930 (E002 layer 1): sentinel_breaker over the Tochka webhook's
+     | paid->access grant — the only automatic "paid" mutation of payments/
+     | access in prod (TochkaWebhookTest's own description). Default OFF —
+     | fail-open with no library, no flag, or the CLI erroring is identical
+     | to today's behaviour; the breaker can only ADD a refusal above a
+     | budget, never grant access it wouldn't have granted anyway.
+     */
+    'money_mutation_breaker' => (bool) env('MONEY_MUTATION_BREAKER', false),
+
+    /*
      | H4672: почасовая read-only сверка денежной оси — webhook success-rate
      | (payment_webhook_events), grant-покрытие (класс H2085: paid без доступа),
      | объём paid-платежей за час. Ничего не пишет в payments/webhook events.
