@@ -119,7 +119,7 @@ class RecordingsGapFreshLinkVerdictTest extends TestCase
         Artisan::call('recordings:gap-watch', ['--dry' => true]);
         $out = Artisan::output();
 
-        $this->assertStringContainsString('вебхук-токен: мёртв', $out);
+        $this->assertStringContainsString('вебхук-токен: мертв', $out);
         $this->assertStringContainsString('записи нет', $out);
     }
 
