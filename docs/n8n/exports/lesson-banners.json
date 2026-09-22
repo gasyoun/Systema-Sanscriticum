@@ -1,0 +1,628 @@
+{
+  "name": "Плашки занятий → Google Диск (LMS lesson-banners)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 5,
+              "triggerAtMinute": 10
+            }
+          ]
+        }
+      },
+      "id": "fd3cd396-b40f-5f9f-b74a-711a9b832705",
+      "name": "Каждое утро 05:10",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://samskrte.ru/api/lesson-banners/due",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "f9d2e9cd-f8ba-5947-9dad-3f8631a2fb41",
+      "name": "LMS: плашки к доставке",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_ON_IMPORT",
+          "name": "Systema lesson banners (X-Webhook-Secret)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "items",
+        "options": {}
+      },
+      "id": "96214aca-8861-51b4-a44c-5c62a62adbea",
+      "name": "По одной",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "0e49e00d-e99a-5e10-882a-b848fe537435",
+      "name": "Loop",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "fbd3ed50-caf4-47a1-9e18-4fe032978e49",
+              "leftValue": "={{ $('Loop').item.json.meeting_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ed055283-b887-57b2-993e-8c5825bee901",
+      "name": "Есть meeting_id?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Z8CndhrmEbgRBiFZvt2Zwr7JM4zFBLqyc9XOVggFiKI",
+          "mode": "list",
+          "cachedResultName": "Automation_DB"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Settings"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "meeting_id",
+              "lookupValue": "={{ $('Loop').item.json.meeting_id }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "384c395c-3961-5ab9-915e-a02b3c893656",
+      "name": "Automation_DB: папка группы",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1100,
+        200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LouM7wyF0ciME6q4",
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "a580c40d-4741-4fc0-a306-e95a3a7539c1",
+              "leftValue": "={{ $json.drive_folder_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "04d17447-1ad4-537f-b095-90b7ac04ecb6",
+      "name": "Есть drive_folder_id?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "=name = '{{ $('Loop').item.json.drive_filename }}' and trashed = false and '{{ $('Automation_DB: папка группы').item.json.drive_folder_id }}' in parents",
+        "filter": {},
+        "options": {}
+      },
+      "id": "d08f00f6-b66b-5769-88dc-a79f6aef6d67",
+      "name": "Drive: файл уже есть?",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1540,
+        100
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "gn90oB4e3TAh4XFv",
+          "name": "Google Drive account"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Loop').item.json.image_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "591bf820-64f1-5e3f-888e-cd5ea049920e",
+      "name": "Скачать плашку",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        100
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0e69b523-8df6-4e0d-9c44-2a3cd9d6573f",
+              "leftValue": "={{ $('Drive: файл уже есть?').item.json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "47831dc7-a9cd-518e-9e99-cbb241b5d5dc",
+      "name": "Файл был?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1980,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Drive: файл уже есть?').item.json.id }}",
+          "mode": "id"
+        },
+        "changeFileContent": true,
+        "inputDataFieldName": "data",
+        "updateFields": {}
+      },
+      "id": "6d52f955-03f6-51d7-9cc8-0944f182babe",
+      "name": "Drive: заменить содержимое",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2200,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "gn90oB4e3TAh4XFv",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Loop').item.json.drive_filename }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Automation_DB: папка группы').item.json.drive_folder_id }}",
+          "mode": "id"
+        },
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "bcdba711-0f5f-5998-ab04-8c5118903b06",
+      "name": "Drive: загрузить",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2200,
+        200
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "gn90oB4e3TAh4XFv",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://samskrte.ru/api/lesson-banners/{{ $('Loop').item.json.id }}/delivered",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'delivered', render_hash: $('Loop').item.json.render_hash, drive_file_id: $json.id }) }}",
+        "options": {}
+      },
+      "id": "7fed2337-7e94-5097-bd4d-e24ba98dabc1",
+      "name": "LMS: доставлено",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2420,
+        100
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_ON_IMPORT",
+          "name": "Systema lesson banners (X-Webhook-Secret)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://samskrte.ru/api/lesson-banners/{{ $('Loop').item.json.id }}/delivered",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'no_folder', render_hash: $('Loop').item.json.render_hash, error: 'нет строки Automation_DB/Settings или drive_folder_id для meeting_id ' + ($('Loop').item.json.meeting_id || '—') }) }}",
+        "options": {}
+      },
+      "id": "f91bd2d2-10f3-5b37-9f4b-4e80e60e334c",
+      "name": "LMS: нет папки",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_ON_IMPORT",
+          "name": "Systema lesson banners (X-Webhook-Secret)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://samskrte.ru/api/lesson-banners/{{ $('Loop').item.json.id }}/delivered",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'error', render_hash: $('Loop').item.json.render_hash, error: String(($json.error && ($json.error.message || $json.error)) || 'n8n error').slice(0, 1900) }) }}",
+        "options": {}
+      },
+      "id": "99f78742-26f9-52cf-973e-fbd699b3935c",
+      "name": "LMS: ошибка",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2420,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "SET_ON_IMPORT",
+          "name": "Systema lesson banners (X-Webhook-Secret)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Каждое утро 05:10": {
+      "main": [
+        [
+          {
+            "node": "LMS: плашки к доставке",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LMS: плашки к доставке": {
+      "main": [
+        [
+          {
+            "node": "По одной",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "По одной": {
+      "main": [
+        [
+          {
+            "node": "Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Есть meeting_id?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть meeting_id?": {
+      "main": [
+        [
+          {
+            "node": "Automation_DB: папка группы",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LMS: нет папки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Automation_DB: папка группы": {
+      "main": [
+        [
+          {
+            "node": "Есть drive_folder_id?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Есть drive_folder_id?": {
+      "main": [
+        [
+          {
+            "node": "Drive: файл уже есть?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LMS: нет папки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive: файл уже есть?": {
+      "main": [
+        [
+          {
+            "node": "Скачать плашку",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LMS: ошибка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Скачать плашку": {
+      "main": [
+        [
+          {
+            "node": "Файл был?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LMS: ошибка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Файл был?": {
+      "main": [
+        [
+          {
+            "node": "Drive: заменить содержимое",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Drive: загрузить",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive: заменить содержимое": {
+      "main": [
+        [
+          {
+            "node": "LMS: доставлено",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LMS: ошибка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive: загрузить": {
+      "main": [
+        [
+          {
+            "node": "LMS: доставлено",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LMS: ошибка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LMS: доставлено": {
+      "main": [
+        [
+          {
+            "node": "Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LMS: нет папки": {
+      "main": [
+        [
+          {
+            "node": "Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LMS: ошибка": {
+      "main": [
+        [
+          {
+            "node": "Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Moscow"
+  },
+  "meta": {
+    "note": "ЧЕРНОВИК ДЛЯ ИМПОРТА, в n8n не залит. После импорта: создать httpHeaderAuth-креденшл 'Systema lesson banners (X-Webhook-Secret)' (Name=X-Webhook-Secret, Value=N8N_LESSON_BANNERS_SECRET) и привязать к трём LMS-узлам; Google-креденшлы — те же, что у ZOOM 1.4."
+  }
+}
