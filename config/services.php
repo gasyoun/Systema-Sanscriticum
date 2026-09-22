@@ -100,6 +100,10 @@ return [
         'clip_extract_webhook' => env('N8N_CLIP_EXTRACT_WEBHOOK'),
         'clip_extract_secret' => env('N8N_CLIP_EXTRACT_SECRET'),
         'clip_callback_secret' => env('N8N_CLIP_CALLBACK_SECRET'),
+        // Плашки занятий: n8n забирает список готовых плашек и отчитывается о
+        // доставке на Google Диск (GET/POST /api/lesson-banners/*). Секрет — в
+        // X-Webhook-Secret. Пусто → эндпоинты отвечают 403 (выключены).
+        'lesson_banners_secret' => env('N8N_LESSON_BANNERS_SECRET'),
         // Content engine Wave 2 (H1548): один социальный пост — ВК-стена
         // (с прикреплённым клипом) + зеркало в ТГ-канал — тот же
         // webhook-forward паттерн, что monthly_schedule/clip_extract.

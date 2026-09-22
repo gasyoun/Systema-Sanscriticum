@@ -150,6 +150,17 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('post-course-full-schedule-sweep');
 
+        // Плашки занятий: JPEG «дата + номер» на ближайшие lead_days дней.
+        // 04:40 МСК — до утреннего прохода n8n «Плашки занятий», который
+        // кладёт их в папки групп на Google Диске (обложки для ZOOM 1.4).
+        // Перерисовывает только изменившиеся (render_hash). Без флага
+        // LESSON_BANNERS команда no-op.
+        $schedule->command('lesson-banners:render')
+            ->dailyAt('04:40')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('lesson-banners-render');
+
         // VK/ORS content calendar auto-pilot (H1568, Wave 5): hourly tick
         // posts every due `scheduled` slot via n8n. No-op while
         // features.content_calendar_autopilot is OFF (default).

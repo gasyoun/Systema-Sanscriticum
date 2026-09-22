@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AnonsApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CabinetController;
+use App\Http\Controllers\Api\LessonBannerController;
 use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\PartnerBotController;
 use App\Http\Controllers\Api\PublicScheduleController;
@@ -157,6 +158,17 @@ Route::post('/webhooks/exam-scores', [ExamScoresWebhookController::class, 'handl
 Route::post('/webhooks/lecture-clip-callback', [LectureClipCallbackWebhookController::class, 'handle'])
     ->middleware('verify.n8n.clipcallback')
     ->name('webhook.lecture-clip-callback');
+
+// Плашки занятий — n8n «Плашки занятий» забирает готовые JPEG и отчитывается о
+// доставке в папки групп на Google Диске. Секрет в X-Webhook-Secret
+// (services.n8n.lesson_banners_secret); 404 при выключенном features.lesson_banners.
+Route::middleware(['verify.n8n.lessonbanners', 'throttle:60,1'])->group(function () {
+    Route::get('/lesson-banners/due', [LessonBannerController::class, 'due'])
+        ->name('api.lesson-banners.due');
+    Route::post('/lesson-banners/{banner}/delivered', [LessonBannerController::class, 'delivered'])
+        ->whereNumber('banner')
+        ->name('api.lesson-banners.delivered');
+});
 
 // === TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ===
 // Отдельный от /telegram/webhook (user-уведомления) и /webhooks/telegram-magnet

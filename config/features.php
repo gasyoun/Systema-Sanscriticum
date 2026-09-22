@@ -1642,4 +1642,14 @@ return [
      | включается ОТДЕЛЬНО, не этой поставкой). Никаких платежей внутри.
      */
     'course_interest_form' => (bool) env('COURSE_INTEREST_FORM', false),
+
+    /*
+     | Плашки занятий: фон из PSD курса + дата и номер занятия из расписания,
+     | JPEG на ближайшие config('lesson_banners.lead_days') дней. Команда
+     | lesson-banners:render (ежедневно) + API /api/lesson-banners/* для
+     | n8n-воркфлоу «Плашки занятий», который кладёт файлы «ГГГГ-ММ-ДД.jpg» в
+     | папки групп на Google Диске (их берёт обложкой ZOOM 1.4). Default OFF —
+     | команда no-op, API 404. Enable: LESSON_BANNERS=true + config:cache.
+     */
+    'lesson_banners' => (bool) env('LESSON_BANNERS', false),
 ];
