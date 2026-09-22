@@ -30,6 +30,7 @@ final class LessonBannerTemplateStore
         UploadedFile $background,
         string $specJson,
         ?UploadedFile $psd = null,
+        ?UploadedFile $overlay = null,
     ): LessonBannerTemplate {
         $info = @getimagesize($background->getRealPath());
         if ($info === false || ! isset(self::IMAGE_TYPES[$info[2]])) {
@@ -45,6 +46,25 @@ final class LessonBannerTemplateStore
             .'-'.Str::lower(Str::random(8)).'.'.self::IMAGE_TYPES[$info[2]];
         Storage::disk($bgDisk)->putFileAs(dirname($bgPath), $background, basename($bgPath));
 
+        // Верхний слой — только PNG (нужна прозрачность) и ровно того же размера,
+        // что фон: иначе фото преподавателя съедет относительно подложки.
+        $overlayPath = null;
+        if ($overlay !== null) {
+            $oInfo = @getimagesize($overlay->getRealPath());
+            if ($oInfo === false || $oInfo[2] !== IMAGETYPE_PNG) {
+                throw new InvalidArgumentException('Верхний слой должен быть PNG с прозрачностью.');
+            }
+            if ((int) $oInfo[0] !== $width || (int) $oInfo[1] !== $height) {
+                throw new InvalidArgumentException("Верхний слой {$oInfo[0]}×{$oInfo[1]} не совпадает с фоном {$width}×{$height}.");
+            }
+            $overlayPath = preg_replace('/\.(png|jpg)$/', '-overlay.png', $bgPath);
+            Storage::disk($bgDisk)->putFileAs(dirname((string) $overlayPath), $overlay, basename((string) $overlayPath));
+        }
+
+        if ($this->hasUnderFields($spec) && $overlayPath === null) {
+            throw new InvalidArgumentException('spec: есть поля "layer":"under", но не загружен верхний слой (overlay.png).');
+        }
+
         $psdDisk = null;
         $psdPath = null;
         if ($psd !== null) {
@@ -54,7 +74,7 @@ final class LessonBannerTemplateStore
             Storage::disk($psdDisk)->putFileAs(dirname($psdPath), $psd, basename($psdPath));
         }
 
-        return DB::transaction(function () use ($courseId, $groupId, $bgDisk, $bgPath, $width, $height, $spec, $psdDisk, $psdPath, $psd) {
+        return DB::transaction(function () use ($courseId, $groupId, $bgDisk, $bgPath, $overlayPath, $width, $height, $spec, $psdDisk, $psdPath, $psd) {
             $siblings = LessonBannerTemplate::query()
                 ->where('course_id', $courseId)
                 ->when($groupId === null, fn ($q) => $q->whereNull('group_id'), fn ($q) => $q->where('group_id', $groupId));
@@ -67,6 +87,8 @@ final class LessonBannerTemplateStore
                 'group_id' => $groupId,
                 'background_disk' => $bgDisk,
                 'background_path' => $bgPath,
+                'overlay_disk' => $overlayPath !== null ? $bgDisk : null,
+                'overlay_path' => $overlayPath,
                 'width' => $width,
                 'height' => $height,
                 'spec' => $spec,
@@ -132,6 +154,18 @@ final class LessonBannerTemplateStore
         return array_values(array_unique($missing));
     }
 
+    /** @param  array<string, mixed>  $spec */
+    private function hasUnderFields(array $spec): bool
+    {
+        foreach ((array) ($spec['fields'] ?? []) as $field) {
+            if (is_array($field) && ($field['layer'] ?? 'over') === 'under') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Проверить spec (вывод scripts/banner_template_from_psd.py или ручной) и
      * вернуть его массивом. Поле, вылезающее за фон, — ошибка: такой шаблон
@@ -147,9 +181,31 @@ final class LessonBannerTemplateStore
         }
 
         foreach (LessonBannerTemplate::FIELDS as $name) {
-            $field = $spec['fields'][$name] ?? null;
-            if (! is_array($field)) {
+            if (! is_array($spec['fields'][$name] ?? null)) {
                 throw new InvalidArgumentException("spec: нет поля «{$name}».");
+            }
+        }
+
+        foreach ($spec['fields'] as $name => $field) {
+            if (! is_array($field)) {
+                throw new InvalidArgumentException("spec: поле «{$name}» должно быть объектом.");
+            }
+
+            $source = (string) ($field['source'] ?? $name);
+            if (! in_array($source, LessonBannerTemplate::FIELDS, true)) {
+                throw new InvalidArgumentException("spec: у поля «{$name}» source — date|number.");
+            }
+            if (isset($field['layer']) && ! in_array($field['layer'], ['under', 'over'], true)) {
+                throw new InvalidArgumentException("spec: у поля «{$name}» layer — under|over.");
+            }
+            if (isset($field['blend']) && ! in_array($field['blend'], ['normal', 'soft_light'], true)) {
+                throw new InvalidArgumentException("spec: у поля «{$name}» blend — normal|soft_light.");
+            }
+            if (isset($field['opacity']) && (! is_numeric($field['opacity']) || $field['opacity'] < 0 || $field['opacity'] > 1)) {
+                throw new InvalidArgumentException("spec: у поля «{$name}» opacity — число от 0 до 1.");
+            }
+            if (isset($field['badge']) && (! is_array($field['badge']) || ($field['badge']['shape'] ?? 'circle') !== 'circle')) {
+                throw new InvalidArgumentException("spec: у поля «{$name}» badge — {\"shape\":\"circle\",\"diameter\":N}.");
             }
 
             foreach (['x', 'y', 'w', 'h', 'size_px'] as $key) {
@@ -162,19 +218,22 @@ final class LessonBannerTemplateStore
                 throw new InvalidArgumentException("spec: у поля «{$name}» ширина, высота и кегль должны быть больше нуля.");
             }
 
-            if ((float) $field['x'] < 0 || (float) $field['y'] < 0
+            // Водяной знак под верхним слоем по дизайну может уходить за край
+            // (у Кочергиной «40» обрезана низом картинки) — ему это можно.
+            $mayBleed = ($field['layer'] ?? 'over') === 'under';
+            if (! $mayBleed && ((float) $field['x'] < 0 || (float) $field['y'] < 0
                 || (float) $field['x'] + (float) $field['w'] > $width
-                || (float) $field['y'] + (float) $field['h'] > $height) {
+                || (float) $field['y'] + (float) $field['h'] > $height)) {
                 throw new InvalidArgumentException("spec: поле «{$name}» выходит за фон {$width}×{$height}.");
             }
 
             if (isset($field['align']) && ! in_array($field['align'], ['left', 'center', 'right'], true)) {
                 throw new InvalidArgumentException("spec: у поля «{$name}» align — left|center|right.");
             }
-        }
 
-        if (! str_contains((string) ($spec['fields']['number']['format'] ?? 'Занятие {N}'), '{N}')) {
-            throw new InvalidArgumentException('spec: формат номера должен содержать {N}.');
+            if ($source === 'number' && ! str_contains((string) ($field['format'] ?? 'Занятие {N}'), '{N}')) {
+                throw new InvalidArgumentException("spec: формат номера в поле «{$name}» должен содержать {N}.");
+            }
         }
 
         return $spec;
