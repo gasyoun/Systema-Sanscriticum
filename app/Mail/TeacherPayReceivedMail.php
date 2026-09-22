@@ -17,7 +17,7 @@ use Illuminate\Queue\SerializesModels;
  * (H4627). Требует ручной сверки по выписке преподавателя и перевода
  * платежа в paid из админки — после подтверждения номинал вычтется из
  * гонорара преподавателя автоматически (H4597). Очередное (ShouldQueue) —
- * чтобы приём заявки не блокировался на SMTP.
+ * чтобы прием заявки не блокировался на SMTP.
  */
 class TeacherPayReceivedMail extends Mailable implements ShouldQueue
 {

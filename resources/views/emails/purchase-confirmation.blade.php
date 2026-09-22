@@ -34,7 +34,7 @@
 
         <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 20px; margin: 25px 0; border-radius: 0 4px 4px 0;">
             <p style="margin: 0; font-size: 16px;">
-                Доступ откроется в течение пары минут. Если через 10 минут доступа всё еще нет — <a href="https://t.me/rusamskrtam" style="color: #d35400;">напишите нам в Telegram</a>, мы разберемся.
+                Доступ откроется в течение пары минут. Если через 10 минут доступа все еще нет — <a href="https://t.me/rusamskrtam" style="color: #d35400;">напишите нам в Telegram</a>, мы разберемся.
             </p>
         </div>
 

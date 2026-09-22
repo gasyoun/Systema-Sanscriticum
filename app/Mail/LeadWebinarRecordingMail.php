@@ -16,7 +16,7 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Письмо лиду со ссылкой на запись прошедшего вебинара.
  * Отправляется, когда админ заполнил у лендинга webinar_recording_url —
- * планировщик webinar:deliver-recordings разошлёт всем лидам лендинга.
+ * планировщик webinar:deliver-recordings разошлет всем лидам лендинга.
  */
 class LeadWebinarRecordingMail extends Mailable implements ShouldQueue
 {

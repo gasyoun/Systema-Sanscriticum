@@ -10,7 +10,7 @@ use Spatie\Backup\Notifications\Notifiable;
 /**
  * H3312: fail-closed получатель backup-уведомлений.
  *
- * Адрес берётся из единого канонического источника
+ * Адрес берется из единого канонического источника
  * config('services.admin.email') (= env ADMIN_EMAIL). Пусто -> mail-канал
  * отключается: возвращаем пустой массив, на котором Laravel MailChannel
  * делает no-op (см. Channels\MailChannel::send), и пишем warning в лог -
