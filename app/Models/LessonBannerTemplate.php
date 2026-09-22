@@ -26,6 +26,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * x/y/w/h — прямоугольник поля в пикселях фона; текст вписывается в него по
  * align по горизонтали и по центру по вертикали; fit=true ужимает кегль, если
  * текст не влезает по ширине (номер «12» шире «1»).
+ *
+ * Кроме date и number spec может описывать ДОПОЛНИТЕЛЬНЫЕ поля с "source":
+ * "number"|"date" — например, водяной номер Кочергиной ("layer":"under",
+ * "blend":"soft_light"). Номер в кружке — ключ "badge" (см. LessonBannerRenderer).
  */
 class LessonBannerTemplate extends Model
 {
@@ -36,6 +40,8 @@ class LessonBannerTemplate extends Model
         'group_id',
         'background_disk',
         'background_path',
+        'overlay_disk',
+        'overlay_path',
         'width',
         'height',
         'spec',
@@ -67,6 +73,28 @@ class LessonBannerTemplate extends Model
     public function banners(): HasMany
     {
         return $this->hasMany(LessonBanner::class, 'template_id');
+    }
+
+    /**
+     * Все поля spec: имя → [источник значения, описание]. Источник — ключ
+     * "source" поля, для date/number по умолчанию — само имя.
+     *
+     * @return array<string, array{0: string, 1: array<string, mixed>}>
+     */
+    public function fieldSources(): array
+    {
+        $out = [];
+        foreach ((array) ($this->spec['fields'] ?? []) as $name => $field) {
+            if (! is_array($field)) {
+                continue;
+            }
+            $source = (string) ($field['source'] ?? $name);
+            if (in_array($source, self::FIELDS, true)) {
+                $out[(string) $name] = [$source, $field];
+            }
+        }
+
+        return $out;
     }
 
     /** @return array<string, mixed> */
