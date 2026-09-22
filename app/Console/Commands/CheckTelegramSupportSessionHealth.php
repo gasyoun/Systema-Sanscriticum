@@ -40,13 +40,13 @@ class CheckTelegramSupportSessionHealth extends Command
             ->get();
 
         if ($accounts->isEmpty()) {
-            // H5061: ноль включённых аккаунтов — это not_supported/unavailable,
+            // H5061: ноль включенных аккаунтов — это not_supported/unavailable,
             // а не здоровье: выключенные мониторимые поверхности НЕ превращаются
-            // в зелёный. Exit остаётся SUCCESS (прогон планировщика не роняем),
+            // в зеленый. Exit остается SUCCESS (прогон планировщика не роняем),
             // но состояние обязано быть громким и машинночитаемым —
             // тот же класс, что H4648 «канва не вооружена».
-            $this->warn('Нет включённых Telegram-support аккаунтов — проверять нечего (шов не вооружён, статус not_supported).');
-            Log::warning('telegram-support:healthcheck — включённых аккаунтов 0, проверка не вооружена (not_supported)', [
+            $this->warn('Нет включенных Telegram-support аккаунтов — проверять нечего (шов не вооружен, статус not_supported).');
+            Log::warning('telegram-support:healthcheck — включенных аккаунтов 0, проверка не вооружена (not_supported)', [
                 'state' => 'not_supported',
             ]);
 

@@ -75,7 +75,7 @@
                         'Europe/Vilnius' => 'Вильнюс / Литва',
                         'Europe/Tallinn' => 'Таллин / Эстония',
                         'Europe/Kyiv' => 'Киев',
-                        'Europe/Chisinau' => 'Кишинёв',
+                        'Europe/Chisinau' => 'Кишинев',
                         'Europe/Sofia' => 'София',
                         'Europe/Warsaw' => 'Варшава',
                         'Europe/Prague' => 'Прага',

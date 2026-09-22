@@ -41,10 +41,10 @@ class MoneySliHourlyReconcile extends Command
     public function handle(MoneySliAlerter $alerter): int
     {
         if (! config('features.money_sli_hourly_reconcile')) {
-            // H5061: шов не вооружён — громкий машинночитаемый маркер.
+            // H5061: шов не вооружен — громкий машинночитаемый маркер.
             // TSV при этом НЕ пишем: часовой каденс превратил бы метрику в спам.
             $this->comment('features.money_sli_hourly_reconcile OFF — команда no-op до MONEY_SLI_HOURLY_RECONCILE=true.');
-            Log::warning('money_sli: hourly-reconcile не вооружён (features.money_sli_hourly_reconcile=false) — статус not_supported', [
+            Log::warning('money_sli: hourly-reconcile не вооружен (features.money_sli_hourly_reconcile=false) — статус not_supported', [
                 'check' => 'hourly_reconcile',
                 'state' => ProbeOutcome::NOT_SUPPORTED,
             ]);

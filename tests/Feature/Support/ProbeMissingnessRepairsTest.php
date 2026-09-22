@@ -67,7 +67,7 @@ final class ProbeMissingnessRepairsTest extends TestCase
     public function test_synthetic_pay_feature_off_appends_not_supported_tsv_row(): void
     {
         config()->set('features.money_sli_synthetic_pay', false);
-        Log::shouldReceive('warning')->once()->withArgs(fn (string $m): bool => str_contains($m, 'synthetic-pay не вооружён'));
+        Log::shouldReceive('warning')->once()->withArgs(fn (string $m): bool => str_contains($m, 'synthetic-pay не вооружен'));
 
         $this->artisan('money:sli-synthetic-pay')->assertSuccessful();
 
@@ -81,7 +81,7 @@ final class ProbeMissingnessRepairsTest extends TestCase
     public function test_hourly_reconcile_feature_off_is_loud(): void
     {
         config()->set('features.money_sli_hourly_reconcile', false);
-        Log::shouldReceive('warning')->once()->withArgs(fn (string $m): bool => str_contains($m, 'hourly-reconcile не вооружён'));
+        Log::shouldReceive('warning')->once()->withArgs(fn (string $m): bool => str_contains($m, 'hourly-reconcile не вооружен'));
 
         $this->artisan('money:sli-hourly-reconcile')->assertSuccessful();
 
@@ -91,7 +91,7 @@ final class ProbeMissingnessRepairsTest extends TestCase
     public function test_scheduler_heartbeat_with_missing_url_is_loud(): void
     {
         config()->set('heartbeat.url', '');
-        Log::shouldReceive('warning')->once()->withArgs(fn (string $m, array $ctx): bool => str_contains($m, 'НЕ вооружён') && $ctx['state'] === 'not_supported');
+        Log::shouldReceive('warning')->once()->withArgs(fn (string $m, array $ctx): bool => str_contains($m, 'НЕ вооружен') && $ctx['state'] === 'not_supported');
         Http::fake();
 
         $this->artisan('heartbeat:ping')->assertSuccessful();
@@ -101,7 +101,7 @@ final class ProbeMissingnessRepairsTest extends TestCase
 
     public function test_telegram_support_healthcheck_with_zero_enabled_accounts_is_not_quiet_green(): void
     {
-        Log::shouldReceive('warning')->once()->withArgs(fn (string $m, array $ctx): bool => str_contains($m, 'включённых аккаунтов 0') && $ctx['state'] === 'not_supported');
+        Log::shouldReceive('warning')->once()->withArgs(fn (string $m, array $ctx): bool => str_contains($m, 'включенных аккаунтов 0') && $ctx['state'] === 'not_supported');
 
         $this->artisan('telegram-support:healthcheck')
             ->expectsOutputToContain('not_supported')

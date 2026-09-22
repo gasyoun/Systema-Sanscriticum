@@ -130,7 +130,7 @@ VPN: вкл / выкл
 время: сейчас</pre>
         <button type="button" class="btn" id="copy-btn" style="border:0;width:100%;cursor:pointer">Скопировать текст</button>
         <p class="muted" style="margin-top:0.75rem">
-            <strong>Не пишите Артёму.</strong> Артёму пишут только Иван или Марцис, если мертв сервер.
+            <strong>Не пишите Артему.</strong> Артему пишут только Иван или Марцис, если мертв сервер.
         </p>
     </div>
 
@@ -149,7 +149,7 @@ VPN: вкл / выкл
     <div class="card">
         <h2>Для ops (не ученикам)</h2>
         <p class="muted">
-            Красные мониторы Better Stack, SSH, Артём —
+            Красные мониторы Better Stack, SSH, Артем —
             <a href="https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING_RU.md">инструкция RU §2</a>
             ·
             <a href="https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/UPTIME_BETTERSTACK_MONITORING.md">EN для агентов</a>
