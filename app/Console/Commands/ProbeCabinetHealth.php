@@ -22,6 +22,7 @@ use App\Support\ServerGuards\CabinetProbeAlertState;
 use App\Support\ServerGuards\CompiledViewsOwnershipInspector;
 use App\Support\ServerGuards\GuardFinding;
 use App\Support\ServerGuards\GuardSpec;
+use App\Support\ServerGuards\OllamaTunnelProbe;
 use App\Support\ServerGuards\ServerGuardsAuditor;
 use App\Support\ServerGuards\SoftAlertWebhookNotifier;
 use App\Support\ServerGuards\SoftFailureFingerprint;
@@ -133,6 +134,7 @@ class ProbeCabinetHealth extends Command
             $failures = array_merge($failures, $this->probeCompiledViewsOwnership());
             $failures = array_merge($failures, $this->probeOutboundPaymentTls());
             $failures = array_merge($failures, $this->probeScheduleLinks());
+            $failures = array_merge($failures, $this->probeOllamaTunnel());
         } catch (Throwable $e) {
             $failures[] = ['message' => 'probe crashed: '.$e->getMessage(), 'severity' => 'critical'];
             Log::error('cabinet:probe crashed', ['error' => $e->getMessage()]);
@@ -593,6 +595,28 @@ class ProbeCabinetHealth extends Command
                 .' ('.$attempts.' попыток) (оплата у пользователей недоступна)',
             'severity' => 'critical',
         ]];
+    }
+
+    /**
+     * H4845: reverse-туннель к Ollama на GPU-узле. Логика и гейты (потребитель
+     * включён, рабочие часы узла) — в OllamaTunnelProbe; здесь только
+     * soft-находка. Класс `ollama-tunnel` в SoftFailureFingerprint держит её
+     * одной тревогой до зелёного, живой туннель её снимает.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeOllamaTunnel(): array
+    {
+        if (! config('cabinet_probe.check_ollama_tunnel', true)) {
+            return [];
+        }
+
+        $failure = app(OllamaTunnelProbe::class)->failure();
+        if ($failure === null) {
+            return [];
+        }
+
+        return [['message' => $failure, 'severity' => 'soft']];
     }
 
     /**
@@ -1251,11 +1275,14 @@ class ProbeCabinetHealth extends Command
     {
         $guards = false;
         $hybrid = false;
+        $tunnel = false;
         $other = false;
         foreach ($softFails as $f) {
             $m = (string) ($f['message'] ?? '');
             if (str_starts_with($m, 'guards/') || str_starts_with($m, 'guards:')) {
                 $guards = true;
+            } elseif (str_starts_with($m, OllamaTunnelProbe::PREFIX.':')) {
+                $tunnel = true;
             } elseif (
                 str_contains($m, 'hybrid ')
                 || str_contains($m, 'hybrid /')
@@ -1275,6 +1302,9 @@ class ProbeCabinetHealth extends Command
         }
         if ($hybrid) {
             $parts[] = 'hybrid';
+        }
+        if ($tunnel) {
+            $parts[] = 'ollama-туннель';
         }
         if ($other) {
             $parts[] = $parts === [] ? 'опциональные проверки' : 'прочее';

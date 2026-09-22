@@ -75,18 +75,19 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `CABINET_PROBE_CHECK_DEPLOY_DRIFT` | optional | `true` | config/cabinet_probe.php:142 |
 | `CABINET_PROBE_CHECK_GUARDS` | optional | `true` | config/cabinet_probe.php:64 |
 | `CABINET_PROBE_CHECK_HOMEWORK_UPLOAD` | optional | `true` | config/cabinet_probe.php:102 |
+| `CABINET_PROBE_CHECK_OLLAMA_TUNNEL` | optional | `true` | config/cabinet_probe.php:126 |
 | `CABINET_PROBE_CHECK_PAYMENT_TLS` | optional | `true` | config/cabinet_probe.php:75 |
 | `CABINET_PROBE_CHECK_SCHEDULE_LINKS` | optional | `true` | config/cabinet_probe.php:114 |
 | `CABINET_PROBE_CRON` | optional | `'*/15 * * * *'` | config/cabinet_probe.php:49 |
-| `CABINET_PROBE_DEPLOY_DRIFT_BEHIND_MAX_AGE` | optional | `60` | config/cabinet_probe.php:144 |
-| `CABINET_PROBE_DEPLOY_DRIFT_FETCH_MAX_AGE` | optional | `90` | config/cabinet_probe.php:143 |
+| `CABINET_PROBE_DEPLOY_DRIFT_BEHIND_MAX_AGE` | optional | `60` | config/cabinet_probe.php:158 |
+| `CABINET_PROBE_DEPLOY_DRIFT_FETCH_MAX_AGE` | optional | `90` | config/cabinet_probe.php:157 |
 | `CABINET_PROBE_HISTORY_KEEP` | optional | `500` | config/cabinet_probe.php:54 |
-| `CABINET_PROBE_HOMEWORK_COURSE` | optional | `''` | config/cabinet_probe.php:139 |
-| `CABINET_PROBE_HOMEWORK_LESSON_ID` | optional | `0` | config/cabinet_probe.php:140 |
-| `CABINET_PROBE_KANVA_COURSE_ID` | optional | `0` | config/cabinet_probe.php:207 |
+| `CABINET_PROBE_HOMEWORK_COURSE` | optional | `''` | config/cabinet_probe.php:153 |
+| `CABINET_PROBE_HOMEWORK_LESSON_ID` | optional | `0` | config/cabinet_probe.php:154 |
+| `CABINET_PROBE_KANVA_COURSE_ID` | optional | `0` | config/cabinet_probe.php:221 |
 | `CABINET_PROBE_PAYMENT_URL` | optional | `'https://enter.tochka.com/uapi/acquiring/v1.0/payments_with_receipt',` | config/cabinet_probe.php:76 |
 | `CABINET_PROBE_PING_URL` | optional | `''` | config/cabinet_probe.php:20 |
-| `CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS` | optional | `14` | config/cabinet_probe.php:115 |
+| `CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS` | optional | `14` | config/cabinet_probe.php:129 |
 | `CABINET_PROBE_TELEGRAM_CHAT_ID` | optional | `env('ADMIN_TELEGRAM_ID', '')` | config/cabinet_probe.php:23<br>config/logs_watch.php:51<br>config/openrouter.php:30<br>config/recording_gap.php:74 |
 | `CABINET_PROBE_TELEGRAM_COOLDOWN` | optional | `60` | config/cabinet_probe.php:29<br>config/cabinet_probe.php:38 |
 | `CABINET_PROBE_TELEGRAM_SOFT_CHAT_ID` | optional | `''` | config/cabinet_probe.php:26<br>config/logs_watch.php:51 |
@@ -316,7 +317,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `INVEST_MAX_HORIZON_YEARS` | optional | `30` | config/investment.php:39 |
 | `KINESCOPE_PILOT` | feature-flag | `false` | config/features.php:877 |
 | `KINESCOPE_PILOT_COURSE_ID` | required | `—` | config/video.php:16 |
-| `KNOWLEDGE_EMBEDDING_DIMENSIONS` | optional | `1024` | config/knowledge.php:44 |
+| `KNOWLEDGE_EMBEDDING_DIMENSIONS` | optional | `1024` | config/knowledge.php:51 |
 | `KNOWLEDGE_EMBEDDING_DRIVER` | optional | `''` | config/knowledge.php:22 |
 | `KNOWLEDGE_EMBEDDING_MODEL` | optional | `'bge-m3:latest'` | config/knowledge.php:30 |
 | `KNOWLEDGE_FUSION_K` | optional | `60` | config/knowledge.php:56 |
@@ -333,8 +334,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `KNOWLEDGE_LESSON_WEIGHT_DENSE` | optional | `1.0` | config/knowledge.php:94 |
 | `KNOWLEDGE_LESSON_WEIGHT_SPARSE` | optional | `0.6` | config/knowledge.php:93 |
 | `KNOWLEDGE_OLLAMA_BASE_URL` | optional | `'http://127.0.0.1:11434'` | config/knowledge.php:26 |
-| `KNOWLEDGE_REQUEST_TIMEOUT` | optional | `5` | config/knowledge.php:48 |
-| `KNOWLEDGE_RETRIEVAL_DEPTH` | optional | `20` | config/knowledge.php:58 |
+| `KNOWLEDGE_REQUEST_TIMEOUT` | optional | `5` | config/knowledge.php:55 |
+| `KNOWLEDGE_RETRIEVAL_DEPTH` | optional | `20` | config/knowledge.php:65 |
+| `KNOWLEDGE_TUNNEL_HOURS` | optional | `'09:30-20:30'` | config/knowledge.php:33 |
 | `KOCHERGINA_GR61_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:58 |
 | `KOCHERGINA_GR61_COHORT_SLUG` | optional | `'grammatika-po-kocerginoi-gr61'` | config/cohort_courses.php:57 |
 | `KOCHERGINA_SOURCE_PATH` | optional | `base_path('../SanskritGrammar/KocherginaUchebnik_1998/Kochergina_un…` | config/homework.php:277 |
@@ -706,9 +708,9 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SOCIAL_TELEGRAM_URL` | required | `—` | config/social.php:12 |
 | `SOCIAL_VK_URL` | required | `—` | config/social.php:11 |
 | `SOCIAL_WEBSITE_URL` | required | `—` | config/social.php:14 |
-| `SOFT_ALERT_WEBHOOK_SECRET` | secret | `''` | config/cabinet_probe.php:225 |
-| `SOFT_ALERT_WEBHOOK_TIMEOUT` | optional | `8` | config/cabinet_probe.php:226 |
-| `SOFT_ALERT_WEBHOOK_URL` | optional | `''` | config/cabinet_probe.php:224 |
+| `SOFT_ALERT_WEBHOOK_SECRET` | secret | `''` | config/cabinet_probe.php:239 |
+| `SOFT_ALERT_WEBHOOK_TIMEOUT` | optional | `8` | config/cabinet_probe.php:240 |
+| `SOFT_ALERT_WEBHOOK_URL` | optional | `''` | config/cabinet_probe.php:238 |
 | `SQS_PREFIX` | optional | `'https://sqs.us-east-1.amazonaws.com/your-account-id'` | config/queue.php:58 |
 | `SQS_QUEUE` | optional | `'default'` | config/queue.php:59 |
 | `SQS_SUFFIX` | required | `—` | config/queue.php:60 |
