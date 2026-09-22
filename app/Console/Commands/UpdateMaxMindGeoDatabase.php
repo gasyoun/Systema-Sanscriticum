@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Скачивает и атомарно кладёт GeoLite2-City.mmdb для драйвера 'maxmind'
+ * Скачивает и атомарно кладет GeoLite2-City.mmdb для драйвера 'maxmind'
  * (H3445, решение MG 24-08-2026). Нужны MAXMIND_ACCOUNT_ID + MAXMIND_LICENSE_KEY
  * (бесплатная регистрация на maxmind.com). База — gitignored-файл в storage.
  *
@@ -64,7 +64,7 @@ class UpdateMaxMindGeoDatabase extends Command
             return self::FAILURE;
         }
 
-        // Страховка: некоторые клиенты/обёртки не наполняют sink — тогда пишем
+        // Страховка: некоторые клиенты/обертки не наполняют sink — тогда пишем
         // тело ответа вручную (не меняет поведение при настоящей закачке).
         if (! is_file($archivePath) || (filesize($archivePath) ?: 0) === 0) {
             file_put_contents($archivePath, $response->body());
@@ -81,7 +81,7 @@ class UpdateMaxMindGeoDatabase extends Command
         }
 
         if ((bool) $this->option('dry-run')) {
-            $this->info('Dry-run OK: база читается, '.number_format((float) (filesize($mmdb) ?: 0) / 1048576, 1).' MiB — рабочий файл НЕ заменён.');
+            $this->info('Dry-run OK: база читается, '.number_format((float) (filesize($mmdb) ?: 0) / 1048576, 1).' MiB — рабочий файл НЕ заменен.');
             @unlink($mmdb);
 
             return self::SUCCESS;

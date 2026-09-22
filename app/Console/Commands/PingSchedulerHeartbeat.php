@@ -11,11 +11,11 @@ use Laravel\Horizon\Contracts\MasterSupervisorRepository;
 use Throwable;
 
 /**
- * Пульс планировщика (H1713): раз в несколько минут дёргает уникальный URL на
- * healthchecks.io. Пришёл пинг — тихо; не пришёл — внешний сервис сам поднимает
+ * Пульс планировщика (H1713): раз в несколько минут дергает уникальный URL на
+ * healthchecks.io. Пришел пинг — тихо; не пришел — внешний сервис сам поднимает
  * тревогу.
  *
- * Инверсия обычного мониторинга, и в этом весь смысл: сторож живёт снаружи и
+ * Инверсия обычного мониторинга, и в этом весь смысл: сторож живет снаружи и
  * срабатывает на МОЛЧАНИЕ, поэтому переживает смерть всего сервера. Проверка,
  * запущенная на самой машине, о собственной смерти сообщить не может — ровно
  * поэтому простой 24–26.07.2026 (issue #730) длился двое суток.
@@ -30,7 +30,7 @@ use Throwable;
  */
 class PingSchedulerHeartbeat extends Command
 {
-    protected $signature = 'heartbeat:ping {--dry : Показать вердикт и куда бы ушёл пинг, ничего не отправляя}';
+    protected $signature = 'heartbeat:ping {--dry : Показать вердикт и куда бы ушел пинг, ничего не отправляя}';
 
     protected $description = 'Пульс планировщика на healthchecks.io — тревога поднимается по молчанию, а не по ошибке.';
 
@@ -58,14 +58,14 @@ class PingSchedulerHeartbeat extends Command
             return self::SUCCESS;
         }
 
-        // healthchecks.io: <url> = «всё хорошо», <url>/fail = «поднимай тревогу
+        // healthchecks.io: <url> = «все хорошо», <url>/fail = «поднимай тревогу
         // немедленно». Второе важнее, чем кажется: без него смерть Horizon
         // ждала бы истечения периода проверки, то есть лишние минуты простоя.
         $target = $healthy ? $url : rtrim($url, '/').'/fail';
         $body = $healthy ? 'ok' : implode('; ', $failures);
 
         if ($this->option('dry')) {
-            $this->comment('--dry: пинг не отправлен. Ушёл бы на '.$target);
+            $this->comment('--dry: пинг не отправлен. Ушел бы на '.$target);
 
             return self::SUCCESS;
         }
@@ -86,7 +86,7 @@ class PingSchedulerHeartbeat extends Command
                 ]);
             }
         } catch (Throwable $e) {
-            $this->error('Пинг не ушёл: '.$e->getMessage());
+            $this->error('Пинг не ушел: '.$e->getMessage());
             Log::warning('Пульс планировщика: пинг не отправлен', ['error' => $e->getMessage()]);
         }
 
@@ -100,7 +100,7 @@ class PingSchedulerHeartbeat extends Command
      * выполняется, значит `schedule:run` работает. Проверять тут имеет смысл
      * только то, что может умереть НЕЗАВИСИМО от планировщика.
      *
-     * @return list<string> список поломок; пустой список = всё в порядке
+     * @return list<string> список поломок; пустой список = все в порядке
      */
     private function selfCheck(): array
     {
@@ -115,14 +115,14 @@ class PingSchedulerHeartbeat extends Command
         try {
             $masters = app(MasterSupervisorRepository::class)->all();
         } catch (Throwable $e) {
-            // Обычно это лежащий Redis — то есть очереди всё равно мертвы,
+            // Обычно это лежащий Redis — то есть очереди все равно мертвы,
             // так что тревога здесь по делу.
             return ['статус Horizon не читается ('.$e->getMessage().')'];
         }
 
         if ($masters === []) {
             // Horizon держит записи о себе в Redis с TTL, поэтому пустой список
-            // означает «мастер-процесс не отчитывается», а не «ещё не успел».
+            // означает «мастер-процесс не отчитывается», а не «еще не успел».
             return ['Horizon не запущен — очереди стоят'];
         }
 

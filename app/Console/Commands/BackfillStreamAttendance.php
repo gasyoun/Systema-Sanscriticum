@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * H3761, волна 3 — досбор посещаемости потоков курса из Zoom Reports API.
  *
- * Отличия от `zoom:backfill-attendance` (H3085), который остаётся для случая
+ * Отличия от `zoom:backfill-attendance` (H3085), который остается для случая
  * «курс без zoom_meeting_id, часть занятий вообще не заведена»:
  *
  *  1. **Только вставки.** Команда не обновляет и не удаляет ничего — ни
@@ -32,7 +32,7 @@ use Illuminate\Support\Facades\DB;
  *     задним числом нельзя: `schedules` кормит помесячное признание зарплаты
  *     преподавателя, и атрибуция запуска общей «личной комнаты» к конкретному
  *     курсу — решение человека, а не эвристики.
- *  3. **Слепой период называется вслух.** Отчёт всегда печатает обе стороны
+ *  3. **Слепой период называется вслух.** Отчет всегда печатает обе стороны
  *     расхождения: занятия без источника в Zoom и запуски Zoom без занятия в
  *     системе. Ноль в посещаемости и «данных не сохранилось» — разные вещи.
  *  4. **Порог участников.** Общая recurring-комната хранит и служебные запуски
@@ -97,7 +97,7 @@ class BackfillStreamAttendance extends Command
         // Ручной id относится к ОДНОМУ курсу: раздать его нескольким значило бы
         // приписать одному потоку занятия другого.
         if ($this->option('meeting-id') && count(array_filter((array) $this->option('course'))) !== 1) {
-            $this->error('--meeting-id задаётся только вместе с ровно одним --course.');
+            $this->error('--meeting-id задается только вместе с ровно одним --course.');
 
             return self::FAILURE;
         }
@@ -128,7 +128,7 @@ class BackfillStreamAttendance extends Command
                 ->filter(fn (array $i) => $this->inSlot(Carbon::parse($i['start_time']), $slot))
                 ->values();
 
-            // Дата занятия — локальная календарная дата запуска: Zoom отдаёт UTC,
+            // Дата занятия — локальная календарная дата запуска: Zoom отдает UTC,
             // а `schedules.start` хранится в тайм-зоне приложения.
             $byDate = $instances->groupBy(
                 fn (array $i) => Carbon::parse($i['start_time'])->setTimezone(config('app.timezone'))->toDateString()
@@ -226,14 +226,14 @@ class BackfillStreamAttendance extends Command
     /**
      * Разрешение meeting_id: поле курса → общая ссылка курса → ссылка любого
      * его занятия. Волна 3 обязана проверить именно эту цепочку — курс 332
-     * («1 поток») не хранит meeting_id ни в одном из трёх мест.
+     * («1 поток») не хранит meeting_id ни в одном из трех мест.
      *
      * @return array{0: ?string, 1: string}
      */
     private function resolveMeetingId(Course $course): array
     {
         // Переданный вручную id перекрывает цепочку — это единственный способ
-        // добраться до потока, который шёл до появления раздела «Занятия»:
+        // добраться до потока, который шел до появления раздела «Занятия»:
         // у такого курса ссылки нет нигде, резолвить не из чего.
         if ($this->option('meeting-id')) {
             return [(string) $this->option('meeting-id'), 'передан через --meeting-id'];
@@ -256,10 +256,10 @@ class BackfillStreamAttendance extends Command
             return [$m[1], 'schedules.link'];
         }
 
-        return [null, 'не разрешён'];
+        return [null, 'не разрешен'];
     }
 
-    /** Сколько строк добавилось бы: ключ (schedule_id + participant_uuid) ещё не занят. */
+    /** Сколько строк добавилось бы: ключ (schedule_id + participant_uuid) еще не занят. */
     private function countMissing(int $scheduleId, array $participants, AttendanceRecorder $recorder): int
     {
         $existing = WebinarAttendance::where('schedule_id', $scheduleId)
@@ -361,12 +361,12 @@ class BackfillStreamAttendance extends Command
     }
 
     /**
-     * Завести занятие под подтверждённый запуск Zoom. Только со --slot: время
-     * занятия берётся из середины окна, чтобы новая строка попадала в тот же
+     * Завести занятие под подтвержденный запуск Zoom. Только со --slot: время
+     * занятия берется из середины окна, чтобы новая строка попадала в тот же
      * слот, а не в момент, когда ведущий нажал «начать».
      *
-     * Заголовок помечен бэкфилом: строка, заведённая задним числом, должна быть
-     * отличима от расписания, которое человек вёл сам.
+     * Заголовок помечен бэкфилом: строка, заведенная задним числом, должна быть
+     * отличима от расписания, которое человек вел сам.
      */
     private function createLesson(Course $course, string $date, string $meetingId): ?int
     {

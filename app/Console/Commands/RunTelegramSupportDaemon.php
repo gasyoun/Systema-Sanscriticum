@@ -65,7 +65,7 @@ class RunTelegramSupportDaemon extends Command
         // Без этого `systemctl restart` ждал полный TimeoutStopSec=30s и добивал
         // нас SIGKILL: процесс спал в sleep(60) и сигнала не видел, а systemd
         // писал «Failed with result 'timeout'». Плата не косметическая —
-        // KillMode=control-group сносит вместе с нами и демона, и всё это время
+        // KillMode=control-group сносит вместе с нами и демона, и все это время
         // демона нет, а значит очередной cron-заход поднимет свой, под кроном.
         // Тридцать секунд такого окна против одной — вот и вся разница.
         $stopping = false;
@@ -92,7 +92,7 @@ class RunTelegramSupportDaemon extends Command
                 $probe->sleep(1);
             }
             if ($stopping) {
-                $this->stamp('SIGTERM — выхожу; демон остаётся на попечении systemd');
+                $this->stamp('SIGTERM — выхожу; демон остается на попечении systemd');
                 break;
             }
         }

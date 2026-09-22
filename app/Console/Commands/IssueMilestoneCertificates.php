@@ -17,13 +17,13 @@ use Illuminate\Console\Command;
  * сработал (конец блока / N-е занятие группы / урок учебника / занятия
  * материала) → документы оплатившим участникам + уведомление TG/VK/email.
  * Вся логика «кто получает» — в MilestoneCertificateIssuer; здесь гейт,
- * догон авторазметки материала, прогон и отчёт.
+ * догон авторазметки материала, прогон и отчет.
  */
 class IssueMilestoneCertificates extends Command
 {
     protected $signature = 'certificates:issue-milestones {--dry-run : Показать, кому выдалось бы, без записи и рассылки}';
 
-    protected $description = 'Выдаёт сертификаты по созревшим вехам курсов и уведомляет студентов.';
+    protected $description = 'Выдает сертификаты по созревшим вехам курсов и уведомляет студентов.';
 
     public function handle(
         MilestoneCertificateIssuer $issuer,

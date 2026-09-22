@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
  * H3766 B1 — собрать КАНДИДАТОВ для tests/fixtures/faq_rag_eval.json из реальных
  * входящих вопросов поддержки.
  *
- * Команда НИКОГДА не пишет сам фикстур: она отдаёт анонимизированных кандидатов
+ * Команда НИКОГДА не пишет сам фикстур: она отдает анонимизированных кандидатов
  * с предложенным BM25 top-10, а разметку expected_chunk_ids делает человек/агент
  * поштучно (план R6: «ambiguous items dropped, never guessed»).
  *
@@ -110,7 +110,7 @@ class FaqEvalSetBuild extends Command
                 'date' => (string) $row['date'],
                 'category' => $category,
                 'question' => $text,
-                // Ключ называется bm25_candidates — значит и скор в нём BM25
+                // Ключ называется bm25_candidates — значит и скор в нем BM25
                 // (H5065): на гибридном ретривере ['score'] дал бы RRF-числа
                 // под именем, которое обещает BM25.
                 'bm25_candidates' => array_map(static fn (array $h): array => [

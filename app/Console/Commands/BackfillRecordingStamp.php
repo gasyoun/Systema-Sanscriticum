@@ -24,20 +24,20 @@ use Illuminate\Support\Facades\DB;
  * восстановить его неоткуда. Поэтому команда НЕ притворяется, что «нашла» его:
  * она ВОССТАНАВЛИВАЕТ опорную точку из `lesson_date` — даты, когда занятие
  * прошло. Это не наблюдение, а реконструкция, и она названа так и здесь, и в
- * выводе команды. Смысл при этом ровно тот, что задуман фичей: приём ДЗ
+ * выводе команды. Смысл при этом ровно тот, что задуман фичей: прием ДЗ
  * открывается на следующее утро после занятия.
  *
  * ЧЕГО КОМАНДА НЕ ДЕЛАЕТ, СОЗНАТЕЛЬНО:
  *  - не трогает `homework_enabled`, `homework_prompt`, `homework_auto_opened_at`
- *    и `homework_closed_at` — она не открывает приём и не может открыть;
- *  - не шлёт НИ ОДНОГО уведомления. У большинства этих уроков расчётный момент
+ *    и `homework_closed_at` — она не открывает прием и не может открыть;
+ *  - не шлет НИ ОДНОГО уведомления. У большинства этих уроков расчетный момент
  *    открытия давно в прошлом, и наивная рассылка ушла бы по всему архиву;
  *  - не перезаписывает уже проставленный штамп — только NULL.
  */
 class BackfillRecordingStamp extends Command
 {
     protected $signature = 'lessons:backfill-recording-stamp
-        {--apply : Записать в БД. Без этого флага — только отчёт, ни одной записи}
+        {--apply : Записать в БД. Без этого флага — только отчет, ни одной записи}
         {--course=* : Ограничить слагами курсов (можно несколько)}
         {--limit= : Обработать не более N уроков (для осторожного первого прогона)}';
 
@@ -90,7 +90,7 @@ class BackfillRecordingStamp extends Command
 
             if ($apply) {
                 // DB::table, а не модель: хук Lesson::boot() поставил бы «сейчас»,
-                // затерев ровно то, что мы чиним. Затрагиваем ДВЕ колонки, и всё.
+                // затерев ровно то, что мы чиним. Затрагиваем ДВЕ колонки, и все.
                 DB::table('lessons')->where('id', $lesson->id)->update([
                     'recording_attached_at' => $anchor->format('Y-m-d H:i:s'),
                     'homework_opens_at' => $opensAt->format('Y-m-d H:i:s'),
@@ -110,7 +110,7 @@ class BackfillRecordingStamp extends Command
 
         $this->table(['Урок', 'Название', 'Опора (lesson_date)', 'Открытие'], $rows);
         if (count($lessons) > count($rows)) {
-            $this->line(sprintf('… и ещё %d — показаны первые %d.', count($lessons) - count($rows), count($rows)));
+            $this->line(sprintf('… и еще %d — показаны первые %d.', count($lessons) - count($rows), count($rows)));
         }
 
         if ($noAnchor > 0) {
@@ -119,7 +119,7 @@ class BackfillRecordingStamp extends Command
 
         $this->newLine();
         if ($apply) {
-            $this->info(sprintf('Записано: %d из %d кандидатов. Приём ДЗ НЕ открыт ни у одного — этим занимается homework:auto-open.', $written, $total));
+            $this->info(sprintf('Записано: %d из %d кандидатов. Прием ДЗ НЕ открыт ни у одного — этим занимается homework:auto-open.', $written, $total));
         } else {
             $this->info(sprintf('--dry-run по умолчанию: %d кандидат(ов). База не тронута, уведомления не отправлялись.', $total));
             $this->line('Записать: та же команда с --apply.');

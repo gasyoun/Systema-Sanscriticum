@@ -24,12 +24,12 @@ class VerifyServerGuards extends Command
         {--json : Выдать находки машиночитаемо}
         {--force : Проверять даже там, где проверка отключена (не Linux/CI)}';
 
-    protected $description = 'Проверить ресурсные предохранители прода (cron-обёртка, сторожа, потолки памяти, earlyoom, логи)';
+    protected $description = 'Проверить ресурсные предохранители прода (cron-обертка, сторожа, потолки памяти, earlyoom, логи)';
 
     public function handle(): int
     {
         if (! config('server_guards.verify_enabled') && ! $this->option('force')) {
-            $this->comment('guards:verify выключен для этого окружения (SERVER_GUARDS_VERIFY). --force, чтобы всё равно проверить.');
+            $this->comment('guards:verify выключен для этого окружения (SERVER_GUARDS_VERIFY). --force, чтобы все равно проверить.');
 
             return self::SUCCESS;
         }

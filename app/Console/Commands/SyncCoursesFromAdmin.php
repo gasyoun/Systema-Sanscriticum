@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
  *   php artisan courses:sync-from-admin storage/app/imports/courses_admin.csv
  *   php artisan courses:sync-from-admin <path> --dry-run
  *
- * Сопоставление идёт по slug (он уникален и стабилен), title приводится к
+ * Сопоставление идет по slug (он уникален и стабилен), title приводится к
  * каноническому. Это делает Course.title эталонным — чтобы импорт оплат/блоков,
  * который ищет курс по точному title, находил совпадения.
  */

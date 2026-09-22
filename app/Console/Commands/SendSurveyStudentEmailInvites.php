@@ -20,20 +20,20 @@ use Symfony\Component\Mailer\Exception\TransportException;
  * не может (H4431; рулинг MG 08-09-2026 «email да, но не сегодня» — отправка
  * не ранее 09-09-2026, отдельное «go» человека перед --send).
  *
- * Кого берём: тот же конвейер текущих учеников, что у surveys:send-student-invites
+ * Кого берем: тот же конвейер текущих учеников, что у surveys:send-student-invites
  * (живая группа ИЛИ нетерминальный course_user ИЛИ свежая оплата ≤6 мес), те же
  * исключения (персонал, отписавшиеся, недавние ответившие, кабинетные/саппорт-
- * приглашения, exit-триггер, уже приглашённые в любую волну) — НО аудитория
+ * приглашения, exit-триггер, уже приглашенные в любую волну) — НО аудитория
  * полностью без telegram_id (близнецовая ветка telegram_id IS NULL / 0) и с
  * непустым email. Кросс-канальные дубли исключает UNIQUE(survey_slug, user_id):
- * строка channel=email не может появиться, если адресат уже приглашён ботом.
+ * строка channel=email не может появиться, если адресат уже приглашен ботом.
  *
  * Транспорт — собственный мейлер платформы (config/mail.php, как
  * CourseWelcomeMail); новый SMTP-сервис не заводится. Отправка синхронная,
  * чтобы писать статус каждого адресата в журнал survey_invitations.
  *
  * Коды SMTP отличаются от HTTP-семантики Telegram-версии: 5xx (например
- * 550 mailbox unavailable) — ПОСТОЯННЫЙ жёсткий отскок → failed + адрес
+ * 550 mailbox unavailable) — ПОСТОЯННЫЙ жесткий отскок → failed + адрес
  * выбывает из будущих волн; 4xx (450/451) — временный отказ → unknown
  * без слепого ретрая; обрыв связи/таймаут → unknown.
  *
@@ -156,7 +156,7 @@ class SendSurveyStudentEmailInvites extends Command
             usleep(300_000);
         }
 
-        $this->info("Отправлено: {$sent}. Отказов: {$failed}. Неопределённых: {$unknown}. Пропущено (резерв существовал): {$skipped}.");
+        $this->info("Отправлено: {$sent}. Отказов: {$failed}. Неопределенных: {$unknown}. Пропущено (резерв существовал): {$skipped}.");
 
         Log::info('surveys:send-student-email-invites batch complete', [
             'slug' => $slug,
@@ -352,7 +352,7 @@ class SendSurveyStudentEmailInvites extends Command
             $code = $this->smtpReplyCode($message);
 
             if ($code !== null && str_starts_with($code, '5')) {
-                // SMTP 5xx (550 и т.п.) — постоянный жёсткий отскок: адрес
+                // SMTP 5xx (550 и т.п.) — постоянный жесткий отскок: адрес
                 // выбывает из будущих волн через пометку error=hard-bounce.
                 return [SurveyInvitation::STATUS_FAILED, 'hard-bounce: smtp '.$code.': '.$message];
             }
@@ -394,7 +394,7 @@ class SendSurveyStudentEmailInvites extends Command
         return false;
     }
 
-    /** Тексты ошибок транспорта не должны тащить учётные данные и расти без предела. */
+    /** Тексты ошибок транспорта не должны тащить учетные данные и расти без предела. */
     private function sanitize(?string $message): ?string
     {
         if ($message === null) {
@@ -405,7 +405,7 @@ class SendSurveyStudentEmailInvites extends Command
     }
 
     /**
-     * Предполётная проверка мейлера (аналог getMe у Telegram-версии):
+     * Предполетная проверка мейлера (аналог getMe у Telegram-версии):
      * адрес отправителя и транспорт должны быть настроены, иначе рассылка
      * запрещена.
      */
@@ -425,7 +425,7 @@ class SendSurveyStudentEmailInvites extends Command
             return false;
         }
 
-        $this->info("Мейлер подтверждён: {$mailer}, от {$from}.");
+        $this->info("Мейлер подтвержден: {$mailer}, от {$from}.");
 
         return true;
     }

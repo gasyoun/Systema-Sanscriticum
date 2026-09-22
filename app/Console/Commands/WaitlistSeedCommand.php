@@ -91,7 +91,7 @@ class WaitlistSeedCommand extends Command
         }
 
         // Бюлер: дубль-строка потока не нужна (MG 01-09-2026) — идемпотентный
-        // cleanup, чтобы повторные запуски сидра схлопнули её
+        // cleanup, чтобы повторные запуски сидра схлопнули ее
         $removed = CourseWaitlistItem::query()->where('slug', 'bueler-2-potok')->delete();
         if ($removed > 0) {
             $this->info("удалено: {$removed} (bueler-2-potok — дубль-поток, см. MG 01-09-2026)");

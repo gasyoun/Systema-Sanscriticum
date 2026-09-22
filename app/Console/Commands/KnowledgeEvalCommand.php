@@ -13,10 +13,10 @@ use Illuminate\Console\Command;
 /**
  * H3234 (issue #1633 этап 2): knowledge:eval — recall@5 / MRR для конфигураций
  * BM25 (базовая линия H2448/H3766) и hybrid (H4001: BM25 ∪ dense, RRF поверх
- * knowledge_chunks) на золотом наборе. Приёмка эксперимента — hybrid ≥ BM25.
+ * knowledge_chunks) на золотом наборе. Приемка эксперимента — hybrid ≥ BM25.
  *
  * Реюз, не дублирование: скоринг — те же Bm25FaqRetriever и HybridRetriever,
- * что работают в lane'е (H4001 собрал eval-гейты как тесты; команда даёт ту
+ * что работают в lane'е (H4001 собрал eval-гейты как тесты; команда дает ту
  * же метрику в виде печатной таблицы для прогона на проде/с живым узлом).
  *
  * Dense-состояние определяется честно: если эмбеддер недоступен (драйвер не
@@ -76,11 +76,11 @@ class KnowledgeEvalCommand extends Command
             $this->warn('dense-нога недоступна: KNOWLEDGE_EMBEDDING_DRIVER=ollama и живой туннель дадут настоящую гибридную ногу.');
         }
 
-        // Гибридная конфигурация замеряется с включёнными флагами lane'а —
+        // Гибридная конфигурация замеряется с включенными флагами lane'а —
         // eval-команда измеряет МЕХАНИКУ, а не состояние прод-флагов. Но
         // включаем их ТОЛЬКО при живой dense-ноге: их HybridRetriever при
         // выключенных флагах держит BM25-пол, а броски OllamaEmbeddingProvider
-        // (узел умер) в середине прогона сорвали бы таблицу — при мёртвой
+        // (узел умер) в середине прогона сорвали бы таблицу — при мертвой
         // ноге честнее замерить пол и пометить его в шапке.
         $prevSuggester = config('features.faq_rag_suggester');
         $prevHybrid = config('features.faq_hybrid_retrieval');
@@ -142,7 +142,7 @@ class KnowledgeEvalCommand extends Command
         if ($rows[1][$recallKey] >= $rows[0][$recallKey]) {
             $this->info('acceptance: hybrid ≥ BM25 — OK');
         } else {
-            $this->warn('acceptance: hybrid < BM25 — приёмка НЕ пройдена (пол H4001 нарушен: так не должно быть)');
+            $this->warn('acceptance: hybrid < BM25 — приемка НЕ пройдена (пол H4001 нарушен: так не должно быть)');
         }
 
         return self::SUCCESS;

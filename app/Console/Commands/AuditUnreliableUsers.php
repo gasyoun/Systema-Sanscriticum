@@ -13,7 +13,7 @@ class AuditUnreliableUsers extends Command
 {
     protected $signature = 'unreliable:recount';
 
-    protected $description = 'Пересчитать флаг «неблагонадёжный» и подсветку «поведение исправилось» по правилам UnreliabilityAuditor.';
+    protected $description = 'Пересчитать флаг «неблагонадежный» и подсветку «поведение исправилось» по правилам UnreliabilityAuditor.';
 
     public function handle(UnreliabilityAuditor $auditor): int
     {

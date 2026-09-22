@@ -125,7 +125,7 @@ final class ReportFirstTimeBuyers extends Command
         usort($rows, fn (array $a, array $b) => $b['gross'] <=> $a['gross']);
 
         $this->info('Первые покупатели — '.now()->format('Y-m-d H:i')
-            .($days > 0 ? " · первое в жизни покупке за последние {$days} дн." : ' · всё время')
+            .($days > 0 ? " · первое в жизни покупке за последние {$days} дн." : ' · все время')
             .($source !== '' ? " · source={$source}" : ''));
 
         $table = array_map(fn (array $r) => [

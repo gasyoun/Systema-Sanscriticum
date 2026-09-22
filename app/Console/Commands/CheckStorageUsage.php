@@ -20,7 +20,7 @@ use Throwable;
  *
  * Мотив: до этой команды рост медиа не измерялся ничем. Загрузки материалов
  * занятий не ограничены по количеству файлов, а storage/app целиком попадает в
- * еженедельный бэкап — то есть каждый лишний гигабайт бьёт дважды, и заметить
+ * еженедельный бэкап — то есть каждый лишний гигабайт бьет дважды, и заметить
  * это можно было только по факту падения сервера.
  *
  * Read-only: ничего не удаляет и не чистит. Уборка — отдельное решение человека,
@@ -99,7 +99,7 @@ class CheckStorageUsage extends Command
         $body = implode(' ', $snapshot['alerts']);
         foreach ($recipients as $recipient) {
             Notification::make()
-                ->title('Хранилище растёт: пора вмешаться')
+                ->title('Хранилище растет: пора вмешаться')
                 ->danger()
                 ->body($body)
                 ->sendToDatabase($recipient);
@@ -114,7 +114,7 @@ class CheckStorageUsage extends Command
     {
         return match ($level) {
             'red' => 'КРАСНЫЙ',
-            'yellow' => 'жёлтый',
+            'yellow' => 'желтый',
             default => 'ок',
         };
     }

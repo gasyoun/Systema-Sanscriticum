@@ -15,20 +15,20 @@ use Illuminate\Database\Eloquent\Builder;
  * канала лид-магнита и пишем inferred_source + inference_rule + source_inferred_at.
  *
  * Инварианты:
- *  - leads.source (введён человеком) НИКОГДА не перетирается и не заполняется;
+ *  - leads.source (введен человеком) НИКОГДА не перетирается и не заполняется;
  *  - без --recompute уже выведенные строки не трогаем (идемпотентно за ночь);
  *  - запись — update по id мимо Eloquent-событий: без строк в lead_audits и
  *    без bump updated_at, это машинная разметка, а не правка менеджера;
- *  - --dry-run печатает тот же отчёт (доля до/после, разрез по правилам), не пишет.
+ *  - --dry-run печатает тот же отчет (доля до/после, разрез по правилам), не пишет.
  */
 final class InferLeadSources extends Command
 {
     protected $signature = 'leads:infer-source
-        {--dry-run : Только отчёт (доля с источником до/после, разрез по правилам), ничего не пишем}
+        {--dry-run : Только отчет (доля с источником до/после, разрез по правилам), ничего не пишем}
         {--recompute : Пересчитать и уже выведенные inferred_source (source руками — никогда)}
         {--chunk=500 : Размер пачки}';
 
-    protected $description = 'H5021: вывести источник лида из UTM/referrer/статьи/лид-магнита в inferred_source (ночью; --dry-run для отчёта)';
+    protected $description = 'H5021: вывести источник лида из UTM/referrer/статьи/лид-магнита в inferred_source (ночью; --dry-run для отчета)';
 
     public function handle(): int
     {
