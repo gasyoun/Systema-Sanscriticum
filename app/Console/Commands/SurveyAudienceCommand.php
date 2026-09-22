@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  *
  * - churn-block: оплатили блок N курса, но не пришли за N+1 (при том что
  *   более высокий блок курса кто-то покупал — значит, курс длиннее);
- * - post3m: ≥2 оплаченных блока и первый платёж старше 90 дней.
+ * - post3m: ≥2 оплаченных блока и первый платеж старше 90 дней.
  */
 class SurveyAudienceCommand extends Command
 {
@@ -96,7 +96,7 @@ class SurveyAudienceCommand extends Command
                 'Telegram ID' => (string) $r->telegram_id,
                 'Курс' => $r->course,
                 'Оплачен блок' => $r->max_block,
-                'Последний платёж' => substr((string) $r->last_payment, 0, 10),
+                'Последний платеж' => substr((string) $r->last_payment, 0, 10),
             ])
             ->values()->all();
     }
@@ -128,7 +128,7 @@ class SurveyAudienceCommand extends Command
                 'Telegram ID' => (string) $r->telegram_id,
                 'Оплачено блоков' => $r->blocks_paid,
                 'Первый блок' => $r->first_block,
-                'Последний платёж' => $r->last_payment,
+                'Последний платеж' => $r->last_payment,
             ])
             ->all();
     }

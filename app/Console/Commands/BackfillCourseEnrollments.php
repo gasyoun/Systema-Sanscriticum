@@ -12,7 +12,7 @@ class BackfillCourseEnrollments extends Command
 {
     protected $signature = 'courses:backfill-enrollments {--dry-run : Только показать, ничего не записывать}';
 
-    protected $description = 'Создаёт недостающие записи «Обучается на курсах» (course_user, статус «Записался») для студентов с успешной оплатой курса.';
+    protected $description = 'Создает недостающие записи «Обучается на курсах» (course_user, статус «Записался») для студентов с успешной оплатой курса.';
 
     public function handle(): int
     {

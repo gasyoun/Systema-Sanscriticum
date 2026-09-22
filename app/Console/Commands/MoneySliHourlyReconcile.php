@@ -89,7 +89,7 @@ class MoneySliHourlyReconcile extends Command
 
         if ($healthy) {
             $alerter->recovered('hourly_reconcile');
-            $this->info("✅ hourly-reconcile зелёный (webhook {$applied}/{$total}, {$silentGrants->count()} silent-grant, {$paidVolume} paid в окне).");
+            $this->info("✅ hourly-reconcile зеленый (webhook {$applied}/{$total}, {$silentGrants->count()} silent-grant, {$paidVolume} paid в окне).");
 
             return self::SUCCESS;
         }

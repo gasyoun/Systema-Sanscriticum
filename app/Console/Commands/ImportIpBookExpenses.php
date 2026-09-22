@@ -28,14 +28,14 @@ use Illuminate\Support\Carbon;
  * строки внутри вкладки сохраняются (occurrence), а не слипаются.
  *
  * Евровые/долларовые строки книги: сумма в рублях (amount), валютная деталь —
- * в fx_note («400 евро PayPal» — она же счёт-колонка). Категория — эвристика
+ * в fx_note («400 евро PayPal» — она же счет-колонка). Категория — эвристика
  * IpExpenseCategory::guess, оператор пере-категоризует в админке (аудит пишется).
  */
 class ImportIpBookExpenses extends Command
 {
     protected $signature = 'ip-expenses:import-book
         {path : Каталог снапшота (manifest.json + raskhody-ip/gid*.jsonl)}
-        {--apply : Записать импорт; без флага — только отчёт (dry-run)}';
+        {--apply : Записать импорт; без флага — только отчет (dry-run)}';
 
     protected $description = 'Импорт книги «Расходы по ИП» в ip_expenses (dry-run по умолчанию, паритет по manifest, идемпотентно)';
 
@@ -210,7 +210,7 @@ class ImportIpBookExpenses extends Command
                     'import_hash' => $hash,
                 ]);
 
-                // Аудит-строка 'imported' уже уйдёт из observer'а как created
+                // Аудит-строка 'imported' уже уйдет из observer'а как created
                 // («Система»), но провенанс снапшота вешаем явно:
                 $expense->audits()->create([
                     'admin_id' => null,

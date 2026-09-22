@@ -19,17 +19,17 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Сквозная репетиция подарочных сертификатов (H3334, приёмка «e2e-лог:
+ * Сквозная репетиция подарочных сертификатов (H3334, приемка «e2e-лог:
  * покупка → код → активация → доступ» + «одноразовость кода»).
  *
  * Зачем командой. Цепочка покупки размазана по чекауту, вебхуку банка и
- * странице активации — руками её не воспроизвести одинаково дважды, а на
- * проде нельзя дёргать реальные письма/Telegram и оставлять тестовые строки
+ * странице активации — руками ее не воспроизвести одинаково дважды, а на
+ * проде нельзя дергать реальные письма/Telegram и оставлять тестовые строки
  * в бухгалтерии. Команда прогоняет ВСЮ цепочку сервисного слоя (выпуск
  * сертификата по paid-платежу → активация вторым юзером → доступ через
  * группы → отказ повторной активации) внутри ОДНОЙ транзакции с откатом.
  *
- * Что НЕ делает: не шлёт письма (mail driver подменяется на log), не
+ * Что НЕ делает: не шлет письма (mail driver подменяется на log), не
  * диспатчит очереди (queue.default = null — Telegram-джобы отбрасываются);
  * живой HTTP-чекоут с банком репетицией не покрывается — он проверяется
  * человеком один раз после включения флага (см. GIFT_CERTIFICATES_PACKET).
@@ -68,7 +68,7 @@ class RehearseGiftCertificates extends Command
         };
 
         $this->info('Флаг features.gift_certificates = '.(config('features.gift_certificates') ? 'ON' : 'OFF')
-            .' (репетиция идёт по сервисному слою; для живых /gift/* маршрутов флаг включается отдельно).');
+            .' (репетиция идет по сервисному слою; для живых /gift/* маршрутов флаг включается отдельно).');
 
         DB::beginTransaction();
 
@@ -93,7 +93,7 @@ class RehearseGiftCertificates extends Command
 
     private function stepPurchaseAndPay(): void
     {
-        // Прямые create(), БЕЗ Eloquent-фабрик: прод живёт на composer --no-dev
+        // Прямые create(), БЕЗ Eloquent-фабрик: прод живет на composer --no-dev
         // (fakerphp/faker отсутствует), а репетиция обязана работать именно там.
         $course = Course::create([
             'title' => 'REHEARSE gift course',
@@ -116,7 +116,7 @@ class RehearseGiftCertificates extends Command
             'is_active' => true,
         ]);
 
-        // Платёж-покупка ровно той формы, которую пишет чекаут в режиме
+        // Платеж-покупка ровно той формы, которую пишет чекаут в режиме
         // «подарить» (PaymentController::createPayment): tariff='gift' + снимок.
         $buyer = $this->rehearseUser('buyer');
         $this->payment = Payment::create([
@@ -134,10 +134,10 @@ class RehearseGiftCertificates extends Command
             ],
         ]);
 
-        $this->record('1. покупка (pending gift-платёж)', $this->payment->exists ? 'PASS' : 'FAIL',
+        $this->record('1. покупка (pending gift-платеж)', $this->payment->exists ? 'PASS' : 'FAIL',
             'payment #'.$this->payment->id.', tariff=gift, claim_meta со снимком тарифа');
 
-        // Вебхук банка переводит заказ в paid — дальше всё делает Payment::booted().
+        // Вебхук банка переводит заказ в paid — дальше все делает Payment::booted().
         $this->payment->update(['status' => 'paid']);
     }
 
@@ -222,7 +222,7 @@ class RehearseGiftCertificates extends Command
             return;
         }
 
-        // Доступ открыт РОВНО как при обычной покупке: платёж получателя несёт
+        // Доступ открыт РОВНО как при обычной покупке: платеж получателя несет
         // ключ доступа ('full'), группы выданы штатным grantAccess().
         $expectedGroups = $this->payment->course?->groups()->pluck('groups.id')->all() ?? [];
         $actualGroups = $recipient->groups()->pluck('groups.id')->all();

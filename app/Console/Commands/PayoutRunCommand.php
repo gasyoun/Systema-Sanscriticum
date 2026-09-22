@@ -18,17 +18,17 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * H4520 — payout:run: месячный прогон выплат по завершённым блокам.
- * H4629 — три режима отчёта (json без изменений):
+ * H4520 — payout:run: месячный прогон выплат по завершенным блокам.
+ * H4629 — три режима отчета (json без изменений):
  *   - marina    — чат-формулы 1-в-1: «{N}-й блок: платных X: (база × 92%) × ставка = сумма»,
- *                 перерасчёты отдельными строками, «К оплате: итог», € для EUR-получателей
+ *                 перерасчеты отдельными строками, «К оплате: итог», € для EUR-получателей
  *                 (эталоны 16.02–23.07.2026 — Uprava data/h4597_finansy_leitan_kostina_extract.json);
- *   - detailed  — markdown-ведомость + перерасчёты старых блоков ПОИМЁННО
+ *   - detailed  — markdown-ведомость + перерасчеты старых блоков ПОИМЕННО
  *                 (ученик, блок, доля, дата платежа, payment_id) + должники по
- *                 завершённым блокам (debtorsFor наружу; список очищен от
+ *                 завершенным блокам (debtorsFor наружу; список очищен от
  *                 исторического состава групп: вступивший в группу позже
  *                 завершения блока не должник этого блока);
- *   - payments  — лента всех платежей расчёта по датам: дата, ученик, курс,
+ *   - payments  — лента всех платежей расчета по датам: дата, ученик, курс,
  *                 блок, сумма (доля), метод (+ прямые/посреднические/возвраты).
  *
  * READ ONLY: ни payments, ни teacher_payouts, ни users, ни finance_snapshots —
@@ -43,7 +43,7 @@ class PayoutRunCommand extends Command
         {--since= : отсечка последней выплаты YYYY-MM-DD (default: авто — max paid_at / «Расход»)}
         {--format=json : json,marina,detailed,payments — можно несколько через запятую; report = прежнее имя detailed}';
 
-    protected $description = 'Read-only месячный прогон выплат по завершённым блокам (json/marina/detailed/payments)';
+    protected $description = 'Read-only месячный прогон выплат по завершенным блокам (json/marina/detailed/payments)';
 
     public function handle(PayoutRunService $runner, TeacherSalaryService $salaries): int
     {
@@ -131,7 +131,7 @@ class PayoutRunCommand extends Command
     /**
      * Чат-формулы 1-в-1 по эталонам Марины (16.02–23.07.2026):
      *   «{N}-й блок: платных X: (база × 92%) × ставка = срез × ставка = сумма р.»,
-     * перерасчёты — отдельными строками, итог «К оплате: X € / Y руб.»,
+     * перерасчеты — отдельными строками, итог «К оплате: X € / Y руб.»,
      * €-конверсия только для EUR-получателей (lane = EUR).
      *
      * @param  list<array<string, mixed>>  $rows
@@ -158,7 +158,7 @@ class PayoutRunCommand extends Command
                 $row['blocks'],
             );
 
-            // Группировка по курсам: блоки окна + перерасчёт прошлых блоков.
+            // Группировка по курсам: блоки окна + перерасчет прошлых блоков.
             $byCourse = [];
             foreach ($row['blocks'] as $b) {
                 $byCourse[$b['course_title']]['blocks'][] = $b;
@@ -169,7 +169,7 @@ class PayoutRunCommand extends Command
 
             $out[] = sprintf('%s %s по %s:',
                 $row['name'],
-                implode(' и ', $headParts ?: ['(нет завершённых блоков)']),
+                implode(' и ', $headParts ?: ['(нет завершенных блоков)']),
                 $on->format('d.m.Y'));
 
             $courseEurParts = [];
@@ -190,7 +190,7 @@ class PayoutRunCommand extends Command
                 foreach ($entry['prior'] ?? [] as $b) {
                     $paid = count(array_filter($b['lines'], fn (array $l): bool => empty($l['is_return'])));
                     [$line, $sum] = $this->marinaBlockLine(
-                        sprintf('перерасчёт за %d-й блок: платных %d', $b['block_number'], $paid),
+                        sprintf('перерасчет за %d-й блок: платных %d', $b['block_number'], $paid),
                         (float) $b['base_rub'], $slicePct, $ratePct);
                     $lines[] = $line;
                     $parts[] = $this->fmtPlain($sum);
@@ -293,8 +293,8 @@ class PayoutRunCommand extends Command
     }
 
     /**
-     * Markdown-ведомость: начислено/перерасчёты поимённо/выплачено/остаток +
-     * должники по завершённым блокам (очищенные от исторического состава групп).
+     * Markdown-ведомость: начислено/перерасчеты поименно/выплачено/остаток +
+     * должники по завершенным блокам (очищенные от исторического состава групп).
      *
      * @param  list<array<string, mixed>>  $rows
      */
@@ -306,7 +306,7 @@ class PayoutRunCommand extends Command
             $byId[(int) $s['teacher_id']] = $s;
         }
 
-        $out = ['# Ведомость выплат по завершённым блокам — '.$on->format('d.m.Y'), ''];
+        $out = ['# Ведомость выплат по завершенным блокам — '.$on->format('d.m.Y'), ''];
         foreach ($rows as $row) {
             $out[] = '## '.($row['name'] ?? ('препод #'.$row['teacher_id']));
             $out[] = '';
@@ -320,9 +320,9 @@ class PayoutRunCommand extends Command
                 $row['window']['since'], $row['window']['on'], $row['slug'] ?? '—', $row['lane']);
             $out[] = '';
 
-            $out[] = '### Начислено (завершённые блоки окна)';
+            $out[] = '### Начислено (завершенные блоки окна)';
             $out[] = '';
-            $out[] = '| Курс | Блок | Завершён | Платных | База, ₽ |';
+            $out[] = '| Курс | Блок | Завершен | Платных | База, ₽ |';
             $out[] = '|---|---|---|---|---|';
             foreach ($row['blocks'] as $b) {
                 $out[] = sprintf('| %s | %d | %s%s | %d | %s |',
@@ -331,7 +331,7 @@ class PayoutRunCommand extends Command
                     number_format((float) $b['base_rub'], 2, ',', ' '));
             }
             foreach ($row['prior_blocks'] as $b) {
-                $out[] = sprintf('| %s | %d (перерасчёт) | %s | — | %s |',
+                $out[] = sprintf('| %s | %d (перерасчет) | %s | — | %s |',
                     $b['course_title'], $b['block_number'], $b['completed_on'],
                     number_format((float) $b['base_rub'], 2, ',', ' '));
             }
@@ -339,11 +339,11 @@ class PayoutRunCommand extends Command
                 number_format((float) $row['base_total_rub'], 2, ',', ' '));
             $out[] = '';
 
-            // Перерасчёты старых блоков ПОИМЁННО (H4629 режим 2).
+            // Перерасчеты старых блоков ПОИМЕННО (H4629 режим 2).
             if ($row['prior_blocks'] !== []) {
-                $out[] = '### Перерасчёты старых блоков (поимённо)';
+                $out[] = '### Перерасчеты старых блоков (поименно)';
                 $out[] = '';
-                $out[] = '| Ученик | Курс | Блок | Доля, ₽ | Платёж от | payment_id |';
+                $out[] = '| Ученик | Курс | Блок | Доля, ₽ | Платеж от | payment_id |';
                 $out[] = '|---|---|---|---|---|---|';
                 foreach ($row['prior_blocks'] as $b) {
                     foreach ($b['lines'] as $l) {
@@ -376,7 +376,7 @@ class PayoutRunCommand extends Command
                     $a['payout_id'], number_format((float) $a['remaining'], 2, ',', ' '), $a['paid_at'] ?? '?');
             }
             foreach ($row['pass_through']['lines'] as $l) {
-                $out[] = sprintf('- посредническая (НЕ вычет, ручная сверка): %s заплатил за «%s» через счёт преподавателя — %s ₽ от %s',
+                $out[] = sprintf('- посредническая (НЕ вычет, ручная сверка): %s заплатил за «%s» через счет преподавателя — %s ₽ от %s',
                     $l['student'], $l['course_title'], number_format((float) $l['amount_rub'], 2, ',', ' '), $l['date']);
             }
             foreach ($row['prepayment_rent'] as $rent) {
@@ -389,9 +389,9 @@ class PayoutRunCommand extends Command
 
             $s = $byId[$row['teacher_id']] ?? null;
             if ($s !== null) {
-                $out[] = '### Взаиморасчёт (всё время, по данным панели)';
+                $out[] = '### Взаиморасчет (все время, по данным панели)';
                 $out[] = '';
-                $out[] = sprintf('начислено всё время: %s ₽ · выплачено: %s ₽ · остаток: %s ₽',
+                $out[] = sprintf('начислено все время: %s ₽ · выплачено: %s ₽ · остаток: %s ₽',
                     number_format((float) $s['earned_all_time'], 2, ',', ' '),
                     number_format((float) $s['paid_all_time'], 2, ',', ' '),
                     number_format((float) $s['balance'], 2, ',', ' '));
@@ -400,7 +400,7 @@ class PayoutRunCommand extends Command
 
             $debtors = $this->cleanedDebtors($runner, $row);
             if ($debtors !== []) {
-                $out[] = '### Должники по завершённым блокам (список очищен от вступивших в группу позже блока)';
+                $out[] = '### Должники по завершенным блокам (список очищен от вступивших в группу позже блока)';
                 $out[] = '';
                 foreach ($debtors as $d) {
                     foreach ($d['blocks'] as $b) {
@@ -502,15 +502,15 @@ class PayoutRunCommand extends Command
     }
 
     /**
-     * Лента всех платежей расчёта по датам (H4629 режим 3): доли блоков и
-     * перерасчётов (сумма = доля в базе), прямые оплаты (вычет),
+     * Лента всех платежей расчета по датам (H4629 режим 3): доли блоков и
+     * перерасчетов (сумма = доля в базе), прямые оплаты (вычет),
      * посреднические (не вычет), возвраты; дата/метод обогащаются из payments.
      *
      * @param  list<array<string, mixed>>  $rows
      */
     private function renderPayments(array $rows): string
     {
-        $out = ['# Лента платежей расчёта', ''];
+        $out = ['# Лента платежей расчета', ''];
         foreach ($rows as $row) {
             $out[] = '## '.($row['name'] ?? ('препод #'.$row['teacher_id']));
             $out[] = '';
@@ -546,7 +546,7 @@ class PayoutRunCommand extends Command
                 $collect($b['lines'], (string) $b['course_title'], (int) $b['block_number'], 'доля блока');
             }
             foreach ($row['prior_blocks'] as $b) {
-                $collect($b['lines'], (string) $b['course_title'], (int) $b['block_number'], 'перерасчёт');
+                $collect($b['lines'], (string) $b['course_title'], (int) $b['block_number'], 'перерасчет');
             }
             foreach ($row['direct_receipts']['lines'] as $l) {
                 $entries[] = [
@@ -557,7 +557,7 @@ class PayoutRunCommand extends Command
                     'amount' => (float) $l['amount'],
                     'is_return' => false,
                     'payment_id' => null,
-                    'kind' => 'прямая на счёт (вычет по номиналу)',
+                    'kind' => 'прямая на счет (вычет по номиналу)',
                     'foreign' => isset($l['currency']) ? sprintf('%s %s', rtrim(rtrim(number_format((float) $l['amount'], 2, '.', ''), '0'), '.'), $l['currency']) : null,
                     'method' => null,
                 ];
@@ -605,7 +605,7 @@ class PayoutRunCommand extends Command
             usort($entries, fn (array $a, array $b): int => [$a['sort'] ?? '9999', $a['payment_id'] ?? 0] <=> [$b['sort'] ?? '9999', $b['payment_id'] ?? 0]);
 
             if ($entries === []) {
-                $out[] = '_В расчёте нет платежей._';
+                $out[] = '_В расчете нет платежей._';
                 $out[] = '';
 
                 continue;
@@ -626,7 +626,7 @@ class PayoutRunCommand extends Command
                 $out[] = '- '.implode(' — ', $parts);
             }
             $out[] = '';
-            $out[] = sprintf('Доли расчёта: %s р. · прямые: %s · посреднические: %s р.',
+            $out[] = sprintf('Доли расчета: %s р. · прямые: %s · посреднические: %s р.',
                 number_format((float) $row['base_total_rub'], 2, ',', ' '),
                 number_format((float) $row['direct_receipts']['total'], 2, ',', ' ').' '.($row['direct_receipts']['currency'] ?? '₽'),
                 number_format((float) $row['pass_through']['total_rub'], 2, ',', ' '));
@@ -636,7 +636,7 @@ class PayoutRunCommand extends Command
         return implode("\n", $out);
     }
 
-    /** «Карта», «СБП», «Наличные», «Долями»…; null → «не определён». */
+    /** «Карта», «СБП», «Наличные», «Долями»…; null → «не определен». */
     private function methodLabel(?string $method): string
     {
         return match ($method) {
@@ -644,7 +644,7 @@ class PayoutRunCommand extends Command
             'sbp' => 'СБП',
             'dolyame' => 'Долями',
             'cash' => 'Наличные',
-            null => 'не определён',
+            null => 'не определен',
             default => (string) $method,
         };
     }
@@ -665,7 +665,7 @@ class PayoutRunCommand extends Command
         return str_ends_with($txt, ',00') ? substr($txt, 0, -3) : $txt;
     }
 
-    /** 29145,60 — формат сумм как в расчётах Марины (§3б). */
+    /** 29145,60 — формат сумм как в расчетах Марины (§3б). */
     private function fmtRub(float $amount): string
     {
         return number_format($amount, 2, ',', ' ');

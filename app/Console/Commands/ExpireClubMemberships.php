@@ -14,7 +14,7 @@ use Illuminate\Console\Command;
  * заканчивается сам, и снимает его этот демон, а не банк.
  *
  * Сухой прогон по умолчанию: команда, отбирающая доступ у людей, обязана уметь
- * показать список ДО того, как отберёт.
+ * показать список ДО того, как отберет.
  */
 class ExpireClubMemberships extends Command
 {
@@ -29,7 +29,7 @@ class ExpireClubMemberships extends Command
         $apply = (bool) $this->option('apply');
 
         if (! config('features.club_membership')) {
-            $this->warn('Флаг features.club_membership ВЫКЛЮЧЕН — только отчёт, ничего не снимаем.');
+            $this->warn('Флаг features.club_membership ВЫКЛЮЧЕН — только отчет, ничего не снимаем.');
             $apply = false;
         }
 
@@ -45,7 +45,7 @@ class ExpireClubMemberships extends Command
 
         if ($report['refused_groups'] !== []) {
             // Инвариант 3. Группа, разделяемая клубом и обычным курсом, — это
-            // ошибка настройки, а не повод «всё-таки отцепить»: отцепив её, мы
+            // ошибка настройки, а не повод «все-таки отцепить»: отцепив ее, мы
             // отняли бы у человека оплаченный КУРС.
             $this->error('ОТКАЗ отцеплять группы, привязанные не только к клубному курсу: '
                 .implode(', ', $report['refused_groups'])
@@ -53,7 +53,7 @@ class ExpireClubMemberships extends Command
         }
 
         if ($report['checked'] === 0) {
-            $this->info('Истёкших периодов нет.');
+            $this->info('Истекших периодов нет.');
 
             return self::SUCCESS;
         }

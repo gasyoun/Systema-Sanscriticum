@@ -62,7 +62,7 @@ class ImportArticlesFromHtml extends Command
             // Удаляем исходник, если флаг --delete
             if ($this->option('delete')) {
                 if (@unlink($file)) {
-                    $this->line('  <fg=gray>✓ Исходник удалён</>');
+                    $this->line('  <fg=gray>✓ Исходник удален</>');
                 } else {
                     $this->warn("  ⚠ Не удалось удалить: {$file}");
                 }
@@ -264,7 +264,7 @@ class ImportArticlesFromHtml extends Command
 
         foreach ($items as $node) {
             $text = trim($node->textContent);
-            // Если в тексте есть слово "санскрит" / "общество" / "автор" — берём
+            // Если в тексте есть слово "санскрит" / "общество" / "автор" — берем
             if (preg_match('/общество|автор/iu', $text)) {
                 return $text;
             }
@@ -274,7 +274,7 @@ class ImportArticlesFromHtml extends Command
     }
 
     /**
-     * Внутренний HTML узла (всё содержимое, без самого тега).
+     * Внутренний HTML узла (все содержимое, без самого тега).
      * Symfony Crawler не имеет нативного innerHTML — собираем через DOMDocument.
      */
     private function innerHtml(Crawler $node): string

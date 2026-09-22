@@ -15,7 +15,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 
 /**
- * W3.1 healthcheck (H595): раз в N минут проверяет каждую включённую
+ * W3.1 healthcheck (H595): раз в N минут проверяет каждую включенную
  * {@see TelegramSupportAccount} на протухший синк или ошибку.
  *
  * При `TELEGRAM_SUPPORT_AUTO_HEAL=true` и healable-ошибке / stale:
@@ -39,7 +39,7 @@ class CheckTelegramSupportSessionHealth extends Command
             ->get();
 
         if ($accounts->isEmpty()) {
-            $this->info('Нет включённых Telegram-support аккаунтов — проверять нечего.');
+            $this->info('Нет включенных Telegram-support аккаунтов — проверять нечего.');
 
             return self::SUCCESS;
         }
@@ -107,14 +107,14 @@ class CheckTelegramSupportSessionHealth extends Command
             }
 
             if (! $stillBad && $exit === self::SUCCESS) {
-                $this->info('Auto-heal: сессия восстановлена, алерт не шлём.');
+                $this->info('Auto-heal: сессия восстановлена, алерт не шлем.');
 
                 return self::SUCCESS;
             }
 
-            $this->warn('Auto-heal: проблемы остались — шлём алерт.');
+            $this->warn('Auto-heal: проблемы остались — шлем алерт.');
             // Refresh problem text for the alert body.
-            $problems[] = 'Auto-heal recover выполнялся, но сессия всё ещё нездорова.';
+            $problems[] = 'Auto-heal recover выполнялся, но сессия все еще нездорова.';
         } elseif ($healable && $healer->autoHealEnabled() && $healer->isInCooldown()) {
             $this->comment('Auto-heal: в cooldown ('.$healer->cooldownMinutes().' мин) — только алерт.');
         }

@@ -16,9 +16,9 @@ use Illuminate\Support\Facades\File;
  * Запускается ЧЕЛОВЕКОМ на проде один раз на аккаунт: MadelineProto спросит
  * телефон → код из Telegram → пароль 2FA прямо в CLI. Успешный start()
  * пишет session-каталог; команда фиксирует его путь в строке аккаунта и
- * включает её — дальше telegram-support:sync --account=X работает сам.
+ * включает ее — дальше telegram-support:sync --account=X работает сам.
  *
- * Для дефолтного аккаунта 'support' команда не нужна: его сессия уже живёт
+ * Для дефолтного аккаунта 'support' команда не нужна: его сессия уже живет
  * в TELEGRAM_SUPPORT_SESSION.
  */
 class LoginTelegramSupportAccount extends Command
@@ -47,7 +47,7 @@ class LoginTelegramSupportAccount extends Command
         /** @var TelegramSupportAccount|null $account */
         $account = TelegramSupportAccount::query()->where('name', $name)->first();
 
-        if ($account !== null && $this->confirm("Аккаунт «{$name}» уже существует".($account->is_enabled ? ' и включён' : '').'. Перелогиниться?', false) === false && (string) $account->session_path !== '') {
+        if ($account !== null && $this->confirm("Аккаунт «{$name}» уже существует".($account->is_enabled ? ' и включен' : '').'. Перелогиниться?', false) === false && (string) $account->session_path !== '') {
             $this->line('Отменено.');
 
             return self::SUCCESS;
@@ -62,7 +62,7 @@ class LoginTelegramSupportAccount extends Command
         MadelineSessionContext::useSession($absolutePath);
 
         $this->info('Открываю сессию: '.$absolutePath);
-        $this->line('Введите телефон аккаунта, затем код из Telegram (и пароль 2FA, если включён).');
+        $this->line('Введите телефон аккаунта, затем код из Telegram (и пароль 2FA, если включен).');
 
         try {
             $factory->open();

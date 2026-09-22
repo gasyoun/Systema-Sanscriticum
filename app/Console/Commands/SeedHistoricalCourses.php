@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 /**
  * Заводит скрытыми исторические курсы, которых нет в выгрузке админки, но по которым
  * есть реальные оплаты в мастер-таблице (например, старые группы Кочергиной гр.35,
- * Бюллер гр.26 и т.п.). Список берётся из course_aliases.csv (action = create_hidden)
+ * Бюллер гр.26 и т.п.). Список берется из course_aliases.csv (action = create_hidden)
  * через CourseNameResolver.
  *
  *   php artisan courses:seed-historical

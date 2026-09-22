@@ -11,10 +11,10 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
 /**
- * H4457 (MG 09-09): приём канонического JSON таймкодов (из Uprava
+ * H4457 (MG 09-09): прием канонического JSON таймкодов (из Uprava
  * tools/kanva_tg_drive_ingest.py — n8n execution-история) в kanva_timings.
  * Привязка к живой грамматике по семейству курса; дедуп по video_url
- * либо по первым трём меткам (AI-вариант без url).
+ * либо по первым трем меткам (AI-вариант без url).
  */
 class KanvaIngestTimingsCommand extends Command
 {
@@ -54,7 +54,7 @@ class KanvaIngestTimingsCommand extends Command
             $course = $this->resolveCourse($session, $courseOption);
             if ($course === null) {
                 $skipped++;
-                $this->line('  пропущено (курс не определён — укажите --course=): '.($session['source'] ?? '?'));
+                $this->line('  пропущено (курс не определен — укажите --course=): '.($session['source'] ?? '?'));
 
                 continue;
             }

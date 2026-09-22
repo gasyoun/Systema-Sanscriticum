@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Http;
  * (RECORDING_GAP_CARE_TELEGRAM_CHAT_ID в .env). Текст — Telegram-HTML, превью
  * ссылок выключено, длиннее 4000 символов — режется по абзацам, хвосты идут
  * reply'ем на первый кусок. На stdout — одна JSON-строка с message_id первого
- * куска: его Uprava tools/guided_test_lane.py кладёт в леджер, чтобы потом
+ * куска: его Uprava tools/guided_test_lane.py кладет в леджер, чтобы потом
  * сопоставить ответы «готово / сломано» (care:replies).
  *
  *   php artisan care:post --file=/tmp/msg.html

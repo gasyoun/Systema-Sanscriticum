@@ -46,7 +46,7 @@ class RemindDstShifts extends Command
                 }
             });
 
-        $this->info('DST-скан завершён.');
+        $this->info('DST-скан завершен.');
 
         return self::SUCCESS;
     }
@@ -88,7 +88,7 @@ class RemindDstShifts extends Command
                 return sprintf(
                     "⏰ <b>Перевод часов в вашей стране</b>\n\n".
                     "Намасте! %s в вашей зоне (%s) переводят часы.\n".
-                    "Занятие «%s» остаётся в то же московское время (%s МСК), но в вашем времени теперь будет <b>%s</b> вместо %s.\n\n".
+                    "Занятие «%s» остается в то же московское время (%s МСК), но в вашем времени теперь будет <b>%s</b> вместо %s.\n\n".
                     'Проверьте будильник, чтобы не опоздать.',
                     $transition['date']->timezone($tz)->translatedFormat('d F'),
                     $tz,
@@ -106,7 +106,7 @@ class RemindDstShifts extends Command
             $this->sendOnce($user, $transitionDate, 'd1_evening', function () use ($shift, $tz, $session): string {
                 return sprintf(
                     "⏰ <b>Завтра перевод часов</b>\n\n".
-                    "Намасте! С завтрашнего дня занятие «%s» в вашем времени (%s) начнётся в <b>%s</b> вместо %s. Московское время занятия не меняется.\n\n".
+                    "Намасте! С завтрашнего дня занятие «%s» в вашем времени (%s) начнется в <b>%s</b> вместо %s. Московское время занятия не меняется.\n\n".
                     'Не забудьте про сдвиг — иначе можно не попасть на занятие (группа собирается, кворум важен).',
                     $session->title ?: 'занятие',
                     $tz,
@@ -117,7 +117,7 @@ class RemindDstShifts extends Command
         }
 
         // --- Stage 3: T−1 час — вшивается в 60-минутное напоминание (RemindUpcomingClasses).
-        // Тут только маркер в БД для дедупа; текст допстроки шлёт classes:remind-upcoming
+        // Тут только маркер в БД для дедупа; текст допстроки шлет classes:remind-upcoming
         // через User::isNonMskTimezone() (см. buildText там же). Отдельного пинга нет.
         if ($now->gte($session->start->copy()->subHour()) && $now->lt($session->start)) {
             TzAlertSent::firstOrCreate([

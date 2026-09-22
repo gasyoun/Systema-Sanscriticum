@@ -14,15 +14,15 @@ use Illuminate\Console\Command;
 /**
  * Ежедневный прогон (H162): группы со статусом «набирается», у которых
  * эффективная дата старта наступает через N дней (настройка
- * recruitment_notify_lead_days) и состав ещё не набран (min_size) —
- * предупреждаем уже присоединённых студентов и кураторов, вместо молчания
+ * recruitment_notify_lead_days) и состав еще не набран (min_size) —
+ * предупреждаем уже присоединенных студентов и кураторов, вместо молчания
  * до дня старта.
  */
 class NotifyFormingShortfall extends Command
 {
     protected $signature = 'groups:notify-forming-shortfall';
 
-    protected $description = 'Шлёт студентам и кураторам уведомление о недоборе группы за N дней до плановой даты старта.';
+    protected $description = 'Шлет студентам и кураторам уведомление о недоборе группы за N дней до плановой даты старта.';
 
     public function handle(GroupRecruitmentNotifier $notifier, CuratorNotifier $curatorNotifier, WaitlistNotifier $waitlistNotifier): int
     {
@@ -49,7 +49,7 @@ class NotifyFormingShortfall extends Command
             $curatorNotifier->groupUnderEnrolled($group);
 
             // H3327: тот же статус за 2 дня до старта получает и лист ожидания
-            // («дата под вопросом, до запуска ещё N») — дедуп на день внутри сервиса.
+            // («дата под вопросом, до запуска еще N») — дедуп на день внутри сервиса.
             $waitlistNotifier->autoReminder($group);
         }
 

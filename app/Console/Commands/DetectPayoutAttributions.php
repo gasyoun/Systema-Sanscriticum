@@ -19,20 +19,20 @@ use Illuminate\Support\Facades\DB;
  *
  * Разметка семи платежей семьи «Кашмирский шиваизм» вручную занимает у
  * бухгалтера вечер и делается раз в квартал; детектор готовит предложения,
- * решение остаётся за человеком.
+ * решение остается за человеком.
  *
  * Чего детектор НЕ предлагает — и это не оптимизация, а защита от задвоения:
  *
- *   - платежи, заведённые на пользователя, УЖЕ связанного с этим
+ *   - платежи, заведенные на пользователя, УЖЕ связанного с этим
  *     преподавателем (`users.teacher_id`): сверка считает их в «выплачено»
  *     напрямую, источником `payment_expense_direct`. Предложить их к
  *     подтверждению значило бы дать бухгалтеру подтвердить уже посчитанное —
  *     ровно тот случай, когда `paid_out` вырастает из воздуха. На боевых
- *     данных это платёж #13573 на 50 000 ₽: после `salary:link-teacher-users`
- *     он размечается сам, и руками остаётся шесть платежей, а не семь;
+ *     данных это платеж #13573 на 50 000 ₽: после `salary:link-teacher-users`
+ *     он размечается сам, и руками остается шесть платежей, а не семь;
  *   - платежи, по которым предложение уже есть (в любом статусе).
  *
- * Дедупликация идёт по `payment_id`, не по сумме: суммы в этой семье не
+ * Дедупликация идет по `payment_id`, не по сумме: суммы в этой семье не
  * уникальны.
  *
  * Команда пишет ТОЛЬКО в `teacher_payout_attribution_suggestions` и только со
@@ -42,7 +42,7 @@ class DetectPayoutAttributions extends Command
 {
     protected $signature = 'salary:detect-payout-attributions
         {--apply : Завести предложения в статусе pending}
-        {--family= : Ограничить одной семьёй потоков (слаг courses.course_family)}';
+        {--family= : Ограничить одной семьей потоков (слаг courses.course_family)}';
 
     protected $description = 'Найти платежи-«Расходы», похожие на выплаты преподавателю, и завести их в очередь подтверждения';
 
@@ -58,7 +58,7 @@ class DetectPayoutAttributions extends Command
             ->get();
 
         if ($courses->isEmpty()) {
-            $this->warn('Курсов с заполненной семьёй потоков не найдено — сначала `courses:backfill-families --apply`.');
+            $this->warn('Курсов с заполненной семьей потоков не найдено — сначала `courses:backfill-families --apply`.');
 
             return self::SUCCESS;
         }
@@ -133,7 +133,7 @@ class DetectPayoutAttributions extends Command
                 $rows[] = [
                     $paymentId, $family, $payment->course_id, $this->money($amount),
                     $payment->user?->name ?? '—',
-                    ($this->option('apply') ? 'завожу' : 'завёл бы').' · уверенность '.number_format($confidence * 100, 0).' %',
+                    ($this->option('apply') ? 'завожу' : 'завел бы').' · уверенность '.number_format($confidence * 100, 0).' %',
                 ];
             }
         }
@@ -144,19 +144,19 @@ class DetectPayoutAttributions extends Command
             return self::SUCCESS;
         }
 
-        $this->table(['Платёж', 'Семья', 'Курс', 'Сумма', 'На кого заведён', 'Что будет'], $rows);
+        $this->table(['Платеж', 'Семья', 'Курс', 'Сумма', 'На кого заведен', 'Что будет'], $rows);
 
         $total = array_sum(array_column($toCreate, 'amount'));
         $this->line('');
         $this->line(sprintf(
             'К разметке человеком: %d %s на %s ₽.',
             count($toCreate),
-            Plural::ru(count($toCreate), 'платёж', 'платежа', 'платежей'),
+            Plural::ru(count($toCreate), 'платеж', 'платежа', 'платежей'),
             $this->money($total),
         ));
 
         if (! $this->option('apply')) {
-            $this->warn('Режим отчёта: в базу не записано ничего. Повторите с --apply.');
+            $this->warn('Режим отчета: в базу не записано ничего. Повторите с --apply.');
 
             return self::SUCCESS;
         }
@@ -181,7 +181,7 @@ class DetectPayoutAttributions extends Command
     }
 
     /**
-     * Уверенность и её основание одной строкой. Основание печатается человеку
+     * Уверенность и ее основание одной строкой. Основание печатается человеку
      * и хранится в строке предложения: бухгалтер подтверждает не «0.8», а
      * названную причину.
      *
@@ -190,11 +190,11 @@ class DetectPayoutAttributions extends Command
     private function assess(Payment $payment, ?Course $course): array
     {
         $confidence = 0.5;
-        $reasons = ['платёж курса проведён как «'.$payment->tariff.'»'];
+        $reasons = ['платеж курса проведен как «'.$payment->tariff.'»'];
 
         if ($course?->teacher_id !== null) {
             $confidence += 0.2;
-            $reasons[] = 'курс «'.mb_strimwidth((string) $course?->title, 0, 40, '…').'» закреплён за этим преподавателем';
+            $reasons[] = 'курс «'.mb_strimwidth((string) $course?->title, 0, 40, '…').'» закреплен за этим преподавателем';
         }
 
         if ((float) $payment->amount < 0) {
@@ -204,9 +204,9 @@ class DetectPayoutAttributions extends Command
 
         if ($payment->user_id === null) {
             $confidence += 0.05;
-            $reasons[] = 'платёж не заведён ни на кого конкретно';
+            $reasons[] = 'платеж не заведен ни на кого конкретно';
         } else {
-            $reasons[] = 'заведён на пользователя «'.($payment->user?->name ?? '#'.$payment->user_id).'»';
+            $reasons[] = 'заведен на пользователя «'.($payment->user?->name ?? '#'.$payment->user_id).'»';
         }
 
         return [min(1.0, round($confidence, 2)), implode('; ', $reasons).'.'];

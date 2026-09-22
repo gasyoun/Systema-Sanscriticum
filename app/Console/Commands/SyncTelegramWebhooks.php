@@ -63,7 +63,7 @@ class SyncTelegramWebhooks extends Command
             // Без токена спрашивать Telegram нечем; без секрета — регистрировать
             // нельзя (получился бы живой вебхук, который fail-closed middleware
             // отбивает 403, снаружи неотличимо от тишины). В обоих случаях
-            // показываем проблему, а не прячем её.
+            // показываем проблему, а не прячем ее.
             if (! $bot->hasToken() || ($this->option('set') && ! $bot->isRegisterable())) {
                 $problems[] = "{$bot->label}: {$bot->problem}";
                 $rows[] = [$bot->label, '—', '—', '—', $bot->problem];

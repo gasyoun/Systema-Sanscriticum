@@ -332,7 +332,7 @@ class AutoReplyTrialTest extends TestCase
         ]);
 
         $this->artisan('telegram-support:sync', ['--account' => 'rusamskrtam'])
-            ->expectsOutputToContain('отключён (is_enabled=0)')
+            ->expectsOutputToContain('отключен (is_enabled=0)')
             ->assertExitCode(1);
     }
 

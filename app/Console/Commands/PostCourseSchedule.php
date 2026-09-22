@@ -24,7 +24,7 @@ class PostCourseSchedule extends Command
 {
     protected $signature = 'courses:post-schedule
         {courseId? : ID курса (или все его группы)}
-        {--due : Свип — группы с изменённым за 24 ч расписанием}
+        {--due : Свип — группы с измененным за 24 ч расписанием}
         {--force : Отправить даже если текст не изменился}
         {--dry : Показать текст, не отправлять}';
 

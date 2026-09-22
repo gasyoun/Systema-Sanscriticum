@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Baseline-отчёт телеметрии кабинета (H962, Phase 0 ремейка, спека §4).
+ * Baseline-отчет телеметрии кабинета (H962, Phase 0 ремейка, спека §4).
  *
  * Агрегирует ВСЕ источники под именами §4: activity_events (новые события H962)
  * + существующие таблицы lesson_views (lesson.view.heartbeat) и
@@ -21,9 +21,9 @@ use Illuminate\Support\Facades\DB;
  */
 class CabinetBaselineReport extends Command
 {
-    protected $signature = 'cabinet:baseline {--days=14 : Окно отчёта, дней назад от сегодня}';
+    protected $signature = 'cabinet:baseline {--days=14 : Окно отчета, дней назад от сегодня}';
 
-    protected $description = 'Baseline ремейка кабинета: счётчики событий спеки §4 за N дней (H962)';
+    protected $description = 'Baseline ремейка кабинета: счетчики событий спеки §4 за N дней (H962)';
 
     /** События §4, пишущиеся в activity_events (сервер + клиент). */
     private const ACTIVITY_EVENTS = [
@@ -42,7 +42,7 @@ class CabinetBaselineReport extends Command
         ActivityEvent::ACCESS_RENEWAL_COMPLETE,
     ];
 
-    /** События §4 без нынешней поверхности в кабинете — чтобы отчёт был честным про охват. */
+    /** События §4 без нынешней поверхности в кабинете — чтобы отчет был честным про охват. */
     private const NO_CURRENT_SURFACE = [
         'offer.purchase' => 'атрибуция покупки к офферу — после чекаут-attribution',
         'support.topic.pick' => 'у виджета поддержки нет выбора темы',

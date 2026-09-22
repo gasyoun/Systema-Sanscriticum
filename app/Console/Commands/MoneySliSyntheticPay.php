@@ -32,7 +32,7 @@ class MoneySliSyntheticPay extends Command
         {--dry : Прогнать без реальных POST к webhook и без TG/heartbeat}
         {--force-alert : Игнорировать TG-cooldown}';
 
-    protected $description = 'H4672: ежесуточный мок-платёж (webhook→grantAccess), без живого банка';
+    protected $description = 'H4672: ежесуточный мок-платеж (webhook→grantAccess), без живого банка';
 
     public function handle(MoneySliFixture $fixture, MoneySliAlerter $alerter): int
     {
@@ -153,14 +153,14 @@ class MoneySliSyntheticPay extends Command
 
         if ($success) {
             $alerter->recovered('synthetic_pay');
-            $this->info("✅ synthetic-pay зелёный (попытка {$attemptsUsed}/{$attempts}, {$latencyMs} мс).");
+            $this->info("✅ synthetic-pay зеленый (попытка {$attemptsUsed}/{$attempts}, {$latencyMs} мс).");
 
             return self::SUCCESS;
         }
 
         $alerter->alert(
             'synthetic_pay',
-            'Money-axis: ежесуточный synthetic-pay не прошёл',
+            'Money-axis: ежесуточный synthetic-pay не прошел',
             [
                 "Заказ №{$payment->id}, {$attemptsUsed}/{$attempts} попыток исчерпаны",
                 "Последняя ошибка: {$lastError}",

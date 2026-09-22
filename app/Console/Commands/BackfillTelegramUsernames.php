@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Http;
  *
  * Username мы начали ловить при привязке/сообщении (TelegramWebhookController),
  * но «молчуны», привязавшиеся раньше, останутся без него, пока не напишут боту.
- * Команда добирает их через Telegram Bot API getChat по сохранённому telegram_id.
+ * Команда добирает их через Telegram Bot API getChat по сохраненному telegram_id.
  *
  * Ограничения Telegram (честно):
  *  - getChat по приватному пользователю работает, только если он запускал бота
@@ -29,7 +29,7 @@ class BackfillTelegramUsernames extends Command
 {
     protected $signature = 'telegram:backfill-usernames
         {--apply : Реально записать @username (без флага — сухой прогон)}
-        {--all : Опрашивать и тех, у кого username уже сохранён (обновление)}
+        {--all : Опрашивать и тех, у кого username уже сохранен (обновление)}
         {--limit=200 : Максимум пользователей за прогон (батч)}
         {--sleep=60 : Пауза между запросами к API, мс (троттлинг)}';
 
@@ -53,7 +53,7 @@ class BackfillTelegramUsernames extends Command
 
         $query = User::query()->whereNotNull('telegram_id');
         if (! $all) {
-            $query->whereNull('telegram_username'); // только те, у кого ещё нет
+            $query->whereNull('telegram_username'); // только те, у кого еще нет
         }
 
         $total = (clone $query)->count();

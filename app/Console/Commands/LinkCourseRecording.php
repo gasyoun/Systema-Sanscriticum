@@ -13,10 +13,10 @@ use Illuminate\Console\Command;
  *
  * Рулинг MG 31-08-2026: платная запись прошедшего потока не получает
  * собственной карточки в магазине, она вариант покупки внутри карточки живого
- * потока. Связь ставит эта команда, а не руками SQL: у неё есть проверки, а у
+ * потока. Связь ставит эта команда, а не руками SQL: у нее есть проверки, а у
  * `UPDATE courses SET ...` их нет.
  *
- * Ничего не удаляет и не скрывает: страница записи остаётся живой и покупаемой
+ * Ничего не удаляет и не скрывает: страница записи остается живой и покупаемой
  * (у курса 327 «Йога-сутры Патанджали в записи» 129 оплат), меняется только то,
  * КАК программа представлена в ленте каталога и в `rel=canonical`. Развязать —
  * `--unlink`.
@@ -65,7 +65,7 @@ class LinkCourseRecording extends Command
             $recording->id, $recording->title, $live->id, $live->title,
         ));
         $this->line(sprintf('  карточка каталога: только /k/%s', $live->slug));
-        $this->line(sprintf('  /k/%s остаётся покупаем, canonical → /k/%s', $recording->slug, $live->slug));
+        $this->line(sprintf('  /k/%s остается покупаем, canonical → /k/%s', $recording->slug, $live->slug));
 
         if (! $this->option('apply')) {
             $this->newLine();
@@ -130,7 +130,7 @@ class LinkCourseRecording extends Command
         }
 
         $this->line(sprintf(
-            '  %d «%s» перестаёт быть записью курса %d и снова получает собственную карточку',
+            '  %d «%s» перестает быть записью курса %d и снова получает собственную карточку',
             $recording->id, $recording->title, $recording->recording_of_course_id,
         ));
 

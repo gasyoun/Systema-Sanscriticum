@@ -8,7 +8,7 @@ use App\Models\GameEvent;
 use Illuminate\Console\Command;
 
 /**
- * H4692 — отчёт трудности по вопросам бесплатных тренажёров /lila.
+ * H4692 — отчет трудности по вопросам бесплатных тренажеров /lila.
  *
  * Одна строка на (drill, band, вопрос): сколько раундов увидело вопрос,
  * медиана и среднее времени до первой связки пары (ms) и доля раундов,
@@ -18,7 +18,7 @@ use Illuminate\Console\Command;
 class GamesDifficultyReport extends Command
 {
     protected $signature = 'games:difficulty
-        {--days=30 : Окно отчёта, дней назад от сегодня}
+        {--days=30 : Окно отчета, дней назад от сегодня}
         {--limit=25 : Сколько вопросов показать}';
 
     protected $description = 'Трудность вопросов /lila: медиана ms до связки и wrong-rate по каждому вопросу за N дней (H4692)';
@@ -31,10 +31,10 @@ class GamesDifficultyReport extends Command
 
         $rows = GameEvent::difficulty($since);
 
-        $this->info("Трудность вопросов тренажёров за {$days} дн. (с {$since->toDateTimeString()}), топ-{$limit}:");
+        $this->info("Трудность вопросов тренажеров за {$days} дн. (с {$since->toDateTimeString()}), топ-{$limit}:");
 
         if ($rows === []) {
-            $this->line('  Пока ни одного события item_result в окне (нужны завершённые раунды match-игр).');
+            $this->line('  Пока ни одного события item_result в окне (нужны завершенные раунды match-игр).');
 
             return self::SUCCESS;
         }
@@ -50,13 +50,13 @@ class GamesDifficultyReport extends Command
         ], array_slice($rows, 0, $limit));
 
         $this->table(
-            ['Тренажёр', 'Уровень', 'Вопрос', 'Раунды', 'Медиана, мс', 'Среднее, мс', 'Была ошибка'],
+            ['Тренажер', 'Уровень', 'Вопрос', 'Раунды', 'Медиана, мс', 'Среднее, мс', 'Была ошибка'],
             $table,
         );
 
         $total = count($rows);
         if ($total > $limit) {
-            $this->line('… и ещё '.($total - $limit).' вопросов — увеличьте --limit.');
+            $this->line('… и еще '.($total - $limit).' вопросов — увеличьте --limit.');
         }
 
         return self::SUCCESS;

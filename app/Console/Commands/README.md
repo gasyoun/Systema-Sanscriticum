@@ -13,7 +13,7 @@ Artisan-команды. Запускаются через `php artisan <имя>`
 php artisan archives:cleanup {--hours=24}
 ```
 Удаляет ZIP-архивы материалов старше N часов (по умолчанию 24) из `storage/app/tmp/course-archives/`.  
-По расписанию: ежедневно в 03:00 (`archives-cleanup`). Выводит объём освобождённого места.
+По расписанию: ежедневно в 03:00 (`archives-cleanup`). Выводит объем освобожденного места.
 
 ### `ImportAcademyData`
 ```bash
@@ -86,7 +86,7 @@ php artisan debug:payment-skips {--file=payments.csv}
 php artisan salary:post-payouts {--apply}
 ```
 Ручной идемпотентный бэкфилл выплат преподавателям (без `--apply` — только показать).  
-Сервис `TeacherPayoutPoster` живёт в пяти Filament-вызовах; CLI-обёртка — для ручных догонов. Не по расписанию.
+Сервис `TeacherPayoutPoster` живет в пяти Filament-вызовах; CLI-обертка — для ручных догонов. Не по расписанию.
 
 ---
 

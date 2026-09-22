@@ -13,11 +13,11 @@ class RemindPaymentPromisesTomorrow extends Command
 {
     protected $signature = 'promises:remind-tomorrow';
 
-    protected $description = 'Шлёт студентам напоминание в TG: завтра срок по обещанию/рассрочке.';
+    protected $description = 'Шлет студентам напоминание в TG: завтра срок по обещанию/рассрочке.';
 
     public function handle(): int
     {
-        // Рубильник в админке (MarketingSetting). Нет настроек — считаем включённым.
+        // Рубильник в админке (MarketingSetting). Нет настроек — считаем включенным.
         $settings = MarketingSetting::cached();
         if ($settings && ! $settings->payment_reminders_enabled) {
             $this->info('Напоминания о сроках оплаты отключены в настройках — пропуск.');
@@ -47,10 +47,10 @@ class RemindPaymentPromisesTomorrow extends Command
             $url = url('/login');
             $amount = $promise->amount !== null
                 ? number_format((float) $promise->amount, 0, '.', ' ').' ₽'
-                : 'договорённая сумма';
+                : 'договоренная сумма';
 
             $text = "⏰ <b>Завтра срок оплаты</b>\n\n";
-            $text .= "Намасте! По договорённости завтра — срок оплаты курса <b>«{$courseName}»</b>";
+            $text .= "Намасте! По договоренности завтра — срок оплаты курса <b>«{$courseName}»</b>";
             $text .= " ({$amount}).\n\n";
             $text .= "Чтобы не потерять доступ — оплатите сегодня:\n";
             $text .= "<a href='{$url}'>Перейти в личный кабинет</a>";
