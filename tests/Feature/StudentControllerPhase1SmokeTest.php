@@ -18,9 +18,11 @@ use Tests\TestCase;
 
 /**
  * H4978 — smoke coverage for the 3 previously-untested routes moved into
- * App\Http\Controllers\Concerns\ManagesCourseResources during the Phase 1
- * StudentController.php split. Not exhaustive behavior tests — these exist
- * to prove the routes still resolve and respond sanely after the move.
+ * App\Http\Controllers\Concerns\StudentCourseContentConcerns /
+ * StudentCertificateConcerns during the StudentController.php split
+ * (H5245 recovery: Phase 2 layout superseded the Phase 1 Manages* traits).
+ * Not exhaustive behavior tests — these exist to prove the routes still
+ * resolve and respond sanely after the move.
  */
 class StudentControllerPhase1SmokeTest extends TestCase
 {
