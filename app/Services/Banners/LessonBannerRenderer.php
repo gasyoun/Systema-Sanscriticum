@@ -306,10 +306,14 @@ final class LessonBannerRenderer
             return;
         }
 
-        $cursor = $x;
-        foreach (mb_str_split($text) as $char) {
-            imagettftext($image, $size, 0, (int) round($cursor), (int) round($baseline), $color, $font, $char);
-            $cursor += $this->charAdvance($char, $font, $size) + $tracking;
+        // Трекинг: буквы по одной, но позиция каждой — настоящий шаг пера по
+        // префиксу строки (с боковыми отступами и кернингом), а не ширина глифа.
+        // Иначе строка сжимается: «21.09.2026» у Кочергиной выходила на 16 % уже.
+        $prefix = '';
+        foreach (mb_str_split($text) as $i => $char) {
+            $pen = $x + $this->penAdvance($prefix, $font, $size) + $i * $tracking;
+            imagettftext($image, $size, 0, (int) round($pen), (int) round($baseline), $color, $font, $char);
+            $prefix .= $char;
         }
     }
 
@@ -328,24 +332,29 @@ final class LessonBannerRenderer
         $top = (float) min($box[5], $box[7]);
         $bottom = (float) max($box[1], $box[3]);
 
-        if ($tracking == 0.0) {
-            return [(float) (max($box[2], $box[4]) - min($box[0], $box[6])), $top, $bottom];
-        }
+        $width = (float) (max($box[2], $box[4]) - min($box[0], $box[6]));
 
-        $width = 0.0;
-        $chars = mb_str_split($text);
-        foreach ($chars as $char) {
-            $width += $this->charAdvance($char, $font, $size);
-        }
-
-        return [$width + $tracking * max(0, count($chars) - 1), $top, $bottom];
+        return [$width + $tracking * max(0, mb_strlen($text) - 1), $top, $bottom];
     }
 
-    private function charAdvance(string $char, string $font, float $size): float
+    /**
+     * Сдвиг пера после строки $prefix: правый край «$prefix|» минус правый край «|».
+     * imagettfbbox меряет чернила, а не шаг пера, — вертикальная черта-метка
+     * снимает разницу (боковые отступы последней буквы учтены).
+     */
+    private function penAdvance(string $prefix, string $font, float $size): float
     {
-        $box = imagettfbbox($size, 0, $font, $char);
+        if ($prefix === '') {
+            return 0.0;
+        }
 
-        return $box === false ? 0.0 : (float) (max($box[2], $box[4]) - min($box[0], $box[6]));
+        $with = imagettfbbox($size, 0, $font, $prefix.'|');
+        $mark = imagettfbbox($size, 0, $font, '|');
+        if ($with === false || $mark === false) {
+            return 0.0;
+        }
+
+        return (float) (max($with[2], $with[4]) - max($mark[2], $mark[4]));
     }
 
     private function load(string $disk, string $path, string $what): GdImage
