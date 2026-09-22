@@ -35,8 +35,10 @@ class BeginnerPilotOfferTest extends TestCase
         $schedule = Schedule::create(['title' => 'Intro', 'start' => now()->addDays(2), 'end' => now()->addDays(2)->addHour()]);
         config(['marathon.schedule_id' => $schedule->id]);
         $this->get(route('beginner-pilot.show'))->assertDontSee('Выбрать участие с проверкой');
-        config(['beginner_pilot.staffed_schedule_id' => $schedule->id, 'beginner_pilot.staffing_confirmed_at' => now()->toIso8601String()]);
+        config(['beginner_pilot.staffed_schedule_id' => $schedule->id, 'beginner_pilot.staffing_confirmed_at' => now()->toIso8601String(), 'beginner_pilot.staffed_schedule_start' => $schedule->start->toIso8601String(), 'beginner_pilot.staffed_schedule_end' => $schedule->end->toIso8601String()]);
         $this->get(route('beginner-pilot.show'))->assertSee('Выбрать участие с проверкой')->assertSee('мск');
+        $schedule->update(['start' => now()->addDays(3), 'end' => now()->addDays(3)->addHour()]);
+        $this->get(route('beginner-pilot.show'))->assertDontSee('Выбрать участие с проверкой');
         $schedule->update(['end' => null]);
         $this->get(route('beginner-pilot.show'))->assertDontSee('Выбрать участие с проверкой');
     }
