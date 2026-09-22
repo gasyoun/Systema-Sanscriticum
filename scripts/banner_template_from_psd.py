@@ -123,7 +123,7 @@ def is_upper(text: str) -> bool:
     return bool(letters) and all(c == c.upper() for c in letters)
 
 
-def field_spec(layer, canvas_w: int, canvas_h: int, grow: float, fonts: dict[str, str]) -> dict:
+def field_spec(layer, canvas_w: int, canvas_h: int, grow: float, fonts: dict[str, str], obstacles: list[tuple[int, int, int, int]]) -> dict:
     style = style_of(layer)
     left, top, right, bottom = layer.bbox
     width, height = right - left, bottom - top
@@ -132,14 +132,30 @@ def field_spec(layer, canvas_w: int, canvas_h: int, grow: float, fonts: dict[str
     # Рамку расширяем под текст длиннее образца («1» -> «12», «май» -> «сентября»)
     # в сторону, куда текст растёт при данном выравнивании; fit в рендере ужмёт,
     # если и этого не хватит.
-    new_w = min(canvas_w, round(width * grow))
-    extra = new_w - width
+    # Но не дальше соседнего видимого слоя на той же строке («(1)» рядом с «из 16»):
+    # иначе «(12)» ляжет поверх статичного текста фона.
+    gap = 8
+    limit_left, limit_right = 0, canvas_w
+    for o_left, o_top, o_right, o_bottom in obstacles:
+        if o_bottom <= top or o_top >= bottom:
+            continue  # не на этой строке
+        if o_left >= right:
+            limit_right = min(limit_right, o_left - gap)
+        elif o_right <= left:
+            limit_left = max(limit_left, o_right + gap)
+
+    new_w = round(width * grow)
     if align == "left":
         x = left
+        new_w = min(new_w, limit_right - left)
     elif align == "right":
+        new_w = min(new_w, right - limit_left)
         x = right - new_w
     else:
-        x = left - extra // 2
+        half = min((new_w - width) // 2, left - limit_left, limit_right - right)
+        x = left - max(0, half)
+        new_w = width + 2 * max(0, half)
+    new_w = max(width, min(new_w, canvas_w))
     x = max(0, min(x, canvas_w - new_w))
 
     pad_y = round(height * 0.25)
@@ -210,9 +226,19 @@ def main() -> int:
     number_layer = find_layer(psd, args.number_layer)
     fonts = font_file_map(args.fonts_dir)
 
-    date = field_spec(date_layer, psd.width, psd.height, args.grow, fonts)
+    def obstacles_for(target):
+        return [
+            tuple(layer.bbox)
+            for layer in psd.descendants()
+            if layer is not target
+            and layer.kind == "type"
+            and layer.is_visible()
+            and layer.bbox != (0, 0, 0, 0)
+        ]
+
+    date = field_spec(date_layer, psd.width, psd.height, args.grow, fonts, obstacles_for(date_layer))
     date["format"] = args.date_format
-    number = field_spec(number_layer, psd.width, psd.height, args.grow, fonts)
+    number = field_spec(number_layer, psd.width, psd.height, args.grow, fonts, obstacles_for(number_layer))
     number["format"] = args.number_format or number_format(number["_sample"])
     number["overview_text"] = args.overview_text
 
