@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\Payment;
 use App\Support\MoneySli\MoneySliAlerter;
 use App\Support\MoneySli\MoneySliFixture;
+use App\Support\Observability\ProbeOutcome;
 use Firebase\JWT\JWT;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -37,7 +38,26 @@ class MoneySliSyntheticPay extends Command
     public function handle(MoneySliFixture $fixture, MoneySliAlerter $alerter): int
     {
         if (! config('features.money_sli_synthetic_pay')) {
+            // H5061: шов не вооружён — это not_supported, и метрическая запись
+            // обязана это различать (иначе TSV/дедман не отличат «не вооружён»
+            // от «зелёный»). Раз в сутки — строка состояния, не спам.
+            // Heartbeat при этом НЕ пингуем: тишина и есть громкий дедман-сигнал.
             $this->comment('features.money_sli_synthetic_pay OFF — команда no-op до MONEY_SLI_SYNTHETIC_PAY=true (см. DEPLOY_QUEUE H4672).');
+            Log::warning('money_sli: synthetic-pay не вооружён (features.money_sli_synthetic_pay=false) — статус not_supported', [
+                'check' => 'synthetic_pay',
+                'state' => ProbeOutcome::NOT_SUPPORTED,
+            ]);
+            $alerter->appendTsvRow([
+                'date' => now()->toDateString(),
+                'time_utc' => now()->utc()->toTimeString(),
+                'check' => 'synthetic_pay',
+                'status' => ProbeOutcome::NOT_SUPPORTED,
+                'attempts' => 0,
+                'latency_ms' => 0,
+                'http_status' => '',
+                'payment_id' => 0,
+                'notes' => 'features.money_sli_synthetic_pay OFF — шов не вооружён',
+            ]);
 
             return self::SUCCESS;
         }
