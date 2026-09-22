@@ -135,6 +135,12 @@ class LessonBanners extends Page implements HasTable
                         ->storeFiles(false)
                         ->maxSize((int) config('lesson_banners.max_background_kb'))
                         ->required(),
+                    Forms\Components\FileUpload::make('overlay')
+                        ->label('Верхний слой (overlay.png) — только если скрипт его сделал')
+                        ->acceptedFileTypes(['image/png'])
+                        ->storeFiles(false)
+                        ->maxSize((int) config('lesson_banners.max_background_kb'))
+                        ->helperText('Нужен макетам с водяным номером под фото (например, Кочергина). Нет файла overlay.png в папке — поле пустое.'),
                     Forms\Components\FileUpload::make('spec')
                         ->label('Поля (template.json)')
                         ->acceptedFileTypes(['application/json', 'text/plain'])
@@ -171,6 +177,7 @@ class LessonBanners extends Page implements HasTable
                             $background,
                             (string) file_get_contents($spec->getRealPath()),
                             self::file($data['psd'] ?? null),
+                            self::file($data['overlay'] ?? null),
                         );
                     } catch (\Throwable $e) {
                         Notification::make()->title('Шаблон не сохранён')->body($e->getMessage())->danger()->send();

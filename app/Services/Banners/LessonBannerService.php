@@ -103,7 +103,9 @@ final class LessonBannerService
 
         $texts = $this->texts($template, $schedule, $number);
         $filename = self::driveFilename($schedule);
-        $hash = sha1(implode('|', [$template->id, $template->version, $number ?? 'overview', $texts['date'], $texts['number'], $filename]));
+        $sorted = $texts;
+        ksort($sorted);
+        $hash = sha1(implode('|', [$template->id, $template->version, $number ?? 'overview', json_encode($sorted, JSON_UNESCAPED_UNICODE), $filename]));
 
         $disk = (string) config('lesson_banners.image_disk', 'public');
         $fileIsThere = $banner->image_path !== null
@@ -150,29 +152,42 @@ final class LessonBannerService
     /**
      * Тексты полей для занятия (и для превью в админке).
      *
-     * @return array{date: string, number: string}
+     * @return array<string, string>
      */
     public function texts(LessonBannerTemplate $template, Schedule $schedule, ?int $number): array
     {
         return $this->textsFor($template, Carbon::parse($schedule->start), $number, (bool) $schedule->is_overview);
     }
 
-    /** @return array{date: string, number: string} */
+    /**
+     * Текст каждого поля шаблона: поля с источником date получают дату в своём
+     * формате, с источником number — номер (или overview_text у обзорного).
+     *
+     * @return array<string, string> имя поля → текст
+     */
     public function textsFor(LessonBannerTemplate $template, CarbonInterface $start, ?int $number, bool $isOverview): array
     {
-        $dateField = $template->field('date');
-        $numberField = $template->field('number');
-
-        $date = Carbon::instance($start)
+        $local = Carbon::instance($start)
             ->setTimezone((string) config('lesson_banners.display_timezone', 'Europe/Moscow'))
-            ->locale('ru')
-            ->isoFormat((string) ($dateField['format'] ?? 'D MMMM'));
+            ->locale('ru');
 
-        $numberText = $isOverview || $number === null
-            ? (string) ($numberField['overview_text'] ?? 'Обзорное занятие')
-            : str_replace('{N}', (string) $number, (string) ($numberField['format'] ?? 'Занятие {N}'));
+        $texts = [];
+        foreach ($template->fieldSources() as $name => [$source, $field]) {
+            if ($source === 'date') {
+                $texts[$name] = $local->isoFormat((string) ($field['format'] ?? 'D MMMM'));
 
-        return ['date' => $date, 'number' => $numberText];
+                continue;
+            }
+
+            // Номер в кружке «Обзорным занятием» не заполнить — по умолчанию
+            // кружок у обзорного не рисуется вовсе (пустой текст = поле пропущено).
+            $overviewDefault = is_array($field['badge'] ?? null) ? '' : 'Обзорное занятие';
+            $texts[$name] = $isOverview || $number === null
+                ? (string) ($field['overview_text'] ?? $overviewDefault)
+                : str_replace('{N}', (string) $number, (string) ($field['format'] ?? 'Занятие {N}'));
+        }
+
+        return $texts;
     }
 
     /** «ГГГГ-ММ-ДД.jpg» по UTC-дате старта — ровно так ищет ZOOM 1.4. */

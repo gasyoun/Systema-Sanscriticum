@@ -92,7 +92,6 @@ class InstituteMecenatyImpactTest extends TestCase
     }
 
     /**
-     * @param string $html
      * @return string Markup of the impact-scroll section only (no nested
      *                <section> inside, so the first closing tag bounds it).
      */
