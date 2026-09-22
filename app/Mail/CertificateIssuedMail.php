@@ -15,7 +15,7 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Письмо студенту о выданном сертификате (автовыдача по вехе). Сам PDF не
  * прикладываем — он генерируется на лету при скачивании из кабинета; письмо
- * ведёт на student.dashboard, где уже есть кнопки PDF/JPG.
+ * ведет на student.dashboard, где уже есть кнопки PDF/JPG.
  *
  * Транзакционное: НЕ зависит от wants_email_announcements.
  */

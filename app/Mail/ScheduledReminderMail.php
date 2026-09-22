@@ -14,7 +14,7 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Письмо для разового напоминания студенту, поставленного куратором в
  * ScheduledReminder (например, попросить отзыв о курсе после его возвращения
- * из поездки). Переиспользует вёрстку emails.debtor-reminder — тот же
+ * из поездки). Переиспользует верстку emails.debtor-reminder — тот же
  * фирменный шаблон «текст + оранжевая шапка».
  */
 class ScheduledReminderMail extends Mailable implements ShouldQueue

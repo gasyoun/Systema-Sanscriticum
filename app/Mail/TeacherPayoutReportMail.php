@@ -13,11 +13,11 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Прозрачный отчёт преподавателю о расчёте выплаты по блоку: из чего сложилась
+ * Прозрачный отчет преподавателю о расчете выплаты по блоку: из чего сложилась
  * сумма (студенты × ставка = ₽), курс PayPal и итог в валюте. Отправляется по
  * галочке при создании выплаты из калькулятора (TeacherSalaries).
  *
- * Передаём id выплаты — SerializesModels подтянет свежую запись на момент отправки.
+ * Передаем id выплаты — SerializesModels подтянет свежую запись на момент отправки.
  */
 class TeacherPayoutReportMail extends Mailable implements ShouldQueue
 {

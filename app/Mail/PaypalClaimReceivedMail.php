@@ -15,7 +15,7 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Письмо администратору о новой PayPal-заявке студента (оплата из-за рубежа).
  * Требует ручной сверки в PayPal и перевода платежа в paid из админки.
- * Очередное (ShouldQueue) — чтобы приём заявки не блокировался на SMTP.
+ * Очередное (ShouldQueue) — чтобы прием заявки не блокировался на SMTP.
  */
 class PaypalClaimReceivedMail extends Mailable implements ShouldQueue
 {

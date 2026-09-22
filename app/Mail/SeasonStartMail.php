@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * очередь «mailing». Контент: даты сезона, что такое прана/ранги, семантика
  * лидерборда (базовый снапшот, P2P-immune), куда идти играть.
  *
- * Строки сезона на момент рассылки (T-24h) может ещё не быть — тогда берём
+ * Строки сезона на момент рассылки (T-24h) может еще не быть — тогда берем
  * дефолты из config('season.defaults').
  */
 class SeasonStartMail extends Mailable implements ShouldQueue

@@ -17,7 +17,7 @@ use Illuminate\Queue\SerializesModels;
  * Благодарность за первую оплату конкретного курса (со ссылкой на чат курса).
  * Уходит при первой реальной оплате именно этого курса — в отличие от
  * StudentWelcomeMail (она про самый первый вход в Академию). У вернувшегося
- * студента, который берёт 2-й/3-й курс, StudentWelcomeMail уже не сработает,
+ * студента, который берет 2-й/3-й курс, StudentWelcomeMail уже не сработает,
  * а это письмо — да. Ссылка на чат — из Course::chat_url (у каждого курса своя).
  */
 class CourseWelcomeMail extends Mailable implements ShouldQueue

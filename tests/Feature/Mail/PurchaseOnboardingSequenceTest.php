@@ -189,7 +189,7 @@ class PurchaseOnboardingSequenceTest extends TestCase
         $this->assertStringContainsString('полный курс', $html);
         // Общая строка 1 волны (docs/copy/_shared_strings.md) — дословно.
         $this->assertStringContainsString('Доступ откроется в течение пары минут.', $html);
-        $this->assertStringContainsString('Если через 10 минут доступа всё еще нет', $html);
+        $this->assertStringContainsString('Если через 10 минут доступа все еще нет', $html);
         $this->assertStringContainsString('Намасте, Мария!', $html);
     }
 
@@ -288,10 +288,9 @@ class PurchaseOnboardingSequenceTest extends TestCase
                 $this->assertStringNotContainsString($token, $html, "{$name}: urgency/emoji token «{$token}»");
             }
 
-            // Правило D13: новая копия без ё; единственное исключение — «всё»
-            // там, где без ё читалось бы как «все» («всё еще нет»).
-            $residue = str_replace('всё', '', $html);
-            $this->assertStringNotContainsString('ё', $residue, "{$name}: ё вне исключения «всё»");
+            // Редакционный гид §8 (редакция 02-09-2026): буква ё не употребляется нигде,
+            // прежнее исключение D13 для «все еще нет» отменено (H5234).
+            $this->assertStringNotContainsString('ё', $html, "{$name}: буква ё в письме");
         }
     }
 }

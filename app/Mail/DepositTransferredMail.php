@@ -15,7 +15,7 @@ use Illuminate\Queue\SerializesModels;
 
 /**
  * Подтверждение переноса брони (депозита) на другой курс.
- * Шлётся, когда админ переносит оплаченную бронь студента с курса на курс
+ * Шлется, когда админ переносит оплаченную бронь студента с курса на курс
  * (PaymentResource action «Перенести бронь»). Ссылка на чат — нового курса.
  */
 class DepositTransferredMail extends Mailable implements ShouldQueue
