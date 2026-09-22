@@ -182,7 +182,7 @@ final class LessonBannerRenderer
         imagefilledellipse($mask, intdiv($big, 2), intdiv($big, 2), $big, $big, (int) imagecolorallocate($mask, 255, 255, 255));
 
         // Цифры — чёрным по белому кругу: это «дырки» в маске.
-        $size = max(1.0, (float) ($field['size_px'] ?? $diameter * 0.55)) * self::PX_TO_GD_PT * $s;
+        $size = max(1.0, (float) ($field['size_px'] ?? $diameter * 0.62)) * self::PX_TO_GD_PT * $s;
         $tracking = (float) ($field['tracking'] ?? 0) * $s;
         [$width, $top, $bottom] = $this->measure($text, $font, $size, $tracking);
         $maxWidth = $big * self::BADGE_TEXT_MAX_WIDTH;

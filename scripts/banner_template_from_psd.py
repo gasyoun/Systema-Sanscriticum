@@ -49,7 +49,7 @@ JUSTIFICATION = {0: "left", 1: "right", 2: "center"}
 
 # Кегль цифр в кружке относительно диаметра — подобран по макетам ОРС
 # («Введение», «Патанджали», хинди), где кружок 80–87 px.
-BADGE_DIGIT_RATIO = 0.55
+BADGE_DIGIT_RATIO = 0.62
 
 
 def text_layers(psd):
