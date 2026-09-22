@@ -225,6 +225,33 @@ class LogsErrorWatchTest extends TestCase
         Http::assertSentCount(1); // вчерашний ночной всплеск до 06:00 UTC виден
     }
 
+    public function test_excluded_message_pattern_does_not_count_toward_a_burst(): void
+    {
+        // H4879 (15-09-2026): known-chronic WARNING/ERROR-class noise (TG
+        // harvest roster "peer not present in the internal peer database")
+        // must not trip the burst threshold even if it surfaces at ERROR
+        // level — second line of defense alongside the harvest-side fix.
+        config()->set('logs_watch.excluded_message_patterns', ['not present in the internal peer database']);
+
+        $line = static fn (string $ts): string => sprintf(
+            "[%s] production.ERROR: Telegram harvest roster: getPwrChat failed {\"error\":\"This peer is not present in the internal peer database\"}\n",
+            $ts,
+        );
+
+        file_put_contents($this->todayPath(), implode('', [
+            $line('2026-09-13 14:05:33'),
+            $line('2026-09-13 14:06:10'),
+            $line('2026-09-13 14:06:40'),
+        ]));
+
+        $code = Artisan::call('logs:error-watch');
+        $out = Artisan::output();
+
+        $this->assertSame(0, $code);
+        Http::assertNothingSent();
+        $this->assertStringContainsString('Логи чисты', $out);
+    }
+
     public function test_missing_log_files_warn_loudly(): void
     {
         $code = Artisan::call('logs:error-watch');

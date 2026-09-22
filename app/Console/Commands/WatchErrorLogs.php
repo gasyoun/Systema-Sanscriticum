@@ -162,6 +162,7 @@ class WatchErrorLogs extends Command
     {
         $environments = (array) config('logs_watch.environments', ['production']);
         $levels = (array) config('logs_watch.levels', ['ERROR']);
+        $excluded = (array) config('logs_watch.excluded_message_patterns', []);
 
         $header = '/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s+([A-Za-z0-9._-]+)\.([A-Z]+):\s(.*)$/';
         $object = '/\[object\]\s*\(([A-Za-z0-9_\\\\]+)\(code:\d+\).*? at (.+?\.php):(\d+)/';
@@ -179,6 +180,9 @@ class WatchErrorLogs extends Command
                         continue;
                     }
                     if (! in_array($m[2], $environments, true) || ! in_array($m[3], $levels, true)) {
+                        continue;
+                    }
+                    if ($excluded !== [] && $this->isExcludedMessage($m[4], $excluded)) {
                         continue;
                     }
                     $ts = Carbon::createFromFormat('Y-m-d H:i:s', $m[1], $now->getTimezone());
@@ -207,6 +211,25 @@ class WatchErrorLogs extends Command
         }
 
         return $hits;
+    }
+
+    /**
+     * H4879 (15-09-2026, config/logs_watch.php excluded_message_patterns):
+     * известный хронический класс (напр. TG-харвест «peer not present») —
+     * подстрока сырого текста строки, case-insensitive, не regex.
+     *
+     * @param  list<string>  $patterns
+     */
+    private function isExcludedMessage(string $rawMessage, array $patterns): bool
+    {
+        foreach ($patterns as $pattern) {
+            $pattern = trim((string) $pattern);
+            if ($pattern !== '' && stripos($rawMessage, $pattern) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

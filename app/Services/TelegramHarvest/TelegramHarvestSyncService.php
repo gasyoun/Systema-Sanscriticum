@@ -169,6 +169,11 @@ class TelegramHarvestSyncService
      * MadelineProto вообще уходит в сон (см. комментарий в pwrRoster). Без
      * пописьменной выдачи таймаут на пятой группе выбрасывал бы и первые четыре.
      *
+     * H4879 (15-09-2026, SERVER_SOFT_ALERT_PLAYBOOK.md): дохлые/покинутые peer'ы
+     * логировались по одной WARNING-строке КАЖДЫЙ проход (46 -> 535 строк/день за
+     * 10-14.09) — pwrRoster теперь считает их в $stats молча (детали в отдельном
+     * канале telegram_harvest), а здесь пишем ОДНУ сводную INFO-строку на проход.
+     *
      * @param  array<int, string>  $peers
      * @param  null|callable(string, array<int, array<string, mixed>>): void  $onRoster
      * @return array<string, array<int, array<string, mixed>>> peer => roster (только непустые)
@@ -182,6 +187,7 @@ class TelegramHarvestSyncService
         $client = $this->clientFactory->open();
         $this->primePeerDatabase($client);
 
+        $stats = ['tried' => 0, 'missing' => 0];
         $out = [];
         foreach ($peers as $peer) {
             $peer = (string) $peer;
@@ -189,7 +195,7 @@ class TelegramHarvestSyncService
                 continue;
             }
 
-            $roster = $this->pwrRoster($client, $peer);
+            $roster = $this->pwrRoster($client, $peer, $stats);
             if ($roster !== []) {
                 $out[$peer] = $roster;
 
@@ -198,6 +204,12 @@ class TelegramHarvestSyncService
                 }
             }
         }
+
+        Log::info('Telegram harvest roster-groups: run summary', [
+            'peers_tried' => $stats['tried'],
+            'peers_missing' => $stats['missing'],
+            'rosters_written' => count($out),
+        ]);
 
         return $out;
     }
@@ -222,14 +234,38 @@ class TelegramHarvestSyncService
     }
 
     /**
+     * H4879: известный хронический исход для мёртвых/покинутых peer'ов —
+     * MadelineProto так и не находит их в своей сессионной peer-базе даже
+     * после прайминга. Не ошибка приложения — не грузим ей основной лог.
+     */
+    private function isPeerNotPresentError(Throwable $e): bool
+    {
+        return str_contains($e->getMessage(), 'not present in the internal peer database');
+    }
+
+    /**
      * Ростер одного peer'а: getPwrChat + нормализация участников, в try/catch —
      * один недоступный/чужой чат (peer-not-present, приватность) не должен ронять
      * весь батч. Пустой массив = «не сняли» (аккаунт не в чате / пустой чат).
      *
+     * H4879 (15-09-2026): «peer not present in the internal peer database» —
+     * известный хронический исход для мёртвых/покинутых peer'ов, не ошибка.
+     * Раньше грузил основной лог по WARNING-строке НА КАЖДЫЙ peer (46 -> 535
+     * строк/день, см. SERVER_SOFT_ALERT_PLAYBOOK.md «15-09-2026»); теперь
+     * молча считается в $stats (сводка — см. fetchGroupRosters), деталь идёт
+     * в отдельный канал 'telegram_harvest' (config/logging.php), не в основной
+     * daily-лог, который читает logs:error-watch. Прочие ошибки — по-прежнему
+     * громкий Log::warning на основном канале.
+     *
+     * @param  null|array{tried?: int, missing?: int}  $stats  По ссылке — счётчики для сводки батча.
      * @return array<int, array<string, mixed>>
      */
-    private function pwrRoster(object $client, string $peer): array
+    private function pwrRoster(object $client, string $peer, ?array &$stats = null): array
     {
+        if ($stats !== null) {
+            $stats['tried'] = ($stats['tried'] ?? 0) + 1;
+        }
+
         if (! method_exists($client, 'getPwrChat')) {
             return [];
         }
@@ -247,7 +283,14 @@ class TelegramHarvestSyncService
             // команды (см. SnapshotGroupRosters).
             $chat = $client->getPwrChat($peer, true);
         } catch (Throwable $e) {
-            Log::warning('Telegram harvest roster: getPwrChat failed', ['peer' => $peer, 'error' => $e->getMessage()]);
+            if ($this->isPeerNotPresentError($e)) {
+                if ($stats !== null) {
+                    $stats['missing'] = ($stats['missing'] ?? 0) + 1;
+                }
+                Log::channel('telegram_harvest')->debug('Telegram harvest roster: peer not present (known-benign)', ['peer' => $peer, 'error' => $e->getMessage()]);
+            } else {
+                Log::warning('Telegram harvest roster: getPwrChat failed', ['peer' => $peer, 'error' => $e->getMessage()]);
+            }
 
             return [];
         }
