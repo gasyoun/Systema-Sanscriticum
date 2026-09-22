@@ -216,6 +216,9 @@
 
         </details>
 
+        @include('partials.samskrtam-related', ['samskrtamKey' => '_home'])
+        @include('partials.proof-block', ['showTestimonials' => false])
+
         <div class="mt-24 bg-gray-800/40 border border-gray-700/60 rounded-3xl p-8 md:p-12 relative overflow-hidden backdrop-blur-sm shadow-xl">
             <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-[#2AABEE] rounded-full mix-blend-screen filter blur-3xl opacity-10"></div>
             <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-brand rounded-full mix-blend-screen filter blur-3xl opacity-10"></div>
