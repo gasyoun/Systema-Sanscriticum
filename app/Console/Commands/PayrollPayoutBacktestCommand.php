@@ -11,10 +11,10 @@ use App\Services\Payroll\PayrollRateCalculator;
 use Illuminate\Console\Command;
 
 /**
- * H3532/W3 — бэктест формул «на руки» против фикстур ожиданий (расчёты Марины,
+ * H3532/W3 — бэктест формул «на руки» против фикстур ожиданий (расчеты Марины,
  * якоря реестра ставок H3531). Гейт ≤1 % расхождения на получателя×месяц.
  * Read-only: ни teacher_payouts, ни payments, ни users не пишутся —
- * отпечатки счётчиков до/после входят в вывод.
+ * отпечатки счетчиков до/после входят в вывод.
  */
 class PayrollPayoutBacktestCommand extends Command
 {

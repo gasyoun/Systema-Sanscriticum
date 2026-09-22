@@ -17,8 +17,8 @@ use Illuminate\Console\Command;
 class SendAutoReplyWeeklyReport extends Command
 {
     protected $signature = 'support:auto-reply-weekly
-        {--dry : Только показать отчёт, без отправки в Telegram}
-        {--days=7 : Окно отчёта в днях}';
+        {--dry : Только показать отчет, без отправки в Telegram}
+        {--days=7 : Окно отчета в днях}';
 
     protected $description = 'Недельный разбор пробы автоответов H3380 в Telegram админам (H3392).';
 
@@ -44,12 +44,12 @@ class SendAutoReplyWeeklyReport extends Command
 
         $delivered = $notifier->notifyAdmins($snapshot['text']);
         if ($delivered === []) {
-            $this->error('Отчёт не доставлен: нет TELEGRAM_BOT_TOKEN / ADMIN_TELEGRAM_ID или API отказал.');
+            $this->error('Отчет не доставлен: нет TELEGRAM_BOT_TOKEN / ADMIN_TELEGRAM_ID или API отказал.');
 
             return self::FAILURE;
         }
 
-        $this->info('Отчёт отправлен: '.implode(', ', $delivered));
+        $this->info('Отчет отправлен: '.implode(', ', $delivered));
 
         return self::SUCCESS;
     }

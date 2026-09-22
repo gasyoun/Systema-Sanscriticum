@@ -44,7 +44,7 @@ final class MarathonWarmtailAbReport extends Command
 
     protected $signature = 'marathon:warmtail-ab-report';
 
-    protected $description = 'Отчёт A/B тёплого хвоста марафона по последовательным волнам (флагман vs членство)';
+    protected $description = 'Отчет A/B теплого хвоста марафона по последовательным волнам (флагман vs членство)';
 
     public function handle(): int
     {

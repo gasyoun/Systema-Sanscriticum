@@ -20,7 +20,7 @@ use Illuminate\Console\Command;
  *   php artisan avatars:sync --apply --limit=200
  *   php artisan avatars:sync --apply --source=vk
  *
- * Периодическое обновление (раз в неделю, см. Kernel): берём тех, кого давно
+ * Периодическое обновление (раз в неделю, см. Kernel): берем тех, кого давно
  * не синхронизировали (--stale-days) или ни разу (avatar_synced_at IS NULL).
  *   php artisan avatars:sync --apply --stale-days=7
  */

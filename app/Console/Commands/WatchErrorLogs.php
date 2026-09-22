@@ -20,16 +20,16 @@ use Throwable;
  * до LOGS_WATCH_YESTERDAY_UNTIL_UTC (overlap через ротацию — ночной всплеск не
  * теряется, даже если сами ночные прогоны сторожа сорвались), группирует
  * production.ERROR по классу исключения + месту в стектрейсе и при всплеске
- * (≥ threshold_per_hour одинаковых находок в пределах одного часа) шлёт TG soft
+ * (≥ threshold_per_hour одинаковых находок в пределах одного часа) шлет TG soft
  * в канал пробы.
  *
  * Анти-spam — семантика H2335 (cabinet:probe): один и тот же набор находок
- * (fingerprint класса уровня) молчит до зелёного прогона, reminder раз в
+ * (fingerprint класса уровня) молчит до зеленого прогона, reminder раз в
  * LOGS_WATCH_REMINDER_HOURS; новый набор алертит немедленно; чистый прогон
- * гасит состояние (sticky до зелёного).
+ * гасит состояние (sticky до зеленого).
  *
  * БЕЗОПАСНОСТЬ ПРОДА: команда НИЧЕГО не пишет в прод-данные — читает логи,
- * ведёт собственный state-файл в storage/app и шлёт TG. Без TG-канала в конфиге
+ * ведет собственный state-файл в storage/app и шлет TG. Без TG-канала в конфиге
  * — ГРОМКИЙ warning-блок в выводе (не тихий пропуск, класс слепого пятна
  * H3797 «пусто = пропуск»), алерт не считается отправленным.
  */
@@ -88,7 +88,7 @@ class WatchErrorLogs extends Command
             .'<code>tail -n 100 storage/logs/laravel-'.now()->format('Y-m-d').'.log</code>';
 
         if ($this->option('dry')) {
-            $this->comment('--dry: TG не шлём, state не пишем.');
+            $this->comment('--dry: TG не шлем, state не пишем.');
             $this->line($text);
 
             return self::SUCCESS;
@@ -102,7 +102,7 @@ class WatchErrorLogs extends Command
             foreach ($lines as $line) {
                 $this->warn('   '.$line);
             }
-            $this->warn('Быстрый алерт ПРОПУЩЕН (state не ставится — следующий прогон с каналом пошлёт).');
+            $this->warn('Быстрый алерт ПРОПУЩЕН (state не ставится — следующий прогон с каналом пошлет).');
             $this->warn('Задать канал: .env LOGS_WATCH_TELEGRAM_CHAT_ID=<chat_id> && php artisan config:cache');
 
             return self::SUCCESS;
@@ -266,7 +266,7 @@ class WatchErrorLogs extends Command
     }
 
     /**
-     * Sticky до зелёного + reminder (H2335). true = «молчим, всё сказано».
+     * Sticky до зеленого + reminder (H2335). true = «молчим, все сказано».
      */
     private function stateSticky(string $fingerprint): bool
     {
@@ -280,7 +280,7 @@ class WatchErrorLogs extends Command
 
         $reminderHours = max(0, (int) config('logs_watch.reminder_hours', 24));
         if ($reminderHours === 0) {
-            $this->comment('sticky: тот же класс, без re-alert до зелёного (reminder=0)');
+            $this->comment('sticky: тот же класс, без re-alert до зеленого (reminder=0)');
 
             return true;
         }

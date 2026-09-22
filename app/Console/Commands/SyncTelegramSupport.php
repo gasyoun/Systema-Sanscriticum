@@ -66,7 +66,7 @@ class SyncTelegramSupport extends Command
             $cooldown = (int) config('services.telegram_support.sync_timeout_cooldown_seconds', 600);
 
             // После watchdog-kill демон сессии сброшен. Следующая минута
-            // cold-start'ит тот же DC; если столл ещё жив — снова 120 с и
+            // cold-start'ит тот же DC; если столл еще жив — снова 120 с и
             // снова kill. Прод 16–17-08-2026: 18 таких кругов за ~100 мин при
             // здоровом заходе 11–41 с. Кулдаун режет частоту, не потолок.
             if ($cooldown > 0 && MadelineSyncPhase::cooldownActive()) {
@@ -80,25 +80,25 @@ class SyncTelegramSupport extends Command
             }
 
             // Потолок времени взводим ТОЛЬКО на live-пути: импорт из payload в сеть
-            // не ходит и зависнуть не может. Без потолка заход живёт часами, замок
+            // не ходит и зависнуть не может. Без потолка заход живет часами, замок
             // планировщика протухает и на той же сессии стартует второй экземпляр
             // (см. MadelineSyncWatchdog).
             //
-            // Уборка передаётся В watchdog, а не пишется в catch: обработчик
+            // Уборка передается В watchdog, а не пишется в catch: обработчик
             // таймаута завершает процесс через exit(), и никакой catch/finally
             // здесь уже не отработает (H1915 — почему не через исключение).
             $armed = $watchdog->arm($timeout, fn (int $seconds) => $this->cleanUpAfterTimeout($reaper, $seconds, $accountName));
 
             if (! $armed && $timeout > 0) {
                 // ГРОМКО, а не только в verbose: без watchdog'а единственной оградой
-                // остаётся внешний потолок обёртки (SYSTEMA_SCHEDULE_MAX_SECONDS),
+                // остается внешний потолок обертки (SYSTEMA_SCHEDULE_MAX_SECONDS),
                 // и TTL замка планировщика посчитан именно из него — молчать об этом
                 // значит обещать инвариант, которого нет.
-                Log::error('Telegram support sync идёт БЕЗ потолка времени: watchdog не взвёлся (нет расширения pcntl).', [
+                Log::error('Telegram support sync идет БЕЗ потолка времени: watchdog не взвелся (нет расширения pcntl).', [
                     'timeout_seconds' => $timeout,
                     'account' => $accountName,
                 ]);
-                $this->warn('Watchdog недоступен (нет расширения pcntl) — заход идёт без потолка времени.');
+                $this->warn('Watchdog недоступен (нет расширения pcntl) — заход идет без потолка времени.');
             }
 
             try {
@@ -137,13 +137,13 @@ class SyncTelegramSupport extends Command
     }
 
     /**
-     * Заход упёрся в потолок времени. Выполняется ВНУТРИ обработчика SIGALRM,
+     * Заход уперся в потолок времени. Выполняется ВНУТРИ обработчика SIGALRM,
      * непосредственно перед exit() — то есть это единственный шанс прибрать за
      * собой: ни `finally` вызывающего, ни деструкторы на это уже не рассчитывают.
      *
      * Порядок намеренный. Сначала замок сессии: он взят на 900 с, и оставленный
      * висеть заблокировал бы следующие ~15 минут заходов после КАЖДОГО таймаута.
-     * Затем демон этой сессии — иначе он переживёт нас и продолжит держать
+     * Затем демон этой сессии — иначе он переживет нас и продолжит держать
      * дескрипторы (тот самый EMFILE 27.07.2026). И только потом след оператору.
      */
     private function cleanUpAfterTimeout(MadelineSessionReaper $reaper, int $seconds, string $accountName = 'support'): void
@@ -165,7 +165,7 @@ class SyncTelegramSupport extends Command
             'cooldown_seconds' => $cooldown,
         ]);
 
-        // Аккаунт мог ещё не существовать (первый же заход завис) — тогда просто
+        // Аккаунт мог еще не существовать (первый же заход завис) — тогда просто
         // нечего помечать, вся диагностика уже в логе.
         TelegramSupportAccount::query()
             ->where('name', $accountName)
@@ -187,19 +187,19 @@ class SyncTelegramSupport extends Command
         $account = TelegramSupportAccount::query()->where('name', $accountName)->first();
 
         if ($account === null) {
-            return "Аккаунт «{$accountName}» не заведён в telegram_support_accounts.";
+            return "Аккаунт «{$accountName}» не заведен в telegram_support_accounts.";
         }
 
         // H3380 (урок 24-08): named-аккаунт может совпасть личностью с основным
         // support-аккаунтом — тогда вторая сессия того же аккаунта нарушает D1
-        // (два MTProto-логина = AUTH_RESTART пинг-понг). Отключённая строка
+        // (два MTProto-логина = AUTH_RESTART пинг-понг). Отключенная строка
         // (is_enabled=0) не открывается вовсе.
         if (! $account->is_enabled) {
-            return "Аккаунт «{$accountName}» отключён (is_enabled=0) — синк не запускается.";
+            return "Аккаунт «{$accountName}» отключен (is_enabled=0) — синк не запускается.";
         }
 
         if ((string) $account->session_path === '') {
-            return "У аккаунта «{$accountName}» не задан session_path — интерактивный логин ещё не выполнялся.";
+            return "У аккаунта «{$accountName}» не задан session_path — интерактивный логин еще не выполнялся.";
         }
 
         $sessionPath = preg_match('~^(?:[A-Za-z]:[\\\\/]|[\\\\/])~', (string) $account->session_path) === 1

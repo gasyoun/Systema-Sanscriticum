@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * H3085 — бэкфил посещаемости для курса, у которого `courses.zoom_meeting_id`
  * никогда не был выставлен (личная recurring-комната Zoom, переиспользуемая
- * между разными активностями преподавателя), а `schedules` заведён лишь на
+ * между разными активностями преподавателя), а `schedules` заведен лишь на
  * часть реальных занятий.
  *
  * Источник истины по датам занятий — Zoom Reports API
@@ -62,7 +62,7 @@ class BackfillZoomAttendance extends Command
 
         $meetingId = $course->zoom_meeting_id;
         if (! $meetingId) {
-            // Курс сам никогда не хранил meeting_id — берём его с любого уже
+            // Курс сам никогда не хранил meeting_id — берем его с любого уже
             // существующего Schedule этого курса, где ссылка реально зоомная.
             $sample = Schedule::where('course_id', $course->id)
                 ->whereNotNull('link')
@@ -103,7 +103,7 @@ class BackfillZoomAttendance extends Command
             ->groupBy(fn (Schedule $s) => $s->start->toDateString());
 
         // Опорное время занятия — если у курса уже есть хоть один Schedule,
-        // берём его локальное время (час:минута) как канон; иначе 14:00–16:00
+        // берем его локальное время (час:минута) как канон; иначе 14:00–16:00
         // (наблюдавшийся паттерн этого курса) как безопасный дефолт с явной пометкой.
         $anchor = Schedule::where('course_id', $course->id)->whereNotNull('start')->first();
         $startTime = $anchor ? $anchor->start->format('H:i:s') : '14:00:00';

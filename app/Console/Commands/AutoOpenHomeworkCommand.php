@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 
 /**
- * Ежечасный проход автооткрытия приёма ДЗ (H1764, волна 1).
+ * Ежечасный проход автооткрытия приема ДЗ (H1764, волна 1).
  *
  * Ежечасный, а не ежедневный: момент открытия вычисляется точно
  * (`lessons.homework_opens_at`), проход просто доносит его с задержкой не
@@ -25,7 +25,7 @@ class AutoOpenHomeworkCommand extends Command
         {--dry-run : Показать, что было бы открыто, не трогая базу и не отправляя пушей}
         {--backfill-last : Открыть по одному самому свежему прошедшему уроку каждого курса, без уведомлений}';
 
-    protected $description = 'Открыть приём домашних заданий по урокам, у которых наступил расчётный момент открытия';
+    protected $description = 'Открыть прием домашних заданий по урокам, у которых наступил расчетный момент открытия';
 
     public function handle(HomeworkAutoOpener $opener): int
     {
@@ -38,7 +38,7 @@ class AutoOpenHomeworkCommand extends Command
         // H3078: охват больше не список слагов, а правило (дата первого урока +
         // denylist). Пустой `course_slugs` теперь НЕ значит «фича спит» — это
         // значит «исключений из общего охвата нет». Прежний ранний выход здесь
-        // был бы тем же тихим отказом, ради устранения которого всё и делалось.
+        // был бы тем же тихим отказом, ради устранения которого все и делалось.
         if ((string) config('homework.auto_open.scope', 'all') === 'listed'
             && (array) config('homework.auto_open.course_slugs', []) === []) {
             $this->warn('scope=listed, но course_slugs пуст — ни один курс не в охвате, ничего не делаю.');

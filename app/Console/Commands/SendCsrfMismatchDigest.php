@@ -20,7 +20,7 @@ use Illuminate\Console\Command;
  * паттерн, что {@see CheckStorageUsage} и
  * {@see CheckReceivablesThreshold}.
  *
- * Ниже порога — молчит: ежедневный отчёт, который шлётся всегда, это отчёт,
+ * Ниже порога — молчит: ежедневный отчет, который шлется всегда, это отчет,
  * который никто не читает.
  */
 class SendCsrfMismatchDigest extends Command

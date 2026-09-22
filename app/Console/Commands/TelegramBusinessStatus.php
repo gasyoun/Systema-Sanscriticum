@@ -44,7 +44,7 @@ final class TelegramBusinessStatus extends Command
 
         $connections = TelegramBusinessConnection::query()->orderByDesc('id')->get();
         if ($connections->isEmpty()) {
-            $this->warn('Подключений нет: Telegram ещё не прислал business_connection. Пока его нет, апдейты business_message пропускаются — по подключению определяется владелец.');
+            $this->warn('Подключений нет: Telegram еще не прислал business_connection. Пока его нет, апдейты business_message пропускаются — по подключению определяется владелец.');
         } else {
             $this->table(
                 ['business_connection_id', 'владелец', 'can_reply', 'is_enabled', 'подключено', 'отключено'],
@@ -61,7 +61,7 @@ final class TelegramBusinessStatus extends Command
 
         $account = TelegramSupportAccount::query()->where('name', $accountName)->first();
         if ($account === null) {
-            $this->warn("Аккаунта поддержки «{$accountName}» ещё нет: он появится при первом business_message.");
+            $this->warn("Аккаунта поддержки «{$accountName}» еще нет: он появится при первом business_message.");
         } else {
             $this->line(sprintf(
                 'Аккаунт «%s»: auto_reply_enabled=%s, is_enabled=%s',

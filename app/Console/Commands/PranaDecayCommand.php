@@ -28,7 +28,7 @@ class PranaDecayCommand extends Command
         }
 
         $affected = $prana->decayInactive();
-        $this->info("Decay применён к {$affected} студент(ам).");
+        $this->info("Decay применен к {$affected} студент(ам).");
 
         return self::SUCCESS;
     }

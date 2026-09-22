@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Log;
  * telegram_chat_id (бот не запущен) пропускается молча — догонит на
  * следующем прогоне, когда лид запустит бота. Day 3 — общая живая
  * консультация (ОДИН Schedule на всех, не персональный слот); пропускается
- * молча, если MG ещё не настроил `marathon.schedule_id` (см. H487).
+ * молча, если MG еще не настроил `marathon.schedule_id` (см. H487).
  *
  * H445 Phase 1 — Day 1/2 content resolved per-cohort via
  * MarathonEnrollment::content() (falls back to the shared `zero` default);

@@ -74,7 +74,7 @@ class SnapshotGroupRosters extends Command
         $writer = new RosterStoreWriter($path);
 
         // Пишем КАЖДЫЙ ростер сразу, а не пачкой в конце: проход по всем группам
-        // идёт минутами, и прерванный (таймаут/флуд) не должен обнулять уже
+        // идет минутами, и прерванный (таймаут/флуд) не должен обнулять уже
         // снятое.
         $written = 0;
         $writeRoster = function (string $peer, array $roster) use ($writer, &$written): void {
@@ -87,7 +87,7 @@ class SnapshotGroupRosters extends Command
         // тот же класс отказа, что 27.07.2026 положил telegram-support:sync.
         $timeout = (int) config('services.telegram_harvest.roster_timeout_seconds', 600);
 
-        // Уборка передаётся В watchdog: обработчик таймаута завершает процесс через
+        // Уборка передается В watchdog: обработчик таймаута завершает процесс через
         // exit(), поэтому ни catch, ни finally здесь не отработают (H1915 — почему
         // исключение из обработчика SIGALRM до нас не доходило).
         $armed = $watchdog->arm($timeout, function (int $seconds) use ($reaper, &$written, $peers): void {
@@ -107,15 +107,15 @@ class SnapshotGroupRosters extends Command
         });
 
         if (! $armed && $timeout > 0) {
-            Log::error('Telegram harvest roster-groups идёт БЕЗ потолка времени: watchdog не взвёлся (нет расширения pcntl).', [
+            Log::error('Telegram harvest roster-groups идет БЕЗ потолка времени: watchdog не взвелся (нет расширения pcntl).', [
                 'timeout_seconds' => $timeout,
             ]);
-            $this->warn('Watchdog недоступен (нет расширения pcntl) — проход идёт без потолка времени.');
+            $this->warn('Watchdog недоступен (нет расширения pcntl) — проход идет без потолка времени.');
         }
 
         try {
             // Весь проход — под ОДНИМ замком: сессия открывается один раз (иначе
-            // второй демон крадёт IPC-сокеты). null = сессию держит другая команда.
+            // второй демон крадет IPC-сокеты). null = сессию держит другая команда.
             $rosters = $this->withMadelineSessionLock(
                 fn (): array => $harvest->fetchGroupRosters($peers, $writeRoster),
             );

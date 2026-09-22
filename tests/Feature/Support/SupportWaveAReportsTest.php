@@ -119,7 +119,7 @@ class SupportWaveAReportsTest extends TestCase
     public function test_shadow_report_on_empty_data_refuses_to_look_conclusive(): void
     {
         $this->assertStringContainsString(
-            'Живое включение автоотправки на пустом отчёте недопустимо',
+            'Живое включение автоотправки на пустом отчете недопустимо',
             $this->runReport('support:shadow-report', ['--days' => 7]),
         );
     }

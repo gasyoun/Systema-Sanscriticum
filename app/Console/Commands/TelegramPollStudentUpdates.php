@@ -13,7 +13,7 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Аварийный приём апдейтов кабинетного (студенческого) бота long polling'ом
+ * Аварийный прием апдейтов кабинетного (студенческого) бота long polling'ом
  * вместо вебхука — зеркало {@see PollTelegramZapisiUpdates} для дорожки
  * /api/telegram/webhook.
  *
@@ -41,9 +41,9 @@ class TelegramPollStudentUpdates extends Command
         {--max-seconds= : Сколько секунд жить перед плановым выходом (по умолчанию из конфига)}
         {--release-webhook : Снять зарегистрированный вебхук и забирать апдейты поллингом}';
 
-    protected $description = 'АВАРИЙНЫЙ приём апдейтов кабинетного бота поллингом — когда входной узел вебхуков недоступен (инцидент 06-09-2026). Штатно апдейты приходят вебхуком.';
+    protected $description = 'АВАРИЙНЫЙ прием апдейтов кабинетного бота поллингом — когда входной узел вебхуков недоступен (инцидент 06-09-2026). Штатно апдейты приходят вебхуком.';
 
-    /** Ключ курсора: update_id, с которого продолжаем. Подтверждает приём Telegram'у. */
+    /** Ключ курсора: update_id, с которого продолжаем. Подтверждает прием Telegram'у. */
     private const OFFSET_KEY = 'telegram:student:poll:offset';
 
     private bool $shouldStop = false;
@@ -72,7 +72,7 @@ class TelegramPollStudentUpdates extends Command
             ->usingCredentials($token, (string) config('services.telegram.student_bot_username'));
 
         // Пока вебхук зарегистрирован, getUpdates отвечает 409 Conflict: Telegram
-        // отдаёт апдейты ровно одним способом. Снимаем явно и однократно.
+        // отдает апдейты ровно одним способом. Снимаем явно и однократно.
         try {
             $this->releaseWebhook($client);
         } catch (Throwable $e) {
@@ -118,7 +118,7 @@ class TelegramPollStudentUpdates extends Command
 
         // Реинжекция — в ЗДОРОВОЕ приложение, НЕ через входной узел: и
         // TelegramWebhooks::url(), и app.url на этом про́де указывают на
-        // TELEGRAM_WEBHOOK_BASE_URL (103.112.71.201, self-signed + мёртвый
+        // TELEGRAM_WEBHOOK_BASE_URL (103.112.71.201, self-signed + мертвый
         // туннель) — это сама сломанная дорожка. Явный
         // TELEGRAM_STUDENT_POLL_REINJECT_URL (prod: https://samskrte.ru,
         // проверен 06-09: 405/65ms self, 200/0.35s external).
@@ -200,7 +200,7 @@ class TelegramPollStudentUpdates extends Command
 
     /**
      * SIGTERM от supervisor'а должен дать дожить текущему заходу, а не рвать
-     * процесс посреди getUpdates: иначе принятые, но не подтверждённые апдейты
+     * процесс посреди getUpdates: иначе принятые, но не подтвержденные апдейты
      * придут повторно.
      */
     private function trapTermination(): void

@@ -100,7 +100,7 @@ final class ContentAutopilotDigestCommand extends Command
         $lines[] = '';
         $lines[] = '# Автопилоты контента — понедельничный дайджест '.$since->format('d-m-Y').' → '.$until->format('d-m-Y');
         $lines[] = '';
-        $lines[] = 'Окно пост-хок ревью H5020 (MG Q8/Q19, 16-09-2026 → 30-09-2026). Стоп-правило: ОДНА фактическая ошибка или ОДИН промах в цене / дате эфира в опубликованном посте → соответствующий флаг возвращается в `false` тем же проходом, отчёт MG.';
+        $lines[] = 'Окно пост-хок ревью H5020 (MG Q8/Q19, 16-09-2026 → 30-09-2026). Стоп-правило: ОДНА фактическая ошибка или ОДИН промах в цене / дате эфира в опубликованном посте → соответствующий флаг возвращается в `false` тем же проходом, отчет MG.';
         $lines[] = '';
         $lines[] = '## Состояние флагов на момент генерации';
         $lines[] = '';
@@ -118,7 +118,7 @@ final class ContentAutopilotDigestCommand extends Command
             $link = (string) ($meta['link'] ?? '');
             $when = isset($meta['autopilot_published_at']) ? (string) $meta['autopilot_published_at'] : $slot->updated_at?->timezone('Europe/Moscow')->format('Y-m-d H:i');
             $warn = isset($meta['prohibition_warn']) ? implode('; ', (array) $meta['prohibition_warn']) : '—';
-            $lines[] = '| VK ('.$slot->channel.') | '.$slot->slot_type.' #'.$slot->id.' | '.($link !== '' ? '['.$link.']('.$link.')' : '— (ссылку на пост даёт n8n, в слоте нет)').' | '.$when.' | '.$warn.' |';
+            $lines[] = '| VK ('.$slot->channel.') | '.$slot->slot_type.' #'.$slot->id.' | '.($link !== '' ? '['.$link.']('.$link.')' : '— (ссылку на пост дает n8n, в слоте нет)').' | '.$when.' | '.$warn.' |';
         }
         foreach ($stories as $post) {
             $link = 'https://t.me/'.$channel.($post->telegram_message_id ? '/'.$post->telegram_message_id : '');

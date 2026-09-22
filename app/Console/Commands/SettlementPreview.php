@@ -10,14 +10,14 @@ use App\Services\MutualSettlementService;
 use Illuminate\Console\Command;
 
 /**
- * Разовая сверка взаимозачёта (H1730, шаг B2).
+ * Разовая сверка взаимозачета (H1730, шаг B2).
  *
  * Инструмент ПЕРВОЙ сверки на проде, когда появится read-only доступ к базе:
  * печатает обе цифры с расшифровкой и разницу.
  *
- * ТОЛЬКО ЧТЕНИЕ. Команда не создаёт и не меняет ни одной строки — ни акта, ни
- * выплаты. Фиксация делается осознанно человеком со страницы «Взаимозачёт»,
- * а не побочным эффектом отчёта.
+ * ТОЛЬКО ЧТЕНИЕ. Команда не создает и не меняет ни одной строки — ни акта, ни
+ * выплаты. Фиксация делается осознанно человеком со страницы «Взаимозачет»,
+ * а не побочным эффектом отчета.
  */
 class SettlementPreview extends Command
 {
@@ -29,7 +29,7 @@ class SettlementPreview extends Command
         {--to= : конец периода (Y-m-d)}
         {--json : машиночитаемый вывод вместо таблиц}';
 
-    protected $description = 'Сверка взаимозачёта преподаватель-ученик: обе суммы, расшифровка и разница (только чтение)';
+    protected $description = 'Сверка взаимозачета преподаватель-ученик: обе суммы, расшифровка и разница (только чтение)';
 
     public function handle(MutualSettlementService $service): int
     {
@@ -81,7 +81,7 @@ class SettlementPreview extends Command
         $period = ($p['period_from'] ?? '—').' — '.($p['period_to'] ?? '—');
 
         $this->newLine();
-        $this->info('Взаимозачёт: '.$user->name.' (user #'.$user->id.' / teacher #'.$p['teacher_id'].')');
+        $this->info('Взаимозачет: '.$user->name.' (user #'.$user->id.' / teacher #'.$p['teacher_id'].')');
         $this->line('Период: '.$period
             .($p['course_id'] ? ' · курс #'.$p['course_id'] : '')
             .($p['block_number'] ? ' · блок '.$p['block_number'] : ''));
@@ -122,12 +122,12 @@ class SettlementPreview extends Command
         $this->line('  Итого начислено: <info>'.$this->money((float) $p['salary_amount']).' ₽</info>');
         $this->newLine();
 
-        $this->line('<comment>Зачёт</comment>');
-        $this->line('  К зачёту (минимум из двух): <info>'.$this->money((float) $p['offset_amount']).' ₽</info>');
+        $this->line('<comment>Зачет</comment>');
+        $this->line('  К зачету (минимум из двух): <info>'.$this->money((float) $p['offset_amount']).' ₽</info>');
         $this->line('  Остаток: <info>'.$this->money((float) $p['net_amount']).' ₽</info> — '
             .(MutualSettlement::directionLabels()[$p['net_direction']] ?? $p['net_direction']));
         $this->newLine();
-        $this->line('<comment>Ничего не записано</comment> — команда только читает. Фиксация акта — на странице «Взаимозачёт».');
+        $this->line('<comment>Ничего не записано</comment> — команда только читает. Фиксация акта — на странице «Взаимозачет».');
         $this->newLine();
     }
 

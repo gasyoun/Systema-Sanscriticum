@@ -11,10 +11,10 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 /**
- * H5001 — курс продаёт пробное (trial_schedule_id задан), а открыть покупателю
+ * H5001 — курс продает пробное (trial_schedule_id задан), а открыть покупателю
  * нечего: trial_lesson_id пуст, или занятие уже прошло, а урока с записью этой
- * даты нет. Такой курс поднимается алертом, а не ждёт аудита.
- * Только чтение; `--notify` шлёт сводку админам в Telegram (ADMIN_TELEGRAM_ID).
+ * даты нет. Такой курс поднимается алертом, а не ждет аудита.
+ * Только чтение; `--notify` шлет сводку админам в Telegram (ADMIN_TELEGRAM_ID).
  */
 class WatchTrialTargets extends Command
 {
@@ -62,7 +62,7 @@ class WatchTrialTargets extends Command
                 $notifier->notifyAdmins($text);
             } catch (\Throwable $e) {
                 // Сеть до api.telegram.org не должна ронять плановую команду.
-                Log::error('trial:target-watch — алерт админам не ушёл', ['error' => $e->getMessage()]);
+                Log::error('trial:target-watch — алерт админам не ушел', ['error' => $e->getMessage()]);
             }
         }
 

@@ -48,7 +48,7 @@ class CancelScheduleCommand extends Command
         $mover = app(ScheduleMover::class);
 
         $this->info(sprintf(
-            'Группа «%s», занятие #%d на %s — под каскад попадёт %d занят.',
+            'Группа «%s», занятие #%d на %s — под каскад попадет %d занят.',
             $schedule->group?->name ?? '—',
             $schedule->id,
             $schedule->start->format('d.m.Y H:i'),
@@ -62,7 +62,7 @@ class CancelScheduleCommand extends Command
         $shifted = $mover->cancelAndShiftWeek($schedule);
 
         $this->info(sprintf(
-            'Готово: сдвинуто занятий %d. Слот %s освобождён, это занятие теперь %s.',
+            'Готово: сдвинуто занятий %d. Слот %s освобожден, это занятие теперь %s.',
             $shifted,
             $oldStart->format('d.m.Y H:i'),
             $schedule->fresh()->start?->format('d.m.Y H:i'),

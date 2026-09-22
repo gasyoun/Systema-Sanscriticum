@@ -15,11 +15,11 @@ use Throwable;
  * Разовое (и безопасное к повтору) восстановление реальных дат сообщений.
  *
  * До миграции 2026_07_28_160000 колонка `sent_at` несла ON UPDATE
- * current_timestamp: каждый ресинк переписывал её на момент импорта в UTC.
- * Настоящая дата отправки уцелела в `raw_payload.sent_at` — оттуда и берём.
+ * current_timestamp: каждый ресинк переписывал ее на момент импорта в UTC.
+ * Настоящая дата отправки уцелела в `raw_payload.sent_at` — оттуда и берем.
  *
  * Заодно пересчитываем `support_conversations.last_message_at`: он собран из тех
- * же испорченных значений, и без пересчёта старые вопросы так и висели бы вверху
+ * же испорченных значений, и без пересчета старые вопросы так и висели бы вверху
  * списка как сегодняшние.
  */
 class RestoreTelegramSupportSentAt extends Command
@@ -71,7 +71,7 @@ class RestoreTelegramSupportSentAt extends Command
                     }
 
                     if (! $dryRun) {
-                        // Через query builder: save() на модели дёрнул бы updated_at
+                        // Через query builder: save() на модели дернул бы updated_at
                         // и события ingest-пайплайна, а мы правим только факт.
                         DB::table('telegram_support_messages')
                             ->where('id', $message->id)
