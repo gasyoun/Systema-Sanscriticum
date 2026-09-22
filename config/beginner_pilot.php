@@ -2,8 +2,11 @@
 
 return [
     // Published free grammar webinar verified against production on 19-09-2026.
-    // This is a full recording, not an editorially verified short excerpt.
+    // Excerpt verified against public captions on 22-09-2026: script vs language.
     'preview_lesson_id' => 1464,
+    'preview_youtube_id' => 'FmdnLXZ4UFo',
+    'preview_start_seconds' => 5337,
+    'preview_end_seconds' => 5440,
 
     // Bind staffing approval to ONE schedule row. Never roll approval forward
     // automatically when MARATHON_SCHEDULE_ID changes.

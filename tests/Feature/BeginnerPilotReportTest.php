@@ -54,6 +54,7 @@ class BeginnerPilotReportTest extends TestCase
         $this->payment($excluded, ['first_paid_at' => '2026-10-01']);
         $this->payment($new, ['amount' => -200, 'tariff' => 'Расход', 'refund_of_payment_id' => $prior->id, 'created_at' => '2026-09-05']);
         $this->payment($new, ['amount' => 100, 'tariff' => 'Расход', 'refund_of_payment_id' => $prior->id, 'created_at' => '2026-09-05']);
+        $this->payment($new, ['amount' => -999, 'tariff' => 'Расход', 'refund_of_payment_id' => $prior->id, 'created_at' => '2026-09-05', 'is_conditional' => true]);
         $before = Payment::count();
         $result = $this->report();
         $this->assertSame(['first_time' => 1, 'returning' => 1, 'history_unknown' => 1], $result['buyers']);
@@ -103,6 +104,18 @@ class BeginnerPilotReportTest extends TestCase
         $result = $this->report();
         $this->assertSame(['first_time' => 1, 'returning' => 0, 'history_unknown' => 0], $result['buyers']);
         $this->assertSame(1, $result['reconciliation']['purchase_rows_with_paid_timestamp']);
+    }
+
+    public function test_paid_trials_are_purchases_and_preserve_prior_buyer_history(): void
+    {
+        $new = User::factory()->create();
+        $this->payment($new, ['tariff' => 'trial']);
+        $returning = User::factory()->create();
+        $this->payment($returning, ['tariff' => 'trial', 'first_paid_at' => '2026-08-01']);
+        $this->payment($returning);
+        $result = $this->report();
+        $this->assertSame(['first_time' => 1, 'returning' => 1, 'history_unknown' => 0], $result['buyers']);
+        $this->assertSame(0, $result['marathon_buyers']['first_time']);
     }
 
     public function test_command_requires_valid_explicit_start_and_outputs_aggregate_json(): void

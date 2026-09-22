@@ -146,7 +146,9 @@
     </header>
 
     {{-- H2365: site-wide free-intro / trial next-date CTA (NextIntroSession) --}}
-    @include('shop.partials.free-intro-banner')
+    @unless(request()->routeIs('beginner-pilot.show'))
+        @include('shop.partials.free-intro-banner')
+    @endunless
 
     {{-- ═══════════════ КОНТЕНТ ═══════════════ --}}
     <main class="flex-1">

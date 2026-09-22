@@ -3,14 +3,19 @@
 @section('title', 'Попробовать санскрит с нуля — первый шаг')
 
 @section('content')
-<main class="max-w-3xl mx-auto px-4 py-10 sm:py-16 text-stone-800">
+<main class="max-w-3xl mx-auto px-4 py-10 sm:py-16 text-stone-800 bg-stone-50 rounded-2xl my-6">
     <p class="text-sm font-bold text-brand mb-3">Санскрит для занятых взрослых</p>
     <h1 class="text-3xl sm:text-4xl font-extrabold mb-5">Первый шаг — попробовать, как вы учитесь</h1>
     <p class="text-lg leading-relaxed mb-8">Несколько понятных заданий помогут познакомиться с санскритом: узнать знакомые корни и увидеть, как устроено слово. Знание деванагари для этого не требуется.</p>
 
     <section class="rounded-2xl border border-stone-200 bg-white p-5 sm:p-8 mb-8" aria-labelledby="preview-title">
         <h2 id="preview-title" class="text-2xl font-bold mb-3">Сначала посмотрите открытое занятие</h2>
-        @if ($offer['previewUrl'])
+        @if ($offer['clipUrl'])
+            <p class="mb-4">Можно ли начать без деванагари? Объяснение преподавателя за 1 минуту 43 секунды — фрагмент открытого вебинара.</p>
+            <iframe src="{{ $offer['clipUrl'] }}" title="Можно ли начать санскрит без деванагари — короткий фрагмент" class="w-full aspect-video min-h-[200px] rounded-xl border-0" loading="lazy" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+            <p class="mt-4"><a href="{{ $offer['clipWatchUrl'] }}" target="_blank" rel="noopener noreferrer" class="underline">Открыть фрагмент на YouTube ↗</a> <span class="text-sm">(1:28:57–1:30:40)</span></p>
+            <a href="{{ $offer['previewUrl'] }}" target="_blank" rel="noopener noreferrer" class="inline-block mt-3 underline">Полная запись на другом плеере ↗</a>
+        @elseif ($offer['previewUrl'])
             <p class="mb-4">{{ $offer['previewTitle'] }}. Полная запись, бесплатно и без регистрации.</p>
             <a href="{{ $offer['previewUrl'] }}" target="_blank" rel="noopener noreferrer" class="inline-flex rounded-xl border-2 border-brand px-5 py-3 font-bold text-stone-900">Смотреть видео <span class="sr-only">в новой вкладке</span> ↗</a>
         @else

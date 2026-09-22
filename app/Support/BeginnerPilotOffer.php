@@ -23,6 +23,12 @@ class BeginnerPilotOffer
             }
         }
 
+        $videoId = (string) config('beginner_pilot.preview_youtube_id');
+        $clipUrl = $lesson && preg_match('/^[A-Za-z0-9_-]{11}$/', $videoId)
+            && $lesson->youtube_url === 'https://www.youtube.com/embed/'.$videoId
+            ? 'https://www.youtube.com/embed/'.$videoId.'?start='.(int) config('beginner_pilot.preview_start_seconds').'&end='.(int) config('beginner_pilot.preview_end_seconds').'&rel=0'
+            : null;
+
         $schedule = Schedule::find(config('marathon.schedule_id'));
         $available = $schedule && $schedule->start?->isFuture()
             && $schedule->end && $schedule->end->gt($schedule->start)
@@ -33,6 +39,8 @@ class BeginnerPilotOffer
 
         return [
             'previewUrl' => $previewUrl,
+            'clipUrl' => $clipUrl,
+            'clipWatchUrl' => $clipUrl ? 'https://www.youtube.com/watch?v='.$videoId.'&t='.(int) config('beginner_pilot.preview_start_seconds').'s' : null,
             'previewTitle' => $previewUrl ? $lesson->title : null,
             'price' => (int) config('marathon.paid_track_price'),
             'supportAvailable' => (bool) $available,

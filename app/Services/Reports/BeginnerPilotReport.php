@@ -18,7 +18,7 @@ final class BeginnerPilotReport
         $inside = fn ($date) => $date !== null && $date >= $from && $date < $until;
         $payments = Payment::query()->real()->where('amount', '>', 0)
             ->whereNull('refund_of_payment_id')
-            ->whereNotIn('tariff', ['Расход', 'salary_payout', 'deposit', 'trial', 'donation'])
+            ->whereNotIn('tariff', ['Расход', 'salary_payout', 'deposit', 'donation'])
             ->with(['audits', 'lead', 'user.lead'])->get();
         $known = $payments->filter(fn (Payment $p) => $p->first_paid_at !== null);
         $window = $known->filter(fn (Payment $p) => $inside($p->first_paid_at));
@@ -76,7 +76,7 @@ final class BeginnerPilotReport
                 $engaged[] = $userId;
             }
         }
-        $refunds = Payment::query()->whereNotNull('refund_of_payment_id')
+        $refunds = Payment::query()->real()->whereNotNull('refund_of_payment_id')
             ->where('created_at', '>=', $from)->where('created_at', '<', $until)->get(['amount', 'refund_of_payment_id']);
 
         return [
@@ -101,7 +101,7 @@ final class BeginnerPilotReport
                 'linked_refund_amount_rub' => round((float) $refunds->sum(fn ($p) => abs((float) $p->amount)), 2),
             ],
             'limitations' => [
-                'First-time means first known positive real purchase in retained payment history, not first-ever across external or deleted records. Deposit, trial and donation tariffs excluded.',
+                'First-time means first known positive real purchase in retained payment history, not first-ever across external or deleted records. Deposit and donation tariffs excluded; paid trial lessons count as purchases.',
                 'Undated paid history prevents first-time classification; payment creation dates are never substituted. Missing timestamps count covers all retained history.',
                 'Buyers deduplicate by user ID; duplicate accounts cannot be merged. Row and amount totals retain duplicate payment records for reconciliation, not bank-confirmed net revenue.',
                 'Observed source means recorded UTM or manual source; inferred remains separate. Current lead attribution may have been edited after purchase.',

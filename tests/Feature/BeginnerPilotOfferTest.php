@@ -30,6 +30,15 @@ class BeginnerPilotOfferTest extends TestCase
         $this->get(route('beginner-pilot.show'))->assertDontSee($lesson->rutube_url, false);
     }
 
+    public function test_excerpt_is_bound_to_the_verified_public_video(): void
+    {
+        $lesson = Lesson::factory()->free()->create(['course_id' => Course::factory()->create()->id, 'youtube_url' => 'https://www.youtube.com/embed/FmdnLXZ4UFo']);
+        config(['beginner_pilot.preview_lesson_id' => $lesson->id]);
+        $this->get(route('beginner-pilot.show'))->assertSee('start=5337&amp;end=5440', false)->assertSee('1 минуту 43 секунды');
+        $lesson->update(['is_published' => false]);
+        $this->get(route('beginner-pilot.show'))->assertDontSee('start=5337', false);
+    }
+
     public function test_future_schedule_requires_staffing_confirmation_and_explicit_end(): void
     {
         $schedule = Schedule::create(['title' => 'Intro', 'start' => now()->addDays(2), 'end' => now()->addDays(2)->addHour()]);
