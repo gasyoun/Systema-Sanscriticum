@@ -14,6 +14,7 @@ use App\Support\Roles;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 use Livewire\Livewire;
@@ -98,7 +99,7 @@ class LessonBannerPageTest extends TestCase
         $this->assertFileExists($dir.DIRECTORY_SEPARATOR.'Missing.ttf');
         $this->assertSame([], LessonBannerTemplateStore::missingFonts($template));
 
-        \Illuminate\Support\Facades\File::deleteDirectory($dir);
+        File::deleteDirectory($dir);
     }
 
     public function test_non_font_file_with_ttf_name_is_rejected(): void
