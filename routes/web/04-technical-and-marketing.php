@@ -2,8 +2,8 @@
 
 use App\Filament\Resources\UserResource;
 use App\Http\Controllers\AdminLoginLinkController;
-use App\Http\Controllers\CourseInterestController;
 use App\Http\Controllers\CabinetInviteLinkController;
+use App\Http\Controllers\CourseInterestController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\LeadController;

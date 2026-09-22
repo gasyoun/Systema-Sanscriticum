@@ -21,6 +21,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -528,7 +529,7 @@ class MarathonController extends Controller
      * existing magnet_token (H446/H464), no new token needed. 404 for an
      * unknown token or a day that doesn't match an enrolled lead.
      */
-    public function day(int $day, string $token): \Illuminate\Http\Response
+    public function day(int $day, string $token): Response
     {
         $lead = Lead::where('magnet_token', $token)->firstOrFail();
         $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
