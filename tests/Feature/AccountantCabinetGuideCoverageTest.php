@@ -163,7 +163,7 @@ class AccountantCabinetGuideCoverageTest extends TestCase
 
         $this->assertTrue(PayoutAttributionGuide::canAccess());
         $this->get(PayoutAttributionGuide::getUrl())->assertOk()
-            ->assertSee('Что сейчас ждёт вашего решения', false);
+            ->assertSee('Что сейчас ждет вашего решения', false);
     }
 
     public function test_the_panel_page_rewrites_shots_to_the_storage_route(): void

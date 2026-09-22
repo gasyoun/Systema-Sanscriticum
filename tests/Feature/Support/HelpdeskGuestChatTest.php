@@ -108,7 +108,7 @@ class HelpdeskGuestChatTest extends TestCase
             ->call('selectGuest', $thread->id)
             ->assertSet('activeGuestId', $thread->id)
             ->assertSee('Не могу войти в кабинет')
-            ->assertSee('ответ уйдёт в Telegram-чат');
+            ->assertSee('ответ уйдет в Telegram-чат');
     }
 
     /** Техвопрос из Telegram-чата виден в том же списке, с пометкой источника. */

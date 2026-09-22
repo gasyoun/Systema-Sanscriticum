@@ -195,7 +195,7 @@ class NalopakhyanaCourseScaffoldTest extends TestCase
 
         $response->assertOk()
             ->assertSee('nala_billing_mode', false)
-            ->assertSee('Автоплатёж ежемесячно');
+            ->assertSee('Автоплатеж ежемесячно');
 
         // Inert: the auto-pay option itself stays disabled in the DOM — H2026 Phase 1
         // (real Tochka subscription create/webhook) is a separate, ungated handoff.
