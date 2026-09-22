@@ -10,7 +10,7 @@
         @php($templates = $this->templates())
 
         @if ($templates->isEmpty())
-            <p class="text-sm text-gray-500 dark:text-gray-400">Шаблонов ещё нет — «Новый шаблон» вверху справа.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Шаблонов еще нет — «Новый шаблон» вверху справа.</p>
         @else
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
