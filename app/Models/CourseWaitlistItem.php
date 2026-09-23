@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Строка «Списка ожидания» (MG ruling 31-08-2026): курс-кандидат, за который
@@ -200,6 +201,25 @@ class CourseWaitlistItem extends Model
     {
         return $this->belongsToMany(User::class, 'waitlist_votes', 'course_waitlist_item_id', 'user_id')
             ->withTimestamps();
+    }
+
+    /**
+     * Голос юзера за строку: 1 с юзера (updateOrCreate — повтор обновляет
+     * пожелание времени, H4206) + сброс кэша публичного фида. Общий путь для
+     * кнопки на /online/zhdun и для голоса гостя, отложенного до входа.
+     */
+    public function castVoteBy(User $user, ?string $slotPreference): WaitlistVote
+    {
+        $vote = WaitlistVote::updateOrCreate([
+            'course_waitlist_item_id' => $this->getKey(),
+            'user_id' => $user->getKey(),
+        ], [
+            'slot_preference' => $slotPreference,
+        ]);
+
+        Cache::forget('public_waitlist:v1');
+
+        return $vote;
     }
 
     // ================= Витринные производные =================

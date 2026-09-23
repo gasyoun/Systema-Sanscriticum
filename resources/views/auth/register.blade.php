@@ -22,6 +22,8 @@
                 <p class="text-gray-500 text-sm">Бесплатный уровень клуба — без оплаты</p>
             </div>
 
+            @include('auth.partials.pending-waitlist-vote')
+
             @if ($errors->any())
                 <div class="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
                     {{ $errors->first() }}
