@@ -134,16 +134,6 @@ final class ReactivationWaveCohort
             }
         }
 
-        // Дозаполняем поля и считаем канальные отказы одним проходом по юзерам.
-        $users = User::query()->whereIn('id', $rows->pluck('user_id'))->get()->keyBy('id');
-        foreach ($rows as &$row) {
-            $user = $users->get($row['user_id']);
-            if ($user === null) {
-                continue;
-            }
-        }
-        unset($row);
-
         $counts['channel_total'] = $counts['channel_'.self::CHANNEL_TELEGRAM_BOT]
             + $counts['channel_'.self::CHANNEL_EMAIL]
             + $counts['channel_'.self::CHANNEL_NONE];
