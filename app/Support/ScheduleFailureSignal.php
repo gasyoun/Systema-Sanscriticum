@@ -38,6 +38,17 @@ final class ScheduleFailureSignal
                 ->get();
 
             if ($recipients->isEmpty()) {
+                // H5298: the critical log above always fires — this branch only
+                // means the Filament in-admin pager could not be armed. That
+                // must stay machine-distinguishable from "notified N recipients"
+                // (was a silent return: the same silent-skip class repaired in
+                // H5061 for MoneySliAlerter::heartbeat).
+                Log::warning('schedule.money_command_failure_signal_not_supported', [
+                    'command' => $command,
+                    'state' => 'not_supported',
+                    'hint' => 'no super_admin/admin/accountant recipient found — Filament pager not armed, Log::critical above is the only signal',
+                ]);
+
                 return;
             }
 

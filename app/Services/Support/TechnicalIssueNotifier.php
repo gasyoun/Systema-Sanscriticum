@@ -34,6 +34,16 @@ class TechnicalIssueNotifier
             $recipients = $this->recipients();
 
             if ($recipients->isEmpty()) {
+                // H5298: same silent-skip class as the pre-H5061
+                // telegram-support:healthcheck seam this notifier's docblock
+                // compares itself to — a duty pager with nobody armed must be
+                // machine-readable, not indistinguishable from "sent quietly".
+                Log::warning('technical_issue_notifier.not_supported', [
+                    'thread_id' => $thread->id,
+                    'state' => 'not_supported',
+                    'hint' => 'no assignee and no super_admin/admin recipient found — duty pager not armed',
+                ]);
+
                 return;
             }
 
