@@ -509,6 +509,8 @@ def main(argv=None):
     ap.add_argument("--backoff", type=float, default=30.0, help="seconds to wait after a 429")
     ap.add_argument("--limit", type=int, help="first N rows only (smoke)")
     ap.add_argument("--out-dir", default=str(OUT_DIR))
+    ap.add_argument("--measure", nargs="+", metavar="GLOSS",
+                    help="band a proposed replacement gloss (review-sheet evidence), no file")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args(argv)
     if a.selftest:
@@ -522,8 +524,8 @@ def main(argv=None):
                             "gloss": a.gloss_col,
                             "ids": [c for c in a.id_cols.split(",") if c],
                             "sa_key": a.sa_col, "sa_kind": "iast"}))
-    if not jobs:
-        ap.error("name a preset (roots, lemmas) or --tsv")
+    if not jobs and not a.measure:
+        ap.error("name a preset (roots, lemmas), --tsv or --measure")
     client = None
     if not a.offline:
         nk = import_client()
@@ -539,6 +541,10 @@ def main(argv=None):
     pool = load_pool()
     report = {}
     try:
+        for g in a.measure or []:
+            r = lint_gloss(g, lem, ev)
+            report["measure:" + g] = {"status": r["status"], "flags": r["flags"],
+                                      "min_band": r["min_cat"], "tokens": r["tokens"]}
         for name, spec in jobs:
             out, rows = lint_file(name, spec, lem, ev, pool, out_dir=a.out_dir, limit=a.limit)
             report[name] = summarize(name, rows)
