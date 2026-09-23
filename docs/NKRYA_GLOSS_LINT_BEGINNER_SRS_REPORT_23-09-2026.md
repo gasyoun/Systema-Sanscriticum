@@ -65,10 +65,16 @@ Decisions file: `Systema-Sanscriticum/review/systema-sanscriticum-nkrya-gloss-li
 
 ## Residuals
 
-1. Finish the NKRYa band pass (unattended, ~15 h), then cut the next sheet from new `rare` rows.
-2. Apply the 478 mechanical dictionary-form fixes upstream: the roots builder / WhitneyRoots Russian glosses, and the start-chteniya feed.
-3. Fill the 841 empty and 34 English-in-Russian glosses in the start-chteniya feed.
-4. Step 4 of the handoff: verb government (управление глаголов) in the Кочергина answer keys.
-5. The remaining decks: Memrise teacher decks (flag-only, Q3), `sa_ru_glossary.json`, the Бюлер dictionary (a later wave, Q5).
+**Not yet minted.** The residual mint was blocked in the executing session by the harness safety check, not by a guard. The five mission texts and a ready batch spec are in [nkrya_gloss_lint_residuals_23-09-2026/](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/docs/nkrya_gloss_lint_residuals_23-09-2026). Each duplicate-guard match is H5285 itself, the source these split from. Mint them from the Uprava root on the Mac:
+
+```bash
+python3 tools/mint_handoff.py --batch /Users/mac/Documents/GitHub/Systema-Sanscriticum/docs/nkrya_gloss_lint_residuals_23-09-2026/mint_spec.tsv --allow-dup
+```
+
+1. [m1](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/nkrya_gloss_lint_residuals_23-09-2026/m1.md) (🟡2 medium): finish the NKRYa band pass (unattended, ~15 h), then cut the next sheet from new `rare` rows.
+2. [m2](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/nkrya_gloss_lint_residuals_23-09-2026/m2.md) (🟡2 medium): apply the 478 mechanical dictionary-form fixes upstream (WhitneyRoots `ru_root_glosses.tsv`; kosha `reading/data/hitopadesa-0.json`), then rebuild the seeds.
+3. [m3](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/nkrya_gloss_lint_residuals_23-09-2026/m3.md) (🔴3 hard): fill the 841 empty and 34 English-in-Russian glosses of the start-chteniya words.
+4. [m4](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/nkrya_gloss_lint_residuals_23-09-2026/m4.md) (🔴3 hard): step 4 of the handoff, verb government (управление глаголов) in the Кочергина answer keys.
+5. [m5](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/nkrya_gloss_lint_residuals_23-09-2026/m5.md) (🟡2 medium): the remaining decks, i.e. the Memrise teacher decks (flag-only, Q3) and `sa_ru_glossary.json`. The Бюлер dictionary is a later wave (Q5).
 
 _Гасунс_
