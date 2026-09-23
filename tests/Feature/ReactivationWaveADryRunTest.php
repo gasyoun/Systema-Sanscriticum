@@ -99,7 +99,9 @@ class ReactivationWaveADryRunTest extends TestCase
         $this->paid($nonContinuer, $this->course, 1, 3);
 
         // 2. Lapsed: оплатил прошлый курс целиком, действующей группы нет.
+        //    TG привязан, но согласия на анонсы нет → opt-out, канал email.
         $lapsed = User::factory()->create([
+            'telegram_id' => '700102',
             'wants_messenger_announcements' => false,
             'wants_email_announcements' => true,
         ]);
