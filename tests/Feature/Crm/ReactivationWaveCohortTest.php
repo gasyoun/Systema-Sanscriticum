@@ -6,6 +6,7 @@ namespace Tests\Feature\Crm;
 
 use App\Enums\ReactivationWaveTemplate;
 use App\Models\DebtWinBackAttempt;
+use App\Models\Group;
 use App\Models\MessageTemplate;
 use App\Models\Payment;
 use App\Models\SuppressedEmail;
