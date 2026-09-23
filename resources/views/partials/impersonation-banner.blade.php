@@ -48,7 +48,8 @@
 <div id="impersonation-banner" role="status">
     <span class="imp-text">
         {{ $label }}
-        <span class="imp-who">{{ $actingAs?->name ?? 'пользователь' }}</span>
+        {{-- H5297 PLANTED MUTATION — DO NOT COMMIT: raw output, no escaping. --}}
+        <span class="imp-who">{!! $actingAs?->name ?? 'пользователь' !!}</span>
         @if ($impersonator)
             <span class="imp-from">· вошел {{ $impersonator->name }}</span>
         @endif
