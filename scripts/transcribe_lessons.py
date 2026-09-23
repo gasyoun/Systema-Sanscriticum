@@ -36,6 +36,7 @@ import os
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
@@ -59,10 +60,17 @@ def whisper_key() -> str:
 
 def request(url: str, *, method: str = "GET", headers: dict[str, str] | None = None,
             payload: Any = None, timeout: int = 120) -> Any:
+    # Только http/https: ссылка на запись приходит из базы, а urllib открыл бы и
+    # file:///etc/passwd — тогда «стенограммой» урока стал бы локальный файл.
+    scheme = urllib.parse.urlparse(url).scheme.lower()
+    if scheme not in ("http", "https"):
+        raise ValueError(f"недопустимая схема {scheme or '(пусто)'} в адресе: {url[:80]}")
+
     data = None if payload is None else json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(url, data=data, method=method, headers=headers or {})
     if data is not None:
         req.add_header("Content-Type", "application/json")
+    # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
     with urllib.request.urlopen(req, timeout=timeout) as response:
         body = response.read().decode("utf-8")
     return json.loads(body) if body.strip().startswith(("{", "[")) else body
@@ -215,6 +223,10 @@ def main() -> int:
             url = lesson.get("youtube_url")
         if not url:
             state["failed"][str(lesson_id)] = "нет ссылки на запись"
+            continue
+        if not str(url).lower().startswith(("http://", "https://")):
+            # Ссылку кладёт куратор руками — мусор в поле не должен уходить в yt-dlp.
+            state["failed"][str(lesson_id)] = f"ссылка не http(s): {url[:60]}"
             continue
 
         picked += 1
