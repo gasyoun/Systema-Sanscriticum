@@ -76,7 +76,9 @@ def card(name, r, idx):
     label, key_col, src = SOURCES[name]
     key = r.get(key_col, "")
     cur = band_of(r["nkrya_tokens"])
-    cid = "%s-%s-%s" % (name, key, idx)
+    # stable across regenerations: roots by frequency rank, lemmas by lemma + text locus
+    cid = ("roots-%s" % r.get("rank")) if name == "roots" else \
+        "lemmas-%s-%s-%s" % (r.get("pack"), key, r.get("locus"))
     e = html.escape
     from csl_pyutil import mark_cyrillic
     cur_txt = ("«%s»: полоса %s, %s ipm" % (cur[0], cur[1], "%.2f" % cur[2] if cur[2] is not None else "0")
