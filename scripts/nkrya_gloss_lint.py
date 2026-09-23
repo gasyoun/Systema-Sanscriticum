@@ -22,7 +22,8 @@ lint TSV per source + a compact evidence cache that makes `--offline` re-runs ex
 
 NKRYa client: the H5261 client (SanskritLexicography/RussianTranslation/src/nkrya_client.py,
 sibling checkout or env NKRYA_CLIENT_SRC) until H5282 moves it into csl-pyutil.
-Rate limit: ~10 calls/min before HTTP 429 (probed 23-09-2026) -> `--interval` + a 65 s
+Rate limit: per ACCOUNT, shared by every session using the key — 5 calls at 3 s went
+through, then ~1 call per 80 s while two other sessions ran (probed 23-09-2026) -> `--interval` + a 65 s
 back-off on 429; the evidence cache is saved every 20 lookups, so a killed run resumes.
 
   python scripts/nkrya_gloss_lint.py roots lemmas            # live, resumable
@@ -440,6 +441,7 @@ def main(argv=None):
     if not a.offline:
         nk = import_client()
         nk.MIN_INTERVAL_S = a.interval
+        nk.MAX_RETRIES = 0       # 429 is handled by Evidence._live's 65 s back-off, not 2/4/8 s bursts
         client = nk.NkryaClient(cache_dir=str(RAW_CACHE))
     else:
         import_client()          # NkryaError type for the offline path stays importable
