@@ -30,7 +30,7 @@ the key (cache timestamps 13:40-13:56Z 23-09-2026: 4-5/min across all sessions, 
   python scripts/nkrya_gloss_lint.py roots lemmas            # live, resumable
   python scripts/nkrya_gloss_lint.py roots lemmas --offline  # cache only
   python scripts/nkrya_gloss_lint.py --tsv database/seeders/data/memrise_6502608/level_*.csv \
-      --gloss-col col_b --id-cols col_a --name memrise_6502608 --out-dir /tmp/lint
+      --gloss-col col_b --id-cols col_a --sa-col col_a --name memrise_6502608 --out-dir /tmp/lint
   python scripts/nkrya_gloss_lint.py --selftest
 """
 
@@ -423,6 +423,8 @@ def main(argv=None):
                     help="seed files (.tsv tab / .csv comma), e.g. database/seeders/data/memrise_X/level_*.csv")
     ap.add_argument("--gloss-col", default="gloss_ru")
     ap.add_argument("--id-cols", default="")
+    ap.add_argument("--sa-col", default="",
+                    help="IAST Sanskrit column for synonym proposals from sa_ru_glossary.json")
     ap.add_argument("--name", default="custom")
     ap.add_argument("--offline", action="store_true", help="evidence cache only, no network")
     ap.add_argument("--interval", type=float, default=12.0,
@@ -442,7 +444,7 @@ def main(argv=None):
         jobs.append((stem, {"path": os.path.relpath(os.path.abspath(path), REPO),
                             "gloss": a.gloss_col,
                             "ids": [c for c in a.id_cols.split(",") if c],
-                            "sa_key": "", "sa_kind": "iast"}))
+                            "sa_key": a.sa_col, "sa_kind": "iast"}))
     if not jobs:
         ap.error("name a preset (roots, lemmas) or --tsv")
     client = None
