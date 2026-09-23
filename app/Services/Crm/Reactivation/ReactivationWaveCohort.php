@@ -165,7 +165,14 @@ final class ReactivationWaveCohort
     }
 
     /**
-     * Ученики с живым членством в неархивной группе — у них доступ есть.
+     * Ученики, которые ПРЯМО СЕЙЧАС учатся: членство без `left_at` в группе со
+     * статусом `active` (идёт обучение).
+     *
+     * Группы `forming` сюда НЕ входят намеренно: набор — это список
+     * приглашённых, а не доступ. Сухой прогон 23-09-2026 на проде показал,
+     * что в `forming`-ростерах висит 597 давно не плативших учеников (315
+     * уснувших + 282 не продолживших) — трактовать их как «активных
+     * плательщиков» значило бы выкинуть из волны почти всю когорту.
      *
      * @param  list<int>  $userIds
      * @return array<int, true>
@@ -180,7 +187,7 @@ final class ReactivationWaveCohort
             ->join('groups', 'groups.id', '=', 'group_user.group_id')
             ->whereIn('group_user.user_id', $userIds)
             ->whereNull('group_user.left_at')
-            ->where('groups.status', '!=', 'archived')
+            ->where('groups.status', '=', 'active')
             ->distinct()
             ->pluck('group_user.user_id');
 
