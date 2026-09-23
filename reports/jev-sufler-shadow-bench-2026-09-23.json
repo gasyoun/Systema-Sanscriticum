@@ -1,0 +1,475 @@
+{
+  "generated": "2026-09-23",
+  "model": "jev-1.13.0",
+  "endpoint": "https://api.typesafe.ai/v1/systemone",
+  "n_cases": 50,
+  "corpus": "tests/fixtures/Support/classifier_corpus_2026_08.json",
+  "floor": {
+    "corpus": "tests/fixtures/Support/classifier_corpus_2026_08.json",
+    "rules_source": "app/Services/Support/SupportAnswerSuggester.php",
+    "php": "8.5.9",
+    "total": 50,
+    "correct": 49,
+    "accuracy": 0.98,
+    "floor_threshold": 0.93,
+    "floor_met": true,
+    "errors": [
+      {
+        "idx": 2,
+        "t": "Здравствуйте! Спасибо вам большое. Я очень надеюсь дослушать курс по Упанишадам. Скажите как попасть в личный кабинет? Это на сайте ОРС?",
+        "gold": "E",
+        "got": "A"
+      }
+    ],
+    "per_class": {
+      "E": {
+        "tp": 4,
+        "pred": 4,
+        "exp": 4
+      },
+      "A": {
+        "tp": 3,
+        "pred": 4,
+        "exp": 4
+      },
+      "D": {
+        "tp": 8,
+        "pred": 8,
+        "exp": 8
+      },
+      "F": {
+        "tp": 5,
+        "pred": 5,
+        "exp": 5
+      },
+      "B": {
+        "tp": 4,
+        "pred": 4,
+        "exp": 4
+      },
+      "C": {
+        "tp": 4,
+        "pred": 4,
+        "exp": 4
+      },
+      "none": {
+        "tp": 21,
+        "pred": 0,
+        "exp": 0
+      }
+    }
+  },
+  "arm_a": {
+    "total": 50,
+    "correct": 43,
+    "accuracy": 0.86,
+    "floor_live_accuracy": 0.98,
+    "floor_assert_threshold": 0.93,
+    "beats_live_floor": false,
+    "meets_93_assert": false,
+    "errors": [
+      {
+        "i": 12,
+        "t": "Доброе утро, оплатила первый блок, только не поняла где теперь смотреть, придёт на почту?",
+        "gold": "D",
+        "jev": "E"
+      },
+      {
+        "i": 30,
+        "t": "Жаль, тогда прошу сделать возврат",
+        "gold": null,
+        "jev": "D"
+      },
+      {
+        "i": 31,
+        "t": "Возврат",
+        "gold": null,
+        "jev": "D"
+      },
+      {
+        "i": 32,
+        "t": "Здравствуйте! Я бы хотела оформить возврат средств за недостающую часть курса",
+        "gold": null,
+        "jev": "D"
+      },
+      {
+        "i": 33,
+        "t": "попрошу вас сделать возврат оставшихся средств",
+        "gold": null,
+        "jev": "D"
+      },
+      {
+        "i": 42,
+        "t": "Заходим",
+        "gold": null,
+        "jev": "A"
+      },
+      {
+        "i": 46,
+        "t": "Добрый день! Хочу выразить огромную благодарность за организацию процесса и выбор курсов! Попрошу вас сделать возврат оставшихся средств",
+        "gold": null,
+        "jev": "D"
+      }
+    ],
+    "per_class": {
+      "A": {
+        "n_gold": 3,
+        "n_pred": 4,
+        "tp": 3,
+        "precision": 0.75,
+        "recall": 1.0,
+        "f1": 0.8571
+      },
+      "B": {
+        "n_gold": 4,
+        "n_pred": 4,
+        "tp": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "C": {
+        "n_gold": 4,
+        "n_pred": 4,
+        "tp": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "D": {
+        "n_gold": 8,
+        "n_pred": 12,
+        "tp": 7,
+        "precision": 0.5833,
+        "recall": 0.875,
+        "f1": 0.7
+      },
+      "E": {
+        "n_gold": 5,
+        "n_pred": 6,
+        "tp": 5,
+        "precision": 0.8333,
+        "recall": 1.0,
+        "f1": 0.9091
+      },
+      "F": {
+        "n_gold": 5,
+        "n_pred": 5,
+        "tp": 5,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "none": {
+        "n_gold": 21,
+        "n_pred": 15,
+        "tp": 15,
+        "precision": 1.0,
+        "recall": 0.7143,
+        "f1": 0.8333
+      }
+    },
+    "latency": {
+      "n": 50,
+      "mean_ms": 6034.5,
+      "median_ms": 5451.0,
+      "p95_ms": 11818.3,
+      "max_ms": 16411.9
+    },
+    "cost_usd_total": 0.000913,
+    "cost_usd_mean": 1.825e-05,
+    "tokens": {
+      "in": 21732,
+      "out": 3300
+    }
+  },
+  "arm_b": {
+    "В_total": 50,
+    "note": "reference = deterministic ORS-FAQ sufler (В1/В2/В3/В6/В9 + OTHER); no independent В-gold exists on this corpus → agreement, not accuracy",
+    "agreement": {
+      "n": 50,
+      "agree": 27,
+      "rate": 0.54
+    },
+    "distribution_jev": {
+      "В1": 1,
+      "В2": 0,
+      "В3": 0,
+      "В4": 0,
+      "В5": 0,
+      "В6": 3,
+      "В7": 3,
+      "В8": 9,
+      "В9": 0,
+      "В10": 0,
+      "В11": 0,
+      "OTHER": 34
+    },
+    "distribution_ref": {
+      "В1": 0,
+      "В2": 4,
+      "В3": 0,
+      "В4": 0,
+      "В5": 0,
+      "В6": 1,
+      "В7": 0,
+      "В8": 0,
+      "В9": 5,
+      "В10": 0,
+      "В11": 0,
+      "OTHER": 40
+    },
+    "per_class": {
+      "В1": {
+        "n_gold": 0,
+        "n_pred": 1,
+        "tp": 0,
+        "precision": 0.0,
+        "recall": null,
+        "f1": null
+      },
+      "В2": {
+        "n_gold": 4,
+        "n_pred": 0,
+        "tp": 0,
+        "precision": null,
+        "recall": 0.0,
+        "f1": null
+      },
+      "В3": {
+        "n_gold": 0,
+        "n_pred": 0,
+        "tp": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null
+      },
+      "В4": {
+        "n_gold": 0,
+        "n_pred": 0,
+        "tp": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null
+      },
+      "В5": {
+        "n_gold": 0,
+        "n_pred": 0,
+        "tp": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null
+      },
+      "В6": {
+        "n_gold": 1,
+        "n_pred": 3,
+        "tp": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": null
+      },
+      "В7": {
+        "n_gold": 0,
+        "n_pred": 3,
+        "tp": 0,
+        "precision": 0.0,
+        "recall": null,
+        "f1": null
+      },
+      "В8": {
+        "n_gold": 0,
+        "n_pred": 9,
+        "tp": 0,
+        "precision": 0.0,
+        "recall": null,
+        "f1": null
+      },
+      "В9": {
+        "n_gold": 5,
+        "n_pred": 0,
+        "tp": 0,
+        "precision": null,
+        "recall": 0.0,
+        "f1": null
+      },
+      "В10": {
+        "n_gold": 0,
+        "n_pred": 0,
+        "tp": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null
+      },
+      "В11": {
+        "n_gold": 0,
+        "n_pred": 0,
+        "tp": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null
+      },
+      "OTHER": {
+        "n_gold": 40,
+        "n_pred": 34,
+        "tp": 27,
+        "precision": 0.7941,
+        "recall": 0.675,
+        "f1": 0.7297
+      }
+    },
+    "disagreements": [
+      {
+        "i": 6,
+        "t": "сколько будет стоить курс по календарям?",
+        "ref": "В2",
+        "jev": "OTHER"
+      },
+      {
+        "i": 7,
+        "t": "И вопрос если за блок платить, есть ли функция рассрочки или по частям оплата?",
+        "ref": "OTHER",
+        "jev": "В8"
+      },
+      {
+        "i": 8,
+        "t": "А это свободный доступ или есть цена, не очень поняла?",
+        "ref": "В2",
+        "jev": "В8"
+      },
+      {
+        "i": 9,
+        "t": "сколько стоит курс и где ссылка",
+        "ref": "В2",
+        "jev": "В8"
+      },
+      {
+        "i": 10,
+        "t": "ссылку на оплату не нашла",
+        "ref": "OTHER",
+        "jev": "В8"
+      },
+      {
+        "i": 11,
+        "t": "Подскажите где можно оплатить курс по грамматике?",
+        "ref": "В2",
+        "jev": "В8"
+      },
+      {
+        "i": 12,
+        "t": "Доброе утро, оплатила первый блок, только не поняла где теперь смотреть, придёт на почту?",
+        "ref": "OTHER",
+        "jev": "В8"
+      },
+      {
+        "i": 13,
+        "t": "Хотела уточнить про тарифы на следующий поток",
+        "ref": "В6",
+        "jev": "OTHER"
+      },
+      {
+        "i": 14,
+        "t": "По поводу домашней работы не ответили) куда её прикреплять?",
+        "ref": "OTHER",
+        "jev": "В8"
+      },
+      {
+        "i": 16,
+        "t": "куда мы должны прикреплять домашнюю работу по занятию 3?",
+        "ref": "OTHER",
+        "jev": "В8"
+      },
+      {
+        "i": 21,
+        "t": "Я пропустила занятие, посмотрю видеоозапись вечером",
+        "ref": "OTHER",
+        "jev": "В1"
+      },
+      {
+        "i": 23,
+        "t": "как войти в зум на занятие?",
+        "ref": "OTHER",
+        "jev": "В7"
+      },
+      {
+        "i": 24,
+        "t": "Подключиться к занятию не получается, просит код",
+        "ref": "OTHER",
+        "jev": "В7"
+      },
+      {
+        "i": 25,
+        "t": "пришлите линк на встречу, пожалуйста",
+        "ref": "OTHER",
+        "jev": "В7"
+      },
+      {
+        "i": 26,
+        "t": "во сколько сегодня занятие?",
+        "ref": "OTHER",
+        "jev": "В6"
+      },
+      {
+        "i": 27,
+        "t": "расписание следующей недели уже есть?",
+        "ref": "OTHER",
+        "jev": "В6"
+      },
+      {
+        "i": 29,
+        "t": "в какой день начинаются занятия у вечерней группы?",
+        "ref": "OTHER",
+        "jev": "В6"
+      },
+      {
+        "i": 30,
+        "t": "Жаль, тогда прошу сделать возврат",
+        "ref": "В9",
+        "jev": "OTHER"
+      },
+      {
+        "i": 31,
+        "t": "Возврат",
+        "ref": "В9",
+        "jev": "OTHER"
+      },
+      {
+        "i": 32,
+        "t": "Здравствуйте! Я бы хотела оформить возврат средств за недостающую часть курса",
+        "ref": "В9",
+        "jev": "OTHER"
+      },
+      {
+        "i": 33,
+        "t": "попрошу вас сделать возврат оставшихся средств",
+        "ref": "В9",
+        "jev": "OTHER"
+      },
+      {
+        "i": 40,
+        "t": "Да, через [telegram]",
+        "ref": "OTHER",
+        "jev": "В8"
+      },
+      {
+        "i": 46,
+        "t": "Добрый день! Хочу выразить огромную благодарность за организацию процесса и выбор курсов! Попрошу вас сделать возврат оставшихся средств",
+        "ref": "В9",
+        "jev": "OTHER"
+      }
+    ],
+    "latency": {
+      "n": 50,
+      "mean_ms": 5660.5,
+      "median_ms": 5240.7,
+      "p95_ms": 10501.5,
+      "max_ms": 13817.1
+    },
+    "cost_usd_total": 0.00111,
+    "cost_usd_mean": 2.22e-05,
+    "tokens": {
+      "in": 26432,
+      "out": 5716
+    }
+  },
+  "verdict": "NO-GO: Jev 0.86 < live regex floor 0.98 on the frozen corpus — the deterministic YAML+regex floor stands; do not wire Jev into the sufler path."
+}
