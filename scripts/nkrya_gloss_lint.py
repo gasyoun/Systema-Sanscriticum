@@ -167,6 +167,14 @@ class Evidence:
             for k in sorted(self.rows):
                 w.writerow({x: self.rows[k].get(x, "") for x in self.FIELDS})
 
+    @staticmethod
+    def _offline_error():
+        try:
+            from nkrya_client import NkryaOffline
+            return NkryaOffline
+        except ImportError:
+            return ()
+
     def _live(self, fn):
         from nkrya_client import NkryaError
         for attempt in range(240):     # a busy shared key can starve us for a long while
@@ -178,7 +186,7 @@ class Evidence:
                     print("  … %d live lookups, cache saved" % self.live, file=sys.stderr)
                 return out
             except NkryaError as e:
-                if "429" in str(e) and attempt < 239:
+                if str(e).startswith("HTTP 429 ") and attempt < 239:
                     self.rate_limited += 1
                     print("  429 — sleeping %.0f s" % self.backoff, file=sys.stderr)
                     time.sleep(self.backoff)
@@ -188,12 +196,16 @@ class Evidence:
     def freq(self, lemma, npos):
         key = "freq|%s|%s" % (yo(lemma), npos or "")
         if key not in self.rows:
-            if self.offline or self.client is None:
+            if self.client is None:
                 self.misses += 1
                 return None
-            f = self._live(lambda: self.client.freq(lemma, npos or None))
-            if f.get("ipm") is None and npos:
-                f = self._live(lambda: self.client.freq(lemma, None))
+            try:          # --offline: the client reads its raw cache only and raises on a miss
+                f = self._live(lambda: self.client.freq(lemma, npos or None))
+                if f.get("ipm") is None and npos:
+                    f = self._live(lambda: self.client.freq(lemma, None))
+            except self._offline_error():
+                self.misses += 1
+                return None
             self.rows[key] = {"key": key, "ipm": "" if f.get("ipm") is None else f["ipm"],
                               "category": "" if f.get("category") is None else f["category"]}
         r = self.rows[key]
@@ -203,13 +215,17 @@ class Evidence:
     def hits(self, lemma, slice_name):
         key = "hits|%s|%s" % (yo(lemma), slice_name)
         if key not in self.rows:
-            if self.offline or self.client is None:
+            if self.client is None:
                 self.misses += 1
                 return None
             cond = [C19 if slice_name == "c19" else MODERN]
             q = {"sectionValues": [{"subsectionValues": [
                 {"conditionValues": [{"fieldName": "lex", "text": {"v": lemma}}]}]}]}
-            c = self._live(lambda: self.client.concordance(q, n=1, subcorpus_conditions=cond))
+            try:
+                c = self._live(lambda: self.client.concordance(q, n=1, subcorpus_conditions=cond))
+            except self._offline_error():
+                self.misses += 1
+                return None
             self.rows[key] = {"key": key, "hits": "" if c.get("hits") is None else c["hits"]}
         v = self.rows[key].get("hits")
         return int(v) if v not in ("", None) else None
@@ -272,6 +288,14 @@ def lint_gloss(gloss, lem, ev):
     else:
         out["flags"].append("phrase")
     for t, lemma, pos, form in content:
+        low = t.lower()
+        if low.startswith("не") and len(low) > 4 and hasattr(lem.morph, "word_is_known") \
+                and not lem.morph.word_is_known(low) and lem.morph.word_is_known(low[2:]):
+            # fused не- on a participle (неродившихся): pymorphy invents «неродиться»,
+            # which NKRYa scores as band 1 — measure the base verb instead
+            _l, pos2, _f = lem.analyse(low[2:])
+            if pos2 in CONTENT:
+                lemma, pos = _l, pos2
         fl = freq_lemma(lemma, pos, lem)
         f = ev.freq(fl, POS_MAP.get(pos))
         flag = band_flag(f)
@@ -506,6 +530,8 @@ def main(argv=None):
         nk.MIN_INTERVAL_S = a.interval
         nk.MAX_RETRIES = 0       # 429 is handled by Evidence._live's 65 s back-off, not 2/4/8 s bursts
         client = nk.NkryaClient(cache_dir=str(RAW_CACHE))
+    elif RAW_CACHE.is_dir():     # --offline still harvests lookups a stopped live run fetched
+        client = import_client().NkryaClient(cache_dir=str(RAW_CACHE), offline=True)
     else:
         import_client()          # NkryaError type for the offline path stays importable
     ev = Evidence(EVIDENCE_TSV, client=client, offline=a.offline, backoff=a.backoff)
@@ -518,8 +544,7 @@ def main(argv=None):
             report[name] = summarize(name, rows)
             print("%s -> %s" % (name, os.path.relpath(out, REPO)))
     finally:
-        if not a.offline:
-            ev.save()
+        ev.save()
     report["_evidence"] = {"cached_keys": len(ev.rows), "live_lookups": ev.live,
                            "offline_misses": ev.misses, "http_429_backoffs": ev.rate_limited}
     print(json.dumps(report, ensure_ascii=False, indent=1))
