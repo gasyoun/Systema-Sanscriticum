@@ -36,16 +36,23 @@ class ReactivationWaveCohortTest extends TestCase
         parent::tearDown();
     }
 
+    /** @param array<string, mixed> $attributes */
     private function payer(User $user, int $daysAgo, array $attributes = []): Payment
     {
         $at = Carbon::now()->subDays($daysAgo);
 
-        return Payment::factory()->create(array_merge([
+        // withoutEvents: PaymentObserver раздаёт доступы — когорте они не нужны.
+        $payment = Payment::withoutEvents(fn () => Payment::create(array_merge([
             'user_id' => $user->id,
+            'amount' => 4800,
+            'tariff' => 'full',
             'status' => 'paid',
-            'first_paid_at' => $at,
-            'created_at' => $at,
-        ], $attributes));
+            'is_conditional' => false,
+        ], $attributes)));
+
+        $payment->forceFill(['first_paid_at' => $at, 'created_at' => $at])->saveQuietly();
+
+        return $payment->refresh();
     }
 
     private function cohort(): ReactivationWaveCohort
