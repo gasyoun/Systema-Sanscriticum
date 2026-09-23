@@ -12,11 +12,13 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Tests\Concerns\WithStaffedIntroSession;
 use Tests\TestCase;
 
 class MarathonPaidCheckoutTest extends TestCase
 {
     use RefreshDatabase;
+    use WithStaffedIntroSession;
 
     protected function setUp(): void
     {
@@ -49,6 +51,7 @@ class MarathonPaidCheckoutTest extends TestCase
     public function test_paid_track_checkout_creates_pending_payment_and_redirects(): void
     {
         $this->paidTrackEnrollment();
+        $this->confirmIntroSession();
 
         Http::fake(['*' => Http::response([
             'Data' => ['paymentLink' => 'https://pay.tochka/marathon1', 'paymentLinkId' => 'pl_marathon1'],
@@ -113,6 +116,7 @@ class MarathonPaidCheckoutTest extends TestCase
     public function test_guest_with_existing_email_is_rejected(): void
     {
         $this->paidTrackEnrollment('newcomer@example.test');
+        $this->confirmIntroSession();
         User::factory()->create(['email' => 'taken@example.test']);
 
         $this->post(route('marathon.pay'), [

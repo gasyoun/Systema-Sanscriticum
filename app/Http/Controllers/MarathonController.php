@@ -14,6 +14,7 @@ use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\TelegramDeliveryChannel;
 use App\Services\Payments\TochkaPaymentService;
 use App\Support\AcquisitionAttribution;
+use App\Support\BeginnerPilotOffer;
 use App\Support\MarathonLandingCopy;
 use App\Support\MarathonLandingCopySplit;
 use App\Support\MarathonVisual;
@@ -85,6 +86,19 @@ class MarathonController extends Controller
             MarathonLandingCopySplit::recordImpression($split->variantKey);
         }
         $copy = MarathonLandingCopy::forView($split->variantKey);
+        $paidSupportAvailable = BeginnerPilotOffer::supportAvailable();
+        if (! $paidSupportAvailable) {
+            $copy['variant']['hero_title'] = 'Попробуйте санскрит с нуля и выберите следующий шаг';
+            $copy['variant']['hero_subtitle'] = 'Два коротких занятия по ~15 минут в день доступны бесплатно. Живая групповая консультация и участие с проверкой вернутся после подтверждения даты.';
+            $copy['variant']['benefits_heading'] = 'Что вы попробуете бесплатно';
+            $copy['variant']['benefits'] = array_slice($copy['variant']['benefits'], 0, 2);
+            $copy['days'] = array_slice($copy['days'], 0, 2);
+            $copy['tracks'] = ['free' => $copy['tracks']['free']];
+            $copy['faq'][0]['a'] = 'Два вводных занятия занимают около 15 минут каждое. Пропустили день — продолжите, когда удобно. Новая дата групповой консультации пока не подтверждена.';
+            $copy['faq'][2]['a'] = 'Когда новая групповая консультация состоится, на бесплатном треке будет доступна запись. Личный разбор вопроса входит только в участие с проверкой.';
+            $copy['faq'][3]['a'] = 'Участие с проверкой сейчас недоступно: дата групповой встречи и возможность проверки ещё не подтверждены. Бесплатные вводные материалы остаются открытыми.';
+        }
+        $copy['testimonial'] = '';
         // H1975 — chrome/layout skin; independent axis, default b, ?skin= QA override.
         $skin = MarathonVisual::variantKey($request);
 
@@ -96,6 +110,7 @@ class MarathonController extends Controller
             'paidTrackPrice' => config('marathon.paid_track_price'),
             'couponAmount' => config('marathon.coupon_amount'),
             'hostName' => config('marathon.host_name'),
+            'paidSupportAvailable' => $paidSupportAvailable,
         ]);
     }
 
@@ -116,6 +131,12 @@ class MarathonController extends Controller
             'quiz_goal' => 'required|in:'.implode(',', array_keys(self::QUIZ_GOALS)),
             'is_promo_agreed' => 'nullable',
         ]);
+
+        if ($validated['track'] === MarathonEnrollment::TRACK_PAID && ! BeginnerPilotOffer::supportAvailable()) {
+            throw ValidationException::withMessages([
+                'track' => 'Участие с проверкой откроется после подтверждения даты групповой консультации. Пока выберите бесплатный формат.',
+            ]);
+        }
 
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
 
@@ -257,6 +278,11 @@ class MarathonController extends Controller
                 ->with('marathon_paid', true);
         }
 
+        if (! BeginnerPilotOffer::supportAvailable()) {
+            return redirect()->route('marathon.show')
+                ->with('error', 'Оплата участия с проверкой временно закрыта: новая дата групповой консультации и проверка куратором ещё не подтверждены.');
+        }
+
         try {
             $user = $this->resolveUserForCheckout($validated['email'], $lead);
         } catch (ValidationException $e) {
@@ -334,6 +360,7 @@ class MarathonController extends Controller
             'paidTrackPrice' => config('marathon.paid_track_price'),
             'couponAmount' => config('marathon.coupon_amount'),
             'hostName' => config('marathon.host_name'),
+            'paidSupportAvailable' => true,
             'showRoute' => 'marathon.january.show',
             'registerRoute' => 'marathon.january.register',
             'payRoute' => 'marathon.january.pay',
@@ -554,6 +581,8 @@ class MarathonController extends Controller
             'day' => $day,
             'token' => $token,
             'enrollment' => $enrollment,
+            'groupSessionAvailable' => $enrollment->isDevaCohort() || BeginnerPilotOffer::supportAvailable(),
+            'personalReviewEntitled' => $enrollment->isPaidConfirmed(),
         ]));
 
         // A server-rendered Day 1 page is a start, never merely a delivery.

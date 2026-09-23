@@ -47,6 +47,11 @@ final class DeliverMarathonRecording extends Command
             if (! $lead || ! $lead->telegram_chat_id) {
                 continue;
             }
+            // A new beginner waiting for the next group meeting must not
+            // receive the previous cohort's recording as their "Day 3".
+            if (! $enrollment->isDevaCohort() && $enrollment->day0_started_at?->gt($schedule->end)) {
+                continue;
+            }
 
             $text = str_replace('{link}', (string) $schedule->zoom_recording_url, (string) config('marathon.recording_message'));
             $channel->sendMessage((string) $lead->telegram_chat_id, $text);

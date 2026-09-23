@@ -75,7 +75,7 @@
             </ol>
         </div>
 
-        @if (session('marathon_track') === 'paid' && ! session('marathon_paid'))
+        @if ($paidSupportAvailable && session('marathon_track') === 'paid' && ! session('marathon_paid'))
             <div class="mb-8 p-6 bg-[#111622] border border-[#E85C24]/30 rounded-2xl">
                 <p class="font-extrabold text-[#F1F5F9] mb-1">Шаг 2 из 2 — оплата трека «с проверкой»</p>
                 <p class="text-sm text-slate-300 mb-4">
@@ -109,8 +109,8 @@
 
     @if (!empty($days))
         {{-- USEIT H6-1 — vertical timeline, not a bare <ol>; orange nodes per packet A. --}}
-        <section class="mb-10" aria-label="Три дня">
-            <h2 class="text-lg font-extrabold text-[#F1F5F9] mb-4">Как устроены три дня</h2>
+        <section class="mb-10" aria-label="Вводные материалы">
+            <h2 class="text-lg font-extrabold text-[#F1F5F9] mb-4">{{ $paidSupportAvailable ? 'Как устроены три дня' : 'Как устроены вводные материалы' }}</h2>
             <div class="border-l-2 border-[#1F2636] ml-2.5 pl-5 grid gap-[1.1rem]">
                 @foreach ($days as $day)
                     <div class="relative">
@@ -146,7 +146,7 @@
     @endif
 
     <form method="POST" action="{{ route('marathon.register') }}"
-          x-data="{ track: '{{ old('track', 'free') }}' }"
+          x-data="{ track: '{{ $paidSupportAvailable ? old('track', 'free') : 'free' }}' }"
           class="bg-[#111622] rounded-[18px] border border-[#1F2636] shadow-lg shadow-black/20 p-6 md:p-8 space-y-6">
         @csrf
 
@@ -172,9 +172,10 @@
                     <input type="radio" name="track" value="free" x-model="track" class="mt-1">
                     <span>
                         <span class="font-extrabold block text-[#F1F5F9]">Бесплатно</span>
-                        <span class="text-sm text-slate-300">2 дня записей + маршрут + консультация в записи.</span>
+                        <span class="text-sm text-slate-300">{{ $paidSupportAvailable ? '2 дня записей + маршрут + консультация в записи.' : '2 дня записей + маршрут. Запись консультации — после следующего эфира.' }}</span>
                     </span>
                 </label>
+                @if ($paidSupportAvailable)
                 <label class="flex items-start gap-3 p-4 rounded-2xl border-[1.5px] cursor-pointer transition-colors"
                        :class="track === 'paid' ? 'border-[#E85C24] bg-[#E85C24]/10' : 'border-[#1F2636]'">
                     <input type="radio" name="track" value="paid" x-model="track" class="mt-1">
@@ -186,6 +187,7 @@
                         </span>
                     </span>
                 </label>
+                @endif
             </div>
             @error('track')
                 <p id="track-error" class="text-sm text-red-400 mt-1">{{ $message }}</p>

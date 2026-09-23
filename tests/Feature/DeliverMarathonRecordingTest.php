@@ -26,11 +26,11 @@ class DeliverMarathonRecordingTest extends TestCase
         ]);
     }
 
-    private function enrollment(): MarathonEnrollment
+    private function enrollment(array $overrides = []): MarathonEnrollment
     {
         $lead = Lead::factory()->create(['telegram_chat_id' => '12345', 'magnet_token' => Str::random(12)]);
 
-        return MarathonEnrollment::factory()->create(['lead_id' => $lead->id]);
+        return MarathonEnrollment::factory()->create(array_merge(['lead_id' => $lead->id], $overrides));
     }
 
     public function test_sends_recording_link_once_available(): void
@@ -44,12 +44,30 @@ class DeliverMarathonRecordingTest extends TestCase
         ]);
         config(['marathon.schedule_id' => $schedule->id]);
 
-        $enrollment = $this->enrollment();
+        $enrollment = $this->enrollment(['day0_started_at' => now()->subDays(2)]);
 
         $this->artisan('marathon:deliver-recording')->assertSuccessful();
 
         $this->assertNotNull($enrollment->fresh()->recording_sent_at);
         Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'https://zoom.us/rec/marathon'));
+    }
+
+    public function test_new_beginner_does_not_receive_recording_from_past_session(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        $schedule = Schedule::create([
+            'title' => 'Past meeting',
+            'start' => now()->subDays(20),
+            'end' => now()->subDays(20)->addHour(),
+            'zoom_recording_url' => 'https://zoom.us/rec/old',
+        ]);
+        config(['marathon.schedule_id' => $schedule->id]);
+        $enrollment = $this->enrollment(['day0_started_at' => now()]);
+
+        $this->artisan('marathon:deliver-recording')->assertSuccessful();
+
+        $this->assertNull($enrollment->fresh()->recording_sent_at);
+        Http::assertNothingSent();
     }
 
     public function test_does_not_send_before_the_session_ends(): void
