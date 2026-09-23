@@ -29,7 +29,8 @@ the key (cache timestamps 13:40-13:56Z 23-09-2026: 4-5/min across all sessions, 
 
   python scripts/nkrya_gloss_lint.py roots lemmas            # live, resumable
   python scripts/nkrya_gloss_lint.py roots lemmas --offline  # cache only
-  python scripts/nkrya_gloss_lint.py --tsv deck.tsv --gloss-col back_ru --id-cols id
+  python scripts/nkrya_gloss_lint.py --tsv database/seeders/data/memrise_6502608/level_*.csv \
+      --gloss-col col_b --id-cols col_a --name memrise_6502608 --out-dir /tmp/lint
   python scripts/nkrya_gloss_lint.py --selftest
 """
 
@@ -291,7 +292,7 @@ def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None):
     by_iast, by_slp1 = pool
     src = REPO / spec["path"]
     with open(src, encoding="utf-8", newline="") as f:
-        rows = list(csv.DictReader(f, delimiter="\t"))
+        rows = list(csv.DictReader(f, delimiter="," if src.suffix == ".csv" else "\t"))
     if limit:
         rows = rows[:limit]
     fields = spec["ids"] + ["gloss_ru", "status", "flags", "gloss_lemma", "min_band",
@@ -418,7 +419,8 @@ def import_client():
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("presets", nargs="*", choices=[[], *PRESETS], default=[])
-    ap.add_argument("--tsv")
+    ap.add_argument("--tsv", nargs="+", default=[],
+                    help="seed files (.tsv tab / .csv comma), e.g. database/seeders/data/memrise_X/level_*.csv")
     ap.add_argument("--gloss-col", default="gloss_ru")
     ap.add_argument("--id-cols", default="")
     ap.add_argument("--name", default="custom")
@@ -434,11 +436,13 @@ def main(argv=None):
         selftest()
         return 0
     jobs = [(p, PRESETS[p]) for p in (a.presets or [])]
-    if a.tsv:
-        jobs.append((a.name, {"path": os.path.relpath(os.path.abspath(a.tsv), REPO),
-                              "gloss": a.gloss_col,
-                              "ids": [c for c in a.id_cols.split(",") if c],
-                              "sa_key": "", "sa_kind": "iast"}))
+    for path in a.tsv:
+        stem = "%s_%s" % (a.name, Path(path).stem) \
+            if len(a.tsv) > 1 else a.name
+        jobs.append((stem, {"path": os.path.relpath(os.path.abspath(path), REPO),
+                            "gloss": a.gloss_col,
+                            "ids": [c for c in a.id_cols.split(",") if c],
+                            "sa_key": "", "sa_kind": "iast"}))
     if not jobs:
         ap.error("name a preset (roots, lemmas) or --tsv")
     client = None
