@@ -8,6 +8,7 @@ use App\Filament\Pages\LessonMaterials\LessonMaterialsStatsWidget;
 use App\Filament\Resources\LessonResource;
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Services\Materials\TranscriptArchiver;
 use App\Support\RoleGate;
 use Filament\Pages\Page;
 use Filament\Tables\Actions\Action;
@@ -52,6 +53,29 @@ class LessonMaterials extends Page implements HasTable
     protected function getHeaderWidgets(): array
     {
         return [LessonMaterialsStatsWidget::class];
+    }
+
+    /**
+     * Выгрузка стенограмм одним ZIP, внутри — папка на курс.
+     *
+     * Ссылка, а не ->action(): собирать архив в действии и редиректить на выдачу
+     * нельзя — Filament оставляет после этого пустую модалку (тот же урок, что у
+     * «Дизайна курсов»). Архив собирает сам маршрут и удаляет файл после отправки.
+     */
+    protected function getHeaderActions(): array
+    {
+        $available = app(TranscriptArchiver::class)->countAvailable();
+
+        return [
+            \Filament\Actions\Action::make('transcriptsZip')
+                ->label('Скачать стенограммы')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->badge($available > 0 ? (string) $available : null)
+                ->tooltip('ZIP со стенограммами всех курсов: внутри папка на курс, файл на урок.')
+                ->url(route('lesson-materials.transcripts'))
+                ->disabled($available === 0),
+        ];
     }
 
     public function table(Table $table): Table
