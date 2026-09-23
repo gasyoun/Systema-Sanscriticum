@@ -49,7 +49,7 @@ NEG_PREFIX = ("не", "бес", "без")
 FLAG_RU = {"inflected": "не в словарной форме", "inflected_ambiguous": "форма неоднозначна",
            "phrase": "фраза", "rare": "полоса 1", "soft_rare": "полоса 2",
            "c19_only": "только XIX век", "unknown": "не всё измерено",
-           "not_russian": "не по-русски"}
+           "not_russian": "не по-русски", "name": "имя собственное"}
 
 
 def flags_ru(flags):

@@ -14,7 +14,7 @@ hitopadesa-0	ahi	ahi	28	змея	ok			3	змея:S:3:27.43
 hitopadesa-0	ahāryatva	ahāryatvād	4	the state of not being liable to be taken away	not_russian	not_russian						
 hitopadesa-0	ajara	ajara	3	нестареющий	flag	rare		1	нестареющий:A:1:0.35			
 hitopadesa-0	ajāgalastana	ajāgalastanasya	26	nipple or fleshy protuberance on the neck of goats; an emblem of any useless or worthless…	not_russian	not_russian						
-hitopadesa-0	ajāta	ajāta	13	неродившихся	flag	unknown			родиться:V:-:-			
+hitopadesa-0	ajāta	ajāta	13	неродившихся	ok			3	родиться:V:3:99.42			
 hitopadesa-0	akṣama	akṣamāṇām	30	невыполнима	flag	inflected,soft_rare	невыполнимый	2	невыполнимый:A:2:2.12			
 hitopadesa-0	akṣaya	akṣaya	4	нетленные	flag	soft_rare		2	нетленный:A:2:2.68			
 hitopadesa-0	amara	amara	3	бессмертные	ok			3	бессмертный:A:3:16.79			
@@ -47,24 +47,24 @@ hitopadesa-0	atra	'tra	33	здесь	ok			4	здесь:ADV:4:876.99
 hitopadesa-0	autkārṣya	autkārṣyam	30		empty							
 hitopadesa-0	avaśyam	avaśyaṃ	28	непременно	ok			3	непременно:ADV:3:80.09			
 hitopadesa-0	aśman	aśmā	44	камень	ok			4	камень:S:4:178.13			
-hitopadesa-0	bahu	bahubhiḥ	21	много	flag	unknown			много:ADV:-:-			
-hitopadesa-0	baka	bako	37	Бака	flag	unknown			бак:S:-:-			
+hitopadesa-0	bahu	bahubhiḥ	21	много	ok			4	много:ADV:4:672.76			
+hitopadesa-0	baka	bako	37	Бака	ok	name						
 hitopadesa-0	bhavat	bhavat	44	ты	ok							
-hitopadesa-0	bhaya	bhaya	25	страх	flag	unknown			страх:S:-:-			
-hitopadesa-0	bheda	bhedaḥ	9	различие	flag	unknown			различие:S:-:-			
+hitopadesa-0	bhaya	bhaya	25	страх	ok			4	страх:S:4:151.52			
+hitopadesa-0	bheda	bhedaḥ	9	различие	ok			3	различие:S:3:42.33			
 hitopadesa-0	bho	bho	40	о	ok							
 hitopadesa-0	bhoḥ	bhoḥ	40	о	ok							
-hitopadesa-0	bhāgya	bhāgyam	5	счастье	flag	unknown			счастие:S:-:-			
-hitopadesa-0	bhāgīrathī	bhāgīrathī	10	Бхагиратхи	flag	unknown			бхагиратх:S:-:-			
-hitopadesa-0	bhājana	bhājane	8	сосуды	flag	unknown			сосуд:S:-:-			
-hitopadesa-0	bhāryā	bhāryā	14	жена	flag	unknown			жена:S:-:-			
-hitopadesa-0	bhāva	bhāvā	28	бытие	flag	unknown			бытие:S:-:-			
+hitopadesa-0	bhāgya	bhāgyam	5	счастье	ok			3	счастие:S:3:29.48			
+hitopadesa-0	bhāgīrathī	bhāgīrathī	10	Бхагиратхи	ok	name						
+hitopadesa-0	bhājana	bhājane	8	сосуды	ok			3	сосуд:S:3:25.97			
+hitopadesa-0	bhāryā	bhāryā	14	жена	ok			4	жена:S:4:424.54			
+hitopadesa-0	bhāva	bhāvā	28	бытие	ok			3	бытие:S:3:57.09			
 hitopadesa-0	bhāvin	bhāvino	28	будет	flag	inflected	быть	6	быть:V:6:12831.00			
 hitopadesa-0	bhū	bhavati	16	будет	flag	inflected	быть	6	быть:V:6:12831.00			
-hitopadesa-0	bhūpati	bhūpatir	10	царь	flag	unknown			царь:S:-:-			
+hitopadesa-0	bhūpati	bhūpatir	10	царь	ok			4	царь:S:4:196.75			
 hitopadesa-0	brū	abravīt	42	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
-hitopadesa-0	bāla	bālo	37	дети	flag	unknown			ребёнок:S:-:-			
-hitopadesa-0	bṛhaspati	bṛhaspatir	42	Брихаспати	flag	unknown			брихаспать:S:-:-			
+hitopadesa-0	bāla	bālo	37	дети	ok			4	ребёнок:S:4:619.51			
+hitopadesa-0	bṛhaspati	bṛhaspatir	42	Брихаспати	ok	name						
 hitopadesa-0	ca	ca	13	и	ok							
 hitopadesa-0	cakra	cakreṇa	30	колесо	flag	unknown			колесо:S:-:-			
 hitopadesa-0	cakṣus	cakṣuṣā	12	глаз	flag	unknown			глаз:S:-:-			
@@ -84,7 +84,7 @@ hitopadesa-0	dhanya	dhanyo	21	счастлив	flag	inflected,unknown	счаст
 hitopadesa-0	dharma	dharma	26	дхарма	flag	unknown			дхарма:S:-:-			
 hitopadesa-0	dhā	dhatte	40	дай	flag	inflected,unknown	дать		дать:V:-:-			
 hitopadesa-0	dhārmika	dhārmikaḥ	12	добродетельный	flag	unknown			добродетельный:A:-:-			
-hitopadesa-0	dhūrjaṭi	dhūrjaṭeḥ	1	Дхурджати	flag	unknown			дхурджатить:V:-:-			
+hitopadesa-0	dhūrjaṭi	dhūrjaṭeḥ	1	Дхурджати	ok	name						
 hitopadesa-0	doṣa	doṣaḥ	33	зло	flag	unknown			зло:S:-:-			
 hitopadesa-0	draviṇa	draviṇa	14	богатство	flag	unknown			богатство:S:-:-			
 hitopadesa-0	dravya	dravyeṣu	4	субстанция	flag	unknown			субстанция:S:-:-			
@@ -123,7 +123,7 @@ hitopadesa-0	guṇavat	guṇavān	23	добродетельный	flag	unknown		
 hitopadesa-0	guṇin	guṇi	16	элементов	flag	inflected,unknown	элемент		элемент:S:-:-			
 hitopadesa-0	gāmin	gāminām	12	не приносящій жертвы	flag	phrase,unknown			приносящий:A:-:- жертва:S:-:-			
 hitopadesa-0	han	hanti	18	убит	flag	inflected_ambiguous,unknown			убить:V:-:-			
-hitopadesa-0	hari	hareḥ	28	Хари	flag	unknown			харя:S:-:-			
+hitopadesa-0	hari	hareḥ	28	Хари	ok	name						
 hitopadesa-0	haṃsa	haṃsa	37	гуси	flag	unknown			гусь:S:-:-			
 hitopadesa-0	hi	hi	27	ведь	ok							
 hitopadesa-0	hitopadeśa	hitopadeśo	2	friendly advice; salutary instruction; name of a popular collection of fables intermixed…	not_russian	not_russian						
@@ -136,11 +136,11 @@ hitopadesa-0	iha	iha	8	здесь	ok			4	здесь:ADV:4:876.99
 hitopadesa-0	iti	ity	12	так	ok							
 hitopadesa-0	iva	iva	1	как	ok							
 hitopadesa-0	iṣ	icchati	34	хочу	flag	inflected,unknown	хотеть		хотеть:V:-:-			
-hitopadesa-0	jan	jātena	12	родился	flag	inflected,unknown	родиться		родиться:V:-:-			
+hitopadesa-0	jan	jātena	12	родился	flag	inflected	родиться	3	родиться:V:3:99.42			
 hitopadesa-0	janman	janma	26	рождение	flag	unknown			рождение:S:-:-			
 hitopadesa-0	jña	jñaḥ	42	знаю	flag	inflected	знать	5	знать:V:5:1740.03			
 hitopadesa-0	jñāna	jñānaṃ	25	знание	flag	unknown			знание:S:-:-			
-hitopadesa-0	jāhnavī	jāhnavī	1	Джахнави	flag	unknown			джахнавь:S:-:-			
+hitopadesa-0	jāhnavī	jāhnavī	1	Джахнави	ok	name						
 hitopadesa-0	jāragarbha	jāragarbha	39	a child by a paramour; bastard	not_russian	not_russian						
 hitopadesa-0	jīvaloka	jīvalokasya	20	мир живых	flag	phrase,unknown			мир:S:-:- живой:A:-:-			
 hitopadesa-0	ka	kena	10	что	ok							
@@ -157,7 +157,7 @@ hitopadesa-0	kaścit	keṣāṃcid	30	никто	ok
 hitopadesa-0	kaṭhinī	kaṭhinī	16	chalk	not_russian	not_russian						
 hitopadesa-0	kevala	kevalam	12	только	flag	unknown			только:ADV:-:-			
 hitopadesa-0	keśa	keśeṣu	3	волосы	flag	unknown			волос:S:-:-			
-hitopadesa-0	kiṃśuka	kiṃśukāḥ	38	Киншука	flag	unknown			киншук:S:-:-			
+hitopadesa-0	kiṃśuka	kiṃśukāḥ	38	Киншука	ok	name						
 hitopadesa-0	kriyā	kriyā	42	обряды	flag	unknown			обряд:S:-:-			
 hitopadesa-0	kula	kula	21	род	flag	unknown			род:S:-:-			
 hitopadesa-0	kutas	kutaḥ	43	откуда	flag	unknown			откуда:ADV:-:-			
@@ -175,7 +175,7 @@ hitopadesa-0	kīdṛśa	kīdṛśī	16	какова	flag	unknown			каково�
 hitopadesa-0	kīṭa	kīṭo	44	насекомых	flag	inflected,unknown	насекомое		насекомое:S:-:-			
 hitopadesa-0	kṛ	kṛtaṃ	19	сделал	flag	inflected	сделать	4	сделать:V:4:786.76			
 hitopadesa-0	lag	lagnaḥ	8	будет ощутим	flag	phrase,unknown		6	быть:V:6:12831.00 ощутить:V:-:-			
-hitopadesa-0	lakṣmī	lakṣmīr	33	Лакшми	flag	unknown			лакшми:S:-:-			
+hitopadesa-0	lakṣmī	lakṣmīr	33	Лакшми	ok	name						
 hitopadesa-0	lekhā	lekhā	1	линия	flag	unknown			линия:S:-:-			
 hitopadesa-0	likh	likhyate	9	чертит	flag	inflected,unknown	чертить		чертить:V:-:-			
 hitopadesa-0	locana	locanaṃ	10	глазами	flag	inflected,unknown	глаз		глаз:S:-:-			
@@ -188,7 +188,7 @@ hitopadesa-0	manas	manāḥ	12	ум	flag	unknown			ум:S:-:-
 hitopadesa-0	manoratha	manorathaiḥ	36	желание	flag	unknown			желание:S:-:-			
 hitopadesa-0	mati	matis	41	мысль	flag	unknown			мысль:S:-:-			
 hitopadesa-0	maṇi	maṇeḥ	43	амулет	flag	unknown			амулет:S:-:-			
-hitopadesa-0	mitra	mitra	9	Митра	flag	unknown			митра:S:-:-			
+hitopadesa-0	mitra	mitra	9	Митра	ok	name						
 hitopadesa-0	mokṣa	mokṣāṇām	26	освобождение	flag	unknown			освобождение:S:-:-			
 hitopadesa-0	mukha	mukhe	36	лицо	flag	unknown			лицо:S:-:-			
 hitopadesa-0	māna	māna	47	гордость	flag	unknown			гордость:S:-:-			
@@ -208,7 +208,7 @@ hitopadesa-0	nagara	nagaram	10	город	flag	unknown			город:S:-:-
 hitopadesa-0	nagna	nagna	28	нагим	flag	inflected,unknown	нагой		нагой:A:-:-			
 hitopadesa-0	nahi	nahi	36	не	ok							
 hitopadesa-0	nara	naraḥ	23	человек	flag	unknown			человек:S:-:-			
-hitopadesa-0	narapati	narapatir	10	царь	flag	unknown			царь:S:-:-			
+hitopadesa-0	narapati	narapatir	10	царь	ok			4	царь:S:4:196.75			
 hitopadesa-0	nava	nave	8	новые	flag	unknown			новый:A:-:-			
 hitopadesa-0	nidhana	nidhanam	27	смерть	flag	unknown			смерть:S:-:-			
 hitopadesa-0	nidhi	nidhim	35	сокровище	flag	unknown			сокровище:S:-:-			
@@ -223,11 +223,11 @@ hitopadesa-0	nāma	nāma	10	имя	flag	unknown			имя:S:-:-
 hitopadesa-0	nāmadheya	nāmadheyam	10	имя	flag	unknown			имя:S:-:-			
 hitopadesa-0	nāman	nāmā	42	имя	flag	unknown			имя:S:-:-			
 hitopadesa-0	nīcagā	nīcagā	5	a river	not_russian	not_russian						
-hitopadesa-0	nīlakaṇṭha	nīlakaṇṭhasya	28	Синегорлый	flag	unknown			синегорлый:A:-:-			
+hitopadesa-0	nīlakaṇṭha	nīlakaṇṭhasya	28	Синегорлый	ok	name						
 hitopadesa-0	nīti	nīti	2	политика	flag	unknown			политика:S:-:-			
-hitopadesa-0	nṛpa	nṛpaṃ	5	царь	flag	unknown			царь:S:-:-			
+hitopadesa-0	nṛpa	nṛpaṃ	5	царь	ok			4	царь:S:4:196.75			
 hitopadesa-0	pada	pade	13	след	flag	unknown			след:S:-:-			
-hitopadesa-0	padya	padya	43	Находясь у ног	flag	phrase,unknown			находиться:V:-:- нога:S:-:-			
+hitopadesa-0	padya	padya	43	Находясь у ног	flag	phrase,name,unknown			нога:S:-:-			
 hitopadesa-0	para	param	5	высшее	flag	unknown			высокий:A:-:-			
 hitopadesa-0	parivartin	parivartini	15	неусыпной	flag	inflected,unknown	неусыпный		неусыпный:A:-:-			
 hitopadesa-0	parokṣa	parokṣa	10	втайне	flag	unknown			втайне:ADV:-:-			
@@ -264,10 +264,10 @@ hitopadesa-0	pustaka	pustakeṣu	39	книга	flag	unknown			книга:S:-:-
 hitopadesa-0	putra	putrāṇām	12	сын	flag	unknown			сын:S:-:-			
 hitopadesa-0	putraka	putraka	24	сынок	flag	unknown			сынок:S:-:-			
 hitopadesa-0	puṇya	puṇya	19	святая	flag	unknown			святой:A:-:-			
-hitopadesa-0	pā	pīyate	29	Защищайте	flag	inflected,unknown	защищать		защищать:V:-:-			
-hitopadesa-0	pātra	pātra	6	сосуд	flag	unknown			сосуд:S:-:-			
+hitopadesa-0	pā	pīyate	29	Защищайте	flag	inflected,name	защищать					
+hitopadesa-0	pātra	pātra	6	сосуд	ok			3	сосуд:S:3:25.97			
 hitopadesa-0	pāṭaliputra	pāṭaliputra	10	name of a town	not_russian	not_russian						
-hitopadesa-0	pāṭava	pāṭavaṃ	2	Ваджроли	flag	unknown			ваджроль:S:-:-			
+hitopadesa-0	pāṭava	pāṭavaṃ	2	Ваджроли	ok	name						
 hitopadesa-0	pāṭhay	pāṭhyamānaṃ	10	чтения	flag	unknown			чтение:S:-:-			
 hitopadesa-0	pīḍā	pīḍā	12	самоистязанием	flag	inflected,unknown	самоистязание		самоистязание:S:-:-			
 hitopadesa-0	pūjay	pūjyate	23	почтил	flag	inflected,unknown	почтить		почтить:V:-:-			
@@ -275,7 +275,7 @@ hitopadesa-0	pūrva	pūrva	31	прежде	ok
 hitopadesa-0	ratha	rathasya	30	колесницу	flag	inflected,unknown	колесница		колесница:S:-:-			
 hitopadesa-0	rogin	rogi	20	больной	flag	unknown			больной:A:-:-			
 hitopadesa-0	rāga	rāgāṇām	43	влечение	flag	unknown			влечение:S:-:-			
-hitopadesa-0	rājan	rājā	12	царь	flag	unknown			царь:S:-:-			
+hitopadesa-0	rājan	rājā	12	царь	ok			4	царь:S:4:196.75			
 hitopadesa-0	rātri	rātriṣu	24	ночь	flag	unknown			ночь:S:-:-			
 hitopadesa-0	rūpa	rūpa	14	образ	flag	unknown			образ:S:-:-			
 hitopadesa-0	rūpavat	rūpavatī	22	прекрасен	flag	inflected,unknown	прекрасный		прекрасный:A:-:-			
@@ -321,10 +321,10 @@ hitopadesa-0	sidh	sidhyati	30	устанавливается	flag	inflected,unkn
 hitopadesa-0	siṃha	siṃham	33	лев	flag	unknown			лев:S:-:-			
 hitopadesa-0	stha	sthasya	27	стоит	flag	inflected_ambiguous,unknown			стоить:V:-:-			
 hitopadesa-0	strī	striyāḥ	39	женщины	flag	unknown			женщина:S:-:-			
-hitopadesa-0	sudarśana	sudarśano	10	Сударшана	flag	unknown			сударшан:S:-:-			
+hitopadesa-0	sudarśana	sudarśano	10	Сударшана	ok	name						
 hitopadesa-0	sudhī	sudhīḥ	19	мудрый	flag	unknown			мудрый:A:-:-			
 hitopadesa-0	suhṛd	suhṛd	9	друзей	flag	inflected,unknown	друг		друг:S:-:-			
-hitopadesa-0	sukha	sukhāni	20	счастье	flag	unknown			счастие:S:-:-			
+hitopadesa-0	sukha	sukhāni	20	счастье	ok			3	счастие:S:3:29.48			
 hitopadesa-0	sumanas	sumanas	44	цветами	flag	inflected_ambiguous,unknown			цвет:S:-:-			
 hitopadesa-0	supratiṣṭhita	supratiṣṭhitaḥ	44	изящно стоит	flag	phrase,unknown			изящно:ADV:-:- стоить:V:-:-			
 hitopadesa-0	sutin	sutinī	16	having sons	not_russian	not_russian						
@@ -360,7 +360,7 @@ hitopadesa-0	uccāra	uccāra	17	испражняться	flag	unknown			испр
 hitopadesa-0	udayagiri	udayagireḥ	45	the eastern mountain	not_russian	not_russian						
 hitopadesa-0	udvij	udvigna	12	страшится	flag	inflected,unknown	страшиться		страшиться:V:-:-			
 hitopadesa-0	udyama	udyamena	36	труд	flag	unknown			труд:S:-:-			
-hitopadesa-0	udyoga	udyogam	32	в Книге о старании	flag	phrase,unknown			книга:S:-:- старание:S:-:-			
+hitopadesa-0	udyoga	udyogam	32	в Книге о старании	flag	phrase,name,unknown			старание:S:-:-			
 hitopadesa-0	udyogin	udyoginaṃ	33	one who makes effort; active; laborious; persevering; energetic	not_russian	not_russian						
 hitopadesa-0	ukti	uktiṣu	2	говорится	flag	inflected,unknown	говориться		говориться:V:-:-			
 hitopadesa-0	unmārga	unmārga	12	deviation from the right way; wrong way (lit. and fig.)	not_russian	not_russian						
@@ -388,7 +388,7 @@ hitopadesa-0	vinaya	vinayam	44	смиренно	flag	unknown			смиренно:
 hitopadesa-0	vinā	vinā	30	без	ok							
 hitopadesa-0	vitta	vittaṃ	27	богатство	flag	unknown			богатство:S:-:-			
 hitopadesa-0	vivekin	viveki	11	отличен	flag	inflected_ambiguous,unknown			отличный:A:-:-			
-hitopadesa-0	viśeṣa	viśeṣo	25	различие	flag	unknown			различие:S:-:-			
+hitopadesa-0	viśeṣa	viśeṣo	25	различие	ok			3	различие:S:3:42.33			
 hitopadesa-0	viśiṣ	viśiṣṭaiś	41	превосходит	flag	inflected,unknown	превосходить		превосходить:V:-:-			
 hitopadesa-0	viśiṣṭatā	viśiṣṭatām	41		empty							
 hitopadesa-0	viśru	viśrūyate	21	прославленный	flag	unknown			прославить:V:-:-			
@@ -418,15 +418,15 @@ hitopadesa-0	ādṛ	ādriyate	7	проломитель	flag	unknown			проло
 hitopadesa-0	āgama	āgamaḥ	20	пришел	flag	inflected	прийти	4	прийти:V:4:591.06			
 hitopadesa-0	āhāra	āhāra	25	пища	flag	unknown			пища:S:-:-			
 hitopadesa-0	ākara	ākare	43	источник	flag	unknown			источник:S:-:-			
-hitopadesa-0	ākarṇay	ākarṇya	12	Услышав	flag	inflected,unknown	услышать		услышать:V:-:-			
+hitopadesa-0	ākarṇay	ākarṇya	12	Услышав	flag	inflected,name	услышать					
 hitopadesa-0	ākṛṣ	ākṛṣya	9	втягивается	flag	inflected,unknown	втягиваться		втягиваться:V:-:-			
 hitopadesa-0	ālambin	ālambī	21	hanging from; resting or leaning upon; depending on or from; laying hold of; supporting;…	not_russian	not_russian						
 hitopadesa-0	ālasya	ālasya	30	лень	flag	unknown			лень:S:-:-			
 hitopadesa-0	āp	āptum	32	достигает	flag	inflected	достигать	3	достигать:V:3:47.90			
-hitopadesa-0	āpūraṇa	āpūraṇa	21	Апурана	flag	unknown			апурана:S:-:-			
+hitopadesa-0	āpūraṇa	āpūraṇa	21	Апурана	ok	name						
 hitopadesa-0	ārambha	ārambhe	16	начало	flag	unknown			начало:S:-:-			
 hitopadesa-0	āruh	ārohati	44	взошел	flag	inflected,unknown	взойти		взойти:V:-:-			
-hitopadesa-0	āsvādya	āsvādya	46	Вкусив	flag	inflected,unknown	вкусить		вкусить:V:-:-			
+hitopadesa-0	āsvādya	āsvādya	46	Вкусив	flag	inflected,name	вкусить					
 hitopadesa-0	āsāday	āsādya	46	достигнув	flag	inflected,unknown	достигнуть		достигнуть:V:-:-			
 hitopadesa-0	ātman	ātmanaḥ	12	себя	ok							
 hitopadesa-0	āyus	āyuḥ	27	срок жизни	flag	phrase,unknown			срок:S:-:- жизнь:S:-:-			

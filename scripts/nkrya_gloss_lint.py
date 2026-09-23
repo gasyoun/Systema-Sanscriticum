@@ -22,10 +22,13 @@ lint TSV per source + a compact evidence cache that makes `--offline` re-runs ex
 
 NKRYa client: the H5261 client (SanskritLexicography/RussianTranslation/src/nkrya_client.py,
 sibling checkout or env NKRYA_CLIENT_SRC) until H5282 moves it into csl-pyutil.
-Rate limit: 5 successful calls per minute per ACCOUNT, shared by every session using
-the key (cache timestamps 13:40-13:56Z 23-09-2026: 4-5/min across all sessions, body
-`{"detail": "Too many requests."}`, no Retry-After) -> `--interval` 12 s + a `--backoff`
-30 s wait on 429; the evidence cache is saved every 20 lookups, so a killed run resumes.
+Rate limit, measured 23-09-2026: per ACCOUNT, shared by every session using the key;
+a short burst (~5 calls a minute) after idle, then ~1 successful call a minute sustained
+even with the key to ourselves (13:40-14:45Z: 69 raw responses in ~65 min; body
+`{"detail": "Too many requests."}`, no Retry-After) — read it as roughly 60 an hour.
+-> `--interval` 12 s + a `--backoff` 30 s wait on 429; the evidence cache is saved every
+20 lookups and `--offline` harvests the raw cache, so a stopped run loses nothing.
+A full pass over roots + lemmas is ~950 lookups ≈ 15 h: run it unattended.
 
   python scripts/nkrya_gloss_lint.py roots lemmas            # live, resumable
   python scripts/nkrya_gloss_lint.py roots lemmas --offline  # cache only
@@ -288,6 +291,12 @@ def lint_gloss(gloss, lem, ev):
     else:
         out["flags"].append("phrase")
     for t, lemma, pos, form in content:
+        if t[:1].isupper():
+            # a proper name (Бхагиратхи, Брихаспати) is a transliteration, not a word a
+            # corpus band can judge — flag it, never call it rare
+            if "name" not in out["flags"]:
+                out["flags"].append("name")
+            continue
         low = t.lower()
         if low.startswith("не") and len(low) > 4 and hasattr(lem.morph, "word_is_known") \
                 and not lem.morph.word_is_known(low) and lem.morph.word_is_known(low[2:]):
@@ -316,7 +325,7 @@ def lint_gloss(gloss, lem, ev):
             out["flags"].append("soft_rare")
         elif flag == "unknown" and "unknown" not in out["flags"]:
             out["flags"].append("unknown")
-    out["status"] = "flag" if set(out["flags"]) - {"phrase"} else "ok"
+    out["status"] = "flag" if set(out["flags"]) - {"phrase", "name"} else "ok"
     return out
 
 
