@@ -132,26 +132,28 @@ class ReactivationWaveADryRunTest extends TestCase
         $this->paid($expelled, $this->pastCourse(), 1, 1);
         $expelled->courses()->attach($this->pastCourse()->id, ['status' => 'Исключен']);
 
-        // 6. Suppressed email → канала нет.
-        $suppressed = User::factory()->create([
-            'wants_email_announcements' => true,
-        ]);
+        // 6. Lapsed с подавленным email → канала нет вовсе.
+        $suppressed = User::factory()->create();
+        $this->paid($suppressed, $this->pastCourse(), 1, 1);
         SuppressedEmail::suppress($suppressed->email, 'hard_bounce');
 
         $built = app(ReactivationWaveCohort::class)->build();
         $counts = $built['counts'];
 
         $this->assertSame(1, $counts['non_continuer']);
-        $this->assertSame(1, $counts['lapsed']);
-        $this->assertSame(2, $counts['total']);
+        $this->assertSame(2, $counts['lapsed']);
+        $this->assertSame(3, $counts['total']);
         $this->assertSame(1, $counts['excluded_active_payers']);
         $this->assertSame(1, $counts['excluded_refund_only']);
         $this->assertSame(1, $counts['excluded_expelled_or_left']);
 
-        // Каналы: не продливший — TG-бот; lapsed — TG нет (opt-out), email есть.
+        // Каналы: не продливший — TG-бот; lapsed №1 — opt-out TG → email;
+        // suppressed — email недоступен → none.
         $this->assertSame(1, $counts['channel_tg_bot']);
         $this->assertSame(1, $counts['channel_email']);
+        $this->assertSame(1, $counts['channel_none']);
         $this->assertSame(1, $counts['opt_out_messenger']);
+        $this->assertSame(1, $counts['opt_out_or_suppressed_email']);
 
         $rowNc = $built['rows']->firstWhere('user_id', $nonContinuer->id);
         $this->assertSame('non_continuer', $rowNc['segment']);
@@ -171,7 +173,10 @@ class ReactivationWaveADryRunTest extends TestCase
         Mail::fake();
         Queue::fake();
 
-        $nonContinuer = User::factory()->create(['telegram_id' => '700201']);
+        $nonContinuer = User::factory()->create([
+            'telegram_id' => '700201',
+            'wants_messenger_announcements' => true,
+        ]);
         $this->paid($nonContinuer, $this->course, 1, 3);
 
         $dir = storage_path('app/reactivation');
