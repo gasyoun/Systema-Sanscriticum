@@ -157,6 +157,25 @@ class DeliverDueMarathonContentTest extends TestCase
         Http::assertSent(fn ($req) => ! str_contains((string) $req['text'], 'https://zoom.us/j/marathon'));
     }
 
+    public function test_september_session_does_not_invite_deva_cohort(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        $this->confirmIntroSession();
+        $enrollment = $this->enrollment([], [
+            'cohort' => MarathonEnrollment::COHORT_DEVA,
+            'track' => MarathonEnrollment::TRACK_PAID,
+            'paid_at' => now(),
+            'day0_started_at' => now()->subDays(3),
+            'day1_completed_at' => now(),
+            'day2_completed_at' => now(),
+        ]);
+
+        $this->artisan('marathon:deliver-due')->assertSuccessful();
+
+        $this->assertNull($enrollment->fresh()->consultation_booked_at);
+        Http::assertNothingSent();
+    }
+
     public function test_unpaid_paid_track_never_gets_zoom_link(): void
     {
         Http::fake(['*' => Http::response(['ok' => true], 200)]);

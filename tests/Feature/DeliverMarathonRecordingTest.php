@@ -70,6 +70,30 @@ class DeliverMarathonRecordingTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_september_recording_is_not_sent_to_deva_cohort(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        $schedule = Schedule::create([
+            'title' => 'September beginner meeting',
+            'start' => now()->subDay(),
+            'end' => now()->subHours(22),
+            'zoom_recording_url' => 'https://zoom.us/rec/september',
+        ]);
+        config([
+            'marathon.schedule_id' => $schedule->id,
+            'beginner_pilot.staffed_schedule_id' => $schedule->id,
+        ]);
+        $enrollment = $this->enrollment([
+            'cohort' => MarathonEnrollment::COHORT_DEVA,
+            'day0_started_at' => now()->subDays(3),
+        ]);
+
+        $this->artisan('marathon:deliver-recording')->assertSuccessful();
+
+        $this->assertNull($enrollment->fresh()->recording_sent_at);
+        Http::assertNothingSent();
+    }
+
     public function test_does_not_send_before_the_session_ends(): void
     {
         Http::fake(['*' => Http::response(['ok' => true], 200)]);

@@ -78,7 +78,10 @@ final class DeliverDueMarathonContent extends Command
             }
 
             if ($day >= 3 && $enrollment->consultation_booked_at === null && $schedule?->start?->isFuture()
-                && ($enrollment->isDevaCohort() || $zeroCohortStaffed)) {
+                && ($enrollment->isDevaCohort()
+                    ? (int) config('beginner_pilot.staffed_schedule_id') !== $schedule->id
+                    : $zeroCohortStaffed)
+                && (! $enrollment->isPaidConfirmed() || filled($schedule->link))) {
                 $template = $enrollment->isPaidConfirmed()
                     ? (string) config('marathon.day3_message_paid')
                     : (string) config('marathon.day3_message_free');

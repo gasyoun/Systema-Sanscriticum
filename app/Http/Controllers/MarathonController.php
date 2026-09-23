@@ -86,18 +86,25 @@ class MarathonController extends Controller
             MarathonLandingCopySplit::recordImpression($split->variantKey);
         }
         $copy = MarathonLandingCopy::forView($split->variantKey);
-        $paidSupportAvailable = BeginnerPilotOffer::supportAvailable();
+        $paidSupportAvailable = BeginnerPilotOffer::registrationAvailable();
+        $sessionScheduled = BeginnerPilotOffer::supportAvailable();
         if (! $paidSupportAvailable) {
             $copy['variant']['hero_title'] = 'Попробуйте санскрит с нуля и выберите следующий шаг';
-            $copy['variant']['hero_subtitle'] = 'Два коротких занятия по ~15 минут в день доступны бесплатно. Живая групповая консультация и участие с проверкой вернутся после подтверждения даты.';
+            $copy['variant']['hero_subtitle'] = $sessionScheduled
+                ? 'Два коротких занятия по ~15 минут в день доступны бесплатно. Запись на ближайшую групповую консультацию закрыта.'
+                : 'Два коротких занятия по ~15 минут в день доступны бесплатно. Живая групповая консультация и участие с проверкой вернутся после подтверждения даты.';
             $copy['variant']['benefits_heading'] = 'Что вы попробуете бесплатно';
             $copy['variant']['benefits'] = array_slice($copy['variant']['benefits'], 0, 2);
             $copy['days'] = array_slice($copy['days'], 0, 2);
-            $copy['days'][1]['body'] = 'Корень + аффикс на простых примерах. В конце можно оставить вопрос для общего разбора; дата следующей встречи пока не подтверждена.';
+            $copy['days'][1]['body'] = $sessionScheduled
+                ? 'Корень + аффикс на простых примерах. В конце можно оставить вопрос; запись на ближайшую встречу уже закрыта.'
+                : 'Корень + аффикс на простых примерах. В конце можно оставить вопрос для общего разбора; дата следующей встречи пока не подтверждена.';
             $copy['tracks'] = ['free' => $copy['tracks']['free']];
-            $copy['faq'][0]['a'] = 'Два вводных занятия занимают около 15 минут каждое. Пропустили день — продолжите, когда удобно. Новая дата групповой консультации пока не подтверждена.';
+            $copy['faq'][0]['a'] = 'Два вводных занятия занимают около 15 минут каждое. Пропустили день — продолжите, когда удобно.';
             $copy['faq'][2]['a'] = 'Когда новая групповая консультация состоится, на бесплатном треке будет доступна запись. Личный разбор вопроса входит только в участие с проверкой.';
-            $copy['faq'][3]['a'] = 'Участие с проверкой сейчас недоступно: дата групповой встречи и возможность проверки ещё не подтверждены. Бесплатные вводные материалы остаются открытыми.';
+            $copy['faq'][3]['a'] = $sessionScheduled
+                ? 'Запись на ближайшую групповую встречу закрыта. Бесплатные вводные материалы остаются открытыми.'
+                : 'Участие с проверкой сейчас недоступно: дата групповой встречи и возможность проверки ещё не подтверждены. Бесплатные вводные материалы остаются открытыми.';
         }
         $copy['testimonial'] = '';
         // H1975 — chrome/layout skin; independent axis, default b, ?skin= QA override.
@@ -112,6 +119,7 @@ class MarathonController extends Controller
             'couponAmount' => config('marathon.coupon_amount'),
             'hostName' => config('marathon.host_name'),
             'paidSupportAvailable' => $paidSupportAvailable,
+            'sessionScheduled' => $sessionScheduled,
         ]);
     }
 
@@ -133,7 +141,7 @@ class MarathonController extends Controller
             'is_promo_agreed' => 'nullable',
         ]);
 
-        if ($validated['track'] === MarathonEnrollment::TRACK_PAID && ! BeginnerPilotOffer::supportAvailable()) {
+        if ($validated['track'] === MarathonEnrollment::TRACK_PAID && ! BeginnerPilotOffer::registrationAvailable()) {
             throw ValidationException::withMessages([
                 'track' => 'Участие с проверкой откроется после подтверждения даты групповой консультации. Пока выберите бесплатный формат.',
             ]);
@@ -279,9 +287,14 @@ class MarathonController extends Controller
                 ->with('marathon_paid', true);
         }
 
-        if (! BeginnerPilotOffer::supportAvailable()) {
+        if (! BeginnerPilotOffer::registrationAvailable() || $enrollment->currentDay() >= 3) {
             return redirect()->route('marathon.show')
-                ->with('error', 'Оплата участия с проверкой временно закрыта: новая дата групповой консультации и проверка куратором ещё не подтверждены.');
+                ->with('error', 'Запись на ближайшую консультацию закрыта. Бесплатные вводные материалы остаются доступны.');
+        }
+
+        $ttlMinutes = (int) floor(now()->diffInMinutes(BeginnerPilotOffer::registrationCutoff(), false));
+        if ($ttlMinutes < 1) {
+            return redirect()->route('marathon.show')->with('error', 'Запись на ближайшую консультацию закрыта.');
         }
 
         try {
@@ -312,6 +325,7 @@ class MarathonController extends Controller
                 amount: $amount,
                 purpose: $purpose,
                 itemName: 'Марафон «Консультация по онлайн-курсам ОРС» — трек «с проверкой»',
+                ttlMinutes: min($ttlMinutes, 60),
             );
         } catch (ConnectionException $e) {
             $payment->update(['status' => 'failed']);

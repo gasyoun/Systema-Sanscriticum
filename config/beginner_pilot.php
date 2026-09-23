@@ -19,8 +19,8 @@ return [
 
     // Bind staffing approval to ONE schedule row. Never roll approval forward
     // automatically when MARATHON_SCHEDULE_ID changes.
-    'staffed_schedule_id' => null,
-    'staffing_confirmed_at' => null,
-    'staffed_schedule_start' => null,
-    'staffed_schedule_end' => null,
+    'staffed_schedule_id' => 1979,
+    'staffing_confirmed_at' => '2026-09-23',
+    'staffed_schedule_start' => '2026-09-30T19:00:00+03:00',
+    'staffed_schedule_end' => '2026-09-30T20:00:00+03:00',
 ];

@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\BeginnerPilotOffer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -69,6 +70,24 @@ class MarathonPaidCheckoutTest extends TestCase
             'course_id' => null,
         ]);
         $this->assertDatabaseHas('users', ['email' => 'payer@example.test']);
+        Http::assertSent(fn ($request) => isset($request['Data']['ttl'])
+            && $request['Data']['ttl'] > 0 && $request['Data']['ttl'] <= 60);
+    }
+
+    public function test_paid_checkout_closes_at_intake_cutoff_without_creating_payment(): void
+    {
+        $this->paidTrackEnrollment();
+        $this->confirmIntroSession();
+        $this->travelTo(BeginnerPilotOffer::registrationCutoff());
+        Http::fake();
+
+        $this->post(route('marathon.pay'), [
+            'contact' => 'payer@example.test',
+            'email' => 'payer@example.test',
+        ])->assertRedirect(route('marathon.show'));
+
+        $this->assertDatabaseMissing('payments', ['tariff' => 'marathon_paid']);
+        Http::assertNothingSent();
     }
 
     public function test_free_track_enrollment_cannot_pay(): void
