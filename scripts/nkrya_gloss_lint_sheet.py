@@ -147,8 +147,9 @@ def build(out):
         "filters": [(n, SOURCES[n][0]) for n in SOURCES],
         "generated": "23-09-2026",
         "show_ids": True, "note_min_height_px": 88,
-        # card ids are the Sanskrit lemma itself (SLP1/IAST) — no opaque internal ids to resolve
-        "identity_gate": {"patterns": [], "labels": {}},
+        # card ids are the Sanskrit lemma itself (SLP1/IAST); the only opaque ids a card could
+        # mention are handoff numbers — none do, and the gate would demand a label if one did
+        "identity_gate": {"patterns": [r"\bH\d{3,5}\b"], "labels": {}},
         "save_as": "Systema-Sanscriticum/review/%s_decisions.json" % SHEET_ID,
     }
     screening = {**counts, "evidence_path": evidence_path,
