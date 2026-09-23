@@ -77,7 +77,7 @@ final class GuestRegisterController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('student.dashboard');
+        return redirect()->intended(route('student.dashboard'));
     }
 
     private function guardFlag(): void

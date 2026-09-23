@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Listeners\Backup\SplitUploadToYandex;
+use App\Listeners\CastPendingWaitlistVote;
 use App\Listeners\Email\EnforceMailSendingGuards;
 use App\Listeners\LogFailedAuthentication;
 use App\Listeners\UserLoginListener;
@@ -35,6 +36,8 @@ class EventServiceProvider extends ServiceProvider
         // --- ТРЕКИНГ АКТИВНОСТИ ---
         Login::class => [
             UserLoginListener::class,
+            // Голос гостя с /online/zhdun, отложенный до входа/регистрации.
+            CastPendingWaitlistVote::class,
         ],
         Logout::class => [
             UserLogoutListener::class,

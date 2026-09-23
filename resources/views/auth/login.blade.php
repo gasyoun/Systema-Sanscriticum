@@ -24,6 +24,8 @@
                 <p class="text-gray-500 text-sm">Войдите в личный кабинет ОРС</p>
             </div>
 
+            @include('auth.partials.pending-waitlist-vote')
+
             @if (session('status'))
                 <div class="mb-6 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">
                     {{ session('status') }}
@@ -99,10 +101,19 @@
                 <a href="{{ route('password.request') }}" class="text-brand hover:underline font-bold transition-colors">Войдите по email заказа →</a>
             </p>
             @if (config('features.guest_registration'))
-                <p class="text-sm text-gray-600">
-                    Нет кабинета?
-                    <a href="{{ route('register') }}" class="text-brand hover:underline font-bold">Зарегистрироваться бесплатно</a>
-                </p>
+                @if (session()->has(\App\Http\Controllers\Api\PublicWaitlistController::PENDING_VOTE_SESSION_KEY))
+                    {{-- Гость пришёл голосовать: регистрация — главный путь, кнопкой. --}}
+                    <p class="text-sm text-gray-600">Нет кабинета?</p>
+                    <a href="{{ route('register') }}"
+                       class="block w-full border-2 border-brand text-brand hover:bg-brand hover:text-white font-extrabold py-3 px-4 rounded-xl transition text-sm uppercase tracking-wider">
+                        Зарегистрироваться бесплатно
+                    </a>
+                @else
+                    <p class="text-sm text-gray-600">
+                        Нет кабинета?
+                        <a href="{{ route('register') }}" class="text-brand hover:underline font-bold">Зарегистрироваться бесплатно</a>
+                    </p>
+                @endif
             @endif
             <p class="text-xs text-gray-500 leading-relaxed">
                 Аккаунт создан при оплате — сначала

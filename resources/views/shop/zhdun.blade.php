@@ -6,6 +6,26 @@
 <div class="min-h-screen bg-[#0A0D14] text-white py-16 lg:py-24 relative overflow-hidden font-sans"
      x-data="waitlistVote()">
 
+    {{-- Голос учтён: кнопкой (после reload) или после входа/регистрации гостя (CastPendingWaitlistVote). --}}
+    @if(session(\App\Http\Controllers\Api\PublicWaitlistController::VOTED_FLASH_KEY))
+        <div x-data="{ show: true }"
+             x-init="setTimeout(() => show = false, 5000)"
+             x-show="show"
+             x-transition.opacity.duration.300ms
+             role="status"
+             data-waitlist-voted-toast
+             class="fixed z-50 top-20 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 flex items-center gap-3 rounded-2xl bg-[#111622] border border-emerald-500/40 shadow-2xl shadow-black/40 px-4 py-3">
+            <span class="flex-none w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                <i class="fas fa-check"></i>
+            </span>
+            <p class="flex-1 text-sm font-bold text-white">Спасибо, ваш голос учтён!</p>
+            <button type="button" x-on:click="show = false" title="Закрыть"
+                    class="flex-none text-slate-400 hover:text-white transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    @endif
+
     <div class="absolute top-0 left-1/4 w-96 h-96 bg-brand/10 rounded-full blur-[120px] pointer-events-none"></div>
     <div class="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none"></div>
 
