@@ -16,16 +16,13 @@ final class VerifyMaxMagnetWebhook
         // Внимание: Max Bot API при подписке принимает только {url}, без header/body-секрета,
         // поэтому секрет идёт в path. URL хранится только в Max и нашей БД, но всё равно
         // может всплыть в access-логах прокси — ротируйте max_webhook_secret при инцидентах.
-        // H5297 PLANTED MUTATION — DO NOT COMMIT: verify moved after dispatch.
         $expected = (string) (MarketingSetting::cached()?->max_webhook_secret ?? '');
         $received = (string) $request->route('secret', '');
-
-        $response = $next($request);
 
         if ($expected === '' || ! hash_equals($expected, $received)) {
             abort(403, 'Invalid Max webhook secret');
         }
 
-        return $response;
+        return $next($request);
     }
 }
