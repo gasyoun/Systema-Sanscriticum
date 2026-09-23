@@ -11,9 +11,11 @@ use App\Http\Controllers\TeacherPayController;
 use App\Http\Controllers\TrialController;
 use App\Models\Course;
 use App\Models\CourseDesignAsset;
+use App\Models\Lesson;
 use App\Models\MarathonEnrollment;
 use App\Models\Payment;
 use App\Services\Design\CourseDesignArchiver;
+use App\Services\Materials\TranscriptArchiver;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Illuminate\Support\Facades\Route;
@@ -152,6 +154,45 @@ Route::get('/admin/course-design/{course}/archive', function (Course $course, Co
 
     return response()->download($path, $archiver->downloadName($course))->deleteFileAfterSend();
 })->middleware('auth')->name('course-design.archive');
+
+// ZIP со стенограммами уроков: внутри папка на курс, файл на урок. Маршрут сам
+// собирает архив и удаляет его после отправки — стенограмма это платная лекция
+// целиком, на публичном диске ей делать нечего. Гейт тот же, что у страницы
+// «Материалы уроков», откуда ведёт кнопка (супер-админ). ?course=ID — один курс.
+Route::get('/admin/lesson-materials/transcripts', function (TranscriptArchiver $archiver) {
+    abort_unless(RoleGate::isSuperAdmin(), 403);
+
+    $course = filled(request()->query('course'))
+        ? Course::query()->findOrFail((int) request()->query('course'))
+        : null;
+
+    try {
+        $path = $archiver->build($course);
+    } catch (RuntimeException $e) {
+        abort(404, $e->getMessage());
+    }
+
+    return response()->download($path, $archiver->downloadName($course))->deleteFileAfterSend();
+})->middleware('auth')->name('lesson-materials.transcripts');
+
+// Стенограмма одного урока для персонала: та же проверка ролей, что у раздела
+// «Уроки» (админ/преподаватель). Студентам файл отдаёт GatedAssetController по
+// доступу к курсу — этот маршрут его не заменяет и в кабинете не используется.
+Route::get('/admin/lessons/{lesson}/transcript', function (Lesson $lesson) {
+    abort_unless(RoleGate::any(Roles::ADMIN, Roles::TEACHER), 403);
+
+    $path = (string) $lesson->transcript_file;
+    // Абсолютный URL опубликованной лекции — не наш файл (как в GatedAssetController).
+    abort_if($path === '' || preg_match('#^https?://#i', $path) === 1 || str_starts_with($path, '/'), 404);
+
+    foreach (['local', 'public'] as $disk) {
+        if (Storage::disk($disk)->exists($path)) {
+            return Storage::disk($disk)->download($path, $lesson->transcriptDownloadName());
+        }
+    }
+
+    abort(404, 'Файл стенограммы не найден на дисках.');
+})->middleware('auth')->name('admin.lesson.transcript');
 
 // Скачивание планировочных шаблонов «Нескучных финансов» (Финмодель, Бюджет,
 // План доходов/расходов) — гибридная стратегия H207: живые отчёты в панели +

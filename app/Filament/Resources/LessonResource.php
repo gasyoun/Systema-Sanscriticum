@@ -512,6 +512,15 @@ class LessonResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                // Скачать стенограмму урока: ссылка на маршрут с ролевым гейтом,
+                // файл лежит на приватном или публичном диске (см. TranscriptArchiver).
+                Tables\Actions\Action::make('downloadTranscript')
+                    ->label('Стенограмма')
+                    ->icon('heroicon-o-document-text')
+                    ->color('gray')
+                    ->visible(fn (Lesson $record): bool => $record->hasTranscript())
+                    ->url(fn (Lesson $record): string => route('admin.lesson.transcript', $record))
+                    ->openUrlInNewTab(),
                 Tables\Actions\Action::make('copyToCourse')
                     ->label('Копировать в курс…')
                     ->icon('heroicon-o-document-duplicate')

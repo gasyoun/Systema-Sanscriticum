@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class Lesson extends Model
 {
@@ -267,6 +268,19 @@ class Lesson extends Model
     public function attachmentPublicUrl(string $path): string
     {
         return asset('storage/'.ltrim($path, '/'));
+    }
+
+    /**
+     * Имя файла стенограммы при скачивании: «042-dvoystvennoe-chislo-1861.json»
+     * вместо безликого lesson-1861.json — в папке «Загрузки» их десятки.
+     */
+    public function transcriptDownloadName(): string
+    {
+        $ext = pathinfo((string) $this->transcript_file, PATHINFO_EXTENSION) ?: 'json';
+        $number = str_pad((string) ($this->sort_order ?: $this->id), 3, '0', STR_PAD_LEFT);
+        $slug = Str::slug((string) $this->title);
+
+        return $number.($slug !== '' ? '-'.$slug : '').'-'.$this->id.'.'.$ext;
     }
 
     public function hasTranscript(): bool
