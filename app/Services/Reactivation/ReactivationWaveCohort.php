@@ -242,12 +242,15 @@ final class ReactivationWaveCohort
 
     private function lastCourseTitle(int $userId): ?string
     {
-        $courseId = Payment::query()
+        $payment = Payment::query()
             ->whereIn('status', Payment::PAID_STATUSES)
             ->whereNotIn('tariff', ['Расход', 'salary_payout'])
             ->where('user_id', $userId)
-            ->max('course_id');
+            ->latest('id')
+            ->first();
 
-        return $courseId !== null ? (string) Course::query()->whereKey($courseId)->value('title') : null;
+        return $payment?->course_id !== null
+            ? (string) Course::query()->whereKey($payment->course_id)->value('title')
+            : null;
     }
 }
