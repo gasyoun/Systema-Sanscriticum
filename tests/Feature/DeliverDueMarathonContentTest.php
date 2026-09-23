@@ -11,11 +11,13 @@ use App\Models\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Tests\Concerns\WithStaffedIntroSession;
 use Tests\TestCase;
 
 class DeliverDueMarathonContentTest extends TestCase
 {
     use RefreshDatabase;
+    use WithStaffedIntroSession;
 
     protected function setUp(): void
     {
@@ -119,11 +121,12 @@ class DeliverDueMarathonContentTest extends TestCase
     public function test_paid_track_gets_the_zoom_link_on_day3(): void
     {
         Http::fake(['*' => Http::response(['ok' => true], 200)]);
-        $schedule = Schedule::create(['title' => 'Марафон День 3', 'start' => now()->addDay(), 'link' => 'https://zoom.us/j/marathon']);
-        config(['marathon.schedule_id' => $schedule->id]);
+        $schedule = $this->confirmIntroSession();
+        $schedule->update(['link' => 'https://zoom.us/j/marathon']);
 
         $enrollment = $this->enrollment([], [
             'track' => MarathonEnrollment::TRACK_PAID,
+            'paid_at' => now(),
             'day0_started_at' => now()->subDays(3),
             'day1_completed_at' => now(),
             'day2_completed_at' => now(),
@@ -138,8 +141,8 @@ class DeliverDueMarathonContentTest extends TestCase
     public function test_free_track_does_not_get_the_zoom_link_on_day3(): void
     {
         Http::fake(['*' => Http::response(['ok' => true], 200)]);
-        $schedule = Schedule::create(['title' => 'Марафон День 3', 'start' => now()->addDay(), 'link' => 'https://zoom.us/j/marathon']);
-        config(['marathon.schedule_id' => $schedule->id]);
+        $schedule = $this->confirmIntroSession();
+        $schedule->update(['link' => 'https://zoom.us/j/marathon']);
 
         $enrollment = $this->enrollment([], [
             'track' => MarathonEnrollment::TRACK_FREE,
@@ -152,6 +155,52 @@ class DeliverDueMarathonContentTest extends TestCase
 
         $this->assertNotNull($enrollment->fresh()->consultation_booked_at);
         Http::assertSent(fn ($req) => ! str_contains((string) $req['text'], 'https://zoom.us/j/marathon'));
+    }
+
+    public function test_unpaid_paid_track_never_gets_zoom_link(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        $schedule = $this->confirmIntroSession();
+        $schedule->update(['link' => 'https://zoom.us/j/marathon']);
+        $enrollment = $this->enrollment([], [
+            'track' => MarathonEnrollment::TRACK_PAID,
+            'day0_started_at' => now()->subDays(3),
+            'day1_completed_at' => now(),
+            'day2_completed_at' => now(),
+        ]);
+
+        $this->artisan('marathon:deliver-due')->assertSuccessful();
+
+        $this->assertNotNull($enrollment->fresh()->consultation_booked_at);
+        Http::assertSent(fn ($req) => ! str_contains((string) $req['text'], 'https://zoom.us/j/marathon'));
+    }
+
+    public function test_old_unstaffed_schedule_never_invites_new_beginner_to_day3(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        $schedule = Schedule::create(['title' => 'Old meeting', 'start' => now()->subDays(20), 'end' => now()->subDays(20)->addHour()]);
+        config(['marathon.schedule_id' => $schedule->id]);
+        $enrollment = $this->enrollment([], [
+            'day0_started_at' => now()->subDays(3),
+            'day1_completed_at' => now(),
+            'day2_completed_at' => now(),
+        ]);
+
+        $this->artisan('marathon:deliver-due')->assertSuccessful();
+
+        $this->assertNull($enrollment->fresh()->consultation_booked_at);
+        Http::assertNothingSent();
+    }
+
+    public function test_unstaffed_day2_message_does_not_promise_live_or_personal_answer(): void
+    {
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
+        $this->enrollment([], ['day0_started_at' => now()->subDays(2), 'day1_completed_at' => now()]);
+
+        $this->artisan('marathon:deliver-due')->assertSuccessful();
+
+        Http::assertSent(fn ($req) => str_contains((string) $req['text'], 'Дата следующей групповой консультации пока не подтверждена')
+            && ! str_contains((string) $req['text'], 'вопрос к живой консультации Дня 3'));
     }
 
     public function test_does_not_resend_day3(): void

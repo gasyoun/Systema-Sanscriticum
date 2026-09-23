@@ -1,14 +1,16 @@
 # Beginner acquisition pilot
 
-_Created: 22-09-2026 · Last updated: 22-09-2026_
+_Created: 22-09-2026 · Last updated: 23-09-2026_
 
 ## Scope and activation
 
-The homepage prioritises busy adult beginners: free teaching excerpt → existing ₽500 guided introduction → suitable main course. The catalogue and free materials remain accessible; prices, payment processing and access grants are unchanged. No advertising spend is authorised by this implementation. The existing ₽10,000 VK ceiling and attribution/spending approvals remain in force.
+The homepage prioritises busy adult beginners: free teaching excerpt → existing ₽500 guided introduction → suitable main course. The catalogue and free materials remain accessible; prices and existing paid access grants are unchanged. New paid registration and checkout are closed until staffing is verified against the scheduled session; existing paid enrollment remains accessible. No advertising spend is authorised by this implementation. The existing ₽10,000 VK ceiling and attribution/spending approvals remain in force.
 
 The 30-day observation period has **not started**. Activation requires a verified future staffed group session, end-to-end production journey verification and reconciliation with payment records. The live schedule checked on 22 September still pointed to 28 August without an end time. Do not turn historical reports into a current availability claim.
 
 Before offering paid guidance prominently, verify reviewer availability for introductory tasks and one bounded group question session. Record the schedule ID, confirmation timestamp and exact ISO start/end snapshots in `config/beginner_pilot.php`; they must match the future `marathon.schedule_id` record. Moving the session invalidates approval. Total personal participation, including the existing Monday review, must remain within 180 minutes weekly. No schedule or staffing commitment has been invented.
+
+The same schedule check controls the older `/online/konsultaciya` page and both August paid POST routes. While it fails, the page offers only the free first two days, explains that a group recording follows the next confirmed session, and cannot start a new ₽500 checkout even through a direct request. January consultation routes are separate and unchanged.
 
 ## Teaching evidence and copy
 
@@ -48,7 +50,7 @@ Preserve existing useful description content and referral parameters. Before cha
 
 ## Validation and deployment
 
-Targeted regression: 55 tests, 226 assertions passed; independent report/offer verification: 10 tests, 54 assertions passed. Production asset build passed. Mobile preview at 390×844 verified readable copy and free/paid distinction. The embedded player did not load in the checking browser, so a timestamped direct fallback was added. This is not a completed production video/playback or payment journey check.
+Initial targeted regression: 55 tests, 226 assertions passed; independent report/offer verification: 10 tests, 54 assertions passed. Production asset build passed. After the 23 September release, the live homepage and beginner page returned 200, the YouTube player loaded in the mobile browser, and the cabinet probe passed after a stale failure fuse was archived. A subsequent mobile walkthrough exposed an older consultation-page paid option and ambiguous free-track promise; the follow-up staffing gate and messaging fixes have 83 focused tests and 251 assertions passing locally, with independent money-flow verification. CI and production smoke are still required. No real payment was made.
 
 Deploy through the established deployment workflow/script, including the nullable `day1_started_at` migration and frontend asset rebuild. After deployment verify homepage → excerpt → offer → payment sandbox/test path → granted access → first task → support instructions on mobile. Never make a real charge merely to satisfy a smoke test. No pilot start date is set automatically.
 

@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Tests\Concerns\WithStaffedIntroSession;
 use Tests\TestCase;
 
 /**
@@ -31,6 +32,7 @@ use Tests\TestCase;
 class ConsultationProductLaunchGateTest extends TestCase
 {
     use RefreshDatabase;
+    use WithStaffedIntroSession;
 
     protected function setUp(): void
     {
@@ -103,6 +105,7 @@ class ConsultationProductLaunchGateTest extends TestCase
 
     public function test_consultation_checkout_smokes_using_the_config_amount(): void
     {
+        $this->confirmIntroSession();
         $landing = $this->landing();
         $lead = Lead::factory()->create([
             'contact' => 'g31-payer@example.test',

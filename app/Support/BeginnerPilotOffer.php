@@ -29,13 +29,9 @@ class BeginnerPilotOffer
             ? 'https://www.youtube.com/embed/'.$videoId.'?start='.(int) config('beginner_pilot.preview_start_seconds').'&end='.(int) config('beginner_pilot.preview_end_seconds').'&rel=0'
             : null;
 
-        $schedule = Schedule::find(config('marathon.schedule_id'));
-        $available = $schedule && $schedule->start?->isFuture()
-            && $schedule->end && $schedule->end->gt($schedule->start)
-            && (int) config('beginner_pilot.staffed_schedule_id') === $schedule->id
-            && filled(config('beginner_pilot.staffing_confirmed_at'))
-            && config('beginner_pilot.staffed_schedule_start') === $schedule->start->toIso8601String()
-            && config('beginner_pilot.staffed_schedule_end') === $schedule->end->toIso8601String();
+        $available = self::supportAvailable();
+
+        $schedule = $available ? Schedule::find(config('marathon.schedule_id')) : null;
 
         return [
             'previewUrl' => $previewUrl,
@@ -43,11 +39,23 @@ class BeginnerPilotOffer
             'clipWatchUrl' => $clipUrl ? 'https://www.youtube.com/watch?v='.$videoId.'&t='.(int) config('beginner_pilot.preview_start_seconds').'s' : null,
             'previewTitle' => $previewUrl ? $lesson->title : null,
             'price' => (int) config('marathon.paid_track_price'),
-            'supportAvailable' => (bool) $available,
+            'supportAvailable' => $available,
             'scheduleLabel' => $available
                 ? $schedule->start->timezone('Europe/Moscow')->format('d.m.Y H:i')
                     .'–'.$schedule->end->timezone('Europe/Moscow')->format('H:i').' мск'
                 : null,
         ];
+    }
+
+    public static function supportAvailable(): bool
+    {
+        $schedule = Schedule::find(config('marathon.schedule_id'));
+
+        return (bool) ($schedule && $schedule->start?->isFuture()
+            && $schedule->end && $schedule->end->gt($schedule->start)
+            && (int) config('beginner_pilot.staffed_schedule_id') === $schedule->id
+            && filled(config('beginner_pilot.staffing_confirmed_at'))
+            && config('beginner_pilot.staffed_schedule_start') === $schedule->start->toIso8601String()
+            && config('beginner_pilot.staffed_schedule_end') === $schedule->end->toIso8601String());
     }
 }

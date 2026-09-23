@@ -30,7 +30,7 @@
      x-data="{
         step: {{ $initialStep }},
         quizGoal: '{{ old('quiz_goal') }}',
-        track: '{{ old('track', 'free') }}',
+        track: '{{ $paidSupportAvailable ? old('track', 'free') : 'free' }}',
         name: '{{ old('name') }}',
         contact: '{{ old('contact') }}',
         tgClicked: false,
@@ -122,9 +122,10 @@
                             <input type="radio" name="track" value="free" x-model="track" class="mt-1">
                             <span>
                                 <span class="font-extrabold block text-stone-900">Бесплатно</span>
-                                <span class="text-sm text-stone-600">2 дня записей + маршрут + консультация в записи.</span>
+                                <span class="text-sm text-stone-600">{{ $paidSupportAvailable ? '2 дня записей + маршрут + консультация в записи.' : '2 дня записей + маршрут. Запись консультации — после следующего эфира.' }}</span>
                             </span>
                         </label>
+                        @if ($paidSupportAvailable)
                         <label class="flex items-start gap-3 p-4 rounded-2xl border-[1.5px] cursor-pointer transition-colors"
                                :class="track === 'paid' ? 'border-[#E85C24] bg-orange-50' : 'border-stone-200'">
                             <input type="radio" name="track" value="paid" x-model="track" class="mt-1">
@@ -136,6 +137,7 @@
                                 </span>
                             </span>
                         </label>
+                        @endif
                     </div>
                 </fieldset>
                 @error('track')
@@ -211,7 +213,7 @@
                         </li>
                     </ol>
 
-                    @if (session('marathon_track') === 'paid' && ! session('marathon_paid'))
+                    @if ($paidSupportAvailable && session('marathon_track') === 'paid' && ! session('marathon_paid'))
                         <div class="mt-5 p-5 bg-orange-50 border border-orange-200 rounded-2xl text-left">
                             <p class="font-extrabold text-stone-900 mb-1">Шаг 2 из 2 — оплата трека «с проверкой»</p>
                             <p class="text-sm text-stone-600 mb-4">
