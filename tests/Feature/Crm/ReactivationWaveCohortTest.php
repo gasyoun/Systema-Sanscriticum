@@ -106,7 +106,11 @@ class ReactivationWaveCohortTest extends TestCase
 
         $suppressed = User::factory()->create(['email' => 'bounced@example.com', 'telegram_id' => null]);
         $this->payer($suppressed, 400);
-        SuppressedEmail::query()->create(['email' => 'bounced@example.com', 'reason' => 'hard_bounce']);
+        SuppressedEmail::query()->create([
+            'email' => 'bounced@example.com',
+            'reason' => 'hard_bounce',
+            'suppressed_at' => Carbon::now()->subDays(30),
+        ]);
 
         $noConsent = User::factory()->create([
             'email' => 'noconsent@example.com',
