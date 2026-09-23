@@ -13,6 +13,13 @@ class EditLesson extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('downloadTranscript')
+                ->label('Скачать стенограмму')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->visible(fn (): bool => $this->record->hasTranscript())
+                ->url(fn (): string => route('admin.lesson.transcript', $this->record))
+                ->openUrlInNewTab(),
             Actions\DeleteAction::make(),
         ];
     }
