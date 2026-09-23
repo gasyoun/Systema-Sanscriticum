@@ -136,6 +136,24 @@ class ReactivationWaveCohortTest extends TestCase
     }
 
     /** @test */
+    public function a_forming_roster_does_not_count_as_current_access(): void
+    {
+        $forming = User::factory()->create(['email' => 'forming@example.com', 'telegram_id' => 900010]);
+        $this->payer($forming, 400);
+        $forming->groups()->attach(Group::factory()->create(['status' => 'forming'])->id);
+
+        $studying = User::factory()->create(['email' => 'studying@example.com', 'telegram_id' => 900011]);
+        $this->payer($studying, 400);
+        $studying->groups()->attach(Group::factory()->create(['status' => 'active'])->id);
+
+        $census = $this->cohort()->evaluate();
+
+        // Набор — это список приглашённых, а не доступ: такой ученик в волне.
+        $this->assertSame([$forming->id], array_column($census->sendList, 'user_id'));
+        $this->assertSame('active_payer', $census->excluded[$studying->id]);
+    }
+
+    /** @test */
     public function a_recent_win_back_attempt_keeps_a_student_out_of_the_wave(): void
     {
         $user = User::factory()->create(['email' => 'written@example.com', 'telegram_id' => 900003]);
