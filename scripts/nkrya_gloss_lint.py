@@ -55,7 +55,8 @@ GLOSSARY = REPO / "resources" / "data" / "sa_ru_glossary.json"
 
 PRESETS = {
     "roots": {"path": "database/seeders/data/roots_frequency_ru.tsv", "gloss": "gloss_ru",
-              "ids": ["rank", "root_iast", "dcs_lemma"], "sa_key": "dcs_lemma", "sa_kind": "iast"},
+              "ids": ["rank", "root_iast", "dcs_lemma"], "sa_key": "dcs_lemma", "sa_kind": "iast",
+              "prefer_verb": True},
     "lemmas": {"path": "resources/data/cohort_start_chteniya/lemmas_for_srs.tsv",
                "gloss": "gloss_ru", "ids": ["pack", "lemma_slp1", "surface", "locus"],
                "sa_key": "lemma_slp1", "sa_kind": "slp1"},
@@ -66,6 +67,11 @@ POS_MAP = {"NOUN": "S", "ADJF": "A", "ADJS": "A", "COMP": "A", "VERB": "V", "INF
            "PRTF": "V", "PRTS": "V", "GRND": "V", "ADVB": "ADV", "NUMR": "NUM",
            "NPRO": "SPRO", "PRED": "PRAEDIC"}
 CONTENT = {"NOUN", "ADJF", "ADJS", "COMP", "VERB", "INFN", "PRTF", "PRTS", "GRND", "ADVB"}
+# short adjectives whose meaning is lost in the full form (должен ≠ должный)
+PREDICATIVE_SHORT = {"должен", "должна", "должно", "должны", "рад", "рада", "радо", "рады",
+                     "нужен", "нужна", "нужно", "нужны", "каков", "какова", "каково", "каковы",
+                     "таков", "такова", "таково", "таковы"}
+NAME_TAGS = {"Name", "Surn", "Patr", "Geox", "Orgn", "Trad", "Abbr"}
 CYR = re.compile(r"[А-Яа-яЁё]+(?:-[А-Яа-яЁё]+)*")
 LATIN = re.compile(r"[A-Za-z]")
 C19 = {"fieldName": "created", "intRange": {"begin": 1800, "end": 1899}}
@@ -77,12 +83,17 @@ def yo(s):
 
 
 # ---- lemmatization -------------------------------------------------------------------
+VERBAL = {"VERB", "INFN", "GRND", "PRTF", "PRTS"}
+
+
 class Lemmatizer:
-    def __init__(self, morph=None):
+    def __init__(self, morph=None, prefer_verb=False):
         if morph is None:
             import pymorphy3
             morph = pymorphy3.MorphAnalyzer()
         self.morph = morph
+        self.prefer_verb = prefer_verb     # a root deck glosses verbs: правил = править
+        self.ambiguous = set()             # tokens whose readings disagree on the lemma
 
     def analyse(self, token):
         """(lemma, pymorphy_pos, dictionary_form) for one token.
@@ -92,11 +103,28 @@ class Lemmatizer:
         masc nom sg for participles (a participle gloss of a kta form stays a
         participle); comparatives and adverbs are left alone.
         """
-        p = self.morph.parse(token.lower())[0]
+        low = token.lower()
+        parses = self.morph.parse(low)
+        common = [q for q in parses if not (NAME_TAGS & set(q.tag.grammemes))]
+        parses = common or parses                                # нагим is not «Нагима»
+        if self.prefer_verb:
+            parses = [q for q in parses if q.tag.POS in VERBAL] or parses
+        p = parses[0]
+        readings = {yo(q.normal_form) for q in parses if q.tag.POS in CONTENT}
         pos = p.tag.POS or ""
         lemma = p.normal_form
-        form = token.lower()
-        if pos in ("ADJF", "PRTF") and "nomn" in p.tag:
+        form = low
+        if (not self.morph.word_is_known(low)                  # Брихаспати -> «брихаспать»
+                or (token[:1].isupper() and pos == "NOUN")     # Бака -> «бак»: a name
+                or any(q.normal_form == low for q in parses)   # счастье is not «счастие»
+                or low in PREDICATIVE_SHORT                    # должен is not «должный»
+                or (low.endswith("ье") and lemma == low[:-2] + "ие")   # счастье/счастие
+                or any(q.tag.POS == "NOUN" and "nomn" in q.tag and "plur" in q.tag
+                       for q in parses)):
+            pass                   # nom. plural may be deliberate (дети, волосы, гуны): keep
+        elif len(readings) > 1:    # стоит = стоить|стоять, берегу = берег|беречь: no guess
+            self.ambiguous.add(low)
+        elif pos in ("ADJF", "PRTF") and "nomn" in p.tag:
             pass                   # «внутреннее» may be a substantivized neuter: keep gender
         elif pos in ("VERB", "GRND", "INFN", "NOUN", "ADJF", "ADJS"):
             form = lemma
@@ -239,6 +267,8 @@ def lint_gloss(gloss, lem, ev):
         if yo(form) != yo(t.lower()):
             out["flags"].append("inflected")
             out["gloss_lemma"] = form
+        elif t.lower() in lem.ambiguous:
+            out["flags"].append("inflected_ambiguous")
     else:
         out["flags"].append("phrase")
     for t, lemma, pos, form in content:
@@ -295,6 +325,7 @@ def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None):
         rows = list(csv.DictReader(f, delimiter="," if src.suffix == ".csv" else "\t"))
     if limit:
         rows = rows[:limit]
+    lem.prefer_verb = bool(spec.get("prefer_verb"))
     fields = spec["ids"] + ["gloss_ru", "status", "flags", "gloss_lemma", "min_band",
                             "nkrya_tokens", "synonym_proposal", "synonym_ipm", "synonym_band"]
     out_rows = []
@@ -346,6 +377,7 @@ def selftest():
     class Tag:
         def __init__(self, pos):
             self.POS = pos
+            self.grammemes = set()
 
         def __contains__(self, _gram):
             return False
@@ -364,6 +396,9 @@ def selftest():
              "ланиты": ("NOUN", "ланита"), "щёки": ("NOUN", "щека"), "щека": ("NOUN", "щека")}
 
     class Morph:
+        def word_is_known(self, w):
+            return w in table
+
         def parse(self, w):
             pos, normal, *infl = table.get(w, ("NOUN", w))
             return [Parse(w, pos, normal, infl[0] if infl else None)]
@@ -373,6 +408,24 @@ def selftest():
     assert lem.analyse("искусен")[2] == "искусный"
     assert lem.analyse("выше")[2] == "выше", "comparatives are never normalized"
     assert lem.analyse("вызвавший")[2] == "вызвавший", "participle stays a participle"
+    table["бака"] = ("NOUN", "бак")
+    assert lem.analyse("Бака")[2] == "бака", "capitalized noun = a name, never lemmatized"
+    assert lem.analyse("брихаспати")[2] == "брихаспати", "unknown word is never lemmatized"
+    table["должен"] = ("ADJS", "должный")
+    assert lem.analyse("должен")[2] == "должен", "predicative short form stays"
+    multi = {"правил": [("NOUN", "правило"), ("VERB", "править")]}
+    base_parse = Morph.parse
+
+    def parse2(self, w):
+        if w in multi:
+            return [Parse(w, pos, n) for pos, n in multi[w]]
+        return base_parse(self, w)
+    Morph.parse = parse2
+    table["правил"] = ("NOUN", "правило")
+    assert lem.analyse("правил")[2] == "правил" and "правил" in lem.ambiguous, "no guess"
+    lem.prefer_verb = True
+    assert lem.analyse("правил")[2] == "править", "a root deck takes the verbal reading"
+    lem.prefer_verb = False
 
     tmp = Path(tempfile.mkdtemp())
     ev = Evidence(tmp / "ev.tsv", offline=True)
@@ -405,7 +458,7 @@ def selftest():
     again = Evidence(tmp / "ev.tsv", offline=True)
     assert again.freq("ланита", "S") == {"ipm": 0.4, "category": 1}
     assert again.hits("ланита", "c19") == 41
-    print("nkrya_gloss_lint selftest OK (15 checks, offline)")
+    print("nkrya_gloss_lint selftest OK (20 checks, offline)")
 
 
 def import_client():
