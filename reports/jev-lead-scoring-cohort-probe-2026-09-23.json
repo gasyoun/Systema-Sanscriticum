@@ -1,0 +1,62 @@
+{
+  "handoff": "H5280",
+  "date": "2026-09-23",
+  "purpose": "Census of every candidate inquiry-text surface + conversion-outcome source for the Jev Noul lead-scoring shadow bench. Read-only; zero external API calls.",
+  "probes": [
+    {
+      "kind": "committed-artifact",
+      "target": "Uprava data/money/trial_cohort_{21-09,18-09,15-09,07-09,03-09,30-08}-2026.tsv",
+      "command": "wc -l <tsv>",
+      "result": {"lines": 1, "data_rows": 0, "note": "header-only in every weekly snapshot = the frozen conversion cohort is empty"}
+    },
+    {
+      "kind": "committed-report",
+      "target": "Uprava reports/TRIAL_COHORT_REPORT_21-09-2026.md",
+      "result": {"quote": "Zero trial Deals in production as of 21-09-2026. The trial pipeline (flags CRM_TRIAL_BOOKING/CRM_TRIAL_WIDGET_PUBLIC, live since 24-08-2026 per DEPLOY_QUEUE No.80) has not yet produced a Deal: no free widget booking and no paid trial after the flip."}
+    },
+    {
+      "kind": "prod-read-only-ssh",
+      "host": "193.232.229.92",
+      "sql": "SELECT COUNT(*) total, MIN(created_at), MAX(created_at), SUM(status='enrolled') enrolled FROM waitlist_entries;",
+      "result": {"total": 0, "enrolled": null, "note": "waitlist_entries empty - no intake data yet"}
+    },
+    {
+      "kind": "prod-read-only-ssh",
+      "host": "193.232.229.92",
+      "sql": "SELECT (SELECT COUNT(*) FROM leads) leads, (SELECT COUNT(*) FROM leads WHERE converted_at IS NOT NULL) leads_converted, (SELECT COUNT(*) FROM lead_notes) lead_notes, (SELECT COUNT(*) FROM lead_notes WHERE type='dm') dm_notes, (SELECT COUNT(*) FROM deals WHERE kind='trial') trial_deals, (SELECT COUNT(*) FROM deals WHERE kind='trial' AND trial_outcome='converted') trial_converted, (SELECT COUNT(*) FROM course_interest_requests) cir, (SELECT COUNT(*) FROM marathon_enrollments) marathon;",
+      "result": {"leads": 345, "leads_converted": 37, "lead_notes": 69, "dm_notes": 21, "trial_deals": 0, "trial_converted": 0, "cir": 0, "marathon": 5}
+    },
+    {
+      "kind": "prod-read-only-ssh",
+      "host": "193.232.229.92",
+      "sql": "SELECT status, COUNT(*) n FROM leads GROUP BY status ORDER BY n DESC;",
+      "result": [{"status": "new", "n": 310}, {"status": "converted", "n": 35}]
+    },
+    {
+      "kind": "prod-read-only-ssh",
+      "host": "193.232.229.92",
+      "sql": "SELECT ln.type, l.status, COUNT(*) n, SUM(CHAR_LENGTH(ln.body)>30) w_text FROM lead_notes ln JOIN leads l ON l.id=ln.lead_id GROUP BY ln.type, l.status;",
+      "result": [
+        {"type": "dm", "status": "new", "n": 21, "w_text": 19},
+        {"type": "email", "status": "converted", "n": 6, "w_text": 6},
+        {"type": "email", "status": "new", "n": 37, "w_text": 37},
+        {"type": "note", "status": "new", "n": 5, "w_text": 5}
+      ],
+      "note": "every manual/dm text sits on a status='new' lead; email rows are outbound autologs - zero inquiry texts on converted leads, AUC undefined"
+    },
+    {
+      "kind": "prod-read-only-ssh",
+      "host": "193.232.229.92",
+      "sql": "SELECT (SELECT COUNT(*) FROM course_waitlist_items) cwi, (SELECT COUNT(*) FROM inbound_emails) inb, (SELECT COUNT(*) FROM chat_messages) chat, (SELECT COUNT(*) FROM lead_step_emails) step_emails;",
+      "result": {"cwi": 26, "inb": 0, "chat": 267, "step_emails": 164}
+    },
+    {
+      "kind": "fence-event",
+      "target": "payments-joining SELECT over SSH; then read of data/money/payments_export_25-08-2026.tsv",
+      "result": {"blocked_by": "repo money-contour-write-confirm guard (2/2 attempts)", "action": "not retried, not routed around; a chat-text to purchase join requires /money-pr-land discipline or a human ruling"}
+    }
+  ],
+  "verdict": "NO-GO - no inquiry-text surface with a two-class conversion outcome exists; the named truth source (frozen trial cohort) has zero rows",
+  "external_api_calls": 0,
+  "cost_usd": 0.0
+}
