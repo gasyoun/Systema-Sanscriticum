@@ -141,16 +141,6 @@ final class ReactivationWaveCohort
             if ($user === null) {
                 continue;
             }
-            $row['name'] = (string) $user->name;
-            $row['tg_ok'] = $this->tgAvailable($user);
-            $row['email_ok'] = $this->emailAvailable($user);
-            $row['last_course'] = $this->lastCourseTitle($row['user_id']);
-            if ($user->telegram_id && ! $row['tg_ok']) {
-                $counts['opt_out_messenger']++;
-            }
-            if ($user->email && ! $row['email_ok']) {
-                $counts['opt_out_or_suppressed_email']++;
-            }
         }
         unset($row);
 
@@ -159,21 +149,6 @@ final class ReactivationWaveCohort
             + $counts['channel_'.self::CHANNEL_NONE];
 
         return ['rows' => $rows->sortBy('user_id')->values(), 'counts' => $counts];
-    }
-
-    /** Первичный канал: бот Telegram при живом chat id, иначе email. */
-    public function channelFor(int $userId): string
-    {
-        $user = User::find($userId);
-
-        if ($user !== null && $this->tgAvailable($user)) {
-            return self::CHANNEL_TELEGRAM_BOT;
-        }
-        if ($user !== null && $this->emailAvailable($user)) {
-            return self::CHANNEL_EMAIL;
-        }
-
-        return self::CHANNEL_NONE;
     }
 
     /** TG-канал: привязанный чат + согласие на анонсы в мессенджерах (152-ФЗ). */
