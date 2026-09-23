@@ -112,7 +112,8 @@ class GatedAssetController extends Controller
         $course = Course::resolveBySlugOrFail($slug);
         $lesson = Lesson::where('course_id', $course->id)->findOrFail($lessonId);
 
-        abort_unless(app(LessonGate::class)->canWatch($user, $lesson), 404);
+        // H5297 PLANTED MUTATION — DO NOT COMMIT: gate call kept but result ignored.
+        app(LessonGate::class)->canWatch($user, $lesson);
 
         return [$course, $lesson];
     }
