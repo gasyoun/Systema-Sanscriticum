@@ -265,6 +265,14 @@ def band_flag(f):
     return ""
 
 
+def is_name(token, lem):
+    """Capitalised AND (unknown to pymorphy or tagged as a name): «Защищайте» is a verb."""
+    low = token.lower()
+    if not hasattr(lem.morph, "word_is_known") or not lem.morph.word_is_known(low):
+        return True
+    return any(NAME_TAGS & set(q.tag.grammemes) for q in lem.morph.parse(token))
+
+
 def lint_gloss(gloss, lem, ev):
     """Return a dict of lint fields for one gloss string."""
     g = (gloss or "").strip()
@@ -291,7 +299,7 @@ def lint_gloss(gloss, lem, ev):
     else:
         out["flags"].append("phrase")
     for t, lemma, pos, form in content:
-        if t[:1].isupper():
+        if t[:1].isupper() and is_name(t, lem):
             # a proper name (Бхагиратхи, Брихаспати) is a transliteration, not a word a
             # corpus band can judge — flag it, never call it rare
             if "name" not in out["flags"]:
