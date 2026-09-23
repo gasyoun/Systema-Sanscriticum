@@ -14,11 +14,10 @@ declare(strict_types=1);
  *
  * Usage: php tools/h5274_regex_floor.php [--json]
  */
-
 $root = dirname(__DIR__);
-$suggester = $root . '/app/Services/Support/SupportAnswerSuggester.php';
-$model = $root . '/app/Models/SupportAnswerSuggestion.php';
-$corpus = $root . '/tests/fixtures/Support/classifier_corpus_2026_08.json';
+$suggester = $root.'/app/Services/Support/SupportAnswerSuggester.php';
+$model = $root.'/app/Models/SupportAnswerSuggestion.php';
+$corpus = $root.'/tests/fixtures/Support/classifier_corpus_2026_08.json';
 
 // --- category constant values, read from the real model -------------------
 $consts = [];
@@ -30,22 +29,22 @@ if (preg_match_all('/const\s+(CATEGORY_[A-Z_]+)\s*=\s*\'([^\']*)\'/', (string) f
 
 // --- eval the RULES literal against a stub class holding those constants ---
 $src = (string) file_get_contents($suggester);
-if (!preg_match('/private const RULES = \[(.*?)\n    \];/s', $src, $rm)) {
+if (! preg_match('/private const RULES = \[(.*?)\n    \];/s', $src, $rm)) {
     fwrite(STDERR, "FAIL: could not locate the RULES constant in {$suggester}\n");
     exit(2);
 }
 
 $stub = "class SupportAnswerSuggestion {\n";
 foreach ($consts as $name => $value) {
-    $stub .= "  const {$name} = " . var_export($value, true) . ";\n";
+    $stub .= "  const {$name} = ".var_export($value, true).";\n";
 }
 $stub .= "}\n";
 
-if (!class_exists('SupportAnswerSuggestion', false)) {
+if (! class_exists('SupportAnswerSuggestion', false)) {
     eval($stub);
 }
-$rules = eval('return [' . $rm[1] . ' ];');
-if (!is_array($rules)) {
+$rules = eval('return ['.$rm[1].' ];');
+if (! is_array($rules)) {
     fwrite(STDERR, "FAIL: RULES literal did not eval to an array\n");
     exit(2);
 }
