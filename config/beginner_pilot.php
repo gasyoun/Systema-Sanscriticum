@@ -1,6 +1,11 @@
 <?php
 
 return [
+    // Human-confirmed 30-day measurement window: 23 Sep–22 Oct 2026, Moscow time.
+    // This starts observation only; paid support still requires a separately
+    // verified future Schedule and its staffing snapshot below.
+    'observation_started_on' => '2026-09-23',
+
     // Published free grammar webinar verified against production on 19-09-2026.
     // Excerpt verified against public captions on 22-09-2026: script vs language.
     'preview_lesson_id' => 1464,

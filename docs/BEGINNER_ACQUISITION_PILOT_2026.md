@@ -6,9 +6,9 @@ _Created: 22-09-2026 · Last updated: 23-09-2026_
 
 The homepage prioritises busy adult beginners: free teaching excerpt → existing ₽500 guided introduction → suitable main course. The catalogue and free materials remain accessible; prices and existing paid access grants are unchanged. New paid registration and checkout are closed until staffing is verified against the scheduled session; existing paid enrollment remains accessible. No advertising spend is authorised by this implementation. The existing ₽10,000 VK ceiling and attribution/spending approvals remain in force.
 
-The 30-day observation period has **not started**. Activation requires a verified future staffed group session, end-to-end production journey verification and reconciliation with payment records. The live schedule checked on 22 September still pointed to 28 August without an end time. Do not turn historical reports into a current availability claim.
+The 30-day observation period **started on 23 September 2026 at 00:00 Moscow time**, following the user's explicit instruction. Its end is 23 October 2026 at 00:00 Moscow time (exclusive). This starts measurement, not the paid offer: a verified future staffed group session is still required before new ₽500 checkout opens. The user confirmed curator availability on 23 September, but did not yet give the next session date or duration. The live schedule checked that day still pointed to 28 August without an end time. Do not turn historical reports into a current availability claim.
 
-Before offering paid guidance prominently, verify reviewer availability for introductory tasks and one bounded group question session. Record the schedule ID, confirmation timestamp and exact ISO start/end snapshots in `config/beginner_pilot.php`; they must match the future `marathon.schedule_id` record. Moving the session invalidates approval. Total personal participation, including the existing Monday review, must remain within 180 minutes weekly. No schedule or staffing commitment has been invented.
+Curator availability was confirmed by the user on 23 September, but a session-specific date and duration are still needed before offering paid guidance. Record the schedule ID, confirmation timestamp and exact ISO start/end snapshots in `config/beginner_pilot.php`; they must match the future `marathon.schedule_id` record. Moving the session invalidates approval. Total personal participation, including the existing Monday review, must remain within 180 minutes weekly. No meeting date or duration has been invented.
 
 The same schedule check controls the older `/online/konsultaciya` page and both August paid POST routes. While it fails, the page offers only the free first two days, explains that a group recording follows the next confirmed session, and cannot start a new ₽500 checkout even through a direct request. January consultation routes are separate and unchanged.
 
@@ -22,15 +22,17 @@ Introductory materials are approximately 15 minutes daily; live support is separ
 
 ## Reporting
 
-Use the read-only `report:beginner-pilot` command after a verified start date exists:
+Use the read-only `report:beginner-pilot` command with the configured start date:
 
 ```sh
-php artisan report:beginner-pilot --from=YYYY-MM-DD --days=30 --main-course=ID --json
+php artisan report:beginner-pilot --days=30 --json
 ```
 
-Replace placeholders with the actual start and verified main-course IDs; repeat `--main-course` for each eligible course. Supply `--support-minutes=N` only from measured effort for the same reporting window; omission remains unavailable rather than zero. Run during the existing Monday review, keeping the same start date. The existing `report:first-time-buyers` rolling report remains available; this command provides a fixed pilot window and explicit continuation-course selection.
+The configured start is 2026-09-23; use `--from` only to override it deliberately. Add `--main-course=ID` for each verified eligible course; until IDs are selected, continuation remains unavailable rather than zero. Supply `--support-minutes=N` only from measured effort for the same reporting window; omission remains unavailable rather than zero. Run during the existing Monday review, keeping the same start date. The existing `report:first-time-buyers` rolling report remains available; this command provides a fixed pilot window and explicit continuation-course selection.
 
-- Deduplicate first-time buyers by user ID across retained paid history, not by payment rows. Include genuine paid trials and introductions; exclude donations, expenses, salary, deposits and refunded source payments. Duplicate accounts still require manual reconciliation.
+The first production aggregate snapshot at 23 September 10:43 Moscow time classified 0 identifiable first-time buyers among timestamped payments, 0 returning buyers, 0 paid introductions, 0 first-task starts and 0 linked refunds within the new window. The first-time count is provisional, not proof that no first purchase occurred. Source coverage and main-course continuation were unavailable, not zero. The retained ledger contains 7,902 currently paid rows without `first_paid_at` across all history; these are not silently classified as new buyers. Payment reconciliation remains necessary before claiming reliable first-time-buyer totals.
+
+- Deduplicate first-time buyers by user ID across retained paid history, not by payment rows. Include genuine paid trials and introductions; exclude donations, expenses, salary, deposits and linked refund ledger rows from purchase counts while retaining original refunded purchases in buyer history. Duplicate accounts still require manual reconciliation.
 - Require `first_paid_at`; uncertain undated historical payments make history unknown rather than implying a new buyer. Payment rows remain separately countable for reconciliation.
 - Keep observed attribution, inferred attribution and unknown sources separate. Capture valid first-visit acquisition fields on new marathon leads while preserving existing tracked-link priority and original duplicate-lead attribution. Source observation is not proof of causal lift.
 - Count first successful Day 1 page views using `day1_started_at`; this is a task start, not quiz completion or learning achievement. Keep completed engagement distinct from message delivery.

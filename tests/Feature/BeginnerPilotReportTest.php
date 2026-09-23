@@ -118,10 +118,15 @@ class BeginnerPilotReportTest extends TestCase
         $this->assertSame(0, $result['marathon_buyers']['first_time']);
     }
 
-    public function test_command_requires_valid_explicit_start_and_outputs_aggregate_json(): void
+    public function test_command_uses_confirmed_start_and_validates_overrides(): void
     {
         $this->travelTo(CarbonImmutable::parse('2026-10-10'));
+        config(['beginner_pilot.observation_started_on' => null]);
         $this->assertSame(1, Artisan::call('report:beginner-pilot'));
+        config(['beginner_pilot.observation_started_on' => '2026-09-23']);
+        $this->assertSame(0, Artisan::call('report:beginner-pilot', ['--json' => true]));
+        $configured = json_decode(Artisan::output(), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertSame('2026-09-23T00:00:00+03:00', $configured['window']['from_inclusive']);
         $this->assertSame(1, Artisan::call('report:beginner-pilot', ['--from' => '2026-02-30']));
         $this->assertSame(1, Artisan::call('report:beginner-pilot', ['--from' => '2026-09-01', '--days' => '0']));
         $this->assertSame(1, Artisan::call('report:beginner-pilot', ['--from' => '2026-09-01', '--main-course' => ['999999']]));
