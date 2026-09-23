@@ -5,49 +5,26 @@ namespace App\Http\Controllers\Concerns;
 use App\Jobs\TrackLessonViewJob;
 use App\Models\ActivityEvent;
 use App\Models\Course;
-use App\Models\CourseFavorite;
-use App\Models\CourseWaitlistItem;
-use App\Models\HomeworkSubmission;
+use App\Models\CourseMaterial;
 use App\Models\Lesson;
 use App\Models\LessonAccessGrant;
 use App\Models\LessonView;
-use App\Models\Payment;
-use App\Models\PranaPerk;
-use App\Models\PranaRedemption;
 use App\Models\Schedule;
-use App\Models\SubscriberMagnet;
-use App\Models\User;
-use App\Models\WaitlistVote;
 use App\Services\AccessDiagnosticsService;
 use App\Services\Activity\CabinetTelemetry;
-use App\Services\Activity\FunnelTelemetry;
 use App\Services\Cabinet\GrammarLadder;
-use App\Services\Cabinet\RecordingsCatalog;
-use App\Services\Cabinet\RecoveryState;
 use App\Services\Cabinet\RecoveryStateResolver;
 use App\Services\CourseContinuationBanner;
-use App\Services\DebtPaymentResolver;
+use App\Services\CourseMaterialsArchiver;
 use App\Services\HindiAttachmentDrills;
 use App\Services\HindiProgrammePlaylist;
 use App\Services\HindiTranscriptDrills;
-use App\Services\Leaderboard\LeaderboardService;
-use App\Services\Learning\ExternalLearningProgressService;
 use App\Services\Membership\ClubEntitlement;
-use App\Services\Membership\ClubMembershipService;
 use App\Services\Membership\RecordingAccessPolicy;
 use App\Services\Prana\PranaService;
-use App\Services\Prana\PranaSettings;
-use App\Services\Schedule\TextbookScale;
-use App\Services\StudentDebtsService;
-use App\Support\Badges;
 use App\Support\KinescopePilot;
-use App\Support\OnboardingChecklist;
-use App\Support\PranaLeaderboard;
 use App\Support\TranscriptParser;
-use App\Support\VisualDcsEntitlement;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 
 /**
  * Domain-scoped concern for StudentController — extracted by H4978 split
@@ -55,7 +32,7 @@ use Illuminate\Support\Collection;
  */
 trait StudentCourseContentConcerns
 {
-/**
+    /**
      * Просмотр содержания курса (список уроков)
      */
     public function showCourse($slug)
@@ -144,7 +121,7 @@ trait StudentCourseContentConcerns
         ));
     }
 
-/**
+    /**
      * Просмотр конкретного урока (Плеер + Навигация)
      */
     public function showLesson($courseSlug, $lessonId, PranaService $prana)
@@ -192,7 +169,7 @@ trait StudentCourseContentConcerns
         return view('student.lesson', compact('course', 'lesson', 'lessons', 'currentNote', 'unlockedTariffs', 'transcriptSentences', 'homeworkOpen', 'homeworkSubmission', 'upcomingSession', 'videoResumeEnabled', 'resumePosition', 'resumeDuration', 'kinescopeEmbedUrl', 'hindiDrillsUrl', 'recordingAccess', 'lywUrl'));
     }
 
-/**
+    /**
      * Отметить урок как пройденный
      */
     public function completeLesson($courseSlug, $lessonId, PranaService $prana)
@@ -264,7 +241,7 @@ trait StudentCourseContentConcerns
         return redirect()->back()->with('success', 'Урок пройден!');
     }
 
-/**
+    /**
      * Сохранение заметки
      */
     public function saveNote(Request $request, $courseSlug, $lessonId)
@@ -290,7 +267,7 @@ trait StudentCourseContentConcerns
         return redirect()->back()->with('success', 'Заметка сохранена');
     }
 
-/**
+    /**
      * Проверяет, что урок принадлежит курсу из URL и доступен пользователю
      * (свободный или оплачен через full/block_X). Иначе — abort(403/404).
      * Защищает completeLesson/saveNote от IDOR на уроки чужих курсов.
@@ -315,7 +292,7 @@ trait StudentCourseContentConcerns
         }
     }
 
-/**
+    /**
      * Скачать архив со всеми материалами курса.
      * Учитывает права доступа студента (оплаченные блоки).
      */
@@ -346,7 +323,7 @@ trait StudentCourseContentConcerns
         }
     }
 
-/**
+    /**
      * Библиотека курса — реестр ссылок на литературу (фаза 1).
      *
      * Доступ: курс активен + студент в группе курса. Тарифы НЕ гейтят страницу

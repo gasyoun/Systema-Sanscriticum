@@ -47,7 +47,7 @@
         @endforeach
     </div>
 
-    @if($testimonials && $testimonials->count() > 0)
+    @if(($showTestimonials ?? true) && $testimonials && $testimonials->count() > 0)
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             @foreach($testimonials as $t)
                 <div class="rounded-2xl bg-[#111622] border border-[#1F2636] p-5">
@@ -59,7 +59,7 @@
                 </div>
             @endforeach
         </div>
-    @else
+    @elseif($showTestimonials ?? true)
         <div class="text-center py-10 bg-gray-800/40 rounded-2xl border border-gray-700/60">
             <p class="text-gray-400 text-sm">Скоро здесь появятся отзывы наших учеников.</p>
         </div>

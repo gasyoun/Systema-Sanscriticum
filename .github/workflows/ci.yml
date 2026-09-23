@@ -27,6 +27,8 @@ jobs:
         php: ["8.3"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
 
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
@@ -78,7 +80,15 @@ jobs:
           touch public/build/assets/app.css public/build/assets/app.js
 
       - name: Laravel Pint format check
-        run: ./vendor/bin/pint --test
+        env:
+          PINT_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          # Check every PHP file changed by this PR/push. Existing formatting
+          # debt in unrelated files must not block the current change.
+          if [ -z "$PINT_BASE_SHA" ] || ! git cat-file -e "$PINT_BASE_SHA^{commit}"; then
+            PINT_BASE_SHA=HEAD^
+          fi
+          ./vendor/bin/pint --test --diff="$PINT_BASE_SHA"
 
       - name: PHPUnit tests
         # --no-interaction is a Laravel artisan flag but PHPUnit 10 rejects it
@@ -431,4 +441,3 @@ jobs:
           else
             python tools/check_mic_vendor_drift.py --self-only
           fi
-

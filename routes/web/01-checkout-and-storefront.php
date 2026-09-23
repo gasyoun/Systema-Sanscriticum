@@ -22,6 +22,7 @@ use App\Models\Course;
 use App\Models\LandingPage;
 use App\Models\Lesson;
 use App\Models\Testimonial;
+use App\Support\BeginnerPilotOffer;
 use App\Support\TrajectoryPaths;
 use Illuminate\Support\Facades\Route;
 
@@ -132,6 +133,10 @@ Route::get('/dvaram/private-archive/{archive}', [MembershipCommerceController::c
 
 // «С чего начать» — вводная страница новичка: лесенка продуктов + квиз подбора
 // курса + уровни (H323, beginner on-ramp).
+Route::get('/online/poprobovat', fn () => view('shop.beginner-pilot', [
+    'offer' => BeginnerPilotOffer::forView(),
+]))->name('beginner-pilot.show');
+
 Route::get('/online/s-chego-nachat', [ShopController::class, 'start'])->name('shop.start');
 
 // Текущий набор в новые онлайн-группы грамматики. Это не каталог: страница
