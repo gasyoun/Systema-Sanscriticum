@@ -22,9 +22,10 @@ lint TSV per source + a compact evidence cache that makes `--offline` re-runs ex
 
 NKRYa client: the H5261 client (SanskritLexicography/RussianTranslation/src/nkrya_client.py,
 sibling checkout or env NKRYA_CLIENT_SRC) until H5282 moves it into csl-pyutil.
-Rate limit: per ACCOUNT, shared by every session using the key — 5 calls at 3 s went
-through, then ~1 call per 80 s while two other sessions ran (probed 23-09-2026) -> `--interval` + a 65 s
-back-off on 429; the evidence cache is saved every 20 lookups, so a killed run resumes.
+Rate limit: 5 successful calls per minute per ACCOUNT, shared by every session using
+the key (cache timestamps 13:40-13:56Z 23-09-2026: 4-5/min across all sessions, body
+`{"detail": "Too many requests."}`, no Retry-After) -> `--interval` 12 s + a `--backoff`
+30 s wait on 429; the evidence cache is saved every 20 lookups, so a killed run resumes.
 
   python scripts/nkrya_gloss_lint.py roots lemmas            # live, resumable
   python scripts/nkrya_gloss_lint.py roots lemmas --offline  # cache only
@@ -113,11 +114,13 @@ class Lemmatizer:
 class Evidence:
     FIELDS = ["key", "ipm", "category", "hits"]
 
-    def __init__(self, path=EVIDENCE_TSV, client=None, offline=False, save_every=20):
+    def __init__(self, path=EVIDENCE_TSV, client=None, offline=False, save_every=20,
+                 backoff=30.0):
         self.path = Path(path)
         self.client = client
         self.offline = offline
         self.save_every = save_every
+        self.backoff = backoff
         self.rows = {}
         self.live = 0
         self.misses = 0
@@ -137,7 +140,7 @@ class Evidence:
 
     def _live(self, fn):
         from nkrya_client import NkryaError
-        for attempt in range(6):
+        for attempt in range(240):     # a busy shared key can starve us for a long while
             try:
                 out = fn()
                 self.live += 1
@@ -146,10 +149,10 @@ class Evidence:
                     print("  … %d live lookups, cache saved" % self.live, file=sys.stderr)
                 return out
             except NkryaError as e:
-                if "429" in str(e) and attempt < 5:
+                if "429" in str(e) and attempt < 239:
                     self.rate_limited += 1
-                    print("  429 — sleeping 65 s", file=sys.stderr)
-                    time.sleep(65)
+                    print("  429 — sleeping %.0f s" % self.backoff, file=sys.stderr)
+                    time.sleep(self.backoff)
                     continue
                 raise
 
@@ -420,8 +423,9 @@ def main(argv=None):
     ap.add_argument("--id-cols", default="")
     ap.add_argument("--name", default="custom")
     ap.add_argument("--offline", action="store_true", help="evidence cache only, no network")
-    ap.add_argument("--interval", type=float, default=6.5,
-                    help="seconds between live NKRYa calls (default 6.5 ≈ 9/min)")
+    ap.add_argument("--interval", type=float, default=12.0,
+                    help="seconds between live NKRYa calls (default 12 = the 5/min account limit)")
+    ap.add_argument("--backoff", type=float, default=30.0, help="seconds to wait after a 429")
     ap.add_argument("--limit", type=int, help="first N rows only (smoke)")
     ap.add_argument("--out-dir", default=str(OUT_DIR))
     ap.add_argument("--selftest", action="store_true")
@@ -445,7 +449,7 @@ def main(argv=None):
         client = nk.NkryaClient(cache_dir=str(RAW_CACHE))
     else:
         import_client()          # NkryaError type for the offline path stays importable
-    ev = Evidence(EVIDENCE_TSV, client=client, offline=a.offline)
+    ev = Evidence(EVIDENCE_TSV, client=client, offline=a.offline, backoff=a.backoff)
     lem = Lemmatizer()
     pool = load_pool()
     report = {}
