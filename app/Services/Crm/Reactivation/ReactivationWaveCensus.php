@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Crm\Reactivation;
 
+use App\Services\Crm\Lifecycle\LifecycleCensus;
+
 /**
  * H5288 — результат сухого прогона волны реактивации A: кто в списке, по
  * какому каналу и кого отсеяли с какой причиной. Та же форма, что у
- * {@see \App\Services\Crm\Lifecycle\LifecycleCensus} — сухой прогон и любая
+ * {@see LifecycleCensus} — сухой прогон и любая
  * будущая отправка печатают одинаковый счёт.
  *
  * Отправкой не пахнет: объект хранит только числа и id.
