@@ -24,7 +24,7 @@
         {{-- H1067 anti-urgency hero — no countdown, no "spots left", evergreen entry any day. --}}
         <div class="text-center mb-8">
             <span class="inline-block text-[11px] font-extrabold uppercase tracking-wide text-brand bg-orange-50 rounded-md px-2 py-1 mb-3">
-                Бесплатная консультация
+                {{ $paidSupportAvailable ? 'Бесплатная консультация' : 'Бесплатное введение' }}
             </span>
             <h1 class="text-3xl md:text-4xl font-black text-stone-900 mb-4 leading-tight">
                 {{ $heroTitle }}

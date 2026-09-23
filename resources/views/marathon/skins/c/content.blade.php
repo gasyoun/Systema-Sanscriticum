@@ -34,7 +34,7 @@
                  darker in-family #A94D1F (4.96:1, already the file's own CTA
                  hover shade) rather than inventing a new hue. --}}
             <span class="inline-block text-[11px] font-extrabold uppercase tracking-wide text-[#A94D1F] mb-3">
-                Бесплатная консультация
+                {{ $paidSupportAvailable ? 'Бесплатная консультация' : 'Бесплатное введение' }}
             </span>
             <h1 class="font-serif text-3xl md:text-4xl font-bold text-[#2C2416] leading-[1.2]">
                 {{ $heroTitle }}
