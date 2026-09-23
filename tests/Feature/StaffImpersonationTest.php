@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\TeacherSalaries;
 use App\Filament\Resources\ImpersonationAuditResource;
+use App\Http\Middleware\ImpersonationGuard;
 use App\Models\ImpersonationAudit;
 use App\Models\Teacher;
 use App\Models\User;
@@ -227,7 +228,7 @@ class StaffImpersonationTest extends TestCase
      * user-controlled name (`users.name` has no HTML allowlist) must never
      * reach the page as live markup — the banner is injected into every
      * layout (cabinet, витрина, Filament) via raw string splice
-     * ({@see \App\Http\Middleware\ImpersonationGuard::injectBanner}), so an
+     * ({@see ImpersonationGuard::injectBanner}), so an
      * escaping regression here is a stored-XSS surface, not a cosmetic bug.
      *
      * @test
