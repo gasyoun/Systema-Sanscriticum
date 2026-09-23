@@ -185,7 +185,14 @@ class LessonController extends Controller
         $path = 'transcripts/lesson-'.$lesson->id.'.json';
         Storage::disk('local')->put($path, json_encode($payload, JSON_UNESCAPED_UNICODE));
 
-        $lesson->forceFill(['transcript_file' => $path])->save();
+        // quiet=1 — привязать стенограмму БЕЗ событий модели. Массовая заливка
+        // (конвейер scripts/transcribe_lessons.py, сотни уроков разом) иначе
+        // разбудит LessonObserver: при включённых content_from_lectures и
+        // clip_marketing каждый урок уедет в нарезку клипов в ВК и в черновики
+        // статей/FAQ. Одиночная загрузка из n8n по-прежнему идёт с событиями.
+        $quiet = $request->boolean('quiet');
+        $lesson->forceFill(['transcript_file' => $path]);
+        $quiet ? $lesson->saveQuietly() : $lesson->save();
 
         $sentences = TranscriptParser::sentencesFromStoredFile($path);
 
@@ -196,6 +203,7 @@ class LessonController extends Controller
         Log::info('Lesson transcript: сохранён', [
             'lesson_id' => $lesson->id,
             'sentences' => count($sentences),
+            'quiet' => $quiet,
         ]);
 
         return response()->json([
@@ -203,6 +211,7 @@ class LessonController extends Controller
             'lesson_id' => $lesson->id,
             'transcript_file' => $path,
             'sentences' => count($sentences),
+            'quiet' => $quiet,
         ]);
     }
 
