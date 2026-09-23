@@ -23,6 +23,8 @@ class MarathonStaffingGateTest extends TestCase
                 ->assertSee('value="free"', false)
                 ->assertDontSee('value="paid"', false)
                 ->assertSee('Платная запись откроется')
+                ->assertSee('Бесплатное введение')
+                ->assertDontSee('В конце — ваш вопрос к живой консультации')
                 ->assertDontSee('Вы получите личный ответ');
         }
     }

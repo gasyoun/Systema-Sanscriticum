@@ -47,7 +47,7 @@
              steps, not `position: fixed`. --}}
         <div class="text-center mb-5">
             <span class="inline-block text-[11px] font-extrabold uppercase tracking-wide text-[#E85C24] bg-orange-50 rounded-md px-2 py-1 mb-2">
-                Бесплатная консультация · ~15 мин/день
+                {{ $paidSupportAvailable ? 'Бесплатная консультация' : 'Бесплатное введение' }} · ~15 мин/день
             </span>
             <h1 class="text-2xl font-black text-stone-900 leading-tight">
                 {{ $heroTitle }}
