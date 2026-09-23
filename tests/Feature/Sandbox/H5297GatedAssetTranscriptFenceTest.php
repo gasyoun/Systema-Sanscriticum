@@ -96,6 +96,6 @@ class H5297GatedAssetTranscriptFenceTest extends TestCase
         $response = $this->actingAs($buyer)->get($this->transcriptUrl());
 
         $response->assertOk();
-        $response->assertSee(self::SECRET_MARKER, false);
+        $this->assertStringContainsString(self::SECRET_MARKER, $response->streamedContent());
     }
 }
