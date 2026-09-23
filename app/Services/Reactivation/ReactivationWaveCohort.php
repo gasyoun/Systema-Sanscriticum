@@ -69,7 +69,21 @@ final class ReactivationWaveCohort
             ->diff($blockedIds)
             ->values();
 
-        $counts = [
+        $counts = array_fill_keys([
+            'channel_'.self::CHANNEL_TELEGRAM_BOT,
+            'channel_'.self::CHANNEL_EMAIL,
+            'channel_'.self::CHANNEL_NONE,
+            self::SEGMENT_NON_CONTINUER.'_channel_'.self::CHANNEL_TELEGRAM_BOT,
+            self::SEGMENT_NON_CONTINUER.'_channel_'.self::CHANNEL_EMAIL,
+            self::SEGMENT_NON_CONTINUER.'_channel_'.self::CHANNEL_NONE,
+            self::SEGMENT_LAPSED.'_channel_'.self::CHANNEL_TELEGRAM_BOT,
+            self::SEGMENT_LAPSED.'_channel_'.self::CHANNEL_EMAIL,
+            self::SEGMENT_LAPSED.'_channel_'.self::CHANNEL_NONE,
+            'opt_out_messenger',
+            'opt_out_or_suppressed_email',
+        ], 0);
+
+        $counts += [
             'non_continuer' => $nonContinuerIds->count(),
             'lapsed' => $lapsedIds->count(),
             'total' => $nonContinuerIds->count() + $lapsedIds->count(),
