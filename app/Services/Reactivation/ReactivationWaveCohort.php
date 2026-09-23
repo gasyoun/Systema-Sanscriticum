@@ -185,7 +185,6 @@ final class ReactivationWaveCohort
     private function realPayerIds(): Collection
     {
         return Payment::query()
-            ->whereNull('lead_id')
             ->where('is_conditional', false)
             ->whereNotIn('tariff', ['Расход', 'salary_payout'])
             ->whereIn('status', Payment::PAID_STATUSES)
