@@ -11,16 +11,16 @@ use Illuminate\Console\Command;
 
 final class ReportBeginnerPilot extends Command
 {
-    protected $signature = 'report:beginner-pilot {--from= : Verified pilot start, YYYY-MM-DD} {--days=30 : Observation window, 1-366 days} {--main-course=* : Verified main-course ID; repeat for each course} {--support-minutes= : Human-measured total support minutes for this window} {--json : Emit aggregate JSON}';
+    protected $signature = 'report:beginner-pilot {--from= : Override configured pilot start, YYYY-MM-DD} {--days=30 : Observation window, 1-366 days} {--main-course=* : Verified main-course ID; repeat for each course} {--support-minutes= : Human-measured total support minutes for this window} {--json : Emit aggregate JSON}';
 
     protected $description = 'Read-only first-purchase pilot report; no personal data and no automatic pilot launch';
 
     public function handle(BeginnerPilotReport $report): int
     {
-        $raw = (string) $this->option('from');
+        $raw = (string) ($this->option('from') ?: config('beginner_pilot.observation_started_on'));
         $days = (string) $this->option('days');
         if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw) || ! ctype_digit($days) || (int) $days < 1 || (int) $days > 366) {
-            $this->error('Supply --from=YYYY-MM-DD and --days=1..366. This command does not launch the pilot.');
+            $this->error('Supply --from=YYYY-MM-DD or configure beginner_pilot.observation_started_on, and --days=1..366.');
 
             return self::FAILURE;
         }
