@@ -219,6 +219,34 @@ class StaffImpersonationTest extends TestCase
             ->assertSee('Выйти из режима');
     }
 
+    /**
+     * H5297 seam 3 (output-encoding/browser-policy): the banner above only
+     * proves a PLAIN name reaches the page — it stays green whether the
+     * partial escapes `{{ }}` or renders raw `{!! !!}`, since a plain name has
+     * no HTML metacharacters to mangle either way. Forbidden side effect: a
+     * user-controlled name (`users.name` has no HTML allowlist) must never
+     * reach the page as live markup — the banner is injected into every
+     * layout (cabinet, витрина, Filament) via raw string splice
+     * ({@see \App\Http\Middleware\ImpersonationGuard::injectBanner}), so an
+     * escaping regression here is a stored-XSS surface, not a cosmetic bug.
+     *
+     * @test
+     */
+    public function the_banner_html_escapes_a_name_with_markup_characters(): void
+    {
+        $super = $this->user(Roles::SUPER_ADMIN);
+        $student = $this->user(null);
+        $student->forceFill(['name' => '<script>alert(1)</script>"Ева"'])->save();
+
+        $this->actingAs($super);
+        $this->start($student, Impersonation::MODE_STUDENT);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('<script>alert(1)</script>', false)
+            ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false);
+    }
+
     /** @test */
     public function impersonating_a_student_does_not_forge_their_login_or_activity(): void
     {
