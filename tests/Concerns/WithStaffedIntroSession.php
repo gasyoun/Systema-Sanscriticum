@@ -10,8 +10,9 @@ trait WithStaffedIntroSession
     {
         $schedule = Schedule::create([
             'title' => 'Confirmed beginner consultation',
-            'start' => now()->addDays(2),
-            'end' => now()->addDays(2)->addHour(),
+            'start' => now()->addDays(4),
+            'end' => now()->addDays(4)->addHour(),
+            'link' => 'https://example.test/join/beginner',
         ]);
 
         config([

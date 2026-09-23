@@ -44,7 +44,11 @@
                     <p class="font-semibold mt-2">Групповая консультация: {{ $offer['scheduleLabel'] }}.</p>
                     <a href="{{ route('marathon.show') }}#marathon-form" class="inline-flex mt-4 rounded-xl bg-brand px-5 py-3 text-white font-bold">Выбрать участие с проверкой →</a>
                 @else
-                    <p class="mt-2 font-semibold" role="status">Новая дата групповой консультации пока не подтверждена. До подтверждения даты начните с бесплатных материалов.</p>
+                    @if ($offer['sessionScheduled'])
+                        <p class="mt-2 font-semibold" role="status">Запись на консультацию {{ $offer['scheduleLabel'] }} закрыта. Бесплатные материалы остаются доступны.</p>
+                    @else
+                        <p class="mt-2 font-semibold" role="status">Новая дата групповой консультации пока не подтверждена. До подтверждения даты начните с бесплатных материалов.</p>
+                    @endif
                 @endif
             </div>
         </div>

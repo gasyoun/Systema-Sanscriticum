@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Schedule;
 use App\Models\Testimonial;
+use App\Support\BeginnerPilotOffer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -41,7 +42,7 @@ class BeginnerPilotOfferTest extends TestCase
 
     public function test_future_schedule_requires_staffing_confirmation_and_explicit_end(): void
     {
-        $schedule = Schedule::create(['title' => 'Intro', 'start' => now()->addDays(2), 'end' => now()->addDays(2)->addHour()]);
+        $schedule = Schedule::create(['title' => 'Intro', 'start' => now()->addDays(4), 'end' => now()->addDays(4)->addHour(), 'link' => 'https://example.test/join/beginner']);
         config(['marathon.schedule_id' => $schedule->id]);
         $this->get(route('beginner-pilot.show'))->assertDontSee('Выбрать участие с проверкой');
         config(['beginner_pilot.staffed_schedule_id' => $schedule->id, 'beginner_pilot.staffing_confirmed_at' => now()->toIso8601String(), 'beginner_pilot.staffed_schedule_start' => $schedule->start->toIso8601String(), 'beginner_pilot.staffed_schedule_end' => $schedule->end->toIso8601String()]);
@@ -49,6 +50,29 @@ class BeginnerPilotOfferTest extends TestCase
         $schedule->update(['start' => now()->addDays(3), 'end' => now()->addDays(3)->addHour()]);
         $this->get(route('beginner-pilot.show'))->assertDontSee('Выбрать участие с проверкой');
         $schedule->update(['end' => null]);
+        $this->get(route('beginner-pilot.show'))->assertDontSee('Выбрать участие с проверкой');
+    }
+
+    public function test_paid_choice_requires_a_join_link_and_closes_before_personal_day_three(): void
+    {
+        $schedule = Schedule::create([
+            'title' => 'Intro',
+            'start' => now()->addDays(7)->startOfDay()->setTime(19, 0),
+            'end' => now()->addDays(7)->startOfDay()->setTime(20, 0),
+        ]);
+        config([
+            'marathon.schedule_id' => $schedule->id,
+            'beginner_pilot.staffed_schedule_id' => $schedule->id,
+            'beginner_pilot.staffing_confirmed_at' => now()->toDateString(),
+            'beginner_pilot.staffed_schedule_start' => $schedule->start->toIso8601String(),
+            'beginner_pilot.staffed_schedule_end' => $schedule->end->toIso8601String(),
+        ]);
+
+        $this->get(route('beginner-pilot.show'))->assertDontSee('Выбрать участие с проверкой');
+        $schedule->update(['link' => 'https://example.test/join/beginner']);
+        $this->get(route('beginner-pilot.show'))->assertSee('Выбрать участие с проверкой');
+
+        $this->travelTo(BeginnerPilotOffer::registrationCutoff());
         $this->get(route('beginner-pilot.show'))->assertDontSee('Выбрать участие с проверкой');
     }
 

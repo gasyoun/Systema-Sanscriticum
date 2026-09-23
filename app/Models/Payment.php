@@ -18,6 +18,7 @@ use App\Services\Membership\ClubMembershipService;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Prana\PranaService;
 use App\Services\PromiseAutoFulfiller;
+use App\Support\BeginnerPilotOffer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -1239,10 +1240,15 @@ class Payment extends Model
         // User, отдельная от лид-магнит-бота привязка — марафонский лид её не имеет).
         $lead = $this->lead;
         if ($lead && $lead->telegram_chat_id) {
-            $text = '✅ <b>Оплата получена</b>'."\n\n"
-                .'Трек «с проверкой» марафона оплачен. Ваша практика Дней 1–2 '
-                .'разбирается куратором, и вам гарантировано место на живой '
-                .'консультации Дня 3 — ваш вопрос разберут лично.';
+            $sessionReady = ! $enrollment->isDevaCohort()
+                && BeginnerPilotOffer::supportAvailable()
+                && $enrollment->currentDay() < 3;
+            $text = $sessionReady
+                ? '✅ <b>Оплата получена</b>'."\n\n"
+                    .'Трек «с проверкой» оплачен. Куратор проверит ваши задания, '
+                    .'а ссылку на групповую консультацию пришлём в День 3.'
+                : '✅ <b>Оплата получена</b>'."\n\n"
+                    .'Куратор свяжется с вами по поводу оплаченного участия и консультации.';
 
             app(DeliveryChannelManager::class)
                 ->get('telegram')

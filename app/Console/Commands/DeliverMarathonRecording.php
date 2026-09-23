@@ -47,6 +47,10 @@ final class DeliverMarathonRecording extends Command
             if (! $lead || ! $lead->telegram_chat_id) {
                 continue;
             }
+            if ($enrollment->isDevaCohort()
+                && (int) config('beginner_pilot.staffed_schedule_id') === $schedule->id) {
+                continue;
+            }
             // A new beginner waiting for the next group meeting must not
             // receive the previous cohort's recording as their "Day 3".
             if (! $enrollment->isDevaCohort() && $enrollment->day0_started_at?->gt($schedule->end)) {
