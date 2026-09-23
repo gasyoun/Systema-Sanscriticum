@@ -102,19 +102,34 @@ final class ReactivationWaveCohort
             self::SEGMENT_LAPSED => $lapsedIds,
         ]);
 
+        // Один запрос на всех кандидатов — каналы и поля заполняются без N+1.
+        $candidateIds = $segmentOf->flatten()->unique()->values();
+        $users = User::query()->whereIn('id', $candidateIds)->get()->keyBy('id');
+
         foreach ($segmentOf as $segment => $ids) {
             foreach ($ids as $userId) {
-                $channel = $this->channelFor($userId);
+                $user = $users->get((int) $userId);
+                $tgOk = $user !== null && $this->tgAvailable($user);
+                $emailOk = $user !== null && $this->emailAvailable($user);
+                $channel = $tgOk ? self::CHANNEL_TELEGRAM_BOT : ($emailOk ? self::CHANNEL_EMAIL : self::CHANNEL_NONE);
+
                 $counts['channel_'.$channel]++;
                 $counts[$segment.'_channel_'.$channel]++;
+                if ($user?->telegram_id && ! $tgOk) {
+                    $counts['opt_out_messenger']++;
+                }
+                if ($user?->email && ! $emailOk) {
+                    $counts['opt_out_or_suppressed_email']++;
+                }
+
                 $rows->push([
                     'user_id' => (int) $userId,
-                    'name' => '',
+                    'name' => (string) ($user?->name ?? ''),
                     'segment' => $segment,
                     'channel' => $channel,
-                    'tg_ok' => false,
-                    'email_ok' => false,
-                    'last_course' => null,
+                    'tg_ok' => $tgOk,
+                    'email_ok' => $emailOk,
+                    'last_course' => $this->lastCourseTitle((int) $userId),
                 ]);
             }
         }
