@@ -46,6 +46,14 @@ SHEET_ID = "systema-sanscriticum-nkrya-gloss-lint_rare-swaps_23-09-2026"
 MAX_CARDS = 10
 VERIFIER = "Claude Code Opus 5.5 (claude-opus-5-5)"
 NEG_PREFIX = ("не", "бес", "без")
+FLAG_RU = {"inflected": "не в словарной форме", "inflected_ambiguous": "форма неоднозначна",
+           "phrase": "фраза", "rare": "полоса 1", "soft_rare": "полоса 2",
+           "c19_only": "только XIX век", "unknown": "не всё измерено",
+           "not_russian": "не по-русски"}
+
+
+def flags_ru(flags):
+    return ", ".join(FLAG_RU.get(f, f) for f in flags.split(",") if f)
 
 
 def read(name):
@@ -168,8 +176,8 @@ def row_card(kind, name, r, prop):
           "Позиция агента: %s.</p>") % (
         e(cur_txt), e(new), e(new_txt), (" " + c19.capitalize() + ".") if c19 else "",
         BLOB, BLOB, name, name, e(stance))
-    src_row = "<p>Источник строки: <a href=\"%s%s\">%s</a> · флаги: %s</p>" % (
-        BLOB, src, e(src), e(r["flags"]))
+    src_row = "<p>Источник строки: <a href=\"%s%s\">%s</a> · отметки линта: %s</p>" % (
+        BLOB, src, e(src), e(flags_ru(r["flags"])))
     item = {"id": card_id(name, r), "filt": name,
             "title": "%s: «%s» → «%s»?" % (key, r["gloss_ru"], new),
             "title_href": "%sresources/data/nkrya_lint/%s_gloss_lint.tsv" % (BLOB, name),
@@ -246,6 +254,18 @@ def build(out):
         items.append(it)
         stamps[it["id"]] = st
     counts["human"] = len(items)
+    from csl_pyutil.evidence import EvidenceManifest
+    manifest = EvidenceManifest(SHEET_ID, [it["id"] for it in items], repo_root=str(REPO))
+    for name in SOURCES:
+        manifest.declare_joined("resources/data/nkrya_lint/%s_gloss_lint.tsv" % name,
+                                ["gloss_ru", "flags", "nkrya_tokens", "synonym_proposal"])
+    manifest.declare_joined("resources/data/nkrya_lint/nkrya_evidence_cache.tsv",
+                            ["ipm", "category", "hits"])
+    manifest.declare_joined("resources/data/nkrya_lint/reword_proposals.tsv",
+                            ["proposal", "why"])
+    manifest.declare_joined("resources/data/sa_ru_glossary.json", ["g"])
+    for it in items:
+        manifest.add_card(it["id"], ["nkrya_band_current", "nkrya_band_proposed"])
     overflow = len(cand) - min(len(cand), room)
     counts["agent"] += overflow        # carded next sheet; counted, not hidden
     config = {
@@ -263,13 +283,15 @@ def build(out):
         # mention are handoff numbers — none do, and the gate would demand a label if one did
         "identity_gate": {"patterns": [r"\bH\d{3,5}\b"], "labels": {}},
         "save_as": "Systema-Sanscriticum/review/%s_decisions.json" % SHEET_ID,
+        # English lint flag names in the screening banner, not Sanskrit
+        "preflight": {"allow_slp1_tokens": ("inflected", "inflected_ambiguous", "soft_rare")},
     }
     screening = {**counts, "evidence_path": BLOB + REPORT,
                  "rules": ["inflected -> dictionary form (grill Q2, no vote)",
                            "inflected_ambiguous -> Sanskrit part of speech (lookup)",
                            "soft_rare band 2 -> note only (grill Q4)",
                            "rare without any proposal -> report only"]}
-    page = render_review_sheet(items, config, screening=screening)
+    page = render_review_sheet(items, config, screening=screening, manifest=manifest)
     page = page.replace("</body>", "<!-- ssb-evidence: %s -->\n</body>" %
                         json.dumps(stamps, ensure_ascii=False))
     Path(out).parent.mkdir(parents=True, exist_ok=True)
