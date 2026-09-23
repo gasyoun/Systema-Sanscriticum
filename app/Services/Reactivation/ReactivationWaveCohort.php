@@ -217,8 +217,9 @@ final class ReactivationWaveCohort
      */
     private function activeGroupUserIds(): Collection
     {
+        // activeGroups: только непокинутые членства (left_at IS NULL).
         return User::query()
-            ->whereHas('groups', fn ($q) => $q->whereIn('groups.status', ['forming', 'active']))
+            ->whereHas('activeGroups', fn ($q) => $q->whereIn('groups.status', ['forming', 'active']))
             ->pluck('id');
     }
 
