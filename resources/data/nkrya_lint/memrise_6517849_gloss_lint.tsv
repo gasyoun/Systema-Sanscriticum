@@ -1,0 +1,79 @@
+level	col_a	gloss_ru	status	flags	gloss_lemma	min_band	nkrya_tokens	synonym_proposal	synonym_ipm	synonym_band
+level_01	bhānuḥ	bhānuḥ N., sg.	not_russian	not_russian						
+level_01	bhāno	bhāhuḥ V., sg.	not_russian	not_russian						
+level_01	bhānum	bhānuḥ A., sg.	not_russian	not_russian						
+level_01	bhānunā	bhānuḥ I., sg.	not_russian	not_russian						
+level_01	bhānave	bhānuḥ D., sg.	not_russian	not_russian						
+level_01	bhānoḥ	bhānuḥ Abl., G., sg.	not_russian	not_russian						
+level_01	bhānau	bhānuḥ L., sg.	not_russian	not_russian						
+level_01	bhānū	bhānuḥ N., A., V., du.	not_russian	not_russian						
+level_01	bhānubhyām	bhānuḥ I., D., Abl., du.	not_russian	not_russian						
+level_01	bhānvoḥ	bhānuḥ G., L., du.	not_russian	not_russian						
+level_01	bhānavaḥ	bhānuḥ N., A., pl.	not_russian	not_russian						
+level_01	bhānūn	bhānuḥ A., pl.	not_russian	not_russian						
+level_01	bhānubhiḥ	bhānuḥ I., pl.	not_russian	not_russian						
+level_01	bhānubhyaḥ	bhānuḥ D., Abl., pl.	not_russian	not_russian						
+level_01	bhānūnām	bhānuḥ G., pl.	not_russian	not_russian						
+level_01	bhānuṣu	bhānuḥ L., pl.	not_russian	not_russian						
+level_02	madhu	madhu N., A., sg.	not_russian	not_russian						
+level_02	madhu/madho	madhu V., sg.	not_russian	not_russian						
+level_02	madhunā	madhu I., sg.	not_russian	not_russian						
+level_02	madhune	madhu D., sg.	not_russian	not_russian						
+level_02	madhunaḥ	madhu Abl., G., sg.	not_russian	not_russian						
+level_02	madhuni	madhu L., sg.	not_russian	not_russian						
+level_02	madhunī	madhu N., A., V., du.	not_russian	not_russian						
+level_02	madhubhyām	madhu I., D., Abl., du.	not_russian	not_russian						
+level_02	madhunoḥ	madhu G., L., du.	not_russian	not_russian						
+level_02	madhūni	madhu N., A., V., pl.	not_russian	not_russian						
+level_02	madhubhiḥ	madhu I., pl.	not_russian	not_russian						
+level_02	madhubhyaḥ	madhu D., Abl., pl.	not_russian	not_russian						
+level_02	madhūnām	madhu G., pl.	not_russian	not_russian						
+level_02	madhuṣu	madhu L., pl.	not_russian	not_russian						
+level_03	dhīḥ	dhī N., V., sg.	not_russian	not_russian						
+level_03	dhiyam	dhī A., sg.	not_russian	not_russian						
+level_03	dhiyā	dhī I., sg.	not_russian	not_russian						
+level_03	dhiye, dhiyai	dhī D., sg.	not_russian	not_russian						
+level_03	dhiyaḥ, dhiyāh	dhī Abl., G., sg.	not_russian	not_russian						
+level_03	dhiyi, dhiyām	dhī L., sg.	not_russian	not_russian						
+level_03	dhiyau	dhī N., A., V., du.	not_russian	not_russian						
+level_03	dhībhyām	dhī I., D., Abl., du.	not_russian	not_russian						
+level_03	dhiyoḥ	dhī G., L., du.	not_russian	not_russian						
+level_03	dhiyaḥ	dhī N., A., V., pl.	not_russian	not_russian						
+level_03	dhībhiḥ	dhī I., pl.	not_russian	not_russian						
+level_03	dhībhyaḥ	dhī D., Abl., pl.	not_russian	not_russian						
+level_03	dhīnām, dhiyām	dhī G., pl.	not_russian	not_russian						
+level_03	dhīṣu	dhī L., pl.	not_russian	not_russian						
+level_04	aham	aham N., V., sg.	not_russian	not_russian						
+level_04	mām, mā	aham A., sg.	not_russian	not_russian						
+level_04	mayā	aham I., sg.	not_russian	not_russian						
+level_04	mahyam, me	aham D., sg.	not_russian	not_russian						
+level_04	mat	aham Abl., sg.	not_russian	not_russian						
+level_04	mama, me	aham Gen., sg.	not_russian	not_russian						
+level_04	mayi	aham L., sg.	not_russian	not_russian						
+level_04	āvām	aham N., V., du.	not_russian	not_russian						
+level_04	āvām, nau	aham A., du.	not_russian	not_russian						
+level_04	āvābhyām	aham I., Abl., du.	not_russian	not_russian						
+level_04	āvābhyām, nau	aham D., du.	not_russian	not_russian						
+level_04	āvayoḥ, nau	aham Gen., du.	not_russian	not_russian						
+level_04	āvayoḥ	aham L., du.	not_russian	not_russian						
+level_04	vayam	aham N., V., pl.	not_russian	not_russian						
+level_04	asmān, naḥ	aham A., pl.	not_russian	not_russian						
+level_04	asmābhiḥ	aham I., pl.	not_russian	not_russian						
+level_04	asmabhyam, naḥ	aham D., pl.	not_russian	not_russian						
+level_04	asmat	aham Abl., pl.	not_russian	not_russian						
+level_04	asmākam, naḥ	aham Gen., pl.	not_russian	not_russian						
+level_04	asmāsu	aham L., pl.	not_russian	not_russian						
+level_05	gīḥ	gir N., V., sg.	not_russian	not_russian						
+level_05	giram	gir A., sg.	not_russian	not_russian						
+level_05	girā	gir I., sg.	not_russian	not_russian						
+level_05	gire	gir D., sg.	not_russian	not_russian						
+level_05	giraḥ	gir Abl., Gen., sg.	not_russian	not_russian						
+level_05	giri	gir L., sg.	not_russian	not_russian						
+level_05	girau	gir N., A., V., du.	not_russian	not_russian						
+level_05	gīrbhyām	gir I., D., Abl., du.	not_russian	not_russian						
+level_05	giroḥ	gir G., L., du.	not_russian	not_russian						
+level_05	giraḥ	gir N., A., V., pl.	not_russian	not_russian						
+level_05	gīrbhiḥ	gir I., pl.	not_russian	not_russian						
+level_05	gīrbhyaḥ	gir D., Abl., pl.	not_russian	not_russian						
+level_05	girām	gir G., pl.	not_russian	not_russian						
+level_05	gīrṣu	gir L., pl.	not_russian	not_russian						
