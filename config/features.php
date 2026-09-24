@@ -1748,4 +1748,26 @@ return [
      | Отчёт бэкфилла (только чтение): php artisan money:ledger-backfill-report.
      */
     'money_ledger_core' => (bool) env('MONEY_LEDGER_CORE', false),
+
+    /*
+     | H5445 (P3, E017, D10): «полный возврат отзывает оставшийся доступ;
+     | частичный возврат требует явного распределения по блокам». Включено =
+     | строка возврата (refund_of_payment_id) частичной суммы без
+     | start_block..end_block отвергается при сохранении; полный возврат снимает
+     | access-only siblings и перестаёт давать доступ к урокам/группам,
+     | частичный — только названные блоки. Выключено — прежнее поведение
+     | (возврат доступа не трогает; сверка P3 показывает такие случаи как
+     | исключения impossible_access / refund_without_blocks).
+     */
+    'money_refund_access_rules' => (bool) env('MONEY_REFUND_ACCESS_RULES', false),
+
+    /*
+     | H5445 (P3, E017, D1): ежедневная оперативная сверка по расписанию
+     | (money:reconcile-daily --persist, 04:35). Выключено — плановый запуск
+     | только пишет warning и пингует heartbeat «disabled»; ручной прогон
+     | только чтения (money:reconcile-daily без --persist) работает всегда.
+     | Сверка денег не создаёт и не меняет — пишет только свои таблицы
+     | money_recon_* (прогон, исключения, след разрешения).
+     */
+    'money_daily_reconciliation' => (bool) env('MONEY_DAILY_RECONCILIATION', false),
 ];

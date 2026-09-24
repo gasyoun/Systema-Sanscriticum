@@ -259,7 +259,7 @@ jobs:
       - name: MySQL finance and webhook transaction tests
         run: >-
           php artisan test
-          --filter='TochkaWebhookTest|MutualSettlementTest|FinanceIdempotencyTest|FinanceLockingMySqlTest|LedgerCoreTest|LedgerVerifierFindingsTest|LedgerBackfillReportTest'
+          --filter='TochkaWebhookTest|MutualSettlementTest|FinanceIdempotencyTest|FinanceLockingMySqlTest|LedgerCoreTest|LedgerVerifierFindingsTest|LedgerBackfillReportTest|DailyReconciliationTest|RefundAccessPolicyTest'
 
   changelog-lint:
     name: Changelog — no duplicated bullets
