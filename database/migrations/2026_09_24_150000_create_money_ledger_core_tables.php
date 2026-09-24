@@ -166,6 +166,7 @@ return new class extends Migration
                 ['ledger: only a payout may offset a direct teacher receipt', "NEW.pairs_movement_id IS NOT NULL AND NEW.type <> 'payout'"],
                 ['ledger: offset must mirror the direct teacher receipt', "NEW.pairs_movement_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM money_movements p WHERE p.id = NEW.pairs_movement_id AND p.type = 'direct_teacher_receipt' AND p.teacher_id = NEW.teacher_id AND p.amount_kopecks = -NEW.amount_kopecks)"],
                 ['ledger: chain root must be a root row', 'NEW.root_movement_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM money_movements o WHERE o.id = NEW.root_movement_id AND o.root_movement_id IS NULL)'],
+                ['ledger: movement already reversed', "NEW.type = 'reversal' AND EXISTS (SELECT 1 FROM money_movements r WHERE r.reverses_movement_id = NEW.reverses_movement_id)"],
                 ['ledger: reversal must mirror a non-reversal row of the same chain', "NEW.type = 'reversal' AND NOT EXISTS (SELECT 1 FROM money_movements t WHERE t.id = NEW.reverses_movement_id AND t.type <> 'reversal' AND t.amount_kopecks = -NEW.amount_kopecks AND COALESCE(t.root_movement_id, t.id) = NEW.root_movement_id)"],
                 // Порядок вставки держит промежуточное состояние в пределе возврата:
                 // приток корректируется ДО сторно, отток — ПОСЛЕ.

@@ -237,6 +237,14 @@ final class LedgerService
                 throw new LedgerInvariantViolation('ledger: a reversal is never reversed — post a correction instead');
             }
 
+            $done = $this->reversalOf($m);
+            if ($done !== null) {
+                if ($done->movement_key === $key) {
+                    return $done;
+                }
+                throw new LedgerInvariantViolation('ledger: movement already reversed');
+            }
+
             if ($m->type === MoneyMovement::DIRECT_TEACHER_RECEIPT) {
                 $offset = MoneyMovement::query()->where('pairs_movement_id', $m->id)->first();
                 if ($offset !== null && ! MoneyMovement::query()->where('reverses_movement_id', $offset->id)->exists()) {
