@@ -583,11 +583,12 @@ def selftest():
     q = {}
     out, rows, n_src = lint_file("gl", spec, lem, again, ({"ajara": ["ланиты", "щёки"]}, {}),
                                  out_dir=tmp, queue=q)
-    assert n_src == 3 and [r["gloss_ru"] for r in rows] == ["ланиты"], rows   # flagged_only
+    # flagged_only keeps the rare and the inflected row, drops the measured-clean «туча»
+    assert n_src == 3 and [r["gloss_ru"] for r in rows] == ["ланиты", "щёки"], rows
     assert rows[0]["synonym_proposal"] == "щека", rows      # ours -> a swap is proposed
     assert q[("туча", "S")] == 1 and ("ланита", "S") not in q, q   # unmeasured lemmas only
     qp, qn = write_queue(q, tmp / "queue.tsv")
-    assert qn == 2 and qp.read_text(encoding="utf-8").splitlines()[0] == \
+    assert qn == 1 and qp.read_text(encoding="utf-8").splitlines()[0] == \
         "lemma\tnkrya_pos\tgloss_rows", qp.read_text(encoding="utf-8")
     spec_deck = {**spec, "flag_only": True, "flagged_only": False}
     _o, rows2, _n = lint_file("deck", spec_deck, lem, again, ({"ajara": ["ланиты", "щёки"]}, {}),
