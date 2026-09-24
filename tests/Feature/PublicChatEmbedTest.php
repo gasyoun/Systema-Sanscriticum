@@ -94,5 +94,32 @@ class PublicChatEmbedTest extends TestCase
         $this->get(self::URL.'?page=not%20a%20url')
             ->assertOk()
             ->assertSee('window.SCW_EMBED_PAGE = "";', false);
+
+        // Невалидный UTF-8: @json на нестроке дал бы `= ;` и синтаксическую
+        // ошибку в boot-скрипте (review H5451 P2) — должен отсекаться.
+        $this->get(self::URL.'?page=https%3A%2F%2Fsamskrtam.ru%2F%FF%FE')
+            ->assertOk()
+            ->assertSee('window.SCW_EMBED_PAGE = "";', false);
+
+        // >2048 символов и control-символы — тоже в пустоту.
+        $long = 'https://samskrtam.ru/'.str_repeat('a', 2100);
+        $this->get(self::URL.'?page='.urlencode($long))
+            ->assertOk()
+            ->assertSee('window.SCW_EMBED_PAGE = "";', false);
+    }
+
+    public function test_embed_response_is_not_cacheable(): void
+    {
+        config(['features.support_chat_embed' => true]);
+
+        // Страница несет session-bound CSRF-токен: session-middleware уже
+        // помечает ответ приватным/некэшируемым (no-cache, private) — это
+        // и есть защита от edge-кеша (проверяем инвариант, не конкретную строку).
+        $response = $this->get(self::URL);
+        $cc = (string) $response->headers->get('Cache-Control');
+        $this->assertTrue(
+            str_contains($cc, 'no-store') || str_contains($cc, 'no-cache'),
+            'Ответ эмбеда должен быть некэшируемым, получено: '.$cc
+        );
     }
 }
