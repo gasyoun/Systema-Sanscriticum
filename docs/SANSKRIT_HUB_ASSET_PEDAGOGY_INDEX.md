@@ -1,12 +1,14 @@
 # Sanskrit-HUB — Asset → Pedagogy → NLP Use-Case Index
 
-_Created: 10-07-2026 · Last updated: 12-08-2026_
+_Created: 10-07-2026 · Last updated: 24-09-2026_
 
 **Purpose.** The single map that answers *"we already have asset X — what can a learner or an
 NLP developer actually DO with it on [samskrtam.ru/sanskritHUB](https://samskrtam.ru/)?"* Every
 row takes a **real, existing asset** (grounded in
 [`SanskritLexicography/FEATURES_INDEX.md`](https://github.com/gasyoun/SanskritLexicography/blob/master/FEATURES_INDEX.md):
-44 dictionaries · 21 interfaces · 37 data assets · 14 tools · 4 external stacks) and pins it to
+44 dictionaries · 23 interfaces (17 live) · 47 data assets · 17 tools · 4 external stacks ·
+12 drill sets (P1–P12) · 30 catalogued methods (Q1–Q30) — re-read 24-09-2026 from that file's
+own **At a glance** line, which is the only place this census is maintained) and pins it to
 (a) the **learner rung** it serves, (b) the **NLP capability** it powers, and (c) one or more
 **invented product use-cases** — concrete features to build into the hub.
 
@@ -150,7 +152,8 @@ assets it stands on; sequencing is in the roadmap.
 ---
 
 _Sources: [`FEATURES_INDEX.md`](https://github.com/gasyoun/SanskritLexicography/blob/master/FEATURES_INDEX.md)
-(44 dicts · 21 interfaces · 37 data · 14 tools · 4 external stacks, each verified with a real
-sample row). Positioning locked by MG 10-07-2026._
+(44 dicts · 23 interfaces (17 live) · 47 data · 17 tools · 4 external stacks · 12 drills · 30
+methods as of 24-09-2026, each verified with a real sample row; that file's **At a glance** line
+is the single maintained copy of this census — re-read it rather than trusting this one). Positioning locked by MG 10-07-2026._
 
 _Dr. Mārcis Gasūns_
