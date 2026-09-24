@@ -316,6 +316,30 @@ class ShopController extends Controller
                 : null;
         }
 
+        // H5475 (MG 24-09-2026) — итоги шапки: «ждун» против «уже идут».
+        // Счётчики ждуна — сами строки $items (курсы + уникальные
+        // преподаватели). «Уже идут» — живые видимые live-курсы, чьё
+        // расписание UNDERWAY (CourseCadence::isUnderway: группа началась и
+        // ещё не кончилась) — расписание, а не ручной флаг, источник правды.
+        // Записи («в записи») и будущие наборы сюда не попадают; ссылки —
+        // точные, на карточку каждого идущего курса.
+        $liveCourses = PrivateArchiveEligibility::scopePublic(Course::query())
+            ->where('is_visible', true)
+            ->where('format', 'live')
+            ->whereNull('recording_of_course_id')
+            ->with('teacher:id,name')
+            ->get();
+
+        $cadences = CourseCadence::forMany($liveCourses);
+        $underwayCourses = $liveCourses
+            ->filter(fn (Course $course) => ($cadences[$course->id] ?? null)?->isUnderway() ?? false)
+            ->values();
+
+        $runningCourses = $underwayCourses->map(fn (Course $course) => [
+            'title' => $course->title,
+            'url' => route('shop.course.show', $course->slug),
+        ]);
+
         $page = new LandingPage([
             'title' => 'Список ожидания — набор в новые группы',
             'description' => 'Голосуйте за будущие курсы: наберётся минимум голосов — откроется оплата; нужное число оплат к сроку — группа стартует.',
@@ -343,6 +367,11 @@ class ShopController extends Controller
             // H5134 — отметки моих сердечек: карточка с курсом → «c:{id}`,
             // без карточки курса → «w:{slug}`. Флаг OFF / гость — пусто.
             'favoriteKeys' => CourseFavorite::heartKeysForCurrentViewer(),
+            // H5475 — итоги шапки: сколько строк под вопросом и что УЖЕ идёт.
+            'zhdunCourseCount' => $items->count(),
+            'zhdunTeacherCount' => $items->pluck('teacher_name')->filter()->unique()->count(),
+            'runningCourses' => $runningCourses,
+            'runningTeacherCount' => $underwayCourses->pluck('teacher.name')->filter()->unique()->count(),
         ]);
     }
 

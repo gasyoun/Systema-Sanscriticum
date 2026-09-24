@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Course;
 use App\Models\CourseWaitlistItem;
+use App\Models\Schedule;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -514,5 +515,85 @@ class VitrinaWaitlistPageTest extends TestCase
         $this->assertStringNotContainsString('data-waitlist-pref="zhdun-cab-fixed"', $html);
         $this->assertStringContainsString('data-waitlist-vote="zhdun-cab-fixed"', $html);
         $this->assertStringContainsString('data-waitlist-pref="zhdun-cab-open"', $html);
+    }
+
+    /**
+     * H5475 (MG 24-09-2026): шапка ждуна — итоги «под вопросом» и «уже идут
+     * осенью 2026» с точными ссылками на идущие курсы. «Уже идут» — только
+     * живые live-курсы с расписанием underway (группа началась и не кончилась);
+     * будущий набор и запись («в записи») в итог не попадают.
+     */
+    public function test_zhdun_header_shows_waitlist_totals_and_running_course_links(): void
+    {
+        config(['features.waitlist_voting' => true]);
+
+        // Ждун: 3 строки, 2 уникальных преподавателя (Гасунс назван дважды).
+        foreach ([
+            ['zhdun-head-a', 'Курс А', 'Марцис Гасунс'],
+            ['zhdun-head-b', 'Курс Б', 'Екатерина Костина'],
+            ['zhdun-head-c', 'Курс В', 'Марцис Гасунс'],
+        ] as [$slug, $title, $teacherName]) {
+            CourseWaitlistItem::create([
+                'slug' => $slug,
+                'course_title' => $title,
+                'teacher_name' => $teacherName,
+                'min_payers' => 10,
+                'kind' => 'other',
+                'earliest_start_at' => '2026-10-01',
+            ]);
+        }
+
+        $teacher = Teacher::create(['name' => 'Гасунс Марцис Юрьевич']);
+
+        // Идущий live-курс: занятие прошло + занятие впереди (underway).
+        $running = Course::factory()->live()->create([
+            'title' => 'Синтаксис санскрита',
+            'slug' => 'zhdun-running-course',
+            'teacher_id' => $teacher->id,
+        ]);
+        Schedule::create(['title' => 'Прошло', 'course_id' => $running->id, 'start' => now()->subDay()]);
+        Schedule::create(['title' => 'Впереди', 'course_id' => $running->id, 'start' => now()->addDay()]);
+
+        // Второй идущий курс того же преподавателя.
+        $running2 = Course::factory()->live()->create([
+            'title' => 'Грамматика по Кочергиной гр.99',
+            'slug' => 'zhdun-running-course-2',
+            'teacher_id' => $teacher->id,
+        ]);
+        Schedule::create(['title' => 'Прошло', 'course_id' => $running2->id, 'start' => now()->subDays(2)]);
+        Schedule::create(['title' => 'Впереди', 'course_id' => $running2->id, 'start' => now()->addDays(2)]);
+
+        // Будущий live-набор — занятий ещё не было, в «уже идут» не попадает.
+        $future = Course::factory()->live()->create([
+            'title' => 'Набор будущего',
+            'slug' => 'zhdun-future-course',
+            'teacher_id' => $teacher->id,
+        ]);
+        Schedule::create(['title' => 'Скоро', 'course_id' => $future->id, 'start' => now()->addMonth()]);
+
+        // Запись («в записи») с расписанием — в «уже идут» тоже не попадает.
+        $recorded = Course::factory()->create([
+            'title' => 'Запись курса',
+            'slug' => 'zhdun-recorded-course',
+            'format' => 'recorded',
+            'teacher_id' => $teacher->id,
+        ]);
+        Schedule::create(['title' => 'Прошло', 'course_id' => $recorded->id, 'start' => now()->subDay()]);
+        Schedule::create(['title' => 'Впереди', 'course_id' => $recorded->id, 'start' => now()->addDay()]);
+
+        $this->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee('Под вопросом (ждун)')
+            ->assertSee('Уже идут осенью 2026')
+            // Итоги ждуна: 3 строки, 2 преподавателя.
+            ->assertSee('3 курса · 2 преподавателя')
+            // Итоги «уже идут»: 2 курса у 1 преподавателя.
+            ->assertSee('2 курса · 1 преподаватель')
+            ->assertSee('записи помогают догнать')
+            // Точные ссылки — только на идущие курсы; набор и запись не попадают.
+            ->assertSee(route('shop.course.show', $running->slug), false)
+            ->assertSee(route('shop.course.show', $running2->slug), false)
+            ->assertDontSee(route('shop.course.show', $future->slug), false)
+            ->assertDontSee(route('shop.course.show', $recorded->slug), false);
     }
 }
