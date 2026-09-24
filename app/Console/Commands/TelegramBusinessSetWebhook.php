@@ -74,11 +74,11 @@ final class TelegramBusinessSetWebhook extends Command
         $channel->setWebhook(
             $url,
             $secret,
-            ['business_connection', 'business_message', 'edited_business_message', 'deleted_business_messages'],
+            ['business_connection', 'business_message', 'edited_business_message', 'deleted_business_messages', 'channel_post'],
             TelegramWebhooks::certificateContents(),
         );
 
-        $this->info('✓ Webhook установлен (business_connection + business_message + edited + deleted).');
+        $this->info('✓ Webhook установлен (Business updates + channel_post for Story sources).');
 
         return self::SUCCESS;
     }

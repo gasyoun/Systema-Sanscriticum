@@ -476,6 +476,15 @@ return [
         // ждёт человека (тот же контракт, что у MadelineProto-дренажа).
         'pending_delivery_max_attempts' => (int) env('TELEGRAM_BUSINESS_PENDING_MAX_ATTEMPTS', 3),
         'timeout_seconds' => (int) env('TELEGRAM_BUSINESS_TIMEOUT_SECONDS', 15),
+        // Автопубликация Story: новые видео из обоих редакционных каналов.
+        // Имена @username допустимы до тех пор, пока Bot API присылает их в
+        // channel_post; для production надёжнее указать numeric chat id.
+        'story_sources' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+            'TELEGRAM_BUSINESS_STORY_SOURCES', '@samskrte,@samskrtamru',
+        ))))),
+        'story_active_period' => (int) env('TELEGRAM_BUSINESS_STORY_ACTIVE_PERIOD', 86400),
+        'story_caption' => env('TELEGRAM_BUSINESS_STORY_CAPTION', ''),
+        'story_ffmpeg_binary' => env('TELEGRAM_BUSINESS_STORY_FFMPEG_BINARY', 'ffmpeg'),
     ],
 
     'vk' => [

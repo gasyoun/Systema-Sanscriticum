@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Models\TelegramBusinessConnection;
 use App\Services\TelegramBusiness\BusinessSupportReplyDrainer;
 use App\Services\TelegramBusiness\TelegramBusinessNormalizer;
+use App\Services\TelegramBusiness\TelegramBusinessStoryPublisher;
 use App\Services\TelegramSupport\TelegramSupportSyncService;
 use App\Support\TelegramSendGuard;
 use Illuminate\Bus\Queueable;
@@ -49,6 +50,7 @@ class ProcessTelegramBusinessUpdate implements ShouldQueue
         TelegramBusinessNormalizer $normalizer,
         TelegramSupportSyncService $sync,
         BusinessSupportReplyDrainer $drainer,
+        TelegramBusinessStoryPublisher $storyPublisher,
     ): void {
         if (! (bool) config('features.telegram_business_bot', false)) {
             return;
@@ -65,6 +67,12 @@ class ProcessTelegramBusinessUpdate implements ShouldQueue
 
         if (isset($this->update['business_connection']) && is_array($this->update['business_connection'])) {
             $this->recordConnection($this->update['business_connection']);
+
+            return;
+        }
+
+        if (isset($this->update['channel_post']) && is_array($this->update['channel_post'])) {
+            $storyPublisher->publishFromChannelPost($this->update['channel_post']);
 
             return;
         }
