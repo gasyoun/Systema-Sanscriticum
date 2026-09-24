@@ -34,6 +34,8 @@ The first run found one real defect, fixed in the same PR. When the MariaDB 1020
 3. The full suite ran locally with `php -d memory_limit=2G vendor/bin/phpunit`, rebased on `origin/main` `9c51aa25`. It took 9 min 12 s and had 6 failures, none in money or ledger code:
    1. Three fail identically on a clean `origin/main` checkout of the same Mac: `GrammarLabImportSearchTest::test_entitled_search_json_and_compare_and_bookmark`, `CatalogPrettyUrlsTest::test_teacher_facet_resolves_by_name_and_filters_courses` and `VitrinaWaitlistPageTest::test_teacher_links_use_natural_name_and_short_facet_resolves`.
    2. Three `SplitGroupMathTest` timestamp-parse datasets fail only inside the full run and pass in isolation on both the branch and main. That points to an ordering or timezone leak between tests; the backup code is untouched here.
+4. CI also runs the three ledger classes in the MySQL 8.4 job (`.github/workflows/ci.yml`). That container keeps MySQL's default binlog on, so `CREATE TRIGGER` from a non-SUPER user fails with error 1419; the job now sets `log_bin_trust_function_creators = 1` first. Prod MariaDB runs `log_bin=0` and needs nothing. The job passed on PR #2844.
+5. Deploy (24-09-2026, ~18:58Z): `deploy.sh` moved prod `3ad754bf → 7d807e5b`, smoke 200, cabinet probe OK. A read-only probe right after: migration batch 228 Ran, 9 `money_*` triggers, the three ledger tables empty, `MONEY_LEDGER_CORE` absent from `.env` (flag off), 9452 legacy `payments` rows untouched.
 
 ## 4. Legacy data findings for the backfill (read-only prod probe earlier in this session; counts only)
 
