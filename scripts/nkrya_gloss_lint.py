@@ -359,11 +359,29 @@ def propose_synonym(gloss, pool_glosses, lem, ev, min_cat):
     return best
 
 
-def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None):
-    by_iast, by_slp1 = pool
+def read_source(spec):
+    """Rows of one lint source: a .tsv/.csv seed, or sa_ru_glossary.json (H5401).
+
+    The glossary is a mapping IAST -> {"g": [top-3 RU glosses], "pos", "n", "slp1"};
+    it is flattened to one row per gloss so a single rare gloss is carded on its own.
+    """
     src = REPO / spec["path"]
+    if src.suffix == ".json":
+        with open(src, encoding="utf-8") as f:
+            entries = json.load(f)["entries"]
+        rows = []
+        for iast, e in entries.items():
+            for idx, gloss in enumerate((e.get("g") or [])[:spec.get("top_n", 3)], 1):
+                rows.append({"iast": iast, "slp1": e.get("slp1", ""), "pos": e.get("pos", ""),
+                             "n": e.get("n", ""), "gloss_idx": idx, "gloss_ru": gloss})
+        return rows
     with open(src, encoding="utf-8", newline="") as f:
-        rows = list(csv.DictReader(f, delimiter="," if src.suffix == ".csv" else "\t"))
+        return list(csv.DictReader(f, delimiter="," if src.suffix == ".csv" else "\t"))
+
+
+def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None, queue=None):
+    by_iast, by_slp1 = pool
+    rows = read_source(spec)
     if limit:
         rows = rows[:limit]
     lem.prefer_verb = bool(spec.get("prefer_verb"))
