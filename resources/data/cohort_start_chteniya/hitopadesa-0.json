@@ -157,7 +157,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "пеной",
-      "lemma": "пену"
+      "lemma": "пена"
      }
     },
     {
@@ -213,7 +213,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "голову",
-      "lemma": "голову"
+      "lemma": "голова"
      }
     },
     {
@@ -326,7 +326,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "берегу",
-      "lemma": "берегу"
+      "lemma": "берег"
      }
     },
     {
@@ -631,7 +631,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "услышал",
-      "lemma": "услышав",
+      "lemma": "услышать",
       "root": "услышав"
      }
     }
@@ -757,7 +757,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "глаз",
-      "lemma": "глазами"
+      "lemma": "глаз"
      }
     },
     {
@@ -957,7 +957,7 @@
      "href": "../w/vivekin.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "отличен"
+      "lemma": "отличный"
      }
     },
     {
@@ -1112,7 +1112,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "Услышав",
-      "lemma": "Услышав",
+      "lemma": "услышать",
       "root": "Услышав"
      }
     },
@@ -1246,7 +1246,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "взволнованный",
-      "lemma": "страшится",
+      "lemma": "страшиться",
       "root": "страшится"
      }
     },
@@ -1300,7 +1300,7 @@
      "resolved": false,
      "gloss_ru": {
       "surface": "подумал",
-      "lemma": "подумал",
+      "lemma": "подумать",
       "root": "подумал"
      }
     }
@@ -1365,7 +1365,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "в рожденном",
-      "lemma": "родился",
+      "lemma": "родиться",
       "root": "родился"
      }
     },
@@ -1529,7 +1529,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "самоистязанием",
-      "lemma": "самоистязанием"
+      "lemma": "самоистязание"
      }
     },
     {
@@ -1594,7 +1594,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "умершего",
-      "lemma": "умирает",
+      "lemma": "умирать",
       "root": "умирает"
      }
     },
@@ -1676,7 +1676,7 @@
      "href": "../w/antima.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "последней"
+      "lemma": "последний"
      }
     }
    ]
@@ -1752,7 +1752,7 @@
      "href": "../w/antima.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "последней"
+      "lemma": "последний"
      }
     },
     {
@@ -1868,7 +1868,7 @@
      "href": "../w/gar_42asr_41va.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "выкидыше"
+      "lemma": "выкидыш"
      }
     },
     {
@@ -1952,7 +1952,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "связь",
-      "lemma": "сближении"
+      "lemma": "сближение"
      }
     },
     {
@@ -1980,7 +1980,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "родился",
-      "lemma": "родился",
+      "lemma": "родиться",
       "root": "родился"
      }
     },
@@ -2215,7 +2215,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "знаток",
-      "lemma": "знает",
+      "lemma": "знать",
       "root": "знает"
      }
     },
@@ -2272,7 +2272,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "наделенный",
-      "lemma": "союзником",
+      "lemma": "союзник",
       "root": "союзником"
      }
     },
@@ -2338,7 +2338,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "рожденный",
-      "lemma": "родился",
+      "lemma": "родиться",
       "root": "родился"
      }
     },
@@ -2367,7 +2367,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "в рожденном",
-      "lemma": "родился",
+      "lemma": "родиться",
       "root": "родился"
      }
     },
@@ -2382,7 +2382,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "идет",
-      "lemma": "идут",
+      "lemma": "идти",
       "root": "идут"
      }
     },
@@ -2429,7 +2429,7 @@
      "href": "../w/parivartin.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "неусыпной"
+      "lemma": "неусыпный"
      }
     },
     {
@@ -2457,7 +2457,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "умер",
-      "lemma": "умирает",
+      "lemma": "умирать",
       "root": "умирает"
      }
     },
@@ -2515,7 +2515,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "рождается",
-      "lemma": "родился",
+      "lemma": "родиться",
       "root": "родился"
      }
     }
@@ -2575,7 +2575,7 @@
      "href": "../w/gu_52in.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "элементов"
+      "lemma": "элемент"
      }
     },
     {
@@ -2603,7 +2603,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "счете",
-      "lemma": "счете"
+      "lemma": "счёт"
      }
     },
     {
@@ -2644,7 +2644,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "падает",
-      "lemma": "упал",
+      "lemma": "упасть",
       "root": "упал"
      }
     },
@@ -2814,7 +2814,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "становится",
-      "lemma": "будет",
+      "lemma": "быть",
       "root": "будет"
      }
     }
@@ -3177,7 +3177,7 @@
      "href": "../w/gu_52in.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "элементов"
+      "lemma": "элемент"
      }
     },
     {
@@ -3324,7 +3324,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "убивает",
-      "lemma": "убит",
+      "lemma": "убить",
       "root": "убит"
      }
     },
@@ -3445,7 +3445,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "совершен",
-      "lemma": "сделал",
+      "lemma": "сделать",
       "root": "сделал"
      }
     },
@@ -3551,7 +3551,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "да проявят",
-      "lemma": "будет",
+      "lemma": "быть",
       "root": "будет"
      }
     },
@@ -3566,7 +3566,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "во власти",
-      "lemma": "послушным"
+      "lemma": "послушный"
      }
     },
     {
@@ -3579,7 +3579,7 @@
      "href": "../w/samf_44.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "процветающим",
+      "lemma": "процветающий",
       "root": "врагов"
      }
     },
@@ -3631,7 +3631,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "знаменит",
-      "lemma": "услышав",
+      "lemma": "услышать",
       "root": "услышав"
      }
     },
@@ -3696,7 +3696,7 @@
      "href": "../w/ukti.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "говорится"
+      "lemma": "говориться"
      }
     }
    ]
@@ -3784,7 +3784,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "дает",
-      "lemma": "дает",
+      "lemma": "давать",
       "root": "взяв"
      }
     },
@@ -3850,7 +3850,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сказано",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     }
@@ -3888,7 +3888,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "приход",
-      "lemma": "пришел"
+      "lemma": "прийти"
      }
     },
     {
@@ -4027,7 +4027,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "говорящая",
-      "lemma": "говорящие"
+      "lemma": "говорящий"
      }
     },
     {
@@ -4063,7 +4063,7 @@
      "href": "../w/va_53ya.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "послушным"
+      "lemma": "послушный"
      }
     },
     {
@@ -4239,7 +4239,7 @@
      "href": "../w/_44anya.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "счастлив"
+      "lemma": "счастливый"
      }
     },
     {
@@ -4452,7 +4452,7 @@
      "href": "../w/_53atru.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "врагов"
+      "lemma": "враг"
      }
     },
     {
@@ -4494,7 +4494,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "изменяя",
-      "lemma": "изменяя"
+      "lemma": "изменять"
      }
     }
    ]
@@ -4531,7 +4531,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "красива",
-      "lemma": "прекрасен"
+      "lemma": "прекрасный"
      }
     },
     {
@@ -4545,7 +4545,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "враг",
-      "lemma": "врагов"
+      "lemma": "враг"
      }
     },
     {
@@ -4572,7 +4572,7 @@
      "href": "../w/_53atru.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "врагов"
+      "lemma": "враг"
      }
     },
     {
@@ -4636,7 +4636,7 @@
      "href": "../w/pras_55.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "размножайтесь",
+      "lemma": "размножаться",
       "root": "родила"
      }
     },
@@ -4677,7 +4677,7 @@
      "resolved": false,
      "gloss_ru": {
       "surface": "почитается",
-      "lemma": "почтил",
+      "lemma": "почтить",
       "root": "почтив"
      }
     },
@@ -4742,7 +4742,7 @@
      "href": "../w/vi_53u_44.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "очищается",
+      "lemma": "очищаться",
       "root": "очищается"
      }
     },
@@ -4799,7 +4799,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сделает",
-      "lemma": "сделал",
+      "lemma": "сделать",
       "root": "сделал"
      }
     }
@@ -4823,7 +4823,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "о",
-      "lemma": "оставив",
+      "lemma": "оставить",
       "root": "оставив"
      }
     },
@@ -4838,7 +4838,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "о",
-      "lemma": "оставив",
+      "lemma": "оставить",
       "root": "оставив"
      }
     },
@@ -4881,7 +4881,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "изучена",
-      "lemma": "изучив",
+      "lemma": "изучить",
       "root": "молитвы"
      }
     },
@@ -4895,7 +4895,7 @@
      "href": "../w/gam.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "отправился",
+      "lemma": "отправиться",
       "root": "пришел"
      }
     },
@@ -5016,7 +5016,7 @@
      "href": "../w/go.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "коров"
+      "lemma": "корова"
      }
     },
     {
@@ -5044,7 +5044,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сидишь",
-      "lemma": "усаживается",
+      "lemma": "усаживаться",
       "root": "уселся"
      }
     }
@@ -5167,7 +5167,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "раскинут",
-      "lemma": "сделал",
+      "lemma": "сделать",
       "root": "сделал"
      }
     },
@@ -5392,7 +5392,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "лишенные",
-      "lemma": "оставив",
+      "lemma": "оставить",
       "root": "оставив"
      }
     },
@@ -5421,7 +5421,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сообща",
-      "lemma": "самана"
+      "lemma": "саман"
      }
     }
    ]
@@ -5578,7 +5578,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "есть",
-      "lemma": "знает",
+      "lemma": "знать",
       "root": "знает"
      }
     }
@@ -5654,7 +5654,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "напрасными",
-      "lemma": "тщетными"
+      "lemma": "тщетный"
      }
     }
    ]
@@ -5705,7 +5705,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "называется",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     }
@@ -5907,7 +5907,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "возрождаются",
-      "lemma": "сотворил",
+      "lemma": "сотворить",
       "root": "выпустил"
      }
     },
@@ -5935,7 +5935,7 @@
      "href": "../w/s_54a.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "стоит"
+      "lemma": "стоять"
      }
     },
     {
@@ -6036,7 +6036,7 @@
      "href": "../w/_42_41vin.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "будет"
+      "lemma": "быть"
      }
     },
     {
@@ -6064,7 +6064,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "становятся",
-      "lemma": "будет",
+      "lemma": "быть",
       "root": "будет"
      }
     },
@@ -6116,7 +6116,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "нагим",
-      "lemma": "нагим"
+      "lemma": "нагой"
      }
     },
     {
@@ -6272,7 +6272,7 @@
      "href": "../w/a_42_41vin.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "достигают"
+      "lemma": "достигать"
      }
     },
     {
@@ -6314,7 +6314,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "будет",
-      "lemma": "будет"
+      "lemma": "быть"
      }
     },
     {
@@ -6328,7 +6328,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "будет",
-      "lemma": "будет"
+      "lemma": "быть"
      }
     },
     {
@@ -6448,7 +6448,7 @@
      "href": "../w/_47na.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "губит"
+      "lemma": "губить"
      }
     },
     {
@@ -6475,7 +6475,7 @@
      "href": "../w/agada.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "здоровым"
+      "lemma": "здоровый"
      }
     },
     {
@@ -6517,7 +6517,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "пьют",
-      "lemma": "Защищайте",
+      "lemma": "защищать",
       "root": "Защищайте"
      }
     }
@@ -6569,7 +6569,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "подобно",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     },
@@ -6637,7 +6637,7 @@
      "resolved": false,
      "gloss_ru": {
       "surface": "помышляет",
-      "lemma": "подумал",
+      "lemma": "подумать",
       "root": "подумал"
      }
     }
@@ -6661,7 +6661,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "схвачен",
-      "lemma": "взяв",
+      "lemma": "взять",
       "root": "взяв"
      }
     },
@@ -6732,7 +6732,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "следует",
-      "lemma": "делает",
+      "lemma": "делать",
       "root": "движется"
      }
     }
@@ -6783,7 +6783,7 @@
      "href": "../w/akzama.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "невыполнима"
+      "lemma": "невыполнимый"
      }
     },
     {
@@ -6869,7 +6869,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сказал",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     }
@@ -6964,7 +6964,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "колесницы",
-      "lemma": "колесницу"
+      "lemma": "колесница"
      }
     },
     {
@@ -6992,7 +6992,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "будет",
-      "lemma": "будет",
+      "lemma": "быть",
       "root": "будет"
      }
     }
@@ -7082,7 +7082,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "устанавливается",
-      "lemma": "устанавливается",
+      "lemma": "устанавливаться",
       "root": "устанавливается"
      }
     }
@@ -7171,7 +7171,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сделано",
-      "lemma": "сделал",
+      "lemma": "сделать",
       "root": "сделал"
      }
     },
@@ -7238,7 +7238,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "зовется",
-      "lemma": "рассказал",
+      "lemma": "рассказать",
       "root": "рассказал"
      }
     }
@@ -7304,7 +7304,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "выказывал",
-      "lemma": "сделал",
+      "lemma": "сделать",
       "root": "сделал"
      }
     },
@@ -7378,7 +7378,7 @@
      "resolved": false,
      "gloss_ru": {
       "surface": "подумав",
-      "lemma": "подумав",
+      "lemma": "подумать",
       "root": "подумал"
      }
     },
@@ -7392,7 +7392,7 @@
      "href": "../w/tyaj.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "оставив",
+      "lemma": "оставить",
       "root": "оставив"
      }
     },
@@ -7490,7 +7490,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "достичь",
-      "lemma": "достигает",
+      "lemma": "достигать",
       "root": "достигает"
      }
     },
@@ -7603,7 +7603,7 @@
      "href": "../w/upe.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "придя",
+      "lemma": "прийти",
       "root": "придя"
      }
     },
@@ -7642,7 +7642,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "должна быть даваема",
-      "lemma": "дает",
+      "lemma": "давать",
       "root": "взяв"
      }
     },
@@ -7718,7 +7718,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "убив",
-      "lemma": "убит",
+      "lemma": "убить",
       "root": "убит"
      }
     },
@@ -7733,7 +7733,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "куру",
-      "lemma": "сделал",
+      "lemma": "сделать",
       "root": "сделал"
      }
     },
@@ -7800,7 +7800,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "ради",
-      "lemma": "сделал",
+      "lemma": "сделать",
       "root": "сделал"
      }
     },
@@ -7843,7 +7843,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "устанавливается",
-      "lemma": "устанавливается",
+      "lemma": "устанавливаться",
       "root": "устанавливается"
      }
     },
@@ -7937,7 +7937,7 @@
      "href": "../w/pi_52qa.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "пинда"
+      "lemma": "пинд"
      }
     },
     {
@@ -7965,7 +7965,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "делает",
-      "lemma": "сделал",
+      "lemma": "сделать",
       "root": "сделал"
      }
     },
@@ -8008,7 +8008,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "желает",
-      "lemma": "хочу",
+      "lemma": "хотеть",
       "root": "хочу"
      }
     }
@@ -8060,7 +8060,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сделано",
-      "lemma": "сделал",
+      "lemma": "сделать",
       "root": "сделал"
      }
     },
@@ -8103,7 +8103,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "достигает",
-      "lemma": "достигает",
+      "lemma": "достигать",
       "root": "достигает"
      }
     }
@@ -8137,7 +8137,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "подобно",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     },
@@ -8152,7 +8152,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "пришел",
-      "lemma": "достигнув",
+      "lemma": "достигнуть",
       "root": "достигает"
      }
     },
@@ -8167,7 +8167,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "увидев",
-      "lemma": "увидев",
+      "lemma": "увидеть",
       "root": "увидев"
      }
     },
@@ -8271,7 +8271,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "принимает",
-      "lemma": "взяв",
+      "lemma": "взять",
       "root": "взяв"
      }
     },
@@ -8367,7 +8367,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "будут действенными",
-      "lemma": "устанавливается",
+      "lemma": "устанавливаться",
       "root": "устанавливается"
      }
     },
@@ -8446,7 +8446,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "уснувшего",
-      "lemma": "спит",
+      "lemma": "спать",
       "root": "спит"
      }
     },
@@ -8475,7 +8475,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "входят",
-      "lemma": "вошел",
+      "lemma": "войти",
       "root": "вошел"
      }
     },
@@ -8504,7 +8504,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "олени",
-      "lemma": "зверей"
+      "lemma": "зверь"
      }
     }
    ]
@@ -8555,7 +8555,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сказано",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     }
@@ -8593,7 +8593,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "враг",
-      "lemma": "врагов"
+      "lemma": "враг"
      }
     },
     {
@@ -8707,7 +8707,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сияет",
-      "lemma": "блистал",
+      "lemma": "блистать",
       "root": "блистал"
      }
     },
@@ -8837,7 +8837,7 @@
      "href": "../w/sampad.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "стал",
+      "lemma": "стать",
       "root": "достигает"
      }
     },
@@ -8852,7 +8852,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "обширным",
-      "lemma": "обширным"
+      "lemma": "обширный"
      }
     },
     {
@@ -8917,7 +8917,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "лишенные",
-      "lemma": "оставив",
+      "lemma": "оставить",
       "root": "оставив"
      }
     },
@@ -8946,7 +8946,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сияли",
-      "lemma": "блистал",
+      "lemma": "блистать",
       "root": "блистал"
      }
     },
@@ -9085,7 +9085,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "изучена",
-      "lemma": "изучив",
+      "lemma": "изучить",
       "root": "молитвы"
      }
     },
@@ -9114,7 +9114,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "изучена",
-      "lemma": "изучив",
+      "lemma": "изучить",
       "root": "молитвы"
      }
     },
@@ -9142,7 +9142,7 @@
      "href": "../w/sa_4dni_44i.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "присутствии"
+      "lemma": "присутствие"
      }
     }
    ]
@@ -9179,7 +9179,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сияет",
-      "lemma": "блистал",
+      "lemma": "блистать",
       "root": "блистал"
      }
     },
@@ -9339,7 +9339,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "называют",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     },
@@ -9488,7 +9488,7 @@
      "resolved": false,
      "gloss_ru": {
       "surface": "поразмыслив",
-      "lemma": "подумал",
+      "lemma": "подумать",
       "root": "подумал"
      }
     },
@@ -9542,7 +9542,7 @@
      "gloss": "to make someone do something; to put; schlachten lassen",
      "resolved": false,
      "gloss_ru": {
-      "lemma": "побуждая",
+      "lemma": "побуждать",
       "root": "призвал"
      }
     }
@@ -9580,7 +9580,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сказал",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     },
@@ -9637,7 +9637,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "выслушайте",
-      "lemma": "услышав",
+      "lemma": "услышать",
       "root": "услышав"
      }
     },
@@ -9934,7 +9934,7 @@
      "resolved": false,
      "gloss_ru": {
       "surface": "заставить выполнять",
-      "lemma": "побуждая",
+      "lemma": "побуждать",
       "root": "призвал"
      }
     },
@@ -9949,7 +9949,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "способен",
-      "lemma": "способен"
+      "lemma": "способный"
      }
     },
     {
@@ -10026,7 +10026,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "приобретает",
-      "lemma": "дай",
+      "lemma": "дать",
       "root": "вера"
      }
     },
@@ -10129,7 +10129,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "идет",
-      "lemma": "идут",
+      "lemma": "идти",
       "root": "идут"
      }
     },
@@ -10163,7 +10163,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сказано",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     },
@@ -10201,7 +10201,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "лишается",
-      "lemma": "оставив",
+      "lemma": "оставить",
       "root": "оставив"
      }
     },
@@ -10258,7 +10258,7 @@
      "href": "../w/h_41.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "оставив",
+      "lemma": "оставить",
       "root": "оставив"
      }
     },
@@ -10351,7 +10351,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "идет",
-      "lemma": "идет",
+      "lemma": "идти",
       "root": "идет"
      }
     },
@@ -10365,7 +10365,7 @@
      "href": "../w/vi_53iz.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "превосходит",
+      "lemma": "превосходить",
       "root": "остается"
      }
     },
@@ -10535,7 +10535,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "истину",
-      "lemma": "правду"
+      "lemma": "правда"
      }
     },
     {
@@ -10549,7 +10549,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "знаешь",
-      "lemma": "знаю"
+      "lemma": "знать"
      }
     },
     {
@@ -10591,7 +10591,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сказал",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     },
@@ -10647,7 +10647,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "возникнув",
-      "lemma": "возник",
+      "lemma": "возникнуть",
       "root": "будет"
      }
     },
@@ -10753,7 +10753,7 @@
      "gloss": "to cause to take or seize or lay hold of; to cause to marry; to make acquainted with; to…",
      "resolved": false,
      "gloss_ru": {
-      "lemma": "обучил",
+      "lemma": "обучить",
       "root": "обучил"
      }
     },
@@ -10768,7 +10768,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "можно",
-      "lemma": "способен",
+      "lemma": "способный",
       "root": "способен"
      }
     }
@@ -10839,7 +10839,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сложены",
-      "lemma": "сложенные",
+      "lemma": "сложить",
       "root": "вера"
      }
     },
@@ -10882,7 +10882,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "плодами",
-      "lemma": "плодами"
+      "lemma": "плод"
      }
     },
     {
@@ -10896,7 +10896,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "будет",
-      "lemma": "будет",
+      "lemma": "быть",
       "root": "будет"
      }
     }
@@ -10990,7 +10990,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "подобно",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     },
@@ -11160,7 +11160,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "возникает",
-      "lemma": "возникает",
+      "lemma": "возникать",
       "root": "родился"
      }
     }
@@ -11411,7 +11411,7 @@
      "href": "../w/a_42ij_59a.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "искусен"
+      "lemma": "искусный"
      }
     },
     {
@@ -11425,7 +11425,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сделаю",
-      "lemma": "сделал",
+      "lemma": "сделать",
       "root": "сделал"
      }
     }
@@ -11504,7 +11504,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сказал",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     }
@@ -11527,7 +11527,7 @@
      "href": "../w/k_49wa.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "насекомых"
+      "lemma": "насекомое"
      }
     },
     {
@@ -11555,7 +11555,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "Суманас",
-      "lemma": "цветами"
+      "lemma": "цветок"
      }
     },
     {
@@ -11583,7 +11583,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "поднимается",
-      "lemma": "взошел",
+      "lemma": "взойти",
       "root": "взошел"
      }
     },
@@ -11613,7 +11613,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "голову",
-      "lemma": "голову"
+      "lemma": "голова"
      }
     }
    ]
@@ -11664,7 +11664,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "идет",
-      "lemma": "идут",
+      "lemma": "идти",
       "root": "идут"
      }
     },
@@ -11897,7 +11897,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "лишенный",
-      "lemma": "оставив",
+      "lemma": "оставить",
       "root": "оставив"
      }
     },
@@ -11991,7 +11991,7 @@
      "href": "../w/j_59a.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "знаю"
+      "lemma": "знать"
      }
     },
     {
@@ -12019,7 +12019,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "становятся",
-      "lemma": "будет",
+      "lemma": "быть",
       "root": "будет"
      }
     },
@@ -12061,7 +12061,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "достигнув",
-      "lemma": "достигнув",
+      "lemma": "достигнуть",
       "root": "достигает"
      }
     },
@@ -12076,7 +12076,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "становятся",
-      "lemma": "будет",
+      "lemma": "быть",
       "root": "будет"
      }
     },
@@ -12113,7 +12113,8 @@
      "href": "../w/_41sv_41dya.html",
      "tier": "exact",
      "gloss_ru": {
-      "surface": "Вкусив"
+      "surface": "Вкусив",
+      "lemma": "вкусить"
      }
     },
     {
@@ -12126,7 +12127,7 @@
      "href": "../w/toya.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "воду"
+      "lemma": "вода"
      }
     },
     {
@@ -12181,7 +12182,7 @@
      "resolved": false,
      "gloss_ru": {
       "surface": "достигнув",
-      "lemma": "достигнув",
+      "lemma": "достигнуть",
       "root": "достигнув"
      }
     },
@@ -12195,7 +12196,7 @@
      "href": "../w/_42_55.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "будет",
+      "lemma": "быть",
       "root": "будет"
      }
     },
@@ -12209,7 +12210,7 @@
      "href": "../w/upe.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "придя",
+      "lemma": "прийти",
       "root": "придя"
      }
     }
@@ -12373,7 +12374,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "сказав",
-      "lemma": "сказал",
+      "lemma": "сказать",
       "root": "сказал"
      }
     },
@@ -12465,7 +12466,7 @@
      "gloss": "to stretch out from; to put into; to shoot (a missile); to deliver; to give; to hand over",
      "resolved": false,
      "gloss_ru": {
-      "lemma": "поразил",
+      "lemma": "поразить",
       "root": "поразил"
      }
     }
@@ -12486,7 +12487,7 @@
      "gloss": "to cause to join together; to bring together; to unite; to put to (horses); to yoke; to h…",
      "resolved": false,
      "gloss_ru": {
-      "lemma": "запряг",
+      "lemma": "запрячь",
       "root": "побуждаешь"
      }
     },
@@ -12711,7 +12712,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "дает",
-      "lemma": "дает",
+      "lemma": "давать",
       "root": "взяв"
      }
     },
@@ -12753,7 +12754,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "идет",
-      "lemma": "идут",
+      "lemma": "идти",
       "root": "идут"
      }
     },
@@ -12847,7 +12848,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "достигает",
-      "lemma": "достигает",
+      "lemma": "достигать",
       "root": "достигает"
      }
     },
@@ -13251,7 +13252,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "будет",
-      "lemma": "будет",
+      "lemma": "быть",
       "root": "будет"
      }
     }
@@ -13358,7 +13359,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "зовется",
-      "lemma": "рассказал",
+      "lemma": "рассказать",
       "root": "рассказал"
      }
     }
@@ -13410,7 +13411,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "друзей",
-      "lemma": "друзей"
+      "lemma": "друг"
      }
     },
     {
@@ -13553,7 +13554,7 @@
      "tier": "exact",
      "gloss_ru": {
       "surface": "вдыхай",
-      "lemma": "втягивается",
+      "lemma": "втягиваться",
       "root": "натянув"
      }
     },
@@ -13567,7 +13568,7 @@
      "href": "../w/li_4b.html",
      "tier": "exact",
      "gloss_ru": {
-      "lemma": "чертит",
+      "lemma": "чертить",
       "root": "чертит"
      }
     }

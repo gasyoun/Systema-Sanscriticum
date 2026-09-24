@@ -18,8 +18,8 @@
       "kind": "reading_pack",
       "source_path": "reading/data/hitopadesa-0.json",
       "pin_path": "data/cohort_start_chteniya/hitopadesa-0.json",
-      "sha256": "86cde2bd4bc27b889f11356c39f4747cf004f035b049e59fb8b42f854fc2c9dc",
-      "bytes": 341875,
+      "sha256": "235fd0a8b64a01c6ceae6080c8a41e7513b35cf88a5173a21841c9653b078380",
+      "bytes": 342024,
       "built_source": "2026-07-15",
       "schema": "reading_pack_v1 (sentences[].tokens[] with form/lemma/upos/morph/gloss/slp1; optional gloss_ru)",
       "adapter_note": null,
@@ -125,9 +125,9 @@
       "kind": "lemma_tsv",
       "source_path": "derived from hitopadesa-0 + subhashita-beginner pins",
       "pin_path": "data/cohort_start_chteniya/lemmas_for_srs.tsv",
-      "sha256": "312038b68fe28ee9a5e6216764b6925114d4122d78fd77aed692b45cf75b10f9",
-      "bytes": 92396,
-      "built_source": "2026-08-01",
+      "sha256": "ec8d2b1cd4bcc1447b2a2d5092d1ce94e8a18cce109955b90804c68bfac6e082",
+      "bytes": 92460,
+      "built_source": "2026-09-24",
       "schema": "TSV pack|lemma_slp1|surface|gloss_ru|gloss_en|locus — unique lemma per pack",
       "adapter_note": "Optional SRS import feed for H2106; not a full koloda seed.",
       "gloss_ru_coverage": "445/1286 rows have gloss_ru",
@@ -143,5 +143,6 @@
     "subhashita-beginner is week-5 literature band (or week-5 fallback).",
     "sandhi L1-3 is the beginner drill/curriculum band.",
     "Schema delta on subhashita is intentional prior art (H1279/H1312) — adapter note in pack row."
-  ]
+  ],
+  "gloss_fix": "H5398 (Opus 5, claude-opus-5, 24-09-2026): 107 Russian lemma glosses in hitopadesa-0 were inflected word-forms rather than dictionary forms («сближении» -> «сближение»), flagged by the H5285 NKRYa gloss lint in Systema-Sanscriticum. Fixed in reading/data/hitopadesa-0.json and re-pinned; lemmas_for_srs.tsv re-derived. The sandhi pins and the subhashita pin are untouched — their live sources have moved since the 2026-08-01 freeze and re-freezing that band is a separate decision."
 }
