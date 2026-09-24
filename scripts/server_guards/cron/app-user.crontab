@@ -32,3 +32,8 @@ HOME=/tmp
 # both default OFF — command is a no-op until the flag is flipped).
 @@WATCHDOG_MONEY_SLI_DAILY_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "money:sli-synthetic-pay" money-sli-daily @@WATCHDOG_MONEY_SLI_DAILY_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
 @@WATCHDOG_MONEY_SLI_HOURLY_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "money:sli-hourly-reconcile" money-sli-hourly @@WATCHDOG_MONEY_SLI_HOURLY_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
+
+# H5452: дайджест открытых подсказок куратору 09:00 Europe/Moscow (= 06:00 UTC,
+# сервер UTC). Своя строка — не schedule:run; инертна, пока
+# SUPPORT_HINT_DAILY_DIGEST=false.
+@@WATCHDOG_HINTS_DIGEST_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "support:hints-digest" hints-digest @@WATCHDOG_HINTS_DIGEST_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1

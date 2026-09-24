@@ -257,6 +257,26 @@ return [
         // Ссылка-приглашение живёт столько часов; после истечения следующий
         // возможный запрос порождает новую ссылку (токен перегенерируется).
         'link_token_ttl_hours' => (int) env('TELEGRAM_SUPPORT_LINK_TOKEN_TTL_HOURS', 336),
+        // H5452: гигиена хинт-канала куратора. Фильтр шума ON по умолчанию,
+        // но за конфигом (исходящих студенту он не порождает — риск нулевой).
+        // hint_suppressed_chat_ids — Telegram-системный аккаунт 777000 и любые
+        // сослужебные диалоги, чьи «сообщения» (Group Transferred и т.п.) —
+        // система, пишущая сама себе. hint_suppressed_prefixes — известные
+        // префиксы инфра-алертов, попадающие в личку как текст.
+        'hint_suppressed_chat_ids' => array_values(array_filter(array_map(
+            'intval',
+            explode(',', (string) env('TELEGRAM_SUPPORT_HINT_SUPPRESSED_CHAT_IDS', '777000')),
+        ))),
+        'hint_suppressed_prefixes' => array_values(array_filter(array_map(
+            'trim',
+            explode('|', (string) env(
+                'TELEGRAM_SUPPORT_HINT_SUPPRESSED_PREFIXES',
+                '⚠️ Кабинет:|🚨 Прод:|Group Transferred|Незавершенная попытка входа',
+            )),
+        ))),
+        // H5452: дедуп per-chat — пока хинт не погашен человеческим ответом,
+        // серия сообщений чата обновляет существующий хинт, а не плодит новый.
+        'hint_dedup_enabled' => (bool) env('TELEGRAM_SUPPORT_HINT_DEDUP_ENABLED', true),
         // Auto-heal IPC hang (01.08.2026): healthcheck → recover (kill worker,
         // clear ipc/locks, unlock madeline-session, one sync). Default OFF —
         // flip TELEGRAM_SUPPORT_AUTO_HEAL=true on prod after smoke.

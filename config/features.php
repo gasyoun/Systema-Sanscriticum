@@ -413,6 +413,15 @@ return [
     'support_auto_reply_weekly_report' => (bool) env('SUPPORT_AUTO_REPLY_WEEKLY_REPORT', false),
 
     /*
+     | H5452: ежедневный дайджест открытых подсказок куратору, 09:00
+     | Europe/Moscow: «Ждут ответа: N чатов / M сообщений; старейший — X ч;
+     | 🔥: K». ВЫКЛ по умолчанию — внешний исходящий админам; --dry работает
+     | и при OFF (паттерн H3392). Расписание — отдельная cron-строка
+     | (урок crontab .92: «своя строка = своя судьба»), не schedule:run.
+     */
+    'support_hint_daily_digest' => (bool) env('SUPPORT_HINT_DAILY_DIGEST', false),
+
+    /*
      | H3462 (рулинг MG 24-08-2026): входящий email как канал поддержки.
      | Ящик zabota@samskrte.ru пересылает почту в проводник (n8n на .91, без
      | нового платного вендора), проводник POSTит payload на
