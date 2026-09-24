@@ -136,6 +136,16 @@ return [
     'support_answer_suggester' => (bool) env('SUPPORT_ANSWER_SUGGESTER', false),
 
     /*
+     | Эмбед веб-чата для samskrtam.ru (H5451): публичный GET /chat/embed —
+     | standalone-страница с одним support-chat-widget без лейаута кабинета,
+     | которую магазин встраивает в iframe (кнопка «Спросить» на WP-стороне).
+     | Selfgate: OFF → 404. CSP frame-ancestors ограничен samskrtam.ru и
+     | выставляется ТОЛЬКО на этом ответе. Троттлинг как у chat/message.
+     | Включение: SUPPORT_CHAT_EMBED=true + php artisan config:cache.
+     */
+    'support_chat_embed' => (bool) env('SUPPORT_CHAT_EMBED', false),
+
+    /*
      | Шаблонные черновики FAQ-суггестера ПЕРЕД LLM (H1838, тикет S9). Когда ВКЛ,
      | категория D/E/F с привязанным шаблоном (MessageTemplate.suggester_category)
      | получает черновик из шаблона с подстановкой плейсхолдеров — LLM для неё

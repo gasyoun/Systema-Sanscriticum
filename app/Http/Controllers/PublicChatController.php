@@ -15,6 +15,7 @@ use App\Services\Support\SupportWebchatAutoReply;
 use App\Support\GuestChat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 /**
  * Публичный эндпоинт живого веб-чата поддержки (H536 Phase 3).
@@ -33,6 +34,62 @@ use Illuminate\Http\Request;
  */
 class PublicChatController extends Controller
 {
+    /**
+     * Origin'ы, которым разрешено встраивать /chat/embed в iframe (H5451) —
+     * та же политика, что у эмбедов курса (CourseInterestController) и
+     * расписания (PublicWidgetController): заголовок ставится ТОЛЬКО на этом
+     * ответе, глобального CSP/X-Frame-Options в проекте нет.
+     */
+    private const FRAME_ANCESTORS = "frame-ancestors 'self' https://samskrtam.ru https://www.samskrtam.ru";
+
+    /**
+     * Standalone-страница чата для iframe-эмбеда на samskrtam.ru (H5451).
+     *
+     * Без лейаута кабинета: только support-chat-widget (+ его scoped CSS/JS).
+     * Гостевая сессия/CSRF бутстрапятся web-группой как у витрины. Параметр
+     * `?page=` (товарная/магазинная страница магазина) пробрасывается в виджет:
+     * контекстное приветствие «Вопрос по этому товару…» и телеметрия entry_url
+     * летят с URL магазина, а не с адреса iframe. Самогейтится флагом
+     * features.support_chat_embed (OFF → 404); троттлинг как у chat/message.
+     */
+    public function embed(Request $request): Response
+    {
+        abort_unless((bool) config('features.support_chat_embed'), 404);
+
+        return response()
+            ->view('chat.embed', [
+                'embedPage' => self::sanitizeEmbedPage($request->query('page')),
+            ])
+            ->header('Content-Security-Policy', self::FRAME_ANCESTORS);
+    }
+
+    /**
+     * `?page=` с WP-стороны — читается только клиентским JS виджета, но
+     * все равно чистим: схеме http(s), длина ≤2048 (как в payload.page),
+     * управляющие символы — долой. Пусто/мусор → '' (виджет тогда живет
+     * телеметрией адреса iframe, как и без параметра).
+     */
+    private static function sanitizeEmbedPage(?string $page): string
+    {
+        if ($page === null || $page === '') {
+            return '';
+        }
+
+        $page = preg_replace('/[\x00-\x1F\x7F]+/', '', $page) ?? '';
+        if ($page === '' || mb_strlen($page) > 2048) {
+            return '';
+        }
+
+        $parts = parse_url($page);
+
+        if ($parts === false || empty($parts['scheme']) || empty($parts['host'])
+            || ! in_array(strtolower((string) $parts['scheme']), ['http', 'https'], true)) {
+            return '';
+        }
+
+        return $page;
+    }
+
     public function store(Request $request, SupportConversationManager $conversations, SupportLeadCaptureService $leadCapture, SupportWebchatAutoReply $webchatAutoReply): JsonResponse
     {
         $validated = $request->validate([
