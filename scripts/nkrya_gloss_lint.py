@@ -631,9 +631,13 @@ def main(argv=None):
             report["measure:" + g] = {"status": r["status"], "flags": r["flags"],
                                       "min_band": r["min_cat"], "tokens": r["tokens"]}
         for name, spec in jobs:
-            out, rows = lint_file(name, spec, lem, ev, pool, out_dir=a.out_dir, limit=a.limit)
-            report[name] = summarize(name, rows)
+            out, rows, n_src = lint_file(name, spec, lem, ev, pool, out_dir=a.out_dir,
+                                         limit=a.limit, queue=queue)
+            report[name] = {"source_rows": n_src, **summarize(name, rows)}
             print("%s -> %s" % (name, os.path.relpath(out, REPO)))
+        if queue is not None:
+            qp, qn = write_queue(queue, a.queue_out)
+            report["_band_queue"] = {"file": os.path.relpath(qp, REPO), "unmeasured_lemmas": qn}
     finally:
         ev.save()
     report["_evidence"] = {"cached_keys": len(ev.rows), "live_lookups": ev.live,
