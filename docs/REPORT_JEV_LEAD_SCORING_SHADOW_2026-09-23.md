@@ -1,6 +1,6 @@
 # Jev Noul lead-scoring shadow — NO-GO: the frozen conversion cohort is empty
 
-_Created: 23-09-2026 · Last updated: 23-09-2026_
+_Created: 23-09-2026 · Last updated: 24-09-2026_
 
 _Generated: 2026-09-23 · model `jev-1.13.0` (Noul primitive, purchase probability) · H5280 · zero external API calls made, $0 spent_
 
@@ -35,6 +35,8 @@ outcome today. Revisit when the preconditions in §4 exist.
 | `lead_notes` | 69 | 26 manual/dm texts, **all on `status='new'` leads** (note/new=5, dm/new=21); email rows are outbound autologs | via parent lead | **No — single class: zero texts on converted leads → AUC undefined** |
 | `chat_messages` | 267 | yes (support dialogs) | requires a join to the payments/access surface | **Not attempted — money-contour fence (§3)** |
 | `course_waitlist_items` | 26 | no (course candidates, not person inquiries) | n/a | **No** |
+
+> **Correction 24-09-2026 (paired-verifier round 2, H5280 close).** The two converted-lead counts in the `leads` row are intentionally both shown: `35` = `status='converted'` (GROUP BY) and `37` = `converted_at IS NOT NULL`; the 2-lead delta is status-vs-timestamp drift (conversion timestamp set, status not yet flipped) — the probe did not cross-tabulate those 2 rows, and either reading is textless because the `leads` surface carries no inquiry text. «26 manual/dm texts» counts note ROWS (21 dm + 5 note); only the 19 dm rows are explicitly text-confirmed (`CHAR_LENGTH(body)>30`), so the text-bearing count is 19–24, all on `status='new'` leads. The load-bearing claim — zero inquiry texts on converted leads → AUC undefined — is unaffected.
 
 Raw probe outputs: [`reports/jev-lead-scoring-cohort-probe-2026-09-23.json`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/reports/jev-lead-scoring-cohort-probe-2026-09-23.json).
 
