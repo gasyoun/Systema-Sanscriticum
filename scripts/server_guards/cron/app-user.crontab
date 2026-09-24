@@ -37,3 +37,9 @@ HOME=/tmp
 # сервер UTC). Своя строка — не schedule:run; инертна, пока
 # SUPPORT_HINT_DAILY_DIGEST=false.
 @@WATCHDOG_HINTS_DIGEST_SCHEDULE@@ /usr/local/sbin/systema-watchdog-run.sh "support:hints-digest" hints-digest @@WATCHDOG_HINTS_DIGEST_MAX_SECONDS@@ >> @@APP_DIR@@/storage/logs/watchdog.log 2>&1
+
+# care-digest: напоминание в Отдел заботы (@nastya) каждые 2 дня в 11:00 MSK —
+# ежедневный запуск 08:00 UTC + гейт 46ч внутри скрипта; своя строка = своя судьба.
+# Спасено из живого crontab .92 24-09-2026 (H5452 apply): строка жила только
+# на боксе, первый apply стёр бы её — управляемые строки живут здесь.
+0 8 * * * /usr/bin/php /usr/local/share/systema-care-digest.php >> /var/www/html/storage/logs/care-digest.log 2>&1
