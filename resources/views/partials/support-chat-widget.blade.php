@@ -281,6 +281,21 @@
     // «оставьте почту» важнее контекстного приветствия, когда операторы офлайн.
     function applyContextualGreeting() {
         if (!CONTEXT_GREETING || !intro || OFFLINE) return;
+        // Эмбед samskrtam.ru (H5451): ?page= — товарная/магазинная страница,
+        // переданная контроллером в SCW_EMBED_PAGE. Приветствие каталога по
+        // паттерну H1198; вне эмбеда переменная не задана — ветка спит.
+        if (window.SCW_EMBED_PAGE) {
+            try {
+                var eu = new URL(window.SCW_EMBED_PAGE);
+                var ep = (eu.pathname || '').toLowerCase();
+                var isShop = /(^|\.)samskrtam\.ru$/.test(eu.hostname)
+                    && (ep.indexOf('/product') === 0 || ep.indexOf('/shop') === 0
+                        || ep.indexOf('/product-category') === 0 || ep.indexOf('/tovar') === 0
+                        || ep.indexOf('/catalog') === 0);
+                if (isShop) intro.textContent = 'Здравствуйте! Вопрос по этому товару — наличие, оплата, доставка? Мы рядом.';
+            } catch (e) { /* невалидный page — дефолтное приветствие */ }
+            return;
+        }
         var path = (location.pathname || '').toLowerCase();
         var greeting = null;
         if (path.indexOf('/online/kursy/') === 0 || path.indexOf('/course/') === 0
@@ -365,7 +380,12 @@
     function beacon() {
         if (!PRESENCE || !PRESENCE_URL) return;
         var payload = {};
-        try { if (location && location.href) payload.page = String(location.href).slice(0, 2048); } catch (e) {}
+        // Эмбед (H5451): шлем страницу магазина из SCW_EMBED_PAGE — куратор
+        // видит товар samskrtam.ru, а не адрес iframe. Вне эмбеда не задано.
+        try {
+            var beaconHref = window.SCW_EMBED_PAGE || (location && location.href);
+            if (beaconHref) payload.page = String(beaconHref).slice(0, 2048);
+        } catch (e) {}
         fetch(PRESENCE_URL, {
             method: 'POST',
             headers: {
@@ -456,7 +476,12 @@
         if (emailEl && !emailEl.hidden && emailEl.value.trim() !== '') payload.email = emailEl.value.trim();
         if (phoneEl && !phoneEl.hidden && phoneEl.value.trim() !== '') payload.phone = phoneEl.value.trim();
         // Страница, с которой посетитель пишет — куратор видит контекст (H1196).
-        try { if (location && location.href) payload.page = String(location.href).slice(0, 2048); } catch (e) {}
+        // Эмбед (H5451): SCW_EMBED_PAGE несет URL магазина вместо адреса iframe;
+        // вне эмбеда переменная не задана — поведение прежнее.
+        try {
+            var pageHref = window.SCW_EMBED_PAGE || (location && location.href);
+            if (pageHref) payload.page = String(pageHref).slice(0, 2048);
+        } catch (e) {}
 
         sendBtn.disabled = true;
         fetch(POST_URL, {
