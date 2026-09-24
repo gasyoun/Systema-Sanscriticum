@@ -200,7 +200,51 @@ def main():
         if not found and shown < 10:
             print('  %-20s %-22s %s' % (pack, lemma, status))
             shown += 1
+
+    write_residual_tsv(res, gl, sub, hit, seed)
     return 0
+
+
+RESIDUAL_TSV = os.path.join(HERE, 'resources', 'data', 'nkrya_lint',
+                            'lemmas_gloss_residual.tsv')
+
+
+def write_residual_tsv(res, gl, sub, hit, seed):
+    """The human-gated queue: one row per residual lemma, with its EN gloss.
+
+    This is what a review sheet is cut from — the EN gloss is carried so a human
+    (or a drafting pass whose output a human approves) can see the meaning
+    without opening the pack. `candidate` is filled only where a source WE OWN
+    has a Russian gloss; an empty `candidate` means the row needs a licensed
+    lookup, which is the measured dead end this file records.
+    """
+    fields = ['pack', 'lemma_slp1', 'surface', 'locus', 'status',
+              'candidate', 'candidate_source', 'gloss_en']
+    out = []
+    for r, status in res:
+        key = norm(r['lemma_slp1'])
+        cand, src = '', ''
+        if key in gl:
+            cand, src = gl[key]['g'][0], 'sa_ru_glossary'
+        elif (sub.get(key) or {}).get('lemma'):
+            cand, src = sub[key]['lemma'][0], 'subhashita_pack_lemma'
+        elif (hit.get(key) or {}).get('lemma'):
+            cand, src = hit[key]['lemma'][0], 'hitopadesa_pack_lemma'
+        elif key in seed:
+            cand, src = seed[key][0], 'seeder_deck'
+        out.append({'pack': r['pack'], 'lemma_slp1': r['lemma_slp1'],
+                    'surface': r.get('surface', ''), 'locus': r.get('locus', ''),
+                    'status': status, 'candidate': cand, 'candidate_source': src,
+                    'gloss_en': (r.get('gloss_en') or '').strip()})
+    out.sort(key=lambda d: (d['pack'], d['lemma_slp1']))
+    os.makedirs(os.path.dirname(RESIDUAL_TSV), exist_ok=True)
+    with open(RESIDUAL_TSV, 'w', encoding='utf-8', newline='') as fh:
+        w = csv.DictWriter(fh, fields, delimiter='\t', lineterminator='\n')
+        w.writeheader()
+        w.writerows(out)
+    print('\nwrote %s (%d rows, %d with an in-data candidate)'
+          % (os.path.relpath(RESIDUAL_TSV, HERE).replace('\\', '/'),
+             len(out), sum(1 for d in out if d['candidate'])))
 
 
 if __name__ == '__main__':
