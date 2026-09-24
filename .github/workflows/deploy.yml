@@ -10,6 +10,11 @@ name: Deploy production
 # Прод по расписанию по-прежнему доставляет серверный cron через deploy.sh.
 # Этот SSH-путь — только ручной аварийный/операторский запуск с тем же
 # Environment approval; merge/push сам по себе его не ставит в очередь.
+#
+# api.github.com недоступен (TLS-таймауты, 24-09-2026)? Ждать этот workflow
+# незачем — deploy ему не принадлежит: тот же deploy.sh гоняют серверный
+# cron (≤30 мин) и одна команда вручную. См. docs/deploy.md
+# §«Деплой без GitHub».
 
 on:
   workflow_dispatch: {}
