@@ -83,7 +83,7 @@ $ php artisan students:reinvite-48h --lookback-days=3650 --limit=100
 
 ### Бэкфилл выполнен 24-09-2026 ~09:17 МСК (H5410, по решению MG «делай backfill»)
 
-Разработка не понадобилась: команда `payments:backfill-first-paid-at` (H1645) уже была на проде — источники: самая ранняя paid-запись в `payment_audits`, иначе `created_at` платежа; только `NULL → значение`, идемпотентна. Перед записью снят снимок id всех строк с `first_paid_at IS NULL` (9166 id, `storage/app/backfill_first_paid_at_null_ids_20260924.json` на проде) — откат: `UPDATE payments SET first_paid_at = NULL WHERE id IN (снимок)`.
+Разработка не понадобилась: команда `payments:backfill-first-paid-at` (H1645) уже была на проде — источники: самая ранняя paid-запись в `payment_audits`, иначе `created_at` платежа; только `NULL → значение`, идемпотентна. Перед записью снят снимок id всех строк с `first_paid_at IS NULL` (9166 id, `storage/app/backfill_first_paid_at_null_ids_20260924.json` на проде) — откат: `UPDATE payments SET first_paid_at = NULL WHERE id IN (снимок) AND first_paid_at <= '2026-09-24 09:17:00'` — условие по времени обязательно: 173 строки из снимка остались NULL, и если какую-то из них позже проставит `fireOnPaid` при реальной оплате, откат без этого условия стер бы и ее (замечание верификатора H5410).
 
 | Шаг | n |
 |---|---|
