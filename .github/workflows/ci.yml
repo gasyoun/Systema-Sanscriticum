@@ -246,13 +246,20 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
+      # H5443: the money-ledger migration creates triggers. The CI container keeps
+      # MySQL 8.4's default binlog ON, and a non-SUPER user then needs
+      # log_bin_trust_function_creators (error 1419). Prod MariaDB runs log_bin=0,
+      # so this is a CI-container setting only.
+      - name: MySQL allow trigger creation (binlog on in CI)
+        run: mysql -h 127.0.0.1 -P 3306 -uroot -proot -e "SET GLOBAL log_bin_trust_function_creators = 1;"
+
       - name: MySQL migrate:fresh
         run: php artisan migrate:fresh --force --no-interaction
 
       - name: MySQL finance and webhook transaction tests
         run: >-
           php artisan test
-          --filter='TochkaWebhookTest|MutualSettlementTest|FinanceIdempotencyTest|FinanceLockingMySqlTest'
+          --filter='TochkaWebhookTest|MutualSettlementTest|FinanceIdempotencyTest|FinanceLockingMySqlTest|LedgerCoreTest|LedgerVerifierFindingsTest|LedgerBackfillReportTest'
 
   changelog-lint:
     name: Changelog — no duplicated bullets
