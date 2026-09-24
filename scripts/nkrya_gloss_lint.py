@@ -403,9 +403,8 @@ def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None, queue=None
             key = r.get(spec["sa_key"], "")
             pg = (by_iast if spec["sa_kind"] == "iast" else by_slp1).get(key, [])
             syn = propose_synonym(gloss, pg, lem, ev, res["min_cat"])
-        if spec.get("flagged_only") and res["status"] == "ok" \
-                and not (set(res["flags"]) & ACTIONABLE):
-            continue
+        if spec.get("flagged_only") and not (set(res["flags"]) & ACTIONABLE):
+            continue      # 74k glossary glosses: only the actionable ones are written out
         out_rows.append({**{k: r.get(k, "") for k in spec["ids"]}, "gloss_ru": gloss,
                          "status": res["status"], "flags": ",".join(res["flags"]),
                          "gloss_lemma": res["gloss_lemma"],
