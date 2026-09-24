@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\LessonQaAnswerJob;
+use App\Jobs\ProcessTelegramBusinessUpdate;
 use App\Jobs\SyncUserAvatarJob;
 use App\Models\ChatMessage;
 use App\Models\ScheduleAttendanceNotice;
@@ -50,6 +51,21 @@ class TelegramWebhookController extends Controller
             ? (int) $data['update_id']
             : null;
         if ($updateId !== null && ! TelegramSendGuard::claimUpdate('main', $updateId)) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        // A single Telegram bot has exactly one webhook.  When the student bot
+        // is also connected to Telegram Business, keep the existing student
+        // endpoint and hand off only Business/Story-source updates to its
+        // dedicated queue worker.  Ordinary student messages and callbacks
+        // continue through the legacy flow below.
+        if (isset($data['business_connection'])
+            || isset($data['business_message'])
+            || isset($data['edited_business_message'])
+            || isset($data['deleted_business_messages'])
+            || isset($data['channel_post'])) {
+            ProcessTelegramBusinessUpdate::dispatch($data);
+
             return response()->json(['status' => 'ok']);
         }
 
