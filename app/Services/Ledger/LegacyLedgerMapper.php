@@ -37,6 +37,10 @@ final class LegacyLedgerMapper
 
     public const CAT_NONPOSITIVE = 'nonpositive_receipt';
 
+    public const CAT_NO_STUDENT = 'receipt_without_student';
+
+    public const CAT_ORPHAN_REFUND = 'refund_source_not_a_receipt';
+
     /** @var array<string, int> evidence_key → первый платёж, который его потребил */
     private array $evidenceSeen = [];
 
@@ -57,7 +61,30 @@ final class LegacyLedgerMapper
         $this->evidenceSeen = [];
 
         foreach (Payment::query()->whereIn('status', Payment::PAID_STATUSES)->whereNull('refund_of_payment_id')->orderBy('id')->lazyById(500) as $p) {
-            yield $this->plan($p, $refundsBySource[$p->id] ?? []);
+            $refunds = $refundsBySource[$p->id] ?? [];
+            unset($refundsBySource[$p->id]);
+            yield $this->plan($p, $refunds);
+        }
+
+        // Связанный возврат, чей источник не оплаченный исходный платёж
+        // (не оплачен, сам возврат, удалён): ядро такой возврат не примет.
+        foreach ($refundsBySource as $sourceId => $refunds) {
+            foreach ($refunds as $r) {
+                yield [
+                    'payment_id' => $r->id,
+                    'user_id' => null,
+                    'course_id' => null,
+                    'occurred_at' => Carbon::parse($r->getRawOriginal('created_at') ?? 'now'),
+                    'legacy_kopecks' => Kopecks::fromDecimal((string) $r->getRawOriginal('amount')),
+                    'category' => self::CAT_ORPHAN_REFUND,
+                    'receipt' => null,
+                    'obligations' => [],
+                    'allocations' => [],
+                    'refunds' => [],
+                    'anomalies' => ['linked_refund_source_not_a_paid_receipt'],
+                    'source_payment_id' => $sourceId,
+                ];
+            }
         }
     }
 
@@ -90,6 +117,12 @@ final class LegacyLedgerMapper
         }
         if ($p->tariff === 'salary_payout') {
             $plan['category'] = self::CAT_PAYOUT_P2;
+
+            return $plan;
+        }
+        if ($p->user_id === null) {
+            $plan['category'] = self::CAT_NO_STUDENT;
+            $plan['anomalies'][] = 'receipt_without_student';
 
             return $plan;
         }
