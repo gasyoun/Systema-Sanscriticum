@@ -8,8 +8,19 @@
     @include('partials.tailwind-cdn')
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 font-sans text-[#101010]">
+@php
+    // Бегущие отзывы слева — только если их хватает на три колонки;
+    // иначе прежний вид: одна карточка по центру.
+    $showTestimonials = isset($testimonials) && $testimonials->count() >= 3;
+@endphp
+<body class="bg-gray-50 min-h-screen font-sans text-[#101010] {{ $showTestimonials ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(460px,40%)]' : 'flex items-center justify-center p-4' }}">
 
+    @if ($showTestimonials)
+        @include('auth.partials.testimonials-marquee', ['testimonials' => $testimonials])
+    @endif
+
+    {{-- Без отзывов main «прозрачен» (contents): карточка остаётся flex-ребёнком body, как раньше. --}}
+    <main class="{{ $showTestimonials ? 'min-h-screen flex items-center justify-center p-4 sm:p-8' : 'contents' }}">
     <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden relative">
         {{-- Декоративная линия сверху --}}
         <div class="absolute top-0 left-0 w-full h-1.5 bg-brand"></div>
@@ -125,6 +136,7 @@
             </p>
         </div>
     </div>
+    </main>
 
     @include('partials.csrf-token-refresh')
     <script>

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Testimonial;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use App\Support\LoginThrottle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,7 +27,30 @@ class AuthController extends Controller
                 : redirect()->route('student.dashboard');
         }
 
-        return view('auth.login');
+        return view('auth.login', [
+            'testimonials' => $this->loginTestimonials(),
+        ]);
+    }
+
+    /**
+     * Отзывы для бегущих колонок слева от формы входа: видимые, избранные первыми.
+     * Витрина не должна ронять вход — ошибка БД даёт пустой список
+     * (тогда страница выглядит как раньше: одна карточка по центру).
+     */
+    private function loginTestimonials(): Collection
+    {
+        try {
+            return Testimonial::query()
+                ->where('is_visible', true)
+                ->orderByDesc('is_featured')
+                ->latest('id')
+                ->limit(18)
+                ->get();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return new Collection;
+        }
     }
 
     // Обработать вход
