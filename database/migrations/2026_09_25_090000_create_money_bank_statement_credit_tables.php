@@ -24,6 +24,10 @@ use Illuminate\Support\Facades\Schema;
  * нет идентификатора ученика (1051 из 1052 поступлений — от самого банка), а
  * назначение платежа хранится ТОЛЬКО для машинных строк банка (QR-расчёты и
  * дневные агрегаты эквайринга); у прочих строк остаётся лишь purpose_digest.
+ *
+ * Имена триггеров НЕ начинаются с `money_`: счётчик триггеров ядра P1
+ * (LedgerCoreTest::ledgerTriggerCount) считает по маске `money_%`, и общий
+ * префикс сделал бы его цифру зависимой от чужой миграции.
  */
 return new class extends Migration
 {
@@ -73,12 +77,12 @@ return new class extends Migration
 
         if ($db->getDriverName() === 'sqlite') {
             DB::unprepared(<<<'SQL'
-                CREATE TRIGGER money_bank_statement_credits_no_update
+                CREATE TRIGGER bank_statement_credits_no_update
                 BEFORE UPDATE ON money_bank_statement_credits
                 BEGIN SELECT RAISE(ABORT, 'money_bank_statement_credits is append-only'); END;
             SQL);
             DB::unprepared(<<<'SQL'
-                CREATE TRIGGER money_bank_statement_credits_no_delete
+                CREATE TRIGGER bank_statement_credits_no_delete
                 BEFORE DELETE ON money_bank_statement_credits
                 BEGIN SELECT RAISE(ABORT, 'money_bank_statement_credits is append-only'); END;
             SQL);
@@ -87,13 +91,13 @@ return new class extends Migration
         }
 
         DB::unprepared(<<<'SQL'
-            CREATE TRIGGER money_bank_statement_credits_no_update
+            CREATE TRIGGER bank_statement_credits_no_update
             BEFORE UPDATE ON money_bank_statement_credits
             FOR EACH ROW
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'money_bank_statement_credits is append-only';
         SQL);
         DB::unprepared(<<<'SQL'
-            CREATE TRIGGER money_bank_statement_credits_no_delete
+            CREATE TRIGGER bank_statement_credits_no_delete
             BEFORE DELETE ON money_bank_statement_credits
             FOR EACH ROW
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'money_bank_statement_credits is append-only';
@@ -102,8 +106,8 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::unprepared('DROP TRIGGER IF EXISTS money_bank_statement_credits_no_update');
-        DB::unprepared('DROP TRIGGER IF EXISTS money_bank_statement_credits_no_delete');
+        DB::unprepared('DROP TRIGGER IF EXISTS bank_statement_credits_no_update');
+        DB::unprepared('DROP TRIGGER IF EXISTS bank_statement_credits_no_delete');
         Schema::dropIfExists('money_bank_statement_credits');
         Schema::dropIfExists('money_bank_statements');
     }

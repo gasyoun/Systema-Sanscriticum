@@ -494,14 +494,19 @@ final class EvidenceCollector
         }
 
         $day = $to->copy()->subDay()->toDateString();
+        // whereDate, а не строковое сравнение: колонки date, а Eloquent пишет
+        // их как «Y-m-d 00:00:00» — «2026-09-23 00:00:00» <= «2026-09-23»
+        // ложно, и покрытый день читался бы как непокрытый.
         $covering = DB::table('money_bank_statements')
-            ->where('covers_from', '<=', $day)->where('covers_to', '>=', $day)
+            ->whereDate('covers_from', '<=', $day)->whereDate('covers_to', '>=', $day)
             ->orderBy('id')->get(['id', 'file_hash', 'file_name', 'covers_from', 'covers_to', 'period_source']);
 
         if ($covering->isEmpty()) {
             $known = DB::table('money_bank_statements')->orderBy('covers_from')
                 ->get(['covers_from', 'covers_to'])
                 ->map(fn ($s) => $s->covers_from.'…'.$s->covers_to)->all();
+            // date-колонки читаются как «Y-m-d 00:00:00» — в примечании нужен день.
+            $known = array_map(fn (string $range) => str_replace(' 00:00:00', '', $range), $known);
 
             return [
                 'status' => 'missing',
