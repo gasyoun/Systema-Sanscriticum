@@ -1739,4 +1739,13 @@ return [
      | php artisan money:p0-wave-report (только чтение).
      */
     'payment_fix_wave1' => (bool) env('PAYMENT_FIX_WAVE1', false),
+
+    /*
+     | H5443 (P1, E017): денежное ядро — неизменяемый журнал движений,
+     | распределения и обязательства (таблицы money_*). Выключено = ни одной
+     | записи вне теневого прогона (LedgerService::shadow, всегда откат);
+     | ни один экран на ядро не переключён — чтение остаётся легаси до P4.
+     | Отчёт бэкфилла (только чтение): php artisan money:ledger-backfill-report.
+     */
+    'money_ledger_core' => (bool) env('MONEY_LEDGER_CORE', false),
 ];
