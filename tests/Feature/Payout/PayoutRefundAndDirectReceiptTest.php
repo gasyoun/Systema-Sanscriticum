@@ -162,13 +162,9 @@ class PayoutRefundAndDirectReceiptTest extends TestCase
 
     public function test_a_direct_receipt_is_offset_against_the_payout_once(): void
     {
-        $receipt = $this->ledger->directTeacherReceipt(
-            'direct:1',
-            50_000,
-            $this->student->id,
-            $this->teacher->id,
-            now(),
-            ['evidence_key' => 'photo:receipt:1', 'source_currency' => 'RUB', 'course_id' => $this->course->id],
+        [$receipt] = $this->ledger->directTeacherReceipt(
+            'direct:1', 50_000, $this->student->id, $this->course->id, $this->teacher->id,
+            'RUB', 50_000, 'photo:receipt:1', now(),
         );
 
         $package = $this->package();
@@ -191,13 +187,9 @@ class PayoutRefundAndDirectReceiptTest extends TestCase
 
     public function test_an_offset_cannot_exceed_what_the_teacher_actually_received(): void
     {
-        $receipt = $this->ledger->directTeacherReceipt(
-            'direct:2',
-            50_000,
-            $this->student->id,
-            $this->teacher->id,
-            now(),
-            ['evidence_key' => 'photo:receipt:2', 'source_currency' => 'RUB', 'course_id' => $this->course->id],
+        [$receipt] = $this->ledger->directTeacherReceipt(
+            'direct:2', 50_000, $this->student->id, $this->course->id, $this->teacher->id,
+            'RUB', 50_000, 'photo:receipt:2', now(),
         );
 
         $package = $this->package();
