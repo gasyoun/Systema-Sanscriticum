@@ -42,6 +42,50 @@
                 голосов — откроется оплата; нужное число оплат к сроку — группа
                 стартует.
             </p>
+
+            {{-- H5475 (MG 24-09-2026): итоги шапки — «ждун» против «уже идут»,
+                 точные ссылки на идущие курсы и разница двух режимов. --}}
+            @php $runningCount = $runningCourses->count(); @endphp
+            <div class="mt-8 max-w-3xl mx-auto text-left rounded-2xl bg-[#111622] border border-[#1F2636] p-5 md:p-6">
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    Два режима: <span class="font-bold text-slate-200">ждун</span> — будущая
+                    группа, которой ещё нет, её старт зависит от голосов и оплат;
+                    <span class="font-bold text-slate-200">уже идут</span> — настоящие группы,
+                    занятия идут по расписанию прямо сейчас.
+                </p>
+                <div class="grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Под вопросом (ждун)</p>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            {{ $zhdunCourseCount }} {{ \App\Support\Plural::ru($zhdunCourseCount, 'курс', 'курса', 'курсов') }} · {{ $zhdunTeacherCount }} {{ \App\Support\Plural::ru($zhdunTeacherCount, 'преподаватель', 'преподавателя', 'преподавателей') }} — будущие группы, которых ещё нет.
+                        </p>
+                        <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                            Дата «не раньше» сдвинется, пока не соберётся кворум: нужное число голосов открывает оплату, нужное число оплат к сроку запускает группу.
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-black uppercase tracking-widest text-emerald-400 mb-2">Уже идут осенью 2026</p>
+                        @if($runningCount === 0)
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                Сейчас по расписанию ничего не идёт — голосуйте за будущие группы ниже.
+                            </p>
+                        @else
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                {{ $runningCount }} {{ \App\Support\Plural::ru($runningCount, 'курс', 'курса', 'курсов') }} · {{ $runningTeacherCount }} {{ \App\Support\Plural::ru($runningTeacherCount, 'преподаватель', 'преподавателя', 'преподавателей') }} — реальные группы, занятия идут по расписанию:
+                            </p>
+                            <p class="text-sm mt-2 leading-relaxed flex flex-wrap gap-x-4 gap-y-1">
+                                @foreach($runningCourses as $running)
+                                    <a href="{{ $running['url'] }}"
+                                       class="text-[#38BDF8] hover:text-[#7DD3FC] transition-colors">{{ $running['title'] }}</a>
+                                @endforeach
+                            </p>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                                Присоединиться можно и позже — записи помогают догнать.
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </header>
 
         @if($sections->isEmpty())
