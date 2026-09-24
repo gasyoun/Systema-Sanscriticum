@@ -83,6 +83,8 @@ class Payment extends Model
         'payer_note',
         // Structured claim payload (PayPal / company invoice) — see claim_meta JSON.
         'claim_meta',
+        // H5442: стабильный ключ повтора PayPal-заявки (unique, пишется при payment_fix_wave1).
+        'claim_replay_key',
         // Дата платежа задаётся вручную при создании из админки.
         'created_at',
     ];
@@ -1541,7 +1543,10 @@ class Payment extends Model
                 'Оплата не применена: привяжите группу в админке курса и повторите.';
             Log::error($msg);
 
-            if (config('features.grant_access_fail_closed')) {
+            // H5442 (P0 п.4): fail-closed входит в целую волну исправлений —
+            // включение payment_fix_wave1 включает и его (D5: без частичной
+            // волны). Отдельный флаг сохранён для обратной совместимости.
+            if (config('features.grant_access_fail_closed') || config('features.payment_fix_wave1')) {
                 throw new \RuntimeException($msg);
             }
 
