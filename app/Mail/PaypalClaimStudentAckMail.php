@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Http\Controllers\PaypalClaimController;
 use App\Models\Payment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -50,6 +51,9 @@ class PaypalClaimStudentAckMail extends Mailable implements ShouldQueue
                 'claimedAmount' => $this->payment->foreignAmountLabel() ?: null,
                 // Ruling 22-08-2026: своим — доступ сразу, гостям — ручная сверка.
                 'trusted' => $this->payment->isAutoTrustedPaypal(),
+                // H5442 (D4): недоплата в пределах 5% засчитана — ученик
+                // узнаёт о разнице. Переплата (D20) долгом не сообщается.
+                'underpaymentNotice' => $this->underpaymentNotice(),
             ],
         );
     }
@@ -61,6 +65,16 @@ class PaypalClaimStudentAckMail extends Mailable implements ShouldQueue
      * письме студенту эмодзи запрещены контрактом голоса). Null — объем из
      * платежа не восстановить: строка тарифа просто не выводится.
      */
+    private function underpaymentNotice(): ?string
+    {
+        $check = $this->payment->claimMeta('amount_check');
+        if (! $this->payment->isAutoTrustedPaypal() || ! is_array($check) || empty($check['notify_underpayment'])) {
+            return null;
+        }
+
+        return PaypalClaimController::underpaymentNotice($check);
+    }
+
     private function tariffScope(): ?string
     {
         $payment = $this->payment;

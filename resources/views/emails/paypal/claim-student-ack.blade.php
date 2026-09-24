@@ -33,6 +33,9 @@
         </table>
 
         <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 20px; margin: 25px 0; border-radius: 0 4px 4px 0;">
+            @if (! empty($underpaymentNotice))
+            <p style="margin: 0 0 12px; font-size: 16px;"><strong>{{ $underpaymentNotice }}</strong></p>
+            @endif
             @if ($trusted)
             <p style="margin: 0 0 12px; font-size: 16px;">
                 Вы наш ученик, поэтому доступ к курсу открыт сразу — без ожидания
