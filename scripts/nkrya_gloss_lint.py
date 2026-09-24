@@ -63,7 +63,24 @@ PRESETS = {
     "lemmas": {"path": "resources/data/cohort_start_chteniya/lemmas_for_srs.tsv",
                "gloss": "gloss_ru", "ids": ["pack", "lemma_slp1", "surface", "locus"],
                "sa_key": "lemma_slp1", "sa_kind": "slp1"},
+    # H5401: the corpus glossary is ours -> rare glosses propose swaps normally; 26k entries
+    # x top-3 glosses, so only actionable rows are written (flagged_only).
+    "glossary": {"path": "resources/data/sa_ru_glossary.json", "gloss": "gloss_ru",
+                 "ids": ["iast", "slp1", "pos", "n", "gloss_idx"], "sa_key": "iast",
+                 "sa_kind": "iast", "top_n": 3, "flagged_only": True},
 }
+# H5401: the Memrise teacher decks are flag-only (grill 23-09-2026 Q3) — the teacher's
+# wording stays, a modern hint only after a vote. One preset per deck id.
+MEMRISE_DECKS = ["6502608", "6508023", "6517849", "6522419", "6679375"]
+for _d in MEMRISE_DECKS:
+    PRESETS["memrise_%s" % _d] = {
+        "glob": "database/seeders/data/memrise_%s/level_*.csv" % _d, "gloss": "col_b",
+        "ids": ["level", "col_a"], "sa_key": "col_a", "sa_kind": "iast", "flag_only": True}
+
+# flags that make a row worth writing out / carding; `phrase`, `name` and `unknown`
+# (nothing measured yet) are context, not a defect.
+ACTIONABLE = {"inflected", "inflected_ambiguous", "rare", "soft_rare", "c19_only",
+              "not_russian"}
 
 # pymorphy3 POS -> NKRYa word-portrait POS
 POS_MAP = {"NOUN": "S", "ADJF": "A", "ADJS": "A", "COMP": "A", "VERB": "V", "INFN": "V",
