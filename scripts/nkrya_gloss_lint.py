@@ -382,6 +382,13 @@ def read_source(spec):
     The glossary is a mapping IAST -> {"g": [top-3 RU glosses], "pos", "n", "slp1"};
     it is flattened to one row per gloss so a single rare gloss is carded on its own.
     """
+    if spec.get("glob"):          # a Memrise deck = one CSV per level, linted as one source
+        rows = []
+        for p in sorted(REPO.glob(spec["glob"])):
+            with open(p, encoding="utf-8", newline="") as f:
+                for r in csv.DictReader(f):
+                    rows.append({**r, "level": p.stem})
+        return rows
     src = REPO / spec["path"]
     if src.suffix == ".json":
         with open(src, encoding="utf-8") as f:
