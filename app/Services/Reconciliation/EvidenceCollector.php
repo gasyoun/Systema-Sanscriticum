@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services\Reconciliation;
 
+use App\Models\MoneyBankStatementCredit;
 use App\Models\Payment;
 use App\Services\BlockAccessMaterializer;
 use App\Services\Ledger\LedgerProjection;
 use App\Services\Ledger\LedgerService;
 use App\Support\Kopecks;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -78,9 +80,9 @@ final class EvidenceCollector
             $sources[self::CH_WEBHOOK] = ['status' => 'missing', 'note' => 'payment_webhook_events table absent'];
         }
 
-        // 3. Банковская выписка зачислений (переводы, SEPA). Импорта зачислений
-        //    в системе нет (парсеры выписок H4200 — только расходы): источник
-        //    отсутствует, прогон — incomplete. Не ноль.
+        // 3. Банковская выписка зачислений (H5480): present только если
+        //    импортированная выписка покрывает день целиком; иначе громко
+        //    missing и прогон incomplete. Не ноль.
         $sources['bank_statement'] = $this->bankStatementSource($from, $to);
 
         // 4. Ядро P1.
@@ -476,18 +478,128 @@ final class EvidenceCollector
         return $rows;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * H5480 (P3b): выписка зачислений банка. Источник `present` только если
+     * импортированная выписка покрывает операционный день ЦЕЛИКОМ; иначе —
+     * громко missing (никогда ноль). Построчной привязки нет структурно
+     * (H4645: в выписке счёта нет идентификатора ученика), поэтому источник
+     * несёт ДНЕВНЫЕ АГРЕГАТЫ и ожидание по оплатам с допуском на лаг расчёта.
+     *
+     * @return array<string, mixed>
+     */
     private function bankStatementSource(?CarbonInterface $from, CarbonInterface $to): array
     {
-        $dir = (string) config('money_recon.bank_statement_dir', '');
-        if ($dir === '' || ! is_dir($dir)) {
-            return ['status' => 'missing', 'note' => 'no bank credit-statement import exists (H4200 parsers read debits only); transfers/SEPA cannot be matched against the bank'];
+        if (! Schema::hasTable('money_bank_statement_credits')) {
+            return ['status' => 'missing', 'note' => 'bank credit-statement tables absent (H5480 migration not run)'];
         }
-        $files = glob(rtrim($dir, '/').'/*.csv') ?: [];
 
-        return $files === []
-            ? ['status' => 'missing', 'note' => "no statement files in {$dir}"]
-            : ['status' => 'missing', 'note' => count($files).' statement file(s) present but no credit parser is wired yet'];
+        $day = $to->copy()->subDay()->toDateString();
+        $covering = DB::table('money_bank_statements')
+            ->where('covers_from', '<=', $day)->where('covers_to', '>=', $day)
+            ->orderBy('id')->get(['id', 'file_hash', 'file_name', 'covers_from', 'covers_to', 'period_source']);
+
+        if ($covering->isEmpty()) {
+            $known = DB::table('money_bank_statements')->orderBy('covers_from')
+                ->get(['covers_from', 'covers_to'])
+                ->map(fn ($s) => $s->covers_from.'…'.$s->covers_to)->all();
+
+            return [
+                'status' => 'missing',
+                'note' => "no imported bank statement covers {$day}"
+                    .($known === [] ? ' (none imported — run money:import-bank-credits)' : ' (covered: '.implode(', ', $known).')'),
+                'business_date' => $day,
+            ];
+        }
+
+        $credits = DB::table('money_bank_statement_credits')
+            ->whereDate('value_date', $day)->orderBy('id')
+            ->get(['row_hash', 'amount_kopecks', 'kind']);
+
+        $byKind = [];
+        foreach ($credits as $c) {
+            $byKind[$c->kind]['rows'] = ($byKind[$c->kind]['rows'] ?? 0) + 1;
+            $byKind[$c->kind]['kopecks'] = ($byKind[$c->kind]['kopecks'] ?? 0) + (int) $c->amount_kopecks;
+        }
+        ksort($byKind);
+
+        $lag = max(0, (int) config('money_recon.settlement_lag_days', 1));
+        $expected = $this->acquiringExpectation($day, $lag);
+        $creditedKopecks = (int) $credits->sum('amount_kopecks');
+        $settlementKopecks = ($byKind[MoneyBankStatementCredit::KIND_QR]['kopecks'] ?? 0)
+            + ($byKind[MoneyBankStatementCredit::KIND_CARD_AGGREGATE]['kopecks'] ?? 0);
+        $feeBps = max(0, (int) config('money_recon.acquiring_fee_max_bps', 300));
+        $tolerance = max(0, (int) config('money_recon.aggregate_tolerance_kopecks', 100));
+
+        return [
+            'status' => 'present',
+            'business_date' => $day,
+            'statements' => $covering->map(fn ($s) => [
+                'file_hash' => $s->file_hash, 'file_name' => $s->file_name,
+                'covers' => $s->covers_from.'…'.$s->covers_to, 'period_source' => $s->period_source,
+            ])->all(),
+            'rows' => $credits->count(),
+            'kopecks' => $creditedKopecks,
+            'by_kind' => $byKind,
+            'unknown_purpose_hashes' => $credits->where('kind', MoneyBankStatementCredit::KIND_OTHER)
+                ->pluck('row_hash')->values()->all(),
+            'unknown_purpose_kopecks' => (int) $credits->where('kind', MoneyBankStatementCredit::KIND_OTHER)->sum('amount_kopecks'),
+            // Контроль дня: расчёты банка (QR + агрегат эквайринга) против
+            // оплат канала bank_acquiring за окно лага, за вычетом комиссии.
+            'control' => [
+                'settlement_kopecks' => $settlementKopecks,
+                'expected_kopecks' => $expected['kopecks'],
+                'expected_payments' => $expected['payments'],
+                'lag_days' => $lag,
+                'window' => $expected['window'],
+                'fee_max_bps' => $feeBps,
+                'tolerance_kopecks' => $tolerance,
+                'floor_kopecks' => intdiv($expected['kopecks'] * (10000 - $feeBps), 10000) - $tolerance,
+                'ceiling_kopecks' => $expected['kopecks'] + $tolerance,
+                'settlement_hashes' => $credits->whereIn('kind', MoneyBankStatementCredit::MACHINE_KINDS)
+                    ->pluck('row_hash')->values()->all(),
+            ],
+        ];
+    }
+
+    /**
+     * Оплаты канала bank_acquiring, которые банк мог рассчитать на день $day:
+     * [$day - lag, $day]. Допуск на лаг настраивается (T+1 по умолчанию).
+     *
+     * @return array{kopecks: int, payments: int, window: string}
+     */
+    private function acquiringExpectation(string $day, int $lag): array
+    {
+        $tz = (string) config('app.timezone');
+        $end = CarbonImmutable::parse($day, $tz)->addDay();
+        $start = CarbonImmutable::parse($day, $tz)->subDays($lag);
+        $dateExpr = 'COALESCE(first_paid_at, created_at)';
+
+        $kopecks = 0;
+        $count = 0;
+        Payment::query()
+            ->whereIn('status', Payment::PAID_STATUSES)
+            ->whereNull('refund_of_payment_id')
+            ->whereNotIn('tariff', ['Расход', 'salary_payout'])
+            ->where(function ($w): void {
+                $w->whereNotIn('provider', [
+                    Payment::PROVIDER_PAYPAL, Payment::PROVIDER_PAYPAL_SUBSCRIPTION,
+                    Payment::PROVIDER_INVOICE, Payment::PROVIDER_BANK_SEPA, Payment::PROVIDER_TEACHER_TRANSFER,
+                ])->orWhereNull('provider');
+            })
+            ->where(fn ($w) => $w->where('received_account', '!=', Payment::RECEIVED_TEACHER)->orWhereNull('received_account'))
+            ->whereRaw("{$dateExpr} < ?", [$end->toDateTimeString()])
+            ->whereRaw("{$dateExpr} >= ?", [$start->toDateTimeString()])
+            ->orderBy('id')
+            ->each(function (Payment $p) use (&$kopecks, &$count): void {
+                $kop = Kopecks::fromDecimal((string) $p->amount);
+                if ($kop === 0) {
+                    return;
+                }
+                $kopecks += $kop;
+                $count++;
+            });
+
+        return ['kopecks' => $kopecks, 'payments' => $count, 'window' => $start->toDateString().'…'.$day];
     }
 
     /** @return array<string, mixed> */
