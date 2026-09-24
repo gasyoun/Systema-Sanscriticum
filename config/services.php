@@ -464,6 +464,10 @@ return [
     'telegram_business' => [
         'token' => env('TELEGRAM_BUSINESS_BOT_TOKEN', ''),
         'secret' => env('TELEGRAM_BUSINESS_WEBHOOK_SECRET', ''),
+        // Set when this is the same bot as the student cabinet bot. Telegram
+        // permits one webhook per bot, so Business events then share the
+        // existing /api/telegram/webhook endpoint and its secret.
+        'shared_student_webhook' => (bool) env('TELEGRAM_BUSINESS_SHARED_STUDENT_WEBHOOK', false),
         // Имя аккаунта поддержки, под которым живёт полоса в support-таблицах.
         // Отдельное имя — чтобы ответы Business никогда не смешались с личкой
         // userbot-аккаунта rusamskrtam в аналитике и в дренаже ответов.

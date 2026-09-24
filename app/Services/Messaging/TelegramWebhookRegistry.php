@@ -53,9 +53,10 @@ class TelegramWebhookRegistry
             token: $token,
             secret: $secret,
             url: TelegramWebhooks::url('/api/telegram/webhook'),
-            // Контроллер разбирает message и callback_query (кнопка
-            // «Разблокировать»), больше ничего — сужаем набор осознанно.
-            allowedUpdates: ['message', 'callback_query'],
+            // This same bot can be connected to Telegram Business.  These
+            // additional update types are routed away from the student flow by
+            // TelegramWebhookController before it handles messages/callbacks.
+            allowedUpdates: ['message', 'callback_query', 'business_connection', 'business_message', 'edited_business_message', 'deleted_business_messages', 'channel_post'],
             problem: $this->problemFor($token, $secret, 'STUDENT_TELEGRAM_BOT_TOKEN/TELEGRAM_BOT_TOKEN', 'TELEGRAM_BOT_WEBHOOK_SECRET'),
         );
     }
