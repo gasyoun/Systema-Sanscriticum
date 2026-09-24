@@ -3,6 +3,7 @@ _Created: 24-09-2026 · Last updated: 24-09-2026_
 # Денежное ядро P1 — контракт движений, распределений и обязательств
 
 Исполнение: [H5443 (Opus 5) — append-only money ledger core](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5443-Opus_Systema-Sanscriticum_money-p1-append-only-ledger-core_24.09.26.md), Opus 5.5 (`claude-opus-5-5`).
+Доказательства (MariaDB 11.8.6, гонки, тесты): [EVIDENCE_MONEY_LEDGER_CORE_P1_H5443_24-09-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/EVIDENCE_MONEY_LEDGER_CORE_P1_H5443_24-09-2026.md).
 Решения-источники: [DECISIONS_MONEY_LEDGER_AND_RECONCILIATION_2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/DECISIONS_MONEY_LEDGER_AND_RECONCILIATION_2026.md) — D2, D6, D7, D9, D10, D11, D12, D16.
 
 ## Что это и чего это НЕ делает
@@ -37,7 +38,7 @@ _Created: 24-09-2026 · Last updated: 24-09-2026_
 9. **Признание (D6).** Блок — ровно 4 урока одного курса, пробное — 1 урок. Выручка признаётся только по `delivered_at`. Депозит и долг не признаются никогда и не бывают «проведены».
 10. **Прямые деньги преподавателю (D16).** Два связанных факта: `direct_teacher_receipt` (счёт `teacher_personal`, преподаватель, валюта, доказательство обязательны) и зеркальная выплата-погашение `pairs_movement_id`. Сторно поступления сторнирует и погашение.
 11. **Идемпотентность.** Каждая запись несёт ключ (`movement_key`, `allocation_key`, `obligation_key`). Повтор с тем же содержимым возвращает существующую строку; с другим — `LedgerReplayConflict`.
-12. **Конкурентность.** Источник возврата, движение и обязательство блокируются `lockForUpdate`, суммы читаются блокирующим чтением — в REPEATABLE READ MariaDB два параллельных возврата не могут вместе пробить предел.
+12. **Конкурентность.** Источник возврата, движение и обязательство блокируются `lockForUpdate`, суммы читаются блокирующим чтением — в REPEATABLE READ MariaDB два параллельных возврата не могут вместе пробить предел. Проигравший в гонке на MariaDB 11.8 получает 1020/deadlock без записи; верхнеуровневый вызов сервис повторяет до 3 раз (`DB::transaction($fn, 3)`), вложенный — отдаёт `DeadlockException` вызывающему.
 
 ## Совместимые проекции (только чтение)
 
