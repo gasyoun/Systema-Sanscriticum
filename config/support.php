@@ -247,6 +247,31 @@ return [
     ],
 
     /*
+     | H5450: параметры вебчат-автоответа samskrte.ru
+     | (features.support_webchat_auto_ack / features.support_webchat_live_faq).
+     */
+    'webchat_auto_reply' => [
+        /*
+         | Окно ack'а, часы: одно «приняли, куратор ответит» на серию. Любое
+         | исходящее (куратор или бот) в треде внутри окна снимает ack —
+         | свежий ответ человека важнее шаблона (паттерн cooldown-инварианта
+         | ack'а H3380, recentOutgoingInChat).
+         */
+        'ack_cooldown_hours' => (int) env('SUPPORT_WEBCHAT_ACK_COOLDOWN_HOURS', 6),
+
+        /*
+         | Текст ack'а. {faq_url} подставляется из ключа ниже.
+         */
+        'ack_text' => env('SUPPORT_WEBCHAT_ACK_TEXT', 'Намасте! Приняли — куратор ответит. Пока можете посмотреть наш FAQ: {faq_url}'),
+
+        /*
+         | Ссылка на FAQ в ack'е. По умолчанию — раздел «Домашние задания»
+         | (route faq.dz): самый частый вопрос посетителей кабинета.
+         */
+        'faq_url' => env('SUPPORT_WEBCHAT_FAQ_URL', '/faq/dz'),
+    ],
+
+    /*
      | H4404 (рулинг MG 08-09-2026 «LLM-черновики»): параметры LLM-ветки
      | автоответа в личке саппорта (features.support_dm_llm_drafts).
      */

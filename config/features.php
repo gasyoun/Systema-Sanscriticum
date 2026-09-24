@@ -331,6 +331,26 @@ return [
     'support_auto_ack' => (bool) env('SUPPORT_AUTO_ACK', false),
 
     /*
+     | H5450: мгновенный ack вебчата samskrte.ru. Посетитель виджета получает
+     | bot-сообщение «приняли, куратор ответит» + ссылку на FAQ сразу после
+     | отправки (порог T-Бизнеса 45 с), один раз за cooldown-окно треда
+     | (support.webchat_auto_reply.ack_cooldown_hours) — паттерн ack'а H3380.
+     | Замещается уверенным FAQ-ответом (support_webchat_live_faq). Откат:
+     | false + config:cache.
+     */
+    'support_webchat_auto_ack' => (bool) env('SUPPORT_WEBCHAT_AUTO_ACK', false),
+
+    /*
+     | H5450: живой FAQ-автоответ посетителю вебчата. Категория F (материалы/
+     | ДЗ/сертификаты) выше живого порога отвечает цитатой раздела FAQ — тот же
+     | BM25-домен порогов support.faq_rag.shadow_min_score*, что и в TG-полосе
+     | H3768. Деньги (D) и доступы (E) вычеркнуты В КОДЕ (рулинг R3) — правка
+     | конфига не может их включить; гостевой тред не получает фактов LMS.
+     | Откат: false + config:cache.
+     */
+    'support_webchat_live_faq' => (bool) env('SUPPORT_WEBCHAT_LIVE_FAQ', false),
+
+    /*
      | H3765 A3 (рулинг R9 плана PLAN_SYSTEMA_TELEGRAM_RAG_SUPPORT_2026H2):
      | ТЕНЕВОЙ режим расширенного автоответа. Пока флаг ВКЛ, на каждой
      | подсказке куратору, которую бот МОГ БЫ отправить студенту сам

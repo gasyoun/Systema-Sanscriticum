@@ -11,6 +11,7 @@ use App\Models\SupportConversation;
 use App\Services\Support\MicShadowClassifier;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\SupportLeadCaptureService;
+use App\Services\Support\SupportWebchatAutoReply;
 use App\Support\GuestChat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ use Illuminate\Http\Request;
  */
 class PublicChatController extends Controller
 {
-    public function store(Request $request, SupportConversationManager $conversations, SupportLeadCaptureService $leadCapture): JsonResponse
+    public function store(Request $request, SupportConversationManager $conversations, SupportLeadCaptureService $leadCapture, SupportWebchatAutoReply $webchatAutoReply): JsonResponse
     {
         $validated = $request->validate([
             'text' => ['required', 'string', 'max:2000'],
@@ -92,11 +93,29 @@ class PublicChatController extends Controller
         // дедуплицирует по `id` (оптимистичный рендер из ответа ниже).
         event(new ChatMessageSent($message));
 
-        return response()->json([
+        // H5450: мгновенный ack и/или живой FAQ-ответ ботом — только за
+        // default-OFF флагами; при OFF поведение (и ответ) байт-в-байт прежнее.
+        // Никогда не бросает — сбой ретривера не пятисотит публичный эндпоинт.
+        $autoReplies = [];
+        $bot = $webchatAutoReply->handle($thread, $message, $user);
+
+        if ($bot !== null) {
+            $autoReplies[] = $this->present($bot);
+        }
+
+        $payload = [
             'ok' => true,
             'conversation_id' => $thread->id,
             'message' => $this->present($message),
-        ]);
+        ];
+
+        // Ключ добавляется только при отправленном bot-сообщении: OFF-ответ
+        // остаётся прежним построчно (инвариант тестом).
+        if ($autoReplies !== []) {
+            $payload['auto_replies'] = $autoReplies;
+        }
+
+        return response()->json($payload);
     }
 
     public function history(Request $request, SupportConversationManager $conversations): JsonResponse

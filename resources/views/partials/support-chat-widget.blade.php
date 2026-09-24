@@ -315,6 +315,15 @@
             el.appendChild(label);
         }
 
+        // H5450: автоответы бота (ack / FAQ) приходят role='bot' — подпись,
+        // чтобы посетитель не принял их за ответ живого куратора.
+        if (msg.role === 'bot') {
+            var botLabel = document.createElement('span');
+            botLabel.className = 'scw-msg-label';
+            botLabel.textContent = 'Бот';
+            el.appendChild(botLabel);
+        }
+
         var body = document.createElement('span');
         // Сервер уже отдал экранированный whitelist-HTML (htmlForWeb); безопасно.
         body.innerHTML = msg.html != null ? msg.html : escapeText(msg.text);
