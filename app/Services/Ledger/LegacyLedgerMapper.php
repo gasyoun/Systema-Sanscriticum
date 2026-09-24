@@ -61,9 +61,12 @@ final class LegacyLedgerMapper
         $this->evidenceSeen = [];
 
         foreach (Payment::query()->whereIn('status', Payment::PAID_STATUSES)->whereNull('refund_of_payment_id')->orderBy('id')->lazyById(500) as $p) {
-            $refunds = $refundsBySource[$p->id] ?? [];
-            unset($refundsBySource[$p->id]);
-            yield $this->plan($p, $refunds);
+            $plan = $this->plan($p, $refundsBySource[$p->id] ?? []);
+            if ($plan['receipt'] !== null) {
+                // Возвраты вошли в семью; у не-поступления они остаются сиротами ниже.
+                unset($refundsBySource[$p->id]);
+            }
+            yield $plan;
         }
 
         // Связанный возврат, чей источник не оплаченный исходный платёж
