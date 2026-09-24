@@ -567,7 +567,33 @@ def selftest():
     again = Evidence(tmp / "ev.tsv", offline=True)
     assert again.freq("ланита", "S") == {"ipm": 0.4, "category": 1}
     assert again.hits("ланита", "c19") == 41
-    print("nkrya_gloss_lint selftest OK (20 checks, offline)")
+
+    # H5401: glossary JSON source, flag-only teacher decks, band queue
+    gj = tmp / "gloss.json"
+    gj.write_text(json.dumps({"entries": {"ajara": {"iast": "ajara", "slp1": "ajara",
+                                                    "pos": "ADJ", "n": 4,
+                                                    "g": ["ланиты", "щёки", "туча", "облако"]}}},
+                             ensure_ascii=False), encoding="utf-8")
+    spec = {"path": os.path.relpath(gj, REPO), "gloss": "gloss_ru", "top_n": 3,
+            "ids": ["iast", "slp1", "pos", "n", "gloss_idx"], "sa_key": "iast",
+            "sa_kind": "iast", "flagged_only": True}
+    src_rows = read_source(spec)
+    assert len(src_rows) == 3 and src_rows[0]["gloss_ru"] == "ланиты", src_rows
+    assert src_rows[2]["gloss_idx"] == 3 and src_rows[0]["pos"] == "ADJ", src_rows
+    q = {}
+    out, rows, n_src = lint_file("gl", spec, lem, again, ({"ajara": ["ланиты", "щёки"]}, {}),
+                                 out_dir=tmp, queue=q)
+    assert n_src == 3 and [r["gloss_ru"] for r in rows] == ["ланиты"], rows   # flagged_only
+    assert rows[0]["synonym_proposal"] == "щека", rows      # ours -> a swap is proposed
+    assert q[("туча", "S")] == 1 and ("ланита", "S") not in q, q   # unmeasured lemmas only
+    qp, qn = write_queue(q, tmp / "queue.tsv")
+    assert qn == 2 and qp.read_text(encoding="utf-8").splitlines()[0] == \
+        "lemma\tnkrya_pos\tgloss_rows", qp.read_text(encoding="utf-8")
+    spec_deck = {**spec, "flag_only": True, "flagged_only": False}
+    _o, rows2, _n = lint_file("deck", spec_deck, lem, again, ({"ajara": ["ланиты", "щёки"]}, {}),
+                              out_dir=tmp)
+    assert len(rows2) == 3 and all(r["synonym_proposal"] == "" for r in rows2), rows2
+    print("nkrya_gloss_lint selftest OK (28 checks, offline)")
 
 
 def import_client():
