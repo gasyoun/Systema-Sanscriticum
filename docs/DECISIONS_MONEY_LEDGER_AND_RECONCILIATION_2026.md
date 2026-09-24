@@ -222,7 +222,11 @@ _Created: 23-09-2026 · Last updated: 24-09-2026 (D22: даты и перекр�
 
 ## Карта улучшений по зависимостям
 
+Программа исполнения объединена в [epic E017](https://github.com/gasyoun/Uprava/blob/main/handoffs/epics/E017-Systema-Sanscriticum_money-ledger-payout-rebuild-p0-p5_24.09.26.md). Дочерние задания выполняются по порядку и не отменяют гейты доказательств между фазами.
+
 ### P0. Немедленно закрыть действующие денежные дефекты
+
+**Исполнение:** [H5442 (Opus 5) — Close live money defects with report-first rollout and 24-hour observation](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5442-Opus_Systema-Sanscriticum_money-p0-live-defects-safe-rollout_24.09.26.md).
 
 1. Выпустить read-only отчет о строках, которые изменит первая волна исправлений; после просмотра включить волну целиком и наблюдать исключения 24 часа (D5).
 2. Исправить PayPal-claim: ожидаемая валюта обязательна, сумма сверяется, допуск до 5% создает уведомление, больше 5% остается `pending`; переплата до 5% засчитывается с записанной разницей, без уведомления о долге и без ручной проверки; добавить стабильный ключ повтора (D4, D20).
@@ -231,12 +235,16 @@ _Created: 23-09-2026 · Last updated: 24-09-2026 (D22: даты и перекр�
 
 ### P1. Создать денежное ядро
 
+**Исполнение:** [H5443 (Opus 5) — Build append-only money movements, allocations, obligations and database invariants](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5443-Opus_Systema-Sanscriticum_money-p1-append-only-ledger-core_24.09.26.md).
+
 1. Append-only `money_movements`: поступление, возврат, сторно, корректировка, выплата, компенсация, прямое получение преподавателем (D2, D9, D12, D16).
 2. `money_allocations`: отдельные распределения движения по обязательству, курсу и четырехзанятному блоку; нераспределенный остаток видим и сверяем (D2, D6).
 3. `obligations`: депозит до зачета, цена после скидки, долг, оказанные/неоказанные блоки; пробное признается по факту занятия (D6, D7).
 4. Инварианты БД: сумма возвратов не выше исходной оплаты; один источник нельзя зачесть дважды; проведенные строки неизменяемы; корректировка ссылается на оригинал (D9, D11, D12, D16).
 
 ### P2. Перестроить выплаты преподавателям
+
+**Исполнение:** [H5444 (Opus 5) — Rebuild teacher payouts on versioned compensation assignments and immutable packages](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5444-Opus_Systema-Sanscriticum_money-p2-teacher-payout-packages_24.09.26.md).
 
 1. Версионированные условия и отдельные датированные назначения компенсации; роли и доступы из расчета исключить (D15, D17).
 2. Расчетный пакет со стабильным ключом и состояниями `draft → approved → paid → reversed`; утверждение замораживает состав, ставки и примененные блоки (D13).
@@ -246,6 +254,8 @@ _Created: 23-09-2026 · Last updated: 24-09-2026 (D22: даты и перекр�
 
 ### P3. Сверка, исключения и доступ
 
+**Исполнение:** [H5445 (Opus 5) — Add daily reconciliation, exception queue, refund access rules and control totals](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5445-Opus_Systema-Sanscriticum_money-p3-daily-reconciliation-access_24.09.26.md).
+
 1. Ежедневно импортировать/сопоставлять банк, PayPal, ручные подтверждения и прямые получения с субрегистром; официальный бухучет не копировать (D1).
 2. Сделать очередь исключений: неизвестное назначение, неверная валюта/сумма, просроченная скидка/лимит, невыдаваемый доступ, нераспределенный остаток, повторное доказательство (D4, D8, D16).
 3. Полный возврат отзывает неоказанный доступ; частичный не проводится без распределения по блокам (D10).
@@ -253,12 +263,16 @@ _Created: 23-09-2026 · Last updated: 24-09-2026 (D22: даты и перекр�
 
 ### P4. Переход и доказуемость
 
+**Исполнение:** [H5446 (Opus 5) — Migrate opening balances and evidence across the two-IP overlap, then cut reads over safely](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5446-Opus_Systema-Sanscriticum_money-p4-evidence-migration-cutover_24.09.26.md).
+
 1. Зафиксировать три миграционных отрезка по D22; в период одновременной работы двух ИП определять получателя каждого движения по первичному доказательству, а не по дате (D3, D19, D22).
 2. Зафиксировать начальные остатки; полностью восстановить открытые долги и крупные аномалии, остальную историю не реконструировать искусственно (D3).
 3. Мигрировать ставки/условия в Systema, сохранив чат и старый реестр неизменяемыми доказательствами (D15).
 4. Сформировать контрольный отчет «до/после» и только затем переключить чтение экранов на новое ядро.
 
 ### P5. Операционные полномочия
+
+**Исполнение:** [H5447 (Opus 5) — Enforce payment-channel authority and auditable manual operations without dual approval](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5447-Opus_Systema-Sanscriticum_money-p5-operator-authority-audit_24.09.26.md).
 
 1. Мария исполняет рублевые выплаты, Марцис — PayPal; обычный утвержденный пакет не требует второго подтверждения (D18).
 2. Возвраты и смены ставок не требуют усиленного подтверждения, порога малой суммы нет (D21).
