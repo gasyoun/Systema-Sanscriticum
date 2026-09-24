@@ -467,6 +467,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MONEY_DAILY_RECONCILIATION` | optional | `false` | config/features.php:1772 |
 | `MONEY_LEDGER_CORE` | optional | `false` | config/features.php:1750 |
 | `MONEY_MUTATION_BREAKER` | optional | `false` | config/features.php:834 |
+| `MONEY_PAYOUT_PACKAGES` | optional | `false` | config/features.php:1786 |
 | `MONEY_RECON_BANK_STATEMENT_DIR` | optional | `''` | config/money_recon.php:26 |
 | `MONEY_RECON_PAYOUT_PACKAGES_TABLE` | optional | `'teacher_payout_packages'` | config/money_recon.php:30 |
 | `MONEY_RECON_PING_URL` | optional | `''` | config/money_recon.php:21 |
