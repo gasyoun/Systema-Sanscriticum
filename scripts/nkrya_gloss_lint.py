@@ -594,6 +594,11 @@ def main(argv=None):
     ap.add_argument("--backoff", type=float, default=30.0, help="seconds to wait after a 429")
     ap.add_argument("--limit", type=int, help="first N rows only (smoke)")
     ap.add_argument("--out-dir", default=str(OUT_DIR))
+    ap.add_argument("--queue-out", default=str(OUT_DIR / "band_queue.tsv"),
+                    help="write the unmeasured (lemma, POS) drain order of this run")
+    ap.add_argument("--no-queue", action="store_true", help="skip the band queue")
+    ap.add_argument("--drain-queue", type=int, metavar="N",
+                    help="band the first N unmeasured lemmas of --queue-out (live pass), no lint")
     ap.add_argument("--measure", nargs="+", metavar="GLOSS",
                     help="band a proposed replacement gloss (review-sheet evidence), no file")
     ap.add_argument("--selftest", action="store_true")
@@ -609,8 +614,10 @@ def main(argv=None):
                             "gloss": a.gloss_col,
                             "ids": [c for c in a.id_cols.split(",") if c],
                             "sa_key": a.sa_col, "sa_kind": "iast"}))
-    if not jobs and not a.measure:
-        ap.error("name a preset (roots, lemmas), --tsv or --measure")
+    if not jobs and not a.measure and not a.drain_queue:
+        ap.error("name a preset (roots, lemmas, glossary, memrise_*), --tsv, --measure "
+                 "or --drain-queue")
+    queue = None if (a.no_queue or a.drain_queue) else {}
     client = None
     if not a.offline:
         nk = import_client()
