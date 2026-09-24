@@ -125,12 +125,12 @@
       "kind": "lemma_tsv",
       "source_path": "derived from hitopadesa-0 + subhashita-beginner pins",
       "pin_path": "data/cohort_start_chteniya/lemmas_for_srs.tsv",
-      "sha256": "ec8d2b1cd4bcc1447b2a2d5092d1ce94e8a18cce109955b90804c68bfac6e082",
-      "bytes": 92460,
+      "sha256": "e0052c7c88f45d85d2714241595a941d5ee846e4922f291ac923ca8bf7ee2671",
+      "bytes": 98261,
       "built_source": "2026-09-24",
       "schema": "TSV pack|lemma_slp1|surface|gloss_ru|gloss_en|locus — unique lemma per pack",
       "adapter_note": "Optional SRS import feed for H2106; not a full koloda seed.",
-      "gloss_ru_coverage": "445/1286 rows have gloss_ru",
+      "gloss_ru_coverage": "855/1286 rows have gloss_ru",
       "stats": {
         "unique_lemmas": 1286,
         "hitopadesa_0": 448,
@@ -144,5 +144,6 @@
     "sandhi L1-3 is the beginner drill/curriculum band.",
     "Schema delta on subhashita is intentional prior art (H1279/H1312) — adapter note in pack row."
   ],
+  "gloss_fix_h5399": "H5399 (Opus 5, claude-opus-5, 24-09-2026): every one of the 838 subhashita-beginner rows of lemmas_for_srs.tsv carried an EMPTY gloss_ru, not because the glosses were missing but because the deriving reader lost them: the subhashita pack stores gloss_ru as a LIST of {surface, lemma} dicts parallel to the lemma_slp1 list, and freeze_cohort_start_chteniya.py called its scalar as_str() on that list, which returns \"\" for a list of dicts. Fixed by index-aligned reading (aligned_pairs/subhashita_gloss_index); 410 Russian glosses recovered from the UNCHANGED pin bytes, TSV rows 445 -> 855 glossed. Only the derived lemmas_for_srs.tsv row is re-pinned (scripts/refreeze_lemmas_for_srs.py grafts it); no pack content changed. Residual: 428 subhashita + 3 hitopadesa lemmas have no RU gloss in ANY owned source and 34 hitopadesa rows still carry English — sa_ru_glossary.json (DCS, freq floor 2) covers 0 of them, so they need Kochergina lookup plus review sheets, not a mechanical pass.",
   "gloss_fix": "H5398 (Opus 5, claude-opus-5, 24-09-2026): 107 Russian lemma glosses in hitopadesa-0 were inflected word-forms rather than dictionary forms («сближении» -> «сближение»), flagged by the H5285 NKRYa gloss lint in Systema-Sanscriticum. Fixed in reading/data/hitopadesa-0.json and re-pinned; lemmas_for_srs.tsv re-derived. The sandhi pins and the subhashita pin are untouched — their live sources have moved since the 2026-08-01 freeze and re-freezing that band is a separate decision."
 }
