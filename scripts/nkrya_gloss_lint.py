@@ -633,6 +633,15 @@ def main(argv=None):
     pool = load_pool()
     report = {}
     try:
+        if a.drain_queue:        # unattended band pass in the queue's order, resumable
+            done = 0
+            with open(a.queue_out, encoding="utf-8", newline="") as f:
+                for q in csv.DictReader(f, delimiter="\t"):
+                    if done >= a.drain_queue:
+                        break
+                    if ev.freq(q["lemma"], q["nkrya_pos"] or None) is not None:
+                        done += 1
+            report["_drain_queue"] = {"asked": a.drain_queue, "banded": done}
         for g in a.measure or []:
             r = lint_gloss(g, lem, ev)
             report["measure:" + g] = {"status": r["status"], "flags": r["flags"],
