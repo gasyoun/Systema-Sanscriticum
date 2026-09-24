@@ -287,6 +287,7 @@ class ShopController extends Controller
                 CourseWaitlistItem::STATUS_SCHEDULED,
             ])
             ->withCount('votes')
+            ->with('course:id,slug,is_visible')
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
@@ -340,6 +341,19 @@ class ShopController extends Controller
             'url' => route('shop.course.show', $course->slug),
         ]);
 
+        // MG 24-09-2026: в шапке обе колонки — нумерованные списки курсов.
+        // Левая (ждун) получает те же 26 строк с точными ссылками, что и карточки
+        // ниже: привязанный видимый курс → страница курса, иначе → поиск каталога.
+        $zhdunCourses = $items
+            ->map(fn (CourseWaitlistItem $item) => [
+                'title' => $item->course_title,
+                'url' => $item->course && $item->course->is_visible
+                    ? route('shop.course.show', $item->course->slug)
+                    : ($item->course_title ? '/online/poisk/'.ShopCatalogUrl::encodeWords($item->course_title) : null),
+            ])
+            ->filter(fn (array $course) => filled($course['title']))
+            ->values();
+
         $page = new LandingPage([
             'title' => 'Список ожидания — набор в новые группы',
             'description' => 'Голосуйте за будущие курсы: наберётся минимум голосов — откроется оплата; нужное число оплат к сроку — группа стартует.',
@@ -370,6 +384,7 @@ class ShopController extends Controller
             // H5475 — итоги шапки: сколько строк под вопросом и что УЖЕ идёт.
             'zhdunCourseCount' => $items->count(),
             'zhdunTeacherCount' => $items->pluck('teacher_name')->filter()->unique()->count(),
+            'zhdunCourses' => $zhdunCourses,
             'runningCourses' => $runningCourses,
             'runningTeacherCount' => $underwayCourses->pluck('teacher.name')->filter()->unique()->count(),
         ]);
