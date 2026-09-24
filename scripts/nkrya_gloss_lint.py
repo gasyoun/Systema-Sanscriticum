@@ -446,7 +446,24 @@ def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None, queue=None
         w = csv.DictWriter(f, fields, delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(out_rows)
-    return out, out_rows
+    return out, out_rows, len(rows)
+
+
+def write_queue(queue, path):
+    """Unmeasured (lemma, POS) pairs, most-used first — the order a live band pass drains.
+
+    At ~60 NKRYa calls an hour (per account, shared) a full pass over the glossary is not
+    a single run: this file is what makes the next unattended run resume where it matters.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rows = sorted(queue.items(), key=lambda kv: (-kv[1], kv[0]))
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f, delimiter="\t", lineterminator="\n")
+        w.writerow(["lemma", "nkrya_pos", "gloss_rows"])
+        for (lemma, pos), n in rows:
+            w.writerow([lemma, pos, n])
+    return path, len(rows)
 
 
 def summarize(name, rows):
