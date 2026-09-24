@@ -118,14 +118,19 @@ final class PaypalClaimAmountCheck
      * уникален у PayPal: один перевод нельзя заявить дважды ни тем же, ни
      * другим учеником, ни на другой тариф). Без txn — ученик + тариф + дата
      * перевода + валюта + сумма.
+     *
+     * $scope разводит без-txn ключи разных форм одного тарифа (доплата
+     * `supplement` vs полная цена блока); пустой scope = ключ H5442 без
+     * изменений. С txn scope не участвует: перевод один на все формы.
      */
-    public static function replayKey(int $userId, int $tariffId, ?string $txn, string $paidOn, string $currency, float $amount): string
+    public static function replayKey(int $userId, int $tariffId, ?string $txn, string $paidOn, string $currency, float $amount, string $scope = ''): string
     {
         $txn = strtoupper(trim((string) $txn));
 
+        $noTxn = $scope === '' ? 'paypal-claim|no-txn' : 'paypal-claim|no-txn|'.$scope;
         $material = $txn !== ''
             ? 'paypal-claim|txn|'.$txn
-            : implode('|', ['paypal-claim|no-txn', $userId, $tariffId, $paidOn, strtoupper($currency), (int) round($amount * 100)]);
+            : implode('|', [$noTxn, $userId, $tariffId, $paidOn, strtoupper($currency), (int) round($amount * 100)]);
 
         return hash('sha256', $material);
     }

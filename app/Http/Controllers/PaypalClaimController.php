@@ -265,6 +265,10 @@ final class PaypalClaimController extends Controller
      */
     private function storeSupplement(StorePaypalClaimRequest $request, Tariff $tariff, CuratorNotifier $curators): RedirectResponse
     {
+        if ((bool) config('features.payment_fix_wave1')) {
+            return $this->storeSupplementWave($request, $tariff, $curators);
+        }
+
         $expected = $request->validated('foreign_currency') === 'USD'
             ? self::SUPPLEMENT_USD
             : self::SUPPLEMENT_EUR;
@@ -355,6 +359,154 @@ final class PaypalClaimController extends Controller
         return redirect()
             ->route('paypal.claim.show', $tariff)
             ->with('success', 'Спасибо, заявка о доплате получена — мы сверим платеж и закроем счёт.');
+    }
+
+    /**
+     * Доплата под `features.payment_fix_wave1` (D4 + D20): та же сверка суммы,
+     * что у store() — PaypalClaimAmountCheck против объявленной доплаты
+     * (€22/$26) в целых центах, ±5% от суммы доплаты — и тот же стабильный
+     * ключ повтора payments.claim_replay_key.
+     *
+     *  - exact / ±5% → открытый счёт-доплата закрывается (как и раньше, без
+     *    model-событий); вердикт и разница пишутся в claim_meta.amount_check;
+     *    недоплата — уведомление ученику (D4), переплата только
+     *    документируется (D20);
+     *  - больше 5% → не отказ, а pending-заявка с reconciliation_exception:
+     *    счёт не закрывается, денежный факт сохранён для ручной сверки (D4);
+     *  - повтор той же заявки (тот же txn или ученик+тариф+дата+валюта+сумма)
+     *    → отказ до записи; гонку страхует unique-индекс;
+     *  - счётом считается только строка без claim_replay_key: заявка,
+     *    записанная этим путём, никогда не «закрывает» следующую заявку.
+     */
+    private function storeSupplementWave(StorePaypalClaimRequest $request, Tariff $tariff, CuratorNotifier $curators): RedirectResponse
+    {
+        $currency = (string) $request->validated('foreign_currency');
+        $claimed = (float) $request->validated('foreign_amount');
+        $expected = $currency === 'USD' ? self::SUPPLEMENT_USD : self::SUPPLEMENT_EUR;
+        $amountCheck = PaypalClaimAmountCheck::classify($currency, $claimed, $expected);
+
+        $user = $this->resolveUser($request);
+
+        $replayKey = PaypalClaimAmountCheck::replayKey(
+            (int) $user->id,
+            (int) $tariff->id,
+            $request->validated('paypal_txn'),
+            (string) $request->validated('paid_on'),
+            $currency,
+            $claimed,
+            'supplement',
+        );
+        $this->rejectReplayedClaim($user, $tariff, $replayKey);
+
+        $proofPath = $request->file('proof')?->store('paypal-proofs', 'local') ?: null;
+
+        $claimMeta = array_filter([
+            'paypal_payer' => (string) $request->validated('paypal_payer'),
+            'paid_on' => (string) $request->validated('paid_on'),
+            'txn' => $request->validated('paypal_txn'),
+            'supplement' => true,
+            'supplement_tariff_id' => $tariff->id,
+            'proof_path' => $proofPath,
+        ], fn ($v) => $v !== null && $v !== '');
+        $claimMeta['amount_check'] = $amountCheck + ['checked_at' => now()->toIso8601String()];
+
+        if ($amountCheck['auto_confirm']) {
+            try {
+                $invoice = DB::transaction(function () use ($user, $tariff, $request, $claimMeta, $replayKey, $currency, $claimed): ?Payment {
+                    $invoice = Payment::query()
+                        ->where('user_id', $user->id)
+                        ->where('course_id', $tariff->course_id)
+                        ->where('amount', self::SUPPLEMENT_RUB)
+                        ->where('status', 'pending')
+                        ->whereNull('claim_replay_key')
+                        ->orderBy('id')
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($invoice === null) {
+                        return null;
+                    }
+
+                    Payment::withoutEvents(function () use ($invoice, $request, $claimMeta, $replayKey, $currency, $claimed): void {
+                        $invoice->forceFill([
+                            'status' => 'paid',
+                            'claim_replay_key' => $replayKey,
+                            'foreign_amount' => $claimed,
+                            'foreign_currency' => $currency,
+                            'claim_meta' => $claimMeta,
+                            'provider' => Payment::PROVIDER_PAYPAL,
+                            'payer_note' => Str::limit(trim(($invoice->payer_note ?? '').' · PayPal-доплата from: '
+                                .$request->validated('paypal_payer').' · paid_on: '.$request->validated('paid_on')
+                                .($request->validated('paypal_txn') ? ' · txn: '.$request->validated('paypal_txn') : '')), 250, ''),
+                        ])->save();
+                        $invoice->refresh();
+                    });
+
+                    return $invoice;
+                });
+            } catch (UniqueConstraintViolationException $e) {
+                $this->rejectReplayedClaim($user, $tariff, $replayKey);
+
+                throw $e;
+            }
+
+            if ($invoice !== null) {
+                $curators->paypalClaimReceived($invoice);
+                Mail::to($user)->send(new PaypalClaimStudentAckMail($invoice));
+
+                $success = 'Спасибо, доплата получена — счёт закрыт. Подтверждение уходит на ваш email.';
+                if ($amountCheck['notify_underpayment']) {
+                    $success .= ' '.self::underpaymentNotice($amountCheck);
+                }
+
+                return redirect()
+                    ->route('paypal.claim.show', $tariff)
+                    ->with('success', $success);
+            }
+        } else {
+            $claimMeta['reconciliation_exception'] = 'supplement_amount_beyond_tolerance';
+        }
+
+        // Счёта нет или сумма вне допуска: pending-строка доплаты (не trusted),
+        // доступ не открывается, счёт (если есть) остаётся pending.
+        try {
+            $payment = DB::transaction(function () use ($user, $tariff, $request, $proofPath, $claimMeta, $replayKey, $currency, $claimed, $amountCheck): Payment {
+                return Payment::create([
+                    'claim_replay_key' => $replayKey,
+                    'user_id' => $user->id,
+                    'course_id' => $tariff->course_id,
+                    'amount' => self::SUPPLEMENT_RUB,
+                    'foreign_amount' => $claimed,
+                    'foreign_currency' => $currency,
+                    'tariff' => $tariff->accessKey(),
+                    'start_block' => null,
+                    'end_block' => null,
+                    'status' => 'pending',
+                    'provider' => Payment::PROVIDER_PAYPAL,
+                    'proof_path' => $proofPath,
+                    'claim_meta' => $claimMeta,
+                    'payer_note' => ($amountCheck['auto_confirm'] ? 'PayPal-доплата (счёт не найден)' : 'PayPal-доплата (сумма вне допуска 5%)')
+                        .' · from: '.$request->validated('paypal_payer')
+                        .' · paid_on: '.$request->validated('paid_on'),
+                ]);
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            $this->rejectReplayedClaim($user, $tariff, $replayKey);
+
+            throw $e;
+        }
+
+        $curators->paypalClaimReceived($payment);
+        Mail::to($user)->send(new PaypalClaimStudentAckMail($payment));
+
+        $success = $amountCheck['auto_confirm']
+            ? 'Спасибо, заявка о доплате получена — мы сверим платеж и закроем счёт.'
+            : 'Спасибо, заявка получена. Сумма отличается от доплаты ('.$expected.' '.($currency === 'USD' ? '$' : '€')
+                .') больше чем на 5% — мы сверим платеж вручную и напишем вам; если перевели одной суммой доплату и следующий блок, остаток зачтём за следующий блок.';
+
+        return redirect()
+            ->route('paypal.claim.show', $tariff)
+            ->with('success', $success);
     }
 
     /** Pre-H3821 behavior: manual config array, block tariffs only. Unchanged while the flag is dark. */
