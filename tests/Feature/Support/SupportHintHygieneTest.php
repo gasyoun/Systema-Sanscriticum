@@ -285,11 +285,14 @@ class SupportHintHygieneTest extends TestCase
             'text' => 'Оплату куда внести??',
             'sent_at' => now()->subHours(162),
         ]);
-        SupportAiReplyEvent::create([
+        $fireEvent = SupportAiReplyEvent::create([
             'telegram_support_message_id' => $fireMessage->id,
             'event_type' => SupportDmAutoReply::EVENT_HINTED,
             'meta' => ['via' => SupportDmAutoReply::VIA, 'fire' => true, 'series_count' => 30],
         ]);
+        // Хинт стареет вместе с сообщением: created_at = момент хинта.
+        $fireEvent->created_at = now()->subHours(162);
+        $fireEvent->save();
 
         $answeredMessage = TelegramSupportMessage::create([
             'telegram_support_account_id' => $account->id,
@@ -300,12 +303,14 @@ class SupportHintHygieneTest extends TestCase
             'text' => 'как войти в зум',
             'sent_at' => now()->subHours(50),
         ]);
-        SupportAiReplyEvent::create([
+        $answeredEvent = SupportAiReplyEvent::create([
             'telegram_support_message_id' => $answeredMessage->id,
             'event_type' => SupportDmAutoReply::EVENT_HINTED,
             'meta' => ['via' => SupportDmAutoReply::VIA, 'series_count' => 1],
         ]);
-        // Человек ответил — чат в дайджест не попадает.
+        $answeredEvent->created_at = now()->subHours(50);
+        $answeredEvent->save();
+        // Человек ответил ПОСЛЕ хинта — чат в дайджест не попадает.
         TelegramSupportMessage::create([
             'telegram_support_account_id' => $account->id,
             'telegram_support_chat_id' => $answeredChat->id,
