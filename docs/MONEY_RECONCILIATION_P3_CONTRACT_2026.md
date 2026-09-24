@@ -44,7 +44,7 @@ _Created: 24-09-2026 · Last updated: 24-09-2026_
 
 ## Типы исключений (в порядке приоритета)
 
-1. `reused_evidence` — один `transaction_id`/PayPal txn/ref у нескольких оплаченных строк (D16).
+1. `reused_evidence` — один `transaction_id`/PayPal txn/ref у оплат разных студентов или курсов, либо дважды за один тариф (D16). Одна оплата, разложенная на блоки одного студента одного курса, — не повтор; метка легаси-импорта «Мульти-оплата (Блоки N-M)» — не доказательство и в ключи не входит.
 2. `currency_amount_mismatch` — PayPal вне допуска 5 % или без ожидаемой цены; валютная сумма без валюты; вебхук `rejected_amount_mismatch`; P0-метка `supplement_amount_beyond_tolerance`.
 3. `unknown_purpose` — нет курса у нетарифной оплаты, отрицательное поступление, возврат несуществующей оплаты; вебхуки `unmatched`, `rejected_resurrection`, `rejected_charge`.
 4. `refund_without_blocks` — частичный возврат без блоков или вне оплаченного диапазона (D10).

@@ -27,6 +27,13 @@ use Throwable;
  */
 final class EvidenceCollector
 {
+    /**
+     * Метка легаси-импорта (ImportAcademyData), а не номер транзакции: на проде
+     * одна и та же «Мульти-оплата (Блоки 1-4)» стоит у 1242 оплат 182 студентов.
+     * Доказательством оплаты не является — в ключи не попадает.
+     */
+    public const IMPORT_PLACEHOLDER_TXN = '/^Мульти-оплата \\(Блоки \\d+-\\d+\\)$/u';
+
     public const CH_BANK = 'bank_acquiring';
 
     public const CH_PAYPAL = 'paypal';
@@ -327,7 +334,8 @@ final class EvidenceCollector
     {
         $keys = [];
         $txn = is_string($p->transaction_id) ? trim($p->transaction_id) : '';
-        if ($txn !== '' && ! str_starts_with($txn, BlockAccessMaterializer::GRANT_PREFIX)) {
+        if ($txn !== '' && ! str_starts_with($txn, BlockAccessMaterializer::GRANT_PREFIX)
+            && preg_match(self::IMPORT_PLACEHOLDER_TXN, $txn) !== 1) {
             $keys[] = 'txn:'.$txn;
         }
         $meta = is_array($p->claim_meta) ? $p->claim_meta : [];
@@ -342,8 +350,13 @@ final class EvidenceCollector
     }
 
     /**
-     * Сколько раз каждый ключ доказательства встречается среди ВСЕХ оплаченных
-     * поступлений (не только окна): повтор со старой строкой тоже повтор.
+     * Сколько раз каждый ключ доказательства использован повторно среди ВСЕХ
+     * оплаченных поступлений (не только окна): повтор со старой строкой тоже повтор.
+     *
+     * Одна оплата, разложенная на блоки одного студента одного курса (разные
+     * тарифы, один номер транзакции), — это один платёж, не повтор: ключ такой
+     * семьи считается один раз. Повтор — это ключ у разных студентов или курсов,
+     * либо дважды за один и тот же тариф (D16).
      *
      * @param  list<Payment>  $candidates
      * @return array<string, int>
@@ -354,7 +367,7 @@ final class EvidenceCollector
         foreach ($candidates as $p) {
             if ($p->refund_of_payment_id === null) {
                 foreach (self::evidenceKeys($p) as $k) {
-                    $wanted[$k] = 0;
+                    $wanted[$k] = [];
                 }
             }
         }
@@ -367,17 +380,24 @@ final class EvidenceCollector
             ->whereNull('refund_of_payment_id')
             ->where('amount', '>', 0)
             ->whereNotIn('tariff', ['Расход', 'salary_payout'])
-            ->select(['id', 'transaction_id', 'provider', 'claim_meta'])
+            ->select(['id', 'user_id', 'course_id', 'tariff', 'transaction_id', 'provider', 'claim_meta'])
             ->lazyById(1000)
             ->each(function (Payment $p) use (&$wanted): void {
                 foreach (self::evidenceKeys($p) as $k) {
                     if (isset($wanted[$k])) {
-                        $wanted[$k]++;
+                        $wanted[$k][] = $p->user_id.'|'.$p->course_id.'|'.$p->tariff;
                     }
                 }
             });
 
-        return $wanted;
+        $out = [];
+        foreach ($wanted as $k => $uses) {
+            $owners = array_unique(array_map(fn (string $u) => substr($u, 0, (int) strrpos($u, '|')), $uses));
+            $splitOfOnePayment = count($owners) === 1 && count(array_unique($uses)) === count($uses);
+            $out[$k] = $splitOfOnePayment ? 1 : count($uses);
+        }
+
+        return $out;
     }
 
     /** @return array<int, true> */
