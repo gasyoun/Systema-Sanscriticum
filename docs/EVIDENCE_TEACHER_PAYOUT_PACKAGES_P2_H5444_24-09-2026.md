@@ -88,5 +88,3 @@ php artisan money:payout-package-compare --teacher=42 --json
 4. Читатели экранов зарплат переключаются в P4, не раньше.
 
 _Гасунс_
-
-_Dr. Mārcis Gasūns_
