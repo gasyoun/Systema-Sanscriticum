@@ -464,6 +464,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MEMCACHED_PORT` | optional | `11211` | config/cache.php:71 |
 | `MEMCACHED_USERNAME` | required | `—` | config/cache.php:62 |
 | `MIC_SHADOW_CLASSIFY` | optional | `false` | config/features.php:1684 |
+| `MONEY_LEDGER_CORE` | optional | `false` | config/features.php:1750 |
 | `MONEY_MUTATION_BREAKER` | optional | `false` | config/features.php:834 |
 | `MONEY_SLI_ATTEMPTS` | optional | `3` | config/money_sli.php:35 |
 | `MONEY_SLI_ATTEMPT_PAUSE_SECONDS` | optional | `2` | config/money_sli.php:36 |
