@@ -437,4 +437,82 @@ class VitrinaWaitlistPageTest extends TestCase
 
         $this->get(route('shop.index'))->assertOk()->assertSee(route('shop.waitlist'), false);
     }
+
+    /**
+     * MG 24-09-2026: день недели и время уже известны (пн 18:00, сб 17:00, …)
+     * — селект «Когда удобно?» не предлагаем, время решено; кнопка голоса
+     * остаётся. Слот неизвестен — селект на месте, как раньше (H4206).
+     */
+    public function test_fixed_slot_hides_when_convenient_select_on_vitrina(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-fixed-slot',
+            'course_title' => 'Философия санкхьи',
+            'teacher_name' => 'Максим Леонов',
+            'slot' => 'пн 18:00',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2026-09-01',
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-open-slot',
+            'course_title' => 'Начальный бенгальский',
+            'teacher_name' => 'Екатерина Костина',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2027-09-15',
+        ]);
+
+        $resp = $this->get(route('shop.waitlist'));
+        $resp->assertOk();
+
+        // Известный слот: селекта нет, голосовать можно.
+        $resp->assertDontSee('data-waitlist-pref="zhdun-fixed-slot"', false);
+        $resp->assertSee('data-waitlist-vote="zhdun-fixed-slot"', false);
+        // Неизвестный слот: селект по-прежнему есть.
+        $resp->assertSee('data-waitlist-pref="zhdun-open-slot"', false);
+    }
+
+    /**
+     * MG 24-09-2026 — то же правило на карточке ждуна в кабинете (H3815):
+     * слот известен → «Когда удобно?» не спрашиваем.
+     */
+    public function test_fixed_slot_hides_when_convenient_select_in_cabinet_card(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        $user = User::factory()->create();
+
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-cab-fixed',
+            'course_title' => 'Индийский эпос: «Махабхарата» и «Рамаяна»',
+            'teacher_name' => 'Максим Леонов',
+            'slot' => 'пн 18:00',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2026-09-01',
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-cab-open',
+            'course_title' => 'Индийское кино',
+            'teacher_name' => 'Екатерина Костина',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2027-10-15',
+        ]);
+
+        $items = CourseWaitlistItem::query()
+            ->withCount(['votes', 'votes as voted_by_me' => fn ($q) => $q->where('user_id', $user->id)])
+            ->orderBy('id')
+            ->get();
+
+        $html = view('student.partials.waitlist-card', [
+            'waitlistItems' => $items,
+            'waitlistMyPrefs' => [],
+        ])->render();
+
+        $this->assertStringNotContainsString('data-waitlist-pref="zhdun-cab-fixed"', $html);
+        $this->assertStringContainsString('data-waitlist-vote="zhdun-cab-fixed"', $html);
+        $this->assertStringContainsString('data-waitlist-pref="zhdun-cab-open"', $html);
+    }
 }
