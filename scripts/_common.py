@@ -30,6 +30,29 @@ def github_root() -> Path:
     return repo_root().parent
 
 
+def kosha_checkout() -> Path:
+    """The kosha clone the vendor_* scripts read pinned bytes from.
+
+    `KOSHA_HOME` wins when set; otherwise the sibling `<github_root>/kosha`
+    (~/Documents/GitHub/kosha on the Mac, %USERPROFILE%\\Documents\\GitHub\\kosha
+    on Windows). Exits naming every tried path — these scripts used to hardcode
+    one Windows box's path and failed everywhere else before comparing a pin.
+    """
+    tried = []
+    env = os.environ.get("KOSHA_HOME")
+    if env:
+        tried.append(("KOSHA_HOME", Path(env).expanduser()))
+    tried.append(("sibling of repo root", github_root() / "kosha"))
+    for _, path in tried:
+        if (path / ".git").exists():
+            return path
+    lines = "\n".join("  %s: %s" % (label, path) for label, path in tried)
+    raise SystemExit(
+        "kosha checkout not found (need a git clone of gasyoun/kosha). Tried:\n%s\n"
+        "Clone it next to this repo or point KOSHA_HOME at an existing clone." % lines
+    )
+
+
 def run(
     cmd: list,
     cwd=None,

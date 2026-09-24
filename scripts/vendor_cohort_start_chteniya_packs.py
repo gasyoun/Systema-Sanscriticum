@@ -25,10 +25,11 @@ import os
 import subprocess
 import sys
 
+from _common import kosha_checkout
+
 sys.stdout.reconfigure(encoding='utf-8')
 sys.stderr.reconfigure(encoding='utf-8')
 
-KOSHA = r'C:\Users\user\Documents\GitHub\kosha'
 KOSHA_REF = 'origin/main'
 MANIFEST_IN_KOSHA = 'data/cohort_start_chteniya/MANIFEST.json'
 
@@ -52,7 +53,7 @@ def git_show(path):
     explicitly, which is where the encoding rule actually applies.
     """
     proc = subprocess.run(
-        ['git', '-C', KOSHA, 'show', '%s:%s' % (KOSHA_REF, path)],
+        ['git', '-C', str(kosha_checkout()), 'show', '%s:%s' % (KOSHA_REF, path)],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
     )
     if proc.returncode:

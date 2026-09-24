@@ -15,7 +15,8 @@ is traceable to one pin. Never hand-edit the output; re-run this script.
 
     python scripts/vendor_corpus_sandhi.py [--coverage 90] [--check]
 
-`--check` rebuilds in memory and exits 1 if the vendored file differs.
+`--check` rebuilds in memory and exits 1 if the vendored file differs (ignoring
+source.commit, which tracks kosha's HEAD rather than the TSV).
 """
 import argparse
 import json
@@ -24,10 +25,11 @@ import re
 import subprocess
 import sys
 
+from _common import kosha_checkout
+
 sys.stdout.reconfigure(encoding='utf-8')
 sys.stderr.reconfigure(encoding='utf-8')
 
-KOSHA = r'C:\Users\user\Documents\GitHub\kosha'
 KOSHA_REF = 'origin/main'
 TSV_IN_KOSHA = 'data/sandhi/corpus_sandhi.tsv'
 
@@ -39,7 +41,7 @@ SENTENCE_MAX = 160
 
 
 def git(*args):
-    return subprocess.run(['git', '-C', KOSHA, *args], check=True,
+    return subprocess.run(['git', '-C', str(kosha_checkout()), *args], check=True,
                           capture_output=True).stdout
 
 
@@ -149,6 +151,12 @@ def main():
 
     if args.check:
         current = open(OUT, encoding='utf-8').read() if os.path.exists(OUT) else ''
+        # source.commit is kosha's HEAD at vendoring time and moves with every
+        # unrelated kosha commit; source.blob already pins the TSV bytes. Carry the
+        # vendored commit into the rebuild so --check flags data drift only.
+        if current:
+            data['source']['commit'] = json.loads(current)['source']['commit']
+            text = json.dumps(data, ensure_ascii=False, indent=1) + '\n'
         if current != text:
             print(f'DRIFT: {OUT} differs from a rebuild off kosha {KOSHA_REF}')
             return 1
