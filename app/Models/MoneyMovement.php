@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Services\Ledger\LedgerInvariantViolation;
+use App\Services\Ledger\LedgerService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * H5443 (P1, D2/D9/D12/D16): строка неизменяемого денежного журнала.
  *
- * Только вставка через {@see \App\Services\Ledger\LedgerService}; правка и
+ * Только вставка через {@see LedgerService}; правка и
  * удаление запрещены и здесь, и триггерами БД. Сумма — целые копейки рубля
  * со знаком: приток > 0, отток < 0, сторно = −оригинал.
  *
