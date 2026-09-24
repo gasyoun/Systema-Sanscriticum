@@ -93,6 +93,17 @@ final class SupportDmAutoReply
      */
     private const MONEY_INTENT_PATTERN = '/оплат|плат[еёжи]|денег|деньг|стоимост|сколько\s+стои|цен[аеуы]|\bтариф|рассрочк|доплат|предоплат|скидк|промокод|по\s+частям|сч[её]т|квитанц|возврат/iu';
 
+    /**
+     * H5452: намерение пробного занятия — 🔥 на подсказке куратору рядом с
+     * деньгами. Стемы узкие, чтобы «запись/записи» (категория B, инцидент
+     * 19-09-2026) не загорались: «записатьс» и «записываюсь» совпадают, а
+     * «запись» — нет.
+     */
+    private const TRIAL_INTENT_PATTERN = '/пробн|попробоват|записатьс|записываюсь|запиш(?:усь|итесь|ись)/iu';
+
+    /** H5452: подсказка не ушла куратору — сообщение отфильтровано как шум (reason в meta). */
+    public const EVENT_HINT_SUPPRESSED = 'dm_hint_suppressed';
+
     /** @var list<string> */
     private const SIMPLE_CATEGORIES = [
         SupportAnswerSuggestion::CATEGORY_ZOOM,
@@ -596,6 +607,37 @@ final class SupportDmAutoReply
         ?array $resolvedFacts = null,
         ?string $escalation = null,
     ): array {
+        // H5452: шум-фильтр на ХИНТ. Сервисные чаты и инфра-алерты («система
+        // пишет сама себе») не занимают саппорт-полосу куратора. Молчаливое
+        // подавление запрещено: каждое подавление = событие с причиной.
+        // Автоответы/ack не тронуты — ветки выше требуют linked-пользователя,
+        // у сервисных чатов его нет.
+        $noiseReason = $this->hintNoiseReason($incoming, $text);
+
+        if ($noiseReason !== null) {
+            $this->recordHintSuppressed($incoming, $noiseReason);
+
+            return ['status' => 'hint_suppressed', 'category' => $category];
+        }
+
+        // H5452: дедуп per-chat. Пока подсказка не погашена человеческим
+        // ответом, серия сообщений одного чата обновляет существующий хинт
+        // (счётчик серии в мете), а не плодит второй. 🔥 с любого сообщения
+        // серии прилипает к открытому хинту.
+        $fire = $this->moneyIntent($text) || $this->hasTrialIntent($text);
+
+        if ($this->dedupEnabled()) {
+            $openHint = $this->openHintInChat($incoming);
+
+            if ($openHint !== null) {
+                if ((int) $openHint->telegram_support_message_id !== $incoming->id) {
+                    $this->appendToOpenHint($openHint, $incoming, $fire);
+                }
+
+                return ['status' => 'hint_series', 'category' => $category];
+            }
+        }
+
         $hits = $this->faq->retrieve($text, 3);
         $name = $user?->name ?? 'без привязки';
         $catLabel = $category ?? 'без категории';
@@ -603,7 +645,7 @@ final class SupportDmAutoReply
         $safeQuestion = htmlspecialchars(mb_substr($text, 0, 500), ENT_QUOTES, 'UTF-8');
 
         $lines = [
-            '💡 <b>Сложный вопрос — бот не ответил</b>',
+            ($fire ? '🔥' : '💡').' <b>Сложный вопрос — бот не ответил</b>',
             "Студент: {$safeName}",
             "Категория: {$catLabel}",
             '',
@@ -688,6 +730,8 @@ final class SupportDmAutoReply
                 'category' => $category,
                 'source_telegram_message_id' => (int) $incoming->telegram_message_id,
                 'aged' => $aged,
+                'fire' => $fire,
+                'series_count' => 1,
                 'suggestion_id' => $suggestion?->id,
                 'faq_chunk_ids' => array_values(array_map(
                     static fn (array $hit): string => (string) ($hit['chunk_id'] ?? ''),
@@ -1248,6 +1292,136 @@ final class SupportDmAutoReply
     private function moneyIntent(string $text): bool
     {
         return preg_match(self::MONEY_INTENT_PATTERN, $text) === 1;
+    }
+
+    /**
+     * H5452: намерение пробного занятия («хочу на пробное», «запишитесь на
+     * группу») — 🔥 на подсказке, тот же маркер в дайджесте 09:00.
+     */
+    private function hasTrialIntent(string $text): bool
+    {
+        $normalized = mb_strtolower($text);
+
+        if (preg_match(self::TRIAL_INTENT_PATTERN, $normalized) === 1) {
+            return true;
+        }
+
+        // «Группы» + «как/когда попасть» — второй сигнал пробного из замера
+        // 24-09-2026 («что нужно, чтобы на пробное прийти» без слова «пробное»).
+        return str_contains($normalized, 'групп') && str_contains($normalized, 'попасть');
+    }
+
+    /**
+     * H5452: причина подавить подсказку для этого сообщения или null.
+     *
+     * Два источника шума, оба за конфигом («фильтр может быть ON по умолчанию,
+     * но за конфигом»): сервисные чаты (Telegram-системный аккаунт 777000 и
+     * сослужебные диалоги) и известные префиксы инфра-алертов — «система
+     * пишет сама себе», а классификатор хинтит куратору. Фильтр стоит только
+     * на ХИНТ; ack/автоответы не тронуты: у сервисных чатов нет linked-юзера,
+     * и их инвариант «не отвечаем» зафиксирован тестом.
+     */
+    private function hintNoiseReason(TelegramSupportMessage $incoming, string $text): ?string
+    {
+        $chatIds = config('support.hints.suppressed_chat_ids', []);
+        if (is_array($chatIds) && in_array((int) $incoming->telegram_chat_id, array_map('intval', $chatIds), true)) {
+            return 'service_chat';
+        }
+
+        $prefixes = config('support.hints.suppressed_prefixes', []);
+        if (is_array($prefixes)) {
+            foreach ($prefixes as $prefix) {
+                $prefix = (string) $prefix;
+
+                if ($prefix !== '' && mb_strpos($text, $prefix) === 0) {
+                    return 'infra_prefix';
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /** H5452: подавление остаётся событием с причиной — молчаливого нет. */
+    private function recordHintSuppressed(TelegramSupportMessage $incoming, string $reason): void
+    {
+        SupportAiReplyEvent::firstOrCreate(
+            [
+                'telegram_support_message_id' => $incoming->id,
+                'event_type' => self::EVENT_HINT_SUPPRESSED,
+            ],
+            [
+                'meta' => [
+                    'via' => self::VIA,
+                    'reason' => $reason,
+                    'telegram_chat_id' => (int) $incoming->telegram_chat_id,
+                ],
+            ],
+        );
+    }
+
+    private function dedupEnabled(): bool
+    {
+        return (bool) config('support.hints.dedup_enabled', true);
+    }
+
+    /**
+     * H5452: последний dm_hinted в чате, не погашенный человеческим ответом
+     * (ни одного human-исходящего в чате после него), или null. Снимает
+     * блокировку ровно то, что гасит и ack — любое human-исходящее; исходящее
+     * бота (ack/FAQ/LLM) погасить подсказку не может.
+     */
+    private function openHintInChat(TelegramSupportMessage $incoming): ?SupportAiReplyEvent
+    {
+        $chatId = (int) $incoming->telegram_chat_id;
+
+        $messageIds = TelegramSupportMessage::query()
+            ->where('telegram_chat_id', $chatId)
+            ->pluck('id');
+
+        if ($messageIds->isEmpty()) {
+            return null;
+        }
+
+        $event = SupportAiReplyEvent::query()
+            ->where('event_type', self::EVENT_HINTED)
+            ->whereIn('telegram_support_message_id', $messageIds)
+            ->orderByDesc('id')
+            ->first();
+
+        if ($event === null) {
+            return null;
+        }
+
+        $humanAnswered = TelegramSupportMessage::query()
+            ->where('telegram_chat_id', $chatId)
+            ->where('direction', 'outgoing')
+            ->where('sent_at', '>=', $event->created_at)
+            ->where(fn ($q) => $q
+                ->where('responder_type', 'human')
+                ->orWhere(fn ($qq) => $qq->whereNull('responder_type')->where('role', 'human')))
+            ->exists();
+
+        return $humanAnswered ? null : $event;
+    }
+
+    /**
+     * H5452: сообщение серии не создаёт второй хинт — в мете открытого хинта
+     * растёт счётчик серии и запоминается последнее сообщение; 🔥 прилипает.
+     */
+    private function appendToOpenHint(SupportAiReplyEvent $openHint, TelegramSupportMessage $incoming, bool $fire): void
+    {
+        $meta = is_array($openHint->meta) ? $openHint->meta : [];
+        $meta['series_count'] = (int) ($meta['series_count'] ?? 1) + 1;
+        $meta['series_last_message_id'] = (int) $incoming->telegram_message_id;
+        $meta['series_last_at'] = now()->toIso8601String();
+
+        if ($fire) {
+            $meta['fire'] = true;
+        }
+
+        $openHint->meta = $meta;
+        $openHint->save();
     }
 
     /**
