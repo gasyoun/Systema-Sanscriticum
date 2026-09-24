@@ -18,6 +18,7 @@ use App\Services\Membership\ClubMembershipService;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Prana\PranaService;
 use App\Services\PromiseAutoFulfiller;
+use App\Services\Reconciliation\RefundAccessPolicy;
 use App\Support\BeginnerPilotOffer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -643,6 +644,10 @@ class Payment extends Model
         // флага conditional_access_expiry (у окон свой рубильник).
         $query->withoutExpiredAccessWindow();
 
+        // H5445 (D10): возвращённая оплата/блок больше не открывает уроки
+        // (флаг money_refund_access_rules, дефолт OFF).
+        RefundAccessPolicy::excludeRefundedAccess($query);
+
         if (! config('features.conditional_access_expiry')) {
             return $query;
         }
@@ -754,6 +759,20 @@ class Payment extends Model
             } else {
                 $payment->received_account = self::RECEIVED_SCHOOL;
                 $payment->received_by_teacher_id = null;
+            }
+
+            // H5445 (P3, D10): частичный возврат — только с блоками (флаг
+            // money_refund_access_rules, дефолт OFF).
+            app(RefundAccessPolicy::class)->guardLegacyRefund($payment);
+        });
+
+        // H5445 (P3, D10): полный возврат отзывает оставшийся доступ, частичный —
+        // доступ названных блоков. Идемпотентно; без флага — no-op.
+        static::saved(function (Payment $payment): void {
+            if ($payment->refund_of_payment_id !== null
+                && ($payment->wasRecentlyCreated || $payment->wasChanged(['status', 'amount', 'start_block', 'end_block', 'refund_of_payment_id']))
+            ) {
+                app(RefundAccessPolicy::class)->applyLegacyRefund($payment);
             }
         });
 
@@ -1650,10 +1669,10 @@ class Payment extends Model
 
     private function accessGrantingPaymentsForUser(Builder $query): Builder
     {
-        return $query
+        return RefundAccessPolicy::excludeRefundedAccess($query
             ->where('user_id', $this->user_id)
             ->paid()
-            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout']);
+            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout']));
     }
 
     // ==========================================

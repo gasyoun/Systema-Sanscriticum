@@ -59,6 +59,18 @@ class MoneyCronScheduleHooksTest extends TestCase
         );
     }
 
+    public function test_daily_reconciliation_is_registered_at_0435_persisting(): void
+    {
+        $event = $this->eventFor('money:reconcile-daily');
+
+        $this->assertNotNull($event, 'money:reconcile-daily not in Kernel schedule');
+        $this->assertSame('35 4 * * *', $event->expression);
+        $this->assertStringContainsString('--persist', $event->command);
+        $this->assertStringContainsString('--scheduled', $event->command);
+        $this->assertTrue($event->withoutOverlapping);
+        $this->assertTrue($event->onOneServer);
+    }
+
     /**
      * @dataProvider moneyCronNeedles
      */
@@ -81,6 +93,7 @@ class MoneyCronScheduleHooksTest extends TestCase
             'receivables:check' => ['receivables:check'],
             'debts:remind' => ['debts:remind'],
             'expire-stale-checkouts' => ['payments:expire-stale-checkouts'],
+            'money:reconcile-daily' => ['money:reconcile-daily'],
         ];
     }
 
