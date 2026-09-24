@@ -733,6 +733,14 @@ class TeacherSalaryService
                 if (empty($covered) || ! in_array($blockNumber, $covered, true)) {
                     continue;
                 }
+                // H5442 (P0, D11): возврат удерживается из зарплаты ЕДИНОЖДЫ.
+                // Выплата блока пишет строки возвратов в breakdown.payments —
+                // paidShareKeys их видит. Раньше дедуп был только для
+                // положительных долей, и каждый перерасчёт блока вычитал ту же
+                // возвратную строку повторно (audit MEDIUM #12).
+                if (config('features.payment_fix_wave1') && isset($paid[$courseId.':'.$blockNumber.':'.$p->id])) {
+                    continue;
+                }
                 $amount = (float) $p->amount; // отрицательная
                 $share = $amount / count($covered);
                 $total += $share;

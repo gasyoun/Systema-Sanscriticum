@@ -38,6 +38,8 @@ class TeacherPayout extends Model
         'amount_foreign',
         'breakdown',
         'payment_id',
+        // H5442 (D13): стабильный ключ расчётного пакета поблочной выплаты (unique).
+        'settlement_key',
     ];
 
     protected $casts = [
@@ -119,5 +121,14 @@ class TeacherPayout extends Model
     public function payment(): BelongsTo
     {
         return $this->belongsTo(Payment::class);
+    }
+
+    /**
+     * H5442 (P0, D13): стабильный ключ поблочной выплаты — один пакет на
+     * (преподаватель, курс, блок, группа).
+     */
+    public static function blockSettlementKey(int $teacherId, int $courseId, int $blockNumber, ?int $groupId): string
+    {
+        return hash('sha256', implode('|', ['block-payout', $teacherId, $courseId, $blockNumber, $groupId ?? 'all']));
     }
 }

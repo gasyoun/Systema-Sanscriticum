@@ -70,6 +70,17 @@ final class AutoReplyWeeklyReport
         $staleSkips = $tgEvents->where('event_type', SupportDmAutoReply::EVENT_STALE_SKIP)->count();
         $latency = $this->humanAnswerLatencyMinutes($tgEvents);
 
+        // H5452: видимость шума — сколько подсказок куратор НЕ получил,
+        // потому что сообщение отфильтровано (сервис-чат / инфра-префикс).
+        // Каждое подавление = событие dm_hint_suppressed с reason.
+        $hintSuppressed = $tgEvents->where('event_type', SupportDmAutoReply::EVENT_HINT_SUPPRESSED)->count();
+        $hintSuppressedByReason = $tgEvents
+            ->where('event_type', SupportDmAutoReply::EVENT_HINT_SUPPRESSED)
+            ->groupBy(fn (SupportAiReplyEvent $e): string => (string) ($e->meta['reason'] ?? 'unknown'))
+            ->map(fn (Collection $rows): int => $rows->count())
+            ->sortKeys()
+            ->all();
+
         return [
             'from' => $from->format('d.m'),
             'to' => $to->format('d.m'),
@@ -82,6 +93,8 @@ final class AutoReplyWeeklyReport
             'latency_median_minutes' => $latency,
             'web_total' => $webEvents->count(),
             'web_sent_by_kind' => $webSentByKind,
+            'hint_suppressed' => $hintSuppressed,
+            'hint_suppressed_by_reason' => $hintSuppressedByReason,
             'text' => $this->formatHtml(
                 $from,
                 $to,
@@ -94,6 +107,8 @@ final class AutoReplyWeeklyReport
                 $latency,
                 $webEvents->count(),
                 $webSentByKind,
+                $hintSuppressed,
+                $hintSuppressedByReason,
             ),
         ];
     }
@@ -269,6 +284,8 @@ final class AutoReplyWeeklyReport
         array $latency,
         int $webTotal = 0,
         array $webSentByKind = [],
+        int $hintSuppressed = 0,
+        array $hintSuppressedByReason = [],
     ): string {
         $lines = [
             '<b>🤖 Автоответы · '.$from->format('d.m').'–'.$to->format('d.m').'</b>',
@@ -310,6 +327,17 @@ final class AutoReplyWeeklyReport
 
         if ($staleSkips > 0) {
             $lines[] = 'Пропущено как устаревшие: '.$staleSkips.' (backlog era)';
+        }
+
+        // H5452: строка шума. Нет подавлений — строки нет, отчёт байт-в-байт
+        // прежний (OFF-инвариант).
+        if ($hintSuppressed > 0) {
+            $reasons = implode(' · ', array_map(
+                fn (string $reason, int $n): string => e($reason).' '.$n,
+                array_keys($hintSuppressedByReason),
+                array_values($hintSuppressedByReason),
+            ));
+            $lines[] = 'Отфильтровано как шум: '.$hintSuppressed.($reasons !== '' ? ' ('.$reasons.')' : '');
         }
 
         if ($webTotal > 0) {

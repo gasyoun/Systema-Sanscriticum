@@ -152,8 +152,11 @@
                                             <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Открыта оплата — свяжитесь с куратором</span>
                                         @endif
                                     @else
-                                        {{-- H4206: пожелание времени — куратор подберет слот по голосам. --}}
+                                        {{-- H4206: пожелание времени — куратор подберет слот по голосам.
+                                             MG 24-09-2026: недельный слот уже известен (пн 18:00, сб 17:00, …)
+                                             — селект «Когда удобно?» не предлагаем, время решено. --}}
                                         <div class="flex items-center gap-2">
+                                            @if(! $item->slot)
                                             <select data-waitlist-pref="{{ $item->slug }}"
                                                     title="Когда вам удобно?"
                                                     class="text-xs font-semibold text-slate-300 bg-[#141A28] border border-[#1F2636] hover:border-brand/50 rounded-lg px-2 py-1.5">
@@ -162,6 +165,7 @@
                                                     <option value="{{ $prefKey }}">{{ $prefLabel }}</option>
                                                 @endforeach
                                             </select>
+                                            @endif
                                             <button type="button"
                                                     data-waitlist-vote="{{ $item->slug }}"
                                                     class="text-xs font-bold text-white bg-brand hover:opacity-90 transition rounded-lg px-3 py-1.5"

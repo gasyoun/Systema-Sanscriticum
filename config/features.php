@@ -136,6 +136,16 @@ return [
     'support_answer_suggester' => (bool) env('SUPPORT_ANSWER_SUGGESTER', false),
 
     /*
+     | Эмбед веб-чата для samskrtam.ru (H5451): публичный GET /chat/embed —
+     | standalone-страница с одним support-chat-widget без лейаута кабинета,
+     | которую магазин встраивает в iframe (кнопка «Спросить» на WP-стороне).
+     | Selfgate: OFF → 404. CSP frame-ancestors ограничен samskrtam.ru и
+     | выставляется ТОЛЬКО на этом ответе. Троттлинг как у chat/message.
+     | Включение: SUPPORT_CHAT_EMBED=true + php artisan config:cache.
+     */
+    'support_chat_embed' => (bool) env('SUPPORT_CHAT_EMBED', false),
+
+    /*
      | Шаблонные черновики FAQ-суггестера ПЕРЕД LLM (H1838, тикет S9). Когда ВКЛ,
      | категория D/E/F с привязанным шаблоном (MessageTemplate.suggester_category)
      | получает черновик из шаблона с подстановкой плейсхолдеров — LLM для неё
@@ -411,6 +421,15 @@ return [
      | OFF). Слот расписания — воскресенье 18:00 Europe/Moscow.
      */
     'support_auto_reply_weekly_report' => (bool) env('SUPPORT_AUTO_REPLY_WEEKLY_REPORT', false),
+
+    /*
+     | H5452: ежедневный дайджест открытых подсказок куратору, 09:00
+     | Europe/Moscow: «Ждут ответа: N чатов / M сообщений; старейший — X ч;
+     | 🔥: K». ВЫКЛ по умолчанию — внешний исходящий админам; --dry работает
+     | и при OFF (паттерн H3392). Расписание — отдельная cron-строка
+     | (урок crontab .92: «своя строка = своя судьба»), не schedule:run.
+     */
+    'support_hint_daily_digest' => (bool) env('SUPPORT_HINT_DAILY_DIGEST', false),
 
     /*
      | H3462 (рулинг MG 24-08-2026): входящий email как канал поддержки.
@@ -1709,6 +1728,15 @@ return [
      | выплаты. OFF = прежнее поведение. H5 (unique-guard fulfilled_payment_id)
      | и H6 (окно payout-run) — чистые дефекты без флага. Включение:
      | PAYMENT_FIX_WAVE1=true + php artisan config:cache (human ops).
+     | H5442 (решения D4/D11/D13/D14/D20, одна волна целиком): PayPal-заявка
+     | сверяется с ценой тарифа в той же валюте, ±5% — автоподтверждение
+     | (недоплата — уведомление ученику), вне допуска/без цены — pending;
+     | стабильный ключ повтора claim_replay_key (unique); возврат удерживается
+     | из выплаты один раз; один пакет выплаты на блок (settlement_key, unique);
+     | RUB — источник истины, EUR выводится из итогового RUB после авансов,
+     | отрицательный итог → 0 + типизированное исключение сверки; доступ
+     | fail-closed (как GRANT_ACCESS_FAIL_CLOSED). Отчёт до/после:
+     | php artisan money:p0-wave-report (только чтение).
      */
     'payment_fix_wave1' => (bool) env('PAYMENT_FIX_WAVE1', false),
 ];
