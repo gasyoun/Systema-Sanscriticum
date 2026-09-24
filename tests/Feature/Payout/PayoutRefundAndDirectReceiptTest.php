@@ -95,25 +95,23 @@ class PayoutRefundAndDirectReceiptTest extends TestCase
     /** Обязательство за блок + оплата + возврат по нему, всё через P1-ядро. */
     private function refundedBlock(bool $delivered = false, int $blockNumber = 1): array
     {
-        $obligation = $this->ledger->obligation("obl:{$blockNumber}", [
-            'kind' => 'block',
-            'user_id' => $this->student->id,
-            'course_id' => $this->course->id,
-            'block_number' => $blockNumber,
-            'lessons_count' => 4,
-            'list_price_kopecks' => 100_000,
-            'price_kopecks' => 100_000,
-        ]);
+        $obligation = $this->ledger->openBlock(
+            "obl:{$blockNumber}",
+            $this->student->id,
+            $this->course->id,
+            $blockNumber,
+            100_000,
+        );
 
         $receipt = $this->ledger->receipt("rcpt:{$blockNumber}", 100_000, $this->student->id, $this->course->id, now());
-        $this->ledger->allocate("alloc:{$blockNumber}", $receipt, $obligation, 100_000);
+        $this->ledger->allocate($receipt, $obligation, 100_000, "alloc:{$blockNumber}");
 
         if ($delivered) {
             $this->ledger->markDelivered($obligation, now()->subDay());
         }
 
-        $refund = $this->ledger->refund("rfnd:{$blockNumber}", 100_000, $receipt, now());
-        $this->ledger->allocate("alloc-rfnd:{$blockNumber}", $refund, $obligation, -100_000);
+        // Возврат за неоказанный блок явно называет обязательство, которое уменьшает (D10).
+        $refund = $this->ledger->refund($receipt, "rfnd:{$blockNumber}", 100_000, now(), [$obligation->id => -100_000]);
 
         return [$obligation->refresh(), $refund];
     }
