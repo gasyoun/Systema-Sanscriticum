@@ -10,6 +10,7 @@ use App\Models\ReminderSuggestion;
 use App\Models\SupportAiReplyEvent;
 use App\Models\SupportAnswerSuggestion;
 use App\Models\SupportConversation;
+use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Reminders\ReminderSuggestionService;
@@ -82,6 +83,13 @@ class Helpdesk extends Page
     /** Активная вкладка списка диалогов: inbox | mine | tech | resolved. */
     public $activeTab = 'inbox';
 
+    /**
+     * Поиск над списком (24-09-2026): имя, email, @username или Telegram chat_id
+     * из отчёта. Непустой поиск ищет по всем вкладкам — куратор ищет человека,
+     * а не состояние треда.
+     */
+    public $search = '';
+
     /** Чья карточка открыта в модалке инфо (null = закрыта). */
     public $infoUserId = null;
 
@@ -120,7 +128,9 @@ class Helpdesk extends Page
                     ->orWhereHas('linkedSupportChats')
                     ->orWhereHas('supportConversations');
             })
-            ->tap(fn ($query) => $this->applyTabFilter($query))
+            ->tap(fn ($query) => $this->searchTerm() !== ''
+                ? $this->applyUserSearch($query, $this->searchTerm())
+                : $this->applyTabFilter($query))
             ->withCount(['chatMessages as unread_count' => function ($query) {
                 $query->where('is_read', false)->where('role', 'user');
             }]);
@@ -147,18 +157,28 @@ class Helpdesk extends Page
      */
     protected function loadGuestThreads(): void
     {
-        $this->guestThreads = SupportConversation::query()
+        $term = $this->searchTerm();
+
+        $threads = SupportConversation::query()
             ->whereNull('user_id')
             ->where(fn ($query) => $query
                 ->whereNotNull('guest_token')
                 ->orWhereNotNull('source_telegram_chat_id'))
             ->where('status', '!=', SupportConversation::STATUS_CLOSED)
+            ->when($term !== '', fn ($query) => $this->applyGuestSearch($query, $term))
             ->withCount(['chatMessages as unread_count' => function ($query): void {
                 $query->where('is_read', false)->where('role', 'user');
             }])
             ->orderByDesc('last_message_at')
-            ->get()
-            ->map(function (SupportConversation $thread): array {
+            ->get();
+
+        // @username чатов одним запросом — подпись «@user · chat N» под именем.
+        $tgUsernames = TelegramSupportChat::query()
+            ->whereIn('telegram_chat_id', $threads->pluck('source_telegram_chat_id')->filter()->unique())
+            ->pluck('username', 'telegram_chat_id');
+
+        $this->guestThreads = $threads
+            ->map(function (SupportConversation $thread) use ($tgUsernames): array {
                 $isTelegram = $thread->source_telegram_chat_id !== null;
 
                 // У телеграм-треда переписка лежит в telegram_support_messages,
@@ -175,6 +195,15 @@ class Helpdesk extends Page
                     'location' => $thread->locationLabel(), // город/страна посетителя (H1196)
                     'source' => $isTelegram ? 'telegram' : 'web',
                     'is_technical' => $thread->isTechnical(),
+                    // Номер из отчётов/аудитов — чтобы найти чат глазами.
+                    'tg_label' => $isTelegram
+                        ? collect([
+                            filled($tgUsernames[$thread->source_telegram_chat_id] ?? null)
+                                ? '@'.$tgUsernames[$thread->source_telegram_chat_id]
+                                : null,
+                            'chat '.$thread->source_telegram_chat_id,
+                        ])->filter()->implode(' · ')
+                        : null,
                 ];
             })
             ->all();
@@ -205,6 +234,53 @@ class Helpdesk extends Page
                         ->whereNull('assigned_to'));
             }),
         };
+    }
+
+    /** Поиск перечитывает список сразу (wire:model.live в шаблоне). */
+    public function updatedSearch(): void
+    {
+        $this->loadUsersList();
+    }
+
+    protected function searchTerm(): string
+    {
+        return trim(ltrim(trim((string) $this->search), '@'));
+    }
+
+    /** Студенты: имя / email / telegram_id / chat_id привязанного TG-support чата. */
+    protected function applyUserSearch($query, string $term): void
+    {
+        $like = '%'.$term.'%';
+
+        $query->where(function ($q) use ($term, $like): void {
+            $q->where('name', 'like', $like)
+                ->orWhere('email', 'like', $like);
+
+            if (ctype_digit($term)) {
+                $q->orWhere('telegram_id', $term)
+                    ->orWhereHas('linkedSupportChats', fn ($chat) => $chat->where('telegram_chat_id', $term));
+            } else {
+                $q->orWhereHas('linkedSupportChats', fn ($chat) => $chat->where('username', 'like', $like));
+            }
+        });
+    }
+
+    /** Треды «Без привязки»: имя гостя / chat_id / @username TG-чата. */
+    protected function applyGuestSearch($query, string $term): void
+    {
+        $like = '%'.$term.'%';
+
+        $query->where(function ($q) use ($term, $like): void {
+            $q->where('guest_name', 'like', $like);
+
+            if (ctype_digit($term)) {
+                $q->orWhere('source_telegram_chat_id', $term);
+            } else {
+                $q->orWhereIn('source_telegram_chat_id', TelegramSupportChat::query()
+                    ->where('username', 'like', $like)
+                    ->select('telegram_chat_id'));
+            }
+        });
     }
 
     /** Переключить вкладку списка диалогов и перечитать список. */
@@ -705,11 +781,21 @@ class Helpdesk extends Page
 
         $channel = app(SupportReplyService::class)->activeChannel($this->activeUserId);
 
-        if ($channel === SupportReplyService::CHANNEL_TELEGRAM_SUPPORT) {
+        if ($channel !== SupportReplyService::CHANNEL_TELEGRAM_SUPPORT) {
+            return $cabinet;
+        }
+
+        // Разговор живёт в Telegram, но в TG-support ответ уйдёт, только если
+        // ветка отправки туда пойдёт (та же проверка, что в sendMessageToStudent):
+        // флаг support_unified_reply ИЛИ тред «Техника». Иначе — честно «Кабинет».
+        $user = User::find($this->activeUserId);
+        $isTech = $user && app(SupportConversationManager::class)->currentFor($user)?->isTechnical() === true;
+
+        if (config('features.support_unified_reply') || $isTech) {
             return ['key' => 'telegram', 'label' => 'Telegram-support', 'emoji' => '🔹'];
         }
 
-        return $cabinet;
+        return ['key' => 'web', 'label' => 'Кабинет — в Telegram не уйдёт, студент пишет туда', 'emoji' => '⚠️'];
     }
 
     /** ИИ-черновик ответа: кладём в поле ввода, не отправляя. */
