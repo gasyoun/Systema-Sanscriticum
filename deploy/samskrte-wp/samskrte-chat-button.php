@@ -22,24 +22,23 @@
  * Helpdesk). src ставится лениво при первом открытии — страница не грузит
  * чат до клика. CSP samskrte.ru ограничивает frame-ancestors своим доменом.
  */
-
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
+if (! defined('ABSPATH')) {
+    exit;
 }
 
-add_action( 'wp_footer', function () {
-	if ( is_admin() || wp_doing_ajax() ) {
-		return;
-	}
+add_action('wp_footer', function () {
+    if (is_admin() || wp_doing_ajax()) {
+        return;
+    }
 
-	// Текущий URL витрины — уходит в Systema как ?page= (контекст товара).
-	$scheme = ( is_ssl() ? 'https' : 'http' ) . '://';
-	$host   = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
-	$uri    = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '/';
-	$page   = esc_url( $scheme . $host . $uri );
+    // Текущий URL витрины — уходит в Systema как ?page= (контекст товара).
+    $scheme = (is_ssl() ? 'https' : 'http').'://';
+    $host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
+    $uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '/';
+    $page = esc_url($scheme.$host.$uri);
 
-	$embed = 'https://samskrte.ru/chat/embed?page=' . rawurlencode( $page );
-	?>
+    $embed = 'https://samskrte.ru/chat/embed?page='.rawurlencode($page);
+    ?>
 	<style>
 		#samscw-btn {
 			position: fixed; right: 20px; bottom: 20px; z-index: 99999;
@@ -71,7 +70,7 @@ add_action( 'wp_footer', function () {
 	<div id="samscw-wrap" role="dialog" aria-label="Чат с поддержкой" hidden>
 		<iframe id="samscw-frame"
 			title="Чат с поддержкой"
-			data-src="<?php echo esc_attr( $embed ); ?>"
+			data-src="<?php echo esc_attr($embed); ?>"
 			loading="lazy"
 			referrerpolicy="no-referrer-when-downgrade"
 		></iframe>
@@ -92,4 +91,4 @@ add_action( 'wp_footer', function () {
 	})();
 	</script>
 	<?php
-}, 20 );
+}, 20);
