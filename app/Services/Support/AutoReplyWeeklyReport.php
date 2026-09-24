@@ -34,6 +34,8 @@ final class AutoReplyWeeklyReport
      *     hinted_without_answer: int,
      *     stale_skips: int,
      *     latency_median_minutes: array<string, int>,
+     *     web_total: int,
+     *     web_sent_by_kind: array<string, int>,
      *     text: string
      * }
      */
@@ -48,12 +50,25 @@ final class AutoReplyWeeklyReport
             ->orderBy('id')
             ->get(['id', 'telegram_support_message_id', 'event_type', 'meta', 'created_at']);
 
-        $sentByKind = $this->sentByKind($events);
-        $categories = $this->categoryCounts($events);
-        $hinted = $events->where('event_type', SupportDmAutoReply::EVENT_HINTED)->count();
-        $hintedWithoutAnswer = $this->hintedWithoutAnswer($events);
-        $staleSkips = $events->where('event_type', SupportDmAutoReply::EVENT_STALE_SKIP)->count();
-        $latency = $this->humanAnswerLatencyMinutes($events);
+        // H5450: веб-срез (samskrte.ru) идёт отдельной строкой отчёта, а не в
+        // общую TG-полосу: иные channel'ы — иные знаменатели. Неделя без веб-
+        // событий не меняет ни одной прежней строки.
+        $webEvents = $events->filter(fn (SupportAiReplyEvent $e): bool => $this->isWebEvent($e));
+        $tgEvents = $events->reject(fn (SupportAiReplyEvent $e): bool => $this->isWebEvent($e));
+
+        $webSentByKind = $webEvents
+            ->where('event_type', SupportDmAutoReply::EVENT_SENT)
+            ->groupBy(fn (SupportAiReplyEvent $e): string => (string) ($e->meta['kind'] ?? 'unknown'))
+            ->map(fn (Collection $rows): int => $rows->count())
+            ->sortKeys()
+            ->all();
+
+        $sentByKind = $this->sentByKind($tgEvents);
+        $categories = $this->categoryCounts($tgEvents);
+        $hinted = $tgEvents->where('event_type', SupportDmAutoReply::EVENT_HINTED)->count();
+        $hintedWithoutAnswer = $this->hintedWithoutAnswer($tgEvents);
+        $staleSkips = $tgEvents->where('event_type', SupportDmAutoReply::EVENT_STALE_SKIP)->count();
+        $latency = $this->humanAnswerLatencyMinutes($tgEvents);
 
         return [
             'from' => $from->format('d.m'),
@@ -65,6 +80,8 @@ final class AutoReplyWeeklyReport
             'hinted_without_answer' => $hintedWithoutAnswer,
             'stale_skips' => $staleSkips,
             'latency_median_minutes' => $latency,
+            'web_total' => $webEvents->count(),
+            'web_sent_by_kind' => $webSentByKind,
             'text' => $this->formatHtml(
                 $from,
                 $to,
@@ -75,8 +92,19 @@ final class AutoReplyWeeklyReport
                 $hintedWithoutAnswer,
                 $staleSkips,
                 $latency,
+                $webEvents->count(),
+                $webSentByKind,
             ),
         ];
+    }
+
+    /**
+     * Событие веб-полосы: без TG-сообщения и с via вебчат-конвейера.
+     */
+    private function isWebEvent(SupportAiReplyEvent $event): bool
+    {
+        return $event->telegram_support_message_id === null
+            && (string) ($event->meta['via'] ?? '') === SupportWebchatAutoReply::VIA;
     }
 
     /**
@@ -227,6 +255,7 @@ final class AutoReplyWeeklyReport
      * @param  array<string, int>  $sentByKind
      * @param  array<string, int>  $categories
      * @param  array<string, int>  $latency
+     * @param  array<string, int>  $webSentByKind
      */
     private function formatHtml(
         CarbonImmutable $from,
@@ -238,6 +267,8 @@ final class AutoReplyWeeklyReport
         int $hintedWithoutAnswer,
         int $staleSkips,
         array $latency,
+        int $webTotal = 0,
+        array $webSentByKind = [],
     ): string {
         $lines = [
             '<b>🤖 Автоответы · '.$from->format('d.m').'–'.$to->format('d.m').'</b>',
@@ -279,6 +310,15 @@ final class AutoReplyWeeklyReport
 
         if ($staleSkips > 0) {
             $lines[] = 'Пропущено как устаревшие: '.$staleSkips.' (backlog era)';
+        }
+
+        if ($webTotal > 0) {
+            $webKinds = implode(' · ', array_map(
+                fn (string $kind, int $n): string => e($kind).' '.$n,
+                array_keys($webSentByKind),
+                array_values($webSentByKind),
+            ));
+            $lines[] = 'Веб-чат (samskrte.ru): '.$webTotal.($webKinds !== '' ? ' ('.$webKinds.')' : '');
         }
 
         if ($latency !== []) {
