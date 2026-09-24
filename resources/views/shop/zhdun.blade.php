@@ -44,7 +44,9 @@
             </p>
 
             {{-- H5475 (MG 24-09-2026): итоги шапки — «ждун» против «уже идут»,
-                 точные ссылки на идущие курсы и разница двух режимов. --}}
+                 точные ссылки на идущие курсы и разница двух режимов.
+                 MG 24-09-2026 (numbered lists): обе колонки — нумерованные
+                 <ol class="list-decimal"> — слева ждун, справа «уже идут». --}}
             @php $runningCount = $runningCourses->count(); @endphp
             <div class="mt-8 max-w-3xl mx-auto text-left rounded-2xl bg-[#111622] border border-[#1F2636] p-5 md:p-6">
                 <p class="text-sm text-slate-400 leading-relaxed mb-4">
@@ -57,8 +59,22 @@
                     <div>
                         <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Под вопросом (ждун)</p>
                         <p class="text-sm text-slate-300 leading-relaxed">
-                            {{ $zhdunCourseCount }} {{ \App\Support\Plural::ru($zhdunCourseCount, 'курс', 'курса', 'курсов') }} · {{ $zhdunTeacherCount }} {{ \App\Support\Plural::ru($zhdunTeacherCount, 'преподаватель', 'преподавателя', 'преподавателей') }} — будущие группы, которых ещё нет.
+                            {{ $zhdunCourseCount }} {{ \App\Support\Plural::ru($zhdunCourseCount, 'курс', 'курса', 'курсов') }} · {{ $zhdunTeacherCount }} {{ \App\Support\Plural::ru($zhdunTeacherCount, 'преподаватель', 'преподавателя', 'преподавателей') }} — будущие группы, которых ещё нет:
                         </p>
+                        @if($zhdunCourses->isNotEmpty())
+                            <ol class="text-sm mt-2 leading-relaxed list-decimal list-inside space-y-1">
+                                @foreach($zhdunCourses as $zhdun)
+                                    <li>
+                                        @if($zhdun['url'])
+                                            <a href="{{ $zhdun['url'] }}"
+                                               class="text-[#38BDF8] hover:text-[#7DD3FC] transition-colors">{{ $zhdun['title'] }}</a>
+                                        @else
+                                            {{ $zhdun['title'] }}
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ol>
+                        @endif
                         <p class="text-xs text-slate-500 mt-2 leading-relaxed">
                             Дата «не раньше» сдвинется, пока не соберётся кворум: нужное число голосов открывает оплату, нужное число оплат к сроку запускает группу.
                         </p>
@@ -73,12 +89,14 @@
                             <p class="text-sm text-slate-300 leading-relaxed">
                                 {{ $runningCount }} {{ \App\Support\Plural::ru($runningCount, 'курс', 'курса', 'курсов') }} · {{ $runningTeacherCount }} {{ \App\Support\Plural::ru($runningTeacherCount, 'преподаватель', 'преподавателя', 'преподавателей') }} — реальные группы, занятия идут по расписанию:
                             </p>
-                            <p class="text-sm mt-2 leading-relaxed flex flex-wrap gap-x-4 gap-y-1">
+                            <ol class="text-sm mt-2 leading-relaxed list-decimal list-inside space-y-1">
                                 @foreach($runningCourses as $running)
-                                    <a href="{{ $running['url'] }}"
-                                       class="text-[#38BDF8] hover:text-[#7DD3FC] transition-colors">{{ $running['title'] }}</a>
+                                    <li>
+                                        <a href="{{ $running['url'] }}"
+                                           class="text-[#38BDF8] hover:text-[#7DD3FC] transition-colors">{{ $running['title'] }}</a>
+                                    </li>
                                 @endforeach
-                            </p>
+                            </ol>
                             <p class="text-xs text-slate-500 mt-2 leading-relaxed">
                                 Присоединиться можно и позже — записи помогают догнать.
                             </p>
