@@ -391,11 +391,21 @@ def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None, queue=None
     for i, r in enumerate(rows, 1):
         gloss = r.get(spec["gloss"], "")
         res = lint_gloss(gloss, lem, ev)
+        if queue is not None:
+            for tok in res["tokens"]:                 # lemma:POS:band:ipm — band "-" = unmeasured
+                lemma, pos, band = tok.split(":")[:3]
+                if band == "-":
+                    queue[(lemma, pos)] = queue.get((lemma, pos), 0) + 1
         syn = None
-        if "rare" in res["flags"]:
+        # teacher decks are flag-only (grill 23-09-2026 Q3): the teacher's wording stays,
+        # a swap is proposed only for sources we own.
+        if "rare" in res["flags"] and not spec.get("flag_only"):
             key = r.get(spec["sa_key"], "")
             pg = (by_iast if spec["sa_kind"] == "iast" else by_slp1).get(key, [])
             syn = propose_synonym(gloss, pg, lem, ev, res["min_cat"])
+        if spec.get("flagged_only") and res["status"] == "ok" \
+                and not (set(res["flags"]) & ACTIONABLE):
+            continue
         out_rows.append({**{k: r.get(k, "") for k in spec["ids"]}, "gloss_ru": gloss,
                          "status": res["status"], "flags": ",".join(res["flags"]),
                          "gloss_lemma": res["gloss_lemma"],
