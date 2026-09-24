@@ -10,8 +10,8 @@ use App\Models\Group;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Services\Telegram\VacationCommandService;
-use Illuminate\Support\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
