@@ -404,6 +404,14 @@ return [
     'support_draft_queue' => (bool) env('SUPPORT_DRAFT_QUEUE', false),
 
     /*
+     | 24-09-2026: TG-личка человека без привязки к кабинету заводит тред в
+     | Helpdesk («Без привязки») — с полем ответа, а не только в read-only
+     | «Аналитике». Чистое «привет/спасибо» и служебный 777000 треда не заводят.
+     | Висящие чаты догружает php artisan support:open-unlinked-dm-threads.
+     */
+    'support_unlinked_dm_threads' => (bool) env('SUPPORT_UNLINKED_DM_THREADS', false),
+
+    /*
      | H3242: утренняя сводка вчерашней поддержки в Telegram на ADMIN_TELEGRAM_ID
      | (gasyoun). ВКЛ по умолчанию — админский дайджест по явной просьбе, не
      | студенческий автоответ. Выкл: SUPPORT_DAILY_DIGEST=false + config:cache.

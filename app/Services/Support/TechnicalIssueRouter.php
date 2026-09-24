@@ -7,6 +7,7 @@ namespace App\Services\Support;
 use App\Models\SupportConversation;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
+use App\Support\SupportSmallTalk;
 
 /**
  * После ingest TelegramSupportMessage: открыть Helpdesk-тред и при match
@@ -18,6 +19,9 @@ use App\Models\User;
  */
 class TechnicalIssueRouter
 {
+    /** Служебные уведомления самого Telegram (вход с нового устройства, передача группы). */
+    public const TELEGRAM_SERVICE_CHAT_ID = 777000;
+
     public function __construct(
         private readonly TechnicalIssueDetector $detector,
         private readonly SupportConversationManager $conversations,
@@ -51,9 +55,15 @@ class TechnicalIssueRouter
         // Но только для ТЕХНИЧЕСКИХ вопросов, и в группе, и в личке: болтовню
         // незнакомца в личке по-прежнему пропускаем, иначе тред заводился бы на
         // каждого постороннего, написавшего юзерботу «привет».
+        //
+        // Флаг support_unlinked_dm_threads (24-09-2026): личка незнакомца с
+        // СОДЕРЖАТЕЛЬНЫМ сообщением тоже заводит тред. Иначе пробные заявки и
+        // «куда внести оплату» от ещё не привязанных людей видны лишь в read-only
+        // «Аналитике» и куратор не может ответить из Helpdesk. Чистое «привет» /
+        // «спасибо» по-прежнему пропускаем.
         $isLinked = $linkedUserId && User::query()->whereKey($linkedUserId)->exists();
 
-        if (! $isLinked && ! $isTech) {
+        if (! $isLinked && ! $isTech && ! $this->opensUnlinkedDmThread($isPrivate, $payload, $message)) {
             return null;
         }
 
@@ -93,6 +103,28 @@ class TechnicalIssueRouter
         }
 
         return $thread;
+    }
+
+    /**
+     * Личка непривязанного автора заводит тред, если флаг ON и это не чистый
+     * small talk. Пустой текст (фото чека, стикер, файл) — тоже тред: чек
+     * об оплате без подписи куратор обязан увидеть.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function opensUnlinkedDmThread(bool $isPrivate, array $payload, TelegramSupportMessage $message): bool
+    {
+        if (! $isPrivate || ! config('features.support_unlinked_dm_threads', false)) {
+            return false;
+        }
+
+        // «Незавершённая попытка входа», «Group Transferred» — это не человек.
+        $chatId = (int) ($payload['telegram_chat_id'] ?? $message->telegram_chat_id);
+        if ($chatId === self::TELEGRAM_SERVICE_CHAT_ID) {
+            return false;
+        }
+
+        return SupportSmallTalk::kind((string) ($payload['text'] ?? $message->text ?? '')) === null;
     }
 
     /**

@@ -481,6 +481,15 @@
                 @endforeach
             </div>
 
+            {{-- Поиск: имя, email, @username или номер Telegram-чата из отчёта --}}
+            <div style="padding: 8px 12px; border-bottom: 1px solid #f3f4f6;">
+                <input type="search"
+                    wire:model.live.debounce.400ms="search"
+                    data-helpdesk-search
+                    placeholder="Имя, email, @username или номер чата"
+                    style="width: 100%; font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(0,0,0,.15);">
+            </div>
+
             <div class="chat-list" wire:poll.10s="loadUsersList">
                 @forelse($usersWithChats as $chatUser)
                     <button wire:click="selectUser({{ $chatUser->id }})" class="chat-user-item {{ $activeUserId == $chatUser->id ? 'active' : '' }}">
@@ -497,7 +506,7 @@
                     </button>
                 @empty
                     @if(empty($guestThreads))
-                        <div style="text-align: center; color: #9ca3af; padding: 40px 20px;">Нет диалогов</div>
+                        <div style="text-align: center; color: #9ca3af; padding: 40px 20px;">{{ trim((string) $search) !== '' ? 'Ничего не нашлось' : 'Нет диалогов' }}</div>
                     @endif
                 @endforelse
 
@@ -508,7 +517,7 @@
                     @foreach($guestThreads as $g)
                         <button wire:click="selectGuest({{ $g['id'] }})" class="chat-user-item {{ $activeGuestId == $g['id'] ? 'active' : '' }}">
                             @if(($g['source'] ?? 'web') === 'telegram')
-                                <div style="width:40px;height:40px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;" title="Техвопрос из Telegram-чата">TG</div>
+                                <div style="width:40px;height:40px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;" title="Telegram-чат без привязки к кабинету">TG</div>
                             @else
                                 <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">Г</div>
                             @endif
@@ -520,6 +529,9 @@
                                     @endif
                                 </div>
                                 <div style="font-size: 12px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $g['preview'] ?: (($g['source'] ?? 'web') === 'telegram' ? 'Telegram-чат' : 'Гость сайта') }}</div>
+                                @if(!empty($g['tg_label']))
+                                    <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;" data-tg-label>{{ $g['tg_label'] }}</div>
+                                @endif
                                 @if(!empty($g['is_technical']))
                                     <div style="font-size: 11px; color: #b45309; margin-top: 2px;">🔧 Техника</div>
                                 @endif

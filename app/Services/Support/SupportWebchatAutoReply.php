@@ -11,6 +11,7 @@ use App\Models\SupportAnswerSuggestion;
 use App\Models\SupportConversation;
 use App\Models\User;
 use App\Services\Support\Faq\HybridRetriever;
+use App\Support\SupportSmallTalk;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -330,62 +331,7 @@ final class SupportWebchatAutoReply
      */
     private function pureSmallTalkKind(string $text): ?string
     {
-        $normalized = mb_strtolower(trim($text));
-        $stripped = preg_replace('~[^\p{L}\p{N}\s]~u', ' ', $normalized) ?? '';
-        $stripped = (string) preg_replace('~\s+~u', ' ', trim($stripped));
-
-        if ($stripped === '') {
-            return null;
-        }
-
-        $thanksWords = ['спасибо', 'спс', 'благодарю', 'благодарочка', 'thanks', 'thank you'];
-        $greetingWords = ['привет', 'здравствуйте', 'добрый день', 'добрый вечер',
-            'доброе утро', 'hello', 'hi', 'добрый'];
-        $courtesyWords = ['большое', 'огромное', 'вам', 'тебе', 'пожалуйста', 'всем'];
-
-        $isGreeting = false;
-        $isThanks = false;
-        $hasContent = false;
-
-        foreach (explode(' ', $stripped) as $token) {
-            $token = trim($token);
-
-            if ($token === '') {
-                continue;
-            }
-
-            if (in_array($token, $thanksWords, true)) {
-                $isThanks = true;
-
-                continue;
-            }
-
-            if (in_array($token, $greetingWords, true) || str_starts_with($token, 'нам')) {
-                $isGreeting = true;
-
-                continue;
-            }
-
-            if (in_array($token, $courtesyWords, true)) {
-                continue;
-            }
-
-            $hasContent = true;
-        }
-
-        if ($hasContent) {
-            return null;
-        }
-
-        if ($isGreeting) {
-            return 'greeting';
-        }
-
-        if ($isThanks) {
-            return 'thanks';
-        }
-
-        return null;
+        return SupportSmallTalk::kind($text);
     }
 
     private function moneyIntent(string $text): bool
