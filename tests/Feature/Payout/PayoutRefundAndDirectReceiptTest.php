@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature\Payout;
 
 use App\Models\Course;
-use App\Models\MoneyMovement;
-use App\Models\MoneyObligation;
 use App\Models\Teacher;
 use App\Models\TeacherCompensationAssignment;
 use App\Models\TeacherCompensationTerm;
@@ -214,7 +212,7 @@ class PayoutRefundAndDirectReceiptTest extends TestCase
         $this->artisan('money:payout-package-compare', ['--json' => true])
             ->assertSuccessful();
 
-        $output = \Illuminate\Support\Facades\Artisan::output();
+        $output = Artisan::output();
         $this->assertStringContainsString('unresolved_rate', $output);
         $this->assertStringNotContainsString('"delta_kopecks": 0', $output);
     }
@@ -232,7 +230,7 @@ class PayoutRefundAndDirectReceiptTest extends TestCase
 
         $this->artisan('money:payout-package-compare', ['--json' => true])->assertSuccessful();
 
-        $output = \Illuminate\Support\Facades\Artisan::output();
+        $output = Artisan::output();
         $this->assertStringContainsString('"class": "tie"', $output);
     }
 
@@ -240,7 +238,7 @@ class PayoutRefundAndDirectReceiptTest extends TestCase
     {
         config(['features.money_payout_packages' => false]);
 
-        $this->expectException(\App\Services\Payout\PayoutWritesDisabled::class);
+        $this->expectException(PayoutWritesDisabled::class);
         $this->packages->draft($this->teacher->id, Carbon::parse('2026-10-01'), Carbon::parse('2026-10-31'));
     }
 }
