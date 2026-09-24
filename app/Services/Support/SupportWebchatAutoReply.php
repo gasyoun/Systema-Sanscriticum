@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Support;
 
-use App\Support\SupportSmallTalk;
 use App\Events\ChatMessageSent;
 use App\Models\ChatMessage;
 use App\Models\SupportAiReplyEvent;
@@ -12,6 +11,7 @@ use App\Models\SupportAnswerSuggestion;
 use App\Models\SupportConversation;
 use App\Models\User;
 use App\Services\Support\Faq\HybridRetriever;
+use App\Support\SupportSmallTalk;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 

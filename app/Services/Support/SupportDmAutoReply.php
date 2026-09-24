@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Support;
 
-use App\Support\SupportSmallTalk;
 use App\Models\FollowUpTask;
 use App\Models\MessageTemplate;
 use App\Models\SupportAiReplyEvent;
@@ -15,6 +14,7 @@ use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Support\Faq\HybridRetriever;
 use App\Services\Support\Faq\SharedKnowledgeBase;
+use App\Support\SupportSmallTalk;
 use Illuminate\Support\Facades\Log;
 
 /**

@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportMessage;
 use App\Services\Support\TechnicalIssueRouter;
+use App\Services\TelegramSupport\TelegramSupportSyncService;
 use Illuminate\Console\Command;
 
 /**
@@ -102,7 +103,7 @@ class SupportOpenUnlinkedDmThreads extends Command
     }
 
     /**
-     * Payload как у живого синка ({@see \App\Services\TelegramSupport\TelegramSupportSyncService::rerouteUnlinkedIncoming()}),
+     * Payload как у живого синка ({@see TelegramSupportSyncService::rerouteUnlinkedIncoming()}),
      * плюс имя автора из контакта — чтобы в Helpdesk был человек, а не «Аноним».
      *
      * @return array<string, mixed>
