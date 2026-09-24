@@ -10,14 +10,19 @@
     увеличивается; длинный отзыв раскрывается по клику.
 --}}
 @php
-    // Короткий список размножаем, чтобы лента была выше экрана и не зияла дырой.
-    $pool = $testimonials->values();
-    while ($testimonials->isNotEmpty() && $pool->count() < 12) {
-        $pool = $pool->concat($testimonials);
-    }
+    // Раскладываем по колонкам, потом короткую колонку дополняем её же
+    // отзывами (лента должна быть выше экрана). Размножать общий список
+    // нельзя — тогда один и тот же отзыв встаёт рядом в соседних колонках.
     $columns = [[], [], []];
-    foreach ($pool as $i => $t) {
+    foreach ($testimonials->values() as $i => $t) {
         $columns[$i % 3][] = $t;
+    }
+    foreach ($columns as $c => $cards) {
+        $filled = $cards;
+        while ($cards !== [] && count($filled) < 5) {
+            $filled = array_merge($filled, $cards);
+        }
+        $columns[$c] = $filled;
     }
     $longBody = 260;
 @endphp
@@ -160,6 +165,13 @@
             if (!card || e.target !== card) return;
             e.preventDefault();
             toggle(card);
+        });
+        // Ушли с карточки — сворачиваем: раскрытая меняет высоту ленты,
+        // и петля -50% перестаёт попадать в стык.
+        document.querySelectorAll('.lt-card[aria-expanded]').forEach(function (card) {
+            card.addEventListener('mouseleave', function () {
+                card.setAttribute('aria-expanded', 'false');
+            });
         });
     })();
 </script>
