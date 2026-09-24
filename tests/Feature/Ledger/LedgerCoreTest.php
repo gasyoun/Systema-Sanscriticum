@@ -108,6 +108,14 @@ class LedgerCoreTest extends TestCase
         $this->assertFalse($this->ledger->writable());
     }
 
+    /** Число триггеров ядра — SQLite локально/CI, MariaDB в scratch-доказательстве. */
+    private function ledgerTriggerCount(): int
+    {
+        return DB::getDriverName() === 'sqlite'
+            ? DB::table('sqlite_master')->where('type', 'trigger')->where('name', 'like', 'money_%')->count()
+            : DB::table('information_schema.triggers')->where('trigger_schema', DB::getDatabaseName())->where('trigger_name', 'like', 'money\\_%')->count();
+    }
+
     public function test_migration_rolls_back_and_reapplies_without_touching_legacy_tables(): void
     {
         $paymentsColumns = Schema::getColumnListing('payments');
@@ -117,10 +125,10 @@ class LedgerCoreTest extends TestCase
         foreach (['money_movements', 'money_allocations', 'money_obligations'] as $t) {
             $this->assertFalse(Schema::hasTable($t), $t);
         }
-        $this->assertSame(0, DB::table('sqlite_master')->where('type', 'trigger')->where('name', 'like', 'money_%')->count());
+        $this->assertSame(0, $this->ledgerTriggerCount());
 
         $migration->up();
-        $this->assertSame(9, DB::table('sqlite_master')->where('type', 'trigger')->where('name', 'like', 'money_%')->count());
+        $this->assertSame(9, $this->ledgerTriggerCount());
         $this->assertSame($paymentsColumns, Schema::getColumnListing('payments'));
         $this->assertSame(1000, $this->receipt(1000)->amount_kopecks);
     }

@@ -71,13 +71,14 @@ race() {
     sed 's/^/      /' /tmp/h5443_race_a /tmp/h5443_race_b
     echo "      family net = $(sql -N -e "SELECT SUM(amount_kopecks) FROM $DB.money_movements WHERE id=$id OR cap_anchor_id=$id")"
 }
-echo "== 5. concurrency (both participants hold an old REPEATABLE READ snapshot)"
+echo "== 5. concurrency: service = top-level calls; stale/raw = both hold an old REPEATABLE READ snapshot"
 race service
+race stale
 race raw
 echo "   integrity: $(php scripts/h5443_ledger_concurrency_probe.php check)"
 
 echo "== 6. ledger tests on MariaDB (RefreshDatabase = migrate:fresh on scratch)"
-vendor/bin/phpunit tests/Feature/Ledger 2>&1 | grep -viE 'deprecat' | tail -6
+DB_PASSWORD="${DB_PASSWORD}" vendor/bin/phpunit tests/Feature/Ledger 2>&1 | grep -viE 'deprecat' | tail -6
 
 if [ "${1:-}" = "--with-legacy-copy" ]; then
     echo "== 7. backfill report on a copy of live legacy tables (stays on this host)"

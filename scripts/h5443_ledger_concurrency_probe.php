@@ -7,13 +7,15 @@ declare(strict_types=1);
  *
  *   php scripts/h5443_ledger_concurrency_probe.php setup
  *   php scripts/h5443_ledger_concurrency_probe.php service <receiptId> <key> <kopecks> <barrierEpoch>
+ *   php scripts/h5443_ledger_concurrency_probe.php stale   <receiptId> <key> <kopecks> <barrierEpoch>
  *   php scripts/h5443_ledger_concurrency_probe.php raw     <receiptId> <key> <kopecks> <barrierEpoch>
  *   php scripts/h5443_ledger_concurrency_probe.php check
  *
- * Каждый участник гонки открывает транзакцию, делает чтение (фиксирует снимок
- * REPEATABLE READ), ждёт общего барьера и только потом возвращает деньги —
- * худший случай для «устаревшего снимка». `service` идёт через LedgerService
- * (блокировки), `raw` — голым INSERT, только триггер. Отказывается работать,
+ * `service` — обычный верхнеуровневый вызов LedgerService (как в проде): оба
+ * участника стартуют по общему барьеру. `stale` и `raw` сначала открывают свою
+ * транзакцию и делают чтение (фиксируют снимок REPEATABLE READ), ждут барьера
+ * и только потом возвращают деньги — худший случай «устаревшего снимка»;
+ * `stale` зовёт сервис внутри этой транзакции, `raw` — голый INSERT, только триггер. Отказывается работать,
  * если DB_DATABASE не содержит «scratch».
  */
 
@@ -24,6 +26,7 @@ use App\Services\Ledger\LedgerInvariantViolation;
 use App\Services\Ledger\LedgerProjection;
 use App\Services\Ledger\LedgerService;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Database\DeadlockException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
@@ -57,12 +60,20 @@ if ($mode === 'check') {
 [$id, $key, $kopecks, $barrier] = [(int) $argv[2], (string) $argv[3], (int) $argv[4], (float) $argv[5]];
 
 try {
+    if ($mode === 'service') {
+        while (microtime(true) < $barrier) {
+            usleep(500);
+        }
+        $ledger->refund(MoneyMovement::query()->findOrFail($id), $key, $kopecks, now());
+        echo "OK {$mode} {$key}", PHP_EOL;
+        exit(0);
+    }
     DB::transaction(function () use ($mode, $ledger, $id, $key, $kopecks, $barrier): void {
         DB::select('SELECT COUNT(*) AS n FROM money_movements'); // снимок до барьера
         while (microtime(true) < $barrier) {
             usleep(500);
         }
-        if ($mode === 'service') {
+        if ($mode === 'stale') {
             $ledger->refund(MoneyMovement::query()->findOrFail($id), $key, $kopecks, now());
 
             return;
@@ -83,6 +94,8 @@ try {
         usleep(300_000); // держим транзакцию открытой, чтобы вторая вставка шла внахлёст
     });
     echo "OK {$mode} {$key}", PHP_EOL;
+} catch (DeadlockException $e) {
+    echo "ABORTED-SAFE {$mode} {$key}: ", preg_replace('/\s+/', ' ', mb_substr($e->getMessage(), 0, 110)), PHP_EOL;
 } catch (LedgerInvariantViolation|QueryException $e) {
-    echo "REJECTED {$mode} {$key}: ", preg_replace('/\s+/', ' ', mb_substr($e->getMessage(), 0, 160)), PHP_EOL;
+    echo "REJECTED {$mode} {$key}: ", preg_replace('/\s+/', ' ', mb_substr($e->getMessage(), 0, 110)), PHP_EOL;
 }

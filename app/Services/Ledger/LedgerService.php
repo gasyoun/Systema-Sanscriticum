@@ -47,6 +47,8 @@ final class LedgerService
         'legacy_teacher_payout_id', 'created_by', 'reason', 'meta', 'approved_by',
     ];
 
+    private const CONCURRENCY_ATTEMPTS = 3;
+
     private int $shadowDepth = 0;
 
     public function __construct(private readonly LedgerProjection $projection) {}
@@ -675,7 +677,13 @@ final class LedgerService
             throw new LedgerWritesDisabled('Денежное ядро (H5443) выключено: features.money_ledger_core=false. В P1 запись идёт только в теневом прогоне.');
         }
 
-        return DB::transaction($fn);
+        // Гонка на MariaDB 11.8 (innodb_snapshot_isolation=ON, как на проде):
+        // проигравший получает 1020 «Record has changed since last read» /
+        // deadlock, и ничего не записывается. Верхнеуровневый вызов Laravel
+        // повторяет сам — на повторе предел проверяется по свежим данным и
+        // даёт обычный отказ «refunds exceed…». Внутри чужой транзакции
+        // DeadlockException уходит вызывающему: повторять надо всю его транзакцию.
+        return DB::transaction($fn, self::CONCURRENCY_ATTEMPTS);
     }
 
     /** Ошибка триггера «ledger: …» → LedgerInvariantViolation с тем же текстом. */
