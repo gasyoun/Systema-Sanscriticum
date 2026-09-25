@@ -99,6 +99,35 @@ php artisan money:recon-exceptions --resolve=17 --by=1 --reason="доступ с
 
 Плановый прогон: `money:reconcile-daily --persist --scheduled`, ежедневно 04:35 (Europe/Moscow), `withoutOverlapping`, `onOneServer`, сбой — `ScheduleFailureSignal`. Heartbeat — `MONEY_RECON_PING_URL`; Telegram-алерт — новые исключения, FAIL или смена статуса полноты; повтор без изменений алерта не шлёт.
 
+## Источник `bank_statement` — зачисления выписки Точки (H5480)
+
+**Почему только агрегаты.** Выписка счёта не несёт идентификатора ученика: [H4645](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H4645-OxAlpha_Systema-Sanscriticum_tochka-statement-import-paid-no-access-sensor_13.09.26.md) измерил 1051 из 1052 входящих строк с банком в роли плательщика — 939 пер-QR расчётов и 111 дневных агрегатов эквайринга за вычетом комиссии. Построчная привязка строки выписки к оплате структурно невозможна, поэтому сверка идёт **по суммам дня** и никогда не «догадывается».
+
+**Импорт.** Бухгалтер выгружает CSV, кладёт на хост и называет покрытый период — выводить его из строк нельзя, иначе день без зачислений выглядел бы непокрытым:
+
+```bash
+php artisan money:import-statement-credits /var/www/html/storage/app/statements/Tochka_2026-09.csv --from=2026-09-01 --to=2026-09-30 --dry-run
+php artisan money:import-statement-credits /var/www/html/storage/app/statements/Tochka_2026-09.csv --from=2026-09-01 --to=2026-09-30
+```
+
+Идемпотентность двойная: тот же файл (sha256) — прежний импорт и ни одной записи; та же строка (`row_hash` = sha256 «документ|дата|сумма|назначение», формула сенсора H4645) — пропуск. Таблицы `bank_statement_imports` / `bank_statement_credits` append-only (триггеры запрещают UPDATE и DELETE, одинаково на MariaDB и SQLite). Назначение платежа **не хранится** — только его sha256 и технические токены (QR ID, «Заказ №N»); ПДн в базу сверки не попадают. Неизвестный заголовок — отказ, а не «разобрали 0 строк».
+
+**Статус источника.** `present` — только если какой-то **один** импорт покрывает день целиком; частичная выписка остаётся `missing`, и прогон честно `incomplete`. Пока флаг `MONEY_BANK_STATEMENT_CREDITS` выключен, сверка строк выписки не читает вовсе.
+
+**Дневные контроли** (расхождение = одно исключение на контроль, доказательство — хэши строк выписки; сверка ничего не чинит и не закрывает):
+
+| Контроль | Что сравнивается | Тип исключения |
+|---|---|---|
+| `qr_settlements_vs_payments` | пер-QR расчёты дня ↔ оплаты канала `bank_acquiring` окна `[день − лаг; день]` | `currency_amount_mismatch` |
+| `acquiring_aggregate_vs_payments_net_of_fee` | дневной агрегат эквайринга ↔ те же оплаты за вычетом комиссии: подразумеваемая комиссия обязана лежать в `[0; max_fee_bps]` | `currency_amount_mismatch` |
+| `unclassified_credits` | зачисления без QR ID, договора эквайринга и «Заказ №N» | `unknown_purpose` |
+
+Пороги — `config/money_recon.php`, **никогда не в коде**: `settlement_lag_days` (T+1), `aggregate_tolerance_kopecks` (0), `acquiring_max_fee_bps` (350).
+
+**Включение в проде** (money-контур, отдельный ops-шаг после первого импорта и зелёного прогона без `--persist`): `MONEY_BANK_STATEMENT_CREDITS=true` + `php artisan config:cache`.
+
+Пин: [BankStatementCreditsTest](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/Reconciliation/BankStatementCreditsTest.php).
+
 ## Известные пробелы
 
 1. ~~Нет импорта выписки зачислений банка~~ — закрыто [H5480](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5480-Opus_Systema-Sanscriticum_money-p3b-bank-statement-credits-source_24.09.26.md), см. «Источник bank_statement» ниже. Остаток: пока `MONEY_BANK_STATEMENT_CREDITS` выключен в проде, источник по-прежнему missing и прогоны `incomplete`.
