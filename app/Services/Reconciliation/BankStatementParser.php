@@ -192,9 +192,8 @@ final class BankStatementParser
             return null;
         }
         if (str_contains($s, '.') && str_contains($s, ',')) {
-            $s = str_replace([',', '.'], ['.', ''], str_replace('.', '', $s));
-            $s = str_replace(',', '.', str_replace('.', '', trim($raw)));
-            $s = str_replace([' ', "\u{00a0}"], '', $s);
+            // 1.234,56 — точка разделяет тысячи, запятая десятичная.
+            $s = str_replace(',', '.', str_replace('.', '', $s));
         } elseif (str_contains($s, ',')) {
             $s = str_replace(',', '.', $s);
         }
