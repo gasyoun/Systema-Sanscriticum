@@ -479,15 +479,10 @@ final class EvidenceCollector
     /** @return array<string, mixed> */
     private function bankStatementSource(?CarbonInterface $from, CarbonInterface $to): array
     {
-        $dir = (string) config('money_recon.bank_statement_dir', '');
-        if ($dir === '' || ! is_dir($dir)) {
-            return ['status' => 'missing', 'note' => 'no bank credit-statement import exists (H4200 parsers read debits only); transfers/SEPA cannot be matched against the bank'];
-        }
-        $files = glob(rtrim($dir, '/').'/*.csv') ?: [];
-
-        return $files === []
-            ? ['status' => 'missing', 'note' => "no statement files in {$dir}"]
-            : ['status' => 'missing', 'note' => count($files).' statement file(s) present but no credit parser is wired yet'];
+        return $this->statement->source(
+            $from !== null ? CarbonImmutable::parse($from) : null,
+            CarbonImmutable::parse($to),
+        );
     }
 
     /** @return array<string, mixed> */
