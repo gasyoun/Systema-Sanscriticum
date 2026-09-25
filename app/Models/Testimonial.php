@@ -23,12 +23,16 @@ class Testimonial extends Model
         'media_url',
         'is_visible',
         'is_featured',
+        'reviewed_at',
+        'show_on_login',
     ];
 
     protected $casts = [
         'rating' => 'integer',
         'is_visible' => 'boolean',
         'is_featured' => 'boolean',
+        'reviewed_at' => 'date',
+        'show_on_login' => 'boolean',
     ];
 
     /** Отзывы для общесайтовой полосы на витрине каталога (H323). */
