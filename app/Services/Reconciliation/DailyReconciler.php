@@ -61,6 +61,11 @@ final class DailyReconciler
             array_push($findings, ...$c['findings']);
         }
         array_push($findings, ...$this->classifier->ledgerFindings($input['ledger']));
+        // H5480: дневной агрегатный контроль выписки. Окно «вся история» его не
+        // запускает — выписка покрывает дни, а не историю.
+        if (! $allHistory) {
+            array_push($findings, ...$this->statement->findings($day, $input['sources'][BankStatementControl::SOURCE] ?? []));
+        }
 
         $missing = array_keys(array_filter($input['sources'], fn ($s) => in_array($s['status'], ['missing', 'dark'], true)));
         sort($missing);
