@@ -235,6 +235,9 @@ final class DailyReconciler
             'excluded' => $input['excluded'],
             'findings_by_type' => $findingTypes,
             'ledger' => $ledger,
+            // H5480: что банк прислал за день, по видам зачислений (пусто, пока
+            // источник missing — ноль вместо «не видели» запрещён).
+            'bank_statement' => $input['sources'][BankStatementControl::SOURCE]['credits'] ?? null,
             'payout_packages' => $input['sources']['payout_packages'],
             'classification_digest' => $classDigest,
             'identity' => [
