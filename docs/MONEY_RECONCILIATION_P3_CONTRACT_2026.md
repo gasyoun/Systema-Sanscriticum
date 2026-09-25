@@ -101,7 +101,7 @@ php artisan money:recon-exceptions --resolve=17 --by=1 --reason="доступ с
 
 ## Известные пробелы
 
-1. Нет импорта выписки зачислений банка — `bank_statement` всегда missing, прогоны `incomplete` до [H5480 (Opus 5) — bank_statement source: Tochka credit import + daily aggregate control](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5480-Opus_Systema-Sanscriticum_money-p3b-bank-statement-credits-source_24.09.26.md). Сверять по строкам нельзя: [H4645](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H4645-OxAlpha_Systema-Sanscriticum_tochka-statement-import-paid-no-access-sensor_13.09.26.md) измерил, что в выписке счёта Точки нет идентификатора ученика (1051 из 1052 поступлений — от самого банка), поэтому H5480 сверяет дневные агрегаты.
+1. ~~Нет импорта выписки зачислений банка~~ — закрыто [H5480](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5480-Opus_Systema-Sanscriticum_money-p3b-bank-statement-credits-source_24.09.26.md), см. «Источник bank_statement» ниже. Остаток: пока `MONEY_BANK_STATEMENT_CREDITS` выключен в проде, источник по-прежнему missing и прогоны `incomplete`.
 2. Ядро тёмное до P4 — строки сверяются по согласованности доказательств, сверка с ядром включится сама, когда в ядре появятся строки.
 3. Пакеты выплат P2 (H5444) ещё не существуют — используется легаси `teacher_payouts`; P2 подключается через `MONEY_RECON_PAYOUT_PACKAGES_TABLE` без второй модели.
 
