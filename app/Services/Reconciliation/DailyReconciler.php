@@ -38,6 +38,7 @@ final class DailyReconciler
         private readonly EvidenceCollector $collector,
         private readonly EvidenceClassifier $classifier,
         private readonly ExceptionQueue $queue,
+        private readonly BankStatementControl $statement,
     ) {}
 
     /**
