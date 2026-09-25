@@ -123,4 +123,25 @@ class TelegramAdminNotifierResilienceTest extends TestCase
                 && $context['status'] === 400
         );
     }
+
+    public function test_error_body_is_sanitized_before_logging(): void
+    {
+        Log::spy();
+        Http::fake([
+            'api.telegram.org/*' => Http::response(
+                'Bad Request for https://api.telegram.org/bot'.self::TOKEN.'/sendMessage',
+                400
+            ),
+        ]);
+
+        $sent = app(TelegramAdminNotifier::class)->send(self::TOKEN, '555', 'алерт');
+
+        $this->assertFalse($sent);
+        Log::shouldHaveReceived('error')->once()->withArgs(function (string $message, array $context): bool {
+            $this->assertStringNotContainsString(self::TOKEN, (string) $context['body']);
+            $this->assertDoesNotMatchRegularExpression('/bot\d+:/', (string) $context['body']);
+
+            return true;
+        });
+    }
 }

@@ -119,13 +119,23 @@ class TelegramAdminNotifier
             Log::error('Telegram admin notifier error', [
                 'chat_id' => $chatId,
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'body' => $this->sanitizeError($response->body()),
             ]);
 
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Настроена ли отправка админам: есть и токен бота, и получатели.
+     * Нужен вызывающему коду, чтобы отличить «сбой доставки» (получатели есть,
+     * сообщение не ушло) от «отправлять некуда и нечем» (тихий no-op).
+     */
+    public function configured(): bool
+    {
+        return (string) config('services.telegram.bot_token') !== '' && $this->adminChatIds() !== [];
     }
 
     /**
