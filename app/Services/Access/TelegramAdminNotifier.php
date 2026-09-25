@@ -16,6 +16,16 @@ use Illuminate\Support\Facades\Log;
 class TelegramAdminNotifier
 {
     /**
+     * Сеть до api.telegram.org не должна держать FPM-воркер: при недоступном
+     * Telegram connect обрывается за 2 с (обычный прод-случай — DNS отдаёт
+     * недоступные IP), весь вызов ограничен 5 с. Алерт админу не срочный,
+     * поэтому таймауты жёстче, чем в очередях (connect 5 / total 15).
+     */
+    private const CONNECT_TIMEOUT_SECONDS = 2;
+
+    private const TIMEOUT_SECONDS = 5;
+
+    /**
      * @param  array<int,array<int,array{text:string,callback_data:string}>>|null  $inlineKeyboard
      * @return list<string> chat_id получателей, кому сообщение реально ушло
      */
@@ -62,7 +72,24 @@ class TelegramAdminNotifier
             $payload['reply_markup'] = json_encode(['inline_keyboard' => $inlineKeyboard]);
         }
 
-        $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", $payload);
+        try {
+            $response = Http::connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
+                ->timeout(self::TIMEOUT_SECONDS)
+                ->post("https://api.telegram.org/bot{$token}/sendMessage", $payload);
+        } catch (\Throwable $e) {
+            // Этот вызов исполняется СИНХРОННО внутри запроса логина
+            // (неудачный вход → LogFailedAuthentication → AccessAttemptLogger).
+            // Пока исключение летело наружу, недоступность Telegram превращала
+            // «неверный пароль» в 500 и держала воркер ~10 с на каждую попытку.
+            // Алерт — побочный эффект: его провал не имеет права ломать вход.
+            Log::warning('Telegram admin notifier: отправка не удалась', [
+                'chat_id' => $chatId,
+                'error' => $e->getMessage(),
+                'text' => $text,
+            ]);
+
+            return false;
+        }
 
         if (! $response->successful()) {
             Log::error('Telegram admin notifier error', [
