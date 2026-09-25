@@ -111,7 +111,8 @@ class PayoutRefundAndDirectReceiptTest extends TestCase
         }
 
         // Возврат за неоказанный блок явно называет обязательство, которое уменьшает (D10).
-        $refund = $this->ledger->refund($receipt, "rfnd:{$blockNumber}", 100_000, now(), [$obligation->id => -100_000]);
+        // Доли называются ПОЛОЖИТЕЛЬНОЙ величиной: знак ставит само ядро P1.
+        $refund = $this->ledger->refund($receipt, "rfnd:{$blockNumber}", 100_000, now(), [$obligation->id => 100_000]);
 
         return [$obligation->refresh(), $refund];
     }
@@ -211,8 +212,8 @@ class PayoutRefundAndDirectReceiptTest extends TestCase
             'comment' => 'офлайн, ставка спорна',
         ]);
 
-        $this->artisan('money:payout-package-compare', ['--json' => true])
-            ->assertSuccessful();
+        // Artisan::output() читает только вызовы через фасад — PendingCommand пишет мимо него.
+        $this->assertSame(0, Artisan::call('money:payout-package-compare', ['--json' => true]));
 
         $output = Artisan::output();
         $this->assertStringContainsString('unresolved_rate', $output);
@@ -230,7 +231,7 @@ class PayoutRefundAndDirectReceiptTest extends TestCase
             'paid_at' => '2026-09-10',
         ]);
 
-        $this->artisan('money:payout-package-compare', ['--json' => true])->assertSuccessful();
+        $this->assertSame(0, Artisan::call('money:payout-package-compare', ['--json' => true]));
 
         $output = Artisan::output();
         $this->assertStringContainsString('"class": "tie"', $output);
