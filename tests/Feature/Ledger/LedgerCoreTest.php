@@ -122,7 +122,11 @@ class LedgerCoreTest extends TestCase
     {
         $paymentsColumns = Schema::getColumnListing('payments');
         $migration = require database_path('migrations/2026_09_24_150000_create_money_ledger_core_tables.php');
+        // Откат всегда идёт пакетами в обратном порядке: выплатные таблицы P2 стоят
+        // на внешних ключах к money_movements, поэтому снимаются первыми (H5444).
+        $payouts = require database_path('migrations/2026_09_24_190000_create_teacher_compensation_and_payout_packages.php');
 
+        $payouts->down();
         $migration->down();
         foreach (['money_movements', 'money_allocations', 'money_obligations'] as $t) {
             $this->assertFalse(Schema::hasTable($t), $t);
@@ -130,6 +134,8 @@ class LedgerCoreTest extends TestCase
         $this->assertSame(0, $this->ledgerTriggerCount());
 
         $migration->up();
+        $payouts->up();
+        $this->assertTrue(Schema::hasTable('teacher_payout_packages'));
         $this->assertSame(9, $this->ledgerTriggerCount());
         $this->assertSame($paymentsColumns, Schema::getColumnListing('payments'));
         $this->assertSame(1000, $this->receipt(1000)->amount_kopecks);

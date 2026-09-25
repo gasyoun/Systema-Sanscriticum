@@ -261,7 +261,8 @@ return new class extends Migration
             'tpp_bi' => ['table' => 'teacher_payout_packages', 'event' => 'INSERT', 'rules' => array_merge([
                 ['payout: a new package starts as a draft', "NEW.state <> 'draft'"],
                 // D13: второй активный пакет того же расчётного окна запрещён.
-                ['payout: another live package already covers this teacher and period', "EXISTS (SELECT 1 FROM teacher_payout_packages p WHERE p.teacher_id = NEW.teacher_id AND p.period_start = NEW.period_start AND p.period_end = NEW.period_end AND p.state <> 'reversed')"],
+                // DATE() с обеих сторон: сырой INSERT с датой-временем иначе не совпадал со строкой-датой и обходил проверку.
+                ['payout: another live package already covers this teacher and period', "EXISTS (SELECT 1 FROM teacher_payout_packages p WHERE p.teacher_id = NEW.teacher_id AND DATE(p.period_start) = DATE(NEW.period_start) AND DATE(p.period_end) = DATE(NEW.period_end) AND p.state <> 'reversed')"],
             ], $packageShape)],
             'tpp_bu' => ['table' => 'teacher_payout_packages', 'event' => 'UPDATE', 'rules' => array_merge([
                 ['payout: illegal package transition', "NOT ({$legalTransition})"],
