@@ -46,7 +46,10 @@ final class EvidenceCollector
 
     public const CH_WEBHOOK = 'webhook_journal';
 
-    public function __construct(private readonly LedgerProjection $projection) {}
+    public function __construct(
+        private readonly LedgerProjection $projection,
+        private readonly BankStatementControl $statement,
+    ) {}
 
     /**
      * @return array{window: array{from: ?string, to: string}, sources: array<string, array<string, mixed>>, rows: list<array<string, mixed>>, excluded: array<string, int>, ledger: array<string, mixed>}
