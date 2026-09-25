@@ -110,6 +110,8 @@ php artisan money:recon-exceptions --resolve=17 --by=1 --reason="доступ с
 5. **Повтор ничего не открывает заново:** ключ исключения содержит суммы дня, поэтому те же числа дают тот же ключ.
 6. **Таблицы только свои:** `money_bank_statements`, `money_bank_statement_credits` (триггеры запрещают UPDATE/DELETE строк). Ни `payments`, ни доступ импорт не трогает.
 
+Прогон на настоящей выписке Точки (разбор совпал с независимым измерением H4645 до строки и до копейки): [EVIDENCE_MONEY_RECONCILIATION_P3B_H5480_25-09-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/EVIDENCE_MONEY_RECONCILIATION_P3B_H5480_25-09-2026.md).
+
 ## Известные пробелы
 
 1. ~~Нет импорта выписки зачислений банка~~ — закрыто [H5480](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5480-Opus_Systema-Sanscriticum_money-p3b-bank-statement-credits-source_24.09.26.md) (см. раздел «Выписка зачислений» ниже). Остаточный пробел: покрытие дня честно только при явных `--from/--to`; без них период выводится по датам строк и день без зачислений в него не попадает.
