@@ -1,0 +1,167 @@
+level	col_a	gloss_ru	status	flags	gloss_lemma	min_band	nkrya_tokens	synonym_proposal	synonym_ipm	synonym_band
+level_01	अजः	коза	flag	unknown			коза:S:-:-			
+level_01	गजः	слон	flag	unknown			слон:S:-:-			
+level_01	बाला	девочка	flag	unknown			девочка:S:-:-			
+level_01	माला	гирлянда	flag	unknown			гирлянда:S:-:-			
+level_01	पात्रम्	горшок	flag	unknown			горшок:S:-:-			
+level_01	नेत्रम्	глаз	flag	unknown			глаз:S:-:-			
+level_01	अश्वः	лошадь	flag	unknown			лошадь:S:-:-			
+level_01	जिह्वा	язык	flag	unknown			язык:S:-:-			
+level_01	नरः	человек	ok			5	человек:S:5:2888.63			
+level_01	नासा	нос	flag	unknown			нос:S:-:-			
+level_01	विश्वम्	вселенная	flag	unknown			вселенная:S:-:-			
+level_01	मुखम्	рот	flag	unknown			рот:S:-:-			
+level_02	वृक्षः	дерево	flag	unknown			дерево:S:-:-			
+level_02	लता	лиана	flag	unknown			лиана:S:-:-			
+level_02	रामः	Рама	ok	name						
+level_02	सीता	Сита	flag	unknown			сит:S:-:-			
+level_02	पुष्पम्	цветок	flag	unknown			цветок:S:-:-			
+level_02	वटः	баньян (дерево)	flag	phrase,unknown			баньян:S:-:- дерево:S:-:-			
+level_02	चूतः	манго (дерево)	flag	phrase,unknown			манго:S:-:- дерево:S:-:-			
+level_02	कमलम्	лотос	flag	unknown			лотос:S:-:-			
+level_02	स्फुरति	дрожит	flag	inflected,unknown	дрожать		дрожать:V:-:-			
+level_02	पठति	читает, учится	flag	phrase,unknown			читать:V:-:- учиться:V:-:-			
+level_02	गच्छति	идет	flag	inflected,unknown	идти		идти:V:-:-			
+level_02	विकसति	распускается	flag	inflected,unknown	распускаться		распускаться:V:-:-			
+level_02	लसति	блестит	flag	inflected,unknown	блестеть		блестеть:V:-:-			
+level_02	म्लायति	вянет	flag	inflected,unknown	вянуть		вянуть:V:-:-			
+level_02	पुष्प्यति	цветет	flag	inflected,unknown	цвести		цвести:V:-:-			
+level_02	वदति	говорит	flag	inflected,unknown	говорить		говорить:V:-:-			
+level_02	फलति	плодоносит	flag	inflected,unknown	плодоносить		плодоносить:V:-:-			
+level_02	तिष्ठति	стоит	flag	inflected_ambiguous,unknown			стоить:V:-:-			
+level_02	करोति	делает	flag	inflected,unknown	делать		делать:V:-:-			
+level_03	बालः	мальчик	flag	unknown			мальчик:S:-:-			
+level_03	देवः	бог	ok			4	бог:S:4:587.01			
+level_03	फलम्	плод	flag	unknown			плод:S:-:-			
+level_03	चरणः	нога	flag	unknown			нога:S:-:-			
+level_03	हस्तः	рука	ok			5	рука:S:5:1367.37			
+level_03	कन्या	девушка	flag	unknown			девушка:S:-:-			
+level_03	पुत्रः	сын	ok			4	сын:S:4:382.88			
+level_03	छात्रः	студент	flag	unknown			студент:S:-:-			
+level_03	नटः	актер, танцор	flag	phrase,unknown			актёр:S:-:- танцор:S:-:-			
+level_03	गायति	поет	flag	inflected,unknown	петь		петь:V:-:-			
+level_03	नमति	кланяется	flag	inflected,unknown	кланяться		кланяться:V:-:-			
+level_03	लिखति	пишет	flag	inflected,unknown	писать		писать:V:-:-			
+level_03	नृत्यति	танцует	flag	inflected,unknown	танцевать		танцевать:V:-:-			
+level_03	पश्यति	видит	flag	inflected,unknown	видеть		видеть:V:-:-			
+level_03	चलति	двигается	flag	inflected,unknown	двигаться		двигаться:V:-:-			
+level_04	हंसः	гусь-лебедь	flag	unknown			гусь-лебедь:S:-:-			
+level_04	कूजति	кричит	flag	inflected,unknown	кричать		кричать:V:-:-			
+level_04	पर्णम्	лист (дерева)	flag	phrase,unknown			лист:S:-:- дерево:S:-:-			
+level_04	क्रीडति	играет	flag	inflected,unknown	играть		играть:V:-:-			
+level_04	नृपः	царь	ok			4	царь:S:4:196.75			
+level_04	जयति	побеждает	flag	inflected,unknown	побеждать		побеждать:V:-:-			
+level_04	अचलः	гора	flag	unknown			гора:S:-:-			
+level_04	श्लोकः	шлока, строфа	flag	phrase,unknown			шлоко:S:-:- строфа:S:-:-			
+level_05	रथः	колесница	flag	unknown			колесница:S:-:-			
+level_05	तृनम्	трава	flag	unknown			трава:S:-:-			
+level_05	सारथिः	колесничий	flag	unknown			колесничий:S:-:-			
+level_05	गृहम्	дом	flag	unknown			дом:S:-:-			
+level_05	त्वम्	ты	ok							
+level_05	नयति	ведет	flag	inflected,unknown	вести		вести:V:-:-			
+level_05	खादति	ест, кушает	flag	phrase,unknown		4	есть:V:4:151.44 кушать:V:-:-			
+level_05	हरिः	Хари	flag	unknown			харя:S:-:-			
+level_05	नृपतिः	царь (на -i)	ok	phrase		4	царь:S:4:196.75			
+level_05	जलम्	вода	ok			4	вода:S:4:573.16			
+level_05	कपिः	обезьяна	flag	unknown			обезьяна:S:-:-			
+level_05	अहम्	я	ok							
+level_05	चरति	пасется, ест траву	flag	phrase,unknown		4	пастись:V:-:- есть:V:4:151.44 трава:S:-:-			
+level_05	आनयति	приносит	flag	inflected,unknown	приносить		приносить:V:-:-			
+level_05	आरोहति	садится на лошадь	flag	phrase,unknown			садиться:V:-:- лошадь:S:-:-			
+level_05	वहति	везет	flag	inflected,unknown	везти		везти:V:-:-			
+level_06	शकटम्	повозка	flag	unknown			повозка:S:-:-			
+level_06	शाकटिकः	возничий	flag	unknown			возничий:S:-:-			
+level_06	नौका	лодка	flag	unknown			лодка:S:-:-			
+level_06	नाविकः	лодчник	flag	unknown			лодчникнуть:V:-:-			
+level_06	पादः	стопа	flag	unknown			стоп:S:-:-			
+level_06	चन्द्रः	луна	flag	unknown			луна:S:-:-			
+level_06	वृषभः	бык	flag	unknown			бык:S:-:-			
+level_06	पतिः	муж	flag	unknown			муж:S:-:-			
+level_06	बालकः	мальчик на ка	flag	phrase,unknown			мальчик:S:-:-			
+level_06	चक्रम्	колесо	flag	unknown			колесо:S:-:-			
+level_06	कशा	кнут	flag	unknown			кнут:S:-:-			
+level_06	नदी	река	flag	unknown			река:S:-:-			
+level_06	नारी	женщина	flag	unknown			женщина:S:-:-			
+level_06	क्षेपणी	весло	flag	unknown			весло:S:-:-			
+level_06	आवाम्	мы двое	ok	phrase						
+level_06	युवाम्	вы двое	ok	phrase						
+level_06	कथम्	как	ok							
+level_06	आह्वयति	зовет	flag	inflected,unknown	звать		звать:V:-:-			
+level_06	तरति	пересекать	flag	unknown			пересекать:V:-:-			
+level_06	क्षिपति	бросать, грести	flag	phrase,unknown			бросать:V:-:- грести:V:-:-			
+level_06	ताडयति	бить	flag	unknown			бить:V:-:-			
+level_06	विलसति	украшать, сиять	flag	phrase,unknown			украшать:V:-:- сиять:V:-:-			
+level_07	धेनुः	корова	flag	unknown			корова:S:-:-			
+level_07	व्याघ्रः	тигр	flag	unknown			тигр:S:-:-			
+level_07	क्षीरम्	молоко	flag	unknown			молоко:S:-:-			
+level_07	ज्ञानम्	знание (среднего рода)	flag	phrase,unknown			знание:S:-:- среднее:S:-:- род:S:-:-			
+level_07	आहारः	еда, пища	flag	phrase,unknown			еда:S:-:- пища:S:-:-			
+level_07	वत्सः	теленок	flag	unknown			телёнок:S:-:-			
+level_07	धनम्	богатство, деньги, дар	flag	phrase,unknown			богатство:S:-:- деньга:S:-:- дар:S:-:-			
+level_07	उद्यानम्	сад	flag	unknown			сад:S:-:-			
+level_07	अध्ययनम्	обучение, повторение	flag	phrase,unknown			обучение:S:-:- повторение:S:-:-			
+level_07	विद्या	знание (женского рода)	flag	phrase,unknown			знание:S:-:- женский:A:-:- род:S:-:-			
+level_07	पाठालयः	школа	flag	unknown			школа:S:-:-			
+level_07	वयम्	мы	ok							
+level_07	यूयम्	вы	ok							
+level_07	वितरति	раздает	flag	inflected,unknown	раздавать		раздавать:V:-:-			
+level_07	भ्राम्यति	бродит, скитается, рыщет	flag	phrase,unknown			бродить:V:-:- скитаться:V:-:- рыскать:V:-:-			
+level_07	व्रजति	идет, направляется	flag	phrase,unknown			идти:V:-:- направляться:V:-:-			
+level_07	यच्छति	дает	flag	inflected,unknown	давать		давать:V:-:-			
+level_07	देशान्तरम्	заграница	flag	unknown			заграница:S:-:-			
+level_07	कविः	поэт	flag	unknown			поэт:S:-:-			
+level_08	शाखा	ветка	flag	unknown			ветка:S:-:-			
+level_08	तरुः	дерево (на t)	flag	phrase,unknown			дерево:S:-:-			
+level_08	पर्वतः	гора (на p)	flag	phrase,unknown			гора:S:-:-			
+level_08	बीजम्‌	семечка, семя	flag	phrase,unknown			семечко:S:-:- семя:S:-:-			
+level_08	मधु	мед	flag	unknown			мёд:S:-:-			
+level_08	रत्नम्‌	драгоценный камень	flag	phrase,unknown		4	драгоценный:A:-:- камень:S:4:178.13			
+level_08	पद्मम्	лотос (на p)	flag	phrase,unknown			лотос:S:-:-			
+level_08	नगरम्‌	город	flag	unknown			город:S:-:-			
+level_08	अङ्कुरः	побег растения	flag	phrase,unknown			побег:S:-:- растение:S:-:-			
+level_08	पीठम्‌	стул	flag	unknown			стул:S:-:-			
+level_08	समुद्रः	океан	flag	unknown			океан:S:-:-			
+level_08	मक्षिका	муха	flag	unknown			муха:S:-:-			
+level_08	धनिकः	богач	flag	unknown			богач:S:-:-			
+level_08	तटाकम्	озеро	flag	unknown			озеро:S:-:-			
+level_08	ग्रामः	деревня	flag	unknown			деревня:S:-:-			
+level_08	कुसुमम्	цветок (на k)	flag	phrase,unknown			цветок:S:-:-			
+level_08	प्ररोहति	проростает	flag	unknown			проростаять:V:-:-			
+level_08	पिबति	пьет	flag	inflected,unknown	пить		пить:V:-:-			
+level_08	स्रवति	течет	flag	inflected,unknown	течь		течь:V:-:-			
+level_08	त्रस्यति	боится	flag	inflected,unknown	бояться		бояться:V:-:-			
+level_08	उत्तिष्ठति	встает	flag	inflected,unknown	вставать		вставать:V:-:-			
+level_08	अवरोहति	спускается	flag	inflected,unknown	спускаться		спускаться:V:-:-			
+level_08	प्रवहति	стекает	flag	inflected,unknown	стекать		стекать:V:-:-			
+level_09	माता	мать	ok			4	мать:S:4:413.00			
+level_09	दुहिता	дочь	flag	unknown			дочь:S:-:-			
+level_09	पिता	отец	flag	unknown			отец:S:-:-			
+level_09	भर्ता	супруг	flag	unknown			супруг:S:-:-			
+level_09	जामाता	зять	flag	unknown			зять:S:-:-			
+level_09	पत्नी	жена	ok			4	жена:S:4:424.54			
+level_09	आज्ञा	приказ	flag	unknown			приказ:S:-:-			
+level_09	शिशुः	ребенок	ok			4	ребёнок:S:4:619.51			
+level_09	गानम्	песня	flag	unknown			песня:S:-:-			
+level_09	लालयति	ласкать, гладить	flag	phrase,unknown			ласкать:V:-:- гладить:V:-:-			
+level_09	तुष्यति	радовать, удовлетворять	flag	phrase,unknown			радовать:V:-:- удовлетворять:V:-:-			
+level_09	अनुसरति	следовать	flag	unknown			следовать:V:-:-			
+level_09	शब्दः	слово	flag	unknown			слово:S:-:-			
+level_09	आकर्णयति	слушать, прислушиватся	flag	phrase,unknown			слушать:V:-:- прислушивиться:V:-:-			
+level_09	स्वसा	сестра	flag	unknown			сестра:S:-:-			
+level_09	भ्राता	брат	flag	unknown			брат:S:-:-			
+level_10	काकः	ворона	flag	unknown			ворона:S:-:-			
+level_10	भेकः	лягушка	flag	unknown			лягушка:S:-:-			
+level_10	आकाशम्	небо	flag	unknown			небо:S:-:-			
+level_10	वर्षाः	pl. tantum сезон дождей	flag	phrase,unknown			сезон:S:-:- дождь:S:-:-			
+level_10	वापी	колодец, пруд	flag	phrase,unknown			колодец:S:-:- пруд:S:-:-			
+level_10	नीडम्	гнездо	flag	unknown			гнездо:S:-:-			
+level_10	भुमिः	земля	ok			4	земля:S:4:650.73			
+level_10	दिवा	днем	flag	inflected_ambiguous,unknown			день:S:-:-			
+level_10	नक्तम्	ночью	flag	unknown			ночью:ADV:-:-			
+level_10	स्वर्गः	небеса	flag	unknown			небо:S:-:-			
+level_10	डयते	летает	flag	inflected,unknown	летать		летать:V:-:-			
+level_10	वसति	живет	flag	inflected,unknown	жить		жить:V:-:-			
+level_10	रटति	кричит, квакает	flag	phrase,unknown			кричать:V:-:- квакать:V:-:-			
+level_10	प्लवते	прыгает, плавает	flag	phrase,unknown			прыгать:V:-:- плавать:V:-:-			
+level_10	जायते	рождается	flag	inflected,unknown	рождаться		рождаться:V:-:-			
+level_10	लभते	получает	flag	inflected,unknown	получать		получать:V:-:-			

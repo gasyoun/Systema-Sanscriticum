@@ -1,0 +1,1158 @@
+level	col_a	gloss_ru	status	flags	gloss_lemma	min_band	nkrya_tokens	synonym_proposal	synonym_ipm	synonym_band
+level_01	pat	падать, лететь	flag	phrase,unknown			падать:V:-:- лететь:V:-:-			
+level_01	dah	гореть, жечь	flag	phrase,unknown			гореть:V:-:- жечь:V:-:-			
+level_01	yaj	приносить жертву	flag	phrase,unknown			приносить:V:-:- жертва:S:-:-			
+level_01	śaṁs	прославлять	flag	unknown			прославлять:V:-:-			
+level_01	vas	жить, обитать, проживать	flag	phrase,unknown			жить:V:-:- обитать:V:-:- проживать:V:-:-			
+level_01	rakṣ	защищать	flag	unknown			защищать:V:-:-			
+level_01	jīv	жить	flag	unknown			жить:V:-:-			
+level_01	car	идти, совершать, пастись	flag	phrase,unknown			идти:V:-:- совершать:V:-:- пастись:V:-:-			
+level_01	nam	1P кланяться, почитать	flag	phrase,unknown			кланяться:V:-:- почитать:V:-:-			
+level_01	pac	варить	flag	unknown			варить:V:-:-			
+level_01	dhāv	бежать	flag	unknown			бежать:V:-:-			
+level_01	tyaj	покидать	flag	unknown			покидать:V:-:-			
+level_01	vah	нести, течь, веять, дуть	flag	phrase,unknown			нести:V:-:- течь:S:-:- веять:V:-:- дуть:V:-:-			
+level_01	vad	1 P. говорить	flag	unknown			говорить:V:-:-			
+level_02	atas / itas	отсюда, поэтому	flag	phrase,unknown		4	отсюда:ADV:-:- поэтому:ADV:4:289.91			
+level_02	tatas	оттуда, потому	flag	phrase,unknown			оттуда:ADV:-:- потому:ADV:-:-			
+level_02	yatas	откуда, почему (относит.)	flag	phrase,unknown			откуда:ADV:-:- почему:ADV:-:- относить:V:-:-			
+level_02	atra	здесь, сюда	flag	phrase,unknown		4	здесь:ADV:4:876.99 сюда:ADV:-:-			
+level_02	tatra	там, туда	flag	phrase,unknown			там:ADV:-:- туда:ADV:-:-			
+level_02	yatra	где, куда (относит.)	flag	phrase,unknown			где:ADV:-:- относить:V:-:-			
+level_02	ittham	(э)так	ok	phrase						
+level_02	tathā	так	ok							
+level_02	yathā	как (относит.)	flag	phrase,unknown			относить:V:-:-			
+level_02	adhunā	теперь	flag	unknown			теперь:ADV:-:-			
+level_02	tadā	тогда	flag	unknown			тогда:ADV:-:-			
+level_02	yadā	если, когда	ok	phrase						
+level_02	evam	таким образом	flag	phrase,unknown			такой:A:-:- образ:S:-:-			
+level_02	iti	так (цитат.)	flag	phrase,unknown			цитата:S:-:-			
+level_02	tu, kimtu	но, же	ok	phrase						
+level_02	adya	сегодня	flag	unknown			сегодня:ADV:-:-			
+level_02	sadā	всегда	flag	unknown			всегда:ADV:-:-			
+level_02	sarvatra	везде, повсюду	flag	phrase,unknown			везде:ADV:-:- повсюду:ADV:-:-			
+level_02	ca	и	ok							
+level_02	iha	здесь	ok			4	здесь:ADV:4:876.99			
+level_02	katham	как? каким образом?	flag	phrase,unknown			какой:A:-:- образ:S:-:-			
+level_02	kutas	откуда? почему?	flag	phrase,unknown			откуда:ADV:-:- почему:ADV:-:-			
+level_02	kutra, kva	где? куда?	flag	phrase,unknown			где:ADV:-:-			
+level_02	kadā	когда?	ok							
+level_02	eva	именно, только	flag	phrase,unknown			только:ADV:-:-			
+level_02	punar	опять, снова, но, же	flag	phrase,unknown			опять:ADV:-:- снова:ADV:-:-			
+level_02	he	о!	ok							
+level_03	ji	побеждать, завоевывать	flag	phrase,unknown			побеждать:V:-:- завоёвывать:V:-:-			
+level_03	nī	вести, направлять	flag	phrase,unknown			вести:V:-:- направлять:V:-:-			
+level_03	bhū	быть, становиться, происходить	flag	phrase,unknown		6	быть:V:6:12831.00 становиться:V:-:- происходить:V:-:-			
+level_03	smṛ	вспоминать	flag	unknown			вспоминать:V:-:-			
+level_03	tṛ	переправлять, спасать	flag	phrase,unknown			переправлять:V:-:- спасать:V:-:-			
+level_03	vṛṣ	идти (о дожде), осыпать дарами	flag	phrase,unknown			идти:V:-:- дождь:S:-:- осыпать:V:-:- дар:S:-:-			
+level_03	pā (piba-)	пить	flag	unknown			пить:V:-:-			
+level_03	sthā (tiṣṭha-)	стоять, находиться	flag	phrase,unknown			стоять:V:-:- находиться:V:-:-			
+level_03	dṛś (paśya-)	смотреть, видеть	flag	phrase,unknown			смотреть:V:-:- видеть:V:-:-			
+level_03	gam (gaccha-)	идти, ходить	flag	phrase,unknown			идти:V:-:- ходить:V:-:-			
+level_03	yam (yaccha-)	давать	flag	unknown			давать:V:-:-			
+level_04	devaḥ	бог	ok			4	бог:S:4:587.01			
+level_04	naraḥ	мужчина, человек	flag	phrase,unknown		5	мужчина:S:-:- человек:S:5:2888.63			
+level_04	putraḥ	сын	ok			4	сын:S:4:382.88			
+level_04	gajaḥ	слон	flag	unknown			слон:S:-:-			
+level_04	grāmaḥ	деревня	flag	unknown			деревня:S:-:-			
+level_04	nṛpaḥ	царь	ok			4	царь:S:4:196.75			
+level_04	phalam	плод, награда	flag	phrase,unknown			плод:S:-:- награда:S:-:-			
+level_04	gṛham	дом	flag	unknown			дом:S:-:-			
+level_04	nagaram	город	flag	unknown			город:S:-:-			
+level_04	jalam	вода	ok			4	вода:S:4:573.16			
+level_04	kṣīram	молоко	flag	unknown			молоко:S:-:-			
+level_04	dānam	подарок, подаяние	flag	phrase,unknown			подарок:S:-:- подаяние:S:-:-			
+level_05	kṣip	бросать	flag	unknown			бросать:V:-:-			
+level_05	viś	входить	flag	unknown			входить:V:-:-			
+level_05	pracch	спрашивать	flag	unknown			спрашивать:V:-:-			
+level_05	kṛṣ	пахать	flag	unknown			пахать:V:-:-			
+level_05	spṛś	прикасаться	flag	unknown			прикасаться:V:-:-			
+level_05	iṣ	искать, желать	flag	phrase,unknown		4	искать:V:-:- желать:V:4:213.33			
+level_05	diś	показывать	flag	unknown			показывать:V:-:-			
+level_05	sic	капать, поливать	flag	phrase,unknown			капать:V:-:- поливать:V:-:-			
+level_05	sṛj	творить, выпускать	flag	phrase,unknown			творить:V:-:- выпускать:V:-:-			
+level_05	hvā	звать	flag	unknown			звать:V:-:-			
+level_05	sad	сидеть	flag	unknown			сидеть:V:-:-			
+level_05	guh	прятать	flag	unknown			прятать:V:-:-			
+level_06	meghaḥ	облако	flag	unknown			облако:S:-:-			
+level_06	hastaḥ	рука	ok			5	рука:S:5:1367.37			
+level_06	mārgaḥ	дорога	flag	unknown			дорога:S:-:-			
+level_06	kuntaḥ	копье	flag	unknown			копьё:S:-:-			
+level_06	kaṭaḥ	циновка	flag	unknown			циновка:S:-:-			
+level_06	bālaḥ	мальчик	flag	unknown			мальчик:S:-:-			
+level_06	śaraḥ	стрела	flag	unknown			стрела:S:-:-			
+level_06	dhanam	деньги, богатство	flag	phrase,unknown			деньга:S:-:- богатство:S:-:-			
+level_06	sukham	счастье, благо	flag	phrase,unknown		3	счастие:S:3:29.48 благо:S:-:-			
+level_06	lāṅgalam	плуг	flag	unknown			плуг:S:-:-			
+level_06	kṣetram	поле	flag	unknown			поле:S:-:-			
+level_06	viṣam	яд	flag	unknown			яд:S:-:-			
+level_07	muc	освобождать, отпускать	flag	phrase,unknown			освобождать:V:-:- отпускать:V:-:-			
+level_07	kṛt	резать	flag	unknown			резать:V:-:-			
+level_07	lip	мазать, пачкать	flag	phrase,unknown			мазать:V:-:- пачкать:V:-:-			
+level_07	lup	ломать, грабить	flag	phrase,unknown			ломать:V:-:- грабить:V:-:-			
+level_07	gup	стеречь, защищать	flag	phrase,unknown			стеречь:V:-:- защищать:V:-:-			
+level_07	ruh	расти	flag	unknown			расти:V:-:-			
+level_08	janaḥ	человек, люди	ok	phrase		5	человек:S:5:2888.63 человек:S:5:2888.63			
+level_08	vṛkṣaḥ	дерево	flag	unknown			дерево:S:-:-			
+level_08	śivaḥ	Шива, имя бога	flag	phrase,name,unknown		4	имя:S:-:- бог:S:4:587.01			
+level_08	rāmaḥ	Рама, имя героя	flag	phrase,name,unknown			имя:S:-:- герой:S:-:-			
+level_08	śaraḥ	стрела	flag	unknown			стрела:S:-:-			
+level_08	pāpam	грех, зло	flag	phrase,unknown			грех:S:-:- зло:S:-:-			
+level_08	duḥkham	несчастье, горе	flag	phrase,unknown			несчастие:S:-:- гора:S:-:-			
+level_08	satyam	правда, истина	flag	phrase,unknown			истина:S:-:-			
+level_08	viṣam	яд	flag	unknown			яд:S:-:-			
+level_08	agniḥ	огонь	flag	unknown			огонь:S:-:-			
+level_08	ariḥ	враг	flag	unknown			враг:S:-:-			
+level_08	ṛṣiḥ	пророк, мудрец	flag	phrase,unknown			пророк:S:-:- мудрец:S:-:-			
+level_08	kaviḥ	поэт	flag	unknown			поэт:S:-:-			
+level_08	asiḥ	меч	flag	unknown			меч:S:-:-			
+level_08	pāṇiḥ	рука	ok			5	рука:S:5:1367.37			
+level_08	giriḥ	гора	flag	unknown			гора:S:-:-			
+level_08	hariḥ	Хари, имя бога	flag	phrase,unknown		4	харя:S:-:- имя:S:-:- бог:S:4:587.01			
+level_08	vāri	вода	ok			4	вода:S:4:573.16			
+level_09	lubh	желать	ok			4	желать:V:4:213.33			
+level_09	krudh	гневаться	flag	unknown			гневаться:V:-:-			
+level_09	śuṣ	засыхать	flag	unknown			засыхать:V:-:-			
+level_09	kup	сердиться, злиться	flag	phrase,unknown			сердиться:V:-:- злиться:V:-:-			
+level_09	as	бросать, метать	flag	phrase,unknown			бросать:V:-:- метать:V:-:-			
+level_09	naś	погибать, обращаться в бегство	flag	phrase,unknown			погибать:V:-:- обращаться:V:-:- бегство:S:-:-			
+level_09	snih	любить, быть расположенным	flag	phrase,unknown		6	любить:V:-:- быть:V:6:12831.00 расположить:V:-:-			
+level_09	likh	царапать, надрезать, писать	flag	phrase,unknown			царапать:V:-:- надрезать:V:-:- писать:V:-:-			
+level_09	āgam	приходить	flag	unknown			приходить:V:-:-			
+level_09	āruh	восходить, подниматься на, взбираться на	flag	phrase,unknown			восходить:V:-:- подниматься:V:-:- взбираться:V:-:-			
+level_10	bhānuḥ	солнце	flag	unknown			солнце:S:-:-			
+level_10	śatruḥ	противник, неприятель	flag	phrase,unknown			противник:S:-:- неприятель:S:-:-			
+level_10	bāhuḥ	рука (целиком), передняя лапа	flag	phrase,unknown		5	рука:S:5:1367.37 целиком:ADV:-:- передний:A:-:- лапа:S:-:-			
+level_10	vāyuḥ	ветер	flag	unknown			ветер:S:-:-			
+level_10	pādaḥ	нога, луч, четверть	flag	phrase,unknown			нога:S:-:- луч:S:-:- четверть:S:-:-			
+level_10	śiṣyaḥ	ученик	flag	unknown			ученик:S:-:-			
+level_10	annam	еда, корм	flag	phrase,unknown			еда:S:-:- корм:S:-:-			
+level_10	sūktam	ведийский гимн	flag	phrase,unknown			ведийский:A:-:- гимн:S:-:-			
+level_10	maṇiḥ	жемчужина, драгоценность, украшение, амулет	flag	phrase,unknown			жемчужина:S:-:- драгоценность:S:-:- украшение:S:-:- амулет:S:-:-			
+level_10	udadhiḥ	океан	flag	unknown			океан:S:-:-			
+level_10	viṣṇuḥ	Вишну (имя бога)	flag	phrase,name,unknown		4	имя:S:-:- бог:S:4:587.01			
+level_10	binduḥ	капля	flag	unknown			капля:S:-:-			
+level_10	paraśuḥ	топор	flag	unknown			топор:S:-:-			
+level_10	guruḥ	учитель	flag	unknown			учитель:S:-:-			
+level_10	śikharaḥ	вершина	flag	unknown			вершина:S:-:-			
+level_10	aśvaḥ	лошадь	flag	unknown			лошадь:S:-:-			
+level_10	ratnam	дар, подношение, сокровище, драгоценность, жемчужина	flag	phrase,unknown			дар:S:-:- подношение:S:-:- сокровище:S:-:- драгоценность:S:-:- жемчужина:S:-:-			
+level_10	pattram	лист, письмо	flag	phrase,unknown			лист:S:-:- письмо:S:-:-			
+level_10	rāśiḥ	куча	flag	unknown			куча:S:-:-			
+level_11	ākram	наступать, нападать	flag	phrase,unknown			наступать:V:-:- нападать:V:-:-			
+level_11	div	играть	flag	unknown			играть:V:-:-			
+level_11	mad	пьянеть	flag	unknown			пьянеть:V:-:-			
+level_11	tuṣ	радоваться, быть довольным	flag	phrase,unknown		6	радоваться:V:-:- быть:V:6:12831.00 довольный:A:-:-			
+level_11	tam	быть печальным	flag	phrase,unknown		6	быть:V:6:12831.00 печальный:A:-:-			
+level_11	śam	успокаиваться, тухнуть	flag	phrase,unknown			успокаиваться:V:-:- тухнуть:V:-:-			
+level_11	śram	уставать	flag	unknown			уставать:V:-:-			
+level_11	bhram	бродить, блуждать	flag	phrase,unknown			бродить:V:-:- блуждать:V:-:-			
+level_11	vyadh	пронзать, попадать	flag	phrase,unknown			пронзать:V:-:- попадать:V:-:-			
+level_11	ācam	пить, зачерпывать	flag	phrase,unknown			пить:V:-:- зачерпывать:V:-:-			
+level_11	ar	идти, падать на к.-л.	flag	phrase,unknown			идти:V:-:- падать:V:-:- л:S:-:-			
+level_11	har	брать, отнимать, похищать	flag	phrase,unknown			брать:V:-:- отнимать:V:-:- похищать:V:-:-			
+level_12	madhu	мед	flag	unknown			мёд:S:-:-			
+level_12	aśru	слеза	flag	unknown			слеза:S:-:-			
+level_12	vasu	богатство, добро, вещи	flag	phrase,unknown			богатство:S:-:- добро:ADV:-:- вещь:S:-:-			
+level_12	mṛtyuḥ	смерть	flag	unknown			смерть:S:-:-			
+level_12	aliḥ	пчела	flag	unknown			пчела:S:-:-			
+level_12	nṛpati	царь, повелитель, владыка	flag	phrase,unknown		3	царь:S:4:196.75 повелитель:S:-:- владыка:S:3:29.85			
+level_12	netram	глаз	flag	unknown			глаз:S:-:-			
+level_12	mukham	рот, лицо	flag	phrase,unknown			рот:S:-:- лицо:S:-:-			
+level_12	ṛkṣaḥ	медведь	flag	unknown			медведь:S:-:-			
+level_12	akṣaḥ	кость (игральная)	flag	phrase,unknown			кость:S:-:- игральный:A:-:-			
+level_12	kṣatriyaḥ	воин	flag	unknown			воин:S:-:-			
+level_12	adharmaḥ	несправедливость	flag	unknown			несправедливость:S:-:-			
+level_12	kopaḥ	гнев	flag	unknown			гнев:S:-:-			
+level_13	kṣal	мыть	flag	unknown			мыть:V:-:-			
+level_13	cur	красть	flag	unknown			красть:V:-:-			
+level_13	tul	взвешивать	flag	unknown			взвешивать:V:-:-			
+level_13	taḍ	бить	flag	unknown			бить:V:-:-			
+level_13	gaṇ	считать	flag	unknown			считать:V:-:-			
+level_13	kath	рассказывать, излагать	flag	phrase,unknown			рассказывать:V:-:- излагать:V:-:-			
+level_13	daṇḍ	наказывать	flag	unknown			наказывать:V:-:-			
+level_13	pīḍ	мучить	flag	unknown			мучить:V:-:-			
+level_13	par	10P преодолевать	flag	unknown			преодолевать:V:-:-			
+level_13	pūj	почитать	flag	unknown			почитать:V:-:-			
+level_13	ānī	приносить	flag	unknown			приносить:V:-:-			
+level_14	sūtaḥ	кучер	flag	unknown			кучер:S:-:-			
+level_14	stenaḥ	вор	flag	unknown			вор:S:-:-			
+level_14	janakaḥ	отец	flag	unknown			отец:S:-:-			
+level_14	daṇḍaḥ	палка, наказание	flag	phrase,unknown			палка:S:-:- наказание:S:-:-			
+level_14	lokaḥ	мир, люди	ok	phrase		4	мир:S:4:667.85 человек:S:5:2888.63			
+level_14	rāmāyaṇam	название поэмы Рамаяна	flag	phrase,unknown,name			название:S:-:- поэма:S:-:-			
+level_14	suvarṇam	золото	flag	unknown			золото:S:-:-			
+level_14	puṇyam	заслуга, добродетель	flag	phrase,unknown			заслуга:S:-:- добродетель:S:-:-			
+level_14	rūpakam	рупия или рубль	flag	phrase,unknown			рупия:S:-:- рубль:S:-:-			
+level_14	sādhuḥ	набожный человек, святой	flag	phrase,unknown		5	набожный:A:-:- человек:S:5:2888.63 святой:A:-:-			
+level_14	iva	как	ok							
+level_15	īkṣ	1Ā видеть, смотреть	flag	phrase,unknown			видеть:V:-:- смотреть:V:-:-			
+level_15	kamp	1Ā дрожать, сотрясаться	flag	phrase,unknown			дрожать:V:-:- сотрясаться:V:-:-			
+level_15	bhāṣ	1Ā говорить	flag	unknown			говорить:V:-:-			
+level_15	yat	1Ā D стремиться к	flag	phrase,unknown			стремиться:V:-:-			
+level_15	ārabh	1Ā начинать, приниматься за	flag	phrase,unknown			начинать:V:-:- приниматься:V:-:-			
+level_15	ruc	1Ā D|G нравиться	flag	unknown			нравиться:V:-:-			
+level_15	labh	1Ā получать	flag	unknown			получать:V:-:-			
+level_15	vand	1Ā кланяться, чтить	flag	phrase,unknown			кланяться:V:-:- чтить:V:-:-			
+level_15	śikṣ	1Ā учиться, учить ч.-л.	flag	phrase,unknown			учиться:V:-:- учить:V:-:- ч:S:-:- л:S:-:-			
+level_15	sah	1Ā переносить, терпеть	flag	phrase,unknown			переносить:V:-:- терпеть:V:-:-			
+level_15	sev	1Ā служить, почитать	flag	phrase,unknown			служить:V:-:- почитать:V:-:-			
+level_15	jan	4Ā рождаться, возникать	flag	phrase,unknown			рождаться:V:-:- возникать:V:-:-			
+level_15	yudh	4Ā I сражаться	flag	unknown			сражаться:V:-:-			
+level_15	mar	6Ā умирать	flag	unknown			умирать:V:-:-			
+level_15	arth	10Ā A.duplex просить, требовать	flag	phrase,unknown			просить:V:-:- требовать:V:-:-			
+level_16	anarthaḥ	несчастье	flag	unknown			несчастие:S:-:-			
+level_16	dharmaḥ	добродетель, закон	flag	phrase,unknown			добродетель:S:-:- закон:S:-:-			
+level_16	udyogaḥ	прилежание	flag	unknown			прилежание:S:-:-			
+level_16	manuṣyaḥ	смертный, человек	flag	phrase,unknown		5	смертный:A:-:- человек:S:5:2888.63			
+level_16	yajñaḥ	жертва, жертвоприношение	flag	phrase,unknown			жертва:S:-:- жертвоприношение:S:-:-			
+level_16	vinayaḥ	послушание	flag	unknown			послушание:S:-:-			
+level_16	śūdraḥ	шудра, человек четвертой касты	flag	phrase,unknown		5	шудра:S:-:- человек:S:5:2888.63 четвёртый:A:-:- каста:S:-:-			
+level_16	kalyāṇam	счастье, благополучие, красота	flag	phrase,unknown		3	счастие:S:3:29.48 благополучие:S:-:- красота:S:-:-			
+level_16	hitam	добро, благо	flag	phrase,unknown			добро:ADV:-:- благо:S:-:-			
+level_16	balam	сила, могущество	flag	phrase,unknown		4	сила:S:4:706.05 могущество:S:-:-			
+level_16	vanam	лес	flag	unknown			лес:S:-:-			
+level_16	śāstram	наука, трактат	flag	phrase,unknown			наука:S:-:- трактат:S:-:-			
+level_16	dhairyam	стойкость	flag	unknown			стойкость:S:-:-			
+level_16	dvijaḥ, dvijātiḥ	дваждырожденный, ариец	flag	phrase,unknown			дваждырожденный:A:-:- ариец:S:-:-			
+level_16	vīciḥ	волна	flag	unknown			волна:S:-:-			
+level_16	taruḥ	дерево	flag	unknown			дерево:S:-:-			
+level_16	paśuḥ	скот, жертвенное животное	flag	phrase,unknown			скот:S:-:- жертвенный:A:-:- животное:S:-:-			
+level_17	saṃgam	1Ā I сходиться вместе,  соединяться	flag	phrase,unknown			сходиться:V:-:- вместе:ADV:-:- соединяться:V:-:-			
+level_17	parāji	1Ā побеждать	flag	unknown			побеждать:V:-:-			
+level_17	uḍḍī	1Ā взлетать	flag	unknown			взлетать:V:-:-			
+level_17	bhikṣ	1Ā просить милостыню	flag	phrase,unknown			просить:V:-:- милостыня:S:-:-			
+level_17	śubh	1Ā блистать	flag	unknown			блистать:V:-:-			
+level_17	vart	1Ā становиться, существовать	flag	phrase,unknown			становиться:V:-:- существовать:V:-:-			
+level_17	prapad	4Ā отправляться, прибегать к	flag	phrase,unknown			отправляться:V:-:- прибегать:V:-:-			
+level_17	marg	10Ā искать	flag	unknown			искать:V:-:-			
+level_17	avagam	1P понимать	flag	unknown			понимать:V:-:-			
+level_17	avatar	1P спускаться, снизойти	flag	phrase,unknown			спускаться:V:-:- снизойти:V:-:-			
+level_17	avaruh	1P слезать, спешиться	flag	phrase,unknown			слезать:V:-:- спешиться:V:-:-			
+level_17	upanī	1P приводить, посвящать	flag	phrase,unknown			приводить:V:-:- посвящать:V:-:-			
+level_17	parinī	1P обводить кругом, жениться	flag	phrase,unknown			обводить:V:-:- кругом:ADV:-:- жениться:V:-:-			
+level_18	kanyā	дочь, девушка	flag	phrase,unknown			дочь:S:-:- девушка:S:-:-			
+level_18	gaṅgā	Ганг	ok	name						
+level_18	chāyā	тень	flag	unknown			тень:S:-:-			
+level_18	bhāryā	супруга, жена	flag	phrase,unknown		4	супруг:S:-:- жена:S:4:424.54			
+level_18	bhāṣā	язык	flag	unknown			язык:S:-:-			
+level_18	bhikṣā	милостыня	flag	unknown			милостыня:S:-:-			
+level_18	yamunā	название реки, Ямуна	flag	phrase,unknown,name			название:S:-:- река:S:-:-			
+level_18	rathyā	улица	flag	unknown			улица:S:-:-			
+level_18	vidyā	знание, наука	flag	phrase,unknown			знание:S:-:- наука:S:-:-			
+level_18	saṃdhyā	сумерки	flag	unknown			сумерки:S:-:-			
+level_18	gṛhasthaḥ	отец семейства	flag	phrase,unknown			отец:S:-:- семейство:S:-:-			
+level_18	prayāgaḥ	название города, Праяга	flag	phrase,unknown,name			название:S:-:- город:S:-:-			
+level_18	vihagaḥ	птица	flag	unknown			птица:S:-:-			
+level_18	vyādhaḥ	охотник	flag	unknown			охотник:S:-:-			
+level_18	iṣuḥ	стрела	flag	unknown			стрела:S:-:-			
+level_18	bhayam	страх	ok			4	страх:S:4:151.52			
+level_18	raṇaḥ, raṇam	сражение	flag	unknown			сражение:S:-:-			
+level_18	śaraṇam	защита	flag	unknown			защита:S:-:-			
+level_18	svargaḥ	небо	flag	unknown			небо:S:-:-			
+level_18	hṛdayam	сердце	flag	unknown			сердце:S:-:-			
+level_18	kṛṣṇaḥ, kṛṣṇā	черный	flag	unknown			чёрный:A:-:-			
+level_18	pāpaḥ, pāpā	злой, дурной	flag	phrase,unknown			злой:A:-:- дурной:A:-:-			
+level_18	prabhūtaḥ, prabhūtā	многочисленный	flag	unknown			многочисленный:A:-:-			
+level_18	sahasā	внезапно, быстро	flag	phrase,unknown			внезапно:ADV:-:- быстро:ADV:-:-			
+level_18	saha	вместе (+In.)	flag	phrase,unknown			вместе:ADV:-:-			
+level_19	kar	8U делать	flag	unknown			делать:V:-:-			
+level_19	khan	1P копать	flag	unknown			копать:V:-:-			
+level_19	gai	1P петь	flag	unknown			петь:V:-:-			
+level_19	grah	9P брать, принимать, схватывать	flag	phrase,unknown			брать:V:-:- принимать:V:-:- схватывать:V:-:-			
+level_19	daṃś	1P кусать	flag	unknown			кусать:V:-:-			
+level_19	do	1P резать	flag	unknown			резать:V:-:-			
+level_19	dhā	3U ставить, класть	flag	phrase,unknown			ставить:V:-:- класть:V:-:-			
+level_19	dhe	1P сосать, пить	flag	phrase,unknown			сосать:V:-:- пить:V:-:-			
+level_19	dhyai	1P думать, размышлять	flag	phrase,unknown			думать:V:-:- размышлять:V:-:-			
+level_19	par	9P наполнять	flag	unknown			наполнять:V:-:-			
+level_19	bandh	9P вязать, привязать	flag	phrase,unknown			вязать:V:-:- привязать:V:-:-			
+level_19	mā	3U мерить	flag	unknown			мерить:V:-:-			
+level_19	vac	2P говорить	flag	unknown			говорить:V:-:-			
+level_19	vap	1P сеять	flag	unknown			сеять:V:-:-			
+level_19	śās	2P наказывать, повелевать	flag	phrase,unknown			наказывать:V:-:- повелевать:V:-:-			
+level_19	śru	5P слышать	flag	unknown			слышать:V:-:-			
+level_19	stu	2U прославлять	flag	unknown			прославлять:V:-:-			
+level_19	svap	2P спать	flag	unknown			спать:V:-:-			
+level_19	hā	3P оставлять, покидать, пренебрегать	flag	phrase,unknown			оставлять:V:-:- покидать:V:-:- пренебрегать:V:-:-			
+level_19	āhvā	1P призывать	flag	unknown			призывать:V:-:-			
+level_20	ājñā	приказание	flag	unknown			приказание:S:-:-			
+level_20	āśā	надежда	flag	unknown			надежда:S:-:-			
+level_20	kāṣṭham	кусок дерева, полено	flag	phrase,unknown			кусок:S:-:- дерево:S:-:- полено:S:-:-			
+level_20	gītam	песня	flag	unknown			песня:S:-:-			
+level_20	ghaṭaḥ	горшок, сосуд	flag	phrase,unknown		3	горшок:S:-:- сосуд:S:3:25.97			
+level_20	ghṛtam	топленое масло	flag	phrase,unknown			топлёный:A:-:- масло:S:-:-			
+level_20	dhānyam	хлеб	flag	unknown			хлеб:S:-:-			
+level_20	pāśaḥ	петля, веревка	flag	phrase,unknown			петлить:V:-:- верёвка:S:-:-			
+level_20	bhāraḥ	ноша	flag	unknown			ноша:S:-:-			
+level_20	bhikṣuḥ	нищий, аскет	flag	phrase,unknown			нищий:A:-:- аскет:S:-:-			
+level_20	bhṛtyaḥ	слуга	flag	unknown			слуга:S:-:-			
+level_20	mālā	венок	flag	unknown			венок:S:-:-			
+level_20	rājyam	царство	flag	unknown			царство:S:-:-			
+level_20	śiśuḥ	дитя	flag	unknown			дитя:S:-:-			
+level_20	sarpaḥ	змея	ok			3	змея:S:3:27.43			
+level_20	vidheyaḥ, vidheyā	послушный	flag	unknown			послушный:A:-:-			
+level_21	avakart	6P срубать	flag	unknown			срубать:V:-:-			
+level_21	paṭh	1P читать (вслух)	flag	phrase,unknown			читать:V:-:- вслух:ADV:-:-			
+level_21	upaviś	6U садиться	flag	unknown			садиться:V:-:-			
+level_21	praviś	6U входить	flag	unknown			входить:V:-:-			
+level_21	āhar	1P приносить	flag	unknown			приносить:V:-:-			
+level_22	arthaḥ	цель, смысл, богатство	flag	phrase,unknown			цель:S:-:- смысл:S:-:- богатство:S:-:-			
+level_22	indraḥ	Индра, имя бога	flag	phrase,name,unknown		4	имя:S:-:- бог:S:4:587.01			
+level_22	indrāṇī	Индрани, имя богини	flag	phrase,name,unknown			имя:S:-:- богиня:S:-:-			
+level_22	kāvyam	стихотворение	flag	unknown			стихотворение:S:-:-			
+level_22	granthaḥ	сочинение, текст, книга	flag	phrase,unknown			сочинение:S:-:- текст:S:-:- книга:S:-:-			
+level_22	jananī	мать	ok			4	мать:S:4:413.00			
+level_22	dāsī	рабыня, служанка	flag	phrase,unknown			рабыня:S:-:- служанка:S:-:-			
+level_22	devī	богиня, царица	flag	phrase,unknown			богиня:S:-:- царица:S:-:-			
+level_22	nagarī	город	flag	unknown			город:S:-:-			
+level_22	nārī	женщина, жена	flag	phrase,unknown		4	женщина:S:-:- жена:S:4:424.54			
+level_22	patnī	супруга	flag	inflected,unknown	супруг		супруг:S:-:-			
+level_22	putrī	дочь	flag	unknown			дочь:S:-:-			
+level_22	pustakam	книга (рукопись)	flag	phrase,unknown			книга:S:-:- рукопись:S:-:-			
+level_22	pūraḥ	высокая вода, половодье	flag	phrase,unknown		4	высокий:A:-:- вода:S:4:573.16 половодье:S:-:-			
+level_22	pṛthivī	земля, почва	flag	phrase,unknown		4	земля:S:4:650.73 почва:S:-:-			
+level_22	matsyam	рыба	flag	unknown			рыба:S:-:-			
+level_22	vāpī	пруд	flag	unknown			пруд:S:-:-			
+level_22	sabhā	собрание	flag	unknown			собрание:S:-:-			
+level_22	senā	войско	flag	unknown			войско:S:-:-			
+level_22	stotram	хвалебная песнь	flag	phrase,unknown			хвалебный:A:-:- песня:S:-:-			
+level_22	śītaḥ, śītā	прохладный, холодный	flag	phrase,unknown			прохладный:A:-:- холодный:A:-:-			
+level_23	kalp	1Ā делать, служить чему	flag	phrase,unknown			делать:V:-:- служить:V:-:-			
+level_23	upadiś	6P учить, наставлять	flag	phrase,unknown			учить:V:-:- наставлять:V:-:-			
+level_23	vid	6U достигать, находить	flag	phrase,unknown		3	достигать:V:3:47.90 находить:V:-:-			
+level_24	kalahaḥ, kalaham	ссора	flag	unknown			ссора:S:-:-			
+level_24	kīrtiḥ	f слава	flag	unknown			слава:S:-:-			
+level_24	gopaḥ	пастух	flag	unknown			пастух:S:-:-			
+level_24	jātiḥ	f порода, каста	flag	phrase,unknown			порода:S:-:- каста:S:-:-			
+level_24	dhṛtiḥ	f решимость, мужество	flag	phrase,unknown			решимость:S:-:- мужество:S:-:-			
+level_24	pārthivaḥ	царь, князь	flag	phrase,unknown		4	царь:S:4:196.75 князь:S:-:-			
+level_24	buddhiḥ	f ум, разум	flag	phrase,unknown			ум:S:-:- разум:S:-:-			
+level_24	bhaktiḥ	f преданность, почитание	flag	phrase,unknown			преданность:S:-:- почитание:S:-:-			
+level_24	bhāgaḥ	m кусок, часть, доля	flag	phrase,unknown			кусок:S:-:- часть:S:-:- доля:S:-:-			
+level_24	bhūtiḥ	f благополучие, благословение	flag	phrase,unknown			благополучие:S:-:- благословение:S:-:-			
+level_24	bhūmiḥ	f земля, почва, страна	flag	phrase,unknown		4	земля:S:4:650.73 почва:S:-:- страна:S:-:-			
+level_24	makṣikā	муха, комар	flag	phrase,unknown			муха:S:-:- комар:S:-:-			
+level_24	muktiḥ	f избавление, спасение	flag	phrase,unknown			избавление:S:-:- спасение:S:-:-			
+level_24	yaṣṭiḥ	f прут	flag	unknown			прут:S:-:-			
+level_24	raśmiḥ	m узда, луч	flag	phrase,unknown			узда:S:-:- луч:S:-:-			
+level_24	rātriḥ	f ночь	flag	unknown			ночь:S:-:-			
+level_24	vraṇaḥ, vraṇam	m, n рана	flag	phrase,unknown			рана:S:-:-			
+level_24	śāntiḥ	f покой	flag	unknown			покой:S:-:-			
+level_24	śrutiḥ	f слух, священное писание	flag	phrase,unknown			слух:S:-:- священный:A:-:- писание:S:-:-			
+level_24	smṛtiḥ	f воспоминание, предание, свод законов	flag	phrase,unknown			воспоминание:S:-:- предание:S:-:- свод:S:-:- закон:S:-:-			
+level_24	svapnaḥ	сон, сновидение	flag	phrase,unknown			сон:S:-:- сновидение:S:-:-			
+level_24	hanu	f челюсть	flag	unknown			челюсть:S:-:-			
+level_24	nīca, nīcā	низкий	flag	unknown			низкий:A:-:-			
+level_24	mukhya, mukhyā	отличный, превосходный, первый	flag	phrase,unknown			отличный:A:-:- превосходный:A:-:- первый:A:-:-			
+level_24	laghu, laghvī	легкий	flag	unknown			лёгкий:A:-:-			
+level_25	atikram	4, 1P. / 1Ā. переходить за,  проходить, переступать, нарушать	flag	phrase,unknown			переходить:V:-:- проходить:V:-:- переступать:V:-:- нарушать:V:-:-			
+level_25	adhisthā	стоять над, на, взлезать, повелевать	flag	phrase,unknown			стоять:V:-:- взлезать:V:-:- повелевать:V:-:-			
+level_25	ujjan	рождаться, происходить из	flag	phrase,unknown			рождаться:V:-:- происходить:V:-:-			
+level_25	niṣev	обслуживать, населять, посещать	flag	phrase,unknown			обслуживать:V:-:- населять:V:-:- посещать:V:-:-			
+level_25	niṣpad	4Ā. исходить, происходить	flag	phrase,unknown			исходить:V:-:- происходить:V:-:-			
+level_25	apidhā	покрывать, прикрывать	flag	phrase,unknown			покрывать:V:-:- прикрывать:V:-:-			
+level_25	prajan	возникать	flag	unknown			возникать:V:-:-			
+level_25	prabhū	возникать, властвовать	flag	phrase,unknown			возникать:V:-:- властвовать:V:-:-			
+level_25	pratibhāṣ	отвечать	flag	unknown			отвечать:V:-:-			
+level_25	pratiṣidh	1P. удерживать, запрещать	flag	phrase,unknown			удерживать:V:-:- запрещать:V:-:-			
+level_25	pratihan	препятствовать, повреждать	flag	phrase,unknown			препятствовать:V:-:- повреждать:V:-:-			
+level_25	rac	1P. составлять, сочинять	flag	phrase,unknown			составлять:V:-:- сочинять:V:-:-			
+level_25	vinaś	исчезать, гибнуть	flag	phrase,unknown			исчезать:V:-:- гибнуть:V:-:-			
+level_25	samnah	4P опоясывать, снаряжать	flag	phrase,unknown			опоясывать:V:-:- снаряжать:V:-:-			
+level_26	anujñā	разрешение	flag	unknown			разрешение:S:-:-			
+level_26	īśvaraḥ	бог	ok			4	бог:S:4:587.01			
+level_26	kapotaḥ	голубь	flag	unknown			голубь:S:-:-			
+level_26	karṇaḥ	ухо	flag	unknown			ухо:S:-:-			
+level_26	kāmaḥ	желание, бог любви	flag	phrase,unknown		4	желание:S:4:164.59 бог:S:4:587.01 любовь:S:-:-			
+level_26	kāraṇam	основание, причина	flag	phrase,unknown			основание:S:-:- причина:S:-:-			
+level_26	krodhaḥ	гнев	flag	unknown			гнев:S:-:-			
+level_26	jālam	сеть	flag	unknown			сеть:S:-:-			
+level_26	dhīḥ	f ум, проницательность	flag	phrase,unknown			ум:S:-:- проницательность:S:-:-			
+level_26	nāśaḥ	погибель	flag	unknown			погибель:S:-:-			
+level_26	padmaḥ, padmam	лотос	flag	unknown			лотос:S:-:-			
+level_26	puruṣaḥ	человек	ok			5	человек:S:5:2888.63			
+level_26	mahārājaḥ	великий царь	ok	phrase		4	великий:A:4:442.42 царь:S:4:196.75			
+level_26	muniḥ	m мудрец, аскет	flag	phrase,unknown			мудрец:S:-:- аскет:S:-:-			
+level_26	mekhalā	пояс	flag	unknown			пояс:S:-:-			
+level_26	mohaḥ	ослепление	flag	unknown			ослепление:S:-:-			
+level_26	rathaḥ	повозка	flag	unknown			повозка:S:-:-			
+level_26	lobhaḥ	алчность, жадность	flag	phrase,unknown			алчность:S:-:- жадность:S:-:-			
+level_26	vasatiḥ	f жилище	flag	unknown			жилище:S:-:-			
+level_26	śrīḥ	f счастье, богиня счастья, богатство	flag	phrase,unknown		3	счастие:S:3:29.48 богиня:S:-:- счастие:S:3:29.48 богатство:S:-:-			
+level_26	samudraḥ	океан	flag	unknown			океан:S:-:-			
+level_26	sṛṣṭiḥ	f творение	flag	unknown			творение:S:-:-			
+level_26	hrīḥ	f стыдливость, скромность	flag	phrase,unknown			стыдливость:S:-:- скромность:S:-:-			
+level_26	kṛtsnaḥ, kṛtsnā	весь, целый	flag	phrase,unknown		5	весь:A:5:4305.27 целый:A:-:-			
+level_26	cāru	красивый	flag	unknown			красивый:A:-:-			
+level_26	dhīraḥ, dhīrā	стойкий, мудрый, мужественный	flag	phrase,unknown			стойкий:A:-:- мудрый:A:-:- мужественный:A:-:-			
+level_26	śvetaḥ, śvetā	белый	flag	unknown			белый:A:-:-			
+level_27	abhyas	4P повторять, изучать, учить(ся)	flag	phrase,unknown			повторять:V:-:- изучать:V:-:- учить:V:-:-			
+level_27	prās	4P бросать вперед, бросать во что-нибудь	flag	phrase,unknown			бросать:V:-:- вперёд:ADV:-:- бросать:V:-:-			
+level_27	ādiś	6P приказывать	flag	unknown			приказывать:V:-:-			
+level_27	dṛśya	pass от darś казаться, выглядеть	flag	phrase,unknown			казаться:V:-:- выглядеть:V:-:-			
+level_27	nivas	1P жить	flag	unknown			жить:V:-:-			
+level_27	pravart	1Ā приходить в движение, начинаться,   возникать;	flag	phrase,unknown			приходить:V:-:- движение:S:-:- начинаться:V:-:- возникать:V:-:-			
+level_27	śuc	1P  печалиться, заботиться	flag	phrase,unknown			печалиться:V:-:- заботиться:V:-:-			
+level_27	niṣad	1P садиться	flag	unknown			садиться:V:-:-			
+level_28	atithiḥ	m гость	flag	unknown			гость:S:-:-			
+level_28	anṛtaṃ	неправда	flag	unknown			неправда:S:-:-			
+level_28	abhyāsaḥ	изучение, повторение	flag	phrase,unknown			изучение:S:-:- повторение:S:-:-			
+level_28	ādeśaḥ	приказание, предписание;	flag	phrase,unknown			приказание:S:-:- предписание:S:-:-			
+level_28	āsanam	сидение, стул	flag	phrase,unknown			сидение:S:-:- стул:S:-:-			
+level_28	juhūḥ	f ложка, жертвенная ложка	flag	phrase,unknown			ложка:S:-:- жертвенный:A:-:- ложка:S:-:-			
+level_28	pāṭhaḥ	урок	flag	unknown			урок:S:-:-			
+level_28	prajā	тварь, подданый	flag	phrase,unknown			тварь:S:-:- подданый:A:-:-			
+level_28	bhūḥ	f земля, почва	flag	phrase,unknown		4	земля:S:4:650.73 почва:S:-:-			
+level_28	bhūṣaṇam	украшение, драгоценность	flag	phrase,unknown			украшение:S:-:- драгоценность:S:-:-			
+level_28	bhrūḥ	f бровь	flag	unknown			бровь:S:-:-			
+level_28	vadhūḥ	f женщина, жена	flag	phrase,unknown		4	женщина:S:-:- жена:S:4:424.54			
+level_28	vediḥ	f алтарь	flag	unknown			алтарь:S:-:-			
+level_28	śvaśrūḥ	f теща, свекровь	flag	phrase,unknown			тёща:S:-:- свекровь:S:-:-			
+level_28	stutiḥ	f хвала, хвалебная песнь	flag	phrase,unknown			хвала:S:-:- хвалебный:A:-:- песня:S:-:-			
+level_28	snuṣā	сноха	flag	unknown			сноха:S:-:-			
+level_28	aparaḥ, aparā	низкий, другой	flag	phrase,unknown		5	низкий:A:-:- другой:A:5:2034.50			
+level_28	paraḥ, parā	высший, другой, чужой, дальний	flag	phrase,unknown		5	высокий:A:-:- другой:A:5:2034.50 чужой:A:-:- дальний:A:-:-			
+level_28	vakraḥ, vakrā	кривой, согнутый	flag	phrase,unknown			кривая:S:-:- согнутый:A:-:-			
+level_28	sundaraḥ, sundarī	красивый	flag	unknown			красивый:A:-:-			
+level_28	adhastāt	под, внизу	flag	phrase,unknown			внизу:ADV:-:-			
+level_28	ciram	долго	flag	unknown			долго:ADV:-:-			
+level_28	dīrgham	далеко, вдаль	flag	phrase,unknown			далеко:ADV:-:- вдаль:ADV:-:-			
+level_28	hrasvam	коротко, ближе к	flag	phrase,unknown			коротко:ADV:-:- близкий:A:-:-			
+level_28	mā	отрицание при imp.	flag	phrase,unknown			отрицание:S:-:-			
+level_28	vā	или	ok							
+level_29	anugam	1P следовать	flag	unknown			следовать:V:-:-			
+level_29	samācar	1P справлять, исполнять, делать	flag	phrase,unknown			справлять:V:-:- исполнять:V:-:- делать:V:-:-			
+level_29	vivad	1Ā спорить, состязаться	flag	phrase,unknown			спорить:V:-:- состязаться:V:-:-			
+level_29	āśri	1U идти к, уходить под защиту кого-либо	flag	phrase,unknown			идти:V:-:- уходить:V:-:- защита:S:-:-			
+level_30	ācāryaḥ	учитель	flag	unknown			учитель:S:-:-			
+level_30	kartar	виновник, делатель, составитель, автор	flag	phrase,unknown			виновник:S:-:- делатель:S:-:- составитель:S:-:- автор:S:-:-			
+level_30	kālaḥ	время	flag	unknown			время:S:-:-			
+level_30	kṛpā	милость, сострадание	flag	phrase,unknown			милость:S:-:- сострадание:S:-:-			
+level_30	dātar	податель, щедрый	flag	phrase,unknown			податель:S:-:- щедрый:A:-:-			
+level_30	durjanaḥ	злодей	flag	unknown			злодей:S:-:-			
+level_30	draṣṭar	пророк, судья, составитель (гимнов)	flag	phrase,unknown			пророк:S:-:- судья:S:-:- составитель:S:-:- гимн:S:-:-			
+level_30	dhātar	творец	flag	unknown			творец:S:-:-			
+level_30	niścayaḥ	решение, уверенность	flag	phrase,unknown			решение:S:-:- уверенность:S:-:-			
+level_30	netar	проводник, вождь	flag	phrase,unknown			проводник:S:-:- вождь:S:-:-			
+level_30	paṇḍitaḥ	ученый	flag	unknown			учёный:S:-:-			
+level_30	padam	шаг	flag	unknown			шаг:S:-:-			
+level_30	prāyaścittam	покаяние	flag	unknown			покаяние:S:-:-			
+level_30	bhartar	кормилец, содержатель, господин,  муж	flag	phrase,unknown			кормилец:S:-:- содержатель:S:-:- господин:S:-:- муж:S:-:-			
+level_30	rakṣitar	защитник	flag	unknown			защитник:S:-:-			
+level_30	vyavahāraḥ	тяжба	flag	unknown			тяжба:S:-:-			
+level_30	śāstar	каратель, правитель	flag	phrase,unknown			каратель:S:-:- правитель:S:-:-			
+level_30	sraṣṭar	творец, творящий	flag	phrase,unknown			творец:S:-:- творить:V:-:-			
+level_30	namas	почет, хвала (indecl. +Dat.)	flag	phrase,unknown			почёт:S:-:- хвала:S:-:-			
+level_30	daridra, ā	бедный	flag	unknown			бедный:A:-:-			
+level_30	vara, ā	лучший, превосходнейший	flag	phrase,unknown		4	хороший:A:4:555.39 превосходный:A:-:-			
+level_31	car	пастись	flag	unknown			пастись:V:-:-			
+level_31	man	4Ā думать, полагать	flag	phrase,unknown			думать:V:-:- полагать:V:-:-			
+level_31	mud	1Ā радоваться (+In.)	flag	phrase,unknown			радоваться:V:-:-			
+level_31	śaṃs	доносить, рассказывать, сообщать;  хвалить, одобрять; обижать	flag	phrase,unknown			доносить:V:-:- рассказывать:V:-:- сообщать:V:-:- хвалить:V:-:- одобрять:V:-:- обижать:V:-:-			
+level_31	smar	учить	flag	unknown			учить:V:-:-			
+level_32	gauḥ	m, f - бык, корова; f - речь	flag	phrase,unknown			бык:S:-:- корова:S:-:- речь:S:-:-			
+level_32	gotvam	природа быка	flag	phrase,unknown			природа:S:-:- бык:S:-:-			
+level_32	ghāsaḥ	корм, сено	flag	phrase,unknown			корм:S:-:- сено:S:-:-			
+level_32	paṃkaḥ	m, n - болото	flag	phrase,unknown			болото:S:-:-			
+level_32	pitar	du. родители; pl. тени усопших, предки	flag	phrase,unknown			родитель:S:-:- тень:S:-:- усопший:A:-:- предок:S:-:-			
+level_32	budhaḥ	мудрец	flag	unknown			мудрец:S:-:-			
+level_32	māsaḥ	месяц	flag	unknown			месяц:S:-:-			
+level_32	yugmam	пара	flag	unknown			пара:S:-:-			
+level_32	rakṣaṇam	защита	flag	unknown			защита:S:-:-			
+level_32	śrāddham	поминальная жертва	flag	phrase,unknown			поминальный:A:-:- жертва:S:-:-			
+level_32	adhika	f  ā - больше, больший, величайший	flag	phrase,unknown		4	большой:A:-:- больший:A:-:- великий:A:4:442.42			
+level_32	kāmadugha	f  ā - исполняющий желание	flag	phrase,unknown		4	исполнять:V:-:- желание:S:4:164.59			
+level_32	duṣprayukta	f ā - плохо устроенный, или  употребленный	flag	phrase,unknown			устроенный:A:-:- употребить:V:-:-			
+level_32	prayukta	f  ā -  употребленный или устроенный	flag	phrase,unknown			употребить:V:-:- устроенный:A:-:-			
+level_32	jyeṣṭha	f  ā  - старший	flag	unknown			старший:S:-:-			
+level_32	śreṣṭha	f  ā -  лучший	ok			4	хороший:A:4:555.39			
+level_32	sā	f - она	ok							
+level_32	cet	если 1	ok							
+level_32	nityam	всегда, ежедневно	flag	phrase,unknown			всегда:ADV:-:- ежедневно:ADV:-:-			
+level_32	yadi	если 2	ok							
+level_32	samyak	хорошо	flag	unknown			хорошо:ADV:-:-			
+level_33	pratīkṣ	ожидать	flag	unknown			ожидать:V:-:-			
+level_33	abhinand	1U радоваться	flag	unknown			радоваться:V:-:-			
+level_33	ram	1Ā забавляться	flag	unknown			забавляться:V:-:-			
+level_33	viram	оставлять, прекращать	flag	phrase,unknown			оставлять:V:-:- прекращать:V:-:-			
+level_33	anuṣṭhā	следовать за, исполнять	flag	phrase,unknown			следовать:V:-:- исполнять:V:-:-			
+level_34	udyānam	сад	flag	unknown			сад:S:-:-			
+level_34	kṛṣiḥ	f земледелие	flag	unknown			земледелие:S:-:-			
+level_34	jīvitam	жизнь	flag	unknown			жизнь:S:-:-			
+level_34	nideśaḥ	приказание	flag	unknown			приказание:S:-:-			
+level_34	pāśupālyam	скотоводство	flag	unknown			скотоводство:S:-:-			
+level_34	purohitaḥ	домашний, придворный жрец	flag	phrase,unknown			домашний:A:-:- придворный:S:-:- жрец:S:-:-			
+level_34	bhakṣaṇam	еда	flag	unknown			еда:S:-:-			
+level_34	bhṛtakaḥ	слуга	flag	unknown			слуга:S:-:-			
+level_34	maraṇam	смерть	flag	unknown			смерть:S:-:-			
+level_34	mitraḥ	друг	flag	unknown			друг:S:-:-			
+level_34	yuddham	битва, сражение	flag	phrase,unknown			битва:S:-:- сражение:S:-:-			
+level_34	vāṇijyam	торговля	flag	unknown			торговля:S:-:-			
+level_34	vidhiḥ	правило, судьба	flag	phrase,unknown			правило:S:-:- судьба:S:-:-			
+level_34	śvaśuraḥ	тесть, свекор	flag	phrase,unknown			тесть:S:-:- свёкор:S:-:-			
+level_34	bhadraḥ, bhadrā	хороший, милый; n - счастье	flag	phrase,unknown		3	хороший:A:4:555.39 милый:A:-:- счастие:S:3:29.48			
+level_34	saṃdigdhaḥ, saṃdigdhā	сомнительный, ненадежный	flag	phrase,unknown			сомнительный:A:-:- ненадёжный:A:-:-			
+level_35	aś	есть	ok			4	есть:V:4:151.44			
+level_35	āśaya	кормить, давать пищу	flag	phrase,unknown			кормить:V:-:- давать:V:-:- пища:S:-:-			
+level_35	adhī	изучать	flag	unknown			изучать:V:-:-			
+level_35	adhyāpaya	учить	flag	unknown			учить:V:-:-			
+level_35	kalpaya	делать, устанавливать	flag	phrase,unknown			делать:V:-:- устанавливать:V:-:-			
+level_35	ājñā	знать, понимать	flag	phrase,unknown		5	знать:V:5:1740.03 понимать:V:-:-			
+level_35	ājñāpaya	приказывать	flag	unknown			приказывать:V:-:-			
+level_35	darśaya	показывать	flag	unknown			показывать:V:-:-			
+level_35	paridhā	одевать	flag	unknown			одевать:V:-:-			
+level_35	apanī	уводить	flag	unknown			уводить:V:-:-			
+level_35	māraya	убивать	flag	unknown			убивать:V:-:-			
+level_35	yājaya	приносить жертву для кого (+Acc.)	flag	phrase,unknown			приносить:V:-:- жертва:S:-:-			
+level_35	abhivad	приветствовать	flag	unknown			приветствовать:V:-:-			
+level_35	abhivādaya	передавать привет	flag	phrase,unknown			передавать:V:-:- привет:S:-:-			
+level_35	vid	знать	ok			5	знать:V:5:1740.03			
+level_35	vardh	1Ā. расти	flag	unknown			расти:V:-:-			
+level_35	sthāpaya	ставить, останавливать,  устанавливать	flag	phrase,unknown			ставить:V:-:- останавливать:V:-:- устанавливать:V:-:-			
+level_35	prasthā	1Ā, отправляться	flag	phrase,unknown			отправляться:V:-:-			
+level_35	prasthāpaya	посылать	flag	unknown			посылать:V:-:-			
+level_35	vyath	cтрадать	flag	unknown			традать:V:-:-			
+level_36	amṛtam	нектар	flag	unknown			нектар:S:-:-			
+level_36	upanayanam	посвящение (арийцев)	flag	phrase,unknown			посвящение:S:-:- ариец:S:-:-			
+level_36	karaḥ	рука, хобот, луч, руль; подать, налог	flag	phrase,unknown		5	рука:S:5:1367.37 хобот:S:-:- луч:S:-:- руль:S:-:- подать:V:-:- налог:S:-:-			
+level_36	kāśī	f Варанаси (совр. Бенарес)	flag	phrase,name,unknown			совр:S:-:-			
+level_36	guṇaḥ	качество, преимущество	flag	phrase,unknown			качество:S:-:- преимущество:S:-:-			
+level_36	dāsaḥ	раб, слуга	flag	phrase,unknown			раб:S:-:- слуга:S:-:-			
+level_36	dūtaḥ	вестник, посланник	flag	phrase,unknown			вестник:S:-:- посланник:S:-:-			
+level_36	pāṭaliputram	Патна (город в Индии)	flag	phrase,name,unknown			город:S:-:-			
+level_36	manorathaḥ	желание, мечта	flag	phrase,unknown		4	желание:S:4:164.59 мечта:S:-:-			
+level_36	vastram	платье	flag	unknown			платье:S:-:-			
+level_36	vidhiḥ	m Брахма	ok	name						
+level_36	vṛkaḥ	волк	flag	unknown			волк:S:-:-			
+level_36	vedaḥ	наука, свящ. писание	flag	phrase,unknown			наука:S:-:- свящий:A:-:- писание:S:-:-			
+level_37	ās	сидеть	flag	unknown			сидеть:V:-:-			
+level_37	āsaya	сажать, ставить	flag	phrase,unknown			сажать:V:-:- ставить:V:-:-			
+level_37	pā	пить	flag	unknown			пить:V:-:-			
+level_37	pāyaya	поить	flag	unknown			поить:V:-:-			
+level_37	pā	защищать	flag	unknown			защищать:V:-:-			
+level_37	pālaya	защищать каузатив	flag	phrase,unknown			защищать:V:-:- каузатив:S:-:-			
+level_37	prī	радоваться	flag	unknown			радоваться:V:-:-			
+level_37	prīṇaya	радовать	flag	unknown			радовать:V:-:-			
+level_37	bhī	бояться	flag	unknown			бояться:V:-:-			
+level_37	bhīṣaya	пугать 1	flag	unknown			пугать:V:-:-			
+level_37	bhāyaya	пугать 2	flag	unknown			пугать:V:-:-			
+level_37	vac	говорить, называть	flag	phrase,unknown			говорить:V:-:- называть:V:-:-			
+level_37	sah	1Ā переносить, терпеть	flag	phrase,unknown			переносить:V:-:- терпеть:V:-:-			
+level_37	sidh	удаваться	flag	unknown			удаваться:V:-:-			
+level_37	sādhaya	(о светских  вещах) совершать, достигать	flag	phrase,unknown		3	светский:A:-:- вещь:S:-:- совершать:V:-:- достигать:V:3:47.90			
+level_37	han	убивать	flag	unknown			убивать:V:-:-			
+level_37	ghātaya	велеть убивать	flag	phrase,unknown			велеть:V:-:- убивать:V:-:-			
+level_37	hvā	звать	flag	unknown			звать:V:-:-			
+level_37	hvāyaya	велеть позвать	flag	phrase,unknown			велеть:V:-:- позвать:V:-:-			
+level_38	kṛṣṇaḥ	Кришна, имя бога, N. pr.	flag	phrase,name,unknown		4	имя:S:-:- бог:S:4:587.01			
+level_38	gati	f путь, ход, убежище	flag	phrase,unknown			путь:S:-:- ход:S:-:- убежище:S:-:-			
+level_38	chatram	зонт	flag	unknown			зонт:S:-:-			
+level_38	dugdham	молоко	flag	unknown			молоко:S:-:-			
+level_38	devakī	Деваки  N. pr.	ok	name						
+level_38	pṛthvī	земля	ok			4	земля:S:4:650.73			
+level_38	vasudevaḥ	Васудева N. pr.	ok	name						
+level_38	vātaḥ	ветер	flag	unknown			ветер:S:-:-			
+level_38	vāridaḥ	облако, туча	flag	phrase,unknown			облако:S:-:- туча:S:-:-			
+level_38	śrī	употребляется перед собств. именами в  смысле «достопочтенный, знаменитый»	flag	phrase,unknown			употребляться:V:-:- собство:S:-:- имя:S:-:- смысл:S:-:- достопочтенный:A:-:- знаменитый:A:-:-			
+level_38	salilam	вода	ok			4	вода:S:4:573.16			
+level_38	svādu	сладкий	flag	unknown			сладкий:A:-:-			
+level_38	kaścit, kācit	кто-нибудь, некто	ok	phrase						
+level_38	kimcit	какое-нибудь, что-то, нечто	flag	phrase,unknown			какой-нибудь:A:-:- что-то:ADV:-:-			
+level_38	na kaścit	никто	ok							
+level_38	na kiṃcit	ничто	ok							
+level_39	rohaya, ropaya	заставлять, подыматься, расти, сажать	flag	phrase,unknown			заставлять:V:-:- подыматься:V:-:- расти:V:-:- сажать:V:-:-			
+level_39	lambhaya	заставлять достичь, давать	flag	phrase,unknown			заставлять:V:-:- достигнуть:V:-:- давать:V:-:-			
+level_40	upaniṣad	f отдел писания в котором идеть речь о  спасении	flag	phrase,unknown			отдел:S:-:- писание:S:-:- который:A:-:- идеть:V:-:- речь:S:-:- спасение:S:-:-			
+level_40	upavītam	священный шнурок	flag	phrase,unknown			священный:A:-:- шнурок:S:-:-			
+level_40	kāryam	дело	flag	unknown			дело:S:-:-			
+level_40	caraṇaḥ	нога	flag	unknown			нога:S:-:-			
+level_40	taḍit	f молния	flag	unknown			молния:S:-:-			
+level_40	dṛṣad	f - камень	ok			4	камень:S:4:178.13			
+level_40	nirvṛti	f довольство, счастье	flag	phrase,unknown		3	довольство:S:-:- счастие:S:3:29.48			
+level_40	poṣakaḥ	кормилец	flag	unknown			кормилец:S:-:-			
+level_40	bhūbhṛt	m царь, гора	flag	phrase,unknown		4	царь:S:4:196.75 гора:S:-:-			
+level_40	marut	m ветер	flag	unknown			ветер:S:-:-			
+level_40	yoṣit	f жена	ok			4	жена:S:4:424.54			
+level_40	viśvāsaḥ	доверие	flag	unknown			доверие:S:-:-			
+level_40	vṛtraḥ	Вритра, N. pr. демона	flag	phrase,name,unknown			демон:S:-:-			
+level_40	śatam	сотня	flag	unknown			сотня:S:-:-			
+level_40	śarad	f осень, год	flag	phrase,unknown			осень:S:-:- год:S:-:-			
+level_40	samidh	f полено	flag	unknown			полено:S:-:-			
+level_40	sarit	f река	flag	unknown			река:S:-:-			
+level_40	sahāyaḥ	товарищ, помощник	flag	phrase,unknown			товарищ:S:-:- помощник:S:-:-			
+level_40	suhṛd	m друг	flag	unknown			друг:S:-:-			
+level_40	kuśala, ā	ловкий, опытный, ученый	flag	phrase,unknown			ловкий:A:-:- опытный:A:-:- учёный:S:-:-			
+level_40	trivṛt	тройной	flag	unknown			тройной:A:-:-			
+level_40	durlabha, ā	трудно находимый,  недостижимый	flag	phrase,unknown			трудно:ADV:-:- находить:V:-:- недостижимый:A:-:-			
+level_40	bhakta, ā	преданный, верный	flag	phrase,unknown			предать:V:-:- верный:A:-:-			
+level_40	api	также, даже, хотя, и	ok	phrase						
+level_40	paścāt	за (Gen.), позади	flag	phrase,unknown			позади:ADV:-:-			
+level_40	vinā	без (In. или Acc.)	ok	phrase						
+level_41	dam	приручать, покорять, завоевывать	flag	phrase,unknown			приручать:V:-:- покорять:V:-:- завоёвывать:V:-:-			
+level_41	damaya	укрощать, одолевать	flag	phrase,unknown			укрощать:V:-:- одолевать:V:-:-			
+level_41	druh	4P ненавидеть, обижать	flag	phrase,unknown			ненавидеть:V:-:- обижать:V:-:-			
+level_41	dhar	держать, нести, удерживать	flag	phrase,unknown			держать:V:-:- нести:V:-:- удерживать:V:-:-			
+level_41	dhāraya	нести	flag	unknown			нести:V:-:-			
+level_41	bhar	1P. Ā. - нести, сохранять, содержать	flag	phrase,unknown			нести:V:-:- сохранять:V:-:- содержать:V:-:-			
+level_41	utsarj	выпускать, поднимать	flag	phrase,unknown			выпускать:V:-:- поднимать:V:-:-			
+level_41	pariṣvaj	1Ā обнимать	flag	unknown			обнимать:V:-:-			
+level_41	prahar	бить, поражать	flag	phrase,unknown			бить:V:-:- поражать:V:-:-			
+level_42	andhraḥ	название народа андхра	flag	phrase,unknown			название:S:-:- народ:S:-:- андхра:S:-:-			
+level_42	ṛc	f стих Ригведы	flag	phrase,unknown,name			стих:S:-:-			
+level_42	ṛtvij	m жрец	flag	unknown			жрец:S:-:-			
+level_42	ruj	f  болезнь, боль	flag	phrase,unknown			болезнь:S:-:- боль:S:-:-			
+level_42	auṣadham	n лекарство	flag	unknown			лекарство:S:-:-			
+level_42	kāmaduh	f мифическая корова,  исполнительница всех желаний	flag	phrase,unknown		4	мифический:A:-:- корова:S:-:- исполнительница:S:-:- весь:A:5:4305.27 желание:S:4:164.59			
+level_42	kaunteyaḥ	сын Кунти	ok	phrase,name		4	сын:S:4:382.88			
+level_42	dṛś	f взгляд, глаз	flag	phrase,unknown			взгляд:S:-:- глаз:S:-:-			
+level_42	madhulih	m пчела	flag	unknown			пчела:S:-:-			
+level_42	mādhuryam	n сладость	flag	unknown			сладость:S:-:-			
+level_42	vāṣpa	m, n - слеза	flag	phrase,unknown			слеза:S:-:-			
+level_42	samrāj	m царь царей, император	flag	phrase,unknown		4	царь:S:4:196.75 царь:S:4:196.75 император:S:-:-			
+level_42	sāmantaḥ	вассал	flag	unknown			вассал:S:-:-			
+level_42	svādhyāyaḥ	чтение (Вед), самообучение	flag	phrase,unknown			чтение:S:-:- веда:S:-:- самообучение:S:-:-			
+level_42	ākrānta	f ā - подвергшийся нападению,  подверженный чему	flag	phrase,unknown			подвергнуться:V:-:- нападение:S:-:- подверженный:A:-:-			
+level_42	īśvara	f ā - богатый	flag	unknown			богатый:A:-:-			
+level_42	nīruj	здоровый	ok			4	здоровый:A:4:104.60			
+level_42	pathya	f ā - полезный, целительный	flag	phrase,unknown			полезный:A:-:- целительный:A:-:-			
+level_42	baliṣṭha	f ā - сильнейший	flag	unknown			сильный:A:-:-			
+level_42	ruddha	f ā - осажденный, покрытый	flag	phrase,unknown			осадить:V:-:- покрыть:V:-:-			
+level_42	vidviṣṭa	f ā - ненавистный	flag	unknown			ненавистный:A:-:-			
+level_42	vṛddha	f ā - старый	flag	unknown			старый:A:-:-			
+level_42	vyādhita	f ā - больной	flag	unknown			больной:A:-:-			
+level_42	sameta	f ā - снабженный чем	flag	phrase,unknown			снабдить:V:-:-			
+level_42	kadācana, kadāpi, kadācit	когда-то	flag	unknown			когда-то:ADV:-:-			
+level_43	sañj	1P. виснуть на чем, быть привязанным к ч.-л	flag	phrase,unknown		6	виснуть:V:-:- быть:V:6:12831.00 привязать:V:-:- ч:S:-:- л:S:-:-			
+level_44	apsaras	небесная нимфа	flag	phrase,unknown			небесный:A:-:- нимфа:S:-:-			
+level_44	kṣitipaḥ	царь	ok			4	царь:S:4:196.75			
+level_44	gandhaḥ	запах	flag	unknown			запах:S:-:-			
+level_44	cakṣus	n глаз	flag	unknown			глаз:S:-:-			
+level_44	candramas	m луна	flag	unknown			луна:S:-:-			
+level_44	cāraḥ	шпион	flag	unknown			шпион:S:-:-			
+level_44	jyā	тетива	flag	unknown			тетива:S:-:-			
+level_44	jyotis	n свет, светило, созвездие	flag	phrase,unknown			свет:S:-:- светило:S:-:- созвездие:S:-:-			
+level_44	taḍāgaḥ	пруд	flag	unknown			пруд:S:-:-			
+level_44	tapasvin	страдающий, кающийся; m аскет	flag	phrase,unknown			страдать:V:-:- каяться:V:-:- аскет:S:-:-			
+level_44	dvār	f дверь, ворота	flag	phrase,unknown			дверь:S:-:- ворота:S:-:-			
+level_44	nālī	труба	flag	unknown			труба:S:-:-			
+level_44	payas	n вода, молоко	flag	phrase,unknown		4	вода:S:4:573.16 молоко:S:-:-			
+level_44	prāṇin	m тварь, живое существо	flag	phrase,unknown			тварь:S:-:- живой:A:-:- существо:S:-:-			
+level_44	bharatakhaṇḍaḥ	Индия	ok	name						
+level_44	mantrin	m министр	flag	unknown			министр:S:-:-			
+level_44	yajus	n жертвенное изречение	flag	phrase,unknown			жертвенный:A:-:- изречение:S:-:-			
+level_44	yaśas	n слава	flag	unknown			слава:S:-:-			
+level_44	vaṇij	m купец	flag	unknown			купец:S:-:-			
+level_44	vayas	n возраст	flag	unknown			возраст:S:-:-			
+level_44	sumanas	f  цветок	flag	unknown			цветок:S:-:-			
+level_44	sūryaḥ	солнце	flag	unknown			солнце:S:-:-			
+level_44	sthānam	место	flag	unknown			место:S:-:-			
+level_44	svāmin	собственник, господин	flag	phrase,unknown			собственник:S:-:- господин:S:-:-			
+level_44	ākṛṣṭa	f ā - натянутый	flag	unknown			натянутый:A:-:-			
+level_44	tejasvin	мужественный	flag	unknown			мужественный:A:-:-			
+level_44	prathama	f ā - первый	flag	unknown			первый:A:-:-			
+level_44	mṛta	f ā - умерший, павший	flag	phrase,unknown			умерший:A:-:- пасть:V:-:-			
+level_44	sthita	f ā - стоящий	flag	unknown			стоящий:A:-:-			
+level_44	vai	действительно	flag	unknown			действительно:ADV:-:-			
+level_45	nind	1P порицать	flag	unknown			порицать:V:-:-			
+level_45	rāj	1Ā сиять, властвовать	flag	phrase,unknown			сиять:V:-:- властвовать:V:-:-			
+level_45	apasar	уходить	flag	unknown			уходить:V:-:-			
+level_46	ādityaḥ	солнце	flag	unknown			солнце:S:-:-			
+level_46	garīyaṃs	почтенный, почтеннейший	flag	phrase,unknown			почтенный:A:-:- почтенный:A:-:-			
+level_46	prakāśin	освещающий	flag	unknown			освещать:V:-:-			
+level_46	bhūta	f ā - возникший, ставший; n существо	flag	phrase,unknown			возникнуть:V:-:- стать:V:-:- существо:S:-:-			
+level_46	vatsaḥ	теленок	flag	unknown			телёнок:S:-:-			
+level_46	śreyaṃs	лучше, лучший (самый); n благо	flag	phrase,unknown		4	хороший:A:4:555.39 хороший:A:4:555.39 самый:A:-:- благо:S:-:-			
+level_46	sat	(sant) - существующий; m хороший человек;  f верная жена.	flag	phrase,unknown		4	существующий:A:-:- хороший:A:4:555.39 человек:S:5:2888.63 верный:A:-:- жена:S:4:424.54			
+level_46	śvas	завтра	flag	unknown			завтра:ADV:-:-			
+level_47	avachid	отрезать, заключать	flag	phrase,unknown			отрезать:V:-:- заключать:V:-:-			
+level_47	marj	тереть, гладить	flag	phrase,unknown			тереть:V:-:- гладить:V:-:-			
+level_47	mārjaya	натирать, обтирать	flag	phrase,unknown			натирать:V:-:- обтирать:V:-:-			
+level_47	varṇ	описывать, изображать	flag	phrase,unknown			описывать:V:-:- изображать:V:-:-			
+level_47	udvij	испытывать ужас, бояться	flag	phrase,unknown			испытывать:V:-:- ужас:S:-:- бояться:V:-:-			
+level_47	udvijaya	пугать	flag	unknown			пугать:V:-:-			
+level_48	śrīmat	богатый, знаменитый	flag	phrase,unknown			богатый:A:-:- знаменитый:A:-:-			
+level_48	rājan	m. царь	ok			4	царь:S:4:196.75			
+level_48	nāman	n. имя	flag	unknown			имя:S:-:-			
+level_48	ātman	m. душа	flag	unknown			душа:S:-:-			
+level_48	brahman	m. имя бога творца; n. брахман,  мировой дух, Веды	flag	phrase,unknown		4	имя:S:-:- бог:S:4:587.01 творец:S:-:- брахман:S:-:- мировой:A:-:- дух:S:-:- веда:S:-:-			
+level_48	karman	n. дело, обряд, судьба	flag	phrase,unknown			дело:S:-:- обряд:S:-:- судьба:S:-:-			
+level_48	carman	n. шкура, кожа	flag	phrase,unknown			шкура:S:-:- кожа:S:-:-			
+level_48	janman	n. рождение	flag	unknown			рождение:S:-:-			
+level_48	dinaḥ	день	flag	unknown			день:S:-:-			
+level_48	narakaḥ	ад	flag	unknown			ад:S:-:-			
+level_48	bhasman	n. зола	flag	unknown			зола:S:-:-			
+level_48	yatiḥ	m. аскет	flag	unknown			аскет:S:-:-			
+level_48	loman	n. волосы	flag	unknown			волос:S:-:-			
+level_48	varṣam	n. год	flag	unknown			год:S:-:-			
+level_48	saṃgamaḥ	m. встреча	flag	unknown			встреча:S:-:-			
+level_48	hantar	m. убийца	flag	unknown			убийца:S:-:-			
+level_48	āyuṣmant	долголетний, m величество	flag	phrase,unknown			долголетний:A:-:- величество:S:-:-			
+level_48	kiyant	сколь великий	flag	phrase,unknown		4	сколь:ADV:-:- великий:A:4:442.42			
+level_48	kṛpaṇa	бедный, скупой	flag	phrase,unknown			бедный:A:-:- скупой:A:-:-			
+level_48	tāvant	столь великий	flag	phrase,unknown		4	столь:ADV:-:- великий:A:4:442.42			
+level_48	bhagavant	достопочтенный	flag	unknown			достопочтенный:A:-:-			
+level_48	dvitīya	второй	flag	unknown			второй:A:-:-			
+level_48	priyakarman	милостивый	flag	unknown			милостивый:A:-:-			
+level_48	priyavāc	ласковый	flag	unknown			ласковый:A:-:-			
+level_48	balavant	сильный, могущественный	flag	phrase,unknown			сильный:A:-:- могущественный:A:-:-			
+level_48	bhāsvant	сияющий	flag	unknown			сиять:V:-:-			
+level_48	matimant	умный	flag	unknown			умный:A:-:-			
+level_48	rūkṣa	твердый, грубый	flag	phrase,unknown			твёрдый:A:-:- грубый:A:-:-			
+level_48	yāvant	сколь многий	flag	phrase,unknown			сколь:ADV:-:- многий:A:-:-			
+level_48	vibhu	вездесущий	flag	unknown			вездесущие:S:-:-			
+level_48	hata	убитый	flag	unknown			убитый:A:-:-			
+level_48	prāyeṇa	обыкновенно	flag	unknown			обыкновенно:ADV:-:-			
+level_49	astam gam	заходить (о солнце)	flag	phrase,unknown			заходить:V:-:- солнце:S:-:-			
+level_49	udgam	восходить	flag	unknown			восходить:V:-:-			
+level_49	sparh	X.P. (spṛhayati) стремиться, желать	flag	phrase,unknown		4	стремиться:V:-:- желать:V:4:213.33			
+level_49	gaurava	n. тяжесть, достоинство	flag	phrase,unknown			тяжесть:S:-:- достоинство:S:-:-			
+level_49	jagat	n. мир, живущее	flag	phrase,unknown		4	мир:S:4:667.85 жить:V:-:-			
+level_49	takṣaśilā	f. название столицы страны Гандхары	flag	phrase,unknown,name			название:S:-:- столица:S:-:- страна:S:-:-			
+level_49	tiryañc	m., n. зверь	flag	phrase,unknown			зверь:S:-:-			
+level_49	tvaṣṭar	m. создатель, имя бога	flag	phrase,unknown		4	создатель:S:-:- имя:S:-:- бог:S:4:587.01			
+level_49	pariṣad	f. собрание	flag	unknown			собрание:S:-:-			
+level_49	bhṛgukaccha	n. название свящ. места на берегу Нармады (совр. Барох)	flag	phrase,unknown,name			название:S:-:- свящий:A:-:- место:S:-:- берег:S:-:- совр:S:-:-			
+level_49	vipāka	m. созревание, воздаяние;	flag	phrase,unknown			созревание:S:-:- воздаяние:S:-:-			
+level_49	śrama	m. труд, усталость	flag	phrase,unknown			труд:S:-:- усталость:S:-:-			
+level_49	samāgama	m. встреча	flag	unknown			встреча:S:-:-			
+level_49	siṃha	m. лев	flag	unknown			лев:S:-:-			
+level_49	snāna	n. купание	flag	unknown			купание:S:-:-			
+level_49	hariṇa	m. газель	flag	unknown			газель:S:-:-			
+level_49	adhīta	f. ā ученый, образованный	flag	phrase,unknown			учёный:S:-:- образовать:V:-:-			
+level_49	tasthivaṃs	стоявший; n недвижимое	flag	phrase,unknown			стоять:V:-:- недвижимый:A:-:-			
+level_49	triśīrṣan	триголовый	flag	unknown			триголовый:A:-:-			
+level_49	daṣṭa	f. ā укушенный	flag	unknown			укусить:V:-:-			
+level_49	vanavāsin	живущий в лесу	flag	phrase,unknown			жить:V:-:- лес:S:-:-			
+level_50	arpaya	заставлять идти, передавать	flag	phrase,unknown			заставлять:V:-:- идти:V:-:- передавать:V:-:-			
+level_50	gūhaya	скрывать, прятать	flag	phrase,unknown			скрывать:V:-:- прятать:V:-:-			
+level_50	tarp	IV. P. радоваться, насыщаться	flag	phrase,unknown			радоваться:V:-:- насыщаться:V:-:-			
+level_50	adroha	m верность	flag	unknown			верность:S:-:-			
+level_50	devatā	f божество, божественность	flag	phrase,unknown			божество:S:-:- божественность:S:-:-			
+level_50	pālana	n защита	flag	unknown			защита:S:-:-			
+level_50	vrata	n обет, долг	flag	phrase,unknown			обет:S:-:- долг:S:-:-			
+level_50	kāṇa	f ā одноглазый, кривой	flag	phrase,unknown			одноглазый:A:-:- кривая:S:-:-			
+level_50	catuṣpād	четырехногий	flag	unknown			четырехногий:A:-:-			
+level_50	niyata	f ā определенный, постоянный	flag	phrase,unknown			определённый:A:-:- постоянный:A:-:-			
+level_50	śiva	f ā спасительный, милостивый.	flag	phrase,unknown			спасительный:A:-:- милостивый:A:-:-			
+level_51	upekṣ	упускать, запускать	flag	phrase,unknown			упускать:V:-:- запускать:V:-:-			
+level_51	avagaṇ	презирать	flag	unknown			презирать:V:-:-			
+level_51	uccāraya	произносить	flag	unknown			произносить:V:-:-			
+level_51	uttar	выходить	flag	unknown			выходить:V:-:-			
+level_51	pyai	I. Ā. жиреть	flag	unknown			жиреть:V:-:-			
+level_51	bhakṣ	X. P. есть	ok			4	есть:V:4:151.44			
+level_51	upabhuj	наслаждаться	flag	unknown			наслаждаться:V:-:-			
+level_51	paribhū	презирать, окружать	flag	phrase,unknown			презирать:V:-:- окружать:V:-:-			
+level_51	majj	VI. P. погружаться	flag	unknown			погружаться:V:-:-			
+level_51	yojaya	запрягать	flag	unknown			запрягать:V:-:-			
+level_51	lag	I. P. приставать, прижиматься, находиться в	flag	phrase,unknown			приставать:V:-:- прижиматься:V:-:- находиться:V:-:-			
+level_51	sad	погибать	flag	unknown			погибать:V:-:-			
+level_51	aśvin	m, du. Ащвины (два божества утренней и  вечерней зари, сыновья бога солнца)	flag	phrase,name,unknown		4	божество:S:-:- утренний:A:-:- вечерний:A:-:- заря:S:-:- сын:S:4:382.88 бог:S:4:587.01 солнце:S:-:-			
+level_51	ācāra	m поведение, благочестивая жизнь	flag	phrase,unknown			поведение:S:-:- благочестивый:A:-:- жизнь:S:-:-			
+level_51	ṛṇa	n долг	flag	unknown			долг:S:-:-			
+level_51	kṣudh	f голод	flag	unknown			голод:S:-:-			
+level_51	bhojana	n питание, еда	flag	phrase,unknown			питание:S:-:- еда:S:-:-			
+level_51	madhuparka	m медовый напиток	flag	phrase,unknown			медовый:A:-:- напиток:S:-:-			
+level_51	muktā	f жемчужина	flag	unknown			жемчужина:S:-:-			
+level_51	rākṣasa	m демон	flag	unknown			демон:S:-:-			
+level_51	lābha	m достижение, выгода	flag	phrase,unknown			достижение:S:-:- выгода:S:-:-			
+level_51	vyādhi	m болезнь	flag	unknown			болезнь:S:-:-			
+level_51	śakaṭa	m тележка	flag	unknown			тележка:S:-:-			
+level_51	śayyā	f - постель	flag	unknown			постель:S:-:-			
+level_51	hala	m, n плуг	flag	phrase,unknown			плуг:S:-:-			
+level_51	hāra	m - цепь, гирлянда	flag	phrase,unknown			цепь:S:-:- гирлянда:S:-:-			
+level_51	kṣīṇa	изнуренный, исхудалый	flag	phrase,unknown			изнурённый:A:-:- исхудалый:A:-:-			
+level_51	tīvra	большой, стремительный, строгий,  суровый; тяжелый	flag	phrase,unknown			большой:A:-:- стремительный:A:-:- строгий:A:-:- суровый:A:-:- тяжёлый:A:-:-			
+level_51	bhoḥ	о! эй!	ok	phrase						
+level_52	palāy	I. Ā. бежать	flag	unknown			бежать:V:-:-			
+level_52	āghrā	(jighrati) I.P. обнюхивать, целовать	flag	phrase,unknown			обнюхивать:V:-:- целовать:V:-:-			
+level_52	pratāraya	(caus. от pratṝ) обманывать	flag	phrase,unknown			обманывать:V:-:-			
+level_52	saṅnah	приготовляться	flag	unknown			приготовляться:V:-:-			
+level_52	vyāpādaya	(caus. от vyāpad) умерщвлять	flag	phrase,unknown			умерщвлять:V:-:-			
+level_52	upastar	(upastṝ) покрывать, сыпать	flag	phrase,unknown			покрывать:V:-:- сыпать:V:-:-			
+level_52	bhuj	есть, кушать	flag	phrase,unknown		4	есть:V:4:151.44 кушать:V:-:-			
+level_52	saṃman	чтить	flag	unknown			чтить:V:-:-			
+level_52	muh	IV.P. заблуждаться, быть глупым; падать в  обморок	flag	phrase,unknown		6	заблуждаться:V:-:- быть:V:6:12831.00 глупый:A:-:- падать:V:-:- обморок:S:-:-			
+level_52	uparudh	осаждать	flag	unknown			осаждать:V:-:-			
+level_52	pravartaya	(caus. от pravṛt) продолжать	flag	phrase,unknown			продолжать:V:-:-			
+level_52	avaśiṣ	оставаться	flag	unknown			оставаться:V:-:-			
+level_52	darh	(p.p. dṛḍha) укреплять, устанавливать,  завязывать	flag	phrase,unknown			укреплять:V:-:- устанавливать:V:-:- завязывать:V:-:-			
+level_52	anta	m конец	flag	unknown			конец:S:-:-			
+level_52	indraprastha	n Дели	flag	inflected_ambiguous,name						
+level_52	khara	m осел	flag	inflected_ambiguous,unknown			осесть:V:-:-			
+level_52	guhā	f пещера	flag	unknown			пещера:S:-:-			
+level_52	carita	n жизнь	flag	unknown			жизнь:S:-:-			
+level_52	paura	m горожанин	flag	unknown			горожанин:S:-:-			
+level_52	prāsāda	m дворец	flag	unknown			дворец:S:-:-			
+level_52	yavana	m грек, варвар	flag	phrase,unknown			грек:S:-:- варвар:S:-:-			
+level_52	sainika	m солдат	flag	unknown			солдат:S:-:-			
+level_52	sainya	n войско	flag	unknown			войско:S:-:-			
+level_52	hastin	m слон	flag	unknown			слон:S:-:-			
+level_52	bhūyas	больше, большей частью	flag	phrase,unknown			большой:A:-:- больший:A:-:- часть:S:-:-			
+level_53	nyas	поручать	flag	unknown			поручать:V:-:-			
+level_53	āp	достигать	ok			3	достигать:V:3:47.90			
+level_53	adhikar	ставить перед, ставить над	flag	phrase,unknown			ставить:V:-:- ставить:V:-:-			
+level_53	pracal	I.P двигаться (в походе)	flag	phrase,unknown			двигаться:V:-:- поход:S:-:-			
+level_53	cint	X.P обдумывать	flag	unknown			обдумывать:V:-:-			
+level_53	cyu	I. Ā. падать	flag	unknown			падать:V:-:-			
+level_53	ādā	брать	flag	unknown			брать:V:-:-			
+level_53	samādhā	класть на	flag	phrase,unknown			класть:V:-:-			
+level_53	nirṇī	решать, доводить до конца	flag	phrase,unknown			решать:V:-:- доводить:V:-:- конец:S:-:-			
+level_53	vibhaj	I.P. Ā. раздавать, распределять	flag	phrase,unknown			раздавать:V:-:- распределять:V:-:-			
+level_53	pravraj	уходить, становиться аскетом	flag	phrase,unknown			уходить:V:-:- становиться:V:-:- аскет:S:-:-			
+level_53	abhiprāya	m план, намерение	flag	phrase,unknown			план:S:-:- намерение:S:-:-			
+level_53	ahita	n неприятное	flag	inflected,unknown	неприятный		неприятный:A:-:-			
+level_53	āharaṇa	n принесение	flag	unknown			принесение:S:-:-			
+level_53	kapi	m обезьяна	flag	unknown			обезьяна:S:-:-			
+level_53	karin	m слон	flag	unknown			слон:S:-:-			
+level_53	jaya	m победа	flag	unknown			победа:S:-:-			
+level_53	durdaśā	f несчастье	flag	unknown			несчастие:S:-:-			
+level_53	pakṣa	m бок, крыло, партия, сторона	flag	phrase,unknown			бок:S:-:- крыло:S:-:- партия:S:-:- сторона:S:-:-			
+level_53	bheka	m лягушка	flag	unknown			лягушка:S:-:-			
+level_53	laṅkā	f Цейлон	ok	name						
+level_53	śūra	m герой	flag	unknown			герой:S:-:-			
+level_53	sādhana	n средство	flag	unknown			средство:S:-:-			
+level_53	setu	m мост, насыпь	flag	phrase,unknown			мост:S:-:- насыпать:V:-:-			
+level_53	hanumant	nom. pr. царя обезьян	flag	phrase,unknown		4	царь:S:4:196.75 обезьяна:S:-:-			
+level_53	hutabhuj	m огонь	flag	unknown			огонь:S:-:-			
+level_53	āpta	надежный	flag	unknown			надёжный:A:-:-			
+level_53	ubha	du. - оба	ok							
+level_53	kṣudra	f ā, малый, небольшой, ничтожный	flag	phrase,unknown			малый:S:-:- небольшой:A:-:- ничтожный:A:-:-			
+level_53	nitya	f ā, ежедневный, постоянный	flag	phrase,unknown			ежедневный:A:-:- постоянный:A:-:-			
+level_53	mūrdhaga	f ā, восходящий на голову	flag	phrase,unknown			восходящий:A:-:- голова:S:-:-			
+level_53	pratiṣidh	1P. удерживать, запрещать	flag	phrase,unknown			удерживать:V:-:- запрещать:V:-:-			
+level_54	samāp	оканчивать	flag	unknown			оканчивать:V:-:-			
+level_54	apākar	платить	flag	unknown			платить:V:-:-			
+level_54	arh	I.P. быть достойным, долженствовать	flag	phrase,unknown		6	быть:V:6:12831.00 достойный:A:-:- долженствовать:V:-:-			
+level_54	avagāh	I.Ā. погружаться	flag	unknown			погружаться:V:-:-			
+level_54	vidhā	делать распоряжение, приказывать	flag	phrase,unknown			делать:V:-:- распоряжение:S:-:- приказывать:V:-:-			
+level_54	nart	IV.P. плясать	flag	unknown			плясать:V:-:-			
+level_54	prabhū	быть могущественным или в состоянии	flag	phrase,unknown		6	быть:V:6:12831.00 могущественный:A:-:- состояние:S:-:-			
+level_54	vācaya	читать	flag	unknown			читать:V:-:-			
+level_54	pravart	отправляться	flag	unknown			отправляться:V:-:-			
+level_54	manas kar	решаться, намереваться	flag	phrase,unknown			решаться:V:-:- намереваться:V:-:-			
+level_54	nāṭaka	n драма	flag	unknown			драма:S:-:-			
+level_54	brahmacārin	m изучающий веду, благочестивый	flag	phrase,unknown			изучать:V:-:- вести:V:-:- благочестивый:A:-:-			
+level_54	vapus	n тело, стан	flag	phrase,unknown			тело:S:-:- стан:S:-:-			
+level_54	samāja	m собрание, общество	flag	phrase,unknown			собрание:S:-:- общество:S:-:-			
+level_54	sāman	n ведическая мелодия, pl. SAmaveda	flag	phrase,unknown			ведический:A:-:- мелодия:S:-:-			
+level_54	taruṇa	f ī молодой, нежный	flag	phrase,unknown		4	молодой:A:4:477.42 нежный:A:-:-			
+level_54	priyvādin	говорящий приятное	flag	phrase,unknown			говорящий:A:-:- приятный:A:-:-			
+level_54	puṣṭa	сильный, тучный	flag	phrase,unknown			сильный:A:-:- тучный:A:-:-			
+level_54	phalavant	богатый плодами, плодородный	flag	phrase,unknown			богатый:A:-:- плод:S:-:- плодородный:A:-:-			
+level_54	yajñiya	f ā предназначенный в жертву или  подходящий для нее	flag	phrase,unknown			предназначить:V:-:- жертва:S:-:- подходящий:A:-:-			
+level_54	samartha	f ā способный	flag	unknown			способный:A:-:-			
+level_54	alam	довольно, очень; с dat. способный; с instr. довольно, долой!	flag	phrase,unknown			довольно:ADV:-:- очень:ADV:-:- способный:A:-:- довольно:ADV:-:- долой:ADV:-:-			
+level_54	svairam	по желанию	ok	phrase		4	желание:S:4:164.59			
+level_55	saṅkal	X.P. (kala-, kāla-) слагать, прибавлять	flag	phrase,unknown			слагать:V:-:- прибавлять:V:-:-			
+level_55	atikram	протекать	flag	unknown			протекать:V:-:-			
+level_55	jalp	I.P. говорить, болтать	flag	phrase,unknown			говорить:V:-:- болтать:V:-:-			
+level_55	bhojaya	(caus) угощать	flag	phrase,unknown			угощать:V:-:-			
+level_55	abhiṣic	помазать в цари	flag	phrase,unknown		4	помазать:V:-:- царь:S:4:196.75			
+level_55	udāhar	приводить	flag	unknown			приводить:V:-:-			
+level_55	anahilapāṭaka	n город Aṇhilvāḍ	flag	unknown			город:S:-:-			
+level_55	atharvaveda	m Атхарваведа	ok	name						
+level_55	kaliyuga	m железный век	flag	phrase,unknown			железный:A:-:- век:S:-:-			
+level_55	cakra	n колесо	flag	unknown			колесо:S:-:-			
+level_55	jyotiṣa	n астрономия, учебник астрономии	flag	phrase,unknown			астрономия:S:-:- учебник:S:-:- астрономия:S:-:-			
+level_55	darśana	n философская система	flag	phrase,unknown			философский:A:-:- система:S:-:-			
+level_55	nakṣatra	n созвездие	flag	unknown			созвездие:S:-:-			
+level_55	pāṇḍava	m сын Pāṇḍu	ok			4	сын:S:4:382.88			
+level_55	purāṇa	n собрание мифов и легенд	flag	phrase,unknown			собрание:S:-:- миф:S:-:- легенда:S:-:-			
+level_55	vikramāditya	m имя царя Ujjayinī	flag	phrase,unknown		4	имя:S:-:- царь:S:4:196.75			
+level_55	vivāha	m свадьба, брак	flag	phrase,unknown			свадьба:S:-:- брак:S:-:-			
+level_55	śaka	m - скиф	flag	unknown			скиф:S:-:-			
+level_55	śākhā	f ветка, редакция	flag	phrase,unknown			ветка:S:-:- редакция:S:-:-			
+level_55	saṃvatsara	m год	flag	unknown			год:S:-:-			
+level_55	anantaram	после	ok							
+level_55	sāṃpratam	теперь	flag	unknown			теперь:ADV:-:-			
+level_56	dhāvana	n бег	flag	unknown			бег:S:-:-			
+level_56	pakṣin	m птица	flag	unknown			птица:S:-:-			
+level_56	loha	n железо	flag	unknown			железо:S:-:-			
+level_56	vāyasa	m ворона	flag	unknown			ворона:S:-:-			
+level_56	vedānta	m название философского учения	flag	phrase,unknown			название:S:-:- философский:A:-:- учение:S:-:-			
+level_56	surāpa	m пьяница	flag	unknown			пьяница:S:-:-			
+level_56	hemanta	m зима	flag	unknown			зима:S:-:-			
+level_56	aṇu	малый; n  атом	flag	phrase,unknown			малый:S:-:- атом:S:-:-			
+level_56	āśu	быстрый	flag	unknown			быстрый:A:-:-			
+level_56	īdṛś	f ī такой	flag	unknown			такой:A:-:-			
+level_56	purāṇa	f ā и ī древний	flag	phrase,unknown			древний:A:-:-			
+level_56	vartin	находящийся	flag	unknown			находиться:V:-:-			
+level_56	sumanas	доброжелательный	flag	unknown			доброжелательный:A:-:-			
+level_56	udarcis	пламенеющий вверх	flag	phrase,unknown			пламенеть:V:-:- вверх:ADV:-:-			
+level_56	uccaiḥ	высоко	flag	unknown			высоко:ADV:-:-			
+level_56	su	красиво,  хорошо	flag	phrase,unknown			красиво:ADV:-:- хорошо:ADV:-:-			
+level_56	paṭu	умный	flag	unknown			умный:A:-:-			
+level_56	vasumat	богатый	flag	unknown			богатый:A:-:-			
+level_56	kṣipra	скорый	flag	unknown			скорый:A:-:-			
+level_56	dṛḍha	крепкий	flag	unknown			крепкий:A:-:-			
+level_56	pṛthu	широкий	flag	unknown			широкий:A:-:-			
+level_56	mṛdu	мягкий	flag	unknown			мягкий:A:-:-			
+level_56	sragvin	увенчанный	flag	unknown			увенчать:V:-:-			
+level_56	antika	близкий	flag	unknown			близкий:A:-:-			
+level_56	alpa	малый	flag	unknown			малый:S:-:-			
+level_56	dīrgha	долгий	flag	unknown			долгий:A:-:-			
+level_56	praśasya	достойный похвалы	flag	phrase,unknown			достойный:A:-:- похвала:S:-:-			
+level_57	niyuj	ставить на	flag	phrase,unknown			ставить:V:-:-			
+level_57	anurajj	IV.U. (rajya) льнуть к, быть расположенным к	flag	phrase,unknown		6	льнуть:V:-:- быть:V:6:12831.00 расположить:V:-:-			
+level_57	pravas	уезжать	flag	unknown			уезжать:V:-:-			
+level_57	nivart	возвращаться	flag	unknown			возвращаться:V:-:-			
+level_57	ākāśa	m воздух, небо	flag	phrase,unknown			воздух:S:-:- небо:S:-:-			
+level_57	āśrama	m жилище отшельника	flag	phrase,unknown			жилище:S:-:- отшельник:S:-:-			
+level_57	kumāra	m мальчик, принц	flag	phrase,unknown			мальчик:S:-:- принц:S:-:-			
+level_57	krīḍā	f игра, увеселение	flag	phrase,unknown			игра:S:-:- увеселение:S:-:-			
+level_57	tilaka	m украшение	flag	unknown			украшение:S:-:-			
+level_57	tīra	n берег	flag	unknown			берег:S:-:-			
+level_57	tīrtha	n место омовения, священное место	flag	phrase,unknown			место:S:-:- омовение:S:-:- священный:A:-:- место:S:-:-			
+level_57	dvīpin	m леопард	flag	unknown			леопард:S:-:-			
+level_57	mahiṣī	f царица	flag	unknown			царица:S:-:-			
+level_57	mṛgayā	f охота	flag	unknown			охота:S:-:-			
+level_57	yātrā	f поход, поездка; средства жизни	flag	phrase,unknown			поход:S:-:- поездка:S:-:- средство:S:-:- жизнь:S:-:-			
+level_57	vaṅśa	m род	flag	unknown			род:S:-:-			
+level_57	vṛttānta	m обстоятельства дела, известия	flag	phrase,unknown			обстоятельство:S:-:- дело:S:-:- известие:S:-:-			
+level_57	sakhī	f подруга	flag	unknown			подруга:S:-:-			
+level_57	satkāra	m - угощение	flag	unknown			угощение:S:-:-			
+level_57	agra	f ā передний, первый	flag	phrase,unknown			передний:A:-:- первый:A:-:-			
+level_57	anurūpa	f ā подходящий	flag	unknown			подходящий:A:-:-			
+level_57	kṛtrima	f ā сделанный, усыновленный	flag	phrase,unknown		4	сделать:V:4:786.76 усыновить:V:-:-			
+level_57	gāndharva	f ī подобный гандхарвам	flag	phrase,unknown			подобный:A:-:- гандхарвы:S:-:-			
+level_57	divya	f ā небесный, чудесный	flag	phrase,unknown			небесный:A:-:- чудесный:A:-:-			
+level_57	mānuṣa	f ī человеческий	flag	unknown			человеческий:A:-:-			
+level_57	samīpa	f ā близкий; n  близость	flag	phrase,unknown			близкий:A:-:- близость:S:-:-			
+level_57	purā	раньше	flag	unknown			ранний:A:-:-			
+level_58	niści	решать	flag	unknown			решать:V:-:-			
+level_58	vidāraya	caus. разрывать	flag	unknown			разрывать:V:-:-			
+level_58	paṭ	I.P - взламывать, расщеплять, прорывать	flag	phrase,unknown			взламывать:V:-:- расщеплять:V:-:- прорывать:V:-:-			
+level_58	abhibhū	пересылать, преодолевать	flag	phrase,unknown			пересылать:V:-:- преодолевать:V:-:-			
+level_58	var	I.Ā. (varaya) избирать	flag	phrase,unknown			избирать:V:-:-			
+level_58	āsad	приближаться	flag	unknown			приближаться:V:-:-			
+level_58	āsādaya	caus. встречать, находить	flag	phrase,unknown			встречать:V:-:- находить:V:-:-			
+level_58	has	IV, I.  P радоваться	flag	phrase,unknown			радоваться:V:-:-			
+level_58	aṅga	n член, тело	flag	phrase,unknown			член:S:-:- тело:S:-:-			
+level_58	ākāra	m форма, стан	flag	phrase,unknown			форма:S:-:- стан:S:-:-			
+level_58	indu	m месяц, луна	flag	phrase,unknown			месяц:S:-:- луна:S:-:-			
+level_58	udara	n живот	flag	unknown			живот:S:-:-			
+level_58	ketu	m знамя	flag	unknown			знамя:S:-:-			
+level_58	koṭi	f острие, конец	flag	phrase,unknown			остриё:S:-:- конец:S:-:-			
+level_58	tālu	n нёбо	flag	unknown			нёбо:S:-:-			
+level_58	cūḍā	f вихо́р (на темени)	flag	phrase,unknown			вихо:S:-:- р:S:-:- темя:S:-:-			
+level_58	jñāna	n познание	flag	unknown			познание:S:-:-			
+level_58	tṛṣṇā	f жажда, страстное желание	flag	phrase,unknown		4	жажда:S:-:- страстный:A:-:- желание:S:4:164.59			
+level_58	daṃṣṭrā	f зуб	flag	unknown			зуб:S:-:-			
+level_58	dyuti	f блеск, сияние	flag	phrase,unknown			блеск:S:-:- сияние:S:-:-			
+level_58	parvata	m гора	flag	unknown			гора:S:-:-			
+level_58	prahāra	m удар, рана	flag	phrase,unknown			удар:S:-:- рана:S:-:-			
+level_58	prāṇa	m дыхание, жизнь	flag	phrase,unknown			дыхание:S:-:- жизнь:S:-:-			
+level_58	mastaka	n голова	flag	unknown			голова:S:-:-			
+level_58	mīna	m рыба	flag	unknown			рыба:S:-:-			
+level_58	vakṣas	n грудь	flag	unknown			грудь:S:-:-			
+level_58	varāha	m вепрь	flag	unknown			вепрь:S:-:-			
+level_58	vedanā	f боль	flag	unknown			боль:S:-:-			
+level_58	śṛgāla	m шакал	flag	unknown			шакал:S:-:-			
+level_58	snāyu	m жила, тетива	flag	phrase,unknown			жить:V:-:- тетива:S:-:-			
+level_58	anavadya	f ā безукоризненный	flag	unknown			безукоризненный:A:-:-			
+level_58	anukūla	f ā благоприятный; n  милость	flag	phrase,unknown			благоприятный:A:-:- милость:S:-:-			
+level_58	antara	f ā внутренний, находящийся между, иной;  n. внутреннее, промежуток, промежуток времени	flag	phrase,unknown		4	внутренний:A:4:193.64 находиться:V:-:- иной:A:-:- внутренний:A:4:193.64 промежуток:S:-:- промежуток:S:-:- время:S:-:-			
+level_58	bāla	f ā молодой	ok			4	молодой:A:4:477.42			
+level_58	atha	и вот, затем	flag	phrase,unknown			затем:ADV:-:-			
+level_58	tat	потому	flag	unknown			потому:ADV:-:-			
+level_58	tāvat	тогда, между тем	flag	phrase,unknown			тогда:ADV:-:-			
+level_58	yāvat	пока	flag	unknown			пока:ADV:-:-			
+level_58	sma	придает настоящему времени  значение прошедшего	flag	phrase,unknown			придавать:V:-:- настоящий:A:-:- время:S:-:- значение:S:-:- прошедшее:S:-:-			
+level_59	aś	V Ā. достигать, получать	flag	phrase,unknown		3	достигать:V:3:47.90 получать:V:-:-			
+level_59	ci	U. (также  pra- или sam-) - собирать;	flag	phrase,unknown			собирать:V:-:-			
+level_59	niści	(или viniś-)  решать	flag	phrase,unknown			решать:V:-:-			
+level_59	pracud	X P погонять, понуждать	flag	phrase,unknown			погонять:V:-:- понуждать:V:-:-			
+level_59	du	V P жечь, причинять боль; скорбеть	flag	phrase,unknown			жечь:V:-:- причинять:V:-:- боль:S:-:- скорбеть:V:-:-			
+level_59	dhu	V U. трясти	flag	unknown			трясти:V:-:-			
+level_59	var	V U. покрывать	flag	unknown			покрывать:V:-:-			
+level_59	apāvar	раскрывать	flag	unknown			раскрывать:V:-:-			
+level_59	vivar	объяснять, являть	flag	phrase,unknown			объяснять:V:-:- являть:V:-:-			
+level_59	samvar	закрывать, запирать	flag	phrase,unknown			закрывать:V:-:- запирать:V:-:-			
+level_59	śak	V P - быть в состоянии	flag	phrase,unknown		6	быть:V:6:12831.00 состояние:S:-:-			
+level_59	star	V U. сыпать	flag	unknown			сыпать:V:-:-			
+level_59	hi	V P посылать	flag	unknown			посылать:V:-:-			
+level_59	pratyāhū	возвращать	flag	unknown			возвращать:V:-:-			
+level_59	āhāra	m еда	flag	unknown			еда:S:-:-			
+level_59	prabhāva	m могущество	flag	unknown			могущество:S:-:-			
+level_59	bhoga	m наслаждение	flag	unknown			наслаждение:S:-:-			
+level_59	mūla	n корень	flag	unknown			корень:S:-:-			
+level_59	rasa	m вкус, чувство	flag	phrase,unknown			вкус:S:-:- чувство:S:-:-			
+level_59	vipra	m брахман	flag	unknown			брахман:S:-:-			
+level_59	śabda	m звук, шум, слово	flag	phrase,unknown			звук:S:-:- шум:S:-:- слово:S:-:-			
+level_59	nava	f ā новый	flag	unknown			новый:A:-:-			
+level_59	puṇya	f ā похвальный, священный, приносящий счастье	flag	phrase,unknown		3	похвальный:A:-:- священный:A:-:- приносить:V:-:- счастие:S:3:29.48			
+level_59	-bhāj	участвующий, сопричастный	flag	phrase,unknown			участвовать:V:-:- сопричастный:A:-:-			
+level_59	manohara	f ā очаровательный, приятный	flag	phrase,unknown			очаровательный:A:-:- приятный:A:-:-			
+level_59	sadṛśa	f ī похожий, достойный	flag	phrase,unknown			похожий:A:-:- достойный:A:-:-			
+level_60	apakar	VIII U. делать худое	flag	phrase,unknown			делать:V:-:- худой:A:-:-			
+level_60	upakar	делать доброе	flag	phrase,unknown			делать:V:-:- добрый:A:-:-			
+level_60	pratikar	воздавать	flag	unknown			воздавать:V:-:-			
+level_60	kṣaṇ	VIII U. ранить	flag	unknown			ранить:V:-:-			
+level_60	tan	VIII U. растягивать, раскладывать,  распростирать, совершать (жертвоприношение)	flag	phrase,unknown			растягивать:V:-:- раскладывать:V:-:- распростирать:V:-:- совершать:V:-:- жертвоприношение:S:-:-			
+level_60	ātan	причинять	flag	unknown			причинять:V:-:-			
+level_60	duṣ	IV P быть запятнанным	flag	phrase,unknown		6	быть:V:6:12831.00 запятнать:V:-:-			
+level_60	man	VIII Ā. думать, полагать, считать	flag	phrase,unknown			думать:V:-:- полагать:V:-:- считать:V:-:-			
+level_60	anvaya	m потомки	flag	unknown			потомок:S:-:-			
+level_60	uras	n грудь	flag	unknown			грудь:S:-:-			
+level_60	kānti	f миловидность	flag	unknown			миловидность:S:-:-			
+level_60	camatkāra	m удивление	flag	unknown			удивление:S:-:-			
+level_60	tiraskariṇī	f покрывало	flag	unknown			покрывало:S:-:-			
+level_60	doṣa	m недостаток, ошибка	flag	phrase,unknown			недостаток:S:-:- ошибка:S:-:-			
+level_60	nīti	f политика	flag	unknown			политика:S:-:-			
+level_60	mahānasa	n кухня	flag	unknown			кухня:S:-:-			
+level_60	māṃsa	n мясо	flag	unknown			мясо:S:-:-			
+level_60	lavaṇa	n соль	flag	unknown			соль:S:-:-			
+level_60	vyañjana	n приправа, пряность	flag	phrase,unknown			приправа:S:-:- пряность:S:-:-			
+level_60	saṅśaya	m сомнение	flag	unknown			сомнение:S:-:-			
+level_60	sūda	m повар	flag	unknown			повар:S:-:-			
+level_60	andha	f ā слепой	ok			3	слепой:A:3:39.63			
+level_60	avaśya	f ā необходимый	flag	unknown			необходимый:A:-:-			
+level_60	-jña	f ā знающий	flag	unknown			знающий:A:-:-			
+level_60	-bhuj	наслаждающийся	flag	unknown			наслаждаться:V:-:-			
+level_60	vallabha	f ā милый, дорогой	flag	phrase,unknown			милый:A:-:- дорога:S:-:-			
+level_60	vyalīka	f ā неправдивый, обманчивый	flag	phrase,unknown			неправдивый:A:-:- обманчивый:A:-:-			
+level_60	śubha	f ā хороший	ok			4	хороший:A:4:555.39			
+level_60	sajja	f ā готовый	flag	unknown			готовый:A:-:-			
+level_61	aś	IX P. есть	ok			4	есть:V:4:151.44			
+level_61	granth	IX P. плести	flag	unknown			плести:V:-:-			
+level_61	nigrah	сдерживать, держать строго,  держать в руках	flag	phrase,unknown		5	сдерживать:V:-:- держать:V:-:- строго:ADV:-:- держать:V:-:- рука:S:5:1367.37			
+level_61	pratigrah	принимать	flag	unknown			принимать:V:-:-			
+level_61	jñā	IX U. - знать	ok			5	знать:V:5:1740.03			
+level_61	anujñā	позволять	flag	unknown			позволять:V:-:-			
+level_61	pā	II P. защищать	flag	unknown			защищать:V:-:-			
+level_61	puṣ	IX P. умножать, питать	flag	phrase,unknown			умножать:V:-:- питать:V:-:-			
+level_61	prī	IX U. радовать	flag	unknown			радовать:V:-:-			
+level_61	āplu	обливать	flag	unknown			обливать:V:-:-			
+level_61	bhā	II P. сиять, блестеть	flag	phrase,unknown			сиять:V:-:- блестеть:V:-:-			
+level_61	manth	IX P. пахтать, взбалтывать	flag	phrase,unknown			пахтать:V:-:- взбалтывать:V:-:-			
+level_61	nismā	творить	flag	unknown			творить:V:-:-			
+level_61	muṣ	IX P. красть, обкрадывать	flag	phrase,unknown			красть:V:-:- обкрадывать:V:-:-			
+level_61	nirluṇṭh	похищать	flag	unknown			похищать:V:-:-			
+level_61	var	(vṝ) IX U. избирать	flag	phrase,unknown			избирать:V:-:-			
+level_61	snā	II.-P. купать	flag	unknown			купать:V:-:-			
+level_61	apahan	устранять	flag	unknown			устранять:V:-:-			
+level_61	añjali	m руки сложенные ладонями вместе	flag	phrase,unknown		5	рука:S:5:1367.37 сложить:V:-:- ладонь:S:-:- вместе:ADV:-:-			
+level_61	icchā	f желание	ok			4	желание:S:4:164.59			
+level_61	udaya	m восход	flag	unknown			восход:S:-:-			
+level_61	kalā	f серп (луны)	flag	phrase,unknown			серп:S:-:- луна:S:-:-			
+level_61	kṛti	f дело	flag	unknown			дело:S:-:-			
+level_61	koṣa	(kośa) m сокровище, сокровищница	flag	phrase,unknown			сокровище:S:-:- сокровищница:S:-:-			
+level_61	kṣaṇa	m, n миг, мгновение, время	flag	phrase,unknown			миг:S:-:- мгновение:S:-:- время:S:-:-			
+level_61	cāmīkara	n золото	flag	unknown			золото:S:-:-			
+level_61	dānava	m демон	flag	unknown			демон:S:-:-			
+level_61	nāga	m змея	ok			3	змея:S:3:27.43			
+level_61	netra	n глаз, привязь, веревка	flag	phrase,unknown			глаз:S:-:- привязь:S:-:- верёвка:S:-:-			
+level_61	mathin	m мутовка	flag	unknown			мутовка:S:-:-			
+level_61	yūpa	m жертвенный столб	flag	phrase,unknown			жертвенный:A:-:- столб:S:-:-			
+level_61	lalāṭa	n лоб	flag	unknown			лоб:S:-:-			
+level_61	vara	m жених, благосклонность, милость	flag	phrase,unknown			жених:S:-:- благосклонность:S:-:- милость:S:-:-			
+level_61	śeṣa	m nom. pr. мировой змей	flag	phrase,unknown		3	мировой:A:-:- змея:S:3:27.43			
+level_61	samunnati	f возвышение	flag	unknown			возвышение:S:-:-			
+level_61	dhārmika	праведный	flag	unknown			праведный:A:-:-			
+level_61	vida	знающий	flag	unknown			знающий:A:-:-			
+level_61	vivekin	умный	flag	unknown			умный:A:-:-			
+level_61	sutarām	в высшей степени, еще более, очень	flag	phrase,unknown			высокий:A:-:- степень:S:-:- ещё:ADV:-:- более:ADV:-:- очень:ADV:-:-			
+level_61	samakṣam	в присутствии, перед (+ gen.)	flag	phrase,unknown			присутствие:S:-:-			
+level_62	ape	(apai) уходить	flag	phrase,unknown			уходить:V:-:-			
+level_62	astami	заходить (о светилах и созвездиях)	flag	phrase,unknown			заходить:V:-:- светило:S:-:- созвездие:S:-:-			
+level_62	abhī	(P.) подходить, приходить	flag	phrase,unknown			подходить:V:-:- приходить:V:-:-			
+level_62	upe	(P.) - уходить, исчезать	flag	phrase,unknown			уходить:V:-:- исчезать:V:-:-			
+level_62	udi	(P.) восходить	flag	phrase,unknown			восходить:V:-:-			
+level_62	prabrū	провозглашать	flag	unknown			провозглашать:V:-:-			
+level_62	vibrū	объявлять	flag	unknown			объявлять:V:-:-			
+level_62	rata	n любовь	flag	unknown			любовь:S:-:-			
+level_62	citta	n ум, сердце	flag	phrase,unknown			ум:S:-:- сердце:S:-:-			
+level_62	jina	m Будда	flag	unknown			будда:S:-:-			
+level_62	jihvā	f язык	flag	unknown			язык:S:-:-			
+level_62	nyāya	m логика	flag	unknown			логика:S:-:-			
+level_62	puṣpa	n цветок	flag	unknown			цветок:S:-:-			
+level_62	praśna	m вопрос	flag	unknown			вопрос:S:-:-			
+level_62	mānava	m человек	ok			5	человек:S:5:2888.63			
+level_62	manas	n дух, ум	flag	phrase,unknown			дух:S:-:- ум:S:-:-			
+level_62	vadha	m убийство	flag	unknown			убийство:S:-:-			
+level_62	sahacara	m товарищ	flag	unknown			товарищ:S:-:-			
+level_62	sākṣin	m свидетель	flag	unknown			свидетель:S:-:-			
+level_62	sahacarī	f супруга	flag	inflected,unknown	супруг		супруг:S:-:-			
+level_62	sārasa	m исполинский журавль	flag	phrase,unknown			исполинский:A:-:- журавль:S:-:-			
+level_62	udyata	готовый	flag	unknown			готовый:A:-:-			
+level_62	udyogin	прилежный, энергичный	flag	phrase,unknown			прилежный:A:-:- энергичный:A:-:-			
+level_62	karuṇa	жалкий	flag	unknown			жалкий:A:-:-			
+level_62	-kārin	делающий	flag	unknown			делать:V:-:-			
+level_62	svayam	сам	flag	unknown			сам:A:-:-			
+level_63	ācakṣ	рассказывать	flag	unknown			рассказывать:V:-:-			
+level_63	vyācakṣ	объяснять	flag	unknown			объяснять:V:-:-			
+level_63	ceṣṭ	I Ā. двигаться	flag	unknown			двигаться:V:-:-			
+level_63	aparādh	V P. поступать несправедливо	flag	phrase,unknown			поступать:V:-:- несправедливый:A:-:-			
+level_63	vilap	I P. сетовать, жаловаться	flag	phrase,unknown			сетовать:V:-:- жаловаться:V:-:-			
+level_63	oṣṭha	m губа	flag	unknown			губа:S:-:-			
+level_63	kṣaya	m гибель	flag	unknown			гибель:S:-:-			
+level_63	jetar	m победитель	flag	unknown			победитель:S:-:-			
+level_63	dayā	f милосердие, сострадание	flag	phrase,unknown			милосердие:S:-:- сострадание:S:-:-			
+level_63	pralaya	m гибель	flag	unknown			гибель:S:-:-			
+level_63	brahmacarya	n изучение вед, благочестие	flag	phrase,unknown			изучение:S:-:- веда:S:-:- благочестие:S:-:-			
+level_63	yāma	m стража (ночная)	flag	phrase,unknown			страж:S:-:- ночной:A:-:-			
+level_63	vṛta	n поведение	flag	unknown			поведение:S:-:-			
+level_63	vyākaraṇa	n грамматика	flag	unknown			грамматика:S:-:-			
+level_63	śaṅkā	f сомнение, размышление	flag	phrase,unknown			сомнение:S:-:- размышление:S:-:-			
+level_63	mṛd	f земля	ok			4	земля:S:4:650.73			
+level_63	śruta	n книжная ученость	flag	phrase,unknown			книжный:A:-:- учёность:S:-:-			
+level_63	sarga	m творение	flag	unknown			творение:S:-:-			
+level_63	sthiti	f существование, состояние	flag	phrase,unknown			существование:S:-:- состояние:S:-:-			
+level_63	vācya	достойный порицания	flag	phrase,unknown			достойный:A:-:- порицание:S:-:-			
+level_63	anaparāddha	непогрешимый, невиновный, невинный	flag	phrase,unknown			непогрешимый:A:-:- невиновный:A:-:- невинный:A:-:-			
+level_63	carama	последний	ok			4	последний:A:4:725.90			
+level_64	prāṇ	быть живым	flag	phrase,unknown		6	быть:V:6:12831.00 живой:A:-:-			
+level_64	upās	совершать, почитать	flag	phrase,unknown			совершать:V:-:- почитать:V:-:-			
+level_64	nimīl	замыкать	flag	unknown			замыкать:V:-:-			
+level_64	samāviś	подходить, приближаться	flag	phrase,unknown			подходить:V:-:- приближаться:V:-:-			
+level_64	āśvas	вздыхать	flag	unknown			вздыхать:V:-:-			
+level_64	samāśvas	вздыхать, отдыхать	flag	phrase,unknown			вздыхать:V:-:- отдыхать:V:-:-			
+level_64	viśvas	доверять	flag	unknown			доверять:V:-:-			
+level_64	utthā	вставать	flag	unknown			вставать:V:-:-			
+level_64	upabhoga	m наслаждение	flag	unknown			наслаждение:S:-:-			
+level_64	keśa	m волосы	flag	unknown			волос:S:-:-			
+level_64	musala	m, n дубина	flag	phrase,unknown			дубина:S:-:-			
+level_64	rudhira	n кровь	flag	unknown			кровь:S:-:-			
+level_64	sattra	n жертва	flag	unknown			жертва:S:-:-			
+level_64	skandha	m плечо	flag	unknown			плечо:S:-:-			
+level_64	nipuṇa	f ā опытный	flag	unknown			опытный:A:-:-			
+level_64	nyāyya	f ā правильный, справедливый	flag	phrase,unknown			правильный:A:-:- справедливый:A:-:-			
+level_64	pramatta	нерадивый, беспечный	flag	phrase,unknown			нерадивый:A:-:- беспечный:A:-:-			
+level_64	prātar	рано, утром	flag	phrase,unknown			рано:ADV:-:- утром:ADV:-:-			
+level_64	bhṛśam	очень, сильно	flag	phrase,unknown			очень:ADV:-:- сильно:ADV:-:-			
+level_65	saṃdhā	накладывать, соединять	flag	phrase,unknown			накладывать:V:-:- соединять:V:-:-			
+level_65	asura	m демон	flag	unknown			демон:S:-:-			
+level_65	āhuti	f возлияние	flag	unknown			возлияние:S:-:-			
+level_65	abhaya	n обещание безопасности	flag	phrase,unknown			обещание:S:-:- безопасность:S:-:-			
+level_65	mṛga	m газель	flag	unknown			газель:S:-:-			
+level_65	vitta	n имущество, богатство	flag	phrase,unknown			имущество:S:-:- богатство:S:-:-			
+level_65	śeṣa	m остаток	flag	unknown			остаток:S:-:-			
+level_65	daiva	f ī - божественный	flag	unknown			божественный:A:-:-			
+level_65	viśiṣṭa	отличный	flag	unknown			отличный:A:-:-			
+level_65	sāyam	вечером	flag	unknown			вечером:ADV:-:-			
+level_66	indh	VII U. зажигать	flag	unknown			зажигать:V:-:-			
+level_66	chid	VII U. отрезать	flag	unknown			отрезать:V:-:-			
+level_66	āchid	отнимать	flag	unknown			отнимать:V:-:-			
+level_66	bhañj	VII P. ломать, разрушать	flag	phrase,unknown			ломать:V:-:- разрушать:V:-:-			
+level_66	bhid	VII U. колоть, разрубать, разделять	flag	phrase,unknown			колоть:V:-:- разрубать:V:-:- разделять:V:-:-			
+level_66	viśiṣ	VII P. увеличивать, определять	flag	phrase,unknown			увеличивать:V:-:- определять:V:-:-			
+level_66	saṃhan	II соединять	flag	unknown			соединять:V:-:-			
+level_66	dhṛtiṃ bandh	IX добиваться	flag	unknown			добиваться:V:-:-			
+level_66	piṣ	VII P. дробить, молоть, толочь	flag	phrase,unknown			дробить:V:-:- молоть:V:-:- толочь:V:-:-			
+level_66	hiṃs	VII P. повреждать, уничтожать	flag	phrase,unknown			повреждать:V:-:- уничтожать:V:-:-			
+level_66	vaṃśa	m род	flag	unknown			род:S:-:-			
+level_66	avasthā	f состояние	flag	unknown			состояние:S:-:-			
+level_66	uṣas	f утренняя заря	flag	phrase,unknown			утренний:A:-:- заря:S:-:-			
+level_66	kaṇṭaka	m, n колючка, враг	flag	phrase,unknown			колючка:S:-:- враг:S:-:-			
+level_66	grāsa	m кусок	flag	unknown			кусок:S:-:-			
+level_66	taṇḍula	m рис	flag	unknown			рис:S:-:-			
+level_66	pātaka	n проступок	flag	unknown			проступок:S:-:-			
+level_66	pautra	m внук	flag	unknown			внук:S:-:-			
+level_66	bandhu	m родственник	flag	unknown			родственник:S:-:-			
+level_66	lekhana	n писание, списывание	flag	phrase,unknown			писание:S:-:- списывание:S:-:-			
+level_66	manoruj	f сердечная боль или печаль	flag	phrase,unknown			сердечный:A:-:- боль:S:-:- печаль:S:-:-			
+level_66	ucchrita	высокий	flag	unknown			высокий:A:-:-			
+level_66	kṣātra	подходящий для воинов	flag	phrase,unknown			подходящий:A:-:- воин:S:-:-			
+level_66	pratikūla	f ā неблагоприятный	flag	unknown			неблагоприятный:A:-:-			
