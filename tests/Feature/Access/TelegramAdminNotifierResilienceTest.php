@@ -144,4 +144,30 @@ class TelegramAdminNotifierResilienceTest extends TestCase
             return true;
         });
     }
+
+    /**
+     * Отказ answerCallbackQuery — штатное «query is too old» при позднем
+     * нажатии кнопки. ERROR здесь поднял бы сторожа ошибок
+     * (config/logs_watch.php слушает уровни ['ERROR']) и превратил бы рутину
+     * в ложную тревогу админам.
+     */
+    public function test_callback_answer_rejection_is_not_logged_as_error(): void
+    {
+        config(['services.telegram.bot_token' => self::TOKEN]);
+
+        Log::spy();
+        Http::fake([
+            'api.telegram.org/*' => Http::response(
+                ['ok' => false, 'description' => 'Bad Request: query is too old'],
+                400
+            ),
+        ]);
+
+        app(TelegramAdminNotifier::class)->answerCallback('cb-old', 'Готово');
+
+        Log::shouldNotHaveReceived('error');
+        Log::shouldHaveReceived('warning')->withArgs(
+            fn (string $message): bool => str_contains($message, 'answerCallbackQuery')
+        );
+    }
 }

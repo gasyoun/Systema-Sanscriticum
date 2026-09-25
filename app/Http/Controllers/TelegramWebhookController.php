@@ -27,10 +27,9 @@ use App\Services\Support\SupportDmAutoReply;
 use App\Services\Support\SupportHintSendButton;
 use App\Services\VacationQuorumService;
 use App\Support\TelegramSendGuard;
+use App\Support\TelegramTransport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
 {
@@ -833,26 +832,38 @@ class TelegramWebhookController extends Controller
         // Telegram-HTML — конвертер приводит всё к валидным тегам.
         $text = TelegramFormatter::toHtml((string) $text);
 
-        $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'parse_mode' => 'HTML',
-        ]);
+        // Вебхук — это запрос от Telegram: пока вызов бросал исключение,
+        // недоступный Telegram получал 500, повторял апдейт и снова держал
+        // воркер. Вызов не имеет права ломать обработку апдейта.
+        $response = TelegramTransport::post(
+            "https://api.telegram.org/bot{$token}/sendMessage",
+            ['chat_id' => $chatId, 'text' => $text, 'parse_mode' => 'HTML'],
+            'Telegram webhook sendMessage',
+            ['chat_id' => $chatId],
+        );
 
-        if (! $response->successful()) {
-            Log::error('Telegram API error', ['status' => $response->status(), 'body' => $response->body()]);
+        if ($response?->successful()) {
+            return;
+        }
 
-            // Чаще всего это ошибка парсинга HTML (модель прислала кривой тег или
-            // одиночный «<»). Не теряем сообщение — досылаем как обычный текст.
-            $fallback = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+        // null — Telegram недоступен: фолбэк тем же транспортом только
+        // повторит таймаут, поэтому сдаёмся (причина уже в логе).
+        if ($response === null) {
+            return;
+        }
+
+        // Ответил отказом — чаще всего это ошибка парсинга HTML (модель
+        // прислала кривой тег или одиночный «<»). Не теряем сообщение —
+        // досылаем как обычный текст.
+        TelegramTransport::post(
+            "https://api.telegram.org/bot{$token}/sendMessage",
+            [
                 'chat_id' => $chatId,
                 'text' => html_entity_decode(strip_tags((string) $text), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
-            ]);
-
-            if (! $fallback->successful()) {
-                Log::error('Telegram API error (plain fallback)', ['status' => $fallback->status(), 'body' => $fallback->body()]);
-            }
-        }
+            ],
+            'Telegram webhook sendMessage (plain fallback)',
+            ['chat_id' => $chatId],
+        );
     }
 
     // ==========================================
@@ -865,14 +876,18 @@ class TelegramWebhookController extends Controller
         $token = config('services.telegram.bot_token');
 
         foreach ($this->adminChatIds() as $chatId) {
-            $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-                'chat_id' => $chatId,
-                'text' => $text,
-                'parse_mode' => 'HTML',
-            ]);
+            // null = сеть до Telegram оборвалась. Получатели сидят за одним и
+            // тем же api.telegram.org, поэтому продолжать цикл — значит
+            // умножать таймаут на их число (2 × 5 с держали воркер в инциденте).
+            $delivered = TelegramTransport::post(
+                "https://api.telegram.org/bot{$token}/sendMessage",
+                ['chat_id' => $chatId, 'text' => $text, 'parse_mode' => 'HTML'],
+                'Telegram admin alert',
+                ['chat_id' => $chatId],
+            );
 
-            if (! $response->successful()) {
-                Log::error('Telegram admin alert error', ['chat_id' => $chatId, 'status' => $response->status(), 'body' => $response->body()]);
+            if ($delivered === null) {
+                return;
             }
         }
     }

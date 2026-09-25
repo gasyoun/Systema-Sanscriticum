@@ -22,6 +22,7 @@ use App\Services\Support\SupportFollowUpService;
 use App\Services\Support\SupportReplyService;
 use App\Services\Support\UnifiedInboxReader;
 use App\Support\Roles;
+use App\Support\TelegramTransport;
 use App\Support\UnifiedMessage;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -829,15 +830,24 @@ class Helpdesk extends Page
         // МАГИЯ: ОТПРАВЛЯЕМ В НУЖНЫЙ МЕССЕНДЖЕР
         // Студенту подписываем сообщение псевдонимом куратора (бэйдж).
         // ==========================================
+        $telegramAttempted = false;
+        $telegramDelivered = false;
+
         if ($user->telegram_id && Cache::has("chat_human_{$user->telegram_id}")) {
             // Если пауза стоит в Telegram — отвечаем ботом кабинета (фолбэк на основной)
             $token = config('services.telegram.student_bot_token')
                 ?: config('services.telegram.bot_token');
-            Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-                'chat_id' => $user->telegram_id,
-                'text' => '👨‍🏫 <b>'.e($alias).'</b>:'."\n".$this->newMessage,
-                'parse_mode' => 'HTML',
-            ]);
+            $telegramAttempted = true;
+            $telegramDelivered = TelegramTransport::post(
+                "https://api.telegram.org/bot{$token}/sendMessage",
+                [
+                    'chat_id' => $user->telegram_id,
+                    'text' => '👨‍🏫 <b>'.e($alias).'</b>:'."\n".$this->newMessage,
+                    'parse_mode' => 'HTML',
+                ],
+                'Helpdesk sendReply',
+                ['chat_id' => $user->telegram_id],
+            )?->successful() ?? false;
         } elseif ($user->vk_id && Cache::has("chat_human_vk_{$user->vk_id}")) {
             // Если пауза стоит во ВКонтакте (ДОБАВЛЕНО asForm())
             Http::asForm()->post('https://api.vk.com/method/messages.send', [
@@ -853,8 +863,21 @@ class Helpdesk extends Page
         $this->newMessage = '';
         $this->loadUsersList();
 
+        // Ответ уже записан в БД и виден в кабинете, поэтому недоступность
+        // Telegram — не 500, а управляемое предупреждение оператору: иначе он
+        // видит зелёное «отправлено», а сообщение не ушло (инцидент 25-09-2026).
+        if ($telegramAttempted && ! $telegramDelivered) {
+            Notification::make()
+                ->title('Ответ в Telegram не ушёл')
+                ->body('Telegram недоступен. Ответ сохранён и виден в кабинете — повторите отправку позже.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
         // Тост называет канал доставки — оператор сразу видит, куда ушёл ответ.
-        $sentToMessenger = ($user->telegram_id && Cache::has("chat_human_{$user->telegram_id}"))
+        $sentToMessenger = $telegramDelivered
             || ($user->vk_id && Cache::has("chat_human_vk_{$user->vk_id}"));
 
         Notification::make()
@@ -909,11 +932,27 @@ class Helpdesk extends Page
                 Cache::forget("chat_human_{$user->telegram_id}");
                 $token = config('services.telegram.student_bot_token')
                     ?: config('services.telegram.bot_token');
-                Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-                    'chat_id' => $user->telegram_id,
-                    'text' => '🤖 Куратор завершил диалог. Я снова с вами! Чем я могу помочь?',
-                    'parse_mode' => 'HTML',
-                ]);
+
+                // Недоступный Telegram не должен превращать возврат боту в 500:
+                // состояние (пауза снята) уже изменено, уведомление — следствие.
+                $delivered = TelegramTransport::post(
+                    "https://api.telegram.org/bot{$token}/sendMessage",
+                    [
+                        'chat_id' => $user->telegram_id,
+                        'text' => '🤖 Куратор завершил диалог. Я снова с вами! Чем я могу помочь?',
+                        'parse_mode' => 'HTML',
+                    ],
+                    'Helpdesk returnToBot',
+                    ['chat_id' => $user->telegram_id],
+                )?->successful() ?? false;
+
+                if (! $delivered) {
+                    Notification::make()
+                        ->title('Студент не получил уведомление в Telegram')
+                        ->body('Диалог возвращён боту, но сообщение не ушло — Telegram недоступен.')
+                        ->warning()
+                        ->send();
+                }
             }
 
             // Сбрасываем кэш и уведомляем, если диалог был в ВК (ДОБАВЛЕНО asForm())

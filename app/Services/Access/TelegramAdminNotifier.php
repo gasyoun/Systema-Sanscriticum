@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Access;
 
-use Illuminate\Support\Facades\Http;
+use App\Support\TelegramTransport;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -16,16 +16,10 @@ use Illuminate\Support\Facades\Log;
 class TelegramAdminNotifier
 {
     /**
-     * Сеть до api.telegram.org не должна держать FPM-воркер: при недоступном
-     * Telegram connect обрывается за 2 с (обычный прод-случай — DNS отдаёт
-     * недоступные IP), весь вызов ограничен 5 с. Алерт админу не срочный,
-     * поэтому таймауты жёстче, чем в очередях (connect 5 / total 15).
-     */
-    private const CONNECT_TIMEOUT_SECONDS = 2;
-
-    private const TIMEOUT_SECONDS = 5;
-
-    /**
+     * Сеть до api.telegram.org не должна держать FPM-воркер: таймауты и
+     * санитизация живут в общем контракте App\Support\TelegramTransport
+     * (connect 2 с / всего 5 с) — здесь только семантика алертов.
+     *
      * Оборвалась ли СЕТЬ на последнем send(). В отличие от HTTP-ошибки
      * (не-2xx), сетевой сбой означает, что все получатели — за одним и тем же
      * api.telegram.org — не получат сообщение, и повторять цикл бессмысленно.
@@ -91,8 +85,7 @@ class TelegramAdminNotifier
 
         try {
             $this->lastSendWasNetworkFailure = false;
-            $response = Http::connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
-                ->timeout(self::TIMEOUT_SECONDS)
+            $response = TelegramTransport::client()
                 ->post("https://api.telegram.org/bot{$token}/sendMessage", $payload);
         } catch (\Throwable $e) {
             $this->lastSendWasNetworkFailure = true;
@@ -108,7 +101,7 @@ class TelegramAdminNotifier
             // (в нём email студента).
             Log::warning('Telegram admin notifier: отправка не удалась', [
                 'chat_id' => $chatId,
-                'error' => $this->sanitizeError($e->getMessage()),
+                'error' => TelegramTransport::sanitize($e->getMessage()),
                 'text_length' => mb_strlen($text),
             ]);
 
@@ -119,7 +112,7 @@ class TelegramAdminNotifier
             Log::error('Telegram admin notifier error', [
                 'chat_id' => $chatId,
                 'status' => $response->status(),
-                'body' => $this->sanitizeError($response->body()),
+                'body' => TelegramTransport::sanitize($response->body()),
             ]);
 
             return false;
@@ -140,6 +133,10 @@ class TelegramAdminNotifier
 
     /**
      * Ответ на нажатие inline-кнопки (убирает «часики» на кнопке у клиента).
+     *
+     * Вызывается из тела вебхука: пока вызов бросал исключение, недоступный
+     * Telegram отвечал Telegram'у 500, тот повторял апдейт — и каждый повтор
+     * снова держал воркер. Ответ на callback — косметика, не повод падать.
      */
     public function answerCallback(string $callbackId, string $text = ''): void
     {
@@ -148,10 +145,18 @@ class TelegramAdminNotifier
             return;
         }
 
-        Http::post("https://api.telegram.org/bot{$token}/answerCallbackQuery", array_filter([
-            'callback_query_id' => $callbackId,
-            'text' => $text,
-        ]));
+        TelegramTransport::post(
+            "https://api.telegram.org/bot{$token}/answerCallbackQuery",
+            array_filter([
+                'callback_query_id' => $callbackId,
+                'text' => $text,
+            ]),
+            'Telegram answerCallbackQuery',
+            ['callback_id_length' => mb_strlen($callbackId)],
+            // Отказ здесь — штатное «query is too old» при позднем нажатии
+            // кнопки; ERROR поднял бы сторожа ошибок (config/logs_watch.php).
+            'warning',
+        );
     }
 
     /** @return list<string> */
@@ -161,14 +166,5 @@ class TelegramAdminNotifier
             'trim',
             explode(',', (string) config('services.telegram.admin_id')),
         )));
-    }
-
-    /**
-     * Токен бота нельзя пускать в лог: Laravel/curl кладут в текст ошибки
-     * соединения весь URL, а в нём `https://api.telegram.org/bot<digits>:<token>/sendMessage`.
-     */
-    private function sanitizeError(string $message): string
-    {
-        return (string) preg_replace('#bot\d+:[A-Za-z0-9_\-]+#i', 'bot[redacted]', $message);
     }
 }
