@@ -1770,4 +1770,17 @@ return [
      | money_recon_* (прогон, исключения, след разрешения).
      */
     'money_daily_reconciliation' => (bool) env('MONEY_DAILY_RECONCILIATION', false),
+
+    /*
+     | H5480 (P3): зачисления банковской выписки как источник доказательств
+     | bank_statement и дневной агрегатный контроль (QR-расчёты и агрегат
+     | эквайринга против оплат окна). Выключено — импорт выписки по-прежнему
+     | работает и складывает строки, но сверка их НЕ читает: источник остаётся
+     | missing, прогон incomplete, ни одного исключения не открывается.
+     | Money-контур: дефолт OFF, включение в проде — отдельный ops-шаг
+     | (MONEY_BANK_STATEMENT_CREDITS=true + php artisan config:cache) ПОСЛЕ
+     | первого импорта реальной выписки и зелёного прогона без --persist.
+     | Денег не создаёт и не меняет — только свои таблицы bank_statement_*.
+     */
+    'money_bank_statement_credits' => (bool) env('MONEY_BANK_STATEMENT_CREDITS', false),
 ];
