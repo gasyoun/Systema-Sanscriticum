@@ -30,9 +30,48 @@ class TestimonialResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Отзывы';
 
+    /** Сколько присланных студентами отзывов ждут модерации. */
+    public static function getNavigationBadge(): ?string
+    {
+        $pending = Testimonial::query()->pending()->count();
+
+        return $pending > 0 ? (string) $pending : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Отзывы студентов на модерации';
+    }
+
+    public const STATUS_LABELS = [
+        Testimonial::STATUS_PENDING => 'На модерации',
+        Testimonial::STATUS_APPROVED => 'Одобрен',
+        Testimonial::STATUS_REJECTED => 'Отклонён',
+    ];
+
     public static function form(Form $form): Form
     {
         return $form->schema([
+            Forms\Components\Section::make('Прислан студентом')
+                ->visible(fn (?Testimonial $record) => $record?->user_id !== null)
+                ->schema([
+                    Forms\Components\Placeholder::make('submitted_by')
+                        ->label('Студент')
+                        ->content(fn (Testimonial $record) => $record->user?->email ?? '— аккаунт удалён —'),
+                    Forms\Components\Placeholder::make('moderation')
+                        ->label('Статус')
+                        ->content(fn (Testimonial $record) => self::STATUS_LABELS[$record->moderation_status] ?? $record->moderation_status),
+                    Forms\Components\Placeholder::make('consent')
+                        ->label('Согласие на публикацию')
+                        ->content(fn (Testimonial $record) => $record->publish_consent_at?->format('d.m.Y H:i') ?? 'нет'),
+                ])
+                ->columns(3),
+
             Forms\Components\Section::make('Отзыв')->schema([
                 Forms\Components\Grid::make(2)->schema([
                     Forms\Components\TextInput::make('author_name')
@@ -137,14 +176,44 @@ class TestimonialResource extends Resource
 
                 Tables\Columns\ToggleColumn::make('show_on_login')
                     ->label('На входе'),
+
+                Tables\Columns\TextColumn::make('moderation_status')
+                    ->label('Статус')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state) => self::STATUS_LABELS[$state] ?? $state)
+                    ->color(fn (?string $state) => match ($state) {
+                        Testimonial::STATUS_PENDING => 'warning',
+                        Testimonial::STATUS_REJECTED => 'danger',
+                        default => 'success',
+                    })
+                    ->description(fn (Testimonial $r) => $r->user_id ? 'от студента' : null),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('moderation_status')
+                    ->label('Модерация')
+                    ->options(self::STATUS_LABELS),
                 Tables\Filters\TernaryFilter::make('is_visible')
                     ->label('Видимость'),
                 Tables\Filters\TernaryFilter::make('show_on_login')
                     ->label('На странице входа'),
             ])
             ->actions([
+                Tables\Actions\Action::make('approve')
+                    ->label('Одобрить')
+                    ->icon('heroicon-o-check')
+                    ->color('success')
+                    ->visible(fn (Testimonial $record) => $record->isPending())
+                    ->requiresConfirmation()
+                    ->modalDescription('Отзыв появится на странице входа и на /otzyvy.')
+                    ->action(fn (Testimonial $record) => $record->approve()),
+                Tables\Actions\Action::make('reject')
+                    ->label('Отклонить')
+                    ->icon('heroicon-o-x-mark')
+                    ->color('danger')
+                    ->visible(fn (Testimonial $record) => $record->isPending())
+                    ->requiresConfirmation()
+                    ->modalDescription('Отзыв останется скрытым. Студент сможет прислать новый.')
+                    ->action(fn (Testimonial $record) => $record->reject()),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
