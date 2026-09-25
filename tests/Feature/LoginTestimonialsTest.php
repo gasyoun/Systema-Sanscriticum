@@ -46,6 +46,26 @@ class LoginTestimonialsTest extends TestCase
     }
 
     /** @test */
+    public function login_respects_show_on_login_toggle_and_prints_review_date(): void
+    {
+        $this->makeTestimonial('Анна Первая')->update(['reviewed_at' => '2026-09-13']);
+        $this->makeTestimonial('Борис Второй');
+        $this->makeTestimonial('Вера Третья');
+        $this->makeTestimonial('Только Каталог')->update(['show_on_login' => false]);
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('13 сентября 2026')
+            ->assertDontSee('Только Каталог');
+    }
+
+    /** @test */
+    public function new_testimonials_are_on_login_by_default(): void
+    {
+        $this->assertTrue($this->makeTestimonial('Новый Автор')->fresh()->show_on_login);
+    }
+
+    /** @test */
     public function login_keeps_single_card_layout_with_too_few_testimonials(): void
     {
         $this->makeTestimonial('Анна Первая');

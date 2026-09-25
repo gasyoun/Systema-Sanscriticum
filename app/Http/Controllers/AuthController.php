@@ -42,7 +42,10 @@ class AuthController extends Controller
         try {
             return Testimonial::query()
                 ->where('is_visible', true)
+                ->where('show_on_login', true)
                 ->orderByDesc('is_featured')
+                ->orderByRaw('reviewed_at IS NULL')   // с датой — раньше, чем без даты
+                ->orderByDesc('reviewed_at')
                 ->latest('id')
                 ->limit(18)
                 ->get();

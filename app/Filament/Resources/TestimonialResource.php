@@ -51,7 +51,14 @@ class TestimonialResource extends Resource
                     ->rows(5)
                     ->columnSpanFull(),
 
-                Forms\Components\Grid::make(2)->schema([
+                Forms\Components\Grid::make(3)->schema([
+                    Forms\Components\DatePicker::make('reviewed_at')
+                        ->label('Дата отзыва')
+                        ->native(false)
+                        ->displayFormat('d.m.Y')
+                        ->maxDate(now())
+                        ->helperText('Печатается на карточке. Пусто — без даты.'),
+
                     Forms\Components\Select::make('rating')
                         ->label('Оценка')
                         ->options([1 => '1', 2 => '2', 3 => '3', 4 => '4', 5 => '5'])
@@ -76,8 +83,13 @@ class TestimonialResource extends Resource
 
                 Forms\Components\Toggle::make('is_featured')
                     ->label('Избранный (витрина каталога)')
-                    ->helperText('Показывать в общесайтовом блоке отзывов на странице каталога — помимо привязки к курсам.')
+                    ->helperText('Показывать в общесайтовом блоке отзывов на странице каталога — помимо привязки к курсам. На странице входа избранные идут первыми.')
                     ->default(false),
+
+                Forms\Components\Toggle::make('show_on_login')
+                    ->label('На странице входа')
+                    ->helperText('Бегущие колонки отзывов вокруг формы входа. Нужно и «Показывать».')
+                    ->default(true),
             ]),
         ]);
     }
@@ -107,6 +119,12 @@ class TestimonialResource extends Resource
                     ->badge()
                     ->placeholder('—'),
 
+                Tables\Columns\TextColumn::make('reviewed_at')
+                    ->label('Дата')
+                    ->date('d.m.Y')
+                    ->sortable()
+                    ->placeholder('—'),
+
                 Tables\Columns\TextColumn::make('courses_count')
                     ->label('На курсах')
                     ->counts('courses')
@@ -116,10 +134,15 @@ class TestimonialResource extends Resource
                 Tables\Columns\IconColumn::make('is_visible')
                     ->label('Виден')
                     ->boolean(),
+
+                Tables\Columns\ToggleColumn::make('show_on_login')
+                    ->label('На входе'),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_visible')
                     ->label('Видимость'),
+                Tables\Filters\TernaryFilter::make('show_on_login')
+                    ->label('На странице входа'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
