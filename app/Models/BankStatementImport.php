@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * H5480: один импорт файла банковской выписки (Точка). Append-only — триггеры
@@ -16,8 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $file_sha256
  * @property string $file_name
  * @property string $provider
- * @property \Illuminate\Support\Carbon $covers_from
- * @property \Illuminate\Support\Carbon $covers_to
+ * @property Carbon $covers_from
+ * @property Carbon $covers_to
  */
 class BankStatementImport extends Model
 {

@@ -7,7 +7,6 @@ namespace Tests\Feature\Reconciliation;
 use App\Models\BankStatementCredit;
 use App\Models\BankStatementImport;
 use App\Models\MoneyReconException;
-use App\Models\Payment;
 use App\Models\User;
 use App\Services\Reconciliation\BankStatementImporter;
 use App\Services\Reconciliation\DailyReconciler;

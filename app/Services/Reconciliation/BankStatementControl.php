@@ -10,6 +10,7 @@ use App\Models\MoneyReconException;
 use App\Models\Payment;
 use App\Support\Kopecks;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -188,7 +189,7 @@ final class BankStatementControl
             ->first();
     }
 
-    /** @return \Illuminate\Support\Collection<int, BankStatementCredit> */
+    /** @return Collection<int, BankStatementCredit> */
     private function creditsOfDay(CarbonImmutable $day)
     {
         return BankStatementCredit::query()
@@ -198,7 +199,7 @@ final class BankStatementControl
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, BankStatementCredit>  $credits
+     * @param  Collection<int, BankStatementCredit>  $credits
      * @return array{rows: int, kopecks: int, hashes: list<string>}
      */
     private function bucket($credits, string $kind): array
@@ -216,17 +217,20 @@ final class BankStatementControl
     private function acquiringPaymentsKopecks(CarbonImmutable $from, CarbonImmutable $to): int
     {
         $sum = 0;
-        Payment::query()
+        $q = Payment::query()
             ->whereNull('refund_of_payment_id')
-            ->where('status', Payment::STATUS_PAID)
+            ->whereIn('status', Payment::PAID_STATUSES)
+            ->whereNotIn('tariff', ['Расход', 'salary_payout'])
             ->whereRaw('COALESCE(first_paid_at, created_at) >= ?', [$from->toDateTimeString()])
             ->whereRaw('COALESCE(first_paid_at, created_at) < ?', [$to->toDateTimeString()])
-            ->orderBy('id')
-            ->each(function (Payment $p) use (&$sum): void {
-                if ($this->isAcquiring($p)) {
-                    $sum += Kopecks::fromDecimal((string) $p->amount);
-                }
-            });
+            ->orderBy('id');
+
+        foreach ($q->lazyById(500) as $p) {
+            /** @var Payment $p */
+            if ($this->isAcquiring($p)) {
+                $sum += Kopecks::fromDecimal((string) $p->amount);
+            }
+        }
 
         return $sum;
     }

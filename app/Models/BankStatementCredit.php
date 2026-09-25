@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * H5480: одна строка зачисления из банковской выписки. Идентификатора
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @property int $id
  * @property string $row_hash
- * @property \Illuminate\Support\Carbon $booked_on
+ * @property Carbon $booked_on
  * @property int $amount_kopecks
  * @property string $kind
  */
