@@ -104,6 +104,10 @@ final class BankStatementImporter
                 'imported_by' => $actorId,
             ]);
 
+            foreach ($fresh as $row) {
+                BankStatementCredit::query()->create($row + ['import_id' => $import->id]);
+            }
+
             return [
                 'import' => $import,
                 'outcome' => 'imported',
