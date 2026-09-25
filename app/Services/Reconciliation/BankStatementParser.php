@@ -198,7 +198,8 @@ final class BankStatementParser
             $s = str_replace(',', '.', $s);
         }
 
-        return preg_match('/^-?\d+(\.\d+)?$/', $s) === 1 ? $s : null;
+        // Только рубли с точностью до копейки — больше двух знаков Kopecks не примет.
+        return preg_match('/^-?\d+(\.\d{1,2})?$/', $s) === 1 ? $s : null;
     }
 
     /** DD.MM.YYYY → YYYY-MM-DD; null если не разобрать. */
