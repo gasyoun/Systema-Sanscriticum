@@ -78,9 +78,9 @@ final class EvidenceCollector
             $sources[self::CH_WEBHOOK] = ['status' => 'missing', 'note' => 'payment_webhook_events table absent'];
         }
 
-        // 3. Банковская выписка зачислений (переводы, SEPA). Импорта зачислений
-        //    в системе нет (парсеры выписок H4200 — только расходы): источник
-        //    отсутствует, прогон — incomplete. Не ноль.
+        // 3. Банковская выписка зачислений (H5480). Источник «present» только
+        //    если импортированная выписка покрывает день ЦЕЛИКОМ; частичная —
+        //    по-прежнему missing, и прогон честно incomplete. Не ноль.
         $sources['bank_statement'] = $this->bankStatementSource($from, $to);
 
         // 4. Ядро P1.
