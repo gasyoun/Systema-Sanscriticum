@@ -105,6 +105,14 @@ class AccessAttemptLogger
             ? [[['text' => '🔓 Выслать ссылку для входа', 'callback_data' => 'ub:'.$attempt->id]]]
             : null;
 
-        $this->notifier->notifyAdmins($text, $keyboard);
+        $delivered = $this->notifier->notifyAdmins($text, $keyboard);
+
+        // Дедупликация не должна «съедать» сигнал в аварию: если получатели
+        // настроены, а доставка не удалась (Telegram недоступен), ключ снимаем —
+        // иначе «студент не может войти» потеряется на все 600 с TTL.
+        // Пустой список получателей или пустой токен — не сбой, ключ оставляем.
+        if ($delivered === [] && $this->notifier->adminChatIds() !== []) {
+            Cache::forget($dedupeKey);
+        }
     }
 }

@@ -26,20 +26,31 @@ class TelegramAdminNotifierResilienceTest extends TestCase
         Log::spy();
         Http::fake([
             'api.telegram.org/*' => fn () => throw new ConnectionException(
-                'cURL error 28: Operation timed out after 10000 milliseconds'
+                'cURL error 28: Operation timed out after 10000 milliseconds for https://api.telegram.org/bot'
+                    .self::TOKEN.'/sendMessage'
             ),
         ]);
 
         $sent = app(TelegramAdminNotifier::class)->send(self::TOKEN, '555', '<b>алерт</b>');
 
         $this->assertFalse($sent, 'send() обязан вернуть false, а не бросить исключение');
-        Log::shouldHaveReceived('warning')->once()->withArgs(
-            fn (string $message, array $context): bool => str_contains($message, 'отправка не удалась')
-                && $context['chat_id'] === '555'
-        );
+        Log::shouldHaveReceived('warning')->once()->withArgs(function (string $message, array $context): bool {
+            $this->assertStringContainsString('отправка не удалась', $message);
+            $this->assertSame('555', $context['chat_id']);
+
+            // Токен бота приезжает в тексте cURL-ошибки внутри URL — в лог нельзя.
+            $this->assertStringNotContainsString(self::TOKEN, (string) $context['error']);
+            $this->assertDoesNotMatchRegularExpression('/bot\d+:/', (string) $context['error']);
+
+            // В контексте — длина алерта, а не сам текст (в нём email студента).
+            $this->assertArrayNotHasKey('text', $context);
+            $this->assertSame(mb_strlen('<b>алерт</b>'), $context['text_length']);
+
+            return true;
+        });
     }
 
-    public function test_notify_admins_returns_no_recipients_instead_of_throwing(): void
+    public function test_notify_admins_returns_no_recipients_and_stops_after_the_first_network_failure(): void
     {
         config([
             'services.telegram.bot_token' => self::TOKEN,
@@ -60,7 +71,29 @@ class TelegramAdminNotifierResilienceTest extends TestCase
         $delivered = app(TelegramAdminNotifier::class)->notifyAdmins('алерт');
 
         $this->assertSame([], $delivered, 'никому не ушло — и не упало');
-        $this->assertSame(2, $attempts, 'оба адреса попробовали, оба не дошли');
+        $this->assertSame(
+            1,
+            $attempts,
+            'сетевой сбой прерывает цикл: api.telegram.org один на всех, иначе 2 админа × 5 с = те же 10 с'
+        );
+    }
+
+    public function test_http_error_does_not_stop_the_loop_for_other_recipients(): void
+    {
+        config([
+            'services.telegram.bot_token' => self::TOKEN,
+            'services.telegram.admin_id' => '555,777',
+        ]);
+
+        // Не-2xx — не сетевой сбой: второму админу по-прежнему пробуем доставить.
+        Http::fake([
+            'api.telegram.org/*' => Http::response(['ok' => false, 'description' => 'Bad Request'], 400),
+        ]);
+
+        $delivered = app(TelegramAdminNotifier::class)->notifyAdmins('алерт');
+
+        $this->assertSame([], $delivered);
+        Http::assertSentCount(2);
     }
 
     public function test_successful_send_still_returns_true(): void
