@@ -20,6 +20,7 @@ use App\Services\Prana\PranaService;
 use App\Services\PromiseAutoFulfiller;
 use App\Services\Reconciliation\RefundAccessPolicy;
 use App\Support\BeginnerPilotOffer;
+use App\Support\TelegramTransport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -1271,9 +1272,21 @@ class Payment extends Model
                 : '✅ <b>Оплата получена</b>'."\n\n"
                     .'Куратор свяжется с вами по поводу оплаченного участия и консультации.';
 
-            app(DeliveryChannelManager::class)
-                ->get('telegram')
-                ->sendMessage((string) $lead->telegram_chat_id, $text);
+            // Подтверждение — побочный эффект уже состоявшегося платежа (статус
+            // paid записан): провал доставки не имеет права отдавать эквайрингу
+            // 500 и держать его вебхук. Канал бросает RuntimeException, поэтому
+            // ловим здесь, а не в канале — очередь на это исключение опирается.
+            try {
+                app(DeliveryChannelManager::class)
+                    ->get('telegram')
+                    ->sendMessage((string) $lead->telegram_chat_id, $text);
+            } catch (\Throwable $e) {
+                Log::warning('Payment::processMarathonPaid — подтверждение не доставлено', [
+                    'payment_id' => $this->id,
+                    'lead_id' => $this->lead_id,
+                    'error' => TelegramTransport::sanitize($e->getMessage()),
+                ]);
+            }
         }
 
         app(CuratorNotifier::class)->paymentPaid($this);
