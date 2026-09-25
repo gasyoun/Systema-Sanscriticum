@@ -10,6 +10,12 @@
 <section class="mb-16 lg:mt-12" data-analytics="testimonials-library">
     <h1 class="text-3xl font-bold text-white mb-4">Отзывы учеников</h1>
     <p class="text-slate-400 mb-10">Все опубликованные отзывы — без правки: и те, кому легко, и те, кто честно пишет про трудности. У каждого автора указано, сколько лет он с нами.</p>
+    @if (config('features.student_testimonials'))
+        <a href="{{ route('student.testimonial.create') }}"
+           class="inline-flex items-center gap-2 -mt-6 mb-10 text-sm font-bold text-[#38BDF8] hover:text-[#2da4dd]">
+            <i class="fas fa-comment-dots"></i> Учитесь у нас? Оставьте свой отзыв
+        </a>
+    @endif
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         @foreach($testimonials as $t)

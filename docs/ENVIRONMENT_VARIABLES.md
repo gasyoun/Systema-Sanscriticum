@@ -728,6 +728,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `STUDENT_AGENT_ENABLED` | feature-flag | `false` | config/features.php:1592 |
 | `STUDENT_TELEGRAM_BOT_TOKEN` | secret | `—` | config/services.php:138 |
 | `STUDENT_TELEGRAM_BOT_USERNAME` | required | `—` | config/services.php:139 |
+| `STUDENT_TESTIMONIALS` | optional | `false` | config/features.php:1781 |
 | `SUBHASHITA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:40 |
 | `SUBHASHITA_COURSE_SLUG` | optional | `'subhashita'` | config/cohort_courses.php:39 |
 | `SUBHASHITA_SRS` | optional | `false` | config/features.php:504 |
