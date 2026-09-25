@@ -18,7 +18,9 @@ use Tests\TestCase;
  *
  * Экшен вызывается напрямую: страница ресурса Filament не поднимается через
  * Livewire-тест (снапшот компонента не резолвится вне запроса панели), а
- * проверяем мы ровно метод sendMessageToStudent.
+ * проверяем мы ровно метод sendMessageToStudent. Уведомление при этом
+ * утверждается по сессии — `Notification::send()` кладёт его в
+ * `filament.notifications`, и это доступно без Livewire.
  */
 class DialogsTelegramOutageTest extends TestCase
 {
@@ -57,5 +59,15 @@ class DialogsTelegramOutageTest extends TestCase
             'role' => 'curator',
             'text' => 'Ответ из чата куратора',
         ]);
+
+        // Filament кладёт уведомление в сессию (Notification::send →
+        // session()->push('filament.notifications')) — это работает и без
+        // Livewire-харнесса, поэтому предупреждение куратору проверяем здесь.
+        $titles = array_column((array) session()->get('filament.notifications', []), 'title');
+        $this->assertContains(
+            'Сообщение в Telegram не ушло',
+            $titles,
+            'куратор должен увидеть предупреждение, а не зелёное «отправлено»'
+        );
     }
 }

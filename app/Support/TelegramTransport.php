@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -48,17 +49,38 @@ final class TelegramTransport
      *  - null — транспортный сбой (нет соединения, таймаут, обрыв): Telegram
      *    недоступен, вызывающему стоит прекратить попытки в этом запросе;
      *  - Response с любым статусом — Telegram ответил (2xx или отказ): отказ
-     *    логируется как error, но решение о поведении остаётся за вызывающим.
+     *    логируется, но решение о поведении остаётся за вызывающим.
      *
      * @param  array<string, mixed>  $payload
      * @param  array<string, mixed>  $context  для лога: id чата и прочее, но не текст сообщения
+     * @param  string  $failureLevel  уровень лога для отказа Telegram: 'error'
+     *                                (по умолчанию) или 'warning'. Косметические
+     *                                вызовы (answerCallbackQuery) передают warning:
+     *                                штатное «query is too old» при позднем нажатии
+     *                                кнопки не должно поднимать сторожа ошибок
+     *                                (config/logs_watch.php слушает ERROR).
      */
-    public static function post(string $url, array $payload, string $event, array $context = []): ?Response
-    {
+    public static function post(
+        string $url,
+        array $payload,
+        string $event,
+        array $context = [],
+        string $failureLevel = 'error',
+    ): ?Response {
         try {
             $response = self::client()->post($url, $payload);
-        } catch (\Throwable $e) {
+        } catch (ConnectionException $e) {
+            // Типовой прод-случай: DNS отдаёт недоступный адрес, SYN уходит в
+            // чёрную дыру. Это не поломка кода — предупреждение, а не ERROR.
             Log::warning($event.': Telegram недоступен, вызов пропущен', $context + [
+                'error' => self::sanitize($e->getMessage()),
+            ]);
+
+            return null;
+        } catch (\Throwable $e) {
+            // Всё остальное — неожиданная поломка самого вызова: в логе ERROR,
+            // но наружу она всё равно не летит.
+            Log::error($event.': неожиданная ошибка при вызове Bot API', $context + [
                 'error' => self::sanitize($e->getMessage()),
             ]);
 
@@ -66,10 +88,19 @@ final class TelegramTransport
         }
 
         if (! $response->successful()) {
-            Log::error($event.': Telegram ответил отказом', $context + [
+            $message = $event.': Telegram ответил отказом';
+            $context = $context + [
                 'status' => $response->status(),
                 'body' => self::sanitize($response->body()),
-            ]);
+            ];
+
+            // Уровень выбирает вызывающий: ERROR (по умолчанию) или warning для
+            // косметических вызовов.
+            if ($failureLevel === 'warning') {
+                Log::warning($message, $context);
+            } else {
+                Log::error($message, $context);
+            }
         }
 
         return $response;

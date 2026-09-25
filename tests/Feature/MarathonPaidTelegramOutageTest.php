@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -39,6 +40,8 @@ class MarathonPaidTelegramOutageTest extends TestCase
 
     public function test_marathon_paid_is_completed_when_telegram_is_down(): void
     {
+        Log::spy();
+
         Http::fake([
             'api.telegram.org/*' => fn () => throw new ConnectionException(
                 'cURL error 28: Operation timed out after 10000 milliseconds for '
@@ -81,5 +84,20 @@ class MarathonPaidTelegramOutageTest extends TestCase
             $enrollment->fresh()->paid_at,
             'платёж проведён, марафонец зачислен — Telegram лишь уведомление'
         );
+
+        // Провал доставки не маскируется: он виден в логе вместе с платежом,
+        // иначе потерянное подтверждение никто не найдёт. Проверяем флагом, а
+        // не assert'ом внутри замыкания: замыкание вызывается и для чужих
+        // warning'ов (например, fail-open дедупа TelegramSendGuard).
+        $found = false;
+        Log::shouldHaveReceived('warning')->withArgs(function (string $message, array $context) use ($payment, &$found): bool {
+            if (str_contains($message, 'processMarathonPaid') && ($context['payment_id'] ?? null) === $payment->id) {
+                $found = true;
+            }
+
+            return true;
+        });
+
+        $this->assertTrue($found, 'провал доставки подтверждения обязан попадать в лог с payment_id');
     }
 }

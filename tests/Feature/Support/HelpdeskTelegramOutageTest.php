@@ -57,7 +57,9 @@ class HelpdeskTelegramOutageTest extends TestCase
             ->test(Helpdesk::class)
             ->set('activeUserId', $student->id)
             ->set('newMessage', 'Здравствуйте, помогу с оплатой')
-            ->call('sendMessageToStudent');
+            ->call('sendMessageToStudent')
+            // Оператор видит именно предупреждение, а не зелёное «отправлено».
+            ->assertNotified('Ответ в Telegram не ушёл');
 
         // Запись сделана — ответ не потерян для кабинета.
         $this->assertDatabaseHas('chat_messages', [
@@ -78,7 +80,8 @@ class HelpdeskTelegramOutageTest extends TestCase
         Livewire::actingAs($curator)
             ->test(Helpdesk::class)
             ->set('activeUserId', $student->id)
-            ->call('returnToBot');
+            ->call('returnToBot')
+            ->assertNotified('Студент не получил уведомление в Telegram');
 
         // Состояние изменено (пауза снята) — уведомление студенту лишь следствие.
         $this->assertFalse(Cache::has("chat_human_{$student->telegram_id}"));

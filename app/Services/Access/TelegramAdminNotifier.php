@@ -153,6 +153,9 @@ class TelegramAdminNotifier
             ]),
             'Telegram answerCallbackQuery',
             ['callback_id_length' => mb_strlen($callbackId)],
+            // Отказ здесь — штатное «query is too old» при позднем нажатии
+            // кнопки; ERROR поднял бы сторожа ошибок (config/logs_watch.php).
+            'warning',
         );
     }
 
