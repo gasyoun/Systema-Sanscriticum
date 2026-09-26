@@ -467,9 +467,12 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MONEY_DAILY_RECONCILIATION` | optional | `false` | config/features.php:1772 |
 | `MONEY_LEDGER_CORE` | optional | `false` | config/features.php:1750 |
 | `MONEY_MUTATION_BREAKER` | optional | `false` | config/features.php:834 |
-| `MONEY_RECON_BANK_STATEMENT_DIR` | optional | `''` | config/money_recon.php:26 |
-| `MONEY_RECON_PAYOUT_PACKAGES_TABLE` | optional | `'teacher_payout_packages'` | config/money_recon.php:30 |
+| `MONEY_RECON_ACQUIRING_FEE_MAX_BPS` | optional | `300` | config/money_recon.php:36 |
+| `MONEY_RECON_AGGREGATE_TOLERANCE_KOPECKS` | optional | `100` | config/money_recon.php:39 |
+| `MONEY_RECON_BANK_STATEMENT_DIR` | optional | `''` | config/money_recon.php:27 |
+| `MONEY_RECON_PAYOUT_PACKAGES_TABLE` | optional | `'teacher_payout_packages'` | config/money_recon.php:43 |
 | `MONEY_RECON_PING_URL` | optional | `''` | config/money_recon.php:21 |
+| `MONEY_RECON_SETTLEMENT_LAG_DAYS` | optional | `1` | config/money_recon.php:31 |
 | `MONEY_REFUND_ACCESS_RULES` | optional | `false` | config/features.php:1762 |
 | `MONEY_SLI_ATTEMPTS` | optional | `3` | config/money_sli.php:35 |
 | `MONEY_SLI_ATTEMPT_PAUSE_SECONDS` | optional | `2` | config/money_sli.php:36 |

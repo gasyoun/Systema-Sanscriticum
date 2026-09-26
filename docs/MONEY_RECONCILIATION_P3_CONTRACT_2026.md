@@ -1,4 +1,4 @@
-_Created: 24-09-2026 · Last updated: 24-09-2026_
+_Created: 24-09-2026 · Last updated: 25-09-2026 (H5480: источник `bank_statement` — импорт зачислений и дневной контроль)_
 
 # Денежная сверка P3 — ежедневный срез, очередь исключений и правило возврата D10
 
@@ -26,7 +26,7 @@ _Created: 24-09-2026 · Last updated: 24-09-2026_
 | `teacher_direct` | `payments`, received_account ≠ school | present |
 | `refund` | `payments` `Расход` с `refund_of_payment_id` | present |
 | `webhook_journal` | `payment_webhook_events` | present |
-| `bank_statement` | выписка зачислений банка | **missing** — импорта зачислений нет (парсеры H4200 читают только расходы) |
+| `bank_statement` | `money_bank_statement_credits` — импорт выписки зачислений (H5480) | **present**, если импортированная выписка покрывает день ЦЕЛИКОМ; иначе **missing** с названием покрытых периодов |
 | `ledger` | ядро P1 `money_*` | **dark**, пока ядро пустое и флаг выключен; present, когда в ядре есть строки |
 | `payout_packages` | таблица P2 (H5444), настраиваемая `MONEY_RECON_PAYOUT_PACKAGES_TABLE` | **legacy** — пока P2 нет, суммы из `teacher_payouts` |
 
@@ -99,9 +99,22 @@ php artisan money:recon-exceptions --resolve=17 --by=1 --reason="доступ с
 
 Плановый прогон: `money:reconcile-daily --persist --scheduled`, ежедневно 04:35 (Europe/Moscow), `withoutOverlapping`, `onOneServer`, сбой — `ScheduleFailureSignal`. Heartbeat — `MONEY_RECON_PING_URL`; Telegram-алерт — новые исключения, FAIL или смена статуса полноты; повтор без изменений алерта не шлёт.
 
+## Выписка зачислений (H5480)
+
+Построчно сверять выписку с оплатами **структурно нельзя**: [H4645](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H4645-OxAlpha_Systema-Sanscriticum_tochka-statement-import-paid-no-access-sensor_13.09.26.md) измерил, что в выписке счёта Точки нет идентификатора ученика (1051 из 1052 поступлений — от самого банка; 939 пооперационных QR-расчётов, 111 дневных агрегатов эквайринга за вычетом комиссии). Поэтому сверка идёт **дневными агрегатами**.
+
+1. **Импорт.** `php artisan money:import-bank-credits <путь к CSV> --from=Y-m-d --to=Y-m-d` читает файл с хоста (веб-загрузки нет). Append-only, идемпотентно: тот же файл (sha256) — ноль новых строк, пересекающиеся выписки дедуплицируются по `row_hash` = sha256(№ документа|дата|сумма|назначение) — та же формула, что в сенсоре H4645. Неизвестный заголовок — **отказ**, а не тихий пропуск. `--dry-run` показывает итоги, не записывая ничего.
+2. **Персональные данные не добавляются.** Назначение платежа хранится только у машинных строк банка (`qr_settlement`, `card_acquiring_aggregate`); у остальных остаётся только `purpose_digest`.
+3. **Покрытие дня.** `bank_statement` = `present`, только если импортированная выписка покрывает операционный день целиком (`covers_from ≤ день ≤ covers_to`). Без `--from/--to` период выводится по датам строк — это нижняя оценка, и команда об этом предупреждает.
+4. **Дневной контроль.** Расчёты банка за день (QR + агрегат эквайринга) сравниваются с оплатами канала `bank_acquiring` за окно лага `[день − MONEY_RECON_SETTLEMENT_LAG_DAYS, день]` (T+1 по умолчанию). Коридор: `[ожидание·(1 − MONEY_RECON_ACQUIRING_FEE_MAX_BPS/10000) − допуск; ожидание + допуск]`, допуск — `MONEY_RECON_AGGREGATE_TOLERANCE_KOPECKS` (100 коп.). Выход за коридор → исключение `currency_amount_mismatch`, `source_ref = bank-statement-day:<дата>`, в доказательстве — хэши строк выписки. Зачисления с нераспознанным назначением → одно исключение `unknown_purpose` на день.
+5. **Повтор ничего не открывает заново:** ключ исключения содержит суммы дня, поэтому те же числа дают тот же ключ.
+6. **Таблицы только свои:** `money_bank_statements`, `money_bank_statement_credits` (триггеры запрещают UPDATE/DELETE строк). Ни `payments`, ни доступ импорт не трогает.
+
+Прогон на настоящей выписке Точки (разбор совпал с независимым измерением H4645 до строки и до копейки): [EVIDENCE_MONEY_RECONCILIATION_P3B_H5480_25-09-2026.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/EVIDENCE_MONEY_RECONCILIATION_P3B_H5480_25-09-2026.md).
+
 ## Известные пробелы
 
-1. Нет импорта выписки зачислений банка — `bank_statement` всегда missing, прогоны `incomplete` до [H5480 (Opus 5) — bank_statement source: Tochka credit import + daily aggregate control](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5480-Opus_Systema-Sanscriticum_money-p3b-bank-statement-credits-source_24.09.26.md). Сверять по строкам нельзя: [H4645](https://github.com/gasyoun/Uprava/blob/main/handoffs/archive/H4645-OxAlpha_Systema-Sanscriticum_tochka-statement-import-paid-no-access-sensor_13.09.26.md) измерил, что в выписке счёта Точки нет идентификатора ученика (1051 из 1052 поступлений — от самого банка), поэтому H5480 сверяет дневные агрегаты.
+1. ~~Нет импорта выписки зачислений банка~~ — закрыто [H5480](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5480-Opus_Systema-Sanscriticum_money-p3b-bank-statement-credits-source_24.09.26.md) (см. раздел «Выписка зачислений» ниже). Остаточный пробел: покрытие дня честно только при явных `--from/--to`; без них период выводится по датам строк и день без зачислений в него не попадает.
 2. Ядро тёмное до P4 — строки сверяются по согласованности доказательств, сверка с ядром включится сама, когда в ядре появятся строки.
 3. Пакеты выплат P2 (H5444) ещё не существуют — используется легаси `teacher_payouts`; P2 подключается через `MONEY_RECON_PAYOUT_PACKAGES_TABLE` без второй модели.
 

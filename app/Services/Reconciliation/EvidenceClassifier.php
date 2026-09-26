@@ -90,6 +90,75 @@ final class EvidenceClassifier
         return $out;
     }
 
+    /**
+     * H5480 (P3b): нарушения дневного АГРЕГАТА банковской выписки — построчно
+     * сверять нельзя (в выписке нет идентификатора ученика, H4645).
+     *
+     *  1. расчёты банка за день (QR + агрегат эквайринга) вне коридора
+     *     [ожидание − комиссия − допуск; ожидание + допуск] → currency_amount_mismatch;
+     *  2. зачисления с нераспознанным назначением → unknown_purpose.
+     *
+     * Ключ исключения содержит суммы, поэтому повтор того же дня с теми же
+     * числами не открывает второго исключения (ExceptionQueue::key).
+     *
+     * @param  array<string, mixed>  $source  срез источника bank_statement
+     * @return list<array<string, mixed>>
+     */
+    public function bankStatementFindings(array $source): array
+    {
+        if (($source['status'] ?? null) !== 'present') {
+            return [];
+        }
+        $day = (string) ($source['business_date'] ?? '');
+        $c = $source['control'] ?? [];
+        $out = [];
+
+        $settled = (int) ($c['settlement_kopecks'] ?? 0);
+        $expected = (int) ($c['expected_kopecks'] ?? 0);
+        if (($settled > 0 || $expected > 0) && ($settled < (int) $c['floor_kopecks'] || $settled > (int) $c['ceiling_kopecks'])) {
+            $out[] = [
+                'type' => X::CURRENCY_AMOUNT_MISMATCH,
+                'source' => 'bank_statement',
+                'source_ref' => 'bank-statement-day:'.$day,
+                'evidence' => [
+                    'detail' => 'daily_settlement_vs_acquiring_payments',
+                    'business_date' => $day,
+                    'settlement_kopecks' => $settled,
+                    'expected_kopecks' => $expected,
+                    'expected_payments' => (int) ($c['expected_payments'] ?? 0),
+                    'band_kopecks' => [(int) $c['floor_kopecks'], (int) $c['ceiling_kopecks']],
+                    'lag_days' => (int) ($c['lag_days'] ?? 0),
+                    'payments_window' => $c['window'] ?? null,
+                    'row_hashes' => $c['settlement_hashes'] ?? [],
+                ],
+                'amount_kopecks' => $settled - $expected,
+                'currency' => 'RUB',
+                'user_id' => null,
+            ];
+        }
+
+        $unknown = $source['unknown_purpose_hashes'] ?? [];
+        if ($unknown !== []) {
+            $out[] = [
+                'type' => X::UNKNOWN_PURPOSE,
+                'source' => 'bank_statement',
+                'source_ref' => 'bank-statement-unknown:'.$day,
+                'evidence' => [
+                    'detail' => 'credits_with_unrecognised_purpose',
+                    'business_date' => $day,
+                    'rows' => count($unknown),
+                    'kopecks' => (int) ($source['unknown_purpose_kopecks'] ?? 0),
+                    'row_hashes' => array_values($unknown),
+                ],
+                'amount_kopecks' => (int) ($source['unknown_purpose_kopecks'] ?? 0),
+                'currency' => 'RUB',
+                'user_id' => null,
+            ];
+        }
+
+        return $out;
+    }
+
     /** @return list<array{0: string, 1: string}> */
     private function inflow(array $r, array $ledger): array
     {

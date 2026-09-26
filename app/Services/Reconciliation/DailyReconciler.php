@@ -60,6 +60,7 @@ final class DailyReconciler
             array_push($findings, ...$c['findings']);
         }
         array_push($findings, ...$this->classifier->ledgerFindings($input['ledger']));
+        array_push($findings, ...$this->classifier->bankStatementFindings($input['sources']['bank_statement'] ?? []));
 
         $missing = array_keys(array_filter($input['sources'], fn ($s) => in_array($s['status'], ['missing', 'dark'], true)));
         sort($missing);
