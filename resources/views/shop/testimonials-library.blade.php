@@ -336,7 +336,11 @@
         if (cards.length < 3) return;
 
         // ~26 с на карточку — тот же медленный дрейф, что на входе.
-        const SPEED_ADD = [0, 42, 21, 60, 12], DELAY = [0, -54, -27, -81, -15];
+        const SPEED_ADD = [0, 42, 21, 60, 12];
+        // Случайная стартовая точка каждой колонки: отрицательная задержка = «анимация
+        // уже идёт столько-то секунд». При каждом заходе видны другие отзывы, и с ростом
+        // их числа глубокие отзывы не остаются навсегда за пределами первых минут.
+        function randomPhase(durSec) { return -(Math.random() * durSec).toFixed(1); }
         function columnCount() {
             const w = stage.clientWidth;
             const n = w >= 1536 ? 5 : w >= 1200 ? 4 : w >= 900 ? 3 : w >= 560 ? 2 : 1;
@@ -361,8 +365,9 @@
                 while (list.length < 5) list = list.concat(bucket);
                 const col = document.createElement('div');
                 col.className = 'otz-col' + (c % 2 === 1 ? ' otz-col--down' : '');
-                col.style.setProperty('--otz-dur', (Math.max(130, list.length * 26) + SPEED_ADD[c]) + 's');
-                col.style.setProperty('--otz-delay', DELAY[c] + 's');
+                const dur = Math.max(130, list.length * 26) + SPEED_ADD[c];
+                col.style.setProperty('--otz-dur', dur + 's');
+                col.style.setProperty('--otz-delay', randomPhase(dur) + 's');
                 const track = document.createElement('div');
                 track.className = 'otz-track';
                 [false, true].forEach(function (copy) {
