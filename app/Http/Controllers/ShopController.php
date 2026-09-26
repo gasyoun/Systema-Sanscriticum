@@ -562,9 +562,13 @@ class ShopController extends Controller
 
     public function testimonialsLibrary()
     {
-        // Библиотека всех видимых отзывов — страница /otzyvy.
+        // Библиотека всех видимых отзывов — страница /otzyvy (бегущие колонки, как на входе).
+        // Порядок тот же, что на входе: избранные, потом по дате отзыва, без даты — в конце.
         $testimonials = Testimonial::query()
             ->where('is_visible', true)
+            ->orderByDesc('is_featured')
+            ->orderByRaw('reviewed_at IS NULL')
+            ->orderByDesc('reviewed_at')
             ->orderBy('id')
             ->get();
 
