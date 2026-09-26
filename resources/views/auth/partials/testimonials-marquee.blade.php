@@ -437,8 +437,8 @@
                                                 <span class="lt-more-open">Свернуть ↑</span>
                                             </div>
                                         @endif
-                                        @if($t->media_url)
-                                            <a href="{{ $t->media_url }}" target="_blank" rel="noopener"
+                                        @if($t->mediaLink())
+                                            <a href="{{ $t->mediaLink() }}" target="_blank" rel="noopener"
                                                @if($isCopy) tabindex="-1" @endif
                                                class="lt-accent inline-flex items-center gap-1.5 mt-3 text-xs font-semibold hover:underline">
                                                 <i class="fas fa-play-circle"></i> Смотреть/слушать отзыв

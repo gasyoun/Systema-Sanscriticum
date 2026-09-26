@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Отзыв из общей библиотеки. Привязывается к курсам через пивот
@@ -33,6 +34,7 @@ class Testimonial extends Model
         'body',
         'rating',
         'media_url',
+        'video_path',
         'is_visible',
         'is_featured',
         'reviewed_at',
@@ -75,6 +77,21 @@ class Testimonial extends Model
     public function isPending(): bool
     {
         return $this->moderation_status === self::STATUS_PENDING;
+    }
+
+    /** Загруженный файлом видео-отзыв (диск public) — или null. */
+    public function videoUrl(): ?string
+    {
+        return filled($this->video_path) ? Storage::disk('public')->url($this->video_path) : null;
+    }
+
+    /**
+     * Куда ведёт «Смотреть/слушать отзыв» на сайте: загруженное видео важнее
+     * внешней ссылки (своё не пропадёт, если у ролика на VK закроют доступ).
+     */
+    public function mediaLink(): ?string
+    {
+        return $this->videoUrl() ?? (filled($this->media_url) ? $this->media_url : null);
     }
 
     /**
