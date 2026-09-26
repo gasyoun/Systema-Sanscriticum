@@ -59,6 +59,30 @@ class StudentTestimonialSubmissionTest extends TestCase
         $this->assertSame(0, Testimonial::count());
     }
 
+    public function test_hybrid_home_links_to_the_form(): void
+    {
+        // Прод живёт на гибридном «Сегодня» (CABINET_HYBRID): кнопка была только на
+        // легаси-дашборде, и студенты не находили /dvaram/otzyv.
+        config(['features.cabinet_hybrid' => true]);
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('data-analytics="hybrid-home-testimonial"', false)
+            ->assertSee(route('student.testimonial.create'), false)
+            ->assertSee('Оставить отзыв');
+    }
+
+    public function test_hybrid_home_hides_the_link_when_flag_is_off(): void
+    {
+        config(['features.cabinet_hybrid' => true, 'features.student_testimonials' => false]);
+        $student = User::factory()->create();
+
+        $this->actingAs($student)->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertDontSee('Оставить отзыв');
+    }
+
     public function test_flag_off_gives_404(): void
     {
         config(['features.student_testimonials' => false]);
