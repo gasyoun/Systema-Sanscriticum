@@ -64,6 +64,21 @@
         --otz-avatar-ink: #7a5212;
         --otz-avatar-border: rgba(176, 128, 52, .3);
     }
+    /* Плавный переход от тёмной шапки сайта (#0A0D14) к панели и обратно к подвалу —
+       без резкого стыка в светлой теме. Слой под колонками: карточки не затемняет
+       (они и так растворяются маской у краёв). */
+    .otz-stage::before, .otz-stage::after {
+        content: "";
+        position: absolute; left: 0; right: 0;
+        height: min(22vh, 200px);
+        pointer-events: none;
+        z-index: 0;
+    }
+    .otz-stage::before { top: 0; background: linear-gradient(to bottom, #0A0D14 0%, rgba(10, 13, 20, .55) 40%, rgba(10, 13, 20, 0) 100%); }
+    .otz-stage::after  { bottom: 0; background: linear-gradient(to top, #0A0D14 0%, rgba(10, 13, 20, .55) 40%, rgba(10, 13, 20, 0) 100%); }
+    .otz-stage > .otz-source, .otz-stage > .otz-columns { z-index: 1; }
+    .otz-stage > .otz-source { position: relative; }
+    .otz-stage > .otz-grain { z-index: 2; }
     .otz-grain {
         opacity: var(--otz-grain-opacity);
         mix-blend-mode: var(--otz-grain-blend);
