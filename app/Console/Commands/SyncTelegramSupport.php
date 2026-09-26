@@ -110,6 +110,20 @@ class SyncTelegramSupport extends Command
             }
 
             if ($result === null) {
+                // Инцидент 19-09-2026: часами тянущаяся занятость сессии
+                // оставляла аккаунт «здоровым» в глазах healthcheck — ветка
+                // выходила с кодом 0 и SUCCESS, не трогая sync-стейт, и
+                // auto-heal (у которого «session is busy» в списке лечимых)
+                // не имел повода сработать. Записываем ошибку словами из
+                // HEALABLE_ERROR_NEEDLES, чтобы следующий healthcheck (раз в
+                // 15 мин) увидел её и поднял telegram-support:recover сам.
+                TelegramSupportAccount::query()
+                    ->where('name', $accountName)
+                    ->update([
+                        'last_synced_at' => now(),
+                        'last_sync_error' => 'session is busy (another MadelineProto command holds the session)',
+                    ]);
+
                 Log::warning('Telegram support sync skipped: MadelineProto session busy.');
                 $this->warn('Telegram support sync: session_busy (another MadelineProto command holds the session).');
 
