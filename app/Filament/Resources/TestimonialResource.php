@@ -12,6 +12,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class TestimonialResource extends Resource
@@ -109,12 +110,34 @@ class TestimonialResource extends Resource
                         ->maxLength(1024),
                 ]),
 
-                Forms\Components\FileUpload::make('avatar_path')
-                    ->label('Аватар автора')
-                    ->image()
-                    ->directory('testimonials')
-                    ->imageEditor()
-                    ->maxSize(4096),
+                Forms\Components\Grid::make(2)->schema([
+                    Forms\Components\FileUpload::make('avatar_path')
+                        ->label('Аватар автора')
+                        ->image()
+                        ->disk('public')
+                        ->directory('testimonials')
+                        ->imageEditor()
+                        ->maxSize(5120),
+
+                    // Видео-отзыв файлом: студент грузит его в /dvaram/otzyv, модератор может
+                    // заменить или удалить. На сайте файл важнее ссылки выше (mediaLink()).
+                    Forms\Components\FileUpload::make('video_path')
+                        ->label('Видео-отзыв (файл)')
+                        ->disk('public')
+                        ->directory('testimonials/videos')
+                        ->acceptedFileTypes(['video/mp4', 'video/quicktime', 'video/webm'])
+                        ->maxSize(102400)
+                        ->helperText('MP4, MOV или WebM, до 100 МБ. Если есть и файл, и ссылка — на сайте показывается файл.'),
+                ]),
+
+                Forms\Components\Placeholder::make('video_preview')
+                    ->label('Просмотр видео')
+                    ->visible(fn (?Testimonial $record): bool => filled($record?->video_path))
+                    ->content(fn (?Testimonial $record): HtmlString => new HtmlString(
+                        '<video src="'.e((string) $record?->videoUrl()).'" controls preload="metadata" '
+                        .'style="max-width:480px;width:100%;border-radius:12px;background:#000"></video>'
+                    ))
+                    ->columnSpanFull(),
 
                 Forms\Components\Toggle::make('is_visible')
                     ->label('Показывать')
@@ -157,6 +180,14 @@ class TestimonialResource extends Resource
                     ->label('Оценка')
                     ->badge()
                     ->placeholder('—'),
+
+                Tables\Columns\IconColumn::make('video_path')
+                    ->label('Видео')
+                    ->state(fn (Testimonial $r): bool => filled($r->video_path) || filled($r->media_url))
+                    ->boolean()
+                    ->trueIcon('heroicon-o-video-camera')
+                    ->falseIcon('heroicon-o-minus')
+                    ->tooltip(fn (Testimonial $r): ?string => filled($r->video_path) ? 'Файл' : (filled($r->media_url) ? 'Ссылка' : null)),
 
                 Tables\Columns\TextColumn::make('reviewed_at')
                     ->label('Дата')

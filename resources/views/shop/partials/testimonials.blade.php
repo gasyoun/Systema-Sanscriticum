@@ -15,8 +15,8 @@
                     </div>
                 @endif
                 <blockquote class="text-slate-300 leading-relaxed flex-1 whitespace-pre-line">{{ $t->body }}</blockquote>
-                @if($t->media_url)
-                    <a href="{{ $t->media_url }}" target="_blank" rel="noopener"
+                @if($t->mediaLink())
+                    <a href="{{ $t->mediaLink() }}" target="_blank" rel="noopener"
                        class="inline-flex items-center gap-2 text-sm font-bold text-[#38BDF8] hover:text-[#2da4dd] mt-4">
                         <i class="fas fa-play-circle"></i> Смотреть/слушать отзыв
                     </a>
