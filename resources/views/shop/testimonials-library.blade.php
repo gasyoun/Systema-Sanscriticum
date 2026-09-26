@@ -4,12 +4,21 @@
 
 @push('head')
     <meta name="description" content="Честные отзывы учеников курсов санскрита и хинди: грамматика с М. Гасунсом, продленка с Е. Трефиловой, хинди с Е. Костиной. У каждого автора — сколько лет занимается.">
+    <script>
+        // Тема страницы — до первой отрисовки, без вспышки тёмного при выбранной светлой.
+        (function () {
+            var t = 'dark';
+            try { if (localStorage.getItem('otzyvy-theme') === 'light') t = 'light'; } catch (e) {}
+            document.documentElement.dataset.otzTheme = t;
+        })();
+    </script>
 @endpush
 
 {{--
     /otzyvy — все опубликованные отзывы бегущими колонками, как на странице входа.
     Две темы: «Тёмная» — один в один как на входе, «Светлая» — бумажная, с теми же
-    эффектами; выбор помнится в браузере.
+    эффектами; выбор помнится в браузере и действует на всю страницу (шапка, полоса
+    вводного, подвал — через html[data-otz-theme], только здесь, layouts.shop не трогаем).
 
     Колонки собирает скрипт под реальную ширину (1–5 колонок, round-robin), поэтому
     каждый отзыв виден ровно в одной колонке — на «всех отзывах» ничего не теряем
@@ -44,7 +53,7 @@
         background-color: var(--otz-bg);
         transition: background-color .5s ease;
     }
-    .otz-stage[data-theme="light"] {
+    html[data-otz-theme="light"] .otz-stage {
         --otz-bg: #f5efe4;
         --otz-grain-opacity: .22;
         --otz-grain-blend: multiply;
@@ -74,8 +83,8 @@
         pointer-events: none;
         z-index: 0;
     }
-    .otz-stage::before { top: 0; background: linear-gradient(to bottom, #0A0D14 0%, rgba(10, 13, 20, .55) 40%, rgba(10, 13, 20, 0) 100%); }
-    .otz-stage::after  { bottom: 0; background: linear-gradient(to top, #0A0D14 0%, rgba(10, 13, 20, .55) 40%, rgba(10, 13, 20, 0) 100%); }
+    .otz-stage::before { top: 0; background: linear-gradient(to bottom, var(--otz-page) 0%, color-mix(in srgb, var(--otz-page) 55%, transparent) 40%, transparent 100%); }
+    .otz-stage::after  { bottom: 0; background: linear-gradient(to top, var(--otz-page) 0%, color-mix(in srgb, var(--otz-page) 55%, transparent) 40%, transparent 100%); }
     .otz-stage > .otz-source, .otz-stage > .otz-columns { z-index: 1; }
     .otz-stage > .otz-source { position: relative; }
     .otz-stage > .otz-grain { z-index: 2; }
@@ -157,6 +166,36 @@
     .otz-source .otz-body { -webkit-line-clamp: unset; display: block; }
     .otz-source .otz-more { display: none; }
 
+    /* ── Тема всей страницы. Тёмная — как есть в layouts.shop; светлая перекрашивает шапку,
+          полосу вводного и подвал. Правила вне @layer перебивают утилиты Tailwind,
+          кнопки bg-brand (Войти, Смотреть курсы) не трогаем. */
+    html { --otz-page: #0A0D14; }
+    html[data-otz-theme="light"] { --otz-page: #f5efe4; }
+    body { transition: background-color .5s ease, color .5s ease; }
+    html[data-otz-theme="light"] body { background-color: #f5efe4; color: #2a2118; }
+    html[data-otz-theme="light"] header.sticky {
+        background-color: rgba(245, 239, 228, .88);
+        border-color: rgba(176, 128, 52, .2);
+    }
+    html[data-otz-theme="light"] header img[src*="logo"],
+    html[data-otz-theme="light"] footer img[src*="logo"] { filter: brightness(.22) sepia(.35); }
+    html[data-otz-theme="light"] :is(header, footer, .otz-intro) .text-white:not(.bg-brand),
+    html[data-otz-theme="light"] :is(header, footer) .text-slate-300 { color: #3a2f22; }
+    html[data-otz-theme="light"] :is(header, footer, .otz-intro) :is(.text-slate-400, .text-slate-500, .text-slate-600) { color: rgba(42, 33, 24, .58); }
+    html[data-otz-theme="light"] :is(header, footer) .hover\:text-white:hover { color: #a8701a; }
+    html[data-otz-theme="light"] header :is(.bg-\[\#1F2636\], .hover\:bg-\[\#1F2636\]:hover) { background-color: rgba(176, 128, 52, .12); }
+    html[data-otz-theme="light"] :is(header, footer) .bg-\[\#111622\] { background-color: #fff; }
+    html[data-otz-theme="light"] :is(header, footer) .border-\[\#1F2636\] { border-color: rgba(176, 128, 52, .25); }
+    html[data-otz-theme="light"] .from-\[\#1A2235\] {                 /* полоса «Бесплатное вводное» */
+        background-image: linear-gradient(to right, #efe3cd, #f4ebdb, #efe3cd);
+    }
+    html[data-otz-theme="light"] .from-\[\#1A2235\] .text-white:not(.bg-brand) { color: #2a2118; }
+    html[data-otz-theme="light"] .from-\[\#1A2235\] .text-slate-400 { color: rgba(42, 33, 24, .6); }
+    html[data-otz-theme="light"] .from-\[\#1A2235\] .text-\[\#38BDF8\] { color: #1d6fa5; }
+    html[data-otz-theme="light"] footer { background-color: #ece2d0; border-color: rgba(176, 128, 52, .2); }
+    html[data-otz-theme="light"] .otz-intro .otz-cta { color: #a8701a; }
+    html[data-otz-theme="light"] .otz-intro .otz-cta:hover { color: #7a5212; }
+
     /* ── Переключатель темы — золотая плашка переезжает, как вкладки на входе. */
     .otz-switch { display: inline-grid; grid-template-columns: 1fr 1fr; position: relative; padding: 3px; border-radius: 11px;
                   background: rgba(255, 255, 255, .04); border: 1px solid rgba(233, 196, 125, .18); }
@@ -168,6 +207,10 @@
                          border-radius: 8px; transition: color .3s; white-space: nowrap; }
     .otz-switch button[aria-pressed="true"] { color: #f6dca6; }
     .otz-switch button:focus-visible { outline: 2px solid rgba(233, 196, 125, .5); outline-offset: 1px; }
+    html[data-otz-theme="light"] .otz-switch { background: rgba(255, 255, 255, .6); border-color: rgba(176, 128, 52, .3); }
+    html[data-otz-theme="light"] .otz-switch-ind { background: linear-gradient(135deg, rgba(214, 170, 90, .3), rgba(232, 92, 36, .12)); border-color: rgba(176, 128, 52, .45); }
+    html[data-otz-theme="light"] .otz-switch button { color: rgba(42, 33, 24, .55); }
+    html[data-otz-theme="light"] .otz-switch button[aria-pressed="true"] { color: #7a5212; }
 
     @media (prefers-reduced-motion: reduce) {
         .otz-card, .otz-stage, .otz-switch-ind { transition: none; }
@@ -175,14 +218,14 @@
 </style>
 
 <section class="lg:mt-6" data-analytics="testimonials-library">
-    <div class="container mx-auto px-4 pt-8 pb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+    <div class="otz-intro container mx-auto px-4 pt-8 pb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-5">
         <div class="max-w-2xl">
             <h1 class="text-3xl font-bold text-white mb-3">Отзывы учеников</h1>
             <p class="text-slate-400">Все опубликованные отзывы — без правки: и те, кому легко, и те, кто честно пишет про трудности.
                 Наведите на колонку — она остановится; нажмите на длинный отзыв, чтобы прочитать целиком.</p>
             @if (config('features.student_testimonials'))
                 <a href="{{ route('student.testimonial.create') }}"
-                   class="inline-flex items-center gap-2 mt-4 text-sm font-bold text-[#e9c47d] hover:text-[#f6dca6]">
+                   class="otz-cta inline-flex items-center gap-2 mt-4 text-sm font-bold text-[#e9c47d] hover:text-[#f6dca6]">
                     <i class="fas fa-comment-dots"></i> Учитесь у нас? Оставьте свой отзыв
                 </a>
             @endif
@@ -194,11 +237,7 @@
         </div>
     </div>
 
-    <div class="otz-stage relative" data-theme="dark" id="otz-stage">
-        <script>
-            // Тема до первой отрисовки — без вспышки тёмного при выбранной светлой.
-            try { if (localStorage.getItem('otzyvy-theme') === 'light') document.getElementById('otz-stage').dataset.theme = 'light'; } catch (e) {}
-        </script>
+    <div class="otz-stage relative" id="otz-stage">
 
         {{-- Источник: сетка всех отзывов (без JS / reduced-motion / поисковики). --}}
         <div class="otz-source container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start" data-otz-source>
@@ -262,14 +301,14 @@
 
         // ── Тема: кнопки + память в браузере.
         function setTheme(name, remember) {
-            stage.dataset.theme = name;
+            document.documentElement.dataset.otzTheme = name;
             switcher.dataset.theme = name;
             switcher.querySelectorAll('[data-theme-set]').forEach(function (b) {
                 b.setAttribute('aria-pressed', b.dataset.themeSet === name ? 'true' : 'false');
             });
             if (remember) { try { localStorage.setItem('otzyvy-theme', name); } catch (e) {} }
         }
-        setTheme(stage.dataset.theme, false);
+        setTheme(document.documentElement.dataset.otzTheme === 'light' ? 'light' : 'dark', false);
         switcher.addEventListener('click', function (e) {
             const b = e.target.closest('[data-theme-set]');
             if (b) setTheme(b.dataset.themeSet, true);
