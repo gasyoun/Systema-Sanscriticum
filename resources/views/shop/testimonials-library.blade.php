@@ -71,7 +71,7 @@
                             <div class="min-w-0">
                                 <div class="glx-name truncate">{{ $t->author_name }}</div>
                                 @if (filled($t->city) || $t->reviewed_at)
-                                    <div class="glx-sub truncate">
+                                    <div class="glx-sub">
                                         {{ collect([$t->city, $t->reviewed_at?->locale('ru')->translatedFormat('j F Y')])->filter()->implode(' · ') }}
                                     </div>
                                 @endif
@@ -106,8 +106,10 @@
         const COL_W = 288;       // колонка Glasp: карточка 268 + поля 10 + 10
         const SPEED = 5.3;       // px/с — как у Glasp (30% от 1576 px за 90 с)
 
+        // Колонки заполняют ширину от края до края, как у Glasp: число — по ширине с
+        // округлением, ширина колонки растягивается (≈288 px).
         function columnCount() {
-            return Math.max(1, Math.min(items.length, Math.floor(stage.clientWidth / COL_W)));
+            return Math.max(1, Math.min(items.length, Math.round(stage.clientWidth / COL_W)));
         }
         function hideCopy(node) {
             // Повтор для бесконечной петли: не для читалок и не для Tab.
@@ -130,8 +132,8 @@
             if (n === built) return;
             built = n;
             box.innerHTML = '';
-            // Одна колонка на узком экране — шире 288, но не больше 420.
-            const colW = n === 1 ? Math.min(stage.clientWidth, 420) : COL_W;
+            // Одна колонка на узком экране — на всю ширину, но не шире 420.
+            const colW = n === 1 ? Math.min(stage.clientWidth, 420) : Math.floor(stage.clientWidth / n);
             const buckets = Array.from({ length: n }, function () { return []; });
             items.forEach(function (item, i) { buckets[i % n].push(item); });
             stage.classList.add('glx-live');
