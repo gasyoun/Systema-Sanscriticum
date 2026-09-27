@@ -11,7 +11,8 @@ final class TelegramBusinessStoryPublication extends Model
 {
     protected $fillable = [
         'source_chat_id', 'source_message_id', 'telegram_file_unique_id',
-        'media_sha256', 'duplicate_of_id', 'story_id', 'story_ids', 'part_count', 'status', 'error',
+        'media_sha256', 'duplicate_of_id', 'story_id', 'story_ids', 'part_count',
+        'cta_url', 'started_at', 'deferred_until', 'metrics', 'metrics_collected_at', 'status', 'error',
     ];
 
     protected $casts = [
@@ -20,5 +21,9 @@ final class TelegramBusinessStoryPublication extends Model
         'story_id' => 'integer',
         'story_ids' => 'array',
         'part_count' => 'integer',
+        'started_at' => 'datetime',
+        'deferred_until' => 'datetime',
+        'metrics' => 'array',
+        'metrics_collected_at' => 'datetime',
     ];
 }

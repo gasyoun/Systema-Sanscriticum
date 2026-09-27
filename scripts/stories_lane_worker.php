@@ -21,6 +21,7 @@ use Illuminate\Contracts\Console\Kernel;
  *   {"action":"send_photo","path":"...","caption":"..."}
  *   {"action":"send_video","path":"...","caption":"..."}
  *   {"action":"delete","story_id":123}
+ *   {"action":"get_story_views","story_ids":[123,124]}
  * stdout — ровно ОДНА строка JSON:
  *   {"ok":true,"story_id":123} | {"ok":false,"error":"..."}
  */
@@ -65,6 +66,28 @@ try {
                 isset($task['account']) ? (string) $task['account'] : null,
             );
         }),
+        'get_story_views' => (function () use ($task) {
+            $ids = array_values(array_unique(array_map('intval', is_array($task['story_ids'] ?? null) ? $task['story_ids'] : [])));
+            if ($ids === [] || count($ids) > 50 || min($ids) < 1) {
+                fail('story_ids must contain 1–50 positive IDs');
+            }
+            $factory = app(MadelineClientFactory::class);
+            if (! $factory->isConfigured()) {
+                fail('MadelineProto is not configured');
+            }
+            $result = $factory->open()->stories->getStoriesByID(['peer' => 'me', 'id' => $ids]);
+            $views = [];
+            foreach (($result['stories'] ?? []) as $story) {
+                if (! is_array($story) || ($story['_'] ?? '') !== 'storyItem') {
+                    continue;
+                }
+                $id = (int) ($story['id'] ?? 0);
+                $count = $story['views']['views_count'] ?? null;
+                $views[(string) $id] = is_numeric($count) ? (int) $count : null;
+            }
+
+            return ['ok' => true, 'views' => $views];
+        })(),
         // H5049 R13: живой проб сессии — реальный MTProto-вызов, не файл на диске.
         'get_self' => (function () use ($task) {
             $factory = app(MadelineClientFactory::class);

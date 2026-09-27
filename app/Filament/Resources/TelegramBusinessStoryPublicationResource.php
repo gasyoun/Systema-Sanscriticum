@@ -73,6 +73,7 @@ final class TelegramBusinessStoryPublicationResource extends Resource
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('source_chat_id')->label('Источник')->searchable(),
                 Tables\Columns\TextColumn::make('source_message_id')->label('Пост')->sortable(),
+                Tables\Columns\TextColumn::make('cta_url')->label('Ссылка')->url(fn (TelegramBusinessStoryPublication $record): ?string => $record->cta_url)->limit(45),
                 Tables\Columns\TextColumn::make('status')->label('Статус')->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'published' => 'success',
@@ -81,6 +82,10 @@ final class TelegramBusinessStoryPublicationResource extends Resource
                         default => 'warning',
                     }),
                 Tables\Columns\TextColumn::make('part_count')->label('Частей'),
+                Tables\Columns\TextColumn::make('metrics.final_part_reach.value')->label('Просмотры финала')
+                    ->placeholder('Нет данных'),
+                Tables\Columns\TextColumn::make('metrics.link_clicks.value')->label('Клики по ссылке')
+                    ->placeholder('Нет данных'),
                 Tables\Columns\TextColumn::make('story_ids')->label('Story ID по порядку')
                     ->getStateUsing(fn (TelegramBusinessStoryPublication $record): string => implode(', ', $record->story_ids ?? []))
                     ->wrap(),
@@ -91,6 +96,7 @@ final class TelegramBusinessStoryPublicationResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')->options([
                     'received' => 'Получено',
+                    'deferred' => 'Очередь: дневной лимит',
                     'partial' => 'Публикуется / частично',
                     'published' => 'Опубликовано',
                     'duplicate' => 'Дубликат',

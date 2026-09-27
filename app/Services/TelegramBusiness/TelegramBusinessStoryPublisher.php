@@ -44,6 +44,12 @@ final class TelegramBusinessStoryPublisher
         if (in_array($ledger->status, ['published', 'duplicate', 'uncertain'], true)) {
             return;
         }
+        if ($ledger->status === 'deferred' && $ledger->deferred_until?->isFuture()) {
+            return;
+        }
+        if (! $this->reserveDailySlot($ledger, $post)) {
+            return;
+        }
 
         $tmp = null;
         try {
@@ -62,7 +68,10 @@ final class TelegramBusinessStoryPublisher
                 return;
             }
 
-            $ledger->update(['media_sha256' => $hash]);
+            $ledger->update([
+                'media_sha256' => $hash,
+                'cta_url' => $ledger->cta_url ?? TelegramStoryLink::fromPost($post),
+            ]);
             $hasMoreParts = $this->publishParts($ledger, $tmp, 1);
             if ($hasMoreParts) {
                 PublishTelegramBusinessStory::dispatch($post)->delay(now()->addSeconds(5));
@@ -85,6 +94,43 @@ final class TelegramBusinessStoryPublisher
         }
     }
 
+    /** A source video occupies one daily slot, irrespective of its part count. */
+    private function reserveDailySlot(TelegramBusinessStoryPublication $ledger, array $post): bool
+    {
+        if ($ledger->started_at !== null) {
+            return true;
+        }
+        $cap = max(0, (int) config('services.telegram_business.story_daily_video_cap', 5));
+        if ($cap === 0) {
+            $ledger->update(['started_at' => now(), 'deferred_until' => null, 'status' => 'received']);
+
+            return true;
+        }
+
+        return Cache::lock('telegram-business-story-daily-cap', 30)->block(10, function () use ($ledger, $post, $cap): bool {
+            $ledger->refresh();
+            if ($ledger->started_at !== null) {
+                return true;
+            }
+            $today = now()->startOfDay();
+            $started = TelegramBusinessStoryPublication::query()
+                ->where('started_at', '>=', $today)
+                ->where('started_at', '<', $today->copy()->addDay())
+                ->where('status', '!=', 'duplicate')
+                ->count();
+            if ($started >= $cap) {
+                $next = $today->copy()->addDay()->addMinutes(5);
+                PublishTelegramBusinessStory::dispatch($post)->delay($next);
+                $ledger->update(['status' => 'deferred', 'deferred_until' => $next]);
+
+                return false;
+            }
+            $ledger->update(['started_at' => now(), 'deferred_until' => null, 'status' => 'received']);
+
+            return true;
+        });
+    }
+
     /** Keep each successful upload before attempting the next; queued runs yield after one part. */
     private function publishParts(TelegramBusinessStoryPublication $ledger, string $source, int $maxParts = PHP_INT_MAX): bool
     {
@@ -102,7 +148,7 @@ final class TelegramBusinessStoryPublisher
             $length = $segments[$part]['duration'];
             $video = $this->normalise($source, $offset, $length);
             try {
-                $id = $this->postStory($connection->business_connection_id, $video, $length, $part + 1, $parts);
+                $id = $this->postStory($connection->business_connection_id, $video, $length, $part + 1, $parts, $ledger->cta_url);
                 $ids[] = $id;
                 $ledger->update([
                     'story_ids' => $ids,
@@ -266,21 +312,31 @@ final class TelegramBusinessStoryPublisher
         return $connection;
     }
 
-    private function postStory(string $connectionId, string $video, float $duration, int $part, int $parts): int
+    private function postStory(string $connectionId, string $video, float $duration, int $part, int $parts, ?string $link = null): int
     {
         $caption = (string) config('services.telegram_business.story_caption', '');
+        if ($caption === '') {
+            $caption = 'Видео из канала';
+        }
         if ($parts > 1) {
             $caption = trim($caption.' ('.$part.'/'.$parts.')');
         }
+        if ($link !== null) {
+            $caption = trim($caption."\n".$link);
+        }
         try {
+            $payload = [
+                'business_connection_id' => $connectionId,
+                'content' => json_encode(['type' => 'video', 'video' => 'attach://video', 'duration' => min(60, $duration)]),
+                'active_period' => (int) config('services.telegram_business.story_active_period', 86400),
+                'caption' => $caption,
+            ];
+            if ($link !== null) {
+                $payload['areas'] = TelegramStoryLink::area($link);
+            }
             $response = Http::timeout(120)->attach('video', fopen($video, 'r'), 'story.mp4')->post(
                 'https://api.telegram.org/bot'.$this->token().'/postStory',
-                [
-                    'business_connection_id' => $connectionId,
-                    'content' => json_encode(['type' => 'video', 'video' => 'attach://video', 'duration' => min(60, $duration)]),
-                    'active_period' => (int) config('services.telegram_business.story_active_period', 86400),
-                    'caption' => $caption,
-                ],
+                $payload,
             );
         } catch (ConnectionException $e) {
             throw new StoryUploadOutcomeUnknown('Telegram postStory transport outcome is unknown; review account Stories before retry.', previous: $e);
