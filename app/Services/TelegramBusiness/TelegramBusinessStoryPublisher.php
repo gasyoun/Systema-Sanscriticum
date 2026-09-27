@@ -21,6 +21,7 @@ use Throwable;
 final class TelegramBusinessStoryPublisher
 {
     private const STORY_BYTES_MAX = 30_000_000;
+
     private const STORY_SECONDS_MAX = 60;
 
     public function publishFromChannelPost(array $post): void
