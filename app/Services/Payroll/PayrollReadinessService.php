@@ -101,7 +101,7 @@ final class PayrollReadinessService
                 'warnings' => [],
                 'reconciliation_exceptions' => [],
             ];
-        $last = $this->lastActualTransfer($teacher);
+        $last = $this->lastActualTransfer($teacher, $cutoff);
         $holds = $globalHolds;
         $payableRub = Money::round((float) ($calculation['payable_rub'] ?? 0));
         $payableEur = isset($calculation['payable_eur'])
@@ -162,7 +162,7 @@ final class PayrollReadinessService
     }
 
     /** @return array<string, mixed>|null */
-    private function lastActualTransfer(Teacher $teacher): ?array
+    private function lastActualTransfer(Teacher $teacher, Carbon $cutoff): ?array
     {
         /** @var TeacherPayout|null $payout */
         $payout = $teacher->payouts()
@@ -180,6 +180,9 @@ final class PayrollReadinessService
             // paid_at is the actual transfer date. created_at may be a much
             // later H4597 backfill date and is deliberately never presented.
             'date' => $payout->paid_at?->toDateString(),
+            'days_since' => $payout->paid_at === null
+                ? null
+                : max(0, (int) $payout->paid_at->copy()->startOfDay()->diffInDays($cutoff->copy()->startOfDay())),
             'amount_rub' => Money::round((float) $payout->amount),
             'amount_foreign' => $payout->amount_foreign !== null ? Money::round((float) $payout->amount_foreign) : null,
             'currency' => $payout->payout_currency ?: 'RUB',

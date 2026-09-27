@@ -64,6 +64,22 @@ final class PayrollReadinessCommand extends Command
             ]],
         );
 
+        $this->table(
+            ['ID', 'Teacher', 'Disposition', 'Due', 'RUB', 'EUR', 'Channel', 'Last paid', 'Days', 'Holds'],
+            collect($report['teachers'])->map(fn (array $row): array => [
+                $row['teacher_id'],
+                $row['name'],
+                $row['disposition'],
+                $row['due_on'],
+                number_format((float) $row['payable_rub'], 2, '.', ''),
+                $row['payable_eur'] === null ? '' : number_format((float) $row['payable_eur'], 2, '.', ''),
+                $row['channel'],
+                $row['last_actual_transfer']['date'] ?? 'never',
+                $row['last_actual_transfer']['days_since'] ?? '',
+                implode('; ', $row['holds']),
+            ])->all(),
+        );
+
         return $report['census_exceptions'] === [] ? self::SUCCESS : self::FAILURE;
     }
 }
