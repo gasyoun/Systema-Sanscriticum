@@ -9,6 +9,7 @@ use App\Services\BlockAccessMaterializer;
 use App\Services\Ledger\LedgerProjection;
 use App\Services\Ledger\LedgerService;
 use App\Support\Kopecks;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -46,7 +47,10 @@ final class EvidenceCollector
 
     public const CH_WEBHOOK = 'webhook_journal';
 
-    public function __construct(private readonly LedgerProjection $projection) {}
+    public function __construct(
+        private readonly LedgerProjection $projection,
+        private readonly BankStatementControl $statement,
+    ) {}
 
     /**
      * @return array{window: array{from: ?string, to: string}, sources: array<string, array<string, mixed>>, rows: list<array<string, mixed>>, excluded: array<string, int>, ledger: array<string, mixed>}
@@ -78,9 +82,9 @@ final class EvidenceCollector
             $sources[self::CH_WEBHOOK] = ['status' => 'missing', 'note' => 'payment_webhook_events table absent'];
         }
 
-        // 3. Банковская выписка зачислений (переводы, SEPA). Импорта зачислений
-        //    в системе нет (парсеры выписок H4200 — только расходы): источник
-        //    отсутствует, прогон — incomplete. Не ноль.
+        // 3. Банковская выписка зачислений (H5480). Источник «present» только
+        //    если импортированная выписка покрывает день ЦЕЛИКОМ; частичная —
+        //    по-прежнему missing, и прогон честно incomplete. Не ноль.
         $sources['bank_statement'] = $this->bankStatementSource($from, $to);
 
         // 4. Ядро P1.
@@ -479,15 +483,10 @@ final class EvidenceCollector
     /** @return array<string, mixed> */
     private function bankStatementSource(?CarbonInterface $from, CarbonInterface $to): array
     {
-        $dir = (string) config('money_recon.bank_statement_dir', '');
-        if ($dir === '' || ! is_dir($dir)) {
-            return ['status' => 'missing', 'note' => 'no bank credit-statement import exists (H4200 parsers read debits only); transfers/SEPA cannot be matched against the bank'];
-        }
-        $files = glob(rtrim($dir, '/').'/*.csv') ?: [];
-
-        return $files === []
-            ? ['status' => 'missing', 'note' => "no statement files in {$dir}"]
-            : ['status' => 'missing', 'note' => count($files).' statement file(s) present but no credit parser is wired yet'];
+        return $this->statement->source(
+            $from !== null ? CarbonImmutable::parse($from) : null,
+            CarbonImmutable::parse($to),
+        );
     }
 
     /** @return array<string, mixed> */
