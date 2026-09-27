@@ -212,6 +212,14 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('publish-story-persona');
 
+        // Read-only MTProto observation; publication and support share the
+        // session lock, so a busy session simply defers the next sample.
+        $schedule->command('telegram-business:story-metrics')
+            ->everyTwoHours()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('collect-business-story-metrics');
+
         // Автооткрытие приёма ДЗ после проведённого урока (H1764, волна 1).
         // Ежечасный, а не ежедневный: момент открытия посчитан точно, проход
         // лишь доносит его с задержкой не больше часа. Прод-инертна, пока

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\TelegramBusiness;
 
+use App\Jobs\PublishTelegramBusinessStory;
 use App\Models\TelegramBusinessConnection;
 use App\Models\TelegramBusinessStoryPublication;
 use App\Services\TelegramBusiness\StoryUploadOutcomeUnknown;
@@ -11,6 +12,7 @@ use App\Services\TelegramBusiness\TelegramBusinessStoryPublisher;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use ReflectionMethod;
 use Tests\TestCase;
@@ -27,6 +29,7 @@ final class TelegramBusinessStoryPartsTest extends TestCase
         $this->createPublisherTables();
         $ledger = TelegramBusinessStoryPublication::create([
             'source_chat_id' => '-1001', 'source_message_id' => 620, 'status' => 'received',
+            'cta_url' => 'https://t.me/samskrte/620',
         ]);
         $temporary = tempnam(sys_get_temp_dir(), 'tg-story-test-');
         self::assertNotFalse($temporary);
@@ -59,7 +62,12 @@ final class TelegramBusinessStoryPartsTest extends TestCase
             self::assertSame(701, $ledger->fresh()->story_id);
             self::assertSame(3, $ledger->fresh()->part_count);
             self::assertSame('published', $ledger->fresh()->status);
-            self::assertSame(['Video (1/3)', 'Video (2/3)', 'Video (3/3)'], array_column($requests, 'caption'));
+            self::assertSame([
+                "Video (1/3)\nhttps://t.me/samskrte/620",
+                "Video (2/3)\nhttps://t.me/samskrte/620",
+                "Video (3/3)\nhttps://t.me/samskrte/620",
+            ], array_column($requests, 'caption'));
+            self::assertSame('https://t.me/samskrte/620', json_decode($requests[0]['areas'], true)[0]['type']['url']);
             self::assertSame([60, 60, 1], array_map(fn ($request) => json_decode($request['content'], true)['duration'], $requests));
         } finally {
             @unlink($source);
@@ -80,6 +88,31 @@ final class TelegramBusinessStoryPartsTest extends TestCase
         } finally {
             @unlink($video);
         }
+    }
+
+    public function test_daily_cap_defers_a_new_video_without_downloading_it(): void
+    {
+        $this->createPublisherTables();
+        config()->set('services.telegram_business.story_daily_video_cap', 1);
+        TelegramBusinessStoryPublication::create([
+            'source_chat_id' => '-1001', 'source_message_id' => 620,
+            'status' => 'published', 'started_at' => now(),
+        ]);
+        Queue::fake();
+        Http::fake();
+
+        app(TelegramBusinessStoryPublisher::class)->publishFromChannelPost([
+            'chat' => ['id' => -1001, 'username' => 'samskrte'],
+            'message_id' => 621,
+            'video' => ['file_id' => 'not-downloaded', 'file_unique_id' => 'unique-621'],
+        ]);
+
+        $deferred = TelegramBusinessStoryPublication::query()->where('source_message_id', 621)->firstOrFail();
+        self::assertSame('deferred', $deferred->status);
+        self::assertNotNull($deferred->deferred_until);
+        self::assertNull($deferred->started_at);
+        Queue::assertPushed(PublishTelegramBusinessStory::class, 1);
+        Http::assertNothingSent();
     }
 
     public function test_known_failed_part_resumes_without_reposting_completed_part(): void
@@ -147,9 +180,13 @@ final class TelegramBusinessStoryPartsTest extends TestCase
             $table->id();
             $table->string('source_chat_id');
             $table->unsignedBigInteger('source_message_id');
+            $table->string('telegram_file_unique_id')->nullable();
             $table->unsignedBigInteger('story_id')->nullable();
             $table->json('story_ids')->nullable();
             $table->unsignedSmallInteger('part_count')->nullable();
+            $table->string('cta_url')->nullable();
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('deferred_until')->nullable();
             $table->string('status');
             $table->text('error')->nullable();
             $table->timestamps();
