@@ -1801,6 +1801,14 @@ return [
     'teacher_payroll_readiness' => (bool) env('TEACHER_PAYROLL_READINESS', false),
 
     /*
+     | Approved direct-receipt policy: count cash received by a teacher as
+     | course revenue, calculate the normal teacher percentage, then offset
+     | the cash already held. Default OFF for shadow comparison before the
+     | October transfer run.
+     */
+    'teacher_direct_receipt_revenue_parity' => (bool) env('TEACHER_DIRECT_RECEIPT_REVENUE_PARITY', false),
+
+    /*
      | Студент сам оставляет отзыв в кабинете (/dvaram/otzyv). Отзыв ждёт
      | модерации (Маркетинг → Отзывы, «Одобрить») и только после неё попадает
      | в общий пул — на страницу входа и в /otzyvy; админам уходит сообщение

@@ -732,7 +732,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `STUDENT_AGENT_ENABLED` | feature-flag | `false` | config/features.php:1600 |
 | `STUDENT_TELEGRAM_BOT_TOKEN` | secret | `—` | config/services.php:138 |
 | `STUDENT_TELEGRAM_BOT_USERNAME` | required | `—` | config/services.php:139 |
-| `STUDENT_TESTIMONIALS` | optional | `false` | config/features.php:1802 |
+| `STUDENT_TESTIMONIALS` | optional | `false` | config/features.php:1818 |
 | `SUBHASHITA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:40 |
 | `SUBHASHITA_COURSE_SLUG` | optional | `'subhashita'` | config/cohort_courses.php:39 |
 | `SUBHASHITA_SRS` | optional | `false` | config/features.php:512 |
@@ -818,7 +818,14 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SURVEYS_ENABLED` | feature-flag | `false` | config/surveys.php:12 |
 | `SURVEY_REWARD_PRANA_RUBLES` | optional | `500` | config/surveys.php:14 |
 | `SYSTEMA_SCHEDULE_MAX_SECONDS` | optional | `900` | config/schedule_guard.php:24 |
+| `TEACHER_DIRECT_RECEIPT_REVENUE_PARITY` | optional | `false` | config/features.php:1809 |
 | `TEACHER_PAYOUT_YEAR_VIEW` | optional | `false` | config/features.php:762 |
+| `TEACHER_PAYROLL_EVIDENCE_FROM` | optional | `'2026-08-01'` | config/payroll_readiness.php:10 |
+| `TEACHER_PAYROLL_EVIDENCE_MANIFEST` | optional | `storage_path('app/private/payroll/evidence-manifest.json'),` | config/payroll_readiness.php:15 |
+| `TEACHER_PAYROLL_EVIDENCE_MAX_AGE_DAYS` | optional | `7` | config/payroll_readiness.php:11 |
+| `TEACHER_PAYROLL_EXPECTED_COUNT` | optional | `23` | config/payroll_readiness.php:9 |
+| `TEACHER_PAYROLL_READINESS` | optional | `false` | config/features.php:1801 |
+| `TEACHER_PAYROLL_TARGET_DATE` | optional | `'2026-10-01'` | config/payroll_readiness.php:8 |
 | `TEACHER_PAY_ENABLED` | feature-flag | `false` | config/services.php:683 |
 | `TEACHER_WEEKLY_PAYOUT_CALENDAR` | optional | `false` | config/features.php:753 |
 | `TEACHING_GLOSSARY` | optional | `false` | config/features.php:1418 |

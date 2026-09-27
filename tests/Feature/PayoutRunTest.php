@@ -277,6 +277,34 @@ class PayoutRunTest extends TestCase
         $this->assertEqualsWithDelta(65.18, $row['payable_eur'], 0.02);
     }
 
+    /** H5532: direct cash earns the normal percentage before the held cash is offset. */
+    public function test_direct_receipt_is_course_revenue_then_cash_held_is_offset_once(): void
+    {
+        config()->set('features.teacher_direct_receipt_revenue_parity', true);
+        $leytan = Teacher::create(['name' => 'Лейтан Эдгар', 'payout_currency' => 'EUR']);
+        $syntax = $this->percentCourse($leytan, 'Синтаксис', 60);
+        $this->block($syntax, 65, '2026-07-21', '2026-08-25');
+        $this->pay($syntax, ['user_id' => User::factory()->create()->id, 'amount' => 24000, 'tariff' => 'block_65', 'start_block' => 65, 'end_block' => 65], '2026-08-01');
+        $this->pay($syntax, [
+            'user_id' => User::factory()->create()->id,
+            'amount' => 7000,
+            'tariff' => 'block_65', 'start_block' => 65, 'end_block' => 65,
+            'received_account' => Payment::RECEIVED_TEACHER,
+            'received_by_teacher_id' => $leytan->id,
+            'foreign_amount' => 70.0,
+            'foreign_currency' => 'EUR',
+        ], '2026-08-02');
+        $this->fx(98.0, '2026-08-26');
+
+        $row = $this->runner->runForTeacher($leytan, Carbon::parse('2026-08-26'), Carbon::parse('2026-07-24'));
+
+        $this->assertSame(31000.0, $row['base_total_rub']);
+        $this->assertSame(70.0, $row['direct_receipts']['total']);
+        // (31,000 × 92% × 60%) − (70 × 98) = 10,252 RUB; the offset is once.
+        $this->assertSame(10252.0, $row['payable_rub']);
+        $this->assertEqualsWithDelta(104.61, $row['payable_eur'], 0.02);
+    }
+
     /** Приёмка №4: пустой ends_at → фолбэк на занятия с ⚠; совсем без дат → видимый ⚠, не ноль. */
     public function test_empty_ends_at_falls_back_to_lessons_with_visible_warning(): void
     {

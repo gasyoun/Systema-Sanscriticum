@@ -7,6 +7,8 @@ namespace App\Services\Payroll;
 use App\Models\BankStatementCredit;
 use App\Models\BankStatementImport;
 use App\Models\FinanceSnapshot;
+use App\Models\MoneyReconException;
+use App\Models\MoneyReconRun;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
@@ -171,7 +173,7 @@ final class PayrollReadinessService
             'amount_rub' => Money::round((float) $payout->amount),
             'amount_foreign' => $payout->amount_foreign !== null ? Money::round((float) $payout->amount_foreign) : null,
             'currency' => $payout->payout_currency ?: 'RUB',
-            'channel' => $payout->payout_currency ? 'paypal_mg' : 'tochka_maria',
+            'channel' => strtoupper((string) $payout->payout_currency) === 'EUR' ? 'paypal_mg' : 'tochka_maria',
             'course_id' => $payout->course_id ?? ($breakdown['course_id'] ?? null),
             'block_number' => $breakdown['block_number'] ?? null,
             'rate' => $payout->salary_value !== null ? (float) $payout->salary_value : null,
@@ -197,6 +199,22 @@ final class PayrollReadinessService
             ->whereDate('covers_to', '>=', $cutoff->toDateString())
             ->orderByDesc('id')
             ->first();
+        $reconciliation = MoneyReconRun::query()
+            ->whereDate('business_date', '<=', $cutoff->toDateString())
+            ->orderByDesc('business_date')
+            ->orderByDesc('id')
+            ->first();
+        $openByType = MoneyReconException::query()
+            ->where('state', MoneyReconException::OPEN)
+            ->selectRaw('type, COUNT(*) AS aggregate')
+            ->groupBy('type')
+            ->pluck('aggregate', 'type')
+            ->map(fn ($count): int => (int) $count)
+            ->sortKeys()
+            ->all();
+        $reconciliationFresh = (bool) config('features.money_daily_reconciliation')
+            && $reconciliation?->status === MoneyReconRun::COMPLETE
+            && $reconciliation->business_date?->toDateString() === $cutoff->toDateString();
 
         return [
             'private_manifest' => $manifest,
@@ -212,6 +230,14 @@ final class PayrollReadinessService
                 'as_of' => $paypal?->entered_at?->toIso8601String(),
                 'balance_eur' => $paypal?->majorAmount(),
                 'note' => $paypalFresh ? null : 'fresh PayPal/Xoom balance evidence is missing',
+            ],
+            'reconciliation' => [
+                'status' => $reconciliationFresh ? 'fresh' : 'incomplete',
+                'business_date' => $reconciliation?->business_date?->toDateString(),
+                'input_fingerprint' => $reconciliation?->input_fingerprint,
+                'totals_checksum' => $reconciliation?->totals_checksum,
+                'open_exceptions_by_type' => $openByType,
+                'note' => $reconciliationFresh ? null : 'complete transfer-day reconciliation is missing or disabled',
             ],
         ];
     }
@@ -267,7 +293,7 @@ final class PayrollReadinessService
             } elseif ($remaining[$channel] === null) {
                 $row['funding_state'] = 'unknown';
                 $row['remaining_obligation'] = $need;
-            } elseif ($remaining[$channel] + 0.0001 >= $need) {
+            } elseif ($need <= $remaining[$channel] + 0.0001) {
                 $remaining[$channel] = Money::round($remaining[$channel] - $need);
                 $row['funding_state'] = 'funded';
                 $row['remaining_obligation'] = 0.0;
@@ -275,6 +301,12 @@ final class PayrollReadinessService
                 $row['funding_state'] = 'unfunded';
                 $row['remaining_obligation'] = Money::round($need);
             }
+        }
+        unset($row);
+
+        foreach ($rows as &$row) {
+            unset($row['fingerprint']);
+            $row['fingerprint'] = hash('sha256', $this->canonicalJson($row));
         }
         unset($row);
 
