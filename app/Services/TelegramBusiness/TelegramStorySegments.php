@@ -15,6 +15,11 @@ final class TelegramStorySegments
         if (! is_finite($duration) || $duration <= 0) {
             throw new RuntimeException('Story source video has no valid duration.');
         }
+        // Container metadata may report a sub-millisecond tail beyond an exact boundary.
+        $duration = round($duration, 3);
+        if ($duration <= 0) {
+            throw new RuntimeException('Story source video is shorter than one millisecond.');
+        }
         $count = (int) ceil($duration / 60);
         if ($count > 10) {
             throw new RuntimeException("Story video requires {$count} parts; at most 10 are supported.");

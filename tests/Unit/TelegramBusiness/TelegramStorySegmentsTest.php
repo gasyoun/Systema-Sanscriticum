@@ -23,6 +23,7 @@ final class TelegramStorySegmentsTest extends TestCase
     {
         self::assertCount(1, TelegramStorySegments::plan(60));
         self::assertCount(2, TelegramStorySegments::plan(120));
+        self::assertCount(2, TelegramStorySegments::plan(120.0001));
     }
 
     public function test_oversized_video_is_rejected_without_partial_publication(): void
