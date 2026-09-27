@@ -18,8 +18,9 @@ final class TelegramBusinessStoryPartsTest extends TestCase
 {
     public function test_long_video_posts_three_ordered_parts_and_saves_each_story_id(): void
     {
-        if (! Process::run(['ffmpeg', '-version'])->successful()) {
-            $this->markTestSkipped('ffmpeg is required for this media acceptance test.');
+        $encoders = Process::run(['ffmpeg', '-hide_banner', '-encoders']);
+        if (! $encoders->successful() || ! str_contains($encoders->output(), 'libx265')) {
+            $this->markTestSkipped('ffmpeg with libx265 is required for this media acceptance test.');
         }
 
         Schema::create('telegram_business_connections', function (Blueprint $table): void {
@@ -37,6 +38,7 @@ final class TelegramBusinessStoryPartsTest extends TestCase
             $table->json('story_ids')->nullable();
             $table->unsignedSmallInteger('part_count')->nullable();
             $table->string('status');
+            $table->text('error')->nullable();
             $table->timestamps();
         });
         TelegramBusinessConnection::create([
@@ -47,7 +49,10 @@ final class TelegramBusinessStoryPartsTest extends TestCase
         $ledger = TelegramBusinessStoryPublication::create([
             'source_chat_id' => '-1001', 'source_message_id' => 620, 'status' => 'received',
         ]);
-        $source = tempnam(sys_get_temp_dir(), 'tg-story-test-').'.mp4';
+        $temporary = tempnam(sys_get_temp_dir(), 'tg-story-test-');
+        self::assertNotFalse($temporary);
+        @unlink($temporary);
+        $source = $temporary.'.mp4';
         try {
             $generated = Process::timeout(30)->run([
                 'ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi',
@@ -60,10 +65,7 @@ final class TelegramBusinessStoryPartsTest extends TestCase
             config()->set('services.telegram_business.story_caption', 'Video');
             $requests = [];
             Http::fake(function ($request) use (&$requests) {
-                $requests[] = [
-                    'caption' => $request['caption'],
-                    'content' => json_decode($request['content'], true),
-                ];
+                $requests[] = collect($request->data())->pluck('contents', 'name')->all();
 
                 return Http::response(['ok' => true, 'result' => ['id' => 700 + count($requests)]]);
             });
@@ -76,7 +78,7 @@ final class TelegramBusinessStoryPartsTest extends TestCase
             self::assertSame(3, $ledger->fresh()->part_count);
             self::assertSame('published', $ledger->fresh()->status);
             self::assertSame(['Video (1/3)', 'Video (2/3)', 'Video (3/3)'], array_column($requests, 'caption'));
-            self::assertSame([60, 60, 1], array_column(array_column($requests, 'content'), 'duration'));
+            self::assertSame([60, 60, 1], array_map(fn ($request) => json_decode($request['content'], true)['duration'], $requests));
         } finally {
             @unlink($source);
         }
