@@ -72,7 +72,7 @@ class ProcessTelegramBusinessUpdate implements ShouldQueue
         }
 
         if (isset($this->update['channel_post']) && is_array($this->update['channel_post'])) {
-            $storyPublisher->publishFromChannelPost($this->update['channel_post']);
+            PublishTelegramBusinessStory::dispatch($this->update['channel_post']);
 
             return;
         }
