@@ -76,7 +76,9 @@ class PublicChatController extends Controller
         }
 
         $page = preg_replace('/[\x00-\x1F\x7F]+/', '', $page) ?? '';
-        if ($page === '' || mb_strlen($page) > 2048) {
+        // Невалидный UTF-8 доехал бы до @json -> json_encode(false) -> голый
+        // `= ;` и синтаксическая ошибка в boot-скрипте (review H5451 P2).
+        if ($page === '' || ! mb_check_encoding($page, 'UTF-8') || mb_strlen($page) > 2048) {
             return '';
         }
 

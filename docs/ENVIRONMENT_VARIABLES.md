@@ -464,7 +464,13 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MEMCACHED_PORT` | optional | `11211` | config/cache.php:71 |
 | `MEMCACHED_USERNAME` | required | `—` | config/cache.php:62 |
 | `MIC_SHADOW_CLASSIFY` | optional | `false` | config/features.php:1692 |
+| `MONEY_DAILY_RECONCILIATION` | optional | `false` | config/features.php:1780 |
+| `MONEY_LEDGER_CORE` | optional | `false` | config/features.php:1758 |
 | `MONEY_MUTATION_BREAKER` | optional | `false` | config/features.php:842 |
+| `MONEY_RECON_BANK_STATEMENT_DIR` | optional | `''` | config/money_recon.php:26 |
+| `MONEY_RECON_PAYOUT_PACKAGES_TABLE` | optional | `'teacher_payout_packages'` | config/money_recon.php:30 |
+| `MONEY_RECON_PING_URL` | optional | `''` | config/money_recon.php:21 |
+| `MONEY_REFUND_ACCESS_RULES` | optional | `false` | config/features.php:1770 |
 | `MONEY_SLI_ATTEMPTS` | optional | `3` | config/money_sli.php:35 |
 | `MONEY_SLI_ATTEMPT_PAUSE_SECONDS` | optional | `2` | config/money_sli.php:36 |
 | `MONEY_SLI_DAILY_PING_URL` | optional | `''` | config/money_sli.php:54 |
@@ -722,6 +728,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `STUDENT_AGENT_ENABLED` | feature-flag | `false` | config/features.php:1600 |
 | `STUDENT_TELEGRAM_BOT_TOKEN` | secret | `—` | config/services.php:138 |
 | `STUDENT_TELEGRAM_BOT_USERNAME` | required | `—` | config/services.php:139 |
+| `STUDENT_TESTIMONIALS` | optional | `false` | config/features.php:1789 |
 | `SUBHASHITA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:40 |
 | `SUBHASHITA_COURSE_SLUG` | optional | `'subhashita'` | config/cohort_courses.php:39 |
 | `SUBHASHITA_SRS` | optional | `false` | config/features.php:512 |

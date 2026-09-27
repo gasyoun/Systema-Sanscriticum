@@ -24,6 +24,12 @@
                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
                 <i class="fas fa-book-open"></i> Как пользоваться
             </a>
+            @if (config('features.student_testimonials'))
+            <a href="{{ route('student.testimonial.create') }}"
+               class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
+                <i class="fas fa-comment-dots"></i> Оставить отзыв
+            </a>
+            @endif
             <a href="{{ route('student.cabinet-mastery') }}"
                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
                 <i class="fas fa-clipboard-check"></i> Проверить кабинет

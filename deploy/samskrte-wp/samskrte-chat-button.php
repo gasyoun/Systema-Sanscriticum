@@ -35,7 +35,9 @@ add_action('wp_footer', function () {
     $scheme = (is_ssl() ? 'https' : 'http').'://';
     $host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
     $uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '/';
-    $page = esc_url($scheme.$host.$uri);
+    // esc_url_raw (не esc_url): URL-контекст без entity-кодирования `&`,
+    // иначе multi-param URL доезжал бы до Systema как `&#038;` (review P3).
+    $page = esc_url_raw($scheme.$host.$uri);
 
     $embed = 'https://samskrte.ru/chat/embed?page='.rawurlencode($page);
     ?>

@@ -1,44 +1,59 @@
-# Vendor, скопированный между деревьями: битый $baseDir в autoload — artisan мёртв до dump-autoload
+# Symlink/junction-vendor (не копия!) — корень битого $baseDir в autoload; копия лишь размножает яд, artisan мёртв до dump-autoload
 
 _Created: 24-09-2026 · Last updated: 24-09-2026_
 
-## Факт (measured, 24-09-2026)
+## Корневая причина (measured, 24-09-2026)
 
-`vendor/` был продамплен composer'ом в дереве X, а затем СКОПИРОВАН в sibling-дерево Y:
-сгенерированный `vendor/composer/autoload_psr4.php` содержит
-`$baseDir = dirname(dirname($vendorDir)).'/X'` — резолв всех `App\`/`Tests\` классов уходит
-в чужой (или уже удалённый) корень. Симптом-профиль:
+`vendor/` в сессионных деревьях Systema — **symlink на `Systema-Sanscriticum/vendor` (main)**,
+трюк ради переиспользования vendor без `composer install`. Любой `composer dump-autoload`/`install`
+внутри такого дерева пишет **ЧЕРЕЗ symlink** в `main/vendor`, и `$baseDir` в
+`vendor/composer/autoload_psr4.php` принимает имя ТОГО дерева, из которого запущен composer
+(`$baseDir = dirname(dirname($vendorDir)).'/X'`). Итог: main + все деревья, шарящие `main/vendor`
+(4 story-* + слот-дерево), резолвят `App\`/`Tests\` в X. Симптом-профиль:
 
 - `php artisan *` (любая команда) падает `BindingResolutionException: Target class
   [App\Console\Kernel] does not exist`;
 - прямой `vendor/bin/phpunit` при этом ЗЕЛЁНЫЙ — `phpunit.xml` грузит
   `tests/bootstrap_worktree.php`, который перебиндивает PSR-4 на текущее дерево в рантайме.
 
-Кейс 24-09-2026: vendor из удалённого `Systema-Sanscriticum-h4832-drain` был разкопирован
-в main-клон + 6 сессионных деревьев (`story-link`, `story-link-layout`, `story-series`,
-`story-visible-link`, `h01a08efa`, `pilot-attribution-01a0bab7`); в тот же день живая сессия
-story-серии копировала vendor из `h01a08efa` в соседей — вектор размножения живой.
-Итого 7 из 19 Systema-деревьев с vendor были отравлены одним источником.
+**Диагностика чтением `autoload_psr4.php` ВРАНЬЁ** — после `dump-autoload` строка относительная;
+решает только рантайм-резолв класса:
+`php -r 'require "vendor/autoload.php"; echo (new ReflectionClass("App\\Console\\Kernel"))->getFileName();'`
+должен вернуть ЭТО дерево.
 
-Лечение: `composer dump-autoload` на месте в каждом дереве (~10 с, без сети;
-vendor gitignored — это ремонт окружения, не коммит). Диагностика:
-`rg "baseDir = " vendor/composer/autoload_psr4.php` — если справа стоит ИМЯ ЧУЖОГО дерева,
-vendor чужой.
+## Dangling-target (родственный класс, H4463)
+
+Ссылка, чья ЦЕЛЬ опустошена/удалена — ровно то, что делает `git worktree remove --force`
+(рекурсивно чистит СОДЕРЖИМОЕ цели) — лишает `autoload.php` СРАЗУ всех шареров, пока
+`ls vendor` ещё показывает имена; `test -f`/`file_exists` по ссылке читают «нет файла»;
+«восстановление отсутствующего vendor» записью через висячую ссылку материализует контент
+в ЧУЖОМ дереве.
+
+## Копия — не корень, а вектор размножения
+
+Копирование `vendor/` несёт уже отравленный `autoload_psr4.php` с чужим `$baseDir` в приёмник.
+Кейс 24-09-2026: источник — удалённый `Systema-Sanscriticum-h4832-drain`; живая story-сессия
+копировала vendor из `h01a08efa` в соседей, 7 из 19 деревьев отравлены одним источником.
 
 ## Правило
 
-1. Никогда не копировать `vendor/` между деревьями «как есть»: после копии обязателен
-   `composer dump-autoload` в дереве-приёмнике (или полноценный `composer install`).
-2. Профиль «phpunit зелёный, artisan красный» = первым делом смотреть `baseDir`,
-   а не код репо.
-3. Родственный факт (H4463, junction-vendor): и symlink-vendor, и копия-vendor — оба
-   способа шарить vendor между деревьями стреляют; безопасен только локальный
-   `dump-autoload`/`install` в каждом дереве.
+1. Никогда не делать symlink/junction `vendor` из worktree наружу (ни на main, ни на соседа)
+   и никогда не копировать `vendor/` «как есть».
+2. Безопасен только ЛОКАЛЬНЫЙ vendor: `composer install` либо `composer dump-autoload` в самом
+   дереве; после вынужденной копии — обязателен `dump-autoload` в приёмнике, main — ПОСЛЕДНИМ.
+3. Перед `git worktree remove` — `find . -maxdepth 2 -type l` (`dir /AL` на Windows):
+   ссылка наружу = сначала снять.
+4. Профиль «phpunit зелёный, artisan красный» → первым делом рантайм-резолв класса
+   (`ReflectionClass`), не код репо.
+5. Живой симптом 24-09-2026 21:02: `Systema-Sanscriticum-h5475-36973/vendor →
+   Systema-Sanscriticum/vendor` (residual GTD `0G1`).
 
 ## Источник
 
-- Сессия opencode/OxAlpha 24-09-2026 (GLM 5.3 flash): 7 деревьев отравлены, все
-  починены `dump-autoload`; проверено `php artisan --version` (Laravel 13.31.0) +
-  зелёный прогон `TelegramBusinessLaneTest` обеими дорожками (11 tests, 34 assertions).
+- H5458 close 24-09-2026 (OxAlpha `zai-coding-plan/glm-5.3-flash via opencode`; Codex verifier PASS):
+  12 деревьев с `vendor`, BAD=0; цензус MSI/prod чист (GTD `0FN`).
+- [DANGER_FACTS row](https://github.com/gasyoun/Uprava/blob/main/DANGER_FACTS.md)
+  «symlink/junction-vendor poisons shared $baseDir».
+- H4463 — junction-traversal (`worktree remove --force` вычищает содержимое ЦЕЛИ).
 
 _Гасунс_

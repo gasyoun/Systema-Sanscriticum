@@ -6,6 +6,11 @@ namespace App\Services\TelegramBusiness;
 
 use App\Models\TelegramBusinessConnection;
 use App\Models\TelegramBusinessStoryPublication;
+use App\Services\Telegram\MadelineClientFactory;
+use App\Services\Telegram\MadelineSessionContext;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
@@ -39,7 +44,7 @@ final class TelegramBusinessStoryPublisher
         $tmp = null;
         $storyVideo = null;
         try {
-            $tmp = $this->download((string) ($video['file_id'] ?? ''));
+            $tmp = $this->download($chat, $messageId, (string) ($video['file_id'] ?? ''));
             $hash = hash_file('sha256', $tmp);
             $prior = TelegramBusinessStoryPublication::query()
                 ->where('media_sha256', $hash)->where('id', '!=', $ledger->id)->first();
@@ -77,7 +82,8 @@ final class TelegramBusinessStoryPublisher
         return array_intersect($candidates, $sources) !== [];
     }
 
-    private function download(string $fileId): string
+    /** @param array<string, mixed> $chat */
+    private function download(array $chat, int $messageId, string $fileId): string
     {
         if ($fileId === '') {
             throw new RuntimeException('Source video has no Telegram file_id.');
@@ -86,6 +92,13 @@ final class TelegramBusinessStoryPublisher
         $meta = Http::timeout(20)->get("https://api.telegram.org/bot{$token}/getFile", ['file_id' => $fileId]);
         $path = $meta->json('result.file_path');
         if (! $meta->successful() || ! is_string($path) || $path === '') {
+            // The public Bot API intentionally caps downloads.  The existing
+            // server-side MadelineProto session can read public source channels
+            // directly, so use it only for this documented large-file case.
+            if (str_contains(mb_strtolower($meta->body()), 'file is too big')) {
+                return $this->downloadLargeSourceWithMadeline($chat, $messageId);
+            }
+
             throw new RuntimeException('Telegram getFile failed: '.mb_substr($meta->body(), 0, 300));
         }
         $target = tempnam(sys_get_temp_dir(), 'tg-story-');
@@ -99,6 +112,51 @@ final class TelegramBusinessStoryPublisher
         }
 
         return $target;
+    }
+
+    /** @param array<string, mixed> $chat */
+    private function downloadLargeSourceWithMadeline(array $chat, int $messageId): string
+    {
+        $factory = app(MadelineClientFactory::class);
+        if (! $factory->isConfigured()) {
+            throw new RuntimeException('Source video exceeds the Bot API download limit and the server Telegram media session is unavailable.');
+        }
+
+        $peer = trim((string) ($chat['username'] ?? ''));
+        $peer = $peer !== '' ? '@'.ltrim($peer, '@') : (string) ($chat['id'] ?? '');
+        if ($peer === '' || $messageId < 1) {
+            throw new RuntimeException('Unable to identify the large-video source message.');
+        }
+
+        $lock = Cache::lock(MadelineSessionContext::lockName(), 900);
+        try {
+            $lock->block(10);
+            $client = $factory->open();
+            $history = $client->messages->getHistory([
+                'peer' => $peer,
+                'limit' => 1,
+                'offset_id' => $messageId + 1,
+            ]);
+            $message = collect($history['messages'] ?? [])->first(
+                fn (mixed $item): bool => is_array($item) && (int) ($item['id'] ?? 0) === $messageId,
+            );
+            if (! is_array($message) || empty($message['media'])) {
+                throw new RuntimeException('Large-video source message is unavailable to the server Telegram session.');
+            }
+
+            $directory = storage_path('app/telegram-business-story-source');
+            File::ensureDirectoryExists($directory);
+            $path = $client->downloadToDir($message['media'], $directory);
+            if (! is_string($path) || ! is_file($path)) {
+                throw new RuntimeException('Large-video source download did not produce a local file.');
+            }
+
+            return $path;
+        } catch (LockTimeoutException) {
+            throw new RuntimeException('Server Telegram media session is busy; the Story source will be retried.');
+        } finally {
+            $lock->release();
+        }
     }
 
     private function normalise(string $input): string

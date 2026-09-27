@@ -202,7 +202,7 @@ _Создано: 08-07-2026 · Обновлено: 16-09-2026 (№89 H5020 — �
 
 Код в main тёмным: эндпоинт `POST /api/webhooks/inbound-email/{secret}` (секрет пути, fail-closed), таблица `inbound_emails`, очередь нераспознанных отправителей `/admin/inbound-emails`, бейдж Email в Helpdesk. Флаг `SUPPORT_INBOUND_EMAIL` default **OFF** → маршрут 404. Человеческие шаги — почта/DNS/пересылка:
 
-1. Завести ящик `zabota@samskrte.ru` в панели хостинга (почта домена samskrte.ru).
+1. Завести ящик `zabota@samskrte.ru` в панели хостинга (почта домена samskrte.ru). **Зонд 26-09-2026: самохост входящей почты на .92 НЕВОЗМОЖЕН — хостер фильтрует входящий TCP/25** (postfix поднимали на `0.0.0.0:25` живьём, извне порт закрыт; откат в loopback-only, бэкап `main.cf.bak-inbound25-probe-26-09` на .92). Домен на NS reg.ru, MX-записей нет → ящик создаётся в панели reg.ru («Почта» тариф домена), проводник n8n на .91 поллит reg.ru IMAP.
 2. Пересылка БЕЗ нового платного вендора: n8n на .91 забирает ящик (IMAP-poll по расписанию) и POSTит на `https://samskrte.ru/api/webhooks/inbound-email/<секрет>` JSON `{message_id, from_email, from_name?, subject?, text, received_at?}`.
 3. `.env` прода: `INBOUND_EMAIL_WEBHOOK_SECRET=<openssl rand -hex 24>`, тот же секрет вписать в проводник, затем `php artisan config:cache`.
 4. Smoke (флаг ещё OFF): POST от проводника → 404 (флаг гейтит), секрет неверный → 403. Потом `SUPPORT_INBOUND_EMAIL=true` + config:cache.

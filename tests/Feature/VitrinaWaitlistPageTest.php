@@ -522,6 +522,7 @@ class VitrinaWaitlistPageTest extends TestCase
      * осенью 2026» с точными ссылками на идущие курсы. «Уже идут» — только
      * живые live-курсы с расписанием underway (группа началась и не кончилась);
      * будущий набор и запись («в записи») в итог не попадают.
+     * MG 24-09-2026 (numbered lists): обе колонки шапки — нумерованные <ol>.
      */
     public function test_zhdun_header_shows_waitlist_totals_and_running_course_links(): void
     {
@@ -581,7 +582,7 @@ class VitrinaWaitlistPageTest extends TestCase
         Schedule::create(['title' => 'Прошло', 'course_id' => $recorded->id, 'start' => now()->subDay()]);
         Schedule::create(['title' => 'Впереди', 'course_id' => $recorded->id, 'start' => now()->addDay()]);
 
-        $this->get(route('shop.waitlist'))
+        $resp = $this->get(route('shop.waitlist'))
             ->assertOk()
             ->assertSee('Под вопросом (ждун)')
             ->assertSee('Уже идут осенью 2026')
@@ -595,5 +596,15 @@ class VitrinaWaitlistPageTest extends TestCase
             ->assertSee(route('shop.course.show', $running2->slug), false)
             ->assertDontSee(route('shop.course.show', $future->slug), false)
             ->assertDontSee(route('shop.course.show', $recorded->slug), false);
+
+        // MG 24-09-2026: обе колонки шапки — нумерованные списки (<ol>), а не
+        // строки-ссылки вперемешку: слева ждун, справа «уже идут».
+        $html = (string) $resp->getContent();
+        $this->assertGreaterThanOrEqual(
+            2,
+            substr_count($html, 'list-decimal list-inside space-y-1'),
+            'шапка: обе колонки (ждун и уже идут) — нумерованные списки'
+        );
+        $this->assertStringContainsString('<li>', $html, 'нумерованный список рендерит <li>');
     }
 }

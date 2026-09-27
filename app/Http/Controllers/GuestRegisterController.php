@@ -18,6 +18,9 @@ use Illuminate\View\View;
 /**
  * H3643 — guest email+password /register → Free-tier, no payment.
  * H3692 — optional signup_source + birth_year via AttributionService.
+ * Карточка регистрации на /login шлёт ещё имя, фамилию, телефон и город и ОДИН
+ * пароль; страница /register по-прежнему шлёт пароль дважды — подтверждение
+ * проверяется, только если оно прислано.
  *
  * Entire surface is behind features.guest_registration (default OFF).
  * Flag OFF → 404 on GET and POST. Does not touch Tochka/webhooks.
@@ -41,9 +44,22 @@ final class GuestRegisterController extends Controller
 
         $validated = $request->validate([
             'email' => ['required', 'email', 'max:255'],
-            'password' => ['required', 'confirmed', PasswordRule::min(8)],
+            'password' => array_merge(
+                ['required', PasswordRule::min(8)],
+                $request->has('password_confirmation') ? ['confirmed'] : [],
+            ),
+            'first_name' => ['nullable', 'string', 'max:60'],
+            'last_name' => ['nullable', 'string', 'max:60'],
+            'phone' => ['nullable', 'string', 'max:32', 'regex:/^[0-9+()\-\s]{5,32}$/'],
+            'city' => ['nullable', 'string', 'max:120'],
             'birth_year' => ['nullable', 'integer'],
             'signup_source' => ['nullable', 'string', Rule::in(AttributionService::SIGNUP_SOURCES)],
+        ], [
+            'phone.regex' => 'Телефон: только цифры, пробелы, «+», скобки и дефис.',
+            'phone.max' => 'Телефон слишком длинный.',
+            'first_name.max' => 'Имя слишком длинное.',
+            'last_name.max' => 'Фамилия слишком длинная.',
+            'city.max' => 'Название города слишком длинное.',
         ]);
 
         $email = User::normalizeEmail($validated['email']);
@@ -56,11 +72,14 @@ final class GuestRegisterController extends Controller
         ]);
 
         $local = explode('@', (string) $email)[0] ?: 'Студент';
+        $fullName = trim(($validated['first_name'] ?? '').' '.($validated['last_name'] ?? ''));
 
         $user = User::create([
             'email' => $email,
-            'name' => $local,
+            'name' => $fullName !== '' ? $fullName : $local,
             'password' => Hash::make($validated['password']),
+            'phone' => filled($validated['phone'] ?? null) ? trim($validated['phone']) : null,
+            'city' => filled($validated['city'] ?? null) ? trim($validated['city']) : null,
         ]);
 
         $attribution = app(AttributionService::class);
