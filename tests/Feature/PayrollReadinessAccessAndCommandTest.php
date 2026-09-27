@@ -64,7 +64,9 @@ final class PayrollReadinessAccessAndCommandTest extends TestCase
             '--on' => $cutoff->toIso8601String(),
             '--export' => $this->exportPath,
             '--expect-fingerprint' => $fingerprint,
-        ])->assertSuccessful();
+        ])->expectsOutputToContain('Disposition')
+            ->expectsOutputToContain('never')
+            ->assertSuccessful();
 
         $export = json_decode(File::get($this->exportPath), true, 512, JSON_THROW_ON_ERROR);
         $this->assertSame($fingerprint, $export['fingerprint']);

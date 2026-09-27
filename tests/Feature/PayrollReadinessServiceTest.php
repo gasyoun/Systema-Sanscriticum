@@ -67,6 +67,7 @@ final class PayrollReadinessServiceTest extends TestCase
         $row = collect($report['teachers'])->firstWhere('teacher_id', $teacher->id);
 
         $this->assertSame('2026-07-23', $row['last_actual_transfer']['date']);
+        $this->assertSame(70, $row['last_actual_transfer']['days_since']);
         $this->assertSame(12345.67, $row['last_actual_transfer']['amount_rub']);
         $this->assertTrue($row['last_actual_transfer']['is_historical_backfill']);
         $this->assertArrayNotHasKey('created_at', $row['last_actual_transfer']);

@@ -57,7 +57,7 @@
                             <td class="p-2 tabular-nums">{{ $money($row['payable_rub']) }}@if($row['payable_eur'] !== null)<br>{{ $money($row['payable_eur'], '€') }}@endif</td>
                             <td class="p-2 text-xs">
                                 @if($row['last_actual_transfer'])
-                                    {{ $row['last_actual_transfer']['date'] }} · {{ $money($row['last_actual_transfer']['amount_rub']) }}
+                                    {{ $row['last_actual_transfer']['date'] }} · {{ $row['last_actual_transfer']['days_since'] }} дн. назад · {{ $money($row['last_actual_transfer']['amount_rub']) }}
                                     @if($row['last_actual_transfer']['amount_foreign'] !== null) · {{ $money($row['last_actual_transfer']['amount_foreign'], $row['last_actual_transfer']['currency']) }}@endif
                                     <br>{{ $row['last_actual_transfer']['channel'] }} · курс #{{ $row['last_actual_transfer']['course_id'] ?? '—' }} · блок {{ $row['last_actual_transfer']['block_number'] ?? '—' }} · ставка {{ $row['last_actual_transfer']['rate'] ?? '—' }}
                                     <br>авансы {{ json_encode($row['last_actual_transfer']['advances'], JSON_UNESCAPED_UNICODE) }} · зачёты {{ json_encode($row['last_actual_transfer']['offsets'], JSON_UNESCAPED_UNICODE) }}

@@ -2,6 +2,8 @@ _Created: 27-09-2026 · Last updated: 27-09-2026_
 
 # Готовность выплат преподавателям — 1 октября 2026
 
+Повторяемый операционный процесс: [Teacher payroll operator playbook](TEACHER_PAYROLL_OPERATOR_PLAYBOOK.md).
+
 Страница `/admin/teacher-payroll-readiness` и команда `payroll:readiness` используют один сервис и один отпечаток. Они только читают данные: не создают `payments`, `teacher_payouts` или строки выплат. Перевод выполняет человек, подтверждение остаётся в существующем процессе кабинета.
 
 ## Приватные доказательства
