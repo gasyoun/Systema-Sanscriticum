@@ -22,7 +22,6 @@ final class TelegramBusinessStoryPublisher
 {
     private const STORY_BYTES_MAX = 30_000_000;
     private const STORY_SECONDS_MAX = 60;
-    private const STORY_PARTS_MAX = 10;
 
     public function publishFromChannelPost(array $post): void
     {
@@ -39,7 +38,7 @@ final class TelegramBusinessStoryPublisher
             ['source_chat_id' => $chatId, 'source_message_id' => $messageId],
             ['telegram_file_unique_id' => (string) ($video['file_unique_id'] ?? ''), 'status' => 'received'],
         );
-        if (! $ledger->wasRecentlyCreated && ! in_array($ledger->status, ['failed', 'partial'], true)) {
+        if (! $ledger->wasRecentlyCreated) {
             return;
         }
 
@@ -69,7 +68,9 @@ final class TelegramBusinessStoryPublisher
             ]);
             Log::warning('Telegram Business Story publish failed', ['publication_id' => $ledger->id, 'error' => $e->getMessage()]);
         } finally {
-            if ($tmp !== null) @unlink($tmp);
+            if ($tmp !== null) {
+                @unlink($tmp);
+            }
         }
     }
 
@@ -77,17 +78,15 @@ final class TelegramBusinessStoryPublisher
     private function publishParts(TelegramBusinessStoryPublication $ledger, string $source): void
     {
         $duration = $this->sourceDuration($source);
-        $parts = (int) ceil($duration / self::STORY_SECONDS_MAX);
-        if ($parts < 1 || $parts > self::STORY_PARTS_MAX) {
-            throw new RuntimeException("Story video requires {$parts} parts; supported range is 1–".self::STORY_PARTS_MAX.'.');
-        }
+        $segments = TelegramStorySegments::plan($duration);
+        $parts = count($segments);
         $ids = $ledger->story_ids ?? ($ledger->story_id ? [$ledger->story_id] : []);
         $ledger->update(['part_count' => $parts, 'story_ids' => $ids]);
         $connection = $this->storyConnection();
 
         for ($part = count($ids); $part < $parts; $part++) {
-            $offset = $part * self::STORY_SECONDS_MAX;
-            $length = min(self::STORY_SECONDS_MAX, $duration - $offset);
+            $offset = $segments[$part]['offset'];
+            $length = $segments[$part]['duration'];
             $video = $this->normalise($source, $offset, $length);
             try {
                 $id = $this->postStory($connection->business_connection_id, $video, $length, $part + 1, $parts);
