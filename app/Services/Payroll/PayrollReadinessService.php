@@ -15,6 +15,7 @@ use App\Models\TeacherPayout;
 use App\Models\User;
 use App\Services\Payments\TochkaBalanceService;
 use App\Services\PayoutRunService;
+use App\Services\TeacherSalaryService;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
@@ -40,6 +41,7 @@ final class PayrollReadinessService
         $cutoff ??= Carbon::parse((string) config('payroll_readiness.target_date'))->startOfDay();
         $before = $this->moneyFingerprint();
         $evidence = $this->evidence($cutoff);
+        $lineExceptions = $this->paidWithoutAccess();
         $globalHolds = collect($evidence)
             ->filter(fn (array $source): bool => ($source['status'] ?? 'incomplete') !== 'fresh')
             ->keys()
@@ -49,7 +51,7 @@ final class PayrollReadinessService
 
         $rows = [];
         foreach (Teacher::query()->orderBy('id')->get() as $teacher) {
-            $rows[] = $this->teacherRow($teacher, $cutoff, $globalHolds);
+            $rows[] = $this->teacherRow($teacher, $cutoff, $globalHolds, $lineExceptions);
         }
 
         $expected = (int) config('payroll_readiness.expected_teacher_count', 23);
@@ -66,6 +68,7 @@ final class PayrollReadinessService
             'census_exceptions' => $censusExceptions,
             'source_fingerprints' => $sourceFingerprints,
             'evidence' => $evidence,
+            'line_exceptions' => $lineExceptions,
             'teachers' => $rows,
         ];
         $fingerprint = hash('sha256', $this->canonicalJson($stable));
@@ -81,9 +84,10 @@ final class PayrollReadinessService
     }
 
     /** @return array<string, mixed> */
-    private function teacherRow(Teacher $teacher, Carbon $cutoff, array $globalHolds): array
+    private function teacherRow(Teacher $teacher, Carbon $cutoff, array $globalHolds, array $lineExceptions): array
     {
         $hasCourses = $teacher->allTaughtCourses()->isNotEmpty();
+        $courses = $teacher->allTaughtCourses();
         $calculation = $hasCourses
             ? $this->payouts->runForTeacher($teacher, $cutoff)
             : [
@@ -113,6 +117,12 @@ final class PayrollReadinessService
         }
         foreach ((array) ($calculation['warnings'] ?? []) as $warning) {
             $holds[] = 'warning:'.trim((string) $warning);
+        }
+        $courseIds = $courses->pluck('id')->map(fn ($id): int => (int) $id)->all();
+        foreach ($lineExceptions as $exception) {
+            if (in_array((int) $exception['course_id'], $courseIds, true)) {
+                $holds[] = 'paid_without_access:payment_'.(int) $exception['payment_id'];
+            }
         }
         $holds = array_values(array_unique($holds));
 
@@ -321,6 +331,45 @@ final class PayrollReadinessService
             'rates_sha256' => hash_file('sha256', config_path('teacher_rates.php')),
             'manifest_sha256' => $evidence['private_manifest']['sha256'] ?? null,
         ];
+    }
+
+    /** @return list<array<string, int|float|string|null>> */
+    private function paidWithoutAccess(): array
+    {
+        $excluded = array_values(array_unique(array_merge(
+            ['deposit', 'trial'],
+            TeacherSalaryService::NON_REVENUE_TARIFFS,
+        )));
+
+        return Payment::query()
+            ->paid()
+            ->real()
+            ->whereNotNull('user_id')
+            ->whereNotNull('course_id')
+            ->whereNotIn('tariff', $excluded)
+            ->whereExists(function ($query): void {
+                $query->selectRaw('1')
+                    ->from('course_group')
+                    ->whereColumn('course_group.course_id', 'payments.course_id');
+            })
+            ->whereNotExists(function ($query): void {
+                $query->selectRaw('1')
+                    ->from('group_user')
+                    ->join('course_group', 'course_group.group_id', '=', 'group_user.group_id')
+                    ->whereColumn('group_user.user_id', 'payments.user_id')
+                    ->whereColumn('course_group.course_id', 'payments.course_id');
+            })
+            ->orderBy('id')
+            ->get(['id', 'user_id', 'course_id', 'tariff', 'amount'])
+            ->map(fn (Payment $payment): array => [
+                'type' => 'paid_without_access',
+                'payment_id' => (int) $payment->id,
+                'user_id' => (int) $payment->user_id,
+                'course_id' => (int) $payment->course_id,
+                'tariff' => (string) $payment->tariff,
+                'amount_rub' => Money::round((float) $payment->amount),
+            ])
+            ->all();
     }
 
     /** @return array<string, int|string|null> */

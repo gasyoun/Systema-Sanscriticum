@@ -8,6 +8,7 @@ use App\Models\BankStatementImport;
 use App\Models\Course;
 use App\Models\CourseBlock;
 use App\Models\FinanceSnapshot;
+use App\Models\Group;
 use App\Models\MoneyReconRun;
 use App\Models\Payment;
 use App\Models\Teacher;
@@ -123,6 +124,37 @@ final class PayrollReadinessServiceTest extends TestCase
         $this->assertSame([$older->id, $later->id], $payable->pluck('teacher_id')->all());
         $this->assertSame(['funded', 'unfunded'], $payable->pluck('funding_state')->all());
         $this->assertSame(2760.0, $payable[1]['remaining_obligation']);
+    }
+
+    public function test_paid_without_access_holds_only_the_affected_teacher_line(): void
+    {
+        $affected = Teacher::factory()->create(['name' => 'Трефилова Елена']);
+        $clean = Teacher::factory()->create(['name' => 'Толчельников Иван']);
+        Teacher::factory()->count(21)->create();
+        $this->seedPayable($affected, '2026-09-01');
+        $this->seedPayable($clean, '2026-09-01');
+        $affectedCourse = Course::query()->where('teacher_id', $affected->id)->firstOrFail();
+        $group = Group::query()->create(['name' => 'Access integrity fixture']);
+        $affectedCourse->groups()->attach($group->id);
+        $this->seedFreshEvidence();
+        Http::fake(['*' => Http::response([
+            'Data' => ['Balance' => [[
+                'accountId' => '40702810000000123456/RUB',
+                'type' => 'ClosingAvailable',
+                'Amount' => ['amount' => 10000, 'currency' => 'RUB'],
+                'dateTime' => '2026-10-01T08:00:00+03:00',
+            ]]],
+        ])]);
+        Cache::forget('tochka.open_banking.balances');
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $affectedRow = collect($report['teachers'])->firstWhere('teacher_id', $affected->id);
+        $cleanRow = collect($report['teachers'])->firstWhere('teacher_id', $clean->id);
+
+        $this->assertSame('held', $affectedRow['disposition']);
+        $this->assertStringStartsWith('paid_without_access:payment_', $affectedRow['holds'][0]);
+        $this->assertSame('payable', $cleanRow['disposition']);
+        $this->assertCount(1, $report['line_exceptions']);
     }
 
     private function seedPayable(Teacher $teacher, string $completedOn): void
