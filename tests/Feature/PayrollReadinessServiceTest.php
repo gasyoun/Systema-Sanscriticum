@@ -99,6 +99,27 @@ final class PayrollReadinessServiceTest extends TestCase
         $this->assertArrayNotHasKey('amount', $report['evidence']['private_manifest']);
     }
 
+    public function test_replayed_or_future_private_evidence_fails_closed(): void
+    {
+        Teacher::factory()->count(23)->create();
+        $path = storage_path('framework/testing/payroll-replayed-evidence.json');
+        config()->set('payroll_readiness.evidence_manifest_path', $path);
+        $hash = hash('sha256', 'replayed');
+        File::put($path, json_encode([
+            'sources' => [
+                'payout_sheets' => ['as_of' => '2026-10-02', 'sha256' => $hash],
+                'bank_credit' => ['as_of' => '2026-10-01', 'sha256' => $hash],
+                'paypal_xoom' => ['as_of' => 'not-a-date', 'sha256' => hash('sha256', 'paypal')],
+            ],
+        ], JSON_THROW_ON_ERROR));
+        $this->beforeApplicationDestroyed(fn () => File::delete($path));
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+
+        $this->assertSame('incomplete', $report['evidence']['private_manifest']['status']);
+        $this->assertStringContainsString('replayed', $report['evidence']['private_manifest']['note']);
+    }
+
     public function test_funding_shortfall_uses_due_date_then_teacher_id_and_shows_remaining_obligation(): void
     {
         $later = Teacher::factory()->create(['name' => 'Трефилова Елена']);

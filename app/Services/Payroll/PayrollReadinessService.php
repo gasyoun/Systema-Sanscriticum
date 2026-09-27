@@ -267,12 +267,25 @@ final class PayrollReadinessService
         }
         $required = ['payout_sheets', 'bank_credit', 'paypal_xoom'];
         $sources = (array) ($data['sources'] ?? []);
-        $complete = collect($required)->every(function (string $key) use ($sources, $cutoff): bool {
-            $source = (array) ($sources[$key] ?? []);
+        $hashes = [];
+        try {
+            $complete = collect($required)->every(function (string $key) use ($sources, $cutoff, &$hashes): bool {
+                $source = (array) ($sources[$key] ?? []);
+                $hash = strtolower((string) ($source['sha256'] ?? ''));
+                if (! preg_match('/^[a-f0-9]{64}$/', $hash) || in_array($hash, $hashes, true)) {
+                    return false;
+                }
+                $hashes[] = $hash;
+                $asOf = Carbon::parse((string) ($source['as_of'] ?? ''));
 
-            return isset($source['sha256'], $source['as_of'])
-                && Carbon::parse((string) $source['as_of'])->gte($cutoff->copy()->subDays((int) config('payroll_readiness.evidence_max_age_days', 7)));
-        });
+                return $asOf->betweenIncluded(
+                    $cutoff->copy()->subDays((int) config('payroll_readiness.evidence_max_age_days', 7)),
+                    $cutoff,
+                );
+            });
+        } catch (\Throwable) {
+            $complete = false;
+        }
 
         return [
             'status' => $complete ? 'fresh' : 'incomplete',
@@ -280,7 +293,7 @@ final class PayrollReadinessService
             'sha256' => hash('sha256', $raw),
             'generated_at' => $data['generated_at'] ?? null,
             'sources' => $sources,
-            'note' => $complete ? null : 'required source hash/date is missing or stale',
+            'note' => $complete ? null : 'required source hash/date is missing, stale, future-dated, invalid, or replayed',
         ];
     }
 
