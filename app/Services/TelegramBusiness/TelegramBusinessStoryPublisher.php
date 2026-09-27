@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services\TelegramBusiness;
 
+use App\Jobs\PublishTelegramBusinessStory;
 use App\Models\TelegramBusinessConnection;
 use App\Models\TelegramBusinessStoryPublication;
 use App\Services\Telegram\MadelineClientFactory;
 use App\Services\Telegram\MadelineSessionContext;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -39,7 +41,7 @@ final class TelegramBusinessStoryPublisher
             ['source_chat_id' => $chatId, 'source_message_id' => $messageId],
             ['telegram_file_unique_id' => (string) ($video['file_unique_id'] ?? ''), 'status' => 'received'],
         );
-        if (! $ledger->wasRecentlyCreated) {
+        if (in_array($ledger->status, ['published', 'duplicate', 'uncertain'], true)) {
             return;
         }
 
@@ -61,13 +63,21 @@ final class TelegramBusinessStoryPublisher
             }
 
             $ledger->update(['media_sha256' => $hash]);
-            $this->publishParts($ledger, $tmp);
+            $hasMoreParts = $this->publishParts($ledger, $tmp, 1);
+            if ($hasMoreParts) {
+                PublishTelegramBusinessStory::dispatch($post)->delay(now()->addSeconds(5));
+            }
         } catch (Throwable $e) {
             $ledger->update([
-                'status' => count($ledger->story_ids ?? []) > 0 || $ledger->story_id ? 'partial' : 'failed',
+                'status' => $e instanceof StoryUploadOutcomeUnknown
+                    ? 'uncertain'
+                    : (count($ledger->story_ids ?? []) > 0 || $ledger->story_id ? 'partial' : 'failed'),
                 'error' => mb_substr($e->getMessage(), 0, 2000),
             ]);
             Log::warning('Telegram Business Story publish failed', ['publication_id' => $ledger->id, 'error' => $e->getMessage()]);
+            if (! $e instanceof StoryUploadOutcomeUnknown) {
+                throw $e;
+            }
         } finally {
             if ($tmp !== null) {
                 @unlink($tmp);
@@ -75,17 +85,19 @@ final class TelegramBusinessStoryPublisher
         }
     }
 
-    /** Keep each successful upload before attempting the next; a retry skips completed parts. */
-    private function publishParts(TelegramBusinessStoryPublication $ledger, string $source): void
+    /** Keep each successful upload before attempting the next; queued runs yield after one part. */
+    private function publishParts(TelegramBusinessStoryPublication $ledger, string $source, int $maxParts = PHP_INT_MAX): bool
     {
         $duration = $this->sourceDuration($source);
         $segments = TelegramStorySegments::plan($duration);
         $parts = count($segments);
+        $truncated = TelegramStorySegments::isTruncated($duration);
         $ids = $ledger->story_ids ?? ($ledger->story_id ? [$ledger->story_id] : []);
         $ledger->update(['part_count' => $parts, 'story_ids' => $ids]);
         $connection = $this->storyConnection();
 
-        for ($part = count($ids); $part < $parts; $part++) {
+        $stopAfter = min($parts, count($ids) + $maxParts);
+        for ($part = count($ids); $part < $stopAfter; $part++) {
             $offset = $segments[$part]['offset'];
             $length = $segments[$part]['duration'];
             $video = $this->normalise($source, $offset, $length);
@@ -96,12 +108,23 @@ final class TelegramBusinessStoryPublisher
                     'story_ids' => $ids,
                     'story_id' => $ids[0],
                     'status' => count($ids) === $parts ? 'published' : 'partial',
-                    'error' => null,
+                    'error' => count($ids) === $parts && $truncated
+                        ? 'Source video exceeded 600 seconds; only the first 10 Story parts were published.'
+                        : null,
                 ]);
             } finally {
                 @unlink($video);
             }
         }
+        if ($truncated && count($ids) === $parts) {
+            Log::warning('Telegram Business Story source truncated to 10 parts', [
+                'publication_id' => $ledger->id,
+                'source_duration_seconds' => $duration,
+                'published_story_ids' => $ids,
+            ]);
+        }
+
+        return count($ids) < $parts;
     }
 
     private function sourceDuration(string $source): float
@@ -219,7 +242,8 @@ final class TelegramBusinessStoryPublisher
         $result = Process::timeout(180)->run([
             (string) config('services.telegram_business.story_ffmpeg_binary', 'ffmpeg'), '-y',
             '-ss', (string) $offset, '-i', $input, '-t', (string) min(self::STORY_SECONDS_MAX, round($length, 3)),
-            '-vf', 'scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280',
+            '-filter_complex',
+            '[0:v]split=2[background][foreground];[background]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,boxblur=20:1[blurred];[foreground]scale=720:1280:force_original_aspect_ratio=decrease[fit];[blurred][fit]overlay=(W-w)/2:(H-h)/2',
             '-c:v', 'libx265', '-tag:v', 'hvc1', '-x265-params', 'keyint=30:min-keyint=30',
             '-c:a', 'aac', '-movflags', '+faststart', $output,
         ]);
@@ -248,15 +272,22 @@ final class TelegramBusinessStoryPublisher
         if ($parts > 1) {
             $caption = trim($caption.' ('.$part.'/'.$parts.')');
         }
-        $response = Http::timeout(120)->attach('video', fopen($video, 'r'), 'story.mp4')->post(
-            'https://api.telegram.org/bot'.$this->token().'/postStory',
-            [
-                'business_connection_id' => $connectionId,
-                'content' => json_encode(['type' => 'video', 'video' => 'attach://video', 'duration' => min(60, $duration)]),
-                'active_period' => (int) config('services.telegram_business.story_active_period', 86400),
-                'caption' => $caption,
-            ],
-        );
+        try {
+            $response = Http::timeout(120)->attach('video', fopen($video, 'r'), 'story.mp4')->post(
+                'https://api.telegram.org/bot'.$this->token().'/postStory',
+                [
+                    'business_connection_id' => $connectionId,
+                    'content' => json_encode(['type' => 'video', 'video' => 'attach://video', 'duration' => min(60, $duration)]),
+                    'active_period' => (int) config('services.telegram_business.story_active_period', 86400),
+                    'caption' => $caption,
+                ],
+            );
+        } catch (ConnectionException $e) {
+            throw new StoryUploadOutcomeUnknown('Telegram postStory transport outcome is unknown; review account Stories before retry.', previous: $e);
+        }
+        if ($response->serverError() || ($response->successful() && ! is_numeric($response->json('result.id')))) {
+            throw new StoryUploadOutcomeUnknown('Telegram postStory response did not confirm an outcome; review account Stories before retry.');
+        }
         if (! $response->successful() || ! is_numeric($response->json('result.id'))) {
             throw new RuntimeException('Telegram postStory failed: '.mb_substr($response->body(), 0, 500));
         }

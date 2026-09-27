@@ -20,10 +20,7 @@ final class TelegramStorySegments
         if ($duration <= 0) {
             throw new RuntimeException('Story source video is shorter than one millisecond.');
         }
-        $count = (int) ceil($duration / 60);
-        if ($count > 10) {
-            throw new RuntimeException("Story video requires {$count} parts; at most 10 are supported.");
-        }
+        $count = min(10, (int) ceil($duration / 60));
 
         $segments = [];
         for ($index = 0; $index < $count; $index++) {
@@ -32,5 +29,10 @@ final class TelegramStorySegments
         }
 
         return $segments;
+    }
+
+    public static function isTruncated(float $duration): bool
+    {
+        return round($duration, 3) > 600;
     }
 }
