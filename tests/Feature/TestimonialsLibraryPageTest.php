@@ -11,7 +11,8 @@ use Tests\TestCase;
 /**
  * /otzyvy: все видимые отзывы; колонки с анимацией собирает скрипт в браузере,
  * а сервер отдаёт сетку-источник — её видят поисковики, читалки и браузер без JS.
- * Две темы (тёмная — как на входе, светлая) с переключателем.
+ * Оформление «как у Glasp»: градиент, белые карточки, текст целиком, без тем,
+ * без звёзд и без раскрытия длинных отзывов.
  */
 class TestimonialsLibraryPageTest extends TestCase
 {
@@ -26,21 +27,23 @@ class TestimonialsLibraryPageTest extends TestCase
         ], $extra));
     }
 
-    public function test_page_renders_source_grid_with_all_visible_testimonials_and_theme_switch(): void
+    public function test_page_renders_source_grid_with_all_visible_testimonials_in_glasp_style(): void
     {
-        $this->make('Анна Первая', ['reviewed_at' => '2026-09-13', 'city' => 'Казань']);
+        $this->make('Анна Первая', ['reviewed_at' => '2026-09-13', 'city' => 'Казань', 'rating' => 5]);
         $this->make('Борис Второй');
         $this->make('Скрытый Автор', ['is_visible' => false]);
 
         $this->get('/otzyvy')
             ->assertOk()
-            ->assertSee('data-otz-source', false)
+            ->assertSee('data-glx-source', false)
+            ->assertSee('<h1 class="sr-only">Отзывы учеников</h1>', false)
             ->assertSee('Анна Первая')
             ->assertSee('Казань · 13 сентября 2026')
             ->assertSee('Борис Второй')
             ->assertDontSee('Скрытый Автор')
-            ->assertSee('data-theme-set="dark"', false)
-            ->assertSee('data-theme-set="light"', false);
+            // Как у Glasp: без переключателя тем и без звёзд оценки.
+            ->assertDontSee('data-theme-set', false)
+            ->assertDontSee('fa-star', false);
     }
 
     public function test_featured_first_then_newest_review_date(): void
@@ -55,12 +58,14 @@ class TestimonialsLibraryPageTest extends TestCase
         ]);
     }
 
-    public function test_long_review_is_expandable_card(): void
+    public function test_long_review_is_shown_in_full_without_expand_control(): void
     {
-        $this->make('Длинный Автор', ['body' => str_repeat('Очень длинный отзыв. ', 30)]);
+        $body = str_repeat('Очень длинный отзыв. ', 30).'Последняя фраза отзыва.';
+        $this->make('Длинный Автор', ['body' => $body]);
 
         $this->get('/otzyvy')
-            ->assertSee('aria-expanded="false"', false)
-            ->assertSee('Читать полностью');
+            ->assertSee('Последняя фраза отзыва.')
+            ->assertDontSee('Читать полностью')
+            ->assertDontSee('aria-expanded', false);
     }
 }
