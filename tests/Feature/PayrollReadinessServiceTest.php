@@ -73,6 +73,114 @@ final class PayrollReadinessServiceTest extends TestCase
         $this->assertArrayNotHasKey('created_at', $row['last_actual_transfer']);
     }
 
+    public function test_zero_value_backfill_is_not_reported_as_an_actual_transfer(): void
+    {
+        $teacher = Teacher::factory()->create();
+        Teacher::factory()->count(22)->create();
+        TeacherPayout::query()->create([
+            'teacher_id' => $teacher->id,
+            'amount' => 12000,
+            'type' => TeacherPayout::TYPE_REGULAR,
+            'paid_at' => '2026-06-01',
+        ]);
+        TeacherPayout::query()->create([
+            'teacher_id' => $teacher->id,
+            'amount' => 0,
+            'type' => TeacherPayout::TYPE_REGULAR,
+            'paid_at' => '2026-08-01',
+        ]);
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $row = collect($report['teachers'])->firstWhere('teacher_id', $teacher->id);
+
+        $this->assertSame('2026-06-01', $row['last_actual_transfer']['date']);
+        $this->assertSame(12000.0, $row['last_actual_transfer']['amount_rub']);
+    }
+
+    public function test_uncovered_history_is_excluded_from_the_current_window_amount(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Трефилова Елена']);
+        Teacher::factory()->count(22)->create();
+        $this->seedPayable($teacher, '2026-09-02');
+        $oldCourse = Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'salary_type' => 'percent',
+            'salary_value' => 30,
+        ]);
+        CourseBlock::query()->create([
+            'course_id' => $oldCourse->id,
+            'number' => 1,
+            'is_active' => true,
+            'starts_at' => '2026-06-01',
+            'ends_at' => '2026-07-01',
+        ]);
+        Payment::withoutEvents(fn () => Payment::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => $oldCourse->id,
+            'status' => 'paid',
+            'tariff' => 'block_1',
+            'amount' => 50000,
+            'start_block' => 1,
+            'end_block' => 1,
+            'is_conditional' => false,
+            'received_account' => Payment::RECEIVED_SCHOOL,
+        ]));
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $row = collect($report['teachers'])->firstWhere('teacher_id', $teacher->id);
+
+        $this->assertSame('held', $row['disposition']);
+        $this->assertSame('partial_current_window', $row['amount_state']);
+        $this->assertSame('current_window_only_excludes_unreconciled_prior', $row['amount_basis']);
+        $this->assertSame(2760.0, $row['payable_rub']);
+        $this->assertSame(50000.0, $row['excluded_prior_rub']);
+        $this->assertSame(16560.0, $row['legacy_candidate_rub']);
+        $this->assertContains('reconciliation:uncovered_pre_cutoff_revenue', $row['holds']);
+    }
+
+    public function test_fixed_seasonal_teacher_has_zero_when_no_block_completed_in_window(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Щербак Сергей Викторович']);
+        Teacher::factory()->count(22)->create();
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'salary_type' => 'percent',
+            'salary_value' => 30,
+        ]);
+        CourseBlock::query()->create([
+            'course_id' => $course->id,
+            'number' => 1,
+            'is_active' => true,
+            'starts_at' => '2026-05-01',
+            'ends_at' => '2026-06-24',
+        ]);
+        Payment::withoutEvents(fn () => Payment::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => $course->id,
+            'status' => 'paid',
+            'tariff' => 'block_1',
+            'amount' => 80000,
+            'start_block' => 1,
+            'end_block' => 1,
+            'is_conditional' => false,
+            'received_account' => Payment::RECEIVED_SCHOOL,
+        ]));
+        TeacherPayout::query()->create([
+            'teacher_id' => $teacher->id,
+            'amount' => 24000,
+            'type' => TeacherPayout::TYPE_REGULAR,
+            'paid_at' => '2026-06-24',
+        ]);
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-09-28'));
+        $row = collect($report['teachers'])->firstWhere('teacher_id', $teacher->id);
+
+        $this->assertSame('zero', $row['disposition']);
+        $this->assertSame(0.0, $row['payable_rub']);
+        $this->assertSame('no_completed_block_in_current_window', $row['amount_basis']);
+        $this->assertContains('seasonal:no_completed_block_in_current_window', $row['holds']);
+    }
+
     public function test_repeated_cabinet_export_query_has_same_fingerprint_and_is_read_only(): void
     {
         Teacher::factory()->count(23)->create();
