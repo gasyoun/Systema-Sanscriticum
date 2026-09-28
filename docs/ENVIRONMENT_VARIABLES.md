@@ -544,6 +544,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PARTNER_PROGRAM_ENABLED` | feature-flag | `false` | config/partner.php:24 |
 | `PARTNER_REWARD_AMOUNT` | optional | `1000` | config/partner.php:29 |
 | `PASSWORD_AUDIT_LOG_CHANNEL` | secret | `'stack'` | config/services.php:692 |
+| `PAYMENT_BLOCK_HALF_SPLIT` | optional | `false` | config/features.php:1830 |
 | `PAYMENT_FIX_WAVE1` | optional | `false` | config/features.php:1749 |
 | `PAYMENT_RECOVERY_CTA` | optional | `false` | config/features.php:1223 |
 | `PAYPAL_API_BASE_URL` | required | `—` | config/services.php:657 |
