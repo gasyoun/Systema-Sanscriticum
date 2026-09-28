@@ -278,4 +278,39 @@ class PublicScheduleKocherginaTest extends TestCase
         $this->assertStringContainsString('Хочу в вечернюю группу.', (string) $request->comment);
         $this->assertSame(CourseInterestRequest::STATUS_NEW, $request->status);
     }
+
+    /**
+     * H5533 (GTD 0JW): CTA-копия карточек единая — «Отправить заявку» для
+     * обоих интентов; мёртвого ветвления по joinIntent в шаблоне нет
+     * (интент несёт ?intent= в URL + префилл формы, тест 2).
+     */
+    public function test_cards_render_single_generic_cta_for_both_intents(): void
+    {
+        $this->kocherginaCourse(
+            title: 'Грамматика по Кочергиной 53',
+            slug: 'koch53',
+            groupSuffix: '53',
+            lessonTitles: ['1-е занятие: Кочергина 3 (читка)'],
+        );
+        $this->kocherginaCourse(
+            title: 'Грамматика по Кочергиной 55',
+            slug: 'koch55',
+            groupSuffix: '55',
+        );
+
+        $user = User::factory()->create();
+        $sourceGroup = Group::query()->where('name', 'Кочергина гр. 53')->firstOrFail();
+        $user->groups()->attach($sourceGroup->id);
+
+        // Студент 53-й: карточка 55-й с intent=transfer, своей 53-й — с
+        // intent=join; обе с единой CTA-копией, без по-интентных вариантов.
+        $this->actingAs($user)
+            ->get('/raspisanie/kochergina')
+            ->assertOk()
+            ->assertSee('/interest/koch55?intent=transfer', false)
+            ->assertSee('/interest/koch53?intent=join', false)
+            ->assertSee('Отправить заявку', false)
+            ->assertDontSee('Перевестись в эту группу', false)
+            ->assertDontSee('Встать в заявку', false);
+    }
 }
