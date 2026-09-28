@@ -47,6 +47,13 @@ class PublicSchedulePageController extends Controller
      */
     private const RECENT_ACTIVITY_DAYS = 14;
 
+    /**
+     * MG 21-09: канва-факстура пробы (CABINET_PROBE_KANVA_COURSE_ID, курс
+     * #453 на проде) — это тестовая поверхность cabinet:probe, не живая
+     * группа; на публичной /raspisanie/kochergina ей нечего делать.
+     */
+    private const EXCLUDED_COURSE_IDS = [];
+
     public function __invoke(): View
     {
         $courses = collect();
@@ -109,15 +116,23 @@ class PublicSchedulePageController extends Controller
     /**
      * Строки карточек: по одной на живую группу курса семейства Кочергиной.
      *
-     * @return Collection<int, array{course: Course, groupName: string, canvasCursor: int, canvasTotal: int, teachers: list<array{name: string, url: string}>, interestUrl: string, joinIntent: string}>
+     * @return Collection<int, array{course: Course, groupName: string, canvasCursor: int, canvasTotal: int, canvasAsOf: ?Carbon, teachers: list<array{name: string, url: string}>, interestUrl: string, joinIntent: string}>
      */
     private function kocherginaRows(): Collection
     {
+        // MG 21-09: факстура cabinet:probe не публичная группа.
+        $fixtureCourseId = (int) config('cabinet_probe.kanva_fixture_course_id', 0);
+        $excluded = array_values(array_filter(array_merge(
+            self::EXCLUDED_COURSE_IDS,
+            [$fixtureCourseId],
+        )));
+
         $courses = Course::query()
             ->where('is_active', true)
             ->where('is_visible', true)
             ->whereHas('groups')
             ->where('title', 'like', '%Кочерг%')
+            ->when($excluded !== [], fn ($q) => $q->whereNotIn('id', $excluded))
             ->with(['groups:id,name', 'teacher:id,name'])
             ->orderBy('title')
             ->get()
@@ -177,6 +192,9 @@ class PublicSchedulePageController extends Controller
                     'groupName' => (string) $group->name,
                     'canvasCursor' => $cursor,
                     'canvasTotal' => $total,
+                    // Дата актуальности канвы — день последней записи урока
+                    // (MG 21-09: «надо написать, на какое число актуально»).
+                    'canvasAsOf' => $lastLessonDate,
                     'teachers' => $teachers,
                     'interestUrl' => $interestUrl,
                     'joinIntent' => $intent,
