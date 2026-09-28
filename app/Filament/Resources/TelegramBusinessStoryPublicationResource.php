@@ -9,6 +9,7 @@ use App\Jobs\PublishTelegramBusinessStory;
 use App\Models\TelegramBusinessStoryPublication;
 use App\Support\RoleGate;
 use App\Support\Roles;
+use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -95,6 +96,18 @@ final class TelegramBusinessStoryPublicationResource extends Resource
                         'failed', 'uncertain' => 'danger',
                         default => 'warning',
                     }),
+                Tables\Columns\TextColumn::make('subtitle_status')->label('Субтитры')->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'pending' => 'Готовятся',
+                        'ready' => 'Проверить',
+                        'approved' => 'Одобрены',
+                        'rejected' => 'Отклонены',
+                        'unavailable' => 'Нет речи',
+                        default => '—',
+                    })
+                    ->color(fn (?string $state): string => $state === 'ready' ? 'warning' : 'gray'),
+                Tables\Columns\TextColumn::make('subtitle_deadline_at')->label('Срок проверки')
+                    ->dateTime('d-m-Y H:i'),
                 Tables\Columns\TextColumn::make('part_count')->label('Частей'),
                 Tables\Columns\TextColumn::make('metrics.final_part_reach.value')->label('Просмотры финала')
                     ->placeholder('Нет данных'),
@@ -108,6 +121,38 @@ final class TelegramBusinessStoryPublicationResource extends Resource
                 Tables\Columns\TextColumn::make('updated_at')->label('Обновлено')->dateTime('d-m-Y H:i')->sortable(),
             ])
             ->actions([
+                Tables\Actions\Action::make('approveSubtitles')
+                    ->label('Проверить субтитры')
+                    ->color('success')
+                    ->visible(fn (TelegramBusinessStoryPublication $record): bool => $record->status === 'subtitle_pending' && $record->subtitle_status === 'ready')
+                    ->form([
+                        Textarea::make('draft')->label('Черновик SRT')
+                            ->default(fn (TelegramBusinessStoryPublication $record): ?string => $record->subtitle_draft)
+                            ->disabled()->rows(20),
+                    ])
+                    ->modalSubmitActionLabel('Одобрить и опубликовать')
+                    ->action(function (TelegramBusinessStoryPublication $record): void {
+                        $updated = TelegramBusinessStoryPublication::query()->whereKey($record->id)
+                            ->where('status', 'subtitle_pending')->where('subtitle_status', 'ready')
+                            ->update(['subtitle_status' => 'approved', 'subtitle_reviewed_at' => now(),
+                                'status' => 'subtitle_release', 'error' => null]);
+                        if ($updated === 1 && is_array($record->source_post)) {
+                            PublishTelegramBusinessStory::dispatch($record->source_post);
+                        }
+                    }),
+                Tables\Actions\Action::make('rejectSubtitles')
+                    ->label('Без субтитров')
+                    ->color('gray')->requiresConfirmation()
+                    ->visible(fn (TelegramBusinessStoryPublication $record): bool => $record->status === 'subtitle_pending' && $record->subtitle_status === 'ready')
+                    ->action(function (TelegramBusinessStoryPublication $record): void {
+                        $updated = TelegramBusinessStoryPublication::query()->whereKey($record->id)
+                            ->where('status', 'subtitle_pending')->where('subtitle_status', 'ready')
+                            ->update(['subtitle_status' => 'rejected', 'subtitle_reviewed_at' => now(),
+                                'status' => 'subtitle_release', 'error' => 'Subtitle draft rejected; publishing original video.']);
+                        if ($updated === 1 && is_array($record->source_post)) {
+                            PublishTelegramBusinessStory::dispatch($record->source_post);
+                        }
+                    }),
                 Tables\Actions\Action::make('approveNearMatch')
                     ->label('Опубликовать похожее')
                     ->color('success')->requiresConfirmation()
@@ -137,6 +182,8 @@ final class TelegramBusinessStoryPublicationResource extends Resource
                     'published' => 'Опубликовано',
                     'duplicate' => 'Дубликат',
                     'review' => 'Похожее видео — проверить',
+                    'subtitle_pending' => 'Черновик субтитров',
+                    'subtitle_release' => 'Готовится публикация',
                     'failed' => 'Ошибка',
                     'uncertain' => 'Исход неизвестен — проверить вручную',
                 ]),
@@ -155,6 +202,8 @@ final class TelegramBusinessStoryPublicationResource extends Resource
             ->where(function (Builder $query): void {
                 $query->whereIn('status', ['failed', 'uncertain'])
                     ->orWhere('status', 'review')
+                    ->orWhere(fn (Builder $draft): Builder => $draft->where('status', 'subtitle_pending')
+                        ->where('subtitle_status', 'ready'))
                     ->orWhere(fn (Builder $partial): Builder => $partial->where('status', 'partial')
                         ->where('updated_at', '<', now()->subMinutes(15)))
                     ->orWhere(fn (Builder $warning): Builder => $warning->where('status', 'published')
