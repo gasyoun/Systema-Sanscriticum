@@ -9,6 +9,7 @@ copied to it. Safe to run repeatedly: the server lists only pending drafts.
 from __future__ import annotations
 
 import argparse
+import http.client
 import ipaddress
 import json
 import os
@@ -17,9 +18,7 @@ import subprocess
 import sys
 import tempfile
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
 from pathlib import Path
 
 def load_local_config() -> None:
@@ -78,10 +77,20 @@ def request_json(url: str, key: str, payload: dict | None = None) -> dict:
     headers = {"Authorization": f"Bearer {key}"}
     if data is not None:
         headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(url, data=data, headers=headers,
-                                 method="POST" if data is not None else "GET")
-    with urllib.request.urlopen(req, timeout=30) as response:
-        return json.load(response)
+    target = urllib.parse.urlparse(url)
+    if target.scheme not in ("http", "https") or not target.hostname:
+        raise ValueError("Invalid Whisper HTTP endpoint")
+    connection_type = http.client.HTTPSConnection if target.scheme == "https" else http.client.HTTPConnection
+    connection = connection_type(target.hostname, target.port, timeout=30)
+    try:
+        path = target.path + ("?" + target.query if target.query else "")
+        connection.request("POST" if data is not None else "GET", path, body=data, headers=headers)
+        response = connection.getresponse()
+        if response.status != 200:
+            raise RuntimeError("Whisper HTTP request failed")
+        return json.loads(response.read(5_000_000))
+    finally:
+        connection.close()
 
 
 def srt_time(seconds: float) -> str:
@@ -138,7 +147,7 @@ def ivan_transcribe(source_url: str) -> str | None:
                 raise RuntimeError("Ivan Whisper job failed")
             time.sleep(20)
         raise RuntimeError("Ivan Whisper timed out")
-    except (OSError, KeyError, ValueError, RuntimeError, urllib.error.URLError) as exc:
+    except (OSError, KeyError, ValueError, RuntimeError) as exc:
         # Never print the signed media URL, API key, or remote response body.
         print(f"Ivan Whisper unavailable ({type(exc).__name__}); using Air fallback", file=sys.stderr)
         return None
