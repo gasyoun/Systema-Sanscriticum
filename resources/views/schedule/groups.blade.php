@@ -54,13 +54,12 @@
                         @endif
                     </p>
                     <div class="sch-cta">
+                        {{-- H5533: CTA-копия единая («Отправить заявку», как во вводном
+                             абзаце страницы); интент несёт ?intent= в interestUrl +
+                             префилл формы — ветвление по joinIntent здесь мёртвое. --}}
                         <a href="{{ $row['interestUrl'] }}"
                            class="kg-cta">
-                            @if($row['joinIntent'] === 'transfer')
-                                Перевестись в эту группу
-                            @else
-                                Встать в заявку
-                            @endif
+                            Отправить заявку
                             <i class="fas fa-arrow-right text-[10px]"></i>
                         </a>
                     </div>
