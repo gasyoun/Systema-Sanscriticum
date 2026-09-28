@@ -10,6 +10,8 @@ use App\Models\FinanceSnapshot;
 use App\Models\MoneyReconException;
 use App\Models\MoneyReconRun;
 use App\Models\Payment;
+use App\Models\PaypalPaymentEvidenceLink;
+use App\Models\PaypalReceiptEvidence;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
 use App\Models\User;
@@ -93,8 +95,12 @@ final class PayrollReadinessService
     {
         $hasCourses = $teacher->allTaughtCourses()->isNotEmpty();
         $courses = $teacher->allTaughtCourses();
+        $bankTransfer = $this->transferEvidence->lastForTeacher($teacher, $cutoff);
+        $bankCutoff = $bankTransfer !== null && filled($bankTransfer['date'] ?? null)
+            ? Carbon::parse((string) $bankTransfer['date'])->startOfDay()
+            : null;
         $calculation = $hasCourses
-            ? $this->payouts->runForTeacher($teacher, $cutoff)
+            ? $this->payouts->runForTeacher($teacher, $cutoff, $bankCutoff)
             : [
                 'teacher_id' => (int) $teacher->id,
                 'name' => (string) $teacher->name,
@@ -108,18 +114,19 @@ final class PayrollReadinessService
             ];
         $last = $this->lastActualTransfer($teacher, $cutoff, $calculation);
         $holds = $globalHolds;
-        $compensationHolds = $courses
-            ->filter(function ($course): bool {
-                $type = (string) ($course->salary_type ?? '');
-                $value = $course->salary_value;
-
-                return $type === ''
-                    || $value === null
-                    || ($type === 'percent' && ((float) $value <= 0 || (float) $value > 100));
-            })
-            ->map(fn ($course): string => 'compensation_policy_invalid:course_'.(int) $course->id)
-            ->values()
-            ->all();
+        // The versioned rate timeline is the current payout authority. Course
+        // salary fields are legacy routing metadata: zero may deliberately
+        // mean a non-compensable product, and stale values must not override a
+        // documented recipient rate. Fail closed only when the active rate
+        // period itself is absent or arithmetically invalid.
+        $period = (array) ($calculation['rate_period'] ?? []);
+        $periodInvalid = $hasCourses && ! isset($calculation['error']) && (
+            $period === []
+            || (isset($period['value_pct']) && ((float) $period['value_pct'] <= 0 || (float) $period['value_pct'] > 100))
+            || (isset($period['bank_slice_pct']) && ((float) $period['bank_slice_pct'] <= 0 || (float) $period['bank_slice_pct'] > 100))
+            || (! isset($period['value_pct']) && ! isset($period['value_rub']))
+        );
+        $compensationHolds = $periodInvalid ? ['compensation_policy_invalid:active_rate_period'] : [];
         $holds = array_merge($holds, $compensationHolds);
         $compensationInvalid = $compensationHolds !== [];
         $bankUnallocated = ($last['source'] ?? null) === 'tochka_statement'
@@ -524,6 +531,9 @@ final class PayrollReadinessService
 
     private function hasPaypalNotificationEvidence(Payment $payment): bool
     {
+        if (PaypalPaymentEvidenceLink::query()->where('payment_id', $payment->id)->exists()) {
+            return true;
+        }
         if ($payment->provider !== Payment::PROVIDER_PAYPAL) {
             return false;
         }
@@ -692,6 +702,8 @@ final class PayrollReadinessService
             'users_count' => User::query()->count(),
             'bank_imports_count' => BankStatementImport::query()->count(),
             'bank_credits_count' => BankStatementCredit::query()->count(),
+            'paypal_receipts_count' => PaypalReceiptEvidence::query()->count(),
+            'paypal_receipt_links_count' => PaypalPaymentEvidenceLink::query()->count(),
             'snapshots_count' => FinanceSnapshot::query()->count(),
         ];
     }

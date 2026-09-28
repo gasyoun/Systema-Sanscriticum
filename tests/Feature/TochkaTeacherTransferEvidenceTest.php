@@ -97,7 +97,9 @@ final class TochkaTeacherTransferEvidenceTest extends TestCase
 
     public function test_bank_fact_wins_over_stale_lms_and_remains_unallocated(): void
     {
-        $teacher = Teacher::factory()->create();
+        $teacher = Teacher::factory()->create(['name' => 'Толчельников Иван Евгеньевич']);
+        Teacher::factory()->count(22)->create();
+        Course::factory()->create(['teacher_id' => $teacher->id, 'salary_type' => 'percent', 'salary_value' => 30]);
         $this->identity($teacher, 'inn', '352525483087');
         TeacherPayout::query()->create(['teacher_id' => $teacher->id, 'type' => 'regular', 'amount' => 4553, 'paid_at' => '2026-07-28']);
         app(TochkaTeacherTransferImporter::class)->importPayload($this->payload(), true);
@@ -108,6 +110,11 @@ final class TochkaTeacherTransferEvidenceTest extends TestCase
         $this->assertSame(18520.0, $actual['amount_rub']);
         $this->assertSame('unallocated', $actual['allocation_state']);
         $this->assertSame('124', $actual['document_no']);
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-09-28'));
+        $row = collect($report['teachers'])->firstWhere('teacher_id', $teacher->id);
+        $this->assertSame('2026-08-27', $row['calculation']['window']['since']);
+        $this->assertContains('reconciliation:bank_transfer_unallocated', $row['holds']);
     }
 
     public function test_evidence_rows_are_append_only(): void
@@ -117,7 +124,7 @@ final class TochkaTeacherTransferEvidenceTest extends TestCase
         DB::table('tochka_outgoing_transfers')->update(['amount_kopecks' => 1]);
     }
 
-    public function test_gasuns_is_visible_and_held_when_compensation_policy_is_invalid(): void
+    public function test_gasuns_uses_the_documented_100_percent_rate_with_one_92_percent_bank_slice(): void
     {
         $gasuns = Teacher::factory()->create(['name' => 'Гасунс Марцис Юрьевич']);
         Teacher::factory()->count(22)->create();
@@ -126,13 +133,34 @@ final class TochkaTeacherTransferEvidenceTest extends TestCase
             'salary_type' => 'percent',
             'salary_value' => 1000,
         ]);
+        TeacherPayout::query()->create(['teacher_id' => $gasuns->id, 'type' => 'regular', 'amount' => 1, 'paid_at' => '2026-08-01']);
 
         $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-09-28'));
         $row = collect($report['teachers'])->firstWhere('teacher_id', $gasuns->id);
 
         $this->assertNotNull($row);
-        $this->assertSame('held', $row['disposition']);
-        $this->assertContains('compensation_policy_invalid:course_'.Course::query()->where('teacher_id', $gasuns->id)->value('id'), $row['holds']);
+        $this->assertSame(100.0, $row['rate_period']['value_pct']);
+        $this->assertSame(92.0, $row['rate_period']['bank_slice_pct']);
+        $this->assertNotContains('compensation_policy_invalid:active_rate_period', $row['holds']);
+    }
+
+    public function test_registering_an_identity_backfills_already_imported_transfers(): void
+    {
+        $teacher = Teacher::factory()->create(['name' => 'Толчельников Иван Евгеньевич']);
+        app(TochkaTeacherTransferImporter::class)->importPayload($this->payload(), true);
+        $this->assertSame(0, TeacherTransferMatch::query()->count());
+
+        $this->artisan('money:register-teacher-payout-identity', [
+            'teacher' => $teacher->id,
+            'type' => 'inn',
+            'value' => '352525483087',
+            '--apply' => true,
+        ])->expectsOutputToContain('historical transfers matched: 1')->assertSuccessful();
+
+        $this->assertDatabaseHas('teacher_transfer_matches', [
+            'teacher_id' => $teacher->id,
+            'transfer_id' => TochkaOutgoingTransfer::query()->value('id'),
+        ]);
     }
 
     private function identity(Teacher $teacher, string $type, string $value): void
