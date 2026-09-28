@@ -99,7 +99,10 @@ final class PayrollReadinessServiceTest extends TestCase
 
     public function test_uncovered_history_is_excluded_from_the_current_window_amount(): void
     {
-        $teacher = Teacher::factory()->create(['name' => 'Трефилова Елена']);
+        $teacher = Teacher::factory()->create([
+            'name' => 'Трефилова Елена',
+            'payout_currency' => 'RUB',
+        ]);
         Teacher::factory()->count(22)->create();
         $this->seedPayable($teacher, '2026-09-02');
         $oldCourse = Course::factory()->create([
@@ -125,6 +128,24 @@ final class PayrollReadinessServiceTest extends TestCase
             'is_conditional' => false,
             'received_account' => Payment::RECEIVED_SCHOOL,
         ]));
+        $currentCourse = Course::query()->where('teacher_id', $teacher->id)
+            ->where('id', '!=', $oldCourse->id)
+            ->firstOrFail();
+        Payment::withoutEvents(fn () => Payment::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => $currentCourse->id,
+            'status' => 'paid',
+            'tariff' => 'block_1',
+            'amount' => 1000,
+            'start_block' => 1,
+            'end_block' => 1,
+            'is_conditional' => false,
+            'received_account' => Payment::RECEIVED_TEACHER,
+            'received_by_teacher_id' => $teacher->id,
+            'foreign_amount' => 1000,
+            'foreign_currency' => 'RUB',
+            'created_at' => '2026-09-15 10:00:00',
+        ]));
 
         $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
         $row = collect($report['teachers'])->firstWhere('teacher_id', $teacher->id);
@@ -132,9 +153,11 @@ final class PayrollReadinessServiceTest extends TestCase
         $this->assertSame('held', $row['disposition']);
         $this->assertSame('partial_current_window', $row['amount_state']);
         $this->assertSame('current_window_only_excludes_unreconciled_prior', $row['amount_basis']);
-        $this->assertSame(2760.0, $row['payable_rub']);
+        // School: 10,000 × 92% × 30% = 2,760.
+        // Direct: 1,000 × 30% − 1,000 already held = −700.
+        $this->assertSame(2060.0, $row['payable_rub']);
         $this->assertSame(50000.0, $row['excluded_prior_rub']);
-        $this->assertSame(16560.0, $row['legacy_candidate_rub']);
+        $this->assertSame(15560.0, $row['legacy_candidate_rub']);
         $this->assertContains('reconciliation:uncovered_pre_cutoff_revenue', $row['holds']);
     }
 

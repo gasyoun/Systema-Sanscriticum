@@ -224,10 +224,8 @@ final class PayrollReadinessService
 
         $slice = (float) ($period['bank_slice_pct'] ?? 100.0) / 100.0;
         $rate = (float) $period['value_pct'] / 100.0;
-        $payableRub = (float) ($calculation['base_rub'] ?? 0) * $slice * $rate;
-        $payableRub -= (float) ($calculation['advances_total_rub'] ?? 0);
         $direct = (array) ($calculation['direct_receipts'] ?? []);
-        $payableRub -= (float) ($direct['rub_offset'] ?? 0);
+        $directRubOffset = (float) ($direct['rub_offset'] ?? 0);
         $foreignOffset = (float) ($direct['eur_offset'] ?? 0);
         $fx = (float) (($calculation['fx']['rate'] ?? 0));
         $holds = ['reconciliation:uncovered_pre_cutoff_revenue'];
@@ -245,7 +243,14 @@ final class PayrollReadinessService
                 'holds' => $holds,
             ];
         }
-        $payableRub -= $foreignOffset * $fx;
+        $directForeignRub = $foreignOffset * $fx;
+        $directRevenueRub = $directRubOffset + $directForeignRub;
+        $payableRub = (float) ($calculation['base_rub'] ?? 0) * $slice * $rate;
+        // Direct receipts earn the normal teacher percentage without the bank
+        // slice, then the cash already held by the teacher is offset once.
+        $payableRub += $directRevenueRub * $rate;
+        $payableRub -= $directRevenueRub;
+        $payableRub -= (float) ($calculation['advances_total_rub'] ?? 0);
         if ($payableRub < 0) {
             $holds[] = 'reconciliation:negative_current_window_payable';
             $payableRub = 0.0;
