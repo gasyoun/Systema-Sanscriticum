@@ -1793,6 +1793,13 @@ return [
     'money_bank_statement_credits' => (bool) env('MONEY_BANK_STATEMENT_CREDITS', false),
 
     /*
+     | Booked outgoing Tochka transfers as immutable payroll evidence.
+     | Evidence import never creates payments or teacher_payouts. OFF until
+     | identities and historical allocations have been reviewed by accounting.
+     */
+    'money_tochka_teacher_transfers' => (bool) env('MONEY_TOCHKA_TEACHER_TRANSFERS', false),
+
+    /*
      | Role-gated, read-only October payroll readiness census and private
      | export. It never creates payments or teacher_payouts. Missing or stale
      | evidence holds positive lines. Default OFF until acceptance evidence is

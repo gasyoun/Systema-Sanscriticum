@@ -186,7 +186,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `DB_PORT` | optional | `'3306'` | config/database.php:51<br>config/database.php:75<br>config/database.php:90 |
 | `DB_SOCKET` | optional | `''` | config/database.php:55 |
 | `DB_USERNAME` | optional | `'forge'` | config/database.php:53<br>config/database.php:77<br>config/database.php:92 |
-| `DEBT_STRICT_BLOCK_COVERAGE` | optional | `false` | config/features.php:1841 |
+| `DEBT_STRICT_BLOCK_COVERAGE` | optional | `false` | config/features.php:1848 |
 | `DESIGN_COVER_DISK` | optional | `'public'` | config/design_assets.php:97 |
 | `DESIGN_IMAGE_DISK` | optional | `'public'` | config/design_assets.php:34 |
 | `DESIGN_IMPORT_COPY_TOLERANCE` | optional | `0.0` | config/design_assets.php:99 |
@@ -492,6 +492,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `MONEY_SLI_WEBHOOK_PRIVATE_KEY` | secret | `''` | config/money_sli.php:23 |
 | `MONEY_SLI_WEBHOOK_SUCCESS_RATE_FLOOR` | optional | `0.5` | config/money_sli.php:77 |
 | `MONEY_SLI_WEBHOOK_URL` | required | `—` | config/money_sli.php:27 |
+| `MONEY_TOCHKA_TEACHER_TRANSFERS` | optional | `false` | config/features.php:1800 |
 | `MYSQL_ATTR_SSL_CA` | required | `—` | config/database.php:67 |
 | `N8N_API_BASE_URL` | optional | `'https://context-ai.ru'` | config/recording_gap.php:83 |
 | `N8N_API_KEY` | secret | `''` | config/recording_gap.php:86 |
@@ -545,7 +546,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `PARTNER_PROGRAM_ENABLED` | feature-flag | `false` | config/partner.php:24 |
 | `PARTNER_REWARD_AMOUNT` | optional | `1000` | config/partner.php:29 |
 | `PASSWORD_AUDIT_LOG_CHANNEL` | secret | `'stack'` | config/services.php:694 |
-| `PAYMENT_BLOCK_HALF_SPLIT` | optional | `false` | config/features.php:1830 |
+| `PAYMENT_BLOCK_HALF_SPLIT` | optional | `false` | config/features.php:1837 |
 | `PAYMENT_FIX_WAVE1` | optional | `false` | config/features.php:1749 |
 | `PAYMENT_RECOVERY_CTA` | optional | `false` | config/features.php:1223 |
 | `PAYPAL_API_BASE_URL` | required | `—` | config/services.php:659 |
@@ -734,7 +735,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `STUDENT_AGENT_ENABLED` | feature-flag | `false` | config/features.php:1600 |
 | `STUDENT_TELEGRAM_BOT_TOKEN` | secret | `—` | config/services.php:138 |
 | `STUDENT_TELEGRAM_BOT_USERNAME` | required | `—` | config/services.php:139 |
-| `STUDENT_TESTIMONIALS` | optional | `false` | config/features.php:1818 |
+| `STUDENT_TESTIMONIALS` | optional | `false` | config/features.php:1825 |
 | `SUBHASHITA_COHORT_ENABLED` | feature-flag | `false` | config/cohort_courses.php:40 |
 | `SUBHASHITA_COURSE_SLUG` | optional | `'subhashita'` | config/cohort_courses.php:39 |
 | `SUBHASHITA_SRS` | optional | `false` | config/features.php:512 |
@@ -820,13 +821,13 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SURVEYS_ENABLED` | feature-flag | `false` | config/surveys.php:12 |
 | `SURVEY_REWARD_PRANA_RUBLES` | optional | `500` | config/surveys.php:14 |
 | `SYSTEMA_SCHEDULE_MAX_SECONDS` | optional | `900` | config/schedule_guard.php:24 |
-| `TEACHER_DIRECT_RECEIPT_REVENUE_PARITY` | optional | `false` | config/features.php:1809 |
+| `TEACHER_DIRECT_RECEIPT_REVENUE_PARITY` | optional | `false` | config/features.php:1816 |
 | `TEACHER_PAYOUT_YEAR_VIEW` | optional | `false` | config/features.php:762 |
 | `TEACHER_PAYROLL_EVIDENCE_FROM` | optional | `'2026-08-01'` | config/payroll_readiness.php:10 |
 | `TEACHER_PAYROLL_EVIDENCE_MANIFEST` | optional | `storage_path('app/private/payroll/evidence-manifest.json'),` | config/payroll_readiness.php:22 |
 | `TEACHER_PAYROLL_EVIDENCE_MAX_AGE_DAYS` | optional | `7` | config/payroll_readiness.php:11 |
 | `TEACHER_PAYROLL_EXPECTED_COUNT` | optional | `23` | config/payroll_readiness.php:9 |
-| `TEACHER_PAYROLL_READINESS` | optional | `false` | config/features.php:1801 |
+| `TEACHER_PAYROLL_READINESS` | optional | `false` | config/features.php:1808 |
 | `TEACHER_PAYROLL_TARGET_DATE` | optional | `'2026-10-01'` | config/payroll_readiness.php:8 |
 | `TEACHER_PAY_ENABLED` | feature-flag | `false` | config/services.php:686 |
 | `TEACHER_WEEKLY_PAYOUT_CALENDAR` | optional | `false` | config/features.php:753 |
