@@ -6,7 +6,7 @@
     <string>com.samskrte.story-subtitles</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/opt/homebrew/bin/python3</string>
+        <string>/opt/homebrew/bin/python3.13</string>
         <string>/Users/mac/Documents/GitHub/Systema-Sanscriticum/scripts/story_subtitle_worker.py</string>
     </array>
     <key>StartInterval</key>
