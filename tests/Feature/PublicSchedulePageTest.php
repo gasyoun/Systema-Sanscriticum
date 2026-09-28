@@ -145,11 +145,13 @@ class PublicSchedulePageTest extends TestCase
             ->assertSee('href="#sch-1"', false)
             ->assertSee('href="#sch-2"', false)
             // Кто ведёт (и в сводке, и в заголовке единицы).
+            // MG 28-09-2026: показное имя «Имя Отчество Фамилия».
             ->assertSee('Ведут:', false)
-            ->assertSee('Ведущая Бета')
-            // День недели ближайшего занятия в свёрнутом заголовке.
-            ->assertSee('Понедельник')
-            ->assertSee('Суббота')
+            ->assertSee('Бета Ведущая')
+            // День недели ближайшего занятия в свёрнутом заголовке —
+            // аббревиатурой со временем (MG 28-09-2026).
+            ->assertSee('пн 18:00')
+            ->assertSee('сб 11:00')
             // H4649 (MG 13-09-2026): преподаватель кликабелен ВЕЗДЕ — «Ведут:», оглавление,
             // заголовок единицы (три ссылки на страницу преподавателя).
             ->assertSee('class="sch-toc-teacher"', false)
@@ -160,5 +162,58 @@ class PublicSchedulePageTest extends TestCase
             substr_count($response->getContent(), '/online/prepodavatel/'),
             'преподаватель должен быть ссылкой в сводке, оглавлении и заголовке единицы'
         );
+    }
+
+    /**
+     * MG 28-09-2026: единое оформление /raspisanie.
+     *
+     * - разовые «Открытые занятия и вебинары» (нерегулярный ритм, cadence
+     *   null) — всегда внизу списка, даже когда их ближайшее занятие раньше
+     *   по неделе, чем у регулярного курса;
+     * - показное название («Грамматика санскрита по Кочергиной №61»),
+     *   преподаватель «Имя Отчество Фамилия», день аббревиатурой со временем
+     *   и прогресс «сейчас N-е (нед. W)» — в оглавлении и в заголовке.
+     *
+     * @test
+     */
+    public function irregular_units_sink_to_bottom_with_uniform_labels(): void
+    {
+        config(['features.schedule_full_post' => true]);
+
+        $teacher = Teacher::create(['name' => 'Гасунс Марцис Юрьевич', 'email' => 'gasuns@example.test']);
+        $regular = Course::factory()->create([
+            'title' => 'Грамматика по Кочергиной гр.61', 'slug' => 'koch-61',
+            'is_active' => true, 'is_visible' => true, 'teacher_id' => $teacher->id,
+        ]);
+        $open = Course::factory()->create([
+            'title' => 'Открытые занятия и вебинары', 'slug' => 'open',
+            'is_active' => true, 'is_visible' => true,
+        ]);
+
+        $groupR = Group::factory()->create();
+        $regular->groups()->attach($groupR->id);
+        $groupO = Group::factory()->create();
+        $open->groups()->attach($groupO->id);
+
+        // Регулярный: 1 прошлое + пятница 2027-03-19 18:00 (11-я неделя года).
+        Schedule::create(['title' => 'R0', 'start' => Carbon::parse('2026-09-01 18:00'), 'group_id' => $groupR->id, 'course_id' => $regular->id]);
+        Schedule::create(['title' => 'R1', 'start' => Carbon::parse('2027-03-19 18:00'), 'group_id' => $groupR->id, 'course_id' => $regular->id]);
+
+        // Разовый: вт + ср + чт + вс — cadence null, ближайшее раньше пятницы.
+        foreach (['2027-03-09 16:00', '2027-03-10 16:00', '2027-03-11 16:00', '2027-03-14 16:00'] as $i => $when) {
+            Schedule::create(['title' => 'O'.$i, 'start' => Carbon::parse($when), 'group_id' => $groupO->id, 'course_id' => $open->id]);
+        }
+
+        $response = $this->get('/raspisanie');
+
+        $response
+            ->assertOk()
+            // Регулярный первый, разовый — в самом низу.
+            ->assertSeeInOrder(['id="sch-1"', 'Кочергиной №61', 'id="sch-2"', 'Открытые занятия'], false)
+            // Показное название, преподаватель, день, прогресс.
+            ->assertSee('Грамматика санскрита по Кочергиной №61')
+            ->assertSee('Марцис Юрьевич Гасунс')
+            ->assertSee('пт 18:00')
+            ->assertSee('сейчас 2-е (нед. 11)');
     }
 }
