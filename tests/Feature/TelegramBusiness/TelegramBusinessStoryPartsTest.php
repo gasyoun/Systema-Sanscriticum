@@ -9,6 +9,7 @@ use App\Models\TelegramBusinessConnection;
 use App\Models\TelegramBusinessStoryPublication;
 use App\Services\TelegramBusiness\StoryUploadOutcomeUnknown;
 use App\Services\TelegramBusiness\TelegramBusinessStoryPublisher;
+use App\Services\TelegramBusiness\TelegramStoryVideoFingerprint;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
@@ -115,6 +116,38 @@ final class TelegramBusinessStoryPartsTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_near_match_is_held_for_review_without_consuming_a_daily_slot(): void
+    {
+        $this->createPublisherTables();
+        $fingerprint = ['duration' => 10.0, 'frames' => array_fill(0, 3, 'aaaaaaaaaaaaaaaa')];
+        $published = TelegramBusinessStoryPublication::create([
+            'source_chat_id' => '-1001', 'source_message_id' => 620,
+            'status' => 'published', 'video_fingerprint' => $fingerprint,
+        ]);
+        $incoming = TelegramBusinessStoryPublication::create([
+            'source_chat_id' => '-1002', 'source_message_id' => 621,
+            'status' => 'received', 'started_at' => now(),
+        ]);
+        $post = [
+            'chat' => ['id' => -1002, 'username' => 'samskrtamru'],
+            'message_id' => 621,
+            'video' => ['file_id' => 'file-id', 'file_unique_id' => 'unique-id'],
+            'caption' => 'A public caption',
+        ];
+
+        $method = new ReflectionMethod(TelegramBusinessStoryPublisher::class, 'holdNearMatchForReview');
+        self::assertTrue($method->invoke(app(TelegramBusinessStoryPublisher::class), $incoming,
+            $fingerprint, str_repeat('a', 64), $post, app(TelegramStoryVideoFingerprint::class)));
+
+        $incoming->refresh();
+        self::assertSame('review', $incoming->status);
+        self::assertSame($published->id, $incoming->duplicate_of_id);
+        self::assertNull($incoming->started_at);
+        self::assertSame($post['video'], $incoming->source_post['video']);
+        self::assertSame('A public caption', $incoming->source_post['caption']);
+        self::assertEmpty($incoming->story_ids);
+    }
+
     public function test_known_failed_part_resumes_without_reposting_completed_part(): void
     {
         $encoders = Process::run(['ffmpeg', '-hide_banner', '-encoders']);
@@ -181,10 +214,15 @@ final class TelegramBusinessStoryPartsTest extends TestCase
             $table->string('source_chat_id');
             $table->unsignedBigInteger('source_message_id');
             $table->string('telegram_file_unique_id')->nullable();
+            $table->string('media_sha256')->nullable()->unique();
+            $table->unsignedBigInteger('duplicate_of_id')->nullable();
             $table->unsignedBigInteger('story_id')->nullable();
             $table->json('story_ids')->nullable();
             $table->unsignedSmallInteger('part_count')->nullable();
             $table->string('cta_url')->nullable();
+            $table->json('video_fingerprint')->nullable();
+            $table->json('source_post')->nullable();
+            $table->timestamp('near_match_approved_at')->nullable();
             $table->timestamp('started_at')->nullable();
             $table->timestamp('deferred_until')->nullable();
             $table->string('status');

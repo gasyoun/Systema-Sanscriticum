@@ -8,7 +8,7 @@ They do not alter the separate student-homework Story consent workflow.
 | --- | --- | --- |
 | Timing | Publish immediately, with a daily cap and queued overflow. | Provisional default: 5 source videos per Moscow day; configurable with `TELEGRAM_BUSINESS_STORY_DAILY_VIDEO_CAP`. |
 | Long videos | Do not stop publication at ten parts. Publishing a bounded excerpt is acceptable if truncation is recorded and alerted. | Never silently claim the entire source was published. |
-| Cross-channel duplicates | Suppress exact duplicates; near-matches go to review. | Existing SHA-256 check covers exact bytes only. |
+| Cross-channel duplicates | Suppress exact duplicates; near-matches go to review. | SHA-256 suppresses exact bytes. Three-frame perceptual hashes hold likely re-encodes for explicit approve/suppress in Auto Stories; ordinary videos need no review. |
 | Editorial-channel consent | Do not add a consent approval step to this automatic lane, including when people appear. | Separate student-homework workflow remains unchanged. |
 | Reframing | Use a blurred 9:16 canvas by default; face-aware crops require review. | Text that must be read should be made legible ahead of publication, not rescued by cropping. |
 | Captions/subtitles | Generate drafts away from production; publish as-is if unapproved after one week. | Requires a clear draft timestamp and an opt-out/hold path. |
@@ -22,8 +22,14 @@ They do not alter the separate student-homework Story consent workflow.
 1. Publisher safety: bound very long sources, record truncation, alert, and
    distinguish certain failures from ambiguous uploads.
 2. Safe retry and per-part receipts in the existing operations surface.
-3. Near-duplicate review and campaign-link selection UI, if caption links prove inadequate.
-4. Off-production subtitle pilot, with seven-day approval deadline; its worker and timing relative to immediate publication remain undecided.
+3. Near-duplicate review in Auto Stories; campaign-link selection UI only if caption links prove inadequate.
+4. Off-production subtitle pilot, with seven-day approval deadline. The operator must choose the worker host and whether Story publication waits for the draft; immediate publication and a seven-day approval gate cannot both govern the same Story.
+
+Near-match review compares the public source posts. It never silently suppresses a
+visual match: only exact SHA-256 duplicates are automatic. A reviewer may
+approve a likely match for the normal capped queue or suppress it. Review holds
+release the provisional daily slot. Flat or unreadable video frames do not
+produce a near-match verdict; the original source still publishes normally.
 
 Do not enable a new webhook or move this lane to another bot. The existing
 Telegram Business connection and source channels remain authoritative.
