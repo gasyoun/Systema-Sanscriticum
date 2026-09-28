@@ -187,8 +187,14 @@ final class PayrollReadinessService
         $priorRub = Money::round((float) ($calculation['prior_rub'] ?? 0));
         $period = (array) ($calculation['rate_period'] ?? []);
         $blocks = (array) ($calculation['blocks'] ?? []);
+        $currentCycleStart = Carbon::parse((string) config('payroll_readiness.evidence_from'))->startOfDay();
+        $currentCycleBlocks = collect($blocks)->filter(function (array $block) use ($currentCycleStart): bool {
+            $completedOn = $block['completed_on'] ?? null;
 
-        if (($period['kind'] ?? null) === 'fixed_monthly' && $blocks === []) {
+            return is_string($completedOn) && Carbon::parse($completedOn)->gte($currentCycleStart);
+        });
+
+        if (($period['kind'] ?? null) === 'fixed_monthly' && $currentCycleBlocks->isEmpty()) {
             return [
                 'payable_rub' => 0.0,
                 'payable_eur' => null,

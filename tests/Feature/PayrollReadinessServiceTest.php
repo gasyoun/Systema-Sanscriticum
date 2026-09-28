@@ -169,7 +169,7 @@ final class PayrollReadinessServiceTest extends TestCase
             'teacher_id' => $teacher->id,
             'amount' => 24000,
             'type' => TeacherPayout::TYPE_REGULAR,
-            'paid_at' => '2026-06-24',
+            'paid_at' => '2026-03-15',
         ]);
 
         $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-09-28'));
@@ -177,6 +177,7 @@ final class PayrollReadinessServiceTest extends TestCase
 
         $this->assertSame('zero', $row['disposition']);
         $this->assertSame(0.0, $row['payable_rub']);
+        $this->assertCount(1, $row['calculation']['blocks']);
         $this->assertSame('no_completed_block_in_current_window', $row['amount_basis']);
         $this->assertContains('seasonal:no_completed_block_in_current_window', $row['holds']);
     }
