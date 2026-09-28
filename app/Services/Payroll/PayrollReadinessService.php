@@ -34,6 +34,7 @@ final class PayrollReadinessService
     public function __construct(
         private readonly PayoutRunService $payouts,
         private readonly TochkaBalanceService $tochka,
+        private readonly TeacherTransferEvidenceService $transferEvidence,
     ) {}
 
     /** @return array<string, mixed> */
@@ -107,6 +108,25 @@ final class PayrollReadinessService
             ];
         $last = $this->lastActualTransfer($teacher, $cutoff, $calculation);
         $holds = $globalHolds;
+        $compensationHolds = $courses
+            ->filter(function ($course): bool {
+                $type = (string) ($course->salary_type ?? '');
+                $value = $course->salary_value;
+
+                return $type === ''
+                    || $value === null
+                    || ($type === 'percent' && ((float) $value <= 0 || (float) $value > 100));
+            })
+            ->map(fn ($course): string => 'compensation_policy_invalid:course_'.(int) $course->id)
+            ->values()
+            ->all();
+        $holds = array_merge($holds, $compensationHolds);
+        $compensationInvalid = $compensationHolds !== [];
+        $bankUnallocated = ($last['source'] ?? null) === 'tochka_statement'
+            && ($last['allocation_state'] ?? null) !== 'linked_to_payout';
+        if ($bankUnallocated) {
+            $holds[] = 'reconciliation:bank_transfer_unallocated';
+        }
         $amounts = $this->reportableAmounts($calculation);
         $payableRub = $amounts['payable_rub'];
         $payableEur = $amounts['payable_eur'];
@@ -147,8 +167,9 @@ final class PayrollReadinessService
         $holds = array_values(array_unique($holds));
 
         $disposition = match (true) {
+            $compensationInvalid => 'held',
             isset($calculation['error']) => 'outside_calculator',
-            ($positive || $unreconciledPositive) && $holds !== [] => 'held',
+            ($positive || $unreconciledPositive || $bankUnallocated || $compensationInvalid) && $holds !== [] => 'held',
             $positive => 'payable',
             ! $hasCourses => 'inactive',
             default => 'zero',
@@ -296,6 +317,7 @@ final class PayrollReadinessService
     /** @return array<string, mixed>|null */
     private function lastActualTransfer(Teacher $teacher, Carbon $cutoff, array $calculation): ?array
     {
+        $bank = $this->transferEvidence->lastForTeacher($teacher, $cutoff);
         /** @var TeacherPayout|null $payout */
         $payout = $teacher->payouts()
             ->where('type', TeacherPayout::TYPE_REGULAR)
@@ -308,11 +330,12 @@ final class PayrollReadinessService
             ->orderByDesc('id')
             ->first();
         if ($payout === null) {
-            return null;
+            return $bank;
         }
         $breakdown = (array) ($payout->breakdown ?? []);
 
-        return [
+        $lms = [
+            'source' => 'teacher_payouts',
             // paid_at is the actual transfer date. created_at may be a much
             // later H4597 backfill date and is deliberately never presented.
             'date' => $payout->paid_at?->toDateString(),
@@ -334,6 +357,12 @@ final class PayrollReadinessService
             'evidence_reference' => $breakdown['source_quote'] ?? $payout->comment,
             'is_historical_backfill' => str_starts_with((string) $payout->comment, BackfillHistoryService::COMMENT_MARKER),
         ];
+
+        if ($bank === null) {
+            return $lms;
+        }
+
+        return strcmp((string) $bank['date'], (string) $lms['date']) >= 0 ? $bank : $lms;
     }
 
     /** @return array<string, array<string, mixed>> */
