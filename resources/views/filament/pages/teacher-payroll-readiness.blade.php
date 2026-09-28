@@ -76,7 +76,7 @@
                                     <br>{{ $row['last_actual_transfer']['evidence_reference'] ?: 'нет ссылки на доказательство' }}
                                 @else—@endif
                             </td>
-                            <td class="p-2 text-xs">{{ $row['channel'] }}<br><x-filament::badge :color="$badge($row['funding_state'])">{{ $row['funding_state'] }}</x-filament::badge>@if(($row['remaining_obligation'] ?? null) === null)<br>остаток: НЕПОЛНЫЕ ДАННЫЕ@elseif($row['remaining_obligation'] > 0)<br>остаток {{ $money($row['remaining_obligation'], $row['channel'] === 'paypal_mg' ? '€' : '₽') }}@endif</td>
+                            <td class="p-2 text-xs">{{ $row['channel'] }}<br><x-filament::badge :color="$badge($row['funding_state'])">{{ $row['funding_state'] }}</x-filament::badge>@if(($row['remaining_obligation'] ?? null) === null)<br>остаток: НЕПОЛНЫЕ ДАННЫЕ@elseif($row['remaining_obligation'] > 0)<br>остаток {{ $money($row['remaining_obligation'], in_array($row['channel'], ['paypal_mg', 'xoom_mg'], true) ? '€' : '₽') }}@endif</td>
                             <td class="p-2 text-xs">
                                 <div class="break-all font-mono">{{ substr($row['fingerprint'], 0, 16) }}…</div>
                                 <div>база текущего окна {{ $money($row['base_rub']) }} · несверенная история {{ $money($row['prior_rub']) }} · авансы {{ $money($row['advances_total_rub']) }}</div>

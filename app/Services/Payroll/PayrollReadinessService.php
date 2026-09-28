@@ -42,8 +42,10 @@ final class PayrollReadinessService
         $before = $this->moneyFingerprint();
         $evidence = $this->evidence($cutoff);
         $lineExceptions = $this->paidWithoutAccess();
+        $receiptExceptions = $this->receiptEvidenceExceptions($cutoff, $evidence);
         $globalHolds = collect($evidence)
-            ->filter(fn (array $source): bool => ($source['status'] ?? 'incomplete') !== 'fresh')
+            ->filter(fn (array $source): bool => ($source['scope'] ?? 'global') === 'global'
+                && ($source['status'] ?? 'incomplete') !== 'fresh')
             ->keys()
             ->map(fn (string $source): string => 'evidence_'.$source.'_'.($evidence[$source]['status'] ?? 'incomplete'))
             ->values()
@@ -51,7 +53,7 @@ final class PayrollReadinessService
 
         $rows = [];
         foreach (Teacher::query()->orderBy('id')->get() as $teacher) {
-            $rows[] = $this->teacherRow($teacher, $cutoff, $globalHolds, $lineExceptions);
+            $rows[] = $this->teacherRow($teacher, $cutoff, $globalHolds, $lineExceptions, $receiptExceptions, $evidence);
         }
 
         $expected = (int) config('payroll_readiness.expected_teacher_count', 23);
@@ -69,6 +71,7 @@ final class PayrollReadinessService
             'source_fingerprints' => $sourceFingerprints,
             'evidence' => $evidence,
             'line_exceptions' => $lineExceptions,
+            'receipt_exceptions' => $receiptExceptions,
             'teachers' => $rows,
         ];
         $fingerprint = hash('sha256', $this->canonicalJson($stable));
@@ -84,7 +87,7 @@ final class PayrollReadinessService
     }
 
     /** @return array<string, mixed> */
-    private function teacherRow(Teacher $teacher, Carbon $cutoff, array $globalHolds, array $lineExceptions): array
+    private function teacherRow(Teacher $teacher, Carbon $cutoff, array $globalHolds, array $lineExceptions, array $receiptExceptions, array $evidence): array
     {
         $hasCourses = $teacher->allTaughtCourses()->isNotEmpty();
         $courses = $teacher->allTaughtCourses();
@@ -101,7 +104,7 @@ final class PayrollReadinessService
                 'warnings' => [],
                 'reconciliation_exceptions' => [],
             ];
-        $last = $this->lastActualTransfer($teacher, $cutoff);
+        $last = $this->lastActualTransfer($teacher, $cutoff, $calculation);
         $holds = $globalHolds;
         $amounts = $this->reportableAmounts($calculation);
         $payableRub = $amounts['payable_rub'];
@@ -128,6 +131,18 @@ final class PayrollReadinessService
                 $holds[] = 'paid_without_access:payment_'.(int) $exception['payment_id'];
             }
         }
+        $calculationPaymentIds = collect((array) ($calculation['blocks'] ?? []))
+            ->flatMap(fn (array $block) => (array) ($block['lines'] ?? []))
+            ->pluck('payment_id')->filter()->map(fn ($id): int => (int) $id)->unique()->all();
+        foreach ($receiptExceptions as $exception) {
+            if (in_array((int) $exception['payment_id'], $calculationPaymentIds, true)) {
+                $holds[] = 'receipt_evidence:'.(string) $exception['type'].'_payment_'.(int) $exception['payment_id'];
+            }
+        }
+        $channel = $this->channelFor($calculation);
+        if ($channel === 'xoom_mg' && ($evidence['xoom_edgar']['status'] ?? 'incomplete') !== 'fresh') {
+            $holds[] = 'evidence_xoom_edgar_'.($evidence['xoom_edgar']['status'] ?? 'incomplete');
+        }
         $holds = array_values(array_unique($holds));
 
         $disposition = match (true) {
@@ -145,7 +160,7 @@ final class PayrollReadinessService
             'name' => (string) $teacher->name,
             'disposition' => $disposition,
             'verification_state' => $disposition === 'payable' ? 'verified' : ($disposition === 'held' ? 'held' : 'not_released'),
-            'channel' => ($calculation['lane'] ?? null) === 'EUR' ? 'paypal_mg' : 'tochka_maria',
+            'channel' => $channel,
             'due_on' => (string) $dueOn,
             'payable_rub' => $payableRub,
             'payable_eur' => $payableEur,
@@ -278,7 +293,7 @@ final class PayrollReadinessService
     }
 
     /** @return array<string, mixed>|null */
-    private function lastActualTransfer(Teacher $teacher, Carbon $cutoff): ?array
+    private function lastActualTransfer(Teacher $teacher, Carbon $cutoff, array $calculation): ?array
     {
         /** @var TeacherPayout|null $payout */
         $payout = $teacher->payouts()
@@ -306,7 +321,7 @@ final class PayrollReadinessService
             'amount_rub' => Money::round((float) $payout->amount),
             'amount_foreign' => $payout->amount_foreign !== null ? Money::round((float) $payout->amount_foreign) : null,
             'currency' => $payout->payout_currency ?: 'RUB',
-            'channel' => strtoupper((string) $payout->payout_currency) === 'EUR' ? 'paypal_mg' : 'tochka_maria',
+            'channel' => $this->channelFor($calculation),
             'course_id' => $payout->course_id ?? ($breakdown['course_id'] ?? null),
             'block_number' => $breakdown['block_number'] ?? null,
             'rate' => $payout->salary_value !== null ? (float) $payout->salary_value : null,
@@ -324,9 +339,6 @@ final class PayrollReadinessService
     private function evidence(Carbon $cutoff): array
     {
         $manifest = $this->manifestEvidence($cutoff);
-        $paypal = FinanceSnapshot::latestOfType(FinanceSnapshot::TYPE_PAYPAL_BALANCE);
-        $freshAfter = $cutoff->copy()->subDays((int) config('payroll_readiness.evidence_max_age_days', 7))->startOfDay();
-        $paypalFresh = $paypal?->entered_at !== null && $paypal->entered_at->gte($freshAfter);
         $bankCoverage = BankStatementImport::query()
             ->whereDate('covers_from', '<=', (string) config('payroll_readiness.evidence_from'))
             ->whereDate('covers_to', '>=', $cutoff->toDateString())
@@ -349,23 +361,23 @@ final class PayrollReadinessService
             && $reconciliation?->status === MoneyReconRun::COMPLETE
             && $reconciliation->business_date?->toDateString() === $cutoff->toDateString();
 
+        $paypal = $this->paypalStudentEvidence($cutoff);
+
         return [
-            'private_manifest' => $manifest,
-            'bank_statement' => [
+            'private_manifest' => $manifest + ['scope' => 'global'],
+            'tochka_bank_credits' => [
                 'status' => $bankCoverage !== null && (bool) config('features.money_bank_statement_credits') ? 'fresh' : 'incomplete',
+                'scope' => 'payment_line',
                 'covered_from' => $bankCoverage?->covers_from?->toDateString(),
                 'covered_to' => $bankCoverage?->covers_to?->toDateString(),
                 'source_hash' => $bankCoverage?->file_sha256,
                 'note' => $bankCoverage === null ? 'fresh August-September bank credits not imported' : ((bool) config('features.money_bank_statement_credits') ? null : 'bank source flag is off'),
             ],
-            'paypal_xoom' => [
-                'status' => $paypalFresh && ($manifest['status'] ?? null) === 'fresh' ? 'fresh' : 'incomplete',
-                'as_of' => $paypal?->entered_at?->toIso8601String(),
-                'balance_eur' => $paypal?->majorAmount(),
-                'note' => $paypalFresh ? null : 'fresh PayPal/Xoom balance evidence is missing',
-            ],
+            'paypal_student_notifications' => $paypal + ['scope' => 'payment_line'],
+            'xoom_edgar' => $this->manifestSource($manifest, 'xoom_edgar', $cutoff) + ['scope' => 'teacher_line'],
             'reconciliation' => [
                 'status' => $reconciliationFresh ? 'fresh' : 'incomplete',
+                'scope' => 'global',
                 'business_date' => $reconciliation?->business_date?->toDateString(),
                 'input_fingerprint' => $reconciliation?->input_fingerprint,
                 'totals_checksum' => $reconciliation?->totals_checksum,
@@ -388,7 +400,7 @@ final class PayrollReadinessService
         } catch (JsonException) {
             return ['status' => 'incomplete', 'path' => $path, 'note' => 'private payout evidence manifest is invalid JSON'];
         }
-        $required = ['payout_sheets', 'bank_credit', 'paypal_xoom'];
+        $required = ['payout_sheets'];
         $sources = (array) ($data['sources'] ?? []);
         $hashes = [];
         try {
@@ -420,6 +432,133 @@ final class PayrollReadinessService
         ];
     }
 
+    /** @return array<string, mixed> */
+    private function manifestSource(array $manifest, string $key, Carbon $cutoff): array
+    {
+        $source = (array) (($manifest['sources'] ?? [])[$key] ?? []);
+        $hash = strtolower((string) ($source['sha256'] ?? ''));
+        try {
+            $asOf = Carbon::parse((string) ($source['as_of'] ?? ''));
+            $fresh = preg_match('/^[a-f0-9]{64}$/', $hash) === 1
+                && $asOf->betweenIncluded(
+                    $cutoff->copy()->subDays((int) config('payroll_readiness.evidence_max_age_days', 7)),
+                    $cutoff,
+                );
+        } catch (\Throwable) {
+            $fresh = false;
+        }
+
+        return [
+            'status' => $fresh ? 'fresh' : 'incomplete',
+            'as_of' => $source['as_of'] ?? null,
+            'sha256' => $source['sha256'] ?? null,
+            'note' => $fresh ? null : "private {$key} evidence is missing, stale, future-dated, or invalid",
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function paypalStudentEvidence(Carbon $cutoff): array
+    {
+        $rows = $this->probablePaypalPayments($cutoff);
+        $verified = $rows->filter(fn (Payment $payment): bool => $this->hasPaypalNotificationEvidence($payment));
+        $last = $rows->max(fn (Payment $payment) => ($payment->first_paid_at ?? $payment->created_at)?->toIso8601String());
+
+        return [
+            'status' => $rows->count() > 0 && $verified->count() === $rows->count() ? 'fresh' : 'incomplete',
+            'receipt_count' => $rows->count(),
+            'verified_count' => $verified->count(),
+            'unresolved_count' => $rows->count() - $verified->count(),
+            'by_month' => $rows->countBy(fn (Payment $payment): string => ($payment->first_paid_at ?? $payment->created_at)?->format('Y-m') ?? 'unknown')->sortKeys()->all(),
+            'as_of' => $last,
+            'note' => $rows->count() === 0
+                ? 'no August-September PayPal receipts found; absence is not treated as zero'
+                : ($verified->count() === $rows->count() ? null : ($rows->count() - $verified->count()).' receipt(s) lack a PayPal transaction notification/reference'),
+        ];
+    }
+
+    /** @return \Illuminate\Database\Eloquent\Collection<int, Payment> */
+    private function probablePaypalPayments(Carbon $cutoff)
+    {
+        return Payment::query()
+            ->paid()->real()
+            ->whereNotNull('foreign_amount')
+            ->whereNotNull('foreign_currency')
+            ->where(function ($query): void {
+                $query->whereNull('provider')->orWhere('provider', Payment::PROVIDER_PAYPAL);
+            })
+            ->whereRaw('COALESCE(first_paid_at, created_at) >= ?', [Carbon::parse((string) config('payroll_readiness.evidence_from'))->startOfDay()->toDateTimeString()])
+            ->whereRaw('COALESCE(first_paid_at, created_at) < ?', [$cutoff->copy()->startOfDay()->toDateTimeString()])
+            ->orderBy('id')
+            ->get();
+    }
+
+    private function hasPaypalNotificationEvidence(Payment $payment): bool
+    {
+        if ($payment->provider !== Payment::PROVIDER_PAYPAL) {
+            return false;
+        }
+        $meta = is_array($payment->claim_meta) ? $payment->claim_meta : [];
+
+        return filled($meta['paypal_payer'] ?? null)
+            && filled($meta['paid_on'] ?? null)
+            && filled($meta['txn'] ?? null);
+    }
+
+    /** @return list<array{type: string, payment_id: int, course_id: int|null}> */
+    private function receiptEvidenceExceptions(Carbon $cutoff, array $evidence): array
+    {
+        $out = $this->probablePaypalPayments($cutoff)
+            ->reject(fn (Payment $payment): bool => $this->hasPaypalNotificationEvidence($payment))
+            ->map(fn (Payment $payment): array => [
+                'type' => 'paypal_student_receipt_missing_notification',
+                'payment_id' => (int) $payment->id,
+                'course_id' => $payment->course_id !== null ? (int) $payment->course_id : null,
+            ])->values()->all();
+
+        if (($evidence['tochka_bank_credits']['status'] ?? 'incomplete') !== 'fresh') {
+            $special = [
+                Payment::PROVIDER_PAYPAL,
+                Payment::PROVIDER_PAYPAL_SUBSCRIPTION,
+                Payment::PROVIDER_INVOICE,
+                Payment::PROVIDER_BANK_SEPA,
+                Payment::PROVIDER_TEACHER_TRANSFER,
+            ];
+            $bank = Payment::query()->paid()->real()
+                ->whereNull('foreign_amount')->whereNull('foreign_currency')
+                ->where(function ($query) use ($special): void {
+                    $query->whereNull('provider')->orWhereNotIn('provider', $special);
+                })
+                ->where('received_account', '!=', Payment::RECEIVED_TEACHER)
+                ->whereRaw('COALESCE(first_paid_at, created_at) >= ?', [Carbon::parse((string) config('payroll_readiness.evidence_from'))->startOfDay()->toDateTimeString()])
+                ->whereRaw('COALESCE(first_paid_at, created_at) < ?', [$cutoff->copy()->startOfDay()->toDateTimeString()])
+                ->get(['id', 'course_id'])
+                ->map(fn (Payment $payment): array => [
+                    'type' => 'tochka_bank_credit_not_imported',
+                    'payment_id' => (int) $payment->id,
+                    'course_id' => $payment->course_id !== null ? (int) $payment->course_id : null,
+                ])->all();
+            $out = array_merge($out, $bank);
+        }
+
+        return $out;
+    }
+
+    /** @param array<string, mixed> $calculation */
+    private function channelFor(array $calculation): string
+    {
+        $slug = (string) ($calculation['slug'] ?? '');
+        $override = (array) config('payroll_readiness.channel_overrides', []);
+        if ($slug !== '' && isset($override[$slug])) {
+            return (string) $override[$slug];
+        }
+        $configured = $slug !== '' ? config("teacher_rates.recipients.{$slug}.channel") : null;
+        if (is_string($configured) && $configured !== '') {
+            return $configured;
+        }
+
+        return ($calculation['lane'] ?? null) === 'EUR' ? 'paypal_mg' : 'tochka_maria';
+    }
+
     /** @param list<array<string, mixed>> $rows @return list<array<string, mixed>> */
     private function applyFunding(array $rows): array
     {
@@ -427,12 +566,14 @@ final class PayrollReadinessService
         $paypal = FinanceSnapshot::latestOfType(FinanceSnapshot::TYPE_PAYPAL_BALANCE);
         $remaining = [
             'tochka_maria' => ($tochka['ok'] ?? false) ? (float) ($tochka['closing_total'] ?? 0) : null,
+            'tochka_ip_gasuns' => ($tochka['ok'] ?? false) ? (float) ($tochka['closing_total'] ?? 0) : null,
             'paypal_mg' => $paypal?->majorAmount(),
+            'xoom_mg' => null,
         ];
         usort($rows, fn (array $a, array $b): int => [$a['due_on'], $a['teacher_id']] <=> [$b['due_on'], $b['teacher_id']]);
         foreach ($rows as &$row) {
             $channel = (string) $row['channel'];
-            $need = $channel === 'paypal_mg' ? (float) ($row['payable_eur'] ?? 0) : (float) $row['payable_rub'];
+            $need = in_array($channel, ['paypal_mg', 'xoom_mg'], true) ? (float) ($row['payable_eur'] ?? 0) : (float) $row['payable_rub'];
             if ($row['disposition'] !== 'payable' || $need <= 0) {
                 $row['funding_state'] = 'not_applicable';
                 $row['remaining_obligation'] = $row['amount_state'] === 'incomplete'
