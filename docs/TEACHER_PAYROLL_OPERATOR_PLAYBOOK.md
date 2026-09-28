@@ -32,10 +32,22 @@ Run from the production application directory:
 php artisan payroll:readiness --on=now --export=auto
 ```
 
-The command prints all 23 teachers with disposition, due amount, channel, last
-actual transfer date, and days since that transfer. It also writes the dated
-private JSON package under `storage/app/private/payroll/`. Do not copy this
-personal payroll data into a public repository or chat.
+The command prints all 23 teachers with disposition, **current-window amount**,
+amount basis, channel, last actual transfer date and amount, and days since that
+transfer. It also writes the dated private JSON package under
+`storage/app/private/payroll/`. Do not copy this personal payroll data into a
+public repository or chat.
+
+Never read `legacy_candidate_rub` as money due. It is retained only to expose
+what the old all-time calculator would have said. When `amount_state` is
+`partial_current_window`, `excluded_prior_rub` is historical revenue whose
+payout coverage is not structured enough to prove whether it is paid. The row
+stays held until that history is backfilled; only the current-window estimate is
+shown in the main amount column.
+
+A fixed/seasonal teacher with no block completed inside the current window is
+zero for this run (`no_completed_block_in_current_window`). An open-ended rate
+record must never manufacture a monthly salary on its own.
 
 Read dispositions literally:
 
@@ -48,6 +60,11 @@ Read dispositions literally:
 Confirm that the census is exactly 23 and that every released row has zero
 holds. If funding is insufficient, use the printed order: oldest `due_on`, then
 teacher ID. Keep the remaining obligation visible.
+
+For every `held` row, compare `legacy_candidate_rub` with the current-window
+amount. A large difference is evidence of missing historical payout coverage,
+not evidence of arrears. Backfill the payout-to-block breakdown before releasing
+that line.
 
 ## 3. Recheck immediately before each transfer
 
