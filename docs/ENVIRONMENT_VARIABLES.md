@@ -822,7 +822,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `TEACHER_DIRECT_RECEIPT_REVENUE_PARITY` | optional | `false` | config/features.php:1809 |
 | `TEACHER_PAYOUT_YEAR_VIEW` | optional | `false` | config/features.php:762 |
 | `TEACHER_PAYROLL_EVIDENCE_FROM` | optional | `'2026-08-01'` | config/payroll_readiness.php:10 |
-| `TEACHER_PAYROLL_EVIDENCE_MANIFEST` | optional | `storage_path('app/private/payroll/evidence-manifest.json'),` | config/payroll_readiness.php:15 |
+| `TEACHER_PAYROLL_EVIDENCE_MANIFEST` | optional | `storage_path('app/private/payroll/evidence-manifest.json'),` | config/payroll_readiness.php:22 |
 | `TEACHER_PAYROLL_EVIDENCE_MAX_AGE_DAYS` | optional | `7` | config/payroll_readiness.php:11 |
 | `TEACHER_PAYROLL_EXPECTED_COUNT` | optional | `23` | config/payroll_readiness.php:9 |
 | `TEACHER_PAYROLL_READINESS` | optional | `false` | config/features.php:1801 |
