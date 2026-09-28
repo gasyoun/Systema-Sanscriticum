@@ -17,6 +17,7 @@ use App\Services\Payments\TochkaBalanceService;
 use App\Services\PayoutRunService;
 use App\Services\TeacherSalaryService;
 use App\Support\Money;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use JsonException;
@@ -476,7 +477,7 @@ final class PayrollReadinessService
         ];
     }
 
-    /** @return \Illuminate\Database\Eloquent\Collection<int, Payment> */
+    /** @return Collection<int, Payment> */
     private function probablePaypalPayments(Carbon $cutoff)
     {
         return Payment::query()
