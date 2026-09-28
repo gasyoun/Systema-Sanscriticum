@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TelegramBusinessStoryPublicationResource\Pages;
+use App\Jobs\PublishTelegramBusinessStory;
 use App\Models\TelegramBusinessStoryPublication;
 use App\Support\RoleGate;
 use App\Support\Roles;
@@ -73,11 +74,24 @@ final class TelegramBusinessStoryPublicationResource extends Resource
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('source_chat_id')->label('Источник')->searchable(),
                 Tables\Columns\TextColumn::make('source_message_id')->label('Пост')->sortable(),
+                Tables\Columns\TextColumn::make('source_url')->label('Исходное видео')
+                    ->state(fn (TelegramBusinessStoryPublication $record): ?string => self::sourceUrl($record))
+                    ->url(fn (TelegramBusinessStoryPublication $record): ?string => self::sourceUrl($record))
+                    ->openUrlInNewTab()->limit(35),
+                Tables\Columns\TextColumn::make('near_match_url')->label('Похожее видео')
+                    ->state(fn (TelegramBusinessStoryPublication $record): ?string => self::sourceUrl(
+                        TelegramBusinessStoryPublication::find($record->duplicate_of_id),
+                    ))
+                    ->url(fn (TelegramBusinessStoryPublication $record): ?string => self::sourceUrl(
+                        TelegramBusinessStoryPublication::find($record->duplicate_of_id),
+                    ))
+                    ->openUrlInNewTab()->limit(35),
                 Tables\Columns\TextColumn::make('cta_url')->label('Ссылка')->url(fn (TelegramBusinessStoryPublication $record): ?string => $record->cta_url)->limit(45),
                 Tables\Columns\TextColumn::make('status')->label('Статус')->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'published' => 'success',
                         'duplicate' => 'gray',
+                        'review' => 'warning',
                         'failed', 'uncertain' => 'danger',
                         default => 'warning',
                     }),
@@ -93,6 +107,28 @@ final class TelegramBusinessStoryPublicationResource extends Resource
                     ->limit(100)->tooltip(fn (TelegramBusinessStoryPublication $record): ?string => $record->error),
                 Tables\Columns\TextColumn::make('updated_at')->label('Обновлено')->dateTime('d-m-Y H:i')->sortable(),
             ])
+            ->actions([
+                Tables\Actions\Action::make('approveNearMatch')
+                    ->label('Опубликовать похожее')
+                    ->color('success')->requiresConfirmation()
+                    ->visible(fn (TelegramBusinessStoryPublication $record): bool => $record->status === 'review')
+                    ->action(function (TelegramBusinessStoryPublication $record): void {
+                        if ($record->status !== 'review' || ! is_array($record->source_post)) {
+                            return;
+                        }
+                        $record->update(['near_match_approved_at' => now(), 'status' => 'received', 'error' => null]);
+                        PublishTelegramBusinessStory::dispatch($record->source_post);
+                    }),
+                Tables\Actions\Action::make('suppressNearMatch')
+                    ->label('Не публиковать похожее')
+                    ->color('gray')->requiresConfirmation()
+                    ->visible(fn (TelegramBusinessStoryPublication $record): bool => $record->status === 'review')
+                    ->action(function (TelegramBusinessStoryPublication $record): void {
+                        if ($record->status === 'review') {
+                            $record->update(['status' => 'duplicate', 'error' => 'Near-duplicate suppressed after review.']);
+                        }
+                    }),
+            ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')->options([
                     'received' => 'Получено',
@@ -100,6 +136,7 @@ final class TelegramBusinessStoryPublicationResource extends Resource
                     'partial' => 'Публикуется / частично',
                     'published' => 'Опубликовано',
                     'duplicate' => 'Дубликат',
+                    'review' => 'Похожее видео — проверить',
                     'failed' => 'Ошибка',
                     'uncertain' => 'Исход неизвестен — проверить вручную',
                 ]),
@@ -117,10 +154,24 @@ final class TelegramBusinessStoryPublicationResource extends Resource
         return TelegramBusinessStoryPublication::query()
             ->where(function (Builder $query): void {
                 $query->whereIn('status', ['failed', 'uncertain'])
+                    ->orWhere('status', 'review')
                     ->orWhere(fn (Builder $partial): Builder => $partial->where('status', 'partial')
                         ->where('updated_at', '<', now()->subMinutes(15)))
                     ->orWhere(fn (Builder $warning): Builder => $warning->where('status', 'published')
                         ->where('error', 'like', 'Source video exceeded 600 seconds%'));
             });
+    }
+
+    private static function sourceUrl(?TelegramBusinessStoryPublication $record): ?string
+    {
+        if ($record === null) {
+            return null;
+        }
+        $username = trim((string) ($record->source_post['chat']['username'] ?? ''));
+        if ($username !== '') {
+            return 'https://t.me/'.ltrim($username, '@').'/'.$record->source_message_id;
+        }
+
+        return str_starts_with((string) $record->cta_url, 'https://t.me/') ? $record->cta_url : null;
     }
 }

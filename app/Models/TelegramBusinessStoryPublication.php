@@ -12,7 +12,8 @@ final class TelegramBusinessStoryPublication extends Model
     protected $fillable = [
         'source_chat_id', 'source_message_id', 'telegram_file_unique_id',
         'media_sha256', 'duplicate_of_id', 'story_id', 'story_ids', 'part_count',
-        'cta_url', 'started_at', 'deferred_until', 'metrics', 'metrics_collected_at', 'status', 'error',
+        'cta_url', 'started_at', 'deferred_until', 'metrics', 'metrics_collected_at',
+        'video_fingerprint', 'source_post', 'near_match_approved_at', 'status', 'error',
     ];
 
     protected $casts = [
@@ -25,5 +26,8 @@ final class TelegramBusinessStoryPublication extends Model
         'deferred_until' => 'datetime',
         'metrics' => 'array',
         'metrics_collected_at' => 'datetime',
+        'video_fingerprint' => 'array',
+        'source_post' => 'array',
+        'near_match_approved_at' => 'datetime',
     ];
 }

@@ -41,7 +41,7 @@ final class TelegramBusinessStoryPublisher
             ['source_chat_id' => $chatId, 'source_message_id' => $messageId],
             ['telegram_file_unique_id' => (string) ($video['file_unique_id'] ?? ''), 'status' => 'received'],
         );
-        if (in_array($ledger->status, ['published', 'duplicate', 'uncertain'], true)) {
+        if (in_array($ledger->status, ['published', 'duplicate', 'review', 'uncertain'], true)) {
             return;
         }
         if ($ledger->status === 'deferred' && $ledger->deferred_until?->isFuture()) {
@@ -63,13 +63,30 @@ final class TelegramBusinessStoryPublisher
             if ($prior !== null) {
                 // media_sha256 is unique: keep it on the first publisher and
                 // point this later source message at that authoritative row.
-                $ledger->update(['duplicate_of_id' => $prior->id, 'status' => 'duplicate']);
+                $ledger->update(['duplicate_of_id' => $prior->id, 'status' => 'duplicate', 'started_at' => null]);
 
+                return;
+            }
+
+            $fingerprinter = app(TelegramStoryVideoFingerprint::class);
+            $fingerprint = null;
+            try {
+                $fingerprint = $fingerprinter->fromFile($tmp, $this->sourceDuration($tmp));
+            } catch (Throwable $e) {
+                // A review signal must never block an otherwise valid editorial video.
+                Log::warning('Telegram Story near-match fingerprint unavailable', [
+                    'publication_id' => $ledger->id, 'error' => $e->getMessage(),
+                ]);
+            }
+            if ($fingerprint !== null && $ledger->near_match_approved_at === null
+                && $this->holdNearMatchForReview($ledger, $fingerprint, $hash, $post, $fingerprinter)) {
                 return;
             }
 
             $ledger->update([
                 'media_sha256' => $hash,
+                'video_fingerprint' => $fingerprint,
+                'source_post' => self::reviewSourcePost($post),
                 'cta_url' => $ledger->cta_url ?? TelegramStoryLink::fromPost($post),
             ]);
             $hasMoreParts = $this->publishParts($ledger, $tmp, 1);
@@ -92,6 +109,57 @@ final class TelegramBusinessStoryPublisher
                 @unlink($tmp);
             }
         }
+    }
+
+    /** @param array{duration: float, frames: list<string>} $fingerprint */
+    private function holdNearMatchForReview(
+        TelegramBusinessStoryPublication $ledger,
+        array $fingerprint,
+        string $hash,
+        array $post,
+        TelegramStoryVideoFingerprint $fingerprinter,
+    ): bool {
+        $candidate = TelegramBusinessStoryPublication::query()
+            ->whereNotNull('video_fingerprint')
+            ->whereIn('status', ['published', 'partial'])
+            ->where('id', '!=', $ledger->id)
+            ->latest('id')->limit(1000)->get()
+            ->first(fn (TelegramBusinessStoryPublication $item): bool => $fingerprinter->isNear($fingerprint, $item->video_fingerprint ?? []));
+        if ($candidate === null) {
+            return false;
+        }
+
+        $ledger->update([
+            'media_sha256' => $hash,
+            'video_fingerprint' => $fingerprint,
+            'duplicate_of_id' => $candidate->id,
+            'source_post' => self::reviewSourcePost($post),
+            'started_at' => null,
+            'status' => 'review',
+            'error' => 'Possible near-duplicate: compare source posts before approving or suppressing.',
+        ]);
+        Log::warning('Telegram Business Story near-match requires review', [
+            'publication_id' => $ledger->id, 'candidate_id' => $candidate->id,
+        ]);
+
+        return true;
+    }
+
+    /** Retain only the public channel message fields needed for a reviewed retry. */
+    private static function reviewSourcePost(array $post): array
+    {
+        return [
+            'chat' => [
+                'id' => $post['chat']['id'] ?? null,
+                'username' => $post['chat']['username'] ?? null,
+            ],
+            'message_id' => $post['message_id'] ?? null,
+            'video' => [
+                'file_id' => $post['video']['file_id'] ?? null,
+                'file_unique_id' => $post['video']['file_unique_id'] ?? null,
+            ],
+            'caption' => $post['caption'] ?? null,
+        ];
     }
 
     /** A source video occupies one daily slot, irrespective of its part count. */
