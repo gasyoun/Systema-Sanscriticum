@@ -186,6 +186,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `DB_PORT` | optional | `'3306'` | config/database.php:51<br>config/database.php:75<br>config/database.php:90 |
 | `DB_SOCKET` | optional | `''` | config/database.php:55 |
 | `DB_USERNAME` | optional | `'forge'` | config/database.php:53<br>config/database.php:77<br>config/database.php:92 |
+| `DEBT_STRICT_BLOCK_COVERAGE` | optional | `false` | config/features.php:1841 |
 | `DESIGN_COVER_DISK` | optional | `'public'` | config/design_assets.php:97 |
 | `DESIGN_IMAGE_DISK` | optional | `'public'` | config/design_assets.php:34 |
 | `DESIGN_IMPORT_COPY_TOLERANCE` | optional | `0.0` | config/design_assets.php:99 |
