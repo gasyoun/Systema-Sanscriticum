@@ -205,6 +205,41 @@ final class PayrollReadinessServiceTest extends TestCase
         $this->assertContains('seasonal:no_completed_block_in_current_window', $row['holds']);
     }
 
+    public function test_current_window_net_uses_final_amount_after_direct_receipt_offset(): void
+    {
+        $teacher = Teacher::factory()->create([
+            'name' => 'Уша Санка',
+            'payout_currency' => 'RUB',
+        ]);
+        Teacher::factory()->count(22)->create();
+        $this->seedPayable($teacher, '2026-09-02');
+        $course = Course::query()->where('teacher_id', $teacher->id)->firstOrFail();
+        Payment::withoutEvents(fn () => Payment::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => $course->id,
+            'status' => 'paid',
+            'tariff' => 'block_1',
+            'amount' => 1000,
+            'start_block' => 1,
+            'end_block' => 1,
+            'is_conditional' => false,
+            'received_account' => Payment::RECEIVED_TEACHER,
+            'received_by_teacher_id' => $teacher->id,
+            'foreign_amount' => 1000,
+            'foreign_currency' => 'RUB',
+            'created_at' => '2026-09-15 10:00:00',
+        ]));
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $row = collect($report['teachers'])->firstWhere('teacher_id', $teacher->id);
+
+        // School: 10,000 × 92% × 20% = 1,840.
+        // Direct: 1,000 × 20% − 1,000 already held = −800.
+        $this->assertSame(1040.0, $row['payable_rub']);
+        $this->assertSame(977.6, $row['net_after_npd_rub']);
+        $this->assertSame('current_window_recomputed', $row['amount_basis']);
+    }
+
     public function test_repeated_cabinet_export_query_has_same_fingerprint_and_is_read_only(): void
     {
         Teacher::factory()->count(23)->create();

@@ -207,7 +207,9 @@ final class PayrollReadinessService
             ];
         }
 
-        if ($priorRub <= 0 || ! isset($period['value_pct'])) {
+        if (! isset($period['value_pct'])) {
+            $npdPct = isset($calculation['npd_pct']) ? (float) $calculation['npd_pct'] : null;
+
             return [
                 'payable_rub' => $legacyRub,
                 'payable_eur' => $legacyEur,
@@ -215,8 +217,8 @@ final class PayrollReadinessService
                 'amount_basis' => 'legacy_engine_without_unreconciled_prior',
                 'legacy_candidate_rub' => $legacyRub,
                 'excluded_prior_rub' => 0.0,
-                'net_after_npd_rub' => isset($calculation['net_after_npd_rub'])
-                    ? Money::round((float) $calculation['net_after_npd_rub'])
+                'net_after_npd_rub' => $npdPct !== null
+                    ? Money::round($legacyRub * (1 - $npdPct / 100.0))
                     : null,
                 'holds' => [],
             ];
@@ -228,7 +230,7 @@ final class PayrollReadinessService
         $directRubOffset = (float) ($direct['rub_offset'] ?? 0);
         $foreignOffset = (float) ($direct['eur_offset'] ?? 0);
         $fx = (float) (($calculation['fx']['rate'] ?? 0));
-        $holds = ['reconciliation:uncovered_pre_cutoff_revenue'];
+        $holds = $priorRub > 0 ? ['reconciliation:uncovered_pre_cutoff_revenue'] : [];
         if ($foreignOffset > 0 && $fx <= 0) {
             $holds[] = 'reconciliation:direct_foreign_without_fx';
 
@@ -264,8 +266,10 @@ final class PayrollReadinessService
         return [
             'payable_rub' => $payableRub,
             'payable_eur' => $payableEur,
-            'amount_state' => 'partial_current_window',
-            'amount_basis' => 'current_window_only_excludes_unreconciled_prior',
+            'amount_state' => $priorRub > 0 ? 'partial_current_window' : 'calculated',
+            'amount_basis' => $priorRub > 0
+                ? 'current_window_only_excludes_unreconciled_prior'
+                : 'current_window_recomputed',
             'legacy_candidate_rub' => $legacyRub,
             'excluded_prior_rub' => $priorRub,
             'net_after_npd_rub' => $npdPct !== null ? Money::round($payableRub * (1 - $npdPct / 100.0)) : null,
