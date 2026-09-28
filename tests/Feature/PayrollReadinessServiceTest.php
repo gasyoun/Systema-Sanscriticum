@@ -262,8 +262,9 @@ final class PayrollReadinessServiceTest extends TestCase
         $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
 
         $this->assertSame('incomplete', $report['evidence']['private_manifest']['status']);
-        $this->assertSame('incomplete', $report['evidence']['bank_statement']['status']);
-        $this->assertSame('incomplete', $report['evidence']['paypal_xoom']['status']);
+        $this->assertSame('incomplete', $report['evidence']['tochka_bank_credits']['status']);
+        $this->assertSame('incomplete', $report['evidence']['paypal_student_notifications']['status']);
+        $this->assertSame('incomplete', $report['evidence']['xoom_edgar']['status']);
         $this->assertArrayNotHasKey('amount', $report['evidence']['private_manifest']);
     }
 
@@ -276,8 +277,7 @@ final class PayrollReadinessServiceTest extends TestCase
         File::put($path, json_encode([
             'sources' => [
                 'payout_sheets' => ['as_of' => '2026-10-02', 'sha256' => $hash],
-                'bank_credit' => ['as_of' => '2026-10-01', 'sha256' => $hash],
-                'paypal_xoom' => ['as_of' => 'not-a-date', 'sha256' => hash('sha256', 'paypal')],
+                'xoom_edgar' => ['as_of' => 'not-a-date', 'sha256' => hash('sha256', 'xoom-edgar')],
             ],
         ], JSON_THROW_ON_ERROR));
         $this->beforeApplicationDestroyed(fn () => File::delete($path));
@@ -286,6 +286,62 @@ final class PayrollReadinessServiceTest extends TestCase
 
         $this->assertSame('incomplete', $report['evidence']['private_manifest']['status']);
         $this->assertStringContainsString('replayed', $report['evidence']['private_manifest']['note']);
+    }
+
+    public function test_paypal_notification_gap_holds_only_teacher_lines_using_the_unverified_receipt(): void
+    {
+        $affected = Teacher::factory()->create(['name' => 'Трефилова Елена']);
+        $clean = Teacher::factory()->create(['name' => 'Толчельников Иван']);
+        Teacher::factory()->count(21)->create();
+        $this->seedPayable($affected, '2026-09-02');
+        $this->seedPayable($clean, '2026-09-02');
+        $this->seedFreshEvidence();
+        $affectedCourse = Course::query()->where('teacher_id', $affected->id)->firstOrFail();
+        Payment::withoutEvents(fn () => Payment::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => $affectedCourse->id,
+            'status' => 'paid',
+            'tariff' => 'block_1',
+            'amount' => 9000,
+            'foreign_amount' => 100,
+            'foreign_currency' => 'EUR',
+            'start_block' => 1,
+            'end_block' => 1,
+            'is_conditional' => false,
+            'received_account' => Payment::RECEIVED_SCHOOL,
+            'provider' => null,
+            'created_at' => '2026-09-15 10:00:00',
+        ]));
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $affectedRow = collect($report['teachers'])->firstWhere('teacher_id', $affected->id);
+        $cleanRow = collect($report['teachers'])->firstWhere('teacher_id', $clean->id);
+
+        $this->assertSame(1, $report['evidence']['paypal_student_notifications']['receipt_count']);
+        $this->assertSame(1, $report['evidence']['paypal_student_notifications']['unresolved_count']);
+        $this->assertSame('held', $affectedRow['disposition']);
+        $this->assertTrue(collect($affectedRow['holds'])->contains(fn (string $hold): bool => str_contains($hold, 'paypal_student_receipt_missing_notification')));
+        $this->assertSame('payable', $cleanRow['disposition']);
+    }
+
+    public function test_xoom_evidence_is_scoped_to_edgar_not_other_foreign_teachers(): void
+    {
+        $edgar = Teacher::factory()->create(['name' => 'Лейтан Эдгар', 'payout_currency' => 'EUR']);
+        $other = Teacher::factory()->create(['name' => 'Костина Екатерина', 'payout_currency' => 'EUR']);
+        Teacher::factory()->count(21)->create();
+        $this->seedPayable($edgar, '2026-09-02');
+        $this->seedPayable($other, '2026-09-02');
+        $this->seedFreshEvidence(includeXoom: false);
+
+        $report = app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'));
+        $edgarRow = collect($report['teachers'])->firstWhere('teacher_id', $edgar->id);
+        $otherRow = collect($report['teachers'])->firstWhere('teacher_id', $other->id);
+
+        $this->assertSame('xoom_mg', $edgarRow['channel']);
+        $this->assertSame('held', $edgarRow['disposition']);
+        $this->assertContains('evidence_xoom_edgar_incomplete', $edgarRow['holds']);
+        $this->assertSame('paypal_mg', $otherRow['channel']);
+        $this->assertSame('payable', $otherRow['disposition']);
     }
 
     public function test_funding_shortfall_uses_due_date_then_teacher_id_and_shows_remaining_obligation(): void
@@ -379,7 +435,7 @@ final class PayrollReadinessServiceTest extends TestCase
         ]);
     }
 
-    private function seedFreshEvidence(): void
+    private function seedFreshEvidence(bool $includeXoom = true): void
     {
         $path = storage_path('framework/testing/payroll-readiness-evidence.json');
         config()->set('payroll_readiness.evidence_manifest_path', $path);
@@ -388,7 +444,7 @@ final class PayrollReadinessServiceTest extends TestCase
         config()->set('services.tochka.token', 'fixture-token');
         File::put($path, json_encode([
             'generated_at' => '2026-10-01T08:00:00+03:00',
-            'sources' => collect(['payout_sheets', 'bank_credit', 'paypal_xoom'])
+            'sources' => collect($includeXoom ? ['payout_sheets', 'xoom_edgar'] : ['payout_sheets'])
                 ->mapWithKeys(fn (string $key): array => [$key => ['as_of' => '2026-10-01', 'sha256' => hash('sha256', $key)]])
                 ->all(),
         ], JSON_THROW_ON_ERROR));

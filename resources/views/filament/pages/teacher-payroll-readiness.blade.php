@@ -24,6 +24,9 @@
                     <x-filament::badge :color="$badge($evidence['status'])">{{ $evidence['status'] }}</x-filament::badge>
                 </div>
                 <p class="mt-2 text-xs text-gray-500">{{ $evidence['note'] ?? ($evidence['as_of'] ?? $evidence['generated_at'] ?? 'fresh') }}</p>
+                @if(array_key_exists('receipt_count', $evidence))
+                    <p class="mt-1 text-xs font-medium">Найдено: {{ $evidence['receipt_count'] }} · подтверждено: {{ $evidence['verified_count'] }} · без уведомления: {{ $evidence['unresolved_count'] }}</p>
+                @endif
             </x-filament::section>
         @endforeach
     </div>
@@ -76,7 +79,7 @@
                                     <br>{{ $row['last_actual_transfer']['evidence_reference'] ?: 'нет ссылки на доказательство' }}
                                 @else—@endif
                             </td>
-                            <td class="p-2 text-xs">{{ $row['channel'] }}<br><x-filament::badge :color="$badge($row['funding_state'])">{{ $row['funding_state'] }}</x-filament::badge>@if(($row['remaining_obligation'] ?? null) === null)<br>остаток: НЕПОЛНЫЕ ДАННЫЕ@elseif($row['remaining_obligation'] > 0)<br>остаток {{ $money($row['remaining_obligation'], $row['channel'] === 'paypal_mg' ? '€' : '₽') }}@endif</td>
+                            <td class="p-2 text-xs">{{ $row['channel'] }}<br><x-filament::badge :color="$badge($row['funding_state'])">{{ $row['funding_state'] }}</x-filament::badge>@if(($row['remaining_obligation'] ?? null) === null)<br>остаток: НЕПОЛНЫЕ ДАННЫЕ@elseif($row['remaining_obligation'] > 0)<br>остаток {{ $money($row['remaining_obligation'], in_array($row['channel'], ['paypal_mg', 'xoom_mg'], true) ? '€' : '₽') }}@endif</td>
                             <td class="p-2 text-xs">
                                 <div class="break-all font-mono">{{ substr($row['fingerprint'], 0, 16) }}…</div>
                                 <div>база текущего окна {{ $money($row['base_rub']) }} · несверенная история {{ $money($row['prior_rub']) }} · авансы {{ $money($row['advances_total_rub']) }}</div>
