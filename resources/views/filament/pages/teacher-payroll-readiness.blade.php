@@ -24,6 +24,9 @@
                     <x-filament::badge :color="$badge($evidence['status'])">{{ $evidence['status'] }}</x-filament::badge>
                 </div>
                 <p class="mt-2 text-xs text-gray-500">{{ $evidence['note'] ?? ($evidence['as_of'] ?? $evidence['generated_at'] ?? 'fresh') }}</p>
+                @if(array_key_exists('receipt_count', $evidence))
+                    <p class="mt-1 text-xs font-medium">Найдено: {{ $evidence['receipt_count'] }} · подтверждено: {{ $evidence['verified_count'] }} · без уведомления: {{ $evidence['unresolved_count'] }}</p>
+                @endif
             </x-filament::section>
         @endforeach
     </div>
