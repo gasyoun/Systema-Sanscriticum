@@ -565,25 +565,25 @@ final class PayrollReadinessService
         $tochka = $this->tochka->snapshot();
         $paypal = FinanceSnapshot::latestOfType(FinanceSnapshot::TYPE_PAYPAL_BALANCE);
         $remaining = [
-            'tochka_maria' => ($tochka['ok'] ?? false) ? (float) ($tochka['closing_total'] ?? 0) : null,
-            'tochka_ip_gasuns' => ($tochka['ok'] ?? false) ? (float) ($tochka['closing_total'] ?? 0) : null,
+            'tochka_rub' => ($tochka['ok'] ?? false) ? (float) ($tochka['closing_total'] ?? 0) : null,
             'paypal_mg' => $paypal?->majorAmount(),
             'xoom_mg' => null,
         ];
         usort($rows, fn (array $a, array $b): int => [$a['due_on'], $a['teacher_id']] <=> [$b['due_on'], $b['teacher_id']]);
         foreach ($rows as &$row) {
             $channel = (string) $row['channel'];
+            $fundingPool = str_starts_with($channel, 'tochka_') ? 'tochka_rub' : $channel;
             $need = in_array($channel, ['paypal_mg', 'xoom_mg'], true) ? (float) ($row['payable_eur'] ?? 0) : (float) $row['payable_rub'];
             if ($row['disposition'] !== 'payable' || $need <= 0) {
                 $row['funding_state'] = 'not_applicable';
                 $row['remaining_obligation'] = $row['amount_state'] === 'incomplete'
                     ? null
                     : ($row['disposition'] === 'held' ? $need : 0.0);
-            } elseif ($remaining[$channel] === null) {
+            } elseif (($remaining[$fundingPool] ?? null) === null) {
                 $row['funding_state'] = 'unknown';
                 $row['remaining_obligation'] = $need;
-            } elseif ($need <= $remaining[$channel] + 0.0001) {
-                $remaining[$channel] = Money::round($remaining[$channel] - $need);
+            } elseif ($need <= $remaining[$fundingPool] + 0.0001) {
+                $remaining[$fundingPool] = Money::round($remaining[$fundingPool] - $need);
                 $row['funding_state'] = 'funded';
                 $row['remaining_obligation'] = 0.0;
             } else {
