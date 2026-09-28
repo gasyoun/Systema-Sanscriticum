@@ -1,7 +1,9 @@
 <x-filament-panels::page>
     @php
         $report = $this->getReport();
-        $money = fn ($value, $currency = '₽') => number_format((float) $value, 2, ',', ' ') . ' ' . $currency;
+        $money = fn ($value, $currency = '₽') => $value === null
+            ? 'НЕПОЛНЫЕ ДАННЫЕ'
+            : number_format((float) $value, 2, ',', ' ') . ' ' . $currency;
         $badge = fn ($status) => match ($status) {
             'payable', 'fresh', 'funded' => 'success',
             'held', 'incomplete', 'unfunded' => 'danger',
@@ -48,13 +50,23 @@
         <x-slot name="description">Сортировка при нехватке средств: самая старая дата обязательства, затем ID преподавателя.</x-slot>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead><tr class="text-left text-xs text-gray-500"><th class="p-2">ID / преподаватель</th><th class="p-2">Статус</th><th class="p-2">К выплате</th><th class="p-2">Последний перевод</th><th class="p-2">Канал / средства</th><th class="p-2">Проверка</th></tr></thead>
+                <thead><tr class="text-left text-xs text-gray-500"><th class="p-2">ID / преподаватель</th><th class="p-2">Статус</th><th class="p-2">Оценка текущего окна</th><th class="p-2">Последний перевод</th><th class="p-2">Канал / средства</th><th class="p-2">Проверка</th></tr></thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     @foreach ($report['teachers'] as $row)
                         <tr>
                             <td class="p-2"><span class="text-xs text-gray-400">#{{ $row['teacher_id'] }}</span> {{ $row['name'] }}<div class="text-xs text-gray-400">due {{ $row['due_on'] }}</div></td>
                             <td class="p-2"><x-filament::badge :color="$badge($row['disposition'])">{{ $row['disposition'] }}</x-filament::badge></td>
-                            <td class="p-2 tabular-nums">{{ $money($row['payable_rub']) }}@if($row['payable_eur'] !== null)<br>{{ $money($row['payable_eur'], '€') }}@endif</td>
+                            <td class="p-2 tabular-nums">
+                                <div class="font-semibold">{{ $money($row['payable_rub']) }}</div>
+                                @if($row['payable_eur'] !== null)<div>{{ $money($row['payable_eur'], '€') }}</div>@endif
+                                <div class="mt-1 text-xs text-gray-500">{{ $row['amount_state'] }} · {{ $row['amount_basis'] }}</div>
+                                @if(($row['excluded_prior_rub'] ?? 0) > 0)
+                                    <div class="mt-1 text-xs text-warning-700">Исключена несверенная история: {{ $money($row['excluded_prior_rub']) }}</div>
+                                @endif
+                                @if(array_key_exists('legacy_candidate_rub', $row) && $row['legacy_candidate_rub'] !== null)
+                                    <div class="mt-1 text-xs text-danger-600">Старый кандидат: {{ $money($row['legacy_candidate_rub']) }} — не к выплате</div>
+                                @endif
+                            </td>
                             <td class="p-2 text-xs">
                                 @if($row['last_actual_transfer'])
                                     {{ $row['last_actual_transfer']['date'] }} · {{ $row['last_actual_transfer']['days_since'] }} дн. назад · {{ $money($row['last_actual_transfer']['amount_rub']) }}
@@ -64,10 +76,10 @@
                                     <br>{{ $row['last_actual_transfer']['evidence_reference'] ?: 'нет ссылки на доказательство' }}
                                 @else—@endif
                             </td>
-                            <td class="p-2 text-xs">{{ $row['channel'] }}<br><x-filament::badge :color="$badge($row['funding_state'])">{{ $row['funding_state'] }}</x-filament::badge>@if($row['remaining_obligation'] > 0)<br>остаток {{ $money($row['remaining_obligation'], $row['channel'] === 'paypal_mg' ? '€' : '₽') }}@endif</td>
+                            <td class="p-2 text-xs">{{ $row['channel'] }}<br><x-filament::badge :color="$badge($row['funding_state'])">{{ $row['funding_state'] }}</x-filament::badge>@if(($row['remaining_obligation'] ?? null) === null)<br>остаток: НЕПОЛНЫЕ ДАННЫЕ@elseif($row['remaining_obligation'] > 0)<br>остаток {{ $money($row['remaining_obligation'], $row['channel'] === 'paypal_mg' ? '€' : '₽') }}@endif</td>
                             <td class="p-2 text-xs">
                                 <div class="break-all font-mono">{{ substr($row['fingerprint'], 0, 16) }}…</div>
-                                <div>база {{ $money($row['base_rub']) }} · прошлые блоки {{ $money($row['prior_rub']) }} · авансы {{ $money($row['advances_total_rub']) }}</div>
+                                <div>база текущего окна {{ $money($row['base_rub']) }} · несверенная история {{ $money($row['prior_rub']) }} · авансы {{ $money($row['advances_total_rub']) }}</div>
                                 <div>ставка {{ json_encode($row['rate_period'], JSON_UNESCAPED_UNICODE) }} · прямые {{ json_encode($row['direct_receipts'], JSON_UNESCAPED_UNICODE) }}</div>
                                 @foreach($row['holds'] as $hold)<div class="mt-1 text-danger-600">{{ $hold }}</div>@endforeach
                             </td>

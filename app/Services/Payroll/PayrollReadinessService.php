@@ -103,11 +103,12 @@ final class PayrollReadinessService
             ];
         $last = $this->lastActualTransfer($teacher, $cutoff);
         $holds = $globalHolds;
-        $payableRub = Money::round((float) ($calculation['payable_rub'] ?? 0));
-        $payableEur = isset($calculation['payable_eur'])
-            ? Money::round((float) $calculation['payable_eur'])
-            : null;
-        $positive = $payableRub > 0 || ($payableEur ?? 0) > 0;
+        $amounts = $this->reportableAmounts($calculation);
+        $payableRub = $amounts['payable_rub'];
+        $payableEur = $amounts['payable_eur'];
+        $positive = ($payableRub ?? 0) > 0 || ($payableEur ?? 0) > 0;
+        $unreconciledPositive = $amounts['amount_state'] === 'partial_current_window'
+            && (float) $amounts['legacy_candidate_rub'] > 0;
 
         if (isset($calculation['error'])) {
             $holds[] = 'calculator:'.(string) $calculation['error'];
@@ -117,6 +118,9 @@ final class PayrollReadinessService
         }
         foreach ((array) ($calculation['warnings'] ?? []) as $warning) {
             $holds[] = 'warning:'.trim((string) $warning);
+        }
+        foreach ($amounts['holds'] as $hold) {
+            $holds[] = $hold;
         }
         $courseIds = $courses->pluck('id')->map(fn ($id): int => (int) $id)->all();
         foreach ($lineExceptions as $exception) {
@@ -128,15 +132,13 @@ final class PayrollReadinessService
 
         $disposition = match (true) {
             isset($calculation['error']) => 'outside_calculator',
-            $positive && $holds !== [] => 'held',
+            ($positive || $unreconciledPositive) && $holds !== [] => 'held',
             $positive => 'payable',
             ! $hasCourses => 'inactive',
             default => 'zero',
         };
-        $dueOn = collect(array_merge(
-            (array) ($calculation['prior_blocks'] ?? []),
-            (array) ($calculation['blocks'] ?? []),
-        ))->pluck('completed_on')->filter()->sort()->first() ?? $cutoff->toDateString();
+        $dueOn = collect((array) ($calculation['blocks'] ?? []))
+            ->pluck('completed_on')->filter()->sort()->first() ?? $cutoff->toDateString();
 
         $row = [
             'teacher_id' => (int) $teacher->id,
@@ -147,6 +149,11 @@ final class PayrollReadinessService
             'due_on' => (string) $dueOn,
             'payable_rub' => $payableRub,
             'payable_eur' => $payableEur,
+            'amount_state' => $amounts['amount_state'],
+            'amount_basis' => $amounts['amount_basis'],
+            'legacy_candidate_rub' => $amounts['legacy_candidate_rub'],
+            'excluded_prior_rub' => $amounts['excluded_prior_rub'],
+            'net_after_npd_rub' => $amounts['net_after_npd_rub'],
             'base_rub' => Money::round((float) ($calculation['base_rub'] ?? 0)),
             'prior_rub' => Money::round((float) ($calculation['prior_rub'] ?? 0)),
             'rate_period' => $calculation['rate_period'] ?? null,
@@ -161,6 +168,111 @@ final class PayrollReadinessService
         return $row;
     }
 
+    /**
+     * The legacy engine adds every uncovered pre-cutoff receipt to the current
+     * salary. That is unsafe for teachers historically paid outside
+     * teacher_payouts: an unbackfilled payout makes already-paid years look due
+     * again. The readiness surface therefore reports only the current window
+     * for percentage rows and exposes the legacy total as an unreconciled
+     * candidate. Fixed rows with no completed block in the window are zero.
+     *
+     * @return array{payable_rub: float|null, payable_eur: float|null, amount_state: string, amount_basis: string, legacy_candidate_rub: float, excluded_prior_rub: float, net_after_npd_rub: float|null, holds: list<string>}
+     */
+    private function reportableAmounts(array $calculation): array
+    {
+        $legacyRub = Money::round((float) ($calculation['payable_rub'] ?? 0));
+        $legacyEur = isset($calculation['payable_eur'])
+            ? Money::round((float) $calculation['payable_eur'])
+            : null;
+        $priorRub = Money::round((float) ($calculation['prior_rub'] ?? 0));
+        $period = (array) ($calculation['rate_period'] ?? []);
+        $blocks = (array) ($calculation['blocks'] ?? []);
+        $currentCycleStart = Carbon::parse((string) config('payroll_readiness.evidence_from'))->startOfDay();
+        $currentCycleBlocks = collect($blocks)->filter(function (array $block) use ($currentCycleStart): bool {
+            $completedOn = $block['completed_on'] ?? null;
+
+            return is_string($completedOn) && Carbon::parse($completedOn)->gte($currentCycleStart);
+        });
+
+        if (($period['kind'] ?? null) === 'fixed_monthly' && $currentCycleBlocks->isEmpty()) {
+            return [
+                'payable_rub' => 0.0,
+                'payable_eur' => null,
+                'amount_state' => 'calculated',
+                'amount_basis' => 'no_completed_block_in_current_window',
+                'legacy_candidate_rub' => $legacyRub,
+                'excluded_prior_rub' => $priorRub,
+                'net_after_npd_rub' => null,
+                'holds' => ['seasonal:no_completed_block_in_current_window'],
+            ];
+        }
+
+        if ($priorRub <= 0 || ! isset($period['value_pct'])) {
+            return [
+                'payable_rub' => $legacyRub,
+                'payable_eur' => $legacyEur,
+                'amount_state' => 'calculated',
+                'amount_basis' => 'legacy_engine_without_unreconciled_prior',
+                'legacy_candidate_rub' => $legacyRub,
+                'excluded_prior_rub' => 0.0,
+                'net_after_npd_rub' => isset($calculation['net_after_npd_rub'])
+                    ? Money::round((float) $calculation['net_after_npd_rub'])
+                    : null,
+                'holds' => [],
+            ];
+        }
+
+        $slice = (float) ($period['bank_slice_pct'] ?? 100.0) / 100.0;
+        $rate = (float) $period['value_pct'] / 100.0;
+        $direct = (array) ($calculation['direct_receipts'] ?? []);
+        $directRubOffset = (float) ($direct['rub_offset'] ?? 0);
+        $foreignOffset = (float) ($direct['eur_offset'] ?? 0);
+        $fx = (float) (($calculation['fx']['rate'] ?? 0));
+        $holds = ['reconciliation:uncovered_pre_cutoff_revenue'];
+        if ($foreignOffset > 0 && $fx <= 0) {
+            $holds[] = 'reconciliation:direct_foreign_without_fx';
+
+            return [
+                'payable_rub' => null,
+                'payable_eur' => null,
+                'amount_state' => 'incomplete',
+                'amount_basis' => 'current_window_fx_missing',
+                'legacy_candidate_rub' => $legacyRub,
+                'excluded_prior_rub' => $priorRub,
+                'net_after_npd_rub' => null,
+                'holds' => $holds,
+            ];
+        }
+        $directForeignRub = $foreignOffset * $fx;
+        $directRevenueRub = $directRubOffset + $directForeignRub;
+        $payableRub = (float) ($calculation['base_rub'] ?? 0) * $slice * $rate;
+        // Direct receipts earn the normal teacher percentage without the bank
+        // slice, then the cash already held by the teacher is offset once.
+        $payableRub += $directRevenueRub * $rate;
+        $payableRub -= $directRevenueRub;
+        $payableRub -= (float) ($calculation['advances_total_rub'] ?? 0);
+        if ($payableRub < 0) {
+            $holds[] = 'reconciliation:negative_current_window_payable';
+            $payableRub = 0.0;
+        }
+        $payableRub = Money::round($payableRub);
+        $payableEur = ($calculation['lane'] ?? null) === 'EUR' && $fx > 0
+            ? Money::round($payableRub / $fx)
+            : null;
+        $npdPct = isset($calculation['npd_pct']) ? (float) $calculation['npd_pct'] : null;
+
+        return [
+            'payable_rub' => $payableRub,
+            'payable_eur' => $payableEur,
+            'amount_state' => 'partial_current_window',
+            'amount_basis' => 'current_window_only_excludes_unreconciled_prior',
+            'legacy_candidate_rub' => $legacyRub,
+            'excluded_prior_rub' => $priorRub,
+            'net_after_npd_rub' => $npdPct !== null ? Money::round($payableRub * (1 - $npdPct / 100.0)) : null,
+            'holds' => $holds,
+        ];
+    }
+
     /** @return array<string, mixed>|null */
     private function lastActualTransfer(Teacher $teacher, Carbon $cutoff): ?array
     {
@@ -168,6 +280,10 @@ final class PayrollReadinessService
         $payout = $teacher->payouts()
             ->where('type', TeacherPayout::TYPE_REGULAR)
             ->whereNotNull('paid_at')
+            ->where(function ($query): void {
+                $query->where('amount', '>', 0)
+                    ->orWhere('amount_foreign', '>', 0);
+            })
             ->orderByDesc('paid_at')
             ->orderByDesc('id')
             ->first();
@@ -315,7 +431,9 @@ final class PayrollReadinessService
             $need = $channel === 'paypal_mg' ? (float) ($row['payable_eur'] ?? 0) : (float) $row['payable_rub'];
             if ($row['disposition'] !== 'payable' || $need <= 0) {
                 $row['funding_state'] = 'not_applicable';
-                $row['remaining_obligation'] = $row['disposition'] === 'held' ? $need : 0.0;
+                $row['remaining_obligation'] = $row['amount_state'] === 'incomplete'
+                    ? null
+                    : ($row['disposition'] === 'held' ? $need : 0.0);
             } elseif ($remaining[$channel] === null) {
                 $row['funding_state'] = 'unknown';
                 $row['remaining_obligation'] = $need;
@@ -412,6 +530,7 @@ final class PayrollReadinessService
             'released_eur' => Money::round((float) collect($rows)->where('disposition', 'payable')->sum('payable_eur')),
             'held_rub' => Money::round((float) collect($rows)->where('disposition', 'held')->sum('payable_rub')),
             'held_eur' => Money::round((float) collect($rows)->where('disposition', 'held')->sum('payable_eur')),
+            'unreconciled_legacy_candidate_rub' => Money::round((float) collect($rows)->sum('excluded_prior_rub')),
         ];
     }
 
