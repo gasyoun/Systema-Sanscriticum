@@ -127,6 +127,17 @@ class SplitUploadToYandex
         $this->verifyEnabled = (bool) config('backup.backup.split_upload.verify', true);
 
         if ($targetDiskName === '' || $targetDiskName === 'local' || $maxPartMb < 1) {
+            // H5298: off-site нога не вооружена (пустой/вырожденный диск или
+            // битый max_part_mb) — раньше полное молчание на BackupWasSuccessful,
+            // «offsite armed» было неотличимо от «offsite skipped». Громко и
+            // машиночитаемо (state-ключ, контракт H5061/H5298); поведение не
+            // меняется: local-копия в безопасности, ничего не льём.
+            Log::warning('split-upload: off-site нога не вооружена, части не льются', [
+                'state' => 'not_supported',
+                'disk' => $targetDiskName,
+                'max_part_mb' => $maxPartMb,
+            ]);
+
             return;
         }
 
@@ -156,6 +167,13 @@ class SplitUploadToYandex
     {
         $targetDiskName = (string) config('backup.backup.split_upload.disk');
         if ($targetDiskName === '' || $targetDiskName === 'local') {
+            // H5298: та же громкость, что в handle() — докатка тоже обязана
+            // честно сказать «шов не вооружён», а не молчать.
+            Log::warning('split-upload: докатка не вооружена, незавершённых групп не добираем', [
+                'state' => 'not_supported',
+                'disk' => $targetDiskName,
+            ]);
+
             return;
         }
 

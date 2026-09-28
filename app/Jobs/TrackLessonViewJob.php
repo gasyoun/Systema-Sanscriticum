@@ -61,7 +61,19 @@ final class TrackLessonViewJob implements ShouldQueue
         $lesson = Lesson::find($this->lessonId);
 
         if (! $user || ! $lesson) {
-            // Молча завершаемся — нет смысла ретраить, данные пропали
+            // H5298: раньше — полное молчание, и выпавший lesson_open был
+            // неотличим от «джоба не запускалась». Ретраить правда нечего, но
+            // пропуск обязан быть громким и машиночитаемым (контракт H5061/H5298,
+            // state-ключ): источник исчез = unavailable, НЕ ноль и НЕ успех.
+            // Джоба НЕ падает (ретрай по несуществующим id бессмысленный).
+            Log::warning('TrackLessonViewJob: источник просмотра исчез, событие не записано', [
+                'state' => 'unavailable',
+                'user_id' => $this->userId,
+                'lesson_id' => $this->lessonId,
+                'user_found' => $user !== null,
+                'lesson_found' => $lesson !== null,
+            ]);
+
             return;
         }
 
