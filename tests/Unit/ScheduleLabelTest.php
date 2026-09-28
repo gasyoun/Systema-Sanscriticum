@@ -67,7 +67,8 @@ class ScheduleLabelTest extends TestCase
             'Марцис Юрьевич Гасунс',
             ScheduleLabel::teacherDisplay('Гасунс Марцис Юрьевич')
         );
-        $this->assertSame('Санка Уша', ScheduleLabel::teacherDisplay('Уша Санка'));
+        $this->assertSame('Санка Уша', ScheduleLabel::teacherDisplay('Санка Уша'));
+        $this->assertSame('Уша Санка', ScheduleLabel::teacherDisplay('Уша Санка'));
         $this->assertSame('Платон', ScheduleLabel::teacherDisplay('Платон'));
     }
 
