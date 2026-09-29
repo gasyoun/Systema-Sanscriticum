@@ -54,6 +54,7 @@ SLUGS = {
 
 # channel/lane per recipient — evidence-cited marked defaults (PLAN рулинги #6/#8, якоря A2/A4/A6)
 CHANNELS = {
+    "gasuns": ("retained_tochka_net", "RUB", "ruling 28-09-2026: 100% rate, one 92% bank slice"),
     "leytan": ("paypal_mg", "EUR", "A1/A7: «€ по курсу дня», PayPal MG"),
     "kostina": ("paypal_mg", "EUR", "A2 paid_note: «286 евро PayPal»"),
     "trefilova": ("tochka_ip_gasuns", "RUB", "A6 paid_note: «лист июнь… ИП Гасунс»"),
@@ -62,6 +63,17 @@ CHANNELS = {
 }
 
 DEFAULT_CHANNEL = ("tochka_maria", "RUB", "дефолт без прямого доказательства канала в чате ⚠️")
+
+GASUNS_STATIC = """        'gasuns' => [
+            'name' => 'Гасунс Марцис',
+            'aliases' => ['Гасунс', 'Марцис'],
+            'channel' => 'retained_tochka_net',
+            'lane' => 'RUB',
+            'rate_periods' => [
+                ['kind' => 'percent', 'value_pct' => 100.0, 'bank_slice_pct' => 92.0, 'from' => '2026-01-01', 'to' => null],
+            ],
+            'direct_deductions' => [],
+        ],"""
 
 STAFF_STATIC = """    'staff' => [
         // Штат (не преподаватели LMS): суммы из брифа H3532 / реестра ставок, ритм — по платёжным записям Марии.
@@ -307,10 +319,11 @@ def main():
     out.append("    ],")
     out.append("")
     out.append("    'recipients' => [")
+    out.append(GASUNS_STATIC)
     for name in data.get("timeline_order", []):
         teacher = data.get("teachers", {}).get(name)
         slug = SLUGS.get(name)
-        if not teacher or not slug or slug in ("kravchenko", "ilyushina"):
+        if not teacher or not slug or slug in ("gasuns", "kravchenko", "ilyushina"):
             continue
         if not teacher.get("rate_periods") and not teacher.get("fixed_payments"):
             continue

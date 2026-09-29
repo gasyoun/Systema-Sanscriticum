@@ -65,21 +65,36 @@ final class PayrollReadinessCommand extends Command
         );
 
         $this->table(
-            ['ID', 'Teacher', 'Disposition', 'Due', 'RUB', 'EUR', 'Channel', 'Last paid', 'Days', 'Holds'],
+            ['ID', 'Teacher', 'Disposition', 'Due', 'Current RUB', 'EUR', 'Basis', 'Channel', 'Last paid', 'Last amount', 'Days', 'Holds'],
             collect($report['teachers'])->map(fn (array $row): array => [
                 $row['teacher_id'],
                 $row['name'],
                 $row['disposition'],
                 $row['due_on'],
-                number_format((float) $row['payable_rub'], 2, '.', ''),
+                $row['payable_rub'] === null ? 'INCOMPLETE' : number_format((float) $row['payable_rub'], 2, '.', ''),
                 $row['payable_eur'] === null ? '' : number_format((float) $row['payable_eur'], 2, '.', ''),
+                $row['amount_basis'],
                 $row['channel'],
                 $row['last_actual_transfer']['date'] ?? 'never',
+                $this->lastAmount($row['last_actual_transfer'] ?? null),
                 $row['last_actual_transfer']['days_since'] ?? '',
                 implode('; ', $row['holds']),
             ])->all(),
         );
 
         return $report['census_exceptions'] === [] ? self::SUCCESS : self::FAILURE;
+    }
+
+    /** @param array<string, mixed>|null $last */
+    private function lastAmount(?array $last): string
+    {
+        if ($last === null) {
+            return '';
+        }
+        if (($last['amount_foreign'] ?? null) !== null) {
+            return number_format((float) $last['amount_foreign'], 2, '.', '').' '.($last['currency'] ?? '');
+        }
+
+        return number_format((float) ($last['amount_rub'] ?? 0), 2, '.', '').' RUB';
     }
 }

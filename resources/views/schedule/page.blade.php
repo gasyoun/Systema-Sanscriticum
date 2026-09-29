@@ -112,7 +112,7 @@
             <ol class="sch-toc">
                 @foreach($courses as $row)
                     <li>
-                        <a href="#sch-{{ $row['no'] }}" class="sch-toc-link">{{ $row['no'] }}. {{ $row['course']->title }}</a>@if($row['course']->teacher) — <a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($row['course']->teacher->name) }}" class="sch-toc-teacher">{{ $row['course']->teacher->name }}</a>@endif
+                        <a href="#sch-{{ $row['no'] }}" class="sch-toc-link">{{ $row['no'] }}. {{ $row['displayTitle'] }}</a>@if($row['nextLabel']) — {{ $row['nextLabel'] }}@endif@if($row['course']->teacher) — <a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($row['course']->teacher->name) }}" class="sch-toc-teacher">{{ $row['teacherDisplay'] }}</a>@endif
                     </li>
                 @endforeach
             </ol>
@@ -125,10 +125,10 @@
                     <summary class="sch-sum">
                         <span class="sch-no">{{ $row['no'] }}</span>
                         <span class="sch-main">
-                            <span class="sch-title">{{ $course->title }}</span>
-                            @if($course->teacher)<a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($course->teacher->name) }}" class="sch-teacher">{{ $course->teacher->name }}</a>@endif
+                            <span class="sch-title">{{ $row['displayTitle'] }}</span>
+                            @if($course->teacher)<a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($course->teacher->name) }}" class="sch-teacher">{{ $row['teacherDisplay'] }}</a>@endif
                         </span>
-                        <span class="sch-meta">@if($row['weekdayRu']){{ $row['weekdayRu'] }} · @endifзанятий: {{ $row['lessonsCount'] }}</span>
+                        <span class="sch-meta">@if($row['nextLabel']){{ $row['nextLabel'] }} · @endifзанятий: {{ $row['lessonsCount'] }}@if($row['progress']) · {{ $row['progress'] }}@endif</span>
                         <i class="fas fa-chevron-down sch-chev" aria-hidden="true"></i>
                     </summary>
                     <div class="sch-body">
