@@ -739,6 +739,16 @@ return [
     'tochka_webhook_guard' => (bool) env('TOCHKA_WEBHOOK_GUARD', true),
 
     /*
+     | Фискализация через Digital Kassa вместо облачной кассы Точки. Когда ВКЛ,
+     | TochkaPaymentService создаёт ссылку нефискальным /payments, помечает платёж
+     | fiscal_provider=digitalkassa, а WebhookController после перехода в paid
+     | ставит IssueDigitalKassaReceiptJob. Провайдер фиксируется НА ПЛАТЕЖЕ в момент
+     | создания ссылки — переключение флага не даёт двойного чека по уже выданным
+     | ссылкам. Default OFF. Включение: DIGITALKASSA_RECEIPTS=true + config:cache.
+     */
+    'digitalkassa_receipts' => (bool) env('DIGITALKASSA_RECEIPTS', false),
+
+    /*
      | H3280: live Tochka ClosingAvailable on /admin/teacher-salaries.
      | Read-only Open Banking GET. Default OFF. Enable: TOCHKA_BALANCE_ON_SALARIES=true
      | + config:cache. Teachers on «Моя зарплата» never see it (RoleGate::accounting).
