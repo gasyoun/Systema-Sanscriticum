@@ -1780,6 +1780,20 @@ return [
     'money_daily_reconciliation' => (bool) env('MONEY_DAILY_RECONCILIATION', false),
 
     /*
+     | H5444 (P2, E017, D11/D13/D14/D15/D16/D17): выплаты на версионированных
+     | условиях и неизменяемых расчётных пакетах. Выключено = ни одной записи
+     | в teacher_compensation_* / teacher_payout_package* (сервис отказывает,
+     | PayoutWritesDisabled); ни один экран зарплат не переключён — чтение
+     | остаётся легаси `teacher_payouts` до P4. Сверка нового и старого
+     | (только чтение, работает при выключенном флаге):
+     | php artisan money:payout-package-compare
+     | Money-контур: дефолт OFF, включение в проде — отдельный ops-шаг
+     | (MONEY_PAYOUT_PACKAGES=true + php artisan config:cache) ПОСЛЕ того, как
+     | отчёт сверки сходится или оставляет только названные исключения.
+     */
+    'money_payout_packages' => (bool) env('MONEY_PAYOUT_PACKAGES', false),
+
+    /*
      | H5480 (P3): зачисления банковской выписки как источник доказательств
      | bank_statement и дневной агрегатный контроль (QR-расчёты и агрегат
      | эквайринга против оплат окна). Выключено — импорт выписки по-прежнему
