@@ -108,7 +108,7 @@
         </div>
     @endunless
 
-    {{-- Счётчик --}}
+    {{-- Счетчик --}}
     <div class="mb-4 flex items-center gap-2 text-sm font-bold text-gray-400">
         <i class="fas fa-layer-group text-brand"></i>
         @if($isGuest)
@@ -166,7 +166,7 @@
                 </div>
             </div>
             @if($pairsFeedback === 'wrong')
-                <p class="mt-4 text-center text-sm font-bold text-red-600">Не пара — попробуйте ещё</p>
+                <p class="mt-4 text-center text-sm font-bold text-red-600">Не пара — попробуйте еще</p>
             @endif
         @endif
 
@@ -326,7 +326,7 @@
                 <h3 class="text-xl font-bold text-gray-900 mb-2">Сложных пока нет</h3>
                 <p class="text-gray-500">Карточки попадают сюда после ошибок (lapses &gt; 0). Повторите колоду в классике.</p>
             @else
-                <h3 class="text-xl font-bold text-gray-900 mb-2">На сегодня всё!</h3>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">На сегодня все!</h3>
                 <p class="text-gray-500">Вы повторили все карточки, которые были готовы. Загляните позже.</p>
             @endif
         </div>

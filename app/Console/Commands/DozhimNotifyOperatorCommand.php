@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Log;
  * manager с привязанным telegram_id (личные уведомления — тот же путь,
  * что у студентов: User::sendTelegramMessage()).
  *
- * Пустая очередь НЕ отправляет ничего — тишина значит «всё дожато».
+ * Пустая очередь НЕ отправляет ничего — тишина значит «все дожато».
  * Флаг — dozhim_operator_notify; --force отправляет и при OFF (для ручной
  * проверки доставки), но не при пустом списке без --force.
  */
@@ -109,7 +109,7 @@ class DozhimNotifyOperatorCommand extends Command
             $ageDays = max(1, (int) $deal->created_at->startOfDay()->diffInDays(now()->startOfDay()));
 
             $lines[] = sprintf(
-                '• <b>%s</b> — %s — %s — ждёт %d дн.',
+                '• <b>%s</b> — %s — %s — ждет %d дн.',
                 e($name),
                 e(mb_substr($course, 0, 60)),
                 e($amount),
@@ -118,7 +118,7 @@ class DozhimNotifyOperatorCommand extends Command
         }
 
         $header = $deals->isEmpty()
-            ? '<b>Дожим 10:00:</b> недожатых нет — всё дожато ✅'
+            ? '<b>Дожим 10:00:</b> недожатых нет — все дожато ✅'
             : sprintf('<b>Дожим 10:00:</b> недожатых сделок — %d', $deals->count());
 
         return implode("\n", [

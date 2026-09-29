@@ -50,7 +50,7 @@
                     <a href="{{ $this->leadUrl($lead->id) }}" class="wq-btn" target="_blank">Открыть лид</a>
                 </div>
             @empty
-                <div class="wq-empty">На сегодня всё сделано 🎉</div>
+                <div class="wq-empty">На сегодня все сделано 🎉</div>
             @endforelse
         </div>
 
@@ -117,7 +117,7 @@
         </div>
 
         {{-- 5. Задачи по сделкам на сегодня (GC-C3, H1836). Карточка появляется
-             только при включённом crm_follow_up_tasks — пока флаг OFF, кокпит
+             только при включенном crm_follow_up_tasks — пока флаг OFF, кокпит
              выглядит ровно как до этого хэндоффа. --}}
         @if(config('features.crm_follow_up_tasks'))
             <div class="wq-card">

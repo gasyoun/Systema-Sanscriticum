@@ -1,14 +1,14 @@
 @extends('layouts.student')
 
-@section('title', 'Тренажёры')
-@section('header', 'Тренажёры')
+@section('title', 'Тренажеры')
+@section('header', 'Тренажеры')
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
 
     <div class="mb-8 mt-6">
         <h2 class="text-3xl md:text-4xl font-extrabold text-[#101010] tracking-tight mb-2">
-            Короткие тренажёры
+            Короткие тренажеры
         </h2>
         <p class="text-gray-500 text-lg max-w-3xl">
             Быстрая практика по конкретному навыку — не карточки на повторение

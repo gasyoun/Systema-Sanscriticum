@@ -20,9 +20,9 @@ use Illuminate\Support\Facades\Log;
  * переспрашивать никого не нужно.
  *
  * Гейты (все обязательны):
- *  - SUPPORT_DM_LLM_DRAFTS (config) включён — иначе ветка мертва, включать
+ *  - SUPPORT_DM_LLM_DRAFTS (config) включен — иначе ветка мертва, включать
  *    нечего: отказ с причиной в лог;
- *  - живой режим ещё НЕ включён (env-флаг или штамп в marketing_settings);
+ *  - живой режим еще НЕ включен (env-флаг или штамп в marketing_settings);
  *  - >= SupportDailyDigest::STREAK_MAX_DAYS (7) календарных дней подряд
  *    (включая вчерашний) с >= 1 событием тени или живой отправки;
  *  - пустой день сбрасывает серию (штатная пауза traffic'а — не повод
@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Log;
  *
  * Включение: штамп support_llm_live_enabled_at в marketing_settings (его
  * читает SupportDailyDigest::llmLive(), а с ним и конвейер H4404) + аудит-
- * событие dm_llm_live_enabled с окном серии и счётчиками. Идемпототентно:
+ * событие dm_llm_live_enabled с окном серии и счетчиками. Идемпототентно:
  * повторный прогон после включения — no-op.
  */
 class EnableSupportLlmLive extends Command
@@ -50,7 +50,7 @@ class EnableSupportLlmLive extends Command
         }
 
         if (SupportDailyDigest::llmLive()) {
-            $this->info('support:llm-live-enable: живой режим уже включён.');
+            $this->info('support:llm-live-enable: живой режим уже включен.');
 
             return self::SUCCESS;
         }
@@ -69,7 +69,7 @@ class EnableSupportLlmLive extends Command
         }
 
         if ($this->option('dry')) {
-            $this->comment('--dry: серия '.$streak.' дней, живой режим был бы включён.');
+            $this->comment('--dry: серия '.$streak.' дней, живой режим был бы включен.');
 
             return self::SUCCESS;
         }
@@ -89,8 +89,8 @@ class EnableSupportLlmLive extends Command
             ],
         ]);
 
-        Log::info('H4429: живой режим LLM-ветки включён авто-рубильником', ['streak_days' => $streak]);
-        $this->info('Живой режим LLM-ветки ВКЛЮЧЁН (серия '.$streak.' дней тени).');
+        Log::info('H4429: живой режим LLM-ветки включен авто-рубильником', ['streak_days' => $streak]);
+        $this->info('Живой режим LLM-ветки ВКЛЮЧЕН (серия '.$streak.' дней тени).');
 
         return self::SUCCESS;
     }

@@ -46,7 +46,7 @@
             <label for="callback-note" class="block text-sm font-bold text-gray-700 mb-2">Комментарий (необязательно)</label>
             <textarea id="callback-note" name="note" maxlength="500" rows="3"
                       class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/40"
-                      placeholder="Когда удобно перезвонить, о чём вопрос">{{ old('note') }}</textarea>
+                      placeholder="Когда удобно перезвонить, о чем вопрос">{{ old('note') }}</textarea>
         </div>
 
         <label class="flex items-start gap-3 text-sm text-gray-600 font-medium">

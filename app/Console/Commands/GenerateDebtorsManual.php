@@ -27,7 +27,7 @@ class GenerateDebtorsManual extends Command
 
         File::put($out, $pdf->output());
 
-        $this->info('PDF сохранён: '.$out);
+        $this->info('PDF сохранен: '.$out);
 
         return self::SUCCESS;
     }

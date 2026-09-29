@@ -20,7 +20,7 @@ class LaunchSurfacePixelsH3674Test extends TestCase
     {
         $html = $this->get('/')->assertOk()->getContent();
 
-        $this->assertStringContainsString('с преподавателем', $html);
+        $this->assertStringContainsString('Курсы санскрита с нуля: сначала попробуйте учиться', $html);
         $this->assertMatchesRegularExpression(
             '/<h1[^>]*break-words[^>]*>/s',
             $html

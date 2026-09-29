@@ -62,7 +62,9 @@ payout. [ARCHITECTURE…SETTLEMENT.md](https://github.com/gasyoun/Systema-Sanscr
 ## Deploy / soft-alert (always-on)
 
 Only [`deploy.sh`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy.sh)
-— never a hand `git pull` on prod. Ritual+gate: [deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md);
+— never a hand `git pull` on prod. Ritual+gate: [deploy.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/deploy.md)
+(incl. the no-GitHub fallback when `api.github.com` is down — prod cron within
+30 min, or `ssh root@193.232.229.92 'sudo /bin/bash /var/www/html/deploy.sh'`);
 guards+playbook: [server-resource-guards.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/server-resource-guards.md) ·
 [SERVER_SOFT_ALERT_PLAYBOOK.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/SERVER_SOFT_ALERT_PLAYBOOK.md).
 Soft TG «Кабинет: soft-сбой» + `auto_deploy.disabled`/tracked dirty ≠ cabinet

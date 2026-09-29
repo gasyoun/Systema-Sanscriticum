@@ -109,7 +109,7 @@ class RetireCatalogShell extends Command
             $this->line(sprintf(
                 '  алиас: /k/%s %s на курс %d (301 после будущего удаления)',
                 $plan['alias']['slug'],
-                $applied ? 'заведён' : 'будет заведён',
+                $applied ? 'заведен' : 'будет заведен',
                 $plan['target']['id'],
             ));
         } else {
@@ -118,7 +118,7 @@ class RetireCatalogShell extends Command
 
         $this->newLine();
         if ($applied) {
-            $this->info('Курс НЕ удалён. Удаление — отдельный проход после проверки человеком.');
+            $this->info('Курс НЕ удален. Удаление — отдельный проход после проверки человеком.');
         } else {
             $this->info('Сухой прогон. Повторите с --apply, чтобы выполнить.');
         }

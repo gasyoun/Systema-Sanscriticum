@@ -26,10 +26,10 @@ class SeasonRefreshLeaderboardCommand extends Command
             return 1;
         }
 
-        // Пересчёт prana_earned = current lifetime_prana − baseline_lifetime_prana.
+        // Пересчет prana_earned = current lifetime_prana − baseline_lifetime_prana.
         // P2P-immune: baseline снят при season:open, а transfer() не увеличивает
         // lifetime_prana получателя, так что перекачка праны между аккаунтами
-        // в сезонный счёт не попадает.
+        // в сезонный счет не попадает.
         //
         // Без `UPDATE ... JOIN` (MySQL-only) — тесты идут на SQLite, поэтому
         // читаем и пишем чанками, как остальной портируемый код в репозитории.
@@ -53,7 +53,7 @@ class SeasonRefreshLeaderboardCommand extends Command
                 }
             });
 
-        // Пересчёт rank_position по убыванию prana_earned. Тай-брейк по user_id,
+        // Пересчет rank_position по убыванию prana_earned. Тай-брейк по user_id,
         // иначе порядок равных значений зависит от движка БД и ранги «дрожат»
         // между прогонами. Позиции плотные (1,2,3…), ничьи не дублируются.
         $ranked = DB::table('season_leaderboard_cache')

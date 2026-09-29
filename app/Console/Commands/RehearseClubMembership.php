@@ -19,18 +19,18 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Сквозная репетиция клубного членства (H2644, пункт приёмки «d»):
+ * Сквозная репетиция клубного членства (H2644, пункт приемки «d»):
  * оплата → группа → каталог виден → истечение → право снято, с PASS/FAIL по
  * каждому шагу.
  *
  * Зачем командой, а не руками. Репетиция обязана пройти на ПРОДЕ, но зависит
  * от ops-шага, который делает человек (курс-членство + три тарифа в Filament,
  * спецификация §7 п.5). Команда превращает «пять ручных проверок, которые
- * никто не воспроизведёт одинаково» в одну строку, воспроизводимую в день
+ * никто не воспроизведет одинаково» в одну строку, воспроизводимую в день
  * запуска и через месяц.
  *
- * Что НЕ делаем на проде и почему. Платёж создаётся ВНУТРИ withoutEvents():
- * настоящий Payment::created дёрнул бы выгрузку в финансовый Google Sheet,
+ * Что НЕ делаем на проде и почему. Платеж создается ВНУТРИ withoutEvents():
+ * настоящий Payment::created дернул бы выгрузку в финансовый Google Sheet,
  * реферальные награды, прану и приветственные письма — репетиция не должна
  * слать студенту письмо и писать строку в бухгалтерию. Проверяется ровно то,
  * ради чего написан H2644: контур ПРАВА (группа + период + гейт доступа + его
@@ -70,7 +70,7 @@ class RehearseClubMembership extends Command
         $tariffs = Tariff::query()->where('course_id', $course->id)->whereNotNull('membership_months')->get();
         $this->record('1. курс-членство', $tariffs->isEmpty() ? 'FAIL' : 'PASS',
             'курс #'.$course->id.' «'.$course->title.'», тарифов со сроком: '.$tariffs->count()
-            .($tariffs->isEmpty() ? ' — заполните membership_months (1/3/12) на трёх тарифах' : ''));
+            .($tariffs->isEmpty() ? ' — заполните membership_months (1/3/12) на трех тарифах' : ''));
 
         if ((bool) config('features.membership_tiered', false)) {
             $missing = [];
@@ -130,7 +130,7 @@ class RehearseClubMembership extends Command
             ->whereKeyNot($course->id)
             ->first();
         // H2886: репетировать надо на уроке, который клуб ДОЛЖЕН открыть. При
-        // объёме block_N первый по порядку урок курса может лежать в другом
+        // объеме block_N первый по порядку урок курса может лежать в другом
         // блоке — тогда шаг 6 покажет FAIL на верной конфигурации.
         $shelfKey = $shelfCourse instanceof Course ? $entitlement->accessKeyFor($shelfCourse) : 'full';
         $shelfLesson = $shelfCourse instanceof Course
@@ -147,18 +147,18 @@ class RehearseClubMembership extends Command
             : null;
         $this->record('3. полка записей', $shelfLesson instanceof Lesson ? 'PASS' : 'FAIL',
             $shelfCourse instanceof Course
-                ? 'курс «'.$shelfCourse->title.'», объём '.$shelfKey
-                    .', платный урок: '.($shelfLesson?->id ?? 'НЕТ — в этом объёме нет ни одного платного урока')
+                ? 'курс «'.$shelfCourse->title.'», объем '.$shelfKey
+                    .', платный урок: '.($shelfLesson?->id ?? 'НЕТ — в этом объеме нет ни одного платного урока')
                 : 'ни одного курса с club_included=true — наберите полку ЯВНЫМ списком: '
                     .'membership:club-catalogue --course=<id|slug> --course=… --apply. '
-                    .'Голый --apply на проде 16-08-2026 предлагает НОЛЬ курсов: авто-подбор идёт через '
+                    .'Голый --apply на проде 16-08-2026 предлагает НОЛЬ курсов: авто-подбор идет через '
                     .'Course::sellsRecordings(), а тот требует features.course_recordings_sales (OFF) '
                     .'И is_completed=true (0 из 100 активных курсов)');
 
         if (! config('features.club_membership')) {
             $this->record('4. флаг', 'WARN', 'features.club_membership ВЫКЛЮЧЕН — право не подмешивается в гейты; включите CLUB_MEMBERSHIP=true перед репетицией');
         } else {
-            $this->record('4. флаг', 'PASS', 'features.club_membership включён');
+            $this->record('4. флаг', 'PASS', 'features.club_membership включен');
         }
 
         $this->record('4b. recording rollout', 'PASS',
@@ -225,10 +225,10 @@ class RehearseClubMembership extends Command
             $unlocked = $shelfLesson->isUnlockedBy($keys);
             $this->record('6. каталог виден', ($covers && $unlocked) ? 'PASS' : 'FAIL',
                 'курс «'.$shelfCourse->title.'» покрыт: '.($covers ? 'да' : 'НЕТ')
-                .', объём '.$shelfKey
+                .', объем '.$shelfKey
                 .', урок #'.$shelfLesson->id.' открыт: '.($unlocked ? 'да' : 'НЕТ'));
 
-            // ── Шаг 6b. Частичный объём НЕ открывает лишнего ─────────────────
+            // ── Шаг 6b. Частичный объем НЕ открывает лишнего ─────────────────
             // Половина контракта block_N, которую шаг 6 проверить не может: он
             // доказывает, что нужное открылось, и молчит о том, что остальное
             // осталось закрытым. Именно эта половина стоит денег.
@@ -242,14 +242,14 @@ class RehearseClubMembership extends Command
                     ->orderBy('block_number')->orderBy('sort_order')->first();
 
                 if (! $outside instanceof Lesson) {
-                    $this->record('6b. вне объёма закрыто', 'SKIP',
+                    $this->record('6b. вне объема закрыто', 'SKIP',
                         'у курса нет платных уроков за пределами блока '.$shelfLesson->block_number
-                        .' — проверять нечего (объём совпал с курсом целиком)');
+                        .' — проверять нечего (объем совпал с курсом целиком)');
                 } else {
                     $leaked = $outside->isUnlockedBy($keys);
-                    $this->record('6b. вне объёма закрыто', $leaked ? 'FAIL' : 'PASS',
+                    $this->record('6b. вне объема закрыто', $leaked ? 'FAIL' : 'PASS',
                         'урок #'.$outside->id.' (блок '.$outside->block_number.') '
-                        .($leaked ? 'ОТКРЫТ — утечка объёма' : 'закрыт, как и должен'));
+                        .($leaked ? 'ОТКРЫТ — утечка объема' : 'закрыт, как и должен'));
                 }
             }
 
@@ -299,7 +299,7 @@ class RehearseClubMembership extends Command
                         $user->groups()->syncWithoutDetaching($restore);
                     }
                 });
-                $this->line('Откат выполнен: репетиционный платёж и период удалены, состав групп восстановлен.');
+                $this->line('Откат выполнен: репетиционный платеж и период удалены, состав групп восстановлен.');
             } else {
                 $this->warn('--keep: созданное НЕ откачено — уберите вручную.');
             }

@@ -89,7 +89,7 @@
             {{-- Правый блок: Войти / Аккаунт --}}
             <div class="flex items-center gap-2 md:gap-3 shrink-0">
                 
-                {{-- Контакты для тёмной шапки магазина --}}
+                {{-- Контакты для темной шапки магазина --}}
 @include('partials.contacts-bar', ['variant' => 'dark'])
 
 {{-- Разделитель --}}
@@ -146,7 +146,9 @@
     </header>
 
     {{-- H2365: site-wide free-intro / trial next-date CTA (NextIntroSession) --}}
-    @include('shop.partials.free-intro-banner')
+    @unless(request()->routeIs('beginner-pilot.show'))
+        @include('shop.partials.free-intro-banner')
+    @endunless
 
     {{-- ═══════════════ КОНТЕНТ ═══════════════ --}}
     <main class="flex-1">

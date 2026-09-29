@@ -143,6 +143,8 @@ final class TrialController extends Controller
         $user = User::create([
             'email' => $request->input('email'),
             'name' => $fullName,
+            // Поле «Имя» формы — точное имя для обращения, без угадывания по ФИО.
+            'greeting_name' => mb_substr(trim((string) $request->input('name')), 0, 60) ?: null,
             'password' => Hash::make(Str::random(12)),
             'wants_email_announcements' => $request->boolean('wants_announcements'),
             // Новый аккаунт = opt-in по той же галочке согласия на рассылку (152-ФЗ).

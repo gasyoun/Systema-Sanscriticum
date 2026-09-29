@@ -570,6 +570,31 @@ class TeacherSalaries extends Page implements HasTable
                         Teacher::whereKey((int) $data['teacher_id'])->lockForUpdate()->first();
                     }
 
+                    // H5442 (P0, D13): один расчётный пакет на блок — стабильный
+                    // ключ (препод+курс+блок+группа) и unique-индекс. Раньше база
+                    // бралась из формы, и двойной submit создавал две выплаты и два
+                    // зеркала в «Финансах». Повтор — отказ без записи; повторить
+                    // можно только после отмены (удаления) первой выплаты.
+                    $settlementKey = config('features.payment_fix_wave1') && ! empty($data['teacher_id'])
+                        ? TeacherPayout::blockSettlementKey(
+                            (int) $data['teacher_id'],
+                            (int) ($data['course_id'] ?? 0),
+                            (int) ($data['block_number'] ?? 0),
+                            ! empty($data['group_id']) ? (int) $data['group_id'] : null,
+                        )
+                        : null;
+                    if ($settlementKey !== null
+                        && ($existing = TeacherPayout::query()->where('settlement_key', $settlementKey)->first()) !== null) {
+                        Notification::make()
+                            ->title('Этот блок уже выплачен')
+                            ->body('Выплата #'.$existing->id.' от '.($existing->paid_at?->format('d.m.Y') ?? '—')
+                                .' уже закрывает этот блок у этого преподавателя. Вторая выплата не записана. Поздние оплаты добавляются в выплату следующего блока, разовая доплата — через «Записать выплату».')
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
                     $course = $data['course_id'] ? Course::find($data['course_id']) : null;
                     $salaryType = (string) ($data['salary_type'] ?? 'percent');
                     $isFixed = $this->isFixedModel($salaryType);
@@ -697,6 +722,7 @@ class TeacherSalaries extends Page implements HasTable
                     $amountForeign = ($currency && $rate > 0) ? round($total / $rate, 2) : null;
 
                     $payout = Teacher::find($data['teacher_id'])?->payouts()->create([
+                        'settlement_key' => $settlementKey,
                         'amount' => $total,
                         'paid_at' => now()->toDateString(),
                         'period_month' => $period,
@@ -1569,33 +1595,32 @@ class TeacherSalaries extends Page implements HasTable
                 // со-препод — из pivot), а не всегда основного.
                 $terms = $course?->salaryTermsFor((int) $r->id);
 
-                $payout = Teacher::find($r->id)?->payouts()->create([
-                    'amount' => $data['amount'],
-                    'type' => TeacherPayout::TYPE_REGULAR,
-                    'paid_at' => $data['paid_at'],
-                    'period_month' => $data['period_month'] ?? null,
-                    'course_id' => $course?->id,
-                    'salary_type' => $terms['type'] ?? null,
-                    'salary_value' => $terms['value'] ?? null,
-                    'comment' => $data['comment'] ?? null,
-                ]);
-
-                if ($payout && ($data['post_to_finance'] ?? true)) {
-                    app(TeacherPayoutPoster::class)->post($payout);
+                $teacher = Teacher::find($r->id);
+                if ($teacher === null) {
+                    return;
                 }
 
-                // Зачёт авансов: помечаем непогашенные авансы преподавателя зачтёнными.
-                if (! empty($data['settle_advances'])) {
-                    TeacherPayout::query()
-                        ->where('teacher_id', $r->id)
-                        ->unsettledAdvances()
-                        ->get()
-                        ->each(fn (TeacherPayout $advance) => $advance->update([
-                            'settled_amount' => $advance->amount,
-                            'settled_at' => now(),
-                            'settled_by' => auth()->id(),
-                        ]));
-                }
+                // H5007 (audit H7): создание выплаты + проводка в «Финансах» +
+                // зачёт авансов — ОДНА транзакция, и зачёт FIFO НЕ БОЛЬШЕ суммы
+                // выплаты (тот же settleAdvancesForBlockPayout, что у поблочной
+                // выплаты). Раньше «Зачесть аванс» гасил ВСЕ авансы целиком
+                // независимо от суммы, и падение проводки оставляло выплату
+                // без транзакции-оттока.
+                app(TeacherSalaryService::class)->recordManualPayout(
+                    $teacher,
+                    [
+                        'amount' => (float) $data['amount'],
+                        'paid_at' => $data['paid_at'],
+                        'period_month' => $data['period_month'] ?? null,
+                        'course_id' => $course?->id,
+                        'salary_type' => $terms['type'] ?? null,
+                        'salary_value' => $terms['value'] ?? null,
+                        'comment' => $data['comment'] ?? null,
+                    ],
+                    (bool) ($data['post_to_finance'] ?? true),
+                    ! empty($data['settle_advances']),
+                    auth()->id(),
+                );
 
                 Notification::make()
                     ->title('Выплата записана')

@@ -68,10 +68,10 @@ class SeasonOpenCommand extends Command
 
         $this->info("Season #{$season->id} opened. Leaderboard baseline set for ".$users->count().' users.');
 
-        // Decay включён флагом seasons.decay_enabled=true на строке сезона —
+        // Decay включен флагом seasons.decay_enabled=true на строке сезона —
         // PranaService::isDecayEnabled() читает его из БД (H3297). Гасится
-        // автоматически season:close (R4-1: decay не живёт вне сезона).
-        $this->info('Decay включён DB-флагом seasons.decay_enabled=true (сезон #'.$season->id.').');
+        // автоматически season:close (R4-1: decay не живет вне сезона).
+        $this->info('Decay включен DB-флагом seasons.decay_enabled=true (сезон #'.$season->id.').');
 
         return 0;
     }

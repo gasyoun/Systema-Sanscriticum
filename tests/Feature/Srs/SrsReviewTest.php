@@ -86,7 +86,7 @@ class SrsReviewTest extends TestCase
         $this->makeSystemDeck(withCard: false);
 
         Livewire::actingAs($user)->test(SrsReview::class)
-            ->assertSee('На сегодня всё');
+            ->assertSee('На сегодня все');
     }
 
     public function test_review_renders_audio_and_image_when_media_published(): void

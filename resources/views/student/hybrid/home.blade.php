@@ -18,7 +18,7 @@
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
     <div class="mt-6">
-        {{-- Flash от платёжных редиректов (анти-дубль, отбивки DebtPaymentController):
+        {{-- Flash от платежных редиректов (анти-дубль, отбивки DebtPaymentController):
              без баннера отказ выглядит как «кнопка ничего не делает». --}}
         @include('student.partials.flash-messages')
     </div>
@@ -27,13 +27,25 @@
             Добро пожаловать, {{ auth()->user()->name }}!
         </h2>
         <p class="text-gray-500 text-base">{{ now()->timezone(config('app.timezone'))->translatedFormat('l, d F') }}</p>
-        {{-- H4463: повторный показ welcome-тура (тот же гейт, что у партиала) --}}
-        @if (config('features.cabinet_tour') && ! \App\Support\Impersonation::isActive())
-        <button type="button" x-on:click="$dispatch('open-cabinet-tour')"
-                class="mt-2 inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline">
-            <i class="fas fa-route text-xs"></i> Обзор кабинета
-        </button>
-        @endif
+        <div class="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1">
+            {{-- H4463: повторный показ welcome-тура (тот же гейт, что у партиала) --}}
+            @if (config('features.cabinet_tour') && ! \App\Support\Impersonation::isActive())
+            <button type="button" x-on:click="$dispatch('open-cabinet-tour')"
+                    class="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline">
+                <i class="fas fa-route text-xs"></i> Обзор кабинета
+            </button>
+            @endif
+            {{-- Студент сам пишет отзыв (/dvaram/otzyv). На легаси-дашборде кнопка была,
+                 а гибридный «Сегодня» (прод, CABINET_HYBRID) её не показывал — страницу
+                 находили только по прямой ссылке. --}}
+            @if (config('features.student_testimonials'))
+            <a href="{{ route('student.testimonial.create') }}"
+               class="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline"
+               data-analytics="hybrid-home-testimonial">
+                <i class="fas fa-comment-dots text-xs"></i> Оставить отзыв
+            </a>
+            @endif
+        </div>
     </div>
 
     @include('student.partials.hindi-programme-playlist-card', ['hindiPlaylist' => $hindiPlaylist ?? null])
@@ -74,8 +86,8 @@
                     <p class="text-xs text-gray-400 mb-3">{{ $c['meta'] }}</p>
                 @endif
                 @if (! empty($c['cta']['url']))
-                    {{-- CTA обязан уважать method: платёжные действия (bundle-долг,
-                         взнос рассрочки) — POST-роуты, голая ссылка даёт 405. --}}
+                    {{-- CTA обязан уважать method: платежные действия (bundle-долг,
+                         взнос рассрочки) — POST-роуты, голая ссылка дает 405. --}}
                     @if (($c['cta']['method'] ?? 'GET') === 'POST')
                         <form method="POST" action="{{ $c['cta']['url'] }}">
                             @csrf
@@ -88,7 +100,7 @@
                         </form>
                     @else
                         {{-- TAB («Открыть долги», #debts) — в hybrid-шелле вкладок нет,
-                             ведём на страницу «Оплата и доступ». --}}
+                             ведем на страницу «Оплата и доступ». --}}
                         <a href="{{ ($c['cta']['method'] ?? 'GET') === 'TAB' ? route('student.access') : $c['cta']['url'] }}"
                            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold"
                            data-track-event="cabinet.continue.click"
@@ -183,6 +195,9 @@
         <a href="{{ route('student.dashboard') }}#prana" class="hover:text-brand">Прана</a>
         <a href="{{ route('student.progress') }}" class="hover:text-brand">Сертификаты</a>
         <a href="{{ route('student.open-lessons') }}" class="hover:text-brand">Открытые уроки</a>
+        @if (config('features.student_testimonials'))
+            <a href="{{ route('student.testimonial.create') }}" class="hover:text-brand">Оставить отзыв</a>
+        @endif
     </nav>
 </div>
 
