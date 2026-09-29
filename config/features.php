@@ -1793,6 +1793,13 @@ return [
     'money_bank_statement_credits' => (bool) env('MONEY_BANK_STATEMENT_CREDITS', false),
 
     /*
+     | Booked outgoing Tochka transfers as immutable payroll evidence.
+     | Evidence import never creates payments or teacher_payouts. OFF until
+     | identities and historical allocations have been reviewed by accounting.
+     */
+    'money_tochka_teacher_transfers' => (bool) env('MONEY_TOCHKA_TEACHER_TRANSFERS', false),
+
+    /*
      | Role-gated, read-only October payroll readiness census and private
      | export. It never creates payments or teacher_payouts. Missing or stale
      | evidence holds positive lines. Default OFF until acceptance evidence is
@@ -1816,4 +1823,27 @@ return [
      | на /otzyvy не показываются; модерация уже присланных работает всегда.
      */
     'student_testimonials' => (bool) env('STUDENT_TESTIMONIALS', false),
+
+    /*
+     | Money-контур: «Разбить оплату блока на другую группу» (Студенты →
+     | массовое действие). Студент оплатил блок N целиком в курсе-когорте A, но
+     | со 2-й половины учится в курсе-когорте B: платёж A становится
+     | block_N_h1 на свою долю, на курсе B заводится block_N_h2 на остаток — так
+     | открываются уроки обеих половин и выручка делится между группами. Сухой
+     | прогон доступен всегда, применение — только при включённом флаге.
+     | Дефолт OFF; боевое включение — отдельный шаг после проверки разметки
+     | половин (lessons.block_half) в обоих курсах.
+     */
+    'payment_block_half_split' => (bool) env('PAYMENT_BLOCK_HALF_SPLIT', false),
+
+    /*
+     | Money-контур: строгое покрытие блоков при расчёте долга (кабинет,
+     | «Должники», напоминания). Бронь и пробное без границ блоков сейчас
+     | читаются как «оплачен весь курс» и прячут долг навсегда; возврат
+     | («Расход») делает то же в кабинете. Включено — бронь/пробное остаются
+     | оплатой курса, но блок не покрывают; возврат и выплата ЗП не считаются
+     | покупкой вовсе. Дефолт OFF: включение добавит долги ученикам, которые
+     | начинали с брони (перепись на проде 28-09-2026: 3 пары, все гр.60).
+     */
+    'debt_strict_block_coverage' => (bool) env('DEBT_STRICT_BLOCK_COVERAGE', false),
 ];
