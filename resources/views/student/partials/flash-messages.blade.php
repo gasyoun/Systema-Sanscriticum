@@ -10,6 +10,19 @@
     </div>
 @endif
 
+{{-- status — приветствие после входа по одноразовой ссылке («задайте пароль»);
+     password_status — итог смены пароля. Раньше выводились только на легаси-
+     дашборде (password_status) или нигде (status), а прод живёт на hybrid. --}}
+@foreach (['status', 'password_status'] as $flashKey)
+    @if (session($flashKey))
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 8000)" role="status"
+             class="mb-6 flex items-center justify-between gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">
+            <span><i class="fas fa-check-circle mr-1.5"></i>{{ session($flashKey) }}</span>
+            <button type="button" x-on:click="show = false" class="text-green-500 hover:text-green-700" aria-label="Закрыть"><i class="fas fa-times"></i></button>
+        </div>
+    @endif
+@endforeach
+
 @if (session('success'))
     <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 8000)" role="status"
          class="mb-6 flex items-center justify-between gap-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3">

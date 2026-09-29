@@ -45,6 +45,13 @@
                 <i class="fas fa-comment-dots text-xs"></i> Оставить отзыв
             </a>
             @endif
+            {{-- Смена пароля: на легаси-дашборде кнопка была, на hybrid (прод) пропала
+                 вместе с модалкой — студенту после входа по ссылке негде задать пароль. --}}
+            <button type="button" x-on:click="$dispatch('open-change-password')"
+                    class="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline"
+                    data-analytics="hybrid-home-change-password">
+                <i class="fas fa-key text-xs"></i> Сменить пароль
+            </button>
         </div>
     </div>
 
@@ -203,5 +210,7 @@
 
 {{-- H4463: welcome-тур (автопоказ 1 раз + кнопка «Обзор кабинета» выше) --}}
 @include('student.partials.cabinet-tour')
+
+@include('student.partials.change-password-modal')
 
 @endsection
