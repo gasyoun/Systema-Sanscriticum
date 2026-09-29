@@ -17,6 +17,16 @@ return [
         'leytan' => 'xoom_mg',
     ],
 
+    // Human-set window starts for teachers with no payout/transfer history
+    // (no teacher_payouts, no «Расход» records, no bank evidence). Without an
+    // entry here such a teacher stays outside_calculator and is absent from
+    // the per-line tables. Keyed by teachers.id. Fail-closed: missing,
+    // invalid, or future-dated values are ignored.
+    // Гасунс Марцис (prod id 2): never paid through recorded channels, rate
+    // always 100% (MG 29-09-2026) — full depth on purpose.
+    'teacher_since_overrides' => [
+        2 => '2020-01-01',
+    ],
     // Private, gitignored manifest prepared by accounting. It contains hashes
     // and dates, not credentials. See docs/TEACHER_PAYROLL_READINESS_2026.md.
     'evidence_manifest_path' => env(
