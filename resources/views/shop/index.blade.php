@@ -33,13 +33,13 @@
                     <i class="fas fa-compass"></i>
                     Не знаете, с чего начать?
                 </a>
-                {{-- H2764 / R18: путь из трёх направлений, не стена потоков --}}
+                {{-- H2764 / R18: путь из трех направлений, не стена потоков --}}
                 <a href="{{ route('shop.pathway') }}"
                    class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#38BDF8]/60 hover:bg-[#38BDF8]/5 text-[#38BDF8] text-sm font-bold rounded-xl transition-all">
                     <i class="fas fa-route"></i>
                     Три направления
                 </a>
-                {{-- Клуб записей (H2645) — виден только при включённом контуре H2644 --}}
+                {{-- Клуб записей (H2645) — виден только при включенном контуре H2644 --}}
                 @if(config('features.club_membership'))
                 <a href="{{ route('membership.landing') }}"
                    class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-[#38BDF8]/60 hover:bg-[#38BDF8]/5 text-[#38BDF8] text-sm font-bold rounded-xl transition-all">
@@ -82,6 +82,9 @@
             'initialLevel' => $initialLevel,
             'initialSearch' => $initialSearch,
         ])
+
+        {{-- H5134 — JS сердечка «Избранное» (флаг OFF — пусто) --}}
+        @include('shop.partials.favorites-script')
 
         {{-- Лесенка цен с позиционированием (H1293) --}}
         @include('shop.partials.price-ladder-narrative', ['ladder' => $ladder])

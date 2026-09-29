@@ -33,7 +33,7 @@
             </button>
         </form>
         @if(session('status') === 'added_to_srs')
-            <p class="text-sm text-gray-600 mb-6">Карточка в вашей колоде «Лаборатория грамматики». Расписание ведёт существующий FSRS.</p>
+            <p class="text-sm text-gray-600 mb-6">Карточка в вашей колоде «Лаборатория грамматики». Расписание ведет существующий FSRS.</p>
         @endif
         @if(!empty($recommendation))
             <div class="mb-6 px-4 py-3 rounded-xl border border-gray-200">

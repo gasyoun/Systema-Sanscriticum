@@ -12,11 +12,11 @@
             <span style="font-size: 64px; color: #d35400; line-height: 1;">ॐ</span>
         </div>
 
-        <h2 style="color: #8a3324; text-align: center; font-size: 26px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'друг' }}!</h2>
+        <h2 style="color: #8a3324; text-align: center; font-size: 26px; margin-top: 0; font-weight: normal;">Намасте, {{ $user?->greetingName('друг') ?? 'друг' }}!</h2>
 
         <p style="font-size: 18px; text-align: center;">Недавно вы оплатили курс — спасибо, что вы с нами. Ваш <strong>личный кабинет</strong> уже открыт.</p>
 
-        <p style="font-size: 16px;">В кабинете вас ждут <strong>записи занятий</strong> и материалы: смотреть можно в любое время и в своём темпе — ничего не пропадает, догнать группу можно с любого места.</p>
+        <p style="font-size: 16px;">В кабинете вас ждут <strong>записи занятий</strong> и материалы: смотреть можно в любое время и в своем темпе — ничего не пропадает, догнать группу можно с любого места.</p>
 
         <div style="text-align: center; margin-top: 35px; margin-bottom: 30px;">
             <a href="{{ $loginUrl }}" style="background-color: #d35400; color: #ffffff; padding: 14px 35px; text-decoration: none; border-radius: 30px; font-weight: bold; font-size: 15px; display: inline-block; letter-spacing: 1px;">Войти в кабинет без пароля</a>

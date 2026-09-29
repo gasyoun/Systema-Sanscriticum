@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * Pull-сверка посещаемости Zoom через Reports API — страховка от пропущенных
- * вебхуков participant_joined/left. По каждому курсу с единой ссылкой берём
+ * вебхуков participant_joined/left. По каждому курсу с единой ссылкой берем
  * прошедшие запуски встречи (instances), мапим на занятие (resolveForZoomEvent)
  * и апсертим участников. Идемпотентно (тот же ключ schedule_id+participant_uuid).
  */

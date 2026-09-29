@@ -27,7 +27,7 @@
         </select>
         <p class="mt-1 text-xs text-gray-400">
             Семья — это ярлык, которым связаны потоки одной программы. Он проставляется в карточке курса,
-            поле «Семья потоков»; пустой список означает, что ни одному курсу семья ещё не назначена
+            поле «Семья потоков»; пустой список означает, что ни одному курсу семья еще не назначена
             (команда <code>courses:backfill-families</code>).
         </p>
     </div>
@@ -111,7 +111,7 @@
 
             <p class="text-xs text-gray-400">
                 «Чел.» — сколько человек купили <b>именно этот блок</b>: то же определение, что у выручки блока.
-                «Доступ у N» появляется, когда у блока есть ещё и те, кто купил курс целиком, — они за блок
+                «Доступ у N» появляется, когда у блока есть еще и те, кто купил курс целиком, — они за блок
                 отдельно не платили, поэтому в выручку блока не входят. Учтены только оплаченные платежи,
                 без «обещанного» доступа.
             </p>
@@ -137,7 +137,7 @@
                         @if ($s['salary_scheme'] === null)
                             <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
                                 У курса не задана схема оплаты преподавателя, поэтому начисление здесь ноль.
-                                Это не ошибка расчёта: пока схемы нет, начислять не с чего.
+                                Это не ошибка расчета: пока схемы нет, начислять не с чего.
                             </p>
                         @endif
                     </div>
@@ -164,7 +164,7 @@
                     <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $money($salary['accrued']) }} ₽</div>
                 </div>
                 <div class="rounded-xl bg-gray-50 p-4 ring-1 ring-gray-950/5 dark:bg-white/5 dark:ring-white/10">
-                    <div class="text-sm text-gray-500 dark:text-gray-400">Выплачено (подтверждённо)</div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">Выплачено (подтвержденно)</div>
                     <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ $money($salary['paid_out']) }} ₽</div>
                 </div>
                 <div @class([
@@ -189,7 +189,7 @@
                     </p>
                     <p class="mt-1 text-amber-900/80 dark:text-amber-200/80">
                         {{ count($salary['pending_candidates']) }}
-                        {{ Plural::ru(count($salary['pending_candidates']), 'платёж', 'платежа', 'платежей') }}
+                        {{ Plural::ru(count($salary['pending_candidates']), 'платеж', 'платежа', 'платежей') }}
                         на {{ $money($salary['pending_total']) }} ₽ проведены по этим курсам как «Расход», но из данных
                         неотличимы от аренды или рекламы: они заведены на служебного пользователя, а не на
                         преподавателя. Пока человек не подтвердит, что это именно выплаты преподавателю, они
@@ -214,10 +214,10 @@
                         <table class="w-full text-xs">
                             <thead class="text-amber-900/70 dark:text-amber-200/70">
                                 <tr>
-                                    <th class="px-2 py-1 text-left font-semibold">Платёж</th>
+                                    <th class="px-2 py-1 text-left font-semibold">Платеж</th>
                                     <th class="px-2 py-1 text-left font-semibold">Дата</th>
                                     <th class="px-2 py-1 text-left font-semibold">Курс</th>
-                                    <th class="px-2 py-1 text-left font-semibold">На кого заведён</th>
+                                    <th class="px-2 py-1 text-left font-semibold">На кого заведен</th>
                                     <th class="px-2 py-1 text-right font-semibold">Сумма, ₽</th>
                                 </tr>
                             </thead>
@@ -280,12 +280,12 @@
             </div>
         </section>
 
-        {{-- ── Блок 5. Отток поимённо + плашка покрытия ────────────────────── --}}
+        {{-- ── Блок 5. Отток поименно + плашка покрытия ────────────────────── --}}
         <section class="space-y-3">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Отток и посещаемость</h2>
 
-            {{-- Плашка покрытия: обязательна. Пустая колонка посещаемости без неё
-                 читается как «никто не ходил» — это была бы ложь в отчёте. --}}
+            {{-- Плашка покрытия: обязательна. Пустая колонка посещаемости без нее
+                 читается как «никто не ходил» — это была бы ложь в отчете. --}}
             <div class="rounded-xl bg-blue-50 p-4 text-sm ring-1 ring-blue-500/20 dark:bg-blue-500/10">
                 <p class="font-semibold text-blue-900 dark:text-blue-200">
                     Данные о посещаемости есть по {{ $attendance['covered_users'] }} из {{ $attendance['total_users'] }}

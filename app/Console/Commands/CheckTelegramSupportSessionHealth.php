@@ -13,9 +13,10 @@ use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 
 /**
- * W3.1 healthcheck (H595): раз в N минут проверяет каждую включённую
+ * W3.1 healthcheck (H595): раз в N минут проверяет каждую включенную
  * {@see TelegramSupportAccount} на протухший синк или ошибку.
  *
  * При `TELEGRAM_SUPPORT_AUTO_HEAL=true` и healable-ошибке / stale:
@@ -39,7 +40,15 @@ class CheckTelegramSupportSessionHealth extends Command
             ->get();
 
         if ($accounts->isEmpty()) {
-            $this->info('Нет включённых Telegram-support аккаунтов — проверять нечего.');
+            // H5061: ноль включенных аккаунтов — это not_supported/unavailable,
+            // а не здоровье: выключенные мониторимые поверхности НЕ превращаются
+            // в зеленый. Exit остается SUCCESS (прогон планировщика не роняем),
+            // но состояние обязано быть громким и машинночитаемым —
+            // тот же класс, что H4648 «канва не вооружена».
+            $this->warn('Нет включенных Telegram-support аккаунтов — проверять нечего (шов не вооружен, статус not_supported).');
+            Log::warning('telegram-support:healthcheck — включенных аккаунтов 0, проверка не вооружена (not_supported)', [
+                'state' => 'not_supported',
+            ]);
 
             return self::SUCCESS;
         }
@@ -107,14 +116,14 @@ class CheckTelegramSupportSessionHealth extends Command
             }
 
             if (! $stillBad && $exit === self::SUCCESS) {
-                $this->info('Auto-heal: сессия восстановлена, алерт не шлём.');
+                $this->info('Auto-heal: сессия восстановлена, алерт не шлем.');
 
                 return self::SUCCESS;
             }
 
-            $this->warn('Auto-heal: проблемы остались — шлём алерт.');
+            $this->warn('Auto-heal: проблемы остались — шлем алерт.');
             // Refresh problem text for the alert body.
-            $problems[] = 'Auto-heal recover выполнялся, но сессия всё ещё нездорова.';
+            $problems[] = 'Auto-heal recover выполнялся, но сессия все еще нездорова.';
         } elseif ($healable && $healer->autoHealEnabled() && $healer->isInCooldown()) {
             $this->comment('Auto-heal: в cooldown ('.$healer->cooldownMinutes().' мин) — только алерт.');
         }

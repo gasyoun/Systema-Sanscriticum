@@ -170,7 +170,7 @@
                     this.embedUrl = '';
                     this.chooserOptions = [];
                 },
-                /* Листание остаётся в пределах доступных страниц; на границе
+                /* Листание остается в пределах доступных страниц; на границе
                    заблокированной зоны — модалка авторизации вместо перехода. */
                 prev() { this.slide = (this.slide - 1 + this.maxSlide) % this.maxSlide },
                 next() {
@@ -256,7 +256,7 @@
                                             #{{ $card['number'] }}
                                         </span>
 
-                                        {{-- Бейдж длительности — только если админ её заполнил. --}}
+                                        {{-- Бейдж длительности — только если админ ее заполнил. --}}
                                         @if($card['duration'])
                                             <span class="absolute bottom-2 right-2 px-2 py-0.5 text-xs font-semibold text-white bg-black/70 backdrop-blur-sm rounded-md tabular-nums">
                                                 {{ $card['duration'] }}

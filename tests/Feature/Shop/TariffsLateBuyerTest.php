@@ -100,7 +100,7 @@ class TariffsLateBuyerTest extends TestCase
         $html = $this->get('/k/'.$course->slug)->assertOk()->getContent();
 
         $this->assertStringContainsString('data-testid="tariffs-underway-notice"', $html);
-        $this->assertStringContainsString('Курс уже идёт', $html);
+        $this->assertStringContainsString('Курс уже идет', $html);
         $this->assertStringContainsString('записи всех прошедших занятий', $html);
         // Число записей считается по факту, а не заявляется.
         $this->assertStringContainsString('сейчас их 3', $html);
@@ -116,7 +116,7 @@ class TariffsLateBuyerTest extends TestCase
         $html = $this->get('/k/'.$course->slug)->assertOk()->getContent();
 
         $this->assertStringContainsString('data-testid="tariffs-finished-block"', $html);
-        $this->assertStringContainsString('УЖЕ ПРОШЁЛ — В ЗАПИСИ', $html);
+        $this->assertStringContainsString('УЖЕ ПРОШЕЛ — В ЗАПИСИ', $html);
         $this->assertStringContainsString('Купить записи блока', $html);
         // Идущий блок остаётся живым — его кнопка не должна стать «записями».
         $this->assertStringContainsString('СЕЙЧАС ИДЕТ', $html);

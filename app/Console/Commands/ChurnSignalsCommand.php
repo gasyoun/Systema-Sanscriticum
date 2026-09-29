@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Storage;
  * Вызов:
  *   edtech:churn-signals            собрать сигналы, напечатать JSON, POST в n8n
  *   edtech:churn-signals --dry-run  только печать payload, без POST и записи
- *   edtech:churn-signals --d7       отчёт: была ли активность в 7 дней после
+ *   edtech:churn-signals --d7       отчет: была ли активность в 7 дней после
  *                                   сигнала, split intervention/control
  *
  * Вебхук — тот же n8n-паттерн, что schedule→sheet (X-Webhook-Secret, H1960);
@@ -124,8 +124,8 @@ class ChurnSignalsCommand extends Command
         // без условных нод), по одному POST на действие:
         //   intervention         → .../churn-curator (флаг куратору)
         //   intervention + tg_id → .../churn-nudge   (TG-подтягивание)
-        //   d7-отчёт             → .../churn-d7      (сводка intervention/control)
-        // control — измерение без интервенции, POST не шлём.
+        //   d7-отчет             → .../churn-d7      (сводка intervention/control)
+        // control — измерение без интервенции, POST не шлем.
         $sent = 0;
         foreach ($signals as $s) {
             if ($s['bucket'] !== 'intervention') {
@@ -143,14 +143,14 @@ class ChurnSignalsCommand extends Command
     }
 
     /**
-     * d7-отчёт: для каждой записи состояния — была ли у юзера активность
+     * d7-отчет: для каждой записи состояния — была ли у юзера активность
      * (SRS или открытие урока) в 7 дней после signaled_at.
      */
     private function d7Report(): int
     {
         $state = $this->readState();
         if ($state === []) {
-            $this->warn('Состояние пусто ('.Storage::disk('local')->path(self::STATE_FILE).') — отчёта нет.');
+            $this->warn('Состояние пусто ('.Storage::disk('local')->path(self::STATE_FILE).') — отчета нет.');
 
             return self::SUCCESS;
         }

@@ -36,7 +36,7 @@
                         <div class="absolute inset-0 rounded-full blur-xl opacity-20 group-hover:opacity-60 transition-opacity duration-500 scale-110" style="background: linear-gradient(135deg, var(--accent), #fca5a5);"></div>
                         
                         @php
-                            // Ищем картинку в базе Куратора по её ID
+                            // Ищем картинку в базе Куратора по ее ID
                             $media = \Awcodes\Curator\Models\Media::find($item['image']);
                         @endphp
 

@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * Идемпотентна: файл, уже существующий на приватном диске, пропускается,
  * так что повторный запуск и обрыв на середине безопасны. Прямая ссылка
- * /storage/archives/... после переноса отдаёт 404, скачивание остаётся
+ * /storage/archives/... после переноса отдает 404, скачивание остается
  * только через staff-маршрут force-download.
  */
 class MovePublicArchivesToLocal extends Command
@@ -61,7 +61,7 @@ class MovePublicArchivesToLocal extends Command
 
             if ((bool) $this->option('dry-run')) {
                 $moved++;
-                $this->line("Будет перенесён: {$path}");
+                $this->line("Будет перенесен: {$path}");
 
                 continue;
             }
@@ -80,7 +80,7 @@ class MovePublicArchivesToLocal extends Command
             if ($local->exists($path) && $local->size($path) === $public->size($path)) {
                 $public->delete($path);
                 $moved++;
-                $this->info("Перенесён: {$path}");
+                $this->info("Перенесен: {$path}");
             } else {
                 $this->error("Копия не сошлась по размеру, оригинал не тронут: {$path}");
             }
@@ -88,7 +88,7 @@ class MovePublicArchivesToLocal extends Command
 
         if (! (bool) $this->option('dry-run') && ! $public->exists('archives/.gitignore') && $public->files('archives') === []) {
             $public->deleteDirectory('archives');
-            $this->info('Каталог public/archives опустел и удалён.');
+            $this->info('Каталог public/archives опустел и удален.');
         }
 
         $dryRun = (bool) $this->option('dry-run');
