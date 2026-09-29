@@ -34,7 +34,7 @@
         <div class="c360-card">
             <div class="c360-k">Карточка</div>
             <div class="c360-v">Выберите студента или заявку</div>
-            <p class="c360-src">Поиск сверху, либо ссылка со страницы студента / заявки. Факты не копируются — каждая строка ведёт к своему владельцу.</p>
+            <p class="c360-src">Поиск сверху, либо ссылка со страницы студента / заявки. Факты не копируются — каждая строка ведет к своему владельцу.</p>
         </div>
     @else
         <h2 class="text-xl font-bold mb-3">{{ $snap->displayName }}</h2>
@@ -73,7 +73,7 @@
                     владелец: {{ $access['owner'] ?? 'Payment' }}
                     @if(!empty($access['course'])) · {{ $access['course'] }} @endif
                     @if(!empty($access['url']))
-                        · <a href="{{ $access['url'] }}">платёж</a>
+                        · <a href="{{ $access['url'] }}">платеж</a>
                     @endif
                 </div>
             </div>
@@ -90,7 +90,7 @@
             </div>
 
             <div class="c360-card" data-testid="c360-learning">
-                <div class="c360-k">Учёба</div>
+                <div class="c360-k">Учеба</div>
                 <div class="c360-v">{{ $learning['event_type'] ?? 'нет событий' }}</div>
                 <div class="c360-src">владелец: ActivityEvent</div>
             </div>
@@ -129,7 +129,7 @@
                             <option value="">исход…</option>
                             <option value="booked">записан</option>
                             <option value="attended">был</option>
-                            <option value="no_show">не пришёл</option>
+                            <option value="no_show">не пришел</option>
                             <option value="converted">конвертирован</option>
                         </select>
                         <button type="button" class="c360-btn" wire:click="applyTrialOutcome">Сохранить исход</button>

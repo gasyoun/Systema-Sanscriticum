@@ -44,12 +44,21 @@ class PaymentWebhookEvent extends Model
      */
     public const DECISION_REJECTED_CHARGE = 'rejected_charge';
 
+    /**
+     * Подпись валидна и грант был бы применён, но sentinel_breaker (H4930,
+     * features.money_mutation_breaker) заморожен — N+1-я мутация в окне
+     * отказана и прокричана денежным каналом; доступ НЕ выдан, ждём
+     * человека. Точка ретраит на non-2xx, поэтому этот путь тоже отвечает 200.
+     */
+    public const DECISION_BREAKER_REFUSED = 'breaker_refused';
+
     /** Решения-отказы — для отчёта операторам (AuditCheckoutIntegrity). */
     public const REJECTED_DECISIONS = [
         self::DECISION_REJECTED_RESURRECTION,
         self::DECISION_REJECTED_AMOUNT_MISMATCH,
         self::DECISION_REJECTED_CHARGE,
         self::DECISION_HOLD_NOT_CAPTURED,
+        self::DECISION_BREAKER_REFUSED,
     ];
 
     /** Только момент записи; updated_at не нужен — лог неизменяем. */

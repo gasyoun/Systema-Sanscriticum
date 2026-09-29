@@ -50,6 +50,11 @@ return [
         'maximum_tooling' => 'club',
         'private_archives' => 'top',
         'additive_samudra' => 'top',
+        // H4832: преподавательский глоссарий — агрегат живой преподавательской
+        // речи (кириллическая форма → SLP1 лемма, freq ≥ 20, 42-курсовой
+        // профиль). Поверхность тира Top; включается флагом
+        // features.teaching_glossary в дополнение к этому минимуму.
+        'teaching_glossary' => 'top',
     ],
 
     'recording_gate' => [

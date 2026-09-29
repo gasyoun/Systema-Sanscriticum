@@ -22,6 +22,12 @@ class PublicWaitlistController extends Controller
 {
     private const CACHE_TTL_MINUTES = 5;
 
+    /** Голос гостя, отложенный до входа: ['slug' => …, 'slot_preference' => …]. */
+    public const PENDING_VOTE_SESSION_KEY = 'waitlist.pending_vote';
+
+    /** Флеш «голос учтён» — зелёное уведомление на /online/zhdun. */
+    public const VOTED_FLASH_KEY = 'waitlist_voted';
+
     public function index(): JsonResponse
     {
         $data = Cache::remember(
@@ -43,19 +49,30 @@ class PublicWaitlistController extends Controller
             abort(404);
         }
 
-        // Только зарегистрированные в кабинете (MG 31-08-2026). Гость — 401.
-        // Из web-группы (/online/zhdun/vote, 01-09-2026) сессия стартует в
-        // мидлвари, user('web') резолвится; из api — как раньше.
-        $user = $request->user('web') ?? $request->user();
-        if (! $user instanceof User) {
-            return response()->json(['ok' => false, 'error' => 'auth_required'], 401);
-        }
-
         $data = $request->validate([
             'slug' => ['required', 'string', 'max:180'],
             // H4206: пожелание времени слота; повторный голос обновляет его.
             'slot_preference' => ['nullable', 'string', 'in:'.implode(',', array_keys(WaitlistVote::SLOT_PREFERENCES))],
         ]);
+
+        // Только зарегистрированные в кабинете (MG 31-08-2026). Гость — 401.
+        // Из web-группы (/online/zhdun/vote, 01-09-2026) сессия стартует в
+        // мидлвари, user('web') резолвится; из api — как раньше.
+        $user = $request->user('web') ?? $request->user();
+        if (! $user instanceof User) {
+            // Гость с витрины: голос откладываем в сессию — его засчитает
+            // CastPendingWaitlistVote при входе/регистрации, а после входа
+            // вернём на /online/zhdun (url.intended).
+            if ($request->hasSession()) {
+                $request->session()->put(self::PENDING_VOTE_SESSION_KEY, [
+                    'slug' => $data['slug'],
+                    'slot_preference' => $data['slot_preference'] ?? null,
+                ]);
+                $request->session()->put('url.intended', route('shop.waitlist'));
+            }
+
+            return response()->json(['ok' => false, 'error' => 'auth_required'], 401);
+        }
 
         $item = CourseWaitlistItem::query()
             ->where('slug', $data['slug'])
@@ -66,17 +83,12 @@ class PublicWaitlistController extends Controller
             return response()->json(['ok' => false, 'error' => 'not_found'], 404);
         }
 
-        // 1 голос с юзера на строку: updateOrCreate — повтор не дублирует,
-        // но обновляет пожелание времени (H4206).
-        WaitlistVote::updateOrCreate([
-            'course_waitlist_item_id' => $item->getKey(),
-            'user_id' => $user->getKey(),
-        ], [
-            'slot_preference' => $data['slot_preference'] ?? null,
-        ]);
+        $item->castVoteBy($user, $data['slot_preference'] ?? null);
 
-        // Кэш фида сбрасываем — прогресс на карточках должен обновиться сразу.
-        Cache::forget('public_waitlist:v1');
+        // Страница перезагрузится после ответа — там покажем «Спасибо, ваш голос учтён!».
+        if ($request->hasSession()) {
+            $request->session()->flash(self::VOTED_FLASH_KEY, true);
+        }
 
         return response()->json([
             'ok' => true,

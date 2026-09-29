@@ -11,14 +11,14 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Проводит в «Финансах» уже существующие выплаты преподам (transaction-зеркало
- * salary_payout), у которых ещё нет привязанной транзакции. По умолчанию —
+ * salary_payout), у которых еще нет привязанной транзакции. По умолчанию —
  * dry-run; запись только с --apply. Идемпотентно: повторный прогон не дублирует.
  */
 class PostTeacherPayouts extends Command
 {
     protected $signature = 'salary:post-payouts {--apply : Реально создать транзакции (без флага — только показать)}';
 
-    protected $description = 'Создаёт транзакции «Выплата ЗП» в Финансах для ранее записанных выплат без привязки.';
+    protected $description = 'Создает транзакции «Выплата ЗП» в Финансах для ранее записанных выплат без привязки.';
 
     public function handle(TeacherPayoutPoster $poster): int
     {

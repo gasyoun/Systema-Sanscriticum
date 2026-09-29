@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CourseFavoriteController;
 use App\Http\Controllers\Api\GamesSrsOnboardingController;
 use App\Http\Controllers\Api\GameTelemetryController;
 use App\Http\Controllers\Api\LilaGateController;
@@ -21,6 +22,7 @@ use App\Models\Course;
 use App\Models\LandingPage;
 use App\Models\Lesson;
 use App\Models\Testimonial;
+use App\Support\BeginnerPilotOffer;
 use App\Support\TrajectoryPaths;
 use Illuminate\Support\Facades\Route;
 
@@ -131,6 +133,10 @@ Route::get('/dvaram/private-archive/{archive}', [MembershipCommerceController::c
 
 // «С чего начать» — вводная страница новичка: лесенка продуктов + квиз подбора
 // курса + уровни (H323, beginner on-ramp).
+Route::get('/online/poprobovat', fn () => view('shop.beginner-pilot', [
+    'offer' => BeginnerPilotOffer::forView(),
+]))->name('beginner-pilot.show');
+
 Route::get('/online/s-chego-nachat', [ShopController::class, 'start'])->name('shop.start');
 
 // Текущий набор в новые онлайн-группы грамматики. Это не каталог: страница
@@ -162,6 +168,18 @@ Route::post('/online/zhdun/vote', [PublicWaitlistController::class, 'vote'])
 Route::post('/online/zhdun/unvote', [PublicWaitlistController::class, 'unvote'])
     ->middleware('throttle:10,1')
     ->name('shop.waitlist.unvote');
+
+// H5134 — «Избранное» (сердечки, MG 17-09-2026): тот же контур, что голос
+// ждуна — web-группа (сессия + CSRF), auth-гейт и флаг course_favorites в
+// контроллере (OFF → 404, гость → 401). Отдельно от голоса: WaitlistVote не
+// трогаем. Анти-шум: throttle 10,1; писем нет; PII не логируется.
+Route::post('/favorites/toggle', [CourseFavoriteController::class, 'toggle'])
+    ->middleware('throttle:10,1')
+    ->name('shop.favorites.toggle');
+
+Route::get('/favorites', [CourseFavoriteController::class, 'index'])
+    ->middleware('throttle:10,1')
+    ->name('shop.favorites.index');
 
 // «Материалы» — журнальный хаб бесплатного контента над магазином (H387,
 // паттерн Arzamas): статьи + бесплатные беседы + preview-уроки одной сеткой
@@ -232,6 +250,11 @@ Route::get('/widgets/schedule', [PublicWidgetController::class, 'schedule'])->na
 // эта страница — человеческий эквивалент на samskrte.ru. Без auth.
 Route::get('/raspisanie', PublicSchedulePageController::class)
     ->name('schedule.page');
+
+// H5233: живые группы семейства Кочергиной с канвой и кликом на заявку.
+// Объявлен рядом с /raspisanie; точный путь, паттерн /raspisanie его не съедает.
+Route::get('/raspisanie/kochergina', [PublicSchedulePageController::class, 'groups'])
+    ->name('schedule.groups');
 
 // Редиректы со старых URL витрины (SEO + старые ссылки/закладки/реклама).
 // Имена роутов сохранены, меняются только пути — поэтому route() ниже валиден.

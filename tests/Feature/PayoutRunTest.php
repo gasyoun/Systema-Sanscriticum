@@ -277,6 +277,34 @@ class PayoutRunTest extends TestCase
         $this->assertEqualsWithDelta(65.18, $row['payable_eur'], 0.02);
     }
 
+    /** H5532: direct cash earns the normal percentage before the held cash is offset. */
+    public function test_direct_receipt_is_course_revenue_then_cash_held_is_offset_once(): void
+    {
+        config()->set('features.teacher_direct_receipt_revenue_parity', true);
+        $leytan = Teacher::create(['name' => 'Лейтан Эдгар', 'payout_currency' => 'EUR']);
+        $syntax = $this->percentCourse($leytan, 'Синтаксис', 60);
+        $this->block($syntax, 65, '2026-07-21', '2026-08-25');
+        $this->pay($syntax, ['user_id' => User::factory()->create()->id, 'amount' => 24000, 'tariff' => 'block_65', 'start_block' => 65, 'end_block' => 65], '2026-08-01');
+        $this->pay($syntax, [
+            'user_id' => User::factory()->create()->id,
+            'amount' => 7000,
+            'tariff' => 'block_65', 'start_block' => 65, 'end_block' => 65,
+            'received_account' => Payment::RECEIVED_TEACHER,
+            'received_by_teacher_id' => $leytan->id,
+            'foreign_amount' => 70.0,
+            'foreign_currency' => 'EUR',
+        ], '2026-08-02');
+        $this->fx(98.0, '2026-08-26');
+
+        $row = $this->runner->runForTeacher($leytan, Carbon::parse('2026-08-26'), Carbon::parse('2026-07-24'));
+
+        $this->assertSame(31000.0, $row['base_total_rub']);
+        $this->assertSame(70.0, $row['direct_receipts']['total']);
+        // (31,000 × 92% × 60%) − (70 × 98) = 10,252 RUB; the offset is once.
+        $this->assertSame(10252.0, $row['payable_rub']);
+        $this->assertEqualsWithDelta(104.61, $row['payable_eur'], 0.02);
+    }
+
     /** Приёмка №4: пустой ends_at → фолбэк на занятия с ⚠; совсем без дат → видимый ⚠, не ноль. */
     public function test_empty_ends_at_falls_back_to_lessons_with_visible_warning(): void
     {
@@ -476,7 +504,7 @@ class PayoutRunTest extends TestCase
             'Костина Екатерина 2-й блок Хинди по 26.08.2026:',
             '🔹️ Хинди:',
             '2-й блок: платных 8: (48000 × 92%) × 30% = 44160 × 30% = 13248 р.',
-            'перерасчёт за 1-й блок: платных 1: (6000 × 92%) × 30% = 5520 × 30% = 1656 р.',
+            'перерасчет за 1-й блок: платных 1: (6000 × 92%) × 30% = 5520 × 30% = 1656 р.',
             'итого: 13248 + 1656 = 14904 р. = 151,28 €',
             'Итого начислено: 14 904,00 руб. или 151,28 €',
             'К оплате: 151,28 € / 14 904,00 руб.',
@@ -551,9 +579,9 @@ class PayoutRunTest extends TestCase
         $this->assertSame(0, $code);
         $out = Artisan::output();
         foreach ([
-            '### Перерасчёты старых блоков (поимённо)',
+            '### Перерасчеты старых блоков (поименно)',
             sprintf('| Поздняя Оплата | Синтаксис | 64 | 4 800,00 | 05.08.2026 | %d |', $latePayer->id),
-            '### Должники по завершённым блокам',
+            '### Должники по завершенным блокам',
             '— не оплатили: Соловьева Ольга',
             'не считаем должниками (вступили в группу после завершения блока): Поздний Тест',
         ] as $expected) {
@@ -584,15 +612,37 @@ class PayoutRunTest extends TestCase
         $this->assertSame(0, $code);
         $out = Artisan::output();
         foreach ([
-            '# Лента платежей расчёта',
+            '# Лента платежей расчета',
             '**30.07.2026**',
             '- Плательщик Наличные — «Синтаксис», блок 65 — доля блока #'.$cashPayer->id.' — 19 200,00 р. — Наличные',
             '- Плательщик СБП — «Синтаксис», блок 65 — доля блока #'.$payer->id.' — 4 800,00 р. — СБП',
-            'Доли расчёта: 24 000,00 р.',
+            'Доли расчета: 24 000,00 р.',
         ] as $expected) {
             $this->assertStringContainsString($expected, $out);
         }
         // Хронология: 30.07 строго раньше 01.08 (лексическая сортировка d.m.Y давала бы обратное).
         $this->assertLessThan((int) strpos($out, '**01.08.2026**'), (int) strpos($out, '**30.07.2026**'));
+    }
+
+    /** H5007 (audit H6): блок, завершённый В ДЕНЬ отсечки, входит ровно один раз — в перерасчёт, не в окно. */
+    public function test_h5007_block_completed_on_since_day_is_counted_once(): void
+    {
+        $teacher = Teacher::create(['name' => 'Тест Граница']);
+        $course = $this->percentCourse($teacher, 'Граница', 50);
+        // Completed exactly on the since day (2026-07-24) with an unpaid share.
+        $this->block($course, 7, '2026-07-01', '2026-07-24');
+        $this->pay($course, ['user_id' => User::factory()->create()->id, 'amount' => 4800, 'tariff' => 'block_7', 'start_block' => 7, 'end_block' => 7], '2026-08-01');
+
+        $row = $this->runner->runForTeacher($teacher, Carbon::parse('2026-08-26'), Carbon::parse('2026-07-24'));
+
+        $inWindow = collect($row['blocks'] ?? [])->where('block_number', 7)->count();
+        $inPrior = collect($row['prior_blocks'] ?? [])->where('block_number', 7)->count();
+        $this->assertSame(1, $inWindow + $inPrior, 'the since-day block must appear in exactly one bucket');
+        $this->assertSame(0, $inWindow);
+        $this->assertSame(1, $inPrior);
+        // Pre-fix: 4800 landed in BOTH base_total_rub and prior_rub (9600 total).
+        $this->assertSame(0.0, (float) $row['base_rub']);
+        $this->assertSame(4800.0, (float) $row['prior_rub']);
+        $this->assertSame(4800.0, (float) $row['base_total_rub']);
     }
 }

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Канал крика общего предохранителя (sentinel breaker) на .92 — H4691.
  *
- * Библиотека `sentinel_breaker.py` на каждой заморозке и авто-разморозке зовёт
+ * Библиотека `sentinel_breaker.py` на каждой заморозке и авто-разморозке зовет
  * SENTINEL_BREAKER_ALARM_CMD, дописывая "<label>" "<message>". В приложении эта
  * команда и есть такой ALARM_CMD (см. {@see MadelineSyncBreaker}):
  * сообщение уходит в критический чат cabinet:probe (тот же, куда падают «Кабинет

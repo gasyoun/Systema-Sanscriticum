@@ -11,10 +11,10 @@ use RuntimeException;
 /**
  * H4597 — backfill исторических выплат преподавателям из манифеста.
  *
- * Dry-run по умолчанию; --apply пишет ТОЛЬКО teacher_payouts и разрешён
+ * Dry-run по умолчанию; --apply пишет ТОЛЬКО teacher_payouts и разрешен
  * исключительно после независимого PASS верификатора (class money, H4358,
  * раздел ## Verifier хендоффа H4597). Идемпотентно: повторный прогон
- * пропускает уже заведённые строки. Манифест живёт в приватном Uprava
+ * пропускает уже заведенные строки. Манифест живет в приватном Uprava
  * (data/h4597_backfill_manifest_*.json), в публичный Systema не коммитится.
  */
 class PayrollBackfillHistory extends Command

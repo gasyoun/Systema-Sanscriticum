@@ -31,7 +31,7 @@ final class DeliverMarathonWarmTail extends Command
 {
     protected $signature = 'marathon:deliver-warm-tail';
 
-    protected $description = 'Доставить тёплый хвост (Дни 4-16) неоплатившим энролам марафона';
+    protected $description = 'Доставить теплый хвост (Дни 4-16) неоплатившим энролам марафона';
 
     public function handle(DeliveryChannelManager $channels): int
     {

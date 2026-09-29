@@ -15,7 +15,7 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Подтверждение студенту: заявка «заплатил преподавателю напрямую» получена
  * (H4627). Доступ откроется после сверки куратора по выписке преподавателя —
- * авто-доверия в этом канале нет. Очередь mailing — приём заявки не
+ * авто-доверия в этом канале нет. Очередь mailing — прием заявки не
  * блокируется на SMTP.
  */
 class TeacherPayStudentAckMail extends Mailable implements ShouldQueue

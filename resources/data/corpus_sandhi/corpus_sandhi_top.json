@@ -1,0 +1,4007 @@
+{
+ "schema": "corpus_sandhi_top_v1",
+ "source": {
+  "dataset": "corpus-sandhi",
+  "repo": "https://github.com/gasyoun/kosha",
+  "path": "data/sandhi/corpus_sandhi.tsv",
+  "commit": "3a9c35bd957cc47f6d9eb480f9c8b73428dd4611",
+  "blob": "985dc9e275de7d3441c1fb3b8f4f230b2f799346",
+  "license": "CC BY-SA 4.0",
+  "credit": "DCS (Oliver Hellwig), CC BY-SA 4.0; rule induction and ranking — kosha, Dr. Mārcis Gasūns"
+ },
+ "stats": {
+  "texts": 41,
+  "events": 707936,
+  "rules_total": 13012,
+  "rules_baked": 147,
+  "coverage_cutoff_pct": 90.0,
+  "rules_for_50_pct": 23,
+  "rules_for_80_pct": 82,
+  "rules_for_90_pct": 147
+ },
+ "categories": [
+  {
+   "category": "anusvāra / nasal",
+   "count": 233373,
+   "pct_of_baked": 36.6
+  },
+  {
+   "category": "visarga",
+   "count": 203267,
+   "pct_of_baked": 31.9
+  },
+  {
+   "category": "vowel coalescence",
+   "count": 140558,
+   "pct_of_baked": 22.1
+  },
+  {
+   "category": "consonant / other",
+   "count": 59986,
+   "pct_of_baked": 9.4
+  }
+ ],
+ "rules": [
+  {
+   "rank": 1,
+   "rule": "a a → ā",
+   "category": "vowel coalescence",
+   "count": 45296,
+   "pct": 6.4,
+   "cum_pct": 6.4,
+   "n_texts": 41,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 23014
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 5581
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 3311
+    }
+   ],
+   "example": {
+    "sentence": "ajarāmaravat prājño vidyāmarthaṃ ca cintayet",
+    "split": "ajara+amara→ajarāmaravat"
+   }
+  },
+  {
+   "rank": 2,
+   "rule": "m p → ṃ p",
+   "category": "anusvāra / nasal",
+   "count": 26690,
+   "pct": 3.77,
+   "cum_pct": 10.17,
+   "n_texts": 41,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 15052
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 3360
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 1821
+    }
+   ],
+   "example": {
+    "sentence": "udyoginaṃ puruṣasiṃham upaiti lakṣmīr daivena deyam iti kāpuruṣā vadanti",
+    "split": "udyoginaṃ+puruṣa"
+   }
+  },
+  {
+   "rank": 3,
+   "rule": "m s → ṃ s",
+   "category": "anusvāra / nasal",
+   "count": 23476,
+   "pct": 3.32,
+   "cum_pct": 13.48,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 12210
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 3168
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 1694
+    }
+   ],
+   "example": {
+    "sentence": "śruto hitopadeśo 'yaṃ pāṭavaṃ saṃskṛtoktiṣu",
+    "split": "pāṭavaṃ+saṃskṛta"
+   }
+  },
+  {
+   "rank": 4,
+   "rule": "m v → ṃ v",
+   "category": "anusvāra / nasal",
+   "count": 22649,
+   "pct": 3.2,
+   "cum_pct": 16.68,
+   "n_texts": 40,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 11370
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 3080
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 2221
+    }
+   ],
+   "example": {
+    "sentence": "vidyā dadāti vinayaṃ vinayād yāti pātratām",
+    "split": "vinayaṃ+vinayād"
+   }
+  },
+  {
+   "rank": 5,
+   "rule": "m t → ṃ t",
+   "category": "anusvāra / nasal",
+   "count": 22119,
+   "pct": 3.12,
+   "cum_pct": 19.81,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 12167
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 3056
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 1664
+    }
+   ],
+   "example": {
+    "sentence": "pātratvāt dhanam āpnoti dhanād dharmaṃ tataḥ sukham",
+    "split": "dharmaṃ+tataḥ"
+   }
+  },
+  {
+   "rank": 6,
+   "rule": "ḥ t → s t",
+   "category": "visarga",
+   "count": 21292,
+   "pct": 3.01,
+   "cum_pct": 22.82,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 12503
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 3094
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 1118
+    }
+   ],
+   "example": {
+    "sentence": "kathāchalena bālānāṃ nītis tad iha kathyate",
+    "split": "nītis+tad"
+   }
+  },
+  {
+   "rank": 7,
+   "rule": "m c → ṃ c",
+   "category": "anusvāra / nasal",
+   "count": 20096,
+   "pct": 2.84,
+   "cum_pct": 25.65,
+   "n_texts": 40,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 10920
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 2164
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 1810
+    }
+   ],
+   "example": {
+    "sentence": "ajarāmaravat prājño vidyāmarthaṃ ca cintayet",
+    "split": "artham→vidyāmarthaṃ+ca"
+   }
+  },
+  {
+   "rank": 8,
+   "rule": "ḥ c → ś c",
+   "category": "visarga",
+   "count": 18883,
+   "pct": 2.67,
+   "cum_pct": 28.32,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 11553
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 2589
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 1030
+    }
+   ],
+   "example": {
+    "sentence": "ekaś candramās tamo hanti na ca tārāgaṇair api",
+    "split": "ekaś+candramās"
+   }
+  },
+  {
+   "rank": 9,
+   "rule": "m k → ṃ k",
+   "category": "anusvāra / nasal",
+   "count": 15961,
+   "pct": 2.25,
+   "cum_pct": 30.58,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 8321
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1868
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 1314
+    }
+   ],
+   "example": {
+    "sentence": "dhanurvaṃśaviśuddho 'pi nirguṇaḥ kiṃ kariṣyati",
+    "split": "kiṃ+kariṣyati"
+   }
+  },
+  {
+   "rank": 10,
+   "rule": "a ā → ā",
+   "category": "vowel coalescence",
+   "count": 15955,
+   "pct": 2.25,
+   "cum_pct": 32.83,
+   "n_texts": 41,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 7424
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 2182
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 1182
+    }
+   ],
+   "example": {
+    "sentence": "ity ākarṇyātmanaḥ putrāṇām anadhigataśāstrāṇāṃ nityam unmārgagāmināṃ śāstrānanuṣṭhānenodvignamanāḥ sa rājā cintayāmāsa",
+    "split": "ākarṇya+ātmanaḥ→ākarṇyātmanaḥ"
+   }
+  },
+  {
+   "rank": 11,
+   "rule": "m m → ṃ m",
+   "category": "anusvāra / nasal",
+   "count": 14226,
+   "pct": 2.01,
+   "cum_pct": 34.84,
+   "n_texts": 37,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 8035
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 2155
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 832
+    }
+   ],
+   "example": {
+    "sentence": "dāne tapasi śaurye ca yasya na prathitaṃ manaḥ",
+    "split": "prathitaṃ+manaḥ"
+   }
+  },
+  {
+   "rank": 12,
+   "rule": "m n → ṃ n",
+   "category": "anusvāra / nasal",
+   "count": 12870,
+   "pct": 1.82,
+   "cum_pct": 36.66,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 6731
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1695
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 717
+    }
+   ],
+   "example": {
+    "sentence": "vācāṃ sarvatra vaicitryaṃ nītividyāṃ dadāti ca",
+    "split": "vaicitryaṃ+nīti"
+   }
+  },
+  {
+   "rank": 13,
+   "rule": "m d → ṃ d",
+   "category": "anusvāra / nasal",
+   "count": 11375,
+   "pct": 1.61,
+   "cum_pct": 38.26,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 6249
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1691
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 614
+    }
+   ],
+   "example": {
+    "sentence": "vācāṃ sarvatra vaicitryaṃ nītividyāṃ dadāti ca",
+    "split": "vidyām→nītividyāṃ+dadāti"
+   }
+  },
+  {
+   "rank": 14,
+   "rule": "a u → o",
+   "category": "vowel coalescence",
+   "count": 10672,
+   "pct": 1.51,
+   "cum_pct": 39.77,
+   "n_texts": 41,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 4524
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1386
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 1120
+    }
+   ],
+   "example": {
+    "sentence": "śruto hitopadeśo 'yaṃ pāṭavaṃ saṃskṛtoktiṣu",
+    "split": "saṃskṛta+uktiṣu→saṃskṛtoktiṣu"
+   }
+  },
+  {
+   "rank": 15,
+   "rule": "a e → ai",
+   "category": "vowel coalescence",
+   "count": 10430,
+   "pct": 1.47,
+   "cum_pct": 41.25,
+   "n_texts": 41,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 6205
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1161
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 669
+    }
+   ],
+   "example": {
+    "sentence": "varaṃ garbhasrāvo varam api ca naivābhigamanaṃ varaṃ jātaḥ preto varam api ca kanyāvajanitā",
+    "split": "na+eva→naivābhigamanaṃ"
+   }
+  },
+  {
+   "rank": 16,
+   "rule": "aḥ v → o v",
+   "category": "visarga",
+   "count": 9662,
+   "pct": 1.36,
+   "cum_pct": 42.61,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 5088
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1248
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 740
+    }
+   ],
+   "example": {
+    "sentence": "ajarāmaravat prājño vidyāmarthaṃ ca cintayet",
+    "split": "prājño+vidyām"
+   }
+  },
+  {
+   "rank": 17,
+   "rule": "ā a → ā",
+   "category": "vowel coalescence",
+   "count": 9561,
+   "pct": 1.35,
+   "cum_pct": 43.96,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 4637
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 1047
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1040
+    }
+   ],
+   "example": {
+    "sentence": "saṃyojayati vidyaiva nīcagāpi naraṃ sarit",
+    "split": "nīcagā+api→nīcagāpi"
+   }
+  },
+  {
+   "rank": 18,
+   "rule": "m ś → ṃ ś",
+   "category": "anusvāra / nasal",
+   "count": 9424,
+   "pct": 1.33,
+   "cum_pct": 45.29,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 4909
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1398
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 798
+    }
+   ],
+   "example": {
+    "sentence": "sa bhūpatir ekadā kenāpi pāṭhyamānaṃ ślokadvayaṃ śuśrāva",
+    "split": "pāṭhyamānaṃ+śloka"
+   }
+  },
+  {
+   "rank": 19,
+   "rule": "i a → y a",
+   "category": "vowel coalescence",
+   "count": 8926,
+   "pct": 1.26,
+   "cum_pct": 46.55,
+   "n_texts": 40,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 4455
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 916
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 501
+    }
+   ],
+   "example": {
+    "sentence": "sarvasya locanaṃ śāstraṃ yasya nāsty andha eva saḥ",
+    "split": "asti→nāsty+andha"
+   }
+  },
+  {
+   "rank": 20,
+   "rule": "m y → ṃ y",
+   "category": "anusvāra / nasal",
+   "count": 8382,
+   "pct": 1.18,
+   "cum_pct": 47.74,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 4988
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 880
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 433
+    }
+   ],
+   "example": {
+    "sentence": "sarvasya locanaṃ śāstraṃ yasya nāsty andha eva saḥ",
+    "split": "śāstraṃ+yasya"
+   }
+  },
+  {
+   "rank": 21,
+   "rule": "aḥ m → o m",
+   "category": "visarga",
+   "count": 8120,
+   "pct": 1.15,
+   "cum_pct": 48.88,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 4936
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1151
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 366
+    }
+   ],
+   "example": {
+    "sentence": "asti kaścid evambhūto vidvān yo mama putrāṇāṃ nityam unmārgagāminām anadhigataśāstrāṇām idānīṃ nītiśāstropadeśena punar janma kārayituṃ samarthaḥ yataḥ",
+    "split": "yo+mama"
+   }
+  },
+  {
+   "rank": 22,
+   "rule": "aḥ a → o '",
+   "category": "visarga",
+   "count": 7503,
+   "pct": 1.06,
+   "cum_pct": 49.94,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 4107
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 854
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 807
+    }
+   ],
+   "example": {
+    "sentence": "ko 'rthaḥ putreṇa jātena yo na vidvān na dhārmikaḥ",
+    "split": "ko+'rthaḥ"
+   }
+  },
+  {
+   "rank": 23,
+   "rule": "aḥ n → o n",
+   "category": "visarga",
+   "count": 7291,
+   "pct": 1.03,
+   "cum_pct": 50.97,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 4058
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 840
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 358
+    }
+   ],
+   "example": {
+    "sentence": "yan nave bhājane lagnaḥ saṃskāro nānyathā bhavet",
+    "split": "saṃskāro+na"
+   }
+  },
+  {
+   "rank": 24,
+   "rule": "m bh → ṃ bh",
+   "category": "anusvāra / nasal",
+   "count": 7275,
+   "pct": 1.03,
+   "cum_pct": 52.0,
+   "n_texts": 37,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 4135
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 925
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 396
+    }
+   ],
+   "example": {
+    "sentence": "samudram iva durdharṣaṃ nṛpaṃ bhāgyam ataḥ param",
+    "split": "nṛpaṃ+bhāgyam"
+   }
+  },
+  {
+   "rank": 25,
+   "rule": "t a → d a",
+   "category": "consonant / other",
+   "count": 7087,
+   "pct": 1.0,
+   "cum_pct": 53.0,
+   "n_texts": 40,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 3517
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 616
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 438
+    }
+   ],
+   "example": {
+    "sentence": "ahāryatvād anarghatvād akṣayatvāc ca sarvadā",
+    "split": "ahāryatvād+anargha"
+   }
+  },
+  {
+   "rank": 26,
+   "rule": "m r → ṃ r",
+   "category": "anusvāra / nasal",
+   "count": 6928,
+   "pct": 0.98,
+   "cum_pct": 53.98,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 3409
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1700
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 380
+    }
+   ],
+   "example": {
+    "sentence": "atha prāsādapṛṣṭhe sukhopaviṣṭānāṃ rājaputrāṇāṃ purastāt prastāvakrameṇa paṇḍito 'bravīt",
+    "split": "upaviṣṭānām→sukhopaviṣṭānāṃ+rāja"
+   }
+  },
+  {
+   "rank": 27,
+   "rule": "ḥ a → r a",
+   "category": "visarga",
+   "count": 6712,
+   "pct": 0.95,
+   "cum_pct": 54.93,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 3722
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 778
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 356
+    }
+   ],
+   "example": {
+    "sentence": "sarvadravyeṣu vidyaiva dravyam āhur anuttamam",
+    "split": "āhur+anuttamam"
+   }
+  },
+  {
+   "rank": 28,
+   "rule": "a i → e",
+   "category": "vowel coalescence",
+   "count": 6520,
+   "pct": 0.92,
+   "cum_pct": 55.85,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 3438
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 1063
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 306
+    }
+   ],
+   "example": {
+    "sentence": "ajāgalastanasyeva tasya janma nirarthakam",
+    "split": "ajāgalastanasya+iva→ajāgalastanasyeva"
+   }
+  },
+  {
+   "rank": 29,
+   "rule": "m g → ṃ g",
+   "category": "anusvāra / nasal",
+   "count": 5945,
+   "pct": 0.84,
+   "cum_pct": 56.69,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 3035
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 828
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 387
+    }
+   ],
+   "example": {
+    "sentence": "varaṃ garbhasrāvo varam api ca naivābhigamanaṃ varaṃ jātaḥ preto varam api ca kanyāvajanitā",
+    "split": "varaṃ+garbhasrāvo"
+   }
+  },
+  {
+   "rank": 30,
+   "rule": "aḥ a → o a",
+   "category": "visarga",
+   "count": 5831,
+   "pct": 0.82,
+   "cum_pct": 57.51,
+   "n_texts": 37,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2319
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 729
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 613
+    }
+   ],
+   "example": {
+    "sentence": "varaṃ vandhyā bhāryā varam api ca garbheṣu vasatir na vāvidvān rūpadraviṇaguṇayukto 'pi tanayaḥ",
+    "split": "yuktaḥ→rūpadraviṇaguṇayukto+'pi"
+   }
+  },
+  {
+   "rank": 31,
+   "rule": "ḥ u → Ø u",
+   "category": "visarga",
+   "count": 5491,
+   "pct": 0.78,
+   "cum_pct": 58.29,
+   "n_texts": 31,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 4919
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 88
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 87
+    }
+   ],
+   "example": {
+    "sentence": "vyāghra uvāca śṛṇu re pāntha prāg eva yauvanadaśāyām aham atīva durvṛtta āsam",
+    "split": "vyāghra+uvāca"
+   }
+  },
+  {
+   "rank": 32,
+   "rule": "m h → ṃ h",
+   "category": "anusvāra / nasal",
+   "count": 5249,
+   "pct": 0.74,
+   "cum_pct": 59.03,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2823
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 831
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 366
+    }
+   ],
+   "example": {
+    "sentence": "nagnatvaṃ nīlakaṇṭhasya mahāhiśayanaṃ hareḥ",
+    "split": "śayanam→mahāhiśayanaṃ+hareḥ"
+   }
+  },
+  {
+   "rank": 33,
+   "rule": "aḥ d → o d",
+   "category": "visarga",
+   "count": 5009,
+   "pct": 0.71,
+   "cum_pct": 59.74,
+   "n_texts": 37,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2868
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 569
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 222
+    }
+   ],
+   "example": {
+    "sentence": "tadupadeśādidānīm ahaṃ snānaśīlo dātā vṛddho galitanakhadantaḥ na kathaṃ viśvāsabhūmiḥ",
+    "split": "śīlaḥ→snānaśīlo+dātā"
+   }
+  },
+  {
+   "rank": 34,
+   "rule": "ḥ v → r v",
+   "category": "visarga",
+   "count": 5001,
+   "pct": 0.71,
+   "cum_pct": 60.44,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2728
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 777
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 421
+    }
+   ],
+   "example": {
+    "sentence": "yaśasi cābhirucir vyasanaṃ śrutau prakṛtisiddham idaṃ hi mahātmanām",
+    "split": "abhiruciḥ→cābhirucir+vyasanaṃ"
+   }
+  },
+  {
+   "rank": 35,
+   "rule": "t v → d v",
+   "category": "consonant / other",
+   "count": 4984,
+   "pct": 0.7,
+   "cum_pct": 61.15,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2666
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 637
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 387
+    }
+   ],
+   "example": {
+    "sentence": "tasya putro bhaved vaśyaḥ samṛddho dhārmikaḥ sudhīḥ",
+    "split": "bhaved+vaśyaḥ"
+   }
+  },
+  {
+   "rank": 36,
+   "rule": "ḥ v → Ø v",
+   "category": "visarga",
+   "count": 4813,
+   "pct": 0.68,
+   "cum_pct": 61.83,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2763
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 729
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 339
+    }
+   ],
+   "example": {
+    "sentence": "udyoginaṃ puruṣasiṃham upaiti lakṣmīr daivena deyam iti kāpuruṣā vadanti",
+    "split": "kāpuruṣā+vadanti"
+   }
+  },
+  {
+   "rank": 37,
+   "rule": "m b → ṃ b",
+   "category": "anusvāra / nasal",
+   "count": 4715,
+   "pct": 0.67,
+   "cum_pct": 62.49,
+   "n_texts": 34,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2762
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 577
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 256
+    }
+   ],
+   "example": {
+    "sentence": "prakāśaṃ brūte",
+    "split": "prakāśaṃ+brūte"
+   }
+  },
+  {
+   "rank": 38,
+   "rule": "aḥ bh → o bh",
+   "category": "visarga",
+   "count": 4710,
+   "pct": 0.67,
+   "cum_pct": 63.16,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2808
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 532
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 267
+    }
+   ],
+   "example": {
+    "sentence": "tasya putro bhaved vaśyaḥ samṛddho dhārmikaḥ sudhīḥ",
+    "split": "putro+bhaved"
+   }
+  },
+  {
+   "rank": 39,
+   "rule": "m j → ṃ j",
+   "category": "anusvāra / nasal",
+   "count": 4675,
+   "pct": 0.66,
+   "cum_pct": 63.82,
+   "n_texts": 37,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2521
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 533
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 271
+    }
+   ],
+   "example": {
+    "sentence": "varaṃ garbhasrāvo varam api ca naivābhigamanaṃ varaṃ jātaḥ preto varam api ca kanyāvajanitā",
+    "split": "varaṃ+jātaḥ"
+   }
+  },
+  {
+   "rank": 40,
+   "rule": "ḥ i → Ø i",
+   "category": "visarga",
+   "count": 4614,
+   "pct": 0.65,
+   "cum_pct": 64.47,
+   "n_texts": 39,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2201
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 568
+    },
+    {
+     "text": "Mīmāṃsāsūtrabhāṣya",
+     "count": 217
+    }
+   ],
+   "example": {
+    "sentence": "gṛhīta iva keśeṣu mṛtyunā dharmamācaret",
+    "split": "gṛhīta+iva"
+   }
+  },
+  {
+   "rank": 41,
+   "rule": "aḥ r → o r",
+   "category": "visarga",
+   "count": 4534,
+   "pct": 0.64,
+   "cum_pct": 65.11,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2622
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 939
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 184
+    }
+   ],
+   "example": {
+    "sentence": "sampadi yasya na harṣo vipadi viṣādo raṇe ca bhīrutvam",
+    "split": "viṣādo+raṇe"
+   }
+  },
+  {
+   "rank": 42,
+   "rule": "aḥ y → o y",
+   "category": "visarga",
+   "count": 4498,
+   "pct": 0.64,
+   "cum_pct": 65.75,
+   "n_texts": 37,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2774
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 471
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 205
+    }
+   ],
+   "example": {
+    "sentence": "sa jāto yena jātena yāti vaṃśaḥ samunnatim",
+    "split": "jāto+yena"
+   }
+  },
+  {
+   "rank": 43,
+   "rule": "ā e → ai",
+   "category": "vowel coalescence",
+   "count": 3532,
+   "pct": 0.5,
+   "cum_pct": 66.25,
+   "n_texts": 34,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2085
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 405
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 234
+    }
+   ],
+   "example": {
+    "sentence": "sarvadravyeṣu vidyaiva dravyam āhur anuttamam",
+    "split": "vidyā+eva→vidyaiva"
+   }
+  },
+  {
+   "rank": 44,
+   "rule": "aḥ h → o h",
+   "category": "visarga",
+   "count": 3360,
+   "pct": 0.47,
+   "cum_pct": 66.72,
+   "n_texts": 37,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1876
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 451
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 174
+    }
+   ],
+   "example": {
+    "sentence": "śruto hitopadeśo 'yaṃ pāṭavaṃ saṃskṛtoktiṣu",
+    "split": "śruto+hitopadeśo"
+   }
+  },
+  {
+   "rank": 45,
+   "rule": "ḥ m → Ø m",
+   "category": "visarga",
+   "count": 3353,
+   "pct": 0.47,
+   "cum_pct": 67.19,
+   "n_texts": 32,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2163
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 503
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 169
+    }
+   ],
+   "example": {
+    "sentence": "anekagomānuṣāṇāṃ vadhānme putrā mṛtā dārāś ca",
+    "split": "putrā+mṛtā"
+   }
+  },
+  {
+   "rank": 46,
+   "rule": "ḥ m → r m",
+   "category": "visarga",
+   "count": 3303,
+   "pct": 0.47,
+   "cum_pct": 67.66,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2039
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 500
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 176
+    }
+   ],
+   "example": {
+    "sentence": "ṛṇakartā pitā śatrur mātā ca vyabhicāriṇī",
+    "split": "śatrur+mātā"
+   }
+  },
+  {
+   "rank": 47,
+   "rule": "m dh → ṃ dh",
+   "category": "anusvāra / nasal",
+   "count": 3243,
+   "pct": 0.46,
+   "cum_pct": 68.12,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 2095
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 322
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 198
+    }
+   ],
+   "example": {
+    "sentence": "yauvanaṃ dhanasampattiḥ prabhutvam avivekitā",
+    "split": "yauvanaṃ+dhana"
+   }
+  },
+  {
+   "rank": 48,
+   "rule": "u a → v a",
+   "category": "vowel coalescence",
+   "count": 3232,
+   "pct": 0.46,
+   "cum_pct": 68.58,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1491
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 331
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 292
+    }
+   ],
+   "example": {
+    "sentence": "īrṣyī ghṛṇī tv asaṃtuṣṭaḥ krodhano nityaśaṅkitaḥ",
+    "split": "tv+a"
+   }
+  },
+  {
+   "rank": 49,
+   "rule": "e a → e '",
+   "category": "vowel coalescence",
+   "count": 3154,
+   "pct": 0.45,
+   "cum_pct": 69.02,
+   "n_texts": 31,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1666
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 271
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 270
+    }
+   ],
+   "example": {
+    "sentence": "sa ca bhojanāvaśiṣṭabhikṣānnasahitaṃ bhikṣāpātraṃ nāgadantake 'vasthāpya svapiti",
+    "split": "dantake+'vasthāpya"
+   }
+  },
+  {
+   "rank": 50,
+   "rule": "ā i → e",
+   "category": "vowel coalescence",
+   "count": 3087,
+   "pct": 0.44,
+   "cum_pct": 69.46,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1717
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 386
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 291
+    }
+   ],
+   "example": {
+    "sentence": "ayaṃ nijaḥ paro veti gaṇanā laghucetasām",
+    "split": "vā+iti→veti"
+   }
+  },
+  {
+   "rank": 51,
+   "rule": "i e → y e",
+   "category": "vowel coalescence",
+   "count": 3040,
+   "pct": 0.43,
+   "cum_pct": 69.89,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1676
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 295
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 165
+    }
+   ],
+   "example": {
+    "sentence": "yathā hy ekena cakreṇa na rathasya gatir bhavet",
+    "split": "hy+ekena"
+   }
+  },
+  {
+   "rank": 52,
+   "rule": "t m → n m",
+   "category": "consonant / other",
+   "count": 2965,
+   "pct": 0.42,
+   "cum_pct": 70.31,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1706
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 340
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 183
+    }
+   ],
+   "example": {
+    "sentence": "tato yāvad asau tadvacaḥpratīto lobhāt saraḥ snātuṃ praviṣṭaḥ tāvan mahāpaṅke nimagnaḥ palāyitum akṣamaḥ",
+    "split": "tāvan+mahā"
+   }
+  },
+  {
+   "rank": 53,
+   "rule": "t c → c c",
+   "category": "consonant / other",
+   "count": 2922,
+   "pct": 0.41,
+   "cum_pct": 70.72,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1341
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 284
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 266
+    }
+   ],
+   "example": {
+    "sentence": "ahāryatvād anarghatvād akṣayatvāc ca sarvadā",
+    "split": "tvāt→akṣayatvāc+ca"
+   }
+  },
+  {
+   "rank": 54,
+   "rule": "ḥ n → Ø n",
+   "category": "visarga",
+   "count": 2860,
+   "pct": 0.4,
+   "cum_pct": 71.12,
+   "n_texts": 34,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1764
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 401
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 113
+    }
+   ],
+   "example": {
+    "sentence": "vidyāhīnā na śobhante nirgandhā iva kiṃśukāḥ",
+    "split": "hīnāḥ→vidyāhīnā+na"
+   }
+  },
+  {
+   "rank": 55,
+   "rule": "ḥ n → r n",
+   "category": "visarga",
+   "count": 2823,
+   "pct": 0.4,
+   "cum_pct": 71.52,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1741
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 330
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 100
+    }
+   ],
+   "example": {
+    "sentence": "varaṃ vandhyā bhāryā varam api ca garbheṣu vasatir na vāvidvān rūpadraviṇaguṇayukto 'pi tanayaḥ",
+    "split": "vasatir+na"
+   }
+  },
+  {
+   "rank": 56,
+   "rule": "s s → ḥ s",
+   "category": "consonant / other",
+   "count": 2654,
+   "pct": 0.37,
+   "cum_pct": 71.9,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1435
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 357
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 246
+    }
+   ],
+   "example": {
+    "sentence": "pātratvāt dhanam āpnoti dhanād dharmaṃ tataḥ sukham",
+    "split": "tataḥ+sukham"
+   }
+  },
+  {
+   "rank": 57,
+   "rule": "n c → ṃś c",
+   "category": "anusvāra / nasal",
+   "count": 2650,
+   "pct": 0.37,
+   "cum_pct": 72.27,
+   "n_texts": 26,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1791
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 340
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 128
+    }
+   ],
+   "example": {
+    "sentence": "atha pāśabaddhāṃś caitān dṛṣṭvā savismayaḥ kṣaṇaṃ sthitvā uvāca sakhe kim etat",
+    "split": "baddhān→pāśabaddhāṃś+ca"
+   }
+  },
+  {
+   "rank": 58,
+   "rule": "aḥ b → o b",
+   "category": "visarga",
+   "count": 2599,
+   "pct": 0.37,
+   "cum_pct": 72.64,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1522
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 251
+    },
+    {
+     "text": "Hitopadeśa",
+     "count": 152
+    }
+   ],
+   "example": {
+    "sentence": "ko dhanyo bahubhiḥ putraiḥ kuśūlāpūraṇāḍhakaiḥ",
+    "split": "dhanyo+bahubhiḥ"
+   }
+  },
+  {
+   "rank": 59,
+   "rule": "i u → y u",
+   "category": "vowel coalescence",
+   "count": 2587,
+   "pct": 0.37,
+   "cum_pct": 73.0,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1124
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 395
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 200
+    }
+   ],
+   "example": {
+    "sentence": "tad eteṣām asmatputrāṇāṃ nītiśāstropadeśāya bhavantaḥ pramāṇam ity uktvā tasya viṣṇuśarmaṇo bahumānapuraḥsaraṃ putrān samarpitavān",
+    "split": "ity+uktvā"
+   }
+  },
+  {
+   "rank": 60,
+   "rule": "ḥ r → Ø r",
+   "category": "visarga",
+   "count": 2536,
+   "pct": 0.36,
+   "cum_pct": 73.36,
+   "n_texts": 25,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1556
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 563
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 101
+    }
+   ],
+   "example": {
+    "sentence": "ity ākarṇyātmanaḥ putrāṇām anadhigataśāstrāṇāṃ nityam unmārgagāmināṃ śāstrānanuṣṭhānenodvignamanāḥ sa rājā cintayāmāsa",
+    "split": "sa+rājā"
+   }
+  },
+  {
+   "rank": 61,
+   "rule": "s p → ḥ p",
+   "category": "consonant / other",
+   "count": 2503,
+   "pct": 0.35,
+   "cum_pct": 73.71,
+   "n_texts": 33,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1378
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 284
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 180
+    }
+   ],
+   "example": {
+    "sentence": "samudram iva durdharṣaṃ nṛpaṃ bhāgyam ataḥ param",
+    "split": "ataḥ+param"
+   }
+  },
+  {
+   "rank": 62,
+   "rule": "t n → n n",
+   "category": "consonant / other",
+   "count": 2458,
+   "pct": 0.35,
+   "cum_pct": 74.06,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1274
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 235
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 132
+    }
+   ],
+   "example": {
+    "sentence": "yan nave bhājane lagnaḥ saṃskāro nānyathā bhavet",
+    "split": "yan+nave"
+   }
+  },
+  {
+   "rank": 63,
+   "rule": "ḥ d → Ø d",
+   "category": "visarga",
+   "count": 2438,
+   "pct": 0.34,
+   "cum_pct": 74.41,
+   "n_texts": 34,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1473
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 364
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 132
+    }
+   ],
+   "example": {
+    "sentence": "anekagomānuṣāṇāṃ vadhānme putrā mṛtā dārāś ca",
+    "split": "mṛtā+dārāś"
+   }
+  },
+  {
+   "rank": 64,
+   "rule": "aḥ j → o j",
+   "category": "visarga",
+   "count": 2361,
+   "pct": 0.33,
+   "cum_pct": 74.74,
+   "n_texts": 34,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1372
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 221
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 135
+    }
+   ],
+   "example": {
+    "sentence": "jñānaṃ narāṇām adhiko viśeṣo jñānena hīnāḥ paśubhiḥ samānāḥ",
+    "split": "viśeṣo+jñānena"
+   }
+  },
+  {
+   "rank": 65,
+   "rule": "m l → ṃ l",
+   "category": "anusvāra / nasal",
+   "count": 2324,
+   "pct": 0.33,
+   "cum_pct": 75.07,
+   "n_texts": 34,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1089
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 428
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 231
+    }
+   ],
+   "example": {
+    "sentence": "lokayātrā bhayaṃ lajjā dākṣiṇyaṃ tyāgaśīlatā",
+    "split": "bhayaṃ+lajjā"
+   }
+  },
+  {
+   "rank": 66,
+   "rule": "t d → d d",
+   "category": "consonant / other",
+   "count": 2317,
+   "pct": 0.33,
+   "cum_pct": 75.4,
+   "n_texts": 37,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1256
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 205
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 159
+    }
+   ],
+   "example": {
+    "sentence": "sakṛd duḥkhakarāv ādyāv antimas tu pade pade",
+    "split": "sakṛd+duḥkha"
+   }
+  },
+  {
+   "rank": 67,
+   "rule": "n t → ṃs t",
+   "category": "anusvāra / nasal",
+   "count": 2314,
+   "pct": 0.33,
+   "cum_pct": 75.72,
+   "n_texts": 25,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1583
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 321
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 89
+    }
+   ],
+   "example": {
+    "sentence": "asmiṃs tu nirguṇaṃ gotre nāpatyam upajāyate",
+    "split": "asmiṃs+tu"
+   }
+  },
+  {
+   "rank": 68,
+   "rule": "i i → ī",
+   "category": "vowel coalescence",
+   "count": 2239,
+   "pct": 0.32,
+   "cum_pct": 76.04,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1145
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 180
+    },
+    {
+     "text": "Mīmāṃsāsūtrabhāṣya",
+     "count": 157
+    }
+   ],
+   "example": {
+    "sentence": "yena svahastastham api suvarṇakaṅkaṇaṃ yasmai kasmaicid dātum icchāmi tathāpi vyāghro mānuṣaṃ khādatīti lokāpavādo durnivāraḥ",
+    "split": "khādati+iti→khādatīti"
+   }
+  },
+  {
+   "rank": 69,
+   "rule": "ḥ d → r d",
+   "category": "visarga",
+   "count": 2236,
+   "pct": 0.32,
+   "cum_pct": 76.35,
+   "n_texts": 34,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1340
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 287
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 152
+    }
+   ],
+   "example": {
+    "sentence": "yathodayagirer dravyaṃ saṃnikarṣeṇa dīpyate",
+    "split": "udayagireḥ→yathodayagirer+dravyaṃ"
+   }
+  },
+  {
+   "rank": 70,
+   "rule": "ḥ i → r i",
+   "category": "visarga",
+   "count": 2230,
+   "pct": 0.32,
+   "cum_pct": 76.67,
+   "n_texts": 37,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1217
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 321
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 91
+    }
+   ],
+   "example": {
+    "sentence": "tena tvaṃ viduṣāṃ madhye paṅke gaur iva sīdasi",
+    "split": "gaur+iva"
+   }
+  },
+  {
+   "rank": 71,
+   "rule": "t y → d y",
+   "category": "consonant / other",
+   "count": 2179,
+   "pct": 0.31,
+   "cum_pct": 76.98,
+   "n_texts": 34,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1178
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 232
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 185
+    }
+   ],
+   "example": {
+    "sentence": "vidyā dadāti vinayaṃ vinayād yāti pātratām",
+    "split": "vinayād+yāti"
+   }
+  },
+  {
+   "rank": 72,
+   "rule": "ā ā → ā",
+   "category": "vowel coalescence",
+   "count": 2161,
+   "pct": 0.31,
+   "cum_pct": 77.28,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 999
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 214
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 183
+    }
+   ],
+   "example": {
+    "sentence": "ādyā hāsyāya vṛddhatve dvitīyādriyate sadā",
+    "split": "dvitīyā+ādriyate→dvitīyādriyate"
+   }
+  },
+  {
+   "rank": 73,
+   "rule": "ḥ e → Ø e",
+   "category": "visarga",
+   "count": 2157,
+   "pct": 0.3,
+   "cum_pct": 77.59,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1073
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 200
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 119
+    }
+   ],
+   "example": {
+    "sentence": "sarvasya locanaṃ śāstraṃ yasya nāsty andha eva saḥ",
+    "split": "andha+eva"
+   }
+  },
+  {
+   "rank": 74,
+   "rule": "aḥ g → o g",
+   "category": "visarga",
+   "count": 2150,
+   "pct": 0.3,
+   "cum_pct": 77.89,
+   "n_texts": 34,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1049
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 254
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 187
+    }
+   ],
+   "example": {
+    "sentence": "varam eko guṇī putro na ca mūrkhaśatair api",
+    "split": "eko+guṇī"
+   }
+  },
+  {
+   "rank": 75,
+   "rule": "ā u → o",
+   "category": "vowel coalescence",
+   "count": 2147,
+   "pct": 0.3,
+   "cum_pct": 78.19,
+   "n_texts": 33,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 953
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 327
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 218
+    }
+   ],
+   "example": {
+    "sentence": "rājovāca bho bhoḥ paṇḍitāḥ śrūyatāṃ mama vacanam",
+    "split": "rājā+uvāca→rājovāca"
+   }
+  },
+  {
+   "rank": 76,
+   "rule": "ḥ bh → Ø bh",
+   "category": "visarga",
+   "count": 2030,
+   "pct": 0.29,
+   "cum_pct": 78.48,
+   "n_texts": 31,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1264
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 217
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 139
+    }
+   ],
+   "example": {
+    "sentence": "sa bhūpatir ekadā kenāpi pāṭhyamānaṃ ślokadvayaṃ śuśrāva",
+    "split": "sa+bhūpatir"
+   }
+  },
+  {
+   "rank": 77,
+   "rule": "t bh → d bh",
+   "category": "consonant / other",
+   "count": 2023,
+   "pct": 0.29,
+   "cum_pct": 78.77,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1296
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 196
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 114
+    }
+   ],
+   "example": {
+    "sentence": "yad abhāvi na tad bhāvi bhāvi cen na tad anyathā",
+    "split": "tad+bhāvi"
+   }
+  },
+  {
+   "rank": 78,
+   "rule": "ḥ t → Ø t",
+   "category": "visarga",
+   "count": 2015,
+   "pct": 0.28,
+   "cum_pct": 79.05,
+   "n_texts": 27,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1290
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 456
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 72
+    }
+   ],
+   "example": {
+    "sentence": "mayūrāś citritā yena sa te vṛttiṃ vidhāsyati",
+    "split": "sa+te"
+   }
+  },
+  {
+   "rank": 79,
+   "rule": "ḥ a → ḥ '",
+   "category": "visarga",
+   "count": 2006,
+   "pct": 0.28,
+   "cum_pct": 79.33,
+   "n_texts": 33,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 800
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 267
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 200
+    }
+   ],
+   "example": {
+    "sentence": "varaṃ vandhyā bhāryā varam api ca garbheṣu vasatir na vāvidvān rūpadraviṇaguṇayukto 'pi tanayaḥ",
+    "split": "yuktaḥ+'pi"
+   }
+  },
+  {
+   "rank": 80,
+   "rule": "ḥ u → r u",
+   "category": "visarga",
+   "count": 1975,
+   "pct": 0.28,
+   "cum_pct": 79.61,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1152
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 157
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 149
+    }
+   ],
+   "example": {
+    "sentence": "vidyāyām arthalābhe ca mātur uccāra eva saḥ",
+    "split": "mātur+uccāra"
+   }
+  },
+  {
+   "rank": 81,
+   "rule": "aḥ dh → o dh",
+   "category": "visarga",
+   "count": 1973,
+   "pct": 0.28,
+   "cum_pct": 79.89,
+   "n_texts": 34,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1408
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 171
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 102
+    }
+   ],
+   "example": {
+    "sentence": "tasya putro bhaved vaśyaḥ samṛddho dhārmikaḥ sudhīḥ",
+    "split": "samṛddho+dhārmikaḥ"
+   }
+  },
+  {
+   "rank": 82,
+   "rule": "t i → d i",
+   "category": "consonant / other",
+   "count": 1965,
+   "pct": 0.28,
+   "cum_pct": 80.17,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1057
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 204
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 143
+    }
+   ],
+   "example": {
+    "sentence": "kathāchalena bālānāṃ nītis tad iha kathyate",
+    "split": "tad+iha"
+   }
+  },
+  {
+   "rank": 83,
+   "rule": "t ś → cch",
+   "category": "consonant / other",
+   "count": 1944,
+   "pct": 0.27,
+   "cum_pct": 80.44,
+   "n_texts": 30,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1161
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 222
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 159
+    }
+   ],
+   "example": {
+    "sentence": "yad aśakyaṃ na tac chakyaṃ yacchakyaṃ śakyam eva tat",
+    "split": "yat+śakyam→yacchakyaṃ"
+   }
+  },
+  {
+   "rank": 84,
+   "rule": "ḥ y → r y",
+   "category": "visarga",
+   "count": 1917,
+   "pct": 0.27,
+   "cum_pct": 80.72,
+   "n_texts": 33,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1219
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 216
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 108
+    }
+   ],
+   "example": {
+    "sentence": "sa bandhur yo vipannānām āpaduddharaṇakṣamaḥ",
+    "split": "bandhur+yo"
+   }
+  },
+  {
+   "rank": 85,
+   "rule": "ḥ bh → r bh",
+   "category": "visarga",
+   "count": 1909,
+   "pct": 0.27,
+   "cum_pct": 80.98,
+   "n_texts": 29,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1180
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 278
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 87
+    }
+   ],
+   "example": {
+    "sentence": "yathā hy ekena cakreṇa na rathasya gatir bhavet",
+    "split": "gatir+bhavet"
+   }
+  },
+  {
+   "rank": 86,
+   "rule": "ḥ y → Ø y",
+   "category": "visarga",
+   "count": 1907,
+   "pct": 0.27,
+   "cum_pct": 81.25,
+   "n_texts": 30,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1186
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 203
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 144
+    }
+   ],
+   "example": {
+    "sentence": "prāṇā yathātmano 'bhīṣṭā bhūtānām api te tathā",
+    "split": "prāṇā+yathā"
+   }
+  },
+  {
+   "rank": 87,
+   "rule": "ḥ ā → r ā",
+   "category": "visarga",
+   "count": 1889,
+   "pct": 0.27,
+   "cum_pct": 81.52,
+   "n_texts": 32,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1122
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 221
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 77
+    }
+   ],
+   "example": {
+    "sentence": "tatra sarvasvāmiguṇopetaḥ sudarśano nāma narapatir āsīt",
+    "split": "narapatir+āsīt"
+   }
+  },
+  {
+   "rank": 88,
+   "rule": "t e → d e",
+   "category": "consonant / other",
+   "count": 1827,
+   "pct": 0.26,
+   "cum_pct": 81.78,
+   "n_texts": 37,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 837
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 169
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 127
+    }
+   ],
+   "example": {
+    "sentence": "tad eteṣām asmatputrāṇāṃ nītiśāstropadeśāya bhavantaḥ pramāṇam ity uktvā tasya viṣṇuśarmaṇo bahumānapuraḥsaraṃ putrān samarpitavān",
+    "split": "tad+eteṣām"
+   }
+  },
+  {
+   "rank": 89,
+   "rule": "i ā → y ā",
+   "category": "vowel coalescence",
+   "count": 1815,
+   "pct": 0.26,
+   "cum_pct": 82.04,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 765
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 162
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 155
+    }
+   ],
+   "example": {
+    "sentence": "ity ākarṇyātmanaḥ putrāṇām anadhigataśāstrāṇāṃ nityam unmārgagāmināṃ śāstrānanuṣṭhānenodvignamanāḥ sa rājā cintayāmāsa",
+    "split": "ity+ākarṇya"
+   }
+  },
+  {
+   "rank": 90,
+   "rule": "ḥ h → Ø h",
+   "category": "visarga",
+   "count": 1635,
+   "pct": 0.23,
+   "cum_pct": 82.27,
+   "n_texts": 33,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 996
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 255
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 62
+    }
+   ],
+   "example": {
+    "sentence": "sa hi gaganavihārī kalmaṣadhvaṃsakārī daśaśatakaradhārī jyotiṣāṃ madhyacārī",
+    "split": "sa+hi"
+   }
+  },
+  {
+   "rank": 91,
+   "rule": "t r → d r",
+   "category": "consonant / other",
+   "count": 1589,
+   "pct": 0.22,
+   "cum_pct": 82.49,
+   "n_texts": 29,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 994
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 236
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 89
+    }
+   ],
+   "example": {
+    "sentence": "āpatsu mitraṃ jānīyād raṇe śūram ṛṇe śucim",
+    "split": "jānīyād+raṇe"
+   }
+  },
+  {
+   "rank": 92,
+   "rule": "t ā → d ā",
+   "category": "consonant / other",
+   "count": 1581,
+   "pct": 0.22,
+   "cum_pct": 82.71,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 733
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 129
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 117
+    }
+   ],
+   "example": {
+    "sentence": "pañcatantrāt tathānyasmād granthād ākṛṣya likhyate",
+    "split": "granthād+ākṛṣya"
+   }
+  },
+  {
+   "rank": 93,
+   "rule": "t u → d u",
+   "category": "consonant / other",
+   "count": 1491,
+   "pct": 0.21,
+   "cum_pct": 82.92,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 626
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 160
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 122
+    }
+   ],
+   "example": {
+    "sentence": "na daivam api saṃcintya tyajed udyogam ātmanaḥ",
+    "split": "tyajed+udyogam"
+   }
+  },
+  {
+   "rank": 94,
+   "rule": "s k → ḥ k",
+   "category": "consonant / other",
+   "count": 1461,
+   "pct": 0.21,
+   "cum_pct": 83.13,
+   "n_texts": 32,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 783
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 173
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 99
+    }
+   ],
+   "example": {
+    "sentence": "tataḥ kapotarājas taṇḍulakaṇalubdhān kapotān prāha",
+    "split": "tataḥ+kapota"
+   }
+  },
+  {
+   "rank": 95,
+   "rule": "t b → d b",
+   "category": "consonant / other",
+   "count": 1457,
+   "pct": 0.21,
+   "cum_pct": 83.34,
+   "n_texts": 30,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 932
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 132
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 89
+    }
+   ],
+   "example": {
+    "sentence": "anantaraṃ sa siṃho yadā kadācidapi tasya mūṣikasya śabdaṃ vivarānna śuśrāva tadopayogābhāvād biḍālasyāpyāhāradāne mandādaro babhūva",
+    "split": "abhāvāt→tadopayogābhāvād+biḍālasya"
+   }
+  },
+  {
+   "rank": 96,
+   "rule": "a ṛ → ar",
+   "category": "vowel coalescence",
+   "count": 1439,
+   "pct": 0.2,
+   "cum_pct": 83.54,
+   "n_texts": 21,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1051
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 257
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 36
+    }
+   ],
+   "example": {
+    "sentence": "tatsamakṣaṃ ca tasyarṣeḥ kuśenābhūtkarakṣatiḥ",
+    "split": "tasya+ṛṣeḥ→tasyarṣeḥ"
+   }
+  },
+  {
+   "rank": 97,
+   "rule": "ḥ b → r b",
+   "category": "visarga",
+   "count": 1388,
+   "pct": 0.2,
+   "cum_pct": 83.74,
+   "n_texts": 29,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 933
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 219
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 38
+    }
+   ],
+   "example": {
+    "sentence": "tṛṇair guṇatvam āpannair badhyante mattadantinaḥ",
+    "split": "āpannair+badhyante"
+   }
+  },
+  {
+   "rank": 98,
+   "rule": "iḥ s → Ø s",
+   "category": "visarga",
+   "count": 1346,
+   "pct": 0.19,
+   "cum_pct": 83.93,
+   "n_texts": 14,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1067
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 178
+    },
+    {
+     "text": "Hitopadeśa",
+     "count": 28
+    }
+   ],
+   "example": {
+    "sentence": "ity ākarṇya hiraṇyakaḥ prahṛṣṭamanāḥ pulakitaḥ san abravītsādhu mitra sādhu",
+    "split": "mitra+sādhu"
+   }
+  },
+  {
+   "rank": 99,
+   "rule": "ḥ g → Ø g",
+   "category": "visarga",
+   "count": 1279,
+   "pct": 0.18,
+   "cum_pct": 84.11,
+   "n_texts": 32,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 741
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 140
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 100
+    }
+   ],
+   "example": {
+    "sentence": "tat katham idānīm ete mama putrā guṇavantaḥ kriyantām yataḥ",
+    "split": "putrā+guṇavantaḥ"
+   }
+  },
+  {
+   "rank": 100,
+   "rule": "d p → t p",
+   "category": "consonant / other",
+   "count": 1224,
+   "pct": 0.17,
+   "cum_pct": 84.28,
+   "n_texts": 38,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 476
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 172
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 116
+    }
+   ],
+   "example": {
+    "sentence": "tato lobhākṛṣṭena kenacit pānthena ālocitaṃ bhāgyena etat sambhavati",
+    "split": "kenacit+pānthena"
+   }
+  },
+  {
+   "rank": 101,
+   "rule": "ḥ b → Ø b",
+   "category": "visarga",
+   "count": 1220,
+   "pct": 0.17,
+   "cum_pct": 84.45,
+   "n_texts": 30,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 725
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 163
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 69
+    }
+   ],
+   "example": {
+    "sentence": "asādhanā vittahīnā buddhimantaḥ suhṛnmatāḥ",
+    "split": "hīnāḥ→vittahīnā+buddhimantaḥ"
+   }
+  },
+  {
+   "rank": 102,
+   "rule": "iḥ p → Ø p",
+   "category": "visarga",
+   "count": 1211,
+   "pct": 0.17,
+   "cum_pct": 84.62,
+   "n_texts": 15,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 1004
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 143
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 20
+    }
+   ],
+   "example": {
+    "sentence": "vyāghra uvāca śṛṇu re pāntha prāg eva yauvanadaśāyām aham atīva durvṛtta āsam",
+    "split": "pāntha+prāg"
+   }
+  },
+  {
+   "rank": 103,
+   "rule": "as a → o '",
+   "category": "consonant / other",
+   "count": 1173,
+   "pct": 0.17,
+   "cum_pct": 84.79,
+   "n_texts": 29,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 754
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 108
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 99
+    }
+   ],
+   "example": {
+    "sentence": "kuto 'tra nirjane vane taṇḍulakaṇānāṃ sambhavaḥ",
+    "split": "kuto+'tra"
+   }
+  },
+  {
+   "rank": 104,
+   "rule": "as v → o v",
+   "category": "consonant / other",
+   "count": 1130,
+   "pct": 0.16,
+   "cum_pct": 84.95,
+   "n_texts": 27,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 608
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 133
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 83
+    }
+   ],
+   "example": {
+    "sentence": "yad yad eva hi vāñcheta tato vāñchā pravartate",
+    "split": "tato+vāñchā"
+   }
+  },
+  {
+   "rank": 105,
+   "rule": "iḥ t → Ø t",
+   "category": "visarga",
+   "count": 1102,
+   "pct": 0.16,
+   "cum_pct": 85.1,
+   "n_texts": 21,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 858
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 148
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 28
+    }
+   ],
+   "example": {
+    "sentence": "tad yathā bhavitavyaṃ tathā bhavatu tāvat viśvāsam utpādyāsya samīpam upagacchāmīty ālocya tam upasṛtyābravīd ārya tvām abhivande",
+    "split": "ārya+tvām"
+   }
+  },
+  {
+   "rank": 106,
+   "rule": "d k → t k",
+   "category": "consonant / other",
+   "count": 1097,
+   "pct": 0.15,
+   "cum_pct": 85.26,
+   "n_texts": 33,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 414
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 238
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 126
+    }
+   ],
+   "example": {
+    "sentence": "nādravye nihitā kācit kriyā phalavatī bhavet",
+    "split": "kācit+kriyā"
+   }
+  },
+  {
+   "rank": 107,
+   "rule": "ḥ g → r g",
+   "category": "visarga",
+   "count": 1091,
+   "pct": 0.15,
+   "cum_pct": 85.41,
+   "n_texts": 32,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 610
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 144
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 59
+    }
+   ],
+   "example": {
+    "sentence": "tṛṇair guṇatvam āpannair badhyante mattadantinaḥ",
+    "split": "tṛṇair+guṇa"
+   }
+  },
+  {
+   "rank": 108,
+   "rule": "ḥ h → r h",
+   "category": "visarga",
+   "count": 1055,
+   "pct": 0.15,
+   "cum_pct": 85.56,
+   "n_texts": 26,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 661
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 175
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 65
+    }
+   ],
+   "example": {
+    "sentence": "ity uktvā sarve māṃ cañcubhir hatvā sakopā ūcuḥ paśya re mūrkha sa haṃsas tava rājā sarvathā mṛduḥ",
+    "split": "cañcubhir+hatvā"
+   }
+  },
+  {
+   "rank": 109,
+   "rule": "ḥ e → r e",
+   "category": "visarga",
+   "count": 1050,
+   "pct": 0.15,
+   "cum_pct": 85.71,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 531
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 91
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 81
+    }
+   ],
+   "example": {
+    "sentence": "mitralābhaḥ suhṛdbhedo vigrahaḥ saṃdhir eva ca",
+    "split": "saṃdhir+eva"
+   }
+  },
+  {
+   "rank": 110,
+   "rule": "n ś → ñ ś",
+   "category": "consonant / other",
+   "count": 1020,
+   "pct": 0.14,
+   "cum_pct": 85.85,
+   "n_texts": 12,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 784
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 168
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 25
+    }
+   ],
+   "example": {
+    "sentence": "ekasmiñśayane parāṅmukhatayā vītottaraṃ tāmyator anyonyasya hṛdi sthite'pyanunaye saṃrakṣatorgauravam",
+    "split": "ekasmin+śayane→ekasmiñśayane"
+   }
+  },
+  {
+   "rank": 111,
+   "rule": "s ś → ḥ ś",
+   "category": "consonant / other",
+   "count": 1017,
+   "pct": 0.14,
+   "cum_pct": 86.0,
+   "n_texts": 29,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 569
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 121
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 81
+    }
+   ],
+   "example": {
+    "sentence": "ity uktvā śanaiḥ śanair upagamya tena vyāghreṇa dhṛtaḥ sa pāntho 'cintayat",
+    "split": "śanaiḥ+śanair"
+   }
+  },
+  {
+   "rank": 112,
+   "rule": "t g → d g",
+   "category": "consonant / other",
+   "count": 1016,
+   "pct": 0.14,
+   "cum_pct": 86.14,
+   "n_texts": 35,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 490
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 111
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 103
+    }
+   ],
+   "example": {
+    "sentence": "pañcatantrāt tathānyasmād granthād ākṛṣya likhyate",
+    "split": "anyasmāt→tathānyasmād+granthād"
+   }
+  },
+  {
+   "rank": 113,
+   "rule": "ḥ j → Ø j",
+   "category": "visarga",
+   "count": 1005,
+   "pct": 0.14,
+   "cum_pct": 86.28,
+   "n_texts": 29,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 601
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 108
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 68
+    }
+   ],
+   "example": {
+    "sentence": "sa jāto yena jātena yāti vaṃśaḥ samunnatim",
+    "split": "sa+jāto"
+   }
+  },
+  {
+   "rank": 114,
+   "rule": "aḥ l → o l",
+   "category": "visarga",
+   "count": 1001,
+   "pct": 0.14,
+   "cum_pct": 86.43,
+   "n_texts": 33,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 469
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 177
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 82
+    }
+   ],
+   "example": {
+    "sentence": "gatānugatiko lokaḥ kuṭṭanīm upadeśinīm",
+    "split": "gatānugatiko+lokaḥ"
+   }
+  },
+  {
+   "rank": 115,
+   "rule": "iḥ k → Ø k",
+   "category": "visarga",
+   "count": 983,
+   "pct": 0.14,
+   "cum_pct": 86.56,
+   "n_texts": 12,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 750
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 112
+    },
+    {
+     "text": "Hitopadeśa",
+     "count": 35
+    }
+   ],
+   "example": {
+    "sentence": "rājaputrair uktamārya kathyatām",
+    "split": "āryaiḥ→uktamārya+kathyatām"
+   }
+  },
+  {
+   "rank": 116,
+   "rule": "ḥ p → Ø p",
+   "category": "visarga",
+   "count": 981,
+   "pct": 0.14,
+   "cum_pct": 86.7,
+   "n_texts": 24,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 640
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 115
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 52
+    }
+   ],
+   "example": {
+    "sentence": "ātmavat sarvabhūteṣu yaḥ paśyati sa paṇḍitaḥ",
+    "split": "sa+paṇḍitaḥ"
+   }
+  },
+  {
+   "rank": 117,
+   "rule": "r p → ḥ p",
+   "category": "consonant / other",
+   "count": 918,
+   "pct": 0.13,
+   "cum_pct": 86.83,
+   "n_texts": 25,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 544
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 96
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 63
+    }
+   ],
+   "example": {
+    "sentence": "dhanahīnaḥ svapatnyāpi tyajyate kiṃ punaḥ paraiḥ",
+    "split": "punaḥ+paraiḥ"
+   }
+  },
+  {
+   "rank": 118,
+   "rule": "d s → t s",
+   "category": "consonant / other",
+   "count": 912,
+   "pct": 0.13,
+   "cum_pct": 86.96,
+   "n_texts": 36,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 328
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 125
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 94
+    }
+   ],
+   "example": {
+    "sentence": "vipat saṃnihitā tasya sa naraḥ śatrunandanaḥ",
+    "split": "vipat+saṃnihitā"
+   }
+  },
+  {
+   "rank": 119,
+   "rule": "ḥ j → r j",
+   "category": "visarga",
+   "count": 911,
+   "pct": 0.13,
+   "cum_pct": 87.09,
+   "n_texts": 30,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 546
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 88
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 45
+    }
+   ],
+   "example": {
+    "sentence": "aniṣṭād iṣṭalābhe'pi na gatir jāyate śubhā",
+    "split": "gatir+jāyate"
+   }
+  },
+  {
+   "rank": 120,
+   "rule": "iḥ m → Ø m",
+   "category": "visarga",
+   "count": 901,
+   "pct": 0.13,
+   "cum_pct": 87.22,
+   "n_texts": 20,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 636
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 161
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 26
+    }
+   ],
+   "example": {
+    "sentence": "atrāntare viṣṇuśarmanāmā mahāpaṇḍitaḥ sakalanītiśāstratattvajño bṛhaspatir ivābravīddeva mahākulasambhūtā ete rājaputrāḥ",
+    "split": "devaiḥ→ivābravīddeva+mahā"
+   }
+  },
+  {
+   "rank": 121,
+   "rule": "as d → o d",
+   "category": "consonant / other",
+   "count": 898,
+   "pct": 0.13,
+   "cum_pct": 87.34,
+   "n_texts": 25,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 625
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 94
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 42
+    }
+   ],
+   "example": {
+    "sentence": "tato dineṣu gacchatsu asau pakṣiśāvakān ākramya svakoṭaram ānīya pratyahaṃ khādati",
+    "split": "tato+dineṣu"
+   }
+  },
+  {
+   "rank": 122,
+   "rule": "a ī → e",
+   "category": "vowel coalescence",
+   "count": 888,
+   "pct": 0.13,
+   "cum_pct": 87.47,
+   "n_texts": 28,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 402
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 177
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 132
+    }
+   ],
+   "example": {
+    "sentence": "daridrān bhara kaunteya mā prayaccheśvare dhanam",
+    "split": "prayaccha+īśvare→prayaccheśvare"
+   }
+  },
+  {
+   "rank": 123,
+   "rule": "t dh → d dh",
+   "category": "consonant / other",
+   "count": 857,
+   "pct": 0.12,
+   "cum_pct": 87.59,
+   "n_texts": 22,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 617
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 65
+    },
+    {
+     "text": "Manusmṛti",
+     "count": 47
+    }
+   ],
+   "example": {
+    "sentence": "pātratvāt dhanam āpnoti dhanād dharmaṃ tataḥ sukham",
+    "split": "dhanād+dharmaṃ"
+   }
+  },
+  {
+   "rank": 124,
+   "rule": "iḥ v → Ø v",
+   "category": "visarga",
+   "count": 841,
+   "pct": 0.12,
+   "cum_pct": 87.71,
+   "n_texts": 19,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 614
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 159
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 20
+    }
+   ],
+   "example": {
+    "sentence": "deva vartakakathām api kathayāmi",
+    "split": "deva+vartaka"
+   }
+  },
+  {
+   "rank": 125,
+   "rule": "mpāyanaḥ u → ṃpāyana u",
+   "category": "visarga",
+   "count": 838,
+   "pct": 0.12,
+   "cum_pct": 87.83,
+   "n_texts": 1,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 838
+    }
+   ],
+   "example": {
+    "sentence": "vaiśaṃpāyana uvāca",
+    "split": "vaiśaṃpāyana+uvāca"
+   }
+  },
+  {
+   "rank": 126,
+   "rule": "ḥ s → Ø s",
+   "category": "visarga",
+   "count": 837,
+   "pct": 0.12,
+   "cum_pct": 87.95,
+   "n_texts": 25,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 531
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 113
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 40
+    }
+   ],
+   "example": {
+    "sentence": "dhārmiko nītikuśalaḥ sa svāmī yujyate bhuvi",
+    "split": "sa+svāmī"
+   }
+  },
+  {
+   "rank": 127,
+   "rule": "ḥ c → Ø c",
+   "category": "visarga",
+   "count": 831,
+   "pct": 0.12,
+   "cum_pct": 88.06,
+   "n_texts": 27,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 473
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 98
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 43
+    }
+   ],
+   "example": {
+    "sentence": "sa ca tatra pracchanno bhūtvā sthitaḥ",
+    "split": "sa+ca"
+   }
+  },
+  {
+   "rank": 128,
+   "rule": "m gh → ṃ gh",
+   "category": "anusvāra / nasal",
+   "count": 787,
+   "pct": 0.11,
+   "cum_pct": 88.17,
+   "n_texts": 26,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 394
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 122
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 101
+    }
+   ],
+   "example": {
+    "sentence": "vānarās tāṃ ghaṇṭām anukṣaṇaṃ vādayanti",
+    "split": "tāṃ+ghaṇṭām"
+   }
+  },
+  {
+   "rank": 129,
+   "rule": "ḥ dh → Ø dh",
+   "category": "visarga",
+   "count": 775,
+   "pct": 0.11,
+   "cum_pct": 88.28,
+   "n_texts": 24,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 548
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 85
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 27
+    }
+   ],
+   "example": {
+    "sentence": "bhavantaś caitādṛśā dharmajñā yan mām atithiṃ hantum udyatāḥ gṛhasthadharmaś ca eṣaḥ",
+    "split": "etādṛśāḥ→caitādṛśā+dharma"
+   }
+  },
+  {
+   "rank": 130,
+   "rule": "iḥ n → Ø n",
+   "category": "visarga",
+   "count": 771,
+   "pct": 0.11,
+   "cum_pct": 88.39,
+   "n_texts": 17,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 600
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 94
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 30
+    }
+   ],
+   "example": {
+    "sentence": "hā hā putraka nādhītaṃ gatāsv etāsu rātriṣu",
+    "split": "putraka+na"
+   }
+  },
+  {
+   "rank": 131,
+   "rule": "t j → j j",
+   "category": "consonant / other",
+   "count": 763,
+   "pct": 0.11,
+   "cum_pct": 88.5,
+   "n_texts": 29,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 407
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 65
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 54
+    }
+   ],
+   "example": {
+    "sentence": "anantaraṃ ca vyādhaḥ sudūrāj jālāpahārakāṃs tān avalokya paścād dhāvito 'cintayat",
+    "split": "sudūrāj+jāla"
+   }
+  },
+  {
+   "rank": 132,
+   "rule": "iḥ y → Ø y",
+   "category": "visarga",
+   "count": 761,
+   "pct": 0.11,
+   "cum_pct": 88.61,
+   "n_texts": 16,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 593
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 88
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 21
+    }
+   ],
+   "example": {
+    "sentence": "tad adya bhaṭṭārakavāre katham etān dantaiḥ spṛśāmi mitra yadi citte na anyathā manyase tadā prabhāte yat tvayā vaktavyaṃ tat kartavyam iti",
+    "split": "mitra+yadi"
+   }
+  },
+  {
+   "rank": 133,
+   "rule": "ḥ k → Ø k",
+   "category": "visarga",
+   "count": 753,
+   "pct": 0.11,
+   "cum_pct": 88.71,
+   "n_texts": 23,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 432
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 117
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 43
+    }
+   ],
+   "example": {
+    "sentence": "anantaraṃ sa kākaḥ pradoṣakāle mṛgamanāgatam avalokya itas tato 'nviṣyan tathāvidhaṃ taṃ dṛṣṭvā uvāca sakhe kim etat mṛgeṇoktam avadhīritasuhṛdvākyasya phalam …",
+    "split": "sa+kākaḥ"
+   }
+  },
+  {
+   "rank": 134,
+   "rule": "ḥ dh → r dh",
+   "category": "visarga",
+   "count": 721,
+   "pct": 0.1,
+   "cum_pct": 88.82,
+   "n_texts": 29,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 489
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 81
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 31
+    }
+   ],
+   "example": {
+    "sentence": "vināpy arthair dhīraḥ spṛśati bahumānonnatipadaṃ samāyukto 'py arthaiḥ paribhavapadaṃ yāti kṛpaṇaḥ",
+    "split": "arthair+dhīraḥ"
+   }
+  },
+  {
+   "rank": 135,
+   "rule": "ḥ ā → Ø ā",
+   "category": "visarga",
+   "count": 718,
+   "pct": 0.1,
+   "cum_pct": 88.92,
+   "n_texts": 28,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 403
+    },
+    {
+     "text": "Mīmāṃsāsūtrabhāṣya",
+     "count": 38
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 36
+    }
+   ],
+   "example": {
+    "sentence": "vyāghra uvāca śṛṇu re pāntha prāg eva yauvanadaśāyām aham atīva durvṛtta āsam",
+    "split": "durvṛtta+āsam"
+   }
+  },
+  {
+   "rank": 136,
+   "rule": "u e → v e",
+   "category": "vowel coalescence",
+   "count": 699,
+   "pct": 0.1,
+   "cum_pct": 89.02,
+   "n_texts": 29,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 315
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 70
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 55
+    }
+   ],
+   "example": {
+    "sentence": "hā hā putraka nādhītaṃ gatāsv etāsu rātriṣu",
+    "split": "gatāsv+etāsu"
+   }
+  },
+  {
+   "rank": 137,
+   "rule": "aḥ ayam → o 'yaṃ",
+   "category": "visarga",
+   "count": 694,
+   "pct": 0.1,
+   "cum_pct": 89.11,
+   "n_texts": 25,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 387
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 100
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 62
+    }
+   ],
+   "example": {
+    "sentence": "śruto hitopadeśo 'yaṃ pāṭavaṃ saṃskṛtoktiṣu",
+    "split": "hitopadeśo+'yaṃ"
+   }
+  },
+  {
+   "rank": 138,
+   "rule": "u i → v i",
+   "category": "vowel coalescence",
+   "count": 660,
+   "pct": 0.09,
+   "cum_pct": 89.21,
+   "n_texts": 27,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 377
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 112
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 27
+    }
+   ],
+   "example": {
+    "sentence": "ṭiṭṭibho 'vadad bhārye nanv idam eva sthānaṃ prasūtiyogyam",
+    "split": "nanv+idam"
+   }
+  },
+  {
+   "rank": 139,
+   "rule": "ā ṛ → ar",
+   "category": "vowel coalescence",
+   "count": 659,
+   "pct": 0.09,
+   "cum_pct": 89.3,
+   "n_texts": 15,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 443
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 126
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 27
+    }
+   ],
+   "example": {
+    "sentence": "asti gautamasya maharṣes tapovane mahātapā nāma muniḥ",
+    "split": "mahā+ṛṣeḥ→maharṣes"
+   }
+  },
+  {
+   "rank": 140,
+   "rule": "a o → au",
+   "category": "vowel coalescence",
+   "count": 655,
+   "pct": 0.09,
+   "cum_pct": 89.39,
+   "n_texts": 20,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 390
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 116
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 40
+    }
+   ],
+   "example": {
+    "sentence": "tad ahaṃ svakīyotkarṣaṃ kiṃ na sādhayāmi ity ālocya śṛgālān āhūya tenoktam ahaṃ bhagavatyā vanadevatayā svahastenāraṇyarājye sarvauṣadhirasenābhiṣiktaḥ",
+    "split": "sarva+oṣadhi→sarvauṣadhirasenābhiṣiktaḥ"
+   }
+  },
+  {
+   "rank": 141,
+   "rule": "as m → o m",
+   "category": "consonant / other",
+   "count": 654,
+   "pct": 0.09,
+   "cum_pct": 89.49,
+   "n_texts": 24,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 362
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 85
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 54
+    }
+   ],
+   "example": {
+    "sentence": "ato mām api tatra naya",
+    "split": "ato+mām"
+   }
+  },
+  {
+   "rank": 142,
+   "rule": "as r → o r",
+   "category": "consonant / other",
+   "count": 641,
+   "pct": 0.09,
+   "cum_pct": 89.58,
+   "n_texts": 16,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 448
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 104
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 29
+    }
+   ],
+   "example": {
+    "sentence": "tato rājñā sādaram avalokitau praṇamyopaviṣṭau",
+    "split": "tato+rājñā"
+   }
+  },
+  {
+   "rank": 143,
+   "rule": "t h → dd h",
+   "category": "consonant / other",
+   "count": 636,
+   "pct": 0.09,
+   "cum_pct": 89.67,
+   "n_texts": 22,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 393
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 62
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 49
+    }
+   ],
+   "example": {
+    "sentence": "śarīreṇa samaṃ nāśaṃ sarvam anyaddhi gacchati",
+    "split": "anyat+hi→anyaddhi"
+   }
+  },
+  {
+   "rank": 144,
+   "rule": "s c → ś c",
+   "category": "consonant / other",
+   "count": 623,
+   "pct": 0.09,
+   "cum_pct": 89.75,
+   "n_texts": 25,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 293
+    },
+    {
+     "text": "Kathāsaritsāgara",
+     "count": 82
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 58
+    }
+   ],
+   "example": {
+    "sentence": "kutas taddhanalubdhānām itaś cetaś ca dhāvatām",
+    "split": "itaś+ca"
+   }
+  },
+  {
+   "rank": 145,
+   "rule": "u ā → v ā",
+   "category": "vowel coalescence",
+   "count": 608,
+   "pct": 0.09,
+   "cum_pct": 89.84,
+   "n_texts": 31,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 272
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 74
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 70
+    }
+   ],
+   "example": {
+    "sentence": "dūrād avekṣaṇaṃ hāsaḥ sampraśneṣv ādaro bhṛśam",
+    "split": "sampraśneṣv+ādaro"
+   }
+  },
+  {
+   "rank": 146,
+   "rule": "e e → a e",
+   "category": "vowel coalescence",
+   "count": 596,
+   "pct": 0.08,
+   "cum_pct": 89.92,
+   "n_texts": 30,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 302
+    },
+    {
+     "text": "Suśrutasaṃhitā",
+     "count": 53
+    },
+    {
+     "text": "Carakasaṃhitā",
+     "count": 46
+    }
+   ],
+   "example": {
+    "sentence": "upary upari paśyantaḥ sarva eva daridrati",
+    "split": "sarva+eva"
+   }
+  },
+  {
+   "rank": 147,
+   "rule": "iḥ d → Ø d",
+   "category": "visarga",
+   "count": 577,
+   "pct": 0.08,
+   "cum_pct": 90.01,
+   "n_texts": 11,
+   "top_texts": [
+    {
+     "text": "Mahābhārata (full, incl. Bhagavadgītā)",
+     "count": 456
+    },
+    {
+     "text": "Rāmāyaṇa",
+     "count": 81
+    },
+    {
+     "text": "Bhāratamañjarī",
+     "count": 13
+    }
+   ],
+   "example": {
+    "sentence": "anantaraṃ sa vañcakaḥ karpūratilakasamīpaṃ gatvā sāṣṭāṅgapātaṃ praṇamyovāca deva dṛṣṭiprasādaṃ kuru",
+    "split": "deva+dṛṣṭi"
+   }
+  }
+ ]
+}

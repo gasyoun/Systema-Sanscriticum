@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CorpusSandhiController;
 use App\Http\Controllers\DictionaryPageController;
 use App\Http\Controllers\DocController;
 use App\Http\Controllers\GrammarLabController;
@@ -124,6 +125,9 @@ Route::prefix('slovar')->name('slovar.')->group(function () {
 // ═══════════════════════════════════════════════════════════════
 Route::get('/reading/kosha-demo', [ReadingPackController::class, 'show'])
     ->name('reading.kosha-demo');
+// H4718 (census A13) — sandhi rules ranked by corpus frequency (kosha corpus-sandhi), same flag.
+Route::get('/reading/sandhi', [CorpusSandhiController::class, 'show'])
+    ->name('reading.sandhi');
 
 // ═══════════════════════════════════════════════════════════════
 // H1463 — Sanskrit-HUB L5 /transliterate playground (Workstream A v0).

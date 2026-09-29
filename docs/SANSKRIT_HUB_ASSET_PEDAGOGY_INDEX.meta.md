@@ -30,7 +30,7 @@ Companion metadoc for [`SANSKRIT_HUB_ASSET_PEDAGOGY_INDEX.md`](https://github.co
 ## Known limitations / caveats
 
 - The index is a **planning map, not a build ledger** — a row's presence means the asset exists, not that the use-case is built.
-- Asset IDs and counts (44 dicts · 21 interfaces · 37 data · 14 tools) are a snapshot of `FEATURES_INDEX.md` at 10-07-2026 and go stale as that census moves.
+- Asset IDs and counts are a **snapshot** of `FEATURES_INDEX.md` and go stale as that census moves: the 10-07-2026 snapshot read 44 dicts · 21 interfaces · 37 data · 14 tools, and by 24-09-2026 the live glance line read 44 · 23 (17 live) · 47 · 17 · 4 external · 12 drills · 30 methods (H5426 re-read; drift of +2 interfaces, +10 data, +3 tools went unnoticed for six weeks). Registered as a pinned prose claim in Uprava `data/derived_surfaces.json` so the drift checker catches the next one.
 - Rung assignments (A0–C2) are editorial judgment, not measured difficulty.
 - The "invented use-cases" are aspirational product ideas, not committed scope.
 

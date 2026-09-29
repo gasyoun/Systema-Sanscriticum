@@ -9,7 +9,7 @@ use App\Services\Schedule\WeeklyFinishReport;
 use Illuminate\Console\Command;
 
 /**
- * H4392 (MG 08-09-2026): еженедельный пост «Кто на чём закончил» в чат
+ * H4392 (MG 08-09-2026): еженедельный пост «Кто на чем закончил» в чат
  * «Институт» — по каждой идущей группе весь ростер с последним реальным
  * посещением каждого студента и пропуски 2+ подряд (WeeklyFinishReport).
  *
@@ -21,7 +21,7 @@ class WeeklyFinishReportCommand extends Command
 {
     protected $signature = 'care:weekly-finish {--dry-run : напечатать пост, не отправлять}';
 
-    protected $description = 'Еженедельный пост в «Институт»: кто в какой идущей группе на чём закончил (H4392)';
+    protected $description = 'Еженедельный пост в «Институт»: кто в какой идущей группе на чем закончил (H4392)';
 
     public function handle(): int
     {

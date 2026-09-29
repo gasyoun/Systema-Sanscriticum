@@ -17,7 +17,7 @@ use Illuminate\Queue\SerializesModels;
  * Одноразовая ссылка для входа, выданная куратором из «Проблем со входом» (H849).
  * Транзакционное письмо: `wants_email_announcements` не проверяется.
  *
- * Пароль сюда не кладётся — см. {@see LoginLinkNotifier}.
+ * Пароль сюда не кладется — см. {@see LoginLinkNotifier}.
  */
 class StudentLoginLinkMail extends Mailable implements ShouldQueue
 {

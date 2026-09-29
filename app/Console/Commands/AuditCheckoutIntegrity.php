@@ -220,7 +220,7 @@ class AuditCheckoutIntegrity extends Command
     }
 
     /**
-     * Отклонённые денежные вебхуки (H1359) — чтобы операторы видели воскрешения
+     * Отклоненные денежные вебхуки (H1359) — чтобы операторы видели воскрешения
      * и расхождения сумм без доступа к БД. Только чтение журнала.
      */
     private function rejectedWebhookDeliveries(): Collection

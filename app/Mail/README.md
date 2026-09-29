@@ -35,7 +35,7 @@ Mailable-классы для отправки email. Все письма ста�
 Подтверждение покупки — чек и приветствие в одном (H1286). Уходит на **каждую**
 реальную (не conditional) успешную оплату курса: что куплено, тариф, сумма
 (при нулевой — строка опущена), когда откроется доступ (общая строка 1 волны
-revenue-copy), с чего начать, куда писать. Кассовый чек платёжной системы —
+revenue-copy), с чего начать, куда писать. Кассовый чек платежной системы —
 упомянут, не воспроизводится.  
 Вызывается из `Payment::sendPurchaseConfirmation()` (внутри `processSuccessfulPayment()`).
 Копия: [docs/copy/money-purchase-confirmation-onboarding-seq.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/copy/money-purchase-confirmation-onboarding-seq.md).
@@ -45,9 +45,9 @@ revenue-copy), с чего начать, куда писать. Кассовый
 **Шаблоны**: `resources/views/emails/onboarding/{day1,day5}.blade.php`
 
 Онбординг первой недели после покупки курса (H1286): день 1 «с чего начать»,
-день 5 «если ещё не начали» (мягкий чек-ин без вины, грейс-нота «просто
+день 5 «если еще не начали» (мягкий чек-ин без вины, грейс-нота «просто
 проигнорируйте»). **Отправка сознательно НЕ подключена** (прецедент марафонских
-писем) — канал ждёт ESP-гейта (H1147). Рабочая доставка дней 1/5 сегодня —
+писем) — канал ждет ESP-гейта (H1147). Рабочая доставка дней 1/5 сегодня —
 Telegram/VK через `ScheduledReminder` (`Payment::scheduleOnboardingIfFirstForCourse()`,
 только первая оплата конкретного курса). Тест:
 `tests/Feature/Mail/PurchaseOnboardingSequenceTest.php`.

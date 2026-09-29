@@ -96,7 +96,7 @@ class AutoReplyTrialTest extends TestCase
 
         $outgoing = TelegramSupportMessage::query()->where('direction', 'outgoing')->first();
         $this->assertNotNull($outgoing);
-        $this->assertStringContainsString('Намасте, Студент Тест!', (string) $outgoing->text);
+        $this->assertStringContainsString('Намасте, Студент!', (string) $outgoing->text);
 
         $event = SupportAiReplyEvent::query()->where('event_type', SupportDmAutoReply::EVENT_SENT)->first();
         $this->assertNotNull($event);
@@ -332,7 +332,7 @@ class AutoReplyTrialTest extends TestCase
         ]);
 
         $this->artisan('telegram-support:sync', ['--account' => 'rusamskrtam'])
-            ->expectsOutputToContain('отключён (is_enabled=0)')
+            ->expectsOutputToContain('отключен (is_enabled=0)')
             ->assertExitCode(1);
     }
 

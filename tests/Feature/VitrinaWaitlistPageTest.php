@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Course;
 use App\Models\CourseWaitlistItem;
+use App\Models\Schedule;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -244,7 +245,7 @@ class VitrinaWaitlistPageTest extends TestCase
 
         $resp = $this->actingAs($user)->get(route('shop.waitlist'));
         $resp->assertOk();
-        $resp->assertSee('Голос учтён');
+        $resp->assertSee('Голос учтен');
         $resp->assertDontSee('data-waitlist-vote="zhdun-voted"');
         // 1 голос из 10 — счётчик скрыт.
         $resp->assertDontSee('Осталось доголосовать');
@@ -436,5 +437,174 @@ class VitrinaWaitlistPageTest extends TestCase
         config(['features.waitlist_voting' => true]);
 
         $this->get(route('shop.index'))->assertOk()->assertSee(route('shop.waitlist'), false);
+    }
+
+    /**
+     * MG 24-09-2026: день недели и время уже известны (пн 18:00, сб 17:00, …)
+     * — селект «Когда удобно?» не предлагаем, время решено; кнопка голоса
+     * остаётся. Слот неизвестен — селект на месте, как раньше (H4206).
+     */
+    public function test_fixed_slot_hides_when_convenient_select_on_vitrina(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-fixed-slot',
+            'course_title' => 'Философия санкхьи',
+            'teacher_name' => 'Максим Леонов',
+            'slot' => 'пн 18:00',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2026-09-01',
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-open-slot',
+            'course_title' => 'Начальный бенгальский',
+            'teacher_name' => 'Екатерина Костина',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2027-09-15',
+        ]);
+
+        $resp = $this->get(route('shop.waitlist'));
+        $resp->assertOk();
+
+        // Известный слот: селекта нет, голосовать можно.
+        $resp->assertDontSee('data-waitlist-pref="zhdun-fixed-slot"', false);
+        $resp->assertSee('data-waitlist-vote="zhdun-fixed-slot"', false);
+        // Неизвестный слот: селект по-прежнему есть.
+        $resp->assertSee('data-waitlist-pref="zhdun-open-slot"', false);
+    }
+
+    /**
+     * MG 24-09-2026 — то же правило на карточке ждуна в кабинете (H3815):
+     * слот известен → «Когда удобно?» не спрашиваем.
+     */
+    public function test_fixed_slot_hides_when_convenient_select_in_cabinet_card(): void
+    {
+        config(['features.waitlist_voting' => true]);
+        $user = User::factory()->create();
+
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-cab-fixed',
+            'course_title' => 'Индийский эпос: «Махабхарата» и «Рамаяна»',
+            'teacher_name' => 'Максим Леонов',
+            'slot' => 'пн 18:00',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2026-09-01',
+        ]);
+        CourseWaitlistItem::create([
+            'slug' => 'zhdun-cab-open',
+            'course_title' => 'Индийское кино',
+            'teacher_name' => 'Екатерина Костина',
+            'min_payers' => 8,
+            'kind' => 'other',
+            'earliest_start_at' => '2027-10-15',
+        ]);
+
+        $items = CourseWaitlistItem::query()
+            ->withCount(['votes', 'votes as voted_by_me' => fn ($q) => $q->where('user_id', $user->id)])
+            ->orderBy('id')
+            ->get();
+
+        $html = view('student.partials.waitlist-card', [
+            'waitlistItems' => $items,
+            'waitlistMyPrefs' => [],
+        ])->render();
+
+        $this->assertStringNotContainsString('data-waitlist-pref="zhdun-cab-fixed"', $html);
+        $this->assertStringContainsString('data-waitlist-vote="zhdun-cab-fixed"', $html);
+        $this->assertStringContainsString('data-waitlist-pref="zhdun-cab-open"', $html);
+    }
+
+    /**
+     * H5475 (MG 24-09-2026): шапка ждуна — итоги «под вопросом» и «уже идут
+     * осенью 2026» с точными ссылками на идущие курсы. «Уже идут» — только
+     * живые live-курсы с расписанием underway (группа началась и не кончилась);
+     * будущий набор и запись («в записи») в итог не попадают.
+     * MG 24-09-2026 (numbered lists): обе колонки шапки — нумерованные <ol>.
+     */
+    public function test_zhdun_header_shows_waitlist_totals_and_running_course_links(): void
+    {
+        config(['features.waitlist_voting' => true]);
+
+        // Ждун: 3 строки, 2 уникальных преподавателя (Гасунс назван дважды).
+        foreach ([
+            ['zhdun-head-a', 'Курс А', 'Марцис Гасунс'],
+            ['zhdun-head-b', 'Курс Б', 'Екатерина Костина'],
+            ['zhdun-head-c', 'Курс В', 'Марцис Гасунс'],
+        ] as [$slug, $title, $teacherName]) {
+            CourseWaitlistItem::create([
+                'slug' => $slug,
+                'course_title' => $title,
+                'teacher_name' => $teacherName,
+                'min_payers' => 10,
+                'kind' => 'other',
+                'earliest_start_at' => '2026-10-01',
+            ]);
+        }
+
+        $teacher = Teacher::create(['name' => 'Гасунс Марцис Юрьевич']);
+
+        // Идущий live-курс: занятие прошло + занятие впереди (underway).
+        $running = Course::factory()->live()->create([
+            'title' => 'Синтаксис санскрита',
+            'slug' => 'zhdun-running-course',
+            'teacher_id' => $teacher->id,
+        ]);
+        Schedule::create(['title' => 'Прошло', 'course_id' => $running->id, 'start' => now()->subDay()]);
+        Schedule::create(['title' => 'Впереди', 'course_id' => $running->id, 'start' => now()->addDay()]);
+
+        // Второй идущий курс того же преподавателя.
+        $running2 = Course::factory()->live()->create([
+            'title' => 'Грамматика по Кочергиной гр.99',
+            'slug' => 'zhdun-running-course-2',
+            'teacher_id' => $teacher->id,
+        ]);
+        Schedule::create(['title' => 'Прошло', 'course_id' => $running2->id, 'start' => now()->subDays(2)]);
+        Schedule::create(['title' => 'Впереди', 'course_id' => $running2->id, 'start' => now()->addDays(2)]);
+
+        // Будущий live-набор — занятий ещё не было, в «уже идут» не попадает.
+        $future = Course::factory()->live()->create([
+            'title' => 'Набор будущего',
+            'slug' => 'zhdun-future-course',
+            'teacher_id' => $teacher->id,
+        ]);
+        Schedule::create(['title' => 'Скоро', 'course_id' => $future->id, 'start' => now()->addMonth()]);
+
+        // Запись («в записи») с расписанием — в «уже идут» тоже не попадает.
+        $recorded = Course::factory()->create([
+            'title' => 'Запись курса',
+            'slug' => 'zhdun-recorded-course',
+            'format' => 'recorded',
+            'teacher_id' => $teacher->id,
+        ]);
+        Schedule::create(['title' => 'Прошло', 'course_id' => $recorded->id, 'start' => now()->subDay()]);
+        Schedule::create(['title' => 'Впереди', 'course_id' => $recorded->id, 'start' => now()->addDay()]);
+
+        $resp = $this->get(route('shop.waitlist'))
+            ->assertOk()
+            ->assertSee('Под вопросом (ждун)')
+            ->assertSee('Уже идут осенью 2026')
+            // Итоги ждуна: 3 строки, 2 преподавателя.
+            ->assertSee('3 курса · 2 преподавателя')
+            // Итоги «уже идут»: 2 курса у 1 преподавателя.
+            ->assertSee('2 курса · 1 преподаватель')
+            ->assertSee('записи помогают догнать')
+            // Точные ссылки — только на идущие курсы; набор и запись не попадают.
+            ->assertSee(route('shop.course.show', $running->slug), false)
+            ->assertSee(route('shop.course.show', $running2->slug), false)
+            ->assertDontSee(route('shop.course.show', $future->slug), false)
+            ->assertDontSee(route('shop.course.show', $recorded->slug), false);
+
+        // MG 24-09-2026: обе колонки шапки — нумерованные списки (<ol>), а не
+        // строки-ссылки вперемешку: слева ждун, справа «уже идут».
+        $html = (string) $resp->getContent();
+        $this->assertGreaterThanOrEqual(
+            2,
+            substr_count($html, 'list-decimal list-inside space-y-1'),
+            'шапка: обе колонки (ждун и уже идут) — нумерованные списки'
+        );
+        $this->assertStringContainsString('<li>', $html, 'нумерованный список рендерит <li>');
     }
 }
