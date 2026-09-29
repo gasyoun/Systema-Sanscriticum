@@ -6,6 +6,26 @@
 <div class="min-h-screen bg-[#0A0D14] text-white py-16 lg:py-24 relative overflow-hidden font-sans"
      x-data="waitlistVote()">
 
+    {{-- Голос учтён: кнопкой (после reload) или после входа/регистрации гостя (CastPendingWaitlistVote). --}}
+    @if(session(\App\Http\Controllers\Api\PublicWaitlistController::VOTED_FLASH_KEY))
+        <div x-data="{ show: true }"
+             x-init="setTimeout(() => show = false, 5000)"
+             x-show="show"
+             x-transition.opacity.duration.300ms
+             role="status"
+             data-waitlist-voted-toast
+             class="fixed z-50 top-20 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 flex items-center gap-3 rounded-2xl bg-[#111622] border border-emerald-500/40 shadow-2xl shadow-black/40 px-4 py-3">
+            <span class="flex-none w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                <i class="fas fa-check"></i>
+            </span>
+            <p class="flex-1 text-sm font-bold text-white">Спасибо, ваш голос учтён!</p>
+            <button type="button" x-on:click="show = false" title="Закрыть"
+                    class="flex-none text-slate-400 hover:text-white transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    @endif
+
     <div class="absolute top-0 left-1/4 w-96 h-96 bg-brand/10 rounded-full blur-[120px] pointer-events-none"></div>
     <div class="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none"></div>
 
@@ -18,10 +38,72 @@
             </h1>
             <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
                 За какой курс голосовать? Голосуйте за будущие группы при
-                «Обществе ревнителей санскрита»: наберётся необходимый минимум
+                «Обществе ревнителей санскрита»: наберется необходимый минимум
                 голосов — откроется оплата; нужное число оплат к сроку — группа
                 стартует.
             </p>
+
+            {{-- H5475 (MG 24-09-2026): итоги шапки — «ждун» против «уже идут»,
+                 точные ссылки на идущие курсы и разница двух режимов.
+                 MG 24-09-2026 (numbered lists): обе колонки — нумерованные
+                 <ol class="list-decimal"> — слева ждун, справа «уже идут». --}}
+            @php $runningCount = $runningCourses->count(); @endphp
+            <div class="mt-8 max-w-3xl mx-auto text-left rounded-2xl bg-[#111622] border border-[#1F2636] p-5 md:p-6">
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    Два режима: <span class="font-bold text-slate-200">ждун</span> — будущая
+                    группа, которой ещё нет, её старт зависит от голосов и оплат;
+                    <span class="font-bold text-slate-200">уже идут</span> — настоящие группы,
+                    занятия идут по расписанию прямо сейчас.
+                </p>
+                <div class="grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Под вопросом (ждун)</p>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            {{ $zhdunCourseCount }} {{ \App\Support\Plural::ru($zhdunCourseCount, 'курс', 'курса', 'курсов') }} · {{ $zhdunTeacherCount }} {{ \App\Support\Plural::ru($zhdunTeacherCount, 'преподаватель', 'преподавателя', 'преподавателей') }} — будущие группы, которых ещё нет:
+                        </p>
+                        @if($zhdunCourses->isNotEmpty())
+                            <ol class="text-sm mt-2 leading-relaxed list-decimal list-inside space-y-1">
+                                @foreach($zhdunCourses as $zhdun)
+                                    <li>
+                                        @if($zhdun['url'])
+                                            <a href="{{ $zhdun['url'] }}"
+                                               class="text-[#38BDF8] hover:text-[#7DD3FC] transition-colors">{{ $zhdun['title'] }}</a>
+                                        @else
+                                            {{ $zhdun['title'] }}
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ol>
+                        @endif
+                        <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                            Дата «не раньше» сдвинется, пока не соберётся кворум: нужное число голосов открывает оплату, нужное число оплат к сроку запускает группу.
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-black uppercase tracking-widest text-emerald-400 mb-2">Уже идут осенью 2026</p>
+                        @if($runningCount === 0)
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                Сейчас по расписанию ничего не идёт — голосуйте за будущие группы ниже.
+                            </p>
+                        @else
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                {{ $runningCount }} {{ \App\Support\Plural::ru($runningCount, 'курс', 'курса', 'курсов') }} · {{ $runningTeacherCount }} {{ \App\Support\Plural::ru($runningTeacherCount, 'преподаватель', 'преподавателя', 'преподавателей') }} — реальные группы, занятия идут по расписанию:
+                            </p>
+                            <ol class="text-sm mt-2 leading-relaxed list-decimal list-inside space-y-1">
+                                @foreach($runningCourses as $running)
+                                    <li>
+                                        <a href="{{ $running['url'] }}"
+                                           class="text-[#38BDF8] hover:text-[#7DD3FC] transition-colors">{{ $running['title'] }}</a>
+                                    </li>
+                                @endforeach
+                            </ol>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                                Присоединиться можно и позже — записи помогают догнать.
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </header>
 
         @if($sections->isEmpty())
@@ -98,13 +180,25 @@
                                         @endif
                                     </span>
 
-                                    @if($already)
+                                    {{-- H5134 — сердечко «Избранное» рядом с кнопкой
+                                         голоса: курс есть → «c:{id}`, без карточки
+                                         курса → «w:{slug}`. Голос ждуна не трогает. --}}
+                                    @php
+                                        $heartKey = $item->course ? 'c:'.$item->course->id : 'w:'.$item->slug;
+                                    @endphp
+                                    <div class="flex items-center gap-3">
+                                        @include('shop.partials.favorite-heart', [
+                                            'favoriteKey' => $heartKey,
+                                            'favorited' => in_array($heartKey, $favoriteKeys, true),
+                                        ])
+
+                                        @if($already)
                                         <button type="button"
                                                 data-waitlist-unvote="{{ $item->slug }}"
                                                 title="Отозвать голос"
                                                 class="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition"
                                                 x-on:click="unvote('{{ $item->slug }}', $el)">
-                                            <i class="fas fa-check mr-1"></i>Голос учтён
+                                            <i class="fas fa-check mr-1"></i>Голос учтен
                                             @if($myPref)
                                                 · {{ \App\Models\WaitlistVote::SLOT_PREFERENCES[$myPref] ?? $myPref }}
                                             @endif
@@ -120,8 +214,11 @@
                                             <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Открыта оплата — свяжитесь с куратором</span>
                                         @endif
                                     @else
-                                        {{-- H4206: пожелание времени — куратор подберёт слот по голосам. --}}
+                                        {{-- H4206: пожелание времени — куратор подберет слот по голосам.
+                                             MG 24-09-2026: недельный слот уже известен (пн 18:00, сб 17:00, …)
+                                             — селект «Когда удобно?» не предлагаем, время решено. --}}
                                         <div class="flex items-center gap-2">
+                                            @if(! $item->slot)
                                             <select data-waitlist-pref="{{ $item->slug }}"
                                                     title="Когда вам удобно?"
                                                     class="text-xs font-semibold text-slate-300 bg-[#141A28] border border-[#1F2636] hover:border-brand/50 rounded-lg px-2 py-1.5">
@@ -130,6 +227,7 @@
                                                     <option value="{{ $prefKey }}">{{ $prefLabel }}</option>
                                                 @endforeach
                                             </select>
+                                            @endif
                                             <button type="button"
                                                     data-waitlist-vote="{{ $item->slug }}"
                                                     class="text-xs font-bold text-white bg-brand hover:opacity-90 transition rounded-lg px-3 py-1.5"
@@ -138,6 +236,7 @@
                                             </button>
                                         </div>
                                     @endif
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -147,7 +246,7 @@
         @endif
 
         <section class="mt-12 mb-8 text-center">
-            <p class="text-slate-400 mb-4">Ищете курс, который уже идёт?</p>
+            <p class="text-slate-400 mb-4">Ищете курс, который уже идет?</p>
             <a href="{{ route('shop.index') }}"
                class="inline-flex items-center gap-2 px-6 py-3 bg-[#141A28] border border-[#1F2636] hover:border-brand/60 hover:bg-brand/5 text-white text-sm font-bold rounded-xl transition-all">
                 Весь каталог курсов
@@ -156,6 +255,8 @@
 
     </div>
 </div>
+
+@include('shop.partials.favorites-script')
 
 <script>
 function waitlistVote() {
@@ -176,7 +277,7 @@ function waitlistVote() {
                     body: JSON.stringify({ slug, slot_preference: pref || null }),
                 });
                 if (resp.status === 401 || resp.redirected || ! (resp.headers.get('content-type') || '').includes('application/json')) {
-                    // Гость: web-мидлвари отвечает редиректом, ведём на вход.
+                    // Гость: web-мидлвари отвечает редиректом, ведем на вход.
                     window.location.href = '/login';
                     return;
                 }

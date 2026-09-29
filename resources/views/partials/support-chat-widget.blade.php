@@ -15,13 +15,13 @@
                      resources/js/bootstrap.js) — до деплоя Reverb виджет
                      работает на light-poll фолбэке, ничего не ломается.
       • presence   → POST {{ route('support.presence') }} с первого захода, если
-                     включён флаг support_visitor_presence (H1197, Jivo-паритет
+                     включен флаг support_visitor_presence (H1197, Jivo-паритет
                      Pillar 2). Куратор видит посетителя в «Посетители онлайн» и
-                     может написать первым; ответ beacon'а несёт conversation_id —
+                     может написать первым; ответ beacon'а несет conversation_id —
                      проактив куратора долетает до молчащего посетителя, и виджет
-                     раскрывается. При выключенном флаге beacon не шлётся.
+                     раскрывается. При выключенном флаге beacon не шлется.
 
-    Безопасность: сервер отдаёт уже экранированный `html` (ChatMessage::htmlForWeb,
+    Безопасность: сервер отдает уже экранированный `html` (ChatMessage::htmlForWeb,
     whitelist без атрибутов) — рендерим его, но НИКОГДА не сырой ввод посетителя.
 
     Контекстное приветствие по странице входа (H1198, Jivo-паритет S3): за флагом
@@ -230,7 +230,7 @@
     if (!root) return;
 
     // H4118: высота видимой области без клавиатуры/зума — питает .scw-panel (max-height/height).
-    // Задаём на <html>, чтобы переменная жила даже до инициализации остального скрипта.
+    // Задаем на <html>, чтобы переменная жила даже до инициализации остального скрипта.
     var vv = window.visualViewport;
     var syncVvh = function () {
         if (vv) { document.documentElement.style.setProperty('--scw-vvh', Math.round(vv.height) + 'px'); }
@@ -276,11 +276,26 @@
 
     // Контекстное приветствие по странице входа (H1198): URL известен сразу,
     // без обращения к серверу — за флагом support_answer_suggester. Дефолтный
-    // текст (уже в разметке) остаётся, если флаг выключен или страница не
+    // текст (уже в разметке) остается, если флаг выключен или страница не
     // распознана ни одним паттерном. Не подменяет оффлайн-копирайт (H1199) —
     // «оставьте почту» важнее контекстного приветствия, когда операторы офлайн.
     function applyContextualGreeting() {
         if (!CONTEXT_GREETING || !intro || OFFLINE) return;
+        // Эмбед samskrtam.ru (H5451): ?page= — товарная/магазинная страница,
+        // переданная контроллером в SCW_EMBED_PAGE. Приветствие каталога по
+        // паттерну H1198; вне эмбеда переменная не задана — ветка спит.
+        if (window.SCW_EMBED_PAGE) {
+            try {
+                var eu = new URL(window.SCW_EMBED_PAGE);
+                var ep = (eu.pathname || '').toLowerCase();
+                var isShop = /(^|\.)samskrtam\.ru$/.test(eu.hostname)
+                    && (ep.indexOf('/product') === 0 || ep.indexOf('/shop') === 0
+                        || ep.indexOf('/product-category') === 0 || ep.indexOf('/tovar') === 0
+                        || ep.indexOf('/catalog') === 0);
+                if (isShop) intro.textContent = 'Здравствуйте! Вопрос по этому товару — наличие, оплата, доставка? Мы рядом.';
+            } catch (e) { /* невалидный page — дефолтное приветствие */ }
+            return;
+        }
         var path = (location.pathname || '').toLowerCase();
         var greeting = null;
         if (path.indexOf('/online/kursy/') === 0 || path.indexOf('/course/') === 0
@@ -315,6 +330,15 @@
             el.appendChild(label);
         }
 
+        // H5450: автоответы бота (ack / FAQ) приходят role='bot' — подпись,
+        // чтобы посетитель не принял их за ответ живого куратора.
+        if (msg.role === 'bot') {
+            var botLabel = document.createElement('span');
+            botLabel.className = 'scw-msg-label';
+            botLabel.textContent = 'Бот';
+            el.appendChild(botLabel);
+        }
+
         var body = document.createElement('span');
         // Сервер уже отдал экранированный whitelist-HTML (htmlForWeb); безопасно.
         body.innerHTML = msg.html != null ? msg.html : escapeText(msg.text);
@@ -339,7 +363,7 @@
                 });
             subscribed = true;
             stopPolling(); // живой push вместо опроса
-        } catch (err) { /* Echo не поднят — остаёмся на фолбэке */ }
+        } catch (err) { /* Echo не поднят — остаемся на фолбэке */ }
     }
 
     function startPolling() {
@@ -350,13 +374,18 @@
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     }
 
-    // Presence-beacon: сообщаем серверу «посетитель на этой странице». Ответ несёт
+    // Presence-beacon: сообщаем серверу «посетитель на этой странице». Ответ несет
     // conversation_id — если куратор написал первым молчащему посетителю, тред уже
     // создан: подтягиваем его и раскрываем виджет (Jivo «оператор пишет первым»).
     function beacon() {
         if (!PRESENCE || !PRESENCE_URL) return;
         var payload = {};
-        try { if (location && location.href) payload.page = String(location.href).slice(0, 2048); } catch (e) {}
+        // Эмбед (H5451): шлем страницу магазина из SCW_EMBED_PAGE — куратор
+        // видит товар samskrtam.ru, а не адрес iframe. Вне эмбеда не задано.
+        try {
+            var beaconHref = window.SCW_EMBED_PAGE || (location && location.href);
+            if (beaconHref) payload.page = String(beaconHref).slice(0, 2048);
+        } catch (e) {}
         fetch(PRESENCE_URL, {
             method: 'POST',
             headers: {
@@ -373,7 +402,7 @@
             if (!data || data.enabled === false) { stopBeacon(); return; }   // флаг выключен — не шумим
             var firstBeacon = !beaconStarted;
             beaconStarted = true;
-            // Тред появился, а у виджета его ещё нет → куратор открыл диалог.
+            // Тред появился, а у виджета его еще нет → куратор открыл диалог.
             if (data.conversation_id && !conversationId) {
                 var proactive = !firstBeacon; // появился ПОСЛЕ загрузки = проактив куратора
                 loadHistory().then(function () {
@@ -447,7 +476,12 @@
         if (emailEl && !emailEl.hidden && emailEl.value.trim() !== '') payload.email = emailEl.value.trim();
         if (phoneEl && !phoneEl.hidden && phoneEl.value.trim() !== '') payload.phone = phoneEl.value.trim();
         // Страница, с которой посетитель пишет — куратор видит контекст (H1196).
-        try { if (location && location.href) payload.page = String(location.href).slice(0, 2048); } catch (e) {}
+        // Эмбед (H5451): SCW_EMBED_PAGE несет URL магазина вместо адреса iframe;
+        // вне эмбеда переменная не задана — поведение прежнее.
+        try {
+            var pageHref = window.SCW_EMBED_PAGE || (location && location.href);
+            if (pageHref) payload.page = String(pageHref).slice(0, 2048);
+        } catch (e) {}
 
         sendBtn.disabled = true;
         fetch(POST_URL, {

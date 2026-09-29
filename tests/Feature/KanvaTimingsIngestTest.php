@@ -106,7 +106,7 @@ class KanvaTimingsIngestTest extends TestCase
         File::put($file, json_encode($json, JSON_UNESCAPED_UNICODE));
 
         $this->artisan('kanva:ingest-timings', ['--file' => $file])
-            ->expectsOutputToContain('курс не определён')
+            ->expectsOutputToContain('курс не определен')
             ->assertSuccessful();
         $this->assertSame(0, KanvaTiming::count());
 

@@ -2,9 +2,9 @@
 <html lang="ru" class="h-full bg-[#F4F1EA]">
 <head>
     <meta charset="UTF-8">
-    {{-- H4118: interactive-widget=resizes-content — клавиатура сжимает viewport вместо прокрутки под неё --}}
+    {{-- H4118: interactive-widget=resizes-content — клавиатура сжимает viewport вместо прокрутки под нее --}}
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
-    {{-- H4118: светлые нативные контролы (селекты/даты/скроллбары) — НЕ тёмная тема --}}
+    {{-- H4118: светлые нативные контролы (селекты/даты/скроллбары) — НЕ темная тема --}}
     <meta name="color-scheme" content="light">
     <meta name="theme-color" content="#E85C24">
     <meta name="mobile-web-app-capable" content="yes">
@@ -24,7 +24,7 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap" rel="stylesheet">
-    {{-- Кабинетная Метрика (MG 18-09-2026): тот же счётчик 106964341, но
+    {{-- Кабинетная Метрика (MG 18-09-2026): тот же счетчик 106964341, но
          webvisor:false + clickmap:false — никаких записей сессий залогиненных
          (152-ФЗ). План: docs/METRIKA_GOALS_SHOP_CABINET_2026-09-18.md. --}}
     @include('partials.cabinet-metrika')
@@ -39,7 +39,7 @@
         .h-cabinet-shell { height: 100vh; }
         @supports (height: 100dvh) { .h-cabinet-shell { height: 100dvh; } }
 
-        /* H4118: safe-area (viewport-fit=cover) — шапка и скролл-контейнер не залезают под «чёлку» и домой-полоску */
+        /* H4118: safe-area (viewport-fit=cover) — шапка и скролл-контейнер не залезают под «челку» и домой-полоску */
         .sa-header {
             padding-top: env(safe-area-inset-top);
             padding-left: max(1rem, env(safe-area-inset-left));
@@ -57,7 +57,7 @@
         }
 
         /* H4118: пол 16px для форм-контролов — iOS зумит страницу при фокусе в поле с computed < 16px.
-           :is() даёт специфичность (0,1,1) — перекрывает Tailwind-классы вида .text-sm (0,1,0) на самом инпуте. */
+           :is() дает специфичность (0,1,1) — перекрывает Tailwind-классы вида .text-sm (0,1,0) на самом инпуте. */
         main :is(input, select, textarea) { font-size: max(1rem, 1em); }
 
         /* H4118: глобальные Livewire-индикаторы (прячутся livewire-стилями из head;
@@ -212,7 +212,7 @@
             </a>
             @endif
 
-            {{-- Карточки SRS (H211) — только при включённом флаге srs.enabled --}}
+            {{-- Карточки SRS (H211) — только при включенном флаге srs.enabled --}}
             @if (config('srs.enabled'))
             <a href="{{ route('student.srs') }}"
                class="{{ request()->routeIs('student.srs', 'student.srs.deck') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
@@ -235,12 +235,12 @@
             </a>
             @endif
 
-            {{-- H1680 — короткие тренажёры (не FSRS), свой флаг, независимо от srs.enabled --}}
+            {{-- H1680 — короткие тренажеры (не FSRS), свой флаг, независимо от srs.enabled --}}
             @if (config('features.games_skill_drills'))
             <a href="{{ route('student.skill-drills') }}"
                class="{{ request()->routeIs('student.skill-drills') ? 'bg-[#2C2C32] text-white border-l-2 border-brand' : 'text-gray-400 hover:bg-[#252529] hover:text-white border-l-2 border-transparent' }} flex items-center px-4 py-3 text-sm font-bold rounded-r-xl transition-all">
                 <i class="fas fa-gamepad mr-3 w-5 text-center {{ request()->routeIs('student.skill-drills') ? 'text-brand' : 'text-gray-500' }}"></i>
-                Тренажёры
+                Тренажеры
             </a>
             @endif
 

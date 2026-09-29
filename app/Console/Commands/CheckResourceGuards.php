@@ -13,17 +13,17 @@ use Illuminate\Console\Command;
 /**
  * Ресурсный сторож (H4194, SLI-3 census S1): свободная память / своп / load1.
  *
- * Motive: `cabinet:probe` не читает ни одного из этих трёх чисел — L1 (/tmp
- * скретч съел своп) нашёл человек руками через `du -sh /tmp`, L8 (load 370)
+ * Motive: `cabinet:probe` не читает ни одного из этих трех чисел — L1 (/tmp
+ * скретч съел своп) нашел человек руками через `du -sh /tmp`, L8 (load 370)
  * увидели только когда контейнер уже не отвечал. Пороги — docs/server-resource-guards.md
  * §1/§9 (реальные инциденты .92), заведены в config/guard_pack.php.
  *
- * Идёт ОТДЕЛЬНОЙ строкой cron через systema-watchdog-run.sh, а не внутри
+ * Идет ОТДЕЛЬНОЙ строкой cron через systema-watchdog-run.sh, а не внутри
  * schedule:run — livelock по памяти останавливает сам планировщик первым
  * (§3 того же документа), сторож не должен зависеть от того, что сторожит.
  *
  * Fail-open: /proc недоступен (не Linux, контейнер без cgroup v1 meminfo) —
- * молчим, а не падаем. Windows-дев и CI без /proc должны оставаться зелёными.
+ * молчим, а не падаем. Windows-дев и CI без /proc должны оставаться зелеными.
  */
 class CheckResourceGuards extends Command
 {

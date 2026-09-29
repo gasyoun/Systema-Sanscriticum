@@ -13,7 +13,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 
 /**
- * Перепостить в чат группы «Приём ДЗ открыт» (якорь для reply #ДЗ).
+ * Перепостить в чат группы «Прием ДЗ открыт» (якорь для reply #ДЗ).
  *
  * Нужен, когда auto-open успел записать homework_enabled / homework_auto_opened_at
  * (или ДЗ включили руками), а Telegram-бот не достучался до API (сеть/VPS)
@@ -33,7 +33,7 @@ class RepostHomeworkOpenInvite extends Command
         {--students : также повторно пушнуть студентам TG/VK (HomeworkNotifier::opened)}
         {--dry-run : только диагностика, без отправки}';
 
-    protected $description = 'Переотправить пост «Приём ДЗ открыт» в telegram_chat_id групп урока';
+    protected $description = 'Переотправить пост «Прием ДЗ открыт» в telegram_chat_id групп урока';
 
     public function handle(HomeworkTelegramTagService $tags, HomeworkNotifier $notifier): int
     {
@@ -83,7 +83,7 @@ class RepostHomeworkOpenInvite extends Command
         }
 
         if (! $lesson->homework_enabled) {
-            $this->warn('homework_enabled=false — пост всё равно уйдёт (якорь для #ДЗ), '
+            $this->warn('homework_enabled=false — пост все равно уйдет (якорь для #ДЗ), '
                 .'но студенты могут не видеть форму сдачи. Включите ДЗ в админке при необходимости.');
         }
 

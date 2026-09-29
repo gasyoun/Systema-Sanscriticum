@@ -53,6 +53,15 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('send-login-invites');
 
+        // H5184 N07 — churn-сигнал «stalled_7d» (30д активность есть, 7д нет):
+        // JSON в n8n-вебхук, A/B 50/50 по хешу id, дедуп/состояние внутри
+        // команды. Понедельник 09:00 МСК, до дайджеста онбординга (09:30).
+        $schedule->command('edtech:churn-signals')
+            ->weeklyOn(1, '09:00') // понедельник 09:00 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('edtech-churn-signals');
+
         // H5022 (MG 16-09-2026): через 48 ч после успешной оплаты без входа в
         // кабинет — ОДНО повторное приглашение (Telegram → email) с magic-ссылкой.
         // Гейт features.reinvite_48h (REINVITE_48H, по умолчанию ON) и дедуп
@@ -83,6 +92,14 @@ trait SchedulesStudentsAndContent
             ->withoutOverlapping(10)
             ->onOneServer()
             ->name('prana-decay');
+
+        // H4966: ежедневный монитор протухшего пина пробного занятия
+        // (Course.trial_schedule_id в прошлом) — алерт админам в Telegram.
+        $schedule->command('trial:check-freshness')
+            ->dailyAt('09:00') // 09:00 МСК
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('trial-check-freshness');
 
     }
 
@@ -141,6 +158,17 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('post-course-full-schedule-sweep');
 
+        // Плашки занятий: JPEG «дата + номер» на ближайшие lead_days дней.
+        // 04:40 МСК — до утреннего прохода n8n «Плашки занятий», который
+        // кладёт их в папки групп на Google Диске (обложки для ZOOM 1.4).
+        // Перерисовывает только изменившиеся (render_hash). Без флага
+        // LESSON_BANNERS команда no-op.
+        $schedule->command('lesson-banners:render')
+            ->dailyAt('04:40')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->name('lesson-banners-render');
+
         // VK/ORS content calendar auto-pilot (H1568, Wave 5): hourly tick
         // posts every due `scheduled` slot via n8n. No-op while
         // features.content_calendar_autopilot is OFF (default).
@@ -183,6 +211,22 @@ trait SchedulesStudentsAndContent
             ))
             ->onOneServer()
             ->name('publish-story-persona');
+
+        // Read-only MTProto observation; publication and support share the
+        // session lock, so a busy session simply defers the next sample.
+        $schedule->command('telegram-business:story-metrics')
+            ->everyTwoHours()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('collect-business-story-metrics');
+
+        // Fill an empty Story day from the oldest held video, or release any
+        // unapproved subtitle draft when its seven-day deadline arrives.
+        $schedule->command('telegram-business:story-subtitles release')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('release-business-story-subtitles');
 
         // Автооткрытие приёма ДЗ после проведённого урока (H1764, волна 1).
         // Ежечасный, а не ежедневный: момент открытия посчитан точно, проход

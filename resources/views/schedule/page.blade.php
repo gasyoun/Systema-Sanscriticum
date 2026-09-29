@@ -11,7 +11,7 @@
 
 @section('content')
 @php
-    // H4434: client_tz — даты обёрнуты в <time data-msk-timestamp>, JS ниже
+    // H4434: client_tz — даты обернуты в <time data-msk-timestamp>, JS ниже
     // конвертирует их в зону устройства гостя (MG 09-09-2026).
     $clientTz = ['client_tz' => true];
 @endphp
@@ -27,7 +27,11 @@
         <p class="text-[#E85C24] font-bold mb-2">Набор открыт</p>
         <h2 id="grammar-intake" class="text-2xl font-bold text-white mb-2">Новые онлайн-группы грамматики санскрита</h2>
         <p class="text-slate-300 mb-4">С М. Ю. Гасунсом: суббота в 12:00 или вторник в 08:00 МСК. Если оба времени не подходят, укажите это в заявке.</p>
-        <a href="/ga/m26-schedule-c" class="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all">Встать в список ожидания <i class="fas fa-arrow-right text-[10px]"></i></a>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="/ga/m26-schedule-c" class="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold transition-all">Встать в список ожидания <i class="fas fa-arrow-right text-[10px]"></i></a>
+            {{-- H5233: заметная ссылка на живые группы семейства Кочергиной --}}
+            <a href="/raspisanie/kochergina" class="inline-flex items-center gap-2 py-2.5 px-4 rounded-xl border border-[#E85C24] text-[#E85C24] hover:bg-[#E85C24] hover:text-white text-sm font-bold transition-all">Группы по Кочергиной — канва и заявка <i class="fas fa-arrow-right text-[10px]"></i></a>
+        </div>
     </section>
 
     @if(!$flagOn)
@@ -40,7 +44,7 @@
             .fs-body { color: #cbd5e1; line-height: 1.7; }
             .fs-body strong { color: #fff; }
 
-            /* H4387 + H4647: статус + иконка-кнопка 34×34 справа сверху (тёмная тема). */
+            /* H4387 + H4647: статус + иконка-кнопка 34×34 справа сверху (темная тема). */
             .fs-top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 0 0 .75rem; }
             .fs-status { color: #94a3b8; font-size: .925rem; margin: 0; }
             .fs-toggle {
@@ -98,7 +102,7 @@
             .sch-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.25rem; }
         </style>
 
-        {{-- H4647: сводка — количество курсов, кто ведёт, якорное оглавление --}}
+        {{-- H4647: сводка — количество курсов, кто ведет, якорное оглавление --}}
         <nav class="p-5 mb-8 rounded-2xl bg-[#111622] border border-[#1F2636]" aria-label="Оглавление расписания">
             <p class="sch-index-line">
                 Курсов: {{ $courses->count() }}@if($teachers->isNotEmpty()) · Ведут:
@@ -108,7 +112,7 @@
             <ol class="sch-toc">
                 @foreach($courses as $row)
                     <li>
-                        <a href="#sch-{{ $row['no'] }}" class="sch-toc-link">{{ $row['no'] }}. {{ $row['course']->title }}</a>@if($row['course']->teacher) — <a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($row['course']->teacher->name) }}" class="sch-toc-teacher">{{ $row['course']->teacher->name }}</a>@endif
+                        <a href="#sch-{{ $row['no'] }}" class="sch-toc-link">{{ $row['no'] }}. {{ $row['displayTitle'] }}</a>@if($row['nextLabel']) — {{ $row['nextLabel'] }}@endif@if($row['course']->teacher) — <a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($row['course']->teacher->name) }}" class="sch-toc-teacher">{{ $row['teacherDisplay'] }}</a>@endif
                     </li>
                 @endforeach
             </ol>
@@ -121,10 +125,10 @@
                     <summary class="sch-sum">
                         <span class="sch-no">{{ $row['no'] }}</span>
                         <span class="sch-main">
-                            <span class="sch-title">{{ $course->title }}</span>
-                            @if($course->teacher)<a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($course->teacher->name) }}" class="sch-teacher">{{ $course->teacher->name }}</a>@endif
+                            <span class="sch-title">{{ $row['displayTitle'] }}</span>
+                            @if($course->teacher)<a href="/online/prepodavatel/{{ \App\Support\ShopCatalogUrl::encodeWords($course->teacher->name) }}" class="sch-teacher">{{ $row['teacherDisplay'] }}</a>@endif
                         </span>
-                        <span class="sch-meta">@if($row['weekdayRu']){{ $row['weekdayRu'] }} · @endifзанятий: {{ $row['lessonsCount'] }}</span>
+                        <span class="sch-meta">@if($row['nextLabel']){{ $row['nextLabel'] }} · @endifзанятий: {{ $row['lessonsCount'] }}@if($row['progress']) · {{ $row['progress'] }}@endif</span>
                         <i class="fas fa-chevron-down sch-chev" aria-hidden="true"></i>
                     </summary>
                     <div class="sch-body">

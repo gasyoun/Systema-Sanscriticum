@@ -256,7 +256,8 @@ class SurveyStudentEmailInviteTest extends TestCase
         $this->assertStringContainsString('15–20 минут', $subject);
         $this->assertStringContainsString($mail->url, $html);
         $this->assertStringContainsString('15–20 минут', $html);
-        $this->assertStringContainsString($user->name, $html);
+        $this->assertStringContainsString('Намасте, Анна!', $html);
+        $this->assertStringNotContainsString('Примерная', $html, 'в приветствии только имя');
         $this->assertStringNotContainsString('наград', $html);
         $this->assertStringNotContainsString('приз', $html);
     }

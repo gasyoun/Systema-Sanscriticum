@@ -19,11 +19,11 @@ use Illuminate\Console\Command;
  * новых расходов после остановки книги (июль 2026): Точка (канонический
  * CSV дебета сборщика Uprava), Сбер (расширенная выписка CSV), PayPal
  * (Activity export CSV). Без ручного ввода: парсер → паритет-гейты →
- * dry-run отчёт → --apply.
+ * dry-run отчет → --apply.
  *
  * Гейты до записи (все REFUSE-ные, ничего не пишется):
  *  - месяц файла обязан совпасть с --month и не попадать в окно двойного
- *    счёта (≤ 2026-07: книга Oct'25–Jul'26 уже в ip_expenses + CRM-«Расход»
+ *    счета (≤ 2026-07: книга Oct'25–Jul'26 уже в ip_expenses + CRM-«Расход»
  *    pseudo-payments — AUDIT_BOOKKEEPING_MISERABLE_MAP §3); оверрайд только
  *    осознанный, --overlap-acknowledged;
  *  - --aggregates (tochka_monthly_aggregates.tsv): Σ дебета месяца из
@@ -35,7 +35,7 @@ use Illuminate\Console\Command;
  * прогон доливает только новое. Категория — эвристика guess, оператор
  * пере-категоризует в админке. Аудит — action imported_statement.
  *
- * Без --apply — только отчёт (dry-run), ничего не пишется. Первый реальный
+ * Без --apply — только отчет (dry-run), ничего не пишется. Первый реальный
  * --apply на проде — human-gated (standing deploy rule).
  */
 class ImportIpStatementExpenses extends Command
@@ -44,15 +44,15 @@ class ImportIpStatementExpenses extends Command
         {bank : tochka | sber | paypal}
         {file : CSV-файл выписки}
         {--month= : Месяц выписки YYYY-MM (обязателен: провенанс + гейты)}
-        {--apply : Записать импорт; без флага — только отчёт (dry-run)}
+        {--apply : Записать импорт; без флага — только отчет (dry-run)}
         {--aggregates= : TSV месячных агрегатов Точки — гейт Σ дебета месяца}
         {--expect-total=* : Ожидаемая Σ по валюте: RUB=70080.00 (повторяемо)}
-        {--account= : Метка счёта в ip_expenses (по умолчанию — по банку)}
-        {--overlap-acknowledged : Разрешить месяц из окна двойного счёта (≤ 2026-07)}';
+        {--account= : Метка счета в ip_expenses (по умолчанию — по банку)}
+        {--overlap-acknowledged : Разрешить месяц из окна двойного счета (≤ 2026-07)}';
 
     protected $description = 'Импорт банковской выписки (Точка/Сбер/PayPal) в ip_expenses — dry-run по умолчанию, паритет-гейты, идемпотентно (H4200)';
 
-    /** Последний месяц, покрытый книгой + CRM-«Расход» (окно двойного счёта). */
+    /** Последний месяц, покрытый книгой + CRM-«Расход» (окно двойного счета). */
     private const OVERLAP_LAST_MONTH = '2026-07';
 
     private const BANKS = [
@@ -61,13 +61,13 @@ class ImportIpStatementExpenses extends Command
         'paypal' => ['label' => 'PayPal', 'account' => 'PayPal', 'parser' => PayPalCsvParser::class],
     ];
 
-    /** Человеческие подписи счётчиков парсера — для отчёта dry-run. */
+    /** Человеческие подписи счетчиков парсера — для отчета dry-run. */
     private const STAT_LABELS = [
         'skipped_summary' => 'итоговых строк («Итого»)',
         'skipped_credit' => 'кредитных строк (не расход)',
         'skipped_income' => 'входящих PayPal (не расход)',
         'skipped_status' => 'не Completed (Pending/Denied/…)',
-        'skipped_internal' => 'внутренних переводов на свой счёт',
+        'skipped_internal' => 'внутренних переводов на свой счет',
         'ambiguous_dates' => 'неоднозначных дат D/M vs M/D (прочитано как M/D)',
     ];
 
@@ -84,13 +84,13 @@ class ImportIpStatementExpenses extends Command
         }
 
         if (preg_match('/^\d{4}-\d{2}$/', $month) !== 1) {
-            $this->error('--month обязателен в формате YYYY-MM (провенанс и гейты двойного счёта). REFUSE.');
+            $this->error('--month обязателен в формате YYYY-MM (провенанс и гейты двойного счета). REFUSE.');
 
             return self::FAILURE;
         }
 
         if ($month <= self::OVERLAP_LAST_MONTH && ! $this->option('overlap-acknowledged')) {
-            $this->error("Месяц {$month} попадает в окно двойного счёта (≤ ".self::OVERLAP_LAST_MONTH.'): книга «Расходы по ИП» Oct\'25–Jul\'26 уже лежит в ip_expenses, CRM-«Расход» pseudo-payments добавляет третий счёт — сверка @DECIDE открыта (AUDIT_BOOKKEEPING_MISERABLE_MAP §3). Осознанный оверрайд: --overlap-acknowledged. REFUSE.');
+            $this->error("Месяц {$month} попадает в окно двойного счета (≤ ".self::OVERLAP_LAST_MONTH.'): книга «Расходы по ИП» Oct\'25–Jul\'26 уже лежит в ip_expenses, CRM-«Расход» pseudo-payments добавляет третий счет — сверка @DECIDE открыта (AUDIT_BOOKKEEPING_MISERABLE_MAP §3). Осознанный оверрайд: --overlap-acknowledged. REFUSE.');
 
             return self::FAILURE;
         }
@@ -126,7 +126,7 @@ class ImportIpStatementExpenses extends Command
             return self::FAILURE;
         }
 
-        // Σ по валютам — Decimal-exact, только RUB участвует в рублёвых гейтах.
+        // Σ по валютам — Decimal-exact, только RUB участвует в рублевых гейтах.
         $sums = [];
         foreach ($rows as $row) {
             $sums[$row['currency']] = bcadd($sums[$row['currency']] ?? '0', $row['amount'], 2);
@@ -192,7 +192,7 @@ class ImportIpStatementExpenses extends Command
                 'fx_note' => $row['currency'] !== 'RUB' ? '-'.$row['amount'].' '.$row['currency'].' (PayPal)' : null,
                 'account' => $account,
                 // Категория только по содержимому строки (получатель +
-                // назначение): метка банка в guess не идёт — «Точка» в
+                // назначение): метка банка в guess не идет — «Точка» в
                 // эвристике Bank слил бы каждую строку в «Банк».
                 'category' => IpExpenseCategory::guess($row['payee'], (string) $row['description'])->value,
                 'note' => $row['description'],
@@ -294,9 +294,9 @@ class ImportIpStatementExpenses extends Command
         return true;
     }
 
-    /** Предупреждение о двойном счёте — на каждом прогоне, dry-run и apply. */
+    /** Предупреждение о двойном счете — на каждом прогоне, dry-run и apply. */
     private function doubleCountWarning(string $month, bool $apply): void
     {
-        $this->warn('Двойной счёт: строки выписки НЕ суммировать с CRM-«Расход» (pseudo-payments) и с книгой «Расходы по ИП» — сверка @DECIDE открыта (AUDIT_BOOKKEEPING_MISERABLE_MAP §3).'.($month <= self::OVERLAP_LAST_MONTH ? ' Месяц '.self::OVERLAP_LAST_MONTH.' и раньше — окно двойного счёта, вы пошли с --overlap-acknowledged.' : ''));
+        $this->warn('Двойной счет: строки выписки НЕ суммировать с CRM-«Расход» (pseudo-payments) и с книгой «Расходы по ИП» — сверка @DECIDE открыта (AUDIT_BOOKKEEPING_MISERABLE_MAP §3).'.($month <= self::OVERLAP_LAST_MONTH ? ' Месяц '.self::OVERLAP_LAST_MONTH.' и раньше — окно двойного счета, вы пошли с --overlap-acknowledged.' : ''));
     }
 }

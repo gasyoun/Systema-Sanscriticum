@@ -37,9 +37,9 @@ class HomeworkSubmittedMail extends Mailable implements ShouldQueue
      * `attachments()`, а не в конструкторе на пути запроса (H3095). Раньше
      * конструктор был единственным, что требовало готового PDF в момент
      * постановки письма в очередь, и тем самым привязывал уведомление к
-     * сборке. Теперь сборка идёт своей очередью (`BuildHomeworkImagesPdfJob`),
+     * сборке. Теперь сборка идет своей очередью (`BuildHomeworkImagesPdfJob`),
      * а письмо просто смотрит, успел PDF или нет: успел — вложение и строка о
-     * нём, не успел — только ссылка «Проверить работу» (по ней PDF досбирается
+     * нем, не успел — только ссылка «Проверить работу» (по ней PDF досбирается
      * лениво в `HomeworkController::downloadImagesPdf()`).
      */
     public function hasImagesPdfAttachment(): bool

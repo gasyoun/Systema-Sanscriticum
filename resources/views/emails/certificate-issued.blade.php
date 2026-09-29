@@ -20,7 +20,7 @@
 
                     <tr>
                         <td style="padding: 40px; color: #1A1A1A; font-size: 16px; line-height: 1.6;">
-                            <p style="margin: 0 0 16px;">Намасте, {{ $certificate->displayStudentName() }}!</p>
+                            <p style="margin: 0 0 16px;">Намасте, {{ $certificate->user?->greetingName('друг') ?? \App\Support\GreetingName::of($certificate->displayStudentName(), 'друг') }}!</p>
                             <p style="margin: 0 0 16px;">
                                 Поздравляем — {{ $certificate->isSpravka() ? 'вам выдана справка об образовании' : 'вам выдан сертификат' }}
                                 «<strong>{{ str_replace('|', ' ', $certificate->displayCourseTitle()) }}</strong>»

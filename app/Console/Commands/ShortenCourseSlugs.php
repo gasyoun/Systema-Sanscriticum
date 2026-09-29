@@ -23,7 +23,7 @@ class ShortenCourseSlugs extends Command
 {
     protected $signature = 'courses:shorten-slugs
                             {map : Путь к TSV/CSV карте old→new}
-                            {--dry-run : Только отчёт, без записи}
+                            {--dry-run : Только отчет, без записи}
                             {--apply : Применить изменения}';
 
     protected $description = 'Укоротить slug курсов по карте; старые → course_slug_aliases (301)';
@@ -113,7 +113,7 @@ class ShortenCourseSlugs extends Command
         }
 
         if ($plan === [] || $dryRun) {
-            $this->info($dryRun ? 'Dry-run завершён, записей нет.' : 'Нечего применять.');
+            $this->info($dryRun ? 'Dry-run завершен, записей нет.' : 'Нечего применять.');
 
             return self::SUCCESS;
         }

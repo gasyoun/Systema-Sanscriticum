@@ -137,6 +137,18 @@ return [
             'formatter' => JsonFormatter::class,
         ],
 
+        // H4879 (15-09-2026, SERVER_SOFT_ALERT_PLAYBOOK.md): per-peer детали
+        // харвест-ростера (мёртвые/покинутые peer'ы, "not present in the
+        // internal peer database") — сюда, НЕ в основной daily-лог, который
+        // сканирует logs:error-watch. Сводная строка на проход всё же идёт
+        // в основной лог (Log::info, TelegramHarvestSyncService::fetchGroupRosters).
+        'telegram_harvest' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/telegram-harvest.log'),
+            'level' => 'debug',
+            'days' => (int) env('TELEGRAM_HARVEST_LOG_RETENTION_DAYS', 7),
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

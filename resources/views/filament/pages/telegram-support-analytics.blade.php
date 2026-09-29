@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        {{-- Разбивка по каналам (H1837, S10): единый отчёт без ручной сверки. Пока
+        {{-- Разбивка по каналам (H1837, S10): единый отчет без ручной сверки. Пока
              веб-агрегация выключена флагом, здесь одна строка — Telegram. --}}
         @if(count($today['by_channel']) > 1)
             <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
@@ -93,7 +93,7 @@
 
         {{-- H3529: дневной coverage классификации по каналам. Источник —
              support_topic_assignments выбранной даты; uncategorized rate
-             включает разговоры без назначений. Ссылка на отчёт харнесса
+             включает разговоры без назначений. Ссылка на отчет харнесса
              появляется, когда пакет заморозит reports/*.md (шаг 4 волны 1). --}}
         <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-gray-900">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 px-4 py-3 dark:border-white/10">
@@ -147,7 +147,7 @@
                 <div class="border-t border-gray-200 px-4 py-2 text-xs dark:border-white/10">
                     <a href="{{ $this->harnessReportUrl }}" target="_blank" rel="noopener"
                        class="text-primary-600 underline dark:text-primary-400">
-                        Последний отчёт харнесса классификатора (pinned)
+                        Последний отчет харнесса классификатора (pinned)
                     </a>
                 </div>
             @endif

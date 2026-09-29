@@ -15,7 +15,7 @@ use Illuminate\Console\Command;
  * недожатым open Deal через уже существующий Messaging (TG/VK/email) —
  * day0 (порог dozhim.unpaid_deal_hours) → day3 (+72ч) → day7 (+168ч).
  *
- * Один шаг за прогон на сделку (ORDER BY день ↑, первый ещё не отправленный
+ * Один шаг за прогон на сделку (ORDER BY день ↑, первый еще не отправленный
  * due-шаг — send, break): гарантирует линейный порядок, даже если команда
  * пропустила день. Идемпотентность — {@see DozhimDripLog} (deal_id, step)
  * уникален.

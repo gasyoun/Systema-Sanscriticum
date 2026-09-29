@@ -35,7 +35,7 @@ class SeasonCloseCommand extends Command
             return 1;
         }
 
-        // Финальный пересчёт лидерборда
+        // Финальный пересчет лидерборда
         $this->info('Computing final leaderboard...');
         $this->call('season:refresh-leaderboard', ['season_id' => $season->id]);
 
@@ -72,7 +72,7 @@ class SeasonCloseCommand extends Command
             ]);
 
             // Для типа 'prana' — начислить через PranaService::adminAdjust.
-            // adminAdjust требует User $admin для аудита; берём super_admin,
+            // adminAdjust требует User $admin для аудита; берем super_admin,
             // иначе любого admin-like (роль, а не legacy-флаг is_admin).
             if ($type === 'prana') {
                 $user = $entry->user;
@@ -96,7 +96,7 @@ class SeasonCloseCommand extends Command
             }
         }
 
-        // Закрыть сезон и погасить decay-флаг (H3297 / R4-1: decay не живёт
+        // Закрыть сезон и погасить decay-флаг (H3297 / R4-1: decay не живет
         // вне сезона — гасим явно, хотя is_active=false уже исключает его из
         // PranaService::isDecayEnabled()).
         $season->update([

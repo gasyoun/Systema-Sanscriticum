@@ -6,7 +6,7 @@
     @if($certificate)
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url()->current() }}">
-        <meta property="og:title" content="{{ $certificate->isSpravka() ? 'Справка подтверждена' : 'Сертификат подтверждён' }}: {{ $certificate->displayStudentName() }}">
+        <meta property="og:title" content="{{ $certificate->isSpravka() ? 'Справка подтверждена' : 'Сертификат подтвержден' }}: {{ $certificate->displayStudentName() }}">
         <meta property="og:description" content="{{ str_replace('|', ' · ', $certificate->displayCourseTitle()) }} — выдан {{ \Carbon\Carbon::parse($certificate->issued_at)->format('d.m.Y') }} · проверено Обществом ревнителей санскрита">
     @else
         <meta property="og:type" content="website">
@@ -24,7 +24,7 @@
     <div class="w-full max-w-xl">
 
         @if($certificate)
-            {{-- ═══ СЕРТИФИКАТ ПОДТВЕРЖДЁН ═══ --}}
+            {{-- ═══ СЕРТИФИКАТ ПОДТВЕРЖДЕН ═══ --}}
             <div class="bg-[#111622] border border-[#1F2636] rounded-3xl overflow-hidden shadow-2xl">
 
                 <div class="bg-emerald-500/10 border-b border-emerald-500/20 px-6 py-6 text-center">
