@@ -8,20 +8,20 @@ use App\Models\GameEvent;
 use Illuminate\Console\Command;
 
 /**
- * Отчёт по воронке бесплатных тренажёров /lila (H1360).
+ * Отчет по воронке бесплатных тренажеров /lila (H1360).
  *
  * plays -> completes -> walls -> CTA за N дней, по одной строке на (drill, band).
- * Честность про охват (как cabinet:baseline): семейства тренажёров, у которых за
+ * Честность про охват (как cabinet:baseline): семейства тренажеров, у которых за
  * окно НЕТ ни одного события, перечисляются отдельно как «нет данных», а не молча
- * показываются нулём — иначе «отсутствие поверхности» не отличить от «нет игроков».
+ * показываются нулем — иначе «отсутствие поверхности» не отличить от «нет игроков».
  */
 class GamesFunnelReport extends Command
 {
-    protected $signature = 'games:funnel {--days=14 : Окно отчёта, дней назад от сегодня}';
+    protected $signature = 'games:funnel {--days=14 : Окно отчета, дней назад от сегодня}';
 
-    protected $description = 'Воронка бесплатных тренажёров /lila: показы -> решения -> стена -> CTA за N дней (H1360)';
+    protected $description = 'Воронка бесплатных тренажеров /lila: показы -> решения -> стена -> CTA за N дней (H1360)';
 
-    /** Известные семейства тренажёров (по каталогу public/lila/). */
+    /** Известные семейства тренажеров (по каталогу public/lila/). */
     private const KNOWN_DRILLS = ['ligatures', 'roots', 'sort', 'match', 'cloze', 'index'];
 
     public function handle(): int
@@ -44,13 +44,13 @@ class GamesFunnelReport extends Command
             ];
         }
 
-        $this->info("Воронка тренажёров за {$days} дн. (с {$since->toDateTimeString()}):");
+        $this->info("Воронка тренажеров за {$days} дн. (с {$since->toDateTimeString()}):");
 
         if ($rows === []) {
             $this->line('  Пока ни одного события в окне.');
         } else {
             $this->table(
-                ['Тренажёр', 'Уровень', 'Показы', 'Решения', 'Стена', 'CTA', 'Реш./показ'],
+                ['Тренажер', 'Уровень', 'Показы', 'Решения', 'Стена', 'CTA', 'Реш./показ'],
                 $rows,
             );
         }
@@ -70,7 +70,7 @@ class GamesFunnelReport extends Command
             $this->line('CTA -> регистрация: пока нет кликов «Начать бесплатно» в окне.');
         } else {
             $note = $conversion['baseline_only']
-                ? ' (выборка < 50 — baseline, KPI ещё не судим)'
+                ? ' (выборка < 50 — baseline, KPI еще не судим)'
                 : ($conversion['rate'] >= 15.0 ? ' (цель ≥15% достигнута)' : ' (ниже цели 15%)');
             $this->line(sprintf(
                 'CTA -> регистрация: %d/%d = %s%%%s',

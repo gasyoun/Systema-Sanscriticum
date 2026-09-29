@@ -20,7 +20,7 @@ use Throwable;
  * H3964: persona-полоса принадлежит stories:publish-story): Bot API
  * sendMessage магнит-ботом (MarketingSetting.tg_bot_token —
  * марафон-издатель; НЕ кабинетный бот и НЕ zapisi-бот, FINDINGS §651).
- * Перед первой реальной отправкой прогона — дешёвая getChat-проба пары
+ * Перед первой реальной отправкой прогона — дешевая getChat-проба пары
  * «токен × chat_id»: «chat not found» на предположенном креденшале —
  * сигнал, а не повод для ретрая.
  *

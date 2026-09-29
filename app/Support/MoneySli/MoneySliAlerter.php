@@ -24,6 +24,14 @@ final class MoneySliAlerter
     {
         $pingUrl = trim($pingUrl);
         if ($pingUrl === '') {
+            // H5061: пустой heartbeat-URL — это not_supported (шов не вооружён),
+            // а не здоровье. Молчать нельзя: дедман-сигнал полностью выключен,
+            // и это должно быть громко и машинночитаемо (так же поступает
+            // alert() с пустым TG-токеном).
+            Log::warning('money_sli: heartbeat URL пуст — мёртвый сторож НЕ вооружён (not_supported)', [
+                'state' => 'not_supported',
+            ]);
+
             return;
         }
 

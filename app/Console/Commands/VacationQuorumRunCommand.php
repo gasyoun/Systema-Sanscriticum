@@ -11,7 +11,7 @@ use Illuminate\Console\Command;
  *
  * Ежедневный запуск. 25–31.08 спрашивает группы (is_on_vacation, без даты
  * выхода) в их TG-чатах через @zapisi_ORSbot; круглогодично доразрешает
- * истёкшие дедлайны (кворум есть/нет) и исполняет/убирает предложения о
+ * истекшие дедлайны (кворум есть/нет) и исполняет/убирает предложения о
  * роспуске.
  */
 class VacationQuorumRunCommand extends Command
@@ -30,7 +30,7 @@ class VacationQuorumRunCommand extends Command
                 ->where('outcome', VacationQuorumPoll::OUTCOME_PENDING)
                 ->where('deadline_at', '<', now())
                 ->count();
-            $this->line("дедлайн истёк у: {$dueCount}");
+            $this->line("дедлайн истек у: {$dueCount}");
         } else {
             $service->resolveDue();
         }

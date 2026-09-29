@@ -8,6 +8,7 @@ use App\Models\MarathonEnrollment;
 use App\Models\Schedule;
 use App\Services\Marathon\MarathonDay1Sender;
 use App\Services\Messaging\DeliveryChannelManager;
+use App\Support\BeginnerPilotOffer;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Log;
  * telegram_chat_id (бот не запущен) пропускается молча — догонит на
  * следующем прогоне, когда лид запустит бота. Day 3 — общая живая
  * консультация (ОДИН Schedule на всех, не персональный слот); пропускается
- * молча, если MG ещё не настроил `marathon.schedule_id` (см. H487).
+ * молча, если MG еще не настроил `marathon.schedule_id` (см. H487).
  *
  * H445 Phase 1 — Day 1/2 content resolved per-cohort via
  * MarathonEnrollment::content() (falls back to the shared `zero` default);
@@ -40,6 +41,7 @@ final class DeliverDueMarathonContent extends Command
 
         $scheduleId = config('marathon.schedule_id');
         $schedule = $scheduleId ? Schedule::find($scheduleId) : null;
+        $zeroCohortStaffed = BeginnerPilotOffer::supportAvailable();
 
         $enrollments = MarathonEnrollment::with('lead')
             ->where(function ($q) {
@@ -65,15 +67,22 @@ final class DeliverDueMarathonContent extends Command
 
             if ($day >= 2 && $enrollment->day2_completed_at === null) {
                 $link = route('marathon.day', ['day' => 2, 'token' => $lead->magnet_token]);
-                $text = str_replace('{link}', $link, (string) $enrollment->content('day2_message'));
+                $template = ! $enrollment->isDevaCohort() && ! $zeroCohortStaffed
+                    ? (string) config('beginner_pilot.day2_message_unstaffed')
+                    : (string) $enrollment->content('day2_message');
+                $text = str_replace('{link}', $link, $template);
                 $channel->sendMessage((string) $lead->telegram_chat_id, $text);
                 $enrollment->update(['day2_completed_at' => now()]);
                 $sent++;
                 Log::info("marathon:deliver-due — Day 2 sent, enrollment #{$enrollment->id}");
             }
 
-            if ($day >= 3 && $enrollment->consultation_booked_at === null && $schedule && $schedule->start) {
-                $template = $enrollment->isPaidTrack()
+            if ($day >= 3 && $enrollment->consultation_booked_at === null && $schedule?->start?->isFuture()
+                && ($enrollment->isDevaCohort()
+                    ? (int) config('beginner_pilot.staffed_schedule_id') !== $schedule->id
+                    : $zeroCohortStaffed)
+                && (! $enrollment->isPaidConfirmed() || filled($schedule->link))) {
+                $template = $enrollment->isPaidConfirmed()
                     ? (string) config('marathon.day3_message_paid')
                     : (string) config('marathon.day3_message_free');
 
@@ -81,7 +90,7 @@ final class DeliverDueMarathonContent extends Command
                     ['{date}', '{link}', '{host}'],
                     [
                         $schedule->start->translatedFormat('d F, H:i').' (МСК)',
-                        $enrollment->isPaidTrack() ? (string) $schedule->link : '',
+                        $enrollment->isPaidConfirmed() ? (string) $schedule->link : '',
                         (string) config('marathon.host_name'),
                     ],
                     $template

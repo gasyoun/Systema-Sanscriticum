@@ -89,4 +89,23 @@ class CalendarOngoingEventTest extends TestCase
             ->assertSee('Идёт без конца')
             ->assertDontSee('Протухло без конца');
     }
+
+    /** @test */
+    public function calendar_loads_attendance_notices_when_enabled(): void
+    {
+        config()->set('features.attendance_notices', true);
+        [$user, $group] = $this->studentInGroup();
+
+        Schedule::create([
+            'title' => 'Будущее занятие с отметкой',
+            'start' => now()->addDay(),
+            'end' => now()->addDay()->addHour(),
+            'group_id' => $group->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('student.calendar'))
+            ->assertOk()
+            ->assertSee('Будущее занятие с отметкой');
+    }
 }

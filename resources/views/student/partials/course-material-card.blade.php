@@ -1,7 +1,7 @@
 {{--
     Карточка материала библиотеки курса (фаза 1 — только ссылка).
     Ожидает: $material (CourseMaterial), $kinds (карта подписей), $kindIcons.
-    Ссылка ведёт наружу, поэтому target=_blank + rel="noopener noreferrer",
+    Ссылка ведет наружу, поэтому target=_blank + rel="noopener noreferrer",
     и хост показан явно — студент видит, куда его отправляют, до клика.
 --}}
 <a href="{{ $material->effectiveUrl() }}"

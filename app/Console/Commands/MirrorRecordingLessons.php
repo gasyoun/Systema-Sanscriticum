@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Services\Catalog\LessonCopier;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -37,8 +38,8 @@ use Illuminate\Support\Str;
  * на источник и выставляем 0 явно.
  *
  * По умолчанию это СУХОЙ ПРОГОН. Запись делает только `--apply`.
- * Идемпотентна: урок опознаётся парой (block_number, sort_order), поэтому
- * повторный прогон не создаёт дублей.
+ * Идемпотентна: урок опознается парой (block_number, sort_order), поэтому
+ * повторный прогон не создает дублей.
  */
 class MirrorRecordingLessons extends Command
 {
@@ -49,8 +50,11 @@ class MirrorRecordingLessons extends Command
 
     protected $description = 'Завести курсу-записи собственные уроки со ссылками на записи живого потока. Тарифы и видимость не трогает.';
 
-    /** Поля, которые делают урок записью. Всё остальное намеренно не переносится. */
-    private const CARRIED = [
+    /**
+     * Поля, которые делают урок записью. Все остальное намеренно не переносится.
+     * Их же переносит «Копировать в курс…» ({@see LessonCopier}).
+     */
+    public const CARRIED = [
         'title', 'block_number', 'block_half', 'sort_order', 'lesson_date',
         'duration_seconds', 'duration_minutes', 'is_published', 'is_free', 'is_preview',
         'video_url', 'rutube_url', 'youtube_url', 'topic', 'recording_kind',
@@ -83,7 +87,7 @@ class MirrorRecordingLessons extends Command
             return self::FAILURE;
         }
 
-        // Блоки цели должны покрывать блоки источника: иначе перенесённый урок
+        // Блоки цели должны покрывать блоки источника: иначе перенесенный урок
         // получил бы ключ block_N, которого у цели нет ни в блоках, ни в
         // тарифах, и остался бы недостижимым для купивших.
         $targetBlocks = $target->blocks()->pluck('number')->map(fn ($n) => (int) $n)->all();
@@ -157,7 +161,7 @@ class MirrorRecordingLessons extends Command
                 $attributes['group_id'] = null;
                 // У курса-записи нет проверяющего домашних работ.
                 $attributes['homework_enabled'] = false;
-                $attributes['slug'] = $this->slugFor($lesson, $target);
+                $attributes['slug'] = self::slugFor($lesson, $target);
 
                 Lesson::query()->create($attributes);
                 $created++;
@@ -179,7 +183,7 @@ class MirrorRecordingLessons extends Command
         return self::SUCCESS;
     }
 
-    /** Место урока в курсе: по нему и опознаётся «этот урок уже перенесён». */
+    /** Место урока в курсе: по нему и опознается «этот урок уже перенесен». */
     private function slot(Lesson $lesson): string
     {
         return sprintf(
@@ -191,12 +195,12 @@ class MirrorRecordingLessons extends Command
     }
 
     /**
-     * Слаг для перенесённого урока. У `lessons.slug` нет уникального индекса
+     * Слаг для перенесенного урока. У `lessons.slug` нет уникального индекса
      * (на 01-09-2026 233 урока делят пустой слаг), но одинаковый слаг у двух
      * уроков разных курсов делает ссылку неоднозначной, поэтому исходный слаг
      * получает суффикс курса-цели.
      */
-    private function slugFor(Lesson $lesson, Course $target): string
+    public static function slugFor(Lesson $lesson, Course $target): string
     {
         $base = trim((string) $lesson->slug);
 

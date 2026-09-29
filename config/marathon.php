@@ -145,7 +145,7 @@ return [
     // time. Paid track gets the live join link; free track gets told a
     // recording follows (H440 §3 item 6 — не ежедневный эфир, одна консультация).
     'day3_message_paid' => 'День 3 — живая консультация 🎥'."\n\n"
-        .'{date}, ведет {host}. Ваш вопрос уже у нас — разберем его лично.'."\n\n"
+        .'{date}, ведет {host}. Вопросы по вводным заданиям разберём в группе.'."\n\n"
         .'{link}',
 
     'day3_message_free' => 'День 3 — живая консультация 🎥'."\n\n"

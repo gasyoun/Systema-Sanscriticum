@@ -1,0 +1,30 @@
+{
+  "_comment": "H5062: schema SPECIMEN for the independent review verdict consumed by .github/workflows/oxalpha-review-gate.yml. Real verdicts are NOT committed - an independent reviewer session posts them via tools/oxalpha_gate_verdict.py post, bound to the reviewed head SHA. This fixture documents the evidence shape the gate requires (docs/OXALPHA_STATUS_GATE_DESIGN_2026.md section 2) and is pinned by tests/Feature/OxalphaGateFixtureSchemaTest.php so it can never drift from the enforced schema again (P2 found by the independent review of this PR).",
+  "schema": "oxalpha-review-verdict/1",
+  "head_sha": "0000000000000000000000000000000000000000",
+  "reviewer": {
+    "name": "independent-glm-subagent",
+    "independent": true
+  },
+  "standards": {
+    "verdict": "pass",
+    "findings": [],
+    "evidence": [
+      "diff hunk refs / file:line citations reviewed without access to the author session"
+    ],
+    "evidence_links": [
+      "https://github.com/gasyoun/Systema-Sanscriticum/pull/NNN/files"
+    ]
+  },
+  "spec": {
+    "verdict": "pass",
+    "findings": [],
+    "evidence": [
+      "design doc section quotes vs implementation file:line"
+    ],
+    "evidence_links": [
+      "docs/OXALPHA_STATUS_GATE_DESIGN_2026.md#2-independent-required-status-check-design",
+      "docs/OXALPHA_STATUS_GATE_DESIGN_2026.md#3-added-human-approval-for-moneysecurityproduction-paths"
+    ]
+  }
+}

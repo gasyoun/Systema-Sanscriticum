@@ -74,7 +74,7 @@
 
         @if(!empty($d['title']))
         @php
-            // Подсветка: фрагменты в *звёздочках* красим акцентным цветом (как в hero-блоке).
+            // Подсветка: фрагменты в *звездочках* красим акцентным цветом (как в hero-блоке).
             $titleHtml = preg_replace('/\*(.+?)\*/u', '<span style="color:#E85C24;">$1</span>', e($d['title']));
         @endphp
         <div class="text-center mb-5">
@@ -296,7 +296,7 @@
                     }
                 } catch (e) {}
 
-                // Индексируем строки один раз (start берём из data-, end = start следующей строки).
+                // Индексируем строки один раз (start берем из data-, end = start следующей строки).
                 const container = this.$refs.scrollContainer;
                 const nodes = container ? Array.from(container.querySelectorAll('.transcript-line')) : [];
                 this.lines = nodes.map((el, i) => ({
@@ -338,7 +338,7 @@
                     }
                 }, 500);
 
-                // Автоскролл к активной фразе — работает и в свёрнутом, и в раскрытом виде.
+                // Автоскролл к активной фразе — работает и в свернутом, и в раскрытом виде.
                 setInterval(() => {
                     if (!this.autoScroll || this.searchQuery !== '' || !this.activeEl) return;
                     const container = this.$refs.scrollContainer;
@@ -350,10 +350,10 @@
                 }, 800);
             },
 
-            // Новая позиция плеера → найти активную строку и подсветить только её.
+            // Новая позиция плеера → найти активную строку и подсветить только ее.
             onTime(t) {
                 // Восстановление позиции после перезагрузки: дожимаем перемотку,
-                // пока плеер не окажется около сохранённой секунды (или не выйдет лимит попыток).
+                // пока плеер не окажется около сохраненной секунды (или не выйдет лимит попыток).
                 if (this.pendingSeek != null) {
                     if (Math.abs(t - this.pendingSeek) <= 2) {
                         this.pendingSeek = null;          // достигли цели
@@ -378,7 +378,7 @@
                     this.activeEl = found;
                 }
 
-                // Активная глава = последняя, чьё начало уже прошло.
+                // Активная глава = последняя, чье начало уже прошло.
                 if (this.chapters.length) {
                     let ch = null;
                     for (const c of this.chapters) {
@@ -393,7 +393,7 @@
             },
 
             setActive(el, on) {
-                // Один класс — всё остальное делает <style> выше.
+                // Один класс — все остальное делает <style> выше.
                 el.classList.toggle('is-active-sentence', on);
             },
 

@@ -15,7 +15,7 @@ class CleanCourseArchives extends Command
     public function handle(): int
     {
         // Три независимых каталога ZIP-архивов. Сертификатные архивы с H3310
-        // кладёт GenerateCertificatesArchive в приватный storage/app/archives;
+        // кладет GenerateCertificatesArchive в приватный storage/app/archives;
         // legacy public/archives доезжает с прода после разовой миграции —
         // чистим все три по одному порогу --hours.
         $dirs = [

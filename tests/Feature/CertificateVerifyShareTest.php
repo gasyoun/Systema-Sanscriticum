@@ -35,7 +35,7 @@ class CertificateVerifyShareTest extends TestCase
         $this->get('/verify/'.$cert->number)
             ->assertOk()
             ->assertSee('property="og:title"', false)
-            ->assertSee('Сертификат подтверждён: Иван Петров', false)
+            ->assertSee('Сертификат подтвержден: Иван Петров', false)
             ->assertSee('og:image', false)
             ->assertSee('https://t.me/share/url', false)
             ->assertSee('https://vk.com/share.php', false)

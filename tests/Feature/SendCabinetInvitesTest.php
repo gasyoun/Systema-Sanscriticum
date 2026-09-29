@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Mail\PasswordResetMail;
+use App\Console\Commands\SendCabinetInvites;
+use App\Mail\CabinetInviteMail;
+use App\Models\MagicLinkToken;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -16,6 +18,10 @@ use Tests\TestCase;
  * никогда не логинились (`login_count = 0`). Популяция — ровно та же, что
  * считает еженедельная сводка OnboardingWeeklyDigest: штамп «[Доступ отправлен»
  * в note + реальный email, НЕ только платившие (см. класс команды).
+ *
+ * H4966: ссылка теперь multi-day `MagicLinkToken` (cabinet_invite), не
+ * 60-минутный брокер сброса пароля — email-ветка шлёт App\Mail\CabinetInviteMail
+ * вместо App\Mail\PasswordResetMail.
  *
  * NB: Mail::fake() ставим до создания пользователей — на всякий случай, если
  * какой-то observer тоже шлёт письма.
@@ -52,8 +58,31 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertQueued(PasswordResetMail::class, fn (PasswordResetMail $m) => $m->user->is($user));
+        Mail::assertQueued(CabinetInviteMail::class, fn (CabinetInviteMail $m) => $m->user->is($user));
         $this->assertNotNull($user->fresh()->cabinet_invite_sent_at);
+    }
+
+    /**
+     * H4966: раньше письмо несло 60-минутную ссылку сброса пароля
+     * (config('auth.passwords.users.expire') = 60) — 84.4% из 269 приглашённых
+     * так и не вошли. Теперь ссылка живёт INVITE_TTL_MINUTES (7 дней) и остаётся
+     * валидной далеко за пределами часа.
+     */
+    /** @test */
+    public function invite_link_stays_valid_well_past_sixty_minutes(): void
+    {
+        $user = $this->sleepingStudentWithAccess(['email' => 'sleeper@example.com', 'telegram_id' => null]);
+
+        $token = MagicLinkToken::issueFor($user, SendCabinetInvites::INVITE_PURPOSE, SendCabinetInvites::INVITE_TTL_MINUTES);
+
+        $this->travel(90)->minutes(); // за пределами 60-минутного брокера сброса пароля
+
+        $link = MagicLinkToken::findActive($token, SendCabinetInvites::INVITE_PURPOSE);
+        $this->assertNotNull($link, 'Ссылка-приглашение должна оставаться живой через 90 минут');
+
+        $response = $this->get(route('cabinet.invite', $token));
+        $response->assertRedirect(route('student.dashboard'));
+        $this->assertAuthenticatedAs($user);
     }
 
     /** @test */
@@ -81,18 +110,38 @@ class SendCabinetInvitesTest extends TestCase
     }
 
     /** @test */
-    public function already_invited_are_skipped_unless_resend(): void
+    public function recently_invited_are_skipped_unless_resend(): void
     {
-        $user = $this->sleepingStudentWithAccess(['email' => 'sleeper@example.com', 'cabinet_invite_sent_at' => now()->subWeek()]);
+        $user = $this->sleepingStudentWithAccess(['email' => 'sleeper@example.com', 'cabinet_invite_sent_at' => now()->subDays(2)]);
         Mail::fake();
 
-        // Без --resend — пропускается.
+        // Без --resend, свежая отправка (2 дня < окна auto-resend) — пропускается.
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
         Mail::assertNothingQueued();
 
-        // С --resend — приглашается снова.
+        // С --resend — приглашается снова немедленно.
         $this->artisan('students:send-login-invites', ['--send' => true, '--resend' => true])->assertSuccessful();
-        Mail::assertQueued(PasswordResetMail::class);
+        Mail::assertQueued(CabinetInviteMail::class);
+    }
+
+    /**
+     * H4966 SHIP §4: `cabinet_invite_sent_at` больше не постоянное исключение —
+     * не заходившего после AUTO_RESEND_AFTER_DAYS снова подхватывает батч БЕЗ
+     * ручного --resend (232 никогда не заходивших live 16-09-2026).
+     */
+    /** @test */
+    public function never_logged_in_student_becomes_reinvitable_after_auto_resend_window(): void
+    {
+        $user = $this->sleepingStudentWithAccess([
+            'email' => 'sleeper@example.com',
+            'cabinet_invite_sent_at' => now()->subDays(SendCabinetInvites::AUTO_RESEND_AFTER_DAYS + 1),
+        ]);
+        Mail::fake();
+
+        $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
+
+        Mail::assertQueued(CabinetInviteMail::class, fn (CabinetInviteMail $m) => $m->user->is($user));
+        $this->assertTrue($user->fresh()->cabinet_invite_sent_at->isAfter(now()->subMinute()));
     }
 
     /** @test */
@@ -104,7 +153,7 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertNotQueued(PasswordResetMail::class);             // не email
+        Mail::assertNothingQueued();             // не email
         Http::assertSent(fn ($req) => str_contains($req->url(), 'telegram')); // а Telegram
         $this->assertNotNull($user->fresh()->cabinet_invite_sent_at);
     }
@@ -136,7 +185,7 @@ class SendCabinetInvitesTest extends TestCase
         Mail::assertNothingQueued();
 
         $this->artisan('students:send-login-invites', ['--send' => true, '--include-no-stamp' => true])->assertSuccessful();
-        Mail::assertQueued(PasswordResetMail::class, fn (PasswordResetMail $m) => $m->user->is($noStamp));
+        Mail::assertQueued(CabinetInviteMail::class, fn (CabinetInviteMail $m) => $m->user->is($noStamp));
         $this->assertNotNull($noStamp->fresh()->cabinet_invite_sent_at);
     }
 
@@ -149,7 +198,7 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertNotQueued(PasswordResetMail::class);
+        Mail::assertNothingQueued();
         Http::assertSent(fn ($req) => str_contains($req->url(), 'vk.com'));
         $this->assertNotNull($user->fresh()->cabinet_invite_sent_at);
     }
@@ -169,7 +218,7 @@ class SendCabinetInvitesTest extends TestCase
 
         $this->artisan('students:send-login-invites', ['--send' => true])->assertSuccessful();
 
-        Mail::assertNotQueued(PasswordResetMail::class);
+        Mail::assertNothingQueued();
         Http::assertSent(fn ($req) => str_contains($req->url(), 'sms.ru'));
         $this->assertNotNull($user->fresh()->cabinet_invite_sent_at);
     }

@@ -11,6 +11,7 @@ use App\Models\Teacher;
 use App\Models\User;
 use App\Services\Telegram\VacationCommandService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -24,6 +25,18 @@ class TeacherVacationCommandTest extends TestCase
     use RefreshDatabase;
 
     private const CHAT_ID = '-100555';
+
+    /**
+     * Часы закреплены: фикстуры «с 23.09 по 06.10» и «с 01.08» абсолютные, а
+     * parseWindow() переносит прошедшую дату без года на следующий год — 24-09-2026
+     * «23.09» стало прошлым, и два теста покраснели на каждом PR (time bomb,
+     * FINDINGS §349). 15-09 держит 23.09 впереди с запасом ≥5 дней, 01.08 — позади.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->travelTo(Carbon::create(2026, 9, 15, 12, 0, 0));
+    }
 
     private function seedTeacherWorld(): array
     {

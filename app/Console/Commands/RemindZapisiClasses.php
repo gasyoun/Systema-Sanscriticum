@@ -14,18 +14,18 @@ use Illuminate\Console\Command;
 
 /**
  * Track C (H164): напоминание о занятии в Telegram-чат группы через @zapisi_ORSbot,
- * прямо из расписания. Берёт upcoming Schedule с group_id, шлёт в
+ * прямо из расписания. Берет upcoming Schedule с group_id, шлет в
  * group.telegram_chat_id (тот же маппинг «группа → чат», что и classes:post-group-link,
  * но отдельным ботом-записи). Заменяет ручную таблицу zapisi_class_schedules.
  *
- * Ничего не шлёт, если:
+ * Ничего не шлет, если:
  *  - выключен флаг features.telegram_zapisi_bot (деплой-рубильник бота);
- *  - у группы не задан telegram_chat_id (skip без пометки — уйдёт, когда заполнят);
- *  - по занятию уже ушёл автопостинг ссылки (group_link_posted_at) — зеркальная
+ *  - у группы не задан telegram_chat_id (skip без пометки — уйдет, когда заполнят);
+ *  - по занятию уже ушел автопостинг ссылки (group_link_posted_at) — зеркальная
  *    дубль-гвардия с classes:post-group-link: один «Скоро занятие» на чат;
  *  - у занятия нет ссылки (zoom_join_url/link/course.zoom_link пусты) — инцидент
  *    02-09-2026: напоминание с висящим «по ссылке:» без самой ссылки; пропускаем
- *    без пометки, чтобы после появления ссылки напоминание всё же ушло.
+ *    без пометки, чтобы после появления ссылки напоминание все же ушло.
  * Дедуп — schedules.zapisi_reminded_at (сбрасывается при переносе start).
  */
 class RemindZapisiClasses extends Command
@@ -41,7 +41,7 @@ class RemindZapisiClasses extends Command
      * соседнего classes:post-group-link (см. PostClassLinkToGroupChat::buildText).
      */
     public const DEFAULT_TEMPLATE = "🔔 <b>Скоро занятие</b>\n\n"
-        ."Занятие <b>«{title}»</b> у группы {group} начнётся сегодня в <b>{time}</b> (МСК).\n\n"
+        ."Занятие <b>«{title}»</b> у группы {group} начнется сегодня в <b>{time}</b> (МСК).\n\n"
         .'{join}';
 
     public function handle(): int
@@ -74,12 +74,12 @@ class RemindZapisiClasses extends Command
         $sent = 0;
 
         // Инцидент 11-09-2026 (курс 348 «Бхагавадгита 4 цикл»): в расписании
-        // оказались ДВЕ живые строки на один слот (перенос лёг на существующую
+        // оказались ДВЕ живые строки на один слот (перенос лег на существующую
         // строку серии), и каждая ушла отдельным напоминанием — два поста в один
         // чат за секунду, различие только в номере титула (#76/#77), поэтому
         // TelegramSendGuard по тексту их не склеил. Группируем по слоту
         // (группа + старт): один пост на слот, помечаются ВСЕ строки слота.
-        // Коллизия строк больше не доходит до студентов, даже если её заведут руками.
+        // Коллизия строк больше не доходит до студентов, даже если ее заведут руками.
         $slots = $schedules->groupBy(fn (Schedule $s): string => ($s->group_id ?? 0).':'.($s->start?->format('Y-m-d H:i') ?? ''));
 
         foreach ($slots as $slotRows) {
@@ -88,7 +88,7 @@ class RemindZapisiClasses extends Command
             $group = $schedule->group;
 
             // Нет чата группы — слать некуда; НЕ помечаем, чтобы после заполнения
-            // telegram_chat_id напоминание всё же ушло (как в classes:post-group-link).
+            // telegram_chat_id напоминание все же ушло (как в classes:post-group-link).
             if ($group === null || empty($group->telegram_chat_id)) {
                 continue;
             }
@@ -101,7 +101,7 @@ class RemindZapisiClasses extends Command
             }
 
             // H4253: каникулы — групповой флаг (H3790) или окно преподавателя.
-            // Пропуск БЕЗ пометки: после снятия флага/окна напоминание уйдёт.
+            // Пропуск БЕЗ пометки: после снятия флага/окна напоминание уйдет.
             if ($group->is_on_vacation) {
                 continue;
             }
@@ -114,7 +114,7 @@ class RemindZapisiClasses extends Command
             // года сгенерирована без ссылок (link/zoom_join_url/course.zoom_link пусты),
             // и в чат ушло напоминание с висящим «Подключится к занятию можно по
             // ссылке:» без самой ссылки. Без ссылки напоминание бесполезно —
-            // пропускаем БЕЗ пометки, чтобы после появления ссылки оно всё же ушло.
+            // пропускаем БЕЗ пометки, чтобы после появления ссылки оно все же ушло.
             $link = (string) ($schedule->zoom_join_url ?: ($schedule->link ?: $schedule->course?->zoom_link) ?: '');
             if ($link === '') {
                 report(new \RuntimeException(sprintf(
@@ -151,7 +151,7 @@ class RemindZapisiClasses extends Command
      * Подстановки ЭКРАНИРУЮТСЯ: сообщение уходит с parse_mode=HTML, и один
      * амперсанд в названии курса («Грамматика & чтение») заставлял Telegram
      * отвергнуть весь запрос с «can't parse entities» — напоминание не уходило
-     * вовсе, а в логах оседало предупреждение джоба. Разметку задаёт шаблон,
+     * вовсе, а в логах оседало предупреждение джоба. Разметку задает шаблон,
      * данные — только текст.
      *
      * {join} — готовая ссылка-кнопка: пустая строка, когда подключаться некуда,

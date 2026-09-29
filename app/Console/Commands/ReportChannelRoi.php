@@ -27,8 +27,8 @@ use Illuminate\Database\Eloquent\Builder;
  * H5021: channel = Lead::effectiveSource() (source руками > inferred_source
  * ночной разметки > utm_source), поэтому лиды без UTM, но с выведенным
  * источником, тоже попадают в срез. --by-source схлопывает кампании,
- * --digest шлёт сводку получателям KPI-дайджеста (database notification) —
- * так отчёт приезжает в понедельничный дайджест MG. По-прежнему read-only.
+ * --digest шлет сводку получателям KPI-дайджеста (database notification) —
+ * так отчет приезжает в понедельничный дайджест MG. По-прежнему read-only.
  */
 final class ReportChannelRoi extends Command
 {
@@ -163,7 +163,7 @@ final class ReportChannelRoi extends Command
 
         foreach ($recipients as $recipient) {
             Notification::make()
-                ->title('Каналы: лиды → выручка'.($days > 0 ? " (последние {$days} дн.)" : ' (всё время)'))
+                ->title('Каналы: лиды → выручка'.($days > 0 ? " (последние {$days} дн.)" : ' (все время)'))
                 ->body($body)
                 ->info()
                 ->sendToDatabase($recipient);

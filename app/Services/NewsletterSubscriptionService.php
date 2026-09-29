@@ -44,7 +44,7 @@ class NewsletterSubscriptionService
         $magicUrl = URL::route('newsletter.magic', ['token' => $plaintext]);
 
         Mail::to($user->email)->queue(new NewsletterMagnetsMail(
-            userName: $user->name,
+            userName: $user->greetingName(''),
             magicUrl: $magicUrl,
             magnets: SubscriberMagnet::active()->get(),
         ));
