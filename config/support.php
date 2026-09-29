@@ -247,6 +247,31 @@ return [
     ],
 
     /*
+     | H5450: параметры вебчат-автоответа samskrte.ru
+     | (features.support_webchat_auto_ack / features.support_webchat_live_faq).
+     */
+    'webchat_auto_reply' => [
+        /*
+         | Окно ack'а, часы: одно «приняли, куратор ответит» на серию. Любое
+         | исходящее (куратор или бот) в треде внутри окна снимает ack —
+         | свежий ответ человека важнее шаблона (паттерн cooldown-инварианта
+         | ack'а H3380, recentOutgoingInChat).
+         */
+        'ack_cooldown_hours' => (int) env('SUPPORT_WEBCHAT_ACK_COOLDOWN_HOURS', 6),
+
+        /*
+         | Текст ack'а. {faq_url} подставляется из ключа ниже.
+         */
+        'ack_text' => env('SUPPORT_WEBCHAT_ACK_TEXT', 'Намасте! Приняли — куратор ответит. Пока можете посмотреть наш FAQ: {faq_url}'),
+
+        /*
+         | Ссылка на FAQ в ack'е. По умолчанию — раздел «Домашние задания»
+         | (route faq.dz): самый частый вопрос посетителей кабинета.
+         */
+        'faq_url' => env('SUPPORT_WEBCHAT_FAQ_URL', '/faq/dz'),
+    ],
+
+    /*
      | H4404 (рулинг MG 08-09-2026 «LLM-черновики»): параметры LLM-ветки
      | автоответа в личке саппорта (features.support_dm_llm_drafts).
      */
@@ -257,5 +282,30 @@ return [
         // shadow_min_score: теневые пороги B5 калибровались ПОКАТЕГОРИЙНО,
         // эта ветка от категории не зависит. Дефолт равен глобальному floor'у.
         'min_score' => (float) env('SUPPORT_LLM_REPLIES_MIN_SCORE', 8.0),
+    ],
+
+    /*
+     | H5452: гигиена хинт-канала куратора. Фильтр шума ON по умолчанию, но за
+     | конфигом (исходящих студенту он не порождает — риск нулевой).
+     | suppressed_chat_ids — Telegram-системный аккаунт 777000 и любые
+     | сослужебные диалоги, чьи «сообщения» (Group Transferred, попытки входа)
+     | — система, пишущая сама себе. suppressed_prefixes — известные префиксы
+     | инфра-алертов, попадающие в личку как текст. dedup — дедуп per-chat:
+     | пока хинт чата не погашен человеческим ответом, серия сообщений
+     | обновляет существующий хинт, а не плодит новый.
+     */
+    'hints' => [
+        'suppressed_chat_ids' => array_values(array_filter(array_map(
+            'intval',
+            explode(',', (string) env('SUPPORT_HINT_SUPPRESSED_CHAT_IDS', '777000')),
+        ))),
+        'suppressed_prefixes' => array_values(array_filter(array_map(
+            'trim',
+            explode('|', (string) env(
+                'SUPPORT_HINT_SUPPRESSED_PREFIXES',
+                '⚠️ Кабинет:|🚨 Прод:|Group Transferred|Незавершенная попытка входа',
+            )),
+        ))),
+        'dedup_enabled' => (bool) env('SUPPORT_HINT_DEDUP_ENABLED', true),
     ],
 ];

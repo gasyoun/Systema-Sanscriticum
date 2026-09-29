@@ -35,7 +35,7 @@ class IpExpenseImportStatementTest extends TestCase
             '--month' => '2026-08',
         ])
             ->expectsOutputToContain('dry-run')
-            ->expectsOutputToContain('Двойной счёт')
+            ->expectsOutputToContain('Двойной счет')
             ->assertSuccessful();
 
         $this->assertSame(0, IpExpense::query()->count());
@@ -162,7 +162,7 @@ class IpExpenseImportStatementTest extends TestCase
             'file' => $tmp,
             '--month' => '2026-07',
         ])
-            ->expectsOutputToContain('двойного счёта')
+            ->expectsOutputToContain('двойного счета')
             ->assertFailed();
 
         $this->assertSame(0, IpExpense::query()->count());
@@ -174,7 +174,7 @@ class IpExpenseImportStatementTest extends TestCase
             '--month' => '2026-07',
             '--overlap-acknowledged' => true,
         ])
-            ->expectsOutputToContain('Двойной счёт')
+            ->expectsOutputToContain('Двойной счет')
             ->assertSuccessful();
 
         $this->assertSame(0, IpExpense::query()->count());

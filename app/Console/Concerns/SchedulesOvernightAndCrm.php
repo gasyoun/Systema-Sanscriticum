@@ -96,6 +96,19 @@ trait SchedulesOvernightAndCrm
             ->onFailure(fn () => ScheduleFailureSignal::report('payments:audit-checkout-integrity'))
             ->name('audit-checkout-integrity');
 
+        // H5445 (P3, D1): ежедневная оперативная сверка денег — классы строк,
+        // исключения, контрольные суммы за вчерашний операционный день. Пишет
+        // только money_recon_*; за флагом money_daily_reconciliation (OFF →
+        // no-op + warning). Выход ≠ 0 (дрейф, тождество, запрещённая запись) →
+        // onFailure → ScheduleFailureSignal; heartbeat MONEY_RECON_PING_URL.
+        // Ручной прогон только чтения: `php artisan money:reconcile-daily`.
+        $schedule->command('money:reconcile-daily --persist --scheduled')
+            ->dailyAt('04:35')
+            ->withoutOverlapping(30)
+            ->onOneServer()
+            ->onFailure(fn () => ScheduleFailureSignal::report('money:reconcile-daily'))
+            ->name('money-reconcile-daily');
+
         // Дежурный по файловому хранилищу (H1345): после archives:cleanup (03:00)
         // и backup:clean, чтобы мерить УЖЕ освобождённое место, а не временный
         // пик. Алерт админам при выходе за пороги config/storage_watch.php —

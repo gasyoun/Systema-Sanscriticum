@@ -112,6 +112,20 @@ return [
      * Soft (не outage): у админа есть время заполнить ссылку до занятия.
      */
     'check_schedule_links' => (bool) env('CABINET_PROBE_CHECK_SCHEDULE_LINKS', true),
+
+    /*
+     * H4845: живость reverse-туннеля к Ollama (127.0.0.1:11434, поднимается с
+     * GPU-узла). Мёртвый туннель давал только WARN «dense-нога недоступна» в
+     * laravel.log — поиск молча деградировал в BM25, тень копила ошибки.
+     * Проверка идёт, только если включён потребитель туннеля
+     * (KNOWLEDGE_EMBEDDING_DRIVER=ollama / BOT_OLLAMA_SHADOW /
+     * BOT_LOCAL_GENERATION), и только в knowledge.tunnel_hours. Soft: студент
+     * ответ получает (BM25 / OpenRouter / детерминированный), это деградация,
+     * а не outage. Перепроба перед тревогой — от флапа туннеля.
+     */
+    'check_ollama_tunnel' => (bool) env('CABINET_PROBE_CHECK_OLLAMA_TUNNEL', true),
+    'ollama_tunnel_attempts' => 2,
+    'ollama_tunnel_pause_seconds' => 2,
     'schedule_links_horizon_days' => (int) env('CABINET_PROBE_SCHEDULE_LINKS_HORIZON_DAYS', 14),
 
     /*

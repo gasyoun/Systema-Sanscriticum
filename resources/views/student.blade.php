@@ -71,7 +71,7 @@
             <div class="tg-desc" style="margin-bottom: 0; margin-top: 4px;">Теперь важные ссылки и расписание будут приходить вам в мессенджер.</div>
         @else
             <div class="tg-desc">Подключите бота, чтобы не пропустить важную информацию по обучению и доступы к урокам.</div>
-            {{-- H3313: привязка через CSRF-защищённый POST --}}
+            {{-- H3313: привязка через CSRF-защищенный POST --}}
             <form method="POST" action="{{ route('telegram.connect.start') }}" target="_blank" class="inline-flex">
                 @csrf
                 <button type="submit" class="btn-tg">

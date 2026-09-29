@@ -41,7 +41,7 @@
                     @endif
                 </div>
 
-                <form method="POST" action="{{ route('survey.store', $slug) }}" class="p-6 md:p-8" data-survey-form novalidate>
+                <form method="POST" action="{{ route('survey.store', $slug) }}" class="p-6 md:p-8" data-survey-form data-event-url="{{ route('survey.event', $slug) }}" novalidate>
                     @csrf
                     <input type="text" name="website" value="" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;height:0;width:0;">
 
@@ -131,6 +131,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const shell = document.querySelector('[data-survey-pages]');
     const form = document.querySelector('[data-survey-form]');
     if (!shell || !form) return;
+
+    // H5098: телеметрия воронки — started (первый ввод) и page (переход на страницу).
+    const eventUrl = form.dataset.eventUrl;
+    let startedSent = false;
+    const sendEvent = (payload) => {
+        if (!eventUrl) return;
+        const token = form.querySelector('input[name="_token"]')?.value || '';
+        try {
+            fetch(eventUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+                body: JSON.stringify(payload),
+                keepalive: true,
+            }).catch(() => {});
+        } catch (e) { /* телеметрия не должна мешать анкете */ }
+    };
+    const armStarted = () => {
+        if (startedSent) return;
+        startedSent = true;
+        sendEvent({ event: 'started' });
+    };
+    form.addEventListener('input', armStarted);
+    form.addEventListener('change', armStarted);
+    form.addEventListener('submit', armStarted);
+
     const pages = [...form.querySelectorAll('[data-survey-page]')];
     if (pages.length < 2) return;
     let current = Math.max(0, Math.min(pages.length - 1, Number(shell.dataset.startPage || 1) - 1));
@@ -149,6 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const invalid = pages[current].querySelector(':invalid');
             if (invalid) { invalid.reportValidity(); invalid.focus(); return; }
             show(current + 1);
+            armStarted();
+            sendEvent({ event: 'page', page: current + 1 });
         }
     });
     form.addEventListener('submit', (event) => {

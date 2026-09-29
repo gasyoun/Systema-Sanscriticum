@@ -129,6 +129,7 @@ class CourseInterestRequestResource extends Resource
                         CourseInterestRequest::INTENT_JOIN => 'success',
                         CourseInterestRequest::INTENT_RECORDING => 'info',
                         CourseInterestRequest::INTENT_REVIVE => 'warning',
+                        CourseInterestRequest::INTENT_TRANSFER => 'primary',
                         default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('name')

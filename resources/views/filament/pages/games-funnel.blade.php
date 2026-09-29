@@ -37,7 +37,7 @@
                 </div>
                 <div class="mt-1 text-sm {{ $conv['baseline_only'] ? 'text-gray-500 dark:text-gray-400' : ($conv['rate'] >= 15 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400') }}">
                     @if ($conv['baseline_only'])
-                        Выборка &lt; 50 — baseline, KPI ещё не судим.
+                        Выборка &lt; 50 — baseline, KPI еще не судим.
                     @elseif ($conv['rate'] >= 15)
                         Цель ≥15% достигнута.
                     @else
@@ -47,12 +47,12 @@
             @endif
         </div>
 
-        {{-- Разбивка по тренажёрам --}}
+        {{-- Разбивка по тренажерам --}}
         <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500 dark:bg-white/5 dark:text-gray-400">
                     <tr>
-                        <th class="px-3 py-2">Тренажёр</th>
+                        <th class="px-3 py-2">Тренажер</th>
                         <th class="px-3 py-2">Уровень</th>
                         <th class="px-3 py-2 text-right">Показы</th>
                         <th class="px-3 py-2 text-right">Решения</th>

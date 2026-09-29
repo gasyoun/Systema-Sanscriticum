@@ -27,6 +27,8 @@ jobs:
         php: ["8.3"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
 
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
@@ -78,7 +80,15 @@ jobs:
           touch public/build/assets/app.css public/build/assets/app.js
 
       - name: Laravel Pint format check
-        run: ./vendor/bin/pint --test
+        env:
+          PINT_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          # Check every PHP file changed by this PR/push. Existing formatting
+          # debt in unrelated files must not block the current change.
+          if [ -z "$PINT_BASE_SHA" ] || ! git cat-file -e "$PINT_BASE_SHA^{commit}"; then
+            PINT_BASE_SHA=HEAD^
+          fi
+          ./vendor/bin/pint --test --diff="$PINT_BASE_SHA"
 
       - name: PHPUnit tests
         # --no-interaction is a Laravel artisan flag but PHPUnit 10 rejects it
@@ -132,7 +142,10 @@ jobs:
           sed -i 's/DB_DATABASE=laravel/DB_DATABASE=\/tmp\/parity.sqlite/' .env
           php artisan key:generate
 
-      - name: No-dev runtime parity check (boot + config cache + MIC/anons JSON loaders)
+      - name: No-dev runtime parity check (boot + config cache + MIC/anons loaders + HTTP/queue/console seams)
+        # H5095 — the gate additionally routes a real HTTP GET through the
+        # kernel, pushes a real job through the queue worker, and runs console
+        # + scheduler commands, all against a fresh migrated sqlite fixture.
         run: php scripts/prod_runtime_parity_check.php
 
   frontend-build:
@@ -233,13 +246,20 @@ jobs:
           cp .env.example .env
           php artisan key:generate
 
+      # H5443: the money-ledger migration creates triggers. The CI container keeps
+      # MySQL 8.4's default binlog ON, and a non-SUPER user then needs
+      # log_bin_trust_function_creators (error 1419). Prod MariaDB runs log_bin=0,
+      # so this is a CI-container setting only.
+      - name: MySQL allow trigger creation (binlog on in CI)
+        run: mysql -h 127.0.0.1 -P 3306 -uroot -proot -e "SET GLOBAL log_bin_trust_function_creators = 1;"
+
       - name: MySQL migrate:fresh
         run: php artisan migrate:fresh --force --no-interaction
 
       - name: MySQL finance and webhook transaction tests
         run: >-
           php artisan test
-          --filter='TochkaWebhookTest|MutualSettlementTest|FinanceIdempotencyTest|FinanceLockingMySqlTest'
+          --filter='TochkaWebhookTest|MutualSettlementTest|FinanceIdempotencyTest|FinanceLockingMySqlTest|LedgerCoreTest|LedgerVerifierFindingsTest|LedgerBackfillReportTest|DailyReconciliationTest|RefundAccessPolicyTest'
 
   changelog-lint:
     name: Changelog — no duplicated bullets
@@ -428,4 +448,3 @@ jobs:
           else
             python tools/check_mic_vendor_drift.py --self-only
           fi
-

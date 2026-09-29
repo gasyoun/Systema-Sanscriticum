@@ -15,7 +15,7 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Письмо администратору о новой банковской заявке студента (SEPA/SWIFT,
  * H3497). Требует ручной сверки поступления по выписке получателя и перевода
- * платежа в paid из админки. Очередное (ShouldQueue) — чтобы приём заявки не
+ * платежа в paid из админки. Очередное (ShouldQueue) — чтобы прием заявки не
  * блокировался на SMTP.
  */
 class BankClaimReceivedMail extends Mailable implements ShouldQueue

@@ -1,6 +1,6 @@
 <x-filament-widgets::widget>
     <x-filament::section>
-        <x-slot name="heading">Файлы, прикреплённые к урокам</x-slot>
+        <x-slot name="heading">Файлы, прикрепленные к урокам</x-slot>
         <x-slot name="description">Еженедельные раздатки (в том числе хинди) живут здесь, а не в библиотеке ссылок.</x-slot>
 
         @php $lessons = $this->lessons(); @endphp

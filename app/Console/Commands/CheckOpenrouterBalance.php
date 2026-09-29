@@ -68,7 +68,7 @@ class CheckOpenrouterBalance extends Command
     {
         $dedupeKey = 'openrouter_balance_alert:'.now()->toDateString();
         if (Cache::get($dedupeKey)) {
-            $this->comment('Дедуп '.$dedupeKey.' — повторный алерт не шлём.');
+            $this->comment('Дедуп '.$dedupeKey.' — повторный алерт не шлем.');
 
             return false;
         }
@@ -77,13 +77,13 @@ class CheckOpenrouterBalance extends Command
             ."\nОстаток: $".number_format($remaining, 2)
             ."\nРасход: $".number_format((float) $projection['daily_avg'], 2).'/день (за '.$projection['baseline_days'].' дн.)'
             ."\nИсчерпание ≈ ".$projection['runout_date'].' ('.$projection['days_left'].' дн.)'
-            ."\n\n<b>Попросить пополнение на ≈ $".number_format($topup, 0).'</b> (год вперёд ×'.config('openrouter.safety_factor', 1.25).')'
+            ."\n\n<b>Попросить пополнение на ≈ $".number_format($topup, 0).'</b> (год вперед ×'.config('openrouter.safety_factor', 1.25).')'
             ."\nПополнить: https://openrouter.ai/settings/credits";
 
         $token = (string) config('services.telegram.bot_token', '');
         $chatId = trim((string) config('openrouter.telegram_chat_id', ''));
         if ($token === '' || $chatId === '') {
-            $this->warn('TELEGRAM_BOT_TOKEN или чат пусты — алерт не ушёл.');
+            $this->warn('TELEGRAM_BOT_TOKEN или чат пусты — алерт не ушел.');
 
             return false;
         }

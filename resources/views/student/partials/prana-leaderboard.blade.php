@@ -57,7 +57,7 @@
                             :aria-selected="period === 'all'"
                             :class="period === 'all' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'"
                             class="px-3 py-1.5 rounded-lg transition-colors">
-                        Всё время
+                        Все время
                     </button>
                 </div>
             </div>
@@ -89,7 +89,7 @@
                     <p class="text-xs text-gray-400 mb-3" x-show="board === '{{ $b['key'] }}'">{{ $b['hint'] }}</p>
                 @endif
 
-                @foreach(['week' => 'эту неделю', 'month' => 'этот месяц', 'all' => 'всё время'] as $pkey => $plabel)
+                @foreach(['week' => 'эту неделю', 'month' => 'этот месяц', 'all' => 'все время'] as $pkey => $plabel)
                     @php $rows = $periods[$pkey] ?? collect(); @endphp
                     <div x-show="period === '{{ $pkey }}'" x-cloak
                          @if($pkey !== 'week') style="display: none;" @endif>
@@ -145,7 +145,7 @@
 
         <p class="mt-3 text-[11px] text-gray-400 leading-snug">
             Неделя — с понедельника; месяц — с 1-го. Прана: только начисления (не траты).
-            SRS: 1–4 очка за рейтинг FSRS. /lila: завершённые раунды (только вошедшие).
+            SRS: 1–4 очка за рейтинг FSRS. /lila: завершенные раунды (только вошедшие).
             Memrise: снимок импорта; week/month совпадают, пока нет свежего CSV.
             Отключить ненужные топы: <code class="text-[10px]">config/leaderboards.php</code> → <code class="text-[10px]">enabled => false</code>.
         </p>

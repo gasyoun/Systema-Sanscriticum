@@ -16,11 +16,11 @@ class RemindUpcomingClasses extends Command
 {
     protected $signature = 'classes:remind-upcoming {--minutes= : За сколько минут до старта напоминать (по умолчанию — из настроек админки)}';
 
-    protected $description = 'Шлёт студентам напоминание в TG/VK о скором занятии (по Schedule), один раз на событие.';
+    protected $description = 'Шлет студентам напоминание в TG/VK о скором занятии (по Schedule), один раз на событие.';
 
     public function handle(): int
     {
-        // Рубильник в админке (MarketingSetting). Нет настроек — считаем включённым.
+        // Рубильник в админке (MarketingSetting). Нет настроек — считаем включенным.
         $settings = MarketingSetting::cached();
         if ($settings && ! $settings->class_reminders_enabled) {
             $this->info('Напоминания о занятиях отключены в настройках — пропуск.');
@@ -34,7 +34,7 @@ class RemindUpcomingClasses extends Command
             : (int) ($settings?->class_reminder_lead_minutes ?? 60);
         $lead = max(1, $lead);
 
-        // Занятия, стартующие в ближайшие $lead минут и ещё не напомненные.
+        // Занятия, стартующие в ближайшие $lead минут и еще не напомненные.
         $schedules = Schedule::query()
             ->with(['group', 'course'])
             ->whereNull('reminded_at')
@@ -57,7 +57,7 @@ class RemindUpcomingClasses extends Command
             // Дубль-гвардия каналов (диагноз 28-08-2026): группа с Telegram-чатом уже
             // получает «Скоро занятие» от zapisi:remind-classes в тот же T-60 — персональный
             // пинг каждому студенту с привязанным Telegram приходит через минуту и читается
-            // как повтор. Пропускаем БЕЗ пометки: выключение рубильника вернёт ЛС в том же
+            // как повтор. Пропускаем БЕЗ пометки: выключение рубильника вернет ЛС в том же
             // окне, а перенос занятия (сброс reminded_at) тут ничего не ломает.
             if ($settings?->dm_suppressed_when_group_chat
                 && $schedule->group !== null
@@ -67,7 +67,7 @@ class RemindUpcomingClasses extends Command
 
             $audience = $this->audienceFor($schedule);
 
-            // Без адресной аудитории (нет группы и курса) — глобальные пуши не шлём.
+            // Без адресной аудитории (нет группы и курса) — глобальные пуши не шлем.
             if ($audience === null) {
                 continue;
             }
@@ -76,7 +76,7 @@ class RemindUpcomingClasses extends Command
             $audience->chunkById(200, function ($users) use ($schedule, &$sent): void {
                 foreach ($users as $user) {
                     // Текст персональный: ссылка «Подключиться» подписана на этого
-                    // студента (учёт посещаемости через трекинг-редирект).
+                    // студента (учет посещаемости через трекинг-редирект).
                     SendMessengerAlerts::dispatch($user, $this->buildText($schedule, $user));
                     $sent++;
                 }
@@ -99,7 +99,7 @@ class RemindUpcomingClasses extends Command
 
     /**
      * Кому слать по конкретному занятию: ожидаемый ростер (ClassRoster) с фильтром
-     * по привязанному мессенджеру (иначе SendMessengerAlerts всё равно no-op).
+     * по привязанному мессенджеру (иначе SendMessengerAlerts все равно no-op).
      */
     private function audienceFor(Schedule $schedule): ?Builder
     {
@@ -114,7 +114,7 @@ class RemindUpcomingClasses extends Command
         $time = $schedule->start->format('H:i');
 
         $text = "🔔 <b>Скоро занятие</b>\n\n";
-        $text .= "Намасте! Занятие <b>«{$title}»</b> начнётся сегодня в <b>{$time}</b> (МСК).";
+        $text .= "Намасте! Занятие <b>«{$title}»</b> начнется сегодня в <b>{$time}</b> (МСК).";
 
         // H4434 — допстрока для нон-МСК учеников: их локальное время занятия.
         // MG 09-09-2026: T−1ч напоминание DST слито с этим пингом — отдельного нет.
@@ -126,7 +126,7 @@ class RemindUpcomingClasses extends Command
             }
         }
 
-        // Подписанная трекинг-ссылка на этого студента (учёт посещаемости).
+        // Подписанная трекинг-ссылка на этого студента (учет посещаемости).
         if ($link = $schedule->trackedJoinUrlFor($user, 'reminder')) {
             $text .= "\n\n<a href='{$link}'>Подключиться к занятию</a>";
         }

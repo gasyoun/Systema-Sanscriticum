@@ -250,7 +250,7 @@ class AttendanceDashboard extends Page
                     continue;
                 }
                 if (abs($other['cursor'] - $row['cursor']) <= 2) {
-                    $compatible[] = $other['course'].' (урок '.$other['cursor'].')';
+                    $compatible[] = $other['course'].' (Урок '.$other['cursor'].')';
                 }
             }
             $row['compatible'] = $compatible;

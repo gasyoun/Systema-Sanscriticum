@@ -14,14 +14,14 @@ use Illuminate\Console\Command;
  * `Anna@x` и `anna@x`). Коллизии НИКОГДА не сливаются автоматически — это
  * деньги-/доступ-критичные данные, мерж делается вручную куратором.
  *
- *   php artisan users:normalize-emails           # сухой прогон (отчёт)
- *   php artisan users:normalize-emails --apply    # применить безопасные, коллизии — только отчёт
+ *   php artisan users:normalize-emails           # сухой прогон (отчет)
+ *   php artisan users:normalize-emails --apply    # применить безопасные, коллизии — только отчет
  */
 class NormalizeUserEmails extends Command
 {
     protected $signature = 'users:normalize-emails {--apply : Применить нормализацию к безопасным (без коллизий) записям}';
 
-    protected $description = 'Нормализовать email пользователей (lowercase+trim); коллизии — только отчёт, без авто-мержа';
+    protected $description = 'Нормализовать email пользователей (lowercase+trim); коллизии — только отчет, без авто-мержа';
 
     public function handle(): int
     {
@@ -59,7 +59,7 @@ class NormalizeUserEmails extends Command
 
         $this->info(sprintf('Безопасных к нормализации: %d. Коллизий: %d.', count($toUpdate), count($collisions)));
 
-        // Отчёт по коллизиям — всегда, и в dry-run, и в apply.
+        // Отчет по коллизиям — всегда, и в dry-run, и в apply.
         if ($collisions) {
             $this->warn('--- КОЛЛИЗИИ (НЕ тронуты, требуют ручного мержа) ---');
             foreach ($collisions as $norm => $users) {
@@ -69,7 +69,7 @@ class NormalizeUserEmails extends Command
         }
 
         if (! $apply) {
-            $this->comment('Сухой прогон. Запустите с --apply, чтобы применить безопасные изменения (коллизии всё равно не трогаются).');
+            $this->comment('Сухой прогон. Запустите с --apply, чтобы применить безопасные изменения (коллизии все равно не трогаются).');
             if ($toUpdate) {
                 $this->line('Примеры к изменению:');
                 foreach (array_slice($toUpdate, 0, 10) as [$user, $norm]) {

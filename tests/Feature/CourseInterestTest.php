@@ -229,10 +229,26 @@ class CourseInterestTest extends TestCase
             ->assertSee('name="website"', false) // honeypot в разметке
             ->assertSee('<!DOCTYPE html>', false); // standalone-документ, не лэйаут сайта
 
-        // frame-ancestors для samskrtam.ru — только на этом ответе (как у виджета расписания).
-        $this->assertStringContainsString(
-            'frame-ancestors',
+        // H5094: CSP фиксируется ТОЧНЫМ значением, а не contains('frame-ancestors')
+        // — ослабление allowlist до «frame-ancestors *» (кликджекинг формы из
+        // любого origin) старая проверка пропускала. Литерал в тесте намеренно
+        // не берётся из контроллера: тест должен ловить изменение константы.
+        $this->assertSame(
+            "frame-ancestors 'self' https://samskrtam.ru https://www.samskrtam.ru",
             (string) $response->headers->get('Content-Security-Policy')
         );
+
+        // Запрещённый побочный эффект: CSP не «утекает» на обычную страницу —
+        // ограничение рамки действует только на embed-ответ, site-wide
+        // ослабления нет (контракт PublicWidgetController).
+        $show = $this->get('/interest/buhler');
+        $show->assertOk();
+        $this->assertNull(
+            $show->headers->get('Content-Security-Policy'),
+            'embed-only CSP must not leak onto the show response'
+        );
+
+        // Хранимое состояние: embed — read-only, заявок не создаёт.
+        $this->assertSame(0, CourseInterestRequest::query()->count());
     }
 }

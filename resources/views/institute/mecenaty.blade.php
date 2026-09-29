@@ -7,14 +7,19 @@
     <h1 class="text-3xl font-bold text-white mb-4">Меценаты Института</h1>
     <p class="text-slate-300 mb-4">
         Институт исследования санскрита — учебное крыло Общества ревнителей санскрита.
-        Меценатская поддержка идёт на исследовательскую работу: корпуса и словари,
+        Меценатская поддержка идет на исследовательскую работу: корпуса и словари,
         издания, открытые разборы и бесплатные открытые занятия.
     </p>
     <p class="text-slate-300 mb-8">
-        Пожертвование — добровольное. Взамен мы ничего не продаём:
+        Пожертвование — добровольное. Взамен мы ничего не продаем:
         все публикации Института остаются открытыми, а имена меценатов (по желанию)
         указываются в благодарностях изданий.
     </p>
+
+    {{-- H4522: donor impact scroll — flag OFF по умолчанию; QA ?impact=1.
+         Сторибоард (MG-read gate): marketing/marathon-2026-08/redesign/
+         STORYBOARD_mecenaty-impact_10.09.26.md. Деньги/ст. 582 не тронуты. --}}
+    @include('institute._scrolly', ['gratitudes' => $gratitudes])
 
     {{-- H4400: состав меценатства — ратифицирован MG 08-09-2026 (план института §«Меценаты»). --}}
     <div class="rounded-xl border border-slate-700 p-4 mb-8">
@@ -27,14 +32,14 @@
         </ul>
         <p class="text-sm text-slate-400 mt-3">
             Это не подписка и не услуга: перечисленные возможности — благодарность
-            за добровольную поддержку, а не товар. Встречный пакет благ не продаётся.
+            за добровольную поддержку, а не товар. Встречный пакет благ не продается.
         </p>
     </div>
 
-    <h2 class="text-xl font-bold text-white mb-3">Как поддержать</h2>
+    <h2 id="mecenaty-form" class="text-xl font-bold text-white mb-3">Как поддержать</h2>
 
     @if(config('institute.donations_enabled'))
-        {{-- Онлайн-приём (план института N2): свободная сумма; пресеты — только ратифицированные MG значения из конфига. --}}
+        {{-- Онлайн-прием (план института N2): свободная сумма; пресеты — только ратифицированные MG значения из конфига. --}}
         <form method="POST" action="{{ route('institute.donate') }}" class="rounded-xl border border-slate-700 p-4 mb-6 space-y-4">
             @csrf
             @if(session('error'))
@@ -101,7 +106,7 @@
                 <label class="flex items-start gap-2 text-sm text-slate-300">
                     <input type="checkbox" name="gratitude_consent" value="1"
                            class="mt-0.5 rounded border-slate-500 bg-slate-800">
-                    <span>Указать моё имя в благодарностях меценатам (публичный список ниже; по желанию)</span>
+                    <span>Указать мое имя в благодарностях меценатам (публичный список ниже; по желанию)</span>
                 </label>
                 <div>
                     <label for="gratitude_name" class="block text-sm font-bold text-slate-200 mb-1">Имя для благодарности</label>

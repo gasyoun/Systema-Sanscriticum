@@ -10,14 +10,14 @@ use Illuminate\Console\Command;
 
 /**
  * H3542: бэкфилл приглашений о связывании для сейчас-незалинкованных свежих
- * контактов rusamskrtam-класса. --dry печатает только знаменатель и счёт
+ * контактов rusamskrtam-класса. --dry печатает только знаменатель и счет
  * «ушло бы приглашений»; реальный прогон ограничен --limit и идемпотентен
  * через cooldown link_invited_at.
  */
 class SupportSendLinkInvites extends Command
 {
     protected $signature = 'support:send-link-invites
-        {--dry : только census и счёт «пригласили бы», без отправки}
+        {--dry : только census и счет «пригласили бы», без отправки}
         {--limit=50 : потолок приглашений за прогон}
         {--days=30 : окно свежести активности чата, дней}';
 

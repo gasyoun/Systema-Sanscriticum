@@ -9,7 +9,7 @@
 
     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 40px 30px; border-top: 6px solid #d35400; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
 
-        <h2 style="color: #8a3324; font-size: 24px; margin-top: 0; font-weight: normal;">Намасте, {{ $user->name ?? 'друг' }}!</h2>
+        <h2 style="color: #8a3324; font-size: 24px; margin-top: 0; font-weight: normal;">Намасте, {{ $user?->greetingName('друг') ?? 'друг' }}!</h2>
 
         <p style="font-size: 17px;">Ваше уведомление об оплате через PayPal получено — вот что мы записали:</p>
 
@@ -33,6 +33,9 @@
         </table>
 
         <div style="background-color: #fff8f0; border-left: 4px solid #d35400; padding: 20px; margin: 25px 0; border-radius: 0 4px 4px 0;">
+            @if (! empty($underpaymentNotice))
+            <p style="margin: 0 0 12px; font-size: 16px;"><strong>{{ $underpaymentNotice }}</strong></p>
+            @endif
             @if ($trusted)
             <p style="margin: 0 0 12px; font-size: 16px;">
                 Вы наш ученик, поэтому доступ к курсу открыт сразу — без ожидания

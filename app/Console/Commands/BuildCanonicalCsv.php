@@ -8,10 +8,10 @@ use App\Support\CourseNameResolver;
 use Illuminate\Console\Command;
 
 /**
- * Вспомогательная команда «для проверки глазами»: берёт CSV (по умолчанию payments.csv),
+ * Вспомогательная команда «для проверки глазами»: берет CSV (по умолчанию payments.csv),
  * прогоняет колонку с названием курса через CourseNameResolver и пишет рядом
  * <имя>_canonical.csv с уже подставленными каноническими названиями, а также печатает
- * отчёт «старое название → новое (строк)».
+ * отчет «старое название → новое (строк)».
  *
  *   php artisan import:build-canonical
  *   php artisan import:build-canonical --file=blocks.csv --course-col=1
@@ -25,7 +25,7 @@ class BuildCanonicalCsv extends Command
                             {--file=payments.csv : Имя файла в storage/app/imports}
                             {--course-col=2 : Индекс колонки с названием курса (0-based)}';
 
-    protected $description = 'Сгенерировать копию CSV с каноническими названиями курсов + отчёт изменений';
+    protected $description = 'Сгенерировать копию CSV с каноническими названиями курсов + отчет изменений';
 
     public function handle(CourseNameResolver $resolver): int
     {
@@ -85,12 +85,12 @@ class BuildCanonicalCsv extends Command
         }
 
         arsort($changes);
-        $this->line('<fg=green>Применённые соответствия (старое → новое: строк):</>');
+        $this->line('<fg=green>Примененные соответствия (старое → новое: строк):</>');
         foreach ($changes as $line => $count) {
             $this->line("  • {$line}  ({$count})");
         }
         $this->newLine();
-        $this->info('Всего изменённых строк: '.array_sum($changes).', уникальных соответствий: '.count($changes));
+        $this->info('Всего измененных строк: '.array_sum($changes).', уникальных соответствий: '.count($changes));
 
         return self::SUCCESS;
     }

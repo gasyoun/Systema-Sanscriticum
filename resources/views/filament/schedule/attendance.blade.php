@@ -15,12 +15,12 @@
         'absent' => ['Не сможет', '#b91c1c', '#fee2e2'],
         'uncertain' => ['Не уверен', '#a16207', '#fef9c3'],
         'late' => ['Опоздает', '#c2410c', '#ffedd5'],
-        'leave_early' => ['Уйдёт раньше', '#6d28d9', '#ede9fe'],
+        'leave_early' => ['Уйдет раньше', '#6d28d9', '#ede9fe'],
         default => null,
     };
 @endphp
 
-{{-- Тёмная тема: аддитивные правила, светлую тему не трогают (цвета по [style*=…]). --}}
+{{-- Темная тема: аддитивные правила, светлую тему не трогают (цвета по [style*=…]). --}}
 <style>
     .dark .att-panel [style*="border-bottom: 1px solid #e5e7eb"] { border-bottom-color: rgba(255,255,255,.12) !important; }
     .dark .att-panel [style*="border-bottom: 1px solid #f3f4f6"] { border-bottom-color: rgba(255,255,255,.07) !important; }
