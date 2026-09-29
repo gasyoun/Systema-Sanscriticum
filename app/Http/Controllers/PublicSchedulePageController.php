@@ -9,6 +9,7 @@ use App\Models\Lesson;
 use App\Models\Schedule;
 use App\Services\Schedule\FullSchedulePost;
 use App\Services\Schedule\TextbookScale;
+use App\Support\ScheduleLabel;
 use App\Support\ShopCatalogUrl;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
@@ -47,6 +48,13 @@ class PublicSchedulePageController extends Controller
      */
     private const RECENT_ACTIVITY_DAYS = 14;
 
+    /**
+     * MG 21-09: канва-факстура пробы (CABINET_PROBE_KANVA_COURSE_ID, курс
+     * #453 на проде) — это тестовая поверхность cabinet:probe, не живая
+     * группа; на публичной /raspisanie/kochergina ей нечего делать.
+     */
+    private const EXCLUDED_COURSE_IDS = [];
+
     public function __invoke(): View
     {
         $courses = collect();
@@ -72,7 +80,9 @@ class PublicSchedulePageController extends Controller
                 ->filter()
                 ->unique('id')
                 ->map(fn ($teacher): array => [
-                    'name' => $teacher->name,
+                    // MG 28-09-2026: везде «Имя Отчество Фамилия»; ссылка
+                    // строится по исходному имени.
+                    'name' => ScheduleLabel::teacherDisplay($teacher->name),
                     'url' => '/online/prepodavatel/'.ShopCatalogUrl::encodeWords($teacher->name),
                 ])
                 ->values();
@@ -109,15 +119,23 @@ class PublicSchedulePageController extends Controller
     /**
      * Строки карточек: по одной на живую группу курса семейства Кочергиной.
      *
-     * @return Collection<int, array{course: Course, groupName: string, canvasCursor: int, canvasTotal: int, teachers: list<array{name: string, url: string}>, interestUrl: string, joinIntent: string}>
+     * @return Collection<int, array{course: Course, groupName: string, canvasCursor: int, canvasTotal: int, canvasAsOf: ?Carbon, teachers: list<array{name: string, url: string}>, interestUrl: string, joinIntent: string}>
      */
     private function kocherginaRows(): Collection
     {
+        // MG 21-09: факстура cabinet:probe не публичная группа.
+        $fixtureCourseId = (int) config('cabinet_probe.kanva_fixture_course_id', 0);
+        $excluded = array_values(array_filter(array_merge(
+            self::EXCLUDED_COURSE_IDS,
+            [$fixtureCourseId],
+        )));
+
         $courses = Course::query()
             ->where('is_active', true)
             ->where('is_visible', true)
             ->whereHas('groups')
             ->where('title', 'like', '%Кочерг%')
+            ->when($excluded !== [], fn ($q) => $q->whereNotIn('id', $excluded))
             ->with(['groups:id,name', 'teacher:id,name'])
             ->orderBy('title')
             ->get()
@@ -177,6 +195,9 @@ class PublicSchedulePageController extends Controller
                     'groupName' => (string) $group->name,
                     'canvasCursor' => $cursor,
                     'canvasTotal' => $total,
+                    // Дата актуальности канвы — день последней записи урока
+                    // (MG 21-09: «надо написать, на какое число актуально»).
+                    'canvasAsOf' => $lastLessonDate,
                     'teachers' => $teachers,
                     'interestUrl' => $interestUrl,
                     'joinIntent' => $intent,
@@ -240,17 +261,25 @@ class PublicSchedulePageController extends Controller
      * предстоящее занятие (по данным постов, т.е. групп + фолбэк-сирот),
      * его день недели и общее число занятий.
      *
-     * @return array{course: Course, posts: list<FullSchedulePost>, next: ?Carbon, weekdayIso: int, weekdayRu: ?string, lessonsCount: int}
+     * MG 28-09-2026: показное название (без текущего года, дни аббревиатурой,
+     * предмет грамматики), преподаватель «Имя Отчество Фамилия», подпись
+     * ближайшего занятия («пн 20:00») и прогресс («сейчас 6-е (нед. 40)»);
+     * irregular — нерегулярный ритм без строки cadence (разовые «Открытые
+     * занятия и вебинары»): такие всегда внизу списка, а не в середине.
+     *
+     * @return array{course: Course, posts: list<FullSchedulePost>, next: ?Carbon, weekdayIso: int, weekdayRu: ?string, lessonsCount: int, displayTitle: string, teacherDisplay: ?string, nextLabel: ?string, progress: ?string, irregular: bool}
      */
     private function row(Course $course): array
     {
-        $posts = FullSchedulePost::forCourse($course);
+        $posts = FullSchedulePost::forCourse($course, [ScheduleLabel::class, 'displayTitle']);
 
         $next = null;
         $lessonsCount = 0;
+        $pastTotal = 0;
 
         foreach ($posts as $post) {
             $lessonsCount += count($post->lessons);
+            $pastTotal += $post->pastCount;
 
             foreach ($post->lessons as $lesson) {
                 if ($lesson['is_past']) {
@@ -271,12 +300,27 @@ class PublicSchedulePageController extends Controller
             'weekdayIso' => $next?->dayOfWeekIso ?? 99,
             'weekdayRu' => $next === null ? null : self::WEEKDAYS_RU[$next->dayOfWeekIso],
             'lessonsCount' => $lessonsCount,
+            'displayTitle' => ScheduleLabel::displayTitle($course->title),
+            'teacherDisplay' => $course->teacher !== null
+                ? ScheduleLabel::teacherDisplay($course->teacher->name)
+                : null,
+            'nextLabel' => ScheduleLabel::nextLabel($next),
+            'progress' => ScheduleLabel::progressLabel($pastTotal, $next),
+            'irregular' => $posts !== []
+                && collect($posts)->every(fn (FullSchedulePost $p): bool => $p->cadence === null),
         ];
     }
 
-    /** Пн → Вс; ничья по дню — по времени старта; затем по названию. */
+    /**
+     * Нерегулярные (разовые) — в самый низ; дальше Пн → Вс; ничья по дню —
+     * по времени старта; затем по названию.
+     */
     private function compareRows(array $a, array $b): int
     {
+        if ($a['irregular'] !== $b['irregular']) {
+            return $a['irregular'] <=> $b['irregular'];
+        }
+
         if ($a['weekdayIso'] !== $b['weekdayIso']) {
             return $a['weekdayIso'] <=> $b['weekdayIso'];
         }

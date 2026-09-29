@@ -141,7 +141,7 @@ class RemindDebtors extends Command
                 ->whereIn('user_id', $userIds)
                 ->whereIn('status', Payment::PAID_STATUSES)
                 ->where('is_conditional', false)
-                ->whereNotIn('tariff', ['Расход', 'salary_payout'])
+                ->whereNotIn('tariff', array_merge(DebtorsReport::NON_PURCHASE_TARIFFS, DebtorsReport::nonCoveringTariffs()))
                 ->get(['user_id', 'start_block', 'end_block'])
                 ->groupBy('user_id');
 
