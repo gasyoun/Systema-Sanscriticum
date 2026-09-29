@@ -330,7 +330,7 @@ class PayoutPackageTest extends TestCase
     public function test_percent_terms_apply_in_integer_kopecks(): void
     {
         // 30% от 3333.33 ₽ = 999.999 ₽ → 1000.00 ₽ (половина вверх, без float).
-        $this->assertSame(99_999, $this->makeTerm(300_000, 2, '2026-02-01')->applyToKopecks(333_333));
+        $this->assertSame(100_000, $this->makeTerm(300_000, 2, '2026-02-01')->applyToKopecks(333_333));
     }
 
     public function test_overlapping_active_assignments_are_refused(): void
