@@ -54,8 +54,12 @@
                         @elseif ($item->status === \App\Models\CourseWaitlistItem::STATUS_PAYMENT_OPEN)
                             <span class="text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded-lg">Оплата открыта — ждем администратора</span>
                         @else
-                            {{-- H4206: пожелание времени — куратор подберет слот по голосам. --}}
+                            {{-- H4206: пожелание времени — куратор подберет слот по голосам.
+                                 MG 24-09-2026 (как на витрине /online/zhdun): недельный слот уже
+                                 известен (пн 18:00, сб 17:00, …) — селект «Когда удобно?» не
+                                 предлагаем, время решено. --}}
                             <div class="flex items-center gap-2">
+                                @if (! $item->slot)
                                 <select data-waitlist-pref="{{ $item->slug }}"
                                         title="Когда вам удобно?"
                                         class="text-xs text-gray-700 border border-gray-200 rounded-lg px-1.5 py-1 bg-white">
@@ -64,6 +68,7 @@
                                         <option value="{{ $prefKey }}">{{ $prefLabel }}</option>
                                     @endforeach
                                 </select>
+                                @endif
                                 <button type="button"
                                         data-waitlist-vote="{{ $item->slug }}"
                                         class="text-xs font-bold text-white bg-brand hover:opacity-90 transition rounded-lg px-3 py-1.5"

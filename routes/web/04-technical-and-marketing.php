@@ -2,18 +2,32 @@
 
 use App\Filament\Resources\UserResource;
 use App\Http\Controllers\AdminLoginLinkController;
-use App\Http\Controllers\CourseInterestController;
 use App\Http\Controllers\CabinetInviteLinkController;
+use App\Http\Controllers\CourseInterestController;
 use App\Http\Controllers\Email\TrackingController as EmailTrackingController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\NewsletterSubscribeController;
 use App\Http\Controllers\TelegramSupportLinkController;
 use App\Http\Controllers\TgLoginLinkController;
+use App\Models\TelegramBusinessStoryPublication;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
 // --- ТЕХНИЧЕСКИЕ И ДЕБАГ МАРШРУТЫ ---
+
+// The off-production Whisper worker receives only a short-lived signed URL
+// for one already-public editorial-channel video, never the Telegram bot token.
+Route::get('/internal/telegram-story-subtitle-media/{publication}', function (TelegramBusinessStoryPublication $publication) {
+    abort_unless($publication->status === 'subtitle_pending'
+        && is_string($publication->source_media_path)
+        && is_file($publication->source_media_path), 404);
+
+    return response()->file($publication->source_media_path, [
+        'Content-Type' => 'video/mp4',
+        'Cache-Control' => 'private, no-store',
+    ]);
+})->middleware(['signed:relative', 'throttle:60,1'])->whereNumber('publication')->name('telegram-story-subtitle-media');
 
 // БЕЗОПАСНОЕ СКАЧИВАНИЕ ФАЙЛОВ
 Route::get('/force-download/{file}', function (string $file) {

@@ -18,7 +18,9 @@ use App\Services\Membership\ClubMembershipService;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Prana\PranaService;
 use App\Services\PromiseAutoFulfiller;
+use App\Services\Reconciliation\RefundAccessPolicy;
 use App\Support\BeginnerPilotOffer;
+use App\Support\TelegramTransport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -83,6 +85,8 @@ class Payment extends Model
         'payer_note',
         // Structured claim payload (PayPal / company invoice) — see claim_meta JSON.
         'claim_meta',
+        // H5442: стабильный ключ повтора PayPal-заявки (unique, пишется при payment_fix_wave1).
+        'claim_replay_key',
         // Дата платежа задаётся вручную при создании из админки.
         'created_at',
     ];
@@ -641,6 +645,10 @@ class Payment extends Model
         // флага conditional_access_expiry (у окон свой рубильник).
         $query->withoutExpiredAccessWindow();
 
+        // H5445 (D10): возвращённая оплата/блок больше не открывает уроки
+        // (флаг money_refund_access_rules, дефолт OFF).
+        RefundAccessPolicy::excludeRefundedAccess($query);
+
         if (! config('features.conditional_access_expiry')) {
             return $query;
         }
@@ -752,6 +760,20 @@ class Payment extends Model
             } else {
                 $payment->received_account = self::RECEIVED_SCHOOL;
                 $payment->received_by_teacher_id = null;
+            }
+
+            // H5445 (P3, D10): частичный возврат — только с блоками (флаг
+            // money_refund_access_rules, дефолт OFF).
+            app(RefundAccessPolicy::class)->guardLegacyRefund($payment);
+        });
+
+        // H5445 (P3, D10): полный возврат отзывает оставшийся доступ, частичный —
+        // доступ названных блоков. Идемпотентно; без флага — no-op.
+        static::saved(function (Payment $payment): void {
+            if ($payment->refund_of_payment_id !== null
+                && ($payment->wasRecentlyCreated || $payment->wasChanged(['status', 'amount', 'start_block', 'end_block', 'refund_of_payment_id']))
+            ) {
+                app(RefundAccessPolicy::class)->applyLegacyRefund($payment);
             }
         });
 
@@ -1250,9 +1272,21 @@ class Payment extends Model
                 : '✅ <b>Оплата получена</b>'."\n\n"
                     .'Куратор свяжется с вами по поводу оплаченного участия и консультации.';
 
-            app(DeliveryChannelManager::class)
-                ->get('telegram')
-                ->sendMessage((string) $lead->telegram_chat_id, $text);
+            // Подтверждение — побочный эффект уже состоявшегося платежа (статус
+            // paid записан): провал доставки не имеет права отдавать эквайрингу
+            // 500 и держать его вебхук. Канал бросает RuntimeException, поэтому
+            // ловим здесь, а не в канале — очередь на это исключение опирается.
+            try {
+                app(DeliveryChannelManager::class)
+                    ->get('telegram')
+                    ->sendMessage((string) $lead->telegram_chat_id, $text);
+            } catch (\Throwable $e) {
+                Log::warning('Payment::processMarathonPaid — подтверждение не доставлено', [
+                    'payment_id' => $this->id,
+                    'lead_id' => $this->lead_id,
+                    'error' => TelegramTransport::sanitize($e->getMessage()),
+                ]);
+            }
         }
 
         app(CuratorNotifier::class)->paymentPaid($this);
@@ -1541,7 +1575,10 @@ class Payment extends Model
                 'Оплата не применена: привяжите группу в админке курса и повторите.';
             Log::error($msg);
 
-            if (config('features.grant_access_fail_closed')) {
+            // H5442 (P0 п.4): fail-closed входит в целую волну исправлений —
+            // включение payment_fix_wave1 включает и его (D5: без частичной
+            // волны). Отдельный флаг сохранён для обратной совместимости.
+            if (config('features.grant_access_fail_closed') || config('features.payment_fix_wave1')) {
                 throw new \RuntimeException($msg);
             }
 
@@ -1645,10 +1682,10 @@ class Payment extends Model
 
     private function accessGrantingPaymentsForUser(Builder $query): Builder
     {
-        return $query
+        return RefundAccessPolicy::excludeRefundedAccess($query
             ->where('user_id', $this->user_id)
             ->paid()
-            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout']);
+            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout']));
     }
 
     // ==========================================

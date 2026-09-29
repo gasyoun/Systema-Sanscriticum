@@ -1,571 +1,571 @@
 rank	root_iast	dcs_lemma	gloss_ru	status	flags	gloss_lemma	min_band	nkrya_tokens	synonym_proposal	synonym_ipm	synonym_band
-1	1 kṛ / 2 kṛ / 3 kṛ	kṛ	сделал	flag	inflected	сделать	4	сделать:V:4:786.76			
-2	bhū	bhū	будет	flag	inflected	быть	6	быть:V:6:12831.00			
+1	1 kṛ / 2 kṛ / 3 kṛ	kṛ	сделать	ok			4	сделать:V:4:786.76			
+2	bhū	bhū	быть	ok			6	быть:V:6:12831.00			
 3	1 as / 2 as	as	есть	ok			4	есть:V:4:151.44			
-4	vac	vac	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
-5	gach / gam	gam	пришел	flag	inflected	прийти	4	прийти:V:4:591.06			
-6	dṛś	dṛś	увидев	flag	inflected	увидеть	4	увидеть:V:4:448.26			
-7	1 dā / 2 dā / 3 dā / 4 dā	dā	взяв	flag	inflected	взять	4	взять:V:4:611.30			
-8	1 vid / 2 vid	vid	знает	flag	inflected	знать	5	знать:V:5:1740.03			
-9	śru	śru	услышав	flag	inflected,unknown	услышать		услышать:V:-:-			
-10	brū	brū	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
-11	ah	ah	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
-12	sthā	sthā	пребывает	flag	inflected,unknown	пребывать		пребывать:V:-:-			
-13	jan	jan	родился	flag	inflected	родиться	3	родиться:V:3:99.42			
-14	han	han	убит	flag	inflected,unknown	убитый		убитый:V:-:-			
-15	yaj	yaj	жертвователя	flag	inflected,unknown	жертвователь		жертвователь:S:-:-			
-16	hu	hu	жертвуют	flag	inflected,unknown	жертвовать		жертвовать:V:-:-			
-17	yuj	yuj	союзником	flag	inflected,unknown	союзник		союзник:S:-:-			
-18	yā	yā	идут	flag	inflected,unknown	идти		идти:V:-:-			
-19	1 pā / 2 pā / 3 pā	pā	Защищайте	flag	inflected,unknown	защищать		защищать:V:-:-			
-20	jñā	jñā	зная	flag	inflected	знать	5	знать:V:5:1740.03			
-21	1 iṣ / 2 iṣ / ich	iṣ	хочу	flag	inflected,unknown	хотеть		хотеть:V:-:-			
-22	1 paś / 2 paś	paś	вижу	flag	inflected,unknown	видеть		видеть:V:-:-			
-23	man	man	считаю	flag	inflected,unknown	считать		считать:V:-:-			
+4	vac	vac	сказать	ok			5	сказать:V:5:2472.22			
+5	gach / gam	gam	прийти	ok			4	прийти:V:4:591.06			
+6	dṛś	dṛś	увидеть	ok			4	увидеть:V:4:448.26			
+7	1 dā / 2 dā / 3 dā / 4 dā	dā	взять	ok			4	взять:V:4:611.30			
+8	1 vid / 2 vid	vid	знать	ok			5	знать:V:5:1740.03			
+9	śru	śru	услышать	flag	unknown			услышать:V:-:-			
+10	brū	brū	сказать	ok			5	сказать:V:5:2472.22			
+11	ah	ah	сказать	ok			5	сказать:V:5:2472.22			
+12	sthā	sthā	пребывать	flag	unknown			пребывать:V:-:-			
+13	jan	jan	родиться	ok			3	родиться:V:3:99.42			
+14	han	han	убитый	flag	unknown			убить:V:-:-			
+15	yaj	yaj	жертвователь	flag	unknown			жертвователь:S:-:-			
+16	hu	hu	жертвовать	flag	unknown			жертвовать:V:-:-			
+17	yuj	yuj	союзник	flag	unknown			союзник:S:-:-			
+18	yā	yā	идти	flag	unknown			идти:V:-:-			
+19	1 pā / 2 pā / 3 pā	pā	защищать	flag	unknown			защищать:V:-:-			
+20	jñā	jñā	знать	ok			5	знать:V:5:1740.03			
+21	1 iṣ / 2 iṣ / ich	iṣ	хотеть	flag	unknown			хотеть:V:-:-			
+22	1 paś / 2 paś	paś	видеть	flag	unknown			видеть:V:-:-			
+23	man	man	считать	flag	unknown			считать:V:-:-			
 24	1 dhā / 2 dhā	dhā	вера	flag	unknown			вера:S:-:-			
-25	smṛ	smṛ	считается	flag	inflected,unknown	считаться		считаться:V:-:-			
+25	smṛ	smṛ	считаться	flag	unknown			считаться:V:-:-			
 26	1 ji / 2 ji	ji	Санджая	ok	name						
-27	car	car	движется	flag	inflected,unknown	двигаться		двигаться:V:-:-			
-28	vad	vad	говорят	flag	inflected,unknown	говорить		говорить:V:-:-			
-29	muc	muc	освобождается	flag	inflected,unknown	освобождаться		освобождаться:V:-:-			
-30	1 i / 2 i	i	идет	flag	inflected,unknown	идти		идти:V:-:-			
-31	labh	labh	обретает	flag	inflected,unknown	обретать		обретать:V:-:-			
-32	1 pat / 2 pat	pat	упал	flag	inflected,unknown	упасть		упасть:V:-:-			
-34	1 hṛ / 2 hṛ / har	hṛ	похитил	flag	inflected,unknown	похитить		похитить:V:-:-			
-35	sṛj	sṛj	выпустил	flag	inflected,unknown	выпустить		выпустить:V:-:-			
-36	1 hā / 2 hā	hā	оставив	flag	inflected,unknown	оставить		оставить:V:-:-			
-37	1 bhuj / 2 bhuj	bhuj	наслаждайся	flag	inflected,unknown	наслаждаться		наслаждаться:V:-:-			
-38	bandh	bandh	связывается	flag	inflected,unknown	связываться		связываться:V:-:-			
-39	1 mṛ / 2 mṛ	mṛ	умирает	flag	inflected,unknown	умирать		умирать:V:-:-			
-40	1 vas / 2 vas / 3 vas	vas	жил	flag	inflected,unknown	жить		жить:V:-:-			
-41	vṛt	vṛt	возвращаются	flag	inflected,unknown	возвращаться		возвращаться:V:-:-			
-42	kṣip	kṣip	метнул	flag	inflected,unknown	метнуть		метнуть:V:-:-			
-43	tyaj	tyaj	оставив	flag	inflected,unknown	оставить		оставить:V:-:-			
-44	śudh	śudh	очищается	flag	inflected,unknown	очищаться		очищаться:V:-:-			
+27	car	car	двигаться	flag	unknown			двигаться:V:-:-			
+28	vad	vad	говорить	flag	unknown			говорить:V:-:-			
+29	muc	muc	освобождаться	flag	unknown			освобождаться:V:-:-			
+30	1 i / 2 i	i	идти	flag	unknown			идти:V:-:-			
+31	labh	labh	обретать	flag	unknown			обретать:V:-:-			
+32	1 pat / 2 pat	pat	упасть	flag	unknown			упасть:V:-:-			
+34	1 hṛ / 2 hṛ / har	hṛ	похитить	flag	unknown			похитить:V:-:-			
+35	sṛj	sṛj	выпустить	flag	unknown			выпустить:V:-:-			
+36	1 hā / 2 hā	hā	оставить	flag	unknown			оставить:V:-:-			
+37	1 bhuj / 2 bhuj	bhuj	наслаждаться	flag	unknown			наслаждаться:V:-:-			
+38	bandh	bandh	связываться	flag	unknown			связываться:V:-:-			
+39	1 mṛ / 2 mṛ	mṛ	умирать	flag	unknown			умирать:V:-:-			
+40	1 vas / 2 vas / 3 vas	vas	жить	flag	unknown			жить:V:-:-			
+41	vṛt	vṛt	возвращаться	flag	unknown			возвращаться:V:-:-			
+42	kṣip	kṣip	метнуть	flag	unknown			метнуть:V:-:-			
+43	tyaj	tyaj	оставить	flag	unknown			оставить:V:-:-			
+44	śudh	śudh	очищаться	flag	unknown			очищаться:V:-:-			
 45	arh	arh	должен	ok			3	должный:A:3:20.97			
-46	nī	nī	приведи	flag	inflected,unknown	привести		привести:V:-:-			
-47	āp	āp	достигает	flag	inflected	достигать	3	достигать:V:3:47.90			
-48	dah	dah	сжигает	flag	inflected,unknown	сжигать		сжигать:V:-:-			
-49	jīv	jīv	живет	flag	inflected,unknown	жить		жить:V:-:-			
+46	nī	nī	привести	flag	unknown			привести:V:-:-			
+47	āp	āp	достигать	ok			3	достигать:V:3:47.90			
+48	dah	dah	сжигать	flag	unknown			сжигать:V:-:-			
+49	jīv	jīv	жить	flag	unknown			жить:V:-:-			
 50	1 stu / 2 stu	stu	восхвалять	flag	unknown			восхвалять:V:-:-			
 51	pū	pū	Павамана	ok	name						
-52	chid	chid	рассек	flag	inflected,unknown	рассечь		рассечь:V:-:-			
+52	chid	chid	рассечь	flag	unknown			рассечь:V:-:-			
 53	1 vṛ / 2 vṛ	vṛ	окруженный	flag	unknown			окружить:V:-:-			
-54	tap	tap	греет	flag	inflected,unknown	греть		греть:V:-:-			
-55	pac	pac	перевариваю	flag	inflected,unknown	переваривать		переваривать:V:-:-			
-56	bhid	bhid	разбито	flag	inflected,unknown	разбитый		разбитый:V:-:-			
-57	1 sidh / 2 sidh	sidh	устанавливается	flag	inflected,unknown	устанавливаться		устанавливаться:V:-:-			
-58	ās	ās	почитают	flag	inflected,unknown	почитать		почитать:V:-:-			
-59	śak	śak	способен	flag	inflected,unknown	способный		способный:A:-:-			
-60	1 aś / 2 aś	aś	достигли	flag	inflected,unknown	достигнуть		достигнуть:V:-:-			
-61	rakṣ	rakṣ	охраняет	flag	inflected,unknown	охранять		охранять:V:-:-			
-62	1 gā / 2 gā	gā	пришел	flag	inflected	прийти	4	прийти:V:4:591.06			
-63	vah / vāh	vah	привези	flag	inflected,unknown	привезти		привезти:V:-:-			
-64	bhṛ	bhṛ	принеси	flag	inflected,unknown	принести		принести:V:-:-			
-65	śaṃs	śaṃs	скажи	flag	inflected	сказать	5	сказать:V:5:2472.22			
-66	prī	prī	доволен	flag	inflected,unknown	довольный		довольный:A:-:-			
+54	tap	tap	греть	flag	unknown			греть:V:-:-			
+55	pac	pac	переваривать	flag	unknown			переваривать:V:-:-			
+56	bhid	bhid	разбитый	flag	unknown			разбить:V:-:-			
+57	1 sidh / 2 sidh	sidh	устанавливаться	flag	unknown			устанавливаться:V:-:-			
+58	ās	ās	почитать	flag	unknown			почитать:V:-:-			
+59	śak	śak	способный	flag	unknown			способный:A:-:-			
+60	1 aś / 2 aś	aś	достигнуть	flag	unknown			достигнуть:V:-:-			
+61	rakṣ	rakṣ	охранять	flag	unknown			охранять:V:-:-			
+62	1 gā / 2 gā	gā	прийти	ok			4	прийти:V:4:591.06			
+63	vah / vāh	vah	привезти	flag	unknown			привезти:V:-:-			
+64	bhṛ	bhṛ	принести	flag	unknown			принести:V:-:-			
+65	śaṃs	śaṃs	сказать	ok			5	сказать:V:5:2472.22			
+66	prī	prī	довольный	flag	unknown			довольный:A:-:-			
 67	jap	jap	знатоков гимнов	flag	phrase,unknown			знаток:S:-:- гимн:S:-:-			
 68	krudh	krudh	разгневанный	flag	unknown			разгневать:V:-:-			
-69	snā	snā	омывшись	flag	inflected,unknown	омыться		омыться:V:-:-			
-70	vyadh	vyadh	пронзил	flag	inflected,unknown	пронзить		пронзить:V:-:-			
-71	vṛdh	vṛdh	возрастает	flag	inflected,unknown	возрастать		возрастать:V:-:-			
-72	ram	ram	радуются	flag	inflected,unknown	радоваться		радоваться:V:-:-			
-73	bhāṣ	bhāṣ	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
+69	snā	snā	омыться	flag	unknown			омыться:V:-:-			
+70	vyadh	vyadh	пронзить	flag	unknown			пронзить:V:-:-			
+71	vṛdh	vṛdh	возрастать	flag	unknown			возрастать:V:-:-			
+72	ram	ram	радоваться	flag	unknown			радоваться:V:-:-			
+73	bhāṣ	bhāṣ	сказать	ok			5	сказать:V:5:2472.22			
 74	1 pṛ / 2 pṛ / 3 pṛ	pṛ	полный	flag	unknown			полный:A:-:-			
-75	1 naś / 2 naś	naś	погибнут	flag	inflected,unknown	погибнуть		погибнуть:V:-:-			
-76	1 jṛ / 2 jṛ	jṛ	стареет	flag	inflected,unknown	стареть		стареть:V:-:-			
+75	1 naś / 2 naś	naś	погибнуть	flag	unknown			погибнуть:V:-:-			
+76	1 jṛ / 2 jṛ	jṛ	стареть	flag	unknown			стареть:V:-:-			
 77	bhī	bhī	в страхе	ok	phrase		4	страх:S:4:151.52			
-78	dviṣ	dviṣ	ненавидит	flag	inflected,unknown	ненавидеть		ненавидеть:V:-:-			
-79	sev	sev	служит	flag	inflected,unknown	служить		служить:V:-:-			
+78	dviṣ	dviṣ	ненавидеть	flag	unknown			ненавидеть:V:-:-			
+79	sev	sev	служить	flag	unknown			служить:V:-:-			
 80	yudh	yudh	в битве	flag	phrase,unknown			битва:S:-:-			
-81	vadh	vadh	убил	flag	inflected,unknown	убить		убить:V:-:-			
+81	vadh	vadh	убить	flag	unknown			убить:V:-:-			
 82	dhṛ	dhṛ	наделенный	flag	unknown			наделить:V:-:-			
-83	juṣ	juṣ	наслаждайся	flag	inflected,unknown	наслаждаться		наслаждаться:V:-:-			
+83	juṣ	juṣ	наслаждаться	flag	unknown			наслаждаться:V:-:-			
 84	vraj	vraj	загон	flag	unknown			загон:S:-:-			
-85	1 kṣi / 2 kṣi	kṣi	живет	flag	inflected,unknown	жить		жить:V:-:-			
-86	bhaj	bhaj	почитают	flag	inflected,unknown	почитать		почитать:V:-:-			
+85	1 kṣi / 2 kṣi	kṣi	жить	flag	unknown			жить:V:-:-			
+86	bhaj	bhaj	почитать	flag	unknown			почитать:V:-:-			
 87	dhyā	dhyā	сумерки	flag	unknown			сумерки:S:-:-			
-88	dham	dham	затрубили	flag	inflected,unknown	затрубить		затрубить:V:-:-			
+88	dham	dham	затрубить	flag	unknown			затрубить:V:-:-			
 89	dīp	dīp	пылающий	flag	unknown			пылать:V:-:-			
 90	1 śam / 2 śam / 3 śam	śam	счастье	ok			3	счастие:S:3:29.48			
 91	hṛṣ	hṛṣ	радостно	flag	unknown			радостно:ADV:-:-			
-92	budh	budh	узнай	flag	inflected,unknown	узнать		узнать:V:-:-			
-93	1 śī / 2 śī	śī	лежит	flag	inflected,unknown	лежать		лежать:V:-:-			
+92	budh	budh	узнать	flag	unknown			узнать:V:-:-			
+93	1 śī / 2 śī	śī	лежать	flag	unknown			лежать:V:-:-			
 94	muh	muh	глупец	flag	unknown			глупец:S:-:-			
-95	svap	svap	спит	flag	inflected_ambiguous,unknown			спать:V:-:-			
-96	yach / yam	yam	подняв	flag	inflected,unknown	поднять		поднять:V:-:-			
+95	svap	svap	спать	flag	unknown			спать:V:-:-			
+96	yach / yam	yam	поднять	flag	unknown			поднять:V:-:-			
 97	mad	mad	я	ok							
-98	dru	dru	ринулся	flag	inflected,unknown	ринуться		ринуться:V:-:-			
-99	piṣ	piṣ	сжимая	flag	inflected,unknown	сжимать		сжимать:V:-:-			
-100	spṛś	spṛś	коснулся	flag	inflected,unknown	коснуться		коснуться:V:-:-			
-101	viś	viś	вошел	flag	inflected,unknown	войти		войти:V:-:-			
-102	sad	sad	уселся	flag	inflected,unknown	усесться		усесться:V:-:-			
-103	1 rudh / 2 rudh	rudh	приобретает	flag	inflected,unknown	приобретать		приобретать:V:-:-			
-104	su	su	выжимающего	flag	inflected,unknown	выжимающий		выжимать:V:-:-			
+98	dru	dru	ринуться	flag	unknown			ринуться:V:-:-			
+99	piṣ	piṣ	сжимать	flag	unknown			сжимать:V:-:-			
+100	spṛś	spṛś	коснуться	flag	unknown			коснуться:V:-:-			
+101	viś	viś	войти	flag	unknown			войти:V:-:-			
+102	sad	sad	усесться	flag	unknown			усесться:V:-:-			
+103	1 rudh / 2 rudh	rudh	приобретать	flag	unknown			приобретать:V:-:-			
+104	su	su	выжимающий	flag	unknown			выжимать:V:-:-			
 105	av	av	на помощь	flag	phrase,unknown			помощь:S:-:-			
-106	tṛ	tṛ	сойдя	flag	inflected,unknown	сойти		сойти:V:-:-			
-107	dīkṣ	dīkṣ	видя	flag	inflected,unknown	видеть		видеть:V:-:-			
-108	tuṣ	tuṣ	доволен	flag	inflected,unknown	довольный		довольный:A:-:-			
-109	duṣ	duṣ	развращаются	flag	inflected,unknown	развращаться		развращаться:V:-:-			
+106	tṛ	tṛ	сойти	flag	unknown			сойти:V:-:-			
+107	dīkṣ	dīkṣ	видеть	flag	unknown			видеть:V:-:-			
+108	tuṣ	tuṣ	довольный	flag	unknown			довольный:A:-:-			
+109	duṣ	duṣ	развращаться	flag	unknown			развращаться:V:-:-			
 110	jval	jval	пылающий	flag	unknown			пылать:V:-:-			
-111	duh	duh	доится	flag	inflected,unknown	доиться		доиться:V:-:-			
-112	sah	sah	могу	flag	inflected,unknown	мочь		мочь:V:-:-			
-113	hiṃs	hiṃs	вредит	flag	inflected,unknown	вредить		вредить:V:-:-			
-114	lip	lip	пятнается	flag	inflected,unknown	пятнаться		пятнаться:V:-:-			
+111	duh	duh	доиться	flag	unknown			доиться:V:-:-			
+112	sah	sah	мочь	flag	unknown			мочь:V:-:-			
+113	hiṃs	hiṃs	вредить	flag	unknown			вредить:V:-:-			
+114	lip	lip	пятнаться	flag	unknown			пятнаться:V:-:-			
 115	khyā	khyā	в битве	flag	phrase,unknown			битва:S:-:-			
-116	śuc	śuc	скорбит	flag	inflected,unknown	скорбеть		скорбеть:V:-:-			
+116	śuc	śuc	скорбеть	flag	unknown			скорбеть:V:-:-			
 117	vī	vī	птицы	flag	unknown			птица:S:-:-			
-118	1 ci / 2 ci	ci	решив	flag	inflected,unknown	решить		решить:V:-:-			
-119	yāc	yāc	попросил	flag	inflected,unknown	попросить		попросить:V:-:-			
-120	bhañj	bhañj	разбиты	flag	inflected,unknown	разбитый		разбитый:V:-:-			
-121	bhā	bhā	кажется	flag	inflected,unknown	казаться		казаться:V:-:-			
-122	1 tan / 2 tan	tan	протянулся	flag	inflected,unknown	протянуться		протянуться:V:-:-			
-123	cyu	cyu	отпадают	flag	inflected,unknown	отпадать		отпадать:V:-:-			
-124	añj	añj	мажут	flag	inflected,unknown	мазать		мазать:V:-:-			
-125	ad	ad	поедает	flag	inflected,unknown	поедать		поедать:V:-:-			
+118	1 ci / 2 ci	ci	решить	flag	unknown			решить:V:-:-			
+119	yāc	yāc	попросить	flag	unknown			попросить:V:-:-			
+120	bhañj	bhañj	разбитый	flag	unknown			разбить:V:-:-			
+121	bhā	bhā	казаться	flag	unknown			казаться:V:-:-			
+122	1 tan / 2 tan	tan	протянуться	flag	unknown			протянуться:V:-:-			
+123	cyu	cyu	отпадать	flag	unknown			отпадать:V:-:-			
+124	añj	añj	мазать	flag	unknown			мазать:V:-:-			
+125	ad	ad	поедать	flag	unknown			поедать:V:-:-			
 126	tṛp	tṛp	насытиться	flag	unknown			насытиться:V:-:-			
 127	mṛd	mṛd	глины	flag	unknown			глина:S:-:-			
-128	sic	sic	подливая	flag	inflected,unknown	подливать		подливать:V:-:-			
+128	sic	sic	подливать	flag	unknown			подливать:V:-:-			
 129	1 mā / 2 mā / 3 mā	mā	не	ok							
-130	rud	rud	рыдая	flag	inflected,unknown	рыдать		рыдать:V:-:-			
-131	nam	nam	склоняется	flag	inflected,unknown	склоняться		склоняться:V:-:-			
-132	nind	nind	попрекает	flag	inflected,unknown	попрекать		попрекать:V:-:-			
+130	rud	rud	рыдать	flag	unknown			рыдать:V:-:-			
+131	nam	nam	склоняться	flag	unknown			склоняться:V:-:-			
+132	nind	nind	попрекать	flag	unknown			попрекать:V:-:-			
 133	1 śrī / 2 śrī	śrī	Шри	flag	unknown			шри:S:-:-			
-134	vand	vand	приветствовал	flag	inflected,unknown	приветствовать		приветствовать:V:-:-			
+134	vand	vand	приветствовать	flag	unknown			приветствовать:V:-:-			
 135	mud	mud	радости	flag	unknown			радость:S:-:-			
-136	bhram	bhram	блуждает	flag	inflected,unknown	блуждать		блуждать:V:-:-			
-137	1 dhāv / 2 dhāv	dhāv	ринулся	flag	inflected,unknown	ринуться		ринуться:V:-:-			
-138	path / paṭh	paṭh	читает	flag	inflected,unknown	читать		читать:V:-:-			
-139	vṛṣ	vṛṣ	окатил	flag	inflected,unknown	окатить		окатить:V:-:-			
+136	bhram	bhram	блуждать	flag	unknown			блуждать:V:-:-			
+137	1 dhāv / 2 dhāv	dhāv	ринуться	flag	unknown			ринуться:V:-:-			
+138	path / paṭh	paṭh	читать	flag	unknown			читать:V:-:-			
+139	vṛṣ	vṛṣ	окатить	flag	unknown			окатить:V:-:-			
 140	gup	gup	охраняемый	flag	unknown			охранять:V:-:-			
-141	yat	yat	стремится	flag	inflected,unknown	стремиться		стремиться:V:-:-			
-142	śubh	śubh	блистал	flag	inflected,unknown	блистать		блистать:V:-:-			
+141	yat	yat	стремиться	flag	unknown			стремиться:V:-:-			
+142	śubh	śubh	блистать	flag	unknown			блистать:V:-:-			
 143	tvar	tvar	поспешно	flag	unknown			поспешно:ADV:-:-			
 144	sru	sru	растекайся вокруг	flag	phrase,unknown			растекаться:V:-:-			
-145	1 śās / 2 śās	śās	правил	flag	inflected,unknown	править		править:V:-:-			
-146	sū	sū	родила	flag	inflected,unknown	родить		родить:V:-:-			
-147	kup	kup	разгневался	flag	inflected,unknown	разгневаться		разгневаться:V:-:-			
-148	gras	gras	поглотил	flag	inflected,unknown	поглотить		поглотить:V:-:-			
-149	śā	śā	острыми	flag	inflected,unknown	острый		острый:A:-:-			
-150	likh	likh	чертит	flag	inflected,unknown	чертить		чертить:V:-:-			
-151	ruc	ruc	нравится	flag	inflected,unknown	нравиться		нравиться:V:-:-			
-152	krīḍ	krīḍ	играет	flag	inflected,unknown	играть		играть:V:-:-			
-153	cal	cal	последовал	flag	inflected,unknown	последовать		последовать:V:-:-			
-154	ruh	ruh	взошел	flag	inflected,unknown	взойти		взойти:V:-:-			
-155	śap	śap	проклял	flag	inflected,unknown	проклясть		проклясть:V:-:-			
-156	math	math	похитил	flag	inflected,unknown	похитить		похитить:V:-:-			
-157	īkṣ	īkṣ	увидев	flag	inflected	увидеть	4	увидеть:V:4:448.26			
+145	1 śās / 2 śās	śās	править	flag	unknown			править:V:-:-			
+146	sū	sū	родить	flag	unknown			родить:V:-:-			
+147	kup	kup	разгневаться	flag	unknown			разгневаться:V:-:-			
+148	gras	gras	поглотить	flag	unknown			поглотить:V:-:-			
+149	śā	śā	острый	flag	unknown			острый:A:-:-			
+150	likh	likh	чертить	flag	unknown			чертить:V:-:-			
+151	ruc	ruc	нравиться	flag	unknown			нравиться:V:-:-			
+152	krīḍ	krīḍ	играть	flag	unknown			играть:V:-:-			
+153	cal	cal	последовать	flag	unknown			последовать:V:-:-			
+154	ruh	ruh	взойти	flag	unknown			взойти:V:-:-			
+155	śap	śap	проклясть	flag	unknown			проклясть:V:-:-			
+156	math	math	похитить	flag	unknown			похитить:V:-:-			
+157	īkṣ	īkṣ	увидеть	ok			4	увидеть:V:4:448.26			
 158	guh	guh	скрытый	flag	unknown			скрыть:V:-:-			
-159	gad	gad	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
-160	nad	nad	издал	flag	inflected,unknown	издать		издать:V:-:-			
-161	bādh	bādh	прогони	flag	inflected,unknown	прогнать		прогнать:V:-:-			
-162	śri	śri	полагаясь	flag	inflected,unknown	полагаться		полагаться:V:-:-			
+159	gad	gad	сказать	ok			5	сказать:V:5:2472.22			
+160	nad	nad	издать	flag	unknown			издать:V:-:-			
+161	bādh	bādh	прогнать	flag	unknown			прогнать:V:-:-			
+162	śri	śri	полагаться	flag	unknown			полагаться:V:-:-			
 163	trā	trā	спасти	flag	unknown			спасти:V:-:-			
 164	krī	krī	купленный	flag	unknown			купить:V:-:-			
 165	kṣam	kṣam	простить	flag	unknown			простить:V:-:-			
-166	puṣ	puṣ	процветает	flag	inflected,unknown	процветать		процветать:V:-:-			
-167	īś	īś	властвует	flag	inflected,unknown	властвовать		властвовать:V:-:-			
-168	has	has	смеясь	flag	inflected,unknown	смеяться		смеяться:V:-:-			
-170	kram	kram	вышел	flag	inflected,unknown	выйти		выйти:V:-:-			
-171	arc	arc	почтив	flag	inflected,unknown	почтить		почтить:V:-:-			
-172	lih	lih	облизывая	flag	inflected,unknown	облизывать		облизывать:V:-:-			
+166	puṣ	puṣ	процветать	flag	unknown			процветать:V:-:-			
+167	īś	īś	властвовать	flag	unknown			властвовать:V:-:-			
+168	has	has	смеяться	flag	unknown			смеяться:V:-:-			
+170	kram	kram	выйти	flag	unknown			выйти:V:-:-			
+171	arc	arc	почтить	flag	unknown			почтить:V:-:-			
+172	lih	lih	облизывать	flag	unknown			облизывать:V:-:-			
 173	rāj	rāj	Вирадж	ok	name						
-174	1 gṛ / 2 gṛ / 3 gṛ	gṛ	воспевают	flag	inflected,unknown	воспевать		воспевать:V:-:-			
-175	vyath	vyath	отпрянут	flag	inflected,unknown	отпрянуть		отпрянуть:V:-:-			
+174	1 gṛ / 2 gṛ / 3 gṛ	gṛ	воспевать	flag	unknown			воспевать:V:-:-			
+175	vyath	vyath	отпрянуть	flag	unknown			отпрянуть:V:-:-			
 176	ṛdh	ṛdh	процветающее	flag	unknown			процветать:V:-:-			
-177	śram	śram	отдохнув	flag	inflected,unknown	отдохнуть		отдохнуть:V:-:-			
-178	khad / khād	khād	грызет	flag	inflected,unknown	грызть		грызть:V:-:-			
+177	śram	śram	отдохнуть	flag	unknown			отдохнуть:V:-:-			
+178	khad / khād	khād	грызть	flag	unknown			грызть:V:-:-			
 179	svid	svid	же	ok							
 180	prath	prath	прославленный	flag	unknown			прославить:V:-:-			
-181	kṛṣ	kṛṣ	натянув	flag	inflected,unknown	натянуть		натянуть:V:-:-			
-182	sphur	sphur	столкнул	flag	inflected,unknown	столкнуть		столкнуть:V:-:-			
-183	nṛt	nṛt	плясали	flag	inflected,unknown	плясать		плясать:V:-:-			
-184	khan	khan	вонзил	flag	inflected,unknown	вонзить		вонзить:V:-:-			
+181	kṛṣ	kṛṣ	натянуть	flag	unknown			натянуть:V:-:-			
+182	sphur	sphur	столкнуть	flag	unknown			столкнуть:V:-:-			
+183	nṛt	nṛt	плясать	flag	unknown			плясать:V:-:-			
+184	khan	khan	вонзить	flag	unknown			вонзить:V:-:-			
 185	iḍ / īḍ	īḍ	достойный призывов	flag	phrase,unknown			достойный:A:-:- призыв:S:-:-			
-186	mil	mil	возвращаются	flag	inflected,unknown	возвращаться		возвращаться:V:-:-			
-187	śikṣ	śikṣ	старается	flag	inflected,unknown	стараться		стараться:V:-:-			
+186	mil	mil	возвращаться	flag	unknown			возвращаться:V:-:-			
+187	śikṣ	śikṣ	стараться	flag	unknown			стараться:V:-:-			
 188	majj	majj	погруженный	flag	unknown			погрузить:V:-:-			
 189	dam	dam	смиренный	flag	unknown			смирить:V:-:-			
-190	bhraṃś	bhraṃś	лишается	flag	inflected,unknown	лишаться		лишаться:V:-:-			
+190	bhraṃś	bhraṃś	лишаться	flag	unknown			лишаться:V:-:-			
 191	stṛ	stṛ	швырнуть	flag	unknown			швырнуть:V:-:-			
-192	nud	nud	оттолкни	flag	inflected,unknown	оттолкнуть		оттолкнуть:V:-:-			
+192	nud	nud	оттолкнуть	flag	unknown			оттолкнуть:V:-:-			
 193	lubh	lubh	жадный	flag	unknown			жадный:A:-:-			
-194	sac	sac	следуют	flag	inflected,unknown	следовать		следовать:V:-:-			
-195	1 vap / 2 vap	vap	сея	flag	inflected,unknown	сеять		сеять:V:-:-			
-196	vaś	vaś	хочет	flag	inflected,unknown	хотеть		хотеть:V:-:-			
-197	mṛj	mṛj	начищают	flag	inflected,unknown	начищать		начищать:V:-:-			
+194	sac	sac	следовать	flag	unknown			следовать:V:-:-			
+195	1 vap / 2 vap	vap	сеять	flag	unknown			сеять:V:-:-			
+196	vaś	vaś	хотеть	flag	unknown			хотеть:V:-:-			
+197	mṛj	mṛj	начищать	flag	unknown			начищать:V:-:-			
 198	1 vā / 2 vā / 3 vā	vā	или	ok							
-199	plu	plu	соскочив	flag	inflected,unknown	соскочить		соскочить:V:-:-			
+199	plu	plu	соскочить	flag	unknown			соскочить:V:-:-			
 200	daṃś	daṃś	десятью	ok							
-201	stambh	stambh	укрепил	flag	inflected,unknown	укрепить		укрепить:V:-:-			
-202	dāś	dāś	почитателя	flag	inflected,unknown	почитатель		почитатель:S:-:-			
-203	vṛj	vṛj	обойди	flag	inflected,unknown	обойти		обойти:V:-:-			
-204	1 śṛ / 2 śṛ / 3 śṛ	śṛ	разбей	flag	inflected,unknown	разбить		разбить:V:-:-			
-205	kṣan	kṣan	ранен	flag	inflected,unknown	раненный		ранить:V:-:-			
-206	dṛh	dṛh	укрепил	flag	inflected,unknown	укрепить		укрепить:V:-:-			
-207	śaṅk	śaṅk	опасаясь	flag	inflected,unknown	опасаться		опасаться:V:-:-			
+201	stambh	stambh	укрепить	flag	unknown			укрепить:V:-:-			
+202	dāś	dāś	почитатель	flag	unknown			почитатель:S:-:-			
+203	vṛj	vṛj	обойти	flag	unknown			обойти:V:-:-			
+204	1 śṛ / 2 śṛ / 3 śṛ	śṛ	разбить	flag	unknown			разбить:V:-:-			
+205	kṣan	kṣan	раненный	flag	unknown			ранить:V:-:-			
+206	dṛh	dṛh	укрепить	flag	unknown			укрепить:V:-:-			
+207	śaṅk	śaṅk	опасаться	flag	unknown			опасаться:V:-:-			
 208	chad	chad	тайно	flag	unknown			тайно:ADV:-:-			
-209	1 lī / 2 lī	lī	растворяется	flag	inflected,unknown	растворяться		растворяться:V:-:-			
+209	1 lī / 2 lī	lī	растворяться	flag	unknown			растворяться:V:-:-			
 210	tras	tras	перепуганные	flag	unknown			перепугать:V:-:-			
 211	cit	cit	даже	ok							
 212	riṣ	riṣ	терпит ущерб	flag	phrase,unknown			терпеть:V:-:- ущерб:S:-:-			
-213	skand	skand	истекло	flag	inflected,unknown	истечь		истечь:V:-:-			
+213	skand	skand	истечь	flag	unknown			истечь:V:-:-			
 214	dhū	dhū	дышло	flag	unknown			дышло:S:-:-			
 215	rādh	rādh	ты имел успех	flag	phrase,unknown			иметь:V:-:- успех:S:-:-			
-216	kruś	kruś	взывали	flag	inflected,unknown	взывать		взывать:V:-:-			
+216	kruś	kruś	взывать	flag	unknown			взывать:V:-:-			
 217	kamp	kamp	колебаться	flag	unknown			колебаться:V:-:-			
-218	kṣubh	kṣubh	взволновался	flag	inflected,unknown	взволноваться		взволноваться:V:-:-			
+218	kṣubh	kṣubh	взволноваться	flag	unknown			взволноваться:V:-:-			
 219	lag	lag	застрявшие	flag	unknown			застрять:V:-:-			
-220	smi	smi	улыбаясь	flag	inflected,unknown	улыбаться		улыбаться:V:-:-			
+220	smi	smi	улыбаться	flag	unknown			улыбаться:V:-:-			
 221	hi	hi	ведь	ok							
 222	vam	vam	извергающие	flag	unknown			извергать:V:-:-			
-223	1 kṛt / 2 kṛt	kṛt	рассек	flag	inflected,unknown	рассечь		рассечь:V:-:-			
-224	kṣar	kṣar	текут	flag	inflected,unknown	течь		течь:V:-:-			
-225	van	van	добывает	flag	inflected,unknown	добывать		добывать:V:-:-			
+223	1 kṛt / 2 kṛt	kṛt	рассечь	flag	unknown			рассечь:V:-:-			
+224	kṣar	kṣar	течь	flag	unknown			течь:V:-:-			
+225	van	van	добывать	flag	unknown			добывать:V:-:-			
 226	bhrāj	bhrāj	сверкающие	flag	unknown			сверкать:V:-:-			
 227	1 rā / 2 rā	rā	дар	flag	unknown			дар:S:-:-			
 228	kliś	kliś	подверглась оскорблениям	flag	phrase,unknown			подвергнуться:V:-:- оскорбление:S:-:-			
 229	gal	gal	утратившая	flag	unknown			утратить:V:-:-			
-230	1 vidh / 2 vidh	vidh	почтим	flag	inflected,unknown	почтить		почтить:V:-:-			
-231	ric	ric	превосходит	flag	inflected,unknown	превосходить		превосходить:V:-:-			
+230	1 vidh / 2 vidh	vidh	почтить	flag	unknown			почтить:V:-:-			
+231	ric	ric	превосходить	flag	unknown			превосходить:V:-:-			
 232	sṛ	sṛ	ушедший	flag	unknown			уйти:V:-:-			
-233	kāṅkṣ	kāṅkṣ	желает	flag	inflected,unknown	желать		желать:V:-:-			
-234	ceṣṭ	ceṣṭ	действует	flag	inflected,unknown	действовать		действовать:V:-:-			
+233	kāṅkṣ	kāṅkṣ	желать	flag	unknown			желать:V:-:-			
+234	ceṣṭ	ceṣṭ	действовать	flag	unknown			действовать:V:-:-			
 235	1 yu / 2 yu	yu	Аю	ok	name						
-236	san	san	добывает	flag	inflected,unknown	добывать		добывать:V:-:-			
-237	śiṣ	śiṣ	остается	flag	inflected,unknown	оставаться		оставаться:V:-:-			
-238	sṛp	sṛp	ползает	flag	inflected,unknown	ползать		ползать:V:-:-			
-239	ī	ī	просим	flag	inflected,unknown	просить		просить:V:-:-			
-240	1 ukṣ / 2 ukṣ	ukṣ	окропит	flag	inflected,unknown	окропить		окропить:V:-:-			
+236	san	san	добывать	flag	unknown			добывать:V:-:-			
+237	śiṣ	śiṣ	оставаться	flag	unknown			оставаться:V:-:-			
+238	sṛp	sṛp	ползать	flag	unknown			ползать:V:-:-			
+239	ī	ī	просить	flag	unknown			просить:V:-:-			
+240	1 ukṣ / 2 ukṣ	ukṣ	окропить	flag	unknown			окропить:V:-:-			
 241	mūrch	mūrch	воплощенный	flag	unknown			воплотить:V:-:-			
 242	diś	diś	стороны света	flag	phrase,unknown			сторона:S:-:- свет:S:-:-			
-243	spṛdh	spṛdh	соперничал	flag	inflected,unknown	соперничать		соперничать:V:-:-			
+243	spṛdh	spṛdh	соперничать	flag	unknown			соперничать:V:-:-			
 244	ślāgh	ślāgh	достойного восхваления	flag	phrase,unknown			достойный:A:-:- восхваление:S:-:-			
 245	dih	dih	воплощенный	flag	unknown			воплотить:V:-:-			
 246	garh	garh	порицать	flag	unknown			порицать:V:-:-			
-247	krand	krand	взревел	flag	inflected,unknown	взреветь		взреветь:V:-:-			
-248	pinv	pinv	набухает	flag	inflected,unknown	набухать		набухать:V:-:-			
+247	krand	krand	взреветь	flag	unknown			взреветь:V:-:-			
+248	pinv	pinv	набухать	flag	unknown			набухать:V:-:-			
 249	vāñch	vāñch	Да пожелают	flag	phrase,unknown			пожелать:V:-:-			
-250	garj	garj	шумишь	flag	inflected,unknown	шуметь		шуметь:V:-:-			
-251	edh	edh	процветает	flag	inflected,unknown	процветать		процветать:V:-:-			
-252	1 śuṣ / 2 śuṣ	śuṣ	пересыхает	flag	inflected,unknown	пересыхать		пересыхать:V:-:-			
-253	pyā	pyā	набухшей	flag	inflected,unknown	набухший		набухнуть:V:-:-			
+250	garj	garj	шуметь	flag	unknown			шуметь:V:-:-			
+251	edh	edh	процветать	flag	unknown			процветать:V:-:-			
+252	1 śuṣ / 2 śuṣ	śuṣ	пересыхать	flag	unknown			пересыхать:V:-:-			
+253	pyā	pyā	набухший	flag	unknown			набухнуть:V:-:-			
 254	bhakṣ	bhakṣ	съесть	flag	unknown			съесть:V:-:-			
-255	muṣ	muṣ	отнял	flag	inflected,unknown	отнять		отнять:V:-:-			
-256	takṣ	takṣ	вытесали	flag	inflected,unknown	вытесать		вытесать:V:-:-			
-257	spṛ	spṛ	освободила	flag	inflected,unknown	освободить		освободить:V:-:-			
-258	ghṛṣ	ghṛṣ	терся	flag	inflected,unknown	тереться		тереться:V:-:-			
-259	vip	vip	дрожа	flag	inflected,unknown	дрожать		дрожать:V:-:-			
-260	sphuṭ	sphuṭ	рассечены	flag	inflected,unknown	рассечённый		рассечь:V:-:-			
+255	muṣ	muṣ	отнять	flag	unknown			отнять:V:-:-			
+256	takṣ	takṣ	вытесать	flag	unknown			вытесать:V:-:-			
+257	spṛ	spṛ	освободить	flag	unknown			освободить:V:-:-			
+258	ghṛṣ	ghṛṣ	тереться	flag	unknown			тереться:V:-:-			
+259	vip	vip	дрожать	flag	unknown			дрожать:V:-:-			
+260	sphuṭ	sphuṭ	рассечённый	flag	unknown			рассечь:V:-:-			
 261	śvas	śvas	завтра	flag	unknown			завтра:ADV:-:-			
 262	carv	carv	Посыпание порошком	flag	phrase,unknown			посыпание:S:-:- порошок:S:-:-			
-263	1 dṛ / 2 dṛ	dṛ	разрывается	flag	inflected,unknown	разрываться		разрываться:V:-:-			
-264	mṛṣ	mṛṣ	стерпел	flag	inflected,unknown	стерпеть		стерпеть:V:-:-			
-265	ṛṣ	ṛṣ	течет	flag	inflected,unknown	течь		течь:V:-:-			
-266	vraśc	vraśc	отрубаю	flag	inflected,unknown	отрубать		отрубать:V:-:-			
-267	khid	khid	вырывает	flag	inflected,unknown	вырывать		вырывать:V:-:-			
-268	pad	pad	достигает	flag	inflected	достигать	3	достигать:V:3:47.90			
+263	1 dṛ / 2 dṛ	dṛ	разрываться	flag	unknown			разрываться:V:-:-			
+264	mṛṣ	mṛṣ	стерпеть	flag	unknown			стерпеть:V:-:-			
+265	ṛṣ	ṛṣ	течь	flag	unknown			течь:V:-:-			
+266	vraśc	vraśc	отрубать	flag	unknown			отрубать:V:-:-			
+267	khid	khid	вырывать	flag	unknown			вырывать:V:-:-			
+268	pad	pad	достигать	ok			3	достигать:V:3:47.90			
 269	dhṛṣ	dhṛṣ	дерзко	flag	unknown			дерзко:ADV:-:-			
-270	pṛc	pṛc	наполняешь	flag	inflected,unknown	наполнять		наполнять:V:-:-			
-271	sraṃs	sraṃs	выпадает	flag	inflected,unknown	выпадать		выпадать:V:-:-			
-272	mṛḍ	mṛḍ	Смилуйтесь	flag	inflected,unknown	смиловаться		смиловаться:V:-:-			
-273	nah	nah	связано	flag	inflected,unknown	связанный		связанный:V:-:-			
-274	dhvaṃs	dhvaṃs	гибнет	flag	inflected,unknown	гибнуть		гибнуть:V:-:-			
-275	ghrā	ghrā	обоняя	flag	inflected,unknown	обонять		обонять:V:-:-			
-276	lamb	lamb	висящих	flag	inflected,unknown	висящий		висеть:V:-:-			
-277	nand	nand	радуется	flag	inflected,unknown	радоваться		радоваться:V:-:-			
-278	ruj	ruj	проломил	flag	inflected,unknown	проломить		проломить:V:-:-			
+270	pṛc	pṛc	наполнять	flag	unknown			наполнять:V:-:-			
+271	sraṃs	sraṃs	выпадать	flag	unknown			выпадать:V:-:-			
+272	mṛḍ	mṛḍ	смиловаться	flag	unknown			смиловаться:V:-:-			
+273	nah	nah	связанный	flag	unknown			связать:V:-:-			
+274	dhvaṃs	dhvaṃs	гибнуть	flag	unknown			гибнуть:V:-:-			
+275	ghrā	ghrā	обонять	flag	unknown			обонять:V:-:-			
+276	lamb	lamb	висящий	flag	unknown			висеть:V:-:-			
+277	nand	nand	радоваться	flag	unknown			радоваться:V:-:-			
+278	ruj	ruj	проломить	flag	unknown			проломить:V:-:-			
 279	1 phal / 2 phal	phal	приносить	flag	unknown			приносить:V:-:-			
-280	jalp	jalp	говорил	flag	inflected,unknown	говорить		говорить:V:-:-			
-281	klid	klid	окропи	flag	inflected,unknown	окропить		окропить:V:-:-			
+280	jalp	jalp	говорить	flag	unknown			говорить:V:-:-			
+281	klid	klid	окропить	flag	unknown			окропить:V:-:-			
 283	ghaṭ	ghaṭ	нет	ok							
-284	skhal	skhal	спотыкаясь	flag	inflected,unknown	спотыкаться		спотыкаться:V:-:-			
+284	skhal	skhal	спотыкаться	flag	unknown			спотыкаться:V:-:-			
 285	lup	lup	отнять	flag	unknown			отнять:V:-:-			
 286	nard	nard	крики	flag	unknown			крик:S:-:-			
-287	1 jakṣ / 2 jakṣ	jakṣ	съев	flag	inflected,unknown	съесть		съесть:V:-:-			
+287	1 jakṣ / 2 jakṣ	jakṣ	съесть	flag	unknown			съесть:V:-:-			
 288	bhās	bhās	свет	flag	unknown			свет:S:-:-			
-289	1 dīv / 2 dīv / div	dīv	сыграю	flag	inflected,unknown	сыграть		сыграть:V:-:-			
+289	1 dīv / 2 dīv / div	dīv	сыграть	flag	unknown			сыграть:V:-:-			
 290	lajj	lajj	стыдливая	flag	unknown			стыдливый:A:-:-			
 291	dṛp	dṛp	гордый	flag	unknown			гордый:A:-:-			
-292	syand	syand	текут	flag	inflected,unknown	течь		течь:V:-:-			
-293	bhikṣ	bhikṣ	Испрашивая	flag	inflected,unknown	испрашивать		испрашивать:V:-:-			
-294	cakṣ	cakṣ	расскажи	flag	inflected,unknown	рассказать		рассказать:V:-:-			
-295	mī	mī	нарушают	flag	inflected,unknown	нарушать		нарушать:V:-:-			
+292	syand	syand	течь	flag	unknown			течь:V:-:-			
+293	bhikṣ	bhikṣ	испрашивать	flag	unknown			испрашивать:V:-:-			
+294	cakṣ	cakṣ	рассказать	flag	unknown			рассказать:V:-:-			
+295	mī	mī	нарушать	flag	unknown			нарушать:V:-:-			
 296	ruṣ	ruṣ	в гневе	flag	phrase,unknown			гнев:S:-:-			
-297	kūj	kūj	стонут	flag	inflected,unknown	стонать		стонать:V:-:-			
+297	kūj	kūj	стонать	flag	unknown			стонать:V:-:-			
 298	lal	lal	чарующий	flag	unknown			чаровать:V:-:-			
-299	īh	īh	стремится	flag	inflected,unknown	стремиться		стремиться:V:-:-			
-300	1 mi / 2 mi	mi	сошлись	flag	inflected_ambiguous,unknown			сойтись:V:-:-			
-301	pṛṇ	pṛṇ	заполнил	flag	inflected,unknown	заполнить		заполнить:V:-:-			
+299	īh	īh	стремиться	flag	unknown			стремиться:V:-:-			
+300	1 mi / 2 mi	mi	сойтись	flag	unknown			сойтись:V:-:-			
+301	pṛṇ	pṛṇ	заполнить	flag	unknown			заполнить:V:-:-			
 302	tam	tam	лишается дыхания	flag	phrase,unknown			лишаться:V:-:- дыхание:S:-:-			
 303	tud	tud	уязвляемый	flag	unknown			уязвлять:V:-:-			
 304	kṣudh	kṣudh	голод	flag	unknown			голод:S:-:-			
-305	1 ūh / 2 ūh	ūh	соблюдаете	flag	inflected,unknown	соблюдать		соблюдать:V:-:-			
+305	1 ūh / 2 ūh	ūh	соблюдать	flag	unknown			соблюдать:V:-:-			
 306	dabh	dabh	обмануть	flag	unknown			обмануть:V:-:-			
-307	mārg	mārg	ищет	flag	inflected,unknown	искать		искать:V:-:-			
-309	jyā	jyā	вредит	flag	inflected,unknown	вредить		вредить:V:-:-			
-310	śliṣ	śliṣ	обняв	flag	inflected,unknown	обнять		обнять:V:-:-			
-311	kvath	kvath	сваренную	flag	inflected,unknown	сваренный		сварить:V:-:-			
+307	mārg	mārg	искать	flag	unknown			искать:V:-:-			
+309	jyā	jyā	вредить	flag	unknown			вредить:V:-:-			
+310	śliṣ	śliṣ	обнять	flag	unknown			обнять:V:-:-			
+311	kvath	kvath	сваренный	flag	unknown			сварить:V:-:-			
 312	klam	klam	усталые	flag	unknown			усталый:A:-:-			
 313	mlā	mlā	падали замертво	flag	phrase,unknown			падать:V:-:- замертво:ADV:-:-			
-314	jū	jū	преследует	flag	inflected,unknown	преследовать		преследовать:V:-:-			
-315	jṛmbh	jṛmbh	отряхнулся	flag	inflected,unknown	отряхнуться		отряхнуться:V:-:-			
-316	īr	īr	поднимаются	flag	inflected,unknown	подниматься		подниматься:V:-:-			
-317	1 ru / 2 ru	ru	взревел	flag	inflected,unknown	взреветь		взреветь:V:-:-			
+314	jū	jū	преследовать	flag	unknown			преследовать:V:-:-			
+315	jṛmbh	jṛmbh	отряхнуться	flag	unknown			отряхнуться:V:-:-			
+316	īr	īr	подниматься	flag	unknown			подниматься:V:-:-			
+317	1 ru / 2 ru	ru	взреветь	flag	unknown			взреветь:V:-:-			
 318	sādh	sādh	достигает цели	flag	phrase,unknown		3	достигать:V:3:47.90 целить:V:-:-			
-319	ej	ej	движется	flag	inflected,unknown	двигаться		двигаться:V:-:-			
-320	glā	glā	несчастных	flag	inflected,unknown	несчастный		несчастный:A:-:-			
+319	ej	ej	двигаться	flag	unknown			двигаться:V:-:-			
+320	glā	glā	несчастный	flag	unknown			несчастный:A:-:-			
 321	vrīḍ	vrīḍ	пристыженный	flag	unknown			пристыдить:V:-:-			
 322	miṣ	miṣ	на глазах	flag	phrase,unknown			глаз:S:-:-			
-323	du / dū	du	знают	flag	inflected	знать	5	знать:V:5:1740.03			
-324	kam	kam	возжелал	flag	inflected,unknown	возжелать		возжелать:V:-:-			
-325	lū	lū	рассек	flag	inflected,unknown	рассечь		рассечь:V:-:-			
+323	du / dū	du	знать	ok			5	знать:V:5:1740.03			
+324	kam	kam	возжелать	flag	unknown			возжелать:V:-:-			
+325	lū	lū	рассечь	flag	unknown			рассечь:V:-:-			
 326	svad	svad	сделает вкусными	flag	phrase,unknown		4	сделать:V:4:786.76 вкусный:A:-:-			
 327	dyut	dyut	молнии	flag	unknown			молния:S:-:-			
 328	1 sā / 2 sā	sā	решительный	flag	unknown			решительный:A:-:-			
 329	bhaṇ	bhaṇ	ведет речь	flag	phrase,unknown			вести:V:-:- речь:S:-:-			
 330	ghas	ghas	глаз	flag	unknown			глаз:S:-:-			
 331	vāś	vāś	заставил звучать	flag	phrase,unknown			заставить:V:-:- звучать:V:-:-			
-332	cumb	cumb	целует	flag	inflected,unknown	целовать		целовать:V:-:-			
-333	druh	druh	обмана	flag	inflected,unknown	обман		обман:S:-:-			
+332	cumb	cumb	целовать	flag	unknown			целовать:V:-:-			
+333	druh	druh	обман	flag	unknown			обман:S:-:-			
 334	mih	mih	туман	flag	unknown			туман:S:-:-			
-335	gāh	gāh	ныряет	flag	inflected,unknown	нырять		нырять:V:-:-			
-336	rabh	rabh	начал	flag	inflected,unknown	начать		начать:V:-:-			
+335	gāh	gāh	нырять	flag	unknown			нырять:V:-:-			
+336	rabh	rabh	начать	flag	unknown			начать:V:-:-			
 337	sīv	sīv	цепь	flag	unknown			цепь:S:-:-			
 338	gṛdh	gṛdh	охочим становится	flag	phrase,unknown			охочий:A:-:- становиться:V:-:-			
 339	aṭ	aṭ	странствующий	flag	unknown			странствовать:V:-:-			
-340	kṣud	kṣud	рвет	flag	inflected,unknown	рвать		рвать:V:-:-			
-341	mah	mah	великого	flag	inflected,unknown	великий		великий:A:-:-			
+340	kṣud	kṣud	рвать	flag	unknown			рвать:V:-:-			
+341	mah	mah	великий	flag	unknown			великий:A:-:-			
 342	ri / rī	ri	высокое	flag	unknown			высокий:A:-:-			
-343	las	las	развлекайся	flag	inflected,unknown	развлекаться		развлекаться:V:-:-			
-344	kath	kath	говори	flag	inflected,unknown	говорить		говорить:V:-:-			
-345	nakṣ	nakṣ	достигли	flag	inflected,unknown	достигнуть		достигнуть:V:-:-			
+343	las	las	развлекаться	flag	unknown			развлекаться:V:-:-			
+344	kath	kath	говорить	flag	unknown			говорить:V:-:-			
+345	nakṣ	nakṣ	достигнуть	flag	unknown			достигнуть:V:-:-			
 346	kan	kan	любящий	flag	unknown			любить:V:-:-			
-347	aj	aj	выгнал	flag	inflected,unknown	выгнать		выгнать:V:-:-			
+347	aj	aj	выгнать	flag	unknown			выгнать:V:-:-			
 348	stubh	stubh	возгласы	flag	unknown			возглас:S:-:-			
 349	tṛṣ	tṛṣ	мучимый жаждой	flag	phrase,unknown			мучить:V:-:- жажда:S:-:-			
 350	val	val	Валина	ok	name						
-351	vṛh	vṛh	вырываю	flag	inflected,unknown	вырывать		вырывать:V:-:-			
-352	ghūrṇ	ghūrṇ	реяли	flag	inflected,unknown	реять		реять:V:-:-			
+351	vṛh	vṛh	вырывать	flag	unknown			вырывать:V:-:-			
+352	ghūrṇ	ghūrṇ	реять	flag	unknown			реять:V:-:-			
 353	dhī	dhī	молитвы	flag	unknown			молитва:S:-:-			
 354	nāth	nāth	нуждаясь в помощи	flag	phrase,unknown			нуждаться:V:-:- помощь:S:-:-			
-355	spand	spand	деятельностью	flag	inflected,unknown	деятельность		деятельность:S:-:-			
-356	ras	ras	поднялся	flag	inflected,unknown	подняться		подняться:V:-:-			
-357	uc	uc	нравится	flag	inflected,unknown	нравиться		нравиться:V:-:-			
-358	dhūrv	dhūrv	вредящего	flag	inflected,unknown	вредящий		вредить:V:-:-			
-360	bhūṣ	bhūṣ	окружаете	flag	inflected,unknown	окружать		окружать:V:-:-			
+355	spand	spand	деятельность	flag	unknown			деятельность:S:-:-			
+356	ras	ras	подняться	flag	unknown			подняться:V:-:-			
+357	uc	uc	нравиться	flag	unknown			нравиться:V:-:-			
+358	dhūrv	dhūrv	вредящий	flag	unknown			вредить:V:-:-			
+360	bhūṣ	bhūṣ	окружать	flag	unknown			окружать:V:-:-			
 361	cak	cak	находишь удовольствие	flag	phrase,unknown			находить:V:-:- удовольствие:S:-:-			
 362	hvṛ	hvṛ	обходящий	flag	unknown			обходить:V:-:-			
-363	dhanv	dhanv	лучников	flag	inflected,unknown	лучник		лучник:S:-:-			
-364	rih	rih	лижут	flag	inflected,unknown	лизать		лизать:V:-:-			
-366	kāś	kāś	сияет	flag	inflected,unknown	сиять		сиять:V:-:-			
+363	dhanv	dhanv	лучник	flag	unknown			лучник:S:-:-			
+364	rih	rih	лизать	flag	unknown			лизать:V:-:-			
+366	kāś	kāś	сиять	flag	unknown			сиять:V:-:-			
 367	radh	radh	отдай во власть	flag	phrase,unknown			отдать:V:-:- власть:S:-:-			
-368	1 ran / 2 ran	ran	радуются	flag	inflected,unknown	радоваться		радоваться:V:-:-			
-369	vakṣ	vakṣ	вырос	flag	inflected,unknown	вырасти		вырасти:V:-:-			
-370	1 ṛj / 2 ṛj	ṛj	простираясь	flag	inflected,unknown	простираться		простираться:V:-:-			
-371	veṣṭ	veṣṭ	сокращается	flag	inflected,unknown	сокращаться		сокращаться:V:-:-			
-372	lul	lul	заболело	flag	inflected,unknown	заболеть		заболеть:V:-:-			
-373	valg	valg	приплясывая	flag	inflected,unknown	приплясывать		приплясывать:V:-:-			
+368	1 ran / 2 ran	ran	радоваться	flag	unknown			радоваться:V:-:-			
+369	vakṣ	vakṣ	вырасти	flag	unknown			вырасти:V:-:-			
+370	1 ṛj / 2 ṛj	ṛj	простираться	flag	unknown			простираться:V:-:-			
+371	veṣṭ	veṣṭ	сокращаться	flag	unknown			сокращаться:V:-:-			
+372	lul	lul	заболеть	flag	unknown			заболеть:V:-:-			
+373	valg	valg	приплясывать	flag	unknown			приплясывать:V:-:-			
 374	nabh	nabh	Пусть лопнут	flag	phrase,unknown			лопнуть:V:-:-			
-375	prā	prā	заполнил	flag	inflected,unknown	заполнить		заполнить:V:-:-			
-376	rej	rej	трясутся	flag	inflected,unknown	трястись		трястись:V:-:-			
-377	lakṣ	lakṣ	видел	flag	inflected,unknown	видеть		видеть:V:-:-			
-378	svaj	svaj	обнял	flag	inflected,unknown	обнять		обнять:V:-:-			
+375	prā	prā	заполнить	flag	unknown			заполнить:V:-:-			
+376	rej	rej	трястись	flag	unknown			трястись:V:-:-			
+377	lakṣ	lakṣ	видеть	flag	unknown			видеть:V:-:-			
+378	svaj	svaj	обнять	flag	unknown			обнять:V:-:-			
 379	svar	svar	солнце	flag	unknown			солнце:S:-:-			
-380	tṛd	tṛd	пробуравил	flag	inflected,unknown	пробуравить		пробуравить:V:-:-			
-381	day	day	раздает	flag	inflected,unknown	раздавать		раздавать:V:-:-			
+380	tṛd	tṛd	пробуравить	flag	unknown			пробуравить:V:-:-			
+381	day	day	раздавать	flag	unknown			раздавать:V:-:-			
 382	paṇ	paṇ	поставим на кон	flag	phrase,unknown			поставить:V:-:- кон:S:-:-			
-383	piś	piś	украсил	flag	inflected,unknown	украсить		украсить:V:-:-			
+383	piś	piś	украсить	flag	unknown			украсить:V:-:-			
 384	tuj	tuj	Туджи	ok	name						
-385	rad	rad	укусил	flag	inflected,unknown	укусить		укусить:V:-:-			
+385	rad	rad	укусить	flag	unknown			укусить:V:-:-			
 386	spṛh	spṛh	желанные	flag	unknown			желанный:A:-:-			
-387	mṛś	mṛś	схватил	flag	inflected,unknown	схватить		схватить:V:-:-			
-388	1 uṣ / 2 uṣ	uṣ	прошла	flag	inflected,unknown	пройти		пройти:V:-:-			
-389	dhvan	dhvan	загрохотал	flag	inflected,unknown	загрохотать		загрохотать:V:-:-			
-390	laṅgh	laṅgh	поглощается	flag	inflected,unknown	поглощаться		поглощаться:V:-:-			
-391	cud	cud	направь	flag	inflected,unknown	направить		направить:V:-:-			
-393	cāy	cāy	почтил	flag	inflected,unknown	почтить		почтить:V:-:-			
-394	ghuṣ	ghuṣ	оглашаемую	flag	inflected,unknown	оглашаемый		оглашать:V:-:-			
-395	hīḍ	hīḍ	выщипала	flag	inflected,unknown	выщипать		выщипать:V:-:-			
-396	viṣ	viṣ	ищи	flag	inflected,unknown	искать		искать:V:-:-			
-397	hras	hras	уменьшается	flag	inflected,unknown	уменьшаться		уменьшаться:V:-:-			
+387	mṛś	mṛś	схватить	flag	unknown			схватить:V:-:-			
+388	1 uṣ / 2 uṣ	uṣ	пройти	flag	unknown			пройти:V:-:-			
+389	dhvan	dhvan	загрохотать	flag	unknown			загрохотать:V:-:-			
+390	laṅgh	laṅgh	поглощаться	flag	unknown			поглощаться:V:-:-			
+391	cud	cud	направить	flag	unknown			направить:V:-:-			
+393	cāy	cāy	почтить	flag	unknown			почтить:V:-:-			
+394	ghuṣ	ghuṣ	оглашаемый	flag	unknown			оглашать:V:-:-			
+395	hīḍ	hīḍ	выщипать	flag	unknown			выщипать:V:-:-			
+396	viṣ	viṣ	искать	flag	unknown			искать:V:-:-			
+397	hras	hras	уменьшаться	flag	unknown			уменьшаться:V:-:-			
 398	hrī	hrī	скромность	flag	unknown			скромность:S:-:-			
-399	katth	katth	похвалялся	flag	inflected,unknown	похваляться		похваляться:V:-:-			
+399	katth	katth	похваляться	flag	unknown			похваляться:V:-:-			
 400	kvaṇ	kvaṇ	звенящие	flag	unknown			звенеть:V:-:-			
-401	mṛṇ	mṛṇ	дробя	flag	inflected,unknown	дробить		дробить:V:-:-			
+401	mṛṇ	mṛṇ	дробить	flag	unknown			дробить:V:-:-			
 402	truṭ	truṭ	рваться	flag	unknown			рваться:V:-:-			
 403	dal	dal	пряди волос	flag	phrase,unknown			прясть:V:-:- волос:S:-:-			
 404	iyakṣ	iyakṣ	хочет покорить	flag	phrase,unknown			хотеть:V:-:- покорить:V:-:-			
-405	vij	vij	страшится	flag	inflected,unknown	страшиться		страшиться:V:-:-			
-406	heṣ	heṣ	заржал	flag	inflected,unknown	заржать		заржать:V:-:-			
-407	lap	lap	причитала	flag	inflected,unknown	причитать		причитать:V:-:-			
-408	1 luṭh / 2 luṭh	luṭh	простерся	flag	inflected,unknown	простереться		простереться:V:-:-			
-409	ribh	ribh	распевая	flag	inflected,unknown	распевать		распевать:V:-:-			
-410	bhas	bhas	пожирая	flag	inflected,unknown	пожирать		пожирать:V:-:-			
-411	cṛt	cṛt	разними	flag	inflected,unknown	разнять		разнять:V:-:-			
-412	ghṛ	ghṛ	кроплю	flag	inflected,unknown	кропить		кропить:V:-:-			
+405	vij	vij	страшиться	flag	unknown			страшиться:V:-:-			
+406	heṣ	heṣ	заржать	flag	unknown			заржать:V:-:-			
+407	lap	lap	причитать	flag	unknown			причитать:V:-:-			
+408	1 luṭh / 2 luṭh	luṭh	простереться	flag	unknown			простереться:V:-:-			
+409	ribh	ribh	распевать	flag	unknown			распевать:V:-:-			
+410	bhas	bhas	пожирать	flag	unknown			пожирать:V:-:-			
+411	cṛt	cṛt	разнять	flag	unknown			разнять:V:-:-			
+412	ghṛ	ghṛ	кропить	flag	unknown			кропить:V:-:-			
 413	mikṣ	mikṣ	смешанный	flag	unknown			смешать:V:-:-			
 414	vañc	vañc	Пусть скачут	flag	phrase,unknown			скакать:V:-:-			
-415	īṣ	īṣ	Прими	flag	inflected,unknown	принять		принять:V:-:-			
+415	īṣ	īṣ	принять	flag	unknown			принять:V:-:-			
 416	cañc	cañc	сверкающий	flag	unknown			сверкать:V:-:-			
 417	sap	sap	упряжка	flag	unknown			упряжка:S:-:-			
-418	sas	sas	спящего	flag	inflected,unknown	спящий		спать:V:-:-			
-419	śṛdh	śṛdh	дерзкого	flag	inflected,unknown	дерзкий		дерзкий:A:-:-			
-420	chand	chand	кажется	flag	inflected,unknown	казаться		казаться:V:-:-			
-421	cūṣ	cūṣ	облизываешься	flag	inflected,unknown	облизываться		облизываться:V:-:-			
-422	das	das	иссякают	flag	inflected,unknown	иссякать		иссякать:V:-:-			
+418	sas	sas	спящий	flag	unknown			спать:V:-:-			
+419	śṛdh	śṛdh	дерзкий	flag	unknown			дерзкий:A:-:-			
+420	chand	chand	казаться	flag	unknown			казаться:V:-:-			
+421	cūṣ	cūṣ	облизываться	flag	unknown			облизываться:V:-:-			
+422	das	das	иссякать	flag	unknown			иссякать:V:-:-			
 423	gur	gur	воспевание	flag	unknown			воспевание:S:-:-			
-424	mṛdh	mṛdh	врагов	flag	inflected,unknown	враг		враг:S:-:-			
+424	mṛdh	mṛdh	враг	flag	unknown			враг:S:-:-			
 425	1 drā / 2 drā	drā	Пусть бегут прочь	flag	phrase,unknown			бежать:V:-:- прочить:V:-:-			
-426	nij	nij	смою	flag	inflected,unknown	смыть		смыть:V:-:-			
-427	pluṣ	pluṣ	опаленную	flag	inflected,unknown	опалённый		опалить:V:-:-			
-428	śnath	śnath	столкни	flag	inflected,unknown	столкнуть		столкнуть:V:-:-			
-429	cakās	cakās	ехавшего	flag	inflected,unknown	ехавший		ехать:V:-:-			
+426	nij	nij	смыть	flag	unknown			смыть:V:-:-			
+427	pluṣ	pluṣ	опалённый	flag	unknown			опалить:V:-:-			
+428	śnath	śnath	столкнуть	flag	unknown			столкнуть:V:-:-			
+429	cakās	cakās	ехавший	flag	unknown			ехать:V:-:-			
 430	kṣu	kṣu	на которую чихнули	flag	phrase,unknown			который:A:-:- чихнуть:V:-:-			
-431	skambh	skambh	укреплены	flag	inflected,unknown	укреплённый		укрепить:V:-:-			
+431	skambh	skambh	укреплённый	flag	unknown			укрепить:V:-:-			
 432	stan	stan	стонущие	flag	unknown			стонать:V:-:-			
-433	vyac	vyac	покрывает	flag	inflected,unknown	покрывать		покрывать:V:-:-			
+433	vyac	vyac	покрывать	flag	unknown			покрывать:V:-:-			
 434	svan	svan	с шумом	flag	phrase,unknown			шум:S:-:-			
-435	tṛh	tṛh	убил	flag	inflected,unknown	убить		убить:V:-:-			
-436	ven	ven	Видят	flag	inflected,unknown	видеть		видеть:V:-:-			
-437	1 śad / 2 śad	śad	кичащуюся	flag	inflected,unknown	кичащийся		кичиться:V:-:-			
-438	bṛṃh	bṛṃh	мощного	flag	inflected,unknown	мощный		мощный:A:-:-			
-439	dagh	dagh	лишай	flag	inflected,unknown	лишать		лишать:V:-:-			
-440	khac	khac	украшенного	flag	inflected,unknown	украшенный		украсить:V:-:-			
-442	ṣṭhīv	ṣṭhīv	выталкивает	flag	inflected,unknown	выталкивать		выталкивать:V:-:-			
-443	kṣvid / kṣviḍ	kṣviḍ	бормотали	flag	inflected,unknown	бормотать		бормотать:V:-:-			
+435	tṛh	tṛh	убить	flag	unknown			убить:V:-:-			
+436	ven	ven	видеть	flag	unknown			видеть:V:-:-			
+437	1 śad / 2 śad	śad	кичащийся	flag	unknown			кичиться:V:-:-			
+438	bṛṃh	bṛṃh	мощный	flag	unknown			мощный:A:-:-			
+439	dagh	dagh	лишать	flag	unknown			лишать:V:-:-			
+440	khac	khac	украшенный	flag	unknown			украсить:V:-:-			
+442	ṣṭhīv	ṣṭhīv	выталкивать	flag	unknown			выталкивать:V:-:-			
+443	kṣvid / kṣviḍ	kṣviḍ	бормотать	flag	unknown			бормотать:V:-:-			
 444	kṣap	kṣap	ночи	flag	unknown			ночь:S:-:-			
-445	tur	tur	преодолеем	flag	inflected,unknown	преодолеть		преодолеть:V:-:-			
+445	tur	tur	преодолеть	flag	unknown			преодолеть:V:-:-			
 446	tviṣ	tviṣ	вспышки	flag	unknown			вспышка:S:-:-			
-447	śrath	śrath	сними	flag	inflected,unknown	снять		снять:V:-:-			
-449	iṅg	iṅg	колеблется	flag	inflected,unknown	колебаться		колебаться:V:-:-			
-450	rah	rah	высказал	flag	inflected,unknown	высказать		высказать:V:-:-			
-451	ubj	ubj	Обуздывая	flag	inflected,unknown	обуздывать		обуздывать:V:-:-			
-452	am	am	поклонившись	flag	inflected,unknown	поклониться		поклониться:V:-:-			
-453	irajy	irajy	правишь	flag	inflected,unknown	править		править:V:-:-			
-454	kṛp	kṛp	равнялись	flag	inflected,unknown	равняться		равняться:V:-:-			
-455	guñj	guñj	гудели	flag	inflected,unknown	гудеть		гудеть:V:-:-			
+447	śrath	śrath	снять	flag	unknown			снять:V:-:-			
+449	iṅg	iṅg	колебаться	flag	unknown			колебаться:V:-:-			
+450	rah	rah	высказать	flag	unknown			высказать:V:-:-			
+451	ubj	ubj	обуздывать	flag	unknown			обуздывать:V:-:-			
+452	am	am	поклониться	flag	unknown			поклониться:V:-:-			
+453	irajy	irajy	править	flag	unknown			править:V:-:-			
+454	kṛp	kṛp	равняться	flag	unknown			равняться:V:-:-			
+455	guñj	guñj	гудеть	flag	unknown			гудеть:V:-:-			
 456	hval	hval	в смятении	flag	phrase,unknown			смятение:S:-:-			
-457	myakṣ	myakṣ	подвиг	flag	inflected,unknown	подвигнуть		подвигнуть:V:-:-			
+457	myakṣ	myakṣ	подвигнуть	flag	unknown			подвигнуть:V:-:-			
 458	sagh	sagh	справиться	flag	unknown			справиться:V:-:-			
 459	si	si	связывающий	flag	unknown			связывать:V:-:-			
 460	sūd	sūd	сделай привлекательными	flag	phrase,unknown		4	сделать:V:4:786.76 привлекательный:A:-:-			
 462	ścut	ścut	протекают по каплям	flag	phrase,unknown			протекать:V:-:- капля:S:-:-			
 463	dhvṛ	dhvṛ	чтобы сражать	flag	phrase,unknown			сражать:V:-:-			
-464	1 dī / 2 dī	dī	Летай	flag	inflected,unknown	летать		летать:V:-:-			
+464	1 dī / 2 dī	dī	летать	flag	unknown			летать:V:-:-			
 465	sridh	sridh	допустивших ошибки	flag	phrase,unknown			допустить:V:-:- ошибка:S:-:-			
-466	tuś	tuś	получил	flag	inflected,unknown	получить		получить:V:-:-			
-467	śiñj	śiñj	гудит	flag	inflected,unknown	гудеть		гудеть:V:-:-			
-468	bhaṣ	bhaṣ	лают	flag	inflected,unknown	лаять		лаять:V:-:-			
+466	tuś	tuś	получить	flag	unknown			получить:V:-:-			
+467	śiñj	śiñj	гудеть	flag	unknown			гудеть:V:-:-			
+468	bhaṣ	bhaṣ	лаять	flag	unknown			лаять:V:-:-			
 469	cat	cat	Чатака	ok	name						
-470	inakṣ	inakṣ	Приближаясь	flag	inflected,unknown	приближаться		приближаться:V:-:-			
-472	rap	rap	шепчу	flag	inflected,unknown	шептать		шептать:V:-:-			
-473	raṃh	raṃh	поторопил	flag	inflected,unknown	поторопить		поторопить:V:-:-			
-475	yup	yup	нарушили	flag	inflected,unknown	нарушить		нарушить:V:-:-			
-476	an	an	Одного	flag	inflected,unknown	один		один:A:-:-			
-477	kaṣ	kaṣ	расчесывающего	flag	inflected,unknown	расчёсывающий		расчёсывать:V:-:-			
-478	kās	kās	засияла	flag	inflected,unknown	засиять		засиять:V:-:-			
-479	nas	nas	соединяются	flag	inflected,unknown	соединяться		соединяться:V:-:-			
-480	pūy	pūy	гниет	flag	inflected,unknown	гнить		гнить:V:-:-			
+470	inakṣ	inakṣ	приближаться	flag	unknown			приближаться:V:-:-			
+472	rap	rap	шептать	flag	unknown			шептать:V:-:-			
+473	raṃh	raṃh	поторопить	flag	unknown			поторопить:V:-:-			
+475	yup	yup	нарушить	flag	unknown			нарушить:V:-:-			
+476	an	an	один	flag	unknown			один:A:-:-			
+477	kaṣ	kaṣ	расчёсывающий	flag	unknown			расчёсывать:V:-:-			
+478	kās	kās	засиять	flag	unknown			засиять:V:-:-			
+479	nas	nas	соединяться	flag	unknown			соединяться:V:-:-			
+480	pūy	pūy	гнить	flag	unknown			гнить:V:-:-			
 482	sphūrj	sphūrj	раскаты	flag	unknown			раскат:S:-:-			
-483	vrādh	vrādh	растут	flag	inflected,unknown	расти		расти:V:-:-			
+483	vrādh	vrādh	расти	flag	unknown			расти:V:-:-			
 485	glah	glah	делая ставки	flag	phrase,unknown			делать:V:-:- ставка:S:-:-			
-486	jas	jas	истощите	flag	inflected,unknown	истощить		истощить:V:-:-			
+486	jas	jas	истощить	flag	unknown			истощить:V:-:-			
 487	kṣṇu	kṣṇu	Оттачивающий	flag	unknown			оттачивать:V:-:-			
 489	tarj	tarj	оскорбляемая (угрожаемая)	flag	phrase,unknown			оскорблять:V:-:- угрожаемый:A:-:-			
-490	turv / tūrv	tūrv	спасаете	flag	inflected,unknown	спасать		спасать:V:-:-			
+490	turv / tūrv	tūrv	спасать	flag	unknown			спасать:V:-:-			
 493	at	at	протянутая	flag	unknown			протянуть:V:-:-			
 495	dakṣ	dakṣ	в силе	flag	phrase,unknown			сила:S:-:-			
-496	dhraj	dhraj	Спешащего	flag	inflected,unknown	спешащий		спешить:V:-:-			
+496	dhraj	dhraj	спешащий	flag	unknown			спешить:V:-:-			
 497	dudh	dudh	буйные	flag	unknown			буйный:A:-:-			
 498	jvar	jvar	мучить себя	flag	phrase,unknown			мучить:V:-:-			
-499	kṛś	kṛś	исхудало	flag	inflected,unknown	исхудать		исхудать:V:-:-			
-500	pan	pan	славимся	flag	inflected,unknown	славиться		славиться:V:-:-			
+499	kṛś	kṛś	исхудать	flag	unknown			исхудать:V:-:-			
+500	pan	pan	славиться	flag	unknown			славиться:V:-:-			
 501	tsar	tsar	украдкой	flag	unknown			украдкой:ADV:-:-			
 502	1 vic / 2 vic	vic	уединенный	flag	unknown			уединить:V:-:-			
 504	khel	khel	игры	flag	unknown			игра:S:-:-			
 505	kṣad	kṣad	отдавший	flag	unknown			отдать:V:-:-			
-508	niṃs	niṃs	целуют	flag	inflected,unknown	целовать		целовать:V:-:-			
+508	niṃs	niṃs	целовать	flag	unknown			целовать:V:-:-			
 509	pruth	pruth	Храпением прогоняя	flag	phrase,unknown			храпение:S:-:- прогонять:V:-:-			
-510	pruṣ	pruṣ	кропят	flag	inflected,unknown	кропить		кропить:V:-:-			
-511	1 pī / 2 pī	pī	идут	flag	inflected,unknown	идти		идти:V:-:-			
-513	tak	tak	кинулся	flag	inflected,unknown	кинуться		кинуться:V:-:-			
-514	tim	tim	покое	flag	inflected,unknown	покой		покой:S:-:-			
+510	pruṣ	pruṣ	кропить	flag	unknown			кропить:V:-:-			
+511	1 pī / 2 pī	pī	идти	flag	unknown			идти:V:-:-			
+513	tak	tak	кинуться	flag	unknown			кинуться:V:-:-			
+514	tim	tim	покой	flag	inflected,unknown	покоить		покоить:V:-:-			
 515	bharts	bharts	оскорбляемая	flag	unknown			оскорблять:V:-:-			
-516	hnu	hnu	отпирается	flag	inflected,unknown	отпираться		отпираться:V:-:-			
-517	mith	mith	противников	flag	inflected,unknown	противник		противник:S:-:-			
+516	hnu	hnu	отпираться	flag	unknown			отпираться:V:-:-			
+517	mith	mith	противник	flag	unknown			противник:S:-:-			
 518	mīl	mīl	закрыл глаза	flag	phrase,unknown			закрыть:V:-:- глаз:S:-:-			
-520	psā	psā	Истребляют	flag	inflected,unknown	истреблять		истреблять:V:-:-			
-521	rup	rup	погубишь	flag	inflected,unknown	погубить		погубить:V:-:-			
-522	tij	tij	заостряет	flag	inflected,unknown	заострять		заострять:V:-:-			
+520	psā	psā	истреблять	flag	unknown			истреблять:V:-:-			
+521	rup	rup	погубить	flag	unknown			погубить:V:-:-			
+522	tij	tij	заострять	flag	unknown			заострять:V:-:-			
 523	ār	ār	приведут в возбуждение	flag	phrase,unknown			привести:V:-:- возбуждение:S:-:-			
 524	śruṣ	śruṣ	слушаться	flag	unknown			слушаться:V:-:-			
-525	śvit	śvit	белых	flag	inflected_ambiguous,unknown			белый:A:-:-			
+525	śvit	śvit	белеть	flag	unknown			белеть:V:-:-			
 526	śyā	śyā	Да наступит	flag	phrase,unknown			наступить:V:-:-			
-527	ṛd	ṛd	Расступились	flag	inflected,unknown	расступиться		расступиться:V:-:-			
+527	ṛd	ṛd	расступиться	flag	unknown			расступиться:V:-:-			
 528	bhand	bhand	Радостно прославляемые	flag	phrase,unknown			радостно:ADV:-:- прославлять:V:-:-			
 529	bhiṣaj	bhiṣaj	целители	flag	unknown			целитель:S:-:-			
-530	jeh	jeh	изнывая	flag	inflected,unknown	изнывать		изнывать:V:-:-			
-532	kuṣ	kuṣ	терзавших	flag	inflected,unknown	терзавший		терзать:V:-:-			
-533	rapś	rapś	переполнен	flag	inflected,unknown	переполненный		переполненный:V:-:-			
-534	taṃs	taṃs	ослабь	flag	inflected,unknown	ослабить		ослабить:V:-:-			
+530	jeh	jeh	изнывать	flag	unknown			изнывать:V:-:-			
+532	kuṣ	kuṣ	терзавший	flag	unknown			терзать:V:-:-			
+533	rapś	rapś	переполненный	flag	unknown			переполнить:V:-:-			
+534	taṃs	taṃs	ослабить	flag	unknown			ослабить:V:-:-			
 535	tu	tu	же	ok							
-536	vīj	vīj	овевали	flag	inflected,unknown	овевать		овевать:V:-:-			
+536	vīj	vīj	овевать	flag	unknown			овевать:V:-:-			
 537	yād	yād	соединяющиеся	flag	unknown			соединяться:V:-:-			
 539	1 akṣ / 2 akṣ	akṣ	в битве за ось и чеку (колесницы)	flag	phrase,unknown			битва:S:-:- ось:S:-:- чек:S:-:- колесница:S:-:-			
-541	bhan	bhan	говорят	flag	inflected,unknown	говорить		говорить:V:-:-			
-542	bhreṣ	bhreṣ	оступится	flag	inflected,unknown	оступиться		оступиться:V:-:-			
-543	cup	cup	движется	flag	inflected,unknown	двигаться		двигаться:V:-:-			
-545	kūrd	kūrd	приплясывая	flag	inflected,unknown	приплясывать		приплясывать:V:-:-			
-546	nikṣ	nikṣ	Пробуравь	flag	inflected,unknown	пробуравить		пробуравить:V:-:-			
+541	bhan	bhan	говорить	flag	unknown			говорить:V:-:-			
+542	bhreṣ	bhreṣ	оступиться	flag	unknown			оступиться:V:-:-			
+543	cup	cup	двигаться	flag	unknown			двигаться:V:-:-			
+545	kūrd	kūrd	приплясывать	flag	unknown			приплясывать:V:-:-			
+546	nikṣ	nikṣ	пробуравить	flag	unknown			пробуравить:V:-:-			
 547	ubh	ubh	оба	ok							
-548	vat	vat	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
-550	bharv	bharv	принеси	flag	inflected,unknown	принести		принести:V:-:-			
-551	bhur	bhur	сотрясают	flag	inflected,unknown	сотрясать		сотрясать:V:-:-			
-552	dhav	dhav	сбегаетесь	flag	inflected,unknown	сбегаться		сбегаться:V:-:-			
+548	vat	vat	сказать	ok			5	сказать:V:5:2472.22			
+550	bharv	bharv	принести	flag	unknown			принести:V:-:-			
+551	bhur	bhur	сотрясать	flag	unknown			сотрясать:V:-:-			
+552	dhav	dhav	сбегаться	flag	unknown			сбегаться:V:-:-			
 553	drū	drū	бегун	flag	unknown			бегун:S:-:-			
 555	hās	hās	мчатся наперегонки	flag	phrase,unknown			мчаться:V:-:- наперегонки:ADV:-:-			
-557	mruc	mruc	закате	flag	inflected,unknown	закат		закат:S:-:-			
+557	mruc	mruc	закат	flag	unknown			закат:S:-:-			
 558	rip	rip	все вокруг	ok	phrase						
-559	sarj	sarj	скрипнет	flag	inflected,unknown	скрипнуть		скрипнуть:V:-:-			
+559	sarj	sarj	скрипнуть	flag	unknown			скрипнуть:V:-:-			
 560	snu	snu	вершины	flag	unknown			вершина:S:-:-			
-562	tand	tand	слабеет	flag	inflected,unknown	слабеть		слабеть:V:-:-			
-563	tañc	tañc	взметнувшись	flag	inflected,unknown	взметнуться		взметнуться:V:-:-			
+562	tand	tand	слабеть	flag	unknown			слабеть:V:-:-			
+563	tañc	tañc	взметнуться	flag	unknown			взметнуться:V:-:-			
 565	can	can	другие	ok			5	другой:A:5:2034.50			
-566	caṭ	caṭ	лез	flag	inflected,unknown	лезть		лезть:V:-:-			
-567	dad	dad	дали	flag	inflected,unknown	дать		дать:V:-:-			
+566	caṭ	caṭ	лезть	flag	unknown			лезть:V:-:-			
+567	dad	dad	дать	flag	unknown			дать:V:-:-			
 568	dhan	dhan	поднятая	flag	unknown			поднять:V:-:-			
-569	dās	dās	угрожает	flag	inflected,unknown	угрожать		угрожать:V:-:-			
+569	dās	dās	угрожать	flag	unknown			угрожать:V:-:-			
 570	dṛbh	dṛbh	Дарбхин	ok	name						
-575	jūrv	jūrv	спалите	flag	inflected,unknown	спалить		спалить:V:-:-			
+575	jūrv	jūrv	спалить	flag	unknown			спалить:V:-:-			
 578	mnā	mnā	считаться	flag	unknown			считаться:V:-:-			
-579	mṛch	mṛch	сталкиваются	flag	inflected,unknown	сталкиваться		сталкиваться:V:-:-			
+579	mṛch	mṛch	сталкиваться	flag	unknown			сталкиваться:V:-:-			
 580	ned	ned	производят сильный шум	flag	phrase,unknown			производить:V:-:- сильный:A:-:- шум:S:-:-			
-582	riś	riś	отведаем	flag	inflected,unknown	отведать		отведать:V:-:-			
-583	trap	trap	стыдишься	flag	inflected,unknown	стыдиться		стыдиться:V:-:-			
-585	yas	yas	посвятив	flag	inflected,unknown	посвятить		посвятить:V:-:-			
+582	riś	riś	отведать	flag	unknown			отведать:V:-:-			
+583	trap	trap	стыдиться	flag	unknown			стыдиться:V:-:-			
+585	yas	yas	посвятить	flag	unknown			посвятить:V:-:-			
 586	yeṣ	yeṣ	клокочущий	flag	unknown			клокотать:V:-:-			
-587	śas	śas	наставлению	flag	inflected,unknown	наставление		наставление:S:-:-			
+587	śas	śas	наставление	flag	unknown			наставление:S:-:-			
 589	śriṣ	śriṣ	прикрепить	flag	unknown			прикрепить:V:-:-			
-590	śuj	śuj	разбухая	flag	inflected,unknown	разбухать		разбухать:V:-:-			
-591	bhrī	bhrī	ранит	flag	inflected,unknown	ранить		ранить:V:-:-			
-592	bhuraj	bhuraj	готовят	flag	inflected,unknown	готовить		готовить:V:-:-			
-593	bhyas	bhyas	упражняется	flag	inflected,unknown	упражняться		упражняться:V:-:-			
-594	cand	cand	покорного	flag	inflected,unknown	покорный		покорный:A:-:-			
-595	dan	dan	водой	flag	inflected,unknown	вода		вода:S:-:-			
-598	hūrch	hūrch	страдает	flag	inflected,unknown	страдать		страдать:V:-:-			
+590	śuj	śuj	разбухать	flag	unknown			разбухать:V:-:-			
+591	bhrī	bhrī	ранить	flag	unknown			ранить:V:-:-			
+592	bhuraj	bhuraj	готовить	flag	unknown			готовить:V:-:-			
+593	bhyas	bhyas	упражняться	flag	unknown			упражняться:V:-:-			
+594	cand	cand	покорный	flag	unknown			покорный:A:-:-			
+595	dan	dan	вода	flag	unknown			вода:S:-:-			
+598	hūrch	hūrch	страдать	flag	unknown			страдать:V:-:-			
 599	iradh	iradh	стремятся покорить	flag	phrase,unknown			стремиться:V:-:- покорить:V:-:-			
 600	jri	jri	охват	flag	unknown			охват:S:-:-			
-604	khud	khud	вталкивайте	flag	inflected,unknown	вталкивать		вталкивать:V:-:-			
+604	khud	khud	вталкивать	flag	unknown			вталкивать:V:-:-			
 605	kū	kū	где	flag	unknown			где:ADV:-:-			
-606	kṣā	kṣā	землю	flag	inflected,unknown	земля		земля:S:-:-			
-608	mrad	mrad	смягчи	flag	inflected,unknown	смягчить		смягчить:V:-:-			
+606	kṣā	kṣā	земля	flag	unknown			земля:S:-:-			
+608	mrad	mrad	смягчить	flag	unknown			смягчить:V:-:-			
 610	mṛc	mṛc	смертельным оружием	flag	phrase,unknown			смертельный:A:-:- оружие:S:-:-			
-611	mṛkṣ	mṛkṣ	скребнице	flag	inflected,unknown	скребница		скребница:S:-:-			
+611	mṛkṣ	mṛkṣ	скребница	flag	unknown			скребница:S:-:-			
 612	1 nu / 2 nu	nu	же	ok							
 615	riph	riph	хрипящая	flag	unknown			хрипеть:V:-:-			
 616	sku	sku	делает надрезы	flag	phrase,unknown			делать:V:-:- надрез:S:-:-			
 619	svād	svād	становится вкусным	flag	phrase,unknown			становиться:V:-:- вкусный:A:-:-			
 622	u	u	и	ok							
 626	yakṣ	yakṣ	почтить	flag	unknown			почтить:V:-:-			
-628	ścam	ścam	уймут	flag	inflected,unknown	унять		унять:V:-:-			
+628	ścam	ścam	унять	flag	unknown			унять:V:-:-			

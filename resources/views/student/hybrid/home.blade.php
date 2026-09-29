@@ -27,13 +27,25 @@
             Добро пожаловать, {{ auth()->user()->name }}!
         </h2>
         <p class="text-gray-500 text-base">{{ now()->timezone(config('app.timezone'))->translatedFormat('l, d F') }}</p>
-        {{-- H4463: повторный показ welcome-тура (тот же гейт, что у партиала) --}}
-        @if (config('features.cabinet_tour') && ! \App\Support\Impersonation::isActive())
-        <button type="button" x-on:click="$dispatch('open-cabinet-tour')"
-                class="mt-2 inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline">
-            <i class="fas fa-route text-xs"></i> Обзор кабинета
-        </button>
-        @endif
+        <div class="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1">
+            {{-- H4463: повторный показ welcome-тура (тот же гейт, что у партиала) --}}
+            @if (config('features.cabinet_tour') && ! \App\Support\Impersonation::isActive())
+            <button type="button" x-on:click="$dispatch('open-cabinet-tour')"
+                    class="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline">
+                <i class="fas fa-route text-xs"></i> Обзор кабинета
+            </button>
+            @endif
+            {{-- Студент сам пишет отзыв (/dvaram/otzyv). На легаси-дашборде кнопка была,
+                 а гибридный «Сегодня» (прод, CABINET_HYBRID) её не показывал — страницу
+                 находили только по прямой ссылке. --}}
+            @if (config('features.student_testimonials'))
+            <a href="{{ route('student.testimonial.create') }}"
+               class="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline"
+               data-analytics="hybrid-home-testimonial">
+                <i class="fas fa-comment-dots text-xs"></i> Оставить отзыв
+            </a>
+            @endif
+        </div>
     </div>
 
     @include('student.partials.hindi-programme-playlist-card', ['hindiPlaylist' => $hindiPlaylist ?? null])
@@ -183,6 +195,9 @@
         <a href="{{ route('student.dashboard') }}#prana" class="hover:text-brand">Прана</a>
         <a href="{{ route('student.progress') }}" class="hover:text-brand">Сертификаты</a>
         <a href="{{ route('student.open-lessons') }}" class="hover:text-brand">Открытые уроки</a>
+        @if (config('features.student_testimonials'))
+            <a href="{{ route('student.testimonial.create') }}" class="hover:text-brand">Оставить отзыв</a>
+        @endif
     </nav>
 </div>
 
