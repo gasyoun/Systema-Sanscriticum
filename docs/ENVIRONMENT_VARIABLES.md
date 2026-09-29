@@ -689,6 +689,7 @@ Classification is deterministic: feature switches first, then credentials/secret
 | `SAFE_WITHDRAWAL_STAFF_QUITS` | optional | `''` | config/safe_withdrawal.php:49 |
 | `SAFE_WITHDRAWAL_TOCHKA_EXCLUDED_TAILS` | optional | `'877617'` | config/safe_withdrawal.php:59 |
 | `SAFE_WITHDRAWAL_USN_RATE` | optional | `0.06` | config/safe_withdrawal.php:65 |
+| `SALARY_RETURNS_STUDENT_REFUNDS_ONLY` | optional | `false` | config/features.php:1884 |
 | `SANCTUM_STATEFUL_DOMAINS` | optional | `sprintf( '%s%s', 'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000…` | config/sanctum.php:21 |
 | `SANCTUM_TOKEN_EXPIRATION` | secret | `60 * 24 * 90` | config/sanctum.php:58 |
 | `SANCTUM_TOKEN_PREFIX` | secret | `''` | config/sanctum.php:73 |
