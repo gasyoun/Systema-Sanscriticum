@@ -63,7 +63,24 @@ PRESETS = {
     "lemmas": {"path": "resources/data/cohort_start_chteniya/lemmas_for_srs.tsv",
                "gloss": "gloss_ru", "ids": ["pack", "lemma_slp1", "surface", "locus"],
                "sa_key": "lemma_slp1", "sa_kind": "slp1"},
+    # H5401: the corpus glossary is ours -> rare glosses propose swaps normally; 26k entries
+    # x top-3 glosses, so only actionable rows are written (flagged_only).
+    "glossary": {"path": "resources/data/sa_ru_glossary.json", "gloss": "gloss_ru",
+                 "ids": ["iast", "slp1", "pos", "n", "gloss_idx"], "sa_key": "iast",
+                 "sa_kind": "iast", "top_n": 3, "flagged_only": True},
 }
+# H5401: the Memrise teacher decks are flag-only (grill 23-09-2026 Q3) — the teacher's
+# wording stays, a modern hint only after a vote. One preset per deck id.
+MEMRISE_DECKS = ["6502608", "6508023", "6517849", "6522419", "6679375"]
+for _d in MEMRISE_DECKS:
+    PRESETS["memrise_%s" % _d] = {
+        "glob": "database/seeders/data/memrise_%s/level_*.csv" % _d, "gloss": "col_b",
+        "ids": ["level", "col_a"], "sa_key": "col_a", "sa_kind": "iast", "flag_only": True}
+
+# flags that make a row worth writing out / carding; `phrase`, `name` and `unknown`
+# (nothing measured yet) are context, not a defect.
+ACTIONABLE = {"inflected", "inflected_ambiguous", "rare", "soft_rare", "c19_only",
+              "not_russian"}
 
 # pymorphy3 POS -> NKRYa word-portrait POS
 POS_MAP = {"NOUN": "S", "ADJF": "A", "ADJS": "A", "COMP": "A", "VERB": "V", "INFN": "V",
@@ -359,11 +376,36 @@ def propose_synonym(gloss, pool_glosses, lem, ev, min_cat):
     return best
 
 
-def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None):
-    by_iast, by_slp1 = pool
+def read_source(spec):
+    """Rows of one lint source: a .tsv/.csv seed, or sa_ru_glossary.json (H5401).
+
+    The glossary is a mapping IAST -> {"g": [top-3 RU glosses], "pos", "n", "slp1"};
+    it is flattened to one row per gloss so a single rare gloss is carded on its own.
+    """
+    if spec.get("glob"):          # a Memrise deck = one CSV per level, linted as one source
+        rows = []
+        for p in sorted(REPO.glob(spec["glob"])):
+            with open(p, encoding="utf-8", newline="") as f:
+                for r in csv.DictReader(f):
+                    rows.append({**r, "level": p.stem})
+        return rows
     src = REPO / spec["path"]
+    if src.suffix == ".json":
+        with open(src, encoding="utf-8") as f:
+            entries = json.load(f)["entries"]
+        rows = []
+        for iast, e in entries.items():
+            for idx, gloss in enumerate((e.get("g") or [])[:spec.get("top_n", 3)], 1):
+                rows.append({"iast": iast, "slp1": e.get("slp1", ""), "pos": e.get("pos", ""),
+                             "n": e.get("n", ""), "gloss_idx": idx, "gloss_ru": gloss})
+        return rows
     with open(src, encoding="utf-8", newline="") as f:
-        rows = list(csv.DictReader(f, delimiter="," if src.suffix == ".csv" else "\t"))
+        return list(csv.DictReader(f, delimiter="," if src.suffix == ".csv" else "\t"))
+
+
+def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None, queue=None):
+    by_iast, by_slp1 = pool
+    rows = read_source(spec)
     if limit:
         rows = rows[:limit]
     lem.prefer_verb = bool(spec.get("prefer_verb"))
@@ -373,11 +415,20 @@ def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None):
     for i, r in enumerate(rows, 1):
         gloss = r.get(spec["gloss"], "")
         res = lint_gloss(gloss, lem, ev)
+        if queue is not None:
+            for tok in res["tokens"]:                 # lemma:POS:band:ipm — band "-" = unmeasured
+                lemma, pos, band = tok.split(":")[:3]
+                if band == "-":
+                    queue[(lemma, pos)] = queue.get((lemma, pos), 0) + 1
         syn = None
-        if "rare" in res["flags"]:
+        # teacher decks are flag-only (grill 23-09-2026 Q3): the teacher's wording stays,
+        # a swap is proposed only for sources we own.
+        if "rare" in res["flags"] and not spec.get("flag_only"):
             key = r.get(spec["sa_key"], "")
             pg = (by_iast if spec["sa_kind"] == "iast" else by_slp1).get(key, [])
             syn = propose_synonym(gloss, pg, lem, ev, res["min_cat"])
+        if spec.get("flagged_only") and not (set(res["flags"]) & ACTIONABLE):
+            continue      # 74k glossary glosses: only the actionable ones are written out
         out_rows.append({**{k: r.get(k, "") for k in spec["ids"]}, "gloss_ru": gloss,
                          "status": res["status"], "flags": ",".join(res["flags"]),
                          "gloss_lemma": res["gloss_lemma"],
@@ -395,7 +446,24 @@ def lint_file(name, spec, lem, ev, pool, out_dir=OUT_DIR, limit=None):
         w = csv.DictWriter(f, fields, delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(out_rows)
-    return out, out_rows
+    return out, out_rows, len(rows)
+
+
+def write_queue(queue, path):
+    """Unmeasured (lemma, POS) pairs, most-used first — the order a live band pass drains.
+
+    At ~60 NKRYa calls an hour (per account, shared) a full pass over the glossary is not
+    a single run: this file is what makes the next unattended run resume where it matters.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    rows = sorted(queue.items(), key=lambda kv: (-kv[1], kv[0]))
+    with open(path, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f, delimiter="\t", lineterminator="\n")
+        w.writerow(["lemma", "nkrya_pos", "gloss_rows"])
+        for (lemma, pos), n in rows:
+            w.writerow([lemma, pos, n])
+    return path, len(rows)
 
 
 def summarize(name, rows):
@@ -499,7 +567,34 @@ def selftest():
     again = Evidence(tmp / "ev.tsv", offline=True)
     assert again.freq("ланита", "S") == {"ipm": 0.4, "category": 1}
     assert again.hits("ланита", "c19") == 41
-    print("nkrya_gloss_lint selftest OK (20 checks, offline)")
+
+    # H5401: glossary JSON source, flag-only teacher decks, band queue
+    gj = tmp / "gloss.json"
+    gj.write_text(json.dumps({"entries": {"ajara": {"iast": "ajara", "slp1": "ajara",
+                                                    "pos": "ADJ", "n": 4,
+                                                    "g": ["ланиты", "щёки", "туча", "облако"]}}},
+                             ensure_ascii=False), encoding="utf-8")
+    spec = {"path": os.path.relpath(gj, REPO), "gloss": "gloss_ru", "top_n": 3,
+            "ids": ["iast", "slp1", "pos", "n", "gloss_idx"], "sa_key": "iast",
+            "sa_kind": "iast", "flagged_only": True}
+    src_rows = read_source(spec)
+    assert len(src_rows) == 3 and src_rows[0]["gloss_ru"] == "ланиты", src_rows
+    assert src_rows[2]["gloss_idx"] == 3 and src_rows[0]["pos"] == "ADJ", src_rows
+    q = {}
+    out, rows, n_src = lint_file("gl", spec, lem, again, ({"ajara": ["ланиты", "щёки"]}, {}),
+                                 out_dir=tmp, queue=q)
+    # flagged_only keeps the rare and the inflected row, drops the measured-clean «туча»
+    assert n_src == 3 and [r["gloss_ru"] for r in rows] == ["ланиты", "щёки"], rows
+    assert rows[0]["synonym_proposal"] == "щека", rows      # ours -> a swap is proposed
+    assert q[("туча", "S")] == 1 and ("ланита", "S") not in q, q   # unmeasured lemmas only
+    qp, qn = write_queue(q, tmp / "queue.tsv")
+    assert qn == 1 and qp.read_text(encoding="utf-8").splitlines()[0] == \
+        "lemma\tnkrya_pos\tgloss_rows", qp.read_text(encoding="utf-8")
+    spec_deck = {**spec, "flag_only": True, "flagged_only": False}
+    _o, rows2, _n = lint_file("deck", spec_deck, lem, again, ({"ajara": ["ланиты", "щёки"]}, {}),
+                              out_dir=tmp)
+    assert len(rows2) == 3 and all(r["synonym_proposal"] == "" for r in rows2), rows2
+    print("nkrya_gloss_lint selftest OK (28 checks, offline)")
 
 
 def import_client():
@@ -526,6 +621,11 @@ def main(argv=None):
     ap.add_argument("--backoff", type=float, default=30.0, help="seconds to wait after a 429")
     ap.add_argument("--limit", type=int, help="first N rows only (smoke)")
     ap.add_argument("--out-dir", default=str(OUT_DIR))
+    ap.add_argument("--queue-out", default=str(OUT_DIR / "band_queue.tsv"),
+                    help="write the unmeasured (lemma, POS) drain order of this run")
+    ap.add_argument("--no-queue", action="store_true", help="skip the band queue")
+    ap.add_argument("--drain-queue", type=int, metavar="N",
+                    help="band the first N unmeasured lemmas of --queue-out (live pass), no lint")
     ap.add_argument("--measure", nargs="+", metavar="GLOSS",
                     help="band a proposed replacement gloss (review-sheet evidence), no file")
     ap.add_argument("--selftest", action="store_true")
@@ -541,8 +641,10 @@ def main(argv=None):
                             "gloss": a.gloss_col,
                             "ids": [c for c in a.id_cols.split(",") if c],
                             "sa_key": a.sa_col, "sa_kind": "iast"}))
-    if not jobs and not a.measure:
-        ap.error("name a preset (roots, lemmas), --tsv or --measure")
+    if not jobs and not a.measure and not a.drain_queue:
+        ap.error("name a preset (roots, lemmas, glossary, memrise_*), --tsv, --measure "
+                 "or --drain-queue")
+    queue = None if (a.no_queue or a.drain_queue) else {}
     client = None
     if not a.offline:
         nk = import_client()
@@ -558,14 +660,27 @@ def main(argv=None):
     pool = load_pool()
     report = {}
     try:
+        if a.drain_queue:        # unattended band pass in the queue's order, resumable
+            done = 0
+            with open(a.queue_out, encoding="utf-8", newline="") as f:
+                for q in csv.DictReader(f, delimiter="\t"):
+                    if done >= a.drain_queue:
+                        break
+                    if ev.freq(q["lemma"], q["nkrya_pos"] or None) is not None:
+                        done += 1
+            report["_drain_queue"] = {"asked": a.drain_queue, "banded": done}
         for g in a.measure or []:
             r = lint_gloss(g, lem, ev)
             report["measure:" + g] = {"status": r["status"], "flags": r["flags"],
                                       "min_band": r["min_cat"], "tokens": r["tokens"]}
         for name, spec in jobs:
-            out, rows = lint_file(name, spec, lem, ev, pool, out_dir=a.out_dir, limit=a.limit)
-            report[name] = summarize(name, rows)
+            out, rows, n_src = lint_file(name, spec, lem, ev, pool, out_dir=a.out_dir,
+                                         limit=a.limit, queue=queue)
+            report[name] = {"source_rows": n_src, **summarize(name, rows)}
             print("%s -> %s" % (name, os.path.relpath(out, REPO)))
+        if queue is not None:
+            qp, qn = write_queue(queue, a.queue_out)
+            report["_band_queue"] = {"file": os.path.relpath(qp, REPO), "unmeasured_lemmas": qn}
     finally:
         ev.save()
     report["_evidence"] = {"cached_keys": len(ev.rows), "live_lookups": ev.live,

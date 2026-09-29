@@ -35,6 +35,7 @@ final class TelegramBusinessSetWebhook extends Command
         $token = trim((string) config('services.telegram_business.token', ''));
         $secret = trim((string) config('services.telegram_business.secret', ''));
         $username = trim((string) config('services.telegram_business.username', ''));
+        $sharedStudentWebhook = (bool) config('services.telegram_business.shared_student_webhook', false);
 
         if ($token === '') {
             $this->error('TELEGRAM_BUSINESS_BOT_TOKEN не задан — полоса выключена.');
@@ -67,18 +68,25 @@ final class TelegramBusinessSetWebhook extends Command
         // Тот же входной узел, что у остальных вебхуков (см. TelegramWebhooks):
         // адрес вебхука нельзя собирать из app.url — разъезд этих адресов уже
         // стоил Track C пяти дней тишины 22-27.07.2026.
-        $url = TelegramWebhooks::url('/api/webhooks/telegram-business');
+        $url = TelegramWebhooks::url($sharedStudentWebhook
+            ? '/api/telegram/webhook'
+            : '/api/webhooks/telegram-business');
+
+        $allowedUpdates = ['business_connection', 'business_message', 'edited_business_message', 'deleted_business_messages', 'channel_post'];
+        if ($sharedStudentWebhook) {
+            $allowedUpdates = array_merge(['message', 'callback_query'], $allowedUpdates);
+        }
 
         $this->info("Регистрируем webhook Telegram Business: {$url}");
 
         $channel->setWebhook(
             $url,
             $secret,
-            ['business_connection', 'business_message', 'edited_business_message', 'deleted_business_messages'],
+            $allowedUpdates,
             TelegramWebhooks::certificateContents(),
         );
 
-        $this->info('✓ Webhook установлен (business_connection + business_message + edited + deleted).');
+        $this->info('✓ Webhook установлен (Business updates + channel_post for Story sources).');
 
         return self::SUCCESS;
     }

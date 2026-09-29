@@ -1,21 +1,21 @@
 pack	lemma_slp1	surface	locus	gloss_ru	status	flags	gloss_lemma	min_band	nkrya_tokens	synonym_proposal	synonym_ipm	synonym_band
 hitopadesa-0	a	a	11	о	ok							
-hitopadesa-0	abhigamana	abhigamanam	14	сближении	flag	inflected	сближение	3	сближение:S:3:15.08			
-hitopadesa-0	abhijña	abhijñān	44	искусен	flag	inflected	искусный	3	искусный:A:3:12.86			
+hitopadesa-0	abhigamana	abhigamanam	14	сближение	ok			3	сближение:S:3:15.08			
+hitopadesa-0	abhijña	abhijñān	44	искусный	ok			3	искусный:A:3:12.86			
 hitopadesa-0	abhyantara	abhyantare	44	внутреннее	ok			4	внутренний:A:4:193.64			
-hitopadesa-0	abhāvin	abhāvi	29	достигают	flag	inflected	достигать	3	достигать:V:3:47.90			
+hitopadesa-0	abhāvin	abhāvi	29	достигать	ok			3	достигать:V:3:47.90			
 hitopadesa-0	adhika	adhiko	25	выше	ok			3	выше:ADV:3:46.06			
-hitopadesa-0	adhī	adhītam	24	изучив	flag	inflected	изучить	3	изучить:V:3:30.77			
+hitopadesa-0	adhī	adhītam	24	изучить	ok			3	изучить:V:3:30.77			
 hitopadesa-0	adravya	adravye	42	a nothing; a worthless thing; [medic.] not a dravya = e.g. the mental disposition of the…	not_russian	not_russian						
-hitopadesa-0	agada	agadaḥ	29	здоровым	flag	inflected	здоровый	4	здоровый:A:4:104.60			
+hitopadesa-0	agada	agadaḥ	29	здоровый	ok			4	здоровый:A:4:104.60			
 hitopadesa-0	agratas	agrataḥ	35	перед	ok							
-hitopadesa-0	ah	āha	30	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
+hitopadesa-0	ah	āha	30	сказать	ok			5	сказать:V:5:2472.22			
 hitopadesa-0	ahi	ahi	28	змея	ok			3	змея:S:3:27.43			
 hitopadesa-0	ahāryatva	ahāryatvād	4	the state of not being liable to be taken away	not_russian	not_russian						
 hitopadesa-0	ajara	ajara	3	нестареющий	flag	rare		1	нестареющий:A:1:0.35			
 hitopadesa-0	ajāgalastana	ajāgalastanasya	26	nipple or fleshy protuberance on the neck of goats; an emblem of any useless or worthless…	not_russian	not_russian						
 hitopadesa-0	ajāta	ajāta	13	неродившихся	ok			3	родиться:V:3:99.42			
-hitopadesa-0	akṣama	akṣamāṇām	30	невыполнима	flag	inflected,soft_rare	невыполнимый	2	невыполнимый:A:2:2.12			
+hitopadesa-0	akṣama	akṣamāṇām	30	невыполнимый	flag	soft_rare		2	невыполнимый:A:2:2.12			
 hitopadesa-0	akṣaya	akṣaya	4	нетленные	flag	soft_rare		2	нетленный:A:2:2.68			
 hitopadesa-0	amara	amara	3	бессмертные	ok			3	бессмертный:A:3:16.79			
 hitopadesa-0	ambā	ambā	16	мать	ok			4	мать:S:4:413.00			
@@ -26,7 +26,7 @@ hitopadesa-0	anartha	anarthāya	11	не-артха	flag	rare			не-артх:S:-
 hitopadesa-0	andha	andha	10	слепой	ok			3	слепой:A:3:39.63			
 hitopadesa-0	aneka	aneka	10	многие	ok							
 hitopadesa-0	antara	antare	42	между	ok							
-hitopadesa-0	antima	antimaḥ	13	последней	flag	inflected	последний	4	последний:A:4:725.90			
+hitopadesa-0	antima	antimaḥ	13	последний	ok			4	последний:A:4:725.90			
 hitopadesa-0	anudyoga	anudyogena	32	absence of exertion or effort; inactivity	not_russian	not_russian						
 hitopadesa-0	anuttama	anuttamam	4	несравненный	flag	soft_rare		2	несравненный:A:2:4.40			
 hitopadesa-0	anya	anyac	16	другой	ok			5	другой:A:5:2034.50			
@@ -59,10 +59,10 @@ hitopadesa-0	bhāgīrathī	bhāgīrathī	10	Бхагиратхи	ok	name
 hitopadesa-0	bhājana	bhājane	8	сосуды	ok			3	сосуд:S:3:25.97			
 hitopadesa-0	bhāryā	bhāryā	14	жена	ok			4	жена:S:4:424.54			
 hitopadesa-0	bhāva	bhāvā	28	бытие	ok			3	бытие:S:3:57.09			
-hitopadesa-0	bhāvin	bhāvino	28	будет	flag	inflected	быть	6	быть:V:6:12831.00			
-hitopadesa-0	bhū	bhavati	16	будет	flag	inflected	быть	6	быть:V:6:12831.00			
+hitopadesa-0	bhāvin	bhāvino	28	быть	ok			6	быть:V:6:12831.00			
+hitopadesa-0	bhū	bhavati	16	быть	ok			6	быть:V:6:12831.00			
 hitopadesa-0	bhūpati	bhūpatir	10	царь	ok			4	царь:S:4:196.75			
-hitopadesa-0	brū	abravīt	42	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
+hitopadesa-0	brū	abravīt	42	сказать	ok			5	сказать:V:5:2472.22			
 hitopadesa-0	bāla	bālo	37	дети	ok			4	ребёнок:S:4:619.51			
 hitopadesa-0	bṛhaspati	bṛhaspatir	42	Брихаспати	ok	name						
 hitopadesa-0	ca	ca	13	и	ok							
@@ -72,7 +72,7 @@ hitopadesa-0	candramas	candramās	18	луна	flag	unknown			луна:S:-:-
 hitopadesa-0	catuṣṭaya	catuṣṭayam	11	четыре	ok							
 hitopadesa-0	ced	cen	29	если	ok							
 hitopadesa-0	chala	chalena	8	словесные ухищрения	flag	phrase,unknown			словесный:A:-:- ухищрение:S:-:-			
-hitopadesa-0	cintay	cintayāmāsa	12	подумал	flag	inflected,unknown	подумать		подумать:V:-:-			
+hitopadesa-0	cintay	cintayāmāsa	12	подумать	flag	unknown			подумать:V:-:-			
 hitopadesa-0	cintā	cintā	29	мысль	flag	unknown			мысль:S:-:-			
 hitopadesa-0	daiva	daivaṃ	30	a religious offering or rite; divine power or will; destiny; fate; chance; a deity; finge…	not_russian	not_russian						
 hitopadesa-0	darśaka	darśakam	10	вызвавший появление	flag	phrase,unknown			вызвать:V:-:- появление:S:-:-			
@@ -80,9 +80,9 @@ hitopadesa-0	dehin	dehinaḥ	27	воплощенный	flag	unknown			вопло
 hitopadesa-0	deva	devaiḥ	42	боги	flag	unknown			бог:S:-:-			
 hitopadesa-0	dhana	dhana	11	богатство	flag	unknown			богатство:S:-:-			
 hitopadesa-0	dhanus	dhanus	23	лук	flag	unknown			лук:S:-:-			
-hitopadesa-0	dhanya	dhanyo	21	счастлив	flag	inflected,unknown	счастливый		счастливый:A:-:-			
+hitopadesa-0	dhanya	dhanyo	21	счастливый	flag	unknown			счастливый:A:-:-			
 hitopadesa-0	dharma	dharma	26	дхарма	flag	unknown			дхарма:S:-:-			
-hitopadesa-0	dhā	dhatte	40	дай	flag	inflected,unknown	дать		дать:V:-:-			
+hitopadesa-0	dhā	dhatte	40	дать	flag	unknown			дать:V:-:-			
 hitopadesa-0	dhārmika	dhārmikaḥ	12	добродетельный	flag	unknown			добродетельный:A:-:-			
 hitopadesa-0	dhūrjaṭi	dhūrjaṭeḥ	1	Дхурджати	ok	name						
 hitopadesa-0	doṣa	doṣaḥ	33	зло	flag	unknown			зло:S:-:-			
@@ -94,10 +94,10 @@ hitopadesa-0	dvaya	dvayam	10	два	ok
 hitopadesa-0	dvi	dve	7	два	ok							
 hitopadesa-0	dvitīya	dvitīyā	7	второй	flag	unknown			второй:A:-:-			
 hitopadesa-0	dyuti	dyutīḥ	40	блеск	flag	unknown			блеск:S:-:-			
-hitopadesa-0	dā	dadāti	2	дает	flag	inflected,unknown	давать		давать:V:-:-			
+hitopadesa-0	dā	dadāti	2	давать	flag	unknown			давать:V:-:-			
 hitopadesa-0	dāna	dāne	17	дары	flag	unknown			дар:S:-:-			
 hitopadesa-0	dīp	dīpyate	45	пылающий	flag	unknown			пылать:V:-:-			
-hitopadesa-0	dṛś	dṛṣṭvā	35	увидев	flag	inflected	увидеть	4	увидеть:V:4:448.26			
+hitopadesa-0	dṛś	dṛṣṭvā	35	увидеть	ok			4	увидеть:V:4:448.26			
 hitopadesa-0	eka	eko	18	один	flag	unknown			один:A:-:-			
 hitopadesa-0	ekadā	ekadā	10	однажды	flag	unknown			однажды:ADV:-:-			
 hitopadesa-0	ekaika	ekaikam	11	one by one; single; every single one	not_russian	not_russian						
@@ -105,40 +105,40 @@ hitopadesa-0	etad	etāsu	24	это	ok
 hitopadesa-0	eva	eva	10	именно	ok							
 hitopadesa-0	evam	evam	34	так	ok							
 hitopadesa-0	evambhūta	evambhūto	40	таким образом	flag	phrase,unknown			такой:A:-:- образ:S:-:-			
-hitopadesa-0	gam	gatāsv	24	отправился	flag	inflected,unknown	отправиться		отправиться:V:-:-			
+hitopadesa-0	gam	gatāsv	24	отправиться	flag	unknown			отправиться:V:-:-			
 hitopadesa-0	garbha	garbheṣu	14	зародыш	flag	unknown			зародыш:S:-:-			
-hitopadesa-0	garbhasrāva	garbhasrāvo	14	выкидыше	flag	inflected,unknown	выкидыш		выкидыш:S:-:-			
+hitopadesa-0	garbhasrāva	garbhasrāvo	14	выкидыш	flag	unknown			выкидыш:S:-:-			
 hitopadesa-0	gati	gatir	30	путь	flag	unknown			путь:S:-:-			
 hitopadesa-0	gaṇa	gaṇa	16	сонмы	flag	unknown			сонм:S:-:-			
-hitopadesa-0	gaṇanā	gaṇanā	16	счете	flag	inflected,unknown	счёт		счёт:S:-:-			
-hitopadesa-0	ghna	ghnaḥ	29	губит	flag	inflected,unknown	губить		губить:V:-:-			
-hitopadesa-0	go	gaur	24	коров	flag	inflected,unknown	корова		корова:S:-:-			
+hitopadesa-0	gaṇanā	gaṇanā	16	счёт	flag	unknown			счёт:S:-:-			
+hitopadesa-0	ghna	ghnaḥ	29	губить	flag	unknown			губить:V:-:-			
+hitopadesa-0	go	gaur	24	корова	flag	unknown			корова:S:-:-			
 hitopadesa-0	gotra	gotre	43	род	flag	unknown			род:S:-:-			
-hitopadesa-0	grah	gṛhīta	3	взяв	flag	inflected	взять	4	взять:V:4:611.30			
+hitopadesa-0	grah	gṛhīta	3	взять	ok			4	взять:V:4:611.30			
 hitopadesa-0	grantha	granthād	9	книги	flag	unknown			книга:S:-:-			
-hitopadesa-0	grāhay	grāhayituṃ	42	обучил	flag	inflected,unknown	обучить		обучить:V:-:-			
+hitopadesa-0	grāhay	grāhayituṃ	42	обучить	flag	unknown			обучить:V:-:-			
 hitopadesa-0	guru	guru	39	гуру	flag	unknown			гуру:S:-:-			
 hitopadesa-0	guṇa	guṇa	10	гуны	flag	unknown			гун:S:-:-			
 hitopadesa-0	guṇavat	guṇavān	23	добродетельный	flag	unknown			добродетельный:A:-:-			
-hitopadesa-0	guṇin	guṇi	16	элементов	flag	inflected,unknown	элемент		элемент:S:-:-			
+hitopadesa-0	guṇin	guṇi	16	элемент	flag	unknown			элемент:S:-:-			
 hitopadesa-0	gāmin	gāminām	12	не приносящій жертвы	flag	phrase,unknown			приносящий:A:-:- жертва:S:-:-			
-hitopadesa-0	han	hanti	18	убит	flag	inflected_ambiguous,unknown			убить:V:-:-			
+hitopadesa-0	han	hanti	18	убить	flag	unknown			убить:V:-:-			
 hitopadesa-0	hari	hareḥ	28	Хари	flag	unknown			харя:S:-:-			
 hitopadesa-0	haṃsa	haṃsa	37	гуси	flag	unknown			гусь:S:-:-			
 hitopadesa-0	hi	hi	27	ведь	ok							
 hitopadesa-0	hitopadeśa	hitopadeśo	2	friendly advice; salutary instruction; name of a popular collection of fables intermixed…	not_russian	not_russian						
-hitopadesa-0	hā	hā	24	оставив	flag	inflected,unknown	оставить		оставить:V:-:-			
+hitopadesa-0	hā	hā	24	оставить	flag	unknown			оставить:V:-:-			
 hitopadesa-0	hāsya	hāsyāya	7	шутил шутки	flag	phrase,unknown			шутить:V:-:- шутка:S:-:-			
-hitopadesa-0	i	eti	41	идет	flag	inflected,unknown	идти		идти:V:-:-			
+hitopadesa-0	i	eti	41	идти	flag	unknown			идти:V:-:-			
 hitopadesa-0	idam	'yaṃ	2	это	ok							
 hitopadesa-0	idānīm	idānīm	25	теперь	flag	unknown			теперь:ADV:-:-			
 hitopadesa-0	iha	iha	8	здесь	ok			4	здесь:ADV:4:876.99			
 hitopadesa-0	iti	ity	12	так	ok							
 hitopadesa-0	iva	iva	1	как	ok							
-hitopadesa-0	iṣ	icchati	34	хочу	flag	inflected,unknown	хотеть		хотеть:V:-:-			
-hitopadesa-0	jan	jātena	12	родился	flag	inflected	родиться	3	родиться:V:3:99.42			
+hitopadesa-0	iṣ	icchati	34	хотеть	flag	unknown			хотеть:V:-:-			
+hitopadesa-0	jan	jātena	12	родиться	ok			3	родиться:V:3:99.42			
 hitopadesa-0	janman	janma	26	рождение	flag	unknown			рождение:S:-:-			
-hitopadesa-0	jña	jñaḥ	42	знаю	flag	inflected	знать	5	знать:V:5:1740.03			
+hitopadesa-0	jña	jñaḥ	42	знать	ok			5	знать:V:5:1740.03			
 hitopadesa-0	jñāna	jñānaṃ	25	знание	flag	unknown			знание:S:-:-			
 hitopadesa-0	jāhnavī	jāhnavī	1	Джахнави	ok	name						
 hitopadesa-0	jāragarbha	jāragarbha	39	a child by a paramour; bastard	not_russian	not_russian						
@@ -150,7 +150,7 @@ hitopadesa-0	karin	karī	20	слон	flag	unknown			слон:S:-:-
 hitopadesa-0	karman	karma	27	действия	flag	unknown			действие:S:-:-			
 hitopadesa-0	kartṛ	kartā	34	деятель	flag	unknown			деятель:S:-:-			
 hitopadesa-0	katham	katham	25	как	ok							
-hitopadesa-0	kathay	kathyate	31	рассказал	flag	inflected,unknown	рассказать		рассказать:V:-:-			
+hitopadesa-0	kathay	kathyate	31	рассказать	flag	unknown			рассказать:V:-:-			
 hitopadesa-0	kathā	kathā	8	рассказ	flag	unknown			рассказ:S:-:-			
 hitopadesa-0	kathāmukha	kathāmukham	10	introduction to a tale; name of the second Lambaka or book of the Kathāsaritsāgara	not_russian	not_russian						
 hitopadesa-0	kaścit	keṣāṃcid	30	никто	ok							
@@ -167,18 +167,18 @@ hitopadesa-0	kāca	kācaḥ	40	стекло	flag	unknown			стекло:S:-:-
 hitopadesa-0	kākatālīya	kākatālīya	35	after the manner of the crow and the palm-fruit; unexpected	not_russian	not_russian						
 hitopadesa-0	kāma	kāma	26	желание	flag	unknown			желание:S:-:-			
 hitopadesa-0	kāpuruṣa	kāpuruṣā	33	трус	flag	unknown			трус:S:-:-			
-hitopadesa-0	kāray	kāritavān	40	побуждая	flag	inflected,unknown	побуждать		побуждать:V:-:-			
+hitopadesa-0	kāray	kāritavān	40	побуждать	flag	unknown			побуждать:V:-:-			
 hitopadesa-0	kārya	kārya	30	дело	flag	unknown			дело:S:-:-			
 hitopadesa-0	kāñcana	kāñcana	40	золотой	flag	unknown			золотой:A:-:-			
 hitopadesa-0	kāṇa	kāṇena	12	одноглазый	flag	unknown			одноглазый:A:-:-			
 hitopadesa-0	kīdṛśa	kīdṛśī	16	какова	flag	unknown			каковой:A:-:-			
-hitopadesa-0	kīṭa	kīṭo	44	насекомых	flag	inflected,unknown	насекомое		насекомое:S:-:-			
-hitopadesa-0	kṛ	kṛtaṃ	19	сделал	flag	inflected	сделать	4	сделать:V:4:786.76			
+hitopadesa-0	kīṭa	kīṭo	44	насекомое	flag	unknown			насекомое:S:-:-			
+hitopadesa-0	kṛ	kṛtaṃ	19	сделать	ok			4	сделать:V:4:786.76			
 hitopadesa-0	lag	lagnaḥ	8	будет ощутим	flag	phrase,unknown		6	быть:V:6:12831.00 ощутить:V:-:-			
 hitopadesa-0	lakṣmī	lakṣmīr	33	Лакшми	ok	name						
 hitopadesa-0	lekhā	lekhā	1	линия	flag	unknown			линия:S:-:-			
-hitopadesa-0	likh	likhyate	9	чертит	flag	inflected,unknown	чертить		чертить:V:-:-			
-hitopadesa-0	locana	locanaṃ	10	глазами	flag	inflected,unknown	глаз		глаз:S:-:-			
+hitopadesa-0	likh	likhyate	9	чертить	flag	unknown			чертить:V:-:-			
+hitopadesa-0	locana	locanaṃ	10	глаз	flag	unknown			глаз:S:-:-			
 hitopadesa-0	lābha	lābhe	17	прибыль	flag	unknown			прибыль:S:-:-			
 hitopadesa-0	mad	mama	25	я	ok							
 hitopadesa-0	madhya	madhye	24	среди	ok							
@@ -196,26 +196,26 @@ hitopadesa-0	mānava	mānavaḥ	34	человек	flag	unknown			человек:
 hitopadesa-0	mārakata	mārakatīr	40	belonging to an emerald; having any of the properties or qualities of an emerald; coloure…	not_russian	not_russian						
 hitopadesa-0	māsa	māsa	44	месяц	flag	unknown			месяц:S:-:-			
 hitopadesa-0	mātṛ	mātur	17	мать	ok			4	мать:S:4:413.00			
-hitopadesa-0	mūrdhan	mūrdhani	1	голову	flag	inflected,unknown	голова		голова:S:-:-			
+hitopadesa-0	mūrdhan	mūrdhani	1	голова	flag	unknown			голова:S:-:-			
 hitopadesa-0	mūrkha	mūrkhānām	13	глупец	flag	unknown			глупец:S:-:-			
-hitopadesa-0	mṛ	mṛta	13	умирает	flag	inflected,unknown	умирать		умирать:V:-:-			
+hitopadesa-0	mṛ	mṛta	13	умирать	flag	unknown			умирать:V:-:-			
 hitopadesa-0	mṛd	mṛd	34	глины	flag	unknown			глина:S:-:-			
-hitopadesa-0	mṛga	mṛgāḥ	36	зверей	flag	inflected_ambiguous,unknown			зверь:S:-:-			
+hitopadesa-0	mṛga	mṛgāḥ	36	зверь	flag	unknown			зверь:S:-:-			
 hitopadesa-0	mṛtyu	mṛtyunā	3	смерть	flag	unknown			смерть:S:-:-			
 hitopadesa-0	na	na	10	не	ok							
 hitopadesa-0	nadī	nadyaḥ	46	реки	flag	unknown			река:S:-:-			
 hitopadesa-0	nagara	nagaram	10	город	flag	unknown			город:S:-:-			
-hitopadesa-0	nagna	nagna	28	нагим	flag	inflected,unknown	нагой		нагой:A:-:-			
+hitopadesa-0	nagna	nagna	28	нагой	flag	unknown			нагой:A:-:-			
 hitopadesa-0	nahi	nahi	36	не	ok							
 hitopadesa-0	nara	naraḥ	23	человек	flag	unknown			человек:S:-:-			
 hitopadesa-0	narapati	narapatir	10	царь	ok			4	царь:S:4:196.75			
 hitopadesa-0	nava	nave	8	новые	flag	unknown			новый:A:-:-			
 hitopadesa-0	nidhana	nidhanam	27	смерть	flag	unknown			смерть:S:-:-			
 hitopadesa-0	nidhi	nidhim	35	сокровище	flag	unknown			сокровище:S:-:-			
-hitopadesa-0	nidhā	nihitā	42	сложенные	flag	inflected_ambiguous,unknown			сложить:V:-:-			
+hitopadesa-0	nidhā	nihitā	42	сложить	flag	unknown			сложить:V:-:-			
 hitopadesa-0	nidrā	nidrā	25	сон	flag	unknown			сон:S:-:-			
-hitopadesa-0	nihan	nihatya	33	убит	flag	inflected_ambiguous,unknown			убить:V:-:-			
-hitopadesa-0	nirarthaka	nirarthakam	26	тщетными	flag	inflected,unknown	тщетный		тщетный:A:-:-			
+hitopadesa-0	nihan	nihatya	33	убить	flag	unknown			убить:V:-:-			
+hitopadesa-0	nirarthaka	nirarthakam	26	тщетный	flag	unknown			тщетный:A:-:-			
 hitopadesa-0	nirgandha	nirgandhā	38	void of smell; inodorous	not_russian	not_russian						
 hitopadesa-0	nirguṇa	nirguṇaḥ	23	лишенный свойств	flag	phrase,unknown			лишённый:A:-:- свойство:S:-:-			
 hitopadesa-0	nityam	nityam	12	всегда	flag	unknown			всегда:ADV:-:-			
@@ -229,33 +229,33 @@ hitopadesa-0	nṛpa	nṛpaṃ	5	царь	ok			4	царь:S:4:196.75
 hitopadesa-0	pada	pade	13	след	flag	unknown			след:S:-:-			
 hitopadesa-0	padya	padya	43	Находясь у ног	flag	phrase,unknown			находиться:V:-:- нога:S:-:-			
 hitopadesa-0	para	param	5	высшее	flag	unknown			высокий:A:-:-			
-hitopadesa-0	parivartin	parivartini	15	неусыпной	flag	inflected,unknown	неусыпный		неусыпный:A:-:-			
+hitopadesa-0	parivartin	parivartini	15	неусыпный	flag	unknown			неусыпный:A:-:-			
 hitopadesa-0	parokṣa	parokṣa	10	втайне	flag	unknown			втайне:ADV:-:-			
-hitopadesa-0	pat	patati	16	упал	flag	inflected,unknown	упасть		упасть:V:-:-			
+hitopadesa-0	pat	patati	16	упасть	flag	unknown			упасть:V:-:-			
 hitopadesa-0	pauruṣa	pauruṣam	33	manhood; virility (opp. to strītva); manliness; manly strength or courage or deed; valour…	not_russian	not_russian						
 hitopadesa-0	pañcan	pañca	27	пять	ok							
 hitopadesa-0	pañcatantra	pañcatantrāt	9	name of the well-known collection of moral stories and fables in 5 books; name of a poem…	not_russian	not_russian						
 hitopadesa-0	paśu	paśubhir	25	скот	flag	unknown			скот:S:-:-			
 hitopadesa-0	paṅka	paṅke	24	грязь	flag	unknown			грязь:S:-:-			
 hitopadesa-0	paṇḍita	paṇḍita	40	мудрые	flag	unknown			мудрый:A:-:-			
-hitopadesa-0	phalavat	phalavatī	42	плодами	flag	inflected,unknown	плод		плод:S:-:-			
-hitopadesa-0	phena	phena	1	пену	flag	inflected,unknown	пена		пена:S:-:-			
+hitopadesa-0	phalavat	phalavatī	42	плод	flag	unknown			плод:S:-:-			
+hitopadesa-0	phena	phena	1	пена	flag	unknown			пена:S:-:-			
 hitopadesa-0	pitṛ	pitā	21	отец	flag	unknown			отец:S:-:-			
-hitopadesa-0	piṇḍa	piṇḍāt	34	пинда	flag	inflected,unknown	пинд		пинд:S:-:-			
+hitopadesa-0	piṇḍa	piṇḍāt	34	пинд	flag	unknown			пинд:S:-:-			
 hitopadesa-0	prabhu	prabhu	11	владыка	flag	unknown			владыка:S:-:-			
 hitopadesa-0	pramāṇa	pramāṇam	47	источник знания	flag	phrase,unknown			источник:S:-:- знание:S:-:-			
 hitopadesa-0	prasāda	prasādāt	1	милость	flag	unknown			милость:S:-:-			
-hitopadesa-0	prasū	prasūto	23	размножайтесь	flag	inflected,unknown	размножаться		размножаться:V:-:-			
+hitopadesa-0	prasū	prasūto	23	размножаться	flag	unknown			размножаться:V:-:-			
 hitopadesa-0	prath	prathitaṃ	17	прославленный	flag	unknown			прославить:V:-:-			
-hitopadesa-0	pratipad	pratipadyate	34	достигает	flag	inflected	достигать	3	достигать:V:3:47.90			
+hitopadesa-0	pratipad	pratipadyate	34	достигать	ok			3	достигать:V:3:47.90			
 hitopadesa-0	pratipatti	pratipattaye	7	постижение	flag	unknown			постижение:S:-:-			
 hitopadesa-0	pravah	pravahanti	46	тяжеловозы	flag	unknown			тяжеловоз:S:-:-			
-hitopadesa-0	praviś	praviśanti	36	вошел	flag	inflected,unknown	войти		войти:V:-:-			
+hitopadesa-0	praviś	praviśanti	36	войти	flag	unknown			войти:V:-:-			
 hitopadesa-0	pravīṇatā	pravīṇatām	40	skill; proficiency	not_russian	not_russian						
 hitopadesa-0	pre	preto	14	после смерти	flag	phrase,unknown			смерть:S:-:-			
 hitopadesa-0	priya	priyā	20	приятное	flag	unknown			приятный:A:-:-			
 hitopadesa-0	prājña	prājño	3	мудрый	flag	unknown			мудрый:A:-:-			
-hitopadesa-0	prāp	prāptaṃ	35	достигнув	flag	inflected,unknown	достигнуть		достигнуть:V:-:-			
+hitopadesa-0	prāp	prāptaṃ	35	достигнуть	flag	unknown			достигнуть:V:-:-			
 hitopadesa-0	punar	punar	40	снова	flag	unknown			снова:ADV:-:-			
 hitopadesa-0	puraḥsara	puraḥsaram	47	предшествуемая	flag	unknown			предшествовать:V:-:-			
 hitopadesa-0	puruṣa	puruṣa	33	человек	flag	unknown			человек:S:-:-			
@@ -264,76 +264,76 @@ hitopadesa-0	pustaka	pustakeṣu	39	книга	flag	unknown			книга:S:-:-
 hitopadesa-0	putra	putrāṇām	12	сын	flag	unknown			сын:S:-:-			
 hitopadesa-0	putraka	putraka	24	сынок	flag	unknown			сынок:S:-:-			
 hitopadesa-0	puṇya	puṇya	19	святая	flag	unknown			святой:A:-:-			
-hitopadesa-0	pā	pīyate	29	Защищайте	flag	inflected,unknown	защищать		защищать:V:-:-			
+hitopadesa-0	pā	pīyate	29	защищать	flag	unknown			защищать:V:-:-			
 hitopadesa-0	pātra	pātra	6	сосуд	ok			3	сосуд:S:3:25.97			
 hitopadesa-0	pāṭaliputra	pāṭaliputra	10	name of a town	not_russian	not_russian						
 hitopadesa-0	pāṭava	pāṭavaṃ	2	Ваджроли	ok	name						
 hitopadesa-0	pāṭhay	pāṭhyamānaṃ	10	чтения	flag	unknown			чтение:S:-:-			
-hitopadesa-0	pīḍā	pīḍā	12	самоистязанием	flag	inflected,unknown	самоистязание		самоистязание:S:-:-			
-hitopadesa-0	pūjay	pūjyate	23	почтил	flag	inflected,unknown	почтить		почтить:V:-:-			
+hitopadesa-0	pīḍā	pīḍā	12	самоистязание	flag	unknown			самоистязание:S:-:-			
+hitopadesa-0	pūjay	pūjyate	23	почтить	flag	unknown			почтить:V:-:-			
 hitopadesa-0	pūrva	pūrva	31	прежде	ok							
-hitopadesa-0	ratha	rathasya	30	колесницу	flag	inflected,unknown	колесница		колесница:S:-:-			
+hitopadesa-0	ratha	rathasya	30	колесница	flag	unknown			колесница:S:-:-			
 hitopadesa-0	rogin	rogi	20	больной	flag	unknown			больной:A:-:-			
 hitopadesa-0	rāga	rāgāṇām	43	влечение	flag	unknown			влечение:S:-:-			
 hitopadesa-0	rājan	rājā	12	царь	ok			4	царь:S:4:196.75			
 hitopadesa-0	rātri	rātriṣu	24	ночь	flag	unknown			ночь:S:-:-			
 hitopadesa-0	rūpa	rūpa	14	образ	flag	unknown			образ:S:-:-			
-hitopadesa-0	rūpavat	rūpavatī	22	прекрасен	flag	inflected,unknown	прекрасный		прекрасный:A:-:-			
+hitopadesa-0	rūpavat	rūpavatī	22	прекрасный	flag	unknown			прекрасный:A:-:-			
 hitopadesa-0	sa	sa	16	он	ok							
 hitopadesa-0	sabhā	sabhā	37	собрание	flag	unknown			собрание:S:-:-			
-hitopadesa-0	sad	sīdasi	24	усаживается	flag	inflected,unknown	усаживаться		усаживаться:V:-:-			
+hitopadesa-0	sad	sīdasi	24	усаживаться	flag	unknown			усаживаться:V:-:-			
 hitopadesa-0	sadā	sadā	7	всегда	flag	unknown			всегда:ADV:-:-			
 hitopadesa-0	saha	saha	41	с	ok							
 hitopadesa-0	sakala	sakala	42	все	ok							
 hitopadesa-0	sakṛt	sakṛd	13	однажды	flag	unknown			однажды:ADV:-:-			
 hitopadesa-0	sama	samaiś	41	равный	flag	unknown			равный:A:-:-			
-hitopadesa-0	samarpay	samarpitavān	47	поразил	flag	inflected,unknown	поразить		поразить:V:-:-			
-hitopadesa-0	samartha	samarthaḥ	40	способен	flag	inflected,unknown	способный		способный:A:-:-			
+hitopadesa-0	samarpay	samarpitavān	47	поразить	flag	unknown			поразить:V:-:-			
+hitopadesa-0	samartha	samarthaḥ	40	способный	flag	unknown			способный:A:-:-			
 hitopadesa-0	samatā	samatām	41	равенство	flag	unknown			равенство:S:-:-			
 hitopadesa-0	sambhava	sambhavāḥ	38	рождение	flag	unknown			рождение:S:-:-			
 hitopadesa-0	sambhrama	sambhramāt	16	рвение	flag	unknown			рвение:S:-:-			
-hitopadesa-0	sambhū	sambhūtāḥ	42	возник	flag	inflected,unknown	возникнуть		возникнуть:V:-:-			
-hitopadesa-0	sampad	sampannāḥ	38	стал	flag	inflected,unknown	стать		стать:V:-:-			
+hitopadesa-0	sambhū	sambhūtāḥ	42	возникнуть	flag	unknown			возникнуть:V:-:-			
+hitopadesa-0	sampad	sampannāḥ	38	стать	flag	unknown			стать:V:-:-			
 hitopadesa-0	sampatti	sampattiḥ	11	процветание	flag	unknown			процветание:S:-:-			
 hitopadesa-0	samudra	samudram	46	океан	flag	unknown			океан:S:-:-			
 hitopadesa-0	samunnati	samunnatim	15	rising; swelling; exaltation; eminence; high position; elevation; increase; growth	not_russian	not_russian						
 hitopadesa-0	samāgama	samāgamāt	41	встреча	flag	unknown			встреча:S:-:-			
-hitopadesa-0	samāna	samānāḥ	25	самана	flag	inflected,unknown	саман		саман:S:-:-			
-hitopadesa-0	samṛdh	samṛddho	19	процветающим	flag	inflected,unknown	процветающий		процветать:V:-:-			
+hitopadesa-0	samāna	samānāḥ	25	саман	flag	unknown			саман:S:-:-			
+hitopadesa-0	samṛdh	samṛddho	19	процветающий	flag	unknown			процветать:V:-:-			
 hitopadesa-0	sarit	sarit	5	реки	flag	unknown			река:S:-:-			
 hitopadesa-0	sarva	sarva	10	все	ok							
 hitopadesa-0	sarvadā	sarvadā	4	всегда	flag	unknown			всегда:ADV:-:-			
 hitopadesa-0	sarvatra	sarvatra	2	везде	flag	unknown			везде:ADV:-:-			
-hitopadesa-0	saṃcintay	saṃcintya	32	подумав	flag	inflected,unknown	подумать		подумать:V:-:-			
+hitopadesa-0	saṃcintay	saṃcintya	32	подумать	flag	unknown			подумать:V:-:-			
 hitopadesa-0	saṃdhi	saṃdhir	9	мир	flag	unknown			мир:S:-:-			
-hitopadesa-0	saṃnidhi	saṃnidhau	39	присутствии	flag	inflected,unknown	присутствие		присутствие:S:-:-			
+hitopadesa-0	saṃnidhi	saṃnidhau	39	присутствие	flag	unknown			присутствие:S:-:-			
 hitopadesa-0	saṃnidhāna	saṃnidhānena	40	совокупленье	flag	unknown			совокупление:S:-:-			
 hitopadesa-0	saṃnikarṣa	saṃnikarṣeṇa	45	контакт	flag	unknown			контакт:S:-:-			
 hitopadesa-0	saṃsarga	saṃsargāt	40	смешения	flag	unknown			смешение:S:-:-			
 hitopadesa-0	saṃskāra	saṃskāro	8	санскары	flag	unknown			санскара:S:-:-			
 hitopadesa-0	saṃskṛta	saṃskṛta	2	освященное	flag	unknown			освятить:V:-:-			
 hitopadesa-0	saṃsāra	saṃsāre	15	сансары	flag	unknown			сансар:S:-:-			
-hitopadesa-0	saṃyojay	saṃyojayati	5	запряг	flag	inflected,unknown	запрячь		запрячь:V:-:-			
+hitopadesa-0	saṃyojay	saṃyojayati	5	запрячь	flag	unknown			запрячь:V:-:-			
 hitopadesa-0	saṃśaya	saṃśaya	10	сомнения	flag	unknown			сомнение:S:-:-			
 hitopadesa-0	saṅga	saṅgāt	44	привязанность	flag	unknown			привязанность:S:-:-			
 hitopadesa-0	siddhi	siddhiḥ	1	совершенства	flag	unknown			совершенство:S:-:-			
-hitopadesa-0	sidh	sidhyati	30	устанавливается	flag	inflected,unknown	устанавливаться		устанавливаться:V:-:-			
+hitopadesa-0	sidh	sidhyati	30	устанавливаться	flag	unknown			устанавливаться:V:-:-			
 hitopadesa-0	siṃha	siṃham	33	лев	flag	unknown			лев:S:-:-			
-hitopadesa-0	stha	sthasya	27	стоит	flag	inflected_ambiguous,unknown			стоить:V:-:-			
+hitopadesa-0	stha	sthasya	27	стоять	flag	unknown			стоять:V:-:-			
 hitopadesa-0	strī	striyāḥ	39	женщины	flag	unknown			женщина:S:-:-			
 hitopadesa-0	sudarśana	sudarśano	10	Сударшана	ok	name						
 hitopadesa-0	sudhī	sudhīḥ	19	мудрый	flag	unknown			мудрый:A:-:-			
-hitopadesa-0	suhṛd	suhṛd	9	друзей	flag	inflected,unknown	друг		друг:S:-:-			
+hitopadesa-0	suhṛd	suhṛd	9	друг	flag	unknown			друг:S:-:-			
 hitopadesa-0	sukha	sukhāni	20	счастье	ok			3	счастие:S:3:29.48			
-hitopadesa-0	sumanas	sumanas	44	цветами	flag	inflected_ambiguous,unknown			цвет:S:-:-			
+hitopadesa-0	sumanas	sumanas	44	цветок	flag	unknown			цветок:S:-:-			
 hitopadesa-0	supratiṣṭhita	supratiṣṭhitaḥ	44	изящно стоит	flag	phrase,unknown			изящно:ADV:-:- стоить:V:-:-			
 hitopadesa-0	sutin	sutinī	16	having sons	not_russian	not_russian						
-hitopadesa-0	svap	suptasya	36	спит	flag	inflected_ambiguous,unknown			спать:V:-:-			
+hitopadesa-0	svap	suptasya	36	спать	flag	unknown			спать:V:-:-			
 hitopadesa-0	svayam	svayaṃ	35	сам	flag	unknown			сам:A:-:-			
 hitopadesa-0	svāmin	svāmi	10	хозяин	flag	unknown			хозяин:S:-:-			
 hitopadesa-0	sādhya	sādhye	1	садхьи	flag	unknown			садхие:S:-:-			
 hitopadesa-0	sāmānya	sāmānyam	25	общее	flag	unknown			общий:A:-:-			
-hitopadesa-0	sṛj	sṛjyante	27	сотворил	flag	inflected,unknown	сотворить		сотворить:V:-:-			
+hitopadesa-0	sṛj	sṛjyante	27	сотворить	flag	unknown			сотворить:V:-:-			
 hitopadesa-0	tad	tasya	1	он	ok							
 hitopadesa-0	taila	tailāni	32	sesamum oil; oil; olibanum	not_russian	not_russian						
 hitopadesa-0	tamas	tamo	18	мрак	flag	unknown			мрак:S:-:-			
@@ -342,33 +342,33 @@ hitopadesa-0	tapas	tapasi	17	подвижничество	flag	unknown			под�
 hitopadesa-0	tatas	tataḥ	6	тогда	flag	unknown			тогда:ADV:-:-			
 hitopadesa-0	tathā	tathā	20	так	ok							
 hitopadesa-0	tatra	tatra	10	там	flag	unknown			там:ADV:-:-			
-hitopadesa-0	tattva	tattva	42	правду	flag	inflected,unknown	правда		правда:S:-:-			
+hitopadesa-0	tattva	tattva	42	правда	ok							
 hitopadesa-0	tila	tilebhyo	32	сезам	flag	unknown			сезам:S:-:-			
-hitopadesa-0	toya	toyāḥ	46	воду	flag	inflected_ambiguous,unknown			вода:S:-:-			
+hitopadesa-0	toya	toyāḥ	46	вода	flag	unknown			вода:S:-:-			
 hitopadesa-0	tu	tu	13	же	ok							
 hitopadesa-0	tva	tvam	11	ты	ok							
 hitopadesa-0	tvad	tvaṃ	24	тебя	ok							
-hitopadesa-0	tyaj	tyajed	32	оставив	flag	inflected,unknown	оставить		оставить:V:-:-			
+hitopadesa-0	tyaj	tyajed	32	оставить	flag	unknown			оставить:V:-:-			
 hitopadesa-0	tā	tā	11	эти	flag	unknown			этот:A:-:-			
 hitopadesa-0	tārā	tārā	18	звезды	flag	unknown			звезда:S:-:-			
 hitopadesa-0	tāta	tāta	41	сын мой	flag	phrase,unknown			сын:S:-:- мой:A:-:-			
-hitopadesa-0	tīra	tīre	10	берегу	flag	inflected_ambiguous,unknown			берег:S:-:-			
+hitopadesa-0	tīra	tīre	10	берег	flag	unknown			берег:S:-:-			
 hitopadesa-0	tīrtha	tīrthe	19	тиртхе	flag	unknown			тиртх:S:-:-			
 hitopadesa-0	u	u	11	и	ok							
 hitopadesa-0	ucchedin	ucchedi	10	destroying; resolving (doubts or difficulties)	not_russian	not_russian						
 hitopadesa-0	uccāra	uccāra	17	испражняться	flag	unknown			испражняться:V:-:-			
 hitopadesa-0	udayagiri	udayagireḥ	45	the eastern mountain	not_russian	not_russian						
-hitopadesa-0	udvij	udvigna	12	страшится	flag	inflected,unknown	страшиться		страшиться:V:-:-			
+hitopadesa-0	udvij	udvigna	12	страшиться	flag	unknown			страшиться:V:-:-			
 hitopadesa-0	udyama	udyamena	36	труд	flag	unknown			труд:S:-:-			
 hitopadesa-0	udyoga	udyogam	32	в Книге о старании	flag	phrase,unknown			книга:S:-:- старание:S:-:-			
 hitopadesa-0	udyogin	udyoginaṃ	33	one who makes effort; active; laborious; persevering; energetic	not_russian	not_russian						
-hitopadesa-0	ukti	uktiṣu	2	говорится	flag	inflected,unknown	говориться		говориться:V:-:-			
+hitopadesa-0	ukti	uktiṣu	2	говориться	flag	unknown			говориться:V:-:-			
 hitopadesa-0	unmārga	unmārga	12	deviation from the right way; wrong way (lit. and fig.)	not_russian	not_russian						
 hitopadesa-0	upadeśa	upadeśena	40	наставление	flag	unknown			наставление:S:-:-			
-hitopadesa-0	upajan	upajāyate	43	возникает	flag	inflected,unknown	возникать		возникать:V:-:-			
-hitopadesa-0	upe	upaiti	33	придя	flag	inflected	прийти	4	прийти:V:4:591.06			
+hitopadesa-0	upajan	upajāyate	43	возникать	flag	unknown			возникать:V:-:-			
+hitopadesa-0	upe	upaiti	33	прийти	ok			4	прийти:V:4:591.06			
 hitopadesa-0	upeta	upetaḥ	10	отстранен от зла, связан с благими качествами	flag	phrase,unknown			отстранить:V:-:- зло:S:-:- связать:V:-:- благой:A:-:- качество:S:-:-			
-hitopadesa-0	vac	uktam	20	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
+hitopadesa-0	vac	uktam	20	сказать	ok			5	сказать:V:5:2472.22			
 hitopadesa-0	vacana	vacanam	30	слова	flag	unknown			слово:S:-:-			
 hitopadesa-0	vad	vada	16	говорят	flag	unknown			говорить:V:-:-			
 hitopadesa-0	vaicitrya	vaicitryaṃ	2	variety; manifoldness; diversity; sorrow; despair	not_russian	not_russian						
@@ -377,30 +377,30 @@ hitopadesa-0	vandhyā	vandhyā	14	бесплодная	flag	unknown			беспл
 hitopadesa-0	vara	varam	13	лучший	flag	unknown			хороший:A:-:-			
 hitopadesa-0	varṇa	varṇaḥ	45	варн	flag	unknown			варн:S:-:-			
 hitopadesa-0	vasati	vasatir	14	ночи	flag	unknown			ночь:S:-:-			
-hitopadesa-0	vat	vat	3	сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
-hitopadesa-0	vaśya	vaśyaḥ	19	послушным	flag	inflected,unknown	послушный		послушный:A:-:-			
+hitopadesa-0	vat	vat	3	сказать	ok			5	сказать:V:5:2472.22			
+hitopadesa-0	vaśya	vaśyaḥ	19	послушный	flag	unknown			послушный:A:-:-			
 hitopadesa-0	vaṃśa	vaṃśaḥ	15	род	flag	unknown			род:S:-:-			
-hitopadesa-0	vid	vidvān	14	знает	flag	inflected	знать	5	знать:V:5:1740.03			
+hitopadesa-0	vid	vidvān	14	знать	ok			5	знать:V:5:1740.03			
 hitopadesa-0	vidvas	vidvān	12	мудрый	flag	unknown			мудрый:A:-:-			
 hitopadesa-0	vidyā	vidyāyām	17	знание	flag	unknown			знание:S:-:-			
 hitopadesa-0	vigraha	vigrahaḥ	9	война	flag	unknown			война:S:-:-			
 hitopadesa-0	vinaya	vinayam	44	смиренно	flag	unknown			смиренно:ADV:-:-			
 hitopadesa-0	vinā	vinā	30	без	ok							
 hitopadesa-0	vitta	vittaṃ	27	богатство	flag	unknown			богатство:S:-:-			
-hitopadesa-0	vivekin	viveki	11	отличен	flag	inflected_ambiguous,unknown			отличный:A:-:-			
+hitopadesa-0	vivekin	viveki	11	отличный	flag	unknown			отличный:A:-:-			
 hitopadesa-0	viśeṣa	viśeṣo	25	различие	ok			3	различие:S:3:42.33			
-hitopadesa-0	viśiṣ	viśiṣṭaiś	41	превосходит	flag	inflected,unknown	превосходить		превосходить:V:-:-			
+hitopadesa-0	viśiṣ	viśiṣṭaiś	41	превосходить	flag	unknown			превосходить:V:-:-			
 hitopadesa-0	viśiṣṭatā	viśiṣṭatām	41		empty							
 hitopadesa-0	viśru	viśrūyate	21	прославленный	flag	unknown			прославить:V:-:-			
-hitopadesa-0	viśudh	viśuddhaḥ	23	очищается	flag	inflected,unknown	очищаться		очищаться:V:-:-			
-hitopadesa-0	viśāla	viśāla	38	обширным	flag	inflected,unknown	обширный		обширный:A:-:-			
+hitopadesa-0	viśudh	viśuddhaḥ	23	очищаться	flag	unknown			очищаться:V:-:-			
+hitopadesa-0	viśāla	viśāla	38	обширный	flag	unknown			обширный:A:-:-			
 hitopadesa-0	viṣa	viṣa	29	яд	flag	unknown			яд:S:-:-			
 hitopadesa-0	viṣṇuśarman	viṣṇuśarma	42	name of various authors and other persons	not_russian	not_russian						
-hitopadesa-0	vyabhicārin	vyabhicāriṇī	22	изменяя	flag	inflected,unknown	изменять		изменять:V:-:-			
+hitopadesa-0	vyabhicārin	vyabhicāriṇī	22	изменять	flag	unknown			изменять:V:-:-			
 hitopadesa-0	vyāpāra	vyāpāra	42	деятельность	flag	unknown			деятельность:S:-:-			
 hitopadesa-0	vā	vā	12	или	ok							
 hitopadesa-0	vāc	vācāṃ	2	речь	flag	unknown			речь:S:-:-			
-hitopadesa-0	vādin	vādinī	20	говорящие	flag	inflected_ambiguous,unknown			говорящий:A:-:-			
+hitopadesa-0	vādin	vādinī	20	говорящий	flag	unknown			говорящий:A:-:-			
 hitopadesa-0	vṛddha	vṛddha	7	старый	flag	unknown			старый:A:-:-			
 hitopadesa-0	yad	yad	1	что	ok							
 hitopadesa-0	yadi	yadi	16	если	ok							
@@ -409,466 +409,466 @@ hitopadesa-0	yathā	yathā	30	как	ok
 hitopadesa-0	yatna	yatnaṃ	31	усилия	flag	unknown			усилие:S:-:-			
 hitopadesa-0	yatra	yatra	11	где	flag	unknown			где:ADV:-:-			
 hitopadesa-0	yauvana	yauvanaṃ	11	youth; youthfulness; adolescence; puberty; manhood; a number of young people (esp. of you…	not_russian	not_russian						
-hitopadesa-0	yuj	yuktaḥ	14	союзником	flag	inflected,unknown	союзник		союзник:S:-:-			
-hitopadesa-0	yā	yāti	15	идут	flag	inflected,unknown	идти		идти:V:-:-			
-hitopadesa-0	ācar	ācaret	3	делает	flag	inflected,unknown	делать		делать:V:-:-			
+hitopadesa-0	yuj	yuktaḥ	14	союзник	flag	unknown			союзник:S:-:-			
+hitopadesa-0	yā	yāti	15	идти	flag	unknown			идти:V:-:-			
+hitopadesa-0	ācar	ācaret	3	делать	flag	unknown			делать:V:-:-			
 hitopadesa-0	ādya	ādyau	13	изначальный	flag	unknown			изначальный:A:-:-			
-hitopadesa-0	ādā	ādatte	35	взяв	flag	inflected	взять	4	взять:V:4:611.30			
+hitopadesa-0	ādā	ādatte	35	взять	ok			4	взять:V:4:611.30			
 hitopadesa-0	ādṛ	ādriyate	7	проломитель	flag	unknown			проломитель:S:-:-			
-hitopadesa-0	āgama	āgamaḥ	20	пришел	flag	inflected	прийти	4	прийти:V:4:591.06			
+hitopadesa-0	āgama	āgamaḥ	20	прийти	ok			4	прийти:V:4:591.06			
 hitopadesa-0	āhāra	āhāra	25	пища	flag	unknown			пища:S:-:-			
 hitopadesa-0	ākara	ākare	43	источник	flag	unknown			источник:S:-:-			
-hitopadesa-0	ākarṇay	ākarṇya	12	Услышав	flag	inflected,unknown	услышать		услышать:V:-:-			
-hitopadesa-0	ākṛṣ	ākṛṣya	9	втягивается	flag	inflected,unknown	втягиваться		втягиваться:V:-:-			
+hitopadesa-0	ākarṇay	ākarṇya	12	услышать	flag	unknown			услышать:V:-:-			
+hitopadesa-0	ākṛṣ	ākṛṣya	9	втягиваться	flag	unknown			втягиваться:V:-:-			
 hitopadesa-0	ālambin	ālambī	21	hanging from; resting or leaning upon; depending on or from; laying hold of; supporting;…	not_russian	not_russian						
 hitopadesa-0	ālasya	ālasya	30	лень	flag	unknown			лень:S:-:-			
-hitopadesa-0	āp	āptum	32	достигает	flag	inflected	достигать	3	достигать:V:3:47.90			
+hitopadesa-0	āp	āptum	32	достигать	ok			3	достигать:V:3:47.90			
 hitopadesa-0	āpūraṇa	āpūraṇa	21	Апурана	ok	name						
 hitopadesa-0	ārambha	ārambhe	16	начало	flag	unknown			начало:S:-:-			
-hitopadesa-0	āruh	ārohati	44	взошел	flag	inflected,unknown	взойти		взойти:V:-:-			
-hitopadesa-0	āsvādya	āsvādya	46	Вкусив	flag	inflected,unknown	вкусить		вкусить:V:-:-			
-hitopadesa-0	āsāday	āsādya	46	достигнув	flag	inflected,unknown	достигнуть		достигнуть:V:-:-			
+hitopadesa-0	āruh	ārohati	44	взойти	flag	unknown			взойти:V:-:-			
+hitopadesa-0	āsvādya	āsvādya	46	вкусить	flag	unknown			вкусить:V:-:-			
+hitopadesa-0	āsāday	āsādya	46	достигнуть	flag	unknown			достигнуть:V:-:-			
 hitopadesa-0	ātman	ātmanaḥ	12	себя	ok							
 hitopadesa-0	āyus	āyuḥ	27	срок жизни	flag	phrase,unknown			срок:S:-:- жизнь:S:-:-			
 hitopadesa-0	āḍhaka	āḍhakaiḥ	21	адхака	flag	unknown			адхак:S:-:-			
-hitopadesa-0	śak	śakyante	42	способен	flag	inflected,unknown	способный		способный:A:-:-			
+hitopadesa-0	śak	śakyante	42	способный	flag	unknown			способный:A:-:-			
 hitopadesa-0	śakti	śaktyā	33	дротик	flag	unknown			дротик:S:-:-			
 hitopadesa-0	śastra	śastraṃ	7	оружие	flag	unknown			оружие:S:-:-			
 hitopadesa-0	śata	śataiḥ	18	сто	ok							
-hitopadesa-0	śatru	śatrur	22	врагов	flag	inflected,unknown	враг		враг:S:-:-			
+hitopadesa-0	śatru	śatrur	22	враг	flag	unknown			враг:S:-:-			
 hitopadesa-0	śaurya	śaurye	17	heroism; valour; prowess; might; the heroic branch of dramatic art; name of a village	not_russian	not_russian						
 hitopadesa-0	śayana	śayanam	28	ложе	flag	unknown			ложа:S:-:-			
 hitopadesa-0	śaśin	śaśinaḥ	1	луна	flag	unknown			луна:S:-:-			
-hitopadesa-0	śiras	śiraḥ	44	голову	flag	inflected,unknown	голова		голова:S:-:-			
+hitopadesa-0	śiras	śiraḥ	44	голова	flag	unknown			голова:S:-:-			
 hitopadesa-0	śloka	śloka	10	стих	flag	unknown			стих:S:-:-			
-hitopadesa-0	śru	śuśrāva	10	услышав	flag	inflected,unknown	услышать		услышать:V:-:-			
-hitopadesa-0	śubh	śobhate	37	блистал	flag	inflected,unknown	блистать		блистать:V:-:-			
+hitopadesa-0	śru	śuśrāva	10	услышать	flag	unknown			услышать:V:-:-			
+hitopadesa-0	śubh	śobhate	37	блистать	flag	unknown			блистать:V:-:-			
 hitopadesa-0	śuka	śuka	42	попугай	flag	unknown			попугай:S:-:-			
 hitopadesa-0	śāstra	śāstraṃ	10	шастры	flag	unknown			шастра:S:-:-			
 hitopadesa-0	ṛṇakartṛ	ṛṇakartā	22	one who contracts a debt; indebted	not_russian	not_russian						
 hitopadesa-0	ṣaṣ	ṣaḍ	20	шесть	ok							
-subhashita-beginner	A	ā			empty							
-subhashita-beginner	Agam	āgamiṣyanti			empty							
-subhashita-beginner	Ahf	āhāre			empty							
-subhashita-beginner	Ap	āpatsu			empty							
-subhashita-beginner	BAz	bhāṣaṇe			empty							
-subhashita-beginner	BU	bhavet			empty							
-subhashita-beginner	BUmipati	bhūmipatau			empty							
-subhashita-beginner	BUpati	bhūpatau			empty							
-subhashita-beginner	Baj	bhajate			empty							
-subhashita-beginner	Bartf	bhartrā			empty							
-subhashita-beginner	Bezaja	bheṣaje			empty							
-subhashita-beginner	Bf	bhāryā			empty							
-subhashita-beginner	Bid	bhidyate			empty							
-subhashita-beginner	Bikz	bhikṣā			empty							
-subhashita-beginner	Bikzuka	bhikṣukaḥ			empty							
-subhashita-beginner	Buj	bhojana			empty							
-subhashita-beginner	DA	dhīyate			empty							
-subhashita-beginner	DArmika	dhārmikaḥ			empty							
-subhashita-beginner	DIra	dhīra			empty							
-subhashita-beginner	Dana	dhaneṣu			empty							
-subhashita-beginner	Darma	dharmeṇa			empty							
-subhashita-beginner	Df	khaṅga			empty							
-subhashita-beginner	I	yaḥ			empty							
-subhashita-beginner	Kalu	khalu			empty							
-subhashita-beginner	Kid	khidyante			empty							
-subhashita-beginner	Pal	phalāya			empty							
-subhashita-beginner	SAstra	śāstreṣu			empty							
-subhashita-beginner	SF	śaraṇam			empty							
-subhashita-beginner	SI	śayyā			empty							
-subhashita-beginner	Sak	śakyāḥ			empty							
-subhashita-beginner	Sap	śapate			empty							
-subhashita-beginner	SarIra	śarīreṇa			empty							
-subhashita-beginner	Sarad	śaradi			empty							
-subhashita-beginner	Sastra	śastrāṇi			empty							
-subhashita-beginner	Sata	śateṣu			empty							
-subhashita-beginner	Siva	śivāḥ			empty							
-subhashita-beginner	SradDA	śraddhayā			empty							
-subhashita-beginner	Sri	śrīḥ			empty							
-subhashita-beginner	Sru	śrotā			empty							
-subhashita-beginner	SuB	śobhate			empty							
-subhashita-beginner	SuD	śuddhiḥ			empty							
-subhashita-beginner	Suc	śocati			empty							
-subhashita-beginner	Suci	śucim			empty							
-subhashita-beginner	aBaya	abhayam			empty							
-subhashita-beginner	aBirakz	abhirakṣitaḥ			empty							
-subhashita-beginner	aByas	abhyāsena			empty							
-subhashita-beginner	aDika	adhike			empty							
-subhashita-beginner	aDyavaso	adhyavasyati			empty							
-subhashita-beginner	aTa	atha			empty							
-subhashita-beginner	adya	adya			empty							
-subhashita-beginner	aha	aham			empty							
-subhashita-beginner	aho	aho			empty							
-subhashita-beginner	akftajYa	akṛtajñe			empty							
-subhashita-beginner	alpa	alpa			empty							
-subhashita-beginner	anaGa	anagha			empty							
-subhashita-beginner	anarTa	ātmanā			empty							
-subhashita-beginner	anitya	anityam			empty							
-subhashita-beginner	anyaTA	anyathā			empty							
-subhashita-beginner	anyatra	anyatra			empty							
-subhashita-beginner	apUrva	apūrvas			empty							
-subhashita-beginner	apakf	apakāriṣu			empty							
-subhashita-beginner	apamA	apamāne			empty							
-subhashita-beginner	api	api			empty							
-subhashita-beginner	apriya	apriyasya			empty							
-subhashita-beginner	arTapati	arthapatau			empty							
-subhashita-beginner	arTi	arthas			empty							
-subhashita-beginner	as	asti			empty							
-subhashita-beginner	atfpta	atṛptā			empty							
-subhashita-beginner	atiTi	atithiḥ			empty							
-subhashita-beginner	atiric	atyaricyata			empty							
-subhashita-beginner	atra	atra			empty							
-subhashita-beginner	av	vam			empty							
-subhashita-beginner	avicArya	avicārya			empty							
-subhashita-beginner	bAlA	bāle			empty							
-subhashita-beginner	bAnDava	bāndhavān			empty							
-subhashita-beginner	bIja	bīja			empty							
+subhashita-beginner	A	ā		принеси	flag	inflected,unknown	принести		принести:V:-:-			
+subhashita-beginner	Agam	āgamiṣyanti		пришел	flag	inflected	прийти	4	прийти:V:4:591.06			
+subhashita-beginner	Ahf	āhāre		совершил	flag	inflected,unknown	совершить		совершить:V:-:-			
+subhashita-beginner	Ap	āpatsu		достигает	flag	inflected	достигать	3	достигать:V:3:47.90			
+subhashita-beginner	BAz	bhāṣaṇe		сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
+subhashita-beginner	BU	bhavet		будет	flag	inflected	быть	6	быть:V:6:12831.00			
+subhashita-beginner	BUmipati	bhūmipatau		владыка земли	flag	phrase,unknown			владыка:S:-:- земля:S:-:-			
+subhashita-beginner	BUpati	bhūpatau		царь	ok			4	царь:S:4:196.75			
+subhashita-beginner	Baj	bhajate		почитают	flag	inflected,unknown	почитать		почитать:V:-:-			
+subhashita-beginner	Bartf	bhartrā		мужа	flag	inflected,unknown	муж		муж:S:-:-			
+subhashita-beginner	Bezaja	bheṣaje		лекарство	flag	unknown			лекарство:S:-:-			
+subhashita-beginner	Bf	bhāryā		принеси	flag	inflected,unknown	принести		принести:V:-:-			
+subhashita-beginner	Bid	bhidyate		пронзил	flag	inflected,unknown	пронзить		пронзить:V:-:-			
+subhashita-beginner	Bikz	bhikṣā		Испрашивая	flag	inflected,unknown	испрашивать		испрашивать:V:-:-			
+subhashita-beginner	Bikzuka	bhikṣukaḥ		нищие	flag	unknown			нищий:A:-:-			
+subhashita-beginner	Buj	bhojana		наслаждайся	flag	inflected,unknown	наслаждаться		наслаждаться:V:-:-			
+subhashita-beginner	DA	dhīyate		дай	flag	inflected,unknown	дать		дать:V:-:-			
+subhashita-beginner	DArmika	dhārmikaḥ		добродетельный	flag	unknown			добродетельный:A:-:-			
+subhashita-beginner	DIra	dhīra		мудрый	flag	unknown			мудрый:A:-:-			
+subhashita-beginner	Dana	dhaneṣu		богатство	flag	unknown			богатство:S:-:-			
+subhashita-beginner	Darma	dharmeṇa		дхарма	flag	unknown			дхарма:S:-:-			
+subhashita-beginner	Df	khaṅga		наделенный	flag	unknown			наделить:V:-:-			
+subhashita-beginner	I	yaḥ		просим	flag	inflected,unknown	просить		просить:V:-:-			
+subhashita-beginner	Kalu	khalu		же	ok							
+subhashita-beginner	Kid	khidyante		вдавил	flag	inflected,unknown	вдавить		вдавить:V:-:-			
+subhashita-beginner	Pal	phalāya		приносить	flag	unknown			приносить:V:-:-			
+subhashita-beginner	SAstra	śāstreṣu		шастры	flag	unknown			шастра:S:-:-			
+subhashita-beginner	SF	śaraṇam		защиты	flag	unknown			защита:S:-:-			
+subhashita-beginner	SI	śayyā		лежит	flag	inflected,unknown	лежать		лежать:V:-:-			
+subhashita-beginner	Sak	śakyāḥ		способен	flag	inflected,unknown	способный		способный:A:-:-			
+subhashita-beginner	Sap	śapate		проклял	flag	inflected,unknown	проклясть		проклясть:V:-:-			
+subhashita-beginner	SarIra	śarīreṇa		тело	flag	unknown			тело:S:-:-			
+subhashita-beginner	Sarad	śaradi		осеней	flag	inflected,unknown	осень		осень:S:-:-			
+subhashita-beginner	Sastra	śastrāṇi		оружие	flag	unknown			оружие:S:-:-			
+subhashita-beginner	Sata	śateṣu		сто	ok							
+subhashita-beginner	Siva	śivāḥ		Шива	ok	name						
+subhashita-beginner	SradDA	śraddhayā		вера	flag	unknown			вера:S:-:-			
+subhashita-beginner	Sri	śrīḥ		направил	flag	inflected,unknown	направить		направить:V:-:-			
+subhashita-beginner	Sru	śrotā		услышав	flag	inflected,unknown	услышать		услышать:V:-:-			
+subhashita-beginner	SuB	śobhate		блистал	flag	inflected,unknown	блистать		блистать:V:-:-			
+subhashita-beginner	SuD	śuddhiḥ		чистый	flag	unknown			чистый:A:-:-			
+subhashita-beginner	Suc	śocati		скорбит	flag	inflected,unknown	скорбеть		скорбеть:V:-:-			
+subhashita-beginner	Suci	śucim		чистый	flag	unknown			чистый:A:-:-			
+subhashita-beginner	aBaya	abhayam		бесстрашие	flag	unknown			бесстрашие:S:-:-			
+subhashita-beginner	aBirakz	abhirakṣitaḥ		охраняемый	flag	unknown			охранять:V:-:-			
+subhashita-beginner	aByas	abhyāsena		упражняется	flag	inflected,unknown	упражняться		упражняться:V:-:-			
+subhashita-beginner	aDika	adhike		выше	ok			3	выше:ADV:3:46.06			
+subhashita-beginner	aDyavaso	adhyavasyati		да будет сделано	ok	phrase		4	быть:V:6:12831.00 сделать:V:4:786.76			
+subhashita-beginner	aTa	atha		и	ok							
+subhashita-beginner	adya	adya		сегодня	flag	unknown			сегодня:ADV:-:-			
+subhashita-beginner	aha	aham		дни	flag	unknown			день:S:-:-			
+subhashita-beginner	aho	aho		увы	ok							
+subhashita-beginner	akftajYa	akṛtajñe		неблагодарный	flag	unknown			неблагодарный:A:-:-			
+subhashita-beginner	alpa	alpa		мало	ok							
+subhashita-beginner	anaGa	anagha		безупречный	flag	unknown			безупречный:A:-:-			
+subhashita-beginner	anarTa	ātmanā		не-артха	flag	rare			не-артх:S:-:-	вред	30.12	3
+subhashita-beginner	anitya	anityam		невечен	flag	unknown			вечный:A:-:-			
+subhashita-beginner	anyaTA	anyathā		иначе	ok			4	иначе:ADV:4:117.98			
+subhashita-beginner	anyatra	anyatra		кроме	ok							
+subhashita-beginner	apUrva	apūrvas		необычно	flag	unknown			необычно:ADV:-:-			
+subhashita-beginner	apakf	apakāriṣu		обидчики	flag	unknown			обидчик:S:-:-			
+subhashita-beginner	apamA	apamāne		самая последняя	flag	phrase,unknown		4	самый:A:-:- последний:A:4:725.90			
+subhashita-beginner	api	api		также	ok							
+subhashita-beginner	apriya	apriyasya		неприятное	flag	inflected,unknown	неприятный		неприятный:A:-:-			
+subhashita-beginner	arTapati	arthapatau		великий повелитель	flag	phrase,unknown			великий:A:-:- повелитель:S:-:-			
+subhashita-beginner	arTi	arthas		истцом	flag	inflected,unknown	истец		истец:S:-:-			
+subhashita-beginner	as	asti		есть	ok			4	есть:V:4:151.44			
+subhashita-beginner	atfpta	atṛptā		не удовлетворив	flag	phrase,unknown			удовлетворить:V:-:-			
+subhashita-beginner	atiTi	atithiḥ		гость	flag	unknown			гость:S:-:-			
+subhashita-beginner	atiric	atyaricyata		хуже	flag	unknown			плохой:A:-:-			
+subhashita-beginner	atra	atra		здесь	ok			4	здесь:ADV:4:876.99			
+subhashita-beginner	av	vam		на помощь	flag	phrase,unknown			помощь:S:-:-			
+subhashita-beginner	avicArya	avicārya		не дожидаясь	flag	phrase,unknown			дожидаться:V:-:-			
+subhashita-beginner	bAlA	bāle		дева	flag	unknown			дева:S:-:-			
+subhashita-beginner	bAnDava	bāndhavān		родственники	flag	unknown			родственник:S:-:-			
+subhashita-beginner	bIja	bīja		семя	flag	unknown			семя:S:-:-			
 subhashita-beginner	baDiratama	badhiratamāḥ			empty							
-subhashita-beginner	balavat	balavatī			empty							
-subhashita-beginner	bata	bata			empty							
-subhashita-beginner	bfhaspati	bṛhaspatiḥ			empty							
-subhashita-beginner	boDi	bodhayanti			empty							
-subhashita-beginner	brahman	brahma			empty							
-subhashita-beginner	cAra	cārais			empty							
-subhashita-beginner	ca	ca			empty							
-subhashita-beginner	candana	candanena			empty							
-subhashita-beginner	car	caritāni			empty							
-subhashita-beginner	catur	catvāraḥ			empty							
-subhashita-beginner	ciram	ciram			empty							
-subhashita-beginner	cit	cittena			empty							
-subhashita-beginner	cumb	cumbyate			empty							
-subhashita-beginner	dA	dāne			empty							
+subhashita-beginner	balavat	balavatī		могучий	flag	unknown			могучий:A:-:-			
+subhashita-beginner	bata	bata		увы	ok							
+subhashita-beginner	bfhaspati	bṛhaspatiḥ		Брихаспати	ok	name						
+subhashita-beginner	boDi	bodhayanti		будь	flag	inflected	быть	6	быть:V:6:12831.00			
+subhashita-beginner	brahman	brahma		Брахман	flag	unknown			брахман:S:-:-			
+subhashita-beginner	cAra	cārais		шпионов	flag	inflected,unknown	шпион		шпион:S:-:-			
+subhashita-beginner	ca	ca		и	ok							
+subhashita-beginner	candana	candanena		сандалом	flag	inflected,unknown	сандал		сандал:S:-:-			
+subhashita-beginner	car	caritāni		движется	flag	inflected,unknown	двигаться		двигаться:V:-:-			
+subhashita-beginner	catur	catvāraḥ		четыре	ok							
+subhashita-beginner	ciram	ciram		долго	flag	unknown			долго:ADV:-:-			
+subhashita-beginner	cit	cittena		даже	ok							
+subhashita-beginner	cumb	cumbyate		целует	flag	inflected,unknown	целовать		целовать:V:-:-			
+subhashita-beginner	dA	dāne		дает	flag	inflected,unknown	давать		давать:V:-:-			
 subhashita-beginner	dEva	daiva			empty							
 subhashita-beginner	dEvajYa	daivajñe			empty							
-subhashita-beginner	dUra	dūre			empty							
-subhashita-beginner	dah	dagdhā			empty							
-subhashita-beginner	deva	deve			empty							
-subhashita-beginner	dfS	dṛśyante			empty							
-subhashita-beginner	diS	deśe			empty							
-subhashita-beginner	dih	diha			empty							
-subhashita-beginner	dina	dine			empty							
-subhashita-beginner	divA	divā			empty							
+subhashita-beginner	dUra	dūre		далеко	flag	unknown			далеко:ADV:-:-			
+subhashita-beginner	dah	dagdhā		сжигает	flag	inflected,unknown	сжигать		сжигать:V:-:-			
+subhashita-beginner	deva	deve		боги	flag	unknown			бог:S:-:-			
+subhashita-beginner	dfS	dṛśyante		увидев	flag	inflected	увидеть	4	увидеть:V:4:448.26			
+subhashita-beginner	diS	deśe		стороны	flag	unknown			сторона:S:-:-			
+subhashita-beginner	dih	diha		воплощенный	flag	unknown			воплотить:V:-:-			
+subhashita-beginner	dina	dine		день	flag	unknown			день:S:-:-			
+subhashita-beginner	divA	divā		днем	flag	inflected_ambiguous,unknown			день:S:-:-			
 subhashita-beginner	divAnaktam	divānaktam			empty							
-subhashita-beginner	divya	divyā			empty							
-subhashita-beginner	dozA	doṣā			empty							
-subhashita-beginner	doza	doṣeṇa			empty							
-subhashita-beginner	dru	dravati			empty							
-subhashita-beginner	duh	dogdhrī			empty							
-subhashita-beginner	duhitf	duhitrā			empty							
-subhashita-beginner	durbala	durbalā			empty							
-subhashita-beginner	dvija	dvije			empty							
-subhashita-beginner	etad	etat			empty							
-subhashita-beginner	eva	tatra			empty							
-subhashita-beginner	gaj	gajāḥ			empty							
-subhashita-beginner	gam	gate			empty							
-subhashita-beginner	ganDa	gandhena			empty							
-subhashita-beginner	garBin	garbhiṇī			empty							
-subhashita-beginner	garj	garjati			empty							
-subhashita-beginner	go	gavā			empty							
-subhashita-beginner	grIzma	grīṣmeṇa			empty							
-subhashita-beginner	grah	grahas			empty							
-subhashita-beginner	guRa	guṇāḥ			empty							
-subhashita-beginner	guRi	tādṛś			empty							
-subhashita-beginner	gur	gurau			empty							
-subhashita-beginner	guru	guruṣu			empty							
-subhashita-beginner	hA	hāsyatām			empty							
-subhashita-beginner	ha	he			empty							
-subhashita-beginner	han	hanyate			empty							
-subhashita-beginner	has	hastau			empty							
-subhashita-beginner	hfd	hṛdi			empty							
-subhashita-beginner	hi	hi			empty							
-subhashita-beginner	i	iti			empty							
-subhashita-beginner	iha	duḥkham			empty							
-subhashita-beginner	itara	rājānaḥ			empty							
-subhashita-beginner	iva	iva			empty							
-subhashita-beginner	jAtu	jātu			empty							
-subhashita-beginner	jAtyanDa	jātyandhaḥ			empty							
-subhashita-beginner	jIv	jīvitavyeṣu			empty							
-subhashita-beginner	jYA	jānanti			empty							
-subhashita-beginner	jaMgamya	jaṅgamāni			empty							
-subhashita-beginner	jagat	jagat			empty							
-subhashita-beginner	jagatI	jagati			empty							
-subhashita-beginner	jala	jalena			empty							
-subhashita-beginner	jan	jātena			empty							
-subhashita-beginner	jana	janās			empty							
-subhashita-beginner	janman	janma			empty							
-subhashita-beginner	jfmB	jṛmbhate			empty							
-subhashita-beginner	ji	jātyā			empty							
-subhashita-beginner	jihvA	jihvā			empty							
-subhashita-beginner	kAka	kākāḥ			empty							
-subhashita-beginner	kAku	kāko			empty							
-subhashita-beginner	kAma	kāmāt			empty							
-subhashita-beginner	kAmin	kāmī			empty							
-subhashita-beginner	kAraRa	kāraṇam			empty							
-subhashita-beginner	kAvi	ke			empty							
-subhashita-beginner	kAzWa	kāṣṭhe			empty							
-subhashita-beginner	ka	kasya			empty							
-subhashita-beginner	kaNkaRa	kaṅkaṇena			empty							
-subhashita-beginner	kaTi	kathyate			empty							
-subhashita-beginner	kal	kāle			empty							
-subhashita-beginner	kaluza	kaluṣam			empty							
-subhashita-beginner	kan	kānta			empty							
-subhashita-beginner	kapawa	kapaṭena			empty							
-subhashita-beginner	karman	karma			empty							
-subhashita-beginner	karv	kari			empty							
-subhashita-beginner	kavi	kaviḥ			empty							
-subhashita-beginner	kena	kena			empty							
-subhashita-beginner	kf	kāryāṇi			empty							
-subhashita-beginner	kfpaRa	kṛpaṇena			empty							
-subhashita-beginner	kftaGna	kṛtaghnāḥ			empty							
-subhashita-beginner	kftajYa	kṛtajñeṣu			empty							
-subhashita-beginner	kfz	karṣati			empty							
-subhashita-beginner	kim	kim			empty							
-subhashita-beginner	kleSa	kleśe			empty							
-subhashita-beginner	krama	krameṇa			empty							
-subhashita-beginner	kroDa	krodhāt			empty							
-subhashita-beginner	ku	ko			empty							
+subhashita-beginner	divya	divyā		небесные	flag	unknown			небесный:A:-:-			
+subhashita-beginner	dozA	doṣā		у кого побежденные привязанности и пороки	flag	phrase,unknown			победить:V:-:- привязанность:S:-:- порок:S:-:-			
+subhashita-beginner	doza	doṣeṇa		зло	flag	unknown			зло:S:-:-			
+subhashita-beginner	dru	dravati		быстро	flag	unknown			быстро:ADV:-:-			
+subhashita-beginner	duh	dogdhrī		доится	flag	inflected,unknown	доиться		доиться:V:-:-			
+subhashita-beginner	duhitf	duhitrā		дочь	flag	unknown			дочь:S:-:-			
+subhashita-beginner	durbala	durbalā		слабый	flag	unknown			слабый:A:-:-			
+subhashita-beginner	dvija	dvije		дваждырожденный	flag	unknown			дваждырожденный:A:-:-			
+subhashita-beginner	etad	etat		это	ok							
+subhashita-beginner	eva	tatra		именно	ok							
+subhashita-beginner	gaj	gajāḥ		слоны	flag	unknown			слон:S:-:-			
+subhashita-beginner	gam	gate		отправился	flag	inflected,unknown	отправиться		отправиться:V:-:-			
+subhashita-beginner	ganDa	gandhena		запах	flag	unknown			запах:S:-:-			
+subhashita-beginner	garBin	garbhiṇī		беременная	flag	unknown			беременный:A:-:-			
+subhashita-beginner	garj	garjati		заревел	flag	inflected,unknown	зареветь		зареветь:V:-:-			
+subhashita-beginner	go	gavā		коров	flag	inflected,unknown	корова		корова:S:-:-			
+subhashita-beginner	grIzma	grīṣmeṇa		лето	flag	unknown			лето:S:-:-			
+subhashita-beginner	grah	grahas		взяв	flag	inflected	взять	4	взять:V:4:611.30			
+subhashita-beginner	guRa	guṇāḥ		гуны	flag	unknown			гун:S:-:-			
+subhashita-beginner	guRi	tādṛś		гуны	flag	unknown			гун:S:-:-			
+subhashita-beginner	gur	gurau		прими	flag	inflected,unknown	принять		принять:V:-:-			
+subhashita-beginner	guru	guruṣu		гуру	flag	unknown			гуру:S:-:-			
+subhashita-beginner	hA	hāsyatām		оставив	flag	inflected,unknown	оставить		оставить:V:-:-			
+subhashita-beginner	ha	he		же	ok							
+subhashita-beginner	han	hanyate		убит	flag	inflected_ambiguous,unknown			убить:V:-:-			
+subhashita-beginner	has	hastau		смеясь	flag	inflected,unknown	смеяться		смеяться:V:-:-			
+subhashita-beginner	hfd	hṛdi		сердце	flag	unknown			сердце:S:-:-			
+subhashita-beginner	hi	hi		ведь	ok							
+subhashita-beginner	i	iti		идет	flag	inflected,unknown	идти		идти:V:-:-			
+subhashita-beginner	iha	duḥkham		здесь	ok			4	здесь:ADV:4:876.99			
+subhashita-beginner	itara	rājānaḥ		другие	ok			5	другой:A:5:2034.50			
+subhashita-beginner	iva	iva		как	ok							
+subhashita-beginner	jAtu	jātu		никогда	flag	unknown			никогда:ADV:-:-			
+subhashita-beginner	jAtyanDa	jātyandhaḥ		слепцу	flag	inflected,unknown	слепец		слепец:S:-:-			
+subhashita-beginner	jIv	jīvitavyeṣu		живет	flag	inflected,unknown	жить		жить:V:-:-			
+subhashita-beginner	jYA	jānanti		зная	flag	inflected	знать	5	знать:V:5:1740.03			
+subhashita-beginner	jaMgamya	jaṅgamāni		движущиеся	flag	unknown			двигаться:V:-:-			
+subhashita-beginner	jagat	jagat		живого	flag	inflected,unknown	живой		живой:A:-:-			
+subhashita-beginner	jagatI	jagati		джагати	flag	unknown			джагать:S:-:-			
+subhashita-beginner	jala	jalena		воды	flag	unknown			вода:S:-:-			
+subhashita-beginner	jan	jātena		родился	flag	inflected	родиться	3	родиться:V:3:99.42			
+subhashita-beginner	jana	janās		люди	flag	unknown			человек:S:-:-			
+subhashita-beginner	janman	janma		рождение	flag	unknown			рождение:S:-:-			
+subhashita-beginner	jfmB	jṛmbhate		отряхнулся	flag	inflected,unknown	отряхнуться		отряхнуться:V:-:-			
+subhashita-beginner	ji	jātyā		победить	flag	unknown			победить:V:-:-			
+subhashita-beginner	jihvA	jihvā		язык	flag	unknown			язык:S:-:-			
+subhashita-beginner	kAka	kākāḥ		ворона	flag	unknown			ворона:S:-:-			
+subhashita-beginner	kAku	kāko		лепет	flag	unknown			лепет:S:-:-			
+subhashita-beginner	kAma	kāmāt		желание	flag	unknown			желание:S:-:-			
+subhashita-beginner	kAmin	kāmī		влюбленный	flag	unknown			влюбить:V:-:-			
+subhashita-beginner	kAraRa	kāraṇam		причина	flag	unknown			причина:S:-:-			
+subhashita-beginner	kAvi	ke		кто	ok							
+subhashita-beginner	kAzWa	kāṣṭhe		дрова	flag	unknown			дрова:S:-:-			
+subhashita-beginner	ka	kasya		что	ok							
+subhashita-beginner	kaNkaRa	kaṅkaṇena		Канкану	flag	unknown			канкан:S:-:-			
+subhashita-beginner	kaTi	kathyate		говорить	flag	unknown			говорить:V:-:-			
+subhashita-beginner	kal	kāle		время	flag	unknown			время:S:-:-			
+subhashita-beginner	kaluza	kaluṣam		мутные	flag	inflected,unknown	мутный		мутный:A:-:-			
+subhashita-beginner	kan	kānta		любящий	flag	unknown			любящий:A:-:-			
+subhashita-beginner	kapawa	kapaṭena		Капаты	ok	name						
+subhashita-beginner	karman	karma		действия	flag	unknown			действие:S:-:-			
+subhashita-beginner	karv	kari		слона	flag	inflected,unknown	слон		слон:S:-:-			
+subhashita-beginner	kavi	kaviḥ		поэт	flag	unknown			поэт:S:-:-			
+subhashita-beginner	kena	kena		кем	ok							
+subhashita-beginner	kf	kāryāṇi		сделал	flag	inflected	сделать	4	сделать:V:4:786.76			
+subhashita-beginner	kfpaRa	kṛpaṇena		жалобно	flag	unknown			жалобно:ADV:-:-			
+subhashita-beginner	kftaGna	kṛtaghnāḥ		неблагодарный	flag	unknown			неблагодарный:A:-:-			
+subhashita-beginner	kftajYa	kṛtajñeṣu		благодарный	flag	unknown			благодарный:A:-:-			
+subhashita-beginner	kfz	karṣati		вспахивая	flag	inflected,unknown	вспахивать		вспахивать:V:-:-			
+subhashita-beginner	kim	kim		что	ok							
+subhashita-beginner	kleSa	kleśe		лишения	flag	unknown			лишение:S:-:-			
+subhashita-beginner	krama	krameṇa		последовательность	flag	unknown			последовательность:S:-:-			
+subhashita-beginner	kroDa	krodhāt		гнев	flag	unknown			гнев:S:-:-			
+subhashita-beginner	ku	ko		почва	flag	unknown			почва:S:-:-			
 subhashita-beginner	kuRqi	kuṇḍe			empty							
-subhashita-beginner	kuSala	kuśalā			empty							
-subhashita-beginner	kukkura	kukkura			empty							
-subhashita-beginner	kula	kule			empty							
-subhashita-beginner	kup	kupyanti			empty							
-subhashita-beginner	kva	kva			empty							
-subhashita-beginner	kzI	kṣīṇeṣu			empty							
-subhashita-beginner	kzam	kṣamī			empty							
-subhashita-beginner	kzi	kṣaya			empty							
-subhashita-beginner	kzipra	kṣipram			empty							
-subhashita-beginner	laB	labhate			empty							
-subhashita-beginner	laNG	laṅghayet			empty							
-subhashita-beginner	locana	locanam			empty							
-subhashita-beginner	lok	loke			empty							
-subhashita-beginner	luB	lobhitar			empty							
-subhashita-beginner	mA	me			empty							
-subhashita-beginner	mAlatI	mālatī			empty							
-subhashita-beginner	mAnava	mānavāḥ			empty							
-subhashita-beginner	mUka	mūka			empty							
-subhashita-beginner	mUli	mūlam			empty							
-subhashita-beginner	mUrKa	mūrkhe			empty							
-subhashita-beginner	maDurA	madhurā			empty							
-subhashita-beginner	madira	madirā			empty							
-subhashita-beginner	mah	mahati			empty							
-subhashita-beginner	man	manaḥ			empty							
-subhashita-beginner	manas	manasā			empty							
+subhashita-beginner	kuSala	kuśalā		искусен	flag	inflected	искусный	3	искусный:A:3:12.86			
+subhashita-beginner	kukkura	kukkura		куккуры	flag	unknown			куккура:S:-:-			
+subhashita-beginner	kula	kule		род	flag	unknown			род:S:-:-			
+subhashita-beginner	kup	kupyanti		разгневался	flag	inflected,unknown	разгневаться		разгневаться:V:-:-			
+subhashita-beginner	kva	kva		где	flag	unknown			где:ADV:-:-			
+subhashita-beginner	kzI	kṣīṇeṣu		гибнет	flag	inflected,unknown	гибнуть		гибнуть:V:-:-			
+subhashita-beginner	kzam	kṣamī		простить	flag	unknown			простить:V:-:-			
+subhashita-beginner	kzi	kṣaya		живет	flag	inflected,unknown	жить		жить:V:-:-			
+subhashita-beginner	kzipra	kṣipram		быстро	flag	unknown			быстро:ADV:-:-			
+subhashita-beginner	laB	labhate		обретает	flag	inflected,unknown	обретать		обретать:V:-:-			
+subhashita-beginner	laNG	laṅghayet		поглощается	flag	inflected,unknown	поглощаться		поглощаться:V:-:-			
+subhashita-beginner	locana	locanam		глазами	flag	inflected,unknown	глаз		глаз:S:-:-			
+subhashita-beginner	lok	loke		в мире	flag	phrase,unknown			мир:S:-:-			
+subhashita-beginner	luB	lobhitar		жадный	flag	unknown			жадный:A:-:-			
+subhashita-beginner	mA	me		не	ok							
+subhashita-beginner	mAlatI	mālatī		малати	flag	unknown			малатить:V:-:-			
+subhashita-beginner	mAnava	mānavāḥ		человек	flag	unknown			человек:S:-:-			
+subhashita-beginner	mUka	mūka		немые	flag	unknown			немой:A:-:-			
+subhashita-beginner	mUli	mūlam		имеющий корень	flag	phrase,unknown			иметь:V:-:- корень:S:-:-			
+subhashita-beginner	mUrKa	mūrkhe		глупец	flag	unknown			глупец:S:-:-			
+subhashita-beginner	maDurA	madhurā		сладостный	flag	unknown			сладостный:A:-:-			
+subhashita-beginner	madira	madirā		пьянящего	flag	inflected,unknown	пьянящий		пьянить:V:-:-			
+subhashita-beginner	mah	mahati		великого	flag	inflected,unknown	великий		великий:A:-:-			
+subhashita-beginner	man	manaḥ		считаю	flag	inflected,unknown	считать		считать:V:-:-			
+subhashita-beginner	manas	manasā		ум	flag	unknown			ум:S:-:-			
 subhashita-beginner	mandavisarpin	mandavisarpiṇī			empty							
-subhashita-beginner	manoraTa	manorathaiḥ			empty							
-subhashita-beginner	mantr	mantritam			empty							
-subhashita-beginner	mantra	mantra			empty							
-subhashita-beginner	manu	mano			empty							
-subhashita-beginner	matkuRa	matkuṇasya			empty							
-subhashita-beginner	may	mṛd			empty							
-subhashita-beginner	mayUra	mayūraiḥ			empty							
-subhashita-beginner	meGa	meghaḥ			empty							
-subhashita-beginner	mevi	mayi			empty							
-subhashita-beginner	mf	mṛtaḥ			empty							
-subhashita-beginner	mfR	śūra			empty							
-subhashita-beginner	mfga	mṛgāḥ			empty							
-subhashita-beginner	mfgendra	mṛgendra			empty							
-subhashita-beginner	miTyA	mithyā			empty							
-subhashita-beginner	mitra	mitra			empty							
-subhashita-beginner	muKa	mukhe			empty							
-subhashita-beginner	muRq	muṇḍanena			empty							
-subhashita-beginner	muRqa	muṇḍe			empty							
-subhashita-beginner	muc	muktiḥ			empty							
-subhashita-beginner	muh	mūḍhā			empty							
-subhashita-beginner	muni	muneḥ			empty							
-subhashita-beginner	nAma	nāma			empty							
-subhashita-beginner	nI	nayana			empty							
-subhashita-beginner	na	na			empty							
+subhashita-beginner	manoraTa	manorathaiḥ		желание	flag	unknown			желание:S:-:-			
+subhashita-beginner	mantr	mantritam		посовещавшись	flag	inflected,unknown	посовещаться		посовещаться:V:-:-			
+subhashita-beginner	mantra	mantra		мантры	flag	unknown			мантра:S:-:-			
+subhashita-beginner	manu	mano		Ману	ok	name						
+subhashita-beginner	matkuRa	matkuṇasya		клопов	flag	inflected,unknown	клоп		клоп:S:-:-			
+subhashita-beginner	may	mṛd		меняются	flag	inflected,unknown	меняться		меняться:V:-:-			
+subhashita-beginner	mayUra	mayūraiḥ		павлинов	flag	inflected,unknown	павлин		павлин:S:-:-			
+subhashita-beginner	meGa	meghaḥ		облака	flag	unknown			облако:S:-:-			
+subhashita-beginner	mevi	mayi		говорила	flag	inflected,unknown	говорить		говорить:V:-:-			
+subhashita-beginner	mf	mṛtaḥ		умирает	flag	inflected,unknown	умирать		умирать:V:-:-			
+subhashita-beginner	mfR	śūra		дробя	flag	inflected,unknown	дробить		дробить:V:-:-			
+subhashita-beginner	mfga	mṛgāḥ		зверей	flag	inflected_ambiguous,unknown			зверь:S:-:-			
+subhashita-beginner	mfgendra	mṛgendra		царь зверей	flag	phrase,unknown		4	царь:S:4:196.75 зверь:S:-:-			
+subhashita-beginner	miTyA	mithyā		ложно	flag	unknown			ложный:A:-:-			
+subhashita-beginner	mitra	mitra		Митра	flag	unknown			митра:S:-:-			
+subhashita-beginner	muKa	mukhe		лицо	flag	unknown			лицо:S:-:-			
+subhashita-beginner	muRq	muṇḍanena		с бритой головой	flag	phrase,unknown			бритый:A:-:- голова:S:-:-			
+subhashita-beginner	muRqa	muṇḍe		бритый	flag	unknown			бритый:A:-:-			
+subhashita-beginner	muc	muktiḥ		освобождается	flag	inflected,unknown	освобождаться		освобождаться:V:-:-			
+subhashita-beginner	muh	mūḍhā		глупец	flag	unknown			глупец:S:-:-			
+subhashita-beginner	muni	muneḥ		мудрец	flag	unknown			мудрец:S:-:-			
+subhashita-beginner	nAma	nāma		имя	flag	unknown			имя:S:-:-			
+subhashita-beginner	nI	nayana		ведут	flag	inflected_ambiguous,unknown			вести:V:-:-			
+subhashita-beginner	na	na		не	ok							
 subhashita-beginner	nagnakzapaRaka	nagnakṣapaṇake			empty							
-subhashita-beginner	nah	nahi			empty							
-subhashita-beginner	nam	namanti			empty							
-subhashita-beginner	netf	netaras			empty							
-subhashita-beginner	nf	nṛṇām			empty							
-subhashita-beginner	ni	nis			empty							
-subhashita-beginner	nij	nijā			empty							
-subhashita-beginner	nimnagA	nimnagā			empty							
-subhashita-beginner	nirantara	nirantaram			empty							
-subhashita-beginner	nirarTaka	nirarthakam			empty							
-subhashita-beginner	niviS	niviśate			empty							
-subhashita-beginner	nivid	niveditā			empty							
-subhashita-beginner	nu	no			empty							
-subhashita-beginner	pA	pibati			empty							
-subhashita-beginner	pARi	pāṇiḥ			empty							
-subhashita-beginner	pARqitya	pāṇḍityam			empty							
+subhashita-beginner	nah	nahi		связано	flag	inflected,unknown	связанный		связанный:V:-:-			
+subhashita-beginner	nam	namanti		склоняется	flag	inflected,unknown	склоняться		склоняться:V:-:-			
+subhashita-beginner	netf	netaras		вождь	flag	unknown			вождь:S:-:-			
+subhashita-beginner	nf	nṛṇām		мужей	flag	inflected,unknown	муж		муж:S:-:-			
+subhashita-beginner	ni	nis		в	ok							
+subhashita-beginner	nij	nijā		Омойте	flag	inflected,unknown	омыть		омыть:V:-:-			
+subhashita-beginner	nimnagA	nimnagā		река	flag	unknown			река:S:-:-			
+subhashita-beginner	nirantara	nirantaram		дружески	flag	unknown			дружески:ADV:-:-			
+subhashita-beginner	nirarTaka	nirarthakam		тщетными	flag	inflected,unknown	тщетный		тщетный:A:-:-			
+subhashita-beginner	niviS	niviśate		расположились	flag	inflected,unknown	расположиться		расположиться:V:-:-			
+subhashita-beginner	nivid	niveditā		призывом	flag	inflected,unknown	призыв		призыв:S:-:-			
+subhashita-beginner	nu	no		же	ok							
+subhashita-beginner	pA	pibati		Защищайте	flag	inflected,unknown	защищать		защищать:V:-:-			
+subhashita-beginner	pARi	pāṇiḥ		руки	flag	unknown			рука:S:-:-			
+subhashita-beginner	pARqitya	pāṇḍityam		ученость	flag	unknown			учёность:S:-:-			
 subhashita-beginner	pAWi	pāṭhitaḥ			empty							
-subhashita-beginner	pApa	pāpe			empty							
-subhashita-beginner	pAzARa	pāṣāṇe			empty							
-subhashita-beginner	pF	para			empty							
-subhashita-beginner	pUr	pūrṇam			empty							
-subhashita-beginner	paNka	paṅkam			empty							
-subhashita-beginner	paRqita	paṇḍitaḥ			empty							
-subhashita-beginner	paTin	panthānaḥ			empty							
-subhashita-beginner	paW	paṭha			empty							
-subhashita-beginner	paYcaza	pañcaṣāḥ			empty							
-subhashita-beginner	pad	padam			empty							
-subhashita-beginner	pakzi	pakṣā			empty							
-subhashita-beginner	parA	pare			empty							
-subhashita-beginner	parama	paramām			empty							
-subhashita-beginner	pariRAma	pariṇāme			empty							
+subhashita-beginner	pApa	pāpe		грех	flag	unknown			грех:S:-:-			
+subhashita-beginner	pAzARa	pāṣāṇe		камни	ok			4	камень:S:4:178.13			
+subhashita-beginner	pF	para		заполнил	flag	inflected,unknown	заполнить		заполнить:V:-:-			
+subhashita-beginner	pUr	pūrṇam		полный	flag	unknown			полный:A:-:-			
+subhashita-beginner	paNka	paṅkam		грязь	flag	unknown			грязь:S:-:-			
+subhashita-beginner	paRqita	paṇḍitaḥ		мудрые	flag	unknown			мудрый:A:-:-			
+subhashita-beginner	paTin	panthānaḥ		путь	flag	unknown			путь:S:-:-			
+subhashita-beginner	paW	paṭha		читает	flag	inflected,unknown	читать		читать:V:-:-			
+subhashita-beginner	paYcaza	pañcaṣāḥ		пять-шесть	ok							
+subhashita-beginner	pad	padam		ногами	flag	inflected,unknown	нога		нога:S:-:-			
+subhashita-beginner	pakzi	pakṣā		крылья	flag	unknown			крыло:S:-:-			
+subhashita-beginner	parA	pare		увлеченная, любовно танцует	flag	phrase,unknown			увлечь:V:-:- любовно:ADV:-:- танцевать:V:-:-			
+subhashita-beginner	parama	paramām		высшее	flag	unknown			высокий:A:-:-			
+subhashita-beginner	pariRAma	pariṇāme		изменение	flag	unknown			изменение:S:-:-			
 subhashita-beginner	paripuzwa	paripuṣṭaḥ			empty							
-subhashita-beginner	parivartin	parivartini			empty							
-subhashita-beginner	parjanya	parjanya			empty							
-subhashita-beginner	pat	patiṣyasi			empty							
-subhashita-beginner	pati	patiḥ			empty							
-subhashita-beginner	payas	payas			empty							
-subhashita-beginner	pfTivIkzit	pṛthivīkṣitām			empty							
-subhashita-beginner	pfTivIpati	pṛthivīpatiḥ			empty							
-subhashita-beginner	pi	pitā			empty							
-subhashita-beginner	pitAmaha	pitāmahāḥ			empty							
-subhashita-beginner	prI	priya			empty							
-subhashita-beginner	praT	pratham			empty							
-subhashita-beginner	pradA	pradātavyaḥ			empty							
-subhashita-beginner	prajA	prajā			empty							
-subhashita-beginner	prajYA	prajñā			empty							
-subhashita-beginner	prapad	prapannāni			empty							
-subhashita-beginner	prasad	prasīdati			empty							
-subhashita-beginner	prati	prati			empty							
-subhashita-beginner	pratiSraya	pratiśrayaḥ			empty							
-subhashita-beginner	pratigrah	pratigrahe			empty							
-subhashita-beginner	pratikf	pratikāreṇa			empty							
-subhashita-beginner	pratipad	pratipadyate			empty							
-subhashita-beginner	praviS	praviśanti			empty							
-subhashita-beginner	prayam	prayacchati			empty							
-subhashita-beginner	punar	punar			empty							
-subhashita-beginner	purohita	purohitaḥ			empty							
-subhashita-beginner	puruza	puruṣaḥ			empty							
-subhashita-beginner	putra	putreṇa			empty							
-subhashita-beginner	puzkala	puṣkalena			empty							
-subhashita-beginner	rAj	rājā			empty							
-subhashita-beginner	rAjan	rājñi			empty							
-subhashita-beginner	raYj	rajakas			empty							
-subhashita-beginner	ram	ratis			empty							
-subhashita-beginner	sA	sā			empty							
-subhashita-beginner	sADu	sādhavaḥ			empty							
+subhashita-beginner	parivartin	parivartini		неусыпной	flag	inflected,unknown	неусыпный		неусыпный:A:-:-			
+subhashita-beginner	parjanya	parjanya		Парджанья	ok	name						
+subhashita-beginner	pat	patiṣyasi		упал	flag	inflected,unknown	упасть		упасть:V:-:-			
+subhashita-beginner	pati	patiḥ		мужа	flag	inflected,unknown	муж		муж:S:-:-			
+subhashita-beginner	payas	payas		молоко	flag	unknown			молоко:S:-:-			
+subhashita-beginner	pfTivIkzit	pṛthivīkṣitām		цари	ok			4	царь:S:4:196.75			
+subhashita-beginner	pfTivIpati	pṛthivīpatiḥ		владыка земли	flag	phrase,unknown			владыка:S:-:- земля:S:-:-			
+subhashita-beginner	pi	pitā		отец	flag	unknown			отец:S:-:-			
+subhashita-beginner	pitAmaha	pitāmahāḥ		дед	flag	unknown			дед:S:-:-			
+subhashita-beginner	prI	priya		доволен	flag	inflected,unknown	довольный		довольный:A:-:-			
+subhashita-beginner	praT	pratham		прославленный	flag	unknown			прославить:V:-:-			
+subhashita-beginner	pradA	pradātavyaḥ		дал	flag	inflected,unknown	дать		дать:V:-:-			
+subhashita-beginner	prajA	prajā		потомство	ok			3	потомство:S:3:13.59			
+subhashita-beginner	prajYA	prajñā		мудрость	flag	unknown			мудрость:S:-:-			
+subhashita-beginner	prapad	prapannāni		прибегаю	flag	inflected,unknown	прибегать		прибегать:V:-:-			
+subhashita-beginner	prasad	prasīdati		смилуйся	flag	inflected,unknown	смиловаться		смиловаться:V:-:-			
+subhashita-beginner	prati	prati		к	ok							
+subhashita-beginner	pratiSraya	pratiśrayaḥ		местожительство	flag	unknown			местожительство:S:-:-			
+subhashita-beginner	pratigrah	pratigrahe		принял	flag	inflected,unknown	принять		принять:V:-:-			
+subhashita-beginner	pratikf	pratikāreṇa		противодействовать	flag	unknown			противодействовать:V:-:-			
+subhashita-beginner	pratipad	pratipadyate		достигает	flag	inflected	достигать	3	достигать:V:3:47.90			
+subhashita-beginner	praviS	praviśanti		вошел	flag	inflected,unknown	войти		войти:V:-:-			
+subhashita-beginner	prayam	prayacchati		отдай	flag	inflected,unknown	отдать		отдать:V:-:-			
+subhashita-beginner	punar	punar		снова	flag	unknown			снова:ADV:-:-			
+subhashita-beginner	purohita	purohitaḥ		домашний жрец	flag	phrase,unknown			домашний:A:-:- жрец:S:-:-			
+subhashita-beginner	puruza	puruṣaḥ		человек	flag	unknown			человек:S:-:-			
+subhashita-beginner	putra	putreṇa		сын	flag	unknown			сын:S:-:-			
+subhashita-beginner	puzkala	puṣkalena		многочисленные	flag	unknown			многочисленный:A:-:-			
+subhashita-beginner	rAj	rājā		сверкает	flag	inflected,unknown	сверкать		сверкать:V:-:-			
+subhashita-beginner	rAjan	rājñi		царь	ok			4	царь:S:4:196.75			
+subhashita-beginner	raYj	rajakas		царь	ok			4	царь:S:4:196.75			
+subhashita-beginner	ram	ratis		радуются	flag	inflected,unknown	радоваться		радоваться:V:-:-			
+subhashita-beginner	sA	sā		правильно	flag	unknown			правильно:ADV:-:-			
+subhashita-beginner	sADu	sādhavaḥ		хорошо	flag	unknown			хорошо:ADV:-:-			
 subhashita-beginner	sOKya	saukhyam			empty							
-subhashita-beginner	sTA	tiṣṭhanti			empty							
-subhashita-beginner	sTAvara	sthāvarāṇi			empty							
-subhashita-beginner	sU	svā			empty							
-subhashita-beginner	sUci	sūktayaḥ			empty							
-subhashita-beginner	sUkzma	sūkṣmaḥ			empty							
-subhashita-beginner	sa	sa			empty							
-subhashita-beginner	saMDA	sandhīyate			empty							
-subhashita-beginner	saMKyA	saṅkhyā			empty							
-subhashita-beginner	saMSraya	saṃśrayaḥ			empty							
-subhashita-beginner	saMgati	saṅgatim			empty							
-subhashita-beginner	saMkalpa	saṅkalpāt			empty							
-subhashita-beginner	saMkalpi	saṅkalpayiṣyāmi			empty							
-subhashita-beginner	saMkuc	saṅkucanti			empty							
-subhashita-beginner	saMsf	saṃsāre			empty							
-subhashita-beginner	saMyuj	saṃyujyeta			empty							
-subhashita-beginner	saYj	saṅgas			empty							
-subhashita-beginner	saha	saha			empty							
-subhashita-beginner	sahaja	sahajā			empty							
-subhashita-beginner	sahas	sahasā			empty							
-subhashita-beginner	sahasra	sahasreṣu			empty							
-subhashita-beginner	sakala	sakalam			empty							
-subhashita-beginner	salila	salilena			empty							
-subhashita-beginner	sam	samaḥ			empty							
-subhashita-beginner	samADA	samādhātum			empty							
-subhashita-beginner	samAcar	samācaret			empty							
-subhashita-beginner	samAna	samāne			empty							
-subhashita-beginner	samas	saṃbhavaḥ			empty							
-subhashita-beginner	samudra	samudreṇa			empty							
-subhashita-beginner	samunnam	samunnatim			empty							
-subhashita-beginner	santa	santa			empty							
-subhashita-beginner	sarvAtman	sarvātmanā			empty							
-subhashita-beginner	sarva	sarve			empty							
-subhashita-beginner	sat	satām			empty							
-subhashita-beginner	sev	sevā			empty							
-subhashita-beginner	sfj	sṛṣṭi			empty							
-subhashita-beginner	siD	sidhyanti			empty							
-subhashita-beginner	siMha	siṃhasya			empty							
-subhashita-beginner	sma	sma			empty							
-subhashita-beginner	snA	snā			empty							
-subhashita-beginner	sparDA	spardhayā			empty							
-subhashita-beginner	spfS	sparśane			empty							
-subhashita-beginner	strI	strīṣu			empty							
-subhashita-beginner	su	su			empty							
-subhashita-beginner	suKam	sukham			empty							
-subhashita-beginner	suKi	sukha			empty							
+subhashita-beginner	sTA	tiṣṭhanti		пребывает	flag	inflected,unknown	пребывать		пребывать:V:-:-			
+subhashita-beginner	sTAvara	sthāvarāṇi		неподвижное	flag	unknown			неподвижный:A:-:-			
+subhashita-beginner	sU	svā		родила	flag	inflected,unknown	родить		родить:V:-:-			
+subhashita-beginner	sUci	sūktayaḥ		иглой	flag	inflected,unknown	игла		игла:S:-:-			
+subhashita-beginner	sUkzma	sūkṣmaḥ		тонкие	flag	unknown			тонкий:A:-:-			
+subhashita-beginner	sa	sa		он	ok							
+subhashita-beginner	saMDA	sandhīyate		наложил	flag	inflected,unknown	наложить		наложить:V:-:-			
+subhashita-beginner	saMKyA	saṅkhyā		в битве	flag	phrase,unknown			битва:S:-:-			
+subhashita-beginner	saMSraya	saṃśrayaḥ		поиски помощи	flag	phrase,unknown			поиск:S:-:- помощь:S:-:-			
+subhashita-beginner	saMgati	saṅgatim		связь	flag	unknown			связь:S:-:-			
+subhashita-beginner	saMkalpa	saṅkalpāt		воля	flag	unknown			воля:S:-:-			
+subhashita-beginner	saMkalpi	saṅkalpayiṣyāmi		Решений	flag	unknown			решение:S:-:-			
+subhashita-beginner	saMkuc	saṅkucanti		ограничение	flag	unknown			ограничение:S:-:-			
+subhashita-beginner	saMsf	saṃsāre		перевоплощается	flag	inflected,unknown	перевоплощаться		перевоплощаться:V:-:-			
+subhashita-beginner	saMyuj	saṃyujyeta		соединившись	flag	inflected,unknown	соединиться		соединиться:V:-:-			
+subhashita-beginner	saYj	saṅgas		привязанный	flag	unknown			привязать:V:-:-			
+subhashita-beginner	saha	saha		с	ok							
+subhashita-beginner	sahaja	sahajā		естественный	flag	unknown			естественный:A:-:-			
+subhashita-beginner	sahas	sahasā		внезапно	flag	unknown			внезапно:ADV:-:-			
+subhashita-beginner	sahasra	sahasreṣu		тысяч	flag	inflected,unknown	тысяча		тысяча:S:-:-			
+subhashita-beginner	sakala	sakalam		все	ok							
+subhashita-beginner	salila	salilena		воды	flag	unknown			вода:S:-:-			
+subhashita-beginner	sam	samaḥ		вместе	flag	unknown			вместе:ADV:-:-			
+subhashita-beginner	samADA	samādhātum		сосредоточить	flag	unknown			сосредоточить:V:-:-			
+subhashita-beginner	samAcar	samācaret		совершай	flag	inflected,unknown	совершать		совершать:V:-:-			
+subhashita-beginner	samAna	samāne		самана	flag	inflected,unknown	саман		саман:S:-:-			
+subhashita-beginner	samas	saṃbhavaḥ		привлекут	flag	inflected,unknown	привлечь		привлечь:V:-:-			
+subhashita-beginner	samudra	samudreṇa		океан	flag	unknown			океан:S:-:-			
+subhashita-beginner	samunnam	samunnatim		вознесен	flag	inflected,unknown	вознесённый		вознести:V:-:-			
+subhashita-beginner	santa	santa		добрые	flag	inflected,unknown	добрый		добрый:A:-:-			
+subhashita-beginner	sarvAtman	sarvātmanā		всей душою	flag	phrase,unknown			весь:A:-:- душа:S:-:-			
+subhashita-beginner	sarva	sarve		все	ok							
+subhashita-beginner	sat	satām		добродетельных	flag	inflected,unknown	добродетельный		добродетельный:A:-:-			
+subhashita-beginner	sev	sevā		служит	flag	inflected,unknown	служить		служить:V:-:-			
+subhashita-beginner	sfj	sṛṣṭi		сотворил	flag	inflected,unknown	сотворить		сотворить:V:-:-			
+subhashita-beginner	siD	sidhyanti		устанавливается	flag	inflected,unknown	устанавливаться		устанавливаться:V:-:-			
+subhashita-beginner	siMha	siṃhasya		лев	flag	unknown			лев:S:-:-			
+subhashita-beginner	sma	sma		же	ok							
+subhashita-beginner	snA	snā		омывшись	flag	inflected,unknown	омыться		омыться:V:-:-			
+subhashita-beginner	sparDA	spardhayā		перегоняя друг друга	flag	phrase,unknown			перегонять:V:-:- друг:S:-:- друг:S:-:-			
+subhashita-beginner	spfS	sparśane		коснулся	flag	inflected,unknown	коснуться		коснуться:V:-:-			
+subhashita-beginner	strI	strīṣu		женщины	flag	unknown			женщина:S:-:-			
+subhashita-beginner	su	su		выжимающего	flag	inflected,unknown	выжимающий		выжимать:V:-:-			
+subhashita-beginner	suKam	sukham		счастье	ok			3	счастие:S:3:29.48			
+subhashita-beginner	suKi	sukha		счастлив	flag	inflected,unknown	счастливый		счастливый:A:-:-			
 subhashita-beginner	sugfhin	sugṛhī			empty							
-subhashita-beginner	suhfd	suhṛt			empty							
-subhashita-beginner	sukfta	sukṛtena			empty							
+subhashita-beginner	suhfd	suhṛt		друзей	flag	inflected,unknown	друг		друг:S:-:-			
+subhashita-beginner	sukfta	sukṛtena		благого деяния	flag	phrase,unknown			благой:A:-:- деяние:S:-:-			
 subhashita-beginner	sukula	sukule			empty							
-subhashita-beginner	sumanas	sumanasas			empty							
-subhashita-beginner	sundara	sundaryā			empty							
-subhashita-beginner	surUpa	surūpa			empty							
-subhashita-beginner	svAdu	svādu			empty							
-subhashita-beginner	sva	sva			empty							
-subhashita-beginner	svaDarma	svadharme			empty							
-subhashita-beginner	svap	suptasya			empty							
-subhashita-beginner	svasf	svasrā			empty							
-subhashita-beginner	tA	te			empty							
-subhashita-beginner	tAdfSa	tādṛśe			empty							
-subhashita-beginner	tIrTa	tīrthe			empty							
-subhashita-beginner	taTA	tathā			empty							
-subhashita-beginner	tad	tasya			empty							
-subhashita-beginner	tadvat	tadvat			empty							
-subhashita-beginner	tam	tān			empty							
-subhashita-beginner	tan	sanātha			empty							
-subhashita-beginner	tap	taptā			empty							
-subhashita-beginner	tasmAt	tasmāt			empty							
-subhashita-beginner	tena	tena			empty							
-subhashita-beginner	tfRa	tṛṇāya			empty							
-subhashita-beginner	tfp	tṛptiḥ			empty							
-subhashita-beginner	tftIyA	tṛtīyā			empty							
-subhashita-beginner	til	tila			empty							
-subhashita-beginner	tri	triṣu			empty							
-subhashita-beginner	tripaTagA	tripathagām			empty							
-subhashita-beginner	tu	tu			empty							
-subhashita-beginner	tulA	tulayā			empty							
-subhashita-beginner	tva	tvām			empty							
-subhashita-beginner	tyaj	tyājyaḥ			empty							
-subhashita-beginner	uB	ubhe			empty							
-subhashita-beginner	udyam	udyamena			empty							
-subhashita-beginner	ugra	madhuram			empty							
-subhashita-beginner	upaskf	upakāriṣu			empty							
-subhashita-beginner	utpad	utpadyante			empty							
-subhashita-beginner	vA	vān			empty							
-subhashita-beginner	vARi	vāṇī			empty							
-subhashita-beginner	vac	vaktāraḥ			empty							
-subhashita-beginner	vad	vada			empty							
-subhashita-beginner	valg	valganti			empty							
-subhashita-beginner	valgu	valgu			empty							
-subhashita-beginner	vap	vāpi			empty							
-subhashita-beginner	vapus	vapus			empty							
-subhashita-beginner	vas	vāsas			empty							
-subhashita-beginner	vf	vṛṇīte			empty							
-subhashita-beginner	vfD	vṛddhe			empty							
-subhashita-beginner	vfj	varjayet			empty							
-subhashita-beginner	vfz	varṣati			empty							
-subhashita-beginner	viBava	vibhave			empty							
-subhashita-beginner	viS	viśanti			empty							
-subhashita-beginner	viSiz	viśeṣatas			empty							
-subhashita-beginner	vicitra	vicitrāṇi			empty							
-subhashita-beginner	vid	vidyate			empty							
-subhashita-beginner	vikali	vikale			empty							
-subhashita-beginner	vikas	vikasanti			empty							
-subhashita-beginner	vinI	vinayena			empty							
-subhashita-beginner	vinaS	vinaśyataḥ			empty							
-subhashita-beginner	vipAka	vipāke			empty							
-subhashita-beginner	vipad	vipat			empty							
-subhashita-beginner	viraYj	virāgaḥ			empty							
-subhashita-beginner	vivft	vivartete			empty							
-subhashita-beginner	vivic	viviktās			empty							
-subhashita-beginner	vyADA	vyādhiḥ			empty							
-subhashita-beginner	vyaD	vyādhinā			empty							
-subhashita-beginner	vyasana	vyasane			empty							
-subhashita-beginner	vyavahf	vyavahāreṣu			empty							
-subhashita-beginner	yA	yāsyanti			empty							
-subhashita-beginner	yAc	yācante			empty							
-subhashita-beginner	yAdfSa	yādṛśe			empty							
-subhashita-beginner	yaSas	yaśasi			empty							
-subhashita-beginner	yaTA	yathā			empty							
-subhashita-beginner	yaTAviDi	yathāvidhi			empty							
-subhashita-beginner	yad	yasya			empty							
-subhashita-beginner	yadi	yadi			empty							
-subhashita-beginner	yat	yātā			empty							
-subhashita-beginner	yatra	yatra			empty							
-subhashita-beginner	yozit	yoṣiti			empty							
-subhashita-beginner	yu	yo			empty							
-subhashita-beginner	yuj	yojayet			empty							
-subhashita-beginner	zawpada	ṣaṭpadās			empty							
+subhashita-beginner	sumanas	sumanasas		цветами	flag	inflected_ambiguous,unknown			цвет:S:-:-			
+subhashita-beginner	sundara	sundaryā		Прекрасный, как юное облако	flag	phrase,unknown			прекрасный:A:-:- юный:A:-:- облако:S:-:-			
+subhashita-beginner	surUpa	surūpa		Сурупа	ok	name						
+subhashita-beginner	svAdu	svādu		сладкую	flag	inflected,unknown	сладкий		сладкий:A:-:-			
+subhashita-beginner	sva	sva		свой	flag	unknown			свой:A:-:-			
+subhashita-beginner	svaDarma	svadharme		свой долг	flag	phrase,unknown			свой:A:-:- долг:S:-:-			
+subhashita-beginner	svap	suptasya		спит	flag	inflected_ambiguous,unknown			спать:V:-:-			
+subhashita-beginner	svasf	svasrā		сестра	flag	unknown			сестра:S:-:-			
+subhashita-beginner	tA	te		эти	flag	unknown			этот:A:-:-			
+subhashita-beginner	tAdfSa	tādṛśe		такой	flag	unknown			такой:A:-:-			
+subhashita-beginner	tIrTa	tīrthe		тиртхе	flag	unknown			тиртх:S:-:-			
+subhashita-beginner	taTA	tathā		так	ok							
+subhashita-beginner	tad	tasya		он	ok							
+subhashita-beginner	tadvat	tadvat		так	ok							
+subhashita-beginner	tam	tān		лишается дыхания	flag	phrase,unknown			лишаться:V:-:- дыхание:S:-:-			
+subhashita-beginner	tan	sanātha		протянулся	flag	inflected,unknown	протянуться		протянуться:V:-:-			
+subhashita-beginner	tap	taptā		греет	flag	inflected,unknown	греть		греть:V:-:-			
+subhashita-beginner	tasmAt	tasmāt		поэтому	ok			4	поэтому:ADV:4:289.91			
+subhashita-beginner	tena	tena		тем	ok							
+subhashita-beginner	tfRa	tṛṇāya		трава	flag	unknown			трава:S:-:-			
+subhashita-beginner	tfp	tṛptiḥ		насытиться	flag	unknown			насытиться:V:-:-			
+subhashita-beginner	tftIyA	tṛtīyā		третий	flag	unknown			третий:A:-:-			
+subhashita-beginner	til	tila		кунжут	flag	unknown			кунжут:S:-:-			
+subhashita-beginner	tri	triṣu		три	ok							
+subhashita-beginner	tripaTagA	tripathagām		Текущей тремя путями	flag	phrase,unknown			текущий:A:-:- путь:S:-:-			
+subhashita-beginner	tu	tu		же	ok							
+subhashita-beginner	tulA	tulayā		весы	flag	unknown			весы:S:-:-			
+subhashita-beginner	tva	tvām		ты	ok							
+subhashita-beginner	tyaj	tyājyaḥ		оставив	flag	inflected,unknown	оставить		оставить:V:-:-			
+subhashita-beginner	uB	ubhe		оба	ok							
+subhashita-beginner	udyam	udyamena		подняв	flag	inflected,unknown	поднять		поднять:V:-:-			
+subhashita-beginner	ugra	madhuram		грозный	flag	unknown			грозный:A:-:-			
+subhashita-beginner	upaskf	upakāriṣu		окажу помощь	flag	phrase,unknown			оказать:V:-:- помощь:S:-:-			
+subhashita-beginner	utpad	utpadyante		возникает	flag	inflected,unknown	возникать		возникать:V:-:-			
+subhashita-beginner	vA	vān		или	ok							
+subhashita-beginner	vARi	vāṇī		нежноголосая	flag	unknown			нежноголосый:A:-:-			
+subhashita-beginner	vac	vaktāraḥ		сказал	flag	inflected	сказать	5	сказать:V:5:2472.22			
+subhashita-beginner	vad	vada		говорят	flag	unknown			говорить:V:-:-			
+subhashita-beginner	valg	valganti		приплясывая	flag	inflected,unknown	приплясывать		приплясывать:V:-:-			
+subhashita-beginner	valgu	valgu		милых	flag	inflected,unknown	милый		милый:A:-:-			
+subhashita-beginner	vap	vāpi		посеяно	flag	inflected,unknown	посеянный		посеять:V:-:-			
+subhashita-beginner	vapus	vapus		тело	flag	unknown			тело:S:-:-			
+subhashita-beginner	vas	vāsas		жил	flag	inflected_ambiguous,unknown			жить:V:-:-			
+subhashita-beginner	vf	vṛṇīte		окруженный	flag	unknown			окружить:V:-:-			
+subhashita-beginner	vfD	vṛddhe		возрастает	flag	inflected,unknown	возрастать		возрастать:V:-:-			
+subhashita-beginner	vfj	varjayet		минует	flag	inflected,unknown	миновать		миновать:V:-:-			
+subhashita-beginner	vfz	varṣati		дождь	flag	unknown			дождь:S:-:-			
+subhashita-beginner	viBava	vibhave		богатство	flag	unknown			богатство:S:-:-			
+subhashita-beginner	viS	viśanti		племен	flag	inflected,unknown	племя		племя:S:-:-			
+subhashita-beginner	viSiz	viśeṣatas		превосходит	flag	inflected,unknown	превосходить		превосходить:V:-:-			
+subhashita-beginner	vicitra	vicitrāṇi		различные	flag	unknown			различный:A:-:-			
+subhashita-beginner	vid	vidyate		знает	flag	inflected	знать	5	знать:V:5:1740.03			
+subhashita-beginner	vikali	vikale		с калекой	flag	phrase,unknown			калека:S:-:-			
+subhashita-beginner	vikas	vikasanti		раскрывающийся	flag	unknown			раскрываться:V:-:-			
+subhashita-beginner	vinI	vinayena		почтительно	flag	unknown			почтительно:ADV:-:-			
+subhashita-beginner	vinaS	vinaśyataḥ		погибнет	flag	inflected,unknown	погибнуть		погибнуть:V:-:-			
+subhashita-beginner	vipAka	vipāke		созревание	flag	unknown			созревание:S:-:-			
+subhashita-beginner	vipad	vipat		несчастье	flag	unknown			несчастие:S:-:-			
+subhashita-beginner	viraYj	virāgaḥ		равнодушия	flag	unknown			равнодушие:S:-:-			
+subhashita-beginner	vivft	vivartete		относятся	flag	inflected,unknown	относиться		относиться:V:-:-			
+subhashita-beginner	vivic	viviktās		уединенном	flag	inflected_ambiguous,unknown			уединённый:A:-:-			
+subhashita-beginner	vyADA	vyādhiḥ		страдают	flag	inflected,unknown	страдать		страдать:V:-:-			
+subhashita-beginner	vyaD	vyādhinā		пронзил	flag	inflected,unknown	пронзить		пронзить:V:-:-			
+subhashita-beginner	vyasana	vyasane		несчастье	flag	unknown			несчастие:S:-:-			
+subhashita-beginner	vyavahf	vyavahāreṣu		достойным общения	flag	phrase,unknown			достойный:A:-:- общение:S:-:-			
+subhashita-beginner	yA	yāsyanti		идут	flag	inflected,unknown	идти		идти:V:-:-			
+subhashita-beginner	yAc	yācante		попросил	flag	inflected,unknown	попросить		попросить:V:-:-			
+subhashita-beginner	yAdfSa	yādṛśe		какой	flag	unknown			какой:A:-:-			
+subhashita-beginner	yaSas	yaśasi		слава	flag	unknown			слава:S:-:-			
+subhashita-beginner	yaTA	yathā		как	ok							
+subhashita-beginner	yaTAviDi	yathāvidhi		согласно правилу	flag	phrase,unknown			правило:S:-:-			
+subhashita-beginner	yad	yasya		что	ok							
+subhashita-beginner	yadi	yadi		если	ok							
+subhashita-beginner	yat	yātā		стремится	flag	inflected,unknown	стремиться		стремиться:V:-:-			
+subhashita-beginner	yatra	yatra		где	flag	unknown			где:ADV:-:-			
+subhashita-beginner	yozit	yoṣiti		женщины	flag	unknown			женщина:S:-:-			
+subhashita-beginner	yu	yo		отврати	flag	inflected,unknown	отвратить		отвратить:V:-:-			
+subhashita-beginner	yuj	yojayet		союзником	flag	inflected,unknown	союзник		союзник:S:-:-			
+subhashita-beginner	zawpada	ṣaṭpadās		пчелы	flag	unknown			пчела:S:-:-			
 subhashita-beginner	Брахман	Брахман			empty							
 subhashita-beginner	Брихаспати	Брихаспати			empty							
 subhashita-beginner	Защищайте	пьет			empty							

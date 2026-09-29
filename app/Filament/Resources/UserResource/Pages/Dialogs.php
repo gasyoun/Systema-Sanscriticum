@@ -5,8 +5,9 @@ namespace App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource;
 use App\Models\ChatMessage;
 use App\Models\User;
+use App\Support\TelegramTransport;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
-use Illuminate\Support\Facades\Http;
 
 class Dialogs extends Page
 {
@@ -104,14 +105,29 @@ class Dialogs extends Page
             ?: config('services.telegram.bot_token');
         $chatId = $user->telegram_id;
 
-        Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-            'chat_id' => $chatId,
-            'text' => '👨‍🏫 <b>'.e($alias).'</b>:'."\n".$this->newMessage,
-            'parse_mode' => 'HTML',
-        ]);
+        // Ответ уже сохранён выше, поэтому недоступный Telegram — не 500, а
+        // предупреждение куратору: запись в чате есть, в Telegram не ушло.
+        $delivered = TelegramTransport::post(
+            "https://api.telegram.org/bot{$token}/sendMessage",
+            [
+                'chat_id' => $chatId,
+                'text' => '👨‍🏫 <b>'.e($alias).'</b>:'."\n".$this->newMessage,
+                'parse_mode' => 'HTML',
+            ],
+            'Dialogs sendMessage',
+            ['chat_id' => $chatId],
+        )?->successful() ?? false;
 
         // Очищаем поле ввода и перезагружаем чат
         $this->newMessage = '';
         $this->loadMessages();
+
+        if (! $delivered) {
+            Notification::make()
+                ->title('Сообщение в Telegram не ушло')
+                ->body('Запись сохранена в чате, но Telegram недоступен — отправьте позже.')
+                ->warning()
+                ->send();
+        }
     }
 }

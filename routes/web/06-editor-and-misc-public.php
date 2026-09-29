@@ -151,3 +151,12 @@ Route::get('/chat/history', [PublicChatController::class, 'history'])
 Route::post('/support/presence', [PublicPresenceController::class, 'ping'])
     ->middleware('throttle:20,1')
     ->name('support.presence');
+
+// Iframe-эмбед веб-чата для samskrtam.ru (H5451). Страница без лейаута кабинета:
+// только support-chat-widget; ?page= (товар магазина) уходит в приветствие и
+// телеметрию entry_url. Самогейтится флагом support_chat_embed (OFF → 404);
+// троттлинг как у chat/message; CSP frame-ancestors — только на этом ответе.
+// Строго до catch-all.
+Route::get('/chat/embed', [PublicChatController::class, 'embed'])
+    ->middleware('throttle:30,1')
+    ->name('chat.embed');

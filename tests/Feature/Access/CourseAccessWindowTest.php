@@ -284,16 +284,18 @@ class CourseAccessWindowTest extends TestCase
     /** @test */
     public function access_set_window_command_sets_and_revokes(): void
     {
+        // Keep the fixture at least five days beyond the isActive() boundary.
+        $endsAt = now()->addDays(18)->startOfMinute()->format('Y-m-d H:i');
         $this->artisan('access:set-window', [
             'user' => $this->student->id,
             'course' => $this->course->id,
-            '--until' => '2026-09-27 23:59',
+            '--until' => $endsAt,
             '--reason' => 'MG 09-09: 18 дней',
             '--by' => '1',
         ])->assertSuccessful();
 
         $window = CourseAccessWindow::query()->firstOrFail();
-        $this->assertSame('2026-09-27 23:59', $window->ends_at->format('Y-m-d H:i'));
+        $this->assertSame($endsAt, $window->ends_at->format('Y-m-d H:i'));
         $this->assertTrue($window->isActive());
 
         $this->artisan('access:set-window', [

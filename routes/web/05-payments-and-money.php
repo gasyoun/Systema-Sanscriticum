@@ -77,7 +77,8 @@ Route::post('/bank/{tariff}', [BankClaimController::class, 'store'])
     ->name('bank.claim.store');
 
 // «Я заплатил преподавателю напрямую» (H4627): анкета-зеркало PayPal-pending.
-// Платёж ложится pending с received_account=teacher + received_by_teacher_id;
+// Платёж ложится pending с received_account=teacher_personal (H5474: здесь стояло
+// невалидное 'teacher' — именно оно и утекло в 10 прод-строк) + received_by_teacher_id;
 // куратор сверяет по выписке преподавателя и подтверждает в Filament —
 // номинал вычтется из гонорара сам (H4597). Флаг TEACHER_PAY_ENABLED default
 // OFF (404). Строго до catch-all /{slug}; throttle:5,1 — защита от спама.
