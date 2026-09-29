@@ -54,6 +54,9 @@ class Course extends Model
         'exit_survey_triggered_at',
         // Живой повтор не планируется (MG H1755): куратор говорит «повтора не будет».
         'never_repeat',
+        // H5066: порог заявок «возобновить занятия» (revive), при котором группа
+        // собирается. NULL = порог не задан, решает куратор.
+        'revive_threshold',
         // Новизна для анонсов «только новые курсы» (MG 31-08-2026):
         // new — впервые; repeat — возвращается после года-двух;
         // no_repeat — повтора не будет; usual — обычный.
@@ -96,6 +99,15 @@ class Course extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_course');
+    }
+
+    /**
+     * H5134 — сердечки «Избранное» на этом курсе (auth-only сигнал,
+     * отдельно от голоса ждуна).
+     */
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(CourseFavorite::class);
     }
 
     /**
@@ -239,6 +251,8 @@ class Course extends Model
         'is_active' => 'boolean',
         'is_completed' => 'boolean',
         'never_repeat' => 'boolean',
+        // H5066: порог заявок на возобновление (int, nullable).
+        'revive_threshold' => 'integer',
         'milestones_nudge_sent_at' => 'datetime',
         'deposit_amount' => 'decimal:2',
         'trial_price' => 'decimal:2',
@@ -269,6 +283,12 @@ class Course extends Model
     public function slugAliases(): HasMany
     {
         return $this->hasMany(CourseSlugAlias::class);
+    }
+
+    /** H5066: заявки интереса на курс с публичной формы /interest/{course}. */
+    public function courseInterestRequests(): HasMany
+    {
+        return $this->hasMany(CourseInterestRequest::class);
     }
 
     /**
@@ -580,6 +600,25 @@ class Course extends Model
         return $this->belongsTo(Schedule::class, 'trial_schedule_id');
     }
 
+    /**
+     * H4966: видимый курс с платным пробным, чей закреплённый trial_schedule_id
+     * уже в прошлом (или указывает на удалённую строку) — виджет и NextIntroSession
+     * молча деградируют в тишину, пока Filament-поле «Пробное занятие» не
+     * переуказано вручную (out of scope для агента — только человек в админке).
+     * Используется монитором свежести и публичным фидом, чтобы отличить
+     * «протухший пин» от «пробное отключено».
+     */
+    public function hasStaleTrialPin(): bool
+    {
+        if (! $this->is_visible || (float) ($this->trial_price ?? 0) <= 0.0 || ! $this->trial_schedule_id) {
+            return false;
+        }
+
+        $schedule = $this->relationLoaded('trialSchedule') ? $this->trialSchedule : $this->trialSchedule()->first();
+
+        return $schedule === null || $schedule->start === null || $schedule->start->isPast();
+    }
+
     protected static function booted(): void
     {
         // После сохранения курса синхронизируем урок-заготовку под пробное занятие.
@@ -666,6 +705,15 @@ class Course extends Model
             ->whereDate('lesson_date', $schedule->start->toDateString())
             ->first();
 
+        // H5001: прошедшее занятие продаётся как ЗАПИСЬ — если запись прикреплена
+        // к другому уроку этой даты (группа не совпала с событием), пин ведёт туда,
+        // а не на вечно пустую заготовку. Флаг OFF — поведение как прежде.
+        if (config('features.trial_grant_hardening')
+            && $schedule->start->isPast()
+            && ! $lesson?->hasVideo()) {
+            $lesson = $this->recordedLessonOn($schedule) ?? $lesson;
+        }
+
         if (! $lesson) {
             $lesson = Lesson::create([
                 'course_id' => $this->id,
@@ -681,6 +729,50 @@ class Course extends Model
             // Quietly — иначе saved() зациклится.
             $this->updateQuietly(['trial_lesson_id' => $lesson->id]);
         }
+    }
+
+    /**
+     * H5001: урок, на который реально выдаётся платное пробное.
+     *  - предстоящее занятие → закреплённая заготовка (студент идёт на эфир,
+     *    запись дольётся в неё позже);
+     *  - прошедшее → урок этой даты С ЗАПИСЬЮ (сначала закреплённый, затем любой
+     *    урок курса той же даты, даже при пустом пине); записи нет → null.
+     * Для предстоящего null — когда trial_lesson_id пуст. Решение «что делать с null» —
+     * у вызывающего (Payment::processTrial, trial:target-watch).
+     */
+    public function trialGrantTarget(): ?Lesson
+    {
+        $pinned = $this->trial_lesson_id ? Lesson::find($this->trial_lesson_id) : null;
+        $schedule = $this->trial_schedule_id ? Schedule::find($this->trial_schedule_id) : null;
+
+        // Предстоящее занятие (или события нет) — только закреплённая заготовка.
+        if (! $schedule?->start || ! $schedule->start->isPast()) {
+            return $pinned;
+        }
+
+        if ($pinned?->hasVideo()) {
+            return $pinned;
+        }
+
+        // Прошедшее: запись этой даты, даже если пин пуст или ведёт на заготовку.
+        return $this->recordedLessonOn($schedule);
+    }
+
+    /** Урок курса на дату события расписания, у которого есть запись. */
+    private function recordedLessonOn(Schedule $schedule): ?Lesson
+    {
+        return Lesson::where('course_id', $this->id)
+            ->whereDate('lesson_date', $schedule->start->toDateString())
+            ->withRecording()
+            ->orderBy('id')
+            ->get()
+            // Сначала урок той же группы, что и событие; затем — с отметкой прикрепления.
+            ->sortBy(fn (Lesson $l) => [
+                (string) $l->group_id === (string) $schedule->group_id ? 0 : 1,
+                $l->recording_attached_at ? 0 : 1,
+                $l->id,
+            ])
+            ->first();
     }
 
     // Связь: Один курс имеет много уроков

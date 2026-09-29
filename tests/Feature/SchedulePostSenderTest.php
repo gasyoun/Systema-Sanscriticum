@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Jobs\SendTelegramChatMessageJob;
+use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
@@ -44,24 +45,24 @@ class SchedulePostSenderTest extends TestCase
         $sent = app(SchedulePostSender::class)->sendForGroup($group);
 
         $this->assertNotNull($sent);
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
         $this->assertDatabaseHas('schedule_posts', ['group_id' => $group->id]);
 
         // Тот же текст — повторной отправки нет (hash-память, не только guard).
         $again = app(SchedulePostSender::class)->sendForGroup($group);
         $this->assertNull($again);
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
 
         // Расписание изменилось (перенос даты) — пост уходит заново.
         Schedule::where('group_id', $group->id)->first()->update(['start' => Carbon::parse('2026-03-14 11:00')]);
         $afterMove = app(SchedulePostSender::class)->sendForGroup($group);
         $this->assertNotNull($afterMove);
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 2);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 2);
 
         // force обходит hash-память.
         $forced = app(SchedulePostSender::class)->sendForGroup($group, force: true);
         $this->assertNotNull($forced);
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 3);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 3);
     }
 
     /** @test */
@@ -105,7 +106,7 @@ class SchedulePostSenderTest extends TestCase
         foreach ($groups as $g) {
             app(SchedulePostSender::class)->sendForGroup($g);
         }
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
     }
 
     /** @test */
@@ -139,6 +140,29 @@ class SchedulePostSenderTest extends TestCase
 
         $this->assertSame(1, $result['sent']);
         $this->assertSame(1, $result['skipped']);
-        Queue::assertPushed(SendTelegramChatMessageJob::class, 1);
+        Queue::assertPushed(SendZapisiBotMessageJob::class, 1);
+    }
+
+    /**
+     * H4846: пост идёт ботом @zapisi_ORSbot — основной бот в чатах обучения не
+     * состоит, его sendMessage туда = 400 «chat not found» (прод 11–14.09.2026).
+     *
+     * @test
+     */
+    public function post_goes_via_zapisi_bot_not_main_bot(): void
+    {
+        config(['features.schedule_full_post' => true]);
+        Queue::fake();
+
+        $group = Group::factory()->create(['telegram_chat_id' => '-1009990000001']);
+        Schedule::create(['title' => 'A', 'start' => Carbon::parse('2026-03-07 11:00'), 'group_id' => $group->id]);
+
+        app(SchedulePostSender::class)->sendForGroup($group);
+
+        Queue::assertNotPushed(SendTelegramChatMessageJob::class);
+        Queue::assertPushed(
+            SendZapisiBotMessageJob::class,
+            fn (SendZapisiBotMessageJob $job): bool => $job->chatId === '-1009990000001' && $job->kind === 'schedule_post',
+        );
     }
 }

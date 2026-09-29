@@ -13,6 +13,8 @@ use App\Services\AttributionService;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Messaging\TelegramDeliveryChannel;
 use App\Services\Payments\TochkaPaymentService;
+use App\Support\AcquisitionAttribution;
+use App\Support\BeginnerPilotOffer;
 use App\Support\MarathonLandingCopy;
 use App\Support\MarathonLandingCopySplit;
 use App\Support\MarathonVisual;
@@ -20,6 +22,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -83,6 +86,27 @@ class MarathonController extends Controller
             MarathonLandingCopySplit::recordImpression($split->variantKey);
         }
         $copy = MarathonLandingCopy::forView($split->variantKey);
+        $paidSupportAvailable = BeginnerPilotOffer::registrationAvailable();
+        $sessionScheduled = BeginnerPilotOffer::supportAvailable();
+        if (! $paidSupportAvailable) {
+            $copy['variant']['hero_title'] = 'Попробуйте санскрит с нуля и выберите следующий шаг';
+            $copy['variant']['hero_subtitle'] = $sessionScheduled
+                ? 'Два коротких занятия по ~15 минут в день доступны бесплатно. Запись на ближайшую групповую консультацию закрыта.'
+                : 'Два коротких занятия по ~15 минут в день доступны бесплатно. Живая групповая консультация и участие с проверкой вернутся после подтверждения даты.';
+            $copy['variant']['benefits_heading'] = 'Что вы попробуете бесплатно';
+            $copy['variant']['benefits'] = array_slice($copy['variant']['benefits'], 0, 2);
+            $copy['days'] = array_slice($copy['days'], 0, 2);
+            $copy['days'][1]['body'] = $sessionScheduled
+                ? 'Корень + аффикс на простых примерах. В конце можно оставить вопрос; запись на ближайшую встречу уже закрыта.'
+                : 'Корень + аффикс на простых примерах. В конце можно оставить вопрос для общего разбора; дата следующей встречи пока не подтверждена.';
+            $copy['tracks'] = ['free' => $copy['tracks']['free']];
+            $copy['faq'][0]['a'] = 'Два вводных занятия занимают около 15 минут каждое. Пропустили день — продолжите, когда удобно.';
+            $copy['faq'][2]['a'] = 'Когда новая групповая консультация состоится, на бесплатном треке будет доступна запись. Личный разбор вопроса входит только в участие с проверкой.';
+            $copy['faq'][3]['a'] = $sessionScheduled
+                ? 'Запись на ближайшую групповую встречу закрыта. Бесплатные вводные материалы остаются открытыми.'
+                : 'Участие с проверкой сейчас недоступно: дата групповой встречи и возможность проверки ещё не подтверждены. Бесплатные вводные материалы остаются открытыми.';
+        }
+        $copy['testimonial'] = '';
         // H1975 — chrome/layout skin; independent axis, default b, ?skin= QA override.
         $skin = MarathonVisual::variantKey($request);
 
@@ -94,6 +118,8 @@ class MarathonController extends Controller
             'paidTrackPrice' => config('marathon.paid_track_price'),
             'couponAmount' => config('marathon.coupon_amount'),
             'hostName' => config('marathon.host_name'),
+            'paidSupportAvailable' => $paidSupportAvailable,
+            'sessionScheduled' => $sessionScheduled,
         ]);
     }
 
@@ -115,6 +141,12 @@ class MarathonController extends Controller
             'is_promo_agreed' => 'nullable',
         ]);
 
+        if ($validated['track'] === MarathonEnrollment::TRACK_PAID && ! BeginnerPilotOffer::registrationAvailable()) {
+            throw ValidationException::withMessages([
+                'track' => 'Участие с проверкой откроется после подтверждения даты групповой консультации. Пока выберите бесплатный формат.',
+            ]);
+        }
+
         $landing = LandingPage::where('slug', config('marathon.landing_slug'))->first();
 
         // H2010 — reads the sticky variant cookie set in show(); never
@@ -133,6 +165,8 @@ class MarathonController extends Controller
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
         ];
+
+        $leadData = array_merge($leadData, AcquisitionAttribution::forLead($request));
 
         if (empty($leadData['email']) && filter_var($leadData['contact'], FILTER_VALIDATE_EMAIL)) {
             $leadData['email'] = $leadData['contact'];
@@ -157,9 +191,12 @@ class MarathonController extends Controller
             if ($enrollment) {
                 $this->attachTelegramMagnet($existingLead);
 
+                // H5085: дубликат по знанию контакта — НЕ доказательство
+                // владения им: deep-link с bearer magnet_token существующего
+                // лида анонимному сабмиттеру не выдаём (skin сам деградирует
+                // без marathon_telegram_link).
                 return redirect()->route('marathon.show')
                     ->with('marathon_result', $enrollment->quiz_goal)
-                    ->with('marathon_telegram_link', $this->deepLink($existingLead))
                     ->with('marathon_track', $enrollment->track)
                     ->with('marathon_paid', $enrollment->isPaidConfirmed())
                     ->with('marathon_contact', $existingLead->contact);
@@ -250,6 +287,16 @@ class MarathonController extends Controller
                 ->with('marathon_paid', true);
         }
 
+        if (! BeginnerPilotOffer::registrationAvailable() || $enrollment->currentDay() >= 3) {
+            return redirect()->route('marathon.show')
+                ->with('error', 'Запись на ближайшую консультацию закрыта. Бесплатные вводные материалы остаются доступны.');
+        }
+
+        $ttlMinutes = (int) floor(now()->diffInMinutes(BeginnerPilotOffer::registrationCutoff(), false));
+        if ($ttlMinutes < 1) {
+            return redirect()->route('marathon.show')->with('error', 'Запись на ближайшую консультацию закрыта.');
+        }
+
         try {
             $user = $this->resolveUserForCheckout($validated['email'], $lead);
         } catch (ValidationException $e) {
@@ -278,6 +325,7 @@ class MarathonController extends Controller
                 amount: $amount,
                 purpose: $purpose,
                 itemName: 'Марафон «Консультация по онлайн-курсам ОРС» — трек «с проверкой»',
+                ttlMinutes: min($ttlMinutes, 60),
             );
         } catch (ConnectionException $e) {
             $payment->update(['status' => 'failed']);
@@ -327,6 +375,7 @@ class MarathonController extends Controller
             'paidTrackPrice' => config('marathon.paid_track_price'),
             'couponAmount' => config('marathon.coupon_amount'),
             'hostName' => config('marathon.host_name'),
+            'paidSupportAvailable' => true,
             'showRoute' => 'marathon.january.show',
             'registerRoute' => 'marathon.january.register',
             'payRoute' => 'marathon.january.pay',
@@ -365,6 +414,8 @@ class MarathonController extends Controller
             'user_agent' => $request->userAgent(),
         ];
 
+        $leadData = array_merge($leadData, AcquisitionAttribution::forLead($request));
+
         if (empty($leadData['email']) && filter_var($leadData['contact'], FILTER_VALIDATE_EMAIL)) {
             $leadData['email'] = $leadData['contact'];
         }
@@ -387,9 +438,10 @@ class MarathonController extends Controller
             if ($enrollment) {
                 $this->attachTelegramMagnet($existingLead);
 
+                // H5085: тот же запрет, что и в register() — токен чужого лида
+                // по знанию контакта не выдаём.
                 return redirect()->route('marathon.january.show')
                     ->with('marathon_result', $enrollment->quiz_goal)
-                    ->with('marathon_telegram_link', $this->deepLink($existingLead))
                     ->with('marathon_track', $enrollment->track)
                     ->with('marathon_paid', $enrollment->isPaidConfirmed())
                     ->with('marathon_contact', $existingLead->contact);
@@ -519,7 +571,7 @@ class MarathonController extends Controller
      * existing magnet_token (H446/H464), no new token needed. 404 for an
      * unknown token or a day that doesn't match an enrolled lead.
      */
-    public function day(int $day, string $token): View
+    public function day(int $day, string $token): Response
     {
         $lead = Lead::where('magnet_token', $token)->firstOrFail();
         $enrollment = MarathonEnrollment::where('lead_id', $lead->id)->firstOrFail();
@@ -538,13 +590,23 @@ class MarathonController extends Controller
 
         abort_if($quiz === null && $mantra === null, 404);
 
-        return view("marathon.day{$day}", [
+        $response = response(view("marathon.day{$day}", [
             'quiz' => $quiz,
             'mantra' => $mantra,
             'day' => $day,
             'token' => $token,
             'enrollment' => $enrollment,
-        ]);
+            'groupSessionAvailable' => $enrollment->isDevaCohort() || BeginnerPilotOffer::supportAvailable(),
+            'personalReviewEntitled' => $enrollment->isPaidConfirmed(),
+        ]));
+
+        // A server-rendered Day 1 page is a start, never merely a delivery.
+        if ($day === 1) {
+            MarathonEnrollment::whereKey($enrollment->id)->whereNull('day1_started_at')
+                ->update(['day1_started_at' => now()]);
+        }
+
+        return $response;
     }
 
     /**

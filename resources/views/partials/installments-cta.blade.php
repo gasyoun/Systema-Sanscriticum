@@ -1,8 +1,8 @@
 {{-- Оплата по частям (H1290): тихая точка входа под кнопкой оплаты. Запрос
-     только зовёт куратора (CheckoutController::requestInstallments) — ни
+     только зовет куратора (CheckoutController::requestInstallments) — ни
      PaymentPromise, ни рассрочка отсюда не создаются (ruling D6). Требует
      переменную $tariff. Показывается, только если настроен кураторский чат
-     (services.telegram.curators_chat_id) — иначе запрос ушёл бы в пустоту,
+     (services.telegram.curators_chat_id) — иначе запрос ушел бы в пустоту,
      а студенту было бы обещано «куратор свяжется». --}}
 @if((string) (config('services.telegram.curators_chat_id') ?? '') !== '')
 @php($installmentsErrors = $errors->getBag('installments'))

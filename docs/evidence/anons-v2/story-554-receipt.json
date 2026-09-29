@@ -1,0 +1,34 @@
+{
+    "captured_at": "2026-09-17T18:28:36+03:00",
+    "remote_id": 554,
+    "publication_key": "65970e8a1c97d86e5e5cae6d023c3d2738b368cbec23240b295e9b6f5be16332",
+    "manifest_hash": "74b54ac5c74231ef9dbddc7872f3b7b807578d98a588b33212d7aa4d4ba401c8",
+    "deletion_policy": "retain",
+    "media_areas": [
+        {
+            "_": "mediaAreaUrl",
+            "coordinates": {
+                "_": "mediaAreaCoordinates",
+                "x": 11,
+                "y": 55,
+                "w": 78,
+                "h": 14,
+                "rotation": 0,
+                "radius": 7
+            },
+            "url": "https://samskrte.ru/ga/m26-rs-st-h5049r2-20260917-01"
+        }
+    ],
+    "caption": "Смоук H5049: приёмочная публикация подсистемы, живёт 24 ч по политике retain.\nhttps://samskrte.ru/ga/m26-rs-st-h5049r2-20260917-01",
+    "entities": [
+        {
+            "_": "messageEntityUrl",
+            "offset": 78,
+            "length": 52
+        }
+    ],
+    "date": 1789658855,
+    "expire_date": 1789745255,
+    "downloaded_media_sha256": "f4bbf848aa4a100e471adc6a1927de9adcf92e3dc87e36373a2ff632422b7088",
+    "source": "stories.getStoriesByID peer=me id=[554], MadelineProto subprocess lane, prod .92"
+}

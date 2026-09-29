@@ -14,6 +14,7 @@ use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\RedirectToCanonicalCourseSlug;
 use App\Http\Middleware\StudentMaintenance;
+use App\Http\Middleware\ThrottleLivewireUpdates;
 use App\Http\Middleware\TrackUserActivity;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
@@ -23,9 +24,11 @@ use App\Http\Middleware\VerifyExamScoresWebhook;
 use App\Http\Middleware\VerifyInboundEmailWebhook;
 use App\Http\Middleware\VerifyLeadStepWebhook;
 use App\Http\Middleware\VerifyLectureClipCallbackWebhook;
+use App\Http\Middleware\VerifyLessonBannersApi;
 use App\Http\Middleware\VerifyMaxMagnetWebhook;
 use App\Http\Middleware\VerifyPartnerBotWebhook;
 use App\Http\Middleware\VerifyTelegramBotWebhook;
+use App\Http\Middleware\VerifyTelegramBusinessWebhook;
 use App\Http\Middleware\VerifyTelegramMagnetWebhook;
 use App\Http\Middleware\VerifyTelegramZapisiWebhook;
 use App\Http\Middleware\VerifyVkBotWebhook;
@@ -86,6 +89,10 @@ class Kernel extends HttpKernel
             // отдельно — группу `web` она не берёт.
             ImpersonationGuard::class,
             SubstituteBindings::class,
+            // H5087 (remediation of H5046): throttle для POST /livewire/update
+            // (Livewire регистрирует маршрут сам, без throttle на любом слое;
+            // обёртка применяет лимитер только к пути livewire/update).
+            ThrottleLivewireUpdates::class,
             CaptureReferral::class,
             CapturePartnerReferral::class,
             CaptureAttribution::class,
@@ -131,6 +138,7 @@ class Kernel extends HttpKernel
         'verify.max.magnet' => VerifyMaxMagnetWebhook::class,
         'verify.n8n.leadstep' => VerifyLeadStepWebhook::class,
         'verify.n8n.clipcallback' => VerifyLectureClipCallbackWebhook::class,
+        'verify.n8n.lessonbanners' => VerifyLessonBannersApi::class,
         'verify.n8n.examscores' => VerifyExamScoresWebhook::class,
         // --- ЛЕГАСИ БОТ-ВЕБХУКИ (enforce-if-configured) ---
         'verify.tg.bot' => VerifyTelegramBotWebhook::class,
@@ -139,6 +147,8 @@ class Kernel extends HttpKernel
         'verify.partner.bot' => VerifyPartnerBotWebhook::class,
         // --- TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ---
         'verify.tg.zapisi' => VerifyTelegramZapisiWebhook::class,
+        // --- TELEGRAM BUSINESS (H5065): бот, управляющий чатом от имени аккаунта ---
+        'verify.tg.business' => VerifyTelegramBusinessWebhook::class,
         // --- ВХОДЯЩИЙ EMAIL (H3462): zabota@ → вебхук, секрет в пути ---
         'verify.inbound.email' => VerifyInboundEmailWebhook::class,
         // Канонический slug курса: alias в URL → 301 на courses.slug

@@ -1,10 +1,10 @@
 # Future OxAlpha status gate design (NOT ENABLED)
 
-_Created: 26-08-2026 · Last updated: 26-08-2026_
+_Created: 26-08-2026 · Last updated: 17-09-2026_
 
 Handoff: [H3546](https://github.com/gasyoun/Uprava/blob/main/handoffs/H3546-OxAlpha_Systema-Sanscriticum_oxalpha-30d-risk-review-gate_26.08.26.md) · Companion report: [CODE_REVIEW_SYSTEMA_OXALPHA_30D_2026-08-26](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/CODE_REVIEW_SYSTEMA_OXALPHA_30D_2026-08-26.md)
 
-**Status: design only. No workflow, no branch-protection rule, no required check was created or enabled by this document or its PR** — plan decision 12 and the autonomy contract («Never enable a workflow or protection rule») hold.
+**Status: ARMED 17-09-2026 (H5062) — shadow rung, NOT a required check.** The design is implemented for executable-code PRs as `.github/workflows/oxalpha-review-gate.yml` (same job id `oxalpha-review-gate`; standalone file per the H4074 house precedent so the PR schedule never triggers the ci.yml deploy chain; branch-protection mapping is identical, rollback = delete that one file). Conclusions exactly per §2: `pass` requires separate Standards+Spec verdicts with evidence, posted as the `oxalpha-independent-verdict` check run bound to the tested head SHA (`tools/oxalpha_gate_verdict.py`); `skip` for non-executable diffs with an exclusion note; everything inconclusive (timeout, malformed, stale, self-review) is `fail`, never pass. §3 sensitive paths additionally require the `Gate human approval: @login` line in the PR body by a human other than the PR author. Kill switch: repository variable `OXALPHA_REVIEW_GATE_DISABLED=true` → neutral skip; §4 rollout step 4 (flip to required in branch protection) remains an audited HUMAN step and has NOT been done by automation. Documented interpretation: §3 glob `database/migrations/*money-or-access*` landed as intent globs `*money*`/`*access*`; no other taxonomy change.
 
 ## Purpose
 

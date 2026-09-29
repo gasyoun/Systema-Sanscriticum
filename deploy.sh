@@ -28,6 +28,13 @@ DEPLOY_LOG="storage/logs/deploys.log"
 USE_DOWN=0
 ROLLBACK_TO=""
 DEPLOY_SOFT_FAIL=0
+# H4848 (GTD 0A63, 15-09-2026): правки ЭТОГО скрипта действуют в том же цикле,
+# когда деплой идёт через auto-deploy обёртку: systema-auto-deploy-run.sh после
+# здорового деплоя, чей диапазон трогал deploy.sh, перезапускает его вторым
+# прогоном — bash держит прежний inode, сам скрипт через git pull не обновится
+# (см. docs/deploy.md, «Правка deploy.sh и следующий прогон»). При ручном
+# запуске напрямую (bash deploy.sh) свойство прежнее: правка видна со
+# СЛЕДУЮЩЕГО запуска.
 while [ $# -gt 0 ]; do
   case "$1" in
     --down) USE_DOWN=1 ;;
@@ -343,6 +350,22 @@ fi
 if command -v supervisorctl >/dev/null 2>&1 && supervisorctl status zapisi-poll 2>/dev/null | grep -q RUNNING; then
   say "Рестарт zapisi-poll (аварийный поллер запущен)"
   supervisorctl restart zapisi-poll || echo "ВНИМАНИЕ: zapisi-poll не перезапустился — апдейты бота могут не приходить."
+fi
+
+# ── 6c. Track C: рестарт поллера студенческого бота telegram-student-poll, если он запущен ──
+# Тот же случай, что и с Horizon (H5051, 17-09-2026): долгоживущий CLI-процесс
+# держит код, загруженный при старте, и после деплоя продолжает крутить СТАРЫЙ
+# код в памяти. Поллер сам обновляется раз в час (max-lifetime 3600 с), но до
+# этого часа пред-деплойный класс успевает писать ошибки в лог.
+#
+# Условие именно «сейчас RUNNING», а не «программа известна supervisor'у»:
+# сам поллер штатно работает (autostart=true), но его могут осознанно
+# остановить — возврат на вебхук: `php artisan telegram:webhooks --set` +
+# `supervisorctl stop telegram-student-poll`. `supervisorctl restart` на
+# ОСТАНОВЛЕННОЙ программе её ПОДНИМАЕТ, то есть молча отменил бы это решение.
+if command -v supervisorctl >/dev/null 2>&1 && supervisorctl status telegram-student-poll 2>/dev/null | grep -q RUNNING; then
+  say "Рестарт telegram-student-poll (поллер студента запущен)"
+  supervisorctl restart telegram-student-poll || echo "ВНИМАНИЕ: telegram-student-poll не перезапустился — бот студента держит пред-деплойный код."
 fi
 
 if [ "$USE_DOWN" = 1 ]; then

@@ -13,6 +13,8 @@ use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\Access\TelegramAdminNotifier;
 use App\Services\Support\Faq\HybridRetriever;
+use App\Services\Support\Faq\SharedKnowledgeBase;
+use App\Support\SupportSmallTalk;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -85,6 +87,24 @@ final class SupportDmAutoReply
     /** Префикс callback_data кнопки одного нажатия (см. TelegramWebhookController). */
     public const SEND_CALLBACK_PREFIX = 'sdm:';
 
+    /**
+     * Денежное намерение в тексте студента. Один список на две ветки —
+     * LLM-отказ (H4404) и забор факт-автоответа (инцидент 19-09-2026): правка
+     * списка не должна расходиться по копиям.
+     */
+    private const MONEY_INTENT_PATTERN = '/оплат|плат[еёжи]|денег|деньг|стоимост|сколько\s+стои|цен[аеуы]|\bтариф|рассрочк|доплат|предоплат|скидк|промокод|по\s+частям|сч[её]т|квитанц|возврат/iu';
+
+    /**
+     * H5452: намерение пробного занятия — 🔥 на подсказке куратору рядом с
+     * деньгами. Стемы узкие, чтобы «запись/записи» (категория B, инцидент
+     * 19-09-2026) не загорались: «записатьс» и «записываюсь» совпадают, а
+     * «запись» — нет.
+     */
+    private const TRIAL_INTENT_PATTERN = '/пробн|попробоват|записатьс|записываюсь|запиш(?:усь|итесь|ись)/iu';
+
+    /** H5452: подсказка не ушла куратору — сообщение отфильтровано как шум (reason в meta). */
+    public const EVENT_HINT_SUPPRESSED = 'dm_hint_suppressed';
+
     /** @var list<string> */
     private const SIMPLE_CATEGORIES = [
         SupportAnswerSuggestion::CATEGORY_ZOOM,
@@ -110,6 +130,10 @@ final class SupportDmAutoReply
         private readonly SupportConversationManager $conversations,
         private readonly SupportFollowUpService $followUps,
         private readonly SupportDmLlmReplyComposer $llm,
+        // H5065: общая база знаний — отвечающая полоса формулирует по ПОЛНЫМ
+        // разделам, а не по 280-символьным сниппетам. `faq` (HybridRetriever)
+        // остаётся: на нём подсказка куратору и цитата в ответе студенту.
+        private readonly SharedKnowledgeBase $knowledge,
     ) {}
 
     public function isEnabled(): bool
@@ -221,7 +245,15 @@ final class SupportDmAutoReply
             $resolvedFacts = $this->facts->resolve($category, $user, $text);
 
             if ($resolvedFacts !== null && trim((string) $resolvedFacts['draft']) !== '') {
-                if ($this->factMayAutoSend($resolvedFacts)) {
+                // Инцидент 19-09-2026: студентка просила «ссылку для оплаты», а
+                // вежливая оговорка «иногда буду… смотреть в записи» отдала
+                // сообщение категории B — и бот ответил ссылкой на запись
+                // урока. Классификатор чинится отдельно (узкая платёжная рука
+                // поднята наверх), но забор стоит ЗДЕСЬ, в коде, а не в
+                // классификаторе: денежное намерение в тексте означает, что
+                // автоответить фактом LMS нельзя при ЛЮБОЙ категории — деньги
+                // решает человек (R3), ровно как в llmRefusalReason() ниже.
+                if ($this->factMayAutoSend($resolvedFacts) && ! $this->moneyIntent($text)) {
                     return $this->sendAuto(
                         $incoming,
                         $user,
@@ -267,7 +299,11 @@ final class SupportDmAutoReply
             && $this->accountAllowsAutoReply($incoming)
         ) {
             $hits = $this->faq->retrieve($text, 3);
-            $score = (float) ($hits[0]['score'] ?? 0.0);
+            // H5065: порог читается в домене BM25 (HybridRetriever::bm25Score).
+            // Прямое чтение ['score'] сравнивало RRF-скор 0.0246 с порогом
+            // категории 15.7 и глушило живую FAQ-ветку целиком при включённой
+            // плотной ноге.
+            $score = HybridRetriever::bm25Score($hits[0] ?? []);
 
             if ($hits !== [] && $score >= $this->scoreFloor($category)) {
                 $draft = $this->faqDraft($hits);
@@ -440,60 +476,7 @@ final class SupportDmAutoReply
      */
     private function pureSmallTalkKind(string $text): ?string
     {
-        $normalized = mb_strtolower(trim($text));
-        $stripped = preg_replace('~[^\p{L}\p{N}\s]~u', ' ', $normalized) ?? '';
-        $stripped = (string) preg_replace('~\s+~u', ' ', trim($stripped));
-
-        if ($stripped === '') {
-            return null;
-        }
-
-        $thanksWords = ['спасибо', 'спс', 'благодарю', 'благодарочка', 'thanks', 'thank you'];
-        // Всё на «нам…»: намасте/намо/намах и производные школы.
-        $greetingWords = ['привет', 'здравствуйте', 'добрый день', 'добрый вечер',
-            'доброе утро', 'hello', 'hi', 'добрый'];
-        $courtesyWords = ['большое', 'огромное', 'вам', 'тебе', 'пожалуйста', 'всем'];
-
-        $isGreeting = false;
-        $isThanks = false;
-        $hasContent = false;
-
-        foreach (explode(' ', $stripped) as $token) {
-            $token = trim($token);
-            if ($token === '') {
-                continue;
-            }
-
-            if (in_array($token, $thanksWords, true)) {
-                $isThanks = true;
-
-                continue;
-            }
-
-            if (in_array($token, $greetingWords, true) || str_starts_with($token, 'нам')) {
-                $isGreeting = true;
-
-                continue;
-            }
-
-            if (in_array($token, $courtesyWords, true)) {
-                continue;
-            }
-
-            $hasContent = true;
-        }
-
-        if ($hasContent) {
-            return null;
-        }
-        if ($isGreeting) {
-            return 'greeting';
-        }
-        if ($isThanks) {
-            return 'thanks';
-        }
-
-        return null;
+        return SupportSmallTalk::kind($text);
     }
 
     /**
@@ -572,6 +555,37 @@ final class SupportDmAutoReply
         ?array $resolvedFacts = null,
         ?string $escalation = null,
     ): array {
+        // H5452: шум-фильтр на ХИНТ. Сервисные чаты и инфра-алерты («система
+        // пишет сама себе») не занимают саппорт-полосу куратора. Молчаливое
+        // подавление запрещено: каждое подавление = событие с причиной.
+        // Автоответы/ack не тронуты — ветки выше требуют linked-пользователя,
+        // у сервисных чатов его нет.
+        $noiseReason = $this->hintNoiseReason($incoming, $text);
+
+        if ($noiseReason !== null) {
+            $this->recordHintSuppressed($incoming, $noiseReason);
+
+            return ['status' => 'hint_suppressed', 'category' => $category];
+        }
+
+        // H5452: дедуп per-chat. Пока подсказка не погашена человеческим
+        // ответом, серия сообщений одного чата обновляет существующий хинт
+        // (счётчик серии в мете), а не плодит второй. 🔥 с любого сообщения
+        // серии прилипает к открытому хинту.
+        $fire = $this->moneyIntent($text) || $this->hasTrialIntent($text);
+
+        if ($this->dedupEnabled()) {
+            $openHint = $this->openHintInChat($incoming);
+
+            if ($openHint !== null) {
+                if ((int) $openHint->telegram_support_message_id !== $incoming->id) {
+                    $this->appendToOpenHint($openHint, $incoming, $fire);
+                }
+
+                return ['status' => 'hint_series', 'category' => $category];
+            }
+        }
+
         $hits = $this->faq->retrieve($text, 3);
         $name = $user?->name ?? 'без привязки';
         $catLabel = $category ?? 'без категории';
@@ -579,7 +593,7 @@ final class SupportDmAutoReply
         $safeQuestion = htmlspecialchars(mb_substr($text, 0, 500), ENT_QUOTES, 'UTF-8');
 
         $lines = [
-            '💡 <b>Сложный вопрос — бот не ответил</b>',
+            ($fire ? '🔥' : '💡').' <b>Сложный вопрос — бот не ответил</b>',
             "Студент: {$safeName}",
             "Категория: {$catLabel}",
             '',
@@ -664,6 +678,8 @@ final class SupportDmAutoReply
                 'category' => $category,
                 'source_telegram_message_id' => (int) $incoming->telegram_message_id,
                 'aged' => $aged,
+                'fire' => $fire,
+                'series_count' => 1,
                 'suggestion_id' => $suggestion?->id,
                 'faq_chunk_ids' => array_values(array_map(
                     static fn (array $hit): string => (string) ($hit['chunk_id'] ?? ''),
@@ -730,7 +746,7 @@ final class SupportDmAutoReply
         if ($draft === null && $hits !== []) {
             $draft = $this->faqDraft($hits);
             $kind = 'faq';
-            $confidence = (float) ($hits[0]['score'] ?? 0.0);
+            $confidence = HybridRetriever::bm25Score($hits[0] ?? []);
             $policy = SupportAnswerFactResolver::POLICY_AUTO;
             $extraFacts = $draft === null ? [] : [
                 'faq_chunk_id' => (string) ($hits[0]['chunk_id'] ?? ''),
@@ -1020,7 +1036,10 @@ final class SupportDmAutoReply
             return;
         }
 
-        $score = (float) ($hits[0]['score'] ?? 0.0);
+        // H5065: теневая калибровка B5 выводилась в домене BM25 — и порог, и
+        // записываемый в событие score обязаны быть в нём же, иначе недельный
+        // отчёт support:shadow-report группирует RRF-скор по полосам BM25.
+        $score = HybridRetriever::bm25Score($hits[0] ?? []);
         if ($score < $this->scoreFloor($category)) {
             return;
         }
@@ -1127,18 +1146,20 @@ final class SupportDmAutoReply
             return null;
         }
 
-        // Retrieval тот же, что у FAQ-ветки: LLM формулирует ТОЛЬКО по живым
-        // фрагментам справки. Ниже floor'а F формулировать не из чего —
-        // позволить LLM отвечать «по памяти» значило бы снять рулинг R3.
-        $hits = $this->faq->retrieve($text, 3);
-        $score = (float) ($hits[0]['score'] ?? 0.0);
-        if ($hits === [] || $score < $this->llmScoreFloor()) {
+        // Retrieval тот же, что у FAQ-ветки, но контекст — ОБЩАЯ база знаний:
+        // LLM формулирует ТОЛЬКО по живым разделам справки. Ниже floor'а
+        // формулировать не из чего — позволить LLM отвечать «по памяти»
+        // значило бы снять рулинг R3.
+        $context = $this->knowledge->context($text);
+        // H5065: домен порога — BM25, см. scoreFloor()/llmScoreFloor().
+        $score = $context->bestBm25Score();
+        if ($context->isEmpty() || $score < $this->llmScoreFloor()) {
             $this->recordLlmRefused($incoming, $user, 'below_score_floor', $score);
 
             return null;
         }
 
-        $composed = $this->llm->compose($text, $hits);
+        $composed = $this->llm->compose($text, $context);
 
         if ($composed === null) {
             // Неудача формулировки (ключ/провайдер/пустой ответ) — НЕ отказ
@@ -1197,13 +1218,8 @@ final class SupportDmAutoReply
             }
         }
 
-        $moneyPatterns = [
-            '/оплат|плат[еёжи]|денег|деньг|стоимост|сколько\s+стои|цен[аеуы]|\bтариф|рассрочк|доплат|предоплат|скидк|промокод|по\s+частям|сч[её]т|квитанц|возврат/iu',
-        ];
-        foreach ($moneyPatterns as $pattern) {
-            if (preg_match($pattern, $normalized) === 1) {
-                return 'money';
-            }
+        if ($this->moneyIntent($normalized)) {
+            return 'money';
         }
 
         $accessPatterns = ['/нет\s+доступ|не\s+(?:могу\s+)?(?:войти|зайти|попасть)|парол|логин|\bкабинет/iu'];
@@ -1214,6 +1230,146 @@ final class SupportDmAutoReply
         }
 
         return null;
+    }
+
+    /**
+     * Есть ли в тексте денежное намерение. Тот же список слов, что был в
+     * llmRefusalReason() со дня H4404; вынесен сюда, чтобы им же пользовался
+     * забор факт-автоответа (см. константу и инцидент 19-09-2026).
+     */
+    private function moneyIntent(string $text): bool
+    {
+        return preg_match(self::MONEY_INTENT_PATTERN, $text) === 1;
+    }
+
+    /**
+     * H5452: намерение пробного занятия («хочу на пробное», «запишитесь на
+     * группу») — 🔥 на подсказке, тот же маркер в дайджесте 09:00.
+     */
+    private function hasTrialIntent(string $text): bool
+    {
+        $normalized = mb_strtolower($text);
+
+        if (preg_match(self::TRIAL_INTENT_PATTERN, $normalized) === 1) {
+            return true;
+        }
+
+        // «Группы» + «как/когда попасть» — второй сигнал пробного из замера
+        // 24-09-2026 («что нужно, чтобы на пробное прийти» без слова «пробное»).
+        return str_contains($normalized, 'групп') && str_contains($normalized, 'попасть');
+    }
+
+    /**
+     * H5452: причина подавить подсказку для этого сообщения или null.
+     *
+     * Два источника шума, оба за конфигом («фильтр может быть ON по умолчанию,
+     * но за конфигом»): сервисные чаты (Telegram-системный аккаунт 777000 и
+     * сослужебные диалоги) и известные префиксы инфра-алертов — «система
+     * пишет сама себе», а классификатор хинтит куратору. Фильтр стоит только
+     * на ХИНТ; ack/автоответы не тронуты: у сервисных чатов нет linked-юзера,
+     * и их инвариант «не отвечаем» зафиксирован тестом.
+     */
+    private function hintNoiseReason(TelegramSupportMessage $incoming, string $text): ?string
+    {
+        $chatIds = config('support.hints.suppressed_chat_ids', []);
+        if (is_array($chatIds) && in_array((int) $incoming->telegram_chat_id, array_map('intval', $chatIds), true)) {
+            return 'service_chat';
+        }
+
+        $prefixes = config('support.hints.suppressed_prefixes', []);
+        if (is_array($prefixes)) {
+            foreach ($prefixes as $prefix) {
+                $prefix = (string) $prefix;
+
+                if ($prefix !== '' && mb_strpos($text, $prefix) === 0) {
+                    return 'infra_prefix';
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /** H5452: подавление остаётся событием с причиной — молчаливого нет. */
+    private function recordHintSuppressed(TelegramSupportMessage $incoming, string $reason): void
+    {
+        SupportAiReplyEvent::firstOrCreate(
+            [
+                'telegram_support_message_id' => $incoming->id,
+                'event_type' => self::EVENT_HINT_SUPPRESSED,
+            ],
+            [
+                'meta' => [
+                    'via' => self::VIA,
+                    'reason' => $reason,
+                    'telegram_chat_id' => (int) $incoming->telegram_chat_id,
+                ],
+            ],
+        );
+    }
+
+    private function dedupEnabled(): bool
+    {
+        return (bool) config('support.hints.dedup_enabled', true);
+    }
+
+    /**
+     * H5452: последний dm_hinted в чате, не погашенный человеческим ответом
+     * (ни одного human-исходящего в чате после него), или null. Снимает
+     * блокировку ровно то, что гасит и ack — любое human-исходящее; исходящее
+     * бота (ack/FAQ/LLM) погасить подсказку не может.
+     */
+    private function openHintInChat(TelegramSupportMessage $incoming): ?SupportAiReplyEvent
+    {
+        $chatId = (int) $incoming->telegram_chat_id;
+
+        $messageIds = TelegramSupportMessage::query()
+            ->where('telegram_chat_id', $chatId)
+            ->pluck('id');
+
+        if ($messageIds->isEmpty()) {
+            return null;
+        }
+
+        $event = SupportAiReplyEvent::query()
+            ->where('event_type', self::EVENT_HINTED)
+            ->whereIn('telegram_support_message_id', $messageIds)
+            ->orderByDesc('id')
+            ->first();
+
+        if ($event === null) {
+            return null;
+        }
+
+        $humanAnswered = TelegramSupportMessage::query()
+            ->where('telegram_chat_id', $chatId)
+            ->where('direction', 'outgoing')
+            ->where('sent_at', '>=', $event->created_at)
+            ->where(fn ($q) => $q
+                ->where('responder_type', 'human')
+                ->orWhere(fn ($qq) => $qq->whereNull('responder_type')->where('role', 'human')))
+            ->exists();
+
+        return $humanAnswered ? null : $event;
+    }
+
+    /**
+     * H5452: сообщение серии не создаёт второй хинт — в мете открытого хинта
+     * растёт счётчик серии и запоминается последнее сообщение; 🔥 прилипает.
+     */
+    private function appendToOpenHint(SupportAiReplyEvent $openHint, TelegramSupportMessage $incoming, bool $fire): void
+    {
+        $meta = is_array($openHint->meta) ? $openHint->meta : [];
+        $meta['series_count'] = (int) ($meta['series_count'] ?? 1) + 1;
+        $meta['series_last_message_id'] = (int) $incoming->telegram_message_id;
+        $meta['series_last_at'] = now()->toIso8601String();
+
+        if ($fire) {
+            $meta['fire'] = true;
+        }
+
+        $openHint->meta = $meta;
+        $openHint->save();
     }
 
     /**

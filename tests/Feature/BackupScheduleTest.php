@@ -86,6 +86,24 @@ class BackupScheduleTest extends TestCase
     }
 
     /** @test */
+    public function yandex_readonly_probe_disk_exists_with_the_webdav_probe_driver(): void
+    {
+        // 0bn (15-09-2026): читающий близнец обязан существовать рядом с
+        // боевым диском и не совпадать с ним — иначе backup-fresh cache-miss
+        // снова наследует PUT-потолок 300 с и сторож убивает пробу на 120 с
+        // (WATCHDOG TIMEOUT 14-09 ×5 + 15-09 repro).
+        $this->assertSame('webdav_probe', config('filesystems.disks.yandex_disk_readonly_probe.driver'));
+
+        $probe = config('filesystems.disks.yandex_disk_readonly_probe');
+        $real = config('filesystems.disks.yandex_disk');
+        // Те же креды и тот же корень — читается ровно тот же листинг.
+        $this->assertSame($real['baseUri'], $probe['baseUri']);
+        $this->assertSame($real['prefix'], $probe['prefix']);
+        $this->assertSame($real['username'], $probe['username']);
+        $this->assertNotSame('webdav', $probe['driver'], 'probe-диск обязан иметь СВОЙ curl-профиль, не боевой 300 с');
+    }
+
+    /** @test */
     public function file_storage_is_included_in_the_backup(): void
     {
         $include = config('backup.backup.source.files.include');

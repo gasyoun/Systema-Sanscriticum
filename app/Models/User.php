@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Mail\PasswordResetMail;
 use App\Services\Messaging\SmsRuChannel;
 use App\Services\Prana\PranaSettings;
+use App\Support\GreetingName;
 use App\Support\Roles;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 // --- ДОБАВЛЯЕМ КЛАССЫ ДЛЯ ЗАЩИТЫ FILAMENT ---
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -31,6 +32,12 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * H5083: порог «существования» аккаунта для auto-trust полуинтегрированных
+     * каналов (PayPal/bank claim) — см. isEstablishedClaimStudent().
+     */
+    public const CLAIM_TRUST_MIN_AGE_DAYS = 7;
 
     protected $fillable = [
         'name',
@@ -67,6 +74,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         // --- НОВЫЕ ПОЛЯ ИЗ EXCEL ---
         'phone',
         'city',      // H3909 — спрашиваем у каждого ученика (MG 02-09-2026)
+        'greeting_name', // имя для обращения в уведомлениях; пусто = из name
         'country',   // H3909 — спрашиваем у каждого ученика (MG 02-09-2026)
         // H4434 — timezone localization (MG 09-09-2026): постоянная зона + временное
         // пребывание (оверрайд с датой возврата) + источник постоянной зоны.
@@ -388,6 +396,18 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $alias !== '' ? $alias : (string) $this->name;
     }
 
+    /**
+     * Как обращаться к студенту в уведомлениях: только имя, без фамилии,
+     * отчества и города. Ручное `greeting_name` (карточка, чекаут) важнее
+     * автоматического разбора `name`.
+     */
+    public function greetingName(string $fallback = 'Друг'): string
+    {
+        $manual = trim((string) $this->greeting_name);
+
+        return $manual !== '' ? $manual : GreetingName::of($this->name, $fallback);
+    }
+
     public function scopeUnreliable($query)
     {
         return $query->where('is_unreliable', true);
@@ -627,6 +647,27 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(Payment::class);
     }
 
+    /**
+     * H5083 (remediation confirmed H5046, claim-trusted-autopaid-session-bootstrap):
+     * «существующий ученик» для auto-trust полуинтегрированных каналов
+     * (PayPal/bank claim). Рулинг 22-08-2026 оставляем, но доверие привязываем
+     * к ФАКТУ существования ученика, а не к presence-сессии: аккаунт старше
+     * CLAIM_TRUST_MIN_AGE_DAYS дней ИЛИ уже есть проведённый (paid) платёж.
+     *
+     * Сама публичная форма минтит аккаунт+сессию любому гостю с новым email
+     * (resolveUser), поэтому голый auth()->check() доверял сессии, которую
+     * форма же и выдала минуту назад — второй POST того же гостя уходил сразу
+     * в paid без денег (Nv06 bootstrap).
+     */
+    public function isEstablishedClaimStudent(): bool
+    {
+        if ($this->created_at !== null && $this->created_at->lt(now()->subDays(self::CLAIM_TRUST_MIN_AGE_DAYS))) {
+            return true;
+        }
+
+        return $this->payments()->paid()->exists();
+    }
+
     public function homeworkSubmissions(): HasMany
     {
         return $this->hasMany(HomeworkSubmission::class);
@@ -753,7 +794,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function sendVkMessage($text, $attachment = null)
     {
         if (empty($this->vk_id)) {
-            Log::info("Пропуск ВК: У пользователя {$this->email} не заполнен vk_id в базе.");
+            Log::info("Пропуск ВК: У пользователя id={$this->id} не заполнен vk_id в базе.");
 
             return false;
         }
@@ -800,7 +841,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function sendSmsMessage(string $text): bool
     {
         if (empty($this->phone)) {
-            Log::info("Пропуск SMS: У пользователя {$this->email} не заполнен phone в базе.");
+            Log::info("Пропуск SMS: У пользователя id={$this->id} не заполнен phone в базе.");
 
             return false;
         }

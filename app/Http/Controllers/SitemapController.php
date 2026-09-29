@@ -9,6 +9,7 @@ use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\DictionaryWord;
 use App\Models\LandingPage;
+use App\Models\SrsDeck;
 use App\Services\Membership\PrivateArchiveEligibility;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -98,6 +99,26 @@ class SitemapController extends Controller
                 $urls[] = ['loc' => route('srs.index'), 'changefreq' => 'weekly', 'priority' => '0.5'];
                 $urls[] = ['loc' => route('srs.index.lang', ['word' => 'hindi']), 'changefreq' => 'weekly', 'priority' => '0.4'];
                 $urls[] = ['loc' => route('srs.index.lang', ['word' => 'vse']), 'changefreq' => 'weekly', 'priority' => '0.4'];
+
+                // Отдельные публичные колоды (H5184 N14) — только слагованные
+                // URL /koloda/{slug}: сегменты вида id-N не каноничны, в карту
+                // не тащим. noindex-флаги и canonical-логику не трогаем.
+                SrsDeck::query()
+                    ->whereIn('visibility', ['system', 'public'])
+                    ->whereNotNull('slug')
+                    ->where('slug', '!=', '')
+                    ->select(['slug', 'updated_at'])
+                    ->orderBy('slug')
+                    ->chunk(500, function ($decks) use (&$urls) {
+                        foreach ($decks as $deck) {
+                            $urls[] = [
+                                'loc' => route('srs.deck', $deck->slug),
+                                'lastmod' => optional($deck->updated_at)->format(DATE_ATOM),
+                                'changefreq' => 'weekly',
+                                'priority' => '0.4',
+                            ];
+                        }
+                    });
             }
 
             // Публичный реестр сертификатов/справок (один URL, без query-вариантов).

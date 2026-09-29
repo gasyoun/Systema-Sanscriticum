@@ -36,7 +36,13 @@ final class KnowledgeEmbedChunksJob implements ShouldQueue
     public array $backoff = [30, 120];
 
     public function __construct(
-        /** @var list<array{faq_chunk_id: string, model: string, dims: int, content_hash: string, text: string}> */
+        /**
+         * `text` — то, что уходит в эмбеддинг. Остальное появилось на Этапе 4
+         * и описывает полосу урока; для FAQ-полосы ключи отсутствуют, и строка
+         * пишется ровно как раньше.
+         *
+         * @var list<array{faq_chunk_id: string, model: string, dims: int, content_hash: string, text: string, source_type?: string, lesson_id?: int|null, course_id?: string|null, start_seconds?: int|null, store_text?: string|null}>
+         */
         public readonly array $items,
     ) {
         $this->onQueue('imports');
@@ -66,10 +72,15 @@ final class KnowledgeEmbedChunksJob implements ShouldQueue
             KnowledgeChunk::updateOrCreate(
                 ['faq_chunk_id' => (string) $item['faq_chunk_id']],
                 [
+                    'source_type' => (string) ($item['source_type'] ?? KnowledgeChunk::SOURCE_FAQ),
+                    'lesson_id' => isset($item['lesson_id']) ? (int) $item['lesson_id'] : null,
+                    'course_id' => isset($item['course_id']) ? (string) $item['course_id'] : null,
+                    'start_seconds' => isset($item['start_seconds']) ? (int) $item['start_seconds'] : null,
                     'model' => (string) $item['model'],
                     'dims' => (int) $item['dims'],
                     'embedding' => KnowledgeVectors::pack($vector),
                     'content_hash' => (string) $item['content_hash'],
+                    'text' => isset($item['store_text']) ? (string) $item['store_text'] : null,
                 ],
             );
         }

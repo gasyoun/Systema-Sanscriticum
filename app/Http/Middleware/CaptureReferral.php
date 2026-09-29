@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Support\AcquisitionAttribution;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +18,7 @@ class CaptureReferral
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $ref = trim((string) $request->query('ref'));
+        $ref = AcquisitionAttribution::scalar($request->query('ref')) ?? '';
 
         if ($ref !== '' && ! $request->session()->has('ref')) {
             $request->session()->put('ref', $ref);

@@ -9,7 +9,7 @@
         <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-orange-100 text-brand flex items-center justify-center text-2xl shrink-0">🔥</div>
             <div class="flex-1 min-w-0">
-                {{-- НЕ trans_choice: при app.locale='en' он даёт «12 дня» — русские формы только через Plural::ru --}}
+                {{-- НЕ trans_choice: при app.locale='en' он дает «12 дня» — русские формы только через Plural::ru --}}
                 <h3 class="text-lg font-extrabold text-[#101010]">{{ $streak }} {{ \App\Support\Plural::ru($streak, 'день', 'дня', 'дней') }} подряд</h3>
                 @if($milestone)
                     <p class="text-gray-500 text-sm">

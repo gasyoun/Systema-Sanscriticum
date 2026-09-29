@@ -10,26 +10,26 @@ use Illuminate\Support\Facades\File;
 
 /**
  * H4608 — недельный дайджест MIC null-телеметрии: uncategorized top-50 +
- * near-miss пары. Продаёт harness-семантику run_corpus.py («Uncategorized
+ * near-miss пары. Продает harness-семантику run_corpus.py («Uncategorized
  * top-50 of N», per-plane coverage, per-category n_pred) в прод-контур,
  * где у harness не было доступа.
  *
  * Что НЕ делает: не пишет текст сообщений — в телеметрии его нет по
  * построению (только sha256 + ссылки на channel/conversation/message,
  * по которым человек открывает сообщение в Helpdesk). Никаких решений,
- * никаких флагов: отчёт существует, чтобы правила v2 майнились по фактам
+ * никаких флагов: отчет существует, чтобы правила v2 майнились по фактам
  * (comparative-doc G2/G8), а «тишина классификатора» перестала быть
  * ретроспективной находкой (H3380).
  */
 class MicNullDigest extends Command
 {
-    /** Дублирует harness PRECISION_GATE: порог упомянут в отчёте как контекст. */
+    /** Дублирует harness PRECISION_GATE: порог упомянут в отчете как контекст. */
     private const PRECISION_GATE = 0.93;
 
     protected $signature = 'support:mic-null-digest
         {--days=7 : Окно телеметрии в днях}
         {--top=50 : Сколько uncategorized строк показывать (harness top-50)}
-        {--write= : Записать отчёт в файл (по умолчанию storage/app/reports/mic-null-digest/<дата>.md)}
+        {--write= : Записать отчет в файл (по умолчанию storage/app/reports/mic-null-digest/<дата>.md)}
         {--no-write : Только показать сводку в консоли, файл не создавать}';
 
     protected $description = 'H4608: недельный дайджест MIC shadow-телеметрии — uncategorized top-50 + near-miss пары. Только чтение.';

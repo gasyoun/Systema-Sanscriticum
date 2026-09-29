@@ -35,7 +35,7 @@ class RepairRecordingCourseSalary extends Command
 {
     protected $signature = 'salary:repair-recording-courses
         {--apply : Записать teacher_id/salary_type/salary_value в пустые поля курсов-записей}
-        {--family= : Ограничить одной семьёй потоков (слаг courses.course_family)}';
+        {--family= : Ограничить одной семьей потоков (слаг courses.course_family)}';
 
     protected $description = 'Проставить курсам-записям преподавателя и схему ЗП живого потока той же семьи';
 
@@ -136,7 +136,7 @@ class RepairRecordingCourseSalary extends Command
         $this->table(['ID', 'Курс', 'Семья', 'Условия', 'Что будет'], $rows);
 
         if (! $this->option('apply')) {
-            $this->warn('Режим отчёта: в базу не записано ничего. Повторите с --apply.');
+            $this->warn('Режим отчета: в базу не записано ничего. Повторите с --apply.');
 
             return self::SUCCESS;
         }
@@ -144,7 +144,7 @@ class RepairRecordingCourseSalary extends Command
         $written = 0;
         DB::transaction(function () use ($toWrite, &$written) {
             foreach ($toWrite as $courseId => $patch) {
-                // Пустоту проверяем ещё раз в WHERE: между отчётом и --apply
+                // Пустоту проверяем еще раз в WHERE: между отчетом и --apply
                 // человек мог заполнить поле руками, и перетирать его нельзя.
                 $query = Course::whereKey($courseId);
                 if (array_key_exists('teacher_id', $patch)) {

@@ -6,12 +6,14 @@ namespace App\Services;
 
 use App\Filament\Pages\Debtors;
 use App\Filament\Pages\MarathonMantraReviews;
+use App\Filament\Resources\CourseInterestRequestResource;
 use App\Filament\Resources\CourseMaterialSubmissionResource;
 use App\Filament\Resources\CourseResource;
 use App\Filament\Resources\GroupResource;
 use App\Filament\Resources\UserResource;
 use App\Jobs\SendTelegramChatMessageJob;
 use App\Models\Course;
+use App\Models\CourseInterestRequest;
 use App\Models\CourseMaterialSubmission;
 use App\Models\Group;
 use App\Models\MarathonEnrollment;
@@ -768,5 +770,81 @@ class CuratorNotifier
         }
 
         return "👉 <a href=\"{$url}\">Карточка студента</a>";
+    }
+
+    /**
+     * H5066: новая заявка интереса на курс с публичной формы /interest/{course}
+     * (join / recording / revive). Записи без куратора не остаются — сабмит
+     * сразу же прилетает сюда; счётчик по курсу + сигнал о достижении
+     * revive_threshold (если задан).
+     */
+    public function courseInterestReceived(CourseInterestRequest $interest): void
+    {
+        $labels = CourseInterestRequest::intentLabels();
+
+        $lines = [
+            '🙋 <b>Заявка интереса на курс</b>',
+            '',
+            'Курс: <b>'.e($interest->courseLabel()).'</b>',
+            'Интент: <b>'.e($labels[$interest->intent] ?? $interest->intent).'</b>',
+        ];
+
+        if (filled($interest->name)) {
+            $lines[] = 'Имя: '.e((string) $interest->name);
+        }
+        if (filled($interest->email)) {
+            $lines[] = 'Email: '.e((string) $interest->email);
+        }
+        if (filled($interest->telegram)) {
+            $lines[] = 'Telegram: '.e((string) $interest->telegram);
+        }
+        if (filled($interest->comment)) {
+            $lines[] = 'Комментарий: '.e((string) $interest->comment);
+        }
+
+        $reviveLine = $this->reviveCountLine($interest);
+        if ($reviveLine !== null) {
+            $lines[] = $reviveLine;
+        }
+
+        $lines[] = 'Дата: '.($interest->created_at?->format('d.m.Y H:i') ?? '—');
+        $lines[] = $this->interestAdminLink();
+
+        $this->dispatchToCurators($this->join($lines));
+    }
+
+    /**
+     * Счётчик интересов по курсу; для revive при заданном revive_threshold —
+     * явный сигнал «порог достигнут».
+     */
+    private function reviveCountLine(CourseInterestRequest $interest): ?string
+    {
+        if (! $interest->course_id || $interest->course === null) {
+            return null;
+        }
+
+        $counts = CourseInterestRequest::countsForCourse($interest->course_id);
+        $total = array_sum($counts);
+
+        $line = 'Всего интересов по курсу: <b>'.$total.'</b>';
+
+        $threshold = $interest->course->revive_threshold;
+        $reviveCount = $counts[CourseInterestRequest::INTENT_REVIVE] ?? 0;
+        if ($threshold !== null && $reviveCount >= (int) $threshold) {
+            $line .= ' — 🔔 порог возобновления ('.$threshold.') достигнут!';
+        }
+
+        return $line;
+    }
+
+    private function interestAdminLink(): string
+    {
+        try {
+            $url = CourseInterestRequestResource::getUrl('index');
+        } catch (\Throwable) {
+            $url = url('/admin');
+        }
+
+        return "👉 <a href=\"{$url}\">Заявки интереса</a>";
     }
 }

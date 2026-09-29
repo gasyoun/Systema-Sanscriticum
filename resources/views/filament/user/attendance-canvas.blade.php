@@ -9,7 +9,7 @@
             <div class="flex items-center justify-between">
                 <span class="font-medium text-gray-700 dark:text-gray-200">{{ $row['course_title'] }}</span>
                 <span class="shrink-0 tabular-nums text-gray-500 dark:text-gray-400">
-                    канва: урок {{ $row['student_cursor'] }} / {{ $row['total'] }}
+                    канва: Урок {{ $row['student_cursor'] }} / {{ $row['total'] }}
                 </span>
             </div>
 
@@ -19,7 +19,7 @@
             </div>
 
             <p class="text-gray-600 dark:text-gray-400">
-                Группа дошла до урока {{ $row['group_cursor'] }}.
+                Группа дошла до Урока {{ $row['group_cursor'] }}.
                 @if ($row['last_canvas'])
                     Последний факт: {{ $row['last_canvas'] }}.
                 @endif

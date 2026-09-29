@@ -2,7 +2,7 @@
     $data = $block['data'] ?? [];
     $blockId = 'hero-form-' . uniqid();
 
-    // Счётчик «Осталось N дней» до вебинара (только если включён тогл и дата в будущем).
+    // Счетчик «Осталось N дней» до вебинара (только если включен тогл и дата в будущем).
     $daysLeft = (! empty($data['show_days_countdown']) && isset($page) && $page->webinar_date && $page->webinar_date->isFuture())
         ? (int) ceil(now()->diffInHours($page->webinar_date, false) / 24)
         : null;
@@ -133,7 +133,7 @@
     .tariff-card-popular { transform: translateY(-14px) !important; }
     .tariff-card-popular:hover { transform: translateY(-18px) !important; }
  
-    /* Зелёная пульсирующая точка */
+    /* Зеленая пульсирующая точка */
     .status-dot {
         display: inline-block;
         width:.5rem; height:.5rem; border-radius:50%; background:#22C55E;
@@ -148,7 +148,7 @@
 {{-- ========================================== --}}
 <section class="relative bg-[var(--surface-soft)] overflow-hidden pt-6 pb-14 lg:pt-14 lg:pb-20 grain-overlay">
 
-    {{-- Счётчик дней до вебинара — на уровне надзаголовочной плашки, слева от формы --}}
+    {{-- Счетчик дней до вебинара — на уровне надзаголовочной плашки, слева от формы --}}
     @if($daysLeft !== null)
         <div class="absolute top-6 lg:top-14 right-4 lg:right-[440px] xl:right-[480px] z-30 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-sm border border-brand/20"
              style="box-shadow: 0 4px 16px rgba(232,92,36,.12);">
@@ -196,7 +196,7 @@
             <div class="transform transition-all duration-700 delay-200 translate-y-8 opacity-0 w-full"
                  :class="loaded ? '!translate-y-0 !opacity-100' : ''">
                 @php
-                    // Подсветка: фрагменты в *звёздочках* красим акцентным цветом.
+                    // Подсветка: фрагменты в *звездочках* красим акцентным цветом.
                     // e() экранирует ДО вставки span — тег служебный, контент безопасен.
                     $titleHtml = nl2br(preg_replace(
                         '/\*(.+?)\*/u',
@@ -307,7 +307,7 @@
                 <input type="hidden" name="referrer"     class="analytics-field" value="{{ request()->headers->get('referer') }}">
  
                 @if(!empty($data['form_minimal']))
-                    {{-- ─── УПРОЩЁННАЯ ФОРМА: один контакт + согласие по клику + опц. Telegram ─── --}}
+                    {{-- ─── УПРОЩЕННАЯ ФОРМА: один контакт + согласие по клику + опц. Telegram ─── --}}
                     @php
                         $consentRaw = $data['min_consent_note'] ?? 'Нажимая кнопку, вы соглашаетесь с {link}. Ссылку пришлем в Telegram — спросим контакт после.';
                         // {link} → кликабельная «политика конфиденциальности». e() экранирует

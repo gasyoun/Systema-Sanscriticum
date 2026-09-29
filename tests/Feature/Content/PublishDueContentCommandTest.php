@@ -93,6 +93,30 @@ class PublishDueContentCommandTest extends TestCase
         $this->assertSame(ContentCalendarSlot::STATUS_PUBLISHED, $alreadyPublished->fresh()->status);
     }
 
+    public function test_prohibited_slot_is_held_as_draft_and_never_sent(): void
+    {
+        config([
+            'features.content_calendar_autopilot' => true,
+            'services.n8n.calendar_post_webhook' => 'https://n8n.example/webhook/vk-calendar-post',
+        ]);
+        Http::fake(['n8n.example/*' => Http::response(['ok' => true])]);
+
+        $bad = $this->slot(['body' => 'Ученица Мария Иванова пишет: лучше, чем Окаруто']);
+        $good = $this->slot(['body' => 'Курс стоит 12 000 ₽ — слово дня']);
+
+        $this->artisan('content:publish-due')->assertSuccessful();
+
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => $request['calendar_slot_id'] === $good->id);
+
+        $held = $bad->fresh();
+        $this->assertSame(ContentCalendarSlot::STATUS_DRAFT, $held->status, 'held for a human edit, not retried hourly');
+        $this->assertStringContainsString('prohibition-hold §2.8: crm_personal_data', $held->meta['prohibition_hold']);
+        $this->assertStringContainsString('competitors («Окаруто»)', $held->meta['prohibition_hold'], 'every §2.8 hit is journaled');
+        $this->assertSame(ContentCalendarSlot::STATUS_PUBLISHED, $good->fresh()->status);
+        $this->assertStringContainsString('price_or_live_date', $good->fresh()->meta['prohibition_warn'][0]);
+    }
+
     public function test_failed_n8n_response_keeps_slot_scheduled_for_retry(): void
     {
         config([

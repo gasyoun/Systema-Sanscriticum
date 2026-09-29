@@ -43,8 +43,76 @@ return [
         'first_cabinet_action' => [
             'name' => 'first_cabinet_action',
             'dedup' => 'once per user ever',
-            'metrika_goal' => null,
+            // MG 18-09-2026: flip null -> goal (activation after payment counts
+            // in the same counter; browser marker gated by the pre-emit check).
+            'metrika_goal' => 'first_cabinet_action',
             'surfaces' => ['cabinet.home.view', 'lesson_open — first after any activity'],
+        ],
+        /*
+         | Кабинетные цели Tier 1 (MG 18-09-2026, план
+         | docs/METRIKA_GOALS_SHOP_CABINET_2026-09-18.md). Тот же счётчик
+         | 106964341, но init с webvisor:false + clickmap:false (152-ФЗ:
+         | ни одной записи сессий залогиненных). Имена целей = имя события §4
+         | с точками → подчёркивания; ids 639422183–639422234 созданы в
+         | Метрике через management API (PR #2700). Механика доставки:
+         | клиентский мост (telemetry partial, METRIKA_BRIDGE) либо
+         | data-metrika-goal маркеры, которые рендерит сервер.
+         */
+        'cabinet_home_view' => [
+            'name' => 'cabinet_home_view',
+            'dedup' => 'raw renders (activity truth: cabinet.home.view)',
+            'metrika_goal' => 'cabinet_home_view',
+            'surfaces' => ['cabinet dashboard render — data-metrika-goal marker'],
+        ],
+        'lesson_open' => [
+            'name' => 'lesson_open',
+            'dedup' => 'raw lesson renders (activity truth: lesson_open, dedup in TrackLessonViewJob)',
+            'metrika_goal' => 'lesson_open',
+            'surfaces' => ['lesson page render — data-metrika-goal marker'],
+        ],
+        'lesson_complete' => [
+            'name' => 'lesson_complete',
+            'dedup' => 'once per lesson per user',
+            // NO server emitter exists yet (§4 spec) — goal reads 0 until the
+            // writer ships; kept here so the registry stays the single map.
+            'metrika_goal' => 'lesson_complete',
+            'surfaces' => ['server emitter NOT shipped yet'],
+        ],
+        'lesson_mark_mastered' => [
+            'name' => 'lesson_mark_mastered',
+            'dedup' => 'only on NEW completion (server gates the flash)',
+            'metrika_goal' => 'lesson_mark_mastered',
+            'surfaces' => ['completeLesson flash metrika_goal → marker on redirect target'],
+        ],
+        'library_shelf_view' => [
+            'name' => 'library_shelf_view',
+            'dedup' => 'raw impressions (activity truth: library.shelf.view)',
+            'metrika_goal' => 'library_shelf_view',
+            'surfaces' => ['«Записи» shelves — client telemetry bridge (data-track-impression)'],
+        ],
+        'path_station_view' => [
+            'name' => 'path_station_view',
+            'dedup' => 'raw impressions (activity truth: path.station.view)',
+            'metrika_goal' => 'path_station_view',
+            'surfaces' => ['лестница чтения — client telemetry bridge (data-track-impression)'],
+        ],
+        'access_renewal_start' => [
+            'name' => 'access_renewal_start',
+            'dedup' => 'raw clicks (activity truth: access.renewal.start)',
+            'metrika_goal' => 'access_renewal_start',
+            'surfaces' => ['кнопки продления кабинета — client telemetry bridge (data-track-event)'],
+        ],
+        'access_renewal_complete' => [
+            'name' => 'access_renewal_complete',
+            'dedup' => 'once per payment (server: PaymentTelemetryObserver)',
+            'metrika_goal' => 'access_renewal_complete',
+            'surfaces' => ['/payment/success when confirmed && payment.is_self_service'],
+        ],
+        'zoom_join_click' => [
+            'name' => 'zoom_join_click',
+            'dedup' => 'raw clicks (activity truth: schedule_join_clicks)',
+            'metrika_goal' => 'zoom_join_click',
+            'surfaces' => ['кнопки «На занятие» (class.join) — client telemetry bridge (data-track-event)'],
         ],
         /*
          | H2762 isolated flagship tests. First-party home is storefront_events

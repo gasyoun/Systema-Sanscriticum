@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\AnonsApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CabinetController;
+use App\Http\Controllers\Api\LessonBannerController;
 use App\Http\Controllers\Api\LessonController;
 use App\Http\Controllers\Api\PartnerBotController;
 use App\Http\Controllers\Api\PublicScheduleController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\Webhooks\LeadStepWebhookController;
 use App\Http\Controllers\Webhooks\LectureClipCallbackWebhookController;
 use App\Http\Controllers\Webhooks\MaxMagnetWebhookController;
 use App\Http\Controllers\Webhooks\PaypalSubscriptionsWebhookController;
+use App\Http\Controllers\Webhooks\TelegramBusinessWebhookController;
 use App\Http\Controllers\Webhooks\TelegramMagnetWebhookController;
 use App\Http\Controllers\Webhooks\TelegramZapisiWebhookController;
 use App\Http\Controllers\Webhooks\VkMagnetCallbackController;
@@ -156,12 +159,31 @@ Route::post('/webhooks/lecture-clip-callback', [LectureClipCallbackWebhookContro
     ->middleware('verify.n8n.clipcallback')
     ->name('webhook.lecture-clip-callback');
 
+// Плашки занятий — n8n «Плашки занятий» забирает готовые JPEG и отчитывается о
+// доставке в папки групп на Google Диске. Секрет в X-Webhook-Secret
+// (services.n8n.lesson_banners_secret); 404 при выключенном features.lesson_banners.
+Route::middleware(['verify.n8n.lessonbanners', 'throttle:60,1'])->group(function () {
+    Route::get('/lesson-banners/due', [LessonBannerController::class, 'due'])
+        ->name('api.lesson-banners.due');
+    Route::post('/lesson-banners/{banner}/delivered', [LessonBannerController::class, 'delivered'])
+        ->whereNumber('banner')
+        ->name('api.lesson-banners.delivered');
+});
+
 // === TELEGRAM TRACK C: @zapisi_ORSbot (H164, D8) ===
 // Отдельный от /telegram/webhook (user-уведомления) и /webhooks/telegram-magnet
 // (lead-magnet) эндпоинт для class-booking бота. Секрет из MarketingSetting.
 Route::post('/webhooks/telegram-zapisi', [TelegramZapisiWebhookController::class, 'handle'])
     ->middleware('verify.tg.zapisi')
     ->name('webhook.zapisi.telegram');
+
+// === TELEGRAM BUSINESS (H5065): бот управляет чатом и отвечает ОТ ИМЕНИ аккаунта ===
+// Флаг features.telegram_business_bot OFF → 404 (middleware, fail-closed), пустой
+// секрет → 403. Принимаем бизнес-апдейты (business_connection / business_message),
+// кладём в support-инбокс и прогоняем ту же полосу автоответа, что у лички.
+Route::post('/webhooks/telegram-business', [TelegramBusinessWebhookController::class, 'handle'])
+    ->middleware('verify.tg.business')
+    ->name('webhook.telegram-business');
 
 // === ВХОДЯЩИЙ EMAIL (H3462): zabota@samskrte.ru → проводник (n8n на .91) → сюда ===
 // Письмо раскладывается в chat_messages (source='email') через InboundEmailIngester:
@@ -179,4 +201,17 @@ Route::post('/webhooks/inbound-email/{secret}', [InboundEmailWebhookController::
 Route::prefix('partner-bot')->middleware(['verify.partner.bot', 'throttle:30,1'])->group(function () {
     Route::post('/register', [PartnerBotController::class, 'register'])->name('api.partner-bot.register');
     Route::post('/stats', [PartnerBotController::class, 'stats'])->name('api.partner-bot.stats');
+});
+
+// === ANONS PUBLISHING API (H5049 R10) ===
+// Аутентифицированный интерфейс подсистемы публикаций: draft/preview/
+// publish/schedule/status/metrics/rollback. CLI anons:* зовёт тот же
+// AnonsPublishingService. Токены — Sanctum personal access tokens.
+Route::prefix('anons')->middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
+    Route::post('/', [AnonsApiController::class, 'draft'])->name('api.anons.draft');
+    Route::post('/preview', [AnonsApiController::class, 'preview'])->name('api.anons.preview');
+    Route::post('/publish', [AnonsApiController::class, 'publish'])->name('api.anons.publish');
+    Route::get('/{key}', [AnonsApiController::class, 'status'])->name('api.anons.status');
+    Route::post('/{key}/metrics', [AnonsApiController::class, 'metrics'])->name('api.anons.metrics');
+    Route::post('/{key}/rollback', [AnonsApiController::class, 'rollback'])->name('api.anons.rollback');
 });

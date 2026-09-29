@@ -2417,7 +2417,7 @@ eatures.rq4_study. Smoke: schema_version=1.0.0, items=24, first_item=yat, flag O
   lecture video + transcript + AI timecodes into five sequenced products (clips → social
   text → FAQ → long-form → student materials) under one `ContentCandidate` backbone,
   reusing H1452 clip plumbing and CuratorAi. Docs:
-  [`docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md)
+  [`docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md)
   + ROADMAP / ARCHITECTURE / IMPLEMENTATION / VERIFICATION + metadoc. Cross-linked from
   Content-AI and Anton ops-gaps plans. Execution handoffs H1547–H1551 (Uprava).
   Grok 4.5 (`grok-4.5`).

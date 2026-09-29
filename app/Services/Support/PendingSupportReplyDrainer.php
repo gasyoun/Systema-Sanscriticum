@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Support;
 
-use App\Models\TelegramSupportMessage;
+use App\Services\Support\Concerns\TracksPendingDelivery;
 use App\Services\TelegramSupport\TelegramSupportSyncService;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -25,9 +25,15 @@ use Throwable;
  *
  * Задержка доставки становится равна периоду синка (минута) вместо секунд. Это
  * сознательный размен: минута ожидания против доставки, которой нет вовсе.
+ *
+ * H5065: признак «ждёт доставки» и его разметка переехали в общий трейт
+ * {@see TracksPendingDelivery} — тот же контракт читает дренаж полосы Telegram
+ * Business. Копия этих методов разошлась бы молча.
  */
 class PendingSupportReplyDrainer
 {
+    use TracksPendingDelivery;
+
     /**
      * Разослать ждущие ответы. Вызывается синком после успешного захода, когда
      * сессия заведомо жива.
@@ -43,24 +49,7 @@ class PendingSupportReplyDrainer
         $batch = max(1, (int) config('services.telegram_support.pending_delivery_batch', 20));
         $maxAttempts = max(1, (int) config('services.telegram_support.pending_delivery_max_attempts', 3));
 
-        // Предфильтр по ОТРИЦАТЕЛЬНОМУ telegram_message_id: недоставленные несут
-        // placeholder из createPendingOutgoing(), а успешная доставка заменяет
-        // его настоящим, положительным. Точно и не зависит от диалекта СУБД —
-        // в отличие от запроса по полю JSON.
-        //
-        // ЛИМИТ ТОЛЬКО ПОСЛЕ ОТСЕВА. В первой версии здесь стоял
-        // `orderBy('id')->limit($batch * 4)` ДО фильтрации в PHP, и при 8670
-        // исходящих окно целиком набивалось древним импортом: ждущие сообщения
-        // 10978 и 15255 в него не попадали никогда, дренаж молча выбирал ноль.
-        $pending = TelegramSupportMessage::query()
-            ->where('direction', 'outgoing')
-            ->where('telegram_message_id', '<', 0)
-            ->whereNotNull('raw_payload')
-            ->when($accountId !== null, fn ($q) => $q->where('telegram_support_account_id', $accountId))
-            ->orderBy('id')
-            ->get()
-            ->filter(fn (TelegramSupportMessage $m): bool => $this->isPending($m))
-            ->take($batch);
+        $pending = $this->pendingOutgoing($accountId, $batch);
 
         $stats = ['attempted' => 0, 'delivered' => 0, 'failed' => 0];
 
@@ -105,69 +94,5 @@ class PendingSupportReplyDrainer
         }
 
         return $stats;
-    }
-
-    /**
-     * Отслеживаем ли доставку этого сообщения и ждёт ли оно её.
-     *
-     * Критерий тот же, что у SupportObservability::delivery() и
-     * SupportDeliveryStatus: наличие ключа плюс его истинность. Фильтруем в PHP,
-     * а не запросом по JSON, — на SQLite (тесты) и MySQL синтаксис расходится,
-     * а строк с этим ключом единицы.
-     */
-    private function isPending(TelegramSupportMessage $message): bool
-    {
-        $payload = $message->raw_payload;
-
-        return is_array($payload)
-            && array_key_exists('pending_delivery', $payload)
-            && (bool) $payload['pending_delivery'];
-    }
-
-    /** @param  array<string, mixed>  $payload */
-    private function markDelivered(TelegramSupportMessage $message, array $payload, mixed $telegramMessageId): void
-    {
-        $payload['pending_delivery'] = false;
-        $payload['delivered_at'] = now()->toIso8601String();
-        // Доставленное не должно таскать труп прежней ошибки.
-        unset($payload['delivery_failed_at'], $payload['delivery_error']);
-
-        $update = ['raw_payload' => $payload];
-        if (! empty($telegramMessageId)) {
-            $update['telegram_message_id'] = (int) $telegramMessageId;
-        }
-
-        $message->forceFill($update)->save();
-    }
-
-    /**
-     * ИНВАРИАНТ: pending_delivery остаётся true. Сообщение не доставлено, и
-     * SupportObservability::delivery() обязан считать его в pending ровно как
-     * считал; delivery_failed_at — уточнение о ждущем, а не замена ему.
-     *
-     * @param  array<string, mixed>  $payload
-     */
-    private function markAttemptFailed(TelegramSupportMessage $message, array $payload, Throwable $e, int $maxAttempts): void
-    {
-        $attempts = (int) ($payload['delivery_attempts'] ?? 0) + 1;
-
-        $payload['delivery_attempts'] = $attempts;
-        $payload['delivery_error'] = mb_substr($e->getMessage(), 0, 300);
-
-        // Пометку «не доставлено» в ленте ставим, только когда попытки кончились:
-        // до этого сообщение честно ждёт следующего захода.
-        if ($attempts >= $maxAttempts) {
-            $payload['delivery_failed_at'] = now()->toIso8601String();
-        }
-
-        $message->forceFill(['raw_payload' => $payload])->save();
-
-        Log::warning('Не удалось доставить ответ куратора', [
-            'message_id' => $message->id,
-            'chat_id' => $message->telegram_chat_id,
-            'attempt' => $attempts,
-            'max_attempts' => $maxAttempts,
-            'error' => $e->getMessage(),
-        ]);
     }
 }

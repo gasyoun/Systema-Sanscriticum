@@ -23,7 +23,9 @@ _Created: 14-09-2026 · Last updated: 14-09-2026_
 - Риск: PII (email, IP, платёжные метаданные) копится в логах, которые бэкапятся off-site. Аудит перезаписи пароля пишет email (`User::logPasswordRewrite`).
 - Исправление (код): `.env.example` дефолт `warning`. Исправление (прод): **исполнено тем же проходом 14-09** — `LOG_LEVEL=warning`, бэкап `.env.bak-h4663-20260914-062528`, `config:cache`, reload php-fpm, smoke `/`+`/admin/login`+`/api/public/schedule` = 200×3.
 
-### F2 — [@DECIDE] Второй публичный сайт на Tier-0 боксе (kosha + GitHub device-flow релей)
+### F2 — [МИГРИРОВАНО 18-09-2026] Второй публичный сайт на Tier-0 боксе (kosha + GitHub device-flow релей)
+
+> **МИГРИРОВАНО 18-09-2026** (MG ruling «(б) переехать на .91», Uprava GTD 0B2/0CG2): kosha-API (uvicorn:8001) переехал на n8n-бокс, публичное имя теперь `kosha.193.232.229.91.sslip.io` (caddy, H2991-релей переписан в caddy-route: preflight 204+ACAO allowlist, 403 чужим Origin); .92-vhost снят (бэкап `/root/kosha-migration-backup-18-09/` на .92), 43 хардкода в gasyoun.github.io перебиты. Tier-0 снова с одной публичной поверхностью.
 - Серверный nginx: vhost `kosha.193.232.229.92.sslip.io` (`root /var/www/html`, proxy `127.0.0.1:8001`, сниппет `gh-device-relay.conf`). В репо конфига нет — прод-локальный.
 - Риск: лишняя публичная поверхность на боксе с деньгами и ПДн; имя в чужой DNS-зоне sslip.io; релей — исходящий хоп на `github.com` (ограничен двумя эндпоинтами, CORS-map жёсткий: `default ""`, allowlist `gasyoun.github.io`+localhost).
 - Требует решения человека: нужен ли kosha на этом боксе/имени; если да — внести в perimeter-инвентарь.

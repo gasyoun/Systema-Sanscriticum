@@ -62,6 +62,13 @@ class ActivityEvent extends Model
 
     public const TYPE_SESSION_TIMEOUT = 'session_timeout';
 
+    /**
+     * H5022 — автоматическое повторное приглашение через 48 ч после оплаты без
+     * входа в кабинет (students:reinvite-48h). Одна запись на пользователя —
+     * она же маркер идемпотентности и основа недельного отчёта конверсии.
+     */
+    public const REINVITE_48H_SENT = 'reinvite_48h_sent';
+
     /** Куратор вызвал бот-команду (/долги, /группа) — см. DebtorsBotCommand (H250). */
     public const TYPE_CURATOR_BOT_COMMAND = 'curator_bot_command';
 

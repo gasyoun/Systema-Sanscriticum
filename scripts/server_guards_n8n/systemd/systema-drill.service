@@ -1,0 +1,11 @@
+[Unit]
+Description=Monthly automated restore drill on .91 scratch (H3178 c2.6/2.7)
+OnFailure=systema-alert@%n.service
+
+[Service]
+Type=oneshot
+# RAM guard next to prod n8n: drill runs strictly sequential inside its own
+# isolated mariadbd (96M buffer, no networking). Timeout covers a 1.4 GB dump
+# import on this box with generous margin.
+TimeoutStartSec=4h
+ExecStart=/usr/local/sbin/systema-backup/monthly_drill.py --mode cold

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\GameEvent;
 use App\Models\LilaScoreEvent;
+use App\Support\GameLemmaFence;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -59,10 +60,18 @@ class GameTelemetryController extends Controller
         $drill = $this->slug($request->input('drill'), 40) ?? 'unknown';
         $band = $this->slug($request->input('band'), 40);
         $user = $request->user();
+        $anonId = $this->anonId($request);
+
+        // H5087 (remediation of H5046): запоминаем anon_id, реально присланный
+        // ЭТОЙ браузерной сессией — srs-onboarding-import примет только такие
+        // (привязка к вызывающему вместо голой клиентской заявки). Приватность
+        // дизайна сохранена: телеметрия остаётся fire-and-forget без
+        // серверных идентификаторов; в сессии — сам анонимный слаг, не PII.
+        $this->rememberAnonId($request, $anonId);
 
         try {
             GameEvent::create([
-                'anon_id' => $this->anonId($request),
+                'anon_id' => $anonId,
                 'drill' => $drill,
                 'band' => $band,
                 'event' => $event,
@@ -123,13 +132,50 @@ class GameTelemetryController extends Controller
         return $clean === '' ? null : mb_substr($clean, 0, 32);
     }
 
-    /** Короткий слаг (drill/band): строка, обрезанная до $max; пустое/не-скаляр -> null. */
+    /**
+     * H5087: список anon_id, реально присыланных этой сессией (последние 10) —
+     * источник привязки для /api/games/srs-onboarding-import.
+     */
+    private function rememberAnonId(Request $request, ?string $anonId): void
+    {
+        if ($anonId === null) {
+            return;
+        }
+
+        $known = (array) $request->session()->get('games_anon_ids', []);
+        $known[] = $anonId;
+        $request->session()->put(
+            'games_anon_ids',
+            array_slice(array_values(array_unique($known)), -10),
+        );
+    }
+
+    /** Короткий слаг-ИДЕНТИФИКАТОР (drill/band): только [A-Za-z0-9_-] — как LilaGateController::family(); пустое/не-скаляр -> null. */
     private function slug(mixed $value, int $max): ?string
     {
         if (! is_string($value) && ! is_int($value)) {
             return null;
         }
-        $clean = trim((string) $value);
+        // H5087: идентификаторы — строгий ASCII-набор, любой другой символ
+        // вырезается (раньше проходил произвольный текст).
+        $clean = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $value) ?? '';
+
+        return $clean === '' ? null : mb_substr($clean, 0, $max);
+    }
+
+    /**
+     * H5087 (remediation of H5046): контентная строка тренажёра (лемма IAST /
+     * русский перевод) — charset-фенс {@see GameLemmaFence}: буквы/цифры
+     * Unicode, пробел, дефис, апостроф. Формульные и разметочные символы
+     * вырезаются ДО записи: эти строки позже попадают в общую системную
+     * SRS-колоду и публичный словарь.
+     */
+    private function lemma(mixed $value, int $max): ?string
+    {
+        if (! is_string($value) && ! is_int($value)) {
+            return null;
+        }
+        $clean = GameLemmaFence::clean((string) $value);
 
         return $clean === '' ? null : mb_substr($clean, 0, $max);
     }
@@ -171,11 +217,11 @@ class GameTelemetryController extends Controller
             if (! is_array($item)) {
                 continue;
             }
-            $iast = $this->slug($item['iast'] ?? null, 64);
+            $iast = $this->lemma($item['iast'] ?? null, 64);
             if ($iast === null) {
                 continue;
             }
-            $clean[] = ['iast' => $iast, 'ru' => $this->slug($item['ru'] ?? null, 160) ?? ''];
+            $clean[] = ['iast' => $iast, 'ru' => $this->lemma($item['ru'] ?? null, 160) ?? ''];
         }
 
         return $clean === [] ? null : ['items' => $clean];
@@ -201,8 +247,8 @@ class GameTelemetryController extends Controller
             if (! is_array($item)) {
                 continue;
             }
-            $l = $this->slug($item['l'] ?? null, 160);
-            $r = $this->slug($item['r'] ?? null, 160);
+            $l = $this->lemma($item['l'] ?? null, 160);
+            $r = $this->lemma($item['r'] ?? null, 160);
             if ($l === null || $r === null) {
                 continue;
             }

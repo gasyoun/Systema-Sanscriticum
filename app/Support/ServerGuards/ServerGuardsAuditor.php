@@ -31,6 +31,7 @@ final class ServerGuardsAuditor
         return $this->applyWaivers(array_merge(
             $this->auditManagedFiles(),
             $this->auditCrontab(),
+            $this->auditHermesCrontab(),
             $this->auditAutoDeploy(),
             $this->auditUnitLimits(),
             $this->auditSingleMemoryDefinition(),
@@ -292,6 +293,57 @@ final class ServerGuardsAuditor
                 $findings[] = GuardFinding::warning(
                     'watchdog-cron',
                     "{$command}: таймаут не {$this->spec->get($timeoutKey)} с — строка «{$matched}»",
+                );
+            }
+        }
+
+        return $findings;
+    }
+
+    /**
+     * H5080-F2 (19-09-2026): crontab пользователя hermes — пять линий нервной
+     * системы Hermes (weekly_sweep / ops_daily / research_watch / spend_watch /
+     * foreman_daily). До этого они жили только в живом crontab: первый же
+     * guards re-apply или опечатка в `crontab -e -u hermes` стирали их молча
+     * (класс H4155). Теперь файл управляется репо
+     * (scripts/server_guards/cron/hermes.crontab), а проверка ловит и пропажу
+     * crontab целиком, и пропажу отдельной линии.
+     *
+     * @return list<GuardFinding>
+     */
+    private function auditHermesCrontab(): array
+    {
+        $user = $this->spec->get('HERMES_USER');
+        $crontab = $this->sys->crontabFor($user);
+        if ($crontab === null || trim($crontab) === '') {
+            return [GuardFinding::critical(
+                'hermes-crontab',
+                "crontab {$user} пуст — нервная система Hermes (weekly_sweep/ops_daily/research_watch/spend_watch/foreman_daily) не ходит вовсе",
+            )];
+        }
+
+        $lines = [];
+        foreach (preg_split('/\r\n|\n|\r/', $crontab) ?: [] as $line) {
+            $trimmed = trim($line);
+            if ($trimmed === '' || str_starts_with($trimmed, '#')) {
+                continue;
+            }
+            $lines[] = $trimmed;
+        }
+
+        $findings = [];
+        foreach ($this->spec->csv('HERMES_REQUIRED_LANES') as $lane) {
+            $found = false;
+            foreach ($lines as $line) {
+                if (str_contains($line, $lane)) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (! $found) {
+                $findings[] = GuardFinding::critical(
+                    'hermes-crontab',
+                    "в crontab {$user} нет строки {$lane} — линия нервной системы Hermes стёрта молча (класс H4155)",
                 );
             }
         }

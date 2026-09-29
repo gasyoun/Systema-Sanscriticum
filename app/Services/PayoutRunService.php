@@ -100,10 +100,16 @@ final class PayoutRunService
         }
 
         // 1. Блоки, завершённые В ОКНЕ (since, on].
+        //    H5007 (audit H6): граница окна — КОНЕЦ дня отсечки, ровно как у
+        //    предиката перерасчёта ниже (at <= since.endOfDay()). Раньше окно
+        //    начиналось с startOfDay, и блок, завершённый В день отсечки,
+        //    попадал в оба предиката — его доли суммировались дважды
+        //    (base_rub + prior_rub). defaultSince() = дата последней выплаты,
+        //    так что типичный прогон бил ровно в эту границу.
         $windowBlocks = [];
         $baseRub = 0.0;
         foreach ($completions as $info) {
-            if (! $info['at']->gt($since->copy()->startOfDay()) || $info['at']->gt($on->copy()->endOfDay())) {
+            if (! $info['at']->gt($since->copy()->endOfDay()) || $info['at']->gt($on->copy()->endOfDay())) {
                 continue;
             }
             $detail = $this->salaries->blockGroupRevenueDetail(
@@ -126,6 +132,7 @@ final class PayoutRunService
         //    выплаченные отсечены внутри blockGroupRevenueDetail (paidShareKeys).
         $priorBlocks = [];
         $priorRub = 0.0;
+        $exceptions = [];
         $rentByPayment = []; // payment_id => rent row
         foreach ($completions as $key => $info) {
             if ($info['at']->gt($since->copy()->endOfDay())) {
@@ -172,6 +179,21 @@ final class PayoutRunService
                 continue;
             }
             $keptTotal = Money::round(array_sum(array_map(fn (array $l): float => (float) $l['share'], $kept)));
+            // H5442 (P0, D14): перерасчётная база блока не может быть
+            // отрицательной — как и база блока в окне (blockGroupRevenueDetail).
+            // Возврат сверх остатка выручки блока не вычитается молча из чужих
+            // блоков: это исключение сверки, закрываемое отдельной корректировкой.
+            if (config('features.payment_fix_wave1') && $keptTotal < 0) {
+                $exceptions[] = [
+                    'type' => 'negative_prior_block_base',
+                    'course_title' => (string) $info['course']->title,
+                    'block_number' => (int) $info['number'],
+                    'unabsorbed_rub' => $keptTotal,
+                ];
+                $warnings[] = sprintf('⚠ %s блок %d: возвраты превышают невыплаченную выручку на %s ₽ — не вычтено, нужна отдельная корректировка',
+                    $info['course']->title, $info['number'], number_format(abs($keptTotal), 2, '.', ' '));
+                $keptTotal = 0.0;
+            }
             $priorBlocks[] = [
                 'course_title' => (string) $info['course']->title,
                 'block_number' => (int) $info['number'],
@@ -244,7 +266,32 @@ final class PayoutRunService
         }
         $payableRub = Money::round($payableRub);
         $payableEur = null;
-        if ($lane === 'EUR' && $fx['rate'] > 0) {
+        $singleRubTruth = config('features.payment_fix_wave1')
+            || config('features.teacher_direct_receipt_revenue_parity');
+        if ($singleRubTruth) {
+            // H5442 (P0, D14): рубль — единственный источник истины. Прямые
+            // валютные поступления переводятся в рубли и вычитаются ДО итога;
+            // итог не может стать отрицательным без отдельной корректировки;
+            // валютная сумма — производный снимок финального рублёвого итога
+            // (раньше payable_eur игнорировал авансы — две правды в одной строке).
+            if ($directForeignTotal > 0) {
+                if ($fx['rate'] > 0) {
+                    $payableRub = Money::round($payableRub - $directForeignTotal * $fx['rate']);
+                } else {
+                    $exceptions[] = ['type' => 'direct_foreign_without_fx', 'amount_eur' => $directForeignTotal];
+                    $warnings[] = '⚠ прямые валютные поступления есть, а курса нет — итог не посчитан (исключение сверки)';
+                }
+            }
+            if ($payableRub < 0) {
+                $exceptions[] = ['type' => 'negative_payable_rub', 'unabsorbed_rub' => $payableRub];
+                $warnings[] = sprintf('⚠ итог к выплате отрицательный (%s ₽) — к выплате 0, остаток требует отдельной корректировки',
+                    number_format($payableRub, 2, '.', ' '));
+                $payableRub = 0.0;
+            }
+            if ($lane === 'EUR' && $fx['rate'] > 0) {
+                $payableEur = Money::round($payableRub / $fx['rate']);
+            }
+        } elseif ($lane === 'EUR' && $fx['rate'] > 0) {
             $payableEur = Money::round($accruedFormula / $fx['rate'] - $directForeignTotal);
         }
 
@@ -277,6 +324,7 @@ final class PayoutRunService
             'net_after_npd_rub' => $result['net_after_npd_rub'] ?? null,
             'withholding_reading' => 'одно удержание ×92% (банковский срез): для percent-схем (X×0,92)×r = (X×r)×0,92 — вопрос MG 10-09 «то же или второе удержание?» на цифру percent-прогонов не влияет; двойной срез не применяется',
             'warnings' => $warnings,
+            'reconciliation_exceptions' => $exceptions,
         ];
     }
 

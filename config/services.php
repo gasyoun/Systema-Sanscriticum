@@ -90,12 +90,20 @@ return [
         // payload в этот n8n-вебхук, n8n постит. Секрет уходит в X-Webhook-Secret.
         'monthly_schedule_webhook' => env('N8N_MONTHLY_SCHEDULE_WEBHOOK'),
         'monthly_schedule_secret' => env('N8N_MONTHLY_SCHEDULE_SECRET'),
+        // H5184 N07 — churn-сигналы «студент застыл» (edtech:churn-signals):
+        // POST JSON в этот n8n-вебхук, секрет уходит в X-Webhook-Secret.
+        'churn_webhook' => env('N8N_CHURN_WEBHOOK_URL'),
+        'churn_webhook_secret' => env('N8N_CHURN_WEBHOOK_SECRET'),
         // «Нарежь лекцию на клипы» (H1452): Laravel шлёт лекцию + AI-таймкод-спаны
         // в этот n8n-вебхук (сам ffmpeg/VK-аплоад — вне Laravel), секрет — в
         // X-Webhook-Secret. Callback обратно защищён отдельным секретом.
         'clip_extract_webhook' => env('N8N_CLIP_EXTRACT_WEBHOOK'),
         'clip_extract_secret' => env('N8N_CLIP_EXTRACT_SECRET'),
         'clip_callback_secret' => env('N8N_CLIP_CALLBACK_SECRET'),
+        // Плашки занятий: n8n забирает список готовых плашек и отчитывается о
+        // доставке на Google Диск (GET/POST /api/lesson-banners/*). Секрет — в
+        // X-Webhook-Secret. Пусто → эндпоинты отвечают 403 (выключены).
+        'lesson_banners_secret' => env('N8N_LESSON_BANNERS_SECRET'),
         // Content engine Wave 2 (H1548): один социальный пост — ВК-стена
         // (с прикреплённым клипом) + зеркало в ТГ-канал — тот же
         // webhook-forward паттерн, что monthly_schedule/clip_extract.
@@ -369,6 +377,16 @@ return [
         'subprocess_lane' => (bool) env('TELEGRAM_STORY_SUBPROCESS_LANE', true),
     ],
 
+    // Anons publishing v2 (H5049): declarative manifests, idempotent
+    // publications, visible CTA plaques burned into pixels.
+    'anons' => [
+        // TTF для CTA-плашки (кириллица). null → env ANONS_CTA_FONT →
+        // известные системные пути (DejaVu на Linux) → ASCII-fallback GD.
+        'cta_font' => env('ANONS_CTA_FONT'),
+        // Потолок попыток на один destination-run до blocked (fail-closed).
+        'max_attempts' => (int) env('ANONS_MAX_ATTEMPTS', 3),
+    ],
+
     // ВХОДНОЙ УЗЕЛ вебхуков Telegram — общий для ВСЕХ ботов: кабинетного,
     // лид-магнитного, ботов лендингов и @zapisi_ORSbot.
     //
@@ -432,6 +450,48 @@ return [
         // указывает на входной узел (мёртвый туннель), поэтому здесь задаётся
         // явно: https://samskrte.ru (инцидент 06-09-2026).
         'reinject_url' => env('TELEGRAM_STUDENT_POLL_REINJECT_URL', ''),
+    ],
+
+    /*
+     | H5065 — полоса Telegram Business: бот, подключённый к аккаунту владельца,
+     | отвечает студенту ОТ ИМЕНИ этого аккаунта (sendMessage с
+     | business_connection_id). Токен — СВОЙ, не token поддержки: подключить к
+     | Business можно любой бот, и смешивать его с userbot-сессией нельзя.
+     |
+     | Пустой токен/секрет = полоса выключена (fail-closed 403 на вебхуке), а не
+     | «проверку пропускаем» — тот же контракт, что у zapisi/magnet вебхуков.
+     */
+    'telegram_business' => [
+        'token' => env('TELEGRAM_BUSINESS_BOT_TOKEN', ''),
+        'secret' => env('TELEGRAM_BUSINESS_WEBHOOK_SECRET', ''),
+        // Set when this is the same bot as the student cabinet bot. Telegram
+        // permits one webhook per bot, so Business events then share the
+        // existing /api/telegram/webhook endpoint and its secret.
+        'shared_student_webhook' => (bool) env('TELEGRAM_BUSINESS_SHARED_STUDENT_WEBHOOK', false),
+        // Имя аккаунта поддержки, под которым живёт полоса в support-таблицах.
+        // Отдельное имя — чтобы ответы Business никогда не смешались с личкой
+        // userbot-аккаунта rusamskrtam в аналитике и в дренаже ответов.
+        'account_name' => env('TELEGRAM_BUSINESS_ACCOUNT_NAME', 'telegram-business'),
+        // Имя бота для логов/диагностики (не секрет).
+        'username' => env('TELEGRAM_BUSINESS_BOT_USERNAME', ''),
+        // Сколько ждущих ответов досылать за один прогон дренажа.
+        'pending_delivery_batch' => (int) env('TELEGRAM_BUSINESS_PENDING_BATCH', 20),
+        // Попыток досыла, после которых сообщение помечается «не доставлено» и
+        // ждёт человека (тот же контракт, что у MadelineProto-дренажа).
+        'pending_delivery_max_attempts' => (int) env('TELEGRAM_BUSINESS_PENDING_MAX_ATTEMPTS', 3),
+        'timeout_seconds' => (int) env('TELEGRAM_BUSINESS_TIMEOUT_SECONDS', 15),
+        // Автопубликация Story: новые видео из обоих редакционных каналов.
+        // Имена @username допустимы до тех пор, пока Bot API присылает их в
+        // channel_post; для production надёжнее указать numeric chat id.
+        'story_sources' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+            'TELEGRAM_BUSINESS_STORY_SOURCES', '@samskrte,@samskrtamru',
+        ))))),
+        'story_active_period' => (int) env('TELEGRAM_BUSINESS_STORY_ACTIVE_PERIOD', 86400),
+        'story_caption' => env('TELEGRAM_BUSINESS_STORY_CAPTION', ''),
+        'story_daily_video_cap' => (int) env('TELEGRAM_BUSINESS_STORY_DAILY_VIDEO_CAP', 5),
+        'story_ffmpeg_binary' => env('TELEGRAM_BUSINESS_STORY_FFMPEG_BINARY', 'ffmpeg'),
+        // ASR runs on Ivan/Air; only the already-required final Story transcode runs here.
+        'story_subtitles_enabled' => (bool) env('TELEGRAM_BUSINESS_STORY_SUBTITLES_ENABLED', true),
     ],
 
     'vk' => [
@@ -565,6 +625,12 @@ return [
         // email идут по-старому через pending → ручную сверку.
         // false → откат к ручной сверке для всех, без деплоя логики.
         'trust_existing_students' => (bool) env('PAYPAL_TRUST_EXISTING_STUDENTS', true),
+        // H5083 (ремедиация H5046): auto-trust требует не только сессии, но и
+        // «дозагрузочного» аккаунта — возраст ≥ N часов ИЛИ хотя бы один
+        // PAID-платеж (см. App\Services\Payments\ClaimTrustPolicy). Иначе
+        // сессия, сама mintившая аккаунт первым POST'ом, доверяла бы себе на
+        // втором POST'е (auto-paid без сверки).
+        'trust_min_account_age_hours' => (int) env('PAYPAL_TRUST_MIN_ACCOUNT_AGE_HOURS', 24),
         // MG 23-08-2026: в PayPal платят только EUR (предпочтительно) и USD,
         // и дороже рублевых — рублевую цену тарифа на форме НЕ показываем.
         // Валютная цена за БЛОК по course_id; показывается только блочным
@@ -602,6 +668,9 @@ return [
         // Заявка вошедшего существующего ученика сразу paid (зеркало рулинга
         // 22-08-2026 из PayPal-канала); гость с новым email → ручная сверка.
         'trust_existing_students' => (bool) env('BANK_TRUST_EXISTING_STUDENTS', true),
+        // H5083: зеркало PayPal-канала — auto-trust требует дозагрузочный
+        // аккаунт (возраст ≥ N часов ИЛИ один PAID-платеж). ClaimTrustPolicy.
+        'trust_min_account_age_hours' => (int) env('BANK_TRUST_MIN_ACCOUNT_AGE_HOURS', 24),
         // Реквизиты для шага 1 формы (показываются ученику).
         'recipient_name' => env('BANK_RECIPIENT_NAME', ''),
         'iban' => env('BANK_RECIPIENT_IBAN', ''),

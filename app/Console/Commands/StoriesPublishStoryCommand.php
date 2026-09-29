@@ -20,13 +20,13 @@ use Throwable;
 /**
  * Издатель user-сториз персоны @rusamskrtam (H3964, Phase 2).
  *
- * Берёт approved+due строки lane=persona (kind text|photo|video) и кладёт
+ * Берет approved+due строки lane=persona (kind text|photo|video) и кладет
  * сториз на СВОЙ профиль аккаунта через MadelineProto (рулинг MG
- * «персона + канал»: сториз живёт на persona-аккаунте, БЕЗ админ-прав
+ * «персона + канал»: сториз живет на persona-аккаунте, БЕЗ админ-прав
  * канала; текстовые посты канала — отдельный stories:publish-due, Phase 1).
  *
- * Сессия ОДНА на всё (легаси support-сессия и есть @rusamskrtam, H3380):
- * живой проход открывает её только под madeline-session-локом и никогда
+ * Сессия ОДНА на все (легаси support-сессия и есть @rusamskrtam, H3380):
+ * живой проход открывает ее только под madeline-session-локом и никогда
  * параллельно с telegram-support:sync / telegram-harvest:* (AUTH_RESTART),
  * TTL лока выводится madelineSessionLockMinutes() из stories_timeout_seconds.
  *
@@ -46,7 +46,7 @@ use Throwable;
  * Режимы:
  *   --test-photo=ПУТЬ   одна тестовая фотосториз из файла: отправлена и тут
  *                       же удалена тем же кодом (смок/проба сессии; --keep
- *                       оставляет её висеть до конца суток).
+ *                       оставляет ее висеть до конца суток).
  *   --probe-attempts=N  (только вместе с --test-photo) до N дополнительных
  *                       отправок send→delete — снять фактический дневной
  *                       лимит user-сториз по первому FLOOD-коду. Потолок 30
@@ -58,13 +58,16 @@ final class StoriesPublishStoryCommand extends Command
 {
     use LocksMadelineSession;
 
-    /** Жёсткий потолок пробы лимита за один прогон. */
+    /** Жесткий потолок пробы лимита за один прогон. */
     private const PROBE_CAP = 30;
 
     protected $signature = 'stories:publish-story
-        {--test-photo= : Отправить одну тестовую фотосториз из файла и удалить её тем же кодом}
+        {--test-photo= : Отправить одну тестовую фотосториз из файла и удалить ее тем же кодом}
+        {--account=rusamskrtam : Аккаунт-персона для ручной фотопроверки}
+        {--caption= : Подпись к ручной фотосторис}
+        {--link= : Кликабельная ссылка; для очереди ссылка /ga/ извлекается из подписи автоматически}
         {--keep : Не удалять тестовую сториз (--test-photo)}
-        {--probe-attempts=0 : Дослать ещё до N сториз (send→delete) до первого FLOOD — замер дневного лимита}
+        {--probe-attempts=0 : Дослать еще до N сториз (send→delete) до первого FLOOD — замер дневного лимита}
         {--delete-story= : Удалить свою сториз по id}';
 
     protected $description = 'Publish due approved story_posts (lane=persona) as user-stories of @rusamskrtam via MadelineProto';
@@ -90,7 +93,7 @@ final class StoriesPublishStoryCommand extends Command
 
         // Режимы --test-photo / --delete-story открывают сессию всегда; основной
         // проход — ТОЛЬКО когда очередь реально непуста: сессия одна на
-        // поддержку+харвест, гонять её демон ежечасно ради пустого запроса
+        // поддержку+харвест, гонять ее демон ежечасно ради пустого запроса
         // нельзя (запуск клиента ~40 с жизни общего аккаунта).
         $isQueueRun = $this->option('test-photo') === null && $this->option('delete-story') === null;
         if ($isQueueRun
@@ -104,7 +107,7 @@ final class StoriesPublishStoryCommand extends Command
         $cooldown = (int) config('services.telegram_harvest.sync_timeout_cooldown_seconds', 600);
 
         // Та же сессия, что и у support/harvest — пост-таймаутный cooldown,
-        // вооружённый ЛЮБЫМ из них, обязан гасить и этот лейн (H3411-форма).
+        // вооруженный ЛЮБЫМ из них, обязан гасить и этот лейн (H3411-форма).
         if ($cooldown > 0 && MadelineSyncPhase::cooldownActive()) {
             Log::warning('Stories publish skipped: post-timeout cooldown', [
                 'cooldown_seconds' => $cooldown,
@@ -148,7 +151,7 @@ final class StoriesPublishStoryCommand extends Command
     private function runLane(StoryPublisher $publisher, StoryRepeatEngine $repeat): int
     {
         if ($deleteId = $this->option('delete-story')) {
-            $publisher->deleteStory((int) $deleteId);
+            $publisher->deleteStory((int) $deleteId, (string) $this->option('account'));
             $this->info("Deleted story #{$deleteId}.");
 
             return self::SUCCESS;
@@ -167,11 +170,16 @@ final class StoriesPublishStoryCommand extends Command
         $attempts = min(max((int) $this->option('probe-attempts'), 0), self::PROBE_CAP);
 
         $this->info('Sending test photo story…');
-        $storyId = $publisher->sendPhotoStory($path, 'H3964 smoke');
+        $storyId = $publisher->sendPhotoStory(
+            $path,
+            (string) ($this->option('caption') ?? 'H3964 smoke'),
+            (string) $this->option('account'),
+            $this->option('link') !== null ? (string) $this->option('link') : null,
+        );
         $this->info($storyId !== null ? "Sent story id={$storyId}." : 'Sent, but story id was not extractable from the Updates.');
 
         if ($storyId !== null && ! $this->option('keep')) {
-            $publisher->deleteStory($storyId);
+            $publisher->deleteStory($storyId, (string) $this->option('account'));
             $this->info("Deleted story id={$storyId} (same code path).");
         }
 
@@ -287,15 +295,24 @@ final class StoriesPublishStoryCommand extends Command
     private function sendPost(StoryPublisher $publisher, StoryPost $post): ?int
     {
         $caption = (string) $post->payload;
+        $link = $this->trackedStoryLink($caption);
 
         return match ($post->kind) {
-            StoryPost::KIND_PHOTO => $publisher->sendPhotoStory((string) $post->media_path, $caption),
-            StoryPost::KIND_VIDEO => $publisher->sendVideoStory((string) $post->media_path, $caption),
+            StoryPost::KIND_PHOTO => $publisher->sendPhotoStory((string) $post->media_path, $caption, 'rusamskrtam', $link),
+            StoryPost::KIND_VIDEO => $publisher->sendVideoStory((string) $post->media_path, $caption, $link),
             default => throw new \InvalidArgumentException("Unsupported story kind {$post->kind}."),
         };
     }
 
-    /** Журнальный скип без смены статуса: строка остаётся на кураторе. */
+    /** Promote the first tracked short URL in the caption to a Telegram link sticker. */
+    private function trackedStoryLink(string $caption): ?string
+    {
+        return preg_match('~https://samskrte\.ru/ga/[a-z0-9-]+~i', $caption, $match) === 1
+            ? $match[0]
+            : null;
+    }
+
+    /** Журнальный скип без смены статуса: строка остается на кураторе. */
     private function journalSkip(StoryPost $post, string $reason): void
     {
         $post->forceFill([

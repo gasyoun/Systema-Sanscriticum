@@ -1,0 +1,13 @@
+[Unit]
+Description=restic copy estate to third destination + reconcile report (H3176 S1.6)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=HOME=/root
+Environment=XDG_CACHE_HOME=/root/.cache/restic
+Environment=RESTIC_PASSWORD_FILE=/root/.restic-pass
+Environment=RESTIC_FROM_PASSWORD_FILE=/root/.restic-pass
+ExecStart=/usr/bin/restic copy --no-lock -r rclone:gdrive:Backups/restic-estate --from-repo /srv/restic/systema
+ExecStartPost=/usr/local/bin/restic-fanout-report.sh

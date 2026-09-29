@@ -10,7 +10,7 @@
         </x-slot>
 
         @if($rows->isEmpty())
-            <p class="text-sm text-gray-500">Пока нет данных — ни один студент ещё не открывал слова в текстах курса.</p>
+            <p class="text-sm text-gray-500">Пока нет данных — ни один студент еще не открывал слова в текстах курса.</p>
         @else
             <table class="w-full text-sm">
                 <thead>

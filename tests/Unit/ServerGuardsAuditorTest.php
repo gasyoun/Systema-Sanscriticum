@@ -141,6 +141,34 @@ class ServerGuardsAuditorTest extends TestCase
         );
     }
 
+    public function test_hermes_crontab_wipe_is_critical(): void
+    {
+        $sys = $this->healthy();
+        $user = $this->spec->get('HERMES_USER');
+        // Класс H4155: crontab переписан вручную / стёрт guards re-apply'ем —
+        // нервная система Hermes не ходит, и до H5080-F2 это было молчание.
+        $sys->crontabs[$user] = '';
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString("crontab {$user} пуст", $lines);
+    }
+
+    public function test_a_single_missing_hermes_lane_is_critical(): void
+    {
+        $sys = $this->healthy();
+        $user = $this->spec->get('HERMES_USER');
+        $sys->crontabs[$user] = str_replace(
+            "55 3 * * * /home/hermes/bin/foreman_daily.sh >> /home/hermes/pilots/foreman.log 2>&1\n",
+            '',
+            (string) $sys->crontabs[$user],
+        );
+
+        $lines = $this->lines($this->auditor($sys)->audit());
+
+        $this->assertStringContainsString('нет строки foreman_daily.sh', $lines);
+    }
+
     public function test_removed_memory_ceiling_is_critical(): void
     {
         $sys = $this->healthy();

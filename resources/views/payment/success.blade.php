@@ -112,7 +112,7 @@
                         Доступ откроется автоматически.
                     </p>
                     <p class="text-gray-600 leading-relaxed mb-2">
-                        Если через 10 минут доступа всё еще нет — напишите нам в
+                        Если через 10 минут доступа все еще нет — напишите нам в
                         <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand hover:underline">Telegram</a>,
                         мы разберемся.
                     </p>
@@ -137,7 +137,7 @@
                     Войдите в аккаунт — доступ откроется в течение пары минут.
                 </p>
                 <p class="text-gray-600 leading-relaxed mb-8">
-                    Если через 10 минут доступа всё еще нет — напишите нам в
+                    Если через 10 минут доступа все еще нет — напишите нам в
                     <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer" class="font-semibold text-brand hover:underline">Telegram</a>,
                     мы разберемся.
                 </p>
@@ -172,6 +172,15 @@
                 window.shopReachGoal('payment_success');
             } else if (typeof ym !== 'undefined') {
                 ym({{ config('analytics.metrika.shop_counter_id') }}, 'reachGoal', 'payment_success');
+            }
+        @endif
+        {{-- Метрика access_renewal_complete (MG 18-09-2026): self-service
+             платеж подтвержден = продление завершено (повторная оплата = LTV).
+             Truth — access.renewal.complete в activity_events
+             (PaymentTelemetryObserver); здесь только браузерный дубль. --}}
+        @if($confirmed && ($payment?->is_self_service ?? false))
+            if (typeof window.shopReachGoal === 'function') {
+                window.shopReachGoal('access_renewal_complete');
             }
         @endif
         @if(session('vk_id'))

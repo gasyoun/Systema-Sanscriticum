@@ -151,11 +151,12 @@
                             {{-- Кнопки действий --}}
                             <div class="mt-auto pt-4 border-t border-gray-50 space-y-2">
                                 @if($event->link)
-                                    {{-- Главная кнопка: На занятие. Идём через трекинг-редирект
-                                         (учёт посещаемости), он 302-нет на настоящий Zoom-URL. --}}
+                                    {{-- Главная кнопка: На занятие. Идем через трекинг-редирект
+                                         (учет посещаемости), он 302-нет на настоящий Zoom-URL. --}}
                                     <a href="{{ route('class.join', $event) }}"
                                        target="_blank"
                                        rel="noopener noreferrer"
+                                       data-track-event="zoom.join.click"
                                        aria-label="Подключиться к занятию через Zoom"
                                        class="flex items-center justify-center gap-2 w-full px-4 py-3 bg-brand hover:bg-[#d6501f] text-white text-sm md:text-base font-extrabold rounded-xl transition-all shadow-[0_4px_12px_rgba(232,92,36,0.25)] hover:shadow-[0_8px_20px_rgba(232,92,36,0.4)] hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-wide">
                                         <i class="fas fa-video text-base"></i>

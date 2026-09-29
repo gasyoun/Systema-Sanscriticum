@@ -352,7 +352,14 @@ class SrsReview extends Component
 
         $service = app(ReviewService::class);
         foreach ($this->pairLeft as $item) {
-            $card = SrsCard::find($item['id'] ?? null);
+            // H5087 (remediation of H5046): pairLeft — клиентское состояние
+            // (восстанавливается из Livewire-снапшота), поэтому id карточки
+            // перевязывается к access-checked колоде ДО грейда/начисления —
+            // тот же забор, что у grade()/currentDeck(). Голый SrsCard::find()
+            // грейдил чужие приватные карточки и фермыл прану.
+            $card = SrsCard::query()
+                ->where('deck_id', $deck->id)
+                ->find($item['id'] ?? null);
             if ($card !== null) {
                 $service->grade(auth()->user(), $card, $rating);
             }

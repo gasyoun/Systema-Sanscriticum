@@ -75,4 +75,26 @@ class SplitGroupMathTest extends TestCase
 
         $this->assertNull(SplitGroupMath::newestCompleteEntry($entries), 'Только куски оборванной группы — свежести нет.');
     }
+
+    /**
+     * @dataProvider timestampNames
+     */
+    public function test_timestamp_from_basename_parses_the_archive_name(string $name, ?int $expected): void
+    {
+        $this->assertSame($expected, SplitGroupMath::timestampFromBasename($name));
+    }
+
+    /**
+     * @return array<string, array{string, int|null}>
+     */
+    public static function timestampNames(): array
+    {
+        return [
+            'single zip' => ['2026-08-13-14-27-49.zip', strtotime('2026-08-13 14:27:49')],
+            'split part' => ['2026-08-23-02-02-32.part-01-of-39.zip', strtotime('2026-08-23 02:02:32')],
+            'full path in' => ['Laravel/2026-08-23-02-02-32.part-39-of-39.zip', strtotime('2026-08-23 02:02:32')],
+            'garbage name' => ['probe.readme.txt', null],
+            'no timestamp' => ['backup.zip', null],
+        ];
+    }
 }

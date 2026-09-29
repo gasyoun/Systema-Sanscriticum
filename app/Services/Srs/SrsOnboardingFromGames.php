@@ -11,6 +11,7 @@ use App\Models\SrsCard;
 use App\Models\SrsDeck;
 use App\Models\SrsNoteType;
 use App\Models\User;
+use App\Support\GameLemmaFence;
 use Illuminate\Support\Str;
 
 /**
@@ -109,11 +110,18 @@ class SrsOnboardingFromGames
             ->get(['payload'])
             ->each(function (GameEvent $event) use (&$seen): void {
                 foreach ((array) ($event->payload['items'] ?? []) as $item) {
-                    $iast = (string) ($item['iast'] ?? '');
+                    // H5087: повторная чистка на ГРАНИЦЕ записи в общие
+                    // поверхности (системная колода + публичный словарь) —
+                    // формульные/разметочные символы вырезаются и из
+                    // legacy-payload, записанного до фенса приёма.
+                    $iast = GameLemmaFence::clean((string) ($item['iast'] ?? ''));
                     if ($iast === '' || isset($seen[$iast])) {
                         continue;
                     }
-                    $seen[$iast] = ['iast' => $iast, 'ru' => (string) ($item['ru'] ?? '')];
+                    $seen[$iast] = [
+                        'iast' => $iast,
+                        'ru' => GameLemmaFence::clean((string) ($item['ru'] ?? '')),
+                    ];
                 }
             });
 

@@ -11,9 +11,11 @@ use App\Models\SupportConversation;
 use App\Services\Support\MicShadowClassifier;
 use App\Services\Support\SupportConversationManager;
 use App\Services\Support\SupportLeadCaptureService;
+use App\Services\Support\SupportWebchatAutoReply;
 use App\Support\GuestChat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 /**
  * Публичный эндпоинт живого веб-чата поддержки (H536 Phase 3).
@@ -32,7 +34,65 @@ use Illuminate\Http\Request;
  */
 class PublicChatController extends Controller
 {
-    public function store(Request $request, SupportConversationManager $conversations, SupportLeadCaptureService $leadCapture): JsonResponse
+    /**
+     * Origin'ы, которым разрешено встраивать /chat/embed в iframe (H5451) —
+     * та же политика, что у эмбедов курса (CourseInterestController) и
+     * расписания (PublicWidgetController): заголовок ставится ТОЛЬКО на этом
+     * ответе, глобального CSP/X-Frame-Options в проекте нет.
+     */
+    private const FRAME_ANCESTORS = "frame-ancestors 'self' https://samskrtam.ru https://www.samskrtam.ru";
+
+    /**
+     * Standalone-страница чата для iframe-эмбеда на samskrtam.ru (H5451).
+     *
+     * Без лейаута кабинета: только support-chat-widget (+ его scoped CSS/JS).
+     * Гостевая сессия/CSRF бутстрапятся web-группой как у витрины. Параметр
+     * `?page=` (товарная/магазинная страница магазина) пробрасывается в виджет:
+     * контекстное приветствие «Вопрос по этому товару…» и телеметрия entry_url
+     * летят с URL магазина, а не с адреса iframe. Самогейтится флагом
+     * features.support_chat_embed (OFF → 404); троттлинг как у chat/message.
+     */
+    public function embed(Request $request): Response
+    {
+        abort_unless((bool) config('features.support_chat_embed'), 404);
+
+        return response()
+            ->view('chat.embed', [
+                'embedPage' => self::sanitizeEmbedPage($request->query('page')),
+            ])
+            ->header('Content-Security-Policy', self::FRAME_ANCESTORS);
+    }
+
+    /**
+     * `?page=` с WP-стороны — читается только клиентским JS виджета, но
+     * все равно чистим: схеме http(s), длина ≤2048 (как в payload.page),
+     * управляющие символы — долой. Пусто/мусор → '' (виджет тогда живет
+     * телеметрией адреса iframe, как и без параметра).
+     */
+    private static function sanitizeEmbedPage(?string $page): string
+    {
+        if ($page === null || $page === '') {
+            return '';
+        }
+
+        $page = preg_replace('/[\x00-\x1F\x7F]+/', '', $page) ?? '';
+        // Невалидный UTF-8 доехал бы до @json -> json_encode(false) -> голый
+        // `= ;` и синтаксическая ошибка в boot-скрипте (review H5451 P2).
+        if ($page === '' || ! mb_check_encoding($page, 'UTF-8') || mb_strlen($page) > 2048) {
+            return '';
+        }
+
+        $parts = parse_url($page);
+
+        if ($parts === false || empty($parts['scheme']) || empty($parts['host'])
+            || ! in_array(strtolower((string) $parts['scheme']), ['http', 'https'], true)) {
+            return '';
+        }
+
+        return $page;
+    }
+
+    public function store(Request $request, SupportConversationManager $conversations, SupportLeadCaptureService $leadCapture, SupportWebchatAutoReply $webchatAutoReply): JsonResponse
     {
         $validated = $request->validate([
             'text' => ['required', 'string', 'max:2000'],
@@ -92,11 +152,29 @@ class PublicChatController extends Controller
         // дедуплицирует по `id` (оптимистичный рендер из ответа ниже).
         event(new ChatMessageSent($message));
 
-        return response()->json([
+        // H5450: мгновенный ack и/или живой FAQ-ответ ботом — только за
+        // default-OFF флагами; при OFF поведение (и ответ) байт-в-байт прежнее.
+        // Никогда не бросает — сбой ретривера не пятисотит публичный эндпоинт.
+        $autoReplies = [];
+        $bot = $webchatAutoReply->handle($thread, $message, $user);
+
+        if ($bot !== null) {
+            $autoReplies[] = $this->present($bot);
+        }
+
+        $payload = [
             'ok' => true,
             'conversation_id' => $thread->id,
             'message' => $this->present($message),
-        ]);
+        ];
+
+        // Ключ добавляется только при отправленном bot-сообщении: OFF-ответ
+        // остаётся прежним построчно (инвариант тестом).
+        if ($autoReplies !== []) {
+            $payload['auto_replies'] = $autoReplies;
+        }
+
+        return response()->json($payload);
     }
 
     public function history(Request $request, SupportConversationManager $conversations): JsonResponse

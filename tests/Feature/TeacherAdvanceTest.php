@@ -179,4 +179,50 @@ class TeacherAdvanceTest extends TestCase
         // 4000 - 2000 remaining unsettled on a2
         $this->assertSame(2000.0, $row['advances_outstanding']);
     }
+
+    /** @test */
+    public function h5007_manual_payout_settles_advances_fifo_capped_by_amount_when_wave1_on(): void
+    {
+        // Audit H7 (16-09-2026): «Зачесть аванс» on a manual payout wrote off
+        // EVERY unsettled advance in full regardless of the payout amount.
+        config(['features.payment_fix_wave1' => true]);
+        $teacher = $this->teacherEarning12000();
+        $a1 = $teacher->payouts()->create(['amount' => 3000, 'type' => TeacherPayout::TYPE_ADVANCE, 'paid_at' => now()->subDays(2)->toDateString()]);
+        $a2 = $teacher->payouts()->create(['amount' => 4000, 'type' => TeacherPayout::TYPE_ADVANCE, 'paid_at' => now()->subDay()->toDateString()]);
+
+        $result = $this->service->recordManualPayout($teacher->fresh(), [
+            'amount' => 5000,
+            'paid_at' => now()->toDateString(),
+            'period_month' => now()->format('Y-m'),
+        ], true, true, null);
+
+        $this->assertSame(TeacherPayout::TYPE_REGULAR, $result['payout']->type);
+        $this->assertSame(5000.0, $result['settled']['total']);
+        $this->assertSame(3000.0, (float) $a1->fresh()->settled_amount);
+        $this->assertNotNull($a1->fresh()->settled_at);
+        $this->assertSame(2000.0, (float) $a2->fresh()->settled_amount);
+        $this->assertNull($a2->fresh()->settled_at);
+        // Finance posting happened inside the same transaction (salary_payout mirror row).
+        $this->assertSame(1, Payment::where('tariff', 'salary_payout')->count());
+        $this->assertEqualsWithDelta(-5000.0, (float) Payment::where('tariff', 'salary_payout')->value('amount'), 0.01);
+    }
+
+    /** @test */
+    public function h5007_manual_payout_flag_off_keeps_full_writeoff_but_is_transactional(): void
+    {
+        config(['features.payment_fix_wave1' => false]);
+        $teacher = $this->teacherEarning12000();
+        $a1 = $teacher->payouts()->create(['amount' => 3000, 'type' => TeacherPayout::TYPE_ADVANCE, 'paid_at' => now()->subDay()->toDateString()]);
+        $a2 = $teacher->payouts()->create(['amount' => 4000, 'type' => TeacherPayout::TYPE_ADVANCE, 'paid_at' => now()->toDateString()]);
+
+        $result = $this->service->recordManualPayout($teacher->fresh(), [
+            'amount' => 5000,
+            'paid_at' => now()->toDateString(),
+        ], false, true, null);
+
+        $this->assertSame(7000.0, $result['settled']['total']);
+        $this->assertSame(3000.0, (float) $a1->fresh()->settled_amount);
+        $this->assertSame(4000.0, (float) $a2->fresh()->settled_amount);
+        $this->assertNotNull($a2->fresh()->settled_at);
+    }
 }

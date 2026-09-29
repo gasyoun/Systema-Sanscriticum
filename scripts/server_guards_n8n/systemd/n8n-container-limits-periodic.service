@@ -1,0 +1,15 @@
+# n8n-container-limits-periodic.service — периодический прогон
+# n8n-container-limits.sh под n8n-container-limits.timer (H5080-F1, 19-09-2026).
+#
+# Отдельный от boot-юнита H3182 (n8n-container-limits.service) ровно потому, что
+# тот объявлен RemainAfterExit=yes и повторный запуск по таймеру невозможен —
+# см. комментарий в n8n-container-limits.timer. ExecStart тот же, скрипт
+# идемпотентен: второй прогон подряд ничего не меняет.
+[Unit]
+Description=re-assert n8n/Caddy container memory and pids limits — periodic run (H3182)
+Documentation=https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_SERVER_UPTIME_GUARDRAILS_2026H2.md
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/n8n-container-limits.sh

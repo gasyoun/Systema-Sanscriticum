@@ -1,0 +1,9 @@
+[Unit]
+Description=Restic repo ownership sweep every 10 min (H4988: old :52-only cadence left a 38-43min gap vs .92's *:30:00 hourly slot)
+
+[Timer]
+OnCalendar=*-*-* *:00/10:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

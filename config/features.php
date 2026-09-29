@@ -21,6 +21,18 @@ return [
     'full_course_block_credit' => (bool) env('FULL_COURSE_BLOCK_CREDIT', false),
 
     /*
+     | H5001 — пробное занятие: доступ только к уроку, где он реально есть.
+     | ВЫКЛЮЧЕН по умолчанию (поведение как прежде). Когда включён:
+     |  - цель гранта для ПРОШЕДШЕГО занятия — урок этой даты с записью
+     |    (video/rutube/youtube), а не пустая заготовка (дефект B);
+     |  - если цели нет (trial_lesson_id пуст или записи ещё нет), грант не
+     |    создаётся, письмо/телеграм «запись открыта» НЕ уходят покупателю,
+     |    админам уходит громкий алерт в Telegram (дефект A).
+     | Включить: TRIAL_GRANT_HARDENING=true в .env + php artisan config:cache.
+     */
+    'trial_grant_hardening' => (bool) env('TRIAL_GRANT_HARDENING', false),
+
+    /*
      | Единый ответ из Helpdesk с маршрутизацией в канал разговора. ВЫКЛЮЧЕН по
      | умолчанию: когда включён, ответ куратора на диалог, живущий в
      | импортированном TG-support (userbot), пишется в TelegramSupportMessage
@@ -124,6 +136,16 @@ return [
     'support_answer_suggester' => (bool) env('SUPPORT_ANSWER_SUGGESTER', false),
 
     /*
+     | Эмбед веб-чата для samskrtam.ru (H5451): публичный GET /chat/embed —
+     | standalone-страница с одним support-chat-widget без лейаута кабинета,
+     | которую магазин встраивает в iframe (кнопка «Спросить» на WP-стороне).
+     | Selfgate: OFF → 404. CSP frame-ancestors ограничен samskrtam.ru и
+     | выставляется ТОЛЬКО на этом ответе. Троттлинг как у chat/message.
+     | Включение: SUPPORT_CHAT_EMBED=true + php artisan config:cache.
+     */
+    'support_chat_embed' => (bool) env('SUPPORT_CHAT_EMBED', false),
+
+    /*
      | Шаблонные черновики FAQ-суггестера ПЕРЕД LLM (H1838, тикет S9). Когда ВКЛ,
      | категория D/E/F с привязанным шаблоном (MessageTemplate.suggester_category)
      | получает черновик из шаблона с подстановкой плейсхолдеров — LLM для неё
@@ -201,6 +223,25 @@ return [
     'bot_faq_retrieval' => (bool) env('BOT_FAQ_RETRIEVAL', false),
 
     /*
+     | Этап 4 (#1633 / EXPERIMENT_OLLAMA_GPU_OCT1_2026.md) — вопросы студента по
+     | расшифровкам ЕГО занятий в кабинетном боте.
+     |
+     | Контур доступа: выдача ограничена LessonGate::canWatch — тем же гейтом,
+     | что и скачивание стенограммы. Генерация ТОЛЬКО локальная (qwen3 на узле
+     | через туннель), внешнего фолбэка нет: текст платного занятия не уходит
+     | стороннему провайдеру. Цитаты короткие (knowledge.lesson.quote_chars),
+     | лекция целиком через бота не выдаётся — H3308.
+     |
+     | Когда ВЫКЛ: ветка в TelegramWebhookController не срабатывает вовсе,
+     | вопросы идут обычному ИИ-куратору, команды /уроки и /урок молчат,
+     | knowledge:index-lessons ничего не индексирует. Прод-инертно.
+     |
+     | Включение — осознанный шаг: LESSON_QA_ENABLED=true + config:cache после
+     | прогона knowledge:index-lessons и проверки на своём аккаунте.
+     */
+    'lesson_qa' => (bool) env('LESSON_QA_ENABLED', false),
+
+    /*
      | H3768 (рулинг MG 31-08-2026 «только F»): ЖИВОЙ автоответ студенту из FAQ.
      |
      | До сих пор BM25-ответ доходил только до куратора (подсказка) или до
@@ -249,6 +290,19 @@ return [
     'support_dm_llm_drafts_live' => (bool) env('SUPPORT_DM_LLM_DRAFTS_LIVE', false),
 
     /*
+     | H5065: ЧЬЯ модель формулирует ответ студенту в LLM-ветке лички и полосы
+     | Telegram Business. true → локальный узел (Ollama, knowledge.base_url):
+     | вопрос и справка не покидают школу, стоимость ответа нулевая, внешние
+     | рейт-лимиты перестают быть потолком. false (по умолчанию) → внешний
+     | провайдер, как было.
+     |
+     | Узел недоступен → формулировки нет, полоса уходит в шаблон/ack/подсказку
+     | куратору. Внешний провайдер в локальном режиме не вызывается НИКОГДА
+     | (контракт H3234: откат на внешний = снятие обещания приватности).
+     */
+    'support_dm_llm_drafts_local' => (bool) env('SUPPORT_DM_LLM_DRAFTS_LOCAL', false),
+
+    /*
      | H3233 B: автоответ простых A/B/C в личке саппорт-аккаунта + подсказка
      | кураторам на сложные. ВЫКЛ по умолчанию = откат на A (кабинетный бот,
      | Helpdesk-черновики, люди печатают в Telegram). Деньги (D) не автоотвечает.
@@ -256,6 +310,18 @@ return [
      | Включение: SUPPORT_DM_AUTO_REPLY=true + config:cache.
      */
     'support_dm_auto_reply' => (bool) env('SUPPORT_DM_AUTO_REPLY', false),
+
+    /*
+     | H5065: полоса Telegram Business — бот, подключённый к аккаунту владельца,
+     | принимает business_message и отвечает студенту ОТ ИМЕНИ аккаунта.
+     |
+     | ВЫКЛ по умолчанию и осознанно: включение означает, что в личке студента
+     | начнёт отвечать не человек, а бот, причём «голосом» аккаунта школы. Даже
+     | при включённом флаге отправку держат ещё два гейта: право can_reply у
+     | подключения и telegram_support_accounts.auto_reply_enabled у аккаунта
+     | полосы (H3380-контракт). Откат — один флаг: false + config:cache.
+     */
+    'telegram_business_bot' => (bool) env('TELEGRAM_BUSINESS_BOT_ENABLED', false),
 
     /*
      | H3380 (рулинг MG 23-08-2026): шаблонные автоответы D/E/F по привязке S9.
@@ -273,6 +339,26 @@ return [
      | linked-пользователя не шлём (некуда ставить очередь). Откат: false.
      */
     'support_auto_ack' => (bool) env('SUPPORT_AUTO_ACK', false),
+
+    /*
+     | H5450: мгновенный ack вебчата samskrte.ru. Посетитель виджета получает
+     | bot-сообщение «приняли, куратор ответит» + ссылку на FAQ сразу после
+     | отправки (порог T-Бизнеса 45 с), один раз за cooldown-окно треда
+     | (support.webchat_auto_reply.ack_cooldown_hours) — паттерн ack'а H3380.
+     | Замещается уверенным FAQ-ответом (support_webchat_live_faq). Откат:
+     | false + config:cache.
+     */
+    'support_webchat_auto_ack' => (bool) env('SUPPORT_WEBCHAT_AUTO_ACK', false),
+
+    /*
+     | H5450: живой FAQ-автоответ посетителю вебчата. Категория F (материалы/
+     | ДЗ/сертификаты) выше живого порога отвечает цитатой раздела FAQ — тот же
+     | BM25-домен порогов support.faq_rag.shadow_min_score*, что и в TG-полосе
+     | H3768. Деньги (D) и доступы (E) вычеркнуты В КОДЕ (рулинг R3) — правка
+     | конфига не может их включить; гостевой тред не получает фактов LMS.
+     | Откат: false + config:cache.
+     */
+    'support_webchat_live_faq' => (bool) env('SUPPORT_WEBCHAT_LIVE_FAQ', false),
 
     /*
      | H3765 A3 (рулинг R9 плана PLAN_SYSTEMA_TELEGRAM_RAG_SUPPORT_2026H2):
@@ -318,6 +404,14 @@ return [
     'support_draft_queue' => (bool) env('SUPPORT_DRAFT_QUEUE', false),
 
     /*
+     | 24-09-2026: TG-личка человека без привязки к кабинету заводит тред в
+     | Helpdesk («Без привязки») — с полем ответа, а не только в read-only
+     | «Аналитике». Чистое «привет/спасибо» и служебный 777000 треда не заводят.
+     | Висящие чаты догружает php artisan support:open-unlinked-dm-threads.
+     */
+    'support_unlinked_dm_threads' => (bool) env('SUPPORT_UNLINKED_DM_THREADS', false),
+
+    /*
      | H3242: утренняя сводка вчерашней поддержки в Telegram на ADMIN_TELEGRAM_ID
      | (gasyoun). ВКЛ по умолчанию — админский дайджест по явной просьбе, не
      | студенческий автоответ. Выкл: SUPPORT_DAILY_DIGEST=false + config:cache.
@@ -335,6 +429,15 @@ return [
      | OFF). Слот расписания — воскресенье 18:00 Europe/Moscow.
      */
     'support_auto_reply_weekly_report' => (bool) env('SUPPORT_AUTO_REPLY_WEEKLY_REPORT', false),
+
+    /*
+     | H5452: ежедневный дайджест открытых подсказок куратору, 09:00
+     | Europe/Moscow: «Ждут ответа: N чатов / M сообщений; старейший — X ч;
+     | 🔥: K». ВЫКЛ по умолчанию — внешний исходящий админам; --dry работает
+     | и при OFF (паттерн H3392). Расписание — отдельная cron-строка
+     | (урок crontab .92: «своя строка = своя судьба»), не schedule:run.
+     */
+    'support_hint_daily_digest' => (bool) env('SUPPORT_HINT_DAILY_DIGEST', false),
 
     /*
      | H3462 (рулинг MG 24-08-2026): входящий email как канал поддержки.
@@ -729,6 +832,16 @@ return [
     'money_sli_synthetic_pay' => (bool) env('MONEY_SLI_SYNTHETIC_PAY', false),
 
     /*
+     | H4930 (E002 layer 1): sentinel_breaker over the Tochka webhook's
+     | paid->access grant — the only automatic "paid" mutation of payments/
+     | access in prod (TochkaWebhookTest's own description). Default OFF —
+     | fail-open with no library, no flag, or the CLI erroring is identical
+     | to today's behaviour; the breaker can only ADD a refusal above a
+     | budget, never grant access it wouldn't have granted anyway.
+     */
+    'money_mutation_breaker' => (bool) env('MONEY_MUTATION_BREAKER', false),
+
+    /*
      | H4672: почасовая read-only сверка денежной оси — webhook success-rate
      | (payment_webhook_events), grant-покрытие (класс H2085: paid без доступа),
      | объём paid-платежей за час. Ничего не пишет в payments/webhook events.
@@ -982,6 +1095,15 @@ return [
      | пока OFF. Не включать в этом PR — только ключ, default false.
      */
     'waitlist_voting' => (bool) env('WAITLIST_VOTING', false),
+
+    /*
+     | H5134 — «Избранное» (сердечки, MG 17-09-2026): личный список курсов +
+     | сигнал направлений. Auth-only, отдельно от голоса ждуна; поверхности —
+     | ждун, /k/{slug}, каталог; кабинет — секция «Избранное». OFF — эндпоинты
+     | 404 и кнопки скрыты. Не включать в этом PR — только ключ, default false
+     | (включается человеком на проде отдельным шагом, как H5066).
+     */
+    'course_favorites' => (bool) env('COURSE_FAVORITES', false),
 
     /*
      | Атрибуция возвратов по ссылке «Возврат за платёж №…» в зачёте докупки
@@ -1290,6 +1412,10 @@ return [
     'membership_advanced_features' => (bool) env('MEMBERSHIP_ADVANCED_FEATURES', false),
     // Separate 01-10 go/no-go. OFF caps Top rows at Club capabilities and hides checkout.
     'membership_top' => (bool) env('MEMBERSHIP_TOP', false),
+    // H4832: поверхность «Преподавательский глоссарий» тира Top (5 000 ₽/мес).
+    // Dark до включения MG: OFF = 404 даже для Top-члена. Данные кладёт
+    // teaching-glossary:import из зарегистрированного агрегата.
+    'teaching_glossary' => (bool) env('TEACHING_GLOSSARY', false),
     'membership_recording_shadow' => (bool) env('MEMBERSHIP_RECORDING_SHADOW', false),
     'membership_recording_pilot' => (bool) env('MEMBERSHIP_RECORDING_PILOT', false),
     'membership_recording_enforce' => (bool) env('MEMBERSHIP_RECORDING_ENFORCE', false),
@@ -1463,10 +1589,13 @@ return [
      | homework_hint и только по названию урока — тело работы, файлы и
      | Telegram DM никогда не уходят в LLM. cabinet_faq требует ВКЛЮЧЁННОГО
      | faq_rag_suggester — второго нерегулируемого пути в него это не
-     | открывает. ВЫКЛ по умолчанию — deploy-рубильник: пока OFF,
-     | POST /dvaram/agent отдаёт 404 байт-в-байт как раньше (маршрута не
-     | существовало). Включение — осознанный шаг человека:
-     | STUDENT_AGENT_ENABLED=true + config:cache после ревью.
+      | открывает. ВЫКЛ по умолчанию — deploy-рубильник: пока OFF,
+      | POST /dvaram/agent отдаёт 404 байт-в-байт как раньше (маршрута не
+      | существовало). H5193: даже при ON маршрут отвечает только платным
+      | членам клуба (StudentAgentAccess: действующий период с уровнем Basic
+      | и выше; Free-грант / без периода — 403), поэтому включение безопасно.
+      | Включение — осознанный шаг человека:
+      | STUDENT_AGENT_ENABLED=true + config:cache после ревью.
      */
     'student_agent' => (bool) env('STUDENT_AGENT_ENABLED', false),
 
@@ -1561,4 +1690,160 @@ return [
      | + php artisan config:cache (human ops).
      */
     'mic_shadow_classify' => (bool) env('MIC_SHADOW_CLASSIFY', false),
+
+    /*
+     | H5022 (MG ruling Q14, digital-marketing grill 16-09-2026): автоматическое
+     | повторное приглашение в кабинет через 48 ч после успешной оплаты, если
+     | студент ни разу не входил (утечка «оплатил — не вошёл» 75,2 %).
+     | Команда students:reinvite-48h (ежедневно по расписанию, --send).
+     | ОДНО сообщение на пользователя (ActivityEvent reinvite_48h_sent —
+     | маркер идемпотентности), Telegram при привязанном chat id, иначе email;
+     | magic-ссылка входа без пароля. Kill switch: REINVITE_48H=false
+     | + php artisan config:cache. По умолчанию ВКЛЮЧЕНО — решение MG 16-09-2026.
+     */
+    'reinvite_48h' => (bool) env('REINVITE_48H', true),
+
+    /*
+     | H5066 — публичная форма интереса на курс (/interest/{course}): три
+     | интента (в следующий набор / купить запись / возобновить занятия),
+     | записи в course_interest_requests, TG-уведомление кураторам и
+     | Filament-витрина со счётчиком по курсам. Default OFF — маршруты 404.
+     | Enable: COURSE_INTEREST_FORM=true + php artisan config:cache (на проде
+     | включается ОТДЕЛЬНО, не этой поставкой). Никаких платежей внутри.
+     */
+    'course_interest_form' => (bool) env('COURSE_INTEREST_FORM', false),
+
+    /*
+     | Плашки занятий: фон из PSD курса + дата и номер занятия из расписания,
+     | JPEG на ближайшие config('lesson_banners.lead_days') дней. Команда
+     | lesson-banners:render (ежедневно) + API /api/lesson-banners/* для
+     | n8n-воркфлоу «Плашки занятий», который кладёт файлы «ГГГГ-ММ-ДД.jpg» в
+     | папки групп на Google Диске (их берёт обложкой ZOOM 1.4). Default OFF —
+     | команда no-op, API 404. Enable: LESSON_BANNERS=true + config:cache.
+     */
+    'lesson_banners' => (bool) env('LESSON_BANNERS', false),
+
+    /*
+     | H5007 — payment logic fix wave 1 (audit AUDIT_PAYMENT_LOGIC_CORRECTNESS
+     | 16-09-2026, HIGH rows H2/H3/H4/H7). ON: (H2) повторная PayPal-заявка того же
+     | ученика по тому же тарифу с тем же txn/в тот же день отклоняется, а не
+     | создаёт второй paid-платёж; (H3) PAYMENT.SALE.REFUNDED/REVERSED/DENIED
+     | переводят платёж подписки в canceled (штатный откат доступа/праны) и
+     | commitment в cancelled/failed; (H4) BILLING.SUBSCRIPTION.UPDATED берёт
+     | статус из resource.status, отменённая/завершённая подписка не воскресает
+     | (rejected_resurrection), устаревшее по update_time событие не применяется;
+     | (H7) «Зачесть аванс» на ручной выплате гасит авансы FIFO не больше суммы
+     | выплаты. OFF = прежнее поведение. H5 (unique-guard fulfilled_payment_id)
+     | и H6 (окно payout-run) — чистые дефекты без флага. Включение:
+     | PAYMENT_FIX_WAVE1=true + php artisan config:cache (human ops).
+     | H5442 (решения D4/D11/D13/D14/D20, одна волна целиком): PayPal-заявка
+     | сверяется с ценой тарифа в той же валюте, ±5% — автоподтверждение
+     | (недоплата — уведомление ученику), вне допуска/без цены — pending;
+     | стабильный ключ повтора claim_replay_key (unique); возврат удерживается
+     | из выплаты один раз; один пакет выплаты на блок (settlement_key, unique);
+     | RUB — источник истины, EUR выводится из итогового RUB после авансов,
+     | отрицательный итог → 0 + типизированное исключение сверки; доступ
+     | fail-closed (как GRANT_ACCESS_FAIL_CLOSED). Отчёт до/после:
+     | php artisan money:p0-wave-report (только чтение).
+     */
+    'payment_fix_wave1' => (bool) env('PAYMENT_FIX_WAVE1', false),
+
+    /*
+     | H5443 (P1, E017): денежное ядро — неизменяемый журнал движений,
+     | распределения и обязательства (таблицы money_*). Выключено = ни одной
+     | записи вне теневого прогона (LedgerService::shadow, всегда откат);
+     | ни один экран на ядро не переключён — чтение остаётся легаси до P4.
+     | Отчёт бэкфилла (только чтение): php artisan money:ledger-backfill-report.
+     */
+    'money_ledger_core' => (bool) env('MONEY_LEDGER_CORE', false),
+
+    /*
+     | H5445 (P3, E017, D10): «полный возврат отзывает оставшийся доступ;
+     | частичный возврат требует явного распределения по блокам». Включено =
+     | строка возврата (refund_of_payment_id) частичной суммы без
+     | start_block..end_block отвергается при сохранении; полный возврат снимает
+     | access-only siblings и перестаёт давать доступ к урокам/группам,
+     | частичный — только названные блоки. Выключено — прежнее поведение
+     | (возврат доступа не трогает; сверка P3 показывает такие случаи как
+     | исключения impossible_access / refund_without_blocks).
+     */
+    'money_refund_access_rules' => (bool) env('MONEY_REFUND_ACCESS_RULES', false),
+
+    /*
+     | H5445 (P3, E017, D1): ежедневная оперативная сверка по расписанию
+     | (money:reconcile-daily --persist, 04:35). Выключено — плановый запуск
+     | только пишет warning и пингует heartbeat «disabled»; ручной прогон
+     | только чтения (money:reconcile-daily без --persist) работает всегда.
+     | Сверка денег не создаёт и не меняет — пишет только свои таблицы
+     | money_recon_* (прогон, исключения, след разрешения).
+     */
+    'money_daily_reconciliation' => (bool) env('MONEY_DAILY_RECONCILIATION', false),
+
+    /*
+     | H5480 (P3): зачисления банковской выписки как источник доказательств
+     | bank_statement и дневной агрегатный контроль (QR-расчёты и агрегат
+     | эквайринга против оплат окна). Выключено — импорт выписки по-прежнему
+     | работает и складывает строки, но сверка их НЕ читает: источник остаётся
+     | missing, прогон incomplete, ни одного исключения не открывается.
+     | Money-контур: дефолт OFF, включение в проде — отдельный ops-шаг
+     | (MONEY_BANK_STATEMENT_CREDITS=true + php artisan config:cache) ПОСЛЕ
+     | первого импорта реальной выписки и зелёного прогона без --persist.
+     | Денег не создаёт и не меняет — только свои таблицы bank_statement_*.
+     */
+    'money_bank_statement_credits' => (bool) env('MONEY_BANK_STATEMENT_CREDITS', false),
+
+    /*
+     | Booked outgoing Tochka transfers as immutable payroll evidence.
+     | Evidence import never creates payments or teacher_payouts. OFF until
+     | identities and historical allocations have been reviewed by accounting.
+     */
+    'money_tochka_teacher_transfers' => (bool) env('MONEY_TOCHKA_TEACHER_TRANSFERS', false),
+
+    /*
+     | Role-gated, read-only October payroll readiness census and private
+     | export. It never creates payments or teacher_payouts. Missing or stale
+     | evidence holds positive lines. Default OFF until acceptance evidence is
+     | green and the accountant is ready to use the surface.
+     */
+    'teacher_payroll_readiness' => (bool) env('TEACHER_PAYROLL_READINESS', false),
+
+    /*
+     | Approved direct-receipt policy: count cash received by a teacher as
+     | course revenue, calculate the normal teacher percentage, then offset
+     | the cash already held. Default OFF for shadow comparison before the
+     | October transfer run.
+     */
+    'teacher_direct_receipt_revenue_parity' => (bool) env('TEACHER_DIRECT_RECEIPT_REVENUE_PARITY', false),
+
+    /*
+     | Студент сам оставляет отзыв в кабинете (/dvaram/otzyv). Отзыв ждёт
+     | модерации (Маркетинг → Отзывы, «Одобрить») и только после неё попадает
+     | в общий пул — на страницу входа и в /otzyvy; админам уходит сообщение
+     | в Telegram. Выключено — страница отвечает 404, кнопки в кабинете и
+     | на /otzyvy не показываются; модерация уже присланных работает всегда.
+     */
+    'student_testimonials' => (bool) env('STUDENT_TESTIMONIALS', false),
+
+    /*
+     | Money-контур: «Разбить оплату блока на другую группу» (Студенты →
+     | массовое действие). Студент оплатил блок N целиком в курсе-когорте A, но
+     | со 2-й половины учится в курсе-когорте B: платёж A становится
+     | block_N_h1 на свою долю, на курсе B заводится block_N_h2 на остаток — так
+     | открываются уроки обеих половин и выручка делится между группами. Сухой
+     | прогон доступен всегда, применение — только при включённом флаге.
+     | Дефолт OFF; боевое включение — отдельный шаг после проверки разметки
+     | половин (lessons.block_half) в обоих курсах.
+     */
+    'payment_block_half_split' => (bool) env('PAYMENT_BLOCK_HALF_SPLIT', false),
+
+    /*
+     | Money-контур: строгое покрытие блоков при расчёте долга (кабинет,
+     | «Должники», напоминания). Бронь и пробное без границ блоков сейчас
+     | читаются как «оплачен весь курс» и прячут долг навсегда; возврат
+     | («Расход») делает то же в кабинете. Включено — бронь/пробное остаются
+     | оплатой курса, но блок не покрывают; возврат и выплата ЗП не считаются
+     | покупкой вовсе. Дефолт OFF: включение добавит долги ученикам, которые
+     | начинали с брони (перепись на проде 28-09-2026: 3 пары, все гр.60).
+     */
+    'debt_strict_block_coverage' => (bool) env('DEBT_STRICT_BLOCK_COVERAGE', false),
 ];

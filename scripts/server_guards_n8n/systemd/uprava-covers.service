@@ -1,0 +1,8 @@
+[Unit]
+Description=H4514 lesson covers generator (render + upload to course Drive folders)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/covers/venv/bin/python /opt/covers/generate_covers.py --run

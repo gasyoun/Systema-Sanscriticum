@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Schedule;
 
-use App\Jobs\SendTelegramChatMessageJob;
+use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\Course;
 use App\Models\Group;
 use App\Models\Schedule;
@@ -56,7 +56,10 @@ final class SchedulePostSender
             }
         }
 
-        SendTelegramChatMessageJob::dispatch($chatId, $html);
+        // H4846: чат обучения группы — зона @zapisi_ORSbot (им шлют напоминания,
+        // отмены, слот-уведомления). Основной бот в этих чатах не состоит —
+        // SendTelegramChatMessageJob давал 400 «chat not found» на каждый пост.
+        SendZapisiBotMessageJob::dispatch($chatId, $html, kind: 'schedule_post');
 
         SchedulePost::query()->updateOrCreate(
             ['group_id' => $group->id],

@@ -73,7 +73,11 @@ class NewsletterSubscribeController extends Controller
     {
         $this->abortIfDisabled();
 
-        $link = MagicLinkToken::findActive($token);
+        // H5087 (remediation of H5046): purpose-забор обязателен и на этом
+        // маршруте — без него /magic потреблял admin_unblock/tg_login-токены,
+        // обходя флаг-гейт /tg-login (кросс-роутовое потребление, которое
+        // findActive считал невозможным).
+        $link = MagicLinkToken::findActive($token, 'newsletter');
 
         abort_if($link === null, 404);
 

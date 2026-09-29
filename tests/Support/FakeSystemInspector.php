@@ -64,6 +64,11 @@ final class FakeSystemInspector implements SystemInspector
         $fake->crontabs['root'] = $spec->render(
             (string) file_get_contents(rtrim($templateRoot, '/\\').'/cron/root.crontab')
         );
+        // H5080-F2: нервная система Hermes — управляемый crontab, здоровое
+        // состояние обязано включать его, иначе проверка молчала бы всегда.
+        $fake->crontabs[$spec->get('HERMES_USER')] = $spec->render(
+            (string) file_get_contents(rtrim($templateRoot, '/\\').'/cron/hermes.crontab')
+        );
 
         $pool = '/etc/php/'.$spec->get('PHP_VERSION').'/fpm/pool.d/www.conf';
         $fake->files[$pool] = "[www]\npm = dynamic\npm.max_children = ".$spec->get('FPM_MAX_CHILDREN')

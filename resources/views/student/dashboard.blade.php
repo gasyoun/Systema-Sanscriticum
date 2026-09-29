@@ -5,6 +5,12 @@
 
 @section('content')
 
+{{-- Метрика кабинета (MG 18-09-2026): cabinet_home_view — каждая загрузка;
+     first_cabinet_action — только если ЭТА загрузка первое действие студента
+     (сервер считает флаг до эмита, см. StudentController::dashboard). --}}
+<span data-metrika-goal="cabinet_home_view" hidden></span>
+@if(! empty($metrikaFirstCabinetAction))<span data-metrika-goal="first_cabinet_action" hidden></span>@endif
+
 {{-- activeTab: #prana / #debts с fail-redirect оплаты долга (DebtPaymentController → #debts) --}}
 <div x-data="{ activeTab: (window.location.hash === '#prana' ? 'prana' : (window.location.hash === '#debts' ? 'debts' : 'courses')) }" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 font-nunito">
 
@@ -18,6 +24,12 @@
                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
                 <i class="fas fa-book-open"></i> Как пользоваться
             </a>
+            @if (config('features.student_testimonials'))
+            <a href="{{ route('student.testimonial.create') }}"
+               class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
+                <i class="fas fa-comment-dots"></i> Оставить отзыв
+            </a>
+            @endif
             <a href="{{ route('student.cabinet-mastery') }}"
                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:border-brand hover:text-brand transition-colors shadow-sm">
                 <i class="fas fa-clipboard-check"></i> Проверить кабинет
@@ -115,6 +127,9 @@
     @include('student.partials.continue-learning-card')
 
     @include('student.partials.waitlist-card')
+
+    {{-- H5134 — «Избранное» (сердечки): flag OFF / пусто — не рендерится --}}
+    @include('student.partials.favorites-card')
 
     @include('student.partials.subscriber-shelf')
 
@@ -218,7 +233,7 @@
             <h3 class="text-base md:text-lg font-extrabold text-gray-900 mb-1.5 leading-tight">
                 Кабинет находится на стадии наполнения
             </h3>
-            {{-- На мобиле текст свёрнут (line-clamp-2) с тумблером «Подробнее»;
+            {{-- На мобиле текст свернут (line-clamp-2) с тумблером «Подробнее»;
                  на sm+ всегда показан целиком, экономит вертикаль на телефоне. --}}
             <p class="text-sm text-gray-600 leading-relaxed"
                :class="expanded ? '' : 'line-clamp-2 sm:line-clamp-none'">
@@ -309,7 +324,7 @@
             </div>
 
             @unless($tgConnected)
-                {{-- H3313: привязка через CSRF-защищённый POST --}}
+                {{-- H3313: привязка через CSRF-защищенный POST --}}
                 <form method="POST" action="{{ route('telegram.connect.start') }}" target="_blank"
                       class="relative z-10 shrink-0 flex items-center w-full xl:w-auto justify-center">
                     @csrf
@@ -366,7 +381,7 @@
             </div>
 
             @unless($vkConnected)
-                {{-- H3313: привязка через CSRF-защищённый POST --}}
+                {{-- H3313: привязка через CSRF-защищенный POST --}}
                 <form method="POST" action="{{ route('vk.connect.start') }}" target="_blank"
                       class="relative z-10 shrink-0 flex items-center w-full xl:w-auto justify-center">
                     @csrf
@@ -505,7 +520,7 @@
                         {{-- H4435: канва — две шкалы раздельно (наши занятия ≠ уроки учебника, MG 09-09). --}}
                         @if($canvas && $canvas['group'] > 0)
                             <div class="mb-3 rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 text-xs text-gray-600">
-                                {{ ucfirst($canvas['family']) }}: вы на уроке {{ $canvas['student'] }} из {{ $canvas['total'] }} · группа дошла до урока {{ $canvas['group'] }}
+                                {{ ucfirst($canvas['family']) }}: вы на Уроке {{ $canvas['student'] }} из {{ $canvas['total'] }} · группа дошла до Урока {{ $canvas['group'] }}
                             </div>
                         @endif
 
@@ -521,7 +536,7 @@
                                 <div class="bg-brand h-full rounded-full transition-all duration-1000 relative" style="width: {{ $percent }}%"></div>
                             </div>
 
-                            {{-- Подсказка «следующий урок»: куда ведёт кнопка. При 100% — курс пройден. --}}
+                            {{-- Подсказка «следующий урок»: куда ведет кнопка. При 100% — курс пройден. --}}
                             @if($nextLesson)
                                 <div class="flex items-start gap-1.5 mb-4 text-xs text-gray-500 leading-snug">
                                     <i class="fas fa-play-circle text-brand/70 mt-0.5 shrink-0"></i>
@@ -598,8 +613,8 @@
                                 </div>
                             @endif
 
-                            {{-- Кнопка: при наличии следующего урока ведём прямо в него,
-                                 иначе (всё пройдено / нет уроков) — на страницу курса. --}}
+                            {{-- Кнопка: при наличии следующего урока ведем прямо в него,
+                                 иначе (все пройдено / нет уроков) — на страницу курса. --}}
                             <a href="{{ $nextLesson ? route('student.lesson', [$course->slug, $nextLesson->id]) : route('student.course', $course->slug) }}" data-track-event="cabinet.continue.click" data-track-kind="{{ $nextLesson ? 'lesson' : 'course' }}" data-track-surface="course-row" class="flex items-center justify-center w-full px-4 py-2.5 bg-gray-50 text-gray-900 text-sm font-bold rounded-xl group-hover:bg-brand group-hover:text-white transition-all duration-300">
                                 <span>@if($nextLesson)@if($percent > 0) Продолжить @else Начать обучение @endif @else К курсу @endif</span>
                                 <i class="fas fa-arrow-right ml-2 text-xs opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
@@ -663,7 +678,7 @@
 
         {{-- КЛУБ (H2644): карточка членства + полка записей. Партиал сам решает,
              рисовать ли себя: при выключенном флаге clubMembership = null и
-             clubShelf пуста, и кабинет остаётся прежним. --}}
+             clubShelf пуста, и кабинет остается прежним. --}}
         @include('student.partials.club-membership')
 
         {{-- ДОСТИЖЕНИЯ (Сертификаты) --}}
@@ -872,7 +887,7 @@
                             @endif
                         </div>
                     @else
-                        {{-- Долг без договорённости (не продлил) --}}
+                        {{-- Долг без договоренности (не продлил) --}}
                         <div class="{{ $accentBg }} border rounded-lg px-3 py-2 mb-3">
                             <div class="text-[9px] font-bold {{ $accentLabel }} uppercase tracking-wider mb-0.5">
                                 Не оплачено · {{ count($debt->debt_block_numbers) }} бл.
@@ -909,7 +924,7 @@
                                 <form method="POST" action="{{ $opts['whole']['url'] }}">
                                     @csrf
                                     <button type="submit" data-track-event="access.renewal.start" data-track-kind="promise-whole" class="w-full flex items-center justify-center px-3 py-1.5 border border-brand/40 text-brand hover:bg-orange-50 text-xs font-bold rounded-lg transition-colors">
-                                        <span>Погасить всё{{ $opts['whole']['amount'] ? ' ('.number_format($opts['whole']['amount'], 0, '.', ' ').' ₽)' : '' }}</span>
+                                        <span>Погасить все{{ $opts['whole']['amount'] ? ' ('.number_format($opts['whole']['amount'], 0, '.', ' ').' ₽)' : '' }}</span>
                                     </button>
                                 </form>
                             @endif
@@ -961,13 +976,13 @@
                                          штатный чекаут по bundle-тарифу; POST — fallback pay-bundle. --}}
                                     @if(($opts['bundle']['method'] ?? 'POST') === 'GET')
                                         <a href="{{ $opts['bundle']['url'] }}" data-track-event="access.renewal.start" data-track-kind="bundle" class="flex items-center justify-center px-3 py-2 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-lg transition-colors">
-                                            <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить всё ({{ number_format($opts['bundle']['amount'], 0, '.', ' ') }} ₽)</span>
+                                            <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить все ({{ number_format($opts['bundle']['amount'], 0, '.', ' ') }} ₽)</span>
                                         </a>
                                     @else
                                         <form method="POST" action="{{ $opts['bundle']['url'] }}">
                                             @csrf
                                             <button type="submit" data-track-event="access.renewal.start" data-track-kind="bundle" class="w-full flex items-center justify-center px-3 py-2 bg-brand hover:bg-brand-hover text-white text-xs font-bold rounded-lg transition-colors">
-                                                <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить всё ({{ number_format($opts['bundle']['amount'], 0, '.', ' ') }} ₽)</span>
+                                                <i class="fas fa-credit-card mr-1.5 text-[10px]"></i><span>Оплатить все ({{ number_format($opts['bundle']['amount'], 0, '.', ' ') }} ₽)</span>
                                             </button>
                                         </form>
                                     @endif

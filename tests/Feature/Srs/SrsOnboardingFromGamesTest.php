@@ -169,11 +169,37 @@ class SrsOnboardingFromGamesTest extends TestCase
     public function import_endpoint_reports_imported_count_for_the_authenticated_caller(): void
     {
         config(['srs.enabled' => true]);
-        $this->seedItemSeen('guest007', [['iast' => 'gam', 'ru' => 'идти']]);
+        // H5087: сид через HTTP-приёмник — импорт принимает только anon_id,
+        // которые ЭТА браузерная сессия реально присылала (привязка к
+        // вызывающему), как это делает настоящий браузер после бесплатной игры.
+        $this->postJson('/api/games/event', [
+            'anon_id' => 'guest007',
+            'drill' => 'roots',
+            'band' => 'top-25',
+            'event' => GameEvent::ITEM_SEEN,
+            'payload' => ['items' => [['iast' => 'gam', 'ru' => 'идти']]],
+        ])->assertNoContent();
+
         $this->actingAs(User::factory()->create());
 
         $this->postJson('/api/games/srs-onboarding-import', ['anon_id' => 'guest007'])
             ->assertOk()
             ->assertJson(['imported' => 1]);
+    }
+
+    /** @test */
+    public function import_endpoint_rejects_anon_id_never_sent_by_this_session(): void
+    {
+        config(['srs.enabled' => true]);
+        // H5087: строки могли быть записаны другим браузером (или напрямую) —
+        // заявка «импортируй чужой anon_id» больше не проходит.
+        $this->seedItemSeen('guest888', [['iast' => 'gam', 'ru' => 'идти']]);
+        $this->actingAs(User::factory()->create());
+
+        $this->postJson('/api/games/srs-onboarding-import', ['anon_id' => 'guest888'])
+            ->assertOk()
+            ->assertJson(['imported' => 0]);
+
+        $this->assertDatabaseCount('srs_cards', 0);
     }
 }

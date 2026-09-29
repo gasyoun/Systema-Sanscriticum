@@ -293,6 +293,14 @@ class HomeworkController extends Controller
      */
     private function ensureLessonAccessible($user, Course $course, Lesson $lesson): void
     {
+        // H5087 (remediation of H5046): группа-видимость — тот же забор, что у
+        // плеера (StudentController::ensureLessonAccessible). Без него студент
+        // параллельного потока с оплаченным block-ключом сдавал ДЗ в чужой
+        // поток — сабмишен попадал в чужую очередь проверки и в уведомления.
+        if (! $lesson->isVisibleToGroupsOf($user)) {
+            abort(403, 'Этот урок относится к другой группе курса.');
+        }
+
         if ($lesson->is_free) {
             return;
         }

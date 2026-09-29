@@ -9,6 +9,7 @@ use App\Mail\PurchaseConfirmationMail;
 use App\Mail\StudentWelcomeMail;
 use App\Mail\TrialZoomLinkMail;
 use App\Models\Concerns\TracksBlame;
+use App\Services\Access\TelegramAdminNotifier;
 use App\Services\BlockAccessMaterializer;
 use App\Services\CuratorNotifier;
 use App\Services\GiftCertificateService;
@@ -17,6 +18,9 @@ use App\Services\Membership\ClubMembershipService;
 use App\Services\Messaging\DeliveryChannelManager;
 use App\Services\Prana\PranaService;
 use App\Services\PromiseAutoFulfiller;
+use App\Services\Reconciliation\RefundAccessPolicy;
+use App\Support\BeginnerPilotOffer;
+use App\Support\TelegramTransport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -81,6 +85,8 @@ class Payment extends Model
         'payer_note',
         // Structured claim payload (PayPal / company invoice) — see claim_meta JSON.
         'claim_meta',
+        // H5442: стабильный ключ повтора PayPal-заявки (unique, пишется при payment_fix_wave1).
+        'claim_replay_key',
         // Дата платежа задаётся вручную при создании из админки.
         'created_at',
     ];
@@ -639,6 +645,10 @@ class Payment extends Model
         // флага conditional_access_expiry (у окон свой рубильник).
         $query->withoutExpiredAccessWindow();
 
+        // H5445 (D10): возвращённая оплата/блок больше не открывает уроки
+        // (флаг money_refund_access_rules, дефолт OFF).
+        RefundAccessPolicy::excludeRefundedAccess($query);
+
         if (! config('features.conditional_access_expiry')) {
             return $query;
         }
@@ -751,6 +761,20 @@ class Payment extends Model
                 $payment->received_account = self::RECEIVED_SCHOOL;
                 $payment->received_by_teacher_id = null;
             }
+
+            // H5445 (P3, D10): частичный возврат — только с блоками (флаг
+            // money_refund_access_rules, дефолт OFF).
+            app(RefundAccessPolicy::class)->guardLegacyRefund($payment);
+        });
+
+        // H5445 (P3, D10): полный возврат отзывает оставшийся доступ, частичный —
+        // доступ названных блоков. Идемпотентно; без флага — no-op.
+        static::saved(function (Payment $payment): void {
+            if ($payment->refund_of_payment_id !== null
+                && ($payment->wasRecentlyCreated || $payment->wasChanged(['status', 'amount', 'start_block', 'end_block', 'refund_of_payment_id']))
+            ) {
+                app(RefundAccessPolicy::class)->applyLegacyRefund($payment);
+            }
         });
 
         // 1. Срабатывает при СОЗДАНИИ нового платежа
@@ -802,6 +826,23 @@ class Payment extends Model
                         app(GiftCertificateService::class)->revokeForPayment($payment);
                     }
                 }
+            }
+        });
+
+        // H5084 (находка H5046 payment-hard-delete-skips-access-revocation):
+        // хард-делит оплаченного платежа шёл мимо цепочки отзыва — при DELETE
+        // модельные события не срабатывают, и групповой доступ / прана /
+        // реферальный кредит оставались висеть над удалённой строкой денег.
+        // Роутим удаление через канонический переход в 'canceled': save()
+        // внутри deleting запускает стандартную цепочку отката (static::updated
+        // выше + PaymentObserver::updated), и только потом строка удаляется.
+        // Тихие программные удаления это не задевают: они идут через
+        // withoutEvents (TeacherPayout, RehearseClubMembership) или query-builder
+        // (события не стреляют вовсе).
+        static::deleting(function (Payment $payment): void {
+            if (in_array($payment->getOriginal('status') ?? $payment->status, self::PAID_STATUSES, true)) {
+                $payment->status = 'canceled';
+                $payment->save();
             }
         });
     }
@@ -1065,7 +1106,13 @@ class Payment extends Model
     // ==========================================
     public function processTrial(): void
     {
-        $lessonId = $this->course?->trial_lesson_id;
+        // H5001 (флаг features.trial_grant_hardening, default OFF): цель гранта —
+        // урок, где доступ реально есть (для прошедшего занятия — урок с записью).
+        // Цели нет → ни гранта, ни письма «запись открыта», а громкий алерт админам.
+        $hardened = (bool) config('features.trial_grant_hardening');
+        $lessonId = $hardened
+            ? $this->course?->trialGrantTarget()?->id
+            : $this->course?->trial_lesson_id;
 
         DB::transaction(function () use ($lessonId) {
             // Доступ к курсу/группам НЕ открываем — только разовый grant на пробный урок.
@@ -1102,6 +1149,14 @@ class Payment extends Model
         });
 
         app(CuratorNotifier::class)->depositReceived($this);
+
+        // Продавать доступ, которого нет, хуже, чем не продать: без гранта
+        // покупателю не пишем «открыто», а поднимаем тревогу операторам.
+        if ($hardened && ! $lessonId) {
+            $this->alertTrialWithoutGrant();
+
+            return;
+        }
 
         if (! $this->user_id) {
             return;
@@ -1144,6 +1199,36 @@ class Payment extends Model
         SendTelegramMessageJob::dispatch($this->user_id, $text);
     }
 
+    /**
+     * H5001: оплаченное пробное, по которому нечего открыть (trial_lesson_id пуст
+     * или у прошедшего занятия нет урока с записью). Платёж остаётся paid —
+     * решение «выдать доступ вручную или вернуть деньги» за человеком.
+     */
+    private function alertTrialWithoutGrant(): void
+    {
+        $context = [
+            'payment_id' => $this->id,
+            'course_id' => $this->course_id,
+            'user_id' => $this->user_id,
+            'trial_lesson_id' => $this->course?->trial_lesson_id,
+            'trial_schedule_id' => $this->course?->trial_schedule_id,
+        ];
+        Log::error('Payment::processTrial — оплачено пробное, доступ НЕ выдан (нет урока-цели)', $context);
+
+        $courseName = e($this->course->title ?? 'курс #'.$this->course_id);
+        $text = "🚨 <b>Пробное оплачено, доступ НЕ выдан</b>\n\n";
+        $text .= "Платёж #{$this->id}, курс «{$courseName}» (#{$this->course_id}), ученик #{$this->user_id}.\n";
+        $text .= 'У пробного нет урока с доступом: '
+            .($this->course?->trial_lesson_id ? 'у прошедшего занятия нет урока с записью' : 'trial_lesson_id пуст')
+            .".\nПисьмо «запись открыта» покупателю НЕ отправлено. Решение за человеком: выдать доступ вручную или вернуть оплату.";
+
+        try {
+            app(TelegramAdminNotifier::class)->notifyAdmins($text);
+        } catch (\Throwable $e) {
+            Log::error('Payment::processTrial — алерт админам не ушёл', $context + ['error' => $e->getMessage()]);
+        }
+    }
+
     // ==========================================
     // МАРАФОН «С ПРОВЕРКОЙ» ₽500 — отдельный путь (H471)
     // ==========================================
@@ -1177,14 +1262,31 @@ class Payment extends Model
         // User, отдельная от лид-магнит-бота привязка — марафонский лид её не имеет).
         $lead = $this->lead;
         if ($lead && $lead->telegram_chat_id) {
-            $text = '✅ <b>Оплата получена</b>'."\n\n"
-                .'Трек «с проверкой» марафона оплачен. Ваша практика Дней 1–2 '
-                .'разбирается куратором, и вам гарантировано место на живой '
-                .'консультации Дня 3 — ваш вопрос разберут лично.';
+            $sessionReady = ! $enrollment->isDevaCohort()
+                && BeginnerPilotOffer::supportAvailable()
+                && $enrollment->currentDay() < 3;
+            $text = $sessionReady
+                ? '✅ <b>Оплата получена</b>'."\n\n"
+                    .'Трек «с проверкой» оплачен. Куратор проверит ваши задания, '
+                    .'а ссылку на групповую консультацию пришлём в День 3.'
+                : '✅ <b>Оплата получена</b>'."\n\n"
+                    .'Куратор свяжется с вами по поводу оплаченного участия и консультации.';
 
-            app(DeliveryChannelManager::class)
-                ->get('telegram')
-                ->sendMessage((string) $lead->telegram_chat_id, $text);
+            // Подтверждение — побочный эффект уже состоявшегося платежа (статус
+            // paid записан): провал доставки не имеет права отдавать эквайрингу
+            // 500 и держать его вебхук. Канал бросает RuntimeException, поэтому
+            // ловим здесь, а не в канале — очередь на это исключение опирается.
+            try {
+                app(DeliveryChannelManager::class)
+                    ->get('telegram')
+                    ->sendMessage((string) $lead->telegram_chat_id, $text);
+            } catch (\Throwable $e) {
+                Log::warning('Payment::processMarathonPaid — подтверждение не доставлено', [
+                    'payment_id' => $this->id,
+                    'lead_id' => $this->lead_id,
+                    'error' => TelegramTransport::sanitize($e->getMessage()),
+                ]);
+            }
         }
 
         app(CuratorNotifier::class)->paymentPaid($this);
@@ -1397,6 +1499,17 @@ class Payment extends Model
 
         // Закрываем обещание, если у него не осталось открытых conditional-доступов
         // (full-обещание могло открыть несколько блоков — частичная оплата его не гасит).
+        //
+        // H5007 (audit H5): fulfilled_payment_id — UNIQUE audit-ссылка (миграция
+        // 2026_08_04). Один реальный full-платёж может закрыть НЕСКОЛЬКО обещаний
+        // одного user+course; писать один id во все — QueryException внутри
+        // fireOnPaid → откат честно оплаченного платежа после выдачи доступа.
+        // Ссылку получает ровно одно обещание (явно связанное linked_promise_id,
+        // иначе первое закрытое), остальные закрываются с null — как в
+        // PromiseAutoFulfiller.
+        $linkOwnerId = $this->linked_promise_id ? (int) $this->linked_promise_id : null;
+        $linkTaken = PaymentPromise::query()->where('fulfilled_payment_id', $this->id)->exists();
+
         foreach ($promiseIds as $promiseId) {
             $promise = PaymentPromise::find($promiseId);
 
@@ -1413,12 +1526,19 @@ class Payment extends Model
                 continue;
             }
 
+            $ownsLink = ! $linkTaken
+                && ($linkOwnerId === null || ! $promiseIds->contains($linkOwnerId) || (int) $promise->id === $linkOwnerId);
+
             $promise->update([
                 'status' => PaymentPromise::STATUS_FULFILLED,
                 'fulfilled_at' => now(),
-                'fulfilled_payment_id' => $this->id,
+                'fulfilled_payment_id' => $ownsLink ? $this->id : null,
                 'actual_paid_at' => now(),
             ]);
+
+            if ($ownsLink) {
+                $linkTaken = true;
+            }
         }
     }
 
@@ -1455,7 +1575,10 @@ class Payment extends Model
                 'Оплата не применена: привяжите группу в админке курса и повторите.';
             Log::error($msg);
 
-            if (config('features.grant_access_fail_closed')) {
+            // H5442 (P0 п.4): fail-closed входит в целую волну исправлений —
+            // включение payment_fix_wave1 включает и его (D5: без частичной
+            // волны). Отдельный флаг сохранён для обратной совместимости.
+            if (config('features.grant_access_fail_closed') || config('features.payment_fix_wave1')) {
                 throw new \RuntimeException($msg);
             }
 
@@ -1559,10 +1682,10 @@ class Payment extends Model
 
     private function accessGrantingPaymentsForUser(Builder $query): Builder
     {
-        return $query
+        return RefundAccessPolicy::excludeRefundedAccess($query
             ->where('user_id', $this->user_id)
             ->paid()
-            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout']);
+            ->whereNotIn('tariff', ['deposit', 'trial', 'Расход', 'salary_payout']));
     }
 
     // ==========================================
@@ -1648,11 +1771,11 @@ class Payment extends Model
         $paymentsCount = $student->payments()->paid()->count();
 
         // Пишем в лог, сколько оплат нашла система
-        Log::info("Попытка отправки письма. Студент: {$student->email}. Найдено успешных оплат: {$paymentsCount}");
+        Log::info("Попытка отправки письма. Студент: user_id={$student->id}. Найдено успешных оплат: {$paymentsCount}");
 
         // Если это первая оплата
         if ($paymentsCount === 1) {
-            Log::info("Генерируем пароль и отправляем письмо студенту: {$student->email}");
+            Log::info("Генерируем пароль и отправляем письмо студенту: user_id={$student->id}");
 
             $newPassword = Str::random(8);
             $student->password = Hash::make($newPassword);

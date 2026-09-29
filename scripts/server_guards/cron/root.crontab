@@ -37,6 +37,12 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # → P1 в awake-окне (иначе — в утренний бриф), дедуп раз в час.
 @@IB_BALANCE_WATCH_SCHEDULE@@ /usr/local/sbin/systema-ib-balance-watch.sh >> /var/log/systema-ib-balance-watch-cron.log 2>&1
 
+# H4929 (16-09-2026, E002 layer 2) — внешний свидетель .91's deadman_check.py:
+# метку /var/lib/systema-guards/deadman91_hub.last пушит КАЖДЫЙ прогон
+# deadman_check.py на .91 (forced-command ключ deadman-witness). Тишина
+# > @@DEADMAN91_WATCH_STALE_MINUTES@@ мин → P1 (окно awake решает lane_lib).
+@@DEADMAN91_WATCH_SCHEDULE@@ /usr/local/sbin/systema-deadman91-watch.sh >> /var/log/systema-deadman91-watch-cron.log 2>&1
+
 # Hermes nervous-system lanes (H4155/H4247). Installed here (single source)
 # after the 07-09-2026 guards re-apply wiped the on-box copies — lane jobs MUST
 # live in this file, never hand-added via crontab -e, or the next apply kills them.

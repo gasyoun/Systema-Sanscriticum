@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Services\Support\Faq\Bm25FaqRetriever;
+use App\Services\Support\Faq\HybridRetriever;
 use Illuminate\Console\Command;
 
 /**
@@ -12,7 +13,7 @@ use Illuminate\Console\Command;
  * права даже думать об отправке.
  *
  * Считает по committed-фикстуре tests/fixtures/faq_rag_eval.json: для каждого
- * кандидата в пороги берётся точность top-1 среди вопросов, ЧЕЙ ЛУЧШИЙ СКОР ≥
+ * кандидата в пороги берется точность top-1 среди вопросов, ЧЕЙ ЛУЧШИЙ СКОР ≥
  * порога («precision at threshold»), и покрытие — доля вопросов, доживших до
  * порога. Ruling R3 требует ≥95 % точности; там, где полосы скоров верных и
  * неверных ответов пересекаются, такого порога не существует — команда честно
@@ -51,7 +52,11 @@ class FaqRagScoreFloor extends Command
             }
             $category = (string) ($item['category'] ?? '-');
             $byCategory[$category][] = [
-                'score' => (float) ($hits[0]['score'] ?? 0.0),
+                // H5065: калибровка обязана остаться в домене BM25. С прямым
+                // ['score'] на гибридном ретривере пороги выводились бы по
+                // RRF-шкале (~0.02) — то есть набор чисел, несовместимый с
+                // порогами, которые эти же ключи читают в бою.
+                'score' => HybridRetriever::bm25Score($hits[0]),
                 'correct' => in_array($hits[0]['chunk_id'], (array) $item['expected_chunk_ids'], true),
             ];
         }

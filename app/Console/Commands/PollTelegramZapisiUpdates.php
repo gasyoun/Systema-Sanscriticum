@@ -15,7 +15,7 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Track C (H164): приём апдейтов @zapisi_ORSbot через long polling вместо вебхука.
+ * Track C (H164): прием апдейтов @zapisi_ORSbot через long polling вместо вебхука.
  *
  * Зачем не вебхук. Telegram не может достучаться до этого прода: входящие
  * соединения из его подсетей не проходят (27.07.2026 — «Connection timed out»
@@ -30,7 +30,7 @@ use Throwable;
  * формат `update` идентичен, дорожка хранения одна.
  *
  * Демон: висит до `poll_max_lifetime_seconds`, затем выходит с кодом 0, и
- * supervisor поднимает свежий процесс — так после деплоя поллер не остаётся на
+ * supervisor поднимает свежий процесс — так после деплоя поллер не остается на
  * старом коде (та же логика, что у рестарта Horizon в deploy.sh).
  */
 class PollTelegramZapisiUpdates extends Command
@@ -40,9 +40,9 @@ class PollTelegramZapisiUpdates extends Command
         {--max-seconds= : Сколько секунд жить перед плановым выходом (по умолчанию из конфига)}
         {--release-webhook : Снять зарегистрированный вебхук и забирать апдейты поллингом}';
 
-    protected $description = 'АВАРИЙНЫЙ приём апдейтов @zapisi_ORSbot поллингом — когда входной узел вебхуков недоступен. Штатно апдейты приходят вебхуком.';
+    protected $description = 'АВАРИЙНЫЙ прием апдейтов @zapisi_ORSbot поллингом — когда входной узел вебхуков недоступен. Штатно апдейты приходят вебхуком.';
 
-    /** Ключ курсора: update_id, с которого продолжаем. Подтверждает приём Telegram'у. */
+    /** Ключ курсора: update_id, с которого продолжаем. Подтверждает прием Telegram'у. */
     private const OFFSET_KEY = 'zapisi:poll:offset';
 
     private bool $shouldStop = false;
@@ -76,7 +76,7 @@ class PollTelegramZapisiUpdates extends Command
         $client = $telegram->usingCredentials($token, (string) ($settings?->zapisi_bot_username ?? ''));
 
         // Пока вебхук зарегистрирован, getUpdates отвечает 409 Conflict: Telegram
-        // отдаёт апдейты ровно одним способом. Снимаем его явно и однократно.
+        // отдает апдейты ровно одним способом. Снимаем его явно и однократно.
         try {
             $this->releaseWebhook($client);
         } catch (Throwable $e) {
@@ -117,7 +117,10 @@ class PollTelegramZapisiUpdates extends Command
     {
         $offset = (int) Cache::get(self::OFFSET_KEY, 0);
 
-        // allowed_updates те же, что регистрирует вебхук (ZapisiSetWebhook).
+        // allowed_updates те же, что регистрирует вебхук (ZapisiSetWebhook):
+        // группа шлет message, канал — channel_post, my_chat_member —
+        // приветственная карточка (H4314), плюс callback_query/poll_answer
+        // для опросов (состав — TelegramWebhooks::ZAPISI_ALLOWED_UPDATES).
         $updates = $client->getUpdates($offset, $pollTimeout, TelegramWebhooks::ZAPISI_ALLOWED_UPDATES);
 
         foreach ($updates as $update) {
@@ -140,7 +143,7 @@ class PollTelegramZapisiUpdates extends Command
      * Освобождает вебхук — но ТОЛЬКО по явному флагу.
      *
      * Пока вебхук зарегистрирован, getUpdates отвечает 409 Conflict: Telegram
-     * отдаёт апдейты ровно одним способом. Раньше команда снимала вебхук молча
+     * отдает апдейты ровно одним способом. Раньше команда снимала вебхук молча
      * при каждом старте — то есть один случайный запуск процесса тихо уводил
      * бота с рабочей дорожки, и заметить это было нечем. Теперь переключение —
      * осознанное действие оператора.
@@ -179,7 +182,7 @@ class PollTelegramZapisiUpdates extends Command
     /**
      * SIGTERM от supervisor'а (`supervisorctl stop/restart`) должен дать
      * дожить текущему заходу, а не рвать процесс посреди getUpdates: иначе
-     * принятые, но не подтверждённые апдейты придут повторно.
+     * принятые, но не подтвержденные апдейты придут повторно.
      */
     private function trapTermination(): void
     {

@@ -334,25 +334,49 @@ rc=${PIPESTATUS[0]}
 # on origin/main; rolling back would re-create the 2026-08-05 loop (deploy →
 # GUARDS DRIFT → rollback → retry → fuse). Keep HEAD, skip fail_deploy, still
 # require independent health_check below.
-if [ "$rc" -eq 75 ]; then
-  if ! health_check; then
-    fail_deploy "deploy.sh exit 75 (guards drift) and server unhealthy:$fails" 75
-  fi
-  echo "$(stamp) OK-WITH-GUARDS-DRIFT: code $(git rev-parse --short HEAD) live; apply: bash scripts/server_guards_apply.sh; health clean (mem ${avail:-?}MB, smoke 200)"
-  rm -f "$RETRIES_FILE"
-  exit 0
-fi
-if [ "$rc" -ne 0 ]; then
+if [ "$rc" -ne 0 ] && [ "$rc" -ne 75 ]; then
   fail_deploy "deploy.sh завершился с кодом $rc" "$rc"
 fi
 
 if ! health_check; then
-  fail_deploy "деплой прошёл, но сервер нездоров:$fails" 1
+  fail_deploy "деплой прошёл, но сервер нездоров:$fails" "$rc"
+fi
+
+# H4848-остаток (GTD 0A63, 15-09-2026): правка deploy.sh вступает в силу только
+# со СЛЕДУЮЩЕГО прогона — bash уже открыл прежний inode, и прогон, ПРИВОЗЯЩИЙ
+# правку, исполняет ещё старый скрипт (канарейка 15-09: до 716 root-овых вьюх
+# на «привозящем» прогоне, ноль на следующем). Если диапазон ЭТОГО деплоя трогал
+# deploy.sh — перезапускаем его здесь: на диске уже новый файл, и второй прогон
+# исполняет правку в том же цикле, а не через 30 минут. Перед перезапуском —
+# тест формы bash -n: синтаксически сломанный новый скрипт исполнять нельзя.
+# Автоотката на провале второго прогона НЕТ сознательно: первый прогон только
+# что доказал health'ом, что ЭТОТ код жив — ломается не код, а новый скрипт, и
+# откат гнал бы тот же подозрительный скрипт в режиме --rollback. Ставим
+# предохранитель и зовём человека.
+deploy_sh_touched=$(git diff --name-only "$LOCAL" "$REMOTE" -- deploy.sh)
+if [ -n "$deploy_sh_touched" ]; then
+  echo "$(stamp) RE-RUN: диапазон деплоя менял deploy.sh — bash держит прежний inode, перезапускаю новым файлом"
+  if bash -n "$DEPLOY_SH"; then
+    timeout -k 30s "${MAX}s" bash "$DEPLOY_SH" 9>&- 2>&1 | tee -a "$STAGE_LOG"
+    rc2=${PIPESTATUS[0]}
+    if ! health_check; then
+      trip "re-run deploy.sh (новая версия из этого же деплоя) завершился rc=$rc2, health:$fails — код от первого прогона был жив; автооткат не делаем, нужен человек; встали на шаге «$(last_stage)»$(cgroup_note)"
+    fi
+    if [ "$rc2" -ne 0 ] && [ "$rc2" -ne 75 ]; then
+      echo "$(stamp) WARN: re-run deploy.sh rc=$rc2 при чистом health — код уже жив, предохранитель не ставим; разобрать deploy.sh до следующего деплоя"
+    fi
+  else
+    echo "$(stamp) WARN: новый deploy.sh не проходит bash -n (тест формы) — re-run отменён, исполнять сломанный скрипт нельзя; разобрать до следующего деплоя"
+  fi
+fi
+
+if [ "$rc" -eq 75 ]; then
+  echo "$(stamp) OK-WITH-GUARDS-DRIFT: code $(git rev-parse --short HEAD) live; apply: bash scripts/server_guards_apply.sh; health clean (mem ${avail:-?}MB, smoke 200)"
+else
+  echo "$(stamp) OK: задеплоен $(git rev-parse --short HEAD), health чист (mem ${avail:-?}MB, smoke 200)"
 fi
 
 # Успех — единственное событие, обнуляющее серию авто-повторов (H2149).
 # Обнулять по «предохранителя нет» было бы неверно: мы его сами и удалили.
 rm -f "$RETRIES_FILE"
-
-echo "$(stamp) OK: задеплоен $(git rev-parse --short HEAD), health чист (mem ${avail:-?}MB, smoke 200)"
 exit 0

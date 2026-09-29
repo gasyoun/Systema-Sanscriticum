@@ -13,7 +13,9 @@
         $canvasRoster = $this->canvasRoster();
     @endphp
 
-    {{-- H4443: «ещё в деньгах» по грамматикам (неоплаченные блоки от курсора) --}}
+    {{-- H4443: «еще в деньгах» по грамматикам (неоплаченные блоки от курсора) --}}
+    {{-- H5087: блок денег — админ-only (см. AttendanceDashboard::canvasMoney) --}}
+    @if(auth()->user()?->isAdminLike())
     <x-filament::section>
         <x-slot name="heading">Канва: неоплаченные блоки грамматик</x-slot>
         <x-slot name="description">Студенты × цена блоков, не покрытых их платежами, от курсора канвы группы. Базовые цены, без скидок и иностранной валюты. В Telegram-пост эти цифры не идут.</x-slot>
@@ -36,10 +38,11 @@
             </div>
         </x-slot>
     </x-filament::section>
+    @endif
 
-    {{-- H4495: ростер «кто на чём» — ТОЛЬКО админка (MG 09-09: из поста убраны) --}}
+    {{-- H4495: ростер «кто на чем» — ТОЛЬКО админка (MG 09-09: из поста убраны) --}}
     <x-filament::section>
-        <x-slot name="heading">Канва: кто на чём (ростер — админ)</x-slot>
+        <x-slot name="heading">Канва: кто на чем (ростер — админ)</x-slot>
         <x-slot name="description">Персональные данные студентов живых грамматик: последнее занятие, позиция на шкале, ⚠️ пропуски. В публичный Telegram-пост эти данные больше не попадают.</x-slot>
         <x-slot name="content">
             <div class="space-y-3 text-sm">
@@ -62,7 +65,7 @@
     {{-- H4457: покрытие таймкодами --}}
     <x-filament::section>
         <x-slot name="heading">Канва: таймкоды (ингестия из n8n)</x-slot>
-        <x-slot name="description">Канонические таймкоды занятий (kanva_timings) — приём из n8n execution-истории командой kanva:ingest-timings. Группы без таймкодов ждут своей нарезки.</x-slot>
+        <x-slot name="description">Канонические таймкоды занятий (kanva_timings) — прием из n8n execution-истории командой kanva:ingest-timings. Группы без таймкодов ждут своей нарезки.</x-slot>
         <x-slot name="content">
             <div class="space-y-1 text-sm">
                 @forelse($canvasTimings['rows'] as $row)
@@ -71,7 +74,7 @@
                         <span class="text-gray-500 tabular-nums">{{ $row['last'] ?? '—' }}</span>
                     </div>
                 @empty
-                    <p class="text-gray-400">Таймкодов ещё нет.</p>
+                    <p class="text-gray-400">Таймкодов еще нет.</p>
                 @endforelse
                 @if($canvasTimings['without'] > 0)
                     <p class="text-gray-500">Без таймкодов: {{ $canvasTimings['without'] }} грамматик.</p>
@@ -91,7 +94,7 @@
                         <span>
                             <span class="font-medium">{{ $row['course'] }}</span>@if($row['group'] !== $row['course'])
                                 <span class="text-gray-400">({{ $row['group'] }})</span>@endif
-                            · урок {{ $row['cursor'] }}/{{ $row['total'] }} · блок {{ $row['block'] }}/{{ $row['blocks_total'] }}
+                            · Урок {{ $row['cursor'] }}/{{ $row['total'] }} · блок {{ $row['block'] }}/{{ $row['blocks_total'] }}
                             · ответвлений {{ $row['deviations'] }}
                             @if($row['forecast']) · финал ≈ {{ $row['forecast'] }}@endif
                         </span>

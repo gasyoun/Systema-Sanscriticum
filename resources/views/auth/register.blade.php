@@ -22,6 +22,8 @@
                 <p class="text-gray-500 text-sm">Бесплатный уровень клуба — без оплаты</p>
             </div>
 
+            @include('auth.partials.pending-waitlist-vote')
+
             @if ($errors->any())
                 <div class="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
                     {{ $errors->first() }}
@@ -62,7 +64,7 @@
 
                 <div>
                     <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 pl-1" for="password_confirmation">
-                        Пароль ещё раз
+                        Пароль еще раз
                     </label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

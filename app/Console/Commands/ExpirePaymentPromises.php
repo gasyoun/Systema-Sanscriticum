@@ -20,7 +20,7 @@ class ExpirePaymentPromises extends Command
     {
         // Сначала забираем сами обещания — раньше демон молча делал mass-update
         // active→expired, и никто об этом не узнавал (retention audit gap #4).
-        // Теперь по каждому пишем PromiseEvent и шлём куратору утренний дайджест.
+        // Теперь по каждому пишем PromiseEvent и шлем куратору утренний дайджест.
         $promises = PaymentPromise::query()
             ->with(['user', 'course'])
             ->where('status', PaymentPromise::STATUS_ACTIVE)
@@ -49,10 +49,10 @@ class ExpirePaymentPromises extends Command
         $curator->promisesExpiredDigest($promises);
 
         // H4396 (census §C.1): сколько conditional-доступов «под обещание»
-        // держатся на только что истёкших обещаниях. Строки НЕ удаляются —
+        // держатся на только что истекших обещаниях. Строки НЕ удаляются —
         // ключи закрывает read-side предикат Payment::scopeWithAccessExpiry
         // при флаге conditional_access_expiry=ON; при OFF строка — ops-сигнал
-        // «сколько доступов ждёт флипа» (деньги-смежное, флип остаётся за человеком).
+        // «сколько доступов ждет флипа» (деньги-смежное, флип остается за человеком).
         $conditionalOpen = Payment::query()
             ->whereIn('linked_promise_id', $promises->pluck('id'))
             ->conditional()

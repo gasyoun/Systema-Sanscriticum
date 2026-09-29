@@ -51,7 +51,7 @@
             @elseif(session('reading_srs_status') === 'duplicate')
                 Слово <b lang="sa-Latn">{{ $srsWord }}</b> уже есть в вашей колоде «Старт чтения».
             @else
-                Для формы <b lang="sa-Latn">{{ $srsWord }}</b> в этом пакете нет леммы — карточку не создаём.
+                Для формы <b lang="sa-Latn">{{ $srsWord }}</b> в этом пакете нет леммы — карточку не создаем.
             @endif
         </div>
     </div>

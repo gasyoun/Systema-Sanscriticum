@@ -1,0 +1,6 @@
+[Unit]
+Description=Daily cleanup of stale restic locks (GTD 0b8: backup ignores --no-lock, append-only forbids removal)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/restic-stale-locks-clean.sh

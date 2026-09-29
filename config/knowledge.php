@@ -25,6 +25,13 @@ return [
     // владелец сокета — sshd-session, см. EXPERIMENT_OLLAMA_GPU_OCT1_2026.md).
     'base_url' => env('KNOWLEDGE_OLLAMA_BASE_URL', 'http://127.0.0.1:11434'),
 
+    // H4845: рабочее окно GPU-узла «HH:MM-HH:MM» (часовой пояс приложения,
+    // МСК). Узел живёт 9–21 МСК; по полчаса запаса с краёв, чтобы утренний
+    // подъём туннеля и вечерний отбой не будили cabinet:probe. Вне окна
+    // мёртвый туннель — штатный сон, не тревога. Пусто = круглосуточно.
+    // Владелец и перезапуск: docs/ops/OLLAMA_TUNNEL_RUNBOOK.md.
+    'tunnel_hours' => env('KNOWLEDGE_TUNNEL_HOURS', '09:30-20:30'),
+
     // На узле модель видна ровно как bge-m3:latest (проба 01-09-2026) —
     // короткое имя без тега даёт 404 "model not found".
     'embedding_model' => env('KNOWLEDGE_EMBEDDING_MODEL', 'bge-m3:latest'),
@@ -64,6 +71,34 @@ return [
         // наборе = дефект, не тюнинг.
         'weight_sparse' => (float) env('KNOWLEDGE_FUSION_WEIGHT_SPARSE', 1.0),
         'weight_dense' => (float) env('KNOWLEDGE_FUSION_WEIGHT_DENSE', 0.5),
+    ],
+
+    /*
+     * Этап 4 — полоса уроков. Живёт в той же таблице и на той же модели, но
+     * веса слияния свои: у FAQ лексическая нога опирается на вылизанный
+     * RuTextNormalizer и служит полом, а у дословной устной речи она шумит
+     * (замер 16-09-2026 на расшифровке урока 1961: BM25 без стемминга топил
+     * сигнал, вектор без BM25 промахивался мимо лексически очевидных мест).
+     * Поэтому здесь ведёт плотная нога, а лексическая поднимает.
+     */
+    'lesson' => [
+        // Сколько фрагментов уходит в контекст модели.
+        'top_k' => (int) env('KNOWLEDGE_LESSON_TOP_K', 6),
+
+        // Порог косинуса лучшего фрагмента, ниже которого вопрос считается
+        // «не про уроки» и падает в обычного ИИ-куратора.
+        'min_score' => (float) env('KNOWLEDGE_LESSON_MIN_SCORE', 0.45),
+
+        // Целевая длина окна нарезки и перекрытие в одно предложение.
+        'chunk_chars' => (int) env('KNOWLEDGE_LESSON_CHUNK_CHARS', 700),
+
+        // Дословная выдержка в ответе: длина одной цитаты и их количество.
+        // H3308: бот не выгружает платную лекцию целиком.
+        'quote_chars' => (int) env('KNOWLEDGE_LESSON_QUOTE_CHARS', 280),
+        'max_quotes' => (int) env('KNOWLEDGE_LESSON_MAX_QUOTES', 3),
+
+        'weight_sparse' => (float) env('KNOWLEDGE_LESSON_WEIGHT_SPARSE', 0.6),
+        'weight_dense' => (float) env('KNOWLEDGE_LESSON_WEIGHT_DENSE', 1.0),
     ],
 
 ];

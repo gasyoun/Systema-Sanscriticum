@@ -47,4 +47,25 @@ $links['m26-schedule-c'] = [
 return [
     'session_key' => 'tracked_link_attribution',
     'links' => $links,
+    'story_campaigns' => [
+        'm26' => [
+            'destination' => '/online/kursy/grammatika-gasuns-2026',
+            'utm_campaign' => $campaign,
+            'utm_term' => 'beginner',
+        ],
+        'lingq' => [
+            'destination' => 'https://t.me/samskrtamru/4166',
+            'utm_campaign' => 'linguistics_tasks_evergreen',
+            'utm_term' => 'puzzle',
+        ],
+        'linga' => [
+            'destination' => 'https://t.me/samskrtamru/4169',
+            'utm_campaign' => 'linguistics_tasks_evergreen',
+            'utm_term' => 'answer',
+        ],
+    ],
+    'story_accounts' => [
+        'mg' => 'telegram_marcisgasuns',
+        'rs' => 'telegram_rusamskrtam',
+    ],
 ];

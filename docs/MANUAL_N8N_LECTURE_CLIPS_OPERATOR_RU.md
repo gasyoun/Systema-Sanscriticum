@@ -10,7 +10,7 @@ _Created: 24-07-2026 · Last updated: 24-07-2026_
 | Пошаговая установка n8n для Ивана | [issue #666](https://github.com/gasyoun/Systema-Sanscriticum/issues/666) |
 | Очередь деплоя (№47) | [`DEPLOY_QUEUE.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/DEPLOY_QUEUE.md) |
 | Тех. README n8n (JSON, payload) | [`docs/n8n/README.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/n8n/README.md) |
-| План расширения (посты/FAQ/…) | [`docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md) |
+| План расширения (посты/FAQ/…) | [`docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md) |
 | Общее админ-руководство | [`docs/admin-manual.md`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/admin-manual.md) |
 
 **Роли**

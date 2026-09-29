@@ -101,11 +101,11 @@ class TelegramSupportPeerWindowTest extends TestCase
         FakeMadelineProtoClient::$histories = [
             3001 => [],
             77701 => [
-                ['id' => 9001, 'date' => strtotime('2026-09-08 12:00:00'), 'message' => 'Прошу уточнить стоимость за 3 блок', 'peer_id' => 77701, 'from_id' => ['user_id' => 5967791864]],
+                ['id' => 9001, 'date' => now()->subDays(2)->timestamp, 'message' => 'Прошу уточнить стоимость за 3 блок', 'peer_id' => 77701, 'from_id' => ['user_id' => 5967791864]],
             ],
         ];
 
-        $this->seedIncoming(77701, 8900, 'старое сообщение', '2026-09-05 10:00:00');
+        $this->seedIncoming(77701, 8900, 'старое сообщение', now()->subDays(5)->format('Y-m-d H:i:s'));
         FakeMadelineProtoClient::$dialogs = [
             ['peer' => ['_' => 'peerUser', 'user_id' => 3001]],
         ];
@@ -144,11 +144,13 @@ class TelegramSupportPeerWindowTest extends TestCase
             FakeMadelineProtoClient::$histories[$i] = [];
         }
         FakeMadelineProtoClient::$histories[55501] = [
-            ['id' => 7001, 'date' => strtotime('2026-07-01 10:00:00'), 'message' => 'вернулся после паузы', 'peer_id' => 55501, 'from_id' => ['user_id' => 7002]],
+            ['id' => 7001, 'date' => now()->subDays(45)->timestamp, 'message' => 'вернулся после паузы', 'peer_id' => 55501, 'from_id' => ['user_id' => 7002]],
         ];
 
-        // Последняя активность 20 дней назад — за пределами окна 14 дней.
-        $this->seedIncoming(55501, 7000, 'было давно', '2026-08-19 10:00:00');
+        // Последняя активность 20 дней назад — за пределами окна 14 дней, но внутри
+        // catch-up окна 30 дней. Даты относительные: захардкоженные рванули 18-09-2026
+        // (ровно 30 дней от 19-08), положив детерминированным красным весь CI репо.
+        $this->seedIncoming(55501, 7000, 'было давно', now()->subDays(20)->format('Y-m-d H:i:s'));
 
         app(TelegramSupportSyncService::class)->sync();
 
@@ -212,7 +214,7 @@ class TelegramSupportPeerWindowTest extends TestCase
             3001 => [],
         ];
 
-        $this->seedIncoming(77701, 8900, 'старое сообщение', '2026-09-05 10:00:00');
+        $this->seedIncoming(77701, 8900, 'старое сообщение', now()->subDays(40)->format('Y-m-d H:i:s'));
 
         app(TelegramSupportSyncService::class)->sync();
 
@@ -233,7 +235,7 @@ class TelegramSupportPeerWindowTest extends TestCase
         FakeMadelineProtoClient::$histories = [
             3001 => [],
         ];
-        $this->seedIncoming(77701, 8900, 'старое сообщение', '2026-09-05 10:00:00');
+        $this->seedIncoming(77701, 8900, 'старое сообщение', now()->subDays(40)->format('Y-m-d H:i:s'));
 
         $log = Log::spy();
 
@@ -259,7 +261,7 @@ class TelegramSupportPeerWindowTest extends TestCase
 
         FakeMadelineProtoClient::$histories = [
             88801 => [
-                ['id' => 9100, 'date' => strtotime('2026-09-09 09:00:00'), 'message' => 'Добрый день! Хочу записаться на курс', 'peer_id' => 88801, 'from_id' => ['user_id' => 88802]],
+                ['id' => 9100, 'date' => now()->subHours(2)->timestamp, 'message' => 'Добрый день! Хочу записаться на курс', 'peer_id' => 88801, 'from_id' => ['user_id' => 88802]],
             ],
         ];
         FakeMadelineProtoClient::$dialogs = [

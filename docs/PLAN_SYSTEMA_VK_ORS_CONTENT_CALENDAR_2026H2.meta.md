@@ -36,7 +36,7 @@ Companion for the H2 plan that turns the IndologyScholars `vk-ors` wall archive
 
 - Plan + four layers (same stem)
 - [vk-ors README](https://github.com/gasyoun/IndologyScholars/blob/main/vk-ors/README.md)
-- [PLAN lecture content engine](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md)
+- [PLAN lecture content engine](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/archive/PLAN_SYSTEMA_N8N_LECTURE_CONTENT_ENGINE_2026H2.md)
 
 ## Revision history
 

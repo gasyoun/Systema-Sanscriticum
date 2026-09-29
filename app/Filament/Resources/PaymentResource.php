@@ -9,6 +9,8 @@ use App\Models\Course;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Services\CuratorNotifier;
+use App\Services\Reconciliation\RefundAccessPolicy;
+use App\Services\Reconciliation\RefundAccessViolation;
 use App\Support\RoleGate;
 use App\Support\Roles;
 use Filament\Forms;
@@ -51,9 +53,21 @@ class PaymentResource extends Resource
         return RoleGate::any(Roles::ADMIN, Roles::MANAGER, Roles::ACCOUNTANT);
     }
 
+    // Удаление транзакции — только админам (H5084): жёсткое удаление оплаченного
+    // платежа не проходит через цепочку отзыва (статусы failed/canceled в
+    // Payment::booted), доступ к группе/прана/депозит остались бы висеть при
+    // уничтоженной строке денег. Отзыв доступа — переводом статуса, не удалением.
     public static function canDelete($record): bool
     {
-        return RoleGate::any(Roles::ADMIN, Roles::MANAGER, Roles::ACCOUNTANT);
+        return RoleGate::adminOnly();
+    }
+
+    // Без этого override Filament отдаёт canDeleteAny()=true (нет PaymentPolicy),
+    // и DeleteBulkAction всплывал бы у менеджера/бухгалтера — прецедент
+    // UserResource::canDeleteAny() ровно про этот класс дыры.
+    public static function canDeleteAny(): bool
+    {
+        return RoleGate::adminOnly();
     }
 
     /**
@@ -275,6 +289,27 @@ class PaymentResource extends Resource
                                     $p->id => '#'.$p->id.' · '.number_format((float) $p->amount, 0, '.', ' ').' ₽ · '.$p->tariff.' · '.optional($p->created_at)->format('Y-m-d'),
                                 ])
                                 ->all();
+                        })
+                        // H5445 (D10, флаг money_refund_access_rules): частичный возврат —
+                        // только с блоками «с/по», которые он уменьшает; отказ модели
+                        // показывается ошибкой формы, а не падением сохранения.
+                        ->rule(static fn (Forms\Get $get, ?Payment $record) => static function (string $attribute, $value, \Closure $fail) use ($get, $record): void {
+                            if (blank($value) || ! RefundAccessPolicy::enabled()) {
+                                return;
+                            }
+                            $probe = $record !== null ? clone $record : new Payment;
+                            $probe->forceFill([
+                                'refund_of_payment_id' => (int) $value,
+                                'amount' => (string) $get('amount'),
+                                'status' => $get('status') ?? $record?->status,
+                                'start_block' => filled($get('start_block')) ? (int) $get('start_block') : null,
+                                'end_block' => filled($get('end_block')) ? (int) $get('end_block') : null,
+                            ]);
+                            try {
+                                app(RefundAccessPolicy::class)->guardLegacyRefund($probe);
+                            } catch (RefundAccessViolation $e) {
+                                $fail($e->getMessage());
+                            }
                         })
                         // Money-critical: только админ (как salary_recognition_month).
                         ->visible(fn (): bool => RoleGate::adminOnly()),

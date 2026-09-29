@@ -25,7 +25,7 @@ class GiftCertificateIssuedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    /** Сырой код живёт только в этом инстансе до отправки. */
+    /** Сырой код живет только в этом инстансе до отправки. */
     public function __construct(
         public User $buyer,
         public GiftCertificate $certificate,
@@ -58,7 +58,7 @@ class GiftCertificateIssuedMail extends Mailable implements ShouldQueue
     public function attachments(): Attachments
     {
         // PDF печатается БЕЗ кода: сертификат верифицируется публичным номером,
-        // а секретный код остаётся только в теле этого письма.
+        // а секретный код остается только в теле этого письма.
         $pdf = app(GiftCertificateService::class)->renderPdf($this->certificate);
 
         return Attachments::fromData(

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\LessonQaAnswerJob;
+use App\Jobs\ProcessTelegramBusinessUpdate;
 use App\Jobs\SyncUserAvatarJob;
 use App\Models\ChatMessage;
 use App\Models\ScheduleAttendanceNotice;
@@ -13,6 +15,8 @@ use App\Services\Bot\CabinetLoginBotCommand;
 use App\Services\Bot\CabinetProvisionBotCommand;
 use App\Services\Bot\CuratorAi;
 use App\Services\Bot\DebtorsBotCommand;
+use App\Services\Bot\LessonQaBotCommands;
+use App\Services\Bot\LessonQaService;
 use App\Services\Bot\RosterBotCommand;
 use App\Services\Bot\StudentSelfService;
 use App\Services\Bot\TelegramFormatter;
@@ -23,10 +27,9 @@ use App\Services\Support\SupportDmAutoReply;
 use App\Services\Support\SupportHintSendButton;
 use App\Services\VacationQuorumService;
 use App\Support\TelegramSendGuard;
+use App\Support\TelegramTransport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class TelegramWebhookController extends Controller
 {
@@ -47,6 +50,21 @@ class TelegramWebhookController extends Controller
             ? (int) $data['update_id']
             : null;
         if ($updateId !== null && ! TelegramSendGuard::claimUpdate('main', $updateId)) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        // A single Telegram bot has exactly one webhook.  When the student bot
+        // is also connected to Telegram Business, keep the existing student
+        // endpoint and hand off only Business/Story-source updates to its
+        // dedicated queue worker.  Ordinary student messages and callbacks
+        // continue through the legacy flow below.
+        if (isset($data['business_connection'])
+            || isset($data['business_message'])
+            || isset($data['edited_business_message'])
+            || isset($data['deleted_business_messages'])
+            || isset($data['channel_post'])) {
+            ProcessTelegramBusinessUpdate::dispatch($data);
+
             return response()->json(['status' => 'ok']);
         }
 
@@ -119,7 +137,7 @@ class TelegramWebhookController extends Controller
                     // Подтягиваем аватарку из Telegram (в очереди, не тормозим вебхук).
                     SyncUserAvatarJob::dispatch($user->id);
 
-                    $this->sendMessage($chatId, "Намасте, {$user->name}! 🙏\n\nВаш аккаунт Академии успешно привязан. Теперь важные уведомления и доступы будут приходить прямо сюда. Также вы можете задавать мне вопросы по обучению!\n\nНапишите <b>«мои группы»</b>, чтобы увидеть свои группы и расписание.");
+                    $this->sendMessage($chatId, "Намасте, {$user->greetingName()}! 🙏\n\nВаш аккаунт Академии успешно привязан. Теперь важные уведомления и доступы будут приходить прямо сюда. Также вы можете задавать мне вопросы по обучению!\n\nНапишите <b>«мои группы»</b>, чтобы увидеть свои группы и расписание.");
                 } else {
                     $this->sendMessage($chatId, 'Ссылка устарела или недействительна. Пожалуйста, сгенерируйте новую кнопку в личном кабинете на сайте.');
                 }
@@ -359,6 +377,25 @@ class TelegramWebhookController extends Controller
             }
         }
 
+        // 1.9. SELF-SERVICE: список доступных занятий и закрепление одного из
+        // них (Этап 4). Детерминированно, без LLM: что открыто студенту —
+        // это факт из БД, а не догадка модели.
+        if ((bool) config('features.lesson_qa', false)) {
+            $lessonCommands = app(LessonQaBotCommands::class);
+
+            if ($lessonCommands->matchesListIntent($question)) {
+                $this->replyAndStore($user, $chatId, $lessonCommands->listSummary($user));
+
+                return;
+            }
+
+            if ($lessonCommands->matchesPinIntent($question)) {
+                $this->replyAndStore($user, $chatId, $lessonCommands->handlePin($user, $question));
+
+                return;
+            }
+        }
+
         // 2. ПРОВЕРЯЕМ РЕЖИМ ЧЕЛОВЕКА
         if (Cache::has("chat_human_{$chatId}")) {
             if ($adminId) {
@@ -393,6 +430,14 @@ class TelegramWebhookController extends Controller
             }
         }
 
+        // 4. ВОПРОС ПО РАСШИФРОВКЕ СВОЕГО ЗАНЯТИЯ (Этап 4, флаг lesson_qa).
+        // Стоит ПОСЛЕ режима человека и слов-триггеров: «позови куратора»
+        // обязано выигрывать у любой автоматики. Ничего не нашлось или совпало
+        // слабо — молча падаем в обычного ИИ-куратора ниже.
+        if ($this->answerFromLessonTranscripts($user, $question, $chatId)) {
+            return;
+        }
+
         $this->sendMessage($chatId, '⏳ <i>Изучаю манускрипты...</i>');
 
         // Вопрос студента уже сохранён в ChatMessage выше — он попадёт в историю
@@ -414,6 +459,62 @@ class TelegramWebhookController extends Controller
         ]);
 
         $this->sendMessage($chatId, $answer);
+    }
+
+    /**
+     * Этап 4 — попытка ответить по расшифровкам занятий, открытых студенту.
+     *
+     * Возвращает true, если вопрос обработан здесь (ответ отправлен или принят
+     * в очередь). false означает «это не про уроки» — вызывающий код идёт
+     * дальше к обычному ИИ-куратору, поведение при выключенном флаге
+     * остаётся прежним байт-в-байт.
+     */
+    private function answerFromLessonTranscripts(User $user, string $question, string $chatId): bool
+    {
+        $qa = app(LessonQaService::class);
+        if (! $qa->isEnabled()) {
+            return false;
+        }
+
+        $result = $qa->answer($user, $question);
+
+        if ($result['status'] === LessonQaService::STATUS_NOTHING) {
+            return false;
+        }
+
+        if ($result['status'] === LessonQaService::STATUS_QUEUED) {
+            // Узел с моделью недоступен. Внешнего фолбэка нет по рулингу
+            // #1633, поэтому вопрос не теряем: доигрывает джоба.
+            LessonQaAnswerJob::dispatch($user->id, $question, $chatId);
+            $this->sendMessage(
+                $chatId,
+                '⏳ Узел с моделью сейчас занят. Вопрос принял — отвечу по этому занятию, как только он освободится.',
+            );
+
+            return true;
+        }
+
+        if ($result['text'] === null) {
+            return false;
+        }
+
+        $this->replyAndStore($user, $chatId, $result['text']);
+
+        return true;
+    }
+
+    /** Сохранить ответ бота в историю диалога и отправить его студенту. */
+    private function replyAndStore(User $user, string $chatId, string $text): void
+    {
+        ChatMessage::create([
+            'user_id' => $user->id,
+            'role' => 'bot',
+            'text' => $text,
+            'is_read' => true,
+            'source' => 'telegram_bot',
+        ]);
+
+        $this->sendMessage($chatId, $text);
     }
 
     /**
@@ -731,26 +832,38 @@ class TelegramWebhookController extends Controller
         // Telegram-HTML — конвертер приводит всё к валидным тегам.
         $text = TelegramFormatter::toHtml((string) $text);
 
-        $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'parse_mode' => 'HTML',
-        ]);
+        // Вебхук — это запрос от Telegram: пока вызов бросал исключение,
+        // недоступный Telegram получал 500, повторял апдейт и снова держал
+        // воркер. Вызов не имеет права ломать обработку апдейта.
+        $response = TelegramTransport::post(
+            "https://api.telegram.org/bot{$token}/sendMessage",
+            ['chat_id' => $chatId, 'text' => $text, 'parse_mode' => 'HTML'],
+            'Telegram webhook sendMessage',
+            ['chat_id' => $chatId],
+        );
 
-        if (! $response->successful()) {
-            Log::error('Telegram API error', ['status' => $response->status(), 'body' => $response->body()]);
+        if ($response?->successful()) {
+            return;
+        }
 
-            // Чаще всего это ошибка парсинга HTML (модель прислала кривой тег или
-            // одиночный «<»). Не теряем сообщение — досылаем как обычный текст.
-            $fallback = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+        // null — Telegram недоступен: фолбэк тем же транспортом только
+        // повторит таймаут, поэтому сдаёмся (причина уже в логе).
+        if ($response === null) {
+            return;
+        }
+
+        // Ответил отказом — чаще всего это ошибка парсинга HTML (модель
+        // прислала кривой тег или одиночный «<»). Не теряем сообщение —
+        // досылаем как обычный текст.
+        TelegramTransport::post(
+            "https://api.telegram.org/bot{$token}/sendMessage",
+            [
                 'chat_id' => $chatId,
                 'text' => html_entity_decode(strip_tags((string) $text), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
-            ]);
-
-            if (! $fallback->successful()) {
-                Log::error('Telegram API error (plain fallback)', ['status' => $fallback->status(), 'body' => $fallback->body()]);
-            }
-        }
+            ],
+            'Telegram webhook sendMessage (plain fallback)',
+            ['chat_id' => $chatId],
+        );
     }
 
     // ==========================================
@@ -763,14 +876,18 @@ class TelegramWebhookController extends Controller
         $token = config('services.telegram.bot_token');
 
         foreach ($this->adminChatIds() as $chatId) {
-            $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-                'chat_id' => $chatId,
-                'text' => $text,
-                'parse_mode' => 'HTML',
-            ]);
+            // null = сеть до Telegram оборвалась. Получатели сидят за одним и
+            // тем же api.telegram.org, поэтому продолжать цикл — значит
+            // умножать таймаут на их число (2 × 5 с держали воркер в инциденте).
+            $delivered = TelegramTransport::post(
+                "https://api.telegram.org/bot{$token}/sendMessage",
+                ['chat_id' => $chatId, 'text' => $text, 'parse_mode' => 'HTML'],
+                'Telegram admin alert',
+                ['chat_id' => $chatId],
+            );
 
-            if (! $response->successful()) {
-                Log::error('Telegram admin alert error', ['chat_id' => $chatId, 'status' => $response->status(), 'body' => $response->body()]);
+            if ($delivered === null) {
+                return;
             }
         }
     }

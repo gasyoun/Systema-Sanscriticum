@@ -1,0 +1,14 @@
+# MANAGED FILE — installed by scripts/server_guards_apply.sh as the crontab of
+# user `hermes` (.92). Edit the repo copy (scripts/server_guards/cron/hermes.crontab),
+# never `crontab -e -u hermes` on the server: guards:verify reports the difference.
+#
+# Зачем: пять линий нервной системы Hermes жили ТОЛЬКО в живом crontab .92 —
+# один guards re-apply или опечатка в `crontab -e` стирали их молча (класс H4155,
+# ровно как строки H4570/H4590/H4929 в root.crontab). Здесь — вербатим-снимок
+# живого crontab 19-09-2026 (H5080-F2), снятый ssh-пробой; расписания не менялись.
+# Ходят до foreman (03:55), чтобы утренний дайджест нёс свежие строки.
+17 3 * * 1 /home/hermes/bin/weekly_sweep.sh >> /home/hermes/pilots/sweeps.log 2>&1
+37 2 * * * /home/hermes/bin/ops_daily.sh >> /home/hermes/pilots/ops.log 2>&1
+27 3 * * 4 /home/hermes/bin/research_watch.sh >> /home/hermes/pilots/research.log 2>&1
+27 3 * * 1 /home/hermes/bin/spend_watch.sh >> /home/hermes/pilots/spend.log 2>&1
+55 3 * * * /home/hermes/bin/foreman_daily.sh >> /home/hermes/pilots/foreman.log 2>&1

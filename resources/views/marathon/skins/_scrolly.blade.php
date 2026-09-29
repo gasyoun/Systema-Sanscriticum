@@ -20,8 +20,8 @@
   A/B config file is not touched.
 --}}
 @php
-    $scrollyOn = (bool) config('marathon_visual.scrollytelling', false)
-        || in_array(strtolower((string) request()->query('scrolly', '')), ['1', 'true', 'on', 'yes'], true);
+    $scrollyOn = $paidSupportAvailable && ((bool) config('marathon_visual.scrollytelling', false)
+        || in_array(strtolower((string) request()->query('scrolly', '')), ['1', 'true', 'on', 'yes'], true));
 
     $scrollyDays = $days ?? [];
     $scrollyQuizGoals = $quizGoals ?? [];

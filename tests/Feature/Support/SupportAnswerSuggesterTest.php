@@ -128,6 +128,18 @@ class SupportAnswerSuggesterTest extends TestCase
             '06 schedule в какое время' => ['Начинаем 1-го марта — в какое время?', SupportAnswerSuggestion::CATEGORY_SCHEDULE],
             'regression ссылка на запись stays B' => ['Скиньте ссылку на запись', SupportAnswerSuggestion::CATEGORY_RECORDING],
             'regression payment stays D' => ['Сколько стоит курс?', SupportAnswerSuggestion::CATEGORY_PAYMENT],
+            // Инцидент 19-09-2026 (PII снято): студентка просила ссылку для
+            // оплаты, оговорка «буду смотреть в записи» отдавала сообщение
+            // категории B — бот ответил ссылкой на запись урока. Платёжная
+            // рука поднята наверх; она сильнее вежливой оговорки про записи.
+            'incident 19-09 payment link beats recording remark' => [
+                "Добрый день! Пришлите, пожалуйста ссылку для оплаты.\nХотела сразу предупредить, что иногда буду отсутствовать на занятии и смотреть в записи.",
+                SupportAnswerSuggestion::CATEGORY_PAYMENT,
+            ],
+            'incident 19-09 mixed ask without link word stays B for the fence' => [
+                'Хочу оплатить следующий блок. И где посмотреть запись вчерашнего урока?',
+                SupportAnswerSuggestion::CATEGORY_RECORDING,
+            ],
         ];
     }
 

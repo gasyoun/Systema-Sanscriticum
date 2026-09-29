@@ -34,6 +34,11 @@ class SupportAnswerSuggester
      * несколько рук с разным приоритетом (типичные фразы ORS-FAQ 04/05/06).
      *
      * Порядок:
+     * 0. Узкий D «ссылка на оплату» РАНЬШЕ ВСЕГО. Инцидент 19-09-2026:
+     *    студентка просила «ссылку для оплаты», а вежливая оговорка «иногда
+     *    буду… смотреть в записи» matчилась первой рукой B — и бот ответил на
+     *    просьбу об оплате ссылкой на запись урока. Платёжное намерение рядом
+     *    со «ссылкой» сильнее любой вежливой оговорки про записи/занятия.
      * 1. B (запись) раньше A, чтобы «ссылка на запись» не ушла в Zoom.
      * 2. Узкий C «ссылка на расписание» раньше A, иначе `ссылк` крадёт тему 06.
      * 3. A Zoom, затем широкий C.
@@ -42,12 +47,13 @@ class SupportAnswerSuggester
      * @var list<array{0: string, 1: string}>
      */
     private const RULES = [
+        // H3394: деньги рядом со «ссылкой» — это D («ссылку на оплату не
+        // нашла», «сколько стоит курс и где ссылка»), а не Zoom. Инцидент
+        // 19-09-2026 поднял руку на первое место: раньше она стояла третьей и
+        // проигрывала руке B по слову «записи» из оговорки.
+        [SupportAnswerSuggestion::CATEGORY_PAYMENT, '/(?:ссылк|линк)[^\n]{0,48}(?:оплат|плат|тариф|цен|стои)|(?:оплат|тариф|цен|стои)[^\n]{0,48}(?:ссылк|линк)/iu'],
         [SupportAnswerSuggestion::CATEGORY_RECORDING, '/запис|видеозап|пересмотр|переслуш|тайм.?код|rutube|youtube|пропуст[а-яё]{0,8}.{0,40}(?:занят|урок|лекц)|(?:занят|урок|лекц).{0,40}пропуст/iu'],
         [SupportAnswerSuggestion::CATEGORY_SCHEDULE, '/ссылк[^\n]{0,48}расписан|расписан[^\n]{0,48}ссылк/iu'],
-        // H3394: деньги рядом со «ссылкой» — это D («ссылку на оплату не
-        // нашла», «сколько стоит курс и где ссылка»), а не Zoom. Узкая рука
-        // СТРОГО до широкого A-«ссылк», иначе A крадёт платёжные темы.
-        [SupportAnswerSuggestion::CATEGORY_PAYMENT, '/(?:ссылк|линк)[^\n]{0,48}(?:оплат|плат|тариф|цен|стои)|(?:оплат|тариф|цен|стои)[^\n]{0,48}(?:ссылк|линк)/iu'],
         [SupportAnswerSuggestion::CATEGORY_ZOOM, '/зум|zoom|подключ|ссылк|линк|\bjoin\b|как\s+(?:мне\s+)?(?:войти|зайти|попасть)|войти\s+в\s+(?:занятие|урок|встреч)/iu'],
         [SupportAnswerSuggestion::CATEGORY_SCHEDULE, '/расписан|когда\s+(?:занятие|урок|начн|следующ|будет|стартует|пара)|во\s?сколько|время\s+(?:занят|урок)|перенос|перенес|в\s+какой\s+день|график\s+занят|в\s+какое\s+время/iu'],
         // H3394: «сколько будет стоить», любое упоминание оплаты, «по частям».
@@ -64,6 +70,7 @@ class SupportAnswerSuggester
         private readonly SupportTemplateDraftResolver $templates,
         private readonly Faq\HybridRetriever $faqRag,
         private readonly Faq\FaqRagDraftBuilder $faqDrafts,
+        private readonly SupportFactCheckVerifier $factCheck = new SupportFactCheckVerifier,
     ) {}
 
     public function isEnabled(): bool
@@ -191,6 +198,13 @@ class SupportAnswerSuggester
             return false;
         }
 
+        // H4589: детерминированная сверка «что LLM написала» vs «что резолвер
+        // насчитал» — измерение, пишется рядом с фактами. НЕ гасит кнопку
+        // отправки (H4440 явно снял код-уровневый draft_only с tap-дорожки;
+        // см. docblock SupportFactCheckVerifier) — только маркер для /admin и
+        // для будущего явного рулинга MG.
+        $factCheck = $this->factCheck->verify((string) $resolved['draft'], $resolved['facts']);
+
         $suggestion = SupportAnswerSuggestion::create([
             'user_id' => $userId,
             'source_type' => $sourceType,
@@ -198,7 +212,7 @@ class SupportAnswerSuggester
             'category' => $category,
             'detected_text' => $text,
             'draft_text' => $resolved['draft'],
-            'facts' => $resolved['facts'],
+            'facts' => [...$resolved['facts'], 'fact_check' => $factCheck],
             'confidence' => $resolved['confidence'],
             'status' => SupportAnswerSuggestion::STATUS_PENDING,
         ]);

@@ -102,7 +102,7 @@ class CabinetProvisionBotCommand
 
         $user = $this->createUser($email, $chatId, $fromUsername);
 
-        return "Намасте, {$user->name}! 🙏 Ваш личный кабинет создан — вход без пароля:\n\n"
+        return "Намасте, {$user->greetingName()}! 🙏 Ваш личный кабинет создан — вход без пароля:\n\n"
             .$this->loginLinkMessage($this->logins->issueLoginLink($user))
             ."\n\n<i>Бесплатные плейлисты уже открыты внутри.</i>";
     }

@@ -1,0 +1,8 @@
+[Unit]
+Description=restic backup n8n dumps into shared estate, tag n8n,w5 (W5 / H3176 fanout feed)
+After=network-online.target n8n-backup.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/restic-n8n-estate-run.sh

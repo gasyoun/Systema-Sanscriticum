@@ -42,5 +42,14 @@
         <!-- Outbound payment-TLS probe: tests must never hit the real acquiring API
              (each test enables it explicitly with Http::fake). -->
         <env name="CABINET_PROBE_CHECK_PAYMENT_TLS" value="false"/>
+        <!-- H5065 knowledge/RAG: набор обязан быть герметичным к локальному .env.
+             FAQ_HYBRID_RETRIEVAL=true у разработчика иначе включал плотную ногу
+             ВНУТРИ тестов: retriever ходил в Ollama по Http и в knowledge_chunks
+             по БД, из-за чего падали тесты, вообще не про RAG (BotKnowledgeBase,
+             SupportDmLlmDrafts). Тесты, которым гибрид нужен, включают его
+             конфигом явно (FaqHybridRetrieverTest, KnowledgeEvalCommandTest). -->
+        <env name="FAQ_HYBRID_RETRIEVAL" value="false"/>
+        <env name="FAQ_RAG_SUGGESTER" value="false"/>
+        <env name="KNOWLEDGE_EMBEDDING_DRIVER" value=""/>
     </php>
 </phpunit>

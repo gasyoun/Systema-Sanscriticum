@@ -296,5 +296,37 @@ class AppServiceProvider extends ServiceProvider
 
             return new LaravelFilesystemAdapter(new Filesystem($adapter, $config), $adapter, $config);
         });
+
+        // Read-only близнец webdav ТОЛЬКО для probe/guards-ноги (0bn, 15-09-2026).
+        // sabre-клиент боевого диска носит PUT-потолок 300 с (п.3 выше), и тот
+        // применялся к ЛЮБОМУ запросу диска — включая propFind-листинг, которым
+        // backup-fresh (cabinet:probe, cache-miss раз в час) меряет off-site.
+        // Стагнация TCP на чтении держала пробу до 300 с, сторож */15 убивал её
+        // на 120 с → класс WATCHDOG TIMEOUT (14-09 ×5 + 15-09 repro; watchdog.log),
+        // каждый тик = нет результата пробы и нет BetterStack heartbeat.
+        // Клиент ниже рвёт ЛЮБОЙ запрос за 45 с: listing читается секунды, а
+        // запись через этот диск запрещена контрактом (имя *_readonly_probe).
+        Storage::extend('webdav_probe', function ($app, array $config) {
+            $client = new Client([
+                'baseUri' => $config['baseUri'],
+                'userName' => $config['username'] ?? null,
+                'password' => $config['password'] ?? null,
+                // AUTH_BASIC — по той же причине, что и в боевой ноге выше.
+                'authType' => Client::AUTH_BASIC,
+            ]);
+            $client->addCurlSetting(CURLOPT_CONNECTTIMEOUT, 10);
+            $client->addCurlSetting(CURLOPT_LOW_SPEED_LIMIT, 1024);
+            $client->addCurlSetting(CURLOPT_LOW_SPEED_TIME, 30);
+            $client->addCurlSetting(CURLOPT_FOLLOWLOCATION, false);
+            // Жёсткий потолок всего запроса: probe-бюджет. Сторож убивает пробу
+            // на 120 с; 45 с здесь рвут застрявшее чтение заведомо раньше и
+            // оставляют пробе время на всё остальное (isReachable ловит
+            // исключение → «диск недостижим» — штатная soft-находка guard'а).
+            $client->addCurlSetting(CURLOPT_TIMEOUT, 45);
+
+            $adapter = new WebDAVAdapter($client, $config['prefix'] ?? '');
+
+            return new LaravelFilesystemAdapter(new Filesystem($adapter, $config), $adapter, $config);
+        });
     }
 }

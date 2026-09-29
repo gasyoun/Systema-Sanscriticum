@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Jobs\SendTelegramChatMessageJob;
+use App\Jobs\SendZapisiBotMessageJob;
 use App\Models\MarketingSetting;
 use App\Models\Schedule;
 use Illuminate\Console\Command;
@@ -12,10 +12,10 @@ use Illuminate\Console\Command;
 /**
  * P0 автоматизации «Отдела заботы»: за N минут до занятия постит ссылку
  * подключения ОДНИМ сообщением в Telegram-чат группы (в отличие от
- * classes:remind-upcoming, который шлёт персональные ЛС каждому студенту).
+ * classes:remind-upcoming, который шлет персональные ЛС каждому студенту).
  *
  * Снимает самый механический класс вопросов из анализа чата (Zoom-ссылка,
- * «где ссылка», часть «когда занятие»). Ничего не шлёт, если:
+ * «где ссылка», часть «когда занятие»). Ничего не шлет, если:
  *  - выключен env-рубильник CLASS_LINK_AUTOPOST (config('features.class_link_autopost'), деплой-уровень);
  *  - выключен флаг class_link_autopost_enabled (MarketingSetting, админка);
  *  - у группы не задан telegram_chat_id;
@@ -40,7 +40,7 @@ class PostClassLinkToGroupChat extends Command
 
         $settings = MarketingSetting::cached();
         if ($settings && ! $settings->class_link_autopost_enabled) {
-            $this->info('Авто-постинг ссылки в чат группы отключён в настройках — пропуск.');
+            $this->info('Авто-постинг ссылки в чат группы отключен в настройках — пропуск.');
 
             return self::SUCCESS;
         }
@@ -71,7 +71,7 @@ class PostClassLinkToGroupChat extends Command
             $group = $schedule->group;
 
             // Нет чата группы — постить некуда; НЕ помечаем как отправленное,
-            // чтобы после заполнения telegram_chat_id ссылка всё же ушла.
+            // чтобы после заполнения telegram_chat_id ссылка все же ушла.
             if ($group === null || empty($group->telegram_chat_id)) {
                 continue;
             }
@@ -91,7 +91,9 @@ class PostClassLinkToGroupChat extends Command
                 continue;
             }
 
-            SendTelegramChatMessageJob::dispatch(
+            // H4846: чат группы — зона @zapisi_ORSbot; основной бот в чатах
+            // обучения не состоит (прод-проба 15-09-2026: 0/33), его пост = 400.
+            SendZapisiBotMessageJob::dispatch(
                 (string) $group->telegram_chat_id,
                 $this->buildText($schedule, $link),
             );
@@ -114,7 +116,7 @@ class PostClassLinkToGroupChat extends Command
         $time = $schedule->start->format('H:i');
 
         return "🔔 <b>Скоро занятие</b>\n\n"
-            ."Намасте! Занятие <b>«{$title}»</b> начнётся сегодня в <b>{$time}</b> (МСК).\n\n"
+            ."Намасте! Занятие <b>«{$title}»</b> начнется сегодня в <b>{$time}</b> (МСК).\n\n"
             ."<a href=\"{$link}\">Подключиться к занятию</a>";
     }
 }

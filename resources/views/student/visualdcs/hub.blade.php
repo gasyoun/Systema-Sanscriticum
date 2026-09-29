@@ -1,23 +1,23 @@
 @extends('layouts.student')
 
-@section('title', 'Тренажёры VisualDCS')
-@section('header', 'Тренажёры VisualDCS')
+@section('title', 'Тренажеры VisualDCS')
+@section('header', 'Тренажеры VisualDCS')
 
 @section('content')
 <div class="max-w-3xl mx-auto px-4 sm:px-6 pb-12">
-    {{-- H2869: фон кабинета кремовый (#F4F1EA) — gray-500 прямо на нём даёт
-         4.2:1 < AA 4.5:1; в белых карточках gray-500 остаётся (4.8:1). --}}
+    {{-- H2869: фон кабинета кремовый (#F4F1EA) — gray-500 прямо на нем дает
+         4.2:1 < AA 4.5:1; в белых карточках gray-500 остается (4.8:1). --}}
     <p class="text-sm text-gray-600 mb-6">
-        Три независимых тренажёра по корпусу DCS: глагол, имя, пассаж.
+        Три независимых тренажера по корпусу DCS: глагол, имя, пассаж.
         @if(($state ?? '') === 'preview' || ($state ?? '') === 'unpaid')
             Сейчас открыт публичный просмотр частотных единиц.
         @elseif(($state ?? '') === 'expired')
-            Полный доступ истёк — доступен только просмотр.
+            Полный доступ истек — доступен только просмотр.
         @endif
     </p>
 
     @if(empty($surfaces))
-        <p class="text-sm text-gray-600">Тренажёры выключены.</p>
+        <p class="text-sm text-gray-600">Тренажеры выключены.</p>
     @else
         <ul class="space-y-3">
             @foreach($surfaces as $surface => $pack)

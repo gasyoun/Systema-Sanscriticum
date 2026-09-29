@@ -157,6 +157,39 @@ class StoriesPublishStoryTest extends TestCase
     }
 
     /** @test */
+    public function tracked_url_in_caption_is_attached_as_a_clickable_story_area(): void
+    {
+        config(['features.telegram_story_stories' => true]);
+
+        $url = 'https://samskrte.ru/ga/m26-rs-st-gita-20260917-01';
+        $this->personaPhotoPost(['payload' => "Чантинг Бхагавадгиты\n{$url}"]);
+
+        $this->artisan('stories:publish-story')->assertSuccessful();
+
+        $area = FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0];
+        self::assertSame('mediaAreaUrl', $area['_']);
+        self::assertSame($url, $area['url']);
+        self::assertSame('mediaAreaCoordinates', $area['coordinates']['_']);
+        self::assertStringContainsString($url, FakeStoriesMadelineProtoClient::$sentStories[0]['caption']);
+        self::assertSame('messageEntityUrl', FakeStoriesMadelineProtoClient::$sentStories[0]['entities'][0]['_']);
+    }
+
+    /** @test */
+    public function manual_test_mode_accepts_an_explicit_clickable_link(): void
+    {
+        config(['features.telegram_story_stories' => true]);
+
+        $url = 'https://samskrte.ru/ga/m26-mg-st-gita-20260917-01';
+        $this->artisan('stories:publish-story --test-photo='.$this->cliPhoto().' --link='.$url)
+            ->assertSuccessful();
+
+        self::assertSame($url, FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['url']);
+        self::assertStringEndsWith($url, FakeStoriesMadelineProtoClient::$sentStories[0]['caption']);
+        self::assertGreaterThan(0, FakeStoriesMadelineProtoClient::$sentStories[0]['entities'][0]['offset']);
+        self::assertSame(55.0, FakeStoriesMadelineProtoClient::$sentStories[0]['media_areas'][0]['coordinates']['y']);
+    }
+
+    /** @test */
     public function channel_lane_rows_are_not_taken_by_the_story_publisher(): void
     {
         config(['features.telegram_story_stories' => true]);

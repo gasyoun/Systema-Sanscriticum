@@ -6,25 +6,44 @@
       data-track-impression="offer.impression" data-track-kind="..."  — показ (1 раз при загрузке).
     Любые data-track-<x> (кроме event/impression) уходят в data[<x>].
 
-    Инлайн-скрипт без Vite сознательно: кабинет ещё не мигрирован на Vite
-    (миграция — в счёте гибрида), а телеметрия должна жить и до неё.
+    Инлайн-скрипт без Vite сознательно: кабинет еще не мигрирован на Vite
+    (миграция — в счете гибрида), а телеметрия должна жить и до нее.
     fetch keepalive — чтобы клик по ссылке с уходом со страницы не терял событие.
-    Никаких сторонних трекеров (R20); только свой эндпоинт student.telemetry.
+    Никаких сторонних трекеров (R20) НАПРЯМУЮ; единственное исключение — мост
+    в Метрику (MG 18-09-2026, docs/METRIKA_GOALS_SHOP_CABINET_2026-09-18.md):
+    события из карты METRIKA_BRIDGE дублируются в reachGoal того же счетчика
+    106964341 (имена: точки → подчеркивания). PII по-прежнему ноль — только
+    имя цели. События без созданной цели (Tier 2) в карту не входят —
+    мусорный reachGoal-трафик не плодим.
 --}}
 <script>
     (function () {
         'use strict';
         // Идемпотентность: layouts/student.blade.php подключает партиал всегда,
-        // а страница могла подключить его ещё раз — два набора слушателей дали бы
-        // ДВОЙНОЙ счёт кликов и импрешенов (H4185). Вешаемся ровно один раз.
+        // а страница могла подключить его еще раз — два набора слушателей дали бы
+        // ДВОЙНОЙ счет кликов и импрешенов (H4185). Вешаемся ровно один раз.
         if (window.__cabinetTelemetryBound) return;
         window.__cabinetTelemetryBound = true;
 
         var URL = @json(route('student.telemetry'));
         var TOKEN = document.querySelector('meta[name="csrf-token"]');
 
+        // Кабинетные цели Метрики Tier 1 (см. config/analytics.php).
+        // zoom.join.click не в CLIENT_CABINET_EVENTS (пишется в
+        // schedule_join_clicks сервером) — до Метрики дублируем только здесь.
+        var METRIKA_BRIDGE = {
+            'library.shelf.view': 'library_shelf_view',
+            'path.station.view': 'path_station_view',
+            'access.renewal.start': 'access_renewal_start',
+            'zoom.join.click': 'zoom_join_click'
+        };
+
         function send(event, data) {
             if (!event || !TOKEN) return;
+            var goal = METRIKA_BRIDGE[event];
+            if (goal && typeof window.shopReachGoal === 'function') {
+                try { window.shopReachGoal(goal); } catch (e) { /* мост не ломает кабинет */ }
+            }
             try {
                 fetch(URL, {
                     method: 'POST',

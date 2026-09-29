@@ -7,6 +7,11 @@
 
   Counter id: config('analytics.metrika.shop_counter_id') default 106964341
   (samskrte.ru). No PII in reachGoal payloads — goal name only.
+
+  MG 18-09-2026 (152-ФЗ): webvisor writes GUESTS ONLY — a logged-in student
+  browsing /k/*, /checkout/* or /online must never be recorded, so init
+  sends webvisor:false for any authenticated session (plan
+  docs/METRIKA_GOALS_SHOP_CABINET_2026-09-18.md §Architecture 3).
 --}}
 @php
     $metrikaEnabled = (bool) config('analytics.metrika.enabled', true);
@@ -24,7 +29,7 @@
         clickmap:true,
         trackLinks:true,
         accurateTrackBounce:true,
-        webvisor:true
+        webvisor: {{ auth()->check() ? 'false' : 'true' }}
    });
 
    window.SHOP_METRIKA_ID = {{ $metrikaId }};

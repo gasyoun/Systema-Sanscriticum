@@ -49,6 +49,9 @@ sbin/systema-admin-roster.sh|/usr/local/sbin/systema-admin-roster.sh|755|critica
 sbin/systema-ib-balance-watch.sh|/usr/local/sbin/systema-ib-balance-watch.sh|755|warning
 expected-dirty.conf|/usr/local/share/systema-guards/expected-dirty.conf|644|critical
 
+# H4929 (16-09-2026) — внешний свидетель .91's deadman_check.py (E002 layer 2).
+sbin/systema-deadman91-watch.sh|/usr/local/sbin/systema-deadman91-watch.sh|755|warning
+
 # MG ruling 13-09-2026 — append-only restic push path: a root compromise of the
 # .92 pusher (which holds the repo password + push key) must not be able to wipe
 # snapshot history on .91. `-P remove,rmdir` denies delete while keeping the

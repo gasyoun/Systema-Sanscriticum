@@ -8,6 +8,11 @@ use App\Models\MicShadowClassification;
 use App\Services\Support\MicShadowClassifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use MessageClassifier\Loader;
+use ReflectionClass;
+use RuntimeException;
+use Symfony\Component\Yaml\Yaml;
 use Tests\TestCase;
 
 /**
@@ -22,6 +27,107 @@ class MicShadowClassifyTest extends TestCase
     private const SAMPLE_MATCH = 'Подскажите, где посмотреть видеозаписи прошлого занятия?';
 
     private const SAMPLE_NULL = 'фывапролджэ йцукенгшщзхъ';
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        self::resetClassifierStatics();
+    }
+
+    protected function tearDown(): void
+    {
+        self::resetClassifierStatics();
+        parent::tearDown();
+    }
+
+    private static function resetClassifierStatics(): void
+    {
+        $reflection = new ReflectionClass(MicShadowClassifier::class);
+        $reflection->setStaticPropertyValue('instance', null);
+        $reflection->setStaticPropertyValue('loadFailed', false);
+    }
+
+    public function test_flag_off_instance_is_null_and_loader_never_runs(): void
+    {
+        Log::spy();
+
+        $this->assertNull(MicShadowClassifier::instance());
+
+        Log::shouldNotHaveReceived('warning');
+    }
+
+    /**
+     * H4847: в проде нет symfony/yaml — классификатор обязан собираться из
+     * JSON-близнецов. Копия пакета БЕЗ единого .yaml: любое обращение к YAML
+     * здесь бы упало.
+     */
+    public function test_loads_from_json_twins_in_a_package_without_any_yaml(): void
+    {
+        $source = base_path('tools/message-intent-classifier');
+        $root = storage_path('framework/testing/mic-json-only-'.getmypid());
+
+        try {
+            File::ensureDirectoryExists($root.'/rules/v1');
+            File::ensureDirectoryExists($root.'/php/MessageClassifier');
+            File::copy($source.'/php/MessageClassifier/Loader.php', $root.'/php/MessageClassifier/Loader.php');
+            foreach (File::glob($source.'/rules/v1/*.json') as $json) {
+                File::copy($json, $root.'/rules/v1/'.basename($json));
+            }
+            $this->assertSame([], File::glob($root.'/rules/v1/*.yaml'));
+
+            $classifier = MicShadowClassifier::fromPackageRoot($root);
+
+            [$winner] = $classifier->classifyPlaneWithNearMiss(
+                'topic',
+                Loader::normalizeText(self::SAMPLE_MATCH),
+            );
+            $this->assertSame('recording_access', $winner['category'] ?? null);
+        } finally {
+            File::deleteDirectory($root);
+        }
+    }
+
+    public function test_package_without_json_twins_fails_loudly(): void
+    {
+        $root = storage_path('framework/testing/mic-empty-'.getmypid());
+
+        try {
+            File::ensureDirectoryExists($root.'/rules/v1');
+
+            $this->expectException(RuntimeException::class);
+            MicShadowClassifier::fromPackageRoot($root);
+        } finally {
+            File::deleteDirectory($root);
+        }
+    }
+
+    /** JSON-близнецы дают ровно тот же порядок правил, что YAML-лоадер. */
+    public function test_json_rule_order_matches_vendored_yaml_loader(): void
+    {
+        if (! class_exists(Yaml::class)) {
+            $this->markTestSkipped('symfony/yaml not installed (no-dev environment) — covered by CI');
+        }
+
+        $root = base_path('tools/message-intent-classifier');
+        $classifier = MicShadowClassifier::fromPackageRoot($root);
+        $yamlLoader = new Loader($root);
+
+        $shape = static fn (array $rules): array => array_map(
+            static fn (array $rule): array => [
+                $rule['category'], $rule['priority'], $rule['patterns'], $rule['negations'], $rule['enabled'],
+            ],
+            $rules,
+        );
+
+        foreach (Loader::PLANES as $plane) {
+            $this->assertNotEmpty($classifier->rulesFor($plane), "plane {$plane} has no rules");
+            $this->assertSame(
+                $shape($yamlLoader->rulesFor($plane)),
+                $shape($classifier->rulesFor($plane)),
+                "plane {$plane}: JSON twin order diverges from YAML loader",
+            );
+        }
+    }
 
     public function test_flag_is_off_by_default(): void
     {

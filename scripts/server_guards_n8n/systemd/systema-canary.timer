@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly restic canary timer (Sundays 03:17 UTC)
+
+[Timer]
+OnCalendar=Sun *-*-* 03:17:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

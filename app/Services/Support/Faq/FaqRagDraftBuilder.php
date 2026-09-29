@@ -38,7 +38,10 @@ final class FaqRagDraftBuilder
             $lines[] = 'Черновик для куратора по разделам FAQ; при необходимости уточните персональные детали из LMS.';
         }
 
-        $best = (float) ($hits[0]['score'] ?? 0.0);
+        // H5065: «BM25 score» здесь читалось как $hit['score'], а при включённой
+        // плотной ноге это RRF-скор (~0.02) — полоса уверенности 0.55–0.92
+        // съезжала в нижнюю границу для любого хита.
+        $best = HybridRetriever::bm25Score($hits[0] ?? []);
         // Soft map BM25 score → 0.55–0.92 confidence band (curator still reviews).
         $confidence = min(0.92, max(0.55, 0.5 + min($best, 8.0) / 20.0));
 
@@ -50,6 +53,9 @@ final class FaqRagDraftBuilder
                 'snippet' => (string) ($hit['snippet'] ?? ''),
                 'source' => (string) ($hit['source'] ?? 'faq.md'),
                 'score' => isset($hit['score']) ? (float) $hit['score'] : null,
+                // Домен порогов — отдельным полем: без него цитата в аудите
+                // неотличима от RRF-скора гибрида.
+                'bm25_score' => isset($hit['bm25_score']) ? (float) $hit['bm25_score'] : null,
             ];
         }, $hits);
 

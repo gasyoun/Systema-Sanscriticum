@@ -44,7 +44,7 @@ final class SmsRuChannel
         $status = $body['sms'][$digits]['status'] ?? null;
 
         if (! $response->successful() || ($body['status'] ?? null) !== 'OK' || $status !== 'OK') {
-            Log::error('SMS.ru send failed', ['phone' => $digits, 'response' => $body]);
+            Log::error('SMS.ru send failed', ['phone' => '***'.substr($digits, -2), 'response' => $body]);
 
             return false;
         }

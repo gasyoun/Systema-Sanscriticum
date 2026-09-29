@@ -10,7 +10,7 @@
 @section('meta_description', $headword.' ('.($primary->cyrillic ?: $primary->iast).'): '.$metaDesc)
 @section('og_title', $headword.' — санскритско-русский словарь')
 @section('canonical', $canonical)
-{{-- Wave 0: всё noindex,follow. Как только index_enabled и слово проходит curated-гейт — index. --}}
+{{-- Wave 0: все noindex,follow. Как только index_enabled и слово проходит curated-гейт — index. --}}
 @section('robots', $indexable ? 'index, follow' : 'noindex, follow')
 
 @push('head')
@@ -75,7 +75,7 @@
         @endforeach
     </div>
 
-    {{-- ═════ Кёльнские словари (CDSL link-out, H3762 wave 1) ═════ --}}
+    {{-- ═════ Кельнские словари (CDSL link-out, H3762 wave 1) ═════ --}}
     @include('partials.slovar-cdsl-links', ['cdslLinks' => $cdslLinks ?? []])
 
     {{-- ═════ Внешние соответствия (sameAs, решение D4 — только при наличии) ═════ --}}

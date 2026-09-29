@@ -1,0 +1,7 @@
+[Unit]
+Description=Weekly restic read-data canary per destination (H3178 c2.5)
+OnFailure=systema-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/systema-backup/weekly_canary.sh

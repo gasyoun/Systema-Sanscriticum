@@ -45,7 +45,10 @@ final class ZapisiSetWebhook extends Command
         $this->info("Регистрируем webhook @zapisi_ORSbot: {$url}");
 
         // Список апдейтов — TelegramWebhooks::ZAPISI_ALLOWED_UPDATES (там же зачем
-        // каждый тип). Меняется список ⇒ после деплоя перезапустить эту команду на
+        // каждый тип): message + channel_post читает ProcessTelegramZapisiUpdate
+        // (группа шлет message, канал — channel_post), my_chat_member (H4314) —
+        // приветственная карточка, callback_query/poll_answer — опросы.
+        // Меняется список ⇒ после деплоя перезапустить эту команду на
         // проде, иначе Telegram продолжит слать по старому.
         $telegram
             ->usingCredentials($token, $username)

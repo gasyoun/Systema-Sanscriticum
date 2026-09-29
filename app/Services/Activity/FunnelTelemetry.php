@@ -94,6 +94,18 @@ final class FunnelTelemetry
         ], $request);
     }
 
+    /**
+     * Read side of the once-per-user check (MG 18-09-2026, Метрика):
+     * контроллер дашборда вызывает её ДО CabinetTelemetry::emit —
+     * «нет события» здесь означает, что ЭТА загрузка и есть первое
+     * действие в кабинете, и странице можно рендерить
+     * data-metrika-goal="first_cabinet_action".
+     */
+    public function hasFirstCabinetAction(User $user): bool
+    {
+        return $this->existsType($user->id, ActivityEvent::FIRST_CABINET_ACTION);
+    }
+
     private function emitOncePerDay(
         User $user,
         string $type,
