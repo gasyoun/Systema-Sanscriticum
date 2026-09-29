@@ -161,6 +161,59 @@ final class PayrollReadinessServiceTest extends TestCase
         $this->assertContains('reconciliation:uncovered_pre_cutoff_revenue', $row['holds']);
     }
 
+    public function test_configured_since_override_brings_teacher_without_payout_history_into_tables(): void
+    {
+        $teacher = Teacher::factory()->create([
+            'name' => 'Гасунс Марцис',
+            'payout_currency' => 'RUB',
+        ]);
+        Teacher::factory()->count(22)->create();
+        $course = Course::factory()->create([
+            'teacher_id' => $teacher->id,
+            'salary_type' => 'percent',
+            'salary_value' => 30,
+        ]);
+        CourseBlock::query()->create([
+            'course_id' => $course->id,
+            'number' => 1,
+            'is_active' => true,
+            'starts_at' => '2026-08-01',
+            'ends_at' => '2026-09-02',
+        ]);
+        Payment::withoutEvents(fn () => Payment::query()->create([
+            'user_id' => User::factory()->create()->id,
+            'course_id' => $course->id,
+            'status' => 'paid',
+            'tariff' => 'block_1',
+            'amount' => 10000,
+            'start_block' => 1,
+            'end_block' => 1,
+            'is_conditional' => false,
+            'received_account' => Payment::RECEIVED_SCHOOL,
+        ]));
+
+        $row = collect(app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'))['teachers'])
+            ->firstWhere('teacher_id', $teacher->id);
+        $this->assertSame('outside_calculator', $row['disposition']);
+
+        config()->set('payroll_readiness.teacher_since_overrides', [$teacher->id => '2026-01-01']);
+
+        $row = collect(app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'))['teachers'])
+            ->firstWhere('teacher_id', $teacher->id);
+        // The fixture name matches the real rate timeline (Гасунс Марцис =
+        // 100% × 92%), so 10,000 × 92% = 9,200 in the window; held by
+        // missing evidence.
+        $this->assertSame('held', $row['disposition']);
+        $this->assertSame(9200.0, $row['payable_rub']);
+        $this->assertNotEmpty($row['calculation']['blocks']);
+
+        config()->set('payroll_readiness.teacher_since_overrides', [$teacher->id => '2026-12-01']);
+
+        $row = collect(app(PayrollReadinessService::class)->build(Carbon::parse('2026-10-01'))['teachers'])
+            ->firstWhere('teacher_id', $teacher->id);
+        $this->assertSame('outside_calculator', $row['disposition']);
+    }
+
     public function test_fixed_seasonal_teacher_has_zero_when_no_block_completed_in_window(): void
     {
         $teacher = Teacher::factory()->create(['name' => 'Щербак Сергей Викторович']);

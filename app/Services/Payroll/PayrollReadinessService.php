@@ -99,6 +99,11 @@ final class PayrollReadinessService
         $bankCutoff = $bankTransfer !== null && filled($bankTransfer['date'] ?? null)
             ? Carbon::parse((string) $bankTransfer['date'])->startOfDay()
             : null;
+        // Teachers never paid through the recorded channels (no payout, no
+        // transfer evidence) have no auto-cutoff. A human-set since-date in
+        // payroll_readiness.teacher_since_overrides brings them into the
+        // tables with an explicit full window instead of outside_calculator.
+        $bankCutoff ??= $this->configuredSinceOverride((int) $teacher->id, $cutoff);
         $calculation = $hasCourses
             ? $this->payouts->runForTeacher($teacher, $cutoff, $bankCutoff)
             : [
@@ -210,6 +215,27 @@ final class PayrollReadinessService
         $row['fingerprint'] = hash('sha256', $this->canonicalJson($row));
 
         return $row;
+    }
+
+    /**
+     * Human-set window start for teachers with no payout/transfer history.
+     * Returns null (fail closed) when unconfigured, unparsable, or dated
+     * after the cutoff.
+     */
+    private function configuredSinceOverride(int $teacherId, Carbon $cutoff): ?Carbon
+    {
+        $overrides = (array) config('payroll_readiness.teacher_since_overrides', []);
+        $raw = $overrides[$teacherId] ?? null;
+        if (! is_string($raw) || trim($raw) === '') {
+            return null;
+        }
+        try {
+            $since = Carbon::parse($raw)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $since->lte($cutoff) ? $since : null;
     }
 
     /**
