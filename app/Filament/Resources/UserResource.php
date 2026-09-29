@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\SplitPaymentBlockBulkAction;
 use App\Filament\Resources\UserResource\Pages;
 use App\Jobs\SendMessengerAlerts;
 use App\Models\Course;
@@ -1544,6 +1545,13 @@ class UserResource extends Resource
                                 ->send();
                         })
                         ->deselectRecordsAfterCompletion(),
+
+                    // --- РАЗБИТЬ ОПЛАТУ БЛОКА МЕЖДУ КУРСАМИ-КОГОРТАМИ ---
+                    // «Перенести в группу» выше меняет только состав группы; когда группа
+                    // распалась посреди блока и студенты доучиваются в ДРУГОМ курсе, оплата
+                    // (она привязана к курсу) должна поехать вместе с ними. Сухой прогон
+                    // всегда, применение — за features.payment_block_half_split.
+                    SplitPaymentBlockBulkAction::make(),
 
                     // --- СЕГМЕНТНАЯ РАССЫЛКА В МЕССЕНДЖЕРЫ ---
                     // Сегмент = выбранные студенты (отфильтрованные фильтрами выше:

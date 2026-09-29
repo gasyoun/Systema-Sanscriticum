@@ -220,6 +220,14 @@ trait SchedulesStudentsAndContent
             ->onOneServer()
             ->name('collect-business-story-metrics');
 
+        // Fill an empty Story day from the oldest held video, or release any
+        // unapproved subtitle draft when its seven-day deadline arrives.
+        $schedule->command('telegram-business:story-subtitles release')
+            ->everyFifteenMinutes()
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('release-business-story-subtitles');
+
         // Автооткрытие приёма ДЗ после проведённого урока (H1764, волна 1).
         // Ежечасный, а не ежедневный: момент открытия посчитан точно, проход
         // лишь доносит его с задержкой не больше часа. Прод-инертна, пока
