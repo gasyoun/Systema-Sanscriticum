@@ -42,6 +42,68 @@
                 голосов — откроется оплата; нужное число оплат к сроку — группа
                 стартует.
             </p>
+
+            {{-- H5475 (MG 24-09-2026): итоги шапки — «ждун» против «уже идут»,
+                 точные ссылки на идущие курсы и разница двух режимов.
+                 MG 24-09-2026 (numbered lists): обе колонки — нумерованные
+                 <ol class="list-decimal"> — слева ждун, справа «уже идут». --}}
+            @php $runningCount = $runningCourses->count(); @endphp
+            <div class="mt-8 max-w-3xl mx-auto text-left rounded-2xl bg-[#111622] border border-[#1F2636] p-5 md:p-6">
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    Два режима: <span class="font-bold text-slate-200">ждун</span> — будущая
+                    группа, которой ещё нет, её старт зависит от голосов и оплат;
+                    <span class="font-bold text-slate-200">уже идут</span> — настоящие группы,
+                    занятия идут по расписанию прямо сейчас.
+                </p>
+                <div class="grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <p class="text-[11px] font-black uppercase tracking-widest text-[#38BDF8] mb-2">Под вопросом (ждун)</p>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            {{ $zhdunCourseCount }} {{ \App\Support\Plural::ru($zhdunCourseCount, 'курс', 'курса', 'курсов') }} · {{ $zhdunTeacherCount }} {{ \App\Support\Plural::ru($zhdunTeacherCount, 'преподаватель', 'преподавателя', 'преподавателей') }} — будущие группы, которых ещё нет:
+                        </p>
+                        @if($zhdunCourses->isNotEmpty())
+                            <ol class="text-sm mt-2 leading-relaxed list-decimal list-inside space-y-1">
+                                @foreach($zhdunCourses as $zhdun)
+                                    <li>
+                                        @if($zhdun['url'])
+                                            <a href="{{ $zhdun['url'] }}"
+                                               class="text-[#38BDF8] hover:text-[#7DD3FC] transition-colors">{{ $zhdun['title'] }}</a>
+                                        @else
+                                            {{ $zhdun['title'] }}
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ol>
+                        @endif
+                        <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                            Дата «не раньше» сдвинется, пока не соберётся кворум: нужное число голосов открывает оплату, нужное число оплат к сроку запускает группу.
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-black uppercase tracking-widest text-emerald-400 mb-2">Уже идут осенью 2026</p>
+                        @if($runningCount === 0)
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                Сейчас по расписанию ничего не идёт — голосуйте за будущие группы ниже.
+                            </p>
+                        @else
+                            <p class="text-sm text-slate-300 leading-relaxed">
+                                {{ $runningCount }} {{ \App\Support\Plural::ru($runningCount, 'курс', 'курса', 'курсов') }} · {{ $runningTeacherCount }} {{ \App\Support\Plural::ru($runningTeacherCount, 'преподаватель', 'преподавателя', 'преподавателей') }} — реальные группы, занятия идут по расписанию:
+                            </p>
+                            <ol class="text-sm mt-2 leading-relaxed list-decimal list-inside space-y-1">
+                                @foreach($runningCourses as $running)
+                                    <li>
+                                        <a href="{{ $running['url'] }}"
+                                           class="text-[#38BDF8] hover:text-[#7DD3FC] transition-colors">{{ $running['title'] }}</a>
+                                    </li>
+                                @endforeach
+                            </ol>
+                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                                Присоединиться можно и позже — записи помогают догнать.
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
         </header>
 
         @if($sections->isEmpty())
@@ -152,8 +214,11 @@
                                             <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">Открыта оплата — свяжитесь с куратором</span>
                                         @endif
                                     @else
-                                        {{-- H4206: пожелание времени — куратор подберет слот по голосам. --}}
+                                        {{-- H4206: пожелание времени — куратор подберет слот по голосам.
+                                             MG 24-09-2026: недельный слот уже известен (пн 18:00, сб 17:00, …)
+                                             — селект «Когда удобно?» не предлагаем, время решено. --}}
                                         <div class="flex items-center gap-2">
+                                            @if(! $item->slot)
                                             <select data-waitlist-pref="{{ $item->slug }}"
                                                     title="Когда вам удобно?"
                                                     class="text-xs font-semibold text-slate-300 bg-[#141A28] border border-[#1F2636] hover:border-brand/50 rounded-lg px-2 py-1.5">
@@ -162,6 +227,7 @@
                                                     <option value="{{ $prefKey }}">{{ $prefLabel }}</option>
                                                 @endforeach
                                             </select>
+                                            @endif
                                             <button type="button"
                                                     data-waitlist-vote="{{ $item->slug }}"
                                                     class="text-xs font-bold text-white bg-brand hover:opacity-90 transition rounded-lg px-3 py-1.5"

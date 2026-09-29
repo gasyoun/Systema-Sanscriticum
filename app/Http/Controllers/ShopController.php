@@ -287,6 +287,7 @@ class ShopController extends Controller
                 CourseWaitlistItem::STATUS_SCHEDULED,
             ])
             ->withCount('votes')
+            ->with('course:id,slug,is_visible')
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
@@ -316,6 +317,43 @@ class ShopController extends Controller
                 : null;
         }
 
+        // H5475 (MG 24-09-2026) — итоги шапки: «ждун» против «уже идут».
+        // Счётчики ждуна — сами строки $items (курсы + уникальные
+        // преподаватели). «Уже идут» — живые видимые live-курсы, чьё
+        // расписание UNDERWAY (CourseCadence::isUnderway: группа началась и
+        // ещё не кончилась) — расписание, а не ручной флаг, источник правды.
+        // Записи («в записи») и будущие наборы сюда не попадают; ссылки —
+        // точные, на карточку каждого идущего курса.
+        $liveCourses = PrivateArchiveEligibility::scopePublic(Course::query())
+            ->where('is_visible', true)
+            ->where('format', 'live')
+            ->whereNull('recording_of_course_id')
+            ->with('teacher:id,name')
+            ->get();
+
+        $cadences = CourseCadence::forMany($liveCourses);
+        $underwayCourses = $liveCourses
+            ->filter(fn (Course $course) => ($cadences[$course->id] ?? null)?->isUnderway() ?? false)
+            ->values();
+
+        $runningCourses = $underwayCourses->map(fn (Course $course) => [
+            'title' => $course->title,
+            'url' => route('shop.course.show', $course->slug),
+        ]);
+
+        // MG 24-09-2026: в шапке обе колонки — нумерованные списки курсов.
+        // Левая (ждун) получает те же 26 строк с точными ссылками, что и карточки
+        // ниже: привязанный видимый курс → страница курса, иначе → поиск каталога.
+        $zhdunCourses = $items
+            ->map(fn (CourseWaitlistItem $item) => [
+                'title' => $item->course_title,
+                'url' => $item->course && $item->course->is_visible
+                    ? route('shop.course.show', $item->course->slug)
+                    : ($item->course_title ? '/online/poisk/'.ShopCatalogUrl::encodeWords($item->course_title) : null),
+            ])
+            ->filter(fn (array $course) => filled($course['title']))
+            ->values();
+
         $page = new LandingPage([
             'title' => 'Список ожидания — набор в новые группы',
             'description' => 'Голосуйте за будущие курсы: наберётся минимум голосов — откроется оплата; нужное число оплат к сроку — группа стартует.',
@@ -343,6 +381,12 @@ class ShopController extends Controller
             // H5134 — отметки моих сердечек: карточка с курсом → «c:{id}`,
             // без карточки курса → «w:{slug}`. Флаг OFF / гость — пусто.
             'favoriteKeys' => CourseFavorite::heartKeysForCurrentViewer(),
+            // H5475 — итоги шапки: сколько строк под вопросом и что УЖЕ идёт.
+            'zhdunCourseCount' => $items->count(),
+            'zhdunTeacherCount' => $items->pluck('teacher_name')->filter()->unique()->count(),
+            'zhdunCourses' => $zhdunCourses,
+            'runningCourses' => $runningCourses,
+            'runningTeacherCount' => $underwayCourses->pluck('teacher.name')->filter()->unique()->count(),
         ]);
     }
 
@@ -518,9 +562,13 @@ class ShopController extends Controller
 
     public function testimonialsLibrary()
     {
-        // Библиотека всех видимых отзывов — страница /otzyvy.
+        // Библиотека всех видимых отзывов — страница /otzyvy (бегущие колонки, как на входе).
+        // Порядок тот же, что на входе: избранные, потом по дате отзыва, без даты — в конце.
         $testimonials = Testimonial::query()
             ->where('is_visible', true)
+            ->orderByDesc('is_featured')
+            ->orderByRaw('reviewed_at IS NULL')
+            ->orderByDesc('reviewed_at')
             ->orderBy('id')
             ->get();
 

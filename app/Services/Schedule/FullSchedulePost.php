@@ -73,14 +73,20 @@ final class FullSchedulePost
      * группы в заголовке только когда групп больше одной. Строки, висящие
      * на course_id без группы потока, идут отдельным постом-фолбэком.
      *
+     * $titleMapper — показное название курса (MG 28-09-2026: единое
+     * оформление /raspisanie, App\Support\ScheduleLabel::displayTitle).
+     * Без него заголовок — сырой title курса (TG-посты, админка, витрина).
+     *
      * @return list<self>
      */
-    public static function forCourse(Course $course): array
+    public static function forCourse(Course $course, ?callable $titleMapper = null): array
     {
         $multi = $course->groups()->count() > 1;
 
         $posts = [];
         $covered = collect();
+
+        $heading = $titleMapper !== null ? (string) $titleMapper($course->title) : $course->title;
 
         foreach ($course->groups as $group) {
             $sessions = Schedule::query()->where('group_id', $group->id)->orderBy('start')->get();
@@ -88,7 +94,7 @@ final class FullSchedulePost
                 continue;
             }
 
-            $post = self::compose($course->title, $sessions, $multi);
+            $post = self::compose($heading, $sessions, $multi);
             if ($post !== null) {
                 $posts[] = $post;
                 $covered = $covered->merge($sessions->pluck('id'));
@@ -103,7 +109,7 @@ final class FullSchedulePost
             ->orderBy('start')
             ->get();
         if ($orphans->isNotEmpty()) {
-            $post = self::compose($course->title, $orphans, false);
+            $post = self::compose($heading, $orphans, false);
             if ($post !== null) {
                 $posts[] = $post;
             }

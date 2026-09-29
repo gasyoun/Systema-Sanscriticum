@@ -464,6 +464,10 @@ return [
     'telegram_business' => [
         'token' => env('TELEGRAM_BUSINESS_BOT_TOKEN', ''),
         'secret' => env('TELEGRAM_BUSINESS_WEBHOOK_SECRET', ''),
+        // Set when this is the same bot as the student cabinet bot. Telegram
+        // permits one webhook per bot, so Business events then share the
+        // existing /api/telegram/webhook endpoint and its secret.
+        'shared_student_webhook' => (bool) env('TELEGRAM_BUSINESS_SHARED_STUDENT_WEBHOOK', false),
         // Имя аккаунта поддержки, под которым живёт полоса в support-таблицах.
         // Отдельное имя — чтобы ответы Business никогда не смешались с личкой
         // userbot-аккаунта rusamskrtam в аналитике и в дренаже ответов.
@@ -476,6 +480,18 @@ return [
         // ждёт человека (тот же контракт, что у MadelineProto-дренажа).
         'pending_delivery_max_attempts' => (int) env('TELEGRAM_BUSINESS_PENDING_MAX_ATTEMPTS', 3),
         'timeout_seconds' => (int) env('TELEGRAM_BUSINESS_TIMEOUT_SECONDS', 15),
+        // Автопубликация Story: новые видео из обоих редакционных каналов.
+        // Имена @username допустимы до тех пор, пока Bot API присылает их в
+        // channel_post; для production надёжнее указать numeric chat id.
+        'story_sources' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+            'TELEGRAM_BUSINESS_STORY_SOURCES', '@samskrte,@samskrtamru',
+        ))))),
+        'story_active_period' => (int) env('TELEGRAM_BUSINESS_STORY_ACTIVE_PERIOD', 86400),
+        'story_caption' => env('TELEGRAM_BUSINESS_STORY_CAPTION', ''),
+        'story_daily_video_cap' => (int) env('TELEGRAM_BUSINESS_STORY_DAILY_VIDEO_CAP', 5),
+        'story_ffmpeg_binary' => env('TELEGRAM_BUSINESS_STORY_FFMPEG_BINARY', 'ffmpeg'),
+        // ASR runs on Ivan/Air; only the already-required final Story transcode runs here.
+        'story_subtitles_enabled' => (bool) env('TELEGRAM_BUSINESS_STORY_SUBTITLES_ENABLED', true),
     ],
 
     'vk' => [

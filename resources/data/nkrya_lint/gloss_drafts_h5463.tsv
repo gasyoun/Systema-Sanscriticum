@@ -1,0 +1,38 @@
+pack	lemma_slp1	surface	locus	upos	morph	gloss_ru_lemma	gloss_ru_surface	source	disposition	note
+hitopadesa-0	adravya	adravye	42	NOUN	Loc Sing Neut	ничтожная вещь	в ничтожной вещи	MW s.v. adravya (a nothing, a worthless thing)	sheet	a-negation of dravya; the «worthless thing» sense, not the medical one
+hitopadesa-0	ahāryatva	ahāryatvād	4	NOUN	Abl Sing Neut	неотъемлемость	от неотъемлемости	MW s.v. ahārya + -tva (state of not being liable to be taken away)	sheet	abstract -tva noun
+hitopadesa-0	ajāgalastana	ajāgalastanasya	26	NOUN	Gen Sing Masc	козий сосок (образ бесполезного)	козьего соска	MW s.v. ajāgalastana (nipple on the neck of a goat; emblem of anything useless)	sheet	proverbial image; the gloss keeps the emblem, a bare «сосок» loses the locus
+hitopadesa-0	anargha	anargha	4	ADJ	Nom Sing Masc	бесценный	бесценный	Apte s.v. anargha (priceless, invaluable)	sheet
+hitopadesa-0	anudyoga	anudyogena	32	NOUN	Ins Sing Masc	бездеятельность	бездеятельностью	MW s.v. anudyoga (absence of exertion or effort; inactivity)	sheet	antonym pair with udyogin at locus 33
+hitopadesa-0	autkārṣya	autkārṣyam	30	NOUN	Acc Sing Neut	превосходство	превосходство	MW s.v. autkarṣya (superiority, pre-eminence) < utkarṣa	sheet	pack carries no gloss_en for this row — sense taken from the lemma alone
+hitopadesa-0	daiva	daivaṃ	30	NOUN	Nom Sing Neut	судьба, рок	судьба	MW s.v. daiva (divine power or will; destiny; fate)	sheet	in-data candidate «божественный» (seeder_deck) REJECTED: adjectival, but the token is a noun meaning fate
+hitopadesa-0	ekaika	ekaikam	11	PRON	Nom Sing Neut	один за другим	один за другим	seeder_deck (in-data candidate, H5399 census)	land	in-data; matches gloss_en «one by one»
+hitopadesa-0	hitopadeśa	hitopadeśo	2	NOUN	Nom Sing Masc	благое наставление	благое наставление	MW s.v. hitopadeśa (friendly advice; salutary instruction)	sheet	also the title of the collection; the appellative sense is the one read at locus 2
+hitopadesa-0	jāragarbha	jāragarbha	39	NOUN	Nom Sing Masc	дитя от любовника	дитя от любовника	MW s.v. jāragarbha (a child by a paramour)	sheet	«незаконнорождённый» is the free equivalent; kept literal
+hitopadesa-0	kathāmukha	kathāmukham	10	NOUN	Acc Sing Neut	зачин рассказа	зачин рассказа	MW s.v. kathāmukha (introduction to a tale)	sheet	the Kathāsaritsāgara book-name sense is not the one here
+hitopadesa-0	kaṭhinī	kaṭhinī	16	NOUN	Nom Sing Fem	мел	мел	MW s.v. kaṭhinī (chalk)	sheet
+hitopadesa-0	kuśūla	kuśūla	21	NOUN	Nom Sing Masc	житница, закром	житница	MW s.v. kuśūla (a granary, store-room for grain)	sheet	pack carries no gloss_en for this row — sense taken from the lemma alone
+hitopadesa-0	kākatālīya	kākatālīya	35	ADJ	Nom Sing Masc	случайное совпадение	случайное совпадение	MW s.v. kākatālīya (after the manner of the crow and the palm-fruit; unexpected)	sheet	nyāya-image; «неожиданный» loses the proverbial force
+hitopadesa-0	maithuna	maithunāni	25	NOUN	Nom Plur Neut	соитие	соития	MW s.v. maithuna (copulation, sexual intercourse)	sheet
+hitopadesa-0	mārakata	mārakatīr	40	ADJ	Acc Plur Fem	изумрудный	изумрудные	MW s.v. mārakata (belonging to an emerald)	sheet
+hitopadesa-0	nirgandha	nirgandhā	38	ADJ	Nom Sing Fem	лишённый запаха	лишённая запаха	MW s.v. nirgandha (void of smell, inodorous)	sheet
+hitopadesa-0	nīcagā	nīcagā	5	NOUN	Nom Sing Fem	река	река	MW s.v. nīcagā (a river, lit. going downward)	sheet	etymological «текущая вниз» dropped — the reading sense is simply «река»
+hitopadesa-0	pauruṣa	pauruṣam	33	NOUN	Acc Sing Neut	мужество	мужество	Apte s.v. pauruṣa (manhood, manliness, manly strength)	sheet
+hitopadesa-0	pañcatantra	pañcatantrāt	9	NOUN	Abl Sing Neut	Панчатантра	из Панчатантры	MW s.v. pañcatantra (name of the collection of fables in 5 books)	sheet	proper name — transliterated, not translated
+hitopadesa-0	pravīṇatā	pravīṇatām	40	NOUN	Acc Sing Fem	искусность	искусность	MW s.v. pravīṇatā (skill, proficiency)	sheet
+hitopadesa-0	pāṭaliputra	pāṭaliputra	10	PROPN	Nom Sing Neut	Паталипутра	Паталипутра	MW s.v. pāṭaliputra (name of a town)	sheet	proper name — transliterated
+hitopadesa-0	samunnati	samunnatim	15	NOUN	Acc Sing Fem	возвышение	возвышение	MW s.v. samunnati (rising, exaltation, high position)	sheet
+hitopadesa-0	sutin	sutinī	16	ADJ	Nom Sing Fem	имеющий сыновей	имеющая сыновей	MW s.v. sutin (having sons)	sheet
+hitopadesa-0	taila	tailāni	32	NOUN	Nom Plur Neut	масло	масла	MW s.v. taila (sesamum oil; oil)	sheet
+hitopadesa-0	ucchedin	ucchedi	10	ADJ	Nom Sing Neut	устраняющий	устраняющий	MW s.v. ucchedin (destroying; resolving doubts)	sheet	at locus 10 the object is doubts — «разрешающий» is the near variant
+hitopadesa-0	udayagiri	udayagireḥ	45	NOUN	Gen Sing Masc	гора восхода	горы восхода	MW s.v. udayagiri (the eastern mountain)	sheet	mythic mountain behind which the sun rises
+hitopadesa-0	udyogin	udyoginaṃ	33	ADJ	Acc Sing Masc	прилежный, энергичный	прилежного	seeder_deck (in-data candidate, H5399 census)	land	in-data; matches gloss_en «active; persevering; energetic»
+hitopadesa-0	unmārga	unmārga	12	NOUN	Nom Sing Masc	ложный путь	ложный путь	MW s.v. unmārga (deviation from the right way; wrong way)	sheet
+hitopadesa-0	vaicitrya	vaicitryaṃ	2	NOUN	Nom Sing Neut	разнообразие	разнообразие	MW s.v. vaicitrya (variety, manifoldness, diversity)	sheet	the «sorrow; despair» sense is not the one at locus 2
+hitopadesa-0	vairin	vairī	37	NOUN	Nom Sing Masc	враг	враг	MW s.v. vairin (an enemy)	sheet
+hitopadesa-0	viśiṣṭatā	viśiṣṭatām	41	NOUN	Acc Sing Fem	отличие, особое достоинство	отличие	MW s.v. viśiṣṭa + -tā (distinction, excellence)	sheet	pack carries no gloss_en for this row; kept distinct from autkārṣya «превосходство» at locus 30
+hitopadesa-0	viṣṇuśarman	viṣṇuśarma	42	PROPN	Nom Sing Masc	Вишнушарман	Вишнушарман	MW s.v. viṣṇuśarman (name of the author of the Pañcatantra)	sheet	proper name — transliterated
+hitopadesa-0	yauvana	yauvanaṃ	11	NOUN	Nom Sing Neut	юность	юность	MW s.v. yauvana (youth, adolescence)	sheet
+hitopadesa-0	ālambin	ālambī	21	ADJ	Nom Sing Masc	опирающийся	опирающийся	MW s.v. ālambin (resting or leaning upon; depending on)	sheet	«свисающий» is the physical variant; locus 21 is the dependence sense
+hitopadesa-0	śaurya	śaurye	17	NOUN	Loc Sing Neut	доблесть	в доблести	MW s.v. śaurya (heroism, valour, prowess)	sheet
+hitopadesa-0	ṛṇakartṛ	ṛṇakartā	22	NOUN	Nom Sing Masc	должник	должник	MW s.v. ṛṇakartṛ (one who contracts a debt; indebted)	sheet
