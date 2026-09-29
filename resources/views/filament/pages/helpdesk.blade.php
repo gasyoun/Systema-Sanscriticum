@@ -319,7 +319,7 @@
             margin-top: 4px;
         }
         /* Статус доставки исходящего в Telegram. До 15-08-2026 куратор видел
-           зелёный тост и больше ничего: зависший ответ выглядел отправленным. */
+           зеленый тост и больше ничего: зависший ответ выглядел отправленным. */
         .msg-delivery {
             display: flex;
             align-items: center;
@@ -369,7 +369,7 @@
             border-radius: 8px;
             font-size: 14px;
             background: #f9fafb;
-            /* Фон поля всегда светлый — фиксируем тёмный текст, иначе в тёмной
+            /* Фон поля всегда светлый — фиксируем темный текст, иначе в темной
                теме Filament наследуется светлый цвет и набор не виден. */
             color: #111827;
             resize: none;
@@ -397,7 +397,7 @@
         }
         .btn-send:hover { background: #ea580c; }
 
-        /* === Тёмная тема: Filament вешает .dark на <html>. Правила чисто
+        /* === Темная тема: Filament вешает .dark на <html>. Правила чисто
            аддитивные — светлую тему не трогают. Инлайновые цвета в разметке
            перебиваем точечно по подстроке атрибута style (+ !important). === */
         .dark .chat-container { background: #16181d; border-color: rgba(255,255,255,.1); }
@@ -463,7 +463,7 @@
                 <span style="background: #f3f4f6; padding: 2px 8px; border-radius: 99px; font-size: 12px;">{{ count($usersWithChats) }}</span>
             </div>
 
-            {{-- Вкладки: Входящие · Мои · Техника · Решённые --}}
+            {{-- Вкладки: Входящие · Мои · Техника · Решенные --}}
             @php $tabCounts = $this->tabCounts; @endphp
             <div class="chat-tabs">
                 @foreach ([
@@ -479,6 +479,15 @@
                         <span class="chat-tab-count">{{ $tabCounts[$tabKey] ?? 0 }}</span>
                     </button>
                 @endforeach
+            </div>
+
+            {{-- Поиск: имя, email, @username или номер Telegram-чата из отчёта --}}
+            <div style="padding: 8px 12px; border-bottom: 1px solid #f3f4f6;">
+                <input type="search"
+                    wire:model.live.debounce.400ms="search"
+                    data-helpdesk-search
+                    placeholder="Имя, email, @username или номер чата"
+                    style="width: 100%; font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(0,0,0,.15);">
             </div>
 
             <div class="chat-list" wire:poll.10s="loadUsersList">
@@ -497,7 +506,7 @@
                     </button>
                 @empty
                     @if(empty($guestThreads))
-                        <div style="text-align: center; color: #9ca3af; padding: 40px 20px;">Нет диалогов</div>
+                        <div style="text-align: center; color: #9ca3af; padding: 40px 20px;">{{ trim((string) $search) !== '' ? 'Ничего не нашлось' : 'Нет диалогов' }}</div>
                     @endif
                 @endforelse
 
@@ -508,7 +517,7 @@
                     @foreach($guestThreads as $g)
                         <button wire:click="selectGuest({{ $g['id'] }})" class="chat-user-item {{ $activeGuestId == $g['id'] ? 'active' : '' }}">
                             @if(($g['source'] ?? 'web') === 'telegram')
-                                <div style="width:40px;height:40px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;" title="Техвопрос из Telegram-чата">TG</div>
+                                <div style="width:40px;height:40px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;" title="Telegram-чат без привязки к кабинету">TG</div>
                             @else
                                 <div style="width:40px;height:40px;border-radius:50%;background:#e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">Г</div>
                             @endif
@@ -520,6 +529,9 @@
                                     @endif
                                 </div>
                                 <div style="font-size: 12px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $g['preview'] ?: (($g['source'] ?? 'web') === 'telegram' ? 'Telegram-чат' : 'Гость сайта') }}</div>
+                                @if(!empty($g['tg_label']))
+                                    <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;" data-tg-label>{{ $g['tg_label'] }}</div>
+                                @endif
                                 @if(!empty($g['is_technical']))
                                     <div style="font-size: 11px; color: #b45309; margin-top: 2px;">🔧 Техника</div>
                                 @endif
@@ -622,7 +634,7 @@
                                 @endif
                                 <button type="button" wire:click="resolveConversation"
                                     style="background: #4b5563; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer;">
-                                    Решён
+                                    Решен
                                 </button>
                             </div>
                         @endif
@@ -674,7 +686,7 @@
                     </div>
                 @endif
 
-                {{-- Баннер: детектор нашёл просьбу «напомните мне» в переписке. Ничего
+                {{-- Баннер: детектор нашел просьбу «напомните мне» в переписке. Ничего
                      не отправлено само — только предложение, куратор подтверждает/правит/
                      отклоняет. Та же логика, что в очереди «Предложения напоминаний». --}}
                 @foreach($this->pendingReminderSuggestions as $suggestion)
@@ -776,7 +788,7 @@
                     @endif
                 @endif
 
-                {{-- D6: куда уйдёт ответ — оператор видит канал до отправки --}}
+                {{-- D6: куда уйдет ответ — оператор видит канал до отправки --}}
                 @php $replyChannel = $this->replyChannel; @endphp
                 <div class="reply-channel">
                     <span>Отвечаю в:</span>
@@ -835,7 +847,7 @@
                             <div style="font-weight: bold; font-size: 16px; color: #111827;">{{ $guestThread?->displayName() ?? 'Гость' }}</div>
                             <div style="font-size: 12px; margin-top: 2px; color: #6b7280;">
                                 @if($isTelegramThread)
-                                    Не привязан к аккаунту · ответ уйдёт в Telegram-чат@if($guestThread?->isTechnical()) · 🔧 Техника @endif
+                                    Не привязан к аккаунту · ответ уйдет в Telegram-чат@if($guestThread?->isTechnical()) · 🔧 Техника @endif
                                 @else
                                     Аноним · веб-чат сайта@if($guestThread?->locationLabel()) · 📍 {{ $guestThread->locationLabel() }}@endif
                                 @endif

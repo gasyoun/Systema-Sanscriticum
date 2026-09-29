@@ -34,7 +34,7 @@
             <a class="buy" href="{{ $offer['checkout_urls'][$sourceSite] }}">Выбрать →</a>
         </article>
     @empty
-        <p>Подтверждённые предложения пока не опубликованы.</p>
+        <p>Подтвержденные предложения пока не опубликованы.</p>
     @endforelse
     <footer>Systema feed {{ $feed['version'] }} · коммерческие поля синхронны с samskrtam.ru</footer>
 </main></body></html>

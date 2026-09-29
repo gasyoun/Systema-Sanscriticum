@@ -545,6 +545,68 @@ class CabinetProbeTest extends TestCase
         Http::assertSent(fn ($r) => str_contains($r->url(), 'sendMessage'));
     }
 
+    /**
+     * H4845 acceptance: убитый туннель = ровно одна именованная soft-тревога,
+     * живой туннель её снимает, повторная смерть — снова одна тревога.
+     */
+    public function test_dead_ollama_tunnel_alerts_once_and_restored_tunnel_clears(): void
+    {
+        $this->seedManager();
+        config([
+            'cabinet_probe.ping_url' => '',
+            'cabinet_probe.check_payment_tls' => false,
+            'cabinet_probe.check_schedule_links' => false,
+            'cabinet_probe.telegram_chat_id' => '999001',
+            'cabinet_probe.telegram_soft_reminder_hours' => 24,
+            'cabinet_probe.ollama_tunnel_pause_seconds' => 0,
+            'services.telegram.bot_token' => 'test-bot-token',
+            'knowledge.driver' => 'ollama',
+            'knowledge.base_url' => 'http://127.0.0.1:11434',
+            'knowledge.tunnel_hours' => '',
+            'features.faq_hybrid_retrieval' => true,
+            'features.bot_ollama_shadow' => true,
+        ]);
+        // Http::fake копит стабы (первый совпавший побеждает) — состояние
+        // туннеля переключаем переменной, а не повторным fake().
+        $tunnel = 'refused';
+        Http::fake([
+            'http://127.0.0.1:11434/api/tags' => function () use (&$tunnel) {
+                return match ($tunnel) {
+                    'refused' => Http::failedConnection('cURL error 7: Failed to connect to 127.0.0.1 port 11434 after 0 ms: Could not connect to server'),
+                    'timeout' => Http::failedConnection('cURL error 28: Operation timed out after 5001 milliseconds'),
+                    default => Http::response(['models' => []], 200),
+                };
+            },
+            'https://api.telegram.org/*' => Http::response(['ok' => true, 'result' => []], 200),
+        ]);
+        $tunnelAlerts = fn () => count(Http::recorded(fn ($r) => str_contains($r->url(), 'sendMessage')
+            && str_contains((string) ($r['text'] ?? ''), 'ollama-tunnel:')));
+        $probe = function () use ($tunnelAlerts): int {
+            $before = $tunnelAlerts();
+            Artisan::call('cabinet:probe');
+
+            return $tunnelAlerts() - $before;
+        };
+
+        $this->assertSame(1, $probe());
+        $this->assertStringContainsString('[soft] ollama-tunnel:', Artisan::output());
+        Http::assertSent(fn ($r) => str_contains((string) ($r['text'] ?? ''), '(ollama-туннель)'));
+
+        // Всё ещё мёртв, теперь таймаутом — тот же класс, без спама.
+        $tunnel = 'timeout';
+        $this->assertSame(0, $probe());
+
+        // Туннель поднят — находки нет, sticky-state снят.
+        $tunnel = 'up';
+        $this->assertSame(0, $probe());
+        $this->assertStringNotContainsString('ollama-tunnel', Artisan::output());
+        $this->assertNull(app(CabinetProbeAlertState::class)->getString(CabinetProbeAlertState::LAST_SOFT_FP));
+
+        // Умер снова — снова ровно одна тревога.
+        $tunnel = 'refused';
+        $this->assertSame(1, $probe());
+    }
+
     public function test_soft_reminder_zero_means_once_until_green(): void
     {
         $this->seedManager();

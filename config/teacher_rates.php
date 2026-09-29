@@ -22,6 +22,16 @@ return [
     ],
 
     'recipients' => [
+        'gasuns' => [
+            'name' => 'Гасунс Марцис',
+            'aliases' => ['Гасунс', 'Марцис'],
+            'channel' => 'retained_tochka_net',
+            'lane' => 'RUB',
+            'rate_periods' => [
+                ['kind' => 'percent', 'value_pct' => 100.0, 'bank_slice_pct' => 92.0, 'from' => '2026-01-01', 'to' => null],
+            ],
+            'direct_deductions' => [],
+        ],
         'leytan' => [
             'name' => 'Лейтан Эдгар',
             'aliases' => ['Лейтан', 'Эдгар'],

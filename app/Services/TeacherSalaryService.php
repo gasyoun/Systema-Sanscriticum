@@ -391,6 +391,60 @@ class TeacherSalaryService
     }
 
     /**
+     * H5007 (audit H7): ручная выплата со страницы «Зарплаты» — создание
+     * TeacherPayout, проводка в «Финансах» и FIFO-зачёт авансов НЕ БОЛЬШЕ суммы
+     * выплаты, всё в одной транзакции. Раньше страница гасила все авансы целиком
+     * (без cap по amount) и делала три шага вне транзакции.
+     *
+     * @param  array{amount: float, paid_at: mixed, period_month?: ?string, course_id?: ?int, salary_type?: ?string, salary_value?: mixed, comment?: ?string}  $attributes
+     * @return array{payout: TeacherPayout, settled: array{total: float, lines: list<array{payout_id:int, applied:float, remaining_after:float}>}}
+     */
+    public function recordManualPayout(
+        Teacher $teacher,
+        array $attributes,
+        bool $postToFinance = true,
+        bool $settleAdvances = false,
+        ?int $settledBy = null,
+    ): array {
+        return DB::transaction(function () use ($teacher, $attributes, $postToFinance, $settleAdvances, $settledBy): array {
+            $payout = $teacher->payouts()->create([
+                'amount' => Money::round((float) $attributes['amount']),
+                'type' => TeacherPayout::TYPE_REGULAR,
+                'paid_at' => $attributes['paid_at'],
+                'period_month' => $attributes['period_month'] ?? null,
+                'course_id' => $attributes['course_id'] ?? null,
+                'salary_type' => $attributes['salary_type'] ?? null,
+                'salary_value' => $attributes['salary_value'] ?? null,
+                'comment' => $attributes['comment'] ?? null,
+            ]);
+
+            if ($postToFinance) {
+                app(TeacherPayoutPoster::class)->post($payout);
+            }
+
+            $settled = ['total' => 0.0, 'lines' => []];
+            if ($settleAdvances && config('features.payment_fix_wave1')) {
+                $settled = $this->settleAdvancesForBlockPayout($teacher, (float) $payout->amount, $settledBy);
+            } elseif ($settleAdvances) {
+                // Флаг OFF: прежнее поведение страницы — все непогашенные авансы
+                // гасятся целиком (без cap по сумме), но уже внутри транзакции.
+                foreach ($teacher->payouts()->unsettledAdvances()->lockForUpdate()->get() as $advance) {
+                    $applied = Money::round((float) $advance->amount - (float) $advance->settled_amount);
+                    $advance->update([
+                        'settled_amount' => $advance->amount,
+                        'settled_at' => now(),
+                        'settled_by' => $settledBy,
+                    ]);
+                    $settled['total'] = Money::round($settled['total'] + $applied);
+                    $settled['lines'][] = ['payout_id' => (int) $advance->id, 'applied' => $applied, 'remaining_after' => 0.0];
+                }
+            }
+
+            return ['payout' => $payout, 'settled' => $settled];
+        });
+    }
+
+    /**
      * Зачесть авансы FIFO на сумму не больше $limit и вернуть audit-снимок.
      *
      * @return array{total: float, lines: list<array{payout_id:int, applied:float, remaining_after:float}>}
@@ -618,9 +672,12 @@ class TeacherSalaryService
             ->where('course_id', $courseId)
             ->paid()
             ->real()
-            ->schoolReceived() // прямые платежи преподавателю — не выручка блока
             ->whereNotIn('tariff', self::NON_REVENUE_TARIFFS)
             ->where('amount', '>', 0);
+
+        if (! config('features.teacher_direct_receipt_revenue_parity')) {
+            $query->schoolReceived();
+        }
 
         if ($groupId !== null) {
             $query->whereIn('user_id', function ($q) use ($groupId) {
@@ -677,6 +734,14 @@ class TeacherSalaryService
             foreach ($returnQuery->get() as $p) {
                 $covered = $this->coveredBlockNumbers($p, $blockNumbers);
                 if (empty($covered) || ! in_array($blockNumber, $covered, true)) {
+                    continue;
+                }
+                // H5442 (P0, D11): возврат удерживается из зарплаты ЕДИНОЖДЫ.
+                // Выплата блока пишет строки возвратов в breakdown.payments —
+                // paidShareKeys их видит. Раньше дедуп был только для
+                // положительных долей, и каждый перерасчёт блока вычитал ту же
+                // возвратную строку повторно (audit MEDIUM #12).
+                if (config('features.payment_fix_wave1') && isset($paid[$courseId.':'.$blockNumber.':'.$p->id])) {
                     continue;
                 }
                 $amount = (float) $p->amount; // отрицательная
@@ -903,10 +968,10 @@ class TeacherSalaryService
 
         $payments = $this->coursePayments($course->id);
 
-        // Прямые платежи на личный счёт преподавателя НЕ образуют выручку курса:
-        // деньги не прошли через кассу школы, а зачитываются в гонорар по номиналу
-        // (directReceiptsForTeacher). Иначе — двойной счёт: препод и держит сумму,
-        // и получил бы свой процент сверху. См. docs/direct-teacher-receipts.md.
+        // При флаге H5532 прямые поступления считаются выручкой курса наравне со
+        // школьными: преподавателю начисляется обычный процент, затем уже
+        // удерживаемый им номинал вычитается отдельным directOffset. Это не
+        // двойной счёт, а согласованная формула «процент, затем зачёт наличия».
         $real = $payments->filter(fn (Payment $p) => $this->isCourseRevenuePayment($p));
         $returns = $payments->filter(fn (Payment $p) => $this->isReturnPayment($p));
 
@@ -1110,16 +1175,19 @@ class TeacherSalaryService
 
     /**
      * Платёж образует ВЫРУЧКУ КУРСА: не возврат/зеркало выплаты, положительная
-     * сумма и получен кассой школы. Прямые платежи на личный счёт преподавателя
-     * (RECEIVED_TEACHER) выручкой не считаются — они зачитываются в гонорар по
-     * номиналу (directReceiptsForTeacher), иначе двойной счёт. Единый предикат
+     * сумма. Пока флаг H5532 выключен, действует прежний school-only фильтр.
+     * При включении прямые поступления входят в выручку курса, а уже удержанный
+     * номинал вычитается позже через directReceiptsForTeacher. Единый предикат
      * для computeCourseRevenue и availablePriorBlockPayments.
      */
     private function isCourseRevenuePayment(Payment $payment): bool
     {
         return ! in_array($payment->tariff, self::NON_REVENUE_TARIFFS, true)
             && (float) $payment->amount > 0
-            && $payment->received_account !== Payment::RECEIVED_TEACHER;
+            && (
+                $payment->received_account !== Payment::RECEIVED_TEACHER
+                || (bool) config('features.teacher_direct_receipt_revenue_parity')
+            );
     }
 
     /**

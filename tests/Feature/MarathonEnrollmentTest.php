@@ -9,11 +9,13 @@ use App\Models\Lead;
 use App\Models\MarathonEnrollment;
 use App\Models\MarketingSetting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\WithStaffedIntroSession;
 use Tests\TestCase;
 
 class MarathonEnrollmentTest extends TestCase
 {
     use RefreshDatabase;
+    use WithStaffedIntroSession;
 
     protected function setUp(): void
     {
@@ -66,6 +68,7 @@ class MarathonEnrollmentTest extends TestCase
     public function test_registration_paid_track_persists(): void
     {
         $this->landing();
+        $this->confirmIntroSession();
 
         $this->post(route('marathon.register'), [
             'name' => 'Борис',

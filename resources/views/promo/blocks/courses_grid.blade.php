@@ -63,7 +63,7 @@
     
     {{-- Плашка (Бейдж) - ТЕПЕРЬ СНАРУЖИ БЛОКА С overflow-hidden --}}
     @if($landing->storefrontBadge())
-        {{-- -left-4 вытаскивает её на 16px влево, -left-5 вытащит на 20px --}}
+        {{-- -left-4 вытаскивает ее на 16px влево, -left-5 вытащит на 20px --}}
         <span class="absolute top-6 -left-3 z-30 bg-brand text-white text-[9px] sm:text-[10px] font-extrabold uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-[0_4px_12px_rgba(232,92,36,0.4)]">
             {{ $landing->storefrontBadge() }}
         </span>

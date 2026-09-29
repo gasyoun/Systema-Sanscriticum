@@ -139,7 +139,7 @@ class SupportLlmShadowDigestTest extends TestCase
 
         \Artisan::call('support:llm-live-enable');
         $out = \Artisan::output();
-        $this->assertStringContainsString('ВКЛЮЧЁН', $out, 'команда должна включить живой режим: '.$out);
+        $this->assertStringContainsString('ВКЛЮЧЕН', $out, 'команда должна включить живой режим: '.$out);
 
         $stamp = MarketingSetting::query()->first()?->support_llm_live_enabled_at;
         $this->assertNotNull($stamp, 'штамп живого включения должен быть записан');
@@ -160,7 +160,7 @@ class SupportLlmShadowDigestTest extends TestCase
 
         $this->artisan('support:llm-live-enable')->assertExitCode(0);
         $this->artisan('support:llm-live-enable')
-            ->expectsOutputToContain('уже включён')
+            ->expectsOutputToContain('уже включен')
             ->assertExitCode(0);
 
         $this->assertSame(1, SupportAiReplyEvent::query()->where('event_type', 'dm_llm_live_enabled')->count());

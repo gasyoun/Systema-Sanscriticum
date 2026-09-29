@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  *  2. payment_open + нужное число ОПЛАТ (block payments, paid) к плановой
  *     дате → scheduled: создаются Schedule-потоки не раньше earliest_start_at.
  *
- *  3. Дедлайн (за 7 дней до планового старта) прошёл, оплат < min_payers →
+ *  3. Дедлайн (за 7 дней до планового старта) прошел, оплат < min_payers →
  *     перенос по лестнице: попытка «до конца октября» → январь (grammar) /
  *     март (other); январь/март не начались → июль; июль не начался →
  *     сентябрь следующего года. Цикл 4 попытки из года в год, максимум
@@ -75,7 +75,7 @@ class WaitlistProcessCommand extends Command
                 continue;
             }
 
-            // Лестница переносов: дедлайн = planned_start - 7 дней прошёл.
+            // Лестница переносов: дедлайн = planned_start - 7 дней прошел.
             $deadline = $this->paymentDeadline($item);
             if ($item->status === CourseWaitlistItem::STATUS_PAYMENT_OPEN
                 && $deadline !== null

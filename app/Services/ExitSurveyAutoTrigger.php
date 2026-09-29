@@ -144,7 +144,7 @@ class ExitSurveyAutoTrigger
      */
     public function draftFor(User $user): string
     {
-        $name = trim((string) ($user->name ?? ''));
+        $name = trim((string) ($user->name ?? '')) !== '' ? $user->greetingName('') : '';
         $greeting = $name !== '' ? 'Здравствуйте, '.$name.'!' : 'Здравствуйте!';
 
         return $greeting.' Вы писали нам про курсы санскрита — спасибо, что написали тогда. '

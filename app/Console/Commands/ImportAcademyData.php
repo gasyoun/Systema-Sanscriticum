@@ -26,7 +26,7 @@ class ImportAcademyData extends Command
     /**
      * Статусы обучения в course_user, которые менеджер выставляет вручную и
      * которые повторный импорт ни в коем случае не должен сбрасывать обратно
-     * в «Записался»: иначе студент снова попадёт в «должники».
+     * в «Записался»: иначе студент снова попадет в «должники».
      */
     private const TERMINAL_STATUSES = ['Покинул', 'Исключен', 'Льготник', 'Выпускник'];
 
@@ -199,7 +199,7 @@ class ImportAcademyData extends Command
                 if (! $userId) {
                     if ($dryRun) {
                         // В предпросмотре не плодим технические записи. Если расход без сопоставления,
-                        // отметим его как «ушёл бы в системные» через виртуальный id = 0.
+                        // отметим его как «ушел бы в системные» через виртуальный id = 0.
                         $userId = 0;
                     } else {
                         $sysUser = User::firstOrCreate(
@@ -441,8 +441,8 @@ class ImportAcademyData extends Command
         $this->info("✅ Положительных оплат к импорту: {$countPayments}");
         $this->info("📉 Расходов / возвратов к импорту: {$countExpenses}");
         $this->info("🛡 Пропущено как дубликаты (уже есть в БД): {$countSkipDuplicate}");
-        $this->info("🛡 Сохранён существующий терминальный статус: {$countStatusProtected}");
-        $this->info("🛡 Сохранён существующий note (CSV не затёр пустым): {$countNoteProtected}");
+        $this->info("🛡 Сохранен существующий терминальный статус: {$countStatusProtected}");
+        $this->info("🛡 Сохранен существующий note (CSV не затер пустым): {$countNoteProtected}");
         if ($countSkips > 0) {
             $this->warn("⚠️ Пропущено строк из-за несовпадений ФИО/Курса: {$countSkips}");
             $this->warn("  (Обычно это оплаты за курсы или консультации, которых нет в таблице 'Курсы')");
@@ -587,7 +587,7 @@ class ImportAcademyData extends Command
             $this->info("🔗 Обновлено существующих студентов по email при отличающемся ФИО: {$countEmailMatched}");
         }
         if ($countEmailConflicts > 0) {
-            $this->warn("⚠️ Конфликтов ФИО/email, где сохранён старый email записи по ФИО: {$countEmailConflicts}");
+            $this->warn("⚠️ Конфликтов ФИО/email, где сохранен старый email записи по ФИО: {$countEmailConflicts}");
         }
         if ($countUnsafeEmailMatches > 0) {
             $this->warn("⚠️ Email уже был у другого ФИО без совпадения телефона/Telegram; создан отдельный профиль с placeholder email: {$countUnsafeEmailMatches}");

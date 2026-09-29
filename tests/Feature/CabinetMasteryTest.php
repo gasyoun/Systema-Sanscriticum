@@ -136,7 +136,7 @@ class CabinetMasteryTest extends TestCase
         $this->actingAs($student)
             ->post(route('student.cabinet-mastery.submit'), ['answers' => $answers])
             ->assertOk()
-            ->assertSee('зачёт', false);
+            ->assertSee('зачет', false);
 
         $row = CabinetMasteryAttempt::query()->where('user_id', $student->id)->first();
         $this->assertNotNull($row);

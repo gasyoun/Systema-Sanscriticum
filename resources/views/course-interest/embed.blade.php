@@ -31,7 +31,7 @@
 </head>
 <body>
     <h1>{{ $courseTitle !== '' ? '«'.$courseTitle.'»' : 'Интерес к курсу' }}</h1>
-    <p class="lead">Оставьте заявку — куратор напишет вам, когда соберётся группа или откроется набор.</p>
+    <p class="lead">Оставьте заявку — куратор напишет вам, когда соберется группа или откроется набор.</p>
 
     @if (session('course_interest_status'))
         <div class="flash-ok">{{ session('course_interest_status') }}</div>
@@ -51,10 +51,14 @@
 
         <fieldset>
             <legend>Что вы хотите?</legend>
+            @php
+                // H5233: префилл из query — как в полной форме.
+                $ciIntent = old('intent', $intentPrefill ?? \App\Models\CourseInterestRequest::INTENT_JOIN);
+            @endphp
             @foreach ($intentLabels as $intentValue => $intentLabel)
                 <label class="opt">
                     <input type="radio" name="intent" value="{{ $intentValue }}" required
-                           @checked(old('intent', \App\Models\CourseInterestRequest::INTENT_JOIN) === $intentValue)>
+                           @checked($ciIntent === $intentValue)>
                     <span>{{ $intentLabel }}</span>
                 </label>
             @endforeach

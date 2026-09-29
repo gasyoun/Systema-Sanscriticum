@@ -49,7 +49,7 @@
         @if($deck)
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-extrabold text-gray-900">{{ $deck->name }}</h2>
-                <button type="button" wire:click="deleteDeck" wire:confirm="Удалить колоду и все её карточки?"
+                <button type="button" wire:click="deleteDeck" wire:confirm="Удалить колоду и все ее карточки?"
                         class="text-sm font-bold text-red-600 hover:text-red-700">
                     Удалить колоду
                 </button>

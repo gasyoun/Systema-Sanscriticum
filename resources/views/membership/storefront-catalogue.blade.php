@@ -28,7 +28,7 @@
                 <a href="{{ $offer['checkout_urls'][$sourceSite] }}">Открыть предложение</a>
             </article>
         @empty
-            <p>Подтверждённые предложения пока не опубликованы.</p>
+            <p>Подтвержденные предложения пока не опубликованы.</p>
         @endforelse
     </section>
 </main></body></html>

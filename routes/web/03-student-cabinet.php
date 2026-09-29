@@ -26,9 +26,11 @@ use App\Http\Controllers\Student\HindiProgrammePlaylistController;
 use App\Http\Controllers\Student\HindiTgCuratedPracticeController;
 use App\Http\Controllers\Student\HindiTranscriptDrillsController;
 use App\Http\Controllers\Student\LessonPackController;
+use App\Http\Controllers\Student\TestimonialSubmissionController;
 use App\Http\Controllers\StudentAgentController;
 use App\Http\Controllers\StudentCabinetGuideController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeachingGlossaryController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\TimezoneController;
 use App\Http\Controllers\VisualDcsController;
@@ -66,8 +68,24 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     Route::post('/dvaram/proverka', [CabinetMasteryController::class, 'submit'])
         ->name('student.cabinet-mastery.submit');
 
+    // Студент сам оставляет отзыв → модерация → пул (вход, /otzyvy).
+    // Контроллер 404 при features.student_testimonials OFF.
+    Route::get('/dvaram/otzyv', [TestimonialSubmissionController::class, 'create'])
+        ->name('student.testimonial.create');
+    Route::post('/dvaram/otzyv', [TestimonialSubmissionController::class, 'store'])
+        ->middleware('throttle:5,60')
+        ->name('student.testimonial.store');
+
     Route::get('/dvaram/help', [StudentCabinetGuideController::class, 'show'])
         ->name('student.help');
+
+    // H4832 — поверхность тира Top (5 000 ₽/мес): преподавательский глоссарий.
+    // Двухключевой гейт в контроллере: features.teaching_glossary (OFF → 404)
+    // и ClubEntitlement::allows(user, 'teaching_glossary') (тип `top` в
+    // config/membership.php). Данные кладёт teaching-glossary:import.
+    Route::get('/dvaram/teaching-glossary', [TeachingGlossaryController::class, 'index'])
+        ->middleware('auth')
+        ->name('cabinet.teaching-glossary');
 
     // Bounded student agent (H3231): homework hint / dictionary lookup /
     // cabinet FAQ only, no free chat. 404 while features.student_agent OFF.

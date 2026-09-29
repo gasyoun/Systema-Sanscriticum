@@ -9,6 +9,7 @@ use App\Models\LandingPage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
+use Tests\Concerns\WithStaffedIntroSession;
 use Tests\TestCase;
 
 /**
@@ -23,6 +24,7 @@ use Tests\TestCase;
 class MarathonKonsultaciyaScrollyTest extends TestCase
 {
     use RefreshDatabase;
+    use WithStaffedIntroSession;
 
     private const BLOCK_ID = 'scrolly-konsultaciya';
 
@@ -30,6 +32,7 @@ class MarathonKonsultaciyaScrollyTest extends TestCase
     {
         parent::setUp();
         Queue::fake();
+        $this->confirmIntroSession();
 
         LandingPage::create([
             'title' => 'Консультация по онлайн-курсам ОРС',

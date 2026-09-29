@@ -14,14 +14,14 @@ use Illuminate\Console\Command;
 
 /**
  * Уведомление студентам, пропустившим занятие (опт-ин). Через N минут после конца
- * занятия берёт ожидаемых − пришедших (по ClassAttendanceService) и шлёт TG/VK.
+ * занятия берет ожидаемых − пришедших (по ClassAttendanceService) и шлет TG/VK.
  * Дедуп — schedules.absent_notified_at (сбрасывается при переносе занятия).
  */
 class NotifyAbsentStudents extends Command
 {
     protected $signature = 'classes:notify-absent {--minutes= : Задержка после конца занятия (по умолчанию из настроек)}';
 
-    protected $description = 'Шлёт студентам, пропустившим занятие, напоминание в TG/VK (один раз на событие).';
+    protected $description = 'Шлет студентам, пропустившим занятие, напоминание в TG/VK (один раз на событие).';
 
     public function handle(ClassAttendanceService $attendance): int
     {
@@ -37,7 +37,7 @@ class NotifyAbsentStudents extends Command
             : (int) ($settings->absent_notify_delay_minutes ?? 30);
         $delay = max(0, $delay);
 
-        // Кандидаты: занятия за последние сутки, ещё не уведомлявшиеся, с аудиторией.
+        // Кандидаты: занятия за последние сутки, еще не уведомлявшиеся, с аудиторией.
         $schedules = Schedule::query()
             ->whereNull('absent_notified_at')
             ->whereNotNull('start')
@@ -57,7 +57,7 @@ class NotifyAbsentStudents extends Command
             }
 
             // H2317: кто заранее написал «не смогу» — не пингуем «скучали»:
-            // предупреждение уже принято, запись всё равно в кабинете.
+            // предупреждение уже принято, запись все равно в кабинете.
             $preNotifiedAbsentIds = ScheduleAttendanceNotice::query()
                 ->where('schedule_id', $schedule->id)
                 ->where('status', ScheduleAttendanceNotice::STATUS_ABSENT)
@@ -91,6 +91,6 @@ class NotifyAbsentStudents extends Command
 
         return "🙏 <b>Скучали по вам на занятии</b>\n\n"
             ."Похоже, вы пропустили <b>«{$title}»</b>. Запись появится в личном кабинете — "
-            .'не теряйте темп, мы вас ждём на следующем!';
+            .'не теряйте темп, мы вас ждем на следующем!';
     }
 }
