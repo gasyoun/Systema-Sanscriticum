@@ -14,13 +14,13 @@ use Illuminate\Console\Command;
  * и что изменится, если включить сторож штампованного прогона.
  *
  * Команда СТРОГО ЧИТАЮЩАЯ. Она ничего не пишет ни в `payments`, ни в
- * `teacher_payouts`, ни в `salary_recognition_month`: её продукт — число, по
+ * `teacher_payouts`, ни в `salary_recognition_month`: ее продукт — число, по
  * которому решает человек, а не проводка.
  *
  * Три секции:
  *   1. перепись механизмов по всей популяции платежей (column / blocks /
  *      created / stamped) — сколько строк и на какую сумму признано каждым;
- *   2. поимённо строки, у которых НАБОР МЕСЯЦЕВ меняется при включённом флаге,
+ *   2. поименно строки, у которых НАБОР МЕСЯЦЕВ меняется при включенном флаге,
  *      с курсом, преподавателем и месяцами «было → стало»;
  *   3. ЗП по преподавателям за затронутые месяцы: до и после, с дельтой.
  *
@@ -32,10 +32,10 @@ class AuditRecognitionAttribution extends Command
 {
     protected $signature = 'recognition:attribution-audit
         {--months= : Ограничить секцию 3 месяцами (Y-m через запятую); по умолчанию — все затронутые}
-        {--limit=50 : Сколько изменившихся строк печатать поимённо}
+        {--limit=50 : Сколько изменившихся строк печатать поименно}
         {--json : Выдать машинный JSON вместо таблиц}';
 
-    protected $description = 'H3951: чем признан каждый платёж и что изменит сторож штампованного прогона (только чтение)';
+    protected $description = 'H3951: чем признан каждый платеж и что изменит сторож штампованного прогона (только чтение)';
 
     private const FLAG = 'revenue.recognition_stamped_block_run_guard';
 
@@ -228,7 +228,7 @@ class AuditRecognitionAttribution extends Command
             ], array_slice($changed, 0, $limit)),
         );
         if (count($changed) > $limit) {
-            $this->line('  … и ещё '.(count($changed) - $limit).' строк (см. --limit / --json)');
+            $this->line('  … и еще '.(count($changed) - $limit).' строк (см. --limit / --json)');
         }
         $this->newLine();
     }

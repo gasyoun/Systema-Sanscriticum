@@ -11,7 +11,7 @@ class DetectPaymentPromiseDeferrals extends Command
 {
     protected $signature = 'promises:detect-deferrals';
 
-    protected $description = 'Найти в переписке (веб-чат + TG-support) просьбы об отсрочке оплаты и завести PaymentPromiseSuggestion для куратора. Не создаёт PaymentPromise само.';
+    protected $description = 'Найти в переписке (веб-чат + TG-support) просьбы об отсрочке оплаты и завести PaymentPromiseSuggestion для куратора. Не создает PaymentPromise само.';
 
     public function handle(PaymentPromiseDeferralDetector $detector): int
     {

@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\File;
  * `galex_patch.php`) прошли мимо всех HTTP-200 мониторов — компрометация
  * этого класса не трогает ни одну наблюдаемую поверхность.
  *
- * Baseline пишется ПЕРВЫМ прогоном (пустой файл = «ещё не видели машину»,
+ * Baseline пишется ПЕРВЫМ прогоном (пустой файл = «еще не видели машину»,
  * а не «ноль админов ожидается») и после этого read-only для самой пробы —
  * обновление baseline осознанный человеческий шаг (--write-baseline), иначе
  * атакующий, добавивший админа ДО первого прогона после компрометации,
@@ -84,7 +84,7 @@ class CheckCompromiseIntegrity extends Command
 
         if ($this->option('write-baseline')) {
             $this->writeBaseline($path, ['admin_count' => $count, 'written_at' => now()->toIso8601String()]);
-            $this->info("baseline обновлён: {$count} админ(ов).");
+            $this->info("baseline обновлен: {$count} админ(ов).");
 
             return [];
         }
@@ -124,7 +124,7 @@ class CheckCompromiseIntegrity extends Command
 
         if ($this->option('write-baseline')) {
             $this->writeBaseline($path, ['files' => $current, 'written_at' => now()->toIso8601String()]);
-            $this->info('webroot php-baseline обновлён: '.count($current).' файл(ов).');
+            $this->info('webroot php-baseline обновлен: '.count($current).' файл(ов).');
 
             return [];
         }

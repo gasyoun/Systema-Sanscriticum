@@ -628,7 +628,7 @@ class Debtors extends Page implements HasTable
             ->where('course_id', $courseId)
             ->paid()
             ->real()
-            ->get(['start_block', 'end_block']);
+            ->get(['tariff', 'start_block', 'end_block']);
 
         // Нижняя граница долга: студент мог присоединиться к потоку в середине —
         // блоки до его «блока входа» (явный joined_at_block либо первый
@@ -644,6 +644,8 @@ class Debtors extends Page implements HasTable
             self::$joinedAtBlockCache[$payKey] = $v !== null ? (int) $v : null;
         }
         $explicitJoined = self::$joinedAtBlockCache[$payKey];
+        // Флаг debt_strict_block_coverage: бронь/пробное/возврат блок не покрывают.
+        $payments = DebtorsReport::coveringPayments($payments);
         $floor = DebtorsReport::debtFloor($explicitJoined, $payments);
 
         $debt = [];
@@ -710,7 +712,7 @@ class Debtors extends Page implements HasTable
             ->whereIn('course_id', $courseIds)
             ->paid()
             ->real()
-            ->get(['user_id', 'course_id', 'start_block', 'end_block'])
+            ->get(['user_id', 'course_id', 'tariff', 'start_block', 'end_block'])
             ->groupBy(fn (Payment $p) => ((int) $p->user_id).':'.((int) $p->course_id));
 
         // 2) joined_at_block всех нужных пар одним запросом.
@@ -1718,7 +1720,7 @@ class Debtors extends Page implements HasTable
 
                     $slug = $courseSlugs[$record->course_id] ?? null;
                     $replacements = [
-                        '{name}' => $record->name ?: 'Друг',
+                        '{name}' => $record->greetingName(),
                         '{course}' => $courseTitles[$record->course_id] ?? '',
                         '{block}' => (string) $record->ref_block_number,
                         '{pay_link}' => $slug ? route('shop.course.show', $slug) : url('/login'),

@@ -27,12 +27,12 @@
         @else
             <ul class="mb-5 space-y-1.5 text-sm text-gray-600">
                 <li class="flex items-start gap-2"><i class="fas fa-bell mt-0.5 w-4 text-center shrink-0" style="color: {{ $accent }};"></i><span>Напоминания о занятиях и сроках оплат</span></li>
-                <li class="flex items-start gap-2"><i class="fas fa-robot mt-0.5 w-4 text-center shrink-0" style="color: {{ $accent }};"></i><span>ИИ-куратор отвечает на вопросы об учёбе круглосуточно</span></li>
+                <li class="flex items-start gap-2"><i class="fas fa-robot mt-0.5 w-4 text-center shrink-0" style="color: {{ $accent }};"></i><span>ИИ-куратор отвечает на вопросы об учебе круглосуточно</span></li>
                 <li class="flex items-start gap-2"><i class="fas fa-comments mt-0.5 w-4 text-center shrink-0" style="color: {{ $accent }};"></i><span>Ответы живого куратора прямо в мессенджере</span></li>
             </ul>
         @endif
 
-        {{-- H3313: выдача токена привязки — только CSRF-защищённым POST --}}
+        {{-- H3313: выдача токена привязки — только CSRF-защищенным POST --}}
         <form method="POST" action="{{ $actionUrl }}" target="_blank" class="inline-flex w-full">
             @csrf
             <button type="submit"

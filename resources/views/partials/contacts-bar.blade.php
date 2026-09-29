@@ -4,7 +4,7 @@
     $phoneClean   = config('social.phone_clean') ?: preg_replace('/[^+\d]/', '', (string) $phone);
     $email        = config('social.email');
 
-    // Цветовая схема: 'light' (для светлой шапки кабинета) | 'dark' (для тёмной шапки магазина)
+    // Цветовая схема: 'light' (для светлой шапки кабинета) | 'dark' (для темной шапки магазина)
     $variant      = $variant ?? 'light';
 
     $btnBase = $variant === 'dark'

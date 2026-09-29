@@ -44,14 +44,15 @@ final class TelegramBusinessStatus extends Command
 
         $connections = TelegramBusinessConnection::query()->orderByDesc('id')->get();
         if ($connections->isEmpty()) {
-            $this->warn('Подключений нет: Telegram ещё не прислал business_connection. Пока его нет, апдейты business_message пропускаются — по подключению определяется владелец.');
+            $this->warn('Подключений нет: Telegram еще не прислал business_connection. Пока его нет, апдейты business_message пропускаются — по подключению определяется владелец.');
         } else {
             $this->table(
-                ['business_connection_id', 'владелец', 'can_reply', 'is_enabled', 'подключено', 'отключено'],
+                ['business_connection_id', 'владелец', 'can_reply', 'can_manage_stories', 'is_enabled', 'подключено', 'отключено'],
                 $connections->map(static fn (TelegramBusinessConnection $c): array => [
                     $c->business_connection_id,
                     (string) $c->owner_telegram_user_id,
                     $c->can_reply ? 'да' : 'НЕТ',
+                    (bool) ($c->rights['can_manage_stories'] ?? false) ? 'да' : 'НЕТ',
                     $c->is_enabled ? 'да' : 'нет',
                     $c->connected_at?->toDateTimeString() ?? '—',
                     $c->disabled_at?->toDateTimeString() ?? '—',
@@ -61,7 +62,7 @@ final class TelegramBusinessStatus extends Command
 
         $account = TelegramSupportAccount::query()->where('name', $accountName)->first();
         if ($account === null) {
-            $this->warn("Аккаунта поддержки «{$accountName}» ещё нет: он появится при первом business_message.");
+            $this->warn("Аккаунта поддержки «{$accountName}» еще нет: он появится при первом business_message.");
         } else {
             $this->line(sprintf(
                 'Аккаунт «%s»: auto_reply_enabled=%s, is_enabled=%s',
@@ -94,6 +95,10 @@ final class TelegramBusinessStatus extends Command
         }
         if ($connections->where('is_enabled', true)->where('can_reply', true)->isEmpty()) {
             $blockers[] = 'нет живого подключения с can_reply (проверьте Secretary Mode в @BotFather и право «отвечать» в Business → Чат-боты)';
+        }
+        if ($connections->filter(static fn (TelegramBusinessConnection $c): bool => $c->is_enabled
+            && (bool) ($c->rights['can_manage_stories'] ?? false))->isEmpty()) {
+            $blockers[] = 'нет живого подключения с can_manage_stories (в Telegram Business → Чат-боты включите «Управление историями»)';
         }
         if ($account !== null && ! $account->auto_reply_enabled) {
             $blockers[] = "у аккаунта «{$accountName}» снят auto_reply_enabled (H3380-гейт)";

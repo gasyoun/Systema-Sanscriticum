@@ -9,8 +9,8 @@ use App\Services\ExitSurveyAutoTrigger;
 use Illuminate\Console\Command;
 
 /**
- * H3915 — ручной/догоняющий прогон Exit-опроса по завершённым курсам.
- * Авто-триггер живёт в Course::updated (is_completed false→true); эта команда
+ * H3915 — ручной/догоняющий прогон Exit-опроса по завершенным курсам.
+ * Авто-триггер живет в Course::updated (is_completed false→true); эта команда
  * нужна, когда флаг включили ПОСЛЕ того, как курсы уже завершены, и для
  * повторной отправки (--force сбрасывает дедуп по штампу). В расписание не
  * заведена — событийного пути достаточно.
@@ -21,7 +21,7 @@ class TriggerExitSurveyOnCourseCompletion extends Command
         {--course= : Разобрать только этот курс (id или slug)}
         {--force : Игнорировать дедуп exit_survey_triggered_at}';
 
-    protected $description = 'Завершённые курсы: задача куратору на Exit-опрос (черновики для личной отправки, не рассылка).';
+    protected $description = 'Завершенные курсы: задача куратору на Exit-опрос (черновики для личной отправки, не рассылка).';
 
     public function handle(ExitSurveyAutoTrigger $trigger): int
     {
@@ -39,7 +39,7 @@ class TriggerExitSurveyOnCourseCompletion extends Command
             ->get();
 
         if ($courses->isEmpty()) {
-            $this->info('Завершённых курсов без штампа нет — разбирать нечего.');
+            $this->info('Завершенных курсов без штампа нет — разбирать нечего.');
 
             return self::SUCCESS;
         }

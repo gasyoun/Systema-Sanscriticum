@@ -61,7 +61,7 @@ class SocialAuthController extends Controller
 
         Auth::login($user, remember: true);
 
-        return redirect()->route('student.dashboard');
+        return redirect()->intended(route('student.dashboard'));
     }
 
     /**

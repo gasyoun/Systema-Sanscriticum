@@ -4,7 +4,7 @@
             <p class="text-sm text-gray-600 dark:text-gray-400">
                 Ни у одной учебной группы не задан <strong>telegram_chat_id</strong>.
                 Заполните его в разделе <strong>Группы</strong> (поле «Telegram chat_id группы»)
-                — тогда группа появится здесь, а бот сможет слать в неё напоминания из расписания.
+                — тогда группа появится здесь, а бот сможет слать в нее напоминания из расписания.
             </p>
         </div>
     @else
@@ -43,7 +43,7 @@
 
                     @if (! $this->roster)
                         <p class="text-sm text-gray-500">
-                            Ростер ещё не снят. Запустите
+                            Ростер еще не снят. Запустите
                             <code>php artisan telegram-harvest:roster {{ $this->chatId }}</code> на хосте.
                         </p>
                     @else
@@ -58,7 +58,7 @@
                         @if ($this->roster['is_stale'])
                             <p class="mb-3 rounded-lg bg-danger-50 px-3 py-2 text-xs text-danger-700 dark:bg-danger-400/10 dark:text-danger-400">
                                 Снимок протух (старше {{ $this->roster['stale_after_hours'] }} ч) — состав мог измениться.
-                                Обновляет <code>telegram-harvest:roster-groups</code> раз в час; ему нужна включённая
+                                Обновляет <code>telegram-harvest:roster-groups</code> раз в час; ему нужна включенная
                                 MTProto-сессия (<code>TELEGRAM_SUPPORT_ENABLED</code>).
                             </p>
                         @endif
@@ -104,7 +104,7 @@
                                     Заблокированные ({{ count($this->bannedMembers) }})
                                 </h3>
                                 <p class="mb-3 text-xs text-gray-500">
-                                    Hard ban: «Присоединиться к группе» не сработает, пока не нажмёте «Разбанить».
+                                    Hard ban: «Присоединиться к группе» не сработает, пока не нажмете «Разбанить».
                                 </p>
                                 <ul class="divide-y divide-gray-100 dark:divide-gray-800 max-h-48 overflow-y-auto">
                                     @foreach ($this->bannedMembers as $banned)
@@ -184,7 +184,7 @@
 
         <div class="fi-section mt-6 rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900">
             <p class="text-sm text-gray-600 dark:text-gray-400">
-                Напоминания о занятиях бот шлёт автоматически из расписания
+                Напоминания о занятиях бот шлет автоматически из расписания
                 (<code>zapisi:remind-classes</code>) в чат каждой группы. Время и текст —
                 в настройках маркетинга, раздел «@zapisi_ORSbot (записи)».
             </p>

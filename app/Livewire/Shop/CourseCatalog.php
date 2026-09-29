@@ -6,6 +6,7 @@ namespace App\Livewire\Shop;
 
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseFavorite;
 use App\Models\MarketingSetting;
 use App\Models\Payment;
 use App\Models\Teacher;
@@ -63,7 +64,19 @@ class CourseCatalog extends Component
         $this->format = $initialFormat;
         $this->level = $initialLevel;
         $this->search = $initialSearch;
+        // H5134 — мои сердечки в каталоге: 'c:{id}'-ключи, flag OFF / гость — [].
+        $this->favoriteKeys = array_map(
+            fn (int $courseId): string => 'c:'.$courseId,
+            CourseFavorite::favoritedCourseIdsForCurrentViewer(),
+        );
     }
+
+    /**
+     * H5134 — ключи сердечек текущего зрителя ('c:{id}') для отметки на
+     * карточках каталога. Читается один раз на маунте; toggle живёт в JS
+     * (courseFavorite), перегидрации Livewire не нужны.
+     */
+    public array $favoriteKeys = [];
 
     public function toggleCategory(int $id): void
     {

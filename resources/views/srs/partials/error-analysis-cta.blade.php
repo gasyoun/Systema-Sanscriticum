@@ -1,6 +1,6 @@
 {{-- Разбор твоих ошибок — CTA-блок публичных SRS-страниц (H5184 N06).
      Гостю — регистрация, вошедшему — кабинетный разбор ошибок
-     (/dvaram/koloda/stats). Стиль — карточки /koloda (тёмные rounded-2xl). --}}
+     (/dvaram/koloda/stats). Стиль — карточки /koloda (темные rounded-2xl). --}}
 @php
     $isGuest = ! auth()->check();
     $ctaUrl = $isGuest ? route('register') : url('/dvaram/koloda/stats');

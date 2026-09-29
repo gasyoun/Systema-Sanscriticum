@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Services\Support\SupportAnswerFactResolver;
+use App\Services\Support\SupportFactCheckVerifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -96,6 +97,20 @@ class SupportAnswerSuggestion extends Model
         $facts = is_array($this->facts) ? $this->facts : [];
 
         return (string) ($facts['send_policy'] ?? SupportAnswerFactResolver::POLICY_AUTO);
+    }
+
+    /**
+     * H4589: статус детерминированной сверки draft_text с собственными
+     * facts ({@see SupportFactCheckVerifier}) —
+     * `match`/`mismatch`/`unverifiable`, или `unchecked` для черновиков,
+     * заведённых до H4589. Advisory only — не влияет на {@see isDraftOnly()}.
+     */
+    public function factCheckStatus(): string
+    {
+        $facts = is_array($this->facts) ? $this->facts : [];
+        $factCheck = is_array($facts['fact_check'] ?? null) ? $facts['fact_check'] : [];
+
+        return (string) ($factCheck['status'] ?? 'unchecked');
     }
 
     /**

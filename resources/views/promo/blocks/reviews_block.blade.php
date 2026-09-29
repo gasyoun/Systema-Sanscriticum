@@ -160,7 +160,7 @@
                                         @click="open(@js($options))"
                                         class="relative w-full h-48 mb-5 rounded-2xl overflow-hidden bg-gray-900 group/video cursor-pointer shadow-sm border border-gray-100 block">
 
-                                    {{-- Постер: кадр ролика (YouTube) либо тёмный fallback --}}
+                                    {{-- Постер: кадр ролика (YouTube) либо темный fallback --}}
                                     @if($poster)
                                         <img src="{{ $poster }}" alt="{{ $review['name'] ?? '' }}" loading="lazy"
                                              class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/video:scale-105">

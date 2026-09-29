@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
  * обязательное условие работы TG-команд (каникулы, датированная отмена),
  * резолвящих автора через users.telegram_id / social_accounts.
  *
- * Идемпотентен: создаёт User(role=teacher, teacher_id) только если его ещё нет
+ * Идемпотентен: создает User(role=teacher, teacher_id) только если его еще нет
  * (случайный пароль, БЕЗ письма — для письма есть TeacherAccountService),
  * затем пишет users.telegram_id и social_accounts (provider=telegram).
  *

@@ -8,7 +8,7 @@
 <section class="mt-8 w-full max-w-xl mx-auto bg-white/10 border border-white/15 rounded-2xl p-6 text-center">
     <h2 class="text-lg md:text-xl font-extrabold mb-2">Подключить уведомления</h2>
     <p class="text-sm text-gray-300 leading-relaxed mb-5">
-        Нажмите кнопку — бот сразу придёт со списком статусов этого курса.
+        Нажмите кнопку — бот сразу придет со списком статусов этого курса.
         Рекламных рассылок школы в этой подписке нет.
     </p>
 

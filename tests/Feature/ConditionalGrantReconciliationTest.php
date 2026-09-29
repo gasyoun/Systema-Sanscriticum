@@ -141,4 +141,41 @@ class ConditionalGrantReconciliationTest extends TestCase
         $this->assertSame(PaymentPromise::STATUS_FULFILLED, $promise->status);
         $this->assertSame($real->id, $promise->fulfilled_payment_id);
     }
+
+    /** @test */
+    public function h5007_full_payment_covering_two_promises_settles_both_without_unique_index_clash(): void
+    {
+        // Audit H5 (16-09-2026): one real `full` payment swept the conditional
+        // grants of BOTH promises and wrote the same fulfilled_payment_id into
+        // each → unique index → QueryException inside fireOnPaid → the paid
+        // payment rolled back after access had been granted.
+        $user = User::factory()->create();
+        $course = Course::factory()->create();
+        $first = $this->promiseFor($user, $course);
+        $second = $this->promiseFor($user, $course);
+
+        app(ConditionalAccessGranter::class)->grantForPromise($first, ConditionalAccessGranter::MODE_BLOCKS, [1]);
+        app(ConditionalAccessGranter::class)->grantForPromise($second, ConditionalAccessGranter::MODE_BLOCKS, [2]);
+
+        $real = Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'amount' => 8000,
+            'tariff' => 'full',
+            'status' => 'paid',
+        ]);
+
+        $this->assertDatabaseHas('payments', ['id' => $real->id, 'status' => 'paid']);
+        $this->assertDatabaseMissing('payments', ['course_id' => $course->id, 'is_conditional' => true]);
+
+        $first->refresh();
+        $second->refresh();
+        $this->assertSame(PaymentPromise::STATUS_FULFILLED, $first->status);
+        $this->assertSame(PaymentPromise::STATUS_FULFILLED, $second->status);
+
+        // Exactly one promise owns the unique audit link; the other closes with null.
+        $owners = collect([$first->fulfilled_payment_id, $second->fulfilled_payment_id])->filter();
+        $this->assertCount(1, $owners);
+        $this->assertSame($real->id, $owners->first());
+    }
 }

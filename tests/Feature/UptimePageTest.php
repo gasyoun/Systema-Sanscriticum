@@ -13,6 +13,6 @@ class UptimePageTest extends TestCase
             ->assertSee('Сайт не открывается', false)
             ->assertSee('@rusamskrtam', false)
             ->assertSee('https://t.me/rusamskrtam', false)
-            ->assertSee('Не пишите Артёму', false);
+            ->assertSee('Не пишите Артему', false);
     }
 }

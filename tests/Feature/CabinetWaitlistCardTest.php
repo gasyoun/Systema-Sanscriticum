@@ -60,7 +60,7 @@ class CabinetWaitlistCardTest extends TestCase
         // Проголосовавший видит «Голос учтён», без кнопки.
         $item->votes()->create(['user_id' => $user->id]);
         $resp2 = $this->actingAs($user)->get(route('student.dashboard'));
-        $resp2->assertSee('Голос учтён');
+        $resp2->assertSee('Голос учтен');
         $resp2->assertDontSee('data-waitlist-vote="card-course-1"');
     }
 
@@ -84,7 +84,7 @@ class CabinetWaitlistCardTest extends TestCase
 
         $item->votes()->create(['user_id' => $user->id, 'slot_preference' => 'morning']);
         $resp2 = $this->actingAs($user)->get(route('student.dashboard'));
-        $resp2->assertSee('Голос учтён');
+        $resp2->assertSee('Голос учтен');
         $resp2->assertSee('Утром (до ~11:00)');
         $resp2->assertDontSee('data-waitlist-pref="card-pref-1"', false);
     }

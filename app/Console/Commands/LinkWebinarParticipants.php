@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * H3761 — сопоставление экранных имён Zoom с плательщиками курса.
+ * H3761 — сопоставление экранных имен Zoom с плательщиками курса.
  *
  * Собранная посещаемость есть, но она ни к кому не привязана: почта приходит
  * у 4 % участников, поэтому у 96 % строк `webinar_attendances.user_id` пуст, и
@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\DB;
  *
  * Команда НЕ трогает `webinar_attendances` — она только заводит связки в
  * отдельной таблице (`webinar_participant_links`), и только вставками. Уже
- * существующая связка (в том числе подтверждённая человеком) не переписывается
+ * существующая связка (в том числе подтвержденная человеком) не переписывается
  * никогда: `--apply` повторно — no-op.
  *
  * Неоднозначное и несопоставленное не угадывается. Такие имена печатаются
@@ -34,7 +34,7 @@ class LinkWebinarParticipants extends Command
     protected $signature = 'attendance:link-participants
         {--course=* : ID курса; можно повторять. Без опции — все курсы, где есть посещаемость}
         {--weak : Заводить и связки по одному совпавшему слову (по умолчанию только имя+фамилия)}
-        {--fuzzy : Заводить и нечёткие связки — складка транслита, уменьшительные, опечатка в допуске (H3772)}
+        {--fuzzy : Заводить и нечеткие связки — складка транслита, уменьшительные, опечатка в допуске (H3772)}
         {--apply : Записать связки (без опции — сухой прогон)}';
 
     protected $description = 'Связать экранные имена участников Zoom с плательщиками курса — только вставки, webinar_attendances не меняется';
@@ -98,7 +98,7 @@ class LinkWebinarParticipants extends Command
                         'zoom_name' => (string) $zoomName,
                         'zoom_name_key' => $key,
                         'confidence' => $result['confidence'],
-                        // Не пишется в БД — только для отчёта: нечёткую связку
+                        // Не пишется в БД — только для отчета: нечеткую связку
                         // человек должен иметь возможность проглядеть глазами.
                         'reason' => $result['reason'],
                         'candidate' => $candidates[$result['user_id']] ?? '—',
@@ -156,9 +156,9 @@ class LinkWebinarParticipants extends Command
                         continue;
                     }
 
-                    // `reason`/`candidate` живут только в отчёте; в БД идут поля
-                    // модели. Источник различает точную и нечёткую связку, чтобы
-                    // нечёткие можно было отревизовать или снять одним запросом,
+                    // `reason`/`candidate` живут только в отчете; в БД идут поля
+                    // модели. Источник различает точную и нечеткую связку, чтобы
+                    // нечеткие можно было отревизовать или снять одним запросом,
                     // не трогая те, что совпали буква в букву.
                     WebinarParticipantLink::create([
                         'course_id' => $p['course_id'],
@@ -174,7 +174,7 @@ class LinkWebinarParticipants extends Command
         });
 
         $this->info("Заведено связок: {$inserted}.");
-        $this->comment('webinar_attendances не изменён: связки живут отдельной таблицей (InsertOnlyGuard).');
+        $this->comment('webinar_attendances не изменен: связки живут отдельной таблицей (InsertOnlyGuard).');
 
         return self::SUCCESS;
     }

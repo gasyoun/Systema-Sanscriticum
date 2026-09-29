@@ -11,7 +11,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Материализует три несведённых маппинга внешней идентичности в единый стор
+ * Материализует три несведенных маппинга внешней идентичности в единый стор
  * `social_accounts` (provider, provider_id, user_id) — см. docs/support-identity.md:
  *   - users.telegram_id / vk_id / max_user_id (денормализованные кэши исходящих);
  *   - TelegramSupportContact.telegram_user_id -> linked_user_id (импорт TG).
@@ -136,7 +136,7 @@ class ConsolidateSocialIdentities extends Command
 
     /**
      * Канонизировать внешний id перед сравнением/вставкой, чтобы дрейф формата не
-     * плодил почти-дубли и всё сводилось к одной строке (provider, provider_id).
+     * плодил почти-дубли и все сводилось к одной строке (provider, provider_id).
      * Telegram/VK/MAX id — целочисленные: убираем пробелы, ведущий '+' и ведущие
      * нули у чисто числовых значений. Не-числовые (на всякий случай) — только trim.
      */
