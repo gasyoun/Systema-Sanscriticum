@@ -26,7 +26,8 @@ class StudentDebtsService
      *      conditional-платежами, реальной оплаты ещё не было).
      *
      * Бесплатный доступ через одно лишь групповое назначение (без платежа и
-     * без обещания) задолженностью не считается.
+     * без обещания) задолженностью не считается. С флагом строгого покрытия
+     * добавляется 3) курс с явным «Блоком входа» (course_user.joined_at_block).
      *
      * Возвращает коллекцию объектов вида:
      *   {course, course_id, ref_block, debt_block_numbers, debt_label,
@@ -34,10 +35,13 @@ class StudentDebtsService
      */
     public function forUser(User $user): Collection
     {
+        // Строгое покрытие (флаг): возврат/выплата ЗП — не покупка, курс по
+        // ним «оплачивавшимся» не считается (как в SQL пар должников).
         $realPaidCourseIds = Payment::query()
             ->where('user_id', $user->id)
             ->whereIn('status', self::PAID_STATUSES)
             ->where('is_conditional', false)
+            ->when(DebtorsReport::strictCoverage(), fn ($q) => $q->whereNotIn('tariff', DebtorsReport::NON_PURCHASE_TARIFFS))
             ->pluck('course_id')
             ->unique()
             ->values();
@@ -52,7 +56,25 @@ class StudentDebtsService
             ->unique()
             ->values();
 
-        $candidateIds = $realPaidCourseIds->merge($arrangementCourseIds)->unique()->values();
+        // Строгое покрытие (флаг): явный «Блок входа» в «Обучается на курсах» —
+        // это заявление админа «учится здесь с блока N». Такой курс проверяется
+        // на долг и без единой оплаты: переведённый из распавшейся группы
+        // (гр.60 → гр.61, 28-09-2026) должен видеть «Оплатить блок» в НОВОМ
+        // курсе, а не там, где осталась его бронь. Одно членство в группе долга
+        // по-прежнему не создаёт.
+        $enrolledCourseIds = DebtorsReport::strictCoverage()
+            ? DB::table('course_user')
+                ->where('user_id', $user->id)
+                ->whereNotNull('joined_at_block')
+                ->where(fn ($q) => $q->whereNull('status')->orWhereNotIn('status', DebtorsReport::NON_DEBT_STATUSES))
+                ->pluck('course_id')
+            : collect();
+
+        $candidateIds = $realPaidCourseIds
+            ->merge($arrangementCourseIds)
+            ->merge($enrolledCourseIds)
+            ->unique()
+            ->values();
         if ($candidateIds->isEmpty()) {
             return collect();
         }
@@ -79,7 +101,7 @@ class StudentDebtsService
             ->whereIn('status', self::PAID_STATUSES)
             ->where('is_conditional', false)
             ->whereIn('course_id', $courses->keys())
-            ->get(['course_id', 'start_block', 'end_block'])
+            ->get(['course_id', 'tariff', 'start_block', 'end_block'])
             ->groupBy('course_id');
 
         // Строка course_user по каждому курсу: joined_at_block — приоритетная
@@ -123,7 +145,7 @@ class StudentDebtsService
             }
 
             $blocks = $blocksByCourse->get($courseId, collect());
-            $payments = $paymentsByCourse->get($courseId, collect());
+            $payments = DebtorsReport::coveringPayments($paymentsByCourse->get($courseId, collect()));
             $promises = $promisesByCourse->get($courseId, collect());
 
             // Непогашенные обещания (ждём денег) — активные + просроченные.
@@ -267,7 +289,7 @@ class StudentDebtsService
             ->whereIn('status', self::PAID_STATUSES)
             ->where('is_conditional', false)
             ->whereIn('course_id', $courseIds)
-            ->get(['course_id', 'start_block', 'end_block', 'amount'])
+            ->get(['course_id', 'tariff', 'start_block', 'end_block', 'amount'])
             ->groupBy('course_id');
 
         $joinedByCourse = DB::table('course_user')
@@ -279,7 +301,10 @@ class StudentDebtsService
         $result = collect();
         foreach ($courseIds as $courseId) {
             $blocks = $blocksByCourse->get($courseId, collect());
-            $payments = $paymentsByCourse->get($courseId, collect());
+            // Сумма «внесено» — по всем строкам (бронь тоже деньги); цепочка
+            // покрытия — только по тем, что могут оплачивать блок.
+            $allPayments = $paymentsByCourse->get($courseId, collect());
+            $payments = DebtorsReport::coveringPayments($allPayments);
             if ($blocks->isEmpty() || $payments->isEmpty()) {
                 continue;
             }
@@ -328,7 +353,7 @@ class StudentDebtsService
             $result->push((object) [
                 'course_id' => $courseId,
                 'block' => $lastCovered,
-                'amount_paid' => (float) $payments->sum('amount'),
+                'amount_paid' => (float) $allPayments->sum('amount'),
                 'next_block' => $nextBlock,
                 'next_payment_deadline' => $nextBlock?->starts_at?->copy()->startOfDay(),
                 'extra_paid_blocks' => $extraPaidBlocks,
@@ -391,7 +416,8 @@ class StudentDebtsService
             ->where('course_id', $courseId)
             ->whereIn('status', self::PAID_STATUSES)
             ->where('is_conditional', false)
-            ->get(['start_block', 'end_block']);
+            ->get(['tariff', 'start_block', 'end_block']);
+        $payments = DebtorsReport::coveringPayments($payments);
 
         $explicitJoined = DB::table('course_user')
             ->where('user_id', $user->id)
