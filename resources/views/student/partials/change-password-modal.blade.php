@@ -35,9 +35,14 @@
                 @error('current_password')
                     <p class="text-red-500 text-xs mt-2 pl-1 font-medium">{{ $message }}</p>
                 @enderror
+                {{-- Гостевой /forgot-password вошедшему недоступен (guest → назад в
+                     кабинет, «страница просто перезагружается», 29-09-2026): кнопка шлёт
+                     письмо на адрес из профиля. form= — отдельная форма ниже, без вложения. --}}
                 <p class="text-xs text-gray-400 mt-2 pl-1">
                     Не помните текущий пароль?
-                    <a href="{{ route('password.request') }}" class="text-brand font-bold hover:underline">Сбросить по email</a>
+                    <button type="submit" form="email-password-reset-form"
+                            class="text-brand font-bold hover:underline"
+                            data-analytics="cabinet-password-email-link">Отправить ссылку на почту</button>
                 </p>
             </div>
 
@@ -62,6 +67,10 @@
                     class="w-full bg-brand hover:bg-brand-hover text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl text-sm uppercase tracking-wider">
                 Сохранить
             </button>
+        </form>
+
+        <form id="email-password-reset-form" action="{{ route('student.password.email-link') }}" method="POST" class="hidden">
+            @csrf
         </form>
     </div>
 </div>
