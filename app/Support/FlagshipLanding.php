@@ -103,6 +103,9 @@ final class FlagshipLanding
             'faqs' => $faqs,
             'teacher_bio_html' => $teacherBio,
             'free_step' => self::freeStep($program['free_step'] ?? [], $course),
+            // H5184 N04 — тематический силлабус: конфиг-ключ проходит как есть
+            // (render: shop/partials/flagship-syllabus; DB-поля у силлабуса нет).
+            'syllabus' => is_array($program['syllabus'] ?? null) ? $program['syllabus'] : null,
         ];
     }
 

@@ -48,7 +48,7 @@
                     @elseif (is_array($opts) && ! empty($opts['next']))
                         <a href="{{ $opts['next']['url'] ?? '#' }}"
                            class="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-bold">
-                            Внести платёж
+                            Внести платеж
                         </a>
                     @endif
 
@@ -60,7 +60,7 @@
                                 А если остались сомнения или вопросы по программе — куратор с радостью ответит лично.
                             </p>
                             <p class="mt-2">
-                                <a href="{{ route('faq.payment') }}" class="text-brand underline hover:no-underline">Как оплатить / если платёж не прошёл</a>
+                                <a href="{{ route('faq.payment') }}" class="text-brand underline hover:no-underline">Как оплатить / если платеж не прошел</a>
                                 &middot;
                                 <a href="https://t.me/rusamskrtam" class="text-brand underline hover:no-underline">Написать куратору</a>
                             </p>

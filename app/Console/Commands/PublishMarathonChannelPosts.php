@@ -98,11 +98,11 @@ final class PublishMarathonChannelPosts extends Command
                 continue;
             }
 
-            // H3617 — cross-sender дедуп: этот же текст уже пришёл эхом из
+            // H3617 — cross-sender дедуп: этот же текст уже пришел эхом из
             // канала за последние 24 ч (запланированное в Telegram сообщение,
             // ручной пост админа) — второй копии не будет. Сравниваем сырой
-            // разрешённый текст (Telegram возвращает channel_post.text без
-            // разметки). Без markSent: в канал пост не ушёл, строка-registry
+            // разрешенный текст (Telegram возвращает channel_post.text без
+            // разметки). Без markSent: в канал пост не ушел, строка-registry
             // должна означать фактическую отправку.
             if (TelegramChannelEcho::seenRecently($chatId, $text)) {
                 $this->warn("Skip post {$n}: identical text already in the channel within last 24 h (echo sensor, H3617 — cross-sender dedup).");

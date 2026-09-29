@@ -21,7 +21,7 @@
         <div class="relative z-10 flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm transition-all duration-300"
              :class="unreadCount > 0 ? 'ring-2 ring-brand/20' : ''">
             
-            {{-- Пульсирующая точка (исчезает, когда всё прочитано) --}}
+            {{-- Пульсирующая точка (исчезает, когда все прочитано) --}}
             <div x-show="unreadCount > 0" x-transition class="w-2.5 h-2.5 rounded-full bg-brand animate-pulse"></div>
             <div x-show="unreadCount === 0" class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
             
@@ -30,7 +30,7 @@
                     <span>У вас <span class="text-brand" x-text="unreadCount"></span> новых</span>
                 </template>
                 <template x-if="unreadCount === 0">
-                    <span class="text-gray-500">Всё прочитано</span>
+                    <span class="text-gray-500">Все прочитано</span>
                 </template>
             </span>
         </div>

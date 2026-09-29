@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Заявка интереса на курс (H5066): join — хочу в следующий набор; recording —
  * хочу купить запись; revive — возобновить занятия, если соберётся группа
- * (курс не повторяется). Пишется публичной формой /interest/{course} под
- * флагом features.course_interest_form; уведомление кураторам — через
- * CuratorNotifier::courseInterestReceived().
+ * (курс не повторяется); transfer — переезд из другой живой группы того же
+ * семейства канвы (H5233, исходная группа — префиксом в comment). Пишется
+ * публичной формой /interest/{course} под флагом features.course_interest_form;
+ * уведомление кураторам — через CuratorNotifier::courseInterestReceived().
  */
 class CourseInterestRequest extends Model
 {
@@ -22,11 +23,15 @@ class CourseInterestRequest extends Model
 
     public const INTENT_REVIVE = 'revive';
 
+    /** H5233: переезд из другой живой группы того же семейства канвы. */
+    public const INTENT_TRANSFER = 'transfer';
+
     /** @var list<string> */
     public const INTENTS = [
         self::INTENT_JOIN,
         self::INTENT_RECORDING,
         self::INTENT_REVIVE,
+        self::INTENT_TRANSFER,
     ];
 
     public const STATUS_NEW = 'new';
@@ -68,6 +73,7 @@ class CourseInterestRequest extends Model
             self::INTENT_JOIN => 'В следующий набор',
             self::INTENT_RECORDING => 'Купить запись',
             self::INTENT_REVIVE => 'Возобновить занятия',
+            self::INTENT_TRANSFER => 'Перевестись из другой группы',
         ];
     }
 

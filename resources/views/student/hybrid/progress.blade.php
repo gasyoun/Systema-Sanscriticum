@@ -41,7 +41,7 @@
                     GrammarLadder::STATUS_COMPLETED => ['lit', 'пройдена'],
                     GrammarLadder::STATUS_CURRENT => ['now', 'сейчас'],
                     GrammarLadder::STATUS_AVAILABLE => ['open', 'доступна'],
-                    default => ['lock', 'ждёт'],
+                    default => ['lock', 'ждет'],
                 };
             @endphp
             <li class="rounded-2xl border {{ $border }} p-5 shadow-sm"
@@ -77,7 +77,7 @@
                                 </div>
                             @endif
                         @else
-                            <p class="text-xs text-gray-400 mt-2">Курс для этой станции ещё не привязан (паттерн «{{ $station->pattern }}»).</p>
+                            <p class="text-xs text-gray-400 mt-2">Курс для этой станции еще не привязан (паттерн «{{ $station->pattern }}»).</p>
                         @endif
                     </div>
                     @if ($station->course && $station->has_access)
@@ -96,7 +96,7 @@
         @endforeach
     </ol>
 
-    {{-- R29.7 ladder offer: only after station completed; «станция подождёт» --}}
+    {{-- R29.7 ladder offer: only after station completed; «станция подождет» --}}
     @if ($ladderOffer && ! $suppressOffers)
         <section class="mb-8 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5"
                  data-offer-kind="ladder"

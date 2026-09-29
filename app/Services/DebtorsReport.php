@@ -308,6 +308,16 @@ class DebtorsReport
         // вообще нет записи (NULL после LEFT JOIN) — пара остаётся в долге.
         $nonDebtIn = implode(',', array_fill(0, count(self::NON_DEBT_STATUSES), '?'));
 
+        // Строгое покрытие (флаг debt_strict_block_coverage): бронь и пробное
+        // остаются «оплатой курса» (пара попадает в not_renewed), но блок не
+        // покрывают. Выключено — условие пустое, SQL прежний.
+        $coverGuard = '';
+        $coverBindings = [];
+        if (self::strictCoverage()) {
+            $coverGuard = 'p.tariff NOT IN ('.implode(',', array_fill(0, count(self::NON_BLOCK_TARIFFS), '?')).') AND ';
+            $coverBindings = self::NON_BLOCK_TARIFFS;
+        }
+
         // A: not_renewed — есть хотя бы один paid Payment, но ни один не покрывает ref_number.
         // Conditional платежи (доступ под обещание) НЕ считаются «настоящей» оплатой —
         // иначе должник исчезнет из списка сразу после открытия доступа в кредит.
@@ -328,7 +338,7 @@ class DebtorsReport
               AND p.tariff NOT IN ('Расход', 'salary_payout')
               AND (cu.status IS NULL OR cu.status NOT IN ({$nonDebtIn}))
             GROUP BY p.user_id, p.course_id, ref.ref_number
-            HAVING SUM(CASE WHEN (
+            HAVING SUM(CASE WHEN {$coverGuard}(
                     (p.start_block IS NULL AND p.end_block IS NULL)
                     OR (p.start_block <= ref.ref_number AND p.end_block >= ref.ref_number)
                     OR (p.start_block <= ref.ref_number AND p.end_block IS NULL)
@@ -368,6 +378,7 @@ class DebtorsReport
             $refBindings,
             self::PAID_STATUSES,
             self::NON_DEBT_STATUSES,
+            $coverBindings,
             ['no_payment'],
             $refBindings,
             self::PAID_STATUSES,
@@ -576,9 +587,65 @@ class DebtorsReport
     }
 
     /**
+     * Строки, которые вообще не покупка: возврат и зеркало выплаты ЗП. Они не
+     * делают курс «оплачивавшимся» и не покрывают блоки (в SQL пар должников
+     * так было всегда; кабинет и карточка должника до флага их не исключали).
+     */
+    public const NON_PURCHASE_TARIFFS = ['Расход', 'salary_payout'];
+
+    /**
+     * Покупки, которые не оплачивают блок: бронь зачитывается в цену блока
+     * (сумма долга учитывает её отдельно), пробное — разовый урок. Без
+     * границ блоков paymentCovers() читал их как «оплачен весь курс» и прятал
+     * долг навсегда (гр.60, 28-09-2026: бронь → ни одного долга по курсу).
+     */
+    public const NON_BLOCK_TARIFFS = ['deposit', 'trial'];
+
+    /** Флаг строгого покрытия (дефолт OFF): без него поведение прежнее. */
+    public static function strictCoverage(): bool
+    {
+        return (bool) config('features.debt_strict_block_coverage', false);
+    }
+
+    /**
+     * Тарифы, которые не покрывают блок при расчёте долга. Пустой список при
+     * выключенном флаге — вызывающий код ведёт себя как раньше.
+     *
+     * @return list<string>
+     */
+    public static function nonCoveringTariffs(): array
+    {
+        return self::strictCoverage()
+            ? array_merge(self::NON_PURCHASE_TARIFFS, self::NON_BLOCK_TARIFFS)
+            : [];
+    }
+
+    /**
+     * Оставить из платежей пары только те, что могут покрывать блоки. Каждый
+     * элемент должен нести `tariff` (грузите колонку вместе с границами).
+     *
+     * @param  iterable<object>  $payments
+     * @return Collection<int, object>
+     */
+    public static function coveringPayments(iterable $payments): Collection
+    {
+        $excluded = self::nonCoveringTariffs();
+        $payments = collect($payments);
+
+        if ($excluded === []) {
+            return $payments;
+        }
+
+        return $payments
+            ->reject(fn (object $p): bool => in_array((string) ($p->tariff ?? ''), $excluded, true))
+            ->values();
+    }
+
+    /**
      * Покрывает ли paid Payment с границами (start, end) конкретный номер блока.
      * NULL-границы трактуются как «открытая сторона» — частный случай
-     * (NULL,NULL) = «весь курс» (legacy/full-платежи).
+     * (NULL,NULL) = «весь курс» (legacy/full-платежи). Какие платежи вообще
+     * допускаются к этой проверке, решает {@see coveringPayments()}.
      */
     public static function paymentCovers(?int $start, ?int $end, int $n): bool
     {

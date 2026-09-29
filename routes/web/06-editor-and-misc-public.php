@@ -77,10 +77,20 @@ Route::post('/anketa/{slug}', [SurveyPageController::class, 'store'])
     ->middleware('throttle:20,60')
     ->name('survey.store');
 
+// Телеметрия воронки (H5098): started/page с фронта. Без ПДн, только счётчики.
+// ВАЖНО: длиннее /anketa/{slug} — конфликтов маршрутов нет.
+Route::post('/anketa/{slug}/event', [SurveyPageController::class, 'event'])
+    ->middleware('throttle:60,1')
+    ->name('survey.event');
+
 // Выгрузка ответов CSV для куратора (админ/менеджер).
 Route::get('/admin/surveys/{slug}/export', [SurveyPageController::class, 'exportCsv'])
     ->middleware('throttle:30,60')
     ->name('survey.export');
+
+// Агрегат воронки для куратора (H5098; админ/менеджер, только количества).
+Route::get('/admin/surveys/{slug}', [SurveyPageController::class, 'funnel'])
+    ->name('survey.funnel');
 Route::get('/gift/{certificate}/download', [GiftCertificateController::class, 'download'])
     ->middleware(['auth', 'throttle:10,1'])
     ->name('gift.download');
@@ -141,3 +151,12 @@ Route::get('/chat/history', [PublicChatController::class, 'history'])
 Route::post('/support/presence', [PublicPresenceController::class, 'ping'])
     ->middleware('throttle:20,1')
     ->name('support.presence');
+
+// Iframe-эмбед веб-чата для samskrtam.ru (H5451). Страница без лейаута кабинета:
+// только support-chat-widget; ?page= (товар магазина) уходит в приветствие и
+// телеметрию entry_url. Самогейтится флагом support_chat_embed (OFF → 404);
+// троттлинг как у chat/message; CSP frame-ancestors — только на этом ответе.
+// Строго до catch-all.
+Route::get('/chat/embed', [PublicChatController::class, 'embed'])
+    ->middleware('throttle:30,1')
+    ->name('chat.embed');

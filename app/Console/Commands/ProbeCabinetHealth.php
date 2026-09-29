@@ -22,6 +22,7 @@ use App\Support\ServerGuards\CabinetProbeAlertState;
 use App\Support\ServerGuards\CompiledViewsOwnershipInspector;
 use App\Support\ServerGuards\GuardFinding;
 use App\Support\ServerGuards\GuardSpec;
+use App\Support\ServerGuards\OllamaTunnelProbe;
 use App\Support\ServerGuards\ServerGuardsAuditor;
 use App\Support\ServerGuards\SoftAlertWebhookNotifier;
 use App\Support\ServerGuards\SoftFailureFingerprint;
@@ -49,7 +50,7 @@ class ProbeCabinetHealth extends Command
     protected $signature = 'cabinet:probe
         {--dry : Прогнать проверки, не слать healthchecks/Telegram и не писать history}
         {--force-alert : Игнорировать TG-cooldown (critical и soft)}
-        {--no-alert : Не слать Telegram (deploy.sh — сторож */15 остаётся ртом)}
+        {--no-alert : Не слать Telegram (deploy.sh — сторож */15 остается ртом)}
         {--fail-on-critical : Exit 1 if an HTTP/cabinet surface failed (deploy.sh)}';
 
     protected $description = 'Пульс кабинета: public + manager (+ student) surfaces, history, TG';
@@ -58,7 +59,7 @@ class ProbeCabinetHealth extends Command
      * H4648: прогон неполного покрытия. Канва-факстура не вооружена
      * (CABINET_PROBE_KANVA_COURSE_ID пуст) или student-ветка пропущена —
      * фатал класса инцидента 10-13.09 этой пробой НЕ ловится. Soft-флаг
-     * в cabinet_probe_runs.coverage_partial (не critical — канал не жжём).
+     * в cabinet_probe_runs.coverage_partial (не critical — канал не жжем).
      */
     private bool $coveragePartial = false;
 
@@ -133,6 +134,7 @@ class ProbeCabinetHealth extends Command
             $failures = array_merge($failures, $this->probeCompiledViewsOwnership());
             $failures = array_merge($failures, $this->probeOutboundPaymentTls());
             $failures = array_merge($failures, $this->probeScheduleLinks());
+            $failures = array_merge($failures, $this->probeOllamaTunnel());
         } catch (Throwable $e) {
             $failures[] = ['message' => 'probe crashed: '.$e->getMessage(), 'severity' => 'critical'];
             Log::error('cabinet:probe crashed', ['error' => $e->getMessage()]);
@@ -177,7 +179,7 @@ class ProbeCabinetHealth extends Command
         if (! $this->option('no-alert')) {
             $this->reportToTelegram($httpHealthy, $httpCritical, array_merge($softFails, $hostCritical));
         } else {
-            $this->comment('TG: --no-alert (сторож */15 шлёт, если надо)');
+            $this->comment('TG: --no-alert (сторож */15 шлет, если надо)');
         }
 
         if ($this->option('fail-on-critical') && ! $httpHealthy) {
@@ -224,7 +226,7 @@ class ProbeCabinetHealth extends Command
     }
 
     /**
-     * Ресурсные предохранители ОС (H1914) как ещё одна поверхность этой пробы.
+     * Ресурсные предохранители ОС (H1914) как еще одна поверхность этой пробы.
      *
      * Предохранители 29-07-2026 живут вне репозитория и вне приложения; пересборка
      * LXC сносит их молча. Проба — единственный контур, который ходит каждые 15
@@ -237,8 +239,8 @@ class ProbeCabinetHealth extends Command
      * H3803 — прод перестал получать новый код.
      *
      * Инцидент 31-08-2026: вшитый в URL `origin` PAT протух, `git pull` начал
-     * отдавать 401, и `deploy.sh` падал на втором шаге. Всё, на что смотрят
-     * мониторы, при этом оставалось зелёным — HTTP 200, чистое tracked-дерево,
+     * отдавать 401, и `deploy.sh` падал на втором шаге. Все, на что смотрят
+     * мониторы, при этом оставалось зеленым — HTTP 200, чистое tracked-дерево,
      * непорванный предохранитель, живые guards, — потому что сайт работал; он
      * просто перестал обновляться. Симптом отрицательный: код НЕ приезжает, и
      * заметить это можно было только когда деплой понадобился.
@@ -247,7 +249,7 @@ class ProbeCabinetHealth extends Command
      *
      * 1. Возраст последнего успешного `git fetch`. Ровно этот случай: когда
      *    fetch падает, ref `origin/main` замерзает ВМЕСТЕ с HEAD, отставание
-     *    остаётся нулевым, и наивная проверка «HEAD против origin/main» рапортует
+     *    остается нулевым, и наивная проверка «HEAD против origin/main» рапортует
      *    здоровье. Устаревающий FETCH_HEAD — единственный локальный след.
      * 2. Отставание HEAD от origin/main. Противоположный отказ: fetch работает,
      *    а деплой нет (грязное дерево, сорванный предохранитель, красный
@@ -255,7 +257,7 @@ class ProbeCabinetHealth extends Command
      *    деплой в процессе не поднимали тревогу.
      *
      * Обе ноги локальные: проба ходит раз в 15 минут, и сетевой вызов на пути
-     * health-чека сделал бы её зависимой от доступности GitHub.
+     * health-чека сделал бы ее зависимой от доступности GitHub.
      *
      * @return list<array{message: string, severity: string}>
      */
@@ -267,7 +269,7 @@ class ProbeCabinetHealth extends Command
 
         // Это проверка ПРОДАКШЕН-выкладки. На дев-машине отставание от
         // origin/main — норма жизни, и проба там звенела бы постоянно, что
-        // быстро приучает не читать её вывод.
+        // быстро приучает не читать ее вывод.
         //
         // Сравниваем config('app.env'), а не app()->isProduction(): последний
         // читает env-биндинг контейнера, зафиксированный на бутстрапе, и
@@ -334,7 +336,7 @@ class ProbeCabinetHealth extends Command
      * Проверка стоит здесь, а не только в deploy.sh, ровно потому, что дефект
      * не привязан к выкладке: любой root-овый artisan (деплой, ручной прогрев,
      * чужая правка) оставляет файл, который php-fpm потом не может
-     * `touch()`-нуть, и `/admin` отдаёт 500 до ручного chown — ровно то, что
+     * `touch()`-нуть, и `/admin` отдает 500 до ручного chown — ровно то, что
      * повторялось 17-08, 20-08, 09-09 и 14-09-2026. Deploy-гард ловит регресс
      * в момент выкладки, эта проверка — в любой момент между выкладками, и
      * сторож (раз в 15 минут) бежит от www-data, то есть тем же пользователем,
@@ -342,7 +344,7 @@ class ProbeCabinetHealth extends Command
      *
      * Severity critical, а не soft: следствие — HTTP 500 на Filament /admin,
      * то есть класс HTTP-поверхностей. Сообщение намеренно НЕ начинается с
-     * `guards/` — иначе `isHostGuardFailure()` отнёс бы его к host-guard'ам,
+     * `guards/` — иначе `isHostGuardFailure()` отнес бы его к host-guard'ам,
      * которые не будят Telegram и не роняют деплой (H3197), а этот дефект
      * обязан и будить, и ронять.
      *
@@ -527,19 +529,19 @@ class ProbeCabinetHealth extends Command
         }
 
         if ($failures === []) {
-            $this->info('ДЗ-загрузка (synthetic): файл сохранён и привязан.');
+            $this->info('ДЗ-загрузка (synthetic): файл сохранен и привязан.');
         }
 
         return $failures;
     }
 
     /**
-     * Outbound TLS к платёжному эквайрингу «Точки» (инцидент 25–28-08-2026).
+     * Outbound TLS к платежному эквайрингу «Точки» (инцидент 25–28-08-2026).
      *
      * Чего эта проверка стоит. «Точка» сменила отдаваемую цепочку на
      * Russian Trusted Root CA (Минцифры), которого не было в серверном
      * CA-бандле: каждый чекаут падал cURL error 60 четыре дня, пользователь
-     * видел «Сервис оплаты временно недоступен», а все проверки были зелёные —
+     * видел «Сервис оплаты временно недоступен», а все проверки были зеленые —
      * in-process surfaces ходят на localhost, guards смотрят в файлы и
      * systemd, outbound-TLS не смотрел никто.
      *
@@ -596,12 +598,34 @@ class ProbeCabinetHealth extends Command
     }
 
     /**
+     * H4845: reverse-туннель к Ollama на GPU-узле. Логика и гейты (потребитель
+     * включён, рабочие часы узла) — в OllamaTunnelProbe; здесь только
+     * soft-находка. Класс `ollama-tunnel` в SoftFailureFingerprint держит её
+     * одной тревогой до зелёного, живой туннель её снимает.
+     *
+     * @return list<array{message: string, severity: string}>
+     */
+    private function probeOllamaTunnel(): array
+    {
+        if (! config('cabinet_probe.check_ollama_tunnel', true)) {
+            return [];
+        }
+
+        $failure = app(OllamaTunnelProbe::class)->failure();
+        if ($failure === null) {
+            return [];
+        }
+
+        return [['message' => $failure, 'severity' => 'soft']];
+    }
+
+    /**
      * Будущие занятия без ссылки-подключения (инцидент 02-09-2026, schedule
      * 1620: курс 401 + найденная тем же переписом мина курс 399 — серии
      * нового учебного года сгенерированы без ссылок, и в TG-чат ушло
      * напоминание «…по ссылке:» без самой ссылки). Кодовый guard теперь
      * молча НЕ отправляет напоминание без ссылки — эта проверка делает
-     * пустоту громкой ДО занятия, пока у админа есть время её заполнить.
+     * пустоту громкой ДО занятия, пока у админа есть время ее заполнить.
      *
      * Fallback-цепочка та же, что в zapisi:remind-classes / classes:post-group-link:
      * zoom_join_url → link → course.zoom_link. Soft: не outage, data-gap.
@@ -640,7 +664,7 @@ class ProbeCabinetHealth extends Command
             $nearest = $first->start->format('d-m H:i');
             $lines[] = sprintf('%s: %d занятие(й) без ссылки, ближайшее %s', $label, $rows->count(), $nearest);
 
-            // Ссылку заполняет куратор курса (Настя/Иван), а не админ — зовём
+            // Ссылку заполняет куратор курса (Настя/Иван), а не админ — зовем
             // их напрямую через общий curator-чат (дедуп 24h на курс внутри
             // нотификатора). --dry/--no-alert и не-прод не звонят.
             if ($first->course !== null && ! $this->option('dry') && ! $this->option('no-alert')
@@ -651,7 +675,7 @@ class ProbeCabinetHealth extends Command
 
         return [[
             'message' => sprintf(
-                'schedule-links: %d буд. занятие(й) с TG-чатом без ссылки (zoom_join_url/link/course.zoom_link пусты) — напоминание уйдёт без ссылки или не уйдёт вовсе: %s',
+                'schedule-links: %d буд. занятие(й) с TG-чатом без ссылки (zoom_join_url/link/course.zoom_link пусты) — напоминание уйдет без ссылки или не уйдет вовсе: %s',
                 $missing->count(),
                 implode('; ', array_slice($lines, 0, 5)),
             ),
@@ -700,7 +724,7 @@ class ProbeCabinetHealth extends Command
 
         $family = TextbookScale::courseFamilyPublic((string) $course->title);
         if ($family === null) {
-            return [['message' => "kanva fixture: заголовок курса #{$courseId} «{$course->title}» не матчит семейство канвы — student.dashboard не войдёт в ветку H4435", 'severity' => 'soft']];
+            return [['message' => "kanva fixture: заголовок курса #{$courseId} «{$course->title}» не матчит семейство канвы — student.dashboard не войдет в ветку H4435", 'severity' => 'soft']];
         }
 
         $student = Auth::user();
@@ -992,7 +1016,7 @@ class ProbeCabinetHealth extends Command
             $sameSet = is_string($lastFp) && $lastFp === $fingerprint;
             if (! $force && $sameSet && $lastSoftAt !== null) {
                 if ($reminderHours === 0) {
-                    $this->comment('TG soft-sticky: тот же soft/host-класс, без re-alert до зелёного (reminder=0)');
+                    $this->comment('TG soft-sticky: тот же soft/host-класс, без re-alert до зеленого (reminder=0)');
 
                     return;
                 }
@@ -1069,7 +1093,7 @@ class ProbeCabinetHealth extends Command
         $sameSet = is_string($lastFp) && $lastFp === $fingerprint;
         if (! $force && $sameSet && $lastAt !== null) {
             if ($reminderHours === 0) {
-                $this->comment('TG HTTP-sticky: тот же кабинет-класс, без re-alert до зелёного');
+                $this->comment('TG HTTP-sticky: тот же кабинет-класс, без re-alert до зеленого');
 
                 return;
             }
@@ -1210,8 +1234,8 @@ class ProbeCabinetHealth extends Command
     }
 
     /**
-     * H2104: не пугать «только Артём» на app-level fuse (auto-deploy timeout
-     * при живом HTTP). Артём — host/LXC down (SSH нет).
+     * H2104: не пугать «только Артем» на app-level fuse (auto-deploy timeout
+     * при живом HTTP). Артем — host/LXC down (SSH нет).
      *
      * @param  list<array{message?: string, severity?: string}>  $criticalFails
      */
@@ -1228,17 +1252,17 @@ class ProbeCabinetHealth extends Command
 
         if ($criticalFails === []) {
             // recovery: short neutral note
-            return 'Если снова упадёт: smoke /login → SSH runbook. Host down (нет SSH) — Иван/Марцис → Артём (@t3t3r1n).';
+            return 'Если снова упадет: smoke /login → SSH runbook. Host down (нет SSH) — Иван/Марцис → Артем (@t3t3r1n).';
         }
 
         if ($onlyAutoDeploy) {
-            return "Это guards/auto-deploy (fuse), не «сервер мёртв».\n"
+            return "Это guards/auto-deploy (fuse), не «сервер мертв».\n"
                 .'Сайт часто 200: <code>cat storage/auto_deploy.disabled</code> → smoke → '
                 ."после разбора <code>rm storage/auto_deploy.disabled</code>.\n"
-                .'Артёма (@t3t3r1n) звать только если SSH не отвечает / хост мёртв.';
+                .'Артема (@t3t3r1n) звать только если SSH не отвечает / хост мертв.';
         }
 
-        return 'Сначала SSH + runbook. Поднять VPS/контейнер может только Артём (@t3t3r1n) — '
+        return 'Сначала SSH + runbook. Поднять VPS/контейнер может только Артем (@t3t3r1n) — '
             .'отвечает нечасто; звать только при отсутствии SSH / host-down.';
     }
 
@@ -1251,11 +1275,14 @@ class ProbeCabinetHealth extends Command
     {
         $guards = false;
         $hybrid = false;
+        $tunnel = false;
         $other = false;
         foreach ($softFails as $f) {
             $m = (string) ($f['message'] ?? '');
             if (str_starts_with($m, 'guards/') || str_starts_with($m, 'guards:')) {
                 $guards = true;
+            } elseif (str_starts_with($m, OllamaTunnelProbe::PREFIX.':')) {
+                $tunnel = true;
             } elseif (
                 str_contains($m, 'hybrid ')
                 || str_contains($m, 'hybrid /')
@@ -1275,6 +1302,9 @@ class ProbeCabinetHealth extends Command
         }
         if ($hybrid) {
             $parts[] = 'hybrid';
+        }
+        if ($tunnel) {
+            $parts[] = 'ollama-туннель';
         }
         if ($other) {
             $parts[] = $parts === [] ? 'опциональные проверки' : 'прочее';

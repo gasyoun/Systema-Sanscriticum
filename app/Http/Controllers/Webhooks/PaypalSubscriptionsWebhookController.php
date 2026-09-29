@@ -77,27 +77,43 @@ final class PaypalSubscriptionsWebhookController extends Controller
             $resource = [];
         }
         $reportedAmount = $this->extractAmount($resource);
+        $wave1 = (bool) config('features.payment_fix_wave1');
+        $eventTime = $this->eventTime($resource, (string) $request->input('create_time', ''));
 
         try {
-            DB::transaction(function () use ($resource, $reportedAmount, $eventType, $eventId, $eventHash): void {
+            DB::transaction(function () use ($resource, $reportedAmount, $eventType, $eventId, $eventHash, $wave1, $eventTime): void {
                 $payment = null;
                 $decision = PaymentWebhookEvent::DECISION_APPLIED;
 
-                if ($eventType === 'BILLING.SUBSCRIPTION.ACTIVATED'
+                if ($wave1 && $eventType === 'BILLING.SUBSCRIPTION.UPDATED') {
+                    // H5007 (audit H4): UPDATED больше не значит «Active» безусловно —
+                    // статус берётся из resource.status; без статуса ничего не меняем.
+                    $status = $this->statusFromResource($resource);
+                    $decision = $status === null
+                        ? PaymentWebhookEvent::DECISION_UNMATCHED
+                        : $this->applySubscriptionStatus($resource, $status, $eventId, $eventTime);
+                } elseif ($eventType === 'BILLING.SUBSCRIPTION.ACTIVATED'
                     || $eventType === 'BILLING.SUBSCRIPTION.UPDATED'
                     || $eventType === 'BILLING.SUBSCRIPTION.RE-ACTIVATED') {
-                    $this->applySubscriptionStatus($resource, BillingSubscriptionStatus::Active, $eventId);
+                    $decision = $this->applySubscriptionStatus($resource, BillingSubscriptionStatus::Active, $eventId, $eventTime);
                 } elseif ($eventType === 'BILLING.SUBSCRIPTION.SUSPENDED') {
-                    $this->applySubscriptionStatus($resource, BillingSubscriptionStatus::PastDue, $eventId);
+                    $decision = $this->applySubscriptionStatus($resource, BillingSubscriptionStatus::PastDue, $eventId, $eventTime);
                 } elseif ($eventType === 'BILLING.SUBSCRIPTION.CANCELLED'
                     || $eventType === 'BILLING.SUBSCRIPTION.EXPIRED') {
                     $status = $eventType === 'BILLING.SUBSCRIPTION.EXPIRED'
                         ? BillingSubscriptionStatus::Completed
                         : BillingSubscriptionStatus::Cancelled;
-                    $this->applySubscriptionStatus($resource, $status, $eventId);
+                    $decision = $this->applySubscriptionStatus($resource, $status, $eventId, $eventTime);
                 } elseif ($eventType === 'PAYMENT.SALE.COMPLETED'
                     || $eventType === 'BILLING.SUBSCRIPTION.PAYMENT.COMPLETED') {
                     $payment = $this->materialisePaidCharge($resource, $eventId, $reportedAmount);
+                } elseif ($wave1 && ($eventType === 'PAYMENT.SALE.REFUNDED'
+                    || $eventType === 'PAYMENT.SALE.REVERSED'
+                    || $eventType === 'PAYMENT.SALE.DENIED')) {
+                    // H5007 (audit H3): возврат/чарджбэк/отказ раньше падали в else,
+                    // журналились unmatched и отвечали 200 — платёж оставался paid,
+                    // доступ не отзывался.
+                    [$payment, $decision] = $this->reverseCharge($resource, $eventType, $eventId);
                 } else {
                     $decision = PaymentWebhookEvent::DECISION_UNMATCHED;
                     Log::info('paypal_subscriptions.webhook.unhandled_event', [
@@ -146,11 +162,12 @@ final class PaypalSubscriptionsWebhookController extends Controller
         return response('OK', 200);
     }
 
-    private function applySubscriptionStatus(array $resource, BillingSubscriptionStatus $status, string $eventId): void
+    /** @return string PaymentWebhookEvent::DECISION_* */
+    private function applySubscriptionStatus(array $resource, BillingSubscriptionStatus $status, string $eventId, ?string $eventTime = null): string
     {
         $providerSubId = (string) ($resource['id'] ?? '');
         if ($providerSubId === '') {
-            return;
+            return PaymentWebhookEvent::DECISION_APPLIED;
         }
 
         $row = BillingSubscription::query()
@@ -165,10 +182,41 @@ final class PaypalSubscriptionsWebhookController extends Controller
                 'event_id' => $eventId,
             ]);
 
-            return;
+            return PaymentWebhookEvent::DECISION_APPLIED;
         }
 
         $meta = is_array($row->meta) ? $row->meta : [];
+
+        if (config('features.payment_fix_wave1')) {
+            // H5007 (audit H4): out-of-order guard. (a) Отменённая/завершённая
+            // подписка не воскресает от позднего ACTIVATED/UPDATED/RE-ACTIVATED;
+            // (b) событие старше уже применённого (по resource.update_time /
+            // status_update_time / create_time) не применяется. Паритет с
+            // Точкой: DECISION_REJECTED_RESURRECTION.
+            $terminal = in_array($row->status, [BillingSubscriptionStatus::Cancelled, BillingSubscriptionStatus::Completed], true);
+            $lastTime = isset($meta['last_paypal_event_time']) && is_string($meta['last_paypal_event_time'])
+                ? $meta['last_paypal_event_time']
+                : null;
+            $stale = $eventTime !== null && $lastTime !== null && strtotime($eventTime) < strtotime($lastTime);
+
+            if (($terminal && $status === BillingSubscriptionStatus::Active) || $stale) {
+                Log::warning('paypal_subscriptions.webhook.rejected_resurrection', [
+                    'provider_subscription_id' => $providerSubId,
+                    'event_id' => $eventId,
+                    'current_status' => $row->status->value,
+                    'incoming_status' => $status->value,
+                    'event_time' => $eventTime,
+                    'last_event_time' => $lastTime,
+                ]);
+
+                return PaymentWebhookEvent::DECISION_REJECTED_RESURRECTION;
+            }
+
+            if ($eventTime !== null) {
+                $meta['last_paypal_event_time'] = $eventTime;
+            }
+        }
+
         $meta['last_paypal_event_id'] = $eventId;
         $row->update([
             'status' => $status,
@@ -176,6 +224,110 @@ final class PaypalSubscriptionsWebhookController extends Controller
         ]);
 
         app(GrammarLabEntitlementService::class)->syncFromSubscription($row->fresh());
+
+        return PaymentWebhookEvent::DECISION_APPLIED;
+    }
+
+    /** H5007 (audit H4): статус подписки из resource.status (UPDATED-события). */
+    private function statusFromResource(array $resource): ?BillingSubscriptionStatus
+    {
+        $raw = strtoupper(trim((string) ($resource['status'] ?? '')));
+
+        return match ($raw) {
+            'ACTIVE' => BillingSubscriptionStatus::Active,
+            'SUSPENDED' => BillingSubscriptionStatus::PastDue,
+            'CANCELLED' => BillingSubscriptionStatus::Cancelled,
+            'EXPIRED' => BillingSubscriptionStatus::Completed,
+            default => null,
+        };
+    }
+
+    /** H5007 (audit H4): момент события — resource.update_time / status_update_time / create_time вебхука. */
+    private function eventTime(array $resource, string $createTime): ?string
+    {
+        foreach ([$resource['update_time'] ?? null, $resource['status_update_time'] ?? null, $createTime] as $raw) {
+            if (is_string($raw) && trim($raw) !== '' && strtotime($raw) !== false) {
+                return trim($raw);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * H5007 (audit H3): PAYMENT.SALE.REFUNDED / REVERSED / DENIED → платёж
+     * подписки в canceled (Payment::booted() штатно откатывает прану, реферал,
+     * доступ — reconcileAccessAfterReversal), commitment в cancelled (refund /
+     * reversed) или failed (denied), при отказе подписка → past_due. Нет такого
+     * платежа → unmatched (200, журнал), как у любого чужого события.
+     *
+     * @return array{0: ?Payment, 1: string}
+     */
+    private function reverseCharge(array $resource, string $eventType, string $eventId): array
+    {
+        $saleId = '';
+        foreach (['sale_id', 'id'] as $key) {
+            if (! empty($resource[$key]) && is_string($resource[$key])) {
+                $saleId = $resource[$key];
+                break;
+            }
+        }
+
+        $payment = $saleId === '' ? null : Payment::query()
+            ->where('provider', Payment::PROVIDER_PAYPAL_SUBSCRIPTION)
+            ->where('transaction_id', $saleId)
+            ->lockForUpdate()
+            ->first();
+
+        if ($payment === null) {
+            Log::warning('paypal_subscriptions.webhook.reversal_unmatched', [
+                'event_type' => $eventType,
+                'event_id' => $eventId,
+                'sale_id' => $saleId,
+            ]);
+
+            return [null, PaymentWebhookEvent::DECISION_UNMATCHED];
+        }
+
+        if ($payment->status !== 'canceled') {
+            $payment->update(['status' => 'canceled']);
+        }
+
+        $commitment = BillingCommitment::query()
+            ->where('payment_id', $payment->id)
+            ->lockForUpdate()
+            ->first();
+        $commitment?->update([
+            'status' => $eventType === 'PAYMENT.SALE.DENIED'
+                ? BillingCommitmentStatus::Failed
+                : BillingCommitmentStatus::Cancelled,
+        ]);
+
+        $sub = $commitment?->billing_subscription_id
+            ? BillingSubscription::query()->lockForUpdate()->find($commitment->billing_subscription_id)
+            : null;
+        if ($sub !== null) {
+            $meta = is_array($sub->meta) ? $sub->meta : [];
+            $meta['last_paypal_event_id'] = $eventId;
+            $meta['last_reversal_event_type'] = $eventType;
+            $sub->update([
+                'status' => $eventType === 'PAYMENT.SALE.DENIED' && $sub->status === BillingSubscriptionStatus::Active
+                    ? BillingSubscriptionStatus::PastDue
+                    : $sub->status,
+                'meta' => $meta,
+            ]);
+            app(GrammarLabEntitlementService::class)->syncFromSubscription($sub->fresh());
+        }
+
+        Log::info('paypal_subscriptions.webhook.payment_reversed', [
+            'event_type' => $eventType,
+            'event_id' => $eventId,
+            'payment_id' => $payment->id,
+            'commitment_id' => $commitment?->id,
+            'subscription_id' => $sub?->id,
+        ]);
+
+        return [$payment, PaymentWebhookEvent::DECISION_APPLIED];
     }
 
     /**
@@ -323,7 +475,12 @@ final class PaypalSubscriptionsWebhookController extends Controller
             'payment_id' => $payment->id,
         ]);
 
-        if ($sub->status !== BillingSubscriptionStatus::Active) {
+        // H5007 (audit H4): поздний SALE.COMPLETED не воскрешает отменённую /
+        // завершённую подписку — Active только из pending_first_pay / past_due.
+        $reactivatable = config('features.payment_fix_wave1')
+            ? in_array($sub->status, [BillingSubscriptionStatus::PendingFirstPay, BillingSubscriptionStatus::PastDue], true)
+            : $sub->status !== BillingSubscriptionStatus::Active;
+        if ($reactivatable) {
             $sub->update(['status' => BillingSubscriptionStatus::Active]);
         }
 

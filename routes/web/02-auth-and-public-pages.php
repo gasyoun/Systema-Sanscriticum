@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CorpusSandhiController;
 use App\Http\Controllers\DictionaryPageController;
 use App\Http\Controllers\DocController;
 use App\Http\Controllers\GrammarLabController;
@@ -72,6 +73,10 @@ Route::view('/faq/dz', 'faq.dz')->name('faq.dz');
 // (H2060, linked from student.access recovery CTA behind payment_recovery_cta).
 Route::view('/faq/payment', 'faq.payment')->name('faq.payment');
 
+// H5184 N10 — trust-moat: позиционирование «проверка — человек, а не
+// автопроверка». До catch-all /{slug}.
+Route::view('/pochemu-my', 'pages.trust-moat')->name('trust-moat');
+
 // Публичный гид личного кабинета (H3499) — БЕЗ auth, для ещё не вошедших:
 // рассылки students:send-login-invites, анонсы в Telegram, скрипты куратора.
 // Тот же источник, что кабинетный /dvaram/help. Строго до catch-all /{slug}.
@@ -120,6 +125,9 @@ Route::prefix('slovar')->name('slovar.')->group(function () {
 // ═══════════════════════════════════════════════════════════════
 Route::get('/reading/kosha-demo', [ReadingPackController::class, 'show'])
     ->name('reading.kosha-demo');
+// H4718 (census A13) — sandhi rules ranked by corpus frequency (kosha corpus-sandhi), same flag.
+Route::get('/reading/sandhi', [CorpusSandhiController::class, 'show'])
+    ->name('reading.sandhi');
 
 // ═══════════════════════════════════════════════════════════════
 // H1463 — Sanskrit-HUB L5 /transliterate playground (Workstream A v0).

@@ -89,7 +89,7 @@
             {{-- Правый блок: Войти / Аккаунт --}}
             <div class="flex items-center gap-2 md:gap-3 shrink-0">
                 
-                {{-- Контакты для тёмной шапки магазина --}}
+                {{-- Контакты для темной шапки магазина --}}
 @include('partials.contacts-bar', ['variant' => 'dark'])
 
 {{-- Разделитель --}}
@@ -146,7 +146,9 @@
     </header>
 
     {{-- H2365: site-wide free-intro / trial next-date CTA (NextIntroSession) --}}
-    @include('shop.partials.free-intro-banner')
+    @unless(request()->routeIs('beginner-pilot.show'))
+        @include('shop.partials.free-intro-banner')
+    @endunless
 
     {{-- ═══════════════ КОНТЕНТ ═══════════════ --}}
     <main class="flex-1">
@@ -178,6 +180,8 @@
                     <div class="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 text-[13px] md:text-sm font-medium">
                         @include('partials.footer-docs', ['linkClass' => 'text-slate-400 hover:text-brand transition-colors'])
                         <a href="{{ route('hub.sanskritorium') }}" class="text-slate-400 hover:text-brand transition-colors">Транслитерация</a>
+                        {{-- H5184 N10: trust-moat — «проверка человек, а не автопроверка» --}}
+                        <a href="{{ route('trust-moat') }}" class="text-slate-400 hover:text-brand transition-colors">Почему проверяет человек</a>
                     </div>
                     <p class="text-xs text-slate-600 mt-2">
                         &copy; {{ date('Y') }} Все права защищены

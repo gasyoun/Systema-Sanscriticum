@@ -60,7 +60,7 @@
 
 @section('content')
 
-{{-- Прогресс-бар чтения — фиксирован сверху, растёт со скроллом --}}
+{{-- Прогресс-бар чтения — фиксирован сверху, растет со скроллом --}}
 <div class="reading-progress" id="readingProgress"></div>
 
 {{-- ═══════════════ HERO ═══════════════ --}}
@@ -132,7 +132,7 @@
     </div>
 </section>
 
-{{-- Ещё материалы: обратно в хаб --}}
+{{-- Еще материалы: обратно в хаб --}}
 <div class="text-center mt-8" data-analytics="article-materials-link">
     <a href="{{ route('shop.materials') }}"
        class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-brand transition-colors">
@@ -192,7 +192,7 @@ if (typeof window.sendGoal === 'function') {
     // Триггерим модалку через Alpine — ищем body и обновляем стейт
     const bodyEl = document.body;
     if (bodyEl && typeof window.Alpine !== 'undefined') {
-        // Через Alpine.$data() можно дёрнуть реактивный стейт
+        // Через Alpine.$data() можно дернуть реактивный стейт
         const data = window.Alpine.$data(bodyEl);
         if (data) {
             data.isTrialModalOpen = true;
@@ -254,7 +254,7 @@ if (typeof window.sendGoal === 'function') {
 
     // Хелпер — абсолютная позиция элемента от верха документа.
 // offsetTop ломается, когда родитель имеет position:relative;
-// getBoundingClientRect + scrollY всегда даёт корректное значение.
+// getBoundingClientRect + scrollY всегда дает корректное значение.
 function getAbsoluteTop(el) {
     return el.getBoundingClientRect().top + window.scrollY;
 }
@@ -272,7 +272,7 @@ function updateActiveToc() {
         return;
     }
 
-    // Ещё до первого H2 — ничего не активно
+    // Еще до первого H2 — ничего не активно
     if (scrollPos < getAbsoluteTop(items[0].el)) {
         items.forEach(function(item) {
             item.link.classList.remove('active');

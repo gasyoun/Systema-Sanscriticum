@@ -21,7 +21,7 @@ function hindiTgCuratedPractice() {
                 body,
             });
             if (!res.ok) {
-                this.results[itemId] = { status: 'err', message: 'Не удалось проверить. Попробуйте ещё раз.' };
+                this.results[itemId] = { status: 'err', message: 'Не удалось проверить. Попробуйте еще раз.' };
                 return;
             }
             const data = await res.json();

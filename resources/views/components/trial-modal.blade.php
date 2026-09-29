@@ -6,7 +6,7 @@
     Параметры (можно передать через атрибуты компонента):
     - title       — заголовок модалки
     - description — текст под заголовком
-    - form_name   — имя формы для аналитики (попадёт в lead.form_name)
+    - form_name   — имя формы для аналитики (попадет в lead.form_name)
 --}}
 @props([
     'title' => 'Запись на пробный урок',
@@ -22,7 +22,7 @@
          aria-labelledby="trial-modal-title" role="dialog" aria-modal="true"
          @keydown.escape.window="isTrialModalOpen = false">
         
-        {{-- Тёмный фон --}}
+        {{-- Темный фон --}}
         <div x-show="isTrialModalOpen" 
              x-transition.opacity.duration.300ms
              @click="isTrialModalOpen = false"
@@ -59,7 +59,7 @@
                         @csrf
                         <input type="hidden" name="form_name" value="{{ $formName }}">
                         <input type="hidden" name="referrer" value="{{ request()->fullUrl() }}">
-                        {{-- Если открыли модалку со страницы статьи — передадим её ID для аналитики и дедупликации --}}
+                        {{-- Если открыли модалку со страницы статьи — передадим ее ID для аналитики и дедупликации --}}
                         @if($article)
                             <input type="hidden" name="source_article_id" value="{{ $article->id }}">
                             <input type="hidden" name="source_article_slug" value="{{ $article->slug }}">
@@ -105,7 +105,7 @@
                             </label>
 
                             {{-- Необязательная: согласие на рекламную рассылку (152-ФЗ). name=is_promo_agreed
-                                 читает LeadController::store; x-data этой модалки живёт на <body>, поэтому
+                                 читает LeadController::store; x-data этой модалки живет на <body>, поэтому
                                  без x-model — обычный чекбокс, кнопку не гейтит. --}}
                             <label class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-gray-100">
                                 <div class="flex items-center h-5 mt-px shrink-0">

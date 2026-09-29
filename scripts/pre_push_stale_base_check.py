@@ -1628,6 +1628,56 @@ def relocated_registry_rows(remote_ref: str, local_ref: str, path: str,
     return ok
 
 
+ENV_INVENTORY_PATH = "docs/environment_variables.md"
+ENV_INVENTORY_ROW = re.compile(
+    r"^\| `([A-Z][A-Z0-9_]*)` \| ([^|]+) \| ([^|]+) \| (.+) \|$"
+)
+
+
+def preserved_env_inventory_rows(remote_ref: str, local_ref: str, path: str,
+                                 removed: list[int]) -> set[int]:
+    """Credit regenerated inventory rows only when their keyed facts survive.
+
+    Source line numbers move when config files change. A line-based diff then
+    reports those rows as deleted, even though the key, class and default are
+    still present. Require a unique matching key on both sides and identical
+    class/default; a missing or changed key remains subject to the normal guard.
+    Identical duplicate rows in a stale generated file may collapse to one
+    row, but conflicting duplicates receive no credit.
+    Other paths and non-row text receive no exemption.
+    """
+    if path.replace("\\", "/").lower() != ENV_INVENTORY_PATH:
+        return set()
+
+    old_lines = blob_lines(remote_ref, path)
+    new_lines = blob_lines(local_ref, path)
+
+    def indexed_rows(lines: list[str]) -> dict[str, list[tuple[int, str, str]]]:
+        rows: dict[str, list[tuple[int, str, str]]] = {}
+        for number, line in enumerate(lines, 1):
+            match = ENV_INVENTORY_ROW.fullmatch(line.strip())
+            if match:
+                rows.setdefault(match.group(1), []).append(
+                    (number, match.group(2).strip(), match.group(3).strip()))
+        return rows
+
+    old_rows = indexed_rows(old_lines)
+    new_rows = indexed_rows(new_lines)
+    preserved = set()
+    for number in removed:
+        if not 1 <= number <= len(old_lines):
+            continue
+        match = ENV_INVENTORY_ROW.fullmatch(old_lines[number - 1].strip())
+        if not match:
+            continue
+        key = match.group(1)
+        old_facts = {row[1:] for row in old_rows.get(key, [])}
+        if len(old_facts) == 1 and len(new_rows.get(key, [])) == 1 \
+                and old_facts == {new_rows[key][0][1:]}:
+            preserved.add(number)
+    return preserved
+
+
 def scan(local_ref: str, remote_ref: str, recent_days: float,
          max_paths: int,
          max_blame_lines: int = DEFAULT_MAX_BLAME_LINES,
@@ -1665,6 +1715,12 @@ def scan(local_ref: str, remote_ref: str, recent_days: float,
             continue
         if is_mint_stub(remote_ref, path):
             continue
+        preserved = preserved_env_inventory_rows(remote_ref, local_ref, path,
+                                                 removed)
+        if preserved:
+            removed = [ln for ln in removed if ln not in preserved]
+            if not removed:
+                continue
         # FINDINGS §450: rows this push relocates into REGISTRY_ARCHIVE.md are
         # moves, not losses — drop them from the flagged set before blaming.
         relocated = relocated_registry_rows(remote_ref, local_ref, path, removed)

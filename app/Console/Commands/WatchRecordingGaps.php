@@ -116,7 +116,7 @@ class WatchRecordingGaps extends Command
                 ->first();
             if ($recent !== null) {
                 $this->comment(sprintf(
-                    'Дедуп recording_gap_alerts #%d (%s) — тот же набор пробелов уже уехал, повторный алерт не шлём.',
+                    'Дедуп recording_gap_alerts #%d (%s) — тот же набор пробелов уже уехал, повторный алерт не шлем.',
                     $recent->id,
                     $recent->last_sent_at->timezone((string) config('app.timezone', 'Europe/Moscow'))->format('d-m-Y H:i'),
                 ));
@@ -244,11 +244,11 @@ class WatchRecordingGaps extends Command
             $course = e($gap['course']);
             $gid = $gap['group_id'] !== null ? (string) $gap['group_id'] : '—';
             // H3557: чем старше занятие, тем ближе смерть download_token вебхука
-            // (эмпирика ~24ч). Громкий маркер заставляет дёргать трубу ДО смерти токена.
+            // (эмпирика ~24ч). Громкий маркер заставляет дергать трубу ДО смерти токена.
             $aging = '';
             $ageHours = CarbonImmutable::parse($gap['start'], (string) config('app.timezone', 'Europe/Moscow'))->diffInHours(now((string) config('app.timezone', 'Europe/Moscow')));
             if ($ageHours >= 20) {
-                $aging = ' ⚠️ <b>токен записи истекает — срочно resume, иначе запись вернётся только вручную</b>';
+                $aging = ' ⚠️ <b>токен записи истекает — срочно resume, иначе запись вернется только вручную</b>';
             }
             $lines[] = '• '.$gap['start']
                 .' · course '.$gap['course_id'].' '.$course
@@ -297,7 +297,7 @@ class WatchRecordingGaps extends Command
 
         $line = implode(' · ', $parts);
 
-        // H3952: a fresh-link failure used to be indistinguishable from «вебхук не пришёл»
+        // H3952: a fresh-link failure used to be indistinguishable from «вебхук не пришел»
         // — the run exited green and every diagnostic pointed at a missing webhook. The
         // workflow now stamps its verdict into the thrown error and this line names it,
         // with the webhook-token HEAD as the corroborating evidence.
@@ -310,7 +310,7 @@ class WatchRecordingGaps extends Command
         if ($token !== null) {
             $line .= "\n".'↳ вебхук-токен: '.match ($token) {
                 'alive' => 'ЖИВ (HEAD 2xx/3xx) — запись есть в облаке, значит это сбой credential/fetch, а не пропавший вебхук',
-                'dead' => 'мёртв — за пределами ~24 ч окна, свежую ссылку брать через per-account fresh-link',
+                'dead' => 'мертв — за пределами ~24 ч окна, свежую ссылку брать через per-account fresh-link',
                 'absent' => 'в прогоне нет подписанной ссылки',
                 default => $token,
             };
@@ -397,7 +397,7 @@ class WatchRecordingGaps extends Command
             $chatIds[] = $careId;
         }
         if ($token === '' || $chatIds === []) {
-            $this->warn('TELEGRAM_BOT_TOKEN или RECORDING_GAP_TELEGRAM_CHAT_ID пусты — алерт не ушёл.');
+            $this->warn('TELEGRAM_BOT_TOKEN или RECORDING_GAP_TELEGRAM_CHAT_ID пусты — алерт не ушел.');
 
             return false;
         }

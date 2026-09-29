@@ -18,16 +18,22 @@ name: Schedule guard reproduction test
 #
 # Runs on every push/PR touching the guarded scripts, plus weekly so regressions
 # surface even if the wrappers themselves haven't changed in a while.
+#
+# H5080-F1 (19-09-2026): the .91-side n8n verify parser (scripts/server_guards_n8n/)
+# joined with its own job — the off-site snapshot "newest" bug drew a false
+# critical for ~24 days while every nightly copy was landing.
 
 on:
   push:
     branches: [master, main]
     paths:
       - "scripts/server_guards/sbin/**"
+      - "scripts/server_guards_n8n/**"
   pull_request:
     branches: [master, main]
     paths:
       - "scripts/server_guards/sbin/**"
+      - "scripts/server_guards_n8n/**"
   schedule:
     - cron: "17 3 * * 1" # weekly, Monday 03:17 UTC
   workflow_dispatch:
@@ -77,3 +83,18 @@ jobs:
       # box-side sweep dies, but never once per 15-min tick).
       - name: Run test_systema_ib_balance_watch.sh
         run: bash scripts/server_guards/sbin/test_systema_ib_balance_watch.sh
+
+  n8n-verify-offsite-parser-test:
+    name: n8n verify off-site parser (newest snapshot, not first JSON entry)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # H5080-F1 (19-09-2026): the .91 verify drew a false critical "newest
+      # off-site snapshot 595 h old" while 26 nightly copies were live — the
+      # parser took the FIRST JSON entry, and `--latest 1` returns every group
+      # (each nightly archive has a unique path, so each is its own group).
+      # The test extracts the pipeline from the verify script itself, so a
+      # regression to `head -1` fails it by construction.
+      - name: Run test_n8n_verify_offsite_parser.sh
+        run: bash scripts/server_guards_n8n/sbin/test_n8n_verify_offsite_parser.sh

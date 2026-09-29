@@ -1,5 +1,5 @@
 @php
-    // Соц. доказательство: авто-счёт (база + реальные лиды) или ручной текст.
+    // Соц. доказательство: авто-счет (база + реальные лиды) или ручной текст.
     $registeredNote = null;
     if (! empty($data['registered_dynamic']) && isset($page)) {
         $regN = (int) ($data['registered_base'] ?? 0) + $page->leads()->count();
@@ -24,7 +24,7 @@
         <div class="max-w-7xl mx-auto flex flex-col">
             
             {{-- 1. ТЕКСТОВАЯ ЧАСТЬ --}}
-            {{-- Родитель выравнивает всё влево (items-start) --}}
+            {{-- Родитель выравнивает все влево (items-start) --}}
             <div class="flex flex-col items-start text-left">
                 
                 {{-- Надзаголовок --}}
@@ -44,7 +44,7 @@
                 <div class="transform transition-all duration-700 delay-200 translate-y-8 opacity-0 w-full"
                      :class="loaded ? '!translate-y-0 !opacity-100' : ''">
                     @php
-                        // Подсветка: фрагменты в *звёздочках* красим акцентным цветом.
+                        // Подсветка: фрагменты в *звездочках* красим акцентным цветом.
                         // e() экранирует ДО вставки span — тег служебный, контент безопасен.
                         $titleHtml = nl2br(preg_replace(
                             '/\*(.+?)\*/u',

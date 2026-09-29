@@ -71,7 +71,7 @@ final class StoriesFromHarvestCommand extends Command
             ->where('source_key', $sourceKey)
             ->exists();
         if ($exists) {
-            $this->warn("Этот файл уже заведён в очередь (source_key={$sourceKey}) — пропуск.");
+            $this->warn("Этот файл уже заведен в очередь (source_key={$sourceKey}) — пропуск.");
 
             return self::SUCCESS;
         }

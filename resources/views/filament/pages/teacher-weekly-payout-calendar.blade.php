@@ -1,7 +1,7 @@
 @php
     $money = fn ($v): string => number_format((float) $v, 2, ',', ' ');
     $grid = $grid ?? ['weeks' => [], 'tochka' => ['ok' => false], 'paypal_note' => ''];
-    // H3532: при флаге OFF ($yearView не задан) всё новое отсутствует из DOM байт-в-байт.
+    // H3532: при флаге OFF ($yearView не задан) все новое отсутствует из DOM байт-в-байт.
     $yearView = !empty($yearView);
     $tab = $yearView ? ($tab ?? 'week') : 'week';
     $showWeek = ! $yearView || $tab === 'week';
@@ -12,7 +12,7 @@
     <div class="rounded-xl bg-primary-50 p-4 text-sm ring-1 ring-primary-500/20 dark:bg-primary-500/10">
         <p class="font-semibold text-primary-900 dark:text-primary-200">Только чтение</p>
         <p class="mt-1 text-primary-900/80 dark:text-primary-200/80">
-            Эта страница не создаёт выплаты. Разметка легаси-«Расход» —
+            Эта страница не создает выплаты. Разметка легаси-«Расход» —
             <a href="{{ $attributionUrl }}" class="underline">Как размечать выплаты</a>.
             Начисление — <a href="{{ $salariesUrl }}" class="underline">Зарплаты</a>.
         </p>
@@ -39,7 +39,7 @@
             <li>Проверить сборность должников по курсам получателя — раздел «Собранность должников».</li>
             <li>Заплатить: Точка ₽ / PayPal EUR (вручную).</li>
             <li>Записать: калькулятор «Записать выплату» на «Зарплатах» / занести opex в Финансы.</li>
-            <li>Разметить новые «Расходы» в очереди разметки. НПД-чек самозанятым: зачёт до выплаты, −6 %.</li>
+            <li>Разметить новые «Расходы» в очереди разметки. НПД-чек самозанятым: зачет до выплаты, −6 %.</li>
         </ol>
     </div>
 
@@ -123,7 +123,7 @@
 
     <h2 class="mt-8 text-sm font-semibold text-gray-500 dark:text-gray-400">Собранность должников по преподавателям</h2>
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-        Студенты активных курсов, ещё не оплатившие текущий блок. Выплата без учёта несобранного — неполная картина.
+        Студенты активных курсов, еще не оплатившие текущий блок. Выплата без учета несобранного — неполная картина.
     </p>
     <div class="mt-2 overflow-x-auto rounded-xl ring-1 ring-gray-950/5 dark:ring-white/10">
         <table class="w-full text-sm">
@@ -272,11 +272,11 @@
             $paypal = $yearGrid['paypal'];
             $horizon = $yearGrid['horizon4'];
             $channelLabel = [
-                'tochka_maria' => 'Точка · шлёт Мария',
+                'tochka_maria' => 'Точка · шлет Мария',
                 'tochka_ip_gasuns' => 'ИП Гасунса',
                 'paypal_mg' => 'PayPal € · MG',
                 'xoom_mg' => 'Xoom · MG',
-                'self_ip' => 'своё ИП (Точка)',
+                'self_ip' => 'свое ИП (Точка)',
             ];
         @endphp
 
@@ -296,10 +296,10 @@
                 <p class="font-semibold">€: баланс PayPal (ручной ввод)</p>
                 @if ($paypal['balance_eur'] !== null)
                     <p class="mt-1 text-lg">{{ $money($paypal['balance_eur']) }} €
-                        <span class="text-xs text-gray-500">против {{ $money($horizon['eur_need']) }} € за 4 недели · введён {{ $paypal['entered_at'] }}</span></p>
+                        <span class="text-xs text-gray-500">против {{ $money($horizon['eur_need']) }} € за 4 недели · введен {{ $paypal['entered_at'] }}</span></p>
                     <p class="mt-1 text-xs">{{ (float) $paypal['balance_eur'] + 0.0001 >= $horizon['eur_need'] ? '✓ хватит' : '⚠ не хватит' }}</p>
                 @else
-                    <p class="mt-1 text-warning-600">ещё не введён — внесите ниже</p>
+                    <p class="mt-1 text-warning-600">еще не введен — внесите ниже</p>
                 @endif
                 <p class="mt-1 text-xs text-gray-500">Курс ₽→€: {{ rtrim(rtrim((string) $fx['rate'], '0'), '.') }} ({{ $fx['source'] }})</p>
             </div>
@@ -323,8 +323,8 @@
 
         <h2 class="mt-8 text-sm font-semibold text-gray-500 dark:text-gray-400">Год {{ $yearGrid['year'] }}: 52 недели × все получатели</h2>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Даты твёрдые (конец блока 4 / годовщина прошлого месяца / штатный ритм), суммы предварительные — растут с оплатами студентов.
-            Формула «на руки»: (поступления ₽ × 92 %) × ставка(t) − прямые вычеты ± перерасчёты; НПД −6 % — отдельный шаг выплаты.
+            Даты твердые (конец блока 4 / годовщина прошлого месяца / штатный ритм), суммы предварительные — растут с оплатами студентов.
+            Формула «на руки»: (поступления ₽ × 92 %) × ставка(t) − прямые вычеты ± перерасчеты; НПД −6 % — отдельный шаг выплаты.
         </p>
         <div class="mt-2 overflow-x-auto rounded-xl ring-1 ring-gray-950/5 dark:ring-white/10">
             <table class="w-full text-sm">

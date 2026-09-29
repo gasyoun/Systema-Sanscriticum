@@ -24,6 +24,7 @@ use App\Http\Middleware\VerifyExamScoresWebhook;
 use App\Http\Middleware\VerifyInboundEmailWebhook;
 use App\Http\Middleware\VerifyLeadStepWebhook;
 use App\Http\Middleware\VerifyLectureClipCallbackWebhook;
+use App\Http\Middleware\VerifyLessonBannersApi;
 use App\Http\Middleware\VerifyMaxMagnetWebhook;
 use App\Http\Middleware\VerifyPartnerBotWebhook;
 use App\Http\Middleware\VerifyTelegramBotWebhook;
@@ -137,6 +138,7 @@ class Kernel extends HttpKernel
         'verify.max.magnet' => VerifyMaxMagnetWebhook::class,
         'verify.n8n.leadstep' => VerifyLeadStepWebhook::class,
         'verify.n8n.clipcallback' => VerifyLectureClipCallbackWebhook::class,
+        'verify.n8n.lessonbanners' => VerifyLessonBannersApi::class,
         'verify.n8n.examscores' => VerifyExamScoresWebhook::class,
         // --- ЛЕГАСИ БОТ-ВЕБХУКИ (enforce-if-configured) ---
         'verify.tg.bot' => VerifyTelegramBotWebhook::class,

@@ -11,6 +11,7 @@ use App\Models\TelegramSupportMessage;
 use App\Models\User;
 use App\Services\TelegramBusiness\BusinessSupportReplyDrainer;
 use App\Services\TelegramBusiness\TelegramBusinessNormalizer;
+use App\Services\TelegramBusiness\TelegramBusinessStoryPublisher;
 use App\Services\TelegramSupport\TelegramSupportSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -285,6 +286,7 @@ class TelegramBusinessLaneTest extends TestCase
                 app(TelegramBusinessNormalizer::class),
                 app(TelegramSupportSyncService::class),
                 app(BusinessSupportReplyDrainer::class),
+                app(TelegramBusinessStoryPublisher::class),
             );
     }
 

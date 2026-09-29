@@ -9,7 +9,7 @@
         <div>
             <p class="text-[11px] font-extrabold uppercase tracking-wider text-amber-600">Ваш ранг</p>
             <h3 class="text-lg font-extrabold text-[#101010]">{{ $rank['name'] }}</h3>
-            <p class="text-gray-500 text-sm">Накоплено за всё время: <span class="font-bold">{{ number_format($rank['lifetime'], 0, '.', ' ') }}</span> праны</p>
+            <p class="text-gray-500 text-sm">Накоплено за все время: <span class="font-bold">{{ number_format($rank['lifetime'], 0, '.', ' ') }}</span> праны</p>
         </div>
     </div>
 
