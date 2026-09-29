@@ -450,6 +450,7 @@ class PaymentController extends Controller
                 ttlMinutes: $promoTtlMinutes,
                 redirectUrl: $signedRedirectUrl,
                 failRedirectUrl: $signedFailRedirectUrl,
+                payment: $payment,
             );
         } catch (ConnectionException $e) {
             // Сетевой сбой / TLS / DNS / timeout. Помечаем платёж failed (наблюдатель

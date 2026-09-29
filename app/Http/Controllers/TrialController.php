@@ -83,6 +83,7 @@ final class TrialController extends Controller
                 amount: $amount,
                 purpose: $purpose,
                 itemName: 'Пробное занятие «'.$course->title.'»',
+                payment: $payment,
             );
         } catch (ConnectionException $e) {
             $payment->update(['status' => 'failed']);
