@@ -7,6 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SupportAiReplyEvent extends Model
 {
+    /**
+     * Длина колонки `event_type` (миграция 2026_09_28_120000). Прод-MySQL режет
+     * длинное значение ошибкой 22001, sqlite — молча пропускает, поэтому длину
+     * держит тест, а не база: SupportAiReplyEventTypeLengthTest.
+     */
+    public const EVENT_TYPE_MAX_LENGTH = 64;
+
     /** H3395: куратор отправил ответ, начатый с шаблона библиотеки (Helpdesk). */
     public const EVENT_TEMPLATE_USED = 'template_used';
 

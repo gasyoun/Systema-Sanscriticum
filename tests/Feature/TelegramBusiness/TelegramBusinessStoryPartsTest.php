@@ -91,6 +91,37 @@ final class TelegramBusinessStoryPartsTest extends TestCase
         }
     }
 
+    public function test_approved_subtitles_are_burned_into_a_story_part_when_ffmpeg_supports_libass(): void
+    {
+        $filters = Process::run(['ffmpeg', '-hide_banner', '-filters']);
+        $encoders = Process::run(['ffmpeg', '-hide_banner', '-encoders']);
+        if (! $filters->successful() || ! str_contains($filters->output(), ' subtitles ')
+            || ! $encoders->successful() || ! str_contains($encoders->output(), 'libx265')) {
+            $this->markTestSkipped('ffmpeg with subtitles and libx265 is required.');
+        }
+        $base = tempnam(sys_get_temp_dir(), 'tg-story-caption-test-');
+        self::assertNotFalse($base);
+        @unlink($base);
+        $source = $base.'.mp4';
+        $result = null;
+        try {
+            self::assertTrue(Process::timeout(30)->run([
+                'ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi',
+                '-i', 'testsrc2=size=180x320:rate=10', '-t', '2', '-c:v', 'libx264', $source,
+            ])->successful());
+            $method = new ReflectionMethod(TelegramBusinessStoryPublisher::class, 'normalise');
+            $result = $method->invoke(app(TelegramBusinessStoryPublisher::class), $source, 0, 2.0,
+                "1\n00:00:00,000 --> 00:00:01,500\nСанскрит — это язык.\n");
+            self::assertFileExists($result);
+            self::assertGreaterThan(0, filesize($result));
+        } finally {
+            @unlink($source);
+            if (is_string($result)) {
+                @unlink($result);
+            }
+        }
+    }
+
     public function test_daily_cap_defers_a_new_video_without_downloading_it(): void
     {
         $this->createPublisherTables();
@@ -223,6 +254,10 @@ final class TelegramBusinessStoryPartsTest extends TestCase
             $table->json('video_fingerprint')->nullable();
             $table->json('source_post')->nullable();
             $table->timestamp('near_match_approved_at')->nullable();
+            $table->string('source_media_path')->nullable();
+            $table->longText('subtitle_draft')->nullable();
+            $table->string('subtitle_status')->nullable();
+            $table->timestamp('last_story_posted_at')->nullable();
             $table->timestamp('started_at')->nullable();
             $table->timestamp('deferred_until')->nullable();
             $table->string('status');
