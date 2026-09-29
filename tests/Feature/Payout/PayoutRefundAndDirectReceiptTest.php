@@ -17,7 +17,7 @@ use App\Services\Payout\PayoutPackageService;
 use App\Services\Payout\PayoutWritesDisabled;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Artisan;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -111,7 +111,7 @@ class PayoutRefundAndDirectReceiptTest extends TestCase
         }
 
         // Возврат за неоказанный блок явно называет обязательство, которое уменьшает (D10).
-        $refund = $this->ledger->refund($receipt, "rfnd:{$blockNumber}", 100_000, now(), [$obligation->id => -100_000]);
+        $refund = $this->ledger->refund($receipt, "rfnd:{$blockNumber}", 100_000, now(), [$obligation->id => 100_000]);
 
         return [$obligation->refresh(), $refund];
     }

@@ -488,7 +488,10 @@ return [
         ))))),
         'story_active_period' => (int) env('TELEGRAM_BUSINESS_STORY_ACTIVE_PERIOD', 86400),
         'story_caption' => env('TELEGRAM_BUSINESS_STORY_CAPTION', ''),
+        'story_daily_video_cap' => (int) env('TELEGRAM_BUSINESS_STORY_DAILY_VIDEO_CAP', 5),
         'story_ffmpeg_binary' => env('TELEGRAM_BUSINESS_STORY_FFMPEG_BINARY', 'ffmpeg'),
+        // ASR runs on Ivan/Air; only the already-required final Story transcode runs here.
+        'story_subtitles_enabled' => (bool) env('TELEGRAM_BUSINESS_STORY_SUBTITLES_ENABLED', true),
     ],
 
     'vk' => [

@@ -9,6 +9,7 @@ use App\Services\BlockAccessMaterializer;
 use App\Services\Ledger\LedgerProjection;
 use App\Services\Ledger\LedgerService;
 use App\Support\Kopecks;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -27,6 +28,13 @@ use Throwable;
  */
 final class EvidenceCollector
 {
+    /**
+     * Метка легаси-импорта (ImportAcademyData), а не номер транзакции: на проде
+     * одна и та же «Мульти-оплата (Блоки 1-4)» стоит у 1242 оплат 182 студентов.
+     * Доказательством оплаты не является — в ключи не попадает.
+     */
+    public const IMPORT_PLACEHOLDER_TXN = '/^Мульти-оплата \\(Блоки \\d+-\\d+\\)$/u';
+
     public const CH_BANK = 'bank_acquiring';
 
     public const CH_PAYPAL = 'paypal';
@@ -39,7 +47,10 @@ final class EvidenceCollector
 
     public const CH_WEBHOOK = 'webhook_journal';
 
-    public function __construct(private readonly LedgerProjection $projection) {}
+    public function __construct(
+        private readonly LedgerProjection $projection,
+        private readonly BankStatementControl $statement,
+    ) {}
 
     /**
      * @return array{window: array{from: ?string, to: string}, sources: array<string, array<string, mixed>>, rows: list<array<string, mixed>>, excluded: array<string, int>, ledger: array<string, mixed>}
@@ -71,9 +82,9 @@ final class EvidenceCollector
             $sources[self::CH_WEBHOOK] = ['status' => 'missing', 'note' => 'payment_webhook_events table absent'];
         }
 
-        // 3. Банковская выписка зачислений (переводы, SEPA). Импорта зачислений
-        //    в системе нет (парсеры выписок H4200 — только расходы): источник
-        //    отсутствует, прогон — incomplete. Не ноль.
+        // 3. Банковская выписка зачислений (H5480). Источник «present» только
+        //    если импортированная выписка покрывает день ЦЕЛИКОМ; частичная —
+        //    по-прежнему missing, и прогон честно incomplete. Не ноль.
         $sources['bank_statement'] = $this->bankStatementSource($from, $to);
 
         // 4. Ядро P1.
@@ -327,7 +338,8 @@ final class EvidenceCollector
     {
         $keys = [];
         $txn = is_string($p->transaction_id) ? trim($p->transaction_id) : '';
-        if ($txn !== '' && ! str_starts_with($txn, BlockAccessMaterializer::GRANT_PREFIX)) {
+        if ($txn !== '' && ! str_starts_with($txn, BlockAccessMaterializer::GRANT_PREFIX)
+            && preg_match(self::IMPORT_PLACEHOLDER_TXN, $txn) !== 1) {
             $keys[] = 'txn:'.$txn;
         }
         $meta = is_array($p->claim_meta) ? $p->claim_meta : [];
@@ -342,8 +354,13 @@ final class EvidenceCollector
     }
 
     /**
-     * Сколько раз каждый ключ доказательства встречается среди ВСЕХ оплаченных
-     * поступлений (не только окна): повтор со старой строкой тоже повтор.
+     * Сколько раз каждый ключ доказательства использован повторно среди ВСЕХ
+     * оплаченных поступлений (не только окна): повтор со старой строкой тоже повтор.
+     *
+     * Одна оплата, разложенная на блоки одного студента одного курса (разные
+     * тарифы, один номер транзакции), — это один платёж, не повтор: ключ такой
+     * семьи считается один раз. Повтор — это ключ у разных студентов или курсов,
+     * либо дважды за один и тот же тариф (D16).
      *
      * @param  list<Payment>  $candidates
      * @return array<string, int>
@@ -354,7 +371,7 @@ final class EvidenceCollector
         foreach ($candidates as $p) {
             if ($p->refund_of_payment_id === null) {
                 foreach (self::evidenceKeys($p) as $k) {
-                    $wanted[$k] = 0;
+                    $wanted[$k] = [];
                 }
             }
         }
@@ -367,17 +384,24 @@ final class EvidenceCollector
             ->whereNull('refund_of_payment_id')
             ->where('amount', '>', 0)
             ->whereNotIn('tariff', ['Расход', 'salary_payout'])
-            ->select(['id', 'transaction_id', 'provider', 'claim_meta'])
+            ->select(['id', 'user_id', 'course_id', 'tariff', 'transaction_id', 'provider', 'claim_meta'])
             ->lazyById(1000)
             ->each(function (Payment $p) use (&$wanted): void {
                 foreach (self::evidenceKeys($p) as $k) {
                     if (isset($wanted[$k])) {
-                        $wanted[$k]++;
+                        $wanted[$k][] = $p->user_id.'|'.$p->course_id.'|'.$p->tariff;
                     }
                 }
             });
 
-        return $wanted;
+        $out = [];
+        foreach ($wanted as $k => $uses) {
+            $owners = array_unique(array_map(fn (string $u) => substr($u, 0, (int) strrpos($u, '|')), $uses));
+            $splitOfOnePayment = count($owners) === 1 && count(array_unique($uses)) === count($uses);
+            $out[$k] = $splitOfOnePayment ? 1 : count($uses);
+        }
+
+        return $out;
     }
 
     /** @return array<int, true> */
@@ -459,15 +483,10 @@ final class EvidenceCollector
     /** @return array<string, mixed> */
     private function bankStatementSource(?CarbonInterface $from, CarbonInterface $to): array
     {
-        $dir = (string) config('money_recon.bank_statement_dir', '');
-        if ($dir === '' || ! is_dir($dir)) {
-            return ['status' => 'missing', 'note' => 'no bank credit-statement import exists (H4200 parsers read debits only); transfers/SEPA cannot be matched against the bank'];
-        }
-        $files = glob(rtrim($dir, '/').'/*.csv') ?: [];
-
-        return $files === []
-            ? ['status' => 'missing', 'note' => "no statement files in {$dir}"]
-            : ['status' => 'missing', 'note' => count($files).' statement file(s) present but no credit parser is wired yet'];
+        return $this->statement->source(
+            $from !== null ? CarbonImmutable::parse($from) : null,
+            CarbonImmutable::parse($to),
+        );
     }
 
     /** @return array<string, mixed> */

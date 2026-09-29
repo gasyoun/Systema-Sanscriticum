@@ -404,6 +404,14 @@ return [
     'support_draft_queue' => (bool) env('SUPPORT_DRAFT_QUEUE', false),
 
     /*
+     | 24-09-2026: TG-личка человека без привязки к кабинету заводит тред в
+     | Helpdesk («Без привязки») — с полем ответа, а не только в read-only
+     | «Аналитике». Чистое «привет/спасибо» и служебный 777000 треда не заводят.
+     | Висящие чаты догружает php artisan support:open-unlinked-dm-threads.
+     */
+    'support_unlinked_dm_threads' => (bool) env('SUPPORT_UNLINKED_DM_THREADS', false),
+
+    /*
      | H3242: утренняя сводка вчерашней поддержки в Telegram на ADMIN_TELEGRAM_ID
      | (gasyoun). ВКЛ по умолчанию — админский дайджест по явной просьбе, не
      | студенческий автоответ. Выкл: SUPPORT_DAILY_DIGEST=false + config:cache.
@@ -1784,4 +1792,72 @@ return [
      | отчёт сверки сходится или оставляет только названные исключения.
      */
     'money_payout_packages' => (bool) env('MONEY_PAYOUT_PACKAGES', false),
+
+    /*
+     | H5480 (P3): зачисления банковской выписки как источник доказательств
+     | bank_statement и дневной агрегатный контроль (QR-расчёты и агрегат
+     | эквайринга против оплат окна). Выключено — импорт выписки по-прежнему
+     | работает и складывает строки, но сверка их НЕ читает: источник остаётся
+     | missing, прогон incomplete, ни одного исключения не открывается.
+     | Money-контур: дефолт OFF, включение в проде — отдельный ops-шаг
+     | (MONEY_BANK_STATEMENT_CREDITS=true + php artisan config:cache) ПОСЛЕ
+     | первого импорта реальной выписки и зелёного прогона без --persist.
+     | Денег не создаёт и не меняет — только свои таблицы bank_statement_*.
+     */
+    'money_bank_statement_credits' => (bool) env('MONEY_BANK_STATEMENT_CREDITS', false),
+
+    /*
+     | Booked outgoing Tochka transfers as immutable payroll evidence.
+     | Evidence import never creates payments or teacher_payouts. OFF until
+     | identities and historical allocations have been reviewed by accounting.
+     */
+    'money_tochka_teacher_transfers' => (bool) env('MONEY_TOCHKA_TEACHER_TRANSFERS', false),
+
+    /*
+     | Role-gated, read-only October payroll readiness census and private
+     | export. It never creates payments or teacher_payouts. Missing or stale
+     | evidence holds positive lines. Default OFF until acceptance evidence is
+     | green and the accountant is ready to use the surface.
+     */
+    'teacher_payroll_readiness' => (bool) env('TEACHER_PAYROLL_READINESS', false),
+
+    /*
+     | Approved direct-receipt policy: count cash received by a teacher as
+     | course revenue, calculate the normal teacher percentage, then offset
+     | the cash already held. Default OFF for shadow comparison before the
+     | October transfer run.
+     */
+    'teacher_direct_receipt_revenue_parity' => (bool) env('TEACHER_DIRECT_RECEIPT_REVENUE_PARITY', false),
+
+    /*
+     | Студент сам оставляет отзыв в кабинете (/dvaram/otzyv). Отзыв ждёт
+     | модерации (Маркетинг → Отзывы, «Одобрить») и только после неё попадает
+     | в общий пул — на страницу входа и в /otzyvy; админам уходит сообщение
+     | в Telegram. Выключено — страница отвечает 404, кнопки в кабинете и
+     | на /otzyvy не показываются; модерация уже присланных работает всегда.
+     */
+    'student_testimonials' => (bool) env('STUDENT_TESTIMONIALS', false),
+
+    /*
+     | Money-контур: «Разбить оплату блока на другую группу» (Студенты →
+     | массовое действие). Студент оплатил блок N целиком в курсе-когорте A, но
+     | со 2-й половины учится в курсе-когорте B: платёж A становится
+     | block_N_h1 на свою долю, на курсе B заводится block_N_h2 на остаток — так
+     | открываются уроки обеих половин и выручка делится между группами. Сухой
+     | прогон доступен всегда, применение — только при включённом флаге.
+     | Дефолт OFF; боевое включение — отдельный шаг после проверки разметки
+     | половин (lessons.block_half) в обоих курсах.
+     */
+    'payment_block_half_split' => (bool) env('PAYMENT_BLOCK_HALF_SPLIT', false),
+
+    /*
+     | Money-контур: строгое покрытие блоков при расчёте долга (кабинет,
+     | «Должники», напоминания). Бронь и пробное без границ блоков сейчас
+     | читаются как «оплачен весь курс» и прячут долг навсегда; возврат
+     | («Расход») делает то же в кабинете. Включено — бронь/пробное остаются
+     | оплатой курса, но блок не покрывают; возврат и выплата ЗП не считаются
+     | покупкой вовсе. Дефолт OFF: включение добавит долги ученикам, которые
+     | начинали с брони (перепись на проде 28-09-2026: 3 пары, все гр.60).
+     */
+    'debt_strict_block_coverage' => (bool) env('DEBT_STRICT_BLOCK_COVERAGE', false),
 ];

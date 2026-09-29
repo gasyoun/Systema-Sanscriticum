@@ -12,6 +12,7 @@ use App\Models\MoneyReconRun;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Reconciliation\DailyReconciler;
+use App\Services\Reconciliation\EvidenceCollector;
 use App\Services\Reconciliation\ExceptionQueue;
 use App\Services\Reconciliation\ReconInvariantViolation;
 use Carbon\CarbonImmutable;
@@ -60,7 +61,8 @@ class DailyReconciliationTest extends TestCase
         $this->ids['matched'] = $this->pay(['amount' => '8000.00', 'tariff' => 'block_1', 'start_block' => 1, 'end_block' => 2, 'transaction_id' => 'T-OK'])->id;
         $this->ids['full_tariff'] = $this->pay(['amount' => '12000.00', 'tariff' => 'full', 'transaction_id' => 'T-FULL'])->id;
         $this->ids['dup_a'] = $this->pay(['amount' => '4000.00', 'tariff' => 'block_3', 'transaction_id' => 'T-DUP'])->id;
-        $this->ids['dup_b'] = $this->pay(['amount' => '4000.00', 'tariff' => 'block_4', 'transaction_id' => 'T-DUP'])->id;
+        $this->ids['dup_b'] = $this->pay(['amount' => '4000.00', 'tariff' => 'block_3', 'transaction_id' => 'T-DUP',
+            'user_id' => User::factory()->create()->id])->id;
         $this->ids['beyond'] = $this->pay(['amount' => '4000.00', 'tariff' => 'block_5', 'provider' => Payment::PROVIDER_PAYPAL,
             'foreign_amount' => '30.00', 'foreign_currency' => 'EUR',
             'claim_meta' => ['txn' => 'PP-1', 'amount_check' => ['verdict' => 'beyond_5']]])->id;
@@ -175,6 +177,35 @@ class DailyReconciliationTest extends TestCase
         $this->assertSame($before + 1, MoneyReconException::query()->count());
         // Старые исключения помечены «видели во втором прогоне».
         $this->assertSame($second['run_id'], $this->exceptionFor('payment:'.$this->ids['dup_a'], MoneyReconException::REUSED_EVIDENCE)->last_seen_run_id);
+    }
+
+    public function test_block_split_and_import_placeholder_are_not_reused_evidence(): void
+    {
+        // Прод 24-09: 2045 из 2047 «повторов» были меткой импорта у 182 студентов,
+        // ещё 2 — одна оплата одного студента, разложенная на два блока.
+        $split = [];
+        foreach (['block_7', 'block_8', 'block_9'] as $tariff) {
+            $split[] = $this->pay(['amount' => '4000.00', 'tariff' => $tariff, 'transaction_id' => 'T-SPLIT'])->id;
+        }
+        $label = 'Мульти-оплата (Блоки 1-4)';
+        $imported = [
+            $this->pay(['amount' => '4000.00', 'tariff' => 'block_10', 'transaction_id' => $label])->id,
+            $this->pay(['amount' => '4000.00', 'tariff' => 'block_10', 'transaction_id' => $label, 'user_id' => User::factory()->create()->id])->id,
+        ];
+        $twice = [
+            $this->pay(['amount' => '4000.00', 'tariff' => 'block_11', 'transaction_id' => 'T-TWICE'])->id,
+            $this->pay(['amount' => '4000.00', 'tariff' => 'block_11', 'transaction_id' => 'T-TWICE'])->id,
+        ];
+
+        $this->reconcile();
+
+        foreach ([...$split, ...$imported] as $id) {
+            $this->assertNull($this->exceptionFor('payment:'.$id, MoneyReconException::REUSED_EVIDENCE), "payment:$id");
+        }
+        $this->assertSame([], EvidenceCollector::evidenceKeys(Payment::find($imported[0])));
+        foreach ($twice as $id) {
+            $this->assertNotNull($this->exceptionFor('payment:'.$id, MoneyReconException::REUSED_EVIDENCE), "payment:$id");
+        }
     }
 
     public function test_expired_or_exhausted_promo_is_never_applied_silently(): void

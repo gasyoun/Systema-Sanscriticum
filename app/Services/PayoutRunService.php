@@ -266,7 +266,9 @@ final class PayoutRunService
         }
         $payableRub = Money::round($payableRub);
         $payableEur = null;
-        if (config('features.payment_fix_wave1')) {
+        $singleRubTruth = config('features.payment_fix_wave1')
+            || config('features.teacher_direct_receipt_revenue_parity');
+        if ($singleRubTruth) {
             // H5442 (P0, D14): рубль — единственный источник истины. Прямые
             // валютные поступления переводятся в рубли и вычитаются ДО итога;
             // итог не может стать отрицательным без отдельной корректировки;

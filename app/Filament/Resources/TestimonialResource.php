@@ -12,6 +12,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class TestimonialResource extends Resource
@@ -30,9 +31,48 @@ class TestimonialResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Отзывы';
 
+    /** Сколько присланных студентами отзывов ждут модерации. */
+    public static function getNavigationBadge(): ?string
+    {
+        $pending = Testimonial::query()->pending()->count();
+
+        return $pending > 0 ? (string) $pending : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Отзывы студентов на модерации';
+    }
+
+    public const STATUS_LABELS = [
+        Testimonial::STATUS_PENDING => 'На модерации',
+        Testimonial::STATUS_APPROVED => 'Одобрен',
+        Testimonial::STATUS_REJECTED => 'Отклонён',
+    ];
+
     public static function form(Form $form): Form
     {
         return $form->schema([
+            Forms\Components\Section::make('Прислан студентом')
+                ->visible(fn (?Testimonial $record) => $record?->user_id !== null)
+                ->schema([
+                    Forms\Components\Placeholder::make('submitted_by')
+                        ->label('Студент')
+                        ->content(fn (Testimonial $record) => $record->user?->email ?? '— аккаунт удалён —'),
+                    Forms\Components\Placeholder::make('moderation')
+                        ->label('Статус')
+                        ->content(fn (Testimonial $record) => self::STATUS_LABELS[$record->moderation_status] ?? $record->moderation_status),
+                    Forms\Components\Placeholder::make('consent')
+                        ->label('Согласие на публикацию')
+                        ->content(fn (Testimonial $record) => $record->publish_consent_at?->format('d.m.Y H:i') ?? 'нет'),
+                ])
+                ->columns(3),
+
             Forms\Components\Section::make('Отзыв')->schema([
                 Forms\Components\Grid::make(2)->schema([
                     Forms\Components\TextInput::make('author_name')
@@ -51,7 +91,14 @@ class TestimonialResource extends Resource
                     ->rows(5)
                     ->columnSpanFull(),
 
-                Forms\Components\Grid::make(2)->schema([
+                Forms\Components\Grid::make(3)->schema([
+                    Forms\Components\DatePicker::make('reviewed_at')
+                        ->label('Дата отзыва')
+                        ->native(false)
+                        ->displayFormat('d.m.Y')
+                        ->maxDate(now())
+                        ->helperText('Печатается на карточке. Пусто — без даты.'),
+
                     Forms\Components\Select::make('rating')
                         ->label('Оценка')
                         ->options([1 => '1', 2 => '2', 3 => '3', 4 => '4', 5 => '5'])
@@ -63,12 +110,34 @@ class TestimonialResource extends Resource
                         ->maxLength(1024),
                 ]),
 
-                Forms\Components\FileUpload::make('avatar_path')
-                    ->label('Аватар автора')
-                    ->image()
-                    ->directory('testimonials')
-                    ->imageEditor()
-                    ->maxSize(4096),
+                Forms\Components\Grid::make(2)->schema([
+                    Forms\Components\FileUpload::make('avatar_path')
+                        ->label('Аватар автора')
+                        ->image()
+                        ->disk('public')
+                        ->directory('testimonials')
+                        ->imageEditor()
+                        ->maxSize(5120),
+
+                    // Видео-отзыв файлом: студент грузит его в /dvaram/otzyv, модератор может
+                    // заменить или удалить. На сайте файл важнее ссылки выше (mediaLink()).
+                    Forms\Components\FileUpload::make('video_path')
+                        ->label('Видео-отзыв (файл)')
+                        ->disk('public')
+                        ->directory('testimonials/videos')
+                        ->acceptedFileTypes(['video/mp4', 'video/quicktime', 'video/webm'])
+                        ->maxSize(102400)
+                        ->helperText('MP4, MOV или WebM, до 100 МБ. Если есть и файл, и ссылка — на сайте показывается файл.'),
+                ]),
+
+                Forms\Components\Placeholder::make('video_preview')
+                    ->label('Просмотр видео')
+                    ->visible(fn (?Testimonial $record): bool => filled($record?->video_path))
+                    ->content(fn (?Testimonial $record): HtmlString => new HtmlString(
+                        '<video src="'.e((string) $record?->videoUrl()).'" controls preload="metadata" '
+                        .'style="max-width:480px;width:100%;border-radius:12px;background:#000"></video>'
+                    ))
+                    ->columnSpanFull(),
 
                 Forms\Components\Toggle::make('is_visible')
                     ->label('Показывать')
@@ -76,8 +145,13 @@ class TestimonialResource extends Resource
 
                 Forms\Components\Toggle::make('is_featured')
                     ->label('Избранный (витрина каталога)')
-                    ->helperText('Показывать в общесайтовом блоке отзывов на странице каталога — помимо привязки к курсам.')
+                    ->helperText('Показывать в общесайтовом блоке отзывов на странице каталога — помимо привязки к курсам. На странице входа избранные идут первыми.')
                     ->default(false),
+
+                Forms\Components\Toggle::make('show_on_login')
+                    ->label('На странице входа')
+                    ->helperText('Бегущие колонки отзывов вокруг формы входа. Нужно и «Показывать».')
+                    ->default(true),
             ]),
         ]);
     }
@@ -107,6 +181,20 @@ class TestimonialResource extends Resource
                     ->badge()
                     ->placeholder('—'),
 
+                Tables\Columns\IconColumn::make('video_path')
+                    ->label('Видео')
+                    ->state(fn (Testimonial $r): bool => filled($r->video_path) || filled($r->media_url))
+                    ->boolean()
+                    ->trueIcon('heroicon-o-video-camera')
+                    ->falseIcon('heroicon-o-minus')
+                    ->tooltip(fn (Testimonial $r): ?string => filled($r->video_path) ? 'Файл' : (filled($r->media_url) ? 'Ссылка' : null)),
+
+                Tables\Columns\TextColumn::make('reviewed_at')
+                    ->label('Дата')
+                    ->date('d.m.Y')
+                    ->sortable()
+                    ->placeholder('—'),
+
                 Tables\Columns\TextColumn::make('courses_count')
                     ->label('На курсах')
                     ->counts('courses')
@@ -116,12 +204,47 @@ class TestimonialResource extends Resource
                 Tables\Columns\IconColumn::make('is_visible')
                     ->label('Виден')
                     ->boolean(),
+
+                Tables\Columns\ToggleColumn::make('show_on_login')
+                    ->label('На входе'),
+
+                Tables\Columns\TextColumn::make('moderation_status')
+                    ->label('Статус')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state) => self::STATUS_LABELS[$state] ?? $state)
+                    ->color(fn (?string $state) => match ($state) {
+                        Testimonial::STATUS_PENDING => 'warning',
+                        Testimonial::STATUS_REJECTED => 'danger',
+                        default => 'success',
+                    })
+                    ->description(fn (Testimonial $r) => $r->user_id ? 'от студента' : null),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('moderation_status')
+                    ->label('Модерация')
+                    ->options(self::STATUS_LABELS),
                 Tables\Filters\TernaryFilter::make('is_visible')
                     ->label('Видимость'),
+                Tables\Filters\TernaryFilter::make('show_on_login')
+                    ->label('На странице входа'),
             ])
             ->actions([
+                Tables\Actions\Action::make('approve')
+                    ->label('Одобрить')
+                    ->icon('heroicon-o-check')
+                    ->color('success')
+                    ->visible(fn (Testimonial $record) => $record->isPending())
+                    ->requiresConfirmation()
+                    ->modalDescription('Отзыв появится на странице входа и на /otzyvy.')
+                    ->action(fn (Testimonial $record) => $record->approve()),
+                Tables\Actions\Action::make('reject')
+                    ->label('Отклонить')
+                    ->icon('heroicon-o-x-mark')
+                    ->color('danger')
+                    ->visible(fn (Testimonial $record) => $record->isPending())
+                    ->requiresConfirmation()
+                    ->modalDescription('Отзыв останется скрытым. Студент сможет прислать новый.')
+                    ->action(fn (Testimonial $record) => $record->reject()),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
