@@ -417,13 +417,23 @@ trait StudentDashboardConcerns
             $cta = is_array($opts) ? $this->continueLearningDebtCta($opts) : null;
 
             if ($cta !== null) {
-                return [
+                $action = [
                     'kind' => 'debt',
                     'title' => 'Нужно действие по оплате',
                     'body' => $debt->course->title ?? 'Курс',
                     'meta' => $this->continueLearningDebtMeta($debt),
                     'cta' => $cta,
                 ];
+
+                // features.debt_pay_per_block: основная кнопка платит всё разом,
+                // рядом — ссылка на поблочные кнопки на «Оплата и доступ».
+                if (config('features.debt_pay_per_block')
+                    && ($opts['type'] ?? null) === 'tariff'
+                    && count($opts['blocks'] ?? []) >= 2) {
+                    $action['per_block_url'] = route('student.access').'#debt-course-'.$debt->course_id;
+                }
+
+                return $action;
             }
         }
 
@@ -595,7 +605,7 @@ trait StudentDashboardConcerns
 
             if (! empty($opts['bundle'])) {
                 return [
-                    'label' => 'Оплатить блоки',
+                    'label' => config('features.debt_pay_per_block') ? 'Оплатить все блоки' : 'Оплатить блоки',
                     'url' => $opts['bundle']['url'],
                     'method' => 'POST',
                 ];
