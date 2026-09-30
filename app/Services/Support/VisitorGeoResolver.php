@@ -43,12 +43,51 @@ class VisitorGeoResolver
             return null;
         }
 
-        return match ((string) config('support_geo.driver', 'null')) {
+        $driver = (string) config('support_geo.driver', 'null');
+
+        return match ($driver) {
             'cloudflare' => $this->fromCloudflare($hints),
             'ipapi' => $this->fromIpApi($ip),
             'maxmind' => $this->fromMaxMind($ip),
-            default => null,
+            // H5298: «драйвер не вооружён» — это not_supported, а НЕ честный
+            // «разрешили, города нет». Раньше ветка молчала, и обе джобы
+            // (тред-гео H1196 и присутствие H1197) навсегда ставили
+            // visitor_geo_resolved_at — не вооружённый шов был неотличим от
+            // промаха. Теперь громко и машиночитаемо (state-ключ — тот же
+            // контракт, что у H5061); поведение не меняется: null возвращается
+            // как прежде, resolved_at ставится вызывающей джобой (идемпотентность
+            // сохранена).
+            'null', '' => $this->warnUnarmedDriver(),
+            default => $this->warnUnknownDriver($driver),
         };
+    }
+
+    /**
+     * H5298: громкая машиночитаемая запись «шов не вооружён» (not_supported).
+     * Возвращает null — ровно то, что молчаливая ветка возвращала прежде.
+     */
+    private function warnUnarmedDriver(): ?array
+    {
+        Log::warning('VisitorGeoResolver: гео-драйвер не вооружён', [
+            'state' => 'not_supported',
+            'driver' => (string) config('support_geo.driver', 'null'),
+        ]);
+
+        return null;
+    }
+
+    /**
+     * H5298: неизвестное имя драйвера (опечатка в SUPPORT_GEO_DRIVER) — та же
+     * громкость, отдельная формулировка: конфиг ЕСТЬ, но не распознан.
+     */
+    private function warnUnknownDriver(string $driver): ?array
+    {
+        Log::warning('VisitorGeoResolver: неизвестный гео-драйвер — шов не вооружён', [
+            'state' => 'not_supported',
+            'driver' => $driver,
+        ]);
+
+        return null;
     }
 
     /** @param array<string,string|null> $hints */
