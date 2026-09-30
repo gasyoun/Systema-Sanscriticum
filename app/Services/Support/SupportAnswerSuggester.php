@@ -256,7 +256,7 @@ class SupportAnswerSuggester
         // S9 (H1838): перед LLM — привязанный шаблон MessageTemplate; есть
         // привязка → черновик из шаблона, LLM не вызывается вовсе.
         $resolved = in_array($category, SupportAnswerSuggestion::LLM_CATEGORIES, true)
-            ? $this->templates->resolve($category, $user)
+            ? $this->templates->resolve($category, $user, $text)
                 ?? $this->llm->compose($category, $user, $text, $sourceType)
             : $this->facts->resolve($category, $user);
 

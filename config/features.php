@@ -1247,6 +1247,19 @@ return [
     'debt_pay_per_block' => (bool) env('DEBT_PAY_PER_BLOCK', false),
 
     /*
+     | Ссылка на оплату конкретного блока в ответах поддержки (30-09-2026).
+     | Шаблоны бота лички и хелпдеска рендерились без курса: «Оплатить курс «»
+     | … /login». Под флагом {course}/{block}/{pay_link} берутся из долга
+     | студента (SupportPayLinkResolver): номер блока из сообщения → чекаут
+     | этого block_N, иначе «Оплата и доступ». Напоминания должникам,
+     | реактивация и дожим не затронуты. Платёжный путь прежний.
+     |
+     | ВЫКЛ по умолчанию (денежный контур). Включение —
+     | SUPPORT_BLOCK_PAY_LINK=true + config:cache.
+     */
+    'support_block_pay_link' => (bool) env('SUPPORT_BLOCK_PAY_LINK', false),
+
+    /*
      | Access self-service Phase 1 (H2386): "Почему закрыто?" diagnostics on locked
      | lessons + profile access summary + POST materialize paid block keys via
      | BlockAccessMaterializer. Read-only diagnostics; materialize only expands
