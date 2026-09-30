@@ -7,6 +7,7 @@ namespace App\Console\Commands;
 use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Reports\ChannelPaymentPeriodReport;
 use App\Support\Roles;
 use Filament\Notifications\Notification;
 use Illuminate\Console\Command;
@@ -148,15 +149,17 @@ final class ReportChannelRoi extends Command
             $parsed = \DateTimeImmutable::createFromFormat('!Y-m-d', $date);
             if (! $parsed || $parsed->format('Y-m-d') !== $date) {
                 $this->error('Both payment dates must be valid YYYY-MM-DD dates.');
+
                 return self::FAILURE;
             }
         }
         if ($from > $to || ! in_array($this->option('format'), ['table', 'json'], true)
             || $this->option('digest') || $this->option('days') !== null || $this->option('source') !== null) {
             $this->error('Payment period requires from <= to; use table/json, without days/source/digest.');
+
             return self::FAILURE;
         }
-        $report = app(\App\Services\Reports\ChannelPaymentPeriodReport::class)->build($from, $to);
+        $report = app(ChannelPaymentPeriodReport::class)->build($from, $to);
         if ($this->option('format') === 'json') {
             $this->line(json_encode($report, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE));
         } else {
@@ -165,6 +168,7 @@ final class ReportChannelRoi extends Command
                 array_map(fn ($r) => array_values($r), $report['rows']));
             $this->line('Missing payment date: '.$report['missing_date_count'].' rows (not assigned to period).');
         }
+
         return self::SUCCESS;
     }
 
