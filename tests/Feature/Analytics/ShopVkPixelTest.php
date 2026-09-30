@@ -3,6 +3,8 @@
 namespace Tests\Feature\Analytics;
 
 use App\Models\Course;
+use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -10,7 +12,8 @@ use Tests\TestCase;
  * Пиксель VK Ads на витрине (layouts/shop → partials/shop-vk-pixel):
  * включается ID в config('analytics.vk_pixel.shop_pixel_id'), шлёт цели
  * витрины через обёртку window.shopReachGoal и не дублирует payment_success
- * с пикселем промо-воронки из сессии.
+ * с пикселем промо-воронки из сессии. payment_success в ВК — только для
+ * подтверждённой оплаты, один раз на платёж (ключ в localStorage), с суммой.
  */
 class ShopVkPixelTest extends TestCase
 {
@@ -66,32 +69,65 @@ class ShopVkPixelTest extends TestCase
             ->assertDontSee('alert(1)', false);
     }
 
-    public function test_payment_success_fires_shop_vk_goal_once(): void
+    public function test_confirmed_payment_fires_shop_vk_goal_once_with_amount_and_once_key(): void
     {
         config()->set('analytics.vk_pixel.shop_pixel_id', '3512345');
 
-        $html = $this->get('/payment/success')->assertOk()->getContent();
+        $html = $this->successPageAs('paid');
 
-        $this->assertSame(1, substr_count($html, "id: \"3512345\", goal: 'payment_success'"));
+        $this->assertSame(1, substr_count($html, $this->vkGoal('3512345')));
+        $this->assertStringContainsString('var value = 12500', $html);
+        $this->assertMatchesRegularExpression("/var onceKey = 'vk_payment_success_\\d+'/", $html);
+    }
+
+    public function test_pending_payment_and_guest_do_not_fire_vk_goal(): void
+    {
+        config()->set('analytics.vk_pixel.shop_pixel_id', '3512345');
+
+        $this->assertStringNotContainsString("goal: 'payment_success'", $this->successPageAs('pending'));
+
+        auth()->logout();
+        $guest = $this->get('/payment/success')->assertOk()->getContent();
+        $this->assertStringNotContainsString("goal: 'payment_success'", $guest);
     }
 
     public function test_payment_success_same_session_pixel_is_not_double_counted(): void
     {
         config()->set('analytics.vk_pixel.shop_pixel_id', '3512345');
 
-        $html = $this->withSession(['vk_id' => '3512345'])->get('/payment/success')->assertOk()->getContent();
+        $html = $this->successPageAs('paid', ['vk_id' => '3512345']);
 
         $this->assertSame(1, substr_count($html, '_tmr.push({id: "3512345", type: "pageView"'));
-        $this->assertSame(1, substr_count($html, "id: \"3512345\", goal: 'payment_success'"));
+        $this->assertSame(1, substr_count($html, $this->vkGoal('3512345')));
     }
 
     public function test_payment_success_different_session_pixel_gets_both_goals(): void
     {
         config()->set('analytics.vk_pixel.shop_pixel_id', '3512345');
 
-        $html = $this->withSession(['vk_id' => '777'])->get('/payment/success')->assertOk()->getContent();
+        $html = $this->successPageAs('paid', ['vk_id' => '777']);
 
-        $this->assertSame(1, substr_count($html, "id: \"777\", goal: 'payment_success'"));
-        $this->assertSame(1, substr_count($html, "id: \"3512345\", goal: 'payment_success'"));
+        $this->assertSame(1, substr_count($html, $this->vkGoal('777')));
+        $this->assertSame(1, substr_count($html, $this->vkGoal('3512345')));
+    }
+
+    private function successPageAs(string $status, array $session = []): string
+    {
+        $user = User::factory()->create();
+        Payment::withoutEvents(fn (): Payment => Payment::create([
+            'user_id' => $user->id,
+            'course_id' => $this->course->id,
+            'amount' => 12500,
+            'tariff' => 'full',
+            'status' => $status,
+        ]));
+
+        return $this->actingAs($user)->withSession($session)
+            ->get('/payment/success')->assertOk()->getContent();
+    }
+
+    private function vkGoal(string $pixelId): string
+    {
+        return "_tmr.push({ type: 'reachGoal', id: \"{$pixelId}\", goal: 'payment_success', value: value });";
     }
 }

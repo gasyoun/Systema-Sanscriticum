@@ -189,16 +189,28 @@
                 window.shopReachGoal('access_renewal_complete');
             }
         @endif
-        {{-- ВК: пиксель промо-воронки из сессии и/или пиксель витрины;
-             если это один и тот же ID — цель уходит один раз. --}}
-        @if(session('vk_id') || $shopVkPixelId)
-            var _tmr = window._tmr || (window._tmr = []);
-        @endif
-        @if(session('vk_id'))
-            _tmr.push({ type: 'reachGoal', id: "{{ session('vk_id') }}", goal: 'payment_success' });
-        @endif
-        @if($shopVkPixelId && (string) session('vk_id') !== $shopVkPixelId)
-            _tmr.push({ type: 'reachGoal', id: "{{ $shopVkPixelId }}", goal: 'payment_success' });
+        {{-- ВК: пиксель промо-воронки из сессии и/или пиксель витрины; если это
+             один и тот же ID — цель уходит один раз. VK Ads оптимизирует рекламу
+             на эту цель, поэтому шлём её только для ПОДТВЕРЖДЁННОЙ оплаты и один
+             раз на платёж (повторное открытие страницы 30-09-2026 дало две
+             конверсии на одну тестовую оплату). value — сумма платежа, для
+             выручки/ROMI в кабинете VK Ads. --}}
+        @if($confirmed && $payment && (session('vk_id') || $shopVkPixelId))
+            (function () {
+                var onceKey = 'vk_payment_success_{{ $payment->id }}';
+                try {
+                    if (localStorage.getItem(onceKey)) return;
+                    localStorage.setItem(onceKey, '1');
+                } catch (e) { /* без localStorage — шлём, как раньше */ }
+                var _tmr = window._tmr || (window._tmr = []);
+                var value = @json((float) $payment->amount);
+                @if(session('vk_id'))
+                    _tmr.push({ type: 'reachGoal', id: "{{ session('vk_id') }}", goal: 'payment_success', value: value });
+                @endif
+                @if($shopVkPixelId && (string) session('vk_id') !== $shopVkPixelId)
+                    _tmr.push({ type: 'reachGoal', id: "{{ $shopVkPixelId }}", goal: 'payment_success', value: value });
+                @endif
+            })();
         @endif
     });
     </script>
