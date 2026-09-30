@@ -8,6 +8,11 @@
 
 @section('title', 'Оплата')
 
+@php
+    // Пиксель ВК витрины (layouts/shop → partials/shop-vk-pixel) уже считает просмотр.
+    $shopVkPixelId = \App\Support\ShopVkPixel::id();
+@endphp
+
 @push('head')
     {{-- Счетчики доступны, только если сессия пришла из промо-воронки
          (LeadFlashBuilder кладет yandex_id/vk_id в сессию). На прямом чекауте
@@ -29,7 +34,7 @@
         </script>
         <noscript><div><img src="https://mc.yandex.ru/watch/{{ session('yandex_id') }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     @endif
-    @if(session('vk_id'))
+    @if(session('vk_id') && (string) session('vk_id') !== $shopVkPixelId)
         <script type="text/javascript">
             var _tmr = window._tmr || (window._tmr = []);
             _tmr.push({id: "{{ session('vk_id') }}", type: "pageView", start: (new Date()).getTime()});
@@ -168,9 +173,10 @@
                 ym({{ session('yandex_id') }}, 'reachGoal', 'payment_success');
             }
         @elseif(config('analytics.metrika.enabled') && config('analytics.metrika.shop_counter_id'))
-            if (typeof window.shopReachGoal === 'function') {
-                window.shopReachGoal('payment_success');
-            } else if (typeof ym !== 'undefined') {
+            {{-- Напрямую, не через shopReachGoal: тот шлёт ещё и в пиксель ВК
+                 витрины, а ВК-цель payment_success ставится ниже отдельно —
+                 иначе она ушла бы дважды. --}}
+            if (typeof ym !== 'undefined') {
                 ym({{ config('analytics.metrika.shop_counter_id') }}, 'reachGoal', 'payment_success');
             }
         @endif
@@ -183,9 +189,16 @@
                 window.shopReachGoal('access_renewal_complete');
             }
         @endif
-        @if(session('vk_id'))
+        {{-- ВК: пиксель промо-воронки из сессии и/или пиксель витрины;
+             если это один и тот же ID — цель уходит один раз. --}}
+        @if(session('vk_id') || $shopVkPixelId)
             var _tmr = window._tmr || (window._tmr = []);
+        @endif
+        @if(session('vk_id'))
             _tmr.push({ type: 'reachGoal', id: "{{ session('vk_id') }}", goal: 'payment_success' });
+        @endif
+        @if($shopVkPixelId && (string) session('vk_id') !== $shopVkPixelId)
+            _tmr.push({ type: 'reachGoal', id: "{{ $shopVkPixelId }}", goal: 'payment_success' });
         @endif
     });
     </script>
