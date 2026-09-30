@@ -354,7 +354,7 @@ final class SupportDmAutoReply
                 ->first();
 
             if ($template !== null) {
-                $draft = $template->render($user);
+                $draft = $template->renderForSupport($user, $text);
 
                 if (trim($draft) !== '') {
                     return $this->sendAuto($incoming, $user, $category, $draft, 'template', [
@@ -755,7 +755,7 @@ final class SupportDmAutoReply
         }
 
         if ($draft === null) {
-            $template = $this->categoryTemplate($category, $user);
+            $template = $this->categoryTemplate($category, $user, $text);
 
             if ($template !== null) {
                 $draft = $template['draft'];
@@ -805,7 +805,7 @@ final class SupportDmAutoReply
      *
      * @return array{draft: string, template_id: int, template_title: string}|null
      */
-    private function categoryTemplate(string $category, User $user): ?array
+    private function categoryTemplate(string $category, User $user, ?string $text = null): ?array
     {
         $template = MessageTemplate::query()
             ->boundToSuggesterCategory($category)
@@ -816,7 +816,7 @@ final class SupportDmAutoReply
             return null;
         }
 
-        $draft = $template->render($user);
+        $draft = $template->renderForSupport($user, $text);
 
         if (trim($draft) === '') {
             return null;
