@@ -7,6 +7,7 @@ namespace App\Services\Reports;
 use App\Models\Lead;
 use App\Models\Payment;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 
 /** Explicit, read-only payment-period view. No contact data in the result. */
 final class ChannelPaymentPeriodReport
@@ -16,7 +17,7 @@ final class ChannelPaymentPeriodReport
         $base = Payment::query()->paid()->real();
         $missing = (clone $base)->whereNull('first_paid_at')->count();
         $payments = (clone $base)->where('first_paid_at', '>=', $from.' 00:00:00')
-            ->where('first_paid_at', '<', \Carbon\CarbonImmutable::parse($to)->addDay()->startOfDay())
+            ->where('first_paid_at', '<', CarbonImmutable::parse($to)->addDay()->startOfDay())
             ->get(['id', 'user_id', 'lead_id', 'amount', 'tariff', 'refund_of_payment_id']);
         $users = User::query()->whereIn('id', $payments->pluck('user_id'))->get(['id', 'lead_id'])->keyBy('id');
         $leads = Lead::query()->whereIn('id', $payments->pluck('lead_id')->merge($users->pluck('lead_id'))->filter())
@@ -48,6 +49,7 @@ final class ChannelPaymentPeriodReport
         }
         $rows = array_values($groups);
         usort($rows, fn ($a, $b) => $b['net_kopecks'] <=> $a['net_kopecks']);
+
         return ['schema_version' => 1, 'from' => $from, 'to' => $to, 'timezone' => config('app.timezone'),
             'basis' => 'first_paid_at', 'missing_date_count' => $missing, 'rows' => $rows,
             'totals' => array_combine(['receipts_kopecks', 'refunds_kopecks', 'net_kopecks', 'unclassified_kopecks'],
@@ -60,6 +62,7 @@ final class ChannelPaymentPeriodReport
         if (! preg_match('/^(-?)(\d+)(?:\.(\d{1,2}))?$/D', $value, $m)) {
             throw new \UnexpectedValueException('Payment amount is not a two-decimal monetary value.');
         }
+
         return ($m[1] === '-' ? -1 : 1) * ((int) $m[2] * 100 + (int) str_pad($m[3] ?? '', 2, '0'));
     }
 }
