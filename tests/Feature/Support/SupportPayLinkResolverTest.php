@@ -124,6 +124,75 @@ class SupportPayLinkResolverTest extends TestCase
         $this->assertNull($this->resolve(User::factory()->create(), 'оплатить 4'));
     }
 
+    /**
+     * Прод, 30-09-2026: «как оплатить 10 блок грамматики санскрита в 55й группе».
+     * По гр.55 долга нет, зато «10» совпадало с договорённостью по другому курсу
+     * (блоки 1–12) — уходила ссылка «Оплата и доступ» не про тот курс.
+     */
+    public function test_named_group_wins_over_a_block_number_matching_another_debt(): void
+    {
+        $user = User::factory()->create();
+        $this->debtorCourse($user, 'Медленное чтение', 12, 0);        // долг 1–12, включая 10
+        $gr55 = $this->debtorCourse($user, 'Грамматика по Кочергиной гр.55', 20, 20); // долга нет
+        $this->debtorCourse($user, 'Грамматика по Кочергиной гр.58', 12, 12);
+
+        $link = $this->resolve($user, 'добрый день, как оплатить 10 блок грамматики санскрита в 55й группе?');
+
+        $this->assertSame($gr55->id, $link['course']->id);
+        $this->assertSame(10, $link['block']);
+        $this->assertSame($this->checkoutUrl($gr55, 10), $link['url']);
+    }
+
+    public function test_named_group_with_a_debt_follows_the_debt(): void
+    {
+        $user = User::factory()->create();
+        $gr60 = $this->debtorCourse($user, 'Грамматика по Кочергиной гр.60', 5, 1); // долг 2–5
+
+        $this->assertSame($this->checkoutUrl($gr60, 3), $this->resolve($user, 'оплатить 3 блок гр.60')['url']);
+        $this->assertSame(route('student.access'), $this->resolve($user, 'как оплатить гр. 60?')['url']);
+    }
+
+    public function test_new_course_named_by_title_is_linked_without_any_debt(): void
+    {
+        $user = User::factory()->create();
+        $this->debtorCourse($user, 'Грамматика по Кочергиной гр.60', 5, 1); // долг по другому курсу
+        $hindi = Course::factory()->create(['is_active' => true, 'title' => 'Хинди с нуля']);
+        $full = Tariff::create(['course_id' => $hindi->id, 'title' => 'Весь курс', 'type' => 'full', 'price' => 30000, 'is_active' => true]);
+        $this->assertNotNull($full->id);
+
+        $link = $this->resolve($user, 'Добрый день! Хочу купить курс хинди, пришлите ссылку');
+
+        $this->assertSame($hindi->id, $link['course']->id);
+        $this->assertNull($link['block']);
+        $this->assertSame(route('shop.course.show', $hindi->slug), $link['url']);
+    }
+
+    public function test_ambiguous_title_falls_back_to_debts_and_unsellable_course_is_ignored(): void
+    {
+        $user = User::factory()->create();
+        $gr60 = $this->debtorCourse($user, 'Грамматика по Кочергиной гр.60', 3, 2); // долг — блок 3
+        $this->debtorCourse(User::factory()->create(), 'Грамматика по Кочергиной гр.58', 3, 3);
+        // Курс без активного тарифа купить нельзя — ссылку на него не даём.
+        Course::factory()->create(['is_active' => true, 'title' => 'Ведийский язык']);
+
+        // «грамматика кочергиной» подходит двум группам — не угадываем, идём по долгу.
+        $this->assertSame($this->checkoutUrl($gr60, 3), $this->resolve($user, 'как оплатить грамматику Кочергиной?')['url']);
+        $this->assertSame($this->checkoutUrl($gr60, 3), $this->resolve($user, 'хочу ведийский, как оплатить?')['url']);
+    }
+
+    public function test_group_without_block_tariff_links_the_course_page_and_unknown_group_gives_up(): void
+    {
+        $user = User::factory()->create();
+        $gr55 = Course::factory()->create(['is_active' => true, 'title' => 'Грамматика гр.55']);
+
+        $link = $this->resolve($user, 'как оплатить 7 блок, 55 группа');
+        $this->assertSame($gr55->id, $link['course']->id);
+        $this->assertNull($link['block']);
+        $this->assertSame(route('shop.course.show', $gr55->slug), $link['url']);
+
+        $this->assertNull($this->resolve($user, 'как оплатить 7 блок в 99й группе'));
+    }
+
     public function test_template_render_fills_course_and_block_link_when_flag_on(): void
     {
         $user = User::factory()->create();

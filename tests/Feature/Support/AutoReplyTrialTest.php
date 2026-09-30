@@ -85,6 +85,41 @@ class AutoReplyTrialTest extends TestCase
         ]);
     }
 
+    /**
+     * Прод, 30-09-2026: чат видят два аккаунта (обычный + полоса
+     * telegram-business с бОльшим id). Ответ брал max(account_id) и застревал
+     * в полосе с «нет business_connection_id у чата». Отвечаем тем аккаунтом,
+     * куда пришёл вопрос.
+     */
+    public function test_auto_reply_goes_out_through_the_account_that_received_the_question(): void
+    {
+        config(['features.support_auto_reply_templates' => true]);
+        $this->boundTemplate('D');
+
+        $user = User::factory()->create(['name' => 'Студент Тест']);
+        $support = $this->account(true);
+        $incoming = $this->incoming($user, 'сколько стоит курс и как оплатить', $support);
+
+        // Та же переписка, но записанная второй полосой (id больше).
+        $business = TelegramSupportAccount::create(['name' => 'telegram-business', 'auto_reply_enabled' => false]);
+        TelegramSupportMessage::create([
+            'telegram_support_account_id' => $business->id,
+            'telegram_support_chat_id' => $incoming->telegram_support_chat_id,
+            'telegram_chat_id' => 9101,
+            'telegram_message_id' => random_int(1_000_001, 2_000_000),
+            'direction' => 'incoming',
+            'text' => 'сколько стоит курс и как оплатить',
+            'sent_at' => now(),
+        ]);
+        $this->assertGreaterThan($support->id, $business->id);
+
+        $result = app(SupportDmAutoReply::class)->handle($incoming, $user->id, 'private');
+
+        $this->assertSame('sent', $result['status']);
+        $outgoing = TelegramSupportMessage::query()->where('direction', 'outgoing')->firstOrFail();
+        $this->assertSame($support->id, (int) $outgoing->telegram_support_account_id);
+    }
+
     public function test_bound_template_auto_replies_on_gated_account(): void
     {
         config(['features.support_auto_reply_templates' => true]);

@@ -513,6 +513,7 @@ final class SupportDmAutoReply
             $user,
             $draft,
             (int) $incoming->telegram_message_id,
+            (int) $incoming->telegram_support_account_id ?: null,
         );
 
         if ($outgoing === null) {
