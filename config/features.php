@@ -1233,6 +1233,20 @@ return [
     'payment_recovery_cta' => (bool) env('PAYMENT_RECOVERY_CTA', false),
 
     /*
+     | Поблочная оплата долга в гибридном кабинете (30-09-2026). Должник по
+     | нескольким блокам видел в «Продолжить» только «Оплатить блоки» (всё
+     | разом), а на «Оплата и доступ» у поблочного долга не было ни одной
+     | кнопки. Под флагом: на «Оплата и доступ» — «Оплатить все блоки» + кнопка
+     | на каждый блок (штатный чекаут тарифа block_N из DebtPaymentResolver),
+     | на главной — ссылка «Оплатить по одному блоку». Новый платёжный путь не
+     | вводится: PaymentObserver/grantAccess, тарифы и pay-bundle не тронуты.
+     |
+     | ВЫКЛ по умолчанию (денежный контур). Пока OFF, кабинет рендерится как
+     | раньше. Включение — DEBT_PAY_PER_BLOCK=true + config:cache.
+     */
+    'debt_pay_per_block' => (bool) env('DEBT_PAY_PER_BLOCK', false),
+
+    /*
      | Access self-service Phase 1 (H2386): "Почему закрыто?" diagnostics on locked
      | lessons + profile access summary + POST materialize paid block keys via
      | BlockAccessMaterializer. Read-only diagnostics; materialize only expands

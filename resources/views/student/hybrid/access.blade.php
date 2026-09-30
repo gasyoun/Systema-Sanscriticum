@@ -32,7 +32,7 @@
         <div class="space-y-3 mb-8">
             @foreach ($debts as $debt)
                 @php $opts = $debtPayOptions[$debt->course_id] ?? null; @endphp
-                <article class="rounded-2xl border border-amber-100 bg-white p-5 shadow-sm">
+                <article id="debt-course-{{ $debt->course_id }}" class="rounded-2xl border border-amber-100 bg-white p-5 shadow-sm scroll-mt-24">
                     <h3 class="font-extrabold text-[#101010]">{{ $debt->course->title ?? 'Курс' }}</h3>
                     @if (! empty($debt->debt_label))
                         <p class="text-sm text-gray-600 mt-1">{{ $debt->debt_label }}</p>
@@ -50,6 +50,56 @@
                            class="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-bold">
                             Внести платеж
                         </a>
+                    @elseif (config('features.debt_pay_per_block') && is_array($opts) && ($opts['type'] ?? null) === 'tariff')
+                        {{-- Поблочный долг (features.debt_pay_per_block): всё разом ИЛИ по
+                             одному блоку. Кнопки блоков — штатный чекаут тарифа block_N
+                             (DebtPaymentResolver), bundle — как в старом кабинете:
+                             GET на bundle-тариф или POST-фолбэк pay-bundle. --}}
+                        <div class="mt-3 flex flex-wrap gap-2" data-testid="debt-pay-per-block">
+                            @if (! empty($opts['full']))
+                                <a href="{{ $opts['full']['url'] }}" data-track-event="access.renewal.start" data-track-kind="full"
+                                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold">
+                                    Оплатить курс
+                                </a>
+                            @endif
+                            @if (! empty($opts['bundle']))
+                                @php $bundleLabel = 'Оплатить все блоки — '.number_format((float) $opts['bundle']['amount'], 0, ',', ' ').' ₽'; @endphp
+                                @if (($opts['bundle']['method'] ?? 'POST') === 'GET')
+                                    <a href="{{ $opts['bundle']['url'] }}" data-track-event="access.renewal.start" data-track-kind="bundle"
+                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold">
+                                        {{ $bundleLabel }}
+                                    </a>
+                                @else
+                                    <form method="POST" action="{{ $opts['bundle']['url'] }}">
+                                        @csrf
+                                        <button type="submit" data-track-event="access.renewal.start" data-track-kind="bundle"
+                                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold">
+                                            {{ $bundleLabel }}
+                                        </button>
+                                    </form>
+                                @endif
+                            @endif
+                        </div>
+                        @php $hasWhole = ! empty($opts['bundle']) || ! empty($opts['full']); @endphp
+                        @if (! empty($opts['blocks']))
+                            @if ($hasWhole)
+                                <p class="mt-3 text-xs font-bold uppercase tracking-widest text-gray-400">Или по одному блоку</p>
+                            @endif
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                @foreach ($opts['blocks'] as $b)
+                                    <a href="{{ $b['url'] }}" data-track-event="access.renewal.start" data-track-kind="block"
+                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold {{ $hasWhole ? 'border border-brand/40 text-brand hover:bg-orange-50' : 'bg-brand hover:bg-brand-hover text-white' }}">
+                                        Блок №{{ $b['number'] }}@if (isset($b['amount'])) — {{ number_format((float) $b['amount'], 0, ',', ' ') }} ₽@endif
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
+                        @if (! empty($opts['unpriced_blocks']))
+                            <p class="mt-3 text-sm text-gray-500">
+                                Блоки №{{ implode(', №', $opts['unpriced_blocks']) }} — оплата через
+                                <a href="https://t.me/rusamskrtam" target="_blank" rel="noopener noreferrer" class="text-brand underline hover:no-underline">куратора</a>.
+                            </p>
+                        @endif
                     @endif
 
                     {{-- H2060: FAQ payment link + curator contact + installment CTA copy, behind payment_recovery_cta --}}
