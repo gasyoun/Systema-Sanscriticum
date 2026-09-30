@@ -46,10 +46,15 @@
                             Оплатить / продлить
                         </a>
                     @elseif (is_array($opts) && ! empty($opts['next']))
-                        <a href="{{ $opts['next']['url'] ?? '#' }}"
-                           class="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white text-sm font-bold">
-                            Внести платеж
-                        </a>
+                        {{-- student.debt.promise.pay — POST-маршрут: голая ссылка давала
+                             405 (30-09-2026). Форма — как в старом кабинете и на главной. --}}
+                        <form method="POST" action="{{ $opts['next']['url'] }}" class="mt-3">
+                            @csrf
+                            <button type="submit" data-track-event="access.renewal.start" data-track-kind="promise-next"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-bold">
+                                Внести платеж
+                            </button>
+                        </form>
                     @elseif (config('features.debt_pay_per_block') && is_array($opts) && ($opts['type'] ?? null) === 'tariff')
                         {{-- Поблочный долг (features.debt_pay_per_block): всё разом ИЛИ по
                              одному блоку. Кнопки блоков — штатный чекаут тарифа block_N
