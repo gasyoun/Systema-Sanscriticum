@@ -1,6 +1,5 @@
-# Отзыв студента: своё фото и видео-отзыв
+- **Отзыв студента: своё фото и видео-отзыв**
 
-_Created: 26-09-2026 · Last updated: 26-09-2026_
 
 - `/dvaram/otzyv`: к отзыву можно приложить **своё фото** (JPG/PNG/WebP до 5 МБ) и **видео-отзыв** — файлом (MP4/MOV/WebM до 100 МБ, это лимит PHP-FPM на проде; nginx samskrte.ru пропускает 200 МБ) или ссылкой на VK/YouTube/Rutube (только `https://`). Предпросмотр и проверка размера прямо в браузере, на время отправки кнопка «Загружаем видео…». Согласие на публикацию теперь явно покрывает фото и видео.
 - Файлы — на диск `public` (`testimonials/`, `testimonials/videos/`), как фото отзывов из админки; если запись отзыва не удалась, сохранённые файлы удаляются. Новая колонка `testimonials.video_path` (миграция аддитивная).
@@ -9,4 +8,4 @@ _Created: 26-09-2026 · Last updated: 26-09-2026_
 - Известное ограничение: MOV с iPhone в HEVC может не воспроизводиться в Chrome/Firefox — модератор видит это в плеере до одобрения; перекодирования на сервере нет.
 - Тесты: новый [`StudentTestimonialMediaTest`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/tests/Feature/StudentTestimonialMediaTest.php) (9: поля формы, сохранение фото+видео скрытыми, MOV, >100 МБ, не-видео, фото >5 МБ/не картинка, ссылка только https, файл важнее ссылки и виден после одобрения, ссылка без файла). Связанные `StudentTestimonial*|LoginTestimonials|LoginRegisterCard|CabinetTour|HybridPhase1|Testimonial` — 64/64.
 
-_Гасунс_
+  _Гасунс_

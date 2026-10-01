@@ -1,6 +1,6 @@
-# H5451: живой чат магазина на samskrtam.ru — /chat/embed iframe-виджет + кнопка в WP (OxAlpha `opencode/z-ai/glm-5.3-flash`, 24-09-2026)
+- **H5451: живой чат магазина на samskrtam.ru — /chat/embed iframe-виджет + кнопка в WP (OxAlpha `opencode/z-ai/glm-5.3-flash`, 24-09-2026)**
 
-Плавающая кнопка «Спросить» на витрине **samskrtam.ru** открывает живой чат поддержки **samskrte.ru** в iframe: посетитель каталога получает ack/FAQ-ответ той же полосой поддержки, вопрос доходит в Helpdesk с URL магазина.
+  Плавающая кнопка «Спросить» на витрине **samskrtam.ru** открывает живой чат поддержки **samskrte.ru** в iframe: посетитель каталога получает ack/FAQ-ответ той же полосой поддержки, вопрос доходит в Helpdesk с URL магазина.
 
 - **Systema-сторона** ([PR #2829](https://github.com/gasyoun/Systema-Sanscriticum/pull/2829)): `GET /chat/embed` — standalone-страница с одним `support-chat-widget` без лейаута кабинета; selfgate `features.support_chat_embed` (`SUPPORT_CHAT_EMBED`, default OFF → 404); `throttle:30,1` как у `chat/message`; CSP `frame-ancestors 'self' https://samskrtam.ru https://www.samskrtam.ru` — только на этом ответе (инвариант H5066/PublicWidgetController, site-wide ничего не ослаблено). `?page=` (URL товара) серверно чистится (http(s), ≤2048, control-символы, UTF-8) и уходит в виджет через `SCW_EMBED_PAGE`: контекстное приветствие каталога «Вопрос по этому товару — наличие, оплата, доставка? Мы рядом» (паттерн H1198) + `payload.page`/presence-beacon — куратор видит URL магазина, а не адрес iframe. Три ветки в партиале виджета аддитивны: без `SCW_EMBED_PAGE` (кабинет) поведение байт-в-байт прежнее.
 - **WP-сторона (.95, FTPS+WP-password, без SSH)**: mu-plugin [`samskrte-chat-button.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/deploy/samskrte-wp/samskrte-chat-button.php) — кнопка-пузырь, клик лениво ставит `iframe.src` (`https://samskrte.ru/chat/embed?page=<URL>`), один инлайн-скрипт, без внешних CDN; `esc_url_raw` (не `esc_url` — entity-кодирование ломало multi-param URL). Кеш WP Rocket пройден (точечная очистка `/shop/`), кнопка на проде.
@@ -10,4 +10,4 @@
 - **Независимая проверка** (explorer-ревью PR): 0×P0, без уязвимостей XSS/CSP/clickjacking/throttle; найденный P2 (невалидный UTF-8 в `?page` → `json_encode(false)` → syntax error boot-скрипта) и P3 (`esc_url` → `esc_url_raw`) закрыты в follow-up PR; P3 «CSRF-токен под кешем» уже закрыт session-middleware (`no-cache, private` в ответе — подтверждено прод-заголовками и тестом-инвариантом). Предположенный P1 (SameSite=Lax блокирует сессию в кросс-сайтовом iframe → 419) **опровергнут живым смоуком**: партиционированные cookie-джары браузеров 2026 сохраняют сессию внутри iframe-контекста, `POST /chat/message` → 200.
 - **Остаток**: ночная проба сторожей (03:10 MSK — лог `tamper-watch` чист, файл на месте утром) — GTD `@DO` от 24-09-2026; нот в кешах WP Rocket остальных страниц чистится по мере истечения.
 
-_Dr. Mārcis Gasūns_
+  _Dr. Mārcis Gasūns_

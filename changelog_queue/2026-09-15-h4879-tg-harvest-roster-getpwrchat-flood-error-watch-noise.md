@@ -1,8 +1,8 @@
-# TG-харвест ростера перестал заваливать основной лог дохлыми peer'ами (OxAlpha `opencode/z-ai/glm-5.3-flash`, 15-09-2026)
+- **TG-харвест ростера перестал заваливать основной лог дохлыми peer'ами (OxAlpha `opencode/z-ai/glm-5.3-flash`, 15-09-2026)**
 
-H4879 — «getPwrChat failed … peer not present in the internal peer database» рос 46 → 535
-строк/день за 10–14.09.2026 (мёртвые/покинутые группы в ростере) и 15.09 бёрстом 23 строки/2 мин
-пересёк порог `logs:error-watch`, который прислал алерт с посторонней устаревшей находкой.
+  H4879 — «getPwrChat failed … peer not present in the internal peer database» рос 46 → 535
+  строк/день за 10–14.09.2026 (мёртвые/покинутые группы в ростере) и 15.09 бёрстом 23 строки/2 мин
+  пересёк порог `logs:error-watch`, который прислал алерт с посторонней устаревшей находкой.
 
 - **Основной фикс:** [`TelegramHarvestSyncService::pwrRoster()`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Services/TelegramHarvest/TelegramHarvestSyncService.php)
   теперь классифицирует «peer not present» как known-benign — деталь идёт в отдельный
