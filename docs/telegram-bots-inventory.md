@@ -147,7 +147,7 @@ Privacy mode бота — снять в [@BotFather](https://t.me/BotFather) (с
 |--|--|
 | **Env** | `TELEGRAM_BUSINESS_BOT_TOKEN`, `TELEGRAM_BUSINESS_WEBHOOK_SECRET`, `TELEGRAM_BUSINESS_BOT_ENABLED` |
 | **Config** | `services.telegram_business`, флаг `features.telegram_business_bot` |
-| **Маршрут** | `POST /api/webhooks/telegram-business` (middleware `verify.tg.business`) |
+| **Маршрут** | `POST /api/webhooks/telegram-business` (middleware `verify.tg.business`); при `TELEGRAM_BUSINESS_SHARED_STUDENT_WEBHOOK=true` `set-webhook` регистрирует общий студенческий `POST /api/telegram/webhook` |
 | **Аккаунт в support-таблицах** | `TELEGRAM_BUSINESS_ACCOUNT_NAME` (по умолчанию `telegram-business`) |
 
 **Назначение:** бот подключён к аккаунту школы в **Настройки → Business →
