@@ -127,8 +127,14 @@ class SupportReplyService
     /**
      * Pending исходящее от бота в личку саппорта (H3233). Куратор = null,
      * responder_type=ai. Увозит ближайший заход синка, как человеческий ответ.
+     *
+     * $viaAccountId — аккаунт, через который пришёл вопрос: отвечаем тем же.
+     * Без него берётся max(account_id) в чате, а с появлением полосы
+     * telegram-business (27-09-2026) это в общих чатах всегда она — и ответ на
+     * вопрос из обычного аккаунта застревал с «нет business_connection_id у
+     * чата» (прод, 30-09-2026).
      */
-    public function queueAiReply(User $user, string $text, ?int $replyToMsgId = null): ?TelegramSupportMessage
+    public function queueAiReply(User $user, string $text, ?int $replyToMsgId = null, ?int $viaAccountId = null): ?TelegramSupportMessage
     {
         $thread = $this->conversations->currentFor($user);
         $chat = $this->resolveTargetChat($user, $thread);
@@ -137,7 +143,8 @@ class SupportReplyService
             return null;
         }
 
-        $accountId = $chat->messages()->max('telegram_support_account_id')
+        $accountId = $viaAccountId
+            ?? $chat->messages()->max('telegram_support_account_id')
             ?? TelegramSupportAccount::query()->min('id');
 
         if (! $accountId) {

@@ -45,6 +45,13 @@
                 <i class="fas fa-comment-dots text-xs"></i> Оставить отзыв
             </a>
             @endif
+            {{-- Смена пароля: на легаси-дашборде кнопка была, на hybrid (прод) пропала
+                 вместе с модалкой — студенту после входа по ссылке негде задать пароль. --}}
+            <button type="button" x-on:click="$dispatch('open-change-password')"
+                    class="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline"
+                    data-analytics="hybrid-home-change-password">
+                <i class="fas fa-key text-xs"></i> Сменить пароль
+            </button>
         </div>
     </div>
 
@@ -106,6 +113,15 @@
                            data-track-event="cabinet.continue.click"
                            data-track-kind="{{ $c['kind'] ?? 'lesson' }}" data-track-surface="today-band">
                             {{ $c['cta']['label'] ?? 'Открыть' }}
+                        </a>
+                    @endif
+                    @if (! empty($c['per_block_url']))
+                        {{-- features.debt_pay_per_block: поблочные кнопки живут на «Оплата и доступ» --}}
+                        <a href="{{ $c['per_block_url'] }}"
+                           class="mt-2 block text-sm font-semibold text-brand underline-offset-2 hover:underline"
+                           data-track-event="cabinet.continue.click"
+                           data-track-kind="debt-per-block" data-track-surface="today-band">
+                            Оплатить по одному блоку
                         </a>
                     @endif
                 @endif
@@ -203,5 +219,7 @@
 
 {{-- H4463: welcome-тур (автопоказ 1 раз + кнопка «Обзор кабинета» выше) --}}
 @include('student.partials.cabinet-tour')
+
+@include('student.partials.change-password-modal')
 
 @endsection

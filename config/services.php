@@ -61,6 +61,25 @@ return [
         'sli_webhook_public_key' => env('TOCHKA_SLI_WEBHOOK_PUBLIC_KEY', ''),
     ],
 
+    // Digital Kassa API v2.1 — фискализация чеков вместо облачной кассы Точки
+    // (флаг features.digitalkassa_receipts). Эквайринг остаётся в Точке; чек прихода
+    // пробивается после вебхука оплаты (IssueDigitalKassaReceiptJob).
+    // Спека: https://api.digitalkassa.ru/v2.1/doc
+    'digitalkassa' => [
+        'url' => env('DIGITALKASSA_API_URL') ?: 'https://api.digitalkassa.ru/v2.1',
+        'actor_id' => env('DIGITALKASSA_ACTOR_ID'),
+        'actor_token' => env('DIGITALKASSA_ACTOR_TOKEN'),
+        'c_group_id' => env('DIGITALKASSA_C_GROUP_ID'),
+        // Тег 1055 СНО: 1 ОСН | 2 УСН доход | 4 УСН доход−расход | 16 ЕСХН | 32 ПСН.
+        'taxation' => (int) env('DIGITALKASSA_TAXATION', 2),
+        // Тег 1199 ставка НДС позиции: 6 — «НДС не облагается» (паритет с TOCHKA_VAT_TYPE=none).
+        'vat' => (int) env('DIGITALKASSA_VAT', 6),
+        // Тег 1187 место расчётов — один из billing_place_list группы касс (GET /c_groups/{id}).
+        'billing_place' => env('DIGITALKASSA_BILLING_PLACE') ?: 'https://samskrte.ru/',
+        // Тег 1011 часовая зона: 2 — МСК.
+        'timezone' => (int) env('DIGITALKASSA_TIMEZONE', 2),
+    ],
+
     'lesson_sync' => [
         'secret' => env('LESSON_SYNC_SECRET'),
     ],
