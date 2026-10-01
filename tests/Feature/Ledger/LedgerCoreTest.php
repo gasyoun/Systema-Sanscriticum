@@ -121,6 +121,11 @@ class LedgerCoreTest extends TestCase
     public function test_migration_rolls_back_and_reapplies_without_touching_legacy_tables(): void
     {
         $paymentsColumns = Schema::getColumnListing('payments');
+        // P2 (H5444): пакеты ссылаются на ядро FK — сначала откатываем их,
+        // иначе drop money_movements упрётся во внешний ключ. Порядок совпадает
+        // с обратным порядком migrate:rollback; down() обеих миграций идемпотентны.
+        $payoutMigration = require database_path('migrations/2026_09_24_190000_create_teacher_compensation_and_payout_packages.php');
+        $payoutMigration->down();
         $migration = require database_path('migrations/2026_09_24_150000_create_money_ledger_core_tables.php');
 
         $migration->down();

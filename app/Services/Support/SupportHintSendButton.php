@@ -164,7 +164,13 @@ final class SupportHintSendButton
             return ['status' => 'suppressed', 'message' => 'Уже отправлено.'];
         }
 
-        $outgoing = $this->replies->queueAiReply($student, $draft, (int) $incoming->telegram_message_id);
+        // Отвечаем через аккаунт, куда пришёл вопрос (см. queueAiReply).
+        $outgoing = $this->replies->queueAiReply(
+            $student,
+            $draft,
+            (int) $incoming->telegram_message_id,
+            (int) $incoming->telegram_support_account_id ?: null,
+        );
 
         if ($outgoing === null) {
             // Отказ известен точно — доставки не было, клейм отпускаем, чтобы
