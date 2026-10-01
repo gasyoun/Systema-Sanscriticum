@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -69,6 +70,8 @@ class Payment extends Model
         'provider',
         'payment_method',
         'proof_path',
+        // Кто пробивает чек по платежу Точки: tochka | digitalkassa (фиксируется при создании ссылки).
+        'fiscal_provider',
         // --- НОВЫЕ ПОЛЯ: Для поблочной оплаты ---
         'start_block',
         'end_block',
@@ -175,6 +178,11 @@ class Payment extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function fiscalReceipt(): HasOne
+    {
+        return $this->hasOne(FiscalReceipt::class);
     }
 
     public function promoCode(): BelongsTo

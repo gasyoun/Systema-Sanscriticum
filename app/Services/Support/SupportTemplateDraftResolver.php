@@ -43,7 +43,7 @@ class SupportTemplateDraftResolver
      *
      * @return array{draft: string, facts: array<string, mixed>, confidence: float}|null
      */
-    public function resolve(string $category, User $user): ?array
+    public function resolve(string $category, User $user, ?string $text = null): ?array
     {
         if (! $this->isEnabled() || ! in_array($category, SupportAnswerSuggestion::LLM_CATEGORIES, true)) {
             return null;
@@ -59,9 +59,10 @@ class SupportTemplateDraftResolver
             return null;
         }
 
-        // Подстановка без курса: {course}/{block} схлопываются в пустую строку,
-        // {pay_link} ведёт в личный кабинет — ровно как в MessageTemplate::render.
-        $draft = $template->render($user);
+        // Курс/блок/{pay_link} — из долга студента и номера в его сообщении
+        // (features.support_block_pay_link); флаг OFF — как раньше: без курса,
+        // {pay_link} ведёт в личный кабинет.
+        $draft = $template->renderForSupport($user, $text);
 
         SupportAiReplyEvent::create([
             'telegram_support_message_id' => null,

@@ -40,6 +40,15 @@ trait SchedulesSupportAndPayments
             ->onOneServer()
             ->name('trial-target-watch');
 
+        // Дочековка Digital Kassa: оплаченные чеки, застрявшие в pending/processing
+        // (потерянная джоба). Не гейтится флагом: после отката флага уже начатые
+        // DK-чеки всё равно должны быть допробиты. Без DK-чеков — пустой запрос.
+        $schedule->command('fiscal:retry-digitalkassa')
+            ->hourlyAt(17)
+            ->withoutOverlapping(10)
+            ->onOneServer()
+            ->name('fiscal-retry-digitalkassa');
+
     }
 
     /** OpenRouter balance, support digests/SLA, FAQ knowledge indexing. */

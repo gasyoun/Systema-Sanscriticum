@@ -326,6 +326,7 @@ class MarathonController extends Controller
                 purpose: $purpose,
                 itemName: 'Марафон «Консультация по онлайн-курсам ОРС» — трек «с проверкой»',
                 ttlMinutes: min($ttlMinutes, 60),
+                payment: $payment,
             );
         } catch (ConnectionException $e) {
             $payment->update(['status' => 'failed']);
@@ -538,6 +539,7 @@ class MarathonController extends Controller
                 amount: $amount,
                 purpose: $purpose,
                 itemName: 'Марафон «Консультация по онлайн-курсам ОРС» (деванагари) — трек «с проверкой»',
+                payment: $payment,
             );
         } catch (ConnectionException $e) {
             $payment->update(['status' => 'failed']);
