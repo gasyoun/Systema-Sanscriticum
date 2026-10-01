@@ -157,8 +157,14 @@ final class BusinessSupportReplyDrainer
         // Право ответить выводится из подключения, которое принесло вопрос
         // студента: смотрим последние входящие этого чата. Ограничение окном в
         // 20 строк — чтобы длинный чат не тянул всю историю на каждый досыл.
+        //
+        // Только входящие САМОЙ полосы: чат общий с MTProto-аккаунтом, и его синк
+        // досыпает историю переписки со свежими id. 30-09-2026 такая досыпка
+        // вытеснила из окна единственное business-входящее — ответ трижды упал с
+        // «нет business_connection_id у чата» и застрял.
         return TelegramSupportMessage::query()
             ->where('telegram_support_chat_id', $message->telegram_support_chat_id)
+            ->where('telegram_support_account_id', $message->telegram_support_account_id)
             ->where('direction', 'incoming')
             ->whereNotNull('raw_payload')
             ->orderByDesc('id')
