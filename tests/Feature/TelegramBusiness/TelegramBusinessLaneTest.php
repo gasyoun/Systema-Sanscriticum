@@ -253,6 +253,51 @@ class TelegramBusinessLaneTest extends TestCase
         $this->assertSame(1, TelegramBusinessConnection::query()->count());
     }
 
+    /**
+     * Прод, 30-09-2026: чат общий с MTProto-аккаунтом, его синк досыпал историю
+     * переписки со свежими id и вытеснил единственное business-входящее из окна
+     * последних 20 входящих. Досыл трижды падал с «нет business_connection_id у
+     * чата». Право ответить ищется только среди входящих самой полосы.
+     */
+    public function test_retry_finds_the_connection_after_another_account_backfills_the_chat(): void
+    {
+        Http::fake([
+            'api.telegram.org/*sendMessage' => Http::sequence()
+                ->push(['ok' => false, 'description' => 'Bad Request: temporary'], 400)
+                ->push(['ok' => true, 'result' => ['message_id' => 4242]], 200),
+            'api.telegram.org/*' => Http::response(['ok' => true], 200),
+        ]);
+
+        $this->runUpdate($this->connectionUpdate());
+        $this->runUpdate($this->studentMessageUpdate(600));
+
+        $outgoing = TelegramSupportMessage::query()->where('direction', 'outgoing')->firstOrFail();
+        $this->assertTrue((bool) (($outgoing->raw_payload ?? [])['pending_delivery'] ?? false), 'первая доставка не прошла');
+
+        // Синк другого аккаунта досыпает в тот же чат историю без business_connection_id.
+        $mtproto = TelegramSupportAccount::query()->create(['name' => 'support', 'is_enabled' => true]);
+        for ($i = 1; $i <= 25; $i++) {
+            TelegramSupportMessage::query()->create([
+                'telegram_support_account_id' => $mtproto->id,
+                'telegram_support_chat_id' => $outgoing->telegram_support_chat_id,
+                'telegram_chat_id' => self::STUDENT_ID,
+                'telegram_message_id' => 900_000 + $i,
+                'direction' => 'incoming',
+                'text' => 'история '.$i,
+                'raw_payload' => ['telegram_chat_id' => self::STUDENT_ID, 'text' => 'история '.$i],
+                'sent_at' => now()->subDays(3),
+            ]);
+        }
+
+        app(BusinessSupportReplyDrainer::class)->drain();
+
+        $outgoing->refresh();
+        $this->assertSame(4242, (int) $outgoing->telegram_message_id, 'повторная доставка прошла');
+        Http::assertSent(fn (Request $request): bool => str_contains($request->url(), '/sendMessage')
+            && ($request->data()['business_connection_id'] ?? null) === self::CONNECTION_ID
+            && (int) ($request->data()['chat_id'] ?? 0) === self::STUDENT_ID);
+    }
+
     public function test_api_rejection_leaves_the_reply_pending_for_a_retry(): void
     {
         // Telegram ответил отказом: доставки не было, клейм снят, попытка

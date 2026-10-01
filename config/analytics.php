@@ -18,6 +18,16 @@ return [
     ],
 
     /*
+    | Пиксель VK Ads (счётчик Top.Mail.Ru) на всей витрине — layouts/shop:
+    | /k/{slug}, /checkout/{tariff}, /payment/success. Пустой ID = пиксель
+    | выключен. Цели те же, что у Метрики: window.shopReachGoal шлёт в оба.
+    */
+    'vk_pixel' => [
+        'shop_pixel_id' => env('VK_PIXEL_SHOP_ID'),
+        'enabled' => filter_var(env('VK_PIXEL_SHOP_ENABLED', true), FILTER_VALIDATE_BOOL),
+    ],
+
+    /*
     | Canonical funnel event names (ActivityEvent + Metrika reachGoal).
     | Dedup is intentional: operators read unique users, not raw page spam.
     */
