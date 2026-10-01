@@ -14,6 +14,7 @@ use App\Http\Controllers\GrammarLabPilotController;
 use App\Http\Controllers\HomeworkController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\PranaShopController;
 use App\Http\Controllers\PranaTransferController;
 use App\Http\Controllers\ReadingPackController;
@@ -426,6 +427,12 @@ Route::middleware(['auth', 'track.activity', 'student.maintenance'])->group(func
     // Самостоятельная смена пароля студентом в кабинете
     Route::post('/profile/password', [AuthController::class, 'updatePassword'])
         ->name('student.password.update');
+
+    // Не помнит текущий пароль (вошёл по одноразовой ссылке) — письмо со ссылкой
+    // сброса на СВОЙ адрес из профиля. Гостевой /forgot-password вошедшему недоступен.
+    Route::post('/profile/password/email-link', [PasswordResetController::class, 'sendResetLinkToSelf'])
+        ->middleware('throttle:3,1')
+        ->name('student.password.email-link');
 
     // H4434 — timezone localization (MG 09-09-2026): ручной селектор + временное
     // пребывание + silent device-TZ захват (VPN-иммунный сигнал).

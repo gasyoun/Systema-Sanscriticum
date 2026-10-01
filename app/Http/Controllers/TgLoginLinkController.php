@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MagicLinkToken;
 use App\Services\Access\TelegramLoginService;
+use App\Support\UsedLoginLinkResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,9 +14,9 @@ use Illuminate\Support\Facades\Auth;
  * Вход по одноразовой ссылке, выданной студент-ботом («Telegram-вход»,
  * CABINET_ADOPTION_ROADMAP P2, 28-08-2026). Принимает ТОЛЬКО токены назначения
  * tg_login — админ-ссылку (H849) или newsletter-магию в этот маршрут скормить
- * нельзя. Невалид/протух/использован → 404 без деталей (анти-enumeration), те
- * же гарантии, что у /login-link. Самогейтится флагом
- * telegram_cabinet_login (404 при OFF).
+ * нельзя. Невалид/протух/использован → единый мягкий ответ без различения
+ * случаев ({@see UsedLoginLinkResponse}), те же гарантии, что у /login-link.
+ * Самогейтится флагом telegram_cabinet_login (404 при OFF).
  */
 class TgLoginLinkController extends Controller
 {
@@ -25,10 +26,11 @@ class TgLoginLinkController extends Controller
 
         $link = MagicLinkToken::findActive($token, TelegramLoginService::MAGIC_PURPOSE);
 
-        abort_if($link === null, 404);
-
-        // Атомарно гасим — проигравший гонку/replay получит 404.
-        abort_unless($link->consume(), 404);
+        // Атомарно гасим — проигравший гонку/replay получает тот же ответ, что и
+        // несуществующий токен.
+        if ($link === null || ! $link->consume()) {
+            return UsedLoginLinkResponse::make();
+        }
 
         Auth::login($link->user, remember: true);
 

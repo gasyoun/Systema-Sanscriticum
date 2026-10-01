@@ -732,6 +732,12 @@ class TeacherSalaryService
             }
 
             foreach ($returnQuery->get() as $p) {
+                // Тот же предикат, что у помесячной выручки и тултипа: при флаге
+                // salary_returns_student_refunds_only выплаты преподавателям,
+                // реклама и налоги («Расход» без покупателя) базу не режут.
+                if (! $this->isReturnPayment($p)) {
+                    continue;
+                }
                 $covered = $this->coveredBlockNumbers($p, $blockNumbers);
                 if (empty($covered) || ! in_array($blockNumber, $covered, true)) {
                     continue;
@@ -1167,10 +1173,59 @@ class TeacherSalaryService
         );
     }
 
-    /** Возврат/расход (tariff='Расход', отрицательная сумма) — вычитается из базы. */
+    /**
+     * Возврат, вычитаемый из базы начисления.
+     *
+     * Флаг OFF (дефолт) — прежнее поведение: любой tariff='Расход'.
+     *
+     * Флаг salary_returns_student_refunds_only ON — только НАСТОЯЩИЙ возврат
+     * студенту. «Расход» в школе — общий журнал: туда же вносятся выплаты самим
+     * преподавателям, реклама, налоги ИП, зарплаты кураторов (прод 29-09-2026:
+     * из 412 строк с курсом ни одной с refund_of_payment_id, 142 — выплаты
+     * преподавателям на ≈7,4 млн ₽). Без блоков они делились на все блоки курса и
+     * резали базу блока (курс 348: выплаты самому преподавателю ÷12 уменьшали базу блока в разы).
+     * Возврат = «Расход» И (привязан к исходной оплате ИЛИ несёт блоки ИЛИ записан
+     * на покупателя этого курса).
+     */
     private function isReturnPayment(Payment $payment): bool
     {
-        return $payment->tariff === self::EXPENSE_TARIFF;
+        if ($payment->tariff !== self::EXPENSE_TARIFF) {
+            return false;
+        }
+
+        if (! config('features.salary_returns_student_refunds_only')) {
+            return true;
+        }
+
+        if ($payment->refund_of_payment_id !== null || $payment->start_block !== null) {
+            return true;
+        }
+
+        return $payment->user_id !== null
+            && $payment->course_id !== null
+            && isset($this->courseBuyers((int) $payment->course_id)[(int) $payment->user_id]);
+    }
+
+    /** @var array<int, array<int, true>>  course_id => [user_id => true] покупатели (paid/real, amount>0) */
+    private array $courseBuyersCache = [];
+
+    /** @return array<int, true> */
+    private function courseBuyers(int $courseId): array
+    {
+        if (isset($this->courseBuyersCache[$courseId])) {
+            return $this->courseBuyersCache[$courseId];
+        }
+
+        $buyers = [];
+        foreach ($this->coursePayments($courseId) as $p) {
+            if ($p->user_id !== null
+                && (float) $p->amount > 0
+                && ! in_array($p->tariff, self::NON_REVENUE_TARIFFS, true)) {
+                $buyers[(int) $p->user_id] = true;
+            }
+        }
+
+        return $this->courseBuyersCache[$courseId] = $buyers;
     }
 
     /**

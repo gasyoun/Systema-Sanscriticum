@@ -137,7 +137,10 @@ class DailyReconciliationTest extends TestCase
         $this->assertSame('missing', $r['sources']['bank_statement']['status']);
         $this->assertNotEmpty($r['sources']['bank_statement']['note']);
         $this->assertSame('dark', $r['sources']['ledger']['status']);
-        $this->assertSame('legacy', $r['sources']['payout_packages']['status']);
+        // P2 (H5444): таблица пакетов задеплоена миграцией ветки — источник
+        // больше не legacy teacher_payouts, а present. На main без P2-таблиц
+        // здесь по-прежнему ожидается 'legacy'.
+        $this->assertSame('present', $r['sources']['payout_packages']['status']);
         $this->assertArrayNotHasKey('bank_statement', $r['totals']['channels'], 'a missing source contributes no zero row');
     }
 
