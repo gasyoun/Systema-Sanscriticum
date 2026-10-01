@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MagicLinkToken;
 use App\Services\Access\StudentUnblockService;
+use App\Support\UsedLoginLinkResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
  * Отдельно от newsletter-magic: НЕ завязано на фича-флаг рассылки и принимает
  * только токены назначения admin_unblock. Одноразовая, короткий TTL,
  * hashed-at-rest — те же гарантии, что у сброса пароля. Невалид/протух/использован
- * → 404 (без enumeration).
+ * → единый мягкий ответ без различения случаев ({@see UsedLoginLinkResponse}).
  */
 class AdminLoginLinkController extends Controller
 {
@@ -22,10 +23,11 @@ class AdminLoginLinkController extends Controller
     {
         $link = MagicLinkToken::findActive($token, StudentUnblockService::MAGIC_PURPOSE);
 
-        abort_if($link === null, 404);
-
-        // Атомарно гасим — проигравший гонку/replay получит 404.
-        abort_unless($link->consume(), 404);
+        // Атомарно гасим — проигравший гонку/replay получает тот же ответ, что и
+        // несуществующий токен.
+        if ($link === null || ! $link->consume()) {
+            return UsedLoginLinkResponse::make();
+        }
 
         Auth::login($link->user, remember: true);
 

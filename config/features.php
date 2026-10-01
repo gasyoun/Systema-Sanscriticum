@@ -739,6 +739,16 @@ return [
     'tochka_webhook_guard' => (bool) env('TOCHKA_WEBHOOK_GUARD', true),
 
     /*
+     | Фискализация через Digital Kassa вместо облачной кассы Точки. Когда ВКЛ,
+     | TochkaPaymentService создаёт ссылку нефискальным /payments, помечает платёж
+     | fiscal_provider=digitalkassa, а WebhookController после перехода в paid
+     | ставит IssueDigitalKassaReceiptJob. Провайдер фиксируется НА ПЛАТЕЖЕ в момент
+     | создания ссылки — переключение флага не даёт двойного чека по уже выданным
+     | ссылкам. Default OFF. Включение: DIGITALKASSA_RECEIPTS=true + config:cache.
+     */
+    'digitalkassa_receipts' => (bool) env('DIGITALKASSA_RECEIPTS', false),
+
+    /*
      | H3280: live Tochka ClosingAvailable on /admin/teacher-salaries.
      | Read-only Open Banking GET. Default OFF. Enable: TOCHKA_BALANCE_ON_SALARIES=true
      | + config:cache. Teachers on «Моя зарплата» never see it (RoleGate::accounting).
@@ -1221,6 +1231,33 @@ return [
      | PAYMENT_RECOVERY_CTA=true + config:cache после ревью.
      */
     'payment_recovery_cta' => (bool) env('PAYMENT_RECOVERY_CTA', false),
+
+    /*
+     | Поблочная оплата долга в гибридном кабинете (30-09-2026). Должник по
+     | нескольким блокам видел в «Продолжить» только «Оплатить блоки» (всё
+     | разом), а на «Оплата и доступ» у поблочного долга не было ни одной
+     | кнопки. Под флагом: на «Оплата и доступ» — «Оплатить все блоки» + кнопка
+     | на каждый блок (штатный чекаут тарифа block_N из DebtPaymentResolver),
+     | на главной — ссылка «Оплатить по одному блоку». Новый платёжный путь не
+     | вводится: PaymentObserver/grantAccess, тарифы и pay-bundle не тронуты.
+     |
+     | ВЫКЛ по умолчанию (денежный контур). Пока OFF, кабинет рендерится как
+     | раньше. Включение — DEBT_PAY_PER_BLOCK=true + config:cache.
+     */
+    'debt_pay_per_block' => (bool) env('DEBT_PAY_PER_BLOCK', false),
+
+    /*
+     | Ссылка на оплату конкретного блока в ответах поддержки (30-09-2026).
+     | Шаблоны бота лички и хелпдеска рендерились без курса: «Оплатить курс «»
+     | … /login». Под флагом {course}/{block}/{pay_link} берутся из долга
+     | студента (SupportPayLinkResolver): номер блока из сообщения → чекаут
+     | этого block_N, иначе «Оплата и доступ». Напоминания должникам,
+     | реактивация и дожим не затронуты. Платёжный путь прежний.
+     |
+     | ВЫКЛ по умолчанию (денежный контур). Включение —
+     | SUPPORT_BLOCK_PAY_LINK=true + config:cache.
+     */
+    'support_block_pay_link' => (bool) env('SUPPORT_BLOCK_PAY_LINK', false),
 
     /*
      | Access self-service Phase 1 (H2386): "Почему закрыто?" diagnostics on locked
@@ -1780,6 +1817,20 @@ return [
     'money_daily_reconciliation' => (bool) env('MONEY_DAILY_RECONCILIATION', false),
 
     /*
+     | H5444 (P2, E017, D11/D13/D14/D15/D16/D17): выплаты на версионированных
+     | условиях и неизменяемых расчётных пакетах. Выключено = ни одной записи
+     | в teacher_compensation_* / teacher_payout_package* (сервис отказывает,
+     | PayoutWritesDisabled); ни один экран зарплат не переключён — чтение
+     | остаётся легаси `teacher_payouts` до P4. Сверка нового и старого
+     | (только чтение, работает при выключенном флаге):
+     | php artisan money:payout-package-compare
+     | Money-контур: дефолт OFF, включение в проде — отдельный ops-шаг
+     | (MONEY_PAYOUT_PACKAGES=true + php artisan config:cache) ПОСЛЕ того, как
+     | отчёт сверки сходится или оставляет только названные исключения.
+     */
+    'money_payout_packages' => (bool) env('MONEY_PAYOUT_PACKAGES', false),
+
+    /*
      | H5480 (P3): зачисления банковской выписки как источник доказательств
      | bank_statement и дневной агрегатный контроль (QR-расчёты и агрегат
      | эквайринга против оплат окна). Выключено — импорт выписки по-прежнему
@@ -1846,4 +1897,16 @@ return [
      | начинали с брони (перепись на проде 28-09-2026: 3 пары, все гр.60).
      */
     'debt_strict_block_coverage' => (bool) env('DEBT_STRICT_BLOCK_COVERAGE', false),
+
+    /*
+     | Money-контур, ЗП преподавателей: из базы начисления вычитаются только
+     | НАСТОЯЩИЕ возвраты студентам — «Расход», привязанный к исходной оплате,
+     | несущий блоки или записанный на покупателя курса. Выплаты самим
+     | преподавателям, реклама, налоги и зарплаты кураторов, внесённые тем же
+     | тарифом «Расход», базу больше не режут (прод 29-09-2026: курс 348 — выплаты
+     | самому преподавателю ÷12 уменьшали базу блока в разы). Дефолт OFF;
+     | перед включением — php artisan salary:refund-filter-report и решение
+     | финансового руководителя.
+     */
+    'salary_returns_student_refunds_only' => (bool) env('SALARY_RETURNS_STUDENT_REFUNDS_ONLY', false),
 ];

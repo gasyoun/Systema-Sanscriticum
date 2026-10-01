@@ -6,6 +6,7 @@ use App\Filament\Resources\PaymentResource\Pages;
 use App\Jobs\SendTelegramMessageJob;
 use App\Mail\DepositTransferredMail;
 use App\Models\Course;
+use App\Models\FiscalReceipt;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Services\CuratorNotifier;
@@ -22,6 +23,7 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 
 class PaymentResource extends Resource
@@ -473,6 +475,28 @@ class PaymentResource extends Resource
                     ->alignment(Alignment::Center)
                     ->toggleable(),
 
+                // Чек Digital Kassa (features.digitalkassa_receipts). Пусто — чек
+                // пробивала Точка или платёж не через эквайринг.
+                Tables\Columns\TextColumn::make('fiscalReceipt.status')
+                    ->label('Чек')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        FiscalReceipt::STATUS_DONE => 'success',
+                        FiscalReceipt::STATUS_FAILED => 'danger',
+                        default => 'warning',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        FiscalReceipt::STATUS_DONE => 'Пробит',
+                        FiscalReceipt::STATUS_FAILED => 'Ошибка',
+                        FiscalReceipt::STATUS_PROCESSING => 'В обработке',
+                        default => 'Ожидает',
+                    })
+                    ->url(fn (Payment $record): ?string => $record->fiscalReceipt?->receipt_url, shouldOpenInNewTab: true)
+                    ->tooltip(fn (Payment $record): ?string => $record->fiscalReceipt?->last_error)
+                    ->placeholder('—')
+                    ->alignment(Alignment::Center)
+                    ->toggleable(),
+
                 // 6. ПРИМЕЧАНИЕ
                 Tables\Columns\TextColumn::make('transaction_id')
                     ->label('Примечание (Банк)')
@@ -639,6 +663,22 @@ class PaymentResource extends Resource
                     }),
             ])
             ->actions([
+                // Повтор чека Digital Kassa после ошибки (данные поправлены или DK
+                // была недоступна). Новый receipt_id — DK требует его после ответа 400.
+                Tables\Actions\Action::make('retryFiscalReceipt')
+                    ->label('Повторить чек')
+                    ->icon('heroicon-o-receipt-refund')
+                    ->color('warning')
+                    ->visible(fn (Payment $record): bool => $record->fiscalReceipt?->status === FiscalReceipt::STATUS_FAILED
+                        && in_array($record->status, Payment::PAID_STATUSES, true)
+                        && RoleGate::finance())
+                    ->requiresConfirmation()
+                    ->modalDescription(fn (Payment $record): string => 'Последняя ошибка: '.($record->fiscalReceipt?->last_error ?: '—'))
+                    ->action(fn (Payment $record) => Artisan::call('fiscal:retry-digitalkassa', [
+                        '--payment' => $record->id,
+                        '--new-id' => true,
+                    ])),
+
                 // Подтвердить PayPal-заявку после сверки платежа: перевод в paid
                 // запускает штатную Payment::booted() → доступ/письма/прана.
                 Tables\Actions\Action::make('confirmPaypal')

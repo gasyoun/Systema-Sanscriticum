@@ -89,6 +89,35 @@ class PasswordResetController extends Controller
         return back()->with('email_found', $email);
     }
 
+    // Вошедший студент не помнит текущий пароль (входил по одноразовой ссылке):
+    // шлём ссылку сброса на его СОБСТВЕННЫЙ адрес из профиля — email не вводится,
+    // поэтому ни перебора, ни чужих адресов. Гостевой /forgot-password ему
+    // недоступен (guest-мидлварь возвращает в кабинет).
+    public function sendResetLinkToSelf(Request $request)
+    {
+        $user = $request->user();
+        $email = User::normalizeEmail((string) $user->email);
+
+        if ($email === '' || str_ends_with($email, '@no-email.com')) {
+            return back()->with('error', 'В профиле нет адреса почты — ссылку отправить некуда. Напишите куратору, он поможет задать пароль.');
+        }
+
+        $status = Password::sendResetLink(['email' => $email]);
+
+        app(AccessAttemptLogger::class)->record(
+            $status === Password::RESET_THROTTLED
+                ? AccessAttempt::KIND_RESET_THROTTLED
+                : AccessAttempt::KIND_RESET_SENT,
+            email: $email,
+            ip: $request->ip(),
+            userAgent: $request->userAgent(),
+        );
+
+        // RESET_THROTTLED = письмо уже ушло меньше минуты назад — честно то же
+        // «проверьте почту», как и в гостевом потоке.
+        return back()->with('password_status', "Ссылка для смены пароля отправлена на {$email}. Проверьте почту и папку «Спам».");
+    }
+
     // Форма ввода нового пароля (по ссылке из письма)
     public function showResetForm(Request $request, string $token)
     {
@@ -123,6 +152,12 @@ class PasswordResetController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
+            // Вошедший (сменил пароль по письму, запрошенному из кабинета) — сразу
+            // в кабинет: /login его всё равно отбросил бы, потеряв сообщение.
+            if ($request->user()) {
+                return redirect()->route('student.dashboard')->with('password_status', 'Пароль обновлён.');
+            }
+
             return redirect()->route('login')->with('status', 'Пароль обновлён. Теперь войдите с новым паролем.');
         }
 
