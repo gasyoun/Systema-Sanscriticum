@@ -30,14 +30,14 @@ return [
 
     /**
      * Own cash register (ККТ) instead of renting Tochka's fiscal cloud.
-     * Today fiscalisation is Create Payment Operation With Receipt on Tochka
-     * (TochkaPaymentService). Buying a physical/online KKT is ops + accounting;
-     * code switch is a later integration (OFD provider / new receipt path).
+     * Integrated: Digital Kassa API v2.1 behind features.digitalkassa_receipts
+     * (IssueDigitalKassaReceiptJob after the Tochka paid webhook). Flag OFF →
+     * legacy Create Payment Operation With Receipt on Tochka.
      */
     'own_kkt' => [
         'planned' => true,
-        'status' => 'procurement', // procurement | integrate | live
-        'notes' => 'Replace rented Tochka fiscal with school-owned KKT; keep acquiring or not is @DECIDE.',
+        'status' => 'integrate', // procurement | integrate | live
+        'notes' => 'Digital Kassa receipts; Tochka keeps acquiring (/payments). Flip to live after the flag is ON in prod.',
     ],
 
     'legal' => [

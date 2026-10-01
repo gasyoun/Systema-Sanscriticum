@@ -857,7 +857,12 @@ class Helpdesk extends Page
             return;
         }
 
-        $this->newMessage = $template->render($user);
+        // Номер блока ищем в последнем сообщении студента: «как оплатить 66» →
+        // {pay_link} на чекаут блока 66 (features.support_block_pay_link).
+        $lastIncoming = $this->messages
+            ->last(fn (UnifiedMessage $m) => $m->direction === UnifiedMessage::DIRECTION_INCOMING);
+
+        $this->newMessage = $template->renderForSupport($user, $lastIncoming?->text);
         $this->pendingTemplateId = $template->id;
     }
 

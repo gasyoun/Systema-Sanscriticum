@@ -1,0 +1,35 @@
+# Sufler autonomy policy — skeleton (H5560 scope, NOT enforced yet)
+# Стройка превращает каждый пункт в проверяемый gate.
+# Нарушение любого ceiling = авто-стоп с трейсом, не вмешательство человека.
+
+version: 0
+pilot: sufler-autonomy-2026-09-29
+
+tool_allowlist:
+  - catalog.read
+  - schedule.read
+  - cabinet.read
+  - faq.read
+  # write/send tools are NEVER allowlisted in the pilot
+
+ceilings:
+  max_steps_per_ticket: 8
+  tokens_per_ticket: TBD  # = monthly_allowance / planned_tickets
+  monthly_allowance: TBD  # MG fills: z.ai Max monthly token norm
+
+verify_gates_before_external_action:
+  - money_amount_matches_system  # mismatch => full silence, route to finance lead
+  - no_personal_data_in_corpus
+  - citation_present_for_every_fact
+
+human_stays:
+  - money_disputes
+  - certificates_refunds_conflicts
+  - no_facts_hint_mode
+
+metrics:
+  head: share_resolved_without_human
+  guards:
+    citation_precision_n20_min: 0.95
+    personal_data_in_corpus: 0
+    auto_replies_in_money_disputes: 0

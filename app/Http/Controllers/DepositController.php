@@ -79,6 +79,7 @@ final class DepositController extends Controller
                 itemName: 'Бронь курса «'.$course->title.'»',
                 paymentMethod: 'full_prepayment',
                 paymentObject: 'service',
+                payment: $payment,
             );
         } catch (ConnectionException $e) {
             $payment->update(['status' => 'failed']);
