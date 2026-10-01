@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Services\Access\TelegramLoginService;
 use App\Support\Roles;
+use App\Support\UsedLoginLinkResponse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -149,8 +150,16 @@ class TelegramCabinetLoginTest extends TestCase
         $this->assertAuthenticatedAs($user);
         $this->assertSame(1, $user->fresh()->login_count);
 
-        // Второй клик (replay) — 404.
-        $this->get('/tg-login/'.$plaintext)->assertNotFound();
+        // Второй клик (replay) при живой сессии — просто в кабинет, не 404.
+        $this->get('/tg-login/'.$plaintext)->assertRedirect(route('student.dashboard'));
+        $this->assertAuthenticatedAs($user);
+
+        // Без сессии — страница входа с понятным текстом, токен не оживает.
+        $this->post('/logout');
+        $this->get('/tg-login/'.$plaintext)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('status', UsedLoginLinkResponse::MESSAGE);
+        $this->assertGuest();
     }
 
     /** @test */
@@ -159,8 +168,12 @@ class TelegramCabinetLoginTest extends TestCase
         config(['features.telegram_cabinet_login' => true]);
         $user = $this->linkedStudent();
 
+        // Чужое назначение и выдуманный токен — тот же ответ, что у использованного.
         $newsletter = MagicLinkToken::issueFor($user, 'newsletter', 15);
-        $this->get('/tg-login/'.$newsletter)->assertNotFound();
+        $this->get('/tg-login/'.$newsletter)->assertRedirect(route('login'));
+        $this->get('/tg-login/totallyUnknownToken123')->assertRedirect(route('login'));
+        $this->assertGuest();
+        // Токен не по формату маршрута — по-прежнему 404 на уровне роутинга.
         $this->get('/tg-login/totally-unknown-token')->assertNotFound();
 
         // admin-ссылка не гасится «чужим» маршрутом — осталась живой.
