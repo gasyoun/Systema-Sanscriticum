@@ -1,8 +1,35 @@
 # ROADMAP — Memrise-clone vocabulary trainer in Systema (Sanskrit + Hindi)
 
-_Created: 11-07-2026 · Last updated: 19-08-2026_
+_Created: 11-07-2026 · Last updated: 01-10-2026_
 
 > **Truth-pass 19-08-2026 (H3072, Opus 5 `claude-opus-5`):** тренажёр отгружен и переименован в «колоду»: колоды привязаны к урокам (H1991, 02-08-2026), приватная колода `my-hindi` из плейлистных дриллов (H2445, 14-08-2026), тап-токен «в колоду» из читалки (H2111, 05-08-2026). Текущий план — [PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PLAN_SYSTEMA_KOLODA_CONTENT_PIPELINE_2026H2.md).
+>
+> **Verdict 01-10-2026 ([H5576](https://github.com/gasyoun/Uprava/blob/main/handoffs/H5576-OxAlpha_Systema-Sanscriticum_roadmap-verdict-w2-systema-karaoke_01.10.26.md), wave 2) — REFRESH.**
+> P1/P2 shipped and the flag is ON; the trainer is a live product, so this stays the
+> working roadmap beside the koloda content plan. What remains is one time-critical
+> human export gate, three agent-doable build phases and two artifact-gated phases —
+> checkboxes below, mirrored into Uprava
+> [GTD_NEXT_ACTIONS.md](https://github.com/gasyoun/Uprava/blob/main/GTD_NEXT_ACTIONS.md)
+> per ruling 10 of [GRILL_ROADMAP_CLOSEOUT_OXALPHA_MASS_MINT_21-09-2026.md](https://github.com/gasyoun/Uprava/blob/main/docs/GRILL_ROADMAP_CLOSEOUT_OXALPHA_MASS_MINT_21-09-2026.md).
+
+## What is left (01-10-2026) — gated
+
+- [ ] P0 — export Memrise course 6679375 «Продлёнка по санскриту» (+ any Hindi course the
+  owner holds, same pass) — human-only (needs the owner's `MEMRISE_SESSION`; an agent
+  cannot log into Memrise; time-critical while the community archive still hosts the
+  course; GTD @DO 01-10-2026)
+- [ ] P2b — Devanagari / transliteration input widget (live IAST→Devanagari or on-screen
+  keyboard) — gate: none (agent-doable, next-wave candidate)
+- [ ] P3 — mems/UGC (`SrsMem` model + student deck CRUD + post-moderation per ruled K3) —
+  gate: none (agent-doable, next-wave candidate)
+- [ ] P4 — polish + gamification depth (daily-goal widget, streak freeze, difficult-words
+  and due-today badges, retention analytics off `SrsReviewLog`) — gate: none (agent-doable,
+  next-wave candidate)
+- [ ] P5 — Hindi content wave (import a Hindi course export into Hindi decks/note-types;
+  romanization is its own map, not SLP1) — gate: waits on P0's Hindi export (GTD @WAITING)
+- [ ] P6 — audio (deferred per D4: re-host the P0-exported media or TTS the rest;
+  coordinate with the Sanskrit-audio-gap workstream — do not solve audio twice) — gate:
+  until the audio-gap workstream picks it up (GTD @WAITING)
 
 Bring the full Memrise learning loop — spaced-repetition review, every test mode,
 gamification, and user mnemonics — into the [Systema-Sanscriticum](https://github.com/gasyoun/Systema-Sanscriticum)

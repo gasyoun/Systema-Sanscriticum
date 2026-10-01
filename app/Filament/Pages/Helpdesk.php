@@ -1139,6 +1139,48 @@ class Helpdesk extends Page
             ->send();
     }
 
+    /**
+     * Закрыть гостевой тред («Без привязки»): веб-гость сайта или тред
+     * непривязанного Telegram-автора (source_telegram_chat_id). У этой ветки
+     * правой панели кнопки «Решен» не было вовсе — открытые unlinked-треды
+     * нельзя было снять с очереди из UI никак.
+     *
+     * Тот же H2381-гейт темы, что и у {@see resolveConversation()}: при
+     * features.support_required_close_topic без темы — тост «Нужна тема».
+     */
+    public function resolveGuestConversation(): void
+    {
+        $thread = $this->guestThread;
+
+        if (! $thread || ! $thread->isOpen()) {
+            return;
+        }
+
+        try {
+            app(SupportConversationManager::class)->closeWithTopic(
+                $thread,
+                $this->closeTopicCategory !== '' ? $this->closeTopicCategory : null,
+                auth()->user(),
+            );
+        } catch (\InvalidArgumentException $e) {
+            Notification::make()
+                ->title('Нужна тема обращения')
+                ->body('Выберите тему перед закрытием диалога (или «Другое» / «Без категории»).')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $this->closeTopicCategory = '';
+        $this->loadUsersList();
+
+        Notification::make()
+            ->title('Диалог закрыт')
+            ->success()
+            ->send();
+    }
+
     /** @return array<string, string> */
     public function getTopicOptionsProperty(): array
     {
