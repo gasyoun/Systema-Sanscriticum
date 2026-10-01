@@ -25,6 +25,17 @@ class EditTeacher extends EditRecord
         ];
     }
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        // Включили публичную страницу, но слаг не ввели — собираем из ФИО
+        // (после тумблера поле обычно уже заполнено; это фолбэк для сохранений мимо UI).
+        if (! empty($data['page_enabled']) && blank($data['page_slug'] ?? null) && filled($data['name'] ?? null)) {
+            $data['page_slug'] = Str::slug((string) $data['name']) ?: null;
+        }
+
+        return $data;
+    }
+
     /**
      * После сохранения карточки: если в форме указан новый пароль — сбрасываем его
      * в связанном User-аккаунте. Если у преподавателя есть email, но юзера нет —
