@@ -77,4 +77,59 @@ final class SeededViolationProbes
 
         return ProbeOutcome::value(green: $observed < 5, detail: 'count='.$observed);
     }
+
+    /**
+     * H5298 violation 4 — DYNAMIC SILENT SKIP (unarmed driver coerced to a
+     * resolved value): the geo driver is not configured, yet the seam reports
+     * a green «resolved, city unknown» — exactly the old VisitorGeoResolver
+     * behavior where the unarmed branch returned null and both geo jobs
+     * permanently marked visitor_geo_resolved_at. not_supported became
+     * indistinguishable from a genuine no-match.
+     */
+    public static function dynamicUnarmedDriverAsValue(bool $driverArmed): ProbeOutcome
+    {
+        if (! $driverArmed) {
+            // Seeded defect: the unarmed branch quietly pretends a resolved outcome.
+            return ProbeOutcome::value(green: true, detail: 'resolved (no city)');
+        }
+
+        return ProbeOutcome::value(green: true, detail: 'resolved');
+    }
+
+    /** Compliant counterpart: unarmed driver is loud not_supported. */
+    public static function dynamicUnarmedDriverAsValueCompliant(bool $driverArmed): ProbeOutcome
+    {
+        if (! $driverArmed) {
+            return ProbeOutcome::notSupported('geo driver не вооружён — громкий лог с state-ключом');
+        }
+
+        return ProbeOutcome::value(green: true, detail: 'resolved');
+    }
+
+    /**
+     * H5298 violation 5 — VANISHED SOURCE COERCED TO A RECORDED VALUE: the
+     * queued metric write's source row disappeared while the job waited in
+     * the queue, yet the seam reports the observation as recorded (the old
+     * TrackLessonViewJob silent return: the lesson_open event vanished with
+     * zero machine-readable trace).
+     */
+    public static function dynamicVanishedSourceAsValue(?bool $sourceExists): ProbeOutcome
+    {
+        if ($sourceExists !== true) {
+            // Seeded defect: vanished source still reported as a recorded value.
+            return ProbeOutcome::value(green: true, detail: 'view recorded');
+        }
+
+        return ProbeOutcome::value(green: true, detail: 'view recorded');
+    }
+
+    /** Compliant counterpart: vanished source is loud unavailable, never a value. */
+    public static function dynamicVanishedSourceAsValueCompliant(?bool $sourceExists): ProbeOutcome
+    {
+        if ($sourceExists !== true) {
+            return ProbeOutcome::unavailable('исходник просмотра исчез из очереди — событие НЕ записано, громкий лог');
+        }
+
+        return ProbeOutcome::value(green: true, detail: 'view recorded');
+    }
 }
