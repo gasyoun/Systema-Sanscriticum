@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Jobs\IssueDigitalKassaReceiptJob;
+use App\Models\FiscalReceipt;
 use App\Models\Payment;
 use App\Models\PaymentWebhookEvent;
 use App\Support\SentinelBreakerGate;
@@ -223,6 +225,12 @@ class WebhookController extends Controller
                         // by the H4930 independent logic-critic pass).
                         if (config('features.money_mutation_breaker')) {
                             SentinelBreakerGate::record('tochka_grant', SentinelBreakerGate::CLASS_MONEY_MUTATION);
+                        }
+
+                        // Чек Digital Kassa — только для платежей, чья ссылка создана без
+                        // фискализации Точки. AfterCommit: откат транзакции чек не пробьёт.
+                        if ($payment->fiscal_provider === FiscalReceipt::PROVIDER_DIGITALKASSA) {
+                            IssueDigitalKassaReceiptJob::dispatch($payment->id);
                         }
 
                         Log::info("✅ УСПЕХ: Доступ выдан! Заказ №{$payment->id} оплачен.");

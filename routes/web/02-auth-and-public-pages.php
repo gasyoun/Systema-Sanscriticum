@@ -45,12 +45,17 @@ Route::middleware('guest')->group(function () {
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
         ->middleware('throttle:5,1')
         ->name('password.email');
-    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])
-        ->name('password.reset');
-    Route::post('/reset-password', [PasswordResetController::class, 'reset'])
-        ->middleware('throttle:5,1')
-        ->name('password.update');
 });
+
+// Ссылка из письма «Вход в личный кабинет» — ВНЕ guest-группы (29-09-2026):
+// студент, вошедший по одноразовой ссылке, просит письмо из кабинета («Сменить
+// пароль» → «Отправить ссылку на почту») и открывает его в том же браузере; под
+// guest его молча возвращало в кабинет. Защита — токен из письма, не гостевой статус.
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])
+    ->name('password.reset');
+Route::post('/reset-password', [PasswordResetController::class, 'reset'])
+    ->middleware('throttle:5,1')
+    ->name('password.update');
 
 // Редирект со старого URL личного кабинета (вне auth-группы, чтобы старые
 // закладки работали; имя student.dashboard сохранено — путь сменился на /dvaram).
