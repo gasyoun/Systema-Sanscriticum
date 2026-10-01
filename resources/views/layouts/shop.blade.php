@@ -33,6 +33,8 @@
 
     {{-- H2378: shop-wide Metrika (card/checkout goals were 0 without this) --}}
     @include('partials.shop-metrika')
+    {{-- Пиксель VK Ads на всю витрину; после Метрики — оборачивает shopReachGoal --}}
+    @include('partials.shop-vk-pixel')
 
     @stack('head')
 </head>
