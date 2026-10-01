@@ -33,7 +33,7 @@ class DebtPaymentResolver
      *   whole?: array{amount: float|null, url: string}|null,
      *   installment?: bool,
      *   full?: array{title: string, url: string}|null,
-     *   blocks?: list<array{number: int, title: string, url: string}>,
+     *   blocks?: list<array{number: int, title: string, url: string, amount: float}>,
      *   unpriced_blocks?: list<int>,
      * }
      */
@@ -165,12 +165,14 @@ class DebtPaymentResolver
                 && $t->block_half === null);
 
             if ($tariff instanceof Tariff) {
+                $blockAmount = (float) $tariff->calculateFinalPriceForUser($user);
                 $blockOptions[] = [
                     'number' => $n,
                     'title' => (string) $tariff->title,
                     'url' => route('checkout.show', $tariff),
+                    'amount' => $blockAmount,
                 ];
-                $bundleAmount += (float) $tariff->calculateFinalPriceForUser($user);
+                $bundleAmount += $blockAmount;
             } else {
                 $unpriced[] = $n;
             }
