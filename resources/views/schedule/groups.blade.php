@@ -31,6 +31,7 @@
             .kg-cta { display: inline-flex; align-items: center; gap: 8px; padding: .625rem 1rem; border-radius: .75rem;
                 background: #E85C24; color: #fff; font-size: .75rem; font-weight: 700; transition: all .2s ease; }
             .kg-cta:hover { background: #d14e1b; }
+            .kg-asof { color: #64748b; font-size: .8rem; }
         </style>
 
         <div class="space-y-6" id="kochergina-groups">
@@ -49,17 +50,20 @@
                     </div>
                     <p class="kg-canvas">
                         Канва: <strong>{{ $row['canvasCursor'] > 0 ? 'Урок '.$row['canvasCursor'].' из '.$row['canvasTotal'] : 'Урок —' }}</strong>
+                        @if($row['canvasCursor'] > 0 && $row['canvasAsOf'] !== null)
+                            <span class="kg-asof">· актуально на {{ $row['canvasAsOf']->translatedFormat('d F Y') }}</span>
+                        @endif
                         @if($row['canvasTotal'] > 0 && $row['canvasCursor'] > 0)
                             · {{ $row['canvasTotal'] - $row['canvasCursor'] }} урок(ов) до конца учебника
                         @endif
                     </p>
-                    <div class="sch-cta">
+                    <div class="flex justify-end">
                         <a href="{{ $row['interestUrl'] }}"
                            class="kg-cta">
                             @if($row['joinIntent'] === 'transfer')
-                                Перевестись в эту группу
+                                Отправить заявку
                             @else
-                                Встать в заявку
+                                Отправить заявку
                             @endif
                             <i class="fas fa-arrow-right text-[10px]"></i>
                         </a>
