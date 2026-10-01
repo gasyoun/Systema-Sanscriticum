@@ -136,6 +136,7 @@ Schema derives from migrations; Money above carries the invariants.
 ## External integrations
 
 - Tochka `/api/webhooks/tochka` · Telegram `/api/telegram/webhook` · VK `/api/vk-webhook` · DomPDF.
+- Чеки: Digital Kassa (`DIGITALKASSA_RECEIPTS`, OFF) — провайдер фиксируется на платеже (`payments.fiscal_provider`) при создании ссылки; чек после paid-вебхука, `fiscal:retry-digitalkassa`. Флаг OFF = чек Точки.
 - Lead-magnet bots: `/api/webhooks/telegram-magnet`, `/vk-magnet`, `/max-magnet/{secret}` (secret **in the path** — rotate in `MarketingSetting` after a leak). Secrets use Eloquent `encrypted`.
 - New Telegram send points claim via [TelegramSendGuard](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/TelegramSendGuard.php) before the API call — unclaimed retry after a lost response duplicates the send. Dedupe: `update_id` via `claimUpdate()`.
 - n8n ZOOM 1.4: DOWNLOAD only via the fresh signed URL (≤24h); cleanup deletes only `…/executions/{{ \.id }}*`, never a global rm. API-PUT: back up JSON first.

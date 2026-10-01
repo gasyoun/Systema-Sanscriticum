@@ -98,6 +98,7 @@ final class InstituteDonateController extends Controller
                 amount: (float) $amount,
                 purpose: $purpose,
                 itemName: 'Добровольное пожертвование',
+                payment: $payment,
             );
         } catch (ConnectionException $e) {
             $payment->update(['status' => 'failed']);

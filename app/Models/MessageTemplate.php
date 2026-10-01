@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Support\SupportPayLinkResolver;
 use App\Support\MessagePlaceholders;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -123,6 +124,30 @@ class MessageTemplate extends Model
         return MessagePlaceholders::render(
             (string) $this->body,
             MessagePlaceholders::forUser($user, $course, $blockNumber),
+        );
+    }
+
+    /**
+     * Рендер для ответов поддержки (бот лички, хелпдеск): курс, блок и
+     * {pay_link} берутся из долга студента, номер блока — из его сообщения
+     * ({@see SupportPayLinkResolver}). Флаг OFF или долг не найден — ровно
+     * {@see render()} без курса, как раньше.
+     */
+    public function renderForSupport(User $user, ?string $studentText = null): string
+    {
+        $resolver = app(SupportPayLinkResolver::class);
+        $link = $resolver->isEnabled() ? $resolver->resolve($user, $studentText) : null;
+
+        if ($link === null) {
+            return $this->render($user);
+        }
+
+        return MessagePlaceholders::render(
+            (string) $this->body,
+            array_merge(
+                MessagePlaceholders::forUser($user, $link['course'], $link['block']),
+                ['{pay_link}' => $link['url']],
+            ),
         );
     }
 }

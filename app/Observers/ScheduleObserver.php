@@ -45,6 +45,16 @@ class ScheduleObserver
     {
         $webhookUrl = (string) config('services.n8n.schedule_sheet_webhook');
         if ($webhookUrl === '') {
+            // H5298: was a silent return — the integration being deliberately
+            // off must stay machine-distinguishable from "sent, got no
+            // response" or a future accidental misconfiguration going quiet.
+            Log::info('schedule_observer.n8n_not_supported', [
+                'action' => $action,
+                'schedule_id' => $schedule->id,
+                'state' => 'not_supported',
+                'hint' => 'services.n8n.schedule_sheet_webhook empty — n8n sync intentionally off',
+            ]);
+
             return;
         }
 
