@@ -1,12 +1,12 @@
-# Probe/SLI missingness контракт: тихие пропуски и 0-коэрция починены (OxAlpha `opencode/z-ai/glm-5.3-flash`, 17-09-2026)
+- **Probe/SLI missingness контракт: тихие пропуски и 0-коэрция починены (OxAlpha `opencode/z-ai/glm-5.3-flash`, 17-09-2026)**
 
-H5061 — извлечение и enforcing контракта наблюдаемости, продемонстрированного PR #2526/#2565/#2645
-(H4648 coverage-partial, H4672 money-axis SLI): проба/метрика обязана различать `value` (настоящий ноль —
-это value), `unavailable`, `not_supported`, `pending`, `failed` и `partial`; отсутствие конфигурации —
-громкое и машинночитаемое; зелёный прогон снимает залипший fail. Канзус активных швов —
-[docs/PROBE_SLI_MISSINGNESS_CENSUS_2026-09-17.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PROBE_SLI_MISSINGNESS_CENSUS_2026-09-17.md)
-(8 швов: cabinet:probe, оба money-SLI, heartbeat:ping, telegram-support:healthcheck, hindi-пробы,
-дедман-мониторы).
+  H5061 — извлечение и enforcing контракта наблюдаемости, продемонстрированного PR #2526/#2565/#2645
+  (H4648 coverage-partial, H4672 money-axis SLI): проба/метрика обязана различать `value` (настоящий ноль —
+  это value), `unavailable`, `not_supported`, `pending`, `failed` и `partial`; отсутствие конфигурации —
+  громкое и машинночитаемое; зелёный прогон снимает залипший fail. Канзус активных швов —
+  [docs/PROBE_SLI_MISSINGNESS_CENSUS_2026-09-17.md](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/docs/PROBE_SLI_MISSINGNESS_CENSUS_2026-09-17.md)
+  (8 швов: cabinet:probe, оба money-SLI, heartbeat:ping, telegram-support:healthcheck, hindi-пробы,
+  дедман-мониторы).
 
 - **Словарь состояний** [`app/Support/Observability/ProbeOutcome.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Support/Observability/ProbeOutcome.php):
   шесть канонических состояний, `partial` намеренно НЕ зелёный (частичное покрытие обязано отличаться

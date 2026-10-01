@@ -1,8 +1,7 @@
-_Created: 16-09-2026 · Last updated: 16-09-2026_
 
-# H4966: trial-pin freshness monitor + split cabinet invite from the 60-min password-reset link (Sonnet 5 `claude-sonnet-5`, 16-09-2026)
+- **H4966: trial-pin freshness monitor + split cabinet invite from the 60-min password-reset link (Sonnet 5 `claude-sonnet-5`, 16-09-2026)**
 
-Two live-proven acquisition defects, both a hand-pinned single row/one-shot marker that silently expired with no freshness gate and no monitor. Evidence: Uprava [reports/BLEED_AUDIT_TRIAL_FUNNEL_AND_CABINET_INVITES_16-09-2026.md](https://github.com/gasyoun/Uprava/blob/main/reports/BLEED_AUDIT_TRIAL_FUNNEL_AND_CABINET_INVITES_16-09-2026.md).
+  Two live-proven acquisition defects, both a hand-pinned single row/one-shot marker that silently expired with no freshness gate and no monitor. Evidence: Uprava [reports/BLEED_AUDIT_TRIAL_FUNNEL_AND_CABINET_INVITES_16-09-2026.md](https://github.com/gasyoun/Uprava/blob/main/reports/BLEED_AUDIT_TRIAL_FUNNEL_AND_CABINET_INVITES_16-09-2026.md).
 
 - **`Course::hasStaleTrialPin()`** — a visible course with `trial_price > 0` whose `trial_schedule_id` points into the past (or a deleted row). Used by both the new monitor and the public feed.
 - **Daily monitor `trial:check-freshness`** (09:00 MSK, [`app/Console/Concerns/SchedulesStudentsAndContent.php`](https://github.com/gasyoun/Systema-Sanscriticum/blob/main/app/Console/Concerns/SchedulesStudentsAndContent.php)) — alerts admins in Telegram via `TelegramAdminNotifier` on every stale course found; never a silent no-op.
@@ -13,4 +12,4 @@ Two live-proven acquisition defects, both a hand-pinned single row/one-shot mark
 - OUT OF SCOPE (per handoff): re-pointing the four live `trial_schedule_id` values — that stays a human action in Filament (`/admin` → course → «Пробное занятие»).
 - [H4966](https://github.com/gasyoun/Uprava/blob/main/handoffs/H4966-Sonnet_Systema-Sanscriticum_trial-freshness-gate-and-cabinet-invite-lifetime_16.09.26.md)
 
-_Гасунс_
+  _Гасунс_
