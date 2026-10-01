@@ -357,6 +357,7 @@ class DebtPaymentController extends Controller
                 amount: (float) $finalAmount,
                 purpose: $purpose,
                 itemName: $courseName.' — погашение задолженности',
+                payment: $payment,
             );
         } catch (ConnectionException $e) {
             // failed → наблюдатель Payment вернёт списанную прану.

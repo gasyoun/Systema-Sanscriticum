@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Payments;
 
+use App\Models\FiscalReceipt;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
@@ -17,6 +19,12 @@ use Illuminate\Support\Facades\Http;
  * отправить его на email из Client — то есть покупателю (студенту), а не на дефолтную
  * почту руководителя (как было раньше — отсюда «чужой покупатель» в чеке).
  * См. план kind-tinkering-stardust + ответ поддержки Точки.
+ *
+ * features.digitalkassa_receipts ВКЛ → ссылка создаётся нефискальным /payments (без
+ * Client/Items/СНО), платёж помечается fiscal_provider=digitalkassa и получает
+ * FiscalReceipt(pending); чек пробивает IssueDigitalKassaReceiptJob после вебхука оплаты.
+ * Провайдер пишется на платёж ДО запроса в банк: иначе флаг, переключённый между
+ * созданием ссылки и вебхуком, дал бы двойной чек (или ни одного).
  */
 final class TochkaPaymentService
 {
@@ -27,6 +35,7 @@ final class TochkaPaymentService
      * @param  int|null  $ttlMinutes  Необязательный срок действия платёжной ссылки в минутах.
      * @param  string|null  $redirectUrl  URL возврата при успехе (H1396 §3: подписанный, с id заказа). null → прежний неподписанный route('payment.success').
      * @param  string|null  $failRedirectUrl  URL возврата при отказе. null → прежний route('payment.fail').
+     * @param  Payment|null  $payment  Платёж заказа — на нём фиксируется fiscal_provider (и FiscalReceipt при DK).
      *
      * @throws ConnectionException Сетевой сбой — обрабатывает вызывающий код.
      */
@@ -40,8 +49,14 @@ final class TochkaPaymentService
         ?int $ttlMinutes = null,
         ?string $redirectUrl = null,
         ?string $failRedirectUrl = null,
+        ?Payment $payment = null,
     ): Response {
         $amount = round($amount, 2);
+        $digitalKassa = (bool) config('features.digitalkassa_receipts');
+
+        if ($payment !== null) {
+            $this->assignFiscalProvider($payment, $digitalKassa, $itemName, $paymentMethod);
+        }
 
         $data = [
             'customerCode' => config('services.tochka.customer_code'),
@@ -68,6 +83,11 @@ final class TochkaPaymentService
             ]],
         ];
 
+        if ($digitalKassa) {
+            // Чек пробивает Digital Kassa — Точке отдаём только эквайринг.
+            unset($data['Client'], $data['Items']);
+        }
+
         if ($ttlMinutes !== null) {
             $data['ttl'] = $ttlMinutes;
         }
@@ -82,7 +102,7 @@ final class TochkaPaymentService
 
         // СНО включаем только если задана в конфиге — иначе полагаемся на дефолт кассы.
         $taxSystemCode = config('services.tochka.tax_system_code');
-        if (! empty($taxSystemCode)) {
+        if (! $digitalKassa && ! empty($taxSystemCode)) {
             $data['taxSystemCode'] = $taxSystemCode;
         }
 
@@ -90,8 +110,29 @@ final class TochkaPaymentService
             ->withHeaders(['Accept' => 'application/json'])
             ->connectTimeout(5)
             ->timeout(20)
-            ->post(rtrim((string) config('services.tochka.url'), '/').'/payments_with_receipt', [
+            ->post(rtrim((string) config('services.tochka.url'), '/').($digitalKassa ? '/payments' : '/payments_with_receipt'), [
                 'Data' => $data,
             ]);
+    }
+
+    private function assignFiscalProvider(Payment $payment, bool $digitalKassa, string $itemName, string $paymentMethod): void
+    {
+        if (! $digitalKassa) {
+            $payment->update(['fiscal_provider' => 'tochka']);
+
+            return;
+        }
+
+        $payment->update(['fiscal_provider' => FiscalReceipt::PROVIDER_DIGITALKASSA]);
+
+        FiscalReceipt::updateOrCreate(
+            ['payment_id' => $payment->id],
+            [
+                'provider' => FiscalReceipt::PROVIDER_DIGITALKASSA,
+                'status' => FiscalReceipt::STATUS_PENDING,
+                'item_name' => mb_substr($itemName, 0, 128),
+                'payment_method' => FiscalReceipt::methodFromTochka($paymentMethod),
+            ],
+        );
     }
 }
