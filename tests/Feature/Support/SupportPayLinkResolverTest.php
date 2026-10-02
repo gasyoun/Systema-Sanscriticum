@@ -216,4 +216,39 @@ class SupportPayLinkResolverTest extends TestCase
         $this->assertSame($template->render($user), $template->renderForSupport($user, 'как оплатить 4'));
         $this->assertStringContainsString('«»', $template->renderForSupport($user, 'как оплатить 4'));
     }
+
+    /**
+     * Прод, 01-10-2026: «Перевела вам деньги для продолжение работы над
+     * Рамаяной. Это октябрьской оплаты.» — стем «продо» из обычного слова
+     * «продолжение» совпал с единственным курсом «…продолжающие», и шаблон D2
+     * уехал со ссылкой на него. Слово не из названия курса курс не называет;
+     * курс, названный по существенному слову, опознаётся по-прежнему.
+     */
+    public function test_generic_continue_word_does_not_guess_the_course(): void
+    {
+        $user = User::factory()->create();
+        $hindi = Course::factory()->create(['is_active' => true, 'title' => 'Грамматика хинди гр. 4, суббота, продолжающие (2025)']);
+        Tariff::create(['course_id' => $hindi->id, 'title' => 'Весь курс', 'type' => 'full', 'price' => 20000, 'is_active' => true]);
+
+        $this->assertNull($this->resolve($user, 'Перевела вам деньги для продолжение работы над Рамаяной. Это октябрьской оплаты.'));
+        $this->assertSame($hindi->id, $this->resolve($user, 'как оплатить курс хинди')['course']->id);
+    }
+
+    /**
+     * Прод, 02-10-2026: курс не опознали — а студенту дважды ушло «Оплатить
+     * курс «» удобнее из личного кабинета» со ссылкой на /login. Без курса
+     * пустые кавычки схлопываются, {pay_link} ведёт в кабинет.
+     */
+    public function test_unresolved_course_collapses_quotes_and_links_the_cabinet(): void
+    {
+        $user = User::factory()->create(['name' => 'Студент Тест']);
+        $template = new MessageTemplate(['body' => self::D2]);
+
+        $text = $template->renderForSupport($user, 'как оплатить?');
+
+        $this->assertStringNotContainsString('«»', $text);
+        $this->assertStringContainsString('Оплатить курс удобнее', $text);
+        $this->assertStringContainsString(route('student.access'), $text);
+        $this->assertStringNotContainsString(url('/login'), $text);
+    }
 }

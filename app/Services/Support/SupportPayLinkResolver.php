@@ -234,7 +234,11 @@ final class SupportPayLinkResolver
             'подск', 'можно', 'хочет', 'хотел', 'пожал', 'спаси', 'групп', 'блока', 'блоко',
             'сколь', 'стоит', 'нужно', 'будет', 'когда', 'котор', 'занят', 'урока', 'уроко',
             // «санскрит» есть в половине названий школы — курс не определяет.
-            'санск'];
+            'санск',
+            // «продолжающие» — слово из обычной речи тоже («продолжение работы»),
+            // инцидент 01-10-2026: «Перевела вам деньги для продолжение работы
+            // над Рамаяной» опознало единственный курс «…продолжающие».
+            'продо'];
 
         preg_match_all('/\p{L}{5,}/u', mb_strtolower($text), $m);
 
@@ -273,7 +277,8 @@ final class SupportPayLinkResolver
         return array_values(array_unique($found));
     }
 
-    private function cabinetPaymentsUrl(): string
+    /** Кабинет вместо /login — когда курс опознать не удалось. */
+    public function cabinetPaymentsUrl(): string
     {
         return config('features.cabinet_hybrid')
             ? route('student.access')
