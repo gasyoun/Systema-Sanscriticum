@@ -74,6 +74,7 @@ class SuflerWeek0Autopilot extends Command
             if ($cat === 'none') {
                 $row['verdict'] = 'excluded_smalltalk';
                 $verdicts[] = $row;
+
                 continue;
             }
 
