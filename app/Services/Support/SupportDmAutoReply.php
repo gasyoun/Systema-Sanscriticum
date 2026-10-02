@@ -95,6 +95,16 @@ final class SupportDmAutoReply
     private const MONEY_INTENT_PATTERN = '/оплат|плат[еёжи]|денег|деньг|стоимост|сколько\s+стои|цен[аеуы]|\bтариф|рассрочк|доплат|предоплат|скидк|промокод|по\s+частям|сч[её]т|квитанц|возврат/iu';
 
     /**
+     * Отчёт об оплате — прошедшее время/совершённое действие («я оплатила»,
+     * «перевела вам деньги», «прислала чек»), не вопрос «как оплатить».
+     * Отдельно от MONEY_INTENT_PATTERN: тот шире и матчит оба, а шаблон D2
+     * «куда оплатить» нужен вопросам и вреден отчётам — инцидент 01-10-2026:
+     * на «Перевела вам деньги для продолжение работы над Рамаяной» бот
+     * автоотправил D2 со ссылкой на курс грамматики, угаданный резолвером.
+     */
+    private const MONEY_REPORT_PATTERN = '/оплатил|заплатил|перечислил|перев[её]л|закинул|скинул|произведен|сделал[аи]?\s+(?:перевод|оплату)|(?:прислал|отправил|прикрепил)[аи]?\s+(?:чек|оплату|деньги)/iu';
+
+    /**
      * H5452: намерение пробного занятия — 🔥 на подсказке куратору рядом с
      * деньгами. Стемы узкие, чтобы «запись/записи» (категория B, инцидент
      * 19-09-2026) не загорались: «записатьс» и «записываюсь» совпадают, а
@@ -341,12 +351,19 @@ final class SupportDmAutoReply
 
         // H3380: шаблонный автоответ D/E/F по привязке S9 — только на аккаунтах
         // с auto_reply_enabled, поведение основного support-аккаунта не меняется.
+        //
+        // Инцидент 01-10-2026 (чат Рады): куратор ответил студенту сам, а бот
+        // через минуту ДОБАВИЛ шаблон D2 — шаблонная ветка оставалась
+        // единственной без cooldown-инварианта ack/LLM (recentOutgoingInChat).
+        // И сам шаблон «куда оплатить» ушёл на ОТЧЁТ об оплате, а не на вопрос.
         if ($mayReachStudent
             && $user !== null
             && $category !== null
             && in_array($category, self::TEMPLATE_CATEGORIES, true)
             && (bool) config('features.support_auto_reply_templates', false)
             && $this->accountAllowsAutoReply($incoming)
+            && ! $this->recentOutgoingInChat($incoming)
+            && ! $this->moneyReport($text)
         ) {
             $template = MessageTemplate::query()
                 ->boundToSuggesterCategory($category)
@@ -1241,6 +1258,16 @@ final class SupportDmAutoReply
     private function moneyIntent(string $text): bool
     {
         return preg_match(self::MONEY_INTENT_PATTERN, $text) === 1;
+    }
+
+    /**
+     * Отчёт об оплате («я оплатила», «перевела вам деньги») — в отличие от
+     * вопроса про оплату («как оплатить», «сколько стоит») шаблонную
+     * автоотправку гасит: см. {@see self::MONEY_REPORT_PATTERN}.
+     */
+    private function moneyReport(string $text): bool
+    {
+        return preg_match(self::MONEY_REPORT_PATTERN, $text) === 1;
     }
 
     /**
