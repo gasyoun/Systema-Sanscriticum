@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Support;
 
+use App\Services\Bot\CuratorAi;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -29,6 +30,9 @@ class SuflerWeek0AutopilotRerankTest extends TestCase
         config([
             'features.faq_rag_suggester' => true,
             'knowledge.base_url' => 'http://127.0.0.1:11434',
+            // Чтобы dev-.env с раздельным generation_base_url не протекал в тесты:
+            // по умолчанию генерация ходит туда же, куда эмбеддинги.
+            'knowledge.generation_base_url' => null,
             'knowledge.generation_model' => 'qwen2.5:7b-instruct',
             'knowledge.generation_timeout' => 5,
         ]);
@@ -115,6 +119,26 @@ class SuflerWeek0AutopilotRerankTest extends TestCase
         $this->artisan('sufler:week0-autopilot', ['--rerank' => 'bogus'])
             ->expectsOutputToContain('--rerank must be none|llm')
             ->assertFailed();
+    }
+
+    public function test_generation_base_url_splits_generation_from_embeddings(): void
+    {
+        // H5703: генерация (реранк) может жить на другом узле, чем эмбеддинги;
+        // не задан — общий base_url, прод байт-в-байт не меняется.
+        config(['knowledge.generation_base_url' => 'http://127.0.0.1:11435']);
+        Http::fake([
+            '127.0.0.1:11435/*' => Http::response([
+                'model' => 'qwen3:14b',
+                'choices' => [['message' => ['content' => "A — прямо\nB — нет\n\nОтвет: A"]]],
+                'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 5],
+            ], 200),
+            '127.0.0.1:11434/*' => Http::response(['error' => 'must not be called'], 500),
+        ]);
+
+        $result = app(CuratorAi::class)->localChatWithUsage([['role' => 'user', 'content' => 'q']]);
+
+        $this->assertSame("A — прямо\nB — нет\n\nОтвет: A", $result['content']);
+        Http::assertSent(fn ($request) => str_contains((string) $request->url(), '127.0.0.1:11435/v1/chat/completions'));
     }
 
     /**
