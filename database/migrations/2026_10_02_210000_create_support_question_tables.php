@@ -22,7 +22,12 @@ return new class extends Migration
     {
         Schema::create('support_question_classifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('telegram_support_message_id')->constrained()->cascadeOnDelete();
+            // FK с явным именем: авто-имя длиннее 64 символов (MySQL 1059).
+            $table->foreignId('telegram_support_message_id');
+            $table->foreign('telegram_support_message_id', 'sqc_message_foreign')
+                ->references('id')
+                ->on('telegram_support_messages')
+                ->cascadeOnDelete();
             $table->string('classifier_version', 32);
             $table->string('population', 24); // student|enquiry|staff_internal|unknown
             $table->boolean('is_question');
