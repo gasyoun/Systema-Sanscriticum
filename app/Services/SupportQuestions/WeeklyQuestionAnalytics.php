@@ -408,8 +408,7 @@ class WeeklyQuestionAnalytics
      */
     private function sortedCategories(array $byCategory): array
     {
-        uksort($byCategory, static fn (string $a, string $b): int =>
-            array_search($a, QuestionMessageClassifier::CATEGORY_ORDER, true)
+        uksort($byCategory, static fn (string $a, string $b): int => array_search($a, QuestionMessageClassifier::CATEGORY_ORDER, true)
             <=> array_search($b, QuestionMessageClassifier::CATEGORY_ORDER, true));
 
         return $byCategory;

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Support\QuestionsWeekly;
 
+use App\Models\SupportQuestionClassification;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Services\SupportQuestions\QuestionMessageClassifier;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
@@ -28,7 +30,7 @@ class QuestionsReviewCommandTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        \Carbon\CarbonImmutable::setTestNow(\Carbon\CarbonImmutable::parse('2026-10-02 12:00:00', 'Europe/Moscow'));
+        CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-10-02 12:00:00', 'Europe/Moscow'));
         $this->sheet = storage_path('app/support-questions/test-review-sheet.tsv');
         if (! is_dir(dirname($this->sheet))) {
             mkdir(dirname($this->sheet), 0775, true);
@@ -38,7 +40,7 @@ class QuestionsReviewCommandTest extends TestCase
     protected function tearDown(): void
     {
         @unlink($this->sheet);
-        \Carbon\CarbonImmutable::setTestNow();
+        CarbonImmutable::setTestNow();
         parent::tearDown();
     }
 
@@ -58,11 +60,11 @@ class QuestionsReviewCommandTest extends TestCase
             'telegram_message_id' => $messageId,
             'direction' => 'incoming',
             'text' => $text,
-            'sent_at' => \Carbon\CarbonImmutable::parse('2026-09-29 12:00:00', 'Europe/Moscow'),
+            'sent_at' => CarbonImmutable::parse('2026-09-29 12:00:00', 'Europe/Moscow'),
         ]);
 
         $verdict = app(QuestionMessageClassifier::class)->classifyMessage($text);
-        \App\Models\SupportQuestionClassification::create([
+        SupportQuestionClassification::create([
             'telegram_support_message_id' => $message->id,
             'classifier_version' => QuestionMessageClassifier::VERSION,
             'population' => 'enquiry',
@@ -130,12 +132,12 @@ class QuestionsReviewCommandTest extends TestCase
         $out = [trim((string) $rows[0])];
         // Четвёртой D-строке ревьюер не соглашается (gold C) — единственный промах.
         foreach (array_slice($rows, 1) as $index => $line) {
-            [$id, $population, $predicted] = explode("	", $line);
+            [$id, $population, $predicted] = explode('	', $line);
             $gold = $predicted;
             if ($index === 3) {
                 $gold = 'C';
             }
-$out[] = implode("\t", [$id, $population, $predicted, $gold, 'текст скрыт']);
+            $out[] = implode("\t", [$id, $population, $predicted, $gold, 'текст скрыт']);
         }
         file_put_contents($this->sheet, implode("\n", $out)."\n");
 

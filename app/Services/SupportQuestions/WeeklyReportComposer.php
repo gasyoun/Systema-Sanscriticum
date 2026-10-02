@@ -4,6 +4,7 @@ namespace App\Services\SupportQuestions;
 
 use App\Models\SupportQuestionClassification;
 use App\Models\SupportQuestionWeeklySnapshot;
+use Carbon\CarbonImmutable;
 
 /**
  * HTML-сводка недели для чата «Отдел заботы» (H5709), повторно использует
@@ -45,7 +46,7 @@ class WeeklyReportComposer
         $lines[] = sprintf(
             '<b>Недельный отчёт по вопросам студентов</b> (%s — %s)',
             $this->ruDate($payload['window']['from']),
-            $this->ruDate((string) \Carbon\CarbonImmutable::parse($payload['window']['to'])->modify('-1 day')),
+            $this->ruDate((string) CarbonImmutable::parse($payload['window']['to'])->modify('-1 day')),
         );
         $lines[] = '';
 
@@ -171,7 +172,7 @@ class WeeklyReportComposer
             1 => 'янв', 2 => 'фев', 3 => 'мар', 4 => 'апр', 5 => 'мая', 6 => 'июн',
             7 => 'июл', 8 => 'авг', 9 => 'сен', 10 => 'окт', 11 => 'ноя', 12 => 'дек',
         ];
-        $d = \Carbon\CarbonImmutable::parse($date);
+        $d = CarbonImmutable::parse($date);
 
         return $d->day.' '.$months[(int) $d->month];
     }

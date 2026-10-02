@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Support\QuestionsWeekly;
 
+use App\Models\SupportTopicRule;
 use App\Services\SupportQuestions\QuestionMessageClassifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -116,7 +117,7 @@ class QuestionMessageClassifierTest extends TestCase
     /** Переиспользование существующих keyword-правил через карту категорий. */
     public function test_existing_topic_rule_reused_through_map(): void
     {
-        \App\Models\SupportTopicRule::create([
+        SupportTopicRule::create([
             'category' => 'zoom_link',
             'keywords' => ['зуум-встреча'],
             'priority' => 10,
@@ -131,7 +132,7 @@ class QuestionMessageClassifierTest extends TestCase
     /** Staged pattern_hash-правила НЕ включаются (спека H5709). */
     public function test_staged_pattern_hash_rule_is_ignored(): void
     {
-        \App\Models\SupportTopicRule::create([
+        SupportTopicRule::create([
             'category' => 'zoom_link',
             'keywords' => ['секретный-стем-х5709'],
             'priority' => 1,

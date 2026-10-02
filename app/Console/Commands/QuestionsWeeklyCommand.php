@@ -184,7 +184,7 @@ class QuestionsWeeklyCommand extends Command
             $firstMonday = $firstMonday->startOfWeek(CarbonImmutable::MONDAY);
         }
 
-        [$lastFrom, ] = array_values(WeeklyQuestionAnalytics::defaultWindow());
+        [$lastFrom] = array_values(WeeklyQuestionAnalytics::defaultWindow());
 
         $weeks = [];
         for ($monday = $firstMonday; $monday->lt($lastFrom); $monday = $monday->addWeek()) {

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Support\QuestionsWeekly;
 
+use App\Models\Group;
+use App\Models\Lesson;
+use App\Models\MarketingSetting;
 use App\Models\SupportQuestionClassification;
 use App\Models\SupportQuestionWeeklyDelivery;
 use App\Models\SupportQuestionWeeklySnapshot;
@@ -12,9 +15,10 @@ use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
-use App\Services\SupportQuestions\QuestionMessageClassifier;
+use App\Services\SupportQuestions\WeeklyQuestionAnalytics;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -31,7 +35,7 @@ class QuestionsWeeklyCommandTest extends TestCase
     private TelegramSupportAccount $account;
 
     /** Понедельник прошлой недели поEurope/Moscow на фиксированное «сейчас». */
-    private \Carbon\CarbonImmutable $monday;
+    private CarbonImmutable $monday;
 
     protected function setUp(): void
     {
@@ -39,10 +43,10 @@ class QuestionsWeeklyCommandTest extends TestCase
 
         // Фиксированное «сейчас»: понедельник 05-10-2026 08:00 MSK —
         // предыдущая ЗАВЕРШЁННАЯ неделя = 28-09..05-10.
-        $now = \Carbon\CarbonImmutable::parse('2026-10-05 08:00:00', 'Europe/Moscow');
-        \Carbon\CarbonImmutable::setTestNow($now);
+        $now = CarbonImmutable::parse('2026-10-05 08:00:00', 'Europe/Moscow');
+        CarbonImmutable::setTestNow($now);
 
-        $this->monday = \Carbon\CarbonImmutable::parse('2026-09-28 00:00:00', 'Europe/Moscow');
+        $this->monday = CarbonImmutable::parse('2026-09-28 00:00:00', 'Europe/Moscow');
 
         $this->account = TelegramSupportAccount::create([
             'name' => 'support',
@@ -53,14 +57,14 @@ class QuestionsWeeklyCommandTest extends TestCase
 
     protected function tearDown(): void
     {
-        \Carbon\CarbonImmutable::setTestNow();
+        CarbonImmutable::setTestNow();
         parent::tearDown();
     }
 
     /**
      * @param  array<string, mixed>  $overrides
      */
-    private function seedMessage(\Carbon\CarbonImmutable $sentAt, string $text, array $overrides = []): TelegramSupportMessage
+    private function seedMessage(CarbonImmutable $sentAt, string $text, array $overrides = []): TelegramSupportMessage
     {
         $chat = TelegramSupportChat::firstOrCreate(
             ['telegram_chat_id' => $overrides['telegram_chat_id'] ?? random_int(10000, 99999)],
@@ -97,8 +101,8 @@ class QuestionsWeeklyCommandTest extends TestCase
     private function seedStudent(): User
     {
         $user = User::factory()->create();
-        $group = \App\Models\Group::create(['name' => 'Группа', 'slug' => 'gr-'.random_int(1, 999999)]);
-        \Illuminate\Support\Facades\DB::table('group_user')->insert([
+        $group = Group::create(['name' => 'Группа', 'slug' => 'gr-'.random_int(1, 999999)]);
+        DB::table('group_user')->insert([
             'group_id' => $group->id,
             'user_id' => $user->id,
             'left_at' => null,
@@ -112,15 +116,15 @@ class QuestionsWeeklyCommandTest extends TestCase
         $student = $this->seedStudent();
 
         // 1. Внутри недели (вс 23:30 MSK).
-        $this->seedMessage(\Carbon\CarbonImmutable::parse('2026-10-04 23:30:00', 'Europe/Moscow'), 'сколько стоит курс?', ['linked_user_id' => $student->id]);
+        $this->seedMessage(CarbonImmutable::parse('2026-10-04 23:30:00', 'Europe/Moscow'), 'сколько стоит курс?', ['linked_user_id' => $student->id]);
         // 2. UTC-пересекающая метка: понедельник 01:30 MSK = воскресенье 22:30 UTC прошлой недели — внутри.
-        $this->seedMessage(\Carbon\CarbonImmutable::parse('2026-09-28 01:30:00', 'Europe/Moscow'), 'когда запись появится?', ['linked_user_id' => $student->id]);
+        $this->seedMessage(CarbonImmutable::parse('2026-09-28 01:30:00', 'Europe/Moscow'), 'когда запись появится?', ['linked_user_id' => $student->id]);
         // 3. Ровно на границе конца (следующий понедельник 00:00 MSK) — НЕ входит.
-        $this->seedMessage(\Carbon\CarbonImmutable::parse('2026-10-05 00:00:00', 'Europe/Moscow'), 'не должна попасть: сколько стоит?', ['linked_user_id' => $student->id]);
+        $this->seedMessage(CarbonImmutable::parse('2026-10-05 00:00:00', 'Europe/Moscow'), 'не должна попасть: сколько стоит?', ['linked_user_id' => $student->id]);
         // 4. До окна — не входит.
-        $this->seedMessage(\Carbon\CarbonImmutable::parse('2026-09-27 23:59:00', 'Europe/Moscow'), 'раньше окна: сколько стоит?', ['linked_user_id' => $student->id]);
+        $this->seedMessage(CarbonImmutable::parse('2026-09-27 23:59:00', 'Europe/Moscow'), 'раньше окна: сколько стоит?', ['linked_user_id' => $student->id]);
         // 5. Исходящий ответ куратора — исключается из входящих.
-        $this->seedMessage(\Carbon\CarbonImmutable::parse('2026-09-30 10:00:00', 'Europe/Moscow'), 'ответ куратора', ['direction' => 'outgoing']);
+        $this->seedMessage(CarbonImmutable::parse('2026-09-30 10:00:00', 'Europe/Moscow'), 'ответ куратора', ['direction' => 'outgoing']);
 
         $this->artisan('support:questions-weekly')->assertSuccessful();
 
@@ -146,7 +150,7 @@ class QuestionsWeeklyCommandTest extends TestCase
 
     public function test_dry_run_allows_non_aligned_window_but_persist_refuses(): void
     {
-        $this->seedMessage(\Carbon\CarbonImmutable::parse('2026-09-29 12:00:00', 'Europe/Moscow'), 'сколько стоит?');
+        $this->seedMessage(CarbonImmutable::parse('2026-09-29 12:00:00', 'Europe/Moscow'), 'сколько стоит?');
 
         // Не-понедельник и не 7 дней: только dry-run.
         $this->artisan('support:questions-weekly', [
@@ -165,8 +169,8 @@ class QuestionsWeeklyCommandTest extends TestCase
     {
         $student = $this->seedStudent();
         // Неделя 14-09..20-09 и неделя 21-09..27-09.
-        $this->seedMessage(\Carbon\CarbonImmutable::parse('2026-09-15 10:00:00', 'Europe/Moscow'), 'не могу зайти в zoom', ['linked_user_id' => $student->id]);
-        $this->seedMessage(\Carbon\CarbonImmutable::parse('2026-09-22 10:00:00', 'Europe/Moscow'), 'когда расписание?', ['linked_user_id' => $student->id]);
+        $this->seedMessage(CarbonImmutable::parse('2026-09-15 10:00:00', 'Europe/Moscow'), 'не могу зайти в zoom', ['linked_user_id' => $student->id]);
+        $this->seedMessage(CarbonImmutable::parse('2026-09-22 10:00:00', 'Europe/Moscow'), 'когда расписание?', ['linked_user_id' => $student->id]);
 
         Http::fake();
         Http::preventStrayRequests();
@@ -269,7 +273,7 @@ class QuestionsWeeklyCommandTest extends TestCase
         $older->payload = $payload;
         $older->save();
 
-        $result = \App\Services\SupportQuestions\WeeklyQuestionAnalytics::comparisonReady(
+        $result = WeeklyQuestionAnalytics::comparisonReady(
             SupportQuestionWeeklySnapshot::latest('week_start')->first()->payload,
             $older->payload,
         );
@@ -295,7 +299,7 @@ class QuestionsWeeklyCommandTest extends TestCase
     public function test_send_delivers_exactly_once_and_rerun_suppresses(): void
     {
         config(['recording_gap.care_telegram_chat_id' => '-100200300']);
-        \App\Models\MarketingSetting::create(['tg_bot_token' => '123:abc']);
+        MarketingSetting::create(['tg_bot_token' => '123:abc']);
 
         Http::fake([
             'api.telegram.org/*' => Http::response(['ok' => true, 'result' => ['message_id' => 4242]]),
@@ -317,7 +321,7 @@ class QuestionsWeeklyCommandTest extends TestCase
     public function test_send_after_refusal_is_not_delivered_and_retry_allowed(): void
     {
         config(['recording_gap.care_telegram_chat_id' => '-100200300']);
-        \App\Models\MarketingSetting::create(['tg_bot_token' => '123:abc']);
+        MarketingSetting::create(['tg_bot_token' => '123:abc']);
 
         // Второй Http::fake() не заменяет стаб URL — переключаем ответ
         // замыканием с мутируемым флагом.
@@ -342,7 +346,7 @@ class QuestionsWeeklyCommandTest extends TestCase
     public function test_unknown_delivery_state_requires_reconciliation_no_blind_retry(): void
     {
         config(['recording_gap.care_telegram_chat_id' => '-100200300']);
-        \App\Models\MarketingSetting::create(['tg_bot_token' => '123:abc']);
+        MarketingSetting::create(['tg_bot_token' => '123:abc']);
 
         SupportQuestionWeeklyDelivery::create([
             'week_start' => $this->monday->toDateString(),
@@ -381,8 +385,8 @@ class QuestionsWeeklyCommandTest extends TestCase
         $this->assertNull(SupportQuestionWeeklySnapshot::firstOrFail()->payload['activity']['questions_per_100_active']);
 
         // Добавляем занятие группы в окно → знаменатель появляется.
-        $groupRow = \Illuminate\Support\Facades\DB::table('group_user')->where('user_id', $student->id)->first();
-        \App\Models\Lesson::create([
+        $groupRow = DB::table('group_user')->where('user_id', $student->id)->first();
+        Lesson::create([
             'course_id' => 'c1',
             'title' => 'Занятие',
             'lesson_date' => $this->monday->addDays(2)->toDateString(),

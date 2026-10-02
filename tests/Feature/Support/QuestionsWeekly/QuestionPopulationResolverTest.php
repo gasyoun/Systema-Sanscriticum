@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Support\QuestionsWeekly;
 
+use App\Models\Group;
 use App\Models\SupportResponderMapping;
 use App\Models\TelegramSupportAccount;
 use App\Models\TelegramSupportChat;
@@ -13,7 +14,7 @@ use App\Models\User;
 use App\Services\SupportQuestions\QuestionPopulationResolver;
 use App\Services\SupportQuestions\QuestionStudentAuthority;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -56,8 +57,8 @@ class QuestionPopulationResolverTest extends TestCase
         $chatOwner = User::factory()->create();
         $actualSender = User::factory()->create();
         // Студент-отправитель: членство в группе делает его подтверждённым студентом.
-        \App\Models\Group::create(['name' => 'Курс', 'slug' => 'kurs-1']);
-        \Illuminate\Support\Facades\DB::table('group_user')->insert([
+        Group::create(['name' => 'Курс', 'slug' => 'kurs-1']);
+        DB::table('group_user')->insert([
             'group_id' => 1,
             'user_id' => $actualSender->id,
             'left_at' => null,
@@ -89,8 +90,8 @@ class QuestionPopulationResolverTest extends TestCase
     public function test_private_linked_confirmed_student_is_student(): void
     {
         $user = User::factory()->create();
-        $group = \App\Models\Group::create(['name' => 'G', 'slug' => 'g-1']);
-        \Illuminate\Support\Facades\DB::table('group_user')->insert([
+        $group = Group::create(['name' => 'G', 'slug' => 'g-1']);
+        DB::table('group_user')->insert([
             'group_id' => $group->id,
             'user_id' => $user->id,
             'left_at' => null,
@@ -190,7 +191,7 @@ class QuestionPopulationResolverTest extends TestCase
     {
         config(['services.telegram_support.bot_usernames' => ['samskrte_bot']]);
 
-        [$chat, ] = $this->privateChat(null);
+        [$chat] = $this->privateChat(null);
         $bot = TelegramSupportContact::create([
             'telegram_user_id' => 999,
             'telegram_support_chat_id' => $chat->id,

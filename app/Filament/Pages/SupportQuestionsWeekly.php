@@ -6,6 +6,7 @@ use App\Filament\Clusters\TelegramSupport;
 use App\Models\SupportQuestionClassification;
 use App\Services\SupportQuestions\QuestionMessageClassifier;
 use App\Services\SupportQuestions\WeeklyQuestionAnalytics;
+use Carbon\CarbonImmutable;
 use Filament\Pages\Page;
 
 /**
@@ -84,7 +85,7 @@ class SupportQuestionsWeekly extends Page
                 $byCategory[$category] = ($student[$category] ?? 0) + ($enquiry[$category] ?? 0);
             }
             $rows[] = [
-                'week' => \Carbon\CarbonImmutable::parse((string) $snapshot->week_start)->format('d.m'),
+                'week' => CarbonImmutable::parse((string) $snapshot->week_start)->format('d.m'),
                 'external' => $payload['totals']['external_questions'] ?? 0,
                 'by_category' => $byCategory,
                 'complete' => ! $snapshot->is_incomplete,

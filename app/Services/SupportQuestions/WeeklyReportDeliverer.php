@@ -7,8 +7,9 @@ use App\Models\MarketingSetting;
 use App\Models\SupportQuestionWeeklyDelivery;
 use App\Support\CareChatReplyLog;
 use App\Support\TelegramSendGuard;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Exactly-once доставка недельного отчёта в чат «Отдел заботы» (H5709).
@@ -44,7 +45,7 @@ class WeeklyReportDeliverer
         }
 
         /** @var SupportQuestionWeeklyDelivery $row */
-        $row = \Illuminate\Support\Facades\DB::transaction(function () use ($weekStart): SupportQuestionWeeklyDelivery {
+        $row = DB::transaction(function () use ($weekStart): SupportQuestionWeeklyDelivery {
             /** @var SupportQuestionWeeklyDelivery|null $row */
             $row = SupportQuestionWeeklyDelivery::query()
                 ->where('week_start', $weekStart)
@@ -154,7 +155,7 @@ class WeeklyReportDeliverer
         // слепой повтор запрещён — только reconciliation по чату/леджеру.
         try {
             $this->sendChunks($row, $chatId, $token, $chunks, $firstId, $suppressed);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+        } catch (ConnectionException $e) {
             $row->state = SupportQuestionWeeklyDelivery::STATE_UNKNOWN;
             $row->meta = ['connection' => mb_substr($e->getMessage(), 0, 200)];
             $row->save();

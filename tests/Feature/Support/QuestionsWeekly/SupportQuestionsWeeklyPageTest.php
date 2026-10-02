@@ -6,6 +6,7 @@ namespace Tests\Feature\Support\QuestionsWeekly;
 
 use App\Models\SupportQuestionWeeklySnapshot;
 use App\Models\User;
+use App\Services\SupportQuestions\QuestionMessageClassifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,7 +23,7 @@ class SupportQuestionsWeeklyPageTest extends TestCase
     {
         return [
             'window' => ['from' => '2026-09-28', 'to' => '2026-10-05', 'week_start' => '2026-09-28', 'days' => 7],
-            'classifier_version' => \App\Services\SupportQuestions\QuestionMessageClassifier::VERSION,
+            'classifier_version' => QuestionMessageClassifier::VERSION,
             'student_definition' => 'active_group_membership_or_paid_payment',
             'populations' => [
                 'student' => [
@@ -98,7 +99,7 @@ class SupportQuestionsWeeklyPageTest extends TestCase
         $admin = User::factory()->create(['role' => 'super_admin']);
         SupportQuestionWeeklySnapshot::create([
             'week_start' => '2026-09-28',
-            'classifier_version' => \App\Services\SupportQuestions\QuestionMessageClassifier::VERSION,
+            'classifier_version' => QuestionMessageClassifier::VERSION,
             'payload' => $this->snapshotPayload(),
             'is_incomplete' => false,
         ]);
