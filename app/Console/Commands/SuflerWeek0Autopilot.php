@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Services\Support\Faq\Bm25FaqRetriever;
+use App\Services\Support\Faq\HybridRetriever;
 use Illuminate\Console\Command;
 
 /**
@@ -40,13 +41,22 @@ class SuflerWeek0Autopilot extends Command
         {--policy=policy/sufler.policy.yml : политика пилота (v0 skeleton)}
         {--sample=20 : размер спот-сэмпла precision цитат}
         {--top-k=3 : глубина retrieval для черновика}
+        {--retriever=bm25 : bm25|hybrid — нога retrieval (hybrid требует knowledge:index и FAQ_HYBRID_RETRIEVAL=1)}
         {--out-json=reports/sufler-week0-autopilot-2026-10-02.json}
         {--out-md=docs/REPORT_SUFLER_WEEK0_BASELINE_02-10-2026.md}';
 
     protected $description = 'H5560/Q11: week-0 baseline автопрогона суфлёра (доля без человека + precision цитат N=20) под политикой и killgate';
 
-    public function handle(Bm25FaqRetriever $retriever): int
+    public function handle(Bm25FaqRetriever $bm25, HybridRetriever $hybrid): int
     {
+        $which = (string) $this->option('retriever');
+        if (! in_array($which, ['bm25', 'hybrid'], true)) {
+            $this->error("--retriever must be bm25|hybrid, got {$which}");
+
+            return self::FAILURE;
+        }
+        $retriever = $which === 'hybrid' ? $hybrid : $bm25;
+
         $questionsPath = base_path((string) $this->option('questions'));
         $evalPath = base_path((string) $this->option('eval'));
         $policyPath = base_path((string) $this->option('policy'));
@@ -153,6 +163,7 @@ class SuflerWeek0Autopilot extends Command
         $payload = [
             'generated' => date('Y-m-d H:i'),
             'handoff' => 'H5560 / GTD row 0LD (grill round 2 Q11)',
+            'retriever' => $which,
             'corpus_v1' => 'resources/knowledge/faq.md',
             'questions_corpus' => basename($questionsPath).' ('.count($cases).' cases)',
             'share_without_human' => [
@@ -225,9 +236,10 @@ class SuflerWeek0Autopilot extends Command
         $lines = [
             '# Суфлёр week-0: baseline автопрогона (Q11, row 0LD)',
             '',
-            "_Сгенерировано: {$p['generated']} · H5560/row 0LD · корпус v1: {$p['corpus_v1']} · вопросы: {$p['questions_corpus']}_",
+            "_Сгенерировано: {$p['generated']} · H5560/row 0LD · retrieval: **{$p['retriever']}** · корпус v1: {$p['corpus_v1']} · вопросы: {$p['questions_corpus']}_",
             '',
-            'Детерминированный офлайн-трек: BM25-retrieval + цитированный черновик, LLM не вызывался (токены 0).',
+            'Детерминированный офлайн-трек: retrieval + цитированный черновик, LLM не вызывался (токены 0);',
+            'гибрид = BM25 + dense (nomic-embed-text через локальный Ollama, RRF-фьюжн H5065).',
             '',
             '## Числа week-0 (§20 п.2–3)',
             '',
