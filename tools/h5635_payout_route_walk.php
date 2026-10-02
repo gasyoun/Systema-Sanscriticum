@@ -3,10 +3,13 @@
 /** H5635 route-walk of «Проведение выплаты преподавателю» on the scratch sqlite stand. */
 $_SERVER['APP_ENV'] = 'testing';
 $_ENV['APP_ENV'] = 'testing';
-require '/Users/mac/Documents/GitHub/Systema-Sanscriticum/vendor/autoload.php';
-$app = require '/Users/mac/Documents/GitHub/Systema-Sanscriticum/bootstrap/app.php';
-$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$root = dirname(__DIR__); // репо-корень чекаута, откуда запущен скрипт (не хардкод машины)
+require $root.'/vendor/autoload.php';
+$app = require $root.'/bootstrap/app.php';
+$kernel = 'Illuminate\\Contracts\\Console\\Kernel'; // строкой: pint fully_qualified_strict_types разворачивает FQCN в use-импорт, который в ненеймспейсном скрипте не работает
+$app->make($kernel)->bootstrap();
 
+use App\Models\Course;
 use App\Models\Payment;
 use App\Models\Teacher;
 use App\Models\TeacherPayout;
@@ -105,7 +108,7 @@ $k = $t2->payouts()->create(['amount' => 1000.0, 'type' => TeacherPayout::TYPE_R
 $dupe = false;
 try {
     $t2->payouts()->create(['amount' => 1000.0, 'type' => TeacherPayout::TYPE_REGULAR, 'paid_at' => '2026-10-03', 'settlement_key' => 'H5635-KEY-1']);
-} catch (\Throwable $e) {
+} catch (Throwable $e) {
     $dupe = str_contains(get_class($e), 'QueryException') || str_contains($e->getMessage(), 'UNIQUE');
 }
 $results['R7 settlement_key unique'] = [$dupe];
@@ -114,14 +117,14 @@ $evidence['R7 settlement_key unique'] = 'second insert with key H5635-KEY-1 reje
 // R8 — payout without course lands on the technical course, excluded from salary base.
 $p8 = $t1->payouts()->create(['amount' => 1500.0, 'type' => TeacherPayout::TYPE_REGULAR, 'paid_at' => '2026-10-03']);
 $pay8 = app(TeacherPayoutPoster::class)->post($p8);
-$tech = App\Models\Course::where('slug', 'system-expenses')->first();
+$tech = Course::where('slug', 'system-expenses')->first();
 $results['R8 no-course → technical course'] = [
     $pay8 !== null && (int) $pay8->course_id === (int) $tech->id,
 ];
 $evidence['R8 no-course → technical course'] = "payment {$pay8->id} course_id={$pay8->course_id} (system-expenses id={$tech->id})";
 
 // Verdicts.
-echo "H5635 route walk — ", date('d.m.Y H:i:s'), " (stand: sqlite scratch, PAYMENT_FIX_WAVE1=true)\n\n";
+echo 'H5635 route walk — ', date('d.m.Y H:i:s'), " (stand: sqlite scratch, PAYMENT_FIX_WAVE1=true)\n\n";
 $allPass = true;
 foreach ($results as $route => $checks) {
     $pass = ! in_array(false, $checks, true);
