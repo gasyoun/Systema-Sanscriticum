@@ -302,11 +302,16 @@ final class SupportDmAutoReply
         // Категории берутся из конфига, но D (деньги) и E (доступы)
         // вычёркиваются в КОДЕ: рулинг R3 запрещает их безусловно, и правка
         // конфига не должна уметь это снять.
+        //
+        // Cooldown-инвариант тот же, что у ack/LLM/шаблонной ветки (класс
+        // инцидента 01-10-2026): свежее исходящее в чате — человек уже
+        // ответил, бот не добавляет своего.
         if ($mayReachStudent
             && $user !== null
             && $category !== null
             && in_array($category, $this->liveFaqCategories(), true)
             && $this->accountAllowsAutoReply($incoming)
+            && ! $this->recentOutgoingInChat($incoming)
         ) {
             $hits = $this->faq->retrieve($text, 3);
             // H5065: порог читается в домене BM25 (HybridRetriever::bm25Score).
