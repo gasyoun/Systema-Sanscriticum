@@ -127,13 +127,19 @@ class ShopController extends Controller
             $teacherName = optional(Teacher::find($request->input('teacher')))->name;
         }
 
-        return ShopCatalogUrl::build(
+        $pretty = ShopCatalogUrl::build(
             categorySlugs: $categorySlugs,
             format: (string) $request->input('format', ''),
             level: (string) $request->input('level', ''),
             teacherName: $teacherName,
             search: (string) ($request->input('q') ?? $request->input('search') ?? ''),
         );
+
+        // Location — ASCII по RFC 3986: сырая кириллица из build() в Location не
+        // матчится facets-роутом (прод 02-10-2026: «/online?teacher=N» → 301 на
+        // сырой путь → 404; тот же путь в percent-encoded виде — 200). Кодируем
+        // посегментно: слэши и ASCII-сегменты (kategoriya/prepodavatel) не меняются.
+        return implode('/', array_map('rawurlencode', explode('/', $pretty)));
     }
 
     /**
