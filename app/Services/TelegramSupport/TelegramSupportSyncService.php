@@ -1313,7 +1313,9 @@ class TelegramSupportSyncService
 
         $text = (string) ($payload['text'] ?? '');
         $marker = $this->outgoingAttribution->markerFromOutgoingText($text);
-        if (($payload['responder_marker'] ?? null) && $marker !== SupportOutgoingAttribution::APPLE_MARKER) {
+        if (($payload['responder_marker'] ?? null)
+            && $marker !== SupportOutgoingAttribution::APPLE_MARKER
+            && $marker !== SupportOutgoingAttribution::TURTLE_MARKER) {
             $marker = (string) $payload['responder_marker'];
         }
         $mapping = $marker
