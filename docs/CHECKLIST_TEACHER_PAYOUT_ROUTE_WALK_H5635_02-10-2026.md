@@ -26,8 +26,17 @@ _Created: 02-10-2026 · Last updated: 02-10-2026_
 ## Как воспроизвести
 
 ```bash
-php artisan migrate --env=testing --force   # .env.testing из PR: sqlite /tmp/h5635-stand.sqlite, PAYMENT_FIX_WAVE1=true
-php tools/h5635_payout_route_walk.php       # скрипт сам мигрирует и печатает журнал
+cat > .env.testing <<'ENV'   # локальный scratch-стенд; в git НЕ входит (gitignore) — CI должен видеть свой mysql-контур
+APP_KEY=base64:NcMT3r4txGwMAcBZSMDvhkf/io/wwBuPhWNTV1GNUhA=
+DB_CONNECTION=sqlite
+DB_DATABASE=/tmp/h5635-stand.sqlite
+PAYMENT_FIX_WAVE1=true
+MAIL_MAILER=log
+SESSION_DRIVER=array
+CACHE_STORE=array
+QUEUE_CONNECTION=sync
+ENV
+php tools/h5635_payout_route_walk.php   # скрипт сам мигрирует и печатает журнал
 ```
 
 ## Журнал прогона агента (02-10-2026 13:33 MSK, verbatim)
