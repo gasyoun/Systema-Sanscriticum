@@ -36,7 +36,12 @@ return new class extends Migration
                 ['telegram_support_message_id', 'classifier_version'],
                 'support_question_classification_unique'
             );
-            $table->index(['classifier_version', 'population', 'is_question']);
+            // Имя задано явно: авто-имя этого композита длиннее 64 символов
+            // и ломает MySQL 1059 (SQLite молчит — ловится только CI-джобой).
+            $table->index(
+                ['classifier_version', 'population', 'is_question'],
+                'sqc_version_population_question_idx'
+            );
         });
 
         Schema::create('support_question_weekly_snapshots', function (Blueprint $table) {
