@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\User;
 use App\Services\Design\CoverImportOutcome;
 use App\Services\Design\CoverToBannerImporter;
+use App\Services\Media\ModelImageWebpConverter;
 use App\Services\Media\WebpTranscoder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -220,5 +221,35 @@ class CoversToWebpTest extends TestCase
 
         $this->assertSame('courses/off.png', $course->fresh()->image_path);
         Storage::disk('public')->assertExists('courses/off.png');
+    }
+
+    /**
+     * Диагноз 03-10-2026 (прод, «картинка пропадает»): повторное сохранение
+     * формы вернуло в колонку старый путь, конвейер уже удалил оригинал.
+     * Конвертер обязан увидеть живой webp-близнец и вернуть колонку на него.
+     *
+     * @test
+     */
+    public function converter_heals_column_when_original_is_gone_but_webp_twin_exists(): void
+    {
+        $course = Course::factory()->create(['image_path' => 'courses/photo.png']);
+        Storage::disk('public')->put('courses/photo.webp', 'webp-bytes');
+
+        $result = app(ModelImageWebpConverter::class)->convert($course->fresh(), 'image_path');
+
+        $this->assertSame('healed-to-existing-webp', $result->reason);
+        $this->assertSame('courses/photo.webp', $course->fresh()->image_path);
+        Storage::disk('public')->assertExists('courses/photo.webp');
+    }
+
+    /** @test */
+    public function converter_leaves_column_alone_when_neither_original_nor_twin_exists(): void
+    {
+        $course = Course::factory()->create(['image_path' => 'courses/gone.png']);
+
+        $result = app(ModelImageWebpConverter::class)->convert($course->fresh(), 'image_path');
+
+        $this->assertSame('missing', $result->reason);
+        $this->assertSame('courses/gone.png', $course->fresh()->image_path);
     }
 }
