@@ -165,4 +165,12 @@ Destructive-risk facts: [Uprava DANGER_FACTS.md](https://github.com/gasyoun/Upra
 Committed memory store at [`.claude/projects/Systema-Sanscriticum/memory/`](https://github.com/gasyoun/Systema-Sanscriticum/tree/main/.claude/projects/Systema-Sanscriticum/memory)
 — dangerous/durable facts go there, indexed in its `MEMORY.md` (H4547, `/danger-memory`).
 
+## Repo guards
+
+The shared main tree is guarded: `.githooks/pre-commit` blocks main-tree commits
+(escape `ALLOW_MAIN_TREE_COMMIT=1`, solo only) and `.githooks/post-checkout`
+auto-reverts a foreign branch-switch back to `main` (shared-tree branch-switch guard,
+03-10-2026, PR #2964; escape `ALLOW_MAIN_TREE_CHECKOUT=1`). Work in a session-unique
+worktree; `core.hooksPath=.githooks`.
+
 _Dr. Mārcis Gasūns_

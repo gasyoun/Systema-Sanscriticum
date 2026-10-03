@@ -13,13 +13,16 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
@@ -31,6 +34,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 class TeacherResource extends Resource
 {
@@ -67,9 +71,71 @@ class TeacherResource extends Resource
                             ->directory('teachers')
                             ->imageEditor()
                             ->maxSize(4096)
-                            ->helperText('Показывается в блоке «Преподаватель» на продающей странице курса.')
+                            ->helperText('Показывается в блоке «Преподаватель» на продающей странице курса и на публичной странице преподавателя.')
                             ->columnSpanFull(),
                     ])->columns(3),
+
+                Section::make('Публичная страница на сайте')
+                    ->description('Карточка в списке /prepodavately и отдельная страница преподавателя в оформлении витрины (по структуре — как анкеты на samskrtam.ru). Пока выключено — на сайте преподаватель нигде не виден.')
+                    ->schema([
+                        Toggle::make('page_enabled')
+                            ->label('Показывать на сайте')
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, Get $get): void {
+                                // Включили тумблер — сразу предлагаем слаг из ФИО,
+                                // чтобы поле не упиралось в required с пустым входом.
+                                if ($get('page_enabled') && blank($get('page_slug')) && filled($get('name'))) {
+                                    $set('page_slug', Str::slug((string) $get('name')));
+                                }
+                            })
+                            ->columnSpanFull(),
+                        TextInput::make('page_slug')
+                            ->label('Адрес страницы (slug)')
+                            ->placeholder('ivan-tolchelnikov')
+                            ->helperText('Латиницей, цифрами и дефисами. Итоговый адрес: /prepodavately/{slug}.')
+                            ->required(fn (Get $get): bool => (bool) $get('page_enabled'))
+                            ->unique(ignoreRecord: true)
+                            ->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')
+                            ->maxLength(120),
+                        TextInput::make('page_role')
+                            ->label('Специализация / роль')
+                            ->placeholder('Преподаватель санскритской грамматики и индийской философии')
+                            ->maxLength(255),
+                        TextInput::make('youtube_url')
+                            ->label('YouTube (ссылка)')
+                            ->url()
+                            ->maxLength(255),
+                        Textarea::make('page_excerpt')
+                            ->label('Анонс для карточки')
+                            ->rows(3)
+                            ->placeholder('1–2 предложения: чем занимается и что ведёт. Показывается в карточке на /prepodavately.')
+                            ->columnSpanFull(),
+                        RichEditor::make('page_html')
+                            ->label('Контент страницы')
+                            ->helperText('Секции — заголовками H3, как в анкетах на samskrtam.ru: «Образование и академический путь», «Преподавательская деятельность», «Научные интересы и исследования», «Языки», «Личные интересы».')
+                            ->columnSpanFull(),
+                        Repeater::make('page_facts')
+                            ->label('Факты (строка под именем)')
+                            ->schema([
+                                TextInput::make('label')
+                                    ->label('Подпись')
+                                    ->placeholder('Дата рождения')
+                                    ->maxLength(100),
+                                TextInput::make('value')
+                                    ->label('Значение')
+                                    ->placeholder('1978, Москва')
+                                    ->maxLength(200),
+                            ])
+                            ->columns(2)
+                            ->columnSpanFull(),
+                        TextInput::make('page_sort')
+                            ->label('Порядок в списке')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(100)
+                            ->helperText('Меньше — выше в списке /prepodavately. При равенстве — по алфавиту.'),
+                    ])
+                    ->columns(2),
 
                 Section::make('Аккаунт для входа в админку')
                     ->description('Создаётся автоматически с ролью «Преподаватель». Email из блока выше будет логином. После сохранения преподавателю уходит письмо-приглашение с доступами.')
@@ -144,6 +210,16 @@ class TeacherResource extends Resource
                     ->label('Курсов')
                     ->badge()
                     ->color('info'),
+
+                // Публичная страница /prepodavately включена и заполнена слагом?
+                IconColumn::make('page_enabled')
+                    ->label('На сайте')
+                    ->tooltip('Публичная страница преподавателя на витрине: /prepodavately')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-globe-alt')
+                    ->falseIcon('heroicon-o-lock-closed')
+                    ->trueColor('success')
+                    ->falseColor('gray'),
 
                 // Есть ли у карточки активный аккаунт для входа. Старые карточки,
                 // заведённые до авто-аккаунтов, висят без доступа — их видно по «нет».
@@ -262,6 +338,14 @@ class TeacherResource extends Resource
                 //
             ])
             ->actions([
+                // Открыть публичную страницу преподавателя на витрине.
+                Action::make('open_public_page')
+                    ->label('Страница')
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+                    ->color('info')
+                    ->visible(fn (Teacher $record): bool => $record->publicPageUrl() !== null)
+                    ->url(fn (Teacher $record): string => (string) $record->publicPageUrl(), shouldOpenInNewTab: true),
+
                 // Сгенерировать пароль и выслать приглашение. Работает и для старых
                 // карточек без аккаунта, и для сброса доступа существующему.
                 Action::make('invite')

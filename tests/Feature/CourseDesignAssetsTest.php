@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\CourseDesignAssets;
 use App\Models\Course;
 use App\Models\CourseDesignAsset;
 use App\Models\User;
 use App\Services\Design\CourseDesignArchiver;
 use App\Services\Design\CourseDesignAssetService;
+use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
+use Livewire\Livewire;
 use PhpZip\ZipFile;
 use Tests\TestCase;
 
@@ -356,5 +359,42 @@ class CourseDesignAssetsTest extends TestCase
         $this->assertSame('sanskrit-osnovy-design.zip', $name);
         $this->assertStringNotContainsString('/', $name);
         $this->assertStringNotContainsString('\\', $name);
+    }
+
+    /** @test */
+    public function preview_action_is_visible_and_modal_shows_uploaded_images(): void
+    {
+        $admin = User::factory()->create(['role' => Roles::ADMIN, 'is_admin' => true]);
+        $course = Course::factory()->create();
+        $asset = $this->service()->store($course, '16:9', $this->image(), 'https://disk.example/psd', null, $admin);
+
+        Livewire::actingAs($admin)->test(CourseDesignAssets::class)
+            ->assertTableActionVisible('preview', $course);
+
+        // Контент модалки: превью загруженного слота, ссылка на исходник
+        // и заглушка у пустого слота («что есть, а чего не хватает»).
+        $html = view('filament.pages.course-design-preview', [
+            'course' => $course->fresh(['designAssets.uploader']),
+            'formats' => (array) config('design_assets.formats', []),
+        ])->render();
+
+        $this->assertStringContainsString((string) $asset->imageUrl(), $html);
+        $this->assertStringContainsString('https://disk.example/psd', $html);
+        $this->assertStringContainsString($admin->name, $html);
+        $this->assertStringContainsString('не загружено', $html);
+    }
+
+    /** @test */
+    public function preview_modal_says_when_course_has_no_assets(): void
+    {
+        $course = Course::factory()->create();
+
+        $html = view('filament.pages.course-design-preview', [
+            'course' => $course->load('designAssets.uploader'),
+            'formats' => (array) config('design_assets.formats', []),
+        ])->render();
+
+        $this->assertStringContainsString('ни одного баннера', $html);
+        $this->assertStringNotContainsString('<img', $html);
     }
 }
