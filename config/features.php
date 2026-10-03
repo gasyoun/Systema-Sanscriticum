@@ -440,6 +440,16 @@ return [
     'support_hint_daily_digest' => (bool) env('SUPPORT_HINT_DAILY_DIGEST', false),
 
     /*
+     | H5709: недельный отчёт по студенческим вопросам Telegram (понедельник
+     | 09:00 Europe/Moscow, support:questions-weekly --send). ВЫКЛ по
+     | умолчанию: слот живого поста в чат «Отдел заботы» включается только
+     | ПОСЛЕ независимой верификации логики (гейт хендоффа). Ручной прогон —
+     | php artisan support:questions-weekly [--dry-run|--send] — работает и
+     | при OFF.
+     */
+    'support_questions_weekly' => (bool) env('SUPPORT_QUESTIONS_WEEKLY', false),
+
+    /*
      | H3462 (рулинг MG 24-08-2026): входящий email как канал поддержки.
      | Ящик zabota@samskrte.ru пересылает почту в проводник (n8n на .91, без
      | нового платного вендора), проводник POSTит payload на

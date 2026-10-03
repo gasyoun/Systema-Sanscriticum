@@ -857,6 +857,29 @@
                             @endif
                         </div>
                     </div>
+
+                    {{-- «Решен» для тредов без users-записи: без него открытые
+                         unlinked-треды (гости сайта и лички непривязанных TG-авторов)
+                         нельзя снять с очереди из UI. Гейт темы — тот же H2381,
+                         что у user-тредов выше; closeTopicCategory общий, ветки
+                         панелей взаимоисключимы (activeUserId vs activeGuestId). --}}
+                    @if($guestThread && $guestThread->isOpen())
+                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            @if(config('features.support_required_close_topic'))
+                                <select wire:model="closeTopicCategory"
+                                    style="font-size: 12px; padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(0,0,0,.15); background: #fff; color: #111827; max-width: 180px;">
+                                    <option value="">Тема…</option>
+                                    @foreach($this->topicOptions as $cat => $label)
+                                        <option value="{{ $cat }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
+                            <button type="button" wire:click="resolveGuestConversation"
+                                style="background: #4b5563; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer;">
+                                Решен
+                            </button>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Баннер: FAQ-суггестер для гостя (H1198) — только категория D

@@ -17,6 +17,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SrsController;
 use App\Http\Controllers\StorefrontAnalyticsController;
 use App\Http\Controllers\SubscriptionLandingController;
+use App\Http\Controllers\TeacherPublicPageController;
 use App\Http\Controllers\TrackedLinkController;
 use App\Models\Course;
 use App\Models\LandingPage;
@@ -94,6 +95,17 @@ Route::get('/', function () {
 
 // Витрина магазина курсов
 Route::get('/online', [ShopController::class, 'index'])->name('shop.index');
+
+// --- ПРЕПОДАВАТЕЛИ ОРС (публичные страницы) ---
+// Список карточек + страница каждого преподавателя. Контроллер сам отдаёт 404
+// на выключенные/несуществующие слаги (page_enabled в Filament). Роуты живут
+// здесь, а не после catch-all /{slug}: слаг включённого препода не должен
+// уезжать в PromoController (лендинги без префикса).
+Route::get('/prepodavately', [TeacherPublicPageController::class, 'index'])
+    ->name('teachers.index');
+Route::get('/prepodavately/{slug}', [TeacherPublicPageController::class, 'show'])
+    ->where('slug', '[A-Za-z0-9\-]+')
+    ->name('teachers.show');
 
 // Короткие ссылки кампаний: UTM сохраняются в сессии, а каталог открывается
 // без query string. Внешний текст и адресная строка не раскрывают разметку.

@@ -12,7 +12,7 @@ _Created: 17-09-2026 · Last updated: 17-09-2026_
 
 | | Кабинетный бот | Личка userbot (MadelineProto) | **Telegram Business (новая)** |
 |---|---|---|---|
-| Транспорт | `STUDENT_TELEGRAM_BOT_TOKEN`, вебхук | MTProto-сессия, `telegram-support:sync` | Bot API, вебхук `/api/webhooks/telegram-business` |
+| Транспорт | `STUDENT_TELEGRAM_BOT_TOKEN`, вебхук | MTProto-сессия, `telegram-support:sync` | Bot API, вебхук: выделенный `/api/webhooks/telegram-business` либо общий студенческий `/api/telegram/webhook` (при `TELEGRAM_BUSINESS_SHARED_STUDENT_WEBHOOK=true`) |
 | От чьего имени видит студент | бот | аккаунт школы | **аккаунт школы** (владелец подключил бота) |
 | Доставка ответа | Bot API сразу | pending + дренаж внутри синка | pending + дренаж по Bot API |
 
@@ -24,6 +24,7 @@ _Created: 17-09-2026 · Last updated: 17-09-2026_
 
 ```
 student DM ──► Telegram ──► POST /api/webhooks/telegram-business
+                              │  (или общий /api/telegram/webhook при SHARED_STUDENT_WEBHOOK=true, e79566aa)
                               │  middleware verify.tg.business (fail-closed)
                               ▼
                      ProcessTelegramBusinessUpdate (queue: webhooks)
