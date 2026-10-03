@@ -33,8 +33,11 @@ class WeeklyReportComposer
         $enquiry = $payload['populations'][SupportQuestionClassification::POPULATION_ENQUIRY];
         $staff = $payload['populations'][SupportQuestionClassification::POPULATION_STAFF_INTERNAL];
 
+        // CATEGORY_ORDER — list-константа: итерируем ЗНАЧЕНИЯ (буквы A–I);
+        // array_keys() давал числовые ключи 0..8 и обнулял топ-3 (замерено на
+        // проде 03-10-2026, H5709).
         $externalByCategory = [];
-        foreach (array_keys(QuestionMessageClassifier::CATEGORY_ORDER) as $category) {
+        foreach (QuestionMessageClassifier::CATEGORY_ORDER as $category) {
             $externalByCategory[$category] =
                 ($student['by_category'][$category] ?? 0) + ($enquiry['by_category'][$category] ?? 0);
         }
