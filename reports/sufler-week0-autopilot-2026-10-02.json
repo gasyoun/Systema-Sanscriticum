@@ -1,6 +1,8 @@
 {
-    "generated": "2026-10-02 13:12",
+    "generated": "2026-10-03 19:28",
     "handoff": "H5560 \/ GTD row 0LD (grill round 2 Q11)",
+    "retriever": "bm25",
+    "rerank": "none",
     "corpus_v1": "resources\/knowledge\/faq.md",
     "questions_corpus": "classifier_corpus_2026_08.json (50 cases)",
     "share_without_human": {
@@ -439,7 +441,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/оплата-блоки",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q002",
@@ -450,7 +458,13 @@
                 ],
                 "top1_correct": false,
                 "top3_any": false,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/из-за-рубежа",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q003",
@@ -461,7 +475,13 @@
                 ],
                 "top1_correct": false,
                 "top3_any": false,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/индивидуальные-занятия",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q004",
@@ -472,7 +492,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/материалы",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q005",
@@ -483,7 +509,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/пробное-занятие",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q006",
@@ -494,7 +526,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/уровень-группы",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q007",
@@ -505,7 +543,13 @@
                 ],
                 "top1_correct": false,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/из-за-рубежа",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q008",
@@ -517,7 +561,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/с-чего-начать",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q009",
@@ -529,7 +579,13 @@
                 ],
                 "top1_correct": false,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/прекратить-занятия",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q010",
@@ -541,7 +597,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/прекратить-занятия",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q011",
@@ -552,7 +614,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/сертификат",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q012",
@@ -563,7 +631,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/скидки",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q013",
@@ -574,7 +648,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/личный-кабинет",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q014",
@@ -585,7 +665,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/домашние-задания",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q015",
@@ -596,7 +682,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/догнать-группу",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q016",
@@ -607,7 +699,13 @@
                 ],
                 "top1_correct": false,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/личный-кабинет",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q017",
@@ -619,7 +717,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/деванагари-письмо",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q018",
@@ -630,7 +734,13 @@
                 ],
                 "top1_correct": false,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/домашние-задания",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q019",
@@ -641,7 +751,13 @@
                 ],
                 "top1_correct": false,
                 "top3_any": false,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/размер-группы",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             },
             {
                 "id": "q020",
@@ -652,7 +768,13 @@
                 ],
                 "top1_correct": true,
                 "top3_any": true,
-                "threshold_pass": true
+                "threshold_pass": true,
+                "top1_retrieval": "политика-и-поддержка\/из-за-рубежа",
+                "rerank_pick": null,
+                "rerank_rank": null,
+                "rerank_fallback": null,
+                "rerank_raw": null,
+                "rerank_promoted_from": null
             }
         ]
     },
