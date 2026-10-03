@@ -13,6 +13,8 @@ use App\Models\TelegramSupportChat;
 use App\Models\TelegramSupportContact;
 use App\Models\TelegramSupportMessage;
 use App\Models\User;
+use App\Services\SupportQuestions\GoldReviewException;
+use App\Services\SupportQuestions\GoldReviewService;
 use App\Services\SupportQuestions\QuestionMessageClassifier;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -281,14 +283,21 @@ class ClassifierV2SilverClassesTest extends TestCase
             'primary_category' => 'D',
         ]);
 
-        $exit = \Artisan::call('support:questions-review', ['--carryover-gold' => (string) $sample->id, '--sample' => '3']);
+        $exit = \Artisan::call('support:questions-review', ['--carryover-gold' => (string) $sample->id]);
         $output = \Artisan::output();
         $this->assertSame(0, $exit);
         $this->assertStringContainsString('"carried_labels":3', $output);
         $this->assertStringContainsString('"measured_version":"'.QuestionMessageClassifier::VERSION.'"', $output);
+        // DeepSeek D5: наружу — basename, полный путь листа не печатается.
+        $this->assertStringContainsString('carryover-sample'.$sample->id, $output);
+        $this->assertStringNotContainsString(storage_path('app/support-questions'), $output);
+        // DeepSeek D7: unclassified-строка (нет строки v2) уходит из знаменателя.
+        $this->assertStringContainsString('"n_rows": 3', $output);
+        $this->assertStringContainsString('"n_unlabeled": 0', $output);
         $this->assertStringContainsString('"n_predictions": 2', $output);
         $this->assertStringContainsString('"matches": 1', $output);
         $this->assertStringContainsString('"precision": 0.5', $output);
+        $this->assertStringContainsString('"n_gold_topic": 3', $output);
     }
 
     /** Незавершённый сэмпл carry-over отвергает. */
@@ -318,9 +327,90 @@ class ClassifierV2SilverClassesTest extends TestCase
             'position' => 1,
         ]);
 
-        $this->artisan('support:questions-review', ['--carryover-gold' => (string) $sample->id, '--sample' => '3'])
+        $this->artisan('support:questions-review', ['--carryover-gold' => (string) $sample->id])
             ->expectsOutputToContain('incomplete')
             ->assertExitCode(1);
+    }
+
+    /** DeepSeek D2: метка ЧУЖОГО сэмпла не считается меткой этого item. */
+    public function test_carryover_ignores_label_from_another_sample(): void
+    {
+        $message = $this->makeMessage(8101);
+        $classification = SupportQuestionClassification::create([
+            'telegram_support_message_id' => $message->id,
+            'classifier_version' => 'qw-2026-10-v1',
+            'population' => 'enquiry',
+            'is_question' => true,
+            'primary_category' => 'D',
+        ]);
+        $sample = SupportQuestionReviewSample::create([
+            'window_from' => '2026-09-28',
+            'window_to' => '2026-10-05',
+            'classifier_version' => 'qw-2026-10-v1',
+            'sample_size' => 1,
+            'fingerprint' => str_repeat('e', 64),
+            'status' => SupportQuestionReviewSample::STATUS_OPEN,
+        ]);
+        $item = SupportQuestionReviewItem::create([
+            'sample_id' => $sample->id,
+            'classification_id' => $classification->id,
+            'population' => 'enquiry',
+            'predicted_primary' => 'D',
+            'position' => 1,
+        ]);
+        $other = SupportQuestionReviewSample::create([
+            'window_from' => '2026-09-28',
+            'window_to' => '2026-10-05',
+            'classifier_version' => 'qw-2026-10-v1',
+            'sample_size' => 1,
+            'fingerprint' => str_repeat('f', 64),
+            'status' => SupportQuestionReviewSample::STATUS_OPEN,
+        ]);
+        SupportQuestionReviewLabel::create([
+            'sample_id' => $other->id,
+            'item_id' => $item->id,
+            'user_id' => User::factory()->create(['role' => 'admin'])->id,
+            'gold_label' => 'D',
+        ]);
+
+        $this->artisan('support:questions-review', ['--carryover-gold' => (string) $sample->id])
+            ->expectsOutputToContain('incomplete')
+            ->assertExitCode(1);
+    }
+
+    /** DeepSeek D3: кавычка после URL останавливает URL — вопрос рядом живёт. */
+    public function test_question_in_quotes_after_url_still_detected(): void
+    {
+        $verdict = $this->classifier->classifyMessage(
+            'смотри https://example.com/a?b=1 "кабинет не работает, что делать?"'
+        );
+        $this->assertTrue($verdict['is_question']);
+        $this->assertSame('E', $verdict['primary_category']);
+    }
+
+    /** DeepSeek D6: freeze подSheet со строками СТАРОЙ версии отвергается. */
+    public function test_freeze_refuses_sheet_of_stale_classifier_version(): void
+    {
+        $message = $this->makeMessage(8201);
+        $classification = SupportQuestionClassification::create([
+            'telegram_support_message_id' => $message->id,
+            'classifier_version' => 'qw-2026-09-v0',
+            'population' => 'enquiry',
+            'is_question' => true,
+            'primary_category' => 'D',
+        ]);
+        $path = storage_path('app/support-questions/test-freeze-stale.tsv');
+        if (! is_dir(dirname($path))) {
+            mkdir(dirname($path), 0775, true);
+        }
+        file_put_contents($path, "id\tpopulation\tpredicted_primary\tgold_label\ttext\n"
+            .$classification->id."\tenquiry\tD\t\tдемо-текст\n");
+
+        $this->expectException(GoldReviewException::class);
+        $this->expectExceptionMessage('expected '.QuestionMessageClassifier::VERSION);
+
+        app(GoldReviewService::class)
+            ->freezeFromSheet($path, '2026-09-28..2026-10-05', null);
     }
 
     /**

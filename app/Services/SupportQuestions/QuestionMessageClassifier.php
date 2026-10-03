@@ -260,7 +260,9 @@ class QuestionMessageClassifier
     {
         // URL вычищается ДО анализа (H5781): `?pwd=` в ссылке зума — это не
         // вопросительный знак, а «zoom» в адресе — не топик-попадание.
-        $haystack = trim((string) preg_replace('~https?://\S+~iu', ' ', $text));
+        // Класс символов ограничен допустимыми в URL (DeepSeek D3): текст,
+        // прилепленный к ссылке без пробела, не проглатывается.
+        $haystack = trim((string) preg_replace('~https?://[^\s<>"\']+~iu', ' ', $text));
         $haystack = mb_strtolower($haystack);
 
         $signals = $this->detectSignals($haystack);
