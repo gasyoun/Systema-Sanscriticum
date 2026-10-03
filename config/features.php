@@ -1499,6 +1499,15 @@ return [
     'guest_registration' => (bool) env('GUEST_REGISTRATION_ENABLED', false),
 
     /*
+     | H5823: последовательность напоминаний о продлении членства
+     | (membership:renewal-reminders). Default OFF: слот планировщика всегда
+     | зарегистрирован (audit spec 7), но команда с флагом OFF печатает отчёт
+     | и НИЧЕГО не шлёт — даже с --send. Включение: MEMBERSHIP_RENEWAL_REMINDERS=true
+     | + config:cache на .92 — отдельный ops-шаг, не этот PR.
+     */
+    'membership_renewal_reminders' => (bool) env('MEMBERSHIP_RENEWAL_REMINDERS', false),
+
+    /*
      | Grammar Lab explorer (H2493 / G2). Import and tables are additive;
      | this flag gates every public/cabinet route and payload. Default OFF:
      | /grammar-lab and /dvaram/grammar-lab 404 until a human flips
