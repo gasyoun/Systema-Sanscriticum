@@ -50,8 +50,12 @@
             ],
         ];
     @endphp
-    <script type="application/ld+json">{{ json_encode($personSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</script>
-    <script type="application/ld+json">{{ json_encode($breadcrumbsSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</script>
+    {{-- Сырой вывод {{ }} HTML-экранировал JSON до &quot;@context&quot; — браузер
+         получал нечитаемый мусор. HEX-флаги кодируют <, >, &, ' и " в строковых
+         значениях (\u003C и т.п.), поэтому payload остаётся валидным JSON и
+         не ломает тег </script> даже для админских имён с кавычками/тегами. --}}
+    <script type="application/ld+json">{!! json_encode($personSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+    <script type="application/ld+json">{!! json_encode($breadcrumbsSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
 @endpush
 
 @section('content')
