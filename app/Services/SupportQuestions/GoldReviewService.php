@@ -208,19 +208,19 @@ class GoldReviewService
     }
 
     /**
-     * Гард перед любой записью метки: сэмпл открыт и не устарел.
+     * Гард перед любой записью метки: сэмпл открыт.
+     *
+     * H5781: проверка против ЖИВОЙ версии классификатора убрана — сэмпл
+     * заморожен вместе со своими предсказаниями, human-метки описывают текст
+     * сообщения, а не версию; деплой новой версии классификатора не должен
+     * омораживать идущее ревью посреди пути. Сравнение с живой константой
+     * осталось только в freeze-пути (новые сэмплы замораживаются под текущую
+     * версию).
      */
     public function assertLabelable(SupportQuestionReviewSample $sample): void
     {
         if ($sample->status !== SupportQuestionReviewSample::STATUS_OPEN) {
             throw new GoldReviewException('Sample is already completed — labels are read-only.');
-        }
-        if ($sample->classifier_version !== QuestionMessageClassifier::VERSION) {
-            throw new StaleGoldSampleException(
-                'Sample was frozen for classifier '.$sample->classifier_version
-                .', current is '.QuestionMessageClassifier::VERSION
-                .' — freeze a new sample instead of mixing versions.'
-            );
         }
     }
 

@@ -73,7 +73,7 @@
         @if ($active !== null)
             @php($progress = $this->progress)
             @php($item = $this->currentItem)
-            @php($stale = $active->classifier_version !== \App\Services\SupportQuestions\QuestionMessageClassifier::VERSION)
+            @php($stale = $active->classifier_version !== \App\Services\SupportQuestions\QuestionMessageClassifier::VERSION && $active->status === \App\Models\SupportQuestionReviewSample::STATUS_COMPLETED) {{-- H5781: чип информационный, только на завершённых; открытое ревью под старой версией размечается --}}
 
             <div class="rounded-xl border {{ $progress['complete'] ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30' : 'border-gray-200 bg-white' }} p-4 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <div class="flex flex-wrap items-baseline justify-between gap-2">
